@@ -2,7 +2,7 @@ UNAME := $(shell uname -s)
 
 help:
 	@echo "Targets:"
-	@echo "    webkit-build[-minimal] - build WebKit Qt port"
+	@echo "    webkit[-minimal]       - build WebKit Qt port"
 	@echo "    webkit-clean           - clean WebKit files"
 	@echo "    webkit-install-into-qt - Install Qt port of Webkit into Qt installation"
 	@echo ""
@@ -15,7 +15,7 @@ webkit:
 	@echo "Building release QtWebKit"
 	./WebKit/Tools/Scripts/build-webkit --qt --qmakearg="DEFINES+=ARTEMIS=1"
 
-webkit-build-minimal:
+webkit-minimal:
 	@echo "Build minimal webkit!"
 	./WebKit/Tools/Scripts/build-webkit --qt --minimal --qmakearg="DEFINES+=ARTEMIS=1"
 
@@ -24,7 +24,6 @@ webkit-clean:
 	./WebKit/Tools/Scripts/build-webkit --clean
 
 webkit-install-into-qt:
-
 	@if test -d ./qt/include/QtWebKit; then echo "WebKit dir present in Qt install"; else mkdir ./qt/include/QtWebKit; fi
 ifeq ($(UNAME),Linux)
 	@cp -rv ./WebKit/WebKitBuild/Release/lib/libQtWebKit* ./qt/lib
@@ -44,4 +43,4 @@ artemis-clean:
 	cd artemis-code && qmake && make clean
 
 qt-checkout:
-	git clone git://gitorious.org/qt/qt.git; cd qt; git checkout 4.8
+	git clone git://gitorious.org/qt/qt.git; cd qt; git checkout v4.8.0
