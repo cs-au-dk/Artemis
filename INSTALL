@@ -2,8 +2,9 @@
 higher. If this is not the case, a copy can be downloaded by running
 
    make qt-checkout   
-
-Enter the directory, "./configure" and "make".
+   cd qt
+   ./configure
+   make
 
 0. Apply qhash.patch to your Qt Installation by running
 
@@ -12,7 +13,7 @@ Enter the directory, "./configure" and "make".
 1. Double check that qmake is on your path and then build the
 instrumented webkit by running
    
-   make webkit-build[-debug|-minimal]
+   make webkit[-minimal]
 
 2. Install the newly built QtWebKit port in your existing QT
 installation by running
