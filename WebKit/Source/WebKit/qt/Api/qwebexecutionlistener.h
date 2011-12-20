@@ -1,4 +1,4 @@
-#ifdef ARTEMIS
+
 #ifndef QWEBEXECUTIONLISTENER_H
 #define QWEBEXECUTIONLISTENER_H
 
@@ -43,4 +43,4 @@ public slots:
 void installWebKitExecutionListener(inst::ExecutionListener*);
 
 #endif // QWEBEXECUTIONLISTENER_H
-#endif
+

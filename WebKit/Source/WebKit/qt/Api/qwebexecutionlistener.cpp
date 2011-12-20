@@ -1,4 +1,4 @@
-#ifdef ARTEMIS
+
 #include <config.h>
 #include "qwebexecutionlistener.h"
 #include <DOMWindow.h>
@@ -62,4 +62,4 @@ void QWebExecutionListener::webkit_eval_call(const char * eval_string) {
 void installWebKitExecutionListener(inst::ExecutionListener* e) {
     inst::setDefaultListener(e);
 }
-#endif
+

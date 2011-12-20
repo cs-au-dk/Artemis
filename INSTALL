@@ -1,9 +1,13 @@
-0. Please ensure you have a working installation of Qt 4.8 or
+-1. Please ensure you have a working installation of Qt 4.8 or
 higher. If this is not the case, a copy can be downloaded by running
 
    make qt-checkout   
 
 Enter the directory, "./configure" and "make".
+
+0. Apply qhash.patch to your Qt Installation by running
+
+   // TO-DO
 
 1. Double check that qmake is on your path and then build the
 instrumented webkit by running
