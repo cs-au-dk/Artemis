@@ -1,0 +1,37 @@
+<!DOCTYPE HTML PUBLIC "-//IETF//DTD HTML//EN">
+<html>
+<head>
+<script src="../fast/js/resources/js-test-pre.js"></script>
+</head>
+<body id="body">
+
+<fieldset>
+    <legend>Choose a shipping method:</legend>
+    <input id="overnight" type="radio" name="shipping" value="overnight" />Overnight
+</fieldset>
+
+<p id="description"></p>
+<div id="console"></div>
+
+<script>
+
+    description("This tests that a fieldset's title ui element is the legend's static text.");
+    if (window.accessibilityController) {
+
+        if (window.accessibilityController) {
+
+            var body = document.getElementById("body");
+            body.focus();
+
+            var fieldset = accessibilityController.focusedElement.childAtIndex(0);
+            var titleUIElement = fieldset.titleUIElement();
+            shouldBe("titleUIElement.role", "'AXRole: AXGroup'");
+            shouldBe("titleUIElement.childAtIndex(0).role", "'AXRole: AXStaticText'");
+            shouldBe("titleUIElement.childAtIndex(0).stringValue", "'AXValue: Choose a shipping method:'");
+        }
+    }
+</script>
+
+<script src="../../../fast/js/resources/js-test-post.js"></script>
+</body>
+</html>

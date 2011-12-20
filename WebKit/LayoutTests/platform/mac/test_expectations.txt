@@ -1,0 +1,43 @@
+// These are the layout test expectations for Apple's Mac port of WebKit.
+//
+// See http://trac.webkit.org/wiki/TestExpectations for more information on this file.
+
+// Our slow tests, in alphabetical order.
+BUGWK57672 : http/tests/local/fileapi/send-sliced-dragged-file.html = TEXT PASS
+
+BUGWK57799 : storage/domstorage/localstorage/storagetracker/storage-tracker-4-create.html = TEXT PASS
+BUGWK57799 : storage/domstorage/localstorage/storagetracker/storage-tracker-5-delete-one.html = TEXT PASS
+
+// Flaky tests that appear to be fail depending on which earlier tests
+// run in the same process
+BUGWK57688 : fast/text/international/bidi-AN-after-empty-run.html = PASS TEXT
+BUGWK57688 : fast/text/international/bidi-CS-after-AN.html = PASS TEXT
+BUGWK57688 : fast/text/international/thai-line-breaks.html = PASS TEXT
+
+BUGWK58192 : plugins/npp-set-window-called-during-destruction.html = TEXT
+
+// Flaky tests when run multi-process
+BUGWK58192 : fast/dom/frame-loading-via-document-write.html = TEXT PASS
+BUGWK58192 : http/tests/appcache/fail-on-update-2.html = TEXT PASS
+BUGWK58192 : http/tests/appcache/fail-on-update.html = TEXT PASS
+BUGWK58192 : http/tests/inspector/console-websocket-error.html = TEXT PASS
+BUGWK58192 : fast/canvas/webgl/gl-teximage.html = TEXT PASS
+BUGWK58192 : fast/frames/flattening/iframe-flattening-offscreen.html = TEXT PASS
+BUGWK58192 : svg/dom/SVGScriptElement/script-set-href.svg = TEXT PASS
+
+// Need rebaseline
+BUGWK70765 : fast/forms/listbox-clip.html = TEXT
+
+BUGWK67007 DEBUG : fast/ruby/after-block-doesnt-crash.html = CRASH
+BUGWK67007 DEBUG : fast/ruby/after-table-doesnt-crash.html = CRASH
+BUGWK67007 DEBUG : fast/ruby/generated-after-counter-doesnt-crash.html = CRASH
+BUGWK67007 DEBUG : fast/ruby/generated-before-and-after-counter-doesnt-crash.html = CRASH
+
+BUGWK69999 RELEASE : http/tests/security/contentSecurityPolicy/media-src-allowed.html = TEXT PASS
+
+BUGWK73766 : css3/unicode-bidi-isolate-aharon-failing.html = FAIL
+
+BUGWK74270 : fast/forms/basic-selects.html = FAIL
+
+// The test hits an ASSERT in Debug.
+BUGWK68859 DEBUG : fast/dynamic/crash-paint-no-documentElement-renderer.html = CRASH

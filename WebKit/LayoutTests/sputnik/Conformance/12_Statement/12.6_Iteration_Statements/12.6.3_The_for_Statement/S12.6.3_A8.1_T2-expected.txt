@@ -1,0 +1,7 @@
+CONSOLE MESSAGE: line 80: SyntaxError: Expected an identifier but found '++' instead
+S12.6.3_A8.1_T2
+
+PASS Expected parsing failure
+
+TEST COMPLETE
+

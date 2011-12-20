@@ -1,0 +1,7 @@
+This test checks Web Inspector utilities.
+
+
+Running: binaryIndexOfTest
+
+Running: sortRangeTest
+

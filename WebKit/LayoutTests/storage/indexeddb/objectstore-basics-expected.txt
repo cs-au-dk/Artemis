@@ -1,0 +1,117 @@
+Test the basics of IndexedDB's IDBObjectStore.
+
+On success, you will see a series of "PASS" messages, followed by "TEST COMPLETE".
+
+
+webkitIndexedDB.open('objectstore-basics')
+openSuccess():
+db = event.target.result
+db.setVersion('new version')
+setVersionSuccess():
+trans = event.target.result
+PASS trans !== null is true
+Deleted all object stores.
+createObjectStore():
+store = db.createObjectStore('storeName', null)
+storeNames = db.objectStoreNames
+PASS store.name is "storeName"
+PASS store.keyPath is null
+PASS storeNames.contains('storeName') is true
+PASS storeNames.length is 1
+Ask for an index that doesn't exist:
+index = store.index('asdf')
+PASS Exception thrown.
+PASS code is webkitIDBDatabaseException.NOT_FOUND_ERR
+createIndex():
+index = store.createIndex('indexName', 'x', {unique: true})
+PASS index !== null is true
+PASS store.indexNames.contains('indexName') is true
+index = store.index('indexName')
+PASS index !== null is true
+Ask for an index that doesn't exist:
+index = store.index('asdf')
+PASS Exception thrown.
+PASS code is webkitIDBDatabaseException.NOT_FOUND_ERR
+db.setVersion("version fail")
+PASS db.version is "version fail"
+setVersionTrans = event.target.result
+PASS setVersionTrans !== null is true
+store = setVersionTrans.objectStore('storeName')
+index = store.createIndex('indexFail', 'x')
+PASS db.version is "new version"
+PASS store.transaction is setVersionTrans
+PASS store.indexNames is ['indexName']
+PASS store.indexNames.length is 1
+PASS store.indexNames.contains('') is false
+PASS store.indexNames.contains('indexFail') is false
+PASS store.indexNames.contains('indexName') is true
+PASS store.indexNames[0] is "indexName"
+PASS store.indexNames[1] is null
+PASS store.indexNames[100] is null
+PASS store.indexNames.item(1) is null
+PASS store.indexNames.item(100) is null
+transaction = db.transaction(['storeName'], webkitIDBTransaction.READ_WRITE)
+store = transaction.objectStore('storeName')
+Try to insert data with a Date key:
+store.add({x: 'foo'}, testDate)
+Try to insert a value not handled by structured clone:
+store.add({x: 'bar', y: document.getElementById('console')}, 'bar')
+PASS Exception thrown
+PASS code is DOMException.DATA_CLONE_ERR
+Try to insert data where key path yields a Date key:
+store.add({x: testDateB, y: 'value'}, 'key')
+addSuccess():
+PASS event.target.result is "key"
+event.target.source.add({x: 'foo'}, 'zzz')
+addAgainFailure():
+PASS event.target.errorCode is webkitIDBDatabaseException.CONSTRAINT_ERR
+event.preventDefault()
+db.transaction(['storeName'], webkitIDBTransaction.READ_WRITE)
+store = transaction.objectStore('storeName')
+store.add({x: 'somevalue'}, 'somekey')
+Expecting exception from store.add({x: 'othervalue'}, null)
+PASS Exception was thrown.
+PASS code is webkitIDBDatabaseException.DATA_ERR
+db.transaction(['storeName'], webkitIDBTransaction.READ_WRITE)
+store = transaction.objectStore('storeName')
+store.add({x: null}, 'validkey')
+PASS event.cancelable is true
+addWithNullIndexFailure():
+PASS event.target.errorCode is webkitIDBDatabaseException.DATA_ERR
+event.preventDefault()
+db.transaction(['storeName'], webkitIDBTransaction.READ_WRITE)
+store = transaction.objectStore('storeName')
+store.get('key')
+getSuccess():
+PASS event.target.result.y is "value"
+store = event.target.source
+store.get(testDate)
+getSuccessDateKey():
+PASS event.target.result.x is "foo"
+store.delete('key')
+removeSuccess():
+PASS event.target.result is true
+store.delete('key')
+removeSuccessButFalse():
+PASS event.target.result is false
+store = event.target.source
+Passing an invalid key into store.get().
+Expecting exception from store.get({})
+PASS Exception was thrown.
+PASS code is webkitIDBDatabaseException.DATA_ERR
+Passing an invalid key into store.delete().
+Expecting exception from store.delete({})
+PASS Exception was thrown.
+PASS code is webkitIDBDatabaseException.DATA_ERR
+Passing an invalid key into store.add().
+Expecting exception from store.add(null, {})
+PASS Exception was thrown.
+PASS code is webkitIDBDatabaseException.DATA_ERR
+Passing an invalid key into store.put().
+Expecting exception from store.put(null, {})
+PASS Exception was thrown.
+PASS code is webkitIDBDatabaseException.DATA_ERR
+PASS successfullyParsed is true
+
+TEST COMPLETE
+

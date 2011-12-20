@@ -1,0 +1,20 @@
+layer at (0,0) size 800x600
+  RenderView at (0,0) size 800x600
+layer at (0,0) size 800x600
+  RenderBlock {HTML} at (0,0) size 800x600
+    RenderBody {BODY} at (8,8) size 784x584
+      RenderBlock {P} at (0,0) size 784x42
+        RenderText {#text} at (0,0) size 768x42
+          text run at (0,0) width 501: "This tests extending an editable selection across non-editable content. "
+          text run at (501,0) width 267: "Everything in the region below should"
+          text run at (0,21) width 86: "be selected."
+      RenderBlock {DIV} at (0,58) size 784x21
+        RenderText {#text} at (0,0) size 8x21
+          text run at (0,0) width 8: "x"
+        RenderInline {SPAN} at (0,0) size 16x21
+          RenderText {#text} at (8,0) size 16x21
+            text run at (8,0) width 16: "xx"
+        RenderText {#text} at (24,0) size 8x21
+          text run at (24,0) width 8: "x"
+selection start: position 0 of child 0 {#text} of child 2 {DIV} of body
+selection end:   position 1 of child 2 {#text} of child 2 {DIV} of body

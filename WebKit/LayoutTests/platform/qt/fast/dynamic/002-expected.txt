@@ -1,0 +1,23 @@
+layer at (0,0) size 800x600
+  RenderView at (0,0) size 800x600
+layer at (0,0) size 800x600
+  RenderBlock {HTML} at (0,0) size 800x600
+    RenderBody {BODY} at (8,8) size 784x584
+      RenderBlock {DIV} at (0,0) size 784x21
+        RenderBlock (floating) {DIV} at (493,0) size 291x104 [border: (2px solid #FF0000)]
+          RenderText {#text} at (2,2) size 287x21
+            text run at (2,2) width 287: "I should become a right-floating element."
+        RenderBlock (anonymous) at (0,0) size 784x21
+          RenderText {#text} at (0,0) size 433x21
+            text run at (0,0) width 215: "This text should be on the left. "
+            text run at (215,0) width 218: "The float should be to the right."
+      RenderBlock {DIV} at (0,21) size 784x30
+      RenderBlock {DIV} at (0,51) size 784x63
+        RenderBlock (floating) {SPAN} at (0,0) size 281x104 [border: (2px solid #FF0000)]
+          RenderText {#text} at (2,2) size 277x21
+            text run at (2,2) width 277: "I should become a left-floating element."
+        RenderText {#text} at (281,0) size 192x63
+          text run at (281,0) width 182: "This text should be on the"
+          text run at (281,21) width 39: "right. "
+          text run at (320,21) width 153: "The float should be to"
+          text run at (281,42) width 51: "the left."
