@@ -11,7 +11,7 @@ QMAKE_CXXFLAGS += -DEXE_BUILD_DATE="`date +'\"%d-%m-%Y_%H:%M:%S\"'`" -DARTEMIS=1
 
 DEFINES += ARTEMIS=1
 
-LIBS += /home/kja/Artemis/qt/lib/libQtWebKit.so.4.10.0
+#LIBS += /home/kja/Artemis/qt/lib/libQtWebKit.so.4.10.0
 
 # Input
 HEADERS += src/webkitexecutor.h \
