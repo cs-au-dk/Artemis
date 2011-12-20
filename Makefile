@@ -2,12 +2,14 @@ UNAME := $(shell uname -s)
 
 help:
 	@echo "Targets:"
-	@echo "    webkit-build        - build WebKit Qt port"
-	@echo "    webkit-clean        - clean WebKit files"
-	@echo "    webkit-build-minimal- build WebKit with a minimum of functionality" 
+	@echo "    webkit-build[-minimal] - build WebKit Qt port"
+	@echo "    webkit-clean           - clean WebKit files"
+	@echo "    webkit-install-into-qt - Install Qt port of Webkit into Qt installation"
 	@echo ""
-	@echo "    artemis             - Build Artemis"
-	@echo "    artemis-clean       - Clean artemis"
+	@echo "    artemis                - Build Artemis"
+	@echo "    artemis-clean          - Clean artemis"
+	@echo ""
+	@echo "    qt-checkout            - Checkout a copy of the Qt 4.8 Framework source"
 
 webkit:
 	@echo "Building release QtWebKit"
