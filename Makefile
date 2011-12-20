@@ -8,7 +8,6 @@ help:
 	@echo ""
 	@echo "    artemis             - Build Artemis"
 	@echo "    artemis-clean       - Clean artemis"
-	@echo "    artemis-checkout    - Checkout Simonhj edition of Artemis Source"
 
 webkit:
 	@echo "Building release QtWebKit"
@@ -33,7 +32,7 @@ ifeq ($(UNAME),Darwin)
 endif
 	@cp -v ./WebKit/WebKitBuild/Release/include/QtWebKit/Q* ./qt/include/QtWebKit
 	@cp -v ./WebKit/Source/WebKit/qt/Api/*.h ./qt/include/QtWebKit
-
+	@if test -d ./qt/include/QtWebKit/instrumentation; then echo "Instrumentation dir present in Qt install"; else mkdir ./qt/include/QtWebKit/instrumentation; fi
 	@cp -v ./WebKit/Source/WebCore/instrumentation/executionlistener.h ./qt/include/QtWebKit/instrumentation
 
 artemis:
