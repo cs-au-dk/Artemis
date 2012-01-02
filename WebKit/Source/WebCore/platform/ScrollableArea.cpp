@@ -42,16 +42,14 @@
 
 namespace WebCore {
 
-ScrollableArea::ScrollableArea(ScrollableAreaClient* client)
-    : m_client(client)
-    , m_constrainsScrollingToContentEdge(true)
+ScrollableArea::ScrollableArea()
+    : m_constrainsScrollingToContentEdge(true)
     , m_inLiveResize(false)
     , m_verticalScrollElasticity(ScrollElasticityNone)
     , m_horizontalScrollElasticity(ScrollElasticityNone)
     , m_scrollbarOverlayStyle(ScrollbarOverlayStyleDefault)
     , m_scrollOriginChanged(false)
 {
-    // FIXME: If no client was supplied, create a default one.
 }
 
 ScrollableArea::~ScrollableArea()
@@ -277,6 +275,11 @@ void ScrollableArea::didAddHorizontalScrollbar(Scrollbar* scrollbar)
 
     // <rdar://problem/9797253> AppKit resets the scrollbar's style when you attach a scrollbar
     setScrollbarOverlayStyle(scrollbarOverlayStyle());
+}
+
+void ScrollableArea::contentsResized()
+{
+    scrollAnimator()->contentsResized();
 }
 
 void ScrollableArea::willRemoveHorizontalScrollbar(Scrollbar* scrollbar)

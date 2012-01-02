@@ -2138,29 +2138,59 @@ PassRefPtr<CSSValue> CSSComputedStyleDeclaration::getPropertyCSSValue(int proper
         /* Shorthand properties, currently not supported see bug 13658*/
         case CSSPropertyBackground:
         case CSSPropertyBorder:
-        case CSSPropertyBorderBottom:
-        case CSSPropertyBorderColor:
-        case CSSPropertyBorderLeft:
+            break;
+        case CSSPropertyBorderBottom: {
+            const int properties[3] = { CSSPropertyBorderBottomWidth, CSSPropertyBorderBottomStyle,
+                                        CSSPropertyBorderBottomColor };
+            return getCSSPropertyValuesForShorthandProperties(properties, WTF_ARRAY_LENGTH(properties));
+        }
+        case CSSPropertyBorderColor: {
+            const int properties[4] = { CSSPropertyBorderTopColor, CSSPropertyBorderRightColor,
+                                        CSSPropertyBorderBottomColor, CSSPropertyBorderLeftColor };
+            return getCSSPropertyValuesForShorthandProperties(properties, WTF_ARRAY_LENGTH(properties));
+        }
+        case CSSPropertyBorderLeft: {
+            const int properties[3] = { CSSPropertyBorderLeftWidth, CSSPropertyBorderLeftStyle,
+                                        CSSPropertyBorderLeftColor };
+            return getCSSPropertyValuesForShorthandProperties(properties, WTF_ARRAY_LENGTH(properties));
+        }
         case CSSPropertyBorderImage:
         case CSSPropertyBorderRadius:
-        case CSSPropertyBorderRight:
-        case CSSPropertyBorderStyle:
-        case CSSPropertyBorderTop:
             break;
+        case CSSPropertyBorderRight: {
+            const int properties[3] = { CSSPropertyBorderRightWidth, CSSPropertyBorderRightStyle,
+                                        CSSPropertyBorderRightColor };
+            return getCSSPropertyValuesForShorthandProperties(properties, WTF_ARRAY_LENGTH(properties));
+        }
+        case CSSPropertyBorderStyle: {
+            const int properties[4] = { CSSPropertyBorderTopStyle, CSSPropertyBorderRightStyle,
+                                        CSSPropertyBorderBottomStyle, CSSPropertyBorderLeftStyle };
+            return getCSSPropertyValuesForShorthandProperties(properties, WTF_ARRAY_LENGTH(properties));
+        }
+        case CSSPropertyBorderTop: {
+            const int properties[3] = { CSSPropertyBorderTopWidth, CSSPropertyBorderTopStyle,
+                                        CSSPropertyBorderTopColor };
+            return getCSSPropertyValuesForShorthandProperties(properties, WTF_ARRAY_LENGTH(properties));
+        }
         case CSSPropertyBorderWidth: {
-            RefPtr<CSSValueList> list = CSSValueList::createSpaceSeparated();
-            list->append(zoomAdjustedPixelValue(style->borderTopWidth(), style.get(), cssValuePool));
-            list->append(zoomAdjustedPixelValue(style->borderRightWidth(), style.get(), cssValuePool));
-            list->append(zoomAdjustedPixelValue(style->borderBottomWidth(), style.get(), cssValuePool));
-            list->append(zoomAdjustedPixelValue(style->borderLeftWidth(), style.get(), cssValuePool));
-            return list.release();
+            const int properties[4] = { CSSPropertyBorderTopWidth, CSSPropertyBorderRightWidth,
+                                        CSSPropertyBorderBottomWidth, CSSPropertyBorderLeftWidth };
+            return getCSSPropertyValuesForShorthandProperties(properties, WTF_ARRAY_LENGTH(properties));
         }
         case CSSPropertyListStyle:
-        case CSSPropertyMargin:
-        case CSSPropertyOutline:
-        case CSSPropertyPadding:
             break;
-
+        case CSSPropertyMargin: {
+            const int properties[4] = { CSSPropertyMarginTop, CSSPropertyMarginRight,
+                                        CSSPropertyMarginBottom, CSSPropertyMarginLeft };
+            return getCSSPropertyValuesForShorthandProperties(properties, WTF_ARRAY_LENGTH(properties));
+        }
+        case CSSPropertyOutline:
+            break;
+        case CSSPropertyPadding: {
+            const int properties[4] = { CSSPropertyPaddingTop, CSSPropertyPaddingRight,
+                                        CSSPropertyPaddingBottom, CSSPropertyPaddingLeft };
+            return getCSSPropertyValuesForShorthandProperties(properties, WTF_ARRAY_LENGTH(properties));
+        }
         /* Individual properties not part of the spec */
         case CSSPropertyBackgroundRepeatX:
         case CSSPropertyBackgroundRepeatY:
@@ -2371,6 +2401,16 @@ PassRefPtr<CSSMutableStyleDeclaration> CSSComputedStyleDeclaration::copy() const
 PassRefPtr<CSSMutableStyleDeclaration> CSSComputedStyleDeclaration::makeMutable()
 {
     return copy();
+}
+
+PassRefPtr<CSSValueList> CSSComputedStyleDeclaration::getCSSPropertyValuesForShorthandProperties(const int* properties, size_t size) const
+{
+    RefPtr<CSSValueList> list = CSSValueList::createSpaceSeparated();
+    for (size_t i = 0; i < size; ++i) {
+        RefPtr<CSSValue> value = getPropertyCSSValue(properties[i], DoNotUpdateLayout);
+        list->append(value);
+    }
+    return list.release();
 }
 
 } // namespace WebCore

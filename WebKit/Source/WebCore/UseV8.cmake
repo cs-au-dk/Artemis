@@ -67,7 +67,6 @@ LIST(APPEND WebCore_SOURCES
     bindings/v8/custom/V8ArrayBufferCustom.cpp
     bindings/v8/custom/V8ArrayBufferViewCustom.cpp
     bindings/v8/custom/V8AudioContextCustom.cpp
-    bindings/v8/custom/V8AudioNodeCustom.cpp
     bindings/v8/custom/V8CSSRuleCustom.cpp
     bindings/v8/custom/V8CSSStyleDeclarationCustom.cpp
     bindings/v8/custom/V8CSSStyleSheetCustom.cpp
@@ -246,13 +245,24 @@ ADD_CUSTOM_COMMAND(
 LIST(APPEND WebCore_SOURCES ${DERIVED_SOURCES_WEBCORE_DIR}/V8ArrayBufferViewCustomScript.h)
 
 # Create JavaScript C++ code given an IDL input
+FOREACH (_idl ${WebCore_IDL_FILES})
+    SET(IDL_FILES_LIST "${IDL_FILES_LIST}${WEBCORE_DIR}/${_idl}\n")
+ENDFOREACH ()
+FILE(WRITE ${IDL_FILES_TMP} ${IDL_FILES_LIST})
+
+ADD_CUSTOM_COMMAND(
+    OUTPUT ${SUPPLEMENTAL_DEPENDENCY_FILE}
+    DEPENDS ${WEBCORE_DIR}/bindings/scripts/resolve-supplemental.pl ${SCRIPTS_RESOLVE_SUPPLEMENTAL} ${WebCore_IDL_FILES}
+    COMMAND ${PERL_EXECUTABLE} -I${WEBCORE_DIR}/bindings/scripts ${WEBCORE_DIR}/bindings/scripts/resolve-supplemental.pl --defines "${FEATURE_DEFINES_JAVASCRIPT}" --idlFilesList ${IDL_FILES_TMP} --preprocessor "${CODE_GENERATOR_PREPROCESSOR}" --supplementalDependencyFile ${SUPPLEMENTAL_DEPENDENCY_FILE}
+    VERBATIM)
+
 FOREACH (_file ${WebCore_IDL_FILES})
     GET_FILENAME_COMPONENT (_name ${_file} NAME_WE)
     ADD_CUSTOM_COMMAND(
         OUTPUT  ${DERIVED_SOURCES_WEBCORE_DIR}/V8${_name}.cpp ${DERIVED_SOURCES_WEBCORE_DIR}/V8${_name}.h
         MAIN_DEPENDENCY ${_file}
-        DEPENDS ${WEBCORE_DIR}/bindings/scripts/generate-bindings.pl ${SCRIPTS_BINDINGS} ${WEBCORE_DIR}/bindings/scripts/CodeGeneratorV8.pm ${_file}
-        COMMAND ${PERL_EXECUTABLE} -I${WEBCORE_DIR}/bindings/scripts ${WEBCORE_DIR}/bindings/scripts/generate-bindings.pl --defines "${FEATURE_DEFINES_JAVASCRIPT}" --generator V8 ${IDL_INCLUDES} --outputDir "${DERIVED_SOURCES_WEBCORE_DIR}" --preprocessor "${CODE_GENERATOR_PREPROCESSOR}" ${WEBCORE_DIR}/${_file}
+        DEPENDS ${WEBCORE_DIR}/bindings/scripts/generate-bindings.pl ${SCRIPTS_BINDINGS} ${WEBCORE_DIR}/bindings/scripts/CodeGeneratorV8.pm ${SUPPLEMENTAL_DEPENDENCY_FILE}
+        COMMAND ${PERL_EXECUTABLE} -I${WEBCORE_DIR}/bindings/scripts ${WEBCORE_DIR}/bindings/scripts/generate-bindings.pl --defines "${FEATURE_DEFINES_JAVASCRIPT}" --generator V8 ${IDL_INCLUDES} --outputDir "${DERIVED_SOURCES_WEBCORE_DIR}" --preprocessor "${CODE_GENERATOR_PREPROCESSOR}" --supplementalDependencyFile ${SUPPLEMENTAL_DEPENDENCY_FILE} ${WEBCORE_DIR}/${_file}
         VERBATIM)
     LIST(APPEND WebCore_SOURCES ${DERIVED_SOURCES_WEBCORE_DIR}/V8${_name}.cpp)
 ENDFOREACH ()

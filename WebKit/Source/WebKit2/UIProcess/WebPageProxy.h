@@ -559,8 +559,8 @@ public:
     void endPrinting();
     void computePagesForPrinting(WebFrameProxy*, const PrintInfo&, PassRefPtr<ComputedPagesCallback>);
 #if PLATFORM(MAC) || PLATFORM(WIN)
-    void drawRectToPDF(WebFrameProxy*, const WebCore::IntRect&, PassRefPtr<DataCallback>);
-    void drawPagesToPDF(WebFrameProxy*, uint32_t first, uint32_t count, PassRefPtr<DataCallback>);
+    void drawRectToPDF(WebFrameProxy*, const PrintInfo&, const WebCore::IntRect&, PassRefPtr<DataCallback>);
+    void drawPagesToPDF(WebFrameProxy*, const PrintInfo&, uint32_t first, uint32_t count, PassRefPtr<DataCallback>);
 #endif
 
     const String& pendingAPIRequestURL() const { return m_pendingAPIRequestURL; }
@@ -592,6 +592,9 @@ public:
 
     void printMainFrame();
 
+    // WebPopupMenuProxy::Client
+    virtual NativeWebMouseEvent* currentlyProcessedMouseDownEvent();
+
 private:
     WebPageProxy(PageClient*, PassRefPtr<WebProcessProxy>, WebPageGroup*, uint64_t pageID);
 
@@ -600,7 +603,6 @@ private:
     // WebPopupMenuProxy::Client
     virtual void valueChangedForPopupMenu(WebPopupMenuProxy*, int32_t newSelectedIndex);
     virtual void setTextFromItemForPopupMenu(WebPopupMenuProxy*, int32_t index);
-    virtual NativeWebMouseEvent* currentlyProcessedMouseDownEvent();
 #if PLATFORM(GTK)
     virtual void failedToShowPopupMenu();
 #endif    

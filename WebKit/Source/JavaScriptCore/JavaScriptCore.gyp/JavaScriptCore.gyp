@@ -62,7 +62,6 @@
       # its dependents.
       'target_name': 'wtf_config',
       'type': 'none',
-      'msvs_guid': '2E2D3301-2EC4-4C0F-B889-87073B30F673',
       'direct_dependent_settings': {
         'defines': [
           # Import features_defines from features.gypi
@@ -103,7 +102,7 @@
     {
       'target_name': 'wtf',
       'type': 'static_library',
-      'msvs_guid': 'AA8A5A85-592B-4357-BC60-E0E91E026AF6',
+      'variables': { 'optimize': 'max' },
       'dependencies': [
         'wtf_config',
         '<(chromium_src_dir)/third_party/icu/icu.gyp:icui18n',
@@ -204,7 +203,7 @@
           'dependencies': ['<(chromium_src_dir)/build/win/system.gyp:cygwin'],
         }],
       ],
-      'msvs_guid': '49909552-0B0C-4C14-8CF6-DB8A2ADE0934',
+      'variables': { 'optimize': 'max' },
       'actions': [
         {
           'action_name': 'retgen',
@@ -241,9 +240,3 @@
     },
   ], # targets
 }
-
-# Local Variables:
-# tab-width:2
-# indent-tabs-mode:nil
-# End:
-# vim: set expandtab tabstop=2 shiftwidth=2:

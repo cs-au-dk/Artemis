@@ -105,7 +105,12 @@ void MemoryCache::revalidationSucceeded(CachedResource* revalidatingResource, co
     ASSERT(!resource->inCache());
     ASSERT(resource->isLoaded());
     ASSERT(revalidatingResource->inCache());
-    
+
+    // Calling evict() can potentially delete revalidatingResource, which we use
+    // below. This mustn't be the case since revalidation means it is loaded
+    // and so canDelete() is false.
+    ASSERT(!revalidatingResource->canDelete());
+
     evict(revalidatingResource);
 
     ASSERT(!m_resources.get(resource->url()));
@@ -481,7 +486,7 @@ void MemoryCache::insertInLRUList(CachedResource* resource)
     if (!resource->m_nextInAllResourcesList)
         list->m_tail = resource;
         
-#ifndef NDEBUG
+#if !ASSERT_DISABLED
     // Verify that we are in now in the list like we should be.
     list = lruListFor(resource);
     bool found = false;
@@ -547,7 +552,7 @@ void MemoryCache::removeFromLiveDecodedResourcesList(CachedResource* resource)
         return;
     resource->m_inLiveDecodedResourcesList = false;
 
-#ifndef NDEBUG
+#if !ASSERT_DISABLED
     // Verify that we are in fact in this list.
     bool found = false;
     for (CachedResource* current = m_liveDecodedResources.m_head; current; current = current->m_nextInLiveResourcesList) {
@@ -593,7 +598,7 @@ void MemoryCache::insertInLiveDecodedResourcesList(CachedResource* resource)
     if (!resource->m_nextInLiveResourcesList)
         m_liveDecodedResources.m_tail = resource;
         
-#ifndef NDEBUG
+#if !ASSERT_DISABLED
     // Verify that we are in now in the list like we should be.
     bool found = false;
     for (CachedResource* current = m_liveDecodedResources.m_head; current; current = current->m_nextInLiveResourcesList) {

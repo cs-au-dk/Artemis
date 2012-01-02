@@ -26,7 +26,6 @@
 #ifndef HTMLSelectElement_h
 #define HTMLSelectElement_h
 
-#include "CollectionCache.h"
 #include "Event.h"
 #include "HTMLFormControlElement.h"
 #include <wtf/Vector.h>
@@ -39,6 +38,8 @@ class HTMLOptionsCollection;
 class HTMLSelectElement : public HTMLFormControlElementWithState {
 public:
     static PassRefPtr<HTMLSelectElement> create(const QualifiedName&, Document*, HTMLFormElement*);
+
+    virtual ~HTMLSelectElement();
 
     int selectedIndex() const;
     void setSelectedIndex(int);
@@ -83,8 +84,6 @@ public:
 
     Node* namedItem(const AtomicString& name);
     Node* item(unsigned index);
-
-    CollectionCache* collectionInfo() { m_collectionInfo.checkConsistency(); return &m_collectionInfo; }
 
     void scrollToSelection();
 
@@ -176,7 +175,8 @@ private:
 
     virtual void childrenChanged(bool changedByParser = false, Node* beforeChange = 0, Node* afterChange = 0, int childCountDelta = 0);
 
-    CollectionCache m_collectionInfo;
+    RefPtr<HTMLOptionsCollection> m_optionsCollection;
+
     // m_listItems contains HTMLOptionElement, HTMLOptGroupElement, and HTMLHRElement objects.
     mutable Vector<HTMLElement*> m_listItems;
     Vector<bool> m_lastOnChangeSelection;

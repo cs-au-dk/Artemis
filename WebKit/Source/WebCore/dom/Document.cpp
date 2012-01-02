@@ -542,9 +542,6 @@ Document::~Document()
 
     m_decoder = 0;
 
-    for (size_t i = 0; i < m_nameCollectionInfo.size(); ++i)
-        deleteAllValues(m_nameCollectionInfo[i]);
-
     if (m_styleSheets)
         m_styleSheets->documentDestroyed();
 
@@ -569,6 +566,14 @@ Document::~Document()
 
     if (m_mediaQueryMatcher)
         m_mediaQueryMatcher->documentDestroyed();
+
+    for (unsigned i = 0; i < NumUnnamedDocumentCachedTypes; ++i) {
+        if (m_collections[i])
+            m_collections[i]->detachFromNode();
+    }
+
+    if (m_allCollection)
+        m_allCollection->detachFromNode();
 }
 
 void Document::removedLastRef()
@@ -1699,9 +1704,9 @@ PassRefPtr<RenderStyle> Document::styleForPage(int pageIndex)
     return style.release();
 }
 
-void Document::registerCustomFont(FontData* fontData)
+void Document::registerCustomFont(PassOwnPtr<FontData> fontData)
 {
-    m_customFonts.append(adoptPtr(fontData));
+    m_customFonts.append(fontData);
 }
 
 void Document::deleteCustomFonts()
@@ -2553,7 +2558,7 @@ const Vector<RefPtr<CSSStyleSheet> >* Document::pageGroupUserSheets() const
 
     UserStyleSheetMap::const_iterator end = sheetsMap->end();
     for (UserStyleSheetMap::const_iterator it = sheetsMap->begin(); it != end; ++it) {
-        const UserStyleSheetVector* sheets = it->second;
+        const UserStyleSheetVector* sheets = it->second.get();
         for (unsigned i = 0; i < sheets->size(); ++i) {
             const UserStyleSheet* sheet = sheets->at(i).get();
             if (sheet->injectedFrames() == InjectInTopFrameOnly && ownerElement())
@@ -3096,7 +3101,7 @@ void Document::recalcStyleSelector()
                 if (linkElement->isDisabled())
                     continue;
                 enabledViaScript = linkElement->isEnabledViaScript();
-                if (linkElement->isStyleSheetLoading()) {
+                if (linkElement->styleSheetIsLoading()) {
                     // it is loading but we should still decide which style sheet set to use
                     if (!enabledViaScript && !title.isEmpty() && m_preferredStylesheetSet.isEmpty()) {
                         const AtomicString& rel = e->getAttribute(relAttr);
@@ -4198,7 +4203,7 @@ const RefPtr<HTMLCollection>& Document::cachedCollection(CollectionType type)
 {
     ASSERT(static_cast<unsigned>(type) < NumUnnamedDocumentCachedTypes);
     if (!m_collections[type])
-        m_collections[type] = HTMLCollection::createForCachingOnDocument(this, type);
+        m_collections[type] = HTMLCollection::create(this, type);
     return m_collections[type];
 }
 
@@ -4255,28 +4260,20 @@ PassRefPtr<HTMLAllCollection> Document::all()
     return m_allCollection;
 }
 
-PassRefPtr<HTMLCollection> Document::windowNamedItems(const String &name)
+PassRefPtr<HTMLCollection> Document::windowNamedItems(const AtomicString& name)
 {
-    return HTMLNameCollection::create(this, WindowNamedItems, name);
+    RefPtr<HTMLNameCollection>& collection = m_windowNamedItemCollections.add(name.impl(), 0).first->second;
+    if (!collection)
+        collection = HTMLNameCollection::create(this, WindowNamedItems, name);
+    return collection;
 }
 
-PassRefPtr<HTMLCollection> Document::documentNamedItems(const String &name)
+PassRefPtr<HTMLCollection> Document::documentNamedItems(const AtomicString& name)
 {
-    return HTMLNameCollection::create(this, DocumentNamedItems, name);
-}
-
-CollectionCache* Document::nameCollectionInfo(CollectionType type, const AtomicString& name)
-{
-    ASSERT(type >= FirstNamedDocumentCachedType);
-    unsigned index = type - FirstNamedDocumentCachedType;
-    ASSERT(index < NumNamedDocumentCachedTypes);
-
-    NamedCollectionMap& map = m_nameCollectionInfo[index];
-    NamedCollectionMap::iterator iter = map.find(name.impl());
-    if (iter == map.end())
-        iter = map.add(name.impl(), new CollectionCache).first;
-    iter->second->checkConsistency();
-    return iter->second;
+    RefPtr<HTMLNameCollection>& collection = m_documentNamedItemCollections.add(name.impl(), 0).first->second;
+    if (!collection)
+        collection = HTMLNameCollection::create(this, DocumentNamedItems, name);
+    return collection;
 }
 
 void Document::finishedParsing()
@@ -4313,10 +4310,10 @@ Vector<String> Document::formElementsState() const
     typedef FormElementListHashSet::const_iterator Iterator;
     Iterator end = m_formElementsWithState.end();
     for (Iterator it = m_formElementsWithState.begin(); it != end; ++it) {
-        Element* elementWithState = *it;
-        String value;
+        HTMLFormControlElementWithState* elementWithState = *it;
         if (!elementWithState->shouldSaveAndRestoreFormControlState())
             continue;
+        String value;
         if (!elementWithState->saveFormControlState(value))
             continue;
         stateVector.append(elementWithState->formControlName().string());
@@ -4674,21 +4671,19 @@ void Document::detachRange(Range* range)
 
 CanvasRenderingContext* Document::getCSSCanvasContext(const String& type, const String& name, int width, int height)
 {
-    HTMLCanvasElement* result = getCSSCanvasElement(name);
-    if (!result)
+    HTMLCanvasElement* element = getCSSCanvasElement(name);
+    if (!element)
         return 0;
-    result->setSize(IntSize(width, height));
-    return result->getContext(type);
+    element->setSize(IntSize(width, height));
+    return element->getContext(type);
 }
 
 HTMLCanvasElement* Document::getCSSCanvasElement(const String& name)
 {
-    RefPtr<HTMLCanvasElement> result = m_cssCanvasElements.get(name).get();
-    if (!result) {
-        result = HTMLCanvasElement::create(this);
-        m_cssCanvasElements.set(name, result);
-    }
-    return result.get();
+    RefPtr<HTMLCanvasElement>& element = m_cssCanvasElements.add(name, 0).first->second;
+    if (!element)
+        element = HTMLCanvasElement::create(this);
+    return element.get();
 }
 
 void Document::initDNSPrefetch()

@@ -29,7 +29,6 @@
 #define Document_h
 
 #include "CheckedRadioButtons.h"
-#include "CollectionCache.h"
 #include "CollectionType.h"
 #include "Color.h"
 #include "DOMTimeStamp.h"
@@ -93,11 +92,13 @@ class HTMLCollection;
 class HTMLAllCollection;
 class HTMLDocument;
 class HTMLElement;
+class HTMLFormControlElementWithState;
 class HTMLFormElement;
 class HTMLFrameOwnerElement;
 class HTMLHeadElement;
 class HTMLInputElement;
 class HTMLMapElement;
+class HTMLNameCollection;
 class HitTestRequest;
 class HitTestResult;
 class IntPoint;
@@ -223,9 +224,6 @@ public:
         return adoptRef(new Document(frame, url, true, false));
     }
     virtual ~Document();
-
-    typedef ListHashSet<Element*, 64> FormElementListHashSet;
-    const FormElementListHashSet* getFormElements() const { return &m_formElementsWithState; }    
 
     MediaQueryMatcher* mediaQueryMatcher();
 
@@ -421,21 +419,10 @@ public:
     PassRefPtr<HTMLCollection> anchors();
     PassRefPtr<HTMLCollection> objects();
     PassRefPtr<HTMLCollection> scripts();
-    PassRefPtr<HTMLCollection> windowNamedItems(const String& name);
-    PassRefPtr<HTMLCollection> documentNamedItems(const String& name);
+    PassRefPtr<HTMLCollection> windowNamedItems(const AtomicString& name);
+    PassRefPtr<HTMLCollection> documentNamedItems(const AtomicString& name);
 
     PassRefPtr<HTMLAllCollection> all();
-
-    CollectionCache* collectionInfo(CollectionType type)
-    {
-        ASSERT(type >= FirstUnnamedDocumentCachedType);
-        unsigned index = type - FirstUnnamedDocumentCachedType;
-        ASSERT(index < NumUnnamedDocumentCachedTypes);
-        m_collectionInfo[index].checkConsistency();
-        return &m_collectionInfo[index]; 
-    }
-
-    CollectionCache* nameCollectionInfo(CollectionType, const AtomicString& name);
 
     // Other methods (not part of DOM)
     bool isHTMLDocument() const { return m_isHTML; }
@@ -519,12 +506,14 @@ public:
     void setUsesLinkRules(bool b) { m_usesLinkRules = b; }
 
     // Machinery for saving and restoring state when you leave and then go back to a page.
-    void registerFormElementWithState(Element* e) { m_formElementsWithState.add(e); }
-    void unregisterFormElementWithState(Element* e) { m_formElementsWithState.remove(e); }
+    void registerFormElementWithState(HTMLFormControlElementWithState* control) { m_formElementsWithState.add(control); }
+    void unregisterFormElementWithState(HTMLFormControlElementWithState* control) { m_formElementsWithState.remove(control); }
     Vector<String> formElementsState() const;
     void setStateForNewFormElements(const Vector<String>&);
     bool hasStateForNewFormElements() const;
     bool takeStateForFormElement(AtomicStringImpl* name, AtomicStringImpl* type, String& state);
+    typedef ListHashSet<HTMLFormControlElementWithState*, 64> FormElementListHashSet;
+    const FormElementListHashSet* formElements() const { return &m_formElementsWithState; }
 
     void registerFormElementWithFormAttribute(FormAssociatedElement*);
     void unregisterFormElementWithFormAttribute(FormAssociatedElement*);
@@ -555,7 +544,7 @@ public:
     PassRefPtr<RenderStyle> styleForElementIgnoringPendingStylesheets(Element*);
     PassRefPtr<RenderStyle> styleForPage(int pageIndex);
 
-    void registerCustomFont(FontData*);
+    void registerCustomFont(PassOwnPtr<FontData>);
 
     // Returns true if page box (margin boxes and page borders) is visible.
     bool isPageBoxVisible(int pageIndex);
@@ -1372,9 +1361,9 @@ private:
     RefPtr<HTMLCollection> m_collections[NumUnnamedDocumentCachedTypes];
     RefPtr<HTMLAllCollection> m_allCollection;
 
-    typedef HashMap<AtomicStringImpl*, CollectionCache*> NamedCollectionMap;
-    FixedArray<CollectionCache, NumUnnamedDocumentCachedTypes> m_collectionInfo;
-    FixedArray<NamedCollectionMap, NumNamedDocumentCachedTypes> m_nameCollectionInfo;
+    typedef HashMap<AtomicStringImpl*, RefPtr<HTMLNameCollection> > NamedCollectionMap;
+    NamedCollectionMap m_documentNamedItemCollections;
+    NamedCollectionMap m_windowNamedItemCollections;
 
     RefPtr<XPathEvaluator> m_xpathEvaluator;
 

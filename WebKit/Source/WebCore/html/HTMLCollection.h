@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 1999 Lars Knoll (knoll@kde.org)
  *           (C) 1999 Antti Koivisto (koivisto@kde.org)
- * Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008 Apple Inc. All rights reserved.
+ * Copyright (C) 2003, 2004, 2005, 2006, 2007, 2008, 2011, 2012 Apple Inc. All rights reserved.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -36,14 +36,11 @@ class Element;
 class Node;
 class NodeList;
 
-struct CollectionCache;
-
 class HTMLCollection : public RefCounted<HTMLCollection> {
 public:
-    static PassRefPtr<HTMLCollection> create(PassRefPtr<Node> base, CollectionType);
-    static PassRefPtr<HTMLCollection> createForCachingOnDocument(Document*, CollectionType);
+    static PassRefPtr<HTMLCollection> create(Node* base, CollectionType);
     virtual ~HTMLCollection();
-    
+
     unsigned length() const;
     
     virtual Node* item(unsigned index) const;
@@ -61,15 +58,43 @@ public:
     Node* base() const { return m_base; }
     CollectionType type() const { return static_cast<CollectionType>(m_type); }
 
-protected:
-    HTMLCollection(PassRefPtr<Node> base, CollectionType, CollectionCache* = 0);
-    HTMLCollection(Document*, CollectionType);
+    void detachFromNode();
 
-    CollectionCache* info() const { return m_info; }
-    void resetCollectionInfo() const;
+protected:
+    HTMLCollection(Node* base, CollectionType);
+
+    void invalidateCacheIfNeeded() const;
 
     virtual void updateNameCache() const;
     virtual Element* itemAfter(Element*) const;
+
+    typedef HashMap<AtomicStringImpl*, OwnPtr<Vector<Element*> > > NodeCacheMap;
+    static void append(NodeCacheMap&, const AtomicString&, Element*);
+
+    mutable struct {
+        NodeCacheMap idCache;
+        NodeCacheMap nameCache;
+        uint64_t version;
+        Element* current;
+        unsigned position;
+        unsigned length;
+        int elementsArrayPosition;
+        bool hasLength;
+        bool hasNameCache;
+
+        void clear()
+        {
+            idCache.clear();
+            nameCache.clear();
+            version = 0;
+            current = 0;
+            position = 0;
+            length = 0;
+            elementsArrayPosition = 0;
+            hasLength = false;
+            hasNameCache = false;
+        }
+    } m_cache;
 
 private:
     static bool shouldIncludeChildren(CollectionType);
@@ -79,14 +104,10 @@ private:
 
     bool isAcceptableElement(Element*) const;
 
-    bool m_baseIsRetained : 1;
     bool m_includeChildren : 1;
-    mutable bool m_ownsInfo : 1;
     unsigned m_type : 5; // CollectionType
 
     Node* m_base;
-
-    mutable CollectionCache* m_info;
 };
 
 } // namespace

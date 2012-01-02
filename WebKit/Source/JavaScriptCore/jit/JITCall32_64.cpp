@@ -149,7 +149,7 @@ void JIT::compileLoadVarargs(Instruction* instruction)
         emitLoadTag(arguments, regT1);
         slowCase.append(branch32(NotEqual, regT1, TrustedImm32(JSValue::EmptyValueTag)));
 
-        emitGetFromCallFrameHeader32(RegisterFile::ArgumentCount, regT2);
+        load32(payloadFor(RegisterFile::ArgumentCount), regT2);
         slowCase.append(branch32(Above, regT2, TrustedImm32(Arguments::MaxArguments + 1)));
         // regT2: argumentCountIncludingThis
 
@@ -162,7 +162,6 @@ void JIT::compileLoadVarargs(Instruction* instruction)
         slowCase.append(branchPtr(Below, AbsoluteAddress(m_globalData->interpreter->registerFile().addressOfEnd()), regT3));
 
         // Initialize ArgumentCount.
-        store32(TrustedImm32(JSValue::Int32Tag), tagFor(RegisterFile::ArgumentCount, regT3));
         store32(regT2, payloadFor(RegisterFile::ArgumentCount, regT3));
 
         // Initialize 'this'.
@@ -244,7 +243,6 @@ void JIT::compileOpCall(OpcodeID opcodeID, Instruction* instruction, unsigned ca
 
         addPtr(TrustedImm32(registerOffset * sizeof(Register)), callFrameRegister, regT3);
 
-        store32(TrustedImm32(JSValue::Int32Tag), tagFor(RegisterFile::ArgumentCount, regT3));
         store32(TrustedImm32(argCount), payloadFor(RegisterFile::ArgumentCount, regT3));
     } // regT3 holds newCallFrame with ArgumentCount initialized.
     emitLoad(callee, regT1, regT0); // regT1, regT0 holds callee.

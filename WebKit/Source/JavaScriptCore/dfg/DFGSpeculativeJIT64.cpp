@@ -802,7 +802,7 @@ void SpeculativeJIT::nonSpeculativePeepholeStrictEq(Node& node, NodeIndex branch
         callOperation(operationCompareStrictEqCell, resultGPR, arg1GPR, arg2GPR);
         silentFillAllRegisters(resultGPR);
         
-        addBranch(m_jit.branchTest32(invert ? JITCompiler::NonZero : JITCompiler::Zero, resultGPR), taken);
+        addBranch(m_jit.branchTest32(invert ? JITCompiler::Zero : JITCompiler::NonZero, resultGPR), taken);
     } else {
         m_jit.orPtr(arg1GPR, arg2GPR, resultGPR);
         
@@ -924,7 +924,7 @@ void SpeculativeJIT::emitCall(Node& node)
     // receiver (method call). subsequent children are the arguments.
     int numPassedArgs = node.numChildren() - 1;
     
-    m_jit.storePtr(MacroAssembler::TrustedImmPtr(JSValue::encode(jsNumber(numPassedArgs + dummyThisArgument))), callFrameSlot(RegisterFile::ArgumentCount));
+    m_jit.store32(MacroAssembler::TrustedImm32(numPassedArgs + dummyThisArgument), callFramePayloadSlot(RegisterFile::ArgumentCount));
     m_jit.storePtr(GPRInfo::callFrameRegister, callFrameSlot(RegisterFile::CallerFrame));
     m_jit.storePtr(calleeGPR, callFrameSlot(RegisterFile::Callee));
     
@@ -2286,8 +2286,12 @@ void SpeculativeJIT::compile(Node& node)
     }
 
     case GetByVal: {
-        PredictedType basePrediction = at(node.child2()).prediction();
-        if (!(basePrediction & PredictInt32) && basePrediction) {
+        if (!node.prediction() || !at(node.child1()).prediction() || !at(node.child2()).prediction()) {
+            terminateSpeculativeExecution(Uncountable, JSValueRegs(), NoNode);
+            break;
+        }
+        
+        if (!at(node.child2()).shouldSpeculateInteger() || !isActionableArrayPrediction(at(node.child1()).prediction())) {
             JSValueOperand base(this, node.child1());
             JSValueOperand property(this, node.child2());
             GPRReg baseGPR = base.gpr();
@@ -2370,6 +2374,8 @@ void SpeculativeJIT::compile(Node& node)
                 return;
             break;            
         }
+        
+        ASSERT(at(node.child1()).shouldSpeculateArray());
 
         SpeculateCellOperand base(this, node.child1());
         SpeculateStrictInt32Operand property(this, node.child2());
@@ -2398,8 +2404,12 @@ void SpeculativeJIT::compile(Node& node)
     }
 
     case PutByVal: {
-        PredictedType basePrediction = at(node.child2()).prediction();
-        if (!(basePrediction & PredictInt32) && basePrediction) {
+        if (!at(node.child1()).prediction() || !at(node.child2()).prediction()) {
+            terminateSpeculativeExecution(Uncountable, JSValueRegs(), NoNode);
+            break;
+        }
+        
+        if (!at(node.child2()).shouldSpeculateInteger() || !isActionableMutableArrayPrediction(at(node.child1()).prediction())) {
             JSValueOperand arg1(this, node.child1());
             JSValueOperand arg2(this, node.child2());
             JSValueOperand arg3(this, node.child3());
@@ -2476,6 +2486,8 @@ void SpeculativeJIT::compile(Node& node)
                 return;
             break;            
         }
+            
+        ASSERT(at(node.child1()).shouldSpeculateArray());
 
         JSValueOperand value(this, node.child3());
         GPRTemporary scratch(this);
@@ -2537,8 +2549,13 @@ void SpeculativeJIT::compile(Node& node)
     }
 
     case PutByValAlias: {
-        PredictedType basePrediction = at(node.child2()).prediction();
-        ASSERT_UNUSED(basePrediction, (basePrediction & PredictInt32) || !basePrediction);
+        if (!at(node.child1()).prediction() || !at(node.child2()).prediction()) {
+            terminateSpeculativeExecution(Uncountable, JSValueRegs(), NoNode);
+            break;
+        }
+        
+        ASSERT(isActionableMutableArrayPrediction(at(node.child1()).prediction()));
+        ASSERT(at(node.child2()).shouldSpeculateInteger());
 
         SpeculateCellOperand base(this, node.child1());
         SpeculateStrictInt32Operand property(this, node.child2());
@@ -2602,6 +2619,8 @@ void SpeculativeJIT::compile(Node& node)
                 return;
             break;            
         }
+        
+        ASSERT(at(node.child1()).shouldSpeculateArray());
 
         JSValueOperand value(this, node.child3());
         GPRTemporary scratch(this);
@@ -2922,7 +2941,7 @@ void SpeculativeJIT::compile(Node& node)
                 speculationCheck(BadType, JSValueRegs(thisValueGPR), node.child1(), m_jit.branchPtr(MacroAssembler::NotEqual, scratchGPR, MacroAssembler::TrustedImmPtr(reinterpret_cast<void*>(ValueNull))));
             }
             
-            m_jit.move(MacroAssembler::TrustedImmPtr(m_jit.globalObjectFor(node.codeOrigin)), scratchGPR);
+            m_jit.move(MacroAssembler::TrustedImmPtr(m_jit.globalThisObjectFor(node.codeOrigin)), scratchGPR);
             cellResult(scratchGPR, m_compileIndex);
             break;
         }

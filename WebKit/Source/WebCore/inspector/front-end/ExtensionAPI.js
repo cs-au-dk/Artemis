@@ -169,7 +169,7 @@ function InspectorExtensionAPI()
     this.network = new Network();
     defineDeprecatedProperty(this, "webInspector", "resources", "network");
     this.timeline = new Timeline();
-    this.console = new Console();
+    this.console = new ConsoleAPI();
 
     this.onReset = new EventSink(events.Reset);
 }
@@ -187,12 +187,12 @@ InspectorExtensionAPI.prototype = {
 /**
  * @constructor
  */
-function Console()
+function ConsoleAPI()
 {
     this.onMessageAdded = new EventSink(events.ConsoleMessageAdded);
 }
 
-Console.prototype = {
+ConsoleAPI.prototype = {
     getMessages: function(callback)
     {
         extensionServer.sendRequest({ command: commands.GetConsoleMessages }, callback);
@@ -806,19 +806,27 @@ var Timeline = declareInterfaceClass(TimelineImpl);
 
 var extensionServer = new ExtensionServerClient();
 
-window.webInspector = new InspectorExtensionAPI();
-window.experimental = window.experimental || {};
-window.experimental.webInspector = window.webInspector;
-
+return new InspectorExtensionAPI();
 }
 
-function buildExtensionAPIInjectedScript(platformAPI)
+// Default implementation; platforms will override.
+function buildPlatformExtensionAPI(extensionInfo)
+{
+    function platformExtensionAPI(coreAPI)
+    {
+        window.webInspector = coreAPI;
+    }
+    return platformExtensionAPI.toString();
+}
+
+
+function buildExtensionAPIInjectedScript(extensionInfo)
 {
     return "(function(injectedScriptHost, inspectedWindow, injectedScriptId){ " +
         defineCommonExtensionSymbols.toString() + ";" +
         injectedExtensionAPI.toString() + ";" +
-        "injectedExtensionAPI(injectedScriptId);" +
-        (platformAPI || "") + ";" +
+        buildPlatformExtensionAPI(extensionInfo) + ";" +
+        "platformExtensionAPI(injectedExtensionAPI(injectedScriptId));" +
         "return {};" +
         "})";
 }

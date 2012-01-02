@@ -33,17 +33,16 @@
  * @extends {WebInspector.Object}
  * @param {string} id
  * @param {string} url
- * @param {boolean} isContentScript
  * @param {WebInspector.RawSourceCode} rawSourceCode
  * @param {WebInspector.ContentProvider} contentProvider
  */
-WebInspector.UISourceCode = function(id, url, isContentScript, rawSourceCode, contentProvider)
+WebInspector.UISourceCode = function(id, url, rawSourceCode, contentProvider)
 {
     this._id = id;
     this._url = url;
-    this._isContentScript = isContentScript;
     this._rawSourceCode = rawSourceCode;
     this._contentProvider = contentProvider;
+    this.isContentScript = false;
     /**
      * @type Array.<function(string,string)>
      */
@@ -69,14 +68,6 @@ WebInspector.UISourceCode.prototype = {
     get url()
     {
         return this._url;
-    },
-
-    /**
-     * @return {boolean}
-     */
-    get isContentScript()
-    {
-        return this._isContentScript;
     },
 
     /**
@@ -128,7 +119,7 @@ WebInspector.UISourceCode.prototype = {
      */
     get domain()
     {
-        if (!this._domain)
+        if (typeof(this._domain) === "undefined")
             this._parseURL();
         
         return this._domain;
@@ -139,7 +130,7 @@ WebInspector.UISourceCode.prototype = {
      */
     get folderName()
     {
-        if (!this._folderName)
+        if (typeof(this._folderName) === "undefined")
             this._parseURL();
         
         return this._folderName;
@@ -148,9 +139,20 @@ WebInspector.UISourceCode.prototype = {
     /**
      * @type {string}
      */
+    get fileName()
+    {
+        if (typeof(this._fileName) === "undefined")
+            this._parseURL();
+        
+        return this._fileName;
+    },
+    
+    /**
+     * @type {string}
+     */
     get displayName()
     {
-        if (!this._displayName)
+        if (typeof(this._displayName) === "undefined")
             this._parseURL();
         
         return this._displayName;
@@ -162,26 +164,40 @@ WebInspector.UISourceCode.prototype = {
         var url = parsedURL ? parsedURL.path : this.url;
 
         var folderName = "";
-        var displayName = url;
+        var fileName = url;
 
-        var pathLength = displayName.indexOf("?");
+        var pathLength = fileName.indexOf("?");
         if (pathLength === -1)
-            pathLength = displayName.length;
+            pathLength = fileName.length;
 
-        var fromIndex = displayName.lastIndexOf("/", pathLength - 2);
+        var fromIndex = fileName.lastIndexOf("/", pathLength - 2);
         if (fromIndex !== -1) {
-            folderName = displayName.substring(0, fromIndex);
-            displayName = displayName.substring(fromIndex + 1);
+            folderName = fileName.substring(0, fromIndex);
+            fileName = fileName.substring(fromIndex + 1);
         }
 
-        if (displayName.length > 80)
-            displayName = "\u2026" + displayName.substring(displayName.length - 80);
+        var indexOfQuery = fileName.indexOf("?");
+        if (indexOfQuery === -1)
+            indexOfQuery = fileName.length;
+        var lastPathComponent = fileName.substring(0, indexOfQuery);
+        var queryParams = fileName.substring(indexOfQuery, fileName.length);
+        
+        const maxDisplayNameLength = 30;
+        const minDisplayQueryParamLength = 5;
+        
+        var maxDisplayQueryParamLength = Math.max(minDisplayQueryParamLength, maxDisplayNameLength - lastPathComponent.length);
+        var displayQueryParams = queryParams.trimEnd(maxDisplayQueryParamLength);
+        var displayLastPathComponent = lastPathComponent.trimMiddle(maxDisplayNameLength - displayQueryParams.length);
+        var displayName = displayLastPathComponent + displayQueryParams;
+        if (!displayName)
+            displayName = WebInspector.UIString("(program)");
 
         if (folderName.length > 80)
             folderName = "\u2026" + folderName.substring(folderName.length - 80);
 
         this._domain = parsedURL ? parsedURL.host : "";
         this._folderName = folderName;
+        this._fileName = fileName;
         this._displayName = displayName;
     },
 

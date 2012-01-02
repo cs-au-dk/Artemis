@@ -207,6 +207,7 @@ WebInspector.linkifyResourceAsNode = function(url, lineNumber, classes, tooltipT
 /**
  * @param {WebInspector.Resource} request
  * @param {string=} classes
+ * @return {Element}
  */
 WebInspector.linkifyRequestAsNode = function(request, classes)
 {
@@ -247,29 +248,6 @@ WebInspector.resourceURLForRelatedNode = function(node, url)
     }
     WebInspector.forAllResources(callback);
     return resourceURL;
-}
-
-/**
- * @param {WebInspector.ContextMenu} contextMenu
- * @param {Node} contextNode
- * @param {Event} event
- */
-WebInspector.populateHrefContextMenu = function(contextMenu, contextNode, event)
-{
-    var anchorElement = event.target.enclosingNodeOrSelfWithClass("webkit-html-resource-link") || event.target.enclosingNodeOrSelfWithClass("webkit-html-external-link");
-    if (!anchorElement)
-        return false;
-
-    var resourceURL = WebInspector.resourceURLForRelatedNode(contextNode, anchorElement.href);
-    if (!resourceURL)
-        return false;
-
-    // Add resource-related actions.
-    contextMenu.appendItem(WebInspector.openLinkExternallyLabel(), WebInspector.openResource.bind(WebInspector, resourceURL, false));
-    if (WebInspector.resourceForURL(resourceURL))
-        contextMenu.appendItem(WebInspector.UIString(WebInspector.useLowerCaseMenuTitles() ? "Open link in Resources panel" : "Open Link in Resources Panel"), WebInspector.openResource.bind(null, resourceURL, true));
-    contextMenu.appendItem(WebInspector.copyLinkAddressLabel(), InspectorFrontendHost.copyText.bind(InspectorFrontendHost, resourceURL));
-    return true;
 }
 
 /**

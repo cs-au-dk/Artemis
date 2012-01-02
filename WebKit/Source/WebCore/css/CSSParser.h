@@ -29,17 +29,20 @@
 #include "CSSSelector.h"
 #include "Color.h"
 #include "MediaQuery.h"
+#include <wtf/HashMap.h>
+#include <wtf/HashSet.h>
+#include <wtf/OwnArrayPtr.h>
+#include <wtf/Vector.h>
+#include <wtf/text/AtomicString.h>
+
 #if ENABLE(CSS_FILTERS)
 #include "WebKitCSSFilterValue.h"
 #endif
-#include <wtf/HashMap.h>
-#include <wtf/HashSet.h>
-#include <wtf/Vector.h>
-#include <wtf/text/AtomicString.h>
 
 namespace WebCore {
 
 class CSSBorderImageSliceValue;
+class CSSMappedAttributeDeclaration;
 class CSSMutableStyleDeclaration;
 class CSSPrimitiveValue;
 class CSSValuePool;
@@ -50,12 +53,13 @@ class CSSSelectorList;
 class CSSStyleSheet;
 class CSSValue;
 class CSSValueList;
+class CSSWrapShape;
 class Document;
 class MediaList;
 class MediaQueryExp;
+class StyledElement;
 class WebKitCSSKeyframeRule;
 class WebKitCSSKeyframesRule;
-class CSSWrapShape;
 
 class CSSParser {
 public:
@@ -69,9 +73,10 @@ public:
     static bool parseColor(RGBA32& color, const String&, bool strict = false);
     static bool parseSystemColor(RGBA32& color, const String&, Document*);
     PassRefPtr<CSSPrimitiveValue> parseValidPrimitive(int propId, CSSParserValue*);
-    bool parseColor(CSSMutableStyleDeclaration*, const String&);
     bool parseDeclaration(CSSMutableStyleDeclaration*, const String&, RefPtr<CSSStyleSourceData>* = 0, CSSStyleSheet* contextStyleSheet = 0);
     bool parseMediaQuery(MediaList*, const String&);
+
+    static bool parseMappedAttributeValue(CSSMappedAttributeDeclaration*, StyledElement*, int propertyId, const String&);
 
     Document* findDocument() const;
 
@@ -151,7 +156,7 @@ public:
     bool parseColorFromValue(CSSParserValue*, RGBA32&);
     void parseSelector(const String&, Document* doc, CSSSelectorList&);
 
-    static bool parseColor(const String&, RGBA32& rgb, bool strict);
+    static bool fastParseColor(RGBA32&, const String&, bool strict);
 
     bool parseFontStyle(bool important);
     bool parseFontVariant(bool important);
@@ -222,10 +227,10 @@ public:
     PassOwnPtr<Vector<OwnPtr<CSSParserSelector> > > sinkFloatingSelectorVector(Vector<OwnPtr<CSSParserSelector> >*);
 
     CSSParserValueList* createFloatingValueList();
-    CSSParserValueList* sinkFloatingValueList(CSSParserValueList*);
+    PassOwnPtr<CSSParserValueList> sinkFloatingValueList(CSSParserValueList*);
 
     CSSParserFunction* createFloatingFunction();
-    CSSParserFunction* sinkFloatingFunction(CSSParserFunction*);
+    PassOwnPtr<CSSParserFunction> sinkFloatingFunction(CSSParserFunction*);
 
     CSSParserValue& sinkFloatingValue(CSSParserValue&);
 
@@ -275,7 +280,7 @@ public:
     RefPtr<CSSRule> m_rule;
     RefPtr<WebKitCSSKeyframeRule> m_keyframe;
     OwnPtr<MediaQuery> m_mediaQuery;
-    CSSParserValueList* m_valueList;
+    OwnPtr<CSSParserValueList> m_valueList;
     CSSProperty** m_parsedProperties;
     CSSSelectorList* m_selectorListForParseSelector;
 
@@ -317,6 +322,7 @@ public:
 
 private:
     void setStyleSheet(CSSStyleSheet*);
+    void ensureCSSValuePool();
 
     void recheckAtKeyword(const UChar* str, int len);
 
@@ -331,7 +337,7 @@ private:
     bool isGeneratedImageValue(CSSParserValue*) const;
     bool parseGeneratedImage(CSSParserValueList*, RefPtr<CSSValue>&);
 
-    bool parseValue(CSSMutableStyleDeclaration*, int propId, const String&, bool important);
+    bool parseValue(CSSMutableStyleDeclaration*, int propId, const String&, bool important, CSSStyleSheet* contextStyleSheet = 0);
 
     enum SizeParameterType {
         None,
@@ -348,7 +354,9 @@ private:
     bool parseFontFaceSrcURI(CSSValueList*);
     bool parseFontFaceSrcLocal(CSSValueList*);
 
-    UChar* m_data;
+    bool parseColor(const String&);
+
+    OwnArrayPtr<UChar> m_data;
     UChar* yytext;
     UChar* yy_c_buf_p;
     UChar yy_hold_char;

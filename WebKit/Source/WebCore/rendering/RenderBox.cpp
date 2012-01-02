@@ -1510,10 +1510,6 @@ LayoutRect RenderBox::clippedOverflowRectForRepaint(RenderBoxModelObject* repain
     }
     
     if (style()) {
-        if (style()->hasAppearance())
-            // The theme may wish to inflate the rect used when repainting.
-            theme()->adjustRepaintRect(this, r);
-
         // We have to use maximalOutlineSize() because a child might have an outline
         // that projects outside of our overflowRect.
         if (v) {
@@ -1571,6 +1567,19 @@ void RenderBox::computeRectForRepaint(RenderBoxModelObject* repaintContainer, La
 
     if (isWritingModeRoot() && !isPositioned())
         flipForWritingMode(rect);
+
+#if ENABLE(CSS_FILTERS)
+    if (style()->hasFilterOutsets()) {
+        LayoutUnit topOutset;
+        LayoutUnit rightOutset;
+        LayoutUnit bottomOutset;
+        LayoutUnit leftOutset;
+        style()->filter().getOutsets(topOutset, rightOutset, bottomOutset, leftOutset);
+        rect.move(-leftOutset, -topOutset);
+        rect.expand(leftOutset + rightOutset, topOutset + bottomOutset);
+    }
+#endif
+
     LayoutPoint topLeft = rect.location();
     topLeft.move(x(), y());
 

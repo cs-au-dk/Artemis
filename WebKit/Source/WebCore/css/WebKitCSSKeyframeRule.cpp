@@ -38,7 +38,7 @@ WebKitCSSKeyframeRule::WebKitCSSKeyframeRule(CSSStyleSheet* parent)
 WebKitCSSKeyframeRule::~WebKitCSSKeyframeRule()
 {
     if (m_style)
-        m_style->setParentRule(0);
+        m_style->clearParentRule();
 }
 
 String WebKitCSSKeyframeRule::cssText() const
@@ -54,8 +54,8 @@ String WebKitCSSKeyframeRule::cssText() const
 
 void WebKitCSSKeyframeRule::setDeclaration(PassRefPtr<CSSMutableStyleDeclaration> style)
 {
+    ASSERT(style->parentRule() == this);
     m_style = style;
-    m_style->setParentRule(this);
 }
 
 /* static */

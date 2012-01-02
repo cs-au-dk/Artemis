@@ -694,7 +694,6 @@ SOURCES += \
     html/ButtonInputType.cpp \
     html/CheckboxInputType.cpp \
     html/ClassList.cpp \
-    html/CollectionCache.cpp \
     html/ColorInputType.cpp \
     html/DOMFormData.cpp \
     html/DOMSettableTokenList.cpp \
@@ -1237,6 +1236,7 @@ SOURCES += \
     rendering/RenderSlider.cpp \
     rendering/RenderSummary.cpp \
     rendering/RenderTable.cpp \
+    rendering/RenderTableCaption.cpp \
     rendering/RenderTableCell.cpp \
     rendering/RenderTableCol.cpp \
     rendering/RenderTableRow.cpp \
@@ -1772,7 +1772,6 @@ HEADERS += \
     html/canvas/CanvasStyle.h \
     html/canvas/DataView.h \
     html/ClassList.h \
-    html/CollectionCache.h \
     html/DOMFormData.h \
     html/DOMSettableTokenList.h \
     html/DOMTokenList.h \
@@ -2364,6 +2363,7 @@ HEADERS += \
     rendering/RenderScrollbarTheme.h \
     rendering/RenderSlider.h \
     rendering/RenderSummary.h \
+    rendering/RenderTableCaption.h \
     rendering/RenderTableCell.h \
     rendering/RenderTableCol.h \
     rendering/RenderTable.h \

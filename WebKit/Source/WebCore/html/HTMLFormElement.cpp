@@ -91,6 +91,9 @@ PassRefPtr<HTMLFormElement> HTMLFormElement::create(const QualifiedName& tagName
 
 HTMLFormElement::~HTMLFormElement()
 {
+    if (m_elementsCollection)
+        m_elementsCollection->detachFromNode();
+
     if (!shouldAutocomplete())
         document()->unregisterForPageCacheSuspensionCallbacks(this);
 
@@ -132,9 +135,6 @@ bool HTMLFormElement::rendererIsNeeded(const NodeRenderingContext& context)
 
 void HTMLFormElement::insertedIntoDocument()
 {
-    if (document()->isHTMLDocument())
-        static_cast<HTMLDocument*>(document())->addNamedItem(m_name);
-
     HTMLElement::insertedIntoDocument();
 
     if (hasID())
@@ -143,9 +143,6 @@ void HTMLFormElement::insertedIntoDocument()
 
 void HTMLFormElement::removedFromDocument()
 {
-    if (document()->isHTMLDocument())
-        static_cast<HTMLDocument*>(document())->removeNamedItem(m_name);
-
     HTMLElement::removedFromDocument();
 
     if (hasID())
@@ -384,15 +381,7 @@ void HTMLFormElement::parseMappedAttribute(Attribute* attr)
         setAttributeEventListener(eventNames().submitEvent, createAttributeEventListener(this, attr));
     else if (attr->name() == onresetAttr)
         setAttributeEventListener(eventNames().resetEvent, createAttributeEventListener(this, attr));
-    else if (attr->name() == nameAttr) {
-        const AtomicString& newName = attr->value();
-        if (inDocument() && document()->isHTMLDocument()) {
-            HTMLDocument* document = static_cast<HTMLDocument*>(this->document());
-            document->removeNamedItem(m_name);
-            document->addNamedItem(newName);
-        }
-        m_name = newName;
-    } else
+    else
         HTMLElement::parseMappedAttribute(attr);
 }
 
@@ -514,7 +503,9 @@ void HTMLFormElement::removeImgElement(HTMLImageElement* e)
 
 PassRefPtr<HTMLCollection> HTMLFormElement::elements()
 {
-    return HTMLFormCollection::create(this);
+    if (!m_elementsCollection)
+        m_elementsCollection = HTMLFormCollection::create(this);
+    return m_elementsCollection;
 }
 
 String HTMLFormElement::name() const
@@ -646,18 +637,15 @@ void HTMLFormElement::documentDidResumeFromPageCache()
     }
 }
 
-void HTMLFormElement::willMoveToNewOwnerDocument()
+void HTMLFormElement::didMoveToNewDocument(Document* oldDocument)
 {
-    if (!shouldAutocomplete())
-        document()->unregisterForPageCacheSuspensionCallbacks(this);
-    HTMLElement::willMoveToNewOwnerDocument();
-}
-
-void HTMLFormElement::didMoveToNewOwnerDocument()
-{
-    if (!shouldAutocomplete())
+    if (!shouldAutocomplete()) {
+        if (oldDocument)
+            oldDocument->unregisterForPageCacheSuspensionCallbacks(this);
         document()->registerForPageCacheSuspensionCallbacks(this);
-    HTMLElement::didMoveToNewOwnerDocument();
+    }
+
+    HTMLElement::didMoveToNewDocument(oldDocument);
 }
 
 bool HTMLFormElement::shouldAutocomplete() const

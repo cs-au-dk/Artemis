@@ -82,7 +82,7 @@ sub generateFunctionLists($$$$$);
 sub generateNewChangeLogs($$$$$$$$$$$);
 sub getLatestChangeLogs($);
 sub get_function_line_ranges($$);
-sub get_function_line_ranges_for_c($$);
+sub get_function_line_ranges_for_cpp($$);
 sub get_function_line_ranges_for_java($$);
 sub get_function_line_ranges_for_javascript($$);
 sub get_function_line_ranges_for_perl($$);
@@ -107,12 +107,10 @@ sub testListForChangeLog(@);
 
 ### Constant variables.
 # Project time zone for Cupertino, CA, US
-my $changeLogTimeZone = "PST8PDT";
-
-my $SVN = "svn";
-my $GIT = "git";
-
-my %supportedTestExtensions = map { $_ => 1 } qw(html shtml svg xml xhtml pl php);
+use constant ChangeLogTimeZone => "PST8PDT";
+use constant SVN => "svn";
+use constant GIT => "git";
+use constant SupportedTestExtensions => {map { $_ => 1 } qw(html shtml svg xml xhtml pl php)};
 
 exit(main());
 
@@ -319,7 +317,8 @@ sub changeLogNameFromArgs($$)
 {
     my ($nameFromArgs, $gitCommit) = @_;
     # Silently allow --git-commit to win, we could warn if $nameFromArgs is defined.
-    return `$GIT log --max-count=1 --pretty=\"format:%an\" \"$gitCommit\"` if $gitCommit;
+    my $command = GIT . ' log --max-count=1 --pretty="format:%an" "' . $gitCommit . '"';
+    return `$command` if $gitCommit;
 
     return $nameFromArgs || changeLogName();
 }
@@ -328,7 +327,8 @@ sub changeLogEmailAddressFromArgs($$)
 {
     my ($emailAddressFromArgs, $gitCommit) = @_;
     # Silently allow --git-commit to win, we could warn if $emailAddressFromArgs is defined.
-    return `$GIT log --max-count=1 --pretty=\"format:%ae\" \"$gitCommit\"` if $gitCommit;
+    my $command = GIT . ' log --max-count=1 --pretty="format:%ae" "' . $gitCommit . '"';
+    return `$command` if $gitCommit;
 
     return $emailAddressFromArgs || changeLogEmailAddress();
 }
@@ -430,7 +430,7 @@ sub resolveConflictedChangeLogs($)
     my ($changeLogs) = @_;
 
     print STDERR "  Running 'svn update' to update ChangeLog files.\n";
-    open ERRORS, "-|", $SVN, "update", @$changeLogs
+    open ERRORS, "-|", SVN, "update", @$changeLogs
         or die "The svn update of ChangeLog files failed: $!.\n";
     my @conflictedChangeLogs;
     while (my $line = <ERRORS>) {
@@ -477,7 +477,7 @@ sub generateNewChangeLogs($$$$$$$$$$$)
             print substr($prefix, 0, length($prefix) - 1) . ":\n\n" unless (scalar @$prefixes) == 1;
         }
 
-        my $date = changeLogDate($changeLogTimeZone);
+        my $date = changeLogDate(ChangeLogTimeZone);
         print CHANGE_LOG normalizeLineEndings("$date  $name  <$emailAddress>\n\n", $endl);
 
         my ($reviewer, $description) = reviewerAndDescriptionForGitCommit($gitCommit, $gitReviewer) if $gitCommit;
@@ -551,7 +551,7 @@ sub get_function_line_ranges($$)
 
     # Try to determine the source language based on the file extension.
 
-    return get_function_line_ranges_for_c($file_handle, $file_name) if $file_name =~ /\.(c|cpp|m|mm|h)$/;
+    return get_function_line_ranges_for_cpp($file_handle, $file_name) if $file_name =~ /\.(c|cpp|m|mm|h)$/;
     return get_function_line_ranges_for_java($file_handle, $file_name) if $file_name =~ /\.java$/;
     return get_function_line_ranges_for_javascript($file_handle, $file_name) if $file_name =~ /\.js$/;
     return get_selector_line_ranges_for_css($file_handle, $file_name) if $file_name =~ /\.css$/;
@@ -607,7 +607,7 @@ sub method_decl_to_selector($)
 #
 # Result is a list of triples: [ start_line, end_line, function_name ].
 
-sub get_function_line_ranges_for_c($$)
+sub get_function_line_ranges_for_cpp($$)
 {
     my ($file_handle, $file_name) = @_;
 
@@ -909,6 +909,7 @@ sub get_function_line_ranges_for_java($$)
     my $in_braces = 0;
     my $in_non_block_braces = 0;
     my $class_or_interface_just_seen = 0;
+    my $in_class_declaration = 0;
 
     my $word = "";
 
@@ -977,6 +978,8 @@ sub get_function_line_ranges_for_java($$)
 
             # Open brace.
             if ($1 eq "{") {
+                $in_class_declaration = 0;
+
                 # Promote potential name to real function name at the
                 # start of the outer level set of braces (function/class/interface body?).
                 if (!$in_non_block_braces
@@ -1045,7 +1048,10 @@ sub get_function_line_ranges_for_java($$)
                 next;
             }
 
-            if ($1 eq "class" or $1 eq "interface") {
+            if ($1 eq "class") {
+                $in_class_declaration = 1;
+            }
+            if ($1 eq "class" or (!$in_class_declaration and $1 eq "interface")) {
                 $class_or_interface_just_seen = 1;
                 next;
             }
@@ -1319,7 +1325,7 @@ sub get_function_line_ranges_for_python($$)
 
     my @scopeStack = ({ line => 0, indent => -1, name => undef });
     while (<$fileHandle>) {
-        next unless /^(\s*)(\S.*)$/;
+        next unless /^(\s*)([^#].*)$/;
         my $indent = length $1;
         my $rest = $2;
 
@@ -1450,10 +1456,10 @@ sub diffCommand($$$$)
     if (isSVN()) {
         my @escapedPaths = map(escapeSubversionPath($_), @$paths);
         my $escapedPathsString = "'" . join("' '", @escapedPaths) . "'";
-        $command = "$SVN diff --diff-cmd diff -x -N $escapedPathsString";
+        $command = SVN . " diff --diff-cmd diff -x -N $escapedPathsString";
     } elsif (isGit()) {
         my $pathsString = "'" . join("' '", @$paths) . "'"; 
-        $command = "$GIT diff --no-ext-diff -U0 " . diffFromToString($gitCommit, $gitIndex, $mergeBase);
+        $command = GIT . " diff --no-ext-diff -U0 " . diffFromToString($gitCommit, $gitIndex, $mergeBase);
         $command .= " -- $pathsString" unless $gitCommit or $mergeBase;
     }
 
@@ -1468,10 +1474,10 @@ sub statusCommand($$$$)
     if (isSVN()) {
         my @escapedFiles = map(escapeSubversionPath($_), keys %$paths);
         my $escapedFilesString = "'" . join("' '", @escapedFiles) . "'";
-        $command = "$SVN stat $escapedFilesString";
+        $command = SVN . " stat $escapedFilesString";
     } elsif (isGit()) {
         my $filesString = '"' . join('" "', keys %$paths) . '"';
-        $command = "$GIT diff -r --name-status -M -C " . diffFromToString($gitCommit, $gitIndex, $mergeBase);
+        $command = GIT . " diff -r --name-status -M -C " . diffFromToString($gitCommit, $gitIndex, $mergeBase);
         $command .= " -- $filesString" unless $gitCommit;
     }
 
@@ -1486,7 +1492,7 @@ sub createPatchCommand($$$$)
     if (isSVN()) {
         $command = "'$FindBin::Bin/svn-create-patch' $changedFilesString";
     } elsif (isGit()) {
-        $command = "$GIT diff -M -C " . diffFromToString($gitCommit, $gitIndex, $mergeBase);
+        $command = GIT . " diff -M -C " . diffFromToString($gitCommit, $gitIndex, $mergeBase);
         $command .= " -- $changedFilesString" unless $gitCommit;
     }
 
@@ -1503,7 +1509,7 @@ sub findOriginalFileFromSvn($)
 {
     my ($file) = @_;
     my $baseUrl;
-    open INFO, "$SVN info . |" or die;
+    open INFO, SVN . " info . |" or die;
     while (<INFO>) {
         if (/^URL: (.+?)[\r\n]*$/) {
             $baseUrl = $1;
@@ -1512,7 +1518,7 @@ sub findOriginalFileFromSvn($)
     close INFO;
     my $sourceFile;
     my $escapedFile = escapeSubversionPath($file);
-    open INFO, "$SVN info '$escapedFile' |" or die;
+    open INFO, SVN . " info '$escapedFile' |" or die;
     while (<INFO>) {
         if (/^Copied From URL: (.+?)[\r\n]*$/) {
             $sourceFile = File::Spec->abs2rel($1, $baseUrl);
@@ -1531,14 +1537,14 @@ sub determinePropertyChanges($$$)
     if ($isAdd) {
         my %addedProperties;
         my %removedProperties;
-        open PROPLIST, "$SVN proplist '$escapedFile' |" or die;
+        open PROPLIST, SVN . " proplist '$escapedFile' |" or die;
         while (<PROPLIST>) {
             $addedProperties{$1} = 1 if /^  (.+?)[\r\n]*$/ && $1 ne 'svn:mergeinfo';
         }
         close PROPLIST;
         if ($original) {
             my $escapedOriginal = escapeSubversionPath($original);
-            open PROPLIST, "$SVN proplist '$escapedOriginal' |" or die;
+            open PROPLIST, SVN . " proplist '$escapedOriginal' |" or die;
             while (<PROPLIST>) {
                 next unless /^  (.+?)[\r\n]*$/;
                 my $property = $1;
@@ -1552,7 +1558,7 @@ sub determinePropertyChanges($$$)
         $changes{"A"} = [sort keys %addedProperties] if %addedProperties;
         $changes{"D"} = [sort keys %removedProperties] if %removedProperties;
     } else {
-        open DIFF, "$SVN diff '$escapedFile' |" or die;
+        open DIFF, SVN . " diff '$escapedFile' |" or die;
         while (<DIFF>) {
             if (/^Property changes on:/) {
                 while (<DIFF>) {
@@ -1657,7 +1663,7 @@ sub generateFileList(\%$$$)
                 push @addedRegressionTests, $file
                     if isAddedStatus($status)
                        && $file =~ /\.([a-zA-Z]+)$/
-                       && $supportedTestExtensions{lc($1)}
+                       && SupportedTestExtensions->{lc($1)}
                        && !scalar(grep(/^resources$/i, @components))
                        && !scalar(grep(/^script-tests$/i, @components));
             }
@@ -1822,9 +1828,9 @@ sub reviewerAndDescriptionForGitCommit($$)
     my $gitLog;
     {
         local $/ = undef;
-        open(GIT, "-|", $GIT, @args, $commit) || die;
-        $gitLog = <GIT>;
-        close(GIT);
+        open(GITLOG, "-|", GIT, @args, $commit) || die;
+        $gitLog = <GITLOG>;
+        close(GITLOG);
     }
 
     my @commitLogs = split(/^[Cc]ommit [a-f0-9]{40}/m, $gitLog);

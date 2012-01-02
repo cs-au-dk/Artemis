@@ -100,7 +100,7 @@ namespace WTF {
         template<typename U> RetainPtr& operator=(RetainPtr<U>&&);
 #endif
 
-#if !HAVE(NULLPTR)
+#if !COMPILER_SUPPORTS(CXX_NULLPTR)
         RetainPtr& operator=(std::nullptr_t) { clear(); return *this; }
 #endif
 
@@ -267,6 +267,13 @@ namespace WTF {
         return RetainPtr<T>(AdoptNS, o);
     }
 
+    // Helper function for creating a RetainPtr using template argument deduction.
+    template<typename T> inline RetainPtr<T> retainPtr(T) WARN_UNUSED_RETURN;
+    template<typename T> inline RetainPtr<T> retainPtr(T o)
+    {
+        return RetainPtr<T>(o);
+    }
+
     template<typename P> struct HashTraits<RetainPtr<P> > : SimpleClassHashTraits<RetainPtr<P> > { };
     
     template<typename P> struct PtrHash<RetainPtr<P> > : PtrHash<typename RetainPtr<P>::PtrType> {
@@ -287,5 +294,6 @@ using WTF::AdoptNS;
 using WTF::adoptCF;
 using WTF::adoptNS;
 using WTF::RetainPtr;
+using WTF::retainPtr;
 
 #endif // WTF_RetainPtr_h

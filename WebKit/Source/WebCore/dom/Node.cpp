@@ -2,7 +2,7 @@
  * Copyright (C) 1999 Lars Knoll (knoll@kde.org)
  *           (C) 1999 Antti Koivisto (koivisto@kde.org)
  *           (C) 2001 Dirk Mueller (mueller@kde.org)
- * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010 Apple Inc. All rights reserved.
+ * Copyright (C) 2004, 2005, 2006, 2007, 2008, 2009, 2010, 2011 Apple Inc. All rights reserved.
  * Copyright (C) 2008 Nokia Corporation and/or its subsidiary(-ies)
  * Copyright (C) 2009 Torch Mobile Inc. All rights reserved. (http://www.torchmobile.com/)
  *
@@ -417,31 +417,11 @@ Node::~Node()
         doc->guardDeref();
 }
 
-#ifdef NDEBUG
+#ifndef NDEBUG
 
-static inline void setWillMoveToNewOwnerDocumentWasCalled(bool)
-{
-}
+static bool didMoveToNewDocumentWasCalled;
+static Document* oldDocumentDidMoveToNewDocumentWasCalledWith;
 
-static inline void setDidMoveToNewOwnerDocumentWasCalled(bool)
-{
-}
-
-#else
-    
-static bool willMoveToNewOwnerDocumentWasCalled;
-static bool didMoveToNewOwnerDocumentWasCalled;
-
-static void setWillMoveToNewOwnerDocumentWasCalled(bool wasCalled)
-{
-    willMoveToNewOwnerDocumentWasCalled = wasCalled;
-}
-
-static void setDidMoveToNewOwnerDocumentWasCalled(bool wasCalled)
-{
-    didMoveToNewOwnerDocumentWasCalled = wasCalled;
-}
-    
 #endif
     
 void Node::setDocument(Document* document)
@@ -452,20 +432,22 @@ void Node::setDocument(Document* document)
 
     document->guardRef();
 
-    setWillMoveToNewOwnerDocumentWasCalled(false);
-    willMoveToNewOwnerDocument();
-    ASSERT(willMoveToNewOwnerDocumentWasCalled);
-
     if (m_document) {
         m_document->moveNodeIteratorsToNewDocument(this, document);
         m_document->guardDeref();
     }
 
+    Document* oldDocument = m_document;
     m_document = document;
 
-    setDidMoveToNewOwnerDocumentWasCalled(false);
-    didMoveToNewOwnerDocument();
-    ASSERT(didMoveToNewOwnerDocumentWasCalled);
+#ifndef NDEBUG
+    didMoveToNewDocumentWasCalled = false;
+    oldDocumentDidMoveToNewDocumentWasCalledWith = oldDocument;
+#endif
+
+    didMoveToNewDocument(oldDocument);
+
+    ASSERT(didMoveToNewDocumentWasCalled);
 }
 
 TreeScope* Node::treeScope() const
@@ -477,10 +459,10 @@ TreeScope* Node::treeScope() const
     return scope ? scope : m_document;
 }
 
-void Node::setTreeScopeRecursively(TreeScope* newTreeScope, bool includeRoot)
+void Node::setTreeScopeRecursively(TreeScope* newTreeScope)
 {
     ASSERT(this);
-    ASSERT(!includeRoot || !isDocumentNode());
+    ASSERT(!isDocumentNode());
     ASSERT(newTreeScope);
     ASSERT(!m_deletionHasBegun);
 
@@ -497,7 +479,7 @@ void Node::setTreeScopeRecursively(TreeScope* newTreeScope, bool includeRoot)
     if (currentDocument && currentDocument != newDocument)
         currentDocument->incDOMTreeVersion();
 
-    for (Node* node = includeRoot ? this : traverseNextNode(this); node; node = node->traverseNextNode(this)) {
+    for (Node* node = this; node; node = node->traverseNextNode(this)) {
         if (newTreeScope == newDocument) {
             if (node->hasRareData())
                 node->rareData()->setTreeScope(0);
@@ -2497,16 +2479,14 @@ void Node::removedFromDocument()
     clearInDocument();
 }
 
-void Node::willMoveToNewOwnerDocument()
+void Node::didMoveToNewDocument(Document* oldDocument)
 {
-    ASSERT(!willMoveToNewOwnerDocumentWasCalled);
-    setWillMoveToNewOwnerDocumentWasCalled(true);
-}
+    ASSERT(!didMoveToNewDocumentWasCalled);
+    ASSERT_UNUSED(oldDocument, oldDocument == oldDocumentDidMoveToNewDocumentWasCalledWith);
 
-void Node::didMoveToNewOwnerDocument()
-{
-    ASSERT(!didMoveToNewOwnerDocumentWasCalled);
-    setDidMoveToNewOwnerDocumentWasCalled(true);
+#ifndef NDEBUG
+    didMoveToNewDocumentWasCalled = true;
+#endif
 
     // FIXME: Event listener types for this node should be set on the new owner document here.
 

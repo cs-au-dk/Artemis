@@ -2,7 +2,7 @@
  * Copyright (C) 1999 Lars Knoll (knoll@kde.org)
  *           (C) 2004-2005 Allan Sandfeld Jensen (kde@carewolf.com)
  * Copyright (C) 2006, 2007 Nicholas Shanks (webkit@nickshanks.com)
- * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011 Apple Inc. All rights reserved.
+ * Copyright (C) 2005, 2006, 2007, 2008, 2009, 2010, 2011, 2012 Apple Inc. All rights reserved.
  * Copyright (C) 2007 Alexey Proskuryakov <ap@webkit.org>
  * Copyright (C) 2007, 2008 Eric Seidel <eric@webkit.org>
  * Copyright (C) 2008, 2009 Torch Mobile Inc. All rights reserved. (http://www.torchmobile.com/)
@@ -66,6 +66,7 @@
 #include "HTMLNames.h"
 #include "HTMLProgressElement.h"
 #include "HTMLTextAreaElement.h"
+#include "InspectorInstrumentation.h"
 #include "KeyframeList.h"
 #include "LinkHash.h"
 #include "LocaleToScriptMapping.h"
@@ -715,21 +716,31 @@ void CSSStyleSelector::matchRulesForList(const Vector<RuleData>* rules, int& fir
         const RuleData& ruleData = rules->at(i);
         if (canUseFastReject && m_checker.fastRejectSelector<RuleData::maximumIdentifierCount>(ruleData.descendantSelectorIdentifierHashes()))
             continue;
+
+        CSSStyleRule* rule = ruleData.rule();
+        InspectorInstrumentationCookie cookie = InspectorInstrumentation::willMatchRule(document(), rule);
         if (checkSelector(ruleData)) {
-            if (!matchesInTreeScope(m_element->treeScope(), m_checker.hasUnknownPseudoElements()))
+            if (!matchesInTreeScope(m_element->treeScope(), m_checker.hasUnknownPseudoElements())) {
+                InspectorInstrumentation::didMatchRule(cookie, false);
                 continue;
+            }
             // If the rule has no properties to apply, then ignore it in the non-debug mode.
-            CSSStyleRule* rule = ruleData.rule();
             CSSMutableStyleDeclaration* decl = rule->declaration();
-            if (!decl || (!decl->length() && !includeEmptyRules))
+            if (!decl || (!decl->length() && !includeEmptyRules)) {
+                InspectorInstrumentation::didMatchRule(cookie, false);
                 continue;
-            if (m_sameOriginOnly && !m_checker.document()->securityOrigin()->canRequest(rule->baseURL()))
+            }
+            if (m_sameOriginOnly && !m_checker.document()->securityOrigin()->canRequest(rule->baseURL())) {
+                InspectorInstrumentation::didMatchRule(cookie, false);
                 continue;
+            }
             // If we're matching normal rules, set a pseudo bit if
             // we really just matched a pseudo-element.
             if (m_dynamicPseudo != NOPSEUDO && m_checker.pseudoStyle() == NOPSEUDO) {
-                if (m_checker.isCollectingRulesOnly())
+                if (m_checker.isCollectingRulesOnly()) {
+                    InspectorInstrumentation::didMatchRule(cookie, false);
                     continue;
+                }
                 if (m_dynamicPseudo < FIRST_INTERNAL_PSEUDOID)
                     m_style->setHasPseudoStyle(m_dynamicPseudo);
             } else {
@@ -740,8 +751,11 @@ void CSSStyleSelector::matchRulesForList(const Vector<RuleData>* rules, int& fir
 
                 // Add this rule to our list of matched rules.
                 addMatchedRule(&ruleData);
+                InspectorInstrumentation::didMatchRule(cookie, true);
+                continue;
             }
         }
+        InspectorInstrumentation::didMatchRule(cookie, false);
     }
 }
 
@@ -1374,10 +1388,11 @@ void CSSStyleSelector::keyframeStylesForAnimation(Element* e, const RenderStyle*
 
     m_keyframesRuleMap.checkConsistency();
 
-    if (!m_keyframesRuleMap.contains(list.animationName().impl()))
+    KeyframesRuleMap::iterator it = m_keyframesRuleMap.find(list.animationName().impl());
+    if (it == m_keyframesRuleMap.end())
         return;
 
-    const WebKitCSSKeyframesRule* rule = m_keyframesRuleMap.find(list.animationName().impl()).get()->second.get();
+    const WebKitCSSKeyframesRule* rule = it->second.get();
 
     // Construct and populate the style for each keyframe
     for (unsigned i = 0; i < rule->length(); ++i) {
@@ -2162,6 +2177,7 @@ static Length convertToFloatLength(CSSPrimitiveValue* primitiveValue, RenderStyl
 template <bool applyFirst>
 void CSSStyleSelector::applyDeclaration(CSSMutableStyleDeclaration* styleDeclaration, bool isImportant, bool inheritedOnly)
 {
+    InspectorInstrumentationCookie cookie = InspectorInstrumentation::willProcessRule(document(), styleDeclaration->parentRule());
     CSSMutableStyleDeclaration::const_iterator end = styleDeclaration->end();
     for (CSSMutableStyleDeclaration::const_iterator it = styleDeclaration->begin(); it != end; ++it) {
         const CSSProperty& current = *it;
@@ -2193,6 +2209,7 @@ void CSSStyleSelector::applyDeclaration(CSSMutableStyleDeclaration* styleDeclara
         if (property > CSSPropertyLineHeight)
             applyProperty(current.id(), current.value());
     }
+    InspectorInstrumentation::didProcessRule(cookie);
 }
 
 template <bool applyFirst>
@@ -5094,8 +5111,8 @@ PassRefPtr<CustomFilterOperation> CSSStyleSelector::createCustomFilterOperation(
     RefPtr<StyleShader> vertexShader = styleShader(shadersList->itemWithoutBoundsCheck(0));
     RefPtr<StyleShader> fragmentShader = (shadersList->length() > 1) ? styleShader(shadersList->itemWithoutBoundsCheck(1)) : 0;
     
-    unsigned meshRows = 0;
-    unsigned meshColumns = 0;
+    unsigned meshRows = 1;
+    unsigned meshColumns = 1;
     CustomFilterOperation::MeshBoxType meshBoxType = CustomFilterOperation::FILTER_BOX;
     CustomFilterOperation::MeshType meshType = CustomFilterOperation::ATTACHED;
     

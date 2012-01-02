@@ -108,7 +108,8 @@ PassRefPtr<Node> NamedNodeMap::setNamedItem(Node* node, ExceptionCode& ec)
     Attr* attr = static_cast<Attr*>(node);
 
     Attribute* attribute = attr->attr();
-    Attribute* oldAttribute = getAttributeItem(attribute->name());
+    size_t index = getAttributeItemIndex(attribute->name());
+    Attribute* oldAttribute = index != notFound ? attributeItem(index) : 0;
     if (oldAttribute == attribute)
         return node; // we know about it already
 
@@ -119,16 +120,13 @@ PassRefPtr<Node> NamedNodeMap::setNamedItem(Node* node, ExceptionCode& ec)
         return 0;
     }
 
-    m_element->willModifyAttribute(attribute->name(), oldAttribute ? oldAttribute->value() : nullAtom, attribute->value());
-
-    // ### slightly inefficient - resizes attribute array twice.
     RefPtr<Attr> oldAttr;
     if (oldAttribute) {
         oldAttr = oldAttribute->createAttrIfNeeded(m_element);
-        removeAttribute(attribute->name());
-    }
+        replaceAttribute(index, attribute);
+    } else
+        addAttribute(attribute);
 
-    addAttribute(attribute);
     return oldAttr.release();
 }
 
@@ -137,24 +135,20 @@ PassRefPtr<Node> NamedNodeMap::setNamedItemNS(Node* node, ExceptionCode& ec)
     return setNamedItem(node, ec);
 }
 
-// The DOM2 spec doesn't say that removeAttribute[NS] throws NOT_FOUND_ERR
-// if the attribute is not found, but at this level we have to throw NOT_FOUND_ERR
-// because of removeNamedItem, removeNamedItemNS, and removeAttributeNode.
 PassRefPtr<Node> NamedNodeMap::removeNamedItem(const QualifiedName& name, ExceptionCode& ec)
 {
     ASSERT(m_element);
 
-    Attribute* attribute = getAttributeItem(name);
-    if (!attribute) {
+    size_t index = getAttributeItemIndex(name);
+    if (index == notFound) {
         ec = NOT_FOUND_ERR;
         return 0;
     }
 
-    RefPtr<Attr> attr = attribute->createAttrIfNeeded(m_element);
+    RefPtr<Attr> attr = m_attributes[index]->createAttrIfNeeded(m_element);
 
-    m_element->willModifyAttribute(attribute->name(), attribute->value(), nullAtom);
+    removeAttribute(index);
 
-    removeAttribute(name);
     return attr.release();
 }
 
@@ -171,7 +165,7 @@ void NamedNodeMap::copyAttributesToVector(Vector<RefPtr<Attribute> >& copy)
     copy = m_attributes;
 }
 
-Attribute* NamedNodeMap::getAttributeItemSlowCase(const String& name, bool shouldIgnoreAttributeCase) const
+size_t NamedNodeMap::getAttributeItemIndexSlowCase(const String& name, bool shouldIgnoreAttributeCase) const
 {
     unsigned len = length();
 
@@ -180,16 +174,16 @@ Attribute* NamedNodeMap::getAttributeItemSlowCase(const String& name, bool shoul
         const QualifiedName& attrName = m_attributes[i]->name();
         if (!attrName.hasPrefix()) {
             if (shouldIgnoreAttributeCase && equalIgnoringCase(name, attrName.localName()))
-                return m_attributes[i].get();
+                return i;
         } else {
             // FIXME: Would be faster to do this comparison without calling toString, which
             // generates a temporary string by concatenation. But this branch is only reached
             // if the attribute name has a prefix, which is rare in HTML.
             if (equalPossiblyIgnoringCase(name, attrName.toString(), shouldIgnoreAttributeCase))
-                return m_attributes[i].get();
+                return i;
         }
     }
-    return 0;
+    return notFound;
 }
 
 void NamedNodeMap::clearAttributes()
@@ -225,6 +219,12 @@ void NamedNodeMap::setAttributes(const NamedNodeMap& other)
     if (oldId || newId)
         m_element->updateId(oldId ? oldId->value() : nullAtom, newId ? newId->value() : nullAtom);
 
+    Attribute* oldName = getAttributeItem(HTMLNames::nameAttr);
+    Attribute* newName = other.getAttributeItem(HTMLNames::nameAttr);
+
+    if (oldName || newName)
+        m_element->updateName(oldName ? oldName->value() : nullAtom, newName ? newName->value() : nullAtom);
+
     clearAttributes();
     unsigned newLength = other.length();
     m_attributes.resize(newLength);
@@ -242,54 +242,53 @@ void NamedNodeMap::setAttributes(const NamedNodeMap& other)
 void NamedNodeMap::addAttribute(PassRefPtr<Attribute> prpAttribute)
 {
     RefPtr<Attribute> attribute = prpAttribute;
-    
-    // Add the attribute to the list
-    m_attributes.append(attribute);
 
+    if (m_element)
+        m_element->willModifyAttribute(attribute->name(), nullAtom, attribute->value());
+
+    m_attributes.append(attribute);
     if (Attr* attr = attribute->attr())
         attr->m_element = m_element;
 
-    // Notify the element that the attribute has been added, and dispatch appropriate mutation events
-    // Note that element may be null here if we are called from insertAttribute() during parsing
-    if (m_element) {
-        m_element->attributeChanged(attribute.get());
-        // Because of our updateStyleAttribute() style modification events are never sent at the right time, so don't bother sending them.
-        if (attribute->name() != styleAttr)
-            m_element->dispatchSubtreeModifiedEvent();
-    }
+    if (m_element)
+        m_element->didModifyAttribute(attribute.get());
 }
 
-void NamedNodeMap::removeAttribute(const QualifiedName& name)
+void NamedNodeMap::removeAttribute(size_t index)
 {
-    unsigned len = length();
-    unsigned index = len;
-    for (unsigned i = 0; i < len; ++i) {
-        if (m_attributes[i]->name().matches(name)) {
-            index = i;
-            break;
-        }
-    }
+    ASSERT(index < length());
 
-    if (index >= len)
-        return;
+    RefPtr<Attribute> attribute = m_attributes[index];
 
-    // Remove the attribute from the list
-    RefPtr<Attribute> attr = m_attributes[index].get();
-    if (Attr* a = m_attributes[index]->attr())
-        a->m_element = 0;
+    if (m_element)
+        m_element->willRemoveAttribute(attribute->name(), attribute->value());
 
+    if (Attr* attr = attribute->attr())
+        attr->m_element = 0;
     m_attributes.remove(index);
 
-    // Notify the element that the attribute has been removed
-    // dispatch appropriate mutation events
-    if (m_element && !attr->m_value.isNull()) {
-        AtomicString value = attr->m_value;
-        attr->m_value = nullAtom;
-        m_element->attributeChanged(attr.get());
-        attr->m_value = value;
-    }
     if (m_element)
-        m_element->dispatchSubtreeModifiedEvent();
+        m_element->didRemoveAttribute(attribute.get());
+}
+
+void NamedNodeMap::replaceAttribute(size_t index, PassRefPtr<Attribute> prpAttribute)
+{
+    ASSERT(index < length());
+
+    RefPtr<Attribute> attribute = prpAttribute;
+    Attribute* old = m_attributes[index].get();
+
+    if (m_element)
+        m_element->willModifyAttribute(attribute->name(), old->value(), attribute->value());
+
+    if (Attr* attr = old->attr())
+        attr->m_element = 0;
+    m_attributes[index] = attribute;
+    if (Attr* attr = attribute->attr())
+        attr->m_element = m_element;
+
+    if (m_element)
+        m_element->didModifyAttribute(attribute.get());
 }
 
 void NamedNodeMap::setClass(const String& classStr) 
@@ -300,19 +299,6 @@ void NamedNodeMap::setClass(const String& classStr)
     }
 
     m_classNames.set(classStr, element()->document()->inQuirksMode()); 
-}
-
-int NamedNodeMap::declCount() const
-{
-    int result = 0;
-    for (unsigned i = 0; i < length(); i++) {
-        Attribute* attr = attributeItem(i);
-        if (attr->decl()) {
-            ASSERT(attr->isMappedAttribute());
-            result++;
-        }
-    }
-    return result;
 }
 
 bool NamedNodeMap::mapsEquivalent(const NamedNodeMap* otherMap) const
@@ -336,10 +322,9 @@ bool NamedNodeMap::mapsEquivalent(const NamedNodeMap* otherMap) const
 
 bool NamedNodeMap::mappedMapsEquivalent(const NamedNodeMap* otherMap) const
 {
-    // The # of decls must match.
-    if (declCount() != otherMap->declCount())
+    if (m_mappedAttributeCount != otherMap->m_mappedAttributeCount)
         return false;
-    
+
     // The values for each decl must match.
     for (unsigned i = 0; i < length(); i++) {
         Attribute* attr = attributeItem(i);

@@ -569,7 +569,7 @@ WebInspector.CPUProfileView.prototype.__proto__ = WebInspector.View.prototype;
 
 WebInspector.CPUProfileType = function()
 {
-    WebInspector.ProfileType.call(this, WebInspector.CPUProfileType.TypeId, WebInspector.UIString("CPU PROFILES"));
+    WebInspector.ProfileType.call(this, WebInspector.CPUProfileType.TypeId, WebInspector.UIString("Collect JavaScript CPU Profile"));
     this._recording = false;
     WebInspector.CPUProfileType.instance = this;
 }
@@ -580,11 +580,6 @@ WebInspector.CPUProfileType.prototype = {
     get buttonTooltip()
     {
         return this._recording ? WebInspector.UIString("Stop CPU profiling.") : WebInspector.UIString("Start CPU profiling.");
-    },
-
-    get buttonStyle()
-    {
-        return this._recording ? "record-cpu-profile-status-bar-item status-bar-item toggled-on" : "record-cpu-profile-status-bar-item status-bar-item";
     },
 
     buttonClicked: function()
@@ -598,9 +593,14 @@ WebInspector.CPUProfileType.prototype = {
         }
     },
 
-    get welcomeMessage()
+    get treeItemTitle()
     {
-        return WebInspector.UIString("Control CPU profiling by pressing the %s button on the status bar.");
+        return WebInspector.UIString("CPU PROFILES");
+    },
+
+    get description()
+    {
+        return WebInspector.UIString("CPU profiles show where the execution time is spent in your page's JavaScript functions.");
     },
 
     isRecordingProfile: function()

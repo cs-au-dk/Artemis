@@ -41,7 +41,6 @@
 
 #include "platform/WebFileSystem.h"
 #include "WebWorkerBase.h"
-#include "WebWorkerClient.h"
 #include <wtf/OwnPtr.h>
 #include <wtf/PassOwnPtr.h>
 #include <wtf/RefPtr.h>
@@ -58,8 +57,8 @@ class WebFrameImpl;
 // In essence, this class wraps WorkerMessagingProxy.
 class WebWorkerClientImpl : public WebCore::WorkerContextProxy
                           , public WebCore::WorkerObjectProxy
-                          , public NewWebWorkerBase
-                          , public NewWebCommonWorkerClient {
+                          , public WebWorkerBase
+                          , public WebCommonWorkerClient {
 public:
     // WebCore::WorkerContextProxy Factory.
     static WebCore::WorkerContextProxy* createWorkerContextProxy(WebCore::Worker*);
@@ -107,7 +106,7 @@ public:
                                 WebFileSystemCallbacks*);
 
     // WebCommentWorkerBase methods:
-    virtual NewWebCommonWorkerClient* newCommonClient() { return this; }
+    virtual WebCommonWorkerClient* commonClient() { return this; }
     virtual WebView* view() const;
 
 private:

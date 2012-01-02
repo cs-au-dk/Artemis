@@ -58,6 +58,10 @@ WebInspector.NetworkManager.EventTypes = {
 }
 
 WebInspector.NetworkManager.prototype = {
+    /**
+     * @param {WebInspector.Resource} resource
+     * @param {function(?string, boolean)} callback
+     */
     requestContent: function(resource, callback)
     {
         function callbackWrapper(error, content, contentEncoded)
@@ -77,24 +81,38 @@ WebInspector.NetworkManager.prototype = {
 
     enableResourceTracking: function()
     {
-        var networkAgentEnabled = this.dispatchEventToListeners.bind(this, WebInspector.NetworkManager.EventTypes.ResourceTrackingEnabled);
-        NetworkAgent.enable(networkAgentEnabled);
+        function callback(error)
+        {
+            this.dispatchEventToListeners(WebInspector.NetworkManager.EventTypes.ResourceTrackingEnabled);
+        }
+        NetworkAgent.enable(callback.bind(this));
     },
 
     disableResourceTracking: function()
     {
-        var networkAgentDisabled = this.dispatchEventToListeners.bind(this, WebInspector.NetworkManager.EventTypes.ResourceTrackingDisabled);
-        NetworkAgent.disable(networkAgentDisabled);
+        function callback(error)
+        {
+            this.dispatchEventToListeners(WebInspector.NetworkManager.EventTypes.ResourceTrackingDisabled);
+        }
+        NetworkAgent.disable(callback.bind(this));
     },
 
+    /**
+     * @param {string} url
+     * @return {WebInspector.Resource}
+     */
     inflightResourceForURL: function(url)
     {
         return this._dispatcher._inflightResourcesByURL[url];
     },
 
+    /**
+     * @param {WebInspector.Event} event
+     */
     _cacheDisabledSettingChanged: function(event)
     {
-        NetworkAgent.setCacheDisabled(event.data);
+        var enabled = /** @type {boolean} */ event.data;
+        NetworkAgent.setCacheDisabled(enabled);
     },
 
     _userAgentSettingChanged: function()
@@ -118,6 +136,10 @@ WebInspector.NetworkDispatcher = function(manager)
 }
 
 WebInspector.NetworkDispatcher.prototype = {
+    /**
+     * @param {WebInspector.Resource} resource
+     * @param {NetworkAgent.Request} request
+     */
     _updateResourceWithRequest: function(resource, request)
     {
         resource.requestMethod = request.method;
@@ -125,6 +147,10 @@ WebInspector.NetworkDispatcher.prototype = {
         resource.requestFormData = request.postData;
     },
 
+    /**
+     * @param {WebInspector.Resource} resource
+     * @param {?NetworkAgent.Response} response
+     */
     _updateResourceWithResponse: function(resource, response)
     {
         if (!response)
@@ -165,6 +191,10 @@ WebInspector.NetworkDispatcher.prototype = {
         }
     },
 
+    /**
+     * @param {WebInspector.Resource} resource
+     * @return {boolean}
+     */
     _mimeTypeIsConsistentWithType: function(resource)
     {
         // If status is an error, content is likely to be of an inconsistent type,
@@ -191,6 +221,10 @@ WebInspector.NetworkDispatcher.prototype = {
         return false;
     },
 
+    /**
+     * @param {WebInspector.Resource} resource
+     * @param {?NetworkAgent.CachedResource} cachedResource
+     */
     _updateResourceWithCachedResource: function(resource, cachedResource)
     {
         resource.type = WebInspector.Resource.Type[cachedResource.type];
@@ -198,11 +232,28 @@ WebInspector.NetworkDispatcher.prototype = {
         this._updateResourceWithResponse(resource, cachedResource.response);
     },
 
+    /**
+     * @param {NetworkAgent.Response} response
+     * @return {boolean}
+     */
     _isNull: function(response)
     {
-        return response && !response.status && !response.mimeType && !Object.keys(response.headers).length;
+        if (!response)
+            return true;
+        return !response.status && !response.mimeType && (!response.headers || !Object.keys(response.headers).length);
     },
 
+    /**
+     * @param {NetworkAgent.RequestId} requestId
+     * @param {NetworkAgent.FrameId} frameId
+     * @param {NetworkAgent.LoaderId} loaderId
+     * @param {string} documentURL
+     * @param {NetworkAgent.Request} request
+     * @param {NetworkAgent.Timestamp} time
+     * @param {NetworkAgent.Initiator} initiator
+     * @param {ConsoleAgent.StackTrace=} stackTrace
+     * @param {NetworkAgent.Response=} redirectResponse
+     */
     requestWillBeSent: function(requestId, frameId, loaderId, documentURL, request, time, initiator, stackTrace, redirectResponse)
     {
         var resource = this._inflightResourcesById[requestId];
@@ -221,6 +272,9 @@ WebInspector.NetworkDispatcher.prototype = {
         this._startResource(resource);
     },
 
+    /**
+     * @param {NetworkAgent.RequestId} requestId
+     */
     requestServedFromCache: function(requestId)
     {
         var resource = this._inflightResourcesById[requestId];
@@ -230,6 +284,14 @@ WebInspector.NetworkDispatcher.prototype = {
         resource.cached = true;
     },
 
+    /**
+     * @param {NetworkAgent.RequestId} requestId
+     * @param {NetworkAgent.FrameId} frameId
+     * @param {NetworkAgent.LoaderId} loaderId
+     * @param {NetworkAgent.Timestamp} time
+     * @param {PageAgent.ResourceType} resourceType
+     * @param {NetworkAgent.Response} response
+     */
     responseReceived: function(requestId, frameId, loaderId, time, resourceType, response)
     {
         // FIXME: move this check to the backend.
@@ -257,6 +319,12 @@ WebInspector.NetworkDispatcher.prototype = {
         this._updateResource(resource);
     },
 
+    /**
+     * @param {NetworkAgent.RequestId} requestId
+     * @param {NetworkAgent.Timestamp} time
+     * @param {number} dataLength
+     * @param {number} encodedDataLength
+     */
     dataReceived: function(requestId, time, dataLength, encodedDataLength)
     {
         var resource = this._inflightResourcesById[requestId];
@@ -271,6 +339,10 @@ WebInspector.NetworkDispatcher.prototype = {
         this._updateResource(resource);
     },
 
+    /**
+     * @param {NetworkAgent.RequestId} requestId
+     * @param {NetworkAgent.Timestamp} finishTime
+     */
     loadingFinished: function(requestId, finishTime)
     {
         var resource = this._inflightResourcesById[requestId];
@@ -279,6 +351,12 @@ WebInspector.NetworkDispatcher.prototype = {
         this._finishResource(resource, finishTime);
     },
 
+    /**
+     * @param {NetworkAgent.RequestId} requestId
+     * @param {NetworkAgent.Timestamp} time
+     * @param {string} localizedDescription
+     * @param {boolean=} canceled
+     */
     loadingFailed: function(requestId, time, localizedDescription, canceled)
     {
         var resource = this._inflightResourcesById[requestId];
@@ -291,6 +369,15 @@ WebInspector.NetworkDispatcher.prototype = {
         this._finishResource(resource, time);
     },
 
+    /**
+     * @param {NetworkAgent.RequestId} requestId
+     * @param {NetworkAgent.FrameId} frameId
+     * @param {NetworkAgent.LoaderId} loaderId
+     * @param {string} documentURL
+     * @param {NetworkAgent.Timestamp} time
+     * @param {NetworkAgent.Initiator} initiator
+     * @param {NetworkAgent.CachedResource} cachedResource
+     */
     requestServedFromMemoryCache: function(requestId, frameId, loaderId, documentURL, time, initiator, cachedResource)
     {
         var resource = this._createResource(requestId, frameId, loaderId, cachedResource.url, documentURL, initiator, null);
@@ -302,13 +389,22 @@ WebInspector.NetworkDispatcher.prototype = {
         this._finishResource(resource, time);
     },
 
+    /**
+     * @param {NetworkAgent.RequestId} requestId
+     * @param {string} requestURL
+     */
     webSocketCreated: function(requestId, requestURL)
     {
-        var resource = new WebInspector.Resource(requestId, requestURL, null, null);
+        var resource = new WebInspector.Resource(requestId, requestURL, "", null);
         resource.type = WebInspector.Resource.Type.WebSocket;
         this._startResource(resource);
     },
 
+    /**
+     * @param {NetworkAgent.RequestId} requestId
+     * @param {NetworkAgent.Timestamp} time
+     * @param {NetworkAgent.WebSocketRequest} request
+     */
     webSocketWillSendHandshakeRequest: function(requestId, time, request)
     {
         var resource = this._inflightResourcesById[requestId];
@@ -323,6 +419,11 @@ WebInspector.NetworkDispatcher.prototype = {
         this._updateResource(resource);
     },
 
+    /**
+     * @param {NetworkAgent.RequestId} requestId
+     * @param {NetworkAgent.Timestamp} time
+     * @param {NetworkAgent.WebSocketResponse} response
+     */
     webSocketHandshakeResponseReceived: function(requestId, time, response)
     {
         var resource = this._inflightResourcesById[requestId];
@@ -338,6 +439,10 @@ WebInspector.NetworkDispatcher.prototype = {
         this._updateResource(resource);
     },
 
+    /**
+     * @param {NetworkAgent.RequestId} requestId
+     * @param {NetworkAgent.Timestamp} time
+     */
     webSocketClosed: function(requestId, time)
     {
         var resource = this._inflightResourcesById[requestId];
@@ -346,6 +451,11 @@ WebInspector.NetworkDispatcher.prototype = {
         this._finishResource(resource, time);
     },
 
+    /**
+     * @param {NetworkAgent.RequestId} requestId
+     * @param {NetworkAgent.Timestamp} time
+     * @param {string} redirectURL
+     */
     _appendRedirect: function(requestId, time, redirectURL)
     {
         var originalResource = this._inflightResourcesById[requestId];
@@ -361,6 +471,9 @@ WebInspector.NetworkDispatcher.prototype = {
         return newResource;
     },
 
+    /**
+     * @param {WebInspector.Resource} resource
+     */
     _startResource: function(resource)
     {
         this._inflightResourcesById[resource.requestId] = resource;
@@ -368,11 +481,18 @@ WebInspector.NetworkDispatcher.prototype = {
         this._dispatchEventToListeners(WebInspector.NetworkManager.EventTypes.ResourceStarted, resource);
     },
 
+    /**
+     * @param {WebInspector.Resource} resource
+     */
     _updateResource: function(resource)
     {
         this._dispatchEventToListeners(WebInspector.NetworkManager.EventTypes.ResourceUpdated, resource);
     },
 
+    /**
+     * @param {WebInspector.Resource} resource
+     * @param {NetworkAgent.Timestamp} finishTime
+     */
     _finishResource: function(resource, finishTime)
     {
         resource.endTime = finishTime;
@@ -382,6 +502,10 @@ WebInspector.NetworkDispatcher.prototype = {
         delete this._inflightResourcesByURL[resource.url];
     },
 
+    /**
+     * @param {string} eventType
+     * @param {WebInspector.Resource} resource
+     */
     _dispatchEventToListeners: function(eventType, resource)
     {
         this._manager.dispatchEventToListeners(eventType, resource);

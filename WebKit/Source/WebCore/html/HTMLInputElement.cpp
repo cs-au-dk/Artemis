@@ -196,14 +196,13 @@ void HTMLInputElement::updateCheckedRadioButtons()
         }
     } else {
         typedef Document::FormElementListHashSet::const_iterator Iterator;
-        Iterator end = document()->getFormElements()->end();
-        for (Iterator it = document()->getFormElements()->begin(); it != end; ++it) {
-            Element* element = *it;
-            if (element->formControlName() != name())
+        Iterator end = document()->formElements()->end();
+        for (Iterator it = document()->formElements()->begin(); it != end; ++it) {
+            HTMLFormControlElementWithState* control = *it;
+            if (control->formControlName() != name())
                 continue;
-            if (element->formControlType() != type())
+            if (control->formControlType() != type())
                 continue;
-            HTMLFormControlElement* control = static_cast<HTMLFormControlElement*>(element);
             if (control->form())
                 continue;
             control->setNeedsValidityCheck();
@@ -532,10 +531,9 @@ void HTMLInputElement::setType(const String& type)
     // We should write a test case to show that setting to the empty string does not remove the
     // attribute in other browsers and then fix this. Note that setting to null *does* remove
     // the attribute and setAttribute implements that.
-    if (type.isEmpty()) {
-        ExceptionCode ec;
-        removeAttribute(typeAttr, ec);
-    } else
+    if (type.isEmpty())
+        removeAttribute(typeAttr);
+    else
         setAttribute(typeAttr, type);
 }
 
@@ -1504,24 +1502,21 @@ void HTMLInputElement::documentDidResumeFromPageCache()
     reset();
 }
 
-void HTMLInputElement::willMoveToNewOwnerDocument()
+void HTMLInputElement::didMoveToNewDocument(Document* oldDocument)
 {
     m_inputType->willMoveToNewOwnerDocument();
+    bool needsSuspensionCallback = this->needsSuspensionCallback();
+    if (oldDocument) {
+        // Always unregister for cache callbacks when leaving a document, even if we would otherwise like to be registered
+        if (needsSuspensionCallback)
+            oldDocument->unregisterForPageCacheSuspensionCallbacks(this);
+        oldDocument->checkedRadioButtons().removeButton(this);
+    }
 
-    // Always unregister for cache callbacks when leaving a document, even if we would otherwise like to be registered
-    if (needsSuspensionCallback())
-        document()->unregisterForPageCacheSuspensionCallbacks(this);
+    if (needsSuspensionCallback)
+        document()->registerForPageCacheSuspensionCallbacks(this);
 
-    document()->checkedRadioButtons().removeButton(this);
-
-    HTMLTextFormControlElement::willMoveToNewOwnerDocument();
-}
-
-void HTMLInputElement::didMoveToNewOwnerDocument()
-{
-    registerForSuspensionCallbackIfNeeded();
-
-    HTMLTextFormControlElement::didMoveToNewOwnerDocument();
+    HTMLTextFormControlElement::didMoveToNewDocument(oldDocument);
 }
 
 void HTMLInputElement::addSubresourceAttributeURLs(ListHashSet<KURL>& urls) const

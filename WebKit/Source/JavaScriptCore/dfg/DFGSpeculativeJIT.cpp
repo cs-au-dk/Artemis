@@ -199,6 +199,16 @@ bool SpeculativeJIT::isKnownBoolean(NodeIndex nodeIndex)
     return info.isJSBoolean();
 }
 
+bool SpeculativeJIT::isKnownNotBoolean(NodeIndex nodeIndex)
+{
+    Node& node = m_jit.graph()[nodeIndex];
+    VirtualRegister virtualRegister = node.virtualRegister();
+    GenerationInfo& info = m_generationInfo[virtualRegister];
+    if (node.hasConstant() && !valueOfJSConstant(nodeIndex).isBoolean())
+        return true;
+    return !(info.isJSBoolean() || info.isUnknownJS());
+}
+
 void SpeculativeJIT::writeBarrier(MacroAssembler& jit, GPRReg owner, GPRReg scratch1, GPRReg scratch2, WriteBarrierUseKind useKind)
 {
     UNUSED_PARAM(jit);
@@ -1682,10 +1692,16 @@ void SpeculativeJIT::compileGetByValOnIntTypedArray(const TypedArrayDescriptor& 
     inBounds.link(&m_jit);
     switch (elementSize) {
     case 1:
-        m_jit.load8(MacroAssembler::BaseIndex(storageReg, propertyReg, MacroAssembler::TimesOne), resultReg);
+        if (signedness == SignedTypedArray)
+            m_jit.load8Signed(MacroAssembler::BaseIndex(storageReg, propertyReg, MacroAssembler::TimesOne), resultReg);
+        else
+            m_jit.load8(MacroAssembler::BaseIndex(storageReg, propertyReg, MacroAssembler::TimesOne), resultReg);
         break;
     case 2:
-        m_jit.load16(MacroAssembler::BaseIndex(storageReg, propertyReg, MacroAssembler::TimesTwo), resultReg);
+        if (signedness == SignedTypedArray)
+            m_jit.load16Signed(MacroAssembler::BaseIndex(storageReg, propertyReg, MacroAssembler::TimesTwo), resultReg);
+        else
+            m_jit.load16(MacroAssembler::BaseIndex(storageReg, propertyReg, MacroAssembler::TimesTwo), resultReg);
         break;
     case 4:
         m_jit.load32(MacroAssembler::BaseIndex(storageReg, propertyReg, MacroAssembler::TimesFour), resultReg);
@@ -1746,10 +1762,17 @@ void SpeculativeJIT::compilePutByValForIntTypedArray(const TypedArrayDescriptor&
         MacroAssembler::Jump fixed = m_jit.jump();
         notNaN.link(&m_jit);
     
+        MacroAssembler::Jump done;
         if (signedness == SignedTypedArray)
-            m_jit.truncateDoubleToInt32(fpr, gpr);
+            done = m_jit.branchTruncateDoubleToInt32(fpr, gpr, MacroAssembler::BranchIfTruncateSuccessful);
         else
-            m_jit.truncateDoubleToUint32(fpr, gpr);
+            done = m_jit.branchTruncateDoubleToUint32(fpr, gpr, MacroAssembler::BranchIfTruncateSuccessful);
+        
+        silentSpillAllRegisters(gpr);
+        callOperation(toInt32, gpr, fpr);
+        silentFillAllRegisters(gpr);
+        
+        done.link(&m_jit);
         fixed.link(&m_jit);
         value.adopt(result);
         valueGPR = gpr;
@@ -2376,6 +2399,11 @@ bool SpeculativeJIT::compileStrictEq(Node& node)
 
 void SpeculativeJIT::compileGetIndexedPropertyStorage(Node& node)
 {
+    if (!node.prediction() || !at(node.child1()).prediction() || !at(node.child2()).prediction()) {
+        terminateSpeculativeExecution(Uncountable, JSValueRegs(), NoNode);
+        return;
+    }
+        
     SpeculateCellOperand base(this, node.child1());
     GPRReg baseReg = base.gpr();
     

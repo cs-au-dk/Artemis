@@ -196,10 +196,10 @@ void HTMLFormControlElement::attach()
     resumePostAttachCallbacks();
 }
 
-void HTMLFormControlElement::willMoveToNewOwnerDocument()
+void HTMLFormControlElement::didMoveToNewDocument(Document* oldDocument)
 {
-    FormAssociatedElement::willMoveToNewOwnerDocument();
-    HTMLElement::willMoveToNewOwnerDocument();
+    FormAssociatedElement::didMoveToNewDocument(oldDocument);
+    HTMLElement::didMoveToNewDocument(oldDocument);
 }
 
 void HTMLFormControlElement::insertedIntoTree(bool deep)
@@ -354,8 +354,7 @@ bool HTMLFormControlElement::willValidate() const
 
 void HTMLFormControlElement::setNeedsWillValidateCheck()
 {
-    // We need to recalculate willValidte immediately because willValidate
-    // change can causes style change.
+    // We need to recalculate willValidate immediately because willValidate change can causes style change.
     bool newWillValidate = recalcWillValidate();
     if (m_willValidateInitialized && m_willValidate == newWillValidate)
         return;
@@ -512,16 +511,12 @@ HTMLFormControlElementWithState::~HTMLFormControlElementWithState()
     document()->unregisterFormElementWithState(this);
 }
 
-void HTMLFormControlElementWithState::willMoveToNewOwnerDocument()
+void HTMLFormControlElementWithState::didMoveToNewDocument(Document* oldDocument)
 {
-    document()->unregisterFormElementWithState(this);
-    HTMLFormControlElement::willMoveToNewOwnerDocument();
-}
-
-void HTMLFormControlElementWithState::didMoveToNewOwnerDocument()
-{
+    if (oldDocument)
+        oldDocument->unregisterFormElementWithState(this);
     document()->registerFormElementWithState(this);
-    HTMLFormControlElement::didMoveToNewOwnerDocument();
+    HTMLFormControlElement::didMoveToNewDocument(oldDocument);
 }
 
 bool HTMLFormControlElementWithState::shouldAutocomplete() const
