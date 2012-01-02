@@ -36,7 +36,6 @@ class GraphicsContext;
 class PlatformGestureEvent;
 class PlatformWheelEvent;
 class ScrollAnimator;
-class ScrollableAreaClient;
 #if USE(ACCELERATED_COMPOSITING)
 class GraphicsLayer;
 #endif
@@ -85,6 +84,8 @@ public:
     void willRemoveVerticalScrollbar(Scrollbar*);
     virtual void didAddHorizontalScrollbar(Scrollbar*);
     virtual void willRemoveHorizontalScrollbar(Scrollbar*);
+
+    virtual void contentsResized();
 
     bool hasOverlayScrollbars() const;
     virtual void setScrollbarOverlayStyle(ScrollbarOverlayStyle);
@@ -140,11 +141,6 @@ public:
     virtual IntSize overhangAmount() const { ASSERT_NOT_REACHED(); return IntSize(); }
     virtual IntPoint currentMousePosition() const { return IntPoint(); }
 
-    virtual void didStartRubberBand(const IntSize&) const { ASSERT_NOT_REACHED(); }
-    virtual void didCompleteRubberBand(const IntSize&) const { ASSERT_NOT_REACHED(); }
-    virtual void didStartAnimatedScroll() const { }
-    virtual void didCompleteAnimatedScroll() const { }
-    
     virtual bool shouldSuspendScrollAnimations() const { return true; }
     virtual void scrollbarStyleChanged(int /*newStyle*/, bool /*forceUpdate*/) { }
     virtual void setVisibleScrollerThumbRect(const IntRect&) { }
@@ -173,7 +169,7 @@ public:
     void setScrollOffsetFromInternals(const IntPoint&);
 
 protected:
-    explicit ScrollableArea(ScrollableAreaClient* = 0);
+    ScrollableArea();
     virtual ~ScrollableArea();
 
     void setScrollOrigin(const IntPoint&);
@@ -197,8 +193,6 @@ protected:
     bool hasLayerForScrollCorner() const;
 
 private:
-    ScrollableAreaClient* m_client;
-
     // NOTE: Only called from the ScrollAnimator.
     friend class ScrollAnimator;
     void setScrollOffsetFromAnimation(const IntPoint&);

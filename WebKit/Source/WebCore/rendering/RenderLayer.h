@@ -438,7 +438,7 @@ public:
         PaintLayerPaintingReflection = 1 << 3,
         PaintLayerPaintingOverlayScrollbars = 1 << 4
 #if ENABLE(CSS_FILTERS)
-        , PaintLayerPaintingFilter = 1 << 5
+        , PaintLayerAppliedFilters = 1 << 5
 #endif
     };
     
@@ -593,6 +593,9 @@ private:
     void paintLayer(RenderLayer* rootLayer, GraphicsContext*, const LayoutRect& paintDirtyRect,
                     PaintBehavior, RenderObject* paintingRoot, RenderRegion* = 0, OverlapTestRequestMap* = 0,
                     PaintLayerFlags = 0);
+    void paintLayerContents(RenderLayer* rootLayer, GraphicsContext*, const LayoutRect& paintDirtyRect,
+                    PaintBehavior, RenderObject* paintingRoot, RenderRegion* = 0, OverlapTestRequestMap* = 0,
+                    PaintLayerFlags = 0);
     void paintList(Vector<RenderLayer*>*, RenderLayer* rootLayer, GraphicsContext* p,
                    const LayoutRect& paintDirtyRect, PaintBehavior,
                    RenderObject* paintingRoot, RenderRegion*, OverlapTestRequestMap*,
@@ -654,7 +657,6 @@ private:
     virtual IntSize contentsSize() const;
     virtual IntSize overhangAmount() const;
     virtual IntPoint currentMousePosition() const;
-    virtual void didCompleteRubberBand(const IntSize&) const;
     virtual bool shouldSuspendScrollAnimations() const;
     virtual bool isOnActivePage() const;
 
@@ -693,7 +695,7 @@ private:
 
 #if ENABLE(CSS_FILTERS)
     void updateOrRemoveFilterEffect();
-    void updateFilterBackingStore();
+    void updateFilterBackingStore(const FloatRect& filterRect);
 #endif
 
     void parentClipRects(const RenderLayer* rootLayer, RenderRegion*, ClipRects&, bool temporaryClipRects = false, OverlayScrollbarSizeRelevancy = IgnoreOverlayScrollbarSize) const;

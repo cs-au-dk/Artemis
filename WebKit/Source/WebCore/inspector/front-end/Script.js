@@ -25,15 +25,16 @@
 
 /**
  * @constructor
- * @param {?string} scriptId
+ * @param {string} scriptId
  * @param {string} sourceURL
  * @param {number} startLine
  * @param {number} startColumn
  * @param {number} endLine
  * @param {number} endColumn
  * @param {boolean} isContentScript
+ * @param {string=} sourceMapURL
  */
-WebInspector.Script = function(scriptId, sourceURL, startLine, startColumn, endLine, endColumn, isContentScript)
+WebInspector.Script = function(scriptId, sourceURL, startLine, startColumn, endLine, endColumn, isContentScript, sourceMapURL)
 {
     this.scriptId = scriptId;
     this.sourceURL = sourceURL;
@@ -42,6 +43,7 @@ WebInspector.Script = function(scriptId, sourceURL, startLine, startColumn, endL
     this.endLine = endLine;
     this.endColumn = endColumn;
     this.isContentScript = isContentScript;
+    this.sourceMapURL = sourceMapURL;
 }
 
 WebInspector.Script.prototype = {
@@ -96,14 +98,14 @@ WebInspector.Script.prototype = {
             }
             callback(result || []);
         }
-        
+
         if (this.scriptId) {
             // Script failed to parse.
             DebuggerAgent.searchInContent(this.scriptId, query, caseSensitive, isRegex, innerCallback.bind(this));
         } else
             callback([]);
     },
-    
+
     /**
      * @param {string} newSource
      * @param {function(?Protocol.Error, Array.<DebuggerAgent.CallFrame>=)} callback
@@ -128,8 +130,11 @@ WebInspector.Script.prototype = {
             callback("Script failed to parse");
     },
 
+    /**
+     * @return {boolean}
+     */
     isInlineScript: function()
     {
-        return this.sourceURL && this.lineOffset !== 0 && this.columnOffset !== 0;
+        return !!this.sourceURL && this.lineOffset !== 0 && this.columnOffset !== 0;
     }
 }

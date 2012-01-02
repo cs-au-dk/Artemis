@@ -39,11 +39,9 @@ protected:
     virtual ~ScrollElasticityControllerClient() { } 
 
 public:
-    virtual bool isHorizontalScrollerPinnedToMinimumPosition() = 0;
-    virtual bool isHorizontalScrollerPinnedToMaximumPosition() = 0;
-
     virtual IntSize stretchAmount() = 0;
-
+    virtual bool pinnedInDirection(const FloatSize&) = 0;
+    virtual void immediateScrollByWithoutContentEdgeConstraints(const FloatSize&) = 0;
     virtual void startSnapRubberbandTimer() = 0;
     virtual void stopSnapRubberbandTimer() = 0;
 };
@@ -67,12 +65,7 @@ public:
     bool m_inScrollGesture;
     bool m_momentumScrollInProgress;
     bool m_ignoreMomentumScrolls;
-    bool m_scrollerInitiallyPinnedOnLeft;
-    bool m_scrollerInitiallyPinnedOnRight;
     
-    int m_cumulativeHorizontalScroll;
-    bool m_didCumulativeHorizontalScrollEverSwitchToOppositeDirectionOfPin;
-
     CFTimeInterval m_lastMomentumScrollTimestamp;
     FloatSize m_overflowScrollDelta;
     FloatSize m_stretchScrollForce;

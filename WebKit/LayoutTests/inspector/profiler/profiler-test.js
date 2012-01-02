@@ -7,7 +7,7 @@ InspectorTest.startProfilerTest = function(callback)
     function startTest()
     {
         InspectorTest.addResult("Profiler was enabled.");
-        InspectorTest.addSniffer(WebInspector.panels.profiles, "_addProfileHeader", InspectorTest._profileHeaderAdded, true);
+        InspectorTest.addSniffer(WebInspector.panels.profiles, "addProfileHeader", InspectorTest._profileHeaderAdded, true);
         InspectorTest.addSniffer(WebInspector.CPUProfileView.prototype, "refresh", InspectorTest._profileViewRefresh, true);
         InspectorTest.safeWrap(callback)();
     }
@@ -75,7 +75,7 @@ InspectorTest.waitUntilProfileViewIsShown = function(title, callback)
     callback = InspectorTest.safeWrap(callback);
 
     var profilesPanel = WebInspector.panels.profiles;
-    if (profilesPanel.visibleView && profilesPanel.visibleView.profile.title === title)
+    if (profilesPanel.visibleView && profilesPanel.visibleView.profile && profilesPanel.visibleView.profile.title === title)
         callback(profilesPanel.visibleView);
     else
         InspectorTest._waitUntilProfileViewIsShownCallback = { title: title, callback: callback };

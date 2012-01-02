@@ -78,7 +78,7 @@ namespace WebCore {
 #if PLATFORM(GTK)
         ContextMenuItemTagDelete,
 #endif
-#if PLATFORM(GTK) || PLATFORM(QT)
+#if PLATFORM(GTK) || PLATFORM(QT) || PLATFORM (EFL)
         ContextMenuItemTagSelectAll,
 #endif
 #if PLATFORM(GTK)
@@ -206,7 +206,7 @@ namespace WebCore {
         bool checked;
         bool enabled;
     };
-#elif PLATFORM(CHROMIUM)
+#elif PLATFORM(CHROMIUM) || PLATFORM(EFL)
     struct PlatformMenuItemDescription {
         PlatformMenuItemDescription()
             : type(ActionType)

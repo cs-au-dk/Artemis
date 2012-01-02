@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2006, 2008, 2009Apple Inc. All rights reserved.
+ * Copyright (C) 2006, 2008, 2009 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -31,6 +31,7 @@ namespace WebCore {
 
 class Node;
 class Widget;
+
 class PluginDocument : public HTMLDocument {
 public:
     static PassRefPtr<PluginDocument> create(Frame* frame, const KURL& url)
@@ -43,9 +44,7 @@ public:
     Widget* pluginWidget();
     Node* pluginNode();
 
-    virtual bool isPluginDocument() const { return true; }
-
-    virtual void detach();
+    virtual void detach() OVERRIDE;
 
     void cancelManualPluginLoad();
 
@@ -54,7 +53,8 @@ public:
 private:
     PluginDocument(Frame*, const KURL&);
 
-    virtual PassRefPtr<DocumentParser> createParser();
+    virtual PassRefPtr<DocumentParser> createParser() OVERRIDE;
+    virtual bool isPluginDocument() const OVERRIDE { return true; }    
         
     void setShouldLoadPluginManually(bool loadManually) { m_shouldLoadPluginManually = loadManually; }
 

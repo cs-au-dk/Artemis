@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009, 2011 Apple Inc. All rights reserved.
+ * Copyright (C) 2009, 2011, 2012 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -26,7 +26,6 @@
 #include "config.h"
 #include "HTMLAllCollection.h"
 
-#include "CollectionCache.h"
 #include "Element.h"
 
 namespace WebCore {
@@ -47,17 +46,19 @@ HTMLAllCollection::~HTMLAllCollection()
 
 Node* HTMLAllCollection::namedItemWithIndex(const AtomicString& name, unsigned index) const
 {
-    resetCollectionInfo();
-    updateNameCache();
-    info()->checkConsistency();
+    if (!base())
+        return 0;
 
-    if (Vector<Element*>* idCache = info()->idCache.get(name.impl())) {
+    invalidateCacheIfNeeded();
+    updateNameCache();
+
+    if (Vector<Element*>* idCache = m_cache.idCache.get(name.impl())) {
         if (index < idCache->size())
             return idCache->at(index);
         index -= idCache->size();
     }
 
-    if (Vector<Element*>* nameCache = info()->nameCache.get(name.impl())) {
+    if (Vector<Element*>* nameCache = m_cache.nameCache.get(name.impl())) {
         if (index < nameCache->size())
             return nameCache->at(index);
     }

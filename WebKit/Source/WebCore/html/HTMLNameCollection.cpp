@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 1999 Lars Knoll (knoll@kde.org)
  *           (C) 1999 Antti Koivisto (koivisto@kde.org)
- * Copyright (C) 2003, 2004, 2005, 2006, 2007 Apple Inc. All rights reserved.
+ * Copyright (C) 2003, 2004, 2005, 2006, 2007, 2011, 2012 Apple Inc. All rights reserved.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -32,14 +32,17 @@ namespace WebCore {
 
 using namespace HTMLNames;
 
-HTMLNameCollection::HTMLNameCollection(PassRefPtr<Document> document, CollectionType type, const String& name)
-    : HTMLCollection(document.get(), type, document->nameCollectionInfo(type, name))
+HTMLNameCollection::HTMLNameCollection(Document* document, CollectionType type, const AtomicString& name)
+    : HTMLCollection(document, type)
     , m_name(name)
 {
 }
 
 Element* HTMLNameCollection::itemAfter(Element* previous) const
 {
+    if (!base())
+        return 0;
+
     ASSERT(previous != base());
 
     Node* current;

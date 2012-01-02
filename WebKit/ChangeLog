@@ -1,3 +1,86 @@
+2011-12-28  ChangSeok Oh  <shivamidow@gmail.com>
+
+        [GTK] Fix compilation issue when selecting opengl for Accelerated compositing
+        https://bugs.webkit.org/show_bug.cgi?id=75309
+
+        Reviewed by Martin Robinson.
+
+        Replace WTF_USE_TEXTURE_MAPPER_OPENGL to WTF_USE_TEXTURE_MAPPER_GL
+
+        * GNUmakefile.am:
+
+2011-12-28  Dan Bernstein  <mitz@apple.com>
+
+        Entering "make" in Source builds only JavaScriptGlue and ANGLE
+        https://bugs.webkit.org/show_bug.cgi?id=75318
+
+        Reviewed by Anders Carlsson.
+
+        * Makefile: Changed to make Source and Tools.
+        * Source/Makefile: Changed to make all projects in Source.
+
+2011-12-27  Kentaro Hara  <haraken@chromium.org>
+
+        WIP: Enable the [Supplemental] IDL on Gtk
+        https://bugs.webkit.org/show_bug.cgi?id=74972
+
+        Reviewed by Adam Barth.
+
+        This patch adds dom_binding_idls, which is used in Source/WebCore/GNUmakefile.list.am.
+
+        * GNUmakefile.am:
+
+2011-12-22  Leo Yang  <leo.yang@torchmobile.com.cn>
+
+        [BlackBerry] Enable blob for the BlackBerry porting
+        https://bugs.webkit.org/show_bug.cgi?id=75074
+
+        Reviewed by George Staikos.
+
+        * Source/cmake/OptionsBlackBerry.cmake:
+
+2011-12-22  Ryuan Choi  <ryuan.choi@samsung.com>
+
+        [EFL][WK2] Add an option to build WebKit2.
+        https://bugs.webkit.org/show_bug.cgi?id=61999
+
+        Reviewed by Eric Seidel.
+
+        * Source/cmake/OptionsEfl.cmake: Set WebKit2_LIBRARY_NAME.
+
+2011-12-22  Daniel Jalkut  <jalkut@red-sweater.com>
+
+        ManualTests HTML template should be simplified
+        https://bugs.webkit.org/show_bug.cgi?id=75025
+
+        Reviewed by Ryosuke Niwa.
+
+        * ManualTests/template.html:
+
+2011-12-22  Daniel Jalkut  <jalkut@red-sweater.com>
+
+        WebKit editing throws exception when monochrome color dragged onto text
+        https://bugs.webkit.org/show_bug.cgi?id=74775
+
+        Reviewed by Ryosuke Niwa.
+
+        * ManualTests/drag-color-to-contenteditable.html: Added.
+
+2011-12-21  Daniel Bates  <dbates@webkit.org>
+
+        Add CMake option to only build JavaScriptCore
+        https://bugs.webkit.org/show_bug.cgi?id=74979
+
+        Reviewed by Rob Buis.
+
+        Towards adding CMake support to script Tools/Scripts/build-jsc, add a CMake
+        option to only build JavaScriptCore.
+
+        * CMakeLists.txt: Defined ENABLE_WEBCORE to build WebCore. If the option
+        ONLY_BUILD_JAVASCRIPTCORE is specified then don't build WebCore, WebKit, or WebKit2.
+        * Source/CMakeLists.txt:
+        * Source/cmake/WebKitFS.cmake:
+
 2011-12-20  Ilya Tikhonovsky  <loislo@chromium.org>
 
         emacs: unreviewed. add settings for editing js files.

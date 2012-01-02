@@ -39,11 +39,10 @@ use webkitdirs;
 use VCSUtils;
 
 sub buildTestTool();
-sub dumpAllTests();
+sub dumpTestsBySuite(\%);
 sub populateTests();
-sub runAllTests();
-sub runAllTestsInSuite($);
-sub runTest($$);
+sub runTest($$$);
+sub runTestsBySuite(\%$);
 sub prepareEnvironmentForRunningTestTool();
 sub testToolPath();
 
@@ -55,7 +54,7 @@ my $timeout = 10;
 
 my $showHelp = 0;
 my $verbose = 0;
-my $dump = 0;
+my $dumpTests = 0;
 my $build = 1;
 my $buildDefault = $build ? "build" : "do not build";
 my @testsFailed;
@@ -74,7 +73,7 @@ EOF
 GetOptions(
     'help' => \$showHelp,
     'verbose|v' => \$verbose,
-    'dump|d' => \$dump,
+    'dump|d' => \$dumpTests,
     'build!' => \$build
 );
 
@@ -88,12 +87,12 @@ buildTestTool() if $build;
 setPathForRunningWebKitApp(\%ENV);
 my %testsToRun = populateTests();
 
-if ($dump) {
-    dumpAllTests();
+if ($dumpTests) {
+    dumpTestsBySuite(%testsToRun);
     exit 0;
 }
 
-if (runAllTests()) {
+if (runTestsBySuite(%testsToRun, $verbose)) {
     exit 1;
 }
 
@@ -102,24 +101,29 @@ sub isSupportedPlatform()
     return isAppleMacWebKit() || isAppleWinWebKit() || isChromium();
 }
 
-sub dumpAllTests()
+sub dumpTestsBySuite(\%)
 {
+    my ($testsBySuite) = @_;
     print "Dumping test cases\n";
     print "------------------\n";
-    for my $suite (keys %testsToRun) {
+    for my $suite (sort keys %$testsBySuite) {
         print $suite . ":\n";
-        print map { "   " . $_ . "\n" } @{ $testsToRun{$suite} };
+        print map { "   " . $_ . "\n" } sort @{ $testsBySuite->{$suite} };
     }
     print "------------------\n";
 }
 
-sub runAllTests()
+sub runTestsBySuite(\%$)
 {
+    my ($tests, $verbose) = @_;
     my $anyFailures = 0;
-    for my $suite (sort keys %testsToRun) {
-        my $failed = runAllTestsInSuite($suite);
-        if ($failed) {
-            $anyFailures = 1;
+    for my $suite (sort keys %$tests) {
+        print "Suite: $suite\n" unless $verbose;
+        for my $test (sort @{$tests->{$suite}}) {
+            my $failed = runTest($suite, $test, $verbose);
+            if ($failed) {
+                $anyFailures = 1;
+            }
         }
     }
     
@@ -140,25 +144,9 @@ sub runAllTests()
     return $anyFailures;
 }
 
-sub runAllTestsInSuite($)
+sub runTest($$$)
 {
-    my ($suite) = @_;
-    print "Suite: $suite\n" unless $verbose;
-
-    my $anyFailures = 0;
-    for my $test (sort @{$testsToRun{$suite}}) {
-        my $failed = runTest($suite, $test);
-        if ($failed) {
-            $anyFailures = 1;
-        }
-    }
-   
-    return $anyFailures;
-}
-
-sub runTest($$)
-{
-    my ($suite, $testName) = @_;
+    my ($suite, $testName, $verbose) = @_;
     my $test = $suite . "." . $testName;
 
     my $gtestArg = "--gtest_filter=" . $test;

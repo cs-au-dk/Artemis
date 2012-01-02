@@ -1,3 +1,539 @@
+2012-01-01  Dan Bernstein  <mitz@apple.com>
+
+        EnvironmentUtilities::stripValuesEndingWithString enters an infinite loop if the search value
+        occurs a component other than the first.
+
+        Reviewed by Anders Carlsson.
+
+        * Platform/unix/EnvironmentUtilities.cpp:
+        (WebKit::EnvironmentUtilities::stripValuesEndingWithString): Changed to start the search for
+        the next colon after the current colon.
+
+2012-01-01  Dan Bernstein  <mitz@apple.com>
+
+        Improved reproting of kernel return codes.
+
+        Reviewed by Anders Carlsson.
+
+        * Platform/CoreIPC/mac/ConnectionMac.cpp:
+        (CoreIPC::Connection::exceptionSourceEventHandler): Added the error string to the log message.
+        * Platform/mac/SharedMemoryMac.cpp:
+        (WebKit::SharedMemory::create): Ditto.
+        * PluginProcess/mac/PluginProcessMainMac.mm:
+        (WebKit::PluginProcessMain): Ditto. Also changed to log to stderr.
+        * WebProcess/mac/WebProcessMainMac.mm:
+        (WebKit::WebProcessMain): Ditto.
+
+2011-12-31  Dan Bernstein  <mitz@apple.com>
+
+        Continue trying to fix the ASSERT-enabled Windows build after r103858.
+
+        * WebProcess/WebPage/WebPage.cpp:
+        (WebKit::WebPage::drawRectToPDF):
+        (WebKit::WebPage::drawPagesToPDF):
+
+2011-12-31  Dan Bernstein  <mitz@apple.com>
+
+        Start trying to fix the Windows build after r103858.
+
+        * WebProcess/WebPage/WebPage.cpp:
+        (WebKit::drawPDFPage):
+
+2011-12-31  Dan Bernstein  <mitz@apple.com>
+
+        <rdar://problem/10463059> Cannot print USPS shipping labels
+        http://webkit.org/b/72801
+
+        Reviewed by Anders Carlsson and Alexey Proskuryakov.
+
+        * WebProcess/Plugins/PDF/BuiltInPDFView.cpp:
+        (appendValuesInPDFNameSubtreeToVector): Copied from WebKit/mac/WebView/WebPDFDocumentExtras.mm.
+        (getAllValuesInPDFNameTree): Ditto.
+        (getAllScriptsInPDFDocument): Copied allScriptsInPDFDocument() from WebPDFDocumentExtras.mm
+        and changed it to append to a Vector<RetainPtr<CFStringRef> >.
+        (WebKit::BuiltInPDFView::create): Changed to take a WebFrame* rather than a Page*.
+        (WebKit::BuiltInPDFView::BuiltInPDFView): Ditto. Updated initializer accordingly.
+        (WebKit::BuiltInPDFView::pdfDocumentDidLoad): Copied and adapted code from
+        -[WebPDFRepresentation finishedLoadingWithDataSource:] to run scripts from the PDF with a
+        Doc object as the this object.
+        (WebKit::BuiltInPDFView::initialize): Adapted for the change from having a Page* to having
+        a WebFrame*.
+        (WebKit::BuiltInPDFView::destroy): Ditto.
+        (WebKit::BuiltInPDFView::isActive): Ditto.
+        (WebKit::jsPDFDocInitialize): Added. Refs the BuiltInPDFView which is the private object for
+        this Doc.
+        (WebKit::jsPDFDocFinalize): Added. Derefs the BuiltInPDFView for this Doc.
+        (WebKit::BuiltInPDFView::jsPDFDocPrint): Added. Calls WebCore::Chrome::print().
+        (WebKit::BuiltInPDFView::makeJSPDFDoc): Copied from WebKit/mac/WebView/WebJSPDFDoc.mm and
+        modified to use this BuiltInPDFView as the private object of the Doc being made.
+        * WebProcess/Plugins/PDF/BuiltInPDFView.h:
+        (WebKit::BuiltInPDFView::disconnectFromPage): Adapted for the change from having a Page* to
+        having a WebFrame*.
+        * WebProcess/WebCoreSupport/WebFrameLoaderClient.cpp:
+        (WebKit::WebFrameLoaderClient::createPlugin): Pass the WebFrame to WebPage::createPlugin().
+        * WebProcess/WebPage/WebPage.cpp:
+        (WebKit::WebPage::createPlugin): Added a WebFrame* parameter, which is used when creating
+        a BuiltInPDFView.
+        * WebProcess/WebPage/WebPage.h:
+
+2011-12-31  Dan Bernstein  <mitz@apple.com>
+
+        <rdar://problem/8553040> REGRESSION (WebKit2): Safari status text doesn't change when you change the modifier keys without moving the mouse
+        https://bugs.webkit.org/show_bug.cgi?id=75404
+
+        Reviewed by Jon Honeycutt.
+
+        * UIProcess/API/mac/WKView.mm:
+        (-[WKView dealloc]): Remove the flags changed event monitor.
+        (-[WKView _postFakeMouseMovedEventForFlagsChangedEvent:]): Added. Similarly to
+        -[WebHTMLView _postFlagsChangedEvent:], creates a mouse moved event and passes it to
+        -mouseMoved:.
+        (-[WKView initWithFrame:contextRef:pageGroupRef:]): Create a local event monitor for flags
+        changed events.
+
+2011-12-31  Dan Bernstein  <mitz@apple.com>
+
+        <rdar://problem/8750356> REGRESSION (WebKit2): Printing a subframe containing a PDF prints the on-screen view instead of the entire PDF document
+        <http://webkit.org/b/75232>
+
+        Reviewed by Alexey Proskuryakov.
+
+        * UIProcess/API/C/WKPage.cpp:
+        (WKPageDrawPagesToPDF): Added WKPrintInfo parameter, which is passed through as a PrintInfo
+        to the WebPageProxy.
+        * UIProcess/API/C/WKPagePrivate.h:
+        * UIProcess/API/mac/WKPrintingView.mm:
+        (-[WKPrintingView _preparePDFDataForPrintingOnSecondaryThread]): Changed to pass the PrintInfo
+        down to WebPageProxy::drawPagesToPDF.
+        (-[WKPrintingView _drawPreview:]): Changed to pass the PrintInfo down to
+        WebPageProxy::drawRectToPDF.
+        * UIProcess/API/mac/WKView.mm:
+        (-[WKView canChangeFrameLayout:]): Changed to use WebFrameProxy::isDisplayingPDFDocument, which
+        works for subframes as well.
+        (-[WKView printOperationWithPrintInfo:forFrame:]): Added a FIXME.
+        * UIProcess/WebFrameProxy.cpp:
+        (WebKit::WebFrameProxy::isDisplayingPDFDocument): Added.
+        * UIProcess/WebFrameProxy.h:
+        * UIProcess/WebPageProxy.cpp:
+        (WebKit::WebPageProxy::drawRectToPDF): Added a PrintInfo parameter, which is passed through to
+        the Web process.
+        (WebKit::WebPageProxy::drawPagesToPDF): Ditto.
+        * UIProcess/WebPageProxy.h:
+        * WebProcess/Plugins/PDF/BuiltInPDFView.h:
+        Added an override of pdfDocumentForPrinting() which returns the PDFDocument.
+        * WebProcess/Plugins/Plugin.h:
+        (WebKit::Plugin::pdfDocumentForPrinting): Added. This base class implementation returns 0.
+        * WebProcess/Plugins/PluginView.h:
+        (WebKit::PluginView::pdfDocumentForPrinting): Added. Calls through to the Plugin.
+        * WebProcess/WebPage/WebPage.cpp:
+        (WebKit::pdfDocumentForPrintingFrame): Added this helper function. If the frame is displaying
+        a plug-in document, allows the plug-in to provide a PDF document for printing.
+        (WebKit::WebPage::beginPrinting): Added an early return if the frame provides a PDF document
+        for printing.
+        (WebKit::WebPage::computePagesForPrinting): If the frame provides a PDF document for printing,
+        create for each page in the PDF document a page rect with the size available for printing.
+        (WebKit::drawPDFPage): Added this helper function, which draws a page from the PDF document
+        into one of the aforementioned page rects. It rotates the PDF page 90 degrees if necessary to
+        better match the aspect ratio of the paper, then it centers it on the paper. This matches the
+        behavior of a PDFView when printed with default settings.
+        (WebKit::WebPage::drawRectToPDF): If the frame provides a PDF document for printing, draw the
+        PDF pages falling within the requested rect.
+        (WebKit::WebPage::drawPagesToPDF): If the frame provides a PDF document for printing, draw
+        the requested pages.
+        * WebProcess/WebPage/WebPage.h:
+        * WebProcess/WebPage/WebPage.messages.in: Added a PrintInfo parameter to DrawRectToPDF and
+        DrawPagesToPDF.
+
+2011-12-30  Dan Bernstein  <mitz@apple.com>
+
+        EnvironmentUtilities::stripValuesEndingWithString fails when the variable ends with the search value
+        https://bugs.webkit.org/show_bug.cgi?id=75389
+
+        Reviewed by Anders Carlsson.
+
+        * Platform/unix/EnvironmentUtilities.cpp:
+        (WebKit::EnvironmentUtilities::stripValuesEndingWithString): Fixed an off-by-1 error when
+        examining the character after the match.
+
+2011-12-29  Caio Marcelo de Oliveira Filho  <caio.oliveira@openbossa.org>
+
+        [Qt] Remove unused m_signalListeners from WorkQueue
+        https://bugs.webkit.org/show_bug.cgi?id=75354
+
+        Reviewed by Andreas Kling.
+
+        This is unused since r76507.
+
+        * Platform/WorkQueue.h:
+        * Platform/qt/WorkQueueQt.cpp:
+        (WorkQueue::platformInvalidate):
+
+2011-12-29  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        [GTK] Context menu is hidden right after showing it when first menu item is not disabled
+        https://bugs.webkit.org/show_bug.cgi?id=75357
+
+        Reviewed by Martin Robinson.
+
+        The problem is that we are passing GDK_CURRENT_TIME (which is 0)
+        to gtk_popup_menu, because the events are async and
+        gtk_get_current_event is NULL when calling gtk_menu_popup. GtkMenu
+        has a timeout to decide whether the press-release was fast enough
+        and ignore the button release event in that case. That way, a
+        normal right click shows the menu while a long press hides the
+        menu when the button is released. So, we need to know the real time
+        when the right button was pressed and pass it to gtk_popup_menu.
+
+        * UIProcess/WebPageProxy.h: Make
+        currentlyProcessedMouseDownEvent() public.
+        * UIProcess/gtk/WebContextMenuProxyGtk.cpp:
+        (WebKit::WebContextMenuProxyGtk::showContextMenu): Use
+        WebPageProxy::currentlyProcessedMouseDownEvent() to get the
+        current mouse event and pass its button number and time to
+        gtk_popup_menu.
+
+2011-12-29  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        [GTK] Fix several conding style issues in WebKit2 GTK+ code
+        https://bugs.webkit.org/show_bug.cgi?id=75339
+
+        Reviewed by Martin Robinson.
+
+        In addition to the WebKit coding style, code in UIProcess/API/gtk
+        should follow style and conventions described here
+        http://trac.webkit.org/wiki/WebKitGTK/AddingNewWebKit2API
+
+        * UIProcess/API/gtk/WebKitSettings.cpp: Remove trailing whitespaces.
+        (webkit_settings_class_init): Remove trailing whitespaces, fix
+        indentation issues in API doc comments, add missing trailing to
+        some properties.
+        (webkit_settings_set_enable_fullscreen): Move the code after
+        get_enable_fullscreen() for consistency.
+        * UIProcess/API/gtk/WebKitSettings.h: Remove trailing
+        whitespaces. Fix * placement and line up parameters.
+        * UIProcess/API/gtk/WebKitWebView.cpp: Remove several empty lines.
+        (webkit_web_view_class_init): Mark property nicks and blurbs for translation.
+        (webkitWebViewSetTitle): Remove trailing whitespaces.
+        * UIProcess/API/gtk/WebKitWebView.h: Line up parameters.
+        * UIProcess/API/gtk/WebKitWebViewBase.cpp: Use the angle-bracket
+        form for including file from WebCore and wtf. Use GRefPtr for
+        GtkIMContext and bool instead of gboolean. Use the placement new
+        syntax for private struct instead of new/delete.
+        (webkitWebViewBaseRealize):
+        (webkitWebViewBaseFinalize):
+        (webkit_web_view_base_init):
+        (webkitWebViewBaseFocusInEvent):
+        (webkitWebViewBaseFocusOutEvent):
+        (webkitWebViewBaseKeyPressEvent): Remove trailing whitespaces.
+        (webkitWebViewBaseKeyReleaseEvent):
+        (webkit_web_view_base_class_init):
+        (webkitWebViewBaseGetIMContext):
+
+2011-12-28  Balazs Kelemen  <kbalazs@webkit.org>
+
+        [Qt][WK2] Crash in ~WebGraphicsLayer when running fast/multicol/pagination-* tests
+        https://bugs.webkit.org/show_bug.cgi?id=75000
+
+        Reviewed by Noam Rosenthal.
+
+        Don't adopt a tile client that belongs to a parent layer.
+        This is unnecessary and also unsafe because we can live
+        through that client.
+
+        * WebProcess/WebCoreSupport/WebGraphicsLayer.cpp:
+        (WebCore::WebGraphicsLayer::syncCompositingStateForThisLayerOnly):
+
+2011-12-27  Dan Bernstein  <mitz@apple.com>
+
+        [mac] Stop using bootstrap_look_up2
+        https://bugs.webkit.org/show_bug.cgi?id=75280
+
+        Reviewed by Mark Rowe.
+
+        * PluginProcess/mac/PluginProcessMainMac.mm:
+        (WebKit::PluginProcessMain): Changed to use bootstrap_look_up() instead of
+        bootstrap_look_up2().
+        * WebProcess/mac/WebProcessMainMac.mm:
+        (WebKit::WebProcessMain): Ditto.
+
+2011-12-27  Kenneth Rohde Christiansen  <kenneth@webkit.org>
+
+        [Qt] Make the inputMethodEvent set or confirm the composition
+        https://bugs.webkit.org/show_bug.cgi?id=75256
+
+        Reviewed by Chang Shu.
+
+        * UIProcess/qt/QtWebPageEventHandler.cpp:
+        (QtWebPageEventHandler::inputMethodEvent):
+
+2011-12-26  Mark Rowe  <mrowe@apple.com>
+
+        <http://webkit.org/b/75196> REGRESSION(r103643): Command-clicking a link no longer opens a new tab.
+
+        r103643 contained some botched copy-paste code that caused the state of the Command key
+        to be lost when translating from a WebKit2 event to a WebCore event.
+
+        Reviewed by Dan Bernstein.
+
+        * Shared/WebEventConversion.cpp:
+        (WebKit::WebKit2PlatformMouseEvent::WebKit2PlatformMouseEvent): Test for the correct modifier.
+        (WebKit::WebKit2PlatformWheelEvent::WebKit2PlatformWheelEvent): Ditto.
+        (WebKit::WebKit2PlatformKeyboardEvent::WebKit2PlatformKeyboardEvent): Ditto.
+        (WebKit::WebKit2PlatformGestureEvent::WebKit2PlatformGestureEvent): Ditto.
+        (WebKit::WebKit2PlatformTouchEvent::WebKit2PlatformTouchEvent): Ditto.
+
+2011-12-26  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        Fix a crash in WebProcess when starting a download not initiated by a WebPage
+        https://bugs.webkit.org/show_bug.cgi?id=75225
+
+        Reviewed by Darin Adler.
+
+        * WebProcess/WebProcess.cpp:
+        (WebKit::WebProcess::downloadRequest): Check initiatingPage is not
+        NULL before using it.
+
+2011-12-25  Dan Bernstein  <mitz@apple.com>
+
+        Find indicators overlap when a match spans multiple text boxes
+        https://bugs.webkit.org/show_bug.cgi?id=75220
+
+        Reviewed by Darin Adler.
+
+        * UIProcess/FindIndicator.cpp:
+        (WebKit::findIndicatorsForTextRectsOverlap): Added this helper function that checks for
+        pairwise intersections between all indicator rects.
+        (WebKit::FindIndicator::FindIndicator): Changed to use a single rect (the union of all text
+        rects) if any two indicator rects would otherwise overlap. This is similar to what Safari
+        does, and it eliminates overlapping rects for adjacent text boxes. In rare cases (such as when
+        a match spans two lines and adjacent text boxes on one of those lines) it results in a find
+        indicator that is too large and obscures some non-match text.
+        * UIProcess/FindIndicator.h:
+
+2011-12-21  Sam Weinig  <sam@webkit.org>
+
+        Start extracting platform specific bits out of PlatformEvents
+        https://bugs.webkit.org/show_bug.cgi?id=75063
+
+        Reviewed by Anders Carlsson.
+
+        * Shared/WebEventConversion.cpp:
+        (WebKit::WebKit2PlatformMouseEvent::WebKit2PlatformMouseEvent):
+        (WebKit::WebKit2PlatformWheelEvent::WebKit2PlatformWheelEvent):
+        (WebKit::WebKit2PlatformKeyboardEvent::WebKit2PlatformKeyboardEvent):
+        (WebKit::WebKit2PlatformGestureEvent::WebKit2PlatformGestureEvent):
+        (WebKit::WebKit2PlatformTouchEvent::WebKit2PlatformTouchEvent):
+        * UIProcess/API/mac/WKView.mm:
+        * WebProcess/WebCoreSupport/mac/WebSystemInterface.mm:
+        (InitWebCoreSystemInterface):
+
+2011-12-22  Caio Marcelo de Oliveira Filho  <caio.oliveira@openbossa.org>
+
+        [Qt] [WK2] Use HashMap instead of Vector in the builtin bundle
+        https://bugs.webkit.org/show_bug.cgi?id=75112
+
+        Reviewed by Andreas Kling.
+
+        Fix my own FIXME now that HashMap have support to hold OwnPtr as value.
+
+        * WebProcess/qt/QtBuiltinBundle.cpp:
+        (WebKit::QtBuiltinBundle::didCreatePage):
+        (WebKit::QtBuiltinBundle::willDestroyPage):
+        (WebKit::QtBuiltinBundle::handleMessageToNavigatorQtObject):
+        (WebKit::QtBuiltinBundle::handleSetNavigatorQtObjectEnabled):
+        * WebProcess/qt/QtBuiltinBundle.h:
+
+2011-12-22  Anders Carlsson  <andersca@apple.com>
+
+        Remove the last of the WebKit2 display throttling
+        https://bugs.webkit.org/show_bug.cgi?id=75109
+
+        Reviewed by Adam Roben.
+
+        The code to do display throttling in WebKit2 is complex and doesn't really help us except
+        on an old benchmark that's no longer representative of real-world behavior; let's rip it out instead.
+
+        * WebProcess/WebPage/DrawingAreaImpl.cpp:
+        (WebKit::DrawingAreaImpl::DrawingAreaImpl):
+        (WebKit::DrawingAreaImpl::displayTimerFired):
+        (WebKit::DrawingAreaImpl::display):
+        * WebProcess/WebPage/DrawingAreaImpl.h:
+        * WebProcess/WebPage/WebPage.cpp:
+        (WebKit::WebPage::wheelEvent):
+        (WebKit::WebPage::wheelEventSyncForTesting):
+
+2011-12-22  Anders Carlsson  <andersca@apple.com>
+
+        Get rid of didStartAnimatedScroll and didCompleteAnimatedScroll
+        https://bugs.webkit.org/show_bug.cgi?id=75107
+
+        Reviewed by Adam Roben.
+
+        This is another step towards removing the display throttling in WebKit2.
+
+        * WebProcess/WebCoreSupport/WebChromeClient.cpp:
+        (WebKit::WebChromeClient::dispatchViewportPropertiesDidChange):
+        * WebProcess/WebCoreSupport/WebChromeClient.h:
+
+2011-12-22  Anders Carlsson  <andersca@apple.com>
+
+        Remove didStartRubberBand and didCompleteRubberBand callbacks
+        https://bugs.webkit.org/show_bug.cgi?id=75102
+
+        Reviewed by Adam Roben.
+
+        The code to do display throttling in WebKit2 is complex and doesn't really help us except
+        on an old benchmark that's no longer representative of real-world behavior; let's rip it out instead.
+
+        * WebProcess/WebCoreSupport/WebChromeClient.cpp:
+        * WebProcess/WebCoreSupport/WebChromeClient.h:
+
+2011-12-22  Ryuan Choi <ryuan.choi@samsung.com>, Tomasz Morawski <t.morawski@samsung.com>
+
+        [EFL][WK2] Add an option to build WebKit2.
+        https://bugs.webkit.org/show_bug.cgi?id=61999
+
+        Reviewed by Eric Seidel.
+
+        Add build script for WebKit2 on EFL port.
+
+        * CMakeLists.txt:
+        * PlatformEfl.cmake: Added.
+
+2011-12-21  Eunmi Lee  <eunmi15.lee@samsung.com>
+
+        [EFL][WK2] Add efl port's ewk_view files
+        https://bugs.webkit.org/show_bug.cgi?id=61915
+
+        Reviewed by Eric Seidel.
+
+        This is the initial version of WebKit2 EFL port's ewk_view.
+        The ewk_view is Evas_Object to show the rendered web contents.
+
+        * UIProcess/API/efl/ewk_view.cpp: Added.
+        (_ewk_view_smart_changed):
+        (_ewk_view_smart_focus_in):
+        (_ewk_view_smart_focus_out):
+        (_ewk_view_smart_mouse_wheel):
+        (_ewk_view_smart_mouse_down):
+        (_ewk_view_smart_mouse_up):
+        (_ewk_view_smart_mouse_move):
+        (_ewk_view_smart_key_down):
+        (_ewk_view_smart_key_up):
+        (_ewk_view_on_focus_in):
+        (_ewk_view_on_focus_out):
+        (_ewk_view_on_mouse_wheel):
+        (_ewk_view_on_mouse_down):
+        (_ewk_view_on_mouse_up):
+        (_ewk_view_on_mouse_move):
+        (_ewk_view_on_key_down):
+        (_ewk_view_on_key_up):
+        (_ewk_view_priv_new):
+        (_ewk_view_priv_del):
+        (_ewk_view_smart_add):
+        (_ewk_view_smart_del):
+        (_ewk_view_smart_resize):
+        (_ewk_view_smart_move):
+        (_ewk_view_smart_calculate):
+        (_ewk_view_smart_show):
+        (_ewk_view_smart_hide):
+        (ewk_view_smart_class_init):
+        (_ewk_view_smart_class_new):
+        (ewk_view_add):
+        (ewk_view_page_get):
+        * UIProcess/API/efl/ewk_view.h: Added.
+
+2011-12-21  Timothy Hatcher  <timothy@apple.com>
+
+        Web Inspector: suppress incremental rendering and use application chrome mode
+
+        https://webkit.org/b/75026
+
+        Reviewed by Joseph Pecoraro.
+
+        * UIProcess/WebInspectorProxy.cpp:
+        (WebKit::createInspectorPageGroup): Set suppress incremental rendering and use application chrome mode.
+
+2011-12-21  Sam Weinig  <sam@webkit.org>
+
+        Cleanup up clients when deallocating WebKit2 API objects
+        https://bugs.webkit.org/show_bug.cgi?id=75014
+
+        Reviewed by Adam Roben.
+
+        * UIProcess/API/mac/WKBrowsingContextController.mm:
+        (-[WKBrowsingContextController dealloc]):
+        * UIProcess/API/mac/WKConnection.mm:
+        (-[WKConnection dealloc]):
+        Clear clients on dealloc.
+
+2011-12-21  Rafael Brandao  <rafael.lobo@openbossa.org>
+
+        [Qt][WK2] Add tests for favicon and fix icon url decoding issue
+        https://bugs.webkit.org/show_bug.cgi?id=74967
+
+        Reviewed by Simon Hausmann.
+
+        * UIProcess/API/qt/qwebiconimageprovider.cpp: We already receive the url
+        without the percent encoding and we should access WebIconDatabase with
+        an encoded url. Added a test to cover this behavior.
+        (QWebIconImageProvider::requestImage):
+        * UIProcess/API/qt/tests/qmltests/WebView/tst_favIconLoad.qml: Added.
+        * UIProcess/API/qt/tests/qmltests/common/favicon.html: Added.
+        * UIProcess/API/qt/tests/qmltests/common/favicon.png: Added.
+        * UIProcess/API/qt/tests/qmltests/common/favicon2.html: Added.
+        * UIProcess/API/qt/tests/qmltests/common/small-favicon.png: Added.
+        * UIProcess/API/qt/tests/qmltests/qmltests.pro:
+
+2011-12-21  Sam Weinig  <sam@webkit.org>
+
+        Exception thrown when running WKBrowsingContextLoadDelegateTest.SimpleLoad test
+        https://bugs.webkit.org/show_bug.cgi?id=75012
+
+        Reviewed by Adam Roben.
+
+        * UIProcess/API/mac/WKProcessGroup.mm:
+        (-[WKProcessGroup dealloc]):
+        Clear the WKContext's connection client.
+
+2011-12-21  Michael Brüning  <michael.bruning@nokia.com>
+
+        [Qt][WK2] Fix tst_QQuickWebView::scrollRequest() API test
+        https://bugs.webkit.org/show_bug.cgi?id=73994
+
+        Reviewed by Kenneth Rohde Christiansen.
+
+        Added a viewport meta tag so that the view is actually scrollable and
+        does not get scaled to not be scrollable. Corrected the style
+        definition for the <div> tag. Removed unneeded text in div
+
+        Rolled back changes some of the changes from the previous patch
+        (r102453) because they weren't necessary.
+
+        * UIProcess/API/qt/tests/html/scroll.html:
+        * UIProcess/API/qt/tests/qquickwebview/tst_qquickwebview.cpp:
+        (tst_QQuickWebView::scrollRequest): Partially rolled back changes.
+
+2011-12-21  Jessie Berlin  <jberlin@apple.com>
+
+        Windows build fix.
+
+        Replace all instances of "WebPropupMenuProxy" with "WebPopupMenuProxy".
+
+        * UIProcess/win/WebPopupMenuProxyWin.cpp:
+        (WebKit::WebPopupMenuProxyWin::showPopupMenu):
+        (WebKit::WebPopupMenuProxyWin::setFocusedIndex):
+
+2011-12-20  Anders Carlsson  <andersca@apple.com>
+
+        Add ScrollableArea::contentsResized and have it call the scroll animator
+        https://bugs.webkit.org/show_bug.cgi?id=74966
+
+        Reviewed by Sam Weinig.
+
+        * WebProcess/Plugins/PDF/BuiltInPDFView.cpp:
+        (WebKit::BuiltInPDFView::scrollbarStyleChanged):
+
 2011-12-20  Anders Carlsson  <andersca@apple.com>
 
         Try to fix the Windows build.

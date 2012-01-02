@@ -43,8 +43,8 @@ var Preferences = {
     exposeDisableCache: false,
     exposeWorkersInspection: false,
     applicationTitle: "Web Inspector - %s",
-    // FIXME: Remove once navigator is production-ready.
-    useScriptNavigator: false
+    showHeapSnapshotObjectsHiddenProperties: false,
+    showDockToRight: false
 }
 
 var Capabilities = {
@@ -82,10 +82,12 @@ WebInspector.Settings = function()
     this.eventListenerBreakpoints = this.createSetting("eventListenerBreakpoints", []);
     this.domBreakpoints = this.createSetting("domBreakpoints", []);
     this.xhrBreakpoints = this.createSetting("xhrBreakpoints", []);
+    this.sourceMapsEnabled = this.createSetting("sourceMapsEnabled", false);
     this.cacheDisabled = this.createSetting("cacheDisabled", false);
     this.overrideUserAgent = this.createSetting("overrideUserAgent", "");
     this.userAgent = this.createSetting("userAgent", "");
     this.showScriptFolders = this.createSetting("showScriptFolders", true);
+    this.dockToRight = this.createSetting("dockToRight", false);
 
     // If there are too many breakpoints in a storage, it is likely due to a recent bug that caused
     // periodical breakpoints duplication leading to inspector slowness.
@@ -155,4 +157,133 @@ WebInspector.Setting.prototype = {
     }
 }
 
+/**
+ * @constructor
+ */
+WebInspector.ExperimentsSettings = function()
+{
+    this._setting = WebInspector.settings.createSetting("experiments", {});
+    this._experiments = [];
+    
+    // Add currently running experiments here.
+    // FIXME: Move out from experiments once navigator is production-ready.
+    this.useScriptsNavigator = this._createExperiment("useScriptsNavigator", "Use file navigator and tabbed editor container in scripts panel");
+    
+    this._cleanUpSetting();
+}
+
+WebInspector.ExperimentsSettings.prototype = {
+    /**
+     * @type {Array.<WebInspector.Experiment>}
+     */
+    get experiments()
+    {
+        return this._experiments.slice();
+    },
+    
+    /**
+     * @type {boolean}
+     */
+    get experimentsEnabled()
+    {
+        return "experiments" in WebInspector.queryParamsObject;
+    },
+    
+    /**
+     * @param {string} experimentName
+     * @param {string} experimentTitle
+     * @return {WebInspector.Experiment}
+     */
+    _createExperiment: function(experimentName, experimentTitle)
+    {
+        var experiment = new WebInspector.Experiment(this, experimentName, experimentTitle);
+        this._experiments.push(experiment);
+        return experiment;
+    },
+    
+    /**
+     * @param {string} experimentName
+     * @return {boolean}
+     */
+    isEnabled: function(experimentName)
+    {
+        if (!this.experimentsEnabled)
+            return false;
+        
+        var experimentsSetting = this._setting.get();
+        return experimentsSetting[experimentName];
+    },
+    
+    /**
+     * @param {string} experimentName
+     * @param {boolean} enabled
+     */
+    setEnabled: function(experimentName, enabled)
+    {
+        var experimentsSetting = this._setting.get();
+        experimentsSetting[experimentName] = enabled;
+        this._setting.set(experimentsSetting);
+    },
+    
+    _cleanUpSetting: function()
+    {
+        var experimentsSetting = this._setting.get();
+        var cleanedUpExperimentSetting = {};
+        for (var i = 0; i < this._experiments.length; ++i) {
+            var experimentName = this._experiments[i].name;
+            if (experimentsSetting[experimentName])
+                cleanedUpExperimentSetting[experimentName] = true;
+        }
+        this._setting.set(cleanedUpExperimentSetting);
+    }
+}
+
+/**
+ * @constructor
+ * @param {WebInspector.ExperimentsSettings} experimentsSettings
+ * @param {string} name
+ * @param {string} title
+ */
+WebInspector.Experiment = function(experimentsSettings, name, title)
+{
+    this._name = name;
+    this._title = title;
+    this._experimentsSettings = experimentsSettings;
+}
+
+WebInspector.Experiment.prototype = {
+    /**
+     * @return {string}
+     */
+    get name()
+    {
+        return this._name;
+    },
+    
+    /**
+     * @return {string}
+     */
+    get title()
+    {
+        return this._title;
+    },
+    
+    /**
+     * @return {boolean}
+     */
+    isEnabled: function()
+    {
+        return this._experimentsSettings.isEnabled(this._name);
+    },
+    
+    /**
+     * @param {boolean} enabled
+     */
+    setEnabled: function(enabled)
+    {
+        return this._experimentsSettings.setEnabled(this._name, enabled);
+    }
+}
+
 WebInspector.settings = new WebInspector.Settings();
+WebInspector.experimentsSettings = new WebInspector.ExperimentsSettings();

@@ -708,7 +708,7 @@ void RenderBlock::addChildIgnoringAnonymousColumnBlocks(RenderObject* newChild, 
 
         ASSERT(beforeChildAnonymousContainer->isTable());
         if ((newChild->isTableCol() && newChild->style()->display() == TABLE_COLUMN_GROUP)
-                || (newChild->isRenderBlock() && newChild->style()->display() == TABLE_CAPTION)
+                || (newChild->isTableCaption())
                 || newChild->isTableSection()
                 || newChild->isTableRow()
                 || newChild->isTableCell()) {
@@ -1452,6 +1452,9 @@ void RenderBlock::computeOverflow(LayoutUnit oldClientAfterEdge, bool recomputeF
         
     // Add visual overflow from box-shadow and border-image-outset.
     addVisualEffectOverflow();
+
+    // Add visual overflow from theme.
+    addVisualOverflowFromTheme();
 }
 
 void RenderBlock::addOverflowFromBlockChildren()
@@ -1491,6 +1494,16 @@ void RenderBlock::addOverflowFromPositionedObjects()
         if (positionedObject->style()->position() != FixedPosition)
             addOverflowFromChild(positionedObject);
     }
+}
+
+void RenderBlock::addVisualOverflowFromTheme()
+{
+    if (!style()->hasAppearance())
+        return;
+
+    IntRect inflatedRect = borderBoxRect();
+    theme()->adjustRepaintRect(this, inflatedRect);
+    addVisualOverflow(inflatedRect);
 }
 
 bool RenderBlock::expandsToEncloseOverhangingFloats() const
@@ -2043,7 +2056,7 @@ void RenderBlock::layoutBlockChild(RenderBox* child, MarginInfo& marginInfo, Lay
     LayoutRect oldRect(child->x(), child->y() , child->width(), child->height());
     LayoutUnit oldLogicalTop = logicalTopForChild(child);
 
-#ifndef NDEBUG
+#if !ASSERT_DISABLED
     LayoutSize oldLayoutDelta = view()->layoutDelta();
 #endif
     // Go ahead and position the child as though it didn't collapse with the top.

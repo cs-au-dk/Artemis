@@ -45,7 +45,6 @@
     # binary and increasing the speed of gdb.
     'enable_svg%': 1,
 
-    'optimize': 'max',
     'enable_wexit_time_destructors': 1,
 
     'webcore_include_dirs': [
@@ -231,6 +230,11 @@
         # FIXME: Also enable this for Windows after verifying no warnings
         'chromium_code': 1,
       }],
+      ['use_x11==1 or OS=="android"', {
+        'webcore_include_dirs': [
+          '../platform/graphics/harfbuzz',
+        ],
+      }],
       ['OS=="win" and buildtype=="Official"', {
         # On windows official release builds, we try to preserve symbol space.
         'derived_sources_aggregate_files': [
@@ -261,6 +265,12 @@
       }],
     ],
   },  # variables
+
+  'target_defaults': {
+    'variables': {
+      'optimize': 'max',
+    },
+  },
 
   'conditions': [
     ['OS!="win" and remove_webcore_debug_symbols==1', {
@@ -334,6 +344,14 @@
         },  # target webkit_system_interface
       ],  # targets
     }],  # condition OS == "mac"
+    ['clang==1', {
+      'target_defaults': {
+        'cflags': ['-Wglobal-constructors'],
+        'xcode_settings': {
+          'WARNING_CFLAGS': ['-Wglobal-constructors'],
+        },
+      },
+    }],
   ],  # conditions
 
   'targets': [
@@ -1448,7 +1466,7 @@
         ['include', 'platform/'],
 
         # FIXME: Figure out how to store these patterns in a variable.
-        ['exclude', '(cairo|ca|cf|cg|curl|efl|freetype|gstreamer|gtk|linux|mac|opengl|openvg|opentype|pango|posix|qt|soup|svg|symbian|texmap|iphone|win|wince|wx)/'],
+        ['exclude', '(cairo|ca|cf|cg|curl|efl|freetype|gstreamer|gtk|harfbuzz|linux|mac|opengl|openvg|opentype|pango|posix|qt|soup|svg|symbian|texmap|iphone|win|wince|wx)/'],
         ['exclude', '(?<!Chromium)(Cairo|CF|CG|Curl|Gtk|JSC|Linux|Mac|OpenType|POSIX|Posix|Qt|Safari|Soup|Symbian|Win|WinCE|Wx)\\.(cpp|mm?)$'],
 
         ['exclude', 'platform/LinkHash\\.cpp$'],
@@ -1470,11 +1488,11 @@
         ['use_x11 == 1', {
           'sources/': [
             # Cherry-pick files excluded by the broader regular expressions above.
-            ['include', 'platform/graphics/chromium/ComplexTextControllerLinux\\.cpp$'],
-            ['include', 'platform/graphics/chromium/FontCacheLinux\\.cpp$'],
-            ['include', 'platform/graphics/chromium/FontLinux\\.cpp$'],
-            ['include', 'platform/graphics/chromium/FontPlatformDataLinux\\.cpp$'],
-            ['include', 'platform/graphics/chromium/SimpleFontDataLinux\\.cpp$'],
+            ['include', 'platform/graphics/harfbuzz/ComplexTextControllerHarfBuzz\\.cpp$'],
+            ['include', 'platform/graphics/harfbuzz/FontHarfBuzz\\.cpp$'],
+            ['include', 'platform/graphics/harfbuzz/FontPlatformDataHarfBuzz\\.cpp$'],
+            ['include', 'platform/graphics/harfbuzz/HarfBuzzSkia\\.cpp$'],
+            ['include', 'platform/graphics/harfbuzz/SimpleFontDataSkia\\.cpp$'],
           ],
         }, { # use_x11==0
           'sources/': [
@@ -1639,6 +1657,7 @@
             ['include', 'platform/graphics/cg/IntSizeCG\\.cpp$'],
             ['exclude', 'platform/graphics/chromium/ImageChromiumMac\\.mm$'],
             ['exclude', 'platform/graphics/mac/FontMac\\.mm$'],
+            ['exclude', 'platform/graphics/skia/FontCacheSkia\\.cpp$'],
             ['exclude', 'platform/graphics/skia/GlyphPageTreeNodeSkia\\.cpp$'],
             ['exclude', 'platform/chromium/DragImageChromiumMac\\.cpp$'],
           ],
@@ -1669,6 +1688,7 @@
 
             # The Chromium Win currently uses GlyphPageTreeNodeChromiumWin.cpp from
             # platform/graphics/chromium, included by regex above, instead.
+            ['exclude', 'platform/graphics/skia/FontCacheSkia\\.cpp$'],
             ['exclude', 'platform/graphics/skia/GlyphPageTreeNodeSkia\\.cpp$'],
 
             # SystemInfo.cpp is useful and we don't want to copy it.
@@ -1679,14 +1699,14 @@
           'sources/': [
             ['include', 'platform/chromium/ClipboardChromiumLinux\\.cpp$'],
             ['include', 'platform/chromium/FileSystemChromiumLinux\\.cpp$'],
-            ['include', 'platform/graphics/chromium/ComplexTextControllerLinux\\.cpp$'],
-            ['include', 'platform/graphics/chromium/FontLinux\\.cpp$'],
-            ['include', 'platform/graphics/chromium/FontPlatformDataLinux\\.cpp$'],
             ['include', 'platform/graphics/chromium/GlyphPageTreeNodeLinux\\.cpp$'],
-            ['include', 'platform/graphics/chromium/HarfbuzzSkia\\.cpp$'],
             ['exclude', 'platform/graphics/chromium/IconChromium\\.cpp$'],
-            ['include', 'platform/graphics/chromium/SimpleFontDataLinux\\.cpp$'],
             ['include', 'platform/graphics/chromium/VDMXParser\\.cpp$'],
+            ['include', 'platform/graphics/harfbuzz/ComplexTextControllerHarfBuzz\\.cpp$'],
+            ['include', 'platform/graphics/harfbuzz/FontHarfBuzz\\.cpp$'],
+            ['include', 'platform/graphics/harfbuzz/FontPlatformDataHarfBuzz\\.cpp$'],
+            ['include', 'platform/graphics/harfbuzz/HarfBuzzSkia\\.cpp$'],
+            ['include', 'platform/graphics/harfbuzz/SimpleFontDataSkia\\.cpp$'],
           ],
         }, { # OS!="android"
           'sources/': [

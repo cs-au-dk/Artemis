@@ -486,6 +486,16 @@ public:
         m_assembler.movzbl_mr(address.offset, address.base, dest);
     }
     
+    void load8Signed(BaseIndex address, RegisterID dest)
+    {
+        m_assembler.movsbl_mr(address.offset, address.base, address.index, address.scale, dest);
+    }
+
+    void load8Signed(ImplicitAddress address, RegisterID dest)
+    {
+        m_assembler.movsbl_mr(address.offset, address.base, dest);
+    }
+    
     void load16(BaseIndex address, RegisterID dest)
     {
         m_assembler.movzwl_mr(address.offset, address.base, address.index, address.scale, dest);
@@ -494,6 +504,16 @@ public:
     void load16(Address address, RegisterID dest)
     {
         m_assembler.movzwl_mr(address.offset, address.base, dest);
+    }
+
+    void load16Signed(BaseIndex address, RegisterID dest)
+    {
+        m_assembler.movswl_mr(address.offset, address.base, address.index, address.scale, dest);
+    }
+    
+    void load16Signed(Address address, RegisterID dest)
+    {
+        m_assembler.movswl_mr(address.offset, address.base, dest);
     }
 
     DataLabel32 store32WithAddressOffsetPatch(RegisterID src, Address address)
@@ -786,6 +806,13 @@ public:
         return branch32(branchType ? NotEqual : Equal, dest, TrustedImm32(0x80000000));
     }
 
+    Jump branchTruncateDoubleToUint32(FPRegisterID src, RegisterID dest, BranchTruncateType branchType = BranchIfTruncateFailed)
+    {
+        ASSERT(isSSE2Present());
+        m_assembler.cvttsd2si_rr(src, dest);
+        return branch32(branchType ? GreaterThanOrEqual : LessThan, dest, TrustedImm32(0));
+    }
+
     void truncateDoubleToInt32(FPRegisterID src, RegisterID dest)
     {
         ASSERT(isSSE2Present());
@@ -797,13 +824,6 @@ public:
     {
         ASSERT(isSSE2Present());
         m_assembler.cvttsd2siq_rr(src, dest);
-    }
-#else
-    void truncateDoubleToUint32(FPRegisterID src, RegisterID dest)
-    {
-        ASSERT(isSSE2Present());
-        // FIXME: Generate correct code for a double to unsigned conversion.
-        m_assembler.cvttsd2si_rr(src, dest);
     }
 #endif
     

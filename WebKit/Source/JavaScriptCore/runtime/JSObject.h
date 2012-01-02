@@ -56,7 +56,7 @@ namespace JSC {
     struct HashTable;
 
     JSObject* throwTypeError(ExecState*, const UString&);
-    extern const char* StrictModeReadonlyPropertyWriteError;
+    extern JS_EXPORTDATA const char* StrictModeReadonlyPropertyWriteError;
 
     // ECMA 262-3 8.6.1
     // Property attributes
@@ -133,6 +133,8 @@ namespace JSC {
         double toNumber(ExecState*) const;
         UString toString(ExecState*) const;
 
+        // NOTE: JSObject and its subclasses must be able to gracefully handle ExecState* = 0,
+        // because this call may come from inside the compiler.
         static JSObject* toThisObject(JSCell*, ExecState*);
         JSObject* unwrappedObject();
 

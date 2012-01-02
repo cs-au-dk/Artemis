@@ -182,25 +182,34 @@ var WebInspector = {
 
         this._attached = x;
 
-        var body = document.body;
-
-        if (x) {
-            body.removeStyleClass("detached");
-            body.addStyleClass("attached");
-        } else {
-            body.removeStyleClass("attached");
-            body.addStyleClass("detached");
-        }
-
         if (this._dockToggleButton) {
             this._dockToggleButton.title = this._dockButtonTitle();
             this._dockToggleButton.toggled = !x;
         }
 
+        this._setCompactMode(x && !WebInspector.settings.dockToRight.get());
+    },
+
+    isCompactMode: function()
+    {
+        return this.attached && !WebInspector.settings.dockToRight.get();
+    },
+
+    _setCompactMode: function(x)
+    {
+        var body = document.body;
+        if (x) {
+            body.removeStyleClass("detached");
+            body.addStyleClass("compact");
+        } else {
+            body.removeStyleClass("compact");
+            body.addStyleClass("detached");
+        }
+
         // This may be called before doLoadedDone, hence the bulk of inspector objects may
         // not be created yet.
         if (WebInspector.toolbar)
-            WebInspector.toolbar.attached = x;
+            WebInspector.toolbar.compact = x;
 
         if (WebInspector.searchController)
             WebInspector.searchController.updateSearchLabel();
@@ -385,8 +394,9 @@ WebInspector._doLoadedDoneWithCapabilities = function()
     this._createPanels();
     this._createGlobalStatusBarItems();
 
+
     this.toolbar = new WebInspector.Toolbar();
-    this.toolbar.attached = WebInspector.attached;
+    WebInspector._installDockToRight();
 
     for (var panelName in this.panels)
         this.addPanel(this.panels[panelName]);
@@ -418,10 +428,37 @@ WebInspector._doLoadedDoneWithCapabilities = function()
     DatabaseAgent.enable();
     DOMStorageAgent.enable();
 
-
     WebInspector.CSSCompletions.requestCSSNameCompletions();
     WebInspector.WorkerManager.loadCompleted();
     InspectorFrontendAPI.loadCompleted();
+}
+
+WebInspector._installDockToRight = function()
+{
+    // Re-use Settings infrastructure for the dock-to-right settings UI
+    WebInspector.settings.dockToRight.set(WebInspector.queryParamsObject.dockSide === "right");
+
+    if (WebInspector.settings.dockToRight.get())
+        document.body.addStyleClass("dock-to-right");
+
+    if (WebInspector.attached)
+        WebInspector._setCompactMode(!WebInspector.settings.dockToRight.get());
+
+    WebInspector.settings.dockToRight.addChangeListener(listener.bind(this));
+
+    function listener(event)
+    {
+        var value = WebInspector.settings.dockToRight.get();
+        if (value) {
+            InspectorFrontendHost.requestSetDockSide("right");
+            document.body.addStyleClass("dock-to-right");
+        } else {
+            InspectorFrontendHost.requestSetDockSide("bottom");
+            document.body.removeStyleClass("dock-to-right");
+        }
+        if (WebInspector.attached)
+            WebInspector._setCompactMode(!value);
+    }
 }
 
 WebInspector.addPanel = function(panel)
@@ -884,12 +921,4 @@ WebInspector._toolbarItemClicked = function(event)
 {
     var toolbarItem = event.currentTarget;
     WebInspector.inspectorView.setCurrentPanel(toolbarItem.panel);
-}
-
-WebInspector.installSourceMappingForTest = function(url)
-{
-    // FIXME: remove this method when it's possible to set compiler source mappings via UI.
-    var sourceMapping = new WebInspector.ClosureCompilerSourceMapping(url);
-    var uiSourceCode = WebInspector.panels.scripts.visibleView._uiSourceCode;
-    uiSourceCode.rawSourceCode.setCompilerSourceMapping(sourceMapping);
 }

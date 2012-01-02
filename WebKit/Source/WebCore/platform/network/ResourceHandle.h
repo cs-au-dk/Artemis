@@ -171,7 +171,7 @@ public:
     static void CALLBACK internetStatusCallback(HINTERNET, DWORD_PTR, DWORD, LPVOID, DWORD);
 #endif
 
-#if PLATFORM(QT) || USE(CURL) || USE(SOUP)
+#if PLATFORM(QT) || USE(CURL) || USE(SOUP) || PLATFORM(BLACKBERRY)
     ResourceHandleInternal* getInternal() { return d.get(); }
 #endif
 
@@ -191,6 +191,10 @@ public:
     void setClient(ResourceHandleClient*);
 
     void setDefersLoading(bool);
+
+#if PLATFORM(BLACKBERRY)
+    void pauseLoad(bool);
+#endif
       
     ResourceRequest& firstRequest();
     const String& lastHTTPMethod() const;

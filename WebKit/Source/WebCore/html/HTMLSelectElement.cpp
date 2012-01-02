@@ -92,6 +92,12 @@ HTMLSelectElement::HTMLSelectElement(const QualifiedName& tagName, Document* doc
     ASSERT(hasTagName(selectTag));
 }
 
+HTMLSelectElement::~HTMLSelectElement()
+{
+    if (m_optionsCollection)
+        m_optionsCollection->detachFromNode();
+}
+
 PassRefPtr<HTMLSelectElement> HTMLSelectElement::create(const QualifiedName& tagName, Document* document, HTMLFormElement* form)
 {
     ASSERT(tagName.matches(selectTag));
@@ -327,7 +333,9 @@ RenderObject* HTMLSelectElement::createRenderer(RenderArena* arena, RenderStyle*
 
 PassRefPtr<HTMLOptionsCollection> HTMLSelectElement::options()
 {
-    return HTMLOptionsCollection::create(this);
+    if (!m_optionsCollection)
+        m_optionsCollection = HTMLOptionsCollection::create(this);
+    return m_optionsCollection;
 }
 
 void HTMLSelectElement::updateListItemSelectedStates()
@@ -680,8 +688,8 @@ void HTMLSelectElement::setRecalcListItems()
     m_activeSelectionAnchorIndex = -1;
     setOptionsChangedOnRenderer();
     setNeedsStyleRecalc();
-    if (!inDocument())
-        m_collectionInfo.reset();
+    if (!inDocument() && m_optionsCollection)
+        m_optionsCollection->invalidateCacheIfNeeded();
 }
 
 void HTMLSelectElement::recalcListItems(bool updateSelectedStates) const
@@ -1113,13 +1121,6 @@ void HTMLSelectElement::menuListDefaultEventHandler(Event* event)
             dispatchChangeEventForMenuList();
             handled = true;
         }
-#else
-        int listIndex = optionToListIndex(selectedIndex());
-        if (keyCode == '\r') {
-            // listIndex should already be selected, but this will fire the onchange handler.
-            selectOption(listToOptionIndex(listIndex), DeselectOtherOptions | DispatchChangeEvent | UserDriven);
-            handled = true;
-        }
 #endif
         if (handled)
             event->setDefaultHandled();
@@ -1441,7 +1442,7 @@ void HTMLSelectElement::typeAheadFind(KeyboardEvent* event)
         // Fold the option string and check if its prefix is equal to the folded prefix.
         String text = toHTMLOptionElement(element)->textIndentedToRespectGroupLabel();
         if (stripLeadingWhiteSpace(text).foldCase().startsWith(prefixWithCaseFolded)) {
-            selectOption(listToOptionIndex(index), DeselectOtherOptions | UserDriven);
+            selectOption(listToOptionIndex(index), DeselectOtherOptions | DispatchChangeEvent | UserDriven);
             if (!usesMenuList())
                 listBoxOnChange();
 

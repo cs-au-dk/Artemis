@@ -557,21 +557,20 @@ JITCode JIT::privateCompile(CodePtr* functionEntryArityCheck)
 #if ENABLE(VALUE_PROFILER)
         ASSERT(m_bytecodeOffset == (unsigned)-1);
         if (shouldEmitProfiling()) {
+            m_codeBlock->setArgumentValueProfileSize(m_codeBlock->m_numParameters);
             for (int argument = 0; argument < m_codeBlock->m_numParameters; ++argument) {
                 // If this is a constructor, then we want to put in a dummy profiling site (to
                 // keep things consistent) but we don't actually want to record the dummy value.
                 if (m_codeBlock->m_isConstructor && !argument)
-                    m_codeBlock->addValueProfile(-1);
-                else {
-                    int offset = CallFrame::argumentOffsetIncludingThis(argument) * static_cast<int>(sizeof(Register));
+                    continue;
+                int offset = CallFrame::argumentOffsetIncludingThis(argument) * static_cast<int>(sizeof(Register));
 #if USE(JSVALUE64)
-                    loadPtr(Address(callFrameRegister, offset), regT0);
+                loadPtr(Address(callFrameRegister, offset), regT0);
 #elif USE(JSVALUE32_64)
-                    load32(Address(callFrameRegister, offset + OBJECT_OFFSETOF(JSValue, u.asBits.payload)), regT0);
-                    load32(Address(callFrameRegister, offset + OBJECT_OFFSETOF(JSValue, u.asBits.tag)), regT1);
+                load32(Address(callFrameRegister, offset + OBJECT_OFFSETOF(JSValue, u.asBits.payload)), regT0);
+                load32(Address(callFrameRegister, offset + OBJECT_OFFSETOF(JSValue, u.asBits.tag)), regT1);
 #endif
-                    emitValueProfilingSite(FirstProfilingSite);
-                }
+                emitValueProfilingSite(m_codeBlock->valueProfileForArgument(argument));
             }
         }
 #endif
@@ -606,7 +605,7 @@ JITCode JIT::privateCompile(CodePtr* functionEntryArityCheck)
         emitPutToCallFrameHeader(regT2, RegisterFile::ReturnPC);
         emitPutImmediateToCallFrameHeader(m_codeBlock, RegisterFile::CodeBlock);
 
-        load32(Address(callFrameRegister, RegisterFile::ArgumentCount * static_cast<int>(sizeof(Register))), regT1);
+        load32(payloadFor(RegisterFile::ArgumentCount), regT1);
         branch32(AboveOrEqual, regT1, TrustedImm32(m_codeBlock->m_numParameters)).linkTo(beginLabel, this);
 
         JITStubCall(this, m_codeBlock->m_isConstructor ? cti_op_construct_arityCheck : cti_op_call_arityCheck).call(callFrameRegister);

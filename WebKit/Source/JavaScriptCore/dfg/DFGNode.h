@@ -931,38 +931,46 @@ struct Node {
     
     bool shouldSpeculateInt8Array()
     {
-        return prediction() == PredictInt8Array;
+#if CPU(X86) || CPU(X86_64)
+        return isInt8ArrayPrediction(prediction());
+#else
+        return false;
+#endif
     }
     
     bool shouldSpeculateInt16Array()
     {
-        return prediction() == PredictInt16Array;
+#if CPU(X86) || CPU(X86_64)
+        return isInt16ArrayPrediction(prediction());
+#else
+        return false;
+#endif
     }
     
     bool shouldSpeculateInt32Array()
     {
-        return prediction() == PredictInt32Array;
+        return isInt32ArrayPrediction(prediction());
     }
     
     bool shouldSpeculateUint8Array()
     {
-        return prediction() == PredictUint8Array;
+        return isUint8ArrayPrediction(prediction());
     }
     
     bool shouldSpeculateUint16Array()
     {
-        return prediction() == PredictUint16Array;
+        return isUint16ArrayPrediction(prediction());
     }
     
     bool shouldSpeculateUint32Array()
     {
-        return prediction() == PredictUint32Array;
+        return isUint32ArrayPrediction(prediction());
     }
     
     bool shouldSpeculateFloat32Array()
     {
 #if CPU(X86) || CPU(X86_64)
-        return !!(prediction() & PredictFloat32Array);
+        return isFloat32ArrayPrediction(prediction());
 #else
         return false;
 #endif
@@ -970,7 +978,7 @@ struct Node {
     
     bool shouldSpeculateFloat64Array()
     {
-        return prediction() == PredictFloat64Array;
+        return isFloat64ArrayPrediction(prediction());
     }
     
     bool shouldSpeculateArrayOrOther()

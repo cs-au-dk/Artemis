@@ -35,9 +35,6 @@
 #include "CounterDirectives.h"
 #include "DataRef.h"
 #include "FillLayer.h"
-#if ENABLE(CSS_FILTERS)
-#include "FilterOperations.h"
-#endif
 #include "Font.h"
 #include "GraphicsTypes.h"
 #include "Length.h"
@@ -52,13 +49,7 @@
 #include "StyleBackgroundData.h"
 #include "StyleBoxData.h"
 #include "StyleDeprecatedFlexibleBoxData.h"
-#if ENABLE(CSS_FILTERS)
-#include "StyleFilterData.h"
-#endif
 #include "StyleFlexibleBoxData.h"
-#if ENABLE(CSS_GRID_LAYOUT)
-#include "StyleGridData.h"
-#endif
 #include "StyleInheritedData.h"
 #include "StyleMarqueeData.h"
 #include "StyleMultiColData.h"
@@ -78,6 +69,15 @@
 #include <wtf/RefCounted.h>
 #include <wtf/StdLibExtras.h>
 #include <wtf/Vector.h>
+
+#if ENABLE(CSS_FILTERS)
+#include "FilterOperations.h"
+#include "StyleFilterData.h"
+#endif
+
+#if ENABLE(CSS_GRID_LAYOUT)
+#include "StyleGridData.h"
+#endif
 
 #if ENABLE(DASHBOARD_SUPPORT)
 #include "StyleDashboardRegion.h"
@@ -386,8 +386,6 @@ public:
     static PassRefPtr<RenderStyle> createDefaultStyle();
     static PassRefPtr<RenderStyle> createAnonymousStyle(const RenderStyle* parentStyle);
     static PassRefPtr<RenderStyle> clone(const RenderStyle*);
-
-    ~RenderStyle();
 
     void inheritFrom(const RenderStyle* inheritParent);
     void copyNonInheritedFrom(const RenderStyle*);

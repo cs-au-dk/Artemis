@@ -29,6 +29,7 @@
     <file>CookiesTable.js</file>
     <file>CSSCompletions.js</file>
     <file>CSSKeywordCompletions.js</file>
+    <file>CSSSelectorProfileView.js</file>
     <file>CSSStyleModel.js</file>
     <file>Database.js</file>
     <file>DatabaseQueryView.js</file>
@@ -72,6 +73,7 @@
     <file>InspectorView.js</file>
     <file>JavaScriptContextManager.js</file>
     <file>JavaScriptFormatter.js</file>
+    <file>JavaScriptOutlineDialog.js</file>
     <file>JavaScriptSourceFrame.js</file>
     <file>KeyboardShortcut.js</file>
     <file>MetricsSidebarPane.js</file>
@@ -88,6 +90,7 @@
     <file>Placard.js</file>
     <file>Popover.js</file>
     <file>ProfileDataGridTree.js</file>
+    <file>ProfileLauncherView.js</file>
     <file>ProfilesPanel.js</file>
     <file>ProfileView.js</file>
     <file>PropertiesSection.js</file>
@@ -131,6 +134,7 @@
     <file>SplitView.js</file>
     <file>StatusBarButton.js</file>
     <file>StylesSidebarPane.js</file>
+    <file>TabbedEditorContainer.js</file>
     <file>TabbedPane.js</file>
     <file>TestController.js</file>
     <file>TextEditorHighlighter.js</file>
@@ -151,7 +155,6 @@
     <file>utilities.js</file>
     <file>View.js</file>
     <file>WatchExpressionsSidebarPane.js</file>
-    <file>WelcomeView.js</file>
     <file>WorkerManager.js</file>
     <file>WorkersSidebarPane.js</file>
     <file>UglifyJS/parse-js.js</file>
@@ -164,6 +167,7 @@
     <file>inspector.css</file>
     <file>inspectorCommon.css</file>
     <file>inspectorSyntaxHighlight.css</file>
+    <file>javaScriptOutlineDialog.css</file>
     <file>networkLogView.css</file>
     <file>networkPanel.css</file>
     <file>panelEnablerView.css</file>
@@ -173,6 +177,7 @@
     <file>resourcesPanel.css</file>
     <file>scriptsPanel.css</file>
     <file>splitView.css</file>
+    <file>tabbedPane.css</file>
     <file>textPrompt.css</file>
     <file>textViewer.css</file>
     <file>timelinePanel.css</file>
@@ -202,6 +207,7 @@
     <file>Images/disclosureTriangleSmallRightDownBlack.png</file>
     <file>Images/disclosureTriangleSmallRightDownWhite.png</file>
     <file>Images/disclosureTriangleSmallRightWhite.png</file>
+    <file>Images/domain.png</file>
     <file>Images/errorIcon.png</file>
     <file>Images/errorMediumIcon.png</file>
     <file>Images/errorRedDot.png</file>

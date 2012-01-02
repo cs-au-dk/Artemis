@@ -69,7 +69,6 @@ BUGWK61932 : jquery/manipulation.html = PASS TEXT
 
 BUGWK37623 : scrollbars/scrollbar-crash-on-refresh.html = PASS TEXT
 
-BUGWK22770 : tables/mozilla_expected_failures/marvin/table_overflow_dirty_reflow_tbody.html = PASS TEXT
 BUGWK59937 : tables/mozilla_expected_failures/bugs/bug85016.html = PASS TEXT
 
 BUGWK71776 : fast/forms/password-placeholder-text-security.html = PASS TEXT
@@ -98,52 +97,6 @@ BUGWK73766 : css3/unicode-bidi-isolate-aharon-failing.html = FAIL
 
 BUGWK74270 : fast/forms/basic-selects.html = FAIL
 
-// Need rebaselining after 71244
-BUGWK74432 : css2.1/20110323/border-conflict-style-079.htm = IMAGE
-BUGWK74432 : css2.1/20110323/floating-replaced-height-008.htm = IMAGE
-BUGWK74432 : css2.1/t170602-bdr-conflct-w-05-d.html = IMAGE
-BUGWK74432 : css2.1/t170602-bdr-conflct-w-06-d.html = IMAGE
-BUGWK74432 : css2.1/t170602-bdr-conflct-w-07-d.html = IMAGE
-BUGWK74432 : css2.1/t170602-bdr-conflct-w-08-d.html = IMAGE
-BUGWK74432 : css2.1/t170602-bdr-conflct-w-15-d.html = IMAGE
-BUGWK74432 : css2.1/t170602-bdr-conflct-w-16-d.html = IMAGE
-BUGWK74432 : css2.1/t170602-bdr-conflct-w-17-d.html = IMAGE
-BUGWK74432 : css2.1/t170602-bdr-conflct-w-18-d.html = IMAGE
-BUGWK74432 : css2.1/t170602-bdr-conflct-w-51-d.html = IMAGE
-BUGWK74432 : css2.1/t170602-bdr-conflct-w-52-d.html = IMAGE
-BUGWK74432 : css2.1/t170602-bdr-conflct-w-53-d.html = IMAGE
-BUGWK74432 : css2.1/t170602-bdr-conflct-w-54-d.html = IMAGE
-BUGWK74432 : css2.1/t170602-bdr-conflct-w-55-d.html = IMAGE
-BUGWK74432 : css2.1/t170602-bdr-conflct-w-56-d.html = IMAGE
-BUGWK74432 : css2.1/t170602-bdr-conflct-w-57-d.html = IMAGE
-BUGWK74432 : css2.1/t170602-bdr-conflct-w-58-d.html = IMAGE
-BUGWK74432 : css2.1/t170602-bdr-conflct-w-59-d.html = IMAGE
-BUGWK74432 : css2.1/t170602-bdr-conflct-w-61-d.html = IMAGE
-BUGWK74432 : css2.1/t170602-bdr-conflct-w-62-d.html = IMAGE
-BUGWK74432 : css2.1/t170602-bdr-conflct-w-63-d.html = IMAGE
-BUGWK74432 : css2.1/t170602-bdr-conflct-w-64-d.html = IMAGE
-BUGWK74432 : css2.1/t170602-bdr-conflct-w-65-d.html = IMAGE
-BUGWK74432 : css2.1/t170602-bdr-conflct-w-66-d.html = IMAGE
-BUGWK74432 : css2.1/t170602-bdr-conflct-w-67-d.html = IMAGE
-BUGWK74432 : css2.1/t170602-bdr-conflct-w-68-d.html = IMAGE
-BUGWK74432 : css2.1/t170602-bdr-conflct-w-69-d.html = IMAGE
-BUGWK74432 : css2.1/t170602-bdr-conflct-w-71-d.html = IMAGE
-BUGWK74432 : css2.1/t170602-bdr-conflct-w-72-d.html = IMAGE
-BUGWK74432 : css2.1/t170602-bdr-conflct-w-73-d.html = IMAGE
-BUGWK74432 : css2.1/t170602-bdr-conflct-w-74-d.html = IMAGE
-BUGWK74432 : css2.1/t170602-bdr-conflct-w-75-d.html = IMAGE
-BUGWK74432 : css2.1/t170602-bdr-conflct-w-76-d.html = IMAGE
-BUGWK74432 : css2.1/t170602-bdr-conflct-w-77-d.html = IMAGE
-BUGWK74432 : css2.1/t170602-bdr-conflct-w-78-d.html = IMAGE
-BUGWK74432 : css2.1/t170602-bdr-conflct-w-79-d.html = IMAGE
-BUGWK74432 : css2.1/t170602-bdr-conflct-w-81-d.html = IMAGE
-BUGWK74432 : css2.1/t170602-bdr-conflct-w-82-d.html = IMAGE
-BUGWK74432 : css2.1/t170602-bdr-conflct-w-83-d.html = IMAGE
-BUGWK74432 : css2.1/t170602-bdr-conflct-w-84-d.html = IMAGE
-BUGWK74432 : css2.1/t170602-bdr-conflct-w-85-d.html = IMAGE
-BUGWK74432 : css2.1/t170602-bdr-conflct-w-86-d.html = IMAGE
-BUGWK74432 : css2.1/t170602-bdr-conflct-w-87-d.html = IMAGE
-BUGWK74432 : css2.1/t170602-bdr-conflct-w-88-d.html = IMAGE
-BUGWK74432 : css2.1/t170602-bdr-conflct-w-89-d.html = IMAGE
-BUGWK74432 : fast/borders/border-antialiasing.html = IMAGE
+BUGWK75432 : fast/dom/constructed-objects-prototypes.html = FAIL
+
 

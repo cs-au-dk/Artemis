@@ -35,13 +35,13 @@
 WebInspector.AuditsPanel = function()
 {
     WebInspector.Panel.call(this, "audits");
+    this.registerRequiredCSS("panelEnablerView.css");
     this.registerRequiredCSS("auditsPanel.css");
 
     this.createSplitViewWithSidebarTree();
     this.auditsTreeElement = new WebInspector.SidebarSectionTreeElement("", {}, true);
     this.sidebarTree.appendChild(this.auditsTreeElement);
     this.auditsTreeElement.listItemElement.addStyleClass("hidden");
-    this.auditsTreeElement.expand();
 
     this.auditsItemTreeElement = new WebInspector.AuditsSidebarTreeElement();
     this.auditsTreeElement.appendChild(this.auditsItemTreeElement);

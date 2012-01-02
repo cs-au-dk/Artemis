@@ -55,6 +55,7 @@ IDL_BINDINGS :=
 TEST_PROGS :=
 POFILES :=
 MOFILES :=
+dom_binding_idls :=
 javascriptcore_h_api :=
 javascriptcore_cppflags:=
 javascriptcore_cflags :=
@@ -177,7 +178,7 @@ endif
 
 if USE_TEXTURE_MAPPER_GL
 global_cppflags += \
-	-DWTF_USE_TEXTURE_MAPPER_OPENGL=1
+	-DWTF_USE_TEXTURE_MAPPER_GL=1
 endif
 
 if USE_CLUTTER

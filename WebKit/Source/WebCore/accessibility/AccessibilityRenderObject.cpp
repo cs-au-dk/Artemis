@@ -995,6 +995,10 @@ String AccessibilityRenderObject::helpText() const
     if (!ariaHelp.isEmpty())
         return ariaHelp;
     
+    String describedBy = ariaDescribedByAttribute();
+    if (!describedBy.isEmpty())
+        return describedBy;
+    
     for (RenderObject* curr = m_renderer; curr; curr = curr->parent()) {
         if (curr->node() && curr->node()->isHTMLElement()) {
             const AtomicString& summary = static_cast<Element*>(curr->node())->getAttribute(summaryAttr);
@@ -1325,10 +1329,6 @@ String AccessibilityRenderObject::title() const
     if (!node)
         return String();
     
-    const AtomicString& title = getAttribute(titleAttr);
-    if (!title.isEmpty())
-        return title;
-    
     bool isInputTag = node->hasTagName(inputTag);
     if (isInputTag) {
         HTMLInputElement* input = static_cast<HTMLInputElement*>(node);
@@ -1338,7 +1338,7 @@ String AccessibilityRenderObject::title() const
     
     if (isInputTag || AccessibilityObject::isARIAInput(ariaRoleAttribute()) || isControl()) {
         HTMLLabelElement* label = labelForElement(static_cast<Element*>(node));
-        if (label && !titleUIElement())
+        if (label && !exposesTitleUIElement())
             return label->innerText();
     }
     
@@ -1379,10 +1379,6 @@ String AccessibilityRenderObject::ariaAccessibilityDescription() const
     const AtomicString& ariaLabel = getAttribute(aria_labelAttr);
     if (!ariaLabel.isEmpty())
         return ariaLabel;
-    
-    String ariaDescription = ariaDescribedByAttribute();
-    if (!ariaDescription.isEmpty())
-        return ariaDescription;
     
     return String();
 }
@@ -1687,10 +1683,13 @@ bool AccessibilityRenderObject::exposesTitleUIElement() const
     if (accessibilityIsIgnored())
         return true;
     
-    // checkbox or radio buttons don't expose the title ui element unless it has a title already
-    if (isCheckboxOrRadio() && getAttribute(titleAttr).isEmpty())
-        return false;
-    
+    // Checkboxes and radio buttons use the text of their title ui element as their own AXTitle.
+    // This code controls whether the title ui element should appear in the AX tree (usually, no).
+    // It should appear if the control already has a label (which will be used as the AXTitle instead).
+    if (isCheckboxOrRadio())
+        return hasTextAlternative();
+
+    // When controls have their own descriptions, the title element should be ignored.
     if (hasTextAlternative())
         return false;
     
@@ -1706,10 +1705,9 @@ AccessibilityObject* AccessibilityRenderObject::titleUIElement() const
     if (isFieldset())
         return axObjectCache()->getOrCreate(toRenderFieldset(m_renderer)->findLegend());
     
-    if (!exposesTitleUIElement())
-        return 0;
-    
     Node* element = m_renderer->node();
+    if (!element)
+        return 0;
     HTMLLabelElement* label = labelForElement(static_cast<Element*>(element));
     if (label && label->renderer())
         return axObjectCache()->getOrCreate(label->renderer());
@@ -1893,6 +1891,11 @@ bool AccessibilityRenderObject::accessibilityIsIgnored() const
     
     // ignore images seemingly used as spacers
     if (isImage()) {
+        
+        // If the image can take focus, it should not be ignored, lest the user not be able to interact with something important.
+        if (canSetFocusAttribute())
+            return false;
+        
         if (node && node->isElementNode()) {
             Element* elt = static_cast<Element*>(node);
             const AtomicString& alt = elt->getAttribute(altAttr);
@@ -3072,6 +3075,10 @@ AccessibilityRole AccessibilityRenderObject::determineAriaRoleAttribute() const
     
     AccessibilityRole role = ariaRoleToWebCoreRole(ariaRole);
 
+    // ARIA states if an item can get focus, it should not be presentational.
+    if (role == PresentationalRole && canSetFocusAttribute())
+        return UnknownRole;
+    
     if (role == ButtonRole && ariaHasPopup())
         role = PopUpButtonRole;
 
@@ -3268,6 +3275,10 @@ AccessibilityOrientation AccessibilityRenderObject::orientation() const
     
 bool AccessibilityRenderObject::inheritsPresentationalRole() const
 {
+    // ARIA states if an item can get focus, it should not be presentational.
+    if (canSetFocusAttribute())
+        return false;
+    
     // ARIA spec says that when a parent object is presentational, and it has required child elements,
     // those child elements are also presentational. For example, <li> becomes presentational from <ul>.
     // http://www.w3.org/WAI/PF/aria/complete#presentation
@@ -3418,7 +3429,7 @@ void AccessibilityRenderObject::childrenChanged()
             axObjectCache()->postNotification(parent, parent->document(), AXObjectCache::AXLiveRegionChanged, true);
         
         // If this element is an ARIA text control, notify the AT of changes.
-        if (parent->isARIATextControl() && !parent->isNativeTextControl() && !parent->node()->isContentEditable())
+        if (parent->isARIATextControl() && !parent->isNativeTextControl() && !parent->node()->rendererIsEditable())
             axObjectCache()->postNotification(parent, parent->document(), AXObjectCache::AXValueChanged, true);
     }
 }

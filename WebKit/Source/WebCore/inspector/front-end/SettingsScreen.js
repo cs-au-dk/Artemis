@@ -39,6 +39,11 @@ WebInspector.SettingsScreen = function()
     this._leftColumnElement = document.createElement("td");
     this._rightColumnElement = document.createElement("td");
 
+    if (Preferences.showDockToRight) {
+        var p = this._appendSection(WebInspector.UIString("General"));
+        p.appendChild(this._createCheckboxSetting(WebInspector.UIString("Dock to right"), WebInspector.settings.dockToRight));
+    }
+
     var p = this._appendSection(WebInspector.UIString("Elements"));
     p.appendChild(this._createCheckboxSetting(WebInspector.UIString("Word wrap"), WebInspector.settings.domWordWrap));
 
@@ -66,6 +71,7 @@ WebInspector.SettingsScreen = function()
     p = this._appendSection(WebInspector.UIString("Scripts"), true);
     p.appendChild(this._createCheckboxSetting(WebInspector.UIString("Show script folders"), WebInspector.settings.showScriptFolders));
     p.appendChild(this._createCheckboxSetting(WebInspector.UIString("Search in content scripts"), WebInspector.settings.searchInContentScripts));
+    p.appendChild(this._createCheckboxSetting(WebInspector.UIString("Enable source maps"), WebInspector.settings.sourceMapsEnabled));
 
     p = this._appendSection(WebInspector.UIString("Profiler"), true);
     p.appendChild(this._createCheckboxSetting(WebInspector.UIString("Show objects' hidden properties"), WebInspector.settings.showHeapSnapshotObjectsHiddenProperties));
@@ -79,6 +85,15 @@ WebInspector.SettingsScreen = function()
         p = this._appendSection(WebInspector.UIString("Extensions"), true);
         p.appendChild(this._createCustomSetting(WebInspector.UIString("Open links in"), handlerSelector.element));
     }
+
+    var experiments = WebInspector.experimentsSettings.experiments;
+    if (WebInspector.experimentsSettings.experimentsEnabled && experiments.length) {
+        var experimentsSection = this._appendSection(WebInspector.UIString("Experiments"), true);
+        experimentsSection.appendChild(this._createExperimentsWarningSubsection());
+        for (var i = 0; i < experiments.length; ++i)
+            experimentsSection.appendChild(this._createExperimentCheckbox(experiments[i]));
+    }
+    
     var table = document.createElement("table");
     table.className = "help-table";
     var tr = document.createElement("tr");
@@ -105,6 +120,20 @@ WebInspector.SettingsScreen.prototype = {
         return p;
     },
 
+    /**
+     * @return {Element} element
+     */
+    _createExperimentsWarningSubsection: function()
+    {
+        var subsection = document.createElement("div");
+        var warning = subsection.createChild("span", "settings-experiments-warning-subsection-warning");
+        warning.textContent = WebInspector.UIString("WARNING:");
+        subsection.appendChild(document.createTextNode(" "));
+        var message = subsection.createChild("span", "settings-experiments-warning-subsection-message");
+        message.textContent = WebInspector.UIString("These experiments could be dangerous and may require restart.");
+        return subsection;
+    },
+
     _columnElement: function(right)
     {
         return right ? this._rightColumnElement : this._leftColumnElement;
@@ -126,6 +155,26 @@ WebInspector.SettingsScreen.prototype = {
         var label = document.createElement("label");
         label.appendChild(input);
         label.appendChild(document.createTextNode(name));
+        p.appendChild(label);
+        return p;
+    },
+
+    _createExperimentCheckbox: function(experiment)
+    {
+        var input = document.createElement("input");
+        input.type = "checkbox";
+        input.name = experiment.name;
+        input.checked = experiment.isEnabled();
+        function listener()
+        {
+            experiment.setEnabled(input.checked);
+        }
+        input.addEventListener("click", listener, false);
+
+        var p = document.createElement("p");
+        var label = document.createElement("label");
+        label.appendChild(input);
+        label.appendChild(document.createTextNode(WebInspector.UIString(experiment.title)));
         p.appendChild(label);
         return p;
     },

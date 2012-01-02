@@ -32,12 +32,15 @@ namespace WebCore {
 
 class HTMLCollection;
 class HTMLTableCaptionElement;
+class HTMLTableRowsCollection;
 class HTMLTableSectionElement;
 
 class HTMLTableElement : public HTMLElement {
 public:
     static PassRefPtr<HTMLTableElement> create(Document*);
     static PassRefPtr<HTMLTableElement> create(const QualifiedName&, Document*);
+
+    virtual ~HTMLTableElement();
 
     HTMLTableCaptionElement* caption() const;
     void setCaption(PassRefPtr<HTMLTableCaptionElement>, ExceptionCode&);
@@ -67,8 +70,6 @@ public:
 
     void addSharedCellDecls(Vector<CSSMutableStyleDeclaration*>&);
     void addSharedGroupDecls(bool rows, Vector<CSSMutableStyleDeclaration*>&);
-
-    CollectionCache* collectionCache() const;
 
 private:
     HTMLTableElement(const QualifiedName&, Document*);
@@ -102,7 +103,7 @@ private:
 
     unsigned short m_padding;
     RefPtr<CSSMappedAttributeDeclaration> m_paddingDecl;
-    mutable OwnPtr<CollectionCache> m_collectionCache;
+    RefPtr<HTMLTableRowsCollection> m_rowsCollection;
 };
 
 } //namespace

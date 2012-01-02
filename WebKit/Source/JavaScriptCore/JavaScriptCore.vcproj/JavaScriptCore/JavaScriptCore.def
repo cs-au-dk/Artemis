@@ -106,7 +106,6 @@ EXPORTS
     ?convertUTF16ToUTF8@Unicode@WTF@@YA?AW4ConversionResult@12@PAPB_WPB_WPAPADPAD_N@Z
     ?convertUTF8ToUTF16@Unicode@WTF@@YA?AW4ConversionResult@12@PAPBDPBDPAPA_WPA_W_N@Z
     ?create@ByteArray@WTF@@SA?AV?$PassRefPtr@VByteArray@WTF@@@2@I@Z
-    ?create@JSArray@JSC@@SAPAV12@AAVJSGlobalData@2@PAVStructure@2@@Z
     ?create@JSArray@JSC@@SAPAV12@AAVJSGlobalData@2@PAVStructure@2@ABVArgList@2@@Z
     ?create@JSFunction@JSC@@SAPAV12@PAVExecState@2@PAVJSGlobalObject@2@HABVIdentifier@2@P6I_J0@Z3@Z
     ?create@JSGlobalData@JSC@@SA?AV?$PassRefPtr@VJSGlobalData@JSC@@@WTF@@W4ThreadStackType@2@W4HeapSize@2@@Z
@@ -184,8 +183,8 @@ EXPORTS
     ?finalize@WeakHandleOwner@JSC@@UAEXV?$Handle@W4Unknown@JSC@@@2@PAX@Z
     ?finishCreation@DateInstance@JSC@@IAEXAAVJSGlobalData@2@N@Z
     ?finishCreation@InternalFunction@JSC@@IAEXAAVJSGlobalData@2@ABVIdentifier@2@@Z
-    ?finishCreation@JSArray@JSC@@IAEXAAVJSGlobalData@2@@Z
     ?finishCreation@JSArray@JSC@@IAEXAAVJSGlobalData@2@ABVArgList@2@@Z
+    ?finishCreation@JSArray@JSC@@IAEXAAVJSGlobalData@2@I@Z
     ?finishCreation@RegExpObject@JSC@@IAEXPAVJSGlobalObject@2@@Z
     ?finishCreation@StringObject@JSC@@IAEXAAVJSGlobalData@2@PAVJSString@2@@Z
     ?focus@Profile@JSC@@QAEXPBVProfileNode@2@@Z
@@ -298,6 +297,7 @@ EXPORTS
     ?retrieveCaller@Interpreter@JSC@@QBE?AVJSValue@2@PAVExecState@2@PAVJSFunction@2@@Z
     ?retrieveLastCaller@Interpreter@JSC@@QBEXPAVExecState@2@AAH1AAVUString@2@AAVJSValue@2@@Z
     ?s_globalObjectMethodTable@JSGlobalObject@JSC@@1UGlobalObjectMethodTable@2@B
+    ?s_info@ExecutableBase@JSC@@2UClassInfo@2@B
     ?setAccessorDescriptor@PropertyDescriptor@JSC@@QAEXVJSValue@2@0I@Z
     ?setConfigurable@PropertyDescriptor@JSC@@QAEX_N@Z
     ?setDescriptor@PropertyDescriptor@JSC@@QAEXVJSValue@2@I@Z
@@ -335,6 +335,7 @@ EXPORTS
     ?throwError@JSC@@YAPAVJSObject@1@PAVExecState@1@PAV21@@Z
     ?throwSyntaxError@JSC@@YAPAVJSObject@1@PAVExecState@1@@Z
     ?throwTypeError@JSC@@YAPAVJSObject@1@PAVExecState@1@@Z
+    ?throwTypeError@JSC@@YAPAVJSObject@1@PAVExecState@1@ABVUString@1@@Z
     ?timedWait@ThreadCondition@WTF@@QAE_NAAVMutex@2@N@Z
     ?tlsKeyCount@WTF@@YAAAJXZ
     ?tlsKeys@WTF@@YAPAKXZ

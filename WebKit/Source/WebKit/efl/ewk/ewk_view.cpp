@@ -30,6 +30,7 @@
 #include "DocumentLoader.h"
 #include "DragClientEfl.h"
 #include "EditorClientEfl.h"
+#include "EflScreenUtilities.h"
 #include "EventHandler.h"
 #include "FocusController.h"
 #include "FrameLoaderClientEfl.h"
@@ -264,6 +265,12 @@ struct _Ewk_View_Private_Data {
         return __VA_ARGS__;                                     \
     }
 
+#define EWK_VIEW_TILED_TYPE_CHECK_OR_RETURN(ewkView, ...) \
+    if (!evas_object_smart_type_check(ewkView, "Ewk_View_Tiled")) { \
+        INF("object is not a instance of Ewk_View_Tiled"); \
+        return __VA_ARGS__; \
+    }
+
 static void _ewk_view_smart_changed(Ewk_View_Smart_Data* smartData)
 {
     if (smartData->changed.any)
@@ -330,7 +337,7 @@ static Eina_Bool _ewk_view_scrolls_resize(Ewk_View_Private_Data* priv, size_t si
     return true;
 }
 
-static void _ewk_view_scroll_add(Ewk_View_Private_Data* priv, Evas_Coord deltaX, Evas_Coord deltaY, Evas_Coord x, Evas_Coord y, Evas_Coord width, Evas_Coord height, Eina_Bool mainScroll)
+static void _ewk_view_scroll_add(Ewk_View_Private_Data* priv, Evas_Coord deltaX, Evas_Coord deltaY, Evas_Coord x, Evas_Coord y, Evas_Coord width, Evas_Coord height)
 {
     Ewk_Scroll_Request* rect;
     Ewk_Scroll_Request* rect_end;
@@ -377,7 +384,6 @@ static void _ewk_view_scroll_add(Ewk_View_Private_Data* priv, Evas_Coord deltaX,
     rect->y2 = y2;
     rect->dx = deltaX;
     rect->dy = deltaY;
-    rect->main_scroll = mainScroll;
     DBG("add scroll in region: %d, %d+%dx%d %+03d, %+03d", x, y, width, height, deltaX, deltaY);
 
     Eina_Rectangle* pr;
@@ -503,7 +509,7 @@ static Eina_Bool _ewk_view_smart_run_javascript_prompt(Ewk_View_Smart_Data* smar
 }
 
 // Event Handling //////////////////////////////////////////////////////
-static void _ewk_view_on_focus_in(void* data, Evas* eventType, Evas_Object* callback, void* eventInfo)
+static void _ewk_view_on_focus_in(void* data, Evas*, Evas_Object*, void*)
 {
     Ewk_View_Smart_Data* smartData = static_cast<Ewk_View_Smart_Data*>(data);
     EINA_SAFETY_ON_NULL_RETURN(smartData->api);
@@ -511,7 +517,7 @@ static void _ewk_view_on_focus_in(void* data, Evas* eventType, Evas_Object* call
     smartData->api->focus_in(smartData);
 }
 
-static void _ewk_view_on_focus_out(void* data, Evas* eventType, Evas_Object* callback, void* eventInfo)
+static void _ewk_view_on_focus_out(void* data, Evas*, Evas_Object*, void*)
 {
     Ewk_View_Smart_Data* smartData = static_cast<Ewk_View_Smart_Data*>(data);
     EINA_SAFETY_ON_NULL_RETURN(smartData->api);
@@ -519,7 +525,7 @@ static void _ewk_view_on_focus_out(void* data, Evas* eventType, Evas_Object* cal
     smartData->api->focus_out(smartData);
 }
 
-static void _ewk_view_on_mouse_wheel(void* data, Evas* eventType, Evas_Object* callback, void* eventInfo)
+static void _ewk_view_on_mouse_wheel(void* data, Evas*, Evas_Object*, void* eventInfo)
 {
     Evas_Event_Mouse_Wheel* wheelEvent = static_cast<Evas_Event_Mouse_Wheel*>(eventInfo);
     Ewk_View_Smart_Data* smartData = static_cast<Ewk_View_Smart_Data*>(data);
@@ -528,7 +534,7 @@ static void _ewk_view_on_mouse_wheel(void* data, Evas* eventType, Evas_Object* c
     smartData->api->mouse_wheel(smartData, wheelEvent);
 }
 
-static void _ewk_view_on_mouse_down(void* data, Evas* eventType, Evas_Object* callback, void* eventInfo)
+static void _ewk_view_on_mouse_down(void* data, Evas*, Evas_Object*, void* eventInfo)
 {
     Evas_Event_Mouse_Down* downEvent = static_cast<Evas_Event_Mouse_Down*>(eventInfo);
     Ewk_View_Smart_Data* smartData = static_cast<Ewk_View_Smart_Data*>(data);
@@ -537,7 +543,7 @@ static void _ewk_view_on_mouse_down(void* data, Evas* eventType, Evas_Object* ca
     smartData->api->mouse_down(smartData, downEvent);
 }
 
-static void _ewk_view_on_mouse_up(void* data, Evas* eventType, Evas_Object* callback, void* eventInfo)
+static void _ewk_view_on_mouse_up(void* data, Evas*, Evas_Object*, void* eventInfo)
 {
     Evas_Event_Mouse_Up* upEvent = static_cast<Evas_Event_Mouse_Up*>(eventInfo);
     Ewk_View_Smart_Data* smartData = static_cast<Ewk_View_Smart_Data*>(data);
@@ -546,7 +552,7 @@ static void _ewk_view_on_mouse_up(void* data, Evas* eventType, Evas_Object* call
     smartData->api->mouse_up(smartData, upEvent);
 }
 
-static void _ewk_view_on_mouse_move(void* data, Evas* eventType, Evas_Object* callback, void* eventInfo)
+static void _ewk_view_on_mouse_move(void* data, Evas*, Evas_Object*, void* eventInfo)
 {
     Evas_Event_Mouse_Move* moveEvent = static_cast<Evas_Event_Mouse_Move*>(eventInfo);
     Ewk_View_Smart_Data* smartData = static_cast<Ewk_View_Smart_Data*>(data);
@@ -555,7 +561,7 @@ static void _ewk_view_on_mouse_move(void* data, Evas* eventType, Evas_Object* ca
     smartData->api->mouse_move(smartData, moveEvent);
 }
 
-static void _ewk_view_on_key_down(void* data, Evas* eventType, Evas_Object* callback, void* eventInfo)
+static void _ewk_view_on_key_down(void* data, Evas*, Evas_Object*, void* eventInfo)
 {
     Evas_Event_Key_Down* downEvent = static_cast<Evas_Event_Key_Down*>(eventInfo);
     Ewk_View_Smart_Data* smartData = static_cast<Ewk_View_Smart_Data*>(data);
@@ -564,7 +570,7 @@ static void _ewk_view_on_key_down(void* data, Evas* eventType, Evas_Object* call
     smartData->api->key_down(smartData, downEvent);
 }
 
-static void _ewk_view_on_key_up(void* data, Evas* eventType, Evas_Object* callback, void* eventInfo)
+static void _ewk_view_on_key_up(void* data, Evas*, Evas_Object*, void* eventInfo)
 {
     Evas_Event_Key_Up* upEvent = static_cast<Evas_Event_Key_Up*>(eventInfo);
     Ewk_View_Smart_Data* smartData = static_cast<Ewk_View_Smart_Data*>(data);
@@ -1079,7 +1085,7 @@ static void _ewk_view_zoom_animation_start(Ewk_View_Smart_Data* smartData)
 static WebCore::ViewportAttributes _ewk_view_viewport_attributes_compute(const Ewk_View_Private_Data* priv)
 {
     int desktopWidth = 980;
-    int deviceDPI = ewk_util_dpi_get();
+    int deviceDPI = WebCore::getDPI();
 
     WebCore::IntRect availableRect = enclosingIntRect(priv->page->chrome()->client()->pageRect());
     WebCore::IntRect deviceRect = enclosingIntRect(priv->page->chrome()->client()->windowRect());
@@ -3185,6 +3191,22 @@ void ewk_view_add_console_message(Evas_Object* ewkView, const char* message, uns
     smartData->api->add_console_message(smartData, message, lineNumber, sourceID);
 }
 
+/**
+ * @internal
+ *
+ * Reports that FrameView object has been created.
+ * Allows to repaint the frame completely even if the areas are out of the screen
+ * when @ewkView is an instance of ewk_view_tiled.
+ *
+ * @param ewkView view object
+ */
+void ewk_view_frame_view_creation_notify(Evas_Object* ewkView)
+{
+    EWK_VIEW_TILED_TYPE_CHECK_OR_RETURN(ewkView);
+    EWK_VIEW_SD_GET_OR_RETURN(ewkView, smartData);
+    ewk_frame_paint_full_set(smartData->main_frame, true);
+}
+
 bool ewk_view_focus_can_cycle(Evas_Object* ewkView, Ewk_Focus_Direction direction)
 {
     DBG("ewkView=%p direction=%d", ewkView, direction);
@@ -3330,7 +3352,7 @@ void ewk_view_repaint(Evas_Object* ewkView, Evas_Coord x, Evas_Coord y, Evas_Coo
     _ewk_view_smart_changed(smartData);
 }
 
-void ewk_view_scroll(Evas_Object* ewkView, Evas_Coord deltaX, Evas_Coord deltaY, Evas_Coord scrollX, Evas_Coord scrollY, Evas_Coord scrollWidth, Evas_Coord scrollHeight, Evas_Coord centerX, Evas_Coord centerY, Evas_Coord centerWidth, Evas_Coord centerHeight, bool mainFrame)
+void ewk_view_scroll(Evas_Object* ewkView, Evas_Coord deltaX, Evas_Coord deltaY, Evas_Coord scrollX, Evas_Coord scrollY, Evas_Coord scrollWidth, Evas_Coord scrollHeight, Evas_Coord centerX, Evas_Coord centerY, Evas_Coord centerWidth, Evas_Coord centerHeight)
 {
     DBG("ewkView=%p, delta: %d,%d, scroll: %d,%d+%dx%d, clip: %d,%d+%dx%d",
         ewkView, deltaX, deltaY, scrollX, scrollY, scrollWidth, scrollHeight, centerX, centerY, centerWidth, centerHeight);
@@ -3343,7 +3365,7 @@ void ewk_view_scroll(Evas_Object* ewkView, Evas_Coord deltaX, Evas_Coord deltaY,
     EWK_VIEW_PRIV_GET_OR_RETURN(smartData, priv);
     EINA_SAFETY_ON_TRUE_RETURN(!deltaX && !deltaY);
 
-    _ewk_view_scroll_add(priv, deltaX, deltaY, scrollX, scrollY, scrollWidth, scrollHeight, mainFrame);
+    _ewk_view_scroll_add(priv, deltaX, deltaY, scrollX, scrollY, scrollWidth, scrollHeight);
 
     _ewk_view_smart_changed(smartData);
 }

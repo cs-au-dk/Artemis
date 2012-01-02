@@ -731,8 +731,15 @@ static void AXAttributeStringSetHeadingLevel(NSMutableAttributedString* attrStri
     if (!renderer)
         return;
     
+    // Sometimes there are objects between the text and the heading. 
+    // In those cases the parent hierarchy should be queried to see if there is a heading level.
+    int parentHeadingLevel = 0;
     AccessibilityObject* parentObject = renderer->document()->axObjectCache()->getOrCreate(renderer->parent());
-    int parentHeadingLevel = parentObject->headingLevel();
+    for (; parentObject; parentObject = parentObject->parentObject()) {
+        parentHeadingLevel = parentObject->headingLevel();
+        if (parentHeadingLevel)
+            break;
+    }
     
     if (parentHeadingLevel)
         [attrString addAttribute:@"AXHeadingLevel" value:[NSNumber numberWithInt:parentHeadingLevel] range:range];
@@ -2255,6 +2262,9 @@ static NSString* roleValueToNSString(AccessibilityRole value)
     }
 
     if ([attributeName isEqualToString:NSAccessibilityTitleUIElementAttribute]) {
+        if (!m_object->exposesTitleUIElement())
+            return nil;
+        
         AccessibilityObject* obj = m_object->titleUIElement();
         if (obj)
             return obj->wrapper();

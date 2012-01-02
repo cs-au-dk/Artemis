@@ -57,13 +57,13 @@ WebInspector.NetworkItemView = function(resource)
         this.appendTab("timing", WebInspector.UIString("Timing"), timingView);
     }
 
-    this.addEventListener("tab-selected", this._tabSelected, this);
+    this.addEventListener(WebInspector.TabbedPane.EventTypes.TabSelected, this._tabSelected, this);
 }
 
 WebInspector.NetworkItemView.prototype = {
     wasShown: function()
     {
-        WebInspector.TabbedPane.prototype.wasShown.call();
+        WebInspector.TabbedPane.prototype.wasShown.call(this);
         this._selectTab();
     },
 

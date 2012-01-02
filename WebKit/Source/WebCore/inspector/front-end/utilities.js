@@ -29,20 +29,6 @@
  * http://ejohn.org/files/jsdiff.js (released under the MIT license).
  */
 
-Function.prototype.bind = function(thisObject)
-{
-    var func = this;
-    var args = Array.prototype.slice.call(arguments, 1);
-    function bound()
-    {
-        return func.apply(thisObject, args.concat(Array.prototype.slice.call(arguments, 0)));
-    }
-    bound.toString = function() {
-        return "bound: " + func;
-    };
-    return bound;
-}
-
 /**
  * @param {string=} direction
  */
@@ -469,8 +455,10 @@ String.prototype.asParsedURL = function()
 
         // Then take last path component.
         var lastSlashIndex = path.lastIndexOf("/");
-        if (lastSlashIndex !== -1)
+        if (lastSlashIndex !== -1) {
+            result.firstPathComponents = path.substring(0, lastSlashIndex + 1);
             result.lastPathComponent = path.substring(lastSlashIndex + 1);
+        }
     } 
     return result;
 }
@@ -520,6 +508,13 @@ String.prototype.trimMiddle = function(maxLength)
     var leftHalf = maxLength >> 1;
     var rightHalf = maxLength - leftHalf - 1;
     return this.substr(0, leftHalf) + "\u2026" + this.substr(this.length - rightHalf, rightHalf);
+}
+
+String.prototype.trimEnd = function(maxLength)
+{
+    if (this.length <= maxLength)
+        return this;
+    return this.substr(0, maxLength - 1) + "\u2026";
 }
 
 String.prototype.trimURL = function(baseURLDomain)
@@ -1180,6 +1175,14 @@ Map.prototype = {
     remove: function(key)
     {
         delete this._map[key.__identifier];
+    },
+    
+    keys: function()
+    {
+        var result = [];
+        for (var key in this._map)
+            result.push(key);
+        return result;
     },
     
     /**

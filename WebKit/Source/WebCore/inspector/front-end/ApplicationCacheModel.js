@@ -65,6 +65,9 @@ WebInspector.ApplicationCacheModel.prototype = {
         ApplicationCacheAgent.getManifestForFrame(frame.id, this._manifestForFrameLoaded.bind(this, frame.id));
     },
     
+    /**
+     * @param {WebInspector.Event} event
+     */
     _frameDetached: function(event)
     {
         var frame = /** @type {WebInspector.ResourceTreeFrame} */ event.data;
@@ -78,7 +81,7 @@ WebInspector.ApplicationCacheModel.prototype = {
 
     /**
      * @param {string} frameId
-     * @param {string} error
+     * @param {?Protocol.Error} error
      * @param {string} manifestURL
      */
     _manifestForFrameLoaded: function(frameId, error, manifestURL)
@@ -93,7 +96,7 @@ WebInspector.ApplicationCacheModel.prototype = {
     },
     
     /**
-     * @param {string} error
+     * @param {?Protocol.Error} error
      * @param {Array.<ApplicationCacheAgent.FrameWithManifest>} framesWithManifests
      */
     _framesWithManifestsLoaded: function(error, framesWithManifests)
@@ -246,5 +249,5 @@ WebInspector.ApplicationCacheDispatcher.prototype = {
     networkStateUpdated: function(isNowOnline)
     {
         this._applicationCacheModel._networkStateUpdated(isNowOnline);
-    },
+    }
 }

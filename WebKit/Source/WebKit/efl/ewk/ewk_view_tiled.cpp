@@ -78,7 +78,6 @@ static void _ewk_view_tiled_smart_add(Evas_Object* ewkView)
     evas_object_smart_callback_add(
         sd->main_frame, "contents,size,changed",
         _ewk_view_tiled_contents_size_changed_cb, sd);
-    ewk_frame_paint_full_set(sd->main_frame, true);
 }
 
 static Eina_Bool _ewk_view_tiled_smart_scrolls_process(Ewk_View_Smart_Data* smartData)
@@ -92,47 +91,8 @@ static Eina_Bool _ewk_view_tiled_smart_scrolls_process(Ewk_View_Smart_Data* smar
 
     scrollRequest = ewk_view_scroll_requests_get(smartData->_priv, &count);
     endOfScrollRequest = scrollRequest + count;
-    for (; scrollRequest < endOfScrollRequest; scrollRequest++) {
-        if (scrollRequest->main_scroll)
-            ewk_tiled_backing_store_scroll_full_offset_add
-                (smartData->backing_store, scrollRequest->dx, scrollRequest->dy);
-        else {
-            Evas_Coord scrollX, scrollY, scrollWidth, scrollHeight;
-
-            scrollX = scrollRequest->x;
-            scrollY = scrollRequest->y;
-            scrollWidth = scrollRequest->w;
-            scrollHeight = scrollRequest->h;
-
-            if (abs(scrollRequest->dx) >= scrollWidth || abs(scrollRequest->dy) >= scrollHeight) {
-                /* doubt webkit would be so     stupid... */
-                DBG("full page scroll %+03d,%+03d. convert to repaint %d,%d + %dx%d",
-                    scrollRequest->dx, scrollRequest->dy, scrollX, scrollY, scrollWidth, scrollHeight);
-                ewk_view_repaint_add(smartData->_priv, scrollX, scrollY, scrollWidth, scrollHeight);
-                continue;
-            }
-
-            if (scrollX + scrollWidth > contentsWidth)
-                scrollWidth = contentsWidth - scrollX;
-            if (scrollY + scrollHeight > contentsHeight)
-                scrollHeight = contentsHeight - scrollY;
-
-            if (scrollWidth < 0)
-                scrollWidth = 0;
-            if (scrollHeight < 0)
-                scrollHeight = 0;
-
-            if (!scrollWidth || !scrollHeight)
-                continue;
-
-            scrollX -= abs(scrollRequest->dx);
-            scrollY -= abs(scrollRequest->dy);
-            scrollWidth += abs(scrollRequest->dx);
-            scrollHeight += abs(scrollRequest->dy);
-            ewk_view_repaint_add(smartData->_priv, scrollX, scrollY, scrollWidth, scrollHeight);
-            INF("using repaint for inner frame scolling!");
-        }
-    }
+    for (; scrollRequest < endOfScrollRequest; scrollRequest++)
+        ewk_tiled_backing_store_scroll_full_offset_add(smartData->backing_store, scrollRequest->dx, scrollRequest->dy);
 
     return true;
 }
@@ -239,8 +199,11 @@ Eina_Bool ewk_view_tiled_smart_set(Ewk_View_Smart_Class* api)
     if (!ewk_view_base_smart_set(api))
         return false;
 
-    if (EINA_UNLIKELY(!_parent_sc.sc.add))
+    if (EINA_UNLIKELY(!_parent_sc.sc.add)) {
+        _parent_sc.sc.name =  "Ewk_View_Tiled";
         ewk_view_base_smart_set(&_parent_sc);
+        api->sc.parent = reinterpret_cast<Evas_Smart_Class*>(&_parent_sc);
+    }
 
     api->sc.add = _ewk_view_tiled_smart_add;
 

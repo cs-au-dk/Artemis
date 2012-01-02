@@ -65,7 +65,6 @@
             'target_name': 'webkit',
             'type': 'static_library',
             'variables': { 'enable_wexit_time_destructors': 1, },
-            'msvs_guid': '5ECEC9E5-8F23-47B6-93E0-C3B328B3BE65',
             'dependencies': [
                 '../../WebCore/WebCore.gyp/WebCore.gyp:webcore',
                 '<(chromium_src_dir)/skia/skia.gyp:skia',
@@ -236,6 +235,7 @@
                 'public/WebSecurityPolicy.h',
                 'public/WebSelectElement.h',
                 'public/WebSettings.h',
+                'public/WebSharedWorkerClient.h',
                 'public/WebSharedWorker.h',
                 'public/WebSharedWorkerRepository.h',
                 'public/WebSocket.h',
@@ -265,7 +265,6 @@
                 'public/WebWidget.h',
                 'public/WebWidgetClient.h',
                 'public/WebWorker.h',
-                'public/WebWorkerClient.h',
                 'public/WebWorkerRunLoop.h',
                 'public/android/WebInputEventFactory.h',
                 'public/android/WebSandboxSupport.h',
@@ -666,8 +665,6 @@
                 'src/WebWorkerBase.h',
                 'src/WebWorkerClientImpl.cpp',
                 'src/WebWorkerClientImpl.h',
-                'src/WebWorkerImpl.cpp',
-                'src/WebWorkerImpl.h',
                 'src/WebWorkerRunLoop.cpp',
                 'src/WorkerAsyncFileSystemChromium.cpp',
                 'src/WorkerAsyncFileSystemChromium.h',
@@ -841,6 +838,12 @@
                         }],
                     ],
                 }],
+                ['clang==1', {
+                    'cflags': ['-Wglobal-constructors'],
+                    'xcode_settings': {
+                        'WARNING_CFLAGS': ['-Wglobal-constructors'],
+                    },
+                }],
             ],
         },
         {
@@ -917,10 +920,10 @@
                 'script_name': 'scripts/generate_devtools_extension_api.py',
                 'inputs': [
                     '<@(_script_name)',
-                    '<@(webinspector_extension_api_files)',
+                    '<@(devtools_extension_api_files)',
                 ],
                 'outputs': ['<(PRODUCT_DIR)/resources/inspector/devtools_extension_api.js'],
-                'action': ['python', '<@(_script_name)', '<@(_outputs)', '<@(webinspector_extension_api_files)'],
+                'action': ['python', '<@(_script_name)', '<@(_outputs)', '<@(devtools_extension_api_files)'],
             }],
         },
         {
@@ -999,7 +1002,7 @@
                     '<@(_workers_files)',
                     '<@(webinspector_image_files)',
                     '<@(devtools_image_files)',
-                    '<@(webinspector_extension_api_files)',
+                    '<@(devtools_extension_api_files)',
                 ],
                 'search_path': [
                     '../../WebCore/inspector/front-end',
@@ -1012,7 +1015,7 @@
                 'action': ['python', '<@(_script_name)', '<@(_inspector_html)',
                                      '--devtools-files', '<@(devtools_files)',
                                      '--workers-files', '<@(_workers_files)',
-                                     '--extension-api-files', '<@(webinspector_extension_api_files)',
+                                     '--extension-api-files', '<@(devtools_extension_api_files)',
                                      '--search-path', '<@(_search_path)',
                                      '--js-search-path', '<@(_js_search_path)',
                                      '--output', '<@(_outputs)'],
@@ -1150,7 +1153,6 @@
                 {
                     'target_name': 'webkit_unit_tests',
                     'type': 'executable',
-                    'msvs_guid': '7CEFE800-8403-418A-AD6A-2D52C6FC3EAD',
                     'dependencies': [
                         'webkit',
                         '../../WebCore/WebCore.gyp/WebCore.gyp:webcore',

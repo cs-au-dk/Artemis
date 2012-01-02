@@ -62,27 +62,8 @@ public:
     ScrollAnimatorMac(ScrollableArea*);
     virtual ~ScrollAnimatorMac();
 
-    virtual bool scroll(ScrollbarOrientation, ScrollGranularity, float step, float multiplier);
-    virtual void scrollToOffsetWithoutAnimation(const FloatPoint&);
-
-#if ENABLE(RUBBER_BANDING)
-    virtual bool handleWheelEvent(const PlatformWheelEvent&) OVERRIDE;
-#if ENABLE(GESTURE_EVENTS)
-    virtual void handleGestureEvent(const PlatformGestureEvent&);
-#endif
-#endif
-
-    virtual void cancelAnimations();
-
-    void immediateScrollToPoint(const FloatPoint& newPosition);
-    void immediateScrollByDeltaX(float deltaX);
-    void immediateScrollByDeltaY(float deltaY);
-
     void immediateScrollToPointForScrollAnimation(const FloatPoint& newPosition);
-
     bool haveScrolledSincePageLoad() const { return m_haveScrolledSincePageLoad; }
-
-    virtual void setIsActive();
 
     void updateScrollerStyle();
 
@@ -103,6 +84,19 @@ private:
 
     void initialScrollbarPaintTimerFired(Timer<ScrollAnimatorMac>*);
     Timer<ScrollAnimatorMac> m_initialScrollbarPaintTimer;
+
+    virtual bool scroll(ScrollbarOrientation, ScrollGranularity, float step, float multiplier);
+    virtual void scrollToOffsetWithoutAnimation(const FloatPoint&);
+
+#if ENABLE(RUBBER_BANDING)
+    virtual bool handleWheelEvent(const PlatformWheelEvent&) OVERRIDE;
+#if ENABLE(GESTURE_EVENTS)
+    virtual void handleGestureEvent(const PlatformGestureEvent&);
+#endif
+#endif
+
+    virtual void cancelAnimations();
+    virtual void setIsActive();
     
     virtual void notifyPositionChanged();
     virtual void contentAreaWillPaint() const;
@@ -124,18 +118,18 @@ private:
     virtual void didAddHorizontalScrollbar(Scrollbar*);
     virtual void willRemoveHorizontalScrollbar(Scrollbar*);
 
-    void setNeedsScrollerStyleUpdate(bool needsUpdate) { m_needsScrollerStyleUpdate = needsUpdate; }
-    bool needsScrollerStyleUpdate() const { return m_needsScrollerStyleUpdate; }
-
     float adjustScrollXPositionIfNecessary(float) const;
     float adjustScrollYPositionIfNecessary(float) const;
     FloatPoint adjustScrollPositionIfNecessary(const FloatPoint&) const;
 
+    void immediateScrollTo(const FloatPoint&);
+    void immediateScrollBy(const FloatSize&);
+
 #if ENABLE(RUBBER_BANDING)
     /// ScrollElasticityControllerClient member functions.
-    virtual bool isHorizontalScrollerPinnedToMinimumPosition() OVERRIDE;
-    virtual bool isHorizontalScrollerPinnedToMaximumPosition() OVERRIDE;
     virtual IntSize stretchAmount() OVERRIDE;
+    virtual bool pinnedInDirection(const FloatSize&) OVERRIDE;
+    virtual void immediateScrollByWithoutContentEdgeConstraints(const FloatSize&) OVERRIDE;
     virtual void startSnapRubberbandTimer() OVERRIDE;
     virtual void stopSnapRubberbandTimer() OVERRIDE;
 
@@ -150,6 +144,11 @@ private:
 
     ScrollElasticityController m_scrollElasticityController;
     Timer<ScrollAnimatorMac> m_snapRubberBandTimer;
+
+    bool m_scrollerInitiallyPinnedOnLeft;
+    bool m_scrollerInitiallyPinnedOnRight;
+    int m_cumulativeHorizontalScroll;
+    bool m_didCumulativeHorizontalScrollEverSwitchToOppositeDirectionOfPin;
 #endif
 
     bool m_haveScrolledSincePageLoad;

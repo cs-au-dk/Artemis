@@ -124,23 +124,8 @@ static inline RenderView* rootRenderer(const FrameView* view)
     return view->frame() ? view->frame()->contentRenderer() : 0;
 }
 
-static inline ScrollableAreaClient* scrollableAreaClient(Frame* frame)
-{
-#if ENABLE(THREADED_SCROLLING)
-    if (Page* page = frame ? frame->page() : 0) {
-        if (ScrollingCoordinator* scrollingCoordinator = page->scrollingCoordinator())
-            return scrollingCoordinator->scrollableAreaClientForFrame(frame);
-    }
-#else
-    UNUSED_PARAM(frame);
-#endif
-
-    return 0;
-}
-
 FrameView::FrameView(Frame* frame)
-    : ScrollView(scrollableAreaClient(frame))
-    , m_frame(frame)
+    : m_frame(frame)
     , m_canHaveScrollbars(true)
     , m_slowRepaintObjectCount(0)
     , m_fixedObjectCount(0)
@@ -531,7 +516,7 @@ void FrameView::setContentsSize(const IntSize& size)
     m_deferSetNeedsLayouts++;
 
     ScrollView::setContentsSize(size);
-    scrollAnimator()->contentsResized();
+    ScrollView::contentsResized();
     
     Page* page = frame() ? frame()->page() : 0;
     if (!page)
@@ -1750,6 +1735,7 @@ void FrameView::scrollPositionChangedViaPlatformWidget()
 void FrameView::scrollPositionChanged()
 {
     frame()->eventHandler()->sendScrollEvent();
+    frame()->eventHandler()->dispatchFakeMouseMoveEventSoon();
 
 #if USE(ACCELERATED_COMPOSITING)
     if (RenderView* root = rootRenderer(this)) {
@@ -1841,7 +1827,7 @@ void FrameView::repaintContentRectangle(const IntRect& r, bool immediate)
 
 void FrameView::contentsResized()
 {
-    scrollAnimator()->contentsResized();
+    ScrollView::contentsResized();
     setNeedsLayout();
 }
 
@@ -2539,38 +2525,6 @@ IntRect FrameView::windowResizerRect() const
     if (!page)
         return IntRect();
     return page->chrome()->windowResizerRect();
-}
-
-void FrameView::didStartRubberBand(const IntSize& initialOverhang) const
-{
-    Page* page = m_frame->page();
-    if (!page)
-        return;
-    page->chrome()->client()->didCompleteRubberBandForFrame(m_frame.get(), initialOverhang);
-}
-
-void FrameView::didCompleteRubberBand(const IntSize& initialOverhang) const
-{
-    Page* page = m_frame->page();
-    if (!page)
-        return;
-    page->chrome()->client()->didCompleteRubberBandForFrame(m_frame.get(), initialOverhang);
-}
-
-void FrameView::didStartAnimatedScroll() const
-{
-    Page* page = m_frame->page();
-    if (!page)
-        return;
-    page->chrome()->client()->didStartAnimatedScroll();
-}
-
-void FrameView::didCompleteAnimatedScroll() const
-{
-    Page* page = m_frame->page();
-    if (!page)
-        return;
-    page->chrome()->client()->didCompleteAnimatedScroll();
 }
 
 void FrameView::setVisibleScrollerThumbRect(const IntRect& scrollerThumb)

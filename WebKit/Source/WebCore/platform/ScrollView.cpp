@@ -41,9 +41,8 @@ using namespace std;
 
 namespace WebCore {
 
-ScrollView::ScrollView(ScrollableAreaClient *client)
-    : ScrollableArea(client)
-    , m_horizontalScrollbarMode(ScrollbarAuto)
+ScrollView::ScrollView()
+    : m_horizontalScrollbarMode(ScrollbarAuto)
     , m_verticalScrollbarMode(ScrollbarAuto)
     , m_horizontalScrollbarLock(false)
     , m_verticalScrollbarLock(false)
@@ -324,10 +323,6 @@ int ScrollView::scrollSize(ScrollbarOrientation orientation) const
 {
     Scrollbar* scrollbar = ((orientation == HorizontalScrollbar) ? m_horizontalScrollbar : m_verticalScrollbar).get();
     return scrollbar ? (scrollbar->totalSize() - scrollbar->visibleSize()) : 0;
-}
-
-void ScrollView::didCompleteRubberBand(const IntSize&) const
-{
 }
 
 void ScrollView::notifyPageThatContentAreaWillPaint() const
@@ -902,12 +897,22 @@ static void positionScrollbarLayer(GraphicsLayer* graphicsLayer, Scrollbar* scro
 {
     if (!graphicsLayer || !scrollbar)
         return;
-    graphicsLayer->setDrawsContent(true);
+
     IntRect scrollbarRect = scrollbar->frameRect();
     graphicsLayer->setPosition(scrollbarRect.location());
-    if (scrollbarRect.size() != graphicsLayer->size())
-        graphicsLayer->setNeedsDisplay();
+
+    if (scrollbarRect.size() == graphicsLayer->size())
+        return;
+
     graphicsLayer->setSize(scrollbarRect.size());
+
+    if (graphicsLayer->hasContentsLayer()) {
+        graphicsLayer->setContentsRect(IntRect(0, 0, scrollbarRect.width(), scrollbarRect.height()));
+        return;
+    }
+
+    graphicsLayer->setDrawsContent(true);
+    graphicsLayer->setNeedsDisplay();
 }
 
 static void positionScrollCornerLayer(GraphicsLayer* graphicsLayer, const IntRect& cornerRect)

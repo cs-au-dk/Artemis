@@ -409,10 +409,7 @@ http/tests/xmlhttprequest/workers/shared-worker-methods.html
 # Fixed in Qt 4.8
 http/tests/xmlhttprequest/re-login.html
 
-# Still fail with Qt 4.7.1
 http/tests/xmlhttprequest/cache-override.html
-http/tests/xmlhttprequest/cross-origin-authorization.html
-http/tests/xmlhttprequest/cross-origin-no-authorization.html
 
 # =========================================================================== #
 #       Failing inserting tests.                                              #
@@ -1470,6 +1467,7 @@ fast/xpath/string-value.html
 fast/repaint/japanese-rl-selection-clear.html
 fast/repaint/japanese-rl-selection-repaint.html
 fast/repaint/japanese-rl-selection-repaint-in-regions.html
+fast/text/international/bdi-neutral-wrapped.html
 fast/text/international/bidi-mirror-he-ar.html
 fast/text/international/bold-bengali.html
 fast/text/international/hebrew-vowels.html
@@ -1839,10 +1837,6 @@ http/tests/xmlviewer/dumpAsText/xmlviewer-charset-utf8.xml
 http/tests/xmlviewer/dumpAsText/xmlviewer.xml
 http/tests/xmlviewer/dumpAsText/xsl-stylesheet.xml
 http/tests/xmlviewer/dumpAsText/xul.xml
-
-# [Qt] Two http auth tests fail with Qt 4.7.2
-# https://bugs.webkit.org/show_bug.cgi?id=55767
-http/tests/appcache/auth.html
 
 # LayoutTestController::clearApplicationCacheForOrigin is not implemented
 http/tests/appcache/origin-delete.html
@@ -2529,10 +2523,6 @@ tables/mozilla/bugs/bug2947.html
 # https://bugs.webkit.org/show_bug.cgi?id=74482
 plugins/netscape-plugin-page-cache-works.html
 
-# [Qt][GTK] The html5lib/runner.html test is start to fail after r102626
-# https://bugs.webkit.org/show_bug.cgi?id=74411
-html5lib/runner.html
-
 # [Qt] REGRESSION(103045): It made fast/forms/select-script-onchange.html fail
 # https://bugs.webkit.org/show_bug.cgi?id=74700
 fast/forms/select-script-onchange.html
@@ -2540,3 +2530,21 @@ fast/forms/select-script-onchange.html
 # [Qt] svg/custom/svg-fonts-no-latin-glyph.html fails
 # https://bugs.webkit.org/show_bug.cgi?id=74847
 svg/custom/svg-fonts-no-latin-glyph.html
+
+# [Qt] fails fast/inline/nested-text-descendants.html
+# https://bugs.webkit.org/show_bug.cgi?id=75321
+fast/inline/nested-text-descendants.html
+
+# [Qt] fast/css/absolute-inline-alignment.html fails
+# https://bugs.webkit.org/show_bug.cgi?id=75400
+fast/css/absolute-inline-alignment.html
+fast/css/absolute-inline-alignment-2.html
+
+# Remove unnecessary [Custom] attribute in CanvasRenderingContext2D.idl
+# https://bugs.webkit.org/show_bug.cgi?id=75376
+canvas/philip/tests/2d.pattern.image.string.html
+canvas/philip/tests/2d.pattern.image.undefined.html
+
+# fast/dom/htmlcollection-zombies.html fails on GTK and on Qt
+# https://bugs.webkit.org/show_bug.cgi?id=75431
+fast/dom/htmlcollection-zombies.html

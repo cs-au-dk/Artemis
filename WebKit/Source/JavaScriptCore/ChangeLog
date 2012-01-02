@@ -1,3 +1,809 @@
+2012-01-01  Filip Pizlo  <fpizlo@apple.com>
+
+        Call instructions should leave room for linking information
+        https://bugs.webkit.org/show_bug.cgi?id=75422
+        <rdar://problem/10633985>
+
+        Reviewed by Oliver Hunt.
+
+        * bytecode/Opcode.h:
+        * bytecompiler/BytecodeGenerator.cpp:
+        (JSC::BytecodeGenerator::emitCall):
+        (JSC::BytecodeGenerator::emitConstruct):
+
+2011-12-31  Dan Bernstein  <mitz@apple.com>
+
+        Continue trying to fix the Windows build after r103823.
+
+        * JavaScriptCore.vcproj/JavaScriptCore/JavaScriptCore.def:
+
+2011-12-31  Dan Bernstein  <mitz@apple.com>
+
+        Start trying to fix the Windows build after r103823.
+
+        * JavaScriptCore.vcproj/JavaScriptCore/JavaScriptCore.def:
+
+2011-12-30  Anders Carlsson  <andersca@apple.com>
+
+        Add a ParamStorageTraits specialization for RetainPtr
+        https://bugs.webkit.org/show_bug.cgi?id=75392
+
+        Reviewed by Daniel Bates.
+
+        * wtf/Functional.h:
+        Add a partial specialization of ParamStorageTraits for RetainPtr<T>.
+
+        * wtf/RetainPtr.h:
+        Bring in the retainPtr function template from WTF.
+
+2011-12-29  Sam Weinig  <sam@webkit.org>
+
+        It should be easier to iterate a Vector backwards
+        https://bugs.webkit.org/show_bug.cgi?id=75359
+
+        Reviewed by Anders Carlsson.
+
+        Adds Vector::rbegin(), Vector::rend(), and Vector::reversed(),
+        a new proxy driven way to access a vector backwards. One can use
+        reversed() in a range-based for loop like so:
+
+            for (auto val: myVector.reversed())
+                doSomething(val)
+
+        * wtf/Vector.h:
+        (WTF::Vector::~Vector):
+        Fix style.
+
+        (WTF::Vector::rbegin):
+        (WTF::Vector::rend):
+        Added using standard adaptor std::reverse_iterator.
+
+        (WTF::Vector::reversed):
+        (WTF::Vector::VectorReverseProxy::begin):
+        (WTF::Vector::VectorReverseProxy::end):
+        Add proxy similar to one used in HashMap for keys() and values()
+        which allows access to a Vector backwards for use in range-based
+        for loops.
+
+2011-12-29  Gavin Barraclough  <barraclough@apple.com>
+
+        https://bugs.webkit.org/show_bug.cgi?id=75140
+
+        Reviewed by Oliver Hunt.
+
+        Start cleaning up JSArray construction. JSArray has a set of create methods,
+        one of which (currently) takes a 'creation mode' enum parameter. Based on that
+        parameter, the constructor does one of two completely different things. If the
+        parameter is 'CreateInitialized' it creates an array, setting the length, but
+        does not eagerly allocate a storage vector of the specified length. A small
+        (BASE_VECTOR_LEN sized) initial vector will be allocated, and cleared, property
+        access to the vector will read the hole value (return undefined). The alternate
+        usage of this method ('CreateCompact') does something very different. It tries
+        to create an array of the requested length, and also allocates a storage vector
+        large enough to hold all properties. It does not clear the storage vector,
+        leaving the memory uninitialized and requiring the user to call a method
+        'uncheckedSetIndex' to initialize values in the vector.
+
+        This patch factors out these two behaviours, moving the 'CreateCompact' mode
+        into its own method, 'tryCreateUninitialized' (matching the naming for this
+        functionality in the string classes). 'tryCreateUninitialized' may return 0 if
+        memory allocation fails during construction of the object. The construction
+        pattern changes such that values added during initialization will be marked if
+        a GC is triggered during array allocation. 'CreateInitialized' no longer need
+        be passed to create a normal, fully constructed array with a length, and this
+        method is merged with the version of 'create' that does not take an initial
+        length (length parameter defaults to 0).
+
+        * JavaScriptCore.exp:
+        * runtime/ArrayConstructor.cpp:
+        (JSC::constructArrayWithSizeQuirk):
+            - removed 'CreateInitialized' argument
+        * runtime/ArrayPrototype.cpp:
+        (JSC::arrayProtoFuncSplice):
+            - changed to call 'tryCreateUninitialized'
+        * runtime/FunctionPrototype.cpp:
+        (JSC::functionProtoFuncBind):
+            - changed to call 'tryCreateUninitialized'
+        * runtime/JSArray.cpp:
+        (JSC::JSArray::JSArray):
+            - initialize m_storage to null; if construction fails, make destruction safe
+        (JSC::JSArray::finishCreation):
+            - merge versions of this method, takes an initialLength parameter defaulting to zero
+        (JSC::JSArray::tryFinishCreationUninitialized):
+            - version of 'finishCreation' that tries to eagerly allocate storage; may fail & return 0
+        (JSC::JSArray::~JSArray):
+            - check for null m_storage, in case array construction failed.
+        (JSC::JSArray::increaseVectorPrefixLength):
+        * runtime/JSArray.h:
+        (JSC::JSArray::create):
+            - merge versions of this method, takes an initialLength parameter defaulting to zero
+        (JSC::JSArray::tryCreateUninitialized):
+            - version of 'create' that tries to eagerly allocate storage; may fail & return 0
+        (JSC::JSArray::initializeIndex):
+        (JSC::JSArray::completeInitialization):
+            - used in conjunction with 'tryCreateUninitialized' to initialize the array
+        * runtime/JSGlobalObject.h:
+        (JSC::constructEmptyArray):
+            - removed 'CreateInitialized' argument
+        * runtime/RegExpConstructor.cpp:
+        (JSC::RegExpMatchesArray::finishCreation):
+            - removed 'CreateInitialized' argument
+
+2011-12-29  Anders Carlsson  <andersca@apple.com>
+
+        Add a retainPtr function template
+        https://bugs.webkit.org/show_bug.cgi?id=75365
+
+        Reviewed by Dan Bernstein.
+
+        This makes it easier to make a RetainPtr using template argument deduction, which
+        is useful when passing RetainPtr objects as function arguments.
+
+        * wtf/RetainPtr.h:
+        (WTF::retainPtr):
+
+2011-12-28  Yuqiang Xian  <yuqiang.xian@intel.com>
+
+        spill unboxed values in DFG 32_64
+        https://bugs.webkit.org/show_bug.cgi?id=75291
+
+        Reviewed by Filip Pizlo.
+
+        Currently all the values are spilled as boxed in DFG 32_64, which is
+        not necessary and introduces additional stores/loads. Instead we
+        can spill them as unboxed if feasible. It can be applied to the
+        Integers, Cells and Booleans in DFG 32_64. Doubles are left as is
+        because they don't need to be boxed at all. The modifications to the
+        spill/fill and the OSR exit are required, as well as a bug fix to the
+        "isUnknownJS" logic.
+
+        * bytecode/ValueRecovery.h:
+        (JSC::ValueRecovery::displacedInRegisterFile):
+        (JSC::ValueRecovery::virtualRegister):
+        (JSC::ValueRecovery::dump):
+        * dfg/DFGGenerationInfo.h:
+        (JSC::DFG::GenerationInfo::isUnknownJS):
+        (JSC::DFG::GenerationInfo::spill):
+        * dfg/DFGOSRExitCompiler32_64.cpp:
+        (JSC::DFG::OSRExitCompiler::compileExit):
+        * dfg/DFGSpeculativeJIT.cpp:
+        (JSC::DFG::SpeculativeJIT::isKnownNotBoolean):
+        * dfg/DFGSpeculativeJIT.h:
+        (JSC::DFG::SpeculativeJIT::silentFillGPR):
+        (JSC::DFG::SpeculativeJIT::spill):
+        * dfg/DFGSpeculativeJIT32_64.cpp:
+        (JSC::DFG::SpeculativeJIT::fillInteger):
+        (JSC::DFG::SpeculativeJIT::fillDouble):
+        (JSC::DFG::SpeculativeJIT::fillJSValue):
+        (JSC::DFG::SpeculativeJIT::fillSpeculateIntInternal):
+        (JSC::DFG::SpeculativeJIT::fillSpeculateDouble):
+        (JSC::DFG::SpeculativeJIT::fillSpeculateCell):
+        (JSC::DFG::SpeculativeJIT::fillSpeculateBoolean):
+        (JSC::DFG::SpeculativeJIT::compileObjectEquality):
+        (JSC::DFG::SpeculativeJIT::compile):
+
+2011-12-28  Anders Carlsson  <andersca@apple.com>
+
+        Add an implicit block conversion operator to WTF::Function
+        https://bugs.webkit.org/show_bug.cgi?id=75325
+
+        Reviewed by Dan Bernstein.
+
+        * wtf/Compiler.h:
+        Add a define for COMPILER_SUPPORTS(BLOCKS). It's only defined for clang, since the gcc blocks implementation
+        is buggy, especially when it comes to C++.
+
+        * wtf/Functional.h:
+        Add a block conversion operator that creates and returns an autoreleased block that will call the function when executed.
+
+2011-12-27  Anders Carlsson  <andersca@apple.com>
+
+        Add a new WTF::bind overload that takes 6 parameters
+        https://bugs.webkit.org/show_bug.cgi?id=75287
+
+        Reviewed by Sam Weinig.
+
+        * wtf/Functional.h:
+
+2011-12-27  Sam Weinig  <sam@webkit.org>
+
+        Continue moving compiler feature checks to use the COMPILER_SUPPORTS() macro
+        https://bugs.webkit.org/show_bug.cgi?id=75268
+
+        Reviewed by Anders Carlsson.
+
+        * wtf/Compiler.h:
+        Add support for COMPILER_SUPPORTS(CXX_NULLPTR) and COMPILER_SUPPORTS(CXX_DELETED_FUNCTIONS).
+
+        * wtf/Noncopyable.h:
+        Use COMPILER_SUPPORTS(CXX_DELETED_FUNCTIONS).
+
+        * wtf/NullPtr.cpp:
+        * wtf/NullPtr.h:
+        Use COMPILER_SUPPORTS(CXX_NULLPTR). Remove support for HAVE(NULLPTR).
+
+        * wtf/RefPtr.h:
+        * wtf/RetainPtr.h:
+        Switch from HAVE(NULLPTR) to COMPILER_SUPPORTS(CXX_NULLPTR).
+
+2011-12-27  Anders Carlsson  <andersca@apple.com>
+
+        Misc fixes and cleanups in Functional.h
+        https://bugs.webkit.org/show_bug.cgi?id=75281
+
+        Reviewed by Andreas Kling.
+
+        - Reformat template declarations so that the class begins on a new line.
+        - Change the parameter template parameters to start at P1 instead of P0.
+        - Add function wrappers and bind overloads for 4 and 5 parameter functions.
+        - Change the Function call operator to be const so const functions can be called.
+
+        * wtf/Functional.h:
+
+2011-12-27  Tony Chang  <tony@chromium.org>
+
+        [chromium] Minor cleanup of gyp files.
+        https://bugs.webkit.org/show_bug.cgi?id=75269
+
+        Reviewed by Adam Barth.
+
+        * JavaScriptCore.gyp/JavaScriptCore.gyp: msvs_guid is no longer needed
+        and vim/emacs specific hooks should be added by the user.
+
+2011-12-27  Gavin Barraclough  <barraclough@apple.com>
+
+        https://bugs.webkit.org/show_bug.cgi?id=75260
+        Null name for host function can result in dereference of uninitialize memory
+
+        Reviewed by Filip Pizlo.
+
+        This is a recent regression in ToT, if the name passed to finishCreation of a host function is null,
+        we are currently skipping the putDirect, which leaves memory uninitialized. This patch reverts the
+        aspect of the change that introduced the issue.  It might be better if functions that don't have a
+        name don't have this property at all, but that's change should be separate from fixing the bug.
+
+        * runtime/JSFunction.cpp:
+        (JSC::JSFunction::finishCreation):
+            - Always initialize the name property.
+
+2011-12-27  Anders Carlsson  <andersca@apple.com>
+
+        Function should handle wrapping/unwrapping RefPtr and PassRefPtr
+        https://bugs.webkit.org/show_bug.cgi?id=75266
+
+        Reviewed by Sam Weinig.
+
+        Add ParamStorageTraits that can be used for deciding how bound parameters should be stored
+        and peeked at. For RefPtr we want to use the raw pointer when "peeking" to avoid ref-churn.
+        For PassRefPtr, we want to use RefPtr for storage but still use the raw pointer when peeking.
+
+        * wtf/Functional.h:
+        (WTF::ParamStorageTraits::wrap):
+        (WTF::ParamStorageTraits::unwrap):
+
+2011-12-27  Tony Chang  <tony@chromium.org>
+
+        [chromium] really enable wpo for WebCore libs and for WTF
+        https://bugs.webkit.org/show_bug.cgi?id=75264
+
+        Reviewed by Adam Barth.
+
+        * JavaScriptCore.gyp/JavaScriptCore.gyp: Enable WPO for wtf and yarr.
+
+2011-12-26  Gavin Barraclough  <barraclough@apple.com>
+
+        Errk! OS X build fix.
+
+        * JavaScriptCore.exp:
+
+2011-12-26  Gavin Barraclough  <barraclough@apple.com>
+
+        Windows build fix.
+
+        * JavaScriptCore.vcproj/JavaScriptCore/JavaScriptCore.def:
+        * runtime/JSObject.h:
+
+2011-12-26  Gavin Barraclough  <barraclough@apple.com>
+
+        https://bugs.webkit.org/show_bug.cgi?id=75231
+        Fail to throw in strict mode on assign to read only static properties
+
+        Reviewed by Filip Pizlo.
+
+        There are three bugs here:
+        * symbolTablePut should throw for strict mode accesses.
+        * lookupPut should throw for strict mode accesses.
+        * NumberConstructor should override put to call lookupPut, to trap assignment to readonly properties.
+
+        * runtime/JSActivation.cpp:
+        (JSC::JSActivation::symbolTablePut):
+        (JSC::JSActivation::put):
+        * runtime/JSActivation.h:
+        * runtime/JSGlobalObject.cpp:
+        (JSC::JSGlobalObject::put):
+        * runtime/JSStaticScopeObject.cpp:
+        (JSC::JSStaticScopeObject::put):
+        * runtime/JSVariableObject.h:
+        (JSC::JSVariableObject::symbolTablePut):
+        * runtime/Lookup.h:
+        (JSC::lookupPut):
+        * runtime/NumberConstructor.cpp:
+        (JSC::NumberConstructor::put):
+        * runtime/NumberConstructor.h:
+
+2011-12-26  Gavin Barraclough  <barraclough@apple.com>
+
+        Fix miss-commit of utf8 change.
+
+        Reviewed by Filip Pizlo
+
+        Eeep, patch as landed a while ago had no effect! - acidentally landed
+        modified version of patch used for performance testing.
+
+        (This isn't covered by layout tests because layour tests don't use jsc,
+        and the tests/mozilla tests use latin1, which was already supported!)
+
+        Landing changes as intended (and as originally reviewed).
+
+        * jsc.cpp:
+        (jscSource):
+
+2011-12-26  Filip Pizlo  <fpizlo@apple.com>
+
+        Unreviewed build fix for ARMv7.
+
+        * assembler/MacroAssemblerARMv7.h:
+        (JSC::MacroAssemblerARMv7::load16Signed):
+        (JSC::MacroAssemblerARMv7::load8Signed):
+
+2011-12-26  Hajime Morrita  <morrita@google.com>
+
+        Rename WTF_INLINE, JS_INLINE to HIDDEN_INLINE
+        https://bugs.webkit.org/show_bug.cgi?id=74990
+
+        Reviewed by Kevin Ollivier.
+
+        * runtime/JSExportMacros.h: Removed JS_INLINE
+        * wtf/ExportMacros.h: Renamed WTF_INLINE to HIDDEN_INLINE
+
+2011-12-24  Filip Pizlo  <fpizlo@apple.com>
+
+        The ArgumentCount field in the CallFrame should have its tag left blank for other uses
+        https://bugs.webkit.org/show_bug.cgi?id=75199
+        <rdar://problem/10625105>
+        <rdar://problem/10625106>
+
+        Reviewed by Oliver Hunt.
+
+        * dfg/DFGOSRExitCompiler32_64.cpp:
+        (JSC::DFG::OSRExitCompiler::compileExit):
+        * dfg/DFGOSRExitCompiler64.cpp:
+        (JSC::DFG::OSRExitCompiler::compileExit):
+        * dfg/DFGSpeculativeJIT.h:
+        (JSC::DFG::SpeculativeJIT::argumentPayloadSlot):
+        * dfg/DFGSpeculativeJIT32_64.cpp:
+        (JSC::DFG::SpeculativeJIT::emitCall):
+        * dfg/DFGSpeculativeJIT64.cpp:
+        (JSC::DFG::SpeculativeJIT::emitCall):
+        * interpreter/CallFrame.h:
+        (JSC::ExecState::argumentCountIncludingThis):
+        (JSC::ExecState::setArgumentCountIncludingThis):
+        * interpreter/Register.h:
+        (JSC::Register::unboxedInt32):
+        (JSC::Register::unboxedBoolean):
+        (JSC::Register::unboxedCell):
+        (JSC::Register::payload):
+        (JSC::Register::tag):
+        * jit/JITCall.cpp:
+        (JSC::JIT::compileOpCall):
+        * jit/JITCall32_64.cpp:
+        (JSC::JIT::compileLoadVarargs):
+        (JSC::JIT::compileOpCall):
+
+2011-12-25  Andreas Kling  <awesomekling@apple.com>
+
+        Yarr: Avoid copying vectors in CharacterClassConstructor.
+        <http://webkit.org/b/75206>
+
+        Reviewed by Darin Adler.
+
+        Yarr::CharacterClassConstructor::charClass() was hot when loading twitter
+        feeds (1.2%), replace the usage of Vector::append() by swap() since we're
+        always clearing the source vector afterwards anyway.
+
+        * yarr/YarrPattern.cpp:
+        (JSC::Yarr::CharacterClassConstructor::charClass):
+
+2011-12-24  Darin Adler  <darin@apple.com>
+
+        Specialize HashTraits for RefPtr to use PassRefPtr as "pass type" to reduce reference count churn
+        https://bugs.webkit.org/show_bug.cgi?id=72476
+
+        Reviewed by Sam Weinig.
+
+        * wtf/HashTraits.h: Defined PassInType and store function in HashTraits<RefPtr>.
+
+2011-12-23  Geoffrey Garen  <ggaren@apple.com>
+
+        Inlined Yarr::execute
+        https://bugs.webkit.org/show_bug.cgi?id=75180
+
+        Reviewed reluctantly by Beth Dakin.
+        
+        Tiny speedup on SunSpider string tests. Removes some samples from
+        Instruments. A step toward removing -fomit-frame-pointer.
+
+        * yarr/YarrJIT.cpp:
+        * yarr/YarrJIT.h:
+        (JSC::Yarr::execute): ONE LINE FUNCTION, Y U NOT INLINED?!
+
+2011-12-23  Filip Pizlo  <fpizlo@apple.com>
+
+        DFG loads from signed 8-bit and 16-bit typed arrays are broken
+        https://bugs.webkit.org/show_bug.cgi?id=75163
+
+        Reviewed by Geoffrey Garen.
+        
+        Added 8-bit and 16-bit signed loads. Because doing so on ARM is less trivial, I'm
+        currently disabling Int8Array and Int16Array optimizations on ARM.
+
+        * assembler/MacroAssemblerX86Common.h:
+        (JSC::MacroAssemblerX86Common::load8Signed):
+        (JSC::MacroAssemblerX86Common::load16Signed):
+        * assembler/X86Assembler.h:
+        (JSC::X86Assembler::movswl_mr):
+        (JSC::X86Assembler::movsbl_mr):
+        * bytecode/PredictedType.h:
+        (JSC::isActionableMutableArrayPrediction):
+        * dfg/DFGNode.h:
+        (JSC::DFG::Node::shouldSpeculateInt8Array):
+        (JSC::DFG::Node::shouldSpeculateInt16Array):
+        * dfg/DFGSpeculativeJIT.cpp:
+        (JSC::DFG::SpeculativeJIT::compileGetByValOnIntTypedArray):
+
+2011-12-23  Filip Pizlo  <fpizlo@apple.com>
+
+        DFG does double-to-int conversion incorrectly when storing into int typed arrays
+        https://bugs.webkit.org/show_bug.cgi?id=75164
+        <rdar://problem/10557547>
+
+        Reviewed by Geoffrey Garen.
+
+        * assembler/MacroAssemblerARMv7.h:
+        (JSC::MacroAssemblerARMv7::branchTruncateDoubleToUint32):
+        * assembler/MacroAssemblerX86Common.h:
+        (JSC::MacroAssemblerX86Common::branchTruncateDoubleToUint32):
+        (JSC::MacroAssemblerX86Common::truncateDoubleToUint32):
+        * dfg/DFGSpeculativeJIT.cpp:
+        (JSC::DFG::SpeculativeJIT::compilePutByValForIntTypedArray):
+
+2011-12-23  Geoffrey Garen  <ggaren@apple.com>
+
+        Refactored String.prototype.replace
+        https://bugs.webkit.org/show_bug.cgi?id=75114
+        
+        Reviewed by Darin Adler.
+
+        No performance difference.
+        
+        I think this is a step toward removing -fomit-frame-pointer.
+
+        * runtime/JSString.cpp:
+        * runtime/JSString.h: Removed the test and special case for a single-character
+        search string because the standard path does this test and special case
+        for us. (As an aside, if we do come up with a unique single-character
+        replace optimization in future, it probably belongs in the replace function,
+        and not in JSString.)
+
+        * runtime/StringPrototype.cpp:
+        (JSC::stringProtoFuncReplace): Split this mega-sized function into:
+        (JSC::replaceUsingStringSearch): - This reasonably sized function, and
+        (JSC::replaceUsingRegExpSearch): - This still mega-sized function.
+
+2011-12-23  Pierre Rossi  <pierre.rossi@gmail.com>
+
+        [Qt] REGRESSION(r103467): It broke fast/images/animated-gif-restored-from-bfcache.html
+        https://bugs.webkit.org/show_bug.cgi?id=75087
+
+        monotonicallyIncreasingTime needs to hava a higher resolution than milliseconds.
+
+        Reviewed by Darin Adler.
+
+        * wtf/CurrentTime.cpp:
+        (WTF::monotonicallyIncreasingTime):
+
+2011-12-22  Filip Pizlo  <fpizlo@apple.com>
+
+        DFG should not speculate array even when predictions say that the base is not an array
+        https://bugs.webkit.org/show_bug.cgi?id=75160
+        <rdar://problem/10622646>
+        <rdar://problem/10622649>
+
+        Reviewed by Oliver Hunt.
+        
+        Added the ability to call slow path when the base is known to not be an array.
+        Also rationalized the logic for deciding when the index is not an int, and
+        cleaned up the logic for deciding when to speculate typed array.
+        
+        Neutral for the most part, with odd speed-ups and slow-downs. The slow-downs can
+        likely be mitigated by having the notion of a polymorphic array access, where we
+        try, but don't speculate, to access the array one way before either trying some
+        other ways or calling slow path.
+
+        * bytecode/PredictedType.h:
+        (JSC::isActionableMutableArrayPrediction):
+        (JSC::isActionableArrayPrediction):
+        * dfg/DFGAbstractState.cpp:
+        (JSC::DFG::AbstractState::execute):
+        * dfg/DFGNode.h:
+        (JSC::DFG::Node::shouldSpeculateInt8Array):
+        (JSC::DFG::Node::shouldSpeculateInt16Array):
+        (JSC::DFG::Node::shouldSpeculateInt32Array):
+        (JSC::DFG::Node::shouldSpeculateUint8Array):
+        (JSC::DFG::Node::shouldSpeculateUint16Array):
+        (JSC::DFG::Node::shouldSpeculateUint32Array):
+        (JSC::DFG::Node::shouldSpeculateFloat32Array):
+        (JSC::DFG::Node::shouldSpeculateFloat64Array):
+        * dfg/DFGPropagator.cpp:
+        (JSC::DFG::Propagator::byValIsPure):
+        * dfg/DFGSpeculativeJIT.cpp:
+        (JSC::DFG::SpeculativeJIT::compileGetIndexedPropertyStorage):
+        * dfg/DFGSpeculativeJIT32_64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+        * dfg/DFGSpeculativeJIT64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+
+2011-12-22  Gavin Barraclough  <barraclough@apple.com>
+
+        Unreviewed - fix stylebot issues from last patch.
+
+        * runtime/JSArray.cpp:
+        (JSC::JSArray::putSlowCase):
+
+2011-12-22  Gavin Barraclough  <barraclough@apple.com>
+
+        https://bugs.webkit.org/show_bug.cgi?id=75151
+        Add attributes field to JSArray's SparseMap
+
+        Reviewed by Sam Weinig.
+
+        This will be necessary to be able to support non- writable/configurable/enumerable
+        properties, and helpful for getters/setters.
+
+        Added a concept of being 'inSparseMode' - this indicates the array has a non-standard
+
+        * runtime/ArrayPrototype.cpp:
+        (JSC::arrayProtoFuncSort):
+            - JSArray::sort methods not allowed on arrays that are 'inSparseMode'.
+              (must fall back to generic sort alogrithm).
+        * runtime/JSArray.cpp:
+        (JSC::JSArray::finishCreation):
+            - moved reportedMapCapacity into the SparseArrayValueMap object.
+        (JSC::SparseArrayValueMap::find):
+        (JSC::SparseArrayValueMap::put):
+        (JSC::SparseArrayValueMap::visitChildren):
+            - Added.
+        (JSC::JSArray::getOwnPropertySlotByIndex):
+        (JSC::JSArray::getOwnPropertyDescriptor):
+        (JSC::JSArray::putSlowCase):
+        (JSC::JSArray::deletePropertyByIndex):
+        (JSC::JSArray::getOwnPropertyNames):
+        (JSC::JSArray::setLength):
+        (JSC::JSArray::pop):
+        (JSC::JSArray::visitChildren):
+            - Updated for changes in SparseArrayValueMap.
+        (JSC::JSArray::sortNumeric):
+        (JSC::JSArray::sort):
+        (JSC::JSArray::compactForSorting):
+            - Disallow on 'SparseMode' arrays.
+        * runtime/JSArray.h:
+        (JSC::SparseArrayEntry::SparseArrayEntry):
+            - An entry in the sparse array - value (WriteBarrier) + attributes.
+        (JSC::SparseArrayValueMap::SparseArrayValueMap):
+        (JSC::SparseArrayValueMap::sparseMode):
+        (JSC::SparseArrayValueMap::setSparseMode):
+            - Flags to track whether an Array is forced into SparseMode.
+        (JSC::SparseArrayValueMap::remove):
+        (JSC::SparseArrayValueMap::notFound):
+        (JSC::SparseArrayValueMap::isEmpty):
+        (JSC::SparseArrayValueMap::contains):
+        (JSC::SparseArrayValueMap::size):
+        (JSC::SparseArrayValueMap::begin):
+        (JSC::SparseArrayValueMap::end):
+            - accessors to the map
+        (JSC::SparseArrayValueMap::take):
+            - only for use on non-SpareMode arrays.
+        (JSC::JSArray::inSparseMode):
+            - Added.
+
+2011-12-22  Filip Pizlo  <fpizlo@apple.com>
+
+        DFG CFA sometimes generates an incorrect proof that a node is known to be a typed array
+        https://bugs.webkit.org/show_bug.cgi?id=75150
+        <rdar://problem/10621900>
+
+        Reviewed by Gavin Barraclough.
+
+        * dfg/DFGAbstractState.cpp:
+        (JSC::DFG::AbstractState::execute):
+
+2011-12-22  Filip Pizlo  <fpizlo@apple.com>
+
+        DFG JIT does exactly the wrong thing when doing strict equality on two known cells
+        https://bugs.webkit.org/show_bug.cgi?id=75138
+        <rdar://problem/10621526>
+
+        Reviewed by Oliver Hunt.
+
+        * dfg/DFGSpeculativeJIT32_64.cpp:
+        (JSC::DFG::SpeculativeJIT::nonSpeculativePeepholeStrictEq):
+        * dfg/DFGSpeculativeJIT64.cpp:
+        (JSC::DFG::SpeculativeJIT::nonSpeculativePeepholeStrictEq):
+
+2011-12-22  Balazs Kelemen  <kbalazs@webkit.org>
+
+        Fix debug build with assertions disabled
+        https://bugs.webkit.org/show_bug.cgi?id=75075
+
+        Reviewed by Darin Adler.
+
+        Check whether assertions are disabled instead of NDEBUG
+        where appropriate to avoid "defined but not used" warnings.
+
+        * wtf/DateMath.cpp:
+        (WTF::initializeDates):
+
+2011-12-22  Mariusz Grzegorczyk  <mariusz.g@samsung.com>
+
+        [EFL] Missing plugins support for efl port
+        https://bugs.webkit.org/show_bug.cgi?id=44505
+
+        Reviewed by Anders Carlsson.
+
+        Add define of ENABLE_PLUGIN_PACKAGE_SIMPLE_HASH for efl port.
+
+        * wtf/Platform.h:
+
+2011-12-22  Wei Charles  <charles.wei@torchmobile.com.cn>
+
+        Remove un-used data member of LiteralParser::Lex::m_string
+        https://bugs.webkit.org/show_bug.cgi?id=68216
+
+        Reviewed by George Staikos.
+
+        * runtime/LiteralParser.h:
+
+2011-12-21  Dan Bernstein  <mitz@apple.com>
+
+        OS X build fix after r103488.
+
+        * JavaScriptCore.exp:
+
+2011-12-21  Konrad Piascik  <kpiascik@rim.com>
+
+        Implement the JavaScriptCore bindings for eventListenerHandlerLocation
+        https://bugs.webkit.org/show_bug.cgi?id=74313
+
+        Reviewed by Eric Seidel.
+
+        Updated project files to get Windows and Mac builds working.
+
+        * JavaScriptCore.vcproj/JavaScriptCore/JavaScriptCore.def:
+        * JavaScriptCore.xcodeproj/project.pbxproj:
+
+2011-12-21  Filip Pizlo  <fpizlo@apple.com>
+
+        DFG ConvertThis optimizations do not honor the distinction between the global object and the global this object
+        https://bugs.webkit.org/show_bug.cgi?id=75058
+        <rdar://problem/10616612>
+        <rdar://problem/10617500>
+
+        Reviewed by Oliver Hunt.
+        
+        Added a call to toThisObject() in the DFG when planting a direct reference to the global this object.
+        Instead of adding a separate toThisObject() method on JSCell which does not take ExecState*, I reascribed
+        a new contract: if you're calling toThisObject() on JSObject or one of its subtypes, then the ExecState*
+        is optional.
+
+        * dfg/DFGAssemblyHelpers.h:
+        (JSC::DFG::AssemblyHelpers::globalThisObjectFor):
+        * dfg/DFGSpeculativeJIT32_64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+        * dfg/DFGSpeculativeJIT64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+        * runtime/JSObject.h:
+
+2011-12-21  Pierre Rossi  <pierre.rossi@gmail.com>
+
+        Implement montonicallyIncreasingClock() on Qt
+        https://bugs.webkit.org/show_bug.cgi?id=62159
+
+        Reviewed by Darin Adler.
+
+        * wtf/CurrentTime.cpp:
+        (WTF::monotonicallyIncreasingTime):
+
+2011-12-20  Filip Pizlo  <fpizlo@apple.com>
+
+        32_64 baseline JIT should attempt to convert division results to integers, and record when that fails
+        https://bugs.webkit.org/show_bug.cgi?id=74997
+        <rdar://problem/10612389>
+
+        Reviewed by Gavin Barraclough.
+
+        * jit/JITArithmetic32_64.cpp:
+        (JSC::JIT::emit_op_div):
+
+2011-12-20  Filip Pizlo  <fpizlo@apple.com>
+
+        JavaScriptCore should be consistent about how it reads and writes ArgumentCount
+        https://bugs.webkit.org/show_bug.cgi?id=74989
+        <rdar://problem/10612006>
+
+        Reviewed by Gavin Barraclough.
+
+        * dfg/DFGJITCompiler.cpp:
+        (JSC::DFG::JITCompiler::compileFunction):
+        * jit/JIT.cpp:
+        (JSC::JIT::privateCompile):
+        * jit/JITCall32_64.cpp:
+        (JSC::JIT::compileLoadVarargs):
+        * jit/JITOpcodes32_64.cpp:
+        (JSC::JIT::emit_op_get_arguments_length):
+        (JSC::JIT::emit_op_get_argument_by_val):
+        * jit/SpecializedThunkJIT.h:
+        (JSC::SpecializedThunkJIT::SpecializedThunkJIT):
+
+2011-12-20  Filip Pizlo  <fpizlo@apple.com>
+
+        Value Profiles for arguments should be more easily accessible to the interpreter
+        https://bugs.webkit.org/show_bug.cgi?id=74984
+        <rdar://problem/10611364>
+
+        Reviewed by Gavin Barraclough.
+
+        * bytecode/CodeBlock.cpp:
+        (JSC::CodeBlock::stronglyVisitStrongReferences):
+        (JSC::CodeBlock::shouldOptimizeNow):
+        (JSC::CodeBlock::dumpValueProfiles):
+        * bytecode/CodeBlock.h:
+        (JSC::CodeBlock::setArgumentValueProfileSize):
+        (JSC::CodeBlock::numberOfArgumentValueProfiles):
+        (JSC::CodeBlock::valueProfileForArgument):
+        (JSC::CodeBlock::addValueProfile):
+        (JSC::CodeBlock::valueProfile):
+        (JSC::CodeBlock::valueProfileForBytecodeOffset):
+        (JSC::CodeBlock::totalNumberOfValueProfiles):
+        (JSC::CodeBlock::getFromAllValueProfiles):
+        * bytecode/ValueProfile.h:
+        (JSC::ValueProfile::ValueProfile):
+        * jit/JIT.cpp:
+        (JSC::JIT::privateCompile):
+        * jit/JIT.h:
+        * jit/JITInlineMethods.h:
+        (JSC::JIT::emitValueProfilingSite):
+
+2011-12-20  Gavin Barraclough  <barraclough@apple.com>
+
+        JSC shell should accept utf8 input.
+
+        Reviewed by Filip Pizlo.
+
+        * jsc.cpp:
+        (jscSource):
+        (functionRun):
+        (functionLoad):
+        (functionCheckSyntax):
+        (runWithScripts):
+        (runInteractive):
+
+2011-12-20  Gavin Barraclough  <barraclough@apple.com>
+
+        Rubber Stamped by Sam Weinig
+
+        * runtime/JSGlobalData.cpp:
+            - removed some dead code.
+
 2011-12-19  Geoffrey Garen  <ggaren@apple.com>
 
         Tightened up Vector<T>::append

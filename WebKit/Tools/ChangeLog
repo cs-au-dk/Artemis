@@ -1,3 +1,692 @@
+2012-01-02  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        [GTK] Implement create/ready-to-show/close signals in MiniBrowser
+        https://bugs.webkit.org/show_bug.cgi?id=74711
+
+        Reviewed by Philippe Normand.
+
+        * MiniBrowser/gtk/BrowserWindow.c:
+        (webViewClose): Destroy the window.
+        (webViewReadyToShow): Use WindowProperties of the new view to
+        setup and show the window.
+        (webViewCreate): Create a new view and add it to a browser window.
+        (browser_window_init):
+        (browserWindowConstructed): Connect to WebKitWebView::create signal.
+
+2011-12-31  Dan Bernstein  <mitz@apple.com>
+
+        MiniBrowser sets the WKView’s frame incorrectly
+        https://bugs.webkit.org/show_bug.cgi?id=75393
+
+        Reviewed by Anders Carlsson.
+
+        * MiniBrowser/MiniBrowser.xcodeproj/project.pbxproj: Removed Make Launchable build phase,
+        which is not needed since the binray is linked with the frameworks search path set to the
+        built products directory.
+        * MiniBrowser/mac/BrowserWindowController.m:
+        (-[BrowserWindowController awakeFromNib]): Changed to set the WKView’s frame to its
+        container’s bounds rather than its frame.
+        * MiniBrowser/mac/make-launchable.sh: Removed.
+
+2011-12-29  Dan Bernstein  <mitz@apple.com>
+
+        debug-safari --no-saved-state fails to start the debugger
+        https://bugs.webkit.org/show_bug.cgi?id=75374
+
+        Reviewed by Sam Weinig.
+
+        * Scripts/webkitdirs.pm:
+        (execMacWebKitAppForDebugging): Pass the --args option to gdb so that it passes arguments to
+        the executable being debugged.
+
+2011-12-29  Sam Weinig  <sam@webkit.org>
+
+        It should be easier to iterate a Vector backwards
+        https://bugs.webkit.org/show_bug.cgi?id=75359
+
+        Reviewed by Anders Carlsson.
+
+        * TestWebKitAPI/TestWebKitAPI.xcodeproj/project.pbxproj:
+        * TestWebKitAPI/TestWebKitAPI.gypi:
+        * TestWebKitAPI/win/TestWebKitAPI.vcproj:
+        Add new Vector test.
+
+        * TestWebKitAPI/Tests/Vector.cpp: Added.
+        (TestWebKitAPI::TEST):
+        Test Vector iterators, reverse_iterators and new reversed proxy.
+
+2011-12-28  Dmitry Lomov  <dslomov@google.com>
+
+        [WebWorkers][Chromium] Remove remains of cross-process dedicated worker implementation.
+        https://bugs.webkit.org/show_bug.cgi?id=66509
+        Just renames, merges and removal of dead code. Here are the list of renames:
+          - WebCommonWorkerClient merged with WebWorkerClient and renamed to WebSharedWorkerClient
+          - NewWebCommonWorkerClient renamed to WebCommonWorkerClient
+          - WebWorkerBase merged into WebSharedWorkerImpl
+          - NewWebWorkerBase renamed into WebWorkerBase
+ 
+        Reviewed by David Levin.
+
+        * DumpRenderTree/chromium/TestWebWorker.h:
+        (TestWebWorker::createWorker):
+        * DumpRenderTree/chromium/WebViewHost.cpp:
+        (WebViewHost::createWorker):
+        * DumpRenderTree/chromium/WebViewHost.h:
+
+2011-12-28  Sheriff Bot  <webkit.review.bot@gmail.com>
+
+        Unreviewed, rolling out r103785.
+        http://trac.webkit.org/changeset/103785
+        https://bugs.webkit.org/show_bug.cgi?id=75332
+
+        Broke builders; looks like clobbering didnt help (Requested by
+        dslomov on #webkit).
+
+        * DumpRenderTree/chromium/TestWebWorker.h:
+        (TestWebWorker::createWorker):
+        * DumpRenderTree/chromium/WebViewHost.cpp:
+        (WebViewHost::createWorker):
+        * DumpRenderTree/chromium/WebViewHost.h:
+
+2011-12-28  Dmitry Lomov  <dslomov@google.com>
+
+
+        [WebWorkers][Chromium] Remove remains of cross-process dedicated worker implementation.
+        https://bugs.webkit.org/show_bug.cgi?id=66509
+        Just renames, merges and removal of dead code. Here are the list of renames:
+          - WebCommonWorkerClient merged with WebWorkerClient and renamed to WebSharedWorkerClient
+          - NewWebCommonWorkerClient renamed to WebCommonWorkerClient
+          - WebWorkerBase merged into WebSharedWorkerImpl
+          - NewWebWorkerBase renamed into WebWorkerBase
+ 
+        Reviewed by David Levin.
+
+        * DumpRenderTree/chromium/TestWebWorker.h:
+        (TestWebWorker::createWorker):
+        * DumpRenderTree/chromium/WebViewHost.cpp:
+        (WebViewHost::createWorker):
+        * DumpRenderTree/chromium/WebViewHost.h:
+
+2011-12-28  Sheriff Bot  <webkit.review.bot@gmail.com>
+
+        Unreviewed, rolling out r103620.
+        http://trac.webkit.org/changeset/103620
+        https://bugs.webkit.org/show_bug.cgi?id=75316
+
+        Causes many crashes (Requested by abarth on #webkit).
+
+        * DumpRenderTree/chromium/LayoutTestController.cpp:
+        (LayoutTestController::LayoutTestController):
+        (LayoutTestController::reset):
+        * DumpRenderTree/chromium/LayoutTestController.h:
+        * DumpRenderTree/chromium/WebViewHost.cpp:
+        * DumpRenderTree/chromium/WebViewHost.h:
+
+2011-12-27  Sheriff Bot  <webkit.review.bot@gmail.com>
+
+        Unreviewed, rolling out r103734.
+        http://trac.webkit.org/changeset/103734
+        https://bugs.webkit.org/show_bug.cgi?id=75278
+
+        Broke cr-mac (Requested by dslomov on #webkit).
+
+        * DumpRenderTree/chromium/TestWebWorker.h:
+        (TestWebWorker::createWorker):
+        * DumpRenderTree/chromium/WebViewHost.cpp:
+        (WebViewHost::createWorker):
+        * DumpRenderTree/chromium/WebViewHost.h:
+
+2011-12-27  Dmitry Lomov  <dslomov@google.com>
+
+
+        [WebWorkers][Chromium] Remove remains of cross-process dedicated worker implementation.
+        https://bugs.webkit.org/show_bug.cgi?id=66509
+        Just renames, merges and removal of dead code. Here are the list of renames:
+          - WebCommonWorkerClient merged with WebWorkerClient and renamed to WebSharedWorkerClient
+          - NewWebCommonWorkerClient renamed to WebCommonWorkerClient
+          - WebWorkerBase merged into WebSharedWorkerImpl
+          - NewWebWorkerBase renamed into WebWorkerBase
+ 
+        Reviewed by David Levin.
+
+        * DumpRenderTree/chromium/TestWebWorker.h:
+        (TestWebWorker::createWorker):
+        * DumpRenderTree/chromium/WebViewHost.cpp:
+        (WebViewHost::createWorker):
+        * DumpRenderTree/chromium/WebViewHost.h:
+
+2011-12-27  Anders Carlsson  <andersca@apple.com>
+
+        Function should handle wrapping/unwrapping RefPtr and PassRefPtr
+        https://bugs.webkit.org/show_bug.cgi?id=75266
+
+        Reviewed by Sam Weinig.
+
+        * TestWebKitAPI/Tests/WTF/Functional.cpp:
+        (TestWebKitAPI::Number::create):
+        (TestWebKitAPI::Number::~Number):
+        (TestWebKitAPI::Number::value):
+        (TestWebKitAPI::Number::Number):
+        (TestWebKitAPI::multiplyNumberByTwo):
+        (TestWebKitAPI::TEST):
+
+2011-12-24  Kentaro Hara  <haraken@chromium.org>
+
+        Add unittests for the C++ parser of prepare-ChangeLog
+        https://bugs.webkit.org/show_bug.cgi?id=75191
+
+        Reviewed by Ryosuke Niwa.
+
+        cpp_unittests.cpp is the unittests for get_function_line_ranges_for_cpp()
+        of prepare-ChangeLog.
+
+        * Scripts/prepare-ChangeLog:
+        (get_function_line_ranges): Renames get_function_line_ranges_for_c()
+        to get_function_line_ranges_for_cpp().
+        * Scripts/webkitperl/prepare-ChangeLog_unittest/parser_unittests.pl:
+        * Scripts/webkitperl/prepare-ChangeLog_unittest/resources/cpp_unittests-expected.txt: Added.
+        * Scripts/webkitperl/prepare-ChangeLog_unittest/resources/cpp_unittests.cpp: Added.
+        (func1):
+        (func2):
+        (func3):
+        (func4):
+        (func5):
+        (func6):
+        (func7):
+        (func8):
+        (func9):
+        (func10):
+        (func11):
+        (func12):
+        (func13):
+        (func14):
+        (func15):
+        (funcOverloaded):
+        (Class::func16):
+        (Class1::Class2::func17):
+        (Class2::func18):
+        (Class2::func19):
+        (Class2::func20):
+        (Class2::func21):
+        (Class2::func22):
+        (func23):
+        (func24):
+        (Class2::func25):
+        (Class1::func26):
+        (Class2::func27):
+        (Class3::func28):
+        (Class7::operator+):
+        (Class100::Class100):
+        (Class101::~Class101):
+        (Class102::Class102):
+        (Class103::Class103):
+        (Struct1::func29):
+        (Struct2::func30):
+        (NameSpace1::func30):
+        (NameSpace1::NameSpace2::func31):
+
+2011-12-24  Kentaro Hara  <haraken@chromium.org>
+
+        Add unittests for the Java parser of prepare-ChangeLog
+        https://bugs.webkit.org/show_bug.cgi?id=75195
+
+        Reviewed by Ryosuke Niwa.
+
+        java_unittests.java is unittest cases for get_function_line_ranges_for_java()
+        of prepare-ChangeLog.
+
+        * Scripts/prepare-ChangeLog:
+        (get_function_line_ranges_for_java): Fixed a parser bug.
+
+            interface I
+            {
+                void f()
+                {
+                }
+            }
+
+        should be recognized as "I.f", and
+
+            class C interface I
+            {
+                void f()
+                {
+                }
+            }
+
+        should be recognized as "C.f".
+        Without this patch, both are recognized as "I.f".
+
+        * Scripts/webkitperl/prepare-ChangeLog_unittest/parser_unittests.pl:
+        * Scripts/webkitperl/prepare-ChangeLog_unittest/resources/java_unittests-expected.txt: Added.
+        * Scripts/webkitperl/prepare-ChangeLog_unittest/resources/java_unittests.java: Added.
+        (Simple):
+        (Simple.func1):
+        (Simple.func2):
+        (Simple.func3):
+        (Simple.func4):
+        (Simple.func5):
+        (Simple.func6):
+        (Simple.func7):
+        (Simple.func8):
+        (Simple.func9):
+        (Simple.func10):
+        (Simple.funcOverloaded):
+        (Simple.func11):
+        (Simple.func12):
+        (Simple.func13):
+        (Simple.func14):
+        (Simple.func15):
+        (Simple.func16):
+        (Simple.func17):
+        (Simple.func18):
+        (Simple.func19):
+        (Simple.func20):
+        (Simple.func21):
+        (Derived1):
+        (Derived1.Derived1):
+        (Derived1.func22):
+        (Interface1):
+        (Interface2):
+        (Interface2.func23):
+        (Derived2):
+        (Derived2.Derived2):
+        (Derived2.func23):
+
+2011-12-24  Kentaro Hara  <haraken@chromium.org>
+
+        Add unittests for the Python parser of prepare-ChangeLog
+        https://bugs.webkit.org/show_bug.cgi?id=75197
+
+        Reviewed by Ryosuke Niwa.
+
+        python_unittests.py is the unittest for get_function_line_ranges_for_python()
+        of prepare-ChangeLog. The unittest just contains classes and defs that are not nested.
+        This is because the current python parser is wrong, and it cannot correctly parse nested
+        classes and defs (even one def in a class), nor class inheritance.
+        We will fix it in another patch.
+
+        * Scripts/prepare-ChangeLog:
+        (get_function_line_ranges_for_python): Ignores comment lines that starts from #.
+        * Scripts/webkitperl/prepare-ChangeLog_unittest/parser_unittests.pl:
+        * Scripts/webkitperl/prepare-ChangeLog_unittest/resources/python_unittests-expected.txt: Added.
+        * Scripts/webkitperl/prepare-ChangeLog_unittest/resources/python_unittests.py: Added.
+        (func1):
+        (func2):
+        (func3):
+        (funcInsideComment):
+        (func4):
+        (func5):
+        (func6):
+        (funcOverloaded):
+        (Class1):
+
+2011-12-24  Dan Bernstein  <mitz@apple.com>
+
+        Set SHARED_PRECOMPS_DIR when Xcode is set to use a custom build product path.
+
+        Reviewed by Anders Carlsson.
+
+        * Scripts/webkitdirs.pm:
+        (determineBaseProductDir):
+
+2011-12-24  Dan Bernstein  <mitz@apple.com>
+
+        Make build-webkit aware of additional Xcode build location defaults.
+
+        Reviewed by Anders Carlsson.
+
+        * Scripts/webkitdirs.pm:
+        (determineXcodeVersion): Added. This was previously in determineBaseProductDir().
+        (readXcodeUserDefault): Added. Factored out from determineBaseProductDir().
+        (determineBaseProductDir): Changed to check for a custom build location
+        style specified as an absolute location.
+
+2011-12-24  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Unreviewed, rolling out r103619.
+        http://trac.webkit.org/changeset/103619
+        https://bugs.webkit.org/show_bug.cgi?id=66509
+
+        Broke chromium clang build
+
+        * DumpRenderTree/chromium/TestWebWorker.h:
+        (TestWebWorker::createWorker):
+        * DumpRenderTree/chromium/WebViewHost.cpp:
+        (WebViewHost::createWorker):
+        * DumpRenderTree/chromium/WebViewHost.h:
+
+2011-12-23  Daniel Bates  <dbates@webkit.org>
+
+        Provide option to disable Mac OS 10.7 application resume when using
+        {debug, run}-{safari, minibrowser, test-runner, test-webkit-api}, and run-webkit-app
+        https://bugs.webkit.org/show_bug.cgi?id=66902
+
+        Reviewed by David Kilzer.
+
+        Add an optional command line argument --no-saved-state to disable
+        application resume (state restoration) for the session on Mac OS 10.7.
+
+        For instance, when debugging an issue in Safari it is useful to be able
+        to temporarily disable application resume. Currently you can disable
+        application resume when launching Safari from within Xcode. We should
+        expose a similar option in our command line tools.
+
+        * Scripts/debug-minibrowser: Call printHelpAndExitForRunAndDebugWebKitAppIfNeeded()
+        to print a help message and exit() if the command line argument --help was given.
+        * Scripts/debug-safari: Ditto.
+        * Scripts/debug-test-runner: Ditto.
+        * Scripts/run-minibrowser: Ditto.
+        * Scripts/run-safari: Ditto.
+        * Scripts/run-test-runner: Ditto.
+        * Scripts/run-test-webkit-api: Ditto.
+        * Scripts/run-webkit-app: Ditto.
+        * Scripts/webkitdirs.pm:
+        (printHelpAndExitForRunAndDebugWebKitAppIfNeeded): Added.
+        (argumentsForRunAndDebugMacWebKitApp): Added.
+        (runMacWebKitApp): If the --no-saved-state command line argument was given then
+        disable application resume for the session.
+        (execMacWebKitAppForDebugging): Ditto.
+
+2011-12-23  Dmitry Lomov  <dslomov@google.com>
+
+        [WebWorkers][Chromium] Remove remains of cross-process dedicated worker implementation.
+        https://bugs.webkit.org/show_bug.cgi?id=66509
+        Just renames, merges and removal of dead code. Here are the list of renames:
+          - WebCommonWorkerClient merged with WebWorkerClient and renamed to WebSharedWorkerClient
+          - NewWebCommonWorkerClient renamed to WebCommonWorkerClient
+          - WebWorkerBase merged into WebSharedWorkerImpl
+          - NewWebWorkerBase renamed into WebWorkerBase
+ 
+        Reviewed by David Levin.
+
+        * DumpRenderTree/chromium/TestWebWorker.h:
+        (TestWebWorker::createWorker):
+        * DumpRenderTree/chromium/WebViewHost.cpp:
+        (WebViewHost::createWorker):
+        * DumpRenderTree/chromium/WebViewHost.h:
+
+2011-12-23  Kentaro Hara  <haraken@chromium.org>
+
+        Let parser_unittests.pl call different language parsers
+        https://bugs.webkit.org/show_bug.cgi?id=75081
+
+        Reviewed by David Kilzer.
+
+        We introduced parser_unittests.pl in bug 74994 , but it is implemented
+        to always call get_function_line_ranges_for_perl(). In order to enable unittests
+        for other languages, this patch lets parser_unittests.pl call different language
+        parsers depending on the languages.
+
+        Test: Scripts/webkitperl/prepare-ChangeLog_unittest/resources/perl_unittests.pl
+
+        * Scripts/webkitperl/prepare-ChangeLog_unittest/parser_unittests.pl:
+
+2011-12-22  Adam Roben  <aroben@apple.com>
+
+        Snow Leopard test fix
+
+        * Scripts/webkitpy/test/main.py:
+        (Tester.run_tests): Python 2.6.1 doesn't seem to like specifying testRunner=None to
+        unittest.main, even though that's the default. So now we explicitly specify a
+        TextTestRunner.
+
+2011-12-22  Chris Fleizach  <cfleizach@apple.com>
+
+        AX: attributed strings do not include AXHeading information when a link is contained within the heading
+        https://bugs.webkit.org/show_bug.cgi?id=75059
+
+        Reviewed by Darin Adler.
+
+        Support the ability to check if an arbitrary attribute is present within an
+        attributed string that can be retrieved through an AccessibilityTextMarkerRange.
+
+        * DumpRenderTree/AccessibilityUIElement.cpp:
+        (attributedStringForTextMarkerRangeContainsAttributeCallback):
+        (AccessibilityUIElement::attributedStringForTextMarkerRangeContainsAttribute):
+        (AccessibilityUIElement::getJSClass):
+        * DumpRenderTree/AccessibilityUIElement.h:
+        * DumpRenderTree/mac/AccessibilityUIElementMac.mm:
+        (AccessibilityUIElement::attributedStringForTextMarkerRangeContainsAttribute):
+        * WebKitTestRunner/InjectedBundle/AccessibilityUIElement.cpp:
+        (WTR::AccessibilityUIElement::attributedStringForTextMarkerRangeContainsAttribute):
+        * WebKitTestRunner/InjectedBundle/AccessibilityUIElement.h:
+        * WebKitTestRunner/InjectedBundle/Bindings/AccessibilityUIElement.idl:
+        * WebKitTestRunner/InjectedBundle/mac/AccessibilityUIElementMac.mm:
+        (WTR::AccessibilityUIElement::attributedStringForTextMarkerRangeContainsAttribute):
+
+2011-12-22  David Kilzer  <ddkilzer@apple.com>
+
+        run-api-tests: runAllTests() and runTest() should not use global variables
+
+        Reviewed by Adam Roben.
+
+        Part of: <http://webkit.org/b/75065> run-api-tests should be able to run individual suites and tests
+
+        * Scripts/run-api-tests:
+        (runTestsBySuite): Rename from runAllTests().  Add arguments for
+        list of tests and $verbose.
+        (runTest): Add $verbose argument.
+
+2011-12-22  David Kilzer  <ddkilzer@apple.com>
+
+        run-api-tests: inline runAllTestsInSuite() into runAllTests()
+
+        Reviewed by Adam Roben.
+
+        Part of: <http://webkit.org/b/75065> run-api-tests should be able to run individual suites and tests
+
+        In order to make it easy to run one or more individual suites,
+        or one more individual tests, it's easier to call a single
+        method with different data structures than individual methods.
+
+        * Scripts/run-api-tests:
+        (runAllTests): Inline runAllTestsInSuite().
+
+2011-12-22  Adam Roben  <aroben@apple.com>
+
+        Add a --xml flag to test-webkitpy
+
+        test-webkitpy --xml will, in addition to providing the standard text output on stdout, write
+        JUnit-style XML files to a test-webkitpy-xml-reports subdirectory in the working directory.
+        This is useful for working with tools that consume JUnit-style XML files.
+
+        Fixes <http://webkit.org/b/75090> Would like a way to generate JUnit-style XML files when
+        running test-webkitpy
+
+        Reviewed by Darin Adler.
+
+        * Scripts/webkitpy/test/main.py:
+        (Tester.run_tests): If the --xml flag is passed, create an XMLTestRunner and pass it to
+        unittest.main(). Otherwise pass no test runner so that unittest will choose its own default.
+
+        * Scripts/webkitpy/thirdparty/__init__.py:
+        (AutoinstallImportHook.find_module):
+        (AutoinstallImportHook._install_xmlrunner):
+        Added code to install unittest-xml-reporting as webkitpy.thirdparty.autoinstalled.xmlrunner.
+        This change is untested because it's basically impossible to get a test to pass when --xml
+        is passed to test-webkitpy (because xmlrunner will already have been imported by the time
+        the test runs).
+
+2011-12-22  David Kilzer  <ddkilzer@apple.com>
+
+        TestWebKitAPI: initialize the main thread before running tests
+        <http://webkit.org/b/75064>
+
+        Reviewed by Adam Roben.
+
+        * TestWebKitAPI/TestsController.cpp:
+        (TestWebKitAPI::TestsController::TestsController): Call
+        WTF::initializeMainThread() to prevent assertions in Debug
+        builds.
+
+2011-12-22  David Kilzer  <ddkilzer@apple.com>
+
+        run-api-tests: dumpAllTests() should not use global variables
+
+        Reviewed by Adam Roben.
+
+        Part of: <http://webkit.org/b/75065> run-api-tests should be able to run individual suites and tests
+
+        * Scripts/run-api-tests: Renamed $dump to $dumpTests.
+        (dumpTestsBySuite): Rename from dumpAllTests() and pass in
+        global data as an argument.  Sort suite names and test names
+        alphabetically to match output when running tests.
+
+2011-12-22  Leo Yang  <leo.yang@torchmobile.com.cn>
+
+        [BlackBerry] Enable blob for the BlackBerry porting
+        https://bugs.webkit.org/show_bug.cgi?id=75074
+
+        Reviewed by George Staikos.
+
+        * Scripts/build-webkit:
+
+2011-12-22  Kentaro Hara  <haraken@chromium.org>
+
+        Add unittests for the Perl parser of prepare-ChangeLog
+        https://bugs.webkit.org/show_bug.cgi?id=74994
+
+        Reviewed by David Kilzer.
+
+        This patch adds unittests for get_function_line_ranges_for_perl() of prepare-ChangeLog.
+
+        Test: Scripts/webkitperl/prepare-ChangeLog_unittest/resources/perl_unittests.pl
+
+        * Scripts/webkitperl/prepare-ChangeLog_unittest/parser_unittests.pl: Added.
+        Runs unittests specified in @testFiles.
+        You can reset expected results by specifying a --reset-results option.
+        * Scripts/webkitperl/prepare-ChangeLog_unittest/resources/perl_unittests.pl: Added.
+        Contains simple methods.
+        (func1):
+        (func2):
+        (func3):
+        (func4):
+        (func5):
+        (func6):
+        * Scripts/webkitperl/prepare-ChangeLog_unittest/resources/perl_unittests-expected.txt: Added.
+        This test result is generated by the --reset-results option.
+
+2011-12-21  Eric Seidel  <eric@webkit.org>
+
+        Add webkit.review.bot@gmail.com and commit-queue@webkit.org as "contributors"
+        so that they appear in the bugzilla autocomplete CC list.
+        I also removed the "radar" irc nick (which I believe does not exist)
+        and removed the uneeded [] around the radar bugzilla email.
+
+        Unreviewed.
+
+        * Scripts/webkitpy/common/config/committers.py:
+
+2011-12-21  Daniel Bates  <dbates@rim.com>
+
+        Teach build-jsc how to build JavaScriptCore for the EFL, BlackBerry, and WinCE ports
+        https://bugs.webkit.org/show_bug.cgi?id=74985
+
+        Reviewed by Eric Seidel.
+
+        * Scripts/build-jsc:
+        * Scripts/webkitdirs.pm:
+        (cmakeBasedPortName): Added.
+
+2011-12-21  Daniel Bates  <dbates@rim.com>
+
+        Extract BlackBerry CMake arguments from build-webkit into separate function
+        https://bugs.webkit.org/show_bug.cgi?id=74981
+
+        Reviewed by Rob Buis.
+
+        Towards adding support for using Tools/Scripts/build-jsc for the BlackBerry port, move
+        the CMake argument logic from Tools/Scripts/build-webkit to function webkitdirs::blackberryCMakeArguments()
+        and have cmakeBasedPortArguments() call this function for the BlackBerry CMake argument list.
+        This will allow us to get the BlackBerry CMake arguments in Tools/Scripts/build-jsc so
+        that we can pass them to the CMake build system when building JavaScriptCore.
+
+        * Scripts/build-webkit: Move construction of CMake argument list from here to
+        webkitdirs::blackberryCMakeArguments(). Also, remove exported function blackberryTargetArchitecture()
+        since it's only called within webkitdirs.pm now. Formerly we exported this function so that we could
+        call it from build-webkit.
+        * Scripts/webkitdirs.pm:
+        (blackberryCMakeArguments): Added.
+        (cmakeBasedPortArguments): Modified to call blackberryCMakeArguments() when building the
+        BlackBerry port.
+
+2011-12-21  Daniel Bates  <dbates@webkit.org>
+
+        Extract WinCE CMake arguments from build-webkit into separate function
+        https://bugs.webkit.org/show_bug.cgi?id=74983
+
+        Reviewed by Rob Buis.
+
+        Towards adding support for using Tools/Scripts/build-jsc for the WinCE port, extract the
+        WinCE-specific CMake argument from Tools/Scripts/build-webkit into webkitdirs::cmakeBasedPortArguments().
+        This will allow us to get the WinCE-specific CMake argument in Tools/Scripts/build-jsc so
+        that we can pass it to the CMake build system when building JavaScriptCore.
+
+        * Scripts/build-webkit:
+        * Scripts/webkitdirs.pm:
+        (cmakeBasedPortArguments): Added.
+
+2011-12-21  Kentaro Hara  <haraken@chromium.org>
+
+        In prepare-ChangeLog, replace constant global variables with "use constant"
+        https://bugs.webkit.org/show_bug.cgi?id=74992
+
+        Reviewed by Ryosuke Niwa.
+
+        This patch replaces the following constant global variables with "use constant"s.
+            - $changeLogTimeZone
+            - $SVN
+            - $GIT
+            - %supportedTestExtensions
+
+        * Scripts/prepare-ChangeLog:
+        (changeLogNameFromArgs):
+        (changeLogEmailAddressFromArgs):
+        (resolveConflictedChangeLogs):
+        (generateNewChangeLogs):
+        (diffCommand):
+        (statusCommand):
+        (createPatchCommand):
+        (findOriginalFileFromSvn):
+        (determinePropertyChanges):
+        (generateFileList):
+        (reviewerAndDescriptionForGitCommit):
+
+2011-12-20  Dirk Pranke  <dpranke@chromium.org>
+
+        nrwt: rename field references from _fs to _filesystem
+        https://bugs.webkit.org/show_bug.cgi?id=74898
+
+        Reviewed by Adam Barth.
+
+        This is a simple cleanup; most of the code uses
+        self._filesystem, but some used self._fs; this change renames
+        the latter to the former to be more consistent.
+
+        * Scripts/webkitpy/layout_tests/controllers/manager.py:
+        (Manager.__init__):
+        (Manager.collect_tests):
+        (Manager._strip_test_dir_prefix):
+        (Manager._split_into_chunks_if_necessary):
+        (Manager.results_directory):
+        (Manager._clobber_old_results):
+        (Manager._upload_json_files):
+        (Manager.print_config):
+        (Manager._copy_results_html_file):
+        (Manager._show_results_html_file):
+        (Manager._log_worker_stack):
+        * Scripts/webkitpy/layout_tests/layout_package/json_layout_results_generator.py:
+        (JSONLayoutResultsGenerator._normalize_results_json):
+        * Scripts/webkitpy/layout_tests/layout_package/json_results_generator.py:
+        (JSONResultsGeneratorBase.__init__):
+        (JSONResultsGeneratorBase.generate_json_output):
+        (JSONResultsGeneratorBase.generate_times_ms_file):
+        (JSONResultsGeneratorBase.upload_json_files):
+        (JSONResultsGeneratorBase._get_svn_revision):
+        * Scripts/webkitpy/layout_tests/models/test_expectations_unittest.py:
+        (Base.__init__):
+
 2011-12-20  Kentaro Hara  <haraken@chromium.org>
 
         Replace webkitperl/run-leaks_unittest/RunLeaks.pm with webkitperl/LoadAsModule.pm
