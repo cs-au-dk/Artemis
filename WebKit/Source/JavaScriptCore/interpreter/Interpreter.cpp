@@ -517,7 +517,7 @@ CallFrame* loadVarargs(CallFrame* callFrame, RegisterFile* registerFile, JSValue
         return newCallFrame;
     }
 
-    if (isJSArray(&callFrame->globalData(), arguments)) {
+    if (isJSArray(arguments)) {
         JSArray* array = asArray(arguments);
         unsigned argCount = array->length();
         CallFrame* newCallFrame = CallFrame::create(callFrame->registers() + firstFreeRegister + CallFrame::offsetFor(argCount + 1));
@@ -551,7 +551,12 @@ CallFrame* loadVarargs(CallFrame* callFrame, RegisterFile* registerFile, JSValue
 Interpreter::Interpreter()
     : m_sampleEntryDepth(0)
     , m_reentryDepth(0)
+#if !ASSERT_DISABLED
+    , m_initialized(false)
+#endif
+    , m_enabled(false)
 {
+
 #ifdef ARTEMIS
 #if ENABLE(JIT)
     printf("WEBKIT: JIT enabled - instrumentation will not work!\n");
@@ -562,10 +567,40 @@ Interpreter::Interpreter()
 
 #if ENABLE(COMPUTED_GOTO_INTERPRETER)
     privateExecute(InitializeAndReturn, 0, 0);
+#endif
+}
 
-    for (int i = 0; i < numOpcodeIDs; ++i)
-        m_opcodeIDTable.add(m_opcodeTable[i], static_cast<OpcodeID>(i));
+
+void Interpreter::initialize(bool canUseJIT)
+{
+#if ENABLE(COMPUTED_GOTO_INTERPRETER)
+    if (canUseJIT) {
+        // If the JIT is present, don't use jump destinations for opcodes.
+        
+        for (int i = 0; i < numOpcodeIDs; ++i) {
+            Opcode opcode = bitwise_cast<void*>(static_cast<uintptr_t>(i));
+            m_opcodeTable[i] = opcode;
+            m_opcodeIDTable.add(opcode, static_cast<OpcodeID>(i));
+        }
+    } else {
+        privateExecute(InitializeAndReturn, 0, 0);
+        
+        for (int i = 0; i < numOpcodeIDs; ++i)
+            m_opcodeIDTable.add(m_opcodeTable[i], static_cast<OpcodeID>(i));
+        
+        m_enabled = true;
+    }
+#else
+    UNUSED_PARAM(canUseJIT);
+#if ENABLE(INTERPRETER)
+    m_enabled = true;
+#else
+    m_enabled = false;
+#endif
 #endif // ENABLE(COMPUTED_GOTO_INTERPRETER)
+#if !ASSERT_DISABLED
+    m_initialized = true;
+#endif
 
 #if ENABLE(OPCODE_SAMPLING)
     enableSampler();
@@ -1527,13 +1562,12 @@ NEVER_INLINE void Interpreter::tryCacheGetByID(CallFrame* callFrame, CodeBlock* 
         return;
     }
 
-    JSGlobalData* globalData = &callFrame->globalData();
-    if (isJSArray(globalData, baseValue) && propertyName == callFrame->propertyNames().length) {
+    if (isJSArray(baseValue) && propertyName == callFrame->propertyNames().length) {
         vPC[0] = getOpcode(op_get_array_length);
         return;
     }
 
-    if (isJSString(globalData, baseValue) && propertyName == callFrame->propertyNames().length) {
+    if (isJSString(baseValue) && propertyName == callFrame->propertyNames().length) {
         vPC[0] = getOpcode(op_get_string_length);
         return;
     }
@@ -1672,6 +1706,9 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         #endif // ENABLE(COMPUTED_GOTO_INTERPRETER)
         return JSValue();
     }
+    
+    ASSERT(m_initialized);
+    ASSERT(m_enabled);
     
 #if ENABLE(JIT)
 #if ENABLE(INTERPRETER)
@@ -2674,20 +2711,23 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         ScopeChainNode* scopeChain = callFrame->scopeChain();
         ScopeChainIterator iter = scopeChain->begin();
 
-#ifndef ARTEMIS
         ScopeChainIterator end = scopeChain->end();
-        ASSERT(iter != end);
+
+
+#ifndef ARTEMIS
+        ASSERT_UNUSED(end, iter != end);
 #endif
+
         ASSERT(codeBlock == callFrame->codeBlock());
         bool checkTopLevel = codeBlock->codeType() == FunctionCode && codeBlock->needsFullScopeChain();
         ASSERT(skip || !checkTopLevel);
-    if (checkTopLevel && skip--) {
+        if (checkTopLevel && skip--) {
             if (callFrame->r(codeBlock->activationRegister()).jsValue())
                 ++iter;
         }
         while (skip--) {
             ++iter;
-            ASSERT(iter != end);
+            ASSERT_UNUSED(end, iter != end);
         }
         ASSERT((*iter)->isVariableObject());
         JSVariableObject* scope = static_cast<JSVariableObject*>(iter->get());
@@ -2706,22 +2746,26 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
 
         ScopeChainNode* scopeChain = callFrame->scopeChain();
         ScopeChainIterator iter = scopeChain->begin();
+        ScopeChainIterator end = scopeChain->end();
+
 
 #ifndef ARTEMIS
-        ScopeChainIterator end = scopeChain->end();
-        ASSERT(iter != end);
-#endif
+
 
         ASSERT(codeBlock == callFrame->codeBlock());
+        ASSERT_UNUSED(end, iter != end);
+
+#endif
+
         bool checkTopLevel = codeBlock->codeType() == FunctionCode && codeBlock->needsFullScopeChain();
         ASSERT(skip || !checkTopLevel);
-    if (checkTopLevel && skip--) {
+        if (checkTopLevel && skip--) {
             if (callFrame->r(codeBlock->activationRegister()).jsValue())
                 ++iter;
         }
         while (skip--) {
             ++iter;
-            ASSERT(iter != end);
+            ASSERT_UNUSED(end, iter != end);
         }
 
         ASSERT((*iter)->isVariableObject());
@@ -3244,7 +3288,7 @@ skip_id_custom_self:
 
         int base = vPC[2].u.operand;
         JSValue baseValue = callFrame->r(base).jsValue();
-        if (LIKELY(isJSArray(globalData, baseValue))) {
+        if (LIKELY(isJSArray(baseValue))) {
             int dst = vPC[1].u.operand;
             callFrame->uncheckedR(dst) = jsNumber(asArray(baseValue)->length());
             vPC += OPCODE_LENGTH(op_get_array_length);
@@ -3268,7 +3312,7 @@ skip_id_custom_self:
 
         int base = vPC[2].u.operand;
         JSValue baseValue = callFrame->r(base).jsValue();
-        if (LIKELY(isJSString(globalData, baseValue))) {
+        if (LIKELY(isJSString(baseValue))) {
             int dst = vPC[1].u.operand;
             callFrame->uncheckedR(dst) = jsNumber(asString(baseValue)->length());
             vPC += OPCODE_LENGTH(op_get_string_length);
@@ -3537,15 +3581,15 @@ skip_id_custom_self:
 
         if (LIKELY(subscript.isUInt32())) {
             uint32_t i = subscript.asUInt32();
-            if (isJSArray(globalData, baseValue)) {
+            if (isJSArray(baseValue)) {
                 JSArray* jsArray = asArray(baseValue);
                 if (jsArray->canGetIndex(i))
                     result = jsArray->getIndex(i);
                 else
                     result = jsArray->JSArray::get(callFrame, i);
-            } else if (isJSString(globalData, baseValue) && asString(baseValue)->canGetIndex(i))
+            } else if (isJSString(baseValue) && asString(baseValue)->canGetIndex(i))
                 result = asString(baseValue)->getIndex(callFrame, i);
-            else if (isJSByteArray(globalData, baseValue) && asByteArray(baseValue)->canAccessIndex(i))
+            else if (isJSByteArray(baseValue) && asByteArray(baseValue)->canAccessIndex(i))
                 result = asByteArray(baseValue)->getIndex(callFrame, i);
             else
                 result = baseValue.get(callFrame, i);
@@ -3579,13 +3623,13 @@ skip_id_custom_self:
 
         if (LIKELY(subscript.isUInt32())) {
             uint32_t i = subscript.asUInt32();
-            if (isJSArray(globalData, baseValue)) {
+            if (isJSArray(baseValue)) {
                 JSArray* jsArray = asArray(baseValue);
                 if (jsArray->canSetIndex(i))
                     jsArray->setIndex(*globalData, i, callFrame->r(value).jsValue());
                 else
                     jsArray->JSArray::putByIndex(jsArray, callFrame, i, callFrame->r(value).jsValue());
-            } else if (isJSByteArray(globalData, baseValue) && asByteArray(baseValue)->canAccessIndex(i)) {
+            } else if (isJSByteArray(baseValue) && asByteArray(baseValue)->canAccessIndex(i)) {
                 JSByteArray* jsByteArray = asByteArray(baseValue);
                 JSValue jsValue = callFrame->r(value).jsValue();
                 if (jsValue.isInt32())

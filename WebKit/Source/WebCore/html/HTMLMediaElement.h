@@ -66,6 +66,11 @@ class Widget;
 class DisplaySleepDisabler;
 #endif
 
+#if ENABLE(VIDEO_TRACK)
+typedef PODIntervalTree<double, TextTrackCue*> CueIntervalTree;
+typedef Vector<CueIntervalTree::IntervalType> CueList;
+#endif
+
 // FIXME: The inheritance from MediaPlayerClient here should be private inheritance.
 // But it can't be until the Chromium WebMediaPlayerClientImpl class is fixed so it
 // no longer depends on typecasting a MediaPlayerClient to an HTMLMediaElement.
@@ -196,11 +201,15 @@ public:
     PassRefPtr<TextTrack> addTrack(const String& kind, ExceptionCode& ec) { return addTrack(kind, emptyString(), emptyString(), ec); }
 
     TextTrackList* textTracks();
-
-    void addTextTrack(PassRefPtr<TextTrack>);
+    CueList currentlyActiveCues() const { return m_currentlyActiveCues; }
 
     virtual void trackWasAdded(HTMLTrackElement*);
     virtual void trackWillBeRemoved(HTMLTrackElement*);
+    
+    void configureTextTrack(HTMLTrackElement*);
+    void configureTextTracks();
+    bool textTracksAreReady() const;
+    void configureTextTrackDisplay();
 
     // TextTrackClient
     virtual void textTrackReadyStateChanged(TextTrack*);
@@ -218,7 +227,6 @@ public:
     void deliverNotification(MediaPlayerProxyNotificationType notification);
     void setMediaPlayerProxy(WebMediaPlayerProxy* proxy);
     void getPluginProxyParams(KURL& url, Vector<String>& names, Vector<String>& values);
-    virtual void finishParsingChildren();
     void createMediaPlayerProxy();
     void updateWidget(PluginCreationOption);
 #endif
@@ -266,10 +274,11 @@ public:
     void setController(PassRefPtr<MediaController>);
 
 protected:
-    HTMLMediaElement(const QualifiedName&, Document*);
+    HTMLMediaElement(const QualifiedName&, Document*, bool);
     virtual ~HTMLMediaElement();
 
     virtual void parseMappedAttribute(Attribute*);
+    virtual void finishParsingChildren();
     virtual bool isURLAttribute(Attribute*) const;
     virtual void attach();
 
@@ -388,8 +397,10 @@ private:
     void mediaLoadingFailed(MediaPlayer::NetworkState);
 
 #if ENABLE(VIDEO_TRACK)
-    void configureTextTracks();
     void updateActiveTextTrackCues(float);
+    bool userIsInterestedInThisLanguage(const String&) const;
+    bool userIsInterestedInThisTrack(HTMLTrackElement*) const;
+    HTMLTrackElement* showingTrackWithSameKind(HTMLTrackElement*) const;
 #endif
 
     // These "internal" functions do not check user gesture restrictions.
@@ -541,20 +552,23 @@ private:
     bool m_loadInitiatedByUserGesture : 1;
     bool m_completelyLoaded : 1;
     bool m_havePreparedToPlay : 1;
+    bool m_parsingInProgress : 1;
+
+#if ENABLE(VIDEO_TRACK)
+    bool m_tracksAreReady : 1;
+    bool m_haveVisibleTextTrack : 1;
+
+    RefPtr<TextTrackList> m_textTracks;
+    Vector<RefPtr<TextTrack> > m_textTracksWhenResourceSelectionBegan;
+    CueIntervalTree m_cueTree;
+    CueList m_currentlyActiveCues;
+#endif
 
 #if ENABLE(WEB_AUDIO)
     // This is a weak reference, since m_audioSourceNode holds a reference to us.
     // The value is set just after the MediaElementAudioSourceNode is created.
     // The value is cleared in MediaElementAudioSourceNode::~MediaElementAudioSourceNode().
     MediaElementAudioSourceNode* m_audioSourceNode;
-#endif
-
-#if ENABLE(VIDEO_TRACK)
-    RefPtr<TextTrackList> m_textTracks;
-    
-    typedef PODIntervalTree <double, TextTrackCue*> CueIntervalTree;
-    CueIntervalTree m_cueTree;
-    Vector<CueIntervalTree::IntervalType> m_currentlyVisibleCues;
 #endif
 
     String m_mediaGroup;

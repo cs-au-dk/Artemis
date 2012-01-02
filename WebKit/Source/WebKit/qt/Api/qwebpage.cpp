@@ -329,7 +329,7 @@ QWebPagePrivate::QWebPagePrivate(QWebPage *qq)
     else
         pageClients.deviceOrientationClient = new DeviceOrientationClientQt;
 
-    pageClients.deviceMotionClient = new DeviceMotionClientQt(q);
+    pageClients.deviceMotionClient = new DeviceMotionClientQt;
 #endif
 #if ENABLE(CLIENT_BASED_GEOLOCATION)
     if (useMock)
@@ -3273,7 +3273,7 @@ bool QWebPage::swallowContextMenuEvent(QContextMenuEvent *event)
     if (!RenderThemeQt::useMobileTheme()) {
         if (QWebFrame* webFrame = frameAt(event->pos())) {
             Frame* frame = QWebFramePrivate::core(webFrame);
-            if (Scrollbar* scrollbar = frame->view()->scrollbarAtPoint(PlatformMouseEvent(event, 1).pos()))
+            if (Scrollbar* scrollbar = frame->view()->scrollbarAtPoint(PlatformMouseEvent(event, 1).position()))
                 return scrollbar->contextMenu(PlatformMouseEvent(event, 1));
         }
     }

@@ -242,7 +242,7 @@ void GraphicsLayerChromium::clearBackgroundColor()
 void GraphicsLayerChromium::setContentsOpaque(bool opaque)
 {
     GraphicsLayer::setContentsOpaque(opaque);
-    updateContentsOpaque();
+    m_layer->setOpaque(m_contentsOpaque);
 }
 
 void GraphicsLayerChromium::setMaskLayer(GraphicsLayer* maskLayer)
@@ -261,7 +261,7 @@ void GraphicsLayerChromium::setMaskLayer(GraphicsLayer* maskLayer)
 void GraphicsLayerChromium::setBackfaceVisibility(bool visible)
 {
     GraphicsLayer::setBackfaceVisibility(visible);
-    updateBackfaceVisibility();
+    m_layer->setDoubleSided(m_backfaceVisibility);
 }
 
 void GraphicsLayerChromium::setOpacity(float opacity)
@@ -514,16 +514,6 @@ void GraphicsLayerChromium::updateMasksToBounds()
     updateDebugIndicators();
 }
 
-void GraphicsLayerChromium::updateContentsOpaque()
-{
-    m_layer->setOpaque(m_contentsOpaque);
-}
-
-void GraphicsLayerChromium::updateBackfaceVisibility()
-{
-    m_layer->setDoubleSided(m_backfaceVisibility);
-}
-
 void GraphicsLayerChromium::updateLayerPreserves3D()
 {
     if (m_preserves3D && !m_transformLayer) {
@@ -574,7 +564,7 @@ void GraphicsLayerChromium::updateLayerPreserves3D()
     }
 
     m_layer->setPreserves3D(m_preserves3D);
-    updateOpacityOnLayer();
+    primaryLayer()->setOpacity(m_opacity);
     updateNames();
 }
 
@@ -658,12 +648,6 @@ float GraphicsLayerChromium::contentsScale() const
     return 1;
 }
 
-// This function simply mimics the operation of GraphicsLayerCA
-void GraphicsLayerChromium::updateOpacityOnLayer()
-{
-    primaryLayer()->setOpacity(m_opacity);
-}
-
 void GraphicsLayerChromium::deviceOrPageScaleFactorChanged()
 {
     updateContentsScale();
@@ -679,12 +663,6 @@ bool GraphicsLayerChromium::drawsContent() const
 void GraphicsLayerChromium::paintContents(GraphicsContext& context, const IntRect& clip)
 {
     paintGraphicsLayerContents(context, clip);
-}
-
-void GraphicsLayerChromium::notifySyncRequired()
-{
-    if (m_client)
-        m_client->notifySyncRequired(this);
 }
 
 } // namespace WebCore

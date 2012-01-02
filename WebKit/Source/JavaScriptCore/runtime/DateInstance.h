@@ -34,20 +34,22 @@ namespace JSC {
         DateInstance(ExecState*, Structure*);
         void finishCreation(JSGlobalData&);
         void finishCreation(JSGlobalData&, double);
-        
+
+        static void destroy(JSCell*);
+ 
     public:
         typedef JSWrapperObject Base;
 
         static DateInstance* create(ExecState* exec, Structure* structure, double date)
         {
-            DateInstance* instance = new (allocateCell<DateInstance>(*exec->heap())) DateInstance(exec, structure);
+            DateInstance* instance = new (NotNull, allocateCell<DateInstance>(*exec->heap())) DateInstance(exec, structure);
             instance->finishCreation(exec->globalData(), date);
             return instance;
         }
 
         static DateInstance* create(ExecState* exec, Structure* structure)
         {
-            DateInstance* instance = new (allocateCell<DateInstance>(*exec->heap())) DateInstance(exec, structure);
+            DateInstance* instance = new (NotNull, allocateCell<DateInstance>(*exec->heap())) DateInstance(exec, structure);
             instance->finishCreation(exec->globalData());
             return instance;
         }

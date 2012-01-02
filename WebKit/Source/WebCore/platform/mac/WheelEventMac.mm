@@ -90,16 +90,12 @@ static PlatformWheelEventPhase phaseForEvent(NSEvent *event)
 }
 
 PlatformWheelEvent::PlatformWheelEvent(NSEvent* event, NSView *windowView)
-    : m_position(pointForEvent(event, windowView))
+    : PlatformEvent(PlatformEvent::Wheel, [event modifierFlags] & NSShiftKeyMask, [event modifierFlags] & NSControlKeyMask, [event modifierFlags] & NSAlternateKeyMask, [event modifierFlags] & NSCommandKeyMask, [event timestamp])
+    , m_position(pointForEvent(event, windowView))
     , m_globalPosition(globalPointForEvent(event))
     , m_granularity(ScrollByPixelWheelEvent)
-    , m_shiftKey([event modifierFlags] & NSShiftKeyMask)
-    , m_ctrlKey([event modifierFlags] & NSControlKeyMask)
-    , m_altKey([event modifierFlags] & NSAlternateKeyMask)
-    , m_metaKey([event modifierFlags] & NSCommandKeyMask)
     , m_phase(phaseForEvent(event))
     , m_momentumPhase(momentumPhaseForEvent(event))
-    , m_timestamp([event timestamp])
 {
     BOOL continuous;
     wkGetWheelEventDeltas(event, &m_deltaX, &m_deltaY, &continuous);

@@ -36,7 +36,7 @@ namespace JSC {
 
         static DebuggerActivation* create(JSGlobalData& globalData, JSObject* object)
         {
-            DebuggerActivation* activation = new (allocateCell<DebuggerActivation>(globalData.heap)) DebuggerActivation(globalData);
+            DebuggerActivation* activation = new (NotNull, allocateCell<DebuggerActivation>(globalData.heap)) DebuggerActivation(globalData);
             activation->finishCreation(globalData, object);
             return activation;
         }
@@ -51,6 +51,8 @@ namespace JSC {
         static bool getOwnPropertyDescriptor(JSObject*, ExecState*, const Identifier&, PropertyDescriptor&);
         static void defineGetter(JSObject*, ExecState*, const Identifier& propertyName, JSObject* getterFunction, unsigned attributes);
         static void defineSetter(JSObject*, ExecState*, const Identifier& propertyName, JSObject* setterFunction, unsigned attributes);
+
+        static const ClassInfo s_info;
 
         static Structure* createStructure(JSGlobalData& globalData, JSGlobalObject* globalObject, JSValue prototype) 
         {

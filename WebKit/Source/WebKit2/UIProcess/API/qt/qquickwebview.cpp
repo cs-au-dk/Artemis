@@ -26,6 +26,7 @@
 #include "QtDialogRunner.h"
 #include "QtDownloadManager.h"
 #include "QtWebContext.h"
+#include "QtWebIconDatabaseClient.h"
 #include "QtWebPageEventHandler.h"
 #include "UtilsQt.h"
 #include "WebBackForwardList.h"
@@ -46,6 +47,7 @@
 #include <QFileDialog>
 #include <QtQuick/QQuickCanvas>
 #include <WKOpenPanelResultListener.h>
+#include <wtf/text/WTFString.h>
 
 QQuickWebViewPrivate::QQuickWebViewPrivate(QQuickWebView* viewport)
     : q_ptr(viewport)
@@ -73,8 +75,14 @@ QQuickWebViewPrivate::~QQuickWebViewPrivate()
 // Note: we delay this initialization to make sure that QQuickWebView has its d-ptr in-place.
 void QQuickWebViewPrivate::initialize(WKContextRef contextRef, WKPageGroupRef pageGroupRef)
 {
+    RefPtr<WebPageGroup> pageGroup;
+    if (pageGroupRef)
+        pageGroup = toImpl(pageGroupRef);
+    else
+        pageGroup = WebPageGroup::create();
+
     context = contextRef ? QtWebContext::create(toImpl(contextRef)) : QtWebContext::defaultContext();
-    webPageProxy = context->createWebPage(&pageClient, toImpl(pageGroupRef));
+    webPageProxy = context->createWebPage(&pageClient, pageGroup.get());
 
     QQuickWebPagePrivate* const pageViewPrivate = pageView.data()->d;
     pageViewPrivate->initialize(webPageProxy.get());
@@ -83,6 +91,10 @@ void QQuickWebViewPrivate::initialize(WKContextRef contextRef, WKPageGroupRef pa
     pagePolicyClient.reset(new QtWebPagePolicyClient(toAPI(webPageProxy.get()), q_ptr));
     pageUIClient.reset(new QtWebPageUIClient(toAPI(webPageProxy.get()), q_ptr));
     navigationHistory = adoptPtr(QWebNavigationHistoryPrivate::createHistory(toAPI(webPageProxy.get())));
+
+    QtWebIconDatabaseClient* iconDatabase = context->iconDatabase();
+    QObject::connect(iconDatabase, SIGNAL(iconChangedForPageURL(QUrl, QUrl)), q_ptr, SLOT(_q_onIconChangedForPageURL(QUrl, QUrl)));
+    QObject::connect(q_ptr, SIGNAL(urlChanged(QUrl)), iconDatabase, SLOT(requestIconForPageURL(QUrl)));
 
     // Any page setting should preferrable be set before creating the page.
     setUseTraditionalDesktopBehaviour(false);
@@ -156,6 +168,15 @@ void QQuickWebViewPrivate::didFinishFirstNonEmptyLayout()
         isTransitioningToNewPage = false;
         postTransitionState->apply();
     }
+}
+
+void QQuickWebViewPrivate::_q_onIconChangedForPageURL(const QUrl& pageURL, const QUrl& iconURL)
+{
+    Q_Q(QQuickWebView);
+    if (q->url() != pageURL)
+        return;
+
+    setIcon(iconURL);
 }
 
 void QQuickWebViewPrivate::_q_suspend()
@@ -495,6 +516,28 @@ void QQuickWebViewPrivate::setViewInAttachedProperties(QObject* object)
     attached->setView(q);
 }
 
+void QQuickWebViewPrivate::setIcon(const QUrl& iconURL)
+{
+    Q_Q(QQuickWebView);
+    if (m_iconURL == iconURL)
+        return;
+
+    String oldPageURL = QUrl::fromPercentEncoding(m_iconURL.encodedFragment());
+    String newPageURL = webPageProxy->mainFrame()->url();
+
+    if (oldPageURL != newPageURL) {
+        QtWebIconDatabaseClient* iconDatabase = context->iconDatabase();
+        if (!oldPageURL.isEmpty())
+            iconDatabase->releaseIconForPageURL(oldPageURL);
+
+        if (!newPageURL.isEmpty())
+            iconDatabase->retainIconForPageURL(newPageURL);
+    }
+
+    m_iconURL = iconURL;
+    emit q->iconChanged(m_iconURL);
+}
+
 bool QQuickWebViewPrivate::navigatorQtObjectEnabled() const
 {
     return m_navigatorQtObjectEnabled;
@@ -617,6 +660,14 @@ QDeclarativeComponent* QQuickWebViewExperimental::promptDialog() const
     return d->promptDialog;
 }
 
+QWebPreferences* QQuickWebViewExperimental::preferences() const
+{
+    QQuickWebViewPrivate* const d = d_ptr;
+    if (!d->preferences)
+        d->preferences = adoptPtr(QWebPreferencesPrivate::createPreferences(d));
+    return d->preferences.get();
+}
+
 void QQuickWebViewExperimental::setPromptDialog(QDeclarativeComponent* promptDialog)
 {
     Q_D(QQuickWebView);
@@ -660,6 +711,11 @@ void QQuickWebViewExperimental::goBackTo(int index)
 QWebViewportInfo* QQuickWebViewExperimental::viewportInfo()
 {
     return m_viewportInfo;
+}
+
+QQuickWebPage* QQuickWebViewExperimental::page()
+{
+    return q_ptr->page();
 }
 
 QQuickWebView::QQuickWebView(QQuickItem* parent)
@@ -731,6 +787,12 @@ QUrl QQuickWebView::url() const
     return QUrl(QString(mainFrame->url()));
 }
 
+QUrl QQuickWebView::icon() const
+{
+    Q_D(const QQuickWebView);
+    return d->m_iconURL;
+}
+
 int QQuickWebView::loadProgress() const
 {
     Q_D(const QQuickWebView);
@@ -769,14 +831,6 @@ QString QQuickWebView::title() const
 {
     Q_D(const QQuickWebView);
     return d->webPageProxy->pageTitle();
-}
-
-QWebPreferences* QQuickWebView::preferences() const
-{
-    QQuickWebViewPrivate* const d = d_ptr.data();
-    if (!d->preferences)
-        d->preferences = adoptPtr(QWebPreferencesPrivate::createPreferences(d));
-    return d->preferences.get();
 }
 
 QQuickWebViewExperimental* QQuickWebView::experimental() const

@@ -3739,7 +3739,7 @@ static PassRefPtr<KeyboardEvent> currentKeyboardEvent(Frame* coreFrame)
     switch ([event type]) {
     case NSKeyDown: {
         PlatformKeyboardEvent platformEvent(event);
-        platformEvent.disambiguateKeyDownEvent(PlatformKeyboardEvent::RawKeyDown);
+        platformEvent.disambiguateKeyDownEvent(PlatformEvent::RawKeyDown);
         return KeyboardEvent::create(platformEvent, coreFrame->document()->defaultView());
     }
     case NSKeyUp:
@@ -5381,7 +5381,7 @@ static CGPoint coreGraphicsScreenPointForAppKitScreenPoint(NSPoint point)
         }
         // If there are no text insertion commands, default keydown handler is the right time to execute the commands.
         // Keypress (Char event) handler is the latest opportunity to execute.
-        if (!haveTextInsertionCommands || platformEvent->type() == PlatformKeyboardEvent::Char)
+        if (!haveTextInsertionCommands || platformEvent->type() == PlatformEvent::Char)
             [self _executeSavedKeypressCommands];
     }
     _private->interpretKeyEventsParameters = 0;
@@ -5498,7 +5498,7 @@ static CGPoint coreGraphicsScreenPointForAppKitScreenPoint(NSPoint point)
 #ifdef BUILDING_ON_LEOPARD
     [viewLayer setSublayerTransform:CATransform3DMakeScale(1, -1, 1)]; // setGeometryFlipped: doesn't exist on Leopard.
     [self _updateLayerHostingViewPosition];
-#else
+#elif (defined(BUILDING_ON_SNOW_LEOPARD) || defined(BUILDING_ON_LION))
     // Do geometry flipping here, which flips all the compositing layers so they are top-down.
     [viewLayer setGeometryFlipped:YES];
 #endif

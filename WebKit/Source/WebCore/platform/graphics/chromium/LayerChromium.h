@@ -61,7 +61,6 @@ public:
     virtual ~CCLayerDelegate() { }
     virtual bool drawsContent() const = 0;
     virtual void paintContents(GraphicsContext&, const IntRect& clip) = 0;
-    virtual void notifySyncRequired() = 0;
 };
 
 // Base class for composited layers. Special layer types are derived from
@@ -155,12 +154,13 @@ public:
 
     void setDelegate(CCLayerDelegate* delegate) { m_delegate = delegate; }
 
-    void setReplicaLayer(LayerChromium* layer) { m_replicaLayer = layer; setNeedsCommit(); }
+    void setReplicaLayer(LayerChromium*);
     LayerChromium* replicaLayer() const { return m_replicaLayer.get(); }
 
     // These methods typically need to be overwritten by derived classes.
     virtual bool drawsContent() const { return false; }
     virtual void paintContentsIfDirty() { }
+    virtual void idlePaintContentsIfDirty() { }
     virtual void updateCompositorResources(GraphicsContext3D*, CCTextureUpdater&) { }
     virtual void setIsMask(bool) { }
     virtual void unreserveContentsTexture() { }

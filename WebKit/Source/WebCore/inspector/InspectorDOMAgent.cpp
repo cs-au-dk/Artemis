@@ -540,11 +540,7 @@ void InspectorDOMAgent::setAttributesAsText(ErrorString* errorString, int elemen
         // Add attribute pair
         const Attribute* attribute = attrMap->attributeItem(i);
         foundOriginalAttribute = foundOriginalAttribute || (name && attribute->name().toString() == *name);
-        element->setAttribute(attribute->name(), attribute->value(), ec);
-        if (ec) {
-            *errorString = "Internal error: could not set attribute value";
-            return;
-        }
+        element->setAttribute(attribute->name(), attribute->value());
     }
 
     if (!foundOriginalAttribute && name) {
@@ -598,9 +594,7 @@ void InspectorDOMAgent::setNodeName(ErrorString*, int nodeId, const String& tagN
         return;
 
     // Copy over the original node's attributes.
-    Element* oldElem = static_cast<Element*>(oldNode);
-    if (oldElem->attributes())
-        newElem->attributes()->setAttributes(*(oldElem->attributes(true)));
+    newElem->setAttributesFromElement(*toElement(oldNode));
 
     // Copy over the original node's children.
     Node* child;
@@ -1125,8 +1119,6 @@ String InspectorDOMAgent::documentURLString(Document* document)
 
 PassRefPtr<InspectorObject> InspectorDOMAgent::buildObjectForNode(Node* node, int depth, NodeToIdMap* nodesMap)
 {
-    RefPtr<InspectorObject> value = InspectorObject::create();
-
     int id = bind(node, nodesMap);
     String nodeName;
     String localName;
@@ -1155,15 +1147,16 @@ PassRefPtr<InspectorObject> InspectorDOMAgent::buildObjectForNode(Node* node, in
         break;
     }
 
-    value->setNumber("nodeId", id);
-    value->setNumber("nodeType", node->nodeType());
-    value->setString("nodeName", nodeName);
-    value->setString("localName", localName);
-    value->setString("nodeValue", nodeValue);
+    RefPtr<TypeBuilder::DOM::Node> value = TypeBuilder::DOM::Node::create()
+        .setNodeId(id)
+        .setNodeType(node->nodeType())
+        .setNodeName(nodeName)
+        .setLocalName(localName)
+        .setNodeValue(nodeValue);
 
     if (node->nodeType() == Node::ELEMENT_NODE || node->nodeType() == Node::DOCUMENT_NODE || node->nodeType() == Node::DOCUMENT_FRAGMENT_NODE) {
         int nodeCount = innerChildNodeCount(node);
-        value->setNumber("childNodeCount", nodeCount);
+        value->setChildNodeCount(nodeCount);
         RefPtr<InspectorArray> children = buildArrayForContainerChildren(node, depth, nodesMap);
         if (children->length() > 0)
             value->setArray("children", children.release());
@@ -1173,22 +1166,22 @@ PassRefPtr<InspectorObject> InspectorDOMAgent::buildObjectForNode(Node* node, in
             value->setArray("attributes", buildArrayForElementAttributes(element));
             if (node->isFrameOwnerElement()) {
                 HTMLFrameOwnerElement* frameOwner = static_cast<HTMLFrameOwnerElement*>(node);
-                value->setString("documentURL", documentURLString(frameOwner->contentDocument()));
+                value->setDocumentURL(documentURLString(frameOwner->contentDocument()));
             }
         } else if (node->nodeType() == Node::DOCUMENT_NODE) {
             Document* document = static_cast<Document*>(node);
-            value->setString("documentURL", documentURLString(document));
-            value->setString("xmlVersion", document->xmlVersion());
+            value->setDocumentURL(documentURLString(document));
+            value->setXmlVersion(document->xmlVersion());
         }
     } else if (node->nodeType() == Node::DOCUMENT_TYPE_NODE) {
         DocumentType* docType = static_cast<DocumentType*>(node);
-        value->setString("publicId", docType->publicId());
-        value->setString("systemId", docType->systemId());
-        value->setString("internalSubset", docType->internalSubset());
+        value->setPublicId(docType->publicId());
+        value->setSystemId(docType->systemId());
+        value->setInternalSubset(docType->internalSubset());
     } else if (node->nodeType() == Node::ATTRIBUTE_NODE) {
         Attr* attribute = static_cast<Attr*>(node);
-        value->setString("name", attribute->name());
-        value->setString("value", attribute->value());
+        value->setName(attribute->name());
+        value->setValue(attribute->value());
     }
     return value.release();
 }
@@ -1235,19 +1228,19 @@ PassRefPtr<InspectorArray> InspectorDOMAgent::buildArrayForContainerChildren(Nod
 PassRefPtr<InspectorObject> InspectorDOMAgent::buildObjectForEventListener(const RegisteredEventListener& registeredEventListener, const AtomicString& eventType, Node* node)
 {
     RefPtr<EventListener> eventListener = registeredEventListener.listener;
-    RefPtr<InspectorObject> value = InspectorObject::create();
-    value->setString("type", eventType);
-    value->setBoolean("useCapture", registeredEventListener.useCapture);
-    value->setBoolean("isAttribute", eventListener->isAttribute());
-    value->setNumber("nodeId", pushNodePathToFrontend(node));
-    value->setString("handlerBody", eventListenerHandlerBody(node->document(), eventListener.get()));
+    RefPtr<TypeBuilder::DOM::EventListener> value = TypeBuilder::DOM::EventListener::create()
+        .setType(eventType)
+        .setUseCapture(registeredEventListener.useCapture)
+        .setIsAttribute(eventListener->isAttribute())
+        .setNodeId(pushNodePathToFrontend(node))
+        .setHandlerBody(eventListenerHandlerBody(node->document(), eventListener.get()));
     String sourceName;
     int lineNumber;
     if (eventListenerHandlerLocation(node->document(), eventListener.get(), sourceName, lineNumber)) {
-        RefPtr<InspectorObject> location = InspectorObject::create();
-        location->setString("scriptId", sourceName);
-        location->setNumber("lineNumber", lineNumber);
-        value->setObject("location", location);
+        RefPtr<TypeBuilder::Debugger::Location> location = TypeBuilder::Debugger::Location::create()
+            .setScriptId(sourceName)
+            .setLineNumber(lineNumber);
+        value->setLocation(location);
     }
     return value.release();
 }

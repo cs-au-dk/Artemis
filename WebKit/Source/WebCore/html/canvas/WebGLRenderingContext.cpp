@@ -60,12 +60,12 @@
 #include "WebGLDebugRendererInfo.h"
 #include "WebGLDebugShaders.h"
 #include "WebGLFramebuffer.h"
+#include "WebGLLoseContext.h"
 #include "WebGLProgram.h"
 #include "WebGLRenderbuffer.h"
 #include "WebGLShader.h"
 #include "WebGLTexture.h"
 #include "WebGLUniformLocation.h"
-#include "WebKitLoseContext.h"
 
 #include <wtf/ByteArray.h>
 #include <wtf/OwnArrayPtr.h>
@@ -1415,7 +1415,7 @@ void WebGLRenderingContext::deleteRenderbuffer(WebGLRenderbuffer* renderbuffer)
     if (renderbuffer == m_renderbufferBinding)
         m_renderbufferBinding = 0;
     if (m_framebufferBinding)
-        m_framebufferBinding->removeAttachment(renderbuffer);
+        m_framebufferBinding->removeAttachmentFromBoundFramebuffer(renderbuffer);
 }
 
 void WebGLRenderingContext::deleteShader(WebGLShader* shader)
@@ -1434,7 +1434,7 @@ void WebGLRenderingContext::deleteTexture(WebGLTexture* texture)
             m_textureUnits[i].m_textureCubeMapBinding = 0;
     }
     if (m_framebufferBinding)
-        m_framebufferBinding->removeAttachment(texture);
+        m_framebufferBinding->removeAttachmentFromBoundFramebuffer(texture);
 }
 
 void WebGLRenderingContext::depthFunc(GC3Denum func)
@@ -1918,7 +1918,7 @@ void WebGLRenderingContext::framebufferRenderbuffer(GC3Denum target, GC3Denum at
     default:
         m_context->framebufferRenderbuffer(target, attachment, renderbuffertarget, objectOrZero(buffer));
     }
-    m_framebufferBinding->setAttachment(attachment, buffer);
+    m_framebufferBinding->setAttachmentForBoundFramebuffer(attachment, buffer);
     if (reattachDepth) {
         Platform3DObject object = objectOrZero(m_framebufferBinding->getAttachment(GraphicsContext3D::DEPTH_ATTACHMENT));
         if (object)
@@ -1963,7 +1963,7 @@ void WebGLRenderingContext::framebufferTexture2D(GC3Denum target, GC3Denum attac
         return;
     }
     m_context->framebufferTexture2D(target, attachment, textarget, objectOrZero(texture), level);
-    m_framebufferBinding->setAttachment(attachment, textarget, texture, level);
+    m_framebufferBinding->setAttachmentForBoundFramebuffer(attachment, textarget, texture, level);
     cleanupAfterGraphicsCall(false);
 }
 
@@ -2125,10 +2125,12 @@ WebGLExtension* WebGLRenderingContext::getExtension(const String& name)
         }
         return m_oesVertexArrayObject.get();
     }
-    if (equalIgnoringCase(name, "WEBKIT_lose_context")) {
-        if (!m_webkitLoseContext)
-            m_webkitLoseContext = WebKitLoseContext::create(this);
-        return m_webkitLoseContext.get();
+    if (equalIgnoringCase(name, "WEBKIT_WEBGL_lose_context")
+        // FIXME: remove this after a certain grace period.
+        || equalIgnoringCase(name, "WEBKIT_lose_context")) {
+        if (!m_webglLoseContext)
+            m_webglLoseContext = WebGLLoseContext::create(this);
+        return m_webglLoseContext.get();
     }
     if (equalIgnoringCase(name, "WEBKIT_WEBGL_compressed_textures")) {
         // Use WEBKIT_ prefix until extension is official.
@@ -2579,7 +2581,7 @@ Vector<String> WebGLRenderingContext::getSupportedExtensions()
         result.append("OES_standard_derivatives");
     if (m_context->getExtensions()->supports("GL_OES_vertex_array_object"))
         result.append("OES_vertex_array_object");
-    result.append("WEBKIT_lose_context");
+    result.append("WEBKIT_WEBGL_lose_context");
     if (WebGLCompressedTextures::supported(this))
         result.append("WEBKIT_WEBGL_compressed_textures");
 
@@ -4992,8 +4994,8 @@ void WebGLRenderingContext::maybeRestoreContext(WebGLRenderingContext::LostConte
     case GraphicsContext3D::NO_ERROR:
         // The GraphicsContext3D implementation might not fully
         // support GL_ARB_robustness semantics yet. Alternatively, the
-        // WebGL WEBKIT_lose_context extension might have been used to
-        // force a lost context.
+        // WEBGL_lose_context extension might have been used to force
+        // a lost context.
         break;
     case Extensions3D::GUILTY_CONTEXT_RESET_ARB:
         // The rendering context is not restored if this context was

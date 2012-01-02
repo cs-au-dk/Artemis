@@ -163,9 +163,10 @@ Rectangle {
 
             Rectangle {
                 id: viewportInfoButton
-                height: navigationBar.height - 2
+                height: parent.height
                 width: height
-                color: "#efefef"
+                color: { viewportInfoItem.visible ? "#cfcfcf" : "#efefef" }
+                radius: 6
 
                 Image {
                     anchors.centerIn: parent
@@ -204,6 +205,17 @@ Rectangle {
                 opacity: 0.3
                 visible: webView.loadProgress != 100
             }
+            Image {
+                id: favIcon
+                source: webView.icon != '' ? webView.icon : '../icons/favicon.png'
+                width: 16
+                height: 16
+                anchors {
+                    left: parent.left
+                    leftMargin: 4
+                    verticalCenter: parent.verticalCenter
+                }
+            }
             TextInput {
                 id: addressLine
                 clip: true
@@ -214,7 +226,7 @@ Rectangle {
                 }
                 anchors {
                     verticalCenter: parent.verticalCenter
-                    left: parent.left
+                    left: favIcon.right
                     right: parent.right
                     margins: 6
                 }

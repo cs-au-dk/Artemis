@@ -1020,13 +1020,22 @@ void Node::unregisterDynamicSubtreeNodeList(DynamicSubtreeNodeList* list)
     removeNodeListCacheIfPossible(this, data);
 }
 
-void Node::invalidateNodeListsCacheAfterAttributeChanged()
+void Node::invalidateNodeListsCacheAfterAttributeChanged(const QualifiedName& attrName)
 {
     if (hasRareData() && isAttributeNode()) {
         NodeRareData* data = rareData();
         ASSERT(!data->nodeLists());
         data->clearChildNodeListCache();
     }
+
+    // This list should be sync'ed with NodeListsNodeData.
+    if (attrName != classAttr
+#if ENABLE(MICRODATA)
+        && attrName != itemscopeAttr
+        && attrName != itempropAttr
+#endif
+        && attrName != nameAttr)
+        return;
 
     if (!treeScope()->hasNodeListCaches())
         return;
@@ -2504,15 +2513,13 @@ void Node::didMoveToNewOwnerDocument()
 #if ENABLE(MUTATION_OBSERVERS)
     if (Vector<OwnPtr<MutationObserverRegistration> >* registry = mutationObserverRegistry()) {
         for (size_t i = 0; i < registry->size(); ++i) {
-            if (registry->at(i)->isSubtree())
-                document()->addSubtreeMutationObserverTypes(registry->at(i)->mutationTypes());
+            document()->addMutationObserverTypes(registry->at(i)->mutationTypes());
         }
     }
 
     if (HashSet<MutationObserverRegistration*>* transientRegistry = transientMutationObserverRegistry()) {
         for (HashSet<MutationObserverRegistration*>::iterator iter = transientRegistry->begin(); iter != transientRegistry->end(); ++iter) {
-            if ((*iter)->isSubtree())
-                document()->addSubtreeMutationObserverTypes((*iter)->mutationTypes());
+            document()->addMutationObserverTypes((*iter)->mutationTypes());
         }
     }
 #endif
@@ -2704,18 +2711,9 @@ void Node::collectMatchingObserversForMutation(HashMap<WebKitMutationObserver*, 
     }
 }
 
-bool Node::mayHaveMutationObserversOfType(WebKitMutationObserver::MutationType type)
-{
-    return document()->hasSubtreeMutationObserverOfType(type) || (hasRareData() && (rareData()->mutationObserverRegistry() || rareData()->transientMutationObserverRegistry()));
-}
-
 void Node::getRegisteredMutationObserversOfType(HashMap<WebKitMutationObserver*, MutationRecordDeliveryOptions>& observers, WebKitMutationObserver::MutationType type, const AtomicString& attributeName)
 {
     collectMatchingObserversForMutation(observers, this, type, attributeName);
-
-    if (!document()->hasSubtreeMutationObserverOfType(type))
-        return;
-
     for (Node* node = parentNode(); node; node = node->parentNode())
         collectMatchingObserversForMutation(observers, node, type, attributeName);
 }
@@ -2767,7 +2765,7 @@ void Node::unregisterTransientMutationObserver(MutationObserverRegistration* reg
 
 void Node::notifyMutationObserversNodeWillDetach()
 {
-    if (!document()->hasSubtreeMutationObserver())
+    if (!document()->hasMutationObservers())
         return;
 
     for (Node* node = parentNode(); node; node = node->parentNode()) {

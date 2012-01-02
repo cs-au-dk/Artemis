@@ -119,12 +119,7 @@ PassRefPtr<Node> NamedNodeMap::setNamedItem(Node* node, ExceptionCode& ec)
         return 0;
     }
 
-#if ENABLE(MUTATION_OBSERVERS)
-    m_element->enqueueAttributesMutationRecordIfRequested(attribute->name(), oldAttribute ? oldAttribute->value() : nullAtom);
-#endif
-
-    if (attr->isId())
-        m_element->updateId(oldAttribute ? oldAttribute->value() : nullAtom, attribute->value());
+    m_element->willModifyAttribute(attribute->name(), oldAttribute ? oldAttribute->value() : nullAtom, attribute->value());
 
     // ### slightly inefficient - resizes attribute array twice.
     RefPtr<Attr> oldAttr;
@@ -147,21 +142,17 @@ PassRefPtr<Node> NamedNodeMap::setNamedItemNS(Node* node, ExceptionCode& ec)
 // because of removeNamedItem, removeNamedItemNS, and removeAttributeNode.
 PassRefPtr<Node> NamedNodeMap::removeNamedItem(const QualifiedName& name, ExceptionCode& ec)
 {
+    ASSERT(m_element);
+
     Attribute* attribute = getAttributeItem(name);
     if (!attribute) {
         ec = NOT_FOUND_ERR;
         return 0;
     }
 
-#if ENABLE(MUTATION_OBSERVERS)
-    if (m_element)
-        m_element->enqueueAttributesMutationRecordIfRequested(attribute->name(), attribute->value());
-#endif
-
     RefPtr<Attr> attr = attribute->createAttrIfNeeded(m_element);
 
-    if (attr->isId())
-        m_element->updateId(attribute->value(), nullAtom);
+    m_element->willModifyAttribute(attribute->name(), attribute->value(), nullAtom);
 
     removeAttribute(name);
     return attr.release();
@@ -263,11 +254,8 @@ void NamedNodeMap::addAttribute(PassRefPtr<Attribute> prpAttribute)
     if (m_element) {
         m_element->attributeChanged(attribute.get());
         // Because of our updateStyleAttribute() style modification events are never sent at the right time, so don't bother sending them.
-        if (attribute->name() != styleAttr) {
-            m_element->invalidateNodeListsCacheAfterAttributeChanged();
-            m_element->dispatchAttrAdditionEvent(attribute.get());
+        if (attribute->name() != styleAttr)
             m_element->dispatchSubtreeModifiedEvent();
-        }
     }
 }
 
@@ -300,11 +288,8 @@ void NamedNodeMap::removeAttribute(const QualifiedName& name)
         m_element->attributeChanged(attr.get());
         attr->m_value = value;
     }
-    if (m_element) {
-        m_element->invalidateNodeListsCacheAfterAttributeChanged();
-        m_element->dispatchAttrRemovalEvent(attr.get());
+    if (m_element)
         m_element->dispatchSubtreeModifiedEvent();
-    }
 }
 
 void NamedNodeMap::setClass(const String& classStr) 

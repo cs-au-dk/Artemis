@@ -45,9 +45,10 @@ void JSString::RopeBuilder::expand()
     append(jsString);
 }
 
-JSString::~JSString()
+void JSString::destroy(JSCell* cell)
 {
-    ASSERT(vptr() == JSGlobalData::jsStringVPtr);
+    JSString* thisObject = jsCast<JSString*>(cell);
+    thisObject->JSString::~JSString();
 }
 
 void JSString::visitChildren(JSCell* cell, SlotVisitor& visitor)
@@ -243,7 +244,7 @@ UString JSString::toString(ExecState* exec) const
 
 inline StringObject* StringObject::create(ExecState* exec, JSGlobalObject* globalObject, JSString* string)
 {
-    StringObject* object = new (allocateCell<StringObject>(*exec->heap())) StringObject(exec->globalData(), globalObject->stringObjectStructure());
+    StringObject* object = new (NotNull, allocateCell<StringObject>(*exec->heap())) StringObject(exec->globalData(), globalObject->stringObjectStructure());
     object->finishCreation(exec->globalData(), string);
     return object;
 }

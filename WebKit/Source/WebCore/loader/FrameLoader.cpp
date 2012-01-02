@@ -103,11 +103,6 @@
 #include <wtf/text/CString.h>
 #include <wtf/text/WTFString.h>
 
-#if ENABLE(INPUT_COLOR)
-#include "ColorChooser.h"
-#include "ColorInputType.h"
-#endif
-
 #if ENABLE(SHARED_WORKERS)
 #include "SharedWorkerRepository.h"
 #endif
@@ -376,10 +371,12 @@ void FrameLoader::stopLoading(UnloadEventPolicy unloadEventPolicy)
                         // time into freed memory.
                         RefPtr<DocumentLoader> documentLoader = m_provisionalDocumentLoader;
                         m_pageDismissalEventBeingDispatched = UnloadDismissal;
-                        if (documentLoader && !documentLoader->timing()->unloadEventStart && !documentLoader->timing()->unloadEventEnd) {
+                        if (documentLoader && !documentLoader->timing()->unloadEventStart() && !documentLoader->timing()->unloadEventEnd()) {
                             DocumentLoadTiming* timing = documentLoader->timing();
-                            ASSERT(timing->navigationStart);
-                            m_frame->domWindow()->dispatchTimedEvent(unloadEvent, m_frame->domWindow()->document(), &timing->unloadEventStart, &timing->unloadEventEnd);
+                            ASSERT(timing->navigationStart());
+                            timing->markUnloadEventStart();
+                            m_frame->domWindow()->dispatchEvent(unloadEvent, m_frame->domWindow()->document());
+                            timing->markUnloadEventEnd();
                         } else
                             m_frame->domWindow()->dispatchEvent(unloadEvent, m_frame->domWindow()->document());
                     }
@@ -1771,7 +1768,7 @@ void FrameLoader::commitProvisionalLoad()
     if (pdl) {
         // Check if the destination page is allowed to access the previous page's timing information.
         RefPtr<SecurityOrigin> securityOrigin = SecurityOrigin::create(pdl->request().url());
-        m_documentLoader->timing()->hasSameOriginAsPreviousDocument = securityOrigin->canRequest(m_previousUrl);
+        m_documentLoader->timing()->setHasSameOriginAsPreviousDocument(securityOrigin->canRequest(m_previousUrl));
     }
 
     // Call clientRedirectCancelledOrFinished() here so that the frame load delegate is notified that the redirect's
@@ -1803,7 +1800,7 @@ void FrameLoader::commitProvisionalLoad()
         history()->updateForClientRedirect();
 
     if (m_loadingFromCachedPage) {
-        m_frame->document()->documentDidBecomeActive();
+        m_frame->document()->documentDidResumeFromPageCache();
         
         // Force a layout to update view size and thereby update scrollbars.
         m_frame->view()->forceLayout();
@@ -2327,8 +2324,7 @@ void FrameLoader::continueLoadAfterWillSubmitForm()
         notifier()->assignIdentifierToInitialRequest(identifier, m_provisionalDocumentLoader.get(), m_provisionalDocumentLoader->originalRequest());
     }
 
-    ASSERT(!m_provisionalDocumentLoader->timing()->navigationStart);
-    m_provisionalDocumentLoader->timing()->navigationStart = currentTime();
+    m_provisionalDocumentLoader->timing()->markNavigationStart(frame());
 
     if (!m_provisionalDocumentLoader->startLoadingMainResource(identifier))
         m_provisionalDocumentLoader->updateLoading();
@@ -3028,11 +3024,11 @@ void FrameLoader::loadProvisionalItemFromCachedPage()
     provisionalLoader->prepareForLoadStart();
 
     m_loadingFromCachedPage = true;
-    
+
     // Should have timing data from previous time(s) the page was shown.
-    ASSERT(provisionalLoader->timing()->navigationStart);
+    ASSERT(provisionalLoader->timing()->navigationStart());
     provisionalLoader->resetTiming();
-    provisionalLoader->timing()->navigationStart = currentTime();    
+    provisionalLoader->timing()->markNavigationStart(frame());
 
     provisionalLoader->setCommitted(true);
     commitProvisionalLoad();

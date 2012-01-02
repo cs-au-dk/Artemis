@@ -74,8 +74,8 @@ public:
     bool smartInsertDeleteEnabled();
     bool isSelectTrailingWhitespaceEnabled();
 
-    void registerCommandForUndo(PassRefPtr<WebCore::EditCommand>);
-    void registerCommandForRedo(PassRefPtr<WebCore::EditCommand>);
+    void registerUndoStep(PassRefPtr<WebCore::UndoStep>);
+    void registerRedoStep(PassRefPtr<WebCore::UndoStep>);
     void clearUndoRedoOperations();
 
     bool canCopyCut(WebCore::Frame*, bool defaultValue) const;

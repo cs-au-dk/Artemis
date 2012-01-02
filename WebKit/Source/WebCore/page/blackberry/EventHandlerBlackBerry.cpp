@@ -57,7 +57,7 @@ bool EventHandler::passMouseReleaseEventToSubframe(MouseEventWithHitTestResults&
     return true;
 }
 
-bool EventHandler::passWheelEventToWidget(PlatformWheelEvent&, Widget*)
+bool EventHandler::passWheelEventToWidget(const PlatformWheelEvent&, Widget*)
 {
     notImplemented();
     return false;
@@ -76,7 +76,7 @@ bool EventHandler::tabsToAllFormControls(KeyboardEvent*) const
 
 unsigned EventHandler::accessKeyModifiers()
 {
-    return PlatformKeyboardEvent::AltKey;
+    return PlatformEvent::AltKey;
 }
 
 void EventHandler::focusDocumentView()

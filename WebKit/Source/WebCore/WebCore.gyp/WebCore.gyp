@@ -45,6 +45,9 @@
     # binary and increasing the speed of gdb.
     'enable_svg%': 1,
 
+    'optimize': 'max',
+    'enable_wexit_time_destructors': 1,
+
     'webcore_include_dirs': [
       '../',
       '../..',
@@ -1029,7 +1032,6 @@
     {
       'target_name': 'webcore_bindings',
       'type': 'static_library',
-      'variables': { 'enable_wexit_time_destructors': 1, },
       'hard_dependency': 1,
       'dependencies': [
         'webcore_bindings_sources',
@@ -1299,13 +1301,13 @@
               # such as:
               # com.google.Chrome[] objc[]: Class ScrollbarPrefsObserver is implemented in both .../Google Chrome.app/Contents/Versions/.../Google Chrome Helper.app/Contents/MacOS/../../../Google Chrome Framework.framework/Google Chrome Framework and /System/Library/Frameworks/WebKit.framework/Versions/A/Frameworks/WebCore.framework/Versions/A/WebCore. One of the two will be used. Which one is undefined.
               'WebCascadeList=ChromiumWebCoreObjCWebCascadeList',
-              'ScrollbarPrefsObserver=ChromiumWebCoreObjCScrollbarPrefsObserver',
+              'WebScrollbarPrefsObserver=ChromiumWebCoreObjCWebScrollbarPrefsObserver',
               'WebCoreRenderThemeNotificationObserver=ChromiumWebCoreObjCWebCoreRenderThemeNotificationObserver',
               'WebFontCache=ChromiumWebCoreObjCWebFontCache',
-              'ScrollAnimationHelperDelegate=ChromiumWebCoreObjCScrollAnimationHelperDelegate',
-              'ScrollbarPainterControllerDelegate=ChromiumWebCoreObjCScrollbarPainterControllerDelegate',
-              'ScrollbarPainterDelegate=ChromiumWebCoreObjCScrollbarPainterDelegate',
-              'ScrollbarPartAnimation=ChromiumWebCoreObjCScrollbarPartAnimation',
+              'WebScrollAnimationHelperDelegate=ChromiumWebCoreObjCWebScrollAnimationHelperDelegate',
+              'WebScrollbarPainterControllerDelegate=ChromiumWebCoreObjCWebScrollbarPainterControllerDelegate',
+              'WebScrollbarPainterDelegate=ChromiumWebCoreObjCWebScrollbarPainterDelegate',
+              'WebScrollbarPartAnimation=ChromiumWebCoreObjCWebScrollbarPartAnimation',
             ],
             'include_dirs': [
               '<(chromium_src_dir)/third_party/apple_webkit',
@@ -1378,7 +1380,6 @@
     {
       'target_name': 'webcore_dom',
       'type': 'static_library',
-      'variables': { 'enable_wexit_time_destructors': 1, },
       'dependencies': [
         'webcore_prerequisites',
       ],
@@ -1401,7 +1402,6 @@
     {
       'target_name': 'webcore_html',
       'type': 'static_library',
-      'variables': { 'enable_wexit_time_destructors': 1, },
       'dependencies': [
         'webcore_prerequisites',
       ],
@@ -1416,7 +1416,6 @@
     {
       'target_name': 'webcore_svg',
       'type': 'static_library',
-      'variables': { 'enable_wexit_time_destructors': 1, },
       'dependencies': [
         'webcore_prerequisites',
       ],
@@ -1431,7 +1430,6 @@
     {
       'target_name': 'webcore_platform',
       'type': 'static_library',
-      'variables': { 'enable_wexit_time_destructors': 1, },
       'dependencies': [
         'webcore_prerequisites',
       ],
@@ -1565,7 +1563,11 @@
             ['include', 'platform/mac/BlockExceptions\\.mm$'],
             ['include', 'platform/mac/KillRingMac\\.mm$'],
             ['include', 'platform/mac/LocalCurrentGraphicsContext\\.mm$'],
+            ['include', 'platform/mac/NSScrollerImpDetails\\.mm$'],
             ['include', 'platform/mac/PurgeableBufferMac\\.cpp$'],
+            ['include', 'platform/mac/ScrollbarThemeMac\\.mm$'],
+            ['include', 'platform/mac/ScrollAnimatorMac\\.mm$'],
+            ['include', 'platform/mac/ScrollElasticityController\\.mm$'],
             ['include', 'platform/mac/WebCoreSystemInterface\\.mm$'],
             ['include', 'platform/mac/WebCoreTextRenderer\\.mm$'],
             ['include', 'platform/text/mac/ShapeArabic\\.c$'],
@@ -1699,7 +1701,6 @@
     {
       'target_name': 'webcore_arm_neon',
       'type': 'static_library',
-      'variables': { 'enable_wexit_time_destructors': 1, },
       'dependencies': [
         'webcore_prerequisites',
       ],
@@ -1724,7 +1725,6 @@
     {
       'target_name': 'webcore_rendering',
       'type': 'static_library',
-      'variables': { 'enable_wexit_time_destructors': 1, },
       'dependencies': [
         'webcore_prerequisites',
       ],
@@ -1783,7 +1783,6 @@
     {
       'target_name': 'webcore_remaining',
       'type': 'static_library',
-      'variables': { 'enable_wexit_time_destructors': 1, },
       'dependencies': [
         'webcore_prerequisites',
         '<(chromium_src_dir)/third_party/v8-i18n/build/all.gyp:v8-i18n',
@@ -1985,7 +1984,6 @@
     {
       'target_name': 'webcore_test_support',
       'type': 'static_library',
-      'variables': { 'enable_wexit_time_destructors': 1, },
       'dependencies': [
         'webcore',
       ],

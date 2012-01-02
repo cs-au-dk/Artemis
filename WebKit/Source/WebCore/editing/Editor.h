@@ -295,6 +295,7 @@ public:
     bool compositionUsesCustomUnderlines() const { return !m_customCompositionUnderlines.isEmpty(); }
     const Vector<CompositionUnderline>& customCompositionUnderlines() const { return m_customCompositionUnderlines; }
 
+    void setIgnoreCompositionSelectionChange(bool);
     bool ignoreCompositionSelectionChange() const { return m_ignoreCompositionSelectionChange; }
 
     void setStartNewKillRingSequence(bool);
@@ -340,6 +341,7 @@ public:
     bool findString(const String&, bool forward, bool caseFlag, bool wrapFlag, bool startInSelection);
 
     PassRefPtr<Range> rangeOfString(const String&, Range*, FindOptions);
+    PassRefPtr<Range> findStringAndScrollToVisible(const String&, Range*, FindOptions);
 
     const VisibleSelection& mark() const; // Mark, to be used as emacs uses it.
     void setMark(const VisibleSelection&);
@@ -413,7 +415,6 @@ private:
     void selectComposition();
     enum SetCompositionMode { ConfirmComposition, CancelComposition };
     void setComposition(const String&, SetCompositionMode);
-    void setIgnoreCompositionSelectionChange(bool ignore);
 
     PassRefPtr<Range> firstVisibleRange(const String&, FindOptions);
     PassRefPtr<Range> lastVisibleRange(const String&, FindOptions);

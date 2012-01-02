@@ -163,12 +163,13 @@ public:
     void loseCompositorContext(int numTimes);
 
     void setNeedsAnimate();
-    void setNeedsCommit();
+    // virtual for testing
+    virtual void setNeedsCommit();
     void setNeedsRedraw();
 
     LayerChromium* rootLayer() { return m_rootLayer.get(); }
     const LayerChromium* rootLayer() const { return m_rootLayer.get(); }
-    void setRootLayer(PassRefPtr<LayerChromium> rootLayer) { m_rootLayer = rootLayer; }
+    void setRootLayer(PassRefPtr<LayerChromium>);
 
     const CCSettings& settings() const { return m_settings; }
 
@@ -202,8 +203,10 @@ protected:
 private:
     typedef Vector<RefPtr<LayerChromium> > LayerList;
 
-    void paintLayerContents(const LayerList&);
-    void paintMaskAndReplicaForRenderSurface(LayerChromium*);
+    enum PaintType { PaintVisible, PaintIdle };
+    static void paintContentsIfDirty(LayerChromium*, PaintType);
+    void paintLayerContents(const LayerList&, PaintType);
+    void paintMaskAndReplicaForRenderSurface(LayerChromium*, PaintType);
 
     void updateLayers(LayerChromium*);
     void clearPendingUpdate();
@@ -234,6 +237,7 @@ private:
 
     float m_pageScale;
     float m_minPageScale, m_maxPageScale;
+    bool m_triggerIdlePaints;
 };
 
 }

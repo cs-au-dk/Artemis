@@ -98,7 +98,7 @@ void QtWebPageLoadClient::dispatchLoadFailed(WKErrorRef error)
         return;
 
     QtWebError qtError(error);
-    emit m_webView->loadFailed(static_cast<QQuickWebView::ErrorType>(qtError.type()), qtError.errorCode(), qtError.url());
+    emit m_webView->loadFailed(static_cast<QQuickWebView::ErrorDomain>(qtError.type()), qtError.errorCode(), qtError.url(), qtError.description());
 }
 
 void QtWebPageLoadClient::setLoadProgress(int loadProgress)
@@ -169,7 +169,9 @@ void QtWebPageLoadClient::didReceiveTitleForFrame(WKPageRef, WKStringRef title, 
 
 void QtWebPageLoadClient::didStartProgress(WKPageRef, const void* clientInfo)
 {
-    toQtWebPageLoadClient(clientInfo)->setLoadProgress(0);
+    QtWebPageLoadClient* client = toQtWebPageLoadClient(clientInfo);
+    client->setLoadProgress(0);
+    client->m_webView->d_func()->setIcon(QUrl());
 }
 
 void QtWebPageLoadClient::didChangeProgress(WKPageRef page, const void* clientInfo)

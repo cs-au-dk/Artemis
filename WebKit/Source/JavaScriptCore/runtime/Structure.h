@@ -60,7 +60,7 @@ namespace JSC {
         {
             ASSERT(globalData.structureStructure);
             ASSERT(classInfo);
-            Structure* structure = new (allocateCell<Structure>(globalData.heap)) Structure(globalData, globalObject, prototype, typeInfo, classInfo);
+            Structure* structure = new (NotNull, allocateCell<Structure>(globalData.heap)) Structure(globalData, globalObject, prototype, typeInfo, classInfo);
             structure->finishCreation(globalData);
             return structure;
         }
@@ -103,7 +103,7 @@ namespace JSC {
 
         Structure* flattenDictionaryStructure(JSGlobalData&, JSObject*);
 
-        ~Structure();
+        static void destroy(JSCell*);
 
         // These should be used with caution.  
         size_t addPropertyWithoutTransition(JSGlobalData&, const Identifier& propertyName, unsigned attributes, JSCell* specificValue);
@@ -188,7 +188,7 @@ namespace JSC {
         static Structure* createStructure(JSGlobalData& globalData)
         {
             ASSERT(!globalData.structureStructure);
-            Structure* structure = new (allocateCell<Structure>(globalData.heap)) Structure(globalData);
+            Structure* structure = new (NotNull, allocateCell<Structure>(globalData.heap)) Structure(globalData);
             structure->finishCreation(globalData, CreatingEarlyCell);
             return structure;
         }
@@ -203,7 +203,7 @@ namespace JSC {
         static Structure* create(JSGlobalData& globalData, const Structure* structure)
         {
             ASSERT(globalData.structureStructure);
-            Structure* newStructure = new (allocateCell<Structure>(globalData.heap)) Structure(globalData, structure);
+            Structure* newStructure = new (NotNull, allocateCell<Structure>(globalData.heap)) Structure(globalData, structure);
             newStructure->finishCreation(globalData);
             return newStructure;
         }
@@ -335,16 +335,18 @@ namespace JSC {
     inline void JSCell::setStructure(JSGlobalData& globalData, Structure* structure)
     {
         ASSERT(structure->typeInfo().overridesVisitChildren() == this->structure()->typeInfo().overridesVisitChildren());
+        ASSERT(structure->classInfo() == m_structure->classInfo());
         m_structure.set(globalData, this, structure);
     }
 
-    inline const ClassInfo* JSCell::classInfo() const
+    inline const ClassInfo* JSCell::validatedClassInfo() const
     {
 #if ENABLE(GC_VALIDATION)
-        return m_structure.unvalidatedGet()->classInfo();
+        ASSERT(m_structure.unvalidatedGet()->classInfo() == m_classInfo);
 #else
-        return m_structure->classInfo();
+        ASSERT(m_structure->classInfo() == m_classInfo);
 #endif
+        return m_classInfo;
     }
 
     ALWAYS_INLINE void MarkStack::internalAppend(JSCell* cell)
@@ -378,6 +380,25 @@ namespace JSC {
                 return true;
         }
         return false;
+    }
+
+    inline JSCell::JSCell(JSGlobalData& globalData, Structure* structure)
+        : m_classInfo(structure->classInfo())
+        , m_structure(globalData, this, structure)
+    {
+    }
+
+    inline void JSCell::finishCreation(JSGlobalData& globalData, Structure* structure, CreatingEarlyCellTag)
+    {
+#if ENABLE(GC_VALIDATION)
+        ASSERT(globalData.isInitializingObject());
+        globalData.setInitializingObject(false);
+        if (structure)
+#endif
+            m_structure.setEarlyValue(globalData, this, structure);
+        m_classInfo = structure->classInfo();
+        // Very first set of allocations won't have a real structure.
+        ASSERT(m_structure || !globalData.structureStructure);
     }
 
 } // namespace JSC

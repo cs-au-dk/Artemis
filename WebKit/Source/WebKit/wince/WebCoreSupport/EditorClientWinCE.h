@@ -65,8 +65,8 @@ public:
     virtual void didWriteSelectionToPasteboard();
     virtual void didSetSelectionTypesForPasteboard();
 
-    virtual void registerCommandForUndo(WTF::PassRefPtr<WebCore::EditCommand>);
-    virtual void registerCommandForRedo(WTF::PassRefPtr<WebCore::EditCommand>);
+    virtual void registerUndoStep(WTF::PassRefPtr<WebCore::UndoStep>);
+    virtual void registerRedoStep(WTF::PassRefPtr<WebCore::UndoStep>);
     virtual void clearUndoRedoOperations();
 
     virtual bool canCopyCut(WebCore::Frame*, bool defaultValue) const;

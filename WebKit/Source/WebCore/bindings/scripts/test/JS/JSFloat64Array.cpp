@@ -36,6 +36,7 @@ using namespace JSC;
 namespace WebCore {
 
 ASSERT_CLASS_FITS_IN_CELL(JSFloat64Array);
+ASSERT_HAS_TRIVIAL_DESTRUCTOR(JSFloat64Array);
 
 /* Hash table */
 
@@ -54,7 +55,9 @@ static const HashTableValue JSFloat64ArrayConstructorTableValues[] =
 };
 
 static const HashTable JSFloat64ArrayConstructorTable = { 1, 0, JSFloat64ArrayConstructorTableValues, 0 };
-const ClassInfo JSFloat64ArrayConstructor::s_info = { "Float64ArrayConstructor", &DOMConstructorObject::s_info, &JSFloat64ArrayConstructorTable, 0, CREATE_METHOD_TABLE(JSFloat64ArrayConstructor) };
+ASSERT_HAS_TRIVIAL_DESTRUCTOR(JSFloat64ArrayConstructor);
+
+const ClassInfo JSFloat64ArrayConstructor::s_info = { "Float64ArrayConstructor", &Base::s_info, &JSFloat64ArrayConstructorTable, 0, CREATE_METHOD_TABLE(JSFloat64ArrayConstructor) };
 
 JSFloat64ArrayConstructor::JSFloat64ArrayConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
     : DOMConstructorObject(structure, globalObject)
@@ -88,7 +91,7 @@ ConstructType JSFloat64ArrayConstructor::getConstructData(JSCell*, ConstructData
 
 static const HashTableValue JSFloat64ArrayPrototypeTableValues[] =
 {
-    { "foo", DontDelete | Function, (intptr_t)static_cast<NativeFunction>(jsFloat64ArrayPrototypeFunctionFoo), (intptr_t)1, NoIntrinsic },
+    { "foo", DontDelete | JSC::Function, (intptr_t)static_cast<NativeFunction>(jsFloat64ArrayPrototypeFunctionFoo), (intptr_t)1, NoIntrinsic },
     { 0, 0, 0, 0, NoIntrinsic }
 };
 
@@ -98,7 +101,7 @@ static const HashTable* getJSFloat64ArrayPrototypeTable(ExecState* exec)
     return getHashTableForGlobalData(exec->globalData(), &JSFloat64ArrayPrototypeTable);
 }
 
-const ClassInfo JSFloat64ArrayPrototype::s_info = { "Float64ArrayPrototype", &JSC::JSNonFinalObject::s_info, 0, getJSFloat64ArrayPrototypeTable, CREATE_METHOD_TABLE(JSFloat64ArrayPrototype) };
+const ClassInfo JSFloat64ArrayPrototype::s_info = { "Float64ArrayPrototype", &Base::s_info, 0, getJSFloat64ArrayPrototypeTable, CREATE_METHOD_TABLE(JSFloat64ArrayPrototype) };
 
 JSObject* JSFloat64ArrayPrototype::self(ExecState* exec, JSGlobalObject* globalObject)
 {
@@ -122,7 +125,7 @@ static const HashTable* getJSFloat64ArrayTable(ExecState* exec)
     return getHashTableForGlobalData(exec->globalData(), &JSFloat64ArrayTable);
 }
 
-const ClassInfo JSFloat64Array::s_info = { "Float64Array", &JSArrayBufferView::s_info, 0, getJSFloat64ArrayTable , CREATE_METHOD_TABLE(JSFloat64Array) };
+const ClassInfo JSFloat64Array::s_info = { "Float64Array", &Base::s_info, 0, getJSFloat64ArrayTable , CREATE_METHOD_TABLE(JSFloat64Array) };
 
 JSFloat64Array::JSFloat64Array(Structure* structure, JSDOMGlobalObject* globalObject, PassRefPtr<Float64Array> impl)
     : JSArrayBufferView(structure, globalObject, impl)
@@ -132,7 +135,7 @@ JSFloat64Array::JSFloat64Array(Structure* structure, JSDOMGlobalObject* globalOb
 void JSFloat64Array::finishCreation(JSGlobalData& globalData)
 {
     Base::finishCreation(globalData);
-    TypedArrayDescriptor descriptor(vptr(), OBJECT_OFFSETOF(JSFloat64Array, m_storage), OBJECT_OFFSETOF(JSFloat64Array, m_storageLength));
+    TypedArrayDescriptor descriptor(&JSFloat64Array::s_info, OBJECT_OFFSETOF(JSFloat64Array, m_storage), OBJECT_OFFSETOF(JSFloat64Array, m_storageLength));
     globalData.registerTypedArrayDescriptor(impl(), descriptor);
     m_storage = impl()->data();
     m_storageLength = impl()->length();
@@ -229,14 +232,14 @@ EncodedJSValue JSC_HOST_CALL jsFloat64ArrayPrototypeFunctionFoo(ExecState* exec)
         return throwVMTypeError(exec);
     JSFloat64Array* castedThis = static_cast<JSFloat64Array*>(asObject(thisValue));
     ASSERT_GC_OBJECT_INHERITS(castedThis, &JSFloat64Array::s_info);
-    Float64Array* imp = static_cast<Float64Array*>(castedThis->impl());
+    Float64Array* impl = static_cast<Float64Array*>(castedThis->impl());
     if (exec->argumentCount() < 1)
         return throwVMError(exec, createTypeError(exec, "Not enough arguments"));
     Float32Array* array(toFloat32Array(MAYBE_MISSING_PARAMETER(exec, 0, MissingIsUndefined)));
     if (exec->hadException())
         return JSValue::encode(jsUndefined());
 
-    JSC::JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(imp->foo(array)));
+    JSC::JSValue result = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl->foo(array)));
     return JSValue::encode(result);
 }
 

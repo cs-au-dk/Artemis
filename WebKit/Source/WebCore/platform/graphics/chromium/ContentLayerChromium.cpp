@@ -85,7 +85,6 @@ ContentLayerChromium::ContentLayerChromium(CCLayerDelegate* delegate)
 
 ContentLayerChromium::~ContentLayerChromium()
 {
-    cleanupResources();
 }
 
 void ContentLayerChromium::cleanupResources()
@@ -107,6 +106,20 @@ void ContentLayerChromium::paintContentsIfDirty()
 
     prepareToUpdate(layerRect);
     m_needsDisplay = false;
+}
+
+void ContentLayerChromium::idlePaintContentsIfDirty()
+{
+    if (!drawsContent())
+        return;
+
+    const IntRect& layerRect = visibleLayerRect();
+    if (layerRect.isEmpty())
+        return;
+
+    prepareToUpdateIdle(layerRect);
+    if (needsIdlePaint(layerRect))
+        setNeedsCommit();
 }
 
 bool ContentLayerChromium::drawsContent() const

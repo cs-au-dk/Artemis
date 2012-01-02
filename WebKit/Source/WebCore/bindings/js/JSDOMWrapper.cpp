@@ -32,9 +32,6 @@ using namespace JSC;
 
 namespace WebCore {
 
-void JSDOMWrapper::virtualFunctionToPreventWeakVtable()
-{
-    ASSERT_NOT_REACHED();
-}
+ASSERT_HAS_TRIVIAL_DESTRUCTOR(JSDOMWrapper);
 
 } // namespace WebCore

@@ -40,6 +40,9 @@ class RenderPart;
 #if ENABLE(VIDEO)
 class RenderVideo;
 #endif
+#if ENABLE(THREADED_SCROLLING)
+class ScrollingCoordinator;
+#endif
 
 enum CompositingUpdateType {
     CompositingUpdateAfterLayoutOrStyleChange,
@@ -245,7 +248,7 @@ private:
     void computeCompositingRequirements(RenderLayer*, OverlapMap*, struct CompositingState&, bool& layersChanged);
     
     // Recurses down the tree, parenting descendant compositing layers and collecting an array of child layers for the current compositing layer.
-    void rebuildCompositingLayerTree(RenderLayer* layer, const struct CompositingState&, Vector<GraphicsLayer*>& childGraphicsLayersOfEnclosingLayer);
+    void rebuildCompositingLayerTree(RenderLayer*, Vector<GraphicsLayer*>& childGraphicsLayersOfEnclosingLayer);
 
     // Recurses down the tree, updating layer geometry only.
     void updateLayerTreeGeometry(RenderLayer*);
@@ -291,6 +294,10 @@ private:
     bool requiresScrollCornerLayer() const;
 #if PLATFORM(CHROMIUM) && ENABLE(RUBBER_BANDING)
     bool requiresOverhangAreasLayer() const;
+#endif
+
+#if ENABLE(THREADED_SCROLLING)
+    ScrollingCoordinator* scrollingCoordinator() const;
 #endif
 
 private:

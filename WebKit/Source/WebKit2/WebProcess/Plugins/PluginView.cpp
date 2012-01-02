@@ -414,12 +414,12 @@ void PluginView::setDeviceScaleFactor(float scaleFactor)
     m_plugin->contentsScaleFactorChanged(scaleFactor);
 }
 
-void PluginView::windowAndViewFramesChanged(const FloatRect& windowFrameInScreenCoordinates, const FloatRect& viewFrameInWindowCoordinates)
+void PluginView::windowAndViewFramesChanged(const IntRect& windowFrameInScreenCoordinates, const IntRect& viewFrameInWindowCoordinates)
 {
     if (!m_isInitialized || !m_plugin)
         return;
 
-    m_plugin->windowAndViewFramesChanged(enclosingIntRect(windowFrameInScreenCoordinates), enclosingIntRect(viewFrameInWindowCoordinates));
+    m_plugin->windowAndViewFramesChanged(windowFrameInScreenCoordinates, viewFrameInWindowCoordinates);
 }
 
 bool PluginView::sendComplexTextInput(uint64_t pluginComplexTextInputIdentifier, const String& textInput)
@@ -1202,6 +1202,11 @@ void PluginView::protectPluginFromDestruction()
         ref();
 }
 
+static void derefPluginView(PluginView* pluginView)
+{
+    pluginView->deref();
+}
+
 void PluginView::unprotectPluginFromDestruction()
 {
     if (m_isBeingDestroyed)
@@ -1213,7 +1218,7 @@ void PluginView::unprotectPluginFromDestruction()
     // the destroyed object higher on the stack. To prevent this, if the plug-in has
     // only one remaining reference, call deref() asynchronously.
     if (hasOneRef())
-        RunLoop::main()->scheduleWork(WorkItem::createDeref(this));
+        RunLoop::main()->dispatch(bind(derefPluginView, this));
     else
         deref();
 }

@@ -81,6 +81,9 @@ public:
 
     PlatformCALayer* rootLayer() const;
     
+    // A list of sublayers that GraphicsLayerCA should maintain as the first sublayers.
+    const PlatformCALayerList* customSublayers() const { return m_customSublayers.get(); }
+    
     static bool isValueFunctionSupported();
     
     PlatformCALayerClient* owner() const { return m_owner; }
@@ -179,6 +182,11 @@ public:
 
     float opacity() const;
     void setOpacity(float);
+    
+#if ENABLE(CSS_FILTERS)
+    void setFilters(const FilterOperations&);
+    static bool filtersCanBeComposited(const FilterOperations&);
+#endif
 
     String name() const;
     void setName(const String&);
@@ -214,6 +222,7 @@ private:
     PlatformCALayerClient* m_owner;
     LayerType m_layerType;
     
+    OwnPtr<PlatformCALayerList> m_customSublayers;
 #if PLATFORM(MAC) || PLATFORM(WIN)
     RetainPtr<PlatformLayer> m_layer;
 #endif

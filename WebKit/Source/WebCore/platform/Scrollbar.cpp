@@ -337,14 +337,14 @@ bool Scrollbar::mouseMoved(const PlatformMouseEvent& evt)
                 m_scrollableArea->scrollToOffsetWithoutAnimation(m_orientation, m_dragOrigin);
         } else {
             moveThumb(m_orientation == HorizontalScrollbar ? 
-                      convertFromContainingWindow(evt.pos()).x() :
-                      convertFromContainingWindow(evt.pos()).y(), theme()->shouldDragDocumentInsteadOfThumb(this, evt));
+                      convertFromContainingWindow(evt.position()).x() :
+                      convertFromContainingWindow(evt.position()).y(), theme()->shouldDragDocumentInsteadOfThumb(this, evt));
         }
         return true;
     }
 
     if (m_pressedPart != NoPart)
-        m_pressedPos = (orientation() == HorizontalScrollbar ? convertFromContainingWindow(evt.pos()).x() : convertFromContainingWindow(evt.pos()).y());
+        m_pressedPos = (orientation() == HorizontalScrollbar ? convertFromContainingWindow(evt.position()).x() : convertFromContainingWindow(evt.position()).y());
 
     ScrollbarPart part = theme()->hitTest(this, evt);
     if (part != m_hoveredPart) {
@@ -371,13 +371,13 @@ bool Scrollbar::mouseMoved(const PlatformMouseEvent& evt)
 void Scrollbar::mouseEntered()
 {
     if (m_scrollableArea)
-        m_scrollableArea->scrollAnimator()->mouseEnteredScrollbar(this);
+        m_scrollableArea->mouseEnteredScrollbar(this);
 }
 
 bool Scrollbar::mouseExited()
 {
     if (m_scrollableArea)
-        m_scrollableArea->scrollAnimator()->mouseExitedScrollbar(this);
+        m_scrollableArea->mouseExitedScrollbar(this);
     setHoveredPart(NoPart);
     return true;
 }
@@ -394,7 +394,7 @@ bool Scrollbar::mouseUp(const PlatformMouseEvent& mouseEvent)
         // to really know if the mouse has exited the scrollbar on a mouseUp.
         ScrollbarPart part = theme()->hitTest(this, mouseEvent);
         if (part == NoPart)
-            m_scrollableArea->scrollAnimator()->mouseExitedScrollbar(this);
+            m_scrollableArea->mouseExitedScrollbar(this);
     }
 
     if (parent() && parent()->isFrameView())
@@ -410,7 +410,7 @@ bool Scrollbar::mouseDown(const PlatformMouseEvent& evt)
         return true; // FIXME: Handled as context menu by Qt right now.  Should just avoid even calling this method on a right click though.
 
     setPressedPart(theme()->hitTest(this, evt));
-    int pressedPos = (orientation() == HorizontalScrollbar ? convertFromContainingWindow(evt.pos()).x() : convertFromContainingWindow(evt.pos()).y());
+    int pressedPos = (orientation() == HorizontalScrollbar ? convertFromContainingWindow(evt.position()).x() : convertFromContainingWindow(evt.position()).y());
     
     if ((m_pressedPart == BackTrackPart || m_pressedPart == ForwardTrackPart) && theme()->shouldCenterOnThumb(this, evt)) {
         setHoveredPart(ThumbPart);

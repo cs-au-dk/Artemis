@@ -544,7 +544,7 @@ SYMBOL_STRING(ctiTrampoline) ":" "\n"
     "str r1, [sp, #" STRINGIZE_VALUE_OF(REGISTER_FILE_OFFSET) "]" "\n"
     "str r2, [sp, #" STRINGIZE_VALUE_OF(CALLFRAME_OFFSET) "]" "\n"
     "str r3, [sp, #" STRINGIZE_VALUE_OF(EXCEPTION_OFFSET) "]" "\n"
-    "cpy r5, r2" "\n"
+    "mov r5, r2" "\n"
     "mov r6, #512" "\n"
     "blx r0" "\n"
     "ldr r11, [sp, #" STRINGIZE_VALUE_OF(PRESERVED_R11_OFFSET) "]" "\n"
@@ -568,7 +568,7 @@ HIDE_SYMBOL(ctiVMThrowTrampoline) "\n"
 ".thumb" "\n"
 ".thumb_func " THUMB_FUNC_PARAM(ctiVMThrowTrampoline) "\n"
 SYMBOL_STRING(ctiVMThrowTrampoline) ":" "\n"
-    "cpy r0, sp" "\n"
+    "mov r0, sp" "\n"
     "bl " SYMBOL_STRING_RELOCATION(cti_vm_throw) "\n"
     "ldr r11, [sp, #" STRINGIZE_VALUE_OF(PRESERVED_R11_OFFSET) "]" "\n"
     "ldr r10, [sp, #" STRINGIZE_VALUE_OF(PRESERVED_R10_OFFSET) "]" "\n"
@@ -659,7 +659,7 @@ __asm EncodedJSValue ctiTrampoline(void*, RegisterFile*, CallFrame*, JSValue*, P
     str r1, [sp, # REGISTER_FILE_OFFSET ]
     str r2, [sp, # CALLFRAME_OFFSET ]
     str r3, [sp, # EXCEPTION_OFFSET ]
-    cpy r5, r2
+    mov r5, r2
     mov r6, #512
     blx r0
     ldr r11, [sp, # PRESERVED_R11_OFFSET ]
@@ -678,7 +678,7 @@ __asm EncodedJSValue ctiTrampoline(void*, RegisterFile*, CallFrame*, JSValue*, P
 __asm void ctiVMThrowTrampoline()
 {
     PRESERVE8
-    cpy r0, sp
+    mov r0, sp
     bl cti_vm_throw
     ldr r11, [sp, # PRESERVED_R11_OFFSET ]
     ldr r10, [sp, # PRESERVED_R10_OFFSET ]
@@ -875,12 +875,12 @@ NEVER_INLINE void JITThunks::tryCacheGetByID(CallFrame* callFrame, CodeBlock* co
     
     JSGlobalData* globalData = &callFrame->globalData();
 
-    if (isJSArray(globalData, baseValue) && propertyName == callFrame->propertyNames().length) {
+    if (isJSArray(baseValue) && propertyName == callFrame->propertyNames().length) {
         JIT::compilePatchGetArrayLength(callFrame->scopeChain()->globalData, codeBlock, returnAddress);
         return;
     }
     
-    if (isJSString(globalData, baseValue) && propertyName == callFrame->propertyNames().length) {
+    if (isJSString(baseValue) && propertyName == callFrame->propertyNames().length) {
         // The tradeoff of compiling an patched inline string length access routine does not seem
         // to pay off, so we currently only do this for arrays.
         ctiPatchCallByReturnAddress(codeBlock, returnAddress, globalData->jitStubs->ctiStringLengthTrampoline());
@@ -2478,7 +2478,6 @@ DEFINE_STUB_FUNCTION(EncodedJSValue, op_get_by_val)
     STUB_INIT_STACK_FRAME(stackFrame);
 
     CallFrame* callFrame = stackFrame.callFrame;
-    JSGlobalData* globalData = stackFrame.globalData;
 
     JSValue baseValue = stackFrame.args[0].jsValue();
     JSValue subscript = stackFrame.args[1].jsValue();
@@ -2492,13 +2491,13 @@ DEFINE_STUB_FUNCTION(EncodedJSValue, op_get_by_val)
 
     if (subscript.isUInt32()) {
         uint32_t i = subscript.asUInt32();
-        if (isJSString(globalData, baseValue) && asString(baseValue)->canGetIndex(i)) {
+        if (isJSString(baseValue) && asString(baseValue)->canGetIndex(i)) {
             ctiPatchCallByReturnAddress(callFrame->codeBlock(), STUB_RETURN_ADDRESS, FunctionPtr(cti_op_get_by_val_string));
             JSValue result = asString(baseValue)->getIndex(callFrame, i);
             CHECK_FOR_EXCEPTION();
             return JSValue::encode(result);
         }
-        if (isJSByteArray(globalData, baseValue) && asByteArray(baseValue)->canAccessIndex(i)) {
+        if (isJSByteArray(baseValue) && asByteArray(baseValue)->canAccessIndex(i)) {
             // All fast byte array accesses are safe from exceptions so return immediately to avoid exception checks.
             ctiPatchCallByReturnAddress(callFrame->codeBlock(), STUB_RETURN_ADDRESS, FunctionPtr(cti_op_get_by_val_byte_array));
             return JSValue::encode(asByteArray(baseValue)->getIndex(callFrame, i));
@@ -2519,7 +2518,6 @@ DEFINE_STUB_FUNCTION(EncodedJSValue, op_get_by_val_string)
     STUB_INIT_STACK_FRAME(stackFrame);
     
     CallFrame* callFrame = stackFrame.callFrame;
-    JSGlobalData* globalData = stackFrame.globalData;
     
     JSValue baseValue = stackFrame.args[0].jsValue();
     JSValue subscript = stackFrame.args[1].jsValue();
@@ -2528,11 +2526,11 @@ DEFINE_STUB_FUNCTION(EncodedJSValue, op_get_by_val_string)
     
     if (LIKELY(subscript.isUInt32())) {
         uint32_t i = subscript.asUInt32();
-        if (isJSString(globalData, baseValue) && asString(baseValue)->canGetIndex(i))
+        if (isJSString(baseValue) && asString(baseValue)->canGetIndex(i))
             result = asString(baseValue)->getIndex(callFrame, i);
         else {
             result = baseValue.get(callFrame, i);
-            if (!isJSString(globalData, baseValue))
+            if (!isJSString(baseValue))
                 ctiPatchCallByReturnAddress(callFrame->codeBlock(), STUB_RETURN_ADDRESS, FunctionPtr(cti_op_get_by_val));
         }
     } else {
@@ -2549,7 +2547,6 @@ DEFINE_STUB_FUNCTION(EncodedJSValue, op_get_by_val_byte_array)
     STUB_INIT_STACK_FRAME(stackFrame);
     
     CallFrame* callFrame = stackFrame.callFrame;
-    JSGlobalData* globalData = stackFrame.globalData;
     
     JSValue baseValue = stackFrame.args[0].jsValue();
     JSValue subscript = stackFrame.args[1].jsValue();
@@ -2558,13 +2555,13 @@ DEFINE_STUB_FUNCTION(EncodedJSValue, op_get_by_val_byte_array)
 
     if (LIKELY(subscript.isUInt32())) {
         uint32_t i = subscript.asUInt32();
-        if (isJSByteArray(globalData, baseValue) && asByteArray(baseValue)->canAccessIndex(i)) {
+        if (isJSByteArray(baseValue) && asByteArray(baseValue)->canAccessIndex(i)) {
             // All fast byte array accesses are safe from exceptions so return immediately to avoid exception checks.
             return JSValue::encode(asByteArray(baseValue)->getIndex(callFrame, i));
         }
 
         result = baseValue.get(callFrame, i);
-        if (!isJSByteArray(globalData, baseValue))
+        if (!isJSByteArray(baseValue))
             ctiPatchCallByReturnAddress(callFrame->codeBlock(), STUB_RETURN_ADDRESS, FunctionPtr(cti_op_get_by_val));
     } else {
         Identifier property(callFrame, subscript.toString(callFrame));
@@ -2604,13 +2601,13 @@ DEFINE_STUB_FUNCTION(void, op_put_by_val)
 
     if (LIKELY(subscript.isUInt32())) {
         uint32_t i = subscript.asUInt32();
-        if (isJSArray(globalData, baseValue)) {
+        if (isJSArray(baseValue)) {
             JSArray* jsArray = asArray(baseValue);
             if (jsArray->canSetIndex(i))
                 jsArray->setIndex(*globalData, i, value);
             else
                 JSArray::putByIndex(jsArray, callFrame, i, value);
-        } else if (isJSByteArray(globalData, baseValue) && asByteArray(baseValue)->canAccessIndex(i)) {
+        } else if (isJSByteArray(baseValue) && asByteArray(baseValue)->canAccessIndex(i)) {
             JSByteArray* jsByteArray = asByteArray(baseValue);
             ctiPatchCallByReturnAddress(callFrame->codeBlock(), STUB_RETURN_ADDRESS, FunctionPtr(cti_op_put_by_val_byte_array));
             // All fast byte array accesses are safe from exceptions so return immediately to avoid exception checks.
@@ -2643,7 +2640,6 @@ DEFINE_STUB_FUNCTION(void, op_put_by_val_byte_array)
     STUB_INIT_STACK_FRAME(stackFrame);
     
     CallFrame* callFrame = stackFrame.callFrame;
-    JSGlobalData* globalData = stackFrame.globalData;
     
     JSValue baseValue = stackFrame.args[0].jsValue();
     JSValue subscript = stackFrame.args[1].jsValue();
@@ -2651,7 +2647,7 @@ DEFINE_STUB_FUNCTION(void, op_put_by_val_byte_array)
     
     if (LIKELY(subscript.isUInt32())) {
         uint32_t i = subscript.asUInt32();
-        if (isJSByteArray(globalData, baseValue) && asByteArray(baseValue)->canAccessIndex(i)) {
+        if (isJSByteArray(baseValue) && asByteArray(baseValue)->canAccessIndex(i)) {
             JSByteArray* jsByteArray = asByteArray(baseValue);
             
             // All fast byte array accesses are safe from exceptions so return immediately to avoid exception checks.
@@ -2666,7 +2662,7 @@ DEFINE_STUB_FUNCTION(void, op_put_by_val_byte_array)
             }
         }
 
-        if (!isJSByteArray(globalData, baseValue))
+        if (!isJSByteArray(baseValue))
             ctiPatchCallByReturnAddress(callFrame->codeBlock(), STUB_RETURN_ADDRESS, FunctionPtr(cti_op_put_by_val));
         baseValue.put(callFrame, i, value);
     } else {
@@ -3433,7 +3429,7 @@ DEFINE_STUB_FUNCTION(EncodedJSValue, op_is_string)
 {
     STUB_INIT_STACK_FRAME(stackFrame);
 
-    return JSValue::encode(jsBoolean(isJSString(stackFrame.globalData, stackFrame.args[0].jsValue())));
+    return JSValue::encode(jsBoolean(isJSString(stackFrame.args[0].jsValue())));
 }
 
 DEFINE_STUB_FUNCTION(EncodedJSValue, op_is_object)

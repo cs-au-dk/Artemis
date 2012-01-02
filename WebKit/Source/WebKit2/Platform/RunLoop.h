@@ -28,6 +28,8 @@
 #ifndef RunLoop_h
 #define RunLoop_h
 
+#include <wtf/Forward.h>
+#include <wtf/Functional.h>
 #include <wtf/HashMap.h>
 #include <wtf/PassOwnPtr.h>
 #include <wtf/ThreadSpecific.h>
@@ -41,16 +43,9 @@ typedef struct _GMainContext GMainContext;
 typedef int gboolean;
 #endif
 
-class WorkItem;
-
 namespace CoreIPC {
 class BinarySemaphore;
 }
-
-namespace WTF {
-    template<typename> class Function;
-}
-using WTF::Function;
 
 class RunLoop {
 public:
@@ -59,9 +54,6 @@ public:
 
     static RunLoop* current();
     static RunLoop* main();
-
-    // FIXME: Get rid of this overload and use WTF::Function everywhere.
-    void scheduleWork(PassOwnPtr<WorkItem>);
 
     void dispatch(const Function<void()>&);
 
@@ -147,8 +139,8 @@ private:
     void performWork();
     void wakeUp();
 
-    Mutex m_workItemQueueLock;
-    Vector<OwnPtr<WorkItem> > m_workItemQueue;
+    Mutex m_functionQueueLock;
+    Vector<Function<void()> > m_functionQueue;
 
 #if PLATFORM(WIN)
     static bool registerRunLoopMessageWindowClass();

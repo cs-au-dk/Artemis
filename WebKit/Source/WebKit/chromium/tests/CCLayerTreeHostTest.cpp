@@ -26,10 +26,10 @@
 
 #include "cc/CCLayerTreeHost.h"
 
+#include "CompositorFakeGraphicsContext3D.h"
 #include "ContentLayerChromium.h"
-#include "GraphicsContext3DPrivate.h"
+#include "FakeWebGraphicsContext3D.h"
 #include "LayerChromium.h"
-#include "MockWebGraphicsContext3D.h"
 #include "TextureManager.h"
 #include "WebCompositor.h"
 #include "WebKit.h"
@@ -103,12 +103,15 @@ class MockLayerTreeHost : public CCLayerTreeHost {
 public:
     static PassRefPtr<MockLayerTreeHost> create(TestHooks* testHooks, CCLayerTreeHostClient* client, PassRefPtr<LayerChromium> rootLayer, const CCSettings& settings)
     {
-        RefPtr<MockLayerTreeHost> layerTreeHost = adoptRef(new MockLayerTreeHost(testHooks, client, rootLayer, settings));
+        RefPtr<MockLayerTreeHost> layerTreeHost = adoptRef(new MockLayerTreeHost(testHooks, client, settings));
+        bool success = layerTreeHost->initialize();
+        EXPECT_TRUE(success);
+        layerTreeHost->setRootLayer(rootLayer);
 
         // LayerTreeHostImpl won't draw if it has 1x1 viewport.
         layerTreeHost->setViewport(IntSize(1, 1));
 
-        return layerTreeHost;
+        return layerTreeHost.release();
     }
 
     virtual PassOwnPtr<CCLayerTreeHostImpl> createLayerTreeHostImpl(CCLayerTreeHostImplClient* client)
@@ -117,34 +120,13 @@ public:
     }
 
 private:
-    MockLayerTreeHost(TestHooks* testHooks, CCLayerTreeHostClient* client, PassRefPtr<LayerChromium> rootLayer, const CCSettings& settings)
+    MockLayerTreeHost(TestHooks* testHooks, CCLayerTreeHostClient* client, const CCSettings& settings)
         : CCLayerTreeHost(client, settings)
         , m_testHooks(testHooks)
     {
-        setRootLayer(rootLayer);
-        bool success = initialize();
-        EXPECT_TRUE(success);
     }
 
     TestHooks* m_testHooks;
-};
-
-// Test stub for WebGraphicsContext3D. Returns canned values needed for compositor initialization.
-class CompositorMockWebGraphicsContext3D : public MockWebGraphicsContext3D {
-public:
-    static PassOwnPtr<CompositorMockWebGraphicsContext3D> create()
-    {
-        return adoptPtr(new CompositorMockWebGraphicsContext3D());
-    }
-
-    virtual bool makeContextCurrent() { return true; }
-    virtual WebGLId createProgram() { return 1; }
-    virtual WebGLId createShader(WGC3Denum) { return 1; }
-    virtual void getShaderiv(WebGLId, WGC3Denum, WGC3Dint* value) { *value = 1; }
-    virtual void getProgramiv(WebGLId, WGC3Denum, WGC3Dint* value) { *value = 1; }
-
-private:
-    CompositorMockWebGraphicsContext3D() { }
 };
 
 // Implementation of CCLayerTreeHost callback interface.
@@ -167,10 +149,7 @@ public:
 
     virtual PassRefPtr<GraphicsContext3D> createLayerTreeHostContext3D()
     {
-        OwnPtr<WebGraphicsContext3D> mock = CompositorMockWebGraphicsContext3D::create();
-        GraphicsContext3D::Attributes attrs;
-        RefPtr<GraphicsContext3D> context = GraphicsContext3DPrivate::createGraphicsContextFromWebContext(mock.release(), attrs, 0, GraphicsContext3D::RenderDirectlyToHostWindow, GraphicsContext3DPrivate::ForUseOnAnotherThread);
-        return context;
+        return createCompositorMockGraphicsContext3D(GraphicsContext3D::Attributes());
     }
 
     virtual void didCommitAndDrawFrame()
@@ -453,7 +432,7 @@ public:
     virtual void beginTest()
     {
         // Kill the layerTreeHost immediately.
-        m_layerTreeHost->rootLayer()->setLayerTreeHost(0);
+        m_layerTreeHost->setRootLayer(0);
         m_layerTreeHost.clear();
 
         endTest();
@@ -486,7 +465,7 @@ public:
         postSetNeedsCommitToMainThread();
 
         // Kill the layerTreeHost immediately.
-        m_layerTreeHost->rootLayer()->setLayerTreeHost(0);
+        m_layerTreeHost->setRootLayer(0);
         m_layerTreeHost.clear();
 
         endTest();
@@ -509,7 +488,7 @@ public:
         postSetNeedsRedrawToMainThread();
 
         // Kill the layerTreeHost immediately.
-        m_layerTreeHost->rootLayer()->setLayerTreeHost(0);
+        m_layerTreeHost->setRootLayer(0);
         m_layerTreeHost.clear();
 
         endTest();
@@ -604,7 +583,7 @@ private:
     int m_numDraws;
 };
 
-TEST_F(CCLayerTreeHostTestSetNeedsCommit1, runMultiThread)
+TEST_F(CCLayerTreeHostTestSetNeedsCommit1, DISABLED_runMultiThread)
 {
     runTestThreaded();
 }
@@ -757,7 +736,7 @@ public:
         postSetNeedsCommitToMainThread();
     }
 
-    virtual void beginCommitOnCCThread(CCLayerTreeHostImpl* impl)
+    virtual void animateAndLayout(double frameBeginTime)
     {
         LayerChromium* root = m_layerTreeHost->rootLayer();
         if (!m_layerTreeHost->frameNumber())
@@ -808,7 +787,7 @@ private:
     int m_scrolls;
 };
 
-TEST_F(CCLayerTreeHostTestScrollSimple, runMultiThread)
+TEST_F(CCLayerTreeHostTestScrollSimple, DISABLED_runMultiThread)
 {
     runTestThreaded();
 }
@@ -884,7 +863,7 @@ private:
     int m_scrolls;
 };
 
-TEST_F(CCLayerTreeHostTestScrollMultipleRedraw, runMultiThread)
+TEST_F(CCLayerTreeHostTestScrollMultipleRedraw, DISABLED_runMultiThread)
 {
     runTestThreaded();
 }
@@ -942,7 +921,6 @@ public:
 
     virtual bool drawsContent() const { return true; }
     virtual bool preserves3D() { return false; }
-    virtual void notifySyncRequired() { }
 
 private:
     CCLayerTreeHostTest* m_test;
@@ -953,7 +931,8 @@ public:
     static PassRefPtr<ContentLayerChromiumWithUpdateTracking> create(CCLayerDelegate *delegate) { return adoptRef(new ContentLayerChromiumWithUpdateTracking(delegate)); }
 
     int paintContentsCount() { return m_paintContentsCount; }
-    void resetPaintContentsCount() { m_paintContentsCount = 0; }
+    int idlePaintContentsCount() { return m_idlePaintContentsCount; }
+    void resetPaintContentsCount() { m_paintContentsCount = 0; m_idlePaintContentsCount = 0;}
 
     int updateCount() { return m_updateCount; }
     void resetUpdateCount() { m_updateCount = 0; }
@@ -962,6 +941,12 @@ public:
     {
         ContentLayerChromium::paintContentsIfDirty();
         m_paintContentsCount++;
+    }
+
+    virtual void idlePaintContentsIfDirty()
+    {
+        ContentLayerChromium::idlePaintContentsIfDirty();
+        m_idlePaintContentsCount++;
     }
 
     virtual void updateCompositorResources(GraphicsContext3D* context, CCTextureUpdater& updater)
@@ -974,12 +959,14 @@ private:
     explicit ContentLayerChromiumWithUpdateTracking(CCLayerDelegate *delegate)
         : ContentLayerChromium(delegate)
         , m_paintContentsCount(0)
+        , m_idlePaintContentsCount(0)
         , m_updateCount(0)
     {
         setBounds(IntSize(10, 10));
     }
 
     int m_paintContentsCount;
+    int m_idlePaintContentsCount;
     int m_updateCount;
 };
 
@@ -1009,6 +996,9 @@ public:
     {
         // paintContentsIfDirty() should have been called once.
         EXPECT_EQ(1, m_updateCheckLayer->paintContentsCount());
+
+        // idlePaintContentsIfDirty() should have been called once
+        EXPECT_EQ(1, m_updateCheckLayer->idlePaintContentsCount());
 
         // updateCompositorResources() should have been called the same
         // amout of times as paintContentsIfDirty().

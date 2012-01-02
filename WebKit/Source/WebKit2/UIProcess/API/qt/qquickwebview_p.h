@@ -53,33 +53,32 @@ class QWEBKIT_EXPORT QQuickWebView : public QQuickItem {
     Q_OBJECT
     Q_PROPERTY(QString title READ title NOTIFY titleChanged)
     Q_PROPERTY(QUrl url READ url NOTIFY urlChanged)
+    Q_PROPERTY(QUrl icon READ icon NOTIFY iconChanged FINAL)
     Q_PROPERTY(int loadProgress READ loadProgress NOTIFY loadProgressChanged)
     Q_PROPERTY(bool canGoBack READ canGoBack NOTIFY navigationStateChanged FINAL)
     Q_PROPERTY(bool canGoForward READ canGoForward NOTIFY navigationStateChanged FINAL)
     Q_PROPERTY(bool loading READ loading NOTIFY navigationStateChanged FINAL)
     Q_PROPERTY(bool canReload READ canReload NOTIFY navigationStateChanged FINAL)
-    Q_PROPERTY(QWebPreferences* preferences READ preferences CONSTANT FINAL)
-    Q_PROPERTY(QQuickWebPage* page READ page CONSTANT FINAL)
     Q_ENUMS(NavigationRequestAction)
-    Q_ENUMS(ErrorType)
+    Q_ENUMS(ErrorDomain)
 
 public:
     enum NavigationRequestAction {
         AcceptRequest,
-        IgnoreRequest,
-        DownloadRequest
+        IgnoreRequest
     };
 
-    enum ErrorType {
-        EngineError,
-        NetworkError,
-        HttpError,
-        DownloadError
+    enum ErrorDomain {
+        InternalErrorDomain,
+        NetworkErrorDomain,
+        HttpErrorDomain,
+        DownloadErrorDomain
     };
     QQuickWebView(QQuickItem* parent = 0);
     virtual ~QQuickWebView();
 
     QUrl url() const;
+    QUrl icon() const;
     QString title() const;
     int loadProgress() const;
 
@@ -88,7 +87,6 @@ public:
     bool loading() const;
     bool canReload() const;
 
-    QWebPreferences* preferences() const;
     QQuickWebPage* page();
 
     QQuickWebViewExperimental* experimental() const;
@@ -107,12 +105,12 @@ public Q_SLOTS:
 
 Q_SIGNALS:
     void titleChanged(const QString& title);
-    void statusBarMessageChanged(const QString& message);
     void loadStarted();
     void loadSucceeded();
-    void loadFailed(QQuickWebView::ErrorType errorType, int errorCode, const QUrl& url);
+    void loadFailed(QQuickWebView::ErrorDomain errorDomain, int errorCode, const QUrl& url, const QString& description);
     void loadProgressChanged(int progress);
     void urlChanged(const QUrl& url);
+    void iconChanged(const QUrl& iconURL);
     void linkHovered(const QUrl& url, const QString& title);
     void navigationStateChanged();
     void navigationRequested(QWebNavigationRequest* request);
@@ -135,6 +133,7 @@ private:
     Q_PRIVATE_SLOT(d_func(), void _q_onOpenPanelFinished(int result));
     Q_PRIVATE_SLOT(d_func(), void _q_onVisibleChanged());
     Q_PRIVATE_SLOT(d_func(), void _q_onReceivedResponseFromDownload(QWebDownloadItem*));
+    Q_PRIVATE_SLOT(d_func(), void _q_onIconChangedForPageURL(const QUrl&, const QUrl&));
     // Hides QObject::d_ptr allowing us to use the convenience macros.
     QScopedPointer<QQuickWebViewPrivate> d_ptr;
     QQuickWebViewExperimental* m_experimental;
@@ -168,15 +167,22 @@ QML_DECLARE_TYPEINFO(QQuickWebView, QML_HAS_ATTACHED_PROPERTIES)
 
 class QWEBKIT_EXPORT QQuickWebViewExperimental : public QObject {
     Q_OBJECT
+    Q_PROPERTY(QQuickWebPage* page READ page CONSTANT FINAL)
     Q_PROPERTY(QWebNavigationHistory* navigationHistory READ navigationHistory CONSTANT FINAL)
     Q_PROPERTY(QDeclarativeComponent* alertDialog READ alertDialog WRITE setAlertDialog NOTIFY alertDialogChanged)
     Q_PROPERTY(QDeclarativeComponent* confirmDialog READ confirmDialog WRITE setConfirmDialog NOTIFY confirmDialogChanged)
     Q_PROPERTY(QDeclarativeComponent* promptDialog READ promptDialog WRITE setPromptDialog NOTIFY promptDialogChanged)
     Q_PROPERTY(QDeclarativeComponent* itemSelector READ itemSelector WRITE setItemSelector NOTIFY itemSelectorChanged)
+    Q_PROPERTY(QWebPreferences* preferences READ preferences CONSTANT FINAL)
     Q_PROPERTY(bool useTraditionalDesktopBehaviour READ useTraditionalDesktopBehaviour WRITE setUseTraditionalDesktopBehaviour)
     Q_PROPERTY(QWebViewportInfo* viewportInfo READ viewportInfo CONSTANT FINAL)
+    Q_ENUMS(NavigationRequestAction)
 
 public:
+    enum NavigationRequestAction {
+        DownloadRequest = 2
+    };
+
     QQuickWebViewExperimental(QQuickWebView* webView);
     virtual ~QQuickWebViewExperimental();
 
@@ -191,8 +197,10 @@ public:
     
     QWebViewportInfo* viewportInfo();
 
+    QWebPreferences* preferences() const;
     bool useTraditionalDesktopBehaviour() const;
     QWebNavigationHistory* navigationHistory() const;
+    QQuickWebPage* page();
 
 public Q_SLOTS:
     void setUseTraditionalDesktopBehaviour(bool enable);

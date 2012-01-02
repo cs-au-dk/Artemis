@@ -109,7 +109,7 @@ public:
 
     bool hasAttribute(const QualifiedName&) const;
     const AtomicString& getAttribute(const QualifiedName&) const;
-    void setAttribute(const QualifiedName&, const AtomicString& value, ExceptionCode&);
+    void setAttribute(const QualifiedName&, const AtomicString& value);
     void removeAttribute(const QualifiedName&, ExceptionCode&);
 
     // Typed getters and setters for language bindings.
@@ -209,8 +209,6 @@ public:
     void normalizeAttributes();
     String nodeNamePreservingCase() const;
 
-    // convenience methods which ignore exceptions
-    void setAttribute(const QualifiedName&, const AtomicString& value);
     void setBooleanAttribute(const QualifiedName& name, bool);
 
     NamedNodeMap* attributes(bool readonly = false) const;
@@ -218,8 +216,12 @@ public:
     // This method is called whenever an attribute is added, changed or removed.
     virtual void attributeChanged(Attribute*, bool preserveDecls = false);
 
-    void setAttributeMap(PassRefPtr<NamedNodeMap>, FragmentScriptingPermission = FragmentScriptingAllowed);
+    // Only called by the parser immediately after element construction.
+    void parserSetAttributeMap(PassRefPtr<NamedNodeMap>, FragmentScriptingPermission);
+
     NamedNodeMap* attributeMap() const { return m_attributeMap.get(); }
+
+    void setAttributesFromElement(const Element&);
 
     virtual void copyNonAttributeProperties(const Element* source);
 
@@ -243,9 +245,6 @@ public:
 
     AtomicString computeInheritedLanguage() const;
 
-    void dispatchAttrRemovalEvent(Attribute*);
-    void dispatchAttrAdditionEvent(Attribute*);
-
     virtual void accessKeyAction(bool /*sendToAnyEvent*/) { }
 
     virtual bool isURLAttribute(Attribute*) const;
@@ -266,13 +265,14 @@ public:
     virtual String title() const;
 
     void updateId(const AtomicString& oldId, const AtomicString& newId);
+    void willModifyAttribute(const QualifiedName&, const AtomicString& oldValue, const AtomicString& newValue);
 
     LayoutSize minimumSizeForResizing() const;
     void setMinimumSizeForResizing(const LayoutSize&);
 
     // Use Document::registerForDocumentActivationCallbacks() to subscribe to these
-    virtual void documentWillBecomeInactive() { }
-    virtual void documentDidBecomeActive() { }
+    virtual void documentWillSuspendForPageCache() { }
+    virtual void documentDidResumeFromPageCache() { }
 
     // Use Document::registerForMediaVolumeCallbacks() to subscribe to this
     virtual void mediaVolumeDidChange() { }
@@ -364,10 +364,6 @@ public:
     
     PassRefPtr<RenderStyle> styleForRenderer();
 
-#if ENABLE(MUTATION_OBSERVERS)
-    void enqueueAttributesMutationRecordIfRequested(const QualifiedName&, const AtomicString& oldValue);
-#endif
-
 protected:
     Element(const QualifiedName& tagName, Document* document, ConstructionType type)
         : ContainerNode(document, type)
@@ -436,6 +432,10 @@ private:
 
     SpellcheckAttributeState spellcheckAttributeState() const;
 
+#if ENABLE(MUTATION_OBSERVERS)
+    void enqueueAttributesMutationRecordIfRequested(const QualifiedName&, const AtomicString& oldValue);
+#endif
+
 private:
     mutable RefPtr<NamedNodeMap> m_attributeMap;
 };
@@ -496,6 +496,12 @@ inline NamedNodeMap* Element::attributes(bool readonly) const
     return m_attributeMap.get();
 }
 
+inline void Element::setAttributesFromElement(const Element& other)
+{
+    if (NamedNodeMap* attributeMap = other.attributes(true))
+        attributes(false)->setAttributes(*attributeMap);
+}
+
 inline void Element::updateId(const AtomicString& oldId, const AtomicString& newId)
 {
     if (!inDocument())
@@ -509,6 +515,18 @@ inline void Element::updateId(const AtomicString& oldId, const AtomicString& new
         scope->removeElementById(oldId, this);
     if (!newId.isEmpty())
         scope->addElementById(newId, this);
+}
+
+inline void Element::willModifyAttribute(const QualifiedName& name, const AtomicString& oldValue, const AtomicString& newValue)
+{
+    if (isIdAttributeName(name))
+        updateId(oldValue, newValue);
+
+    // FIXME: Should probably call InspectorInstrumentation::willModifyDOMAttr here.
+
+#if ENABLE(MUTATION_OBSERVERS)
+    enqueueAttributesMutationRecordIfRequested(name, oldValue);
+#endif
 }
 
 inline bool Element::fastHasAttribute(const QualifiedName& name) const

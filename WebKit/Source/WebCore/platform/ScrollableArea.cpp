@@ -42,14 +42,16 @@
 
 namespace WebCore {
 
-ScrollableArea::ScrollableArea()
-    : m_constrainsScrollingToContentEdge(true)
+ScrollableArea::ScrollableArea(ScrollableAreaClient* client)
+    : m_client(client)
+    , m_constrainsScrollingToContentEdge(true)
     , m_inLiveResize(false)
     , m_verticalScrollElasticity(ScrollElasticityNone)
     , m_horizontalScrollElasticity(ScrollElasticityNone)
     , m_scrollbarOverlayStyle(ScrollbarOverlayStyleDefault)
     , m_scrollOriginChanged(false)
 {
+    // FIXME: If no client was supplied, create a default one.
 }
 
 ScrollableArea::~ScrollableArea()
@@ -215,6 +217,46 @@ void ScrollableArea::willEndLiveResize()
     m_inLiveResize = false;
     scrollAnimator()->willEndLiveResize();
 }    
+
+void ScrollableArea::contentAreaWillPaint() const
+{
+    scrollAnimator()->contentAreaWillPaint();
+}
+
+void ScrollableArea::mouseEnteredContentArea() const
+{
+    scrollAnimator()->mouseEnteredContentArea();
+}
+
+void ScrollableArea::mouseExitedContentArea() const
+{
+    scrollAnimator()->mouseEnteredContentArea();
+}
+
+void ScrollableArea::mouseMovedInContentArea() const
+{
+    scrollAnimator()->mouseMovedInContentArea();
+}
+
+void ScrollableArea::mouseEnteredScrollbar(Scrollbar* scrollbar) const
+{
+    scrollAnimator()->mouseEnteredScrollbar(scrollbar);
+}
+
+void ScrollableArea::mouseExitedScrollbar(Scrollbar* scrollbar) const
+{
+    scrollAnimator()->mouseExitedScrollbar(scrollbar);
+}
+
+void ScrollableArea::contentAreaDidShow() const
+{
+    scrollAnimator()->contentAreaDidShow();
+}
+
+void ScrollableArea::contentAreaDidHide() const
+{
+    scrollAnimator()->contentAreaDidHide();
+}
 
 void ScrollableArea::didAddVerticalScrollbar(Scrollbar* scrollbar)
 {

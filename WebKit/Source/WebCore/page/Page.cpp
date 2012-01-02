@@ -91,6 +91,10 @@
 #include "UserMediaClient.h"
 #endif
 
+#if ENABLE(THREADED_SCROLLING)
+#include "ScrollingCoordinator.h"
+#endif
+
 namespace WebCore {
 
 static HashSet<Page*>* allPages;
@@ -232,12 +236,27 @@ Page::~Page()
         m_userMediaClient->pageDestroyed();
 #endif
 
+#if ENABLE(THREADED_SCROLLING)
+    if (m_scrollingCoordinator)
+        m_scrollingCoordinator->pageDestroyed();
+#endif
+
     backForward()->close();
 
 #ifndef NDEBUG
     pageCounter.decrement();
 #endif
 }
+
+#if ENABLE(THREADED_SCROLLING)
+ScrollingCoordinator* Page::scrollingCoordinator()
+{
+    if (!m_scrollingCoordinator && m_settings->scrollingCoordinatorEnabled())
+        m_scrollingCoordinator = ScrollingCoordinator::create(this);
+
+    return m_scrollingCoordinator.get();
+}
+#endif
 
 struct ViewModeInfo {
     const char* name;

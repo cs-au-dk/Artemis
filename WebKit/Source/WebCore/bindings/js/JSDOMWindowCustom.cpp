@@ -484,11 +484,6 @@ JSValue JSDOMWindow::event(ExecState* exec) const
     return toJS(exec, const_cast<JSDOMWindow*>(this), event);
 }
 
-JSValue JSDOMWindow::eventSource(ExecState* exec) const
-{
-    return getDOMConstructor<JSEventSourceConstructor>(exec, this);
-}
-
 JSValue JSDOMWindow::image(ExecState* exec) const
 {
     return getDOMConstructor<JSImageConstructor>(exec, this);
@@ -508,92 +503,6 @@ JSValue JSDOMWindow::audio(ExecState* exec) const
 }
 #endif
 
-JSValue JSDOMWindow::webKitPoint(ExecState* exec) const
-{
-    return getDOMConstructor<JSWebKitPointConstructor>(exec, this);
-}
-
-JSValue JSDOMWindow::webKitCSSMatrix(ExecState* exec) const
-{
-    return getDOMConstructor<JSWebKitCSSMatrixConstructor>(exec, this);
-}
- 
-JSValue JSDOMWindow::arrayBuffer(ExecState* exec) const
-{
-    return getDOMConstructor<JSArrayBufferConstructor>(exec, this);
-}
- 
-JSValue JSDOMWindow::int8Array(ExecState* exec) const
-{
-    return getDOMConstructor<JSInt8ArrayConstructor>(exec, this);
-}
- 
-JSValue JSDOMWindow::uint8Array(ExecState* exec) const
-{
-    return getDOMConstructor<JSUint8ArrayConstructor>(exec, this);
-}
- 
-JSValue JSDOMWindow::int32Array(ExecState* exec) const
-{
-    return getDOMConstructor<JSInt32ArrayConstructor>(exec, this);
-}
- 
-JSValue JSDOMWindow::uint32Array(ExecState* exec) const
-{
-    return getDOMConstructor<JSUint32ArrayConstructor>(exec, this);
-}
- 
-JSValue JSDOMWindow::int16Array(ExecState* exec) const
-{
-    return getDOMConstructor<JSInt16ArrayConstructor>(exec, this);
-}
- 
-JSValue JSDOMWindow::uint16Array(ExecState* exec) const
-{
-    return getDOMConstructor<JSUint16ArrayConstructor>(exec, this);
-}
- 
-JSValue JSDOMWindow::float32Array(ExecState* exec) const
-{
-    return getDOMConstructor<JSFloat32ArrayConstructor>(exec, this);
-}
-
-JSValue JSDOMWindow::float64Array(ExecState* exec) const
-{
-    return getDOMConstructor<JSFloat64ArrayConstructor>(exec, this);
-}
-
-JSValue JSDOMWindow::dataView(ExecState* exec) const
-{
-    return getDOMConstructor<JSDataViewConstructor>(exec, this);
-}
-
-JSValue JSDOMWindow::xmlHttpRequest(ExecState* exec) const
-{
-    return getDOMConstructor<JSXMLHttpRequestConstructor>(exec, this);
-}
-
-#if ENABLE(XSLT)
-JSValue JSDOMWindow::xsltProcessor(ExecState* exec) const
-{
-    return getDOMConstructor<JSXSLTProcessorConstructor>(exec, this);
-}
-#endif
-
-#if ENABLE(CHANNEL_MESSAGING)
-JSValue JSDOMWindow::messageChannel(ExecState* exec) const
-{
-    return getDOMConstructor<JSMessageChannelConstructor>(exec, this);
-}
-#endif
-
-#if ENABLE(WORKERS)
-JSValue JSDOMWindow::worker(ExecState* exec) const
-{
-    return getDOMConstructor<JSWorkerConstructor>(exec, this);
-}
-#endif
-
 #if ENABLE(SHARED_WORKERS)
 JSValue JSDOMWindow::sharedWorker(ExecState* exec) const
 {
@@ -603,6 +512,9 @@ JSValue JSDOMWindow::sharedWorker(ExecState* exec) const
 }
 #endif
 
+// FIXME(haraken): This method will be removed, after all build systems support
+// the [Supplemental] IDL and use settingsForWindowWebAudio() in JSDOMWindowWebAudioCustom.cpp
+// and settingsForWindowWebSocket() in JSDOMWindowWebSocketCustom.cpp (See bug 74599)
 #if ENABLE(WEB_AUDIO) || ENABLE(WEB_SOCKETS)
 static Settings* settingsForWindow(const JSDOMWindow* window)
 {
@@ -613,6 +525,9 @@ static Settings* settingsForWindow(const JSDOMWindow* window)
 }
 #endif
 
+// FIXME(haraken): This method will be removed, after all build systems support
+// the [Supplemental] IDL and use webkitAudioContext() in JSDOMWindowWebAudioCustom.cpp.
+// (See bug 74599)
 #if ENABLE(WEB_AUDIO)
 JSValue JSDOMWindow::webkitAudioContext(ExecState* exec) const
 {
@@ -623,6 +538,9 @@ JSValue JSDOMWindow::webkitAudioContext(ExecState* exec) const
 }
 #endif
 
+// FIXME(haraken): This method will be removed, after all build systems support
+// the [Supplemental] IDL and use webSocket() in JSDOMWindowWebSocketCustom.cpp.
+// (See bug 74599)
 #if ENABLE(WEB_SOCKETS)
 JSValue JSDOMWindow::webSocket(ExecState* exec) const
 {

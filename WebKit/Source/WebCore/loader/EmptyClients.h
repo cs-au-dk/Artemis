@@ -50,6 +50,10 @@
 #include <v8.h>
 #endif
 
+#if ENABLE(INPUT_COLOR)
+#include "ColorChooser.h"
+#endif
+
 /*
  This file holds empty Client stubs for use by WebCore.
  Viewless element needs to create a dummy Page->Frame->FrameView tree for use in parsing or executing JavaScript.
@@ -193,9 +197,7 @@ public:
 #endif
 
 #if ENABLE(INPUT_COLOR)
-    void openColorChooser(ColorChooser*, const Color&) { }
-    void cleanupColorChooser(ColorChooser*) { }
-    void setSelectedColorInColorChooser(ColorChooser*, const Color&) { }
+    virtual PassOwnPtr<ColorChooser> createColorChooser(ColorChooserClient*, const Color&) { return nullptr; }
 #endif
 
     virtual void runOpenPanel(Frame*, PassRefPtr<FileChooser>) { }
@@ -392,7 +394,7 @@ public:
 #if USE(V8)
     virtual void didCreateScriptContext(v8::Handle<v8::Context>, int worldId) { }
     virtual void willReleaseScriptContext(v8::Handle<v8::Context>, int worldId) { }
-    virtual bool allowScriptExtension(const String& extensionName, int extensionGroup) { return false; }
+    virtual bool allowScriptExtension(const String& extensionName, int extensionGroup, int worldId) { return false; }
 #endif
 
 #if PLATFORM(MAC)
@@ -446,27 +448,21 @@ public:
     virtual bool shouldBeginEditing(Range*) { return false; }
     virtual bool shouldEndEditing(Range*) { return false; }
     virtual bool shouldInsertNode(Node*, Range*, EditorInsertAction) { return false; }
-    //  virtual bool shouldInsertNode(Node*, Range* replacingRange, WebViewInsertAction) { return false; }
     virtual bool shouldInsertText(const String&, Range*, EditorInsertAction) { return false; }
     virtual bool shouldChangeSelectedRange(Range*, Range*, EAffinity, bool) { return false; }
 
     virtual bool shouldApplyStyle(CSSStyleDeclaration*, Range*) { return false; }
     virtual bool shouldMoveRangeAfterDelete(Range*, Range*) { return false; }
-    //  virtual bool shouldChangeTypingStyle(CSSStyleDeclaration* fromStyle, CSSStyleDeclaration* toStyle) { return false; }
-    //  virtual bool doCommandBySelector(SEL selector) { return false; }
-    //
+
     virtual void didBeginEditing() { }
     virtual void respondToChangedContents() { }
     virtual void respondToChangedSelection(Frame*) { }
     virtual void didEndEditing() { }
     virtual void didWriteSelectionToPasteboard() { }
     virtual void didSetSelectionTypesForPasteboard() { }
-    //  virtual void webViewDidChangeTypingStyle:(NSNotification *)notification { }
-    //  virtual void webViewDidChangeSelection:(NSNotification *)notification { }
-    //  virtual NSUndoManager* undoManagerForWebView:(WebView *)webView { return 0; }
 
-    virtual void registerCommandForUndo(PassRefPtr<EditCommand>) { }
-    virtual void registerCommandForRedo(PassRefPtr<EditCommand>) { }
+    virtual void registerUndoStep(PassRefPtr<UndoStep>) { }
+    virtual void registerRedoStep(PassRefPtr<UndoStep>) { }
     virtual void clearUndoRedoOperations() { }
 
     virtual bool canCopyCut(Frame*, bool defaultValue) const { return defaultValue; }

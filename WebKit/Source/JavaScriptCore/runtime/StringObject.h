@@ -30,18 +30,16 @@ namespace JSC {
     public:
         typedef JSWrapperObject Base;
 
-        virtual void vtableAnchor();
-
         static StringObject* create(ExecState* exec, Structure* structure)
         {
             JSString* string = jsEmptyString(exec);
-            StringObject* object = new (allocateCell<StringObject>(*exec->heap())) StringObject(exec->globalData(), structure);  
+            StringObject* object = new (NotNull, allocateCell<StringObject>(*exec->heap())) StringObject(exec->globalData(), structure);  
             object->finishCreation(exec->globalData(), string);
             return object;
         }
         static StringObject* create(ExecState* exec, Structure* structure, JSString* string)
         {
-            StringObject* object = new (allocateCell<StringObject>(*exec->heap())) StringObject(exec->globalData(), structure);
+            StringObject* object = new (NotNull, allocateCell<StringObject>(*exec->heap())) StringObject(exec->globalData(), structure);
             object->finishCreation(exec->globalData(), string);
             return object;
         }

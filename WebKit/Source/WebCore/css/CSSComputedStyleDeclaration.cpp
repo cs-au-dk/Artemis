@@ -720,27 +720,22 @@ PassRefPtr<CSSValue> CSSComputedStyleDeclaration::valueForFilter(RenderStyle* st
             filterValue->append(cssValuePool->createValue(componentTransferOperation->amount(), CSSPrimitiveValue::CSS_NUMBER));
             break;
         }
-        case FilterOperation::GAMMA: {
-            GammaFilterOperation* gammaOperation = static_cast<GammaFilterOperation*>(filterOperation);
-            filterValue = WebKitCSSFilterValue::create(WebKitCSSFilterValue::GammaFilterOperation);
-            filterValue->append(cssValuePool->createValue(gammaOperation->amplitude(), CSSPrimitiveValue::CSS_NUMBER));
-            filterValue->append(cssValuePool->createValue(gammaOperation->exponent(), CSSPrimitiveValue::CSS_NUMBER));
-            filterValue->append(cssValuePool->createValue(gammaOperation->offset(), CSSPrimitiveValue::CSS_NUMBER));
+        case FilterOperation::BRIGHTNESS: {
+            BasicComponentTransferFilterOperation* brightnessOperation = static_cast<BasicComponentTransferFilterOperation*>(filterOperation);
+            filterValue = WebKitCSSFilterValue::create(WebKitCSSFilterValue::BrightnessFilterOperation);
+            filterValue->append(cssValuePool->createValue(brightnessOperation->amount(), CSSPrimitiveValue::CSS_NUMBER));
+            break;
+        }
+        case FilterOperation::CONTRAST: {
+            BasicComponentTransferFilterOperation* contrastOperation = static_cast<BasicComponentTransferFilterOperation*>(filterOperation);
+            filterValue = WebKitCSSFilterValue::create(WebKitCSSFilterValue::ContrastFilterOperation);
+            filterValue->append(cssValuePool->createValue(contrastOperation->amount(), CSSPrimitiveValue::CSS_NUMBER));
             break;
         }
         case FilterOperation::BLUR: {
             BlurFilterOperation* blurOperation = static_cast<BlurFilterOperation*>(filterOperation);
             filterValue = WebKitCSSFilterValue::create(WebKitCSSFilterValue::BlurFilterOperation);
-            filterValue->append(zoomAdjustedPixelValue(blurOperation->stdDeviationX().value(), style, cssValuePool));
-            filterValue->append(zoomAdjustedPixelValue(blurOperation->stdDeviationY().value(), style, cssValuePool));
-            break;
-        }
-        case FilterOperation::SHARPEN: {
-            SharpenFilterOperation* sharpenOperation = static_cast<SharpenFilterOperation*>(filterOperation);
-            filterValue = WebKitCSSFilterValue::create(WebKitCSSFilterValue::SharpenFilterOperation);
-            filterValue->append(cssValuePool->createValue(sharpenOperation->amount(), CSSPrimitiveValue::CSS_NUMBER));
-            filterValue->append(zoomAdjustedPixelValue(sharpenOperation->radius().value(), style, cssValuePool));
-            filterValue->append(cssValuePool->createValue(sharpenOperation->threshold(), CSSPrimitiveValue::CSS_NUMBER));
+            filterValue->append(zoomAdjustedPixelValue(blurOperation->stdDeviation().value(), style, cssValuePool));
             break;
         }
         case FilterOperation::DROP_SHADOW: {
@@ -1401,14 +1396,8 @@ PassRefPtr<CSSValue> CSSComputedStyleDeclaration::getPropertyCSSValue(int proper
             return cssValuePool->createValue(style->boxOrdinalGroup(), CSSPrimitiveValue::CSS_NUMBER);
         case CSSPropertyWebkitBoxOrient:
             return cssValuePool->createValue(style->boxOrient());
-        case CSSPropertyWebkitBoxPack: {
-            EBoxAlignment boxPack = style->boxPack();
-            ASSERT(boxPack != BSTRETCH);
-            ASSERT(boxPack != BBASELINE);
-            if (boxPack == BJUSTIFY || boxPack== BBASELINE)
-                return 0;
-            return cssValuePool->createValue(boxPack);
-        }
+        case CSSPropertyWebkitBoxPack:
+            return cssValuePool->createValue(style->boxPack());
         case CSSPropertyWebkitBoxReflect:
             return valueForReflection(style->boxReflect(), style.get(), cssValuePool);
         case CSSPropertyBoxShadow:
@@ -2157,7 +2146,15 @@ PassRefPtr<CSSValue> CSSComputedStyleDeclaration::getPropertyCSSValue(int proper
         case CSSPropertyBorderRight:
         case CSSPropertyBorderStyle:
         case CSSPropertyBorderTop:
-        case CSSPropertyBorderWidth:
+            break;
+        case CSSPropertyBorderWidth: {
+            RefPtr<CSSValueList> list = CSSValueList::createSpaceSeparated();
+            list->append(zoomAdjustedPixelValue(style->borderTopWidth(), style.get(), cssValuePool));
+            list->append(zoomAdjustedPixelValue(style->borderRightWidth(), style.get(), cssValuePool));
+            list->append(zoomAdjustedPixelValue(style->borderBottomWidth(), style.get(), cssValuePool));
+            list->append(zoomAdjustedPixelValue(style->borderLeftWidth(), style.get(), cssValuePool));
+            return list.release();
+        }
         case CSSPropertyListStyle:
         case CSSPropertyMargin:
         case CSSPropertyOutline:

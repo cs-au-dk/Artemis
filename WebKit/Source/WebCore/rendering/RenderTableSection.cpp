@@ -56,6 +56,34 @@ static inline void setRowLogicalHeightToRowStyleLogicalHeightIfNotRelative(Rende
         row.logicalHeight = Length();
 }
 
+static inline void updateLogicalHeightForCell(RenderTableSection::RowStruct& row, const RenderTableCell* cell)
+{
+    // We ignore height settings on rowspan cells.
+    if (cell->rowSpan() != 1)
+        return;
+
+    Length logicalHeight = cell->style()->logicalHeight();
+    if (logicalHeight.isPositive() || (logicalHeight.isRelative() && logicalHeight.value() >= 0)) {
+        Length cRowLogicalHeight = row.logicalHeight;
+        switch (logicalHeight.type()) {
+        case Percent:
+            if (!(cRowLogicalHeight.isPercent())
+                || (cRowLogicalHeight.isPercent() && cRowLogicalHeight.percent() < logicalHeight.percent()))
+                row.logicalHeight = logicalHeight;
+            break;
+        case Fixed:
+            if (cRowLogicalHeight.type() < Percent
+                || (cRowLogicalHeight.isFixed() && cRowLogicalHeight.value() < logicalHeight.value()))
+                row.logicalHeight = logicalHeight;
+            break;
+        case Relative:
+        default:
+            break;
+        }
+    }
+}
+
+
 RenderTableSection::RenderTableSection(Node* node)
     : RenderBox(node)
     , m_cCol(0)
@@ -210,28 +238,7 @@ void RenderTableSection::addCell(RenderTableCell* cell, RenderTableRow* row)
     while (m_cCol < nCols && (cellAt(insertionRow, m_cCol).hasCells() || cellAt(insertionRow, m_cCol).inColSpan))
         m_cCol++;
 
-    if (rSpan == 1) {
-        // we ignore height settings on rowspan cells
-        Length logicalHeight = cell->style()->logicalHeight();
-        if (logicalHeight.isPositive() || (logicalHeight.isRelative() && logicalHeight.value() >= 0)) {
-            Length cRowLogicalHeight = m_grid[insertionRow].logicalHeight;
-            switch (logicalHeight.type()) {
-                case Percent:
-                    if (!(cRowLogicalHeight.isPercent()) ||
-                        (cRowLogicalHeight.isPercent() && cRowLogicalHeight.percent() < logicalHeight.percent()))
-                        m_grid[insertionRow].logicalHeight = logicalHeight;
-                        break;
-                case Fixed:
-                    if (cRowLogicalHeight.type() < Percent ||
-                        (cRowLogicalHeight.isFixed() && cRowLogicalHeight.value() < logicalHeight.value()))
-                        m_grid[insertionRow].logicalHeight = logicalHeight;
-                    break;
-                case Relative:
-                default:
-                    break;
-            }
-        }
-    }
+    updateLogicalHeightForCell(m_grid[insertionRow], cell);
 
     ensureRows(insertionRow + rSpan);
 
@@ -995,7 +1002,7 @@ void RenderTableSection::paintCell(RenderTableCell* cell, PaintInfo& paintInfo, 
         if (!row->hasSelfPaintingLayer())
             cell->paintBackgroundsBehindCell(paintInfo, cellPoint, row);
     }
-    if ((!cell->hasSelfPaintingLayer() && !row->hasSelfPaintingLayer()) || paintInfo.phase == PaintPhaseCollapsedTableBorders)
+    if ((!cell->hasSelfPaintingLayer() && !row->hasSelfPaintingLayer()))
         cell->paint(paintInfo, cellPoint);
 }
 
@@ -1060,14 +1067,31 @@ void RenderTableSection::paintObject(PaintInfo& paintInfo, const LayoutPoint& pa
     }
     if (startcol < endcol) {
         if (!m_hasMultipleCellLevels && !m_overflowingCells.size()) {
-            // Draw the dirty cells in the order that they appear.
-            for (unsigned r = startrow; r < endrow; r++) {
-                for (unsigned c = startcol; c < endcol; c++) {
-                    CellStruct& current = cellAt(r, c);
-                    RenderTableCell* cell = current.primaryCell();
-                    if (!cell || (r > startrow && primaryCellAt(r - 1, c) == cell) || (c > startcol && primaryCellAt(r, c - 1) == cell))
-                        continue;
-                    paintCell(cell, paintInfo, paintOffset);
+            if (paintInfo.phase == PaintPhaseCollapsedTableBorders) {
+                // Collapsed borders are painted from the bottom right to the top left so that precedence
+                // due to cell position is respected.
+                for (unsigned r = endrow; r > startrow; r--) {
+                    unsigned row = r - 1;
+                    for (unsigned c = endcol; c > startcol; c--) {
+                        unsigned col = c - 1;
+                        CellStruct& current = cellAt(row, col);
+                        RenderTableCell* cell = current.primaryCell();
+                        if (!cell || (row > startrow && primaryCellAt(row - 1, col) == cell) || (col > startcol && primaryCellAt(row, col - 1) == cell))
+                            continue;
+                        LayoutPoint cellPoint = flipForWritingModeForChild(cell, paintOffset);
+                        cell->paintCollapsedBorders(paintInfo, cellPoint);
+                    }
+                }
+            } else {
+                // Draw the dirty cells in the order that they appear.
+                for (unsigned r = startrow; r < endrow; r++) {
+                    for (unsigned c = startcol; c < endcol; c++) {
+                        CellStruct& current = cellAt(r, c);
+                        RenderTableCell* cell = current.primaryCell();
+                        if (!cell || (r > startrow && primaryCellAt(r - 1, c) == cell) || (c > startcol && primaryCellAt(r, c - 1) == cell))
+                            continue;
+                        paintCell(cell, paintInfo, paintOffset);
+                    }
                 }
             }
         } else {
@@ -1106,8 +1130,15 @@ void RenderTableSection::paintObject(PaintInfo& paintInfo, const LayoutPoint& pa
             else
                 std::sort(cells.begin(), cells.end(), compareCellPositionsWithOverflowingCells);
 
-            for (unsigned i = 0; i < cells.size(); ++i)
-                paintCell(cells[i], paintInfo, paintOffset);
+            if (paintInfo.phase == PaintPhaseCollapsedTableBorders) {
+                for (unsigned i = cells.size(); i > 0; --i) {
+                    LayoutPoint cellPoint = flipForWritingModeForChild(cells[i - 1], paintOffset);
+                    cells[i - 1]->paintCollapsedBorders(paintInfo, cellPoint);
+                }
+            } else {
+                for (unsigned i = 0; i < cells.size(); ++i)
+                    paintCell(cells[i], paintInfo, paintOffset);
+            }
         }
     }
 }
@@ -1155,9 +1186,17 @@ void RenderTableSection::recalcCells()
     setNeedsLayout(true);
 }
 
+// FIXME: This function could be made O(1) in certain cases (like for the non-most-constrainive cells' case).
 void RenderTableSection::rowLogicalHeightChanged(unsigned rowIndex)
 {
     setRowLogicalHeightToRowStyleLogicalHeightIfNotRelative(m_grid[rowIndex]);
+
+    for (RenderObject* cell = m_grid[rowIndex].rowRenderer->firstChild(); cell; cell = cell->nextSibling()) {
+        if (!cell->isTableCell())
+            continue;
+
+        updateLogicalHeightForCell(m_grid[rowIndex], toRenderTableCell(cell));
+    }
 }
 
 void RenderTableSection::setNeedsCellRecalc()

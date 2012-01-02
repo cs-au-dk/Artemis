@@ -31,6 +31,7 @@
 namespace JSC {
 
 ASSERT_CLASS_FITS_IN_CELL(JSBoundFunction);
+ASSERT_HAS_TRIVIAL_DESTRUCTOR(JSBoundFunction);
 
 const ClassInfo JSBoundFunction::s_info = { "Function", &Base::s_info, 0, 0, CREATE_METHOD_TABLE(JSBoundFunction) };
 
@@ -38,7 +39,7 @@ EncodedJSValue JSC_HOST_CALL boundFunctionCall(ExecState* exec)
 {
     JSBoundFunction* boundFunction = static_cast<JSBoundFunction*>(exec->callee());
 
-    ASSERT(isJSArray(&exec->globalData(), boundFunction->boundArgs())); // Currently this is true!
+    ASSERT(isJSArray(boundFunction->boundArgs())); // Currently this is true!
     JSArray* boundArgs = asArray(boundFunction->boundArgs());
 
     MarkedArgumentBuffer args;
@@ -58,7 +59,7 @@ EncodedJSValue JSC_HOST_CALL boundFunctionConstruct(ExecState* exec)
 {
     JSBoundFunction* boundFunction = static_cast<JSBoundFunction*>(exec->callee());
 
-    ASSERT(isJSArray(&exec->globalData(), boundFunction->boundArgs())); // Currently this is true!
+    ASSERT(isJSArray(boundFunction->boundArgs())); // Currently this is true!
     JSArray* boundArgs = asArray(boundFunction->boundArgs());
 
     MarkedArgumentBuffer args;
@@ -81,7 +82,7 @@ JSBoundFunction* JSBoundFunction::create(ExecState* exec, JSGlobalObject* global
     bool canConstruct = constructType != ConstructTypeNone;
 
     NativeExecutable* executable = exec->globalData().getHostFunction(boundFunctionCall, canConstruct ? boundFunctionConstruct : callHostFunctionAsConstructor);
-    JSBoundFunction* function = new (allocateCell<JSBoundFunction>(*exec->heap())) JSBoundFunction(exec, globalObject, globalObject->boundFunctionStructure(), targetFunction, boundThis, boundArgs);
+    JSBoundFunction* function = new (NotNull, allocateCell<JSBoundFunction>(*exec->heap())) JSBoundFunction(exec, globalObject, globalObject->boundFunctionStructure(), targetFunction, boundThis, boundArgs);
 
     function->finishCreation(exec, executable, length, name);
     return function;

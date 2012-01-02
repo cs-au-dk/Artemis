@@ -35,7 +35,6 @@ import time
 
 from webkitpy.layout_tests.port import Port, Driver, DriverOutput
 from webkitpy.layout_tests.models.test_configuration import TestConfiguration
-from webkitpy.common.host_mock import MockHost
 from webkitpy.common.system.filesystem_mock import MockFileSystem
 
 
@@ -56,7 +55,7 @@ class TestInstance(object):
 
         # The values of each field are treated as raw byte strings. They
         # will be converted to unicode strings where appropriate using
-        # MockFileSystem.read_text_file().
+        # FileSystem.read_text_file().
         self.actual_text = self.base + '-txt'
         self.actual_checksum = self.base + '-checksum'
 
@@ -227,35 +226,11 @@ LAYOUT_TEST_DIR = '/test.checkout/LayoutTests'
 # Here we synthesize an in-memory filesystem from the test list
 # in order to fully control the test output and to demonstrate that
 # we don't need a real filesystem to run the tests.
-
-def unit_test_filesystem(files=None):
-    """Return the FileSystem object used by the unit tests."""
-    test_list = unit_test_list()
-    files = files or {}
-
-    def add_test_file(files, test, suffix, contents):
-        dirname = test.name[0:test.name.rfind('/')]
-        base = test.base
-        add_file(files, dirname + '/' + base + suffix, contents)
-
-    def add_file(files, file_name, contents):
-        files[LAYOUT_TEST_DIR + '/' + file_name] = contents
-
-    # Add each test and the expected output, if any.
-    for test in test_list.tests.values():
-        add_test_file(files, test, '.html', '')
-        if test.is_reftest:
-            continue
-        if test.actual_audio:
-            add_test_file(files, test, '-expected.wav', test.expected_audio)
-            continue
-
-        add_test_file(files, test, '-expected.txt', test.expected_text)
-        add_test_file(files, test, '-expected.png', test.expected_image)
-
-
+def add_unit_tests_to_mock_filesystem(filesystem):
     # Add the test_expectations file.
-    files[LAYOUT_TEST_DIR + '/platform/test/test_expectations.txt'] = """
+    filesystem.maybe_make_directory(LAYOUT_TEST_DIR + '/platform/test')
+    if not filesystem.exists(LAYOUT_TEST_DIR + '/platform/test/test_expectations.txt'):
+        filesystem.write_text_file(LAYOUT_TEST_DIR + '/platform/test/test_expectations.txt', """
 WONTFIX : failures/expected/checksum.html = IMAGE
 WONTFIX : failures/expected/crash.html = CRASH
 WONTFIX : failures/expected/image.html = IMAGE
@@ -275,9 +250,10 @@ WONTFIX : failures/expected/timeout.html = TIMEOUT
 WONTFIX SKIP : failures/expected/hang.html = TIMEOUT
 WONTFIX SKIP : failures/expected/keyboard.html = CRASH
 WONTFIX SKIP : failures/expected/exception.html = CRASH
-"""
+""")
 
-    add_file(files, 'reftests/foo/reftest.list', """
+    filesystem.maybe_make_directory(LAYOUT_TEST_DIR + '/reftests/foo')
+    filesystem.write_text_file(LAYOUT_TEST_DIR + '/reftests/foo/reftest.list', """
 == test.html test-ref.html
 
 == multiple-match-success.html mismatching-ref.html
@@ -301,9 +277,26 @@ WONTFIX SKIP : failures/expected/exception.html = CRASH
     # Add in a file should be ignored by port.find_test_files().
     #files[LAYOUT_TEST_DIR + '/userscripts/resources/iframe.html'] = 'iframe'
 
-    fs = MockFileSystem(files, dirs=set(['/mock-checkout']))  # Make sure at least the checkout_root exists as a directory.
-    fs._tests = test_list
-    return fs
+    def add_file(test, suffix, contents):
+        dirname = filesystem.join(LAYOUT_TEST_DIR, test.name[0:test.name.rfind('/')])
+        base = test.base
+        filesystem.maybe_make_directory(dirname)
+        filesystem.write_binary_file(filesystem.join(dirname, base + suffix), contents)
+
+    # Add each test and the expected output, if any.
+    test_list = unit_test_list()
+    for test in test_list.tests.values():
+        add_file(test, '.html', '')
+        if test.is_reftest:
+            continue
+        if test.actual_audio:
+            add_file(test, '-expected.wav', test.expected_audio)
+            continue
+        add_file(test, '-expected.txt', test.expected_text)
+        add_file(test, '-expected.png', test.expected_image)
+
+    # Clear the list of written files so that we can watch what happens during testing.
+    filesystem.clear_written_files()
 
 
 class TestPort(Port):
@@ -314,24 +307,15 @@ class TestPort(Port):
         'test-linux-x86_64',
     )
 
-    def _set_default_overriding_none(self, dictionary, key, default):
-        # dict.setdefault almost works, but won't actually override None values, which we want.
-        if not dictionary.get(key):
-            dictionary[key] = default
-        return dictionary[key]
-
-    def __init__(self, host=None, port_name=None, **kwargs):
+    def __init__(self, host, port_name=None, **kwargs):
         if not port_name or port_name == 'test':
             port_name = 'test-mac-leopard'
 
-        host = host or MockHost()
-        filesystem = self._set_default_overriding_none(kwargs, 'filesystem', unit_test_filesystem())
-
-        Port.__init__(self, host, port_name=port_name, **kwargs)
+        self._tests = unit_test_list()
+        self._expectations_path = LAYOUT_TEST_DIR + '/platform/test/test_expectations.txt'
         self._results_directory = None
 
-        assert filesystem._tests
-        self._tests = filesystem._tests
+        Port.__init__(self, host, port_name=port_name, **kwargs)
 
         self._operating_system = 'mac'
         if port_name.startswith('test-win'):
@@ -349,7 +333,6 @@ class TestPort(Port):
         }
         self._version = version_map[port_name]
 
-        self._expectations_path = LAYOUT_TEST_DIR + '/platform/test/test_expectations.txt'
 
     def _path_to_driver(self):
         # This routine shouldn't normally be called, but it is called by

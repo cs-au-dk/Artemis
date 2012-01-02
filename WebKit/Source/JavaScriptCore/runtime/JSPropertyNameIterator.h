@@ -48,11 +48,13 @@ namespace JSC {
         static JSPropertyNameIterator* create(ExecState*, JSObject*);
         static JSPropertyNameIterator* create(ExecState* exec, PropertyNameArrayData* propertyNameArrayData, size_t numCacheableSlot)
         {
-            JSPropertyNameIterator* iterator = new (allocateCell<JSPropertyNameIterator>(*exec->heap())) JSPropertyNameIterator(exec, propertyNameArrayData, numCacheableSlot);
+            JSPropertyNameIterator* iterator = new (NotNull, allocateCell<JSPropertyNameIterator>(*exec->heap())) JSPropertyNameIterator(exec, propertyNameArrayData, numCacheableSlot);
             iterator->finishCreation(exec, propertyNameArrayData);
             return iterator;
         }
-        
+
+        static void destroy(JSCell*);
+       
         static Structure* createStructure(JSGlobalData& globalData, JSGlobalObject* globalObject, JSValue prototype)
         {
             return Structure::create(globalData, globalObject, prototype, TypeInfo(CompoundType, OverridesVisitChildren), &s_info);
