@@ -69,6 +69,7 @@
 #include "TextCheckingHelper.h"
 #include "RemoveFormatCommand.h"
 #include "RenderBlock.h"
+#include "RenderLayer.h"
 #include "RenderPart.h"
 #include "RenderTextControl.h"
 #include "RenderedPosition.h"
@@ -888,7 +889,7 @@ void Editor::appliedEditing(PassRefPtr<CompositeEditCommand> cmd)
         // different from the last command
         m_lastEditCommand = cmd;
         if (client())
-            client()->registerCommandForUndo(toCompositeEditCommand(m_lastEditCommand.get())->ensureComposition());
+            client()->registerUndoStep(m_lastEditCommand->ensureComposition());
     }
 
     respondToChangedContents(newSelection);
@@ -906,7 +907,7 @@ void Editor::unappliedEditing(PassRefPtr<EditCommandComposition> cmd)
     
     m_lastEditCommand = 0;
     if (client())
-        client()->registerCommandForRedo(cmd);
+        client()->registerRedoStep(cmd);
     respondToChangedContents(newSelection);
 }
 
@@ -921,7 +922,7 @@ void Editor::reappliedEditing(PassRefPtr<EditCommandComposition> cmd)
     
     m_lastEditCommand = 0;
     if (client())
-        client()->registerCommandForUndo(cmd);
+        client()->registerUndoStep(cmd);
     respondToChangedContents(newSelection);
 }
 
@@ -1004,7 +1005,7 @@ bool Editor::insertTextWithoutSendingTextEvent(const String& text, bool selectIn
             // Reveal the current selection
             if (Frame* editedFrame = document->frame())
                 if (Page* page = editedFrame->page())
-                    page->focusController()->focusedOrMainFrame()->selection()->revealSelection(ScrollAlignment::alignToEdgeIfNeeded);
+                    page->focusController()->focusedOrMainFrame()->selection()->revealSelection(ScrollAlignment::alignCenterIfNeeded);
         }
     }
 
@@ -2338,7 +2339,7 @@ void Editor::revealSelectionAfterEditingOperation()
     if (m_ignoreCompositionSelectionChange)
         return;
 
-    m_frame->selection()->revealSelection(ScrollAlignment::alignToEdgeIfNeeded);
+    m_frame->selection()->revealSelection(ScrollAlignment::alignCenterIfNeeded);
 }
 
 void Editor::setIgnoreCompositionSelectionChange(bool ignore)
@@ -2775,6 +2776,18 @@ bool Editor::findString(const String& target, FindOptions options)
     m_frame->selection()->setSelection(VisibleSelection(resultRange.get(), DOWNSTREAM));
     m_frame->selection()->revealSelection();
     return true;
+}
+
+PassRefPtr<Range> Editor::findStringAndScrollToVisible(const String& target, Range* previousMatch, FindOptions options)
+{
+    RefPtr<Range> nextMatch = rangeOfString(target, previousMatch, options);
+    if (!nextMatch)
+        return 0;
+
+    nextMatch->firstNode()->renderer()->enclosingLayer()->scrollRectToVisible(nextMatch->boundingBox(),
+        ScrollAlignment::alignCenterIfNeeded, ScrollAlignment::alignCenterIfNeeded);
+
+    return nextMatch.release();
 }
 
 PassRefPtr<Range> Editor::rangeOfString(const String& target, Range* referenceRange, FindOptions options)

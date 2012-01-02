@@ -36,15 +36,17 @@ from webkitpy.common.watchlist.watchlist_mock import MockWatchList
 
 # New-style ports need to move down into webkitpy.common.
 from webkitpy.layout_tests.port.factory import PortFactory
+from webkitpy.layout_tests.port.test import add_unit_tests_to_mock_filesystem
 
 
 class MockHost(MockSystemHost):
     def __init__(self, log_executive=False, executive_throws_when_run=None):
         MockSystemHost.__init__(self, log_executive, executive_throws_when_run)
+        add_unit_tests_to_mock_filesystem(self.filesystem)
         self.web = MockWeb()
 
         self._checkout = MockCheckout()
-        self._scm = MockSCM()
+        self._scm = MockSCM(filesystem=self.filesystem, executive=self.executive)
         # Various pieces of code (wrongly) call filesystem.chdir(checkout_root).
         # Making the checkout_root exist in the mock filesystem makes that chdir not raise.
         self.filesystem.maybe_make_directory(self._scm.checkout_root)

@@ -36,11 +36,7 @@ messages -> WebPage {
     KeyEventSyncForTesting(WebKit::WebKeyboardEvent event) -> (bool handled)
     MouseEvent(WebKit::WebMouseEvent event)
     MouseEventSyncForTesting(WebKit::WebMouseEvent event) -> (bool handled)
-    WheelEvent(WebKit::WebWheelEvent event)
     WheelEventSyncForTesting(WebKit::WebWheelEvent event) -> (bool handled)
-#if ENABLE(GESTURE_EVENTS)
-    GestureEvent(WebKit::WebGestureEvent event)
-#endif
 #if ENABLE(TOUCH_EVENTS)
     TouchEvent(WebKit::WebTouchEvent event)
     TouchEventSyncForTesting(WebKit::WebTouchEvent event) -> (bool handled)
@@ -196,12 +192,18 @@ messages -> WebPage {
     SetCanRunBeforeUnloadConfirmPanel(bool canRunBeforeUnloadConfirmPanel)
     SetCanRunModal(bool canRunModal)
 
+#if PLATFORM(QT)
+    SetComposition(WTF::String text, WTF::Vector<WebCore::CompositionUnderline> underlines, uint64_t selectionStart, uint64_t selectionEnd, uint64_t replacementRangeStart, uint64_t replacementRangeEnd)
+    ConfirmComposition(WTF::String text, int64_t selectionStart, int64_t selectionLength)
+    CancelComposition()
+#endif
+
 #if PLATFORM(MAC)
     # Complex text input support for plug-ins.
     SendComplexTextInputToPlugin(uint64_t pluginComplexTextInputIdentifier, String textInput)
 
     SetWindowIsVisible(bool windowIsVisible)
-    WindowAndViewFramesChanged(WebCore::FloatRect windowFrameInScreenCoordinates, WebCore::FloatRect viewFrameInWindowCoordinates, WebCore::FloatPoint accessibilityViewCoordinates)
+    WindowAndViewFramesChanged(WebCore::IntRect windowFrameInScreenCoordinates, WebCore::IntRect viewFrameInWindowCoordinates, WebCore::IntPoint accessibilityViewCoordinates)
     RegisterUIProcessAccessibilityTokens(CoreIPC::DataReference elemenToken, CoreIPC::DataReference windowToken)
     WriteSelectionToPasteboard(WTF::String pasteboardName, WTF::Vector<WTF::String> pasteboardTypes) -> (bool result)
     ReadSelectionFromPasteboard(WTF::String pasteboardName) -> (bool result)

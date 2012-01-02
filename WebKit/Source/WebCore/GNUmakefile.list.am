@@ -546,6 +546,8 @@ webcore_built_sources += \
 	DerivedSources/WebCore/JSWebGLContextEvent.h \
 	DerivedSources/WebCore/JSWebGLFramebuffer.cpp \
 	DerivedSources/WebCore/JSWebGLFramebuffer.h \
+	DerivedSources/WebCore/JSWebGLLoseContext.cpp \
+	DerivedSources/WebCore/JSWebGLLoseContext.h \
 	DerivedSources/WebCore/JSWebGLProgram.cpp \
 	DerivedSources/WebCore/JSWebGLProgram.h \
 	DerivedSources/WebCore/JSWebGLRenderbuffer.cpp \
@@ -578,8 +580,6 @@ webcore_built_sources += \
 	DerivedSources/WebCore/JSWebKitCSSMatrix.h \
 	DerivedSources/WebCore/JSWebKitCSSTransformValue.cpp \
 	DerivedSources/WebCore/JSWebKitCSSTransformValue.h \
-	DerivedSources/WebCore/JSWebKitLoseContext.cpp \
-	DerivedSources/WebCore/JSWebKitLoseContext.h \
 	DerivedSources/WebCore/JSWebKitNamedFlow.cpp \
 	DerivedSources/WebCore/JSWebKitNamedFlow.h \
 	DerivedSources/WebCore/JSWebKitPoint.cpp \
@@ -753,6 +753,8 @@ webcore_sources += \
 	Source/WebCore/bindings/js/JSDOMWindowCustom.h \
 	Source/WebCore/bindings/js/JSDOMWindowShell.cpp \
 	Source/WebCore/bindings/js/JSDOMWindowShell.h \
+	Source/WebCore/bindings/js/JSDOMWindowWebAudioCustom.cpp \
+	Source/WebCore/bindings/js/JSDOMWindowWebSocketCustom.cpp \
 	Source/WebCore/bindings/js/JSDOMWrapper.cpp \
 	Source/WebCore/bindings/js/JSDOMWrapper.h \
 	Source/WebCore/bindings/js/JSDataViewCustom.cpp \
@@ -1281,6 +1283,8 @@ webcore_sources += \
 	Source/WebCore/dom/MutationCallback.h \
 	Source/WebCore/dom/MutationEvent.cpp \
 	Source/WebCore/dom/MutationEvent.h \
+	Source/WebCore/dom/MutationObserverInterestGroup.cpp \
+	Source/WebCore/dom/MutationObserverInterestGroup.h \
 	Source/WebCore/dom/MutationObserverRegistration.cpp \
 	Source/WebCore/dom/MutationObserverRegistration.h \
 	Source/WebCore/dom/MutationRecord.cpp \
@@ -1508,6 +1512,7 @@ webcore_sources += \
 	Source/WebCore/editing/TextIterator.h \
 	Source/WebCore/editing/TypingCommand.cpp \
 	Source/WebCore/editing/TypingCommand.h \
+	Source/WebCore/editing/UndoStep.h \
 	Source/WebCore/editing/UnlinkCommand.cpp \
 	Source/WebCore/editing/UnlinkCommand.h \
 	Source/WebCore/editing/VisiblePosition.cpp \
@@ -2187,9 +2192,10 @@ webcore_sources += \
 	Source/WebCore/loader/CrossOriginPreflightResultCache.h \
 	Source/WebCore/loader/TextTrackLoader.cpp \
 	Source/WebCore/loader/TextTrackLoader.h \
+	Source/WebCore/loader/DocumentLoadTiming.cpp \
+	Source/WebCore/loader/DocumentLoadTiming.h \
 	Source/WebCore/loader/DocumentLoader.cpp \
 	Source/WebCore/loader/DocumentLoader.h \
-	Source/WebCore/loader/DocumentLoadTiming.h \
 	Source/WebCore/loader/DocumentThreadableLoader.cpp \
 	Source/WebCore/loader/DocumentThreadableLoader.h \
 	Source/WebCore/loader/DocumentThreadableLoaderClient.h \
@@ -2471,8 +2477,8 @@ webcore_sources += \
 	Source/WebCore/platform/Clock.h \
 	Source/WebCore/platform/ClockGeneric.cpp \
 	Source/WebCore/platform/ClockGeneric.h \
-	Source/WebCore/platform/ColorChooser.cpp \
 	Source/WebCore/platform/ColorChooser.h \
+	Source/WebCore/platform/ColorChooserClient.h \
 	Source/WebCore/platform/ContentType.cpp \
 	Source/WebCore/platform/ContentType.h \
 	Source/WebCore/platform/ContextMenu.h \
@@ -2506,6 +2512,8 @@ webcore_sources += \
 	Source/WebCore/platform/GeolocationService.cpp \
 	Source/WebCore/platform/GeolocationService.h \
 	Source/WebCore/platform/HashTools.h \
+	Source/WebCore/platform/HistogramSupport.cpp \
+	Source/WebCore/platform/HistogramSupport.h \
 	Source/WebCore/platform/graphics/BitmapImage.cpp \
 	Source/WebCore/platform/graphics/BitmapImage.h \
 	Source/WebCore/platform/graphics/Color.cpp \
@@ -2536,6 +2544,10 @@ webcore_sources += \
 	Source/WebCore/platform/graphics/cairo/RefPtrCairo.cpp \
 	Source/WebCore/platform/graphics/cairo/RefPtrCairo.h \
 	Source/WebCore/platform/graphics/cairo/TransformationMatrixCairo.cpp \
+	Source/WebCore/platform/graphics/filters/CustomFilterMesh.cpp \
+	Source/WebCore/platform/graphics/filters/CustomFilterMesh.h \
+	Source/WebCore/platform/graphics/filters/CustomFilterShader.cpp \
+	Source/WebCore/platform/graphics/filters/CustomFilterShader.h \
 	Source/WebCore/platform/graphics/filters/DistantLightSource.cpp \
 	Source/WebCore/platform/graphics/filters/DistantLightSource.h \
 	Source/WebCore/platform/graphics/filters/FEBlend.cpp \
@@ -2548,6 +2560,8 @@ webcore_sources += \
 	Source/WebCore/platform/graphics/filters/FEComposite.h \
 	Source/WebCore/platform/graphics/filters/FEConvolveMatrix.cpp \
 	Source/WebCore/platform/graphics/filters/FEConvolveMatrix.h \
+	Source/WebCore/platform/graphics/filters/FECustomFilter.cpp \
+	Source/WebCore/platform/graphics/filters/FECustomFilter.h \
 	Source/WebCore/platform/graphics/filters/FEDiffuseLighting.cpp \
 	Source/WebCore/platform/graphics/filters/FEDiffuseLighting.h \
 	Source/WebCore/platform/graphics/filters/FEDisplacementMap.cpp \
@@ -2575,6 +2589,10 @@ webcore_sources += \
 	Source/WebCore/platform/graphics/filters/Filter.h \
 	Source/WebCore/platform/graphics/filters/FilterEffect.cpp \
 	Source/WebCore/platform/graphics/filters/FilterEffect.h \
+	Source/WebCore/platform/graphics/filters/FilterOperation.h \
+	Source/WebCore/platform/graphics/filters/FilterOperation.cpp \
+	Source/WebCore/platform/graphics/filters/FilterOperations.cpp \
+	Source/WebCore/platform/graphics/filters/FilterOperations.h \
 	Source/WebCore/platform/graphics/filters/LightSource.cpp \
 	Source/WebCore/platform/graphics/filters/LightSource.h \
 	Source/WebCore/platform/graphics/filters/PointLightSource.cpp \
@@ -2841,6 +2859,7 @@ webcore_sources += \
 	Source/WebCore/platform/network/ResourceHandleInternal.h \
 	Source/WebCore/platform/network/ResourceLoadInfo.h \
 	Source/WebCore/platform/network/ResourceLoadPriority.h \
+	Source/WebCore/platform/network/ResourceLoadTiming.cpp \
 	Source/WebCore/platform/network/ResourceLoadTiming.h \
 	Source/WebCore/platform/network/ResourceRequestBase.cpp \
 	Source/WebCore/platform/network/ResourceRequestBase.h \
@@ -2871,12 +2890,16 @@ webcore_sources += \
 	Source/WebCore/platform/network/soup/SoupURIUtils.h \
 	Source/WebCore/platform/NotImplemented.h \
 	Source/WebCore/platform/Pasteboard.h \
+	Source/WebCore/platform/PlatformEvent.cpp \
+	Source/WebCore/platform/PlatformEvent.h \
+	Source/WebCore/platform/PlatformExportMacros.h \
 	Source/WebCore/platform/PlatformKeyboardEvent.h \
 	Source/WebCore/platform/PlatformMenuDescription.h \
 	Source/WebCore/platform/PlatformMouseEvent.h \
 	Source/WebCore/platform/PlatformScreen.h \
 	Source/WebCore/platform/PlatformWheelEvent.h \
 	Source/WebCore/platform/PODArena.h \
+	Source/WebCore/platform/PODFreeListArena.h \
 	Source/WebCore/platform/PODInterval.h \
 	Source/WebCore/platform/PODIntervalTree.h \
 	Source/WebCore/platform/PODRedBlackTree.h \
@@ -3254,10 +3277,6 @@ webcore_sources += \
 	Source/WebCore/rendering/style/DataRef.h \
 	Source/WebCore/rendering/style/FillLayer.cpp \
 	Source/WebCore/rendering/style/FillLayer.h \
-	Source/WebCore/rendering/style/FilterOperation.h \
-	Source/WebCore/rendering/style/FilterOperation.cpp \
-	Source/WebCore/rendering/style/FilterOperations.cpp \
-	Source/WebCore/rendering/style/FilterOperations.h \
 	Source/WebCore/rendering/style/KeyframeList.cpp \
 	Source/WebCore/rendering/style/KeyframeList.h \
 	Source/WebCore/rendering/style/LineClampValue.h \
@@ -5006,6 +5025,8 @@ webcore_sources += \
 	Source/WebCore/html/canvas/WebGLFramebuffer.h \
 	Source/WebCore/html/canvas/WebGLGetInfo.cpp \
 	Source/WebCore/html/canvas/WebGLGetInfo.h \
+	Source/WebCore/html/canvas/WebGLLoseContext.cpp \
+	Source/WebCore/html/canvas/WebGLLoseContext.h \
 	Source/WebCore/html/canvas/WebGLObject.cpp \
 	Source/WebCore/html/canvas/WebGLObject.h \
 	Source/WebCore/html/canvas/WebGLProgram.cpp \
@@ -5030,8 +5051,6 @@ webcore_sources += \
 	Source/WebCore/html/canvas/OESTextureFloat.h \
 	Source/WebCore/html/canvas/OESVertexArrayObject.cpp \
 	Source/WebCore/html/canvas/OESVertexArrayObject.h \
-	Source/WebCore/html/canvas/WebKitLoseContext.cpp \
-	Source/WebCore/html/canvas/WebKitLoseContext.h \
 	Source/WebCore/platform/graphics/ANGLEWebKitBridge.cpp \
 	Source/WebCore/platform/graphics/ANGLEWebKitBridge.h \
 	Source/WebCore/platform/graphics/cairo/GraphicsContext3DCairo.cpp \

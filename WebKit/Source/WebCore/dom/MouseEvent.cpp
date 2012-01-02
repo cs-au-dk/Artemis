@@ -33,14 +33,14 @@ namespace WebCore {
 
 PassRefPtr<MouseEvent> MouseEvent::create(const AtomicString& eventType, PassRefPtr<AbstractView> view, const PlatformMouseEvent& event, int detail, PassRefPtr<Node> relatedTarget)
 {
-    ASSERT(event.eventType() == MouseEventMoved || event.button() != NoButton);
+    ASSERT(event.type() == PlatformEvent::MouseMoved || event.button() != NoButton);
 
     bool isCancelable = eventType != eventNames().mousemoveEvent;
 
     return MouseEvent::create(eventType, true, isCancelable, view,
-        detail, event.globalX(), event.globalY(), event.x(), event.y(),
+        detail, event.globalPosition().x(), event.globalPosition().y(), event.position().x(), event.position().y(),
 #if ENABLE(POINTER_LOCK)
-        event.movementX(), event.movementY(),
+        event.movementDelta().x(), event.movementDelta().y(),
 #endif
         event.ctrlKey(), event.altKey(), event.shiftKey(), event.metaKey(), event.button(),
         relatedTarget, 0, false);

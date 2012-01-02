@@ -667,10 +667,6 @@ storage/domstorage/localstorage/storagetracker/storage-tracker-7-usage.html
 # EFL's LayoutTestController does not implement clearAllDatabases
 storage
 
-# EFL's LayoutTestController does not implement setDatabaseQuota
-storage/open-database-creation-callback.html
-storage/quota-tracking.html
-
 # EFL's LayoutTestController does not implement originsWithLocalStorage
 storage/domstorage/localstorage/storagetracker
 
@@ -842,6 +838,10 @@ fast/dom/timer-increase-then-decrease-min-interval.html
 
 # EFL's LayoutTestController does not implement setTextDirection
 fast/html/set-text-direction.html
+
+# Frame::findString does nothing on pages that prevent selection
+# https://bugs.webkit.org/show_bug.cgi?id=40361
+editing/text-iterator/findString-selection-disabled.html
 
 # EFL's DRT misses an 'EDITING DELEGATE' implementation
 editing/input/attributed-substring-from-range-lines.html

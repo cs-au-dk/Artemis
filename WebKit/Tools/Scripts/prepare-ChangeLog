@@ -65,45 +65,45 @@ use POSIX qw(strftime);
 use VCSUtils;
 
 sub changeLogDate($);
-sub changeLogEmailAddressFromArgs($);
-sub changeLogNameFromArgs($);
-sub fetchBugDescriptionFromURL($);
-sub findChangeLogs($);
-sub getLatestChangeLogs($);
-sub resolveConflictedChangeLogs($);
-sub generateNewChangeLogs($$$$$);
-sub printDiff($);
-sub openChangeLogs($);
-sub diffFromToString();
-sub diffCommand(@);
-sub statusCommand(@);
-sub createPatchCommand($);
-sub diffHeaderFormat();
-sub findOriginalFileFromSvn($);
+sub changeLogEmailAddressFromArgs($$);
+sub changeLogNameFromArgs($$);
+sub createPatchCommand($$$$);
+sub decodeEntities($);
 sub determinePropertyChanges($$$);
-sub pluralizeAndList($$@);
-sub generateFileList(\%);
-sub generateFunctionLists($$);
-sub isUnmodifiedStatus($);
-sub isModifiedStatus($);
-sub isAddedStatus($);
-sub isConflictStatus($);
-sub statusDescription($$$$);
-sub propertyChangeDescription($);
+sub diffCommand($$$$);
+sub diffFromToString($$$);
+sub diffHeaderFormat();
 sub extractLineRange($);
-sub testListForChangeLog(@);
+sub fetchBugDescriptionFromURL($$);
+sub findChangeLogs($);
+sub findOriginalFileFromSvn($);
+sub generateFileList(\%$$$);
+sub generateFunctionLists($$$$$);
+sub generateNewChangeLogs($$$$$$$$$$$);
+sub getLatestChangeLogs($);
 sub get_function_line_ranges($$);
 sub get_function_line_ranges_for_c($$);
 sub get_function_line_ranges_for_java($$);
 sub get_function_line_ranges_for_javascript($$);
 sub get_function_line_ranges_for_perl($$);
 sub get_selector_line_ranges_for_css($$);
+sub isAddedStatus($);
+sub isConflictStatus($$$);
+sub isModifiedStatus($);
+sub isUnmodifiedStatus($);
+sub main();
 sub method_decl_to_selector($);
-sub processPaths(\@);
-sub reviewerAndDescriptionForGitCommit($);
 sub normalizeLineEndings($$);
-sub decodeEntities($);
-
+sub openChangeLogs($);
+sub pluralizeAndList($$@);
+sub printDiff($$$$);
+sub processPaths(\@);
+sub propertyChangeDescription($);
+sub resolveConflictedChangeLogs($);
+sub reviewerAndDescriptionForGitCommit($$);
+sub statusCommand($$$$);
+sub statusDescription($$$$);
+sub testListForChangeLog(@);
 
 ### Constant variables.
 # Project time zone for Cupertino, CA, US
@@ -114,128 +114,125 @@ my $GIT = "git";
 
 my %supportedTestExtensions = map { $_ => 1 } qw(html shtml svg xml xhtml pl php);
 
+exit(main());
 
-### Global variables for arguments.
-my $bugDescription;
-my $bugNumber;
-my $name;
-my $emailAddress;
-my $mergeBase = 0;
-my $gitCommit = 0;
-my $gitIndex = "";
-my $gitReviewer = "";
-my $openChangeLogs = 0;
-my $writeChangeLogs = 1;
-my $showHelp = 0;
-my $spewDiff = $ENV{"PREPARE_CHANGELOG_DIFF"};
-my $updateChangeLogs = 1;
-my $parseOptionsResult =
-    GetOptions("diff|d!" => \$spewDiff,
-               "bug|b:i" => \$bugNumber,
-               "description:s" => \$bugDescription,
-               "name:s" => \$name,
-               "email:s" => \$emailAddress,
-               "merge-base:s" => \$mergeBase,
-               "git-commit|g:s" => \$gitCommit,
-               "git-index" => \$gitIndex,
-               "git-reviewer:s" => \$gitReviewer,
-               "help|h!" => \$showHelp,
-               "open|o!" => \$openChangeLogs,
-               "write!" => \$writeChangeLogs,
-               "update!" => \$updateChangeLogs);
-if (!$parseOptionsResult || $showHelp) {
-    print STDERR basename($0) . " [-b|--bug=<bugid>] [-d|--diff] [-h|--help] [-o|--open] [-g|--git-commit=<committish>] [--git-reviewer=<name>] [svndir1 [svndir2 ...]]\n";
-    print STDERR "  -b|--bug        Fill in the ChangeLog bug information from the given bug.\n";
-    print STDERR "  --description   One-line description that matches the bug title.\n";
-    print STDERR "  -d|--diff       Spew diff to stdout when running\n";
-    print STDERR "  --merge-base    Populate the ChangeLogs with the diff to this branch\n";
-    print STDERR "  -g|--git-commit Populate the ChangeLogs from the specified git commit\n";
-    print STDERR "  --git-index     Populate the ChangeLogs from the git index only\n";
-    print STDERR "  --git-reviewer  When populating the ChangeLogs from a git commit claim that the spcified name reviewed the change.\n";
-    print STDERR "                  This option is useful when the git commit lacks a Signed-Off-By: line\n";
-    print STDERR "  -h|--help       Show this help message\n";
-    print STDERR "  -o|--open       Open ChangeLogs in an editor when done\n";
-    print STDERR "  --[no-]update   Update ChangeLogs from svn before adding entry (default: update)\n";
-    print STDERR "  --[no-]write    Write ChangeLogs to disk (otherwise send new entries to stdout) (default: write)\n";
-    print STDERR "  --email=        Specify the email address to be used in the patch\n";
-    exit 1;
-}
-
-die "--git-commit and --git-index are incompatible." if ($gitIndex && $gitCommit);
-
-
-### Main routine.
-
-isSVN() || isGit() || die "Couldn't determine your version control system.";
-
-my %paths = processPaths(@ARGV);
-
-# Find the list of modified files
-my ($changedFiles, $conflictFiles, $functionLists, $addedRegressionTests) = generateFileList(%paths);
-
-if (!@$changedFiles && !@$conflictFiles && !keys %$functionLists) {
-    print STDERR "  No changes found.\n";
-    exit 1;
-}
-
-if (@$conflictFiles) {
-    print STDERR "  The following files have conflicts. Run prepare-ChangeLog again after fixing the conflicts:\n";
-    print STDERR join("\n", @$conflictFiles), "\n";
-    exit 1;
-}
-
-generateFunctionLists($changedFiles, $functionLists);
-
-# Get some parameters for the ChangeLog we are about to write.
-$name = changeLogNameFromArgs($name);
-$emailAddress = changeLogEmailAddressFromArgs($emailAddress);
-
-print STDERR "  Change author: $name <$emailAddress>.\n";
-
-# Remove trailing parenthesized notes from user name (bit of hack).
-$name =~ s/\(.*?\)\s*$//g;
-
-my $bugURL;
-if ($bugNumber) {
-    $bugURL = "https://bugs.webkit.org/show_bug.cgi?id=$bugNumber";
-}
-
-if ($bugNumber && !$bugDescription) {
-    $bugDescription = fetchBugDescriptionFromURL($bugURL);
-}
-
-my ($filesInChangeLog, $prefixes) = findChangeLogs($functionLists);
-
-# Get the latest ChangeLog files from svn.
-my $changeLogs = getLatestChangeLogs($prefixes);
-
-if (@$changeLogs && $updateChangeLogs && isSVN()) {
-    resolveConflictedChangeLogs($changeLogs);
-}
-
-generateNewChangeLogs($prefixes, $filesInChangeLog, $addedRegressionTests, $functionLists, $bugURL);
-
-if ($writeChangeLogs) {
-    print STDERR "-- Please remember to include a detailed description in your ChangeLog entry. --\n-- See <http://webkit.org/coding/contributing.html> for more info --\n";
-}
-
-# Write out another diff.
-if ($spewDiff && @$changedFiles) {
-    printDiff($changedFiles);
-}
-
-# Open ChangeLogs.
-if ($openChangeLogs && @$changeLogs) {
-    openChangeLogs($changeLogs);
-}
-
-# Done.
-exit;
-
-
-sub generateFunctionLists($$)
+sub main()
 {
-    my ($changedFiles, $functionLists) = @_;
+    my $bugDescription;
+    my $bugNumber;
+    my $name;
+    my $emailAddress;
+    my $mergeBase = 0;
+    my $gitCommit = 0;
+    my $gitIndex = "";
+    my $gitReviewer = "";
+    my $openChangeLogs = 0;
+    my $writeChangeLogs = 1;
+    my $showHelp = 0;
+    my $spewDiff = $ENV{"PREPARE_CHANGELOG_DIFF"};
+    my $updateChangeLogs = 1;
+    my $parseOptionsResult =
+        GetOptions("diff|d!" => \$spewDiff,
+                   "bug|b:i" => \$bugNumber,
+                   "description:s" => \$bugDescription,
+                   "name:s" => \$name,
+                   "email:s" => \$emailAddress,
+                   "merge-base:s" => \$mergeBase,
+                   "git-commit|g:s" => \$gitCommit,
+                   "git-index" => \$gitIndex,
+                   "git-reviewer:s" => \$gitReviewer,
+                   "help|h!" => \$showHelp,
+                   "open|o!" => \$openChangeLogs,
+                   "write!" => \$writeChangeLogs,
+                   "update!" => \$updateChangeLogs);
+    if (!$parseOptionsResult || $showHelp) {
+        print STDERR basename($0) . " [-b|--bug=<bugid>] [-d|--diff] [-h|--help] [-o|--open] [-g|--git-commit=<committish>] [--git-reviewer=<name>] [svndir1 [svndir2 ...]]\n";
+        print STDERR "  -b|--bug        Fill in the ChangeLog bug information from the given bug.\n";
+        print STDERR "  --description   One-line description that matches the bug title.\n";
+        print STDERR "  -d|--diff       Spew diff to stdout when running\n";
+        print STDERR "  --merge-base    Populate the ChangeLogs with the diff to this branch\n";
+        print STDERR "  -g|--git-commit Populate the ChangeLogs from the specified git commit\n";
+        print STDERR "  --git-index     Populate the ChangeLogs from the git index only\n";
+        print STDERR "  --git-reviewer  When populating the ChangeLogs from a git commit claim that the spcified name reviewed the change.\n";
+        print STDERR "                  This option is useful when the git commit lacks a Signed-Off-By: line\n";
+        print STDERR "  -h|--help       Show this help message\n";
+        print STDERR "  -o|--open       Open ChangeLogs in an editor when done\n";
+        print STDERR "  --[no-]update   Update ChangeLogs from svn before adding entry (default: update)\n";
+        print STDERR "  --[no-]write    Write ChangeLogs to disk (otherwise send new entries to stdout) (default: write)\n";
+        print STDERR "  --email=        Specify the email address to be used in the patch\n";
+        return 1;
+    }
+
+    die "--git-commit and --git-index are incompatible." if ($gitIndex && $gitCommit);
+
+    isSVN() || isGit() || die "Couldn't determine your version control system.";
+
+    my %paths = processPaths(@ARGV);
+
+    # Find the list of modified files
+    my ($changedFiles, $conflictFiles, $functionLists, $addedRegressionTests) = generateFileList(%paths, $gitCommit, $gitIndex, $mergeBase);
+
+    if (!@$changedFiles && !@$conflictFiles && !keys %$functionLists) {
+        print STDERR "  No changes found.\n";
+        return 1;
+    }
+
+    if (@$conflictFiles) {
+        print STDERR "  The following files have conflicts. Run prepare-ChangeLog again after fixing the conflicts:\n";
+        print STDERR join("\n", @$conflictFiles), "\n";
+        return 1;
+    }
+
+    generateFunctionLists($changedFiles, $functionLists, $gitCommit, $gitIndex, $mergeBase);
+
+    # Get some parameters for the ChangeLog we are about to write.
+    $name = changeLogNameFromArgs($name, $gitCommit);
+    $emailAddress = changeLogEmailAddressFromArgs($emailAddress, $gitCommit);
+
+    print STDERR "  Change author: $name <$emailAddress>.\n";
+
+    # Remove trailing parenthesized notes from user name (bit of hack).
+    $name =~ s/\(.*?\)\s*$//g;
+
+    my $bugURL;
+    if ($bugNumber) {
+        $bugURL = "https://bugs.webkit.org/show_bug.cgi?id=$bugNumber";
+    }
+
+    if ($bugNumber && !$bugDescription) {
+        $bugDescription = fetchBugDescriptionFromURL($bugURL, $bugNumber);
+    }
+
+    my ($filesInChangeLog, $prefixes) = findChangeLogs($functionLists);
+
+    # Get the latest ChangeLog files from svn.
+    my $changeLogs = getLatestChangeLogs($prefixes);
+
+    if (@$changeLogs && $updateChangeLogs && isSVN()) {
+        resolveConflictedChangeLogs($changeLogs);
+    }
+
+    generateNewChangeLogs($prefixes, $filesInChangeLog, $addedRegressionTests, $functionLists, $bugURL, $bugDescription, $name, $emailAddress, $gitReviewer, $gitCommit, $writeChangeLogs);
+
+    if ($writeChangeLogs) {
+        print STDERR "-- Please remember to include a detailed description in your ChangeLog entry. --\n-- See <http://webkit.org/coding/contributing.html> for more info --\n";
+    }
+
+    # Write out another diff.
+    if ($spewDiff && @$changedFiles) {
+        printDiff($changedFiles, $gitCommit, $gitIndex, $mergeBase);
+    }
+
+    # Open ChangeLogs.
+    if ($openChangeLogs && @$changeLogs) {
+        openChangeLogs($changeLogs);
+    }
+    return 0;
+}
+
+sub generateFunctionLists($$$$$)
+{
+    my ($changedFiles, $functionLists, $gitCommit, $gitIndex, $mergeBase) = @_;
 
     my %changed_line_ranges;
     if (@$changedFiles) {
@@ -243,7 +240,7 @@ sub generateFunctionLists($$)
         # Use line numbers from the "after" side of each diff.
         print STDERR "  Reviewing diff to determine which lines changed.\n";
         my $file;
-        open DIFF, "-|", diffCommand(@$changedFiles) or die "The diff failed: $!.\n";
+        open DIFF, "-|", diffCommand($changedFiles, $gitCommit, $gitIndex, $mergeBase) or die "The diff failed: $!.\n";
         while (<DIFF>) {
             $file = makeFilePathRelative($1) if $_ =~ diffHeaderFormat();
             if (defined $file) {
@@ -318,27 +315,27 @@ sub changeLogDate($)
     return $date;
 }
 
-sub changeLogNameFromArgs($)
+sub changeLogNameFromArgs($$)
 {
-    my ($nameFromArgs) = @_;
+    my ($nameFromArgs, $gitCommit) = @_;
     # Silently allow --git-commit to win, we could warn if $nameFromArgs is defined.
     return `$GIT log --max-count=1 --pretty=\"format:%an\" \"$gitCommit\"` if $gitCommit;
 
     return $nameFromArgs || changeLogName();
 }
 
-sub changeLogEmailAddressFromArgs($)
+sub changeLogEmailAddressFromArgs($$)
 {
-    my ($emailAddressFromArgs) = @_;
+    my ($emailAddressFromArgs, $gitCommit) = @_;
     # Silently allow --git-commit to win, we could warn if $emailAddressFromArgs is defined.
     return `$GIT log --max-count=1 --pretty=\"format:%ae\" \"$gitCommit\"` if $gitCommit;
 
     return $emailAddressFromArgs || changeLogEmailAddress();
 }
 
-sub fetchBugDescriptionFromURL($)
+sub fetchBugDescriptionFromURL($$)
 {
-    my ($bugURL) = @_;
+    my ($bugURL, $bugNumber) = @_;
 
     my $bugXMLURL = "$bugURL&ctype=xml";
     # Perl has no built in XML processing, so we'll fetch and parse with curl and grep
@@ -452,9 +449,9 @@ sub resolveConflictedChangeLogs($)
     close RESOLVE;
 }
 
-sub generateNewChangeLogs($$$$$)
+sub generateNewChangeLogs($$$$$$$$$$$)
 {
-    my ($prefixes, $filesInChangeLog, $addedRegressionTests, $functionLists, $bugURL) = @_;
+    my ($prefixes, $filesInChangeLog, $addedRegressionTests, $functionLists, $bugURL, $bugDescription, $name, $emailAddress, $gitReviewer, $gitCommit, $writeChangeLogs) = @_;
 
     # Generate new ChangeLog entries and (optionally) write out new ChangeLog files.
     foreach my $prefix (@$prefixes) {
@@ -483,7 +480,7 @@ sub generateNewChangeLogs($$$$$)
         my $date = changeLogDate($changeLogTimeZone);
         print CHANGE_LOG normalizeLineEndings("$date  $name  <$emailAddress>\n\n", $endl);
 
-        my ($reviewer, $description) = reviewerAndDescriptionForGitCommit($gitCommit) if $gitCommit;
+        my ($reviewer, $description) = reviewerAndDescriptionForGitCommit($gitCommit, $gitReviewer) if $gitCommit;
         $reviewer = "NOBODY (OO" . "PS!)" if !$reviewer;
 
         print CHANGE_LOG normalizeLineEndings($description . "\n", $endl) if $description;
@@ -518,13 +515,14 @@ sub generateNewChangeLogs($$$$$)
     }
 }
 
-sub printDiff($)
+sub printDiff($$$$)
 {
-    my ($changedFiles) = @_;
+    my ($changedFiles, $gitCommit, $gitIndex, $mergeBase) = @_;
 
     print STDERR "  Running diff to help you write the ChangeLog entries.\n";
     local $/ = undef; # local slurp mode
-    open DIFF, "-|", createPatchCommand("'" . join ("' '", @$changedFiles) . "'") or die "The diff failed: $!.\n";
+    my $changedFilesString = "'" . join("' '", @$changedFiles) . "'";
+    open DIFF, "-|", createPatchCommand($changedFilesString, $gitCommit, $gitIndex, $mergeBase) or die "The diff failed: $!.\n";
     print <DIFF>;
     close DIFF;
 }
@@ -1432,8 +1430,10 @@ sub processPaths(\@)
     return %result;
 }
 
-sub diffFromToString()
+sub diffFromToString($$$)
 {
+    my ($gitCommit, $gitIndex, $mergeBase) = @_;
+
     return "" if isSVN();
     return $gitCommit if $gitCommit =~ m/.+\.\..+/;
     return "\"$gitCommit^\" \"$gitCommit\"" if $gitCommit;
@@ -1442,48 +1442,51 @@ sub diffFromToString()
     return "HEAD" if isGit();
 }
 
-sub diffCommand(@)
+sub diffCommand($$$$)
 {
-    my @paths = @_;
-
-    my $pathsString = "'" . join("' '", @paths) . "'"; 
+    my ($paths, $gitCommit, $gitIndex, $mergeBase) = @_;
 
     my $command;
     if (isSVN()) {
-        $command = "$SVN diff --diff-cmd diff -x -N $pathsString";
+        my @escapedPaths = map(escapeSubversionPath($_), @$paths);
+        my $escapedPathsString = "'" . join("' '", @escapedPaths) . "'";
+        $command = "$SVN diff --diff-cmd diff -x -N $escapedPathsString";
     } elsif (isGit()) {
-        $command = "$GIT diff --no-ext-diff -U0 " . diffFromToString();
+        my $pathsString = "'" . join("' '", @$paths) . "'"; 
+        $command = "$GIT diff --no-ext-diff -U0 " . diffFromToString($gitCommit, $gitIndex, $mergeBase);
         $command .= " -- $pathsString" unless $gitCommit or $mergeBase;
     }
 
     return $command;
 }
 
-sub statusCommand(@)
+sub statusCommand($$$$)
 {
-    my @files = @_;
+    my ($paths, $gitCommit, $gitIndex, $mergeBase) = @_;
 
-    my $filesString = "\"" . join ("\" \"", @files) . "\"";
     my $command;
     if (isSVN()) {
-        $command = "$SVN stat $filesString";
+        my @escapedFiles = map(escapeSubversionPath($_), keys %$paths);
+        my $escapedFilesString = "'" . join("' '", @escapedFiles) . "'";
+        $command = "$SVN stat $escapedFilesString";
     } elsif (isGit()) {
-        $command = "$GIT diff -r --name-status -M -C " . diffFromToString();
+        my $filesString = '"' . join('" "', keys %$paths) . '"';
+        $command = "$GIT diff -r --name-status -M -C " . diffFromToString($gitCommit, $gitIndex, $mergeBase);
         $command .= " -- $filesString" unless $gitCommit;
     }
 
     return "$command 2>&1";
 }
 
-sub createPatchCommand($)
+sub createPatchCommand($$$$)
 {
-    my ($changedFilesString) = @_;
+    my ($changedFilesString, $gitCommit, $gitIndex, $mergeBase) = @_;
 
     my $command;
     if (isSVN()) {
         $command = "'$FindBin::Bin/svn-create-patch' $changedFilesString";
     } elsif (isGit()) {
-        $command = "$GIT diff -M -C " . diffFromToString();
+        $command = "$GIT diff -M -C " . diffFromToString($gitCommit, $gitIndex, $mergeBase);
         $command .= " -- $changedFilesString" unless $gitCommit;
     }
 
@@ -1508,7 +1511,8 @@ sub findOriginalFileFromSvn($)
     }
     close INFO;
     my $sourceFile;
-    open INFO, "$SVN info '$file' |" or die;
+    my $escapedFile = escapeSubversionPath($file);
+    open INFO, "$SVN info '$escapedFile' |" or die;
     while (<INFO>) {
         if (/^Copied From URL: (.+?)[\r\n]*$/) {
             $sourceFile = File::Spec->abs2rel($1, $baseUrl);
@@ -1522,17 +1526,19 @@ sub determinePropertyChanges($$$)
 {
     my ($file, $isAdd, $original) = @_;
 
+    my $escapedFile = escapeSubversionPath($file);
     my %changes;
     if ($isAdd) {
         my %addedProperties;
         my %removedProperties;
-        open PROPLIST, "$SVN proplist '$file' |" or die;
+        open PROPLIST, "$SVN proplist '$escapedFile' |" or die;
         while (<PROPLIST>) {
             $addedProperties{$1} = 1 if /^  (.+?)[\r\n]*$/ && $1 ne 'svn:mergeinfo';
         }
         close PROPLIST;
         if ($original) {
-            open PROPLIST, "$SVN proplist '$original' |" or die;
+            my $escapedOriginal = escapeSubversionPath($original);
+            open PROPLIST, "$SVN proplist '$escapedOriginal' |" or die;
             while (<PROPLIST>) {
                 next unless /^  (.+?)[\r\n]*$/;
                 my $property = $1;
@@ -1546,7 +1552,7 @@ sub determinePropertyChanges($$$)
         $changes{"A"} = [sort keys %addedProperties] if %addedProperties;
         $changes{"D"} = [sort keys %removedProperties] if %removedProperties;
     } else {
-        open DIFF, "$SVN diff '$file' |" or die;
+        open DIFF, "$SVN diff '$escapedFile' |" or die;
         while (<DIFF>) {
             if (/^Property changes on:/) {
                 while (<DIFF>) {
@@ -1588,16 +1594,16 @@ sub pluralizeAndList($$@)
     return "$plural " . join(", ", @items[0 .. $#items - 1]) . " and " . $items[-1];
 }
 
-sub generateFileList(\%)
+sub generateFileList(\%$$$)
 {
-    my ($paths) = @_;
+    my ($paths, $gitCommit, $gitIndex, $mergeBase) = @_;
 
     my @changedFiles;
     my @conflictFiles;
     my %functionLists;
     my @addedRegressionTests;
     print STDERR "  Running status to find changed, added, or removed files.\n";
-    open STAT, "-|", statusCommand(keys %$paths) or die "The status failed: $!.\n";
+    open STAT, "-|", statusCommand($paths, $gitCommit, $gitIndex, $mergeBase) or die "The status failed: $!.\n";
     while (<STAT>) {
         my $status;
         my $propertyStatus;
@@ -1656,7 +1662,7 @@ sub generateFileList(\%)
                        && !scalar(grep(/^script-tests$/i, @components));
             }
             push @changedFiles, $file if $components[$#components] ne "ChangeLog";
-        } elsif (isConflictStatus($status) || isConflictStatus($propertyStatus)) {
+        } elsif (isConflictStatus($status, $gitCommit, $gitIndex) || isConflictStatus($propertyStatus, $gitCommit, $gitIndex)) {
             push @conflictFiles, $file;
         }
         if (basename($file) ne "ChangeLog") {
@@ -1703,9 +1709,9 @@ sub isAddedStatus($)
     return $statusCodes{$status};
 }
 
-sub isConflictStatus($)
+sub isConflictStatus($$$)
 {
-    my ($status) = @_;
+    my ($status, $gitCommit, $gitIndex) = @_;
 
     my %svn = (
         "C" => 1,
@@ -1804,9 +1810,9 @@ sub testListForChangeLog(@)
     return $list;
 }
 
-sub reviewerAndDescriptionForGitCommit($)
+sub reviewerAndDescriptionForGitCommit($$)
 {
-    my ($commit) = @_;
+    my ($commit, $gitReviewer) = @_;
 
     my $description = '';
     my $reviewer;

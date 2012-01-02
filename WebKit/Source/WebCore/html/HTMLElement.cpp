@@ -210,8 +210,6 @@ void HTMLElement::parseMappedAttribute(Attribute* attr)
             addCSSProperty(attr, CSSPropertyWebkitUserSelect, CSSValueNone);
         } else if (equalIgnoringCase(value, "false"))
             addCSSProperty(attr, CSSPropertyWebkitUserDrag, CSSValueNone);
-    } else if (attr->name() == nameAttr) {
-        invalidateNodeListsCacheAfterAttributeChanged();
 #if ENABLE(MICRODATA)
     } else if (attr->name() == itempropAttr) {
         setItemProp(attr->value());
@@ -748,9 +746,9 @@ void HTMLElement::setContentEditable(Attribute* attr)
 void HTMLElement::setContentEditable(const String& enabled, ExceptionCode& ec)
 {
     if (equalIgnoringCase(enabled, "true"))
-        setAttribute(contenteditableAttr, "true", ec);
+        setAttribute(contenteditableAttr, "true");
     else if (equalIgnoringCase(enabled, "false"))
-        setAttribute(contenteditableAttr, "false", ec);
+        setAttribute(contenteditableAttr, "false");
     else if (equalIgnoringCase(enabled, "plaintext-only"))
         setAttribute(contenteditableAttr, "plaintext-only");
     else if (equalIgnoringCase(enabled, "inherit"))

@@ -86,23 +86,13 @@ public:
     // Allocates an object from the arena.
     template<class T> T* allocateObject()
     {
-        void* ptr = allocateBase<T>();
-        if (ptr) {
-            // Use placement operator new to allocate a T at this location.
-            new(ptr) T();
-        }
-        return static_cast<T*>(ptr);
+        return new (allocateBase<T>()) T();
     }
 
     // Allocates an object from the arena, calling a single-argument constructor.
     template<class T, class Argument1Type> T* allocateObject(const Argument1Type& argument1)
     {
-        void* ptr = allocateBase<T>();
-        if (ptr) {
-            // Use placement operator new to allocate a T at this location.
-            new(ptr) T(argument1);
-        }
-        return static_cast<T*>(ptr);
+        return new (allocateBase<T>()) T(argument1);
     }
 
     // The initial size of allocated chunks; increases as necessary to
@@ -112,10 +102,9 @@ public:
     };
 
 protected:
-    ~PODArena() { }
+    virtual ~PODArena() { }
     friend class WTF::RefCounted<PODArena>;
 
-private:
     PODArena()
         : m_allocator(FastMallocAllocator::create())
         , m_current(0)
@@ -173,7 +162,7 @@ private:
 
         // Frees the memory allocated from the Allocator in the
         // constructor.
-        ~Chunk()
+        virtual ~Chunk()
         {
             m_allocator->free(m_base);
         }
@@ -194,7 +183,7 @@ private:
             return result;
         }
 
-    private:
+    protected:
         Allocator* m_allocator;
         uint8_t* m_base;
         size_t m_size;

@@ -51,6 +51,7 @@ from webkitpy.common import find_files
 from webkitpy.common.system import logutils
 from webkitpy.common.system import path
 from webkitpy.common.system.executive import ScriptError
+from webkitpy.common.system.systemhost import SystemHost
 from webkitpy.layout_tests import read_checksum_from_png
 from webkitpy.layout_tests.models.test_configuration import TestConfiguration
 from webkitpy.layout_tests.port import config as port_config
@@ -87,13 +88,7 @@ class Port(object):
 
     ALL_BUILD_TYPES = ('debug', 'release')
 
-    def __init__(self, host,
-                 port_name=None, options=None,
-                 executive=None,
-                 user=None,
-                 filesystem=None,
-                 config=None,
-                 **kwargs):
+    def __init__(self, host, port_name=None, options=None, config=None, **kwargs):
 
         # These are default values that should be overridden in a subclasses.
         self._name = port_name or self.port_name  # Subclasses may append a -VERSION (like mac-leopard) or other qualifiers.
@@ -105,22 +100,12 @@ class Port(object):
         # FIXME: Ideally we'd have a package-wide way to get a
         # well-formed options object that had all of the necessary
         # options defined on it.
-        self.options = options or DummyOptions()
+        self._options = options or DummyOptions()
 
         self.host = host
-
-        # FIXME: Remove thes accessors once all callers have moved to using self.host.
-        self.executive = executive or self.host.executive
-        self.user = user or self.host.user
-        self.filesystem = filesystem or self.host.filesystem
-        self.config = config or port_config.Config(self.executive, self.filesystem)
-
-        # FIXME: Remove all of the old "protected" versions when we can.
-        self._options = self.options
-        self._executive = self.executive
-        self._filesystem = self.filesystem
-        self._user = self.user
-        self._config = self.config
+        self._executive = host.executive
+        self._filesystem = host.filesystem
+        self._config = config or port_config.Config(self._executive, self._filesystem)
 
         self._helper = None
         self._http_server = None
@@ -169,7 +154,7 @@ class Port(object):
         free_memory = self.host.platform.free_bytes_memory()
         if free_memory:
             bytes_per_drt = 200 * 1024 * 1024  # Assume each DRT needs 200MB to run.
-            supportable_instances = free_memory / bytes_per_drt
+            supportable_instances = max(free_memory / bytes_per_drt, 1)  # Always use one process, even if we don't have space for it.
             if supportable_instances < cpu_count:
                 # FIXME: The Printer isn't initialized when this is called, so using _log would just show an unitialized logger error.
                 print "This machine could support %s child processes, but only has enough memory for %s." % (cpu_count, supportable_instances)
@@ -508,7 +493,7 @@ class Port(object):
         """Return the list of tests found."""
         # When collecting test cases, skip these directories
         skipped_directories = set(['.svn', '_svn', 'resources', 'script-tests', 'reference', 'reftest'])
-        files = find_files.find(self.filesystem, self.layout_tests_dir(), paths, skipped_directories, Port._is_test_file)
+        files = find_files.find(self._filesystem, self.layout_tests_dir(), paths, skipped_directories, Port._is_test_file)
         return set([self.relative_test_filename(f) for f in files])
 
     # When collecting test cases, we include any file with these extensions.
@@ -766,7 +751,7 @@ class Port(object):
     def show_results_html_file(self, results_filename):
         """This routine should display the HTML file pointed at by
         results_filename in a users' browser."""
-        return self._user.open_url(results_filename)
+        return self.host.user.open_url(results_filename)
 
     def create_driver(self, worker_number):
         """Return a newly created Driver subclass for starting/stopping the test driver."""
@@ -842,7 +827,7 @@ class Port(object):
     def test_configuration(self):
         """Returns the current TestConfiguration for the port."""
         if not self._test_configuration:
-            self._test_configuration = TestConfiguration.from_port(self)
+            self._test_configuration = TestConfiguration(self._version, self._architecture, self._options.configuration.lower(), self._graphics_type)
         return self._test_configuration
 
     # FIXME: Belongs on a Platform object.

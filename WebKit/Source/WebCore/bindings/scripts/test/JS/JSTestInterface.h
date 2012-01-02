@@ -36,7 +36,7 @@ public:
     typedef JSDOMWrapper Base;
     static JSTestInterface* create(JSC::Structure* structure, JSDOMGlobalObject* globalObject, PassRefPtr<TestInterface> impl)
     {
-        JSTestInterface* ptr = new (JSC::allocateCell<JSTestInterface>(globalObject->globalData().heap)) JSTestInterface(structure, globalObject, impl);
+        JSTestInterface* ptr = new (NotNull, JSC::allocateCell<JSTestInterface>(globalObject->globalData().heap)) JSTestInterface(structure, globalObject, impl);
         ptr->finishCreation(globalObject->globalData());
         return ptr;
     }
@@ -53,6 +53,9 @@ public:
     }
 
     static JSC::JSValue getConstructor(JSC::ExecState*, JSC::JSGlobalObject*);
+
+    // Custom attributes
+    JSC::JSValue str3(TestInterface*, JSC::ExecState*) const;
     TestInterface* impl() const { return m_impl; }
     void releaseImpl() { m_impl->deref(); m_impl = 0; }
 
@@ -89,7 +92,7 @@ public:
     static JSC::JSObject* self(JSC::ExecState*, JSC::JSGlobalObject*);
     static JSTestInterfacePrototype* create(JSC::JSGlobalData& globalData, JSC::JSGlobalObject* globalObject, JSC::Structure* structure)
     {
-        JSTestInterfacePrototype* ptr = new (JSC::allocateCell<JSTestInterfacePrototype>(globalData.heap)) JSTestInterfacePrototype(globalData, globalObject, structure);
+        JSTestInterfacePrototype* ptr = new (NotNull, JSC::allocateCell<JSTestInterfacePrototype>(globalData.heap)) JSTestInterfacePrototype(globalData, globalObject, structure);
         ptr->finishCreation(globalData);
         return ptr;
     }
@@ -115,7 +118,7 @@ public:
     typedef DOMConstructorObject Base;
     static JSTestInterfaceConstructor* create(JSC::ExecState* exec, JSC::Structure* structure, JSDOMGlobalObject* globalObject)
     {
-        JSTestInterfaceConstructor* ptr = new (JSC::allocateCell<JSTestInterfaceConstructor>(*exec->heap())) JSTestInterfaceConstructor(structure, globalObject);
+        JSTestInterfaceConstructor* ptr = new (NotNull, JSC::allocateCell<JSTestInterfaceConstructor>(*exec->heap())) JSTestInterfaceConstructor(structure, globalObject);
         ptr->finishCreation(exec, globalObject);
         return ptr;
     }

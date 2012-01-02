@@ -78,6 +78,10 @@ public:
     void deleteIndex(const String& name, ExceptionCode&);
 
     PassRefPtr<IDBRequest> openCursor(ScriptExecutionContext*, PassRefPtr<IDBKeyRange>, unsigned short direction, ExceptionCode&); 
+    PassRefPtr<IDBRequest> count(ScriptExecutionContext* context, ExceptionCode& ec) { return count(context, 0, ec); }
+    PassRefPtr<IDBRequest> count(ScriptExecutionContext*, PassRefPtr<IDBKeyRange>, ExceptionCode&);
+
+    void transactionFinished();
 
 private:
     IDBObjectStore(PassRefPtr<IDBObjectStoreBackendInterface>, IDBTransaction*);
@@ -85,6 +89,9 @@ private:
 
     RefPtr<IDBObjectStoreBackendInterface> m_backend;
     RefPtr<IDBTransaction> m_transaction;
+
+    typedef HashMap<String, RefPtr<IDBIndex> > IDBIndexMap;
+    IDBIndexMap m_indexMap;
 };
 
 } // namespace WebCore

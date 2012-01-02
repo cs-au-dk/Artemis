@@ -32,19 +32,17 @@ namespace JSC {
 
         static RegExpObject* create(ExecState* exec, JSGlobalObject* globalObject, Structure* structure, RegExp* regExp)
         {
-            RegExpObject* object = new (allocateCell<RegExpObject>(*exec->heap())) RegExpObject(globalObject, structure, regExp);
+            RegExpObject* object = new (NotNull, allocateCell<RegExpObject>(*exec->heap())) RegExpObject(globalObject, structure, regExp);
             object->finishCreation(globalObject);
             return object;
         }
         
         static RegExpObject* create(JSGlobalData& globalData, JSGlobalObject* globalObject, Structure* structure, RegExp* regExp)
         {
-            RegExpObject* object = new (allocateCell<RegExpObject>(globalData.heap)) RegExpObject(globalObject, structure, regExp);
+            RegExpObject* object = new (NotNull, allocateCell<RegExpObject>(globalData.heap)) RegExpObject(globalObject, structure, regExp);
             object->finishCreation(globalObject);
             return object;
         }
-
-        virtual ~RegExpObject();
 
         void setRegExp(JSGlobalData& globalData, RegExp* r) { d->regExp.set(globalData, this, r); }
         RegExp* regExp() const { return d->regExp.get(); }
@@ -79,6 +77,8 @@ namespace JSC {
     protected:
         RegExpObject(JSGlobalObject*, Structure*, RegExp*);
         void finishCreation(JSGlobalObject*);
+        static void destroy(JSCell*);
+
         static const unsigned StructureFlags = OverridesVisitChildren | OverridesGetOwnPropertySlot | Base::StructureFlags;
 
         static void visitChildren(JSCell*, SlotVisitor&);

@@ -83,6 +83,8 @@ public:
     // Done, close any open tags, etc.
     void finished();
 
+    void setShouldSkipLeadingNewline(bool shouldSkip) { m_shouldSkipLeadingNewline = shouldSkip; }
+
     static bool scriptEnabled(Frame*);
     static bool pluginsEnabled(Frame*);
 
@@ -109,7 +111,6 @@ private:
         InCellMode,
         InSelectMode,
         InSelectInTableMode,
-        InForeignContentMode,
         AfterBodyMode,
         InFramesetMode,
         AfterFramesetMode,
@@ -149,6 +150,7 @@ private:
     void processAnyOtherEndTagForInBody(AtomicHTMLToken&);
 
     void processCharacterBuffer(ExternalCharacterTokenBuffer&);
+    inline void processCharacterBufferForInBody(ExternalCharacterTokenBuffer&);
 
     void processFakeStartTag(const QualifiedName&, PassRefPtr<NamedNodeMap> attributes = 0);
     void processFakeEndTag(const QualifiedName&);
@@ -168,10 +170,8 @@ private:
     void defaultForAfterHead();
     void defaultForInTableText();
 
-    void prepareToReprocessToken();
-
-    void reprocessStartTag(AtomicHTMLToken&);
-    void reprocessEndTag(AtomicHTMLToken&);
+    inline bool shouldProcessTokenInForeignContent(AtomicHTMLToken&);
+    void processTokenInForeignContent(AtomicHTMLToken&);
 
     PassRefPtr<NamedNodeMap> attributesForIsindexInput(AtomicHTMLToken&);
 
@@ -202,9 +202,6 @@ private:
     }
 
     void resetInsertionModeAppropriately();
-
-    void processForeignContentUsingInBodyModeAndResetMode(AtomicHTMLToken& token);
-    void resetForeignInsertionMode();
 
     class FragmentParsingContext {
         WTF_MAKE_NONCOPYABLE(FragmentParsingContext);
@@ -244,6 +241,8 @@ private:
     // http://www.whatwg.org/specs/web-apps/current-work/multipage/tokenization.html#pending-table-character-tokens
     StringBuilder m_pendingTableCharacters;
 
+    bool m_shouldSkipLeadingNewline;
+
     // We access parser because HTML5 spec requires that we be able to change the state of the tokenizer
     // from within parser actions. We also need it to track the current position.
     HTMLDocumentParser* m_parser;
@@ -257,8 +256,6 @@ private:
     TextPosition m_lastScriptElementStartPosition;
 
     bool m_usePreHTML5ParserQuirks;
-
-    bool m_hasPendingForeignInsertionModeSteps;
 };
 
 }

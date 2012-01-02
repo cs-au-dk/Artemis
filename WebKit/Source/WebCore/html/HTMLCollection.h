@@ -31,6 +31,7 @@
 
 namespace WebCore {
 
+class Document;
 class Element;
 class Node;
 class NodeList;
@@ -40,6 +41,7 @@ struct CollectionCache;
 class HTMLCollection : public RefCounted<HTMLCollection> {
 public:
     static PassRefPtr<HTMLCollection> create(PassRefPtr<Node> base, CollectionType);
+    static PassRefPtr<HTMLCollection> createForCachingOnDocument(Document*, CollectionType);
     virtual ~HTMLCollection();
     
     unsigned length() const;
@@ -51,31 +53,38 @@ public:
 
     Node* firstItem() const;
 
+    bool hasNamedItem(const AtomicString& name) const;
     void namedItems(const AtomicString& name, Vector<RefPtr<Node> >&) const;
 
     PassRefPtr<NodeList> tags(const String&);
 
-    Node* base() const { return m_base.get(); }
+    Node* base() const { return m_base; }
     CollectionType type() const { return static_cast<CollectionType>(m_type); }
 
 protected:
-    HTMLCollection(PassRefPtr<Node> base, CollectionType, CollectionCache*);
-    HTMLCollection(PassRefPtr<Node> base, CollectionType);
+    HTMLCollection(PassRefPtr<Node> base, CollectionType, CollectionCache* = 0);
+    HTMLCollection(Document*, CollectionType);
 
     CollectionCache* info() const { return m_info; }
     void resetCollectionInfo() const;
 
+    virtual void updateNameCache() const;
     virtual Element* itemAfter(Element*) const;
-    bool checkForNameMatch(Element*, bool checkName, const AtomicString& name) const;
 
 private:
-    virtual unsigned calcLength() const;
-    virtual void updateNameCache() const;
+    static bool shouldIncludeChildren(CollectionType);
+    bool checkForNameMatch(Element*, bool checkName, const AtomicString& name) const;
 
+    virtual unsigned calcLength() const;
+
+    bool isAcceptableElement(Element*) const;
+
+    bool m_baseIsRetained : 1;
+    bool m_includeChildren : 1;
     mutable bool m_ownsInfo : 1;
     unsigned m_type : 5; // CollectionType
 
-    RefPtr<Node> m_base;
+    Node* m_base;
 
     mutable CollectionCache* m_info;
 };

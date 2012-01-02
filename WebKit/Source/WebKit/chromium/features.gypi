@@ -37,6 +37,7 @@
       'ENABLE_BLOB_SLICE=1',
       'ENABLE_CHANNEL_MESSAGING=1',
       'ENABLE_CLIENT_BASED_GEOLOCATION=1',
+      'ENABLE_CSS_FILTERS=1',
       'ENABLE_DASHBOARD_SUPPORT=0',
       'ENABLE_DATA_TRANSFER_ITEMS=1',
       'ENABLE_DETAILS=1',
@@ -52,6 +53,7 @@
       'ENABLE_GESTURE_RECOGNIZER=1',
       'ENABLE_ICONDATABASE=0',
       'ENABLE_INDEXED_DATABASE=1',
+      'ENABLE_INPUT_COLOR=0',
       'ENABLE_INPUT_SPEECH=1',
       'ENABLE_INPUT_TYPE_COLOR=0',
       'ENABLE_INPUT_TYPE_DATE=0',
@@ -111,7 +113,7 @@
     # through GYP_DEFINES.
     'variables': {
       'use_accelerated_compositing%': 1,
-      'enable_skia_text%': 0,
+      'enable_skia_text%': 1,
       'enable_svg%': 1,
       'enable_viewport%': 0,
       'enable_touch_events%': 1,

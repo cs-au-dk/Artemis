@@ -66,6 +66,7 @@
 
 #include <wtf/CurrentTime.h>
 #include <wtf/TemporaryChange.h>
+#include <wtf/UnusedParam.h>
 
 #if USE(ACCELERATED_COMPOSITING)
 #include "RenderLayerCompositor.h"
@@ -82,6 +83,10 @@
 
 #if USE(TILED_BACKING_STORE)
 #include "TiledBackingStore.h"
+#endif
+
+#if ENABLE(THREADED_SCROLLING)
+#include "ScrollingCoordinator.h"
 #endif
 
 namespace WebCore {
@@ -119,8 +124,23 @@ static inline RenderView* rootRenderer(const FrameView* view)
     return view->frame() ? view->frame()->contentRenderer() : 0;
 }
 
+static inline ScrollableAreaClient* scrollableAreaClient(Frame* frame)
+{
+#if ENABLE(THREADED_SCROLLING)
+    if (Page* page = frame ? frame->page() : 0) {
+        if (ScrollingCoordinator* scrollingCoordinator = page->scrollingCoordinator())
+            return scrollingCoordinator->scrollableAreaClientForFrame(frame);
+    }
+#else
+    UNUSED_PARAM(frame);
+#endif
+
+    return 0;
+}
+
 FrameView::FrameView(Frame* frame)
-    : m_frame(frame)
+    : ScrollView(scrollableAreaClient(frame))
+    , m_frame(frame)
     , m_canHaveScrollbars(true)
     , m_slowRepaintObjectCount(0)
     , m_fixedObjectCount(0)
@@ -864,7 +884,7 @@ void FrameView::didMoveOnscreen()
     RenderView* root = rootRenderer(this);
     if (root)
         root->didMoveOnscreen();
-    scrollAnimator()->contentAreaDidShow();
+    contentAreaDidShow();
 }
 
 void FrameView::willMoveOffscreen()
@@ -872,7 +892,7 @@ void FrameView::willMoveOffscreen()
     RenderView* root = rootRenderer(this);
     if (root)
         root->willMoveOffscreen();
-    scrollAnimator()->contentAreaDidHide();
+    contentAreaDidHide();
 }
 
 RenderObject* FrameView::layoutRoot(bool onlyDuringLayout) const
@@ -1231,6 +1251,13 @@ void FrameView::addWidgetToUpdate(RenderEmbeddedObject* object)
 {
     if (!m_widgetUpdateSet)
         m_widgetUpdateSet = adoptPtr(new RenderEmbeddedObjectSet);
+
+    // Tell the DOM element that it needs a widget update.
+    Node* node = object->node();
+    if (node->hasTagName(objectTag) || node->hasTagName(embedTag)) {
+        HTMLPlugInImageElement* pluginElement = static_cast<HTMLPlugInImageElement*>(node);
+        pluginElement->setNeedsWidgetUpdate(true);
+    }
 
     m_widgetUpdateSet->add(object);
 }
@@ -2213,9 +2240,12 @@ void FrameView::updateWidget(RenderEmbeddedObject* object)
         return;
 
     // FIXME: This could turn into a real virtual dispatch if we defined
-    // updateWidget(bool) on HTMLElement.
-    if (ownerElement->hasTagName(objectTag) || ownerElement->hasTagName(embedTag))
-        static_cast<HTMLPlugInImageElement*>(ownerElement)->updateWidget(CreateAnyWidgetType);
+    // updateWidget(PluginCreationOption) on HTMLElement.
+    if (ownerElement->hasTagName(objectTag) || ownerElement->hasTagName(embedTag)) {
+        HTMLPlugInImageElement* pluginElement = static_cast<HTMLPlugInImageElement*>(ownerElement);
+        if (pluginElement->needsWidgetUpdate())
+            pluginElement->updateWidget(CreateAnyWidgetType);
+    }
     // FIXME: It is not clear that Media elements need or want this updateWidget() call.
 #if ENABLE(PLUGIN_PROXY_FOR_VIDEO)
     else if (ownerElement->isMediaElement())
@@ -2618,7 +2648,7 @@ void FrameView::notifyPageThatContentAreaWillPaint() const
 
     HashSet<ScrollableArea*>::const_iterator end = scrollableAreas->end(); 
     for (HashSet<ScrollableArea*>::const_iterator it = scrollableAreas->begin(); it != end; ++it)
-        (*it)->scrollAnimator()->contentAreaWillPaint();
+        (*it)->contentAreaWillPaint();
 }
 
 bool FrameView::scrollAnimatorEnabled() const

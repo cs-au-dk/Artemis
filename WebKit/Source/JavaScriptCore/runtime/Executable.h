@@ -77,6 +77,8 @@ namespace JSC {
     public:
         typedef JSCell Base;
 
+        static void destroy(JSCell*);
+
         bool isHostFunction() const
         {
             ASSERT((m_numParametersForCall == NUM_PARAMETERS_IS_HOST) == (m_numParametersForConstruct == NUM_PARAMETERS_IS_HOST));
@@ -184,10 +186,10 @@ namespace JSC {
             ASSERT(globalData.canUseJIT());
             NativeExecutable* executable;
             if (!callThunk) {
-                executable = new (allocateCell<NativeExecutable>(globalData.heap)) NativeExecutable(globalData, function, constructor);
+                executable = new (NotNull, allocateCell<NativeExecutable>(globalData.heap)) NativeExecutable(globalData, function, constructor);
                 executable->finishCreation(globalData, JITCode(), JITCode(), intrinsic);
             } else {
-                executable = new (allocateCell<NativeExecutable>(globalData.heap)) NativeExecutable(globalData, function, constructor);
+                executable = new (NotNull, allocateCell<NativeExecutable>(globalData.heap)) NativeExecutable(globalData, function, constructor);
                 executable->finishCreation(globalData, JITCode::HostFunction(callThunk), JITCode::HostFunction(constructThunk), intrinsic);
             }
             globalData.heap.addFinalizer(executable, &finalize);
@@ -199,14 +201,14 @@ namespace JSC {
         static NativeExecutable* create(JSGlobalData& globalData, NativeFunction function, NativeFunction constructor)
         {
             ASSERT(!globalData.canUseJIT());
-            NativeExecutable* executable = new (allocateCell<NativeExecutable>(globalData.heap)) NativeExecutable(globalData, function, constructor);
+            NativeExecutable* executable = new (NotNull, allocateCell<NativeExecutable>(globalData.heap)) NativeExecutable(globalData, function, constructor);
             executable->finishCreation(globalData);
             globalData.heap.addFinalizer(executable, &finalize);
             return executable;
         }
 #endif
 
-        virtual ~NativeExecutable();
+        static void destroy(JSCell*);
 
         NativeFunction function() { return m_function; }
         NativeFunction constructor() { return m_constructor; }
@@ -274,6 +276,8 @@ namespace JSC {
         {
         }
 
+        static void destroy(JSCell*);
+
         const SourceCode& source() { return m_source; }
         intptr_t sourceID() const { return m_source.provider()->asID(); }
         const UString& sourceURL() const { return m_source.provider()->url(); }
@@ -318,7 +322,7 @@ namespace JSC {
     public:
         typedef ScriptExecutable Base;
 
-        virtual ~EvalExecutable();
+        static void destroy(JSCell*);
 
         JSObject* compile(ExecState* exec, ScopeChainNode* scopeChainNode)
         {
@@ -344,7 +348,7 @@ namespace JSC {
 
         static EvalExecutable* create(ExecState* exec, const SourceCode& source, bool isInStrictContext) 
         {
-            EvalExecutable* executable = new (allocateCell<EvalExecutable>(*exec->heap())) EvalExecutable(exec, source, isInStrictContext);
+            EvalExecutable* executable = new (NotNull, allocateCell<EvalExecutable>(*exec->heap())) EvalExecutable(exec, source, isInStrictContext);
             executable->finishCreation(exec->globalData());
             exec->globalData().heap.addFinalizer(executable, &finalize);
             return executable;
@@ -385,13 +389,13 @@ namespace JSC {
 
         static ProgramExecutable* create(ExecState* exec, const SourceCode& source)
         {
-            ProgramExecutable* executable = new (allocateCell<ProgramExecutable>(*exec->heap())) ProgramExecutable(exec, source);
+            ProgramExecutable* executable = new (NotNull, allocateCell<ProgramExecutable>(*exec->heap())) ProgramExecutable(exec, source);
             executable->finishCreation(exec->globalData());
             exec->globalData().heap.addFinalizer(executable, &finalize);
             return executable;
         }
 
-        virtual ~ProgramExecutable();
+        static void destroy(JSCell*);
 
         JSObject* compile(ExecState* exec, ScopeChainNode* scopeChainNode)
         {
@@ -454,7 +458,7 @@ namespace JSC {
 
         static FunctionExecutable* create(ExecState* exec, const Identifier& name, const SourceCode& source, bool forceUsesArguments, FunctionParameters* parameters, bool isInStrictContext, int firstLine, int lastLine)
         {
-            FunctionExecutable* executable = new (allocateCell<FunctionExecutable>(*exec->heap())) FunctionExecutable(exec, name, source, forceUsesArguments, parameters, isInStrictContext);
+            FunctionExecutable* executable = new (NotNull, allocateCell<FunctionExecutable>(*exec->heap())) FunctionExecutable(exec, name, source, forceUsesArguments, parameters, isInStrictContext);
             executable->finishCreation(exec->globalData(), name, firstLine, lastLine);
             exec->globalData().heap.addFinalizer(executable, &finalize);
             return executable;
@@ -462,13 +466,13 @@ namespace JSC {
 
         static FunctionExecutable* create(JSGlobalData& globalData, const Identifier& name, const SourceCode& source, bool forceUsesArguments, FunctionParameters* parameters, bool isInStrictContext, int firstLine, int lastLine)
         {
-            FunctionExecutable* executable = new (allocateCell<FunctionExecutable>(globalData.heap)) FunctionExecutable(globalData, name, source, forceUsesArguments, parameters, isInStrictContext);
+            FunctionExecutable* executable = new (NotNull, allocateCell<FunctionExecutable>(globalData.heap)) FunctionExecutable(globalData, name, source, forceUsesArguments, parameters, isInStrictContext);
             executable->finishCreation(globalData, name, firstLine, lastLine);
             globalData.heap.addFinalizer(executable, &finalize);
             return executable;
         }
 
-        virtual ~FunctionExecutable();
+        static void destroy(JSCell*);
 
         JSFunction* make(ExecState* exec, ScopeChainNode* scopeChain)
         {

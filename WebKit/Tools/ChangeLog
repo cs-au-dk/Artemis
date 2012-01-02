@@ -1,3 +1,752 @@
+2011-12-20  Kentaro Hara  <haraken@chromium.org>
+
+        Replace webkitperl/run-leaks_unittest/RunLeaks.pm with webkitperl/LoadAsModule.pm
+        https://bugs.webkit.org/show_bug.cgi?id=74836
+
+        Reviewed by David Kilzer.
+
+        webkitperl/run-leaks_unittest/RunLeaks.pm can be used for unit-testing of run-leaks only.
+        This patch creates more generalized webkitperl/LoadAsModule.pm, which can be also used
+        for unit-testing of other Perl scripts. We are planning to use it for unit-testing
+        of prepare-ChangeLog.
+
+        Using LoadAsModule.pm, you can load a Perl script as follows.
+        The first argument is the arbitrary package name you want to use, and the second argument
+        is the name of the Perl script you want to load.
+
+            use LoadAsModule qw(RunLeaks run-leaks);
+            RunLeaks::someFunctionDefinedInRunLeaks(...);
+
+        Tests: Scripts/webkitperl/run-leaks_unittest/run-leaks-report-v1.0.pl
+               Scripts/webkitperl/run-leaks_unittest/run-leaks-report-v2.0-new.pl
+               Scripts/webkitperl/run-leaks_unittest/run-leaks-report-v2.0-old.pl
+
+        * Scripts/webkitperl/LoadAsModule.pm: Added.
+        * Scripts/webkitperl/run-leaks_unittest/RunLeaks.pm: Removed.
+        (import):
+        (readFile):
+        * Scripts/webkitperl/run-leaks_unittest/run-leaks-report-v1.0.pl: Used LoadAsModule instead of RunLeaks.
+        * Scripts/webkitperl/run-leaks_unittest/run-leaks-report-v2.0-new.pl: Ditto.
+        * Scripts/webkitperl/run-leaks_unittest/run-leaks-report-v2.0-old.pl: Ditto.
+
+2011-12-20  Balazs Kelemen  <kbalazs@webkit.org>
+
+        [Qt] WK2 Debugging quirks need some improvement
+        https://bugs.webkit.org/show_bug.cgi?id=74859
+
+        Reviewed by Simon Hausmann.
+
+        Improvements added to make debugging WebKit2 more
+        confortable and efficient:
+        1. Unify debugging quirks. From now all of them are controlled
+        by the QT_WEBKIT2_DEBUG environment variable.
+        2. Disable crash handlers for WebKitTestRunner if debugging quirks
+        are used to make it possible to use postmortem debugging via core dumps
+        which is extremely useful for debugging bugs triggered by layout tests.
+        3. Disable test timeout for WebKitTestRunner if debugging quirks
+        are used because that makes debugging impossible.
+
+        * WebKitTestRunner/InjectedBundle/qt/InjectedBundleQt.cpp:
+        (WTR::InjectedBundle::platformInitialize):
+        * WebKitTestRunner/InjectedBundle/qt/LayoutTestControllerQt.cpp:
+        (WTR::LayoutTestController::initializeWaitToDumpWatchdogTimerIfNeeded):
+        * WebKitTestRunner/qt/TestControllerQt.cpp:
+        (WTR::TestController::platformRunUntil):
+
+2011-12-20  Rafael Brandao  <rafael.lobo@openbossa.org>
+
+        [Qt][WK2] Implement favicon support
+        https://bugs.webkit.org/show_bug.cgi?id=71082
+
+        Reviewed by Simon Hausmann.
+
+        A favorite icon was added on MiniBrowser's url bar as example.
+        We display a default icon when the page doesn't have an icon ready.
+
+        * MiniBrowser/qt/MiniBrowser.qrc:
+        * MiniBrowser/qt/icons/favicon.png: Added.
+        * MiniBrowser/qt/qml/BrowserWindow.qml:
+
+2011-12-19  Sam Weinig  <sam@webkit.org>
+
+        Add support for scrollLineDown: and scrollLineUp: NSResponder selectors
+        https://bugs.webkit.org/show_bug.cgi?id=74907
+
+        Reviewed by Dan Bernstein.
+
+        Add ScrollByLineCommands API test.
+
+        * TestWebKitAPI/TestWebKitAPI.xcodeproj/project.pbxproj:
+        * TestWebKitAPI/Tests/WebKit2/mac/EditorCommands.mm: Added.
+        * TestWebKitAPI/Tests/WebKit2/simple-tall.html: Added.
+
+2011-12-19  Dirk Pranke  <dpranke@chromium.org>
+
+        webkitpy: remove port.executive, port.filesystem, port.user properties
+        https://bugs.webkit.org/show_bug.cgi?id=74896
+
+        Reviewed by Eric Seidel.
+
+        Following on the refactoring of the port and host objects, this
+        removes the public executive, filesystem, and user properties
+        from the Port interface (protected versions of executive and
+        filesystem still exist). There is still some more clean up to
+        make the code more consistent and rearrange some other files to
+        talk to Hosts directly instead of getting them off of the Port
+        class.
+
+        * Scripts/webkitpy/layout_tests/controllers/manager.py:
+        (Manager.__init__):
+        (Manager.results_directory):
+        (Manager._log_worker_stack):
+        * Scripts/webkitpy/layout_tests/controllers/manager_unittest.py:
+        (ManagerTest.test_fallback_path_in_config):
+        * Scripts/webkitpy/layout_tests/controllers/manager_worker_broker.py:
+        (_InlineManager.start_worker):
+        (_InlineWorkerConnection.__init__):
+        * Scripts/webkitpy/layout_tests/controllers/worker.py:
+        (Worker.safe_init):
+        * Scripts/webkitpy/layout_tests/models/test_configuration.py:
+        (TestConfiguration.from_port):
+        * Scripts/webkitpy/layout_tests/port/base.py:
+        (Port.__init__):
+        (Port.tests):
+        (Port.show_results_html_file):
+        * Scripts/webkitpy/layout_tests/port/base_unittest.py:
+        (PortTest.test_layout_tests_skipping):
+        (PortTest.test_test_dirs):
+        * Scripts/webkitpy/layout_tests/run_webkit_tests.py:
+        (_set_up_derived_options):
+        * Scripts/webkitpy/performance_tests/perftestsrunner.py:
+        (PerfTestsRunner.__init__):
+        * Scripts/webkitpy/to_be_moved/rebaseline_chromium_webkit_tests.py:
+        (HtmlGenerator.__init__):
+        (HtmlGenerator.show_html):
+        (real_main):
+        * Scripts/webkitpy/to_be_moved/rebaseline_chromium_webkit_tests_unittest.py:
+        (TestHtmlGenerator.make_generator):
+
+2011-12-19  Daniel Bates  <dbates@webkit.org>
+
+        Pass command line arguments to GDB when debugging a Mac WebKit application
+        https://bugs.webkit.org/show_bug.cgi?id=72829
+
+        Reviewed by David Kilzer.
+
+        Pass through any command line arguments given to debug-{safari, minibrowser}
+        to GDB so that they may influence the application instance launched by GDB.
+
+        * Scripts/webkitdirs.pm:
+        (execMacWebKitAppForDebugging):
+
+2011-12-19  Dirk Pranke  <dpranke@chromium.org>
+
+        webkitpy: remove executive,filesystem,user parameters from Port constructor
+        https://bugs.webkit.org/show_bug.cgi?id=74878
+
+        Reviewed by Eric Seidel.
+
+        This change concludes the refactoring that makes Host a required
+        parameter for Port and ensures that all access to filesystem,
+        executives, etc. is going through the Host.
+
+        * Scripts/webkitpy/layout_tests/port/base.py:
+        (Port.__init__):
+
+2011-12-19  Dirk Pranke  <dpranke@chromium.org>
+
+        webkitpy: finish refactoring port classes to make a host mandatory
+        https://bugs.webkit.org/show_bug.cgi?id=74566
+
+        Reviewed by Eric Seidel.
+
+        This change makes all Port objects take a required (System)Host
+        parameter, and updates the TestPort object to no longer create a
+        mock filesystem or add files to the existing filesystem by
+        default.
+
+        * Scripts/webkitpy/layout_tests/port/base.py:
+        (Port.__init__):
+        * Scripts/webkitpy/layout_tests/port/factory.py:
+        (PortFactory.__init__):
+        (PortFactory._get_kwargs):
+        * Scripts/webkitpy/layout_tests/port/test.py:
+        (TestInstance.__init__):
+        (TestPort.__init__):
+        * Scripts/webkitpy/layout_tests/run_webkit_tests_integrationtest.py:
+        (passing_run):
+        (logging_run):
+        (get_tests_run):
+        (MainTest.test_single_file):
+        (MainTest.test_stderr_is_saved):
+        (MainTest.test_test_list):
+        (MainTest.test_test_list_with_prefix):
+        (MainTest.test_missing_and_unexpected_results):
+        (MainTest.test_missing_and_unexpected_results_with_custom_exit_code):
+        (MainTest.test_crash_with_stderr):
+        (MainTest.test_no_image_failure_with_image_diff):
+        (MainTest.test_crash_log):
+        (MainTest.test_web_process_crash_log):
+        (MainTest.test_exit_after_n_failures_upload):
+        (MainTest.test_results_directory_absolute):
+        (MainTest.test_results_directory_relative):
+        (MainTest.test_retries_directory):
+        (MainTest.test_tolerance.get_port_for_run):
+        (MainTest.test_reftest_should_not_use_naming_convention_if_not_listed_in_reftestlist):
+        (EndToEndTest.test_end_to_end):
+        (EndToEndTest.test_reftest_with_two_notrefs):
+        (RebaselineTest.test_reset_results):
+        (RebaselineTest.test_missing_results):
+        (RebaselineTest.test_new_baseline):
+        * Scripts/webkitpy/to_be_moved/rebaseline_chromium_webkit_tests.py:
+        (Rebaseliner.__init__):
+        (main):
+        (real_main):
+        * Scripts/webkitpy/to_be_moved/rebaseline_chromium_webkit_tests_unittest.py:
+        (test_host_port_and_filesystem):
+        (TestRebaseliner.make_rebaseliner):
+        (TestRealMain.test_all_platforms):
+        (TestHtmlGenerator.make_generator):
+
+2011-12-19  Dirk Pranke  <dpranke@chromium.org>
+
+        webkitpy: update unit tests in preparation for making host a mandatory parameter to Port objects
+        https://bugs.webkit.org/show_bug.cgi?id=74562
+
+        Reviewed by Eric Seidel.
+
+        Apart from a minor change to style/checkers/test_expectations.py
+        to take a host as a parameter to a TestExpectationsChecker(),
+        there are only refactoring changes to unit tests here.
+
+        * Scripts/webkitpy/layout_tests/controllers/test_result_writer_unittest.py:
+        (TestResultWriterTest.test_reftest_diff_image):
+        * Scripts/webkitpy/layout_tests/layout_package/json_results_generator_unittest.py:
+        (JSONGeneratorTest._test_json_generation):
+        (JSONGeneratorTest.test_test_timings_trie):
+        * Scripts/webkitpy/layout_tests/models/test_expectations_unittest.py:
+        (Base.__init__):
+        * Scripts/webkitpy/layout_tests/port/base_unittest.py:
+        (PortTest.make_port):
+        (PortTest.test_layout_tests_skipping):
+        (PortTest.test_test_dirs):
+        (PortTest.test_additional_platform_directory):
+        (PortTest.test_uses_test_expectations_file):
+        (PortTest.test_find_no_paths_specified):
+        (PortTest.test_find_one_test):
+        (PortTest.test_find_glob):
+        (PortTest.test_find_with_skipped_directories):
+        (PortTest.test_find_with_skipped_directories_2):
+        (PortTest.test_parse_reftest_list):
+        * Scripts/webkitpy/layout_tests/port/dryrun.py:
+        (DryRunPort.__init__):
+        * Scripts/webkitpy/layout_tests/port/factory_unittest.py:
+        (FactoryTest.setUp):
+        (FactoryTest.tearDown):
+        (FactoryTest.assert_port):
+        (FactoryTest.assert_platform_port):
+        (FactoryTest.test_unknown_specified):
+        (FactoryTest.test_unknown_default):
+        * Scripts/webkitpy/layout_tests/port/google_chrome_unittest.py:
+        (GetGoogleChromePortTest._verify_expectations_overrides):
+        * Scripts/webkitpy/layout_tests/port/mock_drt_unittest.py:
+        (MockDRTPortTest.make_port):
+        (MockDRTTest.assertTest):
+        (MockDRTTest.test_main):
+        (MockChromiumDRTTest.test_pixeltest__fails):
+        * Scripts/webkitpy/layout_tests/port/qt_unittest.py:
+        (QtPortTest._assert_search_path):
+        * Scripts/webkitpy/layout_tests/port/webkit_unittest.py:
+        (TestWebKitPort.__init__):
+        (WebKitPortTest.test_skipped_directories_for_symbols):
+        (test_skipped_directories_for_features):
+        (test_skipped_layout_tests):
+        (test_skipped_file_search_paths):
+        (test_root_option):
+        (test_test_expectations):
+        (test_build_driver):
+        (test_linux_distro_detection):
+        (test_apache_config_file_name_for_platform):
+        (test_path_to_apache_config_file):
+        (WebKitDriverTest.test_read_block):
+        * Scripts/webkitpy/style/checkers/test_expectations.py:
+        (TestExpectationsChecker.__init__):
+        * Scripts/webkitpy/style/checkers/test_expectations_unittest.py:
+        (TestExpectationsTestCase._expect_port_for_expectations_path):
+        (TestExpectationsTestCase.assert_lines_lint):
+        * Scripts/webkitpy/tool/servers/rebaselineserver_unittest.py:
+        (get_test_config.TestMacPort):
+
+2011-12-19  Raphael Kubo da Costa  <kubo@profusion.mobi>
+
+        [Efl] Fix path returned by builtDylibPathForName in webkitdirs.pm
+        https://bugs.webkit.org/show_bug.cgi?id=74854
+
+        Reviewed by Csaba Osztrogonác.
+
+        Since r101052, libewebkit.so is built in a different location, so we
+        need to adjust the path returned by builtDylibPathForName.
+
+        usesPerConfigurationBuildDirectory also needs to be fixed, as the Efl
+        port also respects Release/Debug configurations.
+
+        These changes should make run-launcher finally work correctly with
+        webkit-efl.
+
+        * Scripts/webkitdirs.pm:
+        (usesPerConfigurationBuildDirectory):
+        (builtDylibPathForName):
+
+2011-12-19  Simon Hausmann  <simon.hausmann@nokia.com>
+
+        [Qt][WK2] Add support for modal event loop processing for WTR
+        https://bugs.webkit.org/show_bug.cgi?id=74852
+
+        Reviewed by Kenneth Rohde Christiansen.
+
+        Rewrote event loop processing: Instead of terminating the event loop
+        in notifyDone() - something no other platform does - we now respect the
+        "bool& condition" parameter passed to platformRunUntil. This ensures
+        proper termination even when the condition is changed from within a
+        nested event loop, because only when we _exit_ from the nested event
+        loop we will check the condition and terminate the test properly.
+
+        In addition this patch implements TestController::runModal by means of
+        a nested event loop, which is passed to the platform webview that is
+        supposed to be modal. It is that view's responsibility to exit the
+        loop, upon destruction. I believe that's similar to how it works on the Mac,
+        where it doesn't seem that NSApp's runModalForWindow is terminate via
+        abort/stopModal but simply because the window is closed.
+
+        * WebKitTestRunner/PlatformWebView.h:
+        (WTR::PlatformWebView::setModalEventLoop):
+        * WebKitTestRunner/qt/PlatformWebViewQt.cpp:
+        (WTR::PlatformWebView::PlatformWebView):
+        (WTR::PlatformWebView::~PlatformWebView):
+        * WebKitTestRunner/qt/TestControllerQt.cpp:
+        (WTR::TestController::notifyDone):
+        (WTR::TestController::platformRunUntil):
+        (WTR::TestController::runModal):
+
+2011-12-18  Kentaro Hara  <haraken@chromium.org>
+
+        REGRESSION(r103149): prepare-ChangeLog outputs a warning
+        https://bugs.webkit.org/show_bug.cgi?id=74808
+
+        Reviewed by David Kilzer.
+
+        Added the prototype declaration of main() to avoid warning messages.
+        Sorted subroutine declarations in the alphabetical order.
+
+        * Scripts/prepare-ChangeLog:
+
+2011-12-17  Adenilson Cavalcanti  <cavalcantii@gmail.com>
+
+        [Qt] Fix QtTestBrowser compilation with QtWidgets module
+        https://bugs.webkit.org/show_bug.cgi?id=74791
+
+        Reviewed by Andreas Kling.
+
+        * QtTestBrowser/QtTestBrowser.pro:
+
+2011-12-17  Kentaro Hara  <haraken@chromium.org>
+
+        Remove top-level code completely from prepare-ChangeLog
+        https://bugs.webkit.org/show_bug.cgi?id=74698
+
+        Reviewed by Darin Adler.
+
+        We are planning to write unit-tests for prepare-ChangeLog in a run-leaks_unittest manner.
+        This patch just moves all top-level code into main().
+
+        * Scripts/prepare-ChangeLog:
+        (main):
+
+2011-12-16  Dean Jackson  <dino@apple.com>
+
+        Move webkit-bug-importer to Contributor. It won't
+        autocomplete as an Account.
+        See https://bugs.webkit.org/show_bug.cgi?id=74739
+        for some discussion.
+
+        Unreviewed.
+
+        * Scripts/webkitpy/common/config/committers.py:
+
+2011-12-16  Dean Jackson  <dino@apple.com>
+
+        Add webkit-bug-importer@group.apple.com to accounts
+        so that it autocompletes in bugzilla.
+
+        Unreviewed.
+
+        * Scripts/webkitpy/common/config/committers.py:
+
+2011-12-16  Philippe Normand  <pnormand@igalia.com>
+
+        Unreviewed, skipping 3 failing GTK API tests.
+
+        * Scripts/run-gtk-tests:
+
+2011-12-16  Philippe Normand  <pnormand@igalia.com>
+
+        Unreviewed, GTK API tests build fix attempt.
+
+        * Scripts/run-gtk-tests: Run xvfb on a display not used by NRWT.
+
+2011-12-16  Philippe Normand  <pnormand@igalia.com>
+
+        Unreviewed, unskipping GTK testdownload. Should pass on the bot now.
+
+        * Scripts/run-gtk-tests:
+
+2011-12-16  Simon Hausmann  <simon.hausmann@nokia.com>
+
+        [Qt] Fix the build for newer Qt5
+        https://bugs.webkit.org/show_bug.cgi?id=74703
+
+        Reviewed by Csaba Osztrogonác.
+
+        * QtTestBrowser/launcherwindow.h: Add missing forward declaration.
+        * DumpRenderTree/qt/EventSenderQt.cpp:
+        (EventSender::sendTouchEvent): Allocate QTouchDevice and use with QTouchEvent constructor.
+        * WebKitTestRunner/qt/EventSenderProxyQt.cpp: Ditto.
+        (WTR::EventSenderProxy::sendTouchEvent):
+        * MiniBrowser/qt/MiniBrowserApplication.cpp:
+        (MiniBrowserApplication::sendTouchEvent): Ditto.
+        (MiniBrowserApplication::notify): Adapt to changed API for marking primary touch point.
+
+2011-12-16  Tor Arne Vestbø  <tor.arne.vestbo@nokia.com>
+
+        [Qt] Detect and force clean build when feature defines are added
+
+        Reviewed by Ossy.
+
+        https://bugs.webkit.org/show_bug.cgi?id=74689
+
+        * Scripts/webkitdirs.pm:
+
+2011-12-16  Kentaro Hara  <haraken@chromium.org>
+
+        [Refactoring] Remove all global variables from prepare-ChangeLog
+        https://bugs.webkit.org/show_bug.cgi?id=74681
+
+        Reviewed by Ryosuke Niwa.
+
+        We are planning to write unit-tests for prepare-ChangeLog in a run-leaks_unittest
+        manner. This bug is one of the incremental refactorings to remove all top-level
+        code and global variables from prepare-ChangeLog. In this patch,
+        we make the following global variables be used only through parameter passing.
+        This patch removes all global variables from prepare-ChangeLog.
+            - $mergeBase
+            - $gitCommit
+            - $gitIndex
+
+        * Scripts/prepare-ChangeLog:
+        (generateFunctionLists):
+        (changeLogNameFromArgs):
+        (changeLogEmailAddressFromArgs):
+        (generateNewChangeLogs):
+        (printDiff):
+        (diffFromToString):
+        (diffCommand):
+        (statusCommand):
+        (createPatchCommand):
+        (generateFileList):
+        (isConflictStatus):
+
+2011-12-15  Philippe Normand  <pnormand@igalia.com>
+
+        [GTK] Rounding errors on 32-bit machines causes tests to fail
+        https://bugs.webkit.org/show_bug.cgi?id=72254
+
+        Initial patch by vanuan@gmail.com.
+        Reviewed by Martin Robinson.
+
+        * Scripts/webkitdirs.pm:
+        (runAutogenForAutotoolsProjectIfNecessary): Pass additional
+        CXXFLAGS to autogen in an attempt to harmonize floating point
+        values between 32-bit and 64-bit architectures.
+
+2011-12-16  Martin Robinson  <mrobinson@igalia.com>
+
+        [GTK] Make distcheck fails during the install
+        https://bugs.webkit.org/show_bug.cgi?id=74274
+
+        No review, since this is a build fix.
+
+        * GNUmakefile.am: Remove BUILT_SOURCES from the dependency list for the gtkdoc
+        step. BUILT_SOURCES includes forwarding header generation for WebKit2, which
+        always runs. This means that the gtkdoc step was always running when make was
+        invoked. Generating gtkdoc during 'make install' was triggering a race condition
+        with the library file. Later we can fix generate-forwarding-headers and unbreak
+        'make docs,' but this bandaid is sufficient to let us release.
+
+2011-12-15  Eric Seidel  <eric@webkit.org>
+
+        NRWT should use free + inactive memory for default_child_processes on OS X (and never return < 1 process)
+        https://bugs.webkit.org/show_bug.cgi?id=74650
+
+        Reviewed by Adam Barth.
+
+        * Scripts/webkitpy/common/system/platforminfo.py:
+        (PlatformInfo._compute_bytes_from_vm_stat_output):
+        * Scripts/webkitpy/layout_tests/port/base.py:
+        (Port.default_child_processes):
+        * Scripts/webkitpy/layout_tests/port/base_unittest.py:
+        (PortTest.test_default_child_processes):
+
+2011-12-15  Filip Pizlo  <fpizlo@apple.com>
+
+        bencher script should support remote benchmarking on platforms that don't have ruby
+        https://bugs.webkit.org/show_bug.cgi?id=74659
+
+        Rubber-stamped by Sam Weinig.
+        
+        Added the ability to have bencher generate a benchmarking playload that consists of
+        copies of all of the benchmarks, optionally copies of all of the frameworks and
+        binaries to run all of the VMs, and a sh script that runs the benchmarks in random
+        order, which then spits out a raw results file that bencher can parse.
+        
+        In normal operating mode, you never see this, as it just generates the payload and
+        script internally, runs it, parses the results, and spits them out.
+        
+        The --remote mode has been changed to use this style, so any remote host that has
+        sshd, passwordless login support, a ~/.bencher file that points to a "tempPath", and
+        a sh-compatible shell can be used for remote benchmarking.
+        
+        The feature to include VMs in the benchmarking payload is by default only activated
+        when using --remote, but it can also be activated when doing local benchmarking; the
+        benefit is that you remove any pathname-related performance pathologies. All VMs
+        become equal because they are all located in
+        /path/to/bencher/directory/temp/benchdata/vmN where N is the configuration number
+        (usually 0 or 1).
+        
+        Also fixed bugs in the DumpRenderTree support. It's now possible to run all benchmarks
+        through DumpRenderTree. This is only a bit slower than running in jsc.
+
+        * Scripts/bencher:
+
+2011-12-15  Dirk Pranke  <dpranke@chromium.org>
+
+        webkitpy: clean up TestPort to (mostly) not create a new filesystem
+        https://bugs.webkit.org/show_bug.cgi?id=74556
+
+        This change modifies the TestPort to be ready to add tests to an
+        existing filesystem instead of creating a new filesystem; we
+        leave unit_test_filesystem() in for now for compatibility.
+
+        * Scripts/webkitpy/common/host_mock.py:
+        (MockHost.__init__):
+          - call add_unit_tests_to_mock_filesystem by default to make
+            the MockHost more generally useful for layout_test unit tests.
+        * Scripts/webkitpy/layout_tests/port/test.py:
+        (TestInstance.__init__):
+        (add_unit_tests_to_mock_filesystem):
+        (add_file):
+        (unit_test_filesystem):
+        (TestPort.__init__):
+        (TestPort._set_default_overriding_none):
+
+2011-12-15  Dirk Pranke  <dpranke@chromium.org>
+
+        webkitpy: cleanup prior to systemhostifying the layout_test/port* classes
+        https://bugs.webkit.org/show_bug.cgi?id=74551
+
+        This is some minor cleanup prior to making all of the host/port
+        changes described in bug 74138.
+
+        * Scripts/webkitpy/common/host_mock.py:
+        (MockHost.__init__):
+          - make sure the scm object is initialized with the same mock
+            executive and filesystem objects.
+
+        * Scripts/webkitpy/common/system/filesystem_mock.py:
+        (MockFileSystem.clear_written_files):
+          - add a routine that will be useful in testing.
+        (MockFileSystem.maybe_make_directory):
+        (MockFileSystem.write_binary_file):
+          - fix bugs to make sure directories are created properly.
+        * Scripts/webkitpy/layout_tests/controllers/manager_worker_broker.py:
+        (_Process.run):
+          - add clarifying comments.
+        * Scripts/webkitpy/layout_tests/port/mock_drt.py:
+        (MockDRTPort.__init__):
+        (MockDRT.__init__):
+          - add clarifying comments.
+
+2011-12-15  Anders Carlsson  <andersca@apple.com>
+
+        Regression (r102866): Navigating away from or closing a page with a plugin crashes
+        https://bugs.webkit.org/show_bug.cgi?id=74655
+
+        Reviewed by Sam Weinig.
+
+        Add a bunch of tests.
+
+        * TestWebKitAPI/Tests/WTF/Functional.cpp:
+
+2011-12-15  Stephanie Lewis  <slewis@apple.com>
+
+        https://bugs.webkit.org/show_bug.cgi?id=74469
+        Escape paths to svn commands so our tools can handle filenames with @ symbols.
+
+        Reviewed by Adam Roben.
+
+        * Scripts/VCSUtils.pm:
+        (scmMoveOrRenameFile):
+        (scmAddExecutableBit):
+        (scmRemoveExecutableBit):
+        (determineSVNRoot):
+        (svnRevisionForDirectory):
+        (pathRelativeToSVNRepositoryRootForPath):
+        (svnStatus):
+        (escapeSubversionPath):
+        * Scripts/parse-malloc-history:
+        (main):
+        * Scripts/prepare-ChangeLog:
+        (diffCommand):
+        (statusCommand):
+        (findOriginalFileFromSvn):
+        (determinePropertyChanges):
+        * Scripts/resolve-ChangeLogs:
+        (conflictFiles):
+        (resolveConflict):
+        (showStatus):
+        * Scripts/svn-apply:
+        (patch):
+        (scmCopy):
+        (scmAdd):
+        (scmRemove):
+        * Scripts/svn-create-patch:
+        (findBaseUrl):
+        (findMimeType):
+        (findSourceFileAndRevision):
+        (generateDiff):
+        (generateFileList):
+        (manufacturePatchForAdditionWithHistory):
+        * Scripts/svn-unapply:
+        (patch):
+        (revertDirectories):
+
+2011-12-15  Michael Bruning  <michael.bruning@nokia.com>
+
+        [qt][wk2] MiniBrowser: Add pressed state for viewport info button.
+        https://bugs.webkit.org/show_bug.cgi?id=74617
+
+        Reviewed by Kenneth Rohde Christiansen.
+
+        * MiniBrowser/qt/qml/BrowserWindow.qml: Added state dependent coloring
+        for viewport info button, adjusted height and added rounded corners.
+
+2011-12-15  Andy Estes  <aestes@apple.com>
+
+        TestFailures: store the name of the buildbot results directory in a property
+        https://bugs.webkit.org/show_bug.cgi?id=74663
+
+        Reviewed by Adam Barth.
+        
+        Store the name of the results directory as a property on Buildbot's
+        prototype. This allows subclasses of Buildbot to customize the results
+        directory.
+
+        * BuildSlaveSupport/build.webkit.org-config/public_html/TestFailures/scripts/Buildbot.js:
+        (Buildbot.prototype.resultsDirectoryURL):
+
+2011-12-15  Tony Chang  <tony@chromium.org>
+
+        [chromium] pass --delete_unversioned_trees to gclient on the bots
+        https://bugs.webkit.org/show_bug.cgi?id=74565
+
+        Reviewed by Kenneth Russell.
+
+        It was temporarily removed in r102891 to keep the bots green.  Now
+        that the bots have cycled, we can add it back.
+
+        * Scripts/update-webkit-chromium:
+
+2011-12-15  Kentaro Hara  <haraken@chromium.org>
+
+        [Refactoring] In prepare-ChangeLog, make several global variables be used only through parameter passing
+        https://bugs.webkit.org/show_bug.cgi?id=74497
+
+        Reviewed by Ryosuke Niwa.
+
+        We are planning to write unit-tests for prepare-ChangeLog in a run-leaks_unittest
+        manner. This bug is one of the incremental refactorings to remove all top-level
+        code and global variables from prepare-ChangeLog. In this patch,
+        we make the following global variables be used only through parameter passing.
+            - $bugDescription
+            - $bugNumber
+            - $name
+            - $emailAddress
+            - $gitReviewer
+            - $writeChangeLogs
+
+        * Scripts/prepare-ChangeLog:
+        (fetchBugDescriptionFromURL):
+        (generateNewChangeLogs):
+        (reviewerAndDescriptionForGitCommit):
+
+2011-12-15  Raphael Kubo da Costa  <kubo@profusion.mobi>
+
+        [EFL] Add a few more web database functions to ewk_settings.
+        https://bugs.webkit.org/show_bug.cgi?id=72148
+
+        Reviewed by Antonio Gomes.
+
+        * DumpRenderTree/efl/LayoutTestControllerEfl.cpp:
+        (LayoutTestController::clearAllDatabases):
+        (LayoutTestController::setDatabaseQuota):
+
+2011-12-15  Martin Kosiba  <mkosiba@google.com>
+
+        Fix find on web pages with -webkit-user-select: none for Chromium
+        https://bugs.webkit.org/show_bug.cgi?id=72281
+
+        Reviewed by Ryosuke Niwa.
+
+        Provided a partial findString implementation. This doesn't support
+        all of the FindOptions since they're not exposed via WebFindOptions.
+
+        * DumpRenderTree/chromium/LayoutTestController.cpp:
+        (LayoutTestController::LayoutTestController):
+        (LayoutTestController::findString):
+        * DumpRenderTree/chromium/LayoutTestController.h:
+
+2011-12-15  Kenneth Russell  <kbr@google.com>
+
+        [chromium] Add DRT support for WebKitPageCacheSupportsPluginsPreferenceKey
+        https://bugs.webkit.org/show_bug.cgi?id=74581
+
+        Reviewed by Darin Fisher.
+
+        * DumpRenderTree/chromium/LayoutTestController.cpp:
+        (LayoutTestController::overridePreference):
+        * DumpRenderTree/chromium/WebPreferences.cpp:
+        (WebPreferences::reset):
+        (WebPreferences::applyTo):
+        * DumpRenderTree/chromium/WebPreferences.h:
+
+2011-12-15  Kenneth Rohde Christiansen  <kenneth@webkit.org>
+
+        [Qt] Improve the look of the viewport info overlay
+
+        Reviewed by Tor Arne Vestbø.
+
+        * MiniBrowser/qt/qml/ViewportInfoItem.qml:
+
+2011-12-15  Igor Oliveira  <igor.oliveira@openbossa.org>
+
+        [Qt] Support requestAnimationFrame API
+        https://bugs.webkit.org/show_bug.cgi?id=74528
+
+        Add build-option for requestAnimationFrame feature.
+
+        Reviewed by Kenneth Rohde Christiansen.
+
+        * qmake/mkspecs/features/features.prf:
+
 2011-12-15  Tor Arne Vestbø  <tor.arne.vestbo@nokia.com>
 
         [Qt] Don't add WebCoreSupport and WebKit APIs to include WebCore's include path

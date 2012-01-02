@@ -38,6 +38,7 @@
 #include "InlineIterator.h"
 #include "InlineTextBox.h"
 #include "LayoutRepainter.h"
+#include "PODFreeListArena.h"
 #include "Page.h"
 #include "PaintInfo.h"
 #include "RenderBoxRegionInfo.h"
@@ -1198,7 +1199,7 @@ void RenderBlock::layoutBlock(bool relayoutChildren, LayoutUnit pageLogicalHeigh
     if (!relayoutChildren && simplifiedLayout())
         return;
 
-    LayoutRepainter repainter(*this, m_everHadLayout && checkForRepaintDuringLayout());
+    LayoutRepainter repainter(*this, everHadLayout() && checkForRepaintDuringLayout());
 
     LayoutUnit oldWidth = logicalWidth();
     LayoutUnit oldColumnWidth = desiredColumnWidth();
@@ -1235,7 +1236,7 @@ void RenderBlock::layoutBlock(bool relayoutChildren, LayoutUnit pageLogicalHeigh
             }
             setLogicalHeight(0);
         }
-        if (colInfo->columnHeight() != pageLogicalHeight && m_everHadLayout) {
+        if (colInfo->columnHeight() != pageLogicalHeight && everHadLayout()) {
             colInfo->setColumnHeight(pageLogicalHeight);
             pageLogicalHeightChanged = true;
         }
@@ -1450,7 +1451,7 @@ void RenderBlock::computeOverflow(LayoutUnit oldClientAfterEdge, bool recomputeF
     }
         
     // Add visual overflow from box-shadow and border-image-outset.
-    addBoxShadowAndBorderOverflow();
+    addVisualEffectOverflow();
 }
 
 void RenderBlock::addOverflowFromBlockChildren()
@@ -2070,7 +2071,7 @@ void RenderBlock::layoutBlockChild(RenderBox* child, MarginInfo& marginInfo, Lay
     if (!child->needsLayout())
         child->markForPaginationRelayoutIfNeeded();
 
-    bool childHadLayout = child->m_everHadLayout;
+    bool childHadLayout = child->everHadLayout();
     bool childNeededLayout = child->needsLayout();
     if (childNeededLayout)
         child->layout();
@@ -3271,7 +3272,7 @@ RenderBlock::FloatingObject* RenderBlock::insertFloatingObject(RenderBox* o)
 
     // Create the list of special objects if we don't aleady have one
     if (!m_floatingObjects)
-        m_floatingObjects = adoptPtr(new FloatingObjects(isHorizontalWritingMode()));
+        m_floatingObjects = adoptPtr(new FloatingObjects(this, isHorizontalWritingMode()));
     else {
         // Don't insert the object again if it's already in the list
         const FloatingObjectSet& floatingObjectSet = m_floatingObjects->set();
@@ -3936,7 +3937,7 @@ LayoutUnit RenderBlock::addOverhangingFloats(RenderBlock* child, bool makeChildP
 
                 // We create the floating object list lazily.
                 if (!m_floatingObjects)
-                    m_floatingObjects = adoptPtr(new FloatingObjects(isHorizontalWritingMode()));
+                    m_floatingObjects = adoptPtr(new FloatingObjects(this, isHorizontalWritingMode()));
 
                 m_floatingObjects->add(floatingObj);
             }
@@ -4009,7 +4010,7 @@ void RenderBlock::addIntrudingFloats(RenderBlock* prev, LayoutUnit logicalLeftOf
                 
                 // We create the floating object list lazily.
                 if (!m_floatingObjects)
-                    m_floatingObjects = adoptPtr(new FloatingObjects(isHorizontalWritingMode()));
+                    m_floatingObjects = adoptPtr(new FloatingObjects(this, isHorizontalWritingMode()));
                 m_floatingObjects->add(floatingObj);
             }
         }
@@ -4029,7 +4030,7 @@ bool RenderBlock::containsFloat(RenderBox* renderer)
 
 void RenderBlock::markAllDescendantsWithFloatsForLayout(RenderBox* floatToRemove, bool inLayout)
 {
-    if (!m_everHadLayout)
+    if (!everHadLayout())
         return;
 
     setChildNeedsLayout(true, !inLayout);
@@ -4688,7 +4689,7 @@ bool RenderBlock::layoutColumns(bool hasSpecifiedPageLogicalHeight, LayoutUnit p
         
         if (columnHeight && columnHeight != pageLogicalHeight) {
             statePusher.pop();
-            m_everHadLayout = true;
+            setEverHadLayout(true);
             layoutBlock(false, columnHeight);
             return true;
         }
@@ -7010,7 +7011,7 @@ void RenderBlock::FloatingObjects::computePlacedFloatsTree()
     ASSERT(!m_placedFloatsTree.isInitialized());
     if (m_set.isEmpty())
         return;
-    m_placedFloatsTree.initIfNeeded();
+    m_placedFloatsTree.initIfNeeded(m_renderer->view()->intervalArena());
     FloatingObjectSetIterator it = m_set.begin();
     FloatingObjectSetIterator end = m_set.end();
     for (; it != end; ++it) {

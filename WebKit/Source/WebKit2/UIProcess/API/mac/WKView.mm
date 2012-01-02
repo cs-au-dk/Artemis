@@ -337,7 +337,7 @@ struct WKViewInterpretKeyEventsParameters {
     NSRect viewFrameInWindowCoordinates = [self convertRect:[self frame] toView:nil];
     NSPoint accessibilityPosition = [[self accessibilityAttributeValue:NSAccessibilityPositionAttribute] pointValue];
     
-    _data->_page->windowAndViewFramesChanged(windowFrameInScreenCoordinates, viewFrameInWindowCoordinates, accessibilityPosition);
+    _data->_page->windowAndViewFramesChanged(enclosingIntRect(windowFrameInScreenCoordinates), enclosingIntRect(viewFrameInWindowCoordinates), IntPoint(accessibilityPosition));
 }
 
 - (void)renewGState
@@ -486,6 +486,8 @@ WEBCORE_COMMAND(paste)
 WEBCORE_COMMAND(pasteAsPlainText)
 WEBCORE_COMMAND(scrollPageDown)
 WEBCORE_COMMAND(scrollPageUp)
+WEBCORE_COMMAND(scrollLineDown)
+WEBCORE_COMMAND(scrollLineUp)
 WEBCORE_COMMAND(scrollToBeginningOfDocument)
 WEBCORE_COMMAND(scrollToEndOfDocument)
 WEBCORE_COMMAND(selectAll)

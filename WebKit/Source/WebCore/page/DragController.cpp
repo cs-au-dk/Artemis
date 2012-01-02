@@ -79,7 +79,7 @@ static PlatformMouseEvent createMouseEvent(DragData* dragData)
     shiftKey = ctrlKey = altKey = metaKey = false;
     PlatformKeyboardEvent::getCurrentModifierState(shiftKey, ctrlKey, altKey, metaKey);
     return PlatformMouseEvent(dragData->clientPosition(), dragData->globalPosition(),
-                              LeftButton, MouseEventMoved, 0, shiftKey, ctrlKey, altKey,
+                              LeftButton, PlatformEvent::MouseMoved, 0, shiftKey, ctrlKey, altKey,
                               metaKey, currentTime());
 }
 
@@ -719,7 +719,7 @@ bool DragController::startDrag(Frame* src, const DragState& state, DragOperation
     KURL linkURL = hitTestResult.absoluteLinkURL();
     KURL imageURL = hitTestResult.absoluteImageURL();
 
-    IntPoint mouseDraggedPoint = src->view()->windowToContents(dragEvent.pos());
+    IntPoint mouseDraggedPoint = src->view()->windowToContents(dragEvent.position());
 
     m_draggingImageURL = KURL();
     m_sourceDragOperation = srcOp;

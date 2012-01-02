@@ -86,14 +86,8 @@ static EncodedJSValue JSC_HOST_CALL callHTMLAllCollection(ExecState* exec)
     UString string = exec->argument(0).toString(exec);
     unsigned index = Identifier::toUInt32(exec->argument(1).toString(exec), ok);
     if (ok) {
-        AtomicString pstr = ustringToAtomicString(string);
-        Node* node = collection->namedItem(pstr);
-        while (node) {
-            if (!index)
-                return JSValue::encode(toJS(exec, jsCollection->globalObject(), node));
-            node = collection->nextNamedItem(pstr);
-            --index;
-        }
+        if (Node* node = collection->namedItemWithIndex(ustringToAtomicString(string), index))
+            return JSValue::encode(toJS(exec, jsCollection->globalObject(), node));
     }
 
     return JSValue::encode(jsUndefined());
@@ -107,9 +101,7 @@ CallType JSHTMLAllCollection::getCallData(JSCell*, CallData& callData)
 
 bool JSHTMLAllCollection::canGetItemsForName(ExecState*, HTMLAllCollection* collection, const Identifier& propertyName)
 {
-    Vector<RefPtr<Node> > namedItems;
-    collection->namedItems(identifierToAtomicString(propertyName), namedItems);
-    return !namedItems.isEmpty();
+    return collection->hasNamedItem(identifierToAtomicString(propertyName));
 }
 
 JSValue JSHTMLAllCollection::nameGetter(ExecState* exec, JSValue slotBase, const Identifier& propertyName)

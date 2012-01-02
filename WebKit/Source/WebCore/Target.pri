@@ -272,6 +272,8 @@ v8 {
         bindings/js/JSDOMWindowBase.cpp \
         bindings/js/JSDOMWindowCustom.cpp \
         bindings/js/JSDOMWindowShell.cpp \
+        bindings/js/JSDOMWindowWebAudioCustom.cpp \
+        bindings/js/JSDOMWindowWebSocketCustom.cpp \
         bindings/js/JSDOMWrapper.cpp \
         bindings/js/JSDataViewCustom.cpp \
         bindings/js/JSDesktopNotificationsCustom.cpp \
@@ -334,6 +336,7 @@ v8 {
         bindings/js/JSPluginElementFunctions.cpp \
         bindings/js/JSPopStateEventCustom.cpp \
         bindings/js/JSProcessingInstructionCustom.cpp \
+        bindings/js/JSRequestAnimationFrameCallbackCustom.cpp \
         bindings/js/JSScriptProfileNodeCustom.cpp \
         bindings/js/JSStorageCustom.cpp \
         bindings/js/JSStyleSheetCustom.cpp \
@@ -529,6 +532,7 @@ SOURCES += \
     dom/MouseEvent.cpp \
     dom/MouseRelatedEvent.cpp \
     dom/MutationEvent.cpp \
+    dom/MutationObserverInterestGroup.cpp \
     dom/MutationObserverRegistration.cpp \
     dom/MutationRecord.cpp \
     dom/NamedNodeMap.cpp \
@@ -554,6 +558,7 @@ SOURCES += \
     dom/RawDataDocumentParser.h \
     dom/RegisteredEventListener.cpp \
     dom/ScopedEventQueue.cpp \
+    dom/ScriptedAnimationController.cpp \
     dom/ScriptableDocumentParser.cpp \
     dom/ScriptElement.cpp \
     dom/ScriptExecutionContext.cpp \
@@ -917,6 +922,7 @@ SOURCES += \
     loader/CrossOriginAccessControl.cpp \
     loader/CrossOriginPreflightResultCache.cpp \
     loader/cache/CachedResourceLoader.cpp \
+    loader/DocumentLoadTiming.cpp \
     loader/DocumentLoader.cpp \
     loader/DocumentThreadableLoader.cpp \
     loader/DocumentWriter.cpp \
@@ -1030,6 +1036,7 @@ SOURCES += \
     platform/FileStream.cpp \
     platform/FileSystem.cpp \
     platform/GeolocationService.cpp \
+    platform/HistogramSupport.cpp \
     platform/image-decoders/qt/ImageFrameQt.cpp \
     platform/graphics/FontDescription.cpp \
     platform/graphics/FontFallbackList.cpp \
@@ -1113,9 +1120,11 @@ SOURCES += \
     platform/network/ProxyServer.cpp \
     platform/network/ResourceErrorBase.cpp \
     platform/network/ResourceHandle.cpp \
+    platform/network/ResourceLoadTiming.cpp \
     platform/network/ResourceRequestBase.cpp \
     platform/network/ResourceResponseBase.cpp \
     platform/text/RegularExpression.cpp \
+    platform/PlatformEvent.cpp \
     platform/RuntimeApplicationChecks.cpp \
     platform/SchemeRegistry.cpp \
     platform/ScrollableArea.cpp \
@@ -1648,6 +1657,7 @@ HEADERS += \
     dom/Range.h \
     dom/RegisteredEventListener.h \
     dom/RenderedDocumentMarker.h \
+    dom/ScriptedAnimationController.h \
     dom/ScriptElement.h \
     dom/ScriptExecutionContext.h \
     dom/SelectorQuery.h \
@@ -1726,6 +1736,7 @@ HEADERS += \
     editing/SplitTextNodeContainingElementCommand.h \
     editing/TextIterator.h \
     editing/TypingCommand.h \
+    editing/UndoStep.h \
     editing/UnlinkCommand.h \
     editing/VisiblePosition.h \
     editing/VisibleSelection.h \
@@ -2071,6 +2082,7 @@ HEADERS += \
     platform/FileStreamClient.h \
     platform/FileSystem.h \
     platform/GeolocationService.h \
+    platform/HistogramSupport.h \
     platform/image-decoders/ImageDecoder.h \
     platform/mock/DeviceOrientationClientMock.h \
     platform/mock/GeolocationClientMock.cpp \
@@ -2080,11 +2092,14 @@ HEADERS += \
     platform/graphics/BitmapImage.h \
     platform/graphics/Color.h \
     platform/graphics/CrossfadeGeneratedImage.h \
+    platform/graphics/filters/CustomFilterMesh.h \
+    platform/graphics/filters/CustomFilterShader.h \
     platform/graphics/filters/FEBlend.h \
     platform/graphics/filters/FEColorMatrix.h \
     platform/graphics/filters/FEComponentTransfer.h \
     platform/graphics/filters/FEComposite.h \
     platform/graphics/filters/FEConvolveMatrix.h \
+    platform/graphics/filters/FECustomFilter.h \
     platform/graphics/filters/FEDiffuseLighting.h \
     platform/graphics/filters/FEDisplacementMap.h \
     platform/graphics/filters/FEDropShadow.h \
@@ -2098,6 +2113,8 @@ HEADERS += \
     platform/graphics/filters/FETile.h \
     platform/graphics/filters/FETurbulence.h \
     platform/graphics/filters/FilterEffect.h \
+    platform/graphics/filters/FilterOperation.h \
+    platform/graphics/filters/FilterOperations.h \
     platform/graphics/filters/LightSource.h \
     platform/graphics/filters/SourceAlpha.h \
     platform/graphics/filters/SourceGraphic.h \
@@ -2371,8 +2388,6 @@ HEADERS += \
     rendering/style/CursorList.h \
     rendering/style/CustomFilterOperation.h \
     rendering/style/FillLayer.h \
-    rendering/style/FilterOperation.h \
-    rendering/style/FilterOperations.h \
     rendering/style/KeyframeList.h \
     rendering/style/NinePieceImage.h \
     rendering/style/QuotesData.h \
@@ -3238,12 +3253,15 @@ contains(DEFINES, ENABLE_XSLT=1) {
 
 contains(DEFINES, ENABLE_FILTERS=1) {
     SOURCES += \
+        platform/graphics/filters/CustomFilterMesh.cpp \
+        platform/graphics/filters/CustomFilterShader.cpp \
         platform/graphics/filters/DistantLightSource.cpp \
         platform/graphics/filters/FEBlend.cpp \
         platform/graphics/filters/FEColorMatrix.cpp \
         platform/graphics/filters/FEComponentTransfer.cpp \
         platform/graphics/filters/FEComposite.cpp \
         platform/graphics/filters/FEConvolveMatrix.cpp \
+        platform/graphics/filters/FECustomFilter.cpp \
         platform/graphics/filters/FEDiffuseLighting.cpp \
         platform/graphics/filters/FEDisplacementMap.cpp \
         platform/graphics/filters/FEDropShadow.cpp \
@@ -3256,6 +3274,8 @@ contains(DEFINES, ENABLE_FILTERS=1) {
         platform/graphics/filters/FESpecularLighting.cpp \
         platform/graphics/filters/FETile.cpp \
         platform/graphics/filters/FETurbulence.cpp \
+        platform/graphics/filters/FilterOperations.cpp \
+        platform/graphics/filters/FilterOperation.cpp \
         platform/graphics/filters/FilterEffect.cpp \
         platform/graphics/filters/LightSource.cpp \
         platform/graphics/filters/PointLightSource.cpp \
@@ -3265,8 +3285,6 @@ contains(DEFINES, ENABLE_FILTERS=1) {
         platform/graphics/filters/arm/FECompositeArithmeticNEON.cpp \
         platform/graphics/filters/arm/FELightingNEON.cpp \
         platform/graphics/filters/arm/FEGaussianBlurNEON.cpp \
-        rendering/style/FilterOperations.cpp \
-        rendering/style/FilterOperation.cpp
 }
 
 contains(DEFINES, ENABLE_MATHML=1) {
@@ -3649,6 +3667,7 @@ contains(DEFINES, ENABLE_WEBGL=1) {
         html/canvas/WebGLExtension.h \
         html/canvas/WebGLFramebuffer.h \
         html/canvas/WebGLGetInfo.h \
+        html/canvas/WebGLLoseContext.h \
         html/canvas/WebGLProgram.h \
         html/canvas/WebGLRenderbuffer.h \
         html/canvas/WebGLRenderingContext.h \
@@ -3659,7 +3678,6 @@ contains(DEFINES, ENABLE_WEBGL=1) {
         html/canvas/WebGLTexture.h \
         html/canvas/WebGLUniformLocation.h \
         html/canvas/WebGLVertexArrayObjectOES.h \
-        html/canvas/WebKitLoseContext.h \
         platform/graphics/ANGLEWebKitBridge.h \
         platform/graphics/Extensions3D.h \
         platform/graphics/GraphicsContext3D.h \
@@ -3686,6 +3704,7 @@ contains(DEFINES, ENABLE_WEBGL=1) {
         html/canvas/WebGLExtension.cpp \
         html/canvas/WebGLFramebuffer.cpp \
         html/canvas/WebGLGetInfo.cpp \
+        html/canvas/WebGLLoseContext.cpp \
         html/canvas/WebGLProgram.cpp \
         html/canvas/WebGLRenderbuffer.cpp \
         html/canvas/WebGLRenderingContext.cpp \
@@ -3696,7 +3715,6 @@ contains(DEFINES, ENABLE_WEBGL=1) {
         html/canvas/WebGLTexture.cpp \
         html/canvas/WebGLUniformLocation.cpp \
         html/canvas/WebGLVertexArrayObjectOES.cpp \
-        html/canvas/WebKitLoseContext.cpp \
         platform/graphics/ANGLEWebKitBridge.cpp \
         platform/graphics/GraphicsContext3D.cpp \
         platform/graphics/gpu/DrawingBuffer.cpp \

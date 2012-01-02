@@ -68,11 +68,11 @@ static PlatformMouseEvent constructRelativeMouseEvent(const PlatformMouseEvent& 
                                                       FramelessScrollView* parent,
                                                       FramelessScrollView* child)
 {
-    IntPoint pos = parent->convertSelfToChild(child, e.pos());
+    IntPoint pos = parent->convertSelfToChild(child, e.position());
 
     // FIXME: This is a horrible hack since PlatformMouseEvent has no setters for x/y.
     PlatformMouseEvent relativeEvent = e;
-    IntPoint& relativePos = const_cast<IntPoint&>(relativeEvent.pos());
+    IntPoint& relativePos = const_cast<IntPoint&>(relativeEvent.position());
     relativePos.setX(pos.x());
     relativePos.setY(pos.y());
     return relativeEvent;
@@ -82,11 +82,11 @@ static PlatformWheelEvent constructRelativeWheelEvent(const PlatformWheelEvent& 
                                                       FramelessScrollView* parent,
                                                       FramelessScrollView* child)
 {
-    IntPoint pos = parent->convertSelfToChild(child, e.pos());
+    IntPoint pos = parent->convertSelfToChild(child, e.position());
 
     // FIXME: This is a horrible hack since PlatformWheelEvent has no setters for x/y.
     PlatformWheelEvent relativeEvent = e;
-    IntPoint& relativePos = const_cast<IntPoint&>(relativeEvent.pos());
+    IntPoint& relativePos = const_cast<IntPoint&>(relativeEvent.position());
     relativePos.setX(pos.x());
     relativePos.setY(pos.y());
     return relativeEvent;
@@ -297,26 +297,28 @@ bool PopupContainer::handleTouchEvent(const PlatformTouchEvent&)
 bool PopupContainer::handleGestureEvent(const PlatformGestureEvent& gestureEvent)
 {
     switch (gestureEvent.type()) {
-    case PlatformGestureEvent::TapType: {
-        PlatformMouseEvent fakeMouseMove(gestureEvent.position(), gestureEvent.globalPosition(), NoButton, MouseEventMoved, /* clickCount */ 1, gestureEvent.shiftKey(), gestureEvent.ctrlKey(), gestureEvent.altKey(), gestureEvent.metaKey(), gestureEvent.timestamp());
-        PlatformMouseEvent fakeMouseDown(gestureEvent.position(), gestureEvent.globalPosition(), LeftButton, MouseEventPressed, /* clickCount */ 1, gestureEvent.shiftKey(), gestureEvent.ctrlKey(), gestureEvent.altKey(), gestureEvent.metaKey(), gestureEvent.timestamp());
-        PlatformMouseEvent fakeMouseUp(gestureEvent.position(), gestureEvent.globalPosition(), LeftButton, MouseEventReleased, /* clickCount */ 1, gestureEvent.shiftKey(), gestureEvent.ctrlKey(), gestureEvent.altKey(), gestureEvent.metaKey(), gestureEvent.timestamp());
+    case PlatformEvent::GestureTap: {
+        PlatformMouseEvent fakeMouseMove(gestureEvent.position(), gestureEvent.globalPosition(), NoButton, PlatformEvent::MouseMoved, /* clickCount */ 1, gestureEvent.shiftKey(), gestureEvent.ctrlKey(), gestureEvent.altKey(), gestureEvent.metaKey(), gestureEvent.timestamp());
+        PlatformMouseEvent fakeMouseDown(gestureEvent.position(), gestureEvent.globalPosition(), LeftButton, PlatformEvent::MousePressed, /* clickCount */ 1, gestureEvent.shiftKey(), gestureEvent.ctrlKey(), gestureEvent.altKey(), gestureEvent.metaKey(), gestureEvent.timestamp());
+        PlatformMouseEvent fakeMouseUp(gestureEvent.position(), gestureEvent.globalPosition(), LeftButton, PlatformEvent::MouseReleased, /* clickCount */ 1, gestureEvent.shiftKey(), gestureEvent.ctrlKey(), gestureEvent.altKey(), gestureEvent.metaKey(), gestureEvent.timestamp());
         // handleMouseMoveEvent(fakeMouseMove);
         handleMouseDownEvent(fakeMouseDown);
         handleMouseReleaseEvent(fakeMouseUp);
         return true;
     }
-    case PlatformGestureEvent::DoubleTapType:
+    case PlatformEvent::GestureDoubleTap:
         break;
-    case PlatformGestureEvent::ScrollUpdateType: {
+    case PlatformEvent::GestureScrollUpdate: {
         PlatformWheelEvent syntheticWheelEvent(gestureEvent.position(), gestureEvent.globalPosition(), gestureEvent.deltaX(), gestureEvent.deltaY(), gestureEvent.deltaX() / 120.0f, gestureEvent.deltaY() / 120.0f, ScrollByPixelWheelEvent, gestureEvent.shiftKey(), gestureEvent.ctrlKey(), gestureEvent.altKey(), gestureEvent.metaKey());
         handleWheelEvent(syntheticWheelEvent);
         return true;
     }
-    case PlatformGestureEvent::ScrollBeginType:
-    case PlatformGestureEvent::ScrollEndType:
-    case PlatformGestureEvent::TapDownType:
+    case PlatformEvent::GestureScrollBegin:
+    case PlatformEvent::GestureScrollEnd:
+    case PlatformEvent::GestureTapDown:
         break;
+    default:
+        ASSERT_NOT_REACHED();
     }
     return false;
 }

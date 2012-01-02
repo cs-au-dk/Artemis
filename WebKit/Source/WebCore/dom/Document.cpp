@@ -77,6 +77,7 @@
 #include "FrameView.h"
 #include "GeolocationController.h"
 #include "HashChangeEvent.h"
+#include "HistogramSupport.h"
 #include "HTMLAllCollection.h"
 #include "HTMLAnchorElement.h"
 #include "HTMLBodyElement.h"
@@ -159,10 +160,6 @@
 #include <wtf/PassRefPtr.h>
 #include <wtf/StdLibExtras.h>
 #include <wtf/text/StringBuffer.h>
-
-#if PLATFORM(CHROMIUM)
-#include "PlatformSupport.h"
-#endif
 
 #if ENABLE(SHARED_WORKERS)
 #include "SharedWorkerRepository.h"
@@ -382,7 +379,7 @@ Document::Document(Frame* frame, const KURL& url, bool isXHTML, bool isHTML)
     , m_compatibilityModeLocked(false)
     , m_domTreeVersion(++s_globalTreeVersion)
 #if ENABLE(MUTATION_OBSERVERS)
-    , m_subtreeMutationObserverTypes(0)
+    , m_mutationObserverTypes(0)
 #endif
     , m_styleSheets(StyleSheetList::create(this))
     , m_readyState(Complete)
@@ -502,17 +499,15 @@ Document::Document(Frame* frame, const KURL& url, bool isXHTML, bool isHTML)
     m_docID = docID++;
 }
 
-#if PLATFORM(CHROMIUM)
 static void histogramMutationEventUsage(const unsigned short& listenerTypes)
 {
-    PlatformSupport::histogramEnumeration("DOMAPI.PerDocumentMutationEventUsage.DOMSubtreeModified", static_cast<bool>(listenerTypes & Document::DOMSUBTREEMODIFIED_LISTENER), 2);
-    PlatformSupport::histogramEnumeration("DOMAPI.PerDocumentMutationEventUsage.DOMNodeInserted", static_cast<bool>(listenerTypes & Document::DOMNODEINSERTED_LISTENER), 2);
-    PlatformSupport::histogramEnumeration("DOMAPI.PerDocumentMutationEventUsage.DOMNodeRemoved", static_cast<bool>(listenerTypes & Document::DOMNODEREMOVED_LISTENER), 2);
-    PlatformSupport::histogramEnumeration("DOMAPI.PerDocumentMutationEventUsage.DOMNodeRemovedFromDocument", static_cast<bool>(listenerTypes & Document::DOMNODEREMOVEDFROMDOCUMENT_LISTENER), 2);
-    PlatformSupport::histogramEnumeration("DOMAPI.PerDocumentMutationEventUsage.DOMNodeInsertedIntoDocument", static_cast<bool>(listenerTypes & Document::DOMNODEINSERTEDINTODOCUMENT_LISTENER), 2);
-    PlatformSupport::histogramEnumeration("DOMAPI.PerDocumentMutationEventUsage.DOMCharacterDataModified", static_cast<bool>(listenerTypes & Document::DOMCHARACTERDATAMODIFIED_LISTENER), 2);
+    HistogramSupport::histogramEnumeration("DOMAPI.PerDocumentMutationEventUsage.DOMSubtreeModified", static_cast<bool>(listenerTypes & Document::DOMSUBTREEMODIFIED_LISTENER), 2);
+    HistogramSupport::histogramEnumeration("DOMAPI.PerDocumentMutationEventUsage.DOMNodeInserted", static_cast<bool>(listenerTypes & Document::DOMNODEINSERTED_LISTENER), 2);
+    HistogramSupport::histogramEnumeration("DOMAPI.PerDocumentMutationEventUsage.DOMNodeRemoved", static_cast<bool>(listenerTypes & Document::DOMNODEREMOVED_LISTENER), 2);
+    HistogramSupport::histogramEnumeration("DOMAPI.PerDocumentMutationEventUsage.DOMNodeRemovedFromDocument", static_cast<bool>(listenerTypes & Document::DOMNODEREMOVEDFROMDOCUMENT_LISTENER), 2);
+    HistogramSupport::histogramEnumeration("DOMAPI.PerDocumentMutationEventUsage.DOMNodeInsertedIntoDocument", static_cast<bool>(listenerTypes & Document::DOMNODEINSERTEDINTODOCUMENT_LISTENER), 2);
+    HistogramSupport::histogramEnumeration("DOMAPI.PerDocumentMutationEventUsage.DOMCharacterDataModified", static_cast<bool>(listenerTypes & Document::DOMCHARACTERDATAMODIFIED_LISTENER), 2);
 }
-#endif
 
 Document::~Document()
 {
@@ -526,9 +521,7 @@ Document::~Document()
 
     m_scriptRunner.clear();
 
-#if PLATFORM(CHROMIUM)
     histogramMutationEventUsage(m_listenerTypes);
-#endif
 
     removeAllEventListeners();
 
@@ -846,9 +839,7 @@ PassRefPtr<Node> Document::importNode(Node* importedNode, bool deep, ExceptionCo
             unsigned length = attrs->length();
             for (unsigned i = 0; i < length; i++) {
                 Attribute* attr = attrs->attributeItem(i);
-                newElement->setAttribute(attr->name(), attr->value().impl(), ec);
-                if (ec)
-                    return 0;
+                newElement->setAttribute(attr->name(), attr->value().impl());
             }
         }
 
@@ -1047,15 +1038,15 @@ void Document::setReadyState(ReadyState readyState)
     switch (readyState) {
     case Loading:
         if (!m_documentTiming.domLoading)
-            m_documentTiming.domLoading = currentTime();
+            m_documentTiming.domLoading = monotonicallyIncreasingTime();
         break;
     case Interactive:
         if (!m_documentTiming.domInteractive)
-            m_documentTiming.domInteractive = currentTime();
+            m_documentTiming.domInteractive = monotonicallyIncreasingTime();
         break;
     case Complete:
         if (!m_documentTiming.domComplete)
-            m_documentTiming.domComplete = currentTime();
+            m_documentTiming.domComplete = monotonicallyIncreasingTime();
         break;
     }
 
@@ -1675,7 +1666,8 @@ void Document::updateLayoutIgnorePendingStylesheets()
         // moment.  If it were more refined, we might be able to do something better.)
         // It's worth noting though that this entire method is a hack, since what we really want to do is
         // suspend JS instead of doing a layout with inaccurate information.
-        if (body() && !body()->renderer() && m_pendingSheetLayout == NoLayoutWithPendingSheets) {
+        HTMLElement* bodyElement = body();
+        if (bodyElement && !bodyElement->renderer() && m_pendingSheetLayout == NoLayoutWithPendingSheets) {
             m_pendingSheetLayout = DidLayoutWithPendingSheets;
             styleSelectorChanged(RecalcStyleImmediately);
         } else if (m_hasNodesWithPlaceholderStyle)
@@ -1843,8 +1835,6 @@ void Document::detach()
 
     RenderObject* render = renderer();
 
-    // Send out documentWillBecomeInactive() notifications to registered elements,
-    // in order to stop media elements
     documentWillBecomeInactive();
 
 #if ENABLE(SHARED_WORKERS)
@@ -3783,9 +3773,10 @@ static bool isValidNameNonASCII(const UChar* characters, unsigned length)
     return true;
 }
 
-static inline bool isValidNameASCII(const UChar* characters, unsigned length)
+template<typename CharType>
+static inline bool isValidNameASCII(const CharType* characters, unsigned length)
 {
-    UChar c = characters[0];
+    CharType c = characters[0];
     if (!(isASCIIAlpha(c) || c == ':' || c == '_'))
         return false;
 
@@ -3804,8 +3795,17 @@ bool Document::isValidName(const String& name)
     if (!length)
         return false;
 
-    const UChar* characters = name.characters();
-    return isValidNameASCII(characters, length) || isValidNameNonASCII(characters, length);
+    const UChar* characters;
+    if (name.is8Bit()) {
+        if (isValidNameASCII(name.characters8(), length))
+            return true;
+        characters = name.characters();
+    } else {
+        characters = name.characters16();
+        if (isValidNameASCII(characters, length))
+            return true;
+    }
+    return isValidNameNonASCII(characters, length);
 }
 
 bool Document::parseQualifiedName(const String& qualifiedName, String& prefix, String& localName, ExceptionCode& ec)
@@ -3918,25 +3918,30 @@ void Document::setInPageCache(bool flag)
     }
 }
 
-void Document::documentWillBecomeInactive() 
+void Document::documentWillBecomeInactive()
 {
 #if USE(ACCELERATED_COMPOSITING)
     if (renderer())
         renderView()->willMoveOffscreen();
 #endif
-
-    HashSet<Element*>::iterator end = m_documentActivationCallbackElements.end();
-    for (HashSet<Element*>::iterator i = m_documentActivationCallbackElements.begin(); i != end; ++i)
-        (*i)->documentWillBecomeInactive();
 }
 
-void Document::documentDidBecomeActive() 
+void Document::documentWillSuspendForPageCache()
+{
+    documentWillBecomeInactive();
+
+    HashSet<Element*>::iterator end = m_documentSuspensionCallbackElements.end();
+    for (HashSet<Element*>::iterator i = m_documentSuspensionCallbackElements.begin(); i != end; ++i)
+        (*i)->documentWillSuspendForPageCache();
+}
+
+void Document::documentDidResumeFromPageCache() 
 {
     Vector<Element*> elements;
-    copyToVector(m_documentActivationCallbackElements, elements);
+    copyToVector(m_documentSuspensionCallbackElements, elements);
     Vector<Element*>::iterator end = elements.end();
     for (Vector<Element*>::iterator i = elements.begin(); i != end; ++i)
-        (*i)->documentDidBecomeActive();
+        (*i)->documentDidResumeFromPageCache();
 
 #if USE(ACCELERATED_COMPOSITING)
     if (renderer())
@@ -3950,14 +3955,14 @@ void Document::documentDidBecomeActive()
     m_frame->loader()->client()->dispatchDidBecomeFrameset(isFrameSet());
 }
 
-void Document::registerForDocumentActivationCallbacks(Element* e)
+void Document::registerForPageCacheSuspensionCallbacks(Element* e)
 {
-    m_documentActivationCallbackElements.add(e);
+    m_documentSuspensionCallbackElements.add(e);
 }
 
-void Document::unregisterForDocumentActivationCallbacks(Element* e)
+void Document::unregisterForPageCacheSuspensionCallbacks(Element* e)
 {
-    m_documentActivationCallbackElements.remove(e);
+    m_documentSuspensionCallbackElements.remove(e);
 }
 
 void Document::mediaVolumeDidChange() 
@@ -4189,55 +4194,65 @@ bool Document::hasSVGRootNode() const
 }
 #endif
 
+const RefPtr<HTMLCollection>& Document::cachedCollection(CollectionType type)
+{
+    ASSERT(static_cast<unsigned>(type) < NumUnnamedDocumentCachedTypes);
+    if (!m_collections[type])
+        m_collections[type] = HTMLCollection::createForCachingOnDocument(this, type);
+    return m_collections[type];
+}
+
 PassRefPtr<HTMLCollection> Document::images()
 {
-    return HTMLCollection::create(this, DocImages);
+    return cachedCollection(DocImages);
 }
 
 PassRefPtr<HTMLCollection> Document::applets()
 {
-    return HTMLCollection::create(this, DocApplets);
+    return cachedCollection(DocApplets);
 }
 
 PassRefPtr<HTMLCollection> Document::embeds()
 {
-    return HTMLCollection::create(this, DocEmbeds);
+    return cachedCollection(DocEmbeds);
 }
 
 PassRefPtr<HTMLCollection> Document::plugins()
 {
     // This is an alias for embeds() required for the JS DOM bindings.
-    return HTMLCollection::create(this, DocEmbeds);
+    return cachedCollection(DocEmbeds);
 }
 
 PassRefPtr<HTMLCollection> Document::objects()
 {
-    return HTMLCollection::create(this, DocObjects);
+    return cachedCollection(DocObjects);
 }
 
 PassRefPtr<HTMLCollection> Document::scripts()
 {
-    return HTMLCollection::create(this, DocScripts);
+    return cachedCollection(DocScripts);
 }
 
 PassRefPtr<HTMLCollection> Document::links()
 {
-    return HTMLCollection::create(this, DocLinks);
+    return cachedCollection(DocLinks);
 }
 
 PassRefPtr<HTMLCollection> Document::forms()
 {
-    return HTMLCollection::create(this, DocForms);
+    return cachedCollection(DocForms);
 }
 
 PassRefPtr<HTMLCollection> Document::anchors()
 {
-    return HTMLCollection::create(this, DocAnchors);
+    return cachedCollection(DocAnchors);
 }
 
 PassRefPtr<HTMLAllCollection> Document::all()
 {
-    return HTMLAllCollection::create(this);
+    if (!m_allCollection)
+        m_allCollection = HTMLAllCollection::create(this);
+    return m_allCollection;
 }
 
 PassRefPtr<HTMLCollection> Document::windowNamedItems(const String &name)
@@ -4270,10 +4285,10 @@ void Document::finishedParsing()
     ASSERT(!scriptableDocumentParser() || m_readyState != Loading);
     setParsing(false);
     if (!m_documentTiming.domContentLoadedEventStart)
-        m_documentTiming.domContentLoadedEventStart = currentTime();
+        m_documentTiming.domContentLoadedEventStart = monotonicallyIncreasingTime();
     dispatchEvent(Event::create(eventNames().DOMContentLoadedEvent, true, false));
     if (!m_documentTiming.domContentLoadedEventEnd)
-        m_documentTiming.domContentLoadedEventEnd = currentTime();
+        m_documentTiming.domContentLoadedEventEnd = monotonicallyIncreasingTime();
 
     if (RefPtr<Frame> f = frame()) {
         // FrameLoader::finishedParsing() might end up calling Document::implicitClose() if all

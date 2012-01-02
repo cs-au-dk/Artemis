@@ -23,7 +23,6 @@
 #include "config.h"
 #include "EditorClientEfl.h"
 
-#include "EditCommand.h"
 #include "Editor.h"
 #include "EventNames.h"
 #include "FocusController.h"
@@ -33,6 +32,7 @@
 #include "Page.h"
 #include "PlatformKeyboardEvent.h"
 #include "Settings.h"
+#include "UndoStep.h"
 #include "WindowsKeyboardCodes.h"
 #include "ewk_private.h"
 
@@ -160,16 +160,16 @@ void EditorClientEfl::didSetSelectionTypesForPasteboard()
     notImplemented();
 }
 
-void EditorClientEfl::registerCommandForUndo(WTF::PassRefPtr<EditCommand> command)
+void EditorClientEfl::registerUndoStep(WTF::PassRefPtr<UndoStep> step)
 {
     if (!m_isInRedo)
         redoStack.clear();
-    undoStack.prepend(command);
+    undoStack.prepend(step);
 }
 
-void EditorClientEfl::registerCommandForRedo(WTF::PassRefPtr<EditCommand> command)
+void EditorClientEfl::registerRedoStep(WTF::PassRefPtr<UndoStep> step)
 {
-    redoStack.prepend(command);
+    redoStack.prepend(step);
 }
 
 void EditorClientEfl::clearUndoRedoOperations()
@@ -201,19 +201,19 @@ bool EditorClientEfl::canRedo() const
 void EditorClientEfl::undo()
 {
     if (canUndo()) {
-        RefPtr<WebCore::EditCommand> command = undoStack.takeFirst();
-        command->unapply();
+        RefPtr<WebCore::UndoStep> step = undoStack.takeFirst();
+        step->unapply();
     }
 }
 
 void EditorClientEfl::redo()
 {
     if (canRedo()) {
-        RefPtr<WebCore::EditCommand> command = redoStack.takeFirst();
+        RefPtr<WebCore::UndoStep> step = redoStack.takeFirst();
 
         ASSERT(!m_isInRedo);
         m_isInRedo = true;
-        command->reapply();
+        step->reapply();
         m_isInRedo = false;
     }
 }
@@ -403,7 +403,7 @@ bool EditorClientEfl::handleEditingKeyboardEvent(KeyboardEvent* event)
 
     Editor::Command command = frame->editor()->command(interpretKeyEvent(event));
 
-    if (keyEvent->type() == PlatformKeyboardEvent::RawKeyDown) {
+    if (keyEvent->type() == PlatformEvent::RawKeyDown) {
         // WebKit doesn't have enough information about mode to decide how commands that just insert text if executed via Editor should be treated,
         // so we leave it upon WebCore to either handle them immediately (e.g. Tab that changes focus) or let a keypress event be generated
         // (e.g. Tab that inserts a Tab character, or Enter).

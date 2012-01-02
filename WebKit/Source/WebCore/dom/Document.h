@@ -201,7 +201,7 @@ struct FormElementKeyHash {
 };
 
 struct FormElementKeyHashTraits : WTF::GenericHashTraits<FormElementKey> {
-    static void constructDeletedValue(FormElementKey& slot) { new (&slot) FormElementKey(WTF::HashTableDeletedValue); }
+    static void constructDeletedValue(FormElementKey& slot) { new (NotNull, &slot) FormElementKey(WTF::HashTableDeletedValue); }
     static bool isDeletedValue(const FormElementKey& value) { return value.isHashTableDeletedValue(); }
 };
 
@@ -787,12 +787,12 @@ public:
     void addListenerTypeIfNeeded(const AtomicString& eventType);
 
 #if ENABLE(MUTATION_OBSERVERS)
-    bool hasSubtreeMutationObserverOfType(WebKitMutationObserver::MutationType type) const
+    bool hasMutationObserversOfType(WebKitMutationObserver::MutationType type) const
     {
-        return m_subtreeMutationObserverTypes & type;
+        return m_mutationObserverTypes & type;
     }
-    bool hasSubtreeMutationObserver() const { return m_subtreeMutationObserverTypes; }
-    void addSubtreeMutationObserverTypes(MutationObserverOptions types) { m_subtreeMutationObserverTypes |= types; }
+    bool hasMutationObservers() const { return m_mutationObserverTypes; }
+    void addMutationObserverTypes(MutationObserverOptions types) { m_mutationObserverTypes |= types; }
 #endif
 
     CSSStyleDeclaration* getOverrideStyle(Element*, const String& pseudoElt);
@@ -970,13 +970,15 @@ public:
 
     bool inPageCache() const { return m_inPageCache; }
     void setInPageCache(bool flag);
-    
-    // Elements can register themselves for the "documentWillBecomeInactive()" and  
-    // "documentDidBecomeActive()" callbacks
-    void registerForDocumentActivationCallbacks(Element*);
-    void unregisterForDocumentActivationCallbacks(Element*);
+
+    // Elements can register themselves for the "documentWillSuspendForPageCache()" and  
+    // "documentDidResumeFromPageCache()" callbacks
+    void registerForPageCacheSuspensionCallbacks(Element*);
+    void unregisterForPageCacheSuspensionCallbacks(Element*);
+
     void documentWillBecomeInactive();
-    void documentDidBecomeActive();
+    void documentWillSuspendForPageCache();
+    void documentDidResumeFromPageCache();
 
     void registerForMediaVolumeCallbacks(Element*);
     void unregisterForMediaVolumeCallbacks(Element*);
@@ -1185,6 +1187,8 @@ private:
     PageVisibilityState visibilityState() const;
 #endif
 
+    const RefPtr<HTMLCollection>& cachedCollection(CollectionType);
+
     int m_guardRefCount;
 
     OwnPtr<CSSStyleSelector> m_styleSelector;
@@ -1267,7 +1271,7 @@ private:
     unsigned short m_listenerTypes;
 
 #if ENABLE(MUTATION_OBSERVERS)
-    MutationObserverOptions m_subtreeMutationObserverTypes;
+    MutationObserverOptions m_mutationObserverTypes;
 #endif
 
     RefPtr<StyleSheetList> m_styleSheets; // All of the stylesheets that are currently in effect for our media type and stylesheet set.
@@ -1365,6 +1369,9 @@ private:
     
     CheckedRadioButtons m_checkedRadioButtons;
 
+    RefPtr<HTMLCollection> m_collections[NumUnnamedDocumentCachedTypes];
+    RefPtr<HTMLAllCollection> m_allCollection;
+
     typedef HashMap<AtomicStringImpl*, CollectionCache*> NamedCollectionMap;
     FixedArray<CollectionCache, NumUnnamedDocumentCachedTypes> m_collectionInfo;
     FixedArray<NamedCollectionMap, NumNamedDocumentCachedTypes> m_nameCollectionInfo;
@@ -1387,7 +1394,7 @@ private:
     bool m_inPageCache;
     Vector<IconURL> m_iconURLs;
 
-    HashSet<Element*> m_documentActivationCallbackElements;
+    HashSet<Element*> m_documentSuspensionCallbackElements;
     HashSet<Element*> m_mediaVolumeCallbackElements;
     HashSet<Element*> m_privateBrowsingStateChangedElements;
 

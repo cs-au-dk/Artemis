@@ -48,6 +48,7 @@
 #include "HTMLNames.h"
 #include "HTMLParserIdioms.h"
 #include "InspectorInstrumentation.h"
+#include "MutationObserverInterestGroup.h"
 #include "MutationRecord.h"
 #include "NodeList.h"
 #include "NodeRenderStyle.h"
@@ -162,10 +163,7 @@ PassRefPtr<Element> Element::cloneElementWithoutChildren()
     // This is a sanity check as HTML overloads some of the DOM methods.
     ASSERT(isHTMLElement() == clone->isHTMLElement());
 
-    // Call attributes(true) to force attribute synchronization to occur for SVG and style attributes.
-    if (NamedNodeMap* attributeMap = attributes(true))
-        clone->attributes()->setAttributes(*attributeMap);
-
+    clone->setAttributesFromElement(*this);
     clone->copyNonAttributeProperties(this);
 
     return clone.release();
@@ -198,12 +196,6 @@ void Element::removeAttribute(const QualifiedName& name, ExceptionCode& ec)
         if (ec == NOT_FOUND_ERR)
             ec = 0;
     }
-}
-
-void Element::setAttribute(const QualifiedName& name, const AtomicString& value)
-{
-    ExceptionCode ec;
-    setAttribute(name, value, ec);
 }
 
 void Element::setBooleanAttribute(const QualifiedName& name, bool b)
@@ -640,28 +632,23 @@ void Element::setAttribute(const AtomicString& name, const AtomicString& value, 
     setAttributeInternal(old, old ? old->name() : QualifiedName(nullAtom, localName, nullAtom), value);
 }
 
-void Element::setAttribute(const QualifiedName& name, const AtomicString& value, ExceptionCode&)
+void Element::setAttribute(const QualifiedName& name, const AtomicString& value)
 {
     // Allocate attribute map if necessary.
     Attribute* old = attributes(false)->getAttributeItem(name);
     setAttributeInternal(old, name, value);
 }
 
-void Element::setAttributeInternal(Attribute* old, const QualifiedName& name, const AtomicString& value)
+inline void Element::setAttributeInternal(Attribute* old, const QualifiedName& name, const AtomicString& value)
 {
 #if ENABLE(INSPECTOR)
     if (!isSynchronizingStyleAttribute())
         InspectorInstrumentation::willModifyDOMAttr(document(), this);
 #endif
 
-#if ENABLE(MUTATION_OBSERVERS)
-    enqueueAttributesMutationRecordIfRequested(name, old ? old->value() : nullAtom);
-#endif
-
     document()->incDOMTreeVersion();
 
-    if (isIdAttributeName(name))
-        updateId(old ? old->value() : nullAtom, value);
+    willModifyAttribute(name, old ? old->value() : nullAtom, value);
 
     if (old && value.isNull())
         m_attributeMap->removeAttribute(name);
@@ -696,6 +683,8 @@ void Element::attributeChanged(Attribute* attr, bool)
 
 void Element::updateAfterAttributeChanged(Attribute* attr)
 {
+    invalidateNodeListsCacheAfterAttributeChanged(attr->name());
+
     if (!AXObjectCache::accessibilityEnabled())
         return;
 
@@ -759,22 +748,14 @@ static bool isAttributeToRemove(const QualifiedName& name, const AtomicString& v
     return (name.localName().endsWith(hrefAttr.localName()) || name == srcAttr || name == actionAttr) && protocolIsJavaScript(stripLeadingAndTrailingHTMLSpaces(value));       
 }
 
-void Element::setAttributeMap(PassRefPtr<NamedNodeMap> list, FragmentScriptingPermission scriptingPermission)
+void Element::parserSetAttributeMap(PassRefPtr<NamedNodeMap> list, FragmentScriptingPermission scriptingPermission)
 {
+    ASSERT(!inDocument());
+    ASSERT(!parentNode());
+
     document()->incDOMTreeVersion();
 
-    // If setting the whole map changes the id attribute, we need to call updateId.
-
-    const QualifiedName& idName = document()->idAttributeName();
-    Attribute* oldId = m_attributeMap ? m_attributeMap->getAttributeItem(idName) : 0;
-    Attribute* newId = list ? list->getAttributeItem(idName) : 0;
-
-    if (oldId || newId)
-        updateId(oldId ? oldId->value() : nullAtom, newId ? newId->value() : nullAtom);
-
-    if (m_attributeMap)
-        m_attributeMap->m_element = 0;
-
+    ASSERT(!m_attributeMap);
     m_attributeMap = list;
 
     if (m_attributeMap) {
@@ -801,7 +782,6 @@ void Element::setAttributeMap(PassRefPtr<NamedNodeMap> list, FragmentScriptingPe
         m_attributeMap->copyAttributesToVector(attributes);
         for (Vector<RefPtr<Attribute> >::iterator iter = attributes.begin(); iter != attributes.end(); ++iter)
             attributeChanged(iter->get());
-        // FIXME: What about attributes that were in the old map that are not in the new map?
     }
 }
 
@@ -1138,7 +1118,6 @@ void Element::recalcStyle(StyleChange change)
     bool forceCheckOfAnyElementSibling = false;
     for (Node *n = firstChild(); n; n = n->nextSibling()) {
         if (n->isTextNode()) {
-            parentPusher.push();
             static_cast<Text*>(n)->recalcTextStyle(change);
             continue;
         } 
@@ -1394,32 +1373,6 @@ void Element::finishParsingChildren()
         styleSelector->popParent(this);
 }
 
-void Element::dispatchAttrRemovalEvent(Attribute*)
-{
-    ASSERT(!eventDispatchForbidden());
-
-#if 0
-    if (!document()->hasListenerType(Document::DOMATTRMODIFIED_LISTENER))
-        return;
-    ExceptionCode ec = 0;
-    dispatchScopedEvent(MutationEvent::create(DOMAttrModifiedEvent, true, attr, attr->value(),
-        attr->value(), document()->attrName(attr->id()), MutationEvent::REMOVAL), ec);
-#endif
-}
-
-void Element::dispatchAttrAdditionEvent(Attribute*)
-{
-    ASSERT(!eventDispatchForbidden());
-
-#if 0
-    if (!document()->hasListenerType(Document::DOMATTRMODIFIED_LISTENER))
-        return;
-    ExceptionCode ec = 0;
-    dispatchScopedEvent(MutationEvent::create(DOMAttrModifiedEvent, true, attr, attr->value(),
-        attr->value(), document()->attrName(attr->id()), MutationEvent::ADDITION), ec);
-#endif
-}
-
 #ifndef NDEBUG
 void Element::formatForDebugger(char* buffer, unsigned length) const
 {
@@ -1505,7 +1458,7 @@ void Element::setAttributeNS(const AtomicString& namespaceURI, const AtomicStrin
     if (scriptingPermission == FragmentScriptingNotAllowed && (isEventHandlerAttribute(qName) || isAttributeToRemove(qName, value)))
         return;
 
-    setAttribute(qName, value, ec);
+    setAttribute(qName, value);
 }
 
 void Element::removeAttribute(const String& name, ExceptionCode& ec)
@@ -1897,8 +1850,7 @@ int Element::getIntegralAttribute(const QualifiedName& attributeName) const
 void Element::setIntegralAttribute(const QualifiedName& attributeName, int value)
 {
     // FIXME: Need an AtomicString version of String::number.
-    ExceptionCode ec;
-    setAttribute(attributeName, String::number(value), ec);
+    setAttribute(attributeName, String::number(value));
 }
 
 unsigned Element::getUnsignedIntegralAttribute(const QualifiedName& attributeName) const
@@ -1909,8 +1861,7 @@ unsigned Element::getUnsignedIntegralAttribute(const QualifiedName& attributeNam
 void Element::setUnsignedIntegralAttribute(const QualifiedName& attributeName, unsigned value)
 {
     // FIXME: Need an AtomicString version of String::number.
-    ExceptionCode ec;
-    setAttribute(attributeName, String::number(value), ec);
+    setAttribute(attributeName, String::number(value));
 }
 
 #if ENABLE(SVG)

@@ -26,7 +26,6 @@
 
 #include "ExceptionCode.h"
 #include "JSDOMBinding.h"
-#include "JSTestSupplemental.h"
 #include "TestInterface.h"
 #include "TestSupplemental.h"
 #include <runtime/Error.h>
@@ -42,6 +41,7 @@ using namespace JSC;
 namespace WebCore {
 
 ASSERT_CLASS_FITS_IN_CELL(JSTestInterface);
+ASSERT_HAS_TRIVIAL_DESTRUCTOR(JSTestInterface);
 
 /* Hash table */
 
@@ -69,7 +69,9 @@ static const HashTableValue JSTestInterfaceConstructorTableValues[] =
 };
 
 static const HashTable JSTestInterfaceConstructorTable = { 1, 0, JSTestInterfaceConstructorTableValues, 0 };
-const ClassInfo JSTestInterfaceConstructor::s_info = { "TestInterfaceConstructor", &DOMConstructorObject::s_info, &JSTestInterfaceConstructorTable, 0, CREATE_METHOD_TABLE(JSTestInterfaceConstructor) };
+ASSERT_HAS_TRIVIAL_DESTRUCTOR(JSTestInterfaceConstructor);
+
+const ClassInfo JSTestInterfaceConstructor::s_info = { "TestInterfaceConstructor", &Base::s_info, &JSTestInterfaceConstructorTable, 0, CREATE_METHOD_TABLE(JSTestInterfaceConstructor) };
 
 JSTestInterfaceConstructor::JSTestInterfaceConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
     : DOMConstructorObject(structure, globalObject)
@@ -130,14 +132,14 @@ static const HashTableValue JSTestInterfacePrototypeTableValues[] =
 };
 
 static const HashTable JSTestInterfacePrototypeTable = { 1, 0, JSTestInterfacePrototypeTableValues, 0 };
-const ClassInfo JSTestInterfacePrototype::s_info = { "TestInterfacePrototype", &JSC::JSNonFinalObject::s_info, &JSTestInterfacePrototypeTable, 0, CREATE_METHOD_TABLE(JSTestInterfacePrototype) };
+const ClassInfo JSTestInterfacePrototype::s_info = { "TestInterfacePrototype", &Base::s_info, &JSTestInterfacePrototypeTable, 0, CREATE_METHOD_TABLE(JSTestInterfacePrototype) };
 
 JSObject* JSTestInterfacePrototype::self(ExecState* exec, JSGlobalObject* globalObject)
 {
     return getDOMPrototype<JSTestInterface>(exec, globalObject);
 }
 
-const ClassInfo JSTestInterface::s_info = { "TestInterface", &JSDOMWrapper::s_info, &JSTestInterfaceTable, 0 , CREATE_METHOD_TABLE(JSTestInterface) };
+const ClassInfo JSTestInterface::s_info = { "TestInterface", &Base::s_info, &JSTestInterfaceTable, 0 , CREATE_METHOD_TABLE(JSTestInterface) };
 
 JSTestInterface::JSTestInterface(Structure* structure, JSDOMGlobalObject* globalObject, PassRefPtr<TestInterface> impl)
     : JSDOMWrapper(structure, globalObject)
@@ -175,8 +177,8 @@ JSValue jsTestInterfaceStr1(ExecState* exec, JSValue slotBase, const Identifier&
 {
     JSTestInterface* castedThis = static_cast<JSTestInterface*>(asObject(slotBase));
     UNUSED_PARAM(exec);
-    TestInterface* imp = static_cast<TestInterface*>(castedThis->impl());
-    JSValue result = jsString(exec, TestSupplemental::str1(imp));
+    TestInterface* impl = static_cast<TestInterface*>(castedThis->impl());
+    JSValue result = jsString(exec, TestSupplemental::str1(impl));
     return result;
 }
 
@@ -187,8 +189,8 @@ JSValue jsTestInterfaceStr2(ExecState* exec, JSValue slotBase, const Identifier&
 {
     JSTestInterface* castedThis = static_cast<JSTestInterface*>(asObject(slotBase));
     UNUSED_PARAM(exec);
-    TestInterface* imp = static_cast<TestInterface*>(castedThis->impl());
-    JSValue result = jsString(exec, TestSupplemental::str2(imp));
+    TestInterface* impl = static_cast<TestInterface*>(castedThis->impl());
+    JSValue result = jsString(exec, TestSupplemental::str2(impl));
     return result;
 }
 
@@ -198,7 +200,8 @@ JSValue jsTestInterfaceStr2(ExecState* exec, JSValue slotBase, const Identifier&
 JSValue jsTestInterfaceStr3(ExecState* exec, JSValue slotBase, const Identifier&)
 {
     JSTestInterface* castedThis = static_cast<JSTestInterface*>(asObject(slotBase));
-    return JSTestSupplemental::str3(castedThis, exec);
+    TestInterface* impl = static_cast<TestInterface*>(castedThis->impl());
+    return castedThis->str3(impl, exec);
 }
 
 #endif
@@ -220,8 +223,8 @@ void JSTestInterface::put(JSCell* cell, ExecState* exec, const Identifier& prope
 void setJSTestInterfaceStr2(ExecState* exec, JSObject* thisObject, JSValue value)
 {
     JSTestInterface* castedThis = static_cast<JSTestInterface*>(thisObject);
-    TestInterface* imp = static_cast<TestInterface*>(castedThis->impl());
-    TestSupplemental::setStr2(imp, ustringToString(value.isEmpty() ? UString() : value.toString(exec)));
+    TestInterface* impl = static_cast<TestInterface*>(castedThis->impl());
+    TestSupplemental::setStr2(impl, ustringToString(value.isEmpty() ? UString() : value.toString(exec)));
 }
 
 #endif
@@ -229,7 +232,9 @@ void setJSTestInterfaceStr2(ExecState* exec, JSObject* thisObject, JSValue value
 #if ENABLE(Condition11) || ENABLE(Condition12)
 void setJSTestInterfaceStr3(ExecState* exec, JSObject* thisObject, JSValue value)
 {
-    JSTestSupplemental::setStr3(static_cast<JSTestInterface*>(thisObject), exec, value);
+    JSTestInterface* castedThis = static_cast<JSTestInterface*>(thisObject);
+    TestInterface* impl = static_cast<TestInterface*>(castedThis->impl());
+    castedThis->setStr3(impl, exec, value);
 }
 
 #endif

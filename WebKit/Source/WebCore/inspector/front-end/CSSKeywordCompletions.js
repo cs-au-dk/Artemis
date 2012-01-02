@@ -47,6 +47,13 @@ WebInspector.CSSKeywordCompletions.isColorAwareProperty = function(propertyName)
     return WebInspector.CSSKeywordCompletions._colorAwareProperties[propertyName] === true;
 }
 
+WebInspector.CSSKeywordCompletions.colors = function()
+{
+    if (!this._colorsKeySet)
+        this._colorsKeySet = this._colors.keySet();
+    return this._colorsKeySet;
+}
+
 // Taken from http://www.w3.org/TR/CSS21/propidx.html.
 WebInspector.CSSKeywordCompletions.InheritedProperties = [
     "azimuth", "border-collapse", "border-spacing", "caption-side", "color", "cursor", "direction", "elevation",
@@ -448,5 +455,9 @@ WebInspector.CSSKeywordCompletions._propertyKeywordMap = {
     ],
     "-webkit-text-emphasis-style": [
         "circle", "filled", "open", "dot", "double-circle", "triangle", "sesame"
+    ],
+    "-webkit-transform": [
+        "scale", "scaleX", "scaleY", "scale3d", "rotate", "rotateX", "rotateY", "rotateZ", "rotate3d", "skew", "skewX", "skewY", 
+        "translate", "translateX", "translateY", "translateZ", "translate3d", "matrix", "matrix3d", "perspective"
     ]
 }

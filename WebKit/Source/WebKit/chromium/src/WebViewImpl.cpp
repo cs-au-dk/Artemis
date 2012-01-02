@@ -537,7 +537,7 @@ void WebViewImpl::mouseContextMenu(const WebMouseEvent& event)
     PlatformMouseEventBuilder pme(mainFrameImpl()->frameView(), event);
 
     // Find the right target frame. See issue 1186900.
-    HitTestResult result = hitTestResultForWindowPos(pme.pos());
+    HitTestResult result = hitTestResultForWindowPos(pme.position());
     Frame* targetFrame;
     if (result.innerNonSharedNode())
         targetFrame = result.innerNonSharedNode()->document()->frame();
@@ -1427,6 +1427,7 @@ void WebViewImpl::setFocus(bool enable)
 {
     m_page->focusController()->setFocused(enable);
     if (enable) {
+        m_page->focusController()->setActive(true);
         RefPtr<Frame> focusedFrame = m_page->focusController()->focusedFrame();
         if (focusedFrame) {
             Node* focusedNode = focusedFrame->document()->focusedNode();
@@ -2205,7 +2206,7 @@ void WebViewImpl::dragSourceEndedAt(
 {
     PlatformMouseEvent pme(clientPoint,
                            screenPoint,
-                           LeftButton, MouseEventMoved, 0, false, false, false,
+                           LeftButton, PlatformEvent::MouseMoved, 0, false, false, false,
                            false, 0);
     m_page->mainFrame()->eventHandler()->dragSourceEndedAt(pme,
         static_cast<DragOperation>(operation));

@@ -1,3 +1,103 @@
+2011-12-20  Pavel Feldman  <pavel.feldman@gmail.com>
+
+        Web Inspector: reproducible crash after closing web inspector and browser window  (iCab)
+        https://bugs.webkit.org/show_bug.cgi?id=74255
+
+        Reviewed by Yury Semikhatsky.
+
+        * WebCoreSupport/WebInspectorClient.h:
+        * WebCoreSupport/WebInspectorClient.mm:
+        (WebInspectorClient::bringFrontendToFront):
+        (-[WebInspectorWindowController destroyInspectorView:]):
+
+2011-12-19  Eric Carlson  <eric.carlson@apple.com>
+
+        Enable <track> for Mac build
+        https://bugs.webkit.org/show_bug.cgi?id=74838
+
+        Reviewed by Darin Adler.
+
+        * Configurations/FeatureDefines.xcconfig:
+
+2011-12-16  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Rename registerCommandFor(Undo|Redo) to register(Undo|Redo)Step
+        https://bugs.webkit.org/show_bug.cgi?id=74748
+
+        Reviewed by Eric Seidel.
+
+        * WebCoreSupport/WebEditorClient.h:
+        * WebCoreSupport/WebEditorClient.mm:
+        (WebEditorClient::registerUndoOrRedoStep):
+        (WebEditorClient::registerUndoStep):
+        (WebEditorClient::registerRedoStep):
+
+2011-12-16  Sam Weinig  <sam@webkit.org>
+
+        Give PlatformEvents a base class
+        https://bugs.webkit.org/show_bug.cgi?id=74685
+
+        Reviewed by Anders Carlsson.
+
+        Add a base class for PlatformMouseEvent, PlatformKeyboardEvent, PlatformWheelEvent
+        and PlatformGestureEvent and move Type enumeration and modifiers down to it.
+
+        * WebView/WebFrame.mm:
+        (-[WebFrame _dragSourceEndedAt:operation:]):
+        * WebView/WebHTMLView.mm:
+        (currentKeyboardEvent):
+        (-[WebHTMLView _interpretKeyEvent:savingCommands:]):
+        * WebView/WebPDFView.mm:
+        (-[WebPDFView PDFViewWillClickOnLink:withURL:]):
+
+2011-12-16  Simon Fraser  <simon.fraser@apple.com>
+
+        Fix a #elsif fumble in my earlier commit.
+
+        * WebView/WebHTMLView.mm:
+        (-[WebHTMLView attachRootLayer:]):
+
+2011-12-16  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Only EditCommandComposition should implement unapply and reapply
+        https://bugs.webkit.org/show_bug.cgi?id=74490
+
+        Reviewed by Eric Seidel.
+
+        * WebCoreSupport/WebEditorClient.h:
+        * WebCoreSupport/WebEditorClient.mm:
+        (-[WebUndoStep initWithUndoStep:]):
+        (-[WebUndoStep dealloc]):
+        (+[WebUndoStep stepWithUndoStep:]):
+        (-[WebUndoStep step]):
+        (-[WebEditorUndoTarget undoEditing:]):
+        (-[WebEditorUndoTarget redoEditing:]):
+        (WebEditorClient::registerCommandForUndoOrRedo):
+        (WebEditorClient::registerCommandForUndo):
+        (WebEditorClient::registerCommandForRedo):
+
+2011-12-16  Simon Fraser  <simon.fraser@apple.com>
+
+        <rdar://problem/10589427> Avoid calling -setGeometryFlipped ourselves on the layer hosting view's layer
+
+        Reviewed by Sam Weinig.
+        
+        Now that we're using a flipped view to host the compositing layers,
+        we should not set geometryFlipped on the root layer ourselves.
+
+        * WebView/WebHTMLView.mm:
+        (-[WebHTMLView attachRootLayer:]):
+
+2011-12-16  Mark Hahnenberg  <mhahnenberg@apple.com>
+
+        De-virtualize destructors
+        https://bugs.webkit.org/show_bug.cgi?id=74331
+
+        Reviewed by Geoffrey Garen.
+
+        * Plugins/Hosted/ProxyRuntimeObject.h: Remove empty virtual destructor.
+        * Plugins/Hosted/ProxyRuntimeObject.mm:
+
 2011-12-14  Ryosuke Niwa  <rniwa@webkit.org>
 
         Mac build fix after r102874.

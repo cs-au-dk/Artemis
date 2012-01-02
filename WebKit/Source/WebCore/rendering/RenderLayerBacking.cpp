@@ -63,7 +63,7 @@ namespace WebCore {
 
 using namespace HTMLNames;
 
-static bool hasBorderOutlineOrShadow(const RenderStyle*);
+static bool hasBoxDecorations(const RenderStyle*);
 static bool hasBoxDecorationsOrBackground(const RenderObject*);
 static bool hasBoxDecorationsOrBackgroundImage(const RenderStyle*);
 static LayoutRect clipBox(RenderBox* renderer);
@@ -87,16 +87,24 @@ RenderLayerBacking::RenderLayerBacking(RenderLayer* layer)
     , m_artificiallyInflatedBounds(false)
     , m_isMainFrameRenderViewLayer(false)
     , m_usingTiledCacheLayer(false)
+#if ENABLE(CSS_FILTERS)
+    , m_canCompositeFilters(false)
+#endif
 {
     if (renderer()->isRenderView()) {
         Frame* frame = toRenderView(renderer())->frameView()->frame();
         Page* page = frame ? frame->page() : 0;
-        if (page && frame && page->mainFrame() == frame)
+        if (page && frame && page->mainFrame() == frame) {
             m_isMainFrameRenderViewLayer = true;
+
+#if ENABLE(THREADED_SCROLLING)
+            // FIXME: It's a little weird that we base this decision on whether there's a scrolling coordinator or not.
+            if (page->scrollingCoordinator())
+                m_usingTiledCacheLayer = true;
+#endif
+        }
     }
     
-    m_usingTiledCacheLayer = false; // FIXME: At some point this will test m_isMainFrameRenderViewLayer and check a Setting.
-
     createPrimaryGraphicsLayer();
 }
 
@@ -134,11 +142,16 @@ void RenderLayerBacking::createPrimaryGraphicsLayer()
 #endif
     m_graphicsLayer = createGraphicsLayer(layerName);
 
-    if (m_isMainFrameRenderViewLayer)
+    if (m_isMainFrameRenderViewLayer) {
+        m_graphicsLayer->setContentsOpaque(true);
         m_graphicsLayer->setAppliesPageScale();
+    }
     
     updateLayerOpacity(renderer()->style());
     updateLayerTransform(renderer()->style());
+#if ENABLE(CSS_FILTERS)
+    updateLayerFilters(renderer()->style());
+#endif
 }
 
 void RenderLayerBacking::destroyGraphicsLayers()
@@ -169,6 +182,13 @@ void RenderLayerBacking::updateLayerTransform(const RenderStyle* style)
     
     m_graphicsLayer->setTransform(t);
 }
+
+#if ENABLE(CSS_FILTERS)
+void RenderLayerBacking::updateLayerFilters(const RenderStyle* style)
+{
+    m_canCompositeFilters = m_graphicsLayer->setFilters(style->filter());
+}
+#endif
 
 static bool hasNonZeroTransformOrigin(const RenderObject* renderer)
 {
@@ -373,6 +393,10 @@ void RenderLayerBacking::updateGraphicsLayerGeometry()
     // Set opacity, if it is not animating.
     if (!renderer()->animation()->isRunningAcceleratedAnimationOnRenderer(renderer(), CSSPropertyOpacity))
         updateLayerOpacity(renderer()->style());
+        
+#if ENABLE(CSS_FILTERS)
+    updateLayerFilters(renderer()->style());
+#endif
     
     m_owningLayer->updateVisibilityStatus();
     m_graphicsLayer->setContentsVisible(m_owningLayer->hasVisibleContent());
@@ -738,19 +762,19 @@ float RenderLayerBacking::compositingOpacity(float rendererOpacity) const
     return finalOpacity;
 }
 
-static bool hasBorderOutlineOrShadow(const RenderStyle* style)
+static bool hasBoxDecorations(const RenderStyle* style)
 {
-    return style->hasBorder() || style->hasBorderRadius() || style->hasOutline() || style->hasAppearance() || style->boxShadow();
+    return style->hasBorder() || style->hasBorderRadius() || style->hasOutline() || style->hasAppearance() || style->boxShadow() || style->hasFilter();
 }
 
 static bool hasBoxDecorationsOrBackground(const RenderObject* renderer)
 {
-    return hasBorderOutlineOrShadow(renderer->style()) || renderer->hasBackground();
+    return hasBoxDecorations(renderer->style()) || renderer->hasBackground();
 }
 
 static bool hasBoxDecorationsOrBackgroundImage(const RenderStyle* style)
 {
-    return hasBorderOutlineOrShadow(style) || style->hasBackgroundImage();
+    return hasBoxDecorations(style) || style->hasBackgroundImage();
 }
 
 bool RenderLayerBacking::rendererHasBackground() const

@@ -46,13 +46,17 @@ import optparse
 import Queue
 import sys
 
+
 # Handle Python < 2.6 where multiprocessing isn't available.
 try:
     import multiprocessing
 except ImportError:
     multiprocessing = None
 
-from webkitpy.common.host import Host  # FIXME: This should not be needed!
+# These are needed when workers are launched in new child processes.
+from webkitpy.common.host import Host
+from webkitpy.common.host_mock import MockHost
+
 from webkitpy.layout_tests.controllers import message_broker
 from webkitpy.layout_tests.views import printing
 
@@ -164,7 +168,7 @@ class _InlineManager(_ManagerConnection):
 
     def start_worker(self, worker_number, results_directory):
         self._inline_worker = _InlineWorkerConnection(self._broker, self._port,
-            self._client, self._worker_class, worker_number, results_directory)
+            self._client, self._worker_class, worker_number, results_directory, self._options)
         return self._inline_worker
 
     def run_message_loop(self, delay_secs=None):
@@ -211,8 +215,8 @@ class _WorkerConnection(message_broker.BrokerConnection):
 
 
 class _InlineWorkerConnection(_WorkerConnection):
-    def __init__(self, broker, port, manager_client, worker_class, worker_number, results_directory):
-        _WorkerConnection.__init__(self, broker, worker_class, worker_number, results_directory, port.options)
+    def __init__(self, broker, port, manager_client, worker_class, worker_number, results_directory, options):
+        _WorkerConnection.__init__(self, broker, worker_class, worker_number, results_directory, options)
         self._alive = False
         self._port = port
         self._manager_client = manager_client
@@ -252,11 +256,16 @@ if multiprocessing:
             self._client = client
 
         def run(self):
-            options = self._options
-            # FIXME: This should get the Host from the owner of this object
-            # so this function can be properly mocked!
-            host = Host()
+            # We need to create a new Host object here because this is
+            # running in a new process and we can't require the parent's
+            # Host to be pickleable and passed to the child.
+            if self._platform_name.startswith('test'):
+                host = MockHost()
+            else:
+                host = Host()
             host._initialize_scm()
+
+            options = self._options
             port_obj = host.port_factory.get(self._platform_name, options)
 
             # The unix multiprocessing implementation clones the

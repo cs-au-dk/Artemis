@@ -1,3 +1,152 @@
+2011-12-20  Rafael Brandao  <rafael.lobo@openbossa.org>
+
+        [Qt] Extend QQuickWebview::navigationRequested API
+        https://bugs.webkit.org/show_bug.cgi?id=73818
+
+        Reviewed by Simon Hausmann.
+
+        * declarative/experimental/plugin.cpp:
+
+2011-12-20  Jarred Nicholls  <jarred@sencha.com>
+
+        [Qt] HTTP header injection via QWebPage::userAgentForUrl()
+        https://bugs.webkit.org/show_bug.cgi?id=68560
+
+        Strip out newline characters from the result of userAgentForUrl() to prevent additional
+        HTTP headers in HTTP requests.
+
+        New QtTest case that validates the user agent, as returned by navigator.userAgent, does not
+        contain any newline characters.
+
+        Reviewed by Simon Hausmann.
+
+        * WebCoreSupport/FrameLoaderClientQt.cpp:
+        (WebCore::FrameLoaderClientQt::userAgent):
+        * tests/qwebpage/tst_qwebpage.cpp:
+        (CustomUserAgentWebPage::userAgentForUrl):
+        (tst_QWebPage::userAgentNewlineStripping):
+
+2011-12-20  Rafael Brandao  <rafael.lobo@openbossa.org>
+
+        [Qt][WK2] Implement favicon support
+        https://bugs.webkit.org/show_bug.cgi?id=71082
+
+        Reviewed by Simon Hausmann.
+
+        * declarative/plugin.cpp:
+        (WebKitQmlPlugin::initializeEngine): Setup for the QDeclarativeImageProvider to display favicons.
+        Its handles the following url format: "image://webicon/<iconID>#<pageURL>".
+
+2011-12-19  Sam Weinig  <sam@webkit.org>
+
+        More PlatformEvent cleanup
+        https://bugs.webkit.org/show_bug.cgi?id=74831
+
+        Reviewed by Dan Bernstein.
+
+        * Api/qwebpage.cpp:
+        (QWebPage::swallowContextMenuEvent):
+        Update to use new names, access style.
+
+2011-12-19  Alexander Færøy  <ahf@0x90.dk>
+
+        [Qt] Cleanup QTM_NAMESPACE usage in DeviceOrientationProviderQt
+        https://bugs.webkit.org/show_bug.cgi?id=74853
+
+        Reviewed by Simon Hausmann.
+
+        * Api/qwebframe_p.h:
+        * WebCoreSupport/DeviceOrientationProviderQt.cpp:
+        * WebCoreSupport/DeviceOrientationProviderQt.h:
+
+2011-12-19  Alexander Færøy  <ahf@0x90.dk>
+
+        [Qt] Cleanup DeviceMotionClientQt and friends.
+        https://bugs.webkit.org/show_bug.cgi?id=74849
+
+        This patch cleans up the DeviceMotionQt class and friends by applying
+        the following changes:
+
+        - Remove unnecessary pointer to QWebPage. This is needed to be able to
+          reuse the code for WebKit2.
+        - Remove QObject dependencies and all signals/slots. Instead, we call
+          didChangeDeviceMotion() on the controller directly from
+          DeviceMotionProviderQt.
+
+        Reviewed by Simon Hausmann.
+
+        * Api/qwebpage.cpp:
+        (QWebPagePrivate::QWebPagePrivate):
+        * WebCoreSupport/DeviceMotionClientQt.cpp:
+        (WebCore::DeviceMotionClientQt::DeviceMotionClientQt):
+        (WebCore::DeviceMotionClientQt::~DeviceMotionClientQt):
+        (WebCore::DeviceMotionClientQt::setController):
+        * WebCoreSupport/DeviceMotionClientQt.h:
+        * WebCoreSupport/DeviceMotionProviderQt.cpp:
+        (WebCore::DeviceMotionProviderQt::DeviceMotionProviderQt):
+        (WebCore::DeviceMotionProviderQt::setController):
+        (WebCore::DeviceMotionProviderQt::filter):
+        * WebCoreSupport/DeviceMotionProviderQt.h:
+
+2011-12-18  Simon Hausmann  <simon.hausmann@nokia.com>
+
+        Rename EditCommandQt to UndoStepQt
+        https://bugs.webkit.org/show_bug.cgi?id=74754
+
+        Reviewed by Ryosuke Niwa.
+
+        * WebCoreSupport/EditorClientQt.cpp:
+        (WebCore::EditorClientQt::registerUndoStep):
+        * WebCoreSupport/UndoStepQt.cpp: Renamed from Source/WebKit/qt/WebCoreSupport/EditCommandQt.cpp.
+        (UndoStepQt::UndoStepQt):
+        (UndoStepQt::~UndoStepQt):
+        (UndoStepQt::redo):
+        (UndoStepQt::undo):
+        * WebCoreSupport/UndoStepQt.h: Renamed from Source/WebKit/qt/WebCoreSupport/EditCommandQt.h.
+
+2011-12-16  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Rename registerCommandFor(Undo|Redo) to register(Undo|Redo)Step
+        https://bugs.webkit.org/show_bug.cgi?id=74748
+
+        Reviewed by Eric Seidel.
+
+        * WebCoreSupport/EditorClientQt.cpp:
+        (WebCore::EditorClientQt::registerUndoStep):
+        (WebCore::EditorClientQt::registerRedoStep):
+        * WebCoreSupport/EditorClientQt.h:
+
+2011-12-16  Sam Weinig  <sam@webkit.org>
+
+        Give PlatformEvents a base class
+        https://bugs.webkit.org/show_bug.cgi?id=74685
+
+        Reviewed by Anders Carlsson.
+
+        Add a base class for PlatformMouseEvent, PlatformKeyboardEvent, PlatformWheelEvent
+        and PlatformGestureEvent and move Type enumeration and modifiers down to it.
+
+        * WebCoreSupport/DragClientQt.cpp:
+        (WebCore::DragClientQt::startDrag):
+        * WebCoreSupport/EditorClientQt.cpp:
+        (WebCore::EditorClientQt::handleKeyboardEvent):
+
+2011-12-16  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Only EditCommandComposition should implement unapply and reapply
+        https://bugs.webkit.org/show_bug.cgi?id=74490
+
+        Reviewed by Eric Seidel.
+
+        EditCommandQt is to be renamed to UndoStepQt in a follow up patch.
+
+        * WebCoreSupport/EditCommandQt.cpp:
+        (EditCommandQt::EditCommandQt):
+        * WebCoreSupport/EditCommandQt.h:
+        * WebCoreSupport/EditorClientQt.cpp:
+        (WebCore::EditorClientQt::registerCommandForUndo):
+        (WebCore::EditorClientQt::registerCommandForRedo):
+
 2011-12-14  Tor Arne Vestbø  <tor.arne.vestbo@nokia.com>
 
         [Qt] Get rid of layering violation in PluginViewQt

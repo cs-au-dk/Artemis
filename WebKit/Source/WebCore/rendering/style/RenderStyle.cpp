@@ -44,6 +44,25 @@ using namespace std;
 
 namespace WebCore {
 
+struct SameSizeAsRenderStyle : public RefCounted<SameSizeAsRenderStyle> {
+    unsigned m_bitfields;
+
+    void* dataRefs[7];
+    void* ownPtrs[1];
+#if ENABLE(SVG)
+    void* dataRefSvgStyle;
+#endif
+    struct InheritedFlags {
+        unsigned m_bitfields[2];
+    } inherited_flags;
+
+    struct NonInheritedFlags {
+        unsigned m_bitfields[2];
+    } noninherited_flags;
+};
+
+COMPILE_ASSERT(sizeof(RenderStyle) == sizeof(SameSizeAsRenderStyle), RenderStyle_should_stay_small);
+
 inline RenderStyle* defaultStyle()
 {
     static RenderStyle* s_defaultStyle = RenderStyle::createDefaultStyle().leakRef();
@@ -74,20 +93,7 @@ PassRefPtr<RenderStyle> RenderStyle::clone(const RenderStyle* other)
 }
 
 ALWAYS_INLINE RenderStyle::RenderStyle()
-    : m_affectedByUncommonAttributeSelectors(false)
-    , m_unique(false)
-    , m_affectedByEmpty(false)
-    , m_emptyState(false)
-    , m_childrenAffectedByFirstChildRules(false)
-    , m_childrenAffectedByLastChildRules(false)
-    , m_childrenAffectedByDirectAdjacentRules(false)
-    , m_childrenAffectedByForwardPositionalRules(false)
-    , m_childrenAffectedByBackwardPositionalRules(false)
-    , m_firstChildState(false)
-    , m_lastChildState(false)
-    , m_explicitInheritance(false)
-    , m_childIndex(0)
-    , m_box(defaultStyle()->m_box)
+    : m_box(defaultStyle()->m_box)
     , visual(defaultStyle()->visual)
     , m_background(defaultStyle()->m_background)
     , surround(defaultStyle()->surround)
@@ -104,19 +110,6 @@ ALWAYS_INLINE RenderStyle::RenderStyle()
 }
 
 ALWAYS_INLINE RenderStyle::RenderStyle(bool)
-    : m_affectedByUncommonAttributeSelectors(false)
-    , m_unique(false)
-    , m_affectedByEmpty(false)
-    , m_emptyState(false)
-    , m_childrenAffectedByFirstChildRules(false)
-    , m_childrenAffectedByLastChildRules(false)
-    , m_childrenAffectedByDirectAdjacentRules(false)
-    , m_childrenAffectedByForwardPositionalRules(false)
-    , m_childrenAffectedByBackwardPositionalRules(false)
-    , m_firstChildState(false)
-    , m_lastChildState(false)
-    , m_explicitInheritance(false)
-    , m_childIndex(0)
 {
     setBitDefaults();
 
@@ -146,19 +139,6 @@ ALWAYS_INLINE RenderStyle::RenderStyle(bool)
 
 ALWAYS_INLINE RenderStyle::RenderStyle(const RenderStyle& o)
     : RefCounted<RenderStyle>()
-    , m_affectedByUncommonAttributeSelectors(false)
-    , m_unique(false)
-    , m_affectedByEmpty(false)
-    , m_emptyState(false)
-    , m_childrenAffectedByFirstChildRules(false)
-    , m_childrenAffectedByLastChildRules(false)
-    , m_childrenAffectedByDirectAdjacentRules(false)
-    , m_childrenAffectedByForwardPositionalRules(false)
-    , m_childrenAffectedByBackwardPositionalRules(false)
-    , m_firstChildState(false)
-    , m_lastChildState(false)
-    , m_explicitInheritance(false)
-    , m_childIndex(0)
     , m_box(o.m_box)
     , visual(o.visual)
     , m_background(o.m_background)
@@ -202,10 +182,10 @@ void RenderStyle::copyNonInheritedFrom(const RenderStyle* other)
     noninherited_flags._position = other->noninherited_flags._position;
     noninherited_flags._floating = other->noninherited_flags._floating;
     noninherited_flags._table_layout = other->noninherited_flags._table_layout;
+    noninherited_flags._unicodeBidi = other->noninherited_flags._unicodeBidi;
     noninherited_flags._page_break_before = other->noninherited_flags._page_break_before;
     noninherited_flags._page_break_after = other->noninherited_flags._page_break_after;
     noninherited_flags._page_break_inside = other->noninherited_flags._page_break_inside;
-    noninherited_flags._unicodeBidi = other->noninherited_flags._unicodeBidi;
 #if ENABLE(SVG)
     if (m_svgStyle != other->m_svgStyle)
         m_svgStyle.access()->copyNonInheritedFrom(other->m_svgStyle.get());

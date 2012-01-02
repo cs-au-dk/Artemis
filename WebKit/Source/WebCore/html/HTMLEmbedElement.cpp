@@ -118,7 +118,6 @@ void HTMLEmbedElement::parseMappedAttribute(Attribute* attr)
             document->addNamedItem(value);
         }
         m_name = value;
-        invalidateNodeListsCacheAfterAttributeChanged();
     } else
         HTMLPlugInImageElement::parseMappedAttribute(attr);
 }
@@ -141,9 +140,7 @@ void HTMLEmbedElement::parametersForPlugin(Vector<String>& paramNames, Vector<St
 void HTMLEmbedElement::updateWidget(PluginCreationOption pluginCreationOption)
 {
     ASSERT(!renderEmbeddedObject()->pluginCrashedOrWasMissing());
-    // FIXME: We should ASSERT(needsWidgetUpdate()), but currently
-    // FrameView::updateWidget() calls updateWidget(false) without checking if
-    // the widget actually needs updating!
+    ASSERT(needsWidgetUpdate());
     setNeedsWidgetUpdate(false);
 
     if (m_url.isEmpty() && m_serviceType.isEmpty())

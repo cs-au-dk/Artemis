@@ -31,6 +31,7 @@
 #include "DataReference.h"
 #include "DownloadProxy.h"
 #include "DrawingAreaProxy.h"
+#include "EventDispatcherMessages.h"
 #include "FindIndicator.h"
 #include "Logging.h"
 #include "MessageID.h"
@@ -60,6 +61,7 @@
 #include "WebFramePolicyListenerProxy.h"
 #include "WebFullScreenManagerProxy.h"
 #include "WebInspectorProxy.h"
+#include "WebNotificationManagerProxy.h"
 #include "WebOpenPanelResultListenerProxy.h"
 #include "WebPageCreationParameters.h"
 #include "WebPageGroup.h"
@@ -939,7 +941,7 @@ void WebPageProxy::handleWheelEvent(const NativeWebWheelEvent& event)
         process()->sendSync(Messages::WebPage::WheelEventSyncForTesting(event), Messages::WebPage::WheelEventSyncForTesting::Reply(handled), m_pageID);
         didReceiveEvent(event.type(), handled);
     } else
-        process()->send(Messages::WebPage::WheelEvent(event), m_pageID);
+        process()->send(Messages::EventDispatcher::WheelEvent(m_pageID, event), 0);
 }
 
 void WebPageProxy::handleKeyboardEvent(const NativeWebKeyboardEvent& event)
@@ -967,7 +969,7 @@ void WebPageProxy::handleGestureEvent(const WebGestureEvent& event)
         return;
 
     process()->responsivenessTimer()->start();
-    process()->send(Messages::WebPage::GestureEvent(event), m_pageID);
+    process()->send(Messages::EventDispatcher::GestureEvent(m_pageID, event), 0);
 }
 #endif
 
@@ -2929,7 +2931,7 @@ void WebPageProxy::didReceiveEvent(uint32_t opaqueType, bool handled)
             WebWheelEvent newWheelEvent = coalescedWheelEvent(m_wheelEventQueue, m_currentlyProcessedWheelEvents);
 
             process()->responsivenessTimer()->start();
-            process()->send(Messages::WebPage::WheelEvent(newWheelEvent), m_pageID);
+            process()->send(Messages::EventDispatcher::WheelEvent(m_pageID, newWheelEvent), 0);
         }
 
         break;
@@ -3310,6 +3312,11 @@ void WebPageProxy::requestNotificationPermission(uint64_t requestID, const Strin
     
     if (!m_uiClient.decidePolicyForNotificationPermissionRequest(this, origin.get(), request.get()))
         request->deny();
+}
+
+void WebPageProxy::showNotification(const String& title, const String& body, const String& originIdentifier, uint64_t notificationID)
+{
+    m_process->context()->notificationManagerProxy()->show(this, title, body, originIdentifier, notificationID);
 }
 
 float WebPageProxy::headerHeight(WebFrameProxy* frame)

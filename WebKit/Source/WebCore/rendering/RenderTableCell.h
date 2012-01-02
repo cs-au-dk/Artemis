@@ -35,6 +35,8 @@ static const unsigned maxColumnIndex = 0x7FFFFFFE; // 2,147,483,646
 static const unsigned unsetRowIndex = 0x7FFFFFFF;
 static const unsigned maxRowIndex = 0x7FFFFFFE; // 2,147,483,646
 
+enum IncludeBorderColorOrNot { DoNotIncludeBorderColor, IncludeBorderColor };
+
 class RenderTableCell : public RenderBlock {
 public:
     explicit RenderTableCell(Node*);
@@ -106,15 +108,15 @@ public:
     LayoutUnit borderHalfBefore(bool outer) const;
     LayoutUnit borderHalfAfter(bool outer) const;
 
-    CollapsedBorderValue collapsedStartBorder() const;
-    CollapsedBorderValue collapsedEndBorder() const;
-    CollapsedBorderValue collapsedBeforeBorder() const;
-    CollapsedBorderValue collapsedAfterBorder() const;
+    CollapsedBorderValue collapsedStartBorder(IncludeBorderColorOrNot = IncludeBorderColor) const;
+    CollapsedBorderValue collapsedEndBorder(IncludeBorderColorOrNot = IncludeBorderColor) const;
+    CollapsedBorderValue collapsedBeforeBorder(IncludeBorderColorOrNot = IncludeBorderColor) const;
+    CollapsedBorderValue collapsedAfterBorder(IncludeBorderColorOrNot = IncludeBorderColor) const;
 
-    CollapsedBorderValue collapsedLeftBorder() const;
-    CollapsedBorderValue collapsedRightBorder() const;
-    CollapsedBorderValue collapsedTopBorder() const;
-    CollapsedBorderValue collapsedBottomBorder() const;
+    CollapsedBorderValue collapsedLeftBorder(IncludeBorderColorOrNot = IncludeBorderColor) const;
+    CollapsedBorderValue collapsedRightBorder(IncludeBorderColorOrNot = IncludeBorderColor) const;
+    CollapsedBorderValue collapsedTopBorder(IncludeBorderColorOrNot = IncludeBorderColor) const;
+    CollapsedBorderValue collapsedBottomBorder(IncludeBorderColorOrNot = IncludeBorderColor) const;
 
     void collectBorderValues(RenderTable::CollapsedBorderValues&) const;
     static void sortBorderValues(RenderTable::CollapsedBorderValues&);
@@ -123,6 +125,7 @@ public:
 
     virtual void paint(PaintInfo&, const LayoutPoint&);
 
+    void paintCollapsedBorders(PaintInfo&, const LayoutPoint&);
     void paintBackgroundsBehindCell(PaintInfo&, const LayoutPoint&, RenderObject* backgroundObject);
 
     LayoutUnit cellBaselinePosition() const;
@@ -171,8 +174,6 @@ private:
     virtual LayoutSize offsetFromContainer(RenderObject*, const LayoutPoint&) const;
     virtual LayoutRect clippedOverflowRectForRepaint(RenderBoxModelObject* repaintContainer) const;
     virtual void computeRectForRepaint(RenderBoxModelObject* repaintContainer, LayoutRect&, bool fixed = false) const;
-
-    void paintCollapsedBorder(GraphicsContext*, const LayoutRect&);
 
     unsigned m_row : 31;
     bool m_cellWidthChanged : 1;

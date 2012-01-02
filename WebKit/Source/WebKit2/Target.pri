@@ -37,7 +37,6 @@ HEADERS += \
     Platform/PlatformProcessIdentifier.h \
     Platform/RunLoop.h \
     Platform/SharedMemory.h \
-    Platform/WorkItem.h \
     Platform/WorkQueue.h \
     PluginProcess/PluginControllerProxy.h \
     PluginProcess/PluginProcess.h \
@@ -272,6 +271,7 @@ HEADERS += \
     UIProcess/qt/QtSGTileNode.h \
     UIProcess/qt/QtViewportInteractionEngine.h \
     UIProcess/qt/QtWebUndoController.h \
+    UIProcess/qt/QtWebIconDatabaseClient.h \
     UIProcess/qt/WebContextMenuProxyQt.h \
     UIProcess/qt/WebGeolocationProviderQt.h \
     UIProcess/qt/WebPopupMenuProxyQt.h \
@@ -349,12 +349,12 @@ HEADERS += \
     WebProcess/WebPage/FindController.h \
     WebProcess/WebPage/PageOverlay.h \
     WebProcess/WebPage/WebContextMenu.h \
-    WebProcess/WebPage/WebEditCommand.h \
     WebProcess/WebPage/WebFrame.h \
     WebProcess/WebPage/WebInspector.h \
     WebProcess/WebPage/WebOpenPanelResultListener.h \
     WebProcess/WebPage/WebPage.h \
     WebProcess/WebPage/WebPageGroupProxy.h \
+    WebProcess/WebPage/WebUndoStep.h \
     WebProcess/WebConnectionToUIProcess.h \
     WebProcess/WebProcess.h \
     WebProcess/qt/QtBuiltinBundle.h \
@@ -503,6 +503,7 @@ SOURCES += \
     UIProcess/API/qt/qquickwebpage.cpp \
     UIProcess/API/qt/qwebnavigationhistory.cpp \
     UIProcess/API/qt/qquickwebview.cpp \
+    UIProcess/API/qt/qwebiconimageprovider.cpp \
     UIProcess/API/qt/qwebpreferences.cpp \
     UIProcess/API/qt/qwebviewportinfo.cpp \
     UIProcess/Authentication/AuthenticationChallengeProxy.cpp \
@@ -603,6 +604,7 @@ SOURCES += \
     UIProcess/qt/WebPageProxyQt.cpp \
     UIProcess/qt/WebPopupMenuProxyQt.cpp \
     UIProcess/qt/WebPreferencesQt.cpp \
+    UIProcess/qt/QtWebIconDatabaseClient.cpp \
     WebProcess/ApplicationCache/WebApplicationCacheManager.cpp \
     WebProcess/Authentication/AuthenticationManager.cpp \
     WebProcess/Cookies/WebCookieManager.cpp \
@@ -698,12 +700,12 @@ SOURCES += \
     WebProcess/WebPage/TiledDrawingArea.cpp \
     WebProcess/WebPage/WebBackForwardListProxy.cpp \
     WebProcess/WebPage/WebContextMenu.cpp \
-    WebProcess/WebPage/WebEditCommand.cpp \
     WebProcess/WebPage/WebFrame.cpp \
     WebProcess/WebPage/WebInspector.cpp \
     WebProcess/WebPage/WebOpenPanelResultListener.cpp \
     WebProcess/WebPage/WebPage.cpp \
     WebProcess/WebPage/WebPageGroupProxy.cpp \
+    WebProcess/WebPage/WebUndoStep.cpp \
     WebProcess/WebPage/qt/WebInspectorQt.cpp \
     WebProcess/WebPage/qt/LayerTreeHostQt.cpp \
     WebProcess/WebPage/qt/WebPageQt.cpp \

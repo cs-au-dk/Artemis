@@ -27,7 +27,6 @@
 #include "RunLoop.h"
 
 #include "BinarySemaphore.h"
-#include "WorkItem.h"
 #include <wtf/CurrentTime.h>
 
 using namespace CoreIPC;
@@ -155,7 +154,7 @@ RunLoop::~RunLoop()
 
 void RunLoop::wakeUp()
 {
-    // FIXME: No need to wake up the run loop if we've already called scheduleWork
+    // FIXME: No need to wake up the run loop if we've already called dispatch
     // before the run loop has had the time to respond.
     ::PostMessage(m_runLoopMessageWindow, PerformWorkMessage, reinterpret_cast<WPARAM>(this), 0);
 }

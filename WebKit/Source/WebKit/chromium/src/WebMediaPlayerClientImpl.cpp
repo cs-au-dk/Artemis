@@ -62,29 +62,6 @@ static PassOwnPtr<WebMediaPlayer> createWebMediaPlayer(WebMediaPlayerClient* cli
     return adoptPtr(webFrame->client()->createMediaPlayer(webFrame, client));
 }
 
-static bool isVideoFrameFormatOpaque(WebVideoFrame::Format format)
-{
-    switch (format) {
-    case WebVideoFrame::FormatInvalid:
-    case WebVideoFrame::FormatEmpty:
-    case WebVideoFrame::FormatRGBA:
-    case WebVideoFrame::FormatNativeTexture:
-        return false;
-    case WebVideoFrame::FormatRGB555:
-    case WebVideoFrame::FormatRGB565:
-    case WebVideoFrame::FormatRGB24:
-    case WebVideoFrame::FormatRGB32:
-    case WebVideoFrame::FormatYV12:
-    case WebVideoFrame::FormatYV16:
-    case WebVideoFrame::FormatNV12:
-    case WebVideoFrame::FormatASCII:
-    case WebVideoFrame::FormatI420:
-        return true;
-    }
-    ASSERT_NOT_REACHED();
-    return false;
-}
-
 bool WebMediaPlayerClientImpl::m_isEnabled = false;
 
 bool WebMediaPlayerClientImpl::isEnabled()
@@ -124,10 +101,10 @@ WebMediaPlayer* WebMediaPlayerClientImpl::mediaPlayer() const
 
 WebMediaPlayerClientImpl::~WebMediaPlayerClientImpl()
 {
-    // VideoLayerChromium may outlive this object so clear the back pointer.
 #if USE(ACCELERATED_COMPOSITING)
-    if (m_videoLayer)
-        m_videoLayer->releaseProvider();
+    MutexLocker locker(m_compositingMutex);
+    if (m_videoFrameProviderClient)
+        m_videoFrameProviderClient->stopUsingProvider();
 #endif
 }
 
@@ -142,8 +119,10 @@ void WebMediaPlayerClientImpl::readyStateChanged()
     ASSERT(m_mediaPlayer);
     m_mediaPlayer->readyStateChanged();
 #if USE(ACCELERATED_COMPOSITING)
-    if (hasVideo() && supportsAcceleratedRendering() && !m_videoLayer)
+    if (hasVideo() && supportsAcceleratedRendering() && !m_videoLayer) {
         m_videoLayer = VideoLayerChromium::create(0, this);
+        m_videoLayer->setOpaque(m_opaque);
+    }
 #endif
 }
 
@@ -191,6 +170,15 @@ void WebMediaPlayerClientImpl::sizeChanged()
 {
     ASSERT(m_mediaPlayer);
     m_mediaPlayer->sizeChanged();
+}
+
+void WebMediaPlayerClientImpl::setOpaque(bool opaque)
+{
+#if USE(ACCELERATED_COMPOSITING)
+    m_opaque = opaque;
+    if (m_videoLayer)
+        m_videoLayer->setOpaque(m_opaque);
+#endif
 }
 
 void WebMediaPlayerClientImpl::sawUnsupportedTracks()
@@ -593,21 +581,27 @@ bool WebMediaPlayerClientImpl::acceleratedRenderingInUse()
     return m_videoLayer && m_videoLayer->layerTreeHost();
 }
 
+void WebMediaPlayerClientImpl::setVideoFrameProviderClient(VideoFrameProvider::Client* client)
+{
+    MutexLocker locker(m_compositingMutex);
+    m_videoFrameProviderClient = client;
+}
+
 VideoFrameChromium* WebMediaPlayerClientImpl::getCurrentFrame()
 {
+    MutexLocker locker(m_compositingMutex);
     ASSERT(!m_currentVideoFrame);
     if (m_webMediaPlayer && !m_currentVideoFrame) {
         WebVideoFrame* webkitVideoFrame = m_webMediaPlayer->getCurrentFrame();
         if (webkitVideoFrame)
             m_currentVideoFrame = adoptPtr(new VideoFrameChromiumImpl(webkitVideoFrame));
-        if (m_videoLayer)
-            m_videoLayer->setOpaque(webkitVideoFrame && isVideoFrameFormatOpaque(webkitVideoFrame->format()));
     }
     return m_currentVideoFrame.get();
 }
 
 void WebMediaPlayerClientImpl::putCurrentFrame(VideoFrameChromium* videoFrame)
 {
+    MutexLocker locker(m_compositingMutex);
     if (videoFrame && videoFrame == m_currentVideoFrame) {
         if (m_webMediaPlayer) {
             m_webMediaPlayer->putCurrentFrame(
@@ -680,6 +674,8 @@ WebMediaPlayerClientImpl::WebMediaPlayerClientImpl()
 #if USE(ACCELERATED_COMPOSITING)
     , m_videoLayer(0)
     , m_supportsAcceleratedCompositing(false)
+    , m_opaque(false)
+    , m_videoFrameProviderClient(0)
 #endif
 {
 }

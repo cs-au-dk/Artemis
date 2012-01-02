@@ -1161,7 +1161,7 @@ static bool isContextClick(const PlatformMouseEvent& event)
 
 static bool handleContextMenuEvent(const PlatformMouseEvent& platformMouseEvent, Page* page)
 {
-    IntPoint point = page->mainFrame()->view()->windowToContents(platformMouseEvent.pos());
+    IntPoint point = page->mainFrame()->view()->windowToContents(platformMouseEvent.position());
     HitTestResult result = page->mainFrame()->eventHandler()->hitTestResultAtPoint(point, false);
 
     Frame* frame = page->mainFrame();
@@ -1183,9 +1183,8 @@ static bool handleMouseEvent(const WebMouseEvent& mouseEvent, Page* page, bool o
 
     PlatformMouseEvent platformMouseEvent = platform(mouseEvent);
 
-    switch (platformMouseEvent.eventType()) {
-        case WebCore::MouseEventPressed:
-        {
+    switch (platformMouseEvent.type()) {
+        case PlatformEvent::MousePressed: {
             if (isContextClick(platformMouseEvent))
                 page->contextMenuController()->clearContextMenu();
             
@@ -1195,11 +1194,10 @@ static bool handleMouseEvent(const WebMouseEvent& mouseEvent, Page* page, bool o
 
             return handled;
         }
-        case WebCore::MouseEventReleased:
+        case PlatformEvent::MouseReleased:
             return frame->eventHandler()->handleMouseReleaseEvent(platformMouseEvent);
-        case WebCore::MouseEventMoved:
+        case PlatformEvent::MouseMoved:
             return frame->eventHandler()->mouseMoved(platformMouseEvent, onlyUpdateScrollbars);
-
         default:
             ASSERT_NOT_REACHED();
             return false;
@@ -1532,7 +1530,7 @@ void WebPage::setInitialFocus(bool forward, bool isKeyboardEventValid, const Web
 
     if (isKeyboardEventValid && event.type() == WebEvent::KeyDown) {
         PlatformKeyboardEvent platformEvent(platform(event));
-        platformEvent.disambiguateKeyDownEvent(PlatformKeyboardEvent::RawKeyDown);
+        platformEvent.disambiguateKeyDownEvent(PlatformEvent::RawKeyDown);
         m_page->focusController()->setInitialFocus(forward ? FocusDirectionForward : FocusDirectionBackward, KeyboardEvent::create(platformEvent, frame->document()->defaultView()).get());
         return;
     }
@@ -1903,7 +1901,7 @@ bool WebPage::handleEditingKeyboardEvent(KeyboardEvent* evt)
 
     Editor::Command command = frame->editor()->command(interpretKeyEvent(evt));
 
-    if (keyEvent->type() == PlatformKeyboardEvent::RawKeyDown) {
+    if (keyEvent->type() == PlatformEvent::RawKeyDown) {
         // WebKit doesn't have enough information about mode to decide how commands that just insert text if executed via Editor should be treated,
         // so we leave it upon WebCore to either handle them immediately (e.g. Tab that changes focus) or let a keypress event be generated
         // (e.g. Tab that inserts a Tab character, or Enter).
@@ -2051,7 +2049,7 @@ void WebPage::dragEnded(WebCore::IntPoint clientPosition, WebCore::IntPoint glob
     if (!view)
         return;
     // FIXME: These are fake modifier keys here, but they should be real ones instead.
-    PlatformMouseEvent event(adjustedClientPosition, adjustedGlobalPosition, LeftButton, MouseEventMoved, 0, false, false, false, false, currentTime());
+    PlatformMouseEvent event(adjustedClientPosition, adjustedGlobalPosition, LeftButton, PlatformEvent::MouseMoved, 0, false, false, false, false, currentTime());
     m_page->mainFrame()->eventHandler()->dragSourceEndedAt(event, (DragOperation)operation);
 }
 
@@ -2060,38 +2058,38 @@ void WebPage::willPerformLoadDragDestinationAction()
     m_sandboxExtensionTracker.willPerformLoadDragDestinationAction(m_pendingDropSandboxExtension.release());
 }
 
-WebEditCommand* WebPage::webEditCommand(uint64_t commandID)
+WebUndoStep* WebPage::webUndoStep(uint64_t stepID)
 {
-    return m_editCommandMap.get(commandID).get();
+    return m_undoStepMap.get(stepID).get();
 }
 
-void WebPage::addWebEditCommand(uint64_t commandID, WebEditCommand* command)
+void WebPage::addWebUndoStep(uint64_t stepID, WebUndoStep* entry)
 {
-    m_editCommandMap.set(commandID, command);
+    m_undoStepMap.set(stepID, entry);
 }
 
-void WebPage::removeWebEditCommand(uint64_t commandID)
+void WebPage::removeWebEditCommand(uint64_t stepID)
 {
-    m_editCommandMap.remove(commandID);
+    m_undoStepMap.remove(stepID);
 }
 
-void WebPage::unapplyEditCommand(uint64_t commandID)
+void WebPage::unapplyEditCommand(uint64_t stepID)
 {
-    WebEditCommand* command = webEditCommand(commandID);
-    if (!command)
+    WebUndoStep* step = webUndoStep(stepID);
+    if (!step)
         return;
 
-    command->command()->unapply();
+    step->step()->unapply();
 }
 
-void WebPage::reapplyEditCommand(uint64_t commandID)
+void WebPage::reapplyEditCommand(uint64_t stepID)
 {
-    WebEditCommand* command = webEditCommand(commandID);
-    if (!command)
+    WebUndoStep* step = webUndoStep(stepID);
+    if (!step)
         return;
 
     m_isInRedo = true;
-    command->command()->reapply();
+    step->step()->reapply();
     m_isInRedo = false;
 }
 
@@ -2313,7 +2311,7 @@ void WebPage::setWindowIsVisible(bool windowIsVisible)
         (*it)->setWindowIsVisible(windowIsVisible);
 }
 
-void WebPage::windowAndViewFramesChanged(const WebCore::FloatRect& windowFrameInScreenCoordinates, const WebCore::FloatRect& viewFrameInWindowCoordinates, const WebCore::FloatPoint& accessibilityViewCoordinates)
+void WebPage::windowAndViewFramesChanged(const WebCore::IntRect& windowFrameInScreenCoordinates, const WebCore::IntRect& viewFrameInWindowCoordinates, const WebCore::IntPoint& accessibilityViewCoordinates)
 {
     m_windowFrameInScreenCoordinates = windowFrameInScreenCoordinates;
     m_viewFrameInWindowCoordinates = viewFrameInWindowCoordinates;
@@ -2321,7 +2319,7 @@ void WebPage::windowAndViewFramesChanged(const WebCore::FloatRect& windowFrameIn
     
     // Tell all our plug-in views that the window and view frames have changed.
     for (HashSet<PluginView*>::const_iterator it = m_pluginViews.begin(), end = m_pluginViews.end(); it != end; ++it)
-        (*it)->windowAndViewFramesChanged(enclosingIntRect(windowFrameInScreenCoordinates), enclosingIntRect(viewFrameInWindowCoordinates));
+        (*it)->windowAndViewFramesChanged(windowFrameInScreenCoordinates, viewFrameInWindowCoordinates);
 }
 
 #endif

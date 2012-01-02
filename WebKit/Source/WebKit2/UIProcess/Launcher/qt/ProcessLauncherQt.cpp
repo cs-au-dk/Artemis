@@ -89,7 +89,7 @@ void QtWebProcess::setupChildProcess()
 {
 #if defined(Q_OS_LINUX)
 #ifndef NDEBUG
-    if (getenv("QT_WEBKIT_KEEP_ALIVE_WEB_PROCESS"))
+    if (qgetenv("QT_WEBKIT2_DEBUG") == "1")
         return;
 #endif
     prctl(PR_SET_PDEATHSIG, SIGKILL);
@@ -174,7 +174,7 @@ void ProcessLauncher::launchProcess()
 
     setpriority(PRIO_PROCESS, webProcess->pid(), 10);
 
-    RunLoop::main()->scheduleWork(WorkItem::create(this, &WebKit::ProcessLauncher::didFinishLaunchingProcess, webProcess, connector));
+    RunLoop::main()->dispatch(bind(&WebKit::ProcessLauncher::didFinishLaunchingProcess, this, webProcess, connector));
 }
 
 void ProcessLauncher::terminateProcess()

@@ -1,3 +1,1050 @@
+2011-12-19  Geoffrey Garen  <ggaren@apple.com>
+
+        Tightened up Vector<T>::append
+        https://bugs.webkit.org/show_bug.cgi?id=74906
+
+        Reviewed by Sam Weinig.
+
+        Not a measurable speedup, but code inspection shows better code generated,
+        and I believe this is a step toward turning off -fomit-frame-pointer.
+
+        * wtf/Vector.h:
+        (WTF::::append):
+        (WTF::::appendSlowCase): Split out the slow case into a separate function
+        to keep unnecessary instructions off the hot path. This means the hot
+        path can now be inlined more often.
+        
+        Removed some old MSVC7 cruft. Hopefully, we don't need to hang on to a
+        compiler work-around from 2007.
+
+2011-12-19  Yuqiang Xian  <yuqiang.xian@intel.com>
+
+        Temporary GPR should not be lazily allocated in DFG JIT on X86
+        https://bugs.webkit.org/show_bug.cgi?id=74908
+
+        Reviewed by Filip Pizlo.
+
+        On X86, we used to allocate a temporary GPR lazily when it's really
+        used rather than defined. This may cause potential issues of
+        allocating registers inside control flow and result in problems in
+        subsequent code generation, for example the DFG JIT may think an
+        operand already being spilled (to satisfy the allocation request) and
+        generate code to read the data from memory, but the allocation and
+        spilling are in a branch which is not taken at runtime, so the
+        generated code is incorrect.
+
+        Although current DFG JIT code doesn't have this problematic pattern,
+        it's better to cut-off the root to avoid any potential issues in the
+        future.
+
+        * dfg/DFGSpeculativeJIT.cpp:
+        (JSC::DFG::GPRTemporary::GPRTemporary):
+        * dfg/DFGSpeculativeJIT.h:
+        (JSC::DFG::GPRTemporary::gpr):
+        * dfg/DFGSpeculativeJIT32_64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+
+2011-12-19  Yuqiang Xian  <yuqiang.xian@intel.com>
+
+        Remove unused code for non-speculative Arith operations from DFG JIT
+        https://bugs.webkit.org/show_bug.cgi?id=74905
+
+        Reviewed by Filip Pizlo.
+
+        * dfg/DFGSpeculativeJIT.h:
+        * dfg/DFGSpeculativeJIT32_64.cpp:
+        * dfg/DFGSpeculativeJIT64.cpp:
+
+2011-12-19  Gavin Barraclough  <barraclough@apple.com>
+
+        https://bugs.webkit.org/show_bug.cgi?id=74903
+        Exceptions not thrown correctly from DFG JIT on 32bit
+
+        Reviewed by Oliver Hunt.
+
+        Arguments for lookupExceptionHandler are not setup correctly.
+        In the case of ARMv7 we rely on lr being preserved over a call,
+        this in invalid. On x86 we don't should be poking the arguments onto the stack!
+
+        * bytecode/CodeBlock.h:
+        (JSC::CodeBlock::bytecodeOffsetForCallAtIndex):
+        * dfg/DFGAssemblyHelpers.h:
+        (JSC::DFG::AssemblyHelpers::restoreReturnAddressBeforeReturn):
+        * dfg/DFGGPRInfo.h:
+        * dfg/DFGJITCompiler.cpp:
+        (JSC::DFG::JITCompiler::compileBody):
+        * dfg/DFGJITCompiler.h:
+        (JSC::DFG::JITCompiler::addExceptionCheck):
+        (JSC::DFG::JITCompiler::addFastExceptionCheck):
+        * dfg/DFGOperations.cpp:
+        * dfg/DFGOperations.h:
+
+2011-12-19  Filip Pizlo  <fpizlo@apple.com>
+
+        If we detect that we can use the JIT, don't use computed opcode lookups
+        https://bugs.webkit.org/show_bug.cgi?id=74899
+        <rdar://problem/10604551>
+
+        Reviewed by Gavin Barraclough.
+
+        * interpreter/Interpreter.cpp:
+        (JSC::Interpreter::Interpreter):
+        (JSC::Interpreter::initialize):
+        (JSC::Interpreter::privateExecute):
+        * interpreter/Interpreter.h:
+        (JSC::Interpreter::getOpcode):
+        (JSC::Interpreter::getOpcodeID):
+        * runtime/JSGlobalData.cpp:
+        (JSC::JSGlobalData::JSGlobalData):
+
+2011-12-19  Geoffrey Garen  <ggaren@apple.com>
+
+        Try to fix the Qt build.
+
+        Unreviewed.
+
+        * wtf/ThreadSpecific.h: #include!
+
+2011-12-18  Filip Pizlo  <fpizlo@apple.com>
+
+        It should be possible to change the value of an Options variable without recompiling the world
+        https://bugs.webkit.org/show_bug.cgi?id=74807
+
+        Reviewed by Gavin Barraclough.
+
+        * runtime/Options.cpp:
+        (JSC::Options::initializeOptions):
+        * runtime/Options.h:
+
+2011-12-19  Sheriff Bot  <webkit.review.bot@gmail.com>
+
+        Unreviewed, rolling out r103250.
+        http://trac.webkit.org/changeset/103250
+        https://bugs.webkit.org/show_bug.cgi?id=74877
+
+        it still breaks codegen (Requested by olliej on #webkit).
+
+        * dfg/DFGAbstractState.cpp:
+        (JSC::DFG::AbstractState::execute):
+        * dfg/DFGByteCodeParser.cpp:
+        (JSC::DFG::ByteCodeParser::parseBlock):
+        * dfg/DFGNode.h:
+        * dfg/DFGPropagator.cpp:
+        (JSC::DFG::Propagator::propagateArithNodeFlags):
+        (JSC::DFG::Propagator::fixupNode):
+        (JSC::DFG::Propagator::byValIsPure):
+        (JSC::DFG::Propagator::clobbersWorld):
+        (JSC::DFG::Propagator::getByValLoadElimination):
+        (JSC::DFG::Propagator::checkStructureLoadElimination):
+        (JSC::DFG::Propagator::getByOffsetLoadElimination):
+        (JSC::DFG::Propagator::getPropertyStorageLoadElimination):
+        (JSC::DFG::Propagator::getIndexedPropertyStorageLoadElimination):
+        (JSC::DFG::Propagator::performNodeCSE):
+        * dfg/DFGSpeculativeJIT.cpp:
+        (JSC::DFG::SpeculativeJIT::compilePutByValForByteArray):
+        (JSC::DFG::SpeculativeJIT::compilePutByValForIntTypedArray):
+        (JSC::DFG::SpeculativeJIT::compilePutByValForFloatTypedArray):
+        * dfg/DFGSpeculativeJIT.h:
+        * dfg/DFGSpeculativeJIT32_64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+        * dfg/DFGSpeculativeJIT64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+
+2011-12-16  Oliver Hunt  <oliver@apple.com>
+
+        Rolling r103120 back in with merge errors corrected.
+
+        PutByVal[Alias] unnecessarily reloads the storage buffer
+        https://bugs.webkit.org/show_bug.cgi?id=74747
+
+        Reviewed by Gavin Barraclough.
+
+        Make PutByVal use GetIndexedStorage to load the storage buffer.
+        This required switching PutByVal to a vararg node (which is
+        responsible for most of the noise in this patch).  This fixes the
+        remaining portion of the kraken regression caused by the GetByVal
+        storage load elimination, and a 1-5% win on some of the sub tests of
+        the typed array benchmark at:
+        http://stepheneb.github.com/webgl-matrix-benchmarks/matrix_benchmark.html
+
+        * dfg/DFGAbstractState.cpp:
+        (JSC::DFG::AbstractState::execute):
+        * dfg/DFGByteCodeParser.cpp:
+        (JSC::DFG::ByteCodeParser::parseBlock):
+        * dfg/DFGNode.h:
+        * dfg/DFGPropagator.cpp:
+        (JSC::DFG::Propagator::propagateArithNodeFlags):
+        (JSC::DFG::Propagator::fixupNode):
+        (JSC::DFG::Propagator::byValIndexIsPure):
+        (JSC::DFG::Propagator::clobbersWorld):
+        (JSC::DFG::Propagator::getByValLoadElimination):
+        (JSC::DFG::Propagator::checkStructureLoadElimination):
+        (JSC::DFG::Propagator::getByOffsetLoadElimination):
+        (JSC::DFG::Propagator::getPropertyStorageLoadElimination):
+        (JSC::DFG::Propagator::getIndexedPropertyStorageLoadElimination):
+        (JSC::DFG::Propagator::performNodeCSE):
+        * dfg/DFGSpeculativeJIT.cpp:
+        (JSC::DFG::SpeculativeJIT::compilePutByValForByteArray):
+        (JSC::DFG::SpeculativeJIT::compilePutByValForIntTypedArray):
+        (JSC::DFG::SpeculativeJIT::compilePutByValForFloatTypedArray):
+        * dfg/DFGSpeculativeJIT.h:
+        * dfg/DFGSpeculativeJIT32_64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+        * dfg/DFGSpeculativeJIT64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+
+2011-12-15  Geoffrey Garen  <ggaren@apple.com>
+
+        Placement new does an unnecessary NULL check
+        https://bugs.webkit.org/show_bug.cgi?id=74676
+
+        Reviewed by Sam Weinig.
+
+        We can define our own version, which skips the NULL check.
+        
+        Not a measurable speedup, but code inspection shows better code generated,
+        and I believe this is a step toward turning off -fomit-frame-pointer.
+
+        * API/JSCallbackConstructor.h:
+        (JSC::JSCallbackConstructor::create):
+        * API/JSCallbackFunction.h:
+        (JSC::JSCallbackFunction::create): Use the NotNull version of placement
+        new to skip the NULL check.
+
+        * API/JSCallbackObject.h: Removed a conflicting, unnecessaray placement new.
+
+        (JSC::JSCallbackObject::create):
+        * debugger/DebuggerActivation.h:
+        (JSC::DebuggerActivation::create):
+        * heap/HandleHeap.cpp:
+        (JSC::HandleHeap::grow):
+        * heap/HandleHeap.h:
+        (JSC::HandleHeap::allocate):
+        * heap/MarkedBlock.cpp:
+        (JSC::MarkedBlock::create):
+        (JSC::MarkedBlock::recycle):
+        * jit/JITCode.h:
+        (JSC::JITCode::clear):
+        * jsc.cpp:
+        (GlobalObject::create):
+        * profiler/CallIdentifier.h:
+        * runtime/Arguments.h:
+        (JSC::Arguments::create):
+        * runtime/ArrayConstructor.h:
+        (JSC::ArrayConstructor::create):
+        * runtime/ArrayPrototype.h:
+        (JSC::ArrayPrototype::create):
+        * runtime/BooleanConstructor.h:
+        (JSC::BooleanConstructor::create):
+        * runtime/BooleanObject.h:
+        (JSC::BooleanObject::create):
+        * runtime/BooleanPrototype.h:
+        (JSC::BooleanPrototype::create):
+        * runtime/DateConstructor.h:
+        (JSC::DateConstructor::create):
+        * runtime/DateInstance.h:
+        (JSC::DateInstance::create):
+        * runtime/DatePrototype.h:
+        (JSC::DatePrototype::create):
+        * runtime/Error.h:
+        (JSC::StrictModeTypeErrorFunction::create):
+        * runtime/ErrorConstructor.h:
+        (JSC::ErrorConstructor::create):
+        * runtime/ErrorInstance.h:
+        (JSC::ErrorInstance::create):
+        * runtime/ErrorPrototype.h:
+        (JSC::ErrorPrototype::create):
+        * runtime/ExceptionHelpers.h:
+        (JSC::InterruptedExecutionError::create):
+        (JSC::TerminatedExecutionError::create):
+        * runtime/Executable.h:
+        (JSC::NativeExecutable::create):
+        (JSC::EvalExecutable::create):
+        (JSC::ProgramExecutable::create):
+        (JSC::FunctionExecutable::create):
+        * runtime/FunctionConstructor.h:
+        (JSC::FunctionConstructor::create):
+        * runtime/FunctionPrototype.h:
+        (JSC::FunctionPrototype::create):
+        * runtime/GetterSetter.h:
+        (JSC::GetterSetter::create):
+        * runtime/JSAPIValueWrapper.h:
+        (JSC::JSAPIValueWrapper::create):
+        * runtime/JSActivation.h:
+        (JSC::JSActivation::create):
+        * runtime/JSArray.h:
+        (JSC::JSArray::create):
+        * runtime/JSBoundFunction.cpp:
+        (JSC::JSBoundFunction::create):
+        * runtime/JSByteArray.h:
+        (JSC::JSByteArray::create): Use the NotNull version of placement
+        new to skip the NULL check.
+
+        * runtime/JSCell.h: Removed a conflicting, unnecessaray placement new.
+
+        * runtime/JSFunction.cpp:
+        (JSC::JSFunction::create):
+        * runtime/JSFunction.h:
+        (JSC::JSFunction::create):
+        * runtime/JSGlobalObject.h:
+        (JSC::JSGlobalObject::create):
+        * runtime/JSGlobalThis.h:
+        (JSC::JSGlobalThis::create):
+        * runtime/JSNotAnObject.h:
+        (JSC::JSNotAnObject::create):
+        * runtime/JSONObject.h:
+        (JSC::JSONObject::create):
+        * runtime/JSObject.h:
+        (JSC::JSFinalObject::create):
+        * runtime/JSPropertyNameIterator.cpp:
+        (JSC::JSPropertyNameIterator::create):
+        * runtime/JSPropertyNameIterator.h:
+        (JSC::JSPropertyNameIterator::create):
+        * runtime/JSStaticScopeObject.h:
+        (JSC::JSStaticScopeObject::create):
+        * runtime/JSString.cpp:
+        (JSC::StringObject::create):
+        * runtime/JSString.h:
+        (JSC::RopeBuilder::createNull):
+        (JSC::RopeBuilder::create):
+        (JSC::RopeBuilder::createHasOtherOwner):
+        * runtime/MathObject.h:
+        (JSC::MathObject::create):
+        * runtime/NativeErrorConstructor.h:
+        (JSC::NativeErrorConstructor::create):
+        * runtime/NativeErrorPrototype.h:
+        (JSC::NativeErrorPrototype::create):
+        * runtime/NumberConstructor.h:
+        (JSC::NumberConstructor::create):
+        * runtime/NumberObject.h:
+        (JSC::NumberObject::create):
+        * runtime/NumberPrototype.h:
+        (JSC::NumberPrototype::create):
+        * runtime/ObjectConstructor.h:
+        (JSC::ObjectConstructor::create):
+        * runtime/ObjectPrototype.h:
+        (JSC::ObjectPrototype::create):
+        * runtime/RegExp.cpp:
+        (JSC::RegExp::createWithoutCaching):
+        * runtime/RegExpConstructor.h:
+        (JSC::RegExpConstructor::create):
+        * runtime/RegExpMatchesArray.h:
+        (JSC::RegExpMatchesArray::create):
+        * runtime/RegExpObject.h:
+        (JSC::RegExpObject::create):
+        * runtime/RegExpPrototype.h:
+        (JSC::RegExpPrototype::create):
+        * runtime/ScopeChain.h:
+        (JSC::ScopeChainNode::create):
+        * runtime/StrictEvalActivation.h:
+        (JSC::StrictEvalActivation::create):
+        * runtime/StringConstructor.h:
+        (JSC::StringConstructor::create):
+        * runtime/StringObject.h:
+        (JSC::StringObject::create):
+        * runtime/StringPrototype.h:
+        (JSC::StringPrototype::create):
+        * runtime/Structure.h:
+        (JSC::Structure::create):
+        (JSC::Structure::createStructure):
+        * runtime/StructureChain.h:
+        (JSC::StructureChain::create):
+        * testRegExp.cpp:
+        (GlobalObject::create):
+        * wtf/BitVector.cpp:
+        (WTF::BitVector::OutOfLineBits::create): Use the NotNull version of placement
+        new to skip the NULL check.
+
+        * wtf/BumpPointerAllocator.h:
+        (WTF::BumpPointerPool::create): Standardized spacing to make grep easier.
+
+        * wtf/ByteArray.cpp:
+        (WTF::ByteArray::create):
+        * wtf/Deque.h:
+        (WTF::::append):
+        (WTF::::prepend): Use NotNull, as above.
+
+        * wtf/FastAllocBase.h: Added a placement new, since this class would otherwise
+        hide the name of the global placement new.
+
+        (WTF::fastNew): Standardized spacing. Most of these functions don't need
+        NotNull, since they check for NULL, and the optimizer can see that.
+
+        * wtf/HashTable.h:
+        * wtf/HashTraits.h:
+        (WTF::SimpleClassHashTraits::constructDeletedValue):
+        * wtf/MetaAllocator.cpp:
+        (WTF::MetaAllocator::allocFreeSpaceNode): NotNull, as above.
+
+        * wtf/StdLibExtras.h:
+        (throw): This is our NotNull placement new. Declaring that we throw is
+        the C++ way to say that operator new will not return NULL.
+
+        * wtf/ThreadSpecific.h:
+        (WTF::T):
+        * wtf/Vector.h:
+        (WTF::::append):
+        (WTF::::tryAppend):
+        (WTF::::uncheckedAppend):
+        (WTF::::insert):
+        * wtf/text/AtomicStringHash.h:
+        * wtf/text/StringImpl.cpp:
+        (WTF::StringImpl::createUninitialized):
+        (WTF::StringImpl::reallocate):
+        * wtf/text/StringImpl.h:
+        (WTF::StringImpl::tryCreateUninitialized):
+        * wtf/text/StringStatics.cpp:
+        (WTF::AtomicString::init): Use NotNull, as above.
+
+        * yarr/YarrInterpreter.cpp:
+        (JSC::Yarr::Interpreter::allocDisjunctionContext):
+        (JSC::Yarr::Interpreter::ParenthesesDisjunctionContext::ParenthesesDisjunctionContext):
+        (JSC::Yarr::Interpreter::allocParenthesesDisjunctionContext): Standardized
+        spacing for easy grep.
+
+2011-12-19  Eric Carlson  <eric.carlson@apple.com>
+
+        Enable <track> for Mac build
+        https://bugs.webkit.org/show_bug.cgi?id=74838
+
+        Reviewed by Darin Adler.
+
+        * wtf/Platform.h:
+
+2011-12-18  Filip Pizlo  <fpizlo@apple.com>
+
+        DFG is too sloppy with register allocation
+        https://bugs.webkit.org/show_bug.cgi?id=74835
+
+        Reviewed by Gavin Barraclough.
+        
+        Added assertions that at the end of a successfully generated basic block,
+        all use counts should be zero. This revealed a number of bugs:
+        
+        - Array length optimizations were turning a must-generate node into one
+          that is not must-generate, but failing to change the ref count
+          accordingly.
+          
+        - Indexed property storage optimizations were failing to deref their
+          children, or to deref the indexed property storage node itself. Also,
+          they used the Phantom node as a replacement. But the Phantom node is
+          must-generate, which was causing bizarre issues. So this introduces a
+          Nop node, which should be used in cases where you want a node that is
+          skipped and has no children.
+          
+        This does not have any significant performance effect, but it should
+        relieve some register pressure. The main thing this patch adds, though,
+        are the assertions, which should make it easier to do register allocation
+        related changes in the future.
+
+        * dfg/DFGAbstractState.cpp:
+        (JSC::DFG::AbstractState::execute):
+        * dfg/DFGGenerationInfo.h:
+        (JSC::DFG::GenerationInfo::initConstant):
+        (JSC::DFG::GenerationInfo::initInteger):
+        (JSC::DFG::GenerationInfo::initJSValue):
+        (JSC::DFG::GenerationInfo::initCell):
+        (JSC::DFG::GenerationInfo::initBoolean):
+        (JSC::DFG::GenerationInfo::initDouble):
+        (JSC::DFG::GenerationInfo::initStorage):
+        (JSC::DFG::GenerationInfo::use):
+        * dfg/DFGGraph.h:
+        (JSC::DFG::Graph::clearAndDerefChild1):
+        (JSC::DFG::Graph::clearAndDerefChild2):
+        (JSC::DFG::Graph::clearAndDerefChild3):
+        * dfg/DFGNode.h:
+        (JSC::DFG::Node::deref):
+        * dfg/DFGPropagator.cpp:
+        (JSC::DFG::Propagator::propagateNodePredictions):
+        (JSC::DFG::Propagator::fixupNode):
+        * dfg/DFGSpeculativeJIT.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+        * dfg/DFGSpeculativeJIT32_64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+        * dfg/DFGSpeculativeJIT64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+
+2011-12-18  Benjamin Poulain  <bpoulain@apple.com>
+
+        Remove the duplicated code from ASCIICType.h
+        https://bugs.webkit.org/show_bug.cgi?id=74771
+
+        Reviewed by Andreas Kling.
+
+        Use isASCIIDigit() and isASCIIAlpha() instead of copying the code.
+
+        * wtf/ASCIICType.h:
+        (WTF::isASCIIDigit):
+        (WTF::isASCIIAlphanumeric):
+        (WTF::isASCIIHexDigit):
+
+2011-12-18  Anders Carlsson  <andersca@apple.com>
+
+        Set the main frame view scroll position asynchronously
+        https://bugs.webkit.org/show_bug.cgi?id=74823
+
+        Reviewed by Sam Weinig.
+
+        * JavaScriptCore.exp:
+
+2011-12-10  Andreas Kling  <kling@webkit.org>
+
+        OpaqueJSClass: Remove RVCT2 workarounds.
+        <http://webkit.org/b/74250>
+
+        Reviewed by Benjamin Poulain.
+
+        We no longer need workarounds for the RVCT2 compiler since it was
+        only used for the Symbian port of WebKit which is now defunct.
+
+        * API/JSClassRef.cpp:
+        (OpaqueJSClass::OpaqueJSClass):
+        (OpaqueJSClassContextData::OpaqueJSClassContextData):
+
+2011-12-16  Benjamin Poulain  <bpoulain@apple.com>
+
+        Remove the duplicated code from ASCIICType.h
+        https://bugs.webkit.org/show_bug.cgi?id=74771
+
+        Reviewed by Andreas Kling.
+
+        The functions were sharing similar code and were defined for the various input types.
+        Use templates instead to avoid code duplication.
+
+        * wtf/ASCIICType.h:
+        (WTF::isASCII):
+        (WTF::isASCIIAlpha):
+        (WTF::isASCIIAlphanumeric):
+        (WTF::isASCIIDigit):
+        (WTF::isASCIIHexDigit):
+        (WTF::isASCIILower):
+        (WTF::isASCIIOctalDigit):
+        (WTF::isASCIIPrintable):
+        (WTF::isASCIISpace):
+        (WTF::isASCIIUpper):
+        (WTF::toASCIILower):
+        (WTF::toASCIIUpper):
+        (WTF::toASCIIHexValue):
+        (WTF::lowerNibbleToASCIIHexDigit):
+        (WTF::upperNibbleToASCIIHexDigit):
+
+2011-12-16  Filip Pizlo  <fpizlo@apple.com>
+
+        DFG OSR exit may get confused about where in the scratch buffer it stored a value
+        https://bugs.webkit.org/show_bug.cgi?id=74695
+
+        Reviewed by Oliver Hunt.
+        
+        The code that reads from the scratch buffer now explicitly knows which locations to
+        read from. No new tests, since this patch covers a case so uncommon that I don't know
+        how to make a test for it.
+
+        * dfg/DFGOSRExitCompiler.h:
+        (JSC::DFG::OSRExitCompiler::badIndex):
+        (JSC::DFG::OSRExitCompiler::initializePoisoned):
+        (JSC::DFG::OSRExitCompiler::poisonIndex):
+        * dfg/DFGOSRExitCompiler32_64.cpp:
+        (JSC::DFG::OSRExitCompiler::compileExit):
+        * dfg/DFGOSRExitCompiler64.cpp:
+        (JSC::DFG::OSRExitCompiler::compileExit):
+
+2011-12-16  Oliver Hunt  <oliver@apple.com>
+
+        PutByVal[Alias] unnecessarily reloads the storage buffer
+        https://bugs.webkit.org/show_bug.cgi?id=74747
+
+        Reviewed by Gavin Barraclough.
+
+        Make PutByVal use GetIndexedStorage to load the storage buffer.
+        This required switching PutByVal to a vararg node (which is
+        responsible for most of the noise in this patch).  This fixes the
+        remaining portion of the kraken regression caused by the GetByVal
+        storage load elimination, and a 1-5% win on some of the sub tests of
+        the typed array benchmark at:
+        http://stepheneb.github.com/webgl-matrix-benchmarks/matrix_benchmark.html
+
+        * dfg/DFGAbstractState.cpp:
+        (JSC::DFG::AbstractState::execute):
+        * dfg/DFGByteCodeParser.cpp:
+        (JSC::DFG::ByteCodeParser::parseBlock):
+        * dfg/DFGNode.h:
+        * dfg/DFGPropagator.cpp:
+        (JSC::DFG::Propagator::propagateArithNodeFlags):
+        (JSC::DFG::Propagator::fixupNode):
+        (JSC::DFG::Propagator::byValIndexIsPure):
+        (JSC::DFG::Propagator::clobbersWorld):
+        (JSC::DFG::Propagator::getByValLoadElimination):
+        (JSC::DFG::Propagator::checkStructureLoadElimination):
+        (JSC::DFG::Propagator::getByOffsetLoadElimination):
+        (JSC::DFG::Propagator::getPropertyStorageLoadElimination):
+        (JSC::DFG::Propagator::getIndexedPropertyStorageLoadElimination):
+        (JSC::DFG::Propagator::performNodeCSE):
+        * dfg/DFGSpeculativeJIT.cpp:
+        (JSC::DFG::SpeculativeJIT::compilePutByValForByteArray):
+        (JSC::DFG::SpeculativeJIT::compilePutByValForIntTypedArray):
+        (JSC::DFG::SpeculativeJIT::compilePutByValForFloatTypedArray):
+        * dfg/DFGSpeculativeJIT.h:
+        * dfg/DFGSpeculativeJIT32_64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+        * dfg/DFGSpeculativeJIT64.cpp:
+        (JSC::DFG::SpeculativeJIT::compile):
+
+2011-12-16  Daniel Bates  <dbates@rim.com>
+
+        Include BlackBerryPlatformLog.h instead of BlackBerryPlatformMisc.h
+
+        Rubber-stamped by Antonio Gomes.
+
+        BlackBerry::Platform::logV() is declared in BlackBerryPlatformLog.h. That is, it isn't
+        declared in BlackBerryPlatformMisc.h. Hence, we should include BlackBerryPlatformLog.h
+        instead of BlackBerryPlatformMisc.h.
+
+        * wtf/Assertions.cpp:
+
+2011-12-16  Mark Hahnenberg  <mhahnenberg@apple.com>
+
+        De-virtualize destructors
+        https://bugs.webkit.org/show_bug.cgi?id=74331
+
+        Reviewed by Geoffrey Garen.
+
+        This is a megapatch which frees us from the chains of virtual destructors.
+
+        In order to remove the virtual destructors, which are the last of the virtual 
+        functions, from the JSCell hierarchy, we need to add the ClassInfo pointer to 
+        the cell rather than to the structure because in order to be able to lazily call 
+        the static destroy() functions that will replace the virtual destructors, we 
+        need to be able to access the ClassInfo without the danger of the object's 
+        Structure being collected before the object itself.
+
+        After adding the ClassInfo to the cell, we can then begin to remove our use 
+        of vptrs for optimizations within the JIT and the GC.  When we have removed 
+        all of the stored vptrs from JSGlobalData, we can then also remove all of 
+        the related VPtrStealingHack code.
+
+        The replacement for virtual destructors will be to add a static destroy function 
+        pointer to the MethodTable stored in ClassInfo.  Any subclass of JSCell that has 
+        a non-trivial destructor will require its own static destroy function to static 
+        call its corresponding destructor, which will now be non-virtual.  In future 
+        patches we will slowly move away from destructors altogether as we make more and 
+        more objects backed by GC memory rather than malloc-ed memory.  The GC will now 
+        call the static destroy method rather than the virtual destructor.
+
+        As we go through the hierarchy and add static destroy functions to classes, 
+        we will also add a new assert, ASSERT_HAS_TRIVIAL_DESTRUCTOR, to those classes 
+        to which it applies.  The future goal is to eventually have every class have that assert.
+
+        * API/JSCallbackConstructor.cpp:
+        (JSC::JSCallbackConstructor::destroy): Add a destroy function to statically call 
+        ~JSCallbackConstructor because it has some extra destruction logic.
+        * API/JSCallbackConstructor.h:
+        * API/JSCallbackFunction.cpp: Add trivial destructor assert for JSCallbackFunction.
+        * API/JSCallbackObject.cpp: Add a destroy function to statically call ~JSCallbackObject 
+        because it has a member OwnPtr that needs destruction.
+        (JSC::::destroy):
+        * API/JSCallbackObject.h:
+        * JavaScriptCore.exp: Add/remove necessary symbols for JSC.
+        * JavaScriptCore.vcproj/JavaScriptCore/JavaScriptCore.def: Same for Windows symbols.
+        * debugger/DebuggerActivation.cpp: DebuggerActivation, for some strange reason, didn't 
+        have its own ClassInfo despite the fact that it overrides a number of MethodTable 
+        methods.  Added the ClassInfo, along with an assertion that its destructor is trivial.
+        * debugger/DebuggerActivation.h:
+        * dfg/DFGOperations.cpp: Remove global data first argument to isJSArray, isJSByteArray, 
+        isJSString, as it is no longer necessary.
+        (JSC::DFG::putByVal):
+        * dfg/DFGRepatch.cpp:  Ditto.  Also remove uses of jsArrayVPtr in favor of using the 
+        JSArray ClassInfo pointer.
+        (JSC::DFG::tryCacheGetByID):
+        * dfg/DFGSpeculativeJIT.cpp:  Replace uses of the old vptrs with new ClassInfo 
+        comparisons since we don't have vptrs anymore.
+        (JSC::DFG::SpeculativeJIT::compilePeepHoleObjectEquality):
+        (JSC::DFG::SpeculativeJIT::compilePeepHoleBranch):
+        (JSC::DFG::SpeculativeJIT::checkArgumentTypes):
+        (JSC::DFG::SpeculativeJIT::compilePutByValForByteArray):
+        (JSC::DFG::SpeculativeJIT::compileGetTypedArrayLength):
+        (JSC::DFG::SpeculativeJIT::compilePutByValForIntTypedArray):
+        (JSC::DFG::SpeculativeJIT::compilePutByValForFloatTypedArray):
+        (JSC::DFG::SpeculativeJIT::compare):
+        (JSC::DFG::SpeculativeJIT::compileStrictEq):
+        (JSC::DFG::SpeculativeJIT::compileGetIndexedPropertyStorage):
+        * dfg/DFGSpeculativeJIT.h: Ditto.
+        (JSC::DFG::SpeculativeJIT::emitAllocateJSFinalObject):
+        * dfg/DFGSpeculativeJIT32_64.cpp: Ditto.
+        (JSC::DFG::SpeculativeJIT::compileObjectEquality):
+        (JSC::DFG::SpeculativeJIT::compileObjectOrOtherLogicalNot):
+        (JSC::DFG::SpeculativeJIT::compileLogicalNot):
+        (JSC::DFG::SpeculativeJIT::emitObjectOrOtherBranch):
+        (JSC::DFG::SpeculativeJIT::emitBranch):
+        (JSC::DFG::SpeculativeJIT::compile):
+        * dfg/DFGSpeculativeJIT64.cpp: Ditto.
+        (JSC::DFG::SpeculativeJIT::compileObjectEquality):
+        (JSC::DFG::SpeculativeJIT::compileObjectOrOtherLogicalNot):
+        (JSC::DFG::SpeculativeJIT::compileLogicalNot):
+        (JSC::DFG::SpeculativeJIT::emitObjectOrOtherBranch):
+        (JSC::DFG::SpeculativeJIT::emitBranch):
+        (JSC::DFG::SpeculativeJIT::compile):
+        * heap/Heap.cpp: Remove all uses of vptrs in GC optimizations and replace them with 
+        ClassInfo comparisons.
+        (JSC::Heap::Heap):
+        * heap/MarkStack.cpp: Ditto.
+        (JSC::MarkStackThreadSharedData::markingThreadMain):
+        (JSC::visitChildren):
+        (JSC::SlotVisitor::drain):
+        * heap/MarkStack.h: Ditto.
+        (JSC::MarkStack::MarkStack):
+        * heap/MarkedBlock.cpp: Ditto.
+        (JSC::MarkedBlock::callDestructor):
+        (JSC::MarkedBlock::specializedSweep):
+        * heap/MarkedBlock.h: Ditto.
+        * heap/SlotVisitor.h: Ditto.
+        (JSC::SlotVisitor::SlotVisitor):
+        * heap/VTableSpectrum.cpp: Now that we don't have vptrs, we can't count them.  
+        We'll have to rename this class and make it use ClassInfo ptrs in a future patch.
+        (JSC::VTableSpectrum::count):
+        * interpreter/Interpreter.cpp: Remove all global data arguments from isJSArray, 
+        etc. functions.
+        (JSC::loadVarargs):
+        (JSC::Interpreter::tryCacheGetByID):
+        (JSC::Interpreter::privateExecute):
+        * jit/JIT.h: Remove vptr argument from emitAllocateBasicJSObject 
+        * jit/JITInlineMethods.h: Remove vptr planting, and add ClassInfo planting, 
+        remove all vtable related code.
+        (JSC::JIT::emitLoadCharacterString):
+        (JSC::JIT::emitAllocateBasicJSObject):
+        (JSC::JIT::emitAllocateJSFinalObject):
+        (JSC::JIT::emitAllocateJSFunction):
+        * jit/JITOpcodes.cpp: Replace vptr related branch code with corresponding ClassInfo.
+        (JSC::JIT::privateCompileCTIMachineTrampolines):
+        (JSC::JIT::emit_op_to_primitive):
+        (JSC::JIT::emit_op_convert_this):
+        * jit/JITOpcodes32_64.cpp: Ditto.
+        (JSC::JIT::privateCompileCTIMachineTrampolines):
+        (JSC::JIT::emit_op_to_primitive):
+        (JSC::JIT::emitSlow_op_eq):
+        (JSC::JIT::emitSlow_op_neq):
+        (JSC::JIT::compileOpStrictEq):
+        (JSC::JIT::emit_op_convert_this):
+        * jit/JITPropertyAccess.cpp: Ditto.
+        (JSC::JIT::stringGetByValStubGenerator):
+        (JSC::JIT::emit_op_get_by_val):
+        (JSC::JIT::emitSlow_op_get_by_val):
+        (JSC::JIT::emit_op_put_by_val):
+        (JSC::JIT::privateCompilePutByIdTransition):
+        (JSC::JIT::privateCompilePatchGetArrayLength):
+        * jit/JITPropertyAccess32_64.cpp: Ditto.
+        (JSC::JIT::stringGetByValStubGenerator):
+        (JSC::JIT::emit_op_get_by_val):
+        (JSC::JIT::emitSlow_op_get_by_val):
+        (JSC::JIT::emit_op_put_by_val):
+        (JSC::JIT::privateCompilePatchGetArrayLength):
+        * jit/JITStubs.cpp: Remove global data argument from isJSString, etc.
+        (JSC::JITThunks::tryCacheGetByID):
+        (JSC::DEFINE_STUB_FUNCTION):
+        * jit/SpecializedThunkJIT.h: Replace vptr related stuff with ClassInfo stuff.
+        (JSC::SpecializedThunkJIT::loadJSStringArgument):
+        * runtime/ArrayConstructor.cpp: Add trivial destructor assert.
+        * runtime/ArrayPrototype.cpp: Remove global data argument from isJSArray.
+        (JSC::arrayProtoFuncToString):
+        (JSC::arrayProtoFuncJoin):
+        (JSC::arrayProtoFuncPop):
+        (JSC::arrayProtoFuncPush):
+        (JSC::arrayProtoFuncShift):
+        (JSC::arrayProtoFuncSplice):
+        (JSC::arrayProtoFuncUnShift):
+        (JSC::arrayProtoFuncFilter):
+        (JSC::arrayProtoFuncMap):
+        (JSC::arrayProtoFuncEvery):
+        (JSC::arrayProtoFuncForEach):
+        (JSC::arrayProtoFuncSome):
+        (JSC::arrayProtoFuncReduce):
+        (JSC::arrayProtoFuncReduceRight):
+        * runtime/BooleanConstructor.cpp: Add trivial destructor assert.
+        * runtime/BooleanObject.cpp: Ditto.
+        * runtime/BooleanPrototype.cpp: Ditto.
+        * runtime/ClassInfo.h: Add destroy function pointer to MethodTable.
+        * runtime/DateConstructor.cpp: Add trivial destructor assert.
+        * runtime/DateInstance.cpp: Add destroy function for DateInstance because it has a RefPtr 
+        that needs destruction.
+        (JSC::DateInstance::destroy):
+        * runtime/DateInstance.h:
+        * runtime/Error.cpp: Ditto (because of UString member).
+        (JSC::StrictModeTypeErrorFunction::destroy):
+        * runtime/Error.h:
+        * runtime/ErrorConstructor.cpp: Add trivial destructor assert.
+        * runtime/ErrorInstance.cpp: Ditto.
+        * runtime/ExceptionHelpers.cpp: Ditto.
+        * runtime/Executable.cpp: Add destroy functions for ExecutableBase and subclasses.
+        (JSC::ExecutableBase::destroy):
+        (JSC::NativeExecutable::destroy):
+        (JSC::ScriptExecutable::destroy):
+        (JSC::EvalExecutable::destroy):
+        (JSC::ProgramExecutable::destroy):
+        (JSC::FunctionExecutable::destroy):
+        * runtime/Executable.h:
+        * runtime/FunctionConstructor.cpp: Add trivial destructor assert.
+        * runtime/FunctionPrototype.cpp: Ditto. Also remove global data first arg from isJSArray.
+        (JSC::functionProtoFuncApply):
+        * runtime/GetterSetter.cpp: Ditto.
+        * runtime/InitializeThreading.cpp: Remove call to JSGlobalData::storeVPtrs since it no 
+        longer exists.
+        (JSC::initializeThreadingOnce):
+        * runtime/InternalFunction.cpp: Remove vtableAnchor function, add trivial destructor assert, 
+        remove first arg from isJSString.
+        (JSC::InternalFunction::displayName):
+        * runtime/InternalFunction.h: Remove VPtrStealingHack.
+        * runtime/JSAPIValueWrapper.cpp: Add trivial destructor assert.
+        * runtime/JSArray.cpp: Add static destroy to call ~JSArray.  Replace vptr checks in 
+        destructor with ClassInfo checks.
+        (JSC::JSArray::~JSArray):
+        (JSC::JSArray::destroy):
+        * runtime/JSArray.h: Remove VPtrStealingHack.  Remove globalData argument from isJSArray 
+        and change them to check the ClassInfo rather than the vptrs.
+        (JSC::isJSArray):
+        * runtime/JSBoundFunction.cpp: Add trival destructor assert. Remove first arg from isJSArray.
+        (JSC::boundFunctionCall):
+        (JSC::boundFunctionConstruct):
+        * runtime/JSByteArray.cpp: Add static destroy function, replace vptr checks with ClassInfo checks.
+        (JSC::JSByteArray::~JSByteArray):
+        (JSC::JSByteArray::destroy):
+        * runtime/JSByteArray.h: Remove VPtrStealingHack code.
+        (JSC::isJSByteArray):
+        * runtime/JSCell.cpp: Add trivial destructor assert.  Add static destroy function.
+        (JSC::JSCell::destroy):
+        * runtime/JSCell.h: Remove VPtrStealingHack code.  Add function for returning the offset 
+        of the ClassInfo pointer in the object for use by the JIT.  Add the ClassInfo pointer to 
+        the JSCell itself, and grab it from the Structure.  Remove the vptr and setVPtr functions, 
+        as they are no longer used.  Add a validatedClassInfo function to JSCell for any clients 
+        that want to verify, while in Debug mode, that the ClassInfo contained in the cell is the 
+        same one as that contained in the Structure.  This isn't used too often, because most of 
+        the places where we compare the ClassInfo to things can be called during destruction.  
+        Since the Structure is unreliable during the phase when destructors are being called, 
+        we can't call validatedClassInfo.
+        (JSC::JSCell::classInfoOffset):
+        (JSC::JSCell::structure):
+        (JSC::JSCell::classInfo):
+        * runtime/JSFunction.cpp: Remove VPtrStealingHack code.  Add static destroy, remove vtableAnchor, 
+        remove first arg from call to isJSString.
+        (JSC::JSFunction::destroy):
+        (JSC::JSFunction::displayName):
+        * runtime/JSFunction.h: 
+        * runtime/JSGlobalData.cpp: Remove all VPtr stealing code and storage, including storeVPtrs, 
+        as these vptrs are no longer needed in the codebase.
+        * runtime/JSGlobalData.h:
+        (JSC::TypedArrayDescriptor::TypedArrayDescriptor): Changed the TypedArrayDescriptor to use 
+        ClassInfo rather than the vptr.
+        * runtime/JSGlobalObject.cpp: Add static destroy function.
+        (JSC::JSGlobalObject::destroy):
+        * runtime/JSGlobalObject.h:
+        * runtime/JSGlobalThis.cpp: Add trivial destructor assert.
+        * runtime/JSNotAnObject.cpp: Ditto.
+        * runtime/JSONObject.cpp: Ditto. Remove first arg from isJSArray calls.
+        (JSC::Stringifier::Holder::appendNextProperty):
+        (JSC::Walker::walk):
+        * runtime/JSObject.cpp: 
+        (JSC::JSFinalObject::destroy):
+        (JSC::JSNonFinalObject::destroy):
+        (JSC::JSObject::destroy):
+        * runtime/JSObject.h: Add trivial destructor assert for JSObject, remove vtableAnchor 
+        from JSNonFinalObject and JSFinalObject, add static destroy for JSFinalObject and 
+        JSNonFinalObject, add isJSFinalObject utility function similar to isJSArray, remove all VPtrStealingHack code.
+        (JSC::JSObject::finishCreation):
+        (JSC::JSNonFinalObject::finishCreation):
+        (JSC::JSFinalObject::finishCreation):
+        (JSC::isJSFinalObject):
+        * runtime/JSPropertyNameIterator.cpp: Add static destroy.
+        (JSC::JSPropertyNameIterator::destroy):
+        * runtime/JSPropertyNameIterator.h:
+        * runtime/JSStaticScopeObject.cpp: Ditto.
+        (JSC::JSStaticScopeObject::destroy):
+        * runtime/JSStaticScopeObject.h: Ditto. 
+        * runtime/JSString.cpp:
+        (JSC::JSString::destroy):
+        * runtime/JSString.h: Ditto. Remove VPtrStealingHack code. Also remove fixupVPtr code, 
+        since we no longer need to fixup vptrs.
+        (JSC::jsSingleCharacterString):
+        (JSC::jsSingleCharacterSubstring):
+        (JSC::jsNontrivialString):
+        (JSC::jsString):
+        (JSC::jsSubstring8):
+        (JSC::jsSubstring):
+        (JSC::jsOwnedString):
+        (JSC::jsStringBuilder):
+        (JSC::isJSString):
+        * runtime/JSVariableObject.cpp: 
+        (JSC::JSVariableObject::destroy):
+        * runtime/JSVariableObject.h: Ditto.
+        * runtime/JSWrapperObject.cpp:
+        * runtime/JSWrapperObject.h: Add trivial destructor assert.
+        * runtime/MathObject.cpp: Ditto.
+        * runtime/NativeErrorConstructor.cpp: Ditto.
+        * runtime/NumberConstructor.cpp: Ditto.
+        * runtime/NumberObject.cpp: Ditto.
+        * runtime/NumberPrototype.cpp: Ditto.
+        * runtime/ObjectConstructor.cpp: Ditto.
+        * runtime/ObjectPrototype.cpp: Ditto.
+        * runtime/Operations.h: Remove calls to fixupVPtr, remove first arg to isJSString.
+        (JSC::jsString):
+        (JSC::jsLess):
+        (JSC::jsLessEq):
+        * runtime/RegExp.cpp: Add static destroy.
+        (JSC::RegExp::destroy):
+        * runtime/RegExp.h:
+        * runtime/RegExpConstructor.cpp: Add static destroy for RegExpConstructor and RegExpMatchesArray.
+        (JSC::RegExpConstructor::destroy):
+        (JSC::RegExpMatchesArray::destroy):
+        * runtime/RegExpConstructor.h:
+        * runtime/RegExpMatchesArray.h:
+        * runtime/RegExpObject.cpp: Add static destroy.
+        (JSC::RegExpObject::destroy):
+        * runtime/RegExpObject.h:
+        * runtime/ScopeChain.cpp: Add trivial destructor assert.
+        * runtime/ScopeChain.h:
+        * runtime/StrictEvalActivation.cpp: Ditto.
+        * runtime/StringConstructor.cpp:
+        * runtime/StringObject.cpp: Ditto. Remove vtableAnchor.
+        * runtime/StringObject.h:
+        * runtime/StringPrototype.cpp: Ditto.
+        * runtime/Structure.cpp: Add static destroy.
+        (JSC::Structure::destroy):
+        * runtime/Structure.h: Move JSCell::finishCreation and JSCell constructor into Structure.h 
+        because they need to have the full Structure type to access the ClassInfo to store in the JSCell.
+        (JSC::JSCell::setStructure):
+        (JSC::JSCell::validatedClassInfo):
+        (JSC::JSCell::JSCell):
+        (JSC::JSCell::finishCreation):
+        * runtime/StructureChain.cpp: Add static destroy.
+        (JSC::StructureChain::destroy):
+        * runtime/StructureChain.h:
+        * wtf/Assertions.h: Add new assertion ASSERT_HAS_TRIVIAL_DESTRUCTOR, which uses clangs 
+        ability to tell us when a class has a trivial destructor. We will use this assert 
+        more in future patches as we move toward having all JSC objects backed by GC memory, 
+        which means moving away from using destructors/finalizers.
+
+2011-12-15  Martin Robinson  <mrobinson@igalia.com>
+
+        Fix 'make dist' in preparation for the GTK+ release.
+
+        * GNUmakefile.list.am: Add missing header.
+
+2011-12-15  Sam Weinig  <sam@webkit.org>
+
+        <rdar://problem/10552550> JavaScriptCore uses obsolete 'cpy' mnemonic in ARM assembly
+
+        Reviewed by Gavin Barraclough.
+
+        Original patch by Jim Grosbach.
+
+        * jit/JITStubs.cpp:
+        (JSC::ctiTrampoline):
+        (JSC::ctiVMThrowTrampoline):
+        Replace uses of the 'cpy' mnemonic with 'mov'.
+
+2011-12-15  Filip Pizlo  <fpizlo@apple.com>
+
+        Value profiling should distinguished between NaN and non-NaN doubles
+        https://bugs.webkit.org/show_bug.cgi?id=74682
+
+        Reviewed by Gavin Barraclough.
+        
+        Added PredictDoubleReal and PredictDoubleNaN. PredictDouble is now the union
+        of the two.
+
+        * bytecode/PredictedType.cpp:
+        (JSC::predictionToString):
+        (JSC::predictionFromValue):
+        * bytecode/PredictedType.h:
+        (JSC::isDoubleRealPrediction):
+        (JSC::isDoublePrediction):
+
+2011-12-15  Anders Carlsson  <andersca@apple.com>
+
+        Regression (r102866): Navigating away from or closing a page with a plugin crashes
+        https://bugs.webkit.org/show_bug.cgi?id=74655
+        <rdar://problem/10590024>
+
+        Reviewed by Sam Weinig.
+
+        Rewrite HasRefAndDeref to work if ref and deref are implemented in base classes,
+        using a modified version of the technique described here:
+        http://groups.google.com/group/comp.lang.c++.moderated/msg/e5fbc9305539f699
+        
+        * wtf/Functional.h:
+
+2011-12-15  Andy Wingo  <wingo@igalia.com>
+
+        Warnings fixes in Interpreter.cpp and PrivateExecute.cpp
+        https://bugs.webkit.org/show_bug.cgi?id=74624
+
+        Reviewed by Darin Adler.
+
+        * interpreter/Interpreter.cpp:
+        (JSC::Interpreter::privateExecute): Fix variables unused in
+        release mode.
+        * wtf/ParallelJobsGeneric.cpp:
+        (WTF::ParallelEnvironment::ParallelEnvironment): Fix
+        signed/unsigned comparison warning, with a cast.
+
+2011-12-15  Andy Wingo  <wingo@igalia.com>
+
+        Use more macrology in JSC::Options
+        https://bugs.webkit.org/show_bug.cgi?id=72938
+
+        Reviewed by Filip Pizlo.
+
+        * runtime/Options.cpp:
+        (JSC::Options::initializeOptions):
+        * runtime/Options.h: Use macros to ensure that all heuristics are
+        declared and have initializers.
+
+2011-12-15  Anders Carlsson  <andersca@apple.com>
+
+        Add ScrollingCoordinator class and ENABLE_THREADED_SCROLLING define
+        https://bugs.webkit.org/show_bug.cgi?id=74639
+
+        Reviewed by Andreas Kling.
+
+        Add ENABLE_THREADED_SCROLLING #define.
+
+        * wtf/Platform.h:
+
+2011-12-15  Anders Carlsson  <andersca@apple.com>
+
+        EventDispatcher should handle wheel events on the connection queue
+        https://bugs.webkit.org/show_bug.cgi?id=74627
+
+        Reviewed by Andreas Kling.
+
+        Add a BoundFunctionImpl specialization that takes three parameters.
+
+        * wtf/Functional.h:
+        (WTF::C::):
+        (WTF::R):
+        (WTF::bind):
+
+2011-12-14  Anders Carlsson  <andersca@apple.com>
+
+        Add WTF::Function to wtf/Forward.h
+        https://bugs.webkit.org/show_bug.cgi?id=74576
+
+        Reviewed by Adam Roben.
+
+        * jsc.cpp:
+        Work around a name conflict in the readline library.
+
+        * wtf/Forward.h:
+        Add Function.
+
+2011-12-15  Igor Oliveira  <igor.oliveira@openbossa.org>
+
+        [Qt] Support requestAnimationFrame API
+        https://bugs.webkit.org/show_bug.cgi?id=74528
+
+        Let Qt port use REQUEST_ANIMATION_FRAME_TIMER.
+
+        Reviewed by Kenneth Rohde Christiansen.
+
+        * wtf/Platform.h:
+
 2011-12-15  Andy Wingo  <wingo@igalia.com>
 
         Minor refactor to Parser::parseTryStatement

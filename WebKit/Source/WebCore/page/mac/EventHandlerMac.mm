@@ -419,7 +419,7 @@ static void selfRetainingNSScrollViewScrollWheel(NSScrollView *self, SEL selecto
         [self release];
 }
 
-bool EventHandler::passWheelEventToWidget(PlatformWheelEvent& wheelEvent, Widget* widget)
+bool EventHandler::passWheelEventToWidget(const PlatformWheelEvent& wheelEvent, Widget* widget)
 {
     BEGIN_BLOCK_OBJC_EXCEPTIONS;
 
@@ -719,9 +719,9 @@ unsigned EventHandler::accessKeyModifiers()
     // So, we use Control in this case, even though it conflicts with Emacs-style key bindings.
     // See <https://bugs.webkit.org/show_bug.cgi?id=21107> for more detail.
     if (AXObjectCache::accessibilityEnhancedUserInterfaceEnabled())
-        return PlatformKeyboardEvent::CtrlKey;
+        return PlatformEvent::CtrlKey;
 
-    return PlatformKeyboardEvent::CtrlKey | PlatformKeyboardEvent::AltKey;
+    return PlatformEvent::CtrlKey | PlatformEvent::AltKey;
 }
 
 }

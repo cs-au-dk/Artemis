@@ -27,8 +27,6 @@
 #include "config.h"
 #include "RunLoop.h"
 
-#include "WorkItem.h"
-
 #include <QCoreApplication>
 #include <QAbstractEventDispatcher>
 #include <QObject>
@@ -60,14 +58,33 @@ private:
     QMetaMethod m_method;
 };
 
+static QEventLoop* currentEventLoop;
+
 void RunLoop::run()
 {
-    QCoreApplication::exec();
+    static bool mainEventLoopIsRunning = false;
+    if (!mainEventLoopIsRunning) {
+        mainEventLoopIsRunning = true;
+        QCoreApplication::exec();
+        mainEventLoopIsRunning = false;
+    } else {
+        QEventLoop eventLoop;
+
+        QEventLoop* previousEventLoop = currentEventLoop;
+        currentEventLoop = &eventLoop;
+
+        eventLoop.exec();
+
+        currentEventLoop = previousEventLoop;
+    }
 }
 
 void RunLoop::stop()
 {
-    QCoreApplication::exit();
+    if (currentEventLoop)
+        currentEventLoop->exit();
+    else
+        QCoreApplication::exit();
 }
 
 RunLoop::RunLoop()

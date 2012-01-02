@@ -25746,15 +25746,19 @@
 				>
 			</File>
 			<File
+				RelativePath="..\loader\DocumentLoadTiming.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\loader\DocumentLoadTiming.h"
+				>
+			</File>
+			<File
 				RelativePath="..\loader\DocumentLoader.cpp"
 				>
 			</File>
 			<File
 				RelativePath="..\loader\DocumentLoader.h"
-				>
-			</File>
-			<File
-				RelativePath="..\loader\DocumentLoadTiming.h"
 				>
 			</File>
 			<File
@@ -26521,6 +26525,14 @@
 				RelativePath="..\platform\GeolocationService.h"
 				>
 			</File>
+            <File
+                RelativePath="..\platform\HistogramSupport.cpp"
+                >
+            </File>
+            <File
+                RelativePath="..\platform\HistogramSupport.h"
+                >
+            </File>
 			<File
 				RelativePath="..\platform\HostWindow.h"
 				>
@@ -26623,6 +26635,14 @@
 			</File>
 			<File
 				RelativePath="..\platform\Pasteboard.h"
+				>
+			</File>
+			<File
+				RelativePath="..\platform\PlatformEvent.cpp"
+				>
+			</File>
+			<File
+				RelativePath="..\platform\PlatformEvent.h"
 				>
 			</File>
 			<File
@@ -29612,6 +29632,22 @@
 					Name="filters"
 					>
 					<File
+						RelativePath="..\platform\graphics\filters\CustomFilterMesh.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\platform\graphics\filters\CustomFilterMesh.h"
+						>
+					</File>
+					<File
+						RelativePath="..\platform\graphics\filters\CustomFilterShader.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\platform\graphics\filters\CustomFilterShader.h"
+						>
+					</File>
+					<File
 						RelativePath="..\platform\graphics\filters\DistantLightSource.cpp"
 						>
 					</File>
@@ -29665,6 +29701,14 @@
 					</File>
 					<File
 						RelativePath="..\platform\graphics\filters\FEConvolveMatrix.h"
+						>
+					</File>
+					<File
+						RelativePath="..\platform\graphics\filters\FECustomFilter.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\platform\graphics\filters\FECustomFilter.h"
 						>
 					</File>
 					<File
@@ -29789,6 +29833,22 @@
 					</File>
 					<File
 						RelativePath="..\platform\graphics\filters\FilterEffect.h"
+						>
+					</File>
+					<File
+						RelativePath="..\platform\graphics\filters\FilterOperation.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\platform\graphics\filters\FilterOperation.h"
+						>
+					</File>
+					<File
+						RelativePath="..\platform\graphics\filters\FilterOperations.cpp"
+						>
+					</File>
+					<File
+						RelativePath="..\platform\graphics\filters\FilterOperations.h"
 						>
 					</File>
 					<File
@@ -30202,6 +30262,10 @@
 				</File>
 				<File
 					RelativePath="..\platform\network\ResourceLoadPriority.h"
+					>
+				</File>
+				<File
+					RelativePath="..\platform\network\ResourceLoadTiming.cpp"
 					>
 				</File>
 				<File
@@ -42459,6 +42523,10 @@
 					>
 				</File>
 				<File
+					RelativePath="..\rendering\style\CustomFilterOperation.h"
+					>
+				</File>
+				<File
 					RelativePath="..\rendering\style\KeyframeList.cpp"
 					>
 					<FileConfiguration
@@ -49298,7 +49366,7 @@
 				>
 			</File>
 			<File
-				RelativePath="..\dom\MutationObserverRegistration.cpp"
+				RelativePath="..\dom\MutationObserverInterestGroup.cpp"
 				>
 				<FileConfiguration
 					Name="Debug|Win32"
@@ -49350,9 +49418,65 @@
 				</FileConfiguration>
 			</File>
 			<File
-				RelativePath="..\dom\MutationObserverRegistration.h"
+				RelativePath="..\dom\MutationObserverInterestGroup.h"
 				>
 			</File>
+            <File
+                RelativePath="..\dom\MutationObserverRegistration.cpp"
+                >
+                <FileConfiguration
+                    Name="Debug|Win32"
+                    ExcludedFromBuild="true"
+                    >
+                    <Tool
+                        Name="VCCLCompilerTool"
+                    />
+                </FileConfiguration>
+                <FileConfiguration
+                    Name="Release|Win32"
+                    ExcludedFromBuild="true"
+                    >
+                    <Tool
+                        Name="VCCLCompilerTool"
+                    />
+                </FileConfiguration>
+                <FileConfiguration
+                    Name="Debug_Cairo_CFLite|Win32"
+                    ExcludedFromBuild="true"
+                    >
+                    <Tool
+                        Name="VCCLCompilerTool"
+                    />
+                </FileConfiguration>
+                <FileConfiguration
+                    Name="Release_Cairo_CFLite|Win32"
+                    ExcludedFromBuild="true"
+                    >
+                    <Tool
+                        Name="VCCLCompilerTool"
+                    />
+                </FileConfiguration>
+                <FileConfiguration
+                    Name="Debug_All|Win32"
+                    ExcludedFromBuild="true"
+                    >
+                    <Tool
+                        Name="VCCLCompilerTool"
+                    />
+                </FileConfiguration>
+                <FileConfiguration
+                    Name="Production|Win32"
+                    ExcludedFromBuild="true"
+                    >
+                    <Tool
+                        Name="VCCLCompilerTool"
+                    />
+                </FileConfiguration>
+            </File>
+            <File
+                RelativePath="..\dom\MutationObserverRegistration.h"
+                >
+            </File>
 			<File
 				RelativePath="..\dom\MutationRecord.cpp"
 				>
@@ -55219,6 +55343,10 @@
 			</File>
 			<File
 				RelativePath="..\editing\TypingCommand.h"
+				>
+			</File>
+			<File
+				RelativePath="..\editing\UndoStep.h"
 				>
 			</File>
 			<File
@@ -63223,6 +63351,110 @@
 				<File
 					RelativePath="..\bindings\js\JSDOMWindowShell.h"
 					>
+				</File>
+				<File
+					RelativePath="..\bindings\js\JSDOMWindowWebAudioCustom.cpp"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug_Cairo_CFLite|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release_Cairo_CFLite|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug_All|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Production|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+				</File>
+				<File
+					RelativePath="..\bindings\js\JSDOMWindowWebSocketCustom.cpp"
+					>
+					<FileConfiguration
+						Name="Debug|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug_Cairo_CFLite|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Release_Cairo_CFLite|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Debug_All|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
+					<FileConfiguration
+						Name="Production|Win32"
+						ExcludedFromBuild="true"
+						>
+						<Tool
+							Name="VCCLCompilerTool"
+						/>
+					</FileConfiguration>
 				</File>
 				<File
 					RelativePath="..\bindings\js\JSDOMWrapper.cpp"

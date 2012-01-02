@@ -27,13 +27,13 @@
 #include "CrossOriginAccessControl.h"
 #include "DOMFormData.h"
 #include "DOMImplementation.h"
-#include "Document.h"
 #include "Event.h"
 #include "EventException.h"
 #include "EventListener.h"
 #include "EventNames.h"
 #include "ExceptionCode.h"
 #include "File.h"
+#include "HTMLDocument.h"
 #include "HTTPParsers.h"
 #include "HTTPValidation.h"
 #include "InspectorInstrumentation.h"
@@ -219,30 +219,38 @@ String XMLHttpRequest::responseText(ExceptionCode& ec)
 
 Document* XMLHttpRequest::responseXML(ExceptionCode& ec)
 {
-    if (m_responseTypeCode != ResponseTypeDefault && m_responseTypeCode != ResponseTypeText && m_responseTypeCode != ResponseTypeDocument) {
+    if (m_responseTypeCode != ResponseTypeDefault && m_responseTypeCode != ResponseTypeDocument) {
         ec = INVALID_STATE_ERR;
         return 0;
     }
 
-    if (m_state != DONE)
+    if (m_error || m_state != DONE)
         return 0;
 
     if (!m_createdDocument) {
-        if ((m_response.isHTTP() && !responseIsXML()) || scriptExecutionContext()->isWorkerContext()) {
-            // The W3C spec requires this.
-            m_responseXML = 0;
+        bool isHTML = equalIgnoringCase(responseMIMEType(), "text/html");
+
+        // The W3C spec requires the final MIME type to be some valid XML type, or text/html.
+        // If it is text/html, then the responseType of "document" must have been supplied explicitly.
+        if ((m_response.isHTTP() && !responseIsXML() && !isHTML)
+            || (isHTML && m_responseTypeCode == ResponseTypeDefault)
+            || scriptExecutionContext()->isWorkerContext()) {
+            m_responseDocument = 0;
         } else {
-            m_responseXML = Document::create(0, m_url);
+            if (isHTML)
+                m_responseDocument = HTMLDocument::create(0, m_url);
+            else
+                m_responseDocument = Document::create(0, m_url);
             // FIXME: Set Last-Modified.
-            m_responseXML->setContent(m_responseBuilder.toStringPreserveCapacity());
-            m_responseXML->setSecurityOrigin(securityOrigin());
-            if (!m_responseXML->wellFormed())
-                m_responseXML = 0;
+            m_responseDocument->setContent(m_responseBuilder.toStringPreserveCapacity());
+            m_responseDocument->setSecurityOrigin(securityOrigin());
+            if (!m_responseDocument->wellFormed())
+                m_responseDocument = 0;
         }
         m_createdDocument = true;
     }
 
-    return m_responseXML.get();
+    return m_responseDocument.get();
 }
 
 #if ENABLE(XHR_RESPONSE_BLOB)
@@ -752,7 +760,7 @@ void XMLHttpRequest::clearResponseBuffers()
 {
     m_responseBuilder.clear();
     m_createdDocument = false;
-    m_responseXML = 0;
+    m_responseDocument = 0;
 #if ENABLE(XHR_RESPONSE_BLOB)
     m_responseBlob = 0;
 #endif
@@ -938,7 +946,9 @@ String XMLHttpRequest::responseMIMEType() const
 
 bool XMLHttpRequest::responseIsXML() const
 {
-    return DOMImplementation::isXMLMIMEType(responseMIMEType());
+    // FIXME: Remove the lower() call when DOMImplementation.isXMLMIMEType() is modified
+    //        to do case insensitive MIME type matching.
+    return DOMImplementation::isXMLMIMEType(responseMIMEType().lower());
 }
 
 int XMLHttpRequest::status(ExceptionCode& ec) const
@@ -1066,7 +1076,7 @@ void XMLHttpRequest::didReceiveData(const char* data, int len)
             m_decoder = TextResourceDecoder::create("application/xml");
             // Don't stop on encoding errors, unlike it is done for other kinds of XML resources. This matches the behavior of previous WebKit versions, Firefox and Opera.
             m_decoder->useLenientXMLDecoding();
-        } else if (responseMIMEType() == "text/html")
+        } else if (equalIgnoringCase(responseMIMEType(), "text/html"))
             m_decoder = TextResourceDecoder::create("text/html", "UTF-8");
         else
             m_decoder = TextResourceDecoder::create("text/plain", "UTF-8");

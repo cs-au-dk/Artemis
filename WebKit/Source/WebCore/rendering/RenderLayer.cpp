@@ -123,7 +123,7 @@ using namespace HTMLNames;
 const int MinimumWidthWhileResizing = 100;
 const int MinimumHeightWhileResizing = 40;
 
-void* ClipRects::operator new(size_t sz, RenderArena* renderArena) throw()
+void* ClipRects::operator new(size_t sz, RenderArena* renderArena)
 {
     return renderArena->allocate(sz);
 }
@@ -150,7 +150,7 @@ RenderLayer::RenderLayer(RenderBoxModelObject* renderer)
     , m_usedTransparency(false)
     , m_paintingInsideReflection(false)
     , m_inOverflowRelayout(false)
-    , m_needsFullRepaint(false)
+    , m_repaintStatus(NeedsNormalRepaint)
     , m_overflowStatusDirty(true)
     , m_visibleContentStatusDirty(true)
     , m_hasVisibleContent(false)
@@ -269,6 +269,23 @@ bool RenderLayer::canRender3DTransforms() const
 #endif
 }
 
+#if ENABLE(CSS_FILTERS)
+bool RenderLayer::paintsWithFilters() const
+{
+    // FIXME: Eventually there will be more factors than isComposited() to decide whether or not to render the filter
+    if (!renderer()->hasFilter())
+        return false;
+        
+    if (!isComposited())
+        return true;
+
+    if (!m_backing || !m_backing->canCompositeFilters())
+        return true;
+
+    return false;
+}
+#endif
+
 LayoutPoint RenderLayer::computeOffsetFromRoot(bool& hasLayerOffset) const
 {
     hasLayerOffset = true;
@@ -363,18 +380,18 @@ void RenderLayer::updateLayerPositions(LayoutPoint* offsetFromRoot, UpdateLayerP
         // as the value not using the cached offset, but we can't due to https://bugs.webkit.org/show_bug.cgi?id=37048
         if (flags & CheckForRepaint) {
             if (view && !view->printing()) {
-                if (m_needsFullRepaint) {
+                if (m_repaintStatus & NeedsFullRepaint) {
                     renderer()->repaintUsingContainer(repaintContainer, oldRepaintRect);
                     if (m_repaintRect != oldRepaintRect)
                         renderer()->repaintUsingContainer(repaintContainer, m_repaintRect);
-                } else
+                } else if (shouldRepaintAfterLayout())
                     renderer()->repaintAfterLayoutIfNeeded(repaintContainer, oldRepaintRect, oldOutlineBox, &m_repaintRect, &m_outlineBox);
             }
         }
     } else
         clearRepaintRects();
 
-    m_needsFullRepaint = false;
+    m_repaintStatus = NeedsNormalRepaint;
 
     // Go ahead and update the reflection's position and size.
     if (m_reflection)
@@ -885,6 +902,21 @@ static inline const RenderLayer* compositingContainer(const RenderLayer* layer)
     return layer->isNormalFlowOnly() ? layer->parent() : layer->stackingContext();
 }
 
+inline bool RenderLayer::shouldRepaintAfterLayout() const
+{
+#if USE(ACCELERATED_COMPOSITING)
+    if (m_repaintStatus == NeedsNormalRepaint)
+        return true;
+
+    // Composited layers that were moved during a positioned movement only
+    // layout, don't need to be repainted. They just need to be recomposited.
+    ASSERT(m_repaintStatus == NeedsFullRepaintForPositionedMovementLayout);
+    return !isComposited();
+#else
+    return true;
+#endif
+}
+
 #if USE(ACCELERATED_COMPOSITING)
 RenderLayer* RenderLayer::enclosingCompositingLayer(bool includeSelf) const
 {
@@ -1040,7 +1072,7 @@ void RenderLayer::beginTransparencyLayers(GraphicsContext* p, const RenderLayer*
     }
 }
 
-void* RenderLayer::operator new(size_t sz, RenderArena* renderArena) throw()
+void* RenderLayer::operator new(size_t sz, RenderArena* renderArena)
 {
     return renderArena->allocate(sz);
 }
@@ -1167,7 +1199,7 @@ void RenderLayer::removeOnlyThisLayer()
         RenderLayer* next = current->nextSibling();
         removeChild(current);
         parent->addChild(current, nextSib);
-        current->setNeedsFullRepaint();
+        current->setRepaintStatus(NeedsFullRepaint);
         LayoutPoint offsetFromRoot = offsetFromRootBeforeMove;
         // updateLayerPositions depends on hasLayer() already being false for proper layout.
         ASSERT(!renderer()->hasLayer());
@@ -1380,8 +1412,10 @@ void RenderLayer::scrollToOffset(LayoutUnit x, LayoutUnit y, ScrollOffsetClampin
         x = min(max<LayoutUnit>(x, 0), maxX);
         y = min(max<LayoutUnit>(y, 0), maxY);
     }
-    
-    ScrollableArea::scrollToOffsetWithoutAnimation(LayoutPoint(x, y));
+
+    LayoutPoint newScrollOffset(x, y);
+    if (newScrollOffset != LayoutPoint(scrollXOffset(), scrollYOffset()))
+        scrollToOffsetWithoutAnimation(newScrollOffset);
 }
 
 void RenderLayer::scrollTo(int x, int y)
@@ -1659,7 +1693,7 @@ void RenderLayer::resize(const PlatformMouseEvent& evt, const LayoutSize& oldOff
 
     float zoomFactor = renderer->style()->effectiveZoom();
 
-    LayoutSize newOffset = offsetFromResizeCorner(document->view()->windowToContents(evt.pos()));
+    LayoutSize newOffset = offsetFromResizeCorner(document->view()->windowToContents(evt.position()));
     newOffset.setWidth(newOffset.width() / zoomFactor);
     newOffset.setHeight(newOffset.height() / zoomFactor);
     
@@ -2712,7 +2746,7 @@ void RenderLayer::paintLayer(RenderLayer* rootLayer, GraphicsContext* p,
         return;
 
 #if ENABLE(CSS_FILTERS)
-    if (!p->paintingDisabled() && hasFilter() && !size().isZero() && !(paintFlags & PaintLayerPaintingFilter)) {
+    if (!p->paintingDisabled() && paintsWithFilters() && !size().isZero() && !(paintFlags & PaintLayerPaintingFilter)) {
         // Update the filter's image if necessary.
         // The filter is always built at this point.
         updateFilterBackingStore();
@@ -2749,8 +2783,7 @@ void RenderLayer::paintLayer(RenderLayer* rootLayer, GraphicsContext* p,
         transform.translateRight(layerOrigin.x(), layerOrigin.y());
         p->concatCTM(transform.toAffineTransform());
         
-        LayoutRect filterBounds = LayoutRect(0, 0, size().width(), size().height());
-        p->drawImageBuffer(m_filter->output(), renderer()->style()->colorSpace(), filterBounds, CompositeSourceOver);
+        p->drawImageBuffer(m_filter->output(), renderer()->style()->colorSpace(), LayoutRect(m_filter->outputRect()), CompositeSourceOver);
         return;
     }
 #endif
@@ -4428,14 +4461,14 @@ void RenderLayer::updateReflectionStyle()
 #if ENABLE(CSS_FILTERS)
 void RenderLayer::updateOrRemoveFilterEffect()
 {
-    if (hasFilter()) {
+    if (paintsWithFilters()) {
         if (!m_filter) {
-            m_filter = FilterEffectRenderer::create();
+            m_filter = FilterEffectRenderer::create(this);
             RenderingMode renderingMode = renderer()->frame()->page()->settings()->acceleratedFiltersEnabled() ? Accelerated : Unaccelerated;
             m_filter->setRenderingMode(renderingMode);
         }
 
-        m_filter->build(renderer()->style()->filter(), toRenderBox(renderer())->borderBoxRect());
+        m_filter->build(renderer()->document(), renderer()->style()->filter());
     } else {
         m_filter = 0;
     }
@@ -4452,6 +4485,11 @@ void RenderLayer::updateFilterBackingStore()
     }
 }
 
+void RenderLayer::filterNeedsRepaint()
+{
+    renderer()->node()->setNeedsStyleRecalc(SyntheticStyleChange);
+    renderer()->repaint();
+}
 #endif
 
 } // namespace WebCore

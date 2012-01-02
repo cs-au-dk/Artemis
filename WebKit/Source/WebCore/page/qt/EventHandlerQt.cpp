@@ -89,7 +89,7 @@ bool EventHandler::eventActivatedView(const PlatformMouseEvent&) const
     return false;
 }
 
-bool EventHandler::passWheelEventToWidget(PlatformWheelEvent& event, Widget* widget)
+bool EventHandler::passWheelEventToWidget(const PlatformWheelEvent& event, Widget* widget)
 {
     Q_ASSERT(widget);
     if (!widget->isFrameView())
@@ -124,9 +124,9 @@ bool EventHandler::passMouseReleaseEventToSubframe(MouseEventWithHitTestResults&
 unsigned EventHandler::accessKeyModifiers()
 {
 #if OS(DARWIN)
-    return PlatformKeyboardEvent::CtrlKey | PlatformKeyboardEvent::AltKey;
+    return PlatformEvent::CtrlKey | PlatformEvent::AltKey;
 #else
-    return PlatformKeyboardEvent::AltKey;
+    return PlatformEvent::AltKey;
 #endif
 }
 

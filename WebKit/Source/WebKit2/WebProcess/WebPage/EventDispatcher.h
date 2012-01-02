@@ -27,17 +27,36 @@
 #define EventDispatcher_h
 
 #include "Connection.h"
+#include <wtf/HashMap.h>
 #include <wtf/Noncopyable.h>
+#include <wtf/RefPtr.h>
 #include <wtf/ThreadingPrimitives.h>
+
+namespace WebCore {
+    class ScrollingCoordinator;
+}
 
 namespace WebKit {
 
+class WebEvent;
+class WebPage;
 class WebWheelEvent;
 
+#if ENABLE(GESTURE_EVENTS)
+class WebGestureEvent;
+#endif
+
 class EventDispatcher : public CoreIPC::Connection::QueueClient {
+    WTF_MAKE_NONCOPYABLE(EventDispatcher);
+
 public:
     EventDispatcher();
     ~EventDispatcher();
+
+#if ENABLE(THREADED_SCROLLING)
+    void addScrollingCoordinatorForPage(WebPage*);
+    void removeScrollingCoordinatorForPage(WebPage*);
+#endif
 
 private:
     // CoreIPC::Connection::QueueClient
@@ -47,7 +66,23 @@ private:
     void didReceiveEventDispatcherMessageOnConnectionWorkQueue(CoreIPC::Connection*, CoreIPC::MessageID, CoreIPC::ArgumentDecoder* arguments, bool& didHandleMessage);
 
     // Message handlers
-    void wheelEvent(const WebWheelEvent&);
+    void wheelEvent(uint64_t pageID, const WebWheelEvent&);
+#if ENABLE(GESTURE_EVENTS)
+    void gestureEvent(uint64_t pageID, const WebGestureEvent&);
+#endif
+
+    // This is called on the main thread.
+    void dispatchWheelEvent(uint64_t pageID, const WebWheelEvent&);
+#if ENABLE(GESTURE_EVENTS)
+    void dispatchGestureEvent(uint64_t pageID, const WebGestureEvent&);
+#endif
+
+#if ENABLE(THREADED_SCROLLING)
+    void sendDidHandleEvent(uint64_t pageID, const WebEvent&);
+
+    Mutex m_scrollingCoordinatorsMutex;
+    HashMap<uint64_t, RefPtr<WebCore::ScrollingCoordinator> > m_scrollingCoordinators;
+#endif
 };
 
 } // namespace WebKit

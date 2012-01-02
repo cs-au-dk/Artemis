@@ -245,9 +245,9 @@ public:
             applyInheritValue(selector);
         else {
             if (selector->applyPropertyToRegularStyle())
-                (selector->style()->*setterFunction)(selector->getColorFromPrimitiveValue(primitiveValue, false));
+                (selector->style()->*setterFunction)(selector->colorFromPrimitiveValue(primitiveValue));
             if (selector->applyPropertyToVisitedLinkStyle())
-                (selector->style()->*visitedLinkSetterFunction)(selector->getColorFromPrimitiveValue(primitiveValue, true));
+                (selector->style()->*visitedLinkSetterFunction)(selector->colorFromPrimitiveValue(primitiveValue, /* forVisitedLink */ true));
         }
     }
 
@@ -578,6 +578,122 @@ public:
     static PropertyHandler createHandler() { return PropertyHandler(&applyInheritValue, &applyInitialValue, &applyValue); }
 };
 
+class ApplyPropertyFontSize {
+private:
+    // When the CSS keyword "larger" is used, this function will attempt to match within the keyword
+    // table, and failing that, will simply multiply by 1.2.
+    static float largerFontSize(float size)
+    {
+        // FIXME: Figure out where we fall in the size ranges (xx-small to xxx-large) and scale up to
+        // the next size level.
+        return size * 1.2f;
+    }
+
+    // Like the previous function, but for the keyword "smaller".
+    static float smallerFontSize(float size)
+    {
+        // FIXME: Figure out where we fall in the size ranges (xx-small to xxx-large) and scale down to
+        // the next size level.
+        return size / 1.2f;
+    }
+public:
+    static void applyInheritValue(CSSStyleSelector* selector)
+    {
+        float size = selector->parentStyle()->fontDescription().specifiedSize();
+
+        if (size < 0)
+            return;
+
+        FontDescription fontDescription = selector->style()->fontDescription();
+        fontDescription.setKeywordSize(selector->parentStyle()->fontDescription().keywordSize());
+        selector->setFontSize(fontDescription, size);
+        selector->setFontDescription(fontDescription);
+        return;
+    }
+
+    static void applyInitialValue(CSSStyleSelector* selector)
+    {
+        FontDescription fontDescription = selector->style()->fontDescription();
+        float size = selector->fontSizeForKeyword(selector->document(), CSSValueMedium, fontDescription.useFixedDefaultSize());
+
+        if (size < 0)
+            return;
+
+        fontDescription.setKeywordSize(CSSValueMedium - CSSValueXxSmall + 1);
+        selector->setFontSize(fontDescription, size);
+        selector->setFontDescription(fontDescription);
+        return;
+    }
+
+    static void applyValue(CSSStyleSelector* selector, CSSValue* value)
+    {
+        if (!value->isPrimitiveValue())
+            return;
+
+        CSSPrimitiveValue* primitiveValue = static_cast<CSSPrimitiveValue*>(value);
+
+        FontDescription fontDescription = selector->style()->fontDescription();
+        fontDescription.setKeywordSize(0);
+        float parentSize = 0;
+        bool parentIsAbsoluteSize = false;
+        float size = 0;
+
+        if (selector->hasParentNode()) {
+            parentSize = selector->parentStyle()->fontDescription().specifiedSize();
+            parentIsAbsoluteSize = selector->parentStyle()->fontDescription().isAbsoluteSize();
+        }
+
+        if (int ident = primitiveValue->getIdent()) {
+            // Keywords are being used.
+            switch (ident) {
+            case CSSValueXxSmall:
+            case CSSValueXSmall:
+            case CSSValueSmall:
+            case CSSValueMedium:
+            case CSSValueLarge:
+            case CSSValueXLarge:
+            case CSSValueXxLarge:
+            case CSSValueWebkitXxxLarge:
+                size = selector->fontSizeForKeyword(selector->document(), ident, fontDescription.useFixedDefaultSize());
+                fontDescription.setKeywordSize(ident - CSSValueXxSmall + 1);
+                break;
+            case CSSValueLarger:
+                size = largerFontSize(parentSize);
+                break;
+            case CSSValueSmaller:
+                size = smallerFontSize(parentSize);
+                break;
+            default:
+                return;
+            }
+
+            fontDescription.setIsAbsoluteSize(parentIsAbsoluteSize && (ident == CSSValueLarger || ident == CSSValueSmaller));
+        } else {
+            int type = primitiveValue->primitiveType();
+            fontDescription.setIsAbsoluteSize(parentIsAbsoluteSize
+                                              || (type != CSSPrimitiveValue::CSS_PERCENTAGE
+                                                  && type != CSSPrimitiveValue::CSS_EMS
+                                                  && type != CSSPrimitiveValue::CSS_EXS
+                                                  && type != CSSPrimitiveValue::CSS_REMS));
+            if (primitiveValue->isLength())
+                size = primitiveValue->computeLength<float>(selector->parentStyle(), selector->rootElementStyle(), 1.0, true);
+            else if (primitiveValue->isPercentage())
+                size = (primitiveValue->getFloatValue() * parentSize) / 100.0f;
+            else
+                return;
+        }
+
+        if (size < 0)
+            return;
+
+        selector->setFontSize(fontDescription, size);
+        selector->setFontDescription(fontDescription);
+        return;
+    }
+
+    static PropertyHandler createHandler() { return PropertyHandler(&applyInheritValue, &applyInitialValue, &applyValue); }
+};
+
 class ApplyPropertyFontWeight {
 public:
     static void applyValue(CSSStyleSelector* selector, CSSValue* value)
@@ -885,6 +1001,42 @@ public:
     static PropertyHandler createHandler()
     {
         PropertyHandler handler = ApplyPropertyDefaultBase<ETextDecoration, &RenderStyle::textDecoration, ETextDecoration, &RenderStyle::setTextDecoration, ETextDecoration, &RenderStyle::initialTextDecoration>::createHandler();
+        return PropertyHandler(handler.inheritFunction(), handler.initialFunction(), &applyValue);
+    }
+};
+
+class ApplyPropertyLineHeight {
+public:
+    static void applyValue(CSSStyleSelector* selector, CSSValue* value)
+    {
+        if (!value->isPrimitiveValue())
+            return;
+
+        CSSPrimitiveValue* primitiveValue = static_cast<CSSPrimitiveValue*>(value);
+        Length lineHeight;
+
+        if (primitiveValue->getIdent() == CSSValueNormal)
+            lineHeight = Length(-100.0, Percent);
+        else if (primitiveValue->isLength()) {
+            double multiplier = selector->style()->effectiveZoom();
+            if (selector->style()->textSizeAdjust()) {
+                if (Frame* frame = selector->document()->frame())
+                    multiplier *= frame->textZoomFactor();
+            }
+            lineHeight = primitiveValue->computeLength<Length>(selector->style(), selector->rootElementStyle(), multiplier);
+        } else if (primitiveValue->isPercentage()) {
+            // FIXME: percentage should not be restricted to an integer here.
+            lineHeight = Length((selector->style()->fontSize() * primitiveValue->getIntValue()) / 100, Fixed);
+        } else if (primitiveValue->isNumber()) {
+            // FIXME: number and percentage values should produce the same type of Length (ie. Fixed or Percent).
+            lineHeight = Length(primitiveValue->getDoubleValue() * 100.0, Percent);
+        } else
+            return;
+        selector->style()->setLineHeight(lineHeight);
+    }
+    static PropertyHandler createHandler()
+    {
+        PropertyHandler handler = ApplyPropertyDefaultBase<Length, &RenderStyle::lineHeight, Length, &RenderStyle::setLineHeight, Length, &RenderStyle::initialLineHeight>::createHandler();
         return PropertyHandler(handler.inheritFunction(), handler.initialFunction(), &applyValue);
     }
 };
@@ -1525,6 +1677,7 @@ CSSStyleApplyProperty::CSSStyleApplyProperty()
     setPropertyHandler(CSSPropertyWebkitFlexWrap, ApplyPropertyDefault<EFlexWrap, &RenderStyle::flexWrap, EFlexWrap, &RenderStyle::setFlexWrap, EFlexWrap, &RenderStyle::initialFlexWrap>::createHandler());
     setPropertyHandler(CSSPropertyWebkitFlexFlow, ApplyPropertyExpanding<SuppressValue, CSSPropertyWebkitFlexDirection, CSSPropertyWebkitFlexWrap>::createHandler());
 
+    setPropertyHandler(CSSPropertyFontSize, ApplyPropertyFontSize::createHandler());
     setPropertyHandler(CSSPropertyFontStyle, ApplyPropertyFont<FontItalic, &FontDescription::italic, &FontDescription::setItalic, FontItalicOff>::createHandler());
     setPropertyHandler(CSSPropertyFontVariant, ApplyPropertyFont<FontSmallCaps, &FontDescription::smallCaps, &FontDescription::setSmallCaps, FontSmallCapsOff>::createHandler());
     setPropertyHandler(CSSPropertyTextRendering, ApplyPropertyFont<TextRenderingMode, &FontDescription::textRenderingMode, &FontDescription::setTextRenderingMode, AutoTextRendering>::createHandler());
@@ -1538,6 +1691,8 @@ CSSStyleApplyProperty::CSSStyleApplyProperty()
     setPropertyHandler(CSSPropertyOutlineStyle, ApplyPropertyOutlineStyle::createHandler());
     setPropertyHandler(CSSPropertyOutlineColor, ApplyPropertyColor<InheritFromParent, &RenderStyle::outlineColor, &RenderStyle::setOutlineColor, &RenderStyle::setVisitedLinkOutlineColor, &RenderStyle::color>::createHandler());
     setPropertyHandler(CSSPropertyOutlineOffset, ApplyPropertyComputeLength<int, &RenderStyle::outlineOffset, &RenderStyle::setOutlineOffset, &RenderStyle::initialOutlineOffset>::createHandler());
+
+    setPropertyHandler(CSSPropertyOutline, ApplyPropertyExpanding<SuppressValue, CSSPropertyOutlineWidth, CSSPropertyOutlineColor, CSSPropertyOutlineStyle>::createHandler());
 
     setPropertyHandler(CSSPropertyOverflowX, ApplyPropertyDefault<EOverflow, &RenderStyle::overflowX, EOverflow, &RenderStyle::setOverflowX, EOverflow, &RenderStyle::initialOverflowX>::createHandler());
     setPropertyHandler(CSSPropertyOverflowY, ApplyPropertyDefault<EOverflow, &RenderStyle::overflowY, EOverflow, &RenderStyle::setOverflowY, EOverflow, &RenderStyle::initialOverflowY>::createHandler());
@@ -1557,6 +1712,8 @@ CSSStyleApplyProperty::CSSStyleApplyProperty()
     setPropertyHandler(CSSPropertyHeight, ApplyPropertyLength<&RenderStyle::height, &RenderStyle::setHeight, &RenderStyle::initialSize, AutoEnabled, IntrinsicEnabled, MinIntrinsicEnabled, NoneDisabled, UndefinedDisabled, FlexHeight>::createHandler());
 
     setPropertyHandler(CSSPropertyTextIndent, ApplyPropertyLength<&RenderStyle::textIndent, &RenderStyle::setTextIndent, &RenderStyle::initialTextIndent>::createHandler());
+
+    setPropertyHandler(CSSPropertyLineHeight, ApplyPropertyLineHeight::createHandler());
 
     setPropertyHandler(CSSPropertyListStyleImage, ApplyPropertyStyleImage<&RenderStyle::listStyleImage, &RenderStyle::setListStyleImage, &RenderStyle::initialListStyleImage, CSSPropertyListStyleImage>::createHandler());
     setPropertyHandler(CSSPropertyListStylePosition, ApplyPropertyDefault<EListStylePosition, &RenderStyle::listStylePosition, EListStylePosition, &RenderStyle::setListStylePosition, EListStylePosition, &RenderStyle::initialListStylePosition>::createHandler());

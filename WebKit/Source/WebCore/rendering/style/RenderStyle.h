@@ -124,26 +124,76 @@ class RenderStyle: public RefCounted<RenderStyle> {
     friend class RenderTreeAsText; // FIXME: Only needed so the render tree can keep lying and dump the wrong colors.  Rebaselining would allow this to be yanked.
 protected:
 
-    // The following bitfield is 32-bits long, which optimizes padding with the
-    // int refCount in the base class. Beware when adding more bits.
-    bool m_affectedByUncommonAttributeSelectors : 1;
-    bool m_unique : 1;
+    class RenderStyleBitfields {
+    public:
+        RenderStyleBitfields()
+            : m_affectedByUncommonAttributeSelectors(false)
+            , m_unique(false)
+            , m_affectedByEmpty(false)
+            , m_emptyState(false)
+            , m_childrenAffectedByFirstChildRules(false)
+            , m_childrenAffectedByLastChildRules(false)
+            , m_childrenAffectedByDirectAdjacentRules(false)
+            , m_childrenAffectedByForwardPositionalRules(false)
+            , m_childrenAffectedByBackwardPositionalRules(false)
+            , m_firstChildState(false)
+            , m_lastChildState(false)
+            , m_explicitInheritance(false)
+            , m_childIndex(0)
+        {
+        }
 
-    // Bits for dynamic child matching.
-    bool m_affectedByEmpty : 1;
-    bool m_emptyState : 1;
+        bool affectedByUncommonAttributeSelectors() const { return m_affectedByUncommonAttributeSelectors; }
+        void setAffectedByUncommonAttributeSelectors(bool value) { m_affectedByUncommonAttributeSelectors = value; }
+        bool unique() const { return m_unique; }
+        void setUnique(bool value) { m_unique = value; }
+        bool affectedByEmpty() const { return m_affectedByEmpty; }
+        void setAffectedByEmpty(bool value) { m_affectedByEmpty = value; }
+        bool emptyState() const { return m_emptyState; }
+        void setEmptyState(bool value) { m_emptyState = value; }
+        bool childrenAffectedByFirstChildRules() const { return m_childrenAffectedByFirstChildRules; }
+        void setChildrenAffectedByFirstChildRules(bool value) { m_childrenAffectedByFirstChildRules = value; }
+        bool childrenAffectedByLastChildRules() const { return m_childrenAffectedByLastChildRules; }
+        void setChildrenAffectedByLastChildRules(bool value) { m_childrenAffectedByLastChildRules = value; }
+        bool childrenAffectedByDirectAdjacentRules() const { return m_childrenAffectedByDirectAdjacentRules; }
+        void setChildrenAffectedByDirectAdjacentRules(bool value) { m_childrenAffectedByDirectAdjacentRules = value; }
+        bool childrenAffectedByForwardPositionalRules() const { return m_childrenAffectedByForwardPositionalRules; }
+        void setChildrenAffectedByForwardPositionalRules(bool value) { m_childrenAffectedByForwardPositionalRules = value; }
+        bool childrenAffectedByBackwardPositionalRules() const { return m_childrenAffectedByBackwardPositionalRules; }
+        void setChildrenAffectedByBackwardPositionalRules(bool value) { m_childrenAffectedByBackwardPositionalRules = value; }
+        bool firstChildState() const { return m_firstChildState; }
+        void setFirstChildState(bool value) { m_firstChildState = value; }
+        bool lastChildState() const { return m_lastChildState; }
+        void setLastChildState(bool value) { m_lastChildState = value; }
+        bool explicitInheritance() const { return m_explicitInheritance; }
+        void setExplicitInheritance(bool value) { m_explicitInheritance = value; }
 
-    // We optimize for :first-child and :last-child.  The other positional child selectors like nth-child or
-    // *-child-of-type, we will just give up and re-evaluate whenever children change at all.
-    bool m_childrenAffectedByFirstChildRules : 1;
-    bool m_childrenAffectedByLastChildRules : 1;
-    bool m_childrenAffectedByDirectAdjacentRules : 1;
-    bool m_childrenAffectedByForwardPositionalRules : 1;
-    bool m_childrenAffectedByBackwardPositionalRules : 1;
-    bool m_firstChildState : 1;
-    bool m_lastChildState : 1;
-    bool m_explicitInheritance : 1;
-    unsigned m_childIndex : 20; // Plenty of bits to cache an index.
+        unsigned childIndex() const { return m_childIndex; }
+        void setChildIndex(unsigned index) { m_childIndex = index; }
+
+    private:
+        // The following bitfield is 32-bits long, which optimizes padding with the
+        // int refCount in the base class. Beware when adding more bits.
+        unsigned m_affectedByUncommonAttributeSelectors : 1;
+        unsigned m_unique : 1;
+
+        // Bits for dynamic child matching.
+        unsigned m_affectedByEmpty : 1;
+        unsigned m_emptyState : 1;
+
+        // We optimize for :first-child and :last-child. The other positional child selectors like nth-child or
+        // *-child-of-type, we will just give up and re-evaluate whenever children change at all.
+        unsigned m_childrenAffectedByFirstChildRules : 1;
+        unsigned m_childrenAffectedByLastChildRules : 1;
+        unsigned m_childrenAffectedByDirectAdjacentRules : 1;
+        unsigned m_childrenAffectedByForwardPositionalRules : 1;
+        unsigned m_childrenAffectedByBackwardPositionalRules : 1;
+        unsigned m_firstChildState : 1;
+        unsigned m_lastChildState : 1;
+        unsigned m_explicitInheritance : 1;
+        unsigned m_childIndex : 20; // Plenty of bits to cache an index.
+    };
+    RenderStyleBitfields m_bitfields;
 
     // non-inherited attributes
     DataRef<StyleBoxData> m_box;
@@ -179,8 +229,8 @@ protected:
                 && (_text_decorations == other._text_decorations)
                 && (_cursor_style == other._cursor_style)
                 && (_direction == other._direction)
-                && (_border_collapse == other._border_collapse)
                 && (_white_space == other._white_space)
+                && (_border_collapse == other._border_collapse)
                 && (_box_direction == other._box_direction)
                 && (m_rtlOrdering == other.m_rtlOrdering)
                 && (m_printColorAdjust == other.m_printColorAdjust)
@@ -191,30 +241,30 @@ protected:
 
         bool operator!=(const InheritedFlags& other) const { return !(*this == other); }
 
-        unsigned char _empty_cells : 1; // EEmptyCell
-        unsigned char _caption_side : 2; // ECaptionSide
-        unsigned char _list_style_type : 7; // EListStyleType
-        unsigned char _list_style_position : 1; // EListStylePosition
-        unsigned char _visibility : 2; // EVisibility
-        unsigned char _text_align : 4; // ETextAlign
-        unsigned char _text_transform : 2; // ETextTransform
-        unsigned char _text_decorations : ETextDecorationBits;
-        unsigned char _cursor_style : 6; // ECursor
-        unsigned char _direction : 1; // TextDirection
-        unsigned char _border_collapse : 1; // EBorderCollapse
-        unsigned char _white_space : 3; // EWhiteSpace
-        unsigned char _box_direction : 1; // EBoxDirection (CSS3 box_direction property, flexible box layout module)
-        // 34 bits
-        
+        unsigned _empty_cells : 1; // EEmptyCell
+        unsigned _caption_side : 2; // ECaptionSide
+        unsigned _list_style_type : 7; // EListStyleType
+        unsigned _list_style_position : 1; // EListStylePosition
+        unsigned _visibility : 2; // EVisibility
+        unsigned _text_align : 4; // ETextAlign
+        unsigned _text_transform : 2; // ETextTransform
+        unsigned _text_decorations : ETextDecorationBits;
+        unsigned _cursor_style : 6; // ECursor
+        unsigned _direction : 1; // TextDirection
+        unsigned _white_space : 3; // EWhiteSpace
+        // 32 bits
+        unsigned _border_collapse : 1; // EBorderCollapse
+        unsigned _box_direction : 1; // EBoxDirection (CSS3 box_direction property, flexible box layout module)
+
         // non CSS2 inherited
-        unsigned char m_rtlOrdering : 1; // Order
-        unsigned char m_printColorAdjust : PrintColorAdjustBits;
-        unsigned char _pointerEvents : 4; // EPointerEvents
-        unsigned char _insideLink : 2; // EInsideLink
+        unsigned m_rtlOrdering : 1; // Order
+        unsigned m_printColorAdjust : PrintColorAdjustBits;
+        unsigned _pointerEvents : 4; // EPointerEvents
+        unsigned _insideLink : 2; // EInsideLink
         // 43 bits
 
         // CSS Text Layout Module Level 3: Vertical writing support
-        unsigned char m_writingMode : 2; // WritingMode
+        unsigned m_writingMode : 2; // WritingMode
         // 45 bits
     } inherited_flags;
 
@@ -245,27 +295,38 @@ protected:
 
         bool operator!=(const NonInheritedFlags& other) const { return !(*this == other); }
 
-        unsigned char _effectiveDisplay : 5; // EDisplay
-        unsigned char _originalDisplay : 5; // EDisplay
-        unsigned char _overflowX : 3; // EOverflow
-        unsigned char _overflowY : 3; // EOverflow
-        unsigned char _vertical_align : 4; // EVerticalAlign
-        unsigned char _clear : 2; // EClear
-        unsigned char _position : 2; // EPosition
-        unsigned char _floating : 2; // EFloat
-        unsigned char _table_layout : 1; // ETableLayout
+        unsigned _effectiveDisplay : 5; // EDisplay
+        unsigned _originalDisplay : 5; // EDisplay
+        unsigned _overflowX : 3; // EOverflow
+        unsigned _overflowY : 3; // EOverflow
+        unsigned _vertical_align : 4; // EVerticalAlign
+        unsigned _clear : 2; // EClear
+        unsigned _position : 2; // EPosition
+        unsigned _floating : 2; // EFloat
+        unsigned _table_layout : 1; // ETableLayout
 
-        unsigned char _page_break_before : 2; // EPageBreak
-        unsigned char _page_break_after : 2; // EPageBreak
-        unsigned char _page_break_inside : 2; // EPageBreak
+        unsigned _unicodeBidi : 3; // EUnicodeBidi
+        unsigned _page_break_before : 2; // EPageBreak
+        // 32 bits
+        unsigned _page_break_after : 2; // EPageBreak
+        unsigned _page_break_inside : 2; // EPageBreak
 
-        unsigned char _styleType : 6; // PseudoId
-        bool _affectedByHover : 1;
-        bool _affectedByActive : 1;
-        bool _affectedByDrag : 1;
-        unsigned char _pseudoBits : 7;
-        unsigned char _unicodeBidi : 3; // EUnicodeBidi
-        bool _isLink : 1;
+        unsigned _styleType : 6; // PseudoId
+        unsigned _pseudoBits : 7;
+
+        bool affectedByHover() const { return _affectedByHover; }
+        void setAffectedByHover(bool value) { _affectedByHover = value; }
+        bool affectedByActive() const { return _affectedByActive; }
+        void setAffectedByActive(bool value) { _affectedByActive = value; }
+        bool affectedByDrag() const { return _affectedByDrag; }
+        void setAffectedByDrag(bool value) { _affectedByDrag = value; }
+        bool isLink() const { return _isLink; }
+        void setIsLink(bool value) { _isLink = value; }
+    private:
+        unsigned _affectedByHover : 1;
+        unsigned _affectedByActive : 1;
+        unsigned _affectedByDrag : 1;
+        unsigned _isLink : 1;
         // If you add more style bits here, you will also need to update RenderStyle::copyNonInheritedFrom()
         // 53 bits
     } noninherited_flags;
@@ -285,8 +346,8 @@ protected:
         inherited_flags._text_decorations = initialTextDecoration();
         inherited_flags._cursor_style = initialCursor();
         inherited_flags._direction = initialDirection();
-        inherited_flags._border_collapse = initialBorderCollapse();
         inherited_flags._white_space = initialWhiteSpace();
+        inherited_flags._border_collapse = initialBorderCollapse();
         inherited_flags.m_rtlOrdering = initialRTLOrdering();
         inherited_flags._box_direction = initialBoxDirection();
         inherited_flags.m_printColorAdjust = initialPrintColorAdjust();
@@ -302,16 +363,16 @@ protected:
         noninherited_flags._position = initialPosition();
         noninherited_flags._floating = initialFloating();
         noninherited_flags._table_layout = initialTableLayout();
+        noninherited_flags._unicodeBidi = initialUnicodeBidi();
         noninherited_flags._page_break_before = initialPageBreak();
         noninherited_flags._page_break_after = initialPageBreak();
         noninherited_flags._page_break_inside = initialPageBreak();
         noninherited_flags._styleType = NOPSEUDO;
-        noninherited_flags._affectedByHover = false;
-        noninherited_flags._affectedByActive = false;
-        noninherited_flags._affectedByDrag = false;
         noninherited_flags._pseudoBits = 0;
-        noninherited_flags._unicodeBidi = initialUnicodeBidi();
-        noninherited_flags._isLink = false;
+        noninherited_flags.setAffectedByHover(false);
+        noninherited_flags.setAffectedByActive(false);
+        noninherited_flags.setAffectedByDrag(false);
+        noninherited_flags.setIsLink(false);
     }
 
 private:
@@ -340,13 +401,13 @@ public:
 
     const PseudoStyleCache* cachedPseudoStyles() const { return m_cachedPseudoStyles.get(); }
 
-    bool affectedByHoverRules() const { return noninherited_flags._affectedByHover; }
-    bool affectedByActiveRules() const { return noninherited_flags._affectedByActive; }
-    bool affectedByDragRules() const { return noninherited_flags._affectedByDrag; }
+    bool affectedByHoverRules() const { return noninherited_flags.affectedByHover(); }
+    bool affectedByActiveRules() const { return noninherited_flags.affectedByActive(); }
+    bool affectedByDragRules() const { return noninherited_flags.affectedByDrag(); }
 
-    void setAffectedByHoverRules(bool b) { noninherited_flags._affectedByHover = b; }
-    void setAffectedByActiveRules(bool b) { noninherited_flags._affectedByActive = b; }
-    void setAffectedByDragRules(bool b) { noninherited_flags._affectedByDrag = b; }
+    void setAffectedByHoverRules(bool b) { noninherited_flags.setAffectedByHover(b); }
+    void setAffectedByActiveRules(bool b) { noninherited_flags.setAffectedByActive(b); }
+    void setAffectedByDragRules(bool b) { noninherited_flags.setAffectedByDrag(b); }
 
     bool operator==(const RenderStyle& other) const;
     bool operator!=(const RenderStyle& other) const { return !(*this == other); }
@@ -398,6 +459,23 @@ public:
     {
         return getImageOutsets(maskBoxImage(), top, right, bottom, left);
     }
+
+#if ENABLE(CSS_FILTERS)
+    void getFilterOutsets(LayoutUnit& top, LayoutUnit& right, LayoutUnit& bottom, LayoutUnit& left) const
+    {
+        if (hasFilter())
+            filter().getOutsets(top, right, bottom, left);
+        else {
+            top = 0;
+            right = 0;
+            bottom = 0;
+            left = 0;
+        }
+    }
+    bool hasFilterOutsets() const { return hasFilter() && filter().hasOutsets(); }
+#else
+    bool hasFilterOutsets() const { return false; }
+#endif
 
     Order rtlOrdering() const { return static_cast<Order>(inherited_flags.m_rtlOrdering); }
     void setRTLOrdering(Order o) { inherited_flags.m_rtlOrdering = o; }
@@ -676,7 +754,7 @@ public:
     CursorList* cursors() const { return rareInheritedData->cursorData.get(); }
 
     EInsideLink insideLink() const { return static_cast<EInsideLink>(inherited_flags._insideLink); }
-    bool isLink() const { return noninherited_flags._isLink; }
+    bool isLink() const { return noninherited_flags.isLink(); }
 
     short widows() const { return rareInheritedData->widows; }
     short orphans() const { return rareInheritedData->orphans; }
@@ -716,7 +794,7 @@ public:
     EBoxLines boxLines() { return static_cast<EBoxLines>(rareNonInheritedData->m_deprecatedFlexibleBox->lines); }
     unsigned int boxOrdinalGroup() const { return rareNonInheritedData->m_deprecatedFlexibleBox->ordinal_group; }
     EBoxOrient boxOrient() const { return static_cast<EBoxOrient>(rareNonInheritedData->m_deprecatedFlexibleBox->orient); }
-    EBoxAlignment boxPack() const { return static_cast<EBoxAlignment>(rareNonInheritedData->m_deprecatedFlexibleBox->pack); }
+    EBoxPack boxPack() const { return static_cast<EBoxPack>(rareNonInheritedData->m_deprecatedFlexibleBox->pack); }
 
     float flexboxWidthPositiveFlex() const { return rareNonInheritedData->m_flexibleBox->m_widthPositiveFlex; }
     float flexboxWidthNegativeFlex() const { return rareNonInheritedData->m_flexibleBox->m_widthNegativeFlex; }
@@ -932,8 +1010,6 @@ public:
     void resetBorderBottomLeftRadius() { SET_VAR(surround, border.m_bottomLeft, initialBorderRadius()) }
     void resetBorderBottomRightRadius() { SET_VAR(surround, border.m_bottomRight, initialBorderRadius()) }
 
-    void resetOutline() { SET_VAR(m_background, m_outline, OutlineValue()) }
-
     void setBackgroundColor(const Color& v) { SET_VAR(m_background, m_color, v) }
 
     void setBackgroundXPosition(Length l) { SET_VAR(m_background, m_background.m_xPosition, l) }
@@ -1102,7 +1178,7 @@ public:
     void clearCursorList();
 
     void setInsideLink(EInsideLink insideLink) { inherited_flags._insideLink = insideLink; }
-    void setIsLink(bool b) { noninherited_flags._isLink = b; }
+    void setIsLink(bool b) { noninherited_flags.setIsLink(b); }
 
     PrintColorAdjust printColorAdjust() const { return static_cast<PrintColorAdjust>(inherited_flags.m_printColorAdjust); }
     void setPrintColorAdjust(PrintColorAdjust value) { inherited_flags.m_printColorAdjust = value; }
@@ -1129,14 +1205,14 @@ public:
     void setOpacity(float f) { SET_VAR(rareNonInheritedData, opacity, f); }
     void setAppearance(ControlPart a) { SET_VAR(rareNonInheritedData, m_appearance, a); }
     // For valid values of box-align see http://www.w3.org/TR/2009/WD-css3-flexbox-20090723/#alignment
-    void setBoxAlign(EBoxAlignment a) { ASSERT(a == BSTRETCH || a == BSTART || a == BCENTER || a == BEND || a == BBASELINE); SET_VAR(rareNonInheritedData.access()->m_deprecatedFlexibleBox, align, a); }
+    void setBoxAlign(EBoxAlignment a) { SET_VAR(rareNonInheritedData.access()->m_deprecatedFlexibleBox, align, a); }
     void setBoxDirection(EBoxDirection d) { inherited_flags._box_direction = d; }
     void setBoxFlex(float f) { SET_VAR(rareNonInheritedData.access()->m_deprecatedFlexibleBox, flex, f); }
     void setBoxFlexGroup(unsigned int fg) { SET_VAR(rareNonInheritedData.access()->m_deprecatedFlexibleBox, flex_group, fg); }
     void setBoxLines(EBoxLines l) { SET_VAR(rareNonInheritedData.access()->m_deprecatedFlexibleBox, lines, l); }
     void setBoxOrdinalGroup(unsigned int og) { SET_VAR(rareNonInheritedData.access()->m_deprecatedFlexibleBox, ordinal_group, og); }
     void setBoxOrient(EBoxOrient o) { SET_VAR(rareNonInheritedData.access()->m_deprecatedFlexibleBox, orient, o); }
-    void setBoxPack(EBoxAlignment p) { SET_VAR(rareNonInheritedData.access()->m_deprecatedFlexibleBox, pack, p); }
+    void setBoxPack(EBoxPack p) { SET_VAR(rareNonInheritedData.access()->m_deprecatedFlexibleBox, pack, p); }
     void setBoxShadow(PassOwnPtr<ShadowData>, bool add = false);
     void setBoxReflect(PassRefPtr<StyleReflection> reflect) { if (rareNonInheritedData->m_boxReflect != reflect) rareNonInheritedData.access()->m_boxReflect = reflect; }
     void setBoxSizing(EBoxSizing s) { SET_VAR(m_box, m_boxSizing, s); }
@@ -1370,38 +1446,38 @@ public:
     void setWritingMode(WritingMode v) { inherited_flags.m_writingMode = v; }
 
     // To tell if this style matched attribute selectors. This makes it impossible to share.
-    bool affectedByUncommonAttributeSelectors() const { return m_affectedByUncommonAttributeSelectors; }
-    void setAffectedByUncommonAttributeSelectors() { m_affectedByUncommonAttributeSelectors = true; }
+    bool affectedByUncommonAttributeSelectors() const { return m_bitfields.affectedByUncommonAttributeSelectors(); }
+    void setAffectedByUncommonAttributeSelectors() { m_bitfields.setAffectedByUncommonAttributeSelectors(true); }
 
-    bool unique() const { return m_unique; }
-    void setUnique() { m_unique = true; }
+    bool unique() const { return m_bitfields.unique(); }
+    void setUnique() { m_bitfields.setUnique(true); }
 
     // Methods for indicating the style is affected by dynamic updates (e.g., children changing, our position changing in our sibling list, etc.)
-    bool affectedByEmpty() const { return m_affectedByEmpty; }
-    bool emptyState() const { return m_emptyState; }
-    void setEmptyState(bool b) { m_affectedByEmpty = true; m_unique = true; m_emptyState = b; }
+    bool affectedByEmpty() const { return m_bitfields.affectedByEmpty(); }
+    bool emptyState() const { return m_bitfields.emptyState(); }
+    void setEmptyState(bool b) { m_bitfields.setAffectedByEmpty(true); m_bitfields.setUnique(true); m_bitfields.setEmptyState(b); }
     bool childrenAffectedByPositionalRules() const { return childrenAffectedByForwardPositionalRules() || childrenAffectedByBackwardPositionalRules(); }
-    bool childrenAffectedByFirstChildRules() const { return m_childrenAffectedByFirstChildRules; }
-    void setChildrenAffectedByFirstChildRules() { m_childrenAffectedByFirstChildRules = true; }
-    bool childrenAffectedByLastChildRules() const { return m_childrenAffectedByLastChildRules; }
-    void setChildrenAffectedByLastChildRules() { m_childrenAffectedByLastChildRules = true; }
-    bool childrenAffectedByDirectAdjacentRules() const { return m_childrenAffectedByDirectAdjacentRules; }
-    void setChildrenAffectedByDirectAdjacentRules() { m_childrenAffectedByDirectAdjacentRules = true; }
-    bool childrenAffectedByForwardPositionalRules() const { return m_childrenAffectedByForwardPositionalRules; }
-    void setChildrenAffectedByForwardPositionalRules() { m_childrenAffectedByForwardPositionalRules = true; }
-    bool childrenAffectedByBackwardPositionalRules() const { return m_childrenAffectedByBackwardPositionalRules; }
-    void setChildrenAffectedByBackwardPositionalRules() { m_childrenAffectedByBackwardPositionalRules = true; }
-    bool firstChildState() const { return m_firstChildState; }
-    void setFirstChildState() { m_unique = true; m_firstChildState = true; }
-    bool lastChildState() const { return m_lastChildState; }
-    void setLastChildState() { m_unique = true; m_lastChildState = true; }
-    unsigned childIndex() const { return m_childIndex; }
-    void setChildIndex(unsigned index) { m_unique = true; m_childIndex = index; }
+    bool childrenAffectedByFirstChildRules() const { return m_bitfields.childrenAffectedByFirstChildRules(); }
+    void setChildrenAffectedByFirstChildRules() { m_bitfields.setChildrenAffectedByFirstChildRules(true); }
+    bool childrenAffectedByLastChildRules() const { return m_bitfields.childrenAffectedByLastChildRules(); }
+    void setChildrenAffectedByLastChildRules() { m_bitfields.setChildrenAffectedByLastChildRules(true); }
+    bool childrenAffectedByDirectAdjacentRules() const { return m_bitfields.childrenAffectedByDirectAdjacentRules(); }
+    void setChildrenAffectedByDirectAdjacentRules() { m_bitfields.setChildrenAffectedByDirectAdjacentRules(true); }
+    bool childrenAffectedByForwardPositionalRules() const { return m_bitfields.childrenAffectedByForwardPositionalRules(); }
+    void setChildrenAffectedByForwardPositionalRules() { m_bitfields.setChildrenAffectedByForwardPositionalRules(true); }
+    bool childrenAffectedByBackwardPositionalRules() const { return m_bitfields.childrenAffectedByBackwardPositionalRules(); }
+    void setChildrenAffectedByBackwardPositionalRules() { m_bitfields.setChildrenAffectedByBackwardPositionalRules(true); }
+    bool firstChildState() const { return m_bitfields.firstChildState(); }
+    void setFirstChildState() { m_bitfields.setUnique(true); m_bitfields.setFirstChildState(true); }
+    bool lastChildState() const { return m_bitfields.lastChildState(); }
+    void setLastChildState() { m_bitfields.setUnique(true); m_bitfields.setLastChildState(true); }
+    unsigned childIndex() const { return m_bitfields.childIndex(); }
+    void setChildIndex(unsigned index) { m_bitfields.setUnique(true); m_bitfields.setChildIndex(index); }
 
     Color visitedDependentColor(int colorProperty) const;
 
-    void setHasExplicitlyInheritedProperties() { m_explicitInheritance = true; }
-    bool hasExplicitlyInheritedProperties() const { return m_explicitInheritance; }
+    void setHasExplicitlyInheritedProperties() { m_bitfields.setExplicitInheritance(true); }
+    bool hasExplicitlyInheritedProperties() const { return m_bitfields.explicitInheritance(); }
     
     // Initial values for all the properties
     static EBorderCollapse initialBorderCollapse() { return BSEPARATE; }
@@ -1458,7 +1534,7 @@ public:
     static EBoxDirection initialBoxDirection() { return BNORMAL; }
     static EBoxLines initialBoxLines() { return SINGLE; }
     static EBoxOrient initialBoxOrient() { return HORIZONTAL; }
-    static EBoxAlignment initialBoxPack() { return BSTART; }
+    static EBoxPack initialBoxPack() { return Start; }
     static float initialBoxFlex() { return 0.0f; }
     static int initialBoxFlexGroup() { return 1; }
     static int initialBoxOrdinalGroup() { return 1; }
@@ -1618,7 +1694,18 @@ private:
     const Color& textEmphasisColor() const { return rareInheritedData->textEmphasisColor; }
     const Color& textFillColor() const { return rareInheritedData->textFillColor; }
     const Color& textStrokeColor() const { return rareInheritedData->textStrokeColor; }
-    
+    const Color& visitedLinkColor() const { return inherited->visitedLinkColor; }
+    const Color& visitedLinkBackgroundColor() const { return rareNonInheritedData->m_visitedLinkBackgroundColor; }
+    const Color& visitedLinkBorderLeftColor() const { return rareNonInheritedData->m_visitedLinkBorderLeftColor; }
+    const Color& visitedLinkBorderRightColor() const { return rareNonInheritedData->m_visitedLinkBorderRightColor; }
+    const Color& visitedLinkBorderBottomColor() const { return rareNonInheritedData->m_visitedLinkBorderBottomColor; }
+    const Color& visitedLinkBorderTopColor() const { return rareNonInheritedData->m_visitedLinkBorderTopColor; }
+    const Color& visitedLinkOutlineColor() const { return rareNonInheritedData->m_visitedLinkOutlineColor; }
+    const Color& visitedLinkColumnRuleColor() const { return rareNonInheritedData->m_multiCol->m_visitedLinkColumnRuleColor; }
+    const Color& visitedLinkTextEmphasisColor() const { return rareInheritedData->visitedLinkTextEmphasisColor; }
+    const Color& visitedLinkTextFillColor() const { return rareInheritedData->visitedLinkTextFillColor; }
+    const Color& visitedLinkTextStrokeColor() const { return rareInheritedData->visitedLinkTextStrokeColor; }
+
     Color colorIncludingFallback(int colorProperty, bool visitedLink) const;
 
 #if ENABLE(SVG)

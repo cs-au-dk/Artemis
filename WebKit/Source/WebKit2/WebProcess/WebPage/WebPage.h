@@ -44,7 +44,7 @@
 #include "Plugin.h"
 #include "SandboxExtension.h"
 #include "ShareableBitmap.h"
-#include "WebEditCommand.h"
+#include "WebUndoStep.h"
 #include <WebCore/DragData.h>
 #include <WebCore/Editor.h>
 #include <WebCore/FrameLoaderTypes.h>
@@ -191,8 +191,8 @@ public:
     WebCore::IntRect windowResizerRect() const;
     WebCore::KeyboardUIMode keyboardUIMode();
 
-    WebEditCommand* webEditCommand(uint64_t);
-    void addWebEditCommand(uint64_t, WebEditCommand*);
+    WebUndoStep* webUndoStep(uint64_t);
+    void addWebUndoStep(uint64_t, WebUndoStep*);
     void removeWebEditCommand(uint64_t);
     bool isInRedo() const { return m_isInRedo; }
 
@@ -289,8 +289,8 @@ public:
     void removePluginView(PluginView*);
 
     bool windowIsVisible() const { return m_windowIsVisible; }
-    const WebCore::FloatRect& windowFrameInScreenCoordinates() const { return m_windowFrameInScreenCoordinates; }
-    const WebCore::FloatRect& viewFrameInWindowCoordinates() const { return m_viewFrameInWindowCoordinates; }
+    const WebCore::IntRect& windowFrameInScreenCoordinates() const { return m_windowFrameInScreenCoordinates; }
+    const WebCore::IntRect& viewFrameInWindowCoordinates() const { return m_viewFrameInWindowCoordinates; }
 #elif PLATFORM(WIN)
     HWND nativeWindow() const { return m_nativeWindow; }
 #endif
@@ -353,11 +353,17 @@ public:
 
     SandboxExtensionTracker& sandboxExtensionTracker() { return m_sandboxExtensionTracker; }
 
+#if PLATFORM(QT)
+    void setComposition(const String& text, Vector<WebCore::CompositionUnderline> underlines, uint64_t selectionStart, uint64_t selectionEnd, uint64_t replacementRangeStart, uint64_t replacementRangeEnd);
+    void confirmComposition(const String& text, int64_t selectionStart, int64_t selectionLength);
+    void cancelComposition();
+#endif
+
 #if PLATFORM(MAC)
     void registerUIProcessAccessibilityTokens(const CoreIPC::DataReference& elemenToken, const CoreIPC::DataReference& windowToken);
     WKAccessibilityWebPageObject* accessibilityRemoteObject();
-    const WebCore::FloatPoint& accessibilityPosition() const { return m_accessibilityPosition; }
-
+    WebCore::IntPoint accessibilityPosition() const { return m_accessibilityPosition; }    
+    
     void sendComplexTextInputToPlugin(uint64_t pluginComplexTextInputIdentifier, const String& textInput);
 
     void setComposition(const String& text, Vector<WebCore::CompositionUnderline> underlines, uint64_t selectionStart, uint64_t selectionEnd, uint64_t replacementRangeStart, uint64_t replacementRangeEnd, EditorState& newState);
@@ -462,6 +468,11 @@ public:
 
     void contextMenuShowing() { m_isShowingContextMenu = true; }
 
+    void wheelEvent(const WebWheelEvent&);
+#if ENABLE(GESTURE_EVENTS)
+    void gestureEvent(const WebGestureEvent&);
+#endif
+
 private:
     WebPage(uint64_t pageID, const WebPageCreationParameters&);
 
@@ -510,13 +521,9 @@ private:
 
     void mouseEvent(const WebMouseEvent&);
     void mouseEventSyncForTesting(const WebMouseEvent&, bool&);
-    void wheelEvent(const WebWheelEvent&);
     void wheelEventSyncForTesting(const WebWheelEvent&, bool&);
     void keyEvent(const WebKeyboardEvent&);
     void keyEventSyncForTesting(const WebKeyboardEvent&, bool&);
-#if ENABLE(GESTURE_EVENTS)
-    void gestureEvent(const WebGestureEvent&);
-#endif
 #if ENABLE(TOUCH_EVENTS)
     void touchEvent(const WebTouchEvent&);
     void touchEventSyncForTesting(const WebTouchEvent&, bool& handled);
@@ -560,7 +567,7 @@ private:
     void performDictionaryLookupForRange(DictionaryPopupInfo::Type, WebCore::Frame*, WebCore::Range*, NSDictionary *options);
 
     void setWindowIsVisible(bool windowIsVisible);
-    void windowAndViewFramesChanged(const WebCore::FloatRect& windowFrameInScreenCoordinates, const WebCore::FloatRect& viewFrameInWindowCoordinates, const WebCore::FloatPoint& accessibilityViewCoordinates);
+    void windowAndViewFramesChanged(const WebCore::IntRect& windowFrameInScreenCoordinates, const WebCore::IntRect& viewFrameInWindowCoordinates, const WebCore::IntPoint& accessibilityViewCoordinates);
 #endif
 
     void unapplyEditCommand(uint64_t commandID);
@@ -637,14 +644,14 @@ private:
     bool m_isSmartInsertDeleteEnabled;
 
     // The frame of the containing window in screen coordinates.
-    WebCore::FloatRect m_windowFrameInScreenCoordinates;
+    WebCore::IntRect m_windowFrameInScreenCoordinates;
 
     // The frame of the view in window coordinates.
-    WebCore::FloatRect m_viewFrameInWindowCoordinates;
+    WebCore::IntRect m_viewFrameInWindowCoordinates;
 
     // The accessibility position of the view.
-    WebCore::FloatPoint m_accessibilityPosition;
-
+    WebCore::IntPoint m_accessibilityPosition;
+    
     // All plug-in views on this web page.
     HashSet<PluginView*> m_pluginViews;
 
@@ -661,7 +668,7 @@ private:
     
     RunLoop::Timer<WebPage> m_setCanStartMediaTimer;
 
-    HashMap<uint64_t, RefPtr<WebEditCommand> > m_editCommandMap;
+    HashMap<uint64_t, RefPtr<WebUndoStep> > m_undoStepMap;
 
     WebCore::IntSize m_windowResizerSize;
 

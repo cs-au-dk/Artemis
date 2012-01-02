@@ -561,6 +561,8 @@ SET(WebCore_SOURCES
     dom/MouseEvent.cpp
     dom/MouseRelatedEvent.cpp
     dom/MutationEvent.cpp
+    dom/MutationObserverInterestGroup.cpp
+    dom/MutationObserverRegistration.cpp
     dom/MutationRecord.cpp
     dom/NamedNodeMap.cpp
     dom/NameNodeList.cpp
@@ -915,6 +917,7 @@ SET(WebCore_SOURCES
 
     loader/CrossOriginAccessControl.cpp
     loader/CrossOriginPreflightResultCache.cpp
+    loader/DocumentLoadTiming.cpp
     loader/DocumentLoader.cpp
     loader/DocumentThreadableLoader.cpp
     loader/DocumentWriter.cpp
@@ -1043,6 +1046,7 @@ SET(WebCore_SOURCES
     platform/FileSystem.cpp
     platform/ClockGeneric.cpp
     platform/GeolocationService.cpp
+    platform/HistogramSupport.cpp
     platform/KURL.cpp
     platform/KillRingNone.cpp
     platform/Language.cpp
@@ -1051,6 +1055,7 @@ SET(WebCore_SOURCES
     platform/Logging.cpp
     platform/MIMETypeRegistry.cpp
     platform/MemoryPressureHandler.cpp
+    platform/PlatformEvent.cpp
     platform/RuntimeApplicationChecks.cpp
     platform/ScrollAnimator.cpp
     platform/ScrollableArea.cpp
@@ -1108,12 +1113,15 @@ SET(WebCore_SOURCES
     platform/graphics/TextRun.cpp
     platform/graphics/WidthIterator.cpp
 
+    platform/graphics/filters/CustomFilterMesh.cpp
+    platform/graphics/filters/CustomFilterShader.cpp
     platform/graphics/filters/DistantLightSource.cpp
     platform/graphics/filters/FEBlend.cpp
     platform/graphics/filters/FEColorMatrix.cpp
     platform/graphics/filters/FEComponentTransfer.cpp
     platform/graphics/filters/FEComposite.cpp
     platform/graphics/filters/FEConvolveMatrix.cpp
+    platform/graphics/filters/FECustomFilter.cpp
     platform/graphics/filters/FEDiffuseLighting.cpp
     platform/graphics/filters/FEDisplacementMap.cpp
     platform/graphics/filters/FEDropShadow.cpp
@@ -1127,6 +1135,7 @@ SET(WebCore_SOURCES
     platform/graphics/filters/FETile.cpp
     platform/graphics/filters/FETurbulence.cpp
     platform/graphics/filters/FilterEffect.cpp
+    platform/graphics/filters/FilterOperations.cpp
     platform/graphics/filters/LightSource.cpp
     platform/graphics/filters/PointLightSource.cpp
     platform/graphics/filters/SpotLightSource.cpp
@@ -1176,6 +1185,7 @@ SET(WebCore_SOURCES
     platform/network/ProxyServer.cpp
     platform/network/ResourceErrorBase.cpp
     platform/network/ResourceHandle.cpp
+    platform/network/ResourceLoadTiming.cpp
     platform/network/ResourceRequestBase.cpp
     platform/network/ResourceResponseBase.cpp
     platform/network/SocketStreamHandleBase.cpp
@@ -1308,7 +1318,6 @@ SET(WebCore_SOURCES
     rendering/style/ContentData.cpp
     rendering/style/CounterDirectives.cpp
     rendering/style/FillLayer.cpp
-    rendering/style/FilterOperations.cpp
     rendering/style/KeyframeList.cpp
     rendering/style/NinePieceImage.cpp
     rendering/style/QuotesData.cpp
@@ -2157,6 +2166,7 @@ IF (ENABLE_WEBGL)
         html/canvas/WebGLDebugShaders.cpp
         html/canvas/WebGLFramebuffer.cpp
         html/canvas/WebGLGetInfo.cpp
+        html/canvas/WebGLLoseContext.cpp
         html/canvas/WebGLObject.cpp
         html/canvas/WebGLProgram.cpp
         html/canvas/WebGLRenderbuffer.cpp
@@ -2169,7 +2179,6 @@ IF (ENABLE_WEBGL)
         html/canvas/OESStandardDerivatives.cpp
         html/canvas/OESTextureFloat.cpp
         html/canvas/OESVertexArrayObject.cpp
-        html/canvas/WebKitLoseContext.cpp
 
         platform/graphics/ANGLEWebKitBridge.cpp
         platform/graphics/GraphicsContext3D.cpp
@@ -2188,6 +2197,7 @@ IF (ENABLE_WEBGL)
         html/canvas/WebGLDebugRendererInfo.idl
         html/canvas/WebGLDebugShaders.idl
         html/canvas/WebGLFramebuffer.idl
+        html/canvas/WebGLLoseContext.idl
         html/canvas/WebGLProgram.idl
         html/canvas/WebGLRenderbuffer.idl
         html/canvas/WebGLRenderingContext.idl
@@ -2195,7 +2205,6 @@ IF (ENABLE_WEBGL)
         html/canvas/WebGLTexture.idl
         html/canvas/WebGLUniformLocation.idl
         html/canvas/WebGLVertexArrayObjectOES.idl
-        html/canvas/WebKitLoseContext.idl
     )
 ENDIF ()
 

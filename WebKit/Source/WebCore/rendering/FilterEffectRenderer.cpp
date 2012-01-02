@@ -34,10 +34,18 @@
 #include "FEDropShadow.h"
 #include "FEGaussianBlur.h"
 #include "FEMerge.h"
+#include "FilterEffectObserver.h"
 #include "FloatConversion.h"
 
 #include <algorithm>
 #include <wtf/MathExtras.h>
+
+#if ENABLE(CSS_SHADERS) && ENABLE(WEBGL)
+#include "CachedShader.h"
+#include "CustomFilterOperation.h"
+#include "FECustomFilter.h"
+#include "Settings.h"
+#endif
 
 namespace WebCore {
 
@@ -55,9 +63,20 @@ static inline void lastMatrixRow(Vector<float>& parameters)
     parameters.append(1);
     parameters.append(0);
 }
+    
+    
+#if ENABLE(CSS_SHADERS) && ENABLE(WEBGL)
+static bool isWebGLEnabled(Document* document)
+{
+    // We only want to enable shaders if WebGL is also enabled on this platform.
+    Settings* settings = document->settings();
+    return settings && settings->webGLEnabled();
+}
+#endif
 
-FilterEffectRenderer::FilterEffectRenderer()
-    : m_graphicsBufferAttached(false)
+FilterEffectRenderer::FilterEffectRenderer(FilterEffectObserver* observer)
+    : m_observer(observer)
+    , m_graphicsBufferAttached(false)
 {
     setFilterResolution(FloatSize(1, 1));
     m_sourceGraphic = SourceGraphic::create(this);
@@ -72,8 +91,14 @@ GraphicsContext* FilterEffectRenderer::inputContext()
     return sourceImage()->context();
 }
 
-void FilterEffectRenderer::build(const FilterOperations& operations, const LayoutRect& borderBox)
+void FilterEffectRenderer::build(Document* document, const FilterOperations& operations)
 {
+#if !ENABLE(CSS_SHADERS) || !ENABLE(WEBGL)
+    UNUSED_PARAM(document);
+#else
+    CachedShaderList cachedShaders;
+#endif
+
     m_effects.clear();
 
     RefPtr<FilterEffect> effect;
@@ -182,28 +207,32 @@ void FilterEffectRenderer::build(const FilterOperations& operations, const Layou
             effect = FEComponentTransfer::create(this, nullFunction, nullFunction, nullFunction, transferFunction);
             break;
         }
-        case FilterOperation::GAMMA: {
-            GammaFilterOperation* gammaOperation = static_cast<GammaFilterOperation*>(filterOperation);
+        case FilterOperation::BRIGHTNESS: {
+            BasicComponentTransferFilterOperation* componentTransferOperation = static_cast<BasicComponentTransferFilterOperation*>(filterOperation);
             ComponentTransferFunction transferFunction;
-            transferFunction.type = FECOMPONENTTRANSFER_TYPE_GAMMA;
-            transferFunction.amplitude = narrowPrecisionToFloat(gammaOperation->amplitude());
-            transferFunction.exponent = narrowPrecisionToFloat(gammaOperation->exponent());
-            transferFunction.offset = narrowPrecisionToFloat(gammaOperation->offset());
+            transferFunction.type = FECOMPONENTTRANSFER_TYPE_LINEAR;
+            transferFunction.slope = narrowPrecisionToFloat(componentTransferOperation->amount());
 
+            ComponentTransferFunction nullFunction;
+            effect = FEComponentTransfer::create(this, transferFunction, transferFunction, transferFunction, nullFunction);
+            break;
+        }
+        case FilterOperation::CONTRAST: {
+            BasicComponentTransferFilterOperation* componentTransferOperation = static_cast<BasicComponentTransferFilterOperation*>(filterOperation);
+            ComponentTransferFunction transferFunction;
+            transferFunction.type = FECOMPONENTTRANSFER_TYPE_LINEAR;
+            float amount = narrowPrecisionToFloat(componentTransferOperation->amount());
+            transferFunction.slope = amount;
+            transferFunction.intercept = -0.5 * amount + 0.5;
+            
             ComponentTransferFunction nullFunction;
             effect = FEComponentTransfer::create(this, transferFunction, transferFunction, transferFunction, nullFunction);
             break;
         }
         case FilterOperation::BLUR: {
             BlurFilterOperation* blurOperation = static_cast<BlurFilterOperation*>(filterOperation);
-            float stdDeviationX = blurOperation->stdDeviationX().calcFloatValue(borderBox.width());
-            float stdDeviationY = blurOperation->stdDeviationY().calcFloatValue(borderBox.height());
-            effect = FEGaussianBlur::create(this, stdDeviationX, stdDeviationY);
-            break;
-        }
-        case FilterOperation::SHARPEN: {
-            // FIXME: Currently unimplemented.
-            // https://bugs.webkit.org/show_bug.cgi?id=72442
+            float stdDeviation = blurOperation->stdDeviation().calcFloatValue(0);
+            effect = FEGaussianBlur::create(this, stdDeviation, stdDeviation);
             break;
         }
         case FilterOperation::DROP_SHADOW: {
@@ -214,7 +243,41 @@ void FilterEffectRenderer::build(const FilterOperations& operations, const Layou
         }
 #if ENABLE(CSS_SHADERS)
         case FilterOperation::CUSTOM: {
-            // Not implemented in the software path.
+#if ENABLE(WEBGL)
+            if (!isWebGLEnabled(document))
+                continue;
+            
+            CustomFilterOperation* customFilterOperation = static_cast<CustomFilterOperation*>(filterOperation);
+            
+            // Check that the filters are already loaded. If not just skip them here.
+            String vertexShader, fragmentShader;
+            bool shadersLoaded = true;
+            if (customFilterOperation->vertexShader()) {
+                CachedShader* cachedShader = customFilterOperation->vertexShader()->cachedShader();
+                ASSERT(cachedShader);
+                cachedShaders.append(cachedShader);
+                cachedShader->addClient(this);
+                if (cachedShader->isLoaded())
+                    vertexShader = cachedShader->shaderString();
+                else
+                    shadersLoaded = false;
+            }
+            if (customFilterOperation->fragmentShader()) {
+                CachedShader* cachedShader = customFilterOperation->fragmentShader()->cachedShader();
+                ASSERT(cachedShader);
+                cachedShaders.append(cachedShader);
+                cachedShader->addClient(this);
+                if (cachedShader->isLoaded())
+                    fragmentShader = cachedShader->shaderString();
+                else
+                    shadersLoaded = false;
+            }
+            if (shadersLoaded) {
+                effect = FECustomFilter::create(this, document, vertexShader, fragmentShader,
+                                                customFilterOperation->meshRows(), customFilterOperation->meshColumns(),
+                                                customFilterOperation->meshBoxType(), customFilterOperation->meshType());
+            }
+#endif
             break;
         }
 #endif
@@ -223,6 +286,9 @@ void FilterEffectRenderer::build(const FilterOperations& operations, const Layou
         }
 
         if (effect) {
+            // Unlike SVG, filters applied here should not clip to their primitive subregions.
+            effect->setClipsToBounds(false);
+            
             if (previousEffect)
                 effect->inputEffects().append(previousEffect);
             m_effects.append(effect);
@@ -236,6 +302,17 @@ void FilterEffectRenderer::build(const FilterOperations& operations, const Layou
 
     m_effects.first()->inputEffects().append(m_sourceGraphic);
     setMaxEffectRects(m_sourceDrawingRegion);
+    
+#if ENABLE(CSS_SHADERS) && ENABLE(WEBGL)
+    for (CachedShaderList::iterator iter = m_cachedShaders.begin(), end = m_cachedShaders.end(); iter != end; ++iter)
+        iter->get()->removeClient(this);
+    m_cachedShaders.swap(cachedShaders);
+#endif
+}
+
+void FilterEffectRenderer::notifyFinished(CachedResource*)
+{
+    m_observer->filterNeedsRepaint();
 }
 
 void FilterEffectRenderer::prepare()

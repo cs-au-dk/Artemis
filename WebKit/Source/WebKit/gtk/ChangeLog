@@ -1,3 +1,76 @@
+2011-12-20  Yuta Kitamura  <yutak@chromium.org>
+
+        [GTK] Change default WebSocket protocol to the latest one
+        https://bugs.webkit.org/show_bug.cgi?id=74064
+
+        Reviewed by Martin Robinson.
+
+        * webkit/webkitwebview.cpp:
+        (webkit_web_view_update_settings):
+        Use hybi WebSocket protocol by default.
+
+2011-12-19  Sam Weinig  <sam@webkit.org>
+
+        More PlatformEvent cleanup
+        https://bugs.webkit.org/show_bug.cgi?id=74831
+
+        Reviewed by Dan Bernstein.
+
+        * webkit/webkitwebview.cpp:
+        (webkit_web_view_forward_context_menu_event):
+        (webkit_web_view_get_hit_test_result):
+        Update to use new names, access style.
+
+2011-12-16  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Rename registerCommandFor(Undo|Redo) to register(Undo|Redo)Step
+        https://bugs.webkit.org/show_bug.cgi?id=74748
+
+        Reviewed by Eric Seidel.
+
+        * WebCoreSupport/EditorClientGtk.cpp:
+        (WebKit::EditorClient::registerUndoStep):
+        (WebKit::EditorClient::registerRedoStep):
+        * WebCoreSupport/EditorClientGtk.h:
+
+2011-12-16  Sam Weinig  <sam@webkit.org>
+
+        Give PlatformEvents a base class
+        https://bugs.webkit.org/show_bug.cgi?id=74685
+
+        Reviewed by Anders Carlsson.
+
+        Add a base class for PlatformMouseEvent, PlatformKeyboardEvent, PlatformWheelEvent
+        and PlatformGestureEvent and move Type enumeration and modifiers down to it.
+
+        * WebCoreSupport/EditorClientGtk.cpp:
+        (WebKit::EditorClient::handleKeyboardEvent):
+        * webkit/webkitwebview.cpp:
+        (webkit_web_view_popup_menu_handler):
+
+2011-12-16  Ryosuke Niwa  <rniwa@webkit.org>
+
+        Only EditCommandComposition should implement unapply and reapply
+        https://bugs.webkit.org/show_bug.cgi?id=74490
+
+        Reviewed by Eric Seidel.
+
+        * WebCoreSupport/EditorClientGtk.cpp:
+        (WebKit::EditorClient::registerCommandForUndo):
+        (WebKit::EditorClient::registerCommandForRedo):
+        (WebKit::EditorClient::undo):
+        (WebKit::EditorClient::redo):
+        * WebCoreSupport/EditorClientGtk.h:
+
+2011-12-16  Carlos Garcia Campos  <cgarcia@igalia.com>
+
+        [GTK] Update NEWS and configure.ac for 1.7.3 release
+        https://bugs.webkit.org/show_bug.cgi?id=74699
+
+        Reviewed by Philippe Normand.
+
+        * NEWS: Added release notes for 1.7.3.
+
 2011-12-14  Jing Zhao  <jingzhao@chromium.org>
 
         Opening two popup menus by dispatchEvent() makes problems.

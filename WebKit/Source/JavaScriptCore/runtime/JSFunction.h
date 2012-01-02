@@ -35,7 +35,6 @@ namespace JSC {
     class JSGlobalObject;
     class NativeExecutable;
     class SourceCode;
-    class VPtrHackExecutable;
     namespace DFG {
     class SpeculativeJIT;
     class JITCompiler;
@@ -59,14 +58,13 @@ namespace JSC {
 
         static JSFunction* create(ExecState* exec, FunctionExecutable* executable, ScopeChainNode* scopeChain)
         {
-            JSFunction* function = new (allocateCell<JSFunction>(*exec->heap())) JSFunction(exec, executable, scopeChain);
+            JSFunction* function = new (NotNull, allocateCell<JSFunction>(*exec->heap())) JSFunction(exec, executable, scopeChain);
             ASSERT(function->structure()->globalObject());
             function->finishCreation(exec, executable, scopeChain);
             return function;
         }
         
-        virtual ~JSFunction();
-        virtual void vtableAnchor(); // FIXME: Remove this once optimizations no longer rely on testing vtables
+        static void destroy(JSCell*);
 
         const UString& name(ExecState*);
         const UString displayName(ExecState*);
@@ -144,8 +142,6 @@ namespace JSC {
         static void visitChildren(JSCell*, SlotVisitor&);
 
     private:
-        explicit JSFunction(VPtrStealingHackType);
-
         bool isHostFunctionNonInline() const;
 
         static JSValue argumentsGetter(ExecState*, JSValue, const Identifier&);
