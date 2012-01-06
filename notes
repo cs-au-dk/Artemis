@@ -1,0 +1,23 @@
+prettyURL() deprecated -> deprecatedString()
+
+qhash patch:
+
+#include <QtCore/qpair.h>
+
++ namespace artemis {
+
+  class FormInput;
+  class EventDescriptor;
+  class AjaxRequest;
+  class EventHandlerDescriptor;
+  class FormField;
+  class SourceInfo;
+  class ExecutableConfiguration;
+}
+
+uint qHash(const artemis::FormInput &key);
+uint qHash(const artemis::EventDescriptor &d);
+uint qHash(const artemis::AjaxRequest &key);
+uint qHash(const artemis::EventHandlerDescriptor &key);
+uint qHash(const artemis::FormField &key);
+uint qHash(const artemis::ExecutableConfiguration &key);
