@@ -1,17 +1,20 @@
 TEMPLATE = app
 TARGET = artemis
 DEPENDPATH += .
-INCLUDEPATH += . inputgenerators src
+INCLUDEPATH += /home/kja/Artemis/WebKit/WebKitBuild/Release/include/QtWebKit \
+    /home/kja/Artemis/WebKit/Source/WebCore \
+    . \
+    inputgenerators \
+    src
 CONFIG-=app_bundle
 OBJECTS_DIR=build
 MOC_DIR=build
 DESTDIR=dist
+LIBS += /home/kja/Artemis/WebKit/WebKitBuild/Release/lib/libQtWebKit.so.4.10.0
 
-QMAKE_CXXFLAGS += -DEXE_BUILD_DATE="`date +'\"%d-%m-%Y_%H:%M:%S\"'`" -DARTEMIS=1
+QMAKE_CXXFLAGS += -DEXE_BUILD_DATE="`date +'\"%d-%m-%Y_%H:%M:%S\"'`"
 
 DEFINES += ARTEMIS=1
-
-#LIBS += /home/kja/Artemis/qt/lib/libQtWebKit.so.4.10.0
 
 # Input
 HEADERS += src/webkitexecutor.h \
@@ -118,6 +121,4 @@ SOURCES += src/webkitexecutor.cpp \
     src/listeners/pagerecreatelistner.cpp \
     src/listeners/sourceloadinglistener.cpp
 
-
- QT += webkit
  QT += network

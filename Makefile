@@ -10,6 +10,8 @@ help:
 	@echo "    artemis-clean          - Clean artemis"
 	@echo ""
 	@echo "    qt-checkout            - Checkout a copy of the Qt 4.8 Framework source"
+	@echo ""
+	@echo "    qhash-patch            - Apply qt sourcefile patch"
 
 webkit:
 	@echo "Building release QtWebKit"
@@ -24,7 +26,7 @@ webkit-clean:
 	./WebKit/Tools/Scripts/build-webkit --clean
 
 webkit-install-into-qt:
-	@if test -d ./qt/include/QtWebKit; then echo "WebKit dir present in Qt install"; else mkdir ./qt/include/QtWebKit; fi
+	@if test -d ./qt/include/QtWebKit; then echo "WebKit dir present in Qt weinstall"; else mkdir ./qt/include/QtWebKit; fi
 ifeq ($(UNAME),Linux)
 	@cp -rv ./WebKit/WebKitBuild/Release/lib/libQtWebKit* ./qt/lib
 endif
@@ -37,10 +39,13 @@ endif
 	@cp -v ./WebKit/Source/WebCore/instrumentation/executionlistener.h ./qt/include/QtWebKit/instrumentation
 
 artemis:
-	cd artemis-code && qmake && make
+	cd artemis-code && qmake -spec linux-llvm && LD_LIBRARY_PATH=/home/kja/Artemis/WebKit/WebKitBuild/Release/lib dragonegg_disable_version_check=1 make
 
 artemis-clean:
-	cd artemis-code && qmake && make clean
+	cd artemis-code && qmake -spec linux-llvm && make clean
 
 qt-checkout:
 	git clone git://gitorious.org/qt/qt.git; cd qt; git checkout v4.8.0
+
+qhash-patch:
+	patch ./qt/src/corelib/tools/qhash.h qhash.patch
