@@ -54,6 +54,10 @@ qwk_1.0 {
         *QWebElementCollection;
         non-virtual?thunk?to?QWebElementCollection*;
         QWebElementCollection::*;
+        installWebKitExecutionListener*;
+        *QWebExecutionListener;
+        non-virtual?thunk?to?QWebExecutionListener*;
+        QWebExecutionListener::*;
         *QWebHitTestResult;
         non-virtual?thunk?to?QWebHitTestResult*;
         QWebHitTestResult::*;
