@@ -1,8 +1,9 @@
 TEMPLATE = app
 TARGET = artemis
 DEPENDPATH += .
-INCLUDEPATH += /home/kja/Artemis/WebKit/WebKitBuild/Release/include/QtWebKit \
-    /home/kja/Artemis/WebKit/Source/WebCore \
+INCLUDEPATH += ../WebKit/WebKitBuild/Release/include/ \
+    ../WebKit/WebKitBuild/Release/include/QtWebKit/ \
+    ../WebKit/Source/WebCore \
     . \
     inputgenerators \
     src
@@ -10,7 +11,7 @@ CONFIG-=app_bundle
 OBJECTS_DIR=build
 MOC_DIR=build
 DESTDIR=dist
-LIBS += /home/kja/Artemis/WebKit/WebKitBuild/Release/lib/libQtWebKit.so.4.10.0
+LIBS += ../WebKit/WebKitBuild/Release/lib/libQtWebKit.so.4.10.0
 
 QMAKE_CXXFLAGS += -DEXE_BUILD_DATE="`date +'\"%d-%m-%Y_%H:%M:%S\"'`"
 
