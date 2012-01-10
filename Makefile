@@ -39,10 +39,10 @@ endif
 	@cp -v ./WebKit/Source/WebCore/instrumentation/executionlistener.h ./qt/include/QtWebKit/instrumentation
 
 artemis:
-	cd artemis-code && qmake -spec linux-llvm && LD_LIBRARY_PATH=/home/kja/Artemis/WebKit/WebKitBuild/Release/lib dragonegg_disable_version_check=1 make
+	cd artemis-code && qmake && make
 
 artemis-clean:
-	cd artemis-code && qmake -spec linux-llvm && make clean
+	cd artemis-code && qmake && make clean
 
 qt-checkout:
 	git clone git://gitorious.org/qt/qt.git; cd qt; git checkout v4.8.0
