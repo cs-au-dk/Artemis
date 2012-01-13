@@ -1,6 +1,0 @@
-#!/bin/sh
-
-echo "Remember to use source <this file>"
-export QTDIR="/home/kja/Artemis/qt"
-export PATH=$QTDIR/bin:$PATH
-echo "Set QTDIR = " $QTDIR
