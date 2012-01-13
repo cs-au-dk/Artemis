@@ -1,6 +1,8 @@
 *.[oa]
 
 qt
+build-output
+artemis-build-output
 
 artemis-code/Makefile
 artemis-code/build/
