@@ -1,1 +1,7 @@
 *.[oa]
+
+qt
+
+artemis-code/Makefile
+artemis-code/build/
+artemis-code/dist/
