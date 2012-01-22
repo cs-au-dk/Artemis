@@ -14,6 +14,8 @@ SourceLoadingListener::SourceLoadingListener()
 }
 
 void SourceLoadingListener::code_loaded(QString source, QUrl url, int startline) {
+    qDebug() << "SLL: CODE LOADED" << endl;
+
     if (this->visisted.contains(get_hash(url,startline)) || is_omit(url)) {
         return;
     }
@@ -39,6 +41,8 @@ void SourceLoadingListener::print_results() {
 
 void SourceLoadingListener::loaded_page(const ArtemisWebPage& page, ExecutorState* exe_state)
 {
+    qDebug() << "SLL: LOADED PAGE" << endl;
+
     QWebElementCollection els = page.mainFrame()->findAllElements("script");
     foreach (QWebElement e, els) {
         if (e.hasAttribute("src")) {
