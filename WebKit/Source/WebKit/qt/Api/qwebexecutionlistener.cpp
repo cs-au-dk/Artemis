@@ -29,12 +29,12 @@ void QWebExecutionListener::domWindowEventCleared(WebCore::DOMWindow *, const st
     //TODO
 }
 
-void QWebExecutionListener::scriptCodeLoaded(intptr_t id,std::string source, std::string url ,int startline) {
-    emit loadedJavaScript(id,QString(tr(source.c_str())), QUrl(QString(tr(url.c_str()))), startline);
+void QWebExecutionListener::scriptCodeLoaded(intptr_t id, std::string source, std::string url, int startline) {
+    emit loadedJavaScript(id, QString(tr(source.c_str())), QUrl(QString(tr(url.c_str()))), startline);
 }
 
 void QWebExecutionListener::executedStatement(intptr_t sourceID, std::string function_name, int linenumber) {
-    emit statementExecuted(sourceID,function_name,linenumber);
+    emit statementExecuted(sourceID, function_name, linenumber);
 }
 
 void QWebExecutionListener::exceptional_condition(std::string cause, intptr_t sourceID, int lineNumber) {

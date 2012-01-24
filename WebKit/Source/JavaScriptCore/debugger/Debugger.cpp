@@ -58,8 +58,10 @@ inline Recompiler::~Recompiler()
     // Call sourceParsed() after reparsing all functions because it will execute
     // JavaScript in the inspector.
     SourceProviderMap::const_iterator end = m_sourceProviders.end();
-    for (SourceProviderMap::const_iterator iter = m_sourceProviders.begin(); iter != end; ++iter)
+    for (SourceProviderMap::const_iterator iter = m_sourceProviders.begin(); iter != end; ++iter) {
+        std::cout << "CALL TO SOURCE PARSED!!!!" << std::endl;
         m_debugger->sourceParsed(iter->second, iter->first, -1, UString());
+    }
 }
 
 inline void Recompiler::operator()(JSCell* cell)

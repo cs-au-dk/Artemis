@@ -8,6 +8,7 @@ namespace artemis {
 
 SourceLoadingListener::SourceLoadingListener()
 {
+    qDebug() << "SLL: CODE INIT" << endl;
     this->src_idx = 0;
     this->file_idx = 0;
     create_dir(".","js-code-dump");
@@ -45,6 +46,7 @@ void SourceLoadingListener::loaded_page(const ArtemisWebPage& page, ExecutorStat
 
     QWebElementCollection els = page.mainFrame()->findAllElements("script");
     foreach (QWebElement e, els) {
+        qDebug() << "SSL ITERATE" << endl;
         if (e.hasAttribute("src")) {
              e.setAttribute("src", "COCKMASTER");
             QString url = e.attribute("src");

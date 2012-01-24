@@ -53,8 +53,9 @@ void MultiplexListener::artemis_start(const QUrl& url) {
 }
 
 void MultiplexListener::code_loaded(QString source, QUrl url, int startline) {
+    qDebug() << "!!!! CODE LOADED SIGNAL IN MULTIPLEXER" << endl;
     foreach (ArtemisTopExecutionListener* l, m_listeners) {
-       // qDebug() << "MWAH: "  << QString::number((int)l) << " ! " << source << " ! " << url << " sdfg " << m_listeners.size();
+        //qDebug() << "MWAH: "  << QString::number((int)l) << " ! " << source << " ! " << url << " sdfg " << m_listeners.size();
         l->code_loaded (source,url,startline);
     }
 }
