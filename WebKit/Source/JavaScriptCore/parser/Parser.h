@@ -23,6 +23,8 @@
 #ifndef Parser_h
 #define Parser_h
 
+#include <iostream>
+
 #include "Debugger.h"
 #include "ExceptionHelpers.h"
 #include "Executable.h"
@@ -965,6 +967,8 @@ template <typename LexerType>
 template <class ParsedNode>
 PassRefPtr<ParsedNode> Parser<LexerType>::parse(JSGlobalObject* lexicalGlobalObject, Debugger* debugger, ExecState* debuggerExecState, JSObject** exception)
 {
+    std::cout << "!!!! PARSE CALLED!!!!" << std::endl;
+
     ASSERT(lexicalGlobalObject);
     ASSERT(exception && !*exception);
     int errLine;
@@ -1019,8 +1023,15 @@ PassRefPtr<ParsedNode> Parser<LexerType>::parse(JSGlobalObject* lexicalGlobalObj
             *exception = addErrorInfo(&lexicalGlobalObject->globalData(), createSyntaxError(lexicalGlobalObject, errMsg), errLine, *m_source);
     }
 
-    if (debugger && !ParsedNode::scopeIsFunction)
+    if (!debugger) {
+        std::cout << "!!! No debugger!!!!" << std::endl;
+    }
+
+    if (debugger && !ParsedNode::scopeIsFunction) {
+        std::cout << "CALL TO SOURCE PARSED!!!!" << std::endl;
         debugger->sourceParsed(debuggerExecState, m_source->provider(), errLine, errMsg);
+    }
+        
 
     m_arena->reset();
 

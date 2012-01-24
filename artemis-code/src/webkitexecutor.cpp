@@ -57,16 +57,16 @@ namespace artemis {
         webkit_listener = new QWebExecutionListener();
         installWebKitExecutionListener(webkit_listener);
 
-        QObject::connect(webkit_listener, SIGNAL(script_crash(QString,intptr_t,int)),
-                         this, SLOT(sl_script_crash(QString,intptr_t,int)));
-        QObject::connect(webkit_listener, SIGNAL(ajax_request(QUrl,QString)),
-                         this, SLOT(sl_ajax_request(QUrl,QString))); 
-        QObject::connect(webkit_listener, SIGNAL(loadedJavaScript(intptr_t,QString,QUrl,int)),
-                         this, SLOT(sl_code_loaded(intptr_t,QString,QUrl,int)));
-        QObject::connect(webkit_listener, SIGNAL(loadedJavaScript(intptr_t,QString,QUrl,int)),
-                         cov_list, SLOT(new_code(intptr_t,QString,QUrl,int)));
-        QObject::connect(webkit_listener, SIGNAL(statementExecuted(intptr_t,std::string,int)),
-                         cov_list, SLOT(statement_executed(intptr_t,std::string,int)));
+        QObject::connect(webkit_listener, SIGNAL(script_crash(QString, intptr_t, int)),
+                         this, SLOT(sl_script_crash(QString, intptr_t, int)));
+        QObject::connect(webkit_listener, SIGNAL(ajax_request(QUrl, QString)),
+                         this, SLOT(sl_ajax_request(QUrl, QString))); 
+        QObject::connect(webkit_listener, SIGNAL(loadedJavaScript(intptr_t, QString, QUrl, int)),
+                         this, SLOT(sl_code_loaded(intptr_t, QString, QUrl, int)));
+        QObject::connect(webkit_listener, SIGNAL(loadedJavaScript(intptr_t, QString, QUrl, int)),
+                         cov_list, SLOT(new_code(intptr_t, QString, QUrl, int)));
+        QObject::connect(webkit_listener, SIGNAL(statementExecuted(intptr_t, std::string, int)),
+                         cov_list, SLOT(statement_executed(intptr_t, std::string, int)));
 
         page = new ArtemisWebPage(this);
         page->setNetworkAccessManager(&ajax_listener);
@@ -303,11 +303,12 @@ namespace artemis {
     }
 
     void WebKitExecutor::sl_eval_called(QString eval_text) {
-        this->execution_listener->eval_called(eval_text, executor_state());
+        execution_listener->eval_called(eval_text, executor_state());
         qDebug() << "Dynamic code eval: " << eval_text;
     }
 
-    void WebKitExecutor::sl_code_loaded(intptr_t _,QString src,QUrl url ,int li) {
-        this->execution_listener->code_loaded(src,url,li);
+    void WebKitExecutor::sl_code_loaded(intptr_t _, QString src, QUrl url, int li) {
+        qDebug() << "WebKitExecutor::sl_code_loaded" << endl;
+        execution_listener->code_loaded(src, url, li);
     }
 }

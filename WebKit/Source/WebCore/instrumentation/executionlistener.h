@@ -13,7 +13,7 @@ namespace WebCore {
 
 namespace JSC {
     class Debugger;
-    class SourceCode;
+    class SourceProvider;
     class ExecState;
     class DebuggerCallFrame;
     class JSValue;
@@ -42,13 +42,14 @@ namespace inst {
         /**
           Loading of files
           */
-        void loadJavaScript(const JSC::SourceCode&,JSC::ExecState*);
+        void loadJavaScript(JSC::SourceProvider* sp, JSC::ExecState*);
         virtual void scriptCodeLoaded(intptr_t id,std::string source, std::string url ,int startline);
 
         /**
           Coverage information
           */
         void interpreterExecutedStatement(const JSC::DebuggerCallFrame&, intptr_t sourceID, int lineNumber);
+        void interpreterCalledEvent(const JSC::DebuggerCallFrame&, intptr_t sourceID, int lineNumber);
         virtual void executedStatement(intptr_t sourceID, std::string function_name, int linenumber);
 
         /**
