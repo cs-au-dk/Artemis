@@ -15,7 +15,6 @@ SourceLoadingListener::SourceLoadingListener()
 }
 
 void SourceLoadingListener::code_loaded(QString source, QUrl url, int startline) {
-    qDebug() << "SLL: CODE LOADED" << endl;
 
     if (this->visisted.contains(get_hash(url,startline)) || is_omit(url)) {
         return;
@@ -25,7 +24,6 @@ void SourceLoadingListener::code_loaded(QString source, QUrl url, int startline)
     size_of_code.insert(get_hash(url,startline), source.toAscii().size());
     QString name = "js" + QString::number(src_idx++) + ".js";
     write_string_to_file("js-code-dump/" + name, source);
-    qDebug() << "!!1 " << name;
     this->rewrite_urls.insert(url.toString(),name);
 }
 
@@ -42,11 +40,9 @@ void SourceLoadingListener::print_results() {
 
 void SourceLoadingListener::loaded_page(const ArtemisWebPage& page, ExecutorState* exe_state)
 {
-    qDebug() << "SLL: LOADED PAGE" << endl;
 
     QWebElementCollection els = page.mainFrame()->findAllElements("script");
     foreach (QWebElement e, els) {
-        qDebug() << "SSL ITERATE" << endl;
         if (e.hasAttribute("src")) {
              e.setAttribute("src", "COCKMASTER");
             QString url = e.attribute("src");

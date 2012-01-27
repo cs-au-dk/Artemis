@@ -80,10 +80,7 @@ namespace artemis {
         qDebug() << "Artemis terminated on: " << QDateTime::currentDateTime().toString();
         qDebug() << "Build timestamp: " << EXE_BUILD_DATE << endl;
 
-        qDebug() << "Artemis: Exit application" << endl;
         app->exit(0);
-        //exit(1); CHANGE INSERT THIS
 
-        qDebug() << "Artemis: Finish sl_testingDone" << endl;
     }
 }

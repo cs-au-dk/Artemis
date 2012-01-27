@@ -84,7 +84,6 @@ namespace artemis {
     }
 
     void WebKitExecutor::sl_loadFinished(bool ok) {
-        qDebug() << "SL LOAD FINISHED CALLED" << endl;
 
         if (!ok) {
             qDebug() << "WEBKIT: Website load failed!";
@@ -103,7 +102,6 @@ namespace artemis {
         setup_initial();
         do_exe();
         finished_sequence();
-        qDebug() << "POST SL_LOADFINISHED" << endl;
     }
 
     void WebKitExecutor::save_dom_state() {
@@ -151,7 +149,6 @@ namespace artemis {
         current_result->finalize();
 
         emit sigExecutedSequence(*current_conf, *current_result);
-        qDebug() << "POST FINISHED_SEQUENCE" << endl;
     }
 
     void WebKitExecutor::get_links() {
@@ -281,7 +278,6 @@ namespace artemis {
         //Load URL into WebKit
         qDebug() << "Trying to load: " << artemis_options->getURL()->toString() << endl;
         page->mainFrame()->load(*artemis_options->getURL());
-        qDebug() << "POST LOAD PAGE" << endl;
     }
 
     ExecutorState* WebKitExecutor::executor_state() {
