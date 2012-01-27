@@ -12,7 +12,6 @@ namespace inst {
     }
 
     void ListenerDebugger::sourceParsed(JSC::ExecState* es, JSC::SourceProvider* sp, int errorLineNumber, const JSC::UString& errorMessage) {
-        std::cout << "!!!!! LISTENER DEBUGGER SOURCE PARSED !!!" << std::endl;
         el->loadJavaScript(sp, es);
     }
 

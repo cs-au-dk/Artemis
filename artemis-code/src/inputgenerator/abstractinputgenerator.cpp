@@ -58,7 +58,6 @@ namespace artemis {
         //We finished one iteration, should we terminate?
         if (termination->should_terminate()) {
             finish_up();
-            qDebug() << "END SL_EXECUTOR_EXECUTEDSEQ 1" << endl;
             return;
         }
 
@@ -67,7 +66,6 @@ namespace artemis {
 
         if (wl->empty()) {
             finish_up();
-            qDebug() << "END SL_EXECUTOR_EXECUTEDSEQ 2" << endl;
             return;
         }
 
@@ -94,7 +92,6 @@ namespace artemis {
         //delete termination;
         
         emit sig_testingDone();
-        qDebug() << "END FINISH_UP" << endl;
     }
 
     void AbstractInputGenerator::start() {

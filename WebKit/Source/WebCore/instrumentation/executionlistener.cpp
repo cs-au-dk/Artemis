@@ -106,15 +106,13 @@ namespace inst {
     }
 
     void ExecutionListener::interpreterExecutedStatement(const JSC::DebuggerCallFrame& frame, intptr_t sourceID, int lineNumber) {
-        std::cout << "WEBKIT: Executed statement" << std::endl;
-        executedStatement(sourceID, std::string(frame.calculatedFunctionName().ascii().data()), lineNumber);
+        /* std::string(frame.calculatedFunctionName().ascii().data()) */
+        /* FIXME IMPORTANT */
+        executedStatement(sourceID, "fooBar()", lineNumber);
     }
 
     void ExecutionListener::interpreterCalledEvent(const JSC::DebuggerCallFrame& frame, intptr_t sourceID, int lineNumber) {
         std::string functionName = std::string(frame.calculatedFunctionName().ascii().data());
-
-        std::cout << "WEBKIT: Event called" << std::endl;
-        std::cout << functionName << std::endl;
     }
 
     void ExecutionListener::executedStatement(intptr_t sourceID, std::string function_name, int linenumber) {
