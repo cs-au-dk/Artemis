@@ -64,9 +64,6 @@ ArtemisOptions* parseCmd(int argc, char *argv[]) {
                 res->dump_page_states(ld.absolutePath());
             }
             break;
-
-        case 's' :
-            break;
         case 'r':
             res->set_recreate_page(true);
             break;
