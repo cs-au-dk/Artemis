@@ -77,6 +77,11 @@ namespace artemis {
         void set_recreate_page(bool v);
         bool recreate_page();
 
+        void set_proxy(QString s);
+        void set_preset_cookie(QString s);
+        QMap<QString, QString> get_preset_cookies();
+        void set_number_of_iterations(QString iterations);
+
     private:
         QUrl* artemis_url;
         ExecutableConfiguration* initial_conf;
@@ -85,7 +90,9 @@ namespace artemis {
         bool m_dump_urls;
         MultiplexListener* m_multi;
         bool m_recreate_page;
-
+        QString m_proxy_address;
+        QMap<QString, QString> m_preset_cookies;
+        int m_number_of_iterations;
 
 
     signals:

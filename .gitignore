@@ -3,7 +3,11 @@
 qt
 build-output
 artemis-build-output
+qt-env*
+
+js-code-dump
 
 artemis-code/Makefile
 artemis-code/build/
 artemis-code/dist/
+artemis-code/js-code-dump
