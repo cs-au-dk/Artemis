@@ -23,6 +23,8 @@
 #ifndef Parser_h
 #define Parser_h
 
+#include <iostream>
+
 #include "Debugger.h"
 #include "ExceptionHelpers.h"
 #include "Executable.h"
@@ -1019,8 +1021,10 @@ PassRefPtr<ParsedNode> Parser<LexerType>::parse(JSGlobalObject* lexicalGlobalObj
             *exception = addErrorInfo(&lexicalGlobalObject->globalData(), createSyntaxError(lexicalGlobalObject, errMsg), errLine, *m_source);
     }
 
-    if (debugger && !ParsedNode::scopeIsFunction)
+    if (debugger && !ParsedNode::scopeIsFunction) {
         debugger->sourceParsed(debuggerExecState, m_source->provider(), errLine, errMsg);
+    }
+        
 
     m_arena->reset();
 

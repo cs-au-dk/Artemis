@@ -25,9 +25,11 @@
   authors and should not be interpreted as representing official policies, either expressed
   or implied, of Simon Holm Jensen
 */
-#include "artemisapplication.h"
+
 #include <iostream>
 #include <stdlib.h>
+
+#include "artemisapplication.h"
 #include "coverage/coveragetooutputstream.h"
 
 using namespace std;
@@ -46,28 +48,39 @@ namespace artemis {
 
     void ArtemisApplication::run() {
         artemis::printHeader();
+
         artemis_options->add_artemis_execution_listner(s_list);
         artemis_options->print_presets();
+
         srand(0); //Better way to get random numbers?
+
         generator = artemis_options->create_input_generator();
+
         QObject::connect(generator,SIGNAL(sig_testingDone()),
                          this, SLOT(sl_testingDone()));
+
         generator->start();
     }
 
     void ArtemisApplication::sl_testingDone() {
+        qDebug() << "Artemis: Testing done..." << endl;
+
         if (this->artemis_options->dump_urls()) {
             cout << "The following URLs were encountered:\n";
             generator->urls_collected().print_urls();
         }
+
         cout << "\n\n == Coverage information for execution: \n";
         write_coverage_report(cout, generator->coverage());
+        
         cout << "\n==== Source code loaded ====\n";
         s_list->print_results();
         cout << "\n\n";
+        
         qDebug() << "Artemis terminated on: " << QDateTime::currentDateTime().toString();
         qDebug() << "Build timestamp: " << EXE_BUILD_DATE << endl;
-        delete generator;
+
         app->exit(0);
+
     }
 }

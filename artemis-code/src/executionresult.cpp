@@ -64,6 +64,8 @@ namespace artemis {
     }
 
     void ExecutionResult::newEventListener(QWebElement *elem, QString name) {
+        qDebug() << "newEventListener called" << endl;
+
         Q_CHECK_PTR(elem);
         Q_ASSERT(!final);
         qDebug() << "Artemis got " << name << " event" <<  " tag name: " << elem->tagName();

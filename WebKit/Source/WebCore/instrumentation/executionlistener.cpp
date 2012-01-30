@@ -1,17 +1,20 @@
 #ifdef ARTEMIS
-#include <config.h>
-#include <wtf/text/CString.h>
-#include "executionlistener.h"
-#include "JavaScriptCore/instrumentation/jscexecutionlistener.h"
-#include "JavaScriptCore/parser/SourceCode.h"
-#include <JSValue.h>
-#include <debugger/DebuggerCallFrame.h>
-#include <UString.h>
-#include <dom/EventTarget.h>
-#include "listenerdebugger.h"
-#include <instrumentation/jscriptlistenerclient.h>
-#include <JSObject.h>
+
 #include <iostream>
+#include <config.h>
+#include <JSValue.h>
+#include <JSObject.h>
+#include <UString.h>
+#include <debugger/DebuggerCallFrame.h>
+#include <dom/EventTarget.h>
+#include <wtf/text/CString.h>
+#include "JavaScriptCore/parser/SourceCode.h"
+
+#include "JavaScriptCore/instrumentation/jscexecutionlistener.h"
+#include "WebCore/instrumentation/jscriptlistenerclient.h"
+#include "WebCore/instrumentation/listenerdebugger.h"
+
+#include "executionlistener.h"
 
 namespace inst {
 
@@ -73,33 +76,43 @@ namespace inst {
     }
 
     void setDefaultListener(ExecutionListener* e) {
-        std::cout << "WEBKIT: Execution listener was set" << std::endl;
+        std::cout << "WEBKIT: Execution listener was set..." << std::endl;
         default_listener = e;
     }
 
     ListenerDebugger* getDebugger() {
         if (debugger == NULL) {
-            //debugger = new ListenerDebugger(getDefaultListener());
+            debugger = new ListenerDebugger(getDefaultListener());
         }
         return debugger;
     }
 
-    void ExecutionListener::loadJavaScript(const JSC::SourceCode& sc,JSC::ExecState* es) {
-        JSC::UString ustr(sc.toString());
-        std::string source(ustr.utf8().data());
-        std::string url(sc.provider()->url().utf8().data());
-        intptr_t id = sc.provider()->asID();
-        int fl = sc.firstLine();
-        scriptCodeLoaded(id,source,url,fl);
+    void ExecutionListener::loadJavaScript(JSC::SourceProvider* sp, JSC::ExecState* es) {
+        // SourceProvider has changed API lately, thus the following usage of it has not been fully
+        // tested with artemis - e.g. if you are tracking an error and reach this point, then you
+        // have come to the right place.
+
+        std::string source(sp->getRange(0, sp->length()).utf8().data());
+        std::string url(sp->url().utf8().data());
+        intptr_t id = sp->asID();
+        int fl = 1;
+
+        scriptCodeLoaded(id, source, url, fl);
     }
 
-    void ExecutionListener::scriptCodeLoaded(intptr_t id,std::string source, std::string url ,int startline) {
+    void ExecutionListener::scriptCodeLoaded(intptr_t id, std::string source, std::string url, int startline) {
         std::cout << "el::load from " << url << " [" << startline << "]" << std::endl;
         std::cout << "el::loaded script: " << source << std::endl;
     }
 
     void ExecutionListener::interpreterExecutedStatement(const JSC::DebuggerCallFrame& frame, intptr_t sourceID, int lineNumber) {
-        executedStatement(sourceID, std::string(frame.calculatedFunctionName().ascii().data()), lineNumber);
+        /* std::string(frame.calculatedFunctionName().ascii().data()) */
+        /* FIXME IMPORTANT */
+        executedStatement(sourceID, "fooBar()", lineNumber);
+    }
+
+    void ExecutionListener::interpreterCalledEvent(const JSC::DebuggerCallFrame& frame, intptr_t sourceID, int lineNumber) {
+        std::string functionName = std::string(frame.calculatedFunctionName().ascii().data());
     }
 
     void ExecutionListener::executedStatement(intptr_t sourceID, std::string function_name, int linenumber) {

@@ -76,7 +76,7 @@ namespace artemis {
     private:
         CodeCoverage cov;
         URLCollector urls;
-        ArtemisTopExecutionListener* m_execution_listener;
+        ArtemisTopExecutionListener* execution_listener;
 
     signals:
         void sig_testingDone();

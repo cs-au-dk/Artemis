@@ -8,12 +8,14 @@ namespace artemis {
 
 SourceLoadingListener::SourceLoadingListener()
 {
+    qDebug() << "SLL: CODE INIT" << endl;
     this->src_idx = 0;
     this->file_idx = 0;
     create_dir(".","js-code-dump");
 }
 
 void SourceLoadingListener::code_loaded(QString source, QUrl url, int startline) {
+
     if (this->visisted.contains(get_hash(url,startline)) || is_omit(url)) {
         return;
     }
@@ -22,7 +24,6 @@ void SourceLoadingListener::code_loaded(QString source, QUrl url, int startline)
     size_of_code.insert(get_hash(url,startline), source.toAscii().size());
     QString name = "js" + QString::number(src_idx++) + ".js";
     write_string_to_file("js-code-dump/" + name, source);
-    qDebug() << "!!1 " << name;
     this->rewrite_urls.insert(url.toString(),name);
 }
 
@@ -39,6 +40,7 @@ void SourceLoadingListener::print_results() {
 
 void SourceLoadingListener::loaded_page(const ArtemisWebPage& page, ExecutorState* exe_state)
 {
+
     QWebElementCollection els = page.mainFrame()->findAllElements("script");
     foreach (QWebElement e, els) {
         if (e.hasAttribute("src")) {
