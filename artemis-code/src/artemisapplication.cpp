@@ -70,7 +70,7 @@ namespace artemis {
             generator->urls_collected().print_urls();
         }
 
-        cout << "\n\n == Coverage information for execution: \n";
+        cout << "\n\n === Coverage information for execution === \n";
         write_coverage_report(cout, generator->coverage());
         
         cout << "\n==== Source code loaded ====\n";

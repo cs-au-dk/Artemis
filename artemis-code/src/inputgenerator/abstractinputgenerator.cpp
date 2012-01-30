@@ -114,7 +114,7 @@ namespace artemis {
     }
 
     CodeCoverage AbstractInputGenerator::coverage() {
-        return cov;
+        return executor->coverage();
     }
 
     URLCollector AbstractInputGenerator::urls_collected() {

@@ -30,16 +30,12 @@
 
 namespace artemis {
 
-    CodeCoverage::CodeCoverage(const QMap<int, SourceInfo>& sources, const QMap<int, QMap<int, LineInfo> >& coverage)
+    CodeCoverage::CodeCoverage(const QMap<int, SourceInfo> &sources, const QMap<int, QMap<int, LineInfo> > &coverage)
     {
         m_sources.clear();
         m_coverage.clear();
         m_sources = sources;
         m_coverage = coverage;
-    }
-
-    CodeCoverage::CodeCoverage() {
-
     }
 
     bool CodeCoverage::operator==(const CodeCoverage& other) const {

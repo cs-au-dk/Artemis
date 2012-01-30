@@ -38,7 +38,6 @@ namespace artemis {
     {
     public:
         CodeCoverage(const QMap<int, SourceInfo>& sources, const QMap<int, QMap<int, LineInfo> >& coverage);
-        CodeCoverage();
 
         QSet<int> source_ids() const;
         const SourceInfo source_info(int id) const;
