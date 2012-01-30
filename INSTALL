@@ -10,9 +10,10 @@ higher. If this is not the case, a copy can be downloaded by running
 
    make qhash-patch
 
-1. Double check that qmake is on your path and then build the
+1. Confirm that qmake version 4.8 is on your path and then build the
 instrumented webkit by running
    
+   qmake --version
    make webkit[-minimal]
 
 2. Build artemis!
