@@ -8,19 +8,14 @@ higher. If this is not the case, a copy can be downloaded by running
 
 0. Apply qhash.patch to your Qt Installation by running
 
-   // TO-DO
+   make qhash-patch
 
 1. Double check that qmake is on your path and then build the
 instrumented webkit by running
    
    make webkit[-minimal]
 
-2. Install the newly built QtWebKit port in your existing QT
-installation by running
-
-   make webkit-install-into-qt
-
-3. Build artemis!
+2. Build artemis!
 
    make artemis
 

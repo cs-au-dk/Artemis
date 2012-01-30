@@ -39,10 +39,11 @@ namespace artemis {
 
     bool NumberOfIterationsTermination::should_terminate() {
         i++;
-        printf("Asked to evaluate termination\n");
         if (i >= max_iterations) {
+            printf("DONE!");
             return true;
         } else {
+            printf("ONEMORETIME!");
             return false;
         }
     }
