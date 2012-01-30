@@ -29,16 +29,18 @@
 #define ABSTRACTINPUTGENERATOR_H
 
 #include <QObject>
+#include <QApplication>
+
 #include "abstractinputgenerator.h"
 #include "artemisoptions.h"
 #include "executionresult.h"
 #include <worklist/worklist.h>
 #include "webkitexecutor.h"
 #include "executorstate.h"
-#include <QApplication>
-#include "coverage/codecoverage.h"
 #include "urls/urlcollector.h"
 #include "listeners/artemistopexecutionlistener.h"
+
+#include "coverage/codecoverage.h"
 
 namespace artemis {
 
@@ -74,7 +76,6 @@ namespace artemis {
         void finish_up();
 
     private:
-        CodeCoverage cov;
         URLCollector urls;
         ArtemisTopExecutionListener* execution_listener;
 

@@ -56,15 +56,16 @@ namespace artemis {
 
 
     void CoverageListener::new_code(intptr_t id, QString source, QUrl url, int startline) {
+        qDebug() << "OI!!!";
         if (is_omit(url))
             return;
         int hash = get_hash(url,startline);
         webkit_pointers.insert(id,hash);
         if (!sources.contains(hash)) {
             qDebug() << "Loaded new code: " << url << " at line " << QString::number(startline);
-            SourceInfo* info_p = new SourceInfo(source,url,startline);
-            sources.insert(hash,info_p);
-            coverage.insert(hash,new QMap<int, LineInfo>());
+            SourceInfo* info_p = new SourceInfo(source, url, startline);
+            sources.insert(hash, info_p);
+            coverage.insert(hash, new QMap<int, LineInfo>());
         }
     }
 
