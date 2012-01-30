@@ -15,7 +15,7 @@ help:
 
 webkit:
 	@echo "Building release QtWebKit"
-	./WebKit/Tools/Scripts/build-webkit --qt --qmakearg="DEFINES+=ARTEMIS=1"
+	./WebKit/Tools/Scripts/build-webkit --qt --qmakearg="DEFINES+=ARTEMIS=1" --makearg="-j4" --debug
 
 webkit-minimal:
 	@echo "Build minimal webkit!"
