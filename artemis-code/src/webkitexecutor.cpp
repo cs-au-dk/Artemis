@@ -34,6 +34,7 @@
 #include <QStack>
 #include <QDebug>
 #include <qwebexecutionlistener.h>
+#include <cookies/immutablecookiejar.h>
 #include <instrumentation/executionlistener.h>
 
 #include "events/formfield.h"
@@ -56,6 +57,9 @@ namespace artemis {
 
         webkit_listener = new QWebExecutionListener();
         installWebKitExecutionListener(webkit_listener);
+
+        ImmutableCookieJar *immutable_cookie_jar = new ImmutableCookieJar(options->get_preset_cookies(), options->getURL()->host());
+        ajax_listener.setCookieJar(immutable_cookie_jar);
 
         QObject::connect(webkit_listener, SIGNAL(script_crash(QString, intptr_t, int)),
                          this, SLOT(sl_script_crash(QString, intptr_t, int)));
