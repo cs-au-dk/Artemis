@@ -18,6 +18,10 @@ namespace JSC {
 
 }
 
+namespace JSC {
+    class JSGlobalObject;
+}
+
 namespace inst {
 
     class ListenerDebugger : public JSC::Debugger
@@ -25,7 +29,7 @@ namespace inst {
     public:
         ListenerDebugger(ExecutionListener*);
 
-        void sourceParsed(JSC::ExecState*, const JSC::SourceCode&, int errorLineNumber, const JSC::UString& errorMessage);
+        void sourceParsed(JSC::ExecState*, JSC::SourceProvider*, int errorLineNumber, const JSC::UString& errorMessage);
         void exception(const JSC::DebuggerCallFrame&, intptr_t sourceID, int lineNumber, bool hasHandler);
         void atStatement(const JSC::DebuggerCallFrame&, intptr_t sourceID, int lineNumber);
         void callEvent(const JSC::DebuggerCallFrame&, intptr_t sourceID, int lineNumber);
@@ -34,6 +38,10 @@ namespace inst {
         void willExecuteProgram(const JSC::DebuggerCallFrame&, intptr_t sourceID, int lineNumber);
         void didExecuteProgram(const JSC::DebuggerCallFrame&, intptr_t sourceID, int lineNumber);
         void didReachBreakpoint(const JSC::DebuggerCallFrame&, intptr_t sourceID, int lineNumber);
+
+        ~ListenerDebugger();
+        void detach(JSC::JSGlobalObject*);
+
 
     private:
         ExecutionListener* el;

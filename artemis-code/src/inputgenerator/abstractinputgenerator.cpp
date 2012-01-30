@@ -25,19 +25,21 @@
   authors and should not be interpreted as representing official policies, either expressed
   or implied, of Simon Holm Jensen
 */
+
+#include <iostream>
+
 #include "abstractinputgenerator.h"
 #include "termination/terminationstrategy.h"
-#include <iostream>
 
 using namespace std;
 
 namespace artemis {
 
-    AbstractInputGenerator::AbstractInputGenerator(QObject *parent, ArtemisOptions* options, ArtemisTopExecutionListener* execution_listener) :
+    AbstractInputGenerator::AbstractInputGenerator(QObject *parent, ArtemisOptions* options, ArtemisTopExecutionListener* listener) :
             QObject(parent)
     {
         artemis_options = options;
-        m_execution_listener = execution_listener;
+        execution_listener = listener;
     }
 
     AbstractInputGenerator::~AbstractInputGenerator() {
@@ -49,16 +51,19 @@ namespace artemis {
     }
 
     void AbstractInputGenerator::sl_executorExecutedSequence(ExecutableConfiguration conf, ExecutionResult res) {
-        m_execution_listener->executed(conf,executor->executor_state(),res);
-        executed_sequence(conf,res);
+        
+        execution_listener->executed(conf, executor->executor_state(), res);
+        executed_sequence(conf, res);
+
         //We finished one iteration, should we terminate?
         if (termination->should_terminate()) {
             finish_up();
             return;
-        } else {
-            reprioritize();
-            add_new_configurations(conf,res,wl, executor->executor_state());
         }
+
+        reprioritize();
+        add_new_configurations(conf, res, wl, executor->executor_state());
+
         if (wl->empty()) {
             finish_up();
             return;
@@ -66,7 +71,8 @@ namespace artemis {
 
         //Start next iteration
         ExecutableConfiguration new_conf =  wl->remove();
-        this->m_execution_listener->before_execute(new_conf,this->executor->executor_state());
+        
+        execution_listener->before_execute(new_conf, executor->executor_state());
         executor->executeSequence(new_conf);
     }
 
@@ -77,23 +83,32 @@ namespace artemis {
     }
 
     void AbstractInputGenerator::finish_up() {
-        cov = executor->coverage();
-        m_execution_listener->artemis_finished(executor->executor_state());
-        delete executor;
-        delete wl;
-        delete termination;
+        execution_listener->artemis_finished(executor->executor_state());
+        
+        executor->finish_up();
+
+        //delete executor;
+        //delete wl;
+        //delete termination;
+        
         emit sig_testingDone();
     }
 
     void AbstractInputGenerator::start() {
-        executor =  new WebKitExecutor(this,artemis_options, this->m_execution_listener);
+
         wl = artemis_options->work_list();
         Q_CHECK_PTR(wl);
+
         termination = artemis_options->termination();
         Q_CHECK_PTR(termination);
-        QObject::connect(executor,SIGNAL(sigExecutedSequence(ExecutableConfiguration,ExecutionResult)),
-                         this, SLOT(sl_executorExecutedSequence(ExecutableConfiguration,ExecutionResult)));
+
+        executor = new WebKitExecutor(this, artemis_options, execution_listener);
+
+        QObject::connect(executor, SIGNAL(sigExecutedSequence(ExecutableConfiguration, ExecutionResult)),
+                         this, SLOT(sl_executorExecutedSequence(ExecutableConfiguration, ExecutionResult)));
+        
         artemis_options->get_listner()->artemis_start(*artemis_options->getURL());
+        
         //Start execution of the empty sequence
         executor->executeSequence(artemis_options->initial_configuration());
     }

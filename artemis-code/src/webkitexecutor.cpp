@@ -26,17 +26,20 @@
   or implied, of Simon Holm Jensen
 */
 
-#include "webkitexecutor.h"
-#include "events/formfield.h"
-#include "events/domelementdescriptor.h"
-#include <QtWebKit>
 #include <iostream>
 #include <unistd.h>
+
+#include <QtWebKit>
 #include <QApplication>
 #include <QStack>
 #include <QDebug>
+#include <qwebexecutionlistener.h>
 #include <instrumentation/executionlistener.h>
-#include "qwebexecutionlistener.h"
+
+#include "events/formfield.h"
+#include "events/domelementdescriptor.h"
+
+#include "webkitexecutor.h"
 
 using namespace std;
 
@@ -45,18 +48,32 @@ namespace artemis {
     WebKitExecutor::WebKitExecutor(QObject *parent, ArtemisOptions* options, ArtemisTopExecutionListener* listener) :
             QObject(parent)
     {
-        webkit_listener = new QWebExecutionListener();
-        cov_list = new CoverageListener(this);
-        installWebKitExecutionListener(webkit_listener);
         artemis_options = options;
-        page = 0;
+        execution_listener = listener;
         current_result = 0;
-        this->m_listener = listener;
 
-        /*QObject::connect(webkit_listener, SIGNAL(statementExecuted(intptr_t,std::string,int)),
-                         cov_list, SLOT(statement_executed(intptr_t,std::string,int)));
-        QObject::connect(webkit_listener, SIGNAL(loadedJavaScript(intptr_t,QString,QUrl,int)),
-                         cov_list, SLOT(new_code(intptr_t,QString,QUrl,int)));*/
+        cov_list = new CoverageListener(this);
+
+        webkit_listener = new QWebExecutionListener();
+        installWebKitExecutionListener(webkit_listener);
+
+        QObject::connect(webkit_listener, SIGNAL(script_crash(QString, intptr_t, int)),
+                         this, SLOT(sl_script_crash(QString, intptr_t, int)));
+        QObject::connect(webkit_listener, SIGNAL(ajax_request(QUrl, QString)),
+                         this, SLOT(sl_ajax_request(QUrl, QString))); 
+        QObject::connect(webkit_listener, SIGNAL(loadedJavaScript(intptr_t, QString, QUrl, int)),
+                         this, SLOT(sl_code_loaded(intptr_t, QString, QUrl, int)));
+        QObject::connect(webkit_listener, SIGNAL(loadedJavaScript(intptr_t, QString, QUrl, int)),
+                         cov_list, SLOT(new_code(intptr_t, QString, QUrl, int)));
+        QObject::connect(webkit_listener, SIGNAL(statementExecuted(intptr_t, std::string, int)),
+                         cov_list, SLOT(statement_executed(intptr_t, std::string, int)));
+
+        page = new ArtemisWebPage(this);
+        page->setNetworkAccessManager(&ajax_listener);
+
+        QObject::connect(page, SIGNAL(loadFinished(bool)),
+                         this, SLOT(sl_loadFinished(bool)));
+
     }
 
     WebKitExecutor::~WebKitExecutor() {
@@ -66,19 +83,24 @@ namespace artemis {
         delete cov_list;
     }
 
-    void WebKitExecutor::slloadFinished(bool ok) {
+    void WebKitExecutor::sl_loadFinished(bool ok) {
+
         if (!ok) {
             qDebug() << "WEBKIT: Website load failed!";
+            
             current_result->make_load_failed();
             finished_sequence();
+            
             exit(1);
             return;
         }
-        this->m_listener->loaded_page(*page, this->executor_state());
+
         qDebug() << "WEBKIT: Finished loading" << endl;
+
+        execution_listener->loaded_page(*page, this->executor_state());
+
         setup_initial();
         do_exe();
-        //executed sequence
         finished_sequence();
     }
 
@@ -104,6 +126,7 @@ namespace artemis {
 
     void WebKitExecutor::do_exe() {
         EventSequence seq = current_conf->get_eventsequence();
+        
         foreach (EventDescriptor ed, seq.to_list()) {
             QWebElement target = ed.handler_descriptor().dom_element().get_element(page);
             qDebug() << "Element: " << target.tagName();
@@ -124,10 +147,8 @@ namespace artemis {
         save_dom_state();
 
         current_result->finalize();
-        ExecutionResult res = *current_result;
 
-        emit sigExecutedSequence(*current_conf,res);
-       // this->current_result = 0;
+        emit sigExecutedSequence(*current_conf, *current_result);
     }
 
     void WebKitExecutor::get_links() {
@@ -203,54 +224,52 @@ namespace artemis {
         return res;
     }
 
-    void WebKitExecutor::executeSequence(ExecutableConfiguration& conf) {
+    void WebKitExecutor::finish_up() {
         if (current_result != 0) {
-            //Disconnect old result
+            qDebug() << "Removing old result" << endl;
+            
             current_result->disconnect();
-            webkit_listener->disconnect();
-            QObject::connect(webkit_listener, SIGNAL(statementExecuted(intptr_t,std::string,int)),
-                             cov_list, SLOT(statement_executed(intptr_t,std::string,int)));
-            QObject::connect(webkit_listener, SIGNAL(loadedJavaScript(intptr_t,QString,QUrl,int)),
-                             cov_list, SLOT(new_code(intptr_t,QString,QUrl,int)));
-            QObject::connect(webkit_listener, SIGNAL(loadedJavaScript(intptr_t,QString,QUrl,int)),
-                             this, SLOT(sl_code_loaded(intptr_t,QString,QUrl,int)));
-            //cov_list->disconnect();
-            page->disconnect();
+
+            delete current_conf;
+            delete current_result;
+        }
+    }
+
+    void WebKitExecutor::executeSequence(ExecutableConfiguration& conf) {
+        qDebug() << "Artemis: Executing sequence" << endl;
+
+        if (current_result != 0) {
+            qDebug() << "Removing old result" << endl;
+            
+            current_result->disconnect();
+
             delete current_conf;
             delete current_result;
         }
 
         current_result = new ExecutionResult(0);
         current_conf = new ExecutableConfiguration(conf);
-        if (page != 0)
-            delete page;
-        page = new ArtemisWebPage(this);
-        page->setNetworkAccessManager(&ajax_listener);
-        installWebKitExecutionListener(webkit_listener);
-        QObject::connect(page, SIGNAL(loadFinished(bool)),
-                         this, SLOT(slloadFinished(bool)));
+
         QObject::connect(webkit_listener, SIGNAL(addedEventListener(QWebElement*,QString)),
-                         current_result, SLOT(newEventListener(QWebElement*,QString)));
+                            current_result, SLOT(newEventListener(QWebElement*,QString)));
         QObject::connect(webkit_listener, SIGNAL(removedEventListener(QWebElement*,QString)),
-                         current_result, SLOT(removeEventListener(QWebElement*,QString)));
+                            current_result, SLOT(removeEventListener(QWebElement*,QString)));
         QObject::connect(webkit_listener, SIGNAL(script_crash(QString,intptr_t,int)),
-                         current_result, SLOT(sl_script_crash(QString,intptr_t,int)));
+                            current_result, SLOT(sl_script_crash(QString,intptr_t,int)));
         QObject::connect(webkit_listener, SIGNAL(eval_call(QString)),
-                         current_result, SLOT(sl_eval_string(QString)));
-        QObject::connect(webkit_listener, SIGNAL(script_crash(QString,intptr_t,int)),
-                         this, SLOT(sl_script_crash(QString,intptr_t,int)));
-        QObject::connect(webkit_listener, SIGNAL(ajax_request(QUrl,QString)),
-                         this, SLOT(sl_ajax_request(QUrl,QString)));
-        //Listen for window.location changes.
+                            current_result, SLOT(sl_eval_string(QString)));
         QObject::connect(webkit_listener, SIGNAL(script_url_load(QUrl)),
-                         current_result, SLOT(add_url(QUrl)));
-       //Set signal on all subframes:
+                            current_result, SLOT(add_url(QUrl)));
+        
+        //Set signal on all subframes:
         QStack<QWebFrame*> work;
-        work.push( page->mainFrame());
+        work.push(page->mainFrame());
         while (!work.isEmpty()) {
             QWebFrame* curr_f = work.pop();
+
             QObject::connect(curr_f, SIGNAL(urlChanged(QUrl)),
                              current_result, SLOT(add_url(QUrl)));
+
             foreach (QWebFrame* sub_f, curr_f->childFrames()) {
                 work.push(sub_f);
             }
@@ -259,7 +278,6 @@ namespace artemis {
         //Load URL into WebKit
         qDebug() << "Trying to load: " << artemis_options->getURL()->toString() << endl;
         page->mainFrame()->load(*artemis_options->getURL());
-        //page->e
     }
 
     ExecutorState* WebKitExecutor::executor_state() {
@@ -271,7 +289,7 @@ namespace artemis {
     }
 
     void WebKitExecutor::sl_script_crash(QString ca, intptr_t id, int n) {
-        this->m_listener->script_crash(ca, executor_state());
+        this->execution_listener->script_crash(ca, executor_state());
     }
 
     void WebKitExecutor::sl_ajax_request(QUrl u, QString post_data) {
@@ -281,11 +299,12 @@ namespace artemis {
     }
 
     void WebKitExecutor::sl_eval_called(QString eval_text) {
-        this->m_listener->eval_called(eval_text, executor_state());
+        execution_listener->eval_called(eval_text, executor_state());
         qDebug() << "Dynamic code eval: " << eval_text;
     }
 
-    void WebKitExecutor::sl_code_loaded(intptr_t _,QString src,QUrl url ,int li) {
-        this->m_listener->code_loaded(src,url,li);
+    void WebKitExecutor::sl_code_loaded(intptr_t _, QString src, QUrl url, int li) {
+        qDebug() << "WebKitExecutor::sl_code_loaded" << endl;
+        execution_listener->code_loaded(src, url, li);
     }
 }

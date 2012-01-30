@@ -55,6 +55,7 @@ namespace artemis {
         QWebExecutionListener* webkit_listener;
         ExecutorState* executor_state();
         CodeCoverage coverage();
+        void finish_up();
 
     private:
         void setup();
@@ -66,6 +67,7 @@ namespace artemis {
         void do_exe();
         void setup_initial();
         void save_dom_state();
+
         ArtemisOptions* artemis_options;
         ArtemisWebPage* page;
         ExecutionResult* current_result;
@@ -73,19 +75,18 @@ namespace artemis {
         ExecutorState state;
         CoverageListener* cov_list;
         QString initial_page_state;
-        ArtemisTopExecutionListener* m_listener;
-        //QNetworkAccessManager* net_man;
+        ArtemisTopExecutionListener* execution_listener;
         AjaxRequestListener ajax_listener;
 
     signals:
         void sigExecutedSequence(ExecutableConfiguration conf, ExecutionResult res);
 
     public slots:
-        void slloadFinished ( bool ok );
-        void sl_script_crash(QString,intptr_t,int);
+        void sl_loadFinished(bool ok);
+        void sl_script_crash(QString, intptr_t, int);
         void sl_ajax_request(QUrl, QString post_data);
         void sl_eval_called(QString eval_text);
-        void sl_code_loaded(intptr_t,QString,QUrl,int);
+        void sl_code_loaded(intptr_t, QString,QUrl,int);
     };
 
 }

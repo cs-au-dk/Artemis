@@ -56,7 +56,7 @@ def execute_artemis(fixture_name, emit_output=False):
         os.mkdir(output_dir)
     except OSError:
         pass
-
+    
     output = subprocess.check_output([ARTEMIS_EXEC, url],
                                              cwd=output_dir)
 
@@ -115,7 +115,7 @@ def update_fixture(fixture_name):
     shutil.copytree(output_dir, result_dir)
 
 def run_fixture(fixture_name):
-    execute_artemis(fixture_name)
+    execute_artemis(fixture_name, emit_output=True)
 
 def fixture_discovery():
     fixture_dir = os.path.join(THIS_DIR, 'fixtures')
@@ -128,8 +128,8 @@ commands = {'run': run_fixture,
 
 if __name__ == '__main__':
 
-    if len(sys.argv) == 1 or (sys.argv[1] not in ('test', 'update')):
-        print 'usage: python %s test|update|run [fixture]'
+    if len(sys.argv) == 1 or (sys.argv[1] not in commands.keys()):
+        print 'usage: python %s test|update|run [fixture]' % sys.argv[0]
         sys.exit(1)
 
     if len(sys.argv) > 2:
@@ -138,7 +138,7 @@ if __name__ == '__main__':
         fixtures = fixture_discovery()
 
     try:
-        command = commands[argv[1]]
+        command = commands[sys.argv[1]]
     except KeyError:
         print 'Unknown command'
         sys.exit(1)
