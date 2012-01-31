@@ -40,21 +40,6 @@ void SourceLoadingListener::print_results() {
 
 void SourceLoadingListener::loaded_page(const ArtemisWebPage& page, ExecutorState* exe_state)
 {
-
-    QWebElementCollection els = page.mainFrame()->findAllElements("script");
-    foreach (QWebElement e, els) {
-        if (e.hasAttribute("src")) {
-             e.setAttribute("src", "COCKMASTER");
-            QString url = e.attribute("src");
-            if (this->rewrite_urls.contains(url)) {
-                e.setAttribute("src", this->rewrite_urls[url]);
-                qDebug() << "SUCESS: visited url " << url << " FUCK!!!! " << this->rewrite_urls[url] << " FUCK2 " << e.toOuterXml();
-            } else {
-                qDebug() << "WARNING: Unvisited url " << url;
-            }
-        }
-    }
-
     write_string_to_file("js-code-dump/pagestate" + QString::number(this->file_idx++) + ".html", page.mainFrame()->toHtml());
 }
 
