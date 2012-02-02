@@ -50,7 +50,7 @@ ArtemisOptions* parseCmd(int argc, char *argv[]) {
     ArtemisOptions* res = new ArtemisOptions;
     int c;
     int index;
-    while ((c = getopt (argc, argv, "rp:uf:")) != -1) {
+    while ((c = getopt (argc, argv, "rp:uf:t:c:i:")) != -1) {
         switch (c) {
         case 'f':
             res->parse_and_add_option_string(QString(optarg));
@@ -58,17 +58,24 @@ ArtemisOptions* parseCmd(int argc, char *argv[]) {
         case 'u':
             res->set_dump_urls(true);
             break;
-        case 'p': {
-            QDir ld = QDir(QString(optarg));
-            res->dump_page_states(ld.absolutePath());
+        case 'p':
+            {
+                QDir ld = QDir(QString(optarg));
+                res->dump_page_states(ld.absolutePath());
+            }
             break;
-        }
-        case 's' : {
-
-            break;
-        }
         case 'r':
             res->set_recreate_page(true);
+            break;
+        case 't':
+            res->set_proxy(QString(optarg));
+            break;
+        case 'c':
+            res->set_preset_cookie(optarg);
+            break;
+        case 'i':
+            printf("Encountered i!");
+            res->set_number_of_iterations(QString(optarg));
             break;
         }
     }

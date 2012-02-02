@@ -33,6 +33,7 @@
 #include "termination/numberofiterationstermination.h"
 #include "events/eventhandlerdescriptor.h"
 #include  <QUrl>
+#include <QNetworkProxy>
 #include "priortizer/constantprioritizer.h"
 #include "listeners/domstatesaverlistener.h"
 #include "listeners/pagerecreatelistner.h"
@@ -47,6 +48,7 @@ namespace artemis {
         initial_conf = NULL;
         m_multi = new MultiplexListener(0);
         this->pri = 0;
+        m_number_of_iterations = 4;
     }
 
     void ArtemisOptions::setURL(QUrl* url) {
@@ -78,7 +80,7 @@ namespace artemis {
     }
 
     TerminationStrategy* ArtemisOptions::termination() {
-        return new NumberOfIterationsTermination(2);
+        return new NumberOfIterationsTermination(m_number_of_iterations);
     }
 
     ExecutableConfiguration& ArtemisOptions::initial_configuration() {
@@ -129,8 +131,14 @@ namespace artemis {
 
     void ArtemisOptions::print_presets() {
         qDebug() << "Preset form fields (id -> value map)";
-        foreach (QString id, this->preset_formfields) {
+        foreach (QString id, this->preset_formfields.keys()) {
             qDebug() << "  " << id << " : " << preset_formfields[id] ;
+        }
+        qDebug() << "";
+
+        qDebug() << "Preset cookies (id -> value map)";
+        foreach (QString id, m_preset_cookies.keys()) {
+            qDebug() << "  " << id << " : " << m_preset_cookies[id];
         }
         qDebug() << "";
     }
@@ -160,5 +168,25 @@ namespace artemis {
         return this->m_recreate_page;
     }
 
+    void ArtemisOptions::set_proxy(QString s) {
+        m_proxy_address = s;
+        QStringList parts = s.split(QString(":"));
+
+        QNetworkProxy proxy(QNetworkProxy::HttpProxy, parts.at(0), parts.at(1).toShort());
+        QNetworkProxy::setApplicationProxy(proxy);
+    }
+
+    void ArtemisOptions::set_preset_cookie(QString s) {
+        QStringList parts = s.split(QString("="));
+        m_preset_cookies.insert(parts.at(0), parts.at(1));
+    }
+
+    QMap<QString, QString> ArtemisOptions::get_preset_cookies() {
+        return m_preset_cookies;
+    }
+
+    void ArtemisOptions::set_number_of_iterations(QString iterations) {
+        m_number_of_iterations = iterations.toInt();
+    }
 
 }

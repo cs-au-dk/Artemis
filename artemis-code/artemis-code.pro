@@ -69,7 +69,8 @@ HEADERS += src/webkitexecutor.h \
     src/ajax/ajaxrequestlistener.h \
     src/ajax/ajaxrequest.h \
     src/listeners/pagerecreatelistner.h \
-    src/listeners/sourceloadinglistener.h
+    src/listeners/sourceloadinglistener.h \
+    src/cookies/immutablecookiejar.h
 SOURCES += src/webkitexecutor.cpp \
     src/executionresult.cpp \
     src/executableconfiguration.cpp \
@@ -120,6 +121,9 @@ SOURCES += src/webkitexecutor.cpp \
     src/ajax/ajaxrequestlistener.cpp \
     src/ajax/ajaxrequest.cpp \
     src/listeners/pagerecreatelistner.cpp \
-    src/listeners/sourceloadinglistener.cpp
+    src/listeners/sourceloadinglistener.cpp \
+    src/cookies/immutablecookiejar.cpp
 
  QT += network
+
+
