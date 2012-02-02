@@ -27,7 +27,7 @@
 */
 #include "numberofiterationstermination.h"
 
-
+#include <stdio.h>
 
 namespace artemis {
 
@@ -39,9 +39,11 @@ namespace artemis {
 
     bool NumberOfIterationsTermination::should_terminate() {
         i++;
-        if (i >= max_iterations)
+        if (i >= max_iterations) {
             return true;
-        return false;
+        } else {
+            return false;
+        }
     }
 
     QString NumberOfIterationsTermination::reason() {

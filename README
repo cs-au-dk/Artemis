@@ -9,3 +9,24 @@ For more information, see http://brics.dk/artemis/
 
 Contained in this repository is, besides the source for the tool, an
 instrumented version of the WebKit code-base.
+
+Usage:
+
+	artemis [-i <n>][-c <URL>][-t <URL>][-r][-u][-p <path>] <url>
+
+   Test the JavaScript application found at <url>.
+
+   -i <n>  : Iterations - Artemis will generate and execute <n>
+      	     sequences of events. Default is 4.
+
+   -c <URl>: Cookies - // TODO
+
+   -t <URL>: Proxy - // TODO
+
+   -r      : set_recreate_page(true) // TODO
+
+   -u 	   : set_dump_urls(true) // TODO
+
+   -p	   : dump_page_states(<path>) // TODO
+
+   
