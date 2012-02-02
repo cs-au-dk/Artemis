@@ -10,7 +10,7 @@ For more information, see http://brics.dk/artemis/
 Contained in this repository is, besides the source for the tool, an
 instrumented version of the WebKit code-base.
 
-   Usage:
+Usage:
 
 	artemis [-i <n>][-c <URL>][-t <URL>][-r][-u][-p <path>] <url>
 

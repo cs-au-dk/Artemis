@@ -57,7 +57,7 @@ def execute_artemis(fixture_name, emit_output=False):
     except OSError:
         pass
     
-    output = subprocess.check_output([ARTEMIS_EXEC, url],
+    output = subprocess.check_output([ARTEMIS_EXEC, "-i 3",url],
                                              cwd=output_dir)
 
     if emit_output:

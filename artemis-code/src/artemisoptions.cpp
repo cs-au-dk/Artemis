@@ -48,7 +48,7 @@ namespace artemis {
         initial_conf = NULL;
         m_multi = new MultiplexListener(0);
         this->pri = 0;
-        m_number_of_iterations = 8;
+        m_number_of_iterations = 4;
     }
 
     void ArtemisOptions::setURL(QUrl* url) {
