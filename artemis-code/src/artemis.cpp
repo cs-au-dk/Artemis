@@ -50,7 +50,7 @@ ArtemisOptions* parseCmd(int argc, char *argv[]) {
     ArtemisOptions* res = new ArtemisOptions;
     int c;
     int index;
-    while ((c = getopt (argc, argv, "rp:uf:t:c:i")) != -1) {
+    while ((c = getopt (argc, argv, "rp:uf:t:c:i:")) != -1) {
         switch (c) {
         case 'f':
             res->parse_and_add_option_string(QString(optarg));
@@ -74,7 +74,9 @@ ArtemisOptions* parseCmd(int argc, char *argv[]) {
             res->set_preset_cookie(optarg);
             break;
         case 'i':
-            res->set_number_of_iterations(optarg);
+            printf("Encountered i!");
+            res->set_number_of_iterations(QString(optarg));
+            break;
         }
     }
 

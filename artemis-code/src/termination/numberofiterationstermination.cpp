@@ -40,10 +40,8 @@ namespace artemis {
     bool NumberOfIterationsTermination::should_terminate() {
         i++;
         if (i >= max_iterations) {
-            printf("DONE!");
             return true;
         } else {
-            printf("ONEMORETIME!");
             return false;
         }
     }
