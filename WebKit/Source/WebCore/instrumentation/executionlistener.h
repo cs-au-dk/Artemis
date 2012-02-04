@@ -1,8 +1,9 @@
 #ifdef ARTEMIS
-#ifndef EXECUTIONLISTENER_H
-#define EXECUTIONLISTENER_H
 
 #include <string>
+
+#ifndef EXECUTIONLISTENER_H
+#define EXECUTIONLISTENER_H
 
 namespace WebCore {
     class EventTarget;
@@ -14,9 +15,9 @@ namespace WebCore {
 namespace JSC {
     class Debugger;
     class SourceProvider;
-    class ExecState;
-    class DebuggerCallFrame;
+    struct DebuggerCallFrame;
     class JSValue;
+    class ExecState;
 }
 
 namespace inst {
@@ -49,8 +50,14 @@ namespace inst {
           Coverage information
           */
         void interpreterExecutedStatement(const JSC::DebuggerCallFrame&, intptr_t sourceID, int lineNumber);
-        void interpreterCalledEvent(const JSC::DebuggerCallFrame&, intptr_t sourceID, int lineNumber);
         virtual void executedStatement(intptr_t sourceID, std::string function_name, int linenumber);
+
+
+        /** 
+          Function calls
+          */
+        void interpreterCalledEvent(const JSC::DebuggerCallFrame&, intptr_t sourceID, int lineNumber);
+        virtual void calledFunction(const JSC::DebuggerCallFrame&);
 
         /**
           Exception

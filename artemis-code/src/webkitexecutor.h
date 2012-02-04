@@ -25,20 +25,21 @@
   authors and should not be interpreted as representing official policies, either expressed
   or implied, of Simon Holm Jensen
 */
+
 #ifndef WEBKITEXECUTOR_H
 #define WEBKITEXECUTOR_H
 
 #include <QObject>
-
-#include "artemisglobals.h"
-#include "executionresult.h"
-#include "executableconfiguration.h"
+#include <QSemaphore>
 #include <QtWebKit>
 #include <QtWebKit/qwebexecutionlistener.h>
+
 #include "artemisoptions.h"
-#include <QSemaphore>
+#include "artemisglobals.h"
+#include "executionresult.h"
 #include "executorstate.h"
 #include "artemiswebpage.h"
+#include "executableconfiguration.h"
 #include "coverage/coveragelistener.h"
 #include "listeners/artemistopexecutionlistener.h"
 #include "ajax/ajaxrequestlistener.h"
@@ -86,7 +87,7 @@ namespace artemis {
         void sl_script_crash(QString, intptr_t, int);
         void sl_ajax_request(QUrl, QString post_data);
         void sl_eval_called(QString eval_text);
-        void sl_code_loaded(intptr_t, QString,QUrl,int);
+        void sl_code_loaded(intptr_t, QString, QUrl, int);
     };
 
 }

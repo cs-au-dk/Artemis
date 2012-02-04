@@ -45,6 +45,8 @@ HEADERS += src/webkitexecutor.h \
     src/events/baseeventparameters.h \
     src/events/mouseeventparameters.h \
     src/events/keyboardeventparameters.h \
+    src/events/targets/suggestions.h \
+    src/events/targets/libraries/jquery.h \
     src/executorstate.h \
     src/variants/randomvariants.h \
     src/variants/variantsgenerator.h \
@@ -82,6 +84,8 @@ SOURCES += src/webkitexecutor.cpp \
     src/listeners/afterexecutionlistener.cpp \
     src/events/eventsequence.cpp \
     src/events/forminput.cpp \
+    src/events/targets/suggestions.cpp \
+    src/events/targets/libraries/jquery.cpp \
     src/worklist/worklist.cpp \
     src/worklist/deterministicworklist.cpp \
     src/termination/terminationstrategy.cpp \
