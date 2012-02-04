@@ -1,9 +1,15 @@
 
 #include <config.h>
-#include "qwebexecutionlistener.h"
 #include <DOMWindow.h>
-#include <QUrl>
 #include <QString>
+#include <iostream>
+#include "wtf/text/CString.h"
+
+#include "JavaScriptCore/debugger/DebuggerCallFrame.h"
+#include "JavaScriptCore/interpreter/Register.h"
+#include "JavaScriptCore/runtime/JSObject.h"
+
+#include "qwebexecutionlistener.h"
 
 using namespace std;
 
@@ -35,6 +41,18 @@ void QWebExecutionListener::scriptCodeLoaded(intptr_t id, std::string source, st
 
 void QWebExecutionListener::executedStatement(intptr_t sourceID, std::string function_name, int linenumber) {
     emit statementExecuted(sourceID, function_name, linenumber);
+}
+
+void QWebExecutionListener::calledFunction(const JSC::DebuggerCallFrame& frame) {
+
+    std::string functionName = std::string(frame.calculatedFunctionName().ascii().data());
+    /*
+    JSC::CallFrame * cframe = frame.callFrame();
+*/
+
+    /* JQuery SUPPORT */
+    cout << "qwebel::calledFunction: " << functionName << endl;
+    emit jqueryEventAdded(/*element, (QString)1, (QString)NULL*/);
 }
 
 void QWebExecutionListener::exceptional_condition(std::string cause, intptr_t sourceID, int lineNumber) {

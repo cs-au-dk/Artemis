@@ -1,18 +1,23 @@
 #ifdef ARTEMIS
 
+#include <stdlib.h>
 #include <iostream>
 #include <config.h>
 #include <JSValue.h>
 #include <JSObject.h>
 #include <UString.h>
-#include <debugger/DebuggerCallFrame.h>
 #include <dom/EventTarget.h>
 #include <wtf/text/CString.h>
 #include "JavaScriptCore/parser/SourceCode.h"
 
+#include "JavaScriptCore/debugger/DebuggerCallFrame.h"
+#include "JavaScriptCore/interpreter/CallFrame.h"
 #include "JavaScriptCore/instrumentation/jscexecutionlistener.h"
 #include "WebCore/instrumentation/jscriptlistenerclient.h"
 #include "WebCore/instrumentation/listenerdebugger.h"
+#include "JavaScriptCore/runtime/Identifier.h"
+#include "JavaScriptCore/runtime/ScopeChain.h"
+#include "JavaScriptCore/interpreter/Register.h"
 
 #include "executionlistener.h"
 
@@ -111,12 +116,32 @@ namespace inst {
         executedStatement(sourceID, "fooBar()", lineNumber);
     }
 
-    void ExecutionListener::interpreterCalledEvent(const JSC::DebuggerCallFrame& frame, intptr_t sourceID, int lineNumber) {
-        std::string functionName = std::string(frame.calculatedFunctionName().ascii().data());
-    }
-
     void ExecutionListener::executedStatement(intptr_t sourceID, std::string function_name, int linenumber) {
         //EMPTY
+    }
+
+    void ExecutionListener::interpreterCalledEvent(const JSC::DebuggerCallFrame& frame, intptr_t sourceID, int lineNumber) {
+        std::cout << "el::interpreterCalledEvent" << std::endl;
+        calledFunction(frame);
+
+        JSC::CallFrame * cframe = frame.callFrame();
+
+        /* JQuery SUPPORT */
+        /*JSC::JSGlobalData * globalData = &cframe->globalData();*/
+   
+        JSC::IdentifierTable * identifierTable = cframe->globalData().identifierTable;
+        JSC::LiteralIdentifierTable literalIdentifierTable = identifierTable->literalTable();
+
+        const JSC::LiteralIdentifierTable::iterator& iter = literalIdentifierTable.find("omgtest");
+        if (iter != literalIdentifierTable.end()) {
+            std::cout << "el::JQUERY SCRIPT DETECTED!!!!!" << std::endl;
+        } else { 
+            std::cout << "el::not JQuery script" << std::endl;
+        }
+    }
+
+    void ExecutionListener::calledFunction(const JSC::DebuggerCallFrame&) {
+        // EMPTY
     }
 
     void ExecutionListener::exceptional_condition(std::string cause, intptr_t sourceID, int lineNumber) {
