@@ -2,6 +2,7 @@
 #include <config.h>
 #include <DOMWindow.h>
 #include <QString>
+#include <iostream>
 #include "wtf/text/CString.h"
 
 #include "JavaScriptCore/debugger/DebuggerCallFrame.h"
@@ -43,11 +44,14 @@ void QWebExecutionListener::executedStatement(intptr_t sourceID, std::string fun
 }
 
 void QWebExecutionListener::calledFunction(const JSC::DebuggerCallFrame& frame) {
-/*
+
     std::string functionName = std::string(frame.calculatedFunctionName().ascii().data());
+    /*
     JSC::CallFrame * cframe = frame.callFrame();
 */
 
+    /* JQuery SUPPORT */
+    cout << "qwebel::calledFunction: " << functionName << endl;
     emit jqueryEventAdded(/*element, (QString)1, (QString)NULL*/);
 }
 
