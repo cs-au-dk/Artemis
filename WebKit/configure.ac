@@ -103,7 +103,7 @@ fi
 # cleanly with that.
 AC_LANG_PUSH(C++)
 TMPCXXFLAGS=$CXXFLAGS
-CXXFLAGS="-Wall -Werror"
+CXXFLAGS="-Wall "
 AC_MSG_CHECKING([if we have to disable C++0x compat warnings for GCC >= 4.6.0])
 AC_TRY_COMPILE([
 namespace std {
