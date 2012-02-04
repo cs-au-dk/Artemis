@@ -39,6 +39,7 @@
 
 #include "events/formfield.h"
 #include "events/domelementdescriptor.h"
+#include "events/targets/libraries/jquery.h"
 
 #include "webkitexecutor.h"
 
@@ -53,6 +54,8 @@ namespace artemis {
         execution_listener = listener;
         current_result = 0;
 
+        JQuery * jquery = new JQuery();
+
         cov_list = new CoverageListener(this);
 
         webkit_listener = new QWebExecutionListener();
@@ -64,13 +67,19 @@ namespace artemis {
         QObject::connect(webkit_listener, SIGNAL(script_crash(QString, intptr_t, int)),
                          this, SLOT(sl_script_crash(QString, intptr_t, int)));
         QObject::connect(webkit_listener, SIGNAL(ajax_request(QUrl, QString)),
-                         this, SLOT(sl_ajax_request(QUrl, QString))); 
+                         this, SLOT(sl_ajax_request(QUrl, QString)));
         QObject::connect(webkit_listener, SIGNAL(loadedJavaScript(intptr_t, QString, QUrl, int)),
                          this, SLOT(sl_code_loaded(intptr_t, QString, QUrl, int)));
+        /*QWebElement, QString, QString*/
+        QObject::connect(webkit_listener, SIGNAL(jqueryEventAdded()),
+                         jquery, SLOT(sl_event_added()));
+        
+
         QObject::connect(webkit_listener, SIGNAL(loadedJavaScript(intptr_t, QString, QUrl, int)),
                          cov_list, SLOT(new_code(intptr_t, QString, QUrl, int)));
         QObject::connect(webkit_listener, SIGNAL(statementExecuted(intptr_t, std::string, int)),
                          cov_list, SLOT(statement_executed(intptr_t, std::string, int)));
+
 
         page = new ArtemisWebPage(this);
         page->setNetworkAccessManager(&ajax_listener);
@@ -264,7 +273,11 @@ namespace artemis {
                             current_result, SLOT(sl_eval_string(QString)));
         QObject::connect(webkit_listener, SIGNAL(script_url_load(QUrl)),
                             current_result, SLOT(add_url(QUrl)));
-        
+
+        //Load URL into WebKit
+        qDebug() << "Trying to load: " << artemis_options->getURL()->toString() << endl;
+        page->mainFrame()->load(*artemis_options->getURL());
+
         //Set signal on all subframes:
         QStack<QWebFrame*> work;
         work.push(page->mainFrame());
@@ -278,10 +291,6 @@ namespace artemis {
                 work.push(sub_f);
             }
         }
-
-        //Load URL into WebKit
-        qDebug() << "Trying to load: " << artemis_options->getURL()->toString() << endl;
-        page->mainFrame()->load(*artemis_options->getURL());
     }
 
     ExecutorState* WebKitExecutor::executor_state() {

@@ -33,3 +33,13 @@ $(function() {
     $("#result-mergesort").after("<h3>Insertion-sort</h3><button class=\"do-sort\" id=\"do-insertionsort\">Sort!</button> > <span id=\"result-insertionsort\" style=\"border: 1px solid #000000;\"></span>");
 
 });
+
+var omgtest = 1;
+
+function omgomgtest() {
+
+    var omgtest = 2;
+
+}
+
+omgomgtest();

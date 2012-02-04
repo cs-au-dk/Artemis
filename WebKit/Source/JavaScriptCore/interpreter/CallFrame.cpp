@@ -61,7 +61,7 @@ bool CallFrame::isInlineCallFrameSlow()
     JSFunction* calleeAsFunction = asFunction(calleeAsFunctionCell);
     return calleeAsFunction->executable() != codeBlock()->ownerExecutable();
 }
-        
+ 
 CallFrame* CallFrame::trueCallerFrame()
 {
     // this -> The callee; this is either an inlined callee in which case it already has
