@@ -33,17 +33,19 @@
 #include "eventhandlerdescriptor.h"
 #include "domelementdescriptor.h"
 #include "eventparameters.h"
+#include "inputgenerator/targets/targetdescriptor.h"
 
 namespace artemis {
 
     class EventDescriptor
     {
     public:
-        EventDescriptor(EventHandlerDescriptor &handler, FormInput &forms_state, EventParameters* params);
+        EventDescriptor(EventHandlerDescriptor &handler, FormInput &forms_state, EventParameters* params, TargetDescriptor* target);
         EventDescriptor(const EventDescriptor& other);
         ~EventDescriptor();
 
         EventHandlerDescriptor handler_descriptor();
+        TargetDescriptor* target();
         FormInput form_input();
         EventParameters* event_params();
 
@@ -57,6 +59,7 @@ namespace artemis {
         EventHandlerDescriptor* event_handler;
         FormInput* m_form_input;
         EventParameters* evt_params;
+        TargetDescriptor* m_target;
     };
 
 }

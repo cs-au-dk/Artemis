@@ -28,19 +28,21 @@
 #include "eventdescriptor.h"
 
 namespace artemis {
-    EventDescriptor::EventDescriptor(EventHandlerDescriptor &handler, FormInput &forms_state, EventParameters* params)
+    EventDescriptor::EventDescriptor(EventHandlerDescriptor &handler, FormInput &forms_state, EventParameters* params, TargetDescriptor* target)
     {
         Q_CHECK_PTR(params);
 
         this->event_handler = new EventHandlerDescriptor(handler);
         this->m_form_input = new FormInput(forms_state);
         this->evt_params = clone_eventparams(params);
+        this->m_target = target;
     }
 
     EventDescriptor::EventDescriptor(const EventDescriptor &other) {
         this->event_handler = new EventHandlerDescriptor(*other.event_handler);
         this->m_form_input = new FormInput(*other.m_form_input);
         this->evt_params = clone_eventparams(other.evt_params);
+        this->m_target = other.m_target;
     }
 
     EventDescriptor& EventDescriptor::operator=(const EventDescriptor &other) {
@@ -50,6 +52,10 @@ namespace artemis {
         this->m_form_input = new FormInput(*other.m_form_input);
         delete this->evt_params;
         this->evt_params = clone_eventparams(other.evt_params);
+        /* TODO TargetDescriptor Copy constructor */
+        /*delete this->m_target;
+        this->m_target = new TargetDescriptor(*other.m_target);*/
+        this->m_target = other.m_target;
         return *this;
     }
 
@@ -57,6 +63,13 @@ namespace artemis {
         delete this->event_handler;
         delete this->m_form_input;
         delete this->evt_params;
+
+        /* TODO TargetDescriptor Copy constructor */
+        /*delete this->m_target;*/
+    }
+
+    TargetDescriptor* EventDescriptor::target() {
+        return m_target;
     }
 
     EventHandlerDescriptor EventDescriptor::handler_descriptor() {
@@ -71,13 +84,12 @@ namespace artemis {
         return evt_params;
     }
 
-
     bool EventDescriptor::operator==(const EventDescriptor& other) const {
         return (*event_handler == *other.event_handler) && (*other.m_form_input == *m_form_input) && (*other.evt_params == *evt_params);
     }
 
     QDebug  operator<<(QDebug dbg, const EventDescriptor &e) {
-       dbg.nospace() << "{" << *e.event_handler << "," << *e.m_form_input << "," << *e.evt_params <<  "}";
+       dbg.nospace() << "{" << *e.event_handler << "," << *e.m_form_input << "," << *e.evt_params << "}";
        return dbg.space();
     }
 

@@ -30,11 +30,16 @@
 
 #include <QString>
 #include <QSet>
+#include <QWebElement>
 
 namespace artemis {
     QString generate_random_string(int length);
     bool random_bool();
+
+    QWebElement pick_rand(QList<QWebElement> s);
+    QString pick_rand(QList<QString> s);
     QString pick_rand(QSet<QString> s);
+
     QString generate_random_js_id();
 
 }

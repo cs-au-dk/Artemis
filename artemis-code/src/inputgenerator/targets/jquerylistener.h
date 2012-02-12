@@ -25,34 +25,37 @@
   authors and should not be interpreted as representing official policies, either expressed
   or implied, of Simon Holm Jensen
 */
-#ifndef WORKLIST_H
-#define WORKLIST_H
 
 #include <QObject>
-#include <QString>
+#include <QList>
 
-#include <executableconfiguration.h>
+#ifndef JQUERYLISTENER_H
+#define JQUERYLISTENER_H
 
 namespace artemis {
 
-    class WorkList {
-    public:
-        WorkList();
-        virtual void add(const ExecutableConfiguration e, int priority) = 0;
-        virtual bool all_zero_priority() = 0;
-        virtual ExecutableConfiguration remove() = 0;
-        virtual int size() = 0;
-        virtual bool empty() = 0;
-        virtual bool contains(const ExecutableConfiguration& e) = 0;
-        virtual void new_priority(const ExecutableConfiguration& e, int priority) = 0;
-        virtual QString toString() = 0;
+    typedef struct jquery_event_t {
+        QString elementSignature;
+        QString event;
+        QString selector;
+    } jquery_event;
 
-    signals:
+    class JQueryListener : public QObject
+    {
+    Q_OBJECT
+
+    public:
+        explicit JQueryListener(QObject *parent = 0);
+        void reset();
+        QList<QString> lookup(QString elementSignature, QString event);
+
+    protected:
+        QList<jquery_event*> jquery_events;
 
     public slots:
-
+        void sl_event_added(QString elementSignature, QString event, QString selector);
     };
 
 }
 
-#endif // WORKLIST_H
+#endif

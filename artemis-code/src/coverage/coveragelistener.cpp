@@ -56,7 +56,6 @@ namespace artemis {
 
 
     void CoverageListener::new_code(intptr_t id, QString source, QUrl url, int startline) {
-        qDebug() << "OI!!!";
         if (is_omit(url))
             return;
         int hash = get_hash(url,startline);

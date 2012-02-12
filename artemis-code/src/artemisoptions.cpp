@@ -37,7 +37,9 @@
 #include "priortizer/constantprioritizer.h"
 #include "listeners/domstatesaverlistener.h"
 #include "listeners/pagerecreatelistner.h"
-
+#include "inputgenerator/targets/targetdescriptor.h"
+#include "inputgenerator/targets/legacytarget.h"
+#include "inputgenerator/targets/jquerytarget.h"
 
 namespace artemis {
 
@@ -47,6 +49,7 @@ namespace artemis {
         artemis_url = new QUrl();
         initial_conf = NULL;
         m_multi = new MultiplexListener(0);
+        m_jquery_listener = new JQueryListener();
         this->pri = 0;
         m_number_of_iterations = 4;
     }
@@ -151,6 +154,15 @@ namespace artemis {
 
     ArtemisTopExecutionListener* ArtemisOptions::get_listner() {
         return this->m_multi;
+    }
+
+    JQueryListener* ArtemisOptions::get_jquery_listener() {
+        return this->m_jquery_listener;
+    }
+
+    TargetDescriptor* ArtemisOptions::target_generator(EventHandlerDescriptor event_handler) {
+        TargetDescriptor* target = new JQueryTarget(event_handler, this);
+        return target;
     }
 
     void ArtemisOptions::dump_page_states(QString target_dir) {

@@ -25,34 +25,51 @@
   authors and should not be interpreted as representing official policies, either expressed
   or implied, of Simon Holm Jensen
 */
-#ifndef WORKLIST_H
-#define WORKLIST_H
 
-#include <QObject>
-#include <QString>
+#include <QDebug>
 
-#include <executableconfiguration.h>
+#include "jquerylistener.h"	
+
+using namespace std;
 
 namespace artemis {
+	
+	JQueryListener::JQueryListener(QObject * parent) : QObject(parent) {
+		
+	}
 
-    class WorkList {
-    public:
-        WorkList();
-        virtual void add(const ExecutableConfiguration e, int priority) = 0;
-        virtual bool all_zero_priority() = 0;
-        virtual ExecutableConfiguration remove() = 0;
-        virtual int size() = 0;
-        virtual bool empty() = 0;
-        virtual bool contains(const ExecutableConfiguration& e) = 0;
-        virtual void new_priority(const ExecutableConfiguration& e, int priority) = 0;
-        virtual QString toString() = 0;
+  void JQueryListener::reset() {
+      jquery_event* event;
+      foreach (event, jquery_events) {
+        delete event;
+      }
 
-    signals:
+      jquery_events.clear();
+  }
 
-    public slots:
+  QList<QString> JQueryListener::lookup(QString elementSignature, QString event) {
+      QList<QString> result;
 
-    };
+      jquery_event* e;
+      foreach (e, jquery_events) {
+          /*
+          qDebug() << "Comparing " << elementSignature << " with " << e->elementSignature << endl;
+          */
+          if (e->event == event && e->elementSignature == elementSignature) {
+              result.append(e->selector);
+          }
+      }
+      
+      return result;
+  }
+
+	void JQueryListener::sl_event_added(QString elementSignature, QString event, QString selector) {
+      jquery_event* e = new jquery_event();
+      e->elementSignature = elementSignature;
+      e->event = event;
+      e->selector = selector;
+      jquery_events.append(e);
+		  qDebug() << "Jquery::Eventhandler registered for event " << event << " and selector " << selector << " on dom node with signature " << elementSignature << endl;
+	}
 
 }
-
-#endif // WORKLIST_H

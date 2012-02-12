@@ -25,12 +25,16 @@ HEADERS += src/webkitexecutor.h \
     src/artemisoptions.h \
     src/inputgenerator/abstractinputgenerator.h \
     src/inputgenerator/randominputgenerator.h \
+    src/inputgenerator/targets/targetdescriptor.h \
+    src/inputgenerator/targets/legacytarget.h \
+    src/inputgenerator/targets/jquerylistener.h \
+    src/inputgenerator/targets/jquerytarget.h \    
     src/listeners/beforeexecutionlistener.h \
     src/listeners/afterexecutionlistener.h \
     src/events/eventsequence.h \
     src/events/forminput.h \
     src/worklist/worklist.h \
-    src/worklist/deterministicworklist.h \
+    src/worklist/deterministicwoer er specifikationen for et lille Crklist.h \
     src/termination/terminationstrategy.h \
     src/termination/numberofiterationstermination.h \
     src/artemisapplication.h \
@@ -45,8 +49,6 @@ HEADERS += src/webkitexecutor.h \
     src/events/baseeventparameters.h \
     src/events/mouseeventparameters.h \
     src/events/keyboardeventparameters.h \
-    src/events/targets/suggestions.h \
-    src/events/targets/libraries/jquery.h \
     src/executorstate.h \
     src/variants/randomvariants.h \
     src/variants/variantsgenerator.h \
@@ -81,12 +83,14 @@ SOURCES += src/webkitexecutor.cpp \
     src/artemisoptions.cpp \
     src/inputgenerator/abstractinputgenerator.cpp \
     src/inputgenerator/randominputgenerator.cpp \
+    src/inputgenerator/targets/legacytarget.cpp \
+    src/inputgenerator/targets/targetdescriptor.cpp \
+    src/inputgenerator/targets/jquerytarget.cpp \
+    src/inputgenerator/targets/jquerylistener.cpp \
     src/listeners/beforeexecutionlistener.cpp \
     src/listeners/afterexecutionlistener.cpp \
     src/events/eventsequence.cpp \
     src/events/forminput.cpp \
-    src/events/targets/suggestions.cpp \
-    src/events/targets/libraries/jquery.cpp \
     src/worklist/worklist.cpp \
     src/worklist/deterministicworklist.cpp \
     src/termination/terminationstrategy.cpp \

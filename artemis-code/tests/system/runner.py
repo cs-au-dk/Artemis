@@ -6,6 +6,7 @@ import signal
 import subprocess
 import filecmp
 import shutil
+import time
 
 THIS_DIR = os.path.abspath(os.path.dirname(__file__))
 
@@ -29,6 +30,8 @@ def setup_testing_env():
     _webserver = subprocess.Popen('python -m SimpleHTTPServer %s' % WEBSERVER_PORT,
                                   cwd=web_root, shell=True, preexec_fn=os.setsid)
 
+
+    time.sleep(1) # allow the web-server to start before running artemis
 
     try:
         print 'creating result directory %s' % ARTEMIS_OUTPUT_DIR
@@ -57,10 +60,13 @@ def execute_artemis(fixture_name, emit_output=False):
     except OSError:
         pass
     
-    output = subprocess.check_output([ARTEMIS_EXEC, "-i 3",url],
-                                             cwd=output_dir)
+    if emit_output:
+        print "Running %s %s" % (ARTEMIS_EXEC, url)
+    
+    output = subprocess.check_output([ARTEMIS_EXEC, "-i 3", url], cwd=output_dir)
 
     if emit_output:
+	print 'RESULT'
         print output
 
     fp = open(os.path.join(output_dir, 'stdout.txt'), 'w')

@@ -46,6 +46,7 @@ namespace artemis {
     QString BaseEventParameters::js_string()  {
         if (!memo_js.isEmpty())
             return memo_js;
+        
         QString rand_id = generate_random_js_id();
         QString res = "var " + rand_id + " = document.createEvent(\"Event\");";
         res = res + " " + rand_id + ".initEvent(";

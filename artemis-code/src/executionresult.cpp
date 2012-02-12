@@ -64,13 +64,13 @@ namespace artemis {
     }
 
     void ExecutionResult::newEventListener(QWebElement *elem, QString name) {
-        qDebug() << "newEventListener called" << endl;
-
         Q_CHECK_PTR(elem);
         Q_ASSERT(!final);
-        qDebug() << "Artemis got " << name << " event" <<  " tag name: " << elem->tagName();
+
+        qDebug() << "Artemis detected new eventhandler for event: " << name << " tag name: " << elem->tagName() << endl;
         if (is_non_interactive(name))
             return;
+
         element_pointers.insert(QPair<QWebElement*,QString>(elem,name));
     }
 

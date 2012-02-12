@@ -8,6 +8,9 @@
 #include "JavaScriptCore/debugger/DebuggerCallFrame.h"
 #include "JavaScriptCore/interpreter/Register.h"
 #include "JavaScriptCore/runtime/JSObject.h"
+#include "JavaScriptCore/runtime/JSValue.h"
+#include "JavaScriptCore/runtime/Identifier.h"
+#include "JavaScriptCore/heap/Heap.h"
 
 #include "qwebexecutionlistener.h"
 
@@ -43,16 +46,81 @@ void QWebExecutionListener::executedStatement(intptr_t sourceID, std::string fun
     emit statementExecuted(sourceID, function_name, linenumber);
 }
 
+bool domNodeSignature(JSC::CallFrame * cframe, JSC::JSObject * domElement, QString * signature) {
+    
+    JSC::Identifier nodeNameIdent(cframe, "nodeName");
+    JSC::Identifier parentNodeIdent(cframe, "parentNode");
+
+    if (domElement->hasProperty(cframe, nodeNameIdent) == false ||
+        domElement->hasProperty(cframe, parentNodeIdent) == false)
+
+        {
+            cout << "Encountered dom-node missing either nodeName or parentNode" << endl;
+            return false;
+        }
+
+    JSC::JSValue nodeName = domElement->get(cframe, nodeNameIdent);
+    JSC::JSValue parentNode = domElement->get(cframe, parentNodeIdent);
+
+    if (nodeName.isString() == false) {
+        cout << "Encountered dom-node with non-string nodeName" << endl;
+        return false;
+    }
+
+    *signature = signature->prepend(QObject::tr("."));
+    *signature = signature->prepend(QString(QObject::tr(nodeName.getString(cframe).ascii().data())));
+
+    if (parentNode.isObject() == false) {
+        /* This must be the last node */
+        return true;
+    }
+
+    JSC::JSObject * parentNodeObj = parentNode.getObject();
+
+    return domNodeSignature(cframe, parentNodeObj, signature);
+
+}
+
 void QWebExecutionListener::calledFunction(const JSC::DebuggerCallFrame& frame) {
 
-    std::string functionName = std::string(frame.calculatedFunctionName().ascii().data());
-    /*
     JSC::CallFrame * cframe = frame.callFrame();
-*/
 
-    /* JQuery SUPPORT */
-    cout << "qwebel::calledFunction: " << functionName << endl;
-    emit jqueryEventAdded(/*element, (QString)1, (QString)NULL*/);
+    std::string functionName = std::string(frame.calculatedFunctionName().ascii().data());
+
+    if (functionName.compare("__jquery_event_add__") == 0) {
+        cout << "JQUERY SPECIFIC ADDITION DETECTED" << endl;
+    
+        
+        JSC::JSValue element = cframe->argument(0);
+        
+        if (element.isObject() == false) {
+            cout << "qweb::Error unknown element" << endl;
+            return;
+
+        }
+
+        QString signature(tr(""));
+        domNodeSignature(cframe, element.getObject(), &signature);
+
+        JSC::JSValue event = cframe->argument(1);
+        
+        if (event.isString() == false) {
+            cout << "qweb::Error unknown event" << endl;
+            return;
+        }
+
+        JSC::JSValue selector = cframe->argument(4);
+
+        if (selector.isString() == false) {
+            cout << "qweb::Error unknown selector" << endl;
+            return;
+        }
+
+        /* JQuery SUPPORT */
+        emit jqueryEventAdded(signature,
+                              QString(tr(event.getString(cframe).ascii().data())),
+                              QString(tr(selector.getString(cframe).ascii().data())));
+    }
 }
 
 void QWebExecutionListener::exceptional_condition(std::string cause, intptr_t sourceID, int lineNumber) {
