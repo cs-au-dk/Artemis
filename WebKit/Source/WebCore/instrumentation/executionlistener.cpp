@@ -31,10 +31,10 @@ namespace inst {
     }
 
     void ExecutionListener::eventAdded(WebCore::EventTarget * e, const char* type) {
-        std::cout << "el::event added, type: "  << type <<std::endl;
         std::string s = std::string(type);
+        
         if (e->toNode() != NULL)
-            nodeEventAdded(e->toNode(),s);
+            nodeEventAdded(e->toNode(), s);
         else if (e->toDOMWindow() != NULL)
             domWindowEventAdded(e->toDOMWindow(), s);
         else
@@ -44,17 +44,17 @@ namespace inst {
 
     void ExecutionListener::eventCleared(WebCore::EventTarget * e, const char* type) {
         std::string s = std::string(type);
-        std::cout << "Event clear: " << s << std::endl;
+        std::cout << "el::event cleared: " << s << std::endl;
 
     }
 
     void ExecutionListener::domWindowEventCleared(WebCore::DOMWindow *, const std::string) {
-        std::cout << "el::dom event cleared, type: " <<std::endl;
+        std::cout << "el::dom event cleared" << std::endl;
         return;
     }
 
     void ExecutionListener::nodeEventCleared(WebCore::Node * , const std::string) {
-        std::cout << "el::node event cleared, type: " <<std::endl;
+        std::cout << "el::node event cleared" <<std::endl;
         return;
     }
 
@@ -121,14 +121,12 @@ namespace inst {
     }
 
     void ExecutionListener::interpreterCalledEvent(const JSC::DebuggerCallFrame& frame, intptr_t sourceID, int lineNumber) {
-        std::cout << "el::interpreterCalledEvent" << std::endl;
         calledFunction(frame);
-
-        JSC::CallFrame * cframe = frame.callFrame();
 
         /* JQuery SUPPORT */
         /*JSC::JSGlobalData * globalData = &cframe->globalData();*/
    
+        /*
         JSC::IdentifierTable * identifierTable = cframe->globalData().identifierTable;
         JSC::LiteralIdentifierTable literalIdentifierTable = identifierTable->literalTable();
 
@@ -138,6 +136,7 @@ namespace inst {
         } else { 
             std::cout << "el::not JQuery script" << std::endl;
         }
+        */
     }
 
     void ExecutionListener::calledFunction(const JSC::DebuggerCallFrame&) {

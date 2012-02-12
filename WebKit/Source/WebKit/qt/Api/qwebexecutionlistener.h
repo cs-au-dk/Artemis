@@ -38,7 +38,7 @@ signals:
     void ajax_request(QUrl, QString post_data);  
     void eval_call(QString source_text);
 
-    void jqueryEventAdded(/*QWebElement element, QString event, QString selectors*/); 
+    void jqueryEventAdded(QString elementSignature, QString event, QString selectors); 
 
 public slots:
 

@@ -46,10 +46,27 @@ namespace artemis {
         return (rand() % 100) > 50;
     }
 
+    QWebElement pick_rand(QList<QWebElement> s) {
+        if (s.size() == 1) {
+          return s.at(0);
+        }
+
+        int elem = rand() % (s.size() - 1);
+        return s.at(elem);
+    }
+
+    QString pick_rand(QList<QString> s) {
+        if (s.size() == 1) {
+          return s.at(0);
+        }
+
+        int elem = rand() % (s.size() - 1);
+        return s.at(elem);
+    }
+
     QString pick_rand(QSet<QString> s) {
         QList<QString> ll = s.toList();
-        int elem = rand() % (ll.size() - 1);
-        return ll.at(elem);
+        return pick_rand(ll);
     }
 
     QString generate_random_js_id() {

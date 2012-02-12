@@ -28,8 +28,9 @@
 #ifndef EXECUTABLECONFIGURATION_H
 #define EXECUTABLECONFIGURATION_H
 
-#include <events/eventsequence.h>
 #include <QUrl>
+
+#include <events/eventsequence.h>
 #include "events/forminput.h"
 
 namespace artemis {

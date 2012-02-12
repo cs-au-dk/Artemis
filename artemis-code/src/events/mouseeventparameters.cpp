@@ -112,6 +112,7 @@ the Event's related EventTarget. Only used with some event types (e.g. mouseover
     QString MouseEventParameters::js_string() {
         if (!memo_js.isEmpty())
             return memo_js;
+            
         QString rand_id = generate_random_js_id();
         QString res = "var " + rand_id + " = document.createEvent(\"MouseEvent\");";
         res = res + " " + rand_id + ".initMouseEvent(";

@@ -36,6 +36,9 @@
 #include "priortizer/abstractprioritizer.h"
 #include "listeners/artemistopexecutionlistener.h"
 #include "listeners/multiplexlistener.h"
+#include "inputgenerator/targets/targetdescriptor.h"
+#include "events/eventhandlerdescriptor.h"
+#include "inputgenerator/targets/jquerylistener.h"
 
 namespace artemis {
 
@@ -67,6 +70,8 @@ namespace artemis {
         void add_artemis_execution_listner(ArtemisTopExecutionListener* l);
         void dump_page_states(QString target_dir);
         ArtemisTopExecutionListener* get_listner();
+        JQueryListener* get_jquery_listener();
+        TargetDescriptor* target_generator(EventHandlerDescriptor event_handler);
         /**
           parse strings on the form id=value and add to the set of preset formfields.
           */
@@ -90,6 +95,7 @@ namespace artemis {
         bool m_dump_urls;
         MultiplexListener* m_multi;
         bool m_recreate_page;
+        JQueryListener* m_jquery_listener;
         QString m_proxy_address;
         QMap<QString, QString> m_preset_cookies;
         int m_number_of_iterations;

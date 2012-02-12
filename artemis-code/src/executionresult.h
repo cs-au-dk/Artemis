@@ -34,6 +34,7 @@
 #include "events/eventhandlerdescriptor.h"
 #include "artemisglobals.h"
 #include "ajax/ajaxrequest.h"
+#include "artemiswebpage.h"
 
 namespace artemis {
 

@@ -1,5 +1,15 @@
 $(function() {
 
+    /** JQUERY INSTRUMENTATION **/
+    old_event_add = jQuery.event.add
+   
+    function __jquery_event_add__(elem, types, handler, data, selector) {
+        return old_event_add(elem, types, handler, data, selector);
+    }
+
+    jQuery.event.add = __jquery_event_add__
+    /** END JQUERY INSTRUMENTATION **/
+
     function quicksort(items) {
         return items;
     }
@@ -33,13 +43,3 @@ $(function() {
     $("#result-mergesort").after("<h3>Insertion-sort</h3><button class=\"do-sort\" id=\"do-insertionsort\">Sort!</button> > <span id=\"result-insertionsort\" style=\"border: 1px solid #000000;\"></span>");
 
 });
-
-var omgtest = 1;
-
-function omgomgtest() {
-
-    var omgtest = 2;
-
-}
-
-omgomgtest();

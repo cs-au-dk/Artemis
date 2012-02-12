@@ -32,7 +32,6 @@ namespace artemis {
 
     void write_coverage_report(ostream& stream, const CodeCoverage& cov) {
         foreach (int id, cov.source_ids()) {
-          std::cout << "OI!!!" << std::endl;
 
             SourceInfo info = cov.source_info(id);
             QString src = info.source();

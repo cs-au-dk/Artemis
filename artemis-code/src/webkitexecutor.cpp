@@ -39,7 +39,7 @@
 
 #include "events/formfield.h"
 #include "events/domelementdescriptor.h"
-#include "events/targets/libraries/jquery.h"
+#include "inputgenerator/targets/jquerylistener.h"
 
 #include "webkitexecutor.h"
 
@@ -54,7 +54,7 @@ namespace artemis {
         execution_listener = listener;
         current_result = 0;
 
-        JQuery * jquery = new JQuery();
+        jquery = options->get_jquery_listener();
 
         cov_list = new CoverageListener(this);
 
@@ -71,8 +71,8 @@ namespace artemis {
         QObject::connect(webkit_listener, SIGNAL(loadedJavaScript(intptr_t, QString, QUrl, int)),
                          this, SLOT(sl_code_loaded(intptr_t, QString, QUrl, int)));
         /*QWebElement, QString, QString*/
-        QObject::connect(webkit_listener, SIGNAL(jqueryEventAdded()),
-                         jquery, SLOT(sl_event_added()));
+        QObject::connect(webkit_listener, SIGNAL(jqueryEventAdded(QString, QString, QString)),
+                         jquery, SLOT(sl_event_added(QString, QString, QString)));
         
 
         QObject::connect(webkit_listener, SIGNAL(loadedJavaScript(intptr_t, QString, QUrl, int)),
@@ -109,10 +109,9 @@ namespace artemis {
         }
 
         qDebug() << "WEBKIT: Finished loading" << endl;
-
         execution_listener->loaded_page(*page, this->executor_state());
 
-        setup_initial();
+        setup_initial();;
         do_exe();
         finished_sequence();
     }
@@ -139,15 +138,20 @@ namespace artemis {
 
     void WebKitExecutor::do_exe() {
         EventSequence seq = current_conf->get_eventsequence();
-        
+    
         foreach (EventDescriptor ed, seq.to_list()) {
-            QWebElement target = ed.handler_descriptor().dom_element().get_element(page);
-            qDebug() << "Element: " << target.tagName();
-            EventParameters* params = ed.event_params();
+            QWebElement handler = ed.handler_descriptor().dom_element().get_element(page);
+            QWebElement target = ed.target()->get(page);
+            QString js_init_event = ed.event_params()->js_string();
+
             ed.form_input().write_to_page(page);
-            QString js_init_event = params->js_string();
+
+            qDebug() << "Event Handler: " << handler.tagName();
+            qDebug() << "Target: " << target.tagName();
             qDebug() << "Executing: " << js_init_event;
+            
             QVariant result =  target.evaluateJavaScript(js_init_event, DONT_MEASURE_COVERAGE);
+            
             //Wait for any ajax stuff to finish
 
             qDebug() << "Result: " << result;
@@ -262,6 +266,8 @@ namespace artemis {
 
         current_result = new ExecutionResult(0);
         current_conf = new ExecutableConfiguration(conf);
+
+        jquery->reset();
 
         QObject::connect(webkit_listener, SIGNAL(addedEventListener(QWebElement*,QString)),
                             current_result, SLOT(newEventListener(QWebElement*,QString)));

@@ -78,6 +78,7 @@ namespace artemis {
         QString initial_page_state;
         ArtemisTopExecutionListener* execution_listener;
         AjaxRequestListener ajax_listener;
+        JQueryListener* jquery;
 
     signals:
         void sigExecutedSequence(ExecutableConfiguration conf, ExecutionResult res);

@@ -25,34 +25,32 @@
   authors and should not be interpreted as representing official policies, either expressed
   or implied, of Simon Holm Jensen
 */
-#ifndef WORKLIST_H
-#define WORKLIST_H
+#ifndef TARGET_DESCRIPTOR_H
+#define TARGET_DESCRIPTOR_H
 
-#include <QObject>
-#include <QString>
+#include <QWebElement>
 
-#include <executableconfiguration.h>
+#include "artemiswebpage.h"
+/*#include "events/eventhandlerdescriptor.h"*/
 
 namespace artemis {
 
-    class WorkList {
-    public:
-        WorkList();
-        virtual void add(const ExecutableConfiguration e, int priority) = 0;
-        virtual bool all_zero_priority() = 0;
-        virtual ExecutableConfiguration remove() = 0;
-        virtual int size() = 0;
-        virtual bool empty() = 0;
-        virtual bool contains(const ExecutableConfiguration& e) = 0;
-        virtual void new_priority(const ExecutableConfiguration& e, int priority) = 0;
-        virtual QString toString() = 0;
+  class TargetDescriptor
+  {
 
-    signals:
+  public:
+    TargetDescriptor(EventHandlerDescriptor& event_handler);
 
-    public slots:
+    /* FIX copy constructor, and update EventHandlerDescriptor to 
+       use this and delete references again */
+    /*TargetDescriptor(const TargetDescriptor* other);*/
+    
+    virtual QWebElement get(ArtemisWebPage* page);
 
-    };
+  protected:
+    EventHandlerDescriptor* m_event_handler;
+  };
 
 }
 
-#endif // WORKLIST_H
+#endif

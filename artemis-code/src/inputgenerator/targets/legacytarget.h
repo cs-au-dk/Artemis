@@ -25,34 +25,24 @@
   authors and should not be interpreted as representing official policies, either expressed
   or implied, of Simon Holm Jensen
 */
-#ifndef WORKLIST_H
-#define WORKLIST_H
+#ifndef LEGACY_H
+#define LEGACY_H
 
-#include <QObject>
-#include <QString>
+#include <QWebElement>
 
-#include <executableconfiguration.h>
+#include "targetdescriptor.h"
 
 namespace artemis {
 
-    class WorkList {
-    public:
-        WorkList();
-        virtual void add(const ExecutableConfiguration e, int priority) = 0;
-        virtual bool all_zero_priority() = 0;
-        virtual ExecutableConfiguration remove() = 0;
-        virtual int size() = 0;
-        virtual bool empty() = 0;
-        virtual bool contains(const ExecutableConfiguration& e) = 0;
-        virtual void new_priority(const ExecutableConfiguration& e, int priority) = 0;
-        virtual QString toString() = 0;
+  class LegacyTarget : public TargetDescriptor
+  {
+  public:
+    explicit LegacyTarget(EventHandlerDescriptor& event_handler);
+    /*explicit LegacyTarget(TargetDescriptor* other);*/
+    QWebElement get(ArtemisWebPage* page);
 
-    signals:
-
-    public slots:
-
-    };
+  };
 
 }
 
-#endif // WORKLIST_H
+#endif 

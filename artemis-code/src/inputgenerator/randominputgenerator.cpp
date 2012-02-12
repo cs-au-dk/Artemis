@@ -25,10 +25,12 @@
   authors and should not be interpreted as representing official policies, either expressed
   or implied, of Simon Holm Jensen
 */
-#include "randominputgenerator.h"
+
 #include "events/eventypes.h"
 #include "variants/randomvariants.h"
 #include "events/forminput.h"
+
+#include "randominputgenerator.h"
 
 namespace artemis {
 
@@ -43,18 +45,20 @@ namespace artemis {
         delete var_gen;
     }
 
-    void RandomInputGenerator::add_new_configurations(const ExecutableConfiguration& e, const ExecutionResult& e_result, WorkList* wl,  ExecutorState* exe_state) {
+    void RandomInputGenerator::add_new_configurations(const ExecutableConfiguration& configuration, const ExecutionResult& result, WorkList* wl,  ExecutorState* exe_state) {
         Q_CHECK_PTR(wl);
         Q_CHECK_PTR(exe_state);
-
-        insert_same_length(e,e_result,*wl, *exe_state);
-        insert_extended(e,e_result,*wl, *exe_state);
+        insert_same_length(configuration, result, *wl, *exe_state);
+        insert_extended(configuration, result, *wl, *exe_state);
     }
 
     void RandomInputGenerator::insert_same_length(const ExecutableConfiguration& e, const ExecutionResult& e_result, WorkList& wl,  ExecutorState& exe_state) {
+
         EventSequence seq = e.get_eventsequence();
+        
         if (seq.empty())
             return;
+
         EventDescriptor last = seq.last();
         for (int i = 0 ; i++ ; i < this->artemis_options->number_of_samelength()) {
             EventParameters* new_params = 0;
@@ -63,18 +67,15 @@ namespace artemis {
             //Event parameters
             if (old_params->type() == BASE_EVENT) {
                 BaseEventParameters bp = var_gen->generate_base_event(last.handler_descriptor().name());
-                new_params = new BaseEventParameters(var_gen->generate_base_event(last.handler_descriptor().name()));
-                // new_params = &bp;
+                new_params = new BaseEventParameters(bp);
             }
             else if (old_params->type() == MOUSE_EVENT) {
                 MouseEventParameters mp = var_gen->generate_mouse_event(last.handler_descriptor().name());
                 new_params = new MouseEventParameters(mp);
-                //new_params = &mp;
             }
             else if (old_params->type() == KEY_EVENT) {
                 KeyboardEventParameters kp = var_gen->generate_keyboard_event(last.handler_descriptor().name());
                 new_params = new KeyboardEventParameters(kp);
-                //new_params = &kp;
             } else {
                 qFatal("Unknown event type!");
                 return;
@@ -85,19 +86,25 @@ namespace artemis {
 
             //Build new Event Descriptor
             EventHandlerDescriptor hh = last.handler_descriptor();
-            EventDescriptor new_last(hh, new_form, new_params);
+            TargetDescriptor* target = artemis_options->target_generator(hh);
+
+            EventDescriptor new_last(hh, new_form, new_params, target);
+
             EventSequence new_seq = seq.new_last(new_last);
             ExecutableConfiguration new_conf = e.copy_with_sequence(new_seq);
-            wl.add(new_conf,artemis_options->prioritizer().prioritize(new_conf,e_result,exe_state));
+
+            wl.add(new_conf, artemis_options->prioritizer().prioritize(new_conf, e_result, exe_state));
+            
             delete new_params;
         }
     }
 
     void RandomInputGenerator::insert_extended(const ExecutableConfiguration& e, const ExecutionResult& e_result, WorkList& wl,  ExecutorState& exe_state) {
-        QSet<FormField> fd = e_result.form_fields();
+
         foreach (EventHandlerDescriptor ee, e_result.event_handlers()) {
             EventParameters* new_params = 0;
             EventType tt = get_type(ee.name());
+            
             //Event parameters
             if (tt == BASE_EVENT) {
                 new_params = new BaseEventParameters(var_gen->generate_base_event(ee.name()));
@@ -114,11 +121,16 @@ namespace artemis {
             }
 
             //Form fields
+            QSet<FormField> fd = e_result.form_fields();
             FormInput new_form = var_gen->generate_form_fields(fd);
+            artemis_options->target_generator(ee);
 
-            EventDescriptor eh(ee,new_form,new_params);
+            TargetDescriptor* target = artemis_options->target_generator(ee);
+            EventDescriptor eh(ee, new_form, new_params, target);
+
             ExecutableConfiguration new_conf(e.get_eventsequence().extend(eh), e.starting_url());
-            wl.add(new_conf,artemis_options->prioritizer().prioritize(new_conf,e_result,exe_state));
+            wl.add(new_conf, artemis_options->prioritizer().prioritize(new_conf, e_result, exe_state));
+
             delete new_params;
         }
     }
