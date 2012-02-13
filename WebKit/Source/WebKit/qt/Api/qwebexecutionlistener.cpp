@@ -81,6 +81,27 @@ bool domNodeSignature(JSC::CallFrame * cframe, JSC::JSObject * domElement, QStri
 
 }
 
+/**
+    Try to detect and track calls to the jQuery.event.add
+    method, such that we can select better targets for our
+    events. 
+
+    Currently, the following must be inserted in one of the
+    loaded script files BEFORE! any events are added in 
+    jQuery. 
+
+    // INSTRUMENTATION 
+    old_event_add = jQuery.event.add
+   
+    function __jquery_event_add__(elem, types, handler, data, selector) {
+        return old_event_add(elem, types, handler, data, selector);
+    }
+
+    jQuery.event.add = __jquery_event_add__
+    // INSTRUMENTATION END
+
+    This should be replaced by a better solution at some point.
+**/
 void QWebExecutionListener::calledFunction(const JSC::DebuggerCallFrame& frame) {
 
     JSC::CallFrame * cframe = frame.callFrame();
@@ -94,7 +115,7 @@ void QWebExecutionListener::calledFunction(const JSC::DebuggerCallFrame& frame) 
         JSC::JSValue element = cframe->argument(0);
         
         if (element.isObject() == false) {
-            cout << "qweb::Error unknown element" << endl;
+            cout << "JQUERY::Error unknown element" << endl;
             return;
 
         }
@@ -105,14 +126,14 @@ void QWebExecutionListener::calledFunction(const JSC::DebuggerCallFrame& frame) 
         JSC::JSValue event = cframe->argument(1);
         
         if (event.isString() == false) {
-            cout << "qweb::Error unknown event" << endl;
+            cout << "JQUERY::Error unknown event" << endl;
             return;
         }
 
         JSC::JSValue selector = cframe->argument(4);
 
         if (selector.isString() == false) {
-            cout << "qweb::Error unknown selector" << endl;
+            cout << "JQUERY::Error unknown selector" << endl;
             return;
         }
 
