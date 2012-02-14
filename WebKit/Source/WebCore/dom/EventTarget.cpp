@@ -31,6 +31,7 @@
 
 #include "config.h"
 #include "EventTarget.h"
+#include <iostream>
 
 #include "Event.h"
 #include "EventException.h"

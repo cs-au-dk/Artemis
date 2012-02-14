@@ -66,6 +66,7 @@ namespace artemis {
         QSet<QWebFrame*> all_frames();
         QSet<QString> get_select_options(const QWebElement&);
         void do_exe();
+        void handle_ajax_callbacks();
         void setup_initial();
         void save_dom_state();
 

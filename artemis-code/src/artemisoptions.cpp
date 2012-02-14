@@ -162,6 +162,7 @@ namespace artemis {
 
     TargetDescriptor* ArtemisOptions::target_generator(EventHandlerDescriptor event_handler) {
         TargetDescriptor* target = new JQueryTarget(event_handler, this);
+        //TargetDescriptor* target = new LegacyTarget(event_handler);
         return target;
     }
 

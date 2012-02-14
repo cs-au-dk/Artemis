@@ -18,6 +18,7 @@
 #include "JavaScriptCore/runtime/Identifier.h"
 #include "JavaScriptCore/runtime/ScopeChain.h"
 #include "JavaScriptCore/interpreter/Register.h"
+#include "WebCore/xml/XMLHttpRequest.h"
 
 #include "executionlistener.h"
 
@@ -37,8 +38,12 @@ namespace inst {
             nodeEventAdded(e->toNode(), s);
         else if (e->toDOMWindow() != NULL)
             domWindowEventAdded(e->toDOMWindow(), s);
-        else
+        else if (s.compare("readystatechange") == 0) {
+            std::cout << "AJAX CALLBACK DETECTED" << std::endl;
+            ajaxCallbackEventAdded((WebCore::XMLHttpRequest*)e);
+        } else {
             std::cout << "ERROR: Strange event :" << s << std::endl;
+        }
         return;
     }
 
@@ -58,11 +63,15 @@ namespace inst {
         return;
     }
 
-    void ExecutionListener::domWindowEventAdded( WebCore::DOMWindow * window, const std::string type) {
+    void ExecutionListener::domWindowEventAdded(WebCore::DOMWindow * window, const std::string type) {
         return;
     }
 
-    void ExecutionListener::nodeEventAdded( WebCore::Node * node, const std::string type) {
+    void ExecutionListener::nodeEventAdded(WebCore::Node * node, const std::string type) {
+        return;
+    }
+
+    void ExecutionListener::ajaxCallbackEventAdded(WebCore::XMLHttpRequest*) {
         return;
     }
 

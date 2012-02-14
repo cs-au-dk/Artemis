@@ -58,6 +58,9 @@ qwk_1.0 {
         *QWebExecutionListener;
         non-virtual?thunk?to?QWebExecutionListener*;
         QWebExecutionListener::*;
+        *QAjaxCallbackHandler;
+        non-virtual?thunk?to?QAjaxCallbackHandler*;
+        QAjaxCallbackHandler::*;
         *QWebHitTestResult;
         non-virtual?thunk?to?QWebHitTestResult*;
         QWebHitTestResult::*;

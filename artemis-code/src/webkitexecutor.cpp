@@ -34,6 +34,7 @@
 #include <QStack>
 #include <QDebug>
 #include <qwebexecutionlistener.h>
+#include <qajaxcallbackhandler.h>
 #include <cookies/immutablecookiejar.h>
 #include <instrumentation/executionlistener.h>
 
@@ -70,7 +71,7 @@ namespace artemis {
                          this, SLOT(sl_ajax_request(QUrl, QString)));
         QObject::connect(webkit_listener, SIGNAL(loadedJavaScript(intptr_t, QString, QUrl, int)),
                          this, SLOT(sl_code_loaded(intptr_t, QString, QUrl, int)));
-        /*QWebElement, QString, QString*/
+        
         QObject::connect(webkit_listener, SIGNAL(jqueryEventAdded(QString, QString, QString)),
                          jquery, SLOT(sl_event_added(QString, QString, QString)));
         
@@ -111,8 +112,12 @@ namespace artemis {
         qDebug() << "WEBKIT: Finished loading" << endl;
         execution_listener->loaded_page(*page, this->executor_state());
 
+        qDebug() << "WEBKIT: Handling initial ajax callbacks" << endl;
+        handle_ajax_callbacks();
         setup_initial();;
+        qDebug() << "WEBKIT: Executing sequence" << endl;
         do_exe();
+        qDebug() << "WEBKIT: Saving results" << endl;
         finished_sequence();
     }
 
@@ -151,10 +156,25 @@ namespace artemis {
             qDebug() << "Executing: " << js_init_event;
             
             QVariant result =  target.evaluateJavaScript(js_init_event, DONT_MEASURE_COVERAGE);
-            
-            //Wait for any ajax stuff to finish
 
             qDebug() << "Result: " << result;
+
+            //Wait for any ajax stuff to finish
+            handle_ajax_callbacks();
+        }
+    }
+
+    void WebKitExecutor::handle_ajax_callbacks() {
+        if (current_result->ajaxCallbackHandlers().count() > 0) {
+            qDebug() << "Pending ajax callbacks found, calling..." << endl;
+
+            QAjaxCallbackHandler* ajaxhandler;
+            foreach (ajaxhandler, current_result->ajaxCallbackHandlers()) {
+                ajaxhandler->dispatch();
+                delete ajaxhandler;
+            }
+
+            current_result->ajaxCallbackHandlers().clear();
         }
     }
 
@@ -279,6 +299,17 @@ namespace artemis {
                             current_result, SLOT(sl_eval_string(QString)));
         QObject::connect(webkit_listener, SIGNAL(script_url_load(QUrl)),
                             current_result, SLOT(add_url(QUrl)));
+        QObject::connect(webkit_listener, SIGNAL(addedAjaxCallbackHandler(QAjaxCallbackHandler*)),
+                            current_result, SLOT(addedAjaxCallbackHandler(QAjaxCallbackHandler*)));
+
+        long int i;
+        qDebug() << "waiting..." << endl;
+        long int j = 0;
+        for (i = 0; i < 2000000000; i++) {
+            j = i - j;
+
+        }
+        qDebug() << "continue..." << j << endl;
 
         //Load URL into WebKit
         qDebug() << "Trying to load: " << artemis_options->getURL()->toString() << endl;

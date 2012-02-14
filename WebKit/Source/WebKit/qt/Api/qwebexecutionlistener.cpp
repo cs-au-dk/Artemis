@@ -11,6 +11,7 @@
 #include "JavaScriptCore/runtime/JSValue.h"
 #include "JavaScriptCore/runtime/Identifier.h"
 #include "JavaScriptCore/heap/Heap.h"
+#include "WebCore/xml/XMLHttpRequest.h"
 
 #include "qwebexecutionlistener.h"
 
@@ -28,6 +29,11 @@ void QWebExecutionListener::domWindowEventAdded(WebCore::DOMWindow* window, cons
 
 void QWebExecutionListener::nodeEventAdded(WebCore::Node * node, const std::string s) {
     emit addedEventListener(new QWebElement(node), QString(tr(s.c_str())));
+}
+
+void QWebExecutionListener::ajaxCallbackEventAdded(WebCore::XMLHttpRequest* xhr) {
+    QAjaxCallbackHandler* handler = new QAjaxCallbackHandler(xhr);
+    emit addedAjaxCallbackHandler(handler);
 }
 
 void QWebExecutionListener::nodeEventCleared(WebCore::Node *, const std::string) {
