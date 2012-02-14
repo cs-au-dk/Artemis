@@ -14,7 +14,8 @@ SOURCES += \
     $$PWD/qt/Api/qwebdatabase.cpp \
     $$PWD/qt/Api/qwebinspector.cpp \
     $$PWD/qt/Api/qwebkitversion.cpp \
-    $$PWD/qt/Api/qwebexecutionlistener.cpp
+    $$PWD/qt/Api/qwebexecutionlistener.cpp \
+    $$PWD/qt/Api/qajaxcallbackhandler.cpp
 
 HEADERS += \
     $$PWD/qt/Api/qwebframe.h \
@@ -34,7 +35,8 @@ HEADERS += \
     $$PWD/qt/Api/qwebinspector.h \
     $$PWD/qt/Api/qwebkitversion.h \
     $$PWD/qt/Api/qwebplugindatabase_p.h \
-    $$PWD/qt/Api/qwebexecutionlistener.h
+    $$PWD/qt/Api/qwebexecutionlistener.h \
+    $$PWD/qt/Api/qajaxcallbackhandler.h
 
 
 

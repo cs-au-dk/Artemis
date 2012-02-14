@@ -31,6 +31,10 @@
 #include <QtWebKit>
 #include <QSet>
 #include <QPair>
+#include <QList>
+
+#include <qajaxcallbackhandler.h>
+
 #include "events/eventhandlerdescriptor.h"
 #include "artemisglobals.h"
 #include "ajax/ajaxrequest.h"
@@ -59,6 +63,7 @@ namespace artemis {
         void set_state_hash(long hash);
         long page_state_hash() const;
         QSet<QString> eval_strings();
+        QList<QAjaxCallbackHandler*> ajaxCallbackHandlers();
 
         /**
           Invoke this method when the page containing the elements is done loading.
@@ -84,6 +89,7 @@ namespace artemis {
         long state_hash;
         QSet<AjaxRequest> m_ajax_request;
         QSet<QString> evaled_strings;
+        QList<QAjaxCallbackHandler*> m_ajax_callback_handlers;
 
     public slots:
         void newEventListener(QWebElement* elem, QString name);
@@ -91,6 +97,7 @@ namespace artemis {
         void sl_script_crash(QString cause, intptr_t sourceID, int lineNumber);
         void add_url(const QUrl url);
         void sl_eval_string(const QString);
+        void addedAjaxCallbackHandler(QAjaxCallbackHandler*);
 
     };
 }

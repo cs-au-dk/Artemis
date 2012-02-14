@@ -3,6 +3,7 @@
 #include <QUrl>
 #include "qwebkitglobal.h"
 #include "qwebelement.h"
+#include "qajaxcallbackhandler.h"
 
 #include "instrumentation/executionlistener.h"
 
@@ -17,7 +18,8 @@ public:
 
     //Overrides!
     virtual void domWindowEventAdded(WebCore::DOMWindow*, const std::string);
-    virtual void nodeEventAdded( WebCore::Node*, const std::string);
+    virtual void nodeEventAdded(WebCore::Node*, const std::string);
+    virtual void ajaxCallbackEventAdded(WebCore::XMLHttpRequest*);
     virtual void domWindowEventCleared(WebCore::DOMWindow*, const std::string);
     virtual void nodeEventCleared(WebCore::Node*, const std::string);
     virtual void scriptCodeLoaded(intptr_t id,std::string source, std::string url, int startline);
@@ -29,8 +31,9 @@ public:
     virtual void calledFunction(const JSC::DebuggerCallFrame&);
 
 signals:
-    void addedEventListener(QWebElement*, QString );
-    void removedEventListener(QWebElement*, QString );
+    void addedEventListener(QWebElement*, QString);
+    void addedAjaxCallbackHandler(QAjaxCallbackHandler*);
+    void removedEventListener(QWebElement*, QString);
     void loadedJavaScript(intptr_t id,QString source, QUrl url, int startline);
     void statementExecuted(intptr_t sourceID, std::string function_name, int linenumber);
     void script_crash(QString cause, intptr_t sourceID, int lineNumber);

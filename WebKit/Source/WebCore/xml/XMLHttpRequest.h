@@ -139,7 +139,7 @@ public:
 
     using RefCounted<XMLHttpRequest>::ref;
     using RefCounted<XMLHttpRequest>::deref;
-
+    void changeState(State newState);
 private:
     XMLHttpRequest(ScriptExecutionContext*, PassRefPtr<SecurityOrigin>);
 
@@ -170,7 +170,6 @@ private:
     String getRequestHeader(const AtomicString& name) const;
     void setRequestHeaderInternal(const AtomicString& name, const String& value);
 
-    void changeState(State newState);
     void callReadyStateChangeListener();
     void dropProtection();
     void internalAbort();

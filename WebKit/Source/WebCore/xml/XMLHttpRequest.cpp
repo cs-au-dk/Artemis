@@ -21,6 +21,7 @@
 
 #include "config.h"
 #include "XMLHttpRequest.h"
+#include <iostream>
 
 #include "Blob.h"
 #include "ContentSecurityPolicy.h"
@@ -486,6 +487,7 @@ void XMLHttpRequest::open(const String& method, const KURL& url, bool async, Exc
         changeState(OPENED);
     else
         m_state = OPENED;
+
 }
 
 void XMLHttpRequest::open(const String& method, const KURL& url, bool async, const String& user, ExceptionCode& ec)
@@ -651,6 +653,7 @@ void XMLHttpRequest::send(ArrayBuffer* body, ExceptionCode& ec)
 
 void XMLHttpRequest::createRequest(ExceptionCode& ec)
 {
+
 #if ENABLE(BLOB)
     // Only GET request is supported for blob URL.
     if (m_url.protocolIs("blob") && m_method != "GET") {
@@ -703,7 +706,26 @@ void XMLHttpRequest::createRequest(ExceptionCode& ec)
     m_exceptionCode = 0;
     m_error = false;
 
+#ifdef ARTEMIS
+    /* Force synchronous AJAX calls even if they are handled
+       by the javascript application as asynchronous.
+
+       This is done such that when we decide in the artemis 
+       inputgenerator to trigger the "callback" the ajax 
+       request then the response is available.
+
+       ARTEMIS-TODO
+
+       Please note, that currently the callback is called
+       DIRECTLY after this has been done, and not later - 
+       as it should - by artemis. This apparently has a 
+       sideeffect such that the callback is called before 
+       we explicitly call the "changeState" method.
+    */
+    if (false) {
+#else
     if (m_async) {
+#endif
         if (m_upload)
             request.setReportUploadProgress(true);
 

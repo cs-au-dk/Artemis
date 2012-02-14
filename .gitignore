@@ -1,6 +1,5 @@
 *.[oa]
 
-qt
 build-output
 artemis-build-output
 qt-env*

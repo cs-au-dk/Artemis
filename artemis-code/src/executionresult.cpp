@@ -74,6 +74,15 @@ namespace artemis {
         element_pointers.insert(QPair<QWebElement*,QString>(elem,name));
     }
 
+    void ExecutionResult::addedAjaxCallbackHandler(QAjaxCallbackHandler* handler) {
+        qDebug() << "AJAX CALLBACK HANDLER ADDED" << endl;
+        m_ajax_callback_handlers.append(handler);
+    }
+
+    QList<QAjaxCallbackHandler*> ExecutionResult::ajaxCallbackHandlers() {
+        return m_ajax_callback_handlers;
+    }
+
     void ExecutionResult::finalize() {
         Q_ASSERT(m_event_handlers.isEmpty());
         Q_ASSERT(!final);
