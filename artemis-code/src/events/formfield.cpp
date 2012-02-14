@@ -118,7 +118,8 @@ namespace artemis {
 
         if (type_attr == "password"
             || type_attr == "text"
-            || type_attr == "email")
+            || type_attr == "email"
+            || type_attr == "file")
             return TEXT;
 
         qFatal("Unknown type attribute on form element: %s", type_attr.toStdString().c_str());
