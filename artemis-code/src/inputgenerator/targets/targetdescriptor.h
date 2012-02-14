@@ -30,8 +30,9 @@
 
 #include <QWebElement>
 
+#include "events/eventhandlerdescriptor.h"
+
 #include "artemiswebpage.h"
-/*#include "events/eventhandlerdescriptor.h"*/
 
 namespace artemis {
 

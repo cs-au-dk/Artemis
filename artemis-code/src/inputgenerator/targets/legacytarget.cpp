@@ -26,10 +26,6 @@
   or implied, of Simon Holm Jensen
 */
 
-#include <QWebElement>
-
-#include "events/eventhandlerdescriptor.h"
-
 #include "legacytarget.h"
 
 namespace artemis {
