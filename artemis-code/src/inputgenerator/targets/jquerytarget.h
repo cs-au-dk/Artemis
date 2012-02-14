@@ -31,7 +31,6 @@
 #include <QWebElement>
 
 #include "artemisoptions.h"
-
 #include "targetdescriptor.h"
 
 namespace artemis {
