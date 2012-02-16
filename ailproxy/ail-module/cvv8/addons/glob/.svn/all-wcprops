@@ -1,0 +1,41 @@
+K 25
+svn:wc:ra_dav:version-url
+V 38
+/svn/!svn/ver/1867/convert/addons/glob
+END
+jsglob.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 49
+/svn/!svn/ver/1867/convert/addons/glob/jsglob.cpp
+END
+whglob.c
+K 25
+svn:wc:ra_dav:version-url
+V 47
+/svn/!svn/ver/1803/convert/addons/glob/whglob.c
+END
+jsglob.hpp
+K 25
+svn:wc:ra_dav:version-url
+V 49
+/svn/!svn/ver/1862/convert/addons/glob/jsglob.hpp
+END
+whglob.h
+K 25
+svn:wc:ra_dav:version-url
+V 47
+/svn/!svn/ver/1803/convert/addons/glob/whglob.h
+END
+test.js
+K 25
+svn:wc:ra_dav:version-url
+V 46
+/svn/!svn/ver/1804/convert/addons/glob/test.js
+END
+Makefile
+K 25
+svn:wc:ra_dav:version-url
+V 47
+/svn/!svn/ver/1862/convert/addons/glob/Makefile
+END

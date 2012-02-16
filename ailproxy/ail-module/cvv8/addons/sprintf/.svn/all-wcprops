@@ -1,0 +1,29 @@
+K 25
+svn:wc:ra_dav:version-url
+V 41
+/svn/!svn/ver/1862/convert/addons/sprintf
+END
+jssprintf.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/svn/!svn/ver/1862/convert/addons/sprintf/jssprintf.cpp
+END
+jssprintf.hpp
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/svn/!svn/ver/1862/convert/addons/sprintf/jssprintf.hpp
+END
+test.js
+K 25
+svn:wc:ra_dav:version-url
+V 49
+/svn/!svn/ver/1526/convert/addons/sprintf/test.js
+END
+Makefile
+K 25
+svn:wc:ra_dav:version-url
+V 50
+/svn/!svn/ver/1862/convert/addons/sprintf/Makefile
+END
