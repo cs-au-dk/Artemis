@@ -1,0 +1,29 @@
+K 25
+svn:wc:ra_dav:version-url
+V 44
+/svn/!svn/ver/2180/convert/addons/shell-skel
+END
+arguments.js
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/svn/!svn/ver/2088/convert/addons/shell-skel/arguments.js
+END
+shell.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 54
+/svn/!svn/ver/2180/convert/addons/shell-skel/shell.cpp
+END
+test.js
+K 25
+svn:wc:ra_dav:version-url
+V 52
+/svn/!svn/ver/1552/convert/addons/shell-skel/test.js
+END
+Makefile
+K 25
+svn:wc:ra_dav:version-url
+V 53
+/svn/!svn/ver/1552/convert/addons/shell-skel/Makefile
+END

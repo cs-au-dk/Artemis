@@ -1,0 +1,29 @@
+K 10
+svn:ignore
+V 166
+*.obj
+*.exe
+*.pdb
+*.user
+*.aps
+*.pch
+*.vspscc
+*_i.c
+*_p.c
+*.ncb
+*.suo
+*.sdf
+*.opensdf
+*.tlb
+*.tlh
+*.bak
+*.cache
+*.ilk
+*.log
+[Dd]ebug*/
+[Rr]elease*/
+ipch/
+*.lib
+*.sbr
+
+END

@@ -1,0 +1,38 @@
+﻿
+Microsoft Visual Studio Solution File, Format Version 11.00
+# Visual Studio 2010
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "cvv8", "cvv8.vcxproj", "{AA405F1C-F920-4974-B840-5E6D76656B59}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "examples", "examples", "{8075743D-F5E5-4852-A888-F8EB5F0AC2C3}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "demo", "examples\demo\demo.vcxproj", "{9AA9BEF6-D025-443B-B413-9D79D7CC7295}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ConvertDemo", "examples\ConvertDemo\ConvertDemo.vcxproj", "{AF484A92-714A-47AE-B9A9-7755A5A69D50}"
+EndProject
+Global
+	GlobalSection(SolutionConfigurationPlatforms) = preSolution
+		Debug|Win32 = Debug|Win32
+		Release|Win32 = Release|Win32
+	EndGlobalSection
+	GlobalSection(ProjectConfigurationPlatforms) = postSolution
+		{AA405F1C-F920-4974-B840-5E6D76656B59}.Debug|Win32.ActiveCfg = Debug|Win32
+		{AA405F1C-F920-4974-B840-5E6D76656B59}.Debug|Win32.Build.0 = Debug|Win32
+		{AA405F1C-F920-4974-B840-5E6D76656B59}.Release|Win32.ActiveCfg = Release|Win32
+		{AA405F1C-F920-4974-B840-5E6D76656B59}.Release|Win32.Build.0 = Release|Win32
+		{9AA9BEF6-D025-443B-B413-9D79D7CC7295}.Debug|Win32.ActiveCfg = Debug|Win32
+		{9AA9BEF6-D025-443B-B413-9D79D7CC7295}.Debug|Win32.Build.0 = Debug|Win32
+		{9AA9BEF6-D025-443B-B413-9D79D7CC7295}.Release|Win32.ActiveCfg = Release|Win32
+		{9AA9BEF6-D025-443B-B413-9D79D7CC7295}.Release|Win32.Build.0 = Release|Win32
+		{AF484A92-714A-47AE-B9A9-7755A5A69D50}.Debug|Win32.ActiveCfg = Debug|Win32
+		{AF484A92-714A-47AE-B9A9-7755A5A69D50}.Debug|Win32.Build.0 = Debug|Win32
+		{AF484A92-714A-47AE-B9A9-7755A5A69D50}.Release|Win32.ActiveCfg = Release|Win32
+		{AF484A92-714A-47AE-B9A9-7755A5A69D50}.Release|Win32.Build.0 = Release|Win32
+	EndGlobalSection
+	GlobalSection(SolutionProperties) = preSolution
+		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{9AA9BEF6-D025-443B-B413-9D79D7CC7295} = {8075743D-F5E5-4852-A888-F8EB5F0AC2C3}
+		{AF484A92-714A-47AE-B9A9-7755A5A69D50} = {8075743D-F5E5-4852-A888-F8EB5F0AC2C3}
+	EndGlobalSection
+EndGlobal

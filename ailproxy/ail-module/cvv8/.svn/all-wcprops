@@ -1,0 +1,41 @@
+K 25
+svn:wc:ra_dav:version-url
+V 26
+/svn/!svn/ver/2180/convert
+END
+config.make
+K 25
+svn:wc:ra_dav:version-url
+V 38
+/svn/!svn/ver/2033/convert/config.make
+END
+common.make
+K 25
+svn:wc:ra_dav:version-url
+V 38
+/svn/!svn/ver/1433/convert/common.make
+END
+README.txt
+K 25
+svn:wc:ra_dav:version-url
+V 37
+/svn/!svn/ver/2091/convert/README.txt
+END
+createForwarders.sh
+K 25
+svn:wc:ra_dav:version-url
+V 46
+/svn/!svn/ver/2065/convert/createForwarders.sh
+END
+createSignatureTypeList.sh
+K 25
+svn:wc:ra_dav:version-url
+V 53
+/svn/!svn/ver/2024/convert/createSignatureTypeList.sh
+END
+Makefile
+K 25
+svn:wc:ra_dav:version-url
+V 35
+/svn/!svn/ver/2069/convert/Makefile
+END

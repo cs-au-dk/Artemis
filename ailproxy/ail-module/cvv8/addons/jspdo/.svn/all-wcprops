@@ -1,0 +1,71 @@
+K 25
+svn:wc:ra_dav:version-url
+V 39
+/svn/!svn/ver/2086/convert/addons/jspdo
+END
+cpdo_amalgamation.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/svn/!svn/ver/1563/convert/addons/jspdo/cpdo_amalgamation.cpp
+END
+jspdo.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 49
+/svn/!svn/ver/2085/convert/addons/jspdo/jspdo.cpp
+END
+js2c.c
+K 25
+svn:wc:ra_dav:version-url
+V 46
+/svn/!svn/ver/1716/convert/addons/jspdo/js2c.c
+END
+cpdo_amalgamation.hpp
+K 25
+svn:wc:ra_dav:version-url
+V 61
+/svn/!svn/ver/1563/convert/addons/jspdo/cpdo_amalgamation.hpp
+END
+jspdo.hpp
+K 25
+svn:wc:ra_dav:version-url
+V 49
+/svn/!svn/ver/1862/convert/addons/jspdo/jspdo.hpp
+END
+scratchpad.js
+K 25
+svn:wc:ra_dav:version-url
+V 53
+/svn/!svn/ver/1428/convert/addons/jspdo/scratchpad.js
+END
+test.js
+K 25
+svn:wc:ra_dav:version-url
+V 47
+/svn/!svn/ver/2034/convert/addons/jspdo/test.js
+END
+jspdo-init.js
+K 25
+svn:wc:ra_dav:version-url
+V 53
+/svn/!svn/ver/1705/convert/addons/jspdo/jspdo-init.js
+END
+README.txt
+K 25
+svn:wc:ra_dav:version-url
+V 50
+/svn/!svn/ver/2017/convert/addons/jspdo/README.txt
+END
+Makefile
+K 25
+svn:wc:ra_dav:version-url
+V 48
+/svn/!svn/ver/2017/convert/addons/jspdo/Makefile
+END
+whiki-local.js
+K 25
+svn:wc:ra_dav:version-url
+V 54
+/svn/!svn/ver/2086/convert/addons/jspdo/whiki-local.js
+END

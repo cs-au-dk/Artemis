@@ -1,0 +1,53 @@
+K 25
+svn:wc:ra_dav:version-url
+V 38
+/svn/!svn/ver/2166/convert/addons/whio
+END
+cvv8-whio.hpp
+K 25
+svn:wc:ra_dav:version-url
+V 52
+/svn/!svn/ver/2161/convert/addons/whio/cvv8-whio.hpp
+END
+whio_amalgamation.c
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/svn/!svn/ver/2166/convert/addons/whio/whio_amalgamation.c
+END
+whio_amalgamation_cpp.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/svn/!svn/ver/2166/convert/addons/whio/whio_amalgamation_cpp.cpp
+END
+whio_amalgamation.h
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/svn/!svn/ver/2166/convert/addons/whio/whio_amalgamation.h
+END
+whio_amalgamation_cpp.hpp
+K 25
+svn:wc:ra_dav:version-url
+V 64
+/svn/!svn/ver/2166/convert/addons/whio/whio_amalgamation_cpp.hpp
+END
+test.js
+K 25
+svn:wc:ra_dav:version-url
+V 46
+/svn/!svn/ver/2164/convert/addons/whio/test.js
+END
+cvv8-whio.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 52
+/svn/!svn/ver/2164/convert/addons/whio/cvv8-whio.cpp
+END
+Makefile
+K 25
+svn:wc:ra_dav:version-url
+V 47
+/svn/!svn/ver/2125/convert/addons/whio/Makefile
+END

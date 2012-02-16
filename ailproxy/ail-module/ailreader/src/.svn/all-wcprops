@@ -1,0 +1,47 @@
+K 25
+svn:wc:ra_dav:version-url
+V 47
+/svn/amoeller-9/!svn/ver/127/code/ailreader/src
+END
+scanner.h
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/svn/amoeller-9/!svn/ver/122/code/ailreader/src/scanner.h
+END
+lemon.h
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/svn/amoeller-9/!svn/ver/122/code/ailreader/src/lemon.h
+END
+parser.y
+K 25
+svn:wc:ra_dav:version-url
+V 56
+/svn/amoeller-9/!svn/ver/124/code/ailreader/src/parser.y
+END
+ail.c
+K 25
+svn:wc:ra_dav:version-url
+V 53
+/svn/amoeller-9/!svn/ver/127/code/ailreader/src/ail.c
+END
+ail.h
+K 25
+svn:wc:ra_dav:version-url
+V 53
+/svn/amoeller-9/!svn/ver/124/code/ailreader/src/ail.h
+END
+lemon.c
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/svn/amoeller-9/!svn/ver/123/code/ailreader/src/lemon.c
+END
+scanner.re
+K 25
+svn:wc:ra_dav:version-url
+V 58
+/svn/amoeller-9/!svn/ver/123/code/ailreader/src/scanner.re
+END

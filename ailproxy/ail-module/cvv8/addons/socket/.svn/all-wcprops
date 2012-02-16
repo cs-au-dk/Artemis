@@ -1,0 +1,47 @@
+K 25
+svn:wc:ra_dav:version-url
+V 40
+/svn/!svn/ver/2111/convert/addons/socket
+END
+srv-echo.js
+K 25
+svn:wc:ra_dav:version-url
+V 52
+/svn/!svn/ver/1792/convert/addons/socket/srv-echo.js
+END
+echo-config.inc.js
+K 25
+svn:wc:ra_dav:version-url
+V 59
+/svn/!svn/ver/1527/convert/addons/socket/echo-config.inc.js
+END
+socket.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 51
+/svn/!svn/ver/2111/convert/addons/socket/socket.cpp
+END
+test.js
+K 25
+svn:wc:ra_dav:version-url
+V 48
+/svn/!svn/ver/1564/convert/addons/socket/test.js
+END
+Makefile
+K 25
+svn:wc:ra_dav:version-url
+V 49
+/svn/!svn/ver/1862/convert/addons/socket/Makefile
+END
+cli-echo.js
+K 25
+svn:wc:ra_dav:version-url
+V 52
+/svn/!svn/ver/1792/convert/addons/socket/cli-echo.js
+END
+socket.hpp
+K 25
+svn:wc:ra_dav:version-url
+V 51
+/svn/!svn/ver/2017/convert/addons/socket/socket.hpp
+END

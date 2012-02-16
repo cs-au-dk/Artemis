@@ -1,0 +1,29 @@
+K 25
+svn:wc:ra_dav:version-url
+V 43
+/svn/!svn/ver/2138/convert/addons/bytearray
+END
+bytearray.cpp
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/svn/!svn/ver/2138/convert/addons/bytearray/bytearray.cpp
+END
+bytearray.hpp
+K 25
+svn:wc:ra_dav:version-url
+V 57
+/svn/!svn/ver/2138/convert/addons/bytearray/bytearray.hpp
+END
+test.js
+K 25
+svn:wc:ra_dav:version-url
+V 51
+/svn/!svn/ver/2017/convert/addons/bytearray/test.js
+END
+Makefile
+K 25
+svn:wc:ra_dav:version-url
+V 52
+/svn/!svn/ver/2017/convert/addons/bytearray/Makefile
+END

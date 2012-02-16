@@ -1,0 +1,47 @@
+K 25
+svn:wc:ra_dav:version-url
+V 38
+/svn/!svn/ver/2017/convert/build/vs_10
+END
+v8.props
+K 25
+svn:wc:ra_dav:version-url
+V 47
+/svn/!svn/ver/2017/convert/build/vs_10/v8.props
+END
+v8_release.props
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/svn/!svn/ver/2017/convert/build/vs_10/v8_release.props
+END
+cvv8.vcxproj
+K 25
+svn:wc:ra_dav:version-url
+V 51
+/svn/!svn/ver/2017/convert/build/vs_10/cvv8.vcxproj
+END
+cvv8.sln
+K 25
+svn:wc:ra_dav:version-url
+V 47
+/svn/!svn/ver/2017/convert/build/vs_10/cvv8.sln
+END
+v8_debug.props
+K 25
+svn:wc:ra_dav:version-url
+V 53
+/svn/!svn/ver/2017/convert/build/vs_10/v8_debug.props
+END
+cvv8.vcxproj.filters
+K 25
+svn:wc:ra_dav:version-url
+V 59
+/svn/!svn/ver/2017/convert/build/vs_10/cvv8.vcxproj.filters
+END
+cvv8.props
+K 25
+svn:wc:ra_dav:version-url
+V 49
+/svn/!svn/ver/2017/convert/build/vs_10/cvv8.props
+END

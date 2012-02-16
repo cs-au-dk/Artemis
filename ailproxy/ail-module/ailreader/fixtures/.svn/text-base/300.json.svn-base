@@ -1,0 +1,19 @@
+{
+"type": "array",
+"items": [
+   {
+      "type": "integer"
+   },
+   {
+      "type": "number"
+   },
+   {
+      "type": "array",
+      "items": [
+         {
+            "type": "string"
+         }
+      ]
+   }
+]
+}

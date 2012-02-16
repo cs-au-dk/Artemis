@@ -1,0 +1,53 @@
+K 25
+svn:wc:ra_dav:version-url
+V 46
+/svn/!svn/ver/2173/convert/include/cvv8/detail
+END
+signature_core.hpp
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/svn/!svn/ver/2101/convert/include/cvv8/detail/signature_core.hpp
+END
+invocable_core.hpp
+K 25
+svn:wc:ra_dav:version-url
+V 65
+/svn/!svn/ver/2173/convert/include/cvv8/detail/invocable_core.hpp
+END
+signature_generated.hpp
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/svn/!svn/ver/2033/convert/include/cvv8/detail/signature_generated.hpp
+END
+tmp.hpp
+K 25
+svn:wc:ra_dav:version-url
+V 54
+/svn/!svn/ver/2017/convert/include/cvv8/detail/tmp.hpp
+END
+invocable_generated.hpp
+K 25
+svn:wc:ra_dav:version-url
+V 70
+/svn/!svn/ver/2017/convert/include/cvv8/detail/invocable_generated.hpp
+END
+doxygen_hack.hpp
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/svn/!svn/ver/2071/convert/include/cvv8/detail/doxygen_hack.hpp
+END
+Makefile
+K 25
+svn:wc:ra_dav:version-url
+V 55
+/svn/!svn/ver/1867/convert/include/cvv8/detail/Makefile
+END
+convert_core.hpp
+K 25
+svn:wc:ra_dav:version-url
+V 63
+/svn/!svn/ver/2173/convert/include/cvv8/detail/convert_core.hpp
+END

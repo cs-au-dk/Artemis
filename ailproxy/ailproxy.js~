@@ -1,0 +1,64 @@
+var http = require('http');
+var url = require('url');
+
+
+function isJSONRequest(request) {
+    return false;
+}
+
+function requestHandler(request, response) {
+
+    console.log('Received request to ', request.url);
+
+    if (isJSONRequest(request)) {
+	console.log('Determined JSON call - calculating response using AIL!');
+    } else {
+	var request_url = url.parse(request.url);
+  
+	target = request.headers['host'].split(':');
+	hostname = target[0];
+	port = (target.length > 1) ? target[1] : 80;
+
+	var options = {
+	    host: hostname,
+	    port: port,
+	    method: request.method, 
+	    path: (request_url.pathname || '/') + (request_url.search || ''), 
+	    headers: request.headers
+	}
+
+	console.log(options);
+
+	var proxy_request = http.request(options, function(proxy_response) {
+	    console.log('Received response from ' + request.url);
+	    response.writeHead(proxy_response.statusCode, proxy_response.headers);
+	    
+	    proxy_response.addListener('data', function(chunk) {
+		response.write(chunk, 'binary');
+	    });
+
+	    proxy_response.addListener('end', function() {
+		response.end();
+	    });
+	    
+	});
+
+	request.addListener('data', function(chunk) {
+	    proxy_request.write(chunk, 'binary');
+	});
+
+	request.addListener('emd', function(chunk) {
+	    proxy_request.end();
+	});
+
+
+	proxy_request.on('error', function(e) {
+	    console.error('Error encountered handling URL: ' + request.url);
+	    response.end();
+	});
+
+	console.log('Finished!');
+    }
+}
+
+http.createServer(requestHandler).listen(8080);

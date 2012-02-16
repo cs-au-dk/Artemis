@@ -1,0 +1,23 @@
+K 25
+svn:wc:ra_dav:version-url
+V 43
+/svn/amoeller-9/!svn/ver/127/code/ailreader
+END
+LICENSE
+K 25
+svn:wc:ra_dav:version-url
+V 50
+/svn/amoeller-9/!svn/ver/22/code/ailreader/LICENSE
+END
+tests.c
+K 25
+svn:wc:ra_dav:version-url
+V 51
+/svn/amoeller-9/!svn/ver/126/code/ailreader/tests.c
+END
+Makefile
+K 25
+svn:wc:ra_dav:version-url
+V 52
+/svn/amoeller-9/!svn/ver/122/code/ailreader/Makefile
+END
