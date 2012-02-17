@@ -1,3 +1,0 @@
-var ailreader = require('./ailreader');
-
-console.warn(ailreader.generate_response_permutation('foo','bar'));
