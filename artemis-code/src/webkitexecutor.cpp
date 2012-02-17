@@ -302,15 +302,6 @@ namespace artemis {
         QObject::connect(webkit_listener, SIGNAL(addedAjaxCallbackHandler(QAjaxCallbackHandler*)),
                             current_result, SLOT(addedAjaxCallbackHandler(QAjaxCallbackHandler*)));
 
-        long int i;
-        qDebug() << "waiting..." << endl;
-        long int j = 0;
-        for (i = 0; i < 2000000000; i++) {
-            j = i - j;
-
-        }
-        qDebug() << "continue..." << j << endl;
-
         //Load URL into WebKit
         qDebug() << "Trying to load: " << artemis_options->getURL()->toString() << endl;
         page->mainFrame()->load(*artemis_options->getURL());
