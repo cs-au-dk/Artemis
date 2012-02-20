@@ -3,7 +3,10 @@
 #include <string>
 #include <fstream>
 
+extern "C" {
 #include "ailreader/src/ail.h"
+}
+
 #include "cvv8/include/cvv8/v8-convert.hpp"
 
 
