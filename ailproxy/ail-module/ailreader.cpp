@@ -94,7 +94,7 @@ Handle<Value> generate_response_permutation(const Arguments& args) {
 
     std::string buffer;
     struct response_chunk * current = response;
-    while (response) {
+    while (current != NULL) {
         buffer.append((current->chunk));
         current = current->next;
     }
