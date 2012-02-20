@@ -51,8 +51,11 @@ int main(int argc, char** argv) {
   fread(raw_ail, sizeof(char), size, fp);
   fclose(fp);
 
+  char * schema_folder;
+  get_schema_folder(argv[1], &schema_folder);
+
   ail_t ail;
-  if (construct_ail(&ail, raw_ail) != 0) {
+  if (construct_ail(&ail, raw_ail, schema_folder) != 0) {
     printf("FAILED READING AIL FILE\n");
     return 1;
   }

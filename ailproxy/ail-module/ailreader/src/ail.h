@@ -85,7 +85,7 @@ struct response_chunk {
 
 typedef struct response_chunk * ail_response_t;
 
-int construct_ail(ail_t* ail, const char* raw_ail);
+int construct_ail(ail_t* ail, const char* raw_ail, char * schema_folder);
 int allocate_operation(ail_operation_t * operation);
 int allocate_schema(ail_schema_t * schema);
 int allocate_url_fragment(ail_url_fragment_t * fragment);
@@ -100,5 +100,7 @@ int generate_response_permutation(const ail_operation_t operation, ail_response_
 
 int operationcmp(const ail_operation_t operation, char** args, int argc, char** kwargs, char** vwargs, int kwargc);
 void print_response(const ail_response_t);
+
+void get_schema_folder(const char * source, char ** schema_folder);
 
 #endif // AIL_READER_H

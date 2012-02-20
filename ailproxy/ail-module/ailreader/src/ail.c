@@ -35,7 +35,11 @@
 #include "ail.h"
 #include "lemon.h"
 
-int construct_ail(ail_t * ail, const char * raw_ail) {
+static char * base_schema_folder = NULL;
+
+int construct_ail(ail_t * ail, const char * raw_ail, char * schema_folder) {
+
+  base_schema_folder = schema_folder;
 
   *ail = (ail_t) malloc(sizeof(struct ail));
 
@@ -427,8 +431,22 @@ int operationcmp(const ail_operation_t operation, \
 }
 
 int load_schema(ail_schema_t schema) {
+  char * file_name = schema->file_name;
+
+  if (base_schema_folder != NULL) {
+
+    // Build the string
+    // xxx/yyy\0
+    // strlen(base_...) + strlen(schema->file_...) + 1
+
+    file_name = malloc(sizeof(char) * (strlen(base_schema_folder) + strlen(file_name) + 1));
+    
+    strcpy(file_name, base_schema_folder);
+    strcpy(file_name + strlen(base_schema_folder), schema->file_name);
+  }
+
   FILE * fp;
-  fp = fopen(schema->file_name, "r");
+  fp = fopen(file_name, "r");
 
   if (fp == NULL) {
     printf("WARNING: JSON file %s not found\n", schema->file_name);
@@ -459,4 +477,21 @@ void print_response(const ail_response_t response) {
       printf("%s", current->chunk);
       current = current->next;
   }
+}
+
+void get_schema_folder(const char * source, char ** schema_folder) {
+  /* Find last instance of a / */
+
+  int i;
+  for (i = strlen(source) - 1; i >= 0; i--) {
+    if (source[i] == '/') {
+      *schema_folder = malloc(sizeof(char) * (i + 2)); /* +1 for \0 and +1 for index offset */
+      memcpy(*schema_folder, source, sizeof(char) * (i + 1));
+      (*schema_folder)[i+1] = '\0';
+
+      return;
+    }
+  }
+
+  *schema_folder = NULL;
 }
