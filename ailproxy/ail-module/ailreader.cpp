@@ -53,8 +53,12 @@ Handle<Value> generate_response_permutation(const Arguments& args) {
 
     // Construct AIL
     ail_t AIL;
-    if(construct_ail(&AIL, rawAILSchema.data())) {
-      return ThrowException(Exception::TypeError(String::New("")));
+
+    char * schema_folder;
+    get_schema_folder(ailSchemaPath.c_str(), &schema_folder);
+
+    if(construct_ail(&AIL, rawAILSchema.data(), schema_folder)) {
+      return ThrowException(Exception::TypeError(String::New("Error reading AIL specification")));
     }
 
     // Test for relevant operation
@@ -75,7 +79,8 @@ Handle<Value> generate_response_permutation(const Arguments& args) {
       valueArgs[i] = const_cast<char*>(vwargs.at(i).data());
     }
     
-    if(!get_operation_for_request(AIL, &operation, operationArgs, opArgs.size(), keywordArgs, valueArgs, kwargs.size())){
+    if(get_operation_for_request(AIL, &operation, operationArgs, \
+        opArgs.size(), keywordArgs, valueArgs, kwargs.size()) != 0){
       return v8::Undefined();
     }
 
@@ -83,7 +88,7 @@ Handle<Value> generate_response_permutation(const Arguments& args) {
 
     ail_response_t response;
 
-    if(generate_response_permutation(operation, &response)) {
+    if(generate_response_permutation(operation, &response) != 0) {
         return ThrowException(Exception::TypeError(String::New("Something went wrong generating response")));
     }
 
