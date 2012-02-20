@@ -62,7 +62,9 @@ int parse_ail(ail_t ail, const char * raw_ail) {
     Parse(parser, 0, 0);
 
     if (result == SCANNER_RESULT_ERR) {
-        return -1;
+        printf("UNEXPECTED TOKEN\n");
+        printf("Token found at byte offset %i\n", buffer->current - raw_ail);
+        return 1;
     }
 
     // cleanup

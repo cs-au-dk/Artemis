@@ -86,7 +86,7 @@ int scan(scanner_buffer *buffer, scanner_token *token) {
 		return SCANNER_RESULT_TOKEN;
 	}
 
-	" "|"\t" {
+	" "|"\t"|"\n" {
 		buffer->start = buffer->current;
 		continue;
 	}

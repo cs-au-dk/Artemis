@@ -52,5 +52,11 @@ int main(int argc, char** argv) {
   fclose(fp);
 
   ail_t ail;
-  return construct_ail(&ail, raw_ail);
+  if (construct_ail(&ail, raw_ail) != 0) {
+    printf("FAILED READING AIL FILE\n");
+    return 1;
+  }
+
+  printf("SYNTAX OK\n");
+  return 0;
 }
