@@ -6,7 +6,7 @@ def set_options(ctx):
 def configure(ctx):
     ctx.check_tool('compiler_cxx')
     ctx.check_tool('node_addon')
-    ctx.env.append_value('LINKFLAGS', ['-l:ail.so', '-L/home/kja/Artemis/ailreader/ail-module/', '-I/home/kja/Artemis/ailreader/ail-module/ailreader/src/'])
+    ctx.env.append_value('LINKFLAGS', ['-l:ail.so', '-L/home/semadk/src/github/artemis/ailproxy/ail-module/ailreader/',])
 
 def build(ctx):
     t = ctx.new_task_gen('cxx', 'shlib', 'node_addon')
