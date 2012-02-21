@@ -52,7 +52,7 @@ char * FIXTURE_AIL_MINIMAL = "\
 void ailParseMinimalTest(void) {
     ail_t ail;
 
-    int error = construct_ail(&ail, FIXTURE_AIL_MINIMAL);
+    int error = construct_ail(&ail, FIXTURE_AIL_MINIMAL, NULL);
 
     CU_ASSERT_FATAL(error == 0);
 
@@ -64,7 +64,7 @@ void ailParseMinimalTest(void) {
 void ailParseSimpleTest(void) {
     ail_t ail;
 
-    int error = construct_ail(&ail, FIXTURE_AIL_SIMPLE);
+    int error = construct_ail(&ail, FIXTURE_AIL_SIMPLE, NULL);
 
     CU_ASSERT_FATAL(error == 0);
 
@@ -122,7 +122,7 @@ void ailOperationLookupFailTest(void) {
     ail_operation_t operation = NULL;
 
     CU_ASSERT_FATAL(0 == \
-        construct_ail(&ail, FIXTURE_AIL_SIMPLE));
+        construct_ail(&ail, FIXTURE_AIL_SIMPLE, NULL));
 
     char * args[] = {"something", "something"};
     int argc = 2;
@@ -141,7 +141,7 @@ void ailOperationLookupTest(void) {
     ail_operation_t operation = NULL;
 
     CU_ASSERT_FATAL(0 == \
-        construct_ail(&ail, FIXTURE_AIL_SIMPLE));
+        construct_ail(&ail, FIXTURE_AIL_SIMPLE, NULL));
 
     char * args[] = {"ajax", "search"};
     int argc = 2;
