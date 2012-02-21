@@ -94,7 +94,7 @@ Handle<Value> generate_response_permutation(const Arguments& args) {
 
     std::string buffer;
 
-    buffer.append("HTTP/1.1 200 OK\n\n");
+    //buffer.append("HTTP/1.1 200 OK\n\n");
 
     struct response_chunk * current = response;
     while (current != NULL) {
