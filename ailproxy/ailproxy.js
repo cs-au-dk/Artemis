@@ -105,7 +105,7 @@ function requestHandler(request, response) {
 }
 
 if (process.argv.length != 3) {
-    console.log('Error, proper usage: ');
+    console.log('Error, proper usage: node ailproxy.js /path/to/schema');
 } else {
     var AILSchema = process.argv[2];
     http.createServer(requestHandler).listen(8080);
