@@ -91,10 +91,17 @@ int scan(scanner_buffer *buffer, scanner_token *token) {
 		continue;
 	}
 
-	[a-zA-Z0-9_\-*\.]+ {
+	[a-zA-Z0-9_\-*\.\[\]]+|"\"".+"\"" {
 		char *string;
 
-		string = strndup(buffer->start, YYCURSOR - buffer->start);
+		int correct_quote = 0;
+
+		if (*(buffer->start) == '"') {
+			correct_quote = 1;
+		}
+
+		string = strndup(buffer->start + correct_quote, \
+			YYCURSOR - buffer->start - correct_quote);
 
 		token->data.string = string;
 		token->id = TOKEN_STRING;
