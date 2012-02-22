@@ -384,8 +384,6 @@ int operationcmp(const ail_operation_t operation, \
 
   ail_url_fragment_t current_fragment = operation->fragments;
 
-
-
   int i;
   for (i = 0; i < argc; i++) {
 
@@ -393,7 +391,8 @@ int operationcmp(const ail_operation_t operation, \
       return 1;
     }
 
-    if (strcmp(current_fragment->text, args[i]) != 0) {
+    if (strcmp(current_fragment->text, args[i]) != 0 &&
+        strcmp(current_fragment->text, "*") != 0) {
       return 1; 
     }
 

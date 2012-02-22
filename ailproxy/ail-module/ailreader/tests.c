@@ -155,6 +155,25 @@ void ailOperationLookupTest(void) {
     CU_ASSERT_FATAL(operation != NULL);
 }
 
+void ailOperationLookupTest2(void) {
+    ail_t ail;
+    ail_operation_t operation = NULL;
+
+    CU_ASSERT_FATAL(0 == \
+        construct_ail(&ail, FIXTURE_AIL_SIMPLE, NULL));
+
+    char * args[] = {"ajax", "delete"};
+    int argc = 2;
+    char * kwargs[] = {"id"};
+    char * vwargs[] = {"2079868250"};
+    int kwargc = 1;
+
+    CU_ASSERT_FATAL(0 == \
+        get_operation_for_request(ail, &operation, args, argc, kwargs, vwargs, kwargc));
+
+    CU_ASSERT_FATAL(operation != NULL);
+}
+
 void ailOperationCmpTest(void) {
 
     ail_url_fragment_t f2;
@@ -245,6 +264,7 @@ int main (int argc, char** argv) {
         NULL == CU_add_test(pSuite, "Parser test simple", ailParseSimpleTest) ||
         NULL == CU_add_test(pSuite, "Operation lookup fail test", ailOperationLookupFailTest) ||
         NULL == CU_add_test(pSuite, "Operation lookup test", ailOperationLookupTest) ||
+        NULL == CU_add_test(pSuite, "Operation lookup test 2", ailOperationLookupTest2) ||
         NULL == CU_add_test(pSuite, "Operation-cmp test", ailOperationCmpTest) ||
         NULL == CU_add_test(pSuite, "Generate response permutation", ailGenerateResponsePermutation)) {
         CU_cleanup_registry();
