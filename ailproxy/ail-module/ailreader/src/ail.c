@@ -449,7 +449,7 @@ int load_schema(ail_schema_t schema) {
   fp = fopen(file_name, "r");
 
   if (fp == NULL) {
-    printf("WARNING: JSON file %s not found\n", schema->file_name);
+    printf("WARNING: JSON file %s not found (path: %s)\n", schema->file_name, file_name);
     return 1;
   }
 
@@ -467,6 +467,8 @@ int load_schema(ail_schema_t schema) {
     printf("WARNING: JSON file %s not valid\n", schema->file_name);
     return 1;
   }
+
+  fclose(fp);
 
   return 0;
 }
