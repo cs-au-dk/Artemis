@@ -293,7 +293,7 @@ int _recursive_operation_perm(const yajl_val schema_part, ail_response_t * respo
   } else if (YAJL_IS_STRING(type) && strcmp(type->u.string, "string") == 0) {
 
     struct response_chunk * result = malloc(sizeof(struct response_chunk));
-    result->chunk = "<str>";
+    result->chunk = "\"<str>\"";
     result->next = NULL;
 
     *response = result;
