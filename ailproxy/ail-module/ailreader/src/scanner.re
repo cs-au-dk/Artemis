@@ -91,7 +91,7 @@ int scan(scanner_buffer *buffer, scanner_token *token) {
 		continue;
 	}
 
-	[a-zA-Z0-9_\-*\.\[\]]+|"\"".+"\"" {
+	[a-zA-Z0-9_\-*\.\[\]]+|"\"".*"\"" {
 		char *string;
 
 		int correct_quote = 0;
