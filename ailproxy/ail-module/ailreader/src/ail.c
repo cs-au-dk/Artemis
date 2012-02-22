@@ -346,17 +346,18 @@ int _recursive_operation_perm(const yajl_val schema_part, ail_response_t * respo
 int generate_response_permutation(const ail_operation_t operation, ail_response_t * response) {
 
   if (operation == NULL) {
-    printf("Error: No operation");
+    printf("Error: No operation\n");
     return 1;
   }
 
   if (operation->schemas == NULL) {
-    printf("Error: No schema");
+    printf("Error: No schema\n");
     return 1;
   }
 
   if (operation->schemas->payload == NULL) {
-    printf("Error: No schema payload");
+    printf("Error: No schema payload\n");
+    printf("For schema name %s\n", operation->schemas->file_name);
     return 1;
   }
 

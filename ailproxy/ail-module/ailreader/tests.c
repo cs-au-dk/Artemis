@@ -40,19 +40,21 @@
 char * FIXTURE_AIL_SIMPLE = "\
     URL http://localhost:8000\
     \
-    GET ajax/search(query:*) : @399.json\
-    GET ajax/get_page(query:*, page:*) : @400.json\
-    GET ajax/*(id:*) : @401.json|@402.json\
+    GET ajax/search(query:*) : @simpleajax.0.json\
+    GET ajax/get_page(query:*, page:*) : @simpleajax.1.json\
+    GET ajax/*(id:*) : @simpleajax.2.json|@simpleajax.3.json\
     ";
 
 char * FIXTURE_AIL_MINIMAL = "\
     URL\
     ";
 
+char * fixture_folder = "./fixtures/";
+
 void ailParseMinimalTest(void) {
     ail_t ail;
 
-    int error = construct_ail(&ail, FIXTURE_AIL_MINIMAL, NULL);
+    int error = construct_ail(&ail, FIXTURE_AIL_MINIMAL, fixture_folder);
 
     CU_ASSERT_FATAL(error == 0);
 
@@ -64,7 +66,7 @@ void ailParseMinimalTest(void) {
 void ailParseSimpleTest(void) {
     ail_t ail;
 
-    int error = construct_ail(&ail, FIXTURE_AIL_SIMPLE, NULL);
+    int error = construct_ail(&ail, FIXTURE_AIL_SIMPLE, fixture_folder);
 
     CU_ASSERT_FATAL(error == 0);
 
@@ -122,7 +124,7 @@ void ailOperationLookupFailTest(void) {
     ail_operation_t operation = NULL;
 
     CU_ASSERT_FATAL(0 == \
-        construct_ail(&ail, FIXTURE_AIL_SIMPLE, NULL));
+        construct_ail(&ail, FIXTURE_AIL_SIMPLE, fixture_folder));
 
     char * args[] = {"something", "something"};
     int argc = 2;
@@ -141,7 +143,7 @@ void ailOperationLookupTest(void) {
     ail_operation_t operation = NULL;
 
     CU_ASSERT_FATAL(0 == \
-        construct_ail(&ail, FIXTURE_AIL_SIMPLE, NULL));
+        construct_ail(&ail, FIXTURE_AIL_SIMPLE, fixture_folder));
 
     char * args[] = {"ajax", "search"};
     int argc = 2;
@@ -160,7 +162,7 @@ void ailOperationLookupTest2(void) {
     ail_operation_t operation = NULL;
 
     CU_ASSERT_FATAL(0 == \
-        construct_ail(&ail, FIXTURE_AIL_SIMPLE, NULL));
+        construct_ail(&ail, FIXTURE_AIL_SIMPLE, fixture_folder));
 
     char * args[] = {"ajax", "delete"};
     int argc = 2;
@@ -172,6 +174,12 @@ void ailOperationLookupTest2(void) {
         get_operation_for_request(ail, &operation, args, argc, kwargs, vwargs, kwargc));
 
     CU_ASSERT_FATAL(operation != NULL);
+
+    CU_ASSERT_FATAL(operation->schemas != NULL);
+    CU_ASSERT_FATAL(operation->schemas->next != NULL);
+    CU_ASSERT_FATAL(operation->schemas->next->next == NULL);
+    CU_ASSERT_FATAL(operation->schemas->file_name != NULL);
+    CU_ASSERT_FATAL(operation->schemas->payload != NULL);
 }
 
 void ailOperationCmpTest(void) {
@@ -212,17 +220,17 @@ void ailOperationCmpTest(void) {
                                (char*[]){"ddd", "111", "fda"}, 3));
 }
 
-void ailGenerateResponsePermutation(void) {
+void ailGenerateResponsePermutationGeneric(char * schema_path) {
     
     ail_schema_t schema1;
     allocate_schema(&schema1);
-    schema1->file_name = "fixtures/300.json";
+    schema1->file_name = schema_path;
 
     CU_ASSERT_FATAL(load_schema(schema1) == 0);
 
     ail_schema_t schema2;
     allocate_schema(&schema2);
-    schema2->file_name = "fixtures/300.json";
+    schema2->file_name = schema_path;
     load_schema(schema2);
     schema2->next = schema1;
 
@@ -237,8 +245,15 @@ void ailGenerateResponsePermutation(void) {
 
     CU_ASSERT_FATAL(NULL != response);
 
-    print_response(response);
+    //print_response(response);
+}
 
+void ailGenerateResponsePermutation(void) {
+    ailGenerateResponsePermutationGeneric("fixtures/300.json");
+    ailGenerateResponsePermutationGeneric("fixtures/simpleajax.0.json");
+    ailGenerateResponsePermutationGeneric("fixtures/simpleajax.1.json");
+    ailGenerateResponsePermutationGeneric("fixtures/simpleajax.2.json");
+    ailGenerateResponsePermutationGeneric("fixtures/simpleajax.3.json");
 }
 
 int main (int argc, char** argv) {
@@ -258,15 +273,15 @@ int main (int argc, char** argv) {
     }
 
     /* add the tests to the suite */
-    if (NULL == CU_add_test(pSuite, "Scanner test minimal", scannerTestMinimal) ||
+    if (NULL == CU_add_test(pSuite, "Generate response permutation", ailGenerateResponsePermutation) ||
+        NULL == CU_add_test(pSuite, "Scanner test minimal", scannerTestMinimal) ||
         NULL == CU_add_test(pSuite, "Scanner test simple", scannerTestSimple) ||
         NULL == CU_add_test(pSuite, "Parser test minimal", ailParseMinimalTest) ||
         NULL == CU_add_test(pSuite, "Parser test simple", ailParseSimpleTest) ||
         NULL == CU_add_test(pSuite, "Operation lookup fail test", ailOperationLookupFailTest) ||
         NULL == CU_add_test(pSuite, "Operation lookup test", ailOperationLookupTest) ||
         NULL == CU_add_test(pSuite, "Operation lookup test 2", ailOperationLookupTest2) ||
-        NULL == CU_add_test(pSuite, "Operation-cmp test", ailOperationCmpTest) ||
-        NULL == CU_add_test(pSuite, "Generate response permutation", ailGenerateResponsePermutation)) {
+        NULL == CU_add_test(pSuite, "Operation-cmp test", ailOperationCmpTest)) {
         CU_cleanup_registry();
         return CU_get_error();
     }
