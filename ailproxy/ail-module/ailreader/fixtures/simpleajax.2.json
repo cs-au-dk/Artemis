@@ -1,0 +1,11 @@
+{
+"required": true,
+"type": "object",
+"properties": {
+   "success": 
+   {
+      "required": true,
+      "type": "integer"
+   }
+}
+}
