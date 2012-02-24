@@ -48,9 +48,9 @@ namespace artemis {
         } else {
             this->id = elm->attribute("id");
             this->tag_name = elm->tagName();
-            this->frame_name = elm->webFrame()->frameName();
+            //this->frame_name = elm->webFrame()->frameName();
             is_body = is_document = is_mainframe = false;
-            set_frame_path(elm);
+            //set_frame_path(elm);
             set_element_path(elm);
         }
     }
@@ -60,7 +60,7 @@ namespace artemis {
         this->frame_path = QList<int>(other.frame_path);
         this->id = other.id;
         this->tag_name = other.tag_name;
-        this->frame_name = other.frame_name;
+        //this->frame_name = other.frame_name;
         this->is_body = other.is_body;
         this->is_document = other.is_document;
         this->is_mainframe = other.is_mainframe;
@@ -184,7 +184,7 @@ namespace artemis {
             return;
         }
 
-        QWebElement document = elm->webFrame()->documentElement();
+        QWebElement document = elm->document();
         QWebElement parent = elm->parent();
         QWebElement current = *elm;
         int i = 0;
