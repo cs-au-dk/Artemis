@@ -13,7 +13,7 @@ MOC_DIR=build
 DESTDIR=dist
 LIBS += ../WebKit/WebKitBuild/Release/lib/libQtWebKit.so.4.10.0
 
-QMAKE_CXXFLAGS += -DEXE_BUILD_DATE="`date +'\"%d-%m-%Y_%H:%M:%S\"'`"
+QMAKE_CXXFLAGS += -g -DEXE_BUILD_DATE="`date +'\"%d-%m-%Y_%H:%M:%S\"'`"
 
 DEFINES += ARTEMIS=1
 
@@ -34,7 +34,7 @@ HEADERS += src/webkitexecutor.h \
     src/events/eventsequence.h \
     src/events/forminput.h \
     src/worklist/worklist.h \
-    src/worklist/deterministicwoer er specifikationen for et lille Crklist.h \
+    src/worklist/deterministicworklist.h \
     src/termination/terminationstrategy.h \
     src/termination/numberofiterationstermination.h \
     src/artemisapplication.h \
