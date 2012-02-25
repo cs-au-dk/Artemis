@@ -195,6 +195,10 @@ int _recursive_operation_perm(const yajl_val schema_part, ail_response_t * respo
 
     int num_elements = random() % 20;
 
+    if (items->u.array.len == 0) {
+      num_elements = 0;
+    }
+
     int i;
     for (i = 0; i < num_elements; i++) {
       
