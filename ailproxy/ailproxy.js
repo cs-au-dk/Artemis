@@ -47,8 +47,6 @@ function trimEmpty(list) {
 
 
 function requestHandler(request, response) {
-
-    console.log('Received request to ', request.url);
     
     var request_url = url.parse(request.url, true);
     var opArgs = trimEmpty(request_url.pathname.split('/'));
@@ -62,19 +60,17 @@ function requestHandler(request, response) {
 	    console.log('WARNING, unhandled post data detected in request')
 	});
 
-    console.log('Asking AIL...');
-
     ailResponse = ail.generate_response_permutation(opArgs, queryKeys, queryValues, AILSchema); 
    
     if (ailResponse != undefined) {
-		console.log('AIL Returned a response!');
+		console.log('AIL-response for ', request.url);
 
 		request.addListener('end', function() {
 		    
 		    response.writeHead(200, {
 		    'Content-Length' : ailResponse.length,
 		    'Content-Type'   : 'application/json'});
-		
+
 			response.write(ailResponse);
 			response.end();
 
@@ -82,7 +78,7 @@ function requestHandler(request, response) {
 		});
 	
     } else {
-		console.log('Determined that no AIL info is available!');
+		console.log('Proxy-response for ', request.url);
 		
 		target = request.headers['host'].split(':');
 		hostname = target[0];
