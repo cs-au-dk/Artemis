@@ -4,7 +4,6 @@ import sys
 import re
 import pprint
 
-COVERAGE_INFORMATION_RE = re.compile(r'=== Coverage information for execution ===')
 COVERAGE_START = re.compile(r'Coverage for source located at URL: (.*)  line')
 COVERED_LINE = re.compile(r'>>>')
 COVERAGE_STOP = re.compile(r'==== Source code loaded ====')
@@ -72,7 +71,10 @@ def _outer_parser(lines, result):
 	except IndexError:
 		return None
 
-	if COVERAGE_INFORMATION_RE.search(line):
+	if 'Adding AJAX request:' in line:
+		result['ajax_callbacks'] = result.get('ajax_callbacks', 0) + 1
+
+	if '=== Coverage information for execution ===' in line:
 		return _coverage_parser
 
 	return _outer_parser
@@ -91,9 +93,14 @@ if __name__ == '__main__':
 		print 'usage: %s <artemis output file>' % sys.argv[0]
 		sys.exit(1)
 
+	if len(sys.argv) == 3:
+		offset = int(sys.argv[2])
+	else:
+		offset = 0
+
 	output_file = open(sys.argv[1], 'r')
 
-	result = parse(output_file.readlines())
+	result = parse(output_file.readlines()[offset:])
 
 	output_file.close()
 
