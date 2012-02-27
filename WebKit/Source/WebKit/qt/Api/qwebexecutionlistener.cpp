@@ -139,7 +139,10 @@ void QWebExecutionListener::calledFunction(const JSC::DebuggerCallFrame& frame) 
         JSC::JSValue selector = cframe->argument(4);
 
         if (selector.isString() == false) {
-            cout << "JQUERY::Error unknown selector" << endl;
+            // This is not really fatal, in some cases an undefined
+            // or null selector is given (presumably when doing a 
+            // direct bind)
+            cout << "JQUERY::Warning unknown selector" << endl;
             return;
         }
 
