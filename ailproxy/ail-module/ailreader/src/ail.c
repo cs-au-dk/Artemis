@@ -377,6 +377,11 @@ int operationcmp(const ail_operation_t operation, \
     current_fragment = current_fragment->next;
   }
 
+  if (current_fragment != NULL) {
+    // Additional fragments left, argc does not match
+    return 1;
+  }
+
   int count = 0;
   ail_url_kwarg_t current_kwarg = operation->kwargs;
 

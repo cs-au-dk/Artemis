@@ -45,6 +45,21 @@ char * FIXTURE_AIL_SIMPLE = "\
     GET ajax/*(id:*) : @simpleajax.2.json|@simpleajax.3.json\
     ";
 
+char * FIXTURE_AIL_SIMLE2 = "\
+URL http://localhost:8000\
+\
+GET impresspages/ImpressPages-1.0.12/ip_backend_worker.php(pageId:'',\
+    security_token:*,\
+    languageId:'',\
+    externalLinking:0,\
+    websiteId:'',\
+    action:getChildren,\
+    module_id:347,\
+    type:'',\
+    id:'',\
+    zoneName:'') : @simpleajax.2.json\
+";
+
 char * FIXTURE_AIL_MINIMAL = "\
     URL\
     ";
@@ -182,6 +197,25 @@ void ailOperationLookupTest2(void) {
     CU_ASSERT_FATAL(operation->schemas->payload != NULL);
 }
 
+void ailOperationLookupTest3(void) {
+    ail_t ail;
+    ail_operation_t operation = NULL;
+
+    CU_ASSERT_FATAL(0 == \
+        construct_ail(&ail, FIXTURE_AIL_SIMLE2, fixture_folder));
+
+    char * args[] = {"impresspages", "ImpressPages-1.0.12", "ip_backend_worker.php"};
+    int argc = 3;
+    char * kwargs[] = {"pageId", "security_token", "languageId", "externalLinking", "websiteId", "action", "module_id", "type", "id", "zoneName"};
+    char * vwargs[] = {"", "d4afb865fcc94217d6c72531caaab74e", "", "0", "", "getChildren", "347", "", "", ""};
+    int kwargc = 10;
+
+    CU_ASSERT_FATAL(0 == \
+        get_operation_for_request(ail, &operation, args, argc, kwargs, vwargs, kwargc));
+
+    CU_ASSERT_FATAL(operation != NULL);
+}
+
 void ailOperationCmpTest(void) {
 
     ail_url_fragment_t f2;
@@ -281,6 +315,7 @@ int main (int argc, char** argv) {
         NULL == CU_add_test(pSuite, "Operation lookup fail test", ailOperationLookupFailTest) ||
         NULL == CU_add_test(pSuite, "Operation lookup test", ailOperationLookupTest) ||
         NULL == CU_add_test(pSuite, "Operation lookup test 2", ailOperationLookupTest2) ||
+        NULL == CU_add_test(pSuite, "Operation lookup test 3", ailOperationLookupTest3) ||
         NULL == CU_add_test(pSuite, "Operation-cmp test", ailOperationCmpTest)) {
         CU_cleanup_registry();
         return CU_get_error();

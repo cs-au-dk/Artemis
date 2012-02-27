@@ -4,6 +4,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <assert.h>
 
 #define _IN_SCANNER
 #include "scanner.h"
@@ -91,17 +92,21 @@ int scan(scanner_buffer *buffer, scanner_token *token) {
 		continue;
 	}
 
-	[a-zA-Z0-9_\-*\.\[\]]+|"\"".*"\"" {
+	[a-zA-Z0-9_\-*\.\[\]]+|"\"".*"\""|"''" {
 		char *string;
 
 		int correct_quote = 0;
 
-		if (*(buffer->start) == '"') {
+		if (*(buffer->start) == '"' || *(buffer->start) == '\'') {
 			correct_quote = 1;
 		}
 
-		string = strndup(buffer->start + correct_quote, \
-			YYCURSOR - buffer->start - correct_quote);
+		if (YYCURSOR - buffer->start - correct_quote * 2 != 0) {
+			string = strndup(buffer->start + correct_quote, \
+				YYCURSOR - buffer->start - correct_quote * 2);
+		} else {
+			string = "";
+		}
 
 		token->data.string = string;
 		token->id = TOKEN_STRING;
