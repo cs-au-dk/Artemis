@@ -1,0 +1,3 @@
+URL http://mysite.com
+
+GET ajax/search(query:*) : @300.json

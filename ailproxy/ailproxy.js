@@ -1,9 +1,9 @@
 var http = require('http');
 var url = require('url');
 var path = require('path');
-var ail = require('./ail-module/build/Release/ailreader');
+var ail = require('./ail-module/build/Release/AIL');
 
-var AILSchema;
+var AILReader;
 
 function extractKeyset(assoArray) {
     if (assoArray.length == 0) {
@@ -47,6 +47,8 @@ function trimEmpty(list) {
 
 
 function requestHandler(request, response) {
+
+    console.log('Received request to ', request.url);
     
     var request_url = url.parse(request.url, true);
     var opArgs = trimEmpty(request_url.pathname.split('/'));
@@ -60,17 +62,19 @@ function requestHandler(request, response) {
 	    console.log('WARNING, unhandled post data detected in request')
 	});
 
-    ailResponse = ail.generate_response_permutation(opArgs, queryKeys, queryValues, AILSchema); 
+    console.log('Asking AIL...');
+
+    ailResponse = AILReader.generateResponse(opArgs, queryKeys, queryValues);
    
     if (ailResponse != undefined) {
-		console.log('AIL-response for ', request.url);
+		console.log('AIL Returned a response!');
 
 		request.addListener('end', function() {
 		    
 		    response.writeHead(200, {
 		    'Content-Length' : ailResponse.length,
 		    'Content-Type'   : 'application/json'});
-
+		
 			response.write(ailResponse);
 			response.end();
 
@@ -78,7 +82,7 @@ function requestHandler(request, response) {
 		});
 	
     } else {
-		console.log('Proxy-response for ', request.url);
+		console.log('Determined that no AIL info is available!');
 		
 		target = request.headers['host'].split(':');
 		hostname = target[0];
@@ -126,7 +130,7 @@ function requestHandler(request, response) {
 if (process.argv.length != 3) {
     console.log('Error, proper usage: node ailproxy.js /path/to/schema');
 } else {
-    var AILSchema = process.argv[2];
+    AILReader = new ail.Reader(process.argv[2]);
     http.createServer(requestHandler).listen(8080);
     console.log('Launched AIL Proxy, listening on port 8080');
 }
