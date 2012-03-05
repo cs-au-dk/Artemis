@@ -1,6 +1,7 @@
 
 #include <QtCore/qobject.h>
 #include <QUrl>
+#include <QMap>
 #include "qwebkitglobal.h"
 #include "qwebelement.h"
 #include "qajaxcallbackhandler.h"
@@ -29,6 +30,14 @@ public:
     virtual void webkit_ajax_send(const char * url, const char * data);
     virtual void webkit_eval_call(const char * eval_string);
     virtual void calledFunction(const JSC::DebuggerCallFrame&);
+    
+    virtual void timerAdded(WebCore::ScriptExecutionContext* context, int timerId, int timeout, bool singleShot);
+    virtual void timerRemoved(WebCore::ScriptExecutionContext* context, int timerId);
+    void timerFire(int timerId);
+    void clearTimers();
+
+private:
+    QMap<int, WebCore::ScriptExecutionContext*> m_timers;
 
 signals:
     void addedEventListener(QWebElement*, QString);
@@ -40,6 +49,9 @@ signals:
     void script_url_load(QUrl url);
     void ajax_request(QUrl, QString post_data);  
     void eval_call(QString source_text);
+
+    void addedTimer(int timerId, int timeout, bool singleShot);
+    void removedTimer(int timerId);
 
     void jqueryEventAdded(QString elementSignature, QString event, QString selectors); 
 

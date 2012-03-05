@@ -34,6 +34,10 @@
 #include <wtf/HashSet.h>
 #include <wtf/StdLibExtras.h>
 
+#ifdef ARTEMIS
+#include "instrumentation/executionlistener.h"
+#endif
+
 using namespace std;
 
 namespace WebCore {
@@ -77,12 +81,21 @@ DOMTimer::DOMTimer(ScriptExecutionContext* context, PassOwnPtr<ScheduledAction> 
         startOneShot(intervalMilliseconds);
     else
         startRepeating(intervalMilliseconds);
+
+#ifdef ARTEMIS
+    inst::getDefaultListener()->timerAdded(scriptExecutionContext(), m_timeoutId, interval, singleShot);
+#endif
 }
 
 DOMTimer::~DOMTimer()
 {
-    if (scriptExecutionContext())
+    if (scriptExecutionContext()) {
         scriptExecutionContext()->removeTimeout(m_timeoutId);
+
+#ifdef ARTEMIS
+        inst::getDefaultListener()->timerRemoved(scriptExecutionContext(), m_timeoutId);
+#endif 
+    }
 }
 
 int DOMTimer::install(ScriptExecutionContext* context, PassOwnPtr<ScheduledAction> action, int timeout, bool singleShot)
