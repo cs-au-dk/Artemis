@@ -1,5 +1,5 @@
 {
 	"name": "ailreader"
-	"version": 0.1
-	"main": "./build/Release/ailreader"
+	"version": 0.2
+	"main": "./build/Release/AIL"
 }
