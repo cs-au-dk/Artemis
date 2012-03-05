@@ -11,6 +11,7 @@ namespace WebCore {
     class DOMWindow;
     class Node;
     class XMLHttpRequest;
+    class ScriptExecutionContext;
 }
 
 namespace JSC {
@@ -39,9 +40,15 @@ namespace inst {
         /**
           Invoked when a dom element no longer has events attached.
           */
-        void eventCleared( WebCore::EventTarget *, const char*);
+        void eventCleared(WebCore::EventTarget *, const char*);
         virtual void  domWindowEventCleared(WebCore::DOMWindow*, const std::string);
         virtual void nodeEventCleared(WebCore::Node*, const std::string);
+
+        /**
+         * Timeouts
+         */
+        virtual void timerAdded(WebCore::ScriptExecutionContext* context, int timerId, int timeout, bool singleShot);
+        virtual void timerRemoved(WebCore::ScriptExecutionContext* context, int timerId);
 
         /**
           Loading of files

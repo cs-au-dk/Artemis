@@ -119,6 +119,7 @@ namespace artemis {
         do_exe();
         qDebug() << "WEBKIT: Saving results" << endl;
         finished_sequence();
+        webkit_listener->clearTimers();
     }
 
     void WebKitExecutor::save_dom_state() {
@@ -161,6 +162,7 @@ namespace artemis {
 
             //Wait for any ajax stuff to finish
             handle_ajax_callbacks();
+            webkit_listener->timerFire(0);
         }
     }
 

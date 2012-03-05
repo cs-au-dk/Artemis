@@ -12,6 +12,8 @@
 #include "JavaScriptCore/runtime/Identifier.h"
 #include "JavaScriptCore/heap/Heap.h"
 #include "WebCore/xml/XMLHttpRequest.h"
+#include "WebCore/dom/ScriptExecutionContext.h"
+#include "WebCore/page/DOMTimer.h"
 
 #include "qwebexecutionlistener.h"
 
@@ -42,6 +44,44 @@ void QWebExecutionListener::nodeEventCleared(WebCore::Node *, const std::string)
 
 void QWebExecutionListener::domWindowEventCleared(WebCore::DOMWindow *, const std::string) {
     //TODO
+}
+
+void QWebExecutionListener::timerAdded(WebCore::ScriptExecutionContext* context, int timerId, int timeout, bool singleShot) {
+    cout << "WEBKIT::Timer " << timerId << " Added" << endl;
+
+    m_timers.insert(timerId, context);
+    emit addedTimer(timerId, timeout, singleShot);
+}
+    
+void QWebExecutionListener::timerRemoved(WebCore::ScriptExecutionContext* context, int timerId) {
+    cout << "WEBKIT::Timer " << timerId << " Removed" << endl;
+
+    m_timers.remove(timerId);
+    emit removedTimer(timerId);
+}
+
+void QWebExecutionListener::timerFire(int timerId) {
+    if (timerId == 0) {
+
+        foreach(timerId, m_timers.keys()) {
+            timerFire(timerId);
+        }
+
+    } else {
+
+        QMap<int, WebCore::ScriptExecutionContext*>::const_iterator i = m_timers.find(timerId);
+        
+        while (i != m_timers.end() && i.key() == timerId) {
+            cout << "Clear Clear... Fire Event!" << endl;
+            i.value()->findTimeout(timerId)->fired();
+            ++i;
+        }
+
+    }
+}
+
+void QWebExecutionListener::clearTimers() {
+    m_timers.clear();
 }
 
 void QWebExecutionListener::scriptCodeLoaded(intptr_t id, std::string source, std::string url, int startline) {

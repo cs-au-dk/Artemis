@@ -19,6 +19,7 @@
 #include "JavaScriptCore/runtime/ScopeChain.h"
 #include "JavaScriptCore/interpreter/Register.h"
 #include "WebCore/xml/XMLHttpRequest.h"
+#include "WebCore/dom/ScriptExecutionContext.h"
 
 #include "executionlistener.h"
 
@@ -60,6 +61,14 @@ namespace inst {
 
     void ExecutionListener::nodeEventCleared(WebCore::Node * , const std::string) {
         std::cout << "el::node event cleared" <<std::endl;
+        return;
+    }
+
+    void ExecutionListener::timerAdded(WebCore::ScriptExecutionContext* context, int timerId, int timeout, bool singleShot) {
+        return;
+    }
+        
+    void ExecutionListener::timerRemoved(WebCore::ScriptExecutionContext* context, int timerId) {
         return;
     }
 
