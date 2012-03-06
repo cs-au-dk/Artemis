@@ -8,6 +8,8 @@
 #include "ail.h"
 #include "lemon.h"
 
+#define   YAJL_IS_INTEGER_FIXED(v)   (YAJL_IS_NUMBER(v) && ((v)->u.number.flags & YAJL_NUMBER_INT_VALID))
+
 static char * base_schema_folder = NULL;
 
 int construct_ail(ail_t * ail, const char * raw_ail, char * schema_folder) {
@@ -186,6 +188,15 @@ int _recursive_operation_perm(const yajl_val schema_part, ail_response_t * respo
       return 1;
     }
 
+    yajl_val min_items = yajl_tree_get(schema_part, \
+                                       (const char *[]){"minItems", (const char*) 0},\
+                                       yajl_t_number);
+
+    long long num_elements_min = 0;
+    if (YAJL_IS_INTEGER_FIXED(min_items)) {
+      num_elements_min = YAJL_GET_INTEGER(min_items);
+    }    
+
     struct response_chunk * prepend = malloc(sizeof(struct response_chunk));
     prepend->chunk = "[";
     prepend->next = NULL;
@@ -193,13 +204,13 @@ int _recursive_operation_perm(const yajl_val schema_part, ail_response_t * respo
     ail_response_t last;
     last = NULL;
 
-    int num_elements = random() % 20;
+    long long num_elements = num_elements_min + (random() % 20);
 
     if (items->u.array.len == 0) {
       num_elements = 0;
     }
 
-    int i;
+    long long i;
     for (i = 0; i < num_elements; i++) {
       
       int choice = random() % items->u.array.len;
@@ -284,7 +295,7 @@ int _recursive_operation_perm(const yajl_val schema_part, ail_response_t * respo
     result->chunk = malloc(sizeof(char) * 11);
     result->next = NULL;
 
-    snprintf(result->chunk, 11, "%d", random());
+    snprintf(result->chunk, 11, "%ld", random());
 
     *response = result;
     return 0;    
