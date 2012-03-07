@@ -47,84 +47,82 @@ function trimEmpty(list) {
 
 
 function requestHandler(request, response) {
-
-    console.log('Received request to ', request.url);
-    
+   
     var request_url = url.parse(request.url, true);
     var opArgs = trimEmpty(request_url.pathname.split('/'));
     var queryKeys = extractKeyset(request_url.query);
     var queryValues = extractValues(request_url.query);
-
-    var ailResponse;
+    var request_data = "";
 
 	request.addListener('data', function(chunk) {
-	    // TODO handle post data
-	    console.log('WARNING, unhandled post data detected in request')
+	    request_data = request_data + chunk;
 	});
 
-    console.log('Asking AIL...');
+	request.addListener('end', function() {
 
-    ailResponse = AILReader.generateResponse(opArgs, queryKeys, queryValues);
-   
-    if (ailResponse != undefined) {
-		console.log('AIL Returned a response!');
+		var lines = request_data.split("&");
+		for (i = 0; i < lines.length; i++) {
+			keyvalue = lines[i].split("=");
 
-		request.addListener('end', function() {
-		    
-		    response.writeHead(200, {
+			if (keyvalue.length == 2) {
+				queryKeys.push(keyvalue[0]);
+				queryValues.push(keyvalue[1]);
+			}
+		}
+
+		var ailResponse = AILReader.generateResponse(opArgs, queryKeys, queryValues);
+
+		if (ailResponse != undefined) {
+			
+			console.log('AIL ', request.url);
+
+			response.writeHead(200, {
 		    'Content-Length' : ailResponse.length,
 		    'Content-Type'   : 'application/json'});
 		
 			response.write(ailResponse);
 			response.end();
-
-			console.log("Response written");
-		});
-	
-    } else {
-		console.log('Determined that no AIL info is available!');
 		
-		target = request.headers['host'].split(':');
-		hostname = target[0];
-		port = (target.length > 1) ? target[1] : 80;
+		} else {
 
-		var options = {
-		    host: hostname,
-		    port: port,
-		    method: request.method, 
-		    path: (request_url.pathname || '/') + (request_url.search || ''), 
-		    headers: request.headers
+			console.log('PROXY ', request.url);
+		
+			target = request.headers['host'].split(':');
+			hostname = target[0];
+			port = (target.length > 1) ? target[1] : 80;
+
+			var options = {
+			    host: hostname,
+			    port: port,
+			    method: request.method, 
+			    path: (request_url.pathname || '/') + (request_url.search || ''), 
+			    headers: request.headers
+			}
+
+			var proxy_request = http.request(options, function(proxy_response) {
+
+			    response.writeHead(proxy_response.statusCode, proxy_response.headers);
+			    
+			    proxy_response.addListener('data', function(chunk) {
+					response.write(chunk, 'binary');
+			    });
+
+			    proxy_response.addListener('end', function() {
+					response.end();
+			    });
+			    
+			});
+
+			proxy_request.on('error', function(e) {
+			    console.error('Error encountered handling URL: ' + request.url);
+			    response.end();
+			});
+
+			proxy_request.write(request_data, 'binary');
+			proxy_request.end();
+
 		}
-
-		var proxy_request = http.request(options, function(proxy_response) {
-
-		    response.writeHead(proxy_response.statusCode, proxy_response.headers);
-		    
-		    proxy_response.addListener('data', function(chunk) {
-				response.write(chunk, 'binary');
-		    });
-
-		    proxy_response.addListener('end', function() {
-				response.end();
-		    });
-		    
-		});
-
-		request.addListener('data', function(chunk) {
-		    proxy_request.write(chunk, 'binary');
-		});
-
-		request.addListener('end', function() {
-		    proxy_request.end();
-		});
-
-
-		proxy_request.on('error', function(e) {
-		    console.error('Error encountered handling URL: ' + request.url);
-		    response.end();
-		});
-	
-    }
+	});
 }
 
 if (process.argv.length != 3) {
