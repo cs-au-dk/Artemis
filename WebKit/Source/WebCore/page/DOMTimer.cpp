@@ -33,6 +33,7 @@
 #include "UserGestureIndicator.h"
 #include <wtf/HashSet.h>
 #include <wtf/StdLibExtras.h>
+#include <iostream>
 
 #ifdef ARTEMIS
 #include "instrumentation/executionlistener.h"
@@ -173,6 +174,12 @@ void DOMTimer::contextDestroyed()
 
 void DOMTimer::stop()
 {
+#ifdef ARTEMIS
+    // We remove the timer, since stopping it effectively prevents
+    // us from calling this timer
+    inst::getDefaultListener()->timerRemoved(scriptExecutionContext(), m_timeoutId);
+#endif 
+
     SuspendableTimer::stop();
     // Need to release JS objects potentially protected by ScheduledAction
     // because they can form circular references back to the ScriptExecutionContext
