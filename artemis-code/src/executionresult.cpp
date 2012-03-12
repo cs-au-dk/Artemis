@@ -67,7 +67,7 @@ namespace artemis {
         Q_CHECK_PTR(elem);
         Q_ASSERT(!final);
 
-        qDebug() << "Artemis detected new eventhandler for event: " << name << " tag name: " << elem->tagName() << endl;
+        qDebug() << "Artemis detected new eventhandler for event: " << name << " tag name: " << elem->tagName() << " id: " << elem->attribute(QString("id")) << endl;
         if (is_non_interactive(name))
             return;
 
