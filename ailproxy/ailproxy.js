@@ -88,7 +88,7 @@ function requestHandler(request, response) {
 
 		var ailResponse = AILReader.generateResponse(opArgs, queryKeys, queryValues);
 
-		if (ailResponse != undefined && false) {
+		if (ailResponse != undefined) {
 			
 			console.log('AIL ', request.url);
 
