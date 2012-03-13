@@ -90,7 +90,7 @@ namespace artemis {
           QWebElement element = pick_rand(elements.toList());
 
           QString name = element.tagName();
-          qDebug() << "TARGET::Selecting element " << name << " out of a total of " << elements.count() << "element(s)" << endl;
+          qDebug() << "TARGET::Selecting element " << name << " out of a total of " << elements.count() << "element(s) and " << selectors.count() << " selector(s)" << endl;
           
           return element;
       }
