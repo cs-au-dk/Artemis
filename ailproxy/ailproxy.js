@@ -2,6 +2,12 @@ var http = require('http');
 var url = require('url');
 var path = require('path');
 var ail = require('./ail-module/build/Release/AIL');
+var fs = require('fs');
+var path = require('path');
+
+var server_only_mode = false;
+var server_base_dir = null;
+var server_cache = {};
 
 var AILReader;
 
@@ -45,6 +51,16 @@ function trimEmpty(list) {
 	return new_list;
 }
 
+function serverPrefetch(filename) {
+	var full_path = path.join(server_base_dir, filename);
+
+	try {
+		server_cache[filename] = fs.readFileSync(full_path);
+	} catch(err) {
+		server_cache[filename] = null;
+	}
+}
+
 
 function requestHandler(request, response) {
    
@@ -72,7 +88,7 @@ function requestHandler(request, response) {
 
 		var ailResponse = AILReader.generateResponse(opArgs, queryKeys, queryValues);
 
-		if (ailResponse != undefined) {
+		if (ailResponse != undefined && false) {
 			
 			console.log('AIL ', request.url);
 
@@ -83,6 +99,33 @@ function requestHandler(request, response) {
 			response.write(ailResponse);
 			response.end();
 		
+		} else if (server_only_mode) {
+
+			filename = (request_url.pathname || 'index.html');
+
+			if (server_cache[filename] == undefined) {
+				serverPrefetch(filename);
+			}
+
+			if (server_cache[filename]) {
+
+				console.log('SERVER-CACHED ', request.url, " (", filename, ")");
+
+				response.writeHead(200, {
+		    		'Content-Type'   : 'text/html'});
+
+				response.write(server_cache[filename], 'binary');
+				response.end();
+
+			} else {
+
+				console.log('SERVER-EMPTY ', request.url, " (", filename, ")");
+
+				response.writeHead(200, {
+		    		'Content-Type'   : 'text/html'});
+				response.end();		
+			}
+
 		} else {
 
 			console.log('PROXY ', request.url);
@@ -125,9 +168,15 @@ function requestHandler(request, response) {
 	});
 }
 
-if (process.argv.length != 3) {
-    console.log('Error, proper usage: node ailproxy.js /path/to/schema');
+if (process.argv.length < 3) {
+    console.log('Error, proper usage: node ailproxy.js /path/to/schema [--server-only-mode /path/to/files]');
 } else {
+	server_only_mode = (process.argv.length > 3 && process.argv[3] == '--server-only-mode');
+
+	if (process.argv.length > 4) {
+		server_base_dir = process.argv[4];
+	}
+
     AILReader = new ail.Reader(process.argv[2]);
     http.createServer(requestHandler).listen(8080);
     console.log('Launched AIL Proxy, listening on port 8080');
