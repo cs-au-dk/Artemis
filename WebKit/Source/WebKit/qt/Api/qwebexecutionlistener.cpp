@@ -71,16 +71,17 @@ void QWebExecutionListener::timerFire(int timerId) {
 
         QMap<int, WebCore::ScriptExecutionContext*>::const_iterator i = m_timers.find(timerId);
         
-        while (i != m_timers.end() && i.key() == timerId) {
-            cout << "Clear Clear... Fire Event!" << endl;
+        if (i != m_timers.end() && i.key() == timerId) {
+            // only execute the first found timer (only one should be returned anyway)
+            cout << "WEBKIT::Timer Clear Clear... Fire Event! tid: " << timerId << endl;
             i.value()->findTimeout(timerId)->fired();
-            ++i;
         }
 
     }
 }
 
 void QWebExecutionListener::clearTimers() {
+    cout << "WEBKIT::Timer clearing" << endl;
     m_timers.clear();
 }
 
