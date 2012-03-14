@@ -152,8 +152,8 @@ namespace artemis {
 
             ed.form_input().write_to_page(page);
 
-            qDebug() << "Event Handler: " << handler.tagName();
-            qDebug() << "Target: " << target.tagName();
+            qDebug() << "Event Handler: " << handler.tagName() << " _ID: " << handler.attribute(QString("id"));
+            qDebug() << "Target: " << target.tagName() << " _ID: " << target.attribute(QString("id"));
             qDebug() << "Executing: " << js_init_event;
             
             QVariant result =  target.evaluateJavaScript(js_init_event, DONT_MEASURE_COVERAGE);

@@ -50,7 +50,7 @@ namespace artemis {
       QString result = get_signature(element.parent());
 
       if (element.tagName() == QString("HTML")) {
-          result = result.append("#document");
+          result = result.append("#document.HTML");
       } else {
           result = result.append(element.tagName());
       }
@@ -64,6 +64,8 @@ namespace artemis {
 
       QString signature = get_signature(m_event_handler->dom_element().get_element(page));
       QString event = m_event_handler->name();
+
+      qDebug() << "TARGET::Info, looking for selectors for signature " << signature << " and event " << event << endl;
 
       JQueryListener* listener = artemis_options->get_jquery_listener();
 
@@ -88,7 +90,7 @@ namespace artemis {
           QWebElement element = pick_rand(elements.toList());
 
           QString name = element.tagName();
-          qDebug() << "TARGET::Selecting element " << name << " out of a total of " << elements.count() << "element(s)" << endl;
+          qDebug() << "TARGET::Selecting element " << name << " out of a total of " << elements.count() << "element(s) and " << selectors.count() << " selector(s)" << endl;
           
           return element;
       }

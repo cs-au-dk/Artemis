@@ -27,6 +27,7 @@
 */
 
 #include <QDebug>
+#include <QStringList>
 
 #include "jquerylistener.h"	
 
@@ -52,11 +53,30 @@ namespace artemis {
 
       jquery_event* e;
       foreach (e, jquery_events) {
-          /*
-          qDebug() << "Comparing " << elementSignature << " with " << e->elementSignature << endl;
-          */
-          if (e->event == event && e->elementSignature == elementSignature) {
-              result.append(e->selector);
+          
+          if (e->event == event) {
+
+            qDebug() << "Comparing " << elementSignature << " with " << e->elementSignature << endl;
+          
+            // The following adds support for fuzzy matching. If an event handler
+            // is added at runtime to an element, which are not yet linked to the
+            // dom tree, then its "root" is called #document-fragment... Thus we
+            // can't get a full signature. These "signatures" are matched using
+            // best effort principles
+            if (e->elementSignature.indexOf(QString("#document-fragment")) != -1) {
+                QString trimmed = e->elementSignature.replace(QString("#document-fragment"), QString(""));
+
+                if (elementSignature.indexOf(trimmed) != -1) {
+                  qDebug() << "Found match (fuzzy)" << endl;
+                  result.append(e->selector);
+                }
+            }
+
+            else if (e->elementSignature == elementSignature) {
+                result.append(e->selector);
+                qDebug() << "Found match" << endl;
+            }
+
           }
       }
       
@@ -66,8 +86,19 @@ namespace artemis {
 	void JQueryListener::sl_event_added(QString elementSignature, QString event, QString selector) {
       jquery_event* e = new jquery_event();
       e->elementSignature = elementSignature;
-      e->event = event;
       e->selector = selector;
+
+      /* Jquery supports namespaced events, e.g. we can bind to the event
+       * click.something, where click is the event and something is a namespace.
+       * This is used to only access a subset of registered listeres, e.g. 
+       * only triggering or removing "something" listeners.
+       * In this case, we remove information regarding namespaces and handle all
+       * events equally. This should not be a problem since we are only interested
+       * in triggering all events from the user's/browser's point of view. 
+       */
+      QStringList parts = event.split(QString("."));
+      e->event = parts[0];
+      
       jquery_events.append(e);
 		  qDebug() << "Jquery::Eventhandler registered for event " << event << " and selector " << selector << " on dom node with signature " << elementSignature << endl;
 	}

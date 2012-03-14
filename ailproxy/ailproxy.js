@@ -2,6 +2,12 @@ var http = require('http');
 var url = require('url');
 var path = require('path');
 var ail = require('./ail-module/build/Release/AIL');
+var fs = require('fs');
+var path = require('path');
+
+var server_only_mode = false;
+var server_base_dir = null;
+var server_cache = {};
 
 var AILReader;
 
@@ -45,91 +51,132 @@ function trimEmpty(list) {
 	return new_list;
 }
 
+function serverPrefetch(filename) {
+	var full_path = path.join(server_base_dir, filename);
+
+	try {
+		server_cache[filename] = fs.readFileSync(full_path);
+	} catch(err) {
+		server_cache[filename] = null;
+	}
+}
+
 
 function requestHandler(request, response) {
-
-    console.log('Received request to ', request.url);
-    
+   
     var request_url = url.parse(request.url, true);
     var opArgs = trimEmpty(request_url.pathname.split('/'));
     var queryKeys = extractKeyset(request_url.query);
     var queryValues = extractValues(request_url.query);
-
-    var ailResponse;
+    var request_data = "";
 
 	request.addListener('data', function(chunk) {
-	    // TODO handle post data
-	    console.log('WARNING, unhandled post data detected in request')
+	    request_data = request_data + chunk;
 	});
 
-    console.log('Asking AIL...');
+	request.addListener('end', function() {
 
-    ailResponse = AILReader.generateResponse(opArgs, queryKeys, queryValues);
-   
-    if (ailResponse != undefined) {
-		console.log('AIL Returned a response!');
+		var lines = request_data.split("&");
+		for (i = 0; i < lines.length; i++) {
+			keyvalue = lines[i].split("=");
 
-		request.addListener('end', function() {
-		    
-		    response.writeHead(200, {
+			if (keyvalue.length == 2) {
+				queryKeys.push(keyvalue[0]);
+				queryValues.push(keyvalue[1]);
+			}
+		}
+
+		var ailResponse = AILReader.generateResponse(opArgs, queryKeys, queryValues);
+
+		if (ailResponse != undefined) {
+			
+			console.log('AIL ', request.url);
+
+			response.writeHead(200, {
 		    'Content-Length' : ailResponse.length,
 		    'Content-Type'   : 'application/json'});
 		
 			response.write(ailResponse);
 			response.end();
-
-			console.log("Response written");
-		});
-	
-    } else {
-		console.log('Determined that no AIL info is available!');
 		
-		target = request.headers['host'].split(':');
-		hostname = target[0];
-		port = (target.length > 1) ? target[1] : 80;
+		} else if (server_only_mode) {
 
-		var options = {
-		    host: hostname,
-		    port: port,
-		    method: request.method, 
-		    path: (request_url.pathname || '/') + (request_url.search || ''), 
-		    headers: request.headers
-		}
+			filename = (request_url.pathname || 'index.html');
 
-		var proxy_request = http.request(options, function(proxy_response) {
+			if (server_cache[filename] == undefined) {
+				serverPrefetch(filename);
+			}
 
-		    response.writeHead(proxy_response.statusCode, proxy_response.headers);
-		    
-		    proxy_response.addListener('data', function(chunk) {
-				response.write(chunk, 'binary');
-		    });
+			if (server_cache[filename]) {
 
-		    proxy_response.addListener('end', function() {
+				console.log('SERVER-CACHED ', request.url, " (", filename, ")");
+
+				response.writeHead(200, {
+		    		'Content-Type'   : 'text/html'});
+
+				response.write(server_cache[filename], 'binary');
 				response.end();
-		    });
-		    
-		});
 
-		request.addListener('data', function(chunk) {
-		    proxy_request.write(chunk, 'binary');
-		});
+			} else {
 
-		request.addListener('end', function() {
-		    proxy_request.end();
-		});
+				console.log('SERVER-EMPTY ', request.url, " (", filename, ")");
 
+				response.writeHead(200, {
+		    		'Content-Type'   : 'text/html'});
+				response.end();		
+			}
 
-		proxy_request.on('error', function(e) {
-		    console.error('Error encountered handling URL: ' + request.url);
-		    response.end();
-		});
-	
-    }
+		} else {
+
+			console.log('PROXY ', request.url);
+		
+			target = request.headers['host'].split(':');
+			hostname = target[0];
+			port = (target.length > 1) ? target[1] : 80;
+
+			var options = {
+			    host: hostname,
+			    port: port,
+			    method: request.method, 
+			    path: (request_url.pathname || '/') + (request_url.search || ''), 
+			    headers: request.headers
+			}
+
+			var proxy_request = http.request(options, function(proxy_response) {
+
+			    response.writeHead(proxy_response.statusCode, proxy_response.headers);
+			    
+			    proxy_response.addListener('data', function(chunk) {
+					response.write(chunk, 'binary');
+			    });
+
+			    proxy_response.addListener('end', function() {
+					response.end();
+			    });
+			    
+			});
+
+			proxy_request.on('error', function(e) {
+			    console.error('Error encountered handling URL: ' + request.url);
+			    response.end();
+			});
+
+			proxy_request.write(request_data, 'binary');
+			proxy_request.end();
+
+		}
+	});
 }
 
-if (process.argv.length != 3) {
-    console.log('Error, proper usage: node ailproxy.js /path/to/schema');
+if (process.argv.length < 3) {
+    console.log('Error, proper usage: node ailproxy.js /path/to/schema [--server-only-mode /path/to/files]');
 } else {
+	server_only_mode = (process.argv.length > 3 && process.argv[3] == '--server-only-mode');
+
+	if (process.argv.length > 4) {
+		server_base_dir = process.argv[4];
+	}
+
     AILReader = new ail.Reader(process.argv[2]);
     http.createServer(requestHandler).listen(8080);
     console.log('Launched AIL Proxy, listening on port 8080');
