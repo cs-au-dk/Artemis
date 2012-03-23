@@ -138,8 +138,11 @@ namespace artemis {
             QWebElement elm = page->mainFrame()->findFirstElement(f);
             if (elm.isNull())
                 continue;
+
+            qDebug() << "Setting value " << fields[f] << "for element " << f << endl;
             elm.setAttribute("value",fields[f]);
         }
+
     }
 
     void WebKitExecutor::do_exe() {
