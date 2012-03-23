@@ -64,7 +64,7 @@ namespace artemis {
             // can't get a full signature. These "signatures" are matched using
             // best effort principles
             if (e->elementSignature.indexOf(QString("#document-fragment")) != -1) {
-                QString trimmed = e->elementSignature.replace(QString("#document-fragment"), QString(""));
+                QString trimmed = QString(e->elementSignature).replace(QString("#document-fragment"), QString(""));
 
                 if (elementSignature.indexOf(trimmed) != -1) {
                   qDebug() << "Found match (fuzzy)" << endl;
@@ -98,7 +98,7 @@ namespace artemis {
        */
       QStringList parts = event.split(QString("."));
       e->event = parts[0];
-      
+
       jquery_events.append(e);
 		  qDebug() << "Jquery::Eventhandler registered for event " << event << " and selector " << selector << " on dom node with signature " << elementSignature << endl;
 	}
