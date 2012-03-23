@@ -86,7 +86,7 @@ namespace artemis {
         void set_preset_cookie(QString s);
         QMap<QString, QString> get_preset_cookies();
         void set_number_of_iterations(QString iterations);
-
+        void set_authentication(QString authstring);
     private:
         QUrl* artemis_url;
         ExecutableConfiguration* initial_conf;
@@ -99,6 +99,10 @@ namespace artemis {
         QString m_proxy_address;
         QMap<QString, QString> m_preset_cookies;
         int m_number_of_iterations;
+
+        bool m_auth_enabled;
+        QString m_auth_username;
+        QString m_auth_password;
 
 
     signals:
