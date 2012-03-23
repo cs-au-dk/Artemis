@@ -50,7 +50,7 @@ ArtemisOptions* parseCmd(int argc, char *argv[]) {
     ArtemisOptions* res = new ArtemisOptions;
     int c;
     int index;
-    while ((c = getopt (argc, argv, "rp:uf:t:c:i:")) != -1) {
+    while ((c = getopt (argc, argv, "rp:uf:t:c:i:a:")) != -1) {
         switch (c) {
         case 'f':
             res->parse_and_add_option_string(QString(optarg));
@@ -76,6 +76,11 @@ ArtemisOptions* parseCmd(int argc, char *argv[]) {
         case 'i':
             printf("Encountered i!");
             res->set_number_of_iterations(QString(optarg));
+            break;
+        case 'a':
+            // Support for http authentication
+            // -a username:password
+            res->set_authentication(QString(optarg));
             break;
         }
     }

@@ -25,21 +25,25 @@
   authors and should not be interpreted as representing official policies, either expressed
   or implied, of Simon Holm Jensen
 */
-#include "artemisoptions.h"
 #include <cstdlib>
-#include "inputgenerator/abstractinputgenerator.h"
-#include "inputgenerator/randominputgenerator.h"
+
+#include <QUrl>
+#include <QNetworkProxy>
+#include <QStringList>
+
 #include "worklist/deterministicworklist.h"
 #include "termination/numberofiterationstermination.h"
 #include "events/eventhandlerdescriptor.h"
-#include  <QUrl>
-#include <QNetworkProxy>
 #include "priortizer/constantprioritizer.h"
 #include "listeners/domstatesaverlistener.h"
 #include "listeners/pagerecreatelistner.h"
 #include "inputgenerator/targets/targetdescriptor.h"
 #include "inputgenerator/targets/legacytarget.h"
 #include "inputgenerator/targets/jquerytarget.h"
+#include "inputgenerator/abstractinputgenerator.h"
+#include "inputgenerator/randominputgenerator.h"
+
+#include "artemisoptions.h"
 
 namespace artemis {
 
@@ -52,14 +56,37 @@ namespace artemis {
         m_jquery_listener = new JQueryListener();
         this->pri = 0;
         m_number_of_iterations = 4;
+        m_auth_enabled = false;
     }
 
     void ArtemisOptions::setURL(QUrl* url) {
         artemis_url = url;
+
+        if (m_auth_enabled) {
+            artemis_url->setUserName(m_auth_username);
+            artemis_url->setPassword(m_auth_password);
+        }
     }
 
     QUrl* ArtemisOptions::getURL() {
         return artemis_url;
+    }
+
+    void ArtemisOptions::set_authentication(QString authstring) {
+        QStringList parts = authstring.split(":");
+
+        if (parts.length() == 2) {
+
+            m_auth_enabled = true;
+            m_auth_username = parts.first();
+            m_auth_password = parts.last();
+
+            artemis_url->setUserName(m_auth_username);
+            artemis_url->setPassword(m_auth_password);
+
+        } else {
+            qDebug() << "ERROR: Wrong authentication format";
+        }
     }
 
     int ArtemisOptions::random_seed() {
