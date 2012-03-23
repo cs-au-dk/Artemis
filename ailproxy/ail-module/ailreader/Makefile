@@ -1,9 +1,9 @@
 build: ail.so
-	gcc -c -g -Wall src/ailcheck.c -I src/
+	gcc -c -O2 -Wall src/ailcheck.c -I src/
 	gcc ailcheck.o ./ail.so -lyajl -o ailcheck
 
 ail.so: src/ail.c src/scanner.c src/parser.c
-	gcc -c -g -fPIC -Wall src/ail.c src/scanner.c src/parser.c -I src/
+	gcc -c -O2 -fPIC -Wall src/ail.c src/scanner.c src/parser.c -I src/
 	gcc -shared -o ail.so ail.o scanner.o parser.o -lyajl
 
 src/scanner.c: src/scanner.re
