@@ -113,7 +113,7 @@ namespace artemis {
         execution_listener->loaded_page(*page, this->executor_state());
 
         qDebug() << "WEBKIT: Handling initial ajax callbacks" << endl;
-        handle_ajax_callbacks();
+        //handle_ajax_callbacks();
         setup_initial();;
         qDebug() << "WEBKIT: Executing sequence" << endl;
         do_exe();
@@ -164,7 +164,7 @@ namespace artemis {
             qDebug() << "Result: " << result;
 
             //Wait for any ajax stuff to finish
-            handle_ajax_callbacks();
+	    //            handle_ajax_callbacks();
             webkit_listener->timerFire(0);
         }
     }
