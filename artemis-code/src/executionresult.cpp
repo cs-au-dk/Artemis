@@ -67,7 +67,7 @@ namespace artemis {
         Q_CHECK_PTR(elem);
         Q_ASSERT(!final);
 
-        qDebug() << "Artemis detected new eventhandler for event: " << name << " tag name: " << elem->tagName() << " id: " << elem->attribute(QString("id")) << endl;
+        qDebug() << "Artemis detected new eventhandler for event: " << name << " tag name: " << elem->tagName() << " id: " << elem->attribute(QString("id")) << " title " << elem->attribute(QString("title")) << endl;
         if (is_non_interactive(name))
             return;
 
@@ -97,12 +97,14 @@ namespace artemis {
                 //TODO: Save strange events somewhere.
             }
 
-            qDebug() << "Finalizing " << p.second << "  " << p.first->tagName();
+            qDebug() << "Finalizing " << p.second << "  " << p.first->tagName() << " _T: " << p.first->attribute(QString("title"));
             if (/*p.first->tagName().isEmpty()*/ p.first->isNull()) {
                 qWarning() << "WEBKIT WARN: Got event handler with NULL element. Assuming document is reciever";
                 //continue;
             }
-            EventHandlerDescriptor handler(p.first,p.second);
+
+            EventHandlerDescriptor handler(p.first, p.second);
+            
             if (handler.is_invalid())
                 qDebug() << "WARN: element was invalid, ignoring";
             else
