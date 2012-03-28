@@ -36,10 +36,10 @@ namespace artemis {
         if (name == "click"
             || name == "dblclick"
             || name == "mousedown"
-            || name == "mouseup"
-            || name == "mouseover"
-            || name == "mousemove"
-            || name == "mouseout")
+            || name == "mouseup")
+            //|| name == "mouseover"
+            //|| name == "mousemove"
+            //|| name == "mouseout")
             return MOUSE_EVENT;
 
         if (name == "keypress"
