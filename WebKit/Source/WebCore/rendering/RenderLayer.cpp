@@ -433,7 +433,9 @@ LayoutRect RenderLayer::repaintRectIncludingDescendants() const
 
 void RenderLayer::computeRepaintRects(IntPoint* offsetFromRoot)
 {
+#ifndef ARTEMIS
     ASSERT(!m_visibleContentStatusDirty);
+#endif
 
     RenderBoxModelObject* repaintContainer = renderer()->containerForRepaint();
     m_repaintRect = renderer()->clippedOverflowRectForRepaint(repaintContainer);
@@ -443,7 +445,9 @@ void RenderLayer::computeRepaintRects(IntPoint* offsetFromRoot)
 void RenderLayer::clearRepaintRects()
 {
     ASSERT(!m_hasVisibleContent);
+#ifndef ARTEMIS
     ASSERT(!m_visibleContentStatusDirty);
+#endif
 
     m_repaintRect = IntRect();
     m_outlineBox = IntRect();
@@ -451,7 +455,9 @@ void RenderLayer::clearRepaintRects()
 
 void RenderLayer::updateLayerPositionsAfterScroll(UpdateLayerPositionsAfterScrollFlags flags)
 {
+#ifndef ARTEMIS
     ASSERT(!m_visibleContentStatusDirty);
+#endif
 
     // If we have no visible content, there is no point recomputing our rectangles as
     // they will be empty. If our visibility changes, we are expected to recompute all
