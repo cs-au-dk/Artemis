@@ -61,8 +61,9 @@ namespace artemis {
   }
 
   QWebElement JQueryTarget::get(ArtemisWebPage* page) {
+      QWebElement element = m_event_handler->dom_element().get_element(page);
 
-      QString signature = get_signature(m_event_handler->dom_element().get_element(page));
+      QString signature = get_signature(element);
       QString event = m_event_handler->name();
 
       qDebug() << "TARGET::Info, looking for selectors for signature " << signature << " and event " << event << endl;
@@ -80,7 +81,8 @@ namespace artemis {
       QString selector = pick_rand(selectors);
 
       /* Select target element */
-      QWebElementCollection elements = page->currentFrame()->findAllElements(selector);
+      //QWebElementCollection elements = page->currentFrame()->findAllElements(selector);
+      QWebElementCollection elements = element.findAll(selector);
 
       if (elements.count() == 0) {
           qDebug() << "TARGET::Warning, no matching elements found, defaulting to source" << endl;
