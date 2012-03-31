@@ -74,7 +74,6 @@ namespace artemis {
         
         QObject::connect(webkit_listener, SIGNAL(jqueryEventAdded(QString, QString, QString)),
                          jquery, SLOT(sl_event_added(QString, QString, QString)));
-        
 
         QObject::connect(webkit_listener, SIGNAL(loadedJavaScript(intptr_t, QString, QUrl, int)),
                          cov_list, SLOT(new_code(intptr_t, QString, QUrl, int)));

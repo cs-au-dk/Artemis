@@ -41,8 +41,9 @@ private:
 
 signals:
     void addedEventListener(QWebElement*, QString);
-    void addedAjaxCallbackHandler(QAjaxCallbackHandler*);
     void removedEventListener(QWebElement*, QString);
+    
+    void addedAjaxCallbackHandler(QAjaxCallbackHandler*);
     void loadedJavaScript(intptr_t id,QString source, QUrl url, int startline);
     void statementExecuted(intptr_t sourceID, std::string function_name, int linenumber);
     void script_crash(QString cause, intptr_t sourceID, int lineNumber);

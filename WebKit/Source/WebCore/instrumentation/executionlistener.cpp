@@ -50,8 +50,15 @@ namespace inst {
 
     void ExecutionListener::eventCleared(WebCore::EventTarget * e, const char* type) {
         std::string s = std::string(type);
-        std::cout << "el::event cleared: " << s << std::endl;
 
+        if (e->toNode() != NULL)
+            nodeEventCleared(e->toNode(), s);
+        else if (e->toDOMWindow() != NULL)
+            domWindowEventCleared(e->toDOMWindow(), s);
+        else {
+            std::cout << "ERROR: Strange event cleared:" << s << std::endl;
+        }
+        return;
     }
 
     void ExecutionListener::domWindowEventCleared(WebCore::DOMWindow *, const std::string) {
