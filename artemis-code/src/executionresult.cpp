@@ -74,6 +74,17 @@ namespace artemis {
         element_pointers.insert(QPair<QWebElement*,QString>(elem,name));
     }
 
+    void ExecutionResult::removeEventListener(QWebElement *elem, QString name) {
+        qDebug() << "Artemis removed eventhandler for event: " << name << " tag name: " << elem->tagName() << " id: " << elem->attribute(QString("id")) << " title " << elem->attribute(QString("title")) << endl;
+
+        if (is_non_interactive(name))
+            return;
+
+        bool removed = element_pointers.remove(QPair<QWebElement*,QString>(elem,name));
+
+        Q_ASSERT(removed);
+    }
+
     void ExecutionResult::addedAjaxCallbackHandler(QAjaxCallbackHandler* handler) {
         qDebug() << "AJAX CALLBACK HANDLER ADDED" << endl;
         m_ajax_callback_handlers.append(handler);
@@ -151,10 +162,6 @@ namespace artemis {
 
     QSet<QUrl> ExecutionResult::urls() const {
         return this->m_urls;
-    }
-
-    void ExecutionResult::removeEventListener(QWebElement *elem, QString name) {
-
     }
 
     void ExecutionResult::add_url(const QUrl url) {

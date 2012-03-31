@@ -33,17 +33,17 @@ void QWebExecutionListener::nodeEventAdded(WebCore::Node * node, const std::stri
     emit addedEventListener(new QWebElement(node), QString(tr(s.c_str())));
 }
 
+void QWebExecutionListener::nodeEventCleared(WebCore::Node * node, const std::string s) {
+    emit removedEventListener(new QWebElement(node), QString(tr(s.c_str())));
+}
+
+void QWebExecutionListener::domWindowEventCleared(WebCore::DOMWindow * window, const std::string s) {
+    emit removedEventListener(new QWebElement(window->frameElement()), QString(tr(s.c_str())));
+}
+
 void QWebExecutionListener::ajaxCallbackEventAdded(WebCore::XMLHttpRequest* xhr) {
     QAjaxCallbackHandler* handler = new QAjaxCallbackHandler(xhr);
     emit addedAjaxCallbackHandler(handler);
-}
-
-void QWebExecutionListener::nodeEventCleared(WebCore::Node *, const std::string) {
-    //TODO
-}
-
-void QWebExecutionListener::domWindowEventCleared(WebCore::DOMWindow *, const std::string) {
-    //TODO
 }
 
 void QWebExecutionListener::timerAdded(WebCore::ScriptExecutionContext* context, int timerId, int timeout, bool singleShot) {
