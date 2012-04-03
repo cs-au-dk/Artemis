@@ -202,6 +202,8 @@ namespace artemis {
     }
 
     void ExecutionResult::sl_script_crash(QString cause, intptr_t sourceID, int lineNumber) {
+        qDebug() << "WEBKIT SCRIPT ERROR: " << cause << " line: " << lineNumber << " source: " << sourceID << endl;
+
         this->crash_cause = cause;
         this->crash_sourceID = sourceID;
         this->crash_lineNumber = lineNumber;
