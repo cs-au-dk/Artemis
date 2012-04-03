@@ -29,100 +29,103 @@ function randInt(max_value) {
 	return value;
 }
 
-function randomJson() {
+var rand_chars = "abcdefghijklmnopqrstuvwxyz";
 
-	var generators;
+function _randomString() {
+    var text = new Array();
+    
+    for (i = 0; i < MAX_RANDOM_STRING; i++) {
+        text.push(rand_chars.charAt(randInt(rand_chars.length - 1)));
+    }
 
-	function getGenerator(max) {
-		range = generators.length - 1;
+    return text.join('');
+}
 
-		if (max != undefined) {
-			range = max;
+function randomJson(type) {
+
+	NUM_TYPES = 7;
+
+	if (type == undefined) {
+		type = randInt(1);
+	}
+
+	if (type == 0) {
+	// Object generator
+
+		var obj = new Array();
+		var num_properties = randInt(MAX_RANDOM_PROPERTIES);
+
+		if (num_properties == 0) {
+			return '{}';
 		}
 
-		return generators[randInt(range)];
-	}
+		obj.push('{');
 
-	var rand_chars = "abcdefghijklmnopqrstuvwxyz";
-
-	function _randomString() {
-	    var text = new Array();
-	    
-	    for (i = 0; i < MAX_RANDOM_STRING; i++) {
-	        text.push(rand_chars.charAt(randInt(rand_chars.length - 1)));
-	    }
-
-	    return text.join('');
-	}
-
-	generators = [
-		function() {
-			// array
-			array = new Array();
-
-			num_elements = randInt(MAX_RANDOM_ARRAY);
-
-			if (num_elements == 0) {
-				return '[]';
-			}
-
-			generator = getGenerator();
-
-			for (i = 0; i < num_elements; i++) {
-				array.push(',')
-				array.push(generator());
-			}
-
-			array[0] = "["; // replace first "," with a [
-			array.push("]");
-
-			return array.join('');
-		},
-		function() {
-			// object
-			obj = new Array();
-
-			num_properties = randInt(MAX_RANDOM_PROPERTIES);
-
-			if (num_properties == 0) {
-				return '{}';
-			}
-
-			for (i = 0; i < num_properties; i++) {
+		for (i = 0; i < num_properties; i++) {
+			if (i != 0) {
 				obj.push(',');
-				obj.push('"' + _randomString() + '":');
-				obj.push(getGenerator()());
 			}
-
-			obj[0] = '{'; // replace first , with a {
-			obj.push('}');
-
-			return obj.join('');
-		},
-		function() {
-			// boolean
-			values = ["True", "False"];
-			return values[randInt(1)];
-		},
-		function() {
-			// integer
-			return '' + Math.floor(Math.random() * MAX_RANDOM_INT);
-		},
-		function() {
-			// string
-			return '<string>';
-		},
-		function() {
-			// null
-			return 'null';
-		},
-		function() {
-			// float
-			return '' + Math.random();
+			
+			obj.push('"' + _randomString() + '":');
+			obj.push(randomJson(randInt(NUM_TYPES-1)));
 		}
-	];
 
-	return getGenerator(1)();
+		obj.push('}');
+
+		return obj.join('');
+	
+	} else if (type == 1) {
+		// Array generator
+	
+		var array = new Array();
+		var num_elements = randInt(MAX_RANDOM_ARRAY);
+
+		if (num_elements == 0) {
+			return '[]';
+		}
+
+		var t = randInt(NUM_TYPES-1);
+
+		array.push("[");
+
+		for (i = 0; i < num_elements; i++) {
+			if (i != 0) {
+				array.push(',')
+			}
+			
+			array.push(randomJson(t));
+		}
+
+		array.push("]");
+
+		return array.join('');
+	
+	} else if (type == 2) {
+		// boolean generator
+
+		values = ["true", "false"];
+		return values[randInt(1)];
+	
+	} else if (type == 3) {
+		// integer generator
+		return '' + Math.floor(Math.random() * MAX_RANDOM_INT);
+	
+	} else if (type == 4) {
+		// string generator
+		return '"<string>"';
+	
+	} else if (type == 5) {
+		// null generator
+		return 'null';
+	
+	} else if (type == 6) {
+		// float generator
+		return '' + Math.random(); 
+	
+	} else {
+		throw "ERROR, should not reach this state";
+	}
+
 }
 
 function extractKeyset(assoArray) {
@@ -223,7 +226,6 @@ function requestHandler(request, response) {
 			    'Content-Type'   : 'application/json'});
 				
 				random_json = randomJson();
-
 				response.write(random_json);
 				response.end();				
 			}
