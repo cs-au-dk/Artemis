@@ -10,6 +10,9 @@
 
 #define   YAJL_IS_INTEGER_FIXED(v)   (YAJL_IS_NUMBER(v) && ((v)->u.number.flags & YAJL_NUMBER_INT_VALID))
 
+#define MAX_ARRAY_SIZE 20
+#define MAX_RANDOM_NUMBER 100
+
 static char * base_schema_folder = NULL;
 
 int construct_ail(ail_t * ail, const char * raw_ail, char * schema_folder) {
@@ -204,7 +207,7 @@ int _recursive_operation_perm(const yajl_val schema_part, ail_response_t * respo
     ail_response_t last;
     last = NULL;
 
-    long long num_elements = num_elements_min + (random() % 20);
+    long long num_elements = num_elements_min + (random() % MAX_ARRAY_SIZE);
 
     if (items->u.array.len == 0) {
       num_elements = 0;
@@ -314,7 +317,7 @@ int _recursive_operation_perm(const yajl_val schema_part, ail_response_t * respo
     result->chunk = malloc(sizeof(char) * 11);
     result->next = NULL;
 
-    snprintf(result->chunk, 11, "%ld", random());
+    snprintf(result->chunk, 11, "%ld", random() % MAX_RANDOM_NUMBER);
 
     *response = result;
     return 0;    
