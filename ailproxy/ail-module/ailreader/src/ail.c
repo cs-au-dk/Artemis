@@ -281,9 +281,28 @@ int _recursive_operation_perm(const yajl_val schema_part, ail_response_t * respo
   } else if (YAJL_IS_STRING(type) && strcmp(type->u.string, "string") == 0) {
 
     struct response_chunk * result = malloc(sizeof(struct response_chunk));
-    result->chunk = "\"<str>\"";
-    result->next = NULL;
+    
 
+    yajl_val str_enum = yajl_tree_get(schema_part, \
+                                      (const char *[]){"enum", (const char*) 0},\
+                                      yajl_t_string);
+
+    if (YAJL_IS_ARRAY(str_enum)) {
+
+        int selected_choice = random() % str_enum->u.array.len;
+
+        if (YAJL_IS_STRING(str_enum->u.array.values[selected_choice])) {
+            result->chunk = YAJL_GET_STRING(str_enum->u.array.values[selected_choice]);
+        } else {
+            fprintf(stderr, "String enum contains non-string values");
+            return 1;
+        }
+
+    } else {
+        result->chunk = "\"<str>\"";     
+    }
+
+    result->next = NULL;
     *response = result;
     return 0;      
 
