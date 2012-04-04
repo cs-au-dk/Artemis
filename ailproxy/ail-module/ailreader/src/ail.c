@@ -286,26 +286,37 @@ int _recursive_operation_perm(const yajl_val schema_part, ail_response_t * respo
     struct response_chunk * result = malloc(sizeof(struct response_chunk));
     
 
-    yajl_val str_enum = yajl_tree_get(schema_part, \
-                                      (const char *[]){"enum", (const char*) 0},\
-                                      yajl_t_string);
+    yajl_val str_enum = yajl_tree_get(schema_part,\
+                                    (const char*[]){"enum", (const char*) 0},\
+                                    yajl_t_array);
 
-    if (YAJL_IS_ARRAY(str_enum)) {
+    if (str_enum != NULL && YAJL_IS_ARRAY(str_enum)) {
 
         int selected_choice = random() % str_enum->u.array.len;
 
         if (YAJL_IS_STRING(str_enum->u.array.values[selected_choice])) {
-            result->chunk = YAJL_GET_STRING(str_enum->u.array.values[selected_choice]);
+
+            struct response_chunk * end = malloc(sizeof(struct response_chunk));
+            end->chunk = "\"";
+            end->next = NULL;
+
+            struct response_chunk * string = malloc(sizeof(struct response_chunk));
+            string->chunk = YAJL_GET_STRING(str_enum->u.array.values[selected_choice]);
+            string->next = end;
+
+            result->chunk = "\"";
+            result->next = string;
+            
         } else {
             fprintf(stderr, "String enum contains non-string values");
             return 1;
         }
 
     } else {
-        result->chunk = "\"<str>\"";     
+        result->chunk = "\"stringdata\"";  
+        result->next = NULL;   
     }
-
-    result->next = NULL;
+    
     *response = result;
     return 0;      
 
