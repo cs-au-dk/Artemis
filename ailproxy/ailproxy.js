@@ -17,6 +17,8 @@ var MAX_RANDOM_ARRAY = 20;
 var MAX_RANDOM_STRING = 8;
 var MAX_RANDOM_PROPERTIES = 8;
 
+var ETAG_PREFIX = "" + Math.floor(Math.random()*10000);
+
 function randInt(max_value) {
 	value = Math.floor(Math.random() * (max_value+1));
 
@@ -174,7 +176,7 @@ function serverPrefetch(filename) {
 	try {
 		server_cache[filename] = fs.readFileSync(full_path);
 	} catch(err) {
-		server_cache[filename] = null;
+		server_cache[filename] = false;
 	}
 }
 
@@ -214,7 +216,7 @@ function requestHandler(request, response) {
 				response.writeHead(200, {
 			    'Content-Length' : ailResponse.length,
 			    'Content-Type'   : 'application/json'});
-			
+
 				response.write(ailResponse);
 				response.end();
 
@@ -232,7 +234,19 @@ function requestHandler(request, response) {
 		
 		} else if (server_only_mode) {
 
+			if (request.headers['if-modified-since'] != undefined ||
+				request.headers['if-none-match'] != undefined) {
+				// fastpath, let the client use the cached version
+				
+				console.log('SERVER-304-CACHE ', request.url);
+
+				response.writeHead(304);
+				response.end();
+				return;
+			}
+
 			filename = (request_url.pathname || 'index.html');
+			filename = filename.replace(/\//g, '');
 
 			if (server_cache[filename] == undefined) {
 				serverPrefetch(filename);
@@ -243,6 +257,9 @@ function requestHandler(request, response) {
 				console.log('SERVER-CACHED ', request.url, " (", filename, ")");
 
 				response.writeHead(200, {
+					'Cache-Control'	 : 'max-age=0, must-revalidate',
+					'Last-Modified'  : 'Thu, 22 Mar 2012 09:09:26 GMT',
+					'ETag'			 : "\"" + ETAG_PREFIX + filename + "\"",
 		    		'Content-Type'   : 'text/html'});
 
 				response.write(server_cache[filename], 'binary');
@@ -253,6 +270,9 @@ function requestHandler(request, response) {
 				console.log('SERVER-EMPTY ', request.url, " (", filename, ")");
 
 				response.writeHead(200, {
+					'Cache-Control'	 : 'max-age=0, must-revalidate',
+					'Last-Modified'  : 'Thu, 22 Mar 2012 09:09:26 GMT',
+					'ETag'			 : "\"" + ETAG_PREFIX + filename + "\"",
 		    		'Content-Type'   : 'text/html'});
 				response.end();		
 			}
