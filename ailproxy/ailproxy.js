@@ -151,7 +151,11 @@ function extractValues(assoArray) {
 	var values = new Array();
 	var i = 0;
 	for (key in assoArray) {
-	    values[i] = assoArray[key];
+		if (assoArray[key] == "") {
+			values[i] = "-";
+		} else {
+			values[i] = assoArray[key];
+		}
 	    i = i + 1;
 	}
 	return values;
@@ -182,7 +186,6 @@ function serverPrefetch(filename) {
 
 
 function requestHandler(request, response) {
-   
     var request_url = url.parse(request.url, true);
     var opArgs = trimEmpty(request_url.pathname.split('/'));
     var queryKeys = extractKeyset(request_url.query);
@@ -196,12 +199,16 @@ function requestHandler(request, response) {
 	request.addListener('end', function() {
 
 		var lines = request_data.split("&");
+
 		for (i = 0; i < lines.length; i++) {
 			keyvalue = lines[i].split("=");
 
 			if (keyvalue.length == 2) {
 				queryKeys.push(keyvalue[0]);
 				queryValues.push(keyvalue[1]);
+			} else if (keyvalue[0].length > 0) {
+				queryKeys.push(keyvalue[0]);
+				queryValues.push("");
 			}
 		}
 
