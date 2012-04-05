@@ -147,6 +147,9 @@ namespace artemis {
     void WebKitExecutor::do_exe() {
         EventSequence seq = current_conf->get_eventsequence();
     
+        // ELfinder addition, ensure that we have one file selected
+        //this->page->currentFrame()->evaluateJavaScript("$($(\".elfinder-cwd-file\")[0]).click()");
+
         foreach (EventDescriptor ed, seq.to_list()) {
             QWebElement handler = ed.handler_descriptor().dom_element().get_element(page);
             QWebElement target = ed.target()->get(page);
@@ -154,8 +157,13 @@ namespace artemis {
 
             ed.form_input().write_to_page(page);
 
-            qDebug() << "Event Handler: " << handler.tagName() << " _ID: " << handler.attribute(QString("id")) << " _Title: " << handler.attribute(QString("title"));
-            qDebug() << "Target: " << target.tagName() << " _ID: " << target.attribute(QString("id")) << " _Title: " << target.attribute(QString("title"));
+            if (handler.isNull() || target.isNull()) {
+                qDebug() << "WARNING::Skipping event, event handler or target could not be found";
+                continue;
+            }
+
+            qDebug() << "Event Handler: " << handler.tagName() << " _ID: " << handler.attribute(QString("id")) << " _Title: " << handler.attribute(QString("title")) << "class: " << handler.attribute(QString("class"));
+            qDebug() << "Target: " << target.tagName() << " _ID: " << target.attribute(QString("id")) << " _Title: " << target.attribute(QString("title")) << "class: " << target.attribute(QString("class"));
             qDebug() << "Executing: " << js_init_event;
             
             QVariant result =  target.evaluateJavaScript(js_init_event, DONT_MEASURE_COVERAGE);

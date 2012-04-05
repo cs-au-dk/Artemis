@@ -39,7 +39,7 @@ namespace artemis {
 
     void DeterministicWorkList::add(const ExecutableConfiguration e, int priority) {
         QSet<ExecutableConfiguration> *set = queue.value(priority);
-        //qDebug() << "Adding: " << e.hashcode() << "with " << priority;
+        qDebug() << "WORKLIST::Adding: " << e.hashcode() << "with " << priority;
         if (set == 0) {
             set = new QSet<ExecutableConfiguration>();
             queue.insert(priority,set);
