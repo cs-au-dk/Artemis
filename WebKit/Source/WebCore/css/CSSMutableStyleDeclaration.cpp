@@ -427,7 +427,9 @@ String CSSMutableStyleDeclaration::fontValue() const
     if (!success) {
         // An invalid "font" value has been built (should never happen, as at least implicit values
         // for mandatory longhands are always found in the style), report empty value instead.
+#ifndef ARTEMIS
         ASSERT_NOT_REACHED();
+#endif
         return emptyString();
     }
     return result.toString();
