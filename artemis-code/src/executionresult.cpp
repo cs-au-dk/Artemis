@@ -67,7 +67,7 @@ namespace artemis {
         Q_CHECK_PTR(elem);
         Q_ASSERT(!final);
 
-        qDebug() << "Artemis detected new eventhandler for event: " << name << " tag name: " << elem->tagName() << " id: " << elem->attribute(QString("id")) << " title " << elem->attribute(QString("title")) << endl;
+        qDebug() << "Artemis detected new eventhandler for event: " << name << " tag name: " << elem->tagName() << " id: " << elem->attribute(QString("id")) << " title " << elem->attribute(QString("title")) << "class: " << elem->attribute("class") << endl;
         if (is_non_interactive(name))
             return;
 
@@ -75,7 +75,7 @@ namespace artemis {
     }
 
     void ExecutionResult::removeEventListener(QWebElement *elem, QString name) {
-        qDebug() << "Artemis removed eventhandler for event: " << name << " tag name: " << elem->tagName() << " id: " << elem->attribute(QString("id")) << " title " << elem->attribute(QString("title")) << endl;
+        qDebug() << "Artemis removed eventhandler for event: " << name << " tag name: " << elem->tagName() << " id: " << elem->attribute(QString("id")) << " title " << elem->attribute(QString("title")) << "class: " << elem->attribute("class") << endl;
 
         if (is_non_interactive(name))
             return;

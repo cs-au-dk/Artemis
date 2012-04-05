@@ -63,6 +63,10 @@ namespace artemis {
   QWebElement JQueryTarget::get(ArtemisWebPage* page) {
       QWebElement element = m_event_handler->dom_element().get_element(page);
 
+      if (element.isNull()) {
+          return QWebElement();
+      }
+
       QString signature = get_signature(element);
       QString event = m_event_handler->name();
 
@@ -74,7 +78,7 @@ namespace artemis {
 
       if (selectors.count() == 0) {
           qDebug() << "TARGET::Warning, no matching selectors found, defaulting to source" << endl;
-          return m_event_handler->dom_element().get_element(page);
+          return element;
       }
 
       /* Select random selector */
@@ -86,7 +90,7 @@ namespace artemis {
 
       if (elements.count() == 0) {
           qDebug() << "TARGET::Warning, no matching elements found, defaulting to source" << endl;
-          return m_event_handler->dom_element().get_element(page);
+          return element;
       
       } else {
           QWebElement element = pick_rand(elements.toList());

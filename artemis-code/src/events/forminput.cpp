@@ -43,10 +43,14 @@ namespace artemis {
     void FormInput::write_to_page(QWebPage* page) {
         foreach (FormField ff, fields_set) {
             Q_ASSERT(this->values.contains(ff));
+
             DOMElementDescriptor elm_desc = ff.element();
             FormFieldValue value = values[ff];
             QWebElement element = elm_desc.get_element(page);
-            element.setAttribute("value",value.string_representation());
+
+            if (!element.isNull()) {
+                element.setAttribute("value", value.string_representation());
+            }
         }
     }
 
