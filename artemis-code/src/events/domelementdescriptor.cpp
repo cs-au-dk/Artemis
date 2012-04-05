@@ -48,6 +48,7 @@ namespace artemis {
         } else {
             this->id = elm->attribute("id");
             this->tag_name = elm->tagName();
+            this->class_line = QString(elm->classes().join(" "));
             //this->frame_name = elm->webFrame()->frameName();
             is_body = is_document = is_mainframe = false;
             //set_frame_path(elm);
@@ -60,6 +61,7 @@ namespace artemis {
         this->frame_path = QList<int>(other.frame_path);
         this->id = other.id;
         this->tag_name = other.tag_name;
+        this->class_line = other.class_line;
         //this->frame_name = other.frame_name;
         this->is_body = other.is_body;
         this->is_document = other.is_document;
@@ -72,6 +74,18 @@ namespace artemis {
         QWebElement elm = get_element_frame(frame);
         Q_ASSERT(elm != NULL_WEB_ELEMENT);
         return elm;
+    }
+
+    QString DOMElementDescriptor::get_tag_name() {
+        return this->tag_name;
+    }
+
+    QString DOMElementDescriptor::get_id() {
+        return this->id;
+    }
+
+    QString DOMElementDescriptor::get_class() {
+        return this->class_line;
     }
 
     QWebFrame* DOMElementDescriptor::get_frame(QWebPage *page) {
@@ -102,9 +116,7 @@ namespace artemis {
             current = nth_child(current,id);
             if (current == NULL_WEB_ELEMENT) {
                 qDebug() << "Invalid frame path: " << *this;
-            //    Q_ASSERT(current != NULL_WEB_ELEMENT);
-                if (current == NULL_WEB_ELEMENT)
-                    return frame->documentElement();
+                return QWebElement();
             }
         }
         return current;

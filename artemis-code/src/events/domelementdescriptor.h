@@ -40,6 +40,9 @@ namespace artemis {
         DOMElementDescriptor(QWebElement* elm);
         DOMElementDescriptor(const DOMElementDescriptor& other);
         QWebElement get_element(QWebPage* page);
+        QString get_tag_name();
+        QString get_id();
+        QString get_class();
         bool is_invalid();
 
         bool operator==(DOMElementDescriptor& other);
@@ -50,6 +53,8 @@ namespace artemis {
         QString id;
         QString tag_name;
         QString frame_name;
+        QString class_line;
+
         /*
          Path from the main_frame to the frame containig the element
          */
