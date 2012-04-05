@@ -105,6 +105,60 @@ namespace artemis {
             EventParameters* new_params = 0;
             EventType tt = get_type(ee.name());
             
+            // elfinder specific filtering START
+
+            // filter a number of events
+            // if (ee.name() == "mouseover" || 
+            //     ee.name() == "mousemove" || 
+            //     ee.name() == "mouseout" ||
+            //     ee.name() == "dblclick" ||
+            //     tt == KEY_EVENT) {
+
+            //     qDebug() << "ELFINDER::FILTERED EVENT #1" << endl;
+            //     continue;
+            // }
+
+            // if (ee.name() == "mousedown" && ee.dom_element().get_id() != "elfinder") {
+            //     qDebug() << "ELFINDER::FILTERED EVENT #2" << endl;
+            //     continue;
+            // }
+
+            // if (ee.name() == "click" && ee.dom_element().get_tag_name() == "<document>") {
+            //     qDebug() << "ELFINDER::FILTERED EVENT #3" << endl;
+            //     continue;
+            // }
+
+            // if (ee.dom_element().get_id() == "place-root-elfinder-elfinder") {
+            //     qDebug() << "ELFINDER::FILTERED EVENT #4" << endl;
+            //     continue;
+            // }
+
+            // QString class_line = ee.dom_element().get_class();
+            
+            // if (class_line == "ui-dialog ui-widget ui-widget-content ui-corner-all ui-draggable std42-dialog  elfinder-dialog elfinder-dialog-notify" ||
+            //     class_line == "elfinder-path" ||
+            //     class_line == "elfinder-quicklook-preview ui-helper-clearfix" ||
+            //     class_line == "elfinder-tree elfinder-places ui-corner-all ui-droppable" ||
+            //     class_line == "elfinder-tree" ||
+            //     class_line == "ui-helper-reset ui-widget elfinder-quicklook ui-draggable ui-resizable" ||
+            //     class_line == "ui-helper-reset ui-widget ui-state-default ui-corner-all elfinder-contextmenu elfinder-contextmenu-ltr" ||
+            //     class_line == "ui-state-default elfinder-navbar ui-resizable" ||
+            //     class_line == "ui-widget-content elfinder-button elfinder-button-search" ||
+            //     class_line == "ui-helper-reset ui-helper-clearfix ui-widget ui-widget-content ui-corner-all elfinder elfinder-ltr ui-resizable elfinder-disabled" ||
+            //     class_line == "ui-widget-content elfinder-toolbar-button-separator" ||
+            //     class_line == "ui-icon ui-icon-close") {
+            //     qDebug() << "ELFINDER::FILTERED EVENT #5" << endl;
+            //     continue;
+            // }
+
+            // if (class_line.contains("std42-dialog")) {
+            //     qDebug() << "ELFINDER::FILTERED EVENT #6" << endl;
+            //     continue;
+            // }
+
+            // elfinder specific filtering END
+
+
             //Event parameters
             if (tt == BASE_EVENT) {
                 new_params = new BaseEventParameters(var_gen->generate_base_event(ee.name()));
