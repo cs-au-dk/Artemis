@@ -111,7 +111,7 @@ int _recursive_operation_perm(const yajl_val schema_part, ail_response_t * respo
 
   yajl_val type = yajl_tree_get(schema_part, \
                                 (const char *[]){"type", (const char*) 0},\
-                                yajl_t_string);
+                                yajl_t_any);
 
   if (type == NULL) {
     fprintf(stderr, "Error getting type"); 
@@ -119,7 +119,6 @@ int _recursive_operation_perm(const yajl_val schema_part, ail_response_t * respo
   }
 
   /* HANDLE OBJECT */
-  /* TODO: Handle optional */
 
   if (YAJL_IS_STRING(type) && strcmp(type->u.string, "object") == 0) {
 
@@ -141,29 +140,37 @@ int _recursive_operation_perm(const yajl_val schema_part, ail_response_t * respo
     int i;
     for (i = 0; i < properties->u.object.len; i++) {
 
-      struct response_chunk * key = malloc(sizeof(struct response_chunk));
-      key->chunk = malloc(sizeof(char) * (strlen(properties->u.object.keys[i]) + 4));
-      key->next = NULL;
+      // if value is optional, skip at random
+      yajl_val required = yajl_tree_get(properties->u.object.values[i],\
+                                        (const char*[]){"required", (const char*) 0},\
+                                        yajl_t_false);
 
-      sprintf(key->chunk, "\"%s\": ", properties->u.object.keys[i]);
+      if (!(YAJL_IS_FALSE(required) && (random() % 2) == 0)) {
 
-      struct response_chunk * value;
-      if (_recursive_operation_perm(properties->u.object.values[i], &value) != 0) {
-        return 1;
-      }
+        struct response_chunk * key = malloc(sizeof(struct response_chunk));
+        key->chunk = malloc(sizeof(char) * (strlen(properties->u.object.keys[i]) + 4));
+        key->next = NULL;
 
-      key->next = value;
+        sprintf(key->chunk, "\"%s\": ", properties->u.object.keys[i]);
 
-      if (previous == NULL) {
-        prepend->next = key;
-        previous = _last(value);
-      } else {
-        struct response_chunk * seperator = malloc(sizeof(struct response_chunk));
-        seperator->chunk = ", ";
-        seperator->next = key;
+        struct response_chunk * value;
+        if (_recursive_operation_perm(properties->u.object.values[i], &value) != 0) {
+          return 1;
+        }
 
-        previous->next = seperator;
-        previous = _last(value);
+        key->next = value;
+
+        if (previous == NULL) {
+          prepend->next = key;
+          previous = _last(value);
+        } else {
+          struct response_chunk * seperator = malloc(sizeof(struct response_chunk));
+          seperator->chunk = ", ";
+          seperator->next = key;
+
+          previous->next = seperator;
+          previous = _last(value);
+        }
       }
 
     }
