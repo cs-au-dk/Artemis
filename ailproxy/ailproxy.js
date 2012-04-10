@@ -327,10 +327,11 @@ function requestHandler(request, response) {
 }
 
 if (process.argv.length < 3) {
-    console.log('Error, proper usage: node ailproxy.js /path/to/schema [--server-only-mode /path/to/files | --random-mode]');
+    console.log('Error, proper usage: node ailproxy.js /path/to/schema [--server-only-mode /path/to/files] [--random-mode]');
 } else {
 	server_only_mode = (process.argv.length > 3 && process.argv[3] == '--server-only-mode');
 	random_mode = (process.argv.length > 3 && process.argv[3] == '--random-mode');
+	random_mode = random_mode || (process.argv.length > 5 && process.argv[5] == '--random-mode');
 
 	if (process.argv.length > 4) {
 		server_base_dir = process.argv[4];
