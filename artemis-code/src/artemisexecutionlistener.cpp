@@ -37,7 +37,7 @@ namespace artemis {
     }
 
     void const ArtemisExecutionListener::installIntoWebKit() {
-        installWebKitExecutionListener(listener);
+        listener->installWebKitExecutionListener(listener);
     }
 
     void ArtemisExecutionListener::newEventListenerRegistered(QWebElement *, QString) {

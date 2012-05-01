@@ -30,6 +30,7 @@ public:
     virtual void webkit_ajax_send(const char * url, const char * data);
     virtual void webkit_eval_call(const char * eval_string);
     virtual void calledFunction(const JSC::DebuggerCallFrame&);
+    void installWebKitExecutionListener(inst::ExecutionListener*);
     
     virtual void timerAdded(WebCore::ScriptExecutionContext* context, int timerId, int timeout, bool singleShot);
     virtual void timerRemoved(WebCore::ScriptExecutionContext* context, int timerId);
@@ -60,7 +61,7 @@ public slots:
 
 };
 
-void installWebKitExecutionListener(inst::ExecutionListener*);
+
 
 #endif // QWEBEXECUTIONLISTENER_H
 
