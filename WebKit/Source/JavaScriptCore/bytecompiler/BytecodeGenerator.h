@@ -478,6 +478,9 @@ namespace JSC {
 
         void addLineInfo(unsigned lineNo)
         {
+#ifdef ARTEMIS
+              m_codeBlock->addLineInfo(instructions().size(), lineNo);
+#endif
 #if !ENABLE(OPCODE_SAMPLING)
             if (m_shouldEmitRichSourceInfo)
 #endif

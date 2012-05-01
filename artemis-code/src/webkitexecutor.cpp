@@ -60,7 +60,7 @@ namespace artemis {
         cov_list = new CoverageListener(this);
 
         webkit_listener = new QWebExecutionListener();
-        installWebKitExecutionListener(webkit_listener);
+        webkit_listener->installWebKitExecutionListener(webkit_listener);
 
         ImmutableCookieJar *immutable_cookie_jar = new ImmutableCookieJar(options->get_preset_cookies(), options->getURL()->host());
         ajax_listener.setCookieJar(immutable_cookie_jar);
