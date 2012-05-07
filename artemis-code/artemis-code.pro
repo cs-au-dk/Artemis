@@ -28,8 +28,6 @@ HEADERS += src/webkitexecutor.h \
     src/inputgenerator/targets/legacytarget.h \
     src/inputgenerator/targets/jquerylistener.h \
     src/inputgenerator/targets/jquerytarget.h \    
-    src/listeners/beforeexecutionlistener.h \
-    src/listeners/afterexecutionlistener.h \
     src/events/eventsequence.h \
     src/events/forminput.h \
     src/worklist/worklist.h \
@@ -85,8 +83,6 @@ SOURCES += src/webkitexecutor.cpp \
     src/inputgenerator/targets/targetdescriptor.cpp \
     src/inputgenerator/targets/jquerytarget.cpp \
     src/inputgenerator/targets/jquerylistener.cpp \
-    src/listeners/beforeexecutionlistener.cpp \
-    src/listeners/afterexecutionlistener.cpp \
     src/events/eventsequence.cpp \
     src/events/forminput.cpp \
     src/worklist/worklist.cpp \
