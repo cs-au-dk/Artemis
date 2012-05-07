@@ -21,7 +21,6 @@ DEFINES += ARTEMIS=1
 HEADERS += src/webkitexecutor.h \
     src/executionresult.h \
     src/executableconfiguration.h \
-    src/artemisexecutionlistener.h \
     src/artemisoptions.h \
     src/inputgenerator/abstractinputgenerator.h \
     src/inputgenerator/randominputgenerator.h \
@@ -78,7 +77,6 @@ HEADERS += src/webkitexecutor.h \
 SOURCES += src/webkitexecutor.cpp \
     src/executionresult.cpp \
     src/executableconfiguration.cpp \
-    src/artemisexecutionlistener.cpp \
     src/artemis.cpp \
     src/artemisoptions.cpp \
     src/inputgenerator/abstractinputgenerator.cpp \
