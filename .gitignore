@@ -1,4 +1,7 @@
 *.[oa]
+*.pyc
+*.so
+.*
 
 build-output
 artemis-build-output
@@ -10,3 +13,7 @@ artemis-code/Makefile
 artemis-code/build/
 artemis-code/dist/
 artemis-code/js-code-dump
+
+WebKit/config.log
+
+*sublime*
