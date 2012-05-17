@@ -29,7 +29,7 @@ HEADERS += src/webkitexecutor.h \
     src/inputgenerator/targets/jquerylistener.h \
     src/inputgenerator/targets/jquerytarget.h \    
     src/events/eventsequence.h \
-    src/events/forminput.h \
+    src/events/forms/forminput.h \
     src/worklist/worklist.h \
     src/worklist/deterministicworklist.h \
     src/termination/terminationstrategy.h \
@@ -39,8 +39,8 @@ HEADERS += src/webkitexecutor.h \
     src/events/eventhandlerdescriptor.h \
     src/events/eventdescriptor.h \
     src/artemisglobals.h \
-    src/events/formfieldtypes.h \
-    src/events/formfield.h \
+    src/events/forms/formfieldtypes.h \
+    src/events/forms/formfield.h \
     src/events/eventparameters.h \
     src/events/eventypes.h \
     src/events/baseeventparameters.h \
@@ -49,7 +49,7 @@ HEADERS += src/webkitexecutor.h \
     src/executorstate.h \
     src/variants/randomvariants.h \
     src/variants/variantsgenerator.h \
-    src/events/formfieldvalue.h \
+    src/events/forms/formfieldvalue.h \
     src/util/randomutil.h \
     src/priortizer/abstractprioritizer.h \
     src/priortizer/randomprioritizer.h \
@@ -86,7 +86,7 @@ SOURCES += src/webkitexecutor.cpp \
     src/inputgenerator/targets/jquerytarget.cpp \
     src/inputgenerator/targets/jquerylistener.cpp \
     src/events/eventsequence.cpp \
-    src/events/forminput.cpp \
+    src/events/forms/forminput.cpp \
     src/worklist/worklist.cpp \
     src/worklist/deterministicworklist.cpp \
     src/termination/terminationstrategy.cpp \
@@ -95,7 +95,7 @@ SOURCES += src/webkitexecutor.cpp \
     src/events/domelementdescriptor.cpp \
     src/events/eventhandlerdescriptor.cpp \
     src/events/eventdescriptor.cpp \
-    src/events/formfield.cpp \
+    src/events/forms/formfield.cpp \
     src/events/eventparameters.cpp \
     src/events/baseeventparameters.cpp \
     src/events/eventtypes.cpp \
@@ -104,7 +104,7 @@ SOURCES += src/webkitexecutor.cpp \
     src/executorstate.cpp \
     src/variants/randomvariants.cpp \
     src/variants/variantsgenerator.cpp \
-    src/events/formfieldvalue.cpp \
+    src/events/forms/formfieldvalue.cpp \
     src/util/randomutil.cpp \
     src/priortizer/abstractprioritizer.cpp \
     src/priortizer/randomprioritizer.cpp \

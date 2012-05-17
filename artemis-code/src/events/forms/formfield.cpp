@@ -26,7 +26,7 @@
   or implied, of Simon Holm Jensen
 */
 #include "formfield.h"
-#include"artemisglobals.h"
+#include "artemisglobals.h"
 
 
 

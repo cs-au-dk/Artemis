@@ -32,7 +32,7 @@
 #include <QString>
 #include <QtWebKit>
 #include "domelementdescriptor.h"
-#include "formfield.h"
+#include "forms/formfield.h"
 
 namespace artemis {
 

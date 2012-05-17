@@ -28,10 +28,11 @@
 #ifndef FORMFIELD_H
 #define FORMFIELD_H
 
-#include "formfieldtypes.h"
-#include "domelementdescriptor.h"
 #include <QSet>
 #include <QString>
+
+#include "formfieldtypes.h"
+#include "events/domelementdescriptor.h"
 
 namespace artemis {
 

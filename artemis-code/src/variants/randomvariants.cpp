@@ -26,7 +26,7 @@
   or implied, of Simon Holm Jensen
 */
 #include "randomvariants.h"
-#include "events/formfieldtypes.h"
+#include "events/forms/formfieldtypes.h"
 #include <util/randomutil.h>
 
 namespace artemis {

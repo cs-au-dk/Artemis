@@ -31,7 +31,7 @@
 #include "events/baseeventparameters.h"
 #include "events/keyboardeventparameters.h"
 #include "events/mouseeventparameters.h"
-#include "events/formfield.h"
+#include "events/forms/formfield.h"
 
 namespace artemis {
 
