@@ -46,6 +46,7 @@
 #include "UStringConcatenate.h"
 #include <stdio.h>
 #include <wtf/StringExtras.h>
+#include <iostream>
 
 #if ENABLE(DFG_JIT)
 #include "DFGOperations.h"
@@ -1884,13 +1885,16 @@ int CodeBlock::lineNumberForBytecodeOffset(unsigned bytecodeOffset)
 {
     ASSERT(bytecodeOffset < m_instructionCount);
 
-    if (!m_rareData)
+    if (!m_rareData) {
+        std::cout << "NO RARE!!" << std::endl;
         return m_ownerExecutable->source().firstLine();
+    }
 
     Vector<LineInfo>& lineInfo = m_rareData->m_lineInfo;
 
     int low = 0;
     int high = lineInfo.size();
+    std::cout << "LL: " <<lineInfo.size() << std::endl;
     while (low < high) {
         int mid = low + (high - low) / 2;
         if (lineInfo[mid].instructionOffset <= bytecodeOffset)
