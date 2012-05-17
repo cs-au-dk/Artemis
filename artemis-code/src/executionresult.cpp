@@ -25,9 +25,12 @@
   authors and should not be interpreted as representing official policies, either expressed
   or implied, of Simon Holm Jensen
 */
-#include "executionresult.h"
-#include "events/eventypes.h"
 #include <iostream>
+
+#include "events/eventypes.h"
+#include "statistics/statsstorage.h"
+
+#include "executionresult.h"
 
 using namespace std;
 
@@ -132,7 +135,7 @@ namespace artemis {
 
      void ExecutionResult::add_ajax_request(AjaxRequest req) {
          Q_ASSERT(!final);
-         this->m_ajax_request << req;
+         //this->m_ajax_request << req;
      }
 
      QSet<AjaxRequest> ExecutionResult::ajax_request() const {
@@ -264,5 +267,16 @@ namespace artemis {
     bool ExecutionResult::modifed_dom() const{
         Q_ASSERT(final);
         return this->m_modfied_dom;
+    }
+
+    void ExecutionResult::sl_timer_added(int timer_id, int timeout, bool single_shot) {
+        qDebug() << "Artemis::Timer " << timer_id << " added";
+        statistics()->accumulate("timers::registered", 1);
+        this->m_timers.insert(timer_id, QPair<int,bool>(timeout, single_shot));
+    }
+
+    void ExecutionResult::sl_timer_removed(int timer_id) {
+        qDebug() << "Artemis::Timer " << timer_id << " removed";
+        this->m_timers.remove(timer_id);
     }
 }

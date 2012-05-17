@@ -46,44 +46,36 @@ void QWebExecutionListener::ajaxCallbackEventAdded(WebCore::XMLHttpRequest* xhr)
     emit addedAjaxCallbackHandler(handler);
 }
 
-void QWebExecutionListener::timerAdded(WebCore::ScriptExecutionContext* context, int timerId, int timeout, bool singleShot) {
-    cout << "WEBKIT::Timer " << timerId << " Added" << endl;
+// TIMERS START
 
+void QWebExecutionListener::timerAdded(WebCore::ScriptExecutionContext* context, int timerId, int timeout, bool singleShot) {
     m_timers.insert(timerId, context);
     emit addedTimer(timerId, timeout, singleShot);
 }
     
 void QWebExecutionListener::timerRemoved(WebCore::ScriptExecutionContext* context, int timerId) {
-    cout << "WEBKIT::Timer " << timerId << " Removed" << endl;
-
     m_timers.remove(timerId);
     emit removedTimer(timerId);
 }
 
 void QWebExecutionListener::timerFire(int timerId) {
-    if (timerId == 0) {
+    Q_ASSERT(timerId > 0);
 
-        foreach(timerId, m_timers.keys()) {
-            timerFire(timerId);
-        }
-
-    } else {
-
-        QMap<int, WebCore::ScriptExecutionContext*>::const_iterator i = m_timers.find(timerId);
-        
-        if (i != m_timers.end() && i.key() == timerId) {
-            // only execute the first found timer (only one should be returned anyway)
-            cout << "WEBKIT::Timer Clear Clear... Fire Event! tid: " << timerId << endl;
-            i.value()->findTimeout(timerId)->fired();
-        }
-
+    QMap<int, WebCore::ScriptExecutionContext*>::const_iterator i = m_timers.find(timerId);
+    
+    if (i != m_timers.constEnd() && i.key() == timerId) {
+        i.value()->findTimeout(timerId)->fired();
     }
+
+    i++;
+    Q_ASSERT(i != m_timers.constEnd());
 }
 
 void QWebExecutionListener::clearTimers() {
-    cout << "WEBKIT::Timer clearing" << endl;
     m_timers.clear();
 }
+
+// TIMERS END
 
 void QWebExecutionListener::scriptCodeLoaded(intptr_t id, std::string source, std::string url, int startline) {
     emit loadedJavaScript(id, QString(tr(source.c_str())), QUrl(QString(tr(url.c_str()))), startline);

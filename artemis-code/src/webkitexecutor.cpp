@@ -111,14 +111,10 @@ namespace artemis {
         qDebug() << "WEBKIT: Finished loading" << endl;
         execution_listener->loaded_page(*page, this->executor_state());
 
-        qDebug() << "WEBKIT: Handling initial ajax callbacks" << endl;
         //handle_ajax_callbacks();
         setup_initial();;
-        qDebug() << "WEBKIT: Executing sequence" << endl;
         do_exe();
-        qDebug() << "WEBKIT: Saving results" << endl;
         finished_sequence();
-        webkit_listener->clearTimers();
     }
 
     void WebKitExecutor::save_dom_state() {
@@ -172,7 +168,6 @@ namespace artemis {
 
             //Wait for any ajax stuff to finish
 	    //            handle_ajax_callbacks();
-            webkit_listener->timerFire(0);
         }
     }
 
@@ -313,6 +308,10 @@ namespace artemis {
                             current_result, SLOT(add_url(QUrl)));
         QObject::connect(webkit_listener, SIGNAL(addedAjaxCallbackHandler(QAjaxCallbackHandler*)),
                             current_result, SLOT(addedAjaxCallbackHandler(QAjaxCallbackHandler*)));
+        QObject::connect(webkit_listener, SIGNAL(addedTimer(int, int, bool)),
+                            current_result, SLOT(sl_timer_added(int, int, bool)));
+        QObject::connect(webkit_listener, SIGNAL(removedTimer(int)),
+                            current_result, SLOT(sl_timer_removed(int)));
 
         //Load URL into WebKit
         qDebug() << "Trying to load: " << artemis_options->getURL()->toString() << endl;

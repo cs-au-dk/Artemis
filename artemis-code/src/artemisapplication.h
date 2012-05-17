@@ -34,7 +34,6 @@
 #include "inputgenerator/abstractinputgenerator.h"
 #include "listeners/sourceloadinglistener.h"
 
-
 namespace artemis {
 
     class ArtemisApplication : public QObject
