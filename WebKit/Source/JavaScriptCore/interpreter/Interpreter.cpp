@@ -1764,8 +1764,14 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
     #define SAMPLE(codeBlock, vPC)
 #endif
 
+#ifdef ARTEMIS
+#define ARTEMIS_BYTECODE_LISTEN(codeBlock, vPC) jsinst::get_js_listener()->listen_byte_code_executed(codeBlock,vPC)
+#else
+#define ARTEMIS_BYTECODE_LISTEN(codeBlock, vPC)
+#endif
+
 #if ENABLE(COMPUTED_GOTO_INTERPRETER)
-    #define NEXT_INSTRUCTION() SAMPLE(codeBlock, vPC); goto *vPC->u.opcode
+    #define NEXT_INSTRUCTION() SAMPLE(codeBlock, vPC);  ARTEMIS_BYTECODE_LISTEN(codeBlock, vPC);goto *vPC->u.opcode
 #if ENABLE(OPCODE_STATS)
     #define DEFINE_OPCODE(opcode) opcode: OpcodeStats::recordInstruction(opcode);
 #else
@@ -1773,7 +1779,7 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
 #endif
     NEXT_INSTRUCTION();
 #else
-    #define NEXT_INSTRUCTION() SAMPLE(codeBlock, vPC); goto interpreterLoopStart
+    #define NEXT_INSTRUCTION() SAMPLE(codeBlock, vPC); ARTEMIS_BYTECODE_LISTEN(codeBlock, vPC); goto interpreterLoopStart
 #if ENABLE(OPCODE_STATS)
     #define DEFINE_OPCODE(opcode) case opcode: OpcodeStats::recordInstruction(opcode);
 #else
