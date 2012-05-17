@@ -15,6 +15,18 @@ class JQueryTest(unittest.TestCase):
 		execute_artemis('test-jquery-live', '%s/jquery-live/index.html' % WEBSERVER_URL)
 
 
+class TimerTests(unittest.TestCase):
+
+	def test_no_timers(self):
+		report = execute_artemis('timer-no-timer', '%s/timers/notimer.html' % WEBSERVER_URL)
+
+		self.assertEqual(0, report.get('timers::registered', 0))
+
+	def test_set_interval(self):
+		report = execute_artemis('timer-set-interval', '%s/timers/timer.html' % WEBSERVER_URL)
+
+		self.assertEqual(1, report.get('timers::registered', 0))
+
 if __name__ == '__main__':
 	server = WebServer(WEBSERVER_ROOT, WEBSERVER_PORT)
  	
