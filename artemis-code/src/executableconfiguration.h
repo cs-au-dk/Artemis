@@ -30,8 +30,8 @@
 
 #include <QUrl>
 
-#include <events/eventsequence.h>
-#include "events/forminput.h"
+#include "events/eventsequence.h"
+#include "events/forms/forminput.h"
 
 namespace artemis {
 

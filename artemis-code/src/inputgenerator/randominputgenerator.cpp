@@ -28,7 +28,7 @@
 
 #include "events/eventypes.h"
 #include "variants/randomvariants.h"
-#include "events/forminput.h"
+#include "events/forms/forminput.h"
 
 #include "randominputgenerator.h"
 
@@ -48,6 +48,7 @@ namespace artemis {
     void RandomInputGenerator::add_new_configurations(const ExecutableConfiguration& configuration, const ExecutionResult& result, WorkList* wl,  ExecutorState* exe_state) {
         Q_CHECK_PTR(wl);
         Q_CHECK_PTR(exe_state);
+        
         insert_same_length(configuration, result, *wl, *exe_state);
         insert_extended(configuration, result, *wl, *exe_state);
     }

@@ -29,7 +29,7 @@
 #define EVENTDESCRIPTOR_H
 
 #include <QtWebKit>
-#include "events/forminput.h"
+#include "events/forms/forminput.h"
 #include "eventhandlerdescriptor.h"
 #include "domelementdescriptor.h"
 #include "eventparameters.h"

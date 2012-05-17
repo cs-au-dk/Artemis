@@ -38,7 +38,7 @@
 #include <cookies/immutablecookiejar.h>
 #include <instrumentation/executionlistener.h>
 
-#include "events/formfield.h"
+#include "events/forms/formfield.h"
 #include "events/domelementdescriptor.h"
 #include "inputgenerator/targets/jquerylistener.h"
 
@@ -300,18 +300,21 @@ namespace artemis {
                             current_result, SLOT(newEventListener(QWebElement*,QString)));
         QObject::connect(webkit_listener, SIGNAL(removedEventListener(QWebElement*,QString)),
                             current_result, SLOT(removeEventListener(QWebElement*,QString)));
+        
+        QObject::connect(webkit_listener, SIGNAL(addedAjaxCallbackHandler(QAjaxCallbackHandler*)),
+                            current_result, SLOT(addedAjaxCallbackHandler(QAjaxCallbackHandler*)));
+        
+        QObject::connect(webkit_listener, SIGNAL(addedTimer(int, int, bool)),
+                            current_result, SLOT(sl_timer_added(int, int, bool)));
+        QObject::connect(webkit_listener, SIGNAL(removedTimer(int)),
+                            current_result, SLOT(sl_timer_removed(int)));
+
         QObject::connect(webkit_listener, SIGNAL(script_crash(QString,intptr_t,int)),
                             current_result, SLOT(sl_script_crash(QString,intptr_t,int)));
         QObject::connect(webkit_listener, SIGNAL(eval_call(QString)),
                             current_result, SLOT(sl_eval_string(QString)));
         QObject::connect(webkit_listener, SIGNAL(script_url_load(QUrl)),
                             current_result, SLOT(add_url(QUrl)));
-        QObject::connect(webkit_listener, SIGNAL(addedAjaxCallbackHandler(QAjaxCallbackHandler*)),
-                            current_result, SLOT(addedAjaxCallbackHandler(QAjaxCallbackHandler*)));
-        QObject::connect(webkit_listener, SIGNAL(addedTimer(int, int, bool)),
-                            current_result, SLOT(sl_timer_added(int, int, bool)));
-        QObject::connect(webkit_listener, SIGNAL(removedTimer(int)),
-                            current_result, SLOT(sl_timer_removed(int)));
 
         //Load URL into WebKit
         qDebug() << "Trying to load: " << artemis_options->getURL()->toString() << endl;
