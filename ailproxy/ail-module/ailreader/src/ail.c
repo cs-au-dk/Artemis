@@ -202,9 +202,19 @@ int _recursive_operation_perm(const yajl_val schema_part, ail_response_t * respo
                                        (const char *[]){"minItems", (const char*) 0},\
                                        yajl_t_number);
 
+    yajl_val max_items = yajl_tree_get(schema_part, \
+                                       (const char *[]){"maxItems", (const char*) 0},\
+                                       yajl_t_number);
+
     long long num_elements_min = 0;
+    long long num_elements_max = MAX_ARRAY_SIZE;
+
     if (YAJL_IS_INTEGER_FIXED(min_items)) {
       num_elements_min = YAJL_GET_INTEGER(min_items);
+    }
+
+    if (YAJL_IS_INTEGER_FIXED(max_items)) {
+      num_elements_max = YAJL_GET_INTEGER(max_items);
     }    
 
     struct response_chunk * prepend = malloc(sizeof(struct response_chunk));
@@ -214,7 +224,11 @@ int _recursive_operation_perm(const yajl_val schema_part, ail_response_t * respo
     ail_response_t last;
     last = NULL;
 
-    long long num_elements = num_elements_min + (random() % MAX_ARRAY_SIZE);
+    long long num_elements = random() % num_elements_max;
+
+    if (num_elements < num_elements_min) {
+      num_elements = num_elements_min;
+    }
 
     if (items->u.array.len == 0) {
       num_elements = 0;
