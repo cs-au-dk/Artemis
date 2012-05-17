@@ -90,6 +90,7 @@ namespace artemis {
         QSet<AjaxRequest> m_ajax_request;
         QSet<QString> evaled_strings;
         QList<QAjaxCallbackHandler*> m_ajax_callback_handlers;
+        QMap<int, QPair<int, bool> > m_timers; // <timer_id, <timeout, single_shot>>
 
     public slots:
         void newEventListener(QWebElement* elem, QString name);
@@ -99,6 +100,8 @@ namespace artemis {
         void sl_eval_string(const QString);
         void addedAjaxCallbackHandler(QAjaxCallbackHandler*);
 
+        void sl_timer_added(int timer_id, int timeout, bool single_shot);
+        void sl_timer_removed(int timer_id);
     };
 }
 

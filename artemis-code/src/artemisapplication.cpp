@@ -31,6 +31,8 @@
 
 #include "artemisapplication.h"
 #include "coverage/coveragetooutputstream.h"
+#include "statistics/statsstorage.h"
+#include "statistics/writers/pretty.h"
 
 using namespace std;
 
@@ -63,7 +65,7 @@ namespace artemis {
     }
 
     void ArtemisApplication::sl_testingDone() {
-        qDebug() << "Artemis: Testing done..." << endl;
+        cout << "Artemis: Testing done..." << endl;
 
         if (this->artemis_options->dump_urls()) {
             cout << "The following URLs were encountered:\n";
@@ -76,8 +78,13 @@ namespace artemis {
         cout << "\n==== Source code loaded ====\n";
         s_list->print_results();
         cout << "\n\n";
+
+        cout << "\n=== Statistics ===\n";
+        StatsPrettyWriter::write(cout, statistics());
+        cout << "\n=== Statistics END ===\n";
+        cout << endl;
         
-        qDebug() << "Artemis terminated on: " << QDateTime::currentDateTime().toString();
+        qDebug() << "Artemis terminated on: " << QDateTime::currentDateTime().toString() << endl;
         qDebug() << "Build timestamp: " << EXE_BUILD_DATE << endl;
 
         app->exit(0);
