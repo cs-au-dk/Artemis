@@ -37,7 +37,7 @@ using namespace std;
 namespace artemis {
 
     class FormInput;
-    class EventDescriptor;
+    class DomInput;
     class SourceInfo;
 
     const QWebElement NULL_WEB_ELEMENT;
@@ -86,7 +86,7 @@ namespace artemis {
 }
 
 uint qHash(const artemis::FormInput &key);
-uint qHash(const artemis::EventDescriptor &d);
+uint qHash(const artemis::DomInput &d);
 
 inline uint qHash(const QList<int> &l)
 {

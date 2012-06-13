@@ -7,16 +7,13 @@ INCLUDEPATH += ../WebKit/WebKitBuild/Debug/include/ \
     . \
     inputgenerators \
     src
-CONFIG-=app_bundle
-OBJECTS_DIR=build
-MOC_DIR=build
-DESTDIR=dist
-LIBS += -F ../WebKit/WebKitBuild/Debug/lib/ -framework QtWebKit
-
-QMAKE_CXXFLAGS += -g -DEXE_BUILD_DATE="`date +'\"%d-%m-%Y_%H:%M:%S\"'`"
-
-QMAKE_LFLAGS += '-t -Wl,-rpath,\'\$$ORIGIN/../../WebKit/WebKitBuild/Debug/lib\''
-
+CONFIG -= app_bundle
+OBJECTS_DIR = build
+MOC_DIR = build
+DESTDIR = dist
+LIBS += ../WebKit/WebKitBuild/Debug/lib/libQtWebKit.so
+QMAKE_CXXFLAGS += -g \
+    -DEXE_BUILD_DATE="`date +'\"%d-%m-%Y_%H:%M:%S\"'`"
 DEFINES += ARTEMIS=1
 
 # Input
@@ -29,8 +26,8 @@ HEADERS += src/webkitexecutor.h \
     src/inputgenerator/targets/targetdescriptor.h \
     src/inputgenerator/targets/legacytarget.h \
     src/inputgenerator/targets/jquerylistener.h \
-    src/inputgenerator/targets/jquerytarget.h \    
-    src/events/eventsequence.h \
+    src/inputgenerator/targets/jquerytarget.h \
+    src/input/inputsequence.h \
     src/events/forms/forminput.h \
     src/worklist/worklist.h \
     src/worklist/deterministicworklist.h \
@@ -39,7 +36,7 @@ HEADERS += src/webkitexecutor.h \
     src/artemisapplication.h \
     src/events/domelementdescriptor.h \
     src/events/eventhandlerdescriptor.h \
-    src/events/eventdescriptor.h \
+    src/input/dominput.h \
     src/artemisglobals.h \
     src/events/forms/formfieldtypes.h \
     src/events/forms/formfield.h \
@@ -75,7 +72,10 @@ HEADERS += src/webkitexecutor.h \
     src/listeners/sourceloadinglistener.h \
     src/cookies/immutablecookiejar.h \
     src/statistics/statsstorage.h \
-    src/statistics/writers/pretty.h
+    src/statistics/writers/pretty.h \
+    src/input/baseinput.h \
+    src/input/timerinput.h \
+    src/browser/timer.h
 SOURCES += src/webkitexecutor.cpp \
     src/executionresult.cpp \
     src/executableconfiguration.cpp \
@@ -87,7 +87,7 @@ SOURCES += src/webkitexecutor.cpp \
     src/inputgenerator/targets/targetdescriptor.cpp \
     src/inputgenerator/targets/jquerytarget.cpp \
     src/inputgenerator/targets/jquerylistener.cpp \
-    src/events/eventsequence.cpp \
+    src/input/inputsequence.cpp \
     src/events/forms/forminput.cpp \
     src/worklist/worklist.cpp \
     src/worklist/deterministicworklist.cpp \
@@ -96,7 +96,7 @@ SOURCES += src/webkitexecutor.cpp \
     src/artemisapplication.cpp \
     src/events/domelementdescriptor.cpp \
     src/events/eventhandlerdescriptor.cpp \
-    src/events/eventdescriptor.cpp \
+    src/input/dominput.cpp \
     src/events/forms/formfield.cpp \
     src/events/eventparameters.cpp \
     src/events/baseeventparameters.cpp \
@@ -130,8 +130,7 @@ SOURCES += src/webkitexecutor.cpp \
     src/listeners/sourceloadinglistener.cpp \
     src/cookies/immutablecookiejar.cpp \
     src/statistics/statsstorage.cpp \
-    src/statistics/writers/pretty.cpp
-
- QT += network
-
-
+    src/statistics/writers/pretty.cpp \
+    src/input/timerinput.cpp \
+    src/browser/timer.cpp
+QT += network

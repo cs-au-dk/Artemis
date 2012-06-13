@@ -42,6 +42,7 @@
 #include "inputgenerator/targets/jquerytarget.h"
 #include "inputgenerator/abstractinputgenerator.h"
 #include "inputgenerator/randominputgenerator.h"
+#include "executableconfiguration.h"
 
 #include "artemisoptions.h"
 
@@ -115,7 +116,7 @@ namespace artemis {
 
     ExecutableConfiguration& ArtemisOptions::initial_configuration() {
         if (initial_conf == 0)
-            initial_conf =  new ExecutableConfiguration(EventSequence(), QUrl(""));
+            initial_conf =  new ExecutableConfiguration(InputSequence(), QUrl(""));
         return *initial_conf;
     }
 

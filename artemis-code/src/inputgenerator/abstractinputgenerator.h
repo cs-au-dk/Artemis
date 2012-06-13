@@ -34,12 +34,11 @@
 #include "abstractinputgenerator.h"
 #include "artemisoptions.h"
 #include "executionresult.h"
-#include <worklist/worklist.h>
+#include "worklist/worklist.h"
 #include "webkitexecutor.h"
 #include "executorstate.h"
 #include "urls/urlcollector.h"
 #include "listeners/artemistopexecutionlistener.h"
-
 #include "coverage/codecoverage.h"
 
 namespace artemis {

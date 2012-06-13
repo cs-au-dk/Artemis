@@ -23,9 +23,12 @@ class TimerTests(unittest.TestCase):
 		self.assertEqual(0, report.get('timers::registered', 0))
 
 	def test_set_interval(self):
-		report = execute_artemis('timer-set-interval', '%s/timers/timer.html' % WEBSERVER_URL)
+		report = execute_artemis('timer-set-interval', '%s/timers/timer.html' % WEBSERVER_URL,
+			iterations=2)
 
-		self.assertEqual(1, report.get('timers::registered', 0))
+		self.assertEqual(2, report.get('timers::registered', 0))
+		self.assertEqual(1, report.get('InputGenerator::added-configurations', 0))
+		self.assertEqual(1, report.get('timers::fired', 0))
 
 if __name__ == '__main__':
 	server = WebServer(WEBSERVER_ROOT, WEBSERVER_PORT)
