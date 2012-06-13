@@ -39,6 +39,7 @@ namespace artemis {
                     AJAX_READY_STATE_CHANGE,
                     NON_INTERACTIVE_EVENT,
                     TOUCH_EVENT,
+                    TIMER_EVENT,
                     UNKNOWN_EVENT};
 
     EventType get_type(QString name);

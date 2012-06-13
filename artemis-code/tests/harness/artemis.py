@@ -4,7 +4,7 @@ import shutil
 import subprocess
 import re
 
-ARTEMIS_EXEC = 'artemis'
+ARTEMIS_EXEC = '/usr/local/bin/artemis'
 OUTPUT_DIR = '.output'
 
 STATS_START = '=== Statistics ==='

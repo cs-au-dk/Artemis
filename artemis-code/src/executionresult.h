@@ -36,6 +36,7 @@
 #include <qajaxcallbackhandler.h>
 
 #include "events/eventhandlerdescriptor.h"
+#include "browser/timer.h"
 #include "artemisglobals.h"
 #include "ajax/ajaxrequest.h"
 #include "artemiswebpage.h"
@@ -64,6 +65,7 @@ namespace artemis {
         long page_state_hash() const;
         QSet<QString> eval_strings();
         QList<QAjaxCallbackHandler*> ajaxCallbackHandlers();
+        QList<Timer> get_timers() const;
 
         /**
           Invoke this method when the page containing the elements is done loading.
@@ -90,7 +92,7 @@ namespace artemis {
         QSet<AjaxRequest> m_ajax_request;
         QSet<QString> evaled_strings;
         QList<QAjaxCallbackHandler*> m_ajax_callback_handlers;
-        QMap<int, QPair<int, bool> > m_timers; // <timer_id, <timeout, single_shot>>
+        QMap<int, Timer> m_timers; // <timer_id, Timer>
 
     public slots:
         void newEventListener(QWebElement* elem, QString name);

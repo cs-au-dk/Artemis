@@ -30,6 +30,7 @@
 
 #include "abstractinputgenerator.h"
 #include "termination/terminationstrategy.h"
+#include "statistics/statsstorage.h"
 
 using namespace std;
 
@@ -61,8 +62,12 @@ namespace artemis {
             return;
         }
 
+        int size_before = wl->size();
+
         reprioritize();
         add_new_configurations(conf, res, wl, executor->executor_state());
+
+        statistics()->accumulate("InputGenerator::added-configurations", wl->size() - size_before);
 
         if (wl->empty()) {
             finish_up();

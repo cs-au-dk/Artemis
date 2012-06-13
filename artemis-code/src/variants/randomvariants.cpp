@@ -25,9 +25,11 @@
   authors and should not be interpreted as representing official policies, either expressed
   or implied, of Simon Holm Jensen
 */
-#include "randomvariants.h"
-#include "events/forms/formfieldtypes.h"
 #include <util/randomutil.h>
+
+#include "events/forms/formfieldtypes.h"
+
+#include "randomvariants.h"
 
 namespace artemis {
 

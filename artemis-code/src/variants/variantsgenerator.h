@@ -44,9 +44,9 @@ public:
     virtual KeyboardEventParameters generate_keyboard_event(QString type) = 0;
     virtual MouseEventParameters generate_mouse_event(QString type) = 0;
 
-
     virtual FormInput generate_form_fields(const QSet<FormField>&) = 0;
 
+    virtual ~VariantsGenerator() {};
 };
 
 }

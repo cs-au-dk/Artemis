@@ -30,7 +30,7 @@
 
 #include <QUrl>
 
-#include "events/eventsequence.h"
+#include "input/inputsequence.h"
 #include "events/forms/forminput.h"
 
 namespace artemis {
@@ -39,21 +39,21 @@ namespace artemis {
     {
     public:
         ExecutableConfiguration();
-        ExecutableConfiguration(EventSequence seq , QUrl start_url);
+        ExecutableConfiguration(InputSequence seq , QUrl start_url);
         ExecutableConfiguration(const ExecutableConfiguration& other);
-        ExecutableConfiguration copy_with_sequence(const EventSequence seq) const ;
+        ExecutableConfiguration copy_with_sequence(const InputSequence seq) const ;
         ~ExecutableConfiguration();
         QUrl starting_url() const;
         bool operator ==(ExecutableConfiguration& rhs) const;
         ExecutableConfiguration &operator=(const ExecutableConfiguration &other);
         bool is_initial();
         uint hashcode() const;
-        EventSequence get_eventsequence() const;
+        InputSequence get_eventsequence() const;
         QString toSimpleString();
 
     private:
         QUrl url;
-        EventSequence sequence;
+        InputSequence sequence;
    };
 }
 

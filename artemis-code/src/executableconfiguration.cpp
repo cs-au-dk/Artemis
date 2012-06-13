@@ -33,7 +33,7 @@ namespace artemis {
 
     }
 
-    ExecutableConfiguration::ExecutableConfiguration(EventSequence seq, QUrl start_url)
+    ExecutableConfiguration::ExecutableConfiguration(InputSequence seq, QUrl start_url)
     {
         this->url = start_url;
         this->sequence = seq;
@@ -49,7 +49,7 @@ namespace artemis {
         return url;
     }
 
-    ExecutableConfiguration ExecutableConfiguration::copy_with_sequence(const EventSequence seq) const {
+    ExecutableConfiguration ExecutableConfiguration::copy_with_sequence(const InputSequence seq) const {
         return ExecutableConfiguration(seq,this->starting_url());
     }
 
@@ -62,10 +62,10 @@ namespace artemis {
     }
 
     bool ExecutableConfiguration::is_initial() {
-       return sequence.empty();
+       return sequence.is_empty();
     }
 
-    EventSequence ExecutableConfiguration::get_eventsequence() const{
+    InputSequence ExecutableConfiguration::get_eventsequence() const{
         return this->sequence;
     }
 
