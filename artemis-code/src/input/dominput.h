@@ -25,54 +25,45 @@
  authors and should not be interpreted as representing official policies, either expressed
  or implied, of Simon Holm Jensen
  */
+#ifndef DOMINPUT_H
+#define DOMINPUT_H
 
-#include "inputsequence.h"
+#include "events/forms/forminput.h"
+#include "events/eventhandlerdescriptor.h"
+#include "events/domelementdescriptor.h"
+#include "events/eventparameters.h"
+#include "inputgenerator/targets/targetdescriptor.h"
+
+#include "baseinput.h"
 
 namespace artemis
 {
 
-InputSequence::InputSequence(QObject* parent) :
-    QObject(parent)
+class DomInput: BaseInput
 {
-    mSequence.clear();
-}
 
-InputSequence::InputSequence(QObject* parent, const QList<BaseInput*>& sequencee) :
-    QObject(parent)
-{
-    mSequence.clear();
-    mSequence += sequencee;
-}
+public:
+    DomInput(QObject* parent, const EventHandlerDescriptor& handler, const FormInput& formInput,
+        EventParameters* params, TargetDescriptor* target);
 
-void InputSequence::replaceLast(BaseInput* newLast)
-{
-    mSequence.removeLast();
-    mSequence.append(newLast);
-}
+    ~DomInput();
 
-void InputSequence::extend(BaseInput* newLast)
-{
-    mSequence.append(newLast);
-}
+    void apply(ArtemisWebPage* page, QWebExecutionListener* webkitListener);
+    bool isEqual(BaseInput* other);
 
-bool InputSequence::isEmpty() const
-{
-    return mSequence.empty();
-}
+    // TODO delete
+    EventHandlerDescriptor getEventHandler() const;
+    TargetDescriptor* target() const;
+    FormInput getFormInput() const;
+    EventParameters* event_params() const;
 
-BaseInput *InputSequence::getLast() const
-{
-    return mSequence.last();
-}
-
-const QList<BaseInput*> InputSequence::toList() const
-{
-    return mSequence;
-}
-
-InputSequence* InputSequence::copy() const
-{
-    return new InputSequence(parent(), mSequence);
-}
+private:
+    EventHandlerDescriptor mEventHandler;
+    FormInput mFormInput;
+    EventParameters* mEvtParams;
+    TargetDescriptor* mTarget;
+};
 
 }
+
+#endif // DOMINPUT_H
