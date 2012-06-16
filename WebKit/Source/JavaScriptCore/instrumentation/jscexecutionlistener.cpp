@@ -8,7 +8,7 @@
 #include "Arguments.h"
 #include "BatchedTransitionOptimizer.h"
 #include "CallFrame.h"
-#include "CallFrameClosure.h"s
+#include "CallFrameClosure.h"
 #include "bytecode/CodeBlock.h"
 #include "bytecode/Instruction.h"
 
