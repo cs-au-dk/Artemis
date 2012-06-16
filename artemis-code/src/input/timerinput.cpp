@@ -26,53 +26,33 @@
  or implied, of Simon Holm Jensen
  */
 
-#include "inputsequence.h"
+#include <iostream>
+
+#include "reports/statistics/statsstorage.h"
+
+#include "input/timerinput.h"
+
+using namespace std;
 
 namespace artemis
 {
 
-InputSequence::InputSequence(QObject* parent) :
-    QObject(parent)
+TimerInput::TimerInput(QObject* parent, Timer timer) :
+    BaseInput(parent)
 {
-    mSequence.clear();
+    this->mTimer = timer;
 }
 
-InputSequence::InputSequence(QObject* parent, const QList<BaseInput*>& sequencee) :
-    QObject(parent)
+void TimerInput::apply(ArtemisWebPage* page, QWebExecutionListener* webkit_listener)
 {
-    mSequence.clear();
-    mSequence += sequencee;
+    statistics()->accumulate("timers::fired", 1);
+    webkit_listener->timerFire(this->mTimer.get_id());
 }
 
-void InputSequence::replaceLast(BaseInput* newLast)
+bool TimerInput::isEqual(BaseInput* other)
 {
-    mSequence.removeLast();
-    mSequence.append(newLast);
-}
-
-void InputSequence::extend(BaseInput* newLast)
-{
-    mSequence.append(newLast);
-}
-
-bool InputSequence::isEmpty() const
-{
-    return mSequence.empty();
-}
-
-BaseInput *InputSequence::getLast() const
-{
-    return mSequence.last();
-}
-
-const QList<BaseInput*> InputSequence::toList() const
-{
-    return mSequence;
-}
-
-InputSequence* InputSequence::copy() const
-{
-    return new InputSequence(parent(), mSequence);
+    //TODO implement this?
+    return false;
 }
 
 }

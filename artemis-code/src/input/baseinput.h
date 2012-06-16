@@ -25,54 +25,30 @@
  authors and should not be interpreted as representing official policies, either expressed
  or implied, of Simon Holm Jensen
  */
+#ifndef BASEINPUT_H
+#define BASEINPUT_H
 
-#include "inputsequence.h"
+#include <QObject>
+#include <QtWebKit/qwebexecutionlistener.h>
+
+#include "artemiswebpage.h"
 
 namespace artemis
 {
 
-InputSequence::InputSequence(QObject* parent) :
-    QObject(parent)
+// TODO convert to QObject memory management
+class BaseInput : QObject
 {
-    mSequence.clear();
-}
 
-InputSequence::InputSequence(QObject* parent, const QList<BaseInput*>& sequencee) :
-    QObject(parent)
-{
-    mSequence.clear();
-    mSequence += sequencee;
-}
+Q_OBJECT
 
-void InputSequence::replaceLast(BaseInput* newLast)
-{
-    mSequence.removeLast();
-    mSequence.append(newLast);
-}
+public:
+    BaseInput(QObject* parent) : QObject(parent) {};
 
-void InputSequence::extend(BaseInput* newLast)
-{
-    mSequence.append(newLast);
-}
-
-bool InputSequence::isEmpty() const
-{
-    return mSequence.empty();
-}
-
-BaseInput *InputSequence::getLast() const
-{
-    return mSequence.last();
-}
-
-const QList<BaseInput*> InputSequence::toList() const
-{
-    return mSequence;
-}
-
-InputSequence* InputSequence::copy() const
-{
-    return new InputSequence(parent(), mSequence);
-}
+    virtual void apply(ArtemisWebPage *page, QWebExecutionListener *webkit_listener) = 0;
+    virtual bool isEqual(BaseInput *other) = 0;
+};
 
 }
+
+#endif // BASEINPUT_H

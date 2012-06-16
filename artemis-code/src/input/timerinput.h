@@ -25,54 +25,28 @@
  authors and should not be interpreted as representing official policies, either expressed
  or implied, of Simon Holm Jensen
  */
+#ifndef TIMERINPUT_H
+#define TIMERINPUT_H
 
-#include "inputsequence.h"
+#include "browser/timer.h"
+
+#include "baseinput.h"
 
 namespace artemis
 {
 
-InputSequence::InputSequence(QObject* parent) :
-    QObject(parent)
+class TimerInput: public BaseInput
 {
-    mSequence.clear();
-}
+public:
+    TimerInput(QObject* parent, Timer timer);
 
-InputSequence::InputSequence(QObject* parent, const QList<BaseInput*>& sequencee) :
-    QObject(parent)
-{
-    mSequence.clear();
-    mSequence += sequencee;
-}
+    void apply(ArtemisWebPage* page, QWebExecutionListener* webkitListener);
+    bool isEqual(BaseInput* other);
 
-void InputSequence::replaceLast(BaseInput* newLast)
-{
-    mSequence.removeLast();
-    mSequence.append(newLast);
-}
-
-void InputSequence::extend(BaseInput* newLast)
-{
-    mSequence.append(newLast);
-}
-
-bool InputSequence::isEmpty() const
-{
-    return mSequence.empty();
-}
-
-BaseInput *InputSequence::getLast() const
-{
-    return mSequence.last();
-}
-
-const QList<BaseInput*> InputSequence::toList() const
-{
-    return mSequence;
-}
-
-InputSequence* InputSequence::copy() const
-{
-    return new InputSequence(parent(), mSequence);
-}
+private:
+    Timer mTimer;
+};
 
 }
+
+#endif // TIMERINPUT_H
