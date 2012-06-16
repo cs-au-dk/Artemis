@@ -37,25 +37,21 @@
 namespace artemis
 {
 
-class InputSequence
+class InputSequence : QObject
 {
+
+Q_OBJECT
+
 public:
-    InputSequence(const QList<BaseInput*>& sequence);
-    InputSequence(const InputSequence& sequence);
-    InputSequence();
+    InputSequence(QObject* parent);
+    InputSequence(QObject* parent, const QList<BaseInput*>& sequence);
 
-    ~InputSequence();
-
-    InputSequence new_last(BaseInput* new_last);
-    InputSequence extend(BaseInput* new_last);
-    bool is_empty() const;
-    BaseInput* get_last() const;
-    QList<BaseInput*> to_list() const;
-
-    uint hashcode() const;
-    bool operator==(const InputSequence& other) const;
-    QDebug friend operator<<(QDebug dbg, const InputSequence& e);
-    InputSequence &operator=(const InputSequence& other);
+    void replaceLast(BaseInput* newLast);
+    void extend(BaseInput* newLast);
+    bool isEmpty() const;
+    BaseInput* getLast() const;
+    const QList<BaseInput*> toList() const;
+    InputSequence* copy() const;
 
 private:
     QList<BaseInput*> mSequence;
