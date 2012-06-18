@@ -25,27 +25,20 @@
   authors and should not be interpreted as representing official policies, either expressed
   or implied, of Simon Holm Jensen
 */
-#include "abstractprioritizer.h"
+#ifndef CONSTANTPRIORITIZER_H
+#define CONSTANTPRIORITIZER_H
+
+#include "prioritizerstrategy.h"
 
 namespace artemis {
 
-    AbstractPrioritizer::AbstractPrioritizer(ArtemisOptions* options)
+    class ConstantPrioritizer : public AbstractPrioritizer
     {
-        Q_CHECK_PTR(options);
-        this->opts = options;
-    }
+    public:
+        ConstantPrioritizer(QObject* parent);
+        double prioritize(ExecutableConfiguration* new_conf,
+                          const ExecutionResult& results);
+    };
 
-    ExecutionResult AbstractPrioritizer::get_from_cache(ExecutableConfiguration* conf)  {
-        //Q_ASSERT(cache.contains(conf));
-        return cache.value(conf);
-    }
-
-    bool AbstractPrioritizer::is_cached(ExecutableConfiguration* conf) const {
-        return cache.contains(conf);
-    }
-
-    double AbstractPrioritizer::prioritize(ExecutableConfiguration* new_conf,
-                                           const ExecutionResult& results) {
-        cache.insert(new_conf,results);
-    }
 }
+#endif // CONSTANTPRIORITIZER_H

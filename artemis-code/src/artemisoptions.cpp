@@ -34,7 +34,7 @@
 #include "runtime/worklist/deterministicworklist.h"
 #include "strategies/termination/numberofiterationstermination.h"
 #include "events/eventhandlerdescriptor.h"
-#include "priortizer/constantprioritizer.h"
+#include "strategies/priortizer/constantprioritizer.h"
 #include "listeners/domstatesaverlistener.h"
 #include "listeners/pagerecreatelistner.h"
 #include "strategies/inputgenerator/targets/targetdescriptor.h"
