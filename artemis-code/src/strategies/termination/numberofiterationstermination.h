@@ -34,8 +34,9 @@ namespace artemis {
 
     class NumberOfIterationsTermination : public TerminationStrategy
     {
+
     public:
-        NumberOfIterationsTermination(int iterationLimit);
+        NumberOfIterationsTermination(QObject* parent, int iterationLimit);
         bool should_terminate();
         QString reason();
 

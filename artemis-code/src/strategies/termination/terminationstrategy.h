@@ -28,14 +28,16 @@
 #ifndef TERMINATIONSTRATEGY_H
 #define TERMINATIONSTRATEGY_H
 
+#include <QObject>
 #include <QString>
 
 namespace artemis {
 
-    class TerminationStrategy
+    class TerminationStrategy : public QObject
     {
     public:
-        TerminationStrategy() {};
+        TerminationStrategy(QObject* parent) : QObject(parent) {};
+
         virtual bool should_terminate() = 0;
         virtual QString reason() = 0;
     };

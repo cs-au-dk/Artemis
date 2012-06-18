@@ -32,7 +32,7 @@
 #include <QUrl>
 #include <QSettings>
 #include <worklist/worklist.h>
-#include "termination/terminationstrategy.h"
+#include "strategies/termination/terminationstrategy.h"
 #include "priortizer/abstractprioritizer.h"
 #include "listeners/artemistopexecutionlistener.h"
 #include "listeners/multiplexlistener.h"

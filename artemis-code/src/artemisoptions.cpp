@@ -32,7 +32,7 @@
 #include <QStringList>
 
 #include "worklist/deterministicworklist.h"
-#include "termination/numberofiterationstermination.h"
+#include "strategies/termination/numberofiterationstermination.h"
 #include "events/eventhandlerdescriptor.h"
 #include "priortizer/constantprioritizer.h"
 #include "listeners/domstatesaverlistener.h"
@@ -111,7 +111,7 @@ namespace artemis {
     }
 
     TerminationStrategy* ArtemisOptions::termination() {
-        return new NumberOfIterationsTermination(m_number_of_iterations);
+        return new NumberOfIterationsTermination(0, m_number_of_iterations);
     }
 
     ExecutableConfiguration* ArtemisOptions::initial_configuration() {

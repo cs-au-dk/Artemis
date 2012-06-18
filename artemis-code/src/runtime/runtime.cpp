@@ -40,7 +40,10 @@ Runtime::Runtime(QObject* parent, ArtemisOptions* options, InputGeneratorStrateg
     mInputgenerator = inputgenerator;
     mWorklist = options->work_list();
     mOptions = options;
+
     mTerminationStrategy = options->termination();
+    mTerminationStrategy->setParent(this);
+
     mWebkitExecutor = new WebKitExecutor(this, options, options->get_listner());
 
     QObject::connect(mWebkitExecutor,
