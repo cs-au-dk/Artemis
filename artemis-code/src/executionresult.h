@@ -66,6 +66,8 @@ namespace artemis {
         QSet<QString> eval_strings();
         QList<QAjaxCallbackHandler*> ajaxCallbackHandlers();
         QList<Timer> get_timers() const;
+        QString getPageContents() const;
+        void setPageContents(QString content);
 
         /**
           Invoke this method when the page containing the elements is done loading.
@@ -93,6 +95,7 @@ namespace artemis {
         QSet<QString> evaled_strings;
         QList<QAjaxCallbackHandler*> m_ajax_callback_handlers;
         QMap<int, Timer> m_timers; // <timer_id, Timer>
+        QString mPageContents;
 
     public slots:
         void newEventListener(QWebElement* elem, QString name);

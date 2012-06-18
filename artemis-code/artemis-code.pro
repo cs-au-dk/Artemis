@@ -47,7 +47,6 @@ HEADERS += src/strategies/inputgenerator/inputgeneratorstrategy.h \
     src/events/baseeventparameters.h \
     src/events/mouseeventparameters.h \
     src/events/keyboardeventparameters.h \
-    src/executorstate.h \
     src/variants/randomvariants.h \
     src/variants/variantsgenerator.h \
     src/events/forms/formfieldvalue.h \
@@ -107,7 +106,6 @@ SOURCES += src/strategies/inputgenerator/inputgeneratorstrategy.cpp \
     src/events/eventtypes.cpp \
     src/events/mouseeventparameters.cpp \
     src/events/keyboardeventparameters.cpp \
-    src/executorstate.cpp \
     src/variants/randomvariants.cpp \
     src/variants/variantsgenerator.cpp \
     src/events/forms/formfieldvalue.cpp \

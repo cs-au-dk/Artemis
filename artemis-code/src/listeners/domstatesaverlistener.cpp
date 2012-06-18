@@ -19,18 +19,18 @@ DOMStateSaverListener::~DOMStateSaverListener() {
    // delete net_access;
 }
 
-void DOMStateSaverListener::executed(const ExecutableConfiguration& _, ExecutorState* exe_state, const ExecutionResult& result) {
+void DOMStateSaverListener::executed(const ExecutableConfiguration& _, const ExecutionResult& result) {
     if (!result.modifed_dom()) {
         return;
     }
     QString filename = save_to_path + "/state_dump_" + QString::number(iter++) + ".html";
     this->created_html_files << filename;
     qDebug() << "Saving DOM state to: " << filename;
-    QString dom_data = exe_state->get_page_from_hash(result.page_state_hash());
+    QString dom_data = result.getPageContents();
     write_string_to_file(filename, dom_data);
 }
 
-void DOMStateSaverListener::loaded_page(const ArtemisWebPage& page, ExecutorState* exe_state) {
+void DOMStateSaverListener::loaded_page(const ArtemisWebPage& page) {
     if (did_dump_url_state)
         return;
     this->state_after_onload = page.mainFrame()->toHtml();
@@ -40,7 +40,7 @@ void DOMStateSaverListener::loaded_page(const ArtemisWebPage& page, ExecutorStat
 
 
 
-void DOMStateSaverListener::artemis_finished(ExecutorState* exe_state) {
+void DOMStateSaverListener::artemis_finished() {
     //Save pre onload state
     QString filename = save_to_path + "/state_dump_preonload" + ".html";
     qDebug() << "Saving DOM preonload state to: " << filename;

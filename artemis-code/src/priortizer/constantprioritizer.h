@@ -37,7 +37,7 @@ namespace artemis {
     public:
         ConstantPrioritizer(ArtemisOptions* options);
         double prioritize(ExecutableConfiguration* new_conf,
-                          const ExecutionResult& results, ExecutorState& state);
+                          const ExecutionResult& results);
     };
 
 }

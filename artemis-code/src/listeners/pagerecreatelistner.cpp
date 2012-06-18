@@ -20,7 +20,7 @@ void PageRecreateListner::artemis_start(const QUrl& url) {
                 " in a workable state in " << base_dir.absolutePath();
 }
 
-void PageRecreateListner::loaded_page(const ArtemisWebPage& page, ExecutorState* exe_state) {
+void PageRecreateListner::loaded_page(const ArtemisWebPage& page) {
     QUrl base_url = page.mainFrame()->url();
     //Save the page
     QString page_contents = read_entire_page(base_url);
@@ -51,7 +51,7 @@ void PageRecreateListner::loaded_page(const ArtemisWebPage& page, ExecutorState*
     }
 }
 
-void PageRecreateListner::executed(const ExecutableConfiguration& conf, ExecutorState* exe_state, const ExecutionResult& result) {
+void PageRecreateListner::executed(const ExecutableConfiguration& conf, const ExecutionResult& result) {
     foreach (AjaxRequest r, result.ajax_request()) {
         QUrl url = r.url();
         if (ajax_urls_fetched.contains(url))

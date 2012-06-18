@@ -36,8 +36,8 @@ namespace artemis {
     }
 
     double RandomPrioritizer::prioritize(ExecutableConfiguration* new_conf,
-                                         const ExecutionResult& results, ExecutorState& state) {
-        AbstractPrioritizer::prioritize(new_conf,results,state);
+                                         const ExecutionResult& results) {
+        AbstractPrioritizer::prioritize(new_conf,results);
 
         return rand();
     }

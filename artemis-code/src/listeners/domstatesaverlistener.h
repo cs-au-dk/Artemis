@@ -13,9 +13,9 @@ class DOMStateSaverListener : public ArtemisTopExecutionListener
 public:
     DOMStateSaverListener(QString path);
     ~DOMStateSaverListener();
-    void executed(const ExecutableConfiguration& conf, ExecutorState* exe_state, const ExecutionResult& result);
-    void loaded_page(const ArtemisWebPage& page, ExecutorState* exe_state);
-    void artemis_finished(ExecutorState* exe_state);
+    void executed(const ExecutableConfiguration& conf, const ExecutionResult& result);
+    void loaded_page(const ArtemisWebPage& page);
+    void artemis_finished();
 
 private:
     void create_index();

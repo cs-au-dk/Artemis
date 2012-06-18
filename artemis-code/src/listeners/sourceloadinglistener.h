@@ -14,7 +14,7 @@ class SourceLoadingListener : public ArtemisTopExecutionListener
 public:
     SourceLoadingListener();
     void code_loaded(QString source, QUrl url, int startline);
-    void loaded_page(const ArtemisWebPage& page, ExecutorState* exe_state);
+    void loaded_page(const ArtemisWebPage& page);
     void print_results();
 
 private:

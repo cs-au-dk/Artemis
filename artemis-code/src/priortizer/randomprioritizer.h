@@ -38,7 +38,7 @@ namespace artemis {
         RandomPrioritizer(ArtemisOptions* options);
 
         double prioritize(ExecutableConfiguration* new_conf,
-                                             const ExecutionResult& results, ExecutorState& state);
+                                             const ExecutionResult& results);
     };
 
 }
