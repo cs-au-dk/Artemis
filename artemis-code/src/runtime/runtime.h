@@ -33,7 +33,7 @@
 
 #include "strategies/inputgenerator/inputgeneratorstrategy.h"
 #include "worklist/worklist.h"
-#include "termination/terminationstrategy.h"
+#include "strategies/termination/terminationstrategy.h"
 #include "webkitexecutor.h"
 #include "executionresult.h"
 #include "executableconfiguration.h"

@@ -30,7 +30,7 @@
 
 namespace artemis {
 
-    NumberOfIterationsTermination::NumberOfIterationsTermination(int iterationLimit)
+    NumberOfIterationsTermination::NumberOfIterationsTermination(QObject* parent, int iterationLimit) : TerminationStrategy(parent)
     {
         mIterationLimit = iterationLimit;
         mIterations = 0;
