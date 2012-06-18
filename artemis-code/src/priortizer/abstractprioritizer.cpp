@@ -45,7 +45,7 @@ namespace artemis {
     }
 
     double AbstractPrioritizer::prioritize(ExecutableConfiguration* new_conf,
-                                           const ExecutionResult& results, ExecutorState& state) {
+                                           const ExecutionResult& results) {
         cache.insert(new_conf,results);
     }
 }

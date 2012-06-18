@@ -110,7 +110,7 @@ namespace artemis {
         }
 
         qDebug() << "WEBKIT: Finished loading" << endl;
-        execution_listener->loaded_page(*page, this->executor_state());
+        execution_listener->loaded_page(*page);
 
         //handle_ajax_callbacks();
         setup_initial();;
@@ -121,7 +121,7 @@ namespace artemis {
     void WebKitExecutor::save_dom_state() {
         current_result->set_state_hash(qHash(page->mainFrame()->toHtml()));
         current_result->set_modfied_dom(page->mainFrame()->toHtml().localeAwareCompare(this->initial_page_state) != 0);
-        executor_state()->add_dom_state(page->mainFrame());
+        current_result->setPageContents(page->mainFrame()->toHtml());
     }
 
     void WebKitExecutor::setup_initial() {
@@ -319,16 +319,12 @@ namespace artemis {
         }
     }
 
-    ExecutorState* WebKitExecutor::executor_state() {
-        return &state;
-    }
-
     CodeCoverage WebKitExecutor::coverage() {
         return cov_list->currrent_coverage();
     }
 
     void WebKitExecutor::sl_script_crash(QString ca, intptr_t id, int n) {
-        this->execution_listener->script_crash(ca, executor_state());
+        this->execution_listener->script_crash(ca);
     }
 
     void WebKitExecutor::sl_ajax_request(QUrl u, QString post_data) {
@@ -338,7 +334,7 @@ namespace artemis {
     }
 
     void WebKitExecutor::sl_eval_called(QString eval_text) {
-        execution_listener->eval_called(eval_text, executor_state());
+        execution_listener->eval_called(eval_text);
         qDebug() << "Dynamic code eval: " << eval_text;
     }
 

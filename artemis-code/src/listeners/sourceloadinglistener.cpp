@@ -38,7 +38,7 @@ void SourceLoadingListener::print_results() {
     qDebug() << "Total loaded code: " << total_loaded << " bytes";
 }
 
-void SourceLoadingListener::loaded_page(const ArtemisWebPage& page, ExecutorState* exe_state)
+void SourceLoadingListener::loaded_page(const ArtemisWebPage& page)
 {
     write_string_to_file("js-code-dump/pagestate" + QString::number(this->file_idx++) + ".html", page.mainFrame()->toHtml());
 }

@@ -30,7 +30,6 @@
 
 #include "artemisoptions.h"
 #include "executionresult.h"
-#include "executorstate.h"
 
 namespace artemis {
 
@@ -48,7 +47,7 @@ namespace artemis {
           state: State of the execution engine
           */
         virtual double prioritize(ExecutableConfiguration* new_conf,
-                       const ExecutionResult& results, ExecutorState& state);
+                       const ExecutionResult& results);
 
         ExecutionResult get_from_cache(ExecutableConfiguration* conf) ;
         bool is_cached(ExecutableConfiguration* conf) const;

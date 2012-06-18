@@ -14,8 +14,8 @@ class PageRecreateListner : public ArtemisTopExecutionListener
 public:
     PageRecreateListner();
     void artemis_start(const QUrl& url);
-    void loaded_page(const ArtemisWebPage& page, ExecutorState* exe_state);
-    void executed(const ExecutableConfiguration& conf, ExecutorState* exe_state, const ExecutionResult& result);
+    void loaded_page(const ArtemisWebPage& page);
+    void executed(const ExecutableConfiguration& conf, const ExecutionResult& result);
     void code_loaded(QString source, QUrl url, int startline);
 
 private:

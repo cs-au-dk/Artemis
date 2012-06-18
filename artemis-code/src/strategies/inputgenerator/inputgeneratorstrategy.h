@@ -35,7 +35,6 @@
 #include "executionresult.h"
 #include "worklist/worklist.h"
 #include "webkitexecutor.h"
-#include "executorstate.h"
 #include "urls/urlcollector.h"
 #include "listeners/artemistopexecutionlistener.h"
 #include "coverage/codecoverage.h"
@@ -49,7 +48,7 @@ namespace artemis {
         InputGeneratorStrategy(QObject *parent, ArtemisOptions* options);
         ~InputGeneratorStrategy();
 
-        virtual void add_new_configurations(const ExecutableConfiguration*, const ExecutionResult&, WorkList*, ExecutorState* exe_state) = 0;
+        virtual void add_new_configurations(const ExecutableConfiguration*, const ExecutionResult&, WorkList*) = 0;
         virtual void reprioritize() = 0;
 
 

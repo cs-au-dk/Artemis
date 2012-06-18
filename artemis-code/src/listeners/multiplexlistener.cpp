@@ -16,33 +16,33 @@ MultiplexListener::MultiplexListener(int number_of_listners, ...)
     va_end(ap);
 }
 
-void MultiplexListener::before_execute(ExecutableConfiguration* conf, ExecutorState* exe_state) {
+void MultiplexListener::before_execute(ExecutableConfiguration* conf) {
     foreach (ArtemisTopExecutionListener* l, m_listeners) {
-        l->before_execute(conf, exe_state);
+        l->before_execute(conf);
     }
 }
 
-void MultiplexListener::executed(ExecutableConfiguration* conf, ExecutorState* exe_state, const ExecutionResult& result) {
+void MultiplexListener::executed(ExecutableConfiguration* conf, const ExecutionResult& result) {
     foreach (ArtemisTopExecutionListener* l, m_listeners) {
-        l->executed(conf, exe_state, result);
+        l->executed(conf, result);
     }
 }
 
-void MultiplexListener::loaded_page(const ArtemisWebPage& page, ExecutorState* exe_state) {
+void MultiplexListener::loaded_page(const ArtemisWebPage& page) {
     foreach (ArtemisTopExecutionListener* l, m_listeners) {
-        l->loaded_page(page, exe_state);
+        l->loaded_page(page);
     }
 }
 
-void MultiplexListener::script_crash(QString cause, ExecutorState* exe_state) {
+void MultiplexListener::script_crash(QString cause) {
     foreach (ArtemisTopExecutionListener* l, m_listeners) {
-        l->script_crash(cause, exe_state);
+        l->script_crash(cause);
     }
 }
 
-void MultiplexListener::artemis_finished(ExecutorState* exe_state) {
+void MultiplexListener::artemis_finished() {
     foreach (ArtemisTopExecutionListener* l, m_listeners) {
-        l->artemis_finished(exe_state);
+        l->artemis_finished();
     }
 }
 

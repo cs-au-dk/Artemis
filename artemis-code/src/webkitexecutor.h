@@ -37,7 +37,6 @@
 #include "artemisoptions.h"
 #include "artemisglobals.h"
 #include "executionresult.h"
-#include "executorstate.h"
 #include "artemiswebpage.h"
 #include "executableconfiguration.h"
 #include "coverage/coveragelistener.h"
@@ -56,7 +55,6 @@ namespace artemis {
         ~WebKitExecutor();
         void executeSequence(ExecutableConfiguration* conf);
         QWebExecutionListener* webkit_listener;
-        ExecutorState* executor_state();
         CodeCoverage coverage();
         void finish_up();
 
@@ -76,7 +74,6 @@ namespace artemis {
         ArtemisWebPage* page;
         ExecutionResult* current_result;
         ExecutableConfiguration* current_conf;
-        ExecutorState state;
         CoverageListener* cov_list;
         QString initial_page_state;
         ArtemisTopExecutionListener* execution_listener;

@@ -82,6 +82,16 @@ void ExecutionResult::newEventListener(QWebElement *elem, QString name)
     element_pointers.insert(QPair<QWebElement*, QString>(elem, name));
 }
 
+void ExecutionResult::setPageContents(QString content)
+{
+    mPageContents = content;
+}
+
+QString ExecutionResult::getPageContents() const
+{
+    return mPageContents;
+}
+
 void ExecutionResult::removeEventListener(QWebElement *elem, QString name)
 {
     qDebug() << "Artemis removed eventhandler for event: " << name << " tag name: "

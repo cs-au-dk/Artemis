@@ -62,7 +62,7 @@ void Runtime::start()
 
 void Runtime::slExecutedSequence(ExecutableConfiguration* configuration, ExecutionResult result)
 {
-    mOptions->get_listner()->executed(configuration, mWebkitExecutor->executor_state(), result);
+    mOptions->get_listner()->executed(configuration, result);
 
     foreach (QUrl u, result.urls()) {
         mUrls.add_url(u);
@@ -77,7 +77,7 @@ void Runtime::slExecutedSequence(ExecutableConfiguration* configuration, Executi
     int size_before = mWorklist->size();
 
     mInputgenerator->reprioritize();
-    mInputgenerator->add_new_configurations(configuration, result, mWorklist, mWebkitExecutor->executor_state());
+    mInputgenerator->add_new_configurations(configuration, result, mWorklist);
 
     statistics()->accumulate("InputGenerator::added-configurations", mWorklist->size() - size_before);
 
@@ -89,12 +89,12 @@ void Runtime::slExecutedSequence(ExecutableConfiguration* configuration, Executi
     //Start next iteration
     ExecutableConfiguration* new_conf = mWorklist->remove();
 
-    mOptions->get_listner()->before_execute(new_conf, mWebkitExecutor->executor_state());
+    mOptions->get_listner()->before_execute(new_conf);
     mWebkitExecutor->executeSequence(new_conf);
 }
 
 void Runtime::finish_up() {
-    mOptions->get_listner()->artemis_finished(mWebkitExecutor->executor_state());
+    mOptions->get_listner()->artemis_finished();
 
     mWebkitExecutor->finish_up();
 
