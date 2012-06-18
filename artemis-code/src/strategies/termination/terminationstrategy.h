@@ -25,12 +25,21 @@
   authors and should not be interpreted as representing official policies, either expressed
   or implied, of Simon Holm Jensen
 */
-#include "terminationstrategy.h"
+#ifndef TERMINATIONSTRATEGY_H
+#define TERMINATIONSTRATEGY_H
+
+#include <QString>
 
 namespace artemis {
 
-    TerminationStrategy::TerminationStrategy()
+    class TerminationStrategy
     {
-    }
+    public:
+        TerminationStrategy() {};
+        virtual bool should_terminate() = 0;
+        virtual QString reason() = 0;
+    };
 
 }
+
+#endif // TERMINATIONSTRATEGY_H
