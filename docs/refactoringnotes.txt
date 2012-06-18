@@ -1,0 +1,39 @@
+Refactoring notes
+=================
+
+Artemis is to go through a substantial refactoring. This will be split into a number of phases.
+
+1. Functional refactoring
+2. Structural refactoring
+3. Memory management review
+4. Coding style
+5. Testing (continuous)
+
+1. Functional Refactoring
+-------------------------
+
+ - Timeout support & synchronous API for WebKit
+
+2. Structural Refactoring
+-------------------------
+
+ - Move all code related to the main algorithm into a single function
+ - Change initialization and use dependency injection
+ - Decouple reporting objects
+
+3. Memory management review
+---------------------------
+
+ - Check if all memory classes use one of the strategies described in codingstyle.txt
+
+4. Coding Style
+---------------
+
+ - Update the coding style to be more coherent
+
+5. Testing
+----------
+
+ - Add system testing harness	DONE
+ - Add unit testing harness
+ - Add new tests as features are changed
