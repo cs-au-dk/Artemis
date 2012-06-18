@@ -40,9 +40,8 @@
 namespace artemis
 {
 
-RandomInputGenerator::RandomInputGenerator(QObject *parent, ArtemisOptions* options,
-    ArtemisTopExecutionListener* execution_listener) :
-    AbstractInputGenerator(parent, options, execution_listener)
+RandomInputGenerator::RandomInputGenerator(QObject *parent, ArtemisOptions* options) :
+    InputGeneratorStrategy(parent, options)
 {
     Q_CHECK_PTR(options);
     this->var_gen = new RandomVariants(options);

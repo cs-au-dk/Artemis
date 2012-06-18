@@ -36,13 +36,13 @@
 #include "priortizer/abstractprioritizer.h"
 #include "listeners/artemistopexecutionlistener.h"
 #include "listeners/multiplexlistener.h"
-#include "inputgenerator/targets/targetdescriptor.h"
+#include "strategies/inputgenerator/targets/targetdescriptor.h"
 #include "events/eventhandlerdescriptor.h"
-#include "inputgenerator/targets/jquerylistener.h"
+#include "strategies/inputgenerator/targets/jquerylistener.h"
 
 namespace artemis {
 
-    class AbstractInputGenerator;
+    class InputGeneratorStrategy;
     class AbstractPrioritizer;
 
     class ArtemisOptions : public QObject
@@ -58,7 +58,7 @@ namespace artemis {
           How many sequence of same length should be added?
           */
         int number_of_samelength();
-        AbstractInputGenerator* create_input_generator();
+        InputGeneratorStrategy* create_input_generator();
         WorkList* work_list();
         TerminationStrategy* termination();
         ExecutableConfiguration* initial_configuration();

@@ -17,18 +17,18 @@ QMAKE_CXXFLAGS += -g \
 DEFINES += ARTEMIS=1
 
 # Input
-HEADERS += src/runtime/runtime.h \
+HEADERS += src/strategies/inputgenerator/inputgeneratorstrategy.h \
+    src/strategies/inputgenerator/randominputgenerator.h \
+    src/strategies/inputgenerator/targets/jquerylistener.h \
+    src/strategies/inputgenerator/targets/jquerytarget.h \
+    src/strategies/inputgenerator/targets/legacytarget.h \
+    src/strategies/inputgenerator/targets/targetdescriptor.h \
+    src/runtime/runtime.h \
     src/runtime/webkitwrapper.h \
     src/webkitexecutor.h \
     src/executionresult.h \
     src/executableconfiguration.h \
     src/artemisoptions.h \
-    src/inputgenerator/abstractinputgenerator.h \
-    src/inputgenerator/randominputgenerator.h \
-    src/inputgenerator/targets/targetdescriptor.h \
-    src/inputgenerator/targets/legacytarget.h \
-    src/inputgenerator/targets/jquerylistener.h \
-    src/inputgenerator/targets/jquerytarget.h \
     src/input/inputsequence.h \
     src/events/forms/forminput.h \
     src/worklist/worklist.h \
@@ -78,19 +78,19 @@ HEADERS += src/runtime/runtime.h \
     src/input/baseinput.h \
     src/input/timerinput.h \
     src/browser/timer.h
-SOURCES += src/runtime/runtime.cpp \
+SOURCES += src/strategies/inputgenerator/inputgeneratorstrategy.cpp \
+    src/strategies/inputgenerator/randominputgenerator.cpp \
+    src/strategies/inputgenerator/targets/jquerylistener.cpp \
+    src/strategies/inputgenerator/targets/jquerytarget.cpp \
+    src/strategies/inputgenerator/targets/legacytarget.cpp \
+    src/strategies/inputgenerator/targets/targetdescriptor.cpp \
+    src/runtime/runtime.cpp \
     src/runtime/webkitwrapper.cpp \
     src/webkitexecutor.cpp \
     src/executionresult.cpp \
     src/executableconfiguration.cpp \
     src/artemis.cpp \
     src/artemisoptions.cpp \
-    src/inputgenerator/abstractinputgenerator.cpp \
-    src/inputgenerator/randominputgenerator.cpp \
-    src/inputgenerator/targets/legacytarget.cpp \
-    src/inputgenerator/targets/targetdescriptor.cpp \
-    src/inputgenerator/targets/jquerytarget.cpp \
-    src/inputgenerator/targets/jquerylistener.cpp \
     src/input/inputsequence.cpp \
     src/events/forms/forminput.cpp \
     src/worklist/worklist.cpp \

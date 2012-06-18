@@ -32,7 +32,7 @@
 #include <QDir>
 
 #include "artemisoptions.h"
-#include "inputgenerator/abstractinputgenerator.h"
+#include "strategies/inputgenerator/inputgeneratorstrategy.h"
 #include "artemisapplication.h"
 #include "exceptionhandlingqapp.h"
 

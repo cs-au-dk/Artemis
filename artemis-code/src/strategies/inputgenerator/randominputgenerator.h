@@ -25,29 +25,39 @@
   authors and should not be interpreted as representing official policies, either expressed
   or implied, of Simon Holm Jensen
 */
+#ifndef RANDOMINPUTGENERATOR_H
+#define RANDOMINPUTGENERATOR_H
 
-#include <iostream>
+#include "inputgeneratorstrategy.h"
+#include "variants/variantsgenerator.h"
 
-#include "abstractinputgenerator.h"
-#include "termination/terminationstrategy.h"
-
-using namespace std;
 
 namespace artemis {
 
-    AbstractInputGenerator::AbstractInputGenerator(QObject *parent, ArtemisOptions* options, ArtemisTopExecutionListener* listener) :
-            QObject(parent)
+    class RandomInputGenerator : public InputGeneratorStrategy
     {
-        artemis_options = options;
-        execution_listener = listener;
-    }
+        Q_OBJECT
+    public:
+        RandomInputGenerator(QObject *parent, ArtemisOptions *options);
+        ~RandomInputGenerator();
+        void add_new_configurations(const ExecutableConfiguration*, const ExecutionResult &, WorkList *,  ExecutorState *exe_state);
+        void reprioritize();
 
-    AbstractInputGenerator::~AbstractInputGenerator() {
+    private:
+        int next_random();
+        void insert_same_length(const ExecutableConfiguration* e, const ExecutionResult& e_result, WorkList& wl,  ExecutorState& exe_state);
+        void insert_extended(const ExecutableConfiguration* e, const ExecutionResult& e_result, WorkList& wl,  ExecutorState& exe_state);
 
-    }
+        BaseInput* permutate_input(const DomInput* input);
+        BaseInput* permutate_input(BaseInput* input);
+        
+        VariantsGenerator* var_gen;
 
-    ArtemisOptions* AbstractInputGenerator::getOptions() {
-        return artemis_options;
-    }
+    signals:
+
+    public slots:
+
+    };
 
 }
+#endif // RANDOMINPUTGENERATOR_H

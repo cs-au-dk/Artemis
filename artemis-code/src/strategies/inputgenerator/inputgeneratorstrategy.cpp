@@ -25,53 +25,25 @@
   authors and should not be interpreted as representing official policies, either expressed
   or implied, of Simon Holm Jensen
 */
-#ifndef ABSTRACTINPUTGENERATOR_H
-#define ABSTRACTINPUTGENERATOR_H
 
-#include <QObject>
-#include <QApplication>
+#include <iostream>
 
-#include "abstractinputgenerator.h"
-#include "artemisoptions.h"
-#include "executionresult.h"
-#include "worklist/worklist.h"
-#include "webkitexecutor.h"
-#include "executorstate.h"
-#include "urls/urlcollector.h"
-#include "listeners/artemistopexecutionlistener.h"
-#include "coverage/codecoverage.h"
+#include "termination/terminationstrategy.h"
+
+#include "inputgeneratorstrategy.h"
+
+using namespace std;
 
 namespace artemis {
 
-    class ArtemisOptions;
-
-    class AbstractInputGenerator : public QObject
+    InputGeneratorStrategy::InputGeneratorStrategy(QObject *parent, ArtemisOptions* options) :
+            QObject(parent)
     {
-        Q_OBJECT
-    public:
-        explicit AbstractInputGenerator(QObject *parent = 0, ArtemisOptions* options = 0, ArtemisTopExecutionListener* execution_listener = 0);
-        ArtemisOptions* getOptions();
-        ~AbstractInputGenerator();
+        artemis_options = options;
+    }
 
-        /**
-          Method is called when a sequence has been executed. Remember to call super if overwritten!
-          */
-        virtual void add_new_configurations(const ExecutableConfiguration*, const ExecutionResult&, WorkList*, ExecutorState* exe_state) = 0;
-        virtual void reprioritize() = 0;
+    InputGeneratorStrategy::~InputGeneratorStrategy() {
 
-
-    protected:
-        ArtemisOptions* artemis_options;
-        WebKitExecutor* executor;
-        WorkList* wl;
-        TerminationStrategy* termination;
-        int iterations;
-
-    private:
-        URLCollector urls;
-        ArtemisTopExecutionListener* execution_listener;
-
-    };
+    }
 
 }
-#endif // ABSTRACTINPUTGENERATOR_H
