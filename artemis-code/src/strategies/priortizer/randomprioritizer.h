@@ -25,19 +25,22 @@
   authors and should not be interpreted as representing official policies, either expressed
   or implied, of Simon Holm Jensen
 */
-#include "constantprioritizer.h"
+#ifndef RANDOMPRIORITIZER_H
+#define RANDOMPRIORITIZER_H
+
+#include "prioritizerstrategy.h"
 
 namespace artemis {
 
-    ConstantPrioritizer::ConstantPrioritizer(ArtemisOptions* options)
-        : AbstractPrioritizer(options)
+    class RandomPrioritizer : public AbstractPrioritizer
     {
-    }
+    public:
+        RandomPrioritizer(QObject* parent);
 
-    double ConstantPrioritizer::prioritize(ExecutableConfiguration* new_conf,
-                                         const ExecutionResult& results) {
-        AbstractPrioritizer::prioritize(new_conf,results);
+        double prioritize(ExecutableConfiguration* new_conf,
+                                             const ExecutionResult& results);
+    };
 
-        return 1;
-    }
 }
+
+#endif // RANDOMPRIORITIZER_H

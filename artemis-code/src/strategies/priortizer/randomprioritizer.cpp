@@ -25,40 +25,20 @@
   authors and should not be interpreted as representing official policies, either expressed
   or implied, of Simon Holm Jensen
 */
-#ifndef ABSTRACTPRIORITIZER_H
-#define ABSTRACTPRIORITIZER_H
-
-#include "artemisoptions.h"
-#include "runtime/browser/executionresult.h"
+#include "randomprioritizer.h"
 
 namespace artemis {
 
-    class ArtemisOptions;
-
-    class AbstractPrioritizer
+    RandomPrioritizer::RandomPrioritizer(QObject* parent) :
+            AbstractPrioritizer(parent)
     {
-    public:
-        AbstractPrioritizer(ArtemisOptions* options);
-        virtual ~AbstractPrioritizer() {};
 
-        /**
-          new_conf: Configuration to be prioritized
-          results: The execution results from last execution
-          state: State of the execution engine
-          */
-        virtual double prioritize(ExecutableConfiguration* new_conf,
-                       const ExecutionResult& results);
+    }
 
-        ExecutionResult get_from_cache(ExecutableConfiguration* conf) ;
-        bool is_cached(ExecutableConfiguration* conf) const;
+    double RandomPrioritizer::prioritize(ExecutableConfiguration* new_conf,
+                                         const ExecutionResult& results) {
 
-    protected:
-        ArtemisOptions* opts;
-
-    private:
-        QHash<ExecutableConfiguration*, ExecutionResult> cache;
-
-    };
+        return rand();
+    }
 
 }
-#endif // ABSTRACTPRIORITIZER_H

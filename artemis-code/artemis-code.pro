@@ -17,7 +17,10 @@ QMAKE_CXXFLAGS += -g \
 DEFINES += ARTEMIS=1
 
 # Input
-HEADERS += src/runtime/browser/artemiswebpage.h \
+HEADERS += src/strategies/priortizer/prioritizerstrategy.h \
+    src/strategies/priortizer/constantprioritizer.h \
+    src/strategies/priortizer/randomprioritizer.h \
+    src/runtime/browser/artemiswebpage.h \
     src/runtime/executableconfiguration.h \
     src/runtime/input/baseinput.h \
     src/runtime/input/dominput.h \
@@ -55,9 +58,6 @@ HEADERS += src/runtime/browser/artemiswebpage.h \
     src/variants/variantsgenerator.h \
     src/events/forms/formfieldvalue.h \
     src/util/randomutil.h \
-    src/priortizer/abstractprioritizer.h \
-    src/priortizer/randomprioritizer.h \
-    src/priortizer/constantprioritizer.h \
     src/exceptionhandlingqapp.h \
     src/coverage/codecoverage.h \
     src/coverage/lineinfo.h \
@@ -77,7 +77,9 @@ HEADERS += src/runtime/browser/artemiswebpage.h \
     src/cookies/immutablecookiejar.h \
     src/statistics/statsstorage.h \
     src/statistics/writers/pretty.h
-SOURCES += src/runtime/browser/artemiswebpage.cpp \
+SOURCES += src/strategies/priortizer/constantprioritizer.cpp \
+    src/strategies/priortizer/randomprioritizer.cpp \
+    src/runtime/browser/artemiswebpage.cpp \
     src/runtime/executableconfiguration.cpp \
     src/runtime/input/dominput.cpp \
     src/runtime/input/inputsequence.cpp \
@@ -112,9 +114,6 @@ SOURCES += src/runtime/browser/artemiswebpage.cpp \
     src/variants/variantsgenerator.cpp \
     src/events/forms/formfieldvalue.cpp \
     src/util/randomutil.cpp \
-    src/priortizer/abstractprioritizer.cpp \
-    src/priortizer/randomprioritizer.cpp \
-    src/priortizer/constantprioritizer.cpp \
     src/exceptionhandlingqapp.cpp \
     src/coverage/codecoverage.cpp \
     src/coverage/lineinfo.cpp \

@@ -34,7 +34,7 @@
 
 #include "runtime/worklist/worklist.h"
 #include "strategies/termination/terminationstrategy.h"
-#include "priortizer/abstractprioritizer.h"
+#include "strategies/priortizer/prioritizerstrategy.h"
 #include "listeners/artemistopexecutionlistener.h"
 #include "listeners/multiplexlistener.h"
 #include "strategies/inputgenerator/targets/targetdescriptor.h"
