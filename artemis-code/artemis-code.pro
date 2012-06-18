@@ -17,7 +17,8 @@ QMAKE_CXXFLAGS += -g \
 DEFINES += ARTEMIS=1
 
 # Input
-HEADERS += src/runtime/webkitwrapper.h \
+HEADERS += src/runtime/runtime.h \
+    src/runtime/webkitwrapper.h \
     src/webkitexecutor.h \
     src/executionresult.h \
     src/executableconfiguration.h \
@@ -77,7 +78,8 @@ HEADERS += src/runtime/webkitwrapper.h \
     src/input/baseinput.h \
     src/input/timerinput.h \
     src/browser/timer.h
-SOURCES += src/runtime/webkitwrapper.cpp \
+SOURCES += src/runtime/runtime.cpp \
+    src/runtime/webkitwrapper.cpp \
     src/webkitexecutor.cpp \
     src/executionresult.cpp \
     src/executableconfiguration.cpp \

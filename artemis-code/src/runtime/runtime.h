@@ -1,16 +1,16 @@
 /*
   Copyright 2011 Simon Holm Jensen. All rights reserved.
-  
+
   Redistribution and use in source and binary forms, with or without modification, are
   permitted provided that the following conditions are met:
-  
+
      1. Redistributions of source code must retain the above copyright notice, this list of
         conditions and the following disclaimer.
-  
+
      2. Redistributions in binary form must reproduce the above copyright notice, this list
         of conditions and the following disclaimer in the documentation and/or other materials
         provided with the distribution.
-  
+
   THIS SOFTWARE IS PROVIDED BY SIMON HOLM JENSEN ``AS IS'' AND ANY EXPRESS OR IMPLIED
   WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
   FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL <COPYRIGHT HOLDER> OR
@@ -20,34 +20,57 @@
   ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
   NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
   ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-  
+
   The views and conclusions contained in the software and documentation are those of the
   authors and should not be interpreted as representing official policies, either expressed
   or implied, of Simon Holm Jensen
 */
 
-#include <iostream>
+#ifndef RUNTIME_H_
+#define RUNTIME_H_
 
-#include "abstractinputgenerator.h"
+#include <QObject>
+
+#include "inputgenerator/abstractinputgenerator.h"
+#include "worklist/worklist.h"
 #include "termination/terminationstrategy.h"
+#include "webkitexecutor.h"
+#include "executionresult.h"
+#include "executableconfiguration.h"
 
-using namespace std;
+namespace artemis
+{
 
-namespace artemis {
+class Runtime : public QObject
+{
 
-    AbstractInputGenerator::AbstractInputGenerator(QObject *parent, ArtemisOptions* options, ArtemisTopExecutionListener* listener) :
-            QObject(parent)
-    {
-        artemis_options = options;
-        execution_listener = listener;
-    }
+Q_OBJECT
 
-    AbstractInputGenerator::~AbstractInputGenerator() {
+public:
+    Runtime(QObject* parent, ArtemisOptions* options, AbstractInputGenerator* inputgenerator);
+    virtual ~Runtime();
 
-    }
+    void start();
+    URLCollector urlsCollected();
+    CodeCoverage coverage();
 
-    ArtemisOptions* AbstractInputGenerator::getOptions() {
-        return artemis_options;
-    }
+private:
+    void finish_up();
 
-}
+    AbstractInputGenerator* mInputgenerator;
+    WorkList* mWorklist;
+    ArtemisOptions* mOptions;
+    TerminationStrategy* mTerminationStrategy;
+    WebKitExecutor* mWebkitExecutor;
+    URLCollector mUrls;
+
+private slots:
+    void slExecutedSequence(ExecutableConfiguration* configuration, ExecutionResult result);
+
+signals:
+    void sigTestingDone();
+
+};
+
+} /* namespace artemis */
+#endif /* RUNTIME_H_ */

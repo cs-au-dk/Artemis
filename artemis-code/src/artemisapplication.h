@@ -33,6 +33,7 @@
 #include "artemisoptions.h"
 #include "inputgenerator/abstractinputgenerator.h"
 #include "listeners/sourceloadinglistener.h"
+#include "runtime/runtime.h"
 
 namespace artemis {
 
@@ -48,6 +49,7 @@ namespace artemis {
         QCoreApplication* app;
         AbstractInputGenerator* generator;
         SourceLoadingListener* s_list;
+        Runtime* mRuntime;
 
     signals:
 
