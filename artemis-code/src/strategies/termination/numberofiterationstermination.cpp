@@ -25,25 +25,20 @@
   authors and should not be interpreted as representing official policies, either expressed
   or implied, of Simon Holm Jensen
 */
-#include "numberofiterationstermination.h"
 
-#include <stdio.h>
+#include "numberofiterationstermination.h"
 
 namespace artemis {
 
-    NumberOfIterationsTermination::NumberOfIterationsTermination(int iter)
+    NumberOfIterationsTermination::NumberOfIterationsTermination(int iterationLimit)
     {
-        max_iterations = iter;
-        i = 0;
+        mIterationLimit = iterationLimit;
+        mIterations = 0;
     }
 
     bool NumberOfIterationsTermination::should_terminate() {
-        i++;
-        if (i >= max_iterations) {
-            return true;
-        } else {
-            return false;
-        }
+        mIterations++;
+        return (mIterations >= mIterationLimit);
     }
 
     QString NumberOfIterationsTermination::reason() {

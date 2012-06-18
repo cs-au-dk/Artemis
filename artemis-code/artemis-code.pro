@@ -17,7 +17,9 @@ QMAKE_CXXFLAGS += -g \
 DEFINES += ARTEMIS=1
 
 # Input
-HEADERS += src/strategies/inputgenerator/inputgeneratorstrategy.h \
+HEADERS += src/strategies/termination/numberofiterationstermination.h \
+    src/strategies/termination/terminationstrategy.h \
+    src/strategies/inputgenerator/inputgeneratorstrategy.h \
     src/strategies/inputgenerator/randominputgenerator.h \
     src/strategies/inputgenerator/targets/jquerylistener.h \
     src/strategies/inputgenerator/targets/jquerytarget.h \
@@ -33,8 +35,6 @@ HEADERS += src/strategies/inputgenerator/inputgeneratorstrategy.h \
     src/events/forms/forminput.h \
     src/worklist/worklist.h \
     src/worklist/deterministicworklist.h \
-    src/termination/terminationstrategy.h \
-    src/termination/numberofiterationstermination.h \
     src/artemisapplication.h \
     src/events/domelementdescriptor.h \
     src/events/eventhandlerdescriptor.h \
@@ -77,7 +77,8 @@ HEADERS += src/strategies/inputgenerator/inputgeneratorstrategy.h \
     src/input/baseinput.h \
     src/input/timerinput.h \
     src/browser/timer.h
-SOURCES += src/strategies/inputgenerator/inputgeneratorstrategy.cpp \
+SOURCES += src/strategies/termination/numberofiterationstermination.cpp \
+    src/strategies/inputgenerator/inputgeneratorstrategy.cpp \
     src/strategies/inputgenerator/randominputgenerator.cpp \
     src/strategies/inputgenerator/targets/jquerylistener.cpp \
     src/strategies/inputgenerator/targets/jquerytarget.cpp \
@@ -94,8 +95,6 @@ SOURCES += src/strategies/inputgenerator/inputgeneratorstrategy.cpp \
     src/events/forms/forminput.cpp \
     src/worklist/worklist.cpp \
     src/worklist/deterministicworklist.cpp \
-    src/termination/terminationstrategy.cpp \
-    src/termination/numberofiterationstermination.cpp \
     src/artemisapplication.cpp \
     src/events/domelementdescriptor.cpp \
     src/events/eventhandlerdescriptor.cpp \

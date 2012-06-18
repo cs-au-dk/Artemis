@@ -25,21 +25,25 @@
   authors and should not be interpreted as representing official policies, either expressed
   or implied, of Simon Holm Jensen
 */
-#ifndef TERMINATIONSTRATEGY_H
-#define TERMINATIONSTRATEGY_H
+#ifndef NUMBEROFITERATIONSTERMINATION_H
+#define NUMBEROFITERATIONSTERMINATION_H
 
-#include <QString>
+#include "terminationstrategy.h"
 
 namespace artemis {
 
-    class TerminationStrategy
+    class NumberOfIterationsTermination : public TerminationStrategy
     {
     public:
-        TerminationStrategy();
-        virtual bool should_terminate() = 0;
-        virtual QString reason() = 0;
+        NumberOfIterationsTermination(int iterationLimit);
+        bool should_terminate();
+        QString reason();
+
+    private:
+        int mIterationLimit;
+        int mIterations;
     };
 
 }
 
-#endif // TERMINATIONSTRATEGY_H
+#endif // NUMBEROFITERATIONSTERMINATION_H
