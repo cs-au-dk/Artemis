@@ -52,7 +52,7 @@ namespace artemis {
     public:
         explicit WebKitExecutor(QObject *parent = 0, ArtemisOptions* options = 0, ArtemisTopExecutionListener* listener = 0);
         ~WebKitExecutor();
-        void executeSequence(ExecutableConfiguration& conf);
+        void executeSequence(ExecutableConfiguration* conf);
         QWebExecutionListener* webkit_listener;
         ExecutorState* executor_state();
         CodeCoverage coverage();
@@ -82,7 +82,7 @@ namespace artemis {
         JQueryListener* jquery;
 
     signals:
-        void sigExecutedSequence(ExecutableConfiguration conf, ExecutionResult res);
+        void sigExecutedSequence(ExecutableConfiguration* conf, ExecutionResult res);
 
     public slots:
         void sl_loadFinished(bool ok);

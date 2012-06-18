@@ -142,12 +142,12 @@ namespace artemis {
     }
 
     void WebKitExecutor::do_exe() {
-        InputSequence seq = current_conf->get_eventsequence();
+        InputSequence* seq = current_conf->get_eventsequence();
     
         // ELfinder addition, ensure that we have one file selected
         //this->page->currentFrame()->evaluateJavaScript("$($(\".elfinder-cwd-file\")[0]).click()");
 
-        foreach (BaseInput* input, seq.to_list()) {
+        foreach (BaseInput* input, seq->toList()) {
             qDebug() << "APPLY!" << endl;
             input->apply(this->page, this->webkit_listener);
             //Wait for any ajax stuff to finish
@@ -176,7 +176,7 @@ namespace artemis {
 
         current_result->finalize();
 
-        emit sigExecutedSequence(*current_conf, *current_result);
+        emit sigExecutedSequence(current_conf, *current_result);
     }
 
     void WebKitExecutor::get_links() {
@@ -263,7 +263,7 @@ namespace artemis {
         }
     }
 
-    void WebKitExecutor::executeSequence(ExecutableConfiguration& conf) {
+    void WebKitExecutor::executeSequence(ExecutableConfiguration* conf) {
         qDebug() << "Artemis: Executing sequence" << endl;
 
         if (current_result != 0) {
@@ -276,7 +276,7 @@ namespace artemis {
         }
 
         current_result = new ExecutionResult(0);
-        current_conf = new ExecutableConfiguration(conf);
+        current_conf = conf;
 
         jquery->reset();
 
