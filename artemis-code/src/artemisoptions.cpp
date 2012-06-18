@@ -114,10 +114,10 @@ namespace artemis {
         return new NumberOfIterationsTermination(m_number_of_iterations);
     }
 
-    ExecutableConfiguration& ArtemisOptions::initial_configuration() {
-        if (initial_conf == 0)
-            initial_conf =  new ExecutableConfiguration(InputSequence(), QUrl(""));
-        return *initial_conf;
+    ExecutableConfiguration* ArtemisOptions::initial_configuration() {
+        if (initial_conf == NULL)
+            initial_conf =  new ExecutableConfiguration(0, new InputSequence(0), QUrl(""));
+        return initial_conf;
     }
 
     AbstractPrioritizer& ArtemisOptions::prioritizer() {

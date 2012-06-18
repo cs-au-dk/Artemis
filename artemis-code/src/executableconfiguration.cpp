@@ -29,54 +29,30 @@
 
 namespace artemis {
 
-    ExecutableConfiguration::ExecutableConfiguration() {
-
-    }
-
-    ExecutableConfiguration::ExecutableConfiguration(InputSequence seq, QUrl start_url)
+    ExecutableConfiguration::ExecutableConfiguration(QObject* parent, InputSequence* seq, QUrl start_url) : QObject(parent)
     {
         this->url = start_url;
         this->sequence = seq;
-    }
-
-    ExecutableConfiguration::ExecutableConfiguration(const ExecutableConfiguration& other)
-    {
-        this->url = other.url;
-        this->sequence = other.sequence;
     }
 
     QUrl ExecutableConfiguration::starting_url() const {
         return url;
     }
 
-    ExecutableConfiguration ExecutableConfiguration::copy_with_sequence(const InputSequence seq) const {
-        return ExecutableConfiguration(seq,this->starting_url());
+    ExecutableConfiguration* ExecutableConfiguration::copy_with_sequence(InputSequence* seq) const {
+        return new ExecutableConfiguration(parent(), seq, this->starting_url());
     }
 
     ExecutableConfiguration::~ExecutableConfiguration() {
 
     }
 
-    bool ExecutableConfiguration::operator==(ExecutableConfiguration& rhs) const {
-        return this->sequence == rhs.sequence;
-    }
-
     bool ExecutableConfiguration::is_initial() {
-       return sequence.is_empty();
+       return sequence->isEmpty();
     }
 
-    InputSequence ExecutableConfiguration::get_eventsequence() const{
+    InputSequence* ExecutableConfiguration::get_eventsequence() const{
         return this->sequence;
-    }
-
-    uint ExecutableConfiguration::hashcode() const {
-        return qHash(url.toString())* 17 + sequence.hashcode()*11;
-    }
-
-    ExecutableConfiguration& ExecutableConfiguration::operator=(const ExecutableConfiguration &other) {
-        this->url = other.url;
-        this->sequence = other.sequence;
-        return *this;
     }
 
   /*  QString ExecutableConfiguration::toSimpleString() {

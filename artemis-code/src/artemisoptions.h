@@ -61,7 +61,7 @@ namespace artemis {
         AbstractInputGenerator* create_input_generator();
         WorkList* work_list();
         TerminationStrategy* termination();
-        ExecutableConfiguration& initial_configuration();
+        ExecutableConfiguration* initial_configuration();
         AbstractPrioritizer& prioritizer();
         bool is_preset_field(QString id);
         QString get_present_value(QString id);

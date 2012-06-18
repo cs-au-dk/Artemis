@@ -75,7 +75,7 @@ namespace artemis {
         }
 
         //Start next iteration
-        ExecutableConfiguration new_conf =  wl->remove();
+        ExecutableConfiguration* new_conf =  wl->remove();
         
         execution_listener->before_execute(new_conf, executor->executor_state());
         executor->executeSequence(new_conf);

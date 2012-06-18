@@ -28,6 +28,7 @@
 #ifndef EXECUTABLECONFIGURATION_H
 #define EXECUTABLECONFIGURATION_H
 
+#include <QObject>
 #include <QUrl>
 
 #include "input/inputsequence.h"
@@ -35,30 +36,24 @@
 
 namespace artemis {
 
-    class ExecutableConfiguration
+    class ExecutableConfiguration : QObject
     {
+
+    	Q_OBJECT
+
     public:
-        ExecutableConfiguration();
-        ExecutableConfiguration(InputSequence seq , QUrl start_url);
-        ExecutableConfiguration(const ExecutableConfiguration& other);
-        ExecutableConfiguration copy_with_sequence(const InputSequence seq) const ;
+        ExecutableConfiguration(QObject* parent, InputSequence* seq , QUrl start_url);
         ~ExecutableConfiguration();
+        ExecutableConfiguration* copy_with_sequence(InputSequence* seq) const ;
         QUrl starting_url() const;
-        bool operator ==(ExecutableConfiguration& rhs) const;
-        ExecutableConfiguration &operator=(const ExecutableConfiguration &other);
         bool is_initial();
-        uint hashcode() const;
-        InputSequence get_eventsequence() const;
+        InputSequence* get_eventsequence() const;
         QString toSimpleString();
 
     private:
         QUrl url;
-        InputSequence sequence;
+        InputSequence* sequence;
    };
-}
-
-inline uint qHash(const artemis::ExecutableConfiguration &d) {
-    return d.hashcode();
 }
 
 #endif // EXECUTABLECONFIGURATION_H
