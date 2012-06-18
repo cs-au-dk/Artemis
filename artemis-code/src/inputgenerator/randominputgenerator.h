@@ -40,13 +40,13 @@ namespace artemis {
     public:
         explicit RandomInputGenerator(QObject *parent = 0, ArtemisOptions *options = 0, ArtemisTopExecutionListener *execution_listener = 0);
         ~RandomInputGenerator();
-        void add_new_configurations(const ExecutableConfiguration &, const ExecutionResult &, WorkList *,  ExecutorState *exe_state);
+        void add_new_configurations(const ExecutableConfiguration*, const ExecutionResult &, WorkList *,  ExecutorState *exe_state);
         void reprioritize();
 
     private:
         int next_random();
-        void insert_same_length(const ExecutableConfiguration& e, const ExecutionResult& e_result, WorkList& wl,  ExecutorState& exe_state);
-        void insert_extended(const ExecutableConfiguration& e, const ExecutionResult& e_result, WorkList& wl,  ExecutorState& exe_state);
+        void insert_same_length(const ExecutableConfiguration* e, const ExecutionResult& e_result, WorkList& wl,  ExecutorState& exe_state);
+        void insert_extended(const ExecutableConfiguration* e, const ExecutionResult& e_result, WorkList& wl,  ExecutorState& exe_state);
 
         BaseInput* permutate_input(const DomInput* input);
         BaseInput* permutate_input(BaseInput* input);

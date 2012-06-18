@@ -28,7 +28,7 @@
 
 #include <iostream>
 
-#include "reports/statistics/statsstorage.h"
+#include "statistics/statsstorage.h"
 
 #include "input/timerinput.h"
 

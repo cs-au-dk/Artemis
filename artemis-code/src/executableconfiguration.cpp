@@ -29,10 +29,14 @@
 
 namespace artemis {
 
-    ExecutableConfiguration::ExecutableConfiguration(QObject* parent, InputSequence* seq, QUrl start_url) : QObject(parent)
+ExecutableConfiguration::ExecutableConfiguration(QObject* parent, InputSequence* seq, QUrl start_url) : QObject(parent)
     {
         this->url = start_url;
         this->sequence = seq;
+    }
+
+ExecutableConfiguration::~ExecutableConfiguration() {
+
     }
 
     QUrl ExecutableConfiguration::starting_url() const {
@@ -41,10 +45,6 @@ namespace artemis {
 
     ExecutableConfiguration* ExecutableConfiguration::copy_with_sequence(InputSequence* seq) const {
         return new ExecutableConfiguration(parent(), seq, this->starting_url());
-    }
-
-    ExecutableConfiguration::~ExecutableConfiguration() {
-
     }
 
     bool ExecutableConfiguration::is_initial() {

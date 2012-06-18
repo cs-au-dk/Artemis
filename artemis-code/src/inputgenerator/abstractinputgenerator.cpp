@@ -51,7 +51,7 @@ namespace artemis {
         return artemis_options;
     }
 
-    void AbstractInputGenerator::sl_executorExecutedSequence(ExecutableConfiguration conf, ExecutionResult res) {
+    void AbstractInputGenerator::sl_executorExecutedSequence(ExecutableConfiguration* conf, ExecutionResult res) {
         
         execution_listener->executed(conf, executor->executor_state(), res);
         executed_sequence(conf, res);
@@ -81,7 +81,7 @@ namespace artemis {
         executor->executeSequence(new_conf);
     }
 
-    void AbstractInputGenerator::executed_sequence(const ExecutableConfiguration &conf, const ExecutionResult &res) {
+    void AbstractInputGenerator::executed_sequence(const ExecutableConfiguration* conf, const ExecutionResult &res) {
         foreach (QUrl u, res.urls()) {
             urls.add_url(u);
         }
@@ -109,8 +109,8 @@ namespace artemis {
 
         executor = new WebKitExecutor(this, artemis_options, execution_listener);
 
-        QObject::connect(executor, SIGNAL(sigExecutedSequence(ExecutableConfiguration, ExecutionResult)),
-                         this, SLOT(sl_executorExecutedSequence(ExecutableConfiguration, ExecutionResult)));
+        QObject::connect(executor, SIGNAL(sigExecutedSequence(ExecutableConfiguration*, ExecutionResult)),
+                         this, SLOT(sl_executorExecutedSequence(ExecutableConfiguration*, ExecutionResult)));
         
         artemis_options->get_listner()->artemis_start(*artemis_options->getURL());
         

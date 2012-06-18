@@ -58,8 +58,8 @@ namespace artemis {
         /**
           Method is called when a sequence has been executed. Remember to call super if overwritten!
           */
-        virtual void executed_sequence(const ExecutableConfiguration& conf, const ExecutionResult& res);
-        virtual void add_new_configurations(const ExecutableConfiguration&, const ExecutionResult&, WorkList*, ExecutorState* exe_state) = 0;
+        virtual void executed_sequence(const ExecutableConfiguration* conf, const ExecutionResult& res);
+        virtual void add_new_configurations(const ExecutableConfiguration*, const ExecutionResult&, WorkList*, ExecutorState* exe_state) = 0;
         virtual void reprioritize() = 0;
 
         CodeCoverage coverage();
@@ -82,7 +82,7 @@ namespace artemis {
         void sig_testingDone();
 
     public slots:
-        void sl_executorExecutedSequence(ExecutableConfiguration conf, ExecutionResult res);
+        void sl_executorExecutedSequence(ExecutableConfiguration* conf, ExecutionResult res);
     };
 
 }

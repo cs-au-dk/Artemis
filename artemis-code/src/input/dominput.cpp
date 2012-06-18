@@ -44,17 +44,17 @@ DomInput::DomInput(QObject* parent, const EventHandlerDescriptor &handler,
     mFormInput = formInput;
 
     mEvtParams = params;
-    mEvtParams->setParent(this);
+    //mEvtParams->setParent(this);
 
     mTarget = target;
-    mTarget->setParent(this);
+    //mTarget->setParent(this);
 }
 
 void DomInput::apply(ArtemisWebPage *page, QWebExecutionListener *webkit_listener)
 {
     QWebElement handler = this->mEventHandler.dom_element().get_element(page);
     QWebElement target = this->target()->get(page);
-    QString js_init_event = this->event_params()->jsString();
+    QString js_init_event = this->event_params()->js_string();
 
     this->getFormInput().write_to_page(page);
 
@@ -79,9 +79,9 @@ void DomInput::apply(ArtemisWebPage *page, QWebExecutionListener *webkit_listene
 
 DomInput::~DomInput()
 {
-    delete this->mEventHandler;
-    delete this->mFormInput;
-    delete this->mEvtParams;
+    //delete this->mEventHandler;
+    //delete this->mFormInput;
+    //delete this->mEvtParams;
 
     /* TODO TargetDescriptor Copy constructor */
     /*delete this->m_target;*/
@@ -94,12 +94,12 @@ TargetDescriptor* DomInput::target() const
 
 EventHandlerDescriptor DomInput::getEventHandler() const
 {
-    return *mEventHandler;
+    return mEventHandler;
 }
 
 FormInput DomInput::getFormInput() const
 {
-    return *mFormInput;
+    return mFormInput;
 }
 
 bool DomInput::isEqual(BaseInput *other)

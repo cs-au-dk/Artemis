@@ -40,23 +40,24 @@ namespace artemis {
     {
     public:
         AbstractPrioritizer(ArtemisOptions* options);
+        virtual ~AbstractPrioritizer() {};
 
         /**
           new_conf: Configuration to be prioritized
           results: The execution results from last execution
           state: State of the execution engine
           */
-        virtual double prioritize(const ExecutableConfiguration& new_conf,
+        virtual double prioritize(ExecutableConfiguration* new_conf,
                        const ExecutionResult& results, ExecutorState& state);
 
-        ExecutionResult get_from_cache(const ExecutableConfiguration& conf) ;
-        bool is_cached(const ExecutableConfiguration& conf) const;
+        ExecutionResult get_from_cache(ExecutableConfiguration* conf) ;
+        bool is_cached(ExecutableConfiguration* conf) const;
 
     protected:
         ArtemisOptions* opts;
 
     private:
-        QHash<ExecutableConfiguration, ExecutionResult> cache;
+        QHash<ExecutableConfiguration*, ExecutionResult> cache;
 
     };
 

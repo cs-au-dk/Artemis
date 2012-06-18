@@ -37,7 +37,7 @@
 namespace artemis
 {
 
-class InputSequence : QObject
+class InputSequence : public QObject
 {
 
 Q_OBJECT

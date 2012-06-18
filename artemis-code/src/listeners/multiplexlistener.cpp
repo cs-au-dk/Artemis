@@ -16,13 +16,13 @@ MultiplexListener::MultiplexListener(int number_of_listners, ...)
     va_end(ap);
 }
 
-void MultiplexListener::before_execute(const ExecutableConfiguration& conf, ExecutorState* exe_state) {
+void MultiplexListener::before_execute(ExecutableConfiguration* conf, ExecutorState* exe_state) {
     foreach (ArtemisTopExecutionListener* l, m_listeners) {
         l->before_execute(conf, exe_state);
     }
 }
 
-void MultiplexListener::executed(const ExecutableConfiguration& conf, ExecutorState* exe_state, const ExecutionResult& result) {
+void MultiplexListener::executed(ExecutableConfiguration* conf, ExecutorState* exe_state, const ExecutionResult& result) {
     foreach (ArtemisTopExecutionListener* l, m_listeners) {
         l->executed(conf, exe_state, result);
     }

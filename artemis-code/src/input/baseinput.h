@@ -37,7 +37,7 @@ namespace artemis
 {
 
 // TODO convert to QObject memory management
-class BaseInput : QObject
+class BaseInput : public QObject
 {
 
 Q_OBJECT

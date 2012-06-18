@@ -36,7 +36,7 @@
 
 namespace artemis {
 
-    class ExecutableConfiguration : QObject
+    class ExecutableConfiguration : public QObject
     {
 
     	Q_OBJECT

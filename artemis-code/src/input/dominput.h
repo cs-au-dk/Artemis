@@ -39,7 +39,7 @@
 namespace artemis
 {
 
-class DomInput: BaseInput
+class DomInput: public BaseInput
 {
 
 public:
