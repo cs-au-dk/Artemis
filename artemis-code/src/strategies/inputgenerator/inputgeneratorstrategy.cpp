@@ -28,7 +28,7 @@
 
 #include <iostream>
 
-#include "termination/terminationstrategy.h"
+#include "strategies/termination/terminationstrategy.h"
 
 #include "inputgeneratorstrategy.h"
 

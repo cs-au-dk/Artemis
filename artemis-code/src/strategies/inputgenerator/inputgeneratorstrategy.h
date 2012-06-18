@@ -32,9 +32,9 @@
 #include <QApplication>
 
 #include "artemisoptions.h"
-#include "executionresult.h"
-#include "worklist/worklist.h"
-#include "webkitexecutor.h"
+#include "runtime/browser/executionresult.h"
+#include "runtime/worklist/worklist.h"
+#include "runtime/browser/webkitexecutor.h"
 #include "urls/urlcollector.h"
 #include "listeners/artemistopexecutionlistener.h"
 #include "coverage/codecoverage.h"

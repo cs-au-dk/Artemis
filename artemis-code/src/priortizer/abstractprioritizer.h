@@ -29,7 +29,7 @@
 #define ABSTRACTPRIORITIZER_H
 
 #include "artemisoptions.h"
-#include "executionresult.h"
+#include "runtime/browser/executionresult.h"
 
 namespace artemis {
 

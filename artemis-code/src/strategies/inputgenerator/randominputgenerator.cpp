@@ -31,9 +31,9 @@
 #include "events/eventypes.h"
 #include "variants/randomvariants.h"
 #include "events/forms/forminput.h"
-#include "input/baseinput.h"
-#include "input/dominput.h"
-#include "input/timerinput.h"
+#include "runtime/input/baseinput.h"
+#include "runtime/input/dominput.h"
+#include "runtime/input/timerinput.h"
 
 #include "randominputgenerator.h"
 

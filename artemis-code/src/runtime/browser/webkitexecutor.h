@@ -38,12 +38,12 @@
 #include "artemisglobals.h"
 #include "executionresult.h"
 #include "artemiswebpage.h"
-#include "executableconfiguration.h"
+#include "runtime/executableconfiguration.h"
 #include "coverage/coveragelistener.h"
 #include "listeners/artemistopexecutionlistener.h"
 #include "ajax/ajaxrequestlistener.h"
 
-#include "runtime/webkitwrapper.h"
+#include "runtime/browser/webkitwrapper.h"
 
 namespace artemis {
 

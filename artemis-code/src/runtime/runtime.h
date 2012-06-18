@@ -32,11 +32,12 @@
 #include <QObject>
 
 #include "strategies/inputgenerator/inputgeneratorstrategy.h"
-#include "worklist/worklist.h"
 #include "strategies/termination/terminationstrategy.h"
-#include "webkitexecutor.h"
-#include "executionresult.h"
-#include "executableconfiguration.h"
+
+#include "runtime/worklist/worklist.h"
+#include "runtime/browser/webkitexecutor.h"
+#include "runtime/browser/executionresult.h"
+#include "runtime/executableconfiguration.h"
 
 namespace artemis
 {
