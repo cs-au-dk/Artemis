@@ -44,6 +44,8 @@
 #include "listeners/artemistopexecutionlistener.h"
 #include "ajax/ajaxrequestlistener.h"
 
+#include "runtime/webkitwrapper.h"
+
 namespace artemis {
 
     class WebKitExecutor : public QObject
@@ -80,6 +82,8 @@ namespace artemis {
         ArtemisTopExecutionListener* execution_listener;
         AjaxRequestListener ajax_listener;
         JQueryListener* jquery;
+
+        WebKitWrapper* mWebkitWrapper;
 
     signals:
         void sigExecutedSequence(ExecutableConfiguration* conf, ExecutionResult res);
