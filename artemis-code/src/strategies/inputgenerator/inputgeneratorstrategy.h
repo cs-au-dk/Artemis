@@ -25,39 +25,39 @@
   authors and should not be interpreted as representing official policies, either expressed
   or implied, of Simon Holm Jensen
 */
-#ifndef RANDOMINPUTGENERATOR_H
-#define RANDOMINPUTGENERATOR_H
+#ifndef ABSTRACTINPUTGENERATOR_H
+#define ABSTRACTINPUTGENERATOR_H
 
-#include "abstractinputgenerator.h"
-#include "variants/variantsgenerator.h"
+#include <QObject>
+#include <QApplication>
 
+#include "artemisoptions.h"
+#include "executionresult.h"
+#include "worklist/worklist.h"
+#include "webkitexecutor.h"
+#include "executorstate.h"
+#include "urls/urlcollector.h"
+#include "listeners/artemistopexecutionlistener.h"
+#include "coverage/codecoverage.h"
 
 namespace artemis {
 
-    class RandomInputGenerator : public AbstractInputGenerator
+    class InputGeneratorStrategy : public QObject
     {
         Q_OBJECT
     public:
-        explicit RandomInputGenerator(QObject *parent = 0, ArtemisOptions *options = 0, ArtemisTopExecutionListener *execution_listener = 0);
-        ~RandomInputGenerator();
-        void add_new_configurations(const ExecutableConfiguration*, const ExecutionResult &, WorkList *,  ExecutorState *exe_state);
-        void reprioritize();
+        InputGeneratorStrategy(QObject *parent, ArtemisOptions* options);
+        ~InputGeneratorStrategy();
 
-    private:
-        int next_random();
-        void insert_same_length(const ExecutableConfiguration* e, const ExecutionResult& e_result, WorkList& wl,  ExecutorState& exe_state);
-        void insert_extended(const ExecutableConfiguration* e, const ExecutionResult& e_result, WorkList& wl,  ExecutorState& exe_state);
+        virtual void add_new_configurations(const ExecutableConfiguration*, const ExecutionResult&, WorkList*, ExecutorState* exe_state) = 0;
+        virtual void reprioritize() = 0;
 
-        BaseInput* permutate_input(const DomInput* input);
-        BaseInput* permutate_input(BaseInput* input);
-        
-        VariantsGenerator* var_gen;
 
-    signals:
-
-    public slots:
+    protected:
+        ArtemisOptions* artemis_options;
+        int iterations;
 
     };
 
 }
-#endif // RANDOMINPUTGENERATOR_H
+#endif // ABSTRACTINPUTGENERATOR_H

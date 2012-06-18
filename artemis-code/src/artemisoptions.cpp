@@ -37,11 +37,11 @@
 #include "priortizer/constantprioritizer.h"
 #include "listeners/domstatesaverlistener.h"
 #include "listeners/pagerecreatelistner.h"
-#include "inputgenerator/targets/targetdescriptor.h"
-#include "inputgenerator/targets/legacytarget.h"
-#include "inputgenerator/targets/jquerytarget.h"
-#include "inputgenerator/abstractinputgenerator.h"
-#include "inputgenerator/randominputgenerator.h"
+#include "strategies/inputgenerator/targets/targetdescriptor.h"
+#include "strategies/inputgenerator/targets/legacytarget.h"
+#include "strategies/inputgenerator/targets/jquerytarget.h"
+#include "strategies/inputgenerator/inputgeneratorstrategy.h"
+#include "strategies/inputgenerator/randominputgenerator.h"
 #include "executableconfiguration.h"
 
 #include "artemisoptions.h"
@@ -102,8 +102,8 @@ namespace artemis {
         return 1;
     }
 
-    AbstractInputGenerator* ArtemisOptions::create_input_generator() {
-        return new RandomInputGenerator(NULL,this, this->m_multi);
+    InputGeneratorStrategy* ArtemisOptions::create_input_generator() {
+        return new RandomInputGenerator(NULL, this);
     }
 
     WorkList* ArtemisOptions::work_list() {

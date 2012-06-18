@@ -34,7 +34,7 @@
 namespace artemis
 {
 
-Runtime::Runtime(QObject* parent, ArtemisOptions* options, AbstractInputGenerator* inputgenerator) :
+Runtime::Runtime(QObject* parent, ArtemisOptions* options, InputGeneratorStrategy* inputgenerator) :
     QObject(parent)
 {
     mInputgenerator = inputgenerator;

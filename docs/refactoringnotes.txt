@@ -12,7 +12,7 @@ Artemis is to go through a substantial refactoring. This will be split into a nu
 1. Functional Refactoring
 -------------------------
 
- - Timeout support & synchronous API for WebKit
+ - Timeout support & synchronous API for WebKit		EXPERIMENTAL
 
 2. Structural Refactoring
 -------------------------

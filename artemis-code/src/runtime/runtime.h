@@ -31,7 +31,7 @@
 
 #include <QObject>
 
-#include "inputgenerator/abstractinputgenerator.h"
+#include "strategies/inputgenerator/inputgeneratorstrategy.h"
 #include "worklist/worklist.h"
 #include "termination/terminationstrategy.h"
 #include "webkitexecutor.h"
@@ -47,7 +47,7 @@ class Runtime : public QObject
 Q_OBJECT
 
 public:
-    Runtime(QObject* parent, ArtemisOptions* options, AbstractInputGenerator* inputgenerator);
+    Runtime(QObject* parent, ArtemisOptions* options, InputGeneratorStrategy* inputgenerator);
     virtual ~Runtime();
 
     void start();
@@ -57,7 +57,7 @@ public:
 private:
     void finish_up();
 
-    AbstractInputGenerator* mInputgenerator;
+    InputGeneratorStrategy* mInputgenerator;
     WorkList* mWorklist;
     ArtemisOptions* mOptions;
     TerminationStrategy* mTerminationStrategy;

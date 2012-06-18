@@ -31,7 +31,7 @@
 #include <QObject>
 #include <QApplication>
 #include "artemisoptions.h"
-#include "inputgenerator/abstractinputgenerator.h"
+#include "strategies/inputgenerator/inputgeneratorstrategy.h"
 #include "listeners/sourceloadinglistener.h"
 #include "runtime/runtime.h"
 
@@ -47,7 +47,7 @@ namespace artemis {
     private:
         ArtemisOptions* artemis_options;
         QCoreApplication* app;
-        AbstractInputGenerator* generator;
+        InputGeneratorStrategy* generator;
         SourceLoadingListener* s_list;
         Runtime* mRuntime;
 

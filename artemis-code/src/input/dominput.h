@@ -32,7 +32,7 @@
 #include "events/eventhandlerdescriptor.h"
 #include "events/domelementdescriptor.h"
 #include "events/eventparameters.h"
-#include "inputgenerator/targets/targetdescriptor.h"
+#include "strategies/inputgenerator/targets/targetdescriptor.h"
 
 #include "baseinput.h"
 
