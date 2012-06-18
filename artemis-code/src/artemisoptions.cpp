@@ -120,10 +120,10 @@ namespace artemis {
         return initial_conf;
     }
 
-    AbstractPrioritizer& ArtemisOptions::prioritizer() {
+    PrioritizerStrategy* ArtemisOptions::prioritizer() {
         if (pri == 0)
             pri = new ConstantPrioritizer(this);
-        return *pri;
+        return pri;
     }
 
     bool ArtemisOptions::is_preset_field(QString id) {

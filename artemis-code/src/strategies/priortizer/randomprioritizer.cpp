@@ -30,7 +30,7 @@
 namespace artemis {
 
     RandomPrioritizer::RandomPrioritizer(QObject* parent) :
-            AbstractPrioritizer(parent)
+            PrioritizerStrategy(parent)
     {
 
     }
@@ -39,6 +39,11 @@ namespace artemis {
                                          const ExecutionResult& results) {
 
         return rand();
+    }
+
+    void RandomPrioritizer::reprioritize(WorkList* worklist)
+    {
+
     }
 
 }

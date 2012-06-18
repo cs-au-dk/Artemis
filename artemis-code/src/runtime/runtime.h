@@ -48,7 +48,7 @@ class Runtime : public QObject
 Q_OBJECT
 
 public:
-    Runtime(QObject* parent, ArtemisOptions* options, InputGeneratorStrategy* inputgenerator);
+    Runtime(QObject* parent, ArtemisOptions* options, InputGeneratorStrategy* inputgenerator, PrioritizerStrategy* prioritizer);
     virtual ~Runtime();
 
     void start();
@@ -58,11 +58,14 @@ public:
 private:
     void finish_up();
 
-    InputGeneratorStrategy* mInputgenerator;
-    WorkList* mWorklist;
-    ArtemisOptions* mOptions;
-    TerminationStrategy* mTerminationStrategy;
     WebKitExecutor* mWebkitExecutor;
+    WorkList* mWorklist;
+
+    TerminationStrategy* mTerminationStrategy;
+    PrioritizerStrategy* mPrioritizerStrategy;
+    InputGeneratorStrategy* mInputgenerator;
+
+    ArtemisOptions* mOptions;
     URLCollector mUrls;
 
 private slots:

@@ -44,7 +44,7 @@
 namespace artemis {
 
     class InputGeneratorStrategy;
-    class AbstractPrioritizer;
+    class PrioritizerStrategy;
 
     class ArtemisOptions : public QObject
     {
@@ -63,7 +63,7 @@ namespace artemis {
         WorkList* work_list();
         TerminationStrategy* termination();
         ExecutableConfiguration* initial_configuration();
-        AbstractPrioritizer& prioritizer();
+        PrioritizerStrategy* prioritizer();
         bool is_preset_field(QString id);
         QString get_present_value(QString id);
         void add_preset_field(QString id, QString value);
@@ -91,7 +91,7 @@ namespace artemis {
     private:
         QUrl* artemis_url;
         ExecutableConfiguration* initial_conf;
-        AbstractPrioritizer* pri;
+        PrioritizerStrategy* pri;
         QMap<QString, QString> preset_formfields;
         bool m_dump_urls;
         MultiplexListener* m_multi;

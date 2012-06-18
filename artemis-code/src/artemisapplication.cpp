@@ -51,7 +51,7 @@ namespace artemis {
         srand(0); //Better way to get random numbers?
 
         generator = artemis_options->create_input_generator();
-        mRuntime = new Runtime(this, artemis_options, generator);
+        mRuntime = new Runtime(this, artemis_options, generator, artemis_options->prioritizer());
 
         QObject::connect(mRuntime, SIGNAL(sigTestingDone()),
                                  this, SLOT(sl_testingDone()));

@@ -52,24 +52,26 @@ RandomInputGenerator::~RandomInputGenerator()
     delete var_gen;
 }
 
-void RandomInputGenerator::add_new_configurations(const ExecutableConfiguration* configuration,
-    const ExecutionResult& result, WorkList* wl)
+QList<ExecutableConfiguration*> RandomInputGenerator::add_new_configurations(const ExecutableConfiguration* configuration,
+    const ExecutionResult& result)
 {
+    QList<ExecutableConfiguration*> newConfigurations;
 
-    Q_CHECK_PTR(wl);
+    newConfigurations.append(insert_same_length(configuration, result));
+    newConfigurations.append(insert_extended(configuration, result));
 
-    insert_same_length(configuration, result, *wl);
-    insert_extended(configuration, result, *wl);
+    return newConfigurations;
 }
 
-void RandomInputGenerator::insert_same_length(const ExecutableConfiguration* e,
-    const ExecutionResult& e_result, WorkList& wl)
+QList<ExecutableConfiguration*> RandomInputGenerator::insert_same_length(const ExecutableConfiguration* e,
+    const ExecutionResult& e_result)
 {
+    QList<ExecutableConfiguration*> newConfigurations;
 
     InputSequence* seq = e->get_eventsequence();
 
     if (seq->isEmpty())
-        return;
+        return newConfigurations;
 
     BaseInput* last = seq->getLast();
     for (int i = 0; i++; i < this->artemis_options->number_of_samelength()) {
@@ -81,10 +83,11 @@ void RandomInputGenerator::insert_same_length(const ExecutableConfiguration* e,
 
             ExecutableConfiguration* new_conf = new ExecutableConfiguration(e->parent(), new_seq, e->starting_url());
 
-            wl.add(new_conf,
-                artemis_options->prioritizer().prioritize(new_conf, e_result));
+            newConfigurations.append(new_conf);
         }
     }
+
+    return newConfigurations;
 }
 
 BaseInput *RandomInputGenerator::permutate_input(const DomInput *input)
@@ -131,9 +134,10 @@ BaseInput* RandomInputGenerator::permutate_input(BaseInput* input)
     return input;
 }
 
-void RandomInputGenerator::insert_extended(const ExecutableConfiguration* oldConfiguration,
-    const ExecutionResult& result, WorkList& wl)
+QList<ExecutableConfiguration*> RandomInputGenerator::insert_extended(const ExecutableConfiguration* oldConfiguration,
+    const ExecutionResult& result)
 {
+    QList<ExecutableConfiguration*> newConfigurations;
 
     foreach (EventHandlerDescriptor ee, result.event_handlers()) {
         EventParameters* new_params = 0;
@@ -226,8 +230,7 @@ void RandomInputGenerator::insert_extended(const ExecutableConfiguration* oldCon
 
         ExecutableConfiguration* newConfiguration = new ExecutableConfiguration(0, newInputSequence, oldConfiguration->starting_url());
 
-        wl.add(newConfiguration,
-            artemis_options->prioritizer().prioritize(newConfiguration, result));
+        newConfigurations.append(newConfiguration);
 
         delete new_params;
     }
@@ -240,14 +243,10 @@ void RandomInputGenerator::insert_extended(const ExecutableConfiguration* oldCon
 
         ExecutableConfiguration* new_conf = new ExecutableConfiguration(0, new_seq, oldConfiguration->starting_url());
 
-        wl.add(new_conf,
-            artemis_options->prioritizer().prioritize(new_conf, result));
+        newConfigurations.append(new_conf);
     }
-}
 
-void RandomInputGenerator::reprioritize()
-{
-
+    return newConfigurations;
 }
 
 }

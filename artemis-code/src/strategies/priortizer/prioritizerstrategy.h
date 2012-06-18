@@ -32,14 +32,15 @@
 
 #include "artemisoptions.h"
 #include "runtime/browser/executionresult.h"
+#include "runtime/worklist/worklist.h"
 
 namespace artemis {
 
-    class AbstractPrioritizer : public QObject
+    class PrioritizerStrategy : public QObject
     {
     public:
-        AbstractPrioritizer(QObject* parent) : QObject(parent) {};
-        virtual ~AbstractPrioritizer() {};
+        PrioritizerStrategy(QObject* parent) : QObject(parent) {};
+        virtual ~PrioritizerStrategy() {};
 
         /**
           new_conf: Configuration to be prioritized
@@ -49,6 +50,7 @@ namespace artemis {
         virtual double prioritize(ExecutableConfiguration* new_conf,
                        const ExecutionResult& results) = 0;
 
+        virtual void reprioritize(WorkList* worklist) = 0;
     };
 
 }

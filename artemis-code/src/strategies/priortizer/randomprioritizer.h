@@ -32,13 +32,15 @@
 
 namespace artemis {
 
-    class RandomPrioritizer : public AbstractPrioritizer
+    class RandomPrioritizer : public PrioritizerStrategy
     {
     public:
         RandomPrioritizer(QObject* parent);
 
         double prioritize(ExecutableConfiguration* new_conf,
                                              const ExecutionResult& results);
+
+        void reprioritize(WorkList* worklist);
     };
 
 }

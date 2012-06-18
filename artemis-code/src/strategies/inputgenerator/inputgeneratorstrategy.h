@@ -29,7 +29,7 @@
 #define ABSTRACTINPUTGENERATOR_H
 
 #include <QObject>
-#include <QApplication>
+#include <QList>
 
 #include "artemisoptions.h"
 #include "runtime/browser/executionresult.h"
@@ -48,13 +48,10 @@ namespace artemis {
         InputGeneratorStrategy(QObject *parent, ArtemisOptions* options);
         ~InputGeneratorStrategy();
 
-        virtual void add_new_configurations(const ExecutableConfiguration*, const ExecutionResult&, WorkList*) = 0;
-        virtual void reprioritize() = 0;
-
+        virtual QList<ExecutableConfiguration*> add_new_configurations(const ExecutableConfiguration*, const ExecutionResult&) = 0;
 
     protected:
         ArtemisOptions* artemis_options;
-        int iterations;
 
     };
 

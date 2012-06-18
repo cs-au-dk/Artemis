@@ -28,6 +28,8 @@
 #ifndef RANDOMINPUTGENERATOR_H
 #define RANDOMINPUTGENERATOR_H
 
+#include <QList>
+
 #include "inputgeneratorstrategy.h"
 #include "variants/variantsgenerator.h"
 
@@ -40,13 +42,12 @@ namespace artemis {
     public:
         RandomInputGenerator(QObject *parent, ArtemisOptions *options);
         ~RandomInputGenerator();
-        void add_new_configurations(const ExecutableConfiguration*, const ExecutionResult &, WorkList *);
-        void reprioritize();
+        QList<ExecutableConfiguration*> add_new_configurations(const ExecutableConfiguration*, const ExecutionResult &);
 
     private:
         int next_random();
-        void insert_same_length(const ExecutableConfiguration* e, const ExecutionResult& e_result, WorkList& wl);
-        void insert_extended(const ExecutableConfiguration* e, const ExecutionResult& e_result, WorkList& wl);
+        QList<ExecutableConfiguration*> insert_same_length(const ExecutableConfiguration* e, const ExecutionResult& e_result);
+        QList<ExecutableConfiguration*> insert_extended(const ExecutableConfiguration* e, const ExecutionResult& e_result);
 
         BaseInput* permutate_input(const DomInput* input);
         BaseInput* permutate_input(BaseInput* input);
