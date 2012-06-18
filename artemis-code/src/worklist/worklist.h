@@ -34,7 +34,7 @@
 #include <executableconfiguration.h>
 
 namespace artemis {
-
+    // TODO move to QObject memory management
     class WorkList {
     public:
         WorkList();

@@ -91,8 +91,8 @@ namespace artemis {
     }
 
     WebKitExecutor::~WebKitExecutor() {
-        delete current_conf;
-        delete current_result;
+        //delete current_conf;
+        //delete current_result;
         delete page;
         delete cov_list;
     }

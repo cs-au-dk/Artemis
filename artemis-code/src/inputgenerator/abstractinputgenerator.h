@@ -53,17 +53,11 @@ namespace artemis {
         ArtemisOptions* getOptions();
         ~AbstractInputGenerator();
 
-
-        virtual void start();
         /**
           Method is called when a sequence has been executed. Remember to call super if overwritten!
           */
-        virtual void executed_sequence(const ExecutableConfiguration* conf, const ExecutionResult& res);
         virtual void add_new_configurations(const ExecutableConfiguration*, const ExecutionResult&, WorkList*, ExecutorState* exe_state) = 0;
         virtual void reprioritize() = 0;
-
-        CodeCoverage coverage();
-        URLCollector urls_collected();
 
 
     protected:
@@ -72,17 +66,11 @@ namespace artemis {
         WorkList* wl;
         TerminationStrategy* termination;
         int iterations;
-        void finish_up();
 
     private:
         URLCollector urls;
         ArtemisTopExecutionListener* execution_listener;
 
-    signals:
-        void sig_testingDone();
-
-    public slots:
-        void sl_executorExecutedSequence(ExecutableConfiguration* conf, ExecutionResult res);
     };
 
 }

@@ -33,6 +33,7 @@
 #include "coverage/coveragetooutputstream.h"
 #include "statistics/statsstorage.h"
 #include "statistics/writers/pretty.h"
+#include "runtime/runtime.h"
 
 using namespace std;
 
@@ -46,6 +47,14 @@ namespace artemis {
         this->artemis_options = options;
         this->app = qapp;
         s_list = new SourceLoadingListener();
+
+        srand(0); //Better way to get random numbers?
+
+        generator = artemis_options->create_input_generator();
+        mRuntime = new Runtime(this, artemis_options, generator);
+
+        QObject::connect(mRuntime, SIGNAL(sigTestingDone()),
+                                 this, SLOT(sl_testingDone()));
     }
 
     void ArtemisApplication::run() {
@@ -54,14 +63,7 @@ namespace artemis {
         artemis_options->add_artemis_execution_listner(s_list);
         artemis_options->print_presets();
 
-        srand(0); //Better way to get random numbers?
-
-        generator = artemis_options->create_input_generator();
-
-        QObject::connect(generator,SIGNAL(sig_testingDone()),
-                         this, SLOT(sl_testingDone()));
-
-        generator->start();
+        mRuntime->start();
     }
 
     void ArtemisApplication::sl_testingDone() {
@@ -69,11 +71,11 @@ namespace artemis {
 
         if (this->artemis_options->dump_urls()) {
             cout << "The following URLs were encountered:\n";
-            generator->urls_collected().print_urls();
+            mRuntime->urlsCollected().print_urls();
         }
 
         cout << "\n\n === Coverage information for execution === \n";
-        write_coverage_report(cout, generator->coverage());
+        write_coverage_report(cout, mRuntime->coverage());
         
         cout << "\n==== Source code loaded ====\n";
         s_list->print_results();
