@@ -32,12 +32,14 @@
 
 namespace artemis {
 
-    class ConstantPrioritizer : public AbstractPrioritizer
+    class ConstantPrioritizer : public PrioritizerStrategy
     {
     public:
         ConstantPrioritizer(QObject* parent);
         double prioritize(ExecutableConfiguration* new_conf,
                           const ExecutionResult& results);
+
+        void reprioritize(WorkList* worklist);
     };
 
 }

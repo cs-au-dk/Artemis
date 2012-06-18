@@ -34,7 +34,7 @@
 namespace artemis
 {
 
-Runtime::Runtime(QObject* parent, ArtemisOptions* options, InputGeneratorStrategy* inputgenerator) :
+Runtime::Runtime(QObject* parent, ArtemisOptions* options, InputGeneratorStrategy* inputgenerator, PrioritizerStrategy* prioritizer) :
     QObject(parent)
 {
     mInputgenerator = inputgenerator;
@@ -43,6 +43,9 @@ Runtime::Runtime(QObject* parent, ArtemisOptions* options, InputGeneratorStrateg
 
     mTerminationStrategy = options->termination();
     mTerminationStrategy->setParent(this);
+
+    mPrioritizerStrategy = prioritizer;
+    mPrioritizerStrategy->setParent(this);
 
     mWebkitExecutor = new WebKitExecutor(this, options, options->get_listner());
 
@@ -77,12 +80,15 @@ void Runtime::slExecutedSequence(ExecutableConfiguration* configuration, Executi
         return;
     }
 
-    int size_before = mWorklist->size();
+    mPrioritizerStrategy->reprioritize(mWorklist);
 
-    mInputgenerator->reprioritize();
-    mInputgenerator->add_new_configurations(configuration, result, mWorklist);
+    QList<ExecutableConfiguration*> newConfigurations = mInputgenerator->add_new_configurations(configuration, result);
 
-    statistics()->accumulate("InputGenerator::added-configurations", mWorklist->size() - size_before);
+    foreach (ExecutableConfiguration* newConfiguration, newConfigurations) {
+        mWorklist->add(newConfiguration, mPrioritizerStrategy->prioritize(newConfiguration, result));
+    }
+
+    statistics()->accumulate("InputGenerator::added-configurations", newConfigurations.size());
 
     if (mWorklist->empty()) {
         finish_up();

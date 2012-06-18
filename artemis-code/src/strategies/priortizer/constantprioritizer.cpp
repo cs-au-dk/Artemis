@@ -30,7 +30,7 @@
 namespace artemis {
 
     ConstantPrioritizer::ConstantPrioritizer(QObject* parent)
-        : AbstractPrioritizer(parent)
+        : PrioritizerStrategy(parent)
     {
     }
 
@@ -38,5 +38,10 @@ namespace artemis {
                                          const ExecutionResult& results) {
 
         return 1;
+    }
+
+    void ConstantPrioritizer::reprioritize(WorkList* worklist)
+    {
+
     }
 }
