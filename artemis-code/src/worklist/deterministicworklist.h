@@ -42,18 +42,18 @@ namespace artemis {
     public:
 
         DeterministicWorkList();
-        void add(const ExecutableConfiguration e, int priority);
+        void add(ExecutableConfiguration* e, int priority);
         bool all_zero_priority();
-        ExecutableConfiguration remove();
+        ExecutableConfiguration* remove();
         int size();
         bool empty();
-        bool contains(const ExecutableConfiguration& e);
-        void new_priority(const ExecutableConfiguration& e, int priority);
+        bool contains(ExecutableConfiguration* e);
+        void new_priority(ExecutableConfiguration* e, int priority);
         QString toString();
 
     private:
         int largest_pri;
-        QMap<int,QSet<ExecutableConfiguration>* > queue;
+        QMap<int,QSet<ExecutableConfiguration*>* > queue;
 
     signals:
 

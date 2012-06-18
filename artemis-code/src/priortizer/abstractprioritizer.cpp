@@ -35,16 +35,16 @@ namespace artemis {
         this->opts = options;
     }
 
-    ExecutionResult AbstractPrioritizer::get_from_cache(const ExecutableConfiguration& conf)  {
+    ExecutionResult AbstractPrioritizer::get_from_cache(ExecutableConfiguration* conf)  {
         //Q_ASSERT(cache.contains(conf));
         return cache.value(conf);
     }
 
-    bool AbstractPrioritizer::is_cached(const ExecutableConfiguration& conf) const {
+    bool AbstractPrioritizer::is_cached(ExecutableConfiguration* conf) const {
         return cache.contains(conf);
     }
 
-    double AbstractPrioritizer::prioritize(const ExecutableConfiguration& new_conf,
+    double AbstractPrioritizer::prioritize(ExecutableConfiguration* new_conf,
                                            const ExecutionResult& results, ExecutorState& state) {
         cache.insert(new_conf,results);
     }

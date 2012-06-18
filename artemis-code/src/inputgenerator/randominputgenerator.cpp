@@ -53,7 +53,7 @@ RandomInputGenerator::~RandomInputGenerator()
     delete var_gen;
 }
 
-void RandomInputGenerator::add_new_configurations(const ExecutableConfiguration& configuration,
+void RandomInputGenerator::add_new_configurations(const ExecutableConfiguration* configuration,
     const ExecutionResult& result, WorkList* wl, ExecutorState* exe_state)
 {
 
@@ -64,22 +64,24 @@ void RandomInputGenerator::add_new_configurations(const ExecutableConfiguration&
     insert_extended(configuration, result, *wl, *exe_state);
 }
 
-void RandomInputGenerator::insert_same_length(const ExecutableConfiguration& e,
+void RandomInputGenerator::insert_same_length(const ExecutableConfiguration* e,
     const ExecutionResult& e_result, WorkList& wl, ExecutorState& exe_state)
 {
 
-    InputSequence seq = e.get_eventsequence();
+    InputSequence* seq = e->get_eventsequence();
 
-    if (seq.is_empty())
+    if (seq->isEmpty())
         return;
 
-    BaseInput *last = seq.get_last();
+    BaseInput* last = seq->getLast();
     for (int i = 0; i++; i < this->artemis_options->number_of_samelength()) {
-        BaseInput *new_last = this->permutate_input(last);
+        BaseInput* new_last = this->permutate_input(last);
 
         if (last->isEqual(new_last) == false) {
-            InputSequence new_seq = seq.new_last(new_last);
-            ExecutableConfiguration new_conf = e.copy_with_sequence(new_seq);
+            InputSequence* new_seq = seq->copy();
+            new_seq->replaceLast(new_last);
+
+            ExecutableConfiguration* new_conf = new ExecutableConfiguration(e->parent(), new_seq, e->starting_url());
 
             wl.add(new_conf,
                 artemis_options->prioritizer().prioritize(new_conf, e_result, exe_state));
@@ -94,16 +96,16 @@ BaseInput *RandomInputGenerator::permutate_input(const DomInput *input)
 
     //Event parameters
     if (old_params->type() == BASE_EVENT) {
-        BaseEventParameters bp = var_gen->generate_base_event(input->handler_descriptor().name());
+        BaseEventParameters bp = var_gen->generate_base_event(input->getEventHandler().name());
         new_params = new BaseEventParameters(bp);
     }
     else if (old_params->type() == MOUSE_EVENT) {
-        MouseEventParameters mp = var_gen->generate_mouse_event(input->handler_descriptor().name());
+        MouseEventParameters mp = var_gen->generate_mouse_event(input->getEventHandler().name());
         new_params = new MouseEventParameters(mp);
     }
     else if (old_params->type() == KEY_EVENT) {
         KeyboardEventParameters kp = var_gen->generate_keyboard_event(
-            input->handler_descriptor().name());
+            input->getEventHandler().name());
         new_params = new KeyboardEventParameters(kp);
     }
     else {
@@ -112,13 +114,13 @@ BaseInput *RandomInputGenerator::permutate_input(const DomInput *input)
     }
 
     //Form fields
-    FormInput new_form = var_gen->generate_form_fields(input->form_input().fields());
+    FormInput new_form = var_gen->generate_form_fields(input->getFormInput().fields());
 
     //Build new Event Descriptor
-    EventHandlerDescriptor hh = input->handler_descriptor();
+    EventHandlerDescriptor hh = input->getEventHandler();
     TargetDescriptor* target = artemis_options->target_generator(hh);
 
-    DomInput *new_last = new DomInput(hh, new_form, new_params, target);
+    DomInput *new_last = new DomInput(0, hh, new_form, new_params, target);
 
     delete new_params;
 
@@ -131,7 +133,7 @@ BaseInput* RandomInputGenerator::permutate_input(BaseInput* input)
     return input;
 }
 
-void RandomInputGenerator::insert_extended(const ExecutableConfiguration& oldConfiguration,
+void RandomInputGenerator::insert_extended(const ExecutableConfiguration* oldConfiguration,
     const ExecutionResult& result, WorkList& wl, ExecutorState& exe_state)
 {
 
@@ -219,11 +221,12 @@ void RandomInputGenerator::insert_extended(const ExecutableConfiguration& oldCon
         artemis_options->target_generator(ee);
 
         TargetDescriptor* target = artemis_options->target_generator(ee);
-        DomInput* domInput = new DomInput(ee, new_form, new_params, target);
+        DomInput* domInput = new DomInput(0, ee, new_form, new_params, target);
 
-        InputSequence newInputSequence = oldConfiguration.get_eventsequence().extend(domInput);
+        InputSequence* newInputSequence = oldConfiguration->get_eventsequence()->copy();
+        newInputSequence->extend(domInput);
 
-        ExecutableConfiguration newConfiguration(newInputSequence, oldConfiguration.starting_url());
+        ExecutableConfiguration* newConfiguration = new ExecutableConfiguration(0, newInputSequence, oldConfiguration->starting_url());
 
         wl.add(newConfiguration,
             artemis_options->prioritizer().prioritize(newConfiguration, result, exe_state));
@@ -232,10 +235,13 @@ void RandomInputGenerator::insert_extended(const ExecutableConfiguration& oldCon
     }
 
     foreach (const Timer timer, result.get_timers()) {
-        TimerInput* new_input = new TimerInput(timer);
+        TimerInput* new_input = new TimerInput(0, timer);
 
-        ExecutableConfiguration new_conf(oldConfiguration.get_eventsequence().extend(new_input),
-            oldConfiguration.starting_url());
+        InputSequence* new_seq = oldConfiguration->get_eventsequence()->copy();
+        new_seq->extend(new_input);
+
+        ExecutableConfiguration* new_conf = new ExecutableConfiguration(0, new_seq, oldConfiguration->starting_url());
+
         wl.add(new_conf,
             artemis_options->prioritizer().prioritize(new_conf, result, exe_state));
     }

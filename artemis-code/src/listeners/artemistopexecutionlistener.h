@@ -14,8 +14,8 @@ namespace artemis {
     public:
         ArtemisTopExecutionListener();
         virtual void artemis_start(const QUrl& url);
-        virtual void before_execute(const ExecutableConfiguration& conf, ExecutorState* exe_state);
-        virtual void executed(const ExecutableConfiguration& conf, ExecutorState* exe_state, const ExecutionResult& result);
+        virtual void before_execute(ExecutableConfiguration* conf, ExecutorState* exe_state);
+        virtual void executed(ExecutableConfiguration* conf, ExecutorState* exe_state, const ExecutionResult& result);
         virtual void loaded_page(const ArtemisWebPage& page, ExecutorState* exe_state);
         virtual void script_crash(QString cause, ExecutorState* exe_state);
         virtual void artemis_finished(ExecutorState* exe_state);

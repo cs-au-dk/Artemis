@@ -37,11 +37,11 @@ namespace artemis {
         largest_pri = 0;
     }
 
-    void DeterministicWorkList::add(const ExecutableConfiguration e, int priority) {
-        QSet<ExecutableConfiguration> *set = queue.value(priority);
+    void DeterministicWorkList::add(ExecutableConfiguration* e, int priority) {
+        QSet<ExecutableConfiguration*>* set = queue.value(priority);
 
-        if (set == 0) {
-            set = new QSet<ExecutableConfiguration>();
+        if (set == NULL) {
+            set = new QSet<ExecutableConfiguration*>();
             queue.insert(priority,set);
         }
         set->insert(e);
@@ -50,13 +50,13 @@ namespace artemis {
         }
     }
 
-    ExecutableConfiguration DeterministicWorkList::remove() {
-        QSet<ExecutableConfiguration> *set = queue.value(largest_pri);
+    ExecutableConfiguration* DeterministicWorkList::remove() {
+        QSet<ExecutableConfiguration*>* set = queue.value(largest_pri);
         if (set == 0)
             qDebug() << "PANIC!";
         Q_CHECK_PTR(set);
         Q_ASSERT(!set->isEmpty());
-        ExecutableConfiguration res = set->toList().at(rand() % set->size());
+        ExecutableConfiguration* res = set->toList().at(rand() % set->size());
         set->remove(res);
         if (set->isEmpty()) {
             queue.remove(largest_pri);
@@ -82,7 +82,7 @@ namespace artemis {
         return queue.empty();
     }
 
-     bool DeterministicWorkList::contains(const ExecutableConfiguration& e) {
+     bool DeterministicWorkList::contains(ExecutableConfiguration* e) {
          foreach (int k, queue.keys()) {
              if (queue.value(k)->contains(e))
                  return true;
@@ -90,7 +90,7 @@ namespace artemis {
          return false;
      }
 
-    void DeterministicWorkList::new_priority(const ExecutableConfiguration& e, int priority) {
+    void DeterministicWorkList::new_priority(ExecutableConfiguration* e, int priority) {
         foreach (int k, queue.keys()) {
             if (queue.value(k)->contains(e)) {
                 queue.value(k)->remove(e);

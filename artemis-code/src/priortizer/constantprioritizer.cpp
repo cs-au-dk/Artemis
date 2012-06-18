@@ -34,7 +34,7 @@ namespace artemis {
     {
     }
 
-    double ConstantPrioritizer::prioritize(const ExecutableConfiguration& new_conf,
+    double ConstantPrioritizer::prioritize(ExecutableConfiguration* new_conf,
                                          const ExecutionResult& results, ExecutorState& state) {
         AbstractPrioritizer::prioritize(new_conf,results,state);
 

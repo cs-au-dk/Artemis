@@ -11,8 +11,8 @@ class MultiplexListener : public ArtemisTopExecutionListener
 {
 public:
     MultiplexListener(int number_of_listners, ...);
-    void before_execute(const ExecutableConfiguration& conf, ExecutorState* exe_state);
-    void executed(const ExecutableConfiguration& conf, ExecutorState* exe_state, const ExecutionResult& result);
+    void before_execute(ExecutableConfiguration* conf, ExecutorState* exe_state);
+    void executed(ExecutableConfiguration* conf, ExecutorState* exe_state, const ExecutionResult& result);
     void loaded_page(const ArtemisWebPage& page, ExecutorState* exe_state);
     void script_crash(QString cause, ExecutorState* exe_state);
     void artemis_finished(ExecutorState* exe_state);
