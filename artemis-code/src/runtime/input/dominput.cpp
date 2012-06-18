@@ -28,7 +28,7 @@
 
 #include "artemisglobals.h"
 
-#include "input/dominput.h"
+#include "runtime/input/dominput.h"
 
 namespace artemis
 {

@@ -36,7 +36,7 @@
 #include <qajaxcallbackhandler.h>
 
 #include "events/eventhandlerdescriptor.h"
-#include "browser/timer.h"
+#include "runtime/browser/timer.h"
 #include "artemisglobals.h"
 #include "ajax/ajaxrequest.h"
 #include "artemiswebpage.h"

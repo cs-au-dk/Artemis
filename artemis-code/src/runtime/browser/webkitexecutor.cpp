@@ -41,7 +41,7 @@
 #include "events/forms/formfield.h"
 #include "events/domelementdescriptor.h"
 #include "strategies/inputgenerator/targets/jquerylistener.h"
-#include "input/baseinput.h"
+#include "runtime/input/baseinput.h"
 
 #include "webkitexecutor.h"
 

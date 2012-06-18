@@ -28,7 +28,7 @@
 #ifndef TIMERINPUT_H
 #define TIMERINPUT_H
 
-#include "browser/timer.h"
+#include "runtime/browser/timer.h"
 
 #include "baseinput.h"
 

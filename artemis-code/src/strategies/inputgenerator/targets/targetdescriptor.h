@@ -32,7 +32,7 @@
 
 #include "events/eventhandlerdescriptor.h"
 
-#include "artemiswebpage.h"
+#include "runtime/browser/artemiswebpage.h"
 
 namespace artemis {
 

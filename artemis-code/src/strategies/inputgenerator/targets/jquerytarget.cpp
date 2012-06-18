@@ -30,7 +30,7 @@
 #include <QList>
 
 #include "events/eventhandlerdescriptor.h"
-#include "inputgenerator/targets/jquerylistener.h"
+#include "strategies/inputgenerator/targets/jquerylistener.h"
 #include "util/randomutil.h"
 
 #include "jquerytarget.h"

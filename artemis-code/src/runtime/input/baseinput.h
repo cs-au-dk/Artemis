@@ -31,7 +31,7 @@
 #include <QObject>
 #include <QtWebKit/qwebexecutionlistener.h>
 
-#include "artemiswebpage.h"
+#include "runtime/browser/artemiswebpage.h"
 
 namespace artemis
 {

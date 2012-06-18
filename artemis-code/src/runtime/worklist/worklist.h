@@ -31,7 +31,7 @@
 #include <QObject>
 #include <QString>
 
-#include <executableconfiguration.h>
+#include "runtime/executableconfiguration.h"
 
 namespace artemis {
     // TODO move to QObject memory management

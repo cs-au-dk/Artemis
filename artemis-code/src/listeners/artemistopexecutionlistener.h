@@ -3,9 +3,9 @@
 
 #include <QtWebKit>
 
-#include "executableconfiguration.h"
-#include "executionresult.h"
-#include "artemiswebpage.h"
+#include "runtime/executableconfiguration.h"
+#include "runtime/browser/executionresult.h"
+#include "runtime/browser/artemiswebpage.h"
 
 namespace artemis {
 

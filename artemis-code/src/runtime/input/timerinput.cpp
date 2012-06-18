@@ -30,7 +30,7 @@
 
 #include "statistics/statsstorage.h"
 
-#include "input/timerinput.h"
+#include "runtime/input/timerinput.h"
 
 using namespace std;
 

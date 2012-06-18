@@ -31,7 +31,7 @@
 #include <QNetworkProxy>
 #include <QStringList>
 
-#include "worklist/deterministicworklist.h"
+#include "runtime/worklist/deterministicworklist.h"
 #include "strategies/termination/numberofiterationstermination.h"
 #include "events/eventhandlerdescriptor.h"
 #include "priortizer/constantprioritizer.h"
@@ -42,7 +42,7 @@
 #include "strategies/inputgenerator/targets/jquerytarget.h"
 #include "strategies/inputgenerator/inputgeneratorstrategy.h"
 #include "strategies/inputgenerator/randominputgenerator.h"
-#include "executableconfiguration.h"
+#include "runtime/executableconfiguration.h"
 
 #include "artemisoptions.h"
 

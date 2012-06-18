@@ -31,7 +31,8 @@
 #include <QObject>
 #include <QUrl>
 #include <QSettings>
-#include <worklist/worklist.h>
+
+#include "runtime/worklist/worklist.h"
 #include "strategies/termination/terminationstrategy.h"
 #include "priortizer/abstractprioritizer.h"
 #include "listeners/artemistopexecutionlistener.h"
