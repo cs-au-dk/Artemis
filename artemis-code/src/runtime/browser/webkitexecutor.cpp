@@ -35,11 +35,11 @@
 #include <QDebug>
 #include <qwebexecutionlistener.h>
 #include <qajaxcallbackhandler.h>
-#include <cookies/immutablecookiejar.h>
+#include <runtime/browser/cookies/immutablecookiejar.h>
 #include <instrumentation/executionlistener.h>
 
-#include "events/forms/formfield.h"
-#include "events/domelementdescriptor.h"
+#include "runtime/events/forms/formfield.h"
+#include "runtime/events/domelementdescriptor.h"
 #include "strategies/inputgenerator/targets/jquerylistener.h"
 #include "runtime/input/baseinput.h"
 

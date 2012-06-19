@@ -32,7 +32,7 @@
 #include <QUrl>
 
 #include "input/inputsequence.h"
-#include "events/forms/forminput.h"
+#include "runtime/events/forms/forminput.h"
 
 namespace artemis {
 

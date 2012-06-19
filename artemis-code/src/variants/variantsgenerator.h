@@ -28,10 +28,10 @@
 #ifndef VARIANTSGENERATOR_H
 #define VARIANTSGENERATOR_H
 
-#include "events/baseeventparameters.h"
-#include "events/keyboardeventparameters.h"
-#include "events/mouseeventparameters.h"
-#include "events/forms/formfield.h"
+#include "runtime/events/baseeventparameters.h"
+#include "runtime/events/keyboardeventparameters.h"
+#include "runtime/events/mouseeventparameters.h"
+#include "runtime/events/forms/formfield.h"
 
 namespace artemis {
 

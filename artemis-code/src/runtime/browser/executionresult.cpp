@@ -27,7 +27,7 @@
  */
 #include <iostream>
 
-#include "events/eventypes.h"
+#include "runtime/events/eventypes.h"
 #include "statistics/statsstorage.h"
 
 #include "executionresult.h"

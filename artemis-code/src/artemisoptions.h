@@ -38,7 +38,7 @@
 #include "listeners/artemistopexecutionlistener.h"
 #include "listeners/multiplexlistener.h"
 #include "strategies/inputgenerator/targets/targetdescriptor.h"
-#include "events/eventhandlerdescriptor.h"
+#include "runtime/events/eventhandlerdescriptor.h"
 #include "strategies/inputgenerator/targets/jquerylistener.h"
 
 namespace artemis {

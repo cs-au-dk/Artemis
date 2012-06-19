@@ -17,7 +17,21 @@ QMAKE_CXXFLAGS += -g \
 DEFINES += ARTEMIS=1
 
 # Input
-HEADERS += src/strategies/priortizer/prioritizerstrategy.h \
+HEADERS += src/runtime/ajax/ajaxrequest.h \
+    src/runtime/ajax/ajaxrequestlistener.h \
+    src/runtime/browser/cookies/immutablecookiejar.h \
+    src/runtime/events/baseeventparameters.h \
+    src/runtime/events/domelementdescriptor.h \
+    src/runtime/events/eventhandlerdescriptor.h \
+    src/runtime/events/eventparameters.h \
+    src/runtime/events/eventypes.h \
+    src/runtime/events/forms/formfield.h \
+    src/runtime/events/forms/formfieldtypes.h \
+    src/runtime/events/forms/formfieldvalue.h \
+    src/runtime/events/forms/forminput.h \
+    src/runtime/events/keyboardeventparameters.h \
+    src/runtime/events/mouseeventparameters.h \
+    src/strategies/priortizer/prioritizerstrategy.h \
     src/strategies/priortizer/constantprioritizer.h \
     src/strategies/priortizer/randomprioritizer.h \
     src/runtime/browser/artemiswebpage.h \
@@ -42,21 +56,10 @@ HEADERS += src/strategies/priortizer/prioritizerstrategy.h \
     src/strategies/inputgenerator/targets/targetdescriptor.h \
     src/runtime/runtime.h \
     src/artemisoptions.h \
-    src/events/forms/forminput.h \
     src/artemisapplication.h \
-    src/events/domelementdescriptor.h \
-    src/events/eventhandlerdescriptor.h \
     src/artemisglobals.h \
-    src/events/forms/formfieldtypes.h \
-    src/events/forms/formfield.h \
-    src/events/eventparameters.h \
-    src/events/eventypes.h \
-    src/events/baseeventparameters.h \
-    src/events/mouseeventparameters.h \
-    src/events/keyboardeventparameters.h \
     src/variants/randomvariants.h \
     src/variants/variantsgenerator.h \
-    src/events/forms/formfieldvalue.h \
     src/util/randomutil.h \
     src/exceptionhandlingqapp.h \
     src/coverage/codecoverage.h \
@@ -70,14 +73,24 @@ HEADERS += src/strategies/priortizer/prioritizerstrategy.h \
     src/listeners/multiplexlistener.h \
     src/util/fileutil.h \
     src/util/urlutil.h \
-    src/ajax/ajaxrequestlistener.h \
-    src/ajax/ajaxrequest.h \
     src/listeners/pagerecreatelistner.h \
     src/listeners/sourceloadinglistener.h \
-    src/cookies/immutablecookiejar.h \
     src/statistics/statsstorage.h \
     src/statistics/writers/pretty.h
-SOURCES += src/strategies/priortizer/constantprioritizer.cpp \
+SOURCES += src/runtime/ajax/ajaxrequest.cpp \
+    src/runtime/ajax/ajaxrequestlistener.cpp \
+    src/runtime/browser/cookies/immutablecookiejar.cpp \
+    src/runtime/events/baseeventparameters.cpp \
+    src/runtime/events/domelementdescriptor.cpp \
+    src/runtime/events/eventhandlerdescriptor.cpp \
+    src/runtime/events/eventparameters.cpp \
+    src/runtime/events/eventtypes.cpp \
+    src/runtime/events/forms/formfield.cpp \
+    src/runtime/events/forms/formfieldvalue.cpp \
+    src/runtime/events/forms/forminput.cpp \
+    src/runtime/events/keyboardeventparameters.cpp \
+    src/runtime/events/mouseeventparameters.cpp \
+    src/strategies/priortizer/constantprioritizer.cpp \
     src/strategies/priortizer/randomprioritizer.cpp \
     src/runtime/browser/artemiswebpage.cpp \
     src/runtime/executableconfiguration.cpp \
@@ -100,19 +113,9 @@ SOURCES += src/strategies/priortizer/constantprioritizer.cpp \
     src/runtime/runtime.cpp \
     src/artemis.cpp \
     src/artemisoptions.cpp \
-    src/events/forms/forminput.cpp \
     src/artemisapplication.cpp \
-    src/events/domelementdescriptor.cpp \
-    src/events/eventhandlerdescriptor.cpp \
-    src/events/forms/formfield.cpp \
-    src/events/eventparameters.cpp \
-    src/events/baseeventparameters.cpp \
-    src/events/eventtypes.cpp \
-    src/events/mouseeventparameters.cpp \
-    src/events/keyboardeventparameters.cpp \
     src/variants/randomvariants.cpp \
     src/variants/variantsgenerator.cpp \
-    src/events/forms/formfieldvalue.cpp \
     src/util/randomutil.cpp \
     src/exceptionhandlingqapp.cpp \
     src/coverage/codecoverage.cpp \
@@ -126,11 +129,8 @@ SOURCES += src/strategies/priortizer/constantprioritizer.cpp \
     src/listeners/multiplexlistener.cpp \
     src/util/fileutil.cpp \
     src/util/urlutil.cpp \
-    src/ajax/ajaxrequestlistener.cpp \
-    src/ajax/ajaxrequest.cpp \
     src/listeners/pagerecreatelistner.cpp \
     src/listeners/sourceloadinglistener.cpp \
-    src/cookies/immutablecookiejar.cpp \
     src/statistics/statsstorage.cpp \
     src/statistics/writers/pretty.cpp
 QT += network

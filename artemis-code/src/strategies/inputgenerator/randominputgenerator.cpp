@@ -28,9 +28,9 @@
 #include <assert.h>
 #include <typeinfo>
 
-#include "events/eventypes.h"
+#include "runtime/events/eventypes.h"
 #include "variants/randomvariants.h"
-#include "events/forms/forminput.h"
+#include "runtime/events/forms/forminput.h"
 #include "runtime/input/baseinput.h"
 #include "runtime/input/dominput.h"
 #include "runtime/input/timerinput.h"

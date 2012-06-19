@@ -29,7 +29,7 @@
 #include <QWebElement>
 #include <QList>
 
-#include "events/eventhandlerdescriptor.h"
+#include "runtime/events/eventhandlerdescriptor.h"
 #include "strategies/inputgenerator/targets/jquerylistener.h"
 #include "util/randomutil.h"
 
