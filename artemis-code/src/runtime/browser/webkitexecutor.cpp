@@ -35,7 +35,6 @@
 #include <QDebug>
 #include <qwebexecutionlistener.h>
 #include <qajaxcallbackhandler.h>
-#include <runtime/browser/cookies/immutablecookiejar.h>
 #include <instrumentation/executionlistener.h>
 
 #include "runtime/events/forms/formfield.h"
@@ -49,22 +48,26 @@ using namespace std;
 
 namespace artemis {
 
-    WebKitExecutor::WebKitExecutor(QObject *parent, ArtemisOptions* options, ArtemisTopExecutionListener* listener) :
+    WebKitExecutor::WebKitExecutor(QObject *parent,
+    		QMap<QString,QString> presetFields,
+    		ArtemisTopExecutionListener* listener,
+    		JQueryListener* jqueryListener,
+    		AjaxRequestListener* ajaxListener) :
             QObject(parent)
     {
-        artemis_options = options;
-        execution_listener = listener;
-        current_result = 0;
+    	current_result = NULL;
 
-        jquery = options->get_jquery_listener();
+    	execution_listener = listener;
+        mPresetFields = presetFields;
+        mJquery = jqueryListener;
+
+        ajax_listener = ajaxListener;
+        ajax_listener->setParent(this);
 
         cov_list = new CoverageListener(this);
 
         webkit_listener = new QWebExecutionListener();
         webkit_listener->installWebKitExecutionListener(webkit_listener);
-
-        ImmutableCookieJar *immutable_cookie_jar = new ImmutableCookieJar(options->get_preset_cookies(), options->getURL()->host());
-        ajax_listener.setCookieJar(immutable_cookie_jar);
 
         QObject::connect(webkit_listener, SIGNAL(script_crash(QString, intptr_t, int)),
                          this, SLOT(sl_script_crash(QString, intptr_t, int)));
@@ -74,7 +77,7 @@ namespace artemis {
                          this, SLOT(sl_code_loaded(intptr_t, QString, QUrl, int)));
         
         QObject::connect(webkit_listener, SIGNAL(jqueryEventAdded(QString, QString, QString)),
-                         jquery, SLOT(sl_event_added(QString, QString, QString)));
+                         mJquery, SLOT(sl_event_added(QString, QString, QString)));
 
         QObject::connect(webkit_listener, SIGNAL(loadedJavaScript(intptr_t, QString, QUrl, int)),
                          cov_list, SLOT(new_code(intptr_t, QString, QUrl, int)));
@@ -83,7 +86,7 @@ namespace artemis {
 
 
         page = new ArtemisWebPage(this);
-        page->setNetworkAccessManager(&ajax_listener);
+        page->setNetworkAccessManager(ajax_listener);
 
         QObject::connect(page, SIGNAL(loadFinished(bool)),
                          this, SLOT(sl_loadFinished(bool)));
@@ -129,14 +132,13 @@ namespace artemis {
         this->initial_page_state = page->mainFrame()->toHtml();
 
         //Set preset formfields
-        QMap<QString,QString> fields = artemis_options->get_preset_fields();
-        foreach (QString f , fields.keys()) {
+        foreach (QString f , mPresetFields.keys()) {
             QWebElement elm = page->mainFrame()->findFirstElement(f);
             if (elm.isNull())
                 continue;
 
-            qDebug() << "Setting value " << fields[f] << "for element " << f << endl;
-            elm.setAttribute("value",fields[f]);
+            qDebug() << "Setting value " << mPresetFields[f] << "for element " << f << endl;
+            elm.setAttribute("value", mPresetFields[f]);
         }
 
     }
@@ -275,7 +277,7 @@ namespace artemis {
         current_result = new ExecutionResult(0);
         current_conf = conf;
 
-        jquery->reset();
+        mJquery->reset();
 
         QObject::connect(webkit_listener, SIGNAL(addedEventListener(QWebElement*,QString)),
                             current_result, SLOT(newEventListener(QWebElement*,QString)));
@@ -298,8 +300,8 @@ namespace artemis {
                             current_result, SLOT(add_url(QUrl)));
 
         //Load URL into WebKit
-        qDebug() << "Trying to load: " << artemis_options->getURL()->toString() << endl;
-        page->mainFrame()->load(*artemis_options->getURL());
+        qDebug() << "Trying to load: " << current_conf->starting_url().toString() << endl;
+        page->mainFrame()->load(current_conf->starting_url());
 
         //Set signal on all subframes:
         QStack<QWebFrame*> work;

@@ -34,20 +34,27 @@
 namespace artemis
 {
 
-Runtime::Runtime(QObject* parent, ArtemisOptions* options, InputGeneratorStrategy* inputgenerator, PrioritizerStrategy* prioritizer) :
+Runtime::Runtime(QObject* parent,
+		WebKitExecutor* webkitExecutor,
+		InputGeneratorStrategy* inputgenerator,
+		PrioritizerStrategy* prioritizer,
+		TerminationStrategy* termination,
+		ArtemisTopExecutionListener* listener) :
     QObject(parent)
 {
     mInputgenerator = inputgenerator;
-    mWorklist = options->work_list();
-    mOptions = options;
+    mWorklist = new DeterministicWorkList();
 
-    mTerminationStrategy = options->termination();
+    mTerminationStrategy = termination;
     mTerminationStrategy->setParent(this);
 
     mPrioritizerStrategy = prioritizer;
     mPrioritizerStrategy->setParent(this);
 
-    mWebkitExecutor = new WebKitExecutor(this, options, options->get_listner());
+    mListener = listener;
+
+    mWebkitExecutor = webkitExecutor;
+    mWebkitExecutor->setParent(this);
 
     QObject::connect(mWebkitExecutor,
         SIGNAL(sigExecutedSequence(ExecutableConfiguration*, ExecutionResult)), this,
@@ -59,16 +66,19 @@ Runtime::~Runtime()
     delete mWorklist;
 }
 
-void Runtime::start()
+void Runtime::start(QUrl url)
 {
-    mOptions->get_listner()->artemis_start(*mOptions->getURL());
+    mListener->artemis_start(url);
 
-    mWebkitExecutor->executeSequence(mOptions->initial_configuration());
+    // TODO remove this memory leak
+    ExecutableConfiguration* initialConfiguration = new ExecutableConfiguration(0, new InputSequence(0), url);
+
+    mWebkitExecutor->executeSequence(initialConfiguration);
 }
 
 void Runtime::slExecutedSequence(ExecutableConfiguration* configuration, ExecutionResult result)
 {
-    mOptions->get_listner()->executed(configuration, result);
+    mListener->executed(configuration, result);
 
     foreach (QUrl u, result.urls()) {
         mUrls.add_url(u);
@@ -96,14 +106,15 @@ void Runtime::slExecutedSequence(ExecutableConfiguration* configuration, Executi
     }
 
     //Start next iteration
+    // TODO remove this memory leak
     ExecutableConfiguration* new_conf = mWorklist->remove();
 
-    mOptions->get_listner()->before_execute(new_conf);
+    mListener->before_execute(new_conf);
     mWebkitExecutor->executeSequence(new_conf);
 }
 
 void Runtime::finish_up() {
-    mOptions->get_listner()->artemis_finished();
+    mListener->artemis_finished();
 
     mWebkitExecutor->finish_up();
 

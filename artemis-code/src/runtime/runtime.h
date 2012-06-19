@@ -30,6 +30,9 @@
 #define RUNTIME_H_
 
 #include <QObject>
+#include <QUrl>
+
+#include "listeners/artemistopexecutionlistener.h"
 
 #include "strategies/inputgenerator/inputgeneratorstrategy.h"
 #include "strategies/termination/terminationstrategy.h"
@@ -48,10 +51,15 @@ class Runtime : public QObject
 Q_OBJECT
 
 public:
-    Runtime(QObject* parent, ArtemisOptions* options, InputGeneratorStrategy* inputgenerator, PrioritizerStrategy* prioritizer);
+    Runtime(QObject* parent,
+    		WebKitExecutor* webkitExecutor,
+    		InputGeneratorStrategy* inputgenerator,
+    		PrioritizerStrategy* prioritizer,
+    		TerminationStrategy* termination,
+    		ArtemisTopExecutionListener* listener);
     virtual ~Runtime();
 
-    void start();
+    void start(QUrl start);
     URLCollector urlsCollected();
     CodeCoverage coverage();
 
@@ -65,7 +73,8 @@ private:
     PrioritizerStrategy* mPrioritizerStrategy;
     InputGeneratorStrategy* mInputgenerator;
 
-    ArtemisOptions* mOptions;
+    ArtemisTopExecutionListener* mListener;
+
     URLCollector mUrls;
 
 private slots:
