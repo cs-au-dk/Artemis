@@ -28,8 +28,8 @@
 #ifndef RANDOMVARIANTS_H
 #define RANDOMVARIANTS_H
 
-#include "variantsgenerator.h"
 #include "artemisoptions.h"
+#include "variantsgenerator.h"
 
 namespace artemis {
 
@@ -37,13 +37,11 @@ namespace artemis {
     {
     public:
 
-        RandomVariants(ArtemisOptions* options);
+        RandomVariants();
 
-         BaseEventParameters generate_base_event(QString type);
-         KeyboardEventParameters generate_keyboard_event(QString type);
-         MouseEventParameters generate_mouse_event(QString type);
-
+        EventParameters* generate_event_parameters(EventHandlerDescriptor eventHandler);
         FormInput generate_form_fields(const QSet<FormField>& fi);
+
     private:
         ArtemisOptions* opts;
     };

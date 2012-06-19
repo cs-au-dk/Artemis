@@ -44,7 +44,7 @@ RandomInputGenerator::RandomInputGenerator(QObject *parent, ArtemisOptions* opti
     InputGeneratorStrategy(parent, options)
 {
     Q_CHECK_PTR(options);
-    this->var_gen = new RandomVariants(options);
+    this->var_gen = new RandomVariants();
 }
 
 RandomInputGenerator::~RandomInputGenerator()
@@ -92,24 +92,9 @@ QList<ExecutableConfiguration*> RandomInputGenerator::insert_same_length(const E
 
 BaseInput *RandomInputGenerator::permutate_input(const DomInput *input)
 {
-    EventParameters* new_params = 0;
-    EventParameters* old_params = input->event_params();
+    EventParameters* new_params = var_gen->generate_event_parameters(input->getEventHandler());
 
-    //Event parameters
-    if (old_params->type() == BASE_EVENT) {
-        BaseEventParameters bp = var_gen->generate_base_event(input->getEventHandler().name());
-        new_params = new BaseEventParameters(bp);
-    }
-    else if (old_params->type() == MOUSE_EVENT) {
-        MouseEventParameters mp = var_gen->generate_mouse_event(input->getEventHandler().name());
-        new_params = new MouseEventParameters(mp);
-    }
-    else if (old_params->type() == KEY_EVENT) {
-        KeyboardEventParameters kp = var_gen->generate_keyboard_event(
-            input->getEventHandler().name());
-        new_params = new KeyboardEventParameters(kp);
-    }
-    else {
+    if (new_params == NULL) {
         qFatal("Unknown event type!");
         assert(false);
     }
@@ -140,8 +125,12 @@ QList<ExecutableConfiguration*> RandomInputGenerator::insert_extended(const Exec
     QList<ExecutableConfiguration*> newConfigurations;
 
     foreach (EventHandlerDescriptor ee, result.event_handlers()) {
-        EventParameters* new_params = 0;
-        EventType tt = get_type(ee.name());
+        EventParameters* new_params = var_gen->generate_event_parameters(ee);
+
+        if (new_params == NULL) {
+            qFatal("Unknown event type!");
+            assert(false);
+        }
 
         // TODO remove
 
@@ -197,25 +186,6 @@ QList<ExecutableConfiguration*> RandomInputGenerator::insert_extended(const Exec
         // }
 
         // elfinder specific filtering END
-
-        //Event parameters
-        if (tt == BASE_EVENT) {
-            new_params = new BaseEventParameters(var_gen->generate_base_event(ee.name()));
-        }
-        else if (tt == MOUSE_EVENT) {
-            new_params = new MouseEventParameters(var_gen->generate_mouse_event(ee.name()));
-        }
-        else if (tt == KEY_EVENT) {
-            new_params = new KeyboardEventParameters(var_gen->generate_keyboard_event(ee.name()));
-        }
-        else if (tt == TOUCH_EVENT) {
-            qDebug() << "TODO: Support touch events";
-            continue;
-        }
-        else if (tt == UNKNOWN_EVENT) {
-            qDebug() << "TODO: Support event: " << ee.name();
-            continue;
-        }
 
         //Form fields
         QSet<FormField> fd = result.form_fields();

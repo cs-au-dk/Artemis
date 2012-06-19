@@ -28,9 +28,8 @@
 #ifndef VARIANTSGENERATOR_H
 #define VARIANTSGENERATOR_H
 
-#include "runtime/events/baseeventparameters.h"
-#include "runtime/events/keyboardeventparameters.h"
-#include "runtime/events/mouseeventparameters.h"
+#include "runtime/events/eventparameters.h"
+#include "runtime/events/eventhandlerdescriptor.h"
 #include "runtime/events/forms/formfield.h"
 
 namespace artemis {
@@ -38,12 +37,9 @@ namespace artemis {
 class VariantsGenerator
 {
 public:
-    VariantsGenerator();
+    VariantsGenerator() {};
 
-    virtual BaseEventParameters generate_base_event(QString type) = 0;
-    virtual KeyboardEventParameters generate_keyboard_event(QString type) = 0;
-    virtual MouseEventParameters generate_mouse_event(QString type) = 0;
-
+    virtual EventParameters* generate_event_parameters(EventHandlerDescriptor eventHandler) = 0;
     virtual FormInput generate_form_fields(const QSet<FormField>&) = 0;
 
     virtual ~VariantsGenerator() {};

@@ -17,7 +17,9 @@ QMAKE_CXXFLAGS += -g \
 DEFINES += ARTEMIS=1
 
 # Input
-HEADERS += src/runtime/ajax/ajaxrequest.h \
+HEADERS += src/strategies/inputgenerator/variants/randomvariants.h \
+    src/strategies/inputgenerator/variants/variantsgenerator.h \
+    src/runtime/ajax/ajaxrequest.h \
     src/runtime/ajax/ajaxrequestlistener.h \
     src/runtime/browser/cookies/immutablecookiejar.h \
     src/runtime/events/baseeventparameters.h \
@@ -58,8 +60,6 @@ HEADERS += src/runtime/ajax/ajaxrequest.h \
     src/artemisoptions.h \
     src/artemisapplication.h \
     src/artemisglobals.h \
-    src/variants/randomvariants.h \
-    src/variants/variantsgenerator.h \
     src/util/randomutil.h \
     src/exceptionhandlingqapp.h \
     src/coverage/codecoverage.h \
@@ -77,7 +77,8 @@ HEADERS += src/runtime/ajax/ajaxrequest.h \
     src/listeners/sourceloadinglistener.h \
     src/statistics/statsstorage.h \
     src/statistics/writers/pretty.h
-SOURCES += src/runtime/ajax/ajaxrequest.cpp \
+SOURCES += src/strategies/inputgenerator/variants/randomvariants.cpp \
+    src/runtime/ajax/ajaxrequest.cpp \
     src/runtime/ajax/ajaxrequestlistener.cpp \
     src/runtime/browser/cookies/immutablecookiejar.cpp \
     src/runtime/events/baseeventparameters.cpp \
@@ -114,8 +115,6 @@ SOURCES += src/runtime/ajax/ajaxrequest.cpp \
     src/artemis.cpp \
     src/artemisoptions.cpp \
     src/artemisapplication.cpp \
-    src/variants/randomvariants.cpp \
-    src/variants/variantsgenerator.cpp \
     src/util/randomutil.cpp \
     src/exceptionhandlingqapp.cpp \
     src/coverage/codecoverage.cpp \

@@ -31,6 +31,8 @@
 #include <QObject>
 #include <QString>
 #include <QtWebKit>
+
+#include "runtime/events/eventypes.h"
 #include "domelementdescriptor.h"
 #include "forms/formfield.h"
 
@@ -47,6 +49,7 @@ namespace artemis {
        QString name();
        DOMElementDescriptor dom_element();
        bool is_invalid();
+       EventType getEventType() const;
 
        bool operator==(const EventHandlerDescriptor& other) const;
        EventHandlerDescriptor &operator=(const EventHandlerDescriptor &other);
