@@ -34,7 +34,6 @@
 #include <QtWebKit>
 #include <QtWebKit/qwebexecutionlistener.h>
 
-#include "artemisoptions.h"
 #include "artemisglobals.h"
 #include "executionresult.h"
 #include "artemiswebpage.h"
@@ -42,6 +41,7 @@
 #include "coverage/coveragelistener.h"
 #include "listeners/artemistopexecutionlistener.h"
 #include "runtime/ajax/ajaxrequestlistener.h"
+#include "strategies/inputgenerator/targets/jquerylistener.h"
 
 #include "runtime/browser/webkitwrapper.h"
 
@@ -51,7 +51,11 @@ namespace artemis {
     {
         Q_OBJECT
     public:
-        explicit WebKitExecutor(QObject *parent = 0, ArtemisOptions* options = 0, ArtemisTopExecutionListener* listener = 0);
+        WebKitExecutor(QObject *parent,
+        		QMap<QString,QString> presetFields,
+        		ArtemisTopExecutionListener* listener,
+        		JQueryListener* jqueryListener,
+        		AjaxRequestListener* ajaxListener);
         ~WebKitExecutor();
         void executeSequence(ExecutableConfiguration* conf);
         QWebExecutionListener* webkit_listener;
@@ -70,15 +74,15 @@ namespace artemis {
         void setup_initial();
         void save_dom_state();
 
-        ArtemisOptions* artemis_options;
         ArtemisWebPage* page;
         ExecutionResult* current_result;
         ExecutableConfiguration* current_conf;
         CoverageListener* cov_list;
         QString initial_page_state;
         ArtemisTopExecutionListener* execution_listener;
-        AjaxRequestListener ajax_listener;
-        JQueryListener* jquery;
+        AjaxRequestListener* ajax_listener;
+        JQueryListener* mJquery;
+        QMap<QString,QString> mPresetFields;
 
         WebKitWrapper* mWebkitWrapper;
 
