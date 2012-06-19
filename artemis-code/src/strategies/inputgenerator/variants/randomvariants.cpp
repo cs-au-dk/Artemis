@@ -27,50 +27,62 @@
 */
 #include <util/randomutil.h>
 
+#include "runtime/events/baseeventparameters.h"
+#include "runtime/events/keyboardeventparameters.h"
+#include "runtime/events/mouseeventparameters.h"
 #include "runtime/events/forms/formfieldtypes.h"
 
 #include "randomvariants.h"
 
 namespace artemis {
 
-    RandomVariants::RandomVariants(ArtemisOptions* options) {
-        Q_CHECK_PTR(options);
-        this->opts = options;
+	RandomVariants::RandomVariants() : VariantsGenerator() {
+
     }
 
-    BaseEventParameters RandomVariants::generate_base_event(QString type) {
-        return BaseEventParameters(type,true,true);
-    }
+    EventParameters* RandomVariants::generate_event_parameters(EventHandlerDescriptor eventHandler) {
 
-    KeyboardEventParameters RandomVariants::generate_keyboard_event(QString type) {
-        KeyboardEventParameters res(type,
-                                    true,
-                                    true,
-                                    QString("a"),
-                                    0,
-                                    false,
-                                    false,
-                                    false,
-                                    false,
-                                    false);
-        return res;
-    }
+    	switch (eventHandler.getEventType()) {
 
-    MouseEventParameters RandomVariants::generate_mouse_event(QString type) {
-        MouseEventParameters res(type,
-                                 true,
-                                 true,
-                                 1,
-                                 0,
-                                 0,
-                                 0,
-                                 0,
-                                 false,
-                                 false,
-                                 false,
-                                 false,
-                                 0);
-        return res;
+    	case BASE_EVENT:
+    		return new BaseEventParameters(eventHandler.name(),true,true);
+    		break;
+
+    	case MOUSE_EVENT:
+    		return new MouseEventParameters(eventHandler.name(),
+                    true,
+                    true,
+                    1,
+                    0,
+                    0,
+                    0,
+                    0,
+                    false,
+                    false,
+                    false,
+                    false,
+                    0);
+    		break;
+
+    	case KEY_EVENT:
+    		return new KeyboardEventParameters(eventHandler.name(),
+                    true,
+                    true,
+                    QString("a"),
+                    0,
+                    false,
+                    false,
+                    false,
+                    false,
+                    false);
+    		break;
+
+    	default:
+    		break;
+
+    	}
+
+    	return NULL;
     }
 
     FormInput RandomVariants::generate_form_fields(const QSet<FormField>& fi) {

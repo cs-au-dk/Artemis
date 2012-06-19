@@ -52,6 +52,10 @@ namespace artemis {
         return *element;
     }
 
+    EventType EventHandlerDescriptor::getEventType() const {
+    	return get_type(event_name);
+    }
+
     bool EventHandlerDescriptor::operator==(const EventHandlerDescriptor& other) const{
         return (event_name == other.event_name) && (element == other.element);
     }
