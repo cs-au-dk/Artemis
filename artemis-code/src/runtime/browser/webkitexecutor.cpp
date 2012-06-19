@@ -144,9 +144,6 @@ namespace artemis {
     void WebKitExecutor::do_exe() {
         InputSequence* seq = current_conf->get_eventsequence();
     
-        // ELfinder addition, ensure that we have one file selected
-        //this->page->currentFrame()->evaluateJavaScript("$($(\".elfinder-cwd-file\")[0]).click()");
-
         foreach (BaseInput* input, seq->toList()) {
             qDebug() << "APPLY!" << endl;
             input->apply(this->page, this->webkit_listener);
