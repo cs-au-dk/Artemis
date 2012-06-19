@@ -41,7 +41,7 @@
 #include "runtime/executableconfiguration.h"
 #include "coverage/coveragelistener.h"
 #include "listeners/artemistopexecutionlistener.h"
-#include "ajax/ajaxrequestlistener.h"
+#include "runtime/ajax/ajaxrequestlistener.h"
 
 #include "runtime/browser/webkitwrapper.h"
 

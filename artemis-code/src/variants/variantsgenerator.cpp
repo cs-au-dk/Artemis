@@ -26,7 +26,7 @@
   or implied, of Simon Holm Jensen
 */
 #include "variantsgenerator.h"
-#include "events/eventypes.h"
+#include "runtime/events/eventypes.h"
 
 namespace artemis {
 

@@ -2,7 +2,7 @@
 
 #include "util/fileutil.h"
 #include "util/urlutil.h"
-#include "ajax/ajaxrequest.h"
+#include "runtime/ajax/ajaxrequest.h"
 
 namespace artemis {
 

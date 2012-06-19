@@ -35,10 +35,10 @@
 
 #include <qajaxcallbackhandler.h>
 
-#include "events/eventhandlerdescriptor.h"
+#include "runtime/events/eventhandlerdescriptor.h"
 #include "runtime/browser/timer.h"
 #include "artemisglobals.h"
-#include "ajax/ajaxrequest.h"
+#include "runtime/ajax/ajaxrequest.h"
 #include "artemiswebpage.h"
 
 namespace artemis {

@@ -28,10 +28,10 @@
 #ifndef DOMINPUT_H
 #define DOMINPUT_H
 
-#include "events/forms/forminput.h"
-#include "events/eventhandlerdescriptor.h"
-#include "events/domelementdescriptor.h"
-#include "events/eventparameters.h"
+#include "runtime/events/forms/forminput.h"
+#include "runtime/events/eventhandlerdescriptor.h"
+#include "runtime/events/domelementdescriptor.h"
+#include "runtime/events/eventparameters.h"
 #include "strategies/inputgenerator/targets/targetdescriptor.h"
 
 #include "baseinput.h"
