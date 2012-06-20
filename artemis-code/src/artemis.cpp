@@ -28,13 +28,12 @@
 #include <iostream>
 #include <stdlib.h>
 #include <getopt.h>
-#include <QCoreApplication>
+#include <QApplication>
 #include <QDir>
 
 #include "artemisoptions.h"
 #include "strategies/inputgenerator/inputgeneratorstrategy.h"
 #include "artemisapplication.h"
-#include "exceptionhandlingqapp.h"
 
 using namespace std;
 
@@ -113,7 +112,7 @@ void artemisConsoleMessageHandler(QtMsgType type, const char *msg)
 
 int main(int argc, char *argv[]) {
     qInstallMsgHandler(artemis::artemisConsoleMessageHandler);
-    ExceptionHandlingQApp app(argc, argv);
+    QApplication app(argc, argv);
     artemis::ArtemisOptions* cmdline_opts = artemis::parseCmd(argc, argv);
     if (cmdline_opts->getURL()->isEmpty()) {
         cerr << "ERROR: You must specify a URL" << endl;

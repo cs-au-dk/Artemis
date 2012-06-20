@@ -61,7 +61,6 @@ HEADERS += src/strategies/inputgenerator/variants/randomvariants.h \
     src/artemisapplication.h \
     src/artemisglobals.h \
     src/util/randomutil.h \
-    src/exceptionhandlingqapp.h \
     src/coverage/codecoverage.h \
     src/coverage/lineinfo.h \
     src/coverage/coveragelistener.h \
@@ -116,7 +115,6 @@ SOURCES += src/strategies/inputgenerator/variants/randomvariants.cpp \
     src/artemisoptions.cpp \
     src/artemisapplication.cpp \
     src/util/randomutil.cpp \
-    src/exceptionhandlingqapp.cpp \
     src/coverage/codecoverage.cpp \
     src/coverage/lineinfo.cpp \
     src/coverage/coveragelistener.cpp \
