@@ -41,14 +41,13 @@ namespace artemis {
     {
         Q_OBJECT
     public:
-        explicit ArtemisApplication(QObject *parent = 0, QCoreApplication* qapp = 0 ,ArtemisOptions* options = 0);
+        explicit ArtemisApplication(QObject *parent = 0, QCoreApplication* qapp = 0, ArtemisOptions* options = 0);
         void run();
 
     private:
         ArtemisOptions* artemis_options;
         QCoreApplication* app;
         InputGeneratorStrategy* generator;
-        SourceLoadingListener* s_list;
         Runtime* mRuntime;
 
     signals:
