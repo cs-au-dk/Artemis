@@ -17,7 +17,13 @@ QMAKE_CXXFLAGS += -g \
 DEFINES += ARTEMIS=1
 
 # Input
-HEADERS += src/strategies/inputgenerator/variants/randomvariants.h \
+HEADERS += src/strategies/prioritizer/constantprioritizer.h \
+    src/strategies/prioritizer/prioritizerstrategy.h \
+    src/strategies/prioritizer/randomprioritizer.h \
+    src/strategies/inputgenerator/targets/targetgenerator.h \
+    src/builder/options.h \
+    src/builder/builder.h \
+    src/strategies/inputgenerator/variants/randomvariants.h \
     src/strategies/inputgenerator/variants/variantsgenerator.h \
     src/runtime/ajax/ajaxrequest.h \
     src/runtime/ajax/ajaxrequestlistener.h \
@@ -33,9 +39,6 @@ HEADERS += src/strategies/inputgenerator/variants/randomvariants.h \
     src/runtime/events/forms/forminput.h \
     src/runtime/events/keyboardeventparameters.h \
     src/runtime/events/mouseeventparameters.h \
-    src/strategies/priortizer/prioritizerstrategy.h \
-    src/strategies/priortizer/constantprioritizer.h \
-    src/strategies/priortizer/randomprioritizer.h \
     src/runtime/browser/artemiswebpage.h \
     src/runtime/executableconfiguration.h \
     src/runtime/input/baseinput.h \
@@ -57,7 +60,6 @@ HEADERS += src/strategies/inputgenerator/variants/randomvariants.h \
     src/strategies/inputgenerator/targets/legacytarget.h \
     src/strategies/inputgenerator/targets/targetdescriptor.h \
     src/runtime/runtime.h \
-    src/artemisoptions.h \
     src/artemisapplication.h \
     src/artemisglobals.h \
     src/util/randomutil.h \
@@ -76,7 +78,11 @@ HEADERS += src/strategies/inputgenerator/variants/randomvariants.h \
     src/listeners/sourceloadinglistener.h \
     src/statistics/statsstorage.h \
     src/statistics/writers/pretty.h
-SOURCES += src/strategies/inputgenerator/variants/randomvariants.cpp \
+SOURCES += src/strategies/prioritizer/constantprioritizer.cpp \
+    src/strategies/prioritizer/randomprioritizer.cpp \
+    src/strategies/inputgenerator/targets/targetgenerator.cpp \
+    src/builder/builder.cpp \
+    src/strategies/inputgenerator/variants/randomvariants.cpp \
     src/runtime/ajax/ajaxrequest.cpp \
     src/runtime/ajax/ajaxrequestlistener.cpp \
     src/runtime/browser/cookies/immutablecookiejar.cpp \
@@ -90,8 +96,6 @@ SOURCES += src/strategies/inputgenerator/variants/randomvariants.cpp \
     src/runtime/events/forms/forminput.cpp \
     src/runtime/events/keyboardeventparameters.cpp \
     src/runtime/events/mouseeventparameters.cpp \
-    src/strategies/priortizer/constantprioritizer.cpp \
-    src/strategies/priortizer/randomprioritizer.cpp \
     src/runtime/browser/artemiswebpage.cpp \
     src/runtime/executableconfiguration.cpp \
     src/runtime/input/dominput.cpp \
@@ -104,7 +108,6 @@ SOURCES += src/strategies/inputgenerator/variants/randomvariants.cpp \
     src/runtime/worklist/deterministicworklist.cpp \
     src/runtime/worklist/worklist.cpp \
     src/strategies/termination/numberofiterationstermination.cpp \
-    src/strategies/inputgenerator/inputgeneratorstrategy.cpp \
     src/strategies/inputgenerator/randominputgenerator.cpp \
     src/strategies/inputgenerator/targets/jquerylistener.cpp \
     src/strategies/inputgenerator/targets/jquerytarget.cpp \
@@ -112,7 +115,6 @@ SOURCES += src/strategies/inputgenerator/variants/randomvariants.cpp \
     src/strategies/inputgenerator/targets/targetdescriptor.cpp \
     src/runtime/runtime.cpp \
     src/artemis.cpp \
-    src/artemisoptions.cpp \
     src/artemisapplication.cpp \
     src/util/randomutil.cpp \
     src/coverage/codecoverage.cpp \

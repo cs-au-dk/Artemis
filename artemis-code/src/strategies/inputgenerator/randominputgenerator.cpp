@@ -40,11 +40,17 @@
 namespace artemis
 {
 
-RandomInputGenerator::RandomInputGenerator(QObject *parent, ArtemisOptions* options) :
-    InputGeneratorStrategy(parent, options)
+RandomInputGenerator::RandomInputGenerator(QObject *parent,
+		TargetGenerator* targetGenerator,
+		int numberSameLength) :
+    InputGeneratorStrategy(parent)
 {
-    Q_CHECK_PTR(options);
-    this->var_gen = new RandomVariants();
+	mTargetGenerator = targetGenerator;
+	mTargetGenerator->setParent(this);
+
+	mNumberSameLength = numberSameLength;
+
+    var_gen = new RandomVariants();
 }
 
 RandomInputGenerator::~RandomInputGenerator()
@@ -74,7 +80,7 @@ QList<ExecutableConfiguration*> RandomInputGenerator::insert_same_length(const E
         return newConfigurations;
 
     BaseInput* last = seq->getLast();
-    for (int i = 0; i++; i < this->artemis_options->number_of_samelength()) {
+    for (int i = 0; i++; i < mNumberSameLength) {
         BaseInput* new_last = this->permutate_input(last);
 
         if (last->isEqual(new_last) == false) {
@@ -104,7 +110,7 @@ BaseInput *RandomInputGenerator::permutate_input(const DomInput *input)
 
     //Build new Event Descriptor
     EventHandlerDescriptor hh = input->getEventHandler();
-    TargetDescriptor* target = artemis_options->target_generator(hh);
+    TargetDescriptor* target = mTargetGenerator->generateTarget(hh);
 
     DomInput *new_last = new DomInput(0, hh, new_form, new_params, target);
 
@@ -135,9 +141,8 @@ QList<ExecutableConfiguration*> RandomInputGenerator::insert_extended(const Exec
         //Form fields
         QSet<FormField> fd = result.form_fields();
         FormInput new_form = var_gen->generate_form_fields(fd);
-        artemis_options->target_generator(ee);
 
-        TargetDescriptor* target = artemis_options->target_generator(ee);
+        TargetDescriptor* target = mTargetGenerator->generateTarget(ee);
         DomInput* domInput = new DomInput(0, ee, new_form, new_params, target);
 
         InputSequence* newInputSequence = oldConfiguration->get_eventsequence()->copy();

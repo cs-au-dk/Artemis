@@ -37,8 +37,10 @@
 
 namespace artemis {
   
-  JQueryTarget::JQueryTarget(EventHandlerDescriptor& event_handler,  ArtemisOptions* options) : TargetDescriptor(event_handler) { 
-      artemis_options = options;
+  JQueryTarget::JQueryTarget(EventHandlerDescriptor& event_handler,
+		  JQueryListener* jqueryListener) :
+		  TargetDescriptor(event_handler) {
+	  mJQueryListener = jqueryListener;
   }
   /*JQueryTarget::JQueryTarget(TargetDescriptor* other) : TargetDescriptor(other) { }*/
 
@@ -72,9 +74,7 @@ namespace artemis {
 
       qDebug() << "TARGET::Info, looking for selectors for signature " << signature << " and event " << event << endl;
 
-      JQueryListener* listener = artemis_options->get_jquery_listener();
-
-      QList<QString> selectors = listener->lookup(signature, event);
+      QList<QString> selectors = mJQueryListener->lookup(signature, event);
 
       if (selectors.count() == 0) {
           qDebug() << "TARGET::Warning, no matching selectors found, defaulting to source" << endl;

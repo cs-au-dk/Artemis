@@ -30,7 +30,7 @@
 
 #include <QWebElement>
 
-#include "artemisoptions.h"
+#include "strategies/inputgenerator/targets/jquerylistener.h"
 #include "targetdescriptor.h"
 
 namespace artemis {
@@ -38,14 +38,13 @@ namespace artemis {
   class JQueryTarget : public TargetDescriptor
   {
   public:
-    explicit JQueryTarget(EventHandlerDescriptor& event_handler, ArtemisOptions* options);
+    JQueryTarget(EventHandlerDescriptor& event_handler, JQueryListener* jqueryListener);
     /*explicit JQueryTarget(TargetDescriptor* other);*/
     QWebElement get(ArtemisWebPage* page);
 
   protected:
     QString get_signature(QWebElement element);
-
-    ArtemisOptions* artemis_options;
+    JQueryListener* mJQueryListener;
   };
 
 }

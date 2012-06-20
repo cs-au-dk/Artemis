@@ -30,14 +30,13 @@
 #include <getopt.h>
 #include <QApplication>
 #include <QDir>
+#include <QUrl>
 
-#include "artemisoptions.h"
-#include "strategies/inputgenerator/inputgeneratorstrategy.h"
+#include "builder/options.h"
 #include "artemisapplication.h"
 
 using namespace std;
 
-namespace artemis {
 void printHeader() {
     qDebug() << "Artemis - Automated tester for JavaScript";
     qDebug() << "Started: " << QDateTime::currentDateTime().toString();
@@ -45,50 +44,71 @@ void printHeader() {
     qDebug() << "-----\n" ;
 }
 
-ArtemisOptions* parseCmd(int argc, char *argv[]) {
-    ArtemisOptions* res = new ArtemisOptions;
-    int c;
-    int index;
-    while ((c = getopt (argc, argv, "rp:uf:t:c:i:a:")) != -1) {
-        switch (c) {
+QUrl parseCmd(int argc, char *argv[], artemis::Options& options) {
+
+    char c;
+    while ((c = getopt(argc, argv, "rp:f:t:c:i:")) != -1) {
+
+    	switch (c) {
+
         case 'f':
-            res->parse_and_add_option_string(QString(optarg));
+        {
+        	QStringList rawformfield = QString(optarg).split("=");
+        	Q_ASSERT(rawformfield.size() == 2);
+        	options.presetFormfields.insert(rawformfield.at(0), rawformfield.at(1));
             break;
-        case 'u':
-            res->set_dump_urls(true);
-            break;
+        }
+
         case 'p':
-            {
-                QDir ld = QDir(QString(optarg));
-                res->dump_page_states(ld.absolutePath());
-            }
+        {
+            QDir ld = QDir(QString(optarg));
+            options.dumpPageStates = "k";
             break;
+        }
+
         case 'r':
-            res->set_recreate_page(true);
+        {
+        	options.recreatePage = true;
             break;
+        }
+
         case 't':
-            res->set_proxy(QString(optarg));
+        {
+        	options.useProxy = QString(optarg);
             break;
+        }
+
         case 'c':
-            res->set_preset_cookie(optarg);
+        {
+        	QStringList parts = QString(optarg).split("=");
+        	options.presetCookies.insert(parts.at(0), parts.at(1));
             break;
+        }
+
         case 'i':
-            printf("Encountered i!");
-            res->set_number_of_iterations(QString(optarg));
+        {
+        	options.iterationLimit = QString(optarg).toInt();
             break;
-        case 'a':
-            // Support for http authentication
-            // -a username:password
-            res->set_authentication(QString(optarg));
-            break;
+        }
+
         }
     }
 
-    for (index = optind; index < argc; index++) {
-        res->setURL(new QUrl(QString(argv[index])));
+    if (optind > argc) {
+    	cerr << "ERROR: You must specify a URL" << endl;
+    	exit(1);
     }
 
-    return res;
+    QStringList rawurl = QString(argv[optind]).split("@");
+    QUrl url = rawurl.last();
+
+    if (rawurl.size() > 1) {
+    	QStringList rawauth = rawurl.first().split(":");
+    	url.setUserName(rawauth.first());
+    	url.setPassword(rawauth.last());
+    }
+
+    return url;
 }
 
 void artemisConsoleMessageHandler(QtMsgType type, const char *msg)
@@ -108,18 +128,19 @@ void artemisConsoleMessageHandler(QtMsgType type, const char *msg)
         abort();
     }
 }
-}
 
 int main(int argc, char *argv[]) {
-    qInstallMsgHandler(artemis::artemisConsoleMessageHandler);
+	printHeader();
+
+	qInstallMsgHandler(artemisConsoleMessageHandler);
+
     QApplication app(argc, argv);
-    artemis::ArtemisOptions* cmdline_opts = artemis::parseCmd(argc, argv);
-    if (cmdline_opts->getURL()->isEmpty()) {
-        cerr << "ERROR: You must specify a URL" << endl;
-        exit(1);
-    }
-    artemis::ArtemisApplication artemis_app(0,&app,cmdline_opts);
-    artemis_app.run();
+
+    artemis::Options options;
+    QUrl url = parseCmd(argc, argv, options);
+
+    artemis::ArtemisApplication artemis_app(0, &app, options, url);
+    artemis_app.run(url);
 
     return app.exec();
 }

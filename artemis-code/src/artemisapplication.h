@@ -30,7 +30,8 @@
 
 #include <QObject>
 #include <QApplication>
-#include "artemisoptions.h"
+
+#include "builder/options.h"
 #include "strategies/inputgenerator/inputgeneratorstrategy.h"
 #include "listeners/sourceloadinglistener.h"
 #include "runtime/runtime.h"
@@ -41,13 +42,13 @@ namespace artemis {
     {
         Q_OBJECT
     public:
-        explicit ArtemisApplication(QObject *parent = 0, QCoreApplication* qapp = 0, ArtemisOptions* options = 0);
-        void run();
+        // TODO remove url from constructor
+        ArtemisApplication(QObject *parent, QCoreApplication* qapp, const Options& options, QUrl url);
+        void run(QUrl url);
 
     private:
-        ArtemisOptions* artemis_options;
         QCoreApplication* app;
-        InputGeneratorStrategy* generator;
+
         Runtime* mRuntime;
 
     signals:

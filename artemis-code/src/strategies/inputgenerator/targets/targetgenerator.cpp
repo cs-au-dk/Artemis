@@ -1,16 +1,16 @@
 /*
   Copyright 2011 Simon Holm Jensen. All rights reserved.
-  
+
   Redistribution and use in source and binary forms, with or without modification, are
   permitted provided that the following conditions are met:
-  
+
      1. Redistributions of source code must retain the above copyright notice, this list of
         conditions and the following disclaimer.
-  
+
      2. Redistributions in binary form must reproduce the above copyright notice, this list
         of conditions and the following disclaimer in the documentation and/or other materials
         provided with the distribution.
-  
+
   THIS SOFTWARE IS PROVIDED BY SIMON HOLM JENSEN ``AS IS'' AND ANY EXPRESS OR IMPLIED
   WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
   FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL <COPYRIGHT HOLDER> OR
@@ -20,38 +20,35 @@
   ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
   NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
   ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-  
+
   The views and conclusions contained in the software and documentation are those of the
   authors and should not be interpreted as representing official policies, either expressed
   or implied, of Simon Holm Jensen
 */
-#ifndef ABSTRACTPRIORITIZER_H
-#define ABSTRACTPRIORITIZER_H
 
-#include <QObject>
+#include "jquerytarget.h"
 
-#include "artemisoptions.h"
-#include "runtime/browser/executionresult.h"
-#include "runtime/worklist/worklist.h"
+#include "targetgenerator.h"
 
 namespace artemis {
 
-    class PrioritizerStrategy : public QObject
-    {
-    public:
-        PrioritizerStrategy(QObject* parent) : QObject(parent) {};
-        virtual ~PrioritizerStrategy() {};
+TargetGenerator::TargetGenerator(QObject* parent,
+		JQueryListener* jqueryListener) :
+		QObject(parent)
+{
 
-        /**
-          new_conf: Configuration to be prioritized
-          results: The execution results from last execution
-          state: State of the execution engine
-          */
-        virtual double prioritize(ExecutableConfiguration* new_conf,
-                       const ExecutionResult& results) = 0;
+	mJQueryListener = jqueryListener;
+}
 
-        virtual void reprioritize(WorkList* worklist) = 0;
-    };
+TargetGenerator::~TargetGenerator() {
+	// TODO Auto-generated destructor stub
+}
+
+TargetDescriptor* TargetGenerator::generateTarget(EventHandlerDescriptor eventHandler) {
+
+	return new JQueryTarget(eventHandler, mJQueryListener);
 
 }
-#endif // ABSTRACTPRIORITIZER_H
+
+
+} // END NAMESPACE

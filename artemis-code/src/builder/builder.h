@@ -26,69 +26,22 @@
   or implied, of Simon Holm Jensen
 */
 
-#ifndef RUNTIME_H_
-#define RUNTIME_H_
+#ifndef BUILDER_H_
+#define BUILDER_H_
 
-#include <QObject>
 #include <QUrl>
 
-#include "listeners/multiplexlistener.h"
-#include "listeners/sourceloadinglistener.h"
+#include "runtime/runtime.h"
+#include "options.h"
 
-#include "strategies/inputgenerator/inputgeneratorstrategy.h"
-#include "strategies/termination/terminationstrategy.h"
-#include "strategies/prioritizer/prioritizerstrategy.h"
+namespace artemis {
 
-#include "runtime/worklist/worklist.h"
-#include "runtime/browser/webkitexecutor.h"
-#include "runtime/browser/executionresult.h"
-#include "runtime/executableconfiguration.h"
-
-namespace artemis
-{
-
-class Runtime : public QObject
-{
-
-Q_OBJECT
+class Builder {
 
 public:
-    Runtime(QObject* parent,
-    		WebKitExecutor* webkitExecutor,
-    		InputGeneratorStrategy* inputgenerator,
-    		PrioritizerStrategy* prioritizer,
-    		TerminationStrategy* termination,
-    		MultiplexListener* listener,
-    		bool dumpUrls);
-    virtual ~Runtime();
-
-    void start(QUrl start);
-    URLCollector urlsCollected();
-    CodeCoverage coverage();
-
-private:
-    void finish_up();
-
-    WebKitExecutor* mWebkitExecutor;
-    WorkList* mWorklist;
-
-    TerminationStrategy* mTerminationStrategy;
-    PrioritizerStrategy* mPrioritizerStrategy;
-    InputGeneratorStrategy* mInputgenerator;
-
-    MultiplexListener* mListener;
-    SourceLoadingListener* s_list;
-
-    URLCollector mUrls;
-    bool mDumpUrls;
-
-private slots:
-    void slExecutedSequence(ExecutableConfiguration* configuration, ExecutionResult result);
-
-signals:
-    void sigTestingDone();
-
+	static Runtime* build(const Options& options, QUrl url);
 };
 
-} /* namespace artemis */
-#endif /* RUNTIME_H_ */
+} // END NAMESPACE
+
+#endif /* BUILDER_H_ */

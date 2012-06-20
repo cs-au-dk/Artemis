@@ -26,61 +26,34 @@
   or implied, of Simon Holm Jensen
 */
 
-#include <iostream>
-#include <stdlib.h>
+#include "runtime/runtime.h"
+#include "builder/builder.h"
 
 #include "artemisapplication.h"
-#include "statistics/statsstorage.h"
-#include "runtime/runtime.h"
-#include "runtime/ajax/ajaxrequestlistener.h"
-#include <runtime/browser/cookies/immutablecookiejar.h>
 
 using namespace std;
 
 namespace artemis {
 
-    void printHeader();
-
-    ArtemisApplication::ArtemisApplication(QObject *parent, QCoreApplication* qapp, ArtemisOptions* options) :
+    ArtemisApplication::ArtemisApplication(QObject *parent,
+    		QCoreApplication* qapp,
+    		const Options& options,
+    		QUrl url) :
             QObject(parent)
     {
-        this->artemis_options = options;
         this->app = qapp;
 
         srand(0); //Better way to get random numbers?
 
-        AjaxRequestListener* ajaxRequestListner = new AjaxRequestListener(NULL);
-
-        ImmutableCookieJar *immutable_cookie_jar = new ImmutableCookieJar(
-        		artemis_options->get_preset_cookies(),
-        		artemis_options->getURL()->host());
-        ajaxRequestListner->setCookieJar(immutable_cookie_jar);
-
-        WebKitExecutor* webkitExecutor = new WebKitExecutor(NULL,
-        		artemis_options->get_preset_fields(),
-        		artemis_options->get_listner(),
-        		artemis_options->get_jquery_listener(),
-        		ajaxRequestListner);
-
-        generator = artemis_options->create_input_generator();
-        mRuntime = new Runtime(this,
-        		webkitExecutor,
-        		generator,
-        		artemis_options->prioritizer(),
-        		artemis_options->termination(),
-        		(MultiplexListener*)artemis_options->get_listner(),
-        		artemis_options->dump_urls());
+        mRuntime = Builder::build(options, url);
+        mRuntime->setParent(this);
 
         QObject::connect(mRuntime, SIGNAL(sigTestingDone()),
                                  this, SLOT(sl_testingDone()));
     }
 
-    void ArtemisApplication::run() {
-        artemis::printHeader();
-
-        artemis_options->print_presets();
-
-        mRuntime->start(*artemis_options->getURL());
+    void ArtemisApplication::run(QUrl url) {
+        mRuntime->start(url);
     }
 
     void ArtemisApplication::sl_testingDone() {

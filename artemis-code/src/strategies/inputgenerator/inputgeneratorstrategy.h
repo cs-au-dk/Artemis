@@ -31,7 +31,6 @@
 #include <QObject>
 #include <QList>
 
-#include "artemisoptions.h"
 #include "runtime/browser/executionresult.h"
 #include "runtime/worklist/worklist.h"
 #include "runtime/browser/webkitexecutor.h"
@@ -45,13 +44,10 @@ namespace artemis {
     {
         Q_OBJECT
     public:
-        InputGeneratorStrategy(QObject *parent, ArtemisOptions* options);
-        ~InputGeneratorStrategy();
+        InputGeneratorStrategy(QObject *parent) : QObject(parent) {};
+        virtual ~InputGeneratorStrategy() {};
 
         virtual QList<ExecutableConfiguration*> add_new_configurations(const ExecutableConfiguration*, const ExecutionResult&) = 0;
-
-    protected:
-        ArtemisOptions* artemis_options;
 
     };
 
