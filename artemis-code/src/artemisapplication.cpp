@@ -30,9 +30,7 @@
 #include <stdlib.h>
 
 #include "artemisapplication.h"
-#include "coverage/coveragetooutputstream.h"
 #include "statistics/statsstorage.h"
-#include "statistics/writers/pretty.h"
 #include "runtime/runtime.h"
 #include "runtime/ajax/ajaxrequestlistener.h"
 #include <runtime/browser/cookies/immutablecookiejar.h>
@@ -48,7 +46,6 @@ namespace artemis {
     {
         this->artemis_options = options;
         this->app = qapp;
-        s_list = new SourceLoadingListener();
 
         srand(0); //Better way to get random numbers?
 
@@ -66,10 +63,13 @@ namespace artemis {
         		ajaxRequestListner);
 
         generator = artemis_options->create_input_generator();
-        mRuntime = new Runtime(this, webkitExecutor, generator,
+        mRuntime = new Runtime(this,
+        		webkitExecutor,
+        		generator,
         		artemis_options->prioritizer(),
         		artemis_options->termination(),
-        		artemis_options->get_listner());
+        		(MultiplexListener*)artemis_options->get_listner(),
+        		artemis_options->dump_urls());
 
         QObject::connect(mRuntime, SIGNAL(sigTestingDone()),
                                  this, SLOT(sl_testingDone()));
@@ -78,34 +78,12 @@ namespace artemis {
     void ArtemisApplication::run() {
         artemis::printHeader();
 
-        artemis_options->add_artemis_execution_listner(s_list);
         artemis_options->print_presets();
 
         mRuntime->start(*artemis_options->getURL());
     }
 
     void ArtemisApplication::sl_testingDone() {
-        cout << "Artemis: Testing done..." << endl;
-
-        if (this->artemis_options->dump_urls()) {
-            cout << "The following URLs were encountered:\n";
-            mRuntime->urlsCollected().print_urls();
-        }
-
-        cout << "\n\n === Coverage information for execution === \n";
-        write_coverage_report(cout, mRuntime->coverage());
-        
-        cout << "\n==== Source code loaded ====\n";
-        s_list->print_results();
-        cout << "\n\n";
-
-        cout << "\n=== Statistics ===\n";
-        StatsPrettyWriter::write(cout, statistics());
-        cout << "\n=== Statistics END ===\n";
-        cout << endl;
-        
-        qDebug() << "Artemis terminated on: " << QDateTime::currentDateTime().toString() << endl;
-        qDebug() << "Build timestamp: " << EXE_BUILD_DATE << endl;
 
         app->exit(0);
 

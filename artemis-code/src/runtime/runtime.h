@@ -32,7 +32,8 @@
 #include <QObject>
 #include <QUrl>
 
-#include "listeners/artemistopexecutionlistener.h"
+#include "listeners/multiplexlistener.h"
+#include "listeners/sourceloadinglistener.h"
 
 #include "strategies/inputgenerator/inputgeneratorstrategy.h"
 #include "strategies/termination/terminationstrategy.h"
@@ -56,7 +57,8 @@ public:
     		InputGeneratorStrategy* inputgenerator,
     		PrioritizerStrategy* prioritizer,
     		TerminationStrategy* termination,
-    		ArtemisTopExecutionListener* listener);
+    		MultiplexListener* listener,
+    		bool dumpUrls);
     virtual ~Runtime();
 
     void start(QUrl start);
@@ -73,9 +75,11 @@ private:
     PrioritizerStrategy* mPrioritizerStrategy;
     InputGeneratorStrategy* mInputgenerator;
 
-    ArtemisTopExecutionListener* mListener;
+    MultiplexListener* mListener;
+    SourceLoadingListener* s_list;
 
     URLCollector mUrls;
+    bool mDumpUrls;
 
 private slots:
     void slExecutedSequence(ExecutableConfiguration* configuration, ExecutionResult result);

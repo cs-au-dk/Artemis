@@ -26,10 +26,16 @@
  or implied, of Simon Holm Jensen
  */
 
+#include <iostream>
+
 #include "worklist/deterministicworklist.h"
 #include "statistics/statsstorage.h"
+#include "coverage/coveragetooutputstream.h"
+#include "statistics/writers/pretty.h"
 
 #include "runtime.h"
+
+using namespace std;
 
 namespace artemis
 {
@@ -39,7 +45,8 @@ Runtime::Runtime(QObject* parent,
 		InputGeneratorStrategy* inputgenerator,
 		PrioritizerStrategy* prioritizer,
 		TerminationStrategy* termination,
-		ArtemisTopExecutionListener* listener) :
+		MultiplexListener* listener,
+		bool dumpUrls) :
     QObject(parent)
 {
     mInputgenerator = inputgenerator;
@@ -52,9 +59,13 @@ Runtime::Runtime(QObject* parent,
     mPrioritizerStrategy->setParent(this);
 
     mListener = listener;
+    s_list = new SourceLoadingListener();
+    mListener->add_listener(s_list);
 
     mWebkitExecutor = webkitExecutor;
     mWebkitExecutor->setParent(this);
+
+    mDumpUrls = dumpUrls;
 
     QObject::connect(mWebkitExecutor,
         SIGNAL(sigExecutedSequence(ExecutableConfiguration*, ExecutionResult)), this,
@@ -114,9 +125,32 @@ void Runtime::slExecutedSequence(ExecutableConfiguration* configuration, Executi
 }
 
 void Runtime::finish_up() {
+
     mListener->artemis_finished();
 
     mWebkitExecutor->finish_up();
+
+	cout << "Artemis: Testing done..." << endl;
+
+	if (mDumpUrls) {
+		cout << "The following URLs were encountered:\n";
+		urlsCollected().print_urls();
+	}
+
+	cout << "\n\n === Coverage information for execution === \n";
+	write_coverage_report(cout, coverage());
+
+	cout << "\n==== Source code loaded ====\n";
+	s_list->print_results();
+	cout << "\n\n";
+
+	cout << "\n=== Statistics ===\n";
+	StatsPrettyWriter::write(cout, statistics());
+	cout << "\n=== Statistics END ===\n";
+	cout << endl;
+
+	qDebug() << "Artemis terminated on: " << QDateTime::currentDateTime().toString() << endl;
+	qDebug() << "Build timestamp: " << EXE_BUILD_DATE << endl;
 
     //delete executor;
     //delete wl;
