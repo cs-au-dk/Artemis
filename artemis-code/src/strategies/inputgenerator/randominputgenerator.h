@@ -32,6 +32,7 @@
 
 #include "inputgeneratorstrategy.h"
 #include "variants/variantsgenerator.h"
+#include "targets/targetgenerator.h"
 
 
 namespace artemis {
@@ -40,7 +41,7 @@ namespace artemis {
     {
         Q_OBJECT
     public:
-        RandomInputGenerator(QObject *parent, ArtemisOptions *options);
+        RandomInputGenerator(QObject *parent, TargetGenerator* targetGenerator, int numberSameLength);
         ~RandomInputGenerator();
         QList<ExecutableConfiguration*> add_new_configurations(const ExecutableConfiguration*, const ExecutionResult &);
 
@@ -52,7 +53,10 @@ namespace artemis {
         BaseInput* permutate_input(const DomInput* input);
         BaseInput* permutate_input(BaseInput* input);
         
+        TargetGenerator* mTargetGenerator;
         VariantsGenerator* var_gen;
+
+        int mNumberSameLength;
 
     signals:
 

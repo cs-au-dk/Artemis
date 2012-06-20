@@ -28,7 +28,6 @@
 #ifndef RANDOMVARIANTS_H
 #define RANDOMVARIANTS_H
 
-#include "artemisoptions.h"
 #include "variantsgenerator.h"
 
 namespace artemis {
@@ -42,8 +41,6 @@ namespace artemis {
         EventParameters* generate_event_parameters(EventHandlerDescriptor eventHandler);
         FormInput generate_form_fields(const QSet<FormField>& fi);
 
-    private:
-        ArtemisOptions* opts;
     };
 
 }

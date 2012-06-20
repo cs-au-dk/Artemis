@@ -26,69 +26,30 @@
   or implied, of Simon Holm Jensen
 */
 
-#ifndef RUNTIME_H_
-#define RUNTIME_H_
+#ifndef TARGETGENERATOR_H_
+#define TARGETGENERATOR_H_
 
 #include <QObject>
-#include <QUrl>
 
-#include "listeners/multiplexlistener.h"
-#include "listeners/sourceloadinglistener.h"
+#include "runtime/events/eventhandlerdescriptor.h"
+#include "strategies/inputgenerator/targets/jquerylistener.h"
 
-#include "strategies/inputgenerator/inputgeneratorstrategy.h"
-#include "strategies/termination/terminationstrategy.h"
-#include "strategies/prioritizer/prioritizerstrategy.h"
+#include "targetdescriptor.h"
 
-#include "runtime/worklist/worklist.h"
-#include "runtime/browser/webkitexecutor.h"
-#include "runtime/browser/executionresult.h"
-#include "runtime/executableconfiguration.h"
+namespace artemis {
 
-namespace artemis
-{
-
-class Runtime : public QObject
-{
-
-Q_OBJECT
+class TargetGenerator : public QObject {
 
 public:
-    Runtime(QObject* parent,
-    		WebKitExecutor* webkitExecutor,
-    		InputGeneratorStrategy* inputgenerator,
-    		PrioritizerStrategy* prioritizer,
-    		TerminationStrategy* termination,
-    		MultiplexListener* listener,
-    		bool dumpUrls);
-    virtual ~Runtime();
+	TargetGenerator(QObject* parent, JQueryListener* jqueryListener);
+	virtual ~TargetGenerator();
 
-    void start(QUrl start);
-    URLCollector urlsCollected();
-    CodeCoverage coverage();
+	TargetDescriptor* generateTarget(EventHandlerDescriptor eventHandler);
 
 private:
-    void finish_up();
-
-    WebKitExecutor* mWebkitExecutor;
-    WorkList* mWorklist;
-
-    TerminationStrategy* mTerminationStrategy;
-    PrioritizerStrategy* mPrioritizerStrategy;
-    InputGeneratorStrategy* mInputgenerator;
-
-    MultiplexListener* mListener;
-    SourceLoadingListener* s_list;
-
-    URLCollector mUrls;
-    bool mDumpUrls;
-
-private slots:
-    void slExecutedSequence(ExecutableConfiguration* configuration, ExecutionResult result);
-
-signals:
-    void sigTestingDone();
-
+	JQueryListener* mJQueryListener;
 };
 
-} /* namespace artemis */
-#endif /* RUNTIME_H_ */
+} // END NAMESPACE
+
+#endif /* TARGETGENERATOR_H_ */

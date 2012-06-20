@@ -31,6 +31,7 @@
 #include "runtime/events/keyboardeventparameters.h"
 #include "runtime/events/mouseeventparameters.h"
 #include "runtime/events/forms/formfieldtypes.h"
+#include "runtime/events/forms/forminput.h"
 
 #include "randomvariants.h"
 

@@ -25,25 +25,32 @@
   authors and should not be interpreted as representing official policies, either expressed
   or implied, of Simon Holm Jensen
 */
+#ifndef ABSTRACTPRIORITIZER_H
+#define ABSTRACTPRIORITIZER_H
 
-#include <iostream>
+#include <QObject>
 
-#include "strategies/termination/terminationstrategy.h"
-
-#include "inputgeneratorstrategy.h"
-
-using namespace std;
+#include "runtime/browser/executionresult.h"
+#include "runtime/worklist/worklist.h"
 
 namespace artemis {
 
-    InputGeneratorStrategy::InputGeneratorStrategy(QObject *parent, ArtemisOptions* options) :
-            QObject(parent)
+    class PrioritizerStrategy : public QObject
     {
-        artemis_options = options;
-    }
+    public:
+        PrioritizerStrategy(QObject* parent) : QObject(parent) {};
+        virtual ~PrioritizerStrategy() {};
 
-    InputGeneratorStrategy::~InputGeneratorStrategy() {
+        /**
+          new_conf: Configuration to be prioritized
+          results: The execution results from last execution
+          state: State of the execution engine
+          */
+        virtual double prioritize(ExecutableConfiguration* new_conf,
+                       const ExecutionResult& results) = 0;
 
-    }
+        virtual void reprioritize(WorkList* worklist) = 0;
+    };
 
 }
+#endif // ABSTRACTPRIORITIZER_H
