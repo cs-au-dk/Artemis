@@ -106,7 +106,6 @@ SOURCES += src/strategies/prioritizer/constantprioritizer.cpp \
     src/runtime/browser/webkitwrapper.cpp \
     src/runtime/browser/timer.cpp \
     src/runtime/worklist/deterministicworklist.cpp \
-    src/runtime/worklist/worklist.cpp \
     src/strategies/termination/numberofiterationstermination.cpp \
     src/strategies/inputgenerator/randominputgenerator.cpp \
     src/strategies/inputgenerator/targets/jquerylistener.cpp \

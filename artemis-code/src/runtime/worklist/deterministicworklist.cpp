@@ -30,8 +30,8 @@
 
 namespace artemis {
 
-    DeterministicWorkList::DeterministicWorkList() :
-            WorkList()
+    DeterministicWorkList::DeterministicWorkList(QObject* parent) :
+            WorkList(parent)
     {
         queue.clear();
         largest_pri = 0;
@@ -97,9 +97,5 @@ namespace artemis {
             }
         }
         add(e,priority);
-    }
-
-    QString DeterministicWorkList::toString() {
-        //TODO
     }
 }
