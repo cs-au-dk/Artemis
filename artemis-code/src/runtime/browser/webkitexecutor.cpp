@@ -178,6 +178,8 @@ namespace artemis {
         emit sigExecutedSequence(current_conf, *current_result);
     }
 
+
+
     void WebKitExecutor::get_links() {
        QWebElementCollection links =  page->mainFrame()->findAllElements("a");
        QSet<QUrl> urls;
