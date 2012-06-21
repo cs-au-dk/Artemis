@@ -60,13 +60,15 @@ public:
     		TerminationStrategy* termination,
     		MultiplexListener* listener,
     		bool dumpUrls);
-    virtual ~Runtime();
+
+    virtual ~Runtime() {};
 
     void start(QUrl start);
     URLCollector urlsCollected();
     CodeCoverage coverage();
 
 private:
+    void runNextIteration();
     void finish_up();
 
     WebKitExecutor* mWebkitExecutor;
