@@ -25,9 +25,12 @@
   authors and should not be interpreted as representing official policies, either expressed
   or implied, of Simon Holm Jensen
 */
-#include "artemiswebpage.h"
 #include <QDebug>
+
 #include "artemisglobals.h"
+#include "statistics/statsstorage.h"
+
+#include "artemiswebpage.h"
 
 namespace artemis {
 
@@ -37,6 +40,7 @@ namespace artemis {
     }
 
     void ArtemisWebPage::javaScriptAlert  (QWebFrame * frame, const QString & msg ) {
+        statistics()->accumulate("WebKit::alerts", 1);
         qDebug() << "JAVASCRIPT ALERT: " << msg;
     }
 
