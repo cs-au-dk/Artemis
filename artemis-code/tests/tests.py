@@ -30,10 +30,10 @@ class TimerTests(unittest.TestCase):
 		self.assertEqual(1, report.get('InputGenerator::added-configurations', 0))
 		self.assertEqual(1, report.get('timers::fired', 0))
 
-class NonTerminatingTests(unittest.TestCase):
-	
-	def test_non_terminating(self):
-		report = execute_artemis('nonterminating', '%s/nonterminating/nonterminating.html' % WEBSERVER_URL)
+#class NonTerminatingTests(unittest.TestCase):
+#	
+#	def test_non_terminating(self):
+#		report = execute_artemis('nonterminating', '%s/nonterminating/nonterminating.html' % WEBSERVER_URL)
 
 class InstrumentationTests(unittest.TestCase):
 	
