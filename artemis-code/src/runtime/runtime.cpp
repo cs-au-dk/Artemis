@@ -42,15 +42,17 @@ namespace artemis
 
 Runtime::Runtime(QObject* parent,
 		WebKitExecutor* webkitExecutor,
-		InputGeneratorStrategy* inputgenerator,
+		InputGeneratorStrategy* inputgeneratorStrategy,
 		PrioritizerStrategy* prioritizer,
 		TerminationStrategy* termination,
 		MultiplexListener* listener,
 		bool dumpUrls) :
     QObject(parent)
 {
-    mInputgenerator = inputgenerator;
-    mWorklist = new DeterministicWorkList();
+	mWorklist = new DeterministicWorkList(this);
+
+    mInputgenerator = inputgeneratorStrategy;
+    mInputgenerator->setParent(this);
 
     mTerminationStrategy = termination;
     mTerminationStrategy->setParent(this);
@@ -58,70 +60,73 @@ Runtime::Runtime(QObject* parent,
     mPrioritizerStrategy = prioritizer;
     mPrioritizerStrategy->setParent(this);
 
+    mWebkitExecutor = webkitExecutor;
+    mWebkitExecutor->setParent(this);
+
+    QObject::connect(mWebkitExecutor,
+            SIGNAL(sigExecutedSequence(ExecutableConfiguration*, ExecutionResult)), this,
+            SLOT(slExecutedSequence(ExecutableConfiguration*, ExecutionResult)));
+
+    // TODO remove listener dependency
     mListener = listener;
     s_list = new SourceLoadingListener();
     mListener->add_listener(s_list);
 
-    mWebkitExecutor = webkitExecutor;
-    mWebkitExecutor->setParent(this);
-
+    // TODO remove dump URLs
     mDumpUrls = dumpUrls;
 
-    QObject::connect(mWebkitExecutor,
-        SIGNAL(sigExecutedSequence(ExecutableConfiguration*, ExecutionResult)), this,
-        SLOT(slExecutedSequence(ExecutableConfiguration*, ExecutionResult)));
-}
-
-Runtime::~Runtime()
-{
-    delete mWorklist;
 }
 
 void Runtime::start(QUrl url)
 {
     mListener->artemis_start(url);
 
-    // TODO remove this memory leak
-    ExecutableConfiguration* initialConfiguration = new ExecutableConfiguration(0, new InputSequence(0), url);
+    // TODO possible memory leak
+    ExecutableConfiguration* initialConfiguration =
+    		new ExecutableConfiguration(NULL, new InputSequence(NULL), url);
 
-    mWebkitExecutor->executeSequence(initialConfiguration);
+    mWorklist->add(initialConfiguration, 0);
+
+    runNextIteration();
+}
+
+void Runtime::runNextIteration()
+{
+	if (mWorklist->empty() ||
+		mTerminationStrategy->should_terminate()) {
+
+		finish_up();
+		return;
+	}
+
+	// TODO remove this memory leak
+	ExecutableConfiguration* nextConfiguration = mWorklist->remove();
+
+	mListener->before_execute(nextConfiguration);
+
+	mWebkitExecutor->executeSequence(nextConfiguration);
 }
 
 void Runtime::slExecutedSequence(ExecutableConfiguration* configuration, ExecutionResult result)
 {
     mListener->executed(configuration, result);
 
+    // TODO remove
     foreach (QUrl u, result.urls()) {
         mUrls.add_url(u);
     }
 
-    //We finished one iteration, should we terminate?
-    if (mTerminationStrategy->should_terminate()) {
-        finish_up();
-        return;
-    }
-
     mPrioritizerStrategy->reprioritize(mWorklist);
 
-    QList<ExecutableConfiguration*> newConfigurations = mInputgenerator->add_new_configurations(configuration, result);
+	QList<ExecutableConfiguration*> newConfigurations = mInputgenerator->add_new_configurations(configuration, result);
 
-    foreach (ExecutableConfiguration* newConfiguration, newConfigurations) {
-        mWorklist->add(newConfiguration, mPrioritizerStrategy->prioritize(newConfiguration, result));
-    }
+	foreach (ExecutableConfiguration* newConfiguration, newConfigurations) {
+		mWorklist->add(newConfiguration, mPrioritizerStrategy->prioritize(newConfiguration, result));
+	}
 
-    statistics()->accumulate("InputGenerator::added-configurations", newConfigurations.size());
+	statistics()->accumulate("InputGenerator::added-configurations", newConfigurations.size());
 
-    if (mWorklist->empty()) {
-        finish_up();
-        return;
-    }
-
-    //Start next iteration
-    // TODO remove this memory leak
-    ExecutableConfiguration* new_conf = mWorklist->remove();
-
-    mListener->before_execute(new_conf);
-    mWebkitExecutor->executeSequence(new_conf);
+	runNextIteration();
 }
 
 void Runtime::finish_up() {

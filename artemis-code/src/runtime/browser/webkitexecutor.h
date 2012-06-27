@@ -43,8 +43,6 @@
 #include "runtime/ajax/ajaxrequestlistener.h"
 #include "strategies/inputgenerator/targets/jquerylistener.h"
 
-#include "runtime/browser/webkitwrapper.h"
-
 namespace artemis {
 
     class WebKitExecutor : public QObject
@@ -82,8 +80,6 @@ namespace artemis {
         AjaxRequestListener* ajax_listener;
         JQueryListener* mJquery;
         QMap<QString,QString> mPresetFields;
-
-        WebKitWrapper* mWebkitWrapper;
 
     signals:
         void sigExecutedSequence(ExecutableConfiguration* conf, ExecutionResult res);

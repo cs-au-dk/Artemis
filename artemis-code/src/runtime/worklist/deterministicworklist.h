@@ -28,10 +28,11 @@
 #ifndef DETERMINISTICWORKLIST_H
 #define DETERMINISTICWORKLIST_H
 
-#include "worklist.h"
 #include <QMultiHash>
 #include <QSet>
 #include <queue>
+
+#include "worklist.h"
 
 using namespace std;
 
@@ -41,7 +42,8 @@ namespace artemis {
     {
     public:
 
-        DeterministicWorkList();
+        DeterministicWorkList(QObject* parent);
+
         void add(ExecutableConfiguration* e, int priority);
         bool all_zero_priority();
         ExecutableConfiguration* remove();
@@ -49,7 +51,6 @@ namespace artemis {
         bool empty();
         bool contains(ExecutableConfiguration* e);
         void new_priority(ExecutableConfiguration* e, int priority);
-        QString toString();
 
     private:
         int largest_pri;
