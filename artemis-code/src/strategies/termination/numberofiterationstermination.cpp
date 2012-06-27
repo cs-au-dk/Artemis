@@ -38,7 +38,7 @@ namespace artemis {
 
     bool NumberOfIterationsTermination::should_terminate() {
         mIterations++;
-        return (mIterations >= mIterationLimit);
+        return (mIterations > mIterationLimit);
     }
 
     QString NumberOfIterationsTermination::reason() {
