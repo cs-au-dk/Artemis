@@ -17,7 +17,8 @@ QMAKE_CXXFLAGS += -g \
 DEFINES += ARTEMIS=1
 
 # Input
-HEADERS += src/strategies/prioritizer/constantprioritizer.h \
+HEADERS += src/runtime/input/ajaxinput.h \
+    src/strategies/prioritizer/constantprioritizer.h \
     src/strategies/prioritizer/prioritizerstrategy.h \
     src/strategies/prioritizer/randomprioritizer.h \
     src/strategies/inputgenerator/targets/targetgenerator.h \
@@ -78,7 +79,8 @@ HEADERS += src/strategies/prioritizer/constantprioritizer.h \
     src/listeners/sourceloadinglistener.h \
     src/statistics/statsstorage.h \
     src/statistics/writers/pretty.h
-SOURCES += src/strategies/prioritizer/constantprioritizer.cpp \
+SOURCES += src/runtime/input/ajaxinput.cpp \
+    src/strategies/prioritizer/constantprioritizer.cpp \
     src/strategies/prioritizer/randomprioritizer.cpp \
     src/strategies/inputgenerator/targets/targetgenerator.cpp \
     src/builder/builder.cpp \

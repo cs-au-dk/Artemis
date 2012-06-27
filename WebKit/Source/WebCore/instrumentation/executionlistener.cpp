@@ -40,8 +40,7 @@ namespace inst {
         else if (e->toDOMWindow() != NULL)
             domWindowEventAdded(e->toDOMWindow(), s);
         else if (s.compare("readystatechange") == 0) {
-            std::cout << "AJAX CALLBACK DETECTED" << std::endl;
-            ajaxCallbackEventAdded((WebCore::XMLHttpRequest*)e);
+            std::cout << "WEBKIT::AJAX CALLBACK DETECTED" << std::endl;
         } else {
             std::cout << "ERROR: Strange event :" << s << std::endl;
         }
@@ -87,7 +86,7 @@ namespace inst {
         return;
     }
 
-    void ExecutionListener::ajaxCallbackEventAdded(WebCore::XMLHttpRequest*) {
+    void ExecutionListener::ajaxCallbackEventAdded(WebCore::LazyXMLHttpRequest*) {
         return;
     }
 

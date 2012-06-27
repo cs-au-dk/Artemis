@@ -3,22 +3,15 @@ Refactoring notes
 
 Artemis is to go through a substantial refactoring. This will be split into a number of phases.
 
-1. Functional refactoring
 2. Structural refactoring
 3. Memory management review
 4. Coding style
 5. Testing (continuous)
 
-1. Functional Refactoring
--------------------------
-
- - Timeout support & synchronous API for WebKit		EXPERIMENTAL
-
 2. Structural Refactoring
 -------------------------
 
- - Move all code related to the main algorithm into a single function
- - Change initialization and use dependency injection
+ - Check dependencies and logical folder structure
  - Decouple reporting objects
 
 3. Memory management review

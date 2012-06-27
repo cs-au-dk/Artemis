@@ -33,8 +33,6 @@
 #include <QPair>
 #include <QList>
 
-#include <qajaxcallbackhandler.h>
-
 #include "runtime/events/eventhandlerdescriptor.h"
 #include "runtime/browser/timer.h"
 #include "artemisglobals.h"
@@ -64,7 +62,7 @@ namespace artemis {
         void set_state_hash(long hash);
         long page_state_hash() const;
         QSet<QString> eval_strings();
-        QList<QAjaxCallbackHandler*> ajaxCallbackHandlers();
+        QList<int> ajaxCallbackHandlers() const;
         QList<Timer> get_timers() const;
         QString getPageContents() const;
         void setPageContents(QString content);
@@ -93,7 +91,7 @@ namespace artemis {
         long state_hash;
         QSet<AjaxRequest> m_ajax_request;
         QSet<QString> evaled_strings;
-        QList<QAjaxCallbackHandler*> m_ajax_callback_handlers;
+        QList<int> m_ajax_callback_handlers;
         QMap<int, Timer> m_timers; // <timer_id, Timer>
         QString mPageContents;
 
@@ -103,7 +101,7 @@ namespace artemis {
         void sl_script_crash(QString cause, intptr_t sourceID, int lineNumber);
         void add_url(const QUrl url);
         void sl_eval_string(const QString);
-        void addedAjaxCallbackHandler(QAjaxCallbackHandler*);
+        void addedAjaxCallbackHandler(int callbackId);
 
         void sl_timer_added(int timer_id, int timeout, bool single_shot);
         void sl_timer_removed(int timer_id);

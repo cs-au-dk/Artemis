@@ -66,6 +66,7 @@ ExecutionResult::ExecutionResult(const ExecutionResult& other) :
         this->crash_sourceID = other.crash_sourceID;
     }
     this->m_timers = QMap<int, Timer>(other.m_timers);
+    this->m_ajax_callback_handlers = QList<int>(other.m_ajax_callback_handlers);
 }
 
 void ExecutionResult::newEventListener(QWebElement *elem, QString name)
@@ -106,13 +107,13 @@ void ExecutionResult::removeEventListener(QWebElement *elem, QString name)
     Q_ASSERT(removed);
 }
 
-void ExecutionResult::addedAjaxCallbackHandler(QAjaxCallbackHandler* handler)
+void ExecutionResult::addedAjaxCallbackHandler(int callbackId)
 {
     qDebug() << "AJAX CALLBACK HANDLER ADDED" << endl;
-    m_ajax_callback_handlers.append(handler);
+    m_ajax_callback_handlers.append(callbackId);
 }
 
-QList<QAjaxCallbackHandler*> ExecutionResult::ajaxCallbackHandlers()
+QList<int> ExecutionResult::ajaxCallbackHandlers() const
 {
     return m_ajax_callback_handlers;
 }
@@ -247,6 +248,7 @@ ExecutionResult &ExecutionResult::operator=(const ExecutionResult &other)
     this->m_ajax_request = other.m_ajax_request;
     this->evaled_strings = other.evaled_strings;
     this->m_timers = other.m_timers;
+    this->m_ajax_callback_handlers = other.m_ajax_callback_handlers;
     return *this;
 }
 

@@ -12,6 +12,7 @@ namespace WebCore {
     class Node;
     class XMLHttpRequest;
     class ScriptExecutionContext;
+    class LazyXMLHttpRequest;
 }
 
 namespace JSC {
@@ -35,13 +36,12 @@ namespace inst {
         void eventAdded(WebCore::EventTarget *, const char*);
         virtual void domWindowEventAdded(WebCore::DOMWindow*, const std::string);
         virtual void nodeEventAdded(WebCore::Node*, const std::string);
-        virtual void ajaxCallbackEventAdded(WebCore::XMLHttpRequest*);
 
         /**
           Invoked when a dom element no longer has events attached.
           */
         void eventCleared(WebCore::EventTarget *, const char*);
-        virtual void  domWindowEventCleared(WebCore::DOMWindow*, const std::string);
+        virtual void domWindowEventCleared(WebCore::DOMWindow*, const std::string);
         virtual void nodeEventCleared(WebCore::Node*, const std::string);
 
         /**
@@ -84,6 +84,7 @@ namespace inst {
           Ajax
           */
         virtual void webkit_ajax_send(const char * url, const char * data);
+        virtual void ajaxCallbackEventAdded(WebCore::LazyXMLHttpRequest*);
 
         /**
           Eval

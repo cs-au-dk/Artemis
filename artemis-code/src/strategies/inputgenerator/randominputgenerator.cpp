@@ -34,6 +34,7 @@
 #include "runtime/input/baseinput.h"
 #include "runtime/input/dominput.h"
 #include "runtime/input/timerinput.h"
+#include "runtime/input/ajaxinput.h"
 
 #include "randominputgenerator.h"
 
@@ -164,6 +165,20 @@ QList<ExecutableConfiguration*> RandomInputGenerator::insert_extended(const Exec
         ExecutableConfiguration* new_conf = new ExecutableConfiguration(0, new_seq, oldConfiguration->starting_url());
 
         newConfigurations.append(new_conf);
+    }
+
+    qDebug() << "INSERTING AJAX HANDLERS" << endl;
+    foreach (int callbackId, result.ajaxCallbackHandlers()) {
+        qDebug() << "HIT" << endl;
+        AjaxInput* newInput = new AjaxInput(0, callbackId);
+
+        InputSequence* newSequence = oldConfiguration->get_eventsequence()->copy();
+        newSequence->extend(newInput);
+
+        ExecutableConfiguration* newConfiguration = new ExecutableConfiguration(0, newSequence,
+            oldConfiguration->starting_url());
+
+        newConfigurations.append(newConfiguration);
     }
 
     return newConfigurations;
