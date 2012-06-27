@@ -48,7 +48,6 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/runtime/input/timerinput.h \
     src/runtime/browser/executionresult.h \
     src/runtime/browser/webkitexecutor.h \
-    src/runtime/browser/webkitwrapper.h \
     src/runtime/browser/timer.h \
     src/runtime/worklist/deterministicworklist.h \
     src/runtime/worklist/worklist.h \
@@ -105,10 +104,8 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/runtime/input/timerinput.cpp \
     src/runtime/browser/executionresult.cpp \
     src/runtime/browser/webkitexecutor.cpp \
-    src/runtime/browser/webkitwrapper.cpp \
     src/runtime/browser/timer.cpp \
     src/runtime/worklist/deterministicworklist.cpp \
-    src/runtime/worklist/worklist.cpp \
     src/strategies/termination/numberofiterationstermination.cpp \
     src/strategies/inputgenerator/randominputgenerator.cpp \
     src/strategies/inputgenerator/targets/jquerylistener.cpp \

@@ -35,10 +35,11 @@
 
 namespace artemis {
     // TODO move to QObject memory management
-    class WorkList {
+    class WorkList : public QObject {
     public:
-        WorkList();
+        WorkList(QObject* parent) : QObject(parent) {};
         virtual ~WorkList() {};
+
         virtual void add(ExecutableConfiguration* e, int priority) = 0;
         virtual bool all_zero_priority() = 0;
         virtual ExecutableConfiguration* remove() = 0;
@@ -46,11 +47,6 @@ namespace artemis {
         virtual bool empty() = 0;
         virtual bool contains(ExecutableConfiguration* e) = 0;
         virtual void new_priority(ExecutableConfiguration* e, int priority) = 0;
-        virtual QString toString() = 0;
-
-    signals:
-
-    public slots:
 
     };
 
