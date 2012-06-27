@@ -51,6 +51,7 @@
 #include "XMLHttpRequestException.h"
 #include "XMLHttpRequestProgressEvent.h"
 #include "XMLHttpRequestUpload.h"
+#include "LazyXMLHttpRequest.h"
 #include "markup.h"
 #include <wtf/ArrayBuffer.h>
 #include <wtf/RefCountedLeakCounter.h>
@@ -706,34 +707,22 @@ void XMLHttpRequest::createRequest(ExceptionCode& ec)
     m_exceptionCode = 0;
     m_error = false;
 
-#ifdef ARTEMIS
-    /* Force synchronous AJAX calls even if they are handled
-       by the javascript application as asynchronous.
-
-       This is done such that when we decide in the artemis 
-       inputgenerator to trigger the "callback" the ajax 
-       request then the response is available.
-
-       ARTEMIS-TODO
-
-       Please note, that currently the callback is called
-       DIRECTLY after this has been done, and not later - 
-       as it should - by artemis. This apparently has a 
-       sideeffect such that the callback is called before 
-       we explicitly call the "changeState" method.
-    */
-    if (false) {
-#else
     if (m_async) {
-#endif
+
         if (m_upload)
             request.setReportUploadProgress(true);
 
+#ifdef ARTEMIS
+        LazyXMLHttpRequest* lazyRequest = new LazyXMLHttpRequest(scriptExecutionContext(), request, this, options);
+        inst::getDefaultListener()->ajaxCallbackEventAdded(lazyRequest);
+#else
         // ThreadableLoader::create can return null here, for example if we're no longer attached to a page.
         // This is true while running onunload handlers.
         // FIXME: Maybe we need to be able to send XMLHttpRequests from onunload, <http://bugs.webkit.org/show_bug.cgi?id=10904>.
         // FIXME: Maybe create() can return null for other reasons too?
         m_loader = ThreadableLoader::create(scriptExecutionContext(), this, request, options);
+#endif
+
         if (m_loader) {
             // Neither this object nor the JavaScript wrapper should be deleted while
             // a request is in progress because we need to keep the listeners alive,
