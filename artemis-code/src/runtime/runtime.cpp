@@ -92,16 +92,12 @@ void Runtime::start(QUrl url)
 
 void Runtime::runNextIteration()
 {
-    qDebug() << "Iteration" << endl;
-
 	if (mWorklist->empty() ||
 		mTerminationStrategy->should_terminate()) {
 
 		finish_up();
 		return;
 	}
-
-	qDebug() << "Iteration END" << endl;
 
 	// TODO remove this memory leak
 	ExecutableConfiguration* nextConfiguration = mWorklist->remove();
