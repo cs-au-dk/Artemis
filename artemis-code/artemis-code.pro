@@ -76,7 +76,8 @@ HEADERS += src/strategies/prioritizer/constantprioritizer.h \
     src/listeners/pagerecreatelistner.h \
     src/listeners/sourceloadinglistener.h \
     src/statistics/statsstorage.h \
-    src/statistics/writers/pretty.h
+    src/statistics/writers/pretty.h \
+    src/exceptionhandlingqapp.h
 SOURCES += src/strategies/prioritizer/constantprioritizer.cpp \
     src/strategies/prioritizer/randomprioritizer.cpp \
     src/strategies/inputgenerator/targets/targetgenerator.cpp \
@@ -128,5 +129,6 @@ SOURCES += src/strategies/prioritizer/constantprioritizer.cpp \
     src/listeners/pagerecreatelistner.cpp \
     src/listeners/sourceloadinglistener.cpp \
     src/statistics/statsstorage.cpp \
-    src/statistics/writers/pretty.cpp
+    src/statistics/writers/pretty.cpp \
+    src/exceptionhandlingqapp.cpp
 QT += network

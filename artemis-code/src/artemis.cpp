@@ -28,10 +28,11 @@
 #include <iostream>
 #include <stdlib.h>
 #include <getopt.h>
-#include <QApplication>
 #include <QDir>
 #include <QUrl>
+#include <QApplication>
 
+#include "exceptionhandlingqapp.h"
 #include "builder/options.h"
 #include "artemisapplication.h"
 
@@ -134,7 +135,7 @@ int main(int argc, char *argv[]) {
 
 	qInstallMsgHandler(artemisConsoleMessageHandler);
 
-    QApplication app(argc, argv);
+    ExceptionHandlingQApp app(argc, argv);
 
     artemis::Options options;
     QUrl url = parseCmd(argc, argv, options);
