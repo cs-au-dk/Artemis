@@ -30,10 +30,10 @@ class TimerTests(unittest.TestCase):
 		self.assertEqual(1, report.get('InputGenerator::added-configurations', 0))
 		self.assertEqual(1, report.get('timers::fired', 0))
 
-class NonTerminatingTests(unittest.TestCase):
-	
-	def test_non_terminating(self):
-		report = execute_artemis('nonterminating', '%s/nonterminating/nonterminating.html' % WEBSERVER_URL)
+#class NonTerminatingTests(unittest.TestCase):
+#	
+#	def test_non_terminating(self):
+#		report = execute_artemis('nonterminating', '%s/nonterminating/nonterminating.html' % WEBSERVER_URL)
 
 class InstrumentationTests(unittest.TestCase):
 	
@@ -48,10 +48,11 @@ class AjaxTests(unittest.TestCase):
 		"""
 		Detect possible ajax callback, but do not call it right now
 		"""
-		report = execute_artemis('ajax-basic-sync-call', '%s/ajax/index.html' % WEBSERVER_URL,
+		report = execute_artemis('ajax-basic-sync-call-init', '%s/ajax/index.html' % WEBSERVER_URL,
 								iterations=1)
 		
 		self.assertEqual(1, report.get('InputGenerator::added-configurations', 0));
+		self.assertEqual(0, report.get("ajax::fired", 0));
 		self.assertEqual(0, report.get('WebKit::alerts', 0));
 		
 	def test_basic_sync_call(self):
@@ -62,6 +63,7 @@ class AjaxTests(unittest.TestCase):
 								iterations=2)
 		
 		self.assertEqual(1, report.get('InputGenerator::added-configurations', 0));
+		self.assertEqual(1, report.get("ajax::fired", 0));
 		self.assertEqual(1, report.get('WebKit::alerts', 0));
 
 if __name__ == '__main__':

@@ -4,7 +4,6 @@
 #include <QMap>
 #include "qwebkitglobal.h"
 #include "qwebelement.h"
-#include "qajaxcallbackhandler.h"
 
 #include "instrumentation/executionlistener.h"
 
@@ -20,7 +19,6 @@ public:
     //Overrides!
     virtual void domWindowEventAdded(WebCore::DOMWindow*, const std::string);
     virtual void nodeEventAdded(WebCore::Node*, const std::string);
-    virtual void ajaxCallbackEventAdded(WebCore::XMLHttpRequest*);
     virtual void domWindowEventCleared(WebCore::DOMWindow*, const std::string);
     virtual void nodeEventCleared(WebCore::Node*, const std::string);
     virtual void scriptCodeLoaded(intptr_t id,std::string source, std::string url, int startline);
@@ -32,6 +30,11 @@ public:
     virtual void calledFunction(const JSC::DebuggerCallFrame&);
     void installWebKitExecutionListener(inst::ExecutionListener*);
     
+    virtual void ajaxCallbackEventAdded(WebCore::LazyXMLHttpRequest*);
+
+    void ajaxCallbackFire(int callbackId);
+    void clearAjaxCallbacks();
+
     virtual void timerAdded(WebCore::ScriptExecutionContext* context, int timerId, int timeout, bool singleShot);
     virtual void timerRemoved(WebCore::ScriptExecutionContext* context, int timerId);
     void timerFire(int timerId);
@@ -39,21 +42,23 @@ public:
 
 private:
     QMap<int, WebCore::ScriptExecutionContext*> m_timers;
+    QMap<int, WebCore::LazyXMLHttpRequest*> m_ajax_callbacks;
 
 signals:
     void addedEventListener(QWebElement*, QString);
     void removedEventListener(QWebElement*, QString);
     
-    void addedAjaxCallbackHandler(QAjaxCallbackHandler*);
+    void addedAjaxCallbackHandler(int callbackId);
+
+    void addedTimer(int timerId, int timeout, bool singleShot);
+    void removedTimer(int timerId);
+
     void loadedJavaScript(intptr_t id,QString source, QUrl url, int startline);
     void statementExecuted(intptr_t sourceID, std::string function_name, int linenumber);
     void script_crash(QString cause, intptr_t sourceID, int lineNumber);
     void script_url_load(QUrl url);
     void ajax_request(QUrl, QString post_data);  
     void eval_call(QString source_text);
-
-    void addedTimer(int timerId, int timeout, bool singleShot);
-    void removedTimer(int timerId);
 
     void jqueryEventAdded(QString elementSignature, QString event, QString selectors); 
 
