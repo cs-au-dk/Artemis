@@ -34,7 +34,6 @@
 #include <QStack>
 #include <QDebug>
 #include <qwebexecutionlistener.h>
-#include <qajaxcallbackhandler.h>
 #include <instrumentation/executionlistener.h>
 
 #include "runtime/events/forms/formfield.h"
@@ -151,20 +150,6 @@ namespace artemis {
             input->apply(this->page, this->webkit_listener);
             //Wait for any ajax stuff to finish
 	    //            handle_ajax_callbacks();
-        }
-    }
-
-    void WebKitExecutor::handle_ajax_callbacks() {
-        if (current_result->ajaxCallbackHandlers().count() > 0) {
-            qDebug() << "Pending ajax callbacks found, calling..." << endl;
-
-            QAjaxCallbackHandler* ajaxhandler;
-            foreach (ajaxhandler, current_result->ajaxCallbackHandlers()) {
-                ajaxhandler->dispatch();
-                delete ajaxhandler;
-            }
-
-            current_result->ajaxCallbackHandlers().clear();
         }
     }
 
@@ -286,8 +271,8 @@ namespace artemis {
         QObject::connect(webkit_listener, SIGNAL(removedEventListener(QWebElement*,QString)),
                             current_result, SLOT(removeEventListener(QWebElement*,QString)));
         
-        QObject::connect(webkit_listener, SIGNAL(addedAjaxCallbackHandler(QAjaxCallbackHandler*)),
-                            current_result, SLOT(addedAjaxCallbackHandler(QAjaxCallbackHandler*)));
+        QObject::connect(webkit_listener, SIGNAL(addedAjaxCallbackHandler(int)),
+                            current_result, SLOT(addedAjaxCallbackHandler(int)));
         
         QObject::connect(webkit_listener, SIGNAL(addedTimer(int, int, bool)),
                             current_result, SLOT(sl_timer_added(int, int, bool)));

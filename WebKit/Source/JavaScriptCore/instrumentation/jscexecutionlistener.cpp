@@ -36,7 +36,7 @@ void JSCExecutionListener::listen_byte_code_executed(CodeBlock* codeBlock, Instr
 }
 
 void JSCExecutionListener::jsc_bytecode_executed(const char * url, unsigned int linenumber, int bytecode_offset, int opcodeID) {
-    cout << "WARNING: Default listener for jsc_bytecode_executed was invoked " << endl;
+    //cout << "WARNING: Default listener for jsc_bytecode_executed was invoked " << endl;
 }
 
 void initialize_js_listener(JSCExecutionListener* l) {

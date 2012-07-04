@@ -1894,7 +1894,7 @@ int CodeBlock::lineNumberForBytecodeOffset(unsigned bytecodeOffset)
 
     int low = 0;
     int high = lineInfo.size();
-    std::cout << "LL: " <<lineInfo.size() << std::endl;
+    //std::cout << "LL: " <<lineInfo.size() << std::endl;
     while (low < high) {
         int mid = low + (high - low) / 2;
         if (lineInfo[mid].instructionOffset <= bytecodeOffset)

@@ -12,6 +12,7 @@
 #include "JavaScriptCore/runtime/Identifier.h"
 #include "JavaScriptCore/heap/Heap.h"
 #include "WebCore/xml/XMLHttpRequest.h"
+#include "WebCore/xml/LazyXMLHttpRequest.h"
 #include "WebCore/dom/ScriptExecutionContext.h"
 #include "WebCore/page/DOMTimer.h"
 
@@ -41,9 +42,22 @@ void QWebExecutionListener::domWindowEventCleared(WebCore::DOMWindow * window, c
     emit removedEventListener(new QWebElement(window->frameElement()), QString(tr(s.c_str())));
 }
 
-void QWebExecutionListener::ajaxCallbackEventAdded(WebCore::XMLHttpRequest* xhr) {
-    QAjaxCallbackHandler* handler = new QAjaxCallbackHandler(xhr);
-    emit addedAjaxCallbackHandler(handler);
+void QWebExecutionListener::ajaxCallbackEventAdded(WebCore::LazyXMLHttpRequest* xmlHttpRequest) {
+    int id = m_ajax_callbacks.size();
+    m_ajax_callbacks.insert(id, xmlHttpRequest);
+    emit addedAjaxCallbackHandler(id);
+}
+
+void QWebExecutionListener::ajaxCallbackFire(int callbackId) {
+	WebCore::LazyXMLHttpRequest* xmlHttpRequest = m_ajax_callbacks.value(callbackId);
+	xmlHttpRequest->fire();
+	delete xmlHttpRequest;
+
+	m_ajax_callbacks.remove(callbackId);
+}
+
+void QWebExecutionListener::clearAjaxCallbacks() {
+	m_ajax_callbacks.clear();
 }
 
 // TIMERS START

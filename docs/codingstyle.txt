@@ -5,9 +5,9 @@ The QT coding style[1] is followed with the following additions:
 
 	Member variables (private and public) are prefixed by "m".
 
-2. Slots
+2. Slots & Signals
 
-	Slots are prefixed by "sl" e.g.
+	Slots are prefixed by "sl" and signals "sig"
 
 3. Implicit or explicit this pointers
 
