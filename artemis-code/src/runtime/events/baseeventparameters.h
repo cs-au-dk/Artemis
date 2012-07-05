@@ -36,18 +36,10 @@ namespace artemis {
     class BaseEventParameters : public EventParameters
     {
     public:
-        BaseEventParameters(QString type, bool bubbles, bool cancelable);
-        BaseEventParameters(const BaseEventParameters& other);
-        BaseEventParameters();
+        BaseEventParameters(QObject* parent, QString type, bool bubbles, bool cancelable);
 
         QString js_string() ;
-        EventType type() const;
-
-        BaseEventParameters &operator=( BaseEventParameters &other);
-        bool operator ==(BaseEventParameters &other);
-        bool operator ==(EventParameters &other);
-        QDebug friend operator<<(QDebug dbg, const BaseEventParameters &e);
-        uint hashcode() const;
+        EventType type() const; 
 
     private:
         QString name;

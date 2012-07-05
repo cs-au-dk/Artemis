@@ -28,29 +28,23 @@
 #ifndef EVENTPARAMETERS_H
 #define EVENTPARAMETERS_H
 
-#include <QDebug>
+#include <QObject>
+
 #include "eventypes.h"
 
 namespace artemis {
 
-    class EventParameters
+    class EventParameters : public QObject
     {
     public:
-        EventParameters();
+        EventParameters(QObject* parent) : QObject(parent) {};
 
         /*
          Returns a javascript function call on the form EVENT_OBJECT_PLACEHOLDER.initXevent(..params..)"
          */
         virtual QString js_string() = 0;
         virtual EventType type() const = 0;
-
-        //virtual EventParameters &operator=( EventParameters &other) = 0;
-        virtual bool operator==(EventParameters &other) = 0;
-        QDebug friend operator<<(QDebug dbg, const EventParameters &e);
-        virtual uint hashcode() const = 0;
     };
-
-    EventParameters* clone_eventparams(EventParameters* e);
 
 }
 

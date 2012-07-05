@@ -92,7 +92,6 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/runtime/events/baseeventparameters.cpp \
     src/runtime/events/domelementdescriptor.cpp \
     src/runtime/events/eventhandlerdescriptor.cpp \
-    src/runtime/events/eventparameters.cpp \
     src/runtime/events/eventtypes.cpp \
     src/runtime/events/forms/formfield.cpp \
     src/runtime/events/forms/formfieldvalue.cpp \
