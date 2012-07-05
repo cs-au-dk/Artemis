@@ -35,22 +35,13 @@ namespace artemis {
     class MouseEventParameters : public EventParameters
     {
     public:
-        MouseEventParameters(QString type, bool canBubble, bool cancelable,
+        MouseEventParameters(QObject* parent, QString type, bool canBubble, bool cancelable,
                              int detail, int screenX, int screenY, int clientX, int clientY,
                              bool ctrlKey, bool altKey, bool  shiftKey, bool  metaKey,
                              int button);
 
-        MouseEventParameters();
-        MouseEventParameters(const MouseEventParameters& other);
-
         QString js_string() ;
         EventType type() const;
-
-        MouseEventParameters &operator=( MouseEventParameters &other);
-        bool operator ==(MouseEventParameters &other);
-        bool operator ==(EventParameters &other);
-        QDebug friend operator<<(QDebug dbg, const MouseEventParameters &e);
-        uint hashcode() const;
 
         bool canBubble;
         bool cancelable;

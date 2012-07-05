@@ -46,11 +46,11 @@ namespace artemis {
     	switch (eventHandler.getEventType()) {
 
     	case BASE_EVENT:
-    		return new BaseEventParameters(eventHandler.name(),true,true);
+    		return new BaseEventParameters(NULL, eventHandler.name(),true,true);
     		break;
 
     	case MOUSE_EVENT:
-    		return new MouseEventParameters(eventHandler.name(),
+    		return new MouseEventParameters(NULL, eventHandler.name(),
                     true,
                     true,
                     1,
@@ -66,7 +66,7 @@ namespace artemis {
     		break;
 
     	case KEY_EVENT:
-    		return new KeyboardEventParameters(eventHandler.name(),
+    		return new KeyboardEventParameters(NULL, eventHandler.name(),
                     true,
                     true,
                     QString("a"),

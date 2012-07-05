@@ -31,16 +31,13 @@
 
 namespace artemis {
 
-    BaseEventParameters::BaseEventParameters(QString name, bool bubbles, bool cancelable)
+    BaseEventParameters::BaseEventParameters(QObject* parent, QString name, bool bubbles, bool cancelable)
+    : EventParameters(parent)
     {
         Q_ASSERT(!name.isEmpty());
         this->name = name;
         this->bubbles = bubbles;
         this->cancelable = cancelable;
-    }
-
-    BaseEventParameters::BaseEventParameters() {
-
     }
 
     QString BaseEventParameters::js_string()  {
@@ -62,40 +59,6 @@ namespace artemis {
 
     EventType BaseEventParameters::type() const {
         return BASE_EVENT;
-    }
-
-    BaseEventParameters::BaseEventParameters(const BaseEventParameters &other) {
-        this->name = other.name;
-        this->bubbles = other.bubbles;
-        this->cancelable = other.cancelable;
-    }
-
-    BaseEventParameters& BaseEventParameters::operator=( BaseEventParameters &other) {
-        this->name = other.name;
-        this->bubbles = other.bubbles;
-        this->cancelable = other.cancelable;
-        return *this;
-    }
-
-    bool BaseEventParameters::operator ==( BaseEventParameters &other) {
-        return (name == other.name)
-                && (bubbles == other.bubbles)
-                && (cancelable == other.cancelable);
-    }
-
-    bool BaseEventParameters::operator ==(EventParameters &other) {
-        if (other.type() != type())
-            return false;
-        return *this == ((BaseEventParameters&)other);
-    }
-
-    QDebug  operator<<(QDebug dbg, const BaseEventParameters &e) {
-        dbg.nospace() << "(name: " << e.name << ",bubbles: " << e.bubbles << ",cancelable: " << e.cancelable << ")" <<endl;
-        return dbg.space();
-    }
-
-    uint BaseEventParameters::hashcode() const {
-        return qHash(name)*17 + 7*(bubbles ? 1 : 0) + 23*(cancelable ? 1 : 0);
     }
 
 }

@@ -115,8 +115,6 @@ BaseInput *RandomInputGenerator::permutate_input(const DomInput *input)
 
     DomInput *new_last = new DomInput(0, hh, new_form, new_params, target);
 
-    delete new_params;
-
     return new_last;
 }
 
@@ -152,8 +150,6 @@ QList<ExecutableConfiguration*> RandomInputGenerator::insert_extended(const Exec
         ExecutableConfiguration* newConfiguration = new ExecutableConfiguration(0, newInputSequence, oldConfiguration->starting_url());
 
         newConfigurations.append(newConfiguration);
-
-        delete new_params;
     }
 
     foreach (const Timer timer, result.get_timers()) {

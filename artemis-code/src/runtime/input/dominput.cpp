@@ -44,7 +44,7 @@ DomInput::DomInput(QObject* parent, const EventHandlerDescriptor &handler,
     mFormInput = formInput;
 
     mEvtParams = params;
-    //mEvtParams->setParent(this);
+    mEvtParams->setParent(this);
 
     mTarget = target;
     //mTarget->setParent(this);
@@ -54,7 +54,8 @@ void DomInput::apply(ArtemisWebPage *page, QWebExecutionListener *webkit_listene
 {
     QWebElement handler = this->mEventHandler->dom_element().get_element(page);
     QWebElement target = this->target()->get(page);
-    QString js_init_event = this->event_params()->js_string();
+
+    QString js_init_event = mEvtParams->js_string();
 
     this->getFormInput().write_to_page(page);
 

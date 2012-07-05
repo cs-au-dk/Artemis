@@ -32,10 +32,11 @@
 
 namespace artemis {
 
-    MouseEventParameters::MouseEventParameters(QString type, bool canBubble, bool cancelable,
+    MouseEventParameters::MouseEventParameters(QObject* parent, QString type, bool canBubble, bool cancelable,
                                                int detail, int screenX, int screenY, int clientX, int clientY,
                                                bool ctrlKey, bool altKey, bool  shiftKey, bool  metaKey,
                                                int button)
+    : EventParameters(parent)
     {
         Q_ASSERT(!type.isEmpty());
         this->altKey = altKey;
@@ -53,29 +54,6 @@ namespace artemis {
         this->metaKey = metaKey;
         this->button = button;
     }
-
-
-    MouseEventParameters::MouseEventParameters() {
-
-    }
-
-    MouseEventParameters::MouseEventParameters(const MouseEventParameters& other) {
-        this->altKey = other.altKey;
-        this->type_n = other.type_n;
-        this->canBubble = other.canBubble;
-        this->cancelable = other.cancelable;
-        this->detail = other.detail;
-        this->screenX = other.screenX;
-        this->screenY = other.screenY;
-        this->clientX = other.clientX;
-        this->clientY = other.clientY;
-        this->ctrlKey = other.ctrlKey;
-        this->altKey = other.altKey;
-        this->shiftKey = other.shiftKey;
-        this->metaKey = other.metaKey;
-        this->button = other.button;
-    }
-
 
     /**
 type
@@ -140,59 +118,6 @@ the Event's related EventTarget. Only used with some event types (e.g. mouseover
 
     EventType MouseEventParameters::type() const{
         return MOUSE_EVENT;
-    }
-
-    MouseEventParameters &MouseEventParameters::operator=( MouseEventParameters &other) {
-        this->altKey = other.altKey;
-        this->type_n = other.type_n;
-        this->canBubble = other.canBubble;
-        this->cancelable = other.cancelable;
-        this->detail = other.detail;
-        this->screenX = other.screenX;
-        this->screenY = other.screenY;
-        this->clientX = other.clientX;
-        this->clientY = other.clientY;
-        this->ctrlKey = other.ctrlKey;
-        this->altKey = other.altKey;
-        this->shiftKey = other.shiftKey;
-        this->metaKey = other.metaKey;
-        this->button = other.button;
-        return *this;
-    }
-
-    bool MouseEventParameters::operator==(MouseEventParameters &other) {
-       return (altKey == other.altKey)
-               && (type_n == other.type_n)
-               && (canBubble == other.canBubble)
-               && (cancelable == other.cancelable)
-               && (detail == other.detail)
-               && (screenX == other.screenX)
-               && (screenY == other.screenY)
-               && (clientX == other.clientX)
-               && (clientY == other.clientY)
-               && (ctrlKey == other.ctrlKey)
-               && (altKey = other.altKey)
-               && (shiftKey == other.shiftKey)
-               && (metaKey == other.metaKey)
-               && (button = other.button);
-    }
-
-    bool MouseEventParameters::operator ==(EventParameters &other) {
-        if (other.type() != type())
-            return false;
-        return *this == ((MouseEventParameters&)other);
-    }
-
-    QDebug operator<<(QDebug dbg, const MouseEventParameters &e) {
-        dbg.nospace() << "(name: " << e.type_n << ",bubbles: " << e.canBubble << ",cancelable: " << e.cancelable << ",button " << e.button << ")" <<endl;
-        return dbg.space();
-    }
-
-    uint MouseEventParameters::hashcode() const {
-        return hash_bool(7,altKey) + qHash(type_n)*13 + hash_bool(31,canBubble)
-                + hash_bool(11,cancelable) + 3*detail + 5*screenX + 17*screenY + 19*clientX
-                + 23*clientY + hash_bool(29,ctrlKey) + hash_bool(37,altKey) + hash_bool(41,shiftKey) + hash_bool(43,metaKey)
-                + 47*button;
     }
 
 }

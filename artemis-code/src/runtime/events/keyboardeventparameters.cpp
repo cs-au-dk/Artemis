@@ -31,11 +31,10 @@
 
 namespace artemis {
 
-    //KeyboardEventParameters::KeyboardEventParameters() {}
-
-    KeyboardEventParameters::KeyboardEventParameters(QString eventType, bool canBubble, bool cancelable,
+    KeyboardEventParameters::KeyboardEventParameters(QObject* parent, QString eventType, bool canBubble, bool cancelable,
                                                      QString keyIdentifier,  unsigned int keyLocation,
-                                                     bool ctrlKey, bool altKey, bool shiftKey, bool metaKey, bool altGraphKey)
+                                                     bool ctrlKey, bool altKey, bool shiftKey, bool metaKey, bool altGraphKey) 
+    : EventParameters(parent)
     {
         Q_ASSERT(!eventType.isEmpty());
         this->eventType = eventType;
@@ -48,10 +47,6 @@ namespace artemis {
         this->shiftKey = shiftKey;
         this->metaKey = metaKey;
         this->altGraphKey = altGraphKey;
-    }
-
-    KeyboardEventParameters::KeyboardEventParameters() {
-
     }
 
     QString KeyboardEventParameters::js_string() {
@@ -80,63 +75,6 @@ namespace artemis {
 
     EventType KeyboardEventParameters::type() const {
         return KEY_EVENT;
-    }
-
-    KeyboardEventParameters::KeyboardEventParameters(const KeyboardEventParameters &other) {
-        this->eventType = other.eventType;
-        this->canBubble = other.canBubble;
-        this->keyIdentifier = other.keyIdentifier;
-        this->keyLocation = other.keyLocation;
-        this->ctrlKey = other.ctrlKey;
-        this->altKey = other.altKey;
-        this->shiftKey = other.shiftKey;
-        this->metaKey = other.metaKey;
-        this->altGraphKey = other.altGraphKey;
-        this->cancelable = other.cancelable;
-    }
-
-    KeyboardEventParameters &KeyboardEventParameters::operator=( KeyboardEventParameters &other) {
-        this->eventType = other.eventType;
-        this->canBubble = other.canBubble;
-        this->keyIdentifier = other.keyIdentifier;
-        this->keyLocation = other.keyLocation;
-        this->ctrlKey = other.ctrlKey;
-        this->altKey = other.altKey;
-        this->shiftKey = other.shiftKey;
-        this->metaKey = other.metaKey;
-        this->altGraphKey = other.altGraphKey;
-        this->cancelable = other.cancelable;
-        return *this;
-    }
-
-    bool KeyboardEventParameters::operator==(KeyboardEventParameters &other) {
-        return eventType == other.eventType &&
-                canBubble == other.canBubble &&
-                keyIdentifier == other.keyIdentifier &&
-                keyLocation == other.keyLocation &&
-                ctrlKey == other.ctrlKey &&
-                altKey == other.altKey &&
-                shiftKey == other.shiftKey &&
-                metaKey == other.metaKey &&
-                altGraphKey == other.altGraphKey &&
-                cancelable == other.cancelable;
-    }
-
-    bool KeyboardEventParameters::operator ==(EventParameters &other) {
-        if (other.type() != type())
-            return false;
-        return *this == ((KeyboardEventParameters&)other);
-    }
-
-    QDebug operator<<(QDebug dbg, const KeyboardEventParameters &e) {
-        dbg.nospace() << "(name: " << e.eventType << ",bubbles: " << e.canBubble << ",cancelable: " << e.cancelable << ",button " << e.keyIdentifier << ")" <<endl;
-        return dbg.space();
-    }
-
-    uint KeyboardEventParameters::hashcode() const {
-        return hash_bool(7,altKey) + qHash(eventType)*13 + hash_bool(31,canBubble)
-                + hash_bool(11,cancelable) + hash_bool(29,ctrlKey) + hash_bool(37,altKey) + hash_bool(41,shiftKey) + hash_bool(43,metaKey)
-                + 47*qHash(keyIdentifier) + 17*keyLocation +hash_bool(23,altGraphKey);
     }
 
 }

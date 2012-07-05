@@ -37,23 +37,12 @@ namespace artemis {
     {
     public:
 
-        //KeyboardEventParameters();
-
-        KeyboardEventParameters(QString eventType, bool canBubble, bool cancelable,
+        KeyboardEventParameters(QObject* parent, QString eventType, bool canBubble, bool cancelable,
                                 QString keyIdentifier,  unsigned int keyLocation,
                                 bool ctrlKey, bool altKey, bool shiftKey, bool metaKey, bool altGraphKey);
 
-        KeyboardEventParameters();
-        KeyboardEventParameters(const KeyboardEventParameters& other);
-
         QString js_string() ;
         EventType type() const;
-
-        KeyboardEventParameters &operator=( KeyboardEventParameters &other);
-        bool operator==(KeyboardEventParameters &other);
-        bool operator==(EventParameters &other);
-        QDebug friend operator<<(QDebug dbg, const KeyboardEventParameters &e);
-        uint hashcode() const;
 
         //Event options:
         bool canBubble;
