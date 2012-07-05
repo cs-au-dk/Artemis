@@ -58,7 +58,7 @@ public:
     EventParameters* event_params() const;
 
 private:
-    EventHandlerDescriptor mEventHandler;
+    EventHandlerDescriptor* mEventHandler;
     FormInput mFormInput;
     EventParameters* mEvtParams;
     TargetDescriptor* mTarget;
