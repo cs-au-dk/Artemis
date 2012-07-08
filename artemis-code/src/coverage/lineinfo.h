@@ -47,6 +47,8 @@ namespace artemis {
         QDebug friend operator<<(QDebug dbg, const LineInfo &e);
         uint hashcode() const;
 
+        QString toString() const;
+
     private:
         int m_hitcount;
 

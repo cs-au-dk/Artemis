@@ -47,6 +47,8 @@ namespace artemis {
         QDebug friend operator<<(QDebug dbg, const CodeCoverage &e);
         uint hashcode() const;
 
+        QString toString() const;
+
     private:
         QMap<int, SourceInfo> m_sources;
         QMap<int, QMap<int, LineInfo> > m_coverage;
