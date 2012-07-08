@@ -67,6 +67,10 @@ namespace artemis {
         dbg.nospace() << (e.m_hitcount > 0 ? "COVERED[" + QString::number(e.m_hitcount) + QString(']') : "UNCOVERED");
         return dbg.space();
     }
+
+    QString LineInfo::toString() const {
+        return m_hitcount > 0 ? "COVERED[" + QString::number(m_hitcount) + QString(']') : "UNCOVERED";
+    }
 }
 
 

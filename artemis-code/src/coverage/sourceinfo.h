@@ -47,6 +47,8 @@ namespace artemis {
         QDebug friend operator<<(QDebug dbg, const SourceInfo &e);
         bool operator==(const SourceInfo& other) const;
 
+        QString toString() const;
+
     private:
         QString m_source;
         QUrl m_url;

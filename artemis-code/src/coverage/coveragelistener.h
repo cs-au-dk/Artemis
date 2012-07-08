@@ -42,7 +42,7 @@ namespace artemis {
         Q_OBJECT
     public:
         explicit CoverageListener(QObject *parent = 0);
-        CodeCoverage currrent_coverage();
+        CodeCoverage current_coverage();
 
 
     private:

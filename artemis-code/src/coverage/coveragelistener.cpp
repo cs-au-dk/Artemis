@@ -36,7 +36,7 @@ namespace artemis {
     {
     }
 
-    CodeCoverage CoverageListener::currrent_coverage() {
+    CodeCoverage CoverageListener::current_coverage() {
         QMap<int, SourceInfo> sourcess;
         QMap<int, QMap<int, LineInfo> > coveragee;
         QMapIterator<int, SourceInfo*> iter(sources);

@@ -70,4 +70,17 @@ namespace artemis {
         return m_coverage[id];
     }
 
+    QString CodeCoverage::toString() const {
+        QString res;
+        foreach (int p, source_ids()) {
+            res.append("[" + source_info(p).toString());
+            foreach (int q, line_info(p).keys()) {
+                res.append("[LINE " + QString::number(q) + " " + line_info(p)[q].toString() + "]");
+            }
+            res.append("]");
+        }
+
+        return res;
+    }
+
 }
