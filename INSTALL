@@ -1,22 +1,28 @@
 -1. Please ensure you have a working installation of Qt 4.8 or
-higher. If this is not the case, a copy can be downloaded by running
+    higher. If this is not the case, a copy can be downloaded by running
 
-   make qt-checkout   
-   cd qt
-   ./configure
-   make
+        make qt-checkout   
+   	cd qt
+   	./configure
+   	make [install]
 
-0. Apply qhash.patch to your Qt Installation by running
+    If you did not run 'make install' make sure the environment
+    variable QTDIR is set as appropriate, and that 'QTDIR/bin' is
+    added to the PATH variable.
 
-   make qhash-patch
+ 0. Apply qhash.patch to your Qt Installation by running
 
-1. Confirm that qmake version 4.8 is on your path and then build the
-instrumented webkit by running
+        make qhash-patch
+
+ 1. Set the environment variable ARTEMIS_PATH to where you want to
+    install Artemis and the instrumented version of WebKit
+
+        export ARTEMIS_PATH=<path>
+
+ 2. Confirm that qmake version 4.8 is on your path and then build and
+    install Artemis 
    
-   qmake --version
-   make webkit[-minimal]
+        qmake --version
+   	make install
 
-2. Build artemis!
-
-   make artemis
 
