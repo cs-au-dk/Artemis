@@ -12,7 +12,7 @@ help:
 
 WEBKIT_BUILD_SCRIPT = ./WebKit/Tools/Scripts/build-webkit --qt --qmakearg="DEFINES+=ARTEMIS=1" --makearg="-j4"
 
-build: webkit artemis
+build: check webkit artemis
 
 install: artemis-install webkit-install
 
@@ -20,7 +20,7 @@ webkit:
 	@echo "Building release QtWebKit"
 	${WEBKIT_BUILD_SCRIPT}
 
-webkit-install: 
+webkit-install: webkit
 	mkdir -p ${ARTEMIS_PATH}/WebKit/WebKitBuild
 	cp -r ./WebKit/WebKitBuild/* ${ARTEMIS_PATH}/WebKit/WebKitBuild
 
@@ -53,4 +53,15 @@ qt-checkout:
 	git clone git://gitorious.org/qt/qt.git
 
 qhash-patch:
-	patch ./qt/src/corelib/tools/qhash.h qhash.patch
+	patch ${QTDIR}/src/corelib/tools/qhash.h qhash.patch
+
+check:
+	@echo "Testing for software dependencies - if an error occurs, consult your local package manager for the programme immeadiately checked for"
+	which flex > /dev/null
+	which bison > /dev/null
+	which gperf > /dev/null
+	which ruby > /dev/null
+	which cmake > /dev/null
+	which lemon > /dev/null
+	which re2c > /dev/null
+	which blabla > /dev/null
