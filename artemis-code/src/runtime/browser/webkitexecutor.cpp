@@ -306,7 +306,7 @@ namespace artemis {
     }
 
     CodeCoverage WebKitExecutor::coverage() {
-        return cov_list->currrent_coverage();
+        return cov_list->current_coverage();
     }
 
     void WebKitExecutor::sl_script_crash(QString ca, intptr_t id, int n) {
