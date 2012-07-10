@@ -49,6 +49,8 @@ namespace artemis {
 
         QString toString() const;
 
+
+
     private:
         QMap<int, SourceInfo> m_sources;
         QMap<int, QMap<int, LineInfo> > m_coverage;
