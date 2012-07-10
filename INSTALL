@@ -1,14 +1,23 @@
+-2. Fetch all software dependencies using
+
+        fetch-[apt|yum]
+
+    depending on your local package manager.
+
 -1. Please ensure you have a working installation of Qt 4.8 or
     higher. If this is not the case, a copy can be downloaded by running
 
         make qt-checkout   
    	cd qt
    	./configure
-   	make [install]
+   	make
 
-    If you did not run 'make install' make sure the environment
-    variable QTDIR is set as appropriate, and that 'QTDIR/bin' is
-    added to the PATH variable.
+    Do not run 'make install', and ensure subsequently that the
+    environment variable QTDIR is set as appropriate, and that
+    'QTDIR/bin' is added to the PATH variable.
+        
+        export QTDIR=/home/user/Artemis/qt
+	export PATH=$QTDIR/bin:$PATH
 
  0. Apply qhash.patch to your Qt Installation by running
 
