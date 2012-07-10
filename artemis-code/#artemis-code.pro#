@@ -14,11 +14,7 @@ DESTDIR = dist
 LIBS += ../WebKit/WebKitBuild/Release/lib/libQtWebKit.so
 QMAKE_CXXFLAGS += -g \
     -DEXE_BUILD_DATE="`date +'\"%d-%m-%Y_%H:%M:%S\"'`"
-DEFINES += ARTEMIS=1
-
-installtarget.path = $$(ARTEMIS_PATH)/bin
-installtarget.files = dist/*
-INSTALLS += installtarget
+DEFINES += ARTE
 
 # Input
 HEADERS += src/runtime/input/ajaxinput.h \
