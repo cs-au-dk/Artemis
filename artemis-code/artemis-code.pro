@@ -78,6 +78,7 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/listeners/multiplexlistener.h \
     src/util/fileutil.h \
     src/util/urlutil.h \
+    src/util/coverageutil.h \
     src/listeners/pagerecreatelistner.h \
     src/listeners/sourceloadinglistener.h \
     src/statistics/statsstorage.h \
@@ -132,6 +133,7 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/listeners/multiplexlistener.cpp \
     src/util/fileutil.cpp \
     src/util/urlutil.cpp \
+    src/util/coverageutil.cpp \
     src/listeners/pagerecreatelistner.cpp \
     src/listeners/sourceloadinglistener.cpp \
     src/statistics/statsstorage.cpp \
