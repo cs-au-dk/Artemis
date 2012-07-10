@@ -56,7 +56,7 @@ qhash-patch:
 	patch ./qt/src/corelib/tools/qhash.h qhash.patch
 
 check:
-	@echo "Testing for software dependencies - if an error occurs, consult your local package manager for the programme immeadiately checked for"
+	@echo "Testing for software dependencies - if an error occurs, consult your local package manager for the program immeadiately checked for"
 	which g++ > /dev/null
 	which qmake > /dev/null
 	which flex > /dev/null
@@ -66,6 +66,11 @@ check:
 	which cmake > /dev/null
 	which lemon > /dev/null
 	which re2c > /dev/null
-### libxext-dev pkg
-### libfontconfig-dev
-### libxrender-dev
+
+DEPENDENCIES = g++ flex bison gperf ruby cmake lemon re2c libxext-dev libfontconfig-dev libxrender-dev
+
+fetch-apt:
+	sudo apt-get install ${DEPENDENCIES}
+
+fetch-yum:
+	yum install ${DEPENDENCIES}
