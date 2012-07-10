@@ -7,6 +7,11 @@ build-output
 artemis-build-output
 qt-env*
 
+qt/*
+qt
+
+
+
 js-code-dump
 
 artemis-code/Makefile
