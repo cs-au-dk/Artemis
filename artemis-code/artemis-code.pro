@@ -1,8 +1,8 @@
 TEMPLATE = app
 TARGET = artemis
 DEPENDPATH += .
-INCLUDEPATH += ../WebKit/WebKitBuild/Debug/include/ \
-    ../WebKit/WebKitBuild/Debug/include/QtWebKit/ \
+INCLUDEPATH += ../WebKit/WebKitBuild/Release/include/ \
+    ../WebKit/WebKitBuild/Release/include/QtWebKit/ \
     ../WebKit/Source/WebCore \
     . \
     inputgenerators \
@@ -11,10 +11,14 @@ CONFIG -= app_bundle
 OBJECTS_DIR = build
 MOC_DIR = build
 DESTDIR = dist
-LIBS += ../WebKit/WebKitBuild/Debug/lib/libQtWebKit.so
+LIBS += ../WebKit/WebKitBuild/Release/lib/libQtWebKit.so
 QMAKE_CXXFLAGS += -g \
     -DEXE_BUILD_DATE="`date +'\"%d-%m-%Y_%H:%M:%S\"'`"
 DEFINES += ARTEMIS=1
+
+installtarget.path = $$(ARTEMIS_PATH)/bin
+installtarget.files = dist/*
+INSTALLS += installtarget
 
 # Input
 HEADERS += src/runtime/input/ajaxinput.h \
