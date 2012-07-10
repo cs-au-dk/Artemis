@@ -25,4 +25,6 @@
         qmake --version
    	make install
 
+ 3. Finally, add the WebKit libraries to ld's library path:
 
+export LD_LIBRARY_PATH=$ARTEMIS_PATH/WebKit/WebKitBuild/Release/lib

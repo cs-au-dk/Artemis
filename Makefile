@@ -14,9 +14,9 @@ WEBKIT_BUILD_SCRIPT = ./WebKit/Tools/Scripts/build-webkit --qt --qmakearg="DEFIN
 
 build: check webkit artemis
 
-install: artemis-install webkit-install
+install: webkit-install artemis-install
 
-webkit:
+webkit: check
 	@echo "Building release QtWebKit"
 	${WEBKIT_BUILD_SCRIPT}
 
@@ -53,10 +53,12 @@ qt-checkout:
 	git clone git://gitorious.org/qt/qt.git
 
 qhash-patch:
-	patch ${QTDIR}/src/corelib/tools/qhash.h qhash.patch
+	patch ./qt/src/corelib/tools/qhash.h qhash.patch
 
 check:
 	@echo "Testing for software dependencies - if an error occurs, consult your local package manager for the programme immeadiately checked for"
+	which g++ > /dev/null
+	which qmake > /dev/null
 	which flex > /dev/null
 	which bison > /dev/null
 	which gperf > /dev/null
@@ -64,4 +66,6 @@ check:
 	which cmake > /dev/null
 	which lemon > /dev/null
 	which re2c > /dev/null
-	which blabla > /dev/null
+### libxext-dev pkg
+### libfontconfig-dev
+### libxrender-dev
