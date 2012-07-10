@@ -49,6 +49,10 @@ namespace artemis {
 
         QString toString() const;
 
+        QString getSource() const;
+        QString getURL() const;
+        int getStartLine() const;
+
     private:
         QString m_source;
         QUrl m_url;

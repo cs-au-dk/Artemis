@@ -40,6 +40,7 @@
 #include "runtime/events/domelementdescriptor.h"
 #include "strategies/inputgenerator/targets/jquerylistener.h"
 #include "runtime/input/baseinput.h"
+#include "util/coverageutil.h"
 
 #include "webkitexecutor.h"
 
@@ -73,7 +74,7 @@ namespace artemis {
         QObject::connect(webkit_listener, SIGNAL(ajax_request(QUrl, QString)),
                          this, SLOT(sl_ajax_request(QUrl, QString)));
         QObject::connect(webkit_listener, SIGNAL(loadedJavaScript(intptr_t, QString, QUrl, int)),
-                         this, SLOT(sl_code_loaded(intptr_t, QString, QUrl, int)));
+                         this, SLOT(fileutilsl_code_loaded(intptr_t, QString, QUrl, int)));
         
         QObject::connect(webkit_listener, SIGNAL(jqueryEventAdded(QString, QString, QString)),
                          mJquery, SLOT(sl_event_added(QString, QString, QString)));
@@ -241,7 +242,9 @@ namespace artemis {
     void WebKitExecutor::finish_up() {
         if (current_result != 0) {
             qDebug() << "Removing old result" << endl;
-            
+
+            write_coverage_html("coverage", coverage());
+
             current_result->disconnect();
 
             delete current_conf;
@@ -306,7 +309,7 @@ namespace artemis {
     }
 
     CodeCoverage WebKitExecutor::coverage() {
-        return cov_list->currrent_coverage();
+        return cov_list->current_coverage();
     }
 
     void WebKitExecutor::sl_script_crash(QString ca, intptr_t id, int n) {

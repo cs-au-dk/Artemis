@@ -67,6 +67,18 @@ namespace artemis {
         Q_ASSERT(false);
     }
 
+    QString SourceInfo::getSource() const {
+        return QString(m_source);
+    }
+
+    int SourceInfo::getStartLine() const {
+        return m_start_line;
+    }
+
+    QString SourceInfo::getURL() const {
+        return m_url.toString();
+    }
+
     QString SourceInfo::toString() const {
         return "[" + m_url.toString() + ", " + QString::number(m_start_line) + ", " + m_source + "ENDOFJSOURCE]";
     }
