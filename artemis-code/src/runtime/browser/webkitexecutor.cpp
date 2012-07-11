@@ -243,7 +243,9 @@ namespace artemis {
         if (current_result != 0) {
             qDebug() << "Removing old result" << endl;
 
+
             write_coverage_html("coverage", coverage());
+
 
             current_result->disconnect();
 

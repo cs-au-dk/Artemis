@@ -7,7 +7,7 @@
 
 namespace artemis {
 
-    void write_coverage_html(QString filename, CodeCoverage cc);
+    void write_coverage_html(QString appname, CodeCoverage cc);
 
 }
 
