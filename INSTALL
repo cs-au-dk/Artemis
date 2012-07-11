@@ -7,9 +7,9 @@
 -1. Please ensure you have a working installation of Qt 4.8 or
     higher. If this is not the case, a copy can be downloaded by running
 
-        make qt-checkout   
-   	cd qt
-   	./configure
+        make qt-checkout
+	cd qt
+	./configure -prefix <path/to/artemis-repo>/qt -no-webkit   
    	make
 
     Do not run 'make install', and ensure subsequently that the
