@@ -1,7 +1,3 @@
-# Artemis
-
-Testing 1 2
-
 Artemis is a tool that performs automated, feedback-directed testing
 of JavaScript applications.
 
@@ -33,4 +29,4 @@ Usage:
 
    -p	   : dump_page_states(<path>) // TODO
 
-   
+   -n 	   : Specify the project name for coverage dump purposes   
