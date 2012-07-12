@@ -1,39 +1,23 @@
--2. Fetch all software dependencies using
-
-        fetch-[apt|yum]
-
-    depending on your local package manager.
-
--1. Please ensure you have a working installation of Qt 4.8 or
-    higher. If this is not the case, a copy can be downloaded by running
-
-        make qt-checkout
-	cd qt
-	./configure -prefix <path/to/artemis-repo>/qt -no-webkit   
-   	make
-
-    Do not run 'make install', and ensure subsequently that the
-    environment variable QTDIR is set as appropriate, and that
-    'QTDIR/bin' is added to the PATH variable.
-        
-        export QTDIR=/home/user/Artemis/qt
-	export PATH=$QTDIR/bin:$PATH
-
- 0. Apply qhash.patch to your Qt Installation by running
-
-        make qhash-patch
-
- 1. Set the environment variable ARTEMIS_PATH to where you want to
-    install Artemis and the instrumented version of WebKit
-
+ 0. Fetch all software dependencies using
+    
+        make fetch-[apt|yum]
+	make fetch-qt
+    
+ 1. Set up your environment variables by running
+    
         export ARTEMIS_PATH=<path>
+	source artemis-env
 
- 2. Confirm that qmake version 4.8 is on your path and then build and
-    install Artemis 
+    where `<path>` is the desired destination of the Artemis binaries
+    and its associated libraries.
+     
+ 2. Build and install Artemis
    
-        qmake --version
    	make install
 
- 3. Finally, add the WebKit libraries to ld's library path:
 
-export LD_LIBRARY_PATH=$ARTEMIS_PATH/WebKit/WebKitBuild/Release/lib
+
+Note: you will need to either add
+      `ARTEMIS_PATH/WebKit/WebKitBuild/Release/lib` to the environment
+      variable `LD_LIBRARY_PATH` or execute step 1 everytime you
+      subsequently wish to use Artemis.
