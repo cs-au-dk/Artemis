@@ -64,9 +64,16 @@ Runtime* Builder::build(const Options& options, QUrl url) {
 
 	JQueryListener* jqueryListener = new JQueryListener(NULL);
 
+    QString appName;
+    if(options.appName.isNull()){
+        appName = "";
+    } else {
+        appName = options.appName;
+    }
+
 	WebKitExecutor* webkitExecutor = new WebKitExecutor(NULL,
 			options.presetFormfields, listener, jqueryListener,
-			ajaxRequestListner);
+            ajaxRequestListner, appName);
 
 	TargetGenerator* targetGenerator = new TargetGenerator(NULL,
 			jqueryListener);
