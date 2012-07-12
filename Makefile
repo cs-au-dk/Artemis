@@ -49,11 +49,8 @@ artemis-clean:
 artemis-install: artemis
 	cd artemis-code && make install
 
-qt-checkout:
+fetch-qt:
 	git clone git://gitorious.org/qt/qt.git && cd qt && echo -e 'o\nyes\n' | ./configure -prefix `pwd` -no-webkit && make && cd .. && patch ./qt/src/corelib/tools/qhash.h qhash.patch
-
-qhash-patch:
-
 
 check:
 	@echo "Testing for software dependencies - if an error occurs, consult your local package manager for the program immeadiately checked for"
