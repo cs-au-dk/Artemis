@@ -1,0 +1,50 @@
+
+The QT coding style[1] is followed with the following additions:
+
+1. Member variables
+
+	Member variables (private and public) are prefixed by "m".
+
+2. Slots & Signals
+
+	Slots are prefixed by "sl" and signals "sig"
+
+3. Implicit or explicit this pointers
+
+	Implicit this pointers are used when possible.
+
+	void A::f()
+	{
+		this->mCount = 0; // wrong
+		mCount = 0; // correct
+	}
+
+4. Memory management
+
+	Two strategies are allowed for memory management:
+
+	a. Value based types [2]
+		These are used in a functional style e.g. member functions does not change state but returns new values.
+
+	b. Pointer based types [2]
+		Necessary for polymorphism. Classic C++ style objects with mutating state and explicit copy methods.
+
+		A pointer based type always inherits from QObject, and its parent are either set at construction or delayed temporarily until another function claims to be parent.
+
+5. If statements and brackets
+
+	Contrary to the QT coding style, brackets are always used with if statements even if the body of the if statement only consist of a single line. This is to improve robustness.
+
+6. Whitespace for pointers and references
+
+	// correct
+	int* value;
+	void* A::func(char* c) { ... 
+
+	// wrong
+	int *value;
+	void *A::func(char *c) { ...
+
+
+[1] http://qt-project.org/wiki/Qt_Coding_Style
+[2] http://qt-project.org/wiki/ValueBasedAndPointerBasedTypes

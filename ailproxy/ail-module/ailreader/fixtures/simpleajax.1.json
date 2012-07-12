@@ -1,0 +1,54 @@
+{
+"required": true,
+"type": "object",
+"properties": {
+   "attendees": 
+   {
+      "required": true,
+      "type": "array",
+      "items": [
+         {
+            "required": true,
+            "type": "object",
+            "properties": {
+               "name": 
+               {
+                  "required": true,
+                  "type": "string"
+               },
+               "checkedin": 
+               {
+                  "required": true,
+                  "type": "integer"
+               },
+               "paid": 
+               {
+                  "required": true,
+                  "type": "integer"
+               },
+               "id": 
+               {
+                  "required": true,
+                  "type": "integer"
+               },
+               "department": 
+               {
+                  "required": true,
+                  "type": "string"
+               },
+               "email": 
+               {
+                  "required": true,
+                  "type": "string"
+               }
+            }
+         }
+      ]
+   },
+   "pages": 
+   {
+      "required": true,
+      "type": "integer"
+   }
+}
+}
