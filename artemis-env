@@ -1,0 +1,4 @@
+#!/bin/sh
+export QTDIR=`pwd`/qt
+export PATH=$QTDIR/bin:$PATH
+export LD_LIBRARY_PATH=$ARTEMIS_PATH/WebKit/WebKitBuild/Release/lib
