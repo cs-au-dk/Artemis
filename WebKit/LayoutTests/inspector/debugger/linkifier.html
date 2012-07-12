@@ -1,0 +1,91 @@
+<html>
+<head>
+<script src="../../http/tests/inspector/inspector-test.js"></script>
+<script src="../../http/tests/inspector/debugger-test.js"></script>
+<script>
+
+function test()
+{
+    InspectorTest.startDebuggerTest(waitForScripts);
+
+    var linkifier;
+    var link;
+    var rawSourceCode;
+
+    function waitForScripts()
+    {
+        var continued = false;
+        function scriptAdded(event)
+        {
+            if (continued)
+                return;
+
+            var script = event.data;
+            if (script.sourceURL === WebInspector.inspectedPageURL) {
+                continued = true;
+                setTimeout(debuggerTest, 0);
+            }
+        }
+
+        WebInspector.debuggerModel.queryScripts(function(script) { scriptAdded({ data: script }) });
+        WebInspector.debuggerModel.addEventListener(WebInspector.DebuggerModel.Events.ParsedScriptSource, scriptAdded);
+    }
+
+    function debuggerTest()
+    {
+        linkifier = WebInspector.debuggerPresentationModel.createLinkifier();
+        rawSourceCode = WebInspector.debuggerPresentationModel._rawSourceCodeForScriptWithURL(WebInspector.inspectedPageURL);
+
+        var count1 = listenersCount(rawSourceCode);
+        link = linkifier.linkifyLocation(WebInspector.inspectedPageURL, 20, 0, "dummy-class");
+        var count2 = listenersCount(rawSourceCode);
+
+        InspectorTest.addResult("listeners added on raw source code: " + (count2 - count1));
+        InspectorTest.addResult("original location: " + link.textContent);
+
+        InspectorTest.addSniffer(linkifier, "_updateAnchor", linkUpdated);
+        WebInspector.debuggerPresentationModel.setFormatSource(true);
+    }
+
+    function linkUpdated()
+    {
+        InspectorTest.addResult("pretty printed location: " + link.textContent);
+        InspectorTest.addSniffer(linkifier, "_updateAnchor", linkReverted);
+        WebInspector.debuggerPresentationModel.setFormatSource(false);
+    }
+
+    function linkReverted()
+    {
+        InspectorTest.addResult("reverted location: " + link.textContent);
+
+        var count1 = listenersCount(rawSourceCode);
+        linkifier.reset();
+        var count2 = listenersCount(rawSourceCode);
+
+        InspectorTest.addResult("listeners removed from raw source code: " + (count1 - count2));
+
+        InspectorTest.completeDebuggerTest();
+    }
+
+    function listenersCount(object)
+    {
+        var listeners = object._listeners;
+        var count = 0;
+        for (var eventTypes in listeners) {
+            var listenersArray = listeners[eventTypes];
+            count += listenersArray.length;
+        }
+        return count; 
+    }
+}
+
+</script>
+</head>
+
+<body onload="runTest()">
+<p>
+Tests that Linkifier works correctly.
+<p>
+
+</body>
+</html>

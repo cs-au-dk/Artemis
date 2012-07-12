@@ -1,0 +1,23 @@
+Tests that valid parsed script notifications are received by front-end. Bug 52721
+
+Debugger was enabled.
+script 1:
+    start: 5:8
+    end: 37:2
+script 2:
+    start: 38:21
+    end: 41:2
+script 3:
+    start: 43:11
+    end: 43:32
+script 4:
+    start: 44:11
+    end: 44:28
+script 5:
+    start: 46:11
+    end: 47:20
+script 6:
+    start: 51:56
+    end: 52:2
+Debugger was disabled.
+

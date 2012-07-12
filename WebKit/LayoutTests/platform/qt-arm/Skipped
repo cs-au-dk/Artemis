@@ -1,0 +1,164 @@
+# Failing tests
+canvas/philip/tests/2d.path.stroke.skew.html
+fast/css/hover-update.html
+fast/workers/storage/interrupt-database.html
+http/tests/cache/subresource-expiration-1.html
+http/tests/cache/subresource-expiration-2.html
+http/tests/history/back-to-post.php
+http/tests/inspector/resource-tree/resource-tree-document-url.html
+http/tests/inspector/resource-tree/resource-tree-frame-add.html
+http/tests/inspector/resource-tree/resource-tree-frame-navigate.html
+http/tests/inspector/resource-tree/resource-tree-non-unique-url.html
+http/tests/inspector/resource-tree/resource-tree-reload.html
+http/tests/navigation/forward-and-cancel.html
+http/tests/security/cross-frame-access-put.html
+http/tests/security/mixedContent/insecure-plugin-in-iframe.html
+http/tests/websocket/tests/hixie76/close-before-open.html
+http/tests/websocket/tests/hixie76/close-unref-websocket.html
+http/tests/websocket/tests/hixie76/frame-lengths.html
+http/tests/websocket/tests/hixie76/simple-stress.html
+http/tests/websocket/tests/hixie76/websocket-event-target.html
+jquery/manipulation.html
+platform/qt/plugins/qt-qwidget-plugin.html
+plugins/application-plugin-plugins-disabled.html
+plugins/keyboard-events.html
+plugins/plugin-initiate-popup-window.html
+svg/text/text-align-04-b.svg
+svg/text/text-hkern.svg
+svg/text/textPathBoundsBug.svg
+svg/text/text-text-03-b.svg
+svg/W3C-SVG-1.1/animate-elem-25-t.svg
+svg/W3C-SVG-1.1/animate-elem-27-t.svg
+svg/W3C-SVG-1.1/masking-path-03-b.svg
+svg/W3C-SVG-1.1/painting-stroke-02-t.svg
+svg/W3C-SVG-1.1/paths-data-02-t.svg
+svg/W3C-SVG-1.1/pservers-grad-11-b.svg
+svg/W3C-SVG-1.1/render-elems-03-t.svg
+svg/W3C-SVG-1.1/shapes-rect-01-t.svg
+svg/W3C-SVG-1.1/text-path-01-b.svg
+svg/W3C-SVG-1.1/text-text-03-b.svg
+
+# Crashed test after r87691-r87693
+http/tests/xmlhttprequest/simple-cross-origin-progress-events.html
+
+# Flakey crashed tests
+fast/workers/wrapper-map-gc.html
+
+# Flakey tests
+svg/animations/animate-mpath-insert.html
+svg/dom/SVGScriptElement/script-load-and-error-events.svg
+
+# Flakey timed out tests
+
+# [Qt][ARM] http/tests/cache/subresource-multiple-instances.html is flaky (timeout)
+# https://bugs.webkit.org/show_bug.cgi?id=66652
+http/tests/cache/subresource-multiple-instances.html
+
+# [Qt][ARM] http/tests/inspector/resource-tree/resource-tree-errors-reload.html is flaky (timeout) 
+# https://bugs.webkit.org/show_bug.cgi?id=66653
+http/tests/inspector/resource-tree/resource-tree-errors-reload.html
+
+fast/js/nested-object-gc.html
+# https://bugs.webkit.org/show_bug.cgi?id=64452
+http/tests/xmlhttprequest/xmlhttprequest-50ms-download-dispatch.html
+
+# [Qt][ARM]REGRESSION(r91752): It made audio related tests fail
+# https://bugs.webkit.org/show_bug.cgi?id=65369
+fast/canvas/canvas-drawImage-incomplete.html
+fast/dom/URL-attribute-reflection.html
+fast/dom/Window/custom-constructors.html
+fast/dom/Window/window-properties.html
+fast/dom/beforeload/video-before-load.html
+fast/dom/boolean-attribute-reflection.html
+fast/dom/constructed-objects-prototypes.html
+fast/dom/constructors-cached-navigate.html
+fast/dom/constructors-cached.html
+fast/dom/dom-constructors.html
+fast/dom/prototype-inheritance-2.html
+fast/dom/prototype-inheritance.html
+fast/forms/form-associated-element-crash3.html
+fast/js/custom-constructors.html
+fast/js/global-constructors.html
+fast/js/instanceof-XMLHttpRequest.html
+fast/replaced/outline-replaced-elements.html
+http/tests/security/local-video-poster-from-remote.html
+http/tests/security/local-video-src-from-remote.html
+
+# Qt results were added by r91986, but these tests fail on Qt-ARM platform
+svg/batik/filters/filterRegions.svg
+svg/batik/text/longTextOnPath.svg
+svg/carto.net/scrollbar.svg
+
+# [Qt][ARM] http/tests/loading/empty-urls.html fails
+# https://bugs.webkit.org/show_bug.cgi?id=67638
+http/tests/loading/empty-urls.html
+
+# [Qt][ARM]fast/dom/call-a-constructor-as-a-function.html fails
+# https://bugs.webkit.org/show_bug.cgi?id=67639
+fast/dom/call-a-constructor-as-a-function.html
+
+# [Qt][ARMv5] Two timeline tests of inspector fail
+# https://bugs.webkit.org/show_bug.cgi?id=68151
+inspector/timeline/timeline-animation-frame.html
+inspector/timeline/timeline-enum-stability.html
+
+# [Qt] [ARMv5] fast/events/media-element-focus-tab.html fast/spatial-navigation/snav-media-elements.html fail
+# https://bugs.webkit.org/show_bug.cgi?id=68341
+fast/events/media-element-focus-tab.html
+fast/spatial-navigation/snav-media-elements.html
+
+# [Qt][ARMv5] inspector/elements/edit-dom-actions.html and ~/elements-delete-inline-style.html times out
+# https://bugs.webkit.org/show_bug.cgi?id=69925
+inspector/elements/edit-dom-actions.html
+inspector/elements/elements-delete-inline-style.html
+
+# Websocket tests are fail on ARM, skip until fix
+http/tests/websocket/tests/hixie76/bad-handshake-crash.html
+http/tests/websocket/tests/hixie76/bufferedAmount-after-close.html
+http/tests/websocket/tests/hixie76/client-close.html
+http/tests/websocket/tests/hixie76/close-event.html
+http/tests/websocket/tests/hixie76/close-on-navigate-new-location.html
+http/tests/websocket/tests/hixie76/close-on-unload-and-force-gc.html
+http/tests/websocket/tests/hixie76/close-on-unload-reference-in-parent.html
+http/tests/websocket/tests/hixie76/close-on-unload.html
+http/tests/websocket/tests/hixie76/cross-origin.html
+http/tests/websocket/tests/hixie76/error-detect.html
+http/tests/websocket/tests/hixie76/frame-length-longer-than-buffer.html
+http/tests/websocket/tests/hixie76/frame-length-overflow.html
+http/tests/websocket/tests/hixie76/frame-length-skip.html
+http/tests/websocket/tests/hixie76/handshake-challenge-randomness.html
+http/tests/websocket/tests/hixie76/handshake-error.html
+http/tests/websocket/tests/hixie76/handshake-fail-by-cross-origin.html
+http/tests/websocket/tests/hixie76/handshake-fail-by-maxlength.html
+http/tests/websocket/tests/hixie76/handshake-fail-by-no-connection-header.html
+http/tests/websocket/tests/hixie76/handshake-fail-by-no-cr.html
+http/tests/websocket/tests/hixie76/handshake-fail-by-no-upgrade-header.html
+http/tests/websocket/tests/hixie76/handshake-fail-by-prepended-null.html
+http/tests/websocket/tests/hixie76/handshake-fail-by-sub-protocol-mismatch.html
+http/tests/websocket/tests/hixie76/httponly-cookie.pl
+http/tests/websocket/tests/hixie76/long-invalid-header.html
+http/tests/websocket/tests/hixie76/multiple-connections.html
+http/tests/websocket/tests/hixie76/null-character.html
+http/tests/websocket/tests/hixie76/send-after-close-on-unload.html
+http/tests/websocket/tests/hixie76/send-empty.html
+http/tests/websocket/tests/hixie76/send-object.html
+http/tests/websocket/tests/hixie76/send-throw.html
+http/tests/websocket/tests/hixie76/send.html
+http/tests/websocket/tests/hixie76/server-close.html
+http/tests/websocket/tests/hixie76/simple.html
+http/tests/websocket/tests/hixie76/sub-protocol-with-space.html
+http/tests/websocket/tests/hixie76/sub-protocol.html
+http/tests/websocket/tests/hixie76/unicode.html
+http/tests/websocket/tests/hixie76/url-no-trailing-slash.html
+http/tests/websocket/tests/hixie76/url-with-credential.html
+http/tests/websocket/tests/hixie76/url-with-empty-query.html
+http/tests/websocket/tests/hixie76/url-with-query-for-no-query.html
+http/tests/websocket/tests/hixie76/url-with-query.html
+http/tests/websocket/tests/hixie76/websocket-pending-activity.html
+http/tests/websocket/tests/hixie76/websocket-protocol-ignored.html
+http/tests/websocket/tests/hixie76/workers/close-in-onmessage-crash.html
+http/tests/websocket/tests/hixie76/workers/close-in-shared-worker.html
+http/tests/websocket/tests/hixie76/workers/close-in-worker.html
+http/tests/websocket/tests/hixie76/workers/shared-worker-simple.html
+http/tests/websocket/tests/hixie76/workers/worker-handshake-challenge-randomness.html
+http/tests/websocket/tests/hixie76/workers/worker-simple.html

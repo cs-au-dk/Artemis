@@ -1,0 +1,41 @@
+<html manifest="resources/wrong-content-type.manifest">
+<body>
+<p>Test that a manifest served with an arbitrary content-type is OK.</p>
+<p>Should say SUCCESS:</p>
+<div id=result></div>
+<script>
+if (window.layoutTestController) {
+    layoutTestController.dumpAsText()
+    layoutTestController.waitUntilDone();
+}
+
+function log(message)
+{
+    document.getElementById("result").innerHTML += message + "<br>";
+}
+
+function errorEventListener()
+{
+    log("FAILURE: An error event was dispatched on window.applicationCache.");
+    if (window.layoutTestController)
+        layoutTestController.notifyDone();
+}
+
+function verifyStatus()
+{
+    if (window.applicationCache.status != window.applicationCache.IDLE)
+        log("FAILURE: Unexpected cache status: " + window.applicationCache.status);
+    else
+        log("SUCCESS");
+
+    if (window.layoutTestController)
+        layoutTestController.notifyDone();
+}
+
+applicationCache.addEventListener('cached', verifyStatus, false);
+applicationCache.addEventListener('noupdate', verifyStatus, false);
+applicationCache.addEventListener('error', errorEventListener, false);
+
+</script>
+</body>
+</html>
