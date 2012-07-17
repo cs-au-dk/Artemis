@@ -10,7 +10,7 @@ help:
 	@echo ""
 	@echo "    qhash-patch              - Apply qt sourcefile patch"
 
-WEBKIT_BUILD_SCRIPT = ./WebKit/Tools/Scripts/build-webkit --qt --qmakearg="DEFINES+=ARTEMIS=1" --makearg="-j4"
+WEBKIT_BUILD_SCRIPT = ./WebKit/Tools/Scripts/build-webkit --qt --qmakearg="DEFINES+=ARTEMIS=1" --makearg="-j4"  --qmakearg="CC=gcc-4.7" --qmakearg="CXX=g++-4.7"
 
 build: check webkit artemis
 
@@ -66,8 +66,10 @@ check:
 
 DEPENDENCIES = g++ flex bison gperf ruby cmake lemon re2c libxext-dev libfontconfig-dev libxrender-dev
 
+YUM_DEPENDENCIES = gcc-c++ flex bison gperf ruby cmake lemon re2c fontconfig-devel libXext-devel patch
+
 fetch-apt:
 	sudo apt-get install ${DEPENDENCIES}
 
 fetch-yum:
-	yum install ${DEPENDENCIES}
+	sudo yum install ${YUM_DEPENDENCIES}
