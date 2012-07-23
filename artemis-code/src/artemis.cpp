@@ -101,7 +101,7 @@ QUrl parseCmd(int argc, char *argv[], artemis::Options& options) {
         }
     }
 
-    if (optind > argc) {
+    if (optind >= argc) {
     	cerr << "ERROR: You must specify a URL" << endl;
     	exit(1);
     }
