@@ -77,7 +77,7 @@ namespace artemis {
         QObject::connect(webkit_listener, SIGNAL(ajax_request(QUrl, QString)),
                          this, SLOT(sl_ajax_request(QUrl, QString)));
         QObject::connect(webkit_listener, SIGNAL(loadedJavaScript(intptr_t, QString, QUrl, int)),
-                         this, SLOT(fileutilsl_code_loaded(intptr_t, QString, QUrl, int)));
+                         this, SLOT(sl_code_loaded(intptr_t, QString, QUrl, int)));
         
         QObject::connect(webkit_listener, SIGNAL(jqueryEventAdded(QString, QString, QString)),
                          mJquery, SLOT(sl_event_added(QString, QString, QString)));
