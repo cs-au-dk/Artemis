@@ -7,8 +7,6 @@ help:
 	@echo "    artemis-clean            - Clean artemis"
 	@echo ""
 	@echo "    qt-checkout              - Checkout a copy of the Qt 4.8 Framework source"
-	@echo ""
-	@echo "    qhash-patch              - Apply qt sourcefile patch"
 
 WEBKIT_BUILD_SCRIPT = ./WebKit/Tools/Scripts/build-webkit --qt --qmakearg="DEFINES+=ARTEMIS=1" --makearg="-j4"  --qmakearg="CC=gcc-4.7" --qmakearg="CXX=g++-4.7"
 
@@ -50,7 +48,7 @@ artemis-install: artemis
 	cd artemis-code && make install
 
 fetch-qt:
-	git clone git://gitorious.org/qt/qt.git && cd qt && echo -e 'o\nyes\n' | ./configure -prefix `pwd` -no-webkit && make && cd .. && patch ./qt/src/corelib/tools/qhash.h qhash.patch
+	git clone git://gitorious.org/qt/qt.git && cd qt && echo -e 'o\nyes\n' | ./configure -prefix `pwd` -no-webkit && make
 
 check:
 	@echo "Testing for software dependencies - if an error occurs, consult your local package manager for the program immeadiately checked for"
