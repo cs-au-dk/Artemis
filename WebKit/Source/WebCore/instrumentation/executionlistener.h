@@ -1,5 +1,6 @@
 #ifdef ARTEMIS
 
+#include <stdint.h>
 #include <string>
 
 #ifndef EXECUTIONLISTENER_H
