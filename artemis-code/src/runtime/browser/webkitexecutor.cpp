@@ -52,7 +52,8 @@ namespace artemis {
     		QMap<QString,QString> presetFields,
     		ArtemisTopExecutionListener* listener,
     		JQueryListener* jqueryListener,
-            AjaxRequestListener* ajaxListener, QString appNameIn) :
+            AjaxRequestListener* ajaxListener,
+            QString appNameIn) :
             QObject(parent)
     {
         appName = appNameIn;
@@ -72,6 +73,8 @@ namespace artemis {
         webkit_listener = new QWebExecutionListener();
         webkit_listener->installWebKitExecutionListener(webkit_listener);
 
+        // TODO cleanup in ajax stuff, we are handling ajax through AjaxRequestListener, the ajax_request signal and addAjaxCallHandler
+
         QObject::connect(webkit_listener, SIGNAL(script_crash(QString, intptr_t, int)),
                          this, SLOT(sl_script_crash(QString, intptr_t, int)));
         QObject::connect(webkit_listener, SIGNAL(ajax_request(QUrl, QString)),
@@ -86,7 +89,6 @@ namespace artemis {
                          cov_list, SLOT(new_code(intptr_t, QString, QUrl, int)));
         QObject::connect(webkit_listener, SIGNAL(statementExecuted(intptr_t, std::string, int)),
                          cov_list, SLOT(statement_executed(intptr_t, std::string, int)));
-
 
         page = new ArtemisWebPage(this);
         page->setNetworkAccessManager(ajax_listener);

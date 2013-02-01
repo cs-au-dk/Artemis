@@ -52,12 +52,11 @@ namespace artemis
 Runtime::Runtime(QObject* parent, const Options& options, QUrl url) : QObject(parent)
 {
 
+    /** Proxy support **/
+
     if (!options.useProxy.isNull()) {
         QStringList parts = options.useProxy.split(QString(":"));
-
-        QNetworkProxy proxy(QNetworkProxy::HttpProxy, parts.at(0),
-                parts.at(1).toShort());
-
+        QNetworkProxy proxy(QNetworkProxy::HttpProxy, parts.at(0), parts.at(1).toShort());
         QNetworkProxy::setApplicationProxy(proxy);
     }
 
@@ -73,6 +72,7 @@ Runtime::Runtime(QObject* parent, const Options& options, QUrl url) : QObject(pa
 
     JQueryListener* jqueryListener = new JQueryListener(this);
 
+    // TODO remove
     QString appName;
     if(options.appName.isNull()){
         appName = "";
