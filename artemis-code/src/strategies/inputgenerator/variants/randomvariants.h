@@ -38,8 +38,8 @@ namespace artemis {
 
         RandomVariants();
 
-        EventParameters* generate_event_parameters(EventHandlerDescriptor eventHandler);
-        FormInput generate_form_fields(const QSet<FormField>& fi);
+        EventParameters* generate_event_parameters(QObject* parent, const EventHandlerDescriptor* eventHandler);
+        FormInput* generate_form_fields(QObject* parent, const QSet<FormField*>& fi);
 
     };
 

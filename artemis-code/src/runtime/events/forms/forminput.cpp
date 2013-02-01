@@ -25,64 +25,52 @@
   authors and should not be interpreted as representing official policies, either expressed
   or implied, of Simon Holm Jensen
 */
-#include "forminput.h"
-#include "artemisglobals.h"
 
+#include "forminput.h"
+
+#include "artemisglobals.h"
 
 namespace artemis {
 
-    FormInput::FormInput()
-    {
-    }
+FormInput::FormInput(QObject* parent) : QObject(parent)
+{
+}
 
-    FormInput::FormInput(const FormInput &other) {
-        this->fields_set.clear();
-        this->fields_set += other.fields_set;
-    }
+QSet<FormField*> FormInput::getFields() const {
+    return mInputs.keys().toSet();
+}
 
-    void FormInput::write_to_page(QWebPage* page) {
-        foreach (FormField ff, fields_set) {
-            Q_ASSERT(this->values.contains(ff));
+void FormInput::writeToPage(QWebPage* page) {
+    foreach (FormField* formField, mInputs.keys()) {
 
-            DOMElementDescriptor elm_desc = ff.element();
-            FormFieldValue value = values[ff];
-            QWebElement element = elm_desc.get_element(page);
+        DOMElementDescriptor* elmDesc = formField->element();
+        QWebElement element = elmDesc->get_element(page);
 
-            if (!element.isNull()) {
-                element.setAttribute("value", value.string_representation());
-            }
+        FormFieldValue* value = mInputs.value(formField);
+
+        if (!element.isNull()) {
+            element.setAttribute("value", value->string_representation());
         }
     }
+}
 
-    QSet<FormField> FormInput::fields() const {
-        return this->fields_set;
-    }
+/**
+ * @brief Adds an input pair of a field and a value, taking ownership of both
+ * @param formField
+ * @param formValue
+ */
+void FormInput::addInput(FormField* formField, FormFieldValue* formValue) {
+    formField->setParent(this);
+    formValue->setParent(this);
 
-    void FormInput::add_field(const FormField f,const FormFieldValue fv) {
-        fields_set.insert(f);
-        values.insert(f,fv);
-    }
+    mInputs.insert(formField, formValue);
+}
 
-    bool FormInput::operator==(FormInput& other) const {
-        return this->fields_set == other.fields_set && this->values == other.values;
-    }
+QDebug operator<<(QDebug dbg, const FormInput* f) {
+    dbg.nospace() << f->mInputs;
+    return dbg.space();
+}
 
-    QDebug operator<<(QDebug dbg, const FormInput &f) {
-        dbg.nospace() << f.values;
-        return dbg.space();
-    }
-
-    uint FormInput::hashcode() const {
-        return qHash(this->fields_set);
-    }
-
-    FormInput &FormInput::operator=(const FormInput &other) {
-        this->fields_set.clear();
-        this->values.clear();
-        this->fields_set += other.fields_set;
-        this->values = other.values;
-        return *this;
-    }
 }
 
 

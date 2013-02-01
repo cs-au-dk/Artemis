@@ -30,13 +30,13 @@
 
 namespace artemis {
   
-  TargetDescriptor::TargetDescriptor(EventHandlerDescriptor& event_handler) { 
-    m_event_handler = new EventHandlerDescriptor(event_handler);
-  }
+TargetDescriptor::TargetDescriptor(QObject* parent, const EventHandlerDescriptor* event_handler) : QObject(parent)
+{
+    m_event_handler = new EventHandlerDescriptor(this, event_handler);
+}
 
-  /*TargetDescriptor::TargetDescriptor(const TargetDescriptor* other) { 
-    m_event_handler = other->m_event_handler;
-  }*/
+QWebElement TargetDescriptor::get(ArtemisWebPage*)
+{
+}
 
-  QWebElement TargetDescriptor::get(ArtemisWebPage*) { }
 }

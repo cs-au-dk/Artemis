@@ -84,7 +84,7 @@ namespace artemis {
         QString appName;
 
     signals:
-        void sigExecutedSequence(ExecutableConfiguration* conf, ExecutionResult res);
+        void sigExecutedSequence(ExecutableConfiguration* conf, ExecutionResult* res);
 
     public slots:
         void sl_loadFinished(bool ok);

@@ -44,9 +44,9 @@ TargetGenerator::~TargetGenerator() {
 	// TODO Auto-generated destructor stub
 }
 
-TargetDescriptor* TargetGenerator::generateTarget(EventHandlerDescriptor eventHandler) {
+TargetDescriptor* TargetGenerator::generateTarget(QObject* parent, const EventHandlerDescriptor* eventHandler) {
 
-	return new JQueryTarget(eventHandler, mJQueryListener);
+    return new JQueryTarget(parent, eventHandler, mJQueryListener);
 
 }
 

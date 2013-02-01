@@ -28,34 +28,33 @@
 #ifndef FORMINPUT_H
 #define FORMINPUT_H
 
-#include "formfield.h"
 #include <QObject>
 #include <QSet>
+
+#include "formfield.h"
 #include "formfieldvalue.h"
 
 namespace artemis {
 
-    class FormInput
-    {
+class FormInput : public QObject
+{
+    Q_OBJECT
+
     public:
-        FormInput();
-        //FormInput(const QSet<FormField> &form_fields);
-        FormInput(const FormInput &other);
+        FormInput(QObject* parent);
 
-        QSet<FormField> fields() const ;
-        void add_field(const FormField f, const FormFieldValue fv);
-        void write_to_page(QWebPage*);
+        QSet<FormField*> getFields() const;
 
-        FormInput &operator=(const FormInput &other);
-        bool operator==(FormInput& other) const;
-        QDebug friend operator<<(QDebug dbg, const FormInput &f);
-        uint hashcode() const;
+        void addInput(FormField* formField, FormFieldValue* formValue);
+        void writeToPage(QWebPage*);
+
+        QDebug friend operator<<(QDebug dbg, const FormInput* f);
 
     private:
-        QSet<FormField> fields_set;
-        QHash<FormField,FormFieldValue> values;
+        QHash<FormField*, FormFieldValue*> mInputs;
 
-    };
+};
+
 }
 
 #endif // FORMINPUT_H

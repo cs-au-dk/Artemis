@@ -51,8 +51,8 @@ void PageRecreateListner::loaded_page(const ArtemisWebPage& page) {
     }
 }
 
-void PageRecreateListner::executed(const ExecutableConfiguration& conf, const ExecutionResult& result) {
-    foreach (AjaxRequest r, result.ajax_request()) {
+void PageRecreateListner::executed(const ExecutableConfiguration& conf, const ExecutionResult* result) {
+    foreach (AjaxRequest r, result->ajax_request()) {
         QUrl url = r.url();
         if (ajax_urls_fetched.contains(url))
             continue;

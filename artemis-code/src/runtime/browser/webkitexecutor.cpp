@@ -164,7 +164,7 @@ namespace artemis {
 
         current_result->finalize();
 
-        emit sigExecutedSequence(current_conf, *current_result);
+        emit sigExecutedSequence(current_conf, current_result);
     }
 
 
@@ -185,29 +185,33 @@ namespace artemis {
 
     void WebKitExecutor::get_form_fields() {
         QSet<QWebFrame*> ff = all_frames();
+
         foreach(QWebFrame* f, ff) {
             QWebElementCollection inputs = f->findAllElements("input");
             foreach (QWebElement i, inputs) {
                 FormFieldTypes f_type =  get_type_from_attr(i.attribute("type"));
                 if (f_type == NO_INPUT)
                     continue;
-                FormField formf(f_type,DOMElementDescriptor(&i));
+                FormField* formf = new FormField(0, f_type, new DOMElementDescriptor(0, &i));
                 current_result->add_form_field(formf);
+                delete formf;
             }
 
             //Gather <textarea> elements
             QWebElementCollection textareas = f->findAllElements("textarea");
             foreach (QWebElement ta, textareas) {
-                FormField taf(TEXT,DOMElementDescriptor(&ta));
+                FormField* taf = new FormField(0, TEXT, new DOMElementDescriptor(0, &ta));
                 current_result->add_form_field(taf);
+                delete taf;
             }
 
             //Gather select tags
             QWebElementCollection selects = f->findAllElements("select");
             foreach (QWebElement ss, selects) {
                 QSet<QString> options = get_select_options(ss);
-                FormField ssf(FIXED_INPUT,DOMElementDescriptor(&ss), options);
+                FormField* ssf = new FormField(0, FIXED_INPUT, new DOMElementDescriptor(0, &ss), options);
                 current_result->add_form_field(ssf);
+                delete ssf;
             }
         }
     }

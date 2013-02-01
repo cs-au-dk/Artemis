@@ -34,41 +34,43 @@
 
 namespace artemis {
 
-    DOMElementDescriptor::DOMElementDescriptor(QWebElement *elm)
-    {
-        Q_CHECK_PTR(elm);
-        this->m_invalid = false;
-        //Q_ASSERT((*elm) != NULL_WEB_ELEMENT);
-        if (elm->isNull()) {
-            //Asume document
-            this->is_document = true;
-            this->is_mainframe = true;
-            this->tag_name = "<document>";
-            this->frame_name = "<mainframe>";
-        } else {
-            this->id = elm->attribute("id");
-            this->tag_name = elm->tagName();
-            this->class_line = QString(elm->classes().join(" "));
-            //this->frame_name = elm->webFrame()->frameName();
-            is_body = is_document = is_mainframe = false;
-            //set_frame_path(elm);
-            set_element_path(elm);
-        }
-    }
+DOMElementDescriptor::DOMElementDescriptor(QObject* parent, QWebElement *elm) : QObject(parent)
+{
+    Q_CHECK_PTR(elm);
 
-    DOMElementDescriptor::DOMElementDescriptor(const DOMElementDescriptor &other) {
-        this->element_path = QList<int>(other.element_path);
-        this->frame_path = QList<int>(other.frame_path);
-        this->id = other.id;
-        this->tag_name = other.tag_name;
-        this->class_line = other.class_line;
-        //this->frame_name = other.frame_name;
-        this->is_body = other.is_body;
-        this->is_document = other.is_document;
-        this->is_mainframe = other.is_mainframe;
+    this->m_invalid = false;
+    //Q_ASSERT((*elm) != NULL_WEB_ELEMENT);
+    if (elm->isNull()) {
+        //Asume document
+        this->is_document = true;
+        this->is_mainframe = true;
+        this->tag_name = "<document>";
+        this->frame_name = "<mainframe>";
+    } else {
+        this->id = elm->attribute("id");
+        this->tag_name = elm->tagName();
+        this->class_line = QString(elm->classes().join(" "));
+        //this->frame_name = elm->webFrame()->frameName();
+        is_body = is_document = is_mainframe = false;
+        //set_frame_path(elm);
+        set_element_path(elm);
     }
+}
 
-    QWebElement DOMElementDescriptor::get_element(QWebPage *page) {
+DOMElementDescriptor::DOMElementDescriptor(QObject* parent, const DOMElementDescriptor* other) : QObject(parent)
+{
+    this->element_path = QList<int>(other->element_path);
+    this->frame_path = QList<int>(other->frame_path);
+    this->id = other->id;
+    this->tag_name = other->tag_name;
+    this->class_line = other->class_line;
+    //this->frame_name = other.frame_name;
+    this->is_body = other->is_body;
+    this->is_document = other->is_document;
+    this->is_mainframe = other->is_mainframe;
+}
+
+    QWebElement DOMElementDescriptor::get_element(QWebPage *page) const {
         Q_CHECK_PTR(page);
         QWebFrame* frame = get_frame(page);
         QWebElement elm = get_element_frame(frame);
@@ -88,7 +90,7 @@ namespace artemis {
         return this->class_line;
     }
 
-    QWebFrame* DOMElementDescriptor::get_frame(QWebPage *page) {
+    QWebFrame* DOMElementDescriptor::get_frame(QWebPage *page) const {
         Q_CHECK_PTR(page);
         if (is_mainframe)
             return page->mainFrame();
@@ -100,7 +102,7 @@ namespace artemis {
         return current;
     }
 
-    QWebElement DOMElementDescriptor::get_element_frame(QWebFrame *frame) {
+    QWebElement DOMElementDescriptor::get_element_frame(QWebFrame *frame) const {
         Q_CHECK_PTR(frame);
         if (is_document)
             return frame->documentElement();
@@ -122,7 +124,7 @@ namespace artemis {
         return current;
     }
 
-    QWebElement DOMElementDescriptor::nth_child(QWebElement elm,int n) {
+    QWebElement DOMElementDescriptor::nth_child(QWebElement elm,int n) const {
         QWebElement current_child = elm.firstChild();
         //qDebug() << "1" << current_child.tagName();
         int i = 1;
@@ -148,20 +150,6 @@ namespace artemis {
         //Include frame info?
         dbg.nospace() << elm_name;
         return dbg.space();
-    }
-
-    bool DOMElementDescriptor::operator==(DOMElementDescriptor& other) {
-        bool frame_equals = false;
-        bool element_equals = false;
-        if (is_mainframe && other.is_mainframe)
-            frame_equals = true;
-        else
-            frame_equals = frame_path == other.frame_path;
-        if ((is_body && other.is_body) || (is_document && other.is_document))
-            element_equals = true;
-        else
-            element_equals = element_path == other.element_path;
-        return frame_equals && element_equals;
     }
 
     void DOMElementDescriptor::set_frame_path(QWebElement* elm) {
@@ -228,24 +216,8 @@ namespace artemis {
         }
     }
 
-    bool DOMElementDescriptor::is_invalid() {
+    bool DOMElementDescriptor::is_invalid() const {
         return this->m_invalid;
     }
 
-    uint DOMElementDescriptor::hashcode() const {
-        uint frame_hash = 0;
-        uint element_hash = 0;
-        if (is_mainframe)
-            frame_hash = 31;
-        else
-            frame_hash = 31 * qHash(frame_path);
-        if (is_document)
-            element_hash = 23;
-        else if (is_body)
-            element_hash = 7;
-        else
-            element_hash = 7 *qHash(element_path);
-        return 29*element_hash + 13*frame_hash;
-    }
-
-}
+  }

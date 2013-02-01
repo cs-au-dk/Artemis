@@ -19,14 +19,14 @@ DOMStateSaverListener::~DOMStateSaverListener() {
    // delete net_access;
 }
 
-void DOMStateSaverListener::executed(const ExecutableConfiguration& _, const ExecutionResult& result) {
-    if (!result.modifed_dom()) {
+void DOMStateSaverListener::executed(const ExecutableConfiguration& _, const ExecutionResult* result) {
+    if (!result->modifed_dom()) {
         return;
     }
     QString filename = save_to_path + "/state_dump_" + QString::number(iter++) + ".html";
     this->created_html_files << filename;
     qDebug() << "Saving DOM state to: " << filename;
-    QString dom_data = result.getPageContents();
+    QString dom_data = result->getPageContents();
     write_string_to_file(filename, dom_data);
 }
 

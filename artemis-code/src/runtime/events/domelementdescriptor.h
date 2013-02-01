@@ -28,26 +28,29 @@
 #ifndef DOMELEMENTDESCRIPTOR_H
 #define DOMELEMENTDESCRIPTOR_H
 
+#include <QObject>
 #include <QtWebKit>
 #include <QDebug>
 
+// TODO convert to new memory model
 
 namespace artemis {
 
-    class DOMElementDescriptor
-    {
+class DOMElementDescriptor : public QObject
+{
+    Q_OBJECT
+
     public:
-        DOMElementDescriptor(QWebElement* elm);
-        DOMElementDescriptor(const DOMElementDescriptor& other);
-        QWebElement get_element(QWebPage* page);
+        DOMElementDescriptor(QObject* parent, QWebElement* elm);
+        DOMElementDescriptor(QObject* parent, const DOMElementDescriptor* other);
+
+        QWebElement get_element(QWebPage* page) const;
         QString get_tag_name();
         QString get_id();
         QString get_class();
-        bool is_invalid();
+        bool is_invalid() const;
 
-        bool operator==(DOMElementDescriptor& other);
         QDebug friend operator<<(QDebug dbg, const DOMElementDescriptor &e);
-        uint hashcode() const;
 
     private:
         QString id;
@@ -67,9 +70,9 @@ namespace artemis {
         void set_frame_path(QWebElement* elm);
         void set_element_path(QWebElement* elm);
 
-        QWebFrame* get_frame(QWebPage* page);
-        QWebElement get_element_frame(QWebFrame* frame);
-        QWebElement nth_child(QWebElement elm,int n);
+        QWebFrame* get_frame(QWebPage* page) const;
+        QWebElement get_element_frame(QWebFrame* frame) const;
+        QWebElement nth_child(QWebElement elm,int n) const;
 
         //special cases
         bool is_document;// = false;
@@ -83,11 +86,6 @@ namespace artemis {
 
 
 
-}
-
-inline uint qHash(const artemis::DOMElementDescriptor &key)
-{
-    return key.hashcode();
 }
 
 #endif // DOMELEMENTDESCRIPTOR_H

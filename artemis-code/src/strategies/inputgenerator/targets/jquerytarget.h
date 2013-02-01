@@ -38,8 +38,8 @@ namespace artemis {
   class JQueryTarget : public TargetDescriptor
   {
   public:
-    JQueryTarget(EventHandlerDescriptor& event_handler, JQueryListener* jqueryListener);
-    /*explicit JQueryTarget(TargetDescriptor* other);*/
+    JQueryTarget(QObject* parent, const EventHandlerDescriptor* event_handler, JQueryListener* jqueryListener);
+
     QWebElement get(ArtemisWebPage* page);
 
   protected:

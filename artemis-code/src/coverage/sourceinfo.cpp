@@ -29,18 +29,19 @@
 
 namespace artemis {
 
-    SourceInfo::SourceInfo(const QString source, const QUrl url, const int startline)
-    {
-        this->m_source = source;
-        this->m_url = url;
-        this->m_start_line = startline;
-    }
+SourceInfo::SourceInfo(QObject* parent, const QString source, const QUrl url, const int startline) : QObject(parent)
+{
+    this->m_source = source;
+    this->m_url = url;
+    this->m_start_line = startline;
+}
 
-    SourceInfo::SourceInfo(const SourceInfo &other) {
-        this->m_source = other.m_source;
-        this->m_url = other.m_url;
-        this->m_start_line = other.m_start_line;
-    }
+SourceInfo::SourceInfo(QObject* parent, const SourceInfo* other) : QObject(parent)
+{
+    this->m_source = other->m_source;
+    this->m_url = other->m_url;
+    this->m_start_line = other->m_start_line;
+}
 
     QString SourceInfo::source() const {
         return this->m_source;
@@ -57,14 +58,6 @@ namespace artemis {
     QDebug operator<<(QDebug dbg, const SourceInfo &e) {
         dbg.nospace() << e.m_url << "[" << QString::number(e.m_start_line) << "]";
         return dbg.space();
-    }
-
-    bool SourceInfo::operator==(const SourceInfo& other) const {
-        return other.m_url == this->m_url && m_start_line == other.m_start_line;
-    }
-
-    SourceInfo::SourceInfo() {
-        Q_ASSERT(false);
     }
 
     QString SourceInfo::getSource() const {

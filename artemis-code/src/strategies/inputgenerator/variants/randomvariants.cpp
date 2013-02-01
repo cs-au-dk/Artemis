@@ -25,6 +25,8 @@
   authors and should not be interpreted as representing official policies, either expressed
   or implied, of Simon Holm Jensen
 */
+
+#include <assert.h>
 #include <util/randomutil.h>
 
 #include "runtime/events/baseeventparameters.h"
@@ -41,16 +43,16 @@ namespace artemis {
 
     }
 
-    EventParameters* RandomVariants::generate_event_parameters(EventHandlerDescriptor eventHandler) {
+    EventParameters* RandomVariants::generate_event_parameters(QObject* parent, const EventHandlerDescriptor* eventHandler) {
 
-    	switch (eventHandler.getEventType()) {
+        switch (eventHandler->getEventType()) {
 
     	case BASE_EVENT:
-    		return new BaseEventParameters(NULL, eventHandler.name(),true,true);
+            return new BaseEventParameters(parent, eventHandler->name(), true, true);
     		break;
 
     	case MOUSE_EVENT:
-    		return new MouseEventParameters(NULL, eventHandler.name(),
+            return new MouseEventParameters(parent, eventHandler->name(),
                     true,
                     true,
                     1,
@@ -66,7 +68,7 @@ namespace artemis {
     		break;
 
     	case KEY_EVENT:
-    		return new KeyboardEventParameters(NULL, eventHandler.name(),
+            return new KeyboardEventParameters(parent, eventHandler->name(),
                     true,
                     true,
                     QString("a"),
@@ -79,27 +81,34 @@ namespace artemis {
     		break;
 
     	default:
-    		break;
-
+            qFatal("Unknown event type!");
+            assert(false);
     	}
-
-    	return NULL;
     }
 
-    FormInput RandomVariants::generate_form_fields(const QSet<FormField>& fi) {
-        FormInput res;
-        foreach (FormField f,fi) {
-            if (f.type() == TEXT) {
-                res.add_field(f,FormFieldValue(generate_random_string(10)));
-            } else if (f.type() == BOOLEAN) {
-                res.add_field(f,FormFieldValue(random_bool()));
-            } else if (f.type() == FIXED_INPUT) {
-                res.add_field(f,FormFieldValue(pick_rand(f.inputs())));
-            } else {
-                res.add_field(f,FormFieldValue());
+    FormInput* RandomVariants::generate_form_fields(QObject* parent, const QSet<FormField*>& fields) {
+        FormInput* result = new FormInput(parent);
+
+        foreach (FormField* field, fields) {
+
+            FormField* formField = new FormField(parent, field);
+
+            switch (formField->type()) {
+            case TEXT:
+                result->addInput(formField, new FormFieldValue(parent, generate_random_string(10)));
+                break;
+            case BOOLEAN:
+                result->addInput(formField, new FormFieldValue(parent, random_bool()));
+                break;
+            case FIXED_INPUT:
+                result->addInput(formField, new FormFieldValue(parent, pick_rand(formField->inputs())));
+                break;
+            default:
+                result->addInput(formField, new FormFieldValue(parent));
             }
         }
-        return res;
+
+        return result;
     }
 
 }

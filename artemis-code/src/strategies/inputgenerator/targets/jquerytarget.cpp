@@ -37,12 +37,14 @@
 
 namespace artemis {
   
-  JQueryTarget::JQueryTarget(EventHandlerDescriptor& event_handler,
-		  JQueryListener* jqueryListener) :
-		  TargetDescriptor(event_handler) {
+  JQueryTarget::JQueryTarget(QObject* parent,
+                             const EventHandlerDescriptor* event_handler,
+                             JQueryListener* jqueryListener) :
+      TargetDescriptor(parent, event_handler)
+  {
 	  mJQueryListener = jqueryListener;
+      mJQueryListener->setParent(this);
   }
-  /*JQueryTarget::JQueryTarget(TargetDescriptor* other) : TargetDescriptor(other) { }*/
 
   QString JQueryTarget::get_signature(QWebElement element) {
       if (element.isNull()) {
@@ -63,7 +65,7 @@ namespace artemis {
   }
 
   QWebElement JQueryTarget::get(ArtemisWebPage* page) {
-      QWebElement element = m_event_handler->dom_element().get_element(page);
+      QWebElement element = m_event_handler->dom_element()->get_element(page);
 
       if (element.isNull()) {
           return QWebElement();

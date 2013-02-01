@@ -45,7 +45,7 @@ namespace artemis {
     Q_OBJECT
 
     public:
-        explicit JQueryListener(QObject *parent = 0);
+        explicit JQueryListener(QObject *parent);
         void reset();
         QList<QString> lookup(QString elementSignature, QString event);
 

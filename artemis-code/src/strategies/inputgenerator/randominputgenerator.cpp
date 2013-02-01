@@ -99,23 +99,14 @@ QList<ExecutableConfiguration*> RandomInputGenerator::insert_same_length(const E
 
 BaseInput *RandomInputGenerator::permutate_input(const DomInput *input)
 {
-    EventParameters* new_params = var_gen->generate_event_parameters(input->getEventHandler());
+    EventParameters* newParams = var_gen->generate_event_parameters(NULL, input->getEventHandler());
+    FormInput* newForm = var_gen->generate_form_fields(NULL, input->getFormInput()->getFields());
+    TargetDescriptor* target = mTargetGenerator->generateTarget(NULL, input->getEventHandler());
+    EventHandlerDescriptor* newEventHandlerDescriptor = new EventHandlerDescriptor(NULL, input->getEventHandler());
 
-    if (new_params == NULL) {
-        qFatal("Unknown event type!");
-        assert(false);
-    }
+    DomInput* newLast = new DomInput(NULL, newEventHandlerDescriptor, newForm, newParams, target);
 
-    //Form fields
-    FormInput new_form = var_gen->generate_form_fields(input->getFormInput().fields());
-
-    //Build new Event Descriptor
-    EventHandlerDescriptor hh = input->getEventHandler();
-    TargetDescriptor* target = mTargetGenerator->generateTarget(hh);
-
-    DomInput *new_last = new DomInput(0, hh, new_form, new_params, target);
-
-    return new_last;
+    return newLast;
 }
 
 // TODO should be const
@@ -129,20 +120,12 @@ QList<ExecutableConfiguration*> RandomInputGenerator::insert_extended(const Exec
 {
     QList<ExecutableConfiguration*> newConfigurations;
 
-    foreach (EventHandlerDescriptor ee, result.event_handlers()) {
-        EventParameters* new_params = var_gen->generate_event_parameters(ee);
+    foreach (EventHandlerDescriptor* ee, result.event_handlers()) {
 
-        if (new_params == NULL) {
-            qFatal("Unknown event type!");
-            assert(false);
-        }
-
-        //Form fields
-        QSet<FormField> fd = result.form_fields();
-        FormInput new_form = var_gen->generate_form_fields(fd);
-
-        TargetDescriptor* target = mTargetGenerator->generateTarget(ee);
-        DomInput* domInput = new DomInput(0, ee, new_form, new_params, target);
+        EventParameters* new_params = var_gen->generate_event_parameters(NULL, ee);
+        FormInput* new_form = var_gen->generate_form_fields(NULL, result.form_fields());
+        TargetDescriptor* target = mTargetGenerator->generateTarget(NULL, ee);
+        DomInput* domInput = new DomInput(NULL, ee, new_form, new_params, target);
 
         InputSequence* newInputSequence = oldConfiguration->get_eventsequence()->copy();
         newInputSequence->extend(domInput);

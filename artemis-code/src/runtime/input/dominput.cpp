@@ -33,15 +33,18 @@
 namespace artemis
 {
 
-DomInput::DomInput(QObject* parent, const EventHandlerDescriptor &handler,
-    const FormInput &formInput, EventParameters* params, TargetDescriptor* target) :
+DomInput::DomInput(QObject* parent, EventHandlerDescriptor* handler,
+    FormInput* formInput, EventParameters* params, TargetDescriptor* target) :
     BaseInput(parent)
 {
     Q_CHECK_PTR(params);
     Q_CHECK_PTR(target);
 
-    mEventHandler = new EventHandlerDescriptor(handler);
+    mEventHandler = handler;
+    mEventHandler->setParent(this);
+
     mFormInput = formInput;
+    mFormInput->setParent(this);
 
     mEvtParams = params;
     mEvtParams->setParent(this);
@@ -52,12 +55,12 @@ DomInput::DomInput(QObject* parent, const EventHandlerDescriptor &handler,
 
 void DomInput::apply(ArtemisWebPage *page, QWebExecutionListener *webkit_listener)
 {
-    QWebElement handler = this->mEventHandler->dom_element().get_element(page);
+    QWebElement handler = mEventHandler->dom_element()->get_element(page);
     QWebElement target = this->target()->get(page);
 
     QString js_init_event = mEvtParams->js_string();
 
-    this->getFormInput().write_to_page(page);
+    this->getFormInput()->writeToPage(page);
 
     if (handler.isNull() || target.isNull()) {
         qDebug() << "WARNING::Skipping event, event handler or target could not be found";
@@ -81,7 +84,6 @@ void DomInput::apply(ArtemisWebPage *page, QWebExecutionListener *webkit_listene
 DomInput::~DomInput()
 {
     //delete this->mEventHandler;
-    //delete this->mFormInput;
     //delete this->mEvtParams;
 
     /* TODO TargetDescriptor Copy constructor */
@@ -93,12 +95,12 @@ TargetDescriptor* DomInput::target() const
     return mTarget;
 }
 
-EventHandlerDescriptor DomInput::getEventHandler() const
+const EventHandlerDescriptor* DomInput::getEventHandler() const
 {
-    return *mEventHandler;
+    return mEventHandler;
 }
 
-FormInput DomInput::getFormInput() const
+FormInput* DomInput::getFormInput() const
 {
     return mFormInput;
 }

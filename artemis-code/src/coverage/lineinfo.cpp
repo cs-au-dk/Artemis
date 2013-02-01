@@ -50,27 +50,15 @@ namespace artemis {
         m_hitcount++;
     }
 
-    uint LineInfo::hashcode() const {
-        return 17*m_hitcount;
-    }
-
-    LineInfo& LineInfo::operator=(const LineInfo &other) {
-        m_hitcount = other.m_hitcount;
-        return *this;
-    }
-
-    bool LineInfo::operator==(const LineInfo& other) const {
-        return m_hitcount == other.m_hitcount;
-    }
-
     QDebug operator<<(QDebug dbg, const LineInfo &e) {
         dbg.nospace() << (e.m_hitcount > 0 ? "COVERED[" + QString::number(e.m_hitcount) + QString(']') : "UNCOVERED");
         return dbg.space();
     }
 
     QString LineInfo::toString() const {
-        return m_hitcount > 0 ? "COVERED[" + QString::number(m_hitcount) + QString(']') : "UNCOVERED";
+        return QString(m_hitcount);
     }
+
 }
 
 
