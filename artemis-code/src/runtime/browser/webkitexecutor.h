@@ -39,7 +39,6 @@
 #include "artemiswebpage.h"
 #include "runtime/executableconfiguration.h"
 #include "coverage/coveragelistener.h"
-#include "listeners/artemistopexecutionlistener.h"
 #include "runtime/ajax/ajaxrequestlistener.h"
 #include "strategies/inputgenerator/targets/jquerylistener.h"
 
@@ -51,7 +50,6 @@ namespace artemis {
     public:
         WebKitExecutor(QObject *parent,
         		QMap<QString,QString> presetFields,
-        		ArtemisTopExecutionListener* listener,
         		JQueryListener* jqueryListener,
                 AjaxRequestListener* ajaxListener);
         ~WebKitExecutor();
@@ -75,7 +73,6 @@ namespace artemis {
         ExecutableConfiguration* current_conf;
         CoverageListener* cov_list;
         QString initial_page_state;
-        ArtemisTopExecutionListener* execution_listener;
         AjaxRequestListener* ajax_listener;
         JQueryListener* mJquery;
         QMap<QString,QString> mPresetFields;

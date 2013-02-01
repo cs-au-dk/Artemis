@@ -60,10 +60,6 @@ Runtime::Runtime(QObject* parent, const Options& options, QUrl url) : QObject(pa
         QNetworkProxy::setApplicationProxy(proxy);
     }
 
-    // TODO remove listener dependency
-    mListener = new MultiplexListener(0);
-    mListener->add_listener(new SourceLoadingListener());
-
     /** Ajax support and cookie injection **/
 
     AjaxRequestListener* ajaxRequestListner = new AjaxRequestListener(this);
@@ -78,7 +74,7 @@ Runtime::Runtime(QObject* parent, const Options& options, QUrl url) : QObject(pa
 
     /** Runtime Objects **/
 
-    mWebkitExecutor = new WebKitExecutor(this, options.presetFormfields, mListener, jqueryListener, ajaxRequestListner);
+    mWebkitExecutor = new WebKitExecutor(this, options.presetFormfields, jqueryListener, ajaxRequestListner);
 
     mInputgenerator = new RandomInputGenerator(this, new TargetGenerator(this, jqueryListener), options.numberSameLength);
     mTerminationStrategy = new NumberOfIterationsTermination(this, options.iterationLimit);
@@ -98,8 +94,6 @@ Runtime::Runtime(QObject* parent, const Options& options, QUrl url) : QObject(pa
  */
 void Runtime::startAnalysis(QUrl url)
 {
-    mListener->artemis_start(url);
-
     // TODO possible memory leak
     ExecutableConfiguration* initialConfiguration =
     		new ExecutableConfiguration(NULL, new InputSequence(NULL), url);
@@ -124,8 +118,6 @@ void Runtime::preConcreteExecution()
 	// TODO remove this memory leak
 	ExecutableConfiguration* nextConfiguration = mWorklist->remove();
 
-	mListener->before_execute(nextConfiguration);
-
     mWebkitExecutor->executeSequence(nextConfiguration); // calls the slExecutedSequence method as callback
 }
 
@@ -136,8 +128,6 @@ void Runtime::preConcreteExecution()
  */
 void Runtime::postConcreteExecution(ExecutableConfiguration* configuration, ExecutionResult* result)
 {
-    mListener->executed(configuration, result);
-
     mPrioritizerStrategy->reprioritize(mWorklist);
 
 	QList<ExecutableConfiguration*> newConfigurations = mInputgenerator->add_new_configurations(configuration, result);
@@ -153,18 +143,12 @@ void Runtime::postConcreteExecution(ExecutableConfiguration* configuration, Exec
 
 void Runtime::finishAnalysis() {
 
-    mListener->artemis_finished();
-
     mWebkitExecutor->finish_up();
 
 	cout << "Artemis: Testing done..." << endl;
 
 	cout << "\n\n === Coverage information for execution === \n";
 	write_coverage_report(cout, coverage());
-
-	cout << "\n==== Source code loaded ====\n";
-	s_list->print_results();
-	cout << "\n\n";
 
 	cout << "\n=== Statistics ===\n";
 	StatsPrettyWriter::write(cout, statistics());

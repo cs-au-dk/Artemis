@@ -35,8 +35,6 @@
 #include "runtime/worklist/worklist.h"
 #include "strategies/termination/terminationstrategy.h"
 #include "strategies/prioritizer/prioritizerstrategy.h"
-#include "listeners/artemistopexecutionlistener.h"
-#include "listeners/multiplexlistener.h"
 #include "strategies/inputgenerator/targets/targetdescriptor.h"
 #include "runtime/events/eventhandlerdescriptor.h"
 #include "strategies/inputgenerator/targets/jquerylistener.h"
