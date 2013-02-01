@@ -6,7 +6,8 @@
 #include <QDateTime>
 
 namespace artemis {
-void write_coverage_html(QString appname, CodeCoverage cc){
+
+void write_coverage_html(CodeCoverage cc){
 
     QDir appdir("", "*.html", QDir::Time);
     QStringList existingFiles = appdir.entryList();
@@ -34,15 +35,10 @@ void write_coverage_html(QString appname, CodeCoverage cc){
     }
     res += ("</body></html>");
 
-    QString pathToFile;
-    if (appname.isEmpty()) {
-        pathToFile = QDateTime::currentDateTime().toString("dd-MM-yy-hh-mm-ss") + ".html";
-    } else {
-        pathToFile = appname + "-" + QDateTime::currentDateTime().toString("dd-MM-yy-hh-mm-ss") + ".html";
-    }
+    QString pathToFile = QDateTime::currentDateTime().toString("dd-MM-yy-hh-mm-ss") + ".html";
 
     write_string_to_file(pathToFile, res);
-
 }
+
 }
 

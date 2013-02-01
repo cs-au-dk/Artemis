@@ -52,13 +52,9 @@ namespace artemis {
     		QMap<QString,QString> presetFields,
     		ArtemisTopExecutionListener* listener,
     		JQueryListener* jqueryListener,
-            AjaxRequestListener* ajaxListener,
-            QString appNameIn) :
+            AjaxRequestListener* ajaxListener) :
             QObject(parent)
     {
-        appName = appNameIn;
-
-
     	current_result = NULL;
 
     	execution_listener = listener;
@@ -253,7 +249,7 @@ namespace artemis {
             qDebug() << "Removing old result" << endl;
 
 
-            write_coverage_html(appName, coverage());
+            write_coverage_html(coverage());
 
 
             current_result->disconnect();

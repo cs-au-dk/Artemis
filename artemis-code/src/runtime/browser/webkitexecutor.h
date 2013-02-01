@@ -53,8 +53,7 @@ namespace artemis {
         		QMap<QString,QString> presetFields,
         		ArtemisTopExecutionListener* listener,
         		JQueryListener* jqueryListener,
-                AjaxRequestListener* ajaxListener,
-                QString appName);
+                AjaxRequestListener* ajaxListener);
         ~WebKitExecutor();
         void executeSequence(ExecutableConfiguration* conf);
         QWebExecutionListener* webkit_listener;
@@ -81,7 +80,6 @@ namespace artemis {
         AjaxRequestListener* ajax_listener;
         JQueryListener* mJquery;
         QMap<QString,QString> mPresetFields;
-        QString appName;
 
     signals:
         void sigExecutedSequence(ExecutableConfiguration* conf, ExecutionResult* res);
