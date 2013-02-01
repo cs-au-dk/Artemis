@@ -31,7 +31,7 @@
 #include <QObject>
 #include <QApplication>
 
-#include "builder/options.h"
+#include "runtime/options.h"
 #include "strategies/inputgenerator/inputgeneratorstrategy.h"
 #include "runtime/runtime.h"
 

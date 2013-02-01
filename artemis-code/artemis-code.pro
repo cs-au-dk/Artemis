@@ -26,7 +26,7 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/strategies/prioritizer/prioritizerstrategy.h \
     src/strategies/prioritizer/randomprioritizer.h \
     src/strategies/inputgenerator/targets/targetgenerator.h \
-    src/builder/options.h \
+    src/runtime/options.h \
     src/strategies/inputgenerator/variants/randomvariants.h \
     src/strategies/inputgenerator/variants/variantsgenerator.h \
     src/runtime/ajax/ajaxrequest.h \
