@@ -64,7 +64,6 @@ namespace artemis {
         void setup();
         void finished_sequence();
         void get_form_fields();
-        void get_links();
         QSet<QWebFrame*> all_frames();
         QSet<QString> get_select_options(const QWebElement&);
         void do_exe();

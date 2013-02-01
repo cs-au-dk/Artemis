@@ -51,7 +51,6 @@ namespace artemis {
 		int iterationLimit;
 		int numberSameLength;
 
-		bool dumpUrls;
 		bool recreatePage;
 
 		QString useProxy;
@@ -60,7 +59,6 @@ namespace artemis {
 		OptionsType() :
 			iterationLimit(1),
 			numberSameLength(1),
-			dumpUrls(true),
 			recreatePage(false) {}
 	} Options;
 

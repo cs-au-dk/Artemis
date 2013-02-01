@@ -52,7 +52,6 @@ ExecutionResult::ExecutionResult(QObject *parent, const ExecutionResult* other) 
     this->m_event_handlers = other->m_event_handlers;
     this->element_pointers = other->element_pointers;
     this->is_crash_state = other->is_crash_state;
-    this->m_urls = other->m_urls;
     this->m_modfied_dom = other->m_modfied_dom;
     this->state_hash = other->state_hash;
     this->m_ajax_request = other->m_ajax_request;
@@ -184,27 +183,10 @@ void ExecutionResult::add_form_fields(const QSet<FormField*>& fields)
     }
 }
 
-void ExecutionResult::add_urls(const QSet<QUrl>& u)
-{
-    Q_ASSERT(!final);
-    m_urls += u;
-}
-
 QSet<EventHandlerDescriptor*> ExecutionResult::event_handlers() const
 {
     Q_ASSERT(final);
     return m_event_handlers;
-}
-
-QSet<QUrl> ExecutionResult::urls() const
-{
-    return this->m_urls;
-}
-
-void ExecutionResult::add_url(const QUrl url)
-{
-    Q_ASSERT(!final);
-    m_urls << url;
 }
 
 void ExecutionResult::make_load_failed()
@@ -253,7 +235,6 @@ QDebug operator<<(QDebug dbg, const ExecutionResult &e)
         else {
             dbg.nospace() << "Event handlers: " << e.m_event_handlers << "\n";
             dbg.nospace() << "Form fields   : " << e.m_form_fields << "\n";
-            dbg.nospace() << "Urls          : " << e.m_urls << "\n";
             dbg.nospace() << "Modfied dom   : " << e.m_modfied_dom << "\n";
             dbg.nospace() << "Ajax requests : " << e.m_ajax_request << "\n";
             dbg.nospace() << "Evaled strings: " << e.evaled_strings;
