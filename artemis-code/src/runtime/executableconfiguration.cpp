@@ -56,13 +56,6 @@ ExecutableConfiguration::~ExecutableConfiguration() {
         return this->sequence;
     }
 
-  /*  QString ExecutableConfiguration::toSimpleString() {
-        QString res;
-        res = "Eventsequence: " +  sequence.toSimpleString();
-        res = "\nStart url: " + url->toString();
-        return res;
-    }*/
-
 }
 
 
