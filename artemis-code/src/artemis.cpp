@@ -42,7 +42,7 @@ void printHeader() {
     qDebug() << "Artemis - Automated tester for JavaScript";
     qDebug() << "Started: " << QDateTime::currentDateTime().toString();
     qDebug() << "Compilation date: " << EXE_BUILD_DATE;
-    qDebug() << "-----\n" ;
+    qDebug() << "-----\n";
 }
 
 QUrl parseCmd(int argc, char *argv[], artemis::Options& options) {

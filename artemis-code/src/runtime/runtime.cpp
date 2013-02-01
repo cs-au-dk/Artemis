@@ -64,8 +64,8 @@ Runtime::Runtime(QObject* parent,
     mWebkitExecutor->setParent(this);
 
     QObject::connect(mWebkitExecutor,
-            SIGNAL(sigExecutedSequence(ExecutableConfiguration*, ExecutionResult)), this,
-            SLOT(slExecutedSequence(ExecutableConfiguration*, ExecutionResult)));
+            SIGNAL(sigExecutedSequence(ExecutableConfiguration*, ExecutionResult*)), this,
+            SLOT(postConcreteExecution(ExecutableConfiguration*, ExecutionResult*)));
 
     // TODO remove listener dependency
     mListener = listener;
@@ -77,7 +77,11 @@ Runtime::Runtime(QObject* parent,
 
 }
 
-void Runtime::start(QUrl url)
+/**
+ * @brief Start the analysis for url
+ * @param url
+ */
+void Runtime::startAnalysis(QUrl url)
 {
     mListener->artemis_start(url);
 
@@ -87,15 +91,18 @@ void Runtime::start(QUrl url)
 
     mWorklist->add(initialConfiguration, 0);
 
-    runNextIteration();
+    preConcreteExecution();
 }
 
-void Runtime::runNextIteration()
+/**
+ * @brief Pre-concrete-execution
+ */
+void Runtime::preConcreteExecution()
 {
 	if (mWorklist->empty() ||
 		mTerminationStrategy->should_terminate()) {
 
-		finish_up();
+        finishAnalysis();
 		return;
 	}
 
@@ -104,10 +111,15 @@ void Runtime::runNextIteration()
 
 	mListener->before_execute(nextConfiguration);
 
-	mWebkitExecutor->executeSequence(nextConfiguration);
+    mWebkitExecutor->executeSequence(nextConfiguration); // calls the slExecutedSequence method as callback
 }
 
-void Runtime::slExecutedSequence(ExecutableConfiguration* configuration, ExecutionResult* result)
+/**
+ * @brief Post-concrete-execution
+ * @param configuration
+ * @param result
+ */
+void Runtime::postConcreteExecution(ExecutableConfiguration* configuration, ExecutionResult* result)
 {
     mListener->executed(configuration, result);
 
@@ -126,10 +138,10 @@ void Runtime::slExecutedSequence(ExecutableConfiguration* configuration, Executi
 
 	statistics()->accumulate("InputGenerator::added-configurations", newConfigurations.size());
 
-	runNextIteration();
+    preConcreteExecution();
 }
 
-void Runtime::finish_up() {
+void Runtime::finishAnalysis() {
 
     mListener->artemis_finished();
 
