@@ -30,8 +30,11 @@
 
 #include "worklist/deterministicworklist.h"
 #include "statistics/statsstorage.h"
-#include "coverage/coveragetooutputstream.h"
 #include "statistics/writers/pretty.h"
+#include "coverage/coveragetooutputstream.h"
+#include "strategies/inputgenerator/randominputgenerator.h"
+#include "strategies/termination/numberofiterationstermination.h"
+#include "strategies/prioritizer/constantprioritizer.h"
 
 #include "runtime.h"
 
@@ -46,41 +49,55 @@ namespace artemis
  * startAnalysis -> preConcreteExecution -> postConcreteExecution -> finishAnalysis
  *                              ^------------------|
  */
-Runtime::Runtime(QObject* parent,
-		WebKitExecutor* webkitExecutor,
-		InputGeneratorStrategy* inputgeneratorStrategy,
-		PrioritizerStrategy* prioritizer,
-		TerminationStrategy* termination,
-		MultiplexListener* listener,
-		bool dumpUrls) :
-    QObject(parent)
+Runtime::Runtime(QObject* parent, const Options& options, QUrl url) : QObject(parent)
 {
-	mWorklist = new DeterministicWorkList(this);
 
-    mInputgenerator = inputgeneratorStrategy;
-    mInputgenerator->setParent(this);
+    if (!options.useProxy.isNull()) {
+        QStringList parts = options.useProxy.split(QString(":"));
 
-    mTerminationStrategy = termination;
-    mTerminationStrategy->setParent(this);
+        QNetworkProxy proxy(QNetworkProxy::HttpProxy, parts.at(0),
+                parts.at(1).toShort());
 
-    mPrioritizerStrategy = prioritizer;
-    mPrioritizerStrategy->setParent(this);
+        QNetworkProxy::setApplicationProxy(proxy);
+    }
 
-    mWebkitExecutor = webkitExecutor;
-    mWebkitExecutor->setParent(this);
+    // TODO remove listener dependency
+    mListener = new MultiplexListener(0);
+    mListener->add_listener(new SourceLoadingListener());
+
+    AjaxRequestListener* ajaxRequestListner = new AjaxRequestListener(NULL);
+
+    ImmutableCookieJar *immutable_cookie_jar = new ImmutableCookieJar(
+            options.presetCookies, url.host());
+    ajaxRequestListner->setCookieJar(immutable_cookie_jar);
+
+    JQueryListener* jqueryListener = new JQueryListener(NULL);
+
+    QString appName;
+    if(options.appName.isNull()){
+        appName = "";
+    } else {
+        appName = options.appName;
+    }
+
+    mWebkitExecutor = new WebKitExecutor(NULL,
+            options.presetFormfields, mListener, jqueryListener,
+            ajaxRequestListner, appName);
+
+    TargetGenerator* targetGenerator = new TargetGenerator(NULL, jqueryListener);
+
+    mWorklist = new DeterministicWorkList(NULL);
+
+    mInputgenerator = new RandomInputGenerator(NULL, targetGenerator, options.numberSameLength);
+    mTerminationStrategy = new NumberOfIterationsTermination(NULL, options.iterationLimit);
+    mPrioritizerStrategy = new ConstantPrioritizer(NULL);
 
     QObject::connect(mWebkitExecutor,
             SIGNAL(sigExecutedSequence(ExecutableConfiguration*, ExecutionResult*)), this,
             SLOT(postConcreteExecution(ExecutableConfiguration*, ExecutionResult*)));
 
-    // TODO remove listener dependency
-    mListener = listener;
-    s_list = new SourceLoadingListener();
-    mListener->add_listener(s_list);
-
     // TODO remove dump URLs
-    mDumpUrls = dumpUrls;
-
+    mDumpUrls = options.dumpUrls;
 }
 
 /**

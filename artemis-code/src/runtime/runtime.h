@@ -31,17 +31,22 @@
 
 #include <QObject>
 #include <QUrl>
+#include <QNetworkProxy>
+
+#include "builder/options.h"
 
 #include "listeners/multiplexlistener.h"
 #include "listeners/sourceloadinglistener.h"
 
 #include "strategies/inputgenerator/inputgeneratorstrategy.h"
+#include "strategies/inputgenerator/targets/targetgenerator.h"
 #include "strategies/termination/terminationstrategy.h"
 #include "strategies/prioritizer/prioritizerstrategy.h"
 
 #include "runtime/worklist/worklist.h"
 #include "runtime/browser/webkitexecutor.h"
 #include "runtime/browser/executionresult.h"
+#include "runtime/browser/cookies/immutablecookiejar.h"
 #include "runtime/executableconfiguration.h"
 
 namespace artemis
@@ -49,19 +54,12 @@ namespace artemis
 
 class Runtime : public QObject
 {
-
-Q_OBJECT
+    Q_OBJECT
 
 public:
-    Runtime(QObject* parent,
-    		WebKitExecutor* webkitExecutor,
-    		InputGeneratorStrategy* inputgenerator,
-    		PrioritizerStrategy* prioritizer,
-    		TerminationStrategy* termination,
-    		MultiplexListener* listener,
-    		bool dumpUrls);
+    Runtime(QObject* parent, const Options& options, QUrl url);
 
-    virtual ~Runtime() {};
+    ~Runtime() {};
 
     void startAnalysis(QUrl startAnalysis);
     URLCollector urlsCollected();

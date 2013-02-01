@@ -27,7 +27,6 @@
 */
 
 #include "runtime/runtime.h"
-#include "builder/builder.h"
 
 #include "artemisapplication.h"
 
@@ -45,8 +44,7 @@ namespace artemis {
 
         srand(0); //Better way to get random numbers?
 
-        mRuntime = Builder::build(options, url);
-        mRuntime->setParent(this);
+        mRuntime = new Runtime(this, options, url);
 
         QObject::connect(mRuntime, SIGNAL(sigTestingDone()),
                                  this, SLOT(sl_testingDone()));
