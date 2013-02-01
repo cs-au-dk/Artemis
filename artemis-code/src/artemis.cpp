@@ -33,7 +33,7 @@
 #include <QApplication>
 
 #include "exceptionhandlingqapp.h"
-#include "builder/options.h"
+#include "runtime/options.h"
 #include "artemisapplication.h"
 
 using namespace std;

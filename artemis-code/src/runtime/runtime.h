@@ -33,13 +33,12 @@
 #include <QUrl>
 #include <QNetworkProxy>
 
-#include "builder/options.h"
-
 #include "strategies/inputgenerator/inputgeneratorstrategy.h"
 #include "strategies/inputgenerator/targets/targetgenerator.h"
 #include "strategies/termination/terminationstrategy.h"
 #include "strategies/prioritizer/prioritizerstrategy.h"
 
+#include "runtime/options.h"
 #include "runtime/worklist/worklist.h"
 #include "runtime/browser/webkitexecutor.h"
 #include "runtime/browser/executionresult.h"
