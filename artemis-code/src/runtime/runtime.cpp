@@ -65,13 +65,13 @@ Runtime::Runtime(QObject* parent, const Options& options, QUrl url) : QObject(pa
     mListener = new MultiplexListener(0);
     mListener->add_listener(new SourceLoadingListener());
 
-    AjaxRequestListener* ajaxRequestListner = new AjaxRequestListener(NULL);
+    AjaxRequestListener* ajaxRequestListner = new AjaxRequestListener(this);
 
     ImmutableCookieJar *immutable_cookie_jar = new ImmutableCookieJar(
             options.presetCookies, url.host());
     ajaxRequestListner->setCookieJar(immutable_cookie_jar);
 
-    JQueryListener* jqueryListener = new JQueryListener(NULL);
+    JQueryListener* jqueryListener = new JQueryListener(this);
 
     QString appName;
     if(options.appName.isNull()){
@@ -80,17 +80,17 @@ Runtime::Runtime(QObject* parent, const Options& options, QUrl url) : QObject(pa
         appName = options.appName;
     }
 
-    mWebkitExecutor = new WebKitExecutor(NULL,
+    mWebkitExecutor = new WebKitExecutor(this,
             options.presetFormfields, mListener, jqueryListener,
             ajaxRequestListner, appName);
 
-    TargetGenerator* targetGenerator = new TargetGenerator(NULL, jqueryListener);
+    TargetGenerator* targetGenerator = new TargetGenerator(this, jqueryListener);
 
-    mWorklist = new DeterministicWorkList(NULL);
+    mWorklist = new DeterministicWorkList(this);
 
-    mInputgenerator = new RandomInputGenerator(NULL, targetGenerator, options.numberSameLength);
-    mTerminationStrategy = new NumberOfIterationsTermination(NULL, options.iterationLimit);
-    mPrioritizerStrategy = new ConstantPrioritizer(NULL);
+    mInputgenerator = new RandomInputGenerator(this, targetGenerator, options.numberSameLength);
+    mTerminationStrategy = new NumberOfIterationsTermination(this, options.iterationLimit);
+    mPrioritizerStrategy = new ConstantPrioritizer(this);
 
     QObject::connect(mWebkitExecutor,
             SIGNAL(sigExecutedSequence(ExecutableConfiguration*, ExecutionResult*)), this,

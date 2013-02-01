@@ -31,7 +31,6 @@
 #include <QObject>
 #include <QList>
 
-#include "runtime/events/eventhandlerdescriptor.h"
 #include "baseinput.h"
 
 namespace artemis
