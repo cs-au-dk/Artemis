@@ -63,13 +63,13 @@ public:
 
     virtual ~Runtime() {};
 
-    void start(QUrl start);
+    void startAnalysis(QUrl startAnalysis);
     URLCollector urlsCollected();
     CodeCoverage coverage();
 
 private:
-    void runNextIteration();
-    void finish_up();
+    void preConcreteExecution();
+    void finishAnalysis();
 
     WebKitExecutor* mWebkitExecutor;
     WorkList* mWorklist;
@@ -85,7 +85,7 @@ private:
     bool mDumpUrls;
 
 private slots:
-    void slExecutedSequence(ExecutableConfiguration* configuration, ExecutionResult* result);
+    void postConcreteExecution(ExecutableConfiguration* configuration, ExecutionResult* result);
 
 signals:
     void sigTestingDone();

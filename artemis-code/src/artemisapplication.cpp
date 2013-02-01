@@ -53,7 +53,7 @@ namespace artemis {
     }
 
     void ArtemisApplication::run(QUrl url) {
-        mRuntime->start(url);
+        mRuntime->startAnalysis(url);
     }
 
     void ArtemisApplication::sl_testingDone() {

@@ -40,6 +40,7 @@
 #include "strategies/prioritizer/constantprioritizer.h"
 
 #include "options.h"
+
 #include "builder.h"
 
 namespace artemis {
