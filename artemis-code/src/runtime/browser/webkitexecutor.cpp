@@ -50,14 +50,12 @@ namespace artemis {
 
     WebKitExecutor::WebKitExecutor(QObject *parent,
     		QMap<QString,QString> presetFields,
-    		ArtemisTopExecutionListener* listener,
-    		JQueryListener* jqueryListener,
+            JQueryListener* jqueryListener,
             AjaxRequestListener* ajaxListener) :
             QObject(parent)
     {
     	current_result = NULL;
 
-    	execution_listener = listener;
         mPresetFields = presetFields;
         mJquery = jqueryListener;
 
@@ -114,7 +112,6 @@ namespace artemis {
         }
 
         qDebug() << "WEBKIT: Finished loading" << endl;
-        execution_listener->loaded_page(*page);
 
         //handle_ajax_callbacks();
         setup_initial();;
@@ -287,7 +284,7 @@ namespace artemis {
     }
 
     void WebKitExecutor::sl_script_crash(QString ca, intptr_t id, int n) {
-        this->execution_listener->script_crash(ca);
+        qDebug() << "Script crashed";
     }
 
     void WebKitExecutor::sl_ajax_request(QUrl u, QString post_data) {
@@ -297,12 +294,10 @@ namespace artemis {
     }
 
     void WebKitExecutor::sl_eval_called(QString eval_text) {
-        execution_listener->eval_called(eval_text);
         qDebug() << "Dynamic code eval: " << eval_text;
     }
 
     void WebKitExecutor::sl_code_loaded(intptr_t _, QString src, QUrl url, int li) {
         qDebug() << "WebKitExecutor::sl_code_loaded" << endl;
-        execution_listener->code_loaded(src, url, li);
     }
 }

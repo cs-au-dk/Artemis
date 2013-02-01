@@ -35,9 +35,6 @@
 
 #include "builder/options.h"
 
-#include "listeners/multiplexlistener.h"
-#include "listeners/sourceloadinglistener.h"
-
 #include "strategies/inputgenerator/inputgeneratorstrategy.h"
 #include "strategies/inputgenerator/targets/targetgenerator.h"
 #include "strategies/termination/terminationstrategy.h"
@@ -74,9 +71,6 @@ private:
     TerminationStrategy* mTerminationStrategy;
     PrioritizerStrategy* mPrioritizerStrategy;
     InputGeneratorStrategy* mInputgenerator;
-
-    MultiplexListener* mListener;
-    SourceLoadingListener* s_list;
 
 private slots:
     void postConcreteExecution(ExecutableConfiguration* configuration, ExecutionResult* result);

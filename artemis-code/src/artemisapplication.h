@@ -33,7 +33,6 @@
 
 #include "builder/options.h"
 #include "strategies/inputgenerator/inputgeneratorstrategy.h"
-#include "listeners/sourceloadinglistener.h"
 #include "runtime/runtime.h"
 
 namespace artemis {
