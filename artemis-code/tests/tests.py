@@ -68,7 +68,7 @@ class AjaxTests(unittest.TestCase):
 
 if __name__ == '__main__':
 	server = WebServer(WEBSERVER_ROOT, WEBSERVER_PORT)
- 	
+
  	unittest.main()
 
  	del server
