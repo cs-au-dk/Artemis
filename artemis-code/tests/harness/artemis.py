@@ -25,26 +25,30 @@ def execute_artemis(execution_uuid, url, iterations=1):
             "-i %s" % iterations,
             url] 
 
-    stdout = subprocess.check_output(cmd, cwd=output_dir, stderr=subprocess.STDOUT)
+    try:
+	stdout = subprocess.check_output(cmd, cwd=output_dir, stderr=subprocess.STDOUT)
 
-    fp = open(os.path.join(output_dir, 'stdout.txt'), 'w')
-    fp.write(stdout)
-    fp.close()
+	fp = open(os.path.join(output_dir, 'stdout.txt'), 'w')
+    	fp.write(stdout)
+    	fp.close()
 
-    statistics = stdout[stdout.find(STATS_START)+len(STATS_START):stdout.find(STATS_END)]
+    	statistics = stdout[stdout.find(STATS_START)+len(STATS_START):stdout.find(STATS_END)]
 
-    report = {}
+    	report = {}
 
-    for line in statistics.splitlines():
-        match = RE_STATS_LINE.match(line)
+    	for line in statistics.splitlines():
+            match = RE_STATS_LINE.match(line)
 
-        if match is not None:
-            try:
-                key = match.group(1).strip()
-                value = int(match.group(2).strip())
+            if match is not None:
+            	try:
+                    key = match.group(1).strip()
+                    value = int(match.group(2).strip())
 
-                report[key] = value
-            except:
-                print 'Error parsing statistics result for line %s' % line
+                    report[key] = value
+                except:
+                    print 'Error parsing statistics result for line %s' % line
 
-    return report
+        return report
+
+    except subprocess.CalledProcessError, e:
+        raise Exception("Error thrown by call %s \n\n %s" % (e, e.output))
