@@ -40,6 +40,12 @@ using namespace std;
 namespace artemis
 {
 
+/**
+ * This is the main-loop used by artemis.
+ *
+ * startAnalysis -> preConcreteExecution -> postConcreteExecution -> finishAnalysis
+ *                              ^------------------|
+ */
 Runtime::Runtime(QObject* parent,
 		WebKitExecutor* webkitExecutor,
 		InputGeneratorStrategy* inputgeneratorStrategy,
