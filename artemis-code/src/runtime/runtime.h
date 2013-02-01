@@ -62,7 +62,6 @@ public:
     ~Runtime() {};
 
     void startAnalysis(QUrl startAnalysis);
-    URLCollector urlsCollected();
     CodeCoverage coverage();
 
 private:
@@ -78,9 +77,6 @@ private:
 
     MultiplexListener* mListener;
     SourceLoadingListener* s_list;
-
-    URLCollector mUrls;
-    bool mDumpUrls;
 
 private slots:
     void postConcreteExecution(ExecutableConfiguration* configuration, ExecutionResult* result);

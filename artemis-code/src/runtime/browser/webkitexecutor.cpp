@@ -157,28 +157,11 @@ namespace artemis {
 
     void WebKitExecutor::finished_sequence() {
         get_form_fields();
-        get_links();
         save_dom_state();
 
         current_result->finalize();
 
         emit sigExecutedSequence(current_conf, current_result);
-    }
-
-
-
-    void WebKitExecutor::get_links() {
-       QWebElementCollection links =  page->mainFrame()->findAllElements("a");
-       QSet<QUrl> urls;
-       foreach (QWebElement link, links) {
-           QString url_string = link.attribute("href");
-           QUrl url(url_string);
-           if(!url.isValid()) {
-               continue;
-           }
-           urls.insert(url);
-       }
-       current_result->add_urls(urls);
     }
 
     void WebKitExecutor::get_form_fields() {
@@ -293,26 +276,10 @@ namespace artemis {
                             current_result, SLOT(sl_script_crash(QString,intptr_t,int)));
         QObject::connect(webkit_listener, SIGNAL(eval_call(QString)),
                             current_result, SLOT(sl_eval_string(QString)));
-        QObject::connect(webkit_listener, SIGNAL(script_url_load(QUrl)),
-                            current_result, SLOT(add_url(QUrl)));
 
         //Load URL into WebKit
         qDebug() << "Trying to load: " << current_conf->starting_url().toString() << endl;
         page->mainFrame()->load(current_conf->starting_url());
-
-        //Set signal on all subframes:
-        QStack<QWebFrame*> work;
-        work.push(page->mainFrame());
-        while (!work.isEmpty()) {
-            QWebFrame* curr_f = work.pop();
-
-            QObject::connect(curr_f, SIGNAL(urlChanged(QUrl)),
-                             current_result, SLOT(add_url(QUrl)));
-
-            foreach (QWebFrame* sub_f, curr_f->childFrames()) {
-                work.push(sub_f);
-            }
-        }
     }
 
     CodeCoverage WebKitExecutor::coverage() {

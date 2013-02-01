@@ -71,7 +71,6 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/coverage/coveragelistener.h \
     src/coverage/sourceinfo.h \
     src/coverage/coveragetooutputstream.h \
-    src/urls/urlcollector.h \
     src/listeners/artemistopexecutionlistener.h \
     src/listeners/domstatesaverlistener.h \
     src/listeners/multiplexlistener.h \
@@ -125,7 +124,6 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/coverage/coveragelistener.cpp \
     src/coverage/sourceinfo.cpp \
     src/coverage/coveragetooutputstream.cpp \
-    src/urls/urlcollector.cpp \
     src/listeners/artemistopexecutionlistener.cpp \
     src/listeners/domstatesaverlistener.cpp \
     src/listeners/multiplexlistener.cpp \

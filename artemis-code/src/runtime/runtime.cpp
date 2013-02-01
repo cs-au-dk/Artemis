@@ -86,8 +86,6 @@ Runtime::Runtime(QObject* parent, const Options& options, QUrl url) : QObject(pa
             SIGNAL(sigExecutedSequence(ExecutableConfiguration*, ExecutionResult*)), this,
             SLOT(postConcreteExecution(ExecutableConfiguration*, ExecutionResult*)));
 
-    // TODO remove dump URLs
-    mDumpUrls = options.dumpUrls;
 }
 
 /**
@@ -136,11 +134,6 @@ void Runtime::postConcreteExecution(ExecutableConfiguration* configuration, Exec
 {
     mListener->executed(configuration, result);
 
-    // TODO remove
-    foreach (QUrl u, result->urls()) {
-        mUrls.add_url(u);
-    }
-
     mPrioritizerStrategy->reprioritize(mWorklist);
 
 	QList<ExecutableConfiguration*> newConfigurations = mInputgenerator->add_new_configurations(configuration, result);
@@ -162,11 +155,6 @@ void Runtime::finishAnalysis() {
 
 	cout << "Artemis: Testing done..." << endl;
 
-	if (mDumpUrls) {
-		cout << "The following URLs were encountered:\n";
-		urlsCollected().print_urls();
-	}
-
 	cout << "\n\n === Coverage information for execution === \n";
 	write_coverage_report(cout, coverage());
 
@@ -187,11 +175,6 @@ void Runtime::finishAnalysis() {
     //delete termination;
 
     emit sigTestingDone();
-}
-
-URLCollector Runtime::urlsCollected()
-{
-    return mUrls;
 }
 
 CodeCoverage Runtime::coverage() {

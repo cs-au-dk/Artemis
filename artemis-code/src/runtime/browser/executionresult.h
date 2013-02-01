@@ -57,10 +57,8 @@ class ExecutionResult : public QObject
         void add_form_fields(const QSet<FormField*>& f);
         void add_form_field(const FormField* f);
 
-        void add_urls(const QSet<QUrl>& u);
         void add_ajax_request(AjaxRequest req);
         QSet<AjaxRequest> ajax_request() const;
-        QSet<QUrl> urls() const;
         void make_load_failed();
         bool modifed_dom() const;
         void set_modfied_dom(bool b) ;
@@ -83,7 +81,6 @@ class ExecutionResult : public QObject
         QSet<EventHandlerDescriptor*> m_event_handlers;
         QSet<QPair<QWebElement*,QString> > element_pointers;
         QSet<FormField*> m_form_fields;
-        QSet<QUrl> m_urls;
         bool final;
         bool is_crash_state;
         QString crash_cause;
@@ -101,7 +98,6 @@ class ExecutionResult : public QObject
         void newEventListener(QWebElement* elem, QString name);
         void removeEventListener(QWebElement* elem, QString name);
         void sl_script_crash(QString cause, intptr_t sourceID, int lineNumber);
-        void add_url(const QUrl url);
         void sl_eval_string(const QString);
         void addedAjaxCallbackHandler(int callbackId);
 

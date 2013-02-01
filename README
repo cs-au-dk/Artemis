@@ -25,6 +25,4 @@ Usage:
 
    -r      : set_recreate_page(true) // TODO
 
-   -u 	   : set_dump_urls(true) // TODO
-
    -p	   : dump_page_states(<path>) // TODO   
