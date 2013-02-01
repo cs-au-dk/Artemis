@@ -72,17 +72,7 @@ Runtime::Runtime(QObject* parent, const Options& options, QUrl url) : QObject(pa
 
     JQueryListener* jqueryListener = new JQueryListener(this);
 
-    // TODO remove
-    QString appName;
-    if(options.appName.isNull()){
-        appName = "";
-    } else {
-        appName = options.appName;
-    }
-
-    mWebkitExecutor = new WebKitExecutor(this,
-            options.presetFormfields, mListener, jqueryListener,
-            ajaxRequestListner, appName);
+    mWebkitExecutor = new WebKitExecutor(this, options.presetFormfields, mListener, jqueryListener, ajaxRequestListner);
 
     TargetGenerator* targetGenerator = new TargetGenerator(this, jqueryListener);
 

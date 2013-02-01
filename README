@@ -27,6 +27,4 @@ Usage:
 
    -u 	   : set_dump_urls(true) // TODO
 
-   -p	   : dump_page_states(<path>) // TODO
-
-   -n 	   : Specify the project name for coverage dump purposes   
+   -p	   : dump_page_states(<path>) // TODO   

@@ -48,7 +48,7 @@ void printHeader() {
 QUrl parseCmd(int argc, char *argv[], artemis::Options& options) {
 
     char c;
-    while ((c = getopt(argc, argv, "rp:f:t:c:i:n:")) != -1) {
+    while ((c = getopt(argc, argv, "rp:f:t:c:i:")) != -1) {
 
     	switch (c) {
 
@@ -89,12 +89,6 @@ QUrl parseCmd(int argc, char *argv[], artemis::Options& options) {
         case 'i':
         {
         	options.iterationLimit = QString(optarg).toInt();
-            break;
-        }
-
-        case 'n':
-        {
-            options.appName = QString(optarg);
             break;
         }
 

@@ -51,8 +51,6 @@ namespace artemis {
 		int iterationLimit;
 		int numberSameLength;
 
-        QString appName;
-
 		bool dumpUrls;
 		bool recreatePage;
 
