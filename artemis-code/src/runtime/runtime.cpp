@@ -64,23 +64,27 @@ Runtime::Runtime(QObject* parent, const Options& options, QUrl url) : QObject(pa
     mListener = new MultiplexListener(0);
     mListener->add_listener(new SourceLoadingListener());
 
+    /** Ajax support and cookie injection **/
+
     AjaxRequestListener* ajaxRequestListner = new AjaxRequestListener(this);
 
     ImmutableCookieJar *immutable_cookie_jar = new ImmutableCookieJar(
             options.presetCookies, url.host());
     ajaxRequestListner->setCookieJar(immutable_cookie_jar);
 
+    /** JQuery support **/
+
     JQueryListener* jqueryListener = new JQueryListener(this);
+
+    /** Runtime Objects **/
 
     mWebkitExecutor = new WebKitExecutor(this, options.presetFormfields, mListener, jqueryListener, ajaxRequestListner);
 
-    TargetGenerator* targetGenerator = new TargetGenerator(this, jqueryListener);
-
-    mWorklist = new DeterministicWorkList(this);
-
-    mInputgenerator = new RandomInputGenerator(this, targetGenerator, options.numberSameLength);
+    mInputgenerator = new RandomInputGenerator(this, new TargetGenerator(this, jqueryListener), options.numberSameLength);
     mTerminationStrategy = new NumberOfIterationsTermination(this, options.iterationLimit);
     mPrioritizerStrategy = new ConstantPrioritizer(this);
+
+    mWorklist = new DeterministicWorkList(this);
 
     QObject::connect(mWebkitExecutor,
             SIGNAL(sigExecutedSequence(ExecutableConfiguration*, ExecutionResult*)), this,
