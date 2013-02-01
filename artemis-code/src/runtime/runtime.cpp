@@ -29,9 +29,9 @@
 #include <iostream>
 
 #include "worklist/deterministicworklist.h"
+#include "coverage/coveragetooutputstream.h"
 #include "statistics/statsstorage.h"
 #include "statistics/writers/pretty.h"
-#include "coverage/coveragetooutputstream.h"
 #include "strategies/inputgenerator/randominputgenerator.h"
 #include "strategies/termination/numberofiterationstermination.h"
 #include "strategies/prioritizer/constantprioritizer.h"
@@ -62,11 +62,11 @@ Runtime::Runtime(QObject* parent, const Options& options, QUrl url) : QObject(pa
 
     /** Ajax support and cookie injection **/
 
-    AjaxRequestListener* ajaxRequestListner = new AjaxRequestListener(this);
+    AjaxRequestListener* ajaxRequestListner = new AjaxRequestListener(NULL);
 
     ImmutableCookieJar *immutable_cookie_jar = new ImmutableCookieJar(
             options.presetCookies, url.host());
-    ajaxRequestListner->setCookieJar(immutable_cookie_jar);
+            ajaxRequestListner->setCookieJar(immutable_cookie_jar);
 
     /** JQuery support **/
 
@@ -85,7 +85,6 @@ Runtime::Runtime(QObject* parent, const Options& options, QUrl url) : QObject(pa
     QObject::connect(mWebkitExecutor,
             SIGNAL(sigExecutedSequence(ExecutableConfiguration*, ExecutionResult*)), this,
             SLOT(postConcreteExecution(ExecutableConfiguration*, ExecutionResult*)));
-
 }
 
 /**
