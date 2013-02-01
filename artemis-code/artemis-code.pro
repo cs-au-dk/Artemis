@@ -27,7 +27,6 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/strategies/prioritizer/randomprioritizer.h \
     src/strategies/inputgenerator/targets/targetgenerator.h \
     src/builder/options.h \
-    src/builder/builder.h \
     src/strategies/inputgenerator/variants/randomvariants.h \
     src/strategies/inputgenerator/variants/variantsgenerator.h \
     src/runtime/ajax/ajaxrequest.h \
@@ -89,7 +88,6 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/strategies/prioritizer/constantprioritizer.cpp \
     src/strategies/prioritizer/randomprioritizer.cpp \
     src/strategies/inputgenerator/targets/targetgenerator.cpp \
-    src/builder/builder.cpp \
     src/strategies/inputgenerator/variants/randomvariants.cpp \
     src/runtime/ajax/ajaxrequest.cpp \
     src/runtime/ajax/ajaxrequestlistener.cpp \
