@@ -37,8 +37,7 @@ using namespace std;
 namespace artemis
 {
 
-ExecutionResult::ExecutionResult(QObject *parent) :
-    QObject(parent)
+ExecutionResult::ExecutionResult(QObject *parent) : QObject(parent)
 {
     final = false;
     is_crash_state = false;
@@ -47,26 +46,25 @@ ExecutionResult::ExecutionResult(QObject *parent) :
     crash_sourceID = 0;
 }
 
-ExecutionResult::ExecutionResult(const ExecutionResult& other) :
-    QObject(0)
+ExecutionResult::ExecutionResult(QObject *parent, const ExecutionResult* other) : QObject(parent)
 {
-    this->final = other.final;
-    this->m_event_handlers = other.m_event_handlers;
-    this->element_pointers = other.element_pointers;
-    this->is_crash_state = other.is_crash_state;
-    this->m_urls = other.m_urls;
-    this->m_modfied_dom = other.m_modfied_dom;
-    this->state_hash = other.state_hash;
-    this->m_ajax_request = other.m_ajax_request;
-    this->evaled_strings = other.evaled_strings;
-    if (other.is_crash_state) {
-        this->is_crash_state = other.is_crash_state;
-        this->crash_cause = other.crash_cause;
-        this->crash_lineNumber = other.crash_lineNumber;
-        this->crash_sourceID = other.crash_sourceID;
+    this->final = other->final;
+    this->m_event_handlers = other->m_event_handlers;
+    this->element_pointers = other->element_pointers;
+    this->is_crash_state = other->is_crash_state;
+    this->m_urls = other->m_urls;
+    this->m_modfied_dom = other->m_modfied_dom;
+    this->state_hash = other->state_hash;
+    this->m_ajax_request = other->m_ajax_request;
+    this->evaled_strings = other->evaled_strings;
+    if (other->is_crash_state) {
+        this->is_crash_state = other->is_crash_state;
+        this->crash_cause = other->crash_cause;
+        this->crash_lineNumber = other->crash_lineNumber;
+        this->crash_sourceID = other->crash_sourceID;
     }
-    this->m_timers = QMap<int, Timer>(other.m_timers);
-    this->m_ajax_callback_handlers = QList<int>(other.m_ajax_callback_handlers);
+    this->m_timers = QMap<int, Timer>(other->m_timers);
+    this->m_ajax_callback_handlers = QList<int>(other->m_ajax_callback_handlers);
 }
 
 void ExecutionResult::newEventListener(QWebElement *elem, QString name)
@@ -141,9 +139,9 @@ void ExecutionResult::finalize()
             //continue;
         }
 
-        EventHandlerDescriptor handler(p.first, p.second);
+        EventHandlerDescriptor* handler = new EventHandlerDescriptor(this, p.first, p.second);
 
-        if (handler.is_invalid())
+        if (handler->is_invalid())
             qDebug() << "WARN: element was invalid, ignoring";
         else
             m_event_handlers.insert(handler);
@@ -152,7 +150,7 @@ void ExecutionResult::finalize()
     element_pointers.clear();
 }
 
-QSet<FormField> ExecutionResult::form_fields() const
+QSet<FormField*> ExecutionResult::form_fields() const
 {
     Q_ASSERT(final);
     return m_form_fields;
@@ -169,16 +167,21 @@ QSet<AjaxRequest> ExecutionResult::ajax_request() const
     return this->m_ajax_request;
 }
 
-void ExecutionResult::add_form_field(FormField f)
+void ExecutionResult::add_form_field(const FormField* f)
 {
     Q_ASSERT(!final);
-    m_form_fields << f;
+
+    FormField* formField = new FormField(this, f);
+    m_form_fields.insert(formField);
 }
 
-void ExecutionResult::add_form_fields(const QSet<FormField>& f)
+void ExecutionResult::add_form_fields(const QSet<FormField*>& fields)
 {
     Q_ASSERT(!final);
-    m_form_fields += f;
+
+    foreach (FormField* field, fields) {
+        this->add_form_field(field);
+    }
 }
 
 void ExecutionResult::add_urls(const QSet<QUrl>& u)
@@ -187,7 +190,7 @@ void ExecutionResult::add_urls(const QSet<QUrl>& u)
     m_urls += u;
 }
 
-QSet<EventHandlerDescriptor> ExecutionResult::event_handlers() const
+QSet<EventHandlerDescriptor*> ExecutionResult::event_handlers() const
 {
     Q_ASSERT(final);
     return m_event_handlers;
@@ -210,46 +213,6 @@ void ExecutionResult::make_load_failed()
     crash_cause = "Webkit failed to load the page";
     crash_sourceID = 0;
     crash_lineNumber = 0;
-}
-
-uint ExecutionResult::hashcode() const
-{
-    Q_ASSERT(final);
-    if (is_crash_state) {
-        return 17 * qHash(this->crash_cause) + 23 * crash_lineNumber;
-    }
-    return 17 * qHash(m_event_handlers) + 23 * qHash(m_form_fields) + 27 * qHash(m_urls)
-        + 9 * state_hash + 13 * qHash(m_ajax_request) + 5 * qHash(evaled_strings);
-}
-
-bool ExecutionResult::operator==(ExecutionResult& other)
-{
-    Q_ASSERT(final);
-    return m_event_handlers == other.m_event_handlers && m_form_fields == other.m_form_fields
-        && is_crash_state == other.is_crash_state && crash_cause == other.crash_cause
-        && crash_lineNumber == other.crash_lineNumber && crash_sourceID == other.crash_sourceID
-        && m_urls == other.m_urls && m_modfied_dom == other.m_modfied_dom
-        && state_hash == other.state_hash && m_ajax_request == other.m_ajax_request
-        && evaled_strings == other.evaled_strings;
-}
-
-ExecutionResult &ExecutionResult::operator=(const ExecutionResult &other)
-{
-    Q_ASSERT(final);
-    this->m_event_handlers = other.m_event_handlers;
-    this->m_form_fields = other.m_form_fields;
-    this->is_crash_state = other.is_crash_state;
-    this->crash_cause = other.crash_cause;
-    this->crash_lineNumber = other.crash_lineNumber;
-    this->crash_sourceID = other.crash_sourceID;
-    this->m_urls = other.m_urls;
-    this->m_modfied_dom = other.m_modfied_dom;
-    this->state_hash = other.state_hash;
-    this->m_ajax_request = other.m_ajax_request;
-    this->evaled_strings = other.evaled_strings;
-    this->m_timers = other.m_timers;
-    this->m_ajax_callback_handlers = other.m_ajax_callback_handlers;
-    return *this;
 }
 
 void ExecutionResult::sl_script_crash(QString cause, intptr_t sourceID, int lineNumber)

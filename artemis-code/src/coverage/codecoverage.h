@@ -32,29 +32,26 @@
 #include "sourceinfo.h"
 #include "lineinfo.h"
 
+// TODO new memory model
+
 namespace artemis {
 
     class CodeCoverage
     {
     public:
-        CodeCoverage(const QMap<int, SourceInfo>& sources, const QMap<int, QMap<int, LineInfo> >& coverage);
+        CodeCoverage(const QMap<int, SourceInfo*>& sources, const QMap<int, QMap<int, LineInfo> >& coverage);
 
         QSet<int> source_ids() const;
-        const SourceInfo source_info(int id) const;
+        const SourceInfo* source_info(int id) const;
         QMap<int, LineInfo> line_info(int id) const;
 
-        bool operator==(const CodeCoverage& other) const;
         QDebug friend operator<<(QDebug dbg, const CodeCoverage &e);
-        uint hashcode() const;
 
         QString toString() const;
 
-
-
     private:
-        QMap<int, SourceInfo> m_sources;
+        QMap<int, SourceInfo*> m_sources;
         QMap<int, QMap<int, LineInfo> > m_coverage;
-
     };
 
 

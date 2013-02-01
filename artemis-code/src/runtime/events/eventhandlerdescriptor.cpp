@@ -29,54 +29,42 @@
 
 namespace artemis {
 
-    EventHandlerDescriptor::EventHandlerDescriptor(QWebElement *elem, QString name)
-    {
-        this->event_name = name;
-        this->element = new DOMElementDescriptor(elem);
-    }
+EventHandlerDescriptor::EventHandlerDescriptor(QObject* parent, QWebElement *elem, QString name) : QObject(parent)
+{
+    this->event_name = name;
+    this->element = new DOMElementDescriptor(parent, elem);
+}
 
-    EventHandlerDescriptor::EventHandlerDescriptor(const EventHandlerDescriptor &other) {
-        this->event_name = other.event_name;
-        this->element = new DOMElementDescriptor(*other.element);
-    }
+EventHandlerDescriptor::EventHandlerDescriptor(QObject* parent, const EventHandlerDescriptor* other) : QObject(parent)
+{
+    this->event_name = other->event_name;
+    this->element = new DOMElementDescriptor(parent, other->element);
+}
 
-    EventHandlerDescriptor::~EventHandlerDescriptor() {
-        delete element;
-    }
+EventHandlerDescriptor::~EventHandlerDescriptor()
+{
+}
 
-    QString EventHandlerDescriptor::name() {
-        return this->event_name;
-    }
+QString EventHandlerDescriptor::name() const {
+    return this->event_name;
+}
 
-    DOMElementDescriptor EventHandlerDescriptor::dom_element() {
-        return *element;
-    }
+const DOMElementDescriptor* EventHandlerDescriptor::dom_element() const {
+    return element;
+}
 
-    EventType EventHandlerDescriptor::getEventType() const {
-    	return get_type(event_name);
-    }
+const EventType EventHandlerDescriptor::getEventType() const {
+    return get_type(event_name);
+}
 
-    bool EventHandlerDescriptor::operator==(const EventHandlerDescriptor& other) const{
-        return (event_name == other.event_name) && (element == other.element);
-    }
+QDebug operator<<(QDebug dbg, const EventHandlerDescriptor &e) {
+    dbg.nospace() << "(" + e.event_name << "," << e.element << ")";
+    return dbg.space();
+}
 
-    QDebug operator<<(QDebug dbg, const EventHandlerDescriptor &e) {
-        dbg.nospace() << "(" + e.event_name << "," << e.element << ")";
-        return dbg.space();
-    }
+bool EventHandlerDescriptor::is_invalid() const {
+    return this->element->is_invalid();
+}
 
-    EventHandlerDescriptor &EventHandlerDescriptor::operator=(const EventHandlerDescriptor &other) {
-        this->event_name = other.event_name;
-        this->element = new DOMElementDescriptor(*other.element);
-        return *this;
-    }
-
-    uint EventHandlerDescriptor::hashcode() const{
-        return 19*qHash(event_name) + 7*qHash(element);
-    }
-
-    bool EventHandlerDescriptor::is_invalid() {
-        return this->element->is_invalid();
-    }
 }
 

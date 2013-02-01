@@ -43,7 +43,7 @@ class DomInput: public BaseInput
 {
 
 public:
-    DomInput(QObject* parent, const EventHandlerDescriptor& handler, const FormInput& formInput,
+    DomInput(QObject* parent, EventHandlerDescriptor* handler, FormInput* formInput,
         EventParameters* params, TargetDescriptor* target);
 
     ~DomInput();
@@ -52,14 +52,14 @@ public:
     bool isEqual(BaseInput* other);
 
     // TODO delete
-    EventHandlerDescriptor getEventHandler() const;
+    const EventHandlerDescriptor* getEventHandler() const;
     TargetDescriptor* target() const;
-    FormInput getFormInput() const;
+    FormInput* getFormInput() const;
     EventParameters* event_params() const;
 
 private:
     EventHandlerDescriptor* mEventHandler;
-    FormInput mFormInput;
+    FormInput* mFormInput;
     EventParameters* mEvtParams;
     TargetDescriptor* mTarget;
 };

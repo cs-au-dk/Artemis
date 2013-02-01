@@ -25,37 +25,57 @@
   authors and should not be interpreted as representing official policies, either expressed
   or implied, of Simon Holm Jensen
 */
-#include "formfield.h"
+
 #include "artemisglobals.h"
 
-
+#include "formfield.h"
 
 namespace artemis {
 
-    FormField::FormField(FormFieldTypes type, DOMElementDescriptor element, QSet<QString> input_options)
-    {
-        this->field_type = type;
-        this->element_descriptor = new DOMElementDescriptor(element);
-        this->inputs_set = input_options;
-    }
+/**
+ * @brief Takes ownership of element
+ * @param parent
+ * @param type
+ * @param element
+ * @param input_options
+ */
+FormField::FormField(QObject* parent, FormFieldTypes type, DOMElementDescriptor* element, QSet<QString> input_options) : QObject(parent)
+{
+    this->field_type = type;
 
-    FormField::FormField(FormFieldTypes type, DOMElementDescriptor element) {
-        this->field_type = type;
-        this->element_descriptor =  new DOMElementDescriptor(element);
-    }
+    this->element_descriptor = element;
+    this->element_descriptor->setParent(this);
 
-    FormField::FormField(const FormField &other){
-        this->field_type = other.field_type;
-        this->element_descriptor =  new DOMElementDescriptor(*other.element_descriptor);
-        this->inputs_set = other.inputs_set;
-    }
+    this->inputs_set = input_options;
+}
+
+/**
+ * @brief Takes ownership of element
+ * @param parent
+ * @param type
+ * @param element
+ */
+FormField::FormField(QObject* parent, FormFieldTypes type, DOMElementDescriptor* element) : QObject(parent)
+{
+    this->field_type = type;
+
+    this->element_descriptor = element;
+    this->element_descriptor->setParent(this);
+}
+
+FormField::FormField(QObject* parent, const FormField* other) : QObject(parent)
+{
+    this->field_type = other->field_type;
+    this->inputs_set = other->inputs_set;
+    this->element_descriptor = new DOMElementDescriptor(parent, other->element_descriptor);
+}
 
     FormField::~FormField() {
-        delete element_descriptor;
+
     }
 
-    DOMElementDescriptor FormField::element() {
-        return *element_descriptor;
+    DOMElementDescriptor* FormField::element() const {
+        return element_descriptor;
     }
 
     FormFieldTypes FormField::type() {
@@ -66,26 +86,9 @@ namespace artemis {
         return inputs_set;
     }
 
-    bool FormField::operator==(const FormField &other) const {
-        return (field_type == other.field_type)
-                && (*element_descriptor == *other.element_descriptor)
-                && (inputs_set == other.inputs_set);
-    }
-
     QDebug operator<<(QDebug dbg, const FormField &f) {
         dbg.nospace() << "{" << *f.element_descriptor << "," << form_field_type_tostring(f.field_type) << "," << f.inputs_set << "}";
         return dbg.space();
-    }
-
-    uint FormField::hashcode() const {
-        return field_type*7 + qHash(*element_descriptor)*13 + qHash(inputs_set)*31;
-    }
-
-    FormField &FormField::operator=(const FormField &other) {
-        this->field_type = other.field_type;
-        this->element_descriptor =  new DOMElementDescriptor(*other.element_descriptor);
-        this->inputs_set = other.inputs_set;
-        return *this;
     }
 
     FormFieldTypes get_type_from_attr(QString type_attr) {

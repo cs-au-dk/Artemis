@@ -28,39 +28,34 @@
 #ifndef FORMFIELDVALUE_H
 #define FORMFIELDVALUE_H
 
+#include <QObject>
 #include <QString>
 
 namespace artemis {
 
-    class FormFieldValue
-    {
+class FormFieldValue : public QObject
+{
+    Q_OBJECT
+
     public:
-        FormFieldValue(QString value);
-        FormFieldValue(bool value);
-        FormFieldValue();
+        FormFieldValue(QObject* parent, QString value);
+        FormFieldValue(QObject* parent, bool value);
+        FormFieldValue(QObject* parent);
 
         bool get_bool();
         QString get_str();
         bool is_no_value();
         QString string_representation();
 
-        FormFieldValue &operator=(const FormFieldValue &other);
-        bool operator==(const FormFieldValue& other) const;
         QDebug friend operator<<(QDebug dbg, const FormFieldValue &f);
-        uint hashcode() const;
 
     private:
         QString str_val;
         bool bool_val;
         bool is_bool;
         bool is_no_val;
+};
 
-    };
-
-}
-
-inline uint qHash(const artemis::FormFieldValue &d) {
-    return d.hashcode();
 }
 
 #endif // FORMFIELDVALUE_H

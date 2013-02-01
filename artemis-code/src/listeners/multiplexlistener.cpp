@@ -22,7 +22,7 @@ void MultiplexListener::before_execute(ExecutableConfiguration* conf) {
     }
 }
 
-void MultiplexListener::executed(ExecutableConfiguration* conf, const ExecutionResult& result) {
+void MultiplexListener::executed(ExecutableConfiguration* conf, const ExecutionResult* result) {
     foreach (ArtemisTopExecutionListener* l, m_listeners) {
         l->executed(conf, result);
     }

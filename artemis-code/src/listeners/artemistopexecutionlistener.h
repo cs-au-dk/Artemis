@@ -15,7 +15,7 @@ namespace artemis {
         ArtemisTopExecutionListener();
         virtual void artemis_start(const QUrl& url);
         virtual void before_execute(ExecutableConfiguration* conf);
-        virtual void executed(ExecutableConfiguration* conf, const ExecutionResult& result);
+        virtual void executed(ExecutableConfiguration* conf, const ExecutionResult* result);
         virtual void loaded_page(const ArtemisWebPage& page);
         virtual void script_crash(QString cause);
         virtual void artemis_finished();

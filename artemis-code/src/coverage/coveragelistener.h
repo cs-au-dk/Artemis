@@ -28,9 +28,12 @@
 #ifndef COVERAGELISTENER_H
 #define COVERAGELISTENER_H
 
+#include <inttypes.h>
+
 #include <QObject>
 #include <QUrl>
 #include <QMap>
+
 #include "sourceinfo.h"
 #include "lineinfo.h"
 #include "codecoverage.h"
@@ -51,7 +54,7 @@ namespace artemis {
         // (Hash of startline + url -> Coverage information)
         QMap<int, QMap<int, LineInfo>* > coverage;
         // (Webkit source id -> Hash of startline + url)
-        QMap<intptr_t,int> webkit_pointers;
+        QMap<intptr_t, int> webkit_pointers;
 
 
 

@@ -28,12 +28,14 @@
 #ifndef EXECUTIONRESULT_H
 #define EXECUTIONRESULT_H
 
+#include <QObject>
 #include <QtWebKit>
 #include <QSet>
 #include <QPair>
 #include <QList>
 
 #include "runtime/events/eventhandlerdescriptor.h"
+#include "runtime/events/forms/formfield.h"
 #include "runtime/browser/timer.h"
 #include "artemisglobals.h"
 #include "runtime/ajax/ajaxrequest.h"
@@ -41,17 +43,20 @@
 
 namespace artemis {
 
-    class ExecutionResult : public QObject
-    {
-        Q_OBJECT
-    public:
-        ExecutionResult(QObject *parent = 0);
-        ExecutionResult(const ExecutionResult& other);
+class ExecutionResult : public QObject
+{
+    Q_OBJECT
 
-        QSet<EventHandlerDescriptor> event_handlers() const;
-        QSet<FormField> form_fields() const;
-        void add_form_fields(const QSet<FormField>& f);
-        void add_form_field(FormField f);
+    public:
+        ExecutionResult(QObject *parent);
+        ExecutionResult(QObject *parent, const ExecutionResult* other);
+
+        QSet<EventHandlerDescriptor*> event_handlers() const;
+
+        QSet<FormField*> form_fields() const;
+        void add_form_fields(const QSet<FormField*>& f);
+        void add_form_field(const FormField* f);
+
         void add_urls(const QSet<QUrl>& u);
         void add_ajax_request(AjaxRequest req);
         QSet<AjaxRequest> ajax_request() const;
@@ -72,15 +77,12 @@ namespace artemis {
           */
         void finalize();
 
-        bool operator==(ExecutionResult& other);
-        ExecutionResult &operator=(const ExecutionResult &other);
         QDebug friend operator<<(QDebug dbg, const ExecutionResult &e);
-        uint hashcode() const;
 
     private:
-        QSet<EventHandlerDescriptor> m_event_handlers;
+        QSet<EventHandlerDescriptor*> m_event_handlers;
         QSet<QPair<QWebElement*,QString> > element_pointers;
-        QSet<FormField> m_form_fields;
+        QSet<FormField*> m_form_fields;
         QSet<QUrl> m_urls;
         bool final;
         bool is_crash_state;
@@ -105,10 +107,7 @@ namespace artemis {
 
         void sl_timer_added(int timer_id, int timeout, bool single_shot);
         void sl_timer_removed(int timer_id);
-    };
+};
 }
 
-inline uint qHash(const artemis::ExecutionResult& e) {
-    return e.hashcode();
-}
 #endif // EXECUTIONRESULT_H

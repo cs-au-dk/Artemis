@@ -44,7 +44,7 @@ public:
 	TargetGenerator(QObject* parent, JQueryListener* jqueryListener);
 	virtual ~TargetGenerator();
 
-	TargetDescriptor* generateTarget(EventHandlerDescriptor eventHandler);
+    TargetDescriptor* generateTarget(QObject* parent, const EventHandlerDescriptor* eventHandler);
 
 private:
 	JQueryListener* mJQueryListener;

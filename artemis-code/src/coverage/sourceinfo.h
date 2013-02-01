@@ -28,24 +28,25 @@
 #ifndef SOURCEINFO_H
 #define SOURCEINFO_H
 
+#include <QObject>
 #include <QUrl>
 #include <QDebug>
 
 namespace artemis {
 
-    class SourceInfo
+    class SourceInfo : public QObject
     {
+        Q_OBJECT
+
     public:
-        SourceInfo(const QString source, const QUrl url, const int startline);
-        SourceInfo(const SourceInfo& other);
-        SourceInfo();
+        SourceInfo(QObject* parent, const QString source, const QUrl url, const int startline);
+        SourceInfo(QObject* parent, const SourceInfo* other);
 
         QString source() const;
         QUrl url() const;
         int start_line() const;
 
         QDebug friend operator<<(QDebug dbg, const SourceInfo &e);
-        bool operator==(const SourceInfo& other) const;
 
         QString toString() const;
 
@@ -60,10 +61,6 @@ namespace artemis {
 
     };
 
-}
-
-inline uint qHash(const artemis::SourceInfo &key) {
-    return qHash(key.url());
 }
 
 #endif // SOURCEINFO_H

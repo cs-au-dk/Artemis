@@ -15,7 +15,7 @@ public:
     PageRecreateListner();
     void artemis_start(const QUrl& url);
     void loaded_page(const ArtemisWebPage& page);
-    void executed(const ExecutableConfiguration& conf, const ExecutionResult& result);
+    void executed(const ExecutableConfiguration& conf, const ExecutionResult* result);
     void code_loaded(QString source, QUrl url, int startline);
 
 private:

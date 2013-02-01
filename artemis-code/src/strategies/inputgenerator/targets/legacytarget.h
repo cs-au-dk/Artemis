@@ -39,8 +39,7 @@ namespace artemis {
   class LegacyTarget : public TargetDescriptor
   {
   public:
-    explicit LegacyTarget(EventHandlerDescriptor& event_handler);
-    /*explicit LegacyTarget(TargetDescriptor* other);*/
+    explicit LegacyTarget(QObject* parent, const EventHandlerDescriptor* event_handler);
     QWebElement get(ArtemisWebPage* page);
 
   };

@@ -34,38 +34,31 @@
 
 #include "runtime/events/eventypes.h"
 #include "domelementdescriptor.h"
-#include "forms/formfield.h"
 
 namespace artemis {
 
+class EventHandlerDescriptor : public QObject
+{
+    Q_OBJECT
 
-    class EventHandlerDescriptor
-    {
     public:
-       EventHandlerDescriptor(QWebElement* elem = 0, QString name = QString());
-       EventHandlerDescriptor(const EventHandlerDescriptor& other);
+       EventHandlerDescriptor(QObject* parent, QWebElement* elem = 0, QString name = QString());
+       EventHandlerDescriptor(QObject* parent, const EventHandlerDescriptor* other);
+
        ~EventHandlerDescriptor();
 
-       QString name();
-       DOMElementDescriptor dom_element();
-       bool is_invalid();
-       EventType getEventType() const;
+       QString name() const;
+       const DOMElementDescriptor* dom_element() const;
+       bool is_invalid() const;
+       const EventType getEventType() const;
 
-       bool operator==(const EventHandlerDescriptor& other) const;
-       EventHandlerDescriptor &operator=(const EventHandlerDescriptor &other);
        QDebug friend operator<<(QDebug dbg, const EventHandlerDescriptor &e);
-       uint hashcode() const;
 
     private:
        DOMElementDescriptor* element;
        QString event_name;
 
-    };
+};
 }
-
-inline uint qHash(const artemis::EventHandlerDescriptor &d) {
-    return d.hashcode();
-}
-
 
 #endif // EVENTDESCRIPTOR_H

@@ -42,10 +42,7 @@ namespace artemis {
         int hit_count() const;
         void line_executed();
 
-        LineInfo &operator=(const LineInfo &other);
-        bool operator==(const LineInfo& other) const;
         QDebug friend operator<<(QDebug dbg, const LineInfo &e);
-        uint hashcode() const;
 
         QString toString() const;
 
@@ -54,10 +51,6 @@ namespace artemis {
 
 
     };
-}
-
-inline uint qHash(const artemis::LineInfo &d) {
-    return d.hashcode();
 }
 
 #endif // LINEINFO_H

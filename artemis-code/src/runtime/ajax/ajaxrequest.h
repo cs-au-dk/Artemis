@@ -15,9 +15,7 @@ public:
     QUrl url() const;
     QString post_data();
 
-    bool operator ==(const AjaxRequest &other) const;
     QDebug friend operator<<(QDebug dbg, const AjaxRequest &e);
-    uint hashcode() const;
 
 private:
     QString m_post_data;
@@ -26,7 +24,4 @@ private:
 
 }
 
-inline uint qHash(const artemis::AjaxRequest &key) {
-    return key.hashcode();
-}
 #endif // AJAXREQUEST_H

@@ -85,7 +85,7 @@ private:
     bool mDumpUrls;
 
 private slots:
-    void slExecutedSequence(ExecutableConfiguration* configuration, ExecutionResult result);
+    void slExecutedSequence(ExecutableConfiguration* configuration, ExecutionResult* result);
 
 signals:
     void sigTestingDone();

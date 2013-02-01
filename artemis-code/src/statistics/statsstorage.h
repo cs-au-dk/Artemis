@@ -41,7 +41,7 @@ namespace artemis {
         void accumulate(QString key, int value);
 
     private:
-        QHash<QString,int> intStorage;
+        QHash<QString, int> intStorage;
     };
 
     StatsStorage* statistics();

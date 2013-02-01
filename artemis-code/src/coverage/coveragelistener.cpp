@@ -37,20 +37,24 @@ namespace artemis {
     }
 
     CodeCoverage CoverageListener::current_coverage() {
-        QMap<int, SourceInfo> sourcess;
-        QMap<int, QMap<int, LineInfo> > coveragee;
-        QMapIterator<int, SourceInfo*> iter(sources);
-        while(iter.hasNext()) {
-            iter.next();
-            sourcess.insert(iter.key(),*iter.value());
-        }
-        QMapIterator<int,  QMap<int, LineInfo>*> iter2(coverage);
-        while(iter2.hasNext()) {
-            iter2.next();
-            coveragee.insert(iter2.key(),*iter2.value());
+
+        QMap<int, SourceInfo*> newSources;
+
+        QMapIterator<int, SourceInfo*> sourcesIter(sources);
+        while (sourcesIter.hasNext()) {
+             sourcesIter.next();
+             newSources.insert(sourcesIter.key(), new SourceInfo(NULL, sourcesIter.value()));
         }
 
-        return CodeCoverage(sourcess, coveragee);
+        QMap<int, QMap<int, LineInfo> > newCoverage;
+
+        QMapIterator<int, QMap<int, LineInfo>* > coverageIter(coverage);
+        while (coverageIter.hasNext()) {
+             coverageIter.next();
+             newCoverage.insert(coverageIter.key(), *coverageIter.value());
+        }
+
+        return CodeCoverage(newSources, newCoverage);
     }
 
 
@@ -62,7 +66,7 @@ namespace artemis {
         webkit_pointers.insert(id,hash);
         if (!sources.contains(hash)) {
             qDebug() << "Loaded new code: " << url << " at line " << QString::number(startline);
-            SourceInfo* info_p = new SourceInfo(source, url, startline);
+            SourceInfo* info_p = new SourceInfo(this, source, url, startline);
             sources.insert(hash, info_p);
             coverage.insert(hash, new QMap<int, LineInfo>());
         }

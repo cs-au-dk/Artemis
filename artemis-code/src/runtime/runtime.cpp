@@ -107,12 +107,12 @@ void Runtime::runNextIteration()
 	mWebkitExecutor->executeSequence(nextConfiguration);
 }
 
-void Runtime::slExecutedSequence(ExecutableConfiguration* configuration, ExecutionResult result)
+void Runtime::slExecutedSequence(ExecutableConfiguration* configuration, ExecutionResult* result)
 {
     mListener->executed(configuration, result);
 
     // TODO remove
-    foreach (QUrl u, result.urls()) {
+    foreach (QUrl u, result->urls()) {
         mUrls.add_url(u);
     }
 
