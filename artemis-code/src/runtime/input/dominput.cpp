@@ -35,24 +35,14 @@
 namespace artemis
 {
 
-DomInput::DomInput(QObject* parent, EventHandlerDescriptor* handler,
-                   FormInput* formInput, EventParameters* params, TargetDescriptor* target) :
-    BaseInput(parent)
+DomInput::DomInput(EventHandlerDescriptor* handler,
+                   FormInput* formInput, EventParameters* params, TargetDescriptor* target)
 {
-    Q_CHECK_PTR(params);
-    Q_CHECK_PTR(target);
-
+    // TODO change to auto ptr
     mEventHandler = handler;
-    mEventHandler->setParent(this);
-
     mFormInput = formInput;
-    mFormInput->setParent(this);
-
     mEvtParams = params;
-    mEvtParams->setParent(this);
-
     mTarget = target;
-    //mTarget->setParent(this);
 }
 
 void DomInput::apply(ArtemisWebPage* page, QWebExecutionListener* webkitListener) const
@@ -107,11 +97,11 @@ FormInput* DomInput::getFormInput() const
     return mFormInput;
 }
 
-bool DomInput::isEqual(const BaseInput* other) const
+bool DomInput::isEqual(QSharedPointer<const BaseInput> other) const
 {
-    const DomInput* domInput = dynamic_cast<const DomInput*>(other);
+    QSharedPointer<const DomInput> domInput = qSharedPointerDynamicCast<const DomInput>(other);
 
-    if (domInput == 0) {
+    if (domInput == NULL) {
         return false;
     }
 

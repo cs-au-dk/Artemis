@@ -28,7 +28,6 @@
 #ifndef BASEINPUT_H
 #define BASEINPUT_H
 
-#include <QObject>
 #include <QtWebKit/qwebexecutionlistener.h>
 
 #include "runtime/browser/artemiswebpage.h"
@@ -36,17 +35,12 @@
 namespace artemis
 {
 
-// TODO convert to QObject memory management
-class BaseInput : public QObject
+class BaseInput
 {
 
-    Q_OBJECT
-
 public:
-    BaseInput(QObject* parent) : QObject(parent) {};
-
     virtual void apply(ArtemisWebPage* page, QWebExecutionListener* webkitListener) const = 0;
-    virtual bool isEqual(const BaseInput* other) const = 0;
+    virtual bool isEqual(QSharedPointer<const BaseInput> other) const = 0;
 };
 
 }

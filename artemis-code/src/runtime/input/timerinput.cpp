@@ -37,8 +37,7 @@ using namespace std;
 namespace artemis
 {
 
-TimerInput::TimerInput(QObject* parent, const QSharedPointer<Timer> timer) :
-    BaseInput(parent)
+TimerInput::TimerInput(QSharedPointer<const Timer> timer)
 {
     mTimer = timer;
 }
@@ -49,7 +48,7 @@ void TimerInput::apply(ArtemisWebPage* page, QWebExecutionListener* webkitListen
     webkitListener->timerFire(mTimer->getId());
 }
 
-bool TimerInput::isEqual(const BaseInput* other) const
+bool TimerInput::isEqual(QSharedPointer<const BaseInput> other) const
 {
     //TODO implement this?
     return false;

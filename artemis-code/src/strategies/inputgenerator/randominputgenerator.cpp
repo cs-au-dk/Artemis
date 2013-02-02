@@ -59,7 +59,7 @@ RandomInputGenerator::~RandomInputGenerator()
     delete varGen;
 }
 
-QList<QSharedPointer<ExecutableConfiguration> > RandomInputGenerator::addNewConfigurations(const QSharedPointer<ExecutableConfiguration> configuration,
+QList<QSharedPointer<ExecutableConfiguration> > RandomInputGenerator::addNewConfigurations(QSharedPointer<const ExecutableConfiguration> configuration,
         const ExecutionResult& result)
 {
     QList<QSharedPointer<ExecutableConfiguration> > newConfigurations;
@@ -70,23 +70,23 @@ QList<QSharedPointer<ExecutableConfiguration> > RandomInputGenerator::addNewConf
     return newConfigurations;
 }
 
-QList<QSharedPointer<ExecutableConfiguration> > RandomInputGenerator::insertSameLength(const QSharedPointer<ExecutableConfiguration> e,
+QList<QSharedPointer<ExecutableConfiguration> > RandomInputGenerator::insertSameLength(QSharedPointer<const ExecutableConfiguration> e,
         const ExecutionResult& eResult)
 {
     QList<QSharedPointer<ExecutableConfiguration> > newConfigurations;
 
-    const QSharedPointer<InputSequence> seq = e->getInputSequence();
+    QSharedPointer<const InputSequence> seq = e->getInputSequence();
 
     if (seq->isEmpty())
         { return newConfigurations; }
 
-    const BaseInput* last = seq->getLast();
+    QSharedPointer<const BaseInput> last = seq->getLast();
 
     for (int i = 0; i < mNumberSameLength; i++) {
-        const BaseInput* newLast = this->permutateInput(last);
+        QSharedPointer<const BaseInput> newLast = this->permutateInput(last);
 
         if (last->isEqual(newLast) == false) {
-            const QSharedPointer<InputSequence> newSeq = seq->replaceLast(newLast);
+            QSharedPointer<const InputSequence> newSeq = seq->replaceLast(newLast);
 
             QSharedPointer<ExecutableConfiguration> newConf = QSharedPointer<ExecutableConfiguration>(new ExecutableConfiguration(newSeq, e->getUrl()));
 
@@ -97,25 +97,25 @@ QList<QSharedPointer<ExecutableConfiguration> > RandomInputGenerator::insertSame
     return newConfigurations;
 }
 
-const BaseInput* RandomInputGenerator::permutateInput(const DomInput* input)
+QSharedPointer<const BaseInput> RandomInputGenerator::permutateInput(QSharedPointer<const DomInput> input)
 {
     EventParameters* newParams = varGen->generateEventParameters(NULL, input->getEventHandler());
     FormInput* newForm = varGen->generateFormFields(NULL, input->getFormInput()->getFields());
     TargetDescriptor* target = mTargetGenerator->generateTarget(NULL, input->getEventHandler());
     EventHandlerDescriptor* newEventHandlerDescriptor = new EventHandlerDescriptor(NULL, input->getEventHandler());
 
-    DomInput* newLast = new DomInput(NULL, newEventHandlerDescriptor, newForm, newParams, target);
+    QSharedPointer<const DomInput> newLast = QSharedPointer<const DomInput>(new DomInput(newEventHandlerDescriptor, newForm, newParams, target));
 
     return newLast;
 }
 
-const BaseInput* RandomInputGenerator::permutateInput(const BaseInput* input)
+QSharedPointer<const BaseInput> RandomInputGenerator::permutateInput(QSharedPointer<const BaseInput> input)
 {
     // TODO implement?
     return input;
 }
 
-QList<QSharedPointer<ExecutableConfiguration> > RandomInputGenerator::insertExtended(const QSharedPointer<ExecutableConfiguration> oldConfiguration,
+QList<QSharedPointer<ExecutableConfiguration> > RandomInputGenerator::insertExtended(QSharedPointer<const ExecutableConfiguration> oldConfiguration,
         const ExecutionResult& result)
 {
     QList<QSharedPointer<ExecutableConfiguration> > newConfigurations;
@@ -125,19 +125,19 @@ QList<QSharedPointer<ExecutableConfiguration> > RandomInputGenerator::insertExte
         EventParameters* newParams = varGen->generateEventParameters(NULL, ee);
         FormInput* newForm = varGen->generateFormFields(NULL, result.formFields());
         TargetDescriptor* target = mTargetGenerator->generateTarget(NULL, ee);
-        DomInput* domInput = new DomInput(NULL, ee, newForm, newParams, target);
+        QSharedPointer<const DomInput> domInput = QSharedPointer<const DomInput>(new DomInput(ee, newForm, newParams, target));
 
-        const QSharedPointer<InputSequence> newInputSequence = oldConfiguration->getInputSequence()->extend(domInput);
+        QSharedPointer<const InputSequence> newInputSequence = oldConfiguration->getInputSequence()->extend(domInput);
 
         QSharedPointer<ExecutableConfiguration> newConfiguration = QSharedPointer<ExecutableConfiguration>(new ExecutableConfiguration(newInputSequence, oldConfiguration->getUrl()));
 
         newConfigurations.append(newConfiguration);
     }
 
-    foreach(const QSharedPointer<Timer> timer, result.getTimers()) {
-        TimerInput* newInput = new TimerInput(0, timer);
+    foreach(QSharedPointer<const Timer> timer, result.getTimers()) {
+        QSharedPointer<const BaseInput> newInput = QSharedPointer<const TimerInput>(new TimerInput(timer));
 
-        const QSharedPointer<InputSequence> newSeq = oldConfiguration->getInputSequence()->extend(newInput);
+        QSharedPointer<const InputSequence> newSeq = oldConfiguration->getInputSequence()->extend(newInput);
 
         QSharedPointer<ExecutableConfiguration> newConf = QSharedPointer<ExecutableConfiguration>(new ExecutableConfiguration(newSeq, oldConfiguration->getUrl()));
 
@@ -147,9 +147,9 @@ QList<QSharedPointer<ExecutableConfiguration> > RandomInputGenerator::insertExte
     qDebug() << "INSERTING AJAX HANDLERS" << endl;
     foreach(int callbackId, result.ajaxCallbackHandlers()) {
         qDebug() << "HIT" << endl;
-        AjaxInput* newInput = new AjaxInput(0, callbackId);
+        QSharedPointer<const BaseInput> newInput = QSharedPointer<const AjaxInput>(new AjaxInput(callbackId));
 
-        const QSharedPointer<InputSequence> newSequence = oldConfiguration->getInputSequence()->extend(newInput);
+        QSharedPointer<const InputSequence> newSequence = oldConfiguration->getInputSequence()->extend(newInput);
 
         QSharedPointer<ExecutableConfiguration> newConfiguration = QSharedPointer<ExecutableConfiguration>(new ExecutableConfiguration(newSequence,
                 oldConfiguration->getUrl()));

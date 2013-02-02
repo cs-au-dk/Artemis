@@ -37,8 +37,7 @@ using namespace std;
 namespace artemis
 {
 
-AjaxInput::AjaxInput(QObject* parent, int callbackId) :
-    BaseInput(parent)
+AjaxInput::AjaxInput(int callbackId)
 {
     this->mCallbackId = callbackId;
 }
@@ -49,7 +48,7 @@ void AjaxInput::apply(ArtemisWebPage* page, QWebExecutionListener* webkitListene
     webkitListener->ajaxCallbackFire(mCallbackId);
 }
 
-bool AjaxInput::isEqual(const BaseInput* other) const
+bool AjaxInput::isEqual(QSharedPointer<const BaseInput> other) const
 {
     //TODO implement this?
     return false;

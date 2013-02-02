@@ -36,10 +36,10 @@ namespace artemis
 class AjaxInput: public BaseInput
 {
 public:
-    AjaxInput(QObject* parent, int callbackId);
+    AjaxInput(int callbackId);
 
     void apply(ArtemisWebPage* page, QWebExecutionListener* webkitListener) const;
-    bool isEqual(const BaseInput* other) const;
+    bool isEqual(QSharedPointer<const BaseInput> other) const;
 
 private:
     int mCallbackId;
