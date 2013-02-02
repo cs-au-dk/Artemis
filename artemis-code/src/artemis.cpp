@@ -38,14 +38,6 @@
 
 using namespace std;
 
-void printHeader()
-{
-    qDebug() << "Artemis - Automated tester for JavaScript";
-    qDebug() << "Started: " << QDateTime::currentDateTime().toString();
-    qDebug() << "Compilation date: " << EXE_BUILD_DATE;
-    qDebug() << "-----\n";
-}
-
 QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
 {
 
@@ -129,7 +121,10 @@ void artemisConsoleMessageHandler(QtMsgType type, const char* msg)
 
 int main(int argc, char* argv[])
 {
-    printHeader();
+    qDebug() << "Artemis - Automated tester for JavaScript";
+    qDebug() << "Started: " << QDateTime::currentDateTime().toString();
+    qDebug() << "Compilation date: " << EXE_BUILD_DATE;
+    qDebug() << "-----\n";
 
     qInstallMsgHandler(artemisConsoleMessageHandler);
 
