@@ -31,24 +31,11 @@
 namespace artemis
 {
 
-Timer::Timer()
-{
-
-}
-
 Timer::Timer(int id, int timeout, bool single_shot)
 {
     this->m_id = id;
     this->m_timeout = timeout;
     this->m_single_shot = single_shot;
-}
-
-Timer& Timer::operator=(const Timer& other)
-{
-    this->m_id = other.m_id;
-    this->m_timeout = other.m_timeout;
-    this->m_single_shot = other.m_single_shot;
-    return *this;
 }
 
 int Timer::get_id() const

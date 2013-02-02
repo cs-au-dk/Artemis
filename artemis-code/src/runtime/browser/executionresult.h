@@ -67,7 +67,7 @@ public:
     long page_state_hash() const;
     QSet<QString> eval_strings();
     QList<int> ajaxCallbackHandlers() const;
-    QList<Timer> get_timers() const;
+    QList<QSharedPointer<Timer> > get_timers() const;
     QString getPageContents() const;
     void setPageContents(QString content);
 
@@ -92,7 +92,7 @@ private:
     QSet<AjaxRequest> m_ajax_request;
     QSet<QString> evaled_strings;
     QList<int> m_ajax_callback_handlers;
-    QMap<int, Timer> m_timers; // <timer_id, Timer>
+    QMap<int, QSharedPointer<Timer> > m_timers; // <timer_id, Timer>
     QString mPageContents;
 
 public slots:

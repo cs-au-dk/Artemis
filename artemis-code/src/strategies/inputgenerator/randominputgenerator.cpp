@@ -136,7 +136,7 @@ QList<QSharedPointer<ExecutableConfiguration> > RandomInputGenerator::insert_ext
         newConfigurations.append(newConfiguration);
     }
 
-    foreach(const Timer timer, result.get_timers()) {
+    foreach(const QSharedPointer<Timer> timer, result.get_timers()) {
         TimerInput* new_input = new TimerInput(0, timer);
 
         InputSequence* new_seq = oldConfiguration->getInputSequence()->copy();
