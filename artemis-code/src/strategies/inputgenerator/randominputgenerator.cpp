@@ -82,7 +82,7 @@ QList<QSharedPointer<ExecutableConfiguration> > RandomInputGenerator::insert_sam
 
     BaseInput* last = seq->getLast();
 
-    for (int i = 0; i++; i < mNumberSameLength) {
+    for (int i = 0; i < mNumberSameLength; i++) {
         BaseInput* new_last = this->permutate_input(last);
 
         if (last->isEqual(new_last) == false) {

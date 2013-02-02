@@ -71,6 +71,7 @@ DOMElementDescriptor::DOMElementDescriptor(QObject* parent, const DOMElementDesc
     this->is_body = other->is_body;
     this->is_document = other->is_document;
     this->is_mainframe = other->is_mainframe;
+    this->m_invalid = other->m_invalid;
 }
 
 QWebElement DOMElementDescriptor::get_element(QWebPage* page) const
@@ -214,7 +215,6 @@ void DOMElementDescriptor::set_element_path(QWebElement* elm)
     QWebElement document = elm->document();
     QWebElement parent = elm->parent();
     QWebElement current = *elm;
-    int i = 0;
 
     //qDebug() << "Starting set_element_path for \n" << elm->toOuterXml()  <<"\nEND\n";
     while (parent != document) {

@@ -26,6 +26,8 @@
  or implied, of Simon Holm Jensen
  */
 
+#include "assert.h"
+
 #include "artemisglobals.h"
 
 #include "runtime/input/dominput.h"
@@ -112,6 +114,9 @@ bool DomInput::isEqual(BaseInput* other)
     if (domInput == 0) {
         return false;
     }
+
+    qFatal("Unimplemented function!");
+    assert(false);
 
     // TODO Implement DomInput::isEqual
 }

@@ -36,8 +36,4 @@ TargetDescriptor::TargetDescriptor(QObject* parent, const EventHandlerDescriptor
     m_event_handler = new EventHandlerDescriptor(this, event_handler);
 }
 
-QWebElement TargetDescriptor::get(ArtemisWebPage*)
-{
-}
-
 }

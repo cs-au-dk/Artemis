@@ -51,7 +51,7 @@ public:
     QString name() const;
     const DOMElementDescriptor* dom_element() const;
     bool is_invalid() const;
-    const EventType getEventType() const;
+    EventType getEventType() const;
 
     QDebug friend operator<<(QDebug dbg, const EventHandlerDescriptor& e);
 

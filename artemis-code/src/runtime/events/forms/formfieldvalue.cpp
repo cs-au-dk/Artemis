@@ -25,23 +25,26 @@
   authors and should not be interpreted as representing official policies, either expressed
   or implied, of Simon Holm Jensen
 */
-#include "formfieldvalue.h"
+
 #include <QDebug>
+
 #include "artemisglobals.h"
+
+#include "formfieldvalue.h"
 
 namespace artemis
 {
 
 FormFieldValue::FormFieldValue(QObject* parent, QString value) : QObject(parent)
 {
-    this->str_val = value;
+    str_val = value;
     is_bool = false;
     is_no_val = false;
 }
 
 FormFieldValue::FormFieldValue(QObject* parent, bool value) : QObject(parent)
 {
-    this->bool_val = value;
+    bool_val = value;
     is_bool = true;
     is_no_val = false;
 }

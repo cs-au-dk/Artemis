@@ -56,7 +56,7 @@ const DOMElementDescriptor* EventHandlerDescriptor::dom_element() const
     return element;
 }
 
-const EventType EventHandlerDescriptor::getEventType() const
+EventType EventHandlerDescriptor::getEventType() const
 {
     return get_type(event_name);
 }
