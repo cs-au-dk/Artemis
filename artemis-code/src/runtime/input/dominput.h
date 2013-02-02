@@ -44,7 +44,7 @@ class DomInput: public BaseInput
 
 public:
     DomInput(QObject* parent, EventHandlerDescriptor* handler, FormInput* formInput,
-        EventParameters* params, TargetDescriptor* target);
+             EventParameters* params, TargetDescriptor* target);
 
     ~DomInput();
 

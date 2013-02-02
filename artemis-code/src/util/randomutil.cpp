@@ -1,16 +1,16 @@
 /*
   Copyright 2011 Simon Holm Jensen. All rights reserved.
-  
+
   Redistribution and use in source and binary forms, with or without modification, are
   permitted provided that the following conditions are met:
-  
+
      1. Redistributions of source code must retain the above copyright notice, this list of
         conditions and the following disclaimer.
-  
+
      2. Redistributions in binary form must reproduce the above copyright notice, this list
         of conditions and the following disclaimer in the documentation and/or other materials
         provided with the distribution.
-  
+
   THIS SOFTWARE IS PROVIDED BY SIMON HOLM JENSEN ``AS IS'' AND ANY EXPRESS OR IMPLIED
   WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
   FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL <COPYRIGHT HOLDER> OR
@@ -20,7 +20,7 @@
   ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
   NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
   ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-  
+
   The views and conclusions contained in the software and documentation are those of the
   authors and should not be interpreted as representing official policies, either expressed
   or implied, of Simon Holm Jensen
@@ -28,49 +28,60 @@
 #include "randomutil.h"
 #include <QSet>
 
-namespace artemis {
+namespace artemis
+{
 
-    QString generate_random_string(int length) {
-        static const char alphanum[] =
-            "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
-        Q_ASSERT(length >= 0);
-        if (length == 0)
-            return "";
-        QString res;
-        for (int i = 0; i < length; ++i)
-             res[i] = QChar(alphanum[rand() % (sizeof(alphanum) - 1)]);
-        return res;
+QString generate_random_string(int length)
+{
+    static const char alphanum[] =
+        "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
+    Q_ASSERT(length >= 0);
+
+    if (length == 0)
+        { return ""; }
+
+    QString res;
+
+    for (int i = 0; i < length; ++i)
+        { res[i] = QChar(alphanum[rand() % (sizeof(alphanum) - 1)]); }
+
+    return res;
+}
+
+bool random_bool()
+{
+    return (rand() % 100) > 50;
+}
+
+QWebElement pick_rand(QList<QWebElement> s)
+{
+    if (s.size() == 1) {
+        return s.at(0);
     }
 
-    bool random_bool() {
-        return (rand() % 100) > 50;
+    int elem = rand() % (s.size() - 1);
+    return s.at(elem);
+}
+
+QString pick_rand(QList<QString> s)
+{
+    if (s.size() == 1) {
+        return s.at(0);
     }
 
-    QWebElement pick_rand(QList<QWebElement> s) {
-        if (s.size() == 1) {
-          return s.at(0);
-        }
+    int elem = rand() % (s.size() - 1);
+    return s.at(elem);
+}
 
-        int elem = rand() % (s.size() - 1);
-        return s.at(elem);
-    }
+QString pick_rand(QSet<QString> s)
+{
+    QList<QString> ll = s.toList();
+    return pick_rand(ll);
+}
 
-    QString pick_rand(QList<QString> s) {
-        if (s.size() == 1) {
-          return s.at(0);
-        }
-
-        int elem = rand() % (s.size() - 1);
-        return s.at(elem);
-    }
-
-    QString pick_rand(QSet<QString> s) {
-        QList<QString> ll = s.toList();
-        return pick_rand(ll);
-    }
-
-    QString generate_random_js_id() {
-        return generate_random_string(5);
-    }
+QString generate_random_js_id()
+{
+    return generate_random_string(5);
+}
 
 }

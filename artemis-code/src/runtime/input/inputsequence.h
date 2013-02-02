@@ -39,7 +39,7 @@ namespace artemis
 class InputSequence : public QObject
 {
 
-Q_OBJECT
+    Q_OBJECT
 
 public:
     InputSequence(QObject* parent);

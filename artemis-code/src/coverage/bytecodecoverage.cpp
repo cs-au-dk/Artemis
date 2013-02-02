@@ -1,6 +1,7 @@
 #include "bytecodecoverage.h"
 
-namespace artemis {
+namespace artemis
+{
 
 ByteCodeCoverage::ByteCodeCoverage(uint lineno, uint opcode)
 {
@@ -9,7 +10,8 @@ ByteCodeCoverage::ByteCodeCoverage(uint lineno, uint opcode)
     this->m_hit_count = 0;
 }
 
-QDebug operator<<(QDebug dbg, const ByteCodeCoverage &e) {
+QDebug operator<<(QDebug dbg, const ByteCodeCoverage& e)
+{
     dbg.nospace() << "ByteCodeCoverage [opcode="
                   << e.m_opcode
                   << ", hit_count="
@@ -19,19 +21,23 @@ QDebug operator<<(QDebug dbg, const ByteCodeCoverage &e) {
     return dbg.space();
 }
 
-void ByteCodeCoverage::bytecode_executed() {
+void ByteCodeCoverage::bytecode_executed()
+{
     this->m_hit_count++;
 }
 
-uint ByteCodeCoverage::hit_count() {
+uint ByteCodeCoverage::hit_count()
+{
     return this->m_hit_count;
 }
 
-uint ByteCodeCoverage::line_number() {
+uint ByteCodeCoverage::line_number()
+{
     this->m_line_no;
 }
 
-uint ByteCodeCoverage::opcodeID() {
+uint ByteCodeCoverage::opcodeID()
+{
     return this->m_opcode;
 }
 

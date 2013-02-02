@@ -7,19 +7,20 @@
 #include <QNetworkCookieJar>
 #include <QNetworkCookie>
 
-namespace artemis {
+namespace artemis
+{
 
-    class ImmutableCookieJar : public QNetworkCookieJar
-    {
-    public:
-        ImmutableCookieJar(const QMap<QString,QString> &initialstate, const QString &domain);
-        bool setCookiesFromUrl(const QList<QNetworkCookie> &cookieList, const QUrl &url);
-        QList<QNetworkCookie> cookiesForUrl(const QUrl &url) const;
+class ImmutableCookieJar : public QNetworkCookieJar
+{
+public:
+    ImmutableCookieJar(const QMap<QString, QString> &initialstate, const QString& domain);
+    bool setCookiesFromUrl(const QList<QNetworkCookie> &cookieList, const QUrl& url);
+    QList<QNetworkCookie> cookiesForUrl(const QUrl& url) const;
 
-    protected:
-    private:
-        QList<QNetworkCookie> m_cookies;
-    };
+protected:
+private:
+    QList<QNetworkCookie> m_cookies;
+};
 
 }
 #endif /* IMMUTABLECOOKIEJAR_H_ */

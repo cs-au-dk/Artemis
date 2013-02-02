@@ -65,9 +65,9 @@ Runtime::Runtime(QObject* parent, const Options& options, QUrl url) : QObject(pa
 
     AjaxRequestListener* ajaxRequestListner = new AjaxRequestListener(NULL);
 
-    ImmutableCookieJar *immutable_cookie_jar = new ImmutableCookieJar(
-            options.presetCookies, url.host());
-            ajaxRequestListner->setCookieJar(immutable_cookie_jar);
+    ImmutableCookieJar* immutable_cookie_jar = new ImmutableCookieJar(
+        options.presetCookies, url.host());
+    ajaxRequestListner->setCookieJar(immutable_cookie_jar);
 
     /** JQuery support **/
 
@@ -84,8 +84,8 @@ Runtime::Runtime(QObject* parent, const Options& options, QUrl url) : QObject(pa
     mWorklist = new DeterministicWorkList(this);
 
     QObject::connect(mWebkitExecutor,
-            SIGNAL(sigExecutedSequence(QSharedPointer<ExecutableConfiguration>, ExecutionResult*)), this,
-            SLOT(postConcreteExecution(QSharedPointer<ExecutableConfiguration>, ExecutionResult*)));
+                     SIGNAL(sigExecutedSequence(QSharedPointer<ExecutableConfiguration>, ExecutionResult*)), this,
+                     SLOT(postConcreteExecution(QSharedPointer<ExecutableConfiguration>, ExecutionResult*)));
 }
 
 /**
@@ -95,7 +95,7 @@ Runtime::Runtime(QObject* parent, const Options& options, QUrl url) : QObject(pa
 void Runtime::startAnalysis(QUrl url)
 {
     QSharedPointer<ExecutableConfiguration> initialConfiguration =
-            QSharedPointer<ExecutableConfiguration>(new ExecutableConfiguration(new InputSequence(NULL), url));
+        QSharedPointer<ExecutableConfiguration>(new ExecutableConfiguration(new InputSequence(NULL), url));
 
     mWorklist->add(initialConfiguration, 0);
 
@@ -107,12 +107,12 @@ void Runtime::startAnalysis(QUrl url)
  */
 void Runtime::preConcreteExecution()
 {
-	if (mWorklist->empty() ||
-		mTerminationStrategy->should_terminate()) {
+    if (mWorklist->empty() ||
+        mTerminationStrategy->should_terminate()) {
 
         finishAnalysis();
-		return;
-	}
+        return;
+    }
 
     QSharedPointer<ExecutableConfiguration> nextConfiguration = mWorklist->remove();
 
@@ -130,35 +130,37 @@ void Runtime::postConcreteExecution(QSharedPointer<ExecutableConfiguration> conf
 
     QList<QSharedPointer<ExecutableConfiguration> > newConfigurations = mInputgenerator->add_new_configurations(configuration, result);
 
-    foreach (QSharedPointer<ExecutableConfiguration> newConfiguration, newConfigurations) {
-		mWorklist->add(newConfiguration, mPrioritizerStrategy->prioritize(newConfiguration, result));
-	}
+    foreach(QSharedPointer<ExecutableConfiguration> newConfiguration, newConfigurations) {
+        mWorklist->add(newConfiguration, mPrioritizerStrategy->prioritize(newConfiguration, result));
+    }
 
-	statistics()->accumulate("InputGenerator::added-configurations", newConfigurations.size());
+    statistics()->accumulate("InputGenerator::added-configurations", newConfigurations.size());
 
     preConcreteExecution();
 }
 
-void Runtime::finishAnalysis() {
+void Runtime::finishAnalysis()
+{
 
     mWebkitExecutor->finish_up();
 
-	cout << "Artemis: Testing done..." << endl;
+    cout << "Artemis: Testing done..." << endl;
 
-	cout << "\n\n === Coverage information for execution === \n";
-	write_coverage_report(cout, coverage());
+    cout << "\n\n === Coverage information for execution === \n";
+    write_coverage_report(cout, coverage());
 
-	cout << "\n=== Statistics ===\n";
-	StatsPrettyWriter::write(cout, statistics());
-	cout << "\n=== Statistics END ===\n";
-	cout << endl;
+    cout << "\n=== Statistics ===\n";
+    StatsPrettyWriter::write(cout, statistics());
+    cout << "\n=== Statistics END ===\n";
+    cout << endl;
 
-	qDebug() << "Artemis terminated on: " << QDateTime::currentDateTime().toString() << endl;
+    qDebug() << "Artemis terminated on: " << QDateTime::currentDateTime().toString() << endl;
 
     emit sigTestingDone();
 }
 
-CodeCoverage Runtime::coverage() {
+CodeCoverage Runtime::coverage()
+{
     return mWebkitExecutor->coverage();
 }
 

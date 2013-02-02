@@ -60,7 +60,7 @@ bool InputSequence::isEmpty() const
     return mSequence.empty();
 }
 
-BaseInput *InputSequence::getLast() const
+BaseInput* InputSequence::getLast() const
 {
     return mSequence.last();
 }

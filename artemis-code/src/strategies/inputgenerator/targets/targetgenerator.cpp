@@ -30,21 +30,24 @@
 
 #include "targetgenerator.h"
 
-namespace artemis {
-
-TargetGenerator::TargetGenerator(QObject* parent,
-		JQueryListener* jqueryListener) :
-		QObject(parent)
+namespace artemis
 {
 
-	mJQueryListener = jqueryListener;
+TargetGenerator::TargetGenerator(QObject* parent,
+                                 JQueryListener* jqueryListener) :
+    QObject(parent)
+{
+
+    mJQueryListener = jqueryListener;
 }
 
-TargetGenerator::~TargetGenerator() {
-	// TODO Auto-generated destructor stub
+TargetGenerator::~TargetGenerator()
+{
+    // TODO Auto-generated destructor stub
 }
 
-TargetDescriptor* TargetGenerator::generateTarget(QObject* parent, const EventHandlerDescriptor* eventHandler) {
+TargetDescriptor* TargetGenerator::generateTarget(QObject* parent, const EventHandlerDescriptor* eventHandler)
+{
 
     return new JQueryTarget(parent, eventHandler, mJQueryListener);
 

@@ -36,18 +36,20 @@
 
 #include "targetdescriptor.h"
 
-namespace artemis {
+namespace artemis
+{
 
-class TargetGenerator : public QObject {
+class TargetGenerator : public QObject
+{
 
 public:
-	TargetGenerator(QObject* parent, JQueryListener* jqueryListener);
-	virtual ~TargetGenerator();
+    TargetGenerator(QObject* parent, JQueryListener* jqueryListener);
+    virtual ~TargetGenerator();
 
     TargetDescriptor* generateTarget(QObject* parent, const EventHandlerDescriptor* eventHandler);
 
 private:
-	JQueryListener* mJQueryListener;
+    JQueryListener* mJQueryListener;
 };
 
 } // END NAMESPACE

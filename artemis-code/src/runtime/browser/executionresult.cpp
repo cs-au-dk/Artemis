@@ -37,7 +37,7 @@ using namespace std;
 namespace artemis
 {
 
-ExecutionResult::ExecutionResult(QObject *parent) : QObject(parent)
+ExecutionResult::ExecutionResult(QObject* parent) : QObject(parent)
 {
     final = false;
     is_crash_state = false;
@@ -46,7 +46,7 @@ ExecutionResult::ExecutionResult(QObject *parent) : QObject(parent)
     crash_sourceID = 0;
 }
 
-ExecutionResult::ExecutionResult(QObject *parent, const ExecutionResult* other) : QObject(parent)
+ExecutionResult::ExecutionResult(QObject* parent, const ExecutionResult* other) : QObject(parent)
 {
     this->final = other->final;
     this->m_event_handlers = other->m_event_handlers;
@@ -56,26 +56,29 @@ ExecutionResult::ExecutionResult(QObject *parent, const ExecutionResult* other) 
     this->state_hash = other->state_hash;
     this->m_ajax_request = other->m_ajax_request;
     this->evaled_strings = other->evaled_strings;
+
     if (other->is_crash_state) {
         this->is_crash_state = other->is_crash_state;
         this->crash_cause = other->crash_cause;
         this->crash_lineNumber = other->crash_lineNumber;
         this->crash_sourceID = other->crash_sourceID;
     }
+
     this->m_timers = QMap<int, Timer>(other->m_timers);
     this->m_ajax_callback_handlers = QList<int>(other->m_ajax_callback_handlers);
 }
 
-void ExecutionResult::newEventListener(QWebElement *elem, QString name)
+void ExecutionResult::newEventListener(QWebElement* elem, QString name)
 {
     Q_CHECK_PTR(elem);
     Q_ASSERT(!final);
 
     qDebug() << "Artemis detected new eventhandler for event: " << name << " tag name: "
-        << elem->tagName() << " id: " << elem->attribute(QString("id")) << " title "
-        << elem->attribute(QString("title")) << "class: " << elem->attribute("class") << endl;
+             << elem->tagName() << " id: " << elem->attribute(QString("id")) << " title "
+             << elem->attribute(QString("title")) << "class: " << elem->attribute("class") << endl;
+
     if (is_non_interactive(name))
-        return;
+        { return; }
 
     element_pointers.insert(QPair<QWebElement*, QString>(elem, name));
 }
@@ -90,14 +93,14 @@ QString ExecutionResult::getPageContents() const
     return mPageContents;
 }
 
-void ExecutionResult::removeEventListener(QWebElement *elem, QString name)
+void ExecutionResult::removeEventListener(QWebElement* elem, QString name)
 {
     qDebug() << "Artemis removed eventhandler for event: " << name << " tag name: "
-        << elem->tagName() << " id: " << elem->attribute(QString("id")) << " title "
-        << elem->attribute(QString("title")) << "class: " << elem->attribute("class") << endl;
+             << elem->tagName() << " id: " << elem->attribute(QString("id")) << " title "
+             << elem->attribute(QString("title")) << "class: " << elem->attribute("class") << endl;
 
     if (is_non_interactive(name))
-        return;
+        { return; }
 
     bool removed = element_pointers.remove(QPair<QWebElement*, QString>(elem, name));
 
@@ -119,31 +122,34 @@ void ExecutionResult::finalize()
 {
     Q_ASSERT(m_event_handlers.isEmpty());
     Q_ASSERT(!final);
+
     if (is_crash_state) {
         final = true;
         return;
     }
+
     QPair<QWebElement*, QString> p;
-    foreach (p, element_pointers) {
+    foreach(p, element_pointers) {
         if (get_type(p.second) == UNKNOWN_EVENT) {
             continue; //qWarning() << ""
             //TODO: Save strange events somewhere.
         }
 
         qDebug() << "Finalizing " << p.second << "  " << p.first->tagName() << " _T: "
-            << p.first->attribute(QString("title"));
+                 << p.first->attribute(QString("title"));
+
         if (/*p.first->tagName().isEmpty()*/p.first->isNull()) {
             qWarning()
-                << "WEBKIT WARN: Got event handler with NULL element. Assuming document is reciever";
+                    << "WEBKIT WARN: Got event handler with NULL element. Assuming document is reciever";
             //continue;
         }
 
         EventHandlerDescriptor* handler = new EventHandlerDescriptor(this, p.first, p.second);
 
         if (handler->is_invalid())
-            qDebug() << "WARN: element was invalid, ignoring";
+            { qDebug() << "WARN: element was invalid, ignoring"; }
         else
-            m_event_handlers.insert(handler);
+            { m_event_handlers.insert(handler); }
     }
     final = true;
     element_pointers.clear();
@@ -178,7 +184,7 @@ void ExecutionResult::add_form_fields(const QSet<FormField*>& fields)
 {
     Q_ASSERT(!final);
 
-    foreach (FormField* field, fields) {
+    foreach(FormField * field, fields) {
         this->add_form_field(field);
     }
 }
@@ -200,7 +206,7 @@ void ExecutionResult::make_load_failed()
 void ExecutionResult::sl_script_crash(QString cause, intptr_t sourceID, int lineNumber)
 {
     qDebug() << "WEBKIT SCRIPT ERROR: " << cause << " line: " << lineNumber << " source: "
-        << sourceID << endl;
+             << sourceID << endl;
 
     this->crash_cause = cause;
     this->crash_sourceID = sourceID;
@@ -226,7 +232,7 @@ void ExecutionResult::set_modfied_dom(bool b)
     this->m_modfied_dom = b;
 }
 
-QDebug operator<<(QDebug dbg, const ExecutionResult &e)
+QDebug operator<<(QDebug dbg, const ExecutionResult& e)
 {
     if (e.final) {
         if (e.is_crash_state) {
@@ -242,7 +248,8 @@ QDebug operator<<(QDebug dbg, const ExecutionResult &e)
     }
     else
         dbg.nospace() << "Unfinalized ExecutionResult with " << e.element_pointers.size()
-            << " events so far";
+                      << " events so far";
+
     return dbg.space();
 }
 
