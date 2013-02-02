@@ -55,8 +55,6 @@ namespace artemis {
     }
 
     void ArtemisApplication::sl_testingDone() {
-
-        app->exit(0);
-
+        app->quit();
     }
 }

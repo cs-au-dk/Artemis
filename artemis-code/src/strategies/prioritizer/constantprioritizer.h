@@ -36,7 +36,7 @@ namespace artemis {
     {
     public:
         ConstantPrioritizer(QObject* parent);
-        double prioritize(ExecutableConfiguration* new_conf,
+        double prioritize(QSharedPointer<ExecutableConfiguration> new_conf,
                           const ExecutionResult& results);
 
         void reprioritize(WorkList* worklist);

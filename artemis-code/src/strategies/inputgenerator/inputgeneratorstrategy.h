@@ -46,7 +46,7 @@ namespace artemis {
         InputGeneratorStrategy(QObject *parent) : QObject(parent) {};
         virtual ~InputGeneratorStrategy() {};
 
-        virtual QList<QSharedPointer<ExecutableConfiguration*> > add_new_configurations(const QSharedPointer<ExecutableConfiguration*>, const ExecutionResult&) = 0;
+        virtual QList<QSharedPointer<ExecutableConfiguration> > add_new_configurations(const QSharedPointer<ExecutableConfiguration>, const ExecutionResult&) = 0;
 
     };
 

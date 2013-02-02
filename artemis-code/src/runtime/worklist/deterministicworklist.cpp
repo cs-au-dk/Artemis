@@ -25,8 +25,10 @@
   authors and should not be interpreted as representing official policies, either expressed
   or implied, of Simon Holm Jensen
 */
-#include "deterministicworklist.h"
+
 #include <stdlib.h>
+
+#include "deterministicworklist.h"
 
 namespace artemis {
 
@@ -37,33 +39,28 @@ DeterministicWorkList::DeterministicWorkList(QObject* parent) :
     largest_pri = 0;
 }
 
-void DeterministicWorkList::add(ExecutableConfiguration* e, int priority) {
-    QSet<QSharedPointer<ExecutableConfiguration*>>* set = queue.value(priority);
+void DeterministicWorkList::add(QSharedPointer<ExecutableConfiguration> e, int priority) {
+    QSet<QSharedPointer<ExecutableConfiguration> > set = queue.value(priority);
+    set.insert(e);
 
-    if (set == NULL) {
-        set = new QSet<QSharedPointer<ExecutableConfiguration*>*>();
-        queue.insert(priority,set);
-    }
-    set->insert(e);
     if (priority > largest_pri) {
         largest_pri = priority;
     }
 }
 
-QSharedPointer<ExecutableConfiguration*> DeterministicWorkList::remove() {
-    QSet<QSharedPointer<ExecutableConfiguration*>>* set = queue.value(largest_pri);
-    if (set == 0)
-        qDebug() << "PANIC!";
-    Q_CHECK_PTR(set);
-    Q_ASSERT(!set->isEmpty());
-    QSharedPointer<ExecutableConfiguration*> res = set->toList().at(rand() % set->size());
-    set->remove(res);
-    if (set->isEmpty()) {
+QSharedPointer<ExecutableConfiguration> DeterministicWorkList::remove() {
+    QSet<QSharedPointer<ExecutableConfiguration> > set = queue.value(largest_pri);
+    Q_ASSERT(!set.isEmpty());
+
+    QSharedPointer<ExecutableConfiguration> result = set.toList().at(rand() % set.size());
+    set.remove(result);
+
+    if (set.isEmpty()) {
         queue.remove(largest_pri);
-        delete set;
         largest_pri = queue.empty() ? 0 : queue.keys().last();
     }
-    return res;
+
+    return result;
 }
 
 bool DeterministicWorkList::all_zero_priority() {
@@ -73,7 +70,7 @@ bool DeterministicWorkList::all_zero_priority() {
 int DeterministicWorkList::size() {
     int res = 0;
     foreach (int k, queue.keys()) {
-        res += queue.value(k)->size();
+        res += queue.value(k).size();
     }
     return res;
 }
@@ -82,18 +79,20 @@ bool DeterministicWorkList::empty() {
     return queue.empty();
 }
 
- bool DeterministicWorkList::contains(QSharedPointer<ExecutableConfiguration*> e) {
-     foreach (int k, queue.keys()) {
-         if (queue.value(k)->contains(e))
-             return true;
-     }
-     return false;
- }
-
-void DeterministicWorkList::new_priority(QSharedPointer<ExecutableConfiguration*> e, int priority) {
+bool DeterministicWorkList::contains(QSharedPointer<ExecutableConfiguration> e) {
     foreach (int k, queue.keys()) {
-        if (queue.value(k)->contains(e)) {
-            queue.value(k)->remove(e);
+        if (queue.value(k).contains(e)) {
+            return true;
+        }
+    }
+    return false;
+}
+
+void DeterministicWorkList::new_priority(QSharedPointer<ExecutableConfiguration> e, int priority) {
+    foreach (int k, queue.keys()) {
+        QSet<QSharedPointer<ExecutableConfiguration> > set = queue.value(k);
+        if (set.contains(e)) {
+            set.remove(e);
         }
     }
     add(e,priority);

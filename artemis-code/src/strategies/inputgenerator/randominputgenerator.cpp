@@ -59,10 +59,10 @@ RandomInputGenerator::~RandomInputGenerator()
     delete var_gen;
 }
 
-QList<QSharedPointer<ExecutableConfiguration*> > RandomInputGenerator::add_new_configurations(const QSharedPointer<ExecutableConfiguration*> configuration,
+QList<QSharedPointer<ExecutableConfiguration> > RandomInputGenerator::add_new_configurations(const QSharedPointer<ExecutableConfiguration> configuration,
     const ExecutionResult& result)
 {
-    QList<QSharedPointer<ExecutableConfiguration*>> newConfigurations;
+    QList<QSharedPointer<ExecutableConfiguration> > newConfigurations;
 
     newConfigurations.append(insert_same_length(configuration, result));
     newConfigurations.append(insert_extended(configuration, result));
@@ -70,12 +70,12 @@ QList<QSharedPointer<ExecutableConfiguration*> > RandomInputGenerator::add_new_c
     return newConfigurations;
 }
 
-QList<QSharedPointer<ExecutableConfiguration*> > RandomInputGenerator::insert_same_length(const QSharedPointer<ExecutableConfiguration*> e,
+QList<QSharedPointer<ExecutableConfiguration> > RandomInputGenerator::insert_same_length(const QSharedPointer<ExecutableConfiguration> e,
     const ExecutionResult& e_result)
 {
-    QList<QSharedPointer<ExecutableConfiguration*>> newConfigurations;
+    QList<QSharedPointer<ExecutableConfiguration> > newConfigurations;
 
-    InputSequence* seq = e->getInputSequence();
+    const InputSequence* seq = e->getInputSequence();
 
     if (seq->isEmpty())
         return newConfigurations;
@@ -88,7 +88,7 @@ QList<QSharedPointer<ExecutableConfiguration*> > RandomInputGenerator::insert_sa
             InputSequence* new_seq = seq->copy();
             new_seq->replaceLast(new_last);
 
-            QSharedPointer<ExecutableConfiguration*> new_conf = QSharedPointer<ExecutableConfiguration*>(new ExecutableConfiguration(e->parent(), new_seq, e->getUrl()));
+            QSharedPointer<ExecutableConfiguration> new_conf = QSharedPointer<ExecutableConfiguration>(new ExecutableConfiguration(new_seq, e->getUrl()));
 
             newConfigurations.append(new_conf);
         }
@@ -115,10 +115,10 @@ BaseInput* RandomInputGenerator::permutate_input(BaseInput* input)
     return input;
 }
 
-QList<QSharedPointer<ExecutableConfiguration*> > RandomInputGenerator::insert_extended(const QSharedPointer<ExecutableConfiguration*> oldConfiguration,
+QList<QSharedPointer<ExecutableConfiguration> > RandomInputGenerator::insert_extended(const QSharedPointer<ExecutableConfiguration> oldConfiguration,
     const ExecutionResult& result)
 {
-    QList<QSharedPointer<ExecutableConfiguration*>> newConfigurations;
+    QList<QSharedPointer<ExecutableConfiguration> > newConfigurations;
 
     foreach (EventHandlerDescriptor* ee, result.event_handlers()) {
 
@@ -130,7 +130,7 @@ QList<QSharedPointer<ExecutableConfiguration*> > RandomInputGenerator::insert_ex
         InputSequence* newInputSequence = oldConfiguration->getInputSequence()->copy();
         newInputSequence->extend(domInput);
 
-        QSharedPointer<ExecutableConfiguration*> newConfiguration = QSharedPointer<ExecutableConfiguration*>(new ExecutableConfiguration(0, newInputSequence, oldConfiguration->getUrl()));
+        QSharedPointer<ExecutableConfiguration> newConfiguration = QSharedPointer<ExecutableConfiguration>(new ExecutableConfiguration(newInputSequence, oldConfiguration->getUrl()));
 
         newConfigurations.append(newConfiguration);
     }
@@ -141,7 +141,7 @@ QList<QSharedPointer<ExecutableConfiguration*> > RandomInputGenerator::insert_ex
         InputSequence* new_seq = oldConfiguration->getInputSequence()->copy();
         new_seq->extend(new_input);
 
-        QSharedPointer<ExecutableConfiguration*> new_conf = QSharedPointer<ExecutableConfiguration*>(new ExecutableConfiguration(0, new_seq, oldConfiguration->getUrl()));
+        QSharedPointer<ExecutableConfiguration> new_conf = QSharedPointer<ExecutableConfiguration>(new ExecutableConfiguration(new_seq, oldConfiguration->getUrl()));
 
         newConfigurations.append(new_conf);
     }
@@ -154,7 +154,7 @@ QList<QSharedPointer<ExecutableConfiguration*> > RandomInputGenerator::insert_ex
         InputSequence* newSequence = oldConfiguration->getInputSequence()->copy();
         newSequence->extend(newInput);
 
-        QSharedPointer<ExecutableConfiguration*> newConfiguration = QSharedPointer<ExecutableConfiguration*>(new ExecutableConfiguration(0, newSequence,
+        QSharedPointer<ExecutableConfiguration> newConfiguration = QSharedPointer<ExecutableConfiguration>(new ExecutableConfiguration(newSequence,
             oldConfiguration->getUrl()));
 
         newConfigurations.append(newConfiguration);

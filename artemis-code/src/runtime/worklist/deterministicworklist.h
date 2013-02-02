@@ -43,17 +43,17 @@ class DeterministicWorkList : public WorkList
 public:
     DeterministicWorkList(QObject* parent);
 
-    void add(QSharedPointer<ExecutableConfiguration*> e, int priority);
+    void add(QSharedPointer<ExecutableConfiguration> e, int priority);
     bool all_zero_priority();
-    QSharedPointer<ExecutableConfiguration*> remove();
+    QSharedPointer<ExecutableConfiguration> remove();
     int size();
     bool empty();
-    bool contains(QSharedPointer<ExecutableConfiguration*> e);
-    void new_priority(QSharedPointer<ExecutableConfiguration*> e, int priority);
+    bool contains(QSharedPointer<ExecutableConfiguration> e);
+    void new_priority(QSharedPointer<ExecutableConfiguration> e, int priority);
 
 private:
     int largest_pri;
-    QMap<int, QSet<QSharedPointer<ExecutableConfiguration*>>* > queue;
+    QMap<int, QSet<QSharedPointer<ExecutableConfiguration> > > queue;
 
 };
 

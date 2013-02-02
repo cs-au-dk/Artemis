@@ -99,7 +99,7 @@ namespace artemis {
         delete cov_list;
     }
 
-    void WebKitExecutor::executeSequence(QSharedPointer<ExecutableConfiguration*> conf) {
+    void WebKitExecutor::executeSequence(QSharedPointer<ExecutableConfiguration> conf) {
         qDebug() << "Artemis: Executing sequence" << endl;
 
         if (current_result != 0) {
@@ -181,7 +181,7 @@ namespace artemis {
     }
 
     void WebKitExecutor::do_exe() {
-        InputSequence* seq = current_conf->getInputSequence();
+        const InputSequence* seq = current_conf->getInputSequence();
     
         foreach (BaseInput* input, seq->toList()) {
             qDebug() << "APPLY!" << endl;
@@ -258,9 +258,7 @@ namespace artemis {
         if (current_result != 0) {
             qDebug() << "Removing old result" << endl;
 
-
             write_coverage_html(coverage());
-
 
             current_result->disconnect();
 
