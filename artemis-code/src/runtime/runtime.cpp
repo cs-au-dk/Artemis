@@ -27,6 +27,7 @@
  */
 
 #include <iostream>
+
 #include <QSharedPointer>
 
 #include "worklist/deterministicworklist.h"
