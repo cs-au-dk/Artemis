@@ -62,9 +62,9 @@ check:
 	which lemon > /dev/null
 	which re2c > /dev/null
 
-DEPENDENCIES = g++ flex bison gperf ruby cmake lemon re2c libxext-dev libfontconfig-dev libxrender-dev
+DEPENDENCIES = g++ flex bison gperf ruby cmake lemon re2c libxext-dev libfontconfig-dev libxrender-dev libsqlite3-dev
 
-YUM_DEPENDENCIES = gcc-c++ flex bison gperf ruby cmake lemon re2c fontconfig-devel libXext-devel patch
+YUM_DEPENDENCIES = gcc-c++ flex bison gperf ruby cmake lemon re2c fontconfig-devel libXext-devel patch libsqlite3-dev
 
 fetch-apt:
 	sudo apt-get install ${DEPENDENCIES}
