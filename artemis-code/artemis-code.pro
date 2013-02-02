@@ -13,7 +13,8 @@ MOC_DIR = build
 DESTDIR = dist
 LIBS += ../WebKit/WebKitBuild/Release/lib/libQtWebKit.so
 QMAKE_CXXFLAGS += -g \
-    -DEXE_BUILD_DATE="`date +'\"%d-%m-%Y_%H:%M:%S\"'`"
+    -DEXE_BUILD_DATE="`date +'\"%d-%m-%Y_%H:%M:%S\"'`" \
+    -Wno-unused-parameter
 DEFINES += ARTEMIS=1
 
 installtarget.path = $$(ARTEMIS_PATH)/bin

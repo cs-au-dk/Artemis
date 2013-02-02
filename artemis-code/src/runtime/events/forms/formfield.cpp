@@ -26,6 +26,8 @@
   or implied, of Simon Holm Jensen
 */
 
+#include <assert.h>
+
 #include "artemisglobals.h"
 
 #include "formfield.h"
@@ -134,5 +136,6 @@ FormFieldTypes get_type_from_attr(QString type_attr)
         { return TEXT; }
 
     qFatal("Unknown type attribute on form element: %s", type_attr.toStdString().c_str());
+    assert(false);
 }
 }
