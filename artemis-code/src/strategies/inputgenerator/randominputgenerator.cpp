@@ -41,15 +41,15 @@
 namespace artemis
 {
 
-RandomInputGenerator::RandomInputGenerator(QObject *parent,
-		TargetGenerator* targetGenerator,
-		int numberSameLength) :
+RandomInputGenerator::RandomInputGenerator(QObject* parent,
+        TargetGenerator* targetGenerator,
+        int numberSameLength) :
     InputGeneratorStrategy(parent)
 {
-	mTargetGenerator = targetGenerator;
-	mTargetGenerator->setParent(this);
+    mTargetGenerator = targetGenerator;
+    mTargetGenerator->setParent(this);
 
-	mNumberSameLength = numberSameLength;
+    mNumberSameLength = numberSameLength;
 
     var_gen = new RandomVariants();
 }
@@ -60,7 +60,7 @@ RandomInputGenerator::~RandomInputGenerator()
 }
 
 QList<QSharedPointer<ExecutableConfiguration> > RandomInputGenerator::add_new_configurations(const QSharedPointer<ExecutableConfiguration> configuration,
-    const ExecutionResult& result)
+        const ExecutionResult& result)
 {
     QList<QSharedPointer<ExecutableConfiguration> > newConfigurations;
 
@@ -71,16 +71,17 @@ QList<QSharedPointer<ExecutableConfiguration> > RandomInputGenerator::add_new_co
 }
 
 QList<QSharedPointer<ExecutableConfiguration> > RandomInputGenerator::insert_same_length(const QSharedPointer<ExecutableConfiguration> e,
-    const ExecutionResult& e_result)
+        const ExecutionResult& e_result)
 {
     QList<QSharedPointer<ExecutableConfiguration> > newConfigurations;
 
     const InputSequence* seq = e->getInputSequence();
 
     if (seq->isEmpty())
-        return newConfigurations;
+        { return newConfigurations; }
 
     BaseInput* last = seq->getLast();
+
     for (int i = 0; i++; i < mNumberSameLength) {
         BaseInput* new_last = this->permutate_input(last);
 
@@ -97,7 +98,7 @@ QList<QSharedPointer<ExecutableConfiguration> > RandomInputGenerator::insert_sam
     return newConfigurations;
 }
 
-BaseInput *RandomInputGenerator::permutate_input(const DomInput *input)
+BaseInput* RandomInputGenerator::permutate_input(const DomInput* input)
 {
     EventParameters* newParams = var_gen->generate_event_parameters(NULL, input->getEventHandler());
     FormInput* newForm = var_gen->generate_form_fields(NULL, input->getFormInput()->getFields());
@@ -116,11 +117,11 @@ BaseInput* RandomInputGenerator::permutate_input(BaseInput* input)
 }
 
 QList<QSharedPointer<ExecutableConfiguration> > RandomInputGenerator::insert_extended(const QSharedPointer<ExecutableConfiguration> oldConfiguration,
-    const ExecutionResult& result)
+        const ExecutionResult& result)
 {
     QList<QSharedPointer<ExecutableConfiguration> > newConfigurations;
 
-    foreach (EventHandlerDescriptor* ee, result.event_handlers()) {
+    foreach(EventHandlerDescriptor * ee, result.event_handlers()) {
 
         EventParameters* new_params = var_gen->generate_event_parameters(NULL, ee);
         FormInput* new_form = var_gen->generate_form_fields(NULL, result.form_fields());
@@ -135,7 +136,7 @@ QList<QSharedPointer<ExecutableConfiguration> > RandomInputGenerator::insert_ext
         newConfigurations.append(newConfiguration);
     }
 
-    foreach (const Timer timer, result.get_timers()) {
+    foreach(const Timer timer, result.get_timers()) {
         TimerInput* new_input = new TimerInput(0, timer);
 
         InputSequence* new_seq = oldConfiguration->getInputSequence()->copy();
@@ -147,7 +148,7 @@ QList<QSharedPointer<ExecutableConfiguration> > RandomInputGenerator::insert_ext
     }
 
     qDebug() << "INSERTING AJAX HANDLERS" << endl;
-    foreach (int callbackId, result.ajaxCallbackHandlers()) {
+    foreach(int callbackId, result.ajaxCallbackHandlers()) {
         qDebug() << "HIT" << endl;
         AjaxInput* newInput = new AjaxInput(0, callbackId);
 
@@ -155,7 +156,7 @@ QList<QSharedPointer<ExecutableConfiguration> > RandomInputGenerator::insert_ext
         newSequence->extend(newInput);
 
         QSharedPointer<ExecutableConfiguration> newConfiguration = QSharedPointer<ExecutableConfiguration>(new ExecutableConfiguration(newSequence,
-            oldConfiguration->getUrl()));
+                oldConfiguration->getUrl()));
 
         newConfigurations.append(newConfiguration);
     }

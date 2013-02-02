@@ -34,7 +34,7 @@ namespace artemis
 {
 
 DomInput::DomInput(QObject* parent, EventHandlerDescriptor* handler,
-    FormInput* formInput, EventParameters* params, TargetDescriptor* target) :
+                   FormInput* formInput, EventParameters* params, TargetDescriptor* target) :
     BaseInput(parent)
 {
     Q_CHECK_PTR(params);
@@ -53,7 +53,7 @@ DomInput::DomInput(QObject* parent, EventHandlerDescriptor* handler,
     //mTarget->setParent(this);
 }
 
-void DomInput::apply(ArtemisWebPage *page, QWebExecutionListener *webkit_listener)
+void DomInput::apply(ArtemisWebPage* page, QWebExecutionListener* webkit_listener)
 {
     QWebElement handler = mEventHandler->dom_element()->get_element(page);
     QWebElement target = this->target()->get(page);
@@ -67,12 +67,12 @@ void DomInput::apply(ArtemisWebPage *page, QWebExecutionListener *webkit_listene
     }
     else {
         qDebug() << "Event Handler: " << handler.tagName() << " _ID: "
-            << handler.attribute(QString("id")) << " _Title: "
-            << handler.attribute(QString("title")) << "class: "
-            << handler.attribute(QString("class"));
+                 << handler.attribute(QString("id")) << " _Title: "
+                 << handler.attribute(QString("title")) << "class: "
+                 << handler.attribute(QString("class"));
         qDebug() << "Target: " << target.tagName() << " _ID: " << target.attribute(QString("id"))
-            << " _Title: " << target.attribute(QString("title")) << "class: "
-            << target.attribute(QString("class"));
+                 << " _Title: " << target.attribute(QString("title")) << "class: "
+                 << target.attribute(QString("class"));
         qDebug() << "Executing: " << js_init_event;
 
         QVariant result = target.evaluateJavaScript(js_init_event, DONT_MEASURE_COVERAGE);
@@ -105,9 +105,9 @@ FormInput* DomInput::getFormInput() const
     return mFormInput;
 }
 
-bool DomInput::isEqual(BaseInput *other)
+bool DomInput::isEqual(BaseInput* other)
 {
-    DomInput *domInput = dynamic_cast<DomInput *>(other);
+    DomInput* domInput = dynamic_cast<DomInput*>(other);
 
     if (domInput == 0) {
         return false;

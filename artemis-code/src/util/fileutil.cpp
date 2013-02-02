@@ -3,9 +3,11 @@
 #include <QDir>
 #include <QTextStream>
 
-namespace artemis {
+namespace artemis
+{
 
-void write_string_to_file(QString filename, QString data) {
+void write_string_to_file(QString filename, QString data)
+{
     QFile file(filename);
     file.open(QIODevice::WriteOnly | QIODevice::Text);
     QTextStream out(&file);
@@ -14,13 +16,16 @@ void write_string_to_file(QString filename, QString data) {
     out.flush();
 }
 
-void create_dir(QString path, QString folder_name){
+void create_dir(QString path, QString folder_name)
+{
     if (QDir().exists(path + "/" + folder_name))
-        return;
+        { return; }
+
     QDir().mkdir(path + "/" + folder_name);
 }
 
-QString read_file(QString file_s) {
+QString read_file(QString file_s)
+{
     QFile f(file_s);
     f.open(QFile::ReadOnly | QFile::Text);
     QTextStream in(&f);

@@ -4,7 +4,8 @@
 #include <Qt>
 #include <QtDebug>
 
-namespace artemis {
+namespace artemis
+{
 
 class ByteCodeCoverage
 {
@@ -12,7 +13,7 @@ public:
     ByteCodeCoverage(uint lineno = 0, uint opcode = 0);
 
 
-    QDebug friend operator<<(QDebug dbg, const ByteCodeCoverage &e);
+    QDebug friend operator<<(QDebug dbg, const ByteCodeCoverage& e);
 
     void bytecode_executed();
     uint hit_count();

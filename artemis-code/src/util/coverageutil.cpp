@@ -5,9 +5,11 @@
 #include <QDir>
 #include <QDateTime>
 
-namespace artemis {
+namespace artemis
+{
 
-void write_coverage_html(CodeCoverage cc){
+void write_coverage_html(CodeCoverage cc)
+{
 
     QDir appdir("", "*.html", QDir::Time);
     QStringList existingFiles = appdir.entryList();
@@ -19,15 +21,15 @@ void write_coverage_html(CodeCoverage cc){
         res += "<a href=\"" + existingFiles.at(0) + "\">Previous run</a>";
     }
 
-    foreach (int p, cc.source_ids()) {
+    foreach(int p, cc.source_ids()) {
         res += "<h2>" + Qt::escape(cc.source_info(p)->getURL()) + "</h2>";
         res += "<pre><table>";
 
         int startline = cc.source_info(p)->getStartLine();
-        foreach (QString line, cc.source_info(p)->getSource().split("\n", QString::KeepEmptyParts)) {
+        foreach(QString line, cc.source_info(p)->getSource().split("\n", QString::KeepEmptyParts)) {
             res += "<tr><td>" + QString::number(startline) + "</td><td class=\""
-                    + (cc.line_info(p).contains(startline) ? "covered" : "uncovered")
-                    + "\">" + QTextDocument(line).toHtml() + "</td></tr>";
+                   + (cc.line_info(p).contains(startline) ? "covered" : "uncovered")
+                   + "\">" + QTextDocument(line).toHtml() + "</td></tr>";
             startline += 1;
         }
         res += "</table></pre>";

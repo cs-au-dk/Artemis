@@ -40,13 +40,13 @@ namespace artemis
 class BaseInput : public QObject
 {
 
-Q_OBJECT
+    Q_OBJECT
 
 public:
     BaseInput(QObject* parent) : QObject(parent) {};
 
-    virtual void apply(ArtemisWebPage *page, QWebExecutionListener *webkit_listener) = 0;
-    virtual bool isEqual(BaseInput *other) = 0;
+    virtual void apply(ArtemisWebPage* page, QWebExecutionListener* webkit_listener) = 0;
+    virtual bool isEqual(BaseInput* other) = 0;
 };
 
 }

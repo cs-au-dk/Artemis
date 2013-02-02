@@ -4,7 +4,8 @@
 #include <QDebug>
 #include <QUrl>
 
-namespace artemis {
+namespace artemis
+{
 
 class SourceIdentifier
 {
@@ -12,7 +13,7 @@ public:
     SourceIdentifier(QUrl& url, int source_offset);
 
     bool operator==(const SourceIdentifier& other) const;
-    QDebug friend operator<<(QDebug dbg, const SourceIdentifier &e);
+    QDebug friend operator<<(QDebug dbg, const SourceIdentifier& e);
     uint hashcode() const;
 
 private:
@@ -22,7 +23,8 @@ private:
 
 }
 
-inline uint qHash(const artemis::SourceIdentifier &d) {
+inline uint qHash(const artemis::SourceIdentifier& d)
+{
     return d.hashcode();
 }
 

@@ -3,9 +3,10 @@
 
 #include "src/coverage/codecoverage.h"
 
-namespace artemis {
+namespace artemis
+{
 
-    void write_coverage_html(CodeCoverage cc);
+void write_coverage_html(CodeCoverage cc);
 
 }
 

@@ -38,57 +38,54 @@
 
 using namespace std;
 
-void printHeader() {
+void printHeader()
+{
     qDebug() << "Artemis - Automated tester for JavaScript";
     qDebug() << "Started: " << QDateTime::currentDateTime().toString();
     qDebug() << "Compilation date: " << EXE_BUILD_DATE;
     qDebug() << "-----\n";
 }
 
-QUrl parseCmd(int argc, char *argv[], artemis::Options& options) {
+QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
+{
 
     char c;
+
     while ((c = getopt(argc, argv, "rp:f:t:c:i:")) != -1) {
 
-    	switch (c) {
+        switch (c) {
 
-        case 'f':
-        {
-        	QStringList rawformfield = QString(optarg).split("=");
-        	Q_ASSERT(rawformfield.size() == 2);
-        	options.presetFormfields.insert(rawformfield.at(0), rawformfield.at(1));
+        case 'f': {
+            QStringList rawformfield = QString(optarg).split("=");
+            Q_ASSERT(rawformfield.size() == 2);
+            options.presetFormfields.insert(rawformfield.at(0), rawformfield.at(1));
             break;
         }
 
-        case 'p':
-        {
+        case 'p': {
             QDir ld = QDir(QString(optarg));
             options.dumpPageStates = "k";
             break;
         }
 
-        case 'r':
-        {
-        	options.recreatePage = true;
+        case 'r': {
+            options.recreatePage = true;
             break;
         }
 
-        case 't':
-        {
-        	options.useProxy = QString(optarg);
+        case 't': {
+            options.useProxy = QString(optarg);
             break;
         }
 
-        case 'c':
-        {
-        	QStringList parts = QString(optarg).split("=");
-        	options.presetCookies.insert(parts.at(0), parts.at(1));
+        case 'c': {
+            QStringList parts = QString(optarg).split("=");
+            options.presetCookies.insert(parts.at(0), parts.at(1));
             break;
         }
 
-        case 'i':
-        {
-        	options.iterationLimit = QString(optarg).toInt();
+        case 'i': {
+            options.iterationLimit = QString(optarg).toInt();
             break;
         }
 
@@ -96,23 +93,23 @@ QUrl parseCmd(int argc, char *argv[], artemis::Options& options) {
     }
 
     if (optind >= argc) {
-    	cerr << "ERROR: You must specify a URL" << endl;
-    	exit(1);
+        cerr << "ERROR: You must specify a URL" << endl;
+        exit(1);
     }
 
     QStringList rawurl = QString(argv[optind]).split("@");
     QUrl url = rawurl.last();
 
     if (rawurl.size() > 1) {
-    	QStringList rawauth = rawurl.first().split(":");
-    	url.setUserName(rawauth.first());
-    	url.setPassword(rawauth.last());
+        QStringList rawauth = rawurl.first().split(":");
+        url.setUserName(rawauth.first());
+        url.setPassword(rawauth.last());
     }
 
     return url;
 }
 
-void artemisConsoleMessageHandler(QtMsgType type, const char *msg)
+void artemisConsoleMessageHandler(QtMsgType type, const char* msg)
 {
     switch (type) {
     case QtDebugMsg:
@@ -130,10 +127,11 @@ void artemisConsoleMessageHandler(QtMsgType type, const char *msg)
     }
 }
 
-int main(int argc, char *argv[]) {
-	printHeader();
+int main(int argc, char* argv[])
+{
+    printHeader();
 
-	qInstallMsgHandler(artemisConsoleMessageHandler);
+    qInstallMsgHandler(artemisConsoleMessageHandler);
 
     ExceptionHandlingQApp app(argc, argv);
 
