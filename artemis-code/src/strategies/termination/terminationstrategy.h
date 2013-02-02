@@ -39,7 +39,7 @@ class TerminationStrategy : public QObject
 public:
     TerminationStrategy(QObject* parent) : QObject(parent) {};
 
-    virtual bool should_terminate() = 0;
+    virtual bool shouldTerminate() = 0;
     virtual QString reason() = 0;
 };
 

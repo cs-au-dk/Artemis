@@ -38,7 +38,7 @@ class NumberOfIterationsTermination : public TerminationStrategy
 
 public:
     NumberOfIterationsTermination(QObject* parent, int iterationLimit);
-    bool should_terminate();
+    bool shouldTerminate();
     QString reason();
 
 private:

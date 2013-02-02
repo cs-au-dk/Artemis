@@ -38,7 +38,7 @@ class RandomPrioritizer : public PrioritizerStrategy
 public:
     RandomPrioritizer(QObject* parent);
 
-    double prioritize(QSharedPointer<ExecutableConfiguration> new_conf,
+    double prioritize(QSharedPointer<ExecutableConfiguration> newConf,
                       const ExecutionResult& results);
 
     void reprioritize(WorkList* worklist);

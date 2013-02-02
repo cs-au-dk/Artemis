@@ -45,15 +45,15 @@ public:
     DeterministicWorkList(QObject* parent);
 
     void add(QSharedPointer<ExecutableConfiguration> e, int priority);
-    bool all_zero_priority();
+    bool allZeroPriority();
     QSharedPointer<ExecutableConfiguration> remove();
     int size();
     bool empty();
     bool contains(QSharedPointer<ExecutableConfiguration> e);
-    void new_priority(QSharedPointer<ExecutableConfiguration> e, int priority);
+    void newPriority(QSharedPointer<ExecutableConfiguration> e, int priority);
 
 private:
-    int largest_pri;
+    int largestPri;
     QMap<int, QSet<QSharedPointer<ExecutableConfiguration> > > queue;
 
 };

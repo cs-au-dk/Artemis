@@ -37,59 +37,59 @@ namespace artemis
 
 FormFieldValue::FormFieldValue(QObject* parent, QString value) : QObject(parent)
 {
-    str_val = value;
-    is_bool = false;
-    is_no_val = false;
+    strVal = value;
+    isBool = false;
+    isNoVal = false;
 }
 
 FormFieldValue::FormFieldValue(QObject* parent, bool value) : QObject(parent)
 {
-    bool_val = value;
-    is_bool = true;
-    is_no_val = false;
+    boolVal = value;
+    isBool = true;
+    isNoVal = false;
 }
 
 FormFieldValue::FormFieldValue(QObject* parent) : QObject(parent)
 {
-    is_bool = false;
-    is_no_val = true;
+    isBool = false;
+    isNoVal = true;
 }
 
-bool FormFieldValue::get_bool()
+bool FormFieldValue::getBool()
 {
-    Q_ASSERT(is_bool);
-    Q_ASSERT(!is_no_val);
-    return bool_val;
+    Q_ASSERT(isBool);
+    Q_ASSERT(!isNoVal);
+    return boolVal;
 }
 
-QString FormFieldValue::get_str()
+QString FormFieldValue::getStr()
 {
-    Q_ASSERT(!is_bool);
-    Q_ASSERT(!is_no_val);
-    return str_val;
+    Q_ASSERT(!isBool);
+    Q_ASSERT(!isNoVal);
+    return strVal;
 }
 
-bool FormFieldValue::is_no_value()
+bool FormFieldValue::isNoValue()
 {
-    return is_no_val;
+    return isNoVal;
 }
 
-QString FormFieldValue::string_representation()
+QString FormFieldValue::stringRepresentation()
 {
-    Q_ASSERT(!is_no_val);
+    Q_ASSERT(!isNoVal);
 
-    if (is_bool)
-        { return bool_tostring(bool_val); }
+    if (isBool)
+        { return boolTostring(boolVal); }
 
-    return str_val;
+    return strVal;
 }
 
 QDebug operator<<(QDebug dbg, const FormFieldValue& f)
 {
-    if (f.is_bool)
-        { dbg.nospace() << f.bool_val; }
-    else if (!f.is_no_val)
-        { dbg.nospace() << f.str_val; }
+    if (f.isBool)
+        { dbg.nospace() << f.boolVal; }
+    else if (!f.isNoVal)
+        { dbg.nospace() << f.strVal; }
     else
         { dbg.nospace() << "<no value>"; }
 

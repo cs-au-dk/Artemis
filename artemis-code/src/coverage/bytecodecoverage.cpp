@@ -5,40 +5,40 @@ namespace artemis
 
 ByteCodeCoverage::ByteCodeCoverage(uint lineno, uint opcode)
 {
-    this->m_line_no = lineno;
-    this->m_opcode = opcode;
-    this->m_hit_count = 0;
+    this->mLineNo = lineno;
+    this->mOpcode = opcode;
+    this->mHitCount = 0;
 }
 
 QDebug operator<<(QDebug dbg, const ByteCodeCoverage& e)
 {
     dbg.nospace() << "ByteCodeCoverage [opcode="
-                  << e.m_opcode
-                  << ", hit_count="
-                  << e.m_hit_count
-                  << ", line_no="
-                  << e.m_line_no << "]";
+                  << e.mOpcode
+                  << ", hitCount="
+                  << e.mHitCount
+                  << ", lineNo="
+                  << e.mLineNo << "]";
     return dbg.space();
 }
 
-void ByteCodeCoverage::bytecode_executed()
+void ByteCodeCoverage::bytecodeExecuted()
 {
-    this->m_hit_count++;
+    this->mHitCount++;
 }
 
-uint ByteCodeCoverage::hit_count()
+uint ByteCodeCoverage::hitCount()
 {
-    return this->m_hit_count;
+    return this->mHitCount;
 }
 
-uint ByteCodeCoverage::line_number()
+uint ByteCodeCoverage::lineNumber()
 {
-    this->m_line_no;
+    this->mLineNo;
 }
 
 uint ByteCodeCoverage::opcodeID()
 {
-    return this->m_opcode;
+    return this->mOpcode;
 }
 
 }

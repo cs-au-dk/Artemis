@@ -15,18 +15,18 @@ public:
 
     QDebug friend operator<<(QDebug dbg, const ByteCodeCoverage& e);
 
-    void bytecode_executed();
-    uint hit_count();
-    uint line_number();
+    void bytecodeExecuted();
+    uint hitCount();
+    uint lineNumber();
     uint opcodeID();
 
 private:
     // How times have this bytecode been hit so far;
-    uint m_hit_count;
+    uint mHitCount;
     // Line number in source where this bytecode is matched
-    uint m_line_no;
+    uint mLineNo;
     //Type
-    uint m_opcode;
+    uint mOpcode;
 
 };
 

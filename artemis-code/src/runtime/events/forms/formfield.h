@@ -43,7 +43,7 @@ class FormField : public QObject
     Q_OBJECT
 
 public:
-    FormField(QObject* parent, FormFieldTypes type, DOMElementDescriptor* element, QSet<QString> input_options);
+    FormField(QObject* parent, FormFieldTypes type, DOMElementDescriptor* element, QSet<QString> inputOptions);
     FormField(QObject* parent, FormFieldTypes type, DOMElementDescriptor* element);
     FormField(QObject* parent, const FormField* other);
 
@@ -56,9 +56,9 @@ public:
     QDebug friend operator<<(QDebug dbg, const FormField& f);
 
 private:
-    FormFieldTypes field_type;
-    DOMElementDescriptor* element_descriptor;
-    QSet<QString> inputs_set;
+    FormFieldTypes fieldType;
+    DOMElementDescriptor* elementDescriptor;
+    QSet<QString> inputsSet;
 
 };
 

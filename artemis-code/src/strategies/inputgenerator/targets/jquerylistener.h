@@ -35,11 +35,11 @@
 namespace artemis
 {
 
-typedef struct jquery_event_t {
+typedef struct jqueryEventT {
     QString elementSignature;
     QString event;
     QString selector;
-} jquery_event;
+} jqueryEvent;
 
 class JQueryListener : public QObject
 {
@@ -51,10 +51,10 @@ public:
     QList<QString> lookup(QString elementSignature, QString event);
 
 protected:
-    QList<jquery_event*> jquery_events;
+    QList<jqueryEvent*> jqueryEvents;
 
 public slots:
-    void sl_event_added(QString elementSignature, QString event, QString selector);
+    void slEventAdded(QString elementSignature, QString event, QString selector);
 };
 
 }

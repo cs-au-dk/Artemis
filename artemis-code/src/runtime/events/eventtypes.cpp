@@ -31,7 +31,7 @@
 namespace artemis
 {
 
-EventType get_type(QString name)
+EventType getType(QString name)
 {
     Q_ASSERT(!name.isEmpty());
 
@@ -84,9 +84,9 @@ EventType get_type(QString name)
     return UNKNOWN_EVENT;
 }
 
-bool is_non_interactive(QString name)
+bool isNonInteractive(QString name)
 {
-    EventType t = get_type(name);
+    EventType t = getType(name);
     return t == UNLOAD_EVENT || t == LOAD_EVENT || t == NON_INTERACTIVE_EVENT;
 }
 }

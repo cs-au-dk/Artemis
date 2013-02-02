@@ -8,7 +8,7 @@
 namespace artemis
 {
 
-void write_coverage_html(CodeCoverage cc)
+void writeCoverageHtml(CodeCoverage cc)
 {
 
     QDir appdir("", "*.html", QDir::Time);
@@ -21,14 +21,14 @@ void write_coverage_html(CodeCoverage cc)
         res += "<a href=\"" + existingFiles.at(0) + "\">Previous run</a>";
     }
 
-    foreach(int p, cc.source_ids()) {
-        res += "<h2>" + Qt::escape(cc.source_info(p)->getURL()) + "</h2>";
+    foreach(int p, cc.sourceIds()) {
+        res += "<h2>" + Qt::escape(cc.sourceInfo(p)->getURL()) + "</h2>";
         res += "<pre><table>";
 
-        int startline = cc.source_info(p)->getStartLine();
-        foreach(QString line, cc.source_info(p)->getSource().split("\n", QString::KeepEmptyParts)) {
+        int startline = cc.sourceInfo(p)->getStartLine();
+        foreach(QString line, cc.sourceInfo(p)->getSource().split("\n", QString::KeepEmptyParts)) {
             res += "<tr><td>" + QString::number(startline) + "</td><td class=\""
-                   + (cc.line_info(p).contains(startline) ? "covered" : "uncovered")
+                   + (cc.lineInfo(p).contains(startline) ? "covered" : "uncovered")
                    + "\">" + QTextDocument(line).toHtml() + "</td></tr>";
             startline += 1;
         }
@@ -39,7 +39,7 @@ void write_coverage_html(CodeCoverage cc)
 
     QString pathToFile = QDateTime::currentDateTime().toString("dd-MM-yy-hh-mm-ss") + ".html";
 
-    write_string_to_file(pathToFile, res);
+    writeStringToFile(pathToFile, res);
 }
 
 }

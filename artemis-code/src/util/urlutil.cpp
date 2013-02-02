@@ -10,7 +10,7 @@
 namespace artemis
 {
 
-QUrl resolve_url(const QUrl& base, const QString& relative)
+QUrl resolveUrl(const QUrl& base, const QString& relative)
 {
     QUrl u(relative);
 
@@ -20,24 +20,24 @@ QUrl resolve_url(const QUrl& base, const QString& relative)
     return base.resolved(u);
 }
 
-void make_script_urls_absolute(QWebFrame* page)
+void makeScriptUrlsAbsolute(QWebFrame* page)
 {
     QWebElementCollection scripts = page->findAllElements("script");
     foreach(QWebElement script, scripts) {
         if (script.hasAttribute("src")) { //External element
             QString src = script.attribute("src");
-            QUrl abs_url = resolve_url(page->url(), src);
-            script.setAttribute("src", abs_url.toString());
+            QUrl absUrl = resolveUrl(page->url(), src);
+            script.setAttribute("src", absUrl.toString());
         }
     }
 }
 
-QString read_entire_page(const QUrl& page)
+QString readEntirePage(const QUrl& page)
 {
-    QNetworkAccessManager net_access;
+    QNetworkAccessManager netAccess;
 
     QUrl curl = page;
-    QNetworkReply* reply = net_access.get(QNetworkRequest(QUrl(curl)));
+    QNetworkReply* reply = netAccess.get(QNetworkRequest(QUrl(curl)));
     QEventLoop loop;
     QObject::connect(reply, SIGNAL(readyRead()), &loop, SLOT(quit()));
     loop.exec();
@@ -45,12 +45,12 @@ QString read_entire_page(const QUrl& page)
     return q.readAll();
 }
 
-QString read_entire_page(const QUrl& page, const QString post_data)
+QString readEntirePage(const QUrl& page, const QString postData)
 {
-    QNetworkAccessManager net_access;
+    QNetworkAccessManager netAccess;
 
     QUrl curl = page;
-    QNetworkReply* reply = net_access.post(QNetworkRequest(QUrl(curl)), post_data.toAscii());
+    QNetworkReply* reply = netAccess.post(QNetworkRequest(QUrl(curl)), postData.toAscii());
     QEventLoop loop;
     QObject::connect(reply, SIGNAL(readyRead()), &loop, SLOT(quit()));
     loop.exec();
@@ -62,7 +62,7 @@ QString read_entire_page(const QUrl& page, const QString post_data)
 /**
   Given url a/b/c/ will return a/b if no / is present. Returns .
   */
-QString get_path_part_of_url(const QString url)
+QString getPathPartOfUrl(const QString url)
 {
     if (!url.contains("/"))
         { return "."; }
@@ -75,7 +75,7 @@ QString get_path_part_of_url(const QString url)
 /**
   Given url a/b/c will return c, if no / is present returns string unchanged
   */
-QString get_filename_part_of_url(const QString& url)
+QString getFilenamePartOfUrl(const QString& url)
 {
     if (!url.contains("/"))
         { return url; }
@@ -88,14 +88,14 @@ QString get_filename_part_of_url(const QString& url)
   Given base url http://host.com/a and aboslute url http://host.com/a/b/c return the best effort relative url
     b/c
   */
-QUrl to_relative(QUrl base, QUrl absolute)
+QUrl toRelative(QUrl base, QUrl absolute)
 {
-    QStringList s_base = base.toString().split("/");
-    QStringList s_absolute = absolute.toString().split("/");
-    QStringList res = QStringList(s_absolute);
+    QStringList sBase = base.toString().split("/");
+    QStringList sAbsolute = absolute.toString().split("/");
+    QStringList res = QStringList(sAbsolute);
 
     if (base.isParentOf(absolute)) {
-        foreach(QString s, s_base) {
+        foreach(QString s, sBase) {
             res.removeFirst();
         }
     }
@@ -109,7 +109,7 @@ QUrl to_relative(QUrl base, QUrl absolute)
     return res.join("/");
 }
 
-int get_hash(const QUrl& u, int startline)
+int getHash(const QUrl& u, int startline)
 {
     return qHash(u) * 53 + startline * 29;
 }

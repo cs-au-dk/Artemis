@@ -34,14 +34,14 @@
 
 namespace artemis
 {
-QString generate_random_string(int length);
-bool random_bool();
+QString generateRandomString(int length);
+bool randomBool();
 
-QWebElement pick_rand(QList<QWebElement> s);
-QString pick_rand(QList<QString> s);
-QString pick_rand(QSet<QString> s);
+QWebElement pickRand(QList<QWebElement> s);
+QString pickRand(QList<QString> s);
+QString pickRand(QSet<QString> s);
 
-QString generate_random_js_id();
+QString generateRandomJsId();
 
 }
 #endif // RANDOMUTIL_H

@@ -39,8 +39,8 @@ public:
 
     RandomVariants();
 
-    EventParameters* generate_event_parameters(QObject* parent, const EventHandlerDescriptor* eventHandler);
-    FormInput* generate_form_fields(QObject* parent, const QSet<FormField*>& fi);
+    EventParameters* generateEventParameters(QObject* parent, const EventHandlerDescriptor* eventHandler);
+    FormInput* generateFormFields(QObject* parent, const QSet<FormField*>& fi);
 
 };
 

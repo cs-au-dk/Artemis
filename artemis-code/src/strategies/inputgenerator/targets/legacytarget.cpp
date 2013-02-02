@@ -31,13 +31,13 @@
 namespace artemis
 {
 
-LegacyTarget::LegacyTarget(QObject* parent, const EventHandlerDescriptor* event_handler) : TargetDescriptor(parent, event_handler)
+LegacyTarget::LegacyTarget(QObject* parent, const EventHandlerDescriptor* eventHandler) : TargetDescriptor(parent, eventHandler)
 {
 }
 
 QWebElement LegacyTarget::get(ArtemisWebPage* page)
 {
-    return m_event_handler->dom_element()->get_element(page);
+    return mEventHandler->domElement()->getElement(page);
 }
 
 }

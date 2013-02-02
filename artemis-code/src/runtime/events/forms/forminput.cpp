@@ -47,12 +47,12 @@ void FormInput::writeToPage(QWebPage* page)
     foreach(FormField * formField, mInputs.keys()) {
 
         DOMElementDescriptor* elmDesc = formField->element();
-        QWebElement element = elmDesc->get_element(page);
+        QWebElement element = elmDesc->getElement(page);
 
         FormFieldValue* value = mInputs.value(formField);
 
         if (!element.isNull()) {
-            element.setAttribute("value", value->string_representation());
+            element.setAttribute("value", value->stringRepresentation());
         }
     }
 }

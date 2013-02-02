@@ -3,25 +3,25 @@
 namespace artemis
 {
 
-AjaxRequest::AjaxRequest(const QUrl url, const QString post_data)
+AjaxRequest::AjaxRequest(const QUrl url, const QString postData)
 {
-    this->m_post_data = post_data;
-    this->m_url = url;
+    this->mPostData = postData;
+    this->mUrl = url;
 }
 
 QUrl AjaxRequest::url() const
 {
-    return m_url;
+    return mUrl;
 }
 
-QString AjaxRequest::post_data()
+QString AjaxRequest::postData()
 {
-    return m_post_data;
+    return mPostData;
 }
 
 QDebug operator<<(QDebug dbg, const AjaxRequest& e)
 {
-    dbg.nospace() << "AjaxRequest[url = " << e.m_url << ",post_data = " << e.m_post_data << "]";
+    dbg.nospace() << "AjaxRequest[url = " << e.mUrl << ",postData = " << e.mPostData << "]";
     return dbg.space();
 }
 

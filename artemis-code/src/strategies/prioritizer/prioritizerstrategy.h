@@ -44,11 +44,11 @@ public:
     virtual ~PrioritizerStrategy() {};
 
     /**
-      new_conf: Configuration to be prioritized
+      newConf: Configuration to be prioritized
       results: The execution results from last execution
       state: State of the execution engine
       */
-    virtual double prioritize(QSharedPointer<ExecutableConfiguration> new_conf,
+    virtual double prioritize(QSharedPointer<ExecutableConfiguration> newConf,
                               const ExecutionResult& results) = 0;
 
     virtual void reprioritize(WorkList* worklist) = 0;

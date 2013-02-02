@@ -36,7 +36,7 @@ RandomPrioritizer::RandomPrioritizer(QObject* parent) :
 
 }
 
-double RandomPrioritizer::prioritize(QSharedPointer<ExecutableConfiguration> new_conf,
+double RandomPrioritizer::prioritize(QSharedPointer<ExecutableConfiguration> newConf,
                                      const ExecutionResult& results)
 {
 

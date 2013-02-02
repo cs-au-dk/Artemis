@@ -65,9 +65,9 @@ Runtime::Runtime(QObject* parent, const Options& options, QUrl url) : QObject(pa
 
     AjaxRequestListener* ajaxRequestListner = new AjaxRequestListener(NULL);
 
-    ImmutableCookieJar* immutable_cookie_jar = new ImmutableCookieJar(
+    ImmutableCookieJar* immutableCookieJar = new ImmutableCookieJar(
         options.presetCookies, url.host());
-    ajaxRequestListner->setCookieJar(immutable_cookie_jar);
+    ajaxRequestListner->setCookieJar(immutableCookieJar);
 
     /** JQuery support **/
 
@@ -113,7 +113,7 @@ void Runtime::startAnalysis(QUrl url)
 void Runtime::preConcreteExecution()
 {
     if (mWorklist->empty() ||
-        mTerminationStrategy->should_terminate()) {
+        mTerminationStrategy->shouldTerminate()) {
 
         finishAnalysis();
         return;
@@ -133,7 +133,7 @@ void Runtime::postConcreteExecution(QSharedPointer<ExecutableConfiguration> conf
 {
     mPrioritizerStrategy->reprioritize(mWorklist);
 
-    QList<QSharedPointer<ExecutableConfiguration> > newConfigurations = mInputgenerator->add_new_configurations(configuration, result);
+    QList<QSharedPointer<ExecutableConfiguration> > newConfigurations = mInputgenerator->addNewConfigurations(configuration, result);
 
     foreach(QSharedPointer<ExecutableConfiguration> newConfiguration, newConfigurations) {
         mWorklist->add(newConfiguration, mPrioritizerStrategy->prioritize(newConfiguration, result));
@@ -147,12 +147,12 @@ void Runtime::postConcreteExecution(QSharedPointer<ExecutableConfiguration> conf
 void Runtime::finishAnalysis()
 {
 
-    mWebkitExecutor->finish_up();
+    mWebkitExecutor->finishUp();
 
     qDebug() << "Artemis: Testing done..." << endl;
 
     qDebug() << "\n\n === Coverage information for execution === \n";
-    write_coverage_report(coverage());
+    writeCoverageReport(coverage());
 
     qDebug() << "\n=== Statistics ===\n";
     StatsPrettyWriter::write(statistics());

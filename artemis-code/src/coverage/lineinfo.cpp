@@ -32,38 +32,38 @@ namespace artemis
 
 LineInfo::LineInfo()
 {
-    m_hitcount = 0;
+    mHitcount = 0;
 }
 
 LineInfo::LineInfo(const LineInfo& other)
 {
-    m_hitcount = other.m_hitcount;
+    mHitcount = other.mHitcount;
 }
 
-bool LineInfo::is_executed() const
+bool LineInfo::isExecuted() const
 {
-    return m_hitcount > 0;
+    return mHitcount > 0;
 }
 
-int LineInfo::hit_count() const
+int LineInfo::hitCount() const
 {
-    return m_hitcount;
+    return mHitcount;
 }
 
-void LineInfo::line_executed()
+void LineInfo::lineExecuted()
 {
-    m_hitcount++;
+    mHitcount++;
 }
 
 QDebug operator<<(QDebug dbg, const LineInfo& e)
 {
-    dbg.nospace() << (e.m_hitcount > 0 ? "COVERED[" + QString::number(e.m_hitcount) + QString(']') : "UNCOVERED");
+    dbg.nospace() << (e.mHitcount > 0 ? "COVERED[" + QString::number(e.mHitcount) + QString(']') : "UNCOVERED");
     return dbg.space();
 }
 
 QString LineInfo::toString() const
 {
-    return QString(m_hitcount);
+    return QString(mHitcount);
 }
 
 }

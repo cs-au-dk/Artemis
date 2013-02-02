@@ -44,8 +44,8 @@ class VariantsGenerator
 public:
     VariantsGenerator() {};
 
-    virtual EventParameters* generate_event_parameters(QObject* parent, const EventHandlerDescriptor* eventHandler) = 0;
-    virtual FormInput* generate_form_fields(QObject* parent, const QSet<FormField*>&) = 0;
+    virtual EventParameters* generateEventParameters(QObject* parent, const EventHandlerDescriptor* eventHandler) = 0;
+    virtual FormInput* generateFormFields(QObject* parent, const QSet<FormField*>&) = 0;
 
     virtual ~VariantsGenerator() {};
 };

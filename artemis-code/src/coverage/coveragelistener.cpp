@@ -37,7 +37,7 @@ CoverageListener::CoverageListener(QObject* parent) :
 {
 }
 
-CodeCoverage CoverageListener::current_coverage()
+CodeCoverage CoverageListener::currentCoverage()
 {
 
     QMap<int, SourceInfo*> newSources;
@@ -63,27 +63,27 @@ CodeCoverage CoverageListener::current_coverage()
 
 
 
-void CoverageListener::new_code(intptr_t id, QString source, QUrl url, int startline)
+void CoverageListener::newCode(intptr_t id, QString source, QUrl url, int startline)
 {
-    if (is_omit(url))
+    if (isOmit(url))
         { return; }
 
-    int hash = get_hash(url, startline);
-    webkit_pointers.insert(id, hash);
+    int hash = getHash(url, startline);
+    webkitPointers.insert(id, hash);
 
     if (!sources.contains(hash)) {
         qDebug() << "Loaded new code: " << url << " at line " << QString::number(startline);
-        SourceInfo* info_p = new SourceInfo(this, source, url, startline);
-        sources.insert(hash, info_p);
+        SourceInfo* infoP = new SourceInfo(this, source, url, startline);
+        sources.insert(hash, infoP);
         coverage.insert(hash, new QMap<int, LineInfo>());
     }
 }
 
 
 
-void CoverageListener::statement_executed(intptr_t sourceID, std::string function_name, int linenumber)
+void CoverageListener::statementExecuted(intptr_t sourceID, std::string functionName, int linenumber)
 {
-    int hash = webkit_pointers[sourceID];
+    int hash = webkitPointers[sourceID];
     QMap<int, LineInfo> *map = coverage.value(hash, 0);
 
     if (map == 0) {
@@ -94,12 +94,12 @@ void CoverageListener::statement_executed(intptr_t sourceID, std::string functio
 
     if (map->contains(linenumber)) {
         LineInfo p = map->value(hash);
-        p.line_executed();
+        p.lineExecuted();
         map->insert(linenumber, p);
     }
     else {
         LineInfo p;
-        p.line_executed();
+        p.lineExecuted();
         map->insert(linenumber, p);
     }
 }

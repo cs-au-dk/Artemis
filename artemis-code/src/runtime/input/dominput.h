@@ -55,7 +55,7 @@ public:
     const EventHandlerDescriptor* getEventHandler() const;
     TargetDescriptor* target() const;
     FormInput* getFormInput() const;
-    EventParameters* event_params() const;
+    EventParameters* eventParams() const;
 
 private:
     EventHandlerDescriptor* mEventHandler;

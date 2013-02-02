@@ -44,8 +44,8 @@ enum EventType {KEY_EVENT,
                 UNKNOWN_EVENT
                };
 
-EventType get_type(QString name);
-bool is_non_interactive(QString name);
+EventType getType(QString name);
+bool isNonInteractive(QString name);
 }
 
 #endif // EVENTYPES_H

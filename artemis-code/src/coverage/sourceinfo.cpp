@@ -32,57 +32,57 @@ namespace artemis
 
 SourceInfo::SourceInfo(QObject* parent, const QString source, const QUrl url, const int startline) : QObject(parent)
 {
-    this->m_source = source;
-    this->m_url = url;
-    this->m_start_line = startline;
+    this->mSource = source;
+    this->mUrl = url;
+    this->mStartLine = startline;
 }
 
 SourceInfo::SourceInfo(QObject* parent, const SourceInfo* other) : QObject(parent)
 {
-    this->m_source = other->m_source;
-    this->m_url = other->m_url;
-    this->m_start_line = other->m_start_line;
+    this->mSource = other->mSource;
+    this->mUrl = other->mUrl;
+    this->mStartLine = other->mStartLine;
 }
 
 QString SourceInfo::source() const
 {
-    return this->m_source;
+    return this->mSource;
 }
 
 QUrl SourceInfo::url() const
 {
-    return this->m_url;
+    return this->mUrl;
 }
 
-int SourceInfo::start_line() const
+int SourceInfo::startLine() const
 {
-    return this->m_start_line;
+    return this->mStartLine;
 }
 
 QDebug operator<<(QDebug dbg, const SourceInfo& e)
 {
-    dbg.nospace() << e.m_url << "[" << QString::number(e.m_start_line) << "]";
+    dbg.nospace() << e.mUrl << "[" << QString::number(e.mStartLine) << "]";
     return dbg.space();
 }
 
 QString SourceInfo::getSource() const
 {
-    return QString(m_source);
+    return QString(mSource);
 }
 
 int SourceInfo::getStartLine() const
 {
-    return m_start_line;
+    return mStartLine;
 }
 
 QString SourceInfo::getURL() const
 {
-    return m_url.toString();
+    return mUrl.toString();
 }
 
 QString SourceInfo::toString() const
 {
-    return "[" + m_url.toString() + ", " + QString::number(m_start_line) + ", " + m_source + "ENDOFJSOURCE]";
+    return "[" + mUrl.toString() + ", " + QString::number(mStartLine) + ", " + mSource + "ENDOFJSOURCE]";
 }
 
 }

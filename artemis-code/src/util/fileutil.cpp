@@ -6,7 +6,7 @@
 namespace artemis
 {
 
-void write_string_to_file(QString filename, QString data)
+void writeStringToFile(QString filename, QString data)
 {
     QFile file(filename);
     file.open(QIODevice::WriteOnly | QIODevice::Text);
@@ -16,17 +16,17 @@ void write_string_to_file(QString filename, QString data)
     out.flush();
 }
 
-void create_dir(QString path, QString folder_name)
+void createDir(QString path, QString folderName)
 {
-    if (QDir().exists(path + "/" + folder_name))
+    if (QDir().exists(path + "/" + folderName))
         { return; }
 
-    QDir().mkdir(path + "/" + folder_name);
+    QDir().mkdir(path + "/" + folderName);
 }
 
-QString read_file(QString file_s)
+QString readFile(QString fileS)
 {
-    QFile f(file_s);
+    QFile f(fileS);
     f.open(QFile::ReadOnly | QFile::Text);
     QTextStream in(&f);
     return in.readAll();

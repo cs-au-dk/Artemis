@@ -6,7 +6,7 @@
 namespace artemis
 {
 
-void write_coverage_html(CodeCoverage cc);
+void writeCoverageHtml(CodeCoverage cc);
 
 }
 

@@ -46,18 +46,18 @@ class RandomInputGenerator : public InputGeneratorStrategy
 public:
     RandomInputGenerator(QObject* parent, TargetGenerator* targetGenerator, int numberSameLength);
     ~RandomInputGenerator();
-    QList<QSharedPointer<ExecutableConfiguration> > add_new_configurations(const QSharedPointer<ExecutableConfiguration>, const ExecutionResult&);
+    QList<QSharedPointer<ExecutableConfiguration> > addNewConfigurations(const QSharedPointer<ExecutableConfiguration>, const ExecutionResult&);
 
 private:
-    int next_random();
-    QList<QSharedPointer<ExecutableConfiguration> > insert_same_length(const QSharedPointer<ExecutableConfiguration> e, const ExecutionResult& e_result);
-    QList<QSharedPointer<ExecutableConfiguration> > insert_extended(const QSharedPointer<ExecutableConfiguration> e, const ExecutionResult& e_result);
+    int nextRandom();
+    QList<QSharedPointer<ExecutableConfiguration> > insertSameLength(const QSharedPointer<ExecutableConfiguration> e, const ExecutionResult& eResult);
+    QList<QSharedPointer<ExecutableConfiguration> > insertExtended(const QSharedPointer<ExecutableConfiguration> e, const ExecutionResult& eResult);
 
-    BaseInput* permutate_input(const DomInput* input);
-    BaseInput* permutate_input(BaseInput* input);
+    BaseInput* permutateInput(const DomInput* input);
+    BaseInput* permutateInput(BaseInput* input);
 
     TargetGenerator* mTargetGenerator;
-    VariantsGenerator* var_gen;
+    VariantsGenerator* varGen;
 
     int mNumberSameLength;
 

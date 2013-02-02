@@ -39,16 +39,16 @@ public:
     LineInfo();
     LineInfo(const LineInfo& other);
 
-    bool is_executed() const;
-    int hit_count() const;
-    void line_executed();
+    bool isExecuted() const;
+    int hitCount() const;
+    void lineExecuted();
 
     QDebug friend operator<<(QDebug dbg, const LineInfo& e);
 
     QString toString() const;
 
 private:
-    int m_hitcount;
+    int mHitcount;
 
 
 };

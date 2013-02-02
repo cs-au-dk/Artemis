@@ -34,7 +34,7 @@ namespace artemis
 {
 enum FormFieldTypes {TEXT, FIXED_INPUT, BOOLEAN, NO_INPUT};
 
-inline QString form_field_type_tostring(FormFieldTypes f)
+inline QString formFieldTypeTostring(FormFieldTypes f)
 {
     switch (f) {
     case TEXT:
@@ -50,7 +50,7 @@ inline QString form_field_type_tostring(FormFieldTypes f)
     return "ERROR1";
 }
 
-FormFieldTypes get_type_from_attr(QString type_attr);
+FormFieldTypes getTypeFromAttr(QString typeAttr);
 
 }
 

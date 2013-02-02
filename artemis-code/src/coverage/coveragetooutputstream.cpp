@@ -33,22 +33,22 @@
 namespace artemis
 {
 
-void write_coverage_report(const CodeCoverage& cov)
+void writeCoverageReport(const CodeCoverage& cov)
 {
-    foreach(int id, cov.source_ids()) {
+    foreach(int id, cov.sourceIds()) {
 
-        const SourceInfo* info = cov.source_info(id);
+        const SourceInfo* info = cov.sourceInfo(id);
         QString src = info->source();
         QTextStream read(&src);
-        qDebug() << "Coverage for source located at URL: " << info->url().toString() << "  line " << info->start_line();
-        QMap<int, LineInfo> li = cov.line_info(id);
-        int i = info->start_line();
+        qDebug() << "Coverage for source located at URL: " << info->url().toString() << "  line " << info->startLine();
+        QMap<int, LineInfo> li = cov.lineInfo(id);
+        int i = info->startLine();
 
         while (!read.atEnd()) {
             LineInfo curr = li[i++];
             QString prefix;
 
-            if (curr.is_executed()) {
+            if (curr.isExecuted()) {
                 prefix = ">>>";
             }
             else {

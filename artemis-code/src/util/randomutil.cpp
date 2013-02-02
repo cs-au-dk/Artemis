@@ -31,7 +31,7 @@
 namespace artemis
 {
 
-QString generate_random_string(int length)
+QString generateRandomString(int length)
 {
     static const char alphanum[] =
         "ABCDEFGHIJKLMNOPQRSTUVWXYZabcdefghijklmnopqrstuvwxyz";
@@ -48,12 +48,12 @@ QString generate_random_string(int length)
     return res;
 }
 
-bool random_bool()
+bool randomBool()
 {
     return (rand() % 100) > 50;
 }
 
-QWebElement pick_rand(QList<QWebElement> s)
+QWebElement pickRand(QList<QWebElement> s)
 {
     if (s.size() == 1) {
         return s.at(0);
@@ -63,7 +63,7 @@ QWebElement pick_rand(QList<QWebElement> s)
     return s.at(elem);
 }
 
-QString pick_rand(QList<QString> s)
+QString pickRand(QList<QString> s)
 {
     if (s.size() == 1) {
         return s.at(0);
@@ -73,15 +73,15 @@ QString pick_rand(QList<QString> s)
     return s.at(elem);
 }
 
-QString pick_rand(QSet<QString> s)
+QString pickRand(QSet<QString> s)
 {
     QList<QString> ll = s.toList();
-    return pick_rand(ll);
+    return pickRand(ll);
 }
 
-QString generate_random_js_id()
+QString generateRandomJsId()
 {
-    return generate_random_string(5);
+    return generateRandomString(5);
 }
 
 }

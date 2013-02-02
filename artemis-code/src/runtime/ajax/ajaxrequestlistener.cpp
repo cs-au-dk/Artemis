@@ -18,9 +18,9 @@ QNetworkReply* AjaxRequestListener::createRequest(Operation op, const QNetworkRe
     QNetworkReply* reply = QNetworkAccessManager::createRequest(op, req, outgoingData);
 
     if (op == GetOperation)
-        { emit this->page_get(req.url()); }
+        { emit this->pageGet(req.url()); }
     else if (op == PostOperation)
-        { emit this->page_post(req.url()); }
+        { emit this->pagePost(req.url()); }
 
     return reply;
 }

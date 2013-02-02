@@ -42,17 +42,17 @@ class CodeCoverage
 public:
     CodeCoverage(const QMap<int, SourceInfo*>& sources, const QMap<int, QMap<int, LineInfo> >& coverage);
 
-    QSet<int> source_ids() const;
-    const SourceInfo* source_info(int id) const;
-    QMap<int, LineInfo> line_info(int id) const;
+    QSet<int> sourceIds() const;
+    const SourceInfo* sourceInfo(int id) const;
+    QMap<int, LineInfo> lineInfo(int id) const;
 
     QDebug friend operator<<(QDebug dbg, const CodeCoverage& e);
 
     QString toString() const;
 
 private:
-    QMap<int, SourceInfo*> m_sources;
-    QMap<int, QMap<int, LineInfo> > m_coverage;
+    QMap<int, SourceInfo*> mSources;
+    QMap<int, QMap<int, LineInfo> > mCoverage;
 };
 
 

@@ -128,8 +128,8 @@ int main(int argc, char* argv[])
     artemis::Options options;
     QUrl url = parseCmd(argc, argv, options);
 
-    artemis::ArtemisApplication artemis_app(0, &app, options, url);
-    artemis_app.run(url);
+    artemis::ArtemisApplication artemisApp(0, &app, options, url);
+    artemisApp.run(url);
 
     return app.exec();
 }

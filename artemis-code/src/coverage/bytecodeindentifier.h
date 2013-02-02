@@ -20,8 +20,8 @@ public:
     uint hashcode() const;
 
 private:
-    QUrl m_url;
-    int m_offset;
+    QUrl mUrl;
+    int mOffset;
 };
 
 }

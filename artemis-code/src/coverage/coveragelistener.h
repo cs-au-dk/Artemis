@@ -46,7 +46,7 @@ class CoverageListener : public QObject
     Q_OBJECT
 public:
     explicit CoverageListener(QObject* parent = 0);
-    CodeCoverage current_coverage();
+    CodeCoverage currentCoverage();
 
 
 private:
@@ -55,15 +55,15 @@ private:
     // (Hash of startline + url -> Coverage information)
     QMap<int, QMap<int, LineInfo>* > coverage;
     // (Webkit source id -> Hash of startline + url)
-    QMap<intptr_t, int> webkit_pointers;
+    QMap<intptr_t, int> webkitPointers;
 
 
 
 signals:
 
 public slots:
-    void new_code(intptr_t id, QString source, QUrl url, int startline);
-    void statement_executed(intptr_t sourceID, std::string function_name, int linenumber);
+    void newCode(intptr_t id, QString source, QUrl url, int startline);
+    void statementExecuted(intptr_t sourceID, std::string functionName, int linenumber);
 };
 
 }
