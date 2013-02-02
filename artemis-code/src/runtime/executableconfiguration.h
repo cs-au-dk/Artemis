@@ -41,15 +41,15 @@ class ExecutableConfiguration
 {
 
 public:
-    ExecutableConfiguration(const InputSequence* sequence, const QUrl url);
+    ExecutableConfiguration(const QSharedPointer<InputSequence> sequence, const QUrl url);
 
     bool isInitial() const;
     const QUrl getUrl() const;
-    const InputSequence* getInputSequence() const;
+    const QSharedPointer<InputSequence> getInputSequence() const;
 
 private:
     const QUrl mUrl;
-    const InputSequence* mSequence;
+    const QSharedPointer<InputSequence> mSequence;
 };
 
 }

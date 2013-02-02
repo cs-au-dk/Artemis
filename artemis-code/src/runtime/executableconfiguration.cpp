@@ -31,7 +31,7 @@
 namespace artemis
 {
 
-ExecutableConfiguration::ExecutableConfiguration(const InputSequence* sequence, const QUrl url)
+ExecutableConfiguration::ExecutableConfiguration(const QSharedPointer<InputSequence> sequence, const QUrl url)
     : mUrl(url), mSequence(sequence)
 {
 }
@@ -46,7 +46,7 @@ bool ExecutableConfiguration::isInitial() const
     return mSequence->isEmpty();
 }
 
-const InputSequence* ExecutableConfiguration::getInputSequence() const
+const QSharedPointer<InputSequence> ExecutableConfiguration::getInputSequence() const
 {
     return mSequence;
 }

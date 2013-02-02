@@ -101,7 +101,7 @@ void Runtime::startAnalysis(QUrl url)
     qDebug() << "-----\n";
 
     QSharedPointer<ExecutableConfiguration> initialConfiguration =
-        QSharedPointer<ExecutableConfiguration>(new ExecutableConfiguration(new InputSequence(), url));
+        QSharedPointer<ExecutableConfiguration>(new ExecutableConfiguration(QSharedPointer<InputSequence>(new InputSequence()), url));
 
     mWorklist->add(initialConfiguration, 0);
 

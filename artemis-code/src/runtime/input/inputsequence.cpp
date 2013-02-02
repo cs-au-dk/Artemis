@@ -40,21 +40,21 @@ InputSequence::InputSequence(const QList<const BaseInput*>& sequence)
 {
 }
 
-const InputSequence* InputSequence::replaceLast(const BaseInput* newLast) const
+const QSharedPointer<InputSequence> InputSequence::replaceLast(const BaseInput* newLast) const
 {
     QList<const BaseInput*> sequence = mSequence;
     sequence.removeLast();
     sequence.append(newLast);
 
-    return new InputSequence(sequence);
+    return QSharedPointer<InputSequence>(new InputSequence(sequence));
 }
 
-const InputSequence* InputSequence::extend(const BaseInput* newLast) const
+const QSharedPointer<InputSequence> InputSequence::extend(const BaseInput* newLast) const
 {
     QList<const BaseInput*> sequence = mSequence;
     sequence.append(newLast);
 
-    return new InputSequence(sequence);
+    return QSharedPointer<InputSequence>(new InputSequence(sequence));
 }
 
 bool InputSequence::isEmpty() const
