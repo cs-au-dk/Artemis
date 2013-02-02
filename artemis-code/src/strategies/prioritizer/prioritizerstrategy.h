@@ -29,6 +29,7 @@
 #define ABSTRACTPRIORITIZER_H
 
 #include <QObject>
+#include <QSharedPointer>
 
 #include "runtime/browser/executionresult.h"
 #include "runtime/worklist/worklist.h"
@@ -46,7 +47,7 @@ namespace artemis {
           results: The execution results from last execution
           state: State of the execution engine
           */
-        virtual double prioritize(ExecutableConfiguration* new_conf,
+        virtual double prioritize(QSharedPointer<ExecutableConfiguration> new_conf,
                        const ExecutionResult& results) = 0;
 
         virtual void reprioritize(WorkList* worklist) = 0;

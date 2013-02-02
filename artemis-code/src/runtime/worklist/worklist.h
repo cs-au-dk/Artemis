@@ -42,13 +42,13 @@ public:
     WorkList(QObject* parent) : QObject(parent) {};
     virtual ~WorkList() {};
 
-    virtual void add(QSharedPointer<ExecutableConfiguration*> e, int priority) = 0;
+    virtual void add(QSharedPointer<ExecutableConfiguration> e, int priority) = 0;
     virtual bool all_zero_priority() = 0;
-    virtual QSharedPointer<ExecutableConfiguration*> remove() = 0;
+    virtual QSharedPointer<ExecutableConfiguration> remove() = 0;
     virtual int size() = 0;
     virtual bool empty() = 0;
-    virtual bool contains(QSharedPointer<ExecutableConfiguration*> e) = 0;
-    virtual void new_priority(QSharedPointer<ExecutableConfiguration*> e, int priority) = 0;
+    virtual bool contains(QSharedPointer<ExecutableConfiguration> e) = 0;
+    virtual void new_priority(QSharedPointer<ExecutableConfiguration> e, int priority) = 0;
 
 };
 

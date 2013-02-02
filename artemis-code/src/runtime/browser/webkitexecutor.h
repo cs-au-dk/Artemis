@@ -54,7 +54,7 @@ namespace artemis {
         		JQueryListener* jqueryListener,
                 AjaxRequestListener* ajaxListener);
         ~WebKitExecutor();
-        void executeSequence(QSharedPointer<ExecutableConfiguration*> conf);
+        void executeSequence(QSharedPointer<ExecutableConfiguration> conf);
         QWebExecutionListener* webkit_listener;
         CodeCoverage coverage();
         void finish_up();
@@ -71,7 +71,7 @@ namespace artemis {
 
         ArtemisWebPage* page;
         ExecutionResult* current_result;
-        QSharedPointer<ExecutableConfiguration*> current_conf;
+        QSharedPointer<ExecutableConfiguration> current_conf;
         CoverageListener* cov_list;
         QString initial_page_state;
         AjaxRequestListener* ajax_listener;
@@ -79,7 +79,7 @@ namespace artemis {
         QMap<QString,QString> mPresetFields;
 
     signals:
-        void sigExecutedSequence(QSharedPointer<ExecutableConfiguration*> conf, ExecutionResult* res);
+        void sigExecutedSequence(QSharedPointer<ExecutableConfiguration> conf, ExecutionResult* res);
 
     public slots:
         void slLoadFinished(bool ok);

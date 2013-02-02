@@ -39,15 +39,15 @@ ExecutableConfiguration::~ExecutableConfiguration() {
     delete mSequence;
 }
 
-QUrl ExecutableConfiguration::getUrl() const {
+const QUrl ExecutableConfiguration::getUrl() const {
     return mUrl;
 }
 
-bool ExecutableConfiguration::isInitial() {
+bool ExecutableConfiguration::isInitial() const {
    return mSequence->isEmpty();
 }
 
-InputSequence* ExecutableConfiguration::getInputSequence() const{
+const InputSequence* ExecutableConfiguration::getInputSequence() const{
     return this->mSequence;
 }
 

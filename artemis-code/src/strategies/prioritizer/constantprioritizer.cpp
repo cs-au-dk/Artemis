@@ -34,7 +34,7 @@ namespace artemis {
     {
     }
 
-    double ConstantPrioritizer::prioritize(ExecutableConfiguration* new_conf,
+    double ConstantPrioritizer::prioritize(QSharedPointer<ExecutableConfiguration> new_conf,
                                          const ExecutionResult& results) {
 
         return 1;

@@ -45,11 +45,11 @@ public:
 
     bool isInitial() const;
     const QUrl getUrl() const;
-    const QSharedPointer<InputSequence*> getInputSequence() const;
+    const InputSequence* getInputSequence() const;
 
 private:
     const QUrl mUrl;
-    const QSharedPointer<InputSequence*> mSequence;
+    const InputSequence* mSequence;
 };
 
 }

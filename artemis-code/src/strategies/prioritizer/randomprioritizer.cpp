@@ -35,7 +35,7 @@ namespace artemis {
 
     }
 
-    double RandomPrioritizer::prioritize(ExecutableConfiguration* new_conf,
+    double RandomPrioritizer::prioritize(QSharedPointer<ExecutableConfiguration> new_conf,
                                          const ExecutionResult& results) {
 
         return rand();

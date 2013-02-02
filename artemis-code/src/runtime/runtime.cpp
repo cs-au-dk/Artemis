@@ -27,6 +27,7 @@
  */
 
 #include <iostream>
+#include <QSharedPointer>
 
 #include "worklist/deterministicworklist.h"
 #include "coverage/coveragetooutputstream.h"
@@ -83,8 +84,8 @@ Runtime::Runtime(QObject* parent, const Options& options, QUrl url) : QObject(pa
     mWorklist = new DeterministicWorkList(this);
 
     QObject::connect(mWebkitExecutor,
-            SIGNAL(sigExecutedSequence(QSharedPointer<ExecutableConfiguration*>, ExecutionResult*)), this,
-            SLOT(postConcreteExecution(QSharedPointer<ExecutableConfiguration*>, ExecutionResult*)));
+            SIGNAL(sigExecutedSequence(QSharedPointer<ExecutableConfiguration>, ExecutionResult*)), this,
+            SLOT(postConcreteExecution(QSharedPointer<ExecutableConfiguration>, ExecutionResult*)));
 }
 
 /**
@@ -93,8 +94,8 @@ Runtime::Runtime(QObject* parent, const Options& options, QUrl url) : QObject(pa
  */
 void Runtime::startAnalysis(QUrl url)
 {
-    QSharedPointer<ExecutableConfiguration*> initialConfiguration =
-            QSharedPointer<ExecutableConfiguration*>(new ExecutableConfiguration(new InputSequence(NULL), url));
+    QSharedPointer<ExecutableConfiguration> initialConfiguration =
+            QSharedPointer<ExecutableConfiguration>(new ExecutableConfiguration(new InputSequence(NULL), url));
 
     mWorklist->add(initialConfiguration, 0);
 
@@ -113,7 +114,7 @@ void Runtime::preConcreteExecution()
 		return;
 	}
 
-    QSharedPointer<ExecutableConfiguration*> nextConfiguration = mWorklist->remove();
+    QSharedPointer<ExecutableConfiguration> nextConfiguration = mWorklist->remove();
 
     mWebkitExecutor->executeSequence(nextConfiguration); // calls the slExecutedSequence method as callback
 }
@@ -123,13 +124,13 @@ void Runtime::preConcreteExecution()
  * @param configuration
  * @param result
  */
-void Runtime::postConcreteExecution(QSharedPointer<ExecutableConfiguration*> configuration, ExecutionResult* result)
+void Runtime::postConcreteExecution(QSharedPointer<ExecutableConfiguration> configuration, ExecutionResult* result)
 {
     mPrioritizerStrategy->reprioritize(mWorklist);
 
-	QList<ExecutableConfiguration*> newConfigurations = mInputgenerator->add_new_configurations(configuration, result);
+    QList<QSharedPointer<ExecutableConfiguration> > newConfigurations = mInputgenerator->add_new_configurations(configuration, result);
 
-	foreach (ExecutableConfiguration* newConfiguration, newConfigurations) {
+    foreach (QSharedPointer<ExecutableConfiguration> newConfiguration, newConfigurations) {
 		mWorklist->add(newConfiguration, mPrioritizerStrategy->prioritize(newConfiguration, result));
 	}
 
@@ -153,11 +154,6 @@ void Runtime::finishAnalysis() {
 	cout << endl;
 
 	qDebug() << "Artemis terminated on: " << QDateTime::currentDateTime().toString() << endl;
-	qDebug() << "Build timestamp: " << EXE_BUILD_DATE << endl;
-
-    //delete executor;
-    //delete wl;
-    //delete termination;
 
     emit sigTestingDone();
 }
