@@ -94,6 +94,11 @@ Runtime::Runtime(QObject* parent, const Options& options, QUrl url) : QObject(pa
  */
 void Runtime::startAnalysis(QUrl url)
 {
+    qDebug() << "Artemis - Automated tester for JavaScript";
+    qDebug() << "Started: " << QDateTime::currentDateTime().toString();
+    qDebug() << "Compilation date: " << EXE_BUILD_DATE;
+    qDebug() << "-----\n";
+
     QSharedPointer<ExecutableConfiguration> initialConfiguration =
         QSharedPointer<ExecutableConfiguration>(new ExecutableConfiguration(new InputSequence(NULL), url));
 
@@ -144,15 +149,15 @@ void Runtime::finishAnalysis()
 
     mWebkitExecutor->finish_up();
 
-    cout << "Artemis: Testing done..." << endl;
+    qDebug() << "Artemis: Testing done..." << endl;
 
-    cout << "\n\n === Coverage information for execution === \n";
-    write_coverage_report(cout, coverage());
+    qDebug() << "\n\n === Coverage information for execution === \n";
+    write_coverage_report(coverage());
 
-    cout << "\n=== Statistics ===\n";
-    StatsPrettyWriter::write(cout, statistics());
-    cout << "\n=== Statistics END ===\n";
-    cout << endl;
+    qDebug() << "\n=== Statistics ===\n";
+    StatsPrettyWriter::write(statistics());
+    qDebug() << "\n=== Statistics END ===\n";
+    qDebug() << endl;
 
     qDebug() << "Artemis terminated on: " << QDateTime::currentDateTime().toString() << endl;
 

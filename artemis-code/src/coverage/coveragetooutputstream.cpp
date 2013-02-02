@@ -26,19 +26,21 @@
   or implied, of Simon Holm Jensen
 */
 #include "coveragetooutputstream.h"
+
 #include <QTextStream>
+#include <QDebug>
 
 namespace artemis
 {
 
-void write_coverage_report(ostream& stream, const CodeCoverage& cov)
+void write_coverage_report(const CodeCoverage& cov)
 {
     foreach(int id, cov.source_ids()) {
 
         const SourceInfo* info = cov.source_info(id);
         QString src = info->source();
         QTextStream read(&src);
-        stream << "Coverage for source located at URL: " << info->url().toString().toStdString() << "  line " << stdstr_to_int(info->start_line())  << endl;
+        qDebug() << "Coverage for source located at URL: " << info->url().toString() << "  line " << info->start_line();
         QMap<int, LineInfo> li = cov.line_info(id);
         int i = info->start_line();
 
@@ -54,7 +56,7 @@ void write_coverage_report(ostream& stream, const CodeCoverage& cov)
             }
 
             QString line = prefix + read.readLine() + "\n";
-            stream << line.toStdString();
+            qDebug() << line;
         }
     }
 }
