@@ -40,34 +40,34 @@ namespace artemis
 ExecutionResult::ExecutionResult(QObject* parent) : QObject(parent)
 {
     final = false;
-    is_crash_state = false;
-    crash_cause = "";
-    crash_lineNumber = 0;
-    crash_sourceID = 0;
-    m_modfied_dom = false;
-    state_hash = 0;
+    isCrashState = false;
+    crashCause = "";
+    crashLineNumber = 0;
+    crashSourceID = 0;
+    mModfiedDom = false;
+    stateHash = 0;
 }
 
 ExecutionResult::ExecutionResult(QObject* parent, const ExecutionResult* other) : QObject(parent)
 {
     this->final = other->final;
-    this->m_event_handlers = other->m_event_handlers;
-    this->element_pointers = other->element_pointers;
-    this->is_crash_state = other->is_crash_state;
-    this->m_modfied_dom = other->m_modfied_dom;
-    this->state_hash = other->state_hash;
-    this->m_ajax_request = other->m_ajax_request;
-    this->evaled_strings = other->evaled_strings;
+    this->mEventHandlers = other->mEventHandlers;
+    this->elementPointers = other->elementPointers;
+    this->isCrashState = other->isCrashState;
+    this->mModfiedDom = other->mModfiedDom;
+    this->stateHash = other->stateHash;
+    this->mAjaxRequest = other->mAjaxRequest;
+    this->evaledStrings = other->evaledStrings;
 
-    if (other->is_crash_state) {
-        this->is_crash_state = other->is_crash_state;
-        this->crash_cause = other->crash_cause;
-        this->crash_lineNumber = other->crash_lineNumber;
-        this->crash_sourceID = other->crash_sourceID;
+    if (other->isCrashState) {
+        this->isCrashState = other->isCrashState;
+        this->crashCause = other->crashCause;
+        this->crashLineNumber = other->crashLineNumber;
+        this->crashSourceID = other->crashSourceID;
     }
 
-    this->m_timers = QMap<int, QSharedPointer<Timer> >(other->m_timers);
-    this->m_ajax_callback_handlers = QList<int>(other->m_ajax_callback_handlers);
+    this->mTimers = QMap<int, QSharedPointer<Timer> >(other->mTimers);
+    this->mAjaxCallbackHandlers = QList<int>(other->mAjaxCallbackHandlers);
 }
 
 void ExecutionResult::newEventListener(QWebElement* elem, QString name)
@@ -79,10 +79,10 @@ void ExecutionResult::newEventListener(QWebElement* elem, QString name)
              << elem->tagName() << " id: " << elem->attribute(QString("id")) << " title "
              << elem->attribute(QString("title")) << "class: " << elem->attribute("class") << endl;
 
-    if (is_non_interactive(name))
+    if (isNonInteractive(name))
         { return; }
 
-    element_pointers.insert(QPair<QWebElement*, QString>(elem, name));
+    elementPointers.insert(QPair<QWebElement*, QString>(elem, name));
 }
 
 void ExecutionResult::setPageContents(QString content)
@@ -101,10 +101,10 @@ void ExecutionResult::removeEventListener(QWebElement* elem, QString name)
              << elem->tagName() << " id: " << elem->attribute(QString("id")) << " title "
              << elem->attribute(QString("title")) << "class: " << elem->attribute("class") << endl;
 
-    if (is_non_interactive(name))
+    if (isNonInteractive(name))
         { return; }
 
-    bool removed = element_pointers.remove(QPair<QWebElement*, QString>(elem, name));
+    bool removed = elementPointers.remove(QPair<QWebElement*, QString>(elem, name));
 
     Q_ASSERT(removed);
 }
@@ -112,27 +112,27 @@ void ExecutionResult::removeEventListener(QWebElement* elem, QString name)
 void ExecutionResult::addedAjaxCallbackHandler(int callbackId)
 {
     qDebug() << "AJAX CALLBACK HANDLER ADDED" << endl;
-    m_ajax_callback_handlers.append(callbackId);
+    mAjaxCallbackHandlers.append(callbackId);
 }
 
 QList<int> ExecutionResult::ajaxCallbackHandlers() const
 {
-    return m_ajax_callback_handlers;
+    return mAjaxCallbackHandlers;
 }
 
 void ExecutionResult::finalize()
 {
-    Q_ASSERT(m_event_handlers.isEmpty());
+    Q_ASSERT(mEventHandlers.isEmpty());
     Q_ASSERT(!final);
 
-    if (is_crash_state) {
+    if (isCrashState) {
         final = true;
         return;
     }
 
     QPair<QWebElement*, QString> p;
-    foreach(p, element_pointers) {
-        if (get_type(p.second) == UNKNOWN_EVENT) {
+    foreach(p, elementPointers) {
+        if (getType(p.second) == UNKNOWN_EVENT) {
             continue; //qWarning() << ""
             //TODO: Save strange events somewhere.
         }
@@ -148,148 +148,148 @@ void ExecutionResult::finalize()
 
         EventHandlerDescriptor* handler = new EventHandlerDescriptor(this, p.first, p.second);
 
-        if (handler->is_invalid())
+        if (handler->isInvalid())
             { qDebug() << "WARN: element was invalid, ignoring"; }
         else
-            { m_event_handlers.insert(handler); }
+            { mEventHandlers.insert(handler); }
     }
     final = true;
-    element_pointers.clear();
+    elementPointers.clear();
 }
 
-QSet<FormField*> ExecutionResult::form_fields() const
+QSet<FormField*> ExecutionResult::formFields() const
 {
     Q_ASSERT(final);
-    return m_form_fields;
+    return mFormFields;
 }
 
-void ExecutionResult::add_ajax_request(AjaxRequest req)
+void ExecutionResult::addAjaxRequest(AjaxRequest req)
 {
     Q_ASSERT(!final);
-    //this->m_ajax_request << req;
+    //this->mAjaxRequest << req;
 }
 
-QSet<AjaxRequest> ExecutionResult::ajax_request() const
+QSet<AjaxRequest> ExecutionResult::ajaxRequest() const
 {
-    return this->m_ajax_request;
+    return this->mAjaxRequest;
 }
 
-void ExecutionResult::add_form_field(const FormField* f)
+void ExecutionResult::addFormField(const FormField* f)
 {
     Q_ASSERT(!final);
 
     FormField* formField = new FormField(this, f);
-    m_form_fields.insert(formField);
+    mFormFields.insert(formField);
 }
 
-void ExecutionResult::add_form_fields(const QSet<FormField*>& fields)
+void ExecutionResult::addFormFields(const QSet<FormField*>& fields)
 {
     Q_ASSERT(!final);
 
     foreach(FormField * field, fields) {
-        this->add_form_field(field);
+        this->addFormField(field);
     }
 }
 
-QSet<EventHandlerDescriptor*> ExecutionResult::event_handlers() const
+QSet<EventHandlerDescriptor*> ExecutionResult::eventHandlers() const
 {
     Q_ASSERT(final);
-    return m_event_handlers;
+    return mEventHandlers;
 }
 
-void ExecutionResult::make_load_failed()
+void ExecutionResult::makeLoadFailed()
 {
-    is_crash_state = true;
-    crash_cause = "Webkit failed to load the page";
-    crash_sourceID = 0;
-    crash_lineNumber = 0;
+    isCrashState = true;
+    crashCause = "Webkit failed to load the page";
+    crashSourceID = 0;
+    crashLineNumber = 0;
 }
 
-void ExecutionResult::sl_script_crash(QString cause, intptr_t sourceID, int lineNumber)
+void ExecutionResult::slScriptCrash(QString cause, intptr_t sourceID, int lineNumber)
 {
     qDebug() << "WEBKIT SCRIPT ERROR: " << cause << " line: " << lineNumber << " source: "
              << sourceID << endl;
 
-    this->crash_cause = cause;
-    this->crash_sourceID = sourceID;
-    this->crash_lineNumber = lineNumber;
-    is_crash_state = true;
+    this->crashCause = cause;
+    this->crashSourceID = sourceID;
+    this->crashLineNumber = lineNumber;
+    isCrashState = true;
 }
 
-void ExecutionResult::sl_eval_string(const QString exp)
+void ExecutionResult::slEvalString(const QString exp)
 {
     Q_ASSERT(!final);
     qDebug() << "WEBKIT: Evaled string: " << exp;
-    this->evaled_strings << exp;
+    this->evaledStrings << exp;
 }
 
-QSet<QString> ExecutionResult::eval_strings()
+QSet<QString> ExecutionResult::evalStrings()
 {
-    return this->evaled_strings;
+    return this->evaledStrings;
 }
 
-void ExecutionResult::set_modfied_dom(bool b)
+void ExecutionResult::setModfiedDom(bool b)
 {
     Q_ASSERT(!final);
-    this->m_modfied_dom = b;
+    this->mModfiedDom = b;
 }
 
 QDebug operator<<(QDebug dbg, const ExecutionResult& e)
 {
     if (e.final) {
-        if (e.is_crash_state) {
-            dbg.nospace() << "CRASH STATE: " << e.crash_cause;
+        if (e.isCrashState) {
+            dbg.nospace() << "CRASH STATE: " << e.crashCause;
         }
         else {
-            dbg.nospace() << "Event handlers: " << e.m_event_handlers << "\n";
-            dbg.nospace() << "Form fields   : " << e.m_form_fields << "\n";
-            dbg.nospace() << "Modfied dom   : " << e.m_modfied_dom << "\n";
-            dbg.nospace() << "Ajax requests : " << e.m_ajax_request << "\n";
-            dbg.nospace() << "Evaled strings: " << e.evaled_strings;
+            dbg.nospace() << "Event handlers: " << e.mEventHandlers << "\n";
+            dbg.nospace() << "Form fields   : " << e.mFormFields << "\n";
+            dbg.nospace() << "Modfied dom   : " << e.mModfiedDom << "\n";
+            dbg.nospace() << "Ajax requests : " << e.mAjaxRequest << "\n";
+            dbg.nospace() << "Evaled strings: " << e.evaledStrings;
         }
     }
     else
-        dbg.nospace() << "Unfinalized ExecutionResult with " << e.element_pointers.size()
+        dbg.nospace() << "Unfinalized ExecutionResult with " << e.elementPointers.size()
                       << " events so far";
 
     return dbg.space();
 }
 
-void ExecutionResult::set_state_hash(long hash)
+void ExecutionResult::setStateHash(long hash)
 {
     Q_ASSERT(!final);
-    this->state_hash = hash;
+    this->stateHash = hash;
 }
 
-long ExecutionResult::page_state_hash() const
+long ExecutionResult::pageStateHash() const
 {
     Q_ASSERT(final);
-    return this->state_hash;
+    return this->stateHash;
 
 }
 
-bool ExecutionResult::modifed_dom() const
+bool ExecutionResult::modifedDom() const
 {
     Q_ASSERT(final);
-    return this->m_modfied_dom;
+    return this->mModfiedDom;
 }
 
-void ExecutionResult::sl_timer_added(int timer_id, int timeout, bool single_shot)
+void ExecutionResult::slTimerAdded(int timerId, int timeout, bool singleShot)
 {
-    qDebug() << "Artemis::Timer " << timer_id << " added";
+    qDebug() << "Artemis::Timer " << timerId << " added";
     statistics()->accumulate("timers::registered", 1);
-    this->m_timers.insert(timer_id, QSharedPointer<Timer>(new Timer(timer_id, timeout, single_shot)));
+    this->mTimers.insert(timerId, QSharedPointer<Timer>(new Timer(timerId, timeout, singleShot)));
 }
 
-void ExecutionResult::sl_timer_removed(int timer_id)
+void ExecutionResult::slTimerRemoved(int timerId)
 {
-    qDebug() << "Artemis::Timer " << timer_id << " removed";
-    this->m_timers.remove(timer_id);
+    qDebug() << "Artemis::Timer " << timerId << " removed";
+    this->mTimers.remove(timerId);
 }
 
-QList<QSharedPointer<Timer> > ExecutionResult::get_timers() const
+QList<QSharedPointer<Timer> > ExecutionResult::getTimers() const
 {
-    return this->m_timers.values();
+    return this->mTimers.values();
 }
 
 }

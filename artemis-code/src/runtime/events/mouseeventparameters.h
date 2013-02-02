@@ -41,7 +41,7 @@ public:
                          bool ctrlKey, bool altKey, bool  shiftKey, bool  metaKey,
                          int button);
 
-    QString js_string() ;
+    QString jsString() ;
     EventType type() const;
 
     bool canBubble;
@@ -56,12 +56,12 @@ public:
     bool shiftKey;
     bool metaKey;
     int button;
-    QString type_n;
+    QString typeN;
 
 private:
 
 
-    QString memo_js;
+    QString memoJs;
 
 };
 

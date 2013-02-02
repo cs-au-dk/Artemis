@@ -45,7 +45,7 @@ public:
 
     QString source() const;
     QUrl url() const;
-    int start_line() const;
+    int startLine() const;
 
     QDebug friend operator<<(QDebug dbg, const SourceInfo& e);
 
@@ -56,9 +56,9 @@ public:
     int getStartLine() const;
 
 private:
-    QString m_source;
-    QUrl m_url;
-    int m_start_line;
+    QString mSource;
+    QUrl mUrl;
+    int mStartLine;
 
 };
 

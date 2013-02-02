@@ -43,10 +43,10 @@ AjaxInput::AjaxInput(QObject* parent, int callbackId) :
     this->mCallbackId = callbackId;
 }
 
-void AjaxInput::apply(ArtemisWebPage* page, QWebExecutionListener* webkit_listener)
+void AjaxInput::apply(ArtemisWebPage* page, QWebExecutionListener* webkitListener)
 {
     statistics()->accumulate("ajax::fired", 1);
-    webkit_listener->ajaxCallbackFire(mCallbackId);
+    webkitListener->ajaxCallbackFire(mCallbackId);
 }
 
 bool AjaxInput::isEqual(BaseInput* other)

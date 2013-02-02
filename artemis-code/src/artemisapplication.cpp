@@ -48,7 +48,7 @@ ArtemisApplication::ArtemisApplication(QObject* parent,
     mRuntime = new Runtime(this, options, url);
 
     QObject::connect(mRuntime, SIGNAL(sigTestingDone()),
-                     this, SLOT(sl_testingDone()));
+                     this, SLOT(slTestingDone()));
 }
 
 void ArtemisApplication::run(QUrl url)
@@ -56,7 +56,7 @@ void ArtemisApplication::run(QUrl url)
     mRuntime->startAnalysis(url);
 }
 
-void ArtemisApplication::sl_testingDone()
+void ArtemisApplication::slTestingDone()
 {
     app->quit();
 }

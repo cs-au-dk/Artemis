@@ -41,21 +41,21 @@ BaseEventParameters::BaseEventParameters(QObject* parent, QString name, bool bub
     this->cancelable = cancelable;
 }
 
-QString BaseEventParameters::js_string()
+QString BaseEventParameters::jsString()
 {
-    if (!memo_js.isEmpty())
-        { return memo_js; }
+    if (!memoJs.isEmpty())
+        { return memoJs; }
 
-    QString rand_id = generate_random_js_id();
-    QString res = "var " + rand_id + " = document.createEvent(\"Event\");";
-    res = res + " " + rand_id + ".initEvent(";
-    res += quote_string(name) = ",";
-    res += bool_tostring(bubbles) + ",";
-    res += bool_tostring(cancelable) + ",);";
+    QString randId = generateRandomJsId();
+    QString res = "var " + randId + " = document.createEvent(\"Event\");";
+    res = res + " " + randId + ".initEvent(";
+    res += quoteString(name) = ",";
+    res += boolTostring(bubbles) + ",";
+    res += boolTostring(cancelable) + ",);";
 
-    res += "this.dispatchEvent(" + rand_id + ");";
+    res += "this.dispatchEvent(" + randId + ");";
 
-    memo_js = res;
+    memoJs = res;
     return res;
 }
 

@@ -45,41 +45,41 @@ public:
     DOMElementDescriptor(QObject* parent, QWebElement* elm);
     DOMElementDescriptor(QObject* parent, const DOMElementDescriptor* other);
 
-    QWebElement get_element(QWebPage* page) const;
-    QString get_tag_name();
-    QString get_id();
-    QString get_class();
-    bool is_invalid() const;
+    QWebElement getElement(QWebPage* page) const;
+    QString getTagName();
+    QString getId();
+    QString getClass();
+    bool isInvalid() const;
 
     QDebug friend operator<<(QDebug dbg, const DOMElementDescriptor& e);
 
 private:
     QString id;
-    QString tag_name;
-    QString frame_name;
-    QString class_line;
+    QString tagName;
+    QString frameName;
+    QString classLine;
 
     /*
-     Path from the main_frame to the frame containig the element
+     Path from the mainFrame to the frame containig the element
      */
-    QList<int> frame_path;
+    QList<int> framePath;
     /*
      Path from the frame containing the element to the actual element
      */
-    QList<int> element_path;
+    QList<int> elementPath;
 
-    void set_frame_path(QWebElement* elm);
-    void set_element_path(QWebElement* elm);
+    void setFramePath(QWebElement* elm);
+    void setElementPath(QWebElement* elm);
 
-    QWebFrame* get_frame(QWebPage* page) const;
-    QWebElement get_element_frame(QWebFrame* frame) const;
-    QWebElement nth_child(QWebElement elm, int n) const;
+    QWebFrame* getFrame(QWebPage* page) const;
+    QWebElement getElementFrame(QWebFrame* frame) const;
+    QWebElement nthChild(QWebElement elm, int n) const;
 
     //special cases
-    bool is_document;// = false;
-    bool is_body;// = false;
-    bool is_mainframe;// = false;
-    bool m_invalid;
+    bool isDocument;// = false;
+    bool isBody;// = false;
+    bool isMainframe;// = false;
+    bool mInvalid;
 
 
 };

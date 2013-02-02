@@ -43,20 +43,20 @@ JQueryListener::JQueryListener(QObject* parent) : QObject(parent)
 
 void JQueryListener::reset()
 {
-    jquery_event* event;
-    foreach(event, jquery_events) {
+    jqueryEvent* event;
+    foreach(event, jqueryEvents) {
         delete event;
     }
 
-    jquery_events.clear();
+    jqueryEvents.clear();
 }
 
 QList<QString> JQueryListener::lookup(QString elementSignature, QString event)
 {
     QList<QString> result;
 
-    jquery_event* e;
-    foreach(e, jquery_events) {
+    jqueryEvent* e;
+    foreach(e, jqueryEvents) {
 
         if (e->event == event) {
 
@@ -87,9 +87,9 @@ QList<QString> JQueryListener::lookup(QString elementSignature, QString event)
     return result;
 }
 
-void JQueryListener::sl_event_added(QString elementSignature, QString event, QString selector)
+void JQueryListener::slEventAdded(QString elementSignature, QString event, QString selector)
 {
-    jquery_event* e = new jquery_event();
+    jqueryEvent* e = new jqueryEvent();
     e->elementSignature = elementSignature;
     e->selector = selector;
 
@@ -104,7 +104,7 @@ void JQueryListener::sl_event_added(QString elementSignature, QString event, QSt
     QStringList parts = event.split(QString("."));
     e->event = parts[0];
 
-    jquery_events.append(e);
+    jqueryEvents.append(e);
     qDebug() << "Jquery::Eventhandler registered for event " << event << " and selector " << selector << " on dom node with signature " << elementSignature << endl;
 }
 

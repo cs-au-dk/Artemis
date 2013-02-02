@@ -38,7 +38,7 @@ using namespace std;
 namespace artemis
 {
 
-void write_coverage_report(const CodeCoverage& cov);
+void writeCoverageReport(const CodeCoverage& cov);
 
 }
 

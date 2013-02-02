@@ -40,16 +40,16 @@ namespace artemis
  * @param parent
  * @param type
  * @param element
- * @param input_options
+ * @param inputOptions
  */
-FormField::FormField(QObject* parent, FormFieldTypes type, DOMElementDescriptor* element, QSet<QString> input_options) : QObject(parent)
+FormField::FormField(QObject* parent, FormFieldTypes type, DOMElementDescriptor* element, QSet<QString> inputOptions) : QObject(parent)
 {
-    this->field_type = type;
+    this->fieldType = type;
 
-    this->element_descriptor = element;
-    this->element_descriptor->setParent(this);
+    this->elementDescriptor = element;
+    this->elementDescriptor->setParent(this);
 
-    this->inputs_set = input_options;
+    this->inputsSet = inputOptions;
 }
 
 /**
@@ -60,17 +60,17 @@ FormField::FormField(QObject* parent, FormFieldTypes type, DOMElementDescriptor*
  */
 FormField::FormField(QObject* parent, FormFieldTypes type, DOMElementDescriptor* element) : QObject(parent)
 {
-    this->field_type = type;
+    this->fieldType = type;
 
-    this->element_descriptor = element;
-    this->element_descriptor->setParent(this);
+    this->elementDescriptor = element;
+    this->elementDescriptor->setParent(this);
 }
 
 FormField::FormField(QObject* parent, const FormField* other) : QObject(parent)
 {
-    this->field_type = other->field_type;
-    this->inputs_set = other->inputs_set;
-    this->element_descriptor = new DOMElementDescriptor(parent, other->element_descriptor);
+    this->fieldType = other->fieldType;
+    this->inputsSet = other->inputsSet;
+    this->elementDescriptor = new DOMElementDescriptor(parent, other->elementDescriptor);
 }
 
 FormField::~FormField()
@@ -80,31 +80,31 @@ FormField::~FormField()
 
 DOMElementDescriptor* FormField::element() const
 {
-    return element_descriptor;
+    return elementDescriptor;
 }
 
 FormFieldTypes FormField::type()
 {
-    return field_type;
+    return fieldType;
 }
 
 QSet<QString> FormField::inputs()
 {
-    return inputs_set;
+    return inputsSet;
 }
 
 QDebug operator<<(QDebug dbg, const FormField& f)
 {
-    dbg.nospace() << "{" << *f.element_descriptor << "," << form_field_type_tostring(f.field_type) << "," << f.inputs_set << "}";
+    dbg.nospace() << "{" << *f.elementDescriptor << "," << formFieldTypeTostring(f.fieldType) << "," << f.inputsSet << "}";
     return dbg.space();
 }
 
-FormFieldTypes get_type_from_attr(QString type_attr)
+FormFieldTypes getTypeFromAttr(QString typeAttr)
 {
-    if (type_attr.isEmpty())
+    if (typeAttr.isEmpty())
         { return TEXT; } //de facto standard;
 
-    type_attr = type_attr.toLower();
+    typeAttr = typeAttr.toLower();
     /** Types :
         button
         checkbox
@@ -118,24 +118,24 @@ FormFieldTypes get_type_from_attr(QString type_attr)
         text
     */
 
-    if (type_attr == "button"
-        || type_attr == "hidden"
-        || type_attr == "submit"
-        || type_attr == "reset"
-        || type_attr == "image")
+    if (typeAttr == "button"
+        || typeAttr == "hidden"
+        || typeAttr == "submit"
+        || typeAttr == "reset"
+        || typeAttr == "image")
         { return NO_INPUT; }
 
-    if (type_attr == "checkbox"
-        || type_attr == "radio")
+    if (typeAttr == "checkbox"
+        || typeAttr == "radio")
         { return BOOLEAN; }
 
-    if (type_attr == "password"
-        || type_attr == "text"
-        || type_attr == "email"
-        || type_attr == "file")
+    if (typeAttr == "password"
+        || typeAttr == "text"
+        || typeAttr == "email"
+        || typeAttr == "file")
         { return TEXT; }
 
-    qFatal("Unknown type attribute on form element: %s", type_attr.toStdString().c_str());
+    qFatal("Unknown type attribute on form element: %s", typeAttr.toStdString().c_str());
     assert(false);
 }
 }

@@ -35,16 +35,16 @@ class Timer
 {
 public:
 
-    Timer(int id, int timeout, bool single_shot);
+    Timer(int id, int timeout, bool singleShot);
 
-    int get_id() const;
-    int get_timeout() const;
-    bool is_single_shot() const;
+    int getId() const;
+    int getTimeout() const;
+    bool isSingleShot() const;
 
 private:
-    int m_id;
-    int m_timeout;
-    bool m_single_shot;
+    int mId;
+    int mTimeout;
+    bool mSingleShot;
 };
 
 }

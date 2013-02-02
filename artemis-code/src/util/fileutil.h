@@ -7,9 +7,9 @@
 namespace artemis
 {
 
-void write_string_to_file(QString filename, QString data);
-void create_dir(QString path, QString folder_name);
-QString read_file(QFile& f);
+void writeStringToFile(QString filename, QString data);
+void createDir(QString path, QString folderName);
+QString readFile(QFile& f);
 
 }
 

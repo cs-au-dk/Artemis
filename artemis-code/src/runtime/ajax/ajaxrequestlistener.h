@@ -15,8 +15,8 @@ public:
     QNetworkReply* createRequest(Operation op, const QNetworkRequest& req, QIODevice* outgoingData = 0);
 
 signals:
-    void page_get(QUrl url);
-    void page_post(QUrl url);
+    void pageGet(QUrl url);
+    void pagePost(QUrl url);
 public slots:
 
 };

@@ -10,15 +10,15 @@ namespace artemis
 class SourceIdentifier
 {
 public:
-    SourceIdentifier(QUrl& url, int source_offset);
+    SourceIdentifier(QUrl& url, int sourceOffset);
 
     bool operator==(const SourceIdentifier& other) const;
     QDebug friend operator<<(QDebug dbg, const SourceIdentifier& e);
     uint hashcode() const;
 
 private:
-    QUrl m_url;
-    int m_source_offset;
+    QUrl mUrl;
+    int mSourceOffset;
 };
 
 }

@@ -39,21 +39,21 @@ namespace artemis
 {
 
 JQueryTarget::JQueryTarget(QObject* parent,
-                           const EventHandlerDescriptor* event_handler,
+                           const EventHandlerDescriptor* eventHandler,
                            JQueryListener* jqueryListener) :
-    TargetDescriptor(parent, event_handler)
+    TargetDescriptor(parent, eventHandler)
 {
     mJQueryListener = jqueryListener;
     mJQueryListener->setParent(this);
 }
 
-QString JQueryTarget::get_signature(QWebElement element)
+QString JQueryTarget::getSignature(QWebElement element)
 {
     if (element.isNull()) {
         return QString("");
     }
 
-    QString result = get_signature(element.parent());
+    QString result = getSignature(element.parent());
 
     if (element.tagName() == QString("HTML")) {
         result = result.append("#document.HTML");
@@ -69,14 +69,14 @@ QString JQueryTarget::get_signature(QWebElement element)
 
 QWebElement JQueryTarget::get(ArtemisWebPage* page)
 {
-    QWebElement element = m_event_handler->dom_element()->get_element(page);
+    QWebElement element = mEventHandler->domElement()->getElement(page);
 
     if (element.isNull()) {
         return QWebElement();
     }
 
-    QString signature = get_signature(element);
-    QString event = m_event_handler->name();
+    QString signature = getSignature(element);
+    QString event = mEventHandler->name();
 
     qDebug() << "TARGET::Info, looking for selectors for signature " << signature << " and event " << event << endl;
 
@@ -88,7 +88,7 @@ QWebElement JQueryTarget::get(ArtemisWebPage* page)
     }
 
     /* Select random selector */
-    QString selector = pick_rand(selectors);
+    QString selector = pickRand(selectors);
 
     /* Select target element */
     //QWebElementCollection elements = page->currentFrame()->findAllElements(selector);
@@ -100,7 +100,7 @@ QWebElement JQueryTarget::get(ArtemisWebPage* page)
 
     }
     else {
-        QWebElement element = pick_rand(elements.toList());
+        QWebElement element = pickRand(elements.toList());
 
         QString name = element.tagName();
         qDebug() << "TARGET::Selecting element " << name << " out of a total of " << elements.count() << "element(s) and " << selectors.count() << " selector(s)" << endl;

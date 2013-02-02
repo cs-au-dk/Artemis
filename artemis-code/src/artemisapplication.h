@@ -54,7 +54,7 @@ private:
 signals:
 
 public slots:
-    void sl_testingDone();
+    void slTestingDone();
 };
 
 }

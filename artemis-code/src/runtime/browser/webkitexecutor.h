@@ -56,26 +56,26 @@ public:
                    AjaxRequestListener* ajaxListener);
     ~WebKitExecutor();
     void executeSequence(QSharedPointer<ExecutableConfiguration> conf);
-    QWebExecutionListener* webkit_listener;
+    QWebExecutionListener* webkitListener;
     CodeCoverage coverage();
-    void finish_up();
+    void finishUp();
 
 private:
     void setup();
     void finishedExecutionSequence();
-    void get_form_fields();
-    QSet<QWebFrame*> all_frames();
-    QSet<QString> get_select_options(const QWebElement&);
-    void do_exe();
-    void setup_initial();
-    void save_dom_state();
+    void getFormFields();
+    QSet<QWebFrame*> allFrames();
+    QSet<QString> getSelectOptions(const QWebElement&);
+    void doExe();
+    void setupInitial();
+    void saveDomState();
 
     ArtemisWebPage* page;
-    ExecutionResult* current_result;
-    QSharedPointer<ExecutableConfiguration> current_conf;
-    CoverageListener* cov_list;
-    QString initial_page_state;
-    AjaxRequestListener* ajax_listener;
+    ExecutionResult* currentResult;
+    QSharedPointer<ExecutableConfiguration> currentConf;
+    CoverageListener* covList;
+    QString initialPageState;
+    AjaxRequestListener* ajaxListener;
     JQueryListener* mJquery;
     QMap<QString, QString> mPresetFields;
 
@@ -84,10 +84,10 @@ signals:
 
 public slots:
     void slLoadFinished(bool ok);
-    void sl_script_crash(QString, intptr_t, int);
-    void sl_ajax_request(QUrl, QString post_data);
-    void sl_eval_called(QString eval_text);
-    void sl_code_loaded(intptr_t, QString, QUrl, int);
+    void slScriptCrash(QString, intptr_t, int);
+    void slAjaxRequest(QUrl, QString postData);
+    void slEvalCalled(QString evalText);
+    void slCodeLoaded(intptr_t, QString, QUrl, int);
 };
 
 }

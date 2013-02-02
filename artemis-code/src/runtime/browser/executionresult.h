@@ -52,22 +52,22 @@ public:
     ExecutionResult(QObject* parent);
     ExecutionResult(QObject* parent, const ExecutionResult* other);
 
-    QSet<EventHandlerDescriptor*> event_handlers() const;
+    QSet<EventHandlerDescriptor*> eventHandlers() const;
 
-    QSet<FormField*> form_fields() const;
-    void add_form_fields(const QSet<FormField*>& f);
-    void add_form_field(const FormField* f);
+    QSet<FormField*> formFields() const;
+    void addFormFields(const QSet<FormField*>& f);
+    void addFormField(const FormField* f);
 
-    void add_ajax_request(AjaxRequest req);
-    QSet<AjaxRequest> ajax_request() const;
-    void make_load_failed();
-    bool modifed_dom() const;
-    void set_modfied_dom(bool b) ;
-    void set_state_hash(long hash);
-    long page_state_hash() const;
-    QSet<QString> eval_strings();
+    void addAjaxRequest(AjaxRequest req);
+    QSet<AjaxRequest> ajaxRequest() const;
+    void makeLoadFailed();
+    bool modifedDom() const;
+    void setModfiedDom(bool b) ;
+    void setStateHash(long hash);
+    long pageStateHash() const;
+    QSet<QString> evalStrings();
     QList<int> ajaxCallbackHandlers() const;
-    QList<QSharedPointer<Timer> > get_timers() const;
+    QList<QSharedPointer<Timer> > getTimers() const;
     QString getPageContents() const;
     void setPageContents(QString content);
 
@@ -79,31 +79,31 @@ public:
     QDebug friend operator<<(QDebug dbg, const ExecutionResult& e);
 
 private:
-    QSet<EventHandlerDescriptor*> m_event_handlers;
-    QSet<QPair<QWebElement*, QString> > element_pointers;
-    QSet<FormField*> m_form_fields;
+    QSet<EventHandlerDescriptor*> mEventHandlers;
+    QSet<QPair<QWebElement*, QString> > elementPointers;
+    QSet<FormField*> mFormFields;
     bool final;
-    bool is_crash_state;
-    QString crash_cause;
-    intptr_t crash_sourceID;
-    int crash_lineNumber;
-    bool m_modfied_dom;
-    long state_hash;
-    QSet<AjaxRequest> m_ajax_request;
-    QSet<QString> evaled_strings;
-    QList<int> m_ajax_callback_handlers;
-    QMap<int, QSharedPointer<Timer> > m_timers; // <timer_id, Timer>
+    bool isCrashState;
+    QString crashCause;
+    intptr_t crashSourceID;
+    int crashLineNumber;
+    bool mModfiedDom;
+    long stateHash;
+    QSet<AjaxRequest> mAjaxRequest;
+    QSet<QString> evaledStrings;
+    QList<int> mAjaxCallbackHandlers;
+    QMap<int, QSharedPointer<Timer> > mTimers; // <timerId, Timer>
     QString mPageContents;
 
 public slots:
     void newEventListener(QWebElement* elem, QString name);
     void removeEventListener(QWebElement* elem, QString name);
-    void sl_script_crash(QString cause, intptr_t sourceID, int lineNumber);
-    void sl_eval_string(const QString);
+    void slScriptCrash(QString cause, intptr_t sourceID, int lineNumber);
+    void slEvalString(const QString);
     void addedAjaxCallbackHandler(int callbackId);
 
-    void sl_timer_added(int timer_id, int timeout, bool single_shot);
-    void sl_timer_removed(int timer_id);
+    void slTimerAdded(int timerId, int timeout, bool singleShot);
+    void slTimerRemoved(int timerId);
 };
 }
 

@@ -55,38 +55,38 @@ WebKitExecutor::WebKitExecutor(QObject* parent,
                                AjaxRequestListener* ajaxListener) :
     QObject(parent)
 {
-    current_result = NULL;
+    currentResult = NULL;
 
     mPresetFields = presetFields;
     mJquery = jqueryListener;
 
-    ajax_listener = ajaxListener;
-    ajax_listener->setParent(this);
+    ajaxListener = ajaxListener;
+    ajaxListener->setParent(this);
 
-    cov_list = new CoverageListener(this);
+    covList = new CoverageListener(this);
 
-    webkit_listener = new QWebExecutionListener();
-    webkit_listener->installWebKitExecutionListener(webkit_listener);
+    webkitListener = new QWebExecutionListener();
+    webkitListener->installWebKitExecutionListener(webkitListener);
 
-    // TODO cleanup in ajax stuff, we are handling ajax through AjaxRequestListener, the ajax_request signal and addAjaxCallHandler
+    // TODO cleanup in ajax stuff, we are handling ajax through AjaxRequestListener, the ajaxRequest signal and addAjaxCallHandler
 
-    QObject::connect(webkit_listener, SIGNAL(script_crash(QString, intptr_t, int)),
-                     this, SLOT(sl_script_crash(QString, intptr_t, int)));
-    QObject::connect(webkit_listener, SIGNAL(ajax_request(QUrl, QString)),
-                     this, SLOT(sl_ajax_request(QUrl, QString)));
-    QObject::connect(webkit_listener, SIGNAL(loadedJavaScript(intptr_t, QString, QUrl, int)),
-                     this, SLOT(sl_code_loaded(intptr_t, QString, QUrl, int)));
+    QObject::connect(webkitListener, SIGNAL(scriptCrash(QString, intptr_t, int)),
+                     this, SLOT(slScriptCrash(QString, intptr_t, int)));
+    QObject::connect(webkitListener, SIGNAL(ajaxRequest(QUrl, QString)),
+                     this, SLOT(slAjaxRequest(QUrl, QString)));
+    QObject::connect(webkitListener, SIGNAL(loadedJavaScript(intptr_t, QString, QUrl, int)),
+                     this, SLOT(slCodeLoaded(intptr_t, QString, QUrl, int)));
 
-    QObject::connect(webkit_listener, SIGNAL(jqueryEventAdded(QString, QString, QString)),
-                     mJquery, SLOT(sl_event_added(QString, QString, QString)));
+    QObject::connect(webkitListener, SIGNAL(jqueryEventAdded(QString, QString, QString)),
+                     mJquery, SLOT(slEventAdded(QString, QString, QString)));
 
-    QObject::connect(webkit_listener, SIGNAL(loadedJavaScript(intptr_t, QString, QUrl, int)),
-                     cov_list, SLOT(new_code(intptr_t, QString, QUrl, int)));
-    QObject::connect(webkit_listener, SIGNAL(statementExecuted(intptr_t, std::string, int)),
-                     cov_list, SLOT(statement_executed(intptr_t, std::string, int)));
+    QObject::connect(webkitListener, SIGNAL(loadedJavaScript(intptr_t, QString, QUrl, int)),
+                     covList, SLOT(newCode(intptr_t, QString, QUrl, int)));
+    QObject::connect(webkitListener, SIGNAL(statementExecuted(intptr_t, std::string, int)),
+                     covList, SLOT(statementExecuted(intptr_t, std::string, int)));
 
     page = new ArtemisWebPage(this);
-    page->setNetworkAccessManager(ajax_listener);
+    page->setNetworkAccessManager(ajaxListener);
 
     QObject::connect(page, SIGNAL(loadFinished(bool)),
                      this, SLOT(slLoadFinished(bool)));
@@ -95,46 +95,46 @@ WebKitExecutor::WebKitExecutor(QObject* parent,
 
 WebKitExecutor::~WebKitExecutor()
 {
-    //delete current_conf;
-    //delete current_result;
+    //delete currentConf;
+    //delete currentResult;
     delete page;
-    delete cov_list;
+    delete covList;
 }
 
 void WebKitExecutor::executeSequence(QSharedPointer<ExecutableConfiguration> conf)
 {
     qDebug() << "Artemis: Executing sequence" << endl;
 
-    if (current_result != 0) {
+    if (currentResult != 0) {
         qDebug() << "Removing old result" << endl;
 
-        current_result->disconnect();
+        currentResult->disconnect();
 
-        delete current_result;
+        delete currentResult;
     }
 
-    current_result = new ExecutionResult(0);
-    current_conf = conf;
+    currentResult = new ExecutionResult(0);
+    currentConf = conf;
 
     mJquery->reset();
 
-    QObject::connect(webkit_listener, SIGNAL(addedEventListener(QWebElement*, QString)),
-                     current_result, SLOT(newEventListener(QWebElement*, QString)));
-    QObject::connect(webkit_listener, SIGNAL(removedEventListener(QWebElement*, QString)),
-                     current_result, SLOT(removeEventListener(QWebElement*, QString)));
+    QObject::connect(webkitListener, SIGNAL(addedEventListener(QWebElement*, QString)),
+                     currentResult, SLOT(newEventListener(QWebElement*, QString)));
+    QObject::connect(webkitListener, SIGNAL(removedEventListener(QWebElement*, QString)),
+                     currentResult, SLOT(removeEventListener(QWebElement*, QString)));
 
-    QObject::connect(webkit_listener, SIGNAL(addedAjaxCallbackHandler(int)),
-                     current_result, SLOT(addedAjaxCallbackHandler(int)));
+    QObject::connect(webkitListener, SIGNAL(addedAjaxCallbackHandler(int)),
+                     currentResult, SLOT(addedAjaxCallbackHandler(int)));
 
-    QObject::connect(webkit_listener, SIGNAL(addedTimer(int, int, bool)),
-                     current_result, SLOT(sl_timer_added(int, int, bool)));
-    QObject::connect(webkit_listener, SIGNAL(removedTimer(int)),
-                     current_result, SLOT(sl_timer_removed(int)));
+    QObject::connect(webkitListener, SIGNAL(addedTimer(int, int, bool)),
+                     currentResult, SLOT(slTimerAdded(int, int, bool)));
+    QObject::connect(webkitListener, SIGNAL(removedTimer(int)),
+                     currentResult, SLOT(slTimerRemoved(int)));
 
-    QObject::connect(webkit_listener, SIGNAL(script_crash(QString, intptr_t, int)),
-                     current_result, SLOT(sl_script_crash(QString, intptr_t, int)));
-    QObject::connect(webkit_listener, SIGNAL(eval_call(QString)),
-                     current_result, SLOT(sl_eval_string(QString)));
+    QObject::connect(webkitListener, SIGNAL(scriptCrash(QString, intptr_t, int)),
+                     currentResult, SLOT(slScriptCrash(QString, intptr_t, int)));
+    QObject::connect(webkitListener, SIGNAL(evalCall(QString)),
+                     currentResult, SLOT(slEvalString(QString)));
 
     //Load URL into WebKit
     qDebug() << "Trying to load: " << conf->getUrl().toString() << endl;
@@ -147,7 +147,7 @@ void WebKitExecutor::slLoadFinished(bool ok)
     if (!ok) {
         qDebug() << "WEBKIT: Website load failed!";
 
-        current_result->make_load_failed();
+        currentResult->makeLoadFailed();
         finishedExecutionSequence();
 
         exit(1);
@@ -156,23 +156,23 @@ void WebKitExecutor::slLoadFinished(bool ok)
 
     qDebug() << "WEBKIT: Finished loading" << endl;
 
-    //handle_ajax_callbacks();
-    setup_initial();;
-    do_exe();
+    //handleAjaxCallbacks();
+    setupInitial();;
+    doExe();
     finishedExecutionSequence();
 }
 
-void WebKitExecutor::save_dom_state()
+void WebKitExecutor::saveDomState()
 {
-    current_result->set_state_hash(qHash(page->mainFrame()->toHtml()));
-    current_result->set_modfied_dom(page->mainFrame()->toHtml().localeAwareCompare(this->initial_page_state) != 0);
-    current_result->setPageContents(page->mainFrame()->toHtml());
+    currentResult->setStateHash(qHash(page->mainFrame()->toHtml()));
+    currentResult->setModfiedDom(page->mainFrame()->toHtml().localeAwareCompare(this->initialPageState) != 0);
+    currentResult->setPageContents(page->mainFrame()->toHtml());
 }
 
-void WebKitExecutor::setup_initial()
+void WebKitExecutor::setupInitial()
 {
     //Save the page state
-    this->initial_page_state = page->mainFrame()->toHtml();
+    this->initialPageState = page->mainFrame()->toHtml();
 
     //Set preset formfields
     foreach(QString f , mPresetFields.keys()) {
@@ -187,32 +187,32 @@ void WebKitExecutor::setup_initial()
 
 }
 
-void WebKitExecutor::do_exe()
+void WebKitExecutor::doExe()
 {
-    const InputSequence* seq = current_conf->getInputSequence();
+    const InputSequence* seq = currentConf->getInputSequence();
 
     foreach(BaseInput * input, seq->toList()) {
         qDebug() << "APPLY!" << endl;
-        input->apply(this->page, this->webkit_listener);
+        input->apply(this->page, this->webkitListener);
         //Wait for any ajax stuff to finish
-        //            handle_ajax_callbacks();
+        //            handleAjaxCallbacks();
     }
 }
 
-void WebKitExecutor::get_form_fields()
+void WebKitExecutor::getFormFields()
 {
-    QSet<QWebFrame*> ff = all_frames();
+    QSet<QWebFrame*> ff = allFrames();
 
     foreach(QWebFrame * f, ff) {
         QWebElementCollection inputs = f->findAllElements("input");
         foreach(QWebElement i, inputs) {
-            FormFieldTypes f_type =  get_type_from_attr(i.attribute("type"));
+            FormFieldTypes fType =  getTypeFromAttr(i.attribute("type"));
 
-            if (f_type == NO_INPUT)
+            if (fType == NO_INPUT)
                 { continue; }
 
-            FormField* formf = new FormField(0, f_type, new DOMElementDescriptor(0, &i));
-            current_result->add_form_field(formf);
+            FormField* formf = new FormField(0, fType, new DOMElementDescriptor(0, &i));
+            currentResult->addFormField(formf);
             delete formf;
         }
 
@@ -220,42 +220,42 @@ void WebKitExecutor::get_form_fields()
         QWebElementCollection textareas = f->findAllElements("textarea");
         foreach(QWebElement ta, textareas) {
             FormField* taf = new FormField(0, TEXT, new DOMElementDescriptor(0, &ta));
-            current_result->add_form_field(taf);
+            currentResult->addFormField(taf);
             delete taf;
         }
 
         //Gather select tags
         QWebElementCollection selects = f->findAllElements("select");
         foreach(QWebElement ss, selects) {
-            QSet<QString> options = get_select_options(ss);
+            QSet<QString> options = getSelectOptions(ss);
             FormField* ssf = new FormField(0, FIXED_INPUT, new DOMElementDescriptor(0, &ss), options);
-            current_result->add_form_field(ssf);
+            currentResult->addFormField(ssf);
             delete ssf;
         }
     }
 }
 
-QSet<QString> WebKitExecutor::get_select_options(const QWebElement& e)
+QSet<QString> WebKitExecutor::getSelectOptions(const QWebElement& e)
 {
     QSet<QString> res;
     QWebElementCollection options = e.findAll("option");
     foreach(QWebElement o, options) {
-        QString value_attr = o.attribute("value");
+        QString valueAttr = o.attribute("value");
 
-        if (!value_attr.isEmpty())
-            { value_attr = o.toPlainText(); }
+        if (!valueAttr.isEmpty())
+            { valueAttr = o.toPlainText(); }
 
-        if (value_attr.isEmpty()) {
+        if (valueAttr.isEmpty()) {
             qWarning() << "WARN: Found empty option element in select, ignoring";
             continue;
         }
 
-        res << value_attr;
+        res << valueAttr;
     }
     return res;
 }
 
-QSet<QWebFrame*> WebKitExecutor::all_frames()
+QSet<QWebFrame*> WebKitExecutor::allFrames()
 {
     QSet<QWebFrame*> res;
     QWebFrame* main = page->mainFrame();
@@ -272,53 +272,53 @@ QSet<QWebFrame*> WebKitExecutor::all_frames()
     return res;
 }
 
-void WebKitExecutor::finish_up()
+void WebKitExecutor::finishUp()
 {
-    if (current_result != 0) {
+    if (currentResult != 0) {
         qDebug() << "Removing old result" << endl;
 
-        write_coverage_html(coverage());
+        writeCoverageHtml(coverage());
 
-        current_result->disconnect();
+        currentResult->disconnect();
 
-        delete current_result;
+        delete currentResult;
     }
 }
 
 void WebKitExecutor::finishedExecutionSequence()
 {
-    get_form_fields();
-    save_dom_state();
+    getFormFields();
+    saveDomState();
 
-    current_result->finalize();
+    currentResult->finalize();
 
-    emit sigExecutedSequence(current_conf, current_result);
+    emit sigExecutedSequence(currentConf, currentResult);
 }
 
 CodeCoverage WebKitExecutor::coverage()
 {
-    return cov_list->current_coverage();
+    return covList->currentCoverage();
 }
 
-void WebKitExecutor::sl_script_crash(QString ca, intptr_t id, int n)
+void WebKitExecutor::slScriptCrash(QString ca, intptr_t id, int n)
 {
     qDebug() << "Script crashed";
 }
 
-void WebKitExecutor::sl_ajax_request(QUrl u, QString post_data)
+void WebKitExecutor::slAjaxRequest(QUrl u, QString postData)
 {
-    AjaxRequest req = AjaxRequest(u, post_data);
+    AjaxRequest req = AjaxRequest(u, postData);
     qDebug() << "Adding AJAX request: " << req;
-    this->current_result->add_ajax_request(req);
+    this->currentResult->addAjaxRequest(req);
 }
 
-void WebKitExecutor::sl_eval_called(QString eval_text)
+void WebKitExecutor::slEvalCalled(QString evalText)
 {
-    qDebug() << "Dynamic code eval: " << eval_text;
+    qDebug() << "Dynamic code eval: " << evalText;
 }
 
-void WebKitExecutor::sl_code_loaded(intptr_t _, QString src, QUrl url, int li)
+void WebKitExecutor::slCodeLoaded(intptr_t _, QString src, QUrl url, int li)
 {
-    qDebug() << "WebKitExecutor::sl_code_loaded" << endl;
+    qDebug() << "WebKitExecutor::slCodeLoaded" << endl;
 }
 }

@@ -55,12 +55,12 @@ DomInput::DomInput(QObject* parent, EventHandlerDescriptor* handler,
     //mTarget->setParent(this);
 }
 
-void DomInput::apply(ArtemisWebPage* page, QWebExecutionListener* webkit_listener)
+void DomInput::apply(ArtemisWebPage* page, QWebExecutionListener* webkitListener)
 {
-    QWebElement handler = mEventHandler->dom_element()->get_element(page);
+    QWebElement handler = mEventHandler->domElement()->getElement(page);
     QWebElement target = this->target()->get(page);
 
-    QString js_init_event = mEvtParams->js_string();
+    QString jsInitEvent = mEvtParams->jsString();
 
     this->getFormInput()->writeToPage(page);
 
@@ -75,9 +75,9 @@ void DomInput::apply(ArtemisWebPage* page, QWebExecutionListener* webkit_listene
         qDebug() << "Target: " << target.tagName() << " _ID: " << target.attribute(QString("id"))
                  << " _Title: " << target.attribute(QString("title")) << "class: "
                  << target.attribute(QString("class"));
-        qDebug() << "Executing: " << js_init_event;
+        qDebug() << "Executing: " << jsInitEvent;
 
-        QVariant result = target.evaluateJavaScript(js_init_event, DONT_MEASURE_COVERAGE);
+        QVariant result = target.evaluateJavaScript(jsInitEvent, DONT_MEASURE_COVERAGE);
 
         qDebug() << "Result: " << result;
     }
@@ -89,7 +89,7 @@ DomInput::~DomInput()
     //delete this->mEvtParams;
 
     /* TODO TargetDescriptor Copy constructor */
-    /*delete this->m_target;*/
+    /*delete this->mTarget;*/
 }
 
 TargetDescriptor* DomInput::target() const
@@ -121,7 +121,7 @@ bool DomInput::isEqual(BaseInput* other)
     // TODO Implement DomInput::isEqual
 }
 
-EventParameters* DomInput::event_params() const
+EventParameters* DomInput::eventParams() const
 {
     return mEvtParams;
 }

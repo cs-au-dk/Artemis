@@ -43,7 +43,7 @@ public:
     /*
      Returns a javascript function call on the form EVENT_OBJECT_PLACEHOLDER.initXevent(..params..)"
      */
-    virtual QString js_string() = 0;
+    virtual QString jsString() = 0;
     virtual EventType type() const = 0;
 };
 

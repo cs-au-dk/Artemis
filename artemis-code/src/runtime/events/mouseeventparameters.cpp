@@ -41,7 +41,7 @@ MouseEventParameters::MouseEventParameters(QObject* parent, QString type, bool c
 {
     Q_ASSERT(!type.isEmpty());
     this->altKey = altKey;
-    this->type_n = type;
+    this->typeN = type;
     this->canBubble = canBubble;
     this->cancelable = cancelable;
     this->detail = detail;
@@ -88,33 +88,33 @@ the Event's mouse event.button.
 relatedTarget
 the Event's related EventTarget. Only used with some event types (e.g. mouseover and mouseout). In other cases, pass null.
   */
-QString MouseEventParameters::js_string()
+QString MouseEventParameters::jsString()
 {
-    if (!memo_js.isEmpty())
-        { return memo_js; }
+    if (!memoJs.isEmpty())
+        { return memoJs; }
 
-    QString rand_id = generate_random_js_id();
-    QString res = "var " + rand_id + " = document.createEvent(\"MouseEvent\");";
-    res = res + " " + rand_id + ".initMouseEvent(";
-    res += quote_string(type_n) + ",";
-    res += bool_tostring(canBubble) + ",";
-    res += bool_tostring(cancelable) + ",";
+    QString randId = generateRandomJsId();
+    QString res = "var " + randId + " = document.createEvent(\"MouseEvent\");";
+    res = res + " " + randId + ".initMouseEvent(";
+    res += quoteString(typeN) + ",";
+    res += boolTostring(canBubble) + ",";
+    res += boolTostring(cancelable) + ",";
     res += "window,";
-    res += int_tostring(detail) + ",";
-    res += int_tostring(screenX) + ",";
-    res += int_tostring(screenY) + ",";
-    res += int_tostring(clientX) + ",";
-    res += int_tostring(clientY) + ",";
-    res += bool_tostring(ctrlKey) + ",";
-    res += bool_tostring(altKey) + ",";
-    res += bool_tostring(shiftKey) + ",";
-    res += bool_tostring(metaKey) + ",";
-    res += int_tostring(button) + ",";
+    res += intTostring(detail) + ",";
+    res += intTostring(screenX) + ",";
+    res += intTostring(screenY) + ",";
+    res += intTostring(clientX) + ",";
+    res += intTostring(clientY) + ",";
+    res += boolTostring(ctrlKey) + ",";
+    res += boolTostring(altKey) + ",";
+    res += boolTostring(shiftKey) + ",";
+    res += boolTostring(metaKey) + ",";
+    res += intTostring(button) + ",";
     res += "null);";
 
-    res +=  "this.dispatchEvent(" + rand_id + ");";
+    res +=  "this.dispatchEvent(" + randId + ");";
 
-    memo_js = res;
+    memoJs = res;
     return res;
 }
 

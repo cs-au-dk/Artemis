@@ -37,7 +37,7 @@ NumberOfIterationsTermination::NumberOfIterationsTermination(QObject* parent, in
     mIterations = 0;
 }
 
-bool NumberOfIterationsTermination::should_terminate()
+bool NumberOfIterationsTermination::shouldTerminate()
 {
     mIterations++;
     return (mIterations > mIterationLimit);

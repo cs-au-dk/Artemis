@@ -50,29 +50,29 @@ KeyboardEventParameters::KeyboardEventParameters(QObject* parent, QString eventT
     this->altGraphKey = altGraphKey;
 }
 
-QString KeyboardEventParameters::js_string()
+QString KeyboardEventParameters::jsString()
 {
-    if (!memo_js.isEmpty())
-        { return memo_js; }
+    if (!memoJs.isEmpty())
+        { return memoJs; }
 
-    QString rand_id = generate_random_js_id();
-    QString res = "var " + rand_id + " = document.createEvent(\"KeyboardEvent\");";
-    res = res + " " + rand_id + ".initKeyboardEvent(";
+    QString randId = generateRandomJsId();
+    QString res = "var " + randId + " = document.createEvent(\"KeyboardEvent\");";
+    res = res + " " + randId + ".initKeyboardEvent(";
     res += eventType + ",";
-    res += bool_tostring(canBubble) + ",";
-    res += bool_tostring(cancelable) + ",";
+    res += boolTostring(canBubble) + ",";
+    res += boolTostring(cancelable) + ",";
     res += "null,";
-    res += quote_string(keyIdentifier) + ",";
+    res += quoteString(keyIdentifier) + ",";
     res += keyLocation + ",";
-    res += bool_tostring(ctrlKey) + ",";
-    res += bool_tostring(altKey) + ",";
-    res += bool_tostring(shiftKey) + ",";
-    res += bool_tostring(metaKey) + ",";
-    res += bool_tostring(altGraphKey) + ");";
+    res += boolTostring(ctrlKey) + ",";
+    res += boolTostring(altKey) + ",";
+    res += boolTostring(shiftKey) + ",";
+    res += boolTostring(metaKey) + ",";
+    res += boolTostring(altGraphKey) + ");";
 
-    res += "this.dispatchEvent(" + rand_id + ");";
+    res += "this.dispatchEvent(" + randId + ");";
 
-    memo_js = res;
+    memoJs = res;
     return res;
 }
 

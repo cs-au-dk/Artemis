@@ -45,7 +45,7 @@ RandomVariants::RandomVariants() : VariantsGenerator()
 
 }
 
-EventParameters* RandomVariants::generate_event_parameters(QObject* parent, const EventHandlerDescriptor* eventHandler)
+EventParameters* RandomVariants::generateEventParameters(QObject* parent, const EventHandlerDescriptor* eventHandler)
 {
 
     switch (eventHandler->getEventType()) {
@@ -89,7 +89,7 @@ EventParameters* RandomVariants::generate_event_parameters(QObject* parent, cons
     }
 }
 
-FormInput* RandomVariants::generate_form_fields(QObject* parent, const QSet<FormField*>& fields)
+FormInput* RandomVariants::generateFormFields(QObject* parent, const QSet<FormField*>& fields)
 {
     FormInput* result = new FormInput(parent);
 
@@ -99,13 +99,13 @@ FormInput* RandomVariants::generate_form_fields(QObject* parent, const QSet<Form
 
         switch (formField->type()) {
         case TEXT:
-            result->addInput(formField, new FormFieldValue(parent, generate_random_string(10)));
+            result->addInput(formField, new FormFieldValue(parent, generateRandomString(10)));
             break;
         case BOOLEAN:
-            result->addInput(formField, new FormFieldValue(parent, random_bool()));
+            result->addInput(formField, new FormFieldValue(parent, randomBool()));
             break;
         case FIXED_INPUT:
-            result->addInput(formField, new FormFieldValue(parent, pick_rand(formField->inputs())));
+            result->addInput(formField, new FormFieldValue(parent, pickRand(formField->inputs())));
             break;
         default:
             result->addInput(formField, new FormFieldValue(parent));

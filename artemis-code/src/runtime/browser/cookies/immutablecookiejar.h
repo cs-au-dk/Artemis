@@ -19,7 +19,7 @@ public:
 
 protected:
 private:
-    QList<QNetworkCookie> m_cookies;
+    QList<QNetworkCookie> mCookies;
 };
 
 }

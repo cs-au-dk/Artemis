@@ -33,42 +33,42 @@ namespace artemis
 
 CodeCoverage::CodeCoverage(const QMap<int, SourceInfo*> &sources, const QMap<int, QMap<int, LineInfo> > &coverage)
 {
-    m_sources.clear();
-    m_coverage.clear();
-    m_sources = sources;
-    m_coverage = coverage;
+    mSources.clear();
+    mCoverage.clear();
+    mSources = sources;
+    mCoverage = coverage;
 }
 
 QDebug operator<<(QDebug dbg, const CodeCoverage& e)
 {
-    dbg.nospace() << e.m_coverage << "   " << e.m_sources;
+    dbg.nospace() << e.mCoverage << "   " << e.mSources;
     return dbg.space();
 }
 
-QSet<int> CodeCoverage::source_ids() const
+QSet<int> CodeCoverage::sourceIds() const
 {
-    return m_sources.keys().toSet();
+    return mSources.keys().toSet();
 }
 
-const SourceInfo* CodeCoverage::source_info(int id) const
+const SourceInfo* CodeCoverage::sourceInfo(int id) const
 {
-    Q_ASSERT(m_sources.contains(id));
-    return m_sources[id];
+    Q_ASSERT(mSources.contains(id));
+    return mSources[id];
 }
 
-QMap<int, LineInfo> CodeCoverage::line_info(int id) const
+QMap<int, LineInfo> CodeCoverage::lineInfo(int id) const
 {
-    Q_ASSERT(m_coverage.contains(id));
-    return m_coverage[id];
+    Q_ASSERT(mCoverage.contains(id));
+    return mCoverage[id];
 }
 
 QString CodeCoverage::toString() const
 {
     QString res;
-    foreach(int p, source_ids()) {
-        res.append("[" + source_info(p)->toString());
-        foreach(int q, line_info(p).keys()) {
-            res.append("[LINE " + QString::number(q) + " " + line_info(p)[q].toString() + "]");
+    foreach(int p, sourceIds()) {
+        res.append("[" + sourceInfo(p)->toString());
+        foreach(int q, lineInfo(p).keys()) {
+            res.append("[LINE " + QString::number(q) + " " + lineInfo(p)[q].toString() + "]");
         }
         res.append("]");
     }

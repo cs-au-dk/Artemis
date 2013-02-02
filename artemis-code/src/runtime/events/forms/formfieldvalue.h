@@ -43,18 +43,18 @@ public:
     FormFieldValue(QObject* parent, bool value);
     FormFieldValue(QObject* parent);
 
-    bool get_bool();
-    QString get_str();
-    bool is_no_value();
-    QString string_representation();
+    bool getBool();
+    QString getStr();
+    bool isNoValue();
+    QString stringRepresentation();
 
     QDebug friend operator<<(QDebug dbg, const FormFieldValue& f);
 
 private:
-    QString str_val;
-    bool bool_val;
-    bool is_bool;
-    bool is_no_val;
+    QString strVal;
+    bool boolVal;
+    bool isBool;
+    bool isNoVal;
 };
 
 }

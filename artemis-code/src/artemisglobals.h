@@ -38,24 +38,24 @@ namespace artemis
 const QWebElement NULL_WEB_ELEMENT;
 const QUrl DONT_MEASURE_COVERAGE("http://this-is-fake-dont-do-coverage.fake");
 
-inline QString quote_string(const QString s)
+inline QString quoteString(const QString s)
 {
     return "\"" + s + "\"";
 }
 
-inline QString bool_tostring(const bool b)
+inline QString boolTostring(const bool b)
 {
     return (b ? "true" : "false");
 }
 
-inline QString int_tostring(const int i)
+inline QString intTostring(const int i)
 {
     QString res = "";
     res.setNum(i);
     return res;
 }
 
-inline bool is_omit(const QUrl& u)
+inline bool isOmit(const QUrl& u)
 {
     //TODO add support for exclusion of libraries!
     return u == DONT_MEASURE_COVERAGE;

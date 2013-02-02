@@ -13,14 +13,14 @@ ImmutableCookieJar::ImmutableCookieJar(const QMap<QString, QString> &initialstat
         QNetworkCookie* cookie = new QNetworkCookie(key.toAscii(), initialstate[key].toAscii());
         cookie->setPath(QString("/"));
         cookie->setDomain(domain);
-        m_cookies.append(*cookie);
+        mCookies.append(*cookie);
     }
-    this->setAllCookies(m_cookies);
+    this->setAllCookies(mCookies);
 }
 
 QList<QNetworkCookie> ImmutableCookieJar::cookiesForUrl(const QUrl& url) const
 {
-    return m_cookies;
+    return mCookies;
 }
 
 bool ImmutableCookieJar::setCookiesFromUrl(const QList<QNetworkCookie> &cookieList, const QUrl& url)

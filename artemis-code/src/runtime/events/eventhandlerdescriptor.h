@@ -49,15 +49,15 @@ public:
     ~EventHandlerDescriptor();
 
     QString name() const;
-    const DOMElementDescriptor* dom_element() const;
-    bool is_invalid() const;
+    const DOMElementDescriptor* domElement() const;
+    bool isInvalid() const;
     EventType getEventType() const;
 
     QDebug friend operator<<(QDebug dbg, const EventHandlerDescriptor& e);
 
 private:
     DOMElementDescriptor* element;
-    QString event_name;
+    QString eventName;
 
 };
 }
