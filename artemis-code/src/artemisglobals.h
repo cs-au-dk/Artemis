@@ -29,8 +29,6 @@
 #define ARTEMISGLOBALS_H
 
 #include <QtWebKit>
-#include <string>
-#include <sstream>
 
 using namespace std;
 
@@ -38,7 +36,6 @@ namespace artemis
 {
 
 const QWebElement NULL_WEB_ELEMENT;
-const QString ELEMENT_OBJECT_PLACEHOLDER = "%event_object%";
 const QUrl DONT_MEASURE_COVERAGE("http://this-is-fake-dont-do-coverage.fake");
 
 inline QString quote_string(const QString s)
@@ -56,18 +53,6 @@ inline QString int_tostring(const int i)
     QString res = "";
     res.setNum(i);
     return res;
-}
-
-inline int hash_bool(int prime, bool b)
-{
-    return (b ? prime : 0);
-}
-
-inline string stdstr_to_int(int number)
-{
-    stringstream ss;
-    ss << number;
-    return ss.str();
 }
 
 inline bool is_omit(const QUrl& u)

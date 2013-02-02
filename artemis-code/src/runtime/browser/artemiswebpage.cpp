@@ -54,7 +54,7 @@ bool ArtemisWebPage::javaScriptConfirm(QWebFrame* frame, const QString& msg)
 
 void ArtemisWebPage::javaScriptConsoleMessage(const QString& message, int lineNumber, const QString& sourceID)
 {
-    qDebug() << "JAVASCRIPT CONSOLE MESSAGES: " << message << " At line: " << int_tostring(lineNumber);
+    qDebug() << "JAVASCRIPT CONSOLE MESSAGES: " << message << " At line: " << lineNumber;
 }
 
 bool ArtemisWebPage::javaScriptPrompt(QWebFrame* frame, const QString& msg, const QString& defaultValue, QString* result)
