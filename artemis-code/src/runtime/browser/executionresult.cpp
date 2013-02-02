@@ -44,6 +44,8 @@ ExecutionResult::ExecutionResult(QObject* parent) : QObject(parent)
     crash_cause = "";
     crash_lineNumber = 0;
     crash_sourceID = 0;
+    m_modfied_dom = false;
+    state_hash = 0;
 }
 
 ExecutionResult::ExecutionResult(QObject* parent, const ExecutionResult* other) : QObject(parent)
@@ -64,7 +66,7 @@ ExecutionResult::ExecutionResult(QObject* parent, const ExecutionResult* other) 
         this->crash_sourceID = other->crash_sourceID;
     }
 
-    this->m_timers = QMap<int, Timer>(other->m_timers);
+    this->m_timers = QMap<int, QSharedPointer<Timer> >(other->m_timers);
     this->m_ajax_callback_handlers = QList<int>(other->m_ajax_callback_handlers);
 }
 
@@ -276,7 +278,7 @@ void ExecutionResult::sl_timer_added(int timer_id, int timeout, bool single_shot
 {
     qDebug() << "Artemis::Timer " << timer_id << " added";
     statistics()->accumulate("timers::registered", 1);
-    this->m_timers.insert(timer_id, Timer(timer_id, timeout, single_shot));
+    this->m_timers.insert(timer_id, QSharedPointer<Timer>(new Timer(timer_id, timeout, single_shot)));
 }
 
 void ExecutionResult::sl_timer_removed(int timer_id)
@@ -285,8 +287,9 @@ void ExecutionResult::sl_timer_removed(int timer_id)
     this->m_timers.remove(timer_id);
 }
 
-QList<Timer> ExecutionResult::get_timers() const
+QList<QSharedPointer<Timer> > ExecutionResult::get_timers() const
 {
     return this->m_timers.values();
 }
+
 }

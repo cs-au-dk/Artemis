@@ -35,14 +35,11 @@ class Timer
 {
 public:
 
-    Timer();
     Timer(int id, int timeout, bool single_shot);
 
     int get_id() const;
     int get_timeout() const;
     bool is_single_shot() const;
-
-    Timer& operator=(const Timer& other);
 
 private:
     int m_id;
