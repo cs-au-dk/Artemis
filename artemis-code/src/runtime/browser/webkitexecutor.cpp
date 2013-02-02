@@ -191,7 +191,7 @@ void WebKitExecutor::doExe()
 {
     const InputSequence* seq = currentConf->getInputSequence();
 
-    foreach(BaseInput * input, seq->toList()) {
+    foreach(const BaseInput* input, seq->toList()) {
         qDebug() << "APPLY!" << endl;
         input->apply(this->page, this->webkitListener);
         //Wait for any ajax stuff to finish

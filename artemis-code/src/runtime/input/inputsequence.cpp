@@ -31,28 +31,30 @@
 namespace artemis
 {
 
-InputSequence::InputSequence(QObject* parent) :
-    QObject(parent)
+InputSequence::InputSequence()
 {
-    mSequence.clear();
 }
 
-InputSequence::InputSequence(QObject* parent, const QList<BaseInput*>& sequencee) :
-    QObject(parent)
+InputSequence::InputSequence(const QList<const BaseInput*>& sequence)
+    : mSequence(sequence)
 {
-    mSequence.clear();
-    mSequence += sequencee;
 }
 
-void InputSequence::replaceLast(BaseInput* newLast)
+const InputSequence* InputSequence::replaceLast(const BaseInput* newLast) const
 {
-    mSequence.removeLast();
-    mSequence.append(newLast);
+    QList<const BaseInput*> sequence = mSequence;
+    sequence.removeLast();
+    sequence.append(newLast);
+
+    return new InputSequence(sequence);
 }
 
-void InputSequence::extend(BaseInput* newLast)
+const InputSequence* InputSequence::extend(const BaseInput* newLast) const
 {
-    mSequence.append(newLast);
+    QList<const BaseInput*> sequence = mSequence;
+    sequence.append(newLast);
+
+    return new InputSequence(sequence);
 }
 
 bool InputSequence::isEmpty() const
@@ -60,19 +62,14 @@ bool InputSequence::isEmpty() const
     return mSequence.empty();
 }
 
-BaseInput* InputSequence::getLast() const
+const BaseInput* InputSequence::getLast() const
 {
     return mSequence.last();
 }
 
-const QList<BaseInput*> InputSequence::toList() const
+const QList<const BaseInput*> InputSequence::toList() const
 {
     return mSequence;
-}
-
-InputSequence* InputSequence::copy() const
-{
-    return new InputSequence(parent(), mSequence);
 }
 
 }

@@ -42,7 +42,6 @@ class ExecutableConfiguration
 
 public:
     ExecutableConfiguration(const InputSequence* sequence, const QUrl url);
-    ~ExecutableConfiguration();
 
     bool isInitial() const;
     const QUrl getUrl() const;

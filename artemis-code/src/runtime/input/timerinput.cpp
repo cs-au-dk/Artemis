@@ -43,13 +43,13 @@ TimerInput::TimerInput(QObject* parent, const QSharedPointer<Timer> timer) :
     mTimer = timer;
 }
 
-void TimerInput::apply(ArtemisWebPage* page, QWebExecutionListener* webkitListener)
+void TimerInput::apply(ArtemisWebPage* page, QWebExecutionListener* webkitListener) const
 {
     statistics()->accumulate("timers::fired", 1);
     webkitListener->timerFire(mTimer->getId());
 }
 
-bool TimerInput::isEqual(BaseInput* other)
+bool TimerInput::isEqual(const BaseInput* other) const
 {
     //TODO implement this?
     return false;

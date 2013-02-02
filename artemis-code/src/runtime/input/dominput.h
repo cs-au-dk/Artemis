@@ -48,8 +48,8 @@ public:
 
     ~DomInput();
 
-    void apply(ArtemisWebPage* page, QWebExecutionListener* webkitListener);
-    bool isEqual(BaseInput* other);
+    void apply(ArtemisWebPage* page, QWebExecutionListener* webkitListener) const;
+    bool isEqual(const BaseInput* other) const;
 
     // TODO delete
     const EventHandlerDescriptor* getEventHandler() const;

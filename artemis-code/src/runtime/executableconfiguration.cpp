@@ -32,13 +32,8 @@ namespace artemis
 {
 
 ExecutableConfiguration::ExecutableConfiguration(const InputSequence* sequence, const QUrl url)
-    : mUrl(url), mSequence(sequence->copy())
+    : mUrl(url), mSequence(sequence)
 {
-}
-
-ExecutableConfiguration::~ExecutableConfiguration()
-{
-    delete mSequence;
 }
 
 const QUrl ExecutableConfiguration::getUrl() const
@@ -53,7 +48,7 @@ bool ExecutableConfiguration::isInitial() const
 
 const InputSequence* ExecutableConfiguration::getInputSequence() const
 {
-    return this->mSequence;
+    return mSequence;
 }
 
 }

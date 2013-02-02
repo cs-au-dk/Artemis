@@ -40,8 +40,8 @@ class TimerInput: public BaseInput
 public:
     TimerInput(QObject* parent, const QSharedPointer<Timer> timer);
 
-    void apply(ArtemisWebPage* page, QWebExecutionListener* webkitListener);
-    bool isEqual(BaseInput* other);
+    void apply(ArtemisWebPage* page, QWebExecutionListener* webkitListener) const;
+    bool isEqual(const BaseInput* other) const;
 
 private:
     QSharedPointer<Timer> mTimer;

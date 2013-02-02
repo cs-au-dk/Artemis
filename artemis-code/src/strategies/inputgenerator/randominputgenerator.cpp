@@ -80,14 +80,13 @@ QList<QSharedPointer<ExecutableConfiguration> > RandomInputGenerator::insertSame
     if (seq->isEmpty())
         { return newConfigurations; }
 
-    BaseInput* last = seq->getLast();
+    const BaseInput* last = seq->getLast();
 
     for (int i = 0; i < mNumberSameLength; i++) {
-        BaseInput* newLast = this->permutateInput(last);
+        const BaseInput* newLast = this->permutateInput(last);
 
         if (last->isEqual(newLast) == false) {
-            InputSequence* newSeq = seq->copy();
-            newSeq->replaceLast(newLast);
+            const InputSequence* newSeq = seq->replaceLast(newLast);
 
             QSharedPointer<ExecutableConfiguration> newConf = QSharedPointer<ExecutableConfiguration>(new ExecutableConfiguration(newSeq, e->getUrl()));
 
@@ -98,7 +97,7 @@ QList<QSharedPointer<ExecutableConfiguration> > RandomInputGenerator::insertSame
     return newConfigurations;
 }
 
-BaseInput* RandomInputGenerator::permutateInput(const DomInput* input)
+const BaseInput* RandomInputGenerator::permutateInput(const DomInput* input)
 {
     EventParameters* newParams = varGen->generateEventParameters(NULL, input->getEventHandler());
     FormInput* newForm = varGen->generateFormFields(NULL, input->getFormInput()->getFields());
@@ -110,9 +109,9 @@ BaseInput* RandomInputGenerator::permutateInput(const DomInput* input)
     return newLast;
 }
 
-// TODO should be const
-BaseInput* RandomInputGenerator::permutateInput(BaseInput* input)
+const BaseInput* RandomInputGenerator::permutateInput(const BaseInput* input)
 {
+    // TODO implement?
     return input;
 }
 
@@ -128,8 +127,7 @@ QList<QSharedPointer<ExecutableConfiguration> > RandomInputGenerator::insertExte
         TargetDescriptor* target = mTargetGenerator->generateTarget(NULL, ee);
         DomInput* domInput = new DomInput(NULL, ee, newForm, newParams, target);
 
-        InputSequence* newInputSequence = oldConfiguration->getInputSequence()->copy();
-        newInputSequence->extend(domInput);
+        const InputSequence* newInputSequence = oldConfiguration->getInputSequence()->extend(domInput);
 
         QSharedPointer<ExecutableConfiguration> newConfiguration = QSharedPointer<ExecutableConfiguration>(new ExecutableConfiguration(newInputSequence, oldConfiguration->getUrl()));
 
@@ -139,8 +137,7 @@ QList<QSharedPointer<ExecutableConfiguration> > RandomInputGenerator::insertExte
     foreach(const QSharedPointer<Timer> timer, result.getTimers()) {
         TimerInput* newInput = new TimerInput(0, timer);
 
-        InputSequence* newSeq = oldConfiguration->getInputSequence()->copy();
-        newSeq->extend(newInput);
+        const InputSequence* newSeq = oldConfiguration->getInputSequence()->extend(newInput);
 
         QSharedPointer<ExecutableConfiguration> newConf = QSharedPointer<ExecutableConfiguration>(new ExecutableConfiguration(newSeq, oldConfiguration->getUrl()));
 
@@ -152,8 +149,7 @@ QList<QSharedPointer<ExecutableConfiguration> > RandomInputGenerator::insertExte
         qDebug() << "HIT" << endl;
         AjaxInput* newInput = new AjaxInput(0, callbackId);
 
-        InputSequence* newSequence = oldConfiguration->getInputSequence()->copy();
-        newSequence->extend(newInput);
+        const InputSequence* newSequence = oldConfiguration->getInputSequence()->extend(newInput);
 
         QSharedPointer<ExecutableConfiguration> newConfiguration = QSharedPointer<ExecutableConfiguration>(new ExecutableConfiguration(newSequence,
                 oldConfiguration->getUrl()));
