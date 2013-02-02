@@ -30,9 +30,11 @@
 
 #include <QList>
 
+
 #include "inputgeneratorstrategy.h"
 #include "variants/variantsgenerator.h"
 #include "targets/targetgenerator.h"
+#include "runtime/input/dominput.h"
 
 
 namespace artemis

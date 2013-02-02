@@ -37,23 +37,9 @@ using namespace std;
 namespace artemis
 {
 
-class FormInput;
-class DomInput;
-class SourceInfo;
-
 const QWebElement NULL_WEB_ELEMENT;
 const QString ELEMENT_OBJECT_PLACEHOLDER = "%event_object%";
 const QUrl DONT_MEASURE_COVERAGE("http://this-is-fake-dont-do-coverage.fake");
-
-const char INDEX_HEADER_A[] = {
-#include "index-header.dat"
-};
-const QString INDEX_HEADER(INDEX_HEADER_A);
-
-const char INDEX_FOOTER_A[] = {
-#include "index-footer.dat"
-};
-const QString INDEX_FOOTER(INDEX_FOOTER_A);
 
 inline QString quote_string(const QString s)
 {
@@ -89,6 +75,7 @@ inline bool is_omit(const QUrl& u)
     //TODO add support for exclusion of libraries!
     return u == DONT_MEASURE_COVERAGE;
 }
+
 }
 
 #endif // ARTEMISGLOBALS_H
