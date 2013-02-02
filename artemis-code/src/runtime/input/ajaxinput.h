@@ -38,8 +38,8 @@ class AjaxInput: public BaseInput
 public:
     AjaxInput(QObject* parent, int callbackId);
 
-    void apply(ArtemisWebPage* page, QWebExecutionListener* webkitListener);
-    bool isEqual(BaseInput* other);
+    void apply(ArtemisWebPage* page, QWebExecutionListener* webkitListener) const;
+    bool isEqual(const BaseInput* other) const;
 
 private:
     int mCallbackId;

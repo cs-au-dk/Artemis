@@ -55,7 +55,7 @@ DomInput::DomInput(QObject* parent, EventHandlerDescriptor* handler,
     //mTarget->setParent(this);
 }
 
-void DomInput::apply(ArtemisWebPage* page, QWebExecutionListener* webkitListener)
+void DomInput::apply(ArtemisWebPage* page, QWebExecutionListener* webkitListener) const
 {
     QWebElement handler = mEventHandler->domElement()->getElement(page);
     QWebElement target = this->target()->get(page);
@@ -107,9 +107,9 @@ FormInput* DomInput::getFormInput() const
     return mFormInput;
 }
 
-bool DomInput::isEqual(BaseInput* other)
+bool DomInput::isEqual(const BaseInput* other) const
 {
-    DomInput* domInput = dynamic_cast<DomInput*>(other);
+    const DomInput* domInput = dynamic_cast<const DomInput*>(other);
 
     if (domInput == 0) {
         return false;
