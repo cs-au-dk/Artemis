@@ -189,9 +189,9 @@ void WebKitExecutor::setupInitial()
 
 void WebKitExecutor::doExe()
 {
-    const QSharedPointer<InputSequence> seq = currentConf->getInputSequence();
+    QSharedPointer<const InputSequence> seq = currentConf->getInputSequence();
 
-    foreach(const BaseInput* input, seq->toList()) {
+    foreach(QSharedPointer<const BaseInput> input, seq->toList()) {
         qDebug() << "APPLY!" << endl;
         input->apply(this->page, this->webkitListener);
         //Wait for any ajax stuff to finish

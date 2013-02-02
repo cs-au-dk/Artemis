@@ -43,13 +43,13 @@ class DomInput: public BaseInput
 {
 
 public:
-    DomInput(QObject* parent, EventHandlerDescriptor* handler, FormInput* formInput,
+    DomInput(EventHandlerDescriptor* handler, FormInput* formInput,
              EventParameters* params, TargetDescriptor* target);
 
     ~DomInput();
 
     void apply(ArtemisWebPage* page, QWebExecutionListener* webkitListener) const;
-    bool isEqual(const BaseInput* other) const;
+    bool isEqual(QSharedPointer<const BaseInput> other) const;
 
     // TODO delete
     const EventHandlerDescriptor* getEventHandler() const;

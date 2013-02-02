@@ -35,23 +35,23 @@ InputSequence::InputSequence()
 {
 }
 
-InputSequence::InputSequence(const QList<const BaseInput*>& sequence)
+InputSequence::InputSequence(const QList<QSharedPointer<const BaseInput> >& sequence)
     : mSequence(sequence)
 {
 }
 
-const QSharedPointer<InputSequence> InputSequence::replaceLast(const BaseInput* newLast) const
+QSharedPointer<const InputSequence> InputSequence::replaceLast(QSharedPointer<const BaseInput> newLast) const
 {
-    QList<const BaseInput*> sequence = mSequence;
+    QList<QSharedPointer<const BaseInput> > sequence;
     sequence.removeLast();
     sequence.append(newLast);
 
     return QSharedPointer<InputSequence>(new InputSequence(sequence));
 }
 
-const QSharedPointer<InputSequence> InputSequence::extend(const BaseInput* newLast) const
+QSharedPointer<const InputSequence> InputSequence::extend(QSharedPointer<const BaseInput> newLast) const
 {
-    QList<const BaseInput*> sequence = mSequence;
+    QList<QSharedPointer<const BaseInput> > sequence = mSequence;
     sequence.append(newLast);
 
     return QSharedPointer<InputSequence>(new InputSequence(sequence));
@@ -62,12 +62,12 @@ bool InputSequence::isEmpty() const
     return mSequence.empty();
 }
 
-const BaseInput* InputSequence::getLast() const
+QSharedPointer<const BaseInput> InputSequence::getLast() const
 {
     return mSequence.last();
 }
 
-const QList<const BaseInput*> InputSequence::toList() const
+const QList<QSharedPointer<const BaseInput> > InputSequence::toList() const
 {
     return mSequence;
 }

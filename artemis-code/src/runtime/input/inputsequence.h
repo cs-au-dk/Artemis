@@ -40,17 +40,17 @@ class InputSequence
 
 public:
     InputSequence();
-    InputSequence(const QList<const BaseInput*>& sequence);
+    InputSequence(const QList<QSharedPointer<const BaseInput> >& sequence);
 
-    const QSharedPointer<InputSequence> replaceLast(const BaseInput* newLast) const;
-    const QSharedPointer<InputSequence> extend(const BaseInput* newLast) const;
+    QSharedPointer<const InputSequence> replaceLast(QSharedPointer<const BaseInput> newLast) const;
+    QSharedPointer<const InputSequence> extend(QSharedPointer<const BaseInput> newLast) const;
 
     bool isEmpty() const;
-    const BaseInput* getLast() const;
-    const QList<const BaseInput*> toList() const;
+    QSharedPointer<const BaseInput> getLast() const;
+    const QList<QSharedPointer<const BaseInput> > toList() const;
 
 private:
-    const QList<const BaseInput*> mSequence;
+    const QList<QSharedPointer<const BaseInput> > mSequence;
 };
 
 }
