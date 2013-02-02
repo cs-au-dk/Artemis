@@ -42,8 +42,8 @@ public:
     InputSequence();
     InputSequence(const QList<const BaseInput*>& sequence);
 
-    const InputSequence* replaceLast(const BaseInput* newLast) const;
-    const InputSequence* extend(const BaseInput* newLast) const;
+    const QSharedPointer<InputSequence> replaceLast(const BaseInput* newLast) const;
+    const QSharedPointer<InputSequence> extend(const BaseInput* newLast) const;
 
     bool isEmpty() const;
     const BaseInput* getLast() const;

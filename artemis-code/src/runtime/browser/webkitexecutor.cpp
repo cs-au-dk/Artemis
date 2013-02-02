@@ -189,7 +189,7 @@ void WebKitExecutor::setupInitial()
 
 void WebKitExecutor::doExe()
 {
-    const InputSequence* seq = currentConf->getInputSequence();
+    const QSharedPointer<InputSequence> seq = currentConf->getInputSequence();
 
     foreach(const BaseInput* input, seq->toList()) {
         qDebug() << "APPLY!" << endl;
