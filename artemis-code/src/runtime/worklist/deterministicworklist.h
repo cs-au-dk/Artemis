@@ -38,29 +38,24 @@ using namespace std;
 
 namespace artemis {
 
-    class DeterministicWorkList : public WorkList
-    {
-    public:
+class DeterministicWorkList : public WorkList
+{
+public:
+    DeterministicWorkList(QObject* parent);
 
-        DeterministicWorkList(QObject* parent);
+    void add(QSharedPointer<ExecutableConfiguration*> e, int priority);
+    bool all_zero_priority();
+    QSharedPointer<ExecutableConfiguration*> remove();
+    int size();
+    bool empty();
+    bool contains(QSharedPointer<ExecutableConfiguration*> e);
+    void new_priority(QSharedPointer<ExecutableConfiguration*> e, int priority);
 
-        void add(ExecutableConfiguration* e, int priority);
-        bool all_zero_priority();
-        ExecutableConfiguration* remove();
-        int size();
-        bool empty();
-        bool contains(ExecutableConfiguration* e);
-        void new_priority(ExecutableConfiguration* e, int priority);
+private:
+    int largest_pri;
+    QMap<int, QSet<QSharedPointer<ExecutableConfiguration*>>* > queue;
 
-    private:
-        int largest_pri;
-        QMap<int,QSet<ExecutableConfiguration*>* > queue;
-
-    signals:
-
-    public slots:
-
-    };
+};
 
 }
 

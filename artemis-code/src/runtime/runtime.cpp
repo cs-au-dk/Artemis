@@ -83,8 +83,8 @@ Runtime::Runtime(QObject* parent, const Options& options, QUrl url) : QObject(pa
     mWorklist = new DeterministicWorkList(this);
 
     QObject::connect(mWebkitExecutor,
-            SIGNAL(sigExecutedSequence(ExecutableConfiguration*, ExecutionResult*)), this,
-            SLOT(postConcreteExecution(ExecutableConfiguration*, ExecutionResult*)));
+            SIGNAL(sigExecutedSequence(QSharedPointer<ExecutableConfiguration*>, ExecutionResult*)), this,
+            SLOT(postConcreteExecution(QSharedPointer<ExecutableConfiguration*>, ExecutionResult*)));
 }
 
 /**
@@ -93,9 +93,8 @@ Runtime::Runtime(QObject* parent, const Options& options, QUrl url) : QObject(pa
  */
 void Runtime::startAnalysis(QUrl url)
 {
-    // TODO possible memory leak
-    ExecutableConfiguration* initialConfiguration =
-    		new ExecutableConfiguration(NULL, new InputSequence(NULL), url);
+    QSharedPointer<ExecutableConfiguration*> initialConfiguration =
+            QSharedPointer<ExecutableConfiguration*>(new ExecutableConfiguration(new InputSequence(NULL), url));
 
     mWorklist->add(initialConfiguration, 0);
 
@@ -114,8 +113,7 @@ void Runtime::preConcreteExecution()
 		return;
 	}
 
-	// TODO remove this memory leak
-	ExecutableConfiguration* nextConfiguration = mWorklist->remove();
+    QSharedPointer<ExecutableConfiguration*> nextConfiguration = mWorklist->remove();
 
     mWebkitExecutor->executeSequence(nextConfiguration); // calls the slExecutedSequence method as callback
 }
@@ -125,7 +123,7 @@ void Runtime::preConcreteExecution()
  * @param configuration
  * @param result
  */
-void Runtime::postConcreteExecution(ExecutableConfiguration* configuration, ExecutionResult* result)
+void Runtime::postConcreteExecution(QSharedPointer<ExecutableConfiguration*> configuration, ExecutionResult* result)
 {
     mPrioritizerStrategy->reprioritize(mWorklist);
 

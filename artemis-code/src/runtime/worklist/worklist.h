@@ -30,25 +30,27 @@
 
 #include <QObject>
 #include <QString>
+#include <QSharedPointer>
 
 #include "runtime/executableconfiguration.h"
 
 namespace artemis {
-    // TODO move to QObject memory management
-    class WorkList : public QObject {
-    public:
-        WorkList(QObject* parent) : QObject(parent) {};
-        virtual ~WorkList() {};
 
-        virtual void add(ExecutableConfiguration* e, int priority) = 0;
-        virtual bool all_zero_priority() = 0;
-        virtual ExecutableConfiguration* remove() = 0;
-        virtual int size() = 0;
-        virtual bool empty() = 0;
-        virtual bool contains(ExecutableConfiguration* e) = 0;
-        virtual void new_priority(ExecutableConfiguration* e, int priority) = 0;
+class WorkList : public QObject {
 
-    };
+public:
+    WorkList(QObject* parent) : QObject(parent) {};
+    virtual ~WorkList() {};
+
+    virtual void add(QSharedPointer<ExecutableConfiguration*> e, int priority) = 0;
+    virtual bool all_zero_priority() = 0;
+    virtual QSharedPointer<ExecutableConfiguration*> remove() = 0;
+    virtual int size() = 0;
+    virtual bool empty() = 0;
+    virtual bool contains(QSharedPointer<ExecutableConfiguration*> e) = 0;
+    virtual void new_priority(QSharedPointer<ExecutableConfiguration*> e, int priority) = 0;
+
+};
 
 }
 
