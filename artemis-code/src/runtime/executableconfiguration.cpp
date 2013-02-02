@@ -30,31 +30,26 @@
 
 namespace artemis {
 
-ExecutableConfiguration::ExecutableConfiguration(QObject* parent, InputSequence* seq, QUrl start_url) : QObject(parent)
-    {
-        this->url = start_url;
-        this->sequence = seq;
-    }
+ExecutableConfiguration::ExecutableConfiguration(const InputSequence* sequence, const QUrl url)
+    : mUrl(url), mSequence(sequence->copy())
+{
+}
 
 ExecutableConfiguration::~ExecutableConfiguration() {
+    delete mSequence;
+}
 
-    }
+QUrl ExecutableConfiguration::getUrl() const {
+    return mUrl;
+}
 
-    QUrl ExecutableConfiguration::starting_url() const {
-        return url;
-    }
+bool ExecutableConfiguration::isInitial() {
+   return mSequence->isEmpty();
+}
 
-    ExecutableConfiguration* ExecutableConfiguration::copy_with_sequence(InputSequence* seq) const {
-        return new ExecutableConfiguration(parent(), seq, this->starting_url());
-    }
-
-    bool ExecutableConfiguration::is_initial() {
-       return sequence->isEmpty();
-    }
-
-    InputSequence* ExecutableConfiguration::get_eventsequence() const{
-        return this->sequence;
-    }
+InputSequence* ExecutableConfiguration::getInputSequence() const{
+    return this->mSequence;
+}
 
 }
 

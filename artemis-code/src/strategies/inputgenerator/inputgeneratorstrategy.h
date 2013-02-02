@@ -30,6 +30,7 @@
 
 #include <QObject>
 #include <QList>
+#include <QSharedPointer>
 
 #include "runtime/browser/executionresult.h"
 #include "runtime/worklist/worklist.h"
@@ -45,7 +46,7 @@ namespace artemis {
         InputGeneratorStrategy(QObject *parent) : QObject(parent) {};
         virtual ~InputGeneratorStrategy() {};
 
-        virtual QList<ExecutableConfiguration*> add_new_configurations(const ExecutableConfiguration*, const ExecutionResult&) = 0;
+        virtual QList<QSharedPointer<ExecutableConfiguration*> > add_new_configurations(const QSharedPointer<ExecutableConfiguration*>, const ExecutionResult&) = 0;
 
     };
 

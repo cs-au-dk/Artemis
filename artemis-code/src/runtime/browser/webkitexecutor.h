@@ -33,6 +33,7 @@
 #include <QSemaphore>
 #include <QtWebKit>
 #include <QtWebKit/qwebexecutionlistener.h>
+#include <QSharedPointer>
 
 #include "artemisglobals.h"
 #include "executionresult.h"
@@ -53,14 +54,14 @@ namespace artemis {
         		JQueryListener* jqueryListener,
                 AjaxRequestListener* ajaxListener);
         ~WebKitExecutor();
-        void executeSequence(ExecutableConfiguration* conf);
+        void executeSequence(QSharedPointer<ExecutableConfiguration*> conf);
         QWebExecutionListener* webkit_listener;
         CodeCoverage coverage();
         void finish_up();
 
     private:
         void setup();
-        void finished_sequence();
+        void finishedExecutionSequence();
         void get_form_fields();
         QSet<QWebFrame*> all_frames();
         QSet<QString> get_select_options(const QWebElement&);
@@ -70,7 +71,7 @@ namespace artemis {
 
         ArtemisWebPage* page;
         ExecutionResult* current_result;
-        ExecutableConfiguration* current_conf;
+        QSharedPointer<ExecutableConfiguration*> current_conf;
         CoverageListener* cov_list;
         QString initial_page_state;
         AjaxRequestListener* ajax_listener;
@@ -78,10 +79,10 @@ namespace artemis {
         QMap<QString,QString> mPresetFields;
 
     signals:
-        void sigExecutedSequence(ExecutableConfiguration* conf, ExecutionResult* res);
+        void sigExecutedSequence(QSharedPointer<ExecutableConfiguration*> conf, ExecutionResult* res);
 
     public slots:
-        void sl_loadFinished(bool ok);
+        void slLoadFinished(bool ok);
         void sl_script_crash(QString, intptr_t, int);
         void sl_ajax_request(QUrl, QString post_data);
         void sl_eval_called(QString eval_text);

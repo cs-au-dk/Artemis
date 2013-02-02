@@ -28,32 +28,30 @@
 #ifndef EXECUTABLECONFIGURATION_H
 #define EXECUTABLECONFIGURATION_H
 
-#include <QObject>
 #include <QUrl>
+#include <QSharedPointer>
 
 #include "input/inputsequence.h"
 #include "runtime/events/forms/forminput.h"
 
 namespace artemis {
 
-    class ExecutableConfiguration : public QObject
-    {
+class ExecutableConfiguration
+{
 
-    	Q_OBJECT
+public:
+    ExecutableConfiguration(const InputSequence* sequence, const QUrl url);
+    ~ExecutableConfiguration();
 
-    public:
-        ExecutableConfiguration(QObject* parent, InputSequence* seq , QUrl start_url);
-        ~ExecutableConfiguration();
-        ExecutableConfiguration* copy_with_sequence(InputSequence* seq) const ;
-        QUrl starting_url() const;
-        bool is_initial();
-        InputSequence* get_eventsequence() const;
-        QString toSimpleString();
+    bool isInitial() const;
+    const QUrl getUrl() const;
+    const QSharedPointer<InputSequence*> getInputSequence() const;
 
-    private:
-        QUrl url;
-        InputSequence* sequence;
-   };
+private:
+    const QUrl mUrl;
+    const QSharedPointer<InputSequence*> mSequence;
+};
+
 }
 
 #endif // EXECUTABLECONFIGURATION_H

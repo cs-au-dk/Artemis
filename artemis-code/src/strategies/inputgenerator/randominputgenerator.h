@@ -43,12 +43,12 @@ namespace artemis {
     public:
         RandomInputGenerator(QObject *parent, TargetGenerator* targetGenerator, int numberSameLength);
         ~RandomInputGenerator();
-        QList<ExecutableConfiguration*> add_new_configurations(const ExecutableConfiguration*, const ExecutionResult &);
+        QList<QSharedPointer<ExecutableConfiguration*> > add_new_configurations(const QSharedPointer<ExecutableConfiguration*>, const ExecutionResult &);
 
     private:
         int next_random();
-        QList<ExecutableConfiguration*> insert_same_length(const ExecutableConfiguration* e, const ExecutionResult& e_result);
-        QList<ExecutableConfiguration*> insert_extended(const ExecutableConfiguration* e, const ExecutionResult& e_result);
+        QList<QSharedPointer<ExecutableConfiguration*> > insert_same_length(const QSharedPointer<ExecutableConfiguration*> e, const ExecutionResult& e_result);
+        QList<QSharedPointer<ExecutableConfiguration*> > insert_extended(const QSharedPointer<ExecutableConfiguration*> e, const ExecutionResult& e_result);
 
         BaseInput* permutate_input(const DomInput* input);
         BaseInput* permutate_input(BaseInput* input);

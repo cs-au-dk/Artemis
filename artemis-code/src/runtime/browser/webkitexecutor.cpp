@@ -88,7 +88,7 @@ namespace artemis {
         page->setNetworkAccessManager(ajax_listener);
 
         QObject::connect(page, SIGNAL(loadFinished(bool)),
-                         this, SLOT(sl_loadFinished(bool)));
+                         this, SLOT(slLoadFinished(bool)));
 
     }
 
@@ -99,14 +99,53 @@ namespace artemis {
         delete cov_list;
     }
 
-    void WebKitExecutor::sl_loadFinished(bool ok) {
+    void WebKitExecutor::executeSequence(QSharedPointer<ExecutableConfiguration*> conf) {
+        qDebug() << "Artemis: Executing sequence" << endl;
+
+        if (current_result != 0) {
+            qDebug() << "Removing old result" << endl;
+
+            current_result->disconnect();
+
+            delete current_result;
+        }
+
+        current_result = new ExecutionResult(0);
+        current_conf = conf;
+
+        mJquery->reset();
+
+        QObject::connect(webkit_listener, SIGNAL(addedEventListener(QWebElement*,QString)),
+                            current_result, SLOT(newEventListener(QWebElement*,QString)));
+        QObject::connect(webkit_listener, SIGNAL(removedEventListener(QWebElement*,QString)),
+                            current_result, SLOT(removeEventListener(QWebElement*,QString)));
+
+        QObject::connect(webkit_listener, SIGNAL(addedAjaxCallbackHandler(int)),
+                            current_result, SLOT(addedAjaxCallbackHandler(int)));
+
+        QObject::connect(webkit_listener, SIGNAL(addedTimer(int, int, bool)),
+                            current_result, SLOT(sl_timer_added(int, int, bool)));
+        QObject::connect(webkit_listener, SIGNAL(removedTimer(int)),
+                            current_result, SLOT(sl_timer_removed(int)));
+
+        QObject::connect(webkit_listener, SIGNAL(script_crash(QString,intptr_t,int)),
+                            current_result, SLOT(sl_script_crash(QString,intptr_t,int)));
+        QObject::connect(webkit_listener, SIGNAL(eval_call(QString)),
+                            current_result, SLOT(sl_eval_string(QString)));
+
+        //Load URL into WebKit
+        qDebug() << "Trying to load: " << conf->getUrl().toString() << endl;
+        page->mainFrame()->load(conf->getUrl());
+    }
+
+    void WebKitExecutor::slLoadFinished(bool ok) {
 
         if (!ok) {
             qDebug() << "WEBKIT: Website load failed!";
-            
+
             current_result->make_load_failed();
-            finished_sequence();
-            
+            finishedExecutionSequence();
+
             exit(1);
             return;
         }
@@ -116,7 +155,7 @@ namespace artemis {
         //handle_ajax_callbacks();
         setup_initial();;
         do_exe();
-        finished_sequence();
+        finishedExecutionSequence();
     }
 
     void WebKitExecutor::save_dom_state() {
@@ -142,7 +181,7 @@ namespace artemis {
     }
 
     void WebKitExecutor::do_exe() {
-        InputSequence* seq = current_conf->get_eventsequence();
+        InputSequence* seq = current_conf->getInputSequence();
     
         foreach (BaseInput* input, seq->toList()) {
             qDebug() << "APPLY!" << endl;
@@ -150,15 +189,6 @@ namespace artemis {
             //Wait for any ajax stuff to finish
 	    //            handle_ajax_callbacks();
         }
-    }
-
-    void WebKitExecutor::finished_sequence() {
-        get_form_fields();
-        save_dom_state();
-
-        current_result->finalize();
-
-        emit sigExecutedSequence(current_conf, current_result);
     }
 
     void WebKitExecutor::get_form_fields() {
@@ -234,49 +264,17 @@ namespace artemis {
 
             current_result->disconnect();
 
-            delete current_conf;
             delete current_result;
         }
     }
 
-    void WebKitExecutor::executeSequence(ExecutableConfiguration* conf) {
-        qDebug() << "Artemis: Executing sequence" << endl;
+    void WebKitExecutor::finishedExecutionSequence() {
+        get_form_fields();
+        save_dom_state();
 
-        if (current_result != 0) {
-            qDebug() << "Removing old result" << endl;
-            
-            current_result->disconnect();
+        current_result->finalize();
 
-            delete current_conf;
-            delete current_result;
-        }
-
-        current_result = new ExecutionResult(0);
-        current_conf = conf;
-
-        mJquery->reset();
-
-        QObject::connect(webkit_listener, SIGNAL(addedEventListener(QWebElement*,QString)),
-                            current_result, SLOT(newEventListener(QWebElement*,QString)));
-        QObject::connect(webkit_listener, SIGNAL(removedEventListener(QWebElement*,QString)),
-                            current_result, SLOT(removeEventListener(QWebElement*,QString)));
-        
-        QObject::connect(webkit_listener, SIGNAL(addedAjaxCallbackHandler(int)),
-                            current_result, SLOT(addedAjaxCallbackHandler(int)));
-        
-        QObject::connect(webkit_listener, SIGNAL(addedTimer(int, int, bool)),
-                            current_result, SLOT(sl_timer_added(int, int, bool)));
-        QObject::connect(webkit_listener, SIGNAL(removedTimer(int)),
-                            current_result, SLOT(sl_timer_removed(int)));
-
-        QObject::connect(webkit_listener, SIGNAL(script_crash(QString,intptr_t,int)),
-                            current_result, SLOT(sl_script_crash(QString,intptr_t,int)));
-        QObject::connect(webkit_listener, SIGNAL(eval_call(QString)),
-                            current_result, SLOT(sl_eval_string(QString)));
-
-        //Load URL into WebKit
-        qDebug() << "Trying to load: " << current_conf->starting_url().toString() << endl;
-        page->mainFrame()->load(current_conf->starting_url());
+        emit sigExecutedSequence(current_conf, current_result);
     }
 
     CodeCoverage WebKitExecutor::coverage() {
