@@ -29,6 +29,8 @@
 #include <iostream>
 #include <QString>
 
+#include <QDebug>
+
 #include "pretty.h"
 
 namespace artemis
@@ -36,14 +38,14 @@ namespace artemis
 
 StatsPrettyWriter::StatsPrettyWriter() {}
 
-void StatsPrettyWriter::write(std::ostream& stream, const StatsStorage* stats)
+void StatsPrettyWriter::write(const StatsStorage* stats)
 {
 
     QHashIterator<QString, int> i(stats->intStorage);
 
     while (i.hasNext()) {
         i.next();
-        std::cout << qPrintable(i.key()) << ": " << i.value() << std::endl;
+        qDebug() << qPrintable(i.key()) << ": " << i.value();
     }
 
 }

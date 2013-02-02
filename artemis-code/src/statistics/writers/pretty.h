@@ -38,7 +38,7 @@ class StatsPrettyWriter
 
 public:
 
-    static void write(std::ostream& stream, const StatsStorage* stats);
+    static void write(const StatsStorage* stats);
 
 private:
     StatsPrettyWriter();
