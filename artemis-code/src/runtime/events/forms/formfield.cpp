@@ -83,12 +83,12 @@ DOMElementDescriptor* FormField::element() const
     return elementDescriptor;
 }
 
-FormFieldTypes FormField::type()
+FormFieldTypes FormField::type() const
 {
     return fieldType;
 }
 
-QSet<QString> FormField::inputs()
+QSet<QString> FormField::inputs() const
 {
     return inputsSet;
 }

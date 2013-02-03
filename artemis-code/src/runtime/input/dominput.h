@@ -43,7 +43,7 @@ class DomInput: public BaseInput
 {
 
 public:
-    DomInput(const EventHandlerDescriptor* handler, const FormInput* formInput,
+    DomInput(const EventHandlerDescriptor* handler, QSharedPointer<const FormInput> formInput,
              const EventParameters* params, const TargetDescriptor* target);
 
     void apply(ArtemisWebPage* page, QWebExecutionListener* webkitListener) const;
@@ -52,7 +52,7 @@ public:
 
 private:
     const EventHandlerDescriptor* mEventHandler;
-    const FormInput* mFormInput;
+    QSharedPointer<const FormInput> mFormInput;
     const EventParameters* mEvtParams;
     const TargetDescriptor* mTarget;
 };

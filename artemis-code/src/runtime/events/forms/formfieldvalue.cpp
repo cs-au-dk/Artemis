@@ -74,7 +74,7 @@ bool FormFieldValue::isNoValue()
     return isNoVal;
 }
 
-QString FormFieldValue::stringRepresentation()
+QString FormFieldValue::stringRepresentation() const
 {
     Q_ASSERT(!isNoVal);
 
