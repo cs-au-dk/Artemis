@@ -91,7 +91,7 @@ bool DomInput::isEqual(QSharedPointer<const BaseInput> other) const
     // TODO Implement DomInput::isEqual
 }
 
-QSharedPointer<const BaseInput> DomInput::getPermutation(VariantsGenerator* variantsGenerator, TargetGenerator* targetGenerator) const
+QSharedPointer<const BaseInput> DomInput::getPermutation(QSharedPointer<VariantsGenerator> variantsGenerator, TargetGenerator* targetGenerator) const
 {
     EventParameters* newParams = variantsGenerator->generateEventParameters(NULL, mEventHandler);
     QSharedPointer<FormInput> newForm = variantsGenerator->generateFormFields(NULL, mFormInput->getFields());

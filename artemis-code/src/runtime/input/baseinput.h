@@ -29,6 +29,7 @@
 #define BASEINPUT_H
 
 #include <QtWebKit/qwebexecutionlistener.h>
+#include <QSharedPointer>
 
 #include "runtime/browser/artemiswebpage.h"
 #include "strategies/inputgenerator/variants/randomvariants.h"
@@ -43,7 +44,8 @@ class BaseInput
 public:
     virtual void apply(ArtemisWebPage* page, QWebExecutionListener* webkitListener) const = 0;
     virtual bool isEqual(QSharedPointer<const BaseInput> other) const = 0;
-    virtual QSharedPointer<const BaseInput> getPermutation(VariantsGenerator* variantsGenerator, TargetGenerator* targetGenerator) const = 0;
+    virtual QSharedPointer<const BaseInput> getPermutation(QSharedPointer<VariantsGenerator> variantsGenerator,
+                                                           TargetGenerator* targetGenerator) const = 0;
 };
 
 }

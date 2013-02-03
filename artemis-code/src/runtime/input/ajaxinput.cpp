@@ -57,7 +57,7 @@ bool AjaxInput::isEqual(QSharedPointer<const BaseInput> other) const
     return mCallbackId == ajaxInput->mCallbackId;
 }
 
-QSharedPointer<const BaseInput> AjaxInput::getPermutation(VariantsGenerator* variantsGenerator, TargetGenerator* targetGenerator) const
+QSharedPointer<const BaseInput> AjaxInput::getPermutation(QSharedPointer<VariantsGenerator> variantsGenerator, TargetGenerator* targetGenerator) const
 {
     return QSharedPointer<const BaseInput>(this);
 }

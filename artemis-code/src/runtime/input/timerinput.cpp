@@ -59,7 +59,8 @@ bool TimerInput::isEqual(QSharedPointer<const BaseInput> other) const
     return mTimer->getId() == timerInput->mTimer->getId();
 }
 
-QSharedPointer<const BaseInput> TimerInput::getPermutation(VariantsGenerator* variantsGenerator, TargetGenerator* targetGenerator) const
+QSharedPointer<const BaseInput> TimerInput::getPermutation(QSharedPointer<VariantsGenerator> variantsGenerator,
+                                                           TargetGenerator* targetGenerator) const
 {
     return QSharedPointer<const BaseInput>(this);
 }
