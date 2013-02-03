@@ -45,7 +45,7 @@ public:
     VariantsGenerator() {}
 
     virtual EventParameters* generateEventParameters(QObject* parent, const EventHandlerDescriptor* eventHandler) = 0;
-    virtual QSharedPointer<FormInput> generateFormFields(QObject* parent, QSet<const FormField*>) = 0;
+    virtual QSharedPointer<FormInput> generateFormFields(QObject* parent, QSet<QSharedPointer<const FormField> >) = 0;
 
     virtual ~VariantsGenerator() {}
 };

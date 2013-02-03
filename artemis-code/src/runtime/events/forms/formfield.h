@@ -28,7 +28,6 @@
 #ifndef FORMFIELD_H
 #define FORMFIELD_H
 
-#include <QObject>
 #include <QSet>
 #include <QString>
 
@@ -38,27 +37,23 @@
 namespace artemis
 {
 
-class FormField : public QObject
+class FormField
 {
-    Q_OBJECT
 
 public:
-    FormField(QObject* parent, FormFieldTypes type, DOMElementDescriptor* element, QSet<QString> inputOptions);
-    FormField(QObject* parent, FormFieldTypes type, DOMElementDescriptor* element);
-    FormField(QObject* parent, const FormField* other);
+    FormField(FormFieldTypes fieldType, const DOMElementDescriptor* domElement, QSet<QString> inputOptions);
+    FormField(FormFieldTypes fieldType, const DOMElementDescriptor* domElement);
 
-    ~FormField();
-
-    DOMElementDescriptor* element() const;
-    FormFieldTypes type() const;
-    QSet<QString> inputs() const;
+    const DOMElementDescriptor* getDomElement() const;
+    FormFieldTypes getType() const;
+    QSet<QString> getInputOptions() const;
 
     QDebug friend operator<<(QDebug dbg, const FormField& f);
 
 private:
-    FormFieldTypes fieldType;
-    DOMElementDescriptor* elementDescriptor;
-    QSet<QString> inputsSet;
+    const DOMElementDescriptor* mElementDescriptor;
+    const FormFieldTypes mFieldType;
+    QSet<QString> mDefaultInputs;
 
 };
 

@@ -40,7 +40,7 @@ public:
     RandomVariants();
 
     EventParameters* generateEventParameters(QObject* parent, const EventHandlerDescriptor* eventHandler);
-    QSharedPointer<FormInput> generateFormFields(QObject* parent, QSet<const FormField*> fi);
+    QSharedPointer<FormInput> generateFormFields(QObject* parent, QSet<QSharedPointer<const FormField> > fi);
 
 };
 

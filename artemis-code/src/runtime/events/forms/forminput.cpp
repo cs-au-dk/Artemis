@@ -33,14 +33,14 @@
 namespace artemis
 {
 
-FormInput::FormInput(QSet<QPair<const FormField*, const FormFieldValue*> >& inputs) :
+FormInput::FormInput(QSet<QPair<QSharedPointer<const FormField>, const FormFieldValue*> >& inputs) :
     mInputs(inputs)
 {
 }
 
-QSet<const FormField*> FormInput::getFields() const
+QSet<QSharedPointer<const FormField> > FormInput::getFields() const
 {
-    QSet<const FormField*> fields;
+    QSet<QSharedPointer<const FormField> > fields;
 
     foreach(input_t input, mInputs) {
         fields.insert(input.first);
@@ -49,7 +49,7 @@ QSet<const FormField*> FormInput::getFields() const
     return fields;
 }
 
-QSet<QPair<const FormField*, const FormFieldValue*> > FormInput::getInputs() const
+QSet<QPair<QSharedPointer<const FormField>, const FormFieldValue*> > FormInput::getInputs() const
 {
     return mInputs;
 }
@@ -58,7 +58,7 @@ void FormInput::writeToPage(QWebPage* page) const
 {
     foreach(input_t input, mInputs) {
 
-        DOMElementDescriptor* elmDesc = input.first->element();
+        const DOMElementDescriptor* elmDesc = input.first->getDomElement();
         QWebElement element = elmDesc->getElement(page);
 
         if (!element.isNull()) {

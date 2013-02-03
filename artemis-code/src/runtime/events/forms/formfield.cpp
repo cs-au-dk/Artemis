@@ -35,67 +35,36 @@
 namespace artemis
 {
 
-/**
- * @brief Takes ownership of element
- * @param parent
- * @param type
- * @param element
- * @param inputOptions
- */
-FormField::FormField(QObject* parent, FormFieldTypes type, DOMElementDescriptor* element, QSet<QString> inputOptions) : QObject(parent)
+FormField::FormField(FormFieldTypes type, const DOMElementDescriptor* element, QSet<QString> inputOptions) :
+    mElementDescriptor(element), mFieldType(type)
 {
-    this->fieldType = type;
-
-    this->elementDescriptor = element;
-    this->elementDescriptor->setParent(this);
-
-    this->inputsSet = inputOptions;
+    this->mDefaultInputs = inputOptions;
 }
 
-/**
- * @brief Takes ownership of element
- * @param parent
- * @param type
- * @param element
- */
-FormField::FormField(QObject* parent, FormFieldTypes type, DOMElementDescriptor* element) : QObject(parent)
-{
-    this->fieldType = type;
-
-    this->elementDescriptor = element;
-    this->elementDescriptor->setParent(this);
-}
-
-FormField::FormField(QObject* parent, const FormField* other) : QObject(parent)
-{
-    this->fieldType = other->fieldType;
-    this->inputsSet = other->inputsSet;
-    this->elementDescriptor = new DOMElementDescriptor(parent, other->elementDescriptor);
-}
-
-FormField::~FormField()
+FormField::FormField(FormFieldTypes type, const DOMElementDescriptor* element) :
+    mElementDescriptor(element), mFieldType(type)
 {
 
 }
 
-DOMElementDescriptor* FormField::element() const
+const DOMElementDescriptor* FormField::getDomElement() const
 {
-    return elementDescriptor;
+    return mElementDescriptor;
 }
 
-FormFieldTypes FormField::type() const
+FormFieldTypes FormField::getType() const
 {
-    return fieldType;
+    return mFieldType;
 }
 
-QSet<QString> FormField::inputs() const
+QSet<QString> FormField::getInputOptions() const
 {
-    return inputsSet;
+    return mDefaultInputs;
 }
 
 QDebug operator<<(QDebug dbg, const FormField& f)
 {
-    dbg.nospace() << "{" << *f.elementDescriptor << "," << formFieldTypeTostring(f.fieldType) << "," << f.inputsSet << "}";
+    dbg.nospace() << "{" << *f.mElementDescriptor << "," << formFieldTypeTostring(f.mFieldType) << "," << f.mDefaultInputs << "}";
     return dbg.space();
 }
 

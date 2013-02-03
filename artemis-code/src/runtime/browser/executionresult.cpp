@@ -157,7 +157,7 @@ void ExecutionResult::finalize()
     elementPointers.clear();
 }
 
-QSet<const FormField*> ExecutionResult::formFields() const
+QSet<QSharedPointer<const FormField> > ExecutionResult::formFields() const
 {
     Q_ASSERT(final);
     return mFormFields;
@@ -174,19 +174,16 @@ QSet<AjaxRequest> ExecutionResult::ajaxRequest() const
     return this->mAjaxRequest;
 }
 
-void ExecutionResult::addFormField(const FormField* f)
+void ExecutionResult::addFormField(QSharedPointer<const FormField> formField)
 {
     Q_ASSERT(!final);
-
-    FormField* formField = new FormField(this, f);
     mFormFields.insert(formField);
 }
 
-void ExecutionResult::addFormFields(const QSet<FormField*>& fields)
+void ExecutionResult::addFormFields(QSet<QSharedPointer<const FormField> > fields)
 {
     Q_ASSERT(!final);
-
-    foreach(FormField * field, fields) {
+    foreach(QSharedPointer<const FormField> field, fields) {
         this->addFormField(field);
     }
 }
