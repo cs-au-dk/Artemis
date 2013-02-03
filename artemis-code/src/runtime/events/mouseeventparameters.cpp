@@ -88,10 +88,11 @@ the Event's mouse event.button.
 relatedTarget
 the Event's related EventTarget. Only used with some event types (e.g. mouseover and mouseout). In other cases, pass null.
   */
-QString MouseEventParameters::jsString()
+QString MouseEventParameters::jsString() const
 {
-    if (!memoJs.isEmpty())
-        { return memoJs; }
+    if (!cachedJsString.isEmpty()) {
+        return cachedJsString;
+    }
 
     QString randId = generateRandomJsId();
     QString res = "var " + randId + " = document.createEvent(\"MouseEvent\");";
@@ -114,7 +115,7 @@ QString MouseEventParameters::jsString()
 
     res +=  "this.dispatchEvent(" + randId + ");";
 
-    memoJs = res;
+    cachedJsString = res;
     return res;
 }
 

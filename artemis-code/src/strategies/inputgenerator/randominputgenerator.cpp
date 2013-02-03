@@ -51,12 +51,12 @@ RandomInputGenerator::RandomInputGenerator(QObject* parent,
 
     mNumberSameLength = numberSameLength;
 
-    varGen = new RandomVariants();
+    mVariantsGenerator = new RandomVariants();
 }
 
 RandomInputGenerator::~RandomInputGenerator()
 {
-    delete varGen;
+    delete mVariantsGenerator;
 }
 
 QList<QSharedPointer<ExecutableConfiguration> > RandomInputGenerator::addNewConfigurations(QSharedPointer<const ExecutableConfiguration> configuration,
@@ -83,7 +83,7 @@ QList<QSharedPointer<ExecutableConfiguration> > RandomInputGenerator::insertSame
     QSharedPointer<const BaseInput> last = seq->getLast();
 
     for (int i = 0; i < mNumberSameLength; i++) {
-        QSharedPointer<const BaseInput> newLast = this->permutateInput(last);
+        QSharedPointer<const BaseInput> newLast = last->getPermutation(mVariantsGenerator, mTargetGenerator);
 
         if (last->isEqual(newLast) == false) {
             QSharedPointer<const InputSequence> newSeq = seq->replaceLast(newLast);
@@ -97,24 +97,6 @@ QList<QSharedPointer<ExecutableConfiguration> > RandomInputGenerator::insertSame
     return newConfigurations;
 }
 
-QSharedPointer<const BaseInput> RandomInputGenerator::permutateInput(QSharedPointer<const DomInput> input)
-{
-    EventParameters* newParams = varGen->generateEventParameters(NULL, input->getEventHandler());
-    FormInput* newForm = varGen->generateFormFields(NULL, input->getFormInput()->getFields());
-    TargetDescriptor* target = mTargetGenerator->generateTarget(NULL, input->getEventHandler());
-    EventHandlerDescriptor* newEventHandlerDescriptor = new EventHandlerDescriptor(NULL, input->getEventHandler());
-
-    QSharedPointer<const DomInput> newLast = QSharedPointer<const DomInput>(new DomInput(newEventHandlerDescriptor, newForm, newParams, target));
-
-    return newLast;
-}
-
-QSharedPointer<const BaseInput> RandomInputGenerator::permutateInput(QSharedPointer<const BaseInput> input)
-{
-    // TODO implement?
-    return input;
-}
-
 QList<QSharedPointer<ExecutableConfiguration> > RandomInputGenerator::insertExtended(QSharedPointer<const ExecutableConfiguration> oldConfiguration,
         const ExecutionResult& result)
 {
@@ -122,8 +104,8 @@ QList<QSharedPointer<ExecutableConfiguration> > RandomInputGenerator::insertExte
 
     foreach(EventHandlerDescriptor * ee, result.eventHandlers()) {
 
-        EventParameters* newParams = varGen->generateEventParameters(NULL, ee);
-        FormInput* newForm = varGen->generateFormFields(NULL, result.formFields());
+        EventParameters* newParams = mVariantsGenerator->generateEventParameters(NULL, ee);
+        FormInput* newForm = mVariantsGenerator->generateFormFields(NULL, result.formFields());
         TargetDescriptor* target = mTargetGenerator->generateTarget(NULL, ee);
         QSharedPointer<const DomInput> domInput = QSharedPointer<const DomInput>(new DomInput(ee, newForm, newParams, target));
 

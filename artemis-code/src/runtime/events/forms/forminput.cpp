@@ -42,7 +42,7 @@ QSet<FormField*> FormInput::getFields() const
     return mInputs.keys().toSet();
 }
 
-void FormInput::writeToPage(QWebPage* page)
+void FormInput::writeToPage(QWebPage* page) const
 {
     foreach(FormField * formField, mInputs.keys()) {
 

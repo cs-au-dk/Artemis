@@ -39,14 +39,14 @@ class BaseEventParameters : public EventParameters
 public:
     BaseEventParameters(QObject* parent, QString type, bool bubbles, bool cancelable);
 
-    QString jsString() ;
+    QString jsString() const ;
     EventType type() const;
 
 private:
     QString name;
     bool cancelable;
     bool bubbles;
-    QString memoJs;
+    mutable QString cachedJsString;
 
 };
 

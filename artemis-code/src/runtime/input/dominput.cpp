@@ -35,8 +35,10 @@
 namespace artemis
 {
 
-DomInput::DomInput(EventHandlerDescriptor* handler,
-                   FormInput* formInput, EventParameters* params, TargetDescriptor* target)
+DomInput::DomInput(const EventHandlerDescriptor* handler,
+                   const FormInput* formInput,
+                   const EventParameters* params,
+                   const TargetDescriptor* target)
 {
     // TODO change to auto ptr
     mEventHandler = handler;
@@ -48,11 +50,11 @@ DomInput::DomInput(EventHandlerDescriptor* handler,
 void DomInput::apply(ArtemisWebPage* page, QWebExecutionListener* webkitListener) const
 {
     QWebElement handler = mEventHandler->domElement()->getElement(page);
-    QWebElement target = this->target()->get(page);
+    QWebElement target = mTarget->get(page);
 
     QString jsInitEvent = mEvtParams->jsString();
 
-    this->getFormInput()->writeToPage(page);
+    mFormInput->writeToPage(page);
 
     if (handler.isNull() || target.isNull()) {
         qDebug() << "WARNING::Skipping event, event handler or target could not be found";
@@ -73,30 +75,6 @@ void DomInput::apply(ArtemisWebPage* page, QWebExecutionListener* webkitListener
     }
 }
 
-DomInput::~DomInput()
-{
-    //delete this->mEventHandler;
-    //delete this->mEvtParams;
-
-    /* TODO TargetDescriptor Copy constructor */
-    /*delete this->mTarget;*/
-}
-
-TargetDescriptor* DomInput::target() const
-{
-    return mTarget;
-}
-
-const EventHandlerDescriptor* DomInput::getEventHandler() const
-{
-    return mEventHandler;
-}
-
-FormInput* DomInput::getFormInput() const
-{
-    return mFormInput;
-}
-
 bool DomInput::isEqual(QSharedPointer<const BaseInput> other) const
 {
     QSharedPointer<const DomInput> domInput = qSharedPointerDynamicCast<const DomInput>(other);
@@ -111,8 +89,14 @@ bool DomInput::isEqual(QSharedPointer<const BaseInput> other) const
     // TODO Implement DomInput::isEqual
 }
 
-EventParameters* DomInput::eventParams() const
+QSharedPointer<const BaseInput> DomInput::getPermutation(VariantsGenerator* variantsGenerator, TargetGenerator* targetGenerator) const
 {
-    return mEvtParams;
+    EventParameters* newParams = variantsGenerator->generateEventParameters(NULL, mEventHandler);
+    FormInput* newForm = variantsGenerator->generateFormFields(NULL, mFormInput->getFields());
+    TargetDescriptor* target = targetGenerator->generateTarget(NULL, mEventHandler);
+    EventHandlerDescriptor* newEventHandlerDescriptor = new EventHandlerDescriptor(NULL, mEventHandler);
+
+    return QSharedPointer<const DomInput>(new DomInput(newEventHandlerDescriptor, newForm, newParams, target));
 }
+
 }
