@@ -211,26 +211,23 @@ void WebKitExecutor::getFormFields()
             if (fType == NO_INPUT)
                 { continue; }
 
-            FormField* formf = new FormField(0, fType, new DOMElementDescriptor(0, &i));
+            QSharedPointer<FormField> formf = QSharedPointer<FormField>(new FormField(fType, new DOMElementDescriptor(0, &i)));
             currentResult->addFormField(formf);
-            delete formf;
         }
 
         //Gather <textarea> elements
         QWebElementCollection textareas = f->findAllElements("textarea");
         foreach(QWebElement ta, textareas) {
-            FormField* taf = new FormField(0, TEXT, new DOMElementDescriptor(0, &ta));
+            QSharedPointer<FormField> taf = QSharedPointer<FormField>(new FormField(TEXT, new DOMElementDescriptor(0, &ta)));
             currentResult->addFormField(taf);
-            delete taf;
         }
 
         //Gather select tags
         QWebElementCollection selects = f->findAllElements("select");
         foreach(QWebElement ss, selects) {
             QSet<QString> options = getSelectOptions(ss);
-            FormField* ssf = new FormField(0, FIXED_INPUT, new DOMElementDescriptor(0, &ss), options);
+            QSharedPointer<FormField> ssf = QSharedPointer<FormField>(new FormField(FIXED_INPUT, new DOMElementDescriptor(0, &ss), options));
             currentResult->addFormField(ssf);
-            delete ssf;
         }
     }
 }

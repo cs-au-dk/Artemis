@@ -37,22 +37,22 @@
 namespace artemis
 {
 
-typedef QPair<const FormField*, const FormFieldValue*> input_t; // workaround for foreach comma bug
+typedef QPair<QSharedPointer<const FormField>, const FormFieldValue*> input_t; // workaround for foreach comma bug
 
 class FormInput
 {
 
 public:
-    FormInput(QSet<QPair<const FormField*, const FormFieldValue*> >& inputs);
+    FormInput(QSet<QPair<QSharedPointer<const FormField>, const FormFieldValue*> >& inputs);
 
-    QSet<const FormField*> getFields() const;
-    QSet<QPair<const FormField*, const FormFieldValue*> > getInputs() const;
+    QSet<QSharedPointer<const FormField> > getFields() const;
+    QSet<QPair<QSharedPointer<const FormField>, const FormFieldValue*> > getInputs() const;
     void writeToPage(QWebPage*) const;
 
     QDebug friend operator<<(QDebug dbg, FormInput* f);
 
 private:
-    QSet<QPair<const FormField*, const FormFieldValue*> > mInputs;
+    QSet<QPair<QSharedPointer<const FormField>, const FormFieldValue*> > mInputs;
 
 };
 

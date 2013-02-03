@@ -43,7 +43,9 @@ DomInput::DomInput(const EventHandlerDescriptor* handler,
     // TODO change to auto ptr
     mEventHandler = handler;
     mFormInput = formInput;
+    // TODO change to auto ptr
     mEvtParams = params;
+    // TODO change to auto ptr
     mTarget = target;
 }
 

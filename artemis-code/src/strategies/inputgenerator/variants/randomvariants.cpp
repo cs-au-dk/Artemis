@@ -92,24 +92,24 @@ EventParameters* RandomVariants::generateEventParameters(QObject* parent, const 
     }
 }
 
-QSharedPointer<FormInput> RandomVariants::generateFormFields(QObject* parent, QSet<const FormField*> fields)
+QSharedPointer<FormInput> RandomVariants::generateFormFields(QObject* parent, QSet<QSharedPointer<const FormField> > fields)
 {
-    QSet<QPair<const FormField*, const FormFieldValue*> > inputs;
+    QSet<QPair<QSharedPointer<const FormField>, const FormFieldValue*> > inputs;
 
-    foreach(const FormField* field, fields) {
+    foreach(QSharedPointer<const FormField> field, fields) {
 
-        switch (field->type()) {
+        switch (field->getType()) {
         case TEXT:
-            inputs.insert(QPair<const FormField*, const FormFieldValue*>(field, new FormFieldValue(parent, generateRandomString(10))));
+            inputs.insert(QPair<QSharedPointer<const FormField>, const FormFieldValue*>(field, new FormFieldValue(parent, generateRandomString(10))));
             break;
         case BOOLEAN:
-            inputs.insert(QPair<const FormField*, const FormFieldValue*>(field, new FormFieldValue(parent, randomBool())));
+            inputs.insert(QPair<QSharedPointer<const FormField>, const FormFieldValue*>(field, new FormFieldValue(parent, randomBool())));
             break;
         case FIXED_INPUT:
-            inputs.insert(QPair<const FormField*, const FormFieldValue*>(field, new FormFieldValue(parent, pickRand(field->inputs()))));
+            inputs.insert(QPair<QSharedPointer<const FormField>, const FormFieldValue*>(field, new FormFieldValue(parent, pickRand(field->getInputOptions()))));
             break;
         default:
-            inputs.insert(QPair<const FormField*, const FormFieldValue*>(field, new FormFieldValue(parent)));
+            inputs.insert(QPair<QSharedPointer<const FormField>, const FormFieldValue*>(field, new FormFieldValue(parent)));
         }
     }
 

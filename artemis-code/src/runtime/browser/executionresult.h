@@ -54,9 +54,9 @@ public:
 
     QSet<EventHandlerDescriptor*> eventHandlers() const;
 
-    QSet<const FormField*> formFields() const;
-    void addFormFields(const QSet<FormField*>& f);
-    void addFormField(const FormField* f);
+    QSet<QSharedPointer<const FormField> > formFields() const;
+    void addFormFields(QSet<QSharedPointer<const FormField> > f);
+    void addFormField(QSharedPointer<const FormField> f);
 
     void addAjaxRequest(AjaxRequest req);
     QSet<AjaxRequest> ajaxRequest() const;
@@ -81,7 +81,7 @@ public:
 private:
     QSet<EventHandlerDescriptor*> mEventHandlers;
     QSet<QPair<QWebElement*, QString> > elementPointers;
-    QSet<const FormField*> mFormFields;
+    QSet<QSharedPointer<const FormField> > mFormFields;
     bool final;
     bool isCrashState;
     QString crashCause;
