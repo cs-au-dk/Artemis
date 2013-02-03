@@ -157,7 +157,7 @@ void ExecutionResult::finalize()
     elementPointers.clear();
 }
 
-QSet<FormField*> ExecutionResult::formFields() const
+QSet<const FormField*> ExecutionResult::formFields() const
 {
     Q_ASSERT(final);
     return mFormFields;

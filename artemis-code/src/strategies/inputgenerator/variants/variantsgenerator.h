@@ -42,12 +42,12 @@ namespace artemis
 class VariantsGenerator
 {
 public:
-    VariantsGenerator() {};
+    VariantsGenerator() {}
 
     virtual EventParameters* generateEventParameters(QObject* parent, const EventHandlerDescriptor* eventHandler) = 0;
-    virtual FormInput* generateFormFields(QObject* parent, const QSet<FormField*>&) = 0;
+    virtual QSharedPointer<FormInput> generateFormFields(QObject* parent, QSet<const FormField*>) = 0;
 
-    virtual ~VariantsGenerator() {};
+    virtual ~VariantsGenerator() {}
 };
 
 }

@@ -29,6 +29,9 @@
 #include <assert.h>
 #include <util/randomutil.h>
 
+#include <QSet>
+#include <QList>
+
 #include "runtime/events/baseeventparameters.h"
 #include "runtime/events/keyboardeventparameters.h"
 #include "runtime/events/mouseeventparameters.h"
@@ -89,30 +92,28 @@ EventParameters* RandomVariants::generateEventParameters(QObject* parent, const 
     }
 }
 
-FormInput* RandomVariants::generateFormFields(QObject* parent, const QSet<FormField*>& fields)
+QSharedPointer<FormInput> RandomVariants::generateFormFields(QObject* parent, QSet<const FormField*> fields)
 {
-    FormInput* result = new FormInput(parent);
+    QSet<QPair<const FormField*, const FormFieldValue*> > inputs;
 
-    foreach(FormField * field, fields) {
+    foreach(const FormField* field, fields) {
 
-        FormField* formField = new FormField(parent, field);
-
-        switch (formField->type()) {
+        switch (field->type()) {
         case TEXT:
-            result->addInput(formField, new FormFieldValue(parent, generateRandomString(10)));
+            inputs.insert(QPair<const FormField*, const FormFieldValue*>(field, new FormFieldValue(parent, generateRandomString(10))));
             break;
         case BOOLEAN:
-            result->addInput(formField, new FormFieldValue(parent, randomBool()));
+            inputs.insert(QPair<const FormField*, const FormFieldValue*>(field, new FormFieldValue(parent, randomBool())));
             break;
         case FIXED_INPUT:
-            result->addInput(formField, new FormFieldValue(parent, pickRand(formField->inputs())));
+            inputs.insert(QPair<const FormField*, const FormFieldValue*>(field, new FormFieldValue(parent, pickRand(field->inputs()))));
             break;
         default:
-            result->addInput(formField, new FormFieldValue(parent));
+            inputs.insert(QPair<const FormField*, const FormFieldValue*>(field, new FormFieldValue(parent)));
         }
     }
 
-    return result;
+    return QSharedPointer<FormInput>(new FormInput(inputs));
 }
 
 }

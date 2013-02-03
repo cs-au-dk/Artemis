@@ -54,7 +54,7 @@ public:
 
     QSet<EventHandlerDescriptor*> eventHandlers() const;
 
-    QSet<FormField*> formFields() const;
+    QSet<const FormField*> formFields() const;
     void addFormFields(const QSet<FormField*>& f);
     void addFormField(const FormField* f);
 
@@ -81,7 +81,7 @@ public:
 private:
     QSet<EventHandlerDescriptor*> mEventHandlers;
     QSet<QPair<QWebElement*, QString> > elementPointers;
-    QSet<FormField*> mFormFields;
+    QSet<const FormField*> mFormFields;
     bool final;
     bool isCrashState;
     QString crashCause;

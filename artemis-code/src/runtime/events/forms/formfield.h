@@ -50,8 +50,8 @@ public:
     ~FormField();
 
     DOMElementDescriptor* element() const;
-    FormFieldTypes type();
-    QSet<QString> inputs();
+    FormFieldTypes type() const;
+    QSet<QString> inputs() const;
 
     QDebug friend operator<<(QDebug dbg, const FormField& f);
 

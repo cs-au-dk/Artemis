@@ -28,8 +28,8 @@
 #ifndef FORMINPUT_H
 #define FORMINPUT_H
 
-#include <QObject>
 #include <QSet>
+#include <QPair>
 
 #include "formfield.h"
 #include "formfieldvalue.h"
@@ -37,22 +37,22 @@
 namespace artemis
 {
 
-class FormInput : public QObject
+typedef QPair<const FormField*, const FormFieldValue*> input_t; // workaround for foreach comma bug
+
+class FormInput
 {
-    Q_OBJECT
 
 public:
-    FormInput(QObject* parent);
+    FormInput(QSet<QPair<const FormField*, const FormFieldValue*> >& inputs);
 
-    QSet<FormField*> getFields() const;
-
-    void addInput(FormField* formField, FormFieldValue* formValue);
+    QSet<const FormField*> getFields() const;
+    QSet<QPair<const FormField*, const FormFieldValue*> > getInputs() const;
     void writeToPage(QWebPage*) const;
 
-    QDebug friend operator<<(QDebug dbg, const FormInput* f);
+    QDebug friend operator<<(QDebug dbg, FormInput* f);
 
 private:
-    QHash<FormField*, FormFieldValue*> mInputs;
+    QSet<QPair<const FormField*, const FormFieldValue*> > mInputs;
 
 };
 

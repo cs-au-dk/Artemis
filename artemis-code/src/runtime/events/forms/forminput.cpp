@@ -33,44 +33,41 @@
 namespace artemis
 {
 
-FormInput::FormInput(QObject* parent) : QObject(parent)
+FormInput::FormInput(QSet<QPair<const FormField*, const FormFieldValue*> >& inputs) :
+    mInputs(inputs)
 {
 }
 
-QSet<FormField*> FormInput::getFields() const
+QSet<const FormField*> FormInput::getFields() const
 {
-    return mInputs.keys().toSet();
+    QSet<const FormField*> fields;
+
+    foreach(input_t input, mInputs) {
+        fields.insert(input.first);
+    }
+
+    return fields;
+}
+
+QSet<QPair<const FormField*, const FormFieldValue*> > FormInput::getInputs() const
+{
+    return mInputs;
 }
 
 void FormInput::writeToPage(QWebPage* page) const
 {
-    foreach(FormField * formField, mInputs.keys()) {
+    foreach(input_t input, mInputs) {
 
-        DOMElementDescriptor* elmDesc = formField->element();
+        DOMElementDescriptor* elmDesc = input.first->element();
         QWebElement element = elmDesc->getElement(page);
 
-        FormFieldValue* value = mInputs.value(formField);
-
         if (!element.isNull()) {
-            element.setAttribute("value", value->stringRepresentation());
+            element.setAttribute("value", input.second->stringRepresentation());
         }
     }
 }
 
-/**
- * @brief Adds an input pair of a field and a value, taking ownership of both
- * @param formField
- * @param formValue
- */
-void FormInput::addInput(FormField* formField, FormFieldValue* formValue)
-{
-    formField->setParent(this);
-    formValue->setParent(this);
-
-    mInputs.insert(formField, formValue);
-}
-
-QDebug operator<<(QDebug dbg, const FormInput* f)
+QDebug operator<<(QDebug dbg, FormInput* f)
 {
     dbg.nospace() << f->mInputs;
     return dbg.space();

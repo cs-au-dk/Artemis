@@ -46,7 +46,7 @@ public:
     bool getBool();
     QString getStr();
     bool isNoValue();
-    QString stringRepresentation();
+    QString stringRepresentation() const;
 
     QDebug friend operator<<(QDebug dbg, const FormFieldValue& f);
 
