@@ -25,6 +25,7 @@
  authors and should not be interpreted as representing official policies, either expressed
  or implied, of Simon Holm Jensen
  */
+
 #include <assert.h>
 #include <typeinfo>
 
@@ -41,7 +42,8 @@
 namespace artemis
 {
 
-RandomInputGenerator::RandomInputGenerator(QObject* parent,
+RandomInputGenerator::RandomInputGenerator(
+        QObject* parent,
         TargetGenerator* targetGenerator,
         int numberSameLength) :
     InputGeneratorStrategy(parent)
@@ -51,12 +53,7 @@ RandomInputGenerator::RandomInputGenerator(QObject* parent,
 
     mNumberSameLength = numberSameLength;
 
-    mVariantsGenerator = new RandomVariants();
-}
-
-RandomInputGenerator::~RandomInputGenerator()
-{
-    delete mVariantsGenerator;
+    mVariantsGenerator = QSharedPointer<RandomVariants>(new RandomVariants());
 }
 
 QList<QSharedPointer<ExecutableConfiguration> > RandomInputGenerator::addNewConfigurations(QSharedPointer<const ExecutableConfiguration> configuration,

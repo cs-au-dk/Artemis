@@ -48,7 +48,7 @@ public:
 
     void apply(ArtemisWebPage* page, QWebExecutionListener* webkitListener) const;
     bool isEqual(QSharedPointer<const BaseInput> other) const;
-    QSharedPointer<const BaseInput> getPermutation(VariantsGenerator* variantsGenerator, TargetGenerator* targetGenerator) const;
+    QSharedPointer<const BaseInput> getPermutation(QSharedPointer<VariantsGenerator> variantsGenerator, TargetGenerator* targetGenerator) const;
 
 private:
     const EventHandlerDescriptor* mEventHandler;

@@ -29,7 +29,7 @@
 #define RANDOMINPUTGENERATOR_H
 
 #include <QList>
-
+#include <QSharedPointer>
 
 #include "inputgeneratorstrategy.h"
 #include "variants/variantsgenerator.h"
@@ -45,7 +45,7 @@ class RandomInputGenerator : public InputGeneratorStrategy
     Q_OBJECT
 public:
     RandomInputGenerator(QObject* parent, TargetGenerator* targetGenerator, int numberSameLength);
-    ~RandomInputGenerator();
+
     QList<QSharedPointer<ExecutableConfiguration> > addNewConfigurations(QSharedPointer<const ExecutableConfiguration>, const ExecutionResult&);
 
 private:
@@ -54,7 +54,7 @@ private:
     QList<QSharedPointer<ExecutableConfiguration> > insertExtended(QSharedPointer<const ExecutableConfiguration> e, const ExecutionResult& eResult);
 
     TargetGenerator* mTargetGenerator;
-    VariantsGenerator* mVariantsGenerator;
+    QSharedPointer<VariantsGenerator> mVariantsGenerator;
 
     int mNumberSameLength;
 
