@@ -47,7 +47,7 @@ JQueryTarget::JQueryTarget(QObject* parent,
     mJQueryListener->setParent(this);
 }
 
-QString JQueryTarget::getSignature(QWebElement element)
+QString JQueryTarget::getSignature(QWebElement element) const
 {
     if (element.isNull()) {
         return QString("");
@@ -67,7 +67,7 @@ QString JQueryTarget::getSignature(QWebElement element)
     return result;
 }
 
-QWebElement JQueryTarget::get(ArtemisWebPage* page)
+QWebElement JQueryTarget::get(ArtemisWebPage* page) const
 {
     QWebElement element = mEventHandler->domElement()->getElement(page);
 

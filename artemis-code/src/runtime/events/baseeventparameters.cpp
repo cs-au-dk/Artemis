@@ -41,10 +41,11 @@ BaseEventParameters::BaseEventParameters(QObject* parent, QString name, bool bub
     this->cancelable = cancelable;
 }
 
-QString BaseEventParameters::jsString()
+QString BaseEventParameters::jsString() const
 {
-    if (!memoJs.isEmpty())
-        { return memoJs; }
+    if (!cachedJsString.isEmpty()) {
+        return cachedJsString;
+    }
 
     QString randId = generateRandomJsId();
     QString res = "var " + randId + " = document.createEvent(\"Event\");";
@@ -55,7 +56,7 @@ QString BaseEventParameters::jsString()
 
     res += "this.dispatchEvent(" + randId + ");";
 
-    memoJs = res;
+    cachedJsString = res;
     return res;
 }
 

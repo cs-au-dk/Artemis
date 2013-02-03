@@ -50,10 +50,11 @@ KeyboardEventParameters::KeyboardEventParameters(QObject* parent, QString eventT
     this->altGraphKey = altGraphKey;
 }
 
-QString KeyboardEventParameters::jsString()
+QString KeyboardEventParameters::jsString() const
 {
-    if (!memoJs.isEmpty())
-        { return memoJs; }
+    if (!cachedJsString.isEmpty()) {
+        return cachedJsString;
+    }
 
     QString randId = generateRandomJsId();
     QString res = "var " + randId + " = document.createEvent(\"KeyboardEvent\");";
@@ -72,7 +73,7 @@ QString KeyboardEventParameters::jsString()
 
     res += "this.dispatchEvent(" + randId + ");";
 
-    memoJs = res;
+    cachedJsString = res;
     return res;
 }
 

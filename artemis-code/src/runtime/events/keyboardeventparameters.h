@@ -42,7 +42,7 @@ public:
                             QString keyIdentifier,  unsigned int keyLocation,
                             bool ctrlKey, bool altKey, bool shiftKey, bool metaKey, bool altGraphKey);
 
-    QString jsString() ;
+    QString jsString() const;
     EventType type() const;
 
     //Event options:
@@ -57,7 +57,7 @@ public:
     bool altGraphKey;
     QString eventType;
 private:
-    QString memoJs;
+    mutable QString cachedJsString;
 
 };
 

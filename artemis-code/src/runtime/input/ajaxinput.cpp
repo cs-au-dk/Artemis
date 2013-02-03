@@ -26,8 +26,6 @@
  or implied, of Simon Holm Jensen
  */
 
-#include <iostream>
-
 #include "statistics/statsstorage.h"
 
 #include "ajaxinput.h"
@@ -50,8 +48,18 @@ void AjaxInput::apply(ArtemisWebPage* page, QWebExecutionListener* webkitListene
 
 bool AjaxInput::isEqual(QSharedPointer<const BaseInput> other) const
 {
-    //TODO implement this?
-    return false;
+    QSharedPointer<const AjaxInput> ajaxInput = qSharedPointerDynamicCast<const AjaxInput>(other);
+
+    if (ajaxInput == NULL) {
+        return false;
+    }
+
+    return mCallbackId == ajaxInput->mCallbackId;
+}
+
+QSharedPointer<const BaseInput> AjaxInput::getPermutation(VariantsGenerator* variantsGenerator, TargetGenerator* targetGenerator) const
+{
+    return QSharedPointer<const BaseInput>(this);
 }
 
 }

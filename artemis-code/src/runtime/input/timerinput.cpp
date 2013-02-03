@@ -50,8 +50,18 @@ void TimerInput::apply(ArtemisWebPage* page, QWebExecutionListener* webkitListen
 
 bool TimerInput::isEqual(QSharedPointer<const BaseInput> other) const
 {
-    //TODO implement this?
-    return false;
+    QSharedPointer<const TimerInput> timerInput = qSharedPointerDynamicCast<const TimerInput>(other);
+
+    if (timerInput == NULL) {
+        return false;
+    }
+
+    return mTimer->getId() == timerInput->mTimer->getId();
+}
+
+QSharedPointer<const BaseInput> TimerInput::getPermutation(VariantsGenerator* variantsGenerator, TargetGenerator* targetGenerator) const
+{
+    return QSharedPointer<const BaseInput>(this);
 }
 
 }

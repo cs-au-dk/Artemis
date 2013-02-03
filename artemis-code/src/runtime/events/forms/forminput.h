@@ -47,7 +47,7 @@ public:
     QSet<FormField*> getFields() const;
 
     void addInput(FormField* formField, FormFieldValue* formValue);
-    void writeToPage(QWebPage*);
+    void writeToPage(QWebPage*) const;
 
     QDebug friend operator<<(QDebug dbg, const FormInput* f);
 

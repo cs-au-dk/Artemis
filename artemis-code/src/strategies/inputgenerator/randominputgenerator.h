@@ -53,17 +53,10 @@ private:
     QList<QSharedPointer<ExecutableConfiguration> > insertSameLength(QSharedPointer<const ExecutableConfiguration> e, const ExecutionResult& eResult);
     QList<QSharedPointer<ExecutableConfiguration> > insertExtended(QSharedPointer<const ExecutableConfiguration> e, const ExecutionResult& eResult);
 
-    QSharedPointer<const BaseInput> permutateInput(QSharedPointer<const DomInput> input);
-    QSharedPointer<const BaseInput> permutateInput(QSharedPointer<const BaseInput> input);
-
     TargetGenerator* mTargetGenerator;
-    VariantsGenerator* varGen;
+    VariantsGenerator* mVariantsGenerator;
 
     int mNumberSameLength;
-
-signals:
-
-public slots:
 
 };
 
