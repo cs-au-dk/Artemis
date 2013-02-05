@@ -113,14 +113,19 @@ void Runtime::startAnalysis(QUrl url)
  */
 void Runtime::preConcreteExecution()
 {
+    qDebug() << "PRE WEBKIT EXEC worklist size " << mWorklist->size();
+
     if (mWorklist->empty() ||
         mTerminationStrategy->shouldTerminate()) {
 
         finishAnalysis();
         return;
     }
+    qDebug() << "PRE WEBKIT EXEC";
 
     QSharedPointer<ExecutableConfiguration> nextConfiguration = mWorklist->remove();
+
+    qDebug() << "PRE WEBKIT EXEC";
 
     mWebkitExecutor->executeSequence(nextConfiguration); // calls the slExecutedSequence method as callback
 }
