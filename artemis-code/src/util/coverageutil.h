@@ -1,7 +1,7 @@
 #ifndef COVERAGEUTIL_H
 #define COVERAGEUTIL_H
 
-#include "src/coverage/codecoverage.h"
+#include "coverage/codecoverage.h"
 
 namespace artemis
 {
