@@ -1,0 +1,84 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
+
+<html>
+<head>
+	<title>HtmlBox - Demo Default Icons</title>
+	<script type="text/javascript" src="jquery-1.3.2.min.js"></script>
+	<script type="text/javascript" src="jquery.codify.min.js"></script>
+	<script type="text/javascript" src="htmlbox.colors.js"></script>
+	<script type="text/javascript" src="htmlbox.styles.js"></script>
+	<script type="text/javascript" src="htmlbox.syntax.js"></script>
+	<script type="text/javascript" src="htmlbox.undoredomanager.js"></script>
+	<script type="text/javascript" src="htmlbox.min.js"></script>
+</head>
+<body>
+<h2>Default Skin</h2>
+<textarea id="htmlbox_icon_set_default">This HtmlBox uses the default Icon Set</textarea>
+<script language="Javascript" type="text/javascript">
+var hb_icon_set_default = $("#htmlbox_icon_set_default").css("height","100").css("width","600").htmlbox({
+    toolbars:[
+	     ["cut","copy","paste","separator_dots","bold","italic","underline","strike","separator","sub","sup","separator_dots","undo","redo","separator_dots",
+		 "left","center","right","justify","separator_dots","ol","ul","indent","outdent","separator_dots","link","unlink","image"],
+		 ["code","removeformat","striptags","separator_dots","quote","paragraph","hr","separator_dots",
+			 {icon:"new.gif",tooltip:"New",command:function(){hb_icon_set_default.set_text("<p></p>");}},
+			 {icon:"open.gif",tooltip:"Open",command:function(){alert('Open')}},
+			 {icon:"save.gif",tooltip:"Save",command:function(){alert('Save')}}
+		  ]
+	],
+	icons:"default",
+	skin:"default"
+});
+</script>
+<h2>Blue Skin</h2>
+<textarea id="htmlbox_icon_set_blue">This HtmlBox uses the default Icon Set</textarea>
+<script language="Javascript" type="text/javascript">
+var hb_icon_set_blue = $("#htmlbox_icon_set_blue").css("height","100").css("width","600").htmlbox({
+    toolbars:[
+	     ["cut","copy","paste","separator_dots","bold","italic","underline","strike","sub","sup","separator_dots","undo","redo","separator_dots",
+		 "left","center","right","justify","separator_dots","ol","ul","indent","outdent","separator_dots","link","unlink","image"],
+		 ["code","removeformat","striptags","separator_dots","quote","paragraph","hr","separator_dots",
+			 {icon:"new.gif",tooltip:"New",command:function(){hb_icon_set_blue.set_text("<p></p>");}},
+			 {icon:"open.gif",tooltip:"Open",command:function(){alert('Open')}},
+			 {icon:"save.gif",tooltip:"Save",command:function(){alert('Save')}}
+		  ]
+	],
+	icons:"default",
+	skin:"blue"
+});
+</script>
+<h2>Green Skin</h2>
+<textarea id="htmlbox_icon_set_green">This HtmlBox uses the default Icon Set</textarea>
+<script language="Javascript" type="text/javascript">
+var hb_icon_set_green = $("#htmlbox_icon_set_green").css("height","100").css("width","600").htmlbox({
+    toolbars:[
+	     ["cut","copy","paste","separator_dots","bold","italic","underline","strike","sub","sup","separator_dots","undo","redo","separator_dots",
+		 "left","center","right","justify","separator_dots","ol","ul","indent","outdent","separator_dots","link","unlink","image"],
+		 ["code","removeformat","striptags","separator_dots","quote","paragraph","hr","separator_dots",
+			 {icon:"new.gif",tooltip:"New",command:function(){hb_icon_set_green.set_text("<p></p>");}},
+			 {icon:"open.gif",tooltip:"Open",command:function(){alert('Open')}},
+			 {icon:"save.gif",tooltip:"Save",command:function(){alert('Save')}}
+		  ]
+	],
+	icons:"default",
+	skin:"green"
+});
+</script>
+<h2>Red Skin</h2>
+<textarea id="htmlbox_icon_set_red">This HtmlBox uses the default Icon Set</textarea>
+<script language="Javascript" type="text/javascript">
+var hb_icon_set_red = $("#htmlbox_icon_set_red").css("height","100").css("width","600").htmlbox({
+    toolbars:[
+	     ["cut","copy","paste","separator_dots","bold","italic","underline","strike","sub","sup","separator_dots","undo","redo","separator_dots",
+		 "left","center","right","justify","separator_dots","ol","ul","indent","outdent","separator_dots","link","unlink","image"],
+		 ["code","removeformat","striptags","separator_dots","quote","paragraph","hr","separator_dots",
+			 {icon:"new.gif",tooltip:"New",command:function(){hb_icon_set_red.set_text("<p></p>");}},
+			 {icon:"open.gif",tooltip:"Open",command:function(){alert('Open')}},
+			 {icon:"save.gif",tooltip:"Save",command:function(){alert('Save')}}
+		  ]
+	],
+	icons:"default",
+	skin:"red"
+});
+</script>
+</body>
+</html>
