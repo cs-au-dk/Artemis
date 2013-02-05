@@ -70,9 +70,9 @@ WebKitExecutor::WebKitExecutor(QObject* parent,
 
     // TODO cleanup in ajax stuff, we are handling ajax through AjaxRequestListener, the ajaxRequest signal and addAjaxCallHandler
 
-    QObject::connect(webkitListener, SIGNAL(scriptCrash(QString, intptr_t, int)),
+    QObject::connect(webkitListener, SIGNAL(script_crash(QString, intptr_t, int)),
                      this, SLOT(slScriptCrash(QString, intptr_t, int)));
-    QObject::connect(webkitListener, SIGNAL(ajaxRequest(QUrl, QString)),
+    QObject::connect(webkitListener, SIGNAL(ajax_request(QUrl, QString)),
                      this, SLOT(slAjaxRequest(QUrl, QString)));
     QObject::connect(webkitListener, SIGNAL(loadedJavaScript(intptr_t, QString, QUrl, int)),
                      this, SLOT(slCodeLoaded(intptr_t, QString, QUrl, int)));
