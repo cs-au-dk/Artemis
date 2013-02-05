@@ -54,7 +54,7 @@ public:
 
 private:
     int largestPri;
-    QMap<int, QSet<QSharedPointer<ExecutableConfiguration> > > queue;
+    QMap<int, QSet<QSharedPointer<ExecutableConfiguration> >* > queue; // use a pointer to the set to disable copy-on-write
 
 };
 
