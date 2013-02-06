@@ -42,7 +42,7 @@ InputSequence::InputSequence(const QList<QSharedPointer<const BaseInput> >& sequ
 
 QSharedPointer<const InputSequence> InputSequence::replaceLast(QSharedPointer<const BaseInput> newLast) const
 {
-    QList<QSharedPointer<const BaseInput> > sequence;
+    QList<QSharedPointer<const BaseInput> > sequence = mSequence;
     sequence.removeLast();
     sequence.append(newLast);
 
