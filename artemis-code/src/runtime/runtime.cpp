@@ -28,6 +28,8 @@
 
 #include <iostream>
 
+#include <QSharedPointer>
+
 #include "worklist/deterministicworklist.h"
 #include "coverage/coveragetooutputstream.h"
 #include "statistics/statsstorage.h"
@@ -35,6 +37,7 @@
 #include "strategies/inputgenerator/randominputgenerator.h"
 #include "strategies/termination/numberofiterationstermination.h"
 #include "strategies/prioritizer/constantprioritizer.h"
+#include "util/coverageutil.h"
 
 #include "runtime.h"
 
@@ -64,9 +67,9 @@ Runtime::Runtime(QObject* parent, const Options& options, QUrl url) : QObject(pa
 
     AjaxRequestListener* ajaxRequestListner = new AjaxRequestListener(NULL);
 
-    ImmutableCookieJar *immutable_cookie_jar = new ImmutableCookieJar(
-            options.presetCookies, url.host());
-            ajaxRequestListner->setCookieJar(immutable_cookie_jar);
+    ImmutableCookieJar* immutableCookieJar = new ImmutableCookieJar(
+        options.presetCookies, url.host());
+    ajaxRequestListner->setCookieJar(immutableCookieJar);
 
     /** JQuery support **/
 
@@ -82,9 +85,8 @@ Runtime::Runtime(QObject* parent, const Options& options, QUrl url) : QObject(pa
 
     mWorklist = new DeterministicWorkList(this);
 
-    QObject::connect(mWebkitExecutor,
-            SIGNAL(sigExecutedSequence(ExecutableConfiguration*, ExecutionResult*)), this,
-            SLOT(postConcreteExecution(ExecutableConfiguration*, ExecutionResult*)));
+    QObject::connect(mWebkitExecutor, SIGNAL(sigExecutedSequence(QSharedPointer<ExecutableConfiguration>, QSharedPointer<ExecutionResult>)),
+                     this, SLOT(postConcreteExecution(QSharedPointer<ExecutableConfiguration>, QSharedPointer<ExecutionResult>)));
 }
 
 /**
@@ -93,9 +95,13 @@ Runtime::Runtime(QObject* parent, const Options& options, QUrl url) : QObject(pa
  */
 void Runtime::startAnalysis(QUrl url)
 {
-    // TODO possible memory leak
-    ExecutableConfiguration* initialConfiguration =
-    		new ExecutableConfiguration(NULL, new InputSequence(NULL), url);
+    qDebug() << "Artemis - Automated tester for JavaScript";
+    qDebug() << "Started: " << QDateTime::currentDateTime().toString();
+    qDebug() << "Compilation date: " << EXE_BUILD_DATE;
+    qDebug() << "-----\n";
+
+    QSharedPointer<ExecutableConfiguration> initialConfiguration =
+        QSharedPointer<ExecutableConfiguration>(new ExecutableConfiguration(QSharedPointer<InputSequence>(new InputSequence()), url));
 
     mWorklist->add(initialConfiguration, 0);
 
@@ -107,15 +113,14 @@ void Runtime::startAnalysis(QUrl url)
  */
 void Runtime::preConcreteExecution()
 {
-	if (mWorklist->empty() ||
-		mTerminationStrategy->should_terminate()) {
+    if (mWorklist->empty() ||
+        mTerminationStrategy->shouldTerminate()) {
 
         finishAnalysis();
-		return;
-	}
+        return;
+    }
 
-	// TODO remove this memory leak
-	ExecutableConfiguration* nextConfiguration = mWorklist->remove();
+    QSharedPointer<ExecutableConfiguration> nextConfiguration = mWorklist->remove();
 
     mWebkitExecutor->executeSequence(nextConfiguration); // calls the slExecutedSequence method as callback
 }
@@ -125,46 +130,41 @@ void Runtime::preConcreteExecution()
  * @param configuration
  * @param result
  */
-void Runtime::postConcreteExecution(ExecutableConfiguration* configuration, ExecutionResult* result)
+void Runtime::postConcreteExecution(QSharedPointer<ExecutableConfiguration> configuration, QSharedPointer<ExecutionResult> result)
 {
     mPrioritizerStrategy->reprioritize(mWorklist);
 
-	QList<ExecutableConfiguration*> newConfigurations = mInputgenerator->add_new_configurations(configuration, result);
+    QList<QSharedPointer<ExecutableConfiguration> > newConfigurations = mInputgenerator->addNewConfigurations(configuration, result);
 
-	foreach (ExecutableConfiguration* newConfiguration, newConfigurations) {
-		mWorklist->add(newConfiguration, mPrioritizerStrategy->prioritize(newConfiguration, result));
-	}
+    foreach(QSharedPointer<ExecutableConfiguration> newConfiguration, newConfigurations) {
+        mWorklist->add(newConfiguration, mPrioritizerStrategy->prioritize(newConfiguration, result));
+    }
 
-	statistics()->accumulate("InputGenerator::added-configurations", newConfigurations.size());
+    statistics()->accumulate("InputGenerator::added-configurations", newConfigurations.size());
 
     preConcreteExecution();
 }
 
-void Runtime::finishAnalysis() {
+void Runtime::finishAnalysis()
+{
+    qDebug() << "Artemis: Testing done..." << endl;
 
-    mWebkitExecutor->finish_up();
+    qDebug() << "\n\n === Coverage information for execution === \n";
+    writeCoverageHtml(coverage());
+    writeCoverageReport(coverage());
 
-	cout << "Artemis: Testing done..." << endl;
+    qDebug() << "\n=== Statistics ===\n";
+    StatsPrettyWriter::write(statistics());
+    qDebug() << "\n=== Statistics END ===\n";
+    qDebug() << endl;
 
-	cout << "\n\n === Coverage information for execution === \n";
-	write_coverage_report(cout, coverage());
-
-	cout << "\n=== Statistics ===\n";
-	StatsPrettyWriter::write(cout, statistics());
-	cout << "\n=== Statistics END ===\n";
-	cout << endl;
-
-	qDebug() << "Artemis terminated on: " << QDateTime::currentDateTime().toString() << endl;
-	qDebug() << "Build timestamp: " << EXE_BUILD_DATE << endl;
-
-    //delete executor;
-    //delete wl;
-    //delete termination;
+    qDebug() << "Artemis terminated on: " << QDateTime::currentDateTime().toString() << endl;
 
     emit sigTestingDone();
 }
 
-CodeCoverage Runtime::coverage() {
+CodeCoverage Runtime::coverage()
+{
     return mWebkitExecutor->coverage();
 }
 

@@ -37,22 +37,21 @@ using namespace std;
 namespace artemis
 {
 
-TimerInput::TimerInput(QObject* parent, Timer timer) :
-    BaseInput(parent)
+TimerInput::TimerInput(QSharedPointer<const Timer> timer)
 {
-    this->mTimer = timer;
+    mTimer = timer;
 }
 
-void TimerInput::apply(ArtemisWebPage* page, QWebExecutionListener* webkit_listener)
+void TimerInput::apply(ArtemisWebPage* page, QWebExecutionListener* webkitListener) const
 {
     statistics()->accumulate("timers::fired", 1);
-    webkit_listener->timerFire(this->mTimer.get_id());
+    webkitListener->timerFire(mTimer->getId());
 }
 
-bool TimerInput::isEqual(BaseInput* other)
+QSharedPointer<const BaseInput> TimerInput::getPermutation(QSharedPointer<VariantsGenerator> variantsGenerator,
+                                                           TargetGenerator* targetGenerator) const
 {
-    //TODO implement this?
-    return false;
+    return QSharedPointer<const BaseInput>(this);
 }
 
 }

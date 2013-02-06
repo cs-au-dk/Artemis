@@ -1,23 +1,27 @@
 #include "ajaxrequest.h"
 
-namespace artemis {
-
-AjaxRequest::AjaxRequest(const QUrl url, const QString post_data)
+namespace artemis
 {
-    this->m_post_data = post_data;
-    this->m_url = url;
+
+AjaxRequest::AjaxRequest(const QUrl url, const QString postData)
+{
+    this->mPostData = postData;
+    this->mUrl = url;
 }
 
-QUrl AjaxRequest::url() const {
-    return m_url;
+QUrl AjaxRequest::url() const
+{
+    return mUrl;
 }
 
-QString AjaxRequest::post_data() {
-    return m_post_data;
+QString AjaxRequest::postData()
+{
+    return mPostData;
 }
 
-QDebug operator<<(QDebug dbg, const AjaxRequest &e) {
-    dbg.nospace() << "AjaxRequest[url = " << e.m_url << ",post_data = " << e.m_post_data << "]";
+QDebug operator<<(QDebug dbg, const AjaxRequest& e)
+{
+    dbg.nospace() << "AjaxRequest[url = " << e.mUrl << ",postData = " << e.mPostData << "]";
     return dbg.space();
 }
 

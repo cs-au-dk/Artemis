@@ -26,6 +26,8 @@
  or implied, of Simon Holm Jensen
  */
 
+#include "assert.h"
+
 #include "artemisglobals.h"
 
 #include "runtime/input/dominput.h"
@@ -33,91 +35,56 @@
 namespace artemis
 {
 
-DomInput::DomInput(QObject* parent, EventHandlerDescriptor* handler,
-    FormInput* formInput, EventParameters* params, TargetDescriptor* target) :
-    BaseInput(parent)
+DomInput::DomInput(const EventHandlerDescriptor* handler,
+                   QSharedPointer<const FormInput> formInput,
+                   const EventParameters* params,
+                   const TargetDescriptor* target)
 {
-    Q_CHECK_PTR(params);
-    Q_CHECK_PTR(target);
-
+    // TODO change to auto ptr
     mEventHandler = handler;
-    mEventHandler->setParent(this);
-
     mFormInput = formInput;
-    mFormInput->setParent(this);
-
+    // TODO change to auto ptr
     mEvtParams = params;
-    mEvtParams->setParent(this);
-
+    // TODO change to auto ptr
     mTarget = target;
-    //mTarget->setParent(this);
 }
 
-void DomInput::apply(ArtemisWebPage *page, QWebExecutionListener *webkit_listener)
+void DomInput::apply(ArtemisWebPage* page, QWebExecutionListener* webkitListener) const
 {
-    QWebElement handler = mEventHandler->dom_element()->get_element(page);
-    QWebElement target = this->target()->get(page);
+    QWebElement handler = mEventHandler->domElement()->getElement(page);
+    QWebElement target = mTarget->get(page);
 
-    QString js_init_event = mEvtParams->js_string();
+    QString jsInitEvent = mEvtParams->jsString();
 
-    this->getFormInput()->writeToPage(page);
+    mFormInput->writeToPage(page);
 
     if (handler.isNull() || target.isNull()) {
         qDebug() << "WARNING::Skipping event, event handler or target could not be found";
     }
     else {
         qDebug() << "Event Handler: " << handler.tagName() << " _ID: "
-            << handler.attribute(QString("id")) << " _Title: "
-            << handler.attribute(QString("title")) << "class: "
-            << handler.attribute(QString("class"));
+                 << handler.attribute(QString("id")) << " _Title: "
+                 << handler.attribute(QString("title")) << "class: "
+                 << handler.attribute(QString("class"));
         qDebug() << "Target: " << target.tagName() << " _ID: " << target.attribute(QString("id"))
-            << " _Title: " << target.attribute(QString("title")) << "class: "
-            << target.attribute(QString("class"));
-        qDebug() << "Executing: " << js_init_event;
+                 << " _Title: " << target.attribute(QString("title")) << "class: "
+                 << target.attribute(QString("class"));
+        qDebug() << "Executing: " << jsInitEvent;
 
-        QVariant result = target.evaluateJavaScript(js_init_event, DONT_MEASURE_COVERAGE);
+        QVariant result = target.evaluateJavaScript(jsInitEvent, DONT_MEASURE_COVERAGE);
 
         qDebug() << "Result: " << result;
     }
 }
 
-DomInput::~DomInput()
+QSharedPointer<const BaseInput> DomInput::getPermutation(QSharedPointer<VariantsGenerator> variantsGenerator, TargetGenerator* targetGenerator) const
 {
-    //delete this->mEventHandler;
-    //delete this->mEvtParams;
+    EventParameters* newParams = variantsGenerator->generateEventParameters(NULL, mEventHandler);
+    QSharedPointer<FormInput> newForm = variantsGenerator->generateFormFields(NULL, mFormInput->getFields());
+    TargetDescriptor* target = targetGenerator->generateTarget(NULL, mEventHandler);
+    EventHandlerDescriptor* newEventHandlerDescriptor = new EventHandlerDescriptor(NULL, mEventHandler);
 
-    /* TODO TargetDescriptor Copy constructor */
-    /*delete this->m_target;*/
+    return QSharedPointer<const DomInput>(new DomInput(newEventHandlerDescriptor, newForm, newParams, target));
 }
 
-TargetDescriptor* DomInput::target() const
-{
-    return mTarget;
-}
-
-const EventHandlerDescriptor* DomInput::getEventHandler() const
-{
-    return mEventHandler;
-}
-
-FormInput* DomInput::getFormInput() const
-{
-    return mFormInput;
-}
-
-bool DomInput::isEqual(BaseInput *other)
-{
-    DomInput *domInput = dynamic_cast<DomInput *>(other);
-
-    if (domInput == 0) {
-        return false;
-    }
-
-    // TODO Implement DomInput::isEqual
-}
-
-EventParameters* DomInput::event_params() const
-{
-    return mEvtParams;
-}
 }

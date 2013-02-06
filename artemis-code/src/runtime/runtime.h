@@ -72,7 +72,7 @@ private:
     InputGeneratorStrategy* mInputgenerator;
 
 private slots:
-    void postConcreteExecution(ExecutableConfiguration* configuration, ExecutionResult* result);
+    void postConcreteExecution(QSharedPointer<ExecutableConfiguration> configuration, QSharedPointer<ExecutionResult> result);
 
 signals:
     void sigTestingDone();
@@ -80,4 +80,5 @@ signals:
 };
 
 } /* namespace artemis */
+
 #endif /* RUNTIME_H_ */

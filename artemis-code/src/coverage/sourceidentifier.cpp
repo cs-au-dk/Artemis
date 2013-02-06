@@ -1,26 +1,30 @@
 #include "sourceidentifier.h"
 
-namespace artemis {
-
-SourceIdentifier::SourceIdentifier(QUrl& url, int source_offset)
+namespace artemis
 {
-    this->m_url = url;
-    this->m_source_offset = source_offset;
+
+SourceIdentifier::SourceIdentifier(QUrl& url, int sourceOffset)
+{
+    this->mUrl = url;
+    this->mSourceOffset = sourceOffset;
 }
 
-bool SourceIdentifier::operator==(const SourceIdentifier& other) const {
+bool SourceIdentifier::operator==(const SourceIdentifier& other) const
+{
     return
-            this->m_source_offset == other.m_source_offset &&
-            this->m_url == other.m_url;
+        this->mSourceOffset == other.mSourceOffset &&
+        this->mUrl == other.mUrl;
 }
 
-QDebug operator<<(QDebug dbg, const SourceIdentifier &e) {
-    dbg.nospace() << "SourceIdentifier[url: " << e.m_url << ", source_offset: " << e.m_source_offset << "]";
+QDebug operator<<(QDebug dbg, const SourceIdentifier& e)
+{
+    dbg.nospace() << "SourceIdentifier[url: " << e.mUrl << ", sourceOffset: " << e.mSourceOffset << "]";
     return dbg.space();
 }
 
-uint SourceIdentifier::hashcode() const {
-    return this->m_source_offset*17 + qHash(this->m_url)*101;
+uint SourceIdentifier::hashcode() const
+{
+    return this->mSourceOffset * 17 + qHash(this->mUrl) * 101;
 }
 
 }

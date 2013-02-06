@@ -28,25 +28,24 @@
 #ifndef BASEINPUT_H
 #define BASEINPUT_H
 
-#include <QObject>
 #include <QtWebKit/qwebexecutionlistener.h>
+#include <QSharedPointer>
 
 #include "runtime/browser/artemiswebpage.h"
+#include "strategies/inputgenerator/variants/randomvariants.h"
+#include "strategies/inputgenerator/targets/targetgenerator.h"
 
 namespace artemis
 {
 
-// TODO convert to QObject memory management
-class BaseInput : public QObject
+class BaseInput
 {
 
-Q_OBJECT
-
 public:
-    BaseInput(QObject* parent) : QObject(parent) {};
-
-    virtual void apply(ArtemisWebPage *page, QWebExecutionListener *webkit_listener) = 0;
-    virtual bool isEqual(BaseInput *other) = 0;
+    virtual ~BaseInput() {}
+    virtual void apply(ArtemisWebPage* page, QWebExecutionListener* webkitListener) const = 0;
+    virtual QSharedPointer<const BaseInput> getPermutation(QSharedPointer<VariantsGenerator> variantsGenerator,
+                                                           TargetGenerator* targetGenerator) const = 0;
 };
 
 }

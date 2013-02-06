@@ -4,7 +4,8 @@
 #include <QUrl>
 #include <QDebug>
 
-namespace artemis {
+namespace artemis
+{
 
 class ByteCodeIndentifier
 {
@@ -15,17 +16,18 @@ public:
     int offset();
 
     bool operator==(const ByteCodeIndentifier& other) const;
-    QDebug friend operator<<(QDebug dbg, const ByteCodeIndentifier &e);
+    QDebug friend operator<<(QDebug dbg, const ByteCodeIndentifier& e);
     uint hashcode() const;
 
 private:
-    QUrl m_url;
-    int m_offset;
+    QUrl mUrl;
+    int mOffset;
 };
 
 }
 
-inline uint qHash(const artemis::ByteCodeIndentifier &d) {
+inline uint qHash(const artemis::ByteCodeIndentifier& d)
+{
     return d.hashcode();
 }
 

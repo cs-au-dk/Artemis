@@ -47,6 +47,9 @@ artemis-clean:
 artemis-install: artemis
 	cd artemis-code && make install
 
+artemis-format-code:
+	cd artemis-code && astyle --style=kr --indent=spaces --break-blocks --indent-labels --pad-header --unpad-paren --break-closing-brackets --add-one-line-brackets --min-conditional-indent=0 --pad-oper --align-pointer=type --recursive "./src/*.cpp" "./src/*.h"
+
 fetch-qt:
 	git clone git://gitorious.org/qt/qt.git && cd qt && echo -e 'o\nyes\n' | ./configure -prefix `pwd` -no-webkit && make
 
@@ -62,9 +65,9 @@ check:
 	which lemon > /dev/null
 	which re2c > /dev/null
 
-DEPENDENCIES = g++ flex bison gperf ruby cmake lemon re2c libxext-dev libfontconfig-dev libxrender-dev
+DEPENDENCIES = g++ flex bison gperf ruby cmake lemon re2c libxext-dev libfontconfig-dev libxrender-dev libsqlite3-dev
 
-YUM_DEPENDENCIES = gcc-c++ flex bison gperf ruby cmake lemon re2c fontconfig-devel libXext-devel patch
+YUM_DEPENDENCIES = gcc-c++ flex bison gperf ruby cmake lemon re2c fontconfig-devel libXext-devel patch libsqlite3-dev
 
 fetch-apt:
 	sudo apt-get install ${DEPENDENCIES}

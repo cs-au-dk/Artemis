@@ -5,21 +5,23 @@
 #include <QUrl>
 #include <QDebug>
 
-namespace artemis {
+namespace artemis
+{
 
 class AjaxRequest
 {
+
 public:
-    AjaxRequest(const QUrl url, const QString post_data);
+    AjaxRequest(const QUrl url, const QString postData);
 
     QUrl url() const;
-    QString post_data();
+    QString postData();
 
-    QDebug friend operator<<(QDebug dbg, const AjaxRequest &e);
+    QDebug friend operator<<(QDebug dbg, const AjaxRequest& e);
 
 private:
-    QString m_post_data;
-    QUrl m_url;
+    QString mPostData;
+    QUrl mUrl;
 };
 
 }
