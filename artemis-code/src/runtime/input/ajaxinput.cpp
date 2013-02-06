@@ -46,17 +46,6 @@ void AjaxInput::apply(ArtemisWebPage* page, QWebExecutionListener* webkitListene
     webkitListener->ajaxCallbackFire(mCallbackId);
 }
 
-bool AjaxInput::isEqual(QSharedPointer<const BaseInput> other) const
-{
-    QSharedPointer<const AjaxInput> ajaxInput = qSharedPointerDynamicCast<const AjaxInput>(other);
-
-    if (ajaxInput == NULL) {
-        return false;
-    }
-
-    return mCallbackId == ajaxInput->mCallbackId;
-}
-
 QSharedPointer<const BaseInput> AjaxInput::getPermutation(QSharedPointer<VariantsGenerator> variantsGenerator, TargetGenerator* targetGenerator) const
 {
     return QSharedPointer<const BaseInput>(this);

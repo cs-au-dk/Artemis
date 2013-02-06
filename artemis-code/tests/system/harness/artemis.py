@@ -51,4 +51,5 @@ def execute_artemis(execution_uuid, url, iterations=1):
         return report
 
     except subprocess.CalledProcessError, e:
-        raise Exception("Error thrown by call %s \n\n %s" % (e, e.output))
+        raise Exception("Exception thrown by call %s \n\n %s \n\n Exception thrown by call %s" \
+            % (e.cmd, e.output, e.cmd))

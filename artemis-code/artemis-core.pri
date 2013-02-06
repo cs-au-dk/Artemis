@@ -63,7 +63,8 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/util/coverageutil.h \
     src/statistics/statsstorage.h \
     src/statistics/writers/pretty.h \
-    src/exceptionhandlingqapp.h
+    src/exceptionhandlingqapp.h \
+    src/runtime/browser/executionresultbuilder.h
 
 SOURCES += src/runtime/input/ajaxinput.cpp \
     src/strategies/prioritizer/constantprioritizer.cpp \
@@ -109,6 +110,7 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/util/coverageutil.cpp \
     src/statistics/statsstorage.cpp \
     src/statistics/writers/pretty.cpp \
-    src/exceptionhandlingqapp.cpp
+    src/exceptionhandlingqapp.cpp \
+    src/runtime/browser/executionresultbuilder.cpp
 
 QT += network

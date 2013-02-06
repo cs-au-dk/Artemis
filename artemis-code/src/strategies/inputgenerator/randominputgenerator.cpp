@@ -58,7 +58,7 @@ RandomInputGenerator::RandomInputGenerator(
 
 QList<QSharedPointer<ExecutableConfiguration> > RandomInputGenerator::addNewConfigurations(
         QSharedPointer<const ExecutableConfiguration> configuration,
-        const ExecutionResult& result)
+        QSharedPointer<const ExecutionResult> result)
 {
 
     QList<QSharedPointer<ExecutableConfiguration> > newConfigurations;
@@ -71,7 +71,7 @@ QList<QSharedPointer<ExecutableConfiguration> > RandomInputGenerator::addNewConf
 
 QList<QSharedPointer<ExecutableConfiguration> > RandomInputGenerator::insertSameLength(
         QSharedPointer<const ExecutableConfiguration> oldConfiguration,
-        const ExecutionResult& result)
+        QSharedPointer<const ExecutionResult>)
 {
     QList<QSharedPointer<ExecutableConfiguration> > newConfigurations;
 
@@ -86,12 +86,18 @@ QList<QSharedPointer<ExecutableConfiguration> > RandomInputGenerator::insertSame
     for (int i = 0; i < mNumberSameLength; i++) {
         QSharedPointer<const BaseInput> newLast = last->getPermutation(mVariantsGenerator, mTargetGenerator);
 
-        if (last->isEqual(newLast) == false) {
-            QSharedPointer<const InputSequence> newSeq = sequence->replaceLast(newLast);
-            QSharedPointer<ExecutableConfiguration> newConf = \
-                    QSharedPointer<ExecutableConfiguration>(new ExecutableConfiguration(newSeq, oldConfiguration->getUrl()));
-            newConfigurations.append(newConf);
-        }
+        QSharedPointer<const InputSequence> newSeq = sequence->replaceLast(newLast);
+        QSharedPointer<ExecutableConfiguration> newConf = \
+                QSharedPointer<ExecutableConfiguration>(new ExecutableConfiguration(newSeq, oldConfiguration->getUrl()));
+        newConfigurations.append(newConf);
+
+        /**
+         * // TODO
+         *
+         * The above code will generate duplicates of the same sequence over time, as the variants generator can repeat already
+         * used parameters. Is this a good way to extend our test sequences? And if so should we put in some "isEqual"-ish check
+         * to avoid duplications?
+         */
     }
 
     return newConfigurations;
@@ -99,14 +105,14 @@ QList<QSharedPointer<ExecutableConfiguration> > RandomInputGenerator::insertSame
 
 QList<QSharedPointer<ExecutableConfiguration> > RandomInputGenerator::insertExtended(
         QSharedPointer<const ExecutableConfiguration> oldConfiguration,
-        const ExecutionResult& result)
+        QSharedPointer<const ExecutionResult> result)
 {
     QList<QSharedPointer<ExecutableConfiguration> > newConfigurations;
 
-    foreach (EventHandlerDescriptor* ee, result.eventHandlers()) {
+    foreach (EventHandlerDescriptor* ee, result->getEventHandlers()) {
         EventParameters* newParams = mVariantsGenerator->generateEventParameters(NULL, ee);
         TargetDescriptor* target = mTargetGenerator->generateTarget(NULL, ee);
-        QSharedPointer<FormInput> newForm = mVariantsGenerator->generateFormFields(NULL, result.formFields());
+        QSharedPointer<FormInput> newForm = mVariantsGenerator->generateFormFields(NULL, result->getFormFields());
         QSharedPointer<const DomInput> domInput = QSharedPointer<const DomInput>(new DomInput(ee, newForm, newParams, target));
 
         QSharedPointer<const InputSequence> newInputSequence = oldConfiguration->getInputSequence()->extend(domInput);
@@ -116,7 +122,7 @@ QList<QSharedPointer<ExecutableConfiguration> > RandomInputGenerator::insertExte
         newConfigurations.append(newConfiguration);
     }
 
-    foreach (QSharedPointer<const Timer> timer, result.getTimers()) {
+    foreach (QSharedPointer<const Timer> timer, result->getTimers()) {
         QSharedPointer<const BaseInput> newInput = QSharedPointer<const TimerInput>(new TimerInput(timer));
 
         QSharedPointer<const InputSequence> newSeq = oldConfiguration->getInputSequence()->extend(newInput);
@@ -126,7 +132,7 @@ QList<QSharedPointer<ExecutableConfiguration> > RandomInputGenerator::insertExte
         newConfigurations.append(newConf);
     }
 
-    foreach (int callbackId, result.ajaxCallbackHandlers()) {
+    foreach (int callbackId, result->getAjaxCallbackHandlers()) {
         QSharedPointer<const BaseInput> newInput = QSharedPointer<const AjaxInput>(new AjaxInput(callbackId));
 
         QSharedPointer<const InputSequence> newSequence = oldConfiguration->getInputSequence()->extend(newInput);

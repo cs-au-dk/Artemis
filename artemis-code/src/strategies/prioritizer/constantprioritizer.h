@@ -38,7 +38,7 @@ class ConstantPrioritizer : public PrioritizerStrategy
 public:
     ConstantPrioritizer(QObject* parent);
     double prioritize(QSharedPointer<ExecutableConfiguration> newConf,
-                      const ExecutionResult& results);
+                      const QSharedPointer<ExecutionResult> result);
 
     void reprioritize(WorkList* worklist);
 };

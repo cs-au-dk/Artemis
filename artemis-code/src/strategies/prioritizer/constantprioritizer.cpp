@@ -35,8 +35,8 @@ ConstantPrioritizer::ConstantPrioritizer(QObject* parent)
 {
 }
 
-double ConstantPrioritizer::prioritize(QSharedPointer<ExecutableConfiguration> newConf,
-                                       const ExecutionResult& results)
+double ConstantPrioritizer::prioritize(QSharedPointer<ExecutableConfiguration>,
+                                       const QSharedPointer<ExecutionResult>)
 {
     return 1;
 }

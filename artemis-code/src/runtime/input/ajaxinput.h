@@ -39,7 +39,6 @@ public:
     AjaxInput(int callbackId);
     ~AjaxInput() {}
     void apply(ArtemisWebPage* page, QWebExecutionListener* webkitListener) const;
-    bool isEqual(QSharedPointer<const BaseInput> other) const;
     QSharedPointer<const BaseInput> getPermutation(QSharedPointer<VariantsGenerator> variantsGenerator, TargetGenerator* targetGenerator) const;
 
 private:

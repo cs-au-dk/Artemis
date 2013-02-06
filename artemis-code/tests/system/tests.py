@@ -66,6 +66,11 @@ class AjaxTests(unittest.TestCase):
 		self.assertEqual(1, report.get("ajax::fired", 0));
 		self.assertEqual(1, report.get('WebKit::alerts', 0));
 
+class LegacyBenchmarkTests(unittest.TestCase):
+
+	def test_htmlbox(self):
+		report = execute_artemis('legacybenchmark', '%s/legacy-benchmarks/htmledit/demo_full.html' % WEBSERVER_URL)
+
 if __name__ == '__main__':
 	server = WebServer(WEBSERVER_ROOT, WEBSERVER_PORT)
 

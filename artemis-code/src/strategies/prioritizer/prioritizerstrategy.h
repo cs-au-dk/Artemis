@@ -49,7 +49,7 @@ public:
       state: State of the execution engine
       */
     virtual double prioritize(QSharedPointer<ExecutableConfiguration> newConf,
-                              const ExecutionResult& results) = 0;
+                              const QSharedPointer<ExecutionResult> result) = 0;
 
     virtual void reprioritize(WorkList* worklist) = 0;
 };
