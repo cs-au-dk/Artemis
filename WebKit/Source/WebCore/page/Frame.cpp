@@ -93,11 +93,6 @@
 #include <wtf/RefCountedLeakCounter.h>
 #include <wtf/StdLibExtras.h>
 
-#ifdef ARTEMIS
-#include <instrumentation/executionlistener.h>
-#endif
-
-
 #if USE(ACCELERATED_COMPOSITING)
 #include "RenderLayerCompositor.h"
 #endif
@@ -182,10 +177,6 @@ inline Frame::Frame(Page* page, HTMLFrameOwnerElement* ownerElement, FrameLoader
     XMLNSNames::init();
     XMLNames::init();
     WebKitFontFamilyNames::init();
-
-#ifdef ARTEMIS
-    executionListener = NULL;
-#endif
 
     if (!ownerElement) {
 #if USE(TILED_BACKING_STORE)
@@ -1130,31 +1121,6 @@ DragImageRef Frame::dragImageForSelection()
     return createDragImageFromImage(image.get());
 }
 
-#endif
-
-#ifdef ARTEMIS
-inst::ExecutionListener* Frame::getExecutionListener()
-{
-    printf("frame::GET\n");
-    if (executionListener == NULL) {
-        printf("frame::GET1\n");
-        Frame* parent = tree()->parent(true);
-        if(parent == NULL) {
-            printf("frame::GET2\n");
-            return inst::getDummy();
-        }
-        return parent->getExecutionListener();
-    } else {
-        printf("GET3: \n");
-        return executionListener;
-    }
-}
-
-void Frame::setExecutionListener(inst::ExecutionListener* e)
-{
-    printf("frame::SET\n");
-    executionListener = e;
-}
 #endif
 
 } // namespace WebCore

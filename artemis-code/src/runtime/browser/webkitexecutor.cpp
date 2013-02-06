@@ -70,8 +70,7 @@ WebKitExecutor::WebKitExecutor(QObject* parent,
     mResultBuilder = new ExecutionResultBuilder(this, mPage);
     covList = new CoverageListener(this);
 
-    webkitListener = new QWebExecutionListener();
-    webkitListener->installWebKitExecutionListener(webkitListener);
+    webkitListener = QWebExecutionListener::getListener();
 
     // TODO cleanup in ajax stuff, we are handling ajax through AjaxRequestListener, the ajaxRequest signal and addAjaxCallHandler
 

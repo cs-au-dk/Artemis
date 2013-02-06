@@ -567,7 +567,7 @@ void XMLHttpRequest::send(const String& body, ExceptionCode& ec)
 
     if (!body.isNull() && m_method != "GET" && m_method != "HEAD" && m_url.protocolInHTTPFamily()) {
 #ifdef ARTEMIS
-        inst::getDefaultListener()->webkit_ajax_send(this->url().deprecatedString().utf8().data(), body.utf8().data());
+        inst::getListener()->webkit_ajax_send(this->url().deprecatedString().utf8().data(), body.utf8().data());
 #endif
         String contentType = getRequestHeader("Content-Type");
         if (contentType.isEmpty()) {
@@ -588,7 +588,7 @@ void XMLHttpRequest::send(const String& body, ExceptionCode& ec)
     }
 #ifdef ARTEMIS
     else {
-        inst::getDefaultListener()->webkit_ajax_send(this->url().deprecatedString().utf8().data(), 0);
+        inst::getListener()->webkit_ajax_send(this->url().deprecatedString().utf8().data(), 0);
     }
 #endif
 
@@ -714,7 +714,7 @@ void XMLHttpRequest::createRequest(ExceptionCode& ec)
 
 #ifdef ARTEMIS
         LazyXMLHttpRequest* lazyRequest = new LazyXMLHttpRequest(scriptExecutionContext(), request, this, options);
-        inst::getDefaultListener()->ajaxCallbackEventAdded(lazyRequest);
+        inst::getListener()->ajaxCallbackEventAdded(lazyRequest);
 #else
         // ThreadableLoader::create can return null here, for example if we're no longer attached to a page.
         // This is true while running onunload handlers.

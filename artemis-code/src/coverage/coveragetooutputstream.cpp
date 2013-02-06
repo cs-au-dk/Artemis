@@ -35,6 +35,7 @@ namespace artemis
 
 void writeCoverageReport(const CodeCoverage& cov)
 {
+
     foreach(int id, cov.sourceIds()) {
 
         const SourceInfo* info = cov.sourceInfo(id);

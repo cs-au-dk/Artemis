@@ -150,7 +150,7 @@ void Runtime::finishAnalysis()
 {
     qDebug() << "Artemis: Testing done..." << endl;
 
-    qDebug() << "\n\n === Coverage information for execution === \n";
+    qDebug() << "=== Coverage information for execution ===";
     writeCoverageHtml(coverage());
     writeCoverageReport(coverage());
 

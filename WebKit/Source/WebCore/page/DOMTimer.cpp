@@ -84,7 +84,7 @@ DOMTimer::DOMTimer(ScriptExecutionContext* context, PassOwnPtr<ScheduledAction> 
         startRepeating(intervalMilliseconds);
 
 #ifdef ARTEMIS
-    inst::getDefaultListener()->timerAdded(scriptExecutionContext(), m_timeoutId, interval, singleShot);
+    inst::getListener()->timerAdded(scriptExecutionContext(), m_timeoutId, interval, singleShot);
 #endif
 }
 
@@ -94,7 +94,7 @@ DOMTimer::~DOMTimer()
         scriptExecutionContext()->removeTimeout(m_timeoutId);
 
 #ifdef ARTEMIS
-        inst::getDefaultListener()->timerRemoved(scriptExecutionContext(), m_timeoutId);
+        inst::getListener()->timerRemoved(scriptExecutionContext(), m_timeoutId);
 #endif 
     }
 }
@@ -177,7 +177,7 @@ void DOMTimer::stop()
 #ifdef ARTEMIS
     // We remove the timer, since stopping it effectively prevents
     // us from calling this timer
-    inst::getDefaultListener()->timerRemoved(scriptExecutionContext(), m_timeoutId);
+    inst::getListener()->timerRemoved(scriptExecutionContext(), m_timeoutId);
 #endif 
 
     SuspendableTimer::stop();

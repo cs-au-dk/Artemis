@@ -25,7 +25,6 @@
 
 namespace inst {
 
-
     ExecutionListener::ExecutionListener()
     {
         jsinst::JSCExecutionListener* ll = new JScriptListenerClient(this);
@@ -90,32 +89,6 @@ namespace inst {
         return;
     }
 
-    ExecutionListener* dummy_listener = new ExecutionListener();
-    ExecutionListener* default_listener;
-    ListenerDebugger* debugger;
-
-    ExecutionListener* getDummy() {
-        return dummy_listener;
-    }
-
-    ExecutionListener* getDefaultListener() {
-        if (default_listener == NULL)
-            return dummy_listener;
-        return default_listener;
-    }
-
-    void setDefaultListener(ExecutionListener* e) {
-        std::cout << "WEBKIT: Execution listener was set..." << std::endl;
-        default_listener = e;
-    }
-
-    ListenerDebugger* getDebugger() {
-        if (debugger == NULL) {
-            debugger = new ListenerDebugger(getDefaultListener());
-        }
-        return debugger;
-    }
-
     void ExecutionListener::loadJavaScript(JSC::SourceProvider* sp, JSC::ExecState* es) {
         // SourceProvider has changed API lately, thus the following usage of it has not been fully
         // tested with artemis - e.g. if you are tracking an error and reach this point, then you
@@ -135,13 +108,14 @@ namespace inst {
     }
 
     void ExecutionListener::interpreterExecutedStatement(const JSC::DebuggerCallFrame& frame, intptr_t sourceID, int lineNumber) {
+        //std::cout << "el::executed statement" << std::endl;
         /* std::string(frame.calculatedFunctionName().ascii().data()) */
         /* FIXME IMPORTANT */
         executedStatement(sourceID, "fooBar()", lineNumber);
     }
 
     void ExecutionListener::executedStatement(intptr_t sourceID, std::string function_name, int linenumber) {
-        //EMPTY
+        std::cout << "el::WARNING-EXE-STATEMENT-LOST" << std::endl;
     }
 
     void ExecutionListener::interpreterCalledEvent(const JSC::DebuggerCallFrame& frame, intptr_t sourceID, int lineNumber) {

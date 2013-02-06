@@ -79,7 +79,6 @@
 #include <wtf/text/StringHash.h>
 
 #ifdef ARTEMIS
-#include <instrumentation/executionlistener.h>
 #include <instrumentation/listenerdebugger.h>
 #endif
 
@@ -188,9 +187,6 @@ Page::Page(PageClients& pageClients)
 #endif
     , m_displayID(0)
 {
-#ifdef ARTEMIS
-    executionListener = NULL;
-#endif
 
     if (!allPages) {
         allPages = new HashSet<Page*>;
@@ -976,25 +972,6 @@ bool Page::javaScriptURLsAreAllowed() const
 {
     return m_javaScriptURLsAreAllowed;
 }
-
-#ifdef ARTEMIS
-void Page::setExecutionListener(inst::ExecutionListener* e)
-{
-    printf("SET::page");
-    mainFrame()->setExecutionListener(e);
-    inst::setDefaultListener(e);
-    executionListener = e;
-}
-
-inst::ExecutionListener* Page::getExecutionListener()
-{
-    printf("GET::page");
-    if (executionListener == NULL) {
-        return inst::getDummy();
-    }
-    return executionListener;
-}
-#endif
 
 void Page::setMinimumTimerInterval(double minimumTimerInterval)
 {

@@ -28,7 +28,8 @@ public:
     virtual void webkit_ajax_send(const char * url, const char * data);
     virtual void webkit_eval_call(const char * eval_string);
     virtual void calledFunction(const JSC::DebuggerCallFrame&);
-    void installWebKitExecutionListener(inst::ExecutionListener*);
+
+    static QWebExecutionListener* getListener();
     
     virtual void ajaxCallbackEventAdded(WebCore::LazyXMLHttpRequest*);
 

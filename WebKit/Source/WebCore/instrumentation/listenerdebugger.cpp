@@ -38,6 +38,12 @@ namespace inst {
 
     ListenerDebugger::~ListenerDebugger() {}
     
-
+    ListenerDebugger* debugger;
+    ListenerDebugger* getDebugger() {
+        if (debugger == NULL) {
+            debugger = new ListenerDebugger(getListener());
+        }
+        return debugger;
+    }
 }
 #endif

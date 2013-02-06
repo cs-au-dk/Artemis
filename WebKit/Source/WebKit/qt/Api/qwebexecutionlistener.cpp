@@ -222,8 +222,20 @@ void QWebExecutionListener::webkit_eval_call(const char * eval_string) {
     emit this->eval_call(QString(tr(eval_string)));
 }
 
-void QWebExecutionListener::installWebKitExecutionListener(inst::ExecutionListener* e) {
+QWebExecutionListener* QWebExecutionListener::getListener() {
+    return (QWebExecutionListener*)inst::getListener();
+}
 
-    inst::setDefaultListener(e);
+namespace inst {
+
+ExecutionListener* listener;
+
+ExecutionListener* getListener() {
+    if (listener == NULL) {
+        listener = new QWebExecutionListener();
+    }
+    return listener;
+}
+
 }
 

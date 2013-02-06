@@ -98,7 +98,7 @@ DOMWindow* EventTarget::toDOMWindow()
 bool EventTarget::addEventListener(const AtomicString& eventType, PassRefPtr<EventListener> listener, bool useCapture)
 {
 #ifdef ARTEMIS
-    inst::getDefaultListener()->eventAdded(this, eventType.string().ascii().data());
+    inst::getListener()->eventAdded(this, eventType.string().ascii().data());
 #endif
     EventTargetData* d = ensureEventTargetData();
     return d->eventListenerMap.add(eventType, listener, useCapture);
@@ -116,7 +116,7 @@ bool EventTarget::removeEventListener(const AtomicString& eventType, EventListen
         return false;
 
 #ifdef ARTEMIS
-    inst::getDefaultListener()->eventCleared(this, eventType.string().ascii().data());
+    inst::getListener()->eventCleared(this, eventType.string().ascii().data());
 #endif
 
     // Notify firing events planning to invoke the listener at 'index' that

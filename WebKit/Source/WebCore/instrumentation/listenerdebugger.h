@@ -48,6 +48,8 @@ namespace inst {
 
     };
 
+    ListenerDebugger* getDebugger();
+
 }
 #endif // LISTENERDEBUGGER_H
 #endif

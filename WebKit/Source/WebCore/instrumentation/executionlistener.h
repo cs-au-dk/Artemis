@@ -26,11 +26,10 @@ namespace JSC {
 
 namespace inst {
 
-    class ListenerDebugger;
-
-    class ExecutionListener {
+class ExecutionListener {
     public:
         ExecutionListener();
+
         /**
           Invoked when an event is added to a DOM element
           */
@@ -91,17 +90,11 @@ namespace inst {
           Eval
           */
         virtual void webkit_eval_call(const char * eval_string);
-    };
+};
 
+extern ExecutionListener* listener;
+ExecutionListener* getListener();
 
-    extern ExecutionListener* dummy_listener;
-    extern ExecutionListener* default_listener;
-
-    ExecutionListener* getDummy();
-    ExecutionListener* getDefaultListener();
-    void setDefaultListener(ExecutionListener*);
-
-    ListenerDebugger* getDebugger();
 }
 #endif // EXECUTIONLISTENER_H
 #endif

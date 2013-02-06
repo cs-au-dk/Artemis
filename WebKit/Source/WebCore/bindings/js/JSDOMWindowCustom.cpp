@@ -466,7 +466,7 @@ void JSDOMWindow::setLocation(ExecState* exec, JSValue value)
 #endif
 
 #ifdef ARTEMIS
-    inst::getDefaultListener()->url_changed(value, exec);
+    inst::getListener()->url_changed(value, exec);
 #endif
 
     UString locationString = value.toString(exec);
