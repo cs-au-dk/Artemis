@@ -116,6 +116,7 @@ void Runtime::preConcreteExecution()
     if (mWorklist->empty() ||
         mTerminationStrategy->shouldTerminate()) {
 
+        mWebkitExecutor->detach();
         finishAnalysis();
         return;
     }

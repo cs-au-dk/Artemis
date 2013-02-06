@@ -111,6 +111,13 @@ WebKitExecutor::~WebKitExecutor()
 {
 }
 
+void WebKitExecutor::detach() {
+
+    // ignore events emitted from webkit on deallocation
+    webkitListener->disconnect(mResultBuilder);
+
+}
+
 void WebKitExecutor::executeSequence(QSharedPointer<ExecutableConfiguration> conf)
 {
     qDebug() << "Artemis: Executing sequence" << endl;
@@ -129,7 +136,8 @@ void WebKitExecutor::slLoadFinished(bool ok)
     mResultBuilder->notifyPageLoaded();
 
     if (!ok) {
-        qFatal("WEBKIT: Website load failed!");
+        qWarning("WEBKIT: Website load failed!");
+        exit(1);
     }
 
     qDebug() << "WEBKIT: Finished loading" << endl;

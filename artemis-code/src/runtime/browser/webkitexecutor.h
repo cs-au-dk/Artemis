@@ -61,6 +61,7 @@ public:
     ~WebKitExecutor();
 
     void executeSequence(QSharedPointer<ExecutableConfiguration> conf);
+    void detach();
     CodeCoverage coverage();
 
     QWebExecutionListener* webkitListener; // TODO should not be public
