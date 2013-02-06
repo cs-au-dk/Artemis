@@ -28,7 +28,6 @@
 #ifndef INPUTSEQUENCE_H
 #define INPUTSEQUENCE_H
 
-#include <QObject>
 #include <QList>
 
 #include "baseinput.h"
@@ -36,24 +35,22 @@
 namespace artemis
 {
 
-class InputSequence : public QObject
+class InputSequence
 {
 
-Q_OBJECT
-
 public:
-    InputSequence(QObject* parent);
-    InputSequence(QObject* parent, const QList<BaseInput*>& sequence);
+    InputSequence();
+    InputSequence(const QList<QSharedPointer<const BaseInput> >& sequence);
 
-    void replaceLast(BaseInput* newLast);
-    void extend(BaseInput* newLast);
+    QSharedPointer<const InputSequence> replaceLast(QSharedPointer<const BaseInput> newLast) const;
+    QSharedPointer<const InputSequence> extend(QSharedPointer<const BaseInput> newLast) const;
+
     bool isEmpty() const;
-    BaseInput* getLast() const;
-    const QList<BaseInput*> toList() const;
-    InputSequence* copy() const;
+    QSharedPointer<const BaseInput> getLast() const;
+    const QList<QSharedPointer<const BaseInput> > toList() const;
 
 private:
-    QList<BaseInput*> mSequence;
+    const QList<QSharedPointer<const BaseInput> > mSequence;
 };
 
 }

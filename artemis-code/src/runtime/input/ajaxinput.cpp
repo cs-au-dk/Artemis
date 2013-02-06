@@ -26,8 +26,6 @@
  or implied, of Simon Holm Jensen
  */
 
-#include <iostream>
-
 #include "statistics/statsstorage.h"
 
 #include "ajaxinput.h"
@@ -37,22 +35,20 @@ using namespace std;
 namespace artemis
 {
 
-AjaxInput::AjaxInput(QObject* parent, int callbackId) :
-    BaseInput(parent)
+AjaxInput::AjaxInput(int callbackId)
 {
     this->mCallbackId = callbackId;
 }
 
-void AjaxInput::apply(ArtemisWebPage* page, QWebExecutionListener* webkit_listener)
+void AjaxInput::apply(ArtemisWebPage* page, QWebExecutionListener* webkitListener) const
 {
     statistics()->accumulate("ajax::fired", 1);
-    webkit_listener->ajaxCallbackFire(mCallbackId);
+    webkitListener->ajaxCallbackFire(mCallbackId);
 }
 
-bool AjaxInput::isEqual(BaseInput* other)
+QSharedPointer<const BaseInput> AjaxInput::getPermutation(QSharedPointer<VariantsGenerator> variantsGenerator, TargetGenerator* targetGenerator) const
 {
-    //TODO implement this?
-    return false;
+    return QSharedPointer<const BaseInput>(this);
 }
 
 }

@@ -1,11 +1,12 @@
 #ifndef COVERAGEUTIL_H
 #define COVERAGEUTIL_H
 
-#include "src/coverage/codecoverage.h"
+#include "coverage/codecoverage.h"
 
-namespace artemis {
+namespace artemis
+{
 
-    void write_coverage_html(CodeCoverage cc);
+void writeCoverageHtml(CodeCoverage cc);
 
 }
 

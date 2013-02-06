@@ -38,14 +38,15 @@ namespace artemis
 class TimerInput: public BaseInput
 {
 public:
-    TimerInput(QObject* parent, Timer timer);
+    TimerInput(QSharedPointer<const Timer> timer);
 
-    void apply(ArtemisWebPage* page, QWebExecutionListener* webkitListener);
-    bool isEqual(BaseInput* other);
+    void apply(ArtemisWebPage* page, QWebExecutionListener* webkitListener) const;
+    QSharedPointer<const BaseInput> getPermutation(QSharedPointer<VariantsGenerator> variantsGenerator, TargetGenerator* targetGenerator) const;
 
 private:
-    Timer mTimer;
+    QSharedPointer<const Timer> mTimer;
 };
+
 
 }
 

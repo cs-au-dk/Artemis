@@ -1,16 +1,16 @@
 /*
   Copyright 2011 Simon Holm Jensen. All rights reserved.
-  
+
   Redistribution and use in source and binary forms, with or without modification, are
   permitted provided that the following conditions are met:
-  
+
      1. Redistributions of source code must retain the above copyright notice, this list of
         conditions and the following disclaimer.
-  
+
      2. Redistributions in binary form must reproduce the above copyright notice, this list
         of conditions and the following disclaimer in the documentation and/or other materials
         provided with the distribution.
-  
+
   THIS SOFTWARE IS PROVIDED BY SIMON HOLM JENSEN ``AS IS'' AND ANY EXPRESS OR IMPLIED
   WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
   FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL <COPYRIGHT HOLDER> OR
@@ -20,24 +20,25 @@
   ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
   NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
   ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-  
+
   The views and conclusions contained in the software and documentation are those of the
   authors and should not be interpreted as representing official policies, either expressed
   or implied, of Simon Holm Jensen
 */
 #include "eventhandlerdescriptor.h"
 
-namespace artemis {
-
-EventHandlerDescriptor::EventHandlerDescriptor(QObject* parent, QWebElement *elem, QString name) : QObject(parent)
+namespace artemis
 {
-    this->event_name = name;
+
+EventHandlerDescriptor::EventHandlerDescriptor(QObject* parent, QWebElement* elem, QString name) : QObject(parent)
+{
+    this->eventName = name;
     this->element = new DOMElementDescriptor(parent, elem);
 }
 
 EventHandlerDescriptor::EventHandlerDescriptor(QObject* parent, const EventHandlerDescriptor* other) : QObject(parent)
 {
-    this->event_name = other->event_name;
+    this->eventName = other->eventName;
     this->element = new DOMElementDescriptor(parent, other->element);
 }
 
@@ -45,25 +46,30 @@ EventHandlerDescriptor::~EventHandlerDescriptor()
 {
 }
 
-QString EventHandlerDescriptor::name() const {
-    return this->event_name;
+QString EventHandlerDescriptor::name() const
+{
+    return this->eventName;
 }
 
-const DOMElementDescriptor* EventHandlerDescriptor::dom_element() const {
+const DOMElementDescriptor* EventHandlerDescriptor::domElement() const
+{
     return element;
 }
 
-const EventType EventHandlerDescriptor::getEventType() const {
-    return get_type(event_name);
+EventType EventHandlerDescriptor::getEventType() const
+{
+    return getType(eventName);
 }
 
-QDebug operator<<(QDebug dbg, const EventHandlerDescriptor &e) {
-    dbg.nospace() << "(" + e.event_name << "," << e.element << ")";
+QDebug operator<<(QDebug dbg, const EventHandlerDescriptor& e)
+{
+    dbg.nospace() << "(" + e.eventName << "," << e.element << ")";
     return dbg.space();
 }
 
-bool EventHandlerDescriptor::is_invalid() const {
-    return this->element->is_invalid();
+bool EventHandlerDescriptor::isInvalid() const
+{
+    return this->element->isInvalid();
 }
 
 }

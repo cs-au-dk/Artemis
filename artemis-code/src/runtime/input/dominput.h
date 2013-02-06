@@ -43,25 +43,17 @@ class DomInput: public BaseInput
 {
 
 public:
-    DomInput(QObject* parent, EventHandlerDescriptor* handler, FormInput* formInput,
-        EventParameters* params, TargetDescriptor* target);
+    DomInput(const EventHandlerDescriptor* handler, QSharedPointer<const FormInput> formInput,
+             const EventParameters* params, const TargetDescriptor* target);
 
-    ~DomInput();
-
-    void apply(ArtemisWebPage* page, QWebExecutionListener* webkitListener);
-    bool isEqual(BaseInput* other);
-
-    // TODO delete
-    const EventHandlerDescriptor* getEventHandler() const;
-    TargetDescriptor* target() const;
-    FormInput* getFormInput() const;
-    EventParameters* event_params() const;
+    void apply(ArtemisWebPage* page, QWebExecutionListener* webkitListener) const;
+    QSharedPointer<const BaseInput> getPermutation(QSharedPointer<VariantsGenerator> variantsGenerator, TargetGenerator* targetGenerator) const;
 
 private:
-    EventHandlerDescriptor* mEventHandler;
-    FormInput* mFormInput;
-    EventParameters* mEvtParams;
-    TargetDescriptor* mTarget;
+    const EventHandlerDescriptor* mEventHandler;
+    QSharedPointer<const FormInput> mFormInput;
+    const EventParameters* mEvtParams;
+    const TargetDescriptor* mTarget;
 };
 
 }
