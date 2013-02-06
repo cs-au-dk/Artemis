@@ -72,7 +72,7 @@ private:
     InputGeneratorStrategy* mInputgenerator;
 
 private slots:
-    void postConcreteExecution(QSharedPointer<ExecutableConfiguration> configuration, ExecutionResult* result);
+    void postConcreteExecution(QSharedPointer<ExecutableConfiguration> configuration, QSharedPointer<ExecutionResult> result);
 
 signals:
     void sigTestingDone();

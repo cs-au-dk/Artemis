@@ -77,20 +77,6 @@ void DomInput::apply(ArtemisWebPage* page, QWebExecutionListener* webkitListener
     }
 }
 
-bool DomInput::isEqual(QSharedPointer<const BaseInput> other) const
-{
-    QSharedPointer<const DomInput> domInput = qSharedPointerDynamicCast<const DomInput>(other);
-
-    if (domInput == NULL) {
-        return false;
-    }
-
-    qFatal("Unimplemented function!");
-    assert(false);
-
-    // TODO Implement DomInput::isEqual
-}
-
 QSharedPointer<const BaseInput> DomInput::getPermutation(QSharedPointer<VariantsGenerator> variantsGenerator, TargetGenerator* targetGenerator) const
 {
     EventParameters* newParams = variantsGenerator->generateEventParameters(NULL, mEventHandler);

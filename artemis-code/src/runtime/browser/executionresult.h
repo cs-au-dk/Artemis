@@ -28,83 +28,61 @@
 #ifndef EXECUTIONRESULT_H
 #define EXECUTIONRESULT_H
 
-#include <QObject>
-#include <QtWebKit>
+#include <inttypes.h>
+
 #include <QSet>
 #include <QPair>
 #include <QList>
 
+#include "artemisglobals.h"
 #include "runtime/events/eventhandlerdescriptor.h"
 #include "runtime/events/forms/formfield.h"
 #include "runtime/browser/timer.h"
-#include "artemisglobals.h"
 #include "runtime/ajax/ajaxrequest.h"
-#include "artemiswebpage.h"
 
 namespace artemis
 {
 
-class ExecutionResult : public QObject
+class ExecutionResult
 {
-    Q_OBJECT
 
 public:
-    ExecutionResult(QObject* parent);
-    ExecutionResult(QObject* parent, const ExecutionResult* other);
+    ExecutionResult();
 
-    QSet<EventHandlerDescriptor*> eventHandlers() const;
+    QSet<EventHandlerDescriptor*> getEventHandlers() const;
+    QSet<QSharedPointer<const FormField> > getFormFields() const;
 
-    QSet<QSharedPointer<const FormField> > formFields() const;
-    void addFormFields(QSet<QSharedPointer<const FormField> > f);
-    void addFormField(QSharedPointer<const FormField> f);
-
-    void addAjaxRequest(AjaxRequest req);
-    QSet<AjaxRequest> ajaxRequest() const;
-    void makeLoadFailed();
-    bool modifedDom() const;
-    void setModfiedDom(bool b) ;
-    void setStateHash(long hash);
-    long pageStateHash() const;
-    QSet<QString> evalStrings();
-    QList<int> ajaxCallbackHandlers() const;
-    QList<QSharedPointer<Timer> > getTimers() const;
+    bool isDomModified() const;
+    long getPageStateHash() const;
     QString getPageContents() const;
-    void setPageContents(QString content);
 
-    /**
-      Invoke this method when the page containing the elements is done loading.
-      */
-    void finalize();
+    QSet<QSharedPointer<AjaxRequest> > getAjaxRequests() const;
+    QList<int> getAjaxCallbackHandlers() const;
+
+    QSet<QString> getEvalStrings();
+    QList<QSharedPointer<Timer> > getTimers() const;
 
     QDebug friend operator<<(QDebug dbg, const ExecutionResult& e);
 
+    friend class ExecutionResultBuilder;
+
 private:
     QSet<EventHandlerDescriptor*> mEventHandlers;
-    QSet<QPair<QWebElement*, QString> > elementPointers;
     QSet<QSharedPointer<const FormField> > mFormFields;
-    bool final;
-    bool isCrashState;
-    QString crashCause;
-    intptr_t crashSourceID;
-    int crashLineNumber;
-    bool mModfiedDom;
-    long stateHash;
-    QSet<AjaxRequest> mAjaxRequest;
-    QSet<QString> evaledStrings;
-    QList<int> mAjaxCallbackHandlers;
-    QMap<int, QSharedPointer<Timer> > mTimers; // <timerId, Timer>
+
+    bool mModifiedDom;
+    long mStateHash;
     QString mPageContents;
 
-public slots:
-    void newEventListener(QWebElement* elem, QString name);
-    void removeEventListener(QWebElement* elem, QString name);
-    void slScriptCrash(QString cause, intptr_t sourceID, int lineNumber);
-    void slEvalString(const QString);
-    void addedAjaxCallbackHandler(int callbackId);
+    QSet<QSharedPointer<AjaxRequest> > mAjaxRequest;
+    QList<int> mAjaxCallbackHandlers;
 
-    void slTimerAdded(int timerId, int timeout, bool singleShot);
-    void slTimerRemoved(int timerId);
+    QSet<QString> mEvaledStrings;
+    QMap<int, QSharedPointer<Timer> > mTimers; // <timerId, Timer>
+
+
 };
+
 }
 
 #endif // EXECUTIONRESULT_H

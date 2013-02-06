@@ -43,15 +43,16 @@ namespace artemis
 class RandomInputGenerator : public InputGeneratorStrategy
 {
     Q_OBJECT
+
 public:
     RandomInputGenerator(QObject* parent, TargetGenerator* targetGenerator, int numberSameLength);
 
-    QList<QSharedPointer<ExecutableConfiguration> > addNewConfigurations(QSharedPointer<const ExecutableConfiguration>, const ExecutionResult&);
+    QList<QSharedPointer<ExecutableConfiguration> > addNewConfigurations(QSharedPointer<const ExecutableConfiguration>, QSharedPointer<const ExecutionResult>);
 
 private:
     int nextRandom();
-    QList<QSharedPointer<ExecutableConfiguration> > insertSameLength(QSharedPointer<const ExecutableConfiguration> e, const ExecutionResult& eResult);
-    QList<QSharedPointer<ExecutableConfiguration> > insertExtended(QSharedPointer<const ExecutableConfiguration> e, const ExecutionResult& eResult);
+    QList<QSharedPointer<ExecutableConfiguration> > insertSameLength(QSharedPointer<const ExecutableConfiguration> e, QSharedPointer<const ExecutionResult> result);
+    QList<QSharedPointer<ExecutableConfiguration> > insertExtended(QSharedPointer<const ExecutableConfiguration> e, QSharedPointer<const ExecutionResult> result);
 
     TargetGenerator* mTargetGenerator;
     QSharedPointer<VariantsGenerator> mVariantsGenerator;

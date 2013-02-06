@@ -25,10 +25,6 @@
  authors and should not be interpreted as representing official policies, either expressed
  or implied, of Simon Holm Jensen
  */
-#include <iostream>
-
-#include "runtime/events/eventypes.h"
-#include "statistics/statsstorage.h"
 
 #include "executionresult.h"
 
@@ -37,57 +33,10 @@ using namespace std;
 namespace artemis
 {
 
-ExecutionResult::ExecutionResult(QObject* parent) : QObject(parent)
+ExecutionResult::ExecutionResult()
 {
-    final = false;
-    isCrashState = false;
-    crashCause = "";
-    crashLineNumber = 0;
-    crashSourceID = 0;
-    mModfiedDom = false;
-    stateHash = 0;
-}
-
-ExecutionResult::ExecutionResult(QObject* parent, const ExecutionResult* other) : QObject(parent)
-{
-    this->final = other->final;
-    this->mEventHandlers = other->mEventHandlers;
-    this->elementPointers = other->elementPointers;
-    this->isCrashState = other->isCrashState;
-    this->mModfiedDom = other->mModfiedDom;
-    this->stateHash = other->stateHash;
-    this->mAjaxRequest = other->mAjaxRequest;
-    this->evaledStrings = other->evaledStrings;
-
-    if (other->isCrashState) {
-        this->isCrashState = other->isCrashState;
-        this->crashCause = other->crashCause;
-        this->crashLineNumber = other->crashLineNumber;
-        this->crashSourceID = other->crashSourceID;
-    }
-
-    this->mTimers = QMap<int, QSharedPointer<Timer> >(other->mTimers);
-    this->mAjaxCallbackHandlers = QList<int>(other->mAjaxCallbackHandlers);
-}
-
-void ExecutionResult::newEventListener(QWebElement* elem, QString name)
-{
-    Q_CHECK_PTR(elem);
-    Q_ASSERT(!final);
-
-    qDebug() << "Artemis detected new eventhandler for event: " << name << " tag name: "
-             << elem->tagName() << " id: " << elem->attribute(QString("id")) << " title "
-             << elem->attribute(QString("title")) << "class: " << elem->attribute("class") << endl;
-
-    if (isNonInteractive(name))
-        { return; }
-
-    elementPointers.insert(QPair<QWebElement*, QString>(elem, name));
-}
-
-void ExecutionResult::setPageContents(QString content)
-{
-    mPageContents = content;
+    mModifiedDom = false;
+    mStateHash = 0;
 }
 
 QString ExecutionResult::getPageContents() const
@@ -95,198 +44,56 @@ QString ExecutionResult::getPageContents() const
     return mPageContents;
 }
 
-void ExecutionResult::removeEventListener(QWebElement* elem, QString name)
-{
-    qDebug() << "Artemis removed eventhandler for event: " << name << " tag name: "
-             << elem->tagName() << " id: " << elem->attribute(QString("id")) << " title "
-             << elem->attribute(QString("title")) << "class: " << elem->attribute("class") << endl;
-
-    if (isNonInteractive(name))
-        { return; }
-
-    bool removed = elementPointers.remove(QPair<QWebElement*, QString>(elem, name));
-
-    Q_ASSERT(removed);
-}
-
-void ExecutionResult::addedAjaxCallbackHandler(int callbackId)
-{
-    qDebug() << "AJAX CALLBACK HANDLER ADDED" << endl;
-    mAjaxCallbackHandlers.append(callbackId);
-}
-
-QList<int> ExecutionResult::ajaxCallbackHandlers() const
+QList<int> ExecutionResult::getAjaxCallbackHandlers() const
 {
     return mAjaxCallbackHandlers;
 }
 
-void ExecutionResult::finalize()
+QSet<QSharedPointer<const FormField> > ExecutionResult::getFormFields() const
 {
-    Q_ASSERT(mEventHandlers.isEmpty());
-    Q_ASSERT(!final);
-
-    if (isCrashState) {
-        final = true;
-        return;
-    }
-
-    QPair<QWebElement*, QString> p;
-    foreach(p, elementPointers) {
-        if (getType(p.second) == UNKNOWN_EVENT) {
-            continue; //qWarning() << ""
-            //TODO: Save strange events somewhere.
-        }
-
-        qDebug() << "Finalizing " << p.second << "  " << p.first->tagName() << " _T: "
-                 << p.first->attribute(QString("title"));
-
-        if (/*p.first->tagName().isEmpty()*/p.first->isNull()) {
-            qWarning()
-                    << "WEBKIT WARN: Got event handler with NULL element. Assuming document is reciever";
-            //continue;
-        }
-
-        EventHandlerDescriptor* handler = new EventHandlerDescriptor(this, p.first, p.second);
-
-        if (handler->isInvalid())
-            { qDebug() << "WARN: element was invalid, ignoring"; }
-        else
-            { mEventHandlers.insert(handler); }
-    }
-    final = true;
-    elementPointers.clear();
-}
-
-QSet<QSharedPointer<const FormField> > ExecutionResult::formFields() const
-{
-    Q_ASSERT(final);
     return mFormFields;
 }
 
-void ExecutionResult::addAjaxRequest(AjaxRequest req)
+QSet<QSharedPointer<AjaxRequest> > ExecutionResult::getAjaxRequests() const
 {
-    Q_ASSERT(!final);
-    //this->mAjaxRequest << req;
+    return mAjaxRequest;
 }
 
-QSet<AjaxRequest> ExecutionResult::ajaxRequest() const
+QSet<EventHandlerDescriptor*> ExecutionResult::getEventHandlers() const
 {
-    return this->mAjaxRequest;
-}
-
-void ExecutionResult::addFormField(QSharedPointer<const FormField> formField)
-{
-    Q_ASSERT(!final);
-    mFormFields.insert(formField);
-}
-
-void ExecutionResult::addFormFields(QSet<QSharedPointer<const FormField> > fields)
-{
-    Q_ASSERT(!final);
-    foreach(QSharedPointer<const FormField> field, fields) {
-        this->addFormField(field);
-    }
-}
-
-QSet<EventHandlerDescriptor*> ExecutionResult::eventHandlers() const
-{
-    Q_ASSERT(final);
     return mEventHandlers;
 }
 
-void ExecutionResult::makeLoadFailed()
+QSet<QString> ExecutionResult::getEvalStrings()
 {
-    isCrashState = true;
-    crashCause = "Webkit failed to load the page";
-    crashSourceID = 0;
-    crashLineNumber = 0;
+    return mEvaledStrings;
 }
 
-void ExecutionResult::slScriptCrash(QString cause, intptr_t sourceID, int lineNumber)
+long ExecutionResult::getPageStateHash() const
 {
-    qDebug() << "WEBKIT SCRIPT ERROR: " << cause << " line: " << lineNumber << " source: "
-             << sourceID << endl;
-
-    this->crashCause = cause;
-    this->crashSourceID = sourceID;
-    this->crashLineNumber = lineNumber;
-    isCrashState = true;
-}
-
-void ExecutionResult::slEvalString(const QString exp)
-{
-    Q_ASSERT(!final);
-    qDebug() << "WEBKIT: Evaled string: " << exp;
-    this->evaledStrings << exp;
-}
-
-QSet<QString> ExecutionResult::evalStrings()
-{
-    return this->evaledStrings;
-}
-
-void ExecutionResult::setModfiedDom(bool b)
-{
-    Q_ASSERT(!final);
-    this->mModfiedDom = b;
-}
-
-QDebug operator<<(QDebug dbg, const ExecutionResult& e)
-{
-    if (e.final) {
-        if (e.isCrashState) {
-            dbg.nospace() << "CRASH STATE: " << e.crashCause;
-        }
-        else {
-            dbg.nospace() << "Event handlers: " << e.mEventHandlers << "\n";
-            dbg.nospace() << "Form fields   : " << e.mFormFields << "\n";
-            dbg.nospace() << "Modfied dom   : " << e.mModfiedDom << "\n";
-            dbg.nospace() << "Ajax requests : " << e.mAjaxRequest << "\n";
-            dbg.nospace() << "Evaled strings: " << e.evaledStrings;
-        }
-    }
-    else
-        dbg.nospace() << "Unfinalized ExecutionResult with " << e.elementPointers.size()
-                      << " events so far";
-
-    return dbg.space();
-}
-
-void ExecutionResult::setStateHash(long hash)
-{
-    Q_ASSERT(!final);
-    this->stateHash = hash;
-}
-
-long ExecutionResult::pageStateHash() const
-{
-    Q_ASSERT(final);
-    return this->stateHash;
+    return mStateHash;
 
 }
 
-bool ExecutionResult::modifedDom() const
+bool ExecutionResult::isDomModified() const
 {
-    Q_ASSERT(final);
-    return this->mModfiedDom;
-}
-
-void ExecutionResult::slTimerAdded(int timerId, int timeout, bool singleShot)
-{
-    qDebug() << "Artemis::Timer " << timerId << " added";
-    statistics()->accumulate("timers::registered", 1);
-    this->mTimers.insert(timerId, QSharedPointer<Timer>(new Timer(timerId, timeout, singleShot)));
-}
-
-void ExecutionResult::slTimerRemoved(int timerId)
-{
-    qDebug() << "Artemis::Timer " << timerId << " removed";
-    this->mTimers.remove(timerId);
+    return mModifiedDom;
 }
 
 QList<QSharedPointer<Timer> > ExecutionResult::getTimers() const
 {
-    return this->mTimers.values();
+    return mTimers.values();
+}
+
+QDebug operator<<(QDebug dbg, const ExecutionResult& e)
+{
+    dbg.nospace() << "Event handlers: " << e.mEventHandlers << "\n";
+    dbg.nospace() << "Form fields   : " << e.mFormFields << "\n";
+    dbg.nospace() << "Modfied dom   : " << e.mModifiedDom << "\n";
+    dbg.nospace() << "Ajax requests : " << e.mAjaxRequest << "\n";
+    dbg.nospace() << "Evaled strings: " << e.mEvaledStrings;
+
+    return dbg.space();
 }
 
 }

@@ -30,7 +30,6 @@
 
 #include <QObject>
 #include <QString>
-#include <QtWebKit>
 
 #include "runtime/events/eventypes.h"
 #include "domelementdescriptor.h"

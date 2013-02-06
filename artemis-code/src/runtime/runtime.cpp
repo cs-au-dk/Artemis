@@ -37,6 +37,7 @@
 #include "strategies/inputgenerator/randominputgenerator.h"
 #include "strategies/termination/numberofiterationstermination.h"
 #include "strategies/prioritizer/constantprioritizer.h"
+#include "util/coverageutil.h"
 
 #include "runtime.h"
 
@@ -84,9 +85,8 @@ Runtime::Runtime(QObject* parent, const Options& options, QUrl url) : QObject(pa
 
     mWorklist = new DeterministicWorkList(this);
 
-    QObject::connect(mWebkitExecutor,
-                     SIGNAL(sigExecutedSequence(QSharedPointer<ExecutableConfiguration>, ExecutionResult*)), this,
-                     SLOT(postConcreteExecution(QSharedPointer<ExecutableConfiguration>, ExecutionResult*)));
+    QObject::connect(mWebkitExecutor, SIGNAL(sigExecutedSequence(QSharedPointer<ExecutableConfiguration>, QSharedPointer<ExecutionResult>)),
+                     this, SLOT(postConcreteExecution(QSharedPointer<ExecutableConfiguration>, QSharedPointer<ExecutionResult>)));
 }
 
 /**
@@ -113,19 +113,14 @@ void Runtime::startAnalysis(QUrl url)
  */
 void Runtime::preConcreteExecution()
 {
-    qDebug() << "PRE WEBKIT EXEC worklist size " << mWorklist->size();
-
     if (mWorklist->empty() ||
         mTerminationStrategy->shouldTerminate()) {
 
         finishAnalysis();
         return;
     }
-    qDebug() << "PRE WEBKIT EXEC";
 
     QSharedPointer<ExecutableConfiguration> nextConfiguration = mWorklist->remove();
-
-    qDebug() << "PRE WEBKIT EXEC";
 
     mWebkitExecutor->executeSequence(nextConfiguration); // calls the slExecutedSequence method as callback
 }
@@ -135,7 +130,7 @@ void Runtime::preConcreteExecution()
  * @param configuration
  * @param result
  */
-void Runtime::postConcreteExecution(QSharedPointer<ExecutableConfiguration> configuration, ExecutionResult* result)
+void Runtime::postConcreteExecution(QSharedPointer<ExecutableConfiguration> configuration, QSharedPointer<ExecutionResult> result)
 {
     mPrioritizerStrategy->reprioritize(mWorklist);
 
@@ -152,12 +147,10 @@ void Runtime::postConcreteExecution(QSharedPointer<ExecutableConfiguration> conf
 
 void Runtime::finishAnalysis()
 {
-
-    mWebkitExecutor->finishUp();
-
     qDebug() << "Artemis: Testing done..." << endl;
 
     qDebug() << "\n\n === Coverage information for execution === \n";
+    writeCoverageHtml(coverage());
     writeCoverageReport(coverage());
 
     qDebug() << "\n=== Statistics ===\n";

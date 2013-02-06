@@ -36,12 +36,15 @@
 #include <QSharedPointer>
 
 #include "artemisglobals.h"
-#include "executionresult.h"
-#include "artemiswebpage.h"
+
 #include "runtime/executableconfiguration.h"
-#include "coverage/coveragelistener.h"
 #include "runtime/ajax/ajaxrequestlistener.h"
+#include "coverage/coveragelistener.h"
 #include "strategies/inputgenerator/targets/jquerylistener.h"
+
+#include "executionresult.h"
+#include "executionresultbuilder.h"
+#include "artemiswebpage.h"
 
 namespace artemis
 {
@@ -49,45 +52,35 @@ namespace artemis
 class WebKitExecutor : public QObject
 {
     Q_OBJECT
+
 public:
     WebKitExecutor(QObject* parent,
                    QMap<QString, QString> presetFields,
                    JQueryListener* jqueryListener,
                    AjaxRequestListener* ajaxListener);
     ~WebKitExecutor();
+
     void executeSequence(QSharedPointer<ExecutableConfiguration> conf);
-    QWebExecutionListener* webkitListener;
     CodeCoverage coverage();
-    void finishUp();
+
+    QWebExecutionListener* webkitListener; // TODO should not be public
 
 private:
-    void setup();
-    void finishedExecutionSequence();
-    void getFormFields();
-    QSet<QWebFrame*> allFrames();
-    QSet<QString> getSelectOptions(const QWebElement&);
-    void doExe();
-    void setupInitial();
-    void saveDomState();
-
-    ArtemisWebPage* page;
-    ExecutionResult* currentResult;
+    ArtemisWebPage* mPage;
+    ExecutionResultBuilder* mResultBuilder;
     QSharedPointer<ExecutableConfiguration> currentConf;
     CoverageListener* covList;
-    QString initialPageState;
-    AjaxRequestListener* ajaxListener;
+    AjaxRequestListener* mAjaxListener;
     JQueryListener* mJquery;
     QMap<QString, QString> mPresetFields;
 
 signals:
-    void sigExecutedSequence(QSharedPointer<ExecutableConfiguration> conf, ExecutionResult* res);
+    void sigExecutedSequence(QSharedPointer<ExecutableConfiguration> conf, QSharedPointer<ExecutionResult> res);
 
 public slots:
     void slLoadFinished(bool ok);
-    void slScriptCrash(QString, intptr_t, int);
-    void slAjaxRequest(QUrl, QString postData);
-    void slEvalCalled(QString evalText);
-    void slCodeLoaded(intptr_t, QString, QUrl, int);
+
+
 };
 
 }

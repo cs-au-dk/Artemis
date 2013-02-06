@@ -44,10 +44,10 @@ class InputGeneratorStrategy : public QObject
 {
     Q_OBJECT
 public:
-    InputGeneratorStrategy(QObject* parent) : QObject(parent) {};
-    virtual ~InputGeneratorStrategy() {};
+    InputGeneratorStrategy(QObject* parent) : QObject(parent) {}
+    virtual ~InputGeneratorStrategy() {}
 
-    virtual QList<QSharedPointer<ExecutableConfiguration> > addNewConfigurations(QSharedPointer<const ExecutableConfiguration>, const ExecutionResult&) = 0;
+    virtual QList<QSharedPointer<ExecutableConfiguration> > addNewConfigurations(QSharedPointer<const ExecutableConfiguration>, QSharedPointer<const ExecutionResult>) = 0;
 
 };
 

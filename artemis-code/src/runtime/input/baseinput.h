@@ -44,7 +44,6 @@ class BaseInput
 public:
     virtual ~BaseInput() {}
     virtual void apply(ArtemisWebPage* page, QWebExecutionListener* webkitListener) const = 0;
-    virtual bool isEqual(QSharedPointer<const BaseInput> other) const = 0;
     virtual QSharedPointer<const BaseInput> getPermutation(QSharedPointer<VariantsGenerator> variantsGenerator,
                                                            TargetGenerator* targetGenerator) const = 0;
 };

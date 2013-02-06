@@ -59,14 +59,17 @@ private:
     QString frameName;
     QString classLine;
 
-    /*
-     Path from the mainFrame to the frame containig the element
-     */
+    // Path from the mainFrame to the frame containig the element
     QList<int> framePath;
-    /*
-     Path from the frame containing the element to the actual element
-     */
+
+    // Path from the frame containing the element to the actual element
     QList<int> elementPath;
+
+    // Special cases
+    bool isDocument;// = false;
+    bool isBody;// = false;
+    bool isMainframe;// = false;
+    bool mInvalid;
 
     void setFramePath(QWebElement* elm);
     void setElementPath(QWebElement* elm);
@@ -75,11 +78,7 @@ private:
     QWebElement getElementFrame(QWebFrame* frame) const;
     QWebElement nthChild(QWebElement elm, int n) const;
 
-    //special cases
-    bool isDocument;// = false;
-    bool isBody;// = false;
-    bool isMainframe;// = false;
-    bool mInvalid;
+
 
 
 };

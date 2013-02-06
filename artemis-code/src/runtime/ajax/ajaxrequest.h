@@ -10,6 +10,7 @@ namespace artemis
 
 class AjaxRequest
 {
+
 public:
     AjaxRequest(const QUrl url, const QString postData);
 
