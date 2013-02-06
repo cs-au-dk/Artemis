@@ -31,57 +31,11 @@ namespace inst {
         jsinst::initialize_js_listener(ll);
     }
 
-    void ExecutionListener::eventAdded(WebCore::EventTarget * e, const char* type) {
-        std::string s = std::string(type);
-        
-        if (e->toNode() != NULL)
-            nodeEventAdded(e->toNode(), s);
-        else if (e->toDOMWindow() != NULL)
-            domWindowEventAdded(e->toDOMWindow(), s);
-        else if (s.compare("readystatechange") == 0) {
-            std::cout << "WEBKIT::AJAX CALLBACK DETECTED" << std::endl;
-        } else {
-            std::cout << "ERROR: Strange event :" << s << std::endl;
-        }
-        return;
-    }
-
-    void ExecutionListener::eventCleared(WebCore::EventTarget * e, const char* type) {
-        std::string s = std::string(type);
-
-        if (e->toNode() != NULL)
-            nodeEventCleared(e->toNode(), s);
-        else if (e->toDOMWindow() != NULL)
-            domWindowEventCleared(e->toDOMWindow(), s);
-        else {
-            std::cout << "ERROR: Strange event cleared:" << s << std::endl;
-        }
-        return;
-    }
-
-    void ExecutionListener::domWindowEventCleared(WebCore::DOMWindow *, const std::string) {
-        std::cout << "el::dom event cleared" << std::endl;
-        return;
-    }
-
-    void ExecutionListener::nodeEventCleared(WebCore::Node * , const std::string) {
-        std::cout << "el::node event cleared" <<std::endl;
-        return;
-    }
-
     void ExecutionListener::timerAdded(WebCore::ScriptExecutionContext* context, int timerId, int timeout, bool singleShot) {
         return;
     }
         
     void ExecutionListener::timerRemoved(WebCore::ScriptExecutionContext* context, int timerId) {
-        return;
-    }
-
-    void ExecutionListener::domWindowEventAdded(WebCore::DOMWindow * window, const std::string type) {
-        return;
-    }
-
-    void ExecutionListener::nodeEventAdded(WebCore::Node * node, const std::string type) {
         return;
     }
 

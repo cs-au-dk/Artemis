@@ -33,16 +33,12 @@ class ExecutionListener {
         /**
           Invoked when an event is added to a DOM element
           */
-        void eventAdded(WebCore::EventTarget *, const char*);
-        virtual void domWindowEventAdded(WebCore::DOMWindow*, const std::string);
-        virtual void nodeEventAdded(WebCore::Node*, const std::string);
+        virtual void eventAdded(WebCore::EventTarget *, const char*) = 0;
 
         /**
           Invoked when a dom element no longer has events attached.
           */
-        void eventCleared(WebCore::EventTarget *, const char*);
-        virtual void domWindowEventCleared(WebCore::DOMWindow*, const std::string);
-        virtual void nodeEventCleared(WebCore::Node*, const std::string);
+        virtual void eventCleared(WebCore::EventTarget *, const char*) = 0;
 
         /**
          * Timeouts

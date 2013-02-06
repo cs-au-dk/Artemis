@@ -16,11 +16,9 @@ class QWEBKIT_EXPORT QWebExecutionListener : public QObject, public inst::Execut
 public:
     explicit QWebExecutionListener(QObject *parent = 0);
 
-    //Overrides!
-    virtual void domWindowEventAdded(WebCore::DOMWindow*, const std::string);
-    virtual void nodeEventAdded(WebCore::Node*, const std::string);
-    virtual void domWindowEventCleared(WebCore::DOMWindow*, const std::string);
-    virtual void nodeEventCleared(WebCore::Node*, const std::string);
+    virtual void eventAdded(WebCore::EventTarget * target, const char* type);
+    virtual void eventCleared(WebCore::EventTarget * target, const char* type);
+
     virtual void scriptCodeLoaded(intptr_t id,std::string source, std::string url, int startline);
     virtual void executedStatement(intptr_t sourceID, std::string function_name, int linenumber);
     virtual void exceptional_condition(std::string cause, intptr_t sourceID, int lineNumber);

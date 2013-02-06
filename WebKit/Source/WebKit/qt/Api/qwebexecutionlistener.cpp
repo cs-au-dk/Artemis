@@ -20,26 +20,43 @@
 
 using namespace std;
 
-QWebExecutionListener::QWebExecutionListener(QObject *parent) :
-    QObject(parent),
-    inst::ExecutionListener()
+QWebExecutionListener::QWebExecutionListener(QObject *parent) : QObject(parent), inst::ExecutionListener()
 {
 }
 
-void QWebExecutionListener::domWindowEventAdded(WebCore::DOMWindow* window, const std::string s) {
-    emit addedEventListener(new QWebElement(window->frameElement()), QString(tr(s.c_str())));
+void QWebExecutionListener::eventAdded(WebCore::EventTarget * target, const char* type) {
+    std::string typeString = std::string(type);
+
+    if (target->toNode() != NULL) {
+        emit addedEventListener(new QWebElement(target->toNode()), QString(tr(typeString.c_str())));
+
+    } else if (target->toDOMWindow() != NULL) {
+        emit addedEventListener(new QWebElement(target->toDOMWindow()->frameElement()), QString(tr(typeString.c_str())));
+
+    } else if (typeString.compare("readystatechange") == 0) {
+        std::cout << "WEBKIT::AJAX CALLBACK DETECTED (and ignored in event added)" << std::endl;
+
+    } else {
+        std::cout << "ERROR: Strange event: " << typeString << std::endl;
+    }
+
+    return;
 }
 
-void QWebExecutionListener::nodeEventAdded(WebCore::Node * node, const std::string s) {
-    emit addedEventListener(new QWebElement(node), QString(tr(s.c_str())));
-}
+void QWebExecutionListener::eventCleared(WebCore::EventTarget * target, const char* type) {
+    std::string typeString = std::string(type);
 
-void QWebExecutionListener::nodeEventCleared(WebCore::Node * node, const std::string s) {
-    emit removedEventListener(new QWebElement(node), QString(tr(s.c_str())));
-}
+    if (target->toNode() != NULL) {
+        emit removedEventListener(new QWebElement(target->toNode()), QString(tr(typeString.c_str())));
 
-void QWebExecutionListener::domWindowEventCleared(WebCore::DOMWindow * window, const std::string s) {
-    emit removedEventListener(new QWebElement(window->frameElement()), QString(tr(s.c_str())));
+     } else if (target->toDOMWindow() != NULL) {
+        emit removedEventListener(new QWebElement(target->toDOMWindow()->frameElement()), QString(tr(typeString.c_str())));
+
+    } else {
+        std::cout << "ERROR: Strange event cleared:" << typeString << std::endl;
+    }
+
+    return;
 }
 
 void QWebExecutionListener::ajaxCallbackEventAdded(WebCore::LazyXMLHttpRequest* xmlHttpRequest) {
