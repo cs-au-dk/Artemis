@@ -1,12 +1,16 @@
 help:
 	@echo "Targets:"
-	@echo "    webkit-minimal[-debug] - build [a minimal] WebKit Qt port [with debug info]"
-	@echo "    webkit-clean             - clean WebKit files"
+	@echo "    install			- install webkit and artemis"
+	@echo "    webkit-minimal[-debug] 	- build a minimal WebKit Qt port [with debug info]"
+	@echo "    webkit-clean             	- clean WebKit files"
 	@echo ""
-	@echo "    artemis                  - Build Artemis"
-	@echo "    artemis-clean            - Clean artemis"
+	@echo "    artemis                  	- Build Artemis"
+	@echo "    artemis-clean            	- Clean artemis"
+	@echo "    artemis-install		- install artemis"
+	@echo "    artemis-format-code		- formats artemis code"
 	@echo ""
-	@echo "    qt-checkout              - Checkout a copy of the Qt 4.8 Framework source"
+	@echo "    fetch-[apt|yum]		- fetching dependencies from [apt|yum]"
+	@echo "    fetch-qt			- fetches, configures and makes Qt"
 
 WEBKIT_BUILD_SCRIPT = ./WebKit/Tools/Scripts/build-webkit --qt --qmakearg="DEFINES+=ARTEMIS=1" --makearg="-j4"  --qmakearg="CC=gcc-4.7" --qmakearg="CXX=g++-4.7"
 
@@ -16,12 +20,12 @@ install: webkit-install artemis-install
 
 webkit-install: webkit-minimal
 
-webkit-minimal:	check
+webkit-minimal:	check check-env
 	@echo "Building minimal release QtWebKit"
 	${WEBKIT_BUILD_SCRIPT} --minimal
 
 
-webkit-minimal-debug: check
+webkit-minimal-debug: check check-env
 	@echo "Building minimal debug QtWebKit"
 	${WEBKIT_BUILD_SCRIPT} --debug --minimal
 
@@ -55,6 +59,9 @@ check:
 	which cmake > /dev/null
 	which lemon > /dev/null
 	which re2c > /dev/null
+check-env:
+	@echo "Checking environment variables"
+	@echo $${QTDIR:?"Please set the QTDIR environment variable to the Qt install dir"} > /dev/null;
 
 DEPENDENCIES = g++ flex bison gperf ruby cmake lemon re2c libxext-dev libfontconfig-dev libxrender-dev libsqlite3-dev
 
