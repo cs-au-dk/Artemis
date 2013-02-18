@@ -1,6 +1,6 @@
 help:
 	@echo "Targets:"
-	@echo "    webkit[-debug][-minimal] - build [a minimal] WebKit Qt port [with debug info]"
+	@echo "    webkit-minimal[-debug] - build [a minimal] WebKit Qt port [with debug info]"
 	@echo "    webkit-clean             - clean WebKit files"
 	@echo ""
 	@echo "    artemis                  - Build Artemis"
@@ -14,23 +14,14 @@ build: check webkit artemis
 
 install: webkit-install artemis-install
 
-webkit: check
-	@echo "Building release QtWebKit"
-	${WEBKIT_BUILD_SCRIPT}
+webkit-install: webkit-minimal
 
-webkit-install: webkit
-	mkdir -p ${ARTEMIS_PATH}/WebKit/WebKitBuild
-	cp -r ./WebKit/WebKitBuild/* ${ARTEMIS_PATH}/WebKit/WebKitBuild
-
-webkit-minimal:
+webkit-minimal:	check
 	@echo "Building minimal release QtWebKit"
 	${WEBKIT_BUILD_SCRIPT} --minimal
 
-webkit-debug:
-	@echo "Building debug QtWebKit"
-	${WEBKIT_BUILD_SCRIPT} --debug
 
-webkit-debug-minimal:
+webkit-minimal-debug: check
 	@echo "Building minimal debug QtWebKit"
 	${WEBKIT_BUILD_SCRIPT} --debug --minimal
 

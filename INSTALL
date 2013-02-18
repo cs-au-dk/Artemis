@@ -1,6 +1,9 @@
  0. Fetch all software dependencies using
     
         make fetch-[apt|yum]
+	
+    If you have no Qt or a version older than 4.8 then run: 
+
 	make fetch-qt
     
  1. Set up your environment variables by running
@@ -15,9 +18,7 @@
    
    	make install
 
-
-
-Note: you will need to either add
+ 3. You will need to either add
       `ARTEMIS_PATH/WebKit/WebKitBuild/Release/lib` to the environment
       variable `LD_LIBRARY_PATH` or execute step 1 everytime you
       subsequently wish to use Artemis.
