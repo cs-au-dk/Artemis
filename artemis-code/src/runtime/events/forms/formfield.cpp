@@ -100,11 +100,12 @@ FormFieldTypes getTypeFromAttr(QString typeAttr)
 
     if (typeAttr == "password"
         || typeAttr == "text"
+        || typeAttr == "textbox" //YAHOO FIX
         || typeAttr == "email"
         || typeAttr == "file")
         { return TEXT; }
 
-    qFatal("Unknown type attribute on form element: %s", typeAttr.toStdString().c_str());
+    qDebug() << "Unknown type attribute on form element: %s"<< typeAttr;
     assert(false);
 }
 }
