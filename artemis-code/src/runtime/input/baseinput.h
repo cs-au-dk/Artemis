@@ -32,7 +32,8 @@
 #include <QSharedPointer>
 
 #include "runtime/browser/artemiswebpage.h"
-#include "strategies/inputgenerator/variants/randomvariants.h"
+#include "strategies/inputgenerator/event/eventparametergenerator.h"
+#include "strategies/inputgenerator/form/forminputgenerator.h"
 #include "strategies/inputgenerator/targets/targetgenerator.h"
 
 namespace artemis
@@ -43,8 +44,10 @@ class BaseInput
 
 public:
     virtual ~BaseInput() {}
+
     virtual void apply(ArtemisWebPage* page, QWebExecutionListener* webkitListener) const = 0;
-    virtual QSharedPointer<const BaseInput> getPermutation(QSharedPointer<VariantsGenerator> variantsGenerator,
+    virtual QSharedPointer<const BaseInput> getPermutation(const QSharedPointer<const FormInputGenerator>& formInputGenerator,
+                                                           const QSharedPointer<const EventParameterGenerator>& eventParameterGenerator,
                                                            TargetGenerator* targetGenerator) const = 0;
 };
 

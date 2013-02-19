@@ -64,13 +64,16 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/statistics/statsstorage.h \
     src/statistics/writers/pretty.h \
     src/exceptionhandlingqapp.h \
-    src/runtime/browser/executionresultbuilder.h
+    src/runtime/browser/executionresultbuilder.h \
+    src/strategies/inputgenerator/form/forminputgenerator.h \
+    src/strategies/inputgenerator/form/staticforminputgenerator.h \
+    src/strategies/inputgenerator/event/eventparametergenerator.h \
+    src/strategies/inputgenerator/event/staticeventparametergenerator.h
 
 SOURCES += src/runtime/input/ajaxinput.cpp \
     src/strategies/prioritizer/constantprioritizer.cpp \
     src/strategies/prioritizer/randomprioritizer.cpp \
     src/strategies/inputgenerator/targets/targetgenerator.cpp \
-    src/strategies/inputgenerator/variants/randomvariants.cpp \
     src/runtime/ajax/ajaxrequest.cpp \
     src/runtime/ajax/ajaxrequestlistener.cpp \
     src/runtime/browser/cookies/immutablecookiejar.cpp \
@@ -111,6 +114,8 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/statistics/statsstorage.cpp \
     src/statistics/writers/pretty.cpp \
     src/exceptionhandlingqapp.cpp \
-    src/runtime/browser/executionresultbuilder.cpp
+    src/runtime/browser/executionresultbuilder.cpp \
+    src/strategies/inputgenerator/event/staticeventparametergenerator.cpp \
+    src/strategies/inputgenerator/form/staticforminputgenerator.cpp
 
 QT += network

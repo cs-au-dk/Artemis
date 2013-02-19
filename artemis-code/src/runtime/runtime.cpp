@@ -32,12 +32,15 @@
 
 #include "worklist/deterministicworklist.h"
 #include "coverage/coveragetooutputstream.h"
+#include "util/coverageutil.h"
+
 #include "statistics/statsstorage.h"
 #include "statistics/writers/pretty.h"
 #include "strategies/inputgenerator/randominputgenerator.h"
+#include "strategies/inputgenerator/event/staticeventparametergenerator.h"
+#include "strategies/inputgenerator/form/staticforminputgenerator.h"
 #include "strategies/termination/numberofiterationstermination.h"
 #include "strategies/prioritizer/constantprioritizer.h"
-#include "util/coverageutil.h"
 
 #include "runtime.h"
 
@@ -79,7 +82,11 @@ Runtime::Runtime(QObject* parent, const Options& options, QUrl url) : QObject(pa
 
     mWebkitExecutor = new WebKitExecutor(this, options.presetFormfields, jqueryListener, ajaxRequestListner);
 
-    mInputgenerator = new RandomInputGenerator(this, new TargetGenerator(this, jqueryListener), options.numberSameLength);
+    mInputgenerator = new RandomInputGenerator(this,
+                                               QSharedPointer<StaticFormInputGenerator>(new StaticFormInputGenerator()),
+                                               QSharedPointer<StaticEventParameterGenerator>(new StaticEventParameterGenerator()),
+                                               new TargetGenerator(this, jqueryListener),
+                                               options.numberSameLength);
     mTerminationStrategy = new NumberOfIterationsTermination(this, options.iterationLimit);
     mPrioritizerStrategy = new ConstantPrioritizer(this);
 

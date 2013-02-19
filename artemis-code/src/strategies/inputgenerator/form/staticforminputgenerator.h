@@ -25,49 +25,24 @@
   authors and should not be interpreted as representing official policies, either expressed
   or implied, of Simon Holm Jensen
 */
-#ifndef RANDOMINPUTGENERATOR_H
-#define RANDOMINPUTGENERATOR_H
+#ifndef STATICFORMINPUTGENERATOR_H
+#define STATICFORMINPUTGENERATOR_H
 
-#include <QList>
-#include <QSharedPointer>
-
-#include "runtime/input/dominput.h"
-
-#include "targets/targetgenerator.h"
-#include "form/forminputgenerator.h"
-#include "event/eventparametergenerator.h"
-
-#include "inputgeneratorstrategy.h"
+#include "forminputgenerator.h"
 
 namespace artemis
 {
 
-class RandomInputGenerator : public InputGeneratorStrategy
+class StaticFormInputGenerator : public FormInputGenerator
 {
-    Q_OBJECT
-
 public:
-    RandomInputGenerator(QObject* parent,
-                         QSharedPointer<const FormInputGenerator> formInputGenerator,
-                         QSharedPointer<const EventParameterGenerator> eventParameterInputGenerator,
-                         TargetGenerator* targetGenerator,
-                         int numberSameLength);
 
-    QList<QSharedPointer<ExecutableConfiguration> > addNewConfigurations(QSharedPointer<const ExecutableConfiguration>, QSharedPointer<const ExecutionResult>);
+    StaticFormInputGenerator();
 
-private:
-    QSharedPointer<const FormInputGenerator> mFormInputGenerator;
-    QSharedPointer<const EventParameterGenerator> mEventParameterGenerator;
-
-    int nextRandom();
-    QList<QSharedPointer<ExecutableConfiguration> > insertSameLength(QSharedPointer<const ExecutableConfiguration> e, QSharedPointer<const ExecutionResult> result);
-    QList<QSharedPointer<ExecutableConfiguration> > insertExtended(QSharedPointer<const ExecutableConfiguration> e, QSharedPointer<const ExecutionResult> result);
-
-    TargetGenerator* mTargetGenerator;
-
-    int mNumberSameLength;
+    QSharedPointer<FormInput> generateFormFields(QObject* parent, QSet<QSharedPointer<const FormField> > fi) const;
 
 };
 
 }
-#endif // RANDOMINPUTGENERATOR_H
+
+#endif // STATICFORMINPUTGENERATOR_H

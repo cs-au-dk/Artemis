@@ -25,31 +25,29 @@
   authors and should not be interpreted as representing official policies, either expressed
   or implied, of Simon Holm Jensen
 */
-#ifndef VARIANTSGENERATOR_H
-#define VARIANTSGENERATOR_H
+#ifndef FORMINPUTGENERATOR_H
+#define FORMINPUTGENERATOR_H
 
 #include <QObject>
 #include <QSet>
+#include <QSharedPointer>
 
-#include "runtime/events/eventparameters.h"
-#include "runtime/events/eventhandlerdescriptor.h"
 #include "runtime/events/forms/formfield.h"
 #include "runtime/events/forms/forminput.h"
 
 namespace artemis
 {
 
-class VariantsGenerator
+class FormInputGenerator
 {
+
 public:
-    VariantsGenerator() {}
+    FormInputGenerator() {}
+    virtual ~FormInputGenerator() {}
 
-    virtual EventParameters* generateEventParameters(QObject* parent, const EventHandlerDescriptor* eventHandler) = 0;
-    virtual QSharedPointer<FormInput> generateFormFields(QObject* parent, QSet<QSharedPointer<const FormField> >) = 0;
-
-    virtual ~VariantsGenerator() {}
+    virtual QSharedPointer<FormInput> generateFormFields(QObject* parent, QSet<QSharedPointer<const FormField> > fi) const = 0;
 };
 
 }
 
-#endif // VARIANTSGENERATOR_H
+#endif // FORMINPUTGENERATOR_H
