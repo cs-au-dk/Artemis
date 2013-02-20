@@ -26,3 +26,9 @@ Usage:
    -r      : set_recreate_page(true) // TODO
 
    -p	   : dump_page_states(<path>) // TODO   
+
+   --strategy-form-input-generation <strategy>: 
+   			  Select form input generation strategy.
+
+   			  javascript-constants - select form inputs based in observed javascript constants
+   			  random - (default) random inputs 

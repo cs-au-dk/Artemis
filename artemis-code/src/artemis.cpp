@@ -28,6 +28,7 @@
 #include <iostream>
 #include <stdlib.h>
 #include <getopt.h>
+#include <string>
 #include <QDir>
 #include <QUrl>
 #include <QApplication>
@@ -41,9 +42,15 @@ using namespace std;
 QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
 {
 
+    struct option long_options[] = {
+        {"strategy-form-input-generation", required_argument, NULL, 'x'},
+        {0, 0, 0, 0}
+    };
+
+    int option_index = 0;
     char c;
 
-    while ((c = getopt(argc, argv, "rp:f:t:c:i:")) != -1) {
+    while ((c = getopt_long(argc, argv, "rp:f:t:c:i:", long_options, &option_index)) != -1) {
 
         switch (c) {
 
@@ -79,6 +86,19 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
         case 'i': {
             options.iterationLimit = QString(optarg).toInt();
             break;
+        }
+
+        case 'x': {
+
+            if (string(optarg).compare("javascript-constants")) {
+                options.formInputGenerationStrategy = artemis::ConstantString;
+            } else if (string(optarg).compare("random")) {
+                options.formInputGenerationStrategy = artemis::Random;
+            } else {
+                cerr << "ERROR: Invalid strategy " << optarg << endl;
+                exit(1);
+            }
+
         }
 
         }

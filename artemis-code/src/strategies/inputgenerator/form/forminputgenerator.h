@@ -34,6 +34,7 @@
 
 #include "runtime/events/forms/formfield.h"
 #include "runtime/events/forms/forminput.h"
+#include "runtime/browser/executionresult.h"
 
 namespace artemis
 {
@@ -45,7 +46,9 @@ public:
     FormInputGenerator() {}
     virtual ~FormInputGenerator() {}
 
-    virtual QSharedPointer<FormInput> generateFormFields(QObject* parent, QSet<QSharedPointer<const FormField> > fi) const = 0;
+    virtual QSharedPointer<FormInput> generateFormFields(QObject* parent,
+                                                         QSet<QSharedPointer<const FormField> > fi,
+                                                         QSharedPointer<const ExecutionResult> executionResult) const = 0;
 };
 
 }

@@ -36,6 +36,7 @@ public:
     
     void reset();
     void notifyPageLoaded();
+    void notifyStartingEvent();
     QSharedPointer<ExecutionResult> getResult();
 
 private:

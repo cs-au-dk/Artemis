@@ -115,7 +115,7 @@ QList<QSharedPointer<ExecutableConfiguration> > RandomInputGenerator::insertExte
     foreach (EventHandlerDescriptor* ee, result->getEventHandlers()) {
         EventParameters* newParams = mEventParameterGenerator->generateEventParameters(NULL, ee);
         TargetDescriptor* target = mTargetGenerator->generateTarget(NULL, ee);
-        QSharedPointer<FormInput> newForm = mFormInputGenerator->generateFormFields(NULL, result->getFormFields());
+        QSharedPointer<FormInput> newForm = mFormInputGenerator->generateFormFields(NULL, result->getFormFields(), result);
         QSharedPointer<const DomInput> domInput = QSharedPointer<const DomInput>(new DomInput(ee, newForm, newParams, target));
 
         QSharedPointer<const InputSequence> newInputSequence = oldConfiguration->getInputSequence()->extend(domInput);

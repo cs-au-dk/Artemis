@@ -161,6 +161,7 @@ void WebKitExecutor::slLoadFinished(bool ok)
     // Execute input sequence
 
     foreach(QSharedPointer<const BaseInput> input, currentConf->getInputSequence()->toList()) {
+        mResultBuilder->notifyStartingEvent();
         input->apply(this->mPage, this->webkitListener);
     }
 

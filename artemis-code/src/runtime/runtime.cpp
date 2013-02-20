@@ -26,6 +26,7 @@
  or implied, of Simon Holm Jensen
  */
 
+#include <assert.h>
 #include <iostream>
 
 #include <QSharedPointer>
@@ -39,6 +40,7 @@
 #include "strategies/inputgenerator/randominputgenerator.h"
 #include "strategies/inputgenerator/event/staticeventparametergenerator.h"
 #include "strategies/inputgenerator/form/staticforminputgenerator.h"
+#include "strategies/inputgenerator/form/constantstringforminputgenerator.h"
 #include "strategies/termination/numberofiterationstermination.h"
 #include "strategies/prioritizer/constantprioritizer.h"
 
@@ -82,8 +84,22 @@ Runtime::Runtime(QObject* parent, const Options& options, QUrl url) : QObject(pa
 
     mWebkitExecutor = new WebKitExecutor(this, options.presetFormfields, jqueryListener, ajaxRequestListner);
 
+    QSharedPointer<FormInputGenerator> formInputGenerator;
+    switch (options.formInputGenerationStrategy) {
+    case Random:
+        formInputGenerator = QSharedPointer<StaticFormInputGenerator>(new StaticFormInputGenerator());
+        break;
+
+    case ConstantString:
+        formInputGenerator = QSharedPointer<ConstantStringFormInputGenerator>(new ConstantStringFormInputGenerator());
+        break;
+
+    default:
+        assert(false);
+    }
+
     mInputgenerator = new RandomInputGenerator(this,
-                                               QSharedPointer<StaticFormInputGenerator>(new StaticFormInputGenerator()),
+                                               formInputGenerator,
                                                QSharedPointer<StaticEventParameterGenerator>(new StaticEventParameterGenerator()),
                                                new TargetGenerator(this, jqueryListener),
                                                options.numberSameLength);

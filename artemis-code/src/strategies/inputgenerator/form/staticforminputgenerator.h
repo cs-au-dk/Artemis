@@ -39,7 +39,9 @@ public:
 
     StaticFormInputGenerator();
 
-    QSharedPointer<FormInput> generateFormFields(QObject* parent, QSet<QSharedPointer<const FormField> > fi) const;
+    QSharedPointer<FormInput> generateFormFields(QObject* parent,
+                                                 QSet<QSharedPointer<const FormField> > fi,
+                                                 QSharedPointer<const ExecutionResult> executionResult) const;
 
 };
 

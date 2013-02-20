@@ -45,7 +45,9 @@ StaticFormInputGenerator::StaticFormInputGenerator() : FormInputGenerator()
 
 }
 
-QSharedPointer<FormInput> StaticFormInputGenerator::generateFormFields(QObject* parent, QSet<QSharedPointer<const FormField> > fields) const
+QSharedPointer<FormInput> StaticFormInputGenerator::generateFormFields(QObject* parent,
+                                                                       QSet<QSharedPointer<const FormField> > fields,
+                                                                       QSharedPointer<const ExecutionResult>) const
 {
     QSet<QPair<QSharedPointer<const FormField>, const FormFieldValue*> > inputs;
 

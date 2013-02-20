@@ -23,6 +23,11 @@ void ExecutionResultBuilder::notifyPageLoaded()
     mPageStateAfterLoad = mPage->mainFrame()->toHtml();
 }
 
+void ExecutionResultBuilder::notifyStartingEvent()
+{
+    mResult->mJavascriptConstantsObservedForLastEvent.clear();
+}
+
 QSharedPointer<ExecutionResult> ExecutionResultBuilder::getResult()
 {
     registerFromFieldsIntoResult();
@@ -209,6 +214,7 @@ void ExecutionResultBuilder::slAjaxRequestInitiated(QUrl u, QString postData)
 void ExecutionResultBuilder::slJavascriptConstantEncountered(QString constant)
 {
     statistics()->accumulate("WebKit::jsconstants", 1);
+    mResult->mJavascriptConstantsObservedForLastEvent.insert(constant);
 }
 
 }
