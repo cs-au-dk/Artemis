@@ -42,6 +42,15 @@ class InstrumentationTests(unittest.TestCase):
 		
 		self.assertEqual(1, report.get('WebKit::alerts', 0));
 
+	def test_jsconstants(self):
+		"""
+		Test if constant strings used in JavaScript are detected and recorded.
+		"""
+		
+		report = execute_artemis('instrumentation-jsconstants', '%s/instrumentation/jsconstants.html' % WEBSERVER_URL)
+		
+		self.assertEqual(1, report.get('WebKit::jsconstants', 0));
+
 class AjaxTests(unittest.TestCase):
 	
 	def test_basic_sync_call_init(self):

@@ -68,7 +68,8 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/strategies/inputgenerator/form/forminputgenerator.h \
     src/strategies/inputgenerator/form/staticforminputgenerator.h \
     src/strategies/inputgenerator/event/eventparametergenerator.h \
-    src/strategies/inputgenerator/event/staticeventparametergenerator.h
+    src/strategies/inputgenerator/event/staticeventparametergenerator.h \
+    src/strategies/inputgenerator/form/dynamicforminputgenerator.h
 
 SOURCES += src/runtime/input/ajaxinput.cpp \
     src/strategies/prioritizer/constantprioritizer.cpp \
@@ -116,6 +117,7 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/exceptionhandlingqapp.cpp \
     src/runtime/browser/executionresultbuilder.cpp \
     src/strategies/inputgenerator/event/staticeventparametergenerator.cpp \
-    src/strategies/inputgenerator/form/staticforminputgenerator.cpp
+    src/strategies/inputgenerator/form/staticforminputgenerator.cpp \
+    src/strategies/inputgenerator/form/dynamicforminputgenerator.cpp
 
 QT += network

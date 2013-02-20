@@ -12,8 +12,6 @@
 
 #include "JavaScriptCore/debugger/DebuggerCallFrame.h"
 #include "JavaScriptCore/interpreter/CallFrame.h"
-#include "JavaScriptCore/instrumentation/jscexecutionlistener.h"
-#include "WebCore/instrumentation/jscriptlistenerclient.h"
 #include "WebCore/instrumentation/listenerdebugger.h"
 #include "JavaScriptCore/runtime/Identifier.h"
 #include "JavaScriptCore/runtime/ScopeChain.h"
@@ -27,8 +25,6 @@ namespace inst {
 
     ExecutionListener::ExecutionListener()
     {
-        jsinst::JSCExecutionListener* ll = new JScriptListenerClient(this);
-        jsinst::initialize_js_listener(ll);
     }
 
     void ExecutionListener::timerAdded(WebCore::ScriptExecutionContext* context, int timerId, int timeout, bool singleShot) {

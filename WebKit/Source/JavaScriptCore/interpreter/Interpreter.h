@@ -38,12 +38,6 @@
 
 #include <wtf/HashMap.h>
 
-#ifdef ARTEMIS
-namespace inst {
-    class ExecutionListener;
-}
-#endif
-
 namespace JSC {
 
     class CodeBlock;
@@ -159,6 +153,10 @@ namespace JSC {
         CallFrameClosure prepareForRepeatCall(FunctionExecutable*, CallFrame*, JSFunction*, int argumentCountIncludingThis, ScopeChainNode*);
         void endRepeatCall(CallFrameClosure&);
         JSValue execute(CallFrameClosure&);
+
+#ifdef ARTEMIS
+        ALWAYS_INLINE JSValue touchJsValue(CallFrame*, const JSValue&);
+#endif
 
 #if ENABLE(INTERPRETER)
         NEVER_INLINE bool resolve(CallFrame*, Instruction*, JSValue& exceptionValue);

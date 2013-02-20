@@ -20,7 +20,7 @@
 
 using namespace std;
 
-QWebExecutionListener::QWebExecutionListener(QObject *parent) : QObject(parent), inst::ExecutionListener()
+QWebExecutionListener::QWebExecutionListener(QObject *parent) : QObject(parent), inst::ExecutionListener(), jscinst::JSCExecutionListener()
 {
 }
 
@@ -234,18 +234,36 @@ void QWebExecutionListener::webkit_ajax_send(const char * url, const char * data
     emit ajax_request(url_u, data_q);
 }
 
-void QWebExecutionListener::webkit_eval_call(const char * eval_string) {
+void QWebExecutionListener::javascript_constant_encountered(std::string constant) {
+    emit sigJavascriptConstantEncountered(QString::fromStdString(constant));
+}
+
+void QWebExecutionListener::javascript_eval_call(const char * eval_string) {
     Q_CHECK_PTR(eval_string);
     emit this->eval_call(QString(tr(eval_string)));
+}
+
+void QWebExecutionListener::javascript_bytecode_executed(JSC::CodeBlock*, JSC::Instruction* inst) {
+    /*int offset  = inst -  codeBlock->instructions().begin();
+    jsc_bytecode_executed(codeBlock->source()->url().utf8(false).data(),
+                          codeBlock->lineNumberForBytecodeOffset(offset),
+                          offset,
+                          -1);*/ //TODO: Find out how to get the opcode from WebKit
+
+    /* void JSCExecutionListener::jsc_bytecode_executed(const char * url, unsigned int linenumber, int bytecode_offset, int opcodeID)  */
 }
 
 QWebExecutionListener* QWebExecutionListener::getListener() {
     return (QWebExecutionListener*)inst::getListener();
 }
 
+void QWebExecutionListener::attachListeners() {
+    jscinst::register_jsc_listener(QWebExecutionListener::getListener());
+}
+
 namespace inst {
 
-ExecutionListener* listener;
+ExecutionListener* listener = 0;
 
 ExecutionListener* getListener() {
     if (listener == NULL) {

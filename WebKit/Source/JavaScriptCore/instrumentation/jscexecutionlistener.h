@@ -3,29 +3,29 @@
 #define JSCEXECUTIONLISTENER_H
 
 namespace JSC {
-    class UString;
     class CodeBlock;
     class Instruction;
 }
 
 
-namespace jsinst {
-
+namespace jscinst {
 
 class JSCExecutionListener
 {
+
 public:
     JSCExecutionListener();
-    virtual void jsc_eval_call(const char * eval_string);
-    void listen_byte_code_executed(JSC::CodeBlock*, JSC::Instruction* inst);
-    virtual void jsc_bytecode_executed(const char * url, unsigned int linenumber, int bytecode_offset, int opcodeID);
+    virtual void javascript_eval_call(const char * eval_string);
+    virtual void javascript_bytecode_executed(JSC::CodeBlock*, JSC::Instruction* inst);
+    virtual void javascript_constant_encountered(std::string constant);
 };
 
+extern JSCExecutionListener* jsc_listener;
 
-
-void initialize_js_listener(JSCExecutionListener* l);
-JSCExecutionListener* get_js_listener();
+void register_jsc_listener(JSCExecutionListener* listener);
+JSCExecutionListener* get_jsc_listener();
 
 }
+
 #endif // JSCEXECUTIONLISTENER_H
 #endif

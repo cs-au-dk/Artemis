@@ -234,6 +234,7 @@ lessThan(QT_GCC_MAJOR_VERSION, 5) {
 }
 
 HEADERS += \
+    instrumentation/jscexecutionlistener.h \
     instrumentation/jscexecutionlistener.h
 
 

@@ -65,6 +65,8 @@ public slots:
     void slAjaxCallbackHandlerAdded(int callbackId);
     void slAjaxRequestInitiated(QUrl, QString postData);
 
+    void slJavascriptConstantEncountered(QString constant);
+
 };
 
 }
