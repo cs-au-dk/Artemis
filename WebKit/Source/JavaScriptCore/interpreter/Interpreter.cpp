@@ -4620,7 +4620,7 @@ skip_id_custom_self:
         */
 
         int activationReg = vPC[1].u.operand;
-        if (!touchJsValue(callFrame, callFrame->r(activationReg).jsValue())) {
+        if (!callFrame->r(activationReg).jsValue()) {
             JSActivation* activation = JSActivation::create(*globalData, callFrame, static_cast<FunctionExecutable*>(codeBlock->ownerExecutable()));
             callFrame->r(activationReg) = JSValue(activation);
             callFrame->setScopeChain(callFrame->scopeChain()->push(activation));
@@ -4681,7 +4681,7 @@ skip_id_custom_self:
         */
 
         int thisRegister = vPC[1].u.operand;
-        JSValue thisVal = touchJsValue(callFrame, callFrame->r(thisRegister).jsValue());
+        JSValue thisVal = callFrame->r(thisRegister).jsValue();
         if (thisVal.isPrimitive())
             callFrame->uncheckedR(thisRegister) = JSValue(thisVal.toThisObject(callFrame));
 
@@ -4711,7 +4711,7 @@ skip_id_custom_self:
         
         int dst = vPC[1].u.operand;
 
-        if (!touchJsValue(callFrame, callFrame->r(dst).jsValue())) {
+        if (!callFrame->r(dst).jsValue()) {
             Arguments* arguments = Arguments::create(*globalData, callFrame);
             callFrame->uncheckedR(dst) = JSValue(arguments);
             callFrame->uncheckedR(unmodifiedArgumentsRegister(dst)) = JSValue(arguments);
