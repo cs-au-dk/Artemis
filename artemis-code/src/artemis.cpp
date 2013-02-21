@@ -91,14 +91,16 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
 
         case 'x': {
 
-            if (string(optarg).compare("javascript-constants")) {
+            if (string(optarg).compare("javascript-constants") == 0) {
                 options.formInputGenerationStrategy = artemis::ConstantString;
-            } else if (string(optarg).compare("random")) {
+            } else if (string(optarg).compare("random") == 0) {
                 options.formInputGenerationStrategy = artemis::Random;
             } else {
                 cerr << "ERROR: Invalid strategy " << optarg << endl;
                 exit(1);
             }
+
+            break;
 
         }
 
@@ -113,6 +115,7 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
                 cerr << "ERROR: Invalid choice of coverage report " << optarg << endl;
                 exit(1);
             }
+            break;
         }
 
         }

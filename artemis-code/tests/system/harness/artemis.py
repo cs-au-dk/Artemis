@@ -12,7 +12,7 @@ STATS_END = '=== Statistics END ==='
 
 RE_STATS_LINE = re.compile(r'^(.*):(.*)$')
 
-def execute_artemis(execution_uuid, url, iterations=1):
+def execute_artemis(execution_uuid, url, iterations=1, strategy_form_input=None):
 
     output_dir = os.path.join(OUTPUT_DIR, execution_uuid)
 
@@ -21,9 +21,16 @@ def execute_artemis(execution_uuid, url, iterations=1):
         
     os.makedirs(output_dir)
     
-    cmd = [ARTEMIS_EXEC, 
-            "-i %s" % iterations,
-            url] 
+    args = []
+    args.append("-i %s" % iterations)
+
+    if strategy_form_input is not None:
+        args.append('--strategy-form-input-generation')
+        args.append(strategy_form_input)
+
+    cmd = [ARTEMIS_EXEC] + args + [url] 
+
+    print cmd
 
     try:
 	stdout = subprocess.check_output(cmd, cwd=output_dir, stderr=subprocess.STDOUT)

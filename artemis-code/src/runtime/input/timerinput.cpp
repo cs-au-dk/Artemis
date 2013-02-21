@@ -50,7 +50,8 @@ void TimerInput::apply(ArtemisWebPage* page, QWebExecutionListener* webkitListen
 
 QSharedPointer<const BaseInput> TimerInput::getPermutation(const QSharedPointer<const FormInputGenerator>&,
                                                            const QSharedPointer<const EventParameterGenerator>&,
-                                                           TargetGenerator*) const
+                                                           TargetGenerator*,
+                                                           QSharedPointer<const ExecutionResult>) const
 {
     return QSharedPointer<const BaseInput>(this);
 }

@@ -123,8 +123,6 @@ void WebKitExecutor::detach() {
 
 void WebKitExecutor::executeSequence(QSharedPointer<ExecutableConfiguration> conf)
 {
-    qDebug() << "Artemis: Executing sequence" << endl;
-
     currentConf = conf;
 
     mJquery->reset(); // TODO merge into result?
@@ -145,7 +143,7 @@ void WebKitExecutor::slLoadFinished(bool ok)
 
     qDebug() << "WEBKIT: Finished loading" << endl;
 
-    // Populate forms
+    // Populate forms (preset)
 
     foreach(QString f , mPresetFields.keys()) {
         QWebElement elm = mPage->mainFrame()->findFirstElement(f);
@@ -159,6 +157,8 @@ void WebKitExecutor::slLoadFinished(bool ok)
     }
 
     // Execute input sequence
+
+    qDebug() << "Artemis: Executing sequence" << endl;
 
     foreach(QSharedPointer<const BaseInput> input, currentConf->getInputSequence()->toList()) {
         mResultBuilder->notifyStartingEvent();

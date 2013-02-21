@@ -99,7 +99,7 @@ void writeCoverageHtml(CodeCoverage cc)
     }
     res += ("</body></html>");
 
-    QString pathToFile = QDateTime::currentDateTime().toString("coverage-dd-MM-yy-hh-mm-ss") + ".html";
+    QString pathToFile = QString("coverage-") + QDateTime::currentDateTime().toString("dd-MM-yy-hh-mm-ss") + ".html";
 
     writeStringToFile(pathToFile, res);
 }

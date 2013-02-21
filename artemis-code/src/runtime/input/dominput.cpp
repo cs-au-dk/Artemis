@@ -79,10 +79,11 @@ void DomInput::apply(ArtemisWebPage* page, QWebExecutionListener* webkitListener
 
 QSharedPointer<const BaseInput> DomInput::getPermutation(const QSharedPointer<const FormInputGenerator>& formInputGenerator,
                                                          const QSharedPointer<const EventParameterGenerator>& eventParameterGenerator,
-                                                         TargetGenerator* targetGenerator) const
+                                                         TargetGenerator* targetGenerator,
+                                                         QSharedPointer<const ExecutionResult> result) const
 {
     EventParameters* newParams = eventParameterGenerator->generateEventParameters(NULL, mEventHandler);
-    QSharedPointer<FormInput> newForm = formInputGenerator->generateFormFields(NULL, mFormInput->getFields());
+    QSharedPointer<FormInput> newForm = formInputGenerator->generateFormFields(NULL, mFormInput->getFields(), result);
     TargetDescriptor* target = targetGenerator->generateTarget(NULL, mEventHandler);
     EventHandlerDescriptor* newEventHandlerDescriptor = new EventHandlerDescriptor(NULL, mEventHandler);
 

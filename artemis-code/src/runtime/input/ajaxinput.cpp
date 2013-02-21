@@ -48,7 +48,8 @@ void AjaxInput::apply(ArtemisWebPage* page, QWebExecutionListener* webkitListene
 
 QSharedPointer<const BaseInput> AjaxInput::getPermutation(const QSharedPointer<const FormInputGenerator>&,
                                                           const QSharedPointer<const EventParameterGenerator>&,
-                                                          TargetGenerator*) const
+                                                          TargetGenerator*,
+                                                          QSharedPointer<const ExecutionResult>) const
 {
     return QSharedPointer<const BaseInput>(this);
 }

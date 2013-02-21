@@ -74,7 +74,7 @@ QList<QSharedPointer<ExecutableConfiguration> > RandomInputGenerator::addNewConf
 
 QList<QSharedPointer<ExecutableConfiguration> > RandomInputGenerator::insertSameLength(
         QSharedPointer<const ExecutableConfiguration> oldConfiguration,
-        QSharedPointer<const ExecutionResult>)
+        QSharedPointer<const ExecutionResult> result)
 {
     QList<QSharedPointer<ExecutableConfiguration> > newConfigurations;
 
@@ -87,7 +87,7 @@ QList<QSharedPointer<ExecutableConfiguration> > RandomInputGenerator::insertSame
     QSharedPointer<const BaseInput> last = sequence->getLast();
 
     for (int i = 0; i < mNumberSameLength; i++) {
-        QSharedPointer<const BaseInput> newLast = last->getPermutation(mFormInputGenerator, mEventParameterGenerator, mTargetGenerator);
+        QSharedPointer<const BaseInput> newLast = last->getPermutation(mFormInputGenerator, mEventParameterGenerator, mTargetGenerator, result);
 
         QSharedPointer<const InputSequence> newSeq = sequence->replaceLast(newLast);
         QSharedPointer<ExecutableConfiguration> newConf = \

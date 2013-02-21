@@ -49,7 +49,8 @@ public:
     void apply(ArtemisWebPage* page, QWebExecutionListener* webkitListener) const;
     QSharedPointer<const BaseInput> getPermutation(const QSharedPointer<const FormInputGenerator>& formInputGenerator,
                                                    const QSharedPointer<const EventParameterGenerator>& eventParameterGenerator,
-                                                   TargetGenerator* targetGenerator) const;
+                                                   TargetGenerator* targetGenerator,
+                                                   QSharedPointer<const ExecutionResult> result) const;
 
 private:
     const EventHandlerDescriptor* mEventHandler;
