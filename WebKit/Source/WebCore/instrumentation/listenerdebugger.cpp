@@ -12,7 +12,7 @@ namespace inst {
     }
 
     void ListenerDebugger::sourceParsed(JSC::ExecState* es, JSC::SourceProvider* sp, int errorLineNumber, const JSC::UString& errorMessage) {
-        el->loadJavaScript(sp, es);
+        el->javascript_code_loaded(sp, es);
     }
 
     void ListenerDebugger::exception(const JSC::DebuggerCallFrame& frame, intptr_t sourceID, int lineNumber, bool hasHandler) {
@@ -22,7 +22,7 @@ namespace inst {
     }
 
     void ListenerDebugger::atStatement(const JSC::DebuggerCallFrame& frame, intptr_t sourceID, int lineNumber) {
-        el->interpreterExecutedStatement(frame, sourceID, lineNumber);
+        el->javascript_executed_statement(frame, sourceID, lineNumber);
     }
 
     void ListenerDebugger::callEvent(const JSC::DebuggerCallFrame& frame, intptr_t sourceID, int lineNumber) {

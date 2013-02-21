@@ -15,6 +15,9 @@
 #include "WebCore/xml/LazyXMLHttpRequest.h"
 #include "WebCore/dom/ScriptExecutionContext.h"
 #include "WebCore/page/DOMTimer.h"
+#include "JavaScriptCore/parser/SourceCode.h"
+#include "JavaScriptCore/interpreter/CallFrame.h"
+#include "JavaScriptCore/runtime/ScopeChain.h"
 
 #include "qwebexecutionlistener.h"
 
@@ -108,12 +111,22 @@ void QWebExecutionListener::clearTimers() {
 
 // TIMERS END
 
-void QWebExecutionListener::scriptCodeLoaded(intptr_t id, std::string source, std::string url, int startline) {
+void QWebExecutionListener::javascript_code_loaded(JSC::SourceProvider* sp, JSC::ExecState*) {
+    // SourceProvider has changed API lately, thus the following usage of it has not been fully
+    // tested with artemis - e.g. if you are tracking an error and reach this point, then you
+    // have come to the right place.
+
+    std::string source(sp->getRange(0, sp->length()).utf8().data());
+    std::string url(sp->url().utf8().data());
+    intptr_t id = sp->asID();
+    int startline = sp->startPosition().m_line.zeroBasedInt() + 1; // startPosition is placed right before the first line, thus (+1)
+
     emit loadedJavaScript(id, QString(tr(source.c_str())), QUrl(QString(tr(url.c_str()))), startline);
 }
 
-void QWebExecutionListener::executedStatement(intptr_t sourceID, std::string function_name, int linenumber) {
-    emit statementExecuted(sourceID, function_name, linenumber);
+void QWebExecutionListener::javascript_executed_statement(const JSC::DebuggerCallFrame&, intptr_t sourceID, int linenumber) {
+    /* std::string(frame.calculatedFunctionName().ascii().data()) */
+    emit statementExecuted(sourceID, "fakeFunktionName()", linenumber);
 }
 
 bool domNodeSignature(JSC::CallFrame * cframe, JSC::JSObject * domElement, QString * signature) {

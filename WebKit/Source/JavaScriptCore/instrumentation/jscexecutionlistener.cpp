@@ -1,6 +1,5 @@
 #ifdef ARTEMIS
 
-#include <assert.h>
 #include <iostream>
 
 #include "jscexecutionlistener.h"
@@ -24,18 +23,18 @@ JSCExecutionListener::JSCExecutionListener()
 }
 
 void JSCExecutionListener::javascript_eval_call(const char * eval_string) {
-    cout << "ERROR: Default listener for javascript_eval_call was invoked, args: " << eval_string << endl;
-    assert(false);
+    cerr << "ERROR: Default listener for javascript_eval_call was invoked, args: " << eval_string << endl;
+    exit(1);
 }
 
 void JSCExecutionListener::javascript_bytecode_executed(CodeBlock* codeBlock, Instruction* inst) {
-    cout << "ERROR: Default listener for javascript_bytecode_executed was invoked " << endl;
-    assert(false);
+    cerr << "ERROR: Default listener for javascript_bytecode_executed was invoked " << endl;
+    exit(1);
 }
 
 void JSCExecutionListener::javascript_constant_encountered(std::string constant) {
-    cout << "ERROR: Default listener for javascript_constant_encountered was invoked " << endl;
-    assert(false);
+    cerr << "ERROR: Default listener for javascript_constant_encountered was invoked " << endl;
+    exit(1);
 }
 
 JSCExecutionListener* jsc_listener = 0;

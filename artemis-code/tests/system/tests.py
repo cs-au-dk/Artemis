@@ -51,6 +51,16 @@ class InstrumentationTests(unittest.TestCase):
 		
 		self.assertEqual(1, report.get('WebKit::jsconstants', 0));
 
+	def test_codecoverage(self):
+		report = execute_artemis('instrumentation-codecoverage', '%s/instrumentation/codecoverage.html' % WEBSERVER_URL)
+		
+		self.assertEqual(5, report.get('WebKit::coverage::covered', 0));
+
+	def test_codecoverage_external(self):
+		report = execute_artemis('instrumentation-codecoverage-external', '%s/instrumentation/codecoverage-external.html' % WEBSERVER_URL)
+		
+		self.assertEqual(3, report.get('WebKit::coverage::covered', 0));
+
 class AjaxTests(unittest.TestCase):
 	
 	def test_basic_sync_call_init(self):

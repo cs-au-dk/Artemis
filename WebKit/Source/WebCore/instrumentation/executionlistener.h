@@ -52,15 +52,12 @@ public:
     /**
       Loading of files
       */
-    void loadJavaScript(JSC::SourceProvider* sp, JSC::ExecState*);
-    virtual void scriptCodeLoaded(intptr_t id,std::string source, std::string url ,int startline);
+    virtual void javascript_code_loaded(JSC::SourceProvider* sp, JSC::ExecState*) = 0;
 
     /**
       Coverage information
       */
-    void interpreterExecutedStatement(const JSC::DebuggerCallFrame&, intptr_t sourceID, int lineNumber);
-    virtual void executedStatement(intptr_t sourceID, std::string function_name, int linenumber);
-
+    virtual void javascript_executed_statement(const JSC::DebuggerCallFrame&, intptr_t sourceID, int lineNumber) = 0;
 
     /**
       Function calls

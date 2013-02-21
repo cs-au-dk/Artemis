@@ -22,12 +22,13 @@ public:
     virtual void eventAdded(WebCore::EventTarget * target, const char* type);
     virtual void eventCleared(WebCore::EventTarget * target, const char* type);
 
-    virtual void scriptCodeLoaded(intptr_t id,std::string source, std::string url, int startline);
-    virtual void executedStatement(intptr_t sourceID, std::string function_name, int linenumber);
+    virtual void javascript_code_loaded(JSC::SourceProvider* sp, JSC::ExecState*);
     virtual void exceptional_condition(std::string cause, intptr_t sourceID, int lineNumber);
     virtual void script_changed_url( std::string url);
     virtual void webkit_ajax_send(const char * url, const char * data);
     virtual void calledFunction(const JSC::DebuggerCallFrame&);
+
+    virtual void javascript_executed_statement(const JSC::DebuggerCallFrame&, intptr_t sourceID, int lineNumber);
 
     virtual void javascript_constant_encountered(std::string constant);
     virtual void javascript_eval_call(const char * eval_string);
