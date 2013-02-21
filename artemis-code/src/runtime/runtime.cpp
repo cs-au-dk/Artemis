@@ -33,7 +33,6 @@
 
 #include "worklist/deterministicworklist.h"
 #include "coverage/coveragetooutputstream.h"
-#include "util/coverageutil.h"
 
 #include "statistics/statsstorage.h"
 #include "statistics/writers/pretty.h"
@@ -59,6 +58,8 @@ namespace artemis
  */
 Runtime::Runtime(QObject* parent, const Options& options, QUrl url) : QObject(parent)
 {
+
+    mOptions = options;
 
     /** Proxy support **/
 
@@ -173,9 +174,16 @@ void Runtime::finishAnalysis()
 {
     qDebug() << "Artemis: Testing done..." << endl;
 
-    qDebug() << "=== Coverage information for execution ===";
-    writeCoverageHtml(coverage());
-    writeCoverageReport(coverage());
+    switch (mOptions.outputCoverage) {
+    case HTML:
+        writeCoverageHtml(coverage());
+        break;
+    case STDOUT:
+         writeCoverageStdout(coverage());
+         break;
+    default:
+        break;
+    }
 
     qDebug() << "\n=== Statistics ===\n";
     StatsPrettyWriter::write(statistics());

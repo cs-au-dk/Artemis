@@ -46,13 +46,18 @@ enum FormInputGenerationStrategies {
     Random, ConstantString
 };
 
+enum CoverageReport {
+    STDOUT, HTML, NONE
+};
+
 typedef struct OptionsType {
 
     OptionsType() :
         iterationLimit(1),
         numberSameLength(1),
         recreatePage(false),
-        formInputGenerationStrategy(Random)
+        formInputGenerationStrategy(Random),
+        outputCoverage(NONE)
     {}
 
     QMap<QString, QString> presetFormfields;
@@ -67,6 +72,8 @@ typedef struct OptionsType {
     QString dumpPageStates;
 
     FormInputGenerationStrategies formInputGenerationStrategy;
+
+    CoverageReport outputCoverage;
 
 } Options;
 

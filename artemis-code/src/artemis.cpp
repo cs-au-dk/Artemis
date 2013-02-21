@@ -44,6 +44,7 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
 
     struct option long_options[] = {
         {"strategy-form-input-generation", required_argument, NULL, 'x'},
+        {"coverage-report", required_argument, NULL, 'y'},
         {0, 0, 0, 0}
     };
 
@@ -99,6 +100,19 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
                 exit(1);
             }
 
+        }
+
+        case 'y': {
+            if (string(optarg).compare("html")) {
+                options.outputCoverage = artemis::HTML;
+            } else if (string(optarg).compare("stdout")) {
+                options.outputCoverage = artemis::STDOUT;
+            } else if (string(optarg).compare("none")) {
+                options.outputCoverage = artemis::NONE;
+            } else {
+                cerr << "ERROR: Invalid choice of coverage report " << optarg << endl;
+                exit(1);
+            }
         }
 
         }

@@ -32,3 +32,10 @@ Usage:
 
    			  javascript-constants - select form inputs based in observed javascript constants
    			  random - (default) random inputs 
+
+   --coverage-report <report-type>:
+               Select code coverage report formatting.
+
+               html - html report dumped in the folder you run Artemis from
+               stdout - text report is printet to std out
+               none - (default) code coverage report is omitted

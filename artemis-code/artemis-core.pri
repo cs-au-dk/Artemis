@@ -60,7 +60,6 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/coverage/coveragetooutputstream.h \
     src/util/fileutil.h \
     src/util/urlutil.h \
-    src/util/coverageutil.h \
     src/statistics/statsstorage.h \
     src/statistics/writers/pretty.h \
     src/exceptionhandlingqapp.h \
@@ -111,7 +110,6 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/coverage/coveragetooutputstream.cpp \
     src/util/fileutil.cpp \
     src/util/urlutil.cpp \
-    src/util/coverageutil.cpp \
     src/statistics/statsstorage.cpp \
     src/statistics/writers/pretty.cpp \
     src/exceptionhandlingqapp.cpp \

@@ -29,6 +29,7 @@
 #define COVERAGETOOUTPUTSTREAM_H
 
 #include <iostream>
+
 #include "codecoverage.h"
 #include "artemisglobals.h"
 
@@ -38,7 +39,8 @@ using namespace std;
 namespace artemis
 {
 
-void writeCoverageReport(const CodeCoverage& cov);
+void writeCoverageStdout(const CodeCoverage& cov);
+void writeCoverageHtml(CodeCoverage cc);
 
 }
 

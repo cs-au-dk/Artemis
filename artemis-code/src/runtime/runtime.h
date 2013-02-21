@@ -71,6 +71,8 @@ private:
     PrioritizerStrategy* mPrioritizerStrategy;
     InputGeneratorStrategy* mInputgenerator;
 
+    Options mOptions;
+
 private slots:
     void postConcreteExecution(QSharedPointer<ExecutableConfiguration> configuration, QSharedPointer<ExecutionResult> result);
 
