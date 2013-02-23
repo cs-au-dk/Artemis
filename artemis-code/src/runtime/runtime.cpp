@@ -176,14 +176,16 @@ void Runtime::finishAnalysis()
 
     switch (mOptions.outputCoverage) {
     case HTML:
-        writeCoverageHtml(coverage());
+        writeCoverageHtml(mWebkitExecutor->coverage());
         break;
     case STDOUT:
-         writeCoverageStdout(coverage());
+         writeCoverageStdout(mWebkitExecutor->coverage());
          break;
     default:
         break;
     }
+
+    statistics()->accumulate("WebKit::coverage::covered-unique", mWebkitExecutor->coverage().getNumCoveredLines());
 
     qDebug() << "\n=== Statistics ===\n";
     StatsPrettyWriter::write(statistics());
@@ -193,11 +195,6 @@ void Runtime::finishAnalysis()
     qDebug() << "Artemis terminated on: " << QDateTime::currentDateTime().toString() << endl;
 
     emit sigTestingDone();
-}
-
-CodeCoverage Runtime::coverage()
-{
-    return mWebkitExecutor->coverage();
 }
 
 } /* namespace artemis */

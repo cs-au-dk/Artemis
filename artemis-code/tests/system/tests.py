@@ -47,6 +47,16 @@ class InputGeneratorStrategies(unittest.TestCase):
 		
 		self.assertEqual(8, report.get('WebKit::coverage::covered', 0));
 
+class PrioritizationStrategies(unittest.TestCase):
+
+	def test_coverage(self):
+		report = execute_artemis('strategy-priority-coverage', 
+			'%s/strategies/priority/coverage.html' % WEBSERVER_URL,
+			iterations=4,
+			coverage='stdout')
+		
+		self.assertEqual(7, report.get('WebKit::coverage::covered-unique', 0));
+
 #class NonTerminatingTests(unittest.TestCase):
 #	
 #	def test_non_terminating(self):

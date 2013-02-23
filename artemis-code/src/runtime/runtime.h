@@ -58,7 +58,6 @@ public:
     ~Runtime() {};
 
     void startAnalysis(QUrl startAnalysis);
-    CodeCoverage coverage();
 
 private:
     void preConcreteExecution();

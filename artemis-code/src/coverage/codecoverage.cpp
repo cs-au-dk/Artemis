@@ -62,6 +62,21 @@ QMap<int, LineInfo> CodeCoverage::lineInfo(int id) const
     return mCoverage[id];
 }
 
+unsigned int CodeCoverage::getNumCoveredLines() const
+{
+    unsigned int executed = 0;
+
+    foreach(int source, sourceIds()) {
+        foreach(int line, lineInfo(source).keys()) {
+            if (lineInfo(source)[line].isExecuted()) {
+                executed++;
+            }
+        }
+    }
+
+    return executed;
+}
+
 QString CodeCoverage::toString() const
 {
     QString res;
