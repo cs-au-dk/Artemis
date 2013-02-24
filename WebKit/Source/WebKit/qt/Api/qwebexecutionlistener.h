@@ -28,11 +28,11 @@ public:
     virtual void webkit_ajax_send(const char * url, const char * data);
     virtual void calledFunction(const JSC::DebuggerCallFrame&);
 
-    virtual void javascript_executed_statement(const JSC::DebuggerCallFrame&, intptr_t sourceID, int lineNumber);
+    virtual void javascript_executed_statement(const JSC::DebuggerCallFrame&, intptr_t sourceID, int lineNumber); // from the debugger
+    virtual void javascript_bytecode_executed(JSC::CodeBlock*, JSC::Instruction* inst); // interpreter instrumentation
 
     virtual void javascript_constant_encountered(std::string constant);
     virtual void javascript_eval_call(const char * eval_string);
-    virtual void javascript_bytecode_executed(JSC::CodeBlock*, JSC::Instruction* inst);
 
     virtual void ajaxCallbackEventAdded(WebCore::LazyXMLHttpRequest*);
 
@@ -70,6 +70,8 @@ signals:
     void jqueryEventAdded(QString elementSignature, QString event, QString selectors); 
 
     void sigJavascriptConstantEncountered(QString constant);
+    void sigJavascriptFunctionCalled(QString functionName, intptr_t codeBlock, size_t bytecodeSize);
+    void sigJavascriptBytecodeExecuted(intptr_t codeBlock, size_t bytecodeOffset);
 
 };
 

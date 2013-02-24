@@ -83,6 +83,8 @@ WebKitExecutor::WebKitExecutor(QObject* parent,
     QObject::connect(webkitListener, SIGNAL(statementExecuted(intptr_t, std::string, int)),
                      covList, SLOT(statementExecuted(intptr_t, std::string, int)));
 
+
+
     QObject::connect(webkitListener, SIGNAL(addedEventListener(QWebElement*, QString)),
                      mResultBuilder, SLOT(slEventListenerAdded(QWebElement*, QString)));
     QObject::connect(webkitListener, SIGNAL(removedEventListener(QWebElement*, QString)),

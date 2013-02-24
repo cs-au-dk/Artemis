@@ -31,7 +31,6 @@ namespace inst {
 class ExecutionListener {
 
 public:
-    ExecutionListener();
 
     /**
       Invoked when an event is added to a DOM element
@@ -46,8 +45,8 @@ public:
     /**
      * Timeouts
      */
-    virtual void timerAdded(WebCore::ScriptExecutionContext* context, int timerId, int timeout, bool singleShot);
-    virtual void timerRemoved(WebCore::ScriptExecutionContext* context, int timerId);
+    virtual void timerAdded(WebCore::ScriptExecutionContext* context, int timerId, int timeout, bool singleShot) = 0;
+    virtual void timerRemoved(WebCore::ScriptExecutionContext* context, int timerId) = 0;
 
     /**
       Loading of files
@@ -63,7 +62,7 @@ public:
       Function calls
       */
     void interpreterCalledEvent(const JSC::DebuggerCallFrame&, intptr_t sourceID, int lineNumber);
-    virtual void calledFunction(const JSC::DebuggerCallFrame&);
+    virtual void calledFunction(const JSC::DebuggerCallFrame&) = 0;
 
     /**
       Exception
@@ -80,7 +79,7 @@ public:
       Ajax
       */
     virtual void webkit_ajax_send(const char * url, const char * data);
-    virtual void ajaxCallbackEventAdded(WebCore::LazyXMLHttpRequest*);
+    virtual void ajaxCallbackEventAdded(WebCore::LazyXMLHttpRequest*) = 0;
 
     /**
       Eval
