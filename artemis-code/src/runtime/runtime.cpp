@@ -195,7 +195,7 @@ void Runtime::postConcreteExecution(QSharedPointer<ExecutableConfiguration> conf
 
 void Runtime::finishAnalysis()
 {
-    qDebug() << "Artemis: Testing done..." << endl;
+    Log::info("Artemis: Testing done...");
 
     switch (mOptions.outputCoverage) {
     case HTML:
@@ -210,12 +210,10 @@ void Runtime::finishAnalysis()
 
     statistics()->accumulate("WebKit::coverage::covered-unique", mWebkitExecutor->getCoverageListener()->getNumCoveredLines());
 
-    qDebug() << "\n=== Statistics ===\n";
+    Log::info("\n=== Statistics ===\n");
     StatsPrettyWriter::write(statistics());
-    qDebug() << "\n=== Statistics END ===\n";
-    qDebug() << endl;
-
-    qDebug() << "Artemis terminated on: " << QDateTime::currentDateTime().toString() << endl;
+    Log::info("\n=== Statistics END ===\n\n");
+    Log::info("Artemis terminated on: "+ QDateTime::currentDateTime().toString().toStdString());
 
     emit sigTestingDone();
 }
