@@ -41,7 +41,10 @@
 #include "strategies/inputgenerator/form/staticforminputgenerator.h"
 #include "strategies/inputgenerator/form/constantstringforminputgenerator.h"
 #include "strategies/termination/numberofiterationstermination.h"
+
 #include "strategies/prioritizer/constantprioritizer.h"
+#include "strategies/prioritizer/randomprioritizer.h"
+#include "strategies/prioritizer/coverageprioritizer.h"
 
 #include "runtime.h"
 
@@ -87,6 +90,8 @@ Runtime::Runtime(QObject* parent, const Options& options, QUrl url) : QObject(pa
 
     /** Runtime Objects **/
 
+    mAppmodel = QSharedPointer<AppModel>(new AppModel(coverageListener));
+
     mWebkitExecutor = new WebKitExecutor(this, options.presetFormfields, jqueryListener, ajaxRequestListner, coverageListener);
 
     QSharedPointer<FormInputGenerator> formInputGenerator;
@@ -109,7 +114,20 @@ Runtime::Runtime(QObject* parent, const Options& options, QUrl url) : QObject(pa
                                                new TargetGenerator(this, jqueryListener),
                                                options.numberSameLength);
     mTerminationStrategy = new NumberOfIterationsTermination(this, options.iterationLimit);
-    mPrioritizerStrategy = new ConstantPrioritizer(this);
+
+    switch (options.prioritizerStrategy) {
+    case CONSTANT:
+        mPrioritizerStrategy = new ConstantPrioritizer(this);
+        break;
+    case RANDOM:
+        mPrioritizerStrategy = new RandomPrioritizer(this);
+        break;
+    case COVERAGE:
+        mPrioritizerStrategy = new CoveragePrioritizer();
+        break;
+    default:
+        assert(false);
+    }
 
     mWorklist = new DeterministicWorkList(this);
 
@@ -166,7 +184,7 @@ void Runtime::postConcreteExecution(QSharedPointer<ExecutableConfiguration> conf
     QList<QSharedPointer<ExecutableConfiguration> > newConfigurations = mInputgenerator->addNewConfigurations(configuration, result);
 
     foreach(QSharedPointer<ExecutableConfiguration> newConfiguration, newConfigurations) {
-        mWorklist->add(newConfiguration, mPrioritizerStrategy->prioritize(newConfiguration, result));
+        mWorklist->add(newConfiguration, mPrioritizerStrategy->prioritize(newConfiguration, result, mAppmodel));
     }
 
     statistics()->accumulate("InputGenerator::added-configurations", newConfigurations.size());

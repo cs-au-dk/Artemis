@@ -50,6 +50,8 @@ public:
                                                            const QSharedPointer<const EventParameterGenerator>& eventParameterGenerator,
                                                            TargetGenerator* targetGenerator,
                                                            QSharedPointer<const ExecutionResult> result) const = 0;
+
+    virtual int hashCode() const = 0;
 };
 
 }

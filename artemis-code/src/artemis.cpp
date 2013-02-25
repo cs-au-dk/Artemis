@@ -45,6 +45,7 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
     struct option long_options[] = {
         {"strategy-form-input-generation", required_argument, NULL, 'x'},
         {"coverage-report", required_argument, NULL, 'y'},
+        {"strategy-priority", required_argument, NULL, 'z'},
         {0, 0, 0, 0}
     };
 
@@ -115,6 +116,21 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
                 cerr << "ERROR: Invalid choice of coverage report " << optarg << endl;
                 exit(1);
             }
+            break;
+        }
+
+        case 'z': {
+            if (string(optarg).compare("constant") == 0) {
+                options.prioritizerStrategy = artemis::CONSTANT;
+            } else if (string(optarg).compare("random") == 0) {
+                options.prioritizerStrategy = artemis::RANDOM;
+            } else if (string(optarg).compare("coverage") == 0) {
+                options.prioritizerStrategy = artemis::COVERAGE;
+            } else {
+                cerr << "ERROR: Invalid choice of prioritizer strategy " << optarg << endl;
+                exit(1);
+            }
+
             break;
         }
 

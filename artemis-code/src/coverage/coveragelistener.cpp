@@ -38,7 +38,8 @@ namespace artemis
 {
 
 CoverageListener::CoverageListener(QObject* parent) :
-    QObject(parent)
+    QObject(parent),
+    mInputBeingExecuted(-1)
 {
 }
 
@@ -75,10 +76,8 @@ void CoverageListener::newCode(intptr_t sourceTemporalID, QString source, QUrl u
     }
 
     if (!mSourceIdMap.contains(sourceTemporalID)) {
-
         int sourceID = qHash(url) * 53 + startline * 29;
         mSourceIdMap.insert(sourceTemporalID, sourceID);
-
     }
 
     int sourceID = mSourceIdMap.value(sourceTemporalID);
@@ -108,14 +107,64 @@ void CoverageListener::statementExecuted(intptr_t sourceTemporalID, int linenumb
     coveredLines->insert(linenumber);
 }
 
-void CoverageListener::slJavascriptFunctionCalled(intptr_t codeBlock, QString functionName, size_t bytecodeSize)
+void CoverageListener::slJavascriptFunctionCalled(intptr_t codeBlockTemporalID, QString functionName, size_t bytecodeSize)
 {
+    if (!mCodeBlockIdMap.contains(codeBlockTemporalID)) {
+        codeblockid_t codeBlockID = qHash(functionName);
+        mCodeBlockIdMap.insert(codeBlockTemporalID, codeBlockID);
+    }
+
+    codeblockid_t codeBlockID = mCodeBlockIdMap.value(codeBlockTemporalID);
+
+    if (!mCodeBlocks.contains(codeBlockID)) {
+        mCodeBlocks.insert(codeBlockID, QSharedPointer<CodeBlockInfo>(new CodeBlockInfo(functionName, bytecodeSize)));
+        mCoveredBytecodes.insert(codeBlockID, new QSet<int>());
+    }
+
+    if (mInputBeingExecuted != -1) {
+        mInputCodeBlockMap.value(mInputBeingExecuted)->insert(codeBlockID);
+    }
+}
+
+void CoverageListener::slJavascriptBytecodeExecuted(intptr_t codeBlockTemporalID, size_t bytecodeOffset)
+{
+
+    codeblockid_t codeBlockID = mCodeBlockIdMap.value(codeBlockTemporalID, -1);
+
+    if (codeBlockID == -1) {
+        return; // ignore unknown code block
+    }
+
+    mCoveredBytecodes.value(codeBlockID)->insert(bytecodeOffset);
 
 }
 
-void CoverageListener::slJavascriptBytecodeExecuted(intptr_t codeBlock, size_t bytecodeOffset)
+void CoverageListener::notifyStartingEvent(QSharedPointer<const BaseInput> inputEvent)
 {
+    mInputBeingExecuted = inputEvent->hashCode();
 
+    if (!mInputCodeBlockMap.contains(mInputBeingExecuted)) {
+        mInputCodeBlockMap.insert(mInputBeingExecuted, new QSet<codeblockid_t>());
+    }
+}
+
+float CoverageListener::getBytecodeCoverage(QSharedPointer<const BaseInput> inputEvent)
+{
+    mInputBeingExecuted = inputEvent->hashCode();
+
+    if (!mInputCodeBlockMap.contains(mInputBeingExecuted)) {
+        return 0;
+    }
+
+    size_t totalBytecodes = 0;
+    size_t executedBytecodes = 0;
+
+    foreach (codeblockid_t codeBlockID, mInputCodeBlockMap.value(mInputBeingExecuted)->toList()) {
+        totalBytecodes += mCodeBlocks.value(codeBlockID)->getBytecodeSize();
+        executedBytecodes += mCoveredBytecodes.value(codeBlockID)->size();
+    }
+
+    return float(executedBytecodes) / float(totalBytecodes);
 
 }
 

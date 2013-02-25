@@ -90,4 +90,9 @@ QSharedPointer<const BaseInput> DomInput::getPermutation(const QSharedPointer<co
     return QSharedPointer<const DomInput>(new DomInput(newEventHandlerDescriptor, newForm, newParams, target));
 }
 
+int DomInput::hashCode() const
+{
+    return 107 * mEventHandler->hashCode();
+}
+
 }

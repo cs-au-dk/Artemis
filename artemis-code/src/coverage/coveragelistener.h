@@ -34,11 +34,17 @@
 #include <QUrl>
 #include <QMap>
 #include <QSet>
+#include <QSharedPointer>
+
+#include "runtime/input/baseinput.h"
 
 #include "sourceinfo.h"
+#include "codeblockinfo.h"
 
 namespace artemis
 {
+
+typedef int codeblockid_t;
 
 class CoverageListener : public QObject
 {
@@ -50,21 +56,36 @@ public:
     QList<int> getSourceIDs();
     SourceInfo* getSourceInfo(int sourceID);
     QSet<int> getLineCoverage(int sourceID);
+
     size_t getNumCoveredLines();
+
+    float getBytecodeCoverage(QSharedPointer<const BaseInput> inputEvent);
+
+    void notifyStartingEvent(QSharedPointer<const BaseInput> inputEvent);
 
 private:
 
-    // (sourceTemporalID -> sourceID) needed as the sourceID changes for each new page-execution
+    // (sourceTemporalID -> sourceID) needed as the sourceTemporalID changes for each new page-execution
     QMap<intptr_t, int> mSourceIdMap;
 
     // (sourceID -> SourceInfo)
     QMap<int, SourceInfo*> sources;
 
-    // (sourceID -> line -> LineInfo)
+    // (sourceID -> set<lines>)
     QMap<int, QSet<int>* > coverage;
 
-    // (codeBlockID -> CodeBlock)
-    //QMap<intptr_t, CodeBlock*> codeBlocks;
+    // (codeBlockTemporalID -> codeBlockID) needed as the codeBlockTemporalID changes for each new page-execution
+    QMap<intptr_t, codeblockid_t> mCodeBlockIdMap;
+
+    // (codeBlockID -> CodeBlockInfo)
+    QMap<codeblockid_t, QSharedPointer<CodeBlockInfo> > mCodeBlocks;
+
+    // (codeBlockID -> set<bytecode offsets>
+    QMap<codeblockid_t, QSet<int>* > mCoveredBytecodes;
+
+    // (inputHashCode -> set<codeBlocks>
+    QMap<int, QSet<codeblockid_t>* > mInputCodeBlockMap;
+    int mInputBeingExecuted;
 
 public slots:
 

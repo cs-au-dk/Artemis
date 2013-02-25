@@ -85,8 +85,6 @@ WebKitExecutor::WebKitExecutor(QObject* parent,
     QObject::connect(webkitListener, SIGNAL(statementExecuted(intptr_t, int)),
                      mCoverageListener, SLOT(statementExecuted(intptr_t, int)));
 
-
-
     QObject::connect(webkitListener, SIGNAL(addedEventListener(QWebElement*, QString)),
                      mResultBuilder, SLOT(slEventListenerAdded(QWebElement*, QString)));
     QObject::connect(webkitListener, SIGNAL(removedEventListener(QWebElement*, QString)),
@@ -166,6 +164,7 @@ void WebKitExecutor::slLoadFinished(bool ok)
 
     foreach(QSharedPointer<const BaseInput> input, currentConf->getInputSequence()->toList()) {
         mResultBuilder->notifyStartingEvent();
+        mCoverageListener->notifyStartingEvent(input);
         input->apply(this->mPage, this->webkitListener);
     }
 

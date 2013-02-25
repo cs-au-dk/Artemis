@@ -46,6 +46,10 @@ enum FormInputGenerationStrategies {
     Random, ConstantString
 };
 
+enum PrioritizerStrategies {
+    CONSTANT, RANDOM, COVERAGE
+};
+
 enum CoverageReport {
     STDOUT, HTML, NONE
 };
@@ -57,6 +61,7 @@ typedef struct OptionsType {
         numberSameLength(1),
         recreatePage(false),
         formInputGenerationStrategy(Random),
+        prioritizerStrategy(CONSTANT),
         outputCoverage(NONE)
     {}
 
@@ -72,7 +77,7 @@ typedef struct OptionsType {
     QString dumpPageStates;
 
     FormInputGenerationStrategies formInputGenerationStrategy;
-
+    PrioritizerStrategies prioritizerStrategy;
     CoverageReport outputCoverage;
 
 } Options;

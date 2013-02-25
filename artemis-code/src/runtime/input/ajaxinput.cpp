@@ -54,4 +54,9 @@ QSharedPointer<const BaseInput> AjaxInput::getPermutation(const QSharedPointer<c
     return QSharedPointer<const BaseInput>(this);
 }
 
+int AjaxInput::hashCode() const
+{
+    return 7 * mCallbackId;
+}
+
 }

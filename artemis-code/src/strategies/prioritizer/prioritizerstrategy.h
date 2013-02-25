@@ -33,6 +33,7 @@
 
 #include "runtime/browser/executionresult.h"
 #include "runtime/worklist/worklist.h"
+#include "runtime/appmodel.h"
 
 namespace artemis
 {
@@ -40,16 +41,17 @@ namespace artemis
 class PrioritizerStrategy : public QObject
 {
 public:
-    PrioritizerStrategy(QObject* parent) : QObject(parent) {};
-    virtual ~PrioritizerStrategy() {};
+    PrioritizerStrategy(QObject* parent) : QObject(parent) {}
+    virtual ~PrioritizerStrategy() {}
 
     /**
       newConf: Configuration to be prioritized
       results: The execution results from last execution
       state: State of the execution engine
       */
-    virtual double prioritize(QSharedPointer<ExecutableConfiguration> newConf,
-                              const QSharedPointer<ExecutionResult> result) = 0;
+    virtual double prioritize(QSharedPointer<const ExecutableConfiguration> newConf,
+                              QSharedPointer<const ExecutionResult> result,
+                              QSharedPointer<const AppModel> appmodel) = 0;
 
     virtual void reprioritize(WorkList* worklist) = 0;
 };

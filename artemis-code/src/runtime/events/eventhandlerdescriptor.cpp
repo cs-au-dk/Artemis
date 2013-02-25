@@ -72,5 +72,10 @@ bool EventHandlerDescriptor::isInvalid() const
     return this->element->isInvalid();
 }
 
+int EventHandlerDescriptor::hashCode() const
+{
+    return qHash(this->eventName) + 7 * this->element->hashCode();
+}
+
 }
 

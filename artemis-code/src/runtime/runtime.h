@@ -44,6 +44,7 @@
 #include "runtime/browser/executionresult.h"
 #include "runtime/browser/cookies/immutablecookiejar.h"
 #include "runtime/executableconfiguration.h"
+#include "runtime/appmodel.h"
 
 namespace artemis
 {
@@ -63,6 +64,7 @@ private:
     void preConcreteExecution();
     void finishAnalysis();
 
+    QSharedPointer<AppModel> mAppmodel;
     WebKitExecutor* mWebkitExecutor;
     WorkList* mWorklist;
 
