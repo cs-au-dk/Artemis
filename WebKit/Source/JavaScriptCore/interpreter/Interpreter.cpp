@@ -64,7 +64,7 @@
 #include <limits.h>
 #include <stdio.h>
 #include <wtf/Threading.h>
-
+#include <QDebug>
 #ifdef ARTEMIS
 #include "instrumentation/jscexecutionlistener.h"
 #endif
@@ -559,9 +559,9 @@ Interpreter::Interpreter()
 
 #ifdef ARTEMIS
 #if ENABLE(JIT)
-    printf("WEBKIT: JIT enabled - instrumentation will not work!\n");
+    qDebug()<<"WEBKIT: JIT enabled - instrumentation will not work!\n";
 #else
-    printf("WEBKIT: JIT disabled - all's well!\n");
+    qDebug() << "WEBKIT: JIT disabled - all's well!\n";
 #endif
 #endif
 
