@@ -1776,7 +1776,7 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
 #endif
 
 #ifdef ARTEMIS
-#define ARTEMIS_BYTECODE_LISTEN(codeBlock, vPC) jscinst::get_jsc_listener()->javascript_bytecode_executed(codeBlock,vPC)
+#define ARTEMIS_BYTECODE_LISTEN(codeBlock, vPC) jscinst::get_jsc_listener()->javascript_bytecode_executed(codeBlock, vPC)
 #else
 #define ARTEMIS_BYTECODE_LISTEN(codeBlock, vPC)
 #endif

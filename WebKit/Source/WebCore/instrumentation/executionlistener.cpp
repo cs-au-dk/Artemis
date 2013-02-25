@@ -23,22 +23,6 @@
 
 namespace inst {
 
-    ExecutionListener::ExecutionListener()
-    {
-    }
-
-    void ExecutionListener::timerAdded(WebCore::ScriptExecutionContext* context, int timerId, int timeout, bool singleShot) {
-        return;
-    }
-        
-    void ExecutionListener::timerRemoved(WebCore::ScriptExecutionContext* context, int timerId) {
-        return;
-    }
-
-    void ExecutionListener::ajaxCallbackEventAdded(WebCore::LazyXMLHttpRequest*) {
-        return;
-    }
-
     void ExecutionListener::interpreterCalledEvent(const JSC::DebuggerCallFrame& frame, intptr_t sourceID, int lineNumber) {
         calledFunction(frame);
 
@@ -56,10 +40,6 @@ namespace inst {
             std::cout << "el::not JQuery script" << std::endl;
         }
         */
-    }
-
-    void ExecutionListener::calledFunction(const JSC::DebuggerCallFrame&) {
-        // EMPTY
     }
 
     void ExecutionListener::exceptional_condition(std::string cause, intptr_t sourceID, int lineNumber) {

@@ -18,6 +18,7 @@
 #include "JavaScriptCore/parser/SourceCode.h"
 #include "JavaScriptCore/interpreter/CallFrame.h"
 #include "JavaScriptCore/runtime/ScopeChain.h"
+#include "JavaScriptCore/bytecode/CodeBlock.h"
 
 #include "qwebexecutionlistener.h"
 
@@ -187,18 +188,17 @@ bool domNodeSignature(JSC::CallFrame * cframe, JSC::JSObject * domElement, QStri
 **/
 void QWebExecutionListener::calledFunction(const JSC::DebuggerCallFrame& frame) {
 
-    JSC::CallFrame * cframe = frame.callFrame();
-
     std::string functionName = std::string(frame.calculatedFunctionName().ascii().data());
 
+    emit sigJavascriptFunctionCalled(QString::fromStdString(functionName), (intptr_t)frame.callFrame()->codeBlock(), frame.callFrame()->codeBlock()->numberOfInstructions());
+
     if (functionName.compare("__jquery_event_add__") == 0) {
-        cout << "JQUERY SPECIFIC ADDITION DETECTED" << endl;
-    
-        
+
+        JSC::CallFrame* cframe = frame.callFrame();
         JSC::JSValue element = cframe->argument(0);
         
         if (element.isObject() == false) {
-            cout << "JQUERY::Error unknown element" << endl;
+            cout << "WARNING: unknown element encountered when handling JQuery support" << endl;
             return;
 
         }
@@ -209,7 +209,7 @@ void QWebExecutionListener::calledFunction(const JSC::DebuggerCallFrame& frame) 
         JSC::JSValue event = cframe->argument(1);
         
         if (event.isString() == false) {
-            cout << "JQUERY::Error unknown event" << endl;
+            cout << "WARNING: unknown event encountered when handling JQuery support" << endl;
             return;
         }
 
@@ -219,7 +219,7 @@ void QWebExecutionListener::calledFunction(const JSC::DebuggerCallFrame& frame) 
             // This is not really fatal, in some cases an undefined
             // or null selector is given (presumably when doing a 
             // direct bind)
-            cout << "JQUERY::Warning unknown selector" << endl;
+            cout << "WARNING: unknown selector encountered when handling JQuery support" << endl;
             return;
         }
 
@@ -256,14 +256,16 @@ void QWebExecutionListener::javascript_eval_call(const char * eval_string) {
     emit this->eval_call(QString(tr(eval_string)));
 }
 
-void QWebExecutionListener::javascript_bytecode_executed(JSC::CodeBlock*, JSC::Instruction* inst) {
-    /*int offset  = inst -  codeBlock->instructions().begin();
-    jsc_bytecode_executed(codeBlock->source()->url().utf8(false).data(),
+void QWebExecutionListener::javascript_bytecode_executed(JSC::CodeBlock* codeBlock, JSC::Instruction* instuction) {
+
+    size_t bytecodeOffset = instuction - codeBlock->instructions().begin();
+
+    emit sigJavascriptBytecodeExecuted((intptr_t)codeBlock, bytecodeOffset);
+
+    /*jsc_bytecode_executed(codeBlock->source()->url().utf8(false).data(),
                           codeBlock->lineNumberForBytecodeOffset(offset),
                           offset,
-                          -1);*/ //TODO: Find out how to get the opcode from WebKit
-
-    /* void JSCExecutionListener::jsc_bytecode_executed(const char * url, unsigned int linenumber, int bytecode_offset, int opcodeID)  */
+                          -1); //TODO: Find out how to get the opcode from WebKit */
 }
 
 QWebExecutionListener* QWebExecutionListener::getListener() {
