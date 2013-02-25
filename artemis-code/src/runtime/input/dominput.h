@@ -52,6 +52,8 @@ public:
                                                    TargetGenerator* targetGenerator,
                                                    QSharedPointer<const ExecutionResult> result) const;
 
+    int hashCode() const;
+
 private:
     const EventHandlerDescriptor* mEventHandler;
     QSharedPointer<const FormInput> mFormInput;

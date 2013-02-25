@@ -33,37 +33,68 @@
 #include <QObject>
 #include <QUrl>
 #include <QMap>
+#include <QSet>
+#include <QSharedPointer>
+
+#include "runtime/input/baseinput.h"
 
 #include "sourceinfo.h"
-#include "lineinfo.h"
-#include "codecoverage.h"
+#include "codeblockinfo.h"
 
 namespace artemis
 {
 
+typedef int codeblockid_t;
+
 class CoverageListener : public QObject
 {
     Q_OBJECT
+
 public:
     explicit CoverageListener(QObject* parent = 0);
-    CodeCoverage currentCoverage();
 
+    QList<int> getSourceIDs();
+    SourceInfo* getSourceInfo(int sourceID);
+    QSet<int> getLineCoverage(int sourceID);
+
+    size_t getNumCoveredLines();
+
+    float getBytecodeCoverage(QSharedPointer<const BaseInput> inputEvent);
+
+    void notifyStartingEvent(QSharedPointer<const BaseInput> inputEvent);
 
 private:
-    // (Hash of startline + url -> SourceInfo)
+
+    // (sourceTemporalID -> sourceID) needed as the sourceTemporalID changes for each new page-execution
+    QMap<intptr_t, int> mSourceIdMap;
+
+    // (sourceID -> SourceInfo)
     QMap<int, SourceInfo*> sources;
-    // (Hash of startline + url -> Coverage information)
-    QMap<int, QMap<int, LineInfo>* > coverage;
-    // (Webkit source id -> Hash of startline + url)
-    QMap<intptr_t, int> webkitPointers;
 
+    // (sourceID -> set<lines>)
+    QMap<int, QSet<int>* > coverage;
 
+    // (codeBlockTemporalID -> codeBlockID) needed as the codeBlockTemporalID changes for each new page-execution
+    QMap<intptr_t, codeblockid_t> mCodeBlockIdMap;
 
-signals:
+    // (codeBlockID -> CodeBlockInfo)
+    QMap<codeblockid_t, QSharedPointer<CodeBlockInfo> > mCodeBlocks;
+
+    // (codeBlockID -> set<bytecode offsets>
+    QMap<codeblockid_t, QSet<int>* > mCoveredBytecodes;
+
+    // (inputHashCode -> set<codeBlocks>
+    QMap<int, QSet<codeblockid_t>* > mInputCodeBlockMap;
+    int mInputBeingExecuted;
 
 public slots:
-    void newCode(intptr_t id, QString source, QUrl url, int startline);
-    void statementExecuted(intptr_t sourceID, std::string functionName, int linenumber);
+
+    void newCode(intptr_t sourceTemporalID, QString source, QUrl url, int startline);
+    void statementExecuted(intptr_t sourceTemporalID, int linenumber);
+
+    void slJavascriptFunctionCalled(intptr_t codeBlockTemporalID, QString functionName, size_t bytecodeSize);
+    void slJavascriptBytecodeExecuted(intptr_t codeBlockTemporalID, size_t bytecodeOffset);
+
 };
 
 }

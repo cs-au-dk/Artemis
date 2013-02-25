@@ -254,4 +254,31 @@ bool DOMElementDescriptor::isInvalid() const
     return this->mInvalid;
 }
 
+uint DOMElementDescriptor::hashCode() const {
+
+    uint frame_hash = 0;
+
+    if (isMainframe) {
+        frame_hash = 7;
+    } else {
+        foreach (int fpath, framePath) {
+            frame_hash = fpath + 17 * frame_hash;
+        }
+    }
+
+    uint element_hash = 0;
+
+    if (isDocument) {
+        element_hash = 23;
+    } else if (isBody) {
+        element_hash = 7;
+    } else {
+        foreach (int element, elementPath) {
+            element_hash = element + 23 * element_hash;
+        }
+    }
+
+    return 29 * element_hash + 13 * frame_hash;
+}
+
 }

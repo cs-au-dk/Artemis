@@ -30,8 +30,8 @@
 
 #include <iostream>
 
-#include "codecoverage.h"
 #include "artemisglobals.h"
+#include "coveragelistener.h"
 
 using namespace std;
 
@@ -39,8 +39,8 @@ using namespace std;
 namespace artemis
 {
 
-void writeCoverageStdout(const CodeCoverage& cov);
-void writeCoverageHtml(CodeCoverage cc);
+void writeCoverageStdout(CoverageListener* cov);
+void writeCoverageHtml(CoverageListener* cc);
 
 }
 

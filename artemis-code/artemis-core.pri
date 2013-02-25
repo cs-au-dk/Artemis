@@ -15,8 +15,6 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/strategies/prioritizer/randomprioritizer.h \
     src/strategies/inputgenerator/targets/targetgenerator.h \
     src/runtime/options.h \
-    src/strategies/inputgenerator/variants/randomvariants.h \
-    src/strategies/inputgenerator/variants/variantsgenerator.h \
     src/runtime/ajax/ajaxrequest.h \
     src/runtime/ajax/ajaxrequestlistener.h \
     src/runtime/browser/cookies/immutablecookiejar.h \
@@ -53,8 +51,6 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/runtime/runtime.h \
     src/artemisglobals.h \
     src/util/randomutil.h \
-    src/coverage/codecoverage.h \
-    src/coverage/lineinfo.h \
     src/coverage/coveragelistener.h \
     src/coverage/sourceinfo.h \
     src/coverage/coveragetooutputstream.h \
@@ -69,7 +65,10 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/strategies/inputgenerator/form/staticforminputgenerator.h \
     src/strategies/inputgenerator/event/eventparametergenerator.h \
     src/strategies/inputgenerator/event/staticeventparametergenerator.h \
-    src/strategies/inputgenerator/form/constantstringforminputgenerator.h
+    src/strategies/inputgenerator/form/constantstringforminputgenerator.h \
+    src/coverage/codeblockinfo.h \
+    src/strategies/prioritizer/coverageprioritizer.h \
+    src/runtime/appmodel.h
 
 SOURCES += src/runtime/input/ajaxinput.cpp \
     src/strategies/prioritizer/constantprioritizer.cpp \
@@ -105,8 +104,6 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/runtime/runtime.cpp \
     src/util/loggingutil.cpp \
     src/util/randomutil.cpp \
-    src/coverage/codecoverage.cpp \
-    src/coverage/lineinfo.cpp \
     src/coverage/coveragelistener.cpp \
     src/coverage/sourceinfo.cpp \
     src/coverage/coveragetooutputstream.cpp \
@@ -118,6 +115,9 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/runtime/browser/executionresultbuilder.cpp \
     src/strategies/inputgenerator/event/staticeventparametergenerator.cpp \
     src/strategies/inputgenerator/form/staticforminputgenerator.cpp \
-    src/strategies/inputgenerator/form/constantstringforminputgenerator.cpp
+    src/strategies/inputgenerator/form/constantstringforminputgenerator.cpp \
+    src/coverage/codeblockinfo.cpp \
+    src/strategies/prioritizer/coverageprioritizer.cpp \
+    src/runtime/appmodel.cpp
 
 QT += network

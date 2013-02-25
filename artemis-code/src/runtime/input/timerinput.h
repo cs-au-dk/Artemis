@@ -46,6 +46,8 @@ public:
                                                    TargetGenerator* targetGenerator,
                                                    QSharedPointer<const ExecutionResult> result) const;
 
+    int hashCode() const;
+
 private:
     QSharedPointer<const Timer> mTimer;
 };

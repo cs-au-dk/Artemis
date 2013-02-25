@@ -28,6 +28,7 @@
 #include <iostream>
 #include <stdlib.h>
 #include <getopt.h>
+#include <string>
 #include <QDir>
 #include <QUrl>
 #include <QApplication>
@@ -35,7 +36,6 @@
 #include "exceptionhandlingqapp.h"
 #include "runtime/options.h"
 #include "artemisapplication.h"
-#include "util/loggingutil.h"
 
 using namespace std;
 
@@ -45,6 +45,7 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
     struct option long_options[] = {
         {"strategy-form-input-generation", required_argument, NULL, 'x'},
         {"coverage-report", required_argument, NULL, 'y'},
+        {"strategy-priority", required_argument, NULL, 'z'},
         {0, 0, 0, 0}
     };
 
@@ -52,7 +53,7 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
     char c;
     artemis::Log::addLogLevel(artemis::INFO);
 
-    while ((c = getopt_long(argc, argv, "rp:f:t:c:i:v:", long_options, &option_index)) != -1) {
+    while ((c = getopt_long(argc, argv, "rp:f:t:c:i:", long_options, &option_index)) != -1) {
 
         switch (c) {
 
@@ -118,7 +119,22 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             }
             break;
         }
-        case 'v': {
+
+        case 'z': {
+            if (string(optarg).compare("constant") == 0) {
+                options.prioritizerStrategy = artemis::CONSTANT;
+            } else if (string(optarg).compare("random") == 0) {
+                options.prioritizerStrategy = artemis::RANDOM;
+            } else if (string(optarg).compare("coverage") == 0) {
+                options.prioritizerStrategy = artemis::COVERAGE;
+            } else {
+                cerr << "ERROR: Invalid choice of prioritizer strategy " << optarg << endl;
+                exit(1);
+            }
+
+            break;
+        }
+ case 'v': {
  if(QString(optarg).indexOf("debug",0,Qt::CaseInsensitive)>=0){
                 artemis::Log::addLogLevel(artemis::DEBUG);
             }
@@ -144,7 +160,8 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
 
             break;
         }
-    }
+
+        }
     }
 
     if (optind >= argc) {
@@ -168,16 +185,16 @@ void artemisConsoleMessageHandler(QtMsgType type, const char* msg)
 {
     switch (type) {
     case QtDebugMsg:
-        artemis::Log::debug(QString(msg).toStdString());
+        fprintf(stdout, "%s\n", msg);
         break;
     case QtWarningMsg:
-        artemis::Log::warning("Warning: "+QString(msg).toStdString());
+        fprintf(stdout, "Warning: %s\n", msg);
         break;
     case QtCriticalMsg:
-        artemis::Log::error("Critical: "+QString(msg).toStdString());
+        fprintf(stdout, "Critical: %s\n", msg);
         break;
     case QtFatalMsg:
-        artemis::Log::fatal("Fatal: "+QString(msg).toStdString());
+        fprintf(stderr, "Fatal: %s\n", msg);
         abort();
     }
 }

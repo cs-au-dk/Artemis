@@ -26,6 +26,8 @@
   or implied, of Simon Holm Jensen
 */
 
+#include <assert.h>
+
 #include "artemisglobals.h"
 #include "util/urlutil.h"
 #include "statistics/statsstorage.h"
@@ -37,76 +39,135 @@ namespace artemis
 {
 
 CoverageListener::CoverageListener(QObject* parent) :
-    QObject(parent)
+    QObject(parent),
+    mInputBeingExecuted(-1)
 {
 }
 
-CodeCoverage CoverageListener::currentCoverage()
+QList<int> CoverageListener::getSourceIDs()
 {
-
-    QMap<int, SourceInfo*> newSources;
-
-    QMapIterator<int, SourceInfo*> sourcesIter(sources);
-
-    while (sourcesIter.hasNext()) {
-        sourcesIter.next();
-        newSources.insert(sourcesIter.key(), new SourceInfo(NULL, sourcesIter.value()));
-    }
-
-    QMap<int, QMap<int, LineInfo> > newCoverage;
-
-    QMapIterator<int, QMap<int, LineInfo>* > coverageIter(coverage);
-
-    while (coverageIter.hasNext()) {
-        coverageIter.next();
-        newCoverage.insert(coverageIter.key(), *coverageIter.value());
-    }
-
-    return CodeCoverage(newSources, newCoverage);
+    return sources.keys();
 }
 
+SourceInfo* CoverageListener::getSourceInfo(int sourceID)
+{
+    return sources.value(sourceID);
+}
 
+QSet<int> CoverageListener::getLineCoverage(int sourceID)
+{
+    return *coverage.value(sourceID);
+}
 
-void CoverageListener::newCode(intptr_t id, QString source, QUrl url, int startline)
+size_t CoverageListener::getNumCoveredLines()
+{
+    size_t coveredLines = 0;
+
+    foreach(QSet<int>* codeCoverage, coverage.values()) {
+        coveredLines += codeCoverage->size();
+    }
+
+    return coveredLines;
+}
+
+void CoverageListener::newCode(intptr_t sourceTemporalID, QString source, QUrl url, int startline)
 {
     if (isOmit(url)) {
         return;
     }
 
-    int hash = getHash(url, startline);
-    webkitPointers.insert(id, hash);
+    if (!mSourceIdMap.contains(sourceTemporalID)) {
+        int sourceID = qHash(url) * 53 + startline * 29;
+        mSourceIdMap.insert(sourceTemporalID, sourceID);
+    }
 
-    if (!sources.contains(hash)) {
-        qDebug() << "Loaded new code: " << url << " at line " << QString::number(startline);
+    int sourceID = mSourceIdMap.value(sourceTemporalID);
+
+    if (!sources.contains(sourceID)) {
+        qDebug() << "Loaded new code (id " << sourceID << "): " << url << " at line " << QString::number(startline);
         SourceInfo* infoP = new SourceInfo(this, source, url, startline);
-        sources.insert(hash, infoP);
-        coverage.insert(hash, new QMap<int, LineInfo>());
+        sources.insert(sourceID, infoP);
+        coverage.insert(sourceID, new QSet<int>());
     }
 }
 
-
-
-void CoverageListener::statementExecuted(intptr_t sourceID, std::string functionName, int linenumber)
+void CoverageListener::statementExecuted(intptr_t sourceTemporalID, int linenumber)
 {
+    int sourceID = mSourceIdMap.value(sourceTemporalID, -1);
+
+    if (sourceID == -1) {
+        qDebug() << "Warning, unknown line " << linenumber << " executed in file " << sourceTemporalID << " (temporal id)";
+        return;
+    }
+
     statistics()->accumulate("WebKit::coverage::covered", 1);
 
-    int hash = webkitPointers[sourceID];
-    QMap<int, LineInfo>* map = coverage.value(hash, 0);
+    QSet<int>* coveredLines = coverage.value(sourceID, NULL);
+    assert(coveredLines != NULL);
 
-    if (map == 0) {
-        map = new QMap<int, LineInfo>();
+    coveredLines->insert(linenumber);
+}
+
+void CoverageListener::slJavascriptFunctionCalled(intptr_t codeBlockTemporalID, QString functionName, size_t bytecodeSize)
+{
+    if (!mCodeBlockIdMap.contains(codeBlockTemporalID)) {
+        codeblockid_t codeBlockID = qHash(functionName);
+        mCodeBlockIdMap.insert(codeBlockTemporalID, codeBlockID);
     }
 
-    coverage.insert(hash, map);
+    codeblockid_t codeBlockID = mCodeBlockIdMap.value(codeBlockTemporalID);
 
-    if (map->contains(linenumber)) {
-        LineInfo p = map->value(hash);
-        p.lineExecuted();
-        map->insert(linenumber, p);
-    } else {
-        LineInfo p;
-        p.lineExecuted();
-        map->insert(linenumber, p);
+    if (!mCodeBlocks.contains(codeBlockID)) {
+        mCodeBlocks.insert(codeBlockID, QSharedPointer<CodeBlockInfo>(new CodeBlockInfo(functionName, bytecodeSize)));
+        mCoveredBytecodes.insert(codeBlockID, new QSet<int>());
+    }
+
+    if (mInputBeingExecuted != -1) {
+        mInputCodeBlockMap.value(mInputBeingExecuted)->insert(codeBlockID);
     }
 }
+
+void CoverageListener::slJavascriptBytecodeExecuted(intptr_t codeBlockTemporalID, size_t bytecodeOffset)
+{
+
+    codeblockid_t codeBlockID = mCodeBlockIdMap.value(codeBlockTemporalID, -1);
+
+    if (codeBlockID == -1) {
+        return; // ignore unknown code block
+    }
+
+    mCoveredBytecodes.value(codeBlockID)->insert(bytecodeOffset);
+
+}
+
+void CoverageListener::notifyStartingEvent(QSharedPointer<const BaseInput> inputEvent)
+{
+    mInputBeingExecuted = inputEvent->hashCode();
+
+    if (!mInputCodeBlockMap.contains(mInputBeingExecuted)) {
+        mInputCodeBlockMap.insert(mInputBeingExecuted, new QSet<codeblockid_t>());
+    }
+}
+
+float CoverageListener::getBytecodeCoverage(QSharedPointer<const BaseInput> inputEvent)
+{
+    mInputBeingExecuted = inputEvent->hashCode();
+
+    if (!mInputCodeBlockMap.contains(mInputBeingExecuted)) {
+        return 0;
+    }
+
+    size_t totalBytecodes = 0;
+    size_t executedBytecodes = 0;
+
+    foreach (codeblockid_t codeBlockID, mInputCodeBlockMap.value(mInputBeingExecuted)->toList()) {
+        totalBytecodes += mCodeBlocks.value(codeBlockID)->getBytecodeSize();
+        executedBytecodes += mCoveredBytecodes.value(codeBlockID)->size();
+    }
+
+    return float(executedBytecodes) / float(totalBytecodes);
+
+}
+
+
 }

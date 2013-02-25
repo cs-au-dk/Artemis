@@ -30,12 +30,19 @@ Usage:
    --strategy-form-input-generation <strategy>: 
    			  Select form input generation strategy.
 
-   			  javascript-constants - select form inputs based in observed javascript constants
+   			  javascript-constants - select form inputs based in observed JavaScript constants
    			  random - (default) random inputs 
 
    --coverage-report <report-type>:
                Select code coverage report formatting.
 
-               html - html report dumped in the folder you run Artemis from
-               stdout - text report is printet to std out
+               html - HTML report dumped in the folder you run Artemis from
+               stdout - text report is printed to std out
                none - (default) code coverage report is omitted
+
+   --strategy-priority <strategy>:
+               Select priority strategy.
+
+               constant - (default) assign the same priority to new configurations
+               random - assign a random priority to new configurations
+               coverage - assign higher priority to configurations with low coverage

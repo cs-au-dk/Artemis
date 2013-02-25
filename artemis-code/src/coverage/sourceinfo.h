@@ -43,23 +43,17 @@ public:
     SourceInfo(QObject* parent, const QString source, const QUrl url, const int startline);
     SourceInfo(QObject* parent, const SourceInfo* other);
 
-    QString source() const;
-    QUrl url() const;
-    int startLine() const;
-
-    QDebug friend operator<<(QDebug dbg, const SourceInfo& e);
-
-    QString toString() const;
-
     QString getSource() const;
     QString getURL() const;
     int getStartLine() const;
+
+    QString toString() const;
+    QDebug friend operator<<(QDebug dbg, const SourceInfo& e);
 
 private:
     QString mSource;
     QUrl mUrl;
     int mStartLine;
-
 };
 
 }

@@ -27,6 +27,8 @@
 */
 #include "coveragetooutputstream.h"
 
+#include <inttypes.h>
+
 #include <QTextStream>
 #include <QDebug>
 #include <QTextDocument>
@@ -43,37 +45,32 @@
 namespace artemis
 {
 
-void writeCoverageStdout(const CodeCoverage& cov)
+void writeCoverageStdout(CoverageListener* cov)
 {
     qDebug() << "=== Coverage information for execution ===";
 
-    foreach(int id, cov.sourceIds()) {
+    foreach(int sourceID, cov->getSourceIDs()) {
 
-        const SourceInfo* info = cov.sourceInfo(id);
-        QString src = info->source();
+        const SourceInfo* sourceInfo = cov->getSourceInfo(sourceID);
+
+        qDebug() << "Coverage for source located at URL: " << sourceInfo->getURL() << "  line " << sourceInfo->getStartLine();
+
+        QString src = sourceInfo->getSource();
         QTextStream read(&src);
-        qDebug() << "Coverage for source located at URL: " << info->url().toString() << "  line " << info->startLine();
-        QMap<int, LineInfo> li = cov.lineInfo(id);
-        int i = info->startLine();
+
+        QSet<int> lineCoverage = cov->getLineCoverage(sourceID);
+        int lineNumber = sourceInfo->getStartLine();
 
         while (!read.atEnd()) {
-            LineInfo curr = li[i++];
-            QString prefix;
-
-            if (curr.isExecuted()) {
-                prefix = ">>>";
-            }
-            else {
-                prefix = "   ";
-            }
-
+            QString prefix = lineCoverage.contains(lineNumber) ? ">>>" : "   ";
             QString line = prefix + read.readLine() + "\n";
             qDebug() << line;
+            lineNumber++;
         }
     }
 }
 
-void writeCoverageHtml(CodeCoverage cc)
+void writeCoverageHtml(CoverageListener* cov)
 {
 
     QDir appdir("", "*.html", QDir::Time);
@@ -86,14 +83,17 @@ void writeCoverageHtml(CodeCoverage cc)
         res += "<a href=\"" + existingFiles.at(0) + "\">Previous run</a>";
     }
 
-    foreach(int p, cc.sourceIds()) {
-        res += "<h2>" + Qt::escape(cc.sourceInfo(p)->getURL()) + "</h2>";
+    foreach(int sourceID, cov->getSourceIDs()) {
+
+        QSet<int> lineCoverage = cov->getLineCoverage(sourceID);
+
+        res += "<h2>" + Qt::escape(cov->getSourceInfo(sourceID)->getURL()) + "</h2>";
         res += "<pre><table>";
 
-        int startline = cc.sourceInfo(p)->getStartLine();
-        foreach(QString line, cc.sourceInfo(p)->getSource().split("\n", QString::KeepEmptyParts)) {
+        int startline = cov->getSourceInfo(sourceID)->getStartLine();
+        foreach(QString line, cov->getSourceInfo(sourceID)->getSource().split("\n", QString::KeepEmptyParts)) {
             res += "<tr><td>" + QString::number(startline) + "</td><td class=\""
-                   + (cc.lineInfo(p).contains(startline) ? "covered" : "uncovered")
+                   + QString(lineCoverage.contains(startline) ? "covered" : "uncovered")
                    + "\">" + QTextDocument(line).toHtml() + "</td></tr>";
             startline += 1;
         }

@@ -51,6 +51,8 @@ public:
     QString getClass();
     bool isInvalid() const;
 
+    uint hashCode() const;
+
     QDebug friend operator<<(QDebug dbg, const DOMElementDescriptor& e);
 
 private:

@@ -52,6 +52,8 @@ public:
     bool isInvalid() const;
     EventType getEventType() const;
 
+    int hashCode() const;
+
     QDebug friend operator<<(QDebug dbg, const EventHandlerDescriptor& e);
 
 private:

@@ -51,7 +51,8 @@ namespace artemis
 WebKitExecutor::WebKitExecutor(QObject* parent,
                                QMap<QString, QString> presetFields,
                                JQueryListener* jqueryListener,
-                               AjaxRequestListener* ajaxListener) :
+                               AjaxRequestListener* ajaxListener,
+                               CoverageListener* coverageListener) :
     QObject(parent)
 {
 
@@ -68,7 +69,8 @@ WebKitExecutor::WebKitExecutor(QObject* parent,
                      this, SLOT(slLoadFinished(bool)));
 
     mResultBuilder = new ExecutionResultBuilder(this, mPage);
-    covList = new CoverageListener(this);
+
+    mCoverageListener = coverageListener;
 
     QWebExecutionListener::attachListeners();
     webkitListener = QWebExecutionListener::getListener();
@@ -79,11 +81,9 @@ WebKitExecutor::WebKitExecutor(QObject* parent,
                      mJquery, SLOT(slEventAdded(QString, QString, QString)));
 
     QObject::connect(webkitListener, SIGNAL(loadedJavaScript(intptr_t, QString, QUrl, int)),
-                     covList, SLOT(newCode(intptr_t, QString, QUrl, int)));
-    QObject::connect(webkitListener, SIGNAL(statementExecuted(intptr_t, std::string, int)),
-                     covList, SLOT(statementExecuted(intptr_t, std::string, int)));
-
-
+                     mCoverageListener, SLOT(newCode(intptr_t, QString, QUrl, int)));
+    QObject::connect(webkitListener, SIGNAL(statementExecuted(intptr_t, int)),
+                     mCoverageListener, SLOT(statementExecuted(intptr_t, int)));
 
     QObject::connect(webkitListener, SIGNAL(addedEventListener(QWebElement*, QString)),
                      mResultBuilder, SLOT(slEventListenerAdded(QWebElement*, QString)));
@@ -164,6 +164,7 @@ void WebKitExecutor::slLoadFinished(bool ok)
 
     foreach(QSharedPointer<const BaseInput> input, currentConf->getInputSequence()->toList()) {
         mResultBuilder->notifyStartingEvent();
+        mCoverageListener->notifyStartingEvent(input);
         input->apply(this->mPage, this->webkitListener);
     }
 
@@ -172,9 +173,9 @@ void WebKitExecutor::slLoadFinished(bool ok)
     emit sigExecutedSequence(currentConf, mResultBuilder->getResult());
 }
 
-CodeCoverage WebKitExecutor::coverage()
+CoverageListener* WebKitExecutor::getCoverageListener()
 {
-    return covList->currentCoverage();
+    return mCoverageListener;
 }
 
 }

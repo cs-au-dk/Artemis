@@ -14,6 +14,7 @@ RE_STATS_LINE = re.compile(r'^(.*):(.*)$')
 
 def execute_artemis(execution_uuid, url, iterations=1, 
     strategy_form_input=None,
+    strategy_priority=None,
     coverage=None):
 
     output_dir = os.path.join(OUTPUT_DIR, execution_uuid)
@@ -29,6 +30,10 @@ def execute_artemis(execution_uuid, url, iterations=1,
     if strategy_form_input is not None:
         args.append('--strategy-form-input-generation')
         args.append(strategy_form_input)
+
+    if strategy_priority is not None:
+        args.append('--strategy-priority')
+        args.append(strategy_priority)
 
     if coverage is not None:
         args.append('--coverage-report')
