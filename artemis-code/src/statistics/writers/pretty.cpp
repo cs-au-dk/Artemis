@@ -31,6 +31,7 @@
 
 #include <QDebug>
 
+#include "util/loggingutil.h"
 #include "pretty.h"
 
 namespace artemis
@@ -45,7 +46,7 @@ void StatsPrettyWriter::write(const StatsStorage* stats)
 
     while (i.hasNext()) {
         i.next();
-        qDebug() << qPrintable(i.key()) << ": " << i.value();
+        Log::info(QString(qPrintable(i.key())).toStdString()+": "+QString::number(i.value()).toStdString());
     }
 
 }

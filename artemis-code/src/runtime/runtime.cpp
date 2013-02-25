@@ -38,8 +38,9 @@
 #include "strategies/termination/numberofiterationstermination.h"
 #include "strategies/prioritizer/constantprioritizer.h"
 #include "util/coverageutil.h"
-
+#include "util/loggingutil.h"
 #include "runtime.h"
+
 
 using namespace std;
 
@@ -95,11 +96,18 @@ Runtime::Runtime(QObject* parent, const Options& options, QUrl url) : QObject(pa
  */
 void Runtime::startAnalysis(QUrl url)
 {
-    qDebug() << "Artemis - Automated tester for JavaScript";
+
+    Log::info("Artemis - Automated tester for JavaScript");
+    Log::info("Started: " + QDateTime::currentDateTime().toString().toStdString());
+    string build = EXE_BUILD_DATE;
+    Log::info("Compilation date: " + build);
+    Log::info("-----\n");
+/*
+     qDebug() << "Artemis - Automated tester for JavaScript";
     qDebug() << "Started: " << QDateTime::currentDateTime().toString();
     qDebug() << "Compilation date: " << EXE_BUILD_DATE;
     qDebug() << "-----\n";
-
+*/
     QSharedPointer<ExecutableConfiguration> initialConfiguration =
         QSharedPointer<ExecutableConfiguration>(new ExecutableConfiguration(QSharedPointer<InputSequence>(new InputSequence()), url));
 
@@ -148,18 +156,18 @@ void Runtime::postConcreteExecution(QSharedPointer<ExecutableConfiguration> conf
 
 void Runtime::finishAnalysis()
 {
-    qDebug() << "Artemis: Testing done..." << endl;
+    qDebug() << "Dette er en test\n\n\n";
+    //TODO Write better final output
+    Log::info("Artemis: Testing done...\n");
 
-    qDebug() << "=== Coverage information for execution ===";
+    Log::info("=== Coverage information for execution ===\n");
     writeCoverageHtml(coverage());
     writeCoverageReport(coverage());
 
-    qDebug() << "\n=== Statistics ===\n";
+    Log::info("\n=== Statistics for execution ===\n");
     StatsPrettyWriter::write(statistics());
-    qDebug() << "\n=== Statistics END ===\n";
-    qDebug() << endl;
 
-    qDebug() << "Artemis terminated on: " << QDateTime::currentDateTime().toString() << endl;
+    Log::info("\nArtemis terminated on: "+QDateTime::currentDateTime().toString().toStdString());
 
     emit sigTestingDone();
 }

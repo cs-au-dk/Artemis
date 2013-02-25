@@ -28,7 +28,7 @@
 #include "coveragelistener.h"
 #include "util/urlutil.h"
 #include "artemisglobals.h"
-
+#include "util/loggingutil.h"
 namespace artemis
 {
 
@@ -72,7 +72,7 @@ void CoverageListener::newCode(intptr_t id, QString source, QUrl url, int startl
     webkitPointers.insert(id, hash);
 
     if (!sources.contains(hash)) {
-        qDebug() << "Loaded new code: " << url << " at line " << QString::number(startline);
+        qDebug()<< "Loaded new code: " << url << " at line " << QString::number(startline);
         SourceInfo* infoP = new SourceInfo(this, source, url, startline);
         sources.insert(hash, infoP);
         coverage.insert(hash, new QMap<int, LineInfo>());

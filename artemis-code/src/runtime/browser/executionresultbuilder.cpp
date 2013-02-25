@@ -1,7 +1,7 @@
 #include "executionresultbuilder.h"
-
+#include <sstream>
 #include "statistics/statsstorage.h"
-
+#include "util/loggingutil.h"
 namespace artemis
 {
 
@@ -124,7 +124,8 @@ QSet<QString> ExecutionResultBuilder::getSelectOptions(const QWebElement& e)
             { valueAttr = o.toPlainText(); }
 
         if (valueAttr.isEmpty()) {
-            qWarning() << "WARN: Found empty option element in select, ignoring";
+            Log::warning("Found empty option element in select, ignoring");
+//            qWarning() << "WARN: Found empty option element in select, ignoring";
             continue;
         }
 
@@ -189,6 +190,9 @@ void ExecutionResultBuilder::slCodeLoaded(intptr_t _, QString src, QUrl url, int
 
 void ExecutionResultBuilder::slScriptCrashed(QString cause, intptr_t sourceID, int lineNumber)
 {
+    string lineNumberString = static_cast<ostringstream*>( &(ostringstream() << lineNumber) )->str();
+    std::stringstream ss;
+    ss << sourceID;
     qDebug() << "WEBKIT SCRIPT ERROR: " << cause << " line: " << lineNumber << " source: "
              << sourceID << endl;
 }

@@ -29,28 +29,31 @@
 
 #include <QTextStream>
 #include <QDebug>
+#include "util/loggingutil.h"
+#include <math.h>
 
 namespace artemis
 {
 
 void writeCoverageReport(const CodeCoverage& cov)
 {
-
+    float totalPct = 0;
+    int numFiles = 0 ;
     foreach(int id, cov.sourceIds()) {
-
         const SourceInfo* info = cov.sourceInfo(id);
         QString src = info->source();
         QTextStream read(&src);
         qDebug() << "Coverage for source located at URL: " << info->url().toString() << "  line " << info->startLine();
         QMap<int, LineInfo> li = cov.lineInfo(id);
         int i = info->startLine();
-
+        int numExecutedLines = 0;
         while (!read.atEnd()) {
             LineInfo curr = li[i++];
             QString prefix;
 
             if (curr.isExecuted()) {
                 prefix = ">>>";
+                numExecutedLines++;
             }
             else {
                 prefix = "   ";
@@ -59,6 +62,19 @@ void writeCoverageReport(const CodeCoverage& cov)
             QString line = prefix + read.readLine() + "\n";
             qDebug() << line;
         }
+
+        float pct = ((numExecutedLines+0.0)/(li.size()+0.0))*100;
+        qDebug() << "Executed "<<QString::number(numExecutedLines)<<" lines of "<<QString::number(li.size())<<" lines ("<<QString::number(floor(pct))<<"%).\n\n";
+        numFiles++;
+        totalPct += pct;
     }
+    QString pctString = "Executed ";
+    pctString += QString::number(floor(totalPct/(numFiles+0.0)));
+    pctString += "% of ";
+    pctString += QString::number(numFiles);
+    pctString += " files.";
+
+    Log::info(pctString.toStdString());
+
 }
 }
