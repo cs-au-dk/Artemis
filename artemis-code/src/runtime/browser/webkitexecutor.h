@@ -57,12 +57,14 @@ public:
     WebKitExecutor(QObject* parent,
                    QMap<QString, QString> presetFields,
                    JQueryListener* jqueryListener,
-                   AjaxRequestListener* ajaxListener);
+                   AjaxRequestListener* ajaxListener,
+                   CoverageListener* coverageListener);
     ~WebKitExecutor();
 
     void executeSequence(QSharedPointer<ExecutableConfiguration> conf);
     void detach();
-    CodeCoverage coverage();
+
+    CoverageListener* getCoverageListener();
 
     QWebExecutionListener* webkitListener; // TODO should not be public
 
@@ -74,6 +76,7 @@ private:
     AjaxRequestListener* mAjaxListener;
     JQueryListener* mJquery;
     QMap<QString, QString> mPresetFields;
+    CoverageListener* mCoverageListener;
 
 signals:
     void sigExecutedSequence(QSharedPointer<ExecutableConfiguration> conf, QSharedPointer<ExecutionResult> res);

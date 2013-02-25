@@ -38,14 +38,14 @@ class InputGeneratorStrategies(unittest.TestCase):
 			'%s/strategies/inputgeneration/form-input-constant.html' % WEBSERVER_URL,
 			iterations=2)
 		
-		self.assertEqual(7, report.get('WebKit::coverage::covered', 0));
+		self.assertEqual(3, report.get('WebKit::coverage::covered-unique', 0));
 
 		report = execute_artemis('strategy-input-form-constant', 
 			'%s/strategies/inputgeneration/form-input-constant.html' % WEBSERVER_URL,
 			strategy_form_input='javascript-constants',
 			iterations=2)
 		
-		self.assertEqual(8, report.get('WebKit::coverage::covered', 0));
+		self.assertEqual(4, report.get('WebKit::coverage::covered-unique', 0));
 
 class PrioritizationStrategies(unittest.TestCase):
 

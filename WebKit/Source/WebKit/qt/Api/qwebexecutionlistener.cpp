@@ -126,8 +126,7 @@ void QWebExecutionListener::javascript_code_loaded(JSC::SourceProvider* sp, JSC:
 }
 
 void QWebExecutionListener::javascript_executed_statement(const JSC::DebuggerCallFrame&, intptr_t sourceID, int linenumber) {
-    /* std::string(frame.calculatedFunctionName().ascii().data()) */
-    emit statementExecuted(sourceID, "fakeFunktionName()", linenumber);
+    emit statementExecuted(sourceID, linenumber);
 }
 
 bool domNodeSignature(JSC::CallFrame * cframe, JSC::JSObject * domElement, QString * signature) {
@@ -190,7 +189,9 @@ void QWebExecutionListener::calledFunction(const JSC::DebuggerCallFrame& frame) 
 
     std::string functionName = std::string(frame.calculatedFunctionName().ascii().data());
 
-    emit sigJavascriptFunctionCalled(QString::fromStdString(functionName), (intptr_t)frame.callFrame()->codeBlock(), frame.callFrame()->codeBlock()->numberOfInstructions());
+    emit sigJavascriptFunctionCalled((intptr_t)frame.callFrame()->codeBlock(),
+                                     QString::fromStdString(functionName),
+                                     frame.callFrame()->codeBlock()->numberOfInstructions());
 
     if (functionName.compare("__jquery_event_add__") == 0) {
 

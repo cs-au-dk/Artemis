@@ -33,10 +33,9 @@
 #include <QObject>
 #include <QUrl>
 #include <QMap>
+#include <QSet>
 
 #include "sourceinfo.h"
-#include "lineinfo.h"
-#include "codecoverage.h"
 
 namespace artemis
 {
@@ -44,26 +43,37 @@ namespace artemis
 class CoverageListener : public QObject
 {
     Q_OBJECT
+
 public:
     explicit CoverageListener(QObject* parent = 0);
-    CodeCoverage currentCoverage();
 
+    QList<int> getSourceIDs();
+    SourceInfo* getSourceInfo(int sourceID);
+    QSet<int> getLineCoverage(int sourceID);
+    size_t getNumCoveredLines();
 
 private:
-    // (Hash of startline + url -> SourceInfo)
+
+    // (sourceTemporalID -> sourceID) needed as the sourceID changes for each new page-execution
+    QMap<intptr_t, int> mSourceIdMap;
+
+    // (sourceID -> SourceInfo)
     QMap<int, SourceInfo*> sources;
-    // (Hash of startline + url -> Coverage information)
-    QMap<int, QMap<int, LineInfo>* > coverage;
-    // (Webkit source id -> Hash of startline + url)
-    QMap<intptr_t, int> webkitPointers;
 
+    // (sourceID -> line -> LineInfo)
+    QMap<int, QSet<int>* > coverage;
 
-
-signals:
+    // (codeBlockID -> CodeBlock)
+    //QMap<intptr_t, CodeBlock*> codeBlocks;
 
 public slots:
-    void newCode(intptr_t id, QString source, QUrl url, int startline);
-    void statementExecuted(intptr_t sourceID, std::string functionName, int linenumber);
+
+    void newCode(intptr_t sourceTemporalID, QString source, QUrl url, int startline);
+    void statementExecuted(intptr_t sourceTemporalID, int linenumber);
+
+    void slJavascriptFunctionCalled(intptr_t codeBlockTemporalID, QString functionName, size_t bytecodeSize);
+    void slJavascriptBytecodeExecuted(intptr_t codeBlockTemporalID, size_t bytecodeOffset);
+
 };
 
 }

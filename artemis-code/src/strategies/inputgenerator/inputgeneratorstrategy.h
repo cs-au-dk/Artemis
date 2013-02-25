@@ -35,7 +35,6 @@
 #include "runtime/browser/executionresult.h"
 #include "runtime/worklist/worklist.h"
 #include "runtime/browser/webkitexecutor.h"
-#include "coverage/codecoverage.h"
 
 namespace artemis
 {

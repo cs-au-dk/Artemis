@@ -81,9 +81,13 @@ Runtime::Runtime(QObject* parent, const Options& options, QUrl url) : QObject(pa
 
     JQueryListener* jqueryListener = new JQueryListener(this);
 
+    /** Coverage support **/
+
+    CoverageListener* coverageListener = new CoverageListener(NULL);
+
     /** Runtime Objects **/
 
-    mWebkitExecutor = new WebKitExecutor(this, options.presetFormfields, jqueryListener, ajaxRequestListner);
+    mWebkitExecutor = new WebKitExecutor(this, options.presetFormfields, jqueryListener, ajaxRequestListner, coverageListener);
 
     QSharedPointer<FormInputGenerator> formInputGenerator;
     switch (options.formInputGenerationStrategy) {
@@ -176,16 +180,16 @@ void Runtime::finishAnalysis()
 
     switch (mOptions.outputCoverage) {
     case HTML:
-        writeCoverageHtml(mWebkitExecutor->coverage());
+        writeCoverageHtml(mWebkitExecutor->getCoverageListener());
         break;
     case STDOUT:
-         writeCoverageStdout(mWebkitExecutor->coverage());
+         writeCoverageStdout(mWebkitExecutor->getCoverageListener());
          break;
     default:
         break;
     }
 
-    statistics()->accumulate("WebKit::coverage::covered-unique", mWebkitExecutor->coverage().getNumCoveredLines());
+    statistics()->accumulate("WebKit::coverage::covered-unique", mWebkitExecutor->getCoverageListener()->getNumCoveredLines());
 
     qDebug() << "\n=== Statistics ===\n";
     StatsPrettyWriter::write(statistics());

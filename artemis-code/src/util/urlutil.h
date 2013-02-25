@@ -13,7 +13,6 @@ QString readEntirePage(const QUrl& page, const QString postData);
 QString getPathPartOfUrl(const QString url);
 QString getFilenamePartOfUrl(const QString& url);
 QUrl toRelative(QUrl base, QUrl absolute);
-int getHash(const QUrl& u, int startline);
 
 
 }

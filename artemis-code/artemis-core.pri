@@ -53,8 +53,6 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/runtime/runtime.h \
     src/artemisglobals.h \
     src/util/randomutil.h \
-    src/coverage/codecoverage.h \
-    src/coverage/lineinfo.h \
     src/coverage/coveragelistener.h \
     src/coverage/sourceinfo.h \
     src/coverage/coveragetooutputstream.h \
@@ -103,8 +101,6 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/strategies/inputgenerator/targets/targetdescriptor.cpp \
     src/runtime/runtime.cpp \
     src/util/randomutil.cpp \
-    src/coverage/codecoverage.cpp \
-    src/coverage/lineinfo.cpp \
     src/coverage/coveragelistener.cpp \
     src/coverage/sourceinfo.cpp \
     src/coverage/coveragetooutputstream.cpp \

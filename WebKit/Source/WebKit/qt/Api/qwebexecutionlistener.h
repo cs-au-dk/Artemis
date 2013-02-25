@@ -60,8 +60,6 @@ signals:
     void addedTimer(int timerId, int timeout, bool singleShot);
     void removedTimer(int timerId);
 
-    void loadedJavaScript(intptr_t id, QString source, QUrl url, int startline);
-    void statementExecuted(intptr_t sourceID, std::string function_name, int linenumber);
     void script_crash(QString cause, intptr_t sourceID, int lineNumber);
     void script_url_load(QUrl url);
     void ajax_request(QUrl, QString post_data);  
@@ -70,8 +68,12 @@ signals:
     void jqueryEventAdded(QString elementSignature, QString event, QString selectors); 
 
     void sigJavascriptConstantEncountered(QString constant);
-    void sigJavascriptFunctionCalled(QString functionName, intptr_t codeBlock, size_t bytecodeSize);
+
+    void sigJavascriptFunctionCalled(intptr_t codeBlock, QString functionName, size_t bytecodeSize);
     void sigJavascriptBytecodeExecuted(intptr_t codeBlock, size_t bytecodeOffset);
+
+    void loadedJavaScript(intptr_t sourceID, QString source, QUrl url, int startline);
+    void statementExecuted(intptr_t sourceID, int linenumber);
 
 };
 

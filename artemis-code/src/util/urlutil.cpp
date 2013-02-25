@@ -108,9 +108,4 @@ QUrl toRelative(QUrl base, QUrl absolute)
 
     return res.join("/");
 }
-
-int getHash(const QUrl& u, int startline)
-{
-    return qHash(u) * 53 + startline * 29;
-}
 }

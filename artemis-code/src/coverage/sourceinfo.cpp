@@ -44,30 +44,9 @@ SourceInfo::SourceInfo(QObject* parent, const SourceInfo* other) : QObject(paren
     this->mStartLine = other->mStartLine;
 }
 
-QString SourceInfo::source() const
-{
-    return this->mSource;
-}
-
-QUrl SourceInfo::url() const
-{
-    return this->mUrl;
-}
-
-int SourceInfo::startLine() const
-{
-    return this->mStartLine;
-}
-
-QDebug operator<<(QDebug dbg, const SourceInfo& e)
-{
-    dbg.nospace() << e.mUrl << "[" << QString::number(e.mStartLine) << "]";
-    return dbg.space();
-}
-
 QString SourceInfo::getSource() const
 {
-    return QString(mSource);
+    return mSource;
 }
 
 int SourceInfo::getStartLine() const
@@ -83,6 +62,12 @@ QString SourceInfo::getURL() const
 QString SourceInfo::toString() const
 {
     return "[" + mUrl.toString() + ", " + QString::number(mStartLine) + ", " + mSource + "ENDOFJSOURCE]";
+}
+
+QDebug operator<<(QDebug dbg, const SourceInfo& e)
+{
+    dbg.nospace() << e.mUrl << "[" << QString::number(e.mStartLine) << "]";
+    return dbg.space();
 }
 
 }
