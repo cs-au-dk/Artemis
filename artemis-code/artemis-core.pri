@@ -58,9 +58,9 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/coverage/coveragelistener.h \
     src/coverage/sourceinfo.h \
     src/coverage/coveragetooutputstream.h \
+    src/util/loggingutil.h \
     src/util/fileutil.h \
     src/util/urlutil.h \
-    src/util/loggingutil.h \
     src/statistics/statsstorage.h \
     src/statistics/writers/pretty.h \
     src/exceptionhandlingqapp.h \
@@ -75,7 +75,6 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/strategies/prioritizer/constantprioritizer.cpp \
     src/strategies/prioritizer/randomprioritizer.cpp \
     src/strategies/inputgenerator/targets/targetgenerator.cpp \
-    src/strategies/inputgenerator/variants/randomvariants.cpp \
     src/runtime/ajax/ajaxrequest.cpp \
     src/runtime/ajax/ajaxrequestlistener.cpp \
     src/runtime/browser/cookies/immutablecookiejar.cpp \
@@ -104,6 +103,7 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/strategies/inputgenerator/targets/legacytarget.cpp \
     src/strategies/inputgenerator/targets/targetdescriptor.cpp \
     src/runtime/runtime.cpp \
+    src/util/loggingutil.cpp \
     src/util/randomutil.cpp \
     src/coverage/codecoverage.cpp \
     src/coverage/lineinfo.cpp \
