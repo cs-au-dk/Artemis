@@ -35,6 +35,7 @@
 #include "exceptionhandlingqapp.h"
 #include "runtime/options.h"
 #include "artemisapplication.h"
+#include "util/loggingutil.h"
 
 using namespace std;
 
@@ -42,8 +43,9 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
 {
 
     char c;
+    artemis::Log::addLogLevel(artemis::INFO);
 
-    while ((c = getopt(argc, argv, "rp:f:t:c:i:")) != -1) {
+    while ((c = getopt(argc, argv, "rp:f:t:c:i:v:")) != -1) {
 
         switch (c) {
 
@@ -80,7 +82,33 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             options.iterationLimit = QString(optarg).toInt();
             break;
         }
+        case 'v' :{
+        }
 
+            if(QString(optarg).indexOf("debug",0,Qt::CaseInsensitive)>=0){
+                artemis::Log::addLogLevel(artemis::DEBUG);
+            }
+
+            if(QString(optarg).indexOf("warning",0,Qt::CaseInsensitive)>=0){
+                artemis::Log::addLogLevel(artemis::WARNING);
+            }
+            if(QString(optarg).indexOf("error",0,Qt::CaseInsensitive)>=0){
+                artemis::Log::addLogLevel(artemis::ERROR);
+            }
+            if(QString(optarg).indexOf("fatal",0,Qt::CaseInsensitive)>=0){
+                artemis::Log::addLogLevel(artemis::FATAL);
+            }
+
+            if(QString(optarg).indexOf("all",0,Qt::CaseInsensitive)>=0){
+                artemis::Log::addLogLevel(artemis::ALL);
+            }
+
+            if(QString(optarg).indexOf("off",0,Qt::CaseInsensitive)>=0){
+                artemis::Log::addLogLevel(artemis::OFF);
+
+            }
+
+            break;
         }
     }
 
@@ -105,16 +133,16 @@ void artemisConsoleMessageHandler(QtMsgType type, const char* msg)
 {
     switch (type) {
     case QtDebugMsg:
-        fprintf(stdout, "%s\n", msg);
+        artemis::Log::debug(QString(msg).toStdString());
         break;
     case QtWarningMsg:
-        fprintf(stdout, "Warning: %s\n", msg);
+        artemis::Log::warning("Warning: "+QString(msg).toStdString());
         break;
     case QtCriticalMsg:
-        fprintf(stdout, "Critical: %s\n", msg);
+        artemis::Log::error("Critical: "+QString(msg).toStdString());
         break;
     case QtFatalMsg:
-        fprintf(stderr, "Fatal: %s\n", msg);
+        artemis::Log::fatal("Fatal: "+QString(msg).toStdString());
         abort();
     }
 }
