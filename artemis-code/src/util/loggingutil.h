@@ -70,10 +70,10 @@ public:
         Log::log(message,INFO);
     }
     static void addLogLevel(LogLevel level){
-        if(level != OFF){
-            Log::levels.insert(level);
-        } else {
+        if(level == OFF){
             Log::levels.clear();
+        } else {
+            Log::levels.insert(level);
         }
     }
 

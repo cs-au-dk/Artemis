@@ -142,10 +142,10 @@ Runtime::Runtime(QObject* parent, const Options& options, QUrl url) : QObject(pa
  */
 void Runtime::startAnalysis(QUrl url)
 {
-    qDebug() << "Artemis - Automated tester for JavaScript";
-    qDebug() << "Started: " << QDateTime::currentDateTime().toString();
-    qDebug() << "Compilation date: " << EXE_BUILD_DATE;
-    qDebug() << "-----\n";
+    Log::info("Artemis - Automated tester for JavaScript");
+    Log::info("Started: " + QDateTime::currentDateTime().toString().toStdString());
+    Log::info("Compilation date: " + ((string) EXE_BUILD_DATE));
+    Log::info( "-----\n");
 
     QSharedPointer<ExecutableConfiguration> initialConfiguration =
         QSharedPointer<ExecutableConfiguration>(new ExecutableConfiguration(QSharedPointer<InputSequence>(new InputSequence()), url));

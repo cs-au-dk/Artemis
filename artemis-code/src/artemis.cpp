@@ -54,7 +54,7 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
     char c;
     artemis::Log::addLogLevel(artemis::INFO);
 
-    while ((c = getopt_long(argc, argv, "rp:f:t:c:i:", long_options, &option_index)) != -1) {
+    while ((c = getopt_long(argc, argv, "rp:f:t:c:i:v:", long_options, &option_index)) != -1) {
 
         switch (c) {
 
@@ -186,16 +186,16 @@ void artemisConsoleMessageHandler(QtMsgType type, const char* msg)
 {
     switch (type) {
     case QtDebugMsg:
-        fprintf(stdout, "%s\n", msg);
+        artemis::Log::debug(QString(msg).toStdString());
         break;
     case QtWarningMsg:
-        fprintf(stdout, "Warning: %s\n", msg);
+        artemis::Log::warning("Warning: "+QString(msg).toStdString());
         break;
     case QtCriticalMsg:
-        fprintf(stdout, "Critical: %s\n", msg);
+        artemis::Log::error("Critical: "+QString(msg).toStdString());
         break;
     case QtFatalMsg:
-        fprintf(stderr, "Fatal: %s\n", msg);
+        artemis::Log::fatal("Fatal: "+QString(msg).toStdString());
         abort();
     }
 }
