@@ -65,7 +65,6 @@ SOURCES += \
     bindings/generic/ActiveDOMCallback.cpp \
     bindings/generic/RuntimeEnabledFeatures.cpp \
     instrumentation/executionlistener.cpp \
-    instrumentation/jscriptlistenerclient.cpp \
     instrumentation/listenerdebugger.cpp
 
 v8 {
@@ -1351,7 +1350,6 @@ HEADERS += \
     bindings/generic/ActiveDOMCallback.h \
     bindings/generic/RuntimeEnabledFeatures.h \
     instrumentation/executionlistener.h \
-    instrumentation/jscriptlistenerclient.h \
     instrumentation/listenerdebugger.h
 
 v8 {

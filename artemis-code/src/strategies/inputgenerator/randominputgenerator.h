@@ -31,11 +31,13 @@
 #include <QList>
 #include <QSharedPointer>
 
-#include "inputgeneratorstrategy.h"
-#include "variants/variantsgenerator.h"
-#include "targets/targetgenerator.h"
 #include "runtime/input/dominput.h"
 
+#include "targets/targetgenerator.h"
+#include "form/forminputgenerator.h"
+#include "event/eventparametergenerator.h"
+
+#include "inputgeneratorstrategy.h"
 
 namespace artemis
 {
@@ -45,17 +47,23 @@ class RandomInputGenerator : public InputGeneratorStrategy
     Q_OBJECT
 
 public:
-    RandomInputGenerator(QObject* parent, TargetGenerator* targetGenerator, int numberSameLength);
+    RandomInputGenerator(QObject* parent,
+                         QSharedPointer<const FormInputGenerator> formInputGenerator,
+                         QSharedPointer<const EventParameterGenerator> eventParameterInputGenerator,
+                         TargetGenerator* targetGenerator,
+                         int numberSameLength);
 
     QList<QSharedPointer<ExecutableConfiguration> > addNewConfigurations(QSharedPointer<const ExecutableConfiguration>, QSharedPointer<const ExecutionResult>);
 
 private:
+    QSharedPointer<const FormInputGenerator> mFormInputGenerator;
+    QSharedPointer<const EventParameterGenerator> mEventParameterGenerator;
+
     int nextRandom();
     QList<QSharedPointer<ExecutableConfiguration> > insertSameLength(QSharedPointer<const ExecutableConfiguration> e, QSharedPointer<const ExecutionResult> result);
     QList<QSharedPointer<ExecutableConfiguration> > insertExtended(QSharedPointer<const ExecutableConfiguration> e, QSharedPointer<const ExecutionResult> result);
 
     TargetGenerator* mTargetGenerator;
-    QSharedPointer<VariantsGenerator> mVariantsGenerator;
 
     int mNumberSameLength;
 

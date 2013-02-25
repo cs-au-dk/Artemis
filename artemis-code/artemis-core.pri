@@ -60,13 +60,16 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/coverage/coveragetooutputstream.h \
     src/util/fileutil.h \
     src/util/urlutil.h \
-    src/util/coverageutil.h \
     src/util/loggingutil.h \
     src/statistics/statsstorage.h \
     src/statistics/writers/pretty.h \
     src/exceptionhandlingqapp.h \
     src/runtime/browser/executionresultbuilder.h \
-    src/util/loggingutil.h
+    src/strategies/inputgenerator/form/forminputgenerator.h \
+    src/strategies/inputgenerator/form/staticforminputgenerator.h \
+    src/strategies/inputgenerator/event/eventparametergenerator.h \
+    src/strategies/inputgenerator/event/staticeventparametergenerator.h \
+    src/strategies/inputgenerator/form/constantstringforminputgenerator.h
 
 SOURCES += src/runtime/input/ajaxinput.cpp \
     src/strategies/prioritizer/constantprioritizer.cpp \
@@ -101,6 +104,7 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/strategies/inputgenerator/targets/legacytarget.cpp \
     src/strategies/inputgenerator/targets/targetdescriptor.cpp \
     src/runtime/runtime.cpp \
+    src/util/randomutil.cpp \
     src/coverage/codecoverage.cpp \
     src/coverage/lineinfo.cpp \
     src/coverage/coveragelistener.cpp \
@@ -108,12 +112,12 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/coverage/coveragetooutputstream.cpp \
     src/util/fileutil.cpp \
     src/util/urlutil.cpp \
-    src/util/randomutil.cpp \
-    src/util/coverageutil.cpp \
     src/statistics/statsstorage.cpp \
     src/statistics/writers/pretty.cpp \
     src/exceptionhandlingqapp.cpp \
     src/runtime/browser/executionresultbuilder.cpp \
-    src/util/loggingutil.cpp
+    src/strategies/inputgenerator/event/staticeventparametergenerator.cpp \
+    src/strategies/inputgenerator/form/staticforminputgenerator.cpp \
+    src/strategies/inputgenerator/form/constantstringforminputgenerator.cpp
 
 QT += network

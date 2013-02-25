@@ -42,10 +42,17 @@ using namespace std;
 QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
 {
 
+    struct option long_options[] = {
+        {"strategy-form-input-generation", required_argument, NULL, 'x'},
+        {"coverage-report", required_argument, NULL, 'y'},
+        {0, 0, 0, 0}
+    };
+
+    int option_index = 0;
     char c;
     artemis::Log::addLogLevel(artemis::INFO);
 
-    while ((c = getopt(argc, argv, "rp:f:t:c:i:v:")) != -1) {
+    while ((c = getopt_long(argc, argv, "rp:f:t:c:i:v:", long_options, &option_index)) != -1) {
 
         switch (c) {
 
@@ -82,10 +89,37 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             options.iterationLimit = QString(optarg).toInt();
             break;
         }
-        case 'v' :{
+
+        case 'x': {
+
+            if (string(optarg).compare("javascript-constants") == 0) {
+                options.formInputGenerationStrategy = artemis::ConstantString;
+            } else if (string(optarg).compare("random") == 0) {
+                options.formInputGenerationStrategy = artemis::Random;
+            } else {
+                cerr << "ERROR: Invalid strategy " << optarg << endl;
+                exit(1);
+            }
+
+            break;
+
         }
 
-            if(QString(optarg).indexOf("debug",0,Qt::CaseInsensitive)>=0){
+        case 'y': {
+            if (string(optarg).compare("html") == 0) {
+                options.outputCoverage = artemis::HTML;
+            } else if (string(optarg).compare("stdout") == 0) {
+                options.outputCoverage = artemis::STDOUT;
+            } else if (string(optarg).compare("none") == 0) {
+                options.outputCoverage = artemis::NONE;
+            } else {
+                cerr << "ERROR: Invalid choice of coverage report " << optarg << endl;
+                exit(1);
+            }
+            break;
+        }
+		case 'v':{
+ if(QString(optarg).indexOf("debug",0,Qt::CaseInsensitive)>=0){
                 artemis::Log::addLogLevel(artemis::DEBUG);
             }
 

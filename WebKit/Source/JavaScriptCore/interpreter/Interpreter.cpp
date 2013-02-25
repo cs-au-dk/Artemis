@@ -398,6 +398,17 @@ ALWAYS_INLINE CallFrame* Interpreter::slideRegisterWindowForCall(CodeBlock* newC
     return newCallFrame;
 }
 
+#ifdef ARTEMIS
+ALWAYS_INLINE JSValue Interpreter::touchJsValue(CallFrame* callFrame, const JSValue& jsvalue)
+{
+    if (jsvalue.isString()) {
+        jscinst::get_jsc_listener()->javascript_constant_encountered(jsvalue.asCell()->toString(callFrame).ascii().mutableData());
+    }
+
+    return jsvalue;
+}
+#endif
+
 #if ENABLE(INTERPRETER)
 static NEVER_INLINE bool isInvalidParamForIn(CallFrame* callFrame, JSValue value, JSValue& exceptionData)
 {
@@ -424,14 +435,14 @@ JSValue eval(CallFrame* callFrame)
     JSValue program = callFrame->argument(0);
     if (!program.isString()) {
 #ifdef ARTEMIS
-        jsinst::get_js_listener()->jsc_eval_call(program.toString(callFrame).utf8().data());
+        jscinst::get_jsc_listener()->javascript_eval_call(program.toString(callFrame).utf8().data());
 #endif
         return program;
     }
 
     UString programSource = asString(program)->value(callFrame);
 #ifdef ARTEMIS
-    jsinst::get_js_listener()->jsc_eval_call(programSource.utf8().data());
+    jscinst::get_jsc_listener()->javascript_eval_call(programSource.utf8().data());
 #endif
     if (callFrame->hadException())
         return JSValue();
@@ -1765,7 +1776,7 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
 #endif
 
 #ifdef ARTEMIS
-#define ARTEMIS_BYTECODE_LISTEN(codeBlock, vPC) jsinst::get_js_listener()->listen_byte_code_executed(codeBlock,vPC)
+#define ARTEMIS_BYTECODE_LISTEN(codeBlock, vPC) jscinst::get_jsc_listener()->javascript_bytecode_executed(codeBlock, vPC)
 #else
 #define ARTEMIS_BYTECODE_LISTEN(codeBlock, vPC)
 #endif
@@ -1775,13 +1786,13 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
 #if ENABLE(OPCODE_STATS)
     #define DEFINE_OPCODE(opcode) opcode: OpcodeStats::recordInstruction(opcode);
 #else
-    #define DEFINE_OPCODE(opcode) opcode:
+#define DEFINE_OPCODE(opcode) opcode:
 #endif
     NEXT_INSTRUCTION();
 #else
     #define NEXT_INSTRUCTION() SAMPLE(codeBlock, vPC); ARTEMIS_BYTECODE_LISTEN(codeBlock, vPC); goto interpreterLoopStart
 #if ENABLE(OPCODE_STATS)
-    #define DEFINE_OPCODE(opcode) case opcode: OpcodeStats::recordInstruction(opcode);
+#define DEFINE_OPCODE(opcode) case opcode: OpcodeStats::recordInstruction(opcode);
 #else
     #define DEFINE_OPCODE(opcode) case opcode:
 #endif
@@ -1872,8 +1883,8 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
            as a boolean in register dst.
         */
         int dst = vPC[1].u.operand;
-        JSValue src1 = callFrame->r(vPC[2].u.operand).jsValue();
-        JSValue src2 = callFrame->r(vPC[3].u.operand).jsValue();
+        JSValue src1 = touchJsValue(callFrame, callFrame->r(vPC[2].u.operand).jsValue());
+        JSValue src2 = touchJsValue(callFrame, callFrame->r(vPC[3].u.operand).jsValue());
         if (src1.isInt32() && src2.isInt32())
             callFrame->uncheckedR(dst) = jsBoolean(src1.asInt32() == src2.asInt32());
         else {
@@ -1892,7 +1903,7 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
            operator, and puts the result as a boolean in register dst.
         */
         int dst = vPC[1].u.operand;
-        JSValue src = callFrame->r(vPC[2].u.operand).jsValue();
+        JSValue src = touchJsValue(callFrame, callFrame->r(vPC[2].u.operand).jsValue());
 
         if (src.isUndefinedOrNull()) {
             callFrame->uncheckedR(dst) = jsBoolean(true);
@@ -1912,8 +1923,8 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
            result as a boolean in register dst.
         */
         int dst = vPC[1].u.operand;
-        JSValue src1 = callFrame->r(vPC[2].u.operand).jsValue();
-        JSValue src2 = callFrame->r(vPC[3].u.operand).jsValue();
+        JSValue src1 = touchJsValue(callFrame, callFrame->r(vPC[2].u.operand).jsValue());
+        JSValue src2 = touchJsValue(callFrame, callFrame->r(vPC[3].u.operand).jsValue());
         if (src1.isInt32() && src2.isInt32())
             callFrame->uncheckedR(dst) = jsBoolean(src1.asInt32() != src2.asInt32());
         else {
@@ -1932,7 +1943,7 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
            operator, and puts the result as a boolean in register dst.
         */
         int dst = vPC[1].u.operand;
-        JSValue src = callFrame->r(vPC[2].u.operand).jsValue();
+        JSValue src = touchJsValue(callFrame, callFrame->r(vPC[2].u.operand).jsValue());
 
         if (src.isUndefinedOrNull()) {
             callFrame->uncheckedR(dst) = jsBoolean(false);
@@ -1952,8 +1963,8 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
            result as a boolean in register dst.
         */
         int dst = vPC[1].u.operand;
-        JSValue src1 = callFrame->r(vPC[2].u.operand).jsValue();
-        JSValue src2 = callFrame->r(vPC[3].u.operand).jsValue();
+        JSValue src1 = touchJsValue(callFrame, callFrame->r(vPC[2].u.operand).jsValue());
+        JSValue src2 = touchJsValue(callFrame, callFrame->r(vPC[3].u.operand).jsValue());
         bool result = JSValue::strictEqual(callFrame, src1, src2);
         CHECK_FOR_EXCEPTION();
         callFrame->uncheckedR(dst) = jsBoolean(result);
@@ -1969,8 +1980,8 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
            puts the result as a boolean in register dst.
         */
         int dst = vPC[1].u.operand;
-        JSValue src1 = callFrame->r(vPC[2].u.operand).jsValue();
-        JSValue src2 = callFrame->r(vPC[3].u.operand).jsValue();
+        JSValue src1 = touchJsValue(callFrame, callFrame->r(vPC[2].u.operand).jsValue());
+        JSValue src2 = touchJsValue(callFrame, callFrame->r(vPC[3].u.operand).jsValue());
         bool result = !JSValue::strictEqual(callFrame, src1, src2);
         CHECK_FOR_EXCEPTION();
         callFrame->uncheckedR(dst) = jsBoolean(result);
@@ -1986,8 +1997,8 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
            a boolean in register dst.
         */
         int dst = vPC[1].u.operand;
-        JSValue src1 = callFrame->r(vPC[2].u.operand).jsValue();
-        JSValue src2 = callFrame->r(vPC[3].u.operand).jsValue();
+        JSValue src1 = touchJsValue(callFrame, callFrame->r(vPC[2].u.operand).jsValue());
+        JSValue src2 = touchJsValue(callFrame, callFrame->r(vPC[3].u.operand).jsValue());
         JSValue result = jsBoolean(jsLess<true>(callFrame, src1, src2));
         CHECK_FOR_EXCEPTION();
         callFrame->uncheckedR(dst) = result;
@@ -2003,8 +2014,8 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
            puts the result as a boolean in register dst.
         */
         int dst = vPC[1].u.operand;
-        JSValue src1 = callFrame->r(vPC[2].u.operand).jsValue();
-        JSValue src2 = callFrame->r(vPC[3].u.operand).jsValue();
+        JSValue src1 = touchJsValue(callFrame, callFrame->r(vPC[2].u.operand).jsValue());
+        JSValue src2 = touchJsValue(callFrame, callFrame->r(vPC[3].u.operand).jsValue());
         JSValue result = jsBoolean(jsLessEq<true>(callFrame, src1, src2));
         CHECK_FOR_EXCEPTION();
         callFrame->uncheckedR(dst) = result;
@@ -2020,8 +2031,8 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
            a boolean in register dst.
         */
         int dst = vPC[1].u.operand;
-        JSValue src1 = callFrame->r(vPC[2].u.operand).jsValue();
-        JSValue src2 = callFrame->r(vPC[3].u.operand).jsValue();
+        JSValue src1 = touchJsValue(callFrame, callFrame->r(vPC[2].u.operand).jsValue());
+        JSValue src2 = touchJsValue(callFrame, callFrame->r(vPC[3].u.operand).jsValue());
         JSValue result = jsBoolean(jsLess<false>(callFrame, src2, src1));
         CHECK_FOR_EXCEPTION();
         callFrame->uncheckedR(dst) = result;
@@ -2037,8 +2048,8 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
            puts the result as a boolean in register dst.
         */
         int dst = vPC[1].u.operand;
-        JSValue src1 = callFrame->r(vPC[2].u.operand).jsValue();
-        JSValue src2 = callFrame->r(vPC[3].u.operand).jsValue();
+        JSValue src1 = touchJsValue(callFrame, callFrame->r(vPC[2].u.operand).jsValue());
+        JSValue src2 = touchJsValue(callFrame, callFrame->r(vPC[3].u.operand).jsValue());
         JSValue result = jsBoolean(jsLessEq<false>(callFrame, src2, src1));
         CHECK_FOR_EXCEPTION();
         callFrame->uncheckedR(dst) = result;
@@ -2053,7 +2064,7 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
            back in register srcDst.
         */
         int srcDst = vPC[1].u.operand;
-        JSValue v = callFrame->r(srcDst).jsValue();
+        JSValue v = touchJsValue(callFrame, callFrame->r(srcDst).jsValue());
         if (v.isInt32() && v.asInt32() < INT_MAX)
             callFrame->uncheckedR(srcDst) = jsNumber(v.asInt32() + 1);
         else {
@@ -2072,7 +2083,7 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
            back in register srcDst.
         */
         int srcDst = vPC[1].u.operand;
-        JSValue v = callFrame->r(srcDst).jsValue();
+        JSValue v = touchJsValue(callFrame, callFrame->r(srcDst).jsValue());
         if (v.isInt32() && v.asInt32() > INT_MIN)
             callFrame->uncheckedR(srcDst) = jsNumber(v.asInt32() - 1);
         else {
@@ -2093,12 +2104,12 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         */
         int dst = vPC[1].u.operand;
         int srcDst = vPC[2].u.operand;
-        JSValue v = callFrame->r(srcDst).jsValue();
+        JSValue v = touchJsValue(callFrame, callFrame->r(srcDst).jsValue());
         if (v.isInt32() && v.asInt32() < INT_MAX) {
             callFrame->uncheckedR(srcDst) = jsNumber(v.asInt32() + 1);
             callFrame->uncheckedR(dst) = v;
         } else {
-            double number = callFrame->r(srcDst).jsValue().toNumber(callFrame);
+            double number = touchJsValue(callFrame, callFrame->r(srcDst).jsValue()).toNumber(callFrame);
             CHECK_FOR_EXCEPTION();
             callFrame->uncheckedR(srcDst) = jsNumber(number + 1);
             callFrame->uncheckedR(dst) = jsNumber(number);
@@ -2116,12 +2127,12 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         */
         int dst = vPC[1].u.operand;
         int srcDst = vPC[2].u.operand;
-        JSValue v = callFrame->r(srcDst).jsValue();
+        JSValue v = touchJsValue(callFrame, callFrame->r(srcDst).jsValue());
         if (v.isInt32() && v.asInt32() > INT_MIN) {
             callFrame->uncheckedR(srcDst) = jsNumber(v.asInt32() - 1);
             callFrame->uncheckedR(dst) = v;
         } else {
-            double number = callFrame->r(srcDst).jsValue().toNumber(callFrame);
+            double number = touchJsValue(callFrame, callFrame->r(srcDst).jsValue()).toNumber(callFrame);
             CHECK_FOR_EXCEPTION();
             callFrame->uncheckedR(srcDst) = jsNumber(number - 1);
             callFrame->uncheckedR(dst) = jsNumber(number);
@@ -2139,7 +2150,7 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         int dst = vPC[1].u.operand;
         int src = vPC[2].u.operand;
 
-        JSValue srcVal = callFrame->r(src).jsValue();
+        JSValue srcVal = touchJsValue(callFrame, callFrame->r(src).jsValue());
 
         if (LIKELY(srcVal.isNumber()))
             callFrame->uncheckedR(dst) = callFrame->r(src);
@@ -2159,7 +2170,7 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
            result in register dst.
         */
         int dst = vPC[1].u.operand;
-        JSValue src = callFrame->r(vPC[2].u.operand).jsValue();
+        JSValue src = touchJsValue(callFrame, callFrame->r(vPC[2].u.operand).jsValue());
         if (src.isInt32() && (src.asInt32() & 0x7fffffff)) // non-zero and no overflow
             callFrame->uncheckedR(dst) = jsNumber(-src.asInt32());
         else {
@@ -2179,8 +2190,8 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
            numeric add, depending on the types of the operands.)
         */
         int dst = vPC[1].u.operand;
-        JSValue src1 = callFrame->r(vPC[2].u.operand).jsValue();
-        JSValue src2 = callFrame->r(vPC[3].u.operand).jsValue();
+        JSValue src1 = touchJsValue(callFrame, callFrame->r(vPC[2].u.operand).jsValue());
+        JSValue src2 = touchJsValue(callFrame, callFrame->r(vPC[3].u.operand).jsValue());
         if (src1.isInt32() && src2.isInt32() && !(src1.asInt32() | (src2.asInt32() & 0xc0000000))) // no overflow
             callFrame->uncheckedR(dst) = jsNumber(src1.asInt32() + src2.asInt32());
         else {
@@ -2198,8 +2209,8 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
            numbers), and puts the product in register dst.
         */
         int dst = vPC[1].u.operand;
-        JSValue src1 = callFrame->r(vPC[2].u.operand).jsValue();
-        JSValue src2 = callFrame->r(vPC[3].u.operand).jsValue();
+        JSValue src1 = touchJsValue(callFrame, callFrame->r(vPC[2].u.operand).jsValue());
+        JSValue src2 = touchJsValue(callFrame, callFrame->r(vPC[3].u.operand).jsValue());
         if (src1.isInt32() && src2.isInt32() && !(src1.asInt32() | src2.asInt32() >> 15)) // no overflow
                 callFrame->uncheckedR(dst) = jsNumber(src1.asInt32() * src2.asInt32());
         else {
@@ -2219,8 +2230,8 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
            quotient in register dst.
         */
         int dst = vPC[1].u.operand;
-        JSValue dividend = callFrame->r(vPC[2].u.operand).jsValue();
-        JSValue divisor = callFrame->r(vPC[3].u.operand).jsValue();
+        JSValue dividend = touchJsValue(callFrame, callFrame->r(vPC[2].u.operand).jsValue());
+        JSValue divisor = touchJsValue(callFrame, callFrame->r(vPC[3].u.operand).jsValue());
 
         JSValue result = jsNumber(dividend.toNumber(callFrame) / divisor.toNumber(callFrame));
         CHECK_FOR_EXCEPTION();
@@ -2237,8 +2248,8 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
            remainder in register dst.
         */
         int dst = vPC[1].u.operand;
-        JSValue dividend = callFrame->r(vPC[2].u.operand).jsValue();
-        JSValue divisor = callFrame->r(vPC[3].u.operand).jsValue();
+        JSValue dividend = touchJsValue(callFrame, callFrame->r(vPC[2].u.operand).jsValue());
+        JSValue divisor = touchJsValue(callFrame, callFrame->r(vPC[3].u.operand).jsValue());
 
         if (dividend.isInt32() && divisor.isInt32() && divisor.asInt32() != 0) {
             JSValue result = jsNumber(dividend.asInt32() % divisor.asInt32());
@@ -2266,8 +2277,8 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
            register dst.
         */
         int dst = vPC[1].u.operand;
-        JSValue src1 = callFrame->r(vPC[2].u.operand).jsValue();
-        JSValue src2 = callFrame->r(vPC[3].u.operand).jsValue();
+        JSValue src1 = touchJsValue(callFrame, callFrame->r(vPC[2].u.operand).jsValue());
+        JSValue src2 = touchJsValue(callFrame, callFrame->r(vPC[3].u.operand).jsValue());
         if (src1.isInt32() && src2.isInt32() && !(src1.asInt32() | (src2.asInt32() & 0xc0000000))) // no overflow
             callFrame->uncheckedR(dst) = jsNumber(src1.asInt32() - src2.asInt32());
         else {
@@ -2286,8 +2297,8 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
            in register dst.
         */
         int dst = vPC[1].u.operand;
-        JSValue val = callFrame->r(vPC[2].u.operand).jsValue();
-        JSValue shift = callFrame->r(vPC[3].u.operand).jsValue();
+        JSValue val = touchJsValue(callFrame, callFrame->r(vPC[2].u.operand).jsValue());
+        JSValue shift = touchJsValue(callFrame, callFrame->r(vPC[3].u.operand).jsValue());
 
         if (val.isInt32() && shift.isInt32())
             callFrame->uncheckedR(dst) = jsNumber(val.asInt32() << (shift.asInt32() & 0x1f));
@@ -2308,8 +2319,8 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
            uint32), and puts the result in register dst.
         */
         int dst = vPC[1].u.operand;
-        JSValue val = callFrame->r(vPC[2].u.operand).jsValue();
-        JSValue shift = callFrame->r(vPC[3].u.operand).jsValue();
+        JSValue val = touchJsValue(callFrame, callFrame->r(vPC[2].u.operand).jsValue());
+        JSValue shift = touchJsValue(callFrame, callFrame->r(vPC[3].u.operand).jsValue());
 
         if (val.isInt32() && shift.isInt32())
             callFrame->uncheckedR(dst) = jsNumber(val.asInt32() >> (shift.asInt32() & 0x1f));
@@ -2330,8 +2341,8 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
            uint32), and puts the result in register dst.
         */
         int dst = vPC[1].u.operand;
-        JSValue val = callFrame->r(vPC[2].u.operand).jsValue();
-        JSValue shift = callFrame->r(vPC[3].u.operand).jsValue();
+        JSValue val = touchJsValue(callFrame, callFrame->r(vPC[2].u.operand).jsValue());
+        JSValue shift = touchJsValue(callFrame, callFrame->r(vPC[3].u.operand).jsValue());
         if (val.isUInt32() && shift.isInt32())
             callFrame->uncheckedR(dst) = jsNumber(val.asInt32() >> (shift.asInt32() & 0x1f));
         else {
@@ -2351,8 +2362,8 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
            in register dst.
         */
         int dst = vPC[1].u.operand;
-        JSValue src1 = callFrame->r(vPC[2].u.operand).jsValue();
-        JSValue src2 = callFrame->r(vPC[3].u.operand).jsValue();
+        JSValue src1 = touchJsValue(callFrame, callFrame->r(vPC[2].u.operand).jsValue());
+        JSValue src2 = touchJsValue(callFrame, callFrame->r(vPC[3].u.operand).jsValue());
         if (src1.isInt32() && src2.isInt32())
             callFrame->uncheckedR(dst) = jsNumber(src1.asInt32() & src2.asInt32());
         else {
@@ -2372,8 +2383,8 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
            in register dst.
         */
         int dst = vPC[1].u.operand;
-        JSValue src1 = callFrame->r(vPC[2].u.operand).jsValue();
-        JSValue src2 = callFrame->r(vPC[3].u.operand).jsValue();
+        JSValue src1 = touchJsValue(callFrame, callFrame->r(vPC[2].u.operand).jsValue());
+        JSValue src2 = touchJsValue(callFrame, callFrame->r(vPC[3].u.operand).jsValue());
         if (src1.isInt32() && src2.isInt32())
             callFrame->uncheckedR(dst) = jsNumber(src1.asInt32() ^ src2.asInt32());
         else {
@@ -2393,8 +2404,8 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
            result in register dst.
         */
         int dst = vPC[1].u.operand;
-        JSValue src1 = callFrame->r(vPC[2].u.operand).jsValue();
-        JSValue src2 = callFrame->r(vPC[3].u.operand).jsValue();
+        JSValue src1 = touchJsValue(callFrame, callFrame->r(vPC[2].u.operand).jsValue());
+        JSValue src2 = touchJsValue(callFrame, callFrame->r(vPC[3].u.operand).jsValue());
         if (src1.isInt32() && src2.isInt32())
             callFrame->uncheckedR(dst) = jsNumber(src1.asInt32() | src2.asInt32());
         else {
@@ -2413,7 +2424,7 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
            and puts the result in register dst.
         */
         int dst = vPC[1].u.operand;
-        JSValue src = callFrame->r(vPC[2].u.operand).jsValue();
+        JSValue src = touchJsValue(callFrame, callFrame->r(vPC[2].u.operand).jsValue());
         if (src.isInt32())
             callFrame->uncheckedR(dst) = jsNumber(~src.asInt32());
         else {
@@ -2432,7 +2443,7 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         */
         int dst = vPC[1].u.operand;
         int src = vPC[2].u.operand;
-        JSValue result = jsBoolean(!callFrame->r(src).jsValue().toBoolean(callFrame));
+        JSValue result = jsBoolean(!touchJsValue(callFrame, callFrame->r(src).jsValue()).toBoolean(callFrame));
         CHECK_FOR_EXCEPTION();
         callFrame->uncheckedR(dst) = result;
 
@@ -2448,7 +2459,7 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
            an valid parameter for instanceof.
         */
         int base = vPC[1].u.operand;
-        JSValue baseVal = callFrame->r(base).jsValue();
+        JSValue baseVal = touchJsValue(callFrame, callFrame->r(base).jsValue());
 
         if (isInvalidParamForInstanceOf(callFrame, baseVal, exceptionValue))
             goto vm_throw;
@@ -2474,11 +2485,11 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         int base = vPC[3].u.operand;
         int baseProto = vPC[4].u.operand;
 
-        JSValue baseVal = callFrame->r(base).jsValue();
+        JSValue baseVal = touchJsValue(callFrame, callFrame->r(base).jsValue());
 
         ASSERT(!isInvalidParamForInstanceOf(callFrame, baseVal, exceptionValue));
 
-        bool result = asObject(baseVal)->methodTable()->hasInstance(asObject(baseVal), callFrame, callFrame->r(value).jsValue(), callFrame->r(baseProto).jsValue());
+        bool result = asObject(baseVal)->methodTable()->hasInstance(asObject(baseVal), callFrame, touchJsValue(callFrame, callFrame->r(value).jsValue()), touchJsValue(callFrame, callFrame->r(baseProto).jsValue()));
         CHECK_FOR_EXCEPTION();
         callFrame->uncheckedR(dst) = jsBoolean(result);
 
@@ -2493,7 +2504,7 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         */
         int dst = vPC[1].u.operand;
         int src = vPC[2].u.operand;
-        callFrame->uncheckedR(dst) = JSValue(jsTypeStringForValue(callFrame, callFrame->r(src).jsValue()));
+        callFrame->uncheckedR(dst) = JSValue(jsTypeStringForValue(callFrame, touchJsValue(callFrame, callFrame->r(src).jsValue())));
 
         vPC += OPCODE_LENGTH(op_typeof);
         NEXT_INSTRUCTION();
@@ -2507,7 +2518,7 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         */
         int dst = vPC[1].u.operand;
         int src = vPC[2].u.operand;
-        JSValue v = callFrame->r(src).jsValue();
+        JSValue v = touchJsValue(callFrame, callFrame->r(src).jsValue());
         callFrame->uncheckedR(dst) = jsBoolean(v.isCell() ? v.asCell()->structure()->typeInfo().masqueradesAsUndefined() : v.isUndefined());
 
         vPC += OPCODE_LENGTH(op_is_undefined);
@@ -2522,7 +2533,7 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         */
         int dst = vPC[1].u.operand;
         int src = vPC[2].u.operand;
-        callFrame->uncheckedR(dst) = jsBoolean(callFrame->r(src).jsValue().isBoolean());
+        callFrame->uncheckedR(dst) = jsBoolean(touchJsValue(callFrame, callFrame->r(src).jsValue()).isBoolean());
 
         vPC += OPCODE_LENGTH(op_is_boolean);
         NEXT_INSTRUCTION();
@@ -2536,7 +2547,7 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         */
         int dst = vPC[1].u.operand;
         int src = vPC[2].u.operand;
-        callFrame->uncheckedR(dst) = jsBoolean(callFrame->r(src).jsValue().isNumber());
+        callFrame->uncheckedR(dst) = jsBoolean(touchJsValue(callFrame, callFrame->r(src).jsValue()).isNumber());
 
         vPC += OPCODE_LENGTH(op_is_number);
         NEXT_INSTRUCTION();
@@ -2550,7 +2561,7 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         */
         int dst = vPC[1].u.operand;
         int src = vPC[2].u.operand;
-        callFrame->uncheckedR(dst) = jsBoolean(callFrame->r(src).jsValue().isString());
+        callFrame->uncheckedR(dst) = jsBoolean(touchJsValue(callFrame, callFrame->r(src).jsValue()).isString());
 
         vPC += OPCODE_LENGTH(op_is_string);
         NEXT_INSTRUCTION();
@@ -2564,7 +2575,7 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         */
         int dst = vPC[1].u.operand;
         int src = vPC[2].u.operand;
-        callFrame->uncheckedR(dst) = jsBoolean(jsIsObjectType(callFrame->r(src).jsValue()));
+        callFrame->uncheckedR(dst) = jsBoolean(jsIsObjectType(touchJsValue(callFrame, callFrame->r(src).jsValue())));
 
         vPC += OPCODE_LENGTH(op_is_object);
         NEXT_INSTRUCTION();
@@ -2578,7 +2589,7 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         */
         int dst = vPC[1].u.operand;
         int src = vPC[2].u.operand;
-        callFrame->uncheckedR(dst) = jsBoolean(jsIsFunctionType(callFrame->r(src).jsValue()));
+        callFrame->uncheckedR(dst) = jsBoolean(jsIsFunctionType(touchJsValue(callFrame, callFrame->r(src).jsValue())));
 
         vPC += OPCODE_LENGTH(op_is_function);
         NEXT_INSTRUCTION();
@@ -2596,13 +2607,13 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         int property = vPC[2].u.operand;
         int base = vPC[3].u.operand;
 
-        JSValue baseVal = callFrame->r(base).jsValue();
+        JSValue baseVal = touchJsValue(callFrame, callFrame->r(base).jsValue());
         if (isInvalidParamForIn(callFrame, baseVal, exceptionValue))
             goto vm_throw;
 
         JSObject* baseObj = asObject(baseVal);
 
-        JSValue propName = callFrame->r(property).jsValue();
+        JSValue propName = touchJsValue(callFrame, callFrame->r(property).jsValue());
 
         uint32_t i;
         if (propName.getUInt32(i))
@@ -2699,8 +2710,8 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         ASSERT(scope->isGlobalObject());
         int index = vPC[1].u.operand;
         int value = vPC[2].u.operand;
-        
-        scope->registerAt(index).set(*globalData, scope, callFrame->r(value).jsValue());
+
+        scope->registerAt(index).set(*globalData, scope, touchJsValue(callFrame, callFrame->r(value).jsValue()));
         vPC += OPCODE_LENGTH(op_put_global_var);
         NEXT_INSTRUCTION();
     }
@@ -2777,7 +2788,7 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         ASSERT((*iter)->isVariableObject());
         JSVariableObject* scope = static_cast<JSVariableObject*>(iter->get());
         ASSERT(callFrame->r(value).jsValue());
-        scope->registerAt(index).set(*globalData, scope, callFrame->r(value).jsValue());
+        scope->registerAt(index).set(*globalData, scope, touchJsValue(callFrame, callFrame->r(value).jsValue()));
         vPC += OPCODE_LENGTH(op_put_scoped_var);
         NEXT_INSTRUCTION();
     }
@@ -2805,7 +2816,7 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         int property = vPC[2].u.operand;
         Identifier& ident = codeBlock->identifier(property);
         
-        JSValue baseVal = callFrame->r(base).jsValue();
+        JSValue baseVal = touchJsValue(callFrame, callFrame->r(base).jsValue());
         JSObject* baseObject = asObject(baseVal);
         PropertySlot slot(baseVal);
         if (!baseObject->getPropertySlot(callFrame, ident, slot)) {
@@ -2861,7 +2872,7 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         int property = vPC[3].u.operand;
 
         Identifier& ident = codeBlock->identifier(property);
-        JSValue baseValue = callFrame->r(base).jsValue();
+        JSValue baseValue = touchJsValue(callFrame, callFrame->r(base).jsValue());
         PropertySlot slot(baseValue);
         JSValue result = baseValue.get(callFrame, ident, slot);
         CHECK_FOR_EXCEPTION();
@@ -2880,7 +2891,7 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
            op_get_by_id.
         */
         int base = vPC[2].u.operand;
-        JSValue baseValue = callFrame->r(base).jsValue();
+        JSValue baseValue = touchJsValue(callFrame, callFrame->r(base).jsValue());
 
         if (LIKELY(baseValue.isCell())) {
             JSCell* baseCell = baseValue.asCell();
@@ -2911,7 +2922,7 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
            reverts to op_get_by_id.
         */
         int base = vPC[2].u.operand;
-        JSValue baseValue = callFrame->r(base).jsValue();
+        JSValue baseValue = touchJsValue(callFrame, callFrame->r(base).jsValue());
 
         if (LIKELY(baseValue.isCell())) {
             JSCell* baseCell = baseValue.asCell();
@@ -2950,7 +2961,7 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
          reverts to op_get_by_id.
          */
         int base = vPC[2].u.operand;
-        JSValue baseValue = callFrame->r(base).jsValue();
+        JSValue baseValue = touchJsValue(callFrame, callFrame->r(base).jsValue());
         
         if (LIKELY(baseValue.isCell())) {
             JSCell* baseCell = baseValue.asCell();
@@ -2995,7 +3006,7 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
          reverts to op_get_by_id.
          */
         int base = vPC[2].u.operand;
-        JSValue baseValue = callFrame->r(base).jsValue();
+        JSValue baseValue = touchJsValue(callFrame, callFrame->r(base).jsValue());
         
         if (LIKELY(baseValue.isCell())) {
             JSCell* baseCell = baseValue.asCell();
@@ -3037,7 +3048,7 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
            reverts to op_get_by_id.
         */
         int base = vPC[2].u.operand;
-        JSValue baseValue = callFrame->r(base).jsValue();
+        JSValue baseValue = touchJsValue(callFrame, callFrame->r(base).jsValue());
 
         if (LIKELY(baseValue.isCell())) {
             JSCell* baseCell = baseValue.asCell();
@@ -3087,7 +3098,7 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
          op_get_by_id.
          */
         int base = vPC[2].u.operand;
-        JSValue baseValue = callFrame->r(base).jsValue();
+        JSValue baseValue = touchJsValue(callFrame, callFrame->r(base).jsValue());
         
         if (LIKELY(baseValue.isCell())) {
             JSCell* baseCell = baseValue.asCell();
@@ -3130,7 +3141,7 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
          op_get_by_id.
          */
         int base = vPC[2].u.operand;
-        JSValue baseValue = callFrame->r(base).jsValue();
+        JSValue baseValue = touchJsValue(callFrame, callFrame->r(base).jsValue());
         
         if (LIKELY(baseValue.isCell())) {
             JSCell* baseCell = baseValue.asCell();
@@ -3167,7 +3178,7 @@ skip_id_custom_self:
         int property = vPC[3].u.operand;
 
         Identifier& ident = codeBlock->identifier(property);
-        JSValue baseValue = callFrame->r(base).jsValue();
+        JSValue baseValue = touchJsValue(callFrame, callFrame->r(base).jsValue());
         PropertySlot slot(baseValue);
         JSValue result = baseValue.get(callFrame, ident, slot);
         CHECK_FOR_EXCEPTION();
@@ -3187,7 +3198,7 @@ skip_id_custom_self:
          reverts to op_get_by_id.
          */
         int base = vPC[2].u.operand;
-        JSValue baseValue = callFrame->r(base).jsValue();
+        JSValue baseValue = touchJsValue(callFrame, callFrame->r(base).jsValue());
         
         if (LIKELY(baseValue.isCell())) {
             JSCell* baseCell = baseValue.asCell();
@@ -3242,7 +3253,7 @@ skip_id_custom_self:
          reverts to op_get_by_id.
          */
         int base = vPC[2].u.operand;
-        JSValue baseValue = callFrame->r(base).jsValue();
+        JSValue baseValue = touchJsValue(callFrame, callFrame->r(base).jsValue());
         
         if (LIKELY(baseValue.isCell())) {
             JSCell* baseCell = baseValue.asCell();
@@ -3293,7 +3304,7 @@ skip_id_custom_self:
         */
 
         int base = vPC[2].u.operand;
-        JSValue baseValue = callFrame->r(base).jsValue();
+        JSValue baseValue = touchJsValue(callFrame, callFrame->r(base).jsValue());
         if (LIKELY(isJSArray(baseValue))) {
             int dst = vPC[1].u.operand;
             callFrame->uncheckedR(dst) = jsNumber(asArray(baseValue)->length());
@@ -3317,7 +3328,7 @@ skip_id_custom_self:
         */
 
         int base = vPC[2].u.operand;
-        JSValue baseValue = callFrame->r(base).jsValue();
+        JSValue baseValue = touchJsValue(callFrame, callFrame->r(base).jsValue());
         if (LIKELY(isJSString(baseValue))) {
             int dst = vPC[1].u.operand;
             callFrame->uncheckedR(dst) = jsNumber(asString(baseValue)->length());
@@ -3350,13 +3361,13 @@ skip_id_custom_self:
         int value = vPC[3].u.operand;
         int direct = vPC[8].u.operand;
 
-        JSValue baseValue = callFrame->r(base).jsValue();
+        JSValue baseValue = touchJsValue(callFrame, callFrame->r(base).jsValue());
         Identifier& ident = codeBlock->identifier(property);
         PutPropertySlot slot(codeBlock->isStrictMode());
         if (direct)
-            baseValue.putDirect(callFrame, ident, callFrame->r(value).jsValue(), slot);
+            baseValue.putDirect(callFrame, ident, touchJsValue(callFrame, callFrame->r(value).jsValue()), slot);
         else
-            baseValue.put(callFrame, ident, callFrame->r(value).jsValue(), slot);
+            baseValue.put(callFrame, ident, touchJsValue(callFrame, callFrame->r(value).jsValue()), slot);
         CHECK_FOR_EXCEPTION();
 
         tryCachePutByID(callFrame, codeBlock, vPC, baseValue, slot);
@@ -3379,7 +3390,7 @@ skip_id_custom_self:
            the register file.
          */
         int base = vPC[1].u.operand;
-        JSValue baseValue = callFrame->r(base).jsValue();
+        JSValue baseValue = touchJsValue(callFrame, callFrame->r(base).jsValue());
         
         if (LIKELY(baseValue.isCell())) {
             JSCell* baseCell = baseValue.asCell();
@@ -3409,7 +3420,7 @@ skip_id_custom_self:
                 int value = vPC[3].u.operand;
                 unsigned offset = vPC[7].u.operand;
                 ASSERT(baseObject->offsetForLocation(baseObject->getDirectLocation(*globalData, codeBlock->identifier(vPC[2].u.operand))) == offset);
-                baseObject->putDirectOffset(callFrame->globalData(), offset, callFrame->r(value).jsValue());
+                baseObject->putDirectOffset(callFrame->globalData(), offset, touchJsValue(callFrame, callFrame->r(value).jsValue()));
 
                 vPC += OPCODE_LENGTH(op_put_by_id_transition);
                 NEXT_INSTRUCTION();
@@ -3431,7 +3442,7 @@ skip_id_custom_self:
            the register file.
         */
         int base = vPC[1].u.operand;
-        JSValue baseValue = callFrame->r(base).jsValue();
+        JSValue baseValue = touchJsValue(callFrame, callFrame->r(base).jsValue());
 
         if (LIKELY(baseValue.isCell())) {
             JSCell* baseCell = baseValue.asCell();
@@ -3444,7 +3455,7 @@ skip_id_custom_self:
                 unsigned offset = vPC[5].u.operand;
                 
                 ASSERT(baseObject->offsetForLocation(baseObject->getDirectLocation(*globalData, codeBlock->identifier(vPC[2].u.operand))) == offset);
-                baseObject->putDirectOffset(callFrame->globalData(), offset, callFrame->r(value).jsValue());
+                baseObject->putDirectOffset(callFrame->globalData(), offset, touchJsValue(callFrame, callFrame->r(value).jsValue()));
 
                 vPC += OPCODE_LENGTH(op_put_by_id_replace);
                 NEXT_INSTRUCTION();
@@ -3468,13 +3479,13 @@ skip_id_custom_self:
         int value = vPC[3].u.operand;
         int direct = vPC[8].u.operand;
 
-        JSValue baseValue = callFrame->r(base).jsValue();
+        JSValue baseValue = touchJsValue(callFrame, callFrame->r(base).jsValue());
         Identifier& ident = codeBlock->identifier(property);
         PutPropertySlot slot(codeBlock->isStrictMode());
         if (direct)
-            baseValue.putDirect(callFrame, ident, callFrame->r(value).jsValue(), slot);
+            baseValue.putDirect(callFrame, ident, touchJsValue(callFrame, callFrame->r(value).jsValue()), slot);
         else
-            baseValue.put(callFrame, ident, callFrame->r(value).jsValue(), slot);
+            baseValue.put(callFrame, ident, touchJsValue(callFrame, callFrame->r(value).jsValue()), slot);
         CHECK_FOR_EXCEPTION();
 
         vPC += OPCODE_LENGTH(op_put_by_id_generic);
@@ -3492,7 +3503,7 @@ skip_id_custom_self:
         int base = vPC[2].u.operand;
         int property = vPC[3].u.operand;
 
-        JSObject* baseObj = callFrame->r(base).jsValue().toObject(callFrame);
+        JSObject* baseObj = touchJsValue(callFrame, callFrame->r(base).jsValue()).toObject(callFrame);
         Identifier& ident = codeBlock->identifier(property);
         bool result = baseObj->methodTable()->deleteProperty(baseObj, callFrame, ident);
         if (!result && codeBlock->isStrictMode()) {
@@ -3512,10 +3523,10 @@ skip_id_custom_self:
         int iter = vPC[5].u.operand;
         int i = vPC[6].u.operand;
 
-        JSValue baseValue = callFrame->r(base).jsValue();
+        JSValue baseValue = touchJsValue(callFrame, callFrame->r(base).jsValue());
         JSPropertyNameIterator* it = callFrame->r(iter).propertyNameIterator();
-        JSValue subscript = callFrame->r(property).jsValue();
-        JSValue expectedSubscript = callFrame->r(expected).jsValue();
+        JSValue subscript = touchJsValue(callFrame, callFrame->r(property).jsValue());
+        JSValue expectedSubscript = touchJsValue(callFrame, callFrame->r(expected).jsValue());
         int index = callFrame->r(i).i() - 1;
         JSValue result;
         int offset = 0;
@@ -3537,7 +3548,7 @@ skip_id_custom_self:
         int dst = vPC[1].u.operand;
         int argumentsRegister = vPC[2].u.operand;
         int property = vPC[3].u.operand;
-        JSValue arguments = callFrame->r(argumentsRegister).jsValue();
+        JSValue arguments = touchJsValue(callFrame, callFrame->r(argumentsRegister).jsValue());
         if (arguments) {
             Identifier& ident = codeBlock->identifier(property);
             PropertySlot slot(arguments);
@@ -3554,8 +3565,8 @@ skip_id_custom_self:
         int dst = vPC[1].u.operand;
         int argumentsRegister = vPC[2].u.operand;
         int property = vPC[3].u.operand;
-        JSValue arguments = callFrame->r(argumentsRegister).jsValue();
-        JSValue subscript = callFrame->r(property).jsValue();
+        JSValue arguments = touchJsValue(callFrame, callFrame->r(argumentsRegister).jsValue());
+        JSValue subscript = touchJsValue(callFrame, callFrame->r(property).jsValue());
         if (!arguments && subscript.isUInt32() && subscript.asUInt32() < callFrame->argumentCount()) {
             callFrame->uncheckedR(dst) = callFrame->argument(subscript.asUInt32());
             vPC += OPCODE_LENGTH(op_get_argument_by_val);
@@ -3580,8 +3591,8 @@ skip_id_custom_self:
         int base = vPC[2].u.operand;
         int property = vPC[3].u.operand;
         
-        JSValue baseValue = callFrame->r(base).jsValue();
-        JSValue subscript = callFrame->r(property).jsValue();
+        JSValue baseValue = touchJsValue(callFrame, callFrame->r(base).jsValue());
+        JSValue subscript = touchJsValue(callFrame, callFrame->r(property).jsValue());
 
         JSValue result;
 
@@ -3624,20 +3635,20 @@ skip_id_custom_self:
         int property = vPC[2].u.operand;
         int value = vPC[3].u.operand;
 
-        JSValue baseValue = callFrame->r(base).jsValue();
-        JSValue subscript = callFrame->r(property).jsValue();
+        JSValue baseValue = touchJsValue(callFrame, callFrame->r(base).jsValue());
+        JSValue subscript = touchJsValue(callFrame, callFrame->r(property).jsValue());
 
         if (LIKELY(subscript.isUInt32())) {
             uint32_t i = subscript.asUInt32();
             if (isJSArray(baseValue)) {
                 JSArray* jsArray = asArray(baseValue);
                 if (jsArray->canSetIndex(i))
-                    jsArray->setIndex(*globalData, i, callFrame->r(value).jsValue());
+                    jsArray->setIndex(*globalData, i, touchJsValue(callFrame, callFrame->r(value).jsValue()));
                 else
-                    jsArray->JSArray::putByIndex(jsArray, callFrame, i, callFrame->r(value).jsValue());
+                    jsArray->JSArray::putByIndex(jsArray, callFrame, i, touchJsValue(callFrame, callFrame->r(value).jsValue()));
             } else if (isJSByteArray(baseValue) && asByteArray(baseValue)->canAccessIndex(i)) {
                 JSByteArray* jsByteArray = asByteArray(baseValue);
-                JSValue jsValue = callFrame->r(value).jsValue();
+                JSValue jsValue = touchJsValue(callFrame, callFrame->r(value).jsValue());
                 if (jsValue.isInt32())
                     jsByteArray->setIndex(i, jsValue.asInt32());
                 else if (jsValue.isDouble())
@@ -3645,12 +3656,12 @@ skip_id_custom_self:
                 else
                     baseValue.put(callFrame, i, jsValue);
             } else
-                baseValue.put(callFrame, i, callFrame->r(value).jsValue());
+                baseValue.put(callFrame, i, touchJsValue(callFrame, callFrame->r(value).jsValue()));
         } else {
             Identifier property(callFrame, subscript.toString(callFrame));
             if (!globalData->exception) { // Don't put to an object if toString threw an exception.
                 PutPropertySlot slot(codeBlock->isStrictMode());
-                baseValue.put(callFrame, property, callFrame->r(value).jsValue(), slot);
+                baseValue.put(callFrame, property, touchJsValue(callFrame, callFrame->r(value).jsValue()), slot);
             }
         }
 
@@ -3670,9 +3681,9 @@ skip_id_custom_self:
         int base = vPC[2].u.operand;
         int property = vPC[3].u.operand;
 
-        JSObject* baseObj = callFrame->r(base).jsValue().toObject(callFrame); // may throw
+        JSObject* baseObj = touchJsValue(callFrame, callFrame->r(base).jsValue()).toObject(callFrame); // may throw
 
-        JSValue subscript = callFrame->r(property).jsValue();
+        JSValue subscript = touchJsValue(callFrame, callFrame->r(property).jsValue());
         bool result;
         uint32_t i;
         if (subscript.getUInt32(i))
@@ -3708,7 +3719,7 @@ skip_id_custom_self:
         unsigned property = vPC[2].u.operand;
         int value = vPC[3].u.operand;
 
-        callFrame->r(base).jsValue().put(callFrame, property, callFrame->r(value).jsValue());
+        touchJsValue(callFrame, callFrame->r(base).jsValue()).put(callFrame, property, touchJsValue(callFrame, callFrame->r(value).jsValue()));
 
         vPC += OPCODE_LENGTH(op_put_by_index);
         NEXT_INSTRUCTION();
@@ -3829,7 +3840,7 @@ skip_id_custom_self:
         */
         int src = vPC[1].u.operand;
         int target = vPC[2].u.operand;
-        JSValue srcValue = callFrame->r(src).jsValue();
+        JSValue srcValue = touchJsValue(callFrame, callFrame->r(src).jsValue());
 
         if (srcValue.isUndefinedOrNull() || (srcValue.isCell() && srcValue.asCell()->structure()->typeInfo().masqueradesAsUndefined())) {
             vPC += target;
@@ -3847,7 +3858,7 @@ skip_id_custom_self:
         */
         int src = vPC[1].u.operand;
         int target = vPC[2].u.operand;
-        JSValue srcValue = callFrame->r(src).jsValue();
+        JSValue srcValue = touchJsValue(callFrame, callFrame->r(src).jsValue());
 
         if (!srcValue.isUndefinedOrNull() && (!srcValue.isCell() || !srcValue.asCell()->structure()->typeInfo().masqueradesAsUndefined())) {
             vPC += target;
@@ -3865,7 +3876,7 @@ skip_id_custom_self:
          */
         int src = vPC[1].u.operand;
         int target = vPC[3].u.operand;
-        JSValue srcValue = callFrame->r(src).jsValue();
+        JSValue srcValue = touchJsValue(callFrame, callFrame->r(src).jsValue());
         if (srcValue != vPC[2].u.jsCell.get()) {
             vPC += target;
             NEXT_INSTRUCTION();
@@ -3885,8 +3896,8 @@ skip_id_custom_self:
            Additionally this loop instruction may terminate JS execution is
            the JS timeout is reached.
          */
-        JSValue src1 = callFrame->r(vPC[1].u.operand).jsValue();
-        JSValue src2 = callFrame->r(vPC[2].u.operand).jsValue();
+        JSValue src1 = touchJsValue(callFrame, callFrame->r(vPC[1].u.operand).jsValue());
+        JSValue src2 = touchJsValue(callFrame, callFrame->r(vPC[2].u.operand).jsValue());
         int target = vPC[3].u.operand;
         
         bool result = jsLess<true>(callFrame, src1, src2);
@@ -3912,8 +3923,8 @@ skip_id_custom_self:
            Additionally this loop instruction may terminate JS execution is
            the JS timeout is reached.
         */
-        JSValue src1 = callFrame->r(vPC[1].u.operand).jsValue();
-        JSValue src2 = callFrame->r(vPC[2].u.operand).jsValue();
+        JSValue src1 = touchJsValue(callFrame, callFrame->r(vPC[1].u.operand).jsValue());
+        JSValue src2 = touchJsValue(callFrame, callFrame->r(vPC[2].u.operand).jsValue());
         int target = vPC[3].u.operand;
         
         bool result = jsLessEq<true>(callFrame, src1, src2);
@@ -3939,8 +3950,8 @@ skip_id_custom_self:
            Additionally this loop instruction may terminate JS execution is
            the JS timeout is reached.
          */
-        JSValue src1 = callFrame->r(vPC[1].u.operand).jsValue();
-        JSValue src2 = callFrame->r(vPC[2].u.operand).jsValue();
+        JSValue src1 = touchJsValue(callFrame, callFrame->r(vPC[1].u.operand).jsValue());
+        JSValue src2 = touchJsValue(callFrame, callFrame->r(vPC[2].u.operand).jsValue());
         int target = vPC[3].u.operand;
         
         bool result = jsLess<false>(callFrame, src2, src1);
@@ -3966,8 +3977,8 @@ skip_id_custom_self:
            Additionally this loop instruction may terminate JS execution is
            the JS timeout is reached.
         */
-        JSValue src1 = callFrame->r(vPC[1].u.operand).jsValue();
-        JSValue src2 = callFrame->r(vPC[2].u.operand).jsValue();
+        JSValue src1 = touchJsValue(callFrame, callFrame->r(vPC[1].u.operand).jsValue());
+        JSValue src2 = touchJsValue(callFrame, callFrame->r(vPC[2].u.operand).jsValue());
         int target = vPC[3].u.operand;
         
         bool result = jsLessEq<false>(callFrame, src2, src1);
@@ -3990,8 +4001,8 @@ skip_id_custom_self:
            target from the current instruction, if and only if the 
            result of the comparison is true.
         */
-        JSValue src1 = callFrame->r(vPC[1].u.operand).jsValue();
-        JSValue src2 = callFrame->r(vPC[2].u.operand).jsValue();
+        JSValue src1 = touchJsValue(callFrame, callFrame->r(vPC[1].u.operand).jsValue());
+        JSValue src2 = touchJsValue(callFrame, callFrame->r(vPC[2].u.operand).jsValue());
         int target = vPC[3].u.operand;
 
         bool result = jsLess<true>(callFrame, src1, src2);
@@ -4013,8 +4024,8 @@ skip_id_custom_self:
          and then jumps to offset target from the current instruction,
          if and only if the result of the comparison is true.
          */
-        JSValue src1 = callFrame->r(vPC[1].u.operand).jsValue();
-        JSValue src2 = callFrame->r(vPC[2].u.operand).jsValue();
+        JSValue src1 = touchJsValue(callFrame, callFrame->r(vPC[1].u.operand).jsValue());
+        JSValue src2 = touchJsValue(callFrame, callFrame->r(vPC[2].u.operand).jsValue());
         int target = vPC[3].u.operand;
         
         bool result = jsLessEq<true>(callFrame, src1, src2);
@@ -4036,8 +4047,8 @@ skip_id_custom_self:
            target from the current instruction, if and only if the 
            result of the comparison is true.
         */
-        JSValue src1 = callFrame->r(vPC[1].u.operand).jsValue();
-        JSValue src2 = callFrame->r(vPC[2].u.operand).jsValue();
+        JSValue src1 = touchJsValue(callFrame, callFrame->r(vPC[1].u.operand).jsValue());
+        JSValue src2 = touchJsValue(callFrame, callFrame->r(vPC[2].u.operand).jsValue());
         int target = vPC[3].u.operand;
 
         bool result = jsLess<false>(callFrame, src2, src1);
@@ -4059,8 +4070,8 @@ skip_id_custom_self:
          and then jumps to offset target from the current instruction,
          if and only if the result of the comparison is true.
          */
-        JSValue src1 = callFrame->r(vPC[1].u.operand).jsValue();
-        JSValue src2 = callFrame->r(vPC[2].u.operand).jsValue();
+        JSValue src1 = touchJsValue(callFrame, callFrame->r(vPC[1].u.operand).jsValue());
+        JSValue src2 = touchJsValue(callFrame, callFrame->r(vPC[2].u.operand).jsValue());
         int target = vPC[3].u.operand;
         
         bool result = jsLessEq<false>(callFrame, src2, src1);
@@ -4082,8 +4093,8 @@ skip_id_custom_self:
            target from the current instruction, if and only if the 
            result of the comparison is false.
         */
-        JSValue src1 = callFrame->r(vPC[1].u.operand).jsValue();
-        JSValue src2 = callFrame->r(vPC[2].u.operand).jsValue();
+        JSValue src1 = touchJsValue(callFrame, callFrame->r(vPC[1].u.operand).jsValue());
+        JSValue src2 = touchJsValue(callFrame, callFrame->r(vPC[2].u.operand).jsValue());
         int target = vPC[3].u.operand;
 
         bool result = jsLess<true>(callFrame, src1, src2);
@@ -4105,8 +4116,8 @@ skip_id_custom_self:
            and then jumps to offset target from the current instruction,
            if and only if theresult of the comparison is false.
         */
-        JSValue src1 = callFrame->r(vPC[1].u.operand).jsValue();
-        JSValue src2 = callFrame->r(vPC[2].u.operand).jsValue();
+        JSValue src1 = touchJsValue(callFrame, callFrame->r(vPC[1].u.operand).jsValue());
+        JSValue src2 = touchJsValue(callFrame, callFrame->r(vPC[2].u.operand).jsValue());
         int target = vPC[3].u.operand;
 
         bool result = jsLessEq<true>(callFrame, src1, src2);
@@ -4128,8 +4139,8 @@ skip_id_custom_self:
            target from the current instruction, if and only if the 
            result of the comparison is false.
         */
-        JSValue src1 = callFrame->r(vPC[1].u.operand).jsValue();
-        JSValue src2 = callFrame->r(vPC[2].u.operand).jsValue();
+        JSValue src1 = touchJsValue(callFrame, callFrame->r(vPC[1].u.operand).jsValue());
+        JSValue src2 = touchJsValue(callFrame, callFrame->r(vPC[2].u.operand).jsValue());
         int target = vPC[3].u.operand;
 
         bool result = jsLess<false>(callFrame, src2, src1);
@@ -4151,8 +4162,8 @@ skip_id_custom_self:
            and then jumps to offset target from the current instruction,
            if and only if theresult of the comparison is false.
         */
-        JSValue src1 = callFrame->r(vPC[1].u.operand).jsValue();
-        JSValue src2 = callFrame->r(vPC[2].u.operand).jsValue();
+        JSValue src1 = touchJsValue(callFrame, callFrame->r(vPC[1].u.operand).jsValue());
+        JSValue src2 = touchJsValue(callFrame, callFrame->r(vPC[2].u.operand).jsValue());
         int target = vPC[3].u.operand;
 
         bool result = jsLessEq<false>(callFrame, src2, src1);
@@ -4177,7 +4188,7 @@ skip_id_custom_self:
          */
         int tableIndex = vPC[1].u.operand;
         int defaultOffset = vPC[2].u.operand;
-        JSValue scrutinee = callFrame->r(vPC[3].u.operand).jsValue();
+        JSValue scrutinee = touchJsValue(callFrame, callFrame->r(vPC[3].u.operand).jsValue());
         if (scrutinee.isInt32())
             vPC += codeBlock->immediateSwitchJumpTable(tableIndex).offsetForValue(scrutinee.asInt32(), defaultOffset);
         else if (scrutinee.isDouble() && scrutinee.asDouble() == static_cast<int32_t>(scrutinee.asDouble()))
@@ -4197,7 +4208,7 @@ skip_id_custom_self:
          */
         int tableIndex = vPC[1].u.operand;
         int defaultOffset = vPC[2].u.operand;
-        JSValue scrutinee = callFrame->r(vPC[3].u.operand).jsValue();
+        JSValue scrutinee = touchJsValue(callFrame, callFrame->r(vPC[3].u.operand).jsValue());
         if (!scrutinee.isString())
             vPC += defaultOffset;
         else {
@@ -4220,7 +4231,7 @@ skip_id_custom_self:
          */
         int tableIndex = vPC[1].u.operand;
         int defaultOffset = vPC[2].u.operand;
-        JSValue scrutinee = callFrame->r(vPC[3].u.operand).jsValue();
+        JSValue scrutinee = touchJsValue(callFrame, callFrame->r(vPC[3].u.operand).jsValue());
         if (!scrutinee.isString())
             vPC += defaultOffset;
         else 
@@ -4239,7 +4250,7 @@ skip_id_custom_self:
         int func = vPC[2].u.operand;
         int shouldCheck = vPC[3].u.operand;
         ASSERT(codeBlock->codeType() != FunctionCode || !codeBlock->needsFullScopeChain() || callFrame->r(codeBlock->activationRegister()).jsValue());
-        if (!shouldCheck || !callFrame->r(dst).jsValue())
+        if (!shouldCheck || !touchJsValue(callFrame, callFrame->r(dst).jsValue()))
             callFrame->uncheckedR(dst) = JSValue(codeBlock->functionDecl(func)->make(callFrame, callFrame->scopeChain()));
 
         vPC += OPCODE_LENGTH(op_new_func);
@@ -4294,7 +4305,7 @@ skip_id_custom_self:
         int registerOffset = vPC[3].u.operand;
         
         ASSERT(codeBlock->codeType() != FunctionCode || !codeBlock->needsFullScopeChain() || callFrame->r(codeBlock->activationRegister()).jsValue());
-        JSValue funcVal = callFrame->r(func).jsValue();
+        JSValue funcVal = touchJsValue(callFrame, callFrame->r(func).jsValue());
 
         if (isHostFunction(funcVal, globalFuncEval)) {
             CallFrame* newCallFrame = CallFrame::create(callFrame->registers() + registerOffset);
@@ -4328,7 +4339,7 @@ skip_id_custom_self:
         int argCount = vPC[2].u.operand;
         int registerOffset = vPC[3].u.operand;
 
-        JSValue v = callFrame->r(func).jsValue();
+        JSValue v = touchJsValue(callFrame, callFrame->r(func).jsValue());
 
         CallData callData;
         CallType callType = getCallData(v, callData);
@@ -4400,9 +4411,9 @@ skip_id_custom_self:
          dst is where op_ret should store its result.
          */
         
-        JSValue v = callFrame->r(vPC[1].u.operand).jsValue();
-        JSValue thisValue = callFrame->r(vPC[2].u.operand).jsValue();
-        JSValue arguments = callFrame->r(vPC[3].u.operand).jsValue();
+        JSValue v = touchJsValue(callFrame, callFrame->r(vPC[1].u.operand).jsValue());
+        JSValue thisValue = touchJsValue(callFrame, callFrame->r(vPC[2].u.operand).jsValue());
+        JSValue arguments = touchJsValue(callFrame, callFrame->r(vPC[3].u.operand).jsValue());
         int firstFreeRegister = vPC[4].u.operand;
 
         CallFrame* newCallFrame = loadVarargs(callFrame, registerFile, thisValue, arguments, firstFreeRegister);
@@ -4481,13 +4492,13 @@ skip_id_custom_self:
         int activation = vPC[1].u.operand;
         int arguments = vPC[2].u.operand;
         ASSERT(codeBlock->needsFullScopeChain());
-        JSValue activationValue = callFrame->r(activation).jsValue();
+        JSValue activationValue = touchJsValue(callFrame, callFrame->r(activation).jsValue());
         if (activationValue) {
             asActivation(activationValue)->tearOff(*globalData);
 
-            if (JSValue argumentsValue = callFrame->r(unmodifiedArgumentsRegister(arguments)).jsValue())
+            if (JSValue argumentsValue = touchJsValue(callFrame, callFrame->r(unmodifiedArgumentsRegister(arguments)).jsValue()))
                 asArguments(argumentsValue)->didTearOffActivation(*globalData, asActivation(activationValue));
-        } else if (JSValue argumentsValue = callFrame->r(unmodifiedArgumentsRegister(arguments)).jsValue()) {
+        } else if (JSValue argumentsValue = touchJsValue(callFrame, callFrame->r(unmodifiedArgumentsRegister(arguments)).jsValue())) {
             if (!codeBlock->isStrictMode())
                 asArguments(argumentsValue)->tearOff(callFrame);
         }
@@ -4510,7 +4521,7 @@ skip_id_custom_self:
         int src1 = vPC[1].u.operand;
         ASSERT(!codeBlock->needsFullScopeChain() && codeBlock->ownerExecutable()->usesArguments());
 
-        if (JSValue arguments = callFrame->r(unmodifiedArgumentsRegister(src1)).jsValue())
+        if (JSValue arguments = touchJsValue(callFrame, callFrame->r(unmodifiedArgumentsRegister(src1)).jsValue()))
             asArguments(arguments)->tearOff(callFrame);
 
         vPC += OPCODE_LENGTH(op_tear_off_arguments);
@@ -4528,7 +4539,7 @@ skip_id_custom_self:
 
         int result = vPC[1].u.operand;
 
-        JSValue returnValue = callFrame->r(result).jsValue();
+        JSValue returnValue = touchJsValue(callFrame, callFrame->r(result).jsValue());
 
         vPC = callFrame->returnVPC();
         callFrame = callFrame->callerFrame();
@@ -4567,10 +4578,10 @@ skip_id_custom_self:
 
         int result = vPC[1].u.operand;
 
-        JSValue returnValue = callFrame->r(result).jsValue();
+        JSValue returnValue = touchJsValue(callFrame, callFrame->r(result).jsValue());
 
         if (UNLIKELY(!returnValue.isObject()))
-            returnValue = callFrame->r(vPC[2].u.operand).jsValue();
+            returnValue = touchJsValue(callFrame, callFrame->r(vPC[2].u.operand).jsValue());
 
         vPC = callFrame->returnVPC();
         callFrame = callFrame->callerFrame();
@@ -4647,7 +4658,7 @@ skip_id_custom_self:
 #endif
 
         Structure* structure;
-        JSValue proto = callFrame->r(protoRegister).jsValue();
+        JSValue proto = touchJsValue(callFrame, callFrame->r(protoRegister).jsValue());
         if (proto.isObject())
             structure = asObject(proto)->inheritorID(callFrame->globalData());
         else
@@ -4727,7 +4738,7 @@ skip_id_custom_self:
         int argCount = vPC[2].u.operand;
         int registerOffset = vPC[3].u.operand;
 
-        JSValue v = callFrame->r(func).jsValue();
+        JSValue v = touchJsValue(callFrame, callFrame->r(func).jsValue());
 
         ConstructData constructData;
         ConstructType constructType = getConstructData(v, constructData);
@@ -4808,7 +4819,7 @@ skip_id_custom_self:
         int dst = vPC[1].u.operand;
         int src = vPC[2].u.operand;
 
-        callFrame->uncheckedR(dst) = callFrame->r(src).jsValue().toPrimitive(callFrame);
+        callFrame->uncheckedR(dst) = touchJsValue(callFrame, callFrame->r(src).jsValue()).toPrimitive(callFrame);
         vPC += OPCODE_LENGTH(op_to_primitive);
 
         NEXT_INSTRUCTION();
@@ -4821,7 +4832,7 @@ skip_id_custom_self:
            are replaced by the result of toObject conversion of the scope.
         */
         int scope = vPC[1].u.operand;
-        JSValue v = callFrame->r(scope).jsValue();
+        JSValue v = touchJsValue(callFrame, callFrame->r(scope).jsValue());
         JSObject* o = v.toObject(callFrame);
         CHECK_FOR_EXCEPTION();
 
@@ -4854,7 +4865,7 @@ skip_id_custom_self:
         int size = vPC[4].u.operand;
         int breakTarget = vPC[5].u.operand;
 
-        JSValue v = callFrame->r(base).jsValue();
+        JSValue v = touchJsValue(callFrame, callFrame->r(base).jsValue());
         if (v.isUndefinedOrNull()) {
             vPC += breakTarget;
             NEXT_INSTRUCTION();
@@ -4969,7 +4980,7 @@ skip_id_custom_self:
         */
 
         int ex = vPC[1].u.operand;
-        exceptionValue = callFrame->r(ex).jsValue();
+        exceptionValue = touchJsValue(callFrame, callFrame->r(ex).jsValue());
 
         handler = throwException(callFrame, exceptionValue, vPC - codeBlock->instructions().begin());
         if (!handler) {
@@ -4991,7 +5002,7 @@ skip_id_custom_self:
            original constructor, using constant message as the
            message string. The result is thrown.
         */
-        UString message = callFrame->r(vPC[1].u.operand).jsValue().toString(callFrame);
+        UString message = touchJsValue(callFrame, callFrame->r(vPC[1].u.operand).jsValue()).toString(callFrame);
         exceptionValue = JSValue(createReferenceError(callFrame, message));
         goto vm_throw;
     }
@@ -5003,7 +5014,7 @@ skip_id_custom_self:
         */
 
         int result = vPC[1].u.operand;
-        return callFrame->r(result).jsValue();
+        return touchJsValue(callFrame, callFrame->r(result).jsValue());
     }
     DEFINE_OPCODE(op_put_getter) {
         /* put_getter base(r) property(id) function(r)
@@ -5105,7 +5116,7 @@ skip_id_custom_self:
         int function = vPC[1].u.operand;
 
         if (*enabledProfilerReference)
-            (*enabledProfilerReference)->willExecute(callFrame, callFrame->r(function).jsValue());
+            (*enabledProfilerReference)->willExecute(callFrame, touchJsValue(callFrame, callFrame->r(function).jsValue()));
 
         vPC += OPCODE_LENGTH(op_profile_will_call);
         NEXT_INSTRUCTION();
@@ -5119,7 +5130,7 @@ skip_id_custom_self:
         int function = vPC[1].u.operand;
 
         if (*enabledProfilerReference)
-            (*enabledProfilerReference)->didExecute(callFrame, callFrame->r(function).jsValue());
+            (*enabledProfilerReference)->didExecute(callFrame, touchJsValue(callFrame, callFrame->r(function).jsValue()));
 
         vPC += OPCODE_LENGTH(op_profile_did_call);
         NEXT_INSTRUCTION();

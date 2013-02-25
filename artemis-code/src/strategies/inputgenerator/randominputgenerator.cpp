@@ -30,7 +30,6 @@
 #include <typeinfo>
 
 #include "runtime/events/eventypes.h"
-#include "variants/randomvariants.h"
 #include "runtime/events/forms/forminput.h"
 #include "runtime/input/baseinput.h"
 #include "runtime/input/dominput.h"
@@ -44,16 +43,20 @@ namespace artemis
 
 RandomInputGenerator::RandomInputGenerator(
         QObject* parent,
+        QSharedPointer<const FormInputGenerator> formInputGenerator,
+        QSharedPointer<const EventParameterGenerator> eventParameterInputGenerator,
         TargetGenerator* targetGenerator,
         int numberSameLength) :
-    InputGeneratorStrategy(parent)
+
+    InputGeneratorStrategy(parent),
+    mFormInputGenerator(formInputGenerator),
+    mEventParameterGenerator(eventParameterInputGenerator)
 {
     mTargetGenerator = targetGenerator;
     mTargetGenerator->setParent(this);
 
     mNumberSameLength = numberSameLength;
 
-    mVariantsGenerator = QSharedPointer<RandomVariants>(new RandomVariants());
 }
 
 QList<QSharedPointer<ExecutableConfiguration> > RandomInputGenerator::addNewConfigurations(
@@ -71,7 +74,7 @@ QList<QSharedPointer<ExecutableConfiguration> > RandomInputGenerator::addNewConf
 
 QList<QSharedPointer<ExecutableConfiguration> > RandomInputGenerator::insertSameLength(
         QSharedPointer<const ExecutableConfiguration> oldConfiguration,
-        QSharedPointer<const ExecutionResult>)
+        QSharedPointer<const ExecutionResult> result)
 {
     QList<QSharedPointer<ExecutableConfiguration> > newConfigurations;
 
@@ -84,7 +87,7 @@ QList<QSharedPointer<ExecutableConfiguration> > RandomInputGenerator::insertSame
     QSharedPointer<const BaseInput> last = sequence->getLast();
 
     for (int i = 0; i < mNumberSameLength; i++) {
-        QSharedPointer<const BaseInput> newLast = last->getPermutation(mVariantsGenerator, mTargetGenerator);
+        QSharedPointer<const BaseInput> newLast = last->getPermutation(mFormInputGenerator, mEventParameterGenerator, mTargetGenerator, result);
 
         QSharedPointer<const InputSequence> newSeq = sequence->replaceLast(newLast);
         QSharedPointer<ExecutableConfiguration> newConf = \
@@ -110,9 +113,9 @@ QList<QSharedPointer<ExecutableConfiguration> > RandomInputGenerator::insertExte
     QList<QSharedPointer<ExecutableConfiguration> > newConfigurations;
 
     foreach (EventHandlerDescriptor* ee, result->getEventHandlers()) {
-        EventParameters* newParams = mVariantsGenerator->generateEventParameters(NULL, ee);
+        EventParameters* newParams = mEventParameterGenerator->generateEventParameters(NULL, ee);
         TargetDescriptor* target = mTargetGenerator->generateTarget(NULL, ee);
-        QSharedPointer<FormInput> newForm = mVariantsGenerator->generateFormFields(NULL, result->getFormFields());
+        QSharedPointer<FormInput> newForm = mFormInputGenerator->generateFormFields(NULL, result->getFormFields(), result);
         QSharedPointer<const DomInput> domInput = QSharedPointer<const DomInput>(new DomInput(ee, newForm, newParams, target));
 
         QSharedPointer<const InputSequence> newInputSequence = oldConfiguration->getInputSequence()->extend(domInput);

@@ -50,6 +50,8 @@ public:
 
     QString toString() const;
 
+    unsigned int getNumCoveredLines() const;
+
 private:
     QMap<int, SourceInfo*> mSources;
     QMap<int, QMap<int, LineInfo> > mCoverage;

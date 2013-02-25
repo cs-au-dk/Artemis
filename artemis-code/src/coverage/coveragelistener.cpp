@@ -25,9 +25,13 @@
   authors and should not be interpreted as representing official policies, either expressed
   or implied, of Simon Holm Jensen
 */
-#include "coveragelistener.h"
-#include "util/urlutil.h"
+
 #include "artemisglobals.h"
+#include "util/urlutil.h"
+#include "statistics/statsstorage.h"
+
+#include "coveragelistener.h"
+
 #include "util/loggingutil.h"
 namespace artemis
 {
@@ -65,14 +69,15 @@ CodeCoverage CoverageListener::currentCoverage()
 
 void CoverageListener::newCode(intptr_t id, QString source, QUrl url, int startline)
 {
-    if (isOmit(url))
-        { return; }
+    if (isOmit(url)) {
+        return;
+    }
 
     int hash = getHash(url, startline);
     webkitPointers.insert(id, hash);
 
     if (!sources.contains(hash)) {
-        qDebug()<< "Loaded new code: " << url << " at line " << QString::number(startline);
+        qDebug() << "Loaded new code: " << url << " at line " << QString::number(startline);
         SourceInfo* infoP = new SourceInfo(this, source, url, startline);
         sources.insert(hash, infoP);
         coverage.insert(hash, new QMap<int, LineInfo>());
@@ -83,8 +88,10 @@ void CoverageListener::newCode(intptr_t id, QString source, QUrl url, int startl
 
 void CoverageListener::statementExecuted(intptr_t sourceID, std::string functionName, int linenumber)
 {
+    statistics()->accumulate("WebKit::coverage::covered", 1);
+
     int hash = webkitPointers[sourceID];
-    QMap<int, LineInfo> *map = coverage.value(hash, 0);
+    QMap<int, LineInfo>* map = coverage.value(hash, 0);
 
     if (map == 0) {
         map = new QMap<int, LineInfo>();
@@ -96,8 +103,7 @@ void CoverageListener::statementExecuted(intptr_t sourceID, std::string function
         LineInfo p = map->value(hash);
         p.lineExecuted();
         map->insert(linenumber, p);
-    }
-    else {
+    } else {
         LineInfo p;
         p.lineExecuted();
         map->insert(linenumber, p);

@@ -70,6 +70,7 @@ WebKitExecutor::WebKitExecutor(QObject* parent,
     mResultBuilder = new ExecutionResultBuilder(this, mPage);
     covList = new CoverageListener(this);
 
+    QWebExecutionListener::attachListeners();
     webkitListener = QWebExecutionListener::getListener();
 
     // TODO cleanup in ajax stuff, we are handling ajax through AjaxRequestListener, the ajaxRequest signal and addAjaxCallHandler
@@ -81,6 +82,8 @@ WebKitExecutor::WebKitExecutor(QObject* parent,
                      covList, SLOT(newCode(intptr_t, QString, QUrl, int)));
     QObject::connect(webkitListener, SIGNAL(statementExecuted(intptr_t, std::string, int)),
                      covList, SLOT(statementExecuted(intptr_t, std::string, int)));
+
+
 
     QObject::connect(webkitListener, SIGNAL(addedEventListener(QWebElement*, QString)),
                      mResultBuilder, SLOT(slEventListenerAdded(QWebElement*, QString)));
@@ -104,6 +107,9 @@ WebKitExecutor::WebKitExecutor(QObject* parent,
     QObject::connect(webkitListener, SIGNAL(ajax_request(QUrl, QString)),
                      mResultBuilder, SLOT(slAjaxRequestInitiated(QUrl, QString)));
 
+    QObject::connect(webkitListener, SIGNAL(sigJavascriptConstantEncountered(QString)),
+                     mResultBuilder, SLOT(slJavascriptConstantEncountered(QString)));
+
 }
 
 WebKitExecutor::~WebKitExecutor()
@@ -119,8 +125,6 @@ void WebKitExecutor::detach() {
 
 void WebKitExecutor::executeSequence(QSharedPointer<ExecutableConfiguration> conf)
 {
-    qDebug() << "Artemis: Executing sequence" << endl;
-
     currentConf = conf;
 
     mJquery->reset(); // TODO merge into result?
@@ -141,7 +145,7 @@ void WebKitExecutor::slLoadFinished(bool ok)
 
     qDebug() << "WEBKIT: Finished loading" << endl;
 
-    // Populate forms
+    // Populate forms (preset)
 
     foreach(QString f , mPresetFields.keys()) {
         QWebElement elm = mPage->mainFrame()->findFirstElement(f);
@@ -156,7 +160,10 @@ void WebKitExecutor::slLoadFinished(bool ok)
 
     // Execute input sequence
 
+    qDebug() << "Artemis: Executing sequence" << endl;
+
     foreach(QSharedPointer<const BaseInput> input, currentConf->getInputSequence()->toList()) {
+        mResultBuilder->notifyStartingEvent();
         input->apply(this->mPage, this->webkitListener);
     }
 

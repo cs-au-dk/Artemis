@@ -36,6 +36,7 @@ public:
     
     void reset();
     void notifyPageLoaded();
+    void notifyStartingEvent();
     QSharedPointer<ExecutionResult> getResult();
 
 private:
@@ -64,6 +65,8 @@ public slots:
 
     void slAjaxCallbackHandlerAdded(int callbackId);
     void slAjaxRequestInitiated(QUrl, QString postData);
+
+    void slJavascriptConstantEncountered(QString constant);
 
 };
 

@@ -35,20 +35,18 @@
 #include "runtime/events/baseeventparameters.h"
 #include "runtime/events/keyboardeventparameters.h"
 #include "runtime/events/mouseeventparameters.h"
-#include "runtime/events/forms/formfieldtypes.h"
-#include "runtime/events/forms/forminput.h"
 
-#include "randomvariants.h"
+#include "staticeventparametergenerator.h"
 
 namespace artemis
 {
 
-RandomVariants::RandomVariants() : VariantsGenerator()
+StaticEventParameterGenerator::StaticEventParameterGenerator() : EventParameterGenerator()
 {
 
 }
 
-EventParameters* RandomVariants::generateEventParameters(QObject* parent, const EventHandlerDescriptor* eventHandler)
+EventParameters* StaticEventParameterGenerator::generateEventParameters(QObject* parent, const EventHandlerDescriptor* eventHandler) const
 {
 
     switch (eventHandler->getEventType()) {
@@ -90,30 +88,6 @@ EventParameters* RandomVariants::generateEventParameters(QObject* parent, const 
         qFatal("Unknown event type!");
         assert(false);
     }
-}
-
-QSharedPointer<FormInput> RandomVariants::generateFormFields(QObject* parent, QSet<QSharedPointer<const FormField> > fields)
-{
-    QSet<QPair<QSharedPointer<const FormField>, const FormFieldValue*> > inputs;
-
-    foreach(QSharedPointer<const FormField> field, fields) {
-
-        switch (field->getType()) {
-        case TEXT:
-            inputs.insert(QPair<QSharedPointer<const FormField>, const FormFieldValue*>(field, new FormFieldValue(parent, generateRandomString(10))));
-            break;
-        case BOOLEAN:
-            inputs.insert(QPair<QSharedPointer<const FormField>, const FormFieldValue*>(field, new FormFieldValue(parent, randomBool())));
-            break;
-        case FIXED_INPUT:
-            inputs.insert(QPair<QSharedPointer<const FormField>, const FormFieldValue*>(field, new FormFieldValue(parent, pickRand(field->getInputOptions()))));
-            break;
-        default:
-            inputs.insert(QPair<QSharedPointer<const FormField>, const FormFieldValue*>(field, new FormFieldValue(parent)));
-        }
-    }
-
-    return QSharedPointer<FormInput>(new FormInput(inputs));
 }
 
 }

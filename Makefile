@@ -12,7 +12,7 @@ help:
 	@echo "    fetch-[apt|yum]		- fetching dependencies from [apt|yum]"
 	@echo "    fetch-qt			- fetches, configures and makes Qt"
 
-WEBKIT_BUILD_SCRIPT = ./WebKit/Tools/Scripts/build-webkit --qt --qmakearg="DEFINES+=ARTEMIS=1" --makearg="-j4"  --qmakearg="CC=gcc-4.7" --qmakearg="CXX=g++-4.7"
+WEBKIT_BUILD_SCRIPT = ./WebKit/Tools/Scripts/build-webkit --qt --qmakearg="DEFINES+=ARTEMIS=1" --makearg="-j4"  --qmakearg="CC=gcc-4.7" --qmakearg="CXX=g++-4.7" --inspector --javascript-debugger
 
 build: check webkit artemis
 

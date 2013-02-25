@@ -18,9 +18,12 @@ VPATH += ../../
 include(../../artemis-core.pri)
 
 HEADERS += \
-    include/gtest/gtest.h
+    include/gtest/gtest.h \
+    include/gmock/gmock.h
 
 SOURCES += \
     src/gtest/gtest_main.cc \
     src/gtest/gtest-all.cc \
-    src/runtime/worklist/deterministicworklisttest.cpp
+    src/gmock/gmock-all.cc \
+    src/runtime/worklist/deterministicworklisttest.cpp \
+    src/strategies/inputgenerator/form/constantstringforminputgeneratortest.cpp

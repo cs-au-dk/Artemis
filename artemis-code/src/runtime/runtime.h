@@ -58,7 +58,6 @@ public:
     ~Runtime() {};
 
     void startAnalysis(QUrl startAnalysis);
-    CodeCoverage coverage();
 
 private:
     void preConcreteExecution();
@@ -70,6 +69,8 @@ private:
     TerminationStrategy* mTerminationStrategy;
     PrioritizerStrategy* mPrioritizerStrategy;
     InputGeneratorStrategy* mInputgenerator;
+
+    Options mOptions;
 
 private slots:
     void postConcreteExecution(QSharedPointer<ExecutableConfiguration> configuration, QSharedPointer<ExecutionResult> result);

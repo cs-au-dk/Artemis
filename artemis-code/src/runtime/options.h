@@ -42,7 +42,23 @@
 namespace artemis
 {
 
+enum FormInputGenerationStrategies {
+    Random, ConstantString
+};
+
+enum CoverageReport {
+    STDOUT, HTML, NONE
+};
+
 typedef struct OptionsType {
+
+    OptionsType() :
+        iterationLimit(1),
+        numberSameLength(1),
+        recreatePage(false),
+        formInputGenerationStrategy(Random),
+        outputCoverage(NONE)
+    {}
 
     QMap<QString, QString> presetFormfields;
     QMap<QString, QString> presetCookies;
@@ -55,10 +71,10 @@ typedef struct OptionsType {
     QString useProxy;
     QString dumpPageStates;
 
-    OptionsType() :
-        iterationLimit(1),
-        numberSameLength(1),
-        recreatePage(false) {}
+    FormInputGenerationStrategies formInputGenerationStrategy;
+
+    CoverageReport outputCoverage;
+
 } Options;
 
 }

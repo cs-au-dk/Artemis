@@ -15,12 +15,16 @@
 #include "WebCore/xml/LazyXMLHttpRequest.h"
 #include "WebCore/dom/ScriptExecutionContext.h"
 #include "WebCore/page/DOMTimer.h"
+#include "JavaScriptCore/parser/SourceCode.h"
+#include "JavaScriptCore/interpreter/CallFrame.h"
+#include "JavaScriptCore/runtime/ScopeChain.h"
+#include "JavaScriptCore/bytecode/CodeBlock.h"
 
 #include "qwebexecutionlistener.h"
 
 using namespace std;
 
-QWebExecutionListener::QWebExecutionListener(QObject *parent) : QObject(parent), inst::ExecutionListener()
+QWebExecutionListener::QWebExecutionListener(QObject *parent) : QObject(parent), inst::ExecutionListener(), jscinst::JSCExecutionListener()
 {
 }
 
@@ -108,12 +112,22 @@ void QWebExecutionListener::clearTimers() {
 
 // TIMERS END
 
-void QWebExecutionListener::scriptCodeLoaded(intptr_t id, std::string source, std::string url, int startline) {
+void QWebExecutionListener::javascript_code_loaded(JSC::SourceProvider* sp, JSC::ExecState*) {
+    // SourceProvider has changed API lately, thus the following usage of it has not been fully
+    // tested with artemis - e.g. if you are tracking an error and reach this point, then you
+    // have come to the right place.
+
+    std::string source(sp->getRange(0, sp->length()).utf8().data());
+    std::string url(sp->url().utf8().data());
+    intptr_t id = sp->asID();
+    int startline = sp->startPosition().m_line.zeroBasedInt() + 1; // startPosition is placed right before the first line, thus (+1)
+
     emit loadedJavaScript(id, QString(tr(source.c_str())), QUrl(QString(tr(url.c_str()))), startline);
 }
 
-void QWebExecutionListener::executedStatement(intptr_t sourceID, std::string function_name, int linenumber) {
-    emit statementExecuted(sourceID, function_name, linenumber);
+void QWebExecutionListener::javascript_executed_statement(const JSC::DebuggerCallFrame&, intptr_t sourceID, int linenumber) {
+    /* std::string(frame.calculatedFunctionName().ascii().data()) */
+    emit statementExecuted(sourceID, "fakeFunktionName()", linenumber);
 }
 
 bool domNodeSignature(JSC::CallFrame * cframe, JSC::JSObject * domElement, QString * signature) {
@@ -174,18 +188,17 @@ bool domNodeSignature(JSC::CallFrame * cframe, JSC::JSObject * domElement, QStri
 **/
 void QWebExecutionListener::calledFunction(const JSC::DebuggerCallFrame& frame) {
 
-    JSC::CallFrame * cframe = frame.callFrame();
-
     std::string functionName = std::string(frame.calculatedFunctionName().ascii().data());
 
+    emit sigJavascriptFunctionCalled(QString::fromStdString(functionName), (intptr_t)frame.callFrame()->codeBlock(), frame.callFrame()->codeBlock()->numberOfInstructions());
+
     if (functionName.compare("__jquery_event_add__") == 0) {
-        cout << "JQUERY SPECIFIC ADDITION DETECTED" << endl;
-    
-        
+
+        JSC::CallFrame* cframe = frame.callFrame();
         JSC::JSValue element = cframe->argument(0);
         
         if (element.isObject() == false) {
-            cout << "JQUERY::Error unknown element" << endl;
+            cout << "WARNING: unknown element encountered when handling JQuery support" << endl;
             return;
 
         }
@@ -196,7 +209,7 @@ void QWebExecutionListener::calledFunction(const JSC::DebuggerCallFrame& frame) 
         JSC::JSValue event = cframe->argument(1);
         
         if (event.isString() == false) {
-            cout << "JQUERY::Error unknown event" << endl;
+            cout << "WARNING: unknown event encountered when handling JQuery support" << endl;
             return;
         }
 
@@ -206,7 +219,7 @@ void QWebExecutionListener::calledFunction(const JSC::DebuggerCallFrame& frame) 
             // This is not really fatal, in some cases an undefined
             // or null selector is given (presumably when doing a 
             // direct bind)
-            cout << "JQUERY::Warning unknown selector" << endl;
+            cout << "WARNING: unknown selector encountered when handling JQuery support" << endl;
             return;
         }
 
@@ -234,18 +247,38 @@ void QWebExecutionListener::webkit_ajax_send(const char * url, const char * data
     emit ajax_request(url_u, data_q);
 }
 
-void QWebExecutionListener::webkit_eval_call(const char * eval_string) {
+void QWebExecutionListener::javascript_constant_encountered(std::string constant) {
+    emit sigJavascriptConstantEncountered(QString::fromStdString(constant));
+}
+
+void QWebExecutionListener::javascript_eval_call(const char * eval_string) {
     Q_CHECK_PTR(eval_string);
     emit this->eval_call(QString(tr(eval_string)));
+}
+
+void QWebExecutionListener::javascript_bytecode_executed(JSC::CodeBlock* codeBlock, JSC::Instruction* instuction) {
+
+    size_t bytecodeOffset = instuction - codeBlock->instructions().begin();
+
+    emit sigJavascriptBytecodeExecuted((intptr_t)codeBlock, bytecodeOffset);
+
+    /*jsc_bytecode_executed(codeBlock->source()->url().utf8(false).data(),
+                          codeBlock->lineNumberForBytecodeOffset(offset),
+                          offset,
+                          -1); //TODO: Find out how to get the opcode from WebKit */
 }
 
 QWebExecutionListener* QWebExecutionListener::getListener() {
     return (QWebExecutionListener*)inst::getListener();
 }
 
+void QWebExecutionListener::attachListeners() {
+    jscinst::register_jsc_listener(QWebExecutionListener::getListener());
+}
+
 namespace inst {
 
-ExecutionListener* listener;
+ExecutionListener* listener = 0;
 
 ExecutionListener* getListener() {
     if (listener == NULL) {

@@ -25,25 +25,30 @@
   authors and should not be interpreted as representing official policies, either expressed
   or implied, of Simon Holm Jensen
 */
-#ifndef RANDOMVARIANTS_H
-#define RANDOMVARIANTS_H
+#ifndef EVENTPARAMETERGENERATOR_H
+#define EVENTPARAMETERGENERATOR_H
 
-#include "variantsgenerator.h"
+#include <QObject>
+#include <QSet>
+
+#include "runtime/events/eventparameters.h"
+#include "runtime/events/eventhandlerdescriptor.h"
+#include "runtime/events/forms/formfield.h"
+#include "runtime/events/forms/forminput.h"
 
 namespace artemis
 {
 
-class RandomVariants : public VariantsGenerator
+class EventParameterGenerator
 {
+
 public:
+    EventParameterGenerator() {}
+    virtual ~EventParameterGenerator() {}
 
-    RandomVariants();
-
-    EventParameters* generateEventParameters(QObject* parent, const EventHandlerDescriptor* eventHandler);
-    QSharedPointer<FormInput> generateFormFields(QObject* parent, QSet<QSharedPointer<const FormField> > fi);
-
+    virtual EventParameters* generateEventParameters(QObject* parent, const EventHandlerDescriptor* eventHandler) const = 0;
 };
 
 }
 
-#endif // RANDOMVARIANTS_H
+#endif // EVENTPARAMETERGENERATOR_H

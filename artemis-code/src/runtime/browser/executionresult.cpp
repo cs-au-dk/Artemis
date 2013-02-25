@@ -85,6 +85,15 @@ QList<QSharedPointer<Timer> > ExecutionResult::getTimers() const
     return mTimers.values();
 }
 
+QSet<QString> ExecutionResult::getJavascriptConstantsObservedForLastEvent() const
+{
+    return mJavascriptConstantsObservedForLastEvent;
+}
+
+void ExecutionResult::addJavascriptConstantObservedForLastEvent(QString constant) {
+    mJavascriptConstantsObservedForLastEvent.insert(constant);
+}
+
 QDebug operator<<(QDebug dbg, const ExecutionResult& e)
 {
     dbg.nospace() << "Event handlers: " << e.mEventHandlers << "\n";

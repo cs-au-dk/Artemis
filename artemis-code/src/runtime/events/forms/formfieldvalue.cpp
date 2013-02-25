@@ -55,21 +55,21 @@ FormFieldValue::FormFieldValue(QObject* parent) : QObject(parent)
     isNoVal = true;
 }
 
-bool FormFieldValue::getBool()
+bool FormFieldValue::getBool() const
 {
     Q_ASSERT(isBool);
     Q_ASSERT(!isNoVal);
     return boolVal;
 }
 
-QString FormFieldValue::getStr()
+QString FormFieldValue::getStr() const
 {
     Q_ASSERT(!isBool);
     Q_ASSERT(!isNoVal);
     return strVal;
 }
 
-bool FormFieldValue::isNoValue()
+bool FormFieldValue::isNoValue() const
 {
     return isNoVal;
 }

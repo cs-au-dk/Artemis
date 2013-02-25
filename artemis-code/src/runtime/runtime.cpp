@@ -26,21 +26,25 @@
  or implied, of Simon Holm Jensen
  */
 
+#include <assert.h>
 #include <iostream>
 
 #include <QSharedPointer>
 
 #include "worklist/deterministicworklist.h"
 #include "coverage/coveragetooutputstream.h"
+
 #include "statistics/statsstorage.h"
 #include "statistics/writers/pretty.h"
 #include "strategies/inputgenerator/randominputgenerator.h"
+#include "strategies/inputgenerator/event/staticeventparametergenerator.h"
+#include "strategies/inputgenerator/form/staticforminputgenerator.h"
+#include "strategies/inputgenerator/form/constantstringforminputgenerator.h"
 #include "strategies/termination/numberofiterationstermination.h"
 #include "strategies/prioritizer/constantprioritizer.h"
-#include "util/coverageutil.h"
+
 #include "util/loggingutil.h"
 #include "runtime.h"
-
 
 using namespace std;
 
@@ -55,6 +59,8 @@ namespace artemis
  */
 Runtime::Runtime(QObject* parent, const Options& options, QUrl url) : QObject(parent)
 {
+
+    mOptions = options;
 
     /** Proxy support **/
 
@@ -80,7 +86,25 @@ Runtime::Runtime(QObject* parent, const Options& options, QUrl url) : QObject(pa
 
     mWebkitExecutor = new WebKitExecutor(this, options.presetFormfields, jqueryListener, ajaxRequestListner);
 
-    mInputgenerator = new RandomInputGenerator(this, new TargetGenerator(this, jqueryListener), options.numberSameLength);
+    QSharedPointer<FormInputGenerator> formInputGenerator;
+    switch (options.formInputGenerationStrategy) {
+    case Random:
+        formInputGenerator = QSharedPointer<StaticFormInputGenerator>(new StaticFormInputGenerator());
+        break;
+
+    case ConstantString:
+        formInputGenerator = QSharedPointer<ConstantStringFormInputGenerator>(new ConstantStringFormInputGenerator());
+        break;
+
+    default:
+        assert(false);
+    }
+
+    mInputgenerator = new RandomInputGenerator(this,
+                                               formInputGenerator,
+                                               QSharedPointer<StaticEventParameterGenerator>(new StaticEventParameterGenerator()),
+                                               new TargetGenerator(this, jqueryListener),
+                                               options.numberSameLength);
     mTerminationStrategy = new NumberOfIterationsTermination(this, options.iterationLimit);
     mPrioritizerStrategy = new ConstantPrioritizer(this);
 
@@ -96,18 +120,11 @@ Runtime::Runtime(QObject* parent, const Options& options, QUrl url) : QObject(pa
  */
 void Runtime::startAnalysis(QUrl url)
 {
-
-    Log::info("Artemis - Automated tester for JavaScript");
-    Log::info("Started: " + QDateTime::currentDateTime().toString().toStdString());
-    string build = EXE_BUILD_DATE;
-    Log::info("Compilation date: " + build);
-    Log::info("-----\n");
-/*
-     qDebug() << "Artemis - Automated tester for JavaScript";
+    qDebug() << "Artemis - Automated tester for JavaScript";
     qDebug() << "Started: " << QDateTime::currentDateTime().toString();
     qDebug() << "Compilation date: " << EXE_BUILD_DATE;
     qDebug() << "-----\n";
-*/
+
     QSharedPointer<ExecutableConfiguration> initialConfiguration =
         QSharedPointer<ExecutableConfiguration>(new ExecutableConfiguration(QSharedPointer<InputSequence>(new InputSequence()), url));
 
@@ -156,25 +173,29 @@ void Runtime::postConcreteExecution(QSharedPointer<ExecutableConfiguration> conf
 
 void Runtime::finishAnalysis()
 {
-    qDebug() << "Dette er en test\n\n\n";
-    //TODO Write better final output
-    Log::info("Artemis: Testing done...\n");
+    qDebug() << "Artemis: Testing done..." << endl;
 
-    Log::info("=== Coverage information for execution ===\n");
-    writeCoverageHtml(coverage());
-    writeCoverageReport(coverage());
+    switch (mOptions.outputCoverage) {
+    case HTML:
+        writeCoverageHtml(mWebkitExecutor->coverage());
+        break;
+    case STDOUT:
+         writeCoverageStdout(mWebkitExecutor->coverage());
+         break;
+    default:
+        break;
+    }
 
-    Log::info("\n=== Statistics for execution ===\n");
+    statistics()->accumulate("WebKit::coverage::covered-unique", mWebkitExecutor->coverage().getNumCoveredLines());
+
+    qDebug() << "\n=== Statistics ===\n";
     StatsPrettyWriter::write(statistics());
+    qDebug() << "\n=== Statistics END ===\n";
+    qDebug() << endl;
 
-    Log::info("\nArtemis terminated on: "+QDateTime::currentDateTime().toString().toStdString());
+    qDebug() << "Artemis terminated on: " << QDateTime::currentDateTime().toString() << endl;
 
     emit sigTestingDone();
-}
-
-CodeCoverage Runtime::coverage()
-{
-    return mWebkitExecutor->coverage();
 }
 
 } /* namespace artemis */

@@ -62,6 +62,9 @@ public:
     QSet<QString> getEvalStrings();
     QList<QSharedPointer<Timer> > getTimers() const;
 
+    QSet<QString> getJavascriptConstantsObservedForLastEvent() const;
+    void addJavascriptConstantObservedForLastEvent(QString constant);
+
     QDebug friend operator<<(QDebug dbg, const ExecutionResult& e);
 
     friend class ExecutionResultBuilder;
@@ -80,6 +83,7 @@ private:
     QSet<QString> mEvaledStrings;
     QMap<int, QSharedPointer<Timer> > mTimers; // <timerId, Timer>
 
+    QSet<QString> mJavascriptConstantsObservedForLastEvent;
 
 };
 

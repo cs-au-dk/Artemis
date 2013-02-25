@@ -30,6 +30,33 @@ class TimerTests(unittest.TestCase):
 		self.assertEqual(1, report.get('InputGenerator::added-configurations', 0))
 		self.assertEqual(1, report.get('timers::fired', 0))
 
+class InputGeneratorStrategies(unittest.TestCase):
+
+	def test_form_input_constant(self):	
+
+		report = execute_artemis('strategy-input-form-constant', 
+			'%s/strategies/inputgeneration/form-input-constant.html' % WEBSERVER_URL,
+			iterations=2)
+		
+		self.assertEqual(7, report.get('WebKit::coverage::covered', 0));
+
+		report = execute_artemis('strategy-input-form-constant', 
+			'%s/strategies/inputgeneration/form-input-constant.html' % WEBSERVER_URL,
+			strategy_form_input='javascript-constants',
+			iterations=2)
+		
+		self.assertEqual(8, report.get('WebKit::coverage::covered', 0));
+
+class PrioritizationStrategies(unittest.TestCase):
+
+	def test_coverage(self):
+		report = execute_artemis('strategy-priority-coverage', 
+			'%s/strategies/priority/coverage.html' % WEBSERVER_URL,
+			iterations=4,
+			coverage='stdout')
+		
+		self.assertEqual(7, report.get('WebKit::coverage::covered-unique', 0));
+
 #class NonTerminatingTests(unittest.TestCase):
 #	
 #	def test_non_terminating(self):
@@ -41,6 +68,21 @@ class InstrumentationTests(unittest.TestCase):
 		report = execute_artemis('instrumentation-alert', '%s/instrumentation/alert.html' % WEBSERVER_URL)
 		
 		self.assertEqual(1, report.get('WebKit::alerts', 0));
+
+	def test_jsconstants(self):	
+		report = execute_artemis('instrumentation-jsconstants', '%s/instrumentation/jsconstants.html' % WEBSERVER_URL)
+		
+		self.assertEqual(1, report.get('WebKit::jsconstants', 0));
+
+	def test_codecoverage(self):
+		report = execute_artemis('instrumentation-codecoverage', '%s/instrumentation/codecoverage.html' % WEBSERVER_URL)
+		
+		self.assertEqual(5, report.get('WebKit::coverage::covered', 0));
+
+	def test_codecoverage_external(self):
+		report = execute_artemis('instrumentation-codecoverage-external', '%s/instrumentation/codecoverage-external.html' % WEBSERVER_URL)
+		
+		self.assertEqual(3, report.get('WebKit::coverage::covered', 0));
 
 class AjaxTests(unittest.TestCase):
 	
