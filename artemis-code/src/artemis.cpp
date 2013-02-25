@@ -36,6 +36,7 @@
 #include "exceptionhandlingqapp.h"
 #include "runtime/options.h"
 #include "artemisapplication.h"
+#include "util/loggingutil.h"
 
 using namespace std;
 
@@ -134,8 +135,8 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
 
             break;
         }
- case 'v': {
- if(QString(optarg).indexOf("debug",0,Qt::CaseInsensitive)>=0){
+         case 'v': {
+         if(QString(optarg).indexOf("debug",0,Qt::CaseInsensitive)>=0){
                 artemis::Log::addLogLevel(artemis::DEBUG);
             }
 
