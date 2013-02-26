@@ -45,6 +45,7 @@
 #include "strategies/prioritizer/constantprioritizer.h"
 #include "strategies/prioritizer/randomprioritizer.h"
 #include "strategies/prioritizer/coverageprioritizer.h"
+#include "strategies/prioritizer/readwriteprioritizer.h"
 
 #include "util/loggingutil.h"
 #include "runtime.h"
@@ -122,6 +123,9 @@ Runtime::Runtime(QObject* parent, const Options& options, QUrl url) : QObject(pa
     case COVERAGE:
         mPrioritizerStrategy = new CoveragePrioritizer();
         break;
+    case READWRITE:
+        mPrioritizerStrategy = new ReadWritePrioritizer();
+        break;
     default:
         assert(false);
     }
@@ -183,8 +187,11 @@ void Runtime::postConcreteExecution(QSharedPointer<ExecutableConfiguration> conf
     mPrioritizerStrategy->reprioritize(mWorklist);
 
     long hash;
-    if(mVisitedStates->find(hash = result->getPageStateHash()) == mVisitedStates->end()){
+    if (mOptions.disableStateCheck ||
+            mVisitedStates->find(hash = result->getPageStateHash()) == mVisitedStates->end()) {
+
         qDebug() << "Visiting new state";
+
         mVisitedStates->insert(hash);
         QList<QSharedPointer<ExecutableConfiguration> > newConfigurations = mInputgenerator->addNewConfigurations(configuration, result);
 
@@ -193,9 +200,11 @@ void Runtime::postConcreteExecution(QSharedPointer<ExecutableConfiguration> conf
         }
 
         statistics()->accumulate("InputGenerator::added-configurations", newConfigurations.size());
+
     } else {
         qDebug() << "Page state has already been seen";
     }
+
     preConcreteExecution();
 }
 

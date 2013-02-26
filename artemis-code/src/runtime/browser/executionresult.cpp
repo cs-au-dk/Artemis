@@ -59,7 +59,7 @@ QSet<QSharedPointer<AjaxRequest> > ExecutionResult::getAjaxRequests() const
     return mAjaxRequest;
 }
 
-QSet<EventHandlerDescriptor*> ExecutionResult::getEventHandlers() const
+QList<EventHandlerDescriptor*> ExecutionResult::getEventHandlers() const
 {
     return mEventHandlers;
 }

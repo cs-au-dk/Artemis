@@ -43,12 +43,14 @@ DeterministicWorkList::DeterministicWorkList(QObject* parent) :
 void DeterministicWorkList::add(QSharedPointer<ExecutableConfiguration> e, int priority)
 {
     if (!queue.contains(priority)) {
-        QSet<QSharedPointer<ExecutableConfiguration> >* set = new QSet<QSharedPointer<ExecutableConfiguration> >();
+        QList<QSharedPointer<ExecutableConfiguration> >* set = new QList<QSharedPointer<ExecutableConfiguration> >();
         queue.insert(priority, set);
     }
 
-    QSet<QSharedPointer<ExecutableConfiguration> >* set = queue.value(priority);
-    set->insert(e);
+    QList<QSharedPointer<ExecutableConfiguration> >* set = queue.value(priority);
+    if (!set->contains(e)) {
+        set->append(e);
+    }
 
     if (priority > largestPri) {
         largestPri = priority;
@@ -59,9 +61,9 @@ QSharedPointer<ExecutableConfiguration> DeterministicWorkList::remove()
 {
     Q_ASSERT(!queue.empty());
 
-    QSet<QSharedPointer<ExecutableConfiguration> >* set = queue.value(largestPri);
-    QSharedPointer<ExecutableConfiguration> result = set->toList().at(rand() % set->size());
-    set->remove(result);
+    QList<QSharedPointer<ExecutableConfiguration> >* set = queue.value(largestPri);
+    QSharedPointer<ExecutableConfiguration> result = set->first();
+    set->removeFirst();
 
     if (set->isEmpty()) {
         queue.remove(largestPri);
@@ -103,10 +105,11 @@ bool DeterministicWorkList::contains(QSharedPointer<ExecutableConfiguration> e)
 void DeterministicWorkList::newPriority(QSharedPointer<ExecutableConfiguration> e, int priority)
 {
     foreach(int k, queue.keys()) {
-        QSet<QSharedPointer<ExecutableConfiguration> >* set = queue.value(k);
+        QList<QSharedPointer<ExecutableConfiguration> >* set = queue.value(k);
 
-        if (set->contains(e)) {
-            set->remove(e);
+        int index = set->indexOf(e);
+        if (index != -1) {
+            set->removeAt(index);
         }
     }
     add(e, priority);

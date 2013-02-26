@@ -47,13 +47,13 @@ namespace artemis
 
 void writeCoverageStdout(CoverageListenerPtr cov)
 {
-    qDebug() << "=== Coverage information for execution ===";
+    Log::info("=== Coverage information for execution ===");
 
     foreach(int sourceID, cov->getSourceIDs()) {
 
         const SourceInfo* sourceInfo = cov->getSourceInfo(sourceID);
 
-        qDebug() << "Coverage for source located at URL: " << sourceInfo->getURL() << "  line " << sourceInfo->getStartLine();
+        Log::info(QString("Coverage for source located at URL: " + sourceInfo->getURL() + "  line " + sourceInfo->getStartLine()).toStdString());
 
         QString src = sourceInfo->getSource();
         QTextStream read(&src);
@@ -63,8 +63,8 @@ void writeCoverageStdout(CoverageListenerPtr cov)
 
         while (!read.atEnd()) {
             QString prefix = lineCoverage.contains(lineNumber) ? ">>>" : "   ";
-            QString line = prefix + read.readLine() + "\n";
-            qDebug() << line;
+            QString line = prefix + read.readLine();
+            Log::info(line.toStdString());
             lineNumber++;
         }
     }

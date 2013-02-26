@@ -47,7 +47,7 @@ enum FormInputGenerationStrategies {
 };
 
 enum PrioritizerStrategies {
-    CONSTANT, RANDOM, COVERAGE
+    CONSTANT, RANDOM, COVERAGE, READWRITE
 };
 
 enum CoverageReport {
@@ -60,6 +60,7 @@ typedef struct OptionsType {
         iterationLimit(1),
         numberSameLength(1),
         recreatePage(false),
+        disableStateCheck(true),
         formInputGenerationStrategy(Random),
         prioritizerStrategy(CONSTANT),
         outputCoverage(NONE)
@@ -72,6 +73,7 @@ typedef struct OptionsType {
     int numberSameLength;
 
     bool recreatePage;
+    bool disableStateCheck;
 
     QString useProxy;
     QString dumpPageStates;

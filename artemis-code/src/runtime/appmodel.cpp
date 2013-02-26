@@ -4,10 +4,10 @@
 
 namespace artemis {
 
-AppModel::AppModel() :
-    mCoverageListener(CoverageListenerPtr(new CoverageListener())),
-    mJavascriptStatistics(JavascriptStatisticsPtr(new JavascriptStatistics()))
+AppModel::AppModel()
 {
+    mCoverageListener = CoverageListenerPtr(new CoverageListener());
+    mJavascriptStatistics = JavascriptStatisticsPtr(new JavascriptStatistics());
 }
 
 CoverageListenerPtr AppModel::getCoverageListener() const

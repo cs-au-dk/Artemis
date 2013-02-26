@@ -49,7 +49,7 @@ class ExecutionResult
 public:
     ExecutionResult();
 
-    QSet<EventHandlerDescriptor*> getEventHandlers() const;
+    QList<EventHandlerDescriptor*> getEventHandlers() const;
     QSet<QSharedPointer<const FormField> > getFormFields() const;
 
     bool isDomModified() const;
@@ -70,7 +70,7 @@ public:
     friend class ExecutionResultBuilder;
 
 private:
-    QSet<EventHandlerDescriptor*> mEventHandlers;
+    QList<EventHandlerDescriptor*> mEventHandlers;
     QSet<QSharedPointer<const FormField> > mFormFields;
 
     bool mModifiedDom;

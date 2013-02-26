@@ -29,7 +29,8 @@
 #define DETERMINISTICWORKLIST_H
 
 #include <QMultiHash>
-#include <QSet>
+#include <QList>
+#include <QMap>
 #include <queue>
 
 #include "worklist.h"
@@ -54,7 +55,7 @@ public:
 
 private:
     int largestPri;
-    QMap<int, QSet<QSharedPointer<ExecutableConfiguration> >* > queue; // use a pointer to the set to disable copy-on-write
+    QMap<int, QList<QSharedPointer<ExecutableConfiguration> >* > queue; // use a pointer to the set to disable copy-on-write
 
 };
 

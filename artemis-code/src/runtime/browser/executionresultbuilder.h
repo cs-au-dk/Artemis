@@ -6,6 +6,7 @@
 #include <QWebPage>
 #include <QWebElement>
 #include <QPair>
+#include <QList>
 #include <QString>
 
 #include "runtime/browser/executionresult.h"
@@ -50,7 +51,7 @@ private:
     QWebPage* mPage;
     QString mPageStateAfterLoad;
 
-    QSet<QPair<QWebElement*, QString> > mElementPointers;
+    QList<QPair<QWebElement*, QString> > mElementPointers;
 
 public slots:
     void slScriptCrashed(QString cause, intptr_t sourceID, int lineNumber);

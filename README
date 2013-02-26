@@ -25,7 +25,9 @@ Usage:
 
    -r      : set_recreate_page(true) // TODO
 
-   -p	   : dump_page_states(<path>) // TODO   
+   -p	   : dump_page_states(<path>) // TODO 
+
+   -s       : Enable DOM state checking  
 
    --strategy-form-input-generation <strategy>: 
    			  Select form input generation strategy.
@@ -46,3 +48,4 @@ Usage:
                constant - (default) assign the same priority to new configurations
                random - assign a random priority to new configurations
                coverage - assign higher priority to configurations with low coverage
+               readwrite - use read/write-sets for JavaScript properties to assign priorities

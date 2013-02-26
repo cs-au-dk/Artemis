@@ -69,7 +69,8 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/coverage/codeblockinfo.h \
     src/strategies/prioritizer/coverageprioritizer.h \
     src/runtime/appmodel.h \
-    src/runtime/model/javascriptstatistics.h
+    src/runtime/model/javascriptstatistics.h \
+    src/strategies/prioritizer/readwriteprioritizer.h
 
 SOURCES += src/runtime/input/ajaxinput.cpp \
     src/strategies/prioritizer/constantprioritizer.cpp \
@@ -120,6 +121,7 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/coverage/codeblockinfo.cpp \
     src/strategies/prioritizer/coverageprioritizer.cpp \
     src/runtime/appmodel.cpp \
-    src/runtime/model/javascriptstatistics.cpp
+    src/runtime/model/javascriptstatistics.cpp \
+    src/strategies/prioritizer/readwriteprioritizer.cpp
 
 QT += network

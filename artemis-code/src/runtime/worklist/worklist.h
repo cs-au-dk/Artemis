@@ -41,8 +41,8 @@ class WorkList : public QObject
 {
 
 public:
-    WorkList(QObject* parent) : QObject(parent) {};
-    virtual ~WorkList() {};
+    WorkList(QObject* parent) : QObject(parent) {}
+    virtual ~WorkList() {}
 
     virtual void add(QSharedPointer<ExecutableConfiguration> e, int priority) = 0;
     virtual bool allZeroPriority() = 0;

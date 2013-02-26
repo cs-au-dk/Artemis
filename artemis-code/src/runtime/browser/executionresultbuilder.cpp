@@ -62,7 +62,7 @@ void ExecutionResultBuilder::registerEventHandlersIntoResult()
         if (handler->isInvalid()) {
             qWarning() << "WARN: element was invalid, ignoring";
         } else {
-            mResult->mEventHandlers.insert(handler);
+            mResult->mEventHandlers.append(handler);
         }
     }
 
@@ -153,7 +153,7 @@ void ExecutionResultBuilder::slEventListenerAdded(QWebElement* elem, QString nam
         return;
     }
 
-    mElementPointers.insert(QPair<QWebElement*, QString>(elem, name));
+    mElementPointers.append(QPair<QWebElement*, QString>(elem, name));
 }
 
 void ExecutionResultBuilder::slEventListenerRemoved(QWebElement* elem, QString name)
@@ -166,7 +166,7 @@ void ExecutionResultBuilder::slEventListenerRemoved(QWebElement* elem, QString n
         return;
     }
 
-    mElementPointers.remove(QPair<QWebElement*, QString>(elem, name));
+    mElementPointers.removeAt(mElementPointers.indexOf(QPair<QWebElement*, QString>(elem, name)));
 }
 
 void ExecutionResultBuilder::slTimerAdded(int timerId, int timeout, bool singleShot)

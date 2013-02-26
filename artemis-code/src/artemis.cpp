@@ -54,7 +54,7 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
     char c;
     artemis::Log::addLogLevel(artemis::INFO);
 
-    while ((c = getopt_long(argc, argv, "rp:f:t:c:i:v:", long_options, &option_index)) != -1) {
+    while ((c = getopt_long(argc, argv, "srp:f:t:c:i:v:", long_options, &option_index)) != -1) {
 
         switch (c) {
 
@@ -89,6 +89,11 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
 
         case 'i': {
             options.iterationLimit = QString(optarg).toInt();
+            break;
+        }
+
+        case 's': {
+            options.disableStateCheck = false;
             break;
         }
 
@@ -128,6 +133,8 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
                 options.prioritizerStrategy = artemis::RANDOM;
             } else if (string(optarg).compare("coverage") == 0) {
                 options.prioritizerStrategy = artemis::COVERAGE;
+            } else if (string(optarg).compare("readwrite") == 0) {
+                options.prioritizerStrategy = artemis::READWRITE;
             } else {
                 cerr << "ERROR: Invalid choice of prioritizer strategy " << optarg << endl;
                 exit(1);

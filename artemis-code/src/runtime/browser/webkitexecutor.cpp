@@ -171,6 +171,7 @@ void WebKitExecutor::slLoadFinished(bool ok)
     foreach(QSharedPointer<const BaseInput> input, currentConf->getInputSequence()->toList()) {
         mResultBuilder->notifyStartingEvent();
         mCoverageListener->notifyStartingEvent(input);
+        mJavascriptStatistics->notifyStartingEvent(input);
         input->apply(this->mPage, this->webkitListener);
     }
 
