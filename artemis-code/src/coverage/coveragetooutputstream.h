@@ -39,8 +39,8 @@ using namespace std;
 namespace artemis
 {
 
-void writeCoverageStdout(CoverageListener* cov);
-void writeCoverageHtml(CoverageListener* cc);
+void writeCoverageStdout(CoverageListenerPtr cov);
+void writeCoverageHtml(CoverageListenerPtr cc);
 
 }
 

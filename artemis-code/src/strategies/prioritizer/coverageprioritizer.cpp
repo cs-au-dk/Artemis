@@ -9,7 +9,7 @@ CoveragePrioritizer::CoveragePrioritizer() : PrioritizerStrategy(NULL)
 
 double CoveragePrioritizer::prioritize(QSharedPointer<const ExecutableConfiguration> configuration,
                                        QSharedPointer<const ExecutionResult>,
-                                       const AppModel* appmodel)
+                                       const AppModelPtr appmodel)
 {
     float coverage = 1;
 

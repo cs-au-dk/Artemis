@@ -38,7 +38,7 @@ RandomPrioritizer::RandomPrioritizer(QObject* parent) :
 
 double RandomPrioritizer::prioritize(QSharedPointer<const ExecutableConfiguration>,
                                      QSharedPointer<const ExecutionResult>,
-                                     const AppModel*)
+                                     const AppModelPtr)
 {
 
     return rand();

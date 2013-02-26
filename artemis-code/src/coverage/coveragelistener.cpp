@@ -38,8 +38,8 @@
 namespace artemis
 {
 
-CoverageListener::CoverageListener(QObject* parent) :
-    QObject(parent),
+CoverageListener::CoverageListener() :
+    QObject(NULL),
     mInputBeingExecuted(-1)
 {
 }

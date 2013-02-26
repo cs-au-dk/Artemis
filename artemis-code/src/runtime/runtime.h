@@ -64,7 +64,7 @@ private:
     void preConcreteExecution();
     void finishAnalysis();
 
-    AppModel* mAppmodel;
+    AppModelPtr mAppmodel;
     WebKitExecutor* mWebkitExecutor;
     WorkList* mWorklist;
 

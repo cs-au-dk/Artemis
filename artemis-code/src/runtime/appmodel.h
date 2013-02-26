@@ -1,25 +1,29 @@
 #ifndef APPMODEL_H
 #define APPMODEL_H
 
+#include <QSharedPointer>
+
 #include "coverage/coveragelistener.h"
 #include "runtime/model/javascriptstatistics.h"
 
 namespace artemis {
 
-class AppModel : public QObject
+class AppModel
 {
 
 public:
-    AppModel(QObject* parent);
+    AppModel();
 
-    CoverageListener* getCoverageListener() const;
-    JavascriptStatistics* getJavascriptStatistics() const;
+    CoverageListenerPtr getCoverageListener() const;
+    JavascriptStatisticsPtr getJavascriptStatistics() const;
 
 private:
-    CoverageListener* mCoverageListener;
-    JavascriptStatistics* mJavascriptStatistics;
+    CoverageListenerPtr mCoverageListener;
+    JavascriptStatisticsPtr mJavascriptStatistics;
 
 };
+
+typedef QSharedPointer<AppModel> AppModelPtr;
 
 }
 

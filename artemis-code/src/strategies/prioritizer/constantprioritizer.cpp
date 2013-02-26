@@ -37,7 +37,7 @@ ConstantPrioritizer::ConstantPrioritizer(QObject* parent)
 
 double ConstantPrioritizer::prioritize(QSharedPointer<const ExecutableConfiguration>,
                                        QSharedPointer<const ExecutionResult>,
-                                       const AppModel*)
+                                       const AppModelPtr)
 {
     return 1;
 }

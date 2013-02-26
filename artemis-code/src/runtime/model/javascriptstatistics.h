@@ -2,6 +2,7 @@
 #define JAVASCRIPTSTATISTICS_H
 
 #include <QObject>
+#include <QSharedPointer>
 
 namespace artemis {
 
@@ -11,13 +12,15 @@ class JavascriptStatistics : public QObject
     Q_OBJECT
 
 public:
-    JavascriptStatistics(QObject* parent);
+    JavascriptStatistics();
 
 public slots:
     void slJavascriptPropertyRead(QString propertyName);
     void slJavascriptPropertyWritten(QString propertyName);
 
 };
+
+typedef QSharedPointer<JavascriptStatistics> JavascriptStatisticsPtr;
 
 }
 

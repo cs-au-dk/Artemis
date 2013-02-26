@@ -45,7 +45,7 @@
 namespace artemis
 {
 
-void writeCoverageStdout(CoverageListener* cov)
+void writeCoverageStdout(CoverageListenerPtr cov)
 {
     qDebug() << "=== Coverage information for execution ===";
 
@@ -70,7 +70,7 @@ void writeCoverageStdout(CoverageListener* cov)
     }
 }
 
-void writeCoverageHtml(CoverageListener* cov)
+void writeCoverageHtml(CoverageListenerPtr cov)
 {
 
     QDir appdir("", "*.html", QDir::Time);

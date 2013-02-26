@@ -87,7 +87,7 @@ Runtime::Runtime(QObject* parent, const Options& options, QUrl url) : QObject(pa
 
     /** Runtime Objects **/
 
-    mAppmodel = new AppModel(this);
+    mAppmodel = AppModelPtr(new AppModel());
 
     mWebkitExecutor = new WebKitExecutor(this, mAppmodel, options.presetFormfields, jqueryListener, ajaxRequestListner);
 
@@ -195,16 +195,16 @@ void Runtime::finishAnalysis()
 
     switch (mOptions.outputCoverage) {
     case HTML:
-        writeCoverageHtml(mWebkitExecutor->getCoverageListener());
+        writeCoverageHtml(mAppmodel->getCoverageListener());
         break;
     case STDOUT:
-         writeCoverageStdout(mWebkitExecutor->getCoverageListener());
+         writeCoverageStdout(mAppmodel->getCoverageListener());
          break;
     default:
         break;
     }
 
-    statistics()->accumulate("WebKit::coverage::covered-unique", mWebkitExecutor->getCoverageListener()->getNumCoveredLines());
+    statistics()->accumulate("WebKit::coverage::covered-unique", mAppmodel->getCoverageListener()->getNumCoveredLines());
 
     Log::info("\n=== Statistics ===\n");
     StatsPrettyWriter::write(statistics());

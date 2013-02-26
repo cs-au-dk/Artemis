@@ -4,19 +4,18 @@
 
 namespace artemis {
 
-AppModel::AppModel(QObject* parent) :
-    QObject(parent),
-    mCoverageListener(new CoverageListener(this)),
-    mJavascriptStatistics(new JavascriptStatistics(this))
+AppModel::AppModel() :
+    mCoverageListener(CoverageListenerPtr(new CoverageListener())),
+    mJavascriptStatistics(JavascriptStatisticsPtr(new JavascriptStatistics()))
 {
 }
 
-CoverageListener* AppModel::getCoverageListener() const
+CoverageListenerPtr AppModel::getCoverageListener() const
 {
     return mCoverageListener;
 }
 
-JavascriptStatistics* AppModel::getJavascriptStatistics() const
+JavascriptStatisticsPtr AppModel::getJavascriptStatistics() const
 {
     return mJavascriptStatistics;
 }

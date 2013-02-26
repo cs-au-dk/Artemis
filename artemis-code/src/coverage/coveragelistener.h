@@ -51,7 +51,7 @@ class CoverageListener : public QObject
     Q_OBJECT
 
 public:
-    explicit CoverageListener(QObject* parent = 0);
+    explicit CoverageListener();
 
     QList<int> getSourceIDs();
     SourceInfo* getSourceInfo(int sourceID);
@@ -96,6 +96,8 @@ public slots:
     void slJavascriptBytecodeExecuted(intptr_t codeBlockTemporalID, size_t bytecodeOffset);
 
 };
+
+typedef QSharedPointer<CoverageListener> CoverageListenerPtr;
 
 }
 

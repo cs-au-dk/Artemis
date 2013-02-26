@@ -55,7 +55,7 @@ class WebKitExecutor : public QObject
 
 public:
     WebKitExecutor(QObject* parent,
-                   const AppModel* appmodel,
+                   AppModelPtr appmodel,
                    QMap<QString, QString> presetFields,
                    JQueryListener* jqueryListener,
                    AjaxRequestListener* ajaxListener);
@@ -64,21 +64,18 @@ public:
     void executeSequence(QSharedPointer<ExecutableConfiguration> conf);
     void detach();
 
-    CoverageListener* getCoverageListener();
-
     QWebExecutionListener* webkitListener; // TODO should not be public
 
 private:
     ArtemisWebPage* mPage;
     ExecutionResultBuilder* mResultBuilder;
     QSharedPointer<ExecutableConfiguration> currentConf;
-    CoverageListener* covList;
     AjaxRequestListener* mAjaxListener;
     JQueryListener* mJquery;
     QMap<QString, QString> mPresetFields;
 
-    CoverageListener* mCoverageListener;
-    JavascriptStatistics* mJavascriptStatistics;
+    CoverageListenerPtr mCoverageListener;
+    JavascriptStatisticsPtr mJavascriptStatistics;
 
 signals:
     void sigExecutedSequence(QSharedPointer<ExecutableConfiguration> conf, QSharedPointer<ExecutionResult> res);

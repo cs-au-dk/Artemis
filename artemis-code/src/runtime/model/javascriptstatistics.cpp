@@ -5,7 +5,7 @@
 
 namespace artemis {
 
-JavascriptStatistics::JavascriptStatistics(QObject* parent) : QObject(parent)
+JavascriptStatistics::JavascriptStatistics() : QObject(NULL)
 {
 }
 

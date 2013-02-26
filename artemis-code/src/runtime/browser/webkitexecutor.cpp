@@ -49,7 +49,7 @@ namespace artemis
 {
 
 WebKitExecutor::WebKitExecutor(QObject* parent,
-                               const AppModel* appmodel,
+                               AppModelPtr appmodel,
                                QMap<QString, QString> presetFields,
                                JQueryListener* jqueryListener,
                                AjaxRequestListener* ajaxListener) :
@@ -82,14 +82,14 @@ WebKitExecutor::WebKitExecutor(QObject* parent,
                      mJquery, SLOT(slEventAdded(QString, QString, QString)));
 
     QObject::connect(webkitListener, SIGNAL(loadedJavaScript(intptr_t, QString, QUrl, int)),
-                     mCoverageListener, SLOT(newCode(intptr_t, QString, QUrl, int)));
+                     mCoverageListener.data(), SLOT(newCode(intptr_t, QString, QUrl, int)));
     QObject::connect(webkitListener, SIGNAL(statementExecuted(intptr_t, int)),
-                     mCoverageListener, SLOT(statementExecuted(intptr_t, int)));
+                     mCoverageListener.data(), SLOT(statementExecuted(intptr_t, int)));
 
     QObject::connect(webkitListener, SIGNAL(sigJavascriptPropertyRead(QString)),
-                     mJavascriptStatistics, SLOT(slJavascriptPropertyRead(QString)));
+                     mJavascriptStatistics.data(), SLOT(slJavascriptPropertyRead(QString)));
     QObject::connect(webkitListener, SIGNAL(sigJavascriptPropertyWritten(QString)),
-                     mJavascriptStatistics, SLOT(slJavascriptPropertyWritten(QString)));
+                     mJavascriptStatistics.data(), SLOT(slJavascriptPropertyWritten(QString)));
 
     QObject::connect(webkitListener, SIGNAL(addedEventListener(QWebElement*, QString)),
                      mResultBuilder, SLOT(slEventListenerAdded(QWebElement*, QString)));
@@ -177,11 +177,6 @@ void WebKitExecutor::slLoadFinished(bool ok)
     // DONE
 
     emit sigExecutedSequence(currentConf, mResultBuilder->getResult());
-}
-
-CoverageListener* WebKitExecutor::getCoverageListener()
-{
-    return mCoverageListener;
 }
 
 }

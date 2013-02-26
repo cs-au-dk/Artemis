@@ -14,7 +14,7 @@ public:
 
     double prioritize(QSharedPointer<const ExecutableConfiguration> newConf,
                       QSharedPointer<const ExecutionResult> result,
-                      const AppModel*);
+                      const AppModelPtr);
 
     void reprioritize(WorkList* worklist);
 
