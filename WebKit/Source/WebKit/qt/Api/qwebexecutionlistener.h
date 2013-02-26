@@ -30,6 +30,8 @@ public:
 
     virtual void javascript_executed_statement(const JSC::DebuggerCallFrame&, intptr_t sourceID, int lineNumber); // from the debugger
     virtual void javascript_bytecode_executed(JSC::CodeBlock*, JSC::Instruction* inst); // interpreter instrumentation
+    virtual void javascript_property_read(std::string propertyName);
+    virtual void javascript_property_written(std::string propertyName);
 
     virtual void javascript_constant_encountered(std::string constant);
     virtual void javascript_eval_call(const char * eval_string);
@@ -71,6 +73,9 @@ signals:
 
     void sigJavascriptFunctionCalled(intptr_t codeBlock, QString functionName, size_t bytecodeSize);
     void sigJavascriptBytecodeExecuted(intptr_t codeBlock, size_t bytecodeOffset);
+
+    void sigJavascriptPropertyRead(QString propertyName);
+    void sigJavascriptPropertyWritten(QString propertyName);
 
     void loadedJavaScript(intptr_t sourceID, QString source, QUrl url, int startline);
     void statementExecuted(intptr_t sourceID, int linenumber);

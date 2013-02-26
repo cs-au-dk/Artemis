@@ -105,6 +105,11 @@ NEVER_INLINE bool Interpreter::resolve(CallFrame* callFrame, Instruction* vPC, J
 
     CodeBlock* codeBlock = callFrame->codeBlock();
     Identifier& ident = codeBlock->identifier(property);
+
+#ifdef ARTEMIS
+    readProperty(ident.ascii().data());
+#endif
+
     do {
         JSObject* o = iter->get();
         PropertySlot slot(o);
@@ -144,6 +149,11 @@ NEVER_INLINE bool Interpreter::resolveSkip(CallFrame* callFrame, Instruction* vP
         ASSERT(iter != end);
     }
     Identifier& ident = codeBlock->identifier(property);
+
+#ifdef ARTEMIS
+    readProperty(ident.ascii().data());
+#endif
+
     do {
         JSObject* o = iter->get();
         PropertySlot slot(o);
@@ -170,6 +180,10 @@ NEVER_INLINE bool Interpreter::resolveGlobal(CallFrame* callFrame, Instruction* 
     int property = vPC[2].u.operand;
     Structure* structure = vPC[3].u.structure.get();
     int offset = vPC[4].u.operand;
+
+#ifdef ARTEMIS
+    readProperty(codeBlock->identifier(property).ascii().data());
+#endif
 
     if (structure == globalObject->structure()) {
         callFrame->uncheckedR(dst) = JSValue(globalObject->getDirectOffset(offset));
@@ -209,6 +223,10 @@ NEVER_INLINE bool Interpreter::resolveGlobalDynamic(CallFrame* callFrame, Instru
     int offset = vPC[4].u.operand;
     int skip = vPC[5].u.operand;
     
+#ifdef ARTEMIS
+    readProperty(codeBlock->identifier(property).ascii().data());
+#endif
+
     ScopeChainNode* scopeChain = callFrame->scopeChain();
     ScopeChainIterator iter = scopeChain->begin();
     ScopeChainIterator end = scopeChain->end();
@@ -281,6 +299,11 @@ NEVER_INLINE void Interpreter::resolveBase(CallFrame* callFrame, Instruction* vP
     int property = vPC[2].u.operand;
     bool isStrictPut = vPC[3].u.operand;
     Identifier ident = callFrame->codeBlock()->identifier(property);
+
+#ifdef ARTEMIS
+    readProperty(ident.ascii().data());
+#endif
+
     JSValue result = JSC::resolveBase(callFrame, ident, callFrame->scopeChain(), isStrictPut);
     if (result) {
         callFrame->uncheckedR(dst) = result;
@@ -341,6 +364,11 @@ NEVER_INLINE bool Interpreter::resolveThisAndProperty(CallFrame* callFrame, Inst
 
     CodeBlock* codeBlock = callFrame->codeBlock();
     Identifier& ident = codeBlock->identifier(property);
+
+#ifdef ARTEMIS
+    readProperty(ident.ascii().data());
+#endif
+
     JSObject* base;
     do {
         base = iter->get();
@@ -407,6 +435,45 @@ ALWAYS_INLINE JSValue Interpreter::touchJsValue(CallFrame* callFrame, const JSVa
 
     return jsvalue;
 }
+
+ALWAYS_INLINE void Interpreter::readProperty(std::string identifier)
+{
+    jscinst::get_jsc_listener()->javascript_property_read(identifier);
+}
+
+ALWAYS_INLINE void Interpreter::readProperty(const SymbolTable& symbolTable, int index)
+{
+
+    SymbolTable::const_iterator it = symbolTable.begin();
+    SymbolTable::const_iterator end = symbolTable.end();
+    for (; it != end; ++it) {
+        if (it->second.getIndex() == index) {
+            jscinst::get_jsc_listener()->javascript_property_read(UString(it->first).ascii().data());
+            return;
+        }
+    }
+
+}
+
+ALWAYS_INLINE void Interpreter::writeProperty(std::string identifier)
+{
+    jscinst::get_jsc_listener()->javascript_property_written(identifier);
+}
+
+ALWAYS_INLINE void Interpreter::writeProperty(const SymbolTable& symbolTable, int index)
+{
+
+    SymbolTable::const_iterator it = symbolTable.begin();
+    SymbolTable::const_iterator end = symbolTable.end();
+    for (; it != end; ++it) {
+        if (it->second.getIndex() == index) {
+            jscinst::get_jsc_listener()->javascript_property_written(UString(it->first).ascii().data());
+            return;
+        }
+    }
+
+}
+
 #endif
 
 #if ENABLE(INTERPRETER)
@@ -1794,7 +1861,7 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
 #if ENABLE(OPCODE_STATS)
 #define DEFINE_OPCODE(opcode) case opcode: OpcodeStats::recordInstruction(opcode);
 #else
-    #define DEFINE_OPCODE(opcode) case opcode:
+#define DEFINE_OPCODE(opcode) case opcode:
 #endif
     while (1) { // iterator loop begins
     interpreterLoopStart:;
@@ -2697,6 +2764,10 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         ASSERT(scope->isGlobalObject());
         int index = vPC[2].u.operand;
 
+#ifdef ARTEMIS
+        readProperty(scope->symbolTable(), index);
+#endif
+
         callFrame->uncheckedR(dst) = scope->registerAt(index).get();
         vPC += OPCODE_LENGTH(op_get_global_var);
         NEXT_INSTRUCTION();
@@ -2710,6 +2781,10 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         ASSERT(scope->isGlobalObject());
         int index = vPC[1].u.operand;
         int value = vPC[2].u.operand;
+
+#ifdef ARTEMIS
+        writeProperty(scope->symbolTable(), index);
+#endif
 
         scope->registerAt(index).set(*globalData, scope, touchJsValue(callFrame, callFrame->r(value).jsValue()));
         vPC += OPCODE_LENGTH(op_put_global_var);
@@ -2750,6 +2825,11 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         JSVariableObject* scope = static_cast<JSVariableObject*>(iter->get());
         callFrame->uncheckedR(dst) = scope->registerAt(index).get();
         ASSERT(callFrame->r(dst).jsValue());
+
+#ifdef ARTEMIS
+        readProperty(scope->symbolTable(), index);
+#endif
+
         vPC += OPCODE_LENGTH(op_get_scoped_var);
         NEXT_INSTRUCTION();
     }
@@ -2767,11 +2847,8 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
 
 
 #ifndef ARTEMIS
-
-
         ASSERT(codeBlock == callFrame->codeBlock());
         ASSERT_UNUSED(end, iter != end);
-
 #endif
 
         bool checkTopLevel = codeBlock->codeType() == FunctionCode && codeBlock->needsFullScopeChain();
@@ -2789,6 +2866,11 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         JSVariableObject* scope = static_cast<JSVariableObject*>(iter->get());
         ASSERT(callFrame->r(value).jsValue());
         scope->registerAt(index).set(*globalData, scope, touchJsValue(callFrame, callFrame->r(value).jsValue()));
+
+#ifdef ARTEMIS
+        writeProperty(scope->symbolTable(), index);
+#endif
+
         vPC += OPCODE_LENGTH(op_put_scoped_var);
         NEXT_INSTRUCTION();
     }
@@ -2816,6 +2898,10 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         int property = vPC[2].u.operand;
         Identifier& ident = codeBlock->identifier(property);
         
+#ifdef ARTEMIS
+        readProperty(ident.ascii().data());
+#endif
+
         JSValue baseVal = touchJsValue(callFrame, callFrame->r(base).jsValue());
         JSObject* baseObject = asObject(baseVal);
         PropertySlot slot(baseVal);
@@ -2872,6 +2958,11 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         int property = vPC[3].u.operand;
 
         Identifier& ident = codeBlock->identifier(property);
+
+#ifdef ARTEMIS
+        readProperty(ident.ascii().data());
+#endif
+
         JSValue baseValue = touchJsValue(callFrame, callFrame->r(base).jsValue());
         PropertySlot slot(baseValue);
         JSValue result = baseValue.get(callFrame, ident, slot);
@@ -2892,6 +2983,11 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         */
         int base = vPC[2].u.operand;
         JSValue baseValue = touchJsValue(callFrame, callFrame->r(base).jsValue());
+
+#ifdef ARTEMIS
+        int property = vPC[3].u.operand;
+        readProperty(codeBlock->identifier(property).ascii().data());
+#endif
 
         if (LIKELY(baseValue.isCell())) {
             JSCell* baseCell = baseValue.asCell();
@@ -2923,6 +3019,11 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         */
         int base = vPC[2].u.operand;
         JSValue baseValue = touchJsValue(callFrame, callFrame->r(base).jsValue());
+
+#ifdef ARTEMIS
+        int property = vPC[3].u.operand;
+        readProperty(codeBlock->identifier(property).ascii().data());
+#endif
 
         if (LIKELY(baseValue.isCell())) {
             JSCell* baseCell = baseValue.asCell();
@@ -2963,6 +3064,11 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         int base = vPC[2].u.operand;
         JSValue baseValue = touchJsValue(callFrame, callFrame->r(base).jsValue());
         
+#ifdef ARTEMIS
+        int property = vPC[3].u.operand;
+        readProperty(codeBlock->identifier(property).ascii().data());
+#endif
+
         if (LIKELY(baseValue.isCell())) {
             JSCell* baseCell = baseValue.asCell();
             Structure* structure = vPC[4].u.structure.get();
@@ -3008,6 +3114,11 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         int base = vPC[2].u.operand;
         JSValue baseValue = touchJsValue(callFrame, callFrame->r(base).jsValue());
         
+#ifdef ARTEMIS
+        int property = vPC[3].u.operand;
+        readProperty(codeBlock->identifier(property).ascii().data());
+#endif
+
         if (LIKELY(baseValue.isCell())) {
             JSCell* baseCell = baseValue.asCell();
             Structure* structure = vPC[4].u.structure.get();
@@ -3049,6 +3160,11 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         */
         int base = vPC[2].u.operand;
         JSValue baseValue = touchJsValue(callFrame, callFrame->r(base).jsValue());
+
+#ifdef ARTEMIS
+        int property = vPC[3].u.operand;
+        readProperty(codeBlock->identifier(property).ascii().data());
+#endif
 
         if (LIKELY(baseValue.isCell())) {
             JSCell* baseCell = baseValue.asCell();
@@ -3100,6 +3216,11 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         int base = vPC[2].u.operand;
         JSValue baseValue = touchJsValue(callFrame, callFrame->r(base).jsValue());
         
+#ifdef ARTEMIS
+        int property = vPC[3].u.operand;
+        readProperty(codeBlock->identifier(property).ascii().data());
+#endif
+
         if (LIKELY(baseValue.isCell())) {
             JSCell* baseCell = baseValue.asCell();
             Structure* structure = vPC[4].u.structure.get();
@@ -3143,6 +3264,11 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         int base = vPC[2].u.operand;
         JSValue baseValue = touchJsValue(callFrame, callFrame->r(base).jsValue());
         
+#ifdef ARTEMIS
+        int property = vPC[3].u.operand;
+        readProperty(codeBlock->identifier(property).ascii().data());
+#endif
+
         if (LIKELY(baseValue.isCell())) {
             JSCell* baseCell = baseValue.asCell();
             Structure* structure = vPC[4].u.structure.get();
@@ -3178,6 +3304,11 @@ skip_id_custom_self:
         int property = vPC[3].u.operand;
 
         Identifier& ident = codeBlock->identifier(property);
+
+#ifdef ARTEMIS
+        readProperty(ident.ascii().data());
+#endif
+
         JSValue baseValue = touchJsValue(callFrame, callFrame->r(base).jsValue());
         PropertySlot slot(baseValue);
         JSValue result = baseValue.get(callFrame, ident, slot);
@@ -3200,6 +3331,11 @@ skip_id_custom_self:
         int base = vPC[2].u.operand;
         JSValue baseValue = touchJsValue(callFrame, callFrame->r(base).jsValue());
         
+#ifdef ARTEMIS
+        int property = vPC[3].u.operand;
+        readProperty(codeBlock->identifier(property).ascii().data());
+#endif
+
         if (LIKELY(baseValue.isCell())) {
             JSCell* baseCell = baseValue.asCell();
             Structure* structure = vPC[4].u.structure.get();
@@ -3255,6 +3391,11 @@ skip_id_custom_self:
         int base = vPC[2].u.operand;
         JSValue baseValue = touchJsValue(callFrame, callFrame->r(base).jsValue());
         
+#ifdef ARTEMIS
+        int property = vPC[3].u.operand;
+        readProperty(codeBlock->identifier(property).ascii().data());
+#endif
+
         if (LIKELY(baseValue.isCell())) {
             JSCell* baseCell = baseValue.asCell();
             Structure* structure = vPC[4].u.structure.get();
@@ -3363,6 +3504,11 @@ skip_id_custom_self:
 
         JSValue baseValue = touchJsValue(callFrame, callFrame->r(base).jsValue());
         Identifier& ident = codeBlock->identifier(property);
+
+#ifdef ARTEMIS
+        writeProperty(ident.ascii().data());
+#endif
+
         PutPropertySlot slot(codeBlock->isStrictMode());
         if (direct)
             baseValue.putDirect(callFrame, ident, touchJsValue(callFrame, callFrame->r(value).jsValue()), slot);
@@ -3392,6 +3538,11 @@ skip_id_custom_self:
         int base = vPC[1].u.operand;
         JSValue baseValue = touchJsValue(callFrame, callFrame->r(base).jsValue());
         
+#ifdef ARTEMIS
+        int property = vPC[2].u.operand;
+        writeProperty(codeBlock->identifier(property).ascii().data());
+#endif
+
         if (LIKELY(baseValue.isCell())) {
             JSCell* baseCell = baseValue.asCell();
             Structure* oldStructure = vPC[4].u.structure.get();
@@ -3444,6 +3595,11 @@ skip_id_custom_self:
         int base = vPC[1].u.operand;
         JSValue baseValue = touchJsValue(callFrame, callFrame->r(base).jsValue());
 
+#ifdef ARTEMIS
+        int property = vPC[2].u.operand;
+        writeProperty(codeBlock->identifier(property).ascii().data());
+#endif
+
         if (LIKELY(baseValue.isCell())) {
             JSCell* baseCell = baseValue.asCell();
             Structure* structure = vPC[4].u.structure.get();
@@ -3481,6 +3637,11 @@ skip_id_custom_self:
 
         JSValue baseValue = touchJsValue(callFrame, callFrame->r(base).jsValue());
         Identifier& ident = codeBlock->identifier(property);
+
+#ifdef ARTEMIS
+        writeProperty(ident.ascii().data());
+#endif
+
         PutPropertySlot slot(codeBlock->isStrictMode());
         if (direct)
             baseValue.putDirect(callFrame, ident, touchJsValue(callFrame, callFrame->r(value).jsValue()), slot);
@@ -3505,6 +3666,11 @@ skip_id_custom_self:
 
         JSObject* baseObj = touchJsValue(callFrame, callFrame->r(base).jsValue()).toObject(callFrame);
         Identifier& ident = codeBlock->identifier(property);
+
+#ifdef ARTEMIS
+        writeProperty(ident.ascii().data());
+#endif
+
         bool result = baseObj->methodTable()->deleteProperty(baseObj, callFrame, ident);
         if (!result && codeBlock->isStrictMode()) {
             exceptionValue = createTypeError(callFrame, "Unable to delete property.");
@@ -3527,6 +3693,11 @@ skip_id_custom_self:
         JSPropertyNameIterator* it = callFrame->r(iter).propertyNameIterator();
         JSValue subscript = touchJsValue(callFrame, callFrame->r(property).jsValue());
         JSValue expectedSubscript = touchJsValue(callFrame, callFrame->r(expected).jsValue());
+
+#ifdef ARTEMIS
+        readProperty(subscript.toString(callFrame).ascii().data());
+#endif
+
         int index = callFrame->r(i).i() - 1;
         JSValue result;
         int offset = 0;
@@ -3594,6 +3765,10 @@ skip_id_custom_self:
         JSValue baseValue = touchJsValue(callFrame, callFrame->r(base).jsValue());
         JSValue subscript = touchJsValue(callFrame, callFrame->r(property).jsValue());
 
+#ifdef ARTEMIS
+        readProperty(subscript.toString(callFrame).ascii().data());
+#endif
+
         JSValue result;
 
         if (LIKELY(subscript.isUInt32())) {
@@ -3637,6 +3812,10 @@ skip_id_custom_self:
 
         JSValue baseValue = touchJsValue(callFrame, callFrame->r(base).jsValue());
         JSValue subscript = touchJsValue(callFrame, callFrame->r(property).jsValue());
+
+#ifdef ARTEMIS
+        writeProperty(subscript.toString(callFrame).ascii().data());
+#endif
 
         if (LIKELY(subscript.isUInt32())) {
             uint32_t i = subscript.asUInt32();
@@ -3682,8 +3861,12 @@ skip_id_custom_self:
         int property = vPC[3].u.operand;
 
         JSObject* baseObj = touchJsValue(callFrame, callFrame->r(base).jsValue()).toObject(callFrame); // may throw
-
         JSValue subscript = touchJsValue(callFrame, callFrame->r(property).jsValue());
+
+#ifdef ARTEMIS
+        readProperty(subscript.toString(callFrame).ascii().data());
+#endif
+
         bool result;
         uint32_t i;
         if (subscript.getUInt32(i))

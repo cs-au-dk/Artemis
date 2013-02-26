@@ -41,10 +41,10 @@
 #include "runtime/ajax/ajaxrequestlistener.h"
 #include "coverage/coveragelistener.h"
 #include "strategies/inputgenerator/targets/jquerylistener.h"
-
 #include "executionresult.h"
 #include "executionresultbuilder.h"
 #include "artemiswebpage.h"
+#include "runtime/appmodel.h"
 
 namespace artemis
 {
@@ -55,10 +55,10 @@ class WebKitExecutor : public QObject
 
 public:
     WebKitExecutor(QObject* parent,
+                   const AppModel* appmodel,
                    QMap<QString, QString> presetFields,
                    JQueryListener* jqueryListener,
-                   AjaxRequestListener* ajaxListener,
-                   CoverageListener* coverageListener);
+                   AjaxRequestListener* ajaxListener);
     ~WebKitExecutor();
 
     void executeSequence(QSharedPointer<ExecutableConfiguration> conf);
@@ -76,7 +76,9 @@ private:
     AjaxRequestListener* mAjaxListener;
     JQueryListener* mJquery;
     QMap<QString, QString> mPresetFields;
+
     CoverageListener* mCoverageListener;
+    JavascriptStatistics* mJavascriptStatistics;
 
 signals:
     void sigExecutedSequence(QSharedPointer<ExecutableConfiguration> conf, QSharedPointer<ExecutionResult> res);

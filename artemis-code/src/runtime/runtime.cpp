@@ -85,15 +85,11 @@ Runtime::Runtime(QObject* parent, const Options& options, QUrl url) : QObject(pa
 
     JQueryListener* jqueryListener = new JQueryListener(this);
 
-    /** Coverage support **/
-
-    CoverageListener* coverageListener = new CoverageListener(NULL);
-
     /** Runtime Objects **/
 
-    mAppmodel = QSharedPointer<AppModel>(new AppModel(coverageListener));
+    mAppmodel = new AppModel(this);
 
-    mWebkitExecutor = new WebKitExecutor(this, options.presetFormfields, jqueryListener, ajaxRequestListner, coverageListener);
+    mWebkitExecutor = new WebKitExecutor(this, mAppmodel, options.presetFormfields, jqueryListener, ajaxRequestListner);
 
     QSharedPointer<FormInputGenerator> formInputGenerator;
     switch (options.formInputGenerationStrategy) {

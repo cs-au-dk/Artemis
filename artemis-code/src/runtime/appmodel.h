@@ -2,19 +2,22 @@
 #define APPMODEL_H
 
 #include "coverage/coveragelistener.h"
+#include "runtime/model/javascriptstatistics.h"
 
 namespace artemis {
 
-class AppModel
+class AppModel : public QObject
 {
 
 public:
-    AppModel(CoverageListener* coverageListener);
+    AppModel(QObject* parent);
 
     CoverageListener* getCoverageListener() const;
+    JavascriptStatistics* getJavascriptStatistics() const;
 
 private:
     CoverageListener* mCoverageListener;
+    JavascriptStatistics* mJavascriptStatistics;
 
 };
 

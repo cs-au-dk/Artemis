@@ -51,7 +51,7 @@ public:
       */
     virtual double prioritize(QSharedPointer<const ExecutableConfiguration> newConf,
                               QSharedPointer<const ExecutionResult> result,
-                              QSharedPointer<const AppModel> appmodel) = 0;
+                              const AppModel* appmodel) = 0;
 
     virtual void reprioritize(WorkList* worklist) = 0;
 };

@@ -269,6 +269,16 @@ void QWebExecutionListener::javascript_bytecode_executed(JSC::CodeBlock* codeBlo
                           -1); //TODO: Find out how to get the opcode from WebKit */
 }
 
+void QWebExecutionListener::javascript_property_read(std::string propertyName)
+{
+    emit sigJavascriptPropertyRead(QString::fromStdString(propertyName));
+}
+
+void QWebExecutionListener::javascript_property_written(std::string propertyName)
+{
+    emit sigJavascriptPropertyWritten(QString::fromStdString(propertyName));
+}
+
 QWebExecutionListener* QWebExecutionListener::getListener() {
     return (QWebExecutionListener*)inst::getListener();
 }

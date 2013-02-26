@@ -36,6 +36,10 @@
 #include "Opcode.h"
 #include "RegisterFile.h"
 
+#ifdef ARTEMIS
+#include "runtime/SymbolTable.h"
+#endif
+
 #include <wtf/HashMap.h>
 
 namespace JSC {
@@ -156,6 +160,10 @@ namespace JSC {
 
 #ifdef ARTEMIS
         ALWAYS_INLINE JSValue touchJsValue(CallFrame*, const JSValue&);
+        ALWAYS_INLINE void readProperty(std::string propertyName);
+        ALWAYS_INLINE void readProperty(const SymbolTable& symbolTable, int index);
+        ALWAYS_INLINE void writeProperty(std::string propertyName);
+        ALWAYS_INLINE void writeProperty(const SymbolTable& symbolTable, int index);
 #endif
 
 #if ENABLE(INTERPRETER)

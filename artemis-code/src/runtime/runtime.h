@@ -64,7 +64,7 @@ private:
     void preConcreteExecution();
     void finishAnalysis();
 
-    QSharedPointer<AppModel> mAppmodel;
+    AppModel* mAppmodel;
     WebKitExecutor* mWebkitExecutor;
     WorkList* mWorklist;
 

@@ -49,10 +49,10 @@ namespace artemis
 {
 
 WebKitExecutor::WebKitExecutor(QObject* parent,
+                               const AppModel* appmodel,
                                QMap<QString, QString> presetFields,
                                JQueryListener* jqueryListener,
-                               AjaxRequestListener* ajaxListener,
-                               CoverageListener* coverageListener) :
+                               AjaxRequestListener* ajaxListener) :
     QObject(parent)
 {
 
@@ -70,7 +70,8 @@ WebKitExecutor::WebKitExecutor(QObject* parent,
 
     mResultBuilder = new ExecutionResultBuilder(this, mPage);
 
-    mCoverageListener = coverageListener;
+    mCoverageListener = appmodel->getCoverageListener();
+    mJavascriptStatistics = appmodel->getJavascriptStatistics();
 
     QWebExecutionListener::attachListeners();
     webkitListener = QWebExecutionListener::getListener();
@@ -84,6 +85,11 @@ WebKitExecutor::WebKitExecutor(QObject* parent,
                      mCoverageListener, SLOT(newCode(intptr_t, QString, QUrl, int)));
     QObject::connect(webkitListener, SIGNAL(statementExecuted(intptr_t, int)),
                      mCoverageListener, SLOT(statementExecuted(intptr_t, int)));
+
+    QObject::connect(webkitListener, SIGNAL(sigJavascriptPropertyRead(QString)),
+                     mJavascriptStatistics, SLOT(slJavascriptPropertyRead(QString)));
+    QObject::connect(webkitListener, SIGNAL(sigJavascriptPropertyWritten(QString)),
+                     mJavascriptStatistics, SLOT(slJavascriptPropertyWritten(QString)));
 
     QObject::connect(webkitListener, SIGNAL(addedEventListener(QWebElement*, QString)),
                      mResultBuilder, SLOT(slEventListenerAdded(QWebElement*, QString)));

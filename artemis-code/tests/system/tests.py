@@ -75,6 +75,12 @@ class InstrumentationTests(unittest.TestCase):
 		
 		self.assertEqual(1, report.get('WebKit::jsconstants', 0));
 
+	def test_jsreadwrite(self):	
+		report = execute_artemis('instrumentation-jsreadwrite', '%s/instrumentation/jsreadwrite.html' % WEBSERVER_URL)
+		
+		self.assertEqual(3, report.get('WebKit::readproperties', 0));
+		self.assertEqual(5, report.get('WebKit::writtenproperties', 0));
+
 	def test_codecoverage(self):
 		report = execute_artemis('instrumentation-codecoverage', '%s/instrumentation/codecoverage.html' % WEBSERVER_URL)
 		
