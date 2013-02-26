@@ -16,7 +16,7 @@ enum LogLevel {ERROR, WARNING, INFO, DEBUG,FATAL,ALL,OFF};
 
 class Log{
 private:
-    static set<artemis::LogLevel> levels;
+    static set<artemis::LogLevel>* levels;
     static string logLevelToString(LogLevel level){
         string result;
         switch(level){
@@ -71,15 +71,15 @@ public:
     }
     static void addLogLevel(LogLevel level){
         if(level == OFF){
-            Log::levels.clear();
+            Log::levels->clear();
         } else {
-            Log::levels.insert(level);
+            Log::levels->insert(level);
         }
     }
 
     static bool hasLogLevel(LogLevel level){
-        return level == INFO || levels.find(level) != levels.end() ||
-                levels.find(artemis::ALL) != levels.end();
+        return level == INFO || levels->find(level) != levels->end() ||
+                levels->find(artemis::ALL) != levels->end();
     }
 };
 

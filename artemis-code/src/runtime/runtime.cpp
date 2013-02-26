@@ -130,6 +130,10 @@ Runtime::Runtime(QObject* parent, const Options& options, QUrl url) : QObject(pa
 
     QObject::connect(mWebkitExecutor, SIGNAL(sigExecutedSequence(QSharedPointer<ExecutableConfiguration>, QSharedPointer<ExecutionResult>)),
                      this, SLOT(postConcreteExecution(QSharedPointer<ExecutableConfiguration>, QSharedPointer<ExecutionResult>)));
+
+
+    /** Visited states **/
+    mVisitedStates = new set<long>();
 }
 
 /**
@@ -178,14 +182,20 @@ void Runtime::postConcreteExecution(QSharedPointer<ExecutableConfiguration> conf
 {
     mPrioritizerStrategy->reprioritize(mWorklist);
 
-    QList<QSharedPointer<ExecutableConfiguration> > newConfigurations = mInputgenerator->addNewConfigurations(configuration, result);
+    long hash;
+    if(mVisitedStates->find(hash = result->getPageStateHash()) == mVisitedStates->end()){
+        qDebug() << "Visiting new state";
+        mVisitedStates->insert(hash);
+        QList<QSharedPointer<ExecutableConfiguration> > newConfigurations = mInputgenerator->addNewConfigurations(configuration, result);
 
-    foreach(QSharedPointer<ExecutableConfiguration> newConfiguration, newConfigurations) {
-        mWorklist->add(newConfiguration, mPrioritizerStrategy->prioritize(newConfiguration, result, mAppmodel));
+        foreach(QSharedPointer<ExecutableConfiguration> newConfiguration, newConfigurations) {
+            mWorklist->add(newConfiguration, mPrioritizerStrategy->prioritize(newConfiguration, result, mAppmodel));
+        }
+
+        statistics()->accumulate("InputGenerator::added-configurations", newConfigurations.size());
+    } else {
+        qDebug() << "Page state has already been seen";
     }
-
-    statistics()->accumulate("InputGenerator::added-configurations", newConfigurations.size());
-
     preConcreteExecution();
 }
 

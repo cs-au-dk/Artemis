@@ -32,6 +32,7 @@
 #include <QObject>
 #include <QUrl>
 #include <QNetworkProxy>
+#include <set>
 
 #include "strategies/inputgenerator/inputgeneratorstrategy.h"
 #include "strategies/inputgenerator/targets/targetgenerator.h"
@@ -67,6 +68,7 @@ private:
     AppModelPtr mAppmodel;
     WebKitExecutor* mWebkitExecutor;
     WorkList* mWorklist;
+    set<long>* mVisitedStates;
 
     TerminationStrategy* mTerminationStrategy;
     PrioritizerStrategy* mPrioritizerStrategy;
