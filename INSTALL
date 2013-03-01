@@ -1,24 +1,31 @@
  0. Fetch all software dependencies using
     
-        make fetch-[apt|yum]
+      make fetch-[apt|yum]
 	
     If you have no Qt or a version older than 4.8 then run: 
 
-	make fetch-qt
+      make fetch-qt
     
  1. Set up your environment variables by running
     
-        export ARTEMIS_PATH=<path>
-	source artemis-env
+      export QTDIR=<qtpath>
+      export PATH=$QTDIR/bin:$PATH
 
-    where `<path>` is the desired destination of the Artemis binaries
-    and its associated libraries.
+    where `<qtpath>` is the QT 4.8 installation directory, either
+    the one provided by your distribution or the one installed in
+    step 0.
+
+    On Ubuntu this is /usr/share/qt4
      
  2. Build and install Artemis
    
-   	make install
+   	  make install
 
- 3. You will need to either add
-      `ARTEMIS_PATH/WebKit/WebKitBuild/Release/lib` to the environment
-      variable `LD_LIBRARY_PATH` or execute step 1 everytime you
-      subsequently wish to use Artemis.
+ 3. Add the instrumented WebKit library to your library path
+
+      export LD_LIBRARY_PATH=<path>/WebKit/WebKitBuild/Release/lib  
+
+    where `<path>` is the root directory of the Artemis repository.
+
+    You will need to add this environment variable every time you
+    subsequently wish to use Artemis.
