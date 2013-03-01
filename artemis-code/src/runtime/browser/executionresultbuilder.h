@@ -53,6 +53,7 @@ public:
     void reset();
     void notifyPageLoaded();
     void notifyStartingEvent();
+    void notifyStartingLoad();
     QSharedPointer<ExecutionResult> getResult();
 
 private:

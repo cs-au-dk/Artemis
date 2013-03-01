@@ -50,6 +50,7 @@ public:
     float getBytecodeCoverage(QSharedPointer<const BaseInput> inputEvent) const;
 
     void notifyStartingEvent(QSharedPointer<const BaseInput> inputEvent);
+    void notifyStartingLoad();
 
     QString toString() const;
 

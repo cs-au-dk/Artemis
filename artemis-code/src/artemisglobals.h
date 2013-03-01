@@ -43,12 +43,6 @@ inline QString intTostring(const int i)
     return res;
 }
 
-inline bool isOmit(const QUrl& u)
-{
-    //TODO add support for exclusion of libraries!
-    return u == DONT_MEASURE_COVERAGE;
-}
-
 }
 
 #endif // ARTEMISGLOBALS_H

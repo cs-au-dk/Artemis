@@ -34,6 +34,7 @@ public:
     JavascriptStatistics();
 
     void notifyStartingEvent(QSharedPointer<const BaseInput> inputEvent);
+    void notifyStartingLoad();
 
     QSet<QString> getPropertiesWritten(const QSharedPointer<const BaseInput>& input) const;
     QSet<QString> getPropertiesRead(const QSharedPointer<const BaseInput>& input) const;
@@ -49,8 +50,8 @@ private:
     uint mInputBeingExecuted;
 
 public slots:
-    void slJavascriptPropertyRead(QString propertyName);
-    void slJavascriptPropertyWritten(QString propertyName);
+    void slJavascriptPropertyRead(QString propertyName, intptr_t codeBlockID, intptr_t sourceID, QUrl url, int line);
+    void slJavascriptPropertyWritten(QString propertyName, intptr_t codeBlockID, intptr_t sourceID, QUrl url, int line);
 
 };
 

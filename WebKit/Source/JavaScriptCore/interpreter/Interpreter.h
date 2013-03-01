@@ -160,10 +160,10 @@ namespace JSC {
 
 #ifdef ARTEMIS
         ALWAYS_INLINE JSValue touchJsValue(CallFrame*, const JSValue&);
-        ALWAYS_INLINE void readProperty(std::string propertyName);
-        ALWAYS_INLINE void readProperty(const SymbolTable& symbolTable, int index);
-        ALWAYS_INLINE void writeProperty(std::string propertyName);
-        ALWAYS_INLINE void writeProperty(const SymbolTable& symbolTable, int index);
+        ALWAYS_INLINE void readProperty(CallFrame* callFrame, std::string propertyName);
+        ALWAYS_INLINE void readProperty(CallFrame* callFrame, const SymbolTable& symbolTable, int index);
+        ALWAYS_INLINE void writeProperty(CallFrame* callFrame, std::string propertyName);
+        ALWAYS_INLINE void writeProperty(CallFrame* callFrame, const SymbolTable& symbolTable, int index);
 #endif
 
 #if ENABLE(INTERPRETER)

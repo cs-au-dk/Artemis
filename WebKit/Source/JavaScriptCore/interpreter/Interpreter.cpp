@@ -107,7 +107,7 @@ NEVER_INLINE bool Interpreter::resolve(CallFrame* callFrame, Instruction* vPC, J
     Identifier& ident = codeBlock->identifier(property);
 
 #ifdef ARTEMIS
-    readProperty(ident.ascii().data());
+    readProperty(callFrame, ident.ascii().data());
 #endif
 
     do {
@@ -151,7 +151,7 @@ NEVER_INLINE bool Interpreter::resolveSkip(CallFrame* callFrame, Instruction* vP
     Identifier& ident = codeBlock->identifier(property);
 
 #ifdef ARTEMIS
-    readProperty(ident.ascii().data());
+    readProperty(callFrame, ident.ascii().data());
 #endif
 
     do {
@@ -182,7 +182,7 @@ NEVER_INLINE bool Interpreter::resolveGlobal(CallFrame* callFrame, Instruction* 
     int offset = vPC[4].u.operand;
 
 #ifdef ARTEMIS
-    readProperty(codeBlock->identifier(property).ascii().data());
+    readProperty(callFrame, codeBlock->identifier(property).ascii().data());
 #endif
 
     if (structure == globalObject->structure()) {
@@ -224,7 +224,7 @@ NEVER_INLINE bool Interpreter::resolveGlobalDynamic(CallFrame* callFrame, Instru
     int skip = vPC[5].u.operand;
     
 #ifdef ARTEMIS
-    readProperty(codeBlock->identifier(property).ascii().data());
+    readProperty(callFrame, codeBlock->identifier(property).ascii().data());
 #endif
 
     ScopeChainNode* scopeChain = callFrame->scopeChain();
@@ -301,7 +301,7 @@ NEVER_INLINE void Interpreter::resolveBase(CallFrame* callFrame, Instruction* vP
     Identifier ident = callFrame->codeBlock()->identifier(property);
 
 #ifdef ARTEMIS
-    readProperty(ident.ascii().data());
+    readProperty(callFrame, ident.ascii().data());
 #endif
 
     JSValue result = JSC::resolveBase(callFrame, ident, callFrame->scopeChain(), isStrictPut);
@@ -366,7 +366,7 @@ NEVER_INLINE bool Interpreter::resolveThisAndProperty(CallFrame* callFrame, Inst
     Identifier& ident = codeBlock->identifier(property);
 
 #ifdef ARTEMIS
-    readProperty(ident.ascii().data());
+    readProperty(callFrame, ident.ascii().data());
 #endif
 
     JSObject* base;
@@ -436,38 +436,40 @@ ALWAYS_INLINE JSValue Interpreter::touchJsValue(CallFrame* callFrame, const JSVa
     return jsvalue;
 }
 
-ALWAYS_INLINE void Interpreter::readProperty(std::string identifier)
+ALWAYS_INLINE void Interpreter::readProperty(CallFrame* callFrame, std::string identifier)
 {
-    jscinst::get_jsc_listener()->javascript_property_read(identifier);
+    //printf("READ %s\n", identifier.c_str());
+    jscinst::get_jsc_listener()->javascript_property_read(identifier, callFrame);
 }
 
-ALWAYS_INLINE void Interpreter::readProperty(const SymbolTable& symbolTable, int index)
+ALWAYS_INLINE void Interpreter::readProperty(CallFrame* callFrame, const SymbolTable& symbolTable, int index)
 {
-
     SymbolTable::const_iterator it = symbolTable.begin();
     SymbolTable::const_iterator end = symbolTable.end();
     for (; it != end; ++it) {
         if (it->second.getIndex() == index) {
-            jscinst::get_jsc_listener()->javascript_property_read(UString(it->first).ascii().data());
+            //printf("READ %s\n", UString(it->first).ascii().data());
+            jscinst::get_jsc_listener()->javascript_property_read(UString(it->first).ascii().data(), callFrame);
             return;
         }
     }
 
 }
 
-ALWAYS_INLINE void Interpreter::writeProperty(std::string identifier)
+ALWAYS_INLINE void Interpreter::writeProperty(CallFrame* callFrame, std::string identifier)
 {
-    jscinst::get_jsc_listener()->javascript_property_written(identifier);
+    //printf("WRITE %s\n", identifier.c_str());
+    jscinst::get_jsc_listener()->javascript_property_written(identifier, callFrame);
 }
 
-ALWAYS_INLINE void Interpreter::writeProperty(const SymbolTable& symbolTable, int index)
+ALWAYS_INLINE void Interpreter::writeProperty(CallFrame* callFrame, const SymbolTable& symbolTable, int index)
 {
-
     SymbolTable::const_iterator it = symbolTable.begin();
     SymbolTable::const_iterator end = symbolTable.end();
     for (; it != end; ++it) {
         if (it->second.getIndex() == index) {
-            jscinst::get_jsc_listener()->javascript_property_written(UString(it->first).ascii().data());
+            //printf("WRITE %s\n", UString(it->first).ascii().data());
+            jscinst::get_jsc_listener()->javascript_property_written(UString(it->first).ascii().data(), callFrame);
             return;
         }
     }
@@ -2763,7 +2765,7 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         int index = vPC[2].u.operand;
 
 #ifdef ARTEMIS
-        readProperty(scope->symbolTable(), index);
+        readProperty(callFrame, scope->symbolTable(), index);
 #endif
 
         callFrame->uncheckedR(dst) = scope->registerAt(index).get();
@@ -2781,7 +2783,7 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         int value = vPC[2].u.operand;
 
 #ifdef ARTEMIS
-        writeProperty(scope->symbolTable(), index);
+        writeProperty(callFrame, scope->symbolTable(), index);
 #endif
 
         scope->registerAt(index).set(*globalData, scope, touchJsValue(callFrame, callFrame->r(value).jsValue()));
@@ -2825,7 +2827,7 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         ASSERT(callFrame->r(dst).jsValue());
 
 #ifdef ARTEMIS
-        readProperty(scope->symbolTable(), index);
+        readProperty(callFrame, scope->symbolTable(), index);
 #endif
 
         vPC += OPCODE_LENGTH(op_get_scoped_var);
@@ -2866,7 +2868,7 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         scope->registerAt(index).set(*globalData, scope, touchJsValue(callFrame, callFrame->r(value).jsValue()));
 
 #ifdef ARTEMIS
-        writeProperty(scope->symbolTable(), index);
+        writeProperty(callFrame, scope->symbolTable(), index);
 #endif
 
         vPC += OPCODE_LENGTH(op_put_scoped_var);
@@ -2897,7 +2899,7 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         Identifier& ident = codeBlock->identifier(property);
         
 #ifdef ARTEMIS
-        readProperty(ident.ascii().data());
+        readProperty(callFrame, ident.ascii().data());
 #endif
 
         JSValue baseVal = touchJsValue(callFrame, callFrame->r(base).jsValue());
@@ -2958,7 +2960,7 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         Identifier& ident = codeBlock->identifier(property);
 
 #ifdef ARTEMIS
-        readProperty(ident.ascii().data());
+        readProperty(callFrame, ident.ascii().data());
 #endif
 
         JSValue baseValue = touchJsValue(callFrame, callFrame->r(base).jsValue());
@@ -2984,7 +2986,7 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
 
 #ifdef ARTEMIS
         int property = vPC[3].u.operand;
-        readProperty(codeBlock->identifier(property).ascii().data());
+        readProperty(callFrame, codeBlock->identifier(property).ascii().data());
 #endif
 
         if (LIKELY(baseValue.isCell())) {
@@ -3020,7 +3022,7 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
 
 #ifdef ARTEMIS
         int property = vPC[3].u.operand;
-        readProperty(codeBlock->identifier(property).ascii().data());
+        readProperty(callFrame, codeBlock->identifier(property).ascii().data());
 #endif
 
         if (LIKELY(baseValue.isCell())) {
@@ -3064,7 +3066,7 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         
 #ifdef ARTEMIS
         int property = vPC[3].u.operand;
-        readProperty(codeBlock->identifier(property).ascii().data());
+        readProperty(callFrame, codeBlock->identifier(property).ascii().data());
 #endif
 
         if (LIKELY(baseValue.isCell())) {
@@ -3114,7 +3116,7 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         
 #ifdef ARTEMIS
         int property = vPC[3].u.operand;
-        readProperty(codeBlock->identifier(property).ascii().data());
+        readProperty(callFrame, codeBlock->identifier(property).ascii().data());
 #endif
 
         if (LIKELY(baseValue.isCell())) {
@@ -3161,7 +3163,7 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
 
 #ifdef ARTEMIS
         int property = vPC[3].u.operand;
-        readProperty(codeBlock->identifier(property).ascii().data());
+        readProperty(callFrame, codeBlock->identifier(property).ascii().data());
 #endif
 
         if (LIKELY(baseValue.isCell())) {
@@ -3216,7 +3218,7 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         
 #ifdef ARTEMIS
         int property = vPC[3].u.operand;
-        readProperty(codeBlock->identifier(property).ascii().data());
+        readProperty(callFrame, codeBlock->identifier(property).ascii().data());
 #endif
 
         if (LIKELY(baseValue.isCell())) {
@@ -3264,7 +3266,7 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         
 #ifdef ARTEMIS
         int property = vPC[3].u.operand;
-        readProperty(codeBlock->identifier(property).ascii().data());
+        readProperty(callFrame, codeBlock->identifier(property).ascii().data());
 #endif
 
         if (LIKELY(baseValue.isCell())) {
@@ -3304,7 +3306,7 @@ skip_id_custom_self:
         Identifier& ident = codeBlock->identifier(property);
 
 #ifdef ARTEMIS
-        readProperty(ident.ascii().data());
+        readProperty(callFrame, ident.ascii().data());
 #endif
 
         JSValue baseValue = touchJsValue(callFrame, callFrame->r(base).jsValue());
@@ -3331,7 +3333,7 @@ skip_id_custom_self:
         
 #ifdef ARTEMIS
         int property = vPC[3].u.operand;
-        readProperty(codeBlock->identifier(property).ascii().data());
+        readProperty(callFrame, codeBlock->identifier(property).ascii().data());
 #endif
 
         if (LIKELY(baseValue.isCell())) {
@@ -3391,7 +3393,7 @@ skip_id_custom_self:
         
 #ifdef ARTEMIS
         int property = vPC[3].u.operand;
-        readProperty(codeBlock->identifier(property).ascii().data());
+        readProperty(callFrame, codeBlock->identifier(property).ascii().data());
 #endif
 
         if (LIKELY(baseValue.isCell())) {
@@ -3504,7 +3506,7 @@ skip_id_custom_self:
         Identifier& ident = codeBlock->identifier(property);
 
 #ifdef ARTEMIS
-        writeProperty(ident.ascii().data());
+        writeProperty(callFrame, ident.ascii().data());
 #endif
 
         PutPropertySlot slot(codeBlock->isStrictMode());
@@ -3538,7 +3540,7 @@ skip_id_custom_self:
         
 #ifdef ARTEMIS
         int property = vPC[2].u.operand;
-        writeProperty(codeBlock->identifier(property).ascii().data());
+        writeProperty(callFrame, codeBlock->identifier(property).ascii().data());
 #endif
 
         if (LIKELY(baseValue.isCell())) {
@@ -3595,7 +3597,7 @@ skip_id_custom_self:
 
 #ifdef ARTEMIS
         int property = vPC[2].u.operand;
-        writeProperty(codeBlock->identifier(property).ascii().data());
+        writeProperty(callFrame, codeBlock->identifier(property).ascii().data());
 #endif
 
         if (LIKELY(baseValue.isCell())) {
@@ -3637,7 +3639,7 @@ skip_id_custom_self:
         Identifier& ident = codeBlock->identifier(property);
 
 #ifdef ARTEMIS
-        writeProperty(ident.ascii().data());
+        writeProperty(callFrame, ident.ascii().data());
 #endif
 
         PutPropertySlot slot(codeBlock->isStrictMode());
@@ -3666,7 +3668,7 @@ skip_id_custom_self:
         Identifier& ident = codeBlock->identifier(property);
 
 #ifdef ARTEMIS
-        writeProperty(ident.ascii().data());
+        writeProperty(callFrame, ident.ascii().data());
 #endif
 
         bool result = baseObj->methodTable()->deleteProperty(baseObj, callFrame, ident);
@@ -3693,7 +3695,7 @@ skip_id_custom_self:
         JSValue expectedSubscript = touchJsValue(callFrame, callFrame->r(expected).jsValue());
 
 #ifdef ARTEMIS
-        readProperty(subscript.toString(callFrame).ascii().data());
+        readProperty(callFrame, subscript.toString(callFrame).ascii().data());
 #endif
 
         int index = callFrame->r(i).i() - 1;
@@ -3764,7 +3766,7 @@ skip_id_custom_self:
         JSValue subscript = touchJsValue(callFrame, callFrame->r(property).jsValue());
 
 #ifdef ARTEMIS
-        readProperty(subscript.toString(callFrame).ascii().data());
+        readProperty(callFrame, subscript.toString(callFrame).ascii().data());
 #endif
 
         JSValue result;
@@ -3812,7 +3814,7 @@ skip_id_custom_self:
         JSValue subscript = touchJsValue(callFrame, callFrame->r(property).jsValue());
 
 #ifdef ARTEMIS
-        writeProperty(subscript.toString(callFrame).ascii().data());
+        writeProperty(callFrame, subscript.toString(callFrame).ascii().data());
 #endif
 
         if (LIKELY(subscript.isUInt32())) {
@@ -3862,7 +3864,7 @@ skip_id_custom_self:
         JSValue subscript = touchJsValue(callFrame, callFrame->r(property).jsValue());
 
 #ifdef ARTEMIS
-        readProperty(subscript.toString(callFrame).ascii().data());
+        readProperty(callFrame, subscript.toString(callFrame).ascii().data());
 #endif
 
         bool result;

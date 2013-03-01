@@ -31,6 +31,10 @@ ReadWritePrioritizer::ReadWritePrioritizer() : PrioritizerStrategy()
 double ReadWritePrioritizer::prioritize(QSharedPointer<const ExecutableConfiguration> configuration,
                                         AppModelConstPtr appmodel)
 {
+    if (configuration->isInitial()) {
+        return 0;
+    }
+
     QList<QSharedPointer<const BaseInput> > inputSequence = configuration->getInputSequence()->toList();
     QSharedPointer<const BaseInput> last = inputSequence.last();
     inputSequence.removeLast();
@@ -42,19 +46,7 @@ double ReadWritePrioritizer::prioritize(QSharedPointer<const ExecutableConfigura
         properitesWrittenBeforeLast.unite(appmodel->getJavascriptStatistics()->getPropertiesWritten(input));
     }
 
-    float pri = float(properitesWrittenBeforeLast.intersect(propertiesReadByLast).size() + 1) / float(propertiesReadByLast.size() + 1);
-
-    /*std::cout << configuration->toString().toStdString() << std::endl;
-    std::cout << "PRIORITY = " << pri << " " \
-              << "with propertiesReadByLast = " << propertiesReadByLast.size() << " and properitesWrittenBeforeLast = " << properitesWrittenBeforeLast.size() << std::endl;
-    foreach (QString prop, properitesWrittenBeforeLast.toList()) {
-        std::cout << "W: " << prop.toStdString() << std::endl;
-    }
-    foreach (QString prop, propertiesReadByLast.toList()) {
-        std::cout << "R: " << prop.toStdString() << std::endl;
-    }*/
-
-    return pri;
+    return float(properitesWrittenBeforeLast.intersect(propertiesReadByLast).size() + 1) / float(propertiesReadByLast.size() + 1);
 }
 
 }

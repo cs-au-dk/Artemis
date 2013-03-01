@@ -15,6 +15,7 @@
  */
 #include <iostream>
 
+#include "artemisglobals.h"
 #include "statistics/statsstorage.h"
 
 #include "javascriptstatistics.h"
@@ -40,8 +41,18 @@ void JavascriptStatistics::notifyStartingEvent(QSharedPointer<const BaseInput> i
     }
 }
 
-void JavascriptStatistics::slJavascriptPropertyRead(QString propertyName)
+void JavascriptStatistics::notifyStartingLoad()
 {
+    // Ignore stuff before we call our first event
+    mInputBeingExecuted = 0;
+}
+
+void JavascriptStatistics::slJavascriptPropertyRead(QString propertyName, intptr_t codeBlockID, intptr_t sourceID, QUrl url, int line)
+{
+    if (url == DONT_MEASURE_COVERAGE) {
+        return;
+    }
+
     statistics()->accumulate("WebKit::readproperties", 1);
 
     if (mInputBeingExecuted != 0) {
@@ -49,8 +60,12 @@ void JavascriptStatistics::slJavascriptPropertyRead(QString propertyName)
     }
 }
 
-void JavascriptStatistics::slJavascriptPropertyWritten(QString propertyName)
+void JavascriptStatistics::slJavascriptPropertyWritten(QString propertyName, intptr_t codeBlockID, intptr_t sourceID, QUrl url, int line)
 {
+    if (url == DONT_MEASURE_COVERAGE) {
+        return;
+    }
+
     statistics()->accumulate("WebKit::writtenproperties", 1);
 
     if (mInputBeingExecuted != 0) {

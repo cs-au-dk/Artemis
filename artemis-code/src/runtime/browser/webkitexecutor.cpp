@@ -78,10 +78,10 @@ WebKitExecutor::WebKitExecutor(QObject* parent,
     QObject::connect(webkitListener, SIGNAL(sigJavascriptFunctionCalled(intptr_t,QString,size_t)),
                      mCoverageListener.data(), SLOT(slJavascriptFunctionCalled(intptr_t,QString,size_t)));
 
-    QObject::connect(webkitListener, SIGNAL(sigJavascriptPropertyRead(QString)),
-                     mJavascriptStatistics.data(), SLOT(slJavascriptPropertyRead(QString)));
-    QObject::connect(webkitListener, SIGNAL(sigJavascriptPropertyWritten(QString)),
-                     mJavascriptStatistics.data(), SLOT(slJavascriptPropertyWritten(QString)));
+    QObject::connect(webkitListener, SIGNAL(sigJavascriptPropertyRead(QString,intptr_t,intptr_t,QUrl,int)),
+                     mJavascriptStatistics.data(), SLOT(slJavascriptPropertyRead(QString,intptr_t,intptr_t,QUrl,int)));
+    QObject::connect(webkitListener, SIGNAL(sigJavascriptPropertyWritten(QString,intptr_t,intptr_t,QUrl,int)),
+                     mJavascriptStatistics.data(), SLOT(slJavascriptPropertyWritten(QString,intptr_t,intptr_t,QUrl,int)));
 
     QObject::connect(webkitListener, SIGNAL(addedEventListener(QWebElement*, QString)),
                      mResultBuilder, SLOT(slEventListenerAdded(QWebElement*, QString)));
@@ -127,6 +127,11 @@ void WebKitExecutor::executeSequence(ExecutableConfigurationConstPtr conf)
     mResultBuilder->reset();
 
     qDebug() << "--------------- FETCH PAGE --------------" << endl;
+
+    mCoverageListener->notifyStartingLoad();
+    mResultBuilder->notifyStartingLoad();
+    mJavascriptStatistics->notifyStartingLoad();
+
     mPage->mainFrame()->load(conf->getUrl());
 }
 

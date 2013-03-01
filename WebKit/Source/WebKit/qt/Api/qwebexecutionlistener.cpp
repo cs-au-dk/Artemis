@@ -112,23 +112,6 @@ void QWebExecutionListener::clearTimers() {
 
 // TIMERS END
 
-void QWebExecutionListener::javascript_code_loaded(JSC::SourceProvider* sp, JSC::ExecState*) {
-    // SourceProvider has changed API lately, thus the following usage of it has not been fully
-    // tested with artemis - e.g. if you are tracking an error and reach this point, then you
-    // have come to the right place.
-
-    std::string source(sp->getRange(0, sp->length()).utf8().data());
-    std::string url(sp->url().utf8().data());
-    intptr_t id = sp->asID();
-    int startline = sp->startPosition().m_line.zeroBasedInt() + 1; // startPosition is placed right before the first line, thus (+1)
-
-    emit loadedJavaScript(id, QString(tr(source.c_str())), QUrl(QString(tr(url.c_str()))), startline);
-}
-
-void QWebExecutionListener::javascript_executed_statement(const JSC::DebuggerCallFrame&, intptr_t sourceID, int linenumber) {
-    emit statementExecuted(sourceID, linenumber);
-}
-
 bool domNodeSignature(JSC::CallFrame * cframe, JSC::JSObject * domElement, QString * signature) {
     
     JSC::Identifier nodeNameIdent(cframe, "nodeName");
@@ -257,6 +240,23 @@ void QWebExecutionListener::javascript_eval_call(const char * eval_string) {
     emit this->eval_call(QString(tr(eval_string)));
 }
 
+void QWebExecutionListener::javascript_code_loaded(JSC::SourceProvider* sp, JSC::ExecState*) {
+    // SourceProvider has changed API lately, thus the following usage of it has not been fully
+    // tested with artemis - e.g. if you are tracking an error and reach this point, then you
+    // have come to the right place.
+
+    std::string source(sp->getRange(0, sp->length()).utf8().data());
+    std::string url(sp->url().utf8().data());
+    intptr_t id = sp->asID();
+    int startline = sp->startPosition().m_line.zeroBasedInt() + 1; // startPosition is placed right before the first line, thus (+1)
+
+    emit loadedJavaScript(id, QString(tr(source.c_str())), QUrl(QString(tr(url.c_str()))), startline);
+}
+
+void QWebExecutionListener::javascript_executed_statement(const JSC::DebuggerCallFrame&, intptr_t sourceID, int linenumber) {
+    emit statementExecuted(sourceID, linenumber);
+}
+
 void QWebExecutionListener::javascript_bytecode_executed(JSC::CodeBlock* codeBlock, JSC::Instruction* instuction) {
 
     size_t bytecodeOffset = instuction - codeBlock->instructions().begin();
@@ -269,14 +269,22 @@ void QWebExecutionListener::javascript_bytecode_executed(JSC::CodeBlock* codeBlo
                           -1); //TODO: Find out how to get the opcode from WebKit */
 }
 
-void QWebExecutionListener::javascript_property_read(std::string propertyName)
+void QWebExecutionListener::javascript_property_read(std::string propertyName, JSC::CallFrame* callFrame)
 {
-    emit sigJavascriptPropertyRead(QString::fromStdString(propertyName));
+    emit sigJavascriptPropertyRead(QString::fromStdString(propertyName),
+                                   (intptr_t)callFrame->codeBlock(),
+                                   callFrame->codeBlock()->source()->asID(),
+                                   QUrl(QString::fromStdString(callFrame->codeBlock()->source()->url().utf8().data())),
+                                   callFrame->codeBlock()->source()->startPosition().m_line.zeroBasedInt() + 1);
 }
 
-void QWebExecutionListener::javascript_property_written(std::string propertyName)
+void QWebExecutionListener::javascript_property_written(std::string propertyName, JSC::CallFrame* callFrame)
 {
-    emit sigJavascriptPropertyWritten(QString::fromStdString(propertyName));
+    emit sigJavascriptPropertyWritten(QString::fromStdString(propertyName),
+                                      (intptr_t)callFrame->codeBlock(),
+                                      callFrame->codeBlock()->source()->asID(),
+                                      QUrl(QString::fromStdString(callFrame->codeBlock()->source()->url().utf8().data())),
+                                      callFrame->codeBlock()->source()->startPosition().m_line.zeroBasedInt() + 1);
 }
 
 QWebExecutionListener* QWebExecutionListener::getListener() {

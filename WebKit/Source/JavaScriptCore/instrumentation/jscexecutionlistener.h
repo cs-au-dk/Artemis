@@ -5,6 +5,7 @@
 namespace JSC {
     class CodeBlock;
     class Instruction;
+    class ExecState;
 }
 
 
@@ -18,8 +19,8 @@ public:
     virtual void javascript_eval_call(const char * eval_string) __attribute__((noreturn));
     virtual void javascript_bytecode_executed(JSC::CodeBlock*, JSC::Instruction* inst) __attribute__((noreturn));
     virtual void javascript_constant_encountered(std::string constant) __attribute__((noreturn));
-    virtual void javascript_property_read(std::string propertyName) __attribute__((noreturn));
-    virtual void javascript_property_written(std::string propertyName) __attribute__((noreturn));
+    virtual void javascript_property_read(std::string propertyName, JSC::ExecState*) __attribute__((noreturn));
+    virtual void javascript_property_written(std::string propertyName, JSC::ExecState*) __attribute__((noreturn));
 };
 
 extern JSCExecutionListener* jsc_listener;

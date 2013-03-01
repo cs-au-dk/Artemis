@@ -28,13 +28,13 @@ void JSCExecutionListener::javascript_constant_encountered(std::string) {
     exit(1);
 }
 
-void JSCExecutionListener::javascript_property_read(std::string)
+void JSCExecutionListener::javascript_property_read(std::string, JSC::ExecState*)
 {
     cerr << "ERROR: Default listener for javascript_property_read was invoked " << endl;
     exit(1);
 }
 
-void JSCExecutionListener::javascript_property_written(std::string)
+void JSCExecutionListener::javascript_property_written(std::string, JSC::ExecState*)
 {
     cerr << "ERROR: Default listener for javascript_property_written was invoked " << endl;
     exit(1);

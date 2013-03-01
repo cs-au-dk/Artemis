@@ -43,6 +43,11 @@ void ExecutionResultBuilder::notifyStartingEvent()
     mResult->mJavascriptConstantsObservedForLastEvent.clear();
 }
 
+void ExecutionResultBuilder::notifyStartingLoad()
+{
+    mResult->mJavascriptConstantsObservedForLastEvent.clear();
+}
+
 QSharedPointer<ExecutionResult> ExecutionResultBuilder::getResult()
 {
     registerFromFieldsIntoResult();
