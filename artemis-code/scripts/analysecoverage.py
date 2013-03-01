@@ -1,5 +1,9 @@
 #!/usr/bin/env python
 
+"""
+Script summarizing code-coverage from Artemis stdout
+"""
+
 import sys
 import re
 import pprint
