@@ -13,7 +13,7 @@
 
   THIS SOFTWARE IS PROVIDED BY SIMON HOLM JENSEN ``AS IS'' AND ANY EXPRESS OR IMPLIED
   WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
-  FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL <COPYRIGHT HOLDER> OR
+  FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL <COPYRIGHT HOLDER OR
   CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
   CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
   SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
@@ -155,25 +155,6 @@ QWebElement DOMElementDescriptor::nthChild(QWebElement elm, int n) const
     return currentChild;
 }
 
-QDebug operator<<(QDebug dbg, const DOMElementDescriptor& e)
-{
-    QString elmName = "";
-
-    if (!e.id.isEmpty()) {
-        elmName = e.id;
-    }
-    else if (e.isBody)
-        { elmName = "body"; }
-    else if (e.isDocument)
-        { elmName = "document"; }
-    else
-        { elmName = e.tagName; }
-
-    //Include frame info?
-    dbg.nospace() << elmName;
-    return dbg.space();
-}
-
 void DOMElementDescriptor::setFramePath(QWebElement* elm)
 {
     QWebFrame* elementFrame = elm->webFrame();
@@ -279,6 +260,45 @@ uint DOMElementDescriptor::hashCode() const {
     }
 
     return 29 * element_hash + 13 * frame_hash;
+}
+
+QString DOMElementDescriptor::toString() const
+{
+    QString elmName = "";
+
+    if (!id.isEmpty()) {
+        elmName = id;
+    }
+    else if (isBody) {
+        elmName = "body";
+    }
+    else if (isDocument) {
+        elmName = "document";
+    }
+    else {
+        elmName = tagName;
+    }
+
+    return elmName;
+}
+
+QDebug operator<<(QDebug dbg, const DOMElementDescriptor& e)
+{
+    QString elmName = "";
+
+    if (!e.id.isEmpty()) {
+        elmName = e.id;
+    }
+    else if (e.isBody)
+        { elmName = "body"; }
+    else if (e.isDocument)
+        { elmName = "document"; }
+    else
+        { elmName = e.tagName; }
+
+    //Include frame info?
+    dbg.nospace() << elmName;
+    return dbg.space();
 }
 
 }

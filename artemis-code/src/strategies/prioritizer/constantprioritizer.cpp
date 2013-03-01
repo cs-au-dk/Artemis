@@ -42,7 +42,7 @@ double ConstantPrioritizer::prioritize(QSharedPointer<const ExecutableConfigurat
     return 1;
 }
 
-void ConstantPrioritizer::reprioritize(WorkList* worklist)
+void ConstantPrioritizer::reprioritize(WorkListPtr worklist)
 {
 
 }

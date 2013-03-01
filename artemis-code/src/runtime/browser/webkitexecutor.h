@@ -61,7 +61,7 @@ public:
                    AjaxRequestListener* ajaxListener);
     ~WebKitExecutor();
 
-    void executeSequence(QSharedPointer<ExecutableConfiguration> conf);
+    void executeSequence(ExecutableConfigurationConstPtr conf);
     void detach();
 
     QWebExecutionListener* webkitListener; // TODO should not be public
@@ -69,7 +69,7 @@ public:
 private:
     ArtemisWebPage* mPage;
     ExecutionResultBuilder* mResultBuilder;
-    QSharedPointer<ExecutableConfiguration> currentConf;
+    ExecutableConfigurationConstPtr currentConf;
     AjaxRequestListener* mAjaxListener;
     JQueryListener* mJquery;
     QMap<QString, QString> mPresetFields;
@@ -78,7 +78,7 @@ private:
     JavascriptStatisticsPtr mJavascriptStatistics;
 
 signals:
-    void sigExecutedSequence(QSharedPointer<ExecutableConfiguration> conf, QSharedPointer<ExecutionResult> res);
+    void sigExecutedSequence(ExecutableConfigurationConstPtr conf, QSharedPointer<ExecutionResult> res);
 
 public slots:
     void slLoadFinished(bool ok);

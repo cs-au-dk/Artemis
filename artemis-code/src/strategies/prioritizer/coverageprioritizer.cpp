@@ -1,3 +1,6 @@
+
+#include <assert.h>
+
 #include "coverageprioritizer.h"
 
 namespace artemis
@@ -17,10 +20,12 @@ double CoveragePrioritizer::prioritize(QSharedPointer<const ExecutableConfigurat
         coverage = coverage * appmodel->getCoverageListener()->getBytecodeCoverage(input);
     }
 
+    assert(coverage >= 0 && coverage <= 1);
+
     return 1 - coverage;
 }
 
-void CoveragePrioritizer::reprioritize(WorkList*)
+void CoveragePrioritizer::reprioritize(WorkListPtr)
 {
 
 }

@@ -28,7 +28,6 @@
 #ifndef WORKLIST_H
 #define WORKLIST_H
 
-#include <QObject>
 #include <QString>
 #include <QSharedPointer>
 
@@ -37,22 +36,22 @@
 namespace artemis
 {
 
-class WorkList : public QObject
+class WorkList
 {
 
 public:
-    WorkList(QObject* parent) : QObject(parent) {}
+    WorkList() {}
     virtual ~WorkList() {}
 
-    virtual void add(QSharedPointer<ExecutableConfiguration> e, int priority) = 0;
-    virtual bool allZeroPriority() = 0;
-    virtual QSharedPointer<ExecutableConfiguration> remove() = 0;
+    virtual void add(ExecutableConfigurationConstPtr configuration, double priority) = 0;
+    virtual ExecutableConfigurationConstPtr remove() = 0;
     virtual int size() = 0;
     virtual bool empty() = 0;
-    virtual bool contains(QSharedPointer<ExecutableConfiguration> e) = 0;
-    virtual void newPriority(QSharedPointer<ExecutableConfiguration> e, int priority) = 0;
 
+    virtual QString toString() const = 0;
 };
+
+typedef QSharedPointer<WorkList> WorkListPtr;
 
 }
 

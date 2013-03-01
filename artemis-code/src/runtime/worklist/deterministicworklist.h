@@ -28,10 +28,10 @@
 #ifndef DETERMINISTICWORKLIST_H
 #define DETERMINISTICWORKLIST_H
 
-#include <QMultiHash>
-#include <QList>
-#include <QMap>
 #include <queue>
+#include <vector>
+
+#include <QPair>
 
 #include "worklist.h"
 
@@ -40,22 +40,31 @@ using namespace std;
 namespace artemis
 {
 
+typedef QPair<double, ExecutableConfigurationConstPtr> WorkListItem;
+
+struct WorkListItemComperator
+{
+    bool operator() (const WorkListItem& lhs, const WorkListItem& rhs)
+    {
+        return lhs.first < rhs.first;
+    }
+};
+
 class DeterministicWorkList : public WorkList
 {
 public:
-    DeterministicWorkList(QObject* parent);
+    DeterministicWorkList();
 
-    void add(QSharedPointer<ExecutableConfiguration> e, int priority);
-    bool allZeroPriority();
-    QSharedPointer<ExecutableConfiguration> remove();
+    void add(ExecutableConfigurationConstPtr configuration, double priority);
+    ExecutableConfigurationConstPtr remove();
     int size();
     bool empty();
-    bool contains(QSharedPointer<ExecutableConfiguration> e);
-    void newPriority(QSharedPointer<ExecutableConfiguration> e, int priority);
+
+    QString toString() const;
 
 private:
-    int largestPri;
-    QMap<int, QList<QSharedPointer<ExecutableConfiguration> >* > queue; // use a pointer to the set to disable copy-on-write
+    // mutable here is a hack to support toString
+    mutable priority_queue<WorkListItem, vector<WorkListItem>, WorkListItemComperator> mQueue;
 
 };
 

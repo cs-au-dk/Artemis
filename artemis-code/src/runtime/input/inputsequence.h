@@ -49,9 +49,14 @@ public:
     QSharedPointer<const BaseInput> getLast() const;
     const QList<QSharedPointer<const BaseInput> > toList() const;
 
+    QString toString() const;
+
 private:
     const QList<QSharedPointer<const BaseInput> > mSequence;
 };
+
+typedef QSharedPointer<InputSequence> InputSequencePtr;
+typedef QSharedPointer<const InputSequence> InputSequenceConstPtr;
 
 }
 #endif // INPUTSEQUENCE_H

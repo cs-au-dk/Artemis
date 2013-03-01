@@ -47,11 +47,15 @@ public:
     const QUrl getUrl() const;
     QSharedPointer<const InputSequence> getInputSequence() const;
 
+    QString toString() const;
+
 private:
     const QUrl mUrl;
     QSharedPointer<const InputSequence> mSequence;
 };
 
+typedef QSharedPointer<ExecutableConfiguration> ExecutableConfigurationPtr;
+typedef QSharedPointer<const ExecutableConfiguration> ExecutableConfigurationConstPtr;
 }
 
 #endif // EXECUTABLECONFIGURATION_H

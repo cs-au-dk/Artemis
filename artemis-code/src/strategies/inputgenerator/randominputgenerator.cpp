@@ -66,7 +66,7 @@ QList<QSharedPointer<ExecutableConfiguration> > RandomInputGenerator::addNewConf
 
     QList<QSharedPointer<ExecutableConfiguration> > newConfigurations;
 
-    newConfigurations.append(insertSameLength(configuration, result));
+    //newConfigurations.append(insertSameLength(configuration, result));
     newConfigurations.append(insertExtended(configuration, result));
 
     return newConfigurations;

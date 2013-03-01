@@ -56,7 +56,6 @@ private:
 public slots:
     void slScriptCrashed(QString cause, intptr_t sourceID, int lineNumber);
     void slStringEvaled(const QString);
-    void slCodeLoaded(intptr_t, QString, QUrl, int);
 
     void slTimerAdded(int timerId, int timeout, bool singleShot);
     void slTimerRemoved(int timerId);

@@ -47,6 +47,7 @@ public:
                                                    QSharedPointer<const ExecutionResult> result) const;
 
     int hashCode() const;
+    QString toString() const;
 
 private:
     QSharedPointer<const Timer> mTimer;

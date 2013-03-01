@@ -130,10 +130,10 @@ Runtime::Runtime(QObject* parent, const Options& options, QUrl url) : QObject(pa
         assert(false);
     }
 
-    mWorklist = new DeterministicWorkList(this);
+    mWorklist = WorkListPtr(new DeterministicWorkList());
 
-    QObject::connect(mWebkitExecutor, SIGNAL(sigExecutedSequence(QSharedPointer<ExecutableConfiguration>, QSharedPointer<ExecutionResult>)),
-                     this, SLOT(postConcreteExecution(QSharedPointer<ExecutableConfiguration>, QSharedPointer<ExecutionResult>)));
+    QObject::connect(mWebkitExecutor, SIGNAL(sigExecutedSequence(ExecutableConfigurationConstPtr, QSharedPointer<ExecutionResult>)),
+                     this, SLOT(postConcreteExecution(ExecutableConfigurationConstPtr, QSharedPointer<ExecutionResult>)));
 
 
     /** Visited states **/
@@ -172,7 +172,11 @@ void Runtime::preConcreteExecution()
         return;
     }
 
-    QSharedPointer<ExecutableConfiguration> nextConfiguration = mWorklist->remove();
+    Log::debug("\n============= New-Iteration =============");
+    Log::debug("--------------- WORKLIST ----------------\n");
+    Log::debug(mWorklist->toString().toStdString());
+
+    ExecutableConfigurationConstPtr nextConfiguration = mWorklist->remove();
 
     mWebkitExecutor->executeSequence(nextConfiguration); // calls the slExecutedSequence method as callback
 }
@@ -182,7 +186,7 @@ void Runtime::preConcreteExecution()
  * @param configuration
  * @param result
  */
-void Runtime::postConcreteExecution(QSharedPointer<ExecutableConfiguration> configuration, QSharedPointer<ExecutionResult> result)
+void Runtime::postConcreteExecution(ExecutableConfigurationConstPtr configuration, QSharedPointer<ExecutionResult> result)
 {
     mPrioritizerStrategy->reprioritize(mWorklist);
 

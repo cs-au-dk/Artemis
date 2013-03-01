@@ -72,4 +72,15 @@ const QList<QSharedPointer<const BaseInput> > InputSequence::toList() const
     return mSequence;
 }
 
+QString InputSequence::toString() const
+{
+    QString output;
+
+    foreach (QSharedPointer<const BaseInput> input, mSequence) {
+        output += input->toString() + QString(" => ");
+    }
+
+    return output;
+}
+
 }

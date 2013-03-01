@@ -95,4 +95,10 @@ int DomInput::hashCode() const
     return 107 * mEventHandler->hashCode();
 }
 
+QString DomInput::toString() const
+{
+
+    return QString("DomInput(") + mEventHandler->toString() + QString(")");
+}
+
 }

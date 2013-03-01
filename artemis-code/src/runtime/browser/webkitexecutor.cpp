@@ -85,6 +85,10 @@ WebKitExecutor::WebKitExecutor(QObject* parent,
                      mCoverageListener.data(), SLOT(newCode(intptr_t, QString, QUrl, int)));
     QObject::connect(webkitListener, SIGNAL(statementExecuted(intptr_t, int)),
                      mCoverageListener.data(), SLOT(statementExecuted(intptr_t, int)));
+    QObject::connect(webkitListener, SIGNAL(sigJavascriptBytecodeExecuted(intptr_t, size_t)),
+                     mCoverageListener.data(), SLOT(slJavascriptBytecodeExecuted(intptr_t, size_t)));
+    QObject::connect(webkitListener, SIGNAL(sigJavascriptFunctionCalled(intptr_t,QString,size_t)),
+                     mCoverageListener.data(), SLOT(slJavascriptFunctionCalled(intptr_t,QString,size_t)));
 
     QObject::connect(webkitListener, SIGNAL(sigJavascriptPropertyRead(QString)),
                      mJavascriptStatistics.data(), SLOT(slJavascriptPropertyRead(QString)));
@@ -105,8 +109,6 @@ WebKitExecutor::WebKitExecutor(QObject* parent,
                      mResultBuilder, SLOT(slScriptCrashed(QString, intptr_t, int)));
     QObject::connect(webkitListener, SIGNAL(eval_call(QString)),
                      mResultBuilder, SLOT(slStringEvaled(QString)));
-    QObject::connect(webkitListener, SIGNAL(loadedJavaScript(intptr_t, QString, QUrl, int)),
-                     mResultBuilder, SLOT(slCodeLoaded(intptr_t, QString, QUrl, int)));
 
     QObject::connect(webkitListener, SIGNAL(addedAjaxCallbackHandler(int)),
                      mResultBuilder, SLOT(slAjaxCallbackHandlerAdded(int)));
@@ -129,14 +131,14 @@ void WebKitExecutor::detach() {
 
 }
 
-void WebKitExecutor::executeSequence(QSharedPointer<ExecutableConfiguration> conf)
+void WebKitExecutor::executeSequence(ExecutableConfigurationConstPtr conf)
 {
     currentConf = conf;
 
     mJquery->reset(); // TODO merge into result?
     mResultBuilder->reset();
 
-    qDebug() << "Trying to load: " << conf->getUrl().toString() << endl;
+    qDebug() << "--------------- FETCH PAGE --------------" << endl;
     mPage->mainFrame()->load(conf->getUrl());
 }
 
@@ -148,8 +150,6 @@ void WebKitExecutor::slLoadFinished(bool ok)
         qWarning("WEBKIT: Website load failed!");
         exit(1);
     }
-
-    qDebug() << "WEBKIT: Finished loading" << endl;
 
     // Populate forms (preset)
 
@@ -166,7 +166,7 @@ void WebKitExecutor::slLoadFinished(bool ok)
 
     // Execute input sequence
 
-    qDebug() << "Artemis: Executing sequence" << endl;
+    qDebug() << "\n------------ EXECUTE SEQUENCE -----------" << endl;
 
     foreach(QSharedPointer<const BaseInput> input, currentConf->getInputSequence()->toList()) {
         mResultBuilder->notifyStartingEvent();

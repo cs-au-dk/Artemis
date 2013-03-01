@@ -51,6 +51,11 @@ QSharedPointer<const InputSequence> ExecutableConfiguration::getInputSequence() 
     return mSequence;
 }
 
+QString ExecutableConfiguration::toString() const
+{
+    return mSequence->toString();
+}
+
 }
 
 

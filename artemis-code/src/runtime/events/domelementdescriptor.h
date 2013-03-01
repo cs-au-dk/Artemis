@@ -52,6 +52,7 @@ public:
     bool isInvalid() const;
 
     uint hashCode() const;
+    QString toString() const;
 
     QDebug friend operator<<(QDebug dbg, const DOMElementDescriptor& e);
 

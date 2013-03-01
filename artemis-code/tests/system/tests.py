@@ -46,17 +46,17 @@ class PrioritizationStrategies(unittest.TestCase):
 	def test_coverage(self):
 		report = execute_artemis('strategy-priority-coverage', 
 			'%s/strategies/priority/coverage.html' % WEBSERVER_URL,
-			iterations=4,
+			iterations=5,
 			strategy_priority='constant')
 		
-		self.assertEqual(5, report.get('WebKit::coverage::covered-unique', 0));
+		self.assertEqual(8, report.get('WebKit::coverage::covered-unique', 0));
 
 		report = execute_artemis('strategy-priority-coverage', 
 			'%s/strategies/priority/coverage.html' % WEBSERVER_URL,
-			iterations=4,
+			iterations=5,
 			strategy_priority='coverage')
 		
-		self.assertEqual(7, report.get('WebKit::coverage::covered-unique', 0));
+		self.assertEqual(9, report.get('WebKit::coverage::covered-unique', 0));
 
 	def test_readwrite(self):
 		report = execute_artemis('strategy-priority-readwrite', 

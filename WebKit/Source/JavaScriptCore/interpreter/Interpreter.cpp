@@ -637,9 +637,7 @@ Interpreter::Interpreter()
 
 #ifdef ARTEMIS
 #if ENABLE(JIT)
-    qDebug()<<"WEBKIT: JIT enabled - instrumentation will not work!\n";
-#else
-    qDebug() << "WEBKIT: JIT disabled - all's well!\n";
+    qFatal()<<"WEBKIT: JIT enabled - instrumentation will not work!\n";
 #endif
 #endif
 

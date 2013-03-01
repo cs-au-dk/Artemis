@@ -61,12 +61,6 @@ EventType EventHandlerDescriptor::getEventType() const
     return getType(eventName);
 }
 
-QDebug operator<<(QDebug dbg, const EventHandlerDescriptor& e)
-{
-    dbg.nospace() << "(" + e.eventName << "," << e.element << ")";
-    return dbg.space();
-}
-
 bool EventHandlerDescriptor::isInvalid() const
 {
     return this->element->isInvalid();
@@ -75,6 +69,17 @@ bool EventHandlerDescriptor::isInvalid() const
 int EventHandlerDescriptor::hashCode() const
 {
     return qHash(this->eventName) + 7 * this->element->hashCode();
+}
+
+QString EventHandlerDescriptor::toString() const
+{
+    return QString(eventName + "@") + element->toString();
+}
+
+QDebug operator<<(QDebug dbg, const EventHandlerDescriptor& e)
+{
+    dbg.nospace() << "(" + e.eventName << "," << e.element << ")";
+    return dbg.space();
 }
 
 }

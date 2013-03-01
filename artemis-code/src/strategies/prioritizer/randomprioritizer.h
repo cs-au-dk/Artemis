@@ -42,7 +42,7 @@ public:
                       QSharedPointer<const ExecutionResult> result,
                       const AppModelPtr);
 
-    void reprioritize(WorkList* worklist);
+    void reprioritize(WorkListPtr worklist);
 };
 
 }

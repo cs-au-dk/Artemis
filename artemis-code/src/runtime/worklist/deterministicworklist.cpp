@@ -33,86 +33,56 @@
 namespace artemis
 {
 
-DeterministicWorkList::DeterministicWorkList(QObject* parent) :
-    WorkList(parent)
+DeterministicWorkList::DeterministicWorkList() :
+    WorkList()
 {
-    queue.clear();
-    largestPri = 0;
 }
 
-void DeterministicWorkList::add(QSharedPointer<ExecutableConfiguration> e, int priority)
+void DeterministicWorkList::add(ExecutableConfigurationConstPtr configuration, double priority)
 {
-    if (!queue.contains(priority)) {
-        QList<QSharedPointer<ExecutableConfiguration> >* set = new QList<QSharedPointer<ExecutableConfiguration> >();
-        queue.insert(priority, set);
-    }
-
-    QList<QSharedPointer<ExecutableConfiguration> >* set = queue.value(priority);
-    if (!set->contains(e)) {
-        set->append(e);
-    }
-
-    if (priority > largestPri) {
-        largestPri = priority;
-    }
+    mQueue.push(WorkListItem(priority, configuration));
 }
 
-QSharedPointer<ExecutableConfiguration> DeterministicWorkList::remove()
+ExecutableConfigurationConstPtr DeterministicWorkList::remove()
 {
-    Q_ASSERT(!queue.empty());
+    Q_ASSERT(!mQueue.empty());
 
-    QList<QSharedPointer<ExecutableConfiguration> >* set = queue.value(largestPri);
-    QSharedPointer<ExecutableConfiguration> result = set->first();
-    set->removeFirst();
+    ExecutableConfigurationConstPtr configuration = mQueue.top().second;
+    mQueue.pop();
 
-    if (set->isEmpty()) {
-        queue.remove(largestPri);
-        largestPri = queue.empty() ? 0 : queue.keys().last();
-    }
-
-    return result;
-}
-
-bool DeterministicWorkList::allZeroPriority()
-{
-    return largestPri == 0;
+    return configuration;
 }
 
 int DeterministicWorkList::size()
 {
-    int res = 0;
-    foreach(int k, queue.keys()) {
-        res += queue.value(k)->size();
-    }
-    return res;
+    return mQueue.size();
 }
 
 bool DeterministicWorkList::empty()
 {
-    return queue.empty();
+    return mQueue.empty();
 }
 
-bool DeterministicWorkList::contains(QSharedPointer<ExecutableConfiguration> e)
+QString DeterministicWorkList::toString() const
 {
-    foreach(int k, queue.keys()) {
-        if (queue.value(k)->contains(e)) {
-            return true;
-        }
-    }
-    return false;
-}
+    // We can't iterate over a priority_queue, thus the ugliness here
+    // TODO find a priority_queue implementation supporting iteration
 
-void DeterministicWorkList::newPriority(QSharedPointer<ExecutableConfiguration> e, int priority)
-{
-    foreach(int k, queue.keys()) {
-        QList<QSharedPointer<ExecutableConfiguration> >* set = queue.value(k);
+    QList<WorkListItem> tmps;
 
-        int index = set->indexOf(e);
-        if (index != -1) {
-            set->removeAt(index);
-        }
+    while (!mQueue.empty()) {
+        tmps.append(mQueue.top());
+        mQueue.pop();
     }
-    add(e, priority);
+
+    QString output;
+
+    foreach (WorkListItem item, tmps) {
+        mQueue.push(item);
+        output += QString::number(item.first) + QString(" => ") + item.second->toString() + QString("\n");
+    }
+
+    return output;
 }
 
 }

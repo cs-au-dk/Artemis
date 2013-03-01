@@ -84,7 +84,9 @@ void CoverageListener::newCode(intptr_t sourceTemporalID, QString source, QUrl u
     int sourceID = mSourceIdMap.value(sourceTemporalID);
 
     if (!sources.contains(sourceID)) {
-        qDebug() << "Loaded new code (id " << sourceID << "): " << url << " at line " << QString::number(startline);
+
+        qDebug() << "Loaded script: " << url.toString() << " (line " << QString::number(startline) << ")";
+
         SourceInfo* infoP = new SourceInfo(this, source, url, startline);
         sources.insert(sourceID, infoP);
         coverage.insert(sourceID, new QSet<int>());
@@ -129,7 +131,6 @@ void CoverageListener::slJavascriptFunctionCalled(intptr_t codeBlockTemporalID, 
 
 void CoverageListener::slJavascriptBytecodeExecuted(intptr_t codeBlockTemporalID, size_t bytecodeOffset)
 {
-
     codeblockid_t codeBlockID = mCodeBlockIdMap.value(codeBlockTemporalID, -1);
 
     if (codeBlockID == -1) {
@@ -149,11 +150,11 @@ void CoverageListener::notifyStartingEvent(QSharedPointer<const BaseInput> input
     }
 }
 
-float CoverageListener::getBytecodeCoverage(QSharedPointer<const BaseInput> inputEvent)
+float CoverageListener::getBytecodeCoverage(QSharedPointer<const BaseInput> inputEvent) const
 {
-    mInputBeingExecuted = inputEvent->hashCode();
+    uint hashcode = inputEvent->hashCode();
 
-    if (!mInputCodeBlockMap.contains(mInputBeingExecuted)) {
+    if (!mInputCodeBlockMap.contains(hashcode)) {
         return 0;
     }
 
@@ -165,7 +166,15 @@ float CoverageListener::getBytecodeCoverage(QSharedPointer<const BaseInput> inpu
         executedBytecodes += mCoveredBytecodes.value(codeBlockID)->size();
     }
 
-    return float(executedBytecodes) / float(totalBytecodes);
+    float coverage = 0;
+
+    if (totalBytecodes > 0) {
+        coverage = float(executedBytecodes) / float(totalBytecodes);
+    }
+
+    assert(coverage <= 1 && coverage >= 0);
+
+    return coverage;
 
 }
 

@@ -44,7 +44,7 @@ double RandomPrioritizer::prioritize(QSharedPointer<const ExecutableConfiguratio
     return rand();
 }
 
-void RandomPrioritizer::reprioritize(WorkList* worklist)
+void RandomPrioritizer::reprioritize(WorkListPtr worklist)
 {
 
 }

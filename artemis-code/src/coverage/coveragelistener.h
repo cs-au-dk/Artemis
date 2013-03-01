@@ -59,7 +59,7 @@ public:
 
     size_t getNumCoveredLines();
 
-    float getBytecodeCoverage(QSharedPointer<const BaseInput> inputEvent);
+    float getBytecodeCoverage(QSharedPointer<const BaseInput> inputEvent) const;
 
     void notifyStartingEvent(QSharedPointer<const BaseInput> inputEvent);
 

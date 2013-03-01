@@ -59,4 +59,9 @@ int AjaxInput::hashCode() const
     return 7 * mCallbackId;
 }
 
+QString AjaxInput::toString() const
+{
+    return QString("AjaxInput");
+}
+
 }

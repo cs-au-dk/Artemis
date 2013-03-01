@@ -1,4 +1,6 @@
 
+#include <iostream>
+
 #include <QSharedPointer>
 #include <QList>
 #include <QString>
@@ -13,8 +15,8 @@ ReadWritePrioritizer::ReadWritePrioritizer() : PrioritizerStrategy(NULL)
 }
 
 double ReadWritePrioritizer::prioritize(QSharedPointer<const ExecutableConfiguration> configuration,
-                                       QSharedPointer<const ExecutionResult>,
-                                       const AppModelPtr appmodel)
+                                        QSharedPointer<const ExecutionResult>,
+                                        const AppModelPtr appmodel)
 {
     QList<QSharedPointer<const BaseInput> > inputSequence = configuration->getInputSequence()->toList();
     QSharedPointer<const BaseInput> last = inputSequence.last();
@@ -27,13 +29,22 @@ double ReadWritePrioritizer::prioritize(QSharedPointer<const ExecutableConfigura
         properitesWrittenBeforeLast.unite(appmodel->getJavascriptStatistics()->getPropertiesWritten(input));
     }
 
-    return float(properitesWrittenBeforeLast.intersect(propertiesReadByLast).size() + 1) / float(propertiesReadByLast.size() + 1);
+    float pri = float(properitesWrittenBeforeLast.intersect(propertiesReadByLast).size() + 1) / float(propertiesReadByLast.size() + 1);
 
-    //std::cout << "PRIORITY = " << pri << " " \
-    //          << "with propertiesReadByLast = " << propertiesReadByLast.size() << " and properitesWrittenBeforeLast = " << properitesWrittenBeforeLast.size() << std::endl;
+    /*std::cout << configuration->toString().toStdString() << std::endl;
+    std::cout << "PRIORITY = " << pri << " " \
+              << "with propertiesReadByLast = " << propertiesReadByLast.size() << " and properitesWrittenBeforeLast = " << properitesWrittenBeforeLast.size() << std::endl;
+    foreach (QString prop, properitesWrittenBeforeLast.toList()) {
+        std::cout << "W: " << prop.toStdString() << std::endl;
+    }
+    foreach (QString prop, propertiesReadByLast.toList()) {
+        std::cout << "R: " << prop.toStdString() << std::endl;
+    }*/
+
+    return pri;
 }
 
-void ReadWritePrioritizer::reprioritize(WorkList*)
+void ReadWritePrioritizer::reprioritize(WorkListPtr)
 {
 
 }

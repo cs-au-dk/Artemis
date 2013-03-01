@@ -141,19 +141,21 @@ QSet<QString> ExecutionResultBuilder::getSelectOptions(const QWebElement& e)
 
 /** LISTENERS **/
 
-void ExecutionResultBuilder::slEventListenerAdded(QWebElement* elem, QString name)
+void ExecutionResultBuilder::slEventListenerAdded(QWebElement* elem, QString eventName)
 {
     Q_CHECK_PTR(elem);
 
-    qDebug() << "Artemis detected new eventhandler for event: " << name << " tag name: "
-             << elem->tagName() << " id: " << elem->attribute(QString("id")) << " title "
-             << elem->attribute(QString("title")) << "class: " << elem->attribute("class") << endl;
+    qDebug() << "Detected EVENTHANDLER event =" << eventName
+             << "tag =" << elem->tagName()
+             << "id =" << elem->attribute(QString("id"))
+             << "title =" << elem->attribute(QString("title"))
+             << "class =" << elem->attribute("class");
 
-    if (isNonInteractive(name)) {
+    if (isNonInteractive(eventName)) {
         return;
     }
 
-    mElementPointers.append(QPair<QWebElement*, QString>(elem, name));
+    mElementPointers.append(QPair<QWebElement*, QString>(elem, eventName));
 }
 
 void ExecutionResultBuilder::slEventListenerRemoved(QWebElement* elem, QString name)
@@ -186,11 +188,6 @@ void ExecutionResultBuilder::slStringEvaled(const QString exp)
 {
     qDebug() << "WEBKIT: Evaled string: " << exp;
     mResult->mEvaledStrings << exp;
-}
-
-void ExecutionResultBuilder::slCodeLoaded(intptr_t _, QString src, QUrl url, int li)
-{
-    qDebug() << "WebKitExecutor::slCodeLoaded" << endl;
 }
 
 void ExecutionResultBuilder::slScriptCrashed(QString cause, intptr_t sourceID, int lineNumber)

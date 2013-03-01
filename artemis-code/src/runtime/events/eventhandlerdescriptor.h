@@ -53,8 +53,10 @@ public:
     EventType getEventType() const;
 
     int hashCode() const;
+    QString toString() const;
 
     QDebug friend operator<<(QDebug dbg, const EventHandlerDescriptor& e);
+
 
 private:
     DOMElementDescriptor* element;

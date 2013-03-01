@@ -67,7 +67,7 @@ private:
 
     AppModelPtr mAppmodel;
     WebKitExecutor* mWebkitExecutor;
-    WorkList* mWorklist;
+    WorkListPtr mWorklist;
     set<long>* mVisitedStates;
 
     TerminationStrategy* mTerminationStrategy;
@@ -77,7 +77,7 @@ private:
     Options mOptions;
 
 private slots:
-    void postConcreteExecution(QSharedPointer<ExecutableConfiguration> configuration, QSharedPointer<ExecutionResult> result);
+    void postConcreteExecution(ExecutableConfigurationConstPtr configuration, QSharedPointer<ExecutionResult> result);
 
 signals:
     void sigTestingDone();

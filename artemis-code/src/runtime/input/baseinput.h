@@ -52,6 +52,7 @@ public:
                                                            QSharedPointer<const ExecutionResult> result) const = 0;
 
     virtual int hashCode() const = 0;
+    virtual QString toString() const = 0;
 };
 
 }

@@ -61,4 +61,9 @@ int TimerInput::hashCode() const
     return 31 * mTimer->getId();
 }
 
+QString TimerInput::toString() const
+{
+    return QString("TimerInput");
+}
+
 }
