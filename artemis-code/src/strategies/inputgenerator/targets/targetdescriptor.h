@@ -19,7 +19,7 @@
 #include <QObject>
 #include <QWebElement>
 
-#include "runtime/events/eventhandlerdescriptor.h"
+#include "runtime/input/events/eventhandlerdescriptor.h"
 
 #include "runtime/browser/artemiswebpage.h"
 

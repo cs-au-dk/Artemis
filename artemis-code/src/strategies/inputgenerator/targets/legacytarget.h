@@ -18,7 +18,7 @@
 
 #include <QWebElement>
 
-#include "runtime/events/eventhandlerdescriptor.h"
+#include "runtime/input/events/eventhandlerdescriptor.h"
 
 #include "targetdescriptor.h"
 

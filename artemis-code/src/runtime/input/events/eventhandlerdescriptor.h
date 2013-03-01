@@ -19,7 +19,7 @@
 #include <QObject>
 #include <QString>
 
-#include "runtime/events/eventypes.h"
+#include "runtime/input/events/eventypes.h"
 #include "domelementdescriptor.h"
 
 namespace artemis

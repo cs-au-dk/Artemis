@@ -44,8 +44,7 @@ class Runtime : public QObject
 
 public:
     Runtime(QObject* parent, const Options& options, QUrl url);
-
-    ~Runtime() {};
+    ~Runtime() {}
 
     void startAnalysis(QUrl startAnalysis);
 

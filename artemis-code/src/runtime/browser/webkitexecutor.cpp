@@ -24,8 +24,8 @@
 #include <qwebexecutionlistener.h>
 #include <instrumentation/executionlistener.h>
 
-#include "runtime/events/forms/formfield.h"
-#include "runtime/events/domelementdescriptor.h"
+#include "runtime/input/forms/formfield.h"
+#include "runtime/input/events/domelementdescriptor.h"
 #include "strategies/inputgenerator/targets/jquerylistener.h"
 #include "runtime/input/baseinput.h"
 

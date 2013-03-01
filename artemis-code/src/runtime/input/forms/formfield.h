@@ -20,7 +20,7 @@
 #include <QString>
 
 #include "formfieldtypes.h"
-#include "runtime/events/domelementdescriptor.h"
+#include "runtime/input/events/domelementdescriptor.h"
 
 namespace artemis
 {

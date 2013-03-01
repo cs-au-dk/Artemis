@@ -20,8 +20,8 @@
 #include <QSet>
 #include <QList>
 
-#include "runtime/events/forms/formfieldtypes.h"
-#include "runtime/events/forms/forminput.h"
+#include "runtime/input/forms/formfieldtypes.h"
+#include "runtime/input/forms/forminput.h"
 
 #include "constantstringforminputgenerator.h"
 

@@ -20,9 +20,9 @@
 #include <QSet>
 #include <QList>
 
-#include "runtime/events/baseeventparameters.h"
-#include "runtime/events/keyboardeventparameters.h"
-#include "runtime/events/mouseeventparameters.h"
+#include "runtime/input/events/baseeventparameters.h"
+#include "runtime/input/events/keyboardeventparameters.h"
+#include "runtime/input/events/mouseeventparameters.h"
 
 #include "staticeventparametergenerator.h"
 

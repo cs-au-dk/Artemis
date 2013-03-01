@@ -17,8 +17,8 @@
 #include <assert.h>
 #include <typeinfo>
 
-#include "runtime/events/eventypes.h"
-#include "runtime/events/forms/forminput.h"
+#include "runtime/input/events/eventypes.h"
+#include "runtime/input/forms/forminput.h"
 #include "runtime/input/baseinput.h"
 #include "runtime/input/dominput.h"
 #include "runtime/input/timerinput.h"

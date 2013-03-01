@@ -26,7 +26,7 @@
 #include "artemisglobals.h"
 
 #include "runtime/executableconfiguration.h"
-#include "runtime/ajax/ajaxrequestlistener.h"
+#include "runtime/browser/ajax/ajaxrequestlistener.h"
 #include "model/coverage/coveragelistener.h"
 #include "strategies/inputgenerator/targets/jquerylistener.h"
 

@@ -15,20 +15,20 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/strategies/prioritizer/randomprioritizer.h \
     src/strategies/inputgenerator/targets/targetgenerator.h \
     src/runtime/options.h \
-    src/runtime/ajax/ajaxrequest.h \
-    src/runtime/ajax/ajaxrequestlistener.h \
+    src/runtime/browser/ajax/ajaxrequest.h \
+    src/runtime/browser/ajax/ajaxrequestlistener.h \
     src/runtime/browser/cookies/immutablecookiejar.h \
-    src/runtime/events/baseeventparameters.h \
-    src/runtime/events/domelementdescriptor.h \
-    src/runtime/events/eventhandlerdescriptor.h \
-    src/runtime/events/eventparameters.h \
-    src/runtime/events/eventypes.h \
-    src/runtime/events/forms/formfield.h \
-    src/runtime/events/forms/formfieldtypes.h \
-    src/runtime/events/forms/formfieldvalue.h \
-    src/runtime/events/forms/forminput.h \
-    src/runtime/events/keyboardeventparameters.h \
-    src/runtime/events/mouseeventparameters.h \
+    src/runtime/input/events/baseeventparameters.h \
+    src/runtime/input/events/domelementdescriptor.h \
+    src/runtime/input/events/eventhandlerdescriptor.h \
+    src/runtime/input/events/eventparameters.h \
+    src/runtime/input/events/eventypes.h \
+    src/runtime/input/forms/formfield.h \
+    src/runtime/input/forms/formfieldtypes.h \
+    src/runtime/input/forms/formfieldvalue.h \
+    src/runtime/input/forms/forminput.h \
+    src/runtime/input/events/keyboardeventparameters.h \
+    src/runtime/input/events/mouseeventparameters.h \
     src/runtime/browser/artemiswebpage.h \
     src/runtime/executableconfiguration.h \
     src/runtime/input/baseinput.h \
@@ -76,18 +76,18 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/strategies/prioritizer/constantprioritizer.cpp \
     src/strategies/prioritizer/randomprioritizer.cpp \
     src/strategies/inputgenerator/targets/targetgenerator.cpp \
-    src/runtime/ajax/ajaxrequest.cpp \
-    src/runtime/ajax/ajaxrequestlistener.cpp \
+    src/runtime/browser/ajax/ajaxrequest.cpp \
+    src/runtime/browser/ajax/ajaxrequestlistener.cpp \
     src/runtime/browser/cookies/immutablecookiejar.cpp \
-    src/runtime/events/baseeventparameters.cpp \
-    src/runtime/events/domelementdescriptor.cpp \
-    src/runtime/events/eventhandlerdescriptor.cpp \
-    src/runtime/events/eventtypes.cpp \
-    src/runtime/events/forms/formfield.cpp \
-    src/runtime/events/forms/formfieldvalue.cpp \
-    src/runtime/events/forms/forminput.cpp \
-    src/runtime/events/keyboardeventparameters.cpp \
-    src/runtime/events/mouseeventparameters.cpp \
+    src/runtime/input/events/baseeventparameters.cpp \
+    src/runtime/input/events/domelementdescriptor.cpp \
+    src/runtime/input/events/eventhandlerdescriptor.cpp \
+    src/runtime/input/events/eventtypes.cpp \
+    src/runtime/input/forms/formfield.cpp \
+    src/runtime/input/forms/formfieldvalue.cpp \
+    src/runtime/input/forms/forminput.cpp \
+    src/runtime/input/events/keyboardeventparameters.cpp \
+    src/runtime/input/events/mouseeventparameters.cpp \
     src/runtime/browser/artemiswebpage.cpp \
     src/runtime/executableconfiguration.cpp \
     src/runtime/input/dominput.cpp \

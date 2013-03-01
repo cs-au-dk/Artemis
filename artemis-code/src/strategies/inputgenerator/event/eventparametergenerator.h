@@ -19,10 +19,10 @@
 #include <QObject>
 #include <QSet>
 
-#include "runtime/events/eventparameters.h"
-#include "runtime/events/eventhandlerdescriptor.h"
-#include "runtime/events/forms/formfield.h"
-#include "runtime/events/forms/forminput.h"
+#include "runtime/input/events/eventparameters.h"
+#include "runtime/input/events/eventhandlerdescriptor.h"
+#include "runtime/input/forms/formfield.h"
+#include "runtime/input/forms/forminput.h"
 
 namespace artemis
 {

@@ -20,8 +20,8 @@
 #include <QSet>
 #include <QSharedPointer>
 
-#include "runtime/events/forms/formfield.h"
-#include "runtime/events/forms/forminput.h"
+#include "runtime/input/forms/formfield.h"
+#include "runtime/input/forms/forminput.h"
 #include "runtime/browser/executionresult.h"
 
 namespace artemis

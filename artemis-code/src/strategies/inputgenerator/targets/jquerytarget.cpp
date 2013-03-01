@@ -17,7 +17,7 @@
 #include <QWebElement>
 #include <QList>
 
-#include "runtime/events/eventhandlerdescriptor.h"
+#include "runtime/input/events/eventhandlerdescriptor.h"
 #include "strategies/inputgenerator/targets/jquerylistener.h"
 #include "util/randomutil.h"
 

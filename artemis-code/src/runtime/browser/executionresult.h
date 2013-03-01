@@ -23,10 +23,10 @@
 #include <QList>
 
 #include "artemisglobals.h"
-#include "runtime/events/eventhandlerdescriptor.h"
-#include "runtime/events/forms/formfield.h"
+#include "runtime/input/events/eventhandlerdescriptor.h"
+#include "runtime/input/forms/formfield.h"
 #include "runtime/browser/timer.h"
-#include "runtime/ajax/ajaxrequest.h"
+#include "runtime/browser/ajax/ajaxrequest.h"
 
 namespace artemis
 {
