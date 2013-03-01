@@ -1,4 +1,7 @@
+
 Artemis
+=======
+
 Copyright 2013 Aarhus University
 
 Artemis is a tool that performs automated, feedback-directed testing
@@ -11,56 +14,36 @@ IBM Research.
 Contained in this repository is, besides the source for the tool, an
 instrumented version of the WebKit code-base.
 
-The following people have contributed to the Artemis source code:
-- Anders Møller
-- Simon Holm Jensen
-- Casper Svenning Jensen
-- Kristoffer Just Andersen
-- Christian Budde Christensen
-
-This software includes components from:
-- WebKit (http://www.webkit.org/)
-- Google Test (https://code.google.com/p/googletest/)
-- Google Mock (https://code.google.com/p/googlemock/)
-
 For more information, see http://brics.dk/artemis/
 
-Usage:
+Contributors
+------------
 
-   artemis [-i <n>][-c <URL>][-t <URL>][-r][-u][-p <path>] <url>
+The following people have contributed to the Artemis source code:
 
-   Test the JavaScript application found at <url>.
+* Anders Møller
+* Simon Holm Jensen
+* Casper Svenning Jensen
+* Kristoffer Just Andersen
+* Christian Budde Christensen
 
-   -i <n>  : Iterations - Artemis will generate and execute <n>
-      	     sequences of events. Default is 4.
+Included Software
+-----------------
 
-   -c <URl>: Cookies - // TODO
+This software includes components from:
 
-   -t <URL>: Proxy - // TODO
+* WebKit (http://www.webkit.org/)
+* Google Test (https://code.google.com/p/googletest/)
+* Google Mock (https://code.google.com/p/googlemock/)
 
-   -r      : set_recreate_page(true) // TODO
+Installation 
+------------
 
-   -p	   : dump_page_states(<path>) // TODO 
+See the included INSTALL file.
 
-   -s       : Enable DOM state checking  
+Usage
+-----
 
-   --strategy-form-input-generation <strategy>: 
-   			  Select form input generation strategy.
+  artemis <url-to-be-tested>
 
-   			  javascript-constants - select form inputs based in observed JavaScript constants
-   			  random - (default) random inputs 
-
-   --coverage-report <report-type>:
-               Select code coverage report formatting.
-
-               html - HTML report dumped in the folder you run Artemis from
-               stdout - text report is printed to std out
-               none - (default) code coverage report is omitted
-
-   --strategy-priority <strategy>:
-               Select priority strategy.
-
-               constant - (default) assign the same priority to new configurations
-               random - assign a random priority to new configurations
-               coverage - assign higher priority to configurations with low coverage
-               readwrite - use read/write-sets for JavaScript properties to assign priorities
+Use the help command `artemis --help` for additional options.

@@ -31,10 +31,50 @@ using namespace std;
 QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
 {
 
+    std::string usage = "\n"
+           "artemis [-i <n>][-c <URL>][-t <URL>][-r][-u][-p <path>] <url>\n"
+           "\n"
+           "Test the JavaScript application found at <url>.\n"
+           "\n"
+           "-i <n>   : Iterations - Artemis will generate and execute <n>\n"
+           "           sequences of events. Default is 4.\n"
+           "\n"
+           "-c <URl> : Cookies - // TODO\n"
+           "\n"
+           "-t <URL> : Proxy - // TODO\n"
+           "\n"
+           "-r       : set_recreate_page(true) // TODO\n"
+           "\n"
+           "-p       : dump_page_states(<path>) // TODO\n"
+           "\n"
+           "-s       : Enable DOM state checking\n"
+           "\n"
+           "--strategy-form-input-generation <strategy>:\n"
+           "           Select form input generation strategy.\n"
+           "\n"
+           "           javascript-constants - select form inputs based in observed JavaScript constants\n"
+           "           random - (default) random inputs\n"
+           "\n"
+           "--coverage-report <report-type>:\n"
+           "           Select code coverage report formatting.\n"
+           "\n"
+           "           html - HTML report dumped in the folder you run Artemis from\n"
+           "           stdout - text report is printed to std out\n"
+           "           none - (default) code coverage report is omitted\n"
+           "\n"
+           "--strategy-priority <strategy>:\n"
+           "           Select priority strategy.\n"
+           "\n"
+           "           constant - (default) assign the same priority to new configurations\n"
+           "           random - assign a random priority to new configurations\n"
+           "           coverage - assign higher priority to configurations with low coverage\n"
+           "           readwrite - use read/write-sets for JavaScript properties to assign priorities\n\n";
+
     struct option long_options[] = {
         {"strategy-form-input-generation", required_argument, NULL, 'x'},
         {"coverage-report", required_argument, NULL, 'y'},
         {"strategy-priority", required_argument, NULL, 'z'},
+        {"help", no_argument, NULL, 'h'},
         {0, 0, 0, 0}
     };
 
@@ -42,9 +82,14 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
     char c;
     artemis::Log::addLogLevel(artemis::INFO);
 
-    while ((c = getopt_long(argc, argv, "srp:f:t:c:i:v:", long_options, &option_index)) != -1) {
+    while ((c = getopt_long(argc, argv, "hsrp:f:t:c:i:v:", long_options, &option_index)) != -1) {
 
         switch (c) {
+
+        case 'h': {
+            std::cout << usage;
+            exit(0);
+        }
 
         case 'f': {
             QStringList rawformfield = QString(optarg).split("=");
