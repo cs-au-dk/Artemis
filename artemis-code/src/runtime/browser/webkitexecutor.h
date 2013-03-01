@@ -27,8 +27,9 @@
 
 #include "runtime/executableconfiguration.h"
 #include "runtime/ajax/ajaxrequestlistener.h"
-#include "coverage/coveragelistener.h"
+#include "model/coverage/coveragelistener.h"
 #include "strategies/inputgenerator/targets/jquerylistener.h"
+
 #include "executionresult.h"
 #include "executionresultbuilder.h"
 #include "artemiswebpage.h"

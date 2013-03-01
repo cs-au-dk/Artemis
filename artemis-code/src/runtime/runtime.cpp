@@ -20,7 +20,8 @@
 #include <QSharedPointer>
 
 #include "worklist/deterministicworklist.h"
-#include "coverage/coveragetooutputstream.h"
+#include "model/coverage/coveragetooutputstream.h"
+#include "util/loggingutil.h"
 
 #include "statistics/statsstorage.h"
 #include "statistics/writers/pretty.h"
@@ -35,7 +36,6 @@
 #include "strategies/prioritizer/coverageprioritizer.h"
 #include "strategies/prioritizer/readwriteprioritizer.h"
 
-#include "util/loggingutil.h"
 #include "runtime.h"
 
 using namespace std;

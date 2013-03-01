@@ -13,7 +13,6 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "coveragetooutputstream.h"
 
 #include <inttypes.h>
 
@@ -23,12 +22,12 @@
 #include <QStringList>
 #include <QDir>
 #include <QDateTime>
+#include <math.h>
 
 #include "util/fileutil.h"
+#include "util/loggingutil.h"
 
 #include "coveragetooutputstream.h"
-#include "util/loggingutil.h"
-#include <math.h>
 
 namespace artemis
 {

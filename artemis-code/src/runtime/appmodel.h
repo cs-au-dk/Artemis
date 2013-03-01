@@ -18,8 +18,8 @@
 
 #include <QSharedPointer>
 
-#include "coverage/coveragelistener.h"
-#include "runtime/model/javascriptstatistics.h"
+#include "model/coverage/coveragelistener.h"
+#include "model/javascriptstatistics.h"
 
 namespace artemis {
 

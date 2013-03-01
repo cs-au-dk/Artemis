@@ -51,9 +51,10 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/runtime/runtime.h \
     src/artemisglobals.h \
     src/util/randomutil.h \
-    src/coverage/coveragelistener.h \
-    src/coverage/sourceinfo.h \
-    src/coverage/coveragetooutputstream.h \
+    src/model/coverage/coveragelistener.h \
+    src/model/coverage/sourceinfo.h \
+    src/model/coverage/coveragetooutputstream.h \
+    src/model/coverage/codeblockinfo.h \
     src/util/loggingutil.h \
     src/util/fileutil.h \
     src/util/urlutil.h \
@@ -66,10 +67,9 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/strategies/inputgenerator/event/eventparametergenerator.h \
     src/strategies/inputgenerator/event/staticeventparametergenerator.h \
     src/strategies/inputgenerator/form/constantstringforminputgenerator.h \
-    src/coverage/codeblockinfo.h \
     src/strategies/prioritizer/coverageprioritizer.h \
     src/runtime/appmodel.h \
-    src/runtime/model/javascriptstatistics.h \
+    src/model/javascriptstatistics.h \
     src/strategies/prioritizer/readwriteprioritizer.h
 
 SOURCES += src/runtime/input/ajaxinput.cpp \
@@ -106,9 +106,10 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/runtime/runtime.cpp \
     src/util/loggingutil.cpp \
     src/util/randomutil.cpp \
-    src/coverage/coveragelistener.cpp \
-    src/coverage/sourceinfo.cpp \
-    src/coverage/coveragetooutputstream.cpp \
+    src/model/coverage/coveragelistener.cpp \
+    src/model/coverage/sourceinfo.cpp \
+    src/model/coverage/coveragetooutputstream.cpp \
+    src/model/coverage/codeblockinfo.cpp \
     src/util/fileutil.cpp \
     src/util/urlutil.cpp \
     src/statistics/statsstorage.cpp \
@@ -118,10 +119,9 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/strategies/inputgenerator/event/staticeventparametergenerator.cpp \
     src/strategies/inputgenerator/form/staticforminputgenerator.cpp \
     src/strategies/inputgenerator/form/constantstringforminputgenerator.cpp \
-    src/coverage/codeblockinfo.cpp \
     src/strategies/prioritizer/coverageprioritizer.cpp \
     src/runtime/appmodel.cpp \
-    src/runtime/model/javascriptstatistics.cpp \
+    src/model/javascriptstatistics.cpp \
     src/strategies/prioritizer/readwriteprioritizer.cpp
 
 QT += network
