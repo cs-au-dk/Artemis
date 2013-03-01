@@ -30,23 +30,16 @@
 namespace artemis
 {
 
-RandomPrioritizer::RandomPrioritizer(QObject* parent) :
-    PrioritizerStrategy(parent)
+RandomPrioritizer::RandomPrioritizer() :
+    PrioritizerStrategy()
 {
 
 }
 
 double RandomPrioritizer::prioritize(QSharedPointer<const ExecutableConfiguration>,
-                                     QSharedPointer<const ExecutionResult>,
-                                     const AppModelPtr)
+                                     AppModelConstPtr)
 {
-
     return rand();
-}
-
-void RandomPrioritizer::reprioritize(WorkListPtr worklist)
-{
-
 }
 
 }

@@ -56,7 +56,7 @@ class PrioritizationStrategies(unittest.TestCase):
 			iterations=5,
 			strategy_priority='coverage')
 		
-		self.assertEqual(9, report.get('WebKit::coverage::covered-unique', 0));
+		self.assertEqual(19, report.get('WebKit::coverage::covered-unique', 0));
 
 	def test_readwrite(self):
 		report = execute_artemis('strategy-priority-readwrite', 

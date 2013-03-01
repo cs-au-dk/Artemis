@@ -71,7 +71,7 @@ private:
     set<long>* mVisitedStates;
 
     TerminationStrategy* mTerminationStrategy;
-    PrioritizerStrategy* mPrioritizerStrategy;
+    PrioritizerStrategyPtr mPrioritizerStrategy;
     InputGeneratorStrategy* mInputgenerator;
 
     Options mOptions;

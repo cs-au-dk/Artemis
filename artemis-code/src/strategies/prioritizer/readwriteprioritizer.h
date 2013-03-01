@@ -12,10 +12,7 @@ public:
     ReadWritePrioritizer();
 
     double prioritize(QSharedPointer<const ExecutableConfiguration> newConf,
-                      QSharedPointer<const ExecutionResult> result,
-                      const AppModelPtr);
-
-    void reprioritize(WorkListPtr worklist);
+                      AppModelConstPtr);
 };
 
 }

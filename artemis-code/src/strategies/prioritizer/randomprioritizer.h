@@ -36,13 +36,11 @@ namespace artemis
 class RandomPrioritizer : public PrioritizerStrategy
 {
 public:
-    RandomPrioritizer(QObject* parent);
+    RandomPrioritizer();
 
     double prioritize(QSharedPointer<const ExecutableConfiguration> newConf,
-                      QSharedPointer<const ExecutionResult> result,
-                      const AppModelPtr);
+                      AppModelConstPtr);
 
-    void reprioritize(WorkListPtr worklist);
 };
 
 }

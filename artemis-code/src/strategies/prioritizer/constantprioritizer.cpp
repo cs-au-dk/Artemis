@@ -30,20 +30,14 @@
 namespace artemis
 {
 
-ConstantPrioritizer::ConstantPrioritizer(QObject* parent)
-    : PrioritizerStrategy(parent)
+ConstantPrioritizer::ConstantPrioritizer()
+    : PrioritizerStrategy()
 {
 }
 
-double ConstantPrioritizer::prioritize(QSharedPointer<const ExecutableConfiguration>,
-                                       QSharedPointer<const ExecutionResult>,
-                                       const AppModelPtr)
+double ConstantPrioritizer::prioritize(QSharedPointer<const ExecutableConfiguration>, AppModelConstPtr)
 {
     return 1;
 }
 
-void ConstantPrioritizer::reprioritize(WorkListPtr worklist)
-{
-
-}
 }

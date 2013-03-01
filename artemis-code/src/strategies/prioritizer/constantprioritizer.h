@@ -36,12 +36,9 @@ namespace artemis
 class ConstantPrioritizer : public PrioritizerStrategy
 {
 public:
-    ConstantPrioritizer(QObject* parent);
+    ConstantPrioritizer();
     double prioritize(QSharedPointer<const ExecutableConfiguration> newConf,
-                      QSharedPointer<const ExecutionResult> result,
-                      const AppModelPtr);
-
-    void reprioritize(WorkListPtr worklist);
+                      AppModelConstPtr);
 };
 
 }

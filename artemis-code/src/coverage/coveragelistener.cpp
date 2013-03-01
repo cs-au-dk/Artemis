@@ -113,6 +113,7 @@ void CoverageListener::statementExecuted(intptr_t sourceTemporalID, int linenumb
 void CoverageListener::slJavascriptFunctionCalled(intptr_t codeBlockTemporalID, QString functionName, size_t bytecodeSize)
 {
     if (!mCodeBlockIdMap.contains(codeBlockTemporalID)) {
+        qDebug() << "Hashing function name " << functionName;
         codeblockid_t codeBlockID = qHash(functionName);
         mCodeBlockIdMap.insert(codeBlockTemporalID, codeBlockID);
     }
@@ -161,7 +162,7 @@ float CoverageListener::getBytecodeCoverage(QSharedPointer<const BaseInput> inpu
     size_t totalBytecodes = 0;
     size_t executedBytecodes = 0;
 
-    foreach (codeblockid_t codeBlockID, mInputCodeBlockMap.value(mInputBeingExecuted)->toList()) {
+    foreach (codeblockid_t codeBlockID, mInputCodeBlockMap.value(hashcode)->toList()) {
         totalBytecodes += mCodeBlocks.value(codeBlockID)->getBytecodeSize();
         executedBytecodes += mCoveredBytecodes.value(codeBlockID)->size();
     }
@@ -175,6 +176,22 @@ float CoverageListener::getBytecodeCoverage(QSharedPointer<const BaseInput> inpu
     assert(coverage <= 1 && coverage >= 0);
 
     return coverage;
+
+}
+
+QString CoverageListener::toString() const
+{
+    QString output;
+
+    foreach (int inputHash, mInputCodeBlockMap.keys()) {
+        output += "Input(" + QString::number(inputHash) + ")\n";
+
+        foreach (codeblockid_t codeBlockID, mInputCodeBlockMap.value(inputHash)->toList()) {
+            output += "  CodeBlockID (" + QString::number(codeBlockID) + ") size = " + QString::number(mCodeBlocks.value(codeBlockID)->getBytecodeSize()) + "\n";
+        }
+    }
+
+    return output;
 
 }
 

@@ -33,6 +33,8 @@
 
 #include <QPair>
 
+#include "strategies/prioritizer/prioritizerstrategy.h"
+
 #include "worklist.h"
 
 using namespace std;
@@ -53,10 +55,13 @@ struct WorkListItemComperator
 class DeterministicWorkList : public WorkList
 {
 public:
-    DeterministicWorkList();
+    DeterministicWorkList(PrioritizerStrategyPtr prioritizer);
 
-    void add(ExecutableConfigurationConstPtr configuration, double priority);
+    void add(ExecutableConfigurationConstPtr configuration, AppModelConstPtr appmodel);
     ExecutableConfigurationConstPtr remove();
+
+    void reprioritize(AppModelConstPtr appmodel);
+
     int size();
     bool empty();
 
@@ -65,6 +70,7 @@ public:
 private:
     // mutable here is a hack to support toString
     mutable priority_queue<WorkListItem, vector<WorkListItem>, WorkListItemComperator> mQueue;
+    PrioritizerStrategyPtr mPrioritizer;
 
 };
 

@@ -12,11 +12,7 @@ class CoveragePrioritizer : public PrioritizerStrategy
 public:
     CoveragePrioritizer();
 
-    double prioritize(QSharedPointer<const ExecutableConfiguration> newConf,
-                      QSharedPointer<const ExecutionResult> result,
-                      const AppModelPtr);
-
-    void reprioritize(WorkListPtr worklist);
+    double prioritize(QSharedPointer<const ExecutableConfiguration> newConf, AppModelConstPtr);
 
 };
 

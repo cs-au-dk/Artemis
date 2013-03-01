@@ -24,7 +24,7 @@ private:
 };
 
 typedef QSharedPointer<AppModel> AppModelPtr;
-
+typedef QSharedPointer<const AppModel> AppModelConstPtr;
 }
 
 #endif // APPMODEL_H

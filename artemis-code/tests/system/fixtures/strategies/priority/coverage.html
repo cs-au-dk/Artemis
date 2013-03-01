@@ -12,14 +12,24 @@
 		var x = false;
 
 		function doSomething1() {
+			if (x) {
+				x = false;
+				var a = 1;
+				a = 2;
+				a = 2;
+				a = 2;
+				a = 2;
+				a = 2;
+				a = 2;
+				a = 2;
+				a = 2;
+				a = 2;
+			}
+
 			x = true;
 		}
 
 		function doSomething2() {
-			if (x) {
-				x = false;
-			}
-
 			x = true;
 		}
 

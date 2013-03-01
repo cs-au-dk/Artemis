@@ -33,14 +33,15 @@
 namespace artemis
 {
 
-DeterministicWorkList::DeterministicWorkList() :
-    WorkList()
+DeterministicWorkList::DeterministicWorkList(PrioritizerStrategyPtr prioritizer) :
+    WorkList(),
+    mPrioritizer(prioritizer)
 {
 }
 
-void DeterministicWorkList::add(ExecutableConfigurationConstPtr configuration, double priority)
+void DeterministicWorkList::add(ExecutableConfigurationConstPtr configuration, AppModelConstPtr appmodel)
 {
-    mQueue.push(WorkListItem(priority, configuration));
+    mQueue.push(WorkListItem(mPrioritizer->prioritize(configuration, appmodel), configuration));
 }
 
 ExecutableConfigurationConstPtr DeterministicWorkList::remove()
@@ -51,6 +52,21 @@ ExecutableConfigurationConstPtr DeterministicWorkList::remove()
     mQueue.pop();
 
     return configuration;
+}
+
+void DeterministicWorkList::reprioritize(AppModelConstPtr appmodel)
+{
+    QList<WorkListItem> tmps;
+
+    while (!mQueue.empty()) {
+        tmps.append(mQueue.top());
+        mQueue.pop();
+    }
+
+    foreach (WorkListItem item, tmps) {
+        item.first = mPrioritizer->prioritize(item.second, appmodel);
+        mQueue.push(item);
+    }
 }
 
 int DeterministicWorkList::size()

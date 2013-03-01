@@ -32,6 +32,7 @@
 #include <QSharedPointer>
 
 #include "runtime/executableconfiguration.h"
+#include "runtime/appmodel.h"
 
 namespace artemis
 {
@@ -43,8 +44,11 @@ public:
     WorkList() {}
     virtual ~WorkList() {}
 
-    virtual void add(ExecutableConfigurationConstPtr configuration, double priority) = 0;
+    virtual void add(ExecutableConfigurationConstPtr configuration, AppModelConstPtr appmodel) = 0;
     virtual ExecutableConfigurationConstPtr remove() = 0;
+
+    virtual void reprioritize(AppModelConstPtr appmodel) = 0;
+
     virtual int size() = 0;
     virtual bool empty() = 0;
 
@@ -52,6 +56,7 @@ public:
 };
 
 typedef QSharedPointer<WorkList> WorkListPtr;
+typedef QSharedPointer<const WorkList> WorkListConstPtr;
 
 }
 

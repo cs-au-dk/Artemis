@@ -63,6 +63,8 @@ public:
 
     void notifyStartingEvent(QSharedPointer<const BaseInput> inputEvent);
 
+    QString toString() const;
+
 private:
 
     // (sourceTemporalID -> sourceID) needed as the sourceTemporalID changes for each new page-execution
@@ -77,15 +79,16 @@ private:
     // (codeBlockTemporalID -> codeBlockID) needed as the codeBlockTemporalID changes for each new page-execution
     QMap<intptr_t, codeblockid_t> mCodeBlockIdMap;
 
+    // (inputHashCode -> set<codeBlockID>
+    QMap<int, QSet<codeblockid_t>* > mInputCodeBlockMap;
+    int mInputBeingExecuted;
+
     // (codeBlockID -> CodeBlockInfo)
     QMap<codeblockid_t, QSharedPointer<CodeBlockInfo> > mCodeBlocks;
 
     // (codeBlockID -> set<bytecode offsets>
     QMap<codeblockid_t, QSet<int>* > mCoveredBytecodes;
 
-    // (inputHashCode -> set<codeBlocks>
-    QMap<int, QSet<codeblockid_t>* > mInputCodeBlockMap;
-    int mInputBeingExecuted;
 
 public slots:
 

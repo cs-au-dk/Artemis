@@ -115,22 +115,22 @@ Runtime::Runtime(QObject* parent, const Options& options, QUrl url) : QObject(pa
 
     switch (options.prioritizerStrategy) {
     case CONSTANT:
-        mPrioritizerStrategy = new ConstantPrioritizer(this);
+        mPrioritizerStrategy = PrioritizerStrategyPtr(new ConstantPrioritizer());
         break;
     case RANDOM:
-        mPrioritizerStrategy = new RandomPrioritizer(this);
+        mPrioritizerStrategy = PrioritizerStrategyPtr(new RandomPrioritizer());
         break;
     case COVERAGE:
-        mPrioritizerStrategy = new CoveragePrioritizer();
+        mPrioritizerStrategy = PrioritizerStrategyPtr(new CoveragePrioritizer());
         break;
     case READWRITE:
-        mPrioritizerStrategy = new ReadWritePrioritizer();
+        mPrioritizerStrategy = PrioritizerStrategyPtr(new ReadWritePrioritizer());
         break;
     default:
         assert(false);
     }
 
-    mWorklist = WorkListPtr(new DeterministicWorkList());
+    mWorklist = WorkListPtr(new DeterministicWorkList(mPrioritizerStrategy));
 
     QObject::connect(mWebkitExecutor, SIGNAL(sigExecutedSequence(ExecutableConfigurationConstPtr, QSharedPointer<ExecutionResult>)),
                      this, SLOT(postConcreteExecution(ExecutableConfigurationConstPtr, QSharedPointer<ExecutionResult>)));
@@ -154,7 +154,7 @@ void Runtime::startAnalysis(QUrl url)
     QSharedPointer<ExecutableConfiguration> initialConfiguration =
         QSharedPointer<ExecutableConfiguration>(new ExecutableConfiguration(QSharedPointer<InputSequence>(new InputSequence()), url));
 
-    mWorklist->add(initialConfiguration, 0);
+    mWorklist->add(initialConfiguration, mAppmodel);
 
     preConcreteExecution();
 }
@@ -175,6 +175,8 @@ void Runtime::preConcreteExecution()
     Log::debug("\n============= New-Iteration =============");
     Log::debug("--------------- WORKLIST ----------------\n");
     Log::debug(mWorklist->toString().toStdString());
+    Log::debug("--------------- COVERAGE ----------------\n");
+    Log::debug(mAppmodel->getCoverageListener()->toString().toStdString());
 
     ExecutableConfigurationConstPtr nextConfiguration = mWorklist->remove();
 
@@ -188,7 +190,7 @@ void Runtime::preConcreteExecution()
  */
 void Runtime::postConcreteExecution(ExecutableConfigurationConstPtr configuration, QSharedPointer<ExecutionResult> result)
 {
-    mPrioritizerStrategy->reprioritize(mWorklist);
+    mWorklist->reprioritize(mAppmodel);
 
     long hash;
     if (mOptions.disableStateCheck ||
@@ -200,7 +202,7 @@ void Runtime::postConcreteExecution(ExecutableConfigurationConstPtr configuratio
         QList<QSharedPointer<ExecutableConfiguration> > newConfigurations = mInputgenerator->addNewConfigurations(configuration, result);
 
         foreach(QSharedPointer<ExecutableConfiguration> newConfiguration, newConfigurations) {
-            mWorklist->add(newConfiguration, mPrioritizerStrategy->prioritize(newConfiguration, result, mAppmodel));
+            mWorklist->add(newConfiguration, mAppmodel);
         }
 
         statistics()->accumulate("InputGenerator::added-configurations", newConfigurations.size());

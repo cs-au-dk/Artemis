@@ -10,13 +10,12 @@
 namespace artemis
 {
 
-ReadWritePrioritizer::ReadWritePrioritizer() : PrioritizerStrategy(NULL)
+ReadWritePrioritizer::ReadWritePrioritizer() : PrioritizerStrategy()
 {
 }
 
 double ReadWritePrioritizer::prioritize(QSharedPointer<const ExecutableConfiguration> configuration,
-                                        QSharedPointer<const ExecutionResult>,
-                                        const AppModelPtr appmodel)
+                                        AppModelConstPtr appmodel)
 {
     QList<QSharedPointer<const BaseInput> > inputSequence = configuration->getInputSequence()->toList();
     QSharedPointer<const BaseInput> last = inputSequence.last();
@@ -42,11 +41,6 @@ double ReadWritePrioritizer::prioritize(QSharedPointer<const ExecutableConfigura
     }*/
 
     return pri;
-}
-
-void ReadWritePrioritizer::reprioritize(WorkListPtr)
-{
-
 }
 
 }

@@ -28,7 +28,6 @@
 #ifndef ABSTRACTPRIORITIZER_H
 #define ABSTRACTPRIORITIZER_H
 
-#include <QObject>
 #include <QSharedPointer>
 
 #include "runtime/browser/executionresult.h"
@@ -38,23 +37,18 @@
 namespace artemis
 {
 
-class PrioritizerStrategy : public QObject
+class PrioritizerStrategy
 {
 public:
-    PrioritizerStrategy(QObject* parent) : QObject(parent) {}
+    PrioritizerStrategy() {}
     virtual ~PrioritizerStrategy() {}
 
-    /**
-      newConf: Configuration to be prioritized
-      results: The execution results from last execution
-      state: State of the execution engine
-      */
     virtual double prioritize(QSharedPointer<const ExecutableConfiguration> newConf,
-                              QSharedPointer<const ExecutionResult> result,
-                              const AppModelPtr appmodel) = 0;
-
-    virtual void reprioritize(WorkListPtr worklist) = 0;
+                              AppModelConstPtr appmodel) = 0;
 };
+
+typedef QSharedPointer<PrioritizerStrategy> PrioritizerStrategyPtr;
+typedef QSharedPointer<const PrioritizerStrategy> PrioritizerStrategyConstPtr;
 
 }
 #endif // ABSTRACTPRIORITIZER_H

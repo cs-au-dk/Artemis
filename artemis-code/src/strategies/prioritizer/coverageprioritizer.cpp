@@ -6,13 +6,13 @@
 namespace artemis
 {
 
-CoveragePrioritizer::CoveragePrioritizer() : PrioritizerStrategy(NULL)
+CoveragePrioritizer::CoveragePrioritizer() :
+    PrioritizerStrategy()
 {
 }
 
-double CoveragePrioritizer::prioritize(QSharedPointer<const ExecutableConfiguration> configuration,
-                                       QSharedPointer<const ExecutionResult>,
-                                       const AppModelPtr appmodel)
+double CoveragePrioritizer::prioritize(ExecutableConfigurationConstPtr configuration,
+                                       AppModelConstPtr appmodel)
 {
     float coverage = 1;
 
@@ -23,11 +23,6 @@ double CoveragePrioritizer::prioritize(QSharedPointer<const ExecutableConfigurat
     assert(coverage >= 0 && coverage <= 1);
 
     return 1 - coverage;
-}
-
-void CoveragePrioritizer::reprioritize(WorkListPtr)
-{
-
 }
 
 }
