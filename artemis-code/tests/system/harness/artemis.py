@@ -25,6 +25,7 @@ def execute_artemis(execution_uuid, url, iterations=1,
     os.makedirs(output_dir)
     
     args = []
+    args.append("-v all");
     args.append("-i %s" % iterations)
 
     if strategy_form_input is not None:

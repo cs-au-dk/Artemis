@@ -59,7 +59,7 @@ void DomInput::apply(ArtemisWebPage* page, QWebExecutionListener* webkitListener
     mFormInput->writeToPage(page);
 
     if (handler.isNull() || target.isNull()) {
-        qDebug() << "WARNING::Skipping event, event handler or target could not be found";
+        qWarning() << "WARNING::Skipping event, event handler or target could not be found";
     }
     else {
         qDebug() << "Event Handler: " << handler.tagName() << " _ID: "

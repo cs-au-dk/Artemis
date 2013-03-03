@@ -139,7 +139,7 @@ void WebKitExecutor::slLoadFinished(bool ok)
     mResultBuilder->notifyPageLoaded();
 
     if (!ok) {
-        qWarning("WEBKIT: Website load failed!");
+        qWarning() << "WEBKIT: Website load failed!";
         exit(1);
     }
 
