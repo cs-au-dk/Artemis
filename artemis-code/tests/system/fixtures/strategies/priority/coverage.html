@@ -9,27 +9,41 @@
 	<meta name="author" content="Caper Svenning Jensen">
 
 	<script type="text/javascript">
-		var x = 1;
+		var x = false;
 
 		function doSomething1() {
-			var i = 1;
+			if (x) {
+				x = false;
+				var a = 1;
+				a = 2;
+				a = 2;
+				a = 2;
+				a = 2;
+				a = 2;
+				a = 2;
+				a = 2;
+				a = 2;
+				a = 2;
+			}
+
+			x = true;
 		}
 
 		function doSomething2() {
-			var j = 1;
+			x = true;
 		}
 
 		function doSomething3() {
-			var k = 1;
-		}	
+			x = true;
+		}
 	</script>
 
 </head>
 <body>
 
-	<button onclick="doSomething1();">DO-1</button>
-	<button onclick="doSomething2();">DO-2</button>
-	<button onclick="doSomething3();">DO-3</button>
+	<button onclick="doSomething1();" id="DO-1">DO-1</button>
+	<button onclick="doSomething2();" id="DO-2">DO-2</button>
+	<button onclick="doSomething3();" id="DO-3">DO-3</button>
 
 </body>
 </html>

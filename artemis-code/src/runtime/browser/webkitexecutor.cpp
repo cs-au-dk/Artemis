@@ -1,30 +1,18 @@
 /*
-  Copyright 2011 Simon Holm Jensen. All rights reserved.
-
-  Redistribution and use in source and binary forms, with or without modification, are
-  permitted provided that the following conditions are met:
-
-     1. Redistributions of source code must retain the above copyright notice, this list of
-        conditions and the following disclaimer.
-
-     2. Redistributions in binary form must reproduce the above copyright notice, this list
-        of conditions and the following disclaimer in the documentation and/or other materials
-        provided with the distribution.
-
-  THIS SOFTWARE IS PROVIDED BY SIMON HOLM JENSEN ``AS IS'' AND ANY EXPRESS OR IMPLIED
-  WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
-  FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL <COPYRIGHT HOLDER> OR
-  CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
-  CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
-  SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
-  ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
-  NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
-  ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
-  The views and conclusions contained in the software and documentation are those of the
-  authors and should not be interpreted as representing official policies, either expressed
-  or implied, of Simon Holm Jensen
-*/
+ * Copyright 2012 Aarhus University
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 #include <iostream>
 #include <unistd.h>
@@ -36,8 +24,8 @@
 #include <qwebexecutionlistener.h>
 #include <instrumentation/executionlistener.h>
 
-#include "runtime/events/forms/formfield.h"
-#include "runtime/events/domelementdescriptor.h"
+#include "runtime/input/forms/formfield.h"
+#include "runtime/input/events/domelementdescriptor.h"
 #include "strategies/inputgenerator/targets/jquerylistener.h"
 #include "runtime/input/baseinput.h"
 
@@ -49,10 +37,10 @@ namespace artemis
 {
 
 WebKitExecutor::WebKitExecutor(QObject* parent,
+                               AppModelPtr appmodel,
                                QMap<QString, QString> presetFields,
                                JQueryListener* jqueryListener,
-                               AjaxRequestListener* ajaxListener,
-                               CoverageListener* coverageListener) :
+                               AjaxRequestListener* ajaxListener) :
     QObject(parent)
 {
 
@@ -70,7 +58,8 @@ WebKitExecutor::WebKitExecutor(QObject* parent,
 
     mResultBuilder = new ExecutionResultBuilder(this, mPage);
 
-    mCoverageListener = coverageListener;
+    mCoverageListener = appmodel->getCoverageListener();
+    mJavascriptStatistics = appmodel->getJavascriptStatistics();
 
     QWebExecutionListener::attachListeners();
     webkitListener = QWebExecutionListener::getListener();
@@ -81,9 +70,18 @@ WebKitExecutor::WebKitExecutor(QObject* parent,
                      mJquery, SLOT(slEventAdded(QString, QString, QString)));
 
     QObject::connect(webkitListener, SIGNAL(loadedJavaScript(intptr_t, QString, QUrl, int)),
-                     mCoverageListener, SLOT(newCode(intptr_t, QString, QUrl, int)));
+                     mCoverageListener.data(), SLOT(newCode(intptr_t, QString, QUrl, int)));
     QObject::connect(webkitListener, SIGNAL(statementExecuted(intptr_t, int)),
-                     mCoverageListener, SLOT(statementExecuted(intptr_t, int)));
+                     mCoverageListener.data(), SLOT(statementExecuted(intptr_t, int)));
+    QObject::connect(webkitListener, SIGNAL(sigJavascriptBytecodeExecuted(intptr_t, size_t)),
+                     mCoverageListener.data(), SLOT(slJavascriptBytecodeExecuted(intptr_t, size_t)));
+    QObject::connect(webkitListener, SIGNAL(sigJavascriptFunctionCalled(intptr_t,QString,size_t)),
+                     mCoverageListener.data(), SLOT(slJavascriptFunctionCalled(intptr_t,QString,size_t)));
+
+    QObject::connect(webkitListener, SIGNAL(sigJavascriptPropertyRead(QString,intptr_t,intptr_t,QUrl,int)),
+                     mJavascriptStatistics.data(), SLOT(slJavascriptPropertyRead(QString,intptr_t,intptr_t,QUrl,int)));
+    QObject::connect(webkitListener, SIGNAL(sigJavascriptPropertyWritten(QString,intptr_t,intptr_t,QUrl,int)),
+                     mJavascriptStatistics.data(), SLOT(slJavascriptPropertyWritten(QString,intptr_t,intptr_t,QUrl,int)));
 
     QObject::connect(webkitListener, SIGNAL(addedEventListener(QWebElement*, QString)),
                      mResultBuilder, SLOT(slEventListenerAdded(QWebElement*, QString)));
@@ -99,8 +97,6 @@ WebKitExecutor::WebKitExecutor(QObject* parent,
                      mResultBuilder, SLOT(slScriptCrashed(QString, intptr_t, int)));
     QObject::connect(webkitListener, SIGNAL(eval_call(QString)),
                      mResultBuilder, SLOT(slStringEvaled(QString)));
-    QObject::connect(webkitListener, SIGNAL(loadedJavaScript(intptr_t, QString, QUrl, int)),
-                     mResultBuilder, SLOT(slCodeLoaded(intptr_t, QString, QUrl, int)));
 
     QObject::connect(webkitListener, SIGNAL(addedAjaxCallbackHandler(int)),
                      mResultBuilder, SLOT(slAjaxCallbackHandlerAdded(int)));
@@ -123,14 +119,19 @@ void WebKitExecutor::detach() {
 
 }
 
-void WebKitExecutor::executeSequence(QSharedPointer<ExecutableConfiguration> conf)
+void WebKitExecutor::executeSequence(ExecutableConfigurationConstPtr conf)
 {
     currentConf = conf;
 
     mJquery->reset(); // TODO merge into result?
     mResultBuilder->reset();
 
-    qDebug() << "Trying to load: " << conf->getUrl().toString() << endl;
+    qDebug() << "--------------- FETCH PAGE --------------" << endl;
+
+    mCoverageListener->notifyStartingLoad();
+    mResultBuilder->notifyStartingLoad();
+    mJavascriptStatistics->notifyStartingLoad();
+
     mPage->mainFrame()->load(conf->getUrl());
 }
 
@@ -142,8 +143,6 @@ void WebKitExecutor::slLoadFinished(bool ok)
         qWarning() << "WEBKIT: Website load failed!";
         exit(1);
     }
-
-    qDebug() << "WEBKIT: Finished loading" << endl;
 
     // Populate forms (preset)
 
@@ -160,22 +159,18 @@ void WebKitExecutor::slLoadFinished(bool ok)
 
     // Execute input sequence
 
-    qDebug() << "Artemis: Executing sequence" << endl;
+    qDebug() << "\n------------ EXECUTE SEQUENCE -----------" << endl;
 
     foreach(QSharedPointer<const BaseInput> input, currentConf->getInputSequence()->toList()) {
         mResultBuilder->notifyStartingEvent();
         mCoverageListener->notifyStartingEvent(input);
+        mJavascriptStatistics->notifyStartingEvent(input);
         input->apply(this->mPage, this->webkitListener);
     }
 
     // DONE
 
     emit sigExecutedSequence(currentConf, mResultBuilder->getResult());
-}
-
-CoverageListener* WebKitExecutor::getCoverageListener()
-{
-    return mCoverageListener;
 }
 
 }

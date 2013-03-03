@@ -1,3 +1,18 @@
+/*
+ * Copyright 2012 Aarhus University
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 #include "executionresultbuilder.h"
 #include <sstream>
 #include "statistics/statsstorage.h"
@@ -24,6 +39,11 @@ void ExecutionResultBuilder::notifyPageLoaded()
 }
 
 void ExecutionResultBuilder::notifyStartingEvent()
+{
+    mResult->mJavascriptConstantsObservedForLastEvent.clear();
+}
+
+void ExecutionResultBuilder::notifyStartingLoad()
 {
     mResult->mJavascriptConstantsObservedForLastEvent.clear();
 }
@@ -62,7 +82,7 @@ void ExecutionResultBuilder::registerEventHandlersIntoResult()
         if (handler->isInvalid()) {
             qWarning() << "WARN: element was invalid, ignoring";
         } else {
-            mResult->mEventHandlers.insert(handler);
+            mResult->mEventHandlers.append(handler);
         }
     }
 
@@ -141,19 +161,21 @@ QSet<QString> ExecutionResultBuilder::getSelectOptions(const QWebElement& e)
 
 /** LISTENERS **/
 
-void ExecutionResultBuilder::slEventListenerAdded(QWebElement* elem, QString name)
+void ExecutionResultBuilder::slEventListenerAdded(QWebElement* elem, QString eventName)
 {
     Q_CHECK_PTR(elem);
 
-    qDebug() << "Artemis detected new eventhandler for event: " << name << " tag name: "
-             << elem->tagName() << " id: " << elem->attribute(QString("id")) << " title "
-             << elem->attribute(QString("title")) << "class: " << elem->attribute("class") << endl;
+    qDebug() << "Detected EVENTHANDLER event =" << eventName
+             << "tag =" << elem->tagName()
+             << "id =" << elem->attribute(QString("id"))
+             << "title =" << elem->attribute(QString("title"))
+             << "class =" << elem->attribute("class");
 
-    if (isNonInteractive(name)) {
+    if (isNonInteractive(eventName)) {
         return;
     }
 
-    mElementPointers.insert(QPair<QWebElement*, QString>(elem, name));
+    mElementPointers.append(QPair<QWebElement*, QString>(elem, eventName));
 }
 
 void ExecutionResultBuilder::slEventListenerRemoved(QWebElement* elem, QString name)
@@ -166,7 +188,7 @@ void ExecutionResultBuilder::slEventListenerRemoved(QWebElement* elem, QString n
         return;
     }
 
-    mElementPointers.remove(QPair<QWebElement*, QString>(elem, name));
+    mElementPointers.removeAt(mElementPointers.indexOf(QPair<QWebElement*, QString>(elem, name)));
 }
 
 void ExecutionResultBuilder::slTimerAdded(int timerId, int timeout, bool singleShot)
@@ -186,11 +208,6 @@ void ExecutionResultBuilder::slStringEvaled(const QString exp)
 {
     qDebug() << "WEBKIT: Evaled string: " << exp;
     mResult->mEvaledStrings << exp;
-}
-
-void ExecutionResultBuilder::slCodeLoaded(intptr_t _, QString src, QUrl url, int li)
-{
-    qDebug() << "WebKitExecutor::slCodeLoaded" << endl;
 }
 
 void ExecutionResultBuilder::slScriptCrashed(QString cause, intptr_t sourceID, int lineNumber)

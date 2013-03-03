@@ -15,20 +15,20 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/strategies/prioritizer/randomprioritizer.h \
     src/strategies/inputgenerator/targets/targetgenerator.h \
     src/runtime/options.h \
-    src/runtime/ajax/ajaxrequest.h \
-    src/runtime/ajax/ajaxrequestlistener.h \
+    src/runtime/browser/ajax/ajaxrequest.h \
+    src/runtime/browser/ajax/ajaxrequestlistener.h \
     src/runtime/browser/cookies/immutablecookiejar.h \
-    src/runtime/events/baseeventparameters.h \
-    src/runtime/events/domelementdescriptor.h \
-    src/runtime/events/eventhandlerdescriptor.h \
-    src/runtime/events/eventparameters.h \
-    src/runtime/events/eventypes.h \
-    src/runtime/events/forms/formfield.h \
-    src/runtime/events/forms/formfieldtypes.h \
-    src/runtime/events/forms/formfieldvalue.h \
-    src/runtime/events/forms/forminput.h \
-    src/runtime/events/keyboardeventparameters.h \
-    src/runtime/events/mouseeventparameters.h \
+    src/runtime/input/events/baseeventparameters.h \
+    src/runtime/input/events/domelementdescriptor.h \
+    src/runtime/input/events/eventhandlerdescriptor.h \
+    src/runtime/input/events/eventparameters.h \
+    src/runtime/input/events/eventypes.h \
+    src/runtime/input/forms/formfield.h \
+    src/runtime/input/forms/formfieldtypes.h \
+    src/runtime/input/forms/formfieldvalue.h \
+    src/runtime/input/forms/forminput.h \
+    src/runtime/input/events/keyboardeventparameters.h \
+    src/runtime/input/events/mouseeventparameters.h \
     src/runtime/browser/artemiswebpage.h \
     src/runtime/executableconfiguration.h \
     src/runtime/input/baseinput.h \
@@ -51,9 +51,10 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/runtime/runtime.h \
     src/artemisglobals.h \
     src/util/randomutil.h \
-    src/coverage/coveragelistener.h \
-    src/coverage/sourceinfo.h \
-    src/coverage/coveragetooutputstream.h \
+    src/model/coverage/coveragelistener.h \
+    src/model/coverage/sourceinfo.h \
+    src/model/coverage/coveragetooutputstream.h \
+    src/model/coverage/codeblockinfo.h \
     src/util/loggingutil.h \
     src/util/fileutil.h \
     src/util/urlutil.h \
@@ -66,26 +67,27 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/strategies/inputgenerator/event/eventparametergenerator.h \
     src/strategies/inputgenerator/event/staticeventparametergenerator.h \
     src/strategies/inputgenerator/form/constantstringforminputgenerator.h \
-    src/coverage/codeblockinfo.h \
     src/strategies/prioritizer/coverageprioritizer.h \
-    src/runtime/appmodel.h
+    src/runtime/appmodel.h \
+    src/model/javascriptstatistics.h \
+    src/strategies/prioritizer/readwriteprioritizer.h
 
 SOURCES += src/runtime/input/ajaxinput.cpp \
     src/strategies/prioritizer/constantprioritizer.cpp \
     src/strategies/prioritizer/randomprioritizer.cpp \
     src/strategies/inputgenerator/targets/targetgenerator.cpp \
-    src/runtime/ajax/ajaxrequest.cpp \
-    src/runtime/ajax/ajaxrequestlistener.cpp \
+    src/runtime/browser/ajax/ajaxrequest.cpp \
+    src/runtime/browser/ajax/ajaxrequestlistener.cpp \
     src/runtime/browser/cookies/immutablecookiejar.cpp \
-    src/runtime/events/baseeventparameters.cpp \
-    src/runtime/events/domelementdescriptor.cpp \
-    src/runtime/events/eventhandlerdescriptor.cpp \
-    src/runtime/events/eventtypes.cpp \
-    src/runtime/events/forms/formfield.cpp \
-    src/runtime/events/forms/formfieldvalue.cpp \
-    src/runtime/events/forms/forminput.cpp \
-    src/runtime/events/keyboardeventparameters.cpp \
-    src/runtime/events/mouseeventparameters.cpp \
+    src/runtime/input/events/baseeventparameters.cpp \
+    src/runtime/input/events/domelementdescriptor.cpp \
+    src/runtime/input/events/eventhandlerdescriptor.cpp \
+    src/runtime/input/events/eventtypes.cpp \
+    src/runtime/input/forms/formfield.cpp \
+    src/runtime/input/forms/formfieldvalue.cpp \
+    src/runtime/input/forms/forminput.cpp \
+    src/runtime/input/events/keyboardeventparameters.cpp \
+    src/runtime/input/events/mouseeventparameters.cpp \
     src/runtime/browser/artemiswebpage.cpp \
     src/runtime/executableconfiguration.cpp \
     src/runtime/input/dominput.cpp \
@@ -104,9 +106,10 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/runtime/runtime.cpp \
     src/util/loggingutil.cpp \
     src/util/randomutil.cpp \
-    src/coverage/coveragelistener.cpp \
-    src/coverage/sourceinfo.cpp \
-    src/coverage/coveragetooutputstream.cpp \
+    src/model/coverage/coveragelistener.cpp \
+    src/model/coverage/sourceinfo.cpp \
+    src/model/coverage/coveragetooutputstream.cpp \
+    src/model/coverage/codeblockinfo.cpp \
     src/util/fileutil.cpp \
     src/util/urlutil.cpp \
     src/statistics/statsstorage.cpp \
@@ -116,8 +119,9 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/strategies/inputgenerator/event/staticeventparametergenerator.cpp \
     src/strategies/inputgenerator/form/staticforminputgenerator.cpp \
     src/strategies/inputgenerator/form/constantstringforminputgenerator.cpp \
-    src/coverage/codeblockinfo.cpp \
     src/strategies/prioritizer/coverageprioritizer.cpp \
-    src/runtime/appmodel.cpp
+    src/runtime/appmodel.cpp \
+    src/model/javascriptstatistics.cpp \
+    src/strategies/prioritizer/readwriteprioritizer.cpp
 
 QT += network

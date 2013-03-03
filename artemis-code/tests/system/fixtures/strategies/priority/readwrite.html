@@ -1,0 +1,33 @@
+<!doctype html>
+<!-- Test file without any timers (setinterval, settimeout) -->
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+	<title>Caper Svenning Jensen</title>
+	<meta name="author" content="Caper Svenning Jensen">
+
+	<script type="text/javascript">
+		var x = {};
+		x.p = 1;
+
+		function doSomething1() {
+			if (x.p === 2) {
+				alert('hit');
+			}
+		}
+
+		function doSomething2() {
+			x.p = 2;
+		}
+	</script>
+
+</head>
+<body>
+
+	<button onclick="doSomething1();" id="DO-1">DO-1</button>
+	<button onclick="doSomething2();" id="DO-2">DO-2</button>
+
+</body>
+</html>

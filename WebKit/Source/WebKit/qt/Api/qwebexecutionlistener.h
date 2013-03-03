@@ -12,6 +12,10 @@
 #ifndef QWEBEXECUTIONLISTENER_H
 #define QWEBEXECUTIONLISTENER_H
 
+namespace JSC {
+    class ExecState;
+}
+
 class QWEBKIT_EXPORT QWebExecutionListener : public QObject, public inst::ExecutionListener, public jscinst::JSCExecutionListener
 {
     Q_OBJECT
@@ -30,6 +34,8 @@ public:
 
     virtual void javascript_executed_statement(const JSC::DebuggerCallFrame&, intptr_t sourceID, int lineNumber); // from the debugger
     virtual void javascript_bytecode_executed(JSC::CodeBlock*, JSC::Instruction* inst); // interpreter instrumentation
+    virtual void javascript_property_read(std::string propertyName, JSC::ExecState*);
+    virtual void javascript_property_written(std::string propertyName, JSC::ExecState*);
 
     virtual void javascript_constant_encountered(std::string constant);
     virtual void javascript_eval_call(const char * eval_string);
@@ -71,6 +77,9 @@ signals:
 
     void sigJavascriptFunctionCalled(intptr_t codeBlock, QString functionName, size_t bytecodeSize);
     void sigJavascriptBytecodeExecuted(intptr_t codeBlock, size_t bytecodeOffset);
+
+    void sigJavascriptPropertyRead(QString propertyName, intptr_t codeBlockID, intptr_t SourceID, QUrl url, int startline);
+    void sigJavascriptPropertyWritten(QString propertyName, intptr_t codeBlockID, intptr_t SourceID, QUrl url, int startline);
 
     void loadedJavaScript(intptr_t sourceID, QString source, QUrl url, int startline);
     void statementExecuted(intptr_t sourceID, int linenumber);

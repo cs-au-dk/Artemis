@@ -1,29 +1,17 @@
 /*
- Copyright 2011 Simon Holm Jensen. All rights reserved.
-
- Redistribution and use in source and binary forms, with or without modification, are
- permitted provided that the following conditions are met:
-
- 1. Redistributions of source code must retain the above copyright notice, this list of
- conditions and the following disclaimer.
-
- 2. Redistributions in binary form must reproduce the above copyright notice, this list
- of conditions and the following disclaimer in the documentation and/or other materials
- provided with the distribution.
-
- THIS SOFTWARE IS PROVIDED BY SIMON HOLM JENSEN ``AS IS'' AND ANY EXPRESS OR IMPLIED
- WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE IMPLIED WARRANTIES OF MERCHANTABILITY AND
- FITNESS FOR A PARTICULAR PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL <COPYRIGHT HOLDER> OR
- CONTRIBUTORS BE LIABLE FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR
- CONSEQUENTIAL DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
- SERVICES; LOSS OF USE, DATA, OR PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON
- ANY THEORY OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT (INCLUDING
- NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE OF THIS SOFTWARE, EVEN IF
- ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
-
- The views and conclusions contained in the software and documentation are those of the
- authors and should not be interpreted as representing official policies, either expressed
- or implied, of Simon Holm Jensen
+ * Copyright 2012 Aarhus University
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
  */
 
 #include <assert.h>
@@ -32,7 +20,8 @@
 #include <QSharedPointer>
 
 #include "worklist/deterministicworklist.h"
-#include "coverage/coveragetooutputstream.h"
+#include "model/coverage/coveragetooutputstream.h"
+#include "util/loggingutil.h"
 
 #include "statistics/statsstorage.h"
 #include "statistics/writers/pretty.h"
@@ -45,8 +34,8 @@
 #include "strategies/prioritizer/constantprioritizer.h"
 #include "strategies/prioritizer/randomprioritizer.h"
 #include "strategies/prioritizer/coverageprioritizer.h"
+#include "strategies/prioritizer/readwriteprioritizer.h"
 
-#include "util/loggingutil.h"
 #include "runtime.h"
 
 using namespace std;
@@ -85,15 +74,11 @@ Runtime::Runtime(QObject* parent, const Options& options, QUrl url) : QObject(pa
 
     JQueryListener* jqueryListener = new JQueryListener(this);
 
-    /** Coverage support **/
-
-    CoverageListener* coverageListener = new CoverageListener(NULL);
-
     /** Runtime Objects **/
 
-    mAppmodel = QSharedPointer<AppModel>(new AppModel(coverageListener));
+    mAppmodel = AppModelPtr(new AppModel());
 
-    mWebkitExecutor = new WebKitExecutor(this, options.presetFormfields, jqueryListener, ajaxRequestListner, coverageListener);
+    mWebkitExecutor = new WebKitExecutor(this, mAppmodel, options.presetFormfields, jqueryListener, ajaxRequestListner);
 
     QSharedPointer<FormInputGenerator> formInputGenerator;
     switch (options.formInputGenerationStrategy) {
@@ -118,22 +103,25 @@ Runtime::Runtime(QObject* parent, const Options& options, QUrl url) : QObject(pa
 
     switch (options.prioritizerStrategy) {
     case CONSTANT:
-        mPrioritizerStrategy = new ConstantPrioritizer(this);
+        mPrioritizerStrategy = PrioritizerStrategyPtr(new ConstantPrioritizer());
         break;
     case RANDOM:
-        mPrioritizerStrategy = new RandomPrioritizer(this);
+        mPrioritizerStrategy = PrioritizerStrategyPtr(new RandomPrioritizer());
         break;
     case COVERAGE:
-        mPrioritizerStrategy = new CoveragePrioritizer();
+        mPrioritizerStrategy = PrioritizerStrategyPtr(new CoveragePrioritizer());
+        break;
+    case READWRITE:
+        mPrioritizerStrategy = PrioritizerStrategyPtr(new ReadWritePrioritizer());
         break;
     default:
         assert(false);
     }
 
-    mWorklist = new DeterministicWorkList(this);
+    mWorklist = WorkListPtr(new DeterministicWorkList(mPrioritizerStrategy));
 
-    QObject::connect(mWebkitExecutor, SIGNAL(sigExecutedSequence(QSharedPointer<ExecutableConfiguration>, QSharedPointer<ExecutionResult>)),
-                     this, SLOT(postConcreteExecution(QSharedPointer<ExecutableConfiguration>, QSharedPointer<ExecutionResult>)));
+    QObject::connect(mWebkitExecutor, SIGNAL(sigExecutedSequence(ExecutableConfigurationConstPtr, QSharedPointer<ExecutionResult>)),
+                     this, SLOT(postConcreteExecution(ExecutableConfigurationConstPtr, QSharedPointer<ExecutionResult>)));
 
 
     /** Visited states **/
@@ -154,7 +142,7 @@ void Runtime::startAnalysis(QUrl url)
     QSharedPointer<ExecutableConfiguration> initialConfiguration =
         QSharedPointer<ExecutableConfiguration>(new ExecutableConfiguration(QSharedPointer<InputSequence>(new InputSequence()), url));
 
-    mWorklist->add(initialConfiguration, 0);
+    mWorklist->add(initialConfiguration, mAppmodel);
 
     preConcreteExecution();
 }
@@ -172,7 +160,13 @@ void Runtime::preConcreteExecution()
         return;
     }
 
-    QSharedPointer<ExecutableConfiguration> nextConfiguration = mWorklist->remove();
+    Log::debug("\n============= New-Iteration =============");
+    Log::debug("--------------- WORKLIST ----------------\n");
+    Log::debug(mWorklist->toString().toStdString());
+    Log::debug("--------------- COVERAGE ----------------\n");
+    Log::debug(mAppmodel->getCoverageListener()->toString().toStdString());
+
+    ExecutableConfigurationConstPtr nextConfiguration = mWorklist->remove();
 
     mWebkitExecutor->executeSequence(nextConfiguration); // calls the slExecutedSequence method as callback
 }
@@ -182,24 +176,29 @@ void Runtime::preConcreteExecution()
  * @param configuration
  * @param result
  */
-void Runtime::postConcreteExecution(QSharedPointer<ExecutableConfiguration> configuration, QSharedPointer<ExecutionResult> result)
+void Runtime::postConcreteExecution(ExecutableConfigurationConstPtr configuration, QSharedPointer<ExecutionResult> result)
 {
-    mPrioritizerStrategy->reprioritize(mWorklist);
+    mWorklist->reprioritize(mAppmodel);
 
     long hash;
-    if(mVisitedStates->find(hash = result->getPageStateHash()) == mVisitedStates->end()){
+    if (mOptions.disableStateCheck ||
+            mVisitedStates->find(hash = result->getPageStateHash()) == mVisitedStates->end()) {
+
         qDebug() << "Visiting new state";
+
         mVisitedStates->insert(hash);
         QList<QSharedPointer<ExecutableConfiguration> > newConfigurations = mInputgenerator->addNewConfigurations(configuration, result);
 
         foreach(QSharedPointer<ExecutableConfiguration> newConfiguration, newConfigurations) {
-            mWorklist->add(newConfiguration, mPrioritizerStrategy->prioritize(newConfiguration, result, mAppmodel));
+            mWorklist->add(newConfiguration, mAppmodel);
         }
 
         statistics()->accumulate("InputGenerator::added-configurations", newConfigurations.size());
+
     } else {
         qDebug() << "Page state has already been seen";
     }
+
     preConcreteExecution();
 }
 
@@ -209,16 +208,16 @@ void Runtime::finishAnalysis()
 
     switch (mOptions.outputCoverage) {
     case HTML:
-        writeCoverageHtml(mWebkitExecutor->getCoverageListener());
+        writeCoverageHtml(mAppmodel->getCoverageListener());
         break;
     case STDOUT:
-         writeCoverageStdout(mWebkitExecutor->getCoverageListener());
+         writeCoverageStdout(mAppmodel->getCoverageListener());
          break;
     default:
         break;
     }
 
-    statistics()->accumulate("WebKit::coverage::covered-unique", mWebkitExecutor->getCoverageListener()->getNumCoveredLines());
+    statistics()->accumulate("WebKit::coverage::covered-unique", mAppmodel->getCoverageListener()->getNumCoveredLines());
 
     Log::info("\n=== Statistics ===\n");
     StatsPrettyWriter::write(statistics());

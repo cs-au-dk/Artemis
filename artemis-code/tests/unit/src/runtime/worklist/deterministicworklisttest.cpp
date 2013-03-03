@@ -14,7 +14,7 @@ namespace artemis
 
 TEST(DeterministicWorklistTest, Dummy) {
 
-    DeterministicWorkList* worklist = new DeterministicWorkList(NULL);
+    DeterministicWorkListPtr worklist = new DeterministicWorkList(NULL);
 
     QUrl url;
     QSharedPointer<InputSequence> inputSequence = QSharedPointer<InputSequence>(new InputSequence());

@@ -34,7 +34,7 @@ webkit-clean:
 	${WEBKIT_BUILD_SCRIPT} --clean
 
 artemis:
-	cd artemis-code && qmake && make
+	cd artemis-code && qmake && make -j4
 
 artemis-clean:
 	cd artemis-code && qmake && make clean

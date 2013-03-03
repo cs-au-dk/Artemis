@@ -46,15 +46,30 @@ class PrioritizationStrategies(unittest.TestCase):
 	def test_coverage(self):
 		report = execute_artemis('strategy-priority-coverage', 
 			'%s/strategies/priority/coverage.html' % WEBSERVER_URL,
-			iterations=4,
+			iterations=5,
 			strategy_priority='constant')
 		
-		self.assertEqual(5, report.get('WebKit::coverage::covered-unique', 0));
+		self.assertEqual(8, report.get('WebKit::coverage::covered-unique', 0));
 
 		report = execute_artemis('strategy-priority-coverage', 
 			'%s/strategies/priority/coverage.html' % WEBSERVER_URL,
-			iterations=4,
+			iterations=5,
 			strategy_priority='coverage')
+		
+		self.assertEqual(19, report.get('WebKit::coverage::covered-unique', 0));
+
+	def test_readwrite(self):
+		report = execute_artemis('strategy-priority-readwrite', 
+			'%s/strategies/priority/readwrite.html' % WEBSERVER_URL,
+			iterations=4,
+			strategy_priority='constant')
+		
+		self.assertEqual(6, report.get('WebKit::coverage::covered-unique', 0));
+
+		report = execute_artemis('strategy-priority-readwrite', 
+			'%s/strategies/priority/readwrite.html' % WEBSERVER_URL,
+			iterations=4,
+			strategy_priority='readwrite')
 		
 		self.assertEqual(7, report.get('WebKit::coverage::covered-unique', 0));
 
@@ -74,6 +89,12 @@ class InstrumentationTests(unittest.TestCase):
 		report = execute_artemis('instrumentation-jsconstants', '%s/instrumentation/jsconstants.html' % WEBSERVER_URL)
 		
 		self.assertEqual(1, report.get('WebKit::jsconstants', 0));
+
+	def test_jsreadwrite(self):	
+		report = execute_artemis('instrumentation-jsreadwrite', '%s/instrumentation/jsreadwrite.html' % WEBSERVER_URL)
+		
+		self.assertEqual(3, report.get('WebKit::readproperties', 0));
+		self.assertEqual(5, report.get('WebKit::writtenproperties', 0));
 
 	def test_codecoverage(self):
 		report = execute_artemis('instrumentation-codecoverage', '%s/instrumentation/codecoverage.html' % WEBSERVER_URL)
