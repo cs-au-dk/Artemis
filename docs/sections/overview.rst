@@ -24,9 +24,25 @@ For installation instructions see the INSTALL file and for usage run the command
 The Artemis Tool
 ----------------
 
-The Artemis tool is written in C++ using Qt 4.8.
+The Artemis tool is written in C++ using Qt 4.8 and the *qmake* build system. The main qmake project file is ``artemis-code/artemis-code.pro``, which in turn includes ``artemis-code/artemis-core.pri`` (the latter is also included by the unit-test project).
 
+The central classes are shown in the following diagram:
 
+.. graphviz::
+
+	digraph overview {
+
+		"Runtime" -> "WebKitExecutor";
+		"Runtime" -> "InputGeneratorStrategy";
+		"Runtime" -> "WorkList";
+		"InputGeneratorStrategy" -> "ExecutionResult";
+		"WebKitExecutor" -> "ExecutionResult";
+		"WebKitExecutor" -> "AppModel";
+		"WorkList" -> "PrioritizerStrategy";
+		"PrioritizerStrategy" -> "AppModel";
+	}
+
+The main application loop and initialization of the application resides in ``Runtime`` (``runtime/runtime.h``). The main application loop maintains the ``WorkList`` (``runtime/worklist/worklist.h``), using an instance of ``InputGeneratorStrategy`` (``strategies/inputgenerator/inputgeneratorstrategy.h``) to generate new event sequences for the worklist. Event sequences are executed using an instance of ``WebKitExecutor`` (``runtime/browser/webkitexecutor.h``), responsible for all interaction with the instrumented WebKit library described in the next section. Finally, the ``WebKitExecutor`` gathers the feedback from WebKit in an ``ExecutionResult`` (``runtime/browser/executionresult.h``) and in updates to ``AppModel`` (``model/appmodel.h``), used by other parts of Artemis. 
 
 WebKit Instrumentation
 ----------------------

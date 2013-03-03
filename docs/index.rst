@@ -10,7 +10,6 @@ Contents:
    :maxdepth: 1
 
    sections/overview
-   sections/instrumentation
    sections/codingstyle
 
 
