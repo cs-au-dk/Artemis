@@ -63,8 +63,8 @@ void writeCoverageHtml(CoverageListenerPtr cov)
     QDir appdir("", "*.html", QDir::Time);
     QStringList existingFiles = appdir.entryList();
 
-    QString res = "<html><head><meta charset=\"utf-8\"/><title>Test</title></head><body><style>";
-    res += "table { border-collapse: collapse; } td.covered { background-color: #00FF00; } td.uncovered { background-color: #FF0000; }</style>";
+    QString res = "<html><head><meta charset=\"utf-8\"/><title>Test</title><style>";
+    res += "table { border-collapse: collapse; } td.covered { background-color: #00FF00; } td.uncovered { background-color: #FF0000; }</style></head><body>";
 
     if (!existingFiles.isEmpty()) {
         res += "<a href=\"" + existingFiles.at(0) + "\">Previous run</a>";
@@ -79,9 +79,12 @@ void writeCoverageHtml(CoverageListenerPtr cov)
 
         int startline = cov->getSourceInfo(sourceID)->getStartLine();
         foreach(QString line, cov->getSourceInfo(sourceID)->getSource().split("\n", QString::KeepEmptyParts)) {
+            QString s = QTextDocument(line).toHtml();
+            int p = s.indexOf("<p");
+            QString htmlString = s.mid(p,s.lastIndexOf("</p>")-p+4);
             res += "<tr><td>" + QString::number(startline) + "</td><td class=\""
                    + QString(lineCoverage.contains(startline) ? "covered" : "uncovered")
-                   + "\">" + QTextDocument(line).toHtml() + "</td></tr>";
+                   + "\">" + htmlString + "</td></tr>";
             startline += 1;
         }
         res += "</table></pre>";
