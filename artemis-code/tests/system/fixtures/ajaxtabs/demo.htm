@@ -1,0 +1,156 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml2/DTD/xhtml1-strict.dtd">
+<html xmlns="http://www.w3.org/1999/xhtml" xml:lang="en">
+
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1" />
+
+<link rel="stylesheet" type="text/css" href="ajaxtabs/ajaxtabs.css" />
+
+<script type="text/javascript" src="ajaxtabs/ajaxtabs.js">
+
+/***********************************************
+* Ajax Tabs Content script v2.2- © Dynamic Drive DHTML code library (www.dynamicdrive.com)
+* This notice MUST stay intact for legal use
+* Visit Dynamic Drive at http://www.dynamicdrive.com/ for full source code
+***********************************************/
+
+</script>
+
+</head>
+
+<body>
+
+<h3><a href="http://www.dynamicdrive.com/dynamicindex17/ajaxtabscontent/">Ajax Tabs Content script Instructions</a></h3>
+
+<h3>Demo #1- Basic implementation</h3>
+
+<p>
+- First tab shows default, inline content directly added inside container DIV<br />
+- 2nd and 3rd tabs show external pages fetched via <b>Ajax</b><br />
+- 4th tab shows an external page fetched via <b>IFRAME</b><br />
+</p>
+
+<ul id="countrytabs" class="shadetabs">
+<li><a href="#" rel="#default" class="selected">Tab 1</a></li>
+<li><a href="external2.htm" rel="countrycontainer">Tab 2</a></li>
+<li><a href="external3.htm" rel="countrycontainer">Tab 3</a></li>
+<li><a href="external4.htm" rel="#iframe">Tab 4</a></li>
+<li><a href="http://www.dynamicdrive.com">Dynamic Drive</a></li>
+</ul>
+
+<div id="countrydivcontainer" style="border:1px solid gray; width:450px; margin-bottom: 1em; padding: 10px">
+<p>This is some default tab content, embedded directly inside this space and not via Ajax. It can be shown when no tabs are automatically selected, or associated with a certain tab, in this case, the first tab.</p>
+</div>
+
+<script type="text/javascript">
+var countries=new ddajaxtabs("countrytabs", "countrydivcontainer")
+countries.setpersist(true)
+countries.setselectedClassTarget("link") //"link" or "linkparent"
+countries.init()
+
+</script>
+
+<p><a href="javascript: countries.expandit(3)">Dynamically select last Tab</a> | <a href="demo.htm?countrytabs=1">Reload page and select 2nd tab using URL parameter</a></p>
+
+<hr />
+
+
+
+
+
+
+
+
+
+
+
+
+
+<h3>Demo #2- Expanding of arbitrary DIVs on the page enabled</h3>
+
+<p>
+- All tabs fetched via <b>Ajax</b><br />
+- 2nd and 4th tabs also show/hide arbitrary DIVs when clicked on<br />
+</p>
+
+<div id="flowernote" style="display:none; position:absolute; right: 30px; width:150px; height:150px; background-color:red; color:white">
+Arbitrary DIV 1
+</div>
+
+<div id="flowernote2" style="display:none; position:absolute; right: 200px; width:80px; height:80px; background-color:black; color:white">
+Arbitrary DIV 2
+</div>
+
+<div id="flowernote3" style="display:none; position:absolute; right: 30px; width:140px; height:140px; background-color:navy; color:white">
+Arbitrary DIV 3
+</div>
+
+
+<div id="flowerdivcontainer" style="border:1px solid gray; width:350px; height: 200px; background-color: lightyellow; padding: 5px">
+</div>
+
+<div id="flowertabs" class="modernbricksmenu2">
+<ul>
+<li><a href="external1.htm" rel="flowerdivcontainer" class="selected">Tab 1</a></li>
+<li><a href="external2.htm" rel="flowerdivcontainer" rev="flowernote,flowernote2">Tab 2</a></li>
+<li><a href="external3.htm" rel="flowerdivcontainer">Tab 3</a></li>
+<li><a href="external5.htm" rel="flowerdivcontainer" rev="flowernote3">Tab 4</a></li>
+<li><a href="http://www.dynamicdrive.com/dynamicindex17/ajaxtabscontent/">Ajax Tabs script</a></li>
+</ul>
+</div>
+<br style="clear: left" />
+
+<script type="text/javascript">
+var myflowers=new ddajaxtabs("flowertabs", "flowerdivcontainer")
+myflowers.setpersist(true)
+myflowers.setselectedClassTarget("link") //"link" or "linkparent"
+myflowers.init()
+</script>
+
+<p><a href="javascript:myflowers.cycleit('prev')" style="margin-right: 250px; text-decoration:none">Back</a>  <a href="javascript:myflowers.cycleit('next')" style="text-decoration:none">Forward</a></p>
+
+<p><a href="javascript: myflowers.loadajaxpage('external2.htm')">Load "external2.htm" into content container via Ajax</a></p>
+
+<hr />
+
+
+
+
+
+
+
+
+
+
+
+
+<h3>Demo #3- All contents fetched via "IFRAME"</h3>
+
+<div id="pettabs" class="indentmenu">
+<ul>
+<li><a href="external1.htm" rel="#iframe" class="selected">Tab 1</a></li>
+<li><a href="external2.htm" rel="#iframe">Tab 2</a></li>
+<li><a href="external3.htm" rel="#iframe">Tab 3</a></li>
+<li><a href="external4.htm" rel="#iframe">Tab 4</a></li>
+</ul>
+<br style="clear: left" />
+</div>
+
+<div id="petsdivcontainer" style="border:1px solid gray; width:550px; height: 150px; padding: 5px; margin-bottom:1em">
+</div>
+
+
+<script type="text/javascript">
+var mypets=new ddajaxtabs("pettabs", "petsdivcontainer")
+mypets.setpersist(false)
+mypets.setselectedClassTarget("link")
+mypets.init()
+
+</script>
+
+<p><a href="javascript: mypets.loadiframepage('http://www.google.com')">Load "Google Homepage" into content container via IFRAME</a></p>
+
+
+
+</body>
+</html>

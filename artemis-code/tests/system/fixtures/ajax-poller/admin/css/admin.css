@@ -1,0 +1,14 @@
+body{
+	font-family:arial;
+}
+th{
+	text-align:left;
+}
+.formButton{
+	width:75px;
+}
+
+a{
+	color:blue;
+	text-decoration:none;
+}
