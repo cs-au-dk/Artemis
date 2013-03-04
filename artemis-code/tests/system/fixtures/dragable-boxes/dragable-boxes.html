@@ -1,0 +1,73 @@
+<?
+/*
+
+LAST UPDATED:
+
+	March, 25th, 2005	-> Using MagpieRSS instead of lastRSS. Changes are made to readRSS.php only.
+
+*/
+?>
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+<head>
+	<meta http-equiv="content-type" content="text/html;charset=iso-8859-1">
+	<title>Boxed website</title>
+	<link rel="stylesheet" href="./css/dragable-boxes.css" type="text/css">
+	<script type="text/javascript" src="js/ajax.js"></script>
+	<script type="text/javascript" src="js/dragable-boxes.js">
+	/************************************************************************************************************
+	(C) www.dhtmlgoodies.com, January 2006
+	
+	This is a script from www.dhtmlgoodies.com. You will find this and a lot of other scripts at our website.	
+	
+	Version:	1.0	: January 16th - 2006
+	
+	Terms of use:
+	You are free to use this script as long as the copyright message is kept intact. However, you may not
+	redistribute, sell or repost it without our permission.
+	
+	Thank you!
+	
+	www.dhtmlgoodies.com
+	Alf Magne Kalleland
+	
+	************************************************************************************************************/		
+	</script>
+	
+</head>
+<body>
+
+<div id="mainContainer">
+	<div id="header">
+		<img src="images/heading3.gif" alt="logo">
+		<div id="addNewFeed">
+			<form method="post" action="#">
+			<table cellpadding="0" cellspacing="0">
+				<tr><td colspan="4"><strong>New feed</strong></td></tr>
+				<tr><td>RSS url: </td><td colspan="4"><input type="text" name="rssUrl" size="30" value="http://www.dhtmlgoodies.com/rss/dhtmlgoodies.xml" maxlength="255"></td></tr>
+				<tr>
+					<td>Items: </td>
+					<td><input type="text" name="items" value="10" size="2" maxlength="2"></td>
+					<td>&nbsp;Refresh every:</td>
+					<td><input type="text" name="reloadInterval" value="10" size="2" maxlength="2"></td>
+					<td>&nbsp;minute</td>
+				</tr>
+				<tr>
+					<td>Fixed height:</td>
+					<td><input type="text" name="height" value="150" size="2" maxlength="3"> </td>
+					<td><input type="button" onclick="createFeed(this.form)" value="Create"></td>
+				</tr>
+
+			</table>
+			</form>
+		</div>
+	</div>
+	<div id="floatingBoxParentContainer">
+		
+	
+	</div>
+</div>
+
+<div id="debug"></div>
+</body>
+</html>
