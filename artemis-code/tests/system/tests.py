@@ -357,6 +357,42 @@ class dynamicArticlesTest (unittest.TestCase):
 			 strategy_priority='all')
 		self.assertLessEqual(0.82*self.loc-self.margin,report.get("WebKit::coverage::covered-unique",0));
 
+class fractalViewerTest (unittest.TestCase):
+	url = '%s/fractal_viewer/index.php' % WEBSERVER_URL;
+	uuid = 'fractalViewer';
+	loc = 750;
+	margin = loc*0.1;
+	def test_events_configuration (self):
+		report = execute_artemis(self.uuid, self.url , 
+		         iterations=100, 
+			 strategy_form_input='random',
+			 strategy_priority='constant')
+		self.assertLessEqual(0.62*self.loc-self.margin,report.get("WebKit::coverage::covered-unique",0));
+
+		
+	def test_const_configuration (self):
+		report = execute_artemis(self.uuid, self.url , 
+		         iterations=100, 
+			 strategy_form_input='javascript-constants',
+			 strategy_priority='constant')
+		self.assertLessEqual(0.63*self.loc-self.margin,report.get("WebKit::coverage::covered-unique",0));
+
+		
+	def test_cov_configuration (self):
+		report = execute_artemis(self.uuid, self.url , 
+		         iterations=100, 
+			 strategy_form_input='javascript-constants',
+			 strategy_priority='coverage')
+		self.assertLessEqual(0.62*self.loc-self.margin,report.get("WebKit::coverage::covered-unique",0));
+
+
+	def test_all_configuration (self):
+		report = execute_artemis(self.uuid, self.url , 
+		         iterations=100, 
+			 strategy_form_input='javascript-constants',
+			 strategy_priority='all')
+		self.assertLessEqual(0.63*self.loc-self.margin,report.get("WebKit::coverage::covered-unique",0));
+
 
 if __name__ == '__main__':
 	server = WebServer(WEBSERVER_ROOT, WEBSERVER_PORT)

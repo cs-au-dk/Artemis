@@ -1,0 +1,141 @@
+body {
+    margin: 0;
+    padding: 0;
+    background-color: #000;
+    color: #000;
+    font: 14px Helvetica, Arial, sans-serif;
+}
+
+h1 {
+    font-size: 30px;
+    font-weight: bold;
+    margin: 0;
+    letter-spacing: -3px;
+}
+
+p {
+    margin: 12px 0 0 0;
+}
+
+a {
+    text-decoration: none;
+    outline: none;
+}
+a:hover {
+    color: #fff;
+}
+
+canvas {
+    cursor: crosshair;
+}
+
+img {
+    border: none;
+}
+
+#my_container {	
+    position: absolute;
+    left: 0px;
+    top: 0px;
+}
+
+#control, #my_canvas {
+    -webkit-user-select: none;
+    -moz-user-select: none;
+}
+
+#control {
+    margin-top: 4px;
+}
+
+#control div {
+	float: right;
+	margin-left: 4px;
+}
+
+#control div.left {
+    float: left;
+    margin-left: 0px;
+}
+
+#control a {
+	color: #bebebe;
+	display: block;
+	float: left;
+    padding: 6px 7px 6px 7px;
+    font-size: 20px;
+    background-color: #0d0d0d;
+}
+#control a:hover {
+    background-color: #323232;
+}
+#control a.selected {
+	background-color: #235fa1;
+	color: #000;
+}
+#control a:first-letter {
+    color: #fff;
+}
+#control a.selected:first-letter {
+	color: #000;
+}
+
+#control a.toggle {
+    padding-left: 31px;
+    background: #0d0d0d url(img/check.png) no-repeat;
+}
+#control a.toggle:hover {
+    background-color: #323232;
+}
+#control a.toggle.selected {
+    background: #39a02f url(img/check.png) no-repeat 0 -35px;
+}
+
+#control a.play {
+    padding-left: 31px;
+    background: #0d0d0d url(img/playpause.png) no-repeat;
+}
+#control a.play:hover {
+    background-color: #323232;
+}
+#control a.play.selected {
+    background: #8bf200 url(img/playpause.png) no-repeat 0 -35px;
+}
+
+
+#about {
+    position: absolute;
+    width: 360px;
+    background-color: rgba(255,234,0,0.9);
+    padding: 14px;
+    color: #000;
+}
+#about a {
+   	color: #000;
+    text-decoration: underline;
+}
+#about a:hover {
+    text-decoration: none;
+}
+#about ul {
+    list-style-type: none;
+    padding: 0;
+}
+#about span.key {
+    font-weight: bold;
+}
+
+#about div.badge {
+    float: right;
+    padding: 0 0 10px 10px;
+}
+
+
+#aboutclear {
+    position: absolute;
+    top: 0px;
+    left: 0px;
+    width: 100%;
+    height: 100%;
+    cursor: pointer;
+}
