@@ -135,6 +135,106 @@ class LegacyBenchmarkTests(unittest.TestCase):
 	def test_htmlbox(self):
 		report = execute_artemis('legacybenchmark', '%s/legacy-benchmarks/htmledit/demo_full.html' % WEBSERVER_URL)
 
+class t3dModelTest(unittest.TestCase):
+
+	def test_events_configuration (self):
+		report = execute_artemis('3dmodel', '%s/3dmodel/index.html' % WEBSERVER_URL, 
+		         iterations=100, 
+			 strategy_form_input='random',
+			 strategy_priority='constant')
+		self.assertLessEqual(74,report.get("WebKit::coverage::covered-unique",0));
+
+	def test_const_configuration (self):
+		report = execute_artemis('3dmodel', '%s/3dmodel/index.html' % WEBSERVER_URL, 
+		         iterations=100, 
+			 strategy_form_input='javascript-constants',
+			 strategy_priority='constant')
+		self.assertLessEqual(74,report.get("WebKit::coverage::covered-unique",0));
+
+		
+	def test_cov_configuration (self):
+		report = execute_artemis('3dmodel', '%s/3dmodel/index.html' % WEBSERVER_URL, 
+		         iterations=100, 
+			 strategy_form_input='javascript-constants',
+			 strategy_priority='coverage')
+		self.assertLessEqual(74,report.get("WebKit::coverage::covered-unique",0));
+
+	def test_all_configuration (self):
+		report = execute_artemis('3dmodel', '%s/3dmodel/index.html' % WEBSERVER_URL, 
+		         iterations=100, 
+			 strategy_form_input='javascript-constants',
+			 strategy_priority='all')
+		self.assertLessEqual(74,report.get("WebKit::coverage::covered-unique",0));
+
+class ajaxPollerTest(unittest.TestCase):
+
+	def test_events_configuration (self):
+		report = execute_artemis('ajaxPoller', '%s/ajax-poller/ajax-poller.php' % WEBSERVER_URL, 
+		         iterations=100, 
+			 strategy_form_input='random',
+			 strategy_priority='constant')
+		self.assertLessEqual(78,report.get("WebKit::coverage::covered-unique",0));
+
+		
+	def test_const_configuration (self):
+		report = execute_artemis('ajaxPoller', '%s/ajax-poller/ajax-poller.php' % WEBSERVER_URL, 
+		         iterations=100, 
+			 strategy_form_input='javascript-constants',
+			 strategy_priority='constant')
+		self.assertLessEqual(78,report.get("WebKit::coverage::covered-unique",0));
+
+		
+	def test_cov_configuration (self):
+		report = execute_artemis('ajaxPoller', '%s/ajax-poller/ajax-poller.php' % WEBSERVER_URL, 
+		         iterations=100, 
+			 strategy_form_input='javascript-constants',
+			 strategy_priority='coverage')
+		self.assertLessEqual(78,report.get("WebKit::coverage::covered-unique",0));
+
+
+	def test_all_configuration (self):
+		report = execute_artemis('ajaxPoller', '%s/ajax-poller/ajax-poller.php' % WEBSERVER_URL, 
+		         iterations=100, 
+			 strategy_form_input='javascript-constants',
+			 strategy_priority='all')
+		self.assertLessEqual(78,report.get("WebKit::coverage::covered-unique",0));
+
+
+class ajaxTabsTest(unittest.TestCase):
+	url = '%s/ajaxtabs/demo.htm' % WEBSERVER_URL;
+	uuid = 'ajaxTabs';
+	def test_events_configuration (self):
+		report = execute_artemis(self.uuid, self.url , 
+		         iterations=100, 
+			 strategy_form_input='random',
+			 strategy_priority='constant')
+		self.assertLessEqual(88,report.get("WebKit::coverage::covered-unique",0));
+
+		
+	def test_const_configuration (self):
+		report = execute_artemis(self.uuid, self.url , 
+		         iterations=100, 
+			 strategy_form_input='javascript-constants',
+			 strategy_priority='constant')
+		self.assertLessEqual(88,report.get("WebKit::coverage::covered-unique",0));
+
+		
+	def test_cov_configuration (self):
+		report = execute_artemis(self.uuid, self.url , 
+		         iterations=100, 
+			 strategy_form_input='javascript-constants',
+			 strategy_priority='coverage')
+		self.assertLessEqual(89,report.get("WebKit::coverage::covered-unique",0));
+
+
+	def test_all_configuration (self):
+		report = execute_artemis(self.uuid, self.url , 
+		         iterations=100, 
+			 strategy_form_input='javascript-constants',
+			 strategy_priority='all')
+		self.assertLessEqual(89,report.get("WebKit::coverage::covered-unique",0));
+
+
 if __name__ == '__main__':
 	server = WebServer(WEBSERVER_ROOT, WEBSERVER_PORT)
 
