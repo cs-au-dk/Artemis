@@ -1,3 +1,0 @@
-
-WebKit Instrumentation
-======================
