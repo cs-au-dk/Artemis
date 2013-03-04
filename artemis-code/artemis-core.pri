@@ -70,7 +70,8 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/strategies/prioritizer/coverageprioritizer.h \
     src/runtime/appmodel.h \
     src/model/javascriptstatistics.h \
-    src/strategies/prioritizer/readwriteprioritizer.h
+    src/strategies/prioritizer/readwriteprioritizer.h \
+    src/strategies/prioritizer/collectedprioritizer.h
 
 SOURCES += src/runtime/input/ajaxinput.cpp \
     src/strategies/prioritizer/constantprioritizer.cpp \
@@ -122,6 +123,7 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/strategies/prioritizer/coverageprioritizer.cpp \
     src/runtime/appmodel.cpp \
     src/model/javascriptstatistics.cpp \
-    src/strategies/prioritizer/readwriteprioritizer.cpp
+    src/strategies/prioritizer/readwriteprioritizer.cpp \
+    src/strategies/prioritizer/collectedprioritizer.cpp
 
 QT += network
