@@ -1,0 +1,216 @@
+<HTML>
+<HEAD>
+<style type="text/css">
+body{
+	background-repeat:no-repeat;
+	font-family: Trebuchet MS, Lucida Sans Unicode, Arial, sans-serif;
+	font-size:0.9em;
+	line-height:130%;
+	text-align:center;
+	height:100%;
+	background-color: #E2EBED;
+}
+#contentContainer h2{	/* No margins above <h2> tags */
+	margin-top:0px;
+}
+
+
+#mainContainer{
+	width:755px;
+	margin:0 auto;
+	text-align:left;
+	padding:5px;
+	margin-top:20px;
+	border:1px solid #000;
+	background-color: #FFF;
+}
+#contentContainer{
+	float:left;
+	border:1px solid #000;
+	background-color: #E2EBED;
+	overflow:auto;
+	margin-right:10px;
+	padding:10px;
+	
+	/* CSS HACK */
+	width: 497px;	/* IE 5.x */
+	width/* */:/**/480px;	/* Other browsers */
+	width: /**/480px;
+	
+	/* CSS HACK */
+	height: 412px;	/* IE 5.x */
+	height/* */:/**/390px;	/* Other browsers */
+	height: /**/390px;
+			
+}
+
+
+#contentContainer .openingText{
+	color:red;
+}
+
+#articleListContainer{	/* <ul> container for article list */
+	float:left;
+	height:410px;
+	overflow:auto;	
+	width:240px;
+	border:1px solid #000;
+	background-color:#FFF;	
+}
+.articleList{
+	margin:0px;
+	padding:2px;
+}
+.articleList li{	/* General layout article in list */
+	list-style-type:none;
+	border:1px solid #999;
+	background-color:#EEE;
+	height:50px;
+	margin:1px;
+	padding:2px;
+	color:#333;
+	cursor:pointer;
+}
+.articleList li.articleMouseOver{	/* Mouse over article in list - layout */
+	border:1px solid #000;
+	color:#000;
+}
+.articleList li.articleClick{	/* Active article in list - layout */
+	border:1px solid #000;
+	color:#000;
+	background-color:#317082;
+	color:#FFF;
+}
+
+.keyText{	/* Just a column I use for key text inside articles - the one with the light blue bg and dotted border */
+	background-color:#FFF;
+	border:1px dotted #000;
+	float:right;
+	margin-top:5px;
+	margin-left:5px;
+	margin-bottom:5px;
+	width:150px;
+	padding:3px
+}
+.clear{
+	clear:both;
+}
+</style>
+<script type="text/javascript" src="js/ajax.js"></script>
+<script type="text/javascript">
+/************************************************************************************************************
+Ajax dynamic articles 
+Copyright (C) 2006  DTHMLGoodies.com, Alf Magne Kalleland
+
+This library is free software; you can redistribute it and/or
+modify it under the terms of the GNU Lesser General Public
+License as published by the Free Software Foundation; either
+version 2.1 of the License, or (at your option) any later version.
+
+This library is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+Lesser General Public License for more details.
+
+You should have received a copy of the GNU Lesser General Public
+License along with this library; if not, write to the Free Software
+Foundation, Inc., 51 Franklin Street, Fifth Floor, Boston, MA  02110-1301  USA
+
+Dhtmlgoodies.com., hereby disclaims all copyright interest in this script
+written by Alf Magne Kalleland.
+
+Alf Magne Kalleland, 2006
+Owner of DHTMLgoodies.com
+
+
+************************************************************************************************************/	
+var ajax = new sack();
+var articleListObj;
+var activeArticle = false;
+var clickedArticle = false;
+var contentObj	// Reference to article content <div>
+
+function mouseoverArticle()	// Highlight article
+{
+	if(this==clickedArticle)return;
+	if(activeArticle && activeArticle!=this){
+		if(activeArticle==clickedArticle)
+			activeArticle.className='articleClick';
+		else
+			activeArticle.className='';
+		
+	}
+	this.className='articleMouseOver';
+	activeArticle = this;	// Storing reference to this article
+}
+
+function showContent()	// Displaying content in the content <div>
+{
+	contentObj.innerHTML = ajax.response;	// ajax.response is a variable that contains the content of the external file	
+}
+
+function showWaitMessage()
+{
+	contentObj.innerHTML = 'Finding article.....<br>Please wait';
+}
+function getAjaxFile(fileName)
+{
+	ajax.requestFile = fileName;	// Specifying which file to get
+	ajax.onCompletion = showContent;	// Specify function that will be executed after file has been found
+	ajax.onLoading = showWaitMessage;	// Action when AJAX is loading the file
+	ajax.runAJAX();		// Execute AJAX function	
+}
+
+function selectArticle()	// User have clicked on an article
+{
+	getAjaxFile(this.id + '.html');	// Calling the getAjasFile function. argument to the function is id of this <li> + '.html', example "article1.html"
+	if(clickedArticle && clickedArticle!=this)clickedArticle.className='articleMouseOver';
+	this.className='articleClick';
+	clickedArticle = this;
+}
+
+
+function initAjaxDemo()
+{
+	articleListObj = document.getElementById('articleList');
+	var articles = articleListObj.getElementsByTagName('LI');
+	for(var no=0;no<articles.length;no++){
+		articles[no].onmouseover = mouseoverArticle;
+		articles[no].onclick = selectArticle;
+	}	
+	
+	contentObj = document.getElementById('contentContainer');
+}
+window.onload = initAjaxDemo;
+</script>
+
+</HEAD>
+
+<BODY>
+
+<div id="mainContainer">
+	<div id="header">
+		<img src="/images/heading3.gif">
+	</div>
+	<div id="contentContainer">
+		<h2 class="openingText">Click on one of the articles to the right.</h2>
+		<p>This will load the the content of external articles into this DIV</p>
+	</div>
+	<div id="articleListContainer">
+		<ul id="articleList" class="articleList">
+			<li id="article1">This is article number one</li>
+			<li id="article2">This is the second article</li>
+			<li id="article3">Article number 3</li>
+			<li id="article4">About AJAX</li>
+			<li id="article5">Article number 5</li>
+			<li id="article6">Article number 6</li>
+			<li id="article7">Article number 7</li>
+			<li id="article8">Article number 8</li>
+			<li id="article9">Article number 9</li>
+		</ul>
+	</div>
+	<div class="clear"></div>
+</div>
+
+</BODY>
+</HTML>
