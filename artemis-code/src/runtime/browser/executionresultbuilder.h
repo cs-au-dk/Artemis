@@ -48,7 +48,7 @@ class ExecutionResultBuilder : public QObject
     Q_OBJECT
 
 public:
-    explicit ExecutionResultBuilder(QObject *parent, ArtemisWebPagePtr page);
+    explicit ExecutionResultBuilder(ArtemisWebPagePtr page);
     
     void reset();
     void notifyPageLoaded();
@@ -85,6 +85,9 @@ public slots:
     void slJavascriptConstantEncountered(QString constant);
 
 };
+
+typedef QSharedPointer<ExecutionResultBuilder> ExecutionResultBuilderPtr;
+typedef QSharedPointer<const ExecutionResultBuilder> ExecutionResultBuilderConstPtr;
 
 }
 

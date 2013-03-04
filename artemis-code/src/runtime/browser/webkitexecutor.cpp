@@ -56,7 +56,7 @@ WebKitExecutor::WebKitExecutor(QObject* parent,
     QObject::connect(mPage.data(), SIGNAL(loadFinished(bool)),
                      this, SLOT(slLoadFinished(bool)));
 
-    mResultBuilder = new ExecutionResultBuilder(this, mPage);
+    mResultBuilder = ExecutionResultBuilderPtr(new ExecutionResultBuilder(mPage));
 
     mCoverageListener = appmodel->getCoverageListener();
     mJavascriptStatistics = appmodel->getJavascriptStatistics();
@@ -84,27 +84,27 @@ WebKitExecutor::WebKitExecutor(QObject* parent,
                      mJavascriptStatistics.data(), SLOT(slJavascriptPropertyWritten(QString,intptr_t,intptr_t,QUrl,int)));
 
     QObject::connect(webkitListener, SIGNAL(addedEventListener(QWebElement*, QString)),
-                     mResultBuilder, SLOT(slEventListenerAdded(QWebElement*, QString)));
+                     mResultBuilder.data(), SLOT(slEventListenerAdded(QWebElement*, QString)));
     QObject::connect(webkitListener, SIGNAL(removedEventListener(QWebElement*, QString)),
-                     mResultBuilder, SLOT(slEventListenerRemoved(QWebElement*, QString)));
+                     mResultBuilder.data(), SLOT(slEventListenerRemoved(QWebElement*, QString)));
 
     QObject::connect(webkitListener, SIGNAL(addedTimer(int, int, bool)),
-                     mResultBuilder, SLOT(slTimerAdded(int, int, bool)));
+                     mResultBuilder.data(), SLOT(slTimerAdded(int, int, bool)));
     QObject::connect(webkitListener, SIGNAL(removedTimer(int)),
-                     mResultBuilder, SLOT(slTimerRemoved(int)));
+                     mResultBuilder.data(), SLOT(slTimerRemoved(int)));
 
     QObject::connect(webkitListener, SIGNAL(script_crash(QString, intptr_t, int)),
-                     mResultBuilder, SLOT(slScriptCrashed(QString, intptr_t, int)));
+                     mResultBuilder.data(), SLOT(slScriptCrashed(QString, intptr_t, int)));
     QObject::connect(webkitListener, SIGNAL(eval_call(QString)),
-                     mResultBuilder, SLOT(slStringEvaled(QString)));
+                     mResultBuilder.data(), SLOT(slStringEvaled(QString)));
 
     QObject::connect(webkitListener, SIGNAL(addedAjaxCallbackHandler(int)),
-                     mResultBuilder, SLOT(slAjaxCallbackHandlerAdded(int)));
+                     mResultBuilder.data(), SLOT(slAjaxCallbackHandlerAdded(int)));
     QObject::connect(webkitListener, SIGNAL(ajax_request(QUrl, QString)),
-                     mResultBuilder, SLOT(slAjaxRequestInitiated(QUrl, QString)));
+                     mResultBuilder.data(), SLOT(slAjaxRequestInitiated(QUrl, QString)));
 
     QObject::connect(webkitListener, SIGNAL(sigJavascriptConstantEncountered(QString)),
-                     mResultBuilder, SLOT(slJavascriptConstantEncountered(QString)));
+                     mResultBuilder.data(), SLOT(slJavascriptConstantEncountered(QString)));
 
 }
 
@@ -114,7 +114,7 @@ WebKitExecutor::~WebKitExecutor()
 
 void WebKitExecutor::detach() {
     // ignore events emitted from webkit on deallocation
-    webkitListener->disconnect(mResultBuilder);
+    webkitListener->disconnect(mResultBuilder.data());
 
 }
 

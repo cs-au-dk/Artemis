@@ -13,14 +13,18 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "executionresultbuilder.h"
+
 #include <sstream>
+
 #include "statistics/statsstorage.h"
 #include "util/loggingutil.h"
+
+#include "executionresultbuilder.h"
+
 namespace artemis
 {
 
-ExecutionResultBuilder::ExecutionResultBuilder(QObject* parent, ArtemisWebPagePtr page) : QObject(parent)
+ExecutionResultBuilder::ExecutionResultBuilder(ArtemisWebPagePtr page) : QObject(NULL)
 {
     mPage = page;
     reset();

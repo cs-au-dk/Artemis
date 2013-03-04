@@ -57,7 +57,7 @@ public:
 
 private:
     ArtemisWebPagePtr mPage;
-    ExecutionResultBuilder* mResultBuilder;
+    ExecutionResultBuilderPtr mResultBuilder;
     ExecutableConfigurationConstPtr currentConf;
     AjaxRequestListener* mAjaxListener;
     JQueryListener* mJquery;
