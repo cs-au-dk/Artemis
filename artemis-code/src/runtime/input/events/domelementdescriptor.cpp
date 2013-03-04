@@ -13,12 +13,13 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "domelementdescriptor.h"
+
 #include <QtWebKit>
 #include <QtGlobal>
 #include <artemisglobals.h>
 #include <QHash>
 
+#include "domelementdescriptor.h"
 
 namespace artemis
 {
@@ -62,7 +63,7 @@ DOMElementDescriptor::DOMElementDescriptor(QObject* parent, const DOMElementDesc
     this->mInvalid = other->mInvalid;
 }
 
-QWebElement DOMElementDescriptor::getElement(QWebPage* page) const
+QWebElement DOMElementDescriptor::getElement(ArtemisWebPagePtr page) const
 {
     Q_CHECK_PTR(page);
     QWebFrame* frame = getFrame(page);
@@ -86,7 +87,7 @@ QString DOMElementDescriptor::getClass()
     return this->classLine;
 }
 
-QWebFrame* DOMElementDescriptor::getFrame(QWebPage* page) const
+QWebFrame* DOMElementDescriptor::getFrame(ArtemisWebPagePtr page) const
 {
     Q_CHECK_PTR(page);
 

@@ -18,6 +18,7 @@
 
 #include <QWebPage>
 #include <QString>
+#include <QSharedPointer>
 
 namespace artemis
 {
@@ -25,19 +26,18 @@ namespace artemis
 class ArtemisWebPage : public QWebPage
 {
     Q_OBJECT
+
 public:
-    explicit ArtemisWebPage(QObject* parent = 0);
+    explicit ArtemisWebPage();
     void javaScriptAlert(QWebFrame* frame, const QString& msg);
     bool javaScriptConfirm(QWebFrame* frame, const QString& msg);
     void javaScriptConsoleMessage(const QString& message, int lineNumber, const QString& sourceID);
     bool javaScriptPrompt(QWebFrame* frame, const QString& msg, const QString& defaultValue, QString* result);
 
-signals:
-
-public slots:
-
 };
 
+typedef QSharedPointer<ArtemisWebPage> ArtemisWebPagePtr;
+typedef QSharedPointer<const ArtemisWebPage> ArtemisWebPageConstPtr;
 
 }
 #endif // ARTEMISWEBPAGE_H

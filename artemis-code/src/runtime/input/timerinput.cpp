@@ -30,7 +30,7 @@ TimerInput::TimerInput(QSharedPointer<const Timer> timer)
     mTimer = timer;
 }
 
-void TimerInput::apply(ArtemisWebPage* page, QWebExecutionListener* webkitListener) const
+void TimerInput::apply(ArtemisWebPagePtr, QWebExecutionListener* webkitListener) const
 {
     statistics()->accumulate("timers::fired", 1);
     webkitListener->timerFire(mTimer->getId());

@@ -28,7 +28,7 @@ AjaxInput::AjaxInput(int callbackId)
     this->mCallbackId = callbackId;
 }
 
-void AjaxInput::apply(ArtemisWebPage* page, QWebExecutionListener* webkitListener) const
+void AjaxInput::apply(ArtemisWebPagePtr, QWebExecutionListener* webkitListener) const
 {
     statistics()->accumulate("ajax::fired", 1);
     webkitListener->ajaxCallbackFire(mCallbackId);

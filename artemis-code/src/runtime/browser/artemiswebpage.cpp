@@ -23,8 +23,7 @@
 namespace artemis
 {
 
-ArtemisWebPage::ArtemisWebPage(QObject* parent) :
-    QWebPage(parent)
+ArtemisWebPage::ArtemisWebPage() : QWebPage(NULL)
 {
 }
 

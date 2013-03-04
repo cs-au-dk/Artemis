@@ -18,13 +18,13 @@
 
 #include <QObject>
 #include <QSharedPointer>
-#include <QWebPage>
 #include <QWebElement>
 #include <QPair>
 #include <QList>
 #include <QString>
 
 #include "runtime/browser/executionresult.h"
+#include "runtime/browser/artemiswebpage.h"
 
 namespace artemis
 {
@@ -48,7 +48,7 @@ class ExecutionResultBuilder : public QObject
     Q_OBJECT
 
 public:
-    explicit ExecutionResultBuilder(QObject *parent, QWebPage* page);
+    explicit ExecutionResultBuilder(ArtemisWebPagePtr page);
     
     void reset();
     void notifyPageLoaded();
@@ -64,7 +64,7 @@ private:
     QSet<QWebFrame*> getAllFrames();
 
     QSharedPointer<ExecutionResult> mResult;
-    QWebPage* mPage;
+    ArtemisWebPagePtr mPage;
     QString mPageStateAfterLoad;
 
     QList<QPair<QWebElement*, QString> > mElementPointers;
@@ -85,6 +85,9 @@ public slots:
     void slJavascriptConstantEncountered(QString constant);
 
 };
+
+typedef QSharedPointer<ExecutionResultBuilder> ExecutionResultBuilderPtr;
+typedef QSharedPointer<const ExecutionResultBuilder> ExecutionResultBuilderConstPtr;
 
 }
 

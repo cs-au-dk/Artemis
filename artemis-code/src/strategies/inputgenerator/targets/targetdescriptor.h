@@ -33,7 +33,7 @@ class TargetDescriptor : public QObject
 public:
     TargetDescriptor(QObject* parent, const EventHandlerDescriptor* eventHandler);
 
-    virtual QWebElement get(ArtemisWebPage* page) const = 0;
+    virtual QWebElement get(ArtemisWebPagePtr page) const = 0;
 
 protected:
     EventHandlerDescriptor* mEventHandler;

@@ -29,7 +29,7 @@ class JQueryTarget : public TargetDescriptor
 public:
     JQueryTarget(QObject* parent, const EventHandlerDescriptor* eventHandler, JQueryListener* jqueryListener);
 
-    QWebElement get(ArtemisWebPage* page) const;
+    QWebElement get(ArtemisWebPagePtr page) const;
 
 protected:
     QString getSignature(QWebElement element) const;

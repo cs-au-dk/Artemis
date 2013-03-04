@@ -42,7 +42,7 @@ QSet<QPair<QSharedPointer<const FormField>, const FormFieldValue*> > FormInput::
     return mInputs;
 }
 
-void FormInput::writeToPage(QWebPage* page) const
+void FormInput::writeToPage(ArtemisWebPagePtr page) const
 {
     foreach(input_t input, mInputs) {
 
