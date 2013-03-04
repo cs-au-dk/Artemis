@@ -175,6 +175,8 @@ class t3dModelTest(unittest.TestCase):
 class ajaxPollerTest(unittest.TestCase):
 	url = '%s/ajax-poller/ajax-poller.php' % WEBSERVER_URL;
 	uuid = 'ajaxPoller';
+	loc = 250;
+	margin = loc*0.1;
 
 	def test_events_configuration (self):
 		report = execute_artemis(self.uuid, self.url , 
