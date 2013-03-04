@@ -135,81 +135,92 @@ class LegacyBenchmarkTests(unittest.TestCase):
 	def test_htmlbox(self):
 		report = execute_artemis('legacybenchmark', '%s/legacy-benchmarks/htmledit/demo_full.html' % WEBSERVER_URL)
 
-"""
-class t3dModelTest(unittest.TestCase):
 
+class t3dModelTest(unittest.TestCase):
+	url = '%s/3dmodel/index.html' % WEBSERVER_URL;
+	uuid = '3dmodel';
+	loc = 393;
+	margin = loc*0.1;
 	def test_events_configuration (self):
-		report = execute_artemis('3dmodel', '%s/3dmodel/index.html' % WEBSERVER_URL, 
+		report = execute_artemis(self.uuid, self.url , 
 		         iterations=100, 
 			 strategy_form_input='random',
 			 strategy_priority='constant')
-		self.assertLessEqual(74,report.get("WebKit::coverage::covered-unique",0));
+		self.assertLessEqual(0.74*self.loc-self.margin,report.get("WebKit::coverage::covered-unique",0));
 
+		
 	def test_const_configuration (self):
-		report = execute_artemis('3dmodel', '%s/3dmodel/index.html' % WEBSERVER_URL, 
+		report = execute_artemis(self.uuid, self.url , 
 		         iterations=100, 
 			 strategy_form_input='javascript-constants',
 			 strategy_priority='constant')
-		self.assertLessEqual(74,report.get("WebKit::coverage::covered-unique",0));
+		self.assertLessEqual(0.74*self.loc-self.margin,report.get("WebKit::coverage::covered-unique",0));
 
 		
 	def test_cov_configuration (self):
-		report = execute_artemis('3dmodel', '%s/3dmodel/index.html' % WEBSERVER_URL, 
+		report = execute_artemis(self.uuid, self.url , 
 		         iterations=100, 
 			 strategy_form_input='javascript-constants',
 			 strategy_priority='coverage')
-		self.assertLessEqual(74,report.get("WebKit::coverage::covered-unique",0));
+		self.assertLessEqual(0.74*self.loc-self.margin,report.get("WebKit::coverage::covered-unique",0));
+
 
 	def test_all_configuration (self):
-		report = execute_artemis('3dmodel', '%s/3dmodel/index.html' % WEBSERVER_URL, 
+		report = execute_artemis(self.uuid, self.url , 
 		         iterations=100, 
 			 strategy_form_input='javascript-constants',
 			 strategy_priority='all')
-		self.assertLessEqual(74,report.get("WebKit::coverage::covered-unique",0));
+		self.assertLessEqual(0.74*self.loc-self.margin,report.get("WebKit::coverage::covered-unique",0));
 
 class ajaxPollerTest(unittest.TestCase):
+	url = '%s/ajax-poller/ajax-poller.php' % WEBSERVER_URL;
+	uuid = 'ajaxPoller';
 
 	def test_events_configuration (self):
-		report = execute_artemis('ajaxPoller', '%s/ajax-poller/ajax-poller.php' % WEBSERVER_URL, 
+		report = execute_artemis(self.uuid, self.url , 
 		         iterations=100, 
 			 strategy_form_input='random',
 			 strategy_priority='constant')
-		self.assertLessEqual(78,report.get("WebKit::coverage::covered-unique",0));
+		loc = report.get("WebKit::coverage::number-of-loaded-lines",0);
+		self.assertNotEqual(0,loc);
+		self.assertLessEqual(0.78*self.loc-self.margin,report.get("WebKit::coverage::covered-unique",0));
 
 		
 	def test_const_configuration (self):
-		report = execute_artemis('ajaxPoller', '%s/ajax-poller/ajax-poller.php' % WEBSERVER_URL, 
+		report = execute_artemis(self.uuid, self.url , 
 		         iterations=100, 
 			 strategy_form_input='javascript-constants',
 			 strategy_priority='constant')
-		self.assertLessEqual(78,report.get("WebKit::coverage::covered-unique",0));
+		self.assertLessEqual(0.78*self.loc-self.margin,report.get("WebKit::coverage::covered-unique",0));
 
 		
 	def test_cov_configuration (self):
-		report = execute_artemis('ajaxPoller', '%s/ajax-poller/ajax-poller.php' % WEBSERVER_URL, 
+		report = execute_artemis(self.uuid, self.url , 
 		         iterations=100, 
 			 strategy_form_input='javascript-constants',
 			 strategy_priority='coverage')
-		self.assertLessEqual(78,report.get("WebKit::coverage::covered-unique",0));
+		self.assertLessEqual(0.78*self.loc-self.margin,report.get("WebKit::coverage::covered-unique",0));
 
 
 	def test_all_configuration (self):
-		report = execute_artemis('ajaxPoller', '%s/ajax-poller/ajax-poller.php' % WEBSERVER_URL, 
+		report = execute_artemis(self.uuid, self.url , 
 		         iterations=100, 
 			 strategy_form_input='javascript-constants',
 			 strategy_priority='all')
-		self.assertLessEqual(78,report.get("WebKit::coverage::covered-unique",0));
+		self.assertLessEqual(0.78*self.loc-self.margin,report.get("WebKit::coverage::covered-unique",0));
 
 
 class ajaxTabsTest(unittest.TestCase):
 	url = '%s/ajaxtabs/demo.htm' % WEBSERVER_URL;
 	uuid = 'ajaxTabs';
+	loc = 156;
+	margin = loc*0.1;
 	def test_events_configuration (self):
 		report = execute_artemis(self.uuid, self.url , 
 		         iterations=100, 
 			 strategy_form_input='random',
 			 strategy_priority='constant')
-		self.assertLessEqual(88,report.get("WebKit::coverage::covered-unique",0));
+		self.assertLessEqual(0.88*self.loc-self.margin,report.get("WebKit::coverage::covered-unique",0));
 
 		
 	def test_const_configuration (self):
@@ -217,7 +228,7 @@ class ajaxTabsTest(unittest.TestCase):
 		         iterations=100, 
 			 strategy_form_input='javascript-constants',
 			 strategy_priority='constant')
-		self.assertLessEqual(88,report.get("WebKit::coverage::covered-unique",0));
+		self.assertLessEqual(0.88*self.loc-self.margin,report.get("WebKit::coverage::covered-unique",0));
 
 		
 	def test_cov_configuration (self):
@@ -225,7 +236,7 @@ class ajaxTabsTest(unittest.TestCase):
 		         iterations=100, 
 			 strategy_form_input='javascript-constants',
 			 strategy_priority='coverage')
-		self.assertLessEqual(89,report.get("WebKit::coverage::covered-unique",0));
+		self.assertLessEqual(0.89*self.loc-self.margin,report.get("WebKit::coverage::covered-unique",0));
 
 
 	def test_all_configuration (self):
@@ -233,17 +244,19 @@ class ajaxTabsTest(unittest.TestCase):
 		         iterations=100, 
 			 strategy_form_input='javascript-constants',
 			 strategy_priority='all')
-		self.assertLessEqual(89,report.get("WebKit::coverage::covered-unique",0));
+		self.assertLessEqual(0.89*self.loc-self.margin,report.get("WebKit::coverage::covered-unique",0));
 
-class ajaxTabsTest(unittest.TestCase):
+class BallPoolTest(unittest.TestCase):
 	url = '%s/ball_pool/index.html' % WEBSERVER_URL;
 	uuid = 'ballpool';
+	loc = 256;
+	margin = loc*0.1;
 	def test_events_configuration (self):
 		report = execute_artemis(self.uuid, self.url , 
 		         iterations=100, 
 			 strategy_form_input='random',
 			 strategy_priority='constant')
-		self.assertLessEqual(89,report.get("WebKit::coverage::covered-unique",0));
+		self.assertLessEqual(0.89*self.loc-self.margin,report.get("WebKit::coverage::covered-unique",0));
 
 		
 	def test_const_configuration (self):
@@ -251,7 +264,7 @@ class ajaxTabsTest(unittest.TestCase):
 		         iterations=100, 
 			 strategy_form_input='javascript-constants',
 			 strategy_priority='constant')
-		self.assertLessEqual(89,report.get("WebKit::coverage::covered-unique",0));
+		self.assertLessEqual(0.89*self.loc-self.margin,report.get("WebKit::coverage::covered-unique",0));
 
 		
 	def test_cov_configuration (self):
@@ -259,7 +272,7 @@ class ajaxTabsTest(unittest.TestCase):
 		         iterations=100, 
 			 strategy_form_input='javascript-constants',
 			 strategy_priority='coverage')
-		self.assertLessEqual(90,report.get("WebKit::coverage::covered-unique",0));
+		self.assertLessEqual(0.90*self.loc-self.margin,report.get("WebKit::coverage::covered-unique",0));
 
 
 	def test_all_configuration (self):
@@ -267,17 +280,19 @@ class ajaxTabsTest(unittest.TestCase):
 		         iterations=100, 
 			 strategy_form_input='javascript-constants',
 			 strategy_priority='all')
-		self.assertLessEqual(90,report.get("WebKit::coverage::covered-unique",0));
-"""
+		self.assertLessEqual(0.90*self.loc-self.margin,report.get("WebKit::coverage::covered-unique",0));
+
 class dragableBoxesTest (unittest.TestCase):
 	url = '%s/dragable-boxes/dragable-boxes.html' % WEBSERVER_URL;
 	uuid = 'dragableBoxes';
+	loc = 697;
+	margin = loc*0.1;
 	def test_events_configuration (self):
 		report = execute_artemis(self.uuid, self.url , 
 		         iterations=100, 
 			 strategy_form_input='random',
 			 strategy_priority='constant')
-		self.assertLessEqual(61,report.get("WebKit::coverage::covered-unique",0));
+		self.assertLessEqual(0.61*self.loc-self.margin,report.get("WebKit::coverage::covered-unique",0));
 
 		
 	def test_const_configuration (self):
@@ -285,7 +300,7 @@ class dragableBoxesTest (unittest.TestCase):
 		         iterations=100, 
 			 strategy_form_input='javascript-constants',
 			 strategy_priority='constant')
-		self.assertLessEqual(61,report.get("WebKit::coverage::covered-unique",0));
+		self.assertLessEqual(0.61*self.loc-self.margin,report.get("WebKit::coverage::covered-unique",0));
 
 		
 	def test_cov_configuration (self):
@@ -293,7 +308,7 @@ class dragableBoxesTest (unittest.TestCase):
 		         iterations=100, 
 			 strategy_form_input='javascript-constants',
 			 strategy_priority='coverage')
-		self.assertLessEqual(62,report.get("WebKit::coverage::covered-unique",0));
+		self.assertLessEqual(0.62*self.loc-self.margin,report.get("WebKit::coverage::covered-unique",0));
 
 
 	def test_all_configuration (self):
@@ -301,7 +316,44 @@ class dragableBoxesTest (unittest.TestCase):
 		         iterations=100, 
 			 strategy_form_input='javascript-constants',
 			 strategy_priority='all')
-		self.assertLessEqual(62,report.get("WebKit::coverage::covered-unique",0));
+		self.assertLessEqual(0.62*self.loc-self.margin,report.get("WebKit::coverage::covered-unique",0));
+
+
+class dynamicArticlesTest (unittest.TestCase):
+	url = '%s/dynamicArticles/index.html' % WEBSERVER_URL;
+	uuid = 'dynamicArticles';
+	loc = 156;
+	margin = 156*0.1;
+	def test_events_configuration (self):
+		report = execute_artemis(self.uuid, self.url , 
+		         iterations=100, 
+			 strategy_form_input='random',
+			 strategy_priority='constant')
+		self.assertLessEqual(0.82*self.loc-self.margin,report.get("WebKit::coverage::covered-unique",0));
+
+		
+	def test_const_configuration (self):
+		report = execute_artemis(self.uuid, self.url , 
+		         iterations=100, 
+			 strategy_form_input='javascript-constants',
+			 strategy_priority='constant')
+		self.assertLessEqual(0.82*self.loc-self.margin,report.get("WebKit::coverage::covered-unique",0));
+
+		
+	def test_cov_configuration (self):
+		report = execute_artemis(self.uuid, self.url , 
+		         iterations=100, 
+			 strategy_form_input='javascript-constants',
+			 strategy_priority='coverage')
+		self.assertLessEqual(0.75*self.loc-self.margin,report.get("WebKit::coverage::covered-unique",0));
+
+
+	def test_all_configuration (self):
+		report = execute_artemis(self.uuid, self.url , 
+		         iterations=100, 
+			 strategy_form_input='javascript-constants',
+			 strategy_priority='all')
+		self.assertLessEqual(0.82*self.loc-self.margin,report.get("WebKit::coverage::covered-unique",0));
 
 
 if __name__ == '__main__':
