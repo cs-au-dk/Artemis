@@ -33,7 +33,7 @@ class BaseInput
 public:
     virtual ~BaseInput() {}
 
-    virtual void apply(ArtemisWebPage* page, QWebExecutionListener* webkitListener) const = 0;
+    virtual void apply(ArtemisWebPagePtr page, QWebExecutionListener* webkitListener) const = 0;
     virtual QSharedPointer<const BaseInput> getPermutation(const QSharedPointer<const FormInputGenerator>& formInputGenerator,
                                                            const QSharedPointer<const EventParameterGenerator>& eventParameterGenerator,
                                                            TargetGenerator* targetGenerator,

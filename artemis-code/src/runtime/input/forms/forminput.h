@@ -35,7 +35,7 @@ public:
 
     QSet<QSharedPointer<const FormField> > getFields() const;
     QSet<QPair<QSharedPointer<const FormField>, const FormFieldValue*> > getInputs() const;
-    void writeToPage(QWebPage*) const;
+    void writeToPage(ArtemisWebPagePtr) const;
 
     QDebug friend operator<<(QDebug dbg, FormInput* f);
 

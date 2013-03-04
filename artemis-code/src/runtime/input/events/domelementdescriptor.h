@@ -20,6 +20,8 @@
 #include <QtWebKit>
 #include <QDebug>
 
+#include "runtime/browser/artemiswebpage.h"
+
 // TODO convert to new memory model
 
 namespace artemis
@@ -33,7 +35,7 @@ public:
     DOMElementDescriptor(QObject* parent, QWebElement* elm);
     DOMElementDescriptor(QObject* parent, const DOMElementDescriptor* other);
 
-    QWebElement getElement(QWebPage* page) const;
+    QWebElement getElement(ArtemisWebPagePtr page) const;
     QString getTagName();
     QString getId();
     QString getClass();
@@ -65,7 +67,7 @@ private:
     void setFramePath(QWebElement* elm);
     void setElementPath(QWebElement* elm);
 
-    QWebFrame* getFrame(QWebPage* page) const;
+    QWebFrame* getFrame(ArtemisWebPagePtr page) const;
     QWebElement getElementFrame(QWebFrame* frame) const;
     QWebElement nthChild(QWebElement elm, int n) const;
 

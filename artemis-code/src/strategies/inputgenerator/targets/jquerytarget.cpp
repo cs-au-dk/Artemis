@@ -55,7 +55,7 @@ QString JQueryTarget::getSignature(QWebElement element) const
     return result;
 }
 
-QWebElement JQueryTarget::get(ArtemisWebPage* page) const
+QWebElement JQueryTarget::get(ArtemisWebPagePtr page) const
 {
     QWebElement element = mEventHandler->domElement()->getElement(page);
 

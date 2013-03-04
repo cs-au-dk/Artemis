@@ -29,7 +29,7 @@ class LegacyTarget : public TargetDescriptor
 {
 public:
     explicit LegacyTarget(QObject* parent, const EventHandlerDescriptor* eventHandler);
-    QWebElement get(ArtemisWebPage* page) const;
+    QWebElement get(ArtemisWebPagePtr page) const;
 
 };
 

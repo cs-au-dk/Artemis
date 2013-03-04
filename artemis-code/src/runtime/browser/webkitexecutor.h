@@ -56,7 +56,7 @@ public:
     QWebExecutionListener* webkitListener; // TODO should not be public
 
 private:
-    ArtemisWebPage* mPage;
+    ArtemisWebPagePtr mPage;
     ExecutionResultBuilder* mResultBuilder;
     ExecutableConfigurationConstPtr currentConf;
     AjaxRequestListener* mAjaxListener;

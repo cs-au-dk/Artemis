@@ -50,10 +50,10 @@ WebKitExecutor::WebKitExecutor(QObject* parent,
     mAjaxListener = ajaxListener;
     mAjaxListener->setParent(this);
 
-    mPage = new ArtemisWebPage(this);
+    mPage = ArtemisWebPagePtr(new ArtemisWebPage());
     mPage->setNetworkAccessManager(mAjaxListener);
 
-    QObject::connect(mPage, SIGNAL(loadFinished(bool)),
+    QObject::connect(mPage.data(), SIGNAL(loadFinished(bool)),
                      this, SLOT(slLoadFinished(bool)));
 
     mResultBuilder = new ExecutionResultBuilder(this, mPage);
@@ -113,7 +113,6 @@ WebKitExecutor::~WebKitExecutor()
 }
 
 void WebKitExecutor::detach() {
-
     // ignore events emitted from webkit on deallocation
     webkitListener->disconnect(mResultBuilder);
 

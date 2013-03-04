@@ -23,7 +23,7 @@ LegacyTarget::LegacyTarget(QObject* parent, const EventHandlerDescriptor* eventH
 {
 }
 
-QWebElement LegacyTarget::get(ArtemisWebPage* page) const
+QWebElement LegacyTarget::get(ArtemisWebPagePtr page) const
 {
     return mEventHandler->domElement()->getElement(page);
 }

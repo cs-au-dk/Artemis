@@ -20,7 +20,7 @@
 namespace artemis
 {
 
-ExecutionResultBuilder::ExecutionResultBuilder(QObject* parent, QWebPage* page) : QObject(parent)
+ExecutionResultBuilder::ExecutionResultBuilder(QObject* parent, ArtemisWebPagePtr page) : QObject(parent)
 {
     mPage = page;
     reset();
