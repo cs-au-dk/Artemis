@@ -1,4 +1,4 @@
-*.[oa]
+source.count(QRegExp("\n"))*.[oa]
 *.pyc
 *.so
 
@@ -18,6 +18,8 @@ artemis-code/Makefile
 artemis-code/build/
 artemis-code/dist/
 artemis-code/js-code-dump
+
+artemis-code/tests/system/fixtures/dragable-boxes/cache/*
 
 WebKit/config.log
 
