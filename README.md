@@ -47,3 +47,8 @@ Usage
   artemis <url-to-be-tested>
 
 Use the help command `artemis --help` for additional options.
+
+Modifying the Software
+----------------------
+
+Developer documentation is placed in the docs folder. To compile the documentation you need to install sphinx (http://sphinx-doc.org/) and run the command ``make html`` or ``make latex`` in the docs folder.
