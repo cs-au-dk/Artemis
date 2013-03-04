@@ -35,7 +35,7 @@ enum FormInputGenerationStrategies {
 };
 
 enum PrioritizerStrategies {
-    CONSTANT, RANDOM, COVERAGE, READWRITE
+    CONSTANT, RANDOM, COVERAGE, READWRITE, ALL_STRATEGIES
 };
 
 enum CoverageReport {

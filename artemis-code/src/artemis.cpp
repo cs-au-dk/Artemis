@@ -81,6 +81,7 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
     int option_index = 0;
     char c;
     artemis::Log::addLogLevel(artemis::INFO);
+    artemis::Log::addLogLevel(artemis::FATAL);
 
     while ((c = getopt_long(argc, argv, "hsrp:f:t:c:i:v:", long_options, &option_index)) != -1) {
 
@@ -168,6 +169,8 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
                 options.prioritizerStrategy = artemis::COVERAGE;
             } else if (string(optarg).compare("readwrite") == 0) {
                 options.prioritizerStrategy = artemis::READWRITE;
+            } else if (string(optarg).compare("all") == 0){
+                options.prioritizerStrategy = artemis::ALL_STRATEGIES;
             } else {
                 cerr << "ERROR: Invalid choice of prioritizer strategy " << optarg << endl;
                 exit(1);
@@ -176,6 +179,7 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             break;
         }
          case 'v': {
+            artemis::Log::addLogLevel(artemis::OFF);
          if(QString(optarg).indexOf("debug",0,Qt::CaseInsensitive)>=0){
                 artemis::Log::addLogLevel(artemis::DEBUG);
             }

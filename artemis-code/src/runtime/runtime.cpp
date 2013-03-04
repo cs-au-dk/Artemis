@@ -35,6 +35,7 @@
 #include "strategies/prioritizer/randomprioritizer.h"
 #include "strategies/prioritizer/coverageprioritizer.h"
 #include "strategies/prioritizer/readwriteprioritizer.h"
+#include "strategies/prioritizer/collectedprioritizer.h"
 
 #include "runtime.h"
 
@@ -113,6 +114,13 @@ Runtime::Runtime(QObject* parent, const Options& options, QUrl url) : QObject(pa
         break;
     case READWRITE:
         mPrioritizerStrategy = PrioritizerStrategyPtr(new ReadWritePrioritizer());
+        break;
+    case  ALL_STRATEGIES:{
+        CollectedPrioritizer* strategy = new CollectedPrioritizer();
+        strategy->addPrioritizer(new ConstantPrioritizer());
+        strategy->addPrioritizer(new CoveragePrioritizer());
+        strategy->addPrioritizer(new ReadWritePrioritizer());
+        mPrioritizerStrategy = PrioritizerStrategyPtr(strategy);}
         break;
     default:
         assert(false);
