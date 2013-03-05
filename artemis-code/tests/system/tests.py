@@ -47,6 +47,7 @@ class PrioritizationStrategies(unittest.TestCase):
 		report = execute_artemis('strategy-priority-coverage', 
 			'%s/strategies/priority/coverage.html' % WEBSERVER_URL,
 			iterations=5,
+			input_strategy_same_length=0,
 			strategy_priority='constant')
 		
 		self.assertEqual(8, report.get('WebKit::coverage::covered-unique', 0));

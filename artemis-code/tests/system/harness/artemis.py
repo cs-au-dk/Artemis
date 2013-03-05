@@ -15,7 +15,8 @@ RE_STATS_LINE = re.compile(r'^(.*):(.*)$')
 def execute_artemis(execution_uuid, url, iterations=1, 
     strategy_form_input=None,
     strategy_priority=None,
-    coverage=None):
+    coverage=None,
+    **kwargs):
 
     output_dir = os.path.join(OUTPUT_DIR, execution_uuid)
 
@@ -39,6 +40,10 @@ def execute_artemis(execution_uuid, url, iterations=1,
     if coverage is not None:
         args.append('--coverage-report')
         args.append(coverage)
+
+    for key in kwargs:
+        args.append('--%s' % key.replace('_', '-'))
+        args.append(str(kwargs[key]))
 
     cmd = [ARTEMIS_EXEC] + args + [url] 
 
