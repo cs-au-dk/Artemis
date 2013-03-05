@@ -29,7 +29,7 @@ class ExecutableConfiguration
 {
 
 public:
-    ExecutableConfiguration(QSharedPointer<const InputSequence> sequence, const QUrl url);
+    ExecutableConfiguration(InputSequenceConstPtr sequence, const QUrl url);
 
     bool isInitial() const;
     const QUrl getUrl() const;
@@ -39,7 +39,7 @@ public:
 
 private:
     const QUrl mUrl;
-    QSharedPointer<const InputSequence> mSequence;
+    InputSequenceConstPtr mSequence;
 };
 
 typedef QSharedPointer<ExecutableConfiguration> ExecutableConfigurationPtr;

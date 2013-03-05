@@ -34,7 +34,7 @@ QSharedPointer<const InputSequence> InputSequence::replaceLast(QSharedPointer<co
     sequence.removeLast();
     sequence.append(newLast);
 
-    return QSharedPointer<InputSequence>(new InputSequence(sequence));
+    return QSharedPointer<const InputSequence>(new InputSequence(sequence));
 }
 
 QSharedPointer<const InputSequence> InputSequence::extend(QSharedPointer<const BaseInput> newLast) const
