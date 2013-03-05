@@ -125,9 +125,10 @@ class AjaxTests(unittest.TestCase):
 		Detect ajax call and call it in iteration 2
 		"""
 		report = execute_artemis('ajax-basic-sync-call', '%s/ajax/index.html' % WEBSERVER_URL,
-								iterations=2)
+								 input_strategy_same_length=0,
+								 iterations=2)
 		
-		self.assertEqual(1, report.get('InputGenerator::added-configurations', 0));
+		self.assertEqual(2, report.get('InputGenerator::added-configurations', 0));
 		self.assertEqual(1, report.get("ajax::fired", 0));
 		self.assertEqual(1, report.get('WebKit::alerts', 0));
 
