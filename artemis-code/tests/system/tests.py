@@ -27,7 +27,7 @@ class TimerTests(unittest.TestCase):
 			iterations=2)
 
 		self.assertEqual(2, report.get('timers::registered', 0))
-		self.assertEqual(1, report.get('InputGenerator::added-configurations', 0))
+		self.assertEqual(2, report.get('InputGenerator::added-configurations', 0))
 		self.assertEqual(1, report.get('timers::fired', 0))
 
 class InputGeneratorStrategies(unittest.TestCase):
