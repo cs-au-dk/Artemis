@@ -41,7 +41,7 @@ QSharedPointer<const BaseInput> TimerInput::getPermutation(const QSharedPointer<
                                                            TargetGenerator*,
                                                            QSharedPointer<const ExecutionResult>) const
 {
-    return QSharedPointer<const BaseInput>(this);
+    return QSharedPointer<const BaseInput>(new TimerInput(this->mTimer));
 }
 
 int TimerInput::hashCode() const
