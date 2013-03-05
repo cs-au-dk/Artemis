@@ -66,7 +66,7 @@ private:
     QMap<int, QSet<int>* > coverage;
 
     // (codeBlockTemporalID -> codeBlockID) needed as the codeBlockTemporalID changes for each new page-execution
-    QMap<intptr_t, codeblockid_t> mCodeBlockIdMap;
+    QMap<intptr_t, QList<codeblockid_t>*> mCodeBlockIdMap;
 
     // (inputHashCode -> set<codeBlockID>
     QMap<int, QSet<codeblockid_t>* > mInputCodeBlockMap;
