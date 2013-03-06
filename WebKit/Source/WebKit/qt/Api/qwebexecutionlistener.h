@@ -55,7 +55,9 @@ public:
 
 private:
     QMap<int, WebCore::ScriptExecutionContext*> m_timers;
+
     QMap<int, WebCore::LazyXMLHttpRequest*> m_ajax_callbacks;
+    int m_ajax_callback_next_id;
 
 signals:
     void addedEventListener(QWebElement*, QString);

@@ -707,7 +707,13 @@ void XMLHttpRequest::createRequest(ExceptionCode& ec)
     m_exceptionCode = 0;
     m_error = false;
 
+#ifdef ARTEMIS
+    // DISABLE ASYNC AJAX, AND FORCE PURE SYNC
+    // avoids the current (broken) ajax (input event) support in Artemis
+    if (false) {
+#else
     if (m_async) {
+#endif
 
         if (m_upload)
             request.setReportUploadProgress(true);

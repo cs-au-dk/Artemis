@@ -24,7 +24,11 @@
 
 using namespace std;
 
-QWebExecutionListener::QWebExecutionListener(QObject *parent) : QObject(parent), inst::ExecutionListener(), jscinst::JSCExecutionListener()
+QWebExecutionListener::QWebExecutionListener(QObject *parent) :
+    QObject(parent),
+    inst::ExecutionListener(),
+    jscinst::JSCExecutionListener(),
+    m_ajax_callback_next_id(0)
 {
 }
 
@@ -63,22 +67,34 @@ void QWebExecutionListener::eventCleared(WebCore::EventTarget * target, const ch
     return;
 }
 
+// AJAX SUPPORT
+
 void QWebExecutionListener::ajaxCallbackEventAdded(WebCore::LazyXMLHttpRequest* xmlHttpRequest) {
-    int id = m_ajax_callbacks.size();
-    m_ajax_callbacks.insert(id, xmlHttpRequest);
-    emit addedAjaxCallbackHandler(id);
+    int callbackId = m_ajax_callback_next_id;
+    m_ajax_callback_next_id++;
+
+    m_ajax_callbacks.insert(callbackId, xmlHttpRequest);
+    emit addedAjaxCallbackHandler(callbackId);
 }
 
 void QWebExecutionListener::ajaxCallbackFire(int callbackId) {
-	WebCore::LazyXMLHttpRequest* xmlHttpRequest = m_ajax_callbacks.value(callbackId);
-	xmlHttpRequest->fire();
-	delete xmlHttpRequest;
+    WebCore::LazyXMLHttpRequest* xmlHttpRequest = m_ajax_callbacks.value(callbackId);
 
-	m_ajax_callbacks.remove(callbackId);
+	xmlHttpRequest->fire();
+
+    m_ajax_callbacks.remove(callbackId);
+	delete xmlHttpRequest;
 }
 
 void QWebExecutionListener::clearAjaxCallbacks() {
-	m_ajax_callbacks.clear();
+    m_ajax_callbacks.clear();
+    m_ajax_callback_next_id = 0;
+}
+
+void QWebExecutionListener::webkit_ajax_send(const char * url, const char * data) {
+    QUrl url_u = QUrl(QString(tr(url)));
+    QString data_q = data == 0 ? QString(tr("")) : QString(tr(data));
+    emit ajax_request(url_u, data_q);
 }
 
 // TIMERS START
@@ -222,13 +238,6 @@ void QWebExecutionListener::script_changed_url(std::string url) {
     QString urlString = tr(url.c_str());
     QUrl qurl = QUrl(urlString);
     emit script_url_load(qurl);
-}
-
-
-void QWebExecutionListener::webkit_ajax_send(const char * url, const char * data) {
-    QUrl url_u = QUrl(QString(tr(url)));
-    QString data_q = data == 0 ? QString(tr("")) : QString(tr(data));
-    emit ajax_request(url_u, data_q);
 }
 
 void QWebExecutionListener::javascript_constant_encountered(std::string constant) {
