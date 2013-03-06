@@ -95,7 +95,7 @@ namespace WebCore {
             ScrollbarMode = ScrollbarAuto, bool horizontalLock = false,
             ScrollbarMode = ScrollbarAuto, bool verticalLock = false);
 
-        ~Frame();
+        virtual ~Frame();
 
         void addDestructionObserver(FrameDestructionObserver*);
         void removeDestructionObserver(FrameDestructionObserver*);

@@ -31,6 +31,7 @@ class BitmapTexture;
 class TextureMapperPlatformLayer {
 public:
     virtual void paintToTextureMapper(TextureMapper*, const FloatRect&, const TransformationMatrix& modelViewMatrix = TransformationMatrix(), float opacity = 1.0, BitmapTexture* mask = 0) const = 0;
+    virtual ~TextureMapperPlatformLayer() {}
 };
 
 };

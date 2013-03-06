@@ -20,6 +20,7 @@ class UnfoldSelect : public TIntermTraverser
 {
   public:
     UnfoldSelect(TParseContext &context, OutputHLSL *outputHLSL);
+    virtual ~UnfoldSelect() {}
 
     void traverse(TIntermNode *node);
     bool visitSelection(Visit visit, TIntermSelection *node);
