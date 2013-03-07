@@ -28,9 +28,9 @@ public:
 
     virtual void javascript_code_loaded(JSC::SourceProvider* sp, JSC::ExecState*);
     virtual void exceptional_condition(std::string cause, intptr_t sourceID, int lineNumber);
-    virtual void script_changed_url( std::string url);
+    virtual void url_changed(JSC::JSValue, JSC::ExecState* e);
     virtual void webkit_ajax_send(const char * url, const char * data);
-    virtual void calledFunction(const JSC::DebuggerCallFrame&);
+    virtual void javascript_called_function(const JSC::DebuggerCallFrame&);
 
     virtual void javascript_executed_statement(const JSC::DebuggerCallFrame&, intptr_t sourceID, int lineNumber); // from the debugger
     virtual void javascript_bytecode_executed(JSC::CodeBlock*, JSC::Instruction* inst); // interpreter instrumentation
@@ -38,7 +38,7 @@ public:
     virtual void javascript_property_written(std::string propertyName, JSC::ExecState*);
 
     virtual void javascript_constant_encountered(std::string constant);
-    virtual void javascript_eval_call(const char * eval_string);
+    virtual void webkit_eval_call(const char * eval_string);
 
     virtual void ajaxCallbackEventAdded(WebCore::LazyXMLHttpRequest*);
 
