@@ -146,7 +146,6 @@ class AjaxTabsTest(unittest.TestCase):
         assert_coverage_is_circa_expected(self, report, 0.89, self.loc)
 """
 
-"""
 class BallPoolTest(unittest.TestCase):
     url = '%s/legacy-benchmarks/ball_pool/index.html' % WEBSERVER_URL
     uuid = 'ballpool'
@@ -169,7 +168,6 @@ class BallPoolTest(unittest.TestCase):
     def test_all_configuration(self):
         report = all_configuration_report(self.uuid, self.url, self.filesToExclude)
         assert_coverage_is_circa_expected(self, report, 0.90, self.loc)
-"""
 
 class DragableBoxesTest(unittest.TestCase):
     url = '%s/legacy-benchmarks/dragable-boxes/dragable-boxes.html' % WEBSERVER_URL
@@ -239,7 +237,6 @@ class FractalViewerTest(unittest.TestCase):
         report = all_configuration_report(self.uuid, self.url, self.filesToExclude)
         assert_coverage_is_circa_expected(self, report, 0.75, self.loc)
 
-"""
 class HomeostasisTest(unittest.TestCase):
     url = '%s/legacy-benchmarks/homeostasis/index.html' % WEBSERVER_URL
     uuid = 'homeostasis'
@@ -261,7 +258,6 @@ class HomeostasisTest(unittest.TestCase):
     def test_all_configuration(self):
         report = all_configuration_report(self.uuid, self.url, self.filesToExclude)
         assert_coverage_is_circa_expected(self, report, 0.63, self.loc)
-"""
 
 class PacmanTest(unittest.TestCase):
     url = '%s/legacy-benchmarks/pacman/index.html' % WEBSERVER_URL
