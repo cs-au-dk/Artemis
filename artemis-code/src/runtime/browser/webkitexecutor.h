@@ -68,6 +68,7 @@ private:
 
 signals:
     void sigExecutedSequence(ExecutableConfigurationConstPtr conf, QSharedPointer<ExecutionResult> res);
+    void sigAbortedExecution(QString reason);
 
 public slots:
     void slLoadFinished(bool ok);

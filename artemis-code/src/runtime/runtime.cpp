@@ -130,6 +130,8 @@ Runtime::Runtime(QObject* parent, const Options& options, QUrl url) : QObject(pa
 
     QObject::connect(mWebkitExecutor, SIGNAL(sigExecutedSequence(ExecutableConfigurationConstPtr, QSharedPointer<ExecutionResult>)),
                      this, SLOT(postConcreteExecution(ExecutableConfigurationConstPtr, QSharedPointer<ExecutionResult>)));
+    QObject::connect(mWebkitExecutor, SIGNAL(sigAbortedExecution(QString)),
+                     this, SLOT(slAbortedExecution(QString)));
 
 
     /** Visited states **/
@@ -232,6 +234,12 @@ void Runtime::finishAnalysis()
     Log::info("\n=== Statistics END ===\n\n");
     Log::info("Artemis terminated on: "+ QDateTime::currentDateTime().toString().toStdString());
 
+    emit sigTestingDone();
+}
+
+void Runtime::slAbortedExecution(QString reason)
+{
+    cerr << reason.toStdString() << std::endl;
     emit sigTestingDone();
 }
 

@@ -65,6 +65,7 @@ private:
 
 private slots:
     void postConcreteExecution(ExecutableConfigurationConstPtr configuration, QSharedPointer<ExecutionResult> result);
+    void slAbortedExecution(QString reason);
 
 signals:
     void sigTestingDone();

@@ -139,8 +139,8 @@ void WebKitExecutor::slLoadFinished(bool ok)
     mResultBuilder->notifyPageLoaded();
 
     if (!ok) {
-        qWarning() << "WEBKIT: Website load failed!";
-        exit(1);
+        emit sigAbortedExecution(QString("Error: The requested URL ") + currentConf->getUrl().toString() + QString(" could not be loaded"));
+        return;
     }
 
     // Populate forms (preset)
