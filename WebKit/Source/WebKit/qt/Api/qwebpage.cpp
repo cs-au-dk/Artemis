@@ -2168,6 +2168,9 @@ bool QWebPage::javaScriptPrompt(QWebFrame *frame, const QString& msg, const QStr
 */
 bool QWebPage::shouldInterruptJavaScript()
 {
+#ifdef ARTEMIS
+    return false;
+#endif
 #ifdef QT_NO_MESSAGEBOX
     return false;
 #else
