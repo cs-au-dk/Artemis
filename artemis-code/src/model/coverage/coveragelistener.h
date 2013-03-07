@@ -32,12 +32,14 @@
 namespace artemis
 {
 
+const QUrl DONT_MEASURE_COVERAGE("http://this-is-fake-dont-do-coverage.fake");
+
 class CoverageListener : public QObject
 {
     Q_OBJECT
 
 public:
-    explicit CoverageListener();
+    explicit CoverageListener(const QSet<QUrl>& ignoredUrls);
 
     QList<sourceid_t> getSourceIDs();
     SourceInfoPtr getSourceInfo(sourceid_t sourceID);
@@ -52,6 +54,8 @@ public:
     QString toString() const;
 
 private:
+
+    QSet<QUrl> mIgnoredUrls;
 
     // (inputHashCode -> set<codeBlockID>
     QMap<int, QSet<codeblockid_t>* > mInputToCodeBlockMap;

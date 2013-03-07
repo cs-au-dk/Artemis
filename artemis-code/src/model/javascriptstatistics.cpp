@@ -15,7 +15,7 @@
  */
 #include <iostream>
 
-#include "artemisglobals.h"
+#include "model/coverage/coveragelistener.h"
 #include "statistics/statsstorage.h"
 
 #include "javascriptstatistics.h"

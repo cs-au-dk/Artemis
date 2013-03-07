@@ -26,10 +26,12 @@
 namespace artemis
 {
 
-CoverageListener::CoverageListener() :
+CoverageListener::CoverageListener(const QSet<QUrl>& ignoredUrls) :
     QObject(NULL),
+    mIgnoredUrls(ignoredUrls),
     mInputBeingExecuted(-1)
 {
+    mIgnoredUrls.insert(DONT_MEASURE_COVERAGE);
 }
 
 QList<sourceid_t> CoverageListener::getSourceIDs()
@@ -96,7 +98,7 @@ void CoverageListener::notifyStartingLoad()
 
 void CoverageListener::slJavascriptScriptParsed(QString sourceCode, QUrl sourceUrl, uint sourceStartLine)
 {   
-    if (sourceUrl == DONT_MEASURE_COVERAGE) {
+    if (mIgnoredUrls.contains(sourceUrl)) {
         return;
     }
 
@@ -113,7 +115,7 @@ void CoverageListener::slJavascriptScriptParsed(QString sourceCode, QUrl sourceU
 
 void CoverageListener::slJavascriptStatementExecuted(uint linenumber, QUrl sourceUrl, uint sourceStartLine)
 {
-    if (sourceUrl == DONT_MEASURE_COVERAGE) {
+    if (mIgnoredUrls.contains(sourceUrl)) {
         return;
     }
 
@@ -132,7 +134,7 @@ void CoverageListener::slJavascriptStatementExecuted(uint linenumber, QUrl sourc
 
 void CoverageListener::slJavascriptFunctionCalled(QString functionName, size_t bytecodeSize, uint sourceOffset, QUrl sourceUrl, uint sourceStartLine)
 {
-    if (sourceUrl == DONT_MEASURE_COVERAGE) {
+    if (mIgnoredUrls.contains(sourceUrl)) {
         return;
     }
 
@@ -149,7 +151,7 @@ void CoverageListener::slJavascriptFunctionCalled(QString functionName, size_t b
 
 void CoverageListener::slJavascriptBytecodeExecuted(uint bytecodeOffset, uint sourceOffset, QUrl sourceUrl, uint sourceStartLine)
 {
-    if (sourceUrl == DONT_MEASURE_COVERAGE) {
+    if (mIgnoredUrls.contains(sourceUrl)) {
         return;
     }
 
