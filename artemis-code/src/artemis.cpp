@@ -220,12 +220,22 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
     }
 
     if (optind >= argc) {
-        cerr << "ERROR: You must specify a URL" << endl;
+        cerr << "Error: You must specify a URL" << endl;
         exit(1);
     }
 
     QStringList rawurl = QString(argv[optind]).split("@");
     QUrl url = rawurl.last();
+
+    if (url.scheme().isEmpty()) {
+        // the http:// part is missing
+        url = QUrl("http://" + url.toString());
+    }
+
+    if (!url.isValid()) {
+        cerr << "Error: The URL " << url.toString().toStdString() << " is not valid" << endl;
+        exit(1);
+    }
 
     if (rawurl.size() > 1) {
         QStringList rawauth = rawurl.first().split(":");
