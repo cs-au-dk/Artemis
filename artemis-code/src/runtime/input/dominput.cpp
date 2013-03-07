@@ -47,8 +47,9 @@ void DomInput::apply(ArtemisWebPagePtr page, QWebExecutionListener* webkitListen
 
     if (handler.isNull() || target.isNull()) {
         qWarning() << "WARNING::Skipping event, event handler or target could not be found";
-    }
-    else {
+    } else if(mEvtParams->type() == TOUCH_EVENT){
+        qWarning() << "Skipping event. Touch events are not supported!";
+    } else {
         qDebug() << "Event Handler: " << handler.tagName() << " _ID: "
                  << handler.attribute(QString("id")) << " _Title: "
                  << handler.attribute(QString("title")) << "class: "
