@@ -38,14 +38,14 @@ void writeCoverageStdout(CoverageListenerPtr cov)
 
     foreach(int sourceID, cov->getSourceIDs()) {
 
-        const SourceInfo* sourceInfo = cov->getSourceInfo(sourceID);
+        const SourceInfoPtr sourceInfo = cov->getSourceInfo(sourceID);
 
         Log::info(QString("Coverage for source located at URL: " + sourceInfo->getURL() + "  line " + sourceInfo->getStartLine()).toStdString());
 
         QString src = sourceInfo->getSource();
         QTextStream read(&src);
 
-        QSet<int> lineCoverage = cov->getLineCoverage(sourceID);
+        QSet<uint> lineCoverage = sourceInfo->getLineCoverage();
         int lineNumber = sourceInfo->getStartLine();
 
         while (!read.atEnd()) {
@@ -72,7 +72,7 @@ void writeCoverageHtml(CoverageListenerPtr cov)
 
     foreach(int sourceID, cov->getSourceIDs()) {
 
-        QSet<int> lineCoverage = cov->getLineCoverage(sourceID);
+        QSet<uint> lineCoverage = cov->getSourceInfo(sourceID)->getLineCoverage();
 
         res += "<h2>" + Qt::escape(cov->getSourceInfo(sourceID)->getURL()) + "</h2>";
         res += "<pre><table>";

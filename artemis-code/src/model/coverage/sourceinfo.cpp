@@ -18,18 +18,11 @@
 namespace artemis
 {
 
-SourceInfo::SourceInfo(QObject* parent, const QString source, const QUrl url, const int startline) : QObject(parent)
+SourceInfo::SourceInfo(const QString source, const QUrl url, const int startline) :
+    mSource(source),
+    mUrl(url),
+    mStartLine(startline)
 {
-    this->mSource = source;
-    this->mUrl = url;
-    this->mStartLine = startline;
-}
-
-SourceInfo::SourceInfo(QObject* parent, const SourceInfo* other) : QObject(parent)
-{
-    this->mSource = other->mSource;
-    this->mUrl = other->mUrl;
-    this->mStartLine = other->mStartLine;
 }
 
 QString SourceInfo::getSource() const
@@ -47,6 +40,16 @@ QString SourceInfo::getURL() const
     return mUrl.toString();
 }
 
+void SourceInfo::setLineCovered(uint lineNumber)
+{
+    mCoverage.insert(lineNumber);
+}
+
+QSet<uint> SourceInfo::getLineCoverage() const
+{
+    return mCoverage;
+}
+
 QString SourceInfo::toString() const
 {
     return "[" + mUrl.toString() + ", " + QString::number(mStartLine) + ", " + mSource + "ENDOFJSOURCE]";
@@ -56,6 +59,11 @@ QDebug operator<<(QDebug dbg, const SourceInfo& e)
 {
     dbg.nospace() << e.mUrl << "[" << QString::number(e.mStartLine) << "]";
     return dbg.space();
+}
+
+sourceid_t SourceInfo::getId(const QUrl& sourceUrl, uint sourceStartLine)
+{
+    return qHash(sourceUrl) * 53 + sourceStartLine * 29;
 }
 
 }

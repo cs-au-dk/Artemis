@@ -32,7 +32,7 @@ public:
     virtual void webkit_ajax_send(const char * url, const char * data);
     virtual void javascript_called_function(const JSC::DebuggerCallFrame&);
 
-    virtual void javascript_executed_statement(const JSC::DebuggerCallFrame&, intptr_t sourceID, int lineNumber); // from the debugger
+    virtual void javascript_executed_statement(const JSC::DebuggerCallFrame&, uint lineNumber); // from the debugger
     virtual void javascript_bytecode_executed(JSC::CodeBlock*, JSC::Instruction* inst); // interpreter instrumentation
     virtual void javascript_property_read(std::string propertyName, JSC::ExecState*);
     virtual void javascript_property_written(std::string propertyName, JSC::ExecState*);
@@ -77,15 +77,14 @@ signals:
 
     void sigJavascriptConstantEncountered(QString constant);
 
-    void sigJavascriptFunctionCalled(QString functionName, size_t bytecodeSize, intptr_t codeBlockID, unsigned sourceOffset, intptr_t SourceID, QUrl url, int startline);
-
-    void sigJavascriptBytecodeExecuted(uint bytecodeOffset, intptr_t codeBlockID, unsigned sourceOffset, intptr_t SourceID, QUrl url, int startline);
-
     void sigJavascriptPropertyRead(QString propertyName, intptr_t codeBlockID, intptr_t SourceID, QUrl url, int startline);
     void sigJavascriptPropertyWritten(QString propertyName, intptr_t codeBlockID, intptr_t SourceID, QUrl url, int startline);
 
-    void loadedJavaScript(intptr_t sourceID, QString source, QUrl url, int startline);
-    void statementExecuted(intptr_t sourceID, int linenumber);
+    void loadedJavaScript(QString source, QUrl url, uint startline);
+    void statementExecuted(uint linenumber, QUrl url, uint startline);
+
+    void sigJavascriptFunctionCalled(QString functionName, size_t bytecodeSize, uint sourceOffset, QUrl url, uint startline);
+    void sigJavascriptBytecodeExecuted(uint bytecodeOffset, uint sourceOffset, QUrl url, uint startline);
 
 };
 

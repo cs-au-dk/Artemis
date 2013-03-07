@@ -39,9 +39,8 @@ class CoverageListener : public QObject
 public:
     explicit CoverageListener();
 
-    QList<int> getSourceIDs();
-    SourceInfo* getSourceInfo(int sourceID);
-    QSet<int> getLineCoverage(int sourceID);
+    QList<sourceid_t> getSourceIDs();
+    SourceInfoPtr getSourceInfo(sourceid_t sourceID);
 
     size_t getNumCoveredLines();
 
@@ -54,18 +53,12 @@ public:
 
 private:
 
-    // (sourceTemporalID -> sourceID) needed as the sourceTemporalID changes for each new page-execution
-    QMap<intptr_t, int> mSourceIdMap;
+    // (inputHashCode -> set<codeBlockID>
+    QMap<int, QSet<codeblockid_t>* > mInputToCodeBlockMap;
+    int mInputBeingExecuted;
 
     // (sourceID -> SourceInfo)
-    QMap<int, SourceInfo*> sources;
-
-    // (sourceID -> set<lines>)
-    QMap<int, QSet<int>* > coverage;
-
-    // (inputHashCode -> set<codeBlockID>
-    QMap<int, QSet<codeblockid_t>* > mInputCodeBlockMap;
-    int mInputBeingExecuted;
+    QMap<sourceid_t, SourceInfoPtr> mSources;
 
     // (codeBlockID -> CodeBlockInfo)
     QMap<codeblockid_t, QSharedPointer<CodeBlockInfo> > mCodeBlocks;
@@ -73,11 +66,10 @@ private:
 
 public slots:
 
-    void newCode(intptr_t sourceTemporalID, QString source, QUrl url, int startline);
-    void statementExecuted(intptr_t sourceTemporalID, int linenumber);
-
-    void slJavascriptFunctionCalled(QString functionName, size_t bytecodeSize, intptr_t codeBlockID, unsigned sourceOffset, intptr_t SourceID, QUrl url, int startline);
-    void slJavascriptBytecodeExecuted(uint bytecodeOffset, intptr_t codeBlockID, unsigned sourceOffset, intptr_t SourceID, QUrl url, int startline);
+    void slJavascriptScriptParsed(QString sourceCode, QUrl sourceUrl, uint sourceStartLine);
+    void slJavascriptFunctionCalled(QString functionName, size_t bytecodeSize, uint sourceOffset, QUrl sourceUrl, uint sourceStartLine);
+    void slJavascriptBytecodeExecuted(uint bytecodeOffset, uint sourceOffset, QUrl sourceUrl, uint sourceStartLine);
+    void slJavascriptStatementExecuted(uint linenumber, QUrl sourceUrl, uint sourceStartLine);
 
 };
 
