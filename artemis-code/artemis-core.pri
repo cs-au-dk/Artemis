@@ -71,7 +71,8 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/runtime/appmodel.h \
     src/model/javascriptstatistics.h \
     src/strategies/prioritizer/readwriteprioritizer.h \
-    src/strategies/prioritizer/collectedprioritizer.h
+    src/strategies/prioritizer/collectedprioritizer.h \
+    src/runtime/input/events/toucheventparameters.h
 
 SOURCES += src/runtime/input/ajaxinput.cpp \
     src/strategies/prioritizer/constantprioritizer.cpp \
@@ -124,6 +125,7 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/runtime/appmodel.cpp \
     src/model/javascriptstatistics.cpp \
     src/strategies/prioritizer/readwriteprioritizer.cpp \
-    src/strategies/prioritizer/collectedprioritizer.cpp
+    src/strategies/prioritizer/collectedprioritizer.cpp \
+    src/runtime/input/events/toucheventparameters.cpp
 
 QT += network

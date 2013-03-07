@@ -23,6 +23,7 @@
 #include "runtime/input/events/baseeventparameters.h"
 #include "runtime/input/events/keyboardeventparameters.h"
 #include "runtime/input/events/mouseeventparameters.h"
+#include "runtime/input/events/toucheventparameters.h"
 
 #include "staticeventparametergenerator.h"
 
@@ -71,7 +72,8 @@ EventParameters* StaticEventParameterGenerator::generateEventParameters(QObject*
                                            false,
                                            false);
         break;
-
+    case TOUCH_EVENT:
+        return new TouchEventParameters();
     default:
         qFatal("Unknown event type!");
         assert(false);
