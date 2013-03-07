@@ -17,6 +17,7 @@
 #define APPMODEL_H
 
 #include <QSharedPointer>
+#include <QUrl>
 
 #include "model/coverage/coveragelistener.h"
 #include "model/javascriptstatistics.h"
@@ -27,7 +28,7 @@ class AppModel
 {
 
 public:
-    AppModel();
+    AppModel(QSet<QUrl> coverageIgnoredUrls);
 
     CoverageListenerPtr getCoverageListener() const;
     JavascriptStatisticsPtr getJavascriptStatistics() const;

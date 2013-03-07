@@ -19,9 +19,9 @@
 
 namespace artemis {
 
-AppModel::AppModel()
+AppModel::AppModel(QSet<QUrl> coverageIgnoredUrls)
 {
-    mCoverageListener = CoverageListenerPtr(new CoverageListener());
+    mCoverageListener = CoverageListenerPtr(new CoverageListener(coverageIgnoredUrls));
     mJavascriptStatistics = JavascriptStatisticsPtr(new JavascriptStatistics());
 }
 

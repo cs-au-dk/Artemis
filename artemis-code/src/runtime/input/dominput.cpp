@@ -15,9 +15,9 @@
  */
 #include "assert.h"
 
-#include "artemisglobals.h"
+#include "model/coverage/coveragelistener.h"
 
-#include "runtime/input/dominput.h"
+#include "dominput.h"
 
 namespace artemis
 {

@@ -24,7 +24,6 @@ namespace artemis
 {
 
 const QWebElement NULL_WEB_ELEMENT;
-const QUrl DONT_MEASURE_COVERAGE("http://this-is-fake-dont-do-coverage.fake");
 
 inline QString quoteString(const QString s)
 {

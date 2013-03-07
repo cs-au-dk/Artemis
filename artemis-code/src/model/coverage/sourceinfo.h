@@ -16,33 +16,44 @@
 #ifndef SOURCEINFO_H
 #define SOURCEINFO_H
 
-#include <QObject>
+#include <inttypes.h>
+
 #include <QUrl>
 #include <QDebug>
+#include <QSharedPointer>
 
 namespace artemis
 {
 
-class SourceInfo : public QObject
+typedef uint sourceid_t;
+
+class SourceInfo
 {
-    Q_OBJECT
 
 public:
-    SourceInfo(QObject* parent, const QString source, const QUrl url, const int startline);
-    SourceInfo(QObject* parent, const SourceInfo* other);
+    SourceInfo(const QString source, const QUrl url, const int startline);
 
     QString getSource() const;
     QString getURL() const;
     int getStartLine() const;
 
+    void setLineCovered(uint lineNumber);
+    QSet<uint> getLineCoverage() const;
+
     QString toString() const;
     QDebug friend operator<<(QDebug dbg, const SourceInfo& e);
+
+    static sourceid_t getId(const QUrl& sourceUrl, uint sourceStartLine);
 
 private:
     QString mSource;
     QUrl mUrl;
     int mStartLine;
+    QSet<uint> mCoverage;
 };
+
+typedef QSharedPointer<SourceInfo> SourceInfoPtr;
+typedef QSharedPointer<const SourceInfo> SourceInfoConstPtr;
 
 }
 

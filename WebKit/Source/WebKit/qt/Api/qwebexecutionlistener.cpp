@@ -192,9 +192,7 @@ void QWebExecutionListener::javascript_called_function(const JSC::DebuggerCallFr
 
     emit sigJavascriptFunctionCalled(QString::fromStdString(functionName),
                                      codeBlock->numberOfInstructions(),
-                                     (intptr_t)codeBlock,
                                      codeBlock->sourceOffset(),
-                                     codeBlock->source()->asID(),
                                      QUrl(QString::fromStdString(codeBlock->source()->url().utf8().data())),
                                      codeBlock->source()->startPosition().m_line.zeroBasedInt() + 1);
 
@@ -269,14 +267,17 @@ void QWebExecutionListener::javascript_code_loaded(JSC::SourceProvider* sp, JSC:
 
     std::string source(sp->getRange(0, sp->length()).utf8().data());
     std::string url(sp->url().utf8().data());
-    intptr_t id = sp->asID();
     int startline = sp->startPosition().m_line.zeroBasedInt() + 1; // startPosition is placed right before the first line, thus (+1)
 
-    emit loadedJavaScript(id, QString(tr(source.c_str())), QUrl(QString(tr(url.c_str()))), startline);
+    emit loadedJavaScript(QString(tr(source.c_str())), QUrl(QString(tr(url.c_str()))), startline);
 }
 
-void QWebExecutionListener::javascript_executed_statement(const JSC::DebuggerCallFrame&, intptr_t sourceID, int linenumber) {
-    emit statementExecuted(sourceID, linenumber);
+void QWebExecutionListener::javascript_executed_statement(const JSC::DebuggerCallFrame& callFrame, uint linenumber) {
+    JSC::SourceProvider* sourceProvider = callFrame.callFrame()->codeBlock()->source();
+
+    emit statementExecuted(linenumber,
+                           QString::fromStdString(sourceProvider->url().utf8().data()),
+                           sourceProvider->startPosition().m_line.zeroBasedInt() + 1);
 }
 
 void QWebExecutionListener::javascript_bytecode_executed(JSC::CodeBlock* codeBlock, JSC::Instruction* instuction) {
@@ -284,9 +285,7 @@ void QWebExecutionListener::javascript_bytecode_executed(JSC::CodeBlock* codeBlo
     uint bytecodeOffset = instuction - codeBlock->instructions().begin();
 
     emit sigJavascriptBytecodeExecuted(bytecodeOffset,
-                                       (intptr_t)codeBlock,
                                        codeBlock->sourceOffset(),
-                                       codeBlock->source()->asID(),
                                        QUrl(QString::fromStdString(codeBlock->source()->url().utf8().data())),
                                        codeBlock->source()->startPosition().m_line.zeroBasedInt() + 1);
 

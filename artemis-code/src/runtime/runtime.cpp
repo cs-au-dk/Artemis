@@ -77,7 +77,7 @@ Runtime::Runtime(QObject* parent, const Options& options, QUrl url) : QObject(pa
 
     /** Runtime Objects **/
 
-    mAppmodel = AppModelPtr(new AppModel());
+    mAppmodel = AppModelPtr(new AppModel(options.coverageIgnoreUrls));
 
     mWebkitExecutor = new WebKitExecutor(this, mAppmodel, options.presetFormfields, jqueryListener, ajaxRequestListner);
 

@@ -22,7 +22,7 @@ namespace inst {
     }
 
     void ListenerDebugger::atStatement(const JSC::DebuggerCallFrame& frame, intptr_t sourceID, int lineNumber) {
-        el->javascript_executed_statement(frame, sourceID, lineNumber);
+        el->javascript_executed_statement(frame, lineNumber);
     }
 
     void ListenerDebugger::callEvent(const JSC::DebuggerCallFrame& frame, intptr_t sourceID, int lineNumber) {

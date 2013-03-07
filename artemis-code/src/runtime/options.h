@@ -57,6 +57,8 @@ typedef struct OptionsType {
     QMap<QString, QString> presetFormfields;
     QMap<QString, QString> presetCookies;
 
+    QSet<QUrl> coverageIgnoreUrls;
+
     int iterationLimit;
     int numberSameLength;
 

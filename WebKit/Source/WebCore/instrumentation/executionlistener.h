@@ -56,7 +56,7 @@ public:
     /**
       Coverage information
       */
-    virtual void javascript_executed_statement(const JSC::DebuggerCallFrame&, intptr_t sourceID, int lineNumber) = 0;
+    virtual void javascript_executed_statement(const JSC::DebuggerCallFrame&, uint lineNumber) = 0;
 
     /**
       Function calls
