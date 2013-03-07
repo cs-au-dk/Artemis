@@ -1,0 +1,98 @@
+body 
+{
+  color: #77bb99;
+  background: #010101;
+}
+
+a:link
+{ 
+  text-decoration: none;
+}
+a:visited
+{  
+  text-decoration: none;
+}
+a:active
+{  
+  text-decoration: none;
+}
+a:hover
+{  
+  text-decoration: underline;
+}
+
+#youdonotexist
+{
+  color: #aa7755;
+  position: relative;
+  font-family: Monaco;
+}
+
+.youdonotexist
+{
+  font-family: Monaco;
+}
+
+#important
+{  
+  font-size: 11px;
+  background: #5588aa;
+  color: #993344;
+  padding-left: 60;
+}
+
+#interaction
+{
+  position: absolute;
+  top: 70;
+  left: 110;
+  font-family: Monaco;
+}
+
+#statement
+{
+  float: left;
+  margin: 10 0 0 0;
+}
+
+#statement_input
+{ 
+  background: #331122;
+  color: #eeddff;
+  height: 212px;
+  width: 638px;
+  font-family: Monaco, Verdana;
+  float: left;
+}
+
+#help
+{
+  width: 40px;
+  float: left;
+  margin: 20 20 0 10;
+}
+
+#help_back
+{
+  margin: 5 0 0 15;
+}
+
+#accept
+{
+  position: absolute;
+  top: 270px;
+  left: 60px;
+}
+
+a.nothingness:hover
+{  
+  text-decoration: none;
+  color: #331133
+  font-size: 13px;
+}
+
+.tiny
+{  
+  font-size: 13px;
+  color: #2244ee;
+}
