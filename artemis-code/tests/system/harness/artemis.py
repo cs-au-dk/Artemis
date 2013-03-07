@@ -16,7 +16,7 @@ def execute_artemis(execution_uuid, url, iterations=1,
                     strategy_form_input=None,
                     strategy_priority=None,
                     coverage=None,
-                    *exclude,
+                    exclude=None,
                     **kwargs):
     output_dir = os.path.join(OUTPUT_DIR, execution_uuid)
 
@@ -43,11 +43,13 @@ def execute_artemis(execution_uuid, url, iterations=1,
         args.append('--%s' % key.replace('_', '-'))
         args.append(str(kwargs[key]))
 
-    for file in exclude:
-        args.append('--coverage-report-ignore %s' % file)
+    if exclude is not None:
+        for file in exclude:
+            args.append('--coverage-report-ignore')
+            args.append(file)
 
     cmd = [ARTEMIS_EXEC] + [url] + args
-
+    
     try:
         stdout = (subprocess.check_output(cmd, cwd=output_dir, stderr=subprocess.STDOUT)).decode("utf-8")
 

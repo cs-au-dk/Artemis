@@ -9,6 +9,47 @@ import unittest
 from harness.environment import WebServer
 from harness.artemis import execute_artemis
 
+def events_configuration_report(uuid, url, exclude):
+    report = execute_artemis(uuid, url,
+                             iterations=100,
+                             strategy_form_input='random',
+                             strategy_priority='constant',
+                             exclude=exclude)
+    return report
+
+
+def const_configuration_report(uuid, url, exclude):
+    report = execute_artemis(uuid, url,
+                             iterations=100,
+                             strategy_form_input='javascript-constants',
+                             strategy_priority='constant',
+                             exclude=exclude)
+    return report
+
+
+def cov_configuration_report(uuid, url, exclude):
+    report = execute_artemis(uuid, url,
+                             iterations=100,
+                             strategy_form_input='javascript-constants',
+                             strategy_priority='coverage',
+                             exclude=exclude)
+    return report
+
+
+def all_configuration_report(uuid, url, exclude):
+    report = execute_artemis(uuid, url,
+                             iterations=100,
+                             strategy_form_input='javascript-constants',
+                             strategy_priority='all',
+                             exclude=exclude)
+    return report
+
+
+def assert_coverage_is_circa_expected(testCase, report, expected, linesOfCode, margin=0.1):
+    covered = float(report.get("WebKit::coverage::covered-unique", -1)) / linesOfCode
+    testCase.assertAlmostEqual(expected, covered, delta=margin * expected)
+
+
 
 class HtmlEditTest(unittest.TestCase):
     url = '%s/legacy-benchmarks/htmledit/demo_full.html' % WEBSERVER_URL
@@ -33,47 +74,6 @@ class HtmlEditTest(unittest.TestCase):
     def test_all_configuration(self):
         report = all_configuration_report(self.uuid, self.url, self.filesToExclude)
         assert_coverage_is_circa_expected(self, report, 0.44, self.loc)
-
-
-def events_configuration_report(uuid, url, *exclude):
-    report = execute_artemis(uuid, url,
-                             iterations=100,
-                             strategy_form_input='random',
-                             strategy_priority='constant',
-                             exclude=exclude)
-    return report
-
-
-def const_configuration_report(uuid, url, *exclude):
-    report = execute_artemis(uuid, url,
-                             iterations=100,
-                             strategy_form_input='javascript-constants',
-                             strategy_priority='constant',
-                             exclude=exclude)
-    return report
-
-
-def cov_configuration_report(uuid, url, *exclude):
-    report = execute_artemis(uuid, url,
-                             iterations=100,
-                             strategy_form_input='javascript-constants',
-                             strategy_priority='coverage',
-                             exclude=exclude)
-    return report
-
-
-def all_configuration_report(uuid, url, *exclude):
-    report = execute_artemis(uuid, url,
-                             iterations=100,
-                             strategy_form_input='javascript-constants',
-                             strategy_priority='all',
-                             exclude=exclude)
-    return report
-
-
-def assert_coverage_is_circa_expected(testCase, report, expected, linesOfCode, margin=0.1):
-    covered = float(report.get("WebKit::coverage::covered-unique", -1)) / linesOfCode
-    testCase.assertAlmostEqual(expected, covered, delta=margin * expected)
 
 
 class T3dModelTest(unittest.TestCase):
@@ -146,7 +146,7 @@ class AjaxTabsTest(unittest.TestCase):
         assert_coverage_is_circa_expected(self, report, 0.89, self.loc)
 """
 
-
+"""
 class BallPoolTest(unittest.TestCase):
     url = '%s/legacy-benchmarks/ball_pool/index.html' % WEBSERVER_URL
     uuid = 'ballpool'
@@ -169,7 +169,7 @@ class BallPoolTest(unittest.TestCase):
     def test_all_configuration(self):
         report = all_configuration_report(self.uuid, self.url, self.filesToExclude)
         assert_coverage_is_circa_expected(self, report, 0.90, self.loc)
-
+"""
 
 class DragableBoxesTest(unittest.TestCase):
     url = '%s/legacy-benchmarks/dragable-boxes/dragable-boxes.html' % WEBSERVER_URL
@@ -239,7 +239,7 @@ class FractalViewerTest(unittest.TestCase):
         report = all_configuration_report(self.uuid, self.url, self.filesToExclude)
         assert_coverage_is_circa_expected(self, report, 0.75, self.loc)
 
-
+"""
 class HomeostasisTest(unittest.TestCase):
     url = '%s/legacy-benchmarks/homeostasis/index.html' % WEBSERVER_URL
     uuid = 'homeostasis'
@@ -261,7 +261,7 @@ class HomeostasisTest(unittest.TestCase):
     def test_all_configuration(self):
         report = all_configuration_report(self.uuid, self.url, self.filesToExclude)
         assert_coverage_is_circa_expected(self, report, 0.63, self.loc)
-
+"""
 
 class PacmanTest(unittest.TestCase):
     url = '%s/legacy-benchmarks/pacman/index.html' % WEBSERVER_URL
