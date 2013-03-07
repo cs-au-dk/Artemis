@@ -64,7 +64,6 @@ SOURCES += \
     accessibility/AXObjectCache.cpp \
     bindings/generic/ActiveDOMCallback.cpp \
     bindings/generic/RuntimeEnabledFeatures.cpp \
-    instrumentation/executionlistener.cpp \
     instrumentation/listenerdebugger.cpp
 
 v8 {

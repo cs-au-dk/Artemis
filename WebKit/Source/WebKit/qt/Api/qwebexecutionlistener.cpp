@@ -184,7 +184,7 @@ bool domNodeSignature(JSC::CallFrame * cframe, JSC::JSObject * domElement, QStri
 
     This should be replaced by a better solution at some point.
 **/
-void QWebExecutionListener::calledFunction(const JSC::DebuggerCallFrame& frame) {
+void QWebExecutionListener::javascript_called_function(const JSC::DebuggerCallFrame& frame) {
 
     std::string functionName = std::string(frame.calculatedFunctionName().ascii().data());
 
@@ -240,9 +240,16 @@ void QWebExecutionListener::exceptional_condition(std::string cause, intptr_t so
     emit script_crash(QString(tr(cause.c_str())), sourceID, lineNumber);
 }
 
-void QWebExecutionListener::script_changed_url(std::string url) {
-    QString urlString = tr(url.c_str());
-    QUrl qurl = QUrl(urlString);
+void QWebExecutionListener::url_changed(JSC::JSValue value, JSC::ExecState* e) {
+    std::string url;
+
+    if (value.isString()) {
+        url = std::string(value.getString(e).utf8().data());
+    } else {
+        url = std::string(value.toString(e).utf8().data());
+    }
+
+    QUrl qurl = QUrl(tr(url.c_str()));
     emit script_url_load(qurl);
 }
 
@@ -250,7 +257,7 @@ void QWebExecutionListener::javascript_constant_encountered(std::string constant
     emit sigJavascriptConstantEncountered(QString::fromStdString(constant));
 }
 
-void QWebExecutionListener::javascript_eval_call(const char * eval_string) {
+void QWebExecutionListener::webkit_eval_call(const char * eval_string) {
     Q_CHECK_PTR(eval_string);
     emit this->eval_call(QString(tr(eval_string)));
 }

@@ -61,30 +61,28 @@ public:
     /**
       Function calls
       */
-    void interpreterCalledEvent(const JSC::DebuggerCallFrame&, intptr_t sourceID, int lineNumber);
-    virtual void calledFunction(const JSC::DebuggerCallFrame&) = 0;
+    virtual void javascript_called_function(const JSC::DebuggerCallFrame&) = 0;
 
     /**
       Exception
       */
-    virtual void exceptional_condition(std::string cause, intptr_t sourceID, int lineNumber);
+    virtual void exceptional_condition(std::string cause, intptr_t sourceID, int lineNumber) = 0;
 
     /**
       Url changing
       */
-    void url_changed( JSC::JSValue,  JSC::ExecState* e);
-    virtual void script_changed_url( std::string url);
+    virtual void url_changed(JSC::JSValue, JSC::ExecState* e) = 0;
 
     /**
       Ajax
       */
-    virtual void webkit_ajax_send(const char * url, const char * data);
+    virtual void webkit_ajax_send(const char * url, const char * data) = 0;
     virtual void ajaxCallbackEventAdded(WebCore::LazyXMLHttpRequest*) = 0;
 
     /**
       Eval
       */
-    virtual void webkit_eval_call(const char * eval_string);
+    virtual void webkit_eval_call(const char * eval_string) = 0;
 
 };
 

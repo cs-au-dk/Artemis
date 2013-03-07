@@ -26,7 +26,7 @@ namespace inst {
     }
 
     void ListenerDebugger::callEvent(const JSC::DebuggerCallFrame& frame, intptr_t sourceID, int lineNumber) {
-        el->interpreterCalledEvent(frame, sourceID, lineNumber);
+        el->javascript_called_function(frame);
     }
 
     void ListenerDebugger::returnEvent(const JSC::DebuggerCallFrame&, intptr_t sourceID, int lineNumber) {}
