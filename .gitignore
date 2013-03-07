@@ -19,7 +19,7 @@ artemis-code/build/
 artemis-code/dist/
 artemis-code/js-code-dump
 
-artemis-code/tests/system/fixtures/dragable-boxes/cache/*
+artemis-code/tests/system/fixtures/legacy-benchmarks/dragable-boxes/cache/*
 
 WebKit/config.log
 
