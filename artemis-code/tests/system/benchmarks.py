@@ -72,11 +72,10 @@ def all_configuration_report(uuid, url, *exclude):
 
 
 def assert_coverage_is_circa_expected(testCase, report, expected, linesOfCode, margin=0.1):
-    covered = report.get("WebKit::coverage::covered-unique", 0) / linesOfCode
+    covered = float(report.get("WebKit::coverage::covered-unique", -1)) / linesOfCode
     testCase.assertAlmostEqual(expected, covered, delta=margin * expected)
 
 
-""" This testcase is skipped following poor performance
 class T3dModelTest(unittest.TestCase):
     url = '%s/legacy-benchmarks/3dmodel/index.html' % WEBSERVER_URL
     uuid = '3dmodel'
@@ -98,8 +97,6 @@ class T3dModelTest(unittest.TestCase):
     def test_all_configuration(self):
         report = all_configuration_report(self.uuid, self.url, self.filesToExclude)
         assert_coverage_is_circa_expected(self, report, 0.74, self.loc)
-
-"""
 
 
 class AjaxPollerTest(unittest.TestCase):
@@ -149,7 +146,7 @@ class AjaxTabsTest(unittest.TestCase):
         assert_coverage_is_circa_expected(self, report, 0.89, self.loc)
 """
 
-""" This testcase is skipped following poor performance
+
 class BallPoolTest(unittest.TestCase):
     url = '%s/legacy-benchmarks/ball_pool/index.html' % WEBSERVER_URL
     uuid = 'ballpool'
@@ -173,7 +170,6 @@ class BallPoolTest(unittest.TestCase):
         report = all_configuration_report(self.uuid, self.url, self.filesToExclude)
         assert_coverage_is_circa_expected(self, report, 0.90, self.loc)
 
-"""
 
 class DragableBoxesTest(unittest.TestCase):
     url = '%s/legacy-benchmarks/dragable-boxes/dragable-boxes.html' % WEBSERVER_URL
