@@ -70,9 +70,9 @@ float CoverageListener::getBytecodeCoverage(QSharedPointer<const BaseInput> inpu
     size_t executedBytecodes = 0;
 
     foreach (codeblockid_t codeBlockID, mInputCodeBlockMap.value(hashcode)->toList()) {
-        totalBytecodes += mCodeBlocks.value(codeBlockID)->getBytecodeSize();
-        executedBytecodes += mCoveredBytecodes.value(codeBlockID)->size();
-
+        QSharedPointer<CodeBlockInfo> codeBlockInfo =  mCodeBlocks.value(codeBlockID);
+        totalBytecodes += codeBlockInfo->getBytecodeSize();
+        executedBytecodes += codeBlockInfo->numCoveredBytecodes();
     }
 
     float coverage = 0;
@@ -140,42 +140,35 @@ void CoverageListener::statementExecuted(intptr_t sourceTemporalID, int linenumb
     coveredLines->insert(linenumber);
 }
 
-void CoverageListener::slJavascriptFunctionCalled(intptr_t codeBlockTemporalID, QString functionName, size_t bytecodeSize)
+void CoverageListener::slJavascriptFunctionCalled(QString functionName, size_t bytecodeSize, intptr_t codeBlockTemporalID, unsigned sourceOffset, intptr_t SourceTemporalID, QUrl url, int startline)
 {
-    codeblockid_t codeBlockID = qHash(functionName+bytecodeSize);
-    QList<codeblockid_t>* l;
-    if (!mCodeBlockIdMap.contains(codeBlockTemporalID)) {
-        l = new QList<codeblockid_t>();
-        l->append(codeBlockID);
-        mCodeBlockIdMap.insert(codeBlockTemporalID,l);
-
-    } else {
-        if(!((l = mCodeBlockIdMap.value(codeBlockTemporalID))->contains(codeBlockID))){
-            l->removeOne(codeBlockID);
-        }
-        l->append(codeBlockID);
+    if (url == DONT_MEASURE_COVERAGE) {
+        return;
     }
 
+    codeblockid_t codeBlockID = CodeBlockInfo::getId(sourceOffset, url, startline);
 
     if (!mCodeBlocks.contains(codeBlockID)) {
         mCodeBlocks.insert(codeBlockID, QSharedPointer<CodeBlockInfo>(new CodeBlockInfo(functionName, bytecodeSize)));
-        mCoveredBytecodes.insert(codeBlockID, new QSet<int>());
     }
-
 
     if (mInputBeingExecuted != -1) {
         mInputCodeBlockMap.value(mInputBeingExecuted)->insert(codeBlockID);
     }
 }
 
-void CoverageListener::slJavascriptBytecodeExecuted(intptr_t codeBlockTemporalID, size_t bytecodeOffset)
+void CoverageListener::slJavascriptBytecodeExecuted(uint bytecodeOffset, intptr_t codeBlockTemporalID, unsigned sourceOffset, intptr_t SourceTemporalID, QUrl url, int startline)
 {
-    QList<codeblockid_t>* codeBlockIDList = mCodeBlockIdMap.value(codeBlockTemporalID, NULL);
-
-    if (codeBlockIDList == NULL) {
-        return; // ignore unknown code block
+    if (url == DONT_MEASURE_COVERAGE) {
+        return;
     }
-    mCoveredBytecodes.value(codeBlockIDList->last())->insert(bytecodeOffset);
+
+    codeblockid_t codeBlockID = CodeBlockInfo::getId(sourceOffset, url, startline);
+    QSharedPointer<CodeBlockInfo> codeBlockInfo = mCodeBlocks.value(codeBlockID, QSharedPointer<CodeBlockInfo>(NULL));
+
+    if (!codeBlockInfo.isNull()) {
+        codeBlockInfo->setBytecodeCovered(bytecodeOffset);
+    }
 }
 
 QString CoverageListener::toString() const

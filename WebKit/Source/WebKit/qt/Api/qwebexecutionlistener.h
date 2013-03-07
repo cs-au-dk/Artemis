@@ -77,8 +77,9 @@ signals:
 
     void sigJavascriptConstantEncountered(QString constant);
 
-    void sigJavascriptFunctionCalled(intptr_t codeBlock, QString functionName, size_t bytecodeSize);
-    void sigJavascriptBytecodeExecuted(intptr_t codeBlock, size_t bytecodeOffset);
+    void sigJavascriptFunctionCalled(QString functionName, size_t bytecodeSize, intptr_t codeBlockID, unsigned sourceOffset, intptr_t SourceID, QUrl url, int startline);
+
+    void sigJavascriptBytecodeExecuted(uint bytecodeOffset, intptr_t codeBlockID, unsigned sourceOffset, intptr_t SourceID, QUrl url, int startline);
 
     void sigJavascriptPropertyRead(QString propertyName, intptr_t codeBlockID, intptr_t SourceID, QUrl url, int startline);
     void sigJavascriptPropertyWritten(QString propertyName, intptr_t codeBlockID, intptr_t SourceID, QUrl url, int startline);

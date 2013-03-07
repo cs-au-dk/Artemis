@@ -32,8 +32,6 @@
 namespace artemis
 {
 
-typedef int codeblockid_t;
-
 class CoverageListener : public QObject
 {
     Q_OBJECT
@@ -65,9 +63,6 @@ private:
     // (sourceID -> set<lines>)
     QMap<int, QSet<int>* > coverage;
 
-    // (codeBlockTemporalID -> codeBlockID) needed as the codeBlockTemporalID changes for each new page-execution
-    QMap<intptr_t, QList<codeblockid_t>*> mCodeBlockIdMap;
-
     // (inputHashCode -> set<codeBlockID>
     QMap<int, QSet<codeblockid_t>* > mInputCodeBlockMap;
     int mInputBeingExecuted;
@@ -75,17 +70,14 @@ private:
     // (codeBlockID -> CodeBlockInfo)
     QMap<codeblockid_t, QSharedPointer<CodeBlockInfo> > mCodeBlocks;
 
-    // (codeBlockID -> set<bytecode offsets>
-    QMap<codeblockid_t, QSet<int>* > mCoveredBytecodes;
-
 
 public slots:
 
     void newCode(intptr_t sourceTemporalID, QString source, QUrl url, int startline);
     void statementExecuted(intptr_t sourceTemporalID, int linenumber);
 
-    void slJavascriptFunctionCalled(intptr_t codeBlockTemporalID, QString functionName, size_t bytecodeSize);
-    void slJavascriptBytecodeExecuted(intptr_t codeBlockTemporalID, size_t bytecodeOffset);
+    void slJavascriptFunctionCalled(QString functionName, size_t bytecodeSize, intptr_t codeBlockID, unsigned sourceOffset, intptr_t SourceID, QUrl url, int startline);
+    void slJavascriptBytecodeExecuted(uint bytecodeOffset, intptr_t codeBlockID, unsigned sourceOffset, intptr_t SourceID, QUrl url, int startline);
 
 };
 

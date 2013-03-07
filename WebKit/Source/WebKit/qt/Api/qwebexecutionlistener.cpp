@@ -188,9 +188,15 @@ void QWebExecutionListener::calledFunction(const JSC::DebuggerCallFrame& frame) 
 
     std::string functionName = std::string(frame.calculatedFunctionName().ascii().data());
 
-    emit sigJavascriptFunctionCalled((intptr_t)frame.callFrame()->codeBlock(),
-                                     QString::fromStdString(functionName),
-                                     frame.callFrame()->codeBlock()->numberOfInstructions());
+    JSC::CodeBlock* codeBlock = frame.callFrame()->codeBlock();
+
+    emit sigJavascriptFunctionCalled(QString::fromStdString(functionName),
+                                     codeBlock->numberOfInstructions(),
+                                     (intptr_t)codeBlock,
+                                     codeBlock->sourceOffset(),
+                                     codeBlock->source()->asID(),
+                                     QUrl(QString::fromStdString(codeBlock->source()->url().utf8().data())),
+                                     codeBlock->source()->startPosition().m_line.zeroBasedInt() + 1);
 
     if (functionName.compare("__jquery_event_add__") == 0) {
 
@@ -268,9 +274,14 @@ void QWebExecutionListener::javascript_executed_statement(const JSC::DebuggerCal
 
 void QWebExecutionListener::javascript_bytecode_executed(JSC::CodeBlock* codeBlock, JSC::Instruction* instuction) {
 
-    size_t bytecodeOffset = instuction - codeBlock->instructions().begin();
+    uint bytecodeOffset = instuction - codeBlock->instructions().begin();
 
-    emit sigJavascriptBytecodeExecuted((intptr_t)codeBlock, bytecodeOffset);
+    emit sigJavascriptBytecodeExecuted(bytecodeOffset,
+                                       (intptr_t)codeBlock,
+                                       codeBlock->sourceOffset(),
+                                       codeBlock->source()->asID(),
+                                       QUrl(QString::fromStdString(codeBlock->source()->url().utf8().data())),
+                                       codeBlock->source()->startPosition().m_line.zeroBasedInt() + 1);
 
     /*jsc_bytecode_executed(codeBlock->source()->url().utf8(false).data(),
                           codeBlock->lineNumberForBytecodeOffset(offset),

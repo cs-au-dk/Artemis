@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #include "codeblockinfo.h"
 
 namespace artemis {
@@ -26,6 +27,21 @@ CodeBlockInfo::CodeBlockInfo(QString functionName, size_t bytecodeSize) :
 size_t CodeBlockInfo::getBytecodeSize() const
 {
     return mBytecodeSize;
+}
+
+size_t CodeBlockInfo::numCoveredBytecodes() const
+{
+    return mCoveredBytecodes.size();
+}
+
+codeblockid_t CodeBlockInfo::getId(unsigned int sourceOffset, const QUrl& url, int startline)
+{
+    return sourceOffset * 7 + qHash(url) + 37 * startline;
+}
+
+void CodeBlockInfo::setBytecodeCovered(uint bytecodeOffset)
+{
+    mCoveredBytecodes.insert(bytecodeOffset);
 }
 
 }

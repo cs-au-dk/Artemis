@@ -19,8 +19,11 @@
 
 #include <QString>
 #include <QSet>
+#include <QUrl>
 
 namespace artemis {
+
+typedef uint codeblockid_t;
 
 class CodeBlockInfo
 {
@@ -29,10 +32,15 @@ public:
     CodeBlockInfo(QString functionName, size_t bytecodeSize);
 
     size_t getBytecodeSize() const;
+    void setBytecodeCovered(uint bytecodeOffset);
+    size_t numCoveredBytecodes() const;
+
+    static codeblockid_t getId(unsigned sourceOffset, const QUrl& url, int startline);
 
 private:
     QString mFunctionName;
     size_t mBytecodeSize;
+    QSet<uint> mCoveredBytecodes;
 
 };
 

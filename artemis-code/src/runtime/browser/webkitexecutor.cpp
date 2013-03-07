@@ -73,10 +73,10 @@ WebKitExecutor::WebKitExecutor(QObject* parent,
                      mCoverageListener.data(), SLOT(newCode(intptr_t, QString, QUrl, int)));
     QObject::connect(webkitListener, SIGNAL(statementExecuted(intptr_t, int)),
                      mCoverageListener.data(), SLOT(statementExecuted(intptr_t, int)));
-    QObject::connect(webkitListener, SIGNAL(sigJavascriptBytecodeExecuted(intptr_t, size_t)),
-                     mCoverageListener.data(), SLOT(slJavascriptBytecodeExecuted(intptr_t, size_t)));
-    QObject::connect(webkitListener, SIGNAL(sigJavascriptFunctionCalled(intptr_t,QString,size_t)),
-                     mCoverageListener.data(), SLOT(slJavascriptFunctionCalled(intptr_t,QString,size_t)));
+    QObject::connect(webkitListener, SIGNAL(sigJavascriptBytecodeExecuted(uint, intptr_t, unsigned, intptr_t, QUrl, int)),
+                     mCoverageListener.data(), SLOT(slJavascriptBytecodeExecuted(uint, intptr_t, unsigned, intptr_t, QUrl, int)));
+    QObject::connect(webkitListener, SIGNAL(sigJavascriptFunctionCalled(QString, size_t, intptr_t, unsigned, intptr_t, QUrl, int)),
+                     mCoverageListener.data(), SLOT(slJavascriptFunctionCalled(QString, size_t, intptr_t, unsigned, intptr_t, QUrl, int)));
 
     QObject::connect(webkitListener, SIGNAL(sigJavascriptPropertyRead(QString,intptr_t,intptr_t,QUrl,int)),
                      mJavascriptStatistics.data(), SLOT(slJavascriptPropertyRead(QString,intptr_t,intptr_t,QUrl,int)));
