@@ -47,7 +47,7 @@ The main application loop and initialization of the application resides in ``Run
 WebKit Instrumentation
 ----------------------
 
-We instrument WebKit to observe the execution of the tested application, gathering feedback for subsequent iterations. 
+We instrument WebKit (checkout anno 2011-12-28) to observe the execution of the tested application, gathering feedback for subsequent iterations. 
 
 The WebKit code-base is extended with a JavaScript debugger (``WebKit/Source/WebCore/instrumentation/listenerdebugger.h``) and a number of listening-points boxed in ``ifdef ARTEMIS`` and ``endif`` directives. The debugger and listening-points invoke methods on a global instance of ``QWebExecutionListener`` (``/WebKit/Source/WebKit/qt/Api/qwebexecutionlistener.h``), denoted the *execution listener*. 
 
