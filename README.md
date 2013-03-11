@@ -49,6 +49,6 @@ Use the help command `artemis --help` for additional options.
 Modifying the Software
 ----------------------
 
-The developer documentation is available online `here <https://artemis.readthedocs.org>`_.
+The developer documentation is available online (https://artemis.readthedocs.org).
 
 To compile the documentation yourself you need to install sphinx (http://sphinx-doc.org/) and run the command ``make html`` or ``make latex`` in the ``docs/`` folder.
