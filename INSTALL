@@ -2,9 +2,12 @@
     
       make fetch-[apt|yum]
 	
-    If you have no Qt or a version older than 4.8 then run: 
+    If you have no Qt or a version older than 4.8.x then run: 
 
       make fetch-qt
+
+    You can check your qt version using the command ``qmake --version``
+    (if qmake is not present, then qt is not installed).
     
  1. Set up your environment variables by running
     
