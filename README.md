@@ -49,4 +49,6 @@ Use the help command `artemis --help` for additional options.
 Modifying the Software
 ----------------------
 
-Developer documentation is placed in the docs folder. To compile the documentation you need to install sphinx (http://sphinx-doc.org/) and run the command ``make html`` or ``make latex`` in the docs folder.
+The developer documentation is available online `here <https://artemis.readthedocs.org>`_.
+
+To compile the documentation yourself you need to install sphinx (http://sphinx-doc.org/) and run the command ``make html`` or ``make latex`` in the ``docs/`` folder.
