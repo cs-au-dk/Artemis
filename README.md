@@ -7,14 +7,12 @@ Copyright 2013 Aarhus University
 Artemis is a tool that performs automated, feedback-directed testing
 of JavaScript applications.
 
-The tool is being developed by the Programming Languages group at
-Aarhus University and the Program Analysis and Transformation group at
-IBM Research.
-
 Contained in this repository is, besides the source for the tool, an
 instrumented version of the WebKit code-base.
 
-For more information, see http://brics.dk/artemis/
+The tool is being developed by the Center for Advanced Software Analysis
+(http://cs.au.dk/CASA/), at Aarhus University. For more information, 
+see http://brics.dk/artemis/
 
 Contributors
 ------------
