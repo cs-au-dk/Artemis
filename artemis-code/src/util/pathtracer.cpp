@@ -21,33 +21,33 @@ namespace artemis{
 
 QList<PathTracer::PathTrace> PathTracer::traces = QList<PathTracer::PathTrace>();
 
-void PathTracer::newPathTrace(string event)
+void PathTracer::newPathTrace(QString event)
 {
-    QList<QPair<PathTracer::ItemType, string> > nl = QList<QPair<PathTracer::ItemType, string> >();
+    QList<QPair<PathTracer::ItemType, QString> > nl = QList<QPair<PathTracer::ItemType, QString> >();
     PathTrace newTrace = qMakePair(event, nl);
     traces.append(newTrace);
 }
 
-void PathTracer::functionCall(string name)
+void PathTracer::functionCall(QString name)
 {
-    name = name.empty() ? "<no name>" : (name + "()");
+    name = name.isEmpty() ? "<no name>" : (name + "()"); // Anonymous function??
     appendItem(FUNCALL, name);
 }
 
 // Idea is to have more methods similar to functionCall() in future.
 // Each one can also be extended to include context info as required.
 
-void PathTracer::appendItem(ItemType type, string message)
+void PathTracer::appendItem(ItemType type, QString message)
 {
     if(traces.isEmpty()){
-        newPathTrace("No Event Yet");
+        newPathTrace("<No Event Yet>");
     }
     traces.last().second.append(qMakePair(type, message));
 }
 
 void PathTracer::write()
 {
-    QPair<ItemType,string> item;
+    QPair<ItemType,QString> item;
     PathTrace trace;
 
     //Log::info("===== Path Tracer =====");
@@ -56,14 +56,14 @@ void PathTracer::write()
         return;
     }
     foreach(trace, traces){
-        Log::info("Trace: " + trace.first);
+        Log::info("Trace: " + trace.first.toStdString());
         foreach(item, trace.second){
             switch(item.first){
             case FUNCALL:
-                Log::info("  Function Call: " + item.second);
+                Log::info("  Function Call: " + item.second.toStdString());
                 break;
             default:
-                Log::info("  Unknown:       " + item.second);
+                Log::info("  Unknown:       " + item.second.toStdString());
                 break;
             }
         }

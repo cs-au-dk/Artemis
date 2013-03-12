@@ -25,15 +25,15 @@ namespace artemis{
 
 class PathTracer{
 public:
-    static void newPathTrace(string event);
-    static void functionCall(string name);
+    static void newPathTrace(QString event);
+    static void functionCall(QString name);
     static void write();
 
 private:
     enum ItemType {FUNCALL};
-    typedef QPair<string, QList<QPair<PathTracer::ItemType, string> > > PathTrace;
+    typedef QPair<QString, QList<QPair<PathTracer::ItemType, QString> > > PathTrace;
     static QList<PathTrace> traces;
-    static void appendItem(ItemType type, string message);
+    static void appendItem(ItemType type, QString message);
 
 };
 
