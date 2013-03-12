@@ -22,6 +22,7 @@
 #include "worklist/deterministicworklist.h"
 #include "model/coverage/coveragetooutputstream.h"
 #include "util/loggingutil.h"
+#include "util/pathtracer.h"
 
 #include "statistics/statsstorage.h"
 #include "statistics/writers/pretty.h"
@@ -231,7 +232,10 @@ void Runtime::finishAnalysis()
 
     Log::info("\n=== Statistics ===\n");
     StatsPrettyWriter::write(statistics());
-    Log::info("\n=== Statistics END ===\n\n");
+    Log::info("\n=== Statistics END ===\n");
+    Log::info("\n=== Path Tracer ===\n");
+    PathTracer::write();
+    Log::info("\n=== Path Tracer END ===\n\n");
     Log::info("Artemis terminated on: "+ QDateTime::currentDateTime().toString().toStdString());
 
     emit sigTestingDone();

@@ -23,6 +23,7 @@
 #include "coveragelistener.h"
 
 #include "util/loggingutil.h"
+#include "util/pathtracer.h"
 namespace artemis
 {
 
@@ -89,11 +90,13 @@ void CoverageListener::notifyStartingEvent(QSharedPointer<const BaseInput> input
     if (!mInputToCodeBlockMap.contains(mInputBeingExecuted)) {
         mInputToCodeBlockMap.insert(mInputBeingExecuted, new QSet<codeblockid_t>());
     }
+    PathTracer::newPathTrace("Starting Event: " + (inputEvent->toString()));
 }
 
 void CoverageListener::notifyStartingLoad()
 {
     mInputBeingExecuted = -1;
+    PathTracer::newPathTrace("Starting Page Load");
 }
 
 void CoverageListener::slJavascriptScriptParsed(QString sourceCode, QUrl sourceUrl, uint sourceStartLine)
@@ -147,6 +150,8 @@ void CoverageListener::slJavascriptFunctionCalled(QString functionName, size_t b
     if (mInputBeingExecuted != -1) {
         mInputToCodeBlockMap.value(mInputBeingExecuted)->insert(codeBlockID);
     }
+
+    PathTracer::functionCall(functionName);
 }
 
 void CoverageListener::slJavascriptBytecodeExecuted(uint bytecodeOffset, uint sourceOffset, QUrl sourceUrl, uint sourceStartLine)
