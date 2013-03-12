@@ -23,6 +23,7 @@
 #include "coveragelistener.h"
 
 #include "util/loggingutil.h"
+#include "util/pathtracer.h"
 namespace artemis
 {
 
@@ -147,6 +148,11 @@ void CoverageListener::slJavascriptFunctionCalled(QString functionName, size_t b
     if (mInputBeingExecuted != -1) {
         mInputToCodeBlockMap.value(mInputBeingExecuted)->insert(codeBlockID);
     }
+
+    //qDebug() << "I'm in function " << functionName; // Doesn't seem to do anything...?
+    //fprintf(stderr, "I'm in function \"%s\"\n", functionName.toAscii().data()); // Works ok.
+    //qDebug("I'm in function \"%s\"", qPrintable(functionName)); // Doesn't seem to do anything...?
+    Log::info("Ben's Tracer: I'm in function \"" + functionName.toStdString() + "\"");
 }
 
 void CoverageListener::slJavascriptBytecodeExecuted(uint bytecodeOffset, uint sourceOffset, QUrl sourceUrl, uint sourceStartLine)
