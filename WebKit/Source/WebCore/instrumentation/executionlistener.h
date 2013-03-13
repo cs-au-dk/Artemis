@@ -64,6 +64,11 @@ public:
     virtual void javascript_called_function(const JSC::DebuggerCallFrame&) = 0;
 
     /**
+      Function returns
+      */
+    virtual void javascript_returned_function(const JSC::DebuggerCallFrame&) = 0;
+
+    /**
       Exception
       */
     virtual void exceptional_condition(std::string cause, intptr_t sourceID, int lineNumber) = 0;

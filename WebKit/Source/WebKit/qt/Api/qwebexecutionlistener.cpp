@@ -234,6 +234,19 @@ void QWebExecutionListener::javascript_called_function(const JSC::DebuggerCallFr
     }
 }
 
+void QWebExecutionListener::javascript_returned_function(const JSC::DebuggerCallFrame& frame) {
+
+    std::string functionName = std::string(frame.calculatedFunctionName().ascii().data());
+
+    JSC::CodeBlock* codeBlock = frame.callFrame()->codeBlock();
+
+    emit sigJavascriptFunctionReturned(QString::fromStdString(functionName),
+                                       codeBlock->numberOfInstructions(),
+                                       codeBlock->sourceOffset(),
+                                       QUrl(QString::fromStdString(codeBlock->source()->url().utf8().data())),
+                                       codeBlock->source()->startPosition().m_line.zeroBasedInt() + 1);
+}
+
 void QWebExecutionListener::exceptional_condition(std::string cause, intptr_t sourceID, int lineNumber) {
     emit script_crash(QString(tr(cause.c_str())), sourceID, lineNumber);
 }

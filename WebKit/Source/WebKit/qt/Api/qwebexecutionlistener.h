@@ -31,6 +31,7 @@ public:
     virtual void url_changed(JSC::JSValue, JSC::ExecState* e);
     virtual void webkit_ajax_send(const char * url, const char * data);
     virtual void javascript_called_function(const JSC::DebuggerCallFrame&);
+    virtual void javascript_returned_function(const JSC::DebuggerCallFrame&);
 
     virtual void javascript_executed_statement(const JSC::DebuggerCallFrame&, uint lineNumber); // from the debugger
     virtual void javascript_bytecode_executed(JSC::CodeBlock*, JSC::Instruction* inst); // interpreter instrumentation
@@ -84,6 +85,7 @@ signals:
     void statementExecuted(uint linenumber, QUrl url, uint startline);
 
     void sigJavascriptFunctionCalled(QString functionName, size_t bytecodeSize, uint sourceOffset, QUrl url, uint startline);
+    void sigJavascriptFunctionReturned(QString functionName, size_t bytecodeSize, uint sourceOffset, QUrl url, uint startline);
     void sigJavascriptBytecodeExecuted(uint bytecodeOffset, uint sourceOffset, QUrl url, uint startline);
 
 };
