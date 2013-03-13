@@ -73,7 +73,9 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/strategies/prioritizer/readwriteprioritizer.h \
     src/strategies/prioritizer/collectedprioritizer.h \
     src/runtime/input/events/toucheventparameters.h \
-    src/util/pathtracer.h
+    src/util/pathtracer.h \
+    src/runtime/toplevel/artemisruntime.h \
+    src/runtime/toplevel/manualruntime.h
 
 SOURCES += src/runtime/input/ajaxinput.cpp \
     src/strategies/prioritizer/constantprioritizer.cpp \
@@ -128,6 +130,8 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/strategies/prioritizer/readwriteprioritizer.cpp \
     src/strategies/prioritizer/collectedprioritizer.cpp \
     src/runtime/input/events/toucheventparameters.cpp \
-    src/util/pathtracer.cpp
+    src/util/pathtracer.cpp \
+    src/runtime/toplevel/artemisruntime.cpp \
+    src/runtime/toplevel/manualruntime.cpp
 
 QT += network

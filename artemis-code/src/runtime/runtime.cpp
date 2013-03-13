@@ -19,7 +19,6 @@
 
 #include <QSharedPointer>
 
-#include "worklist/deterministicworklist.h"
 #include "model/coverage/coveragetooutputstream.h"
 #include "util/loggingutil.h"
 #include "util/pathtracer.h"
@@ -45,14 +44,12 @@ using namespace std;
 namespace artemis
 {
 
-/**
- * This is the main-loop used by artemis.
- *
- * startAnalysis -> preConcreteExecution -> postConcreteExecution -> finishAnalysis
- *                              ^------------------|
- */
-Runtime::Runtime(QObject* parent, const Options& options, QUrl url) : QObject(parent)
+Runtime::Runtime(QObject* parent, const Options& options, const QUrl& url) : QObject(parent)
 {
+    Log::info("Artemis - Automated tester for JavaScript");
+    Log::info("Started: " + QDateTime::currentDateTime().toString().toStdString());
+    Log::info("Compilation date: " + ((string) EXE_BUILD_DATE));
+    Log::info( "-----\n");
 
     mOptions = options;
 
@@ -127,93 +124,14 @@ Runtime::Runtime(QObject* parent, const Options& options, QUrl url) : QObject(pa
         assert(false);
     }
 
-    mWorklist = WorkListPtr(new DeterministicWorkList(mPrioritizerStrategy));
-
-    QObject::connect(mWebkitExecutor, SIGNAL(sigExecutedSequence(ExecutableConfigurationConstPtr, QSharedPointer<ExecutionResult>)),
-                     this, SLOT(postConcreteExecution(ExecutableConfigurationConstPtr, QSharedPointer<ExecutionResult>)));
     QObject::connect(mWebkitExecutor, SIGNAL(sigAbortedExecution(QString)),
                      this, SLOT(slAbortedExecution(QString)));
-
 
     /** Visited states **/
     mVisitedStates = new set<long>();
 }
 
-/**
- * @brief Start the analysis for url
- * @param url
- */
-void Runtime::startAnalysis(QUrl url)
-{
-    Log::info("Artemis - Automated tester for JavaScript");
-    Log::info("Started: " + QDateTime::currentDateTime().toString().toStdString());
-    Log::info("Compilation date: " + ((string) EXE_BUILD_DATE));
-    Log::info( "-----\n");
-
-    QSharedPointer<ExecutableConfiguration> initialConfiguration =
-        QSharedPointer<ExecutableConfiguration>(new ExecutableConfiguration(QSharedPointer<InputSequence>(new InputSequence()), url));
-
-    mWorklist->add(initialConfiguration, mAppmodel);
-
-    preConcreteExecution();
-}
-
-/**
- * @brief Pre-concrete-execution
- */
-void Runtime::preConcreteExecution()
-{
-    if (mWorklist->empty() ||
-        mTerminationStrategy->shouldTerminate()) {
-
-        mWebkitExecutor->detach();
-        finishAnalysis();
-        return;
-    }
-
-    Log::debug("\n============= New-Iteration =============");
-    Log::debug("--------------- WORKLIST ----------------\n");
-    Log::debug(mWorklist->toString().toStdString());
-    Log::debug("--------------- COVERAGE ----------------\n");
-    Log::debug(mAppmodel->getCoverageListener()->toString().toStdString());
-
-    ExecutableConfigurationConstPtr nextConfiguration = mWorklist->remove();
-
-    mWebkitExecutor->executeSequence(nextConfiguration); // calls the slExecutedSequence method as callback
-}
-
-/**
- * @brief Post-concrete-execution
- * @param configuration
- * @param result
- */
-void Runtime::postConcreteExecution(ExecutableConfigurationConstPtr configuration, QSharedPointer<ExecutionResult> result)
-{
-    mWorklist->reprioritize(mAppmodel);
-
-    long hash;
-    if (mOptions.disableStateCheck ||
-            mVisitedStates->find(hash = result->getPageStateHash()) == mVisitedStates->end()) {
-
-        qDebug() << "Visiting new state";
-
-        mVisitedStates->insert(hash);
-        QList<QSharedPointer<ExecutableConfiguration> > newConfigurations = mInputgenerator->addNewConfigurations(configuration, result);
-
-        foreach(QSharedPointer<ExecutableConfiguration> newConfiguration, newConfigurations) {
-            mWorklist->add(newConfiguration, mAppmodel);
-        }
-
-        statistics()->accumulate("InputGenerator::added-configurations", newConfigurations.size());
-
-    } else {
-        qDebug() << "Page state has already been seen";
-    }
-
-    preConcreteExecution();
-}
-
-void Runtime::finishAnalysis()
+void Runtime::done()
 {
     Log::info("Artemis: Testing done...");
 

@@ -55,6 +55,8 @@ public:
 
     QWebExecutionListener* webkitListener; // TODO should not be public
 
+    ArtemisWebPagePtr getPage();
+
 private:
     ArtemisWebPagePtr mPage;
     ExecutionResultBuilderPtr mResultBuilder;
