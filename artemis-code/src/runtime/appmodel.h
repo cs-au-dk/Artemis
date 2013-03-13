@@ -21,6 +21,7 @@
 
 #include "model/coverage/coveragelistener.h"
 #include "model/javascriptstatistics.h"
+#include "model/pathtracer.h"
 
 namespace artemis {
 
@@ -32,10 +33,12 @@ public:
 
     CoverageListenerPtr getCoverageListener() const;
     JavascriptStatisticsPtr getJavascriptStatistics() const;
+    PathTracerPtr getPathTracer() const;
 
 private:
     CoverageListenerPtr mCoverageListener;
     JavascriptStatisticsPtr mJavascriptStatistics;
+    PathTracerPtr mPathTracer;
 
 };
 

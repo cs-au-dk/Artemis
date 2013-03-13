@@ -13,36 +13,46 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-
+#include "pathtracer.h"
 #include "util/loggingutil.h"
-#include "util/pathtracer.h"
+
 
 namespace artemis{
 
-QList<PathTracer::PathTrace> PathTracer::traces = QList<PathTracer::PathTrace>();
-
-void PathTracer::newPathTrace(QString event)
+PathTracer::PathTracer()
 {
-    QList<QPair<PathTracer::ItemType, QString> > nl = QList<QPair<PathTracer::ItemType, QString> >();
-    PathTrace newTrace = qMakePair(event, nl);
-    traces.append(newTrace);
+    mTraces = QList<PathTrace>();
 }
 
-void PathTracer::functionCall(QString name)
+void PathTracer::notifyStartingLoad()
+{
+    newPathTrace("Starting Page Load");
+}
+
+void PathTracer::notifyStartingEvent(QSharedPointer<const BaseInput> inputEvent)
+{
+    newPathTrace("Starting Event: " + (inputEvent->toString()));
+}
+
+void PathTracer::slJavascriptFunctionCalled(QString functionName, size_t bytecodeSize, uint sourceOffset, QUrl sourceUrl, uint sourceStartLine)
 {
     name = name.isEmpty() ? "<no name>" : (name + "()"); // Anonymous function??
     appendItem(FUNCALL, name);
 }
 
-// Idea is to have more methods similar to functionCall() in future.
-// Each one can also be extended to include context info as required.
+void PathTracer::newPathTrace(QString event)
+{
+    QList<QPair<PathTracer::ItemType, QString> > nl = QList<QPair<PathTracer::ItemType, QString> >();
+    PathTrace newTrace = qMakePair(event, nl);
+    mTraces.append(newTrace);
+}
 
 void PathTracer::appendItem(ItemType type, QString message)
 {
-    if(traces.isEmpty()){
+    if(mTraces.isEmpty()){
         newPathTrace("<No Event Yet>");
     }
-    traces.last().second.append(qMakePair(type, message));
+    mTraces.last().second.append(qMakePair(type, message));
 }
 
 void PathTracer::write()
@@ -51,11 +61,11 @@ void PathTracer::write()
     PathTrace trace;
 
     //Log::info("===== Path Tracer =====");
-    if(traces.isEmpty()){
+    if(mTraces.isEmpty()){
         Log::info("No traces were recorded");
         return;
     }
-    foreach(trace, traces){
+    foreach(trace, mTraces){
         Log::info("Trace: " + trace.first.toStdString());
         foreach(item, trace.second){
             switch(item.first){

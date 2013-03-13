@@ -28,6 +28,7 @@
 #include "runtime/executableconfiguration.h"
 #include "runtime/browser/ajax/ajaxrequestlistener.h"
 #include "model/coverage/coveragelistener.h"
+#include "model/pathtracer.h"
 #include "strategies/inputgenerator/targets/jquerylistener.h"
 
 #include "executionresult.h"
@@ -65,6 +66,7 @@ private:
 
     CoverageListenerPtr mCoverageListener;
     JavascriptStatisticsPtr mJavascriptStatistics;
+    PathTracerPtr mPathTracer;
 
 signals:
     void sigExecutedSequence(ExecutableConfigurationConstPtr conf, QSharedPointer<ExecutionResult> res);

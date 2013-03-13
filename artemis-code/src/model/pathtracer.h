@@ -15,26 +15,46 @@
  */
 #ifndef PATHTRACER_H
 #define PATHTRACER_H
+
 #include <string>
-#include <iostream>
+#include <inttypes.h>
+
+#include <QObject>
 #include <QList>
 #include <QPair>
-#endif // PATHTRACER_H
-using namespace std;
-namespace artemis{
+#include <QSharedPointer>
+#include <QUrl>
 
-class PathTracer{
+#include "runtime/input/baseinput.h"
+
+namespace artemis
+{
+
+class PathTracer : public QObject
+{
+    Q_OBJECT
+
 public:
-    static void newPathTrace(QString event);
-    static void functionCall(QString name);
-    static void write();
+    explicit PathTracer();
+    void notifyStartingLoad();
+    void notifyStartingEvent(QSharedPointer<const BaseInput> inputEvent);
+    void write();
 
 private:
     enum ItemType {FUNCALL};
     typedef QPair<QString, QList<QPair<PathTracer::ItemType, QString> > > PathTrace;
-    static QList<PathTrace> traces;
-    static void appendItem(ItemType type, QString message);
+    QList<PathTrace> mTraces;
+    void newPathTrace(QString event);
+    void functionCall(QString name);
+    void appendItem(ItemType type, QString message);
+
+public slots:
+    void slJavascriptFunctionCalled(QString functionName, size_t bytecodeSize, uint sourceOffset, QUrl sourceUrl, uint sourceStartLine);
 
 };
 
+typedef QSharedPointer<PathTracer> PathTracerPtr;
+
 }
+
+#endif // PATHTRACER_H

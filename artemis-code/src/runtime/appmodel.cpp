@@ -23,6 +23,7 @@ AppModel::AppModel(QSet<QUrl> coverageIgnoredUrls)
 {
     mCoverageListener = CoverageListenerPtr(new CoverageListener(coverageIgnoredUrls));
     mJavascriptStatistics = JavascriptStatisticsPtr(new JavascriptStatistics());
+    mPathTracer = PathTracerPtr(new PathTracer());
 }
 
 CoverageListenerPtr AppModel::getCoverageListener() const
@@ -33,6 +34,11 @@ CoverageListenerPtr AppModel::getCoverageListener() const
 JavascriptStatisticsPtr AppModel::getJavascriptStatistics() const
 {
     return mJavascriptStatistics;
+}
+
+PathTracerPtr AppModel::getPathTracer() const
+{
+    return mPathTracer;
 }
 
 }
