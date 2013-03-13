@@ -179,4 +179,9 @@ void WebKitExecutor::slLoadFinished(bool ok)
     emit sigExecutedSequence(currentConf, mResultBuilder->getResult());
 }
 
+ArtemisWebPagePtr WebKitExecutor::getPage()
+{
+    return mPage;
+}
+
 }

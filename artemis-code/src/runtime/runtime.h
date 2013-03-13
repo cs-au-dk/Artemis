@@ -28,7 +28,6 @@
 #include "strategies/prioritizer/prioritizerstrategy.h"
 
 #include "runtime/options.h"
-#include "runtime/worklist/worklist.h"
 #include "runtime/browser/webkitexecutor.h"
 #include "runtime/browser/executionresult.h"
 #include "runtime/browser/cookies/immutablecookiejar.h"
@@ -43,18 +42,16 @@ class Runtime : public QObject
     Q_OBJECT
 
 public:
-    Runtime(QObject* parent, const Options& options, QUrl url);
-    ~Runtime() {}
+    Runtime(QObject* parent, const Options& options, const QUrl& url);
+    virtual ~Runtime() {}
 
-    void startAnalysis(QUrl startAnalysis);
+    virtual void run(const QUrl& url) = 0;
 
-private:
-    void preConcreteExecution();
-    void finishAnalysis();
+protected:
+    void done();
 
     AppModelPtr mAppmodel;
     WebKitExecutor* mWebkitExecutor;
-    WorkListPtr mWorklist;
     set<long>* mVisitedStates;
 
     TerminationStrategy* mTerminationStrategy;
@@ -64,7 +61,6 @@ private:
     Options mOptions;
 
 private slots:
-    void postConcreteExecution(ExecutableConfigurationConstPtr configuration, QSharedPointer<ExecutionResult> result);
     void slAbortedExecution(QString reason);
 
 signals:

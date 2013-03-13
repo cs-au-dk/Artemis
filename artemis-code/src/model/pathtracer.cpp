@@ -56,7 +56,7 @@ void PathTracer::newPathTrace(QString event)
 void PathTracer::appendItem(ItemType type, QString message)
 {
     if(mTraces.isEmpty()){
-        newPathTrace("<No Event Yet>");
+        newPathTrace("<onload>");
     }
     mTraces.last().second.append(qMakePair(type, message));
 }

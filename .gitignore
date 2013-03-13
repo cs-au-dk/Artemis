@@ -24,3 +24,5 @@ artemis-code/tests/system/fixtures/legacy-benchmarks/dragable-boxes/cache/*
 WebKit/config.log
 
 *sublime*
+
+WebKit/WebKit.pro.user*
