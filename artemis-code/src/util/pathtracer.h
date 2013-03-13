@@ -19,7 +19,7 @@
 #include <iostream>
 #include <QList>
 #include <QPair>
-#endif // PATHTRACER_H
+
 using namespace std;
 namespace artemis{
 
@@ -38,3 +38,5 @@ private:
 };
 
 }
+
+#endif // PATHTRACER_H
