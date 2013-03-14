@@ -75,7 +75,8 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/runtime/input/events/toucheventparameters.h \
     src/model/pathtracer.h \
     src/runtime/toplevel/artemisruntime.h \
-    src/runtime/toplevel/manualruntime.h
+    src/runtime/toplevel/manualruntime.h \
+    src/runtime/browser/artemiswebview.h
 
 SOURCES += src/runtime/input/ajaxinput.cpp \
     src/strategies/prioritizer/constantprioritizer.cpp \
@@ -132,6 +133,7 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/runtime/input/events/toucheventparameters.cpp \
     src/model/pathtracer.cpp \
     src/runtime/toplevel/artemisruntime.cpp \
-    src/runtime/toplevel/manualruntime.cpp
+    src/runtime/toplevel/manualruntime.cpp \
+    src/runtime/browser/artemiswebview.cpp
 
 QT += network

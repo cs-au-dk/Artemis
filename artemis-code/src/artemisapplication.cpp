@@ -34,7 +34,11 @@ ArtemisApplication::ArtemisApplication(QObject* parent,
 
     srand(0); //Better way to get random numbers?
 
-    mRuntime = new ArtemisRuntime(this, options, url);
+    if (options.majorMode == AUTOMATED) {
+        mRuntime = new ArtemisRuntime(this, options, url);
+    } else {
+        mRuntime = new ManualRuntime(this, options, url);
+    }
 
     QObject::connect(mRuntime, SIGNAL(sigTestingDone()),
                      this, SLOT(slTestingDone()));

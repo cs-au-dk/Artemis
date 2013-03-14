@@ -42,6 +42,10 @@ enum CoverageReport {
     STDOUT, HTML, NONE
 };
 
+enum MajorMode {
+    AUTOMATED, MANUAL
+};
+
 typedef struct OptionsType {
 
     OptionsType() :
@@ -51,7 +55,8 @@ typedef struct OptionsType {
         disableStateCheck(true),
         formInputGenerationStrategy(Random),
         prioritizerStrategy(CONSTANT),
-        outputCoverage(NONE)
+        outputCoverage(NONE),
+        majorMode(AUTOMATED)
     {}
 
     QMap<QString, QString> presetFormfields;
@@ -71,6 +76,8 @@ typedef struct OptionsType {
     FormInputGenerationStrategies formInputGenerationStrategy;
     PrioritizerStrategies prioritizerStrategy;
     CoverageReport outputCoverage;
+
+    MajorMode majorMode;
 
 } Options;
 

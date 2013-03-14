@@ -14,38 +14,35 @@
  * limitations under the License.
  */
 
-#ifndef MANUALRUNTIME_H
-#define MANUALRUNTIME_H
+#ifndef ARTEMISWEBVIEW_H
+#define ARTEMISWEBVIEW_H
 
 #include <QObject>
-
-#include "runtime/browser/artemiswebview.h"
-
-#include "runtime/runtime.h"
+#include <QWebView>
+#include <QCloseEvent>
+#include <QSharedPointer>
 
 namespace artemis
 {
 
-class ManualRuntime : public Runtime
+class ArtemisWebView : public QWebView
 {
-
     Q_OBJECT
 
 public:
-    ManualRuntime(QObject* parent, const Options& options, const QUrl& url);
-
-    void run(const QUrl& url);
+    explicit ArtemisWebView();
 
 protected:
+    void closeEvent(QCloseEvent* event);
 
-    ArtemisWebViewPtr mWebView;
-
-private slots:
-
-    void slWebViewClosed();
+signals:
+    void sigClose();
 
 };
 
+typedef QSharedPointer<ArtemisWebView> ArtemisWebViewPtr;
+typedef QSharedPointer<const ArtemisWebView> ArtemisWebViewConstPtr;
+
 }
 
-#endif // MANUALRUNTIME_H
+#endif // ARTEMISWEBVIEW_H

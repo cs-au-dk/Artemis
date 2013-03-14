@@ -14,10 +14,6 @@
  * limitations under the License.
  */
 
-#include <QWebView>
-
-
-
 #include "manualruntime.h"
 
 namespace artemis
@@ -27,10 +23,11 @@ ManualRuntime::ManualRuntime(QObject* parent, const Options& options, const QUrl
     Runtime(parent, options, url)
 {
 
-    mWebView = new QWebView();
+    mWebView = ArtemisWebViewPtr(new ArtemisWebView());
     mWebView->setPage(mWebkitExecutor->getPage().data());
 
-
+    QObject::connect(mWebView, SIGNAL(sigClose()),
+                     this, SLOT(slWebViewClosed()));
 }
 
 void ManualRuntime::run(const QUrl& url)
@@ -40,6 +37,11 @@ void ManualRuntime::run(const QUrl& url)
 
     mWebkitExecutor->executeSequence(initial);
     mWebView->show();
+}
+
+void ManualRuntime::slWebViewClosed()
+{
+    done();
 }
 
 }
