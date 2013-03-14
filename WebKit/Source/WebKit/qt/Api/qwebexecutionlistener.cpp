@@ -67,6 +67,22 @@ void QWebExecutionListener::eventCleared(WebCore::EventTarget * target, const ch
     return;
 }
 
+void QWebExecutionListener::eventTriggered(WebCore::EventTarget * target, const char* type) {
+    std::string typeString = std::string(type);
+
+    if (target->toNode() != NULL) {
+        emit triggeredEventListener(new QWebElement(target->toNode()), QString(tr(typeString.c_str())));
+
+     } else if (target->toDOMWindow() != NULL) {
+        emit triggeredEventListener(new QWebElement(target->toDOMWindow()->frameElement()), QString(tr(typeString.c_str())));
+
+    } else {
+        std::cout << "ERROR: Strange event triggered:" << typeString << std::endl;
+    }
+
+    return;
+}
+
 // AJAX SUPPORT
 
 void QWebExecutionListener::ajaxCallbackEventAdded(WebCore::LazyXMLHttpRequest* xmlHttpRequest) {

@@ -46,6 +46,11 @@ void PathTracer::slJavascriptFunctionReturned(QString functionName, size_t bytec
     appendItem(FUNRET, functionName);
 }
 
+void PathTracer::slEventListenerTriggered(QWebElement* elem, QString eventName)
+{
+    newPathTrace("Received Event: " + eventName + " on " + elem->tagName());
+}
+
 void PathTracer::newPathTrace(QString event)
 {
     QList<QPair<PathTracer::ItemType, QString> > nl = QList<QPair<PathTracer::ItemType, QString> >();

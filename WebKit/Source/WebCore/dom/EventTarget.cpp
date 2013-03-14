@@ -215,6 +215,10 @@ void EventTarget::fireEventListeners(Event* event, EventTargetData* d, EventList
 {
     RefPtr<EventTarget> protect = this;
 
+#ifdef ARTEMIS
+    inst::getListener()->eventTriggered(this, event->type().string().ascii().data());
+#endif
+
     // Fire all listeners registered for this event. Don't fire listeners removed
     // during event dispatch. Also, don't fire event listeners added during event
     // dispatch. Conveniently, all new event listeners will be added after 'end',

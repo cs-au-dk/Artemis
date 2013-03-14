@@ -25,6 +25,7 @@ public:
 
     virtual void eventAdded(WebCore::EventTarget * target, const char* type);
     virtual void eventCleared(WebCore::EventTarget * target, const char* type);
+    virtual void eventTriggered(WebCore::EventTarget * target, const char* type);
 
     virtual void javascript_code_loaded(JSC::SourceProvider* sp, JSC::ExecState*);
     virtual void exceptional_condition(std::string cause, intptr_t sourceID, int lineNumber);
@@ -63,6 +64,7 @@ private:
 signals:
     void addedEventListener(QWebElement*, QString);
     void removedEventListener(QWebElement*, QString);
+    void triggeredEventListener(QWebElement*, QString);
     
     void addedAjaxCallbackHandler(int callbackId);
 

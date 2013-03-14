@@ -93,6 +93,9 @@ WebKitExecutor::WebKitExecutor(QObject* parent,
     QObject::connect(webkitListener, SIGNAL(removedEventListener(QWebElement*, QString)),
                      mResultBuilder.data(), SLOT(slEventListenerRemoved(QWebElement*, QString)));
 
+    QObject::connect(webkitListener, SIGNAL(triggeredEventListener(QWebElement*, QString)),
+                     mPathTracer.data(), SLOT(slEventListenerTriggered(QWebElement*, QString)));
+
     QObject::connect(webkitListener, SIGNAL(addedTimer(int, int, bool)),
                      mResultBuilder.data(), SLOT(slTimerAdded(int, int, bool)));
     QObject::connect(webkitListener, SIGNAL(removedTimer(int)),
