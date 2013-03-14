@@ -71,6 +71,9 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             "--coverage-report-ignore <URL>:\n"
             "           Exclude the given URL from the coverage report and coverage statistics.\n"
             "\n"
+            "--path-trace-report:\n"
+            "           Output a report of the execution path through the covered JavaScript.\n"
+            "\n"
             "--strategy-priority <strategy>:\n"
             "           Select priority strategy.\n"
             "\n"
@@ -89,6 +92,7 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
     {"input-strategy-same-length", required_argument, NULL, 'j'},
     {"coverage-report-ignore", required_argument, NULL, 'k'},
     {"major-mode", required_argument, NULL, 'm'},
+    {"path-trace-report", no_argument, NULL, 'a'},
     {"help", no_argument, NULL, 'h'},
     {0, 0, 0, 0}
     };
@@ -98,7 +102,7 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
     artemis::Log::addLogLevel(artemis::INFO);
     artemis::Log::addLogLevel(artemis::FATAL);
 
-    while ((c = getopt_long(argc, argv, "hsrp:m:f:t:c:i:v:", long_options, &option_index)) != -1) {
+    while ((c = getopt_long(argc, argv, "hsrp:a:m:f:t:c:i:v:", long_options, &option_index)) != -1) {
 
         switch (c) {
 
@@ -244,6 +248,11 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
                 exit(1);
             }
 
+            break;
+        }
+
+        case 'a': {
+            options.reportPathTrace = true;
             break;
         }
 

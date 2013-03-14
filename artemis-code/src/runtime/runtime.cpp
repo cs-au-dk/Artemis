@@ -150,10 +150,12 @@ void Runtime::done()
 
     Log::info("\n=== Statistics ===\n");
     StatsPrettyWriter::write(statistics());
-    Log::info("\n=== Statistics END ===\n");
-    Log::info("\n=== Path Tracer ===\n");
-    mAppmodel->getPathTracer()->write();
-    Log::info("\n=== Path Tracer END ===\n\n");
+    Log::info("\n=== Statistics END ===\n\n");
+    if(mOptions.reportPathTrace) {
+        Log::info("=== Path Tracer ===\n");
+        mAppmodel->getPathTracer()->write();
+        Log::info("\n=== Path Tracer END ===\n\n");
+    }
     Log::info("Artemis terminated on: "+ QDateTime::currentDateTime().toString().toStdString());
 
     emit sigTestingDone();

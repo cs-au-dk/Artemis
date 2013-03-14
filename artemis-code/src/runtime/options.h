@@ -53,6 +53,7 @@ typedef struct OptionsType {
         numberSameLength(1),
         recreatePage(false),
         disableStateCheck(true),
+        reportPathTrace(false),
         formInputGenerationStrategy(Random),
         prioritizerStrategy(CONSTANT),
         outputCoverage(NONE),
@@ -69,6 +70,7 @@ typedef struct OptionsType {
 
     bool recreatePage;
     bool disableStateCheck;
+    bool reportPathTrace;
 
     QString useProxy;
     QString dumpPageStates;

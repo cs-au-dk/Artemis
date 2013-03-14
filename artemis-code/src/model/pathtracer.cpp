@@ -48,7 +48,7 @@ void PathTracer::slJavascriptFunctionReturned(QString functionName, size_t bytec
 
 void PathTracer::slEventListenerTriggered(QWebElement* elem, QString eventName)
 {
-    newPathTrace("Received Event: " + eventName + " on " + elem->tagName());
+    newPathTrace("Received Event: '" + eventName + "' on '" + elem->tagName() + "'");
 }
 
 void PathTracer::newPathTrace(QString event)
