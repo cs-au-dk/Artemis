@@ -26,7 +26,7 @@ ManualRuntime::ManualRuntime(QObject* parent, const Options& options, const QUrl
     mWebView = ArtemisWebViewPtr(new ArtemisWebView());
     mWebView->setPage(mWebkitExecutor->getPage().data());
 
-    QObject::connect(mWebView, SIGNAL(sigClose()),
+    QObject::connect(mWebView.data(), SIGNAL(sigClose()),
                      this, SLOT(slWebViewClosed()));
 }
 
