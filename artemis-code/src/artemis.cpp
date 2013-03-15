@@ -78,6 +78,10 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             "           click - Only paths beginning with a click event are displayed\n"
             "           none - (default) Path trace report is omitted\n"
             "\n"
+            "--path-trace-report-bytecode: true|false\n"
+            "\n"
+            "           Show executed bytecodes in path trace reports. Default is false.\n"
+            "\n"
             "--strategy-priority <strategy>:\n"
             "           Select priority strategy.\n"
             "\n"
@@ -97,6 +101,7 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
     {"coverage-report-ignore", required_argument, NULL, 'k'},
     {"major-mode", required_argument, NULL, 'm'},
     {"path-trace-report", required_argument, NULL, 'a'},
+    {"path-trace-report-bytecode", required_argument, NULL, 'b'},
     {"help", no_argument, NULL, 'h'},
     {0, 0, 0, 0}
     };
@@ -265,6 +270,20 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
                 options.reportPathTrace = artemis::NO_TRACES;
             } else {
                 cerr << "ERROR: Invalid choice of path-trace-report " << optarg << endl;
+                exit(1);
+            }
+
+            break;
+        }
+
+        case 'b': {
+
+            if (string(optarg).compare("true") == 0) {
+                options.reportPathTraceBytecode  = true;
+            } else if (string(optarg).compare("false") == 0) {
+                options.reportPathTraceBytecode = false;
+            } else {
+                cerr << "ERROR: Invalid choice of path-trace-report-bytecode " << optarg << endl;
                 exit(1);
             }
 

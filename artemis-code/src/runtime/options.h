@@ -55,7 +55,8 @@ typedef struct OptionsType {
         prioritizerStrategy(CONSTANT),
         outputCoverage(NONE),
         majorMode(AUTOMATED),
-        reportPathTrace(NO_TRACES)
+        reportPathTrace(NO_TRACES),
+        reportPathTraceBytecode(false)
     {}
 
     QMap<QString, QString> presetFormfields;
@@ -79,6 +80,7 @@ typedef struct OptionsType {
     MajorMode majorMode;
 
     PathTraceReport reportPathTrace;
+    bool reportPathTraceBytecode;
 
 } Options;
 
