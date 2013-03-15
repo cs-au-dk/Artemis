@@ -19,6 +19,7 @@
 #include <QSharedPointer>
 #include <QUrl>
 
+#include "runtime/options.h"
 #include "model/coverage/coveragelistener.h"
 #include "model/javascriptstatistics.h"
 #include "model/pathtracer.h"
@@ -29,7 +30,7 @@ class AppModel
 {
 
 public:
-    AppModel(QSet<QUrl> coverageIgnoredUrls, bool pathTracerOnlyRecordClicks);
+    AppModel(Options options);
 
     CoverageListenerPtr getCoverageListener() const;
     JavascriptStatisticsPtr getJavascriptStatistics() const;

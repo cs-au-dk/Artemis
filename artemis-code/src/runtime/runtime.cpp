@@ -75,7 +75,7 @@ Runtime::Runtime(QObject* parent, const Options& options, const QUrl& url) : QOb
 
     /** Runtime Objects **/
 
-    mAppmodel = AppModelPtr(new AppModel(options.coverageIgnoreUrls, options.reportPathTrace == CLICK_TRACES));
+    mAppmodel = AppModelPtr(new AppModel(options));
 
     mWebkitExecutor = new WebKitExecutor(this, mAppmodel, options.presetFormfields, jqueryListener, ajaxRequestListner);
 

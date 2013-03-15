@@ -26,6 +26,7 @@
 #include <QUrl>
 #include <QWebElement>
 
+#include "runtime/options.h"
 #include "runtime/input/baseinput.h"
 
 namespace artemis
@@ -36,7 +37,7 @@ class PathTracer : public QObject
     Q_OBJECT
 
 public:
-    explicit PathTracer(bool onlyClicks);
+    explicit PathTracer(PathTraceReport reportLevel, bool reportBytecode);
     void notifyStartingLoad();
     void notifyStartingEvent(QSharedPointer<const BaseInput> inputEvent);
     void write();
@@ -46,7 +47,8 @@ private:
     typedef QPair<QString, QList<QPair<PathTracer::ItemType, QString> > > PathTrace;
 
     QList<PathTrace> mTraces;
-    const bool mOnlyReportClicks;
+    const PathTraceReport mReportLevel;
+    const bool mReportBytecode;
     bool mCurrentlyRecording;
 
     void newPathTrace(QString description);

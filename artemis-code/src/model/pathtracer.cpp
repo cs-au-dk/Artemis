@@ -19,13 +19,11 @@
 
 namespace artemis{
 
-// TODO: I wanted to pass the PathTraceReport enum into the constructor here, but that requires including
-// options.h, which itself includes (eventually) appmodel.h which is then defined before this header but uses a
-// typedef defined here, causing a conflict.
-PathTracer::PathTracer(bool onlyClicks) :
+PathTracer::PathTracer(PathTraceReport reportLevel, bool reportBytecode) :
     mTraces(QList<PathTrace>()),
-    mOnlyReportClicks(onlyClicks),
-    mCurrentlyRecording(!onlyClicks)
+    mReportLevel(reportLevel),
+    mReportBytecode(reportBytecode),
+    mCurrentlyRecording(reportLevel != ALL_TRACES)
 {
 }
 
@@ -41,7 +39,7 @@ void PathTracer::notifyStartingEvent(QSharedPointer<const BaseInput> inputEvent)
 {
     QString eventStr = inputEvent->toString();
     // TODO: is there a better way to check for inputEvent being a click without adding a special method to BaseInput?
-    if(!mOnlyReportClicks || eventStr.startsWith("DomInput(click")) {
+    if(mReportLevel == ALL_TRACES || ( mReportLevel == CLICK_TRACES && eventStr.startsWith("DomInput(click"))) {
         mCurrentlyRecording = true;
         newPathTrace("Starting Event: " + eventStr);
     }else{
@@ -53,7 +51,7 @@ void PathTracer::notifyStartingEvent(QSharedPointer<const BaseInput> inputEvent)
 // An event which WebKit is executing.
 void PathTracer::slEventListenerTriggered(QWebElement* elem, QString eventName)
 {
-    if(!mOnlyReportClicks || eventName == "click") {
+    if(mReportLevel == ALL_TRACES || ( mReportLevel == CLICK_TRACES && eventName == "click")) {
         mCurrentlyRecording = true;
         newPathTrace("Received Event: '" + eventName + "' on '" + elem->tagName() + "'");
     } else {
@@ -75,7 +73,9 @@ void PathTracer::slJavascriptFunctionReturned(QString functionName, size_t bytec
 
 void PathTracer::slJavascriptBytecodeExecuted(const QString& opcode, uint bytecodeOffset, uint sourceOffset, const QUrl& sourceUrl, uint sourceStartLine)
 {
-    appendItem(BYTECODE, opcode);
+    if(mReportBytecode){
+        appendItem(BYTECODE, opcode);
+    }
 }
 
 void PathTracer::newPathTrace(QString description)

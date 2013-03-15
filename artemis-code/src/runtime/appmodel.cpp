@@ -19,11 +19,11 @@
 
 namespace artemis {
 
-AppModel::AppModel(QSet<QUrl> coverageIgnoredUrls, bool pathTracerOnlyRecordClicks)
+AppModel::AppModel(Options options)
 {
-    mCoverageListener = CoverageListenerPtr(new CoverageListener(coverageIgnoredUrls));
+    mCoverageListener = CoverageListenerPtr(new CoverageListener(options.coverageIgnoreUrls ));
     mJavascriptStatistics = JavascriptStatisticsPtr(new JavascriptStatistics());
-    mPathTracer = PathTracerPtr(new PathTracer(pathTracerOnlyRecordClicks));
+    mPathTracer = PathTracerPtr(new PathTracer(options.reportPathTrace, options.reportPathTraceBytecode));
 }
 
 CoverageListenerPtr AppModel::getCoverageListener() const
