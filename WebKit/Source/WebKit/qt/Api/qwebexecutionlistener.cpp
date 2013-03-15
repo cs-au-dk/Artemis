@@ -19,6 +19,8 @@
 #include "JavaScriptCore/interpreter/CallFrame.h"
 #include "JavaScriptCore/runtime/ScopeChain.h"
 #include "JavaScriptCore/bytecode/CodeBlock.h"
+#include "JavaScriptCore/bytecode/Opcode.h"
+#include "JavaScriptCore/interpreter/Interpreter.h"
 
 #include "qwebexecutionlistener.h"
 
@@ -309,11 +311,12 @@ void QWebExecutionListener::javascript_executed_statement(const JSC::DebuggerCal
                            sourceProvider->startPosition().m_line.zeroBasedInt() + 1);
 }
 
-void QWebExecutionListener::javascript_bytecode_executed(JSC::CodeBlock* codeBlock, JSC::Instruction* instuction) {
+void QWebExecutionListener::javascript_bytecode_executed(JSC::Interpreter* interpreter, JSC::CodeBlock* codeBlock, JSC::Instruction* instuction) {
 
     uint bytecodeOffset = instuction - codeBlock->instructions().begin();
 
-    emit sigJavascriptBytecodeExecuted(bytecodeOffset,
+    emit sigJavascriptBytecodeExecuted(tr(JSC::opcodeNames[interpreter->getOpcodeID(instuction->u.opcode)]),
+                                       bytecodeOffset,
                                        codeBlock->sourceOffset(),
                                        QUrl(QString::fromStdString(codeBlock->source()->url().utf8().data())),
                                        codeBlock->source()->startPosition().m_line.zeroBasedInt() + 1);

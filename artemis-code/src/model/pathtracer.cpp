@@ -13,9 +13,9 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #include "pathtracer.h"
 #include "util/loggingutil.h"
-
 
 namespace artemis{
 
@@ -44,6 +44,11 @@ void PathTracer::slJavascriptFunctionReturned(QString functionName, size_t bytec
 {
     functionName = functionName.isEmpty() ? "<no name>" : (functionName + "()"); // Anonymous function??
     appendItem(FUNRET, functionName);
+}
+
+void PathTracer::slJavascriptBytecodeExecuted(const QString& opcode, uint bytecodeOffset, uint sourceOffset, const QUrl& sourceUrl, uint sourceStartLine)
+{
+    appendItem(BYTECODE, opcode);
 }
 
 void PathTracer::slEventListenerTriggered(QWebElement* elem, QString eventName)
@@ -83,23 +88,30 @@ void PathTracer::write()
         return;
     }
     foreach(trace, mTraces){
-        Log::info("Trace: " + trace.first.toStdString());
+
+        Log::info("    Trace Start | " + trace.first.toStdString());
         stackLevel = 0;
+
         foreach(item, trace.second){
             switch(item.first){
             case FUNCALL:
-                Log::info("  Function Call: " + std::string(stackLevel*2, ' ') + item.second.toStdString());
+                Log::info("  Function Call | " + std::string(stackLevel*2, ' ') + item.second.toStdString());
                 stackLevel++;
                 break;
             case FUNRET:
                 stackLevel--;
                 //Log::info("  Function End:  " + std::string(stackLevel*2, ' ') + item.second.toStdString());
                 break;
+            case BYTECODE:
+                Log::info("                | " + std::string(stackLevel*2, ' ') + item.second.toStdString());
+                break;
             default:
                 Log::info("  Unknown:       " + item.second.toStdString());
                 break;
             }
         }
+
+        Log::info("\n");
     }
 }
 

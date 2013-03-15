@@ -16,7 +16,7 @@
 #ifndef ARTEMISGLOBALS_H
 #define ARTEMISGLOBALS_H
 
-#include <QtWebKit>
+#include <QWebElement>
 
 using namespace std;
 

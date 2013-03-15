@@ -42,7 +42,7 @@ public:
     void write();
 
 private:
-    enum ItemType {FUNCALL, FUNRET};
+    enum ItemType {FUNCALL, FUNRET, BYTECODE};
     typedef QPair<QString, QList<QPair<PathTracer::ItemType, QString> > > PathTrace;
     QList<PathTrace> mTraces;
     void newPathTrace(QString event);
@@ -52,6 +52,7 @@ private:
 public slots:
     void slJavascriptFunctionCalled(QString functionName, size_t bytecodeSize, uint sourceOffset, QUrl sourceUrl, uint sourceStartLine);
     void slJavascriptFunctionReturned(QString functionName, size_t bytecodeSize, uint sourceOffset, QUrl sourceUrl, uint sourceStartLine);
+    void slJavascriptBytecodeExecuted(const QString& bytecode, uint bytecodeOffset, uint sourceOffset, const QUrl& sourceUrl, uint sourceStartLine);
     void slEventListenerTriggered(QWebElement* elem, QString eventName);
 };
 
