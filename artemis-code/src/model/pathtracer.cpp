@@ -19,19 +19,46 @@
 
 namespace artemis{
 
-PathTracer::PathTracer()
+// TODO: I wanted to pass the PathTraceReport enum into the constructor here, but that requires including
+// options.h, which itself includes (eventually) appmodel.h which is then defined before this header but uses a
+// typedef defined here, causing a conflict.
+PathTracer::PathTracer(bool onlyClicks) :
+    mTraces(QList<PathTrace>()),
+    mOnlyReportClicks(onlyClicks),
+    mCurrentlyRecording(!onlyClicks)
 {
-    mTraces = QList<PathTrace>();
 }
 
 void PathTracer::notifyStartingLoad()
 {
+    // Record this for *any* setting of mCurrentlyReporting.
     newPathTrace("Starting Page Load");
 }
 
+// An event which Artemis is triggering.
+// TODO: Maybe obsolete since we have slEventListenerTriggered below?
 void PathTracer::notifyStartingEvent(QSharedPointer<const BaseInput> inputEvent)
 {
-    newPathTrace("Starting Event: " + (inputEvent->toString()));
+    QString eventStr = inputEvent->toString();
+    // TODO: is there a better way to check for inputEvent being a click without adding a special method to BaseInput?
+    if(!mOnlyReportClicks || eventStr.startsWith("DomInput(click")) {
+        mCurrentlyRecording = true;
+        newPathTrace("Starting Event: " + eventStr);
+    }else{
+        mCurrentlyRecording = false;
+    }
+
+}
+
+// An event which WebKit is executing.
+void PathTracer::slEventListenerTriggered(QWebElement* elem, QString eventName)
+{
+    if(!mOnlyReportClicks || eventName == "click") {
+        mCurrentlyRecording = true;
+        newPathTrace("Received Event: '" + eventName + "' on '" + elem->tagName() + "'");
+    } else {
+        mCurrentlyRecording = false;
+    }
 }
 
 void PathTracer::slJavascriptFunctionCalled(QString functionName, size_t bytecodeSize, uint sourceOffset, QUrl sourceUrl, uint sourceStartLine)
@@ -51,16 +78,13 @@ void PathTracer::slJavascriptBytecodeExecuted(const QString& opcode, uint byteco
     appendItem(BYTECODE, opcode);
 }
 
-void PathTracer::slEventListenerTriggered(QWebElement* elem, QString eventName)
+void PathTracer::newPathTrace(QString description)
 {
-    newPathTrace("Received Event: '" + eventName + "' on '" + elem->tagName() + "'");
-}
-
-void PathTracer::newPathTrace(QString event)
-{
-    QList<QPair<PathTracer::ItemType, QString> > nl = QList<QPair<PathTracer::ItemType, QString> >();
-    PathTrace newTrace = qMakePair(event, nl);
-    mTraces.append(newTrace);
+    if(mCurrentlyRecording) {
+        QList<QPair<PathTracer::ItemType, QString> > newItemList = QList<QPair<PathTracer::ItemType, QString> >();
+        PathTrace newTrace = qMakePair(description, newItemList);
+        mTraces.append(newTrace);
+    }
 }
 
 void PathTracer::appendItem(ItemType type, QString message)
@@ -68,7 +92,9 @@ void PathTracer::appendItem(ItemType type, QString message)
     if(mTraces.isEmpty()){
         newPathTrace("<onload>");
     }
-    mTraces.last().second.append(qMakePair(type, message));
+    if(mCurrentlyRecording) {
+        mTraces.last().second.append(qMakePair(type, message));
+    }
 }
 
 /**

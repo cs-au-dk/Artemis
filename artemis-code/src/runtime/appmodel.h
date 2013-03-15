@@ -29,7 +29,7 @@ class AppModel
 {
 
 public:
-    AppModel(QSet<QUrl> coverageIgnoredUrls);
+    AppModel(QSet<QUrl> coverageIgnoredUrls, bool pathTracerOnlyRecordClicks);
 
     CoverageListenerPtr getCoverageListener() const;
     JavascriptStatisticsPtr getJavascriptStatistics() const;

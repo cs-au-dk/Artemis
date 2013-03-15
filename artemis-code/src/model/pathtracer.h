@@ -36,7 +36,7 @@ class PathTracer : public QObject
     Q_OBJECT
 
 public:
-    explicit PathTracer();
+    explicit PathTracer(bool onlyClicks);
     void notifyStartingLoad();
     void notifyStartingEvent(QSharedPointer<const BaseInput> inputEvent);
     void write();
@@ -44,8 +44,12 @@ public:
 private:
     enum ItemType {FUNCALL, FUNRET, BYTECODE};
     typedef QPair<QString, QList<QPair<PathTracer::ItemType, QString> > > PathTrace;
+
     QList<PathTrace> mTraces;
-    void newPathTrace(QString event);
+    const bool mOnlyReportClicks;
+    bool mCurrentlyRecording;
+
+    void newPathTrace(QString description);
     void functionCall(QString name);
     void appendItem(ItemType type, QString message);
 
@@ -54,6 +58,7 @@ public slots:
     void slJavascriptFunctionReturned(QString functionName, size_t bytecodeSize, uint sourceOffset, QUrl sourceUrl, uint sourceStartLine);
     void slJavascriptBytecodeExecuted(const QString& bytecode, uint bytecodeOffset, uint sourceOffset, const QUrl& sourceUrl, uint sourceStartLine);
     void slEventListenerTriggered(QWebElement* elem, QString eventName);
+
 };
 
 typedef QSharedPointer<PathTracer> PathTracerPtr;
