@@ -16,6 +16,8 @@
 
 #include <sstream>
 
+#include <QWebFrame>
+
 #include "statistics/statsstorage.h"
 #include "util/loggingutil.h"
 

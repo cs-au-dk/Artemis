@@ -16,16 +16,10 @@
 #ifndef ARTEMISOPTIONS_H
 #define ARTEMISOPTIONS_H
 
-#include <QObject>
 #include <QUrl>
-#include <QSettings>
-
-#include "runtime/worklist/worklist.h"
-#include "strategies/termination/terminationstrategy.h"
-#include "strategies/prioritizer/prioritizerstrategy.h"
-#include "strategies/inputgenerator/targets/targetdescriptor.h"
-#include "runtime/input/events/eventhandlerdescriptor.h"
-#include "strategies/inputgenerator/targets/jquerylistener.h"
+#include <QSet>
+#include <QMap>
+#include <QString>
 
 namespace artemis
 {
