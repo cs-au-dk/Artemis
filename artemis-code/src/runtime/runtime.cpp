@@ -75,7 +75,7 @@ Runtime::Runtime(QObject* parent, const Options& options, const QUrl& url) : QOb
 
     /** Runtime Objects **/
 
-    mAppmodel = AppModelPtr(new AppModel(options.coverageIgnoreUrls));
+    mAppmodel = AppModelPtr(new AppModel(options.coverageIgnoreUrls, options.reportPathTrace == CLICK_TRACES));
 
     mWebkitExecutor = new WebKitExecutor(this, mAppmodel, options.presetFormfields, jqueryListener, ajaxRequestListner);
 
@@ -151,7 +151,7 @@ void Runtime::done()
     Log::info("\n=== Statistics ===\n");
     StatsPrettyWriter::write(statistics());
     Log::info("\n=== Statistics END ===\n\n");
-    if(mOptions.reportPathTrace) {
+    if(mOptions.reportPathTrace != NO_TRACES) {
         Log::info("=== Path Tracer ===\n");
         mAppmodel->getPathTracer()->write();
         Log::info("\n=== Path Tracer END ===\n\n");

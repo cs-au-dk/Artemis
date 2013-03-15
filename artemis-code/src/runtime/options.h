@@ -46,6 +46,10 @@ enum MajorMode {
     AUTOMATED, MANUAL
 };
 
+enum PathTraceReport {
+    ALL_TRACES, CLICK_TRACES, NO_TRACES
+};
+
 typedef struct OptionsType {
 
     OptionsType() :
@@ -53,11 +57,11 @@ typedef struct OptionsType {
         numberSameLength(1),
         recreatePage(false),
         disableStateCheck(true),
-        reportPathTrace(false),
         formInputGenerationStrategy(Random),
         prioritizerStrategy(CONSTANT),
         outputCoverage(NONE),
-        majorMode(AUTOMATED)
+        majorMode(AUTOMATED),
+        reportPathTrace(NO_TRACES)
     {}
 
     QMap<QString, QString> presetFormfields;
@@ -70,7 +74,6 @@ typedef struct OptionsType {
 
     bool recreatePage;
     bool disableStateCheck;
-    bool reportPathTrace;
 
     QString useProxy;
     QString dumpPageStates;
@@ -80,6 +83,8 @@ typedef struct OptionsType {
     CoverageReport outputCoverage;
 
     MajorMode majorMode;
+
+    PathTraceReport reportPathTrace;
 
 } Options;
 

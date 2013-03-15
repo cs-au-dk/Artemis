@@ -71,8 +71,12 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             "--coverage-report-ignore <URL>:\n"
             "           Exclude the given URL from the coverage report and coverage statistics.\n"
             "\n"
-            "--path-trace-report:\n"
+            "--path-trace-report: <report-type>\n"
             "           Output a report of the execution path through the covered JavaScript.\n"
+            "\n"
+            "           all - All executed paths are displayed\n"
+            "           click - Only paths beginning with a click event are displayed\n"
+            "           none - (default) Path trace report is omitted\n"
             "\n"
             "--strategy-priority <strategy>:\n"
             "           Select priority strategy.\n"
@@ -92,7 +96,7 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
     {"input-strategy-same-length", required_argument, NULL, 'j'},
     {"coverage-report-ignore", required_argument, NULL, 'k'},
     {"major-mode", required_argument, NULL, 'm'},
-    {"path-trace-report", no_argument, NULL, 'a'},
+    {"path-trace-report", required_argument, NULL, 'a'},
     {"help", no_argument, NULL, 'h'},
     {0, 0, 0, 0}
     };
@@ -252,7 +256,18 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
         }
 
         case 'a': {
-            options.reportPathTrace = true;
+
+            if (string(optarg).compare("all") == 0) {
+                options.reportPathTrace  = artemis::ALL_TRACES;
+            } else if (string(optarg).compare("click") == 0) {
+                options.reportPathTrace = artemis::CLICK_TRACES;
+            } else if (string(optarg).compare("none") == 0) {
+                options.reportPathTrace = artemis::NO_TRACES;
+            } else {
+                cerr << "ERROR: Invalid choice of report-path-trace " << optarg << endl;
+                exit(1);
+            }
+
             break;
         }
 
