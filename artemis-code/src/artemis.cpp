@@ -264,7 +264,7 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             } else if (string(optarg).compare("none") == 0) {
                 options.reportPathTrace = artemis::NO_TRACES;
             } else {
-                cerr << "ERROR: Invalid choice of report-path-trace " << optarg << endl;
+                cerr << "ERROR: Invalid choice of path-trace-report " << optarg << endl;
                 exit(1);
             }
 
