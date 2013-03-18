@@ -64,7 +64,11 @@ SOURCES += \
     accessibility/AXObjectCache.cpp \
     bindings/generic/ActiveDOMCallback.cpp \
     bindings/generic/RuntimeEnabledFeatures.cpp \
-    instrumentation/listenerdebugger.cpp
+    instrumentation/listenerdebugger.cpp \
+    symbolicexecution/symbolicinterpreter.cpp \
+    symbolicexecution/native/nativelookup.cpp \
+    symbolicexecution/native/nativefunction.cpp \
+    symbolicexecution/native/ignore.cpp
 
 v8 {
     include($$PWD/../JavaScriptCore/yarr/yarr.pri)
@@ -1349,7 +1353,11 @@ HEADERS += \
     bindings/generic/ActiveDOMCallback.h \
     bindings/generic/RuntimeEnabledFeatures.h \
     instrumentation/executionlistener.h \
-    instrumentation/listenerdebugger.h
+    instrumentation/listenerdebugger.h \
+    symbolicexecution/symbolicinterpreter.h \
+    symbolicexecution/native/nativelookup.h \
+    symbolicexecution/native/nativefunction.h \
+    symbolicexecution/native/ignore.h
 
 v8 {
     HEADERS += \

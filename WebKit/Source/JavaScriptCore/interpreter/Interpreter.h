@@ -37,6 +37,7 @@
 #include "RegisterFile.h"
 
 #ifdef ARTEMIS
+#include "artemisil/artemisil.h"
 #include "runtime/SymbolTable.h"
 #endif
 
@@ -151,6 +152,11 @@ namespace JSC {
         void dumpSampleData(ExecState* exec);
         void startSampling();
         void stopSampling();
+
+#ifdef ARTEMIS
+        static ArtemisIL* m_artemisil;
+#endif
+
     private:
         enum ExecutionFlag { Normal, InitializeAndReturn };
 

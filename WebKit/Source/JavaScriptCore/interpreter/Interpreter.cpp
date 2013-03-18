@@ -93,6 +93,10 @@ static NEVER_INLINE JSValue concatenateStrings(ExecState* exec, Register* string
     return jsString(exec, strings, count);
 }
 
+#ifdef ARTEMIS
+ArtemisIL* Interpreter::m_artemisil = NULL;
+#endif
+
 NEVER_INLINE bool Interpreter::resolve(CallFrame* callFrame, Instruction* vPC, JSValue& exceptionValue)
 {
     int dst = vPC[1].u.operand;
@@ -1788,6 +1792,10 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
     ASSERT(m_initialized);
     ASSERT(m_enabled);
     
+#ifdef ARTEMIS
+    ASSERT(Interpreter::m_artemisil);
+#endif
+
 #if ENABLE(JIT)
 #if ENABLE(INTERPRETER)
     // Mixing Interpreter + JIT is not supported.
@@ -1849,7 +1857,7 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
 #endif
 
 #if ENABLE(COMPUTED_GOTO_INTERPRETER)
-    #define NEXT_INSTRUCTION() SAMPLE(codeBlock, vPC);  ARTEMIS_BYTECODE_LISTEN(codeBlock, vPC);goto *vPC->u.opcode
+    #define NEXT_INSTRUCTION() SAMPLE(codeBlock, vPC); ARTEMIS_BYTECODE_LISTEN(codeBlock, vPC); goto *vPC->u.opcode
 #if ENABLE(OPCODE_STATS)
     #define DEFINE_OPCODE(opcode) opcode: OpcodeStats::recordInstruction(opcode);
 #else
@@ -4528,6 +4536,11 @@ skip_id_custom_self:
         CallType callType = getCallData(v, callData);
 
         if (callType == CallTypeJS) {
+
+#ifdef ARTEMIS
+            Interpreter::m_artemisil->ail_call(codeBlock);
+#endif
+
             ScopeChainNode* callDataScopeChain = callData.js.scopeChain;
 
             JSObject* error = callData.js.functionExecutable->compileForCall(callFrame, callDataScopeChain);
@@ -4559,6 +4572,7 @@ skip_id_custom_self:
         }
 
         if (callType == CallTypeHost) {
+
             ScopeChainNode* scopeChain = callFrame->scopeChain();
             CallFrame* newCallFrame = CallFrame::create(callFrame->registers() + registerOffset);
             newCallFrame->init(0, vPC + OPCODE_LENGTH(op_call), scopeChain, callFrame, argCount, asObject(v));
@@ -4568,6 +4582,12 @@ skip_id_custom_self:
                 SamplingTool::HostCallRecord callRecord(m_sampler.get());
                 returnValue = JSValue::decode(callData.native.function(newCallFrame));
                 *topCallFrameSlot = callFrame;
+
+#ifdef ARTEMIS
+                Interpreter::m_artemisil->ail_call_native(codeBlock,
+                                                          (native_function_ID_t)callData.native.function);
+#endif
+
             }
             CHECK_FOR_EXCEPTION();
 

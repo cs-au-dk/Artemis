@@ -207,7 +207,8 @@ SOURCES += \
     runtime/TimeoutChecker.cpp \
     runtime/UString.cpp \
     yarr/YarrJIT.cpp \
-    instrumentation/jscexecutionlistener.cpp
+    instrumentation/jscexecutionlistener.cpp \
+    artemisil/artemisil.cpp
 
 *sh4* {
     QMAKE_CXXFLAGS += -mieee -w
@@ -235,6 +236,7 @@ lessThan(QT_GCC_MAJOR_VERSION, 5) {
 
 HEADERS += \
     instrumentation/jscexecutionlistener.h \
-    instrumentation/jscexecutionlistener.h
+    instrumentation/jscexecutionlistener.h \
+    artemisil/artemisil.h
 
 
