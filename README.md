@@ -24,6 +24,7 @@ The following people have contributed to the Artemis source code:
 * Casper Svenning Jensen
 * Kristoffer Just Andersen
 * Christian Budde Christensen
+* Ben Spencer
 
 Included Software
 -----------------
