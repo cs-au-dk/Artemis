@@ -27,10 +27,11 @@ ArtemisWebPage::ArtemisWebPage() : QWebPage(NULL)
 {
 }
 
-void ArtemisWebPage::javaScriptAlert(QWebFrame*, const QString& msg)
+void ArtemisWebPage::javaScriptAlert(QWebFrame* frame, const QString& msg)
 {
     statistics()->accumulate("WebKit::alerts", 1);
     qDebug() << "JAVASCRIPT ALERT: " << msg;
+    emit sigJavascriptAlert(frame, msg);
 }
 
 bool ArtemisWebPage::javaScriptConfirm(QWebFrame* frame, const QString& msg)
