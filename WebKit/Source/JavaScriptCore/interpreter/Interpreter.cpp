@@ -1859,9 +1859,9 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
 #if ENABLE(COMPUTED_GOTO_INTERPRETER)
     #define NEXT_INSTRUCTION() SAMPLE(codeBlock, vPC); ARTEMIS_BYTECODE_LISTEN(codeBlock, vPC); goto *vPC->u.opcode
 #if ENABLE(OPCODE_STATS)
-    #define DEFINE_OPCODE(opcode) opcode: OpcodeStats::recordInstruction(opcode);
+#define DEFINE_OPCODE(opcode) opcode: OpcodeStats::recordInstruction(opcode); std::cout << #opcode << std::endl;
 #else
-#define DEFINE_OPCODE(opcode) opcode:
+#define DEFINE_OPCODE(opcode) opcode: std::cout << #opcode << std::endl;
 #endif
     NEXT_INSTRUCTION();
 #else
@@ -4538,7 +4538,7 @@ skip_id_custom_self:
         if (callType == CallTypeJS) {
 
 #ifdef ARTEMIS
-            Interpreter::m_artemisil->ail_call(codeBlock);
+            Interpreter::m_artemisil->ail_call(callFrame, vPC);
 #endif
 
             ScopeChainNode* callDataScopeChain = callData.js.scopeChain;
@@ -4584,7 +4584,7 @@ skip_id_custom_self:
                 *topCallFrameSlot = callFrame;
 
 #ifdef ARTEMIS
-                Interpreter::m_artemisil->ail_call_native(codeBlock,
+                Interpreter::m_artemisil->ail_call_native(callFrame, vPC,
                                                           (native_function_ID_t)callData.native.function);
 #endif
 

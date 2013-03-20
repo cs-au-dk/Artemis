@@ -9,7 +9,8 @@
 #ifdef ARTEMIS
 
 namespace JSC {
-    class CodeBlock;
+    class ExecState;
+    class Instruction;
 }
 
 namespace JSC
@@ -23,8 +24,8 @@ class ArtemisIL
 public:
     ArtemisIL();
 
-    virtual void ail_call(CodeBlock* codeBlock) = 0;
-    virtual void ail_call_native(CodeBlock* codeBlock, native_function_ID_t functionID) = 0;
+    virtual void ail_call(ExecState* callFrame, const Instruction* vPC) = 0;
+    virtual void ail_call_native(ExecState* callFrame, const Instruction* vPC, native_function_ID_t functionID) = 0;
 
 };
 
