@@ -12,7 +12,8 @@ help:
 	@echo "    fetch-[apt|yum]		- fetching dependencies from [apt|yum]"
 	@echo "    fetch-qt			- fetches, configures and makes Qt"
 
-WEBKIT_BUILD_SCRIPT = ./WebKit/Tools/Scripts/build-webkit --qt --qmakearg="DEFINES+=ARTEMIS=1" --makearg="-j8"  --qmakearg="CC=gcc-4.7" --qmakearg="CXX=g++-4.7" --inspector --javascript-debugger
+CORES = `grep -c ^processor /proc/cpuinfo`
+WEBKIT_BUILD_SCRIPT = ./WebKit/Tools/Scripts/build-webkit --qt --qmakearg="DEFINES+=ARTEMIS=1" --makearg="-j$(CORES)"  --qmakearg="CC=gcc-4.7" --qmakearg="CXX=g++-4.7" --no-webkit2 --inspector --javascript-debugger
 
 build: check webkit artemis
 
@@ -32,6 +33,10 @@ webkit-minimal-debug: check check-env
 webkit-clean:
 	@echo "Cleaning WebKit build"
 	${WEBKIT_BUILD_SCRIPT} --clean
+
+webkit-clean-debug:
+	@echo "Cleaning WebKit build"
+	${WEBKIT_BUILD_SCRIPT} --debug --clean
 
 artemis:
 	cd artemis-code && qmake && make -j8

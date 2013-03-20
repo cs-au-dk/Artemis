@@ -85,6 +85,8 @@ WebKitExecutor::WebKitExecutor(QObject* parent,
                      mPathTracer.data(), SLOT(slJavascriptFunctionCalled(QString, size_t, uint, QUrl, uint)));
     QObject::connect(webkitListener, SIGNAL(sigJavascriptFunctionReturned(QString, size_t, uint, QUrl, uint)),
                      mPathTracer.data(), SLOT(slJavascriptFunctionReturned(QString, size_t, uint, QUrl, uint)));
+    QObject::connect(mPage.data(), SIGNAL(sigJavascriptAlert(QWebFrame*, QString)),
+                     mPathTracer.data(), SLOT(slJavascriptAlert(QWebFrame*, QString)));
 
     QObject::connect(webkitListener, SIGNAL(sigJavascriptPropertyRead(QString,intptr_t,intptr_t,QUrl,int)),
                      mJavascriptStatistics.data(), SLOT(slJavascriptPropertyRead(QString,intptr_t,intptr_t,QUrl,int)));

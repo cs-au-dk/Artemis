@@ -78,6 +78,11 @@ void PathTracer::slJavascriptBytecodeExecuted(const QString& opcode, uint byteco
     }
 }
 
+void PathTracer::slJavascriptAlert(QWebFrame* frame, QString msg)
+{
+    appendItem(ALERT, "alert(\"" + msg + "\")");
+}
+
 void PathTracer::newPathTrace(QString description)
 {
     if(mCurrentlyRecording) {
@@ -116,7 +121,7 @@ void PathTracer::write()
     foreach(trace, mTraces){
 
         Log::info("    Trace Start | " + trace.first.toStdString());
-        stackLevel = 0;
+        stackLevel = 1;
 
         foreach(item, trace.second){
             switch(item.first){
@@ -126,13 +131,16 @@ void PathTracer::write()
                 break;
             case FUNRET:
                 stackLevel--;
-                //Log::info("  Function End:  " + std::string(stackLevel*2, ' ') + item.second.toStdString());
+                //Log::info("   Function End | " + std::string(stackLevel*2, ' ') + item.second.toStdString());
                 break;
             case BYTECODE:
                 Log::info("                | " + std::string(stackLevel*2, ' ') + item.second.toStdString());
                 break;
+            case ALERT:
+                Log::info("     Alert Call | " + std::string(stackLevel*2, ' ') + item.second.toStdString());
+                break;
             default:
-                Log::info("  Unknown:       " + item.second.toStdString());
+                Log::info("        Unknown | " + item.second.toStdString());
                 break;
             }
         }
