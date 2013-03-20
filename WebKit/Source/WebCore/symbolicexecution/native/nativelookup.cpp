@@ -7,6 +7,7 @@
 #include "JavaScriptCore/interpreter/CallFrame.h"
 
 #include "JavaScriptCore/runtime/MathObject.h"
+#include "WebCore/generated/"
 
 #include "natives.h"
 
@@ -54,7 +55,10 @@ void NativeLookup::assertConsistencyVisit(JSC::JSGlobalData* jsGlobalData, JSC::
         return;
     }
 
-    if (path.compare(".document.defaultView") == 0) {
+    // force the search to look into .window (such that we can get some more saying paths)
+    if (path.compare(".document.defaultView") == 0 ||
+            path.compare(".document.all") == 0 ||
+            path.compare(".document.scripts") == 0) {
         return;
     }
 
@@ -77,7 +81,12 @@ void NativeLookup::assertConsistencyVisit(JSC::JSGlobalData* jsGlobalData, JSC::
         JSC::CallData callData;
         JSC::CallType callType = JSC::getCallData(value, callData);
 
+
+
         if (callType == JSC::CallTypeHost) {
+
+            //std::cout << (JSC::native_function_ID_t)callData.native.function << " " << newpath << std::endl;
+
             if (find((JSC::native_function_ID_t)callData.native.function) == NULL) {
                 std::cerr << "Error: Could not find native function bound at " << newpath << std::endl;
                 exit(1);

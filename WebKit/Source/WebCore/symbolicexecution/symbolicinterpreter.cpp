@@ -23,15 +23,10 @@ void SymbolicInterpreter::ail_call(JSC::CallFrame*, const JSC::Instruction*)
 void SymbolicInterpreter::ail_call_native(JSC::CallFrame* callFrame, const JSC::Instruction*,
                                           JSC::native_function_ID_t functionID)
 {
-
-    mNativeFunctions.assertConsistency(callFrame);
-
-    JSC::CodeBlock* codeBlock = callFrame->codeBlock();
-
     const NativeFunction* nativeFunction = mNativeFunctions.find(functionID);
 
     if (nativeFunction == NULL) {
-        fatalError(codeBlock, "Unknown native function encountered");
+        fatalError(callFrame->codeBlock(), "Unknown native function encountered");
     }
 
     std::cout << "AIL_CALL_NATIVE <" << nativeFunction->getName() << ">" << std::endl;
