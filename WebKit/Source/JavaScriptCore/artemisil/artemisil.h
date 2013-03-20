@@ -1,7 +1,7 @@
 #ifndef ARTEMISIL_H
 #define ARTEMISIL_H
 
-#include "inttypes.h"
+#include <inttypes.h>
 
 #include "JavaScriptCore/wtf/ExportMacros.h"
 #include "JavaScriptCore/runtime/CallData.h"

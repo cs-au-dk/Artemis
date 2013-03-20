@@ -12,9 +12,12 @@ class NativeFunction
 {
 
 public:
-    NativeFunction();
+    NativeFunction(std::string name);
 
-    virtual std::string getName() const = 0;
+    virtual std::string getName() const;
+
+private:
+    std::string mName;
 };
 
 }

@@ -5,8 +5,14 @@
 namespace SymbolicExecution
 {
 
-NativeFunction::NativeFunction()
+NativeFunction::NativeFunction(std::string name) :
+    mName(name)
 {
+}
+
+std::string NativeFunction::getName() const
+{
+    return mName;
 }
 
 }

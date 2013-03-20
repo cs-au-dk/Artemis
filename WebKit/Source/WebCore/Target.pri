@@ -68,7 +68,7 @@ SOURCES += \
     symbolicexecution/symbolicinterpreter.cpp \
     symbolicexecution/native/nativelookup.cpp \
     symbolicexecution/native/nativefunction.cpp \
-    symbolicexecution/native/ignore.cpp
+    symbolicexecution/native/natives.cpp
 
 v8 {
     include($$PWD/../JavaScriptCore/yarr/yarr.pri)
@@ -1357,7 +1357,8 @@ HEADERS += \
     symbolicexecution/symbolicinterpreter.h \
     symbolicexecution/native/nativelookup.h \
     symbolicexecution/native/nativefunction.h \
-    symbolicexecution/native/ignore.h
+    symbolicexecution/native/natives.h \
+    symbolicexecution/native/nativefunction.h
 
 v8 {
     HEADERS += \

@@ -1,13 +1,16 @@
 
 #include <utility>
+#include <iostream>
 
 #include "JavaScriptCore/wtf/ExportMacros.h"
+#include "JavaScriptCore/bytecode/CodeBlock.h"
+#include "JavaScriptCore/interpreter/CallFrame.h"
+
 #include "JavaScriptCore/runtime/MathObject.h"
 
-#include "ignore.h"
-#include "nativelookup.h"
+#include "natives.h"
 
-#ifdef ARTEMIS
+#include "nativelookup.h"
 
 namespace SymbolicExecution
 {
@@ -15,18 +18,76 @@ namespace SymbolicExecution
 NativeLookup::NativeLookup()
 {
 
-    mNativeFunctionMap.insert(std::make_pair<JSC::native_function_ID_t, NativeFunction*>(
+    mNativeFunctionMap.insert(std::make_pair<JSC::native_function_ID_t, NativeFunction>(
                                   (JSC::native_function_ID_t)JSC::mathProtoFuncAbs,
-                                  new Ignore("math.abs")));
+                                  NativeFunction("Math.abs")));
 
 }
 
 const NativeFunction* NativeLookup::find(JSC::native_function_ID_t functionID)
 {
     function_map_t::iterator iter = mNativeFunctionMap.find(functionID);
-    return iter != mNativeFunctionMap.end() ? iter->second : NULL;
+    if (iter != mNativeFunctionMap.end()) {
+        return &iter->second;
+    } else {
+        return NULL;
+    }
+}
+
+void NativeLookup::assertConsistency(JSC::CallFrame* callFrame)
+{
+    JSC::CodeBlock* codeBlock = callFrame->codeBlock();
+
+    JSC::JSGlobalData* jsGlobalData = &callFrame->globalData();
+    JSC::JSGlobalObject* jsGlobalObject = codeBlock->globalObject();
+
+    visited_t visited;
+
+    assertConsistencyVisit(jsGlobalData, callFrame, jsGlobalObject, &visited, "");
+}
+
+void NativeLookup::assertConsistencyVisit(JSC::JSGlobalData* jsGlobalData, JSC::CallFrame* callFrame, JSC::JSObject* jsObject, visited_t* visited, std::string path) {
+
+    visited_t::iterator visititer = visited->find(jsObject);
+
+    if (visititer != visited->end()) {
+        return;
+    }
+
+    if (path.compare(".document.defaultView") == 0) {
+        return;
+    }
+
+    visited->insert(jsObject);
+
+    JSC::PropertyNameArray propertyNames(jsGlobalData);
+    JSC::JSObject::getPropertyNames(jsObject, callFrame, propertyNames, JSC::ExcludeDontEnumProperties);
+
+    JSC::PropertyNameArrayData::PropertyNameVector::const_iterator iter = propertyNames.data()->propertyNameVector().begin();
+    JSC::PropertyNameArrayData::PropertyNameVector::const_iterator end = propertyNames.data()->propertyNameVector().end();
+
+    for (; iter != end; ++iter) {
+        JSC::PropertySlot property;
+        jsObject->getPropertySlot(callFrame, *iter, property);
+
+        JSC::JSValue value = property.getValue(callFrame, *iter);
+
+        std::string newpath = path + "." + std::string(iter->ustring().ascii().data());
+
+        JSC::CallData callData;
+        JSC::CallType callType = JSC::getCallData(value, callData);
+
+        if (callType == JSC::CallTypeHost) {
+            if (find((JSC::native_function_ID_t)callData.native.function) == NULL) {
+                std::cerr << "Error: Could not find native function bound at " << newpath << std::endl;
+                exit(1);
+            }
+        }
+
+        if (value.isObject()) {
+            assertConsistencyVisit(jsGlobalData, callFrame, value.toObject(callFrame), visited, newpath);
+        }
+    }
 }
 
 }
-
-#endif
