@@ -6,9 +6,6 @@
 #include "JavaScriptCore/bytecode/CodeBlock.h"
 #include "JavaScriptCore/interpreter/CallFrame.h"
 
-#include "JavaScriptCore/runtime/MathObject.h"
-#include "WebCore/generated/"
-
 #include "natives.h"
 
 #include "nativelookup.h"
@@ -18,11 +15,6 @@ namespace SymbolicExecution
 
 NativeLookup::NativeLookup()
 {
-
-    mNativeFunctionMap.insert(std::make_pair<JSC::native_function_ID_t, NativeFunction>(
-                                  (JSC::native_function_ID_t)JSC::mathProtoFuncAbs,
-                                  NativeFunction("Math.abs")));
-
 }
 
 const NativeFunction* NativeLookup::find(JSC::native_function_ID_t functionID)
@@ -35,7 +27,7 @@ const NativeFunction* NativeLookup::find(JSC::native_function_ID_t functionID)
     }
 }
 
-void NativeLookup::assertConsistency(JSC::CallFrame* callFrame)
+void NativeLookup::buildRegistry(JSC::CallFrame* callFrame)
 {
     JSC::CodeBlock* codeBlock = callFrame->codeBlock();
 
@@ -44,10 +36,10 @@ void NativeLookup::assertConsistency(JSC::CallFrame* callFrame)
 
     visited_t visited;
 
-    assertConsistencyVisit(jsGlobalData, callFrame, jsGlobalObject, &visited, "");
+    buildRegistryVisit(jsGlobalData, callFrame, jsGlobalObject, &visited, "");
 }
 
-void NativeLookup::assertConsistencyVisit(JSC::JSGlobalData* jsGlobalData, JSC::CallFrame* callFrame, JSC::JSObject* jsObject, visited_t* visited, std::string path) {
+void NativeLookup::buildRegistryVisit(JSC::JSGlobalData* jsGlobalData, JSC::CallFrame* callFrame, JSC::JSObject* jsObject, visited_t* visited, std::string path) {
 
     visited_t::iterator visititer = visited->find(jsObject);
 
@@ -56,9 +48,9 @@ void NativeLookup::assertConsistencyVisit(JSC::JSGlobalData* jsGlobalData, JSC::
     }
 
     // force the search to look into .window (such that we can get some more saying paths)
-    if (path.compare(".document.defaultView") == 0 ||
-            path.compare(".document.all") == 0 ||
-            path.compare(".document.scripts") == 0) {
+    if (path.compare("document.defaultView") == 0 ||
+            path.compare("document.all") == 0 ||
+            path.compare("document.scripts") == 0) {
         return;
     }
 
@@ -76,25 +68,24 @@ void NativeLookup::assertConsistencyVisit(JSC::JSGlobalData* jsGlobalData, JSC::
 
         JSC::JSValue value = property.getValue(callFrame, *iter);
 
-        std::string newpath = path + "." + std::string(iter->ustring().ascii().data());
+        std::string newpath = (path.size() == 0 ? "" : path +  ".") + std::string(iter->ustring().ascii().data());
 
         JSC::CallData callData;
         JSC::CallType callType = JSC::getCallData(value, callData);
 
-
-
         if (callType == JSC::CallTypeHost) {
 
-            //std::cout << (JSC::native_function_ID_t)callData.native.function << " " << newpath << std::endl;
+            JSC::native_function_ID_t nativeFunctionID = (JSC::native_function_ID_t)callData.native.function;
 
-            if (find((JSC::native_function_ID_t)callData.native.function) == NULL) {
-                std::cerr << "Error: Could not find native function bound at " << newpath << std::endl;
-                exit(1);
+            const NativeFunction* nativeFunction = find(nativeFunctionID);
+
+            if (nativeFunction == NULL || nativeFunction->getName().size() > newpath.size()) {
+                mNativeFunctionMap.insert(std::make_pair<JSC::native_function_ID_t, NativeFunction>(nativeFunctionID, NativeFunction(newpath)));
             }
         }
 
         if (value.isObject()) {
-            assertConsistencyVisit(jsGlobalData, callFrame, value.toObject(callFrame), visited, newpath);
+            buildRegistryVisit(jsGlobalData, callFrame, value.toObject(callFrame), visited, newpath);
         }
     }
 }
