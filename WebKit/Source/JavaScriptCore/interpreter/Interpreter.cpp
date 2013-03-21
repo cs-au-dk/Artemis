@@ -2976,6 +2976,17 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         JSValue result = baseValue.get(callFrame, ident, slot);
         CHECK_FOR_EXCEPTION();
 
+#ifdef ARTEMIS
+        // Experimental source detection
+        if (baseValue.isObject() &&
+                strcmp(baseValue.toObject(callFrame)->classInfo()->className,
+                       "HTMLInputElement") == 0 &&
+                strcmp(ident.ascii().data(), "value") == 0) {
+
+            std::cout << "FORM INPUT SOURCE DETECTED" << std::endl;
+        }
+#endif
+
         tryCacheGetByID(callFrame, codeBlock, vPC, baseValue, ident, slot);
 
         callFrame->uncheckedR(dst) = result;
