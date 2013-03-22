@@ -64,6 +64,30 @@ namespace JSC {
 
     enum PreferredPrimitiveType { NoPreference, PreferNumber, PreferString };
 
+#ifdef ARTEMIS
+    typedef struct {
+
+        union {
+            int64_t asInt64;
+            JSCell* ptr;
+
+            #if CPU(BIG_ENDIAN)
+                    struct {
+                        int32_t tag;
+                        int32_t payload;
+                    } asBits;
+            #else
+                    struct {
+                        int32_t payload;
+                        int32_t tag;
+                    } asBits;
+            #endif
+        } u;
+
+        void* symbolic;
+
+    } SymbolicImmediate;
+#endif
 
 #if USE(JSVALUE32_64)
     typedef int64_t EncodedJSValue;
@@ -77,6 +101,10 @@ namespace JSC {
         double asDouble;
 #elif USE(JSVALUE64)
         JSCell* ptr;
+#endif
+
+#ifdef ARTEMIS
+        SymbolicImmediate* symptr;
 #endif
         
 #if CPU(BIG_ENDIAN)
@@ -343,6 +371,11 @@ namespace JSC {
         // If all bits in the mask are set, this indicates an integer number,
         // if any but not all are set this value is a double precision number.
         #define TagTypeNumber 0xffff000000000000ll
+
+#ifdef ARTEMIS
+        #define TagTypeSymbolicNumber 0xffffe00000000000ll
+        #define TagTypeSymbolicDouble 0xfffff00000000000ll
+#endif
 
         // All non-numeric (bool, null, undefined) immediates have bit 2 set.
         #define TagBitTypeOther 0x2ll

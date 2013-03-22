@@ -407,7 +407,12 @@ namespace JSC {
     inline int32_t JSValue::asInt32() const
     {
         ASSERT(isInt32());
+
+#ifdef ARTEMIS
+        return static_cast<int32_t>(u.asInt64 & ~TagTypeSymbolicNumber);
+#else
         return static_cast<int32_t>(u.asInt64);
+#endif
     }
 
     inline bool JSValue::isDouble() const
@@ -453,7 +458,12 @@ namespace JSC {
 
     inline bool JSValue::isInt32() const
     {
-        return (u.asInt64 & TagTypeNumber) == TagTypeNumber;
+#ifdef ARTEMIS
+        return (((u.asInt64 & TagTypeNumber) == TagTypeNumber) &&
+                ((u.asInt64 & TagTypeSymbolicDouble) != TagTypeSymbolicDouble));
+#else
+        return (u.asInt64 & TagTypeNumber == TagTypeNumber);
+#endif
     }
 
     inline intptr_t reinterpretDoubleToIntptr(double value)
@@ -477,6 +487,12 @@ namespace JSC {
 
     inline double JSValue::asDouble() const
     {
+#ifdef ARTEMIS
+        if ((u.asInt64 & TagTypeSymbolicDouble) == TagTypeSymbolicDouble) {
+            return reinterpretIntptrToDouble(u.symptr->u.asInt64 - DoubleEncodeOffset);
+        }
+#endif
+
         return reinterpretIntptrToDouble(u.asInt64 - DoubleEncodeOffset);
     }
 
