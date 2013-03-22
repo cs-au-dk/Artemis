@@ -160,11 +160,11 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
         }
 
         case 'y': {
-            if (string(optarg).compare("html") == 0) {
+            if (QString(optarg).toLower().compare("html") == 0) {
                 options.outputCoverage = artemis::HTML;
-            } else if (string(optarg).compare("stdout") == 0) {
+            } else if (QString(optarg).toLower().compare("stdout") == 0) {
                 options.outputCoverage = artemis::STDOUT;
-            } else if (string(optarg).compare("none") == 0) {
+            } else if (QString(optarg).toLower().compare("none") == 0) {
                 options.outputCoverage = artemis::NONE;
             } else {
                 cerr << "ERROR: Invalid choice of coverage report " << optarg << endl;
