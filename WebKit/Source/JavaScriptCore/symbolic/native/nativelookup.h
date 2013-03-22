@@ -12,7 +12,7 @@ namespace JSC {
     class ExecState;
 }
 
-namespace SymbolicExecution
+namespace Symbolic
 {
 
 class NativeLookup

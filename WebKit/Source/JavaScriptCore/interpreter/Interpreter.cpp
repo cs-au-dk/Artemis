@@ -67,6 +67,7 @@
 #include <QDebug>
 #ifdef ARTEMIS
 #include "instrumentation/jscexecutionlistener.h"
+#include "symbolic/symbolicinterpreter.h"
 #endif
 
 #if ENABLE(JIT)
@@ -645,6 +646,8 @@ Interpreter::Interpreter()
 #if ENABLE(JIT)
     qFatal()<<"WEBKIT: JIT enabled - instrumentation will not work!\n";
 #endif
+
+    m_artemisil = new Symbolic::SymbolicInterpreter();
 #endif
 
 #if ENABLE(COMPUTED_GOTO_INTERPRETER)

@@ -7,7 +7,7 @@
 
 #ifdef ARTEMIS
 
-namespace SymbolicExecution
+namespace Symbolic
 {
 
 class SymbolicInterpreter : public JSC::ArtemisIL

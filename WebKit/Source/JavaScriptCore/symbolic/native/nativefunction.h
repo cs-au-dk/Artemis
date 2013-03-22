@@ -5,7 +5,7 @@
 
 #ifdef ARTEMIS
 
-namespace SymbolicExecution
+namespace Symbolic
 {
 
 class NativeFunction

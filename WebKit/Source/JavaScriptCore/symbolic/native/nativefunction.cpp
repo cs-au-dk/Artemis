@@ -2,7 +2,7 @@
 
 #ifdef ARTEMIS
 
-namespace SymbolicExecution
+namespace Symbolic
 {
 
 NativeFunction::NativeFunction(std::string name) :

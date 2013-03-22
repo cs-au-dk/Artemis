@@ -10,7 +10,7 @@
 
 #include "nativelookup.h"
 
-namespace SymbolicExecution
+namespace Symbolic
 {
 
 NativeLookup::NativeLookup()

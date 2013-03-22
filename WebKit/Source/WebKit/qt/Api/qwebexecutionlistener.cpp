@@ -22,8 +22,6 @@
 #include "JavaScriptCore/bytecode/Opcode.h"
 #include "JavaScriptCore/interpreter/Interpreter.h"
 
-#include "WebCore/symbolicexecution/symbolicinterpreter.h"
-
 #include "qwebexecutionlistener.h"
 
 using namespace std;
@@ -353,9 +351,6 @@ QWebExecutionListener* QWebExecutionListener::getListener() {
 
 void QWebExecutionListener::attachListeners() {
     jscinst::register_jsc_listener(QWebExecutionListener::getListener());
-
-    JSC::Interpreter::m_artemisil = new SymbolicExecution::SymbolicInterpreter();
-
 }
 
 namespace inst {

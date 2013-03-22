@@ -8,7 +8,7 @@
 
 #include "symbolicinterpreter.h"
 
-namespace SymbolicExecution
+namespace Symbolic
 {
 
 SymbolicInterpreter::SymbolicInterpreter() : ArtemisIL()

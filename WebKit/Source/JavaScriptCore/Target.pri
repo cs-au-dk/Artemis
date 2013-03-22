@@ -208,7 +208,11 @@ SOURCES += \
     runtime/UString.cpp \
     yarr/YarrJIT.cpp \
     instrumentation/jscexecutionlistener.cpp \
-    artemisil/artemisil.cpp
+    artemisil/artemisil.cpp \
+    symbolic/symbolicinterpreter.cpp \
+    symbolic/native/nativelookup.cpp \
+    symbolic/native/nativefunction.cpp \
+    symbolic/native/natives.cpp
 
 *sh4* {
     QMAKE_CXXFLAGS += -mieee -w
@@ -237,6 +241,9 @@ lessThan(QT_GCC_MAJOR_VERSION, 5) {
 HEADERS += \
     instrumentation/jscexecutionlistener.h \
     instrumentation/jscexecutionlistener.h \
-    artemisil/artemisil.h
-
-
+    artemisil/artemisil.h \
+    symbolic/symbolicinterpreter.h \
+    symbolic/native/nativelookup.h \
+    symbolic/native/nativefunction.h \
+    symbolic/native/natives.h \
+    symbolic/native/nativefunction.h
