@@ -66,8 +66,8 @@
 #include <wtf/Threading.h>
 #include <QDebug>
 #ifdef ARTEMIS
+#include "symbolic/native/nativefunction.h"
 #include "instrumentation/jscexecutionlistener.h"
-#include "symbolic/symbolicinterpreter.h"
 #endif
 
 #if ENABLE(JIT)
@@ -79,6 +79,10 @@
 using namespace std;
 
 namespace JSC {
+
+#ifdef ARTEMIS
+Symbolic::SymbolicInterpreter* Interpreter::m_symbolic = new Symbolic::SymbolicInterpreter();
+#endif
 
 // Returns the depth of the scope chain within a given call frame.
 static int depth(CodeBlock* codeBlock, ScopeChainNode* sc)
@@ -93,10 +97,6 @@ static NEVER_INLINE JSValue concatenateStrings(ExecState* exec, Register* string
 {
     return jsString(exec, strings, count);
 }
-
-#ifdef ARTEMIS
-ArtemisIL* Interpreter::m_artemisil = NULL;
-#endif
 
 NEVER_INLINE bool Interpreter::resolve(CallFrame* callFrame, Instruction* vPC, JSValue& exceptionValue)
 {
@@ -647,7 +647,10 @@ Interpreter::Interpreter()
     qFatal()<<"WEBKIT: JIT enabled - instrumentation will not work!\n";
 #endif
 
-    m_artemisil = new Symbolic::SymbolicInterpreter();
+    if (Interpreter::m_symbolic == NULL) {
+        qFatal("WEBKIT m_symbolic not set!");
+    }
+
 #endif
 
 #if ENABLE(COMPUTED_GOTO_INTERPRETER)
@@ -1794,10 +1797,6 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
     
     ASSERT(m_initialized);
     ASSERT(m_enabled);
-    
-#ifdef ARTEMIS
-    ASSERT(Interpreter::m_artemisil);
-#endif
 
 #if ENABLE(JIT)
 #if ENABLE(INTERPRETER)
@@ -1970,6 +1969,15 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
             CHECK_FOR_EXCEPTION();
             callFrame->uncheckedR(dst) = result;
         }
+
+#ifdef ARTEMIS
+        SymbolicValue* symbolicValue = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC,
+                                                                              src1, Symbolic::EQUAL, src2);
+
+        JSValue jsValue = callFrame->uncheckedR(dst).jsValue();
+        jsValue.mutateSymbolic(symbolicValue->identifier, symbolicValue->value);
+        callFrame->uncheckedR(dst) = jsValue;
+#endif
 
         vPC += OPCODE_LENGTH(op_eq);
         NEXT_INSTRUCTION();
@@ -4029,6 +4037,10 @@ skip_id_custom_self:
         */
         int cond = vPC[1].u.operand;
         int target = vPC[2].u.operand;
+
+        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC,
+                                             callFrame->r(cond).jsValue());
+
         if (!callFrame->r(cond).jsValue().toBoolean(callFrame)) {
             vPC += target;
             NEXT_INSTRUCTION();
@@ -4552,7 +4564,7 @@ skip_id_custom_self:
         if (callType == CallTypeJS) {
 
 #ifdef ARTEMIS
-            Interpreter::m_artemisil->ail_call(callFrame, vPC);
+            Interpreter::m_symbolic->ail_call(callFrame, vPC);
 #endif
 
             ScopeChainNode* callDataScopeChain = callData.js.scopeChain;
@@ -4598,8 +4610,8 @@ skip_id_custom_self:
                 *topCallFrameSlot = callFrame;
 
 #ifdef ARTEMIS
-                Interpreter::m_artemisil->ail_call_native(callFrame, vPC,
-                                                          (native_function_ID_t)callData.native.function);
+                Interpreter::m_symbolic->ail_call_native(callFrame, vPC,
+                                                         (native_function_ID_t)callData.native.function);
 #endif
 
             }

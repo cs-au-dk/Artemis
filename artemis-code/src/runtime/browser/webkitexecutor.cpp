@@ -119,6 +119,8 @@ WebKitExecutor::WebKitExecutor(QObject* parent,
     QObject::connect(webkitListener, SIGNAL(sigJavascriptConstantEncountered(QString)),
                      mResultBuilder.data(), SLOT(slJavascriptConstantEncountered(QString)));
 
+    webkitListener->beginSymbolicSession();
+
 }
 
 WebKitExecutor::~WebKitExecutor()
@@ -127,6 +129,7 @@ WebKitExecutor::~WebKitExecutor()
 
 void WebKitExecutor::detach() {
     // ignore events emitted from webkit on deallocation
+    webkitListener->endSymbolicSession();
     webkitListener->disconnect(mResultBuilder.data());
 
 }

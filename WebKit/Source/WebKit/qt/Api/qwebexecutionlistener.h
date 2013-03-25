@@ -52,6 +52,9 @@ public:
     void timerFire(int timerId);
     void clearTimers();
 
+    void beginSymbolicSession();
+    void endSymbolicSession();
+
     static QWebExecutionListener* getListener();
     static void attachListeners();
 

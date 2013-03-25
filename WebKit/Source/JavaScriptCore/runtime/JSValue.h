@@ -23,6 +23,7 @@
 #ifndef JSValue_h
 #define JSValue_h
 
+#include <string>
 #include <math.h>
 #include <stddef.h> // for size_t
 #include <stdint.h>
@@ -65,6 +66,19 @@ namespace JSC {
     enum PreferredPrimitiveType { NoPreference, PreferNumber, PreferString };
 
 #ifdef ARTEMIS
+    typedef struct symbolic_value_t {
+
+        int identifier;
+        std::string value;
+
+        symbolic_value_t(int identifier, std::string value) :
+            identifier(identifier),
+            value(value)
+        {
+        }
+
+    } SymbolicValue;
+
     typedef struct {
 
         union {
@@ -84,7 +98,7 @@ namespace JSC {
             #endif
         } u;
 
-        void* symbolic;
+        SymbolicValue* symbolic;
 
     } SymbolicImmediate;
 #endif
@@ -101,10 +115,6 @@ namespace JSC {
         double asDouble;
 #elif USE(JSVALUE64)
         JSCell* ptr;
-#endif
-
-#ifdef ARTEMIS
-        SymbolicImmediate* symptr;
 #endif
         
 #if CPU(BIG_ENDIAN)
@@ -207,6 +217,14 @@ namespace JSC {
         bool isGetterSetter() const;
         bool isObject() const;
         bool inherits(const ClassInfo*) const;
+
+#ifdef ARTEMIS
+        // Symbolic operations
+        bool isSymbolic() const;
+        void mutateSymbolic(int identifier, std::string value);
+
+        SymbolicValue* asSymbolic() const;
+#endif
         
         // Extracting the value.
         bool getString(ExecState* exec, UString&) const;
@@ -368,13 +386,31 @@ namespace JSC {
         // This value is 2^48, used to encode doubles such that the encoded value will begin
         // with a 16-bit pattern within the range 0x0001..0xFFFE.
         #define DoubleEncodeOffset 0x1000000000000ll
+
+#ifdef ARTEMIS
+        #define TagTypeNumber 0xffff800000000000ll
+
+        #define TagTypeInteger 0xffffC00000000000ll
+
+        #define TagTypeSymbolicInteger 0xffffD00000000000ll
+        #define TagTypeSymbolicDouble 0xffff900000000000ll
+
+        #define TagTypeSymbolicObject 0xffff300000000000ll
+        #define TagTypeSymbolicNull 0xffff100000000000ll
+
+        #define TagTypeSymbolicTrue 0xffff500000000000ll
+        #define TagTypeSymbolicFalse 0xffff700000000000ll
+
+        #define SymbolicMask 0xfffff00000000000ll
+        #define TagTypeSymbolic 0xffff100000000000ll
+
+        SymbolicImmediate* getImmediate() const;
+        JSC::JSCell* getPtr() const;
+        int64_t getInt64() const;
+#else
         // If all bits in the mask are set, this indicates an integer number,
         // if any but not all are set this value is a double precision number.
         #define TagTypeNumber 0xffff000000000000ll
-
-#ifdef ARTEMIS
-        #define TagTypeSymbolicNumber 0xffffe00000000000ll
-        #define TagTypeSymbolicDouble 0xfffff00000000000ll
 #endif
 
         // All non-numeric (bool, null, undefined) immediates have bit 2 set.

@@ -1,9 +1,17 @@
 #ifndef NATIVEFUNCTION_H
 #define NATIVEFUNCTION_H
 
+#include <inttypes.h>
 #include <string>
 
 #ifdef ARTEMIS
+
+namespace JSC
+{
+
+typedef intptr_t native_function_ID_t;
+
+}
 
 namespace Symbolic
 {

@@ -4,8 +4,6 @@
 #include <tr1/unordered_map>
 #include <tr1/unordered_set>
 
-#include "JavaScriptCore/artemisil/artemisil.h"
-
 #include "nativefunction.h"
 
 namespace JSC {

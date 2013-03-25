@@ -37,7 +37,7 @@
 #include "RegisterFile.h"
 
 #ifdef ARTEMIS
-#include "artemisil/artemisil.h"
+#include "symbolic/symbolicinterpreter.h"
 #include "runtime/SymbolTable.h"
 #endif
 
@@ -154,7 +154,7 @@ namespace JSC {
         void stopSampling();
 
 #ifdef ARTEMIS
-        static ArtemisIL* m_artemisil;
+        static Symbolic::SymbolicInterpreter* m_symbolic;
 #endif
 
     private:

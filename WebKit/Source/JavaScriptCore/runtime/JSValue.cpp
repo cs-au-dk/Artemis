@@ -228,4 +228,41 @@ JSString* JSValue::toPrimitiveString(ExecState* exec) const
     return jsString(&exec->globalData(), v.toString(exec));
 }
 
+#ifdef ARTEMIS
+void JSValue::mutateSymbolic(int identifier, std::string value) {
+
+    SymbolicValue* symbolicValue = new SymbolicValue(identifier, value);
+
+    SymbolicImmediate* symbolicImmediate = new SymbolicImmediate();
+    symbolicImmediate->symbolic = symbolicValue;
+
+    if (isInt32()) {
+        symbolicImmediate->u.asInt64 = u.asInt64;
+        u.asInt64 = (TagTypeSymbolicInteger | (int64_t)symbolicImmediate);
+    } else if (isDouble()) {
+        symbolicImmediate->u.asInt64 = u.asInt64;
+        u.asInt64 = (TagTypeSymbolicDouble | (int64_t)symbolicImmediate);
+    } else if (isObject()) {
+        symbolicImmediate->u.asInt64 = u.asInt64;
+        u.asInt64 = (TagTypeSymbolicObject | (int64_t)symbolicImmediate);
+    } else if (isTrue()) {
+        symbolicImmediate->u.asInt64 = u.asInt64;
+        u.asInt64 = (TagTypeSymbolicTrue | (int64_t)symbolicImmediate);
+    } else if (isFalse()) {
+        symbolicImmediate->u.asInt64 = u.asInt64;
+        u.asInt64 = (TagTypeSymbolicFalse | (int64_t)symbolicImmediate);
+    } else {
+        ASSERT(false);
+    }
+
+}
+
+SymbolicValue* JSValue::asSymbolic() const
+{
+    ASSERT(isSymbolic());
+    SymbolicImmediate* immediate = getImmediate();
+    return immediate->symbolic;
+}
+#endif
+
 } // namespace JSC

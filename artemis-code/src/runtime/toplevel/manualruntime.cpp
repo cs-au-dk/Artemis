@@ -41,6 +41,7 @@ void ManualRuntime::run(const QUrl& url)
 
 void ManualRuntime::slWebViewClosed()
 {
+    mWebkitExecutor->detach();
     done();
 }
 

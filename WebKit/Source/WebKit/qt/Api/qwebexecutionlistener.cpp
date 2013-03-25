@@ -353,6 +353,16 @@ void QWebExecutionListener::attachListeners() {
     jscinst::register_jsc_listener(QWebExecutionListener::getListener());
 }
 
+void QWebExecutionListener::beginSymbolicSession()
+{
+    JSC::Interpreter::m_symbolic->beginSession();
+}
+
+void QWebExecutionListener::endSymbolicSession()
+{
+    JSC::Interpreter::m_symbolic->endSession();
+}
+
 namespace inst {
 
 ExecutionListener* listener = 0;
