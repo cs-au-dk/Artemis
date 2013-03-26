@@ -23,13 +23,12 @@ PathTracer::PathTracer(PathTraceReport reportLevel, bool reportBytecode) :
     mTraces(QList<PathTrace>()),
     mReportLevel(reportLevel),
     mReportBytecode(reportBytecode),
-    mCurrentlyRecording(reportLevel != ALL_TRACES)
+    mCurrentlyRecording(reportLevel == ALL_TRACES)
 {
 }
 
 void PathTracer::notifyStartingLoad()
 {
-    // Record this for *any* setting of mCurrentlyReporting.
     newPathTrace("Starting Page Load");
 }
 
@@ -61,7 +60,11 @@ void PathTracer::slEventListenerTriggered(QWebElement* elem, QString eventName)
 
 void PathTracer::slJavascriptFunctionCalled(QString functionName, size_t bytecodeSize, uint sourceOffset, QUrl sourceUrl, uint sourceStartLine)
 {
+    // TODO: Stripping the queries because they are often extremely long, but they are sometimes important as well!
+    QString displayedUrl = sourceUrl.hasQuery() ? (sourceUrl.toString(QUrl::RemoveQuery) + "?...") : sourceUrl.toString();
     functionName = functionName.isEmpty() ? "<no name>" : (functionName + "()"); // Anonymous function??
+    functionName = functionName.leftJustified(20) + QString(" File: %1, Line: %2, Offset: %3.").arg(displayedUrl).arg(sourceStartLine).arg(sourceOffset);
+    // TODO: Would be nice to have this "extra info" as a separate field so the write() method can place it itself.
     appendItem(FUNCALL, functionName);
 }
 
@@ -94,10 +97,12 @@ void PathTracer::newPathTrace(QString description)
 
 void PathTracer::appendItem(ItemType type, QString message)
 {
-    if(mTraces.isEmpty()){
-        newPathTrace("<onload>");
-    }
     if(mCurrentlyRecording) {
+        if(mTraces.isEmpty()){
+            Log::error("Error: Trace item was added before any trace was started.");
+            Log::error("       Message: " + message.toStdString());
+            exit(1);
+        }
         mTraces.last().second.append(qMakePair(type, message));
     }
 }
@@ -105,7 +110,8 @@ void PathTracer::appendItem(ItemType type, QString message)
 /**
   Note that this function implies a call graph which is not *necessarily* accurate.
   The function traces are given in chronological order, so if we ever get calls which are not sequential or
-  for some reason we miss one then we will guess
+  for some reason we miss one then we may guess the caller/callee relationship badly.
+  TODO: Could this feasibly happen?
 **/
 void PathTracer::write()
 {
@@ -115,7 +121,7 @@ void PathTracer::write()
 
     //Log::info("===== Path Tracer =====");
     if(mTraces.isEmpty()){
-        Log::info("No traces were recorded");
+        Log::info("No traces were recorded.");
         return;
     }
     foreach(trace, mTraces){
