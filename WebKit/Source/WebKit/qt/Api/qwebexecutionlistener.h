@@ -25,15 +25,17 @@ public:
 
     virtual void eventAdded(WebCore::EventTarget * target, const char* type);
     virtual void eventCleared(WebCore::EventTarget * target, const char* type);
+    virtual void eventTriggered(WebCore::EventTarget * target, const char* type);
 
     virtual void javascript_code_loaded(JSC::SourceProvider* sp, JSC::ExecState*);
     virtual void exceptional_condition(std::string cause, intptr_t sourceID, int lineNumber);
     virtual void url_changed(JSC::JSValue, JSC::ExecState* e);
     virtual void webkit_ajax_send(const char * url, const char * data);
     virtual void javascript_called_function(const JSC::DebuggerCallFrame&);
+    virtual void javascript_returned_function(const JSC::DebuggerCallFrame&);
 
     virtual void javascript_executed_statement(const JSC::DebuggerCallFrame&, uint lineNumber); // from the debugger
-    virtual void javascript_bytecode_executed(JSC::CodeBlock*, JSC::Instruction* inst); // interpreter instrumentation
+    virtual void javascript_bytecode_executed(JSC::Interpreter* interpreter, JSC::CodeBlock*, JSC::Instruction* inst); // interpreter instrumentation
     virtual void javascript_property_read(std::string propertyName, JSC::ExecState*);
     virtual void javascript_property_written(std::string propertyName, JSC::ExecState*);
 
@@ -62,6 +64,7 @@ private:
 signals:
     void addedEventListener(QWebElement*, QString);
     void removedEventListener(QWebElement*, QString);
+    void triggeredEventListener(QWebElement*, QString);
     
     void addedAjaxCallbackHandler(int callbackId);
 
@@ -84,7 +87,8 @@ signals:
     void statementExecuted(uint linenumber, QUrl url, uint startline);
 
     void sigJavascriptFunctionCalled(QString functionName, size_t bytecodeSize, uint sourceOffset, QUrl url, uint startline);
-    void sigJavascriptBytecodeExecuted(uint bytecodeOffset, uint sourceOffset, QUrl url, uint startline);
+    void sigJavascriptFunctionReturned(QString functionName, size_t bytecodeSize, uint sourceOffset, QUrl url, uint startline);
+    void sigJavascriptBytecodeExecuted(QString opcode, uint bytecodeOffset, uint sourceOffset, QUrl url, uint startline);
 
 };
 

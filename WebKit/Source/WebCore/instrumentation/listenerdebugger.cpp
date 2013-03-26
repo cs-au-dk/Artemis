@@ -29,7 +29,10 @@ namespace inst {
         el->javascript_called_function(frame);
     }
 
-    void ListenerDebugger::returnEvent(const JSC::DebuggerCallFrame&, intptr_t sourceID, int lineNumber) {}
+    void ListenerDebugger::returnEvent(const JSC::DebuggerCallFrame& frame, intptr_t sourceID, int lineNumber) {
+        el->javascript_returned_function(frame);
+    }
+
     void ListenerDebugger::willExecuteProgram(const JSC::DebuggerCallFrame&, intptr_t sourceID, int lineNumber) {}
     void ListenerDebugger::didExecuteProgram(const JSC::DebuggerCallFrame&, intptr_t sourceID, int lineNumber) {}
     void ListenerDebugger::didReachBreakpoint(const JSC::DebuggerCallFrame&, intptr_t sourceID, int lineNumber) {}

@@ -34,6 +34,8 @@ public:
     void javaScriptConsoleMessage(const QString& message, int lineNumber, const QString& sourceID);
     bool javaScriptPrompt(QWebFrame* frame, const QString& msg, const QString& defaultValue, QString* result);
 
+signals:
+    void sigJavascriptAlert(QWebFrame* frame, QString msg);
 };
 
 typedef QSharedPointer<ArtemisWebPage> ArtemisWebPagePtr;

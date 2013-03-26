@@ -19,6 +19,8 @@
 #include "JavaScriptCore/interpreter/CallFrame.h"
 #include "JavaScriptCore/runtime/ScopeChain.h"
 #include "JavaScriptCore/bytecode/CodeBlock.h"
+#include "JavaScriptCore/bytecode/Opcode.h"
+#include "JavaScriptCore/interpreter/Interpreter.h"
 
 #include "qwebexecutionlistener.h"
 
@@ -62,6 +64,22 @@ void QWebExecutionListener::eventCleared(WebCore::EventTarget * target, const ch
 
     } else {
         std::cout << "ERROR: Strange event cleared:" << typeString << std::endl;
+    }
+
+    return;
+}
+
+void QWebExecutionListener::eventTriggered(WebCore::EventTarget * target, const char* type) {
+    std::string typeString = std::string(type);
+
+    if (target->toNode() != NULL) {
+        emit triggeredEventListener(new QWebElement(target->toNode()), QString(tr(typeString.c_str())));
+
+     } else if (target->toDOMWindow() != NULL) {
+        emit triggeredEventListener(new QWebElement(target->toDOMWindow()->frameElement()), QString(tr(typeString.c_str())));
+
+    } else {
+        std::cout << "ERROR: Strange event triggered:" << typeString << std::endl;
     }
 
     return;
@@ -234,6 +252,19 @@ void QWebExecutionListener::javascript_called_function(const JSC::DebuggerCallFr
     }
 }
 
+void QWebExecutionListener::javascript_returned_function(const JSC::DebuggerCallFrame& frame) {
+
+    std::string functionName = std::string(frame.calculatedFunctionName().ascii().data());
+
+    JSC::CodeBlock* codeBlock = frame.callFrame()->codeBlock();
+
+    emit sigJavascriptFunctionReturned(QString::fromStdString(functionName),
+                                       codeBlock->numberOfInstructions(),
+                                       codeBlock->sourceOffset(),
+                                       QUrl(QString::fromStdString(codeBlock->source()->url().utf8().data())),
+                                       codeBlock->source()->startPosition().m_line.zeroBasedInt() + 1);
+}
+
 void QWebExecutionListener::exceptional_condition(std::string cause, intptr_t sourceID, int lineNumber) {
     emit script_crash(QString(tr(cause.c_str())), sourceID, lineNumber);
 }
@@ -280,11 +311,12 @@ void QWebExecutionListener::javascript_executed_statement(const JSC::DebuggerCal
                            sourceProvider->startPosition().m_line.zeroBasedInt() + 1);
 }
 
-void QWebExecutionListener::javascript_bytecode_executed(JSC::CodeBlock* codeBlock, JSC::Instruction* instuction) {
+void QWebExecutionListener::javascript_bytecode_executed(JSC::Interpreter* interpreter, JSC::CodeBlock* codeBlock, JSC::Instruction* instuction) {
 
     uint bytecodeOffset = instuction - codeBlock->instructions().begin();
 
-    emit sigJavascriptBytecodeExecuted(bytecodeOffset,
+    emit sigJavascriptBytecodeExecuted(tr(JSC::opcodeNames[interpreter->getOpcodeID(instuction->u.opcode)]),
+                                       bytecodeOffset,
                                        codeBlock->sourceOffset(),
                                        QUrl(QString::fromStdString(codeBlock->source()->url().utf8().data())),
                                        codeBlock->source()->startPosition().m_line.zeroBasedInt() + 1);

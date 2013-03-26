@@ -147,9 +147,10 @@ void CoverageListener::slJavascriptFunctionCalled(QString functionName, size_t b
     if (mInputBeingExecuted != -1) {
         mInputToCodeBlockMap.value(mInputBeingExecuted)->insert(codeBlockID);
     }
+
 }
 
-void CoverageListener::slJavascriptBytecodeExecuted(uint bytecodeOffset, uint sourceOffset, QUrl sourceUrl, uint sourceStartLine)
+void CoverageListener::slJavascriptBytecodeExecuted(const QString& opcode, uint bytecodeOffset, uint sourceOffset, const QUrl& sourceUrl, uint sourceStartLine)
 {
     if (mIgnoredUrls.contains(sourceUrl)) {
         return;

@@ -13,35 +13,39 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef ARTEMISGLOBALS_H
-#define ARTEMISGLOBALS_H
 
-#include <QWebElement>
+#ifndef MANUALRUNTIME_H
+#define MANUALRUNTIME_H
 
-using namespace std;
+#include <QObject>
+
+#include "runtime/browser/artemiswebview.h"
+
+#include "runtime/runtime.h"
 
 namespace artemis
 {
 
-const QWebElement NULL_WEB_ELEMENT;
-
-inline QString quoteString(const QString s)
+class ManualRuntime : public Runtime
 {
-    return "\"" + s + "\"";
+
+    Q_OBJECT
+
+public:
+    ManualRuntime(QObject* parent, const Options& options, const QUrl& url);
+
+    void run(const QUrl& url);
+
+protected:
+
+    ArtemisWebViewPtr mWebView;
+
+private slots:
+
+    void slWebViewClosed();
+
+};
+
 }
 
-inline QString boolTostring(const bool b)
-{
-    return (b ? "true" : "false");
-}
-
-inline QString intTostring(const int i)
-{
-    QString res = "";
-    res.setNum(i);
-    return res;
-}
-
-}
-
-#endif // ARTEMISGLOBALS_H
+#endif // MANUALRUNTIME_H

@@ -19,8 +19,10 @@
 #include <QSharedPointer>
 #include <QUrl>
 
+#include "runtime/options.h"
 #include "model/coverage/coveragelistener.h"
 #include "model/javascriptstatistics.h"
+#include "model/pathtracer.h"
 
 namespace artemis {
 
@@ -28,14 +30,16 @@ class AppModel
 {
 
 public:
-    AppModel(QSet<QUrl> coverageIgnoredUrls);
+    AppModel(Options options);
 
     CoverageListenerPtr getCoverageListener() const;
     JavascriptStatisticsPtr getJavascriptStatistics() const;
+    PathTracerPtr getPathTracer() const;
 
 private:
     CoverageListenerPtr mCoverageListener;
     JavascriptStatisticsPtr mJavascriptStatistics;
+    PathTracerPtr mPathTracer;
 
 };
 

@@ -16,16 +16,10 @@
 #ifndef ARTEMISOPTIONS_H
 #define ARTEMISOPTIONS_H
 
-#include <QObject>
 #include <QUrl>
-#include <QSettings>
-
-#include "runtime/worklist/worklist.h"
-#include "strategies/termination/terminationstrategy.h"
-#include "strategies/prioritizer/prioritizerstrategy.h"
-#include "strategies/inputgenerator/targets/targetdescriptor.h"
-#include "runtime/input/events/eventhandlerdescriptor.h"
-#include "strategies/inputgenerator/targets/jquerylistener.h"
+#include <QSet>
+#include <QMap>
+#include <QString>
 
 namespace artemis
 {
@@ -42,6 +36,14 @@ enum CoverageReport {
     STDOUT, HTML, NONE
 };
 
+enum MajorMode {
+    AUTOMATED, MANUAL
+};
+
+enum PathTraceReport {
+    ALL_TRACES, CLICK_TRACES, NO_TRACES
+};
+
 typedef struct OptionsType {
 
     OptionsType() :
@@ -51,7 +53,10 @@ typedef struct OptionsType {
         disableStateCheck(true),
         formInputGenerationStrategy(Random),
         prioritizerStrategy(CONSTANT),
-        outputCoverage(NONE)
+        outputCoverage(NONE),
+        majorMode(AUTOMATED),
+        reportPathTrace(NO_TRACES),
+        reportPathTraceBytecode(false)
     {}
 
     QMap<QString, QString> presetFormfields;
@@ -71,6 +76,11 @@ typedef struct OptionsType {
     FormInputGenerationStrategies formInputGenerationStrategy;
     PrioritizerStrategies prioritizerStrategy;
     CoverageReport outputCoverage;
+
+    MajorMode majorMode;
+
+    PathTraceReport reportPathTrace;
+    bool reportPathTraceBytecode;
 
 } Options;
 

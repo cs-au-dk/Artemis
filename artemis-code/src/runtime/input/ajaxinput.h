@@ -16,6 +16,8 @@
 #ifndef AJAXINPUT_H
 #define AJAXINPUT_H
 
+#include <QWebExecutionListener>
+
 #include "baseinput.h"
 
 namespace artemis

@@ -13,6 +13,7 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+
 #ifndef LOGGINGUTIL_H
 #define LOGGINGUTIL_H
 #include <string>
@@ -24,13 +25,19 @@
 #include <QSet>
 #include <algorithm>
 #include <set>
-#endif // LOGGINGUTIL_H
-using namespace std;
-namespace artemis{
-enum LogLevel {ERROR, WARNING, INFO, DEBUG,FATAL,ALL,OFF};
 
-class Log{
+using namespace std;
+
+namespace artemis {
+
+enum LogLevel {
+    ERROR, WARNING, INFO, DEBUG, FATAL, ALL, OFF
+};
+
+class Log {
+
 private:
+
     static set<artemis::LogLevel>* levels;
     static string logLevelToString(LogLevel level){
         string result;
@@ -62,6 +69,7 @@ private:
 
 
 public:
+
     static void log(string message,LogLevel level){
         if(Log::hasLogLevel(level)){
             cout << message << endl;
@@ -71,6 +79,7 @@ public:
     static void error(string message){
         Log::log(message,ERROR);
     }
+
     static void fatal(string message){
         Log::log(message,FATAL);
     }
@@ -78,12 +87,15 @@ public:
     static void warning(string message){
         Log::log(message,WARNING);
     }
+
     static void debug(string message){
         Log::log(message,DEBUG);
     }
+
     static void info(string message){
         Log::log(message,INFO);
     }
+
     static void addLogLevel(LogLevel level){
         if(level == OFF){
             Log::levels->clear();
@@ -101,3 +113,5 @@ public:
 
 
 }
+
+#endif // LOGGINGUTIL_H

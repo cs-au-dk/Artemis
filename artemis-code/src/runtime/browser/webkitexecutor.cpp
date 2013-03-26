@@ -60,6 +60,7 @@ WebKitExecutor::WebKitExecutor(QObject* parent,
 
     mCoverageListener = appmodel->getCoverageListener();
     mJavascriptStatistics = appmodel->getJavascriptStatistics();
+    mPathTracer = appmodel->getPathTracer();
 
     QWebExecutionListener::attachListeners();
     webkitListener = QWebExecutionListener::getListener();
@@ -73,10 +74,19 @@ WebKitExecutor::WebKitExecutor(QObject* parent,
                      mCoverageListener.data(), SLOT(slJavascriptScriptParsed(QString, QUrl, uint)));
     QObject::connect(webkitListener, SIGNAL(statementExecuted(uint, QUrl, uint)),
                      mCoverageListener.data(), SLOT(slJavascriptStatementExecuted(uint, QUrl, uint)));
-    QObject::connect(webkitListener, SIGNAL(sigJavascriptBytecodeExecuted(uint,  uint, QUrl, uint)),
-                     mCoverageListener.data(), SLOT(slJavascriptBytecodeExecuted(uint, uint, QUrl, uint)));
+    QObject::connect(webkitListener, SIGNAL(sigJavascriptBytecodeExecuted(QString, uint,  uint, QUrl, uint)),
+                     mCoverageListener.data(), SLOT(slJavascriptBytecodeExecuted(QString, uint, uint, QUrl, uint)));
     QObject::connect(webkitListener, SIGNAL(sigJavascriptFunctionCalled(QString, size_t, uint, QUrl, uint)),
                      mCoverageListener.data(), SLOT(slJavascriptFunctionCalled(QString, size_t, uint, QUrl, uint)));
+
+    QObject::connect(webkitListener, SIGNAL(sigJavascriptBytecodeExecuted(QString, uint,  uint, QUrl, uint)),
+                     mPathTracer.data(), SLOT(slJavascriptBytecodeExecuted(QString, uint, uint, QUrl, uint)));
+    QObject::connect(webkitListener, SIGNAL(sigJavascriptFunctionCalled(QString, size_t, uint, QUrl, uint)),
+                     mPathTracer.data(), SLOT(slJavascriptFunctionCalled(QString, size_t, uint, QUrl, uint)));
+    QObject::connect(webkitListener, SIGNAL(sigJavascriptFunctionReturned(QString, size_t, uint, QUrl, uint)),
+                     mPathTracer.data(), SLOT(slJavascriptFunctionReturned(QString, size_t, uint, QUrl, uint)));
+    QObject::connect(mPage.data(), SIGNAL(sigJavascriptAlert(QWebFrame*, QString)),
+                     mPathTracer.data(), SLOT(slJavascriptAlert(QWebFrame*, QString)));
 
     QObject::connect(webkitListener, SIGNAL(sigJavascriptPropertyRead(QString,intptr_t,intptr_t,QUrl,int)),
                      mJavascriptStatistics.data(), SLOT(slJavascriptPropertyRead(QString,intptr_t,intptr_t,QUrl,int)));
@@ -87,6 +97,9 @@ WebKitExecutor::WebKitExecutor(QObject* parent,
                      mResultBuilder.data(), SLOT(slEventListenerAdded(QWebElement*, QString)));
     QObject::connect(webkitListener, SIGNAL(removedEventListener(QWebElement*, QString)),
                      mResultBuilder.data(), SLOT(slEventListenerRemoved(QWebElement*, QString)));
+
+    QObject::connect(webkitListener, SIGNAL(triggeredEventListener(QWebElement*, QString)),
+                     mPathTracer.data(), SLOT(slEventListenerTriggered(QWebElement*, QString)));
 
     QObject::connect(webkitListener, SIGNAL(addedTimer(int, int, bool)),
                      mResultBuilder.data(), SLOT(slTimerAdded(int, int, bool)));
@@ -130,6 +143,7 @@ void WebKitExecutor::executeSequence(ExecutableConfigurationConstPtr conf)
     mCoverageListener->notifyStartingLoad();
     mResultBuilder->notifyStartingLoad();
     mJavascriptStatistics->notifyStartingLoad();
+    mPathTracer->notifyStartingLoad();
 
     mPage->mainFrame()->load(conf->getUrl());
 }
@@ -164,12 +178,18 @@ void WebKitExecutor::slLoadFinished(bool ok)
         mResultBuilder->notifyStartingEvent();
         mCoverageListener->notifyStartingEvent(input);
         mJavascriptStatistics->notifyStartingEvent(input);
+        mPathTracer->notifyStartingEvent(input);
         input->apply(this->mPage, this->webkitListener);
     }
 
     // DONE
 
     emit sigExecutedSequence(currentConf, mResultBuilder->getResult());
+}
+
+ArtemisWebPagePtr WebKitExecutor::getPage()
+{
+    return mPage;
 }
 
 }
