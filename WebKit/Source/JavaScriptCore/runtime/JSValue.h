@@ -68,11 +68,9 @@ namespace JSC {
 #ifdef ARTEMIS
     typedef struct symbolic_value_t {
 
-        int identifier;
         std::string value;
 
-        symbolic_value_t(int identifier, std::string value) :
-            identifier(identifier),
+        symbolic_value_t(std::string value) :
             value(value)
         {
         }
@@ -221,7 +219,7 @@ namespace JSC {
 #ifdef ARTEMIS
         // Symbolic operations
         bool isSymbolic() const;
-        void mutateSymbolic(int identifier, std::string value);
+        void mutateSymbolic(std::string value);
 
         SymbolicValue* asSymbolic() const;
 #endif

@@ -26,6 +26,8 @@ typedef enum {
     ADD, SUBTRACT, MILTIPLY, DIVIDE, MODULO
 } OP;
 
+const char* opToString(OP op);
+
 class SymbolicInterpreter
 {
 
@@ -36,8 +38,9 @@ public:
     void ail_call_native(JSC::CallFrame* callFrame, const JSC::Instruction* vPC,
                          JSC::native_function_ID_t functionID);
 
-    JSC::SymbolicValue* ail_op_binary(JSC::CallFrame* callFrame, const JSC::Instruction* vPC,
-                                      JSC::JSValue& x, OP op, JSC::JSValue& y);
+    JSC::JSValue ail_op_binary(JSC::CallFrame* callFrame, const JSC::Instruction* vPC,
+                               JSC::JSValue& x, OP op, JSC::JSValue& y, JSC::JSValue result);
+
     void ail_jmp_iff(JSC::CallFrame* callFrame, const JSC::Instruction* vPC,
                      const JSC::JSValue& condition);
 

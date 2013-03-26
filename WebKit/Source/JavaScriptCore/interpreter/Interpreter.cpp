@@ -1971,12 +1971,10 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         }
 
 #ifdef ARTEMIS
-        SymbolicValue* symbolicValue = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC,
-                                                                              src1, Symbolic::EQUAL, src2);
-
-        JSValue jsValue = callFrame->uncheckedR(dst).jsValue();
-        jsValue.mutateSymbolic(symbolicValue->identifier, symbolicValue->value);
-        callFrame->uncheckedR(dst) = jsValue;
+        callFrame->uncheckedR(dst) = \
+                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC,
+                                                       src1, Symbolic::EQUAL, src2,
+                                                       callFrame->uncheckedR(dst).jsValue());
 #endif
 
         vPC += OPCODE_LENGTH(op_eq);
@@ -2285,6 +2283,14 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
             CHECK_FOR_EXCEPTION();
             callFrame->uncheckedR(dst) = result;
         }
+
+#ifdef ARTEMIS
+        callFrame->uncheckedR(dst) = \
+                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC,
+                                                       src1, Symbolic::ADD, src2,
+                                                       callFrame->uncheckedR(dst).jsValue());
+#endif
+
         vPC += OPCODE_LENGTH(op_add);
         NEXT_INSTRUCTION();
     }

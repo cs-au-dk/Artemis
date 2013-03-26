@@ -12,6 +12,15 @@
 namespace Symbolic
 {
 
+const char* opToString(OP op) {
+    static const char* OPStrings[] = {
+        "==", "!=", "===", "!==", "<=", "<", ">=", ">",
+        "+", "-", "*", "/" "%"
+    };
+
+    return OPStrings[op];
+}
+
 SymbolicInterpreter::SymbolicInterpreter() :
     mPC(""),
     mNextSymbolicValue(0)
@@ -39,24 +48,28 @@ void SymbolicInterpreter::ail_call_native(JSC::CallFrame* callFrame, const JSC::
     std::cout << "AIL_CALL_NATIVE <" << nativeFunction->getName() << ">" << std::endl;
 }
 
-JSC::SymbolicValue* SymbolicInterpreter::ail_op_binary(JSC::CallFrame* callFrame, const JSC::Instruction* vPC,
-                                        JSC::JSValue& x, OP op, JSC::JSValue& y)
+JSC::JSValue SymbolicInterpreter::ail_op_binary(JSC::CallFrame*, const JSC::Instruction*,
+                                                JSC::JSValue& x, OP op, JSC::JSValue& y,
+                                                JSC::JSValue result)
 {
     if (!x.isSymbolic()) {
-        x.mutateSymbolic(mNextSymbolicValue++, "");
+        x.mutateSymbolic(std::string("<") + SSTR(mNextSymbolicValue++) + std::string(">"));
         ASSERT(x.isSymbolic());
     }
 
     if (!y.isSymbolic()) {
-        y.mutateSymbolic(mNextSymbolicValue++, "");
+        y.mutateSymbolic(std::string("<") + SSTR(mNextSymbolicValue++) + std::string(">"));
         ASSERT(y.isSymbolic());
     }
 
-    std::string value = std::string("<") + std::string(SSTR(x.asSymbolic()->identifier)) + std::string("> OP <") + std::string(SSTR(y.asSymbolic()->identifier)) + std::string(">");
+    std::string value = std::string("(") + x.asSymbolic()->value + std::string(opToString(op)) + y.asSymbolic()->value + std::string(")");
 
     std::cout << "AIL_OP_BINARY " << value << std::endl;
 
-    return new JSC::SymbolicValue(mNextSymbolicValue++, value);
+    result.mutateSymbolic(value);
+    ASSERT(result.isSymbolic());
+
+    return result;
 }
 
 void SymbolicInterpreter::ail_jmp_iff(JSC::CallFrame* callFrame, const JSC::Instruction* vPC,
