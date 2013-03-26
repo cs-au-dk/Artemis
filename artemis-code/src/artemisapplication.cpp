@@ -14,7 +14,8 @@
  * limitations under the License.
  */
 
-#include "runtime/runtime.h"
+#include "runtime/toplevel/artemisruntime.h"
+#include "runtime/toplevel/manualruntime.h"
 
 #include "artemisapplication.h"
 
@@ -33,7 +34,11 @@ ArtemisApplication::ArtemisApplication(QObject* parent,
 
     srand(0); //Better way to get random numbers?
 
-    mRuntime = new Runtime(this, options, url);
+    if (options.majorMode == AUTOMATED) {
+        mRuntime = new ArtemisRuntime(this, options, url);
+    } else {
+        mRuntime = new ManualRuntime(this, options, url);
+    }
 
     QObject::connect(mRuntime, SIGNAL(sigTestingDone()),
                      this, SLOT(slTestingDone()));
@@ -41,7 +46,7 @@ ArtemisApplication::ArtemisApplication(QObject* parent,
 
 void ArtemisApplication::run(QUrl url)
 {
-    mRuntime->startAnalysis(url);
+    mRuntime->run(url);
 }
 
 void ArtemisApplication::slTestingDone()

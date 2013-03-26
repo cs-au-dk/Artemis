@@ -16,6 +16,8 @@
 
 #include <iostream>
 
+#include <QWebExecutionListener>
+
 #include "statistics/statsstorage.h"
 
 #include "runtime/input/timerinput.h"

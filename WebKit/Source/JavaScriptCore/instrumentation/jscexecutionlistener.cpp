@@ -18,7 +18,7 @@ void JSCExecutionListener::javascript_eval_call(const char* eval_string) {
     //exit(1);
 }
 
-void JSCExecutionListener::javascript_bytecode_executed(JSC::CodeBlock*, JSC::Instruction*) {
+void JSCExecutionListener::javascript_bytecode_executed(JSC::Interpreter*, JSC::CodeBlock*, JSC::Instruction*) {
     cerr << "Warning: Default listener for javascript_bytecode_executed was invoked " << endl;
     //exit(1);
 }

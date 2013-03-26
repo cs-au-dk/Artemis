@@ -13,35 +13,22 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef ARTEMISGLOBALS_H
-#define ARTEMISGLOBALS_H
 
-#include <QWebElement>
-
-using namespace std;
+#include "artemiswebview.h"
 
 namespace artemis
 {
 
-const QWebElement NULL_WEB_ELEMENT;
-
-inline QString quoteString(const QString s)
+ArtemisWebView::ArtemisWebView() :
+    QWebView(NULL)
 {
-    return "\"" + s + "\"";
+
 }
 
-inline QString boolTostring(const bool b)
+void ArtemisWebView::closeEvent(QCloseEvent* event)
 {
-    return (b ? "true" : "false");
-}
-
-inline QString intTostring(const int i)
-{
-    QString res = "";
-    res.setNum(i);
-    return res;
+    event->ignore();
+    emit sigClose();
 }
 
 }
-
-#endif // ARTEMISGLOBALS_H

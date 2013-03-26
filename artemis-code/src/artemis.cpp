@@ -49,6 +49,12 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             "\n"
             "-s       : Enable DOM state checking\n"
             "\n"
+            "--major-mode <mode>:\n"
+            "           The major-mode specifies the top-level test algorithm used by Artemis.\n"
+            "\n"
+            "           artemis - (default) the top-level test algorithm described in the ICSE'11 Artemis paper\n"
+            "           manual - open a browser window for manual testing of web applications\n"
+            "\n"
             "--strategy-form-input-generation <strategy>:\n"
             "           Select form input generation strategy.\n"
             "\n"
@@ -64,6 +70,17 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             "\n"
             "--coverage-report-ignore <URL>:\n"
             "           Exclude the given URL from the coverage report and coverage statistics.\n"
+            "\n"
+            "--path-trace-report <report-type>:\n"
+            "           Output a report of the execution path through the covered JavaScript.\n"
+            "\n"
+            "           all - All executed paths are displayed\n"
+            "           click - Only paths beginning with a click event are displayed\n"
+            "           none - (default) Path trace report is omitted\n"
+            "\n"
+            "--path-trace-report-bytecode true|false:\n"
+            "\n"
+            "           Show executed bytecodes in path trace reports. Default is false.\n"
             "\n"
             "--strategy-priority <strategy>:\n"
             "           Select priority strategy.\n"
@@ -82,6 +99,9 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
     {"strategy-priority", required_argument, NULL, 'z'},
     {"input-strategy-same-length", required_argument, NULL, 'j'},
     {"coverage-report-ignore", required_argument, NULL, 'k'},
+    {"major-mode", required_argument, NULL, 'm'},
+    {"path-trace-report", required_argument, NULL, 'a'},
+    {"path-trace-report-bytecode", required_argument, NULL, 'b'},
     {"help", no_argument, NULL, 'h'},
     {0, 0, 0, 0}
     };
@@ -91,7 +111,7 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
     artemis::Log::addLogLevel(artemis::INFO);
     artemis::Log::addLogLevel(artemis::FATAL);
 
-    while ((c = getopt_long(argc, argv, "hsrp:f:t:c:i:v:", long_options, &option_index)) != -1) {
+    while ((c = getopt_long(argc, argv, "hsrp:a:m:f:t:c:i:v:", long_options, &option_index)) != -1) {
 
         switch (c) {
 
@@ -199,7 +219,8 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
 
          case 'v': {
             artemis::Log::addLogLevel(artemis::OFF);
-         if(QString(optarg).indexOf("debug",0,Qt::CaseInsensitive)>=0){
+
+            if(QString(optarg).indexOf("debug",0,Qt::CaseInsensitive)>=0){
                 artemis::Log::addLogLevel(artemis::DEBUG);
             }
 
@@ -220,6 +241,50 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             if(QString(optarg).indexOf("off",0,Qt::CaseInsensitive)>=0){
                 artemis::Log::addLogLevel(artemis::OFF);
 
+            }
+
+            break;
+        }
+
+        case 'm': {
+
+            if (string(optarg).compare("artemis") == 0) {
+                options.majorMode = artemis::AUTOMATED;
+            } else if (string(optarg).compare("manual") == 0) {
+                options.majorMode = artemis::MANUAL;
+            } else {
+                cerr << "ERROR: Invalid choice of major-mode " << optarg << endl;
+                exit(1);
+            }
+
+            break;
+        }
+
+        case 'a': {
+
+            if (string(optarg).compare("all") == 0) {
+                options.reportPathTrace  = artemis::ALL_TRACES;
+            } else if (string(optarg).compare("click") == 0) {
+                options.reportPathTrace = artemis::CLICK_TRACES;
+            } else if (string(optarg).compare("none") == 0) {
+                options.reportPathTrace = artemis::NO_TRACES;
+            } else {
+                cerr << "ERROR: Invalid choice of path-trace-report " << optarg << endl;
+                exit(1);
+            }
+
+            break;
+        }
+
+        case 'b': {
+
+            if (string(optarg).compare("true") == 0) {
+                options.reportPathTraceBytecode  = true;
+            } else if (string(optarg).compare("false") == 0) {
+                options.reportPathTraceBytecode = false;
+            } else {
+                cerr << "ERROR: Invalid choice of path-trace-report-bytecode " << optarg << endl;
+                exit(1);
             }
 
             break;

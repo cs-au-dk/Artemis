@@ -43,6 +43,11 @@ public:
     virtual void eventCleared(WebCore::EventTarget *, const char*) = 0;
 
     /**
+      Invoked when an event is fired (only once even if multiple handlers are listening).
+     */
+    virtual void eventTriggered(WebCore::EventTarget *, const char*) = 0;
+
+    /**
      * Timeouts
      */
     virtual void timerAdded(WebCore::ScriptExecutionContext* context, int timerId, int timeout, bool singleShot) = 0;
@@ -62,6 +67,11 @@ public:
       Function calls
       */
     virtual void javascript_called_function(const JSC::DebuggerCallFrame&) = 0;
+
+    /**
+      Function returns
+      */
+    virtual void javascript_returned_function(const JSC::DebuggerCallFrame&) = 0;
 
     /**
       Exception

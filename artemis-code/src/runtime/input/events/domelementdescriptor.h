@@ -17,7 +17,6 @@
 #define DOMELEMENTDESCRIPTOR_H
 
 #include <QObject>
-#include <QtWebKit>
 #include <QDebug>
 
 #include "runtime/browser/artemiswebpage.h"
@@ -70,10 +69,6 @@ private:
     QWebFrame* getFrame(ArtemisWebPagePtr page) const;
     QWebElement getElementFrame(QWebFrame* frame) const;
     QWebElement nthChild(QWebElement elm, int n) const;
-
-
-
-
 };
 
 

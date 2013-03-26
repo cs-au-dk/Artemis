@@ -16,7 +16,6 @@
 #ifndef BASEINPUT_H
 #define BASEINPUT_H
 
-#include <QtWebKit/qwebexecutionlistener.h>
 #include <QSharedPointer>
 
 #include "runtime/browser/artemiswebpage.h"

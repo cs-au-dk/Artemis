@@ -13,35 +13,36 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef ARTEMISGLOBALS_H
-#define ARTEMISGLOBALS_H
 
-#include <QWebElement>
+#ifndef ARTEMISWEBVIEW_H
+#define ARTEMISWEBVIEW_H
 
-using namespace std;
+#include <QObject>
+#include <QWebView>
+#include <QCloseEvent>
+#include <QSharedPointer>
 
 namespace artemis
 {
 
-const QWebElement NULL_WEB_ELEMENT;
-
-inline QString quoteString(const QString s)
+class ArtemisWebView : public QWebView
 {
-    return "\"" + s + "\"";
+    Q_OBJECT
+
+public:
+    explicit ArtemisWebView();
+
+protected:
+    void closeEvent(QCloseEvent* event);
+
+signals:
+    void sigClose();
+
+};
+
+typedef QSharedPointer<ArtemisWebView> ArtemisWebViewPtr;
+typedef QSharedPointer<const ArtemisWebView> ArtemisWebViewConstPtr;
+
 }
 
-inline QString boolTostring(const bool b)
-{
-    return (b ? "true" : "false");
-}
-
-inline QString intTostring(const int i)
-{
-    QString res = "";
-    res.setNum(i);
-    return res;
-}
-
-}
-
-#endif // ARTEMISGLOBALS_H
+#endif // ARTEMISWEBVIEW_H
