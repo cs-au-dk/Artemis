@@ -60,7 +60,11 @@ void PathTracer::slEventListenerTriggered(QWebElement* elem, QString eventName)
 
 void PathTracer::slJavascriptFunctionCalled(QString functionName, size_t bytecodeSize, uint sourceOffset, QUrl sourceUrl, uint sourceStartLine)
 {
+    // TODO: Stripping the queries because they are often extremely long, but they are sometimes important as well!
+    QString displayedUrl = sourceUrl.hasQuery() ? (sourceUrl.toString(QUrl::RemoveQuery) + "?...") : sourceUrl.toString();
     functionName = functionName.isEmpty() ? "<no name>" : (functionName + "()"); // Anonymous function??
+    functionName = functionName.leftJustified(20) + QString(" File: %1, Line: %2, Offset: %3.").arg(displayedUrl).arg(sourceStartLine).arg(sourceOffset);
+    // TODO: Would be nice to have this "extra info" as a separate field so the write() method can place it itself.
     appendItem(FUNCALL, functionName);
 }
 
