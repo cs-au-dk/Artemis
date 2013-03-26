@@ -219,7 +219,7 @@ namespace JSC {
 #ifdef ARTEMIS
         // Symbolic operations
         bool isSymbolic() const;
-        void mutateSymbolic(std::string value);
+        void makeSymbolic(std::string value);
 
         SymbolicValue* asSymbolic() const;
 #endif

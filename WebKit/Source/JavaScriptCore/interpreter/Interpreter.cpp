@@ -1861,9 +1861,9 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
 #if ENABLE(COMPUTED_GOTO_INTERPRETER)
     #define NEXT_INSTRUCTION() SAMPLE(codeBlock, vPC); ARTEMIS_BYTECODE_LISTEN(codeBlock, vPC); goto *vPC->u.opcode
 #if ENABLE(OPCODE_STATS)
-#define DEFINE_OPCODE(opcode) opcode: OpcodeStats::recordInstruction(opcode); std::cout << #opcode << std::endl;
+#define DEFINE_OPCODE(opcode) opcode: OpcodeStats::recordInstruction(opcode);
 #else
-#define DEFINE_OPCODE(opcode) opcode: std::cout << #opcode << std::endl;
+#define DEFINE_OPCODE(opcode) opcode:
 #endif
     NEXT_INSTRUCTION();
 #else
@@ -1996,6 +1996,15 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         }
         
         callFrame->uncheckedR(dst) = jsBoolean(src.isCell() && src.asCell()->structure()->typeInfo().masqueradesAsUndefined());
+
+#ifdef ARTEMIS
+        JSValue jsn = jsNull();
+        callFrame->uncheckedR(dst) = \
+                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC,
+                                                       src, Symbolic::EQUAL, jsn,
+                                                       callFrame->uncheckedR(dst).jsValue());
+#endif
+
         vPC += OPCODE_LENGTH(op_eq_null);
         NEXT_INSTRUCTION();
     }
@@ -2017,6 +2026,13 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
             callFrame->uncheckedR(dst) = result;
         }
 
+#ifdef ARTEMIS
+        callFrame->uncheckedR(dst) = \
+                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC,
+                                                       src1, Symbolic::NOT_EQUAL, src2,
+                                                       callFrame->uncheckedR(dst).jsValue());
+#endif
+
         vPC += OPCODE_LENGTH(op_neq);
         NEXT_INSTRUCTION();
     }
@@ -2036,6 +2052,15 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         }
         
         callFrame->uncheckedR(dst) = jsBoolean(!src.isCell() || !src.asCell()->structure()->typeInfo().masqueradesAsUndefined());
+
+#ifdef ARTEMIS
+        JSValue jsn = jsNull();
+        callFrame->uncheckedR(dst) = \
+                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC,
+                                                       src, Symbolic::NOT_EQUAL, jsn,
+                                                       callFrame->uncheckedR(dst).jsValue());
+#endif
+
         vPC += OPCODE_LENGTH(op_neq_null);
         NEXT_INSTRUCTION();
     }
@@ -2052,6 +2077,13 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         bool result = JSValue::strictEqual(callFrame, src1, src2);
         CHECK_FOR_EXCEPTION();
         callFrame->uncheckedR(dst) = jsBoolean(result);
+
+#ifdef ARTEMIS
+        callFrame->uncheckedR(dst) = \
+                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC,
+                                                       src1, Symbolic::STRICT_EQUAL, src2,
+                                                       callFrame->uncheckedR(dst).jsValue());
+#endif
 
         vPC += OPCODE_LENGTH(op_stricteq);
         NEXT_INSTRUCTION();
@@ -2070,6 +2102,13 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         CHECK_FOR_EXCEPTION();
         callFrame->uncheckedR(dst) = jsBoolean(result);
 
+#ifdef ARTEMIS
+        callFrame->uncheckedR(dst) = \
+                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC,
+                                                       src1, Symbolic::NOT_STRICT_EQUAL, src2,
+                                                       callFrame->uncheckedR(dst).jsValue());
+#endif
+
         vPC += OPCODE_LENGTH(op_nstricteq);
         NEXT_INSTRUCTION();
     }
@@ -2086,6 +2125,13 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         JSValue result = jsBoolean(jsLess<true>(callFrame, src1, src2));
         CHECK_FOR_EXCEPTION();
         callFrame->uncheckedR(dst) = result;
+
+#ifdef ARTEMIS
+        callFrame->uncheckedR(dst) = \
+                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC,
+                                                       src1, Symbolic::LESS_STRICT, src2,
+                                                       callFrame->uncheckedR(dst).jsValue());
+#endif
 
         vPC += OPCODE_LENGTH(op_less);
         NEXT_INSTRUCTION();
@@ -2104,6 +2150,13 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         CHECK_FOR_EXCEPTION();
         callFrame->uncheckedR(dst) = result;
 
+#ifdef ARTEMIS
+        callFrame->uncheckedR(dst) = \
+                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC,
+                                                       src1, Symbolic::LESS_EQ, src2,
+                                                       callFrame->uncheckedR(dst).jsValue());
+#endif
+
         vPC += OPCODE_LENGTH(op_lesseq);
         NEXT_INSTRUCTION();
     }
@@ -2121,6 +2174,13 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         CHECK_FOR_EXCEPTION();
         callFrame->uncheckedR(dst) = result;
 
+#ifdef ARTEMIS
+        callFrame->uncheckedR(dst) = \
+                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC,
+                                                       src1, Symbolic::GREATER_STRICT, src2,
+                                                       callFrame->uncheckedR(dst).jsValue());
+#endif
+
         vPC += OPCODE_LENGTH(op_greater);
         NEXT_INSTRUCTION();
     }
@@ -2137,6 +2197,13 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         JSValue result = jsBoolean(jsLessEq<false>(callFrame, src2, src1));
         CHECK_FOR_EXCEPTION();
         callFrame->uncheckedR(dst) = result;
+
+#ifdef ARTEMIS
+        callFrame->uncheckedR(dst) = \
+                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC,
+                                                       src1, Symbolic::GREATER_EQ, src2,
+                                                       callFrame->uncheckedR(dst).jsValue());
+#endif
 
         vPC += OPCODE_LENGTH(op_greatereq);
         NEXT_INSTRUCTION();
@@ -2157,6 +2224,14 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
             callFrame->uncheckedR(srcDst) = result;
         }
 
+#ifdef ARTEMIS
+        JSValue jsn = jsNumber(1);
+        callFrame->uncheckedR(srcDst) = \
+                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC,
+                                                       v, Symbolic::ADD, jsn,
+                                                       callFrame->uncheckedR(srcDst).jsValue());
+#endif
+
         vPC += OPCODE_LENGTH(op_pre_inc);
         NEXT_INSTRUCTION();
     }
@@ -2175,6 +2250,14 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
             CHECK_FOR_EXCEPTION();
             callFrame->uncheckedR(srcDst) = result;
         }
+
+#ifdef ARTEMIS
+        JSValue jsn = jsNumber(1);
+        callFrame->uncheckedR(srcDst) = \
+                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC,
+                                                       v, Symbolic::SUBTRACT, jsn,
+                                                       callFrame->uncheckedR(srcDst).jsValue());
+#endif
 
         vPC += OPCODE_LENGTH(op_pre_dec);
         NEXT_INSTRUCTION();
@@ -2199,6 +2282,14 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
             callFrame->uncheckedR(dst) = jsNumber(number);
         }
 
+#ifdef ARTEMIS
+        JSValue jsn = jsNumber(1);
+        callFrame->uncheckedR(srcDst) = \
+                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC,
+                                                       v, Symbolic::ADD, jsn,
+                                                       callFrame->uncheckedR(srcDst).jsValue());
+#endif
+
         vPC += OPCODE_LENGTH(op_post_inc);
         NEXT_INSTRUCTION();
     }
@@ -2222,6 +2313,14 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
             callFrame->uncheckedR(dst) = jsNumber(number);
         }
 
+#ifdef ARTEMIS
+        JSValue jsn = jsNumber(1);
+        callFrame->uncheckedR(srcDst) = \
+                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC,
+                                                       v, Symbolic::SUBTRACT, jsn,
+                                                       callFrame->uncheckedR(srcDst).jsValue());
+#endif
+
         vPC += OPCODE_LENGTH(op_post_dec);
         NEXT_INSTRUCTION();
     }
@@ -2244,6 +2343,14 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
             callFrame->uncheckedR(dst) = jsNumber(number);
         }
 
+#ifdef ARTEMIS
+        JSValue jsn = jsNumber(1);
+        callFrame->uncheckedR(dst) = \
+                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC,
+                                                       srcVal, Symbolic::MULTIPLY, jsn,
+                                                       callFrame->uncheckedR(dst).jsValue());
+#endif
+
         vPC += OPCODE_LENGTH(op_to_jsnumber);
         NEXT_INSTRUCTION();
     }
@@ -2262,6 +2369,14 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
             CHECK_FOR_EXCEPTION();
             callFrame->uncheckedR(dst) = result;
         }
+
+#ifdef ARTEMIS
+        JSValue jsn = jsNumber(-1);
+        callFrame->uncheckedR(dst) = \
+                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC,
+                                                       src, Symbolic::MULTIPLY, jsn,
+                                                       callFrame->uncheckedR(dst).jsValue());
+#endif
 
         vPC += OPCODE_LENGTH(op_negate);
         NEXT_INSTRUCTION();
@@ -2311,6 +2426,13 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
             callFrame->uncheckedR(dst) = result;
         }
 
+#ifdef ARTEMIS
+        callFrame->uncheckedR(dst) = \
+                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC,
+                                                       src1, Symbolic::MULTIPLY, src2,
+                                                       callFrame->uncheckedR(dst).jsValue());
+#endif
+
         vPC += OPCODE_LENGTH(op_mul);
         NEXT_INSTRUCTION();
     }
@@ -2328,6 +2450,13 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         JSValue result = jsNumber(dividend.toNumber(callFrame) / divisor.toNumber(callFrame));
         CHECK_FOR_EXCEPTION();
         callFrame->uncheckedR(dst) = result;
+
+#ifdef ARTEMIS
+        callFrame->uncheckedR(dst) = \
+                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC,
+                                                       dividend, Symbolic::DIVIDE, divisor,
+                                                       result);
+#endif
 
         vPC += OPCODE_LENGTH(op_div);
         NEXT_INSTRUCTION();
@@ -2347,6 +2476,14 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
             JSValue result = jsNumber(dividend.asInt32() % divisor.asInt32());
             ASSERT(result);
             callFrame->uncheckedR(dst) = result;
+
+#ifdef ARTEMIS
+        callFrame->uncheckedR(dst) = \
+                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC,
+                                                       dividend, Symbolic::EQUAL, divisor,
+                                                       result);
+#endif
+
             vPC += OPCODE_LENGTH(op_mod);
             NEXT_INSTRUCTION();
         }
@@ -2358,6 +2495,14 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         JSValue result = jsNumber(fmod(d1, d2));
         CHECK_FOR_EXCEPTION();
         callFrame->uncheckedR(dst) = result;
+
+#ifdef ARTEMIS
+        callFrame->uncheckedR(dst) = \
+                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC,
+                                                       dividend, Symbolic::MODULO, divisor,
+                                                       result);
+#endif
+
         vPC += OPCODE_LENGTH(op_mod);
         NEXT_INSTRUCTION();
     }
@@ -2378,6 +2523,14 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
             CHECK_FOR_EXCEPTION();
             callFrame->uncheckedR(dst) = result;
         }
+
+#ifdef ARTEMIS
+        callFrame->uncheckedR(dst) = \
+                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC,
+                                                       src1, Symbolic::SUBTRACT, src2,
+                                                       callFrame->uncheckedR(dst).jsValue());
+#endif
+
         vPC += OPCODE_LENGTH(op_sub);
         NEXT_INSTRUCTION();
     }
@@ -2992,17 +3145,6 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         PropertySlot slot(baseValue);
         JSValue result = baseValue.get(callFrame, ident, slot);
         CHECK_FOR_EXCEPTION();
-
-#ifdef ARTEMIS
-        // Experimental source detection
-        if (baseValue.isObject() &&
-                strcmp(baseValue.toObject(callFrame)->classInfo()->className,
-                       "HTMLInputElement") == 0 &&
-                strcmp(ident.ascii().data(), "value") == 0) {
-
-            std::cout << "FORM INPUT SOURCE DETECTED" << std::endl;
-        }
-#endif
 
         tryCacheGetByID(callFrame, codeBlock, vPC, baseValue, ident, slot);
 
@@ -3990,11 +4132,33 @@ skip_id_custom_self:
          */
         int cond = vPC[1].u.operand;
         int target = vPC[2].u.operand;
+
+#ifdef ARTEMIS
+        JSValue _v = callFrame->r(cond).jsValue();
+        JSValue _jst = jsBoolean(true);
+
+        bool _jumped = _v.toBoolean(callFrame);
+        JSValue _r = jsBoolean(_jumped);
+
+        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC,
+                                                    _v, Symbolic::EQUAL, _jst,
+                                                    _r);
+
+        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC,
+                                             _r, _jumped);
+
+        if (_jumped) {
+            vPC += target;
+            CHECK_FOR_TIMEOUT();
+            NEXT_INSTRUCTION();
+        }
+#else
         if (callFrame->r(cond).jsValue().toBoolean(callFrame)) {
             vPC += target;
             CHECK_FOR_TIMEOUT();
             NEXT_INSTRUCTION();
         }
+#endif
         
         vPC += OPCODE_LENGTH(op_loop_if_true);
         NEXT_INSTRUCTION();
@@ -4010,11 +4174,34 @@ skip_id_custom_self:
          */
         int cond = vPC[1].u.operand;
         int target = vPC[2].u.operand;
+
+#ifdef ARTEMIS
+        JSValue _v = callFrame->r(cond).jsValue();
+        JSValue _jsf = jsBoolean(false);
+
+        bool _jumped = !_v.toBoolean(callFrame);
+        JSValue _r = jsBoolean(_jumped);
+
+        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC,
+                                                    _v, Symbolic::EQUAL, _jsf,
+                                                    _r);
+
+        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC,
+                                             _r, _jumped);
+
+
+        if (_jumped) {
+            vPC += target;
+            CHECK_FOR_TIMEOUT();
+            NEXT_INSTRUCTION();
+        }
+#else
         if (!callFrame->r(cond).jsValue().toBoolean(callFrame)) {
             vPC += target;
             CHECK_FOR_TIMEOUT();
             NEXT_INSTRUCTION();
         }
+#endif
         
         vPC += OPCODE_LENGTH(op_loop_if_true);
         NEXT_INSTRUCTION();
@@ -4027,10 +4214,31 @@ skip_id_custom_self:
         */
         int cond = vPC[1].u.operand;
         int target = vPC[2].u.operand;
+
+#ifdef ARTEMIS
+        JSValue _v = callFrame->r(cond).jsValue();
+        JSValue _jst = jsBoolean(true);
+
+        bool _jumped = _v.toBoolean(callFrame);
+        JSValue _r = jsBoolean(_jumped);
+
+        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC,
+                                                    _v, Symbolic::EQUAL, _jst,
+                                                    _r);
+
+        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC,
+                                             _r, _jumped);
+
+        if (_jumped) {
+            vPC += target;
+            NEXT_INSTRUCTION();
+        }
+#else
         if (callFrame->r(cond).jsValue().toBoolean(callFrame)) {
             vPC += target;
             NEXT_INSTRUCTION();
         }
+#endif
 
         vPC += OPCODE_LENGTH(op_jtrue);
         NEXT_INSTRUCTION();
@@ -4044,16 +4252,34 @@ skip_id_custom_self:
         int cond = vPC[1].u.operand;
         int target = vPC[2].u.operand;
 
-        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC,
-                                             callFrame->r(cond).jsValue());
+#ifdef ARTEMIS
+        JSValue _v = callFrame->r(cond).jsValue();
+        JSValue _jsf = jsBoolean(false);
 
+        bool _jumped = !_v.toBoolean(callFrame);
+        JSValue _r = jsBoolean(_jumped);
+
+        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC,
+                                                    _v, Symbolic::EQUAL, _jsf,
+                                                    _r);
+
+        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC,
+                                             _r, _jumped);
+
+
+        if (_jumped) {
+            vPC += target;
+            NEXT_INSTRUCTION();
+        }
+#else
         if (!callFrame->r(cond).jsValue().toBoolean(callFrame)) {
             vPC += target;
             NEXT_INSTRUCTION();
         }
-
+#endif
         vPC += OPCODE_LENGTH(op_jfalse);
         NEXT_INSTRUCTION();
+
     }
     DEFINE_OPCODE(op_jeq_null) {
         /* jeq_null src(r) target(offset)
@@ -4065,10 +4291,29 @@ skip_id_custom_self:
         int target = vPC[2].u.operand;
         JSValue srcValue = touchJsValue(callFrame, callFrame->r(src).jsValue());
 
+#ifdef ARTEMIS
+        JSValue _jsn = jsNull();
+
+        bool _jumped = (srcValue.isUndefinedOrNull() || (srcValue.isCell() && srcValue.asCell()->structure()->typeInfo().masqueradesAsUndefined()));
+        JSValue _r = jsBoolean(_jumped);
+
+        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC,
+                                                    srcValue, Symbolic::EQUAL, _jsn,
+                                                    _r);
+
+        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC,
+                                             _r, _jumped);
+
+        if (_jumped) {
+            vPC += target;
+            NEXT_INSTRUCTION();
+        }
+#else
         if (srcValue.isUndefinedOrNull() || (srcValue.isCell() && srcValue.asCell()->structure()->typeInfo().masqueradesAsUndefined())) {
             vPC += target;
             NEXT_INSTRUCTION();
         }
+#endif
 
         vPC += OPCODE_LENGTH(op_jeq_null);
         NEXT_INSTRUCTION();
@@ -4083,10 +4328,29 @@ skip_id_custom_self:
         int target = vPC[2].u.operand;
         JSValue srcValue = touchJsValue(callFrame, callFrame->r(src).jsValue());
 
+#ifdef ARTEMIS
+        JSValue _jsn = jsNull();
+
+        bool _jumped = (!srcValue.isUndefinedOrNull() && (!srcValue.isCell() || !srcValue.asCell()->structure()->typeInfo().masqueradesAsUndefined()));
+        JSValue _r = jsBoolean(_jumped);
+
+        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC,
+                                                    srcValue, Symbolic::NOT_EQUAL, _jsn,
+                                                    _r);
+
+        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC,
+                                             _r, _jumped);
+
+        if (_jumped) {
+            vPC += target;
+            NEXT_INSTRUCTION();
+        }
+#else
         if (!srcValue.isUndefinedOrNull() && (!srcValue.isCell() || !srcValue.asCell()->structure()->typeInfo().masqueradesAsUndefined())) {
             vPC += target;
             NEXT_INSTRUCTION();
         }
+#endif
 
         vPC += OPCODE_LENGTH(op_jneq_null);
         NEXT_INSTRUCTION();
@@ -4100,6 +4364,7 @@ skip_id_custom_self:
         int src = vPC[1].u.operand;
         int target = vPC[3].u.operand;
         JSValue srcValue = touchJsValue(callFrame, callFrame->r(src).jsValue());
+
         if (srcValue != vPC[2].u.jsCell.get()) {
             vPC += target;
             NEXT_INSTRUCTION();
@@ -4126,6 +4391,17 @@ skip_id_custom_self:
         bool result = jsLess<true>(callFrame, src1, src2);
         CHECK_FOR_EXCEPTION();
         
+#ifdef ARTEMIS
+        JSValue _r = jsBoolean(result);
+
+        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC,
+                                                    src1, Symbolic::LESS_STRICT, src2,
+                                                    _r);
+
+        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC,
+                                             _r, result);
+#endif
+
         if (result) {
             vPC += target;
             CHECK_FOR_TIMEOUT();
@@ -4153,6 +4429,17 @@ skip_id_custom_self:
         bool result = jsLessEq<true>(callFrame, src1, src2);
         CHECK_FOR_EXCEPTION();
         
+#ifdef ARTEMIS
+        JSValue _r = jsBoolean(result);
+
+        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC,
+                                                    src1, Symbolic::LESS_STRICT, src2,
+                                                    _r);
+
+        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC,
+                                             _r, result);
+#endif
+
         if (result) {
             vPC += target;
             CHECK_FOR_TIMEOUT();
@@ -4180,6 +4467,17 @@ skip_id_custom_self:
         bool result = jsLess<false>(callFrame, src2, src1);
         CHECK_FOR_EXCEPTION();
         
+#ifdef ARTEMIS
+        JSValue _r = jsBoolean(result);
+
+        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC,
+                                                    src1, Symbolic::GREATER_STRICT, src2,
+                                                    _r);
+
+        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC,
+                                             _r, result);
+#endif
+
         if (result) {
             vPC += target;
             CHECK_FOR_TIMEOUT();
@@ -4207,6 +4505,17 @@ skip_id_custom_self:
         bool result = jsLessEq<false>(callFrame, src2, src1);
         CHECK_FOR_EXCEPTION();
         
+#ifdef ARTEMIS
+        JSValue _r = jsBoolean(result);
+
+        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC,
+                                                    src1, Symbolic::GREATER_EQ, src2,
+                                                    _r);
+
+        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC,
+                                             _r, result);
+#endif
+
         if (result) {
             vPC += target;
             CHECK_FOR_TIMEOUT();
@@ -4231,6 +4540,17 @@ skip_id_custom_self:
         bool result = jsLess<true>(callFrame, src1, src2);
         CHECK_FOR_EXCEPTION();
         
+#ifdef ARTEMIS
+        JSValue _r = jsBoolean(result);
+
+        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC,
+                                                    src1, Symbolic::LESS_STRICT, src2,
+                                                    _r);
+
+        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC,
+                                             _r, result);
+#endif
+
         if (result) {
             vPC += target;
             NEXT_INSTRUCTION();
@@ -4254,6 +4574,17 @@ skip_id_custom_self:
         bool result = jsLessEq<true>(callFrame, src1, src2);
         CHECK_FOR_EXCEPTION();
         
+#ifdef ARTEMIS
+        JSValue _r = jsBoolean(result);
+
+        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC,
+                                                    src1, Symbolic::LESS_EQ, src2,
+                                                    _r);
+
+        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC,
+                                             _r, result);
+#endif
+
         if (result) {
             vPC += target;
             NEXT_INSTRUCTION();
@@ -4277,6 +4608,17 @@ skip_id_custom_self:
         bool result = jsLess<false>(callFrame, src2, src1);
         CHECK_FOR_EXCEPTION();
         
+#ifdef ARTEMIS
+        JSValue _r = jsBoolean(result);
+
+        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC,
+                                                    src1, Symbolic::GREATER_STRICT, src2,
+                                                    _r);
+
+        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC,
+                                             _r, result);
+#endif
+
         if (result) {
             vPC += target;
             NEXT_INSTRUCTION();
@@ -4300,6 +4642,17 @@ skip_id_custom_self:
         bool result = jsLessEq<false>(callFrame, src2, src1);
         CHECK_FOR_EXCEPTION();
         
+#ifdef ARTEMIS
+        JSValue _r = jsBoolean(result);
+
+        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC,
+                                                    src1, Symbolic::GREATER_EQ, src2,
+                                                    _r);
+
+        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC,
+                                             _r, result);
+#endif
+
         if (result) {
             vPC += target;
             NEXT_INSTRUCTION();
@@ -4322,6 +4675,17 @@ skip_id_custom_self:
 
         bool result = jsLess<true>(callFrame, src1, src2);
         CHECK_FOR_EXCEPTION();
+
+#ifdef ARTEMIS
+        JSValue _r = jsBoolean(!result);
+
+        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC,
+                                                    src1, Symbolic::GREATER_EQ, src2,
+                                                    _r);
+
+        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC,
+                                             _r, !result);
+#endif
         
         if (!result) {
             vPC += target;
@@ -4346,6 +4710,17 @@ skip_id_custom_self:
         bool result = jsLessEq<true>(callFrame, src1, src2);
         CHECK_FOR_EXCEPTION();
         
+#ifdef ARTEMIS
+        JSValue _r = jsBoolean(!result);
+
+        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC,
+                                                    src1, Symbolic::GREATER_STRICT, src2,
+                                                    _r);
+
+        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC,
+                                             _r, !result);
+#endif
+
         if (!result) {
             vPC += target;
             NEXT_INSTRUCTION();
@@ -4369,6 +4744,17 @@ skip_id_custom_self:
         bool result = jsLess<false>(callFrame, src2, src1);
         CHECK_FOR_EXCEPTION();
         
+#ifdef ARTEMIS
+        JSValue _r = jsBoolean(!result);
+
+        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC,
+                                                    src1, Symbolic::LESS_EQ, src2,
+                                                    _r);
+
+        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC,
+                                             _r, !result);
+#endif
+
         if (!result) {
             vPC += target;
             NEXT_INSTRUCTION();
@@ -4392,6 +4778,17 @@ skip_id_custom_self:
         bool result = jsLessEq<false>(callFrame, src2, src1);
         CHECK_FOR_EXCEPTION();
         
+#ifdef ARTEMIS
+        JSValue _r = jsBoolean(!result);
+
+        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC,
+                                                    src1, Symbolic::GREATER_STRICT, src2,
+                                                    _r);
+
+        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC,
+                                             _r, !result);
+#endif
+
         if (!result) {
             vPC += target;
             NEXT_INSTRUCTION();

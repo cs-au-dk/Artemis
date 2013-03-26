@@ -39,14 +39,13 @@ const char* opToString(OP op) {
 }
 
 SymbolicInterpreter::SymbolicInterpreter() :
-    mPC(""),
     mNextSymbolicValue(0)
 {
 }
 
 void SymbolicInterpreter::ail_call(JSC::CallFrame*, const JSC::Instruction*)
 {
-    std::cout << "AIL_CALL" << std::endl;
+    //std::cout << "AIL_CALL" << std::endl;
 }
 
 void SymbolicInterpreter::ail_call_native(JSC::CallFrame* callFrame, const JSC::Instruction*,
@@ -58,39 +57,36 @@ void SymbolicInterpreter::ail_call_native(JSC::CallFrame* callFrame, const JSC::
     const NativeFunction* nativeFunction = mNativeFunctions.find(functionID);
 
     if (nativeFunction == NULL) {
-        std::cout << "AIL_CALL_NATIVE <Unknown native function>" << std::endl;
+        //std::cout << "AIL_CALL_NATIVE <Unknown native function>" << std::endl;
         return;
     }
 
-    std::cout << "AIL_CALL_NATIVE <" << nativeFunction->getName() << ">" << std::endl;
+    //std::cout << "AIL_CALL_NATIVE <" << nativeFunction->getName() << ">" << std::endl;
 }
 
-JSC::JSValue SymbolicInterpreter::ail_op_binary(JSC::CallFrame*, const JSC::Instruction*,
+JSC::JSValue SymbolicInterpreter::ail_op_binary(JSC::CallFrame* callFrame, const JSC::Instruction*,
                                                 JSC::JSValue& x, OP op, JSC::JSValue& y,
                                                 JSC::JSValue result)
 {
-    if (!x.isSymbolic()) {
-        x.mutateSymbolic(std::string("<") + SSTR(mNextSymbolicValue++) + std::string(">"));
-        ASSERT(x.isSymbolic());
+    if (!x.isSymbolic() && !y.isSymbolic()) {
+        return result; // not symbolic
     }
 
-    if (!y.isSymbolic()) {
-        y.mutateSymbolic(std::string("<") + SSTR(mNextSymbolicValue++) + std::string(">"));
-        ASSERT(y.isSymbolic());
-    }
+    std::string xValue = x.isSymbolic() ? x.asSymbolic()->value : std::string(x.toString(callFrame).ascii().data());
+    std::string yValue = y.isSymbolic() ? y.asSymbolic()->value : std::string(y.toString(callFrame).ascii().data());
 
-    std::string value = std::string("(") + x.asSymbolic()->value + std::string(opToString(op)) + y.asSymbolic()->value + std::string(")");
+    std::string value = std::string("(") + xValue + std::string(opToString(op)) + yValue + std::string(")");
 
     std::cout << "AIL_OP_BINARY " << value << std::endl;
 
-    result.mutateSymbolic(value);
+    result.makeSymbolic(value);
     ASSERT(result.isSymbolic());
 
     return result;
 }
 
 void SymbolicInterpreter::ail_jmp_iff(JSC::CallFrame* callFrame, const JSC::Instruction* vPC,
-                                      const JSC::JSValue& condition)
+                                      JSC::JSValue& condition, bool jumps)
 {
     if (condition.isSymbolic()) {
         std::cout << "AIL_JMP_IFF " << condition.asSymbolic()->value << std::endl;
@@ -108,15 +104,10 @@ void SymbolicInterpreter::fatalError(JSC::CodeBlock* codeBlock, std::string reas
 
 void SymbolicInterpreter::beginSession()
 {
-    std::cout << "Symbolic Session START" << std::endl;
-    mPC = "";
-    mNextSymbolicValue = 0;
 }
 
 void SymbolicInterpreter::endSession()
 {
-    std::cout << "Symbolic Session END" << std::endl;
-    std::cout << "PC = " << mPC << std::endl;
 }
 
 }

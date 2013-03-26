@@ -229,7 +229,7 @@ JSString* JSValue::toPrimitiveString(ExecState* exec) const
 }
 
 #ifdef ARTEMIS
-void JSValue::mutateSymbolic(std::string value) {
+void JSValue::makeSymbolic(std::string value) {
 
     SymbolicValue* symbolicValue = new SymbolicValue(value);
 

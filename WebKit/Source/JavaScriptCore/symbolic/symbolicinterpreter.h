@@ -39,7 +39,7 @@ namespace Symbolic
 
 typedef enum {
     EQUAL, NOT_EQUAL, STRICT_EQUAL, NOT_STRICT_EQUAL, LESS_EQ, LESS_STRICT, GREATER_EQ, GREATER_STRICT,
-    ADD, SUBTRACT, MILTIPLY, DIVIDE, MODULO
+    ADD, SUBTRACT, MULTIPLY, DIVIDE, MODULO
 } OP;
 
 const char* opToString(OP op);
@@ -58,7 +58,7 @@ public:
                                JSC::JSValue& x, OP op, JSC::JSValue& y, JSC::JSValue result);
 
     void ail_jmp_iff(JSC::CallFrame* callFrame, const JSC::Instruction* vPC,
-                     const JSC::JSValue& condition);
+                     JSC::JSValue& condition, bool jumps);
 
     void beginSession();
     void endSession();
@@ -67,8 +67,6 @@ private:
     void fatalError(JSC::CodeBlock* codeBlock, std::string reason) __attribute__((noreturn));
 
     NativeLookup mNativeFunctions;
-
-    std::string mPC;
     int mNextSymbolicValue;
 };
 
