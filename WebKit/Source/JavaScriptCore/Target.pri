@@ -211,7 +211,8 @@ SOURCES += \
     symbolic/symbolicinterpreter.cpp \
     symbolic/native/nativelookup.cpp \
     symbolic/native/nativefunction.cpp \
-    symbolic/native/natives.cpp
+    symbolic/native/natives.cpp \
+    symbolic/domtraversal.cpp
 
 *sh4* {
     QMAKE_CXXFLAGS += -mieee -w
@@ -244,4 +245,5 @@ HEADERS += \
     symbolic/native/nativelookup.h \
     symbolic/native/nativefunction.h \
     symbolic/native/natives.h \
-    symbolic/native/nativefunction.h
+    symbolic/native/nativefunction.h \
+    symbolic/domtraversal.h

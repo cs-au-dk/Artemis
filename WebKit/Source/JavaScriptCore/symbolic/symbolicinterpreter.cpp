@@ -51,9 +51,6 @@ void SymbolicInterpreter::ail_call(JSC::CallFrame*, const JSC::Instruction*)
 void SymbolicInterpreter::ail_call_native(JSC::CallFrame* callFrame, const JSC::Instruction*,
                                           JSC::native_function_ID_t functionID)
 {
-    // We should find a much better place to call this (and only call it once)
-    mNativeFunctions.buildRegistry(callFrame);
-
     const NativeFunction* nativeFunction = mNativeFunctions.find(functionID);
 
     if (nativeFunction == NULL) {
@@ -104,6 +101,7 @@ void SymbolicInterpreter::fatalError(JSC::CodeBlock* codeBlock, std::string reas
 
 void SymbolicInterpreter::beginSession()
 {
+    mNativeFunctions.buildRegistry(callFrame);
 }
 
 void SymbolicInterpreter::endSession()

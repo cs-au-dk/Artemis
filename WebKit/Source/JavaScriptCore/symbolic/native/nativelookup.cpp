@@ -46,49 +46,14 @@ const NativeFunction* NativeLookup::find(JSC::native_function_ID_t functionID)
 
 void NativeLookup::buildRegistry(JSC::CallFrame* callFrame)
 {
-    JSC::CodeBlock* codeBlock = callFrame->codeBlock();
-
-    JSC::JSGlobalData* jsGlobalData = &callFrame->globalData();
-    JSC::JSGlobalObject* jsGlobalObject = codeBlock->globalObject();
-
-    visited_t visited;
-
-    buildRegistryVisit(jsGlobalData, callFrame, jsGlobalObject, &visited, "");
+    DomTraversal::traverseDom(callFrame, this);
 }
 
-void NativeLookup::buildRegistryVisit(JSC::JSGlobalData* jsGlobalData, JSC::CallFrame* callFrame, JSC::JSObject* jsObject, visited_t* visited, std::string path) {
-
-    visited_t::iterator visititer = visited->find(jsObject);
-
-    if (visititer != visited->end()) {
-        return;
-    }
-
-    // force the search to look into .window (such that we can get some more saying paths)
-    if (path.compare("document.defaultView") == 0 ||
-            path.compare("document.all") == 0 ||
-            path.compare("document.scripts") == 0) {
-        return;
-    }
-
-    visited->insert(jsObject);
-
-    JSC::PropertyNameArray propertyNames(jsGlobalData);
-    JSC::JSObject::getPropertyNames(jsObject, callFrame, propertyNames, JSC::ExcludeDontEnumProperties);
-
-    JSC::PropertyNameArrayData::PropertyNameVector::const_iterator iter = propertyNames.data()->propertyNameVector().begin();
-    JSC::PropertyNameArrayData::PropertyNameVector::const_iterator end = propertyNames.data()->propertyNameVector().end();
-
-    for (; iter != end; ++iter) {
-        JSC::PropertySlot property;
-        jsObject->getPropertySlot(callFrame, *iter, property);
-
-        JSC::JSValue value = property.getValue(callFrame, *iter);
-
-        std::string newpath = (path.size() == 0 ? "" : path +  ".") + std::string(iter->ustring().ascii().data());
-
+bool NativeLookup::domNodeTraversalCallback(std::string path, JSC::JSValue jsValue)
+{
+    if (jsValue.isObject()) {
         JSC::CallData callData;
-        JSC::CallType callType = JSC::getCallData(value, callData);
+        JSC::CallType callType = JSC::getCallData(jsValue, callData);
 
         if (callType == JSC::CallTypeHost) {
 
@@ -96,15 +61,13 @@ void NativeLookup::buildRegistryVisit(JSC::JSGlobalData* jsGlobalData, JSC::Call
 
             const NativeFunction* nativeFunction = find(nativeFunctionID);
 
-            if (nativeFunction == NULL || nativeFunction->getName().size() > newpath.size()) {
-                mNativeFunctionMap.insert(std::make_pair<JSC::native_function_ID_t, NativeFunction>(nativeFunctionID, NativeFunction(newpath)));
+            if (nativeFunction == NULL || nativeFunction->getName().size() > path.size()) {
+                mNativeFunctionMap.insert(std::make_pair<JSC::native_function_ID_t, NativeFunction>(nativeFunctionID, NativeFunction(path)));
             }
         }
-
-        if (value.isObject()) {
-            buildRegistryVisit(jsGlobalData, callFrame, value.toObject(callFrame), visited, newpath);
-        }
     }
+
+    return true;
 }
 
 }

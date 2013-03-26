@@ -14,43 +14,36 @@
  * limitations under the License.
  */
 
-#ifndef NATIVELOOKUP_H
-#define NATIVELOOKUP_H
+#ifndef DOMTRAVERSAL_H
+#define DOMTRAVERSAL_H
 
 #ifdef ARTEMIS
 
-#include <tr1/unordered_map>
-
-#include "symbolic/domtraversal.h"
-
-#include "nativefunction.h"
+#include <tr1/unordered_set>
 
 namespace JSC {
     class ExecState;
+    class JSObject;
     class JSValue;
 }
 
 namespace Symbolic
 {
 
-class NativeLookup : public DomTraversal
+class DomTraversal
 {
 
 public:
-    NativeLookup();
+    explicit DomTraversal() {}
 
-    const NativeFunction* find(JSC::native_function_ID_t functionID);
-    void buildRegistry(JSC::ExecState* callFrame);
+    static void traverseDom(JSC::CallFrame* callFrame, DomTraversal* callback);
 
 protected:
-    bool domNodeTraversalCallback(std::string path, JSC::JSValue jsValue);
+    virtual bool domNodeTraversalCallback(std::string path, JSC::JSValue jsValue) = 0;
 
-private:
-    typedef std::tr1::unordered_map<JSC::native_function_ID_t, NativeFunction> function_map_t;
-    function_map_t mNativeFunctionMap;
 };
 
 }
 
 #endif
-#endif // NATIVELOOKUP_H
+#endif // DOMTRAVERSAL_H
