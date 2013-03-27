@@ -1,13 +1,3 @@
-
-#include <iostream>
-#include <tr1/unordered_set>
-#include <inttypes.h>
-
-#include "JavaScriptCore/wtf/ExportMacros.h"
-#include "JavaScriptCore/bytecode/CodeBlock.h"
-#include "JavaScriptCore/interpreter/CallFrame.h"
-
-#include "symbolicinterpreter.h"
 /*
  * Copyright 2012 Aarhus University
  *
@@ -24,6 +14,18 @@
  * limitations under the License.
  */
 
+#include <iostream>
+#include <tr1/unordered_set>
+#include <inttypes.h>
+
+#include "JavaScriptCore/wtf/ExportMacros.h"
+#include "JavaScriptCore/bytecode/CodeBlock.h"
+#include "JavaScriptCore/interpreter/CallFrame.h"
+
+#include "symbolic/sources/forminputsource.h"
+
+#include "symbolicinterpreter.h"
+
 #ifdef ARTEMIS
 
 namespace Symbolic
@@ -39,7 +41,7 @@ const char* opToString(OP op) {
 }
 
 SymbolicInterpreter::SymbolicInterpreter() :
-    mNextSymbolicValue(0)
+    m_nextSymbolicValue(0)
 {
 }
 
@@ -51,7 +53,7 @@ void SymbolicInterpreter::ail_call(JSC::CallFrame*, const JSC::Instruction*)
 void SymbolicInterpreter::ail_call_native(JSC::CallFrame* callFrame, const JSC::Instruction*,
                                           JSC::native_function_ID_t functionID)
 {
-    const NativeFunction* nativeFunction = mNativeFunctions.find(functionID);
+    const NativeFunction* nativeFunction = m_nativeFunctions.find(functionID);
 
     if (nativeFunction == NULL) {
         //std::cout << "AIL_CALL_NATIVE <Unknown native function>" << std::endl;
@@ -99,9 +101,17 @@ void SymbolicInterpreter::fatalError(JSC::CodeBlock* codeBlock, std::string reas
     exit(1);
 }
 
+void SymbolicInterpreter::preExecution(JSC::CallFrame* callFrame)
+{
+    std::cout << "PRE EXECUTE" << std::endl;
+
+    m_nativeFunctions.buildRegistry(callFrame);
+    DomTraversal::traverseDom(callFrame, new FormInputSource());
+}
+
 void SymbolicInterpreter::beginSession()
 {
-    mNativeFunctions.buildRegistry(callFrame);
+    std::cout << "BEGIN SESSION" << std::endl;
 }
 
 void SymbolicInterpreter::endSession()

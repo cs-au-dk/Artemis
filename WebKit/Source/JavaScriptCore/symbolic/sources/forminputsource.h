@@ -14,43 +14,28 @@
  * limitations under the License.
  */
 
-#ifndef NATIVELOOKUP_H
-#define NATIVELOOKUP_H
+#ifndef FORMINPUTSOURCE_H
+#define FORMINPUTSOURCE_H
 
 #ifdef ARTEMIS
 
-#include <tr1/unordered_map>
-
 #include "symbolic/domtraversal.h"
-
-#include "nativefunction.h"
-
-namespace JSC {
-    class ExecState;
-    class JSValue;
-}
 
 namespace Symbolic
 {
 
-class NativeLookup : public DomTraversal
+class FormInputSource : public DomTraversal
 {
-
 public:
-    NativeLookup();
-
-    const NativeFunction* find(JSC::native_function_ID_t functionID);
-    void buildRegistry(JSC::ExecState* callFrame);
+    explicit FormInputSource();
 
 protected:
     bool domNodeTraversalCallback(JSC::CallFrame* callFrame, std::string path, JSC::JSValue jsValue);
 
-private:
-    typedef std::tr1::unordered_map<JSC::native_function_ID_t, NativeFunction> function_map_t;
-    function_map_t m_nativeFunctionMap;
 };
 
 }
 
 #endif
-#endif // NATIVELOOKUP_H
+
+#endif // FORMINPUTSOURCE_H

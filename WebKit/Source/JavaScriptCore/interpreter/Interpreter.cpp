@@ -1837,6 +1837,10 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
     OpcodeStats::resetLastInstruction();
 #endif
 
+#ifdef ARTEMIS
+    m_symbolic->preExecution(callFrame);
+#endif
+
 #define CHECK_FOR_TIMEOUT() \
     if (!--tickCount) { \
         if (globalData->terminator.shouldTerminate() || globalData->timeoutChecker.didTimeOut(callFrame)) { \

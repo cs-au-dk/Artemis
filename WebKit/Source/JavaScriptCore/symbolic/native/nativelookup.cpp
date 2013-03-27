@@ -36,8 +36,8 @@ NativeLookup::NativeLookup()
 
 const NativeFunction* NativeLookup::find(JSC::native_function_ID_t functionID)
 {
-    function_map_t::iterator iter = mNativeFunctionMap.find(functionID);
-    if (iter != mNativeFunctionMap.end()) {
+    function_map_t::iterator iter = m_nativeFunctionMap.find(functionID);
+    if (iter != m_nativeFunctionMap.end()) {
         return &iter->second;
     } else {
         return NULL;
@@ -49,7 +49,7 @@ void NativeLookup::buildRegistry(JSC::CallFrame* callFrame)
     DomTraversal::traverseDom(callFrame, this);
 }
 
-bool NativeLookup::domNodeTraversalCallback(std::string path, JSC::JSValue jsValue)
+bool NativeLookup::domNodeTraversalCallback(JSC::CallFrame*, std::string path, JSC::JSValue jsValue)
 {
     if (jsValue.isObject()) {
         JSC::CallData callData;
@@ -62,7 +62,7 @@ bool NativeLookup::domNodeTraversalCallback(std::string path, JSC::JSValue jsVal
             const NativeFunction* nativeFunction = find(nativeFunctionID);
 
             if (nativeFunction == NULL || nativeFunction->getName().size() > path.size()) {
-                mNativeFunctionMap.insert(std::make_pair<JSC::native_function_ID_t, NativeFunction>(nativeFunctionID, NativeFunction(path)));
+                m_nativeFunctionMap.insert(std::make_pair<JSC::native_function_ID_t, NativeFunction>(nativeFunctionID, NativeFunction(path)));
             }
         }
     }

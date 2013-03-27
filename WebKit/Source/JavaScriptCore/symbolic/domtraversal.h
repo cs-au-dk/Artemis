@@ -39,7 +39,7 @@ public:
     static void traverseDom(JSC::CallFrame* callFrame, DomTraversal* callback);
 
 protected:
-    virtual bool domNodeTraversalCallback(std::string path, JSC::JSValue jsValue) = 0;
+    virtual bool domNodeTraversalCallback(JSC::CallFrame* callFrame, std::string path, JSC::JSValue jsValue) = 0;
 
 };
 

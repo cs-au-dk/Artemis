@@ -22,13 +22,13 @@ namespace Symbolic
 {
 
 NativeFunction::NativeFunction(std::string name) :
-    mName(name)
+    m_name(name)
 {
 }
 
 std::string NativeFunction::getName() const
 {
-    return mName;
+    return m_name;
 }
 
 }

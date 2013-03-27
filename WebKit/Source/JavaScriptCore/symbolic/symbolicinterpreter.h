@@ -60,14 +60,18 @@ public:
     void ail_jmp_iff(JSC::CallFrame* callFrame, const JSC::Instruction* vPC,
                      JSC::JSValue& condition, bool jumps);
 
+    // called from the interpreter before it starts executing (a single trace)
+    void preExecution(JSC::CallFrame* callFrame);
+
+    // called from Artemis
     void beginSession();
     void endSession();
 
 private:
     void fatalError(JSC::CodeBlock* codeBlock, std::string reason) __attribute__((noreturn));
 
-    NativeLookup mNativeFunctions;
-    int mNextSymbolicValue;
+    NativeLookup m_nativeFunctions;
+    int m_nextSymbolicValue;
 };
 
 }

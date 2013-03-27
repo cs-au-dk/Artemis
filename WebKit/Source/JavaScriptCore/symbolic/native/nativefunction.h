@@ -41,7 +41,7 @@ public:
     virtual std::string getName() const;
 
 private:
-    std::string mName;
+    std::string m_name;
 };
 
 }

@@ -54,7 +54,7 @@ void DomTraversal::traverseDom(JSC::CallFrame* callFrame, DomTraversal* callback
         std::string path = item.second;
 
         JSC::PropertyNameArray propertyNames(jsGlobalData);
-        JSC::JSObject::getPropertyNames(jsObject, callFrame, propertyNames, JSC::ExcludeDontEnumProperties);
+        JSC::JSObject::getPropertyNames(jsObject, callFrame, propertyNames, JSC::IncludeDontEnumProperties);
 
         JSC::PropertyNameArrayData::PropertyNameVector::const_iterator iter = propertyNames.data()->propertyNameVector().begin();
         JSC::PropertyNameArrayData::PropertyNameVector::const_iterator end = propertyNames.data()->propertyNameVector().end();
@@ -63,29 +63,35 @@ void DomTraversal::traverseDom(JSC::CallFrame* callFrame, DomTraversal* callback
             JSC::PropertySlot property;
             jsObject->getPropertySlot(callFrame, *iter, property);
 
-            JSC::JSValue propertyValue = property.getValue(callFrame, *iter);
+            if (strcmp("__qt_sender__", iter->ustring().ascii().data()) == 0) {
+                continue;
+            }
+
             std::string propertyPath = (path.size() == 0 ? "" : path +  ".") + std::string(iter->ustring().ascii().data());
+            JSC::JSValue propertyValue = property.getValue(callFrame, *iter);
 
             if (!propertyValue.isObject()) {
-                callback->domNodeTraversalCallback(propertyPath, propertyValue);
+                callback->domNodeTraversalCallback(callFrame, propertyPath, propertyValue);
+                continue;
             }
 
             JSC::JSObject* propertyObject = propertyValue.toObject(callFrame);
 
             if (visited.find(propertyObject) != visited.end()) {
+                //std::cout << "RJ " << propertyPath << "(" << propertyObject << ")" << std::endl;
                 continue;
             }
 
             visited.insert(propertyObject);
 
             // blacklisted paths
-            if (path.compare("document.defaultView") == 0 ||
-                    path.compare("document.all") == 0 ||
-                    path.compare("document.scripts") == 0) {
-                continue;
-            }
+            //if (path.compare("document.defaultView") == 0 ||
+            //        path.compare("document.all") == 0 ||
+            //        path.compare("document.scripts") == 0) {
+            //    continue;
+            //}
 
-            bool mayTraverse = callback->domNodeTraversalCallback(propertyPath, propertyValue);
+            bool mayTraverse = callback->domNodeTraversalCallback(callFrame, propertyPath, propertyValue);
 
             if (mayTraverse) {
                 worklist.push(std::make_pair<JSC::JSObject*, std::string>(propertyObject, propertyPath));

@@ -245,6 +245,9 @@ void JSValue::makeSymbolic(std::string value) {
     } else if (isObject()) {
         symbolicImmediate->u.asInt64 = u.asInt64;
         u.asInt64 = (TagTypeSymbolicObject | (int64_t)symbolicImmediate);
+    } else if (isString()) {
+        symbolicImmediate->u.asInt64 = u.asInt64;
+        u.asInt64 = (TagTypeSymbolicObject | (int64_t)symbolicImmediate);
     } else if (isTrue()) {
         symbolicImmediate->u.asInt64 = u.asInt64;
         u.asInt64 = (TagTypeSymbolicTrue | (int64_t)symbolicImmediate);
