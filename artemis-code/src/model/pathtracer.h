@@ -41,6 +41,7 @@ public:
     void notifyStartingLoad();
     void notifyStartingEvent(QSharedPointer<const BaseInput> inputEvent);
     void write();
+    void writePathTraceHTML();
 
 private:
     enum ItemType {FUNCALL, FUNRET, BYTECODE, ALERT};

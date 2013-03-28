@@ -161,4 +161,58 @@ void PathTracer::write()
     }
 }
 
+void PathTracer::writePathTraceHTML(){
+    QPair<ItemType,QPair<QString, QString> > item;
+    PathTrace trace;
+    QString itemStr;
+
+    QString style = "ol{list-style:none;}ol.tracelist{margin-left:170px;}ol.tracelist>li{margin-bottom:30px;}ol.functionbody{border-left:1px solid lightgray;}span.label{position:absolute;left:0;display:block;width:150px;text-align:right;}span.extrainfo{position:absolute;left:700px;}";
+    QString res = "<html><head><meta charset=\"utf-8\"/><title>Path Trace</title><style>" + style + "</style></head><body>";
+
+    res += "<h1>Path Tracer Results</h1>";
+    if(mTraces.isEmpty()){
+        res += "<p>No traces were recorded.</p>";
+    }else{
+        res += "<ol class=\"tracelist\" >";
+        foreach(trace, mTraces){
+
+            res += "<li><span class=\"label\">Trace Start:</span> " + trace.first + "<ol class=\"singletrace\">";
+
+            foreach(item, trace.second){
+                item.second.first.replace('&',"&amp;").replace('>',"&gt;").replace('<',"&lt;");
+                if(item.second.second == ""){
+                    itemStr = item.second.first;
+                }else{
+                    itemStr = (item.second.first + " <span class=\"extrainfo\">" + item.second.second) + "</span>";
+                }
+                switch(item.first){
+                case FUNCALL:
+                    res += "<li><span class=\"label\">Function Call:</span> " + itemStr + "<ol class=\"functionbody\">";
+                    break;
+                case FUNRET:
+                    res += "</ol></li>";
+                    //Log::info("   Function End | " + std::string(stackLevel*2, ' ') + itemStr);
+                    break;
+                case BYTECODE:
+                    res += "<li>" + itemStr + "</li>";
+                    break;
+                case ALERT:
+                    res += "<li><span class=\"label\">Alert Call:</span> " + itemStr + "</li>";
+                    break;
+                default:
+                    res += "<li><span class=\"label\">Unknown:</span> " + itemStr + "</li>";
+                    break;
+                }
+            }
+
+            res += "</ol></li>";
+        }
+    res += "</ol>";
+    }
+
+    res += "</body></html>";
+
+    Log::info(res.toStdString()); // TEMPORARY
+}
+
 }
