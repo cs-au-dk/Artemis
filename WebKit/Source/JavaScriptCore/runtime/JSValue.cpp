@@ -233,6 +233,11 @@ void JSValue::makeSymbolic(std::string value) {
 
     SymbolicValue* symbolicValue = new SymbolicValue(value);
 
+    if (isSymbolic()) {
+        getImmediate()->symbolic = symbolicValue;
+        return;
+    }
+
     SymbolicImmediate* symbolicImmediate = new SymbolicImmediate();
     symbolicImmediate->symbolic = symbolicValue;
 

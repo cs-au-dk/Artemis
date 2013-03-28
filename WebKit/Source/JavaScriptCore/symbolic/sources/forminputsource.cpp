@@ -55,15 +55,15 @@ bool FormInputSource::domNodeTraversalCallback(JSC::CallFrame* callFrame, std::s
 
     JSC::Identifier valueIdentifier = JSC::Identifier(callFrame, "value");
 
-    JSC::PropertySlot property;
-    jsBaseObject->getPropertySlot(callFrame, valueIdentifier, property);
-
-    JSC::JSValue value = property.getValue(callFrame, valueIdentifier);
-
+    JSC::JSValue value = jsBaseValue.get(callFrame, valueIdentifier);
     value.makeSymbolic(std::string("<SYM ") + path + std::string(">"));
-    property.setValue(value);
 
-    ASSERT(property.getValue(callFrame, valueIdentifier).isSymbolic());
+    ASSERT(value.isString());
+
+    JSC::PutPropertySlot putProperty(false);
+    jsBaseValue.put(callFrame, valueIdentifier, value, putProperty);
+
+    ASSERT(jsBaseValue.get(callFrame, valueIdentifier).isSymbolic());
 
     return true;
 }
