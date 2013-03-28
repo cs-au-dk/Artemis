@@ -212,7 +212,8 @@ void QWebExecutionListener::javascript_called_function(const JSC::DebuggerCallFr
                                      codeBlock->numberOfInstructions(),
                                      codeBlock->sourceOffset(),
                                      QUrl(QString::fromStdString(codeBlock->source()->url().utf8().data())),
-                                     codeBlock->source()->startPosition().m_line.zeroBasedInt() + 1);
+                                     codeBlock->source()->startPosition().m_line.zeroBasedInt() + 1,
+                                     codeBlock->lineNumberForBytecodeOffset(0));
 
     if (functionName.compare("__jquery_event_add__") == 0) {
 
@@ -256,13 +257,7 @@ void QWebExecutionListener::javascript_returned_function(const JSC::DebuggerCall
 
     std::string functionName = std::string(frame.calculatedFunctionName().ascii().data());
 
-    JSC::CodeBlock* codeBlock = frame.callFrame()->codeBlock();
-
-    emit sigJavascriptFunctionReturned(QString::fromStdString(functionName),
-                                       codeBlock->numberOfInstructions(),
-                                       codeBlock->sourceOffset(),
-                                       QUrl(QString::fromStdString(codeBlock->source()->url().utf8().data())),
-                                       codeBlock->source()->startPosition().m_line.zeroBasedInt() + 1);
+    emit sigJavascriptFunctionReturned(QString::fromStdString(functionName));
 }
 
 void QWebExecutionListener::exceptional_condition(std::string cause, intptr_t sourceID, int lineNumber) {

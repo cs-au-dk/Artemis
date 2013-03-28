@@ -58,17 +58,16 @@ void PathTracer::slEventListenerTriggered(QWebElement* elem, QString eventName)
     }
 }
 
-void PathTracer::slJavascriptFunctionCalled(QString functionName, size_t bytecodeSize, uint sourceOffset, QUrl sourceUrl, uint sourceStartLine)
+void PathTracer::slJavascriptFunctionCalled(QString functionName, size_t bytecodeSize, uint sourceOffset, QUrl sourceUrl, uint sourceStartLine, uint functionStartLine)
 {
     // TODO: Stripping the queries because they are often extremely long, but they are sometimes important as well!
     QString displayedUrl = sourceUrl.hasQuery() ? (sourceUrl.toString(QUrl::RemoveQuery) + "?...") : sourceUrl.toString();
     functionName = functionName.isEmpty() ? "<no name>" : (functionName + "()"); // Anonymous function??
-    functionName = functionName.leftJustified(20) + QString(" File: %1, Line: %2, Offset: %3.").arg(displayedUrl).arg(sourceStartLine).arg(sourceOffset);
-    // TODO: Would be nice to have this "extra info" as a separate field so the write() method can place it itself.
-    appendItem(FUNCALL, functionName);
+    QString extras = QString("File: %1, Line: %2.").arg(displayedUrl).arg(functionStartLine);
+    appendItem(FUNCALL, functionName, extras);
 }
 
-void PathTracer::slJavascriptFunctionReturned(QString functionName, size_t bytecodeSize, uint sourceOffset, QUrl sourceUrl, uint sourceStartLine)
+void PathTracer::slJavascriptFunctionReturned(QString functionName)
 {
     functionName = functionName.isEmpty() ? "<no name>" : (functionName + "()"); // Anonymous function??
     appendItem(FUNRET, functionName);
@@ -83,19 +82,20 @@ void PathTracer::slJavascriptBytecodeExecuted(const QString& opcode, uint byteco
 
 void PathTracer::slJavascriptAlert(QWebFrame* frame, QString msg)
 {
-    appendItem(ALERT, "alert(\"" + msg + "\")");
+    msg = msg.replace("\n", "\\n");
+    appendItem(ALERT, "alert()", "Message: " + msg);
 }
 
 void PathTracer::newPathTrace(QString description)
 {
     if(mCurrentlyRecording) {
-        QList<QPair<PathTracer::ItemType, QString> > newItemList = QList<QPair<PathTracer::ItemType, QString> >();
+        QList<QPair<PathTracer::ItemType, QPair<QString, QString> > > newItemList = QList<QPair<PathTracer::ItemType, QPair<QString, QString> > >();
         PathTrace newTrace = qMakePair(description, newItemList);
         mTraces.append(newTrace);
     }
 }
 
-void PathTracer::appendItem(ItemType type, QString message)
+void PathTracer::appendItem(ItemType type, QString message, QString extras)
 {
     if(mCurrentlyRecording) {
         if(mTraces.isEmpty()){
@@ -103,7 +103,7 @@ void PathTracer::appendItem(ItemType type, QString message)
             Log::error("       Message: " + message.toStdString());
             exit(1);
         }
-        mTraces.last().second.append(qMakePair(type, message));
+        mTraces.last().second.append(qMakePair(type, qMakePair(message, extras)));
     }
 }
 
@@ -115,9 +115,10 @@ void PathTracer::appendItem(ItemType type, QString message)
 **/
 void PathTracer::write()
 {
-    QPair<ItemType,QString> item;
+    QPair<ItemType,QPair<QString, QString> > item;
     PathTrace trace;
     uint stackLevel;
+    string itemStr;
 
     //Log::info("===== Path Tracer =====");
     if(mTraces.isEmpty()){
@@ -130,23 +131,28 @@ void PathTracer::write()
         stackLevel = 1;
 
         foreach(item, trace.second){
+            if(item.second.second == ""){
+                itemStr = item.second.first.toStdString();
+            }else{
+                itemStr = (item.second.first.leftJustified(35 - stackLevel*2) + ' ' + item.second.second).toStdString();
+            }
             switch(item.first){
             case FUNCALL:
-                Log::info("  Function Call | " + std::string(stackLevel*2, ' ') + item.second.toStdString());
+                Log::info("  Function Call | " + std::string(stackLevel*2, ' ') + itemStr);
                 stackLevel++;
                 break;
             case FUNRET:
                 stackLevel--;
-                //Log::info("   Function End | " + std::string(stackLevel*2, ' ') + item.second.toStdString());
+                //Log::info("   Function End | " + std::string(stackLevel*2, ' ') + itemStr);
                 break;
             case BYTECODE:
-                Log::info("                | " + std::string(stackLevel*2, ' ') + item.second.toStdString());
+                Log::info("                | " + std::string(stackLevel*2, ' ') + itemStr);
                 break;
             case ALERT:
-                Log::info("     Alert Call | " + std::string(stackLevel*2, ' ') + item.second.toStdString());
+                Log::info("     Alert Call | " + std::string(stackLevel*2, ' ') + itemStr);
                 break;
             default:
-                Log::info("        Unknown | " + item.second.toStdString());
+                Log::info("        Unknown | " + std::string(stackLevel*2, ' ') + itemStr);
                 break;
             }
         }

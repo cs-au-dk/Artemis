@@ -132,7 +132,7 @@ void CoverageListener::slJavascriptStatementExecuted(uint linenumber, QUrl sourc
     sourceInfo->setLineCovered(linenumber);
 }
 
-void CoverageListener::slJavascriptFunctionCalled(QString functionName, size_t bytecodeSize, uint sourceOffset, QUrl sourceUrl, uint sourceStartLine)
+void CoverageListener::slJavascriptFunctionCalled(QString functionName, size_t bytecodeSize, uint sourceOffset, QUrl sourceUrl, uint sourceStartLine, uint functionStartLine)
 {
     if (mIgnoredUrls.contains(sourceUrl)) {
         return;
