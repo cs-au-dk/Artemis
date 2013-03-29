@@ -59,7 +59,7 @@ module html {
         attribute [Reflect] DOMString step;
         attribute [ConvertNullToNullString] DOMString type; // readonly dropped as part of DOM level 2
         attribute [Reflect] DOMString useMap;
-        attribute [ConvertNullToNullString] DOMString value;
+        attribute [ConvertNullToNullString, Symbolic] DOMString value;
 #if !defined(LANGUAGE_CPP) || !LANGUAGE_CPP
         attribute Date valueAsDate setter raises(DOMException);
 #endif
