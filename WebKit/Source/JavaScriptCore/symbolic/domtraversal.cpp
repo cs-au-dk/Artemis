@@ -81,14 +81,15 @@ void DomTraversal::traverseDom(JSC::CallFrame* callFrame, DomTraversal* callback
                 continue;
             }
 
-            visited.insert(propertyObject);
-
             // blacklisted paths
-            //if (path.compare("document.defaultView") == 0 ||
-            //        path.compare("document.all") == 0 ||
-            //        path.compare("document.scripts") == 0) {
-            //    continue;
-            //}
+            if (path.compare("document.defaultView") == 0 ||
+                    path.compare("document.all") == 0 ||
+                    path.compare("document.scripts") == 0 ||
+                    path.compare("document.activeElement") == 0) {
+                continue;
+            }
+
+            visited.insert(propertyObject);
 
             bool mayTraverse = callback->domNodeTraversalCallback(callFrame, propertyPath, propertyValue);
 
