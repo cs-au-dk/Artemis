@@ -165,52 +165,61 @@ void PathTracer::writePathTraceHTML(){
     QPair<ItemType,QPair<QString, QString> > item;
     PathTrace trace;
     QString itemStr;
+    uint indentLevel;
+    QString indent;
 
-    QString style = "ol{list-style:none;}ol.tracelist{margin-left:170px;}ol.tracelist>li{margin-bottom:30px;}ol.functionbody{border-left:1px solid lightgray;}span.label{position:absolute;left:0;display:block;width:150px;text-align:right;}span.extrainfo{position:absolute;left:700px;}";
-    QString res = "<html><head><meta charset=\"utf-8\"/><title>Path Trace</title><style>" + style + "</style></head><body>";
+    QString style = "ol{list-style:none;}ol.tracelist{margin-left:170px;}ol.tracelist>li{margin-bottom:30px;}ol.tracelist>li>span.label{font-weight:bold;}ol.functionbody{border-left:1px solid lightgray;}span.label{position:absolute;left:0;display:block;width:150px;text-align:right;}span.extrainfo{position:absolute;left:700px;}span.itemname{font-family:monospace;cursor:pointer;}li.funcall>span.itemname:before{content:'\\25BD\\00A0';}li.funcall.collapsed>span.itemname:before{content:'\\25B7\\00A0';}li.funcall.collapsed>ol{display:none;}";
+    QString script = "window.onload = function(){elems = document.querySelectorAll('li.funcall>span.itemname'); for(var i=0; i<elems.length; i++){elems[i].onclick = function(){this.parentNode.classList.toggle('collapsed');}}}";
+    QString res = "<html>\n<head>\n\t<meta charset=\"utf-8\"/>\n\t<title>Path Trace</title>\n\t<style type=\"text/css\">" + style + "</style>\n\t<script type=\"text/javascript\">" + script + "</script>\n</head>\n<body>\n";
 
-    res += "<h1>Path Tracer Results</h1>";
+    res += "<h1>Path Tracer Results</h1>\n";
     if(mTraces.isEmpty()){
-        res += "<p>No traces were recorded.</p>";
+        res += "<p>No traces were recorded.</p>\n";
     }else{
-        res += "<ol class=\"tracelist\" >";
+        res += "<ol class=\"tracelist\" >\n";
         foreach(trace, mTraces){
 
-            res += "<li><span class=\"label\">Trace Start:</span> " + trace.first + "<ol class=\"singletrace\">";
+            res += "\t<li>\n\t\t<span class=\"label\">Trace Start:</span> " + trace.first + "\n\t\t<ol class=\"singletrace\">\n";
+            indentLevel = 3;
 
             foreach(item, trace.second){
                 item.second.first.replace('&',"&amp;").replace('>',"&gt;").replace('<',"&lt;");
+                item.second.first = "<span class=\"itemname\">" + item.second.first + "</span>";
                 if(item.second.second == ""){
                     itemStr = item.second.first;
                 }else{
                     itemStr = (item.second.first + " <span class=\"extrainfo\">" + item.second.second) + "</span>";
                 }
+                indent = QString(indentLevel, '\t');
+                res += indent;
+
                 switch(item.first){
                 case FUNCALL:
-                    res += "<li><span class=\"label\">Function Call:</span> " + itemStr + "<ol class=\"functionbody\">";
+                    res += "<li class=\"funcall\">\n"+indent+"\t<span class=\"label\">Function Call:</span> " + itemStr + "\n"+indent+"\t<ol class=\"functionbody\">\n";
+                    indentLevel++;
                     break;
                 case FUNRET:
-                    res += "</ol></li>";
-                    //Log::info("   Function End | " + std::string(stackLevel*2, ' ') + itemStr);
+                    res += "</ol>\n" + QString(indentLevel-1, '\t') + "</li>\n";
+                    indentLevel--;
                     break;
                 case BYTECODE:
-                    res += "<li>" + itemStr + "</li>";
+                    res += "<li class=\"bytecode\">" + itemStr + "</li>\n";
                     break;
                 case ALERT:
-                    res += "<li><span class=\"label\">Alert Call:</span> " + itemStr + "</li>";
+                    res += "<li class=\"alert\"><span class=\"label\">Alert Call:</span> " + itemStr + "</li>\n";
                     break;
                 default:
-                    res += "<li><span class=\"label\">Unknown:</span> " + itemStr + "</li>";
+                    res += "<li class=\"unknown\"><span class=\"label\">Unknown:</span> " + itemStr + "</li>\n";
                     break;
                 }
             }
 
-            res += "</ol></li>";
+            res += "\t\t</ol>\n\t</li>\n";
         }
-    res += "</ol>";
+    res += "</ol>\n";
     }
 
-    res += "</body></html>";
+    res += "</body>\n</html>\n";
 
     Log::info(res.toStdString()); // TEMPORARY
 }
