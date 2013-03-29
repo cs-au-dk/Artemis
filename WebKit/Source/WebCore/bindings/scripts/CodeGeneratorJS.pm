@@ -1015,6 +1015,19 @@ sub GenerateHeader
         push(@headerContent, "    static JSC::JSValue nameGetter(JSC::ExecState*, JSC::JSValue, const JSC::Identifier&);\n");
     }
 
+    # ARTEMIS BEGIN
+    if ($numAttributes > 0) {
+        push(@headerContent, "public:\n");
+        push(@headerContent, "    // Symbolic\n");
+        foreach my $attribute (@{$dataNode->attributes}) {
+            if ($attribute->signature->extendedAttributes->{"Symbolic"}) {
+                push(@headerContent, "    JSC::SymbolicValue* m_" . $attribute->signature->name . "Symbolic;\n");
+            }
+        }
+        push(@headerContent, "\n");
+    }
+    # ARTEMIS END
+
     push(@headerContent, "};\n\n");
 
     if ($dataNode->extendedAttributes->{"InlineGetOwnPropertySlot"} && !$dataNode->extendedAttributes->{"CustomGetOwnPropertySlot"}) {
@@ -1643,6 +1656,13 @@ sub GenerateImplementation
             push(@implContent, "    : $parentClassName(structure, globalObject)\n");
             push(@implContent, "    , m_impl(impl.leakRef())\n");
         }
+        # ARTEMIS BEGIN
+        foreach my $attribute (@{$dataNode->attributes}) {
+            if ($attribute->signature->extendedAttributes->{"Symbolic"}) {
+                push(@implContent, "    , m_" . $attribute->signature->name . "Symbolic(NULL)\n");
+            }
+        }
+        # ARTEMIS END
         push(@implContent, "{\n");
         push(@implContent, "}\n\n");
 
@@ -1818,6 +1838,15 @@ sub GenerateImplementation
                     }
 
                     push(@implContent, "    m_" . $attribute->signature->name . ".set(exec->globalData(), this, result);\n") if ($attribute->signature->extendedAttributes->{"CachedAttribute"});
+                    
+                    if ($attribute->signature->extendedAttributes->{"Symbolic"}) {
+                        # ARTEMIS BEGIN
+                        push(@implContent, "    if (castedThis->m_" . $attribute->signature->name . "Symbolic != NULL) {\n");
+                        push(@implContent, "        result.makeSymbolic(castedThis->m_" . $attribute->signature->name . "Symbolic);\n");
+                        push(@implContent, "    }\n");
+                        # ARTEMIS END
+                    }
+
                     push(@implContent, "    return result;\n");
 
                 } else {
@@ -2032,6 +2061,15 @@ sub GenerateImplementation
                                 push(@arguments, "ec") if @{$attribute->setterExceptions};
                                 push(@implContent, "    ${functionName}(" . join(", ", @arguments) . ");\n");
                                 push(@implContent, "    setDOMException(exec, ec);\n") if @{$attribute->setterExceptions};
+                                # ARTEMIS BEGIN
+                                if ($attribute->signature->extendedAttributes->{"Symbolic"}) {
+                                    if ($attribute->signature->extendedAttributes->{"ImplementedBy"}) {
+                                        # TODO
+                                    } else {
+                                        push(@implContent, "    castedThis->m_" . $attribute->signature->name . "Symbolic = value.isSymbolic() ? value.asSymbolic() : NULL;\n");   
+                                    }
+                                }
+                                # ARTEMIS END
                             }
                         }
 
