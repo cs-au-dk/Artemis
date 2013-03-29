@@ -62,37 +62,69 @@ void writeCoverageHtml(CoverageListenerPtr cov)
 
     QDir appdir("", "*.html", QDir::Time);
     QStringList existingFiles = appdir.entryList();
-
-    QString res = "<html><head><meta charset=\"utf-8\"/><title>Test</title><style>";
-    res += "table { border-collapse: collapse; } td.covered { background-color: #00FF00; } td.uncovered { background-color: #FF0000; }</style></head><body>";
-
+    QString timeString = QDateTime::currentDateTime().toString("dd-MM-yy-hh-mm-ss") ,
+            timeString2 = QDateTime::currentDateTime().toString("dd-MM-yy hh:mm:ss") ;
+    QString res = "<html><head><meta charset=\"utf-8\"/><title>Coverage Report ("+timeString2+")</title>";
+    res += "<script type='text/javascript' src='https://google-code-prettify.googlecode.com/svn/loader/prettify.js'></script>";
+    res += "<script src='http://code.jquery.com/jquery-latest.min.js'></script>";
+    res += "<link rel='stylesheet' type='text/css' href='https://google-code-prettify.googlecode.com/svn/loader/prettify.css'>";
+    res += "<style type='text/css'>*{margin:0;padding:0;font-family:Tahoma,Geneva,sans-serif;font-size:12pt;line-height:20px}body{padding:20px 0}body>div>b{font-size:10pt}body>div{padding:20px;margin:10px 0}body>div:not(.info):nth-of-type(2n+1){background:#eee}body>div.info>.prev{display:block}h2{font-size:20pt;line-height:40px}h1{padding-left:20px;font-size:30pt;line-height:50px}.linenums>ol{padding-left:40px}.linenums>ol>li:nth-of-type(5n),.linenums>ol>li:nth-of-type(1){list-style-type:decimal!important}.linenums>ol>li{list-style-type:none;word-wrap:break-word}pre li:nth-of-type(2n){background:#eee}pre li:nth-of-type(2n+1){background:#fff}pre>ol>li.covered{background:#ffeeb2}pre{padding:2px;border:1px solid #888;display:none}pre *{font-size:11pt}a{text-decoration:none}body>div>a.openLink{float:right;padding:0 10px;display:block;text-decoration:none}body>div>a.expandLink:visited{color:#fff}.arrow-right{width:0;height:0;border-top:5px solid transparent;border-bottom:5px solid transparent;border-left:5px solid darkblue}a.expandLink{display:block;font-size:10pt;text-align:center;background:#5a9dca;padding:3px;color:#fff;margin-top:5px;position:relative}a.expandLink:hover{background:#60acd8}a.expandLink.expanded{background:#e27171;box-shadow:0}a.openLink{background:#aaa;color:#fff;font-size:10pt;border-radius:2px}a.openLink:hover{background:#bbb}a.openLink .arrow-container{float:right;padding:5px 0;margin-left:10px}a.openLink .arrow-container .arrow-right{border-left-color:#fff}</style>";
+    res += "</head><body>";
+    res += "<h1>Coverage Report</h1>";
+    res += "<div class='info'>Ran: "+timeString+"<br /> Nubmer of scripts: "+QString::number(cov->getSourceIDs().length());
     if (!existingFiles.isEmpty()) {
-        res += "<a href=\"" + existingFiles.at(0) + "\">Previous run</a>";
+        res += "<a class='prev' href=\"" + existingFiles.at(0) + "\">Previous run</a>";
     }
-
+    res += "</div>";
+    QString coverageJSString = "";
+    bool first = true;
     foreach(int sourceID, cov->getSourceIDs()) {
 
-        QSet<uint> lineCoverage = cov->getSourceInfo(sourceID)->getLineCoverage();
+        QString url = Qt::escape(cov->getSourceInfo(sourceID)->getURL()).trimmed(), id = "ID"+QString::number(sourceID).replace("-","m");
 
-        res += "<h2>" + Qt::escape(cov->getSourceInfo(sourceID)->getURL()) + "</h2>";
-        res += "<pre><table>";
+        res += "<div id='"+id+"'>";
+        res += "<a href='"+url+"' target='_blank' class='openLink'><div class='arrow-container'><div class='arrow-right'>&nbsp;</div></div>Go to file</a>";
+
+        int index = url.lastIndexOf("/");
+        QString name, tail = name = url.right(url.size() - index - 1);
+        name = name.left(name.indexOf("?")).left(name.indexOf("#"));
+        tail = tail.right(tail.size()-name.size());
+
+        res += "<b>"+ url.left(index+1) +"</b>";
+        res += "<h2 "+(name.size()<=0?" class='inactive'> &lt;index file&gt; ":"> "+name )+"</h2>";
+        res += tail.size()>0?"<b>"+tail+"</b>":"";
+        res += "<a href='#?' class='expandLink'>show code coverage</a>";
 
         int startline = cov->getSourceInfo(sourceID)->getStartLine();
+        res += "<pre class='linenums "+(startline >1 ? "startline startlinenr["+QString::number(startline)+"]":"")+"'>";
+
         foreach(QString line, cov->getSourceInfo(sourceID)->getSource().split("\n", QString::KeepEmptyParts)) {
-            QString s = QTextDocument(line).toHtml();
-            int p = s.indexOf("<p");
-            QString htmlString = s.mid(p,s.lastIndexOf("</p>")-p+4);
-            res += "<tr><td>" + QString::number(startline) + "</td><td class=\""
-                   + QString(lineCoverage.contains(startline) ? "covered" : "uncovered")
-                   + "\">" + htmlString + "</td></tr>";
-            startline += 1;
+            res += QTextDocument(line).toPlainText().replace("<","&lt;").replace(">","&gt;").replace(QRegExp("\\s*$"), "") + "&nbsp;\n";
+
         }
-        res += "</table></pre>";
+
+        QSet<uint> lineCoverage = cov->getSourceInfo(sourceID)->getLineCoverage();
+        if(!first){
+            coverageJSString += ", ";
+        }
+        first=true;
+        coverageJSString += "\""+id+"\":[";
+        foreach(uint i, lineCoverage){
+            if(!first){
+                coverageJSString += ", ";
+            }
+            coverageJSString += QString::number(i);
+            first = false;
+        }
+        coverageJSString += "]";
+        first = false;
+        res += "</pre></div>";
 
     }
+    res += "<script type='text/javascript'> var coverage = {" + coverageJSString + "}; $.fn.updateOLOffset=function(){if($(this).hasClass(\"startline\")){var a=$(this).attr(\"class\").replace(/.*startlinenr\\[([0-9]+)\\].*/,\"$1\");$(this).find(\"ol\").attr(\"start\",a);$(this).removeClass(\"startline\")}};$.fn.updateOffset=function(){var b=$(this);if(b.size()>1){b.each(function(){$(this).updateOffset()});return}if(!b.hasClass(\"expanded\")){b.css(\"top\",\"\");return}var d=b.next(\"pre\");var a=d.offset();var c=(a.top-(b.outerHeight()))-($(window).scrollTop());b.css(\"top\",Math.max(0,Math.min(c*-1,d.outerHeight())))};$.fn.markCoverage=function(){var a=$(this);var e=a.parents(\"div\").attr(\"id\");var c,d=(c=a.find(\"ol.linenums\").first().attr(\"start\"))==undefined?1:c;var b=coverage[e];$.each(b,function(g,f){$(a.find(\"ol.linenums > li\").get(f-d)).addClass(\"covered\")})};$(document).ready(function(){var a=function(){$(\".expandLink.expanded\").updateOffset()};$(window).scroll(a);$(window).resize(a);$(\".expandLink\").click(function(){var b=$(this);var c=b.parent().find(\"pre\");if(b.hasClass(\"expanded\")){c.hide();b.removeClass(\"expanded\");b.updateOffset();$(window).scrollTop(Math.min(b.offset().top,$(window).scrollTop()));b.text(\"show code coverage\")}else{c.show();if(!c.hasClass(\"prettyprinted\")){c.addClass(\"prettyprint\");prettyPrint(function(){c.removeClass(\"prettyprint\");c.updateOLOffset();c.markCoverage()})}b.addClass(\"expanded\");b.text(\"hide\")}})}); </script>";
     res += ("</body></html>");
 
-    QString pathToFile = QString("coverage-") + QDateTime::currentDateTime().toString("dd-MM-yy-hh-mm-ss") + ".html";
+    QString pathToFile = QString("coverage-") + timeString + ".html";
 
     writeStringToFile(pathToFile, res);
 }
