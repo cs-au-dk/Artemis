@@ -76,15 +76,15 @@ WebKitExecutor::WebKitExecutor(QObject* parent,
                      mCoverageListener.data(), SLOT(slJavascriptStatementExecuted(uint, QUrl, uint)));
     QObject::connect(webkitListener, SIGNAL(sigJavascriptBytecodeExecuted(QString, uint,  uint, QUrl, uint)),
                      mCoverageListener.data(), SLOT(slJavascriptBytecodeExecuted(QString, uint, uint, QUrl, uint)));
-    QObject::connect(webkitListener, SIGNAL(sigJavascriptFunctionCalled(QString, size_t, uint, QUrl, uint)),
-                     mCoverageListener.data(), SLOT(slJavascriptFunctionCalled(QString, size_t, uint, QUrl, uint)));
+    QObject::connect(webkitListener, SIGNAL(sigJavascriptFunctionCalled(QString, size_t, uint, QUrl, uint, uint)),
+                     mCoverageListener.data(), SLOT(slJavascriptFunctionCalled(QString, size_t, uint, QUrl, uint, uint)));
 
     QObject::connect(webkitListener, SIGNAL(sigJavascriptBytecodeExecuted(QString, uint,  uint, QUrl, uint)),
                      mPathTracer.data(), SLOT(slJavascriptBytecodeExecuted(QString, uint, uint, QUrl, uint)));
-    QObject::connect(webkitListener, SIGNAL(sigJavascriptFunctionCalled(QString, size_t, uint, QUrl, uint)),
-                     mPathTracer.data(), SLOT(slJavascriptFunctionCalled(QString, size_t, uint, QUrl, uint)));
-    QObject::connect(webkitListener, SIGNAL(sigJavascriptFunctionReturned(QString, size_t, uint, QUrl, uint)),
-                     mPathTracer.data(), SLOT(slJavascriptFunctionReturned(QString, size_t, uint, QUrl, uint)));
+    QObject::connect(webkitListener, SIGNAL(sigJavascriptFunctionCalled(QString, size_t, uint, QUrl, uint, uint)),
+                     mPathTracer.data(), SLOT(slJavascriptFunctionCalled(QString, size_t, uint, QUrl, uint, uint)));
+    QObject::connect(webkitListener, SIGNAL(sigJavascriptFunctionReturned(QString)),
+                     mPathTracer.data(), SLOT(slJavascriptFunctionReturned(QString)));
     QObject::connect(mPage.data(), SIGNAL(sigJavascriptAlert(QWebFrame*, QString)),
                      mPathTracer.data(), SLOT(slJavascriptAlert(QWebFrame*, QString)));
 

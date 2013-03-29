@@ -89,8 +89,8 @@ signals:
     void loadedJavaScript(QString source, QUrl url, uint startline);
     void statementExecuted(uint linenumber, QUrl url, uint startline);
 
-    void sigJavascriptFunctionCalled(QString functionName, size_t bytecodeSize, uint sourceOffset, QUrl url, uint startline);
-    void sigJavascriptFunctionReturned(QString functionName, size_t bytecodeSize, uint sourceOffset, QUrl url, uint startline);
+    void sigJavascriptFunctionCalled(QString functionName, size_t bytecodeSize, uint sourceOffset, QUrl url, uint startline, uint functionLine);
+    void sigJavascriptFunctionReturned(QString functionName);
     void sigJavascriptBytecodeExecuted(QString opcode, uint bytecodeOffset, uint sourceOffset, QUrl url, uint startline);
 
 };

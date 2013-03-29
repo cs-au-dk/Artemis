@@ -155,6 +155,7 @@ void Runtime::done()
         Log::info("=== Path Tracer ===\n");
         mAppmodel->getPathTracer()->write();
         Log::info("\n=== Path Tracer END ===\n\n");
+        //mAppmodel->getPathTracer()->writePathTraceHTML(); // TEMPORARY
     }
     Log::info("Artemis terminated on: "+ QDateTime::currentDateTime().toString().toStdString());
 

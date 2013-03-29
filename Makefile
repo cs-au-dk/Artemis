@@ -34,7 +34,7 @@ webkit-minimal-debug: check check-env
 	@echo "Building minimal debug QtWebKit"
 	${WEBKIT_BUILD_SCRIPT} --debug --minimal
 
-webkit-clean:
+webkit-clean: check-env
 	@echo "Cleaning WebKit build"
 	${WEBKIT_BUILD_SCRIPT} --clean
 
