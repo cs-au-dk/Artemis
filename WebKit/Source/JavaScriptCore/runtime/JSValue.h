@@ -220,6 +220,7 @@ namespace JSC {
         // Symbolic operations
         bool isSymbolic() const;
         void makeSymbolic(std::string value);
+        void makeSymbolic(SymbolicValue* symbolicValue);
 
         SymbolicValue* asSymbolic() const;
 #endif
