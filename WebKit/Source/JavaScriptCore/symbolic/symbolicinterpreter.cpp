@@ -76,7 +76,7 @@ JSC::JSValue SymbolicInterpreter::ail_op_binary(JSC::CallFrame* callFrame, const
 
     std::string value = std::string("(") + xValue + std::string(opToString(op)) + yValue + std::string(")");
 
-    std::cout << "AIL_OP_BINARY " << value << std::endl;
+    //std::cout << "AIL_OP_BINARY " << value << std::endl;
 
     result.makeSymbolic(value);
     ASSERT(result.isSymbolic());
@@ -88,9 +88,9 @@ void SymbolicInterpreter::ail_jmp_iff(JSC::CallFrame* callFrame, const JSC::Inst
                                       JSC::JSValue& condition, bool jumps)
 {
     if (condition.isSymbolic()) {
-        std::cout << "AIL_JMP_IFF " << condition.asSymbolic()->value << std::endl;
+        //std::cout << "AIL_JMP_IFF " << condition.asSymbolic()->value << std::endl;
     } else {
-        std::cout << "AIL_JMP_IFF" << std::endl;
+        //std::cout << "AIL_JMP_IFF" << std::endl;
     }
 
 }
@@ -103,15 +103,12 @@ void SymbolicInterpreter::fatalError(JSC::CodeBlock* codeBlock, std::string reas
 
 void SymbolicInterpreter::preExecution(JSC::CallFrame* callFrame)
 {
-    std::cout << "PRE EXECUTE" << std::endl;
-
     m_nativeFunctions.buildRegistry(callFrame);
     DomTraversal::traverseDom(callFrame, new FormInputSource());
 }
 
 void SymbolicInterpreter::beginSession()
 {
-    std::cout << "BEGIN SESSION" << std::endl;
 }
 
 void SymbolicInterpreter::endSession()

@@ -78,7 +78,6 @@ void DomTraversal::traverseDom(JSC::CallFrame* callFrame, DomTraversal* callback
             JSC::JSObject* propertyObject = propertyValue.toObject(callFrame);
 
             if (visited.find(propertyObject) != visited.end()) {
-                //std::cout << "RJ " << propertyPath << "(" << propertyObject << ")" << std::endl;
                 continue;
             }
 

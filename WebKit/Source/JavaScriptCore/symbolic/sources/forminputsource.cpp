@@ -34,13 +34,6 @@ FormInputSource::FormInputSource()
 
 bool FormInputSource::domNodeTraversalCallback(JSC::CallFrame* callFrame, std::string path, JSC::JSValue jsBaseValue)
 {
-    std::string cname = "";
-    if (jsBaseValue.isObject()) {
-        cname = jsBaseValue.toObject(callFrame)->classInfo()->className;
-    }
-
-    //std::cout << path << " (object: " << jsBaseValue.isObject() << " " << cname << " " << jsBaseValue.toObject(callFrame) << ")" << std::endl;
-
     if (!jsBaseValue.isObject()) {
         return true;
     }
@@ -50,8 +43,6 @@ bool FormInputSource::domNodeTraversalCallback(JSC::CallFrame* callFrame, std::s
     if (strcmp(jsBaseObject->classInfo()->className, "HTMLInputElement") != 0) {
         return true;
     }
-
-    std::cout << "HTMLInputElement Identified! -- " << jsBaseObject->toString(callFrame).ascii().data() << std::endl;
 
     JSC::Identifier valueIdentifier = JSC::Identifier(callFrame, "value");
 
