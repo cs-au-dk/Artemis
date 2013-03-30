@@ -21,6 +21,7 @@
 #include "JavaScriptCore/wtf/ExportMacros.h"
 #include "JavaScriptCore/bytecode/CodeBlock.h"
 #include "JavaScriptCore/interpreter/CallFrame.h"
+#include "JavaScriptCore/instrumentation/bytecodeinfo.h"
 
 #include "symbolic/sources/forminputsource.h"
 
@@ -45,12 +46,12 @@ SymbolicInterpreter::SymbolicInterpreter() :
 {
 }
 
-void SymbolicInterpreter::ail_call(JSC::CallFrame*, const JSC::Instruction*)
+void SymbolicInterpreter::ail_call(JSC::CallFrame*, const JSC::Instruction*, JSC::BytecodeInfo&)
 {
     //std::cout << "AIL_CALL" << std::endl;
 }
 
-void SymbolicInterpreter::ail_call_native(JSC::CallFrame* callFrame, const JSC::Instruction*,
+void SymbolicInterpreter::ail_call_native(JSC::CallFrame* callFrame, const JSC::Instruction*, JSC::BytecodeInfo&,
                                           JSC::native_function_ID_t functionID)
 {
     const NativeFunction* nativeFunction = m_nativeFunctions.find(functionID);
@@ -63,13 +64,15 @@ void SymbolicInterpreter::ail_call_native(JSC::CallFrame* callFrame, const JSC::
     //std::cout << "AIL_CALL_NATIVE <" << nativeFunction->getName() << ">" << std::endl;
 }
 
-JSC::JSValue SymbolicInterpreter::ail_op_binary(JSC::CallFrame* callFrame, const JSC::Instruction*,
+JSC::JSValue SymbolicInterpreter::ail_op_binary(JSC::CallFrame* callFrame, const JSC::Instruction*, JSC::BytecodeInfo& info,
                                                 JSC::JSValue& x, OP op, JSC::JSValue& y,
                                                 JSC::JSValue result)
 {
     if (!x.isSymbolic() && !y.isSymbolic()) {
         return result; // not symbolic
     }
+
+    info.setSymbolic();
 
     std::string xValue = x.isSymbolic() ? x.asSymbolic()->value : std::string(x.toString(callFrame).ascii().data());
     std::string yValue = y.isSymbolic() ? y.asSymbolic()->value : std::string(y.toString(callFrame).ascii().data());
@@ -84,10 +87,11 @@ JSC::JSValue SymbolicInterpreter::ail_op_binary(JSC::CallFrame* callFrame, const
     return result;
 }
 
-void SymbolicInterpreter::ail_jmp_iff(JSC::CallFrame* callFrame, const JSC::Instruction* vPC,
+void SymbolicInterpreter::ail_jmp_iff(JSC::CallFrame* callFrame, const JSC::Instruction* vPC, JSC::BytecodeInfo& info,
                                       JSC::JSValue& condition, bool jumps)
 {
     if (condition.isSymbolic()) {
+        info.setSymbolic();
         //std::cout << "AIL_JMP_IFF " << condition.asSymbolic()->value << std::endl;
     } else {
         //std::cout << "AIL_JMP_IFF" << std::endl;

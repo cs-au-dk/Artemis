@@ -8,6 +8,7 @@
 #include "instrumentation/executionlistener.h"
 
 #include "../JavaScriptCore/instrumentation/jscexecutionlistener.h"
+#include "../JavaScriptCore/instrumentation/bytecodeinfo.h"
 
 #ifndef QWEBEXECUTIONLISTENER_H
 #define QWEBEXECUTIONLISTENER_H
@@ -35,7 +36,7 @@ public:
     virtual void javascript_returned_function(const JSC::DebuggerCallFrame&);
 
     virtual void javascript_executed_statement(const JSC::DebuggerCallFrame&, uint lineNumber); // from the debugger
-    virtual void javascript_bytecode_executed(JSC::Interpreter* interpreter, JSC::CodeBlock*, JSC::Instruction* inst); // interpreter instrumentation
+    virtual void javascript_bytecode_executed(JSC::Interpreter* interpreter, JSC::CodeBlock*, JSC::Instruction* inst, const JSC::BytecodeInfo& info); // interpreter instrumentation
     virtual void javascript_property_read(std::string propertyName, JSC::ExecState*);
     virtual void javascript_property_written(std::string propertyName, JSC::ExecState*);
 
@@ -91,7 +92,7 @@ signals:
 
     void sigJavascriptFunctionCalled(QString functionName, size_t bytecodeSize, uint sourceOffset, QUrl url, uint startline, uint functionLine);
     void sigJavascriptFunctionReturned(QString functionName);
-    void sigJavascriptBytecodeExecuted(QString opcode, uint bytecodeOffset, uint sourceOffset, QUrl url, uint startline);
+    void sigJavascriptBytecodeExecuted(QString opcode, bool isSymbolic, uint bytecodeOffset, uint sourceOffset, QUrl url, uint startline);
 
 };
 

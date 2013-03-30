@@ -23,6 +23,7 @@
 #include <QMap>
 #include <QSet>
 #include <QSharedPointer>
+#include <QWebExecutionListener>
 
 #include "runtime/input/baseinput.h"
 
@@ -72,7 +73,7 @@ public slots:
 
     void slJavascriptScriptParsed(QString sourceCode, QUrl sourceUrl, uint sourceStartLine);
     void slJavascriptFunctionCalled(QString functionName, size_t bytecodeSize, uint sourceOffset, QUrl sourceUrl, uint sourceStartLine, uint functionStartLine);
-    void slJavascriptBytecodeExecuted(const QString& opcode, uint bytecodeOffset, uint sourceOffset, const QUrl& sourceUrl, uint sourceStartLine);
+    void slJavascriptBytecodeExecuted(const QString& opcode, bool isSymbolic, uint bytecodeOffset, uint sourceOffset, const QUrl& sourceUrl, uint sourceStartLine);
     void slJavascriptStatementExecuted(uint linenumber, QUrl sourceUrl, uint sourceStartLine);
 
 };

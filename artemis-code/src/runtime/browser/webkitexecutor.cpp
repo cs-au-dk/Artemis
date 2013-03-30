@@ -21,8 +21,7 @@
 #include <QApplication>
 #include <QStack>
 #include <QDebug>
-#include <qwebexecutionlistener.h>
-#include <instrumentation/executionlistener.h>
+#include <QWebExecutionListener>
 
 #include "runtime/input/forms/formfield.h"
 #include "runtime/input/events/domelementdescriptor.h"
@@ -74,13 +73,13 @@ WebKitExecutor::WebKitExecutor(QObject* parent,
                      mCoverageListener.data(), SLOT(slJavascriptScriptParsed(QString, QUrl, uint)));
     QObject::connect(webkitListener, SIGNAL(statementExecuted(uint, QUrl, uint)),
                      mCoverageListener.data(), SLOT(slJavascriptStatementExecuted(uint, QUrl, uint)));
-    QObject::connect(webkitListener, SIGNAL(sigJavascriptBytecodeExecuted(QString, uint,  uint, QUrl, uint)),
-                     mCoverageListener.data(), SLOT(slJavascriptBytecodeExecuted(QString, uint, uint, QUrl, uint)));
+    QObject::connect(webkitListener, SIGNAL(sigJavascriptBytecodeExecuted(QString, bool, uint,  uint, QUrl, uint)),
+                     mCoverageListener.data(), SLOT(slJavascriptBytecodeExecuted(QString, bool, uint, uint, QUrl, uint)));
     QObject::connect(webkitListener, SIGNAL(sigJavascriptFunctionCalled(QString, size_t, uint, QUrl, uint, uint)),
                      mCoverageListener.data(), SLOT(slJavascriptFunctionCalled(QString, size_t, uint, QUrl, uint, uint)));
 
-    QObject::connect(webkitListener, SIGNAL(sigJavascriptBytecodeExecuted(QString, uint,  uint, QUrl, uint)),
-                     mPathTracer.data(), SLOT(slJavascriptBytecodeExecuted(QString, uint, uint, QUrl, uint)));
+    QObject::connect(webkitListener, SIGNAL(sigJavascriptBytecodeExecuted(QString, bool, uint,  uint, QUrl, uint)),
+                     mPathTracer.data(), SLOT(slJavascriptBytecodeExecuted(QString, bool, uint, uint, QUrl, uint)));
     QObject::connect(webkitListener, SIGNAL(sigJavascriptFunctionCalled(QString, size_t, uint, QUrl, uint, uint)),
                      mPathTracer.data(), SLOT(slJavascriptFunctionCalled(QString, size_t, uint, QUrl, uint, uint)));
     QObject::connect(webkitListener, SIGNAL(sigJavascriptFunctionReturned(QString)),

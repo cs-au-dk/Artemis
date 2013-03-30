@@ -150,7 +150,7 @@ void CoverageListener::slJavascriptFunctionCalled(QString functionName, size_t b
 
 }
 
-void CoverageListener::slJavascriptBytecodeExecuted(const QString& opcode, uint bytecodeOffset, uint sourceOffset, const QUrl& sourceUrl, uint sourceStartLine)
+void CoverageListener::slJavascriptBytecodeExecuted(const QString& opcode, bool isSymbolic, uint bytecodeOffset, uint sourceOffset, const QUrl& sourceUrl, uint sourceStartLine)
 {
     if (mIgnoredUrls.contains(sourceUrl)) {
         return;

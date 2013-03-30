@@ -21,6 +21,7 @@
 
 #include "JavaScriptCore/wtf/ExportMacros.h"
 #include "JavaScriptCore/runtime/CallData.h"
+#include "JavaScriptCore/instrumentation/bytecodeinfo.h"
 
 #include "native/nativelookup.h"
 
@@ -50,14 +51,14 @@ class SymbolicInterpreter
 public:
     SymbolicInterpreter();
 
-    void ail_call(JSC::CallFrame* callFrame, const JSC::Instruction* vPC);
-    void ail_call_native(JSC::CallFrame* callFrame, const JSC::Instruction* vPC,
+    void ail_call(JSC::CallFrame* callFrame, const JSC::Instruction* vPC, JSC::BytecodeInfo& info);
+    void ail_call_native(JSC::CallFrame* callFrame, const JSC::Instruction* vPC, JSC::BytecodeInfo& info,
                          JSC::native_function_ID_t functionID);
 
-    JSC::JSValue ail_op_binary(JSC::CallFrame* callFrame, const JSC::Instruction* vPC,
+    JSC::JSValue ail_op_binary(JSC::CallFrame* callFrame, const JSC::Instruction* vPC, JSC::BytecodeInfo& info,
                                JSC::JSValue& x, OP op, JSC::JSValue& y, JSC::JSValue result);
 
-    void ail_jmp_iff(JSC::CallFrame* callFrame, const JSC::Instruction* vPC,
+    void ail_jmp_iff(JSC::CallFrame* callFrame, const JSC::Instruction* vPC, JSC::BytecodeInfo& info,
                      JSC::JSValue& condition, bool jumps);
 
     // called from the interpreter before it starts executing (a single trace)

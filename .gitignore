@@ -7,8 +7,8 @@ build-output
 artemis-build-output
 qt-env*
 
-qt/*
-qt
+./qt/*
+./qt
 
 
 

@@ -306,11 +306,12 @@ void QWebExecutionListener::javascript_executed_statement(const JSC::DebuggerCal
                            sourceProvider->startPosition().m_line.zeroBasedInt() + 1);
 }
 
-void QWebExecutionListener::javascript_bytecode_executed(JSC::Interpreter* interpreter, JSC::CodeBlock* codeBlock, JSC::Instruction* instuction) {
+void QWebExecutionListener::javascript_bytecode_executed(JSC::Interpreter* interpreter, JSC::CodeBlock* codeBlock, JSC::Instruction* instuction, const JSC::BytecodeInfo& info) {
 
     uint bytecodeOffset = instuction - codeBlock->instructions().begin();
 
     emit sigJavascriptBytecodeExecuted(tr(JSC::opcodeNames[interpreter->getOpcodeID(instuction->u.opcode)]),
+                                       info.isSymbolic(),
                                        bytecodeOffset,
                                        codeBlock->sourceOffset(),
                                        QUrl(QString::fromStdString(codeBlock->source()->url().utf8().data())),

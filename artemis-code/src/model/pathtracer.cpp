@@ -73,10 +73,10 @@ void PathTracer::slJavascriptFunctionReturned(QString functionName)
     appendItem(FUNRET, functionName);
 }
 
-void PathTracer::slJavascriptBytecodeExecuted(const QString& opcode, uint bytecodeOffset, uint sourceOffset, const QUrl& sourceUrl, uint sourceStartLine)
+void PathTracer::slJavascriptBytecodeExecuted(const QString& opcode, bool isSymbolic, uint bytecodeOffset, uint sourceOffset, const QUrl& sourceUrl, uint sourceStartLine)
 {
     if(mReportBytecode){
-        appendItem(BYTECODE, opcode);
+        appendItem(BYTECODE, opcode + (isSymbolic ? " <= Symbolic" : ""));
     }
 }
 

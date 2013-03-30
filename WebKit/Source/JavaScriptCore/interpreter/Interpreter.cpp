@@ -68,6 +68,7 @@
 #ifdef ARTEMIS
 #include "symbolic/native/nativefunction.h"
 #include "instrumentation/jscexecutionlistener.h"
+#include "instrumentation/bytecodeinfo.h"
 #endif
 
 #if ENABLE(JIT)
@@ -1798,6 +1799,10 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
     ASSERT(m_initialized);
     ASSERT(m_enabled);
 
+#ifdef ARTEMIS
+    BytecodeInfo bytecodeInfoPrestine, bytecodeInfo = BytecodeInfo();
+#endif
+
 #if ENABLE(JIT)
 #if ENABLE(INTERPRETER)
     // Mixing Interpreter + JIT is not supported.
@@ -1857,7 +1862,7 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
 #endif
 
 #ifdef ARTEMIS
-#define ARTEMIS_BYTECODE_LISTEN(codeBlock, vPC) jscinst::get_jsc_listener()->javascript_bytecode_executed(this, codeBlock, vPC);
+#define ARTEMIS_BYTECODE_LISTEN(codeBlock, vPC) jscinst::get_jsc_listener()->javascript_bytecode_executed(this, codeBlock, vPC, bytecodeInfo); bytecodeInfo = bytecodeInfoPrestine;
 #else
 #define ARTEMIS_BYTECODE_LISTEN(codeBlock, vPC)
 #endif
@@ -1976,7 +1981,7 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
 
 #ifdef ARTEMIS
         callFrame->uncheckedR(dst) = \
-                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC,
+                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
                                                        src1, Symbolic::EQUAL, src2,
                                                        callFrame->uncheckedR(dst).jsValue());
 #endif
@@ -2004,7 +2009,7 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
 #ifdef ARTEMIS
         JSValue jsn = jsNull();
         callFrame->uncheckedR(dst) = \
-                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC,
+                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
                                                        src, Symbolic::EQUAL, jsn,
                                                        callFrame->uncheckedR(dst).jsValue());
 #endif
@@ -2032,7 +2037,7 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
 
 #ifdef ARTEMIS
         callFrame->uncheckedR(dst) = \
-                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC,
+                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
                                                        src1, Symbolic::NOT_EQUAL, src2,
                                                        callFrame->uncheckedR(dst).jsValue());
 #endif
@@ -2060,7 +2065,7 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
 #ifdef ARTEMIS
         JSValue jsn = jsNull();
         callFrame->uncheckedR(dst) = \
-                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC,
+                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
                                                        src, Symbolic::NOT_EQUAL, jsn,
                                                        callFrame->uncheckedR(dst).jsValue());
 #endif
@@ -2084,7 +2089,7 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
 
 #ifdef ARTEMIS
         callFrame->uncheckedR(dst) = \
-                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC,
+                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
                                                        src1, Symbolic::STRICT_EQUAL, src2,
                                                        callFrame->uncheckedR(dst).jsValue());
 #endif
@@ -2108,7 +2113,7 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
 
 #ifdef ARTEMIS
         callFrame->uncheckedR(dst) = \
-                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC,
+                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
                                                        src1, Symbolic::NOT_STRICT_EQUAL, src2,
                                                        callFrame->uncheckedR(dst).jsValue());
 #endif
@@ -2132,7 +2137,7 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
 
 #ifdef ARTEMIS
         callFrame->uncheckedR(dst) = \
-                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC,
+                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
                                                        src1, Symbolic::LESS_STRICT, src2,
                                                        callFrame->uncheckedR(dst).jsValue());
 #endif
@@ -2156,7 +2161,7 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
 
 #ifdef ARTEMIS
         callFrame->uncheckedR(dst) = \
-                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC,
+                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
                                                        src1, Symbolic::LESS_EQ, src2,
                                                        callFrame->uncheckedR(dst).jsValue());
 #endif
@@ -2180,7 +2185,7 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
 
 #ifdef ARTEMIS
         callFrame->uncheckedR(dst) = \
-                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC,
+                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
                                                        src1, Symbolic::GREATER_STRICT, src2,
                                                        callFrame->uncheckedR(dst).jsValue());
 #endif
@@ -2204,7 +2209,7 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
 
 #ifdef ARTEMIS
         callFrame->uncheckedR(dst) = \
-                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC,
+                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
                                                        src1, Symbolic::GREATER_EQ, src2,
                                                        callFrame->uncheckedR(dst).jsValue());
 #endif
@@ -2231,7 +2236,7 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
 #ifdef ARTEMIS
         JSValue jsn = jsNumber(1);
         callFrame->uncheckedR(srcDst) = \
-                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC,
+                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
                                                        v, Symbolic::ADD, jsn,
                                                        callFrame->uncheckedR(srcDst).jsValue());
 #endif
@@ -2258,7 +2263,7 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
 #ifdef ARTEMIS
         JSValue jsn = jsNumber(1);
         callFrame->uncheckedR(srcDst) = \
-                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC,
+                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
                                                        v, Symbolic::SUBTRACT, jsn,
                                                        callFrame->uncheckedR(srcDst).jsValue());
 #endif
@@ -2289,7 +2294,7 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
 #ifdef ARTEMIS
         JSValue jsn = jsNumber(1);
         callFrame->uncheckedR(srcDst) = \
-                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC,
+                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
                                                        v, Symbolic::ADD, jsn,
                                                        callFrame->uncheckedR(srcDst).jsValue());
 #endif
@@ -2320,7 +2325,7 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
 #ifdef ARTEMIS
         JSValue jsn = jsNumber(1);
         callFrame->uncheckedR(srcDst) = \
-                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC,
+                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
                                                        v, Symbolic::SUBTRACT, jsn,
                                                        callFrame->uncheckedR(srcDst).jsValue());
 #endif
@@ -2350,7 +2355,7 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
 #ifdef ARTEMIS
         JSValue jsn = jsNumber(1);
         callFrame->uncheckedR(dst) = \
-                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC,
+                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
                                                        srcVal, Symbolic::MULTIPLY, jsn,
                                                        callFrame->uncheckedR(dst).jsValue());
 #endif
@@ -2377,7 +2382,7 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
 #ifdef ARTEMIS
         JSValue jsn = jsNumber(-1);
         callFrame->uncheckedR(dst) = \
-                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC,
+                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
                                                        src, Symbolic::MULTIPLY, jsn,
                                                        callFrame->uncheckedR(dst).jsValue());
 #endif
@@ -2405,7 +2410,7 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
 
 #ifdef ARTEMIS
         callFrame->uncheckedR(dst) = \
-                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC,
+                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
                                                        src1, Symbolic::ADD, src2,
                                                        callFrame->uncheckedR(dst).jsValue());
 #endif
@@ -2432,7 +2437,7 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
 
 #ifdef ARTEMIS
         callFrame->uncheckedR(dst) = \
-                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC,
+                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
                                                        src1, Symbolic::MULTIPLY, src2,
                                                        callFrame->uncheckedR(dst).jsValue());
 #endif
@@ -2457,7 +2462,7 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
 
 #ifdef ARTEMIS
         callFrame->uncheckedR(dst) = \
-                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC,
+                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
                                                        dividend, Symbolic::DIVIDE, divisor,
                                                        result);
 #endif
@@ -2483,7 +2488,7 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
 
 #ifdef ARTEMIS
         callFrame->uncheckedR(dst) = \
-                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC,
+                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
                                                        dividend, Symbolic::EQUAL, divisor,
                                                        result);
 #endif
@@ -2502,7 +2507,7 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
 
 #ifdef ARTEMIS
         callFrame->uncheckedR(dst) = \
-                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC,
+                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
                                                        dividend, Symbolic::MODULO, divisor,
                                                        result);
 #endif
@@ -2530,7 +2535,7 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
 
 #ifdef ARTEMIS
         callFrame->uncheckedR(dst) = \
-                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC,
+                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
                                                        src1, Symbolic::SUBTRACT, src2,
                                                        callFrame->uncheckedR(dst).jsValue());
 #endif
@@ -4144,11 +4149,11 @@ skip_id_custom_self:
         bool _jumped = _v.toBoolean(callFrame);
         JSValue _r = jsBoolean(_jumped);
 
-        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC,
+        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
                                                     _v, Symbolic::EQUAL, _jst,
                                                     _r);
 
-        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC,
+        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC, bytecodeInfo,
                                              _r, _jumped);
 
         if (_jumped) {
@@ -4186,11 +4191,11 @@ skip_id_custom_self:
         bool _jumped = !_v.toBoolean(callFrame);
         JSValue _r = jsBoolean(_jumped);
 
-        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC,
+        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
                                                     _v, Symbolic::EQUAL, _jsf,
                                                     _r);
 
-        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC,
+        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC, bytecodeInfo,
                                              _r, _jumped);
 
 
@@ -4226,11 +4231,11 @@ skip_id_custom_self:
         bool _jumped = _v.toBoolean(callFrame);
         JSValue _r = jsBoolean(_jumped);
 
-        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC,
+        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
                                                     _v, Symbolic::EQUAL, _jst,
                                                     _r);
 
-        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC,
+        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC, bytecodeInfo,
                                              _r, _jumped);
 
         if (_jumped) {
@@ -4263,11 +4268,11 @@ skip_id_custom_self:
         bool _jumped = !_v.toBoolean(callFrame);
         JSValue _r = jsBoolean(_jumped);
 
-        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC,
+        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
                                                     _v, Symbolic::EQUAL, _jsf,
                                                     _r);
 
-        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC,
+        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC, bytecodeInfo,
                                              _r, _jumped);
 
 
@@ -4301,11 +4306,11 @@ skip_id_custom_self:
         bool _jumped = (srcValue.isUndefinedOrNull() || (srcValue.isCell() && srcValue.asCell()->structure()->typeInfo().masqueradesAsUndefined()));
         JSValue _r = jsBoolean(_jumped);
 
-        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC,
+        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
                                                     srcValue, Symbolic::EQUAL, _jsn,
                                                     _r);
 
-        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC,
+        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC, bytecodeInfo,
                                              _r, _jumped);
 
         if (_jumped) {
@@ -4338,11 +4343,11 @@ skip_id_custom_self:
         bool _jumped = (!srcValue.isUndefinedOrNull() && (!srcValue.isCell() || !srcValue.asCell()->structure()->typeInfo().masqueradesAsUndefined()));
         JSValue _r = jsBoolean(_jumped);
 
-        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC,
+        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
                                                     srcValue, Symbolic::NOT_EQUAL, _jsn,
                                                     _r);
 
-        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC,
+        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC, bytecodeInfo,
                                              _r, _jumped);
 
         if (_jumped) {
@@ -4398,11 +4403,11 @@ skip_id_custom_self:
 #ifdef ARTEMIS
         JSValue _r = jsBoolean(result);
 
-        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC,
+        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
                                                     src1, Symbolic::LESS_STRICT, src2,
                                                     _r);
 
-        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC,
+        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC, bytecodeInfo,
                                              _r, result);
 #endif
 
@@ -4436,11 +4441,11 @@ skip_id_custom_self:
 #ifdef ARTEMIS
         JSValue _r = jsBoolean(result);
 
-        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC,
+        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
                                                     src1, Symbolic::LESS_STRICT, src2,
                                                     _r);
 
-        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC,
+        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC, bytecodeInfo,
                                              _r, result);
 #endif
 
@@ -4474,11 +4479,11 @@ skip_id_custom_self:
 #ifdef ARTEMIS
         JSValue _r = jsBoolean(result);
 
-        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC,
+        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
                                                     src1, Symbolic::GREATER_STRICT, src2,
                                                     _r);
 
-        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC,
+        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC, bytecodeInfo,
                                              _r, result);
 #endif
 
@@ -4512,11 +4517,11 @@ skip_id_custom_self:
 #ifdef ARTEMIS
         JSValue _r = jsBoolean(result);
 
-        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC,
+        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
                                                     src1, Symbolic::GREATER_EQ, src2,
                                                     _r);
 
-        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC,
+        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC, bytecodeInfo,
                                              _r, result);
 #endif
 
@@ -4547,11 +4552,11 @@ skip_id_custom_self:
 #ifdef ARTEMIS
         JSValue _r = jsBoolean(result);
 
-        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC,
+        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
                                                     src1, Symbolic::LESS_STRICT, src2,
                                                     _r);
 
-        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC,
+        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC, bytecodeInfo,
                                              _r, result);
 #endif
 
@@ -4581,11 +4586,11 @@ skip_id_custom_self:
 #ifdef ARTEMIS
         JSValue _r = jsBoolean(result);
 
-        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC,
+        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
                                                     src1, Symbolic::LESS_EQ, src2,
                                                     _r);
 
-        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC,
+        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC, bytecodeInfo,
                                              _r, result);
 #endif
 
@@ -4615,11 +4620,11 @@ skip_id_custom_self:
 #ifdef ARTEMIS
         JSValue _r = jsBoolean(result);
 
-        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC,
+        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
                                                     src1, Symbolic::GREATER_STRICT, src2,
                                                     _r);
 
-        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC,
+        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC, bytecodeInfo,
                                              _r, result);
 #endif
 
@@ -4649,11 +4654,11 @@ skip_id_custom_self:
 #ifdef ARTEMIS
         JSValue _r = jsBoolean(result);
 
-        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC,
+        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
                                                     src1, Symbolic::GREATER_EQ, src2,
                                                     _r);
 
-        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC,
+        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC, bytecodeInfo,
                                              _r, result);
 #endif
 
@@ -4683,11 +4688,11 @@ skip_id_custom_self:
 #ifdef ARTEMIS
         JSValue _r = jsBoolean(!result);
 
-        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC,
+        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
                                                     src1, Symbolic::GREATER_EQ, src2,
                                                     _r);
 
-        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC,
+        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC, bytecodeInfo,
                                              _r, !result);
 #endif
         
@@ -4717,11 +4722,11 @@ skip_id_custom_self:
 #ifdef ARTEMIS
         JSValue _r = jsBoolean(!result);
 
-        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC,
+        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
                                                     src1, Symbolic::GREATER_STRICT, src2,
                                                     _r);
 
-        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC,
+        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC, bytecodeInfo,
                                              _r, !result);
 #endif
 
@@ -4751,11 +4756,11 @@ skip_id_custom_self:
 #ifdef ARTEMIS
         JSValue _r = jsBoolean(!result);
 
-        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC,
+        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
                                                     src1, Symbolic::LESS_EQ, src2,
                                                     _r);
 
-        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC,
+        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC, bytecodeInfo,
                                              _r, !result);
 #endif
 
@@ -4785,11 +4790,11 @@ skip_id_custom_self:
 #ifdef ARTEMIS
         JSValue _r = jsBoolean(!result);
 
-        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC,
+        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
                                                     src1, Symbolic::GREATER_STRICT, src2,
                                                     _r);
 
-        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC,
+        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC, bytecodeInfo,
                                              _r, !result);
 #endif
 
@@ -4971,7 +4976,7 @@ skip_id_custom_self:
         if (callType == CallTypeJS) {
 
 #ifdef ARTEMIS
-            Interpreter::m_symbolic->ail_call(callFrame, vPC);
+            Interpreter::m_symbolic->ail_call(callFrame, vPC, bytecodeInfo);
 #endif
 
             ScopeChainNode* callDataScopeChain = callData.js.scopeChain;
@@ -5017,7 +5022,7 @@ skip_id_custom_self:
                 *topCallFrameSlot = callFrame;
 
 #ifdef ARTEMIS
-                Interpreter::m_symbolic->ail_call_native(callFrame, vPC,
+                Interpreter::m_symbolic->ail_call_native(callFrame, vPC, bytecodeInfo,
                                                          (native_function_ID_t)callData.native.function);
 #endif
 

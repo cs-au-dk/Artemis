@@ -213,7 +213,8 @@ SOURCES += \
     symbolic/native/nativefunction.cpp \
     symbolic/native/natives.cpp \
     symbolic/domtraversal.cpp \
-    symbolic/sources/forminputsource.cpp
+    symbolic/sources/forminputsource.cpp \
+    instrumentation/bytecodeinfo.cpp
 
 *sh4* {
     QMAKE_CXXFLAGS += -mieee -w
@@ -248,4 +249,5 @@ HEADERS += \
     symbolic/native/natives.h \
     symbolic/native/nativefunction.h \
     symbolic/domtraversal.h \
-    symbolic/sources/forminputsource.h
+    symbolic/sources/forminputsource.h \
+    instrumentation/bytecodeinfo.h
