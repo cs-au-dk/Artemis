@@ -315,11 +315,6 @@ void QWebExecutionListener::javascript_bytecode_executed(JSC::Interpreter* inter
                                        codeBlock->sourceOffset(),
                                        QUrl(QString::fromStdString(codeBlock->source()->url().utf8().data())),
                                        codeBlock->source()->startPosition().m_line.zeroBasedInt() + 1);
-
-    /*jsc_bytecode_executed(codeBlock->source()->url().utf8(false).data(),
-                          codeBlock->lineNumberForBytecodeOffset(offset),
-                          offset,
-                          -1); //TODO: Find out how to get the opcode from WebKit */
 }
 
 void QWebExecutionListener::javascript_property_read(std::string propertyName, JSC::CallFrame* callFrame)
