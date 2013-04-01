@@ -75,4 +75,4 @@ void scheduleDispatchFunctionsOnMainThread()
 
 } // namespace WTF
 
-#include "MainThreadQt.moc"
+#include "../moc/MainThreadQt.moc"

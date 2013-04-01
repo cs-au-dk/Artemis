@@ -228,7 +228,7 @@ namespace JSC {
     typedef OpcodeID Opcode;
 #endif
 
-#if !defined(NDEBUG) || ENABLE(OPCODE_SAMPLING) || ENABLE(CODEBLOCK_SAMPLING) || ENABLE(OPCODE_STATS)
+#if !defined(NDEBUG) || ENABLE(OPCODE_SAMPLING) || ENABLE(CODEBLOCK_SAMPLING) || ENABLE(OPCODE_STATS) || defined(ARTEMIS)
 
 #define PADDING_STRING "                                "
 #define PADDING_STRING_LENGTH static_cast<unsigned>(strlen(PADDING_STRING))
