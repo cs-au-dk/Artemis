@@ -35,7 +35,7 @@ void ManualRuntime::run(const QUrl& url)
    ExecutableConfigurationPtr initial =
         ExecutableConfigurationPtr(new ExecutableConfiguration(InputSequencePtr(new InputSequence()), url));
 
-    mWebkitExecutor->executeSequence(initial);
+    mWebkitExecutor->executeSequence(initial, true);
     mWebView->show();
 }
 

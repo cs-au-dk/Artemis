@@ -47,6 +47,7 @@ bool FormInputSource::domNodeTraversalCallback(JSC::CallFrame* callFrame, std::s
     JSC::Identifier valueIdentifier = JSC::Identifier(callFrame, "value");
 
     JSC::JSValue value = jsBaseValue.get(callFrame, valueIdentifier);
+
     value.makeSymbolic(std::string("<SYM ") + path + std::string(">"));
 
     ASSERT(value.isString());

@@ -42,7 +42,10 @@ const char* opToString(OP op) {
 }
 
 SymbolicInterpreter::SymbolicInterpreter() :
-    m_nextSymbolicValue(0)
+    m_nextSymbolicValue(0),
+    m_shouldTaint(false),
+    m_shouldGC(false),
+    m_initial(true)
 {
 }
 
@@ -107,16 +110,42 @@ void SymbolicInterpreter::fatalError(JSC::CodeBlock* codeBlock, std::string reas
 
 void SymbolicInterpreter::preExecution(JSC::CallFrame* callFrame)
 {
-    m_nativeFunctions.buildRegistry(callFrame);
-    DomTraversal::traverseDom(callFrame, new FormInputSource());
+    if (m_initial) {
+        JSC::JSGlobalData* jsGlobalData = &callFrame->globalData();
+        JSC::Heap* heap = &jsGlobalData->heap;
+
+        heap->notifyIsNotSafeToCollect();
+
+        m_nativeFunctions.buildRegistry(callFrame);
+
+        m_initial = false;
+    }
+
+    if (m_shouldGC) {
+        JSC::JSGlobalData* jsGlobalData = &callFrame->globalData();
+        JSC::Heap* heap = &jsGlobalData->heap;
+
+        heap->notifyIsSafeToCollect();
+        heap->collectAllGarbage();
+        heap->notifyIsNotSafeToCollect();
+
+        m_shouldGC = false;
+    }
+
+    if (m_shouldTaint) {
+        DomTraversal::traverseDom(callFrame, new FormInputSource());
+        m_shouldTaint = false;
+    }
 }
 
 void SymbolicInterpreter::beginSession()
 {
+    m_shouldTaint = true;
 }
 
 void SymbolicInterpreter::endSession()
 {
+    m_shouldGC = true;
 }
 
 }

@@ -40,7 +40,8 @@ WebKitExecutor::WebKitExecutor(QObject* parent,
                                QMap<QString, QString> presetFields,
                                JQueryListener* jqueryListener,
                                AjaxRequestListener* ajaxListener) :
-    QObject(parent)
+    QObject(parent),
+    mKeepOpen(false)
 {
 
     mPresetFields = presetFields;
@@ -118,8 +119,6 @@ WebKitExecutor::WebKitExecutor(QObject* parent,
     QObject::connect(webkitListener, SIGNAL(sigJavascriptConstantEncountered(QString)),
                      mResultBuilder.data(), SLOT(slJavascriptConstantEncountered(QString)));
 
-    webkitListener->beginSymbolicSession();
-
 }
 
 WebKitExecutor::~WebKitExecutor()
@@ -127,13 +126,18 @@ WebKitExecutor::~WebKitExecutor()
 }
 
 void WebKitExecutor::detach() {
-    // ignore events emitted from webkit on deallocation
     webkitListener->endSymbolicSession();
-    webkitListener->disconnect(mResultBuilder.data());
 
+    // ignore events emitted from webkit on deallocation
+    webkitListener->disconnect(mResultBuilder.data());
 }
 
 void WebKitExecutor::executeSequence(ExecutableConfigurationConstPtr conf)
+{
+    executeSequence(conf, false);
+}
+
+void WebKitExecutor::executeSequence(ExecutableConfigurationConstPtr conf, bool keepOpen)
 {
     currentConf = conf;
 
@@ -176,6 +180,8 @@ void WebKitExecutor::slLoadFinished(bool ok)
 
     qDebug() << "\n------------ EXECUTE SEQUENCE -----------" << endl;
 
+    webkitListener->beginSymbolicSession();
+
     foreach(QSharedPointer<const BaseInput> input, currentConf->getInputSequence()->toList()) {
         mResultBuilder->notifyStartingEvent();
         mCoverageListener->notifyStartingEvent(input);
@@ -184,9 +190,17 @@ void WebKitExecutor::slLoadFinished(bool ok)
         input->apply(this->mPage, this->webkitListener);
     }
 
+    if (!mKeepOpen) {
+        webkitListener->endSymbolicSession();
+    }
+
     // DONE
 
-    emit sigExecutedSequence(currentConf, mResultBuilder->getResult());
+    if (!mKeepOpen) {
+        emit sigExecutedSequence(currentConf, mResultBuilder->getResult());
+    }
+
+    mKeepOpen = false;
 }
 
 ArtemisWebPagePtr WebKitExecutor::getPage()

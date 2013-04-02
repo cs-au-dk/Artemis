@@ -344,11 +344,20 @@ void QWebExecutionListener::attachListeners() {
     jscinst::register_jsc_listener(QWebExecutionListener::getListener());
 }
 
+/**
+ * Marks the beginning of a symbolic session, right before events are triggered
+ * but after the onload event has been handled.
+ */
 void QWebExecutionListener::beginSymbolicSession()
 {
     JSC::Interpreter::m_symbolic->beginSession();
 }
 
+/**
+ * Marks the end of a symbolic session, either after a series of events or when
+ * the execution listener is detached. Is always called after a start session,
+ * however no guarantee is made that it is not called more than once.
+ */
 void QWebExecutionListener::endSymbolicSession()
 {
     JSC::Interpreter::m_symbolic->endSession();

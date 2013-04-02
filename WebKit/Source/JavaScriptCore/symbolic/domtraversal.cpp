@@ -40,9 +40,6 @@ void DomTraversal::traverseDom(JSC::CallFrame* callFrame, DomTraversal* callback
     JSC::JSGlobalObject* jsGlobalObject = codeBlock->globalObject();
     JSC::JSGlobalData* jsGlobalData = &callFrame->globalData();
 
-    JSC::Heap* heap = &jsGlobalData->heap;
-    heap->notifyIsNotSafeToCollect();
-
     typedef std::pair<JSC::JSObject*, std::string> worklist_item_t;
 
     std::tr1::unordered_set<JSC::JSObject*> visited;
@@ -51,6 +48,7 @@ void DomTraversal::traverseDom(JSC::CallFrame* callFrame, DomTraversal* callback
     worklist.push(std::make_pair<JSC::JSObject*, std::string>(jsGlobalObject, ""));
 
     while (!worklist.empty()) {
+
         worklist_item_t item = worklist.front();
         worklist.pop();
 
@@ -103,8 +101,6 @@ void DomTraversal::traverseDom(JSC::CallFrame* callFrame, DomTraversal* callback
         }
     }
 
-    heap->notifyIsSafeToCollect();
-    heap->collectAllGarbage();
 }
 
 }

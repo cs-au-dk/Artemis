@@ -52,6 +52,7 @@ public:
     ~WebKitExecutor();
 
     void executeSequence(ExecutableConfigurationConstPtr conf);
+    void executeSequence(ExecutableConfigurationConstPtr conf, bool keepOpen);
     void detach();
 
     QWebExecutionListener* webkitListener; // TODO should not be public
@@ -69,6 +70,8 @@ private:
     CoverageListenerPtr mCoverageListener;
     JavascriptStatisticsPtr mJavascriptStatistics;
     PathTracerPtr mPathTracer;
+
+    bool mKeepOpen;
 
 signals:
     void sigExecutedSequence(ExecutableConfigurationConstPtr conf, QSharedPointer<ExecutionResult> res);
