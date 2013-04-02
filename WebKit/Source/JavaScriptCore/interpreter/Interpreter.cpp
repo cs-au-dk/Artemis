@@ -1844,6 +1844,8 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
 
 #ifdef ARTEMIS
     m_symbolic->preExecution(callFrame);
+    CodeBlock* oldCodeBlock = codeBlock;
+    Instruction* oldPC = vPC;
 #endif
 
 #define CHECK_FOR_TIMEOUT() \
@@ -1862,25 +1864,27 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
 #endif
 
 #ifdef ARTEMIS
-#define ARTEMIS_BYTECODE_LISTEN(codeBlock, vPC) jscinst::get_jsc_listener()->javascript_bytecode_executed(this, codeBlock, vPC, bytecodeInfo); bytecodeInfo = bytecodeInfoPrestine;
+#define ARTEMIS_BYTECODE_PRE oldCodeBlock = codeBlock; oldPC = vPC;
+#define ARTEMIS_BYTECODE_POST jscinst::get_jsc_listener()->javascript_bytecode_executed(this, oldCodeBlock, oldPC, bytecodeInfo); bytecodeInfo = bytecodeInfoPrestine;
 #else
-#define ARTEMIS_BYTECODE_LISTEN(codeBlock, vPC)
+#define ARTEMIS_BYTECODE_PRE
+#define ARTEMIS_BYTECODE_LISTEN
 #endif
 
 #if ENABLE(COMPUTED_GOTO_INTERPRETER)
-    #define NEXT_INSTRUCTION() SAMPLE(codeBlock, vPC); ARTEMIS_BYTECODE_LISTEN(codeBlock, vPC); goto *vPC->u.opcode
+    #define NEXT_INSTRUCTION() SAMPLE(codeBlock, vPC); ARTEMIS_BYTECODE_POST; goto *vPC->u.opcode
 #if ENABLE(OPCODE_STATS)
-#define DEFINE_OPCODE(opcode) opcode: OpcodeStats::recordInstruction(opcode);
+#define DEFINE_OPCODE(opcode) opcode: OpcodeStats::recordInstruction(opcode); ARTEMIS_BYTECODE_PRE;
 #else
-#define DEFINE_OPCODE(opcode) opcode:
+#define DEFINE_OPCODE(opcode) opcode: ARTEMIS_BYTECODE_PRE;
 #endif
     NEXT_INSTRUCTION();
 #else
-    #define NEXT_INSTRUCTION() SAMPLE(codeBlock, vPC); ARTEMIS_BYTECODE_LISTEN(codeBlock, vPC); goto interpreterLoopStart
+    #define NEXT_INSTRUCTION() SAMPLE(codeBlock, vPC); ARTEMIS_BYTECODE_POST; goto interpreterLoopStart
 #if ENABLE(OPCODE_STATS)
-#define DEFINE_OPCODE(opcode) case opcode: OpcodeStats::recordInstruction(opcode);
+#define DEFINE_OPCODE(opcode) case opcode: OpcodeStats::recordInstruction(opcode); ARTEMIS_BYTECODE_PRE;
 #else
-#define DEFINE_OPCODE(opcode) case opcode:
+#define DEFINE_OPCODE(opcode) case opcode: ARTEMIS_BYTECODE_PRE;
 #endif
     while (1) { // iterator loop begins
     interpreterLoopStart:;
