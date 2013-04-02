@@ -97,6 +97,10 @@ namespace JSC {
         void addFinalizer(JSCell*, Finalizer);
 
         void notifyIsSafeToCollect() { m_isSafeToCollect = true; }
+
+#ifdef ARTEMIS
+        void notifyIsNotSafeToCollect() { m_isSafeToCollect = false; }
+#endif
         void collectAllGarbage();
 
         void reportExtraMemoryCost(size_t cost);

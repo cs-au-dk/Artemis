@@ -22,6 +22,7 @@
 #include "JavaScriptCore/wtf/ExportMacros.h"
 #include "JavaScriptCore/bytecode/CodeBlock.h"
 #include "JavaScriptCore/interpreter/CallFrame.h"
+#include "JavaScriptCore/heap/Heap.h"
 
 #include "domtraversal.h"
 
@@ -38,6 +39,9 @@ void DomTraversal::traverseDom(JSC::CallFrame* callFrame, DomTraversal* callback
     JSC::CodeBlock* codeBlock = callFrame->codeBlock();
     JSC::JSGlobalObject* jsGlobalObject = codeBlock->globalObject();
     JSC::JSGlobalData* jsGlobalData = &callFrame->globalData();
+
+    JSC::Heap* heap = &jsGlobalData->heap;
+    heap->notifyIsNotSafeToCollect();
 
     typedef std::pair<JSC::JSObject*, std::string> worklist_item_t;
 
@@ -98,6 +102,9 @@ void DomTraversal::traverseDom(JSC::CallFrame* callFrame, DomTraversal* callback
             }
         }
     }
+
+    heap->notifyIsSafeToCollect();
+    heap->collectAllGarbage();
 }
 
 }
