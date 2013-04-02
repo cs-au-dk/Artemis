@@ -518,7 +518,11 @@ namespace JSC {
 
     inline bool JSValue::isNumber() const
     {
+#ifdef ARTEMIS
+        return getInt64() & TagTypeNumber;
+#else
         return u.asInt64 & TagTypeNumber;
+#endif
     }
 
     ALWAYS_INLINE JSCell* JSValue::asCell() const
