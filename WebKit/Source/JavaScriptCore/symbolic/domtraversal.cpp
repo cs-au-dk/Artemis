@@ -62,10 +62,14 @@ void DomTraversal::traverseDom(JSC::CallFrame* callFrame, DomTraversal* callback
         JSC::PropertyNameArrayData::PropertyNameVector::const_iterator end = propertyNames.data()->propertyNameVector().end();
 
         for (; iter != end; ++iter) {
+
             JSC::PropertySlot property;
             jsObject->getPropertySlot(callFrame, *iter, property);
 
-            if (strcmp("__qt_sender__", iter->ustring().ascii().data()) == 0) {
+            if (strcmp("__qt_sender__", iter->ustring().ascii().data()) == 0 ||
+                    strcmp("attributes", iter->ustring().ascii().data()) == 0 ||
+                    strcmp("caller", iter->ustring().ascii().data()) == 0 ||
+                    strcmp("prototype", iter->ustring().ascii().data()) == 0) {
                 continue;
             }
 
@@ -87,7 +91,10 @@ void DomTraversal::traverseDom(JSC::CallFrame* callFrame, DomTraversal* callback
             if (path.compare("document.defaultView") == 0 ||
                     path.compare("document.all") == 0 ||
                     path.compare("document.scripts") == 0 ||
-                    path.compare("document.activeElement") == 0) {
+                    path.compare("document.activeElement") == 0 ||
+                    path.compare("document.links") == 0 ||
+                    path.compare("$") == 0 ||
+                    path.compare("document.styleSheets") == 0) {
                 continue;
             }
 
