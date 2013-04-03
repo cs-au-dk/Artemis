@@ -40,7 +40,7 @@ public:
     virtual void javascript_property_read(std::string propertyName, JSC::ExecState*);
     virtual void javascript_property_written(std::string propertyName, JSC::ExecState*);
 
-    virtual void javascript_constant_encountered(std::string constant);
+    void javascriptConstantStringEncountered(std::string constant);
     virtual void webkit_eval_call(const char * eval_string);
 
     virtual void ajaxCallbackEventAdded(WebCore::LazyXMLHttpRequest*);
@@ -82,14 +82,15 @@ signals:
 
     void jqueryEventAdded(QString elementSignature, QString event, QString selectors); 
 
-    void sigJavascriptConstantEncountered(QString constant);
+    /* Constant String Instrumentation */
+    void sigJavascriptConstantStringEncountered(QString constant);
 
+    /* Property Access Instrumentation */
     void sigJavascriptPropertyRead(QString propertyName, intptr_t codeBlockID, intptr_t SourceID, QUrl url, int startline);
     void sigJavascriptPropertyWritten(QString propertyName, intptr_t codeBlockID, intptr_t SourceID, QUrl url, int startline);
 
     void loadedJavaScript(QString source, QUrl url, uint startline);
     void statementExecuted(uint linenumber, QUrl url, uint startline);
-
     void sigJavascriptFunctionCalled(QString functionName, size_t bytecodeSize, uint sourceOffset, QUrl url, uint startline, uint functionLine);
     void sigJavascriptFunctionReturned(QString functionName);
     void sigJavascriptBytecodeExecuted(QString opcode, bool isSymbolic, uint bytecodeOffset, uint sourceOffset, QUrl url, uint startline);

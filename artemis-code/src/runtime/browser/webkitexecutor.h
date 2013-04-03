@@ -48,7 +48,8 @@ public:
                    AppModelPtr appmodel,
                    QMap<QString, QString> presetFields,
                    JQueryListener* jqueryListener,
-                   AjaxRequestListener* ajaxListener);
+                   AjaxRequestListener* ajaxListener,
+                   bool enableConstantStringInstrumentation);
     ~WebKitExecutor();
 
     void executeSequence(ExecutableConfigurationConstPtr conf);

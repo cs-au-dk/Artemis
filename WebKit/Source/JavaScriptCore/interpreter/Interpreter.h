@@ -1,5 +1,4 @@
-/*
- * Copyright (C) 2008 Apple Inc. All rights reserved.
+/* * Copyright (C) 2008 Apple Inc. All rights reserved
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -165,7 +164,7 @@ namespace JSC {
         JSValue execute(CallFrameClosure&);
 
 #ifdef ARTEMIS
-        ALWAYS_INLINE JSValue touchJsValue(CallFrame*, const JSValue&);
+        ALWAYS_INLINE void checkForConstantString(CallFrame*, const JSValue&);
         ALWAYS_INLINE void readProperty(CallFrame* callFrame, std::string propertyName);
         ALWAYS_INLINE void readProperty(CallFrame* callFrame, const SymbolTable& symbolTable, int index);
         ALWAYS_INLINE void writeProperty(CallFrame* callFrame, std::string propertyName);

@@ -39,7 +39,8 @@ WebKitExecutor::WebKitExecutor(QObject* parent,
                                AppModelPtr appmodel,
                                QMap<QString, QString> presetFields,
                                JQueryListener* jqueryListener,
-                               AjaxRequestListener* ajaxListener) :
+                               AjaxRequestListener* ajaxListener,
+                               bool enableConstantStringInstrumentation) :
     QObject(parent),
     mKeepOpen(false)
 {
@@ -66,6 +67,10 @@ WebKitExecutor::WebKitExecutor(QObject* parent,
     webkitListener = QWebExecutionListener::getListener();
 
     // TODO cleanup in ajax stuff, we are handling ajax through AjaxRequestListener, the ajaxRequest signal and addAjaxCallHandler
+
+    if (enableConstantStringInstrumentation) {
+        webkitListener->enableConstantStringInstrumentation();
+    }
 
     QObject::connect(webkitListener, SIGNAL(jqueryEventAdded(QString, QString, QString)),
                      mJquery, SLOT(slEventAdded(QString, QString, QString)));
@@ -116,8 +121,8 @@ WebKitExecutor::WebKitExecutor(QObject* parent,
     QObject::connect(webkitListener, SIGNAL(ajax_request(QUrl, QString)),
                      mResultBuilder.data(), SLOT(slAjaxRequestInitiated(QUrl, QString)));
 
-    QObject::connect(webkitListener, SIGNAL(sigJavascriptConstantEncountered(QString)),
-                     mResultBuilder.data(), SLOT(slJavascriptConstantEncountered(QString)));
+    QObject::connect(webkitListener, SIGNAL(javascriptConstantStringEncountered(QString)),
+                     mResultBuilder.data(), SLOT(slJavascriptConstantStringEncountered(QString)));
 
 }
 
