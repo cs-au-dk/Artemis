@@ -77,7 +77,7 @@ Runtime::Runtime(QObject* parent, const Options& options, const QUrl& url) : QOb
 
     mAppmodel = AppModelPtr(new AppModel(options));
 
-    bool enableConstantStringInstrumentation = options.prioritizerStrategy == CONSTANT;
+    bool enableConstantStringInstrumentation = options.formInputGenerationStrategy == ConstantString;
     mWebkitExecutor = new WebKitExecutor(this, mAppmodel, options.presetFormfields, jqueryListener, ajaxRequestListner, enableConstantStringInstrumentation);
 
     QSharedPointer<FormInputGenerator> formInputGenerator;

@@ -121,7 +121,7 @@ WebKitExecutor::WebKitExecutor(QObject* parent,
     QObject::connect(webkitListener, SIGNAL(ajax_request(QUrl, QString)),
                      mResultBuilder.data(), SLOT(slAjaxRequestInitiated(QUrl, QString)));
 
-    QObject::connect(webkitListener, SIGNAL(javascriptConstantStringEncountered(QString)),
+    QObject::connect(webkitListener, SIGNAL(sigJavascriptConstantStringEncountered(QString)),
                      mResultBuilder.data(), SLOT(slJavascriptConstantStringEncountered(QString)));
 
 }

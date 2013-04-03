@@ -38,7 +38,7 @@ class InputGeneratorStrategies(unittest.TestCase):
 		report = execute_artemis('strategy-input-form-constant', 
 			'%s/strategies/inputgeneration/form-input-constant.html' % WEBSERVER_URL,
 			strategy_form_input='javascript-constants',
-			iterations=2)
+			iterations=3)
 		
 		self.assertEqual(4, report.get('WebKit::coverage::covered-unique', 0));
 
@@ -88,9 +88,10 @@ class InstrumentationTests(unittest.TestCase):
 		self.assertEqual(1, report.get('WebKit::alerts', 0));
 
 	def test_jsconstants(self):	
-		report = execute_artemis('instrumentation-jsconstants', '%s/instrumentation/jsconstants.html' % WEBSERVER_URL)
+		report = execute_artemis('instrumentation-jsconstants', '%s/instrumentation/jsconstants.html' % WEBSERVER_URL,
+			strategy_form_input='javascript-constants')
 		
-		self.assertEqual(1, report.get('WebKit::jsconstants', 0));
+		self.assertEqual(2, report.get('WebKit::jsconstants', 0));
 
 	def test_jsreadwrite(self):	
 		report = execute_artemis('instrumentation-jsreadwrite', '%s/instrumentation/jsreadwrite.html' % WEBSERVER_URL)
