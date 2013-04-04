@@ -153,7 +153,6 @@ void Runtime::done()
         Log::info("\n=== Path Tracer ===\n");
         mAppmodel->getPathTracer()->write();
         Log::info("=== Path Tracer END ===\n");
-        //mAppmodel->getPathTracer()->writePathTraceHTML(); // TEMPORARY
     }
 
     statistics()->accumulate("WebKit::coverage::covered-unique", mAppmodel->getCoverageListener()->getNumCoveredLines());
