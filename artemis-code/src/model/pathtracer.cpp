@@ -16,6 +16,7 @@
 
 #include "pathtracer.h"
 #include "util/loggingutil.h"
+#include "util/fileutil.h"
 
 namespace artemis{
 
@@ -50,12 +51,10 @@ void PathTracer::slEventListenerTriggered(QWebElement* elem, QString eventName)
 
 void PathTracer::slJavascriptFunctionCalled(QString functionName, size_t bytecodeSize, uint sourceOffset, QUrl sourceUrl, uint sourceStartLine, uint functionStartLine)
 {
-    // TODO: Stripping the queries because they are often extremely long, but they are sometimes important as well!
-    QString displayedUrl = sourceUrl.hasQuery() ? (sourceUrl.toString(QUrl::RemoveQuery) + "?...") : sourceUrl.toString();
     TraceItem item;
     item.type = FUNCALL;
-    item.name = functionName.isEmpty() ? "<no name>" : (functionName + "()");
-    item.message = QString("File: %1, Line: %2.").arg(displayedUrl).arg(functionStartLine);
+    item.name = displayedFunctionName(functionName);
+    item.message = QString("File: %1, Line: %2.").arg(displayedUrl(sourceUrl)).arg(functionStartLine);
     item.sourceUrl = sourceUrl;
     item.sourceOffset = sourceOffset;
     item.sourceStartLine = sourceStartLine;
@@ -65,8 +64,7 @@ void PathTracer::slJavascriptFunctionCalled(QString functionName, size_t bytecod
 
 void PathTracer::slJavascriptFunctionReturned(QString functionName)
 {
-    functionName = functionName.isEmpty() ? "<no name>" : (functionName + "()");
-    appendItem(FUNRET, functionName, "");
+    appendItem(FUNRET, displayedFunctionName(functionName), "");
 }
 
 void PathTracer::slJavascriptBytecodeExecuted(const QString& opcode, bool isSymbolic, uint bytecodeOffset, uint sourceOffset, const QUrl& sourceUrl, uint sourceStartLine)
@@ -119,6 +117,9 @@ void PathTracer::write()
     if(mReportLevel == NO_TRACES){
         return;
     }
+    if(mReportLevel == HTML_TRACES){
+        Log::info("Trace report will be output as an HTML file in the working directory.");
+    }
 
     //Log::info("===== Path Tracer =====");
     if(mTraces.isEmpty()){
@@ -169,19 +170,21 @@ void PathTracer::writePathTraceHTML(){
     TraceItem item;
     PathTrace trace;
     QString itemStr;
+    QString extraStr;
     uint indentLevel;
     QString indent;
     QString traceClass;
 
-    QString style = ".hidden{display:none;}ol{list-style:none;}ol.tracelist{margin-left:170px;}ol.tracelist>li{margin-bottom:30px;}ol.tracelist>li>span.label{font-weight:bold;}ol.functionbody{border-left:1px solid lightgray;}span.label{position:absolute;left:0;display:block;width:150px;text-align:right;}span.extrainfo{position:absolute;left:700px;}span.itemname{font-family:monospace;cursor:pointer;}li.funcall>span.itemname:before{content:'\\25BD\\00A0';}li.funcall.collapsed>span.itemname:before{content:'\\25B7\\00A0';}li.funcall.collapsed>ol{display:none;}";
-    QString script = "window.onload = function(){elems = document.querySelectorAll('li.funcall>span.itemname'); for(var i=0; i<elems.length; i++){elems[i].onclick = function(){this.parentNode.classList.toggle('collapsed');}} bytecodes=document.querySelectorAll('li.bytecode''); for(var i=0; i<bytecodes.length; i++){bytecodes[i].classList.toggle('hidden')}}";
-    script += "function toggleBytecodes(){alert('BYTE');}";
-    script += "function toggleClicksOnly(){alert('CLICK');}";
+    QString style = ".controls a{text-decoration:underline;cursor:pointer;}.hidden{display:none;}ol{list-style:none;}ol.tracelist{margin-left:170px;}ol.tracelist>li{margin-bottom:30px;}ol.tracelist>li>span.label{font-weight:bold;}ol.functionbody{border-left:1px solid lightgray;}span.label{position:absolute;left:0;display:block;width:150px;text-align:right;}span.extrainfo{position:absolute;left:700px;white-space:nowrap;}span.itemname{font-family:monospace;}li.funcall>span.itemname{cursor:pointer;margin-left:-1.2em;}li.funcall>span.itemname:before{content:'\\25BD\\00A0';}li.funcall.collapsed>span.itemname:before{content:'\\25B7\\00A0';}li.funcall.collapsed>ol{display:none;}";
+    QString script = "function toggleBytecodes(){bytecodes=document.querySelectorAll('li.bytecode'); for(var i=0; i<bytecodes.length; i++){bytecodes[i].classList.toggle('hidden');}}";
+    script += " function toggleClicksOnly(){boringtraces=document.querySelectorAll('li.trace:not(.click)'); for(var i=0; i<boringtraces.length; i++){boringtraces[i].classList.toggle('hidden');}}";
+    script += " window.onload = function(){elems = document.querySelectorAll('li.funcall>span.itemname'); for(var i=0; i<elems.length; i++){elems[i].onclick = function(){this.parentNode.classList.toggle('collapsed');}}};";
+
     QString res = "<html>\n<head>\n\t<meta charset=\"utf-8\"/>\n\t<title>Path Trace</title>\n\t<style type=\"text/css\">" + style + "</style>\n\t<script type=\"text/javascript\">" + script + "</script>\n</head>\n<body>\n";
 
     res += "<h1>Path Tracer Results</h1>\n";
 
-    res += "<hr>\n<ul>\n\t<li><a onclick=\"toggleBytecodes()\">Toggle Bytecode</a></li>\n\t<li><a onclick=\"toggleClicksOnly\">Toggle click traces only</a></li>\n</ul>\n<hr>\n\n";
+    res += "<hr>\n<h3>Display Options:</h3>\n<ul class=\"controls\">\n\t<li><a onclick=\"toggleBytecodes()\">Toggle Bytecode</a></li>\n\t<li><a onclick=\"toggleClicksOnly()\">Toggle click traces only</a></li>\n</ul>\n<hr>\n\n";
 
     if(mTraces.isEmpty()){
         res += "<p>No traces were recorded.</p>\n";
@@ -194,19 +197,17 @@ void PathTracer::writePathTraceHTML(){
             indentLevel = 3;
 
             foreach(item, trace.items){
-                item.name.replace('&',"&amp;").replace('>',"&gt;").replace('<',"&lt;");
-                item.name = "<span class=\"itemname\">" + item.name + "</span>";
-                if(item.message == ""){
-                    itemStr = item.message;
-                }else{
-                    itemStr = (item.message + " <span class=\"extrainfo\">" + item.message) + "</span>";
-                }
+                itemStr = item.name;
+                itemStr.replace('&',"&amp;").replace('>',"&gt;").replace('<',"&lt;");
+                itemStr = "<span class=\"itemname\">" + itemStr + "</span>";
+                extraStr = item.message.isEmpty() ? "" : (" <span class=\"extrainfo\">" + item.message + "</span>");
                 indent = QString(indentLevel, '\t');
                 res += indent;
 
                 switch(item.type){
                 case FUNCALL:
-                    res += "<li class=\"funcall\">\n"+indent+"\t<span class=\"label\">Function Call:</span> " + itemStr + "\n"+indent+"\t<ol class=\"functionbody\">\n";
+                    extraStr = "<span class=\"extrainfo\">File: <a href=\"" + item.sourceUrl.toString() + "\">" + displayedUrl(item.sourceUrl, true) + "</a>, Line: " + QString().setNum(item.lineInFile) + "</span>";
+                    res += "<li class=\"funcall\">\n"+indent+"\t<span class=\"label\">Function Call:</span> " + itemStr + extraStr + "\n"+indent+"\t<ol class=\"functionbody\">\n";
                     indentLevel++;
                     break;
                 case FUNRET:
@@ -214,13 +215,13 @@ void PathTracer::writePathTraceHTML(){
                     indentLevel--;
                     break;
                 case BYTECODE:
-                    res += "<li class=\"bytecode\">" + itemStr + "</li>\n";
+                    res += "<li class=\"bytecode hidden\">" + itemStr + extraStr + "</li>\n";
                     break;
                 case ALERT:
-                    res += "<li class=\"alert\"><span class=\"label\">Alert Call:</span> " + itemStr + "</li>\n";
+                    res += "<li class=\"alert\"><span class=\"label\">Alert Call:</span> " + itemStr + extraStr + "</li>\n";
                     break;
                 default:
-                    res += "<li class=\"unknown\"><span class=\"label\">Unknown:</span> " + itemStr + "</li>\n";
+                    res += "<li class=\"unknown\"><span class=\"label\">Unknown:</span> " + itemStr + extraStr + "</li>\n";
                     break;
                 }
             }
@@ -232,7 +233,26 @@ void PathTracer::writePathTraceHTML(){
 
     res += "</body>\n</html>\n";
 
-    Log::info(res.toStdString()); // TEMPORARY
+    QString pathToFile = QString("traces-") + QDateTime::currentDateTime().toString("dd-MM-yy-hh-mm-ss") + ".html";
+    writeStringToFile(pathToFile, res);
+}
+
+QString PathTracer::displayedUrl(QUrl url, bool fileNameOnly)
+{
+    QString name = url.toString(QUrl::RemoveQuery);
+    if(fileNameOnly){
+        name = name.split("/").last();
+    }
+    if(url.hasQuery()){
+        name += "?...";
+    }
+    return name;
+    // TODO: sometimes returns empty
+}
+
+QString PathTracer::displayedFunctionName(QString name)
+{
+    return name.isEmpty() ? "<no name>" : (name + "()");
 }
 
 }

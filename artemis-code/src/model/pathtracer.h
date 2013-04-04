@@ -21,11 +21,11 @@
 
 #include <QObject>
 #include <QList>
-#include <QPair>
 #include <QSharedPointer>
 #include <QUrl>
 #include <QWebElement>
 #include <QWebExecutionListener>
+#include <QDateTime>
 
 #include "runtime/options.h"
 #include "runtime/input/baseinput.h"
@@ -68,6 +68,9 @@ private:
     void newPathTrace(QString description, TraceType type);
     void appendItem(TraceItem item);
     void appendItem(ItemType type, QString name, QString message);
+
+    QString displayedUrl(QUrl url, bool fileNameOnly = false);
+    QString displayedFunctionName(QString name);
 
 public slots:
     void slJavascriptFunctionCalled(QString functionName, size_t bytecodeSize, uint sourceOffset, QUrl sourceUrl, uint sourceStartLine, uint functionStartLine);

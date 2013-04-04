@@ -77,6 +77,7 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             "           all - All executed paths are displayed\n"
             "           click - Only paths beginning with a click event are displayed\n"
             "           none - (default) Path trace report is omitted\n"
+            "           html - HTML trace report is generated in the folder you run Artemis from\n"
             "\n"
             "--path-trace-report-bytecode true|false:\n"
             "\n"
@@ -269,6 +270,8 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
                 options.reportPathTrace = artemis::CLICK_TRACES;
             } else if (string(optarg).compare("none") == 0) {
                 options.reportPathTrace = artemis::NO_TRACES;
+            }else if (string(optarg).compare("html") == 0) {
+                options.reportPathTrace = artemis::HTML_TRACES;
             } else {
                 cerr << "ERROR: Invalid choice of path-trace-report " << optarg << endl;
                 exit(1);
