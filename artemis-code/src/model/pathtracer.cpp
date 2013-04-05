@@ -17,6 +17,7 @@
 #include "pathtracer.h"
 #include "util/loggingutil.h"
 #include "util/fileutil.h"
+#include "model/coverage/codeblockinfo.h"
 
 namespace artemis{
 
@@ -174,10 +175,10 @@ void PathTracer::write()
 }
 
 void PathTracer::writePathTraceHTML(){
-    TraceItem item;
+    TraceItem item, peek;
     PathTrace trace;
     QString itemStr;
-    QString extraStr;
+    QString extraStr, functionLink;
     uint indentLevel;
     QString indent;
     QString traceClass;
@@ -203,7 +204,10 @@ void PathTracer::writePathTraceHTML(){
             res += "\t<li class=\"trace "+traceClass+"\">\n\t\t<span class=\"label\">Trace Start:</span> " + trace.description + "\n\t\t<ol class=\"singletrace\">\n";
             indentLevel = 3;
 
-            foreach(item, trace.items){
+            QListIterator<TraceItem> itemIt(trace.items);
+            while(itemIt.hasNext()){
+                item = itemIt.next();
+
                 itemStr = item.name;
                 itemStr.replace('&',"&amp;").replace('>',"&gt;").replace('<',"&lt;");
                 itemStr = "<span class=\"itemname\">" + itemStr + "</span>";
@@ -213,7 +217,16 @@ void PathTracer::writePathTraceHTML(){
 
                 switch(item.type){
                 case FUNCALL:
-                    extraStr = QString("<span class=\"extrainfo\">File: <a href=\"%1\">%2</a>, Line: %3</span>").arg(item.sourceUrl.toString()).arg(displayedUrl(item.sourceUrl, true)).arg(item.lineInFile);
+                    // Peek ahead in the trace to find the unique id of the following bytecode. This provides a link to this function in the coverage report.
+                    functionLink = "Could not find link to coverage report";
+                    if(itemIt.hasNext()){
+                        peek = itemIt.peekNext();
+                        if(peek.type == BYTECODE){
+                            functionLink = QString("%1-%2").arg(CodeBlockInfo::getId(peek.sourceOffset, peek.sourceUrl, peek.sourceStartLine)).arg(peek.bytecodeOffset); // This is the bytecode-id.
+                            functionLink = "<a href=\"#" + functionLink + "\" onclick=\"alert('Bytecode ID is " + functionLink + "');return false;\">View Code</a>";
+                        }
+                    }
+                    extraStr = QString("<span class=\"extrainfo\">File: <a href=\"%1\">%2</a>, Line: %3, %4</span>").arg(item.sourceUrl.toString()).arg(displayedUrl(item.sourceUrl, true)).arg(item.lineInFile).arg(functionLink);
                     res += "<li class=\"funcall\">\n"+indent+"\t<span class=\"label\">Function Call:</span> " + itemStr + extraStr + "\n"+indent+"\t<ol class=\"functionbody\">\n";
                     indentLevel++;
                     break;
@@ -222,7 +235,6 @@ void PathTracer::writePathTraceHTML(){
                     indentLevel--;
                     break;
                 case BYTECODE:
-                    extraStr = QString("<span class=\"extrainfo\">%1File: <a href=\"%2\">%3</a>, sourceOffset: %4, sourceStartLine: %5, bytecodeOffset: %6</span>").arg(item.message + (item.message.isEmpty() ? "" : ", " )).arg(item.sourceUrl.toString()).arg(displayedUrl(item.sourceUrl, true)).arg(item.sourceOffset).arg(item.sourceStartLine).arg(item.bytecodeOffset);
                     res += "<li class=\"bytecode hidden\">" + itemStr + extraStr + "</li>\n";
                     break;
                 case ALERT:

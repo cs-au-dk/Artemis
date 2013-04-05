@@ -26,6 +26,7 @@
 #include <QWebElement>
 #include <QWebExecutionListener>
 #include <QDateTime>
+#include <QListIterator>
 
 #include "runtime/options.h"
 #include "runtime/input/baseinput.h"
