@@ -69,8 +69,15 @@ void PathTracer::slJavascriptFunctionReturned(QString functionName)
 
 void PathTracer::slJavascriptBytecodeExecuted(const QString& opcode, bool isSymbolic, uint bytecodeOffset, uint sourceOffset, const QUrl& sourceUrl, uint sourceStartLine)
 {
-    // TODO: could add source location here!
-    appendItem(BYTECODE, opcode, isSymbolic ? "Symbolic" : "");
+    TraceItem item;
+    item.type = BYTECODE;
+    item.name = opcode;
+    item.message = isSymbolic ? "Symbolic" : "";
+    item.sourceUrl = sourceUrl;
+    item.sourceOffset = sourceOffset;
+    item.sourceStartLine = sourceStartLine;
+    item.bytecodeOffset = bytecodeOffset;
+    appendItem(item);
 }
 
 void PathTracer::slJavascriptAlert(QWebFrame* frame, QString msg)
@@ -206,7 +213,7 @@ void PathTracer::writePathTraceHTML(){
 
                 switch(item.type){
                 case FUNCALL:
-                    extraStr = "<span class=\"extrainfo\">File: <a href=\"" + item.sourceUrl.toString() + "\">" + displayedUrl(item.sourceUrl, true) + "</a>, Line: " + QString().setNum(item.lineInFile) + "</span>";
+                    extraStr = QString("<span class=\"extrainfo\">File: <a href=\"%1\">%2</a>, Line: %3</span>").arg(item.sourceUrl.toString()).arg(displayedUrl(item.sourceUrl, true)).arg(item.lineInFile);
                     res += "<li class=\"funcall\">\n"+indent+"\t<span class=\"label\">Function Call:</span> " + itemStr + extraStr + "\n"+indent+"\t<ol class=\"functionbody\">\n";
                     indentLevel++;
                     break;
@@ -215,6 +222,7 @@ void PathTracer::writePathTraceHTML(){
                     indentLevel--;
                     break;
                 case BYTECODE:
+                    extraStr = QString("<span class=\"extrainfo\">%1File: <a href=\"%2\">%3</a>, sourceOffset: %4, sourceStartLine: %5, bytecodeOffset: %6</span>").arg(item.message + (item.message.isEmpty() ? "" : ", " )).arg(item.sourceUrl.toString()).arg(displayedUrl(item.sourceUrl, true)).arg(item.sourceOffset).arg(item.sourceStartLine).arg(item.bytecodeOffset);
                     res += "<li class=\"bytecode hidden\">" + itemStr + extraStr + "</li>\n";
                     break;
                 case ALERT:

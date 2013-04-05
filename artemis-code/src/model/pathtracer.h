@@ -51,7 +51,7 @@ private:
         QString name;
         // The following are not present in all item types.
         QUrl sourceUrl;
-        uint sourceOffset, sourceStartLine, lineInFile;
+        uint sourceOffset, sourceStartLine, lineInFile, bytecodeOffset;
         QString message;
     };
     enum TraceType {OTHER, CLICK, PAGELOAD};
