@@ -30,7 +30,7 @@ PathTracer::PathTracer(PathTraceReport reportLevel, bool reportBytecode) :
 
 void PathTracer::notifyStartingLoad()
 {
-    newPathTrace("Starting Page Load", PAGELOAD);
+    newPathTrace("Starting Page Load", LOAD);
 }
 
 // An event which Artemis is triggering.
@@ -46,7 +46,16 @@ void PathTracer::notifyStartingEvent(QSharedPointer<const BaseInput> inputEvent)
 // An event which WebKit is executing.
 void PathTracer::slEventListenerTriggered(QWebElement* elem, QString eventName)
 {
-    TraceType type = eventName == "click" ? CLICK : OTHER;
+    TraceType type;
+    if(eventName == "click"){
+        type = CLICK;
+    }else if(eventName == "load" || eventName == "DOMContentLoaded"){
+        type = LOAD;
+    }else if(eventName == "mousemove" || eventName == "mouseover" || eventName == "mouseout"){
+        type = MOUSE;
+    }else{
+        type = OTHER;
+    }
     newPathTrace("Received Event: '" + eventName + "' on '" + elem->tagName() + "'", type);
 }
 
@@ -181,12 +190,13 @@ void PathTracer::writePathTraceHTML(){
     QString extraStr, functionLink;
     uint indentLevel;
     QString indent;
-    QString traceClass;
+    QString defaultClasses = "hidebytecode";
 
-    QString style = ".controls a{text-decoration:underline;cursor:pointer;}.hidden{display:none;}ol{list-style:none;}ol.tracelist{margin-left:170px;}ol.tracelist>li{margin-bottom:30px;}ol.tracelist>li>span.label{font-weight:bold;}ol.functionbody{border-left:1px solid lightgray;}span.label{position:absolute;left:0;display:block;width:150px;text-align:right;}span.extrainfo{position:absolute;left:700px;white-space:nowrap;}span.itemname{font-family:monospace;}li.funcall>span.itemname,li.trace>span.description{cursor:pointer;margin-left:-1.2em;}li.funcall>span.itemname:before{content:'\\25BD\\00A0';}li.trace>span.description:before{content:'\\25BF\\00A0';}li.funcall.collapsed>span.itemname:before{content:'\\25B7\\00A0';}li.trace.collapsed>span.description:before{content:'\\25B9\\00A0';}li.funcall.collapsed>ol,li.trace.collapsed>ol{display:none;}";
-    QString script = "function toggleBytecodes(){bytecodes=document.querySelectorAll('li.bytecode'); for(var i=0; i<bytecodes.length; i++){bytecodes[i].classList.toggle('hidden');}}";
-    script += " function toggleClicksOnly(){boringtraces=document.querySelectorAll('li.trace:not(.click)'); for(var i=0; i<boringtraces.length; i++){boringtraces[i].classList.toggle('hidden');}}";
-    script += " window.onload = function(){elems = document.querySelectorAll('li.funcall>span.itemname, li.trace>span.description'); for(var i=0; i<elems.length; i++){elems[i].onclick = function(){this.parentNode.classList.toggle('collapsed');}}};";
+    QString style = ".controls a{text-decoration:underline;cursor:pointer;}ol{list-style:none;}ol#tracelist{margin-left:170px;}ol#tracelist>li{margin-bottom:30px;}ol#tracelist>li>span.label{font-weight:bold;}ol.functionbody{border-left:1px solid lightgray;}span.label{position:absolute;left:0;display:block;width:150px;text-align:right;}span.extrainfo{position:absolute;left:700px;white-space:nowrap;}span.itemname{font-family:monospace;}li.funcall>span.itemname,li.trace>span.description{cursor:pointer;margin-left:-1.2em;}li.funcall>span.itemname:before{content:'\\25BD\\00A0';}li.trace>span.description:before{content:'\\25BF\\00A0';}li.funcall.collapsed>span.itemname:before{content:'\\25B7\\00A0';}li.trace.collapsed>span.description:before{content:'\\25B9\\00A0';}li.funcall.collapsed>ol,li.trace.collapsed>ol{display:none;}";
+    style += " ol#tracelist.hidebytecode ol.singletrace li.bytecode{display:none;} ol#tracelist.showclicktracesonly li.trace:not(.click){display:none;} ol#tracelist.hideloadtraces li.trace.load{display:none;} ol#tracelist.hidemousetraces li.trace.mouse{display:none;}";
+
+    QString script = "window.onload = function(){elems = document.querySelectorAll('li.funcall>span.itemname, li.trace>span.description'); for(var i=0; i<elems.length; i++){elems[i].onclick = function(){this.parentNode.classList.toggle('collapsed');}}};";
+    script += " function toggleSetting(setting){tl=document.getElementById('tracelist').classList.toggle(setting);return false;}";
 
     QString res = "<html>\n<head>\n\t<meta charset=\"utf-8\"/>\n\t<title>Path Trace</title>\n\t<style type=\"text/css\">" + style + "</style>\n\t<script type=\"text/javascript\">" + script + "</script>\n</head>\n<body>\n";
 
@@ -194,21 +204,22 @@ void PathTracer::writePathTraceHTML(){
 
     res += "<hr>\n<h3>Display Options:</h3>\n<ul class=\"controls\">\n";
     if(mReportBytecode){
-        res += "\t<li><a onclick=\"toggleBytecodes()\">Toggle Bytecodes</a></li>\n";
+        res += "\t<li><a onclick=\"toggleSetting('hidebytecode')\">Toggle Bytecodes</a></li>\n";
     }else{
         res += "\t<li>(Bytecode disabled)</li>\n";
     }
-    res += "\t<li><a onclick=\"toggleClicksOnly()\">Toggle displaying click traces only</a></li>\n";
+    res += "\t<li><a onclick=\"toggleSetting('showclicktracesonly')\">Toggle displaying click traces only</a></li>\n";
+    res += "\t<li><a onclick=\"toggleSetting('hidemousetraces')\">Toggle mouse-related traces</a></li>\n";
+    res += "\t<li><a onclick=\"toggleSetting('hideloadtraces')\">Toggle loading-related traces</a></li>\n";
     res += "</ul>\n<hr>\n\n";
 
     if(mTraces.isEmpty()){
         res += "<p>No traces were recorded.</p>\n";
     }else{
-        res += "<ol class=\"tracelist\" >\n";
+        res += "<ol id=\"tracelist\" class=\""+defaultClasses+"\">\n";
         foreach(trace, mTraces){
 
-            traceClass = trace.type == PAGELOAD ? "pageload" : (trace.type == CLICK ? "click" : "other");
-            res += "\t<li class=\"trace "+traceClass+"\">\n\t\t<span class=\"label\">Trace Start:</span> <span class=\"description\">" + trace.description + "</span>\n\t\t<ol class=\"singletrace\">\n";
+            res += "\t<li class=\"trace "+TraceClass(trace.type)+" collapsed\">\n\t\t<span class=\"label\">Trace Start:</span> <span class=\"description\">" + trace.description + "</span>\n\t\t<ol class=\"singletrace\">\n";
             indentLevel = 3;
 
             QListIterator<TraceItem> itemIt(trace.items);
@@ -243,7 +254,7 @@ void PathTracer::writePathTraceHTML(){
                     break;
                 case BYTECODE:
                     if(mReportBytecode){
-                        res += "<li class=\"bytecode hidden\">" + itemStr + extraStr + "</li>\n";
+                        res += "<li class=\"bytecode\">" + itemStr + extraStr + "</li>\n";
                     }
                     break;
                 case ALERT:
@@ -282,6 +293,22 @@ QString PathTracer::displayedUrl(QUrl url, bool fileNameOnly)
 QString PathTracer::displayedFunctionName(QString name)
 {
     return name.isEmpty() ? "<no name>" : (name + "()");
+}
+
+QString PathTracer::TraceClass(TraceType type)
+{
+    switch(type){
+    case OTHER:
+        return "other";
+    case CLICK:
+        return "click";
+    case LOAD:
+        return "load";
+    case MOUSE:
+        return "mouse";
+    default:
+        return "unknown";
+    }
 }
 
 }

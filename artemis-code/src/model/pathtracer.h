@@ -55,7 +55,7 @@ private:
         uint sourceOffset, sourceStartLine, lineInFile, bytecodeOffset;
         QString message;
     };
-    enum TraceType {OTHER, CLICK, PAGELOAD};
+    enum TraceType {OTHER, CLICK, LOAD, MOUSE};
     struct PathTrace {
         TraceType type;
         QString description;
@@ -72,6 +72,7 @@ private:
 
     QString displayedUrl(QUrl url, bool fileNameOnly = false);
     QString displayedFunctionName(QString name);
+    QString TraceClass(TraceType type);
 
 public slots:
     void slJavascriptFunctionCalled(QString functionName, size_t bytecodeSize, uint sourceOffset, QUrl sourceUrl, uint sourceStartLine, uint functionStartLine);
