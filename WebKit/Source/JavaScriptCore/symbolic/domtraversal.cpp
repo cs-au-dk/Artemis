@@ -61,49 +61,50 @@ void DomTraversal::traverseDom(JSC::CallFrame* callFrame, DomTraversal* callback
         JSC::PropertyNameArrayData::PropertyNameVector::const_iterator iter = propertyNames.data()->propertyNameVector().begin();
         JSC::PropertyNameArrayData::PropertyNameVector::const_iterator end = propertyNames.data()->propertyNameVector().end();
 
+        std::string identName = std::string(iter->ustring().ascii().data());
+
         for (; iter != end; ++iter) {
 
-            JSC::PropertySlot property;
-            jsObject->getPropertySlot(callFrame, *iter, property);
-
-            if (strcmp("__qt_sender__", iter->ustring().ascii().data()) == 0 ||
-                    strcmp("attributes", iter->ustring().ascii().data()) == 0 ||
-                    strcmp("caller", iter->ustring().ascii().data()) == 0 ||
-                    strcmp("prototype", iter->ustring().ascii().data()) == 0) {
+            if (identName.compare("__qt_sender__") == 0 ||
+                    identName.compare("attributes") == 0 ||
+                    identName.compare("caller") == 0 ||
+                    identName.compare("prototype") == 0) {
                 continue;
             }
 
-            std::string propertyPath = (path.size() == 0 ? "" : path +  ".") + std::string(iter->ustring().ascii().data());
-            JSC::JSValue propertyValue = property.getValue(callFrame, *iter);
-
-            if (!propertyValue.isObject()) {
-                callback->domNodeTraversalCallback(callFrame, propertyPath, propertyValue);
-                continue;
-            }
-
-            JSC::JSObject* propertyObject = propertyValue.toObject(callFrame);
-
-            if (visited.find(propertyObject) != visited.end()) {
-                continue;
-            }
+            std::string propertyPath = (path.size() == 0 ? "" : path +  ".") + identName;
 
             // blacklisted paths
-            if (path.compare("document.defaultView") == 0 ||
-                    path.compare("document.all") == 0 ||
-                    path.compare("document.scripts") == 0 ||
-                    path.compare("document.activeElement") == 0 ||
-                    path.compare("document.links") == 0 ||
-                    path.compare("$") == 0 ||
-                    path.compare("document.styleSheets") == 0) {
+            if (propertyPath.compare("document.defaultView") == 0 ||
+                    propertyPath.compare("document.all") == 0 ||
+                    propertyPath.compare("document.scripts") == 0 ||
+                    propertyPath.compare("document.activeElement") == 0 ||
+                    propertyPath.compare("document.links") == 0 ||
+                    propertyPath.compare("$") == 0 ||
+                    propertyPath.compare("document.styleSheets") == 0) {
                 continue;
             }
 
-            visited.insert(propertyObject);
+            JSC::JSValue propertyValue = jsObject->get(callFrame, *iter);
 
-            bool mayTraverse = callback->domNodeTraversalCallback(callFrame, propertyPath, propertyValue);
+            if (propertyValue.isObject()) {
 
-            if (mayTraverse) {
-                worklist.push(std::make_pair<JSC::JSObject*, std::string>(propertyObject, propertyPath));
+                JSC::JSObject* propertyObject = propertyValue.toObject(callFrame);
+
+                if (visited.find(propertyObject) != visited.end()) {
+                    continue;
+                }
+
+                visited.insert(propertyObject);
+
+                bool mayTraverse = callback->domNodeTraversalCallback(callFrame, propertyPath, propertyValue);
+
+                if (mayTraverse) {
+                    worklist.push(std::make_pair<JSC::JSObject*, std::string>(propertyObject, propertyPath));
+                }
+
+            } else {
+                callback->domNodeTraversalCallback(callFrame, propertyPath, propertyValue);
             }
         }
     }

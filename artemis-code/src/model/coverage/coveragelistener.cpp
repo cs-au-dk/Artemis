@@ -98,9 +98,9 @@ void CoverageListener::notifyStartingLoad()
 
 void CoverageListener::slJavascriptScriptParsed(QString sourceCode, QUrl sourceUrl, uint sourceStartLine)
 {   
-    if (mIgnoredUrls.contains(sourceUrl)) {
+    /*if (mIgnoredUrls.contains(sourceUrl)) {
         return;
-    }
+    }*/
 
     sourceid_t sourceID = SourceInfo::getId(sourceUrl, sourceStartLine);
 
@@ -115,9 +115,9 @@ void CoverageListener::slJavascriptScriptParsed(QString sourceCode, QUrl sourceU
 
 void CoverageListener::slJavascriptStatementExecuted(uint linenumber, QUrl sourceUrl, uint sourceStartLine)
 {
-    if (mIgnoredUrls.contains(sourceUrl)) {
+    /*if (mIgnoredUrls.contains(sourceUrl)) {
         return;
-    }
+    }*/
 
     statistics()->accumulate("WebKit::coverage::covered", 1);
 
@@ -134,9 +134,9 @@ void CoverageListener::slJavascriptStatementExecuted(uint linenumber, QUrl sourc
 
 void CoverageListener::slJavascriptFunctionCalled(QString functionName, size_t bytecodeSize, uint sourceOffset, QUrl sourceUrl, uint sourceStartLine, uint functionStartLine)
 {
-    if (mIgnoredUrls.contains(sourceUrl)) {
+    /*if (mIgnoredUrls.contains(sourceUrl)) {
         return;
-    }
+    }*/
 
     codeblockid_t codeBlockID = CodeBlockInfo::getId(sourceOffset, sourceUrl, sourceStartLine);
 
@@ -152,9 +152,9 @@ void CoverageListener::slJavascriptFunctionCalled(QString functionName, size_t b
 
 void CoverageListener::slJavascriptBytecodeExecuted(const QString& opcode, bool isSymbolic, uint bytecodeOffset, uint sourceOffset, const QUrl& sourceUrl, uint sourceStartLine)
 {
-    if (mIgnoredUrls.contains(sourceUrl)) {
+    /*if (mIgnoredUrls.contains(sourceUrl)) {
         return;
-    }
+    }*/
 
     codeblockid_t codeBlockID = CodeBlockInfo::getId(sourceOffset, sourceUrl, sourceStartLine);
     QSharedPointer<CodeBlockInfo> codeBlockInfo = mCodeBlocks.value(codeBlockID, QSharedPointer<CodeBlockInfo>(NULL));
