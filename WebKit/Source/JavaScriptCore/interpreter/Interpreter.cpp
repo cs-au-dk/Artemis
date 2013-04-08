@@ -1844,8 +1844,8 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
 
 #ifdef ARTEMIS
     m_symbolic->preExecution(callFrame);
-    CodeBlock* oldCodeBlock = codeBlock;
-    Instruction* oldPC = vPC;
+    //CodeBlock* oldCodeBlock = codeBlock;
+    //Instruction* oldPC = vPC;
 #endif
 
 #define CHECK_FOR_TIMEOUT() \
@@ -1864,8 +1864,8 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
 #endif
 
 #ifdef ARTEMIS
-#define ARTEMIS_BYTECODE_PRE oldCodeBlock = codeBlock; oldPC = vPC;
-#define ARTEMIS_BYTECODE_POST jscinst::get_jsc_listener()->javascript_bytecode_executed(this, oldCodeBlock, oldPC, bytecodeInfo); bytecodeInfo = bytecodeInfoPrestine;
+#define ARTEMIS_BYTECODE_PRE //oldCodeBlock = codeBlock; oldPC = vPC;
+#define ARTEMIS_BYTECODE_POST //jscinst::get_jsc_listener()->javascript_bytecode_executed(this, oldCodeBlock, oldPC, bytecodeInfo); bytecodeInfo = bytecodeInfoPrestine;
 #else
 #define ARTEMIS_BYTECODE_PRE
 #define ARTEMIS_BYTECODE_LISTEN

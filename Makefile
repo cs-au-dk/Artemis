@@ -1,3 +1,5 @@
+ARCH := $(shell uname -m)
+
 help:
 	@echo "Targets:"
 	@echo "    install			- install webkit and artemis"
@@ -25,12 +27,12 @@ webkit-install: webkit-minimal
 webkit-jscore-test:
 	${WEBKIT_TEST_SCRIPT}
 
-webkit-minimal:	check check-env
+webkit-minimal:	check check-env check-sys
 	@echo "Building minimal release QtWebKit"
 	${WEBKIT_BUILD_SCRIPT} --minimal
 
 
-webkit-minimal-debug: check check-env
+webkit-minimal-debug: check check-env check-sys
 	@echo "Building minimal debug QtWebKit"
 	${WEBKIT_BUILD_SCRIPT} --debug --minimal
 
@@ -68,9 +70,17 @@ check:
 	which cmake > /dev/null
 	which lemon > /dev/null
 	which re2c > /dev/null
+
 check-env:
 	@echo "Checking environment variables"
 	@echo $${QTDIR:?"Please set the QTDIR environment variable to the Qt install dir"} > /dev/null;
+
+check-sys:
+	@echo "Checking system compatibility"
+ifneq ($(ARCH),x86_64)
+	@echo "Error: we only support 64 systems"
+	@exit 1
+endif
 
 DEPENDENCIES = g++ flex bison gperf ruby cmake lemon re2c libxext-dev libfontconfig-dev libxrender-dev libsqlite3-dev php5
 

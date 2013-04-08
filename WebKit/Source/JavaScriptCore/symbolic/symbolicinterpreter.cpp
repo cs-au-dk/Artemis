@@ -116,7 +116,7 @@ void SymbolicInterpreter::preExecution(JSC::CallFrame* callFrame)
 
         heap->notifyIsNotSafeToCollect();
 
-        m_nativeFunctions.buildRegistry(callFrame);
+        //m_nativeFunctions.buildRegistry(callFrame);
 
         m_initial = false;
     }
@@ -133,7 +133,10 @@ void SymbolicInterpreter::preExecution(JSC::CallFrame* callFrame)
     }
 
     if (m_shouldTaint) {
+
+        std::cout << "TAINT" << std::endl;
         DomTraversal::traverseDom(callFrame, new FormInputSource());
+        std::cout << "TAINT" << std::endl;
         m_shouldTaint = false;
     }
 }

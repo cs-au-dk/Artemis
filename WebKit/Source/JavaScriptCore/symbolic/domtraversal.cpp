@@ -62,15 +62,26 @@ void DomTraversal::traverseDom(JSC::CallFrame* callFrame, DomTraversal* callback
         JSC::PropertyNameArrayData::PropertyNameVector::const_iterator end = propertyNames.data()->propertyNameVector().end();
 
         for (; iter != end; ++iter) {
-            JSC::PropertySlot property;
-            jsObject->getPropertySlot(callFrame, *iter, property);
 
-            if (strcmp("__qt_sender__", iter->ustring().ascii().data()) == 0) {
+            const char* identName = iter->ustring().ascii().data();
+
+            if ((strcmp("__qt_sender__", identName) == 0) ||
+                    (strcmp("caller", identName) == 0) ||
+                    (strcmp("arguments", identName) == 0)) {
                 continue;
             }
 
-            std::string propertyPath = (path.size() == 0 ? "" : path +  ".") + std::string(iter->ustring().ascii().data());
-            JSC::JSValue propertyValue = property.getValue(callFrame, *iter);
+            std::string propertyPath = (path.size() == 0 ? "" : path +  ".") + std::string(identName);
+
+            // blacklisted paths
+            if (propertyPath.compare("document.defaultView") == 0 ||
+                    propertyPath.compare("document.all") == 0 ||
+                    propertyPath.compare("document.scripts") == 0 ||
+                    propertyPath.compare("document.activeElement") == 0) {
+                continue;
+            }
+
+            JSC::JSValue propertyValue = jsObject->get(callFrame, *iter);
 
             if (!propertyValue.isObject()) {
                 callback->domNodeTraversalCallback(callFrame, propertyPath, propertyValue);
@@ -80,14 +91,6 @@ void DomTraversal::traverseDom(JSC::CallFrame* callFrame, DomTraversal* callback
             JSC::JSObject* propertyObject = propertyValue.toObject(callFrame);
 
             if (visited.find(propertyObject) != visited.end()) {
-                continue;
-            }
-
-            // blacklisted paths
-            if (path.compare("document.defaultView") == 0 ||
-                    path.compare("document.all") == 0 ||
-                    path.compare("document.scripts") == 0 ||
-                    path.compare("document.activeElement") == 0) {
                 continue;
             }
 
