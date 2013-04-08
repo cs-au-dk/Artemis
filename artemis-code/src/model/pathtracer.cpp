@@ -183,16 +183,23 @@ void PathTracer::writePathTraceHTML(){
     QString indent;
     QString traceClass;
 
-    QString style = ".controls a{text-decoration:underline;cursor:pointer;}.hidden{display:none;}ol{list-style:none;}ol.tracelist{margin-left:170px;}ol.tracelist>li{margin-bottom:30px;}ol.tracelist>li>span.label{font-weight:bold;}ol.functionbody{border-left:1px solid lightgray;}span.label{position:absolute;left:0;display:block;width:150px;text-align:right;}span.extrainfo{position:absolute;left:700px;white-space:nowrap;}span.itemname{font-family:monospace;}li.funcall>span.itemname{cursor:pointer;margin-left:-1.2em;}li.funcall>span.itemname:before{content:'\\25BD\\00A0';}li.funcall.collapsed>span.itemname:before{content:'\\25B7\\00A0';}li.funcall.collapsed>ol{display:none;}";
+    QString style = ".controls a{text-decoration:underline;cursor:pointer;}.hidden{display:none;}ol{list-style:none;}ol.tracelist{margin-left:170px;}ol.tracelist>li{margin-bottom:30px;}ol.tracelist>li>span.label{font-weight:bold;}ol.functionbody{border-left:1px solid lightgray;}span.label{position:absolute;left:0;display:block;width:150px;text-align:right;}span.extrainfo{position:absolute;left:700px;white-space:nowrap;}span.itemname{font-family:monospace;}li.funcall>span.itemname,li.trace>span.description{cursor:pointer;margin-left:-1.2em;}li.funcall>span.itemname:before{content:'\\25BD\\00A0';}li.trace>span.description:before{content:'\\25BF\\00A0';}li.funcall.collapsed>span.itemname:before{content:'\\25B7\\00A0';}li.trace.collapsed>span.description:before{content:'\\25B9\\00A0';}li.funcall.collapsed>ol,li.trace.collapsed>ol{display:none;}";
     QString script = "function toggleBytecodes(){bytecodes=document.querySelectorAll('li.bytecode'); for(var i=0; i<bytecodes.length; i++){bytecodes[i].classList.toggle('hidden');}}";
     script += " function toggleClicksOnly(){boringtraces=document.querySelectorAll('li.trace:not(.click)'); for(var i=0; i<boringtraces.length; i++){boringtraces[i].classList.toggle('hidden');}}";
-    script += " window.onload = function(){elems = document.querySelectorAll('li.funcall>span.itemname'); for(var i=0; i<elems.length; i++){elems[i].onclick = function(){this.parentNode.classList.toggle('collapsed');}}};";
+    script += " window.onload = function(){elems = document.querySelectorAll('li.funcall>span.itemname, li.trace>span.description'); for(var i=0; i<elems.length; i++){elems[i].onclick = function(){this.parentNode.classList.toggle('collapsed');}}};";
 
     QString res = "<html>\n<head>\n\t<meta charset=\"utf-8\"/>\n\t<title>Path Trace</title>\n\t<style type=\"text/css\">" + style + "</style>\n\t<script type=\"text/javascript\">" + script + "</script>\n</head>\n<body>\n";
 
     res += "<h1>Path Tracer Results</h1>\n";
 
-    res += "<hr>\n<h3>Display Options:</h3>\n<ul class=\"controls\">\n\t<li><a onclick=\"toggleBytecodes()\">Toggle Bytecode</a></li>\n\t<li><a onclick=\"toggleClicksOnly()\">Toggle click traces only</a></li>\n</ul>\n<hr>\n\n";
+    res += "<hr>\n<h3>Display Options:</h3>\n<ul class=\"controls\">\n";
+    if(mReportBytecode){
+        res += "\t<li><a onclick=\"toggleBytecodes()\">Toggle Bytecodes</a></li>\n";
+    }else{
+        res += "\t<li>(Bytecode disabled)</li>\n";
+    }
+    res += "\t<li><a onclick=\"toggleClicksOnly()\">Toggle displaying click traces only</a></li>\n";
+    res += "</ul>\n<hr>\n\n";
 
     if(mTraces.isEmpty()){
         res += "<p>No traces were recorded.</p>\n";
@@ -201,7 +208,7 @@ void PathTracer::writePathTraceHTML(){
         foreach(trace, mTraces){
 
             traceClass = trace.type == PAGELOAD ? "pageload" : (trace.type == CLICK ? "click" : "other");
-            res += "\t<li class=\"trace "+traceClass+"\">\n\t\t<span class=\"label\">Trace Start:</span> " + trace.description + "\n\t\t<ol class=\"singletrace\">\n";
+            res += "\t<li class=\"trace "+traceClass+"\">\n\t\t<span class=\"label\">Trace Start:</span> <span class=\"description\">" + trace.description + "</span>\n\t\t<ol class=\"singletrace\">\n";
             indentLevel = 3;
 
             QListIterator<TraceItem> itemIt(trace.items);
@@ -235,7 +242,9 @@ void PathTracer::writePathTraceHTML(){
                     indentLevel--;
                     break;
                 case BYTECODE:
-                    res += "<li class=\"bytecode hidden\">" + itemStr + extraStr + "</li>\n";
+                    if(mReportBytecode){
+                        res += "<li class=\"bytecode hidden\">" + itemStr + extraStr + "</li>\n";
+                    }
                     break;
                 case ALERT:
                     res += "<li class=\"alert\"><span class=\"label\">Alert Call:</span> " + itemStr + extraStr + "</li>\n";
