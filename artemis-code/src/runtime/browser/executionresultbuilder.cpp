@@ -238,7 +238,7 @@ void ExecutionResultBuilder::slAjaxRequestInitiated(QUrl u, QString postData)
     mResult->mAjaxRequest.insert(req);
 }
 
-void ExecutionResultBuilder::slJavascriptConstantEncountered(QString constant)
+void ExecutionResultBuilder::slJavascriptConstantStringEncountered(QString constant)
 {
     statistics()->accumulate("WebKit::jsconstants", 1);
     mResult->mJavascriptConstantsObservedForLastEvent.insert(constant);

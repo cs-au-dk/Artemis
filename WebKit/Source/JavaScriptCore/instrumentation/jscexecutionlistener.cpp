@@ -25,7 +25,8 @@ using namespace std;
 
 namespace jscinst {
 
-JSCExecutionListener::JSCExecutionListener()
+JSCExecutionListener::JSCExecutionListener() :
+    m_constantStringInstrumentationEnabled(false)
 {
 }
 
@@ -39,7 +40,7 @@ void JSCExecutionListener::javascript_bytecode_executed(JSC::Interpreter*, JSC::
     //exit(1);
 }
 
-void JSCExecutionListener::javascript_constant_encountered(std::string) {
+void JSCExecutionListener::javascriptConstantStringEncountered(std::string) {
     cerr << "Warning: Default listener for javascript_constant_encountered was invoked " << endl;
     //exit(1);
 }

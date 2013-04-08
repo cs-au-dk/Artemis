@@ -21,11 +21,12 @@
 
 #include <QObject>
 #include <QList>
-#include <QPair>
 #include <QSharedPointer>
 #include <QUrl>
 #include <QWebElement>
 #include <QWebExecutionListener>
+#include <QDateTime>
+#include <QListIterator>
 
 #include "runtime/options.h"
 #include "runtime/input/baseinput.h"
@@ -46,16 +47,31 @@ public:
 
 private:
     enum ItemType {FUNCALL, FUNRET, BYTECODE, ALERT};
-    typedef QPair<QString, QList<QPair<PathTracer::ItemType, QPair<QString, QString> > > > PathTrace;
+    struct TraceItem {
+        ItemType type;
+        QString name;
+        // The following are not present in all item types.
+        QUrl sourceUrl;
+        uint sourceOffset, sourceStartLine, lineInFile, bytecodeOffset;
+        QString message;
+    };
+    enum TraceType {OTHER, CLICK, PAGELOAD};
+    struct PathTrace {
+        TraceType type;
+        QString description;
+        QList<TraceItem> items;
+    };
 
     QList<PathTrace> mTraces;
     const PathTraceReport mReportLevel;
     const bool mReportBytecode;
-    bool mCurrentlyRecording;
 
-    void newPathTrace(QString description);
-    void functionCall(QString name);
-    void appendItem(ItemType type, QString message, QString extras = "");
+    void newPathTrace(QString description, TraceType type);
+    void appendItem(TraceItem item);
+    void appendItem(ItemType type, QString name, QString message);
+
+    QString displayedUrl(QUrl url, bool fileNameOnly = false);
+    QString displayedFunctionName(QString name);
 
 public slots:
     void slJavascriptFunctionCalled(QString functionName, size_t bytecodeSize, uint sourceOffset, QUrl sourceUrl, uint sourceStartLine, uint functionStartLine);

@@ -277,8 +277,11 @@ void QWebExecutionListener::url_changed(JSC::JSValue value, JSC::ExecState* e) {
     emit script_url_load(qurl);
 }
 
-void QWebExecutionListener::javascript_constant_encountered(std::string constant) {
-    emit sigJavascriptConstantEncountered(QString::fromStdString(constant));
+/* Constant String Instrumentation */
+
+void QWebExecutionListener::javascriptConstantStringEncountered(std::string constant)
+{
+    emit sigJavascriptConstantStringEncountered(QString::fromStdString(constant));
 }
 
 void QWebExecutionListener::webkit_eval_call(const char * eval_string) {

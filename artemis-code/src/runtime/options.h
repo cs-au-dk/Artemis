@@ -41,7 +41,7 @@ enum MajorMode {
 };
 
 enum PathTraceReport {
-    ALL_TRACES, CLICK_TRACES, NO_TRACES
+    ALL_TRACES, CLICK_TRACES, NO_TRACES, HTML_TRACES
 };
 
 typedef struct OptionsType {

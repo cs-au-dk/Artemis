@@ -37,9 +37,26 @@ public:
     JSCExecutionListener();
     virtual void javascript_eval_call(const char * eval_string); //__attribute__((noreturn));
     virtual void javascript_bytecode_executed(JSC::Interpreter* interpreter, JSC::CodeBlock*, JSC::Instruction* inst, const JSC::BytecodeInfo&); //__attribute__((noreturn));
-    virtual void javascript_constant_encountered(std::string constant); //__attribute__((noreturn));
+    virtual void javascriptConstantStringEncountered(std::string constant); //__attribute__((noreturn));
     virtual void javascript_property_read(std::string propertyName, JSC::ExecState*); //__attribute__((noreturn));
     virtual void javascript_property_written(std::string propertyName, JSC::ExecState*); //__attribute__((noreturn));
+
+    /* Constant String Instrumentation */
+public:
+    inline bool isConstantStringInstrumentationEnabled()
+    {
+        return m_constantStringInstrumentationEnabled;
+    }
+
+    inline void enableConstantStringInstrumentation()
+    {
+        m_constantStringInstrumentationEnabled = true;
+    }
+
+private:
+    bool m_constantStringInstrumentationEnabled;
+
+
 };
 
 extern JSCExecutionListener* jsc_listener;

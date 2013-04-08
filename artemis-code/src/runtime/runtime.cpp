@@ -77,7 +77,8 @@ Runtime::Runtime(QObject* parent, const Options& options, const QUrl& url) : QOb
 
     mAppmodel = AppModelPtr(new AppModel(options));
 
-    mWebkitExecutor = new WebKitExecutor(this, mAppmodel, options.presetFormfields, jqueryListener, ajaxRequestListner);
+    bool enableConstantStringInstrumentation = options.formInputGenerationStrategy == ConstantString;
+    mWebkitExecutor = new WebKitExecutor(this, mAppmodel, options.presetFormfields, jqueryListener, ajaxRequestListner, enableConstantStringInstrumentation);
 
     QSharedPointer<FormInputGenerator> formInputGenerator;
     switch (options.formInputGenerationStrategy) {
@@ -146,17 +147,19 @@ void Runtime::done()
         break;
     }
 
+    if (mOptions.reportPathTrace == HTML_TRACES) {
+        mAppmodel->getPathTracer()->writePathTraceHTML();
+    } else if(mOptions.reportPathTrace != NO_TRACES) {
+        Log::info("\n=== Path Tracer ===\n");
+        mAppmodel->getPathTracer()->write();
+        Log::info("=== Path Tracer END ===\n");
+    }
+
     statistics()->accumulate("WebKit::coverage::covered-unique", mAppmodel->getCoverageListener()->getNumCoveredLines());
 
     Log::info("\n=== Statistics ===\n");
     StatsPrettyWriter::write(statistics());
     Log::info("\n=== Statistics END ===\n\n");
-    if(mOptions.reportPathTrace != NO_TRACES) {
-        Log::info("=== Path Tracer ===\n");
-        mAppmodel->getPathTracer()->write();
-        Log::info("\n=== Path Tracer END ===\n\n");
-        //mAppmodel->getPathTracer()->writePathTraceHTML(); // TEMPORARY
-    }
     Log::info("Artemis terminated on: "+ QDateTime::currentDateTime().toString().toStdString());
 
     emit sigTestingDone();

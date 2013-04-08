@@ -71,6 +71,9 @@ JSC::JSValue SymbolicInterpreter::ail_op_binary(JSC::CallFrame* callFrame, const
                                                 JSC::JSValue& x, OP op, JSC::JSValue& y,
                                                 JSC::JSValue result)
 {
+
+    /* Symbolic */
+
     if (!x.isSymbolic() && !y.isSymbolic()) {
         return result; // not symbolic
     }
