@@ -68,15 +68,15 @@ void writeCoverageHtml(CoverageListenerPtr cov)
     res += "<script type='text/javascript' src='https://google-code-prettify.googlecode.com/svn/loader/prettify.js'></script>";
     res += "<script src='http://code.jquery.com/jquery-latest.min.js'></script>";
     res += "<link rel='stylesheet' type='text/css' href='https://google-code-prettify.googlecode.com/svn/loader/prettify.css'>";
-    res += "<style type='text/css'>*{margin:0;padding:0;font-family:Tahoma,Geneva,sans-serif;font-size:12pt;line-height:20px}body{padding:20px 0}body>div>b{font-size:10pt}body>div{padding:20px;margin:10px 0}body>div:not(.info):nth-of-type(2n+1){background:#eee}body>div.info>.prev{display:block}h2{font-size:20pt;line-height:40px}h1{padding-left:20px;font-size:30pt;line-height:50px}.linenums>ol{padding-left:40px}.linenums>ol>li:nth-of-type(5n),.linenums>ol>li:nth-of-type(1){list-style-type:decimal!important}.linenums>ol>li{list-style-type:none;word-wrap:break-word}pre li:nth-of-type(2n){background:#eee}pre li:nth-of-type(2n+1){background:#fff}pre>ol>li.covered{background:#ffeeb2}pre{padding:2px;border:1px solid #888;display:none}pre *{font-size:11pt}a{text-decoration:none}body>div>a.openLink{float:right;padding:0 10px;display:block;text-decoration:none}body>div>a.expandLink:visited{color:#fff}.arrow-right{width:0;height:0;border-top:5px solid transparent;border-bottom:5px solid transparent;border-left:5px solid darkblue}a.expandLink{display:block;font-size:10pt;text-align:center;background:#5a9dca;padding:3px;color:#fff;margin-top:5px;position:relative}a.expandLink:hover{background:#60acd8}a.expandLink.expanded{background:#e27171;box-shadow:0}a.openLink{background:#aaa;color:#fff;font-size:10pt;border-radius:2px}a.openLink:hover{background:#bbb}a.openLink .arrow-container{float:right;padding:5px 0;margin-left:10px}a.openLink .arrow-container .arrow-right{border-left-color:#fff}</style>";
+    res += "<style type='text/css'>*{margin:0;padding:0;font-family:Tahoma,Geneva,sans-serif;font-size:12pt;line-height:20px}body{padding:20px 0}body>div>b{font-size:10pt}body>div{padding:20px;margin:10px 0}body>div:not(.info):nth-of-type(2n+1){background:#eee}body>div.info>.prev{display:block}h2{font-size:20pt;line-height:40px}h1{padding-left:20px;font-size:30pt;line-height:50px}.linenums>ol{padding-left:40px}.linenums>ol>li:nth-of-type(5n),.linenums>ol>li:nth-of-type(1){list-style-type:decimal!important}.linenums>ol>li{list-style-type:none;word-wrap:break-word}pre li:nth-of-type(2n){background:#eee}pre li:nth-of-type(2n+1){background:#fff}pre>ol>li.covered{background:#ffeeb2}pre>ol>li.symCovered{background:#e29c1d!important}pre{padding:2px;border:1px solid #888;display:none}pre *{font-size:11pt}a{text-decoration:none}body>div>a.openLink{float:right;padding:0 10px;display:block;text-decoration:none}body>div>a.expandLink:visited{color:#fff}.arrow-right{width:0;height:0;border-top:5px solid transparent;border-bottom:5px solid transparent;border-left:5px solid darkblue}a.expandLink{display:block;font-size:10pt;text-align:center;background:#5a9dca;padding:3px;color:#fff;margin-top:5px;position:relative}a.expandLink:hover{background:#60acd8}a.expandLink.expanded{background:#e27171;box-shadow:0}a.openLink{background:#aaa;color:#fff;font-size:10pt;border-radius:2px}a.openLink:hover{background:#bbb}a.openLink .arrow-container{float:right;padding:5px 0;margin-left:10px}a.openLink .arrow-container .arrow-right{border-left-color:#fff}</style>";
     res += "</head><body>";
     res += "<h1>Coverage Report</h1>";
-    res += "<div class='info'>Ran: "+timeString+"<br /> Nubmer of scripts: "+QString::number(cov->getSourceIDs().length());
+    res += "<div class='info'>Ran: "+timeString+"<br /> Number of scripts: "+QString::number(cov->getSourceIDs().length());
     if (!existingFiles.isEmpty()) {
         res += "<a class='prev' href=\"" + existingFiles.at(0) + "\">Previous run</a>";
     }
     res += "</div>";
-    QString coverageJSString = "";
+    QString coverageJSString = "", symbolicCoverageJSString = "";
     bool first = true;
     foreach(int sourceID, cov->getSourceIDs()) {
 
@@ -104,11 +104,14 @@ void writeCoverageHtml(CoverageListenerPtr cov)
         }
 
         QSet<uint> lineCoverage = cov->getSourceInfo(sourceID)->getLineCoverage();
+        QSet<uint> symbolicLineCoverage = cov->getSourceInfo(sourceID)->getSymbolicLineCoverage();
         if(!first){
             coverageJSString += ", ";
+            symbolicCoverageJSString += ", ";
         }
         first=true;
         coverageJSString += "\""+id+"\":[";
+        symbolicCoverageJSString += "\""+id+"\":[";
         foreach(uint i, lineCoverage){
             if(!first){
                 coverageJSString += ", ";
@@ -116,12 +119,22 @@ void writeCoverageHtml(CoverageListenerPtr cov)
             coverageJSString += QString::number(i);
             first = false;
         }
+        first = true;
+        foreach(uint i, symbolicLineCoverage){
+            if(!first){
+                symbolicCoverageJSString += ", ";
+            }
+            symbolicCoverageJSString += QString::number(i);
+            first = false;
+        }
+
         coverageJSString += "]";
+        symbolicCoverageJSString += "]";
         first = false;
         res += "</pre></div>";
 
     }
-    res += "<script type='text/javascript'> var coverage = {" + coverageJSString + "}; $.fn.updateOLOffset=function(){if($(this).hasClass(\"startline\")){var a=$(this).attr(\"class\").replace(/.*startlinenr\\[([0-9]+)\\].*/,\"$1\");$(this).find(\"ol\").attr(\"start\",a);$(this).removeClass(\"startline\")}};$.fn.updateOffset=function(){var b=$(this);if(b.size()>1){b.each(function(){$(this).updateOffset()});return}if(!b.hasClass(\"expanded\")){b.css(\"top\",\"\");return}var d=b.next(\"pre\");var a=d.offset();var c=(a.top-(b.outerHeight()))-($(window).scrollTop());b.css(\"top\",Math.max(0,Math.min(c*-1,d.outerHeight())))};$.fn.markCoverage=function(){var a=$(this);var e=a.parents(\"div\").attr(\"id\");var c,d=(c=a.find(\"ol.linenums\").first().attr(\"start\"))==undefined?1:c;var b=coverage[e];$.each(b,function(g,f){$(a.find(\"ol.linenums > li\").get(f-d)).addClass(\"covered\")})};$(document).ready(function(){var a=function(){$(\".expandLink.expanded\").updateOffset()};$(window).scroll(a);$(window).resize(a);$(\".expandLink\").click(function(){var b=$(this);var c=b.parent().find(\"pre\");if(b.hasClass(\"expanded\")){c.hide();b.removeClass(\"expanded\");b.updateOffset();$(window).scrollTop(Math.min(b.offset().top,$(window).scrollTop()));b.text(\"show code coverage\")}else{c.show();if(!c.hasClass(\"prettyprinted\")){c.addClass(\"prettyprint\");prettyPrint(function(){c.removeClass(\"prettyprint\");c.updateOLOffset();c.markCoverage()})}b.addClass(\"expanded\");b.text(\"hide\")}})}); </script>";
+    res += "<script type='text/javascript'> var coverage = {" + coverageJSString + "}; var symbolicCoverage = {" + symbolicCoverageJSString + "}; $.fn.updateOLOffset=function(){if($(this).hasClass(\"startline\")){var a=$(this).attr(\"class\").replace(/.*startlinenr\\[([0-9]+)\\].*/,\"$1\");$(this).find(\"ol\").attr(\"start\",a);$(this).removeClass(\"startline\")}};$.fn.updateOffset=function(){var b=$(this);if(b.size()>1){b.each(function(){$(this).updateOffset()});return}if(!b.hasClass(\"expanded\")){b.css(\"top\",\"\");return}var d=b.next(\"pre\");var a=d.offset();var c=(a.top-(b.outerHeight()))-($(window).scrollTop());b.css(\"top\",Math.max(0,Math.min(c*-1,d.outerHeight())))};$.fn.markCoverage=function(e,d){if(e==undefined){e=coverage}if(d==undefined){d=\"covered\"}var a=$(this);var g=a.parents(\"div\").attr(\"id\");var c,f=(c=a.find(\"ol.linenums\").first().attr(\"start\"))==undefined?1:c;var b=e[g];$.each(b,function(i,h){$(a.find(\"ol.linenums > li\").get(h-f)).addClass(d)})};$.fn.toggleExpandCode=function(){var a=$(this);var b=a.parent().find(\"pre\");if(a.hasClass(\"expanded\")){b.hide();a.removeClass(\"expanded\");a.updateOffset();$(window).scrollTop(Math.min(a.offset().top,$(window).scrollTop()));a.text(\"show code coverage\")}else{b.show();if(!b.hasClass(\"prettyprinted\")){b.addClass(\"prettyprint\");prettyPrint(function(){b.removeClass(\"prettyprint\");b.updateOLOffset();b.markCoverage();b.markCoverage(symbolicCoverage,\"symCovered\")})}a.addClass(\"expanded\");a.text(\"hide\")}};$(document).ready(function(){var a=function(){$(\".expandLink.expanded\").updateOffset()};$(window).scroll(a);$(window).resize(a);$(\".expandLink\").click(function(){$(this).toggleExpandCode()})});</script>";
     res += ("</body></html>");
 
     QString pathToFile = QString("coverage-") + timeString + ".html";

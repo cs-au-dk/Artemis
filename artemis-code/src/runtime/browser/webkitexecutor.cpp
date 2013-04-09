@@ -80,13 +80,13 @@ WebKitExecutor::WebKitExecutor(QObject* parent,
                      mCoverageListener.data(), SLOT(slJavascriptScriptParsed(QString, QSource*)));
     QObject::connect(webkitListener, SIGNAL(statementExecuted(uint, QSource*)),
                      mCoverageListener.data(), SLOT(slJavascriptStatementExecuted(uint, QSource*)));
-    QObject::connect(webkitListener, SIGNAL(sigJavascriptBytecodeExecuted(QString, bool, uint,  uint, QSource*)),
-                     mCoverageListener.data(), SLOT(slJavascriptBytecodeExecuted(QString, bool, uint, uint, QSource*)));
+    QObject::connect(webkitListener, SIGNAL(sigJavascriptBytecodeExecuted(QString, bool, uint,  uint, QSource*, uint)),
+                     mCoverageListener.data(), SLOT(slJavascriptBytecodeExecuted(QString, bool, uint, uint, QSource*, uint)));
     QObject::connect(webkitListener, SIGNAL(sigJavascriptFunctionCalled(QString, size_t, uint, uint, QSource*)),
                      mCoverageListener.data(), SLOT(slJavascriptFunctionCalled(QString, size_t, uint, uint, QSource*)));
 
-    QObject::connect(webkitListener, SIGNAL(sigJavascriptBytecodeExecuted(QString, bool, uint,  uint, QSource*)),
-                     mPathTracer.data(), SLOT(slJavascriptBytecodeExecuted(QString, bool, uint, uint, QSource*)));
+    QObject::connect(webkitListener, SIGNAL(sigJavascriptBytecodeExecuted(QString, bool, uint,  uint, QSource*, uint)),
+                     mPathTracer.data(), SLOT(slJavascriptBytecodeExecuted(QString, bool, uint, uint, QSource*, uint)));
     QObject::connect(webkitListener, SIGNAL(sigJavascriptFunctionCalled(QString, size_t, uint, uint, QSource*)),
                      mPathTracer.data(), SLOT(slJavascriptFunctionCalled(QString, size_t, uint, uint, QSource*)));
     QObject::connect(webkitListener, SIGNAL(sigJavascriptFunctionReturned(QString)),

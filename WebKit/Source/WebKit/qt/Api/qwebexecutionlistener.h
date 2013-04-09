@@ -113,7 +113,7 @@ signals:
     void statementExecuted(uint linenumber, QSource* source);
     void sigJavascriptFunctionCalled(QString functionName, size_t bytecodeSize, uint functionLine, uint sourceOffset, QSource* source);
     void sigJavascriptFunctionReturned(QString functionName);
-    void sigJavascriptBytecodeExecuted(QString opcode, bool isSymbolic, uint bytecodeOffset, uint sourceOffset, QSource* source);
+    void sigJavascriptBytecodeExecuted(QString opcode, bool isSymbolic, uint bytecodeOffset, uint sourceOffset, QSource* source, uint bytecodeLine);
 
 };
 

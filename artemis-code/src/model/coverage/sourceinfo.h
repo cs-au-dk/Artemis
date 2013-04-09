@@ -38,7 +38,9 @@ public:
     int getStartLine() const;
 
     void setLineCovered(uint lineNumber);
+    void setLineSymbolicCovered(uint lineNumber);
     QSet<uint> getLineCoverage() const;
+    QSet<uint> getSymbolicLineCoverage() const;
 
     QString toString() const;
     QDebug friend operator<<(QDebug dbg, const SourceInfo& e);
@@ -50,6 +52,7 @@ private:
     QUrl mUrl;
     int mStartLine;
     QSet<uint> mCoverage;
+    QSet<uint> mSymbolicCoverage;
 };
 
 typedef QSharedPointer<SourceInfo> SourceInfoPtr;
