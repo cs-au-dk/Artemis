@@ -328,7 +328,7 @@ void QWebExecutionListener::javascript_bytecode_executed(JSC::Interpreter* inter
                                        info.isSymbolic(),
                                        bytecodeOffset,
                                        codeBlock->sourceOffset(),
-                                       m_sourceRegistry.get(codeBlock->source()));
+                                       m_sourceRegistry.get(codeBlock->source()),
                                        codeBlock->lineNumberForBytecodeOffset(bytecodeOffset));
 }
 

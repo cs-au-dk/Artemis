@@ -167,7 +167,7 @@ void CoverageListener::slJavascriptBytecodeExecuted(const QString& opcode, bool 
     if(!isSymbolic){
         return;
     }
-    sourceid_t sourceID = SourceInfo::getId(sourceUrl, sourceStartLine);
+    sourceid_t sourceID = SourceInfo::getId(source->getUrl(), source->getStartLine());
     SourceInfoPtr sourceInfo = mSources.value(sourceID, SourceInfoPtr(NULL));
 
     if (!sourceInfo.isNull()) {
