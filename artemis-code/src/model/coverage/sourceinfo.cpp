@@ -57,7 +57,6 @@ QSet<uint> SourceInfo::getLineCoverage() const
 
 QSet<uint> SourceInfo::getSymbolicLineCoverage() const
 {
-    qDebug() << "Symbolic registered";
     return mSymbolicCoverage;
 }
 
