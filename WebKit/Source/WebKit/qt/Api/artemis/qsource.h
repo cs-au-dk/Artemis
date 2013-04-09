@@ -14,36 +14,36 @@
  * limitations under the License.
  */
 
-#ifndef CODEBLOCKINFO_H
-#define CODEBLOCKINFO_H
+#ifndef QSOURCE_H
+#define QSOURCE_H
+
+#include <qwebkitglobal.h>
 
 #include <QString>
-#include <QSet>
-#include <QUrl>
 
-namespace artemis {
-
-typedef uint codeblockid_t;
-
-class CodeBlockInfo
+class QWEBKIT_EXPORT QSource
 {
 
 public:
-    CodeBlockInfo(QString functionName, size_t bytecodeSize);
+    explicit QSource(uint key, QString url, uint startLine);
 
-    size_t getBytecodeSize() const;
-    void setBytecodeCovered(uint bytecodeOffset);
-    size_t numCoveredBytecodes() const;
+    inline QString getUrl() const
+    {
+        return m_url;
+    }
 
-    static codeblockid_t getId(unsigned sourceOffset, const QString& url, int startline);
+    inline uint getStartLine() const
+    {
+        return m_startLine;
+    }
 
 private:
-    QString mFunctionName;
-    size_t mBytecodeSize;
-    QSet<uint> mCoveredBytecodes;
+
+    uint m_key;
+    QString m_url;
+    uint m_startLine;
+
 
 };
 
-}
-
-#endif // CODEBLOCKINFO_H
+#endif // QSOURCE_H

@@ -24,6 +24,7 @@
 #include <QSet>
 #include <QSharedPointer>
 #include <QWebExecutionListener>
+#include <QSource>
 
 #include "runtime/input/baseinput.h"
 
@@ -33,7 +34,7 @@
 namespace artemis
 {
 
-const QUrl DONT_MEASURE_COVERAGE("http://this-is-fake-dont-do-coverage.fake");
+const QString DONT_MEASURE_COVERAGE("http://this-is-fake-dont-do-coverage.fake");
 
 class CoverageListener : public QObject
 {
@@ -71,10 +72,10 @@ private:
 
 public slots:
 
-    void slJavascriptScriptParsed(QString sourceCode, QUrl sourceUrl, uint sourceStartLine);
-    void slJavascriptFunctionCalled(QString functionName, size_t bytecodeSize, uint sourceOffset, QUrl sourceUrl, uint sourceStartLine, uint functionStartLine);
-    void slJavascriptBytecodeExecuted(const QString& opcode, bool isSymbolic, uint bytecodeOffset, uint sourceOffset, const QUrl& sourceUrl, uint sourceStartLine, uint bytecodeLine);
-    void slJavascriptStatementExecuted(uint linenumber, QUrl sourceUrl, uint sourceStartLine);
+    void slJavascriptScriptParsed(QString sourceCode, QSource* source);
+    void slJavascriptFunctionCalled(QString functionName, size_t bytecodeSize, uint functionStartLine, uint sourceOffset, QSource* source);
+    void slJavascriptBytecodeExecuted(const QString& opcode, bool isSymbolic, uint bytecodeOffset, uint sourceOffset, QSource* source, uint bytecodeLine);
+    void slJavascriptStatementExecuted(uint linenumber, QSource* source);
 
 };
 

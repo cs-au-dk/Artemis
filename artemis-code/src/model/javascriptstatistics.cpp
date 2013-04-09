@@ -47,9 +47,9 @@ void JavascriptStatistics::notifyStartingLoad()
     mInputBeingExecuted = 0;
 }
 
-void JavascriptStatistics::slJavascriptPropertyRead(QString propertyName, intptr_t codeBlockID, intptr_t sourceID, QUrl url, int line)
+void JavascriptStatistics::slJavascriptPropertyRead(QString propertyName, intptr_t codeBlockID, intptr_t sourceID, QSource* source)
 {
-    if (url == DONT_MEASURE_COVERAGE) {
+    if (source->getUrl() == DONT_MEASURE_COVERAGE) {
         return;
     }
 
@@ -60,9 +60,9 @@ void JavascriptStatistics::slJavascriptPropertyRead(QString propertyName, intptr
     }
 }
 
-void JavascriptStatistics::slJavascriptPropertyWritten(QString propertyName, intptr_t codeBlockID, intptr_t sourceID, QUrl url, int line)
+void JavascriptStatistics::slJavascriptPropertyWritten(QString propertyName, intptr_t codeBlockID, intptr_t sourceID, QSource* source)
 {
-    if (url == DONT_MEASURE_COVERAGE) {
+    if (source->getUrl() == DONT_MEASURE_COVERAGE) {
         return;
     }
 

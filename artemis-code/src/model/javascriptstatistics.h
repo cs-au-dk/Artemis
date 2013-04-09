@@ -20,6 +20,7 @@
 #include <QSharedPointer>
 #include <QSet>
 #include <QHash>
+#include <QSource>
 
 #include "runtime/input/baseinput.h"
 
@@ -50,8 +51,8 @@ private:
     uint mInputBeingExecuted;
 
 public slots:
-    void slJavascriptPropertyRead(QString propertyName, intptr_t codeBlockID, intptr_t sourceID, QUrl url, int line);
-    void slJavascriptPropertyWritten(QString propertyName, intptr_t codeBlockID, intptr_t sourceID, QUrl url, int line);
+    void slJavascriptPropertyRead(QString propertyName, intptr_t codeBlockID, intptr_t sourceID, QSource* source);
+    void slJavascriptPropertyWritten(QString propertyName, intptr_t codeBlockID, intptr_t sourceID, QSource* source);
 
 };
 

@@ -1,3 +1,18 @@
+/*
+ * Copyright 2012 Aarhus University
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
 
 
 #include <config.h>
@@ -211,10 +226,9 @@ void QWebExecutionListener::javascript_called_function(const JSC::DebuggerCallFr
 
     emit sigJavascriptFunctionCalled(QString::fromStdString(functionName),
                                      codeBlock->numberOfInstructions(),
+                                     codeBlock->lineNumberForBytecodeOffset(0),
                                      codeBlock->sourceOffset(),
-                                     QUrl(QString::fromStdString(codeBlock->source()->url().utf8().data())),
-                                     codeBlock->source()->startPosition().m_line.zeroBasedInt() + 1,
-                                     codeBlock->lineNumberForBytecodeOffset(0));
+                                     m_sourceRegistry.get(codeBlock->source()));
 
     if (functionName.compare("__jquery_event_add__") == 0) {
 
@@ -295,18 +309,15 @@ void QWebExecutionListener::javascript_code_loaded(JSC::SourceProvider* sp, JSC:
     // have come to the right place.
 
     std::string source(sp->getRange(0, sp->length()).utf8().data());
-    std::string url(sp->url().utf8().data());
-    int startline = sp->startPosition().m_line.zeroBasedInt() + 1; // startPosition is placed right before the first line, thus (+1)
 
-    emit loadedJavaScript(QString(tr(source.c_str())), QUrl(QString(tr(url.c_str()))), startline);
+    emit loadedJavaScript(QString(tr(source.c_str())), m_sourceRegistry.get(sp));
 }
 
 void QWebExecutionListener::javascript_executed_statement(const JSC::DebuggerCallFrame& callFrame, uint linenumber) {
     JSC::SourceProvider* sourceProvider = callFrame.callFrame()->codeBlock()->source();
 
     emit statementExecuted(linenumber,
-                           QString::fromStdString(sourceProvider->url().utf8().data()),
-                           sourceProvider->startPosition().m_line.zeroBasedInt() + 1);
+                           m_sourceRegistry.get(sourceProvider));
 }
 
 void QWebExecutionListener::javascript_bytecode_executed(JSC::Interpreter* interpreter, JSC::CodeBlock* codeBlock, JSC::Instruction* instuction, const JSC::BytecodeInfo& info) {
@@ -317,8 +328,7 @@ void QWebExecutionListener::javascript_bytecode_executed(JSC::Interpreter* inter
                                        info.isSymbolic(),
                                        bytecodeOffset,
                                        codeBlock->sourceOffset(),
-                                       QUrl(QString::fromStdString(codeBlock->source()->url().utf8().data())),
-                                       codeBlock->source()->startPosition().m_line.zeroBasedInt() + 1,
+                                       m_sourceRegistry.get(codeBlock->source()),
                                        codeBlock->lineNumberForBytecodeOffset(bytecodeOffset));
 }
 
@@ -327,8 +337,7 @@ void QWebExecutionListener::javascript_property_read(std::string propertyName, J
     emit sigJavascriptPropertyRead(QString::fromStdString(propertyName),
                                    (intptr_t)callFrame->codeBlock(),
                                    callFrame->codeBlock()->source()->asID(),
-                                   QUrl(QString::fromStdString(callFrame->codeBlock()->source()->url().utf8().data())),
-                                   callFrame->codeBlock()->source()->startPosition().m_line.zeroBasedInt() + 1);
+                                   m_sourceRegistry.get(callFrame->codeBlock()->source()));
 }
 
 void QWebExecutionListener::javascript_property_written(std::string propertyName, JSC::CallFrame* callFrame)
@@ -336,8 +345,7 @@ void QWebExecutionListener::javascript_property_written(std::string propertyName
     emit sigJavascriptPropertyWritten(QString::fromStdString(propertyName),
                                       (intptr_t)callFrame->codeBlock(),
                                       callFrame->codeBlock()->source()->asID(),
-                                      QUrl(QString::fromStdString(callFrame->codeBlock()->source()->url().utf8().data())),
-                                      callFrame->codeBlock()->source()->startPosition().m_line.zeroBasedInt() + 1);
+                                      m_sourceRegistry.get(callFrame->codeBlock()->source()));
 }
 
 QWebExecutionListener* QWebExecutionListener::getListener() {

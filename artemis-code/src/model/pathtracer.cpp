@@ -59,15 +59,15 @@ void PathTracer::slEventListenerTriggered(QWebElement* elem, QString eventName)
     newPathTrace("Received Event: '" + eventName + "' on '" + elem->tagName() + "'", type);
 }
 
-void PathTracer::slJavascriptFunctionCalled(QString functionName, size_t bytecodeSize, uint sourceOffset, QUrl sourceUrl, uint sourceStartLine, uint functionStartLine)
+void PathTracer::slJavascriptFunctionCalled(QString functionName, size_t bytecodeSize, uint functionStartLine, uint sourceOffset, QSource* source)
 {
     TraceItem item;
     item.type = FUNCALL;
     item.name = displayedFunctionName(functionName);
-    item.message = QString("File: %1, Line: %2.").arg(displayedUrl(sourceUrl)).arg(functionStartLine);
-    item.sourceUrl = sourceUrl;
+    item.message = QString("File: %1, Line: %2.").arg(displayedUrl(source->getUrl())).arg(functionStartLine);
+    item.sourceUrl = source->getUrl();
     item.sourceOffset = sourceOffset;
-    item.sourceStartLine = sourceStartLine;
+    item.sourceStartLine = source->getStartLine();
     item.lineInFile = functionStartLine;
     appendItem(item);
 }
@@ -77,15 +77,15 @@ void PathTracer::slJavascriptFunctionReturned(QString functionName)
     appendItem(FUNRET, displayedFunctionName(functionName), "");
 }
 
-void PathTracer::slJavascriptBytecodeExecuted(const QString& opcode, bool isSymbolic, uint bytecodeOffset, uint sourceOffset, const QUrl& sourceUrl, uint sourceStartLine, uint bytecodeLine)
+void PathTracer::slJavascriptBytecodeExecuted(const QString& opcode, bool isSymbolic, uint bytecodeOffset, uint sourceOffset, QSource* source, uint bytecodeLine)
 {
     TraceItem item;
     item.type = BYTECODE;
     item.name = opcode;
     item.message = isSymbolic ? "Symbolic" : "";
-    item.sourceUrl = sourceUrl;
+    item.sourceUrl = source->getUrl();
     item.sourceOffset = sourceOffset;
-    item.sourceStartLine = sourceStartLine;
+    item.sourceStartLine = source->getStartLine();
     item.bytecodeOffset = bytecodeOffset;
     appendItem(item);
 }
@@ -244,7 +244,7 @@ void PathTracer::writePathTraceHTML(){
                             functionLink = "<a href=\"#" + functionLink + "\" onclick=\"alert('Bytecode ID is " + functionLink + "');return false;\">View Code</a>";
                         }
                     }
-                    extraStr = QString("<span class=\"extrainfo\">File: <a href=\"%1\">%2</a>, Line: %3, %4</span>").arg(item.sourceUrl.toString()).arg(displayedUrl(item.sourceUrl, true)).arg(item.lineInFile).arg(functionLink);
+                    extraStr = QString("<span class=\"extrainfo\">File: <a href=\"%1\">%2</a>, Line: %3, %4</span>").arg(item.sourceUrl).arg(displayedUrl(item.sourceUrl, true)).arg(item.lineInFile).arg(functionLink);
                     res += "<li class=\"funcall\">\n"+indent+"\t<span class=\"label\">Function Call:</span> " + itemStr + extraStr + "\n"+indent+"\t<ol class=\"functionbody\">\n";
                     indentLevel++;
                     break;
@@ -277,15 +277,18 @@ void PathTracer::writePathTraceHTML(){
     writeStringToFile(pathToFile, res);
 }
 
-QString PathTracer::displayedUrl(QUrl url, bool fileNameOnly)
+QString PathTracer::displayedUrl(QString url, bool fileNameOnly)
 {
-    QString name = url.toString(QUrl::RemoveQuery);
+    bool hasQuery = url.indexOf('?') != -1;
+    QString name = url.split("?").first();
+
     if(fileNameOnly){
         name = name.split("/").last();
     }
-    if(url.hasQuery()){
+    if(hasQuery){
         name += "?...";
     }
+
     return name;
     // TODO: sometimes returns empty
 }

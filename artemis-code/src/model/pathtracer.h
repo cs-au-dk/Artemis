@@ -27,6 +27,7 @@
 #include <QWebExecutionListener>
 #include <QDateTime>
 #include <QListIterator>
+#include <QSource>
 
 #include "runtime/options.h"
 #include "runtime/input/baseinput.h"
@@ -51,7 +52,7 @@ private:
         ItemType type;
         QString name;
         // The following are not present in all item types.
-        QUrl sourceUrl;
+        QString sourceUrl;
         uint sourceOffset, sourceStartLine, lineInFile, bytecodeOffset;
         QString message;
     };
@@ -70,14 +71,14 @@ private:
     void appendItem(TraceItem item);
     void appendItem(ItemType type, QString name, QString message);
 
-    QString displayedUrl(QUrl url, bool fileNameOnly = false);
+    QString displayedUrl(QString url, bool fileNameOnly = false);
     QString displayedFunctionName(QString name);
     QString TraceClass(TraceType type);
 
 public slots:
-    void slJavascriptFunctionCalled(QString functionName, size_t bytecodeSize, uint sourceOffset, QUrl sourceUrl, uint sourceStartLine, uint functionStartLine);
+    void slJavascriptFunctionCalled(QString functionName, size_t bytecodeSize, uint functionStartLine, uint sourceOffset, QSource* source);
     void slJavascriptFunctionReturned(QString functionName);
-    void slJavascriptBytecodeExecuted(const QString& bytecode, bool isSymbolic, uint bytecodeOffset, uint sourceOffset, const QUrl& sourceUrl, uint sourceStartLine, uint bytecodeLine);
+    void slJavascriptBytecodeExecuted(const QString& bytecode, bool isSymbolic, uint bytecodeOffset, uint sourceOffset, QSource* source, uint bytecodeLine);
     void slEventListenerTriggered(QWebElement* elem, QString eventName);
     void slJavascriptAlert(QWebFrame* frame, QString msg);
 

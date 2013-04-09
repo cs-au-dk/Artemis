@@ -18,6 +18,7 @@
 #include <unistd.h>
 
 #include <QtWebKit>
+#include <QSource>
 #include <QApplication>
 #include <QStack>
 #include <QDebug>
@@ -75,28 +76,28 @@ WebKitExecutor::WebKitExecutor(QObject* parent,
     QObject::connect(webkitListener, SIGNAL(jqueryEventAdded(QString, QString, QString)),
                      mJquery, SLOT(slEventAdded(QString, QString, QString)));
 
-    QObject::connect(webkitListener, SIGNAL(loadedJavaScript(QString, QUrl, uint)),
-                     mCoverageListener.data(), SLOT(slJavascriptScriptParsed(QString, QUrl, uint)));
-    QObject::connect(webkitListener, SIGNAL(statementExecuted(uint, QUrl, uint)),
-                     mCoverageListener.data(), SLOT(slJavascriptStatementExecuted(uint, QUrl, uint)));
-    QObject::connect(webkitListener, SIGNAL(sigJavascriptBytecodeExecuted(QString, bool, uint,  uint, QUrl, uint,uint)),
-                     mCoverageListener.data(), SLOT(slJavascriptBytecodeExecuted(QString, bool, uint, uint, QUrl, uint,uint)));
-    QObject::connect(webkitListener, SIGNAL(sigJavascriptFunctionCalled(QString, size_t, uint, QUrl, uint, uint)),
-                     mCoverageListener.data(), SLOT(slJavascriptFunctionCalled(QString, size_t, uint, QUrl, uint, uint)));
+    QObject::connect(webkitListener, SIGNAL(loadedJavaScript(QString, QSource*)),
+                     mCoverageListener.data(), SLOT(slJavascriptScriptParsed(QString, QSource*)));
+    QObject::connect(webkitListener, SIGNAL(statementExecuted(uint, QSource*)),
+                     mCoverageListener.data(), SLOT(slJavascriptStatementExecuted(uint, QSource*)));
+    QObject::connect(webkitListener, SIGNAL(sigJavascriptBytecodeExecuted(QString, bool, uint,  uint, QSource*, uint)),
+                     mCoverageListener.data(), SLOT(slJavascriptBytecodeExecuted(QString, bool, uint, uint, QSource*, uint)));
+    QObject::connect(webkitListener, SIGNAL(sigJavascriptFunctionCalled(QString, size_t, uint, uint, QSource*)),
+                     mCoverageListener.data(), SLOT(slJavascriptFunctionCalled(QString, size_t, uint, uint, QSource*)));
 
-    QObject::connect(webkitListener, SIGNAL(sigJavascriptBytecodeExecuted(QString, bool, uint,  uint, QUrl, uint,uint)),
-                     mPathTracer.data(), SLOT(slJavascriptBytecodeExecuted(QString, bool, uint, uint, QUrl, uint,uint)));
-    QObject::connect(webkitListener, SIGNAL(sigJavascriptFunctionCalled(QString, size_t, uint, QUrl, uint, uint)),
-                     mPathTracer.data(), SLOT(slJavascriptFunctionCalled(QString, size_t, uint, QUrl, uint, uint)));
+    QObject::connect(webkitListener, SIGNAL(sigJavascriptBytecodeExecuted(QString, bool, uint,  uint, QSource*, uint)),
+                     mPathTracer.data(), SLOT(slJavascriptBytecodeExecuted(QString, bool, uint, uint, QSource*, uint)));
+    QObject::connect(webkitListener, SIGNAL(sigJavascriptFunctionCalled(QString, size_t, uint, uint, QSource*)),
+                     mPathTracer.data(), SLOT(slJavascriptFunctionCalled(QString, size_t, uint, uint, QSource*)));
     QObject::connect(webkitListener, SIGNAL(sigJavascriptFunctionReturned(QString)),
                      mPathTracer.data(), SLOT(slJavascriptFunctionReturned(QString)));
     QObject::connect(mPage.data(), SIGNAL(sigJavascriptAlert(QWebFrame*, QString)),
                      mPathTracer.data(), SLOT(slJavascriptAlert(QWebFrame*, QString)));
 
-    QObject::connect(webkitListener, SIGNAL(sigJavascriptPropertyRead(QString,intptr_t,intptr_t,QUrl,int)),
-                     mJavascriptStatistics.data(), SLOT(slJavascriptPropertyRead(QString,intptr_t,intptr_t,QUrl,int)));
-    QObject::connect(webkitListener, SIGNAL(sigJavascriptPropertyWritten(QString,intptr_t,intptr_t,QUrl,int)),
-                     mJavascriptStatistics.data(), SLOT(slJavascriptPropertyWritten(QString,intptr_t,intptr_t,QUrl,int)));
+    QObject::connect(webkitListener, SIGNAL(sigJavascriptPropertyRead(QString,intptr_t,intptr_t, QSource*)),
+                     mJavascriptStatistics.data(), SLOT(slJavascriptPropertyRead(QString,intptr_t,intptr_t, QSource*)));
+    QObject::connect(webkitListener, SIGNAL(sigJavascriptPropertyWritten(QString,intptr_t,intptr_t, QSource*)),
+                     mJavascriptStatistics.data(), SLOT(slJavascriptPropertyWritten(QString,intptr_t,intptr_t, QSource*)));
 
     QObject::connect(webkitListener, SIGNAL(addedEventListener(QWebElement*, QString)),
                      mResultBuilder.data(), SLOT(slEventListenerAdded(QWebElement*, QString)));
