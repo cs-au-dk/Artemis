@@ -22,7 +22,6 @@
 #include <QObject>
 #include <QList>
 #include <QSharedPointer>
-#include <QUrl>
 #include <QWebElement>
 #include <QWebExecutionListener>
 #include <QDateTime>

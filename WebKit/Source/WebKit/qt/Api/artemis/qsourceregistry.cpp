@@ -41,7 +41,8 @@ QSourceRegistry::QSourceRegistry() :
 
 QSource* QSourceRegistry::get(JSC::SourceProvider* sourceProvider)
 {
-    // Fast lookup (cache)
+    // Quick case
+
     if (m_cache_key == sourceProvider) {
         return m_cache_source;
     }

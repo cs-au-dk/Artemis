@@ -19,7 +19,6 @@
 
 #include <QString>
 #include <QSet>
-#include <QUrl>
 
 namespace artemis {
 

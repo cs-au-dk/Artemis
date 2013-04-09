@@ -19,7 +19,7 @@
 namespace artemis
 {
 
-SourceInfo::SourceInfo(const QString source, const QUrl url, const int startline) :
+SourceInfo::SourceInfo(const QString source, const QString url, const int startline) :
     mSource(source),
     mUrl(url),
     mStartLine(startline)
@@ -38,7 +38,7 @@ int SourceInfo::getStartLine() const
 
 QString SourceInfo::getURL() const
 {
-    return mUrl.toString();
+    return mUrl;
 }
 
 void SourceInfo::setLineCovered(uint lineNumber)
@@ -64,7 +64,7 @@ QSet<uint> SourceInfo::getSymbolicLineCoverage() const
 
 QString SourceInfo::toString() const
 {
-    return "[" + mUrl.toString() + ", " + QString::number(mStartLine) + ", " + mSource + "ENDOFJSOURCE]";
+    return "[" + mUrl + ", " + QString::number(mStartLine) + ", " + mSource + "ENDOFJSOURCE]";
 }
 
 QDebug operator<<(QDebug dbg, const SourceInfo& e)
@@ -73,7 +73,7 @@ QDebug operator<<(QDebug dbg, const SourceInfo& e)
     return dbg.space();
 }
 
-sourceid_t SourceInfo::getId(const QUrl& sourceUrl, uint sourceStartLine)
+sourceid_t SourceInfo::getId(const QString& sourceUrl, uint sourceStartLine)
 {
     return qHash(sourceUrl) * 53 + sourceStartLine * 29;
 }

@@ -17,7 +17,6 @@
 #define APPMODEL_H
 
 #include <QSharedPointer>
-#include <QUrl>
 
 #include "runtime/options.h"
 #include "model/coverage/coveragelistener.h"

@@ -41,6 +41,7 @@ public:
 
 private:
     //QHash<JSC::SourceProvider*, sourceid_t> m_registry;
+
     JSC::SourceProvider* m_cache_key;
     QSource* m_cache_source;
 

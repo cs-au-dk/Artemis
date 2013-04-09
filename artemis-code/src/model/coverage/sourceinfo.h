@@ -18,7 +18,6 @@
 
 #include <inttypes.h>
 
-#include <QUrl>
 #include <QDebug>
 #include <QSharedPointer>
 
@@ -31,7 +30,7 @@ class SourceInfo
 {
 
 public:
-    SourceInfo(const QString source, const QUrl url, const int startline);
+    SourceInfo(const QString source, const QString url, const int startline);
 
     QString getSource() const;
     QString getURL() const;
@@ -45,11 +44,11 @@ public:
     QString toString() const;
     QDebug friend operator<<(QDebug dbg, const SourceInfo& e);
 
-    static sourceid_t getId(const QUrl& sourceUrl, uint sourceStartLine);
+    static sourceid_t getId(const QString& sourceUrl, uint sourceStartLine);
 
 private:
     QString mSource;
-    QUrl mUrl;
+    QString mUrl;
     int mStartLine;
     QSet<uint> mCoverage;
     QSet<uint> mSymbolicCoverage;
