@@ -74,9 +74,7 @@ private:
     NativeLookup m_nativeFunctions;
     int m_nextSymbolicValue;
 
-    bool m_shouldTaint;
     bool m_shouldGC;
-    bool m_initial;
 };
 
 }

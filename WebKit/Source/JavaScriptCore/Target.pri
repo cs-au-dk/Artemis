@@ -212,8 +212,6 @@ SOURCES += \
     symbolic/native/nativelookup.cpp \
     symbolic/native/nativefunction.cpp \
     symbolic/native/natives.cpp \
-    symbolic/domtraversal.cpp \
-    symbolic/sources/forminputsource.cpp \
     instrumentation/bytecodeinfo.cpp
 
 *sh4* {
@@ -248,6 +246,4 @@ HEADERS += \
     symbolic/native/nativefunction.h \
     symbolic/native/natives.h \
     symbolic/native/nativefunction.h \
-    symbolic/domtraversal.h \
-    symbolic/sources/forminputsource.h \
     instrumentation/bytecodeinfo.h

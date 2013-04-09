@@ -32,6 +32,10 @@ namespace Symbolic
 
 NativeLookup::NativeLookup()
 {
+    /*
+     * m_nativeFunctionMap.insert(std::make_pair<JSC::native_function_ID_t, NativeFunction>(nativeFunctionID, NativeFunction(path)));
+     */
+
 }
 
 const NativeFunction* NativeLookup::find(JSC::native_function_ID_t functionID)
@@ -42,32 +46,6 @@ const NativeFunction* NativeLookup::find(JSC::native_function_ID_t functionID)
     } else {
         return NULL;
     }
-}
-
-void NativeLookup::buildRegistry(JSC::CallFrame* callFrame)
-{
-    DomTraversal::traverseDom(callFrame, this);
-}
-
-bool NativeLookup::domNodeTraversalCallback(JSC::CallFrame*, std::string path, JSC::JSValue jsValue)
-{
-    if (jsValue.isObject()) {
-        JSC::CallData callData;
-        JSC::CallType callType = JSC::getCallData(jsValue, callData);
-
-        if (callType == JSC::CallTypeHost) {
-
-            JSC::native_function_ID_t nativeFunctionID = (JSC::native_function_ID_t)callData.native.function;
-
-            const NativeFunction* nativeFunction = find(nativeFunctionID);
-
-            if (nativeFunction == NULL || nativeFunction->getName().size() > path.size()) {
-                m_nativeFunctionMap.insert(std::make_pair<JSC::native_function_ID_t, NativeFunction>(nativeFunctionID, NativeFunction(path)));
-            }
-        }
-    }
-
-    return true;
 }
 
 }
