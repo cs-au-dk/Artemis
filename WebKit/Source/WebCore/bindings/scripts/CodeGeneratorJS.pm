@@ -1841,7 +1841,9 @@ sub GenerateImplementation
                     
                     if ($attribute->signature->extendedAttributes->{"Symbolic"}) {
                         # ARTEMIS BEGIN
-                        push(@implContent, "    if (castedThis->m_" . $attribute->signature->name . "Symbolic != NULL) {\n");
+                        push(@implContent, "    if (castedThis->m_" . $attribute->signature->name . "Symbolic == NULL) {\n");
+                        push(@implContent, "        result.makeSymbolic(\"SYM\");\n");
+                        push(@implContent, "    } else {\n");
                         push(@implContent, "        result.makeSymbolic(castedThis->m_" . $attribute->signature->name . "Symbolic);\n");
                         push(@implContent, "    }\n");
                         # ARTEMIS END

@@ -23,8 +23,6 @@
 #include "JavaScriptCore/interpreter/CallFrame.h"
 #include "JavaScriptCore/instrumentation/bytecodeinfo.h"
 
-#include "symbolic/sources/forminputsource.h"
-
 #include "symbolicinterpreter.h"
 
 #ifdef ARTEMIS
@@ -43,9 +41,7 @@ const char* opToString(OP op) {
 
 SymbolicInterpreter::SymbolicInterpreter() :
     m_nextSymbolicValue(0),
-    m_shouldTaint(false),
-    m_shouldGC(false),
-    m_initial(true)
+    m_shouldGC(false)
 {
 }
 
@@ -71,8 +67,6 @@ JSC::JSValue SymbolicInterpreter::ail_op_binary(JSC::CallFrame* callFrame, const
                                                 JSC::JSValue& x, OP op, JSC::JSValue& y,
                                                 JSC::JSValue result)
 {
-
-    /* Symbolic */
 
     if (!x.isSymbolic() && !y.isSymbolic()) {
         return result; // not symbolic
@@ -113,18 +107,13 @@ void SymbolicInterpreter::fatalError(JSC::CodeBlock* codeBlock, std::string reas
 
 void SymbolicInterpreter::preExecution(JSC::CallFrame* callFrame)
 {
-    if (m_initial) {
-        JSC::JSGlobalData* jsGlobalData = &callFrame->globalData();
-        JSC::Heap* heap = &jsGlobalData->heap;
-
-        heap->notifyIsNotSafeToCollect();
-
-        //m_nativeFunctions.buildRegistry(callFrame);
-
-        m_initial = false;
-    }
-
     if (m_shouldGC) {
+        /*
+         * Disable GC, and only GC at the beginning of each session.
+         * DomNodes (the JS bindings) are GC'ed, removing any symbolic
+         * information stored in them.
+         */
+
         JSC::JSGlobalData* jsGlobalData = &callFrame->globalData();
         JSC::Heap* heap = &jsGlobalData->heap;
 
@@ -134,24 +123,15 @@ void SymbolicInterpreter::preExecution(JSC::CallFrame* callFrame)
 
         m_shouldGC = false;
     }
-
-    if (m_shouldTaint) {
-
-        std::cout << "TAINT" << std::endl;
-        DomTraversal::traverseDom(callFrame, new FormInputSource());
-        std::cout << "TAINT" << std::endl;
-        m_shouldTaint = false;
-    }
 }
 
 void SymbolicInterpreter::beginSession()
 {
-    m_shouldTaint = true;
+    m_shouldGC = true;
 }
 
 void SymbolicInterpreter::endSession()
 {
-    m_shouldGC = true;
 }
 
 }

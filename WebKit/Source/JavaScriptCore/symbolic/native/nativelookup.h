@@ -21,8 +21,6 @@
 
 #include <tr1/unordered_map>
 
-#include "symbolic/domtraversal.h"
-
 #include "nativefunction.h"
 
 namespace JSC {
@@ -33,17 +31,13 @@ namespace JSC {
 namespace Symbolic
 {
 
-class NativeLookup : public DomTraversal
+class NativeLookup
 {
 
 public:
     NativeLookup();
 
     const NativeFunction* find(JSC::native_function_ID_t functionID);
-    void buildRegistry(JSC::ExecState* callFrame);
-
-protected:
-    bool domNodeTraversalCallback(JSC::CallFrame* callFrame, std::string path, JSC::JSValue jsValue);
 
 private:
     typedef std::tr1::unordered_map<JSC::native_function_ID_t, NativeFunction> function_map_t;
