@@ -15,6 +15,7 @@
  */
 
 #include "statsstorage.h"
+#include <QDebug>
 
 namespace artemis
 {

@@ -93,7 +93,7 @@ signals:
     void statementExecuted(uint linenumber, QUrl url, uint startline);
     void sigJavascriptFunctionCalled(QString functionName, size_t bytecodeSize, uint sourceOffset, QUrl url, uint startline, uint functionLine);
     void sigJavascriptFunctionReturned(QString functionName);
-    void sigJavascriptBytecodeExecuted(QString opcode, bool isSymbolic, uint bytecodeOffset, uint sourceOffset, QUrl url, uint startline);
+    void sigJavascriptBytecodeExecuted(QString opcode, bool isSymbolic, uint bytecodeOffset, uint sourceOffset, QUrl url, uint startline, uint bytecodeLine);
 
 };
 

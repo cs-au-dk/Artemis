@@ -1,4 +1,5 @@
 
+
 #include <config.h>
 #include <DOMWindow.h>
 #include <QString>
@@ -217,8 +218,7 @@ void QWebExecutionListener::javascript_called_function(const JSC::DebuggerCallFr
 
     if (functionName.compare("__jquery_event_add__") == 0) {
 
-        JSC::CallFrame* cframe = frame.callFrame();
-        JSC::JSValue element = cframe->argument(0);
+        JSC::CallFrame* cframe = frame.callFrame(); JSC::JSValue element = cframe->argument(0);
         
         if (element.isObject() == false) {
             cout << "WARNING: unknown element encountered when handling JQuery support" << endl;
@@ -318,7 +318,8 @@ void QWebExecutionListener::javascript_bytecode_executed(JSC::Interpreter* inter
                                        bytecodeOffset,
                                        codeBlock->sourceOffset(),
                                        QUrl(QString::fromStdString(codeBlock->source()->url().utf8().data())),
-                                       codeBlock->source()->startPosition().m_line.zeroBasedInt() + 1);
+                                       codeBlock->source()->startPosition().m_line.zeroBasedInt() + 1,
+                                       codeBlock->lineNumberForBytecodeOffset(bytecodeOffset));
 }
 
 void QWebExecutionListener::javascript_property_read(std::string propertyName, JSC::CallFrame* callFrame)

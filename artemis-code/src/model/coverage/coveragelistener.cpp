@@ -15,7 +15,7 @@
  */
 
 #include <assert.h>
-
+#include <QDebug>
 #include "artemisglobals.h"
 #include "util/urlutil.h"
 #include "statistics/statsstorage.h"
@@ -57,6 +57,7 @@ size_t CoverageListener::getNumCoveredLines()
 
 float CoverageListener::getBytecodeCoverage(QSharedPointer<const BaseInput> inputEvent) const
 {
+
     uint hashcode = inputEvent->hashCode();
 
     if (!mInputToCodeBlockMap.contains(hashcode)) {
@@ -150,7 +151,7 @@ void CoverageListener::slJavascriptFunctionCalled(QString functionName, size_t b
 
 }
 
-void CoverageListener::slJavascriptBytecodeExecuted(const QString& opcode, bool isSymbolic, uint bytecodeOffset, uint sourceOffset, const QUrl& sourceUrl, uint sourceStartLine)
+void CoverageListener::slJavascriptBytecodeExecuted(const QString& opcode, bool isSymbolic, uint bytecodeOffset, uint sourceOffset, const QUrl& sourceUrl, uint sourceStartLine, uint bytecodeLine)
 {
     /*if (mIgnoredUrls.contains(sourceUrl)) {
         return;
@@ -162,6 +163,18 @@ void CoverageListener::slJavascriptBytecodeExecuted(const QString& opcode, bool 
     if (!codeBlockInfo.isNull()) {
         codeBlockInfo->setBytecodeCovered(bytecodeOffset);
     }
+
+    if(!isSymbolic){
+        return;
+    }
+    sourceid_t sourceID = SourceInfo::getId(sourceUrl, sourceStartLine);
+    SourceInfoPtr sourceInfo = mSources.value(sourceID, SourceInfoPtr(NULL));
+
+    if (!sourceInfo.isNull()) {
+        sourceInfo->setLineSymbolicCovered(bytecodeLine);
+    }
+
+
 }
 
 QString CoverageListener::toString() const

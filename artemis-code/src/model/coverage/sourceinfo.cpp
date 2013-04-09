@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 #include "sourceinfo.h"
+#include <QDebug>
 
 namespace artemis
 {
@@ -45,10 +46,21 @@ void SourceInfo::setLineCovered(uint lineNumber)
     mCoverage.insert(lineNumber);
 }
 
+void SourceInfo::setLineSymbolicCovered(uint lineNumber){
+    mSymbolicCoverage.insert(lineNumber);
+}
+
 QSet<uint> SourceInfo::getLineCoverage() const
 {
     return mCoverage;
 }
+
+QSet<uint> SourceInfo::getSymbolicLineCoverage() const
+{
+    qDebug() << "Symbolic registered";
+    return mSymbolicCoverage;
+}
+
 
 QString SourceInfo::toString() const
 {

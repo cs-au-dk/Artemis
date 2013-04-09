@@ -77,7 +77,7 @@ private:
 public slots:
     void slJavascriptFunctionCalled(QString functionName, size_t bytecodeSize, uint sourceOffset, QUrl sourceUrl, uint sourceStartLine, uint functionStartLine);
     void slJavascriptFunctionReturned(QString functionName);
-    void slJavascriptBytecodeExecuted(const QString& bytecode, bool isSymbolic, uint bytecodeOffset, uint sourceOffset, const QUrl& sourceUrl, uint sourceStartLine);
+    void slJavascriptBytecodeExecuted(const QString& bytecode, bool isSymbolic, uint bytecodeOffset, uint sourceOffset, const QUrl& sourceUrl, uint sourceStartLine, uint bytecodeLine);
     void slEventListenerTriggered(QWebElement* elem, QString eventName);
     void slJavascriptAlert(QWebFrame* frame, QString msg);
 

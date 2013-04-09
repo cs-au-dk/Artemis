@@ -77,7 +77,7 @@ void PathTracer::slJavascriptFunctionReturned(QString functionName)
     appendItem(FUNRET, displayedFunctionName(functionName), "");
 }
 
-void PathTracer::slJavascriptBytecodeExecuted(const QString& opcode, bool isSymbolic, uint bytecodeOffset, uint sourceOffset, const QUrl& sourceUrl, uint sourceStartLine)
+void PathTracer::slJavascriptBytecodeExecuted(const QString& opcode, bool isSymbolic, uint bytecodeOffset, uint sourceOffset, const QUrl& sourceUrl, uint sourceStartLine, uint bytecodeLine)
 {
     TraceItem item;
     item.type = BYTECODE;
