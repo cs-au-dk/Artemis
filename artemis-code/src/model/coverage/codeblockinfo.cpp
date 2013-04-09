@@ -34,7 +34,7 @@ size_t CodeBlockInfo::numCoveredBytecodes() const
     return mCoveredBytecodes.size();
 }
 
-codeblockid_t CodeBlockInfo::getId(unsigned int sourceOffset, const QUrl& url, int startline)
+codeblockid_t CodeBlockInfo::getId(unsigned int sourceOffset, const QString& url, int startline)
 {
     return sourceOffset * 7 + qHash(url) + 37 * startline;
 }

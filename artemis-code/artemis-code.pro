@@ -8,6 +8,8 @@ INCLUDEPATH += \
     ../WebKit/Source/WebCore \
     src
 
+INCLUDEPATH += WebKit/WebKitBuild/Debug/include/QtWebKit
+
 CONFIG -= app_bundle
 
 LIBS += ../WebKit/WebKitBuild/Release/lib/libQtWebKit.so

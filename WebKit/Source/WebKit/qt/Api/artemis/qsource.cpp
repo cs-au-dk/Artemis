@@ -14,36 +14,12 @@
  * limitations under the License.
  */
 
-#ifndef CODEBLOCKINFO_H
-#define CODEBLOCKINFO_H
+#include "qsource.h"
 
-#include <QString>
-#include <QSet>
-#include <QUrl>
-
-namespace artemis {
-
-typedef uint codeblockid_t;
-
-class CodeBlockInfo
+QSource::QSource(uint key, QString url, uint startLine) :
+    m_key(key),
+    m_url(url),
+    m_startLine(startLine)
 {
-
-public:
-    CodeBlockInfo(QString functionName, size_t bytecodeSize);
-
-    size_t getBytecodeSize() const;
-    void setBytecodeCovered(uint bytecodeOffset);
-    size_t numCoveredBytecodes() const;
-
-    static codeblockid_t getId(unsigned sourceOffset, const QString& url, int startline);
-
-private:
-    QString mFunctionName;
-    size_t mBytecodeSize;
-    QSet<uint> mCoveredBytecodes;
-
-};
-
 }
 
-#endif // CODEBLOCKINFO_H

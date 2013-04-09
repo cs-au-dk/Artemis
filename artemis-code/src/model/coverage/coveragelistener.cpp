@@ -96,24 +96,24 @@ void CoverageListener::notifyStartingLoad()
     mInputBeingExecuted = -1;
 }
 
-void CoverageListener::slJavascriptScriptParsed(QString sourceCode, QUrl sourceUrl, uint sourceStartLine)
+void CoverageListener::slJavascriptScriptParsed(QString sourceCode, QSource* source)
 {   
     /*if (mIgnoredUrls.contains(sourceUrl)) {
         return;
     }*/
 
-    sourceid_t sourceID = SourceInfo::getId(sourceUrl, sourceStartLine);
+    sourceid_t sourceID = SourceInfo::getId(source->getUrl(), source->getStartLine());
 
     if (!mSources.contains(sourceID)) {
 
-        qDebug() << "Loaded script: " << sourceUrl.toString() << " (line " << QString::number(sourceStartLine) << ")";
+        qDebug() << "Loaded script: " << source->getUrl() << " (line " << QString::number(source->getStartLine()) << ")";
 
-        SourceInfoPtr sourceInfo = SourceInfoPtr(new SourceInfo(sourceCode, sourceUrl, sourceStartLine));
+        SourceInfoPtr sourceInfo = SourceInfoPtr(new SourceInfo(sourceCode, source->getUrl(), source->getStartLine()));
         mSources.insert(sourceID, sourceInfo);
     }
 }
 
-void CoverageListener::slJavascriptStatementExecuted(uint linenumber, QUrl sourceUrl, uint sourceStartLine)
+void CoverageListener::slJavascriptStatementExecuted(uint linenumber, QSource* source)
 {
     /*if (mIgnoredUrls.contains(sourceUrl)) {
         return;
@@ -121,24 +121,24 @@ void CoverageListener::slJavascriptStatementExecuted(uint linenumber, QUrl sourc
 
     statistics()->accumulate("WebKit::coverage::covered", 1);
 
-    sourceid_t sourceID = SourceInfo::getId(sourceUrl, sourceStartLine);
+    sourceid_t sourceID = SourceInfo::getId(source->getUrl(), source->getStartLine());
     SourceInfoPtr sourceInfo = mSources.value(sourceID, SourceInfoPtr(NULL));
 
     if (sourceInfo.isNull()) {
-        qDebug() << "Warning, unknown line " << linenumber << " executed in file at " << sourceUrl << " offset " << sourceStartLine;
+        qDebug() << "Warning, unknown line " << linenumber << " executed in file at " << source->getUrl() << " offset " << source->getStartLine();
         return;
     }
 
     sourceInfo->setLineCovered(linenumber);
 }
 
-void CoverageListener::slJavascriptFunctionCalled(QString functionName, size_t bytecodeSize, uint sourceOffset, QUrl sourceUrl, uint sourceStartLine, uint functionStartLine)
+void CoverageListener::slJavascriptFunctionCalled(QString functionName, size_t bytecodeSize, uint functionStartLine, uint sourceOffset, QSource* source)
 {
     /*if (mIgnoredUrls.contains(sourceUrl)) {
         return;
     }*/
 
-    codeblockid_t codeBlockID = CodeBlockInfo::getId(sourceOffset, sourceUrl, sourceStartLine);
+    codeblockid_t codeBlockID = CodeBlockInfo::getId(sourceOffset, source->getUrl(), source->getStartLine());
 
     if (!mCodeBlocks.contains(codeBlockID)) {
         mCodeBlocks.insert(codeBlockID, QSharedPointer<CodeBlockInfo>(new CodeBlockInfo(functionName, bytecodeSize)));
@@ -150,13 +150,13 @@ void CoverageListener::slJavascriptFunctionCalled(QString functionName, size_t b
 
 }
 
-void CoverageListener::slJavascriptBytecodeExecuted(const QString& opcode, bool isSymbolic, uint bytecodeOffset, uint sourceOffset, const QUrl& sourceUrl, uint sourceStartLine)
+void CoverageListener::slJavascriptBytecodeExecuted(const QString& opcode, bool isSymbolic, uint bytecodeOffset, uint sourceOffset, QSource* source)
 {
     /*if (mIgnoredUrls.contains(sourceUrl)) {
         return;
     }*/
 
-    codeblockid_t codeBlockID = CodeBlockInfo::getId(sourceOffset, sourceUrl, sourceStartLine);
+    codeblockid_t codeBlockID = CodeBlockInfo::getId(sourceOffset, source->getUrl(), source->getStartLine());
     QSharedPointer<CodeBlockInfo> codeBlockInfo = mCodeBlocks.value(codeBlockID, QSharedPointer<CodeBlockInfo>(NULL));
 
     if (!codeBlockInfo.isNull()) {
