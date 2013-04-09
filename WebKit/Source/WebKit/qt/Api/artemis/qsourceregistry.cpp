@@ -32,16 +32,19 @@
 
 #include "qsourceregistry.h"
 
-QSourceRegistry::QSourceRegistry()
+QSourceRegistry::QSourceRegistry() :
+    m_cache_key(NULL),
+    m_cache_source(NULL)
 {
 }
 
 
 QSource* QSourceRegistry::get(JSC::SourceProvider* sourceProvider)
 {
-
     // Fast lookup (cache)
-    // TODO
+    if (m_cache_key == sourceProvider) {
+        return m_cache_source;
+    }
 
     // Normal lookup (hash lookup of sourceProvider memory location)
     // TODO
@@ -59,9 +62,16 @@ QSource* QSourceRegistry::get(JSC::SourceProvider* sourceProvider)
         QSource* source = new QSource(key, url, lineOffset);
         m_registry.insert(key, source);
 
+        m_cache_key = sourceProvider;
+        m_cache_source = source;
+
         return source;
     }
 
     // We should not hit this case, a slow lookup of a known element
+
+    m_cache_key = sourceProvider;
+    m_cache_source = iter.value();
+
     return iter.value();
 }
