@@ -320,16 +320,18 @@ void QWebExecutionListener::javascript_executed_statement(const JSC::DebuggerCal
                            m_sourceRegistry.get(sourceProvider));
 }
 
-void QWebExecutionListener::javascript_bytecode_executed(JSC::Interpreter* interpreter, JSC::CodeBlock* codeBlock, JSC::Instruction* instuction, const JSC::BytecodeInfo& info) {
+void QWebExecutionListener::javascript_bytecode_executed(JSC::Interpreter* interpreter, JSC::CodeBlock* codeBlock, JSC::Instruction* instruction, const JSC::BytecodeInfo& info) {
 
-    uint bytecodeOffset = instuction - codeBlock->instructions().begin();
-
-    emit sigJavascriptBytecodeExecuted(tr(JSC::opcodeNames[interpreter->getOpcodeID(instuction->u.opcode)]),
+    uint bytecodeOffset = instruction - codeBlock->instructions().begin();
+    emit sigJavascriptBytecodeExecuted(tr(JSC::opcodeNames[interpreter->getOpcodeID(instruction->u.opcode)]),
                                        info.isSymbolic(),
                                        bytecodeOffset,
                                        codeBlock->sourceOffset(),
                                        m_sourceRegistry.get(codeBlock->source()),
                                        codeBlock->lineNumberForBytecodeOffset(bytecodeOffset));
+//    int a, b, c;
+//    codeBlock->expressionRangeForBytecodeOffset(bytecodeOffset,a,b,c);
+//    qDebug() << codeBlock->lineNumberForBytecodeOffset(bytecodeOffset) << m_sourceRegistry.get(codeBlock->source())->getUrl() << a << b << c;
 }
 
 void QWebExecutionListener::javascript_property_read(std::string propertyName, JSC::CallFrame* callFrame)

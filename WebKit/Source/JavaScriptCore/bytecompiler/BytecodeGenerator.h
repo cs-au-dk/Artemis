@@ -231,9 +231,10 @@ namespace JSC {
 
         void emitExpressionInfo(unsigned divot, unsigned startOffset, unsigned endOffset)
         {
+#ifndef ARTEMIS
             if (!m_shouldEmitRichSourceInfo)
                 return;
-
+#endif
             divot -= m_codeBlock->sourceOffset();
             if (divot > ExpressionRangeInfo::MaxDivot) {
                 // Overflow has occurred, we can only give line number info for errors for this region
@@ -252,7 +253,7 @@ namespace JSC {
                 // dropping the rest of the range.
                 endOffset = 0;
             }
-            
+
             ExpressionRangeInfo info;
             info.instructionOffset = instructions().size();
             info.divotPoint = divot;
