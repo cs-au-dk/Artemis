@@ -50,6 +50,17 @@ void SourceInfo::setLineSymbolicCovered(uint lineNumber){
     mSymbolicCoverage.insert(lineNumber);
 }
 
+void SourceInfo::setRangeCovered(int divot, int startOffset, int endOffset){
+    mStartRangeCoverage[divot] = std::max(startOffset,mStartRangeCoverage[divot]);
+    mEndRangeCoverage[divot] = std::max(endOffset,mEndRangeCoverage[divot]);
+}
+
+void SourceInfo::setRangeSymbolicCovered(int divot, int startOffset, int endOffset){
+    mSymbolicStartRangeCoverage[divot] = std::max(startOffset,mSymbolicStartRangeCoverage[divot]);
+    mSymbolicEndRangeCoverage[divot] = std::max(endOffset,mSymbolicEndRangeCoverage[divot]);
+}
+
+
 QSet<uint> SourceInfo::getLineCoverage() const
 {
     return mCoverage;
@@ -59,6 +70,52 @@ QSet<uint> SourceInfo::getSymbolicLineCoverage() const
 {
     return mSymbolicCoverage;
 }
+
+QMap<int,int> SourceInfo::getRangeCoverage() const
+{
+    QMap<int,int> returnMap;
+    int lastEnd = 0,lastStart = 0;
+    foreach(int key, mStartRangeCoverage.keys()){
+        int end = key+mEndRangeCoverage[key],
+                start = key-mStartRangeCoverage[key];
+        if(start < end){
+
+            if(start <= lastEnd){
+                returnMap[lastStart] = end;
+            } else {
+                returnMap[start] = end;
+            }
+        }
+
+        lastEnd = end;
+        lastStart = start;
+    }
+
+    return returnMap;
+}
+
+QMap<int,int> SourceInfo::getSymbolicRangeCoverage() const
+{
+    QMap<int,int> returnMap;
+    int lastEnd = 0,lastStart = 0;
+    foreach(int key, mSymbolicStartRangeCoverage.keys()){
+        int end = key+mSymbolicEndRangeCoverage[key],
+                start = key-mSymbolicStartRangeCoverage[key];
+        if(start < end){
+
+        if(start <= lastEnd){
+            returnMap[lastStart] = end;
+        } else {
+            returnMap[start] = end;
+        }
+        }
+        lastEnd = end;
+        lastStart = start;
+    }
+
+    return returnMap;
+}
+
 
 
 QString SourceInfo::toString() const

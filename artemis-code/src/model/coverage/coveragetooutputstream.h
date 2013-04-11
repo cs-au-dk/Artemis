@@ -26,7 +26,6 @@ using namespace std;
 
 namespace artemis
 {
-
 void writeCoverageStdout(CoverageListenerPtr cov);
 void writeCoverageHtml(CoverageListenerPtr cc);
 

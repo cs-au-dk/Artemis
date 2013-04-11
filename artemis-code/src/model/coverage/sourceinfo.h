@@ -34,12 +34,17 @@ public:
 
     QString getSource() const;
     QString getURL() const;
+
     int getStartLine() const;
 
     void setLineCovered(uint lineNumber);
     void setLineSymbolicCovered(uint lineNumber);
+    void setRangeCovered(int divot, int startOffset, int endOffset);
+    void setRangeSymbolicCovered(int divot, int startOffset, int endOffset);
     QSet<uint> getLineCoverage() const;
     QSet<uint> getSymbolicLineCoverage() const;
+    QMap<int,int> getRangeCoverage() const;
+    QMap<int,int> getSymbolicRangeCoverage() const;
 
     QString toString() const;
     QDebug friend operator<<(QDebug dbg, const SourceInfo& e);
@@ -52,6 +57,10 @@ private:
     int mStartLine;
     QSet<uint> mCoverage;
     QSet<uint> mSymbolicCoverage;
+    QMap<int, int> mSymbolicStartRangeCoverage;
+    QMap<int,int> mSymbolicEndRangeCoverage;
+    QMap<int,int> mStartRangeCoverage;
+    QMap<int,int> mEndRangeCoverage;
 };
 
 typedef QSharedPointer<SourceInfo> SourceInfoPtr;

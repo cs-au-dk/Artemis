@@ -57,6 +57,25 @@ void writeCoverageStdout(CoverageListenerPtr cov)
     }
 }
 
+QString generateRangeJSMapElement(int startline, int startchar, int endline, int endchar){
+    QString ret = "";
+    ret += "{\"sl\":"+QString::number(startline)+", \"sc\":"+QString::number(startchar)+", \"el\":"+QString::number(endline)+", \"ec\":"+QString::number(endchar)+"}";
+    return ret;
+}
+
+QString generateLineCoverageJSListElements(QSet<uint> map){
+    bool first = true;
+    QString ret = "";
+    foreach(uint i, map){
+        if(!first){
+            ret += ", ";
+        }
+        ret += QString::number(i);
+        first = false;
+    }
+    return ret;
+}
+
 void writeCoverageHtml(CoverageListenerPtr cov)
 {
 
@@ -76,7 +95,7 @@ void writeCoverageHtml(CoverageListenerPtr cov)
         res += "<a class='prev' href=\"" + existingFiles.at(0) + "\">Previous run</a>";
     }
     res += "</div>";
-    QString coverageJSString = "", symbolicCoverageJSString = "";
+    QString coverageJSString = "", symbolicCoverageJSString = "", coverageRangeString = "";
     bool first = true;
     foreach(int sourceID, cov->getSourceIDs()) {
 
@@ -98,42 +117,59 @@ void writeCoverageHtml(CoverageListenerPtr cov)
         int startline = cov->getSourceInfo(sourceID)->getStartLine();
         res += "<pre class='linenums "+(startline >1 ? "startline startlinenr["+QString::number(startline)+"]":"")+"'>";
 
-        foreach(QString line, cov->getSourceInfo(sourceID)->getSource().split("\n", QString::KeepEmptyParts)) {
-            res += QTextDocument(line).toPlainText().replace("<","&lt;").replace(">","&gt;").replace(QRegExp("\\s*$"), "") + "&nbsp;\n";
+        int currentChar = 0, currentLine = 1;
 
-        }
+        QMap<int,int> coverageRange = cov->getSourceInfo(sourceID)->getRangeCoverage(),
+                symbolicCoverageRange = cov->getSourceInfo(sourceID)->getSymbolicRangeCoverage();
 
-        QSet<uint> lineCoverage = cov->getSourceInfo(sourceID)->getLineCoverage();
-        QSet<uint> symbolicLineCoverage = cov->getSourceInfo(sourceID)->getSymbolicLineCoverage();
+        QList<int> rangeKeys = coverageRange.keys(),
+                symbolicRangeKeys = symbolicCoverageRange.keys();
+
+        int pendingEnd = -1, pendingStartLine = -1, pendingStartChar = -1;
+
         if(!first){
             coverageJSString += ", ";
             symbolicCoverageJSString += ", ";
-        }
-        first=true;
-        coverageJSString += "\""+id+"\":[";
-        symbolicCoverageJSString += "\""+id+"\":[";
-        foreach(uint i, lineCoverage){
-            if(!first){
-                coverageJSString += ", ";
-            }
-            coverageJSString += QString::number(i);
-            first = false;
-        }
-        first = true;
-        foreach(uint i, symbolicLineCoverage){
-            if(!first){
-                symbolicCoverageJSString += ", ";
-            }
-            symbolicCoverageJSString += QString::number(i);
-            first = false;
+            coverageRangeString += ", ";
         }
 
-        coverageJSString += "]";
-        symbolicCoverageJSString += "]";
+        QString s = "\""+id+"\":[";
+
+        coverageJSString += s + generateLineCoverageJSListElements( cov->getSourceInfo(sourceID)->getLineCoverage())+"]";
+        symbolicCoverageJSString += s + generateLineCoverageJSListElements( cov->getSourceInfo(sourceID)->getSymbolicLineCoverage())+"]";
+
+        coverageRangeString += s;
+
+        foreach(QString line, cov->getSourceInfo(sourceID)->getSource().split("\n", QString::KeepEmptyParts)) {
+
+            int lineLength = line.length()+1;
+            res += QTextDocument(line).toPlainText().replace("<","&lt;").replace(">","&gt;").replace(QRegExp("\\s*$"), "") + "&nbsp;\n";
+
+            if(pendingEnd > 0 && pendingEnd < currentChar+lineLength){
+                coverageRangeString += generateRangeJSMapElement(pendingStartLine,pendingStartChar,currentLine,pendingEnd-currentChar) + ", ";
+                pendingEnd = -1;
+            }
+            int key;
+            while(!rangeKeys.isEmpty() && (key = rangeKeys.first()) < currentChar+lineLength){
+                if(coverageRange[key] >= currentChar+lineLength){
+                    pendingEnd = coverageRange[key];
+                    pendingStartLine = currentLine;
+                    pendingStartChar = key - currentChar;
+                } else {
+                    coverageRangeString += generateRangeJSMapElement(currentLine,key-currentChar,currentLine,coverageRange[key]-currentChar)+", ";
+                }
+                rangeKeys.removeFirst();
+            }
+            currentChar += lineLength;
+            currentLine ++;
+        }
+
+        coverageRangeString += "{}]";
+
         first = false;
         res += "</pre></div>";
-
     }
+
     res += "<script type='text/javascript'> var coverage = {" + coverageJSString + "}; var symbolicCoverage = {" + symbolicCoverageJSString + "}; $.fn.updateOLOffset=function(){if($(this).hasClass(\"startline\")){var a=$(this).attr(\"class\").replace(/.*startlinenr\\[([0-9]+)\\].*/,\"$1\");$(this).find(\"ol\").attr(\"start\",a);$(this).removeClass(\"startline\")}};$.fn.updateOffset=function(){var b=$(this);if(b.size()>1){b.each(function(){$(this).updateOffset()});return}if(!b.hasClass(\"expanded\")){b.css(\"top\",\"\");return}var d=b.next(\"pre\");var a=d.offset();var c=(a.top-(b.outerHeight()))-($(window).scrollTop());b.css(\"top\",Math.max(0,Math.min(c*-1,d.outerHeight())))};$.fn.markCoverage=function(e,d){if(e==undefined){e=coverage}if(d==undefined){d=\"covered\"}var a=$(this);var g=a.parents(\"div\").attr(\"id\");var c,f=(c=a.find(\"ol.linenums\").first().attr(\"start\"))==undefined?1:c;var b=e[g];$.each(b,function(i,h){$(a.find(\"ol.linenums > li\").get(h-f)).addClass(d)})};$.fn.toggleExpandCode=function(c){if(c==undefined){c=function(){}}var a=$(this);var b=a.parent().find(\"pre\");if(a.hasClass(\"expanded\")){b.hide();a.removeClass(\"expanded\");a.updateOffset();$(window).scrollTop(Math.min(a.offset().top,$(window).scrollTop()));a.text(\"show code coverage\")}else{b.show();if(!b.hasClass(\"prettyprinted\")){b.addClass(\"prettyprint\");prettyPrint(function(){b.removeClass(\"prettyprint\");b.updateOLOffset();b.markCoverage();b.markCoverage(symbolicCoverage,\"symCovered\");c()})}else{c()}a.addClass(\"expanded\");a.text(\"hide\")}};$.fn.blinkLine=function(){var a=$(this);a.css(\"opacity\",0);a.animate({opacity:1},300)};function setUpSymbolicInfo(){var d=0,f=null;$.each(symbolicCoverage,function(h,g){d+=g.length});var c=$('<div id=\"SymbolicNavigator\">'+d+\" symbolic tainted lines found.</div>\");c.appendTo(\"body\");if(d>0){var e=function(m){m=(n=m%d)>=0?n:d+n;f=m;var l=$(\"div.code\");var p=null,k,h,n=k=0;while(p==null){p=$(l[n]).attr(\"id\");h=k;k+=symbolicCoverage[p].length;p=k>m?$(l[n]):null;n++}var g;var o=function(){var i=p.find(\"ol.linenums > li.symCovered:eq(\"+(m-h)+\")\");var r=i.offset().top;var q=$(window),j=q.scrollTop()+200;if(j>r||j+q.height()-400<r+i.outerHeight()){q.scrollTop(r-(q.height()-i.outerHeight())/2)}i.blinkLine()};if(!(g=p.find(\"a.expandLink\")).hasClass(\"expanded\")){g.toggleExpandCode(o)}else{o()}};var a=$('<a href=\"#\">next line</a>'),b=$('<a href=\"#\">previous line</a> ');c.append(\" Go to \");c.append(b);c.append(\" - \");c.append(a);b.click(function(){e(f==null?0:f-1);return false});a.click(function(){e(f==null?0:f+1);return false})}}$(document).ready(function(){var a=function(){$(\".expandLink.expanded\").updateOffset()};$(window).scroll(a);$(window).resize(a);$(\".expandLink\").click(function(){$(this).toggleExpandCode();return false});setUpSymbolicInfo()});</script>";
     res += ("</body></html>");
 

@@ -16,6 +16,7 @@
 
 #include <assert.h>
 #include <QDebug>
+#include <QWebExecutionListener>
 #include "artemisglobals.h"
 #include "util/urlutil.h"
 #include "statistics/statsstorage.h"
@@ -130,7 +131,7 @@ void CoverageListener::slJavascriptStatementExecuted(uint linenumber, QSource* s
         return;
     }
 
-    sourceInfo->setLineCovered(linenumber);
+//    sourceInfo->setLineCovered(linenumber);
 }
 
 void CoverageListener::slJavascriptFunctionCalled(QString functionName, size_t bytecodeSize, uint functionStartLine, uint sourceOffset, QSource* source)
@@ -151,27 +152,29 @@ void CoverageListener::slJavascriptFunctionCalled(QString functionName, size_t b
 
 }
 
-void CoverageListener::slJavascriptBytecodeExecuted(const QString& opcode, bool isSymbolic, uint bytecodeOffset, uint sourceOffset, QSource* source, uint bytecodeLine)
+void CoverageListener::slJavascriptBytecodeExecuted(const QString& opcode, uint sourceOffset, QSource* source, const ByteCodeInfoStruct binfo)
 {
     /*if (mIgnoredUrls.contains(sourceUrl)) {
         return;
     }*/
-
     codeblockid_t codeBlockID = CodeBlockInfo::getId(sourceOffset, source->getUrl(), source->getStartLine());
     QSharedPointer<CodeBlockInfo> codeBlockInfo = mCodeBlocks.value(codeBlockID, QSharedPointer<CodeBlockInfo>(NULL));
 
     if (!codeBlockInfo.isNull()) {
-        codeBlockInfo->setBytecodeCovered(bytecodeOffset);
+        codeBlockInfo->setBytecodeCovered(binfo.bytecodeOffset);
     }
 
-    if(!isSymbolic){
-        return;
-    }
     sourceid_t sourceID = SourceInfo::getId(source->getUrl(), source->getStartLine());
     SourceInfoPtr sourceInfo = mSources.value(sourceID, SourceInfoPtr(NULL));
 
     if (!sourceInfo.isNull()) {
-        sourceInfo->setLineSymbolicCovered(bytecodeLine);
+        if(binfo.isSymbolic){
+            sourceInfo->setRangeSymbolicCovered(binfo.divot,binfo.startOffset,binfo.endOffset);
+            sourceInfo->setLineSymbolicCovered(binfo.linenumber);
+        } else {
+            sourceInfo->setRangeCovered(binfo.divot,binfo.startOffset,binfo.endOffset);
+            sourceInfo->setLineCovered(binfo.linenumber);
+        }
     }
 
 

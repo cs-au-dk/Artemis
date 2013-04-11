@@ -77,10 +77,9 @@ private:
 public slots:
     void slJavascriptFunctionCalled(QString functionName, size_t bytecodeSize, uint functionStartLine, uint sourceOffset, QSource* source);
     void slJavascriptFunctionReturned(QString functionName);
-    void slJavascriptBytecodeExecuted(const QString& bytecode, bool isSymbolic, uint bytecodeOffset, uint sourceOffset, QSource* source, uint bytecodeLine);
+    void slJavascriptBytecodeExecuted(const QString& bytecode, uint sourceOffset, QSource* source, const ByteCodeInfoStruct binfo);
     void slEventListenerTriggered(QWebElement* elem, QString eventName);
     void slJavascriptAlert(QWebFrame* frame, QString msg);
-
 };
 
 typedef QSharedPointer<PathTracer> PathTracerPtr;

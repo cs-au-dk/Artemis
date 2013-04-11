@@ -35,6 +35,18 @@ namespace JSC {
     class ExecState;
 }
 
+struct ByteCodeInfoStruct
+{
+    unsigned int linenumber;
+    unsigned int bytecodeOffset;
+    int divot;
+    int startOffset;
+    int endOffset;
+    bool isSymbolic;
+};
+
+Q_DECLARE_METATYPE(ByteCodeInfoStruct);
+
 class QWEBKIT_EXPORT QWebExecutionListener : public QObject, public inst::ExecutionListener, public jscinst::JSCExecutionListener
 {
     Q_OBJECT
@@ -113,7 +125,7 @@ signals:
     void statementExecuted(uint linenumber, QSource* source);
     void sigJavascriptFunctionCalled(QString functionName, size_t bytecodeSize, uint functionLine, uint sourceOffset, QSource* source);
     void sigJavascriptFunctionReturned(QString functionName);
-    void sigJavascriptBytecodeExecuted(QString opcode, bool isSymbolic, uint bytecodeOffset, uint sourceOffset, QSource* source, uint bytecodeLine);
+    void sigJavascriptBytecodeExecuted(QString opcode, uint sourceOffset, QSource* source, const ByteCodeInfoStruct byteInfo);
 
 };
 
