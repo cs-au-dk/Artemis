@@ -212,7 +212,10 @@ SOURCES += \
     symbolic/native/nativelookup.cpp \
     symbolic/native/nativefunction.cpp \
     symbolic/native/natives.cpp \
-    instrumentation/bytecodeinfo.cpp
+    instrumentation/bytecodeinfo.cpp \
+    symbolic/expression/symbolicinteger.cpp \
+    symbolic/expression/constantinteger.cpp \
+    symbolic/expression/integerbinaryoperation.cpp
 
 *sh4* {
     QMAKE_CXXFLAGS += -mieee -w
@@ -246,4 +249,9 @@ HEADERS += \
     symbolic/native/nativefunction.h \
     symbolic/native/natives.h \
     symbolic/native/nativefunction.h \
-    instrumentation/bytecodeinfo.h
+    instrumentation/bytecodeinfo.h \
+    symbolic/expression/expression.h \
+    symbolic/expression/integerexpression.h \
+    symbolic/expression/symbolicinteger.h \
+    symbolic/expression/constantinteger.h \
+    symbolic/expression/integerbinaryoperation.h

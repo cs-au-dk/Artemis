@@ -34,6 +34,10 @@
 #include <wtf/MathExtras.h>
 #include <wtf/StdLibExtras.h>
 
+#ifdef ARTEMIS
+#include "symbolic/expression/expression.h"
+#endif
+
 namespace JSC {
 
     class ExecState;
@@ -66,16 +70,6 @@ namespace JSC {
     enum PreferredPrimitiveType { NoPreference, PreferNumber, PreferString };
 
 #ifdef ARTEMIS
-    typedef struct symbolic_value_t {
-
-        std::string value;
-
-        symbolic_value_t(std::string value) :
-            value(value)
-        {
-        }
-
-    } SymbolicValue;
 
     typedef struct {
 
@@ -96,7 +90,7 @@ namespace JSC {
             #endif
         } u;
 
-        SymbolicValue* symbolic;
+        Symbolic::Expression* symbolic;
 
     } SymbolicImmediate;
 #endif
@@ -219,10 +213,9 @@ namespace JSC {
 #ifdef ARTEMIS
         // Symbolic operations
         bool isSymbolic() const;
-        void makeSymbolic(std::string value);
-        void makeSymbolic(SymbolicValue* symbolicValue);
+        void makeSymbolic(Symbolic::Expression* symbolic);
 
-        SymbolicValue* asSymbolic() const;
+        Symbolic::Expression* asSymbolic() const;
 #endif
         
         // Extracting the value.

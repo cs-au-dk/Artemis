@@ -229,12 +229,8 @@ JSString* JSValue::toPrimitiveString(ExecState* exec) const
 }
 
 #ifdef ARTEMIS
-void JSValue::makeSymbolic(std::string value) {
-    SymbolicValue* symbolicValue = new SymbolicValue(value);
-    makeSymbolic(symbolicValue);
-}
 
-void JSValue::makeSymbolic(SymbolicValue* symbolicValue) {
+void JSValue::makeSymbolic(Symbolic::Expression* symbolicValue) {
 
     if (isSymbolic()) {
         getImmediate()->symbolic = symbolicValue;
@@ -268,7 +264,7 @@ void JSValue::makeSymbolic(SymbolicValue* symbolicValue) {
 
 }
 
-SymbolicValue* JSValue::asSymbolic() const
+Symbolic::Expression* JSValue::asSymbolic() const
 {
     ASSERT(isSymbolic());
     SymbolicImmediate* immediate = getImmediate();

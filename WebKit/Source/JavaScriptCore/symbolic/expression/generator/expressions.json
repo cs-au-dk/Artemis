@@ -1,0 +1,53 @@
+[
+	{
+		"ID": "Expression",
+		"type": "interface",
+		"parent": null
+	},
+		
+
+
+
+
+	{
+		"ID": "IntegerExpression",
+		"type": "interface",
+		"parent": "Expression"
+	},
+
+	{
+		"ID": "SymbolicInteger",
+		"type": "expression",
+		"parent": "IntegerExpression",
+		"fields": [
+			["std::string", "identifier"]
+		]
+	},
+
+	{
+		"ID": "ConstantInteger",
+		"type": "expression",
+		"parent": "IntegerExpression",
+		"fields": [
+			["int", "value"]
+		]
+	},
+
+	{
+		"ID": "IntegerBinaryOperation",
+		"type": "expression",
+		"parent": "IntegerExpression",
+		"fields": [
+			["IntegerExpression", "lhs"],
+			["IntegerBinaryOp", "op"],
+			["IntegerExpression", "rhs"]
+		],
+		"enums": [
+			{
+				"ID": "IntegerBinaryOp",
+				"values": ["ADD, SUBTRACT, MULTIPLY, DIVIDE"]
+			}
+		]
+	}
+			
+]
