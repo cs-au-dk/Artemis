@@ -1021,7 +1021,7 @@ sub GenerateHeader
         push(@headerContent, "    // Symbolic\n");
         foreach my $attribute (@{$dataNode->attributes}) {
             if ($attribute->signature->extendedAttributes->{"Symbolic"}) {
-                push(@headerContent, "    JSC::SymbolicValue* m_" . $attribute->signature->name . "Symbolic;\n");
+                push(@headerContent, "    Symbolic::Expression* m_" . $attribute->signature->name . "Symbolic;\n");
             }
         }
         push(@headerContent, "\n");
@@ -1399,6 +1399,10 @@ sub GenerateImplementation
 
     $implIncludes{"<wtf/GetPtr.h>"} = 1;
     $implIncludes{"<runtime/PropertyNameArray.h>"} = 1 if $dataNode->extendedAttributes->{"HasIndexGetter"} || $dataNode->extendedAttributes->{"HasCustomIndexGetter"} || $dataNode->extendedAttributes->{"HasNumericIndexGetter"};
+
+    # ARTEMIS BEGIN
+    $implIncludes{"\"symbolic/expression/symbolicstring.h\""} = 1;
+    # ARTEMIS END
 
     AddIncludesForTypeInImpl($interfaceName);
 
@@ -1842,7 +1846,7 @@ sub GenerateImplementation
                     if ($attribute->signature->extendedAttributes->{"Symbolic"}) {
                         # ARTEMIS BEGIN
                         push(@implContent, "    if (castedThis->m_" . $attribute->signature->name . "Symbolic == NULL) {\n");
-                        push(@implContent, "        result.makeSymbolic(\"SYM\");\n");
+                        push(@implContent, "        result.makeSymbolic(new Symbolic::SymbolicString(\"SYM\"));\n");
                         push(@implContent, "    } else {\n");
                         push(@implContent, "        result.makeSymbolic(castedThis->m_" . $attribute->signature->name . "Symbolic);\n");
                         push(@implContent, "    }\n");

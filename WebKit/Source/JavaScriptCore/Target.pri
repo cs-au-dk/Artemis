@@ -215,7 +215,15 @@ SOURCES += \
     instrumentation/bytecodeinfo.cpp \
     symbolic/expression/symbolicinteger.cpp \
     symbolic/expression/constantinteger.cpp \
-    symbolic/expression/integerbinaryoperation.cpp
+    symbolic/expression/integerbinaryoperation.cpp \
+    symbolic/expression/integercoercion.cpp \
+    symbolic/expression/symbolicstring.cpp \
+    symbolic/expression/constantstring.cpp \
+    symbolic/expression/stringcoercion.cpp \
+    symbolic/expression/symbolicboolean.cpp \
+    symbolic/expression/constantboolean.cpp \
+    symbolic/expression/stringbinaryoperation.cpp \
+    symbolic/expression/booleancoercion.cpp
 
 *sh4* {
     QMAKE_CXXFLAGS += -mieee -w
@@ -254,4 +262,14 @@ HEADERS += \
     symbolic/expression/integerexpression.h \
     symbolic/expression/symbolicinteger.h \
     symbolic/expression/constantinteger.h \
-    symbolic/expression/integerbinaryoperation.h
+    symbolic/expression/integerbinaryoperation.h \
+    symbolic/expression/integercoercion.h \
+    symbolic/expression/stringexpression.h \
+    symbolic/expression/symbolicstring.h \
+    symbolic/expression/constantstring.h \
+    symbolic/expression/stringcoercion.h \
+    symbolic/expression/booleanexpression.h \
+    symbolic/expression/symbolicboolean.h \
+    symbolic/expression/constantboolean.h \
+    symbolic/expression/stringbinaryoperation.h \
+    symbolic/expression/booleancoercion.h

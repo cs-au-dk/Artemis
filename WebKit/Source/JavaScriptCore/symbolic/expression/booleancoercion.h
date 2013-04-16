@@ -16,48 +16,36 @@
 
  // AUTO GENERATED - DO NOT MODIFY
 
-#ifndef SYMBOLIC_INTEGERBINARYOPERATION_H
-#define SYMBOLIC_INTEGERBINARYOPERATION_H
+#ifndef SYMBOLIC_BOOLEANCOERCION_H
+#define SYMBOLIC_BOOLEANCOERCION_H
 
 #include <string>
 
 #include "JavaScriptCore/wtf/ExportMacros.h"
 #include "JavaScriptCore/runtime/UString.h"
 
-#include "integerexpression.h"
+#include "booleanexpression.h"
+#include "expression.h"
 
 #ifdef ARTEMIS
 
 namespace Symbolic
 {
 
-typedef enum {
-	INT_ADD, INT_SUBTRACT, INT_MULTIPLY, INT_DIVIDE
-} IntegerBinaryOp;
-
-
-class IntegerBinaryOperation : public IntegerExpression
+class BooleanCoercion : public BooleanExpression
 {
 public:
-    explicit IntegerBinaryOperation(IntegerExpression* lhs, IntegerBinaryOp op, IntegerExpression* rhs);
+    explicit BooleanCoercion(Expression* expression);
 
-	inline IntegerExpression* getLhs() {
-		return m_lhs;
-	}
-	inline IntegerBinaryOp getOp() {
-		return m_op;
-	}
-	inline IntegerExpression* getRhs() {
-		return m_rhs;
+	inline Expression* getExpression() {
+		return m_expression;
 	}
 
 private:
-	IntegerExpression* m_lhs;
-	IntegerBinaryOp m_op;
-	IntegerExpression* m_rhs;
+	Expression* m_expression;
 
 };
 }
 
 #endif
-#endif // SYMBOLIC_INTEGERBINARYOPERATION_H
+#endif // SYMBOLIC_BOOLEANCOERCION_H

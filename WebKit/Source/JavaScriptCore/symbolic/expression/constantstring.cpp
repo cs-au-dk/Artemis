@@ -16,35 +16,20 @@
 
  // AUTO GENERATED - DO NOT MODIFY
 
-#ifndef SYMBOLIC_SYMBOLICINTEGER_H
-#define SYMBOLIC_SYMBOLICINTEGER_H
-
-#include <string>
-
-#include "JavaScriptCore/wtf/ExportMacros.h"
-#include "JavaScriptCore/runtime/UString.h"
-
-#include "integerexpression.h"
-
 #ifdef ARTEMIS
 
+#include "constantstring.h"
+
 namespace Symbolic
+
 {
 
-class SymbolicInteger : public IntegerExpression
+ConstantString::ConstantString(JSC::UString value) :
+    StringExpression(),
+    m_value(value)
 {
-public:
-    explicit SymbolicInteger(std::string identifier);
+}
 
-	inline std::string getIdentifier() {
-		return m_identifier;
-	}
-
-private:
-	std::string m_identifier;
-
-};
 }
 
 #endif
-#endif // SYMBOLIC_SYMBOLICINTEGER_H

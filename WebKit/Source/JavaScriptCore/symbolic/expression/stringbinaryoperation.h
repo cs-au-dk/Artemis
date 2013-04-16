@@ -16,15 +16,15 @@
 
  // AUTO GENERATED - DO NOT MODIFY
 
-#ifndef SYMBOLIC_INTEGERBINARYOPERATION_H
-#define SYMBOLIC_INTEGERBINARYOPERATION_H
+#ifndef SYMBOLIC_STRINGBINARYOPERATION_H
+#define SYMBOLIC_STRINGBINARYOPERATION_H
 
 #include <string>
 
 #include "JavaScriptCore/wtf/ExportMacros.h"
 #include "JavaScriptCore/runtime/UString.h"
 
-#include "integerexpression.h"
+#include "stringexpression.h"
 
 #ifdef ARTEMIS
 
@@ -32,32 +32,32 @@ namespace Symbolic
 {
 
 typedef enum {
-	INT_ADD, INT_SUBTRACT, INT_MULTIPLY, INT_DIVIDE
-} IntegerBinaryOp;
+	CONCAT
+} StringBinaryOp;
 
 
-class IntegerBinaryOperation : public IntegerExpression
+class StringBinaryOperation : public StringExpression
 {
 public:
-    explicit IntegerBinaryOperation(IntegerExpression* lhs, IntegerBinaryOp op, IntegerExpression* rhs);
+    explicit StringBinaryOperation(StringExpression* lhs, StringBinaryOp op, StringExpression* rhs);
 
-	inline IntegerExpression* getLhs() {
+	inline StringExpression* getLhs() {
 		return m_lhs;
 	}
-	inline IntegerBinaryOp getOp() {
+	inline StringBinaryOp getOp() {
 		return m_op;
 	}
-	inline IntegerExpression* getRhs() {
+	inline StringExpression* getRhs() {
 		return m_rhs;
 	}
 
 private:
-	IntegerExpression* m_lhs;
-	IntegerBinaryOp m_op;
-	IntegerExpression* m_rhs;
+	StringExpression* m_lhs;
+	StringBinaryOp m_op;
+	StringExpression* m_rhs;
 
 };
 }
 
 #endif
-#endif // SYMBOLIC_INTEGERBINARYOPERATION_H
+#endif // SYMBOLIC_STRINGBINARYOPERATION_H

@@ -29,7 +29,7 @@
 		"type": "expression",
 		"parent": "IntegerExpression",
 		"fields": [
-			["int", "value"]
+			["double", "value"]
 		]
 	},
 
@@ -38,15 +38,111 @@
 		"type": "expression",
 		"parent": "IntegerExpression",
 		"fields": [
-			["IntegerExpression", "lhs"],
+			["IntegerExpression*", "lhs"],
 			["IntegerBinaryOp", "op"],
-			["IntegerExpression", "rhs"]
+			["IntegerExpression*", "rhs"]
 		],
 		"enums": [
 			{
 				"ID": "IntegerBinaryOp",
-				"values": ["ADD, SUBTRACT, MULTIPLY, DIVIDE"]
+				"values": ["INT_ADD, INT_SUBTRACT, INT_MULTIPLY, INT_DIVIDE"]
 			}
+		]
+	},
+
+	{
+		"ID": "IntegerCoercion",
+		"type": "expression",
+		"parent": "IntegerExpression",
+		"fields": [
+			["Expression*", "expression"]
+		]
+	},
+
+
+	{
+		"ID": "StringExpression",
+		"type": "interface",
+		"parent": "Expression"
+	},
+
+	{
+		"ID": "SymbolicString",
+		"type": "expression",
+		"parent": "StringExpression",
+		"fields": [
+			["std::string", "identifier"]
+		]
+	},
+
+	{
+		"ID": "ConstantString",
+		"type": "expression",
+		"parent": "StringExpression",
+		"fields": [
+			["JSC::UString", "value"]
+		]
+	},
+
+	{
+		"ID": "StringBinaryOperation",
+		"type": "expression",
+		"parent": "StringExpression",
+		"fields": [
+			["StringExpression*", "lhs"],
+			["StringBinaryOp", "op"],
+			["StringExpression*", "rhs"]
+		],
+		"enums": [
+			{
+				"ID": "StringBinaryOp",
+				"values": ["CONCAT"]
+			}
+		]
+	},
+
+	{
+		"ID": "StringCoercion",
+		"type": "expression",
+		"parent": "StringExpression",
+		"fields": [
+			["Expression*", "expression"]
+		]
+	},
+
+
+
+
+	{
+		"ID": "BooleanExpression",
+		"type": "interface",
+		"parent": "Expression"
+	},
+
+	{
+		"ID": "SymbolicBoolean",
+		"type": "expression",
+		"parent": "BooleanExpression",
+		"fields": [
+			["std::string", "identifier"]
+		]
+	},
+
+	{
+		"ID": "ConstantBoolean",
+		"type": "expression",
+		"parent": "BooleanExpression",
+		"fields": [
+			["bool", "value"]
+		]
+	},
+
+	{
+		"ID": "BooleanCoercion",
+		"type": "expression",
+		"parent": "BooleanExpression",
+		"fields": [
+			["Expression*", "expression"]
 		]
 	}
 			

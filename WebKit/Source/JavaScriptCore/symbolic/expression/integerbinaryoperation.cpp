@@ -24,7 +24,7 @@ namespace Symbolic
 
 {
 
-IntegerBinaryOperation::IntegerBinaryOperation(IntegerExpression lhs, IntegerBinaryOp op, IntegerExpression rhs) :
+IntegerBinaryOperation::IntegerBinaryOperation(IntegerExpression* lhs, IntegerBinaryOp op, IntegerExpression* rhs) :
     IntegerExpression(),
     m_lhs(lhs),
     m_op(op),

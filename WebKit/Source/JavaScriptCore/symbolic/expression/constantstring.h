@@ -16,48 +16,35 @@
 
  // AUTO GENERATED - DO NOT MODIFY
 
-#ifndef SYMBOLIC_INTEGERBINARYOPERATION_H
-#define SYMBOLIC_INTEGERBINARYOPERATION_H
+#ifndef SYMBOLIC_CONSTANTSTRING_H
+#define SYMBOLIC_CONSTANTSTRING_H
 
 #include <string>
 
 #include "JavaScriptCore/wtf/ExportMacros.h"
 #include "JavaScriptCore/runtime/UString.h"
 
-#include "integerexpression.h"
+#include "stringexpression.h"
 
 #ifdef ARTEMIS
 
 namespace Symbolic
 {
 
-typedef enum {
-	INT_ADD, INT_SUBTRACT, INT_MULTIPLY, INT_DIVIDE
-} IntegerBinaryOp;
-
-
-class IntegerBinaryOperation : public IntegerExpression
+class ConstantString : public StringExpression
 {
 public:
-    explicit IntegerBinaryOperation(IntegerExpression* lhs, IntegerBinaryOp op, IntegerExpression* rhs);
+    explicit ConstantString(JSC::UString value);
 
-	inline IntegerExpression* getLhs() {
-		return m_lhs;
-	}
-	inline IntegerBinaryOp getOp() {
-		return m_op;
-	}
-	inline IntegerExpression* getRhs() {
-		return m_rhs;
+	inline JSC::UString getValue() {
+		return m_value;
 	}
 
 private:
-	IntegerExpression* m_lhs;
-	IntegerBinaryOp m_op;
-	IntegerExpression* m_rhs;
+	JSC::UString m_value;
 
 };
 }
 
 #endif
-#endif // SYMBOLIC_INTEGERBINARYOPERATION_H
+#endif // SYMBOLIC_CONSTANTSTRING_H

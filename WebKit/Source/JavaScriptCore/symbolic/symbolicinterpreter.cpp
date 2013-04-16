@@ -22,6 +22,15 @@
 #include "JavaScriptCore/bytecode/CodeBlock.h"
 #include "JavaScriptCore/interpreter/CallFrame.h"
 #include "JavaScriptCore/instrumentation/bytecodeinfo.h"
+#include "JavaScriptCore/runtime/JSString.h"
+
+#include "JavaScriptCore/symbolic/expression/integerbinaryoperation.h"
+#include "JavaScriptCore/symbolic/expression/symbolicinteger.h"
+#include "JavaScriptCore/symbolic/expression/constantinteger.h"
+#include "JavaScriptCore/symbolic/expression/constantstring.h"
+#include "JavaScriptCore/symbolic/expression/stringcoercion.h"
+#include "JavaScriptCore/symbolic/expression/integercoercion.h"
+#include "JavaScriptCore/symbolic/expression/stringbinaryoperation.h"
 
 #include "symbolicinterpreter.h"
 
@@ -47,7 +56,6 @@ SymbolicInterpreter::SymbolicInterpreter() :
 
 void SymbolicInterpreter::ail_call(JSC::CallFrame*, const JSC::Instruction*, JSC::BytecodeInfo&)
 {
-    //std::cout << "AIL_CALL" << std::endl;
 }
 
 void SymbolicInterpreter::ail_call_native(JSC::CallFrame* callFrame, const JSC::Instruction*, JSC::BytecodeInfo&,
@@ -74,17 +82,162 @@ JSC::JSValue SymbolicInterpreter::ail_op_binary(JSC::CallFrame* callFrame, const
 
     info.setSymbolic();
 
+    switch (op) {
 
+    case EQUAL:
+    case NOT_EQUAL:
+        break;
 
-    std::string xValue = x.isSymbolic() ? x.asSymbolic()->value : std::string(x.toString(callFrame).ascii().data());
-    std::string yValue = y.isSymbolic() ? y.asSymbolic()->value : std::string(y.toString(callFrame).ascii().data());
+    case STRICT_EQUAL:
+    case NOT_STRICT_EQUAL:
+        break;
 
-    std::string value = std::string("(") + xValue + std::string(opToString(op)) + yValue + std::string(")");
+    case LESS_EQ:
+    case LESS_STRICT:
+        break;
+
+    case GREATER_EQ:
+    case GREATER_STRICT:
+        break;
+
+    case ADD:
+    case SUBTRACT: {
+
+        // case 1: number
+        if (x.isNumber() && y.isNumber()) {
+
+            Symbolic::IntegerExpression* sx = x.isSymbolic() ? (Symbolic::IntegerExpression*)x.asSymbolic() : new ConstantInteger(x.asNumber());
+            Symbolic::IntegerExpression* sy = y.isSymbolic() ? (Symbolic::IntegerExpression*)y.asSymbolic() : new ConstantInteger(y.asNumber());
+
+            result.makeSymbolic(new IntegerBinaryOperation(sx, INT_ADD, sy));
+
+            ASSERT(result.isSymbolic());
+
+            return result;
+        }
+
+        // case 2: string
+        if (x.isString()) {
+
+            Symbolic::StringExpression* sx = NULL;
+            Symbolic::StringExpression* sy = NULL;
+
+            sx = x.isSymbolic() ? (Symbolic::StringExpression*)x.asSymbolic() : new ConstantString(x.toString(callFrame));
+
+            if (y.isString()) {
+                sy = y.isSymbolic() ? (Symbolic::StringExpression*)y.asSymbolic() : new ConstantString(y.toString(callFrame));
+            } else {
+                // y string coercion
+                sy = y.isSymbolic() ? (Symbolic::StringExpression*)new StringCoercion(y.asSymbolic()) :
+                                      (Symbolic::StringExpression*)new ConstantString(y.toPrimitiveString(callFrame)->toString(callFrame));
+            }
+
+            ASSERT(sx != NULL);
+            ASSERT(sy != NULL);
+
+            result.makeSymbolic(new StringBinaryOperation(sx, CONCAT, sy));
+
+            ASSERT(result.isSymbolic());
+
+            return result;
+        }
+
+        JSC::JSValue xx = x.toPrimitive(callFrame);
+        JSC::JSValue yy = y.toPrimitive(callFrame);
+
+        // case 3: primitive string
+        if (xx.isString()) {
+
+            Symbolic::StringExpression* sx = NULL;
+            Symbolic::StringExpression* sy = NULL;
+
+            sx = x.isSymbolic() ? (Symbolic::StringExpression*)x.asSymbolic() : new ConstantString(xx.toString(callFrame));
+
+            if (yy.isString()) {
+                sy = y.isSymbolic() ? (Symbolic::StringExpression*)y.asSymbolic() : new ConstantString(yy.toString(callFrame));
+
+            } else {
+                // yy string coercion
+                sy = y.isSymbolic() ? (Symbolic::StringExpression*)new StringCoercion(y.asSymbolic()) :
+                                      (Symbolic::StringExpression*)new ConstantString(yy.toString(callFrame));
+            }
+
+            ASSERT(sx != NULL);
+            ASSERT(sy != NULL);
+
+            result.makeSymbolic(new StringBinaryOperation(sx, CONCAT, sy));
+
+            ASSERT(result.isSymbolic());
+
+            return result;
+        }
+
+        if (yy.isString()) {
+            // xx string coercion
+
+            Symbolic::StringExpression* sx = NULL;
+            Symbolic::StringExpression* sy = NULL;
+
+            sx = x.isSymbolic() ? (Symbolic::StringExpression*)new StringCoercion(x.asSymbolic()) :
+                                  (Symbolic::StringExpression*)new ConstantString(xx.toString(callFrame));
+            sy = y.isSymbolic() ? (Symbolic::StringExpression*)y.asSymbolic() : new ConstantString(yy.toString(callFrame));
+
+            ASSERT(sx != NULL);
+            ASSERT(sy != NULL);
+
+            result.makeSymbolic(new StringBinaryOperation(sx, CONCAT, sy));
+
+            ASSERT(result.isSymbolic());
+
+            return result;
+        }
+
+        // case 4: primitive number coercion
+
+        Symbolic::IntegerExpression* sx = NULL;
+        Symbolic::IntegerExpression* sy = NULL;
+
+        if (xx.isNumber()) {
+            sx = x.isSymbolic() ? (Symbolic::IntegerExpression*)x.asSymbolic() : new ConstantInteger(xx.asNumber());
+        } else {
+            sx = x.isSymbolic() ? (Symbolic::IntegerExpression*)new IntegerCoercion(x.asSymbolic()) :
+                                  (Symbolic::IntegerExpression*)new ConstantInteger(xx.asNumber());
+        }
+
+        if (yy.isNumber()) {
+            sy = y.isSymbolic() ? (Symbolic::IntegerExpression*)y.asSymbolic() : new ConstantInteger(yy.asNumber());
+        } else {
+            sy = y.isSymbolic() ? (Symbolic::IntegerExpression*)new IntegerCoercion(y.asSymbolic()) :
+                                  (Symbolic::IntegerExpression*)new ConstantInteger(yy.asNumber());
+        }
+
+        ASSERT(sx != NULL);
+        ASSERT(sy != NULL);
+
+        result.makeSymbolic(new IntegerBinaryOperation(sx, INT_ADD, sy));
+
+        ASSERT(result.isSymbolic());
+
+        return result;
+    }
+
+    case MULTIPLY:
+        break;
+
+    case DIVIDE:
+        break;
+
+    case MODULO:
+        break;
+
+    }
+
+    //std::string xValue = x.isSymbolic() ? x.asSymbolic()->value : std::string(x.toString(callFrame).ascii().data());
+    //std::string yValue = y.isSymbolic() ? y.asSymbolic()->value : std::string(y.toString(callFrame).ascii().data());
+
+    //std::string value = std::string("(") + xValue + std::string(opToString(op)) + yValue + std::string(")");
 
     //std::cout << "AIL_OP_BINARY " << value << std::endl;
-
-    result.makeSymbolic(value);
-    ASSERT(result.isSymbolic());
 
     return result;
 }

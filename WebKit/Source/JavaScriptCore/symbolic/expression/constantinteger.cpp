@@ -24,7 +24,7 @@ namespace Symbolic
 
 {
 
-ConstantInteger::ConstantInteger(int value) :
+ConstantInteger::ConstantInteger(double value) :
     IntegerExpression(),
     m_value(value)
 {

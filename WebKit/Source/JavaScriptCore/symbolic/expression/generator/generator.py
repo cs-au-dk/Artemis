@@ -4,6 +4,9 @@ import sys
 import os
 import simplejson
 
+def field_filter_include(field):
+	return field.replace('*', '').lower()
+
 def generate_interface(target_dir, ID, parent):
 	
 	with open(os.path.join(target_dir, '%s.h' % ID.lower()), 'w') as fp:
@@ -37,7 +40,7 @@ def generate_interface(target_dir, ID, parent):
 		dependencies = [parent] if parent is not None else []
 
 		for dependency in dependencies:
-			fp.write("#include \"%s.h\"\n" % dependency.lower())
+			fp.write("#include \"%s.h\"\n" % field_filter_include(dependency))
 
 		parent_inherit = ''
 		parent_init = ''
@@ -96,14 +99,19 @@ def generate_expression(target_dir, ID, parent, fields, enums):
 		fp.write("#define SYMBOLIC_%s_H\n\n" % ID.upper())
 
 		fp.write("#include <string>\n\n")
+		fp.write("#include \"JavaScriptCore/wtf/ExportMacros.h\"\n")
+		fp.write("#include \"JavaScriptCore/runtime/UString.h\"\n\n")
 
 		enum_ids = [enum['ID'] for enum in enums]
 
-		dependencies = [field_type for (field_type, field_name) in fields if not field_type.islower() and field_type not in enum_ids]
+		dependencies = [field_type.replace('*', '') for (field_type, field_name) in fields \
+			if not field_type.islower() and \
+			field_type.replace('*', '') not in enum_ids and \
+			'::' not in field_type]
 		dependencies.append(parent)
 
 		for dependency in set(dependencies):
-			fp.write("#include \"%s.h\"\n" % dependency.lower())
+			fp.write("#include \"%s.h\"\n" % field_filter_include(dependency))
 
 		fp.write("""
 #ifdef ARTEMIS
@@ -175,7 +183,7 @@ public:
 		dependencies = [ID]
 
 		for dependency in dependencies:
-			fp.write("#include \"%s.h\"\n" % dependency.lower())
+			fp.write("#include \"%s.h\"\n" % field_filter_include(dependency))
 
 		fp.write("\nnamespace Symbolic\n");
 

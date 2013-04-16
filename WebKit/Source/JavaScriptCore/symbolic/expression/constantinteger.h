@@ -21,6 +21,9 @@
 
 #include <string>
 
+#include "JavaScriptCore/wtf/ExportMacros.h"
+#include "JavaScriptCore/runtime/UString.h"
+
 #include "integerexpression.h"
 
 #ifdef ARTEMIS
@@ -31,14 +34,14 @@ namespace Symbolic
 class ConstantInteger : public IntegerExpression
 {
 public:
-    explicit ConstantInteger(int value);
+    explicit ConstantInteger(double value);
 
-	inline int getValue() {
+	inline double getValue() {
 		return m_value;
 	}
 
 private:
-	int m_value;
+	double m_value;
 
 };
 }

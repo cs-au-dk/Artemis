@@ -14,37 +14,26 @@
  * limitations under the License.
  */
 
- // AUTO GENERATED - DO NOT MODIFY
+// AUTO GENERATED - DO NOT MODIFY
 
-#ifndef SYMBOLIC_SYMBOLICINTEGER_H
-#define SYMBOLIC_SYMBOLICINTEGER_H
-
-#include <string>
-
-#include "JavaScriptCore/wtf/ExportMacros.h"
-#include "JavaScriptCore/runtime/UString.h"
-
-#include "integerexpression.h"
+#ifndef SYMBOLIC_BOOLEANEXPRESSION_H
+#define SYMBOLIC_BOOLEANEXPRESSION_H
 
 #ifdef ARTEMIS
+
+#include "expression.h"
+
 
 namespace Symbolic
 {
 
-class SymbolicInteger : public IntegerExpression
+class BooleanExpression : public Expression
 {
-public:
-    explicit SymbolicInteger(std::string identifier);
-
-	inline std::string getIdentifier() {
-		return m_identifier;
-	}
-
-private:
-	std::string m_identifier;
-
+protected:
+    explicit BooleanExpression() : Expression() {}
 };
+
 }
 
 #endif
-#endif // SYMBOLIC_SYMBOLICINTEGER_H
+#endif // SYMBOLIC_BOOLEANEXPRESSION_H
