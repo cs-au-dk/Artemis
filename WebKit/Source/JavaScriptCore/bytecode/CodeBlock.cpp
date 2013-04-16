@@ -1931,7 +1931,6 @@ void CodeBlock::expressionRangeForBytecodeOffset(unsigned bytecodeOffset, int& d
             high = mid;
     }
 
-    ASSERT(low);
     if (!low) {
         startOffset = 0;
         endOffset = 0;
