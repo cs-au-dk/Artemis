@@ -223,7 +223,9 @@ SOURCES += \
     symbolic/expression/symbolicboolean.cpp \
     symbolic/expression/constantboolean.cpp \
     symbolic/expression/stringbinaryoperation.cpp \
-    symbolic/expression/booleancoercion.cpp
+    symbolic/expression/booleancoercion.cpp \
+    symbolic/pathcondition.cpp \
+    symbolic/expression/visitors/printer.cpp
 
 *sh4* {
     QMAKE_CXXFLAGS += -mieee -w
@@ -250,6 +252,7 @@ lessThan(QT_GCC_MAJOR_VERSION, 5) {
 }
 
 HEADERS += \
+    symbolic/expression/visitors/printer.h \
     instrumentation/jscexecutionlistener.h \
     instrumentation/jscexecutionlistener.h \
     symbolic/symbolicinterpreter.h \
@@ -272,4 +275,7 @@ HEADERS += \
     symbolic/expression/symbolicboolean.h \
     symbolic/expression/constantboolean.h \
     symbolic/expression/stringbinaryoperation.h \
-    symbolic/expression/booleancoercion.h
+    symbolic/expression/booleancoercion.h \
+    symbolic/pathcondition.h \
+    symbolic/expression/visitor.h \
+    symbolic/expr.h

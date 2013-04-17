@@ -24,6 +24,7 @@
 #include "JavaScriptCore/wtf/ExportMacros.h"
 #include "JavaScriptCore/runtime/UString.h"
 
+#include "visitor.h"
 #include "stringexpression.h"
 
 #ifdef ARTEMIS
@@ -35,6 +36,7 @@ class ConstantString : public StringExpression
 {
 public:
     explicit ConstantString(JSC::UString value);
+    void accept(Visitor* visitor);
 
 	inline JSC::UString getValue() {
 		return m_value;

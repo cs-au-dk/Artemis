@@ -30,6 +30,11 @@ ConstantInteger::ConstantInteger(double value) :
 {
 }
 
+void ConstantInteger::accept(Visitor* visitor) 
+{
+	visitor->visit(this); 	
+}
+
 }
 
 #endif

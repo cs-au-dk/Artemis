@@ -32,6 +32,11 @@ StringBinaryOperation::StringBinaryOperation(StringExpression* lhs, StringBinary
 {
 }
 
+void StringBinaryOperation::accept(Visitor* visitor) 
+{
+	visitor->visit(this); 	
+}
+
 }
 
 #endif

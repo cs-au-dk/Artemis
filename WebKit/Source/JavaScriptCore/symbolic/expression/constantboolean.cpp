@@ -30,6 +30,11 @@ ConstantBoolean::ConstantBoolean(bool value) :
 {
 }
 
+void ConstantBoolean::accept(Visitor* visitor) 
+{
+	visitor->visit(this); 	
+}
+
 }
 
 #endif

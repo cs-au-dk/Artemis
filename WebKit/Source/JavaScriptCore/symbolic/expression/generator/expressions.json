@@ -45,7 +45,7 @@
 		"enums": [
 			{
 				"ID": "IntegerBinaryOp",
-				"values": ["INT_ADD, INT_SUBTRACT, INT_MULTIPLY, INT_DIVIDE"]
+				"values": ["INT_ADD", "INT_SUBTRACT", "INT_MULTIPLY", "INT_DIVIDE", "INT_EQ"]
 			}
 		]
 	},
@@ -96,7 +96,7 @@
 		"enums": [
 			{
 				"ID": "StringBinaryOp",
-				"values": ["CONCAT"]
+				"values": ["CONCAT", "STRING_EQ"]
 			}
 		]
 	},

@@ -16,37 +16,17 @@
 
  // AUTO GENERATED - DO NOT MODIFY
 
-#ifndef SYMBOLIC_SYMBOLICBOOLEAN_H
-#define SYMBOLIC_SYMBOLICBOOLEAN_H
-
-#include <string>
-
-#include "JavaScriptCore/wtf/ExportMacros.h"
-#include "JavaScriptCore/runtime/UString.h"
-
-#include "visitor.h"
-#include "booleanexpression.h"
-
 #ifdef ARTEMIS
 
-namespace Symbolic
-{
-
-class SymbolicBoolean : public BooleanExpression
-{
-public:
-    explicit SymbolicBoolean(std::string identifier);
-    void accept(Visitor* visitor);
-
-	inline std::string getIdentifier() {
-		return m_identifier;
-	}
-
-private:
-	std::string m_identifier;
-
-};
-}
-
+#include "expression/symbolicinteger.h"
+#include "expression/constantinteger.h"
+#include "expression/integerbinaryoperation.h"
+#include "expression/integercoercion.h"
+#include "expression/symbolicstring.h"
+#include "expression/constantstring.h"
+#include "expression/stringbinaryoperation.h"
+#include "expression/stringcoercion.h"
+#include "expression/symbolicboolean.h"
+#include "expression/constantboolean.h"
+#include "expression/booleancoercion.h"
 #endif
-#endif // SYMBOLIC_SYMBOLICBOOLEAN_H

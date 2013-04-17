@@ -24,8 +24,9 @@
 #include "JavaScriptCore/wtf/ExportMacros.h"
 #include "JavaScriptCore/runtime/UString.h"
 
-#include "integerexpression.h"
+#include "visitor.h"
 #include "expression.h"
+#include "integerexpression.h"
 
 #ifdef ARTEMIS
 
@@ -36,6 +37,7 @@ class IntegerCoercion : public IntegerExpression
 {
 public:
     explicit IntegerCoercion(Expression* expression);
+    void accept(Visitor* visitor);
 
 	inline Expression* getExpression() {
 		return m_expression;

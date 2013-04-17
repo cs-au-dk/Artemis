@@ -14,39 +14,28 @@
  * limitations under the License.
  */
 
- // AUTO GENERATED - DO NOT MODIFY
-
-#ifndef SYMBOLIC_SYMBOLICBOOLEAN_H
-#define SYMBOLIC_SYMBOLICBOOLEAN_H
-
-#include <string>
-
-#include "JavaScriptCore/wtf/ExportMacros.h"
-#include "JavaScriptCore/runtime/UString.h"
-
-#include "visitor.h"
-#include "booleanexpression.h"
+#include "pathcondition.h"
 
 #ifdef ARTEMIS
 
 namespace Symbolic
 {
 
-class SymbolicBoolean : public BooleanExpression
+PathCondition::PathCondition()
 {
-public:
-    explicit SymbolicBoolean(std::string identifier);
-    void accept(Visitor* visitor);
+}
 
-	inline std::string getIdentifier() {
-		return m_identifier;
-	}
+void PathCondition::append(Symbolic::Expression* condition)
+{
+    m_pc.push_back(condition);
+}
 
-private:
-	std::string m_identifier;
+int PathCondition::size() const
+{
+    return m_pc.size();
+}
 
-};
+
 }
 
 #endif
-#endif // SYMBOLIC_SYMBOLICBOOLEAN_H

@@ -24,6 +24,7 @@
 #include "JavaScriptCore/wtf/ExportMacros.h"
 #include "JavaScriptCore/runtime/UString.h"
 
+#include "visitor.h"
 #include "stringexpression.h"
 
 #ifdef ARTEMIS
@@ -32,7 +33,7 @@ namespace Symbolic
 {
 
 typedef enum {
-	CONCAT
+	CONCAT, STRING_EQ
 } StringBinaryOp;
 
 
@@ -40,6 +41,7 @@ class StringBinaryOperation : public StringExpression
 {
 public:
     explicit StringBinaryOperation(StringExpression* lhs, StringBinaryOp op, StringExpression* rhs);
+    void accept(Visitor* visitor);
 
 	inline StringExpression* getLhs() {
 		return m_lhs;

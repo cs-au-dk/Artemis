@@ -30,6 +30,11 @@ SymbolicBoolean::SymbolicBoolean(std::string identifier) :
 {
 }
 
+void SymbolicBoolean::accept(Visitor* visitor) 
+{
+	visitor->visit(this); 	
+}
+
 }
 
 #endif

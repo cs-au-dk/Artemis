@@ -30,6 +30,11 @@ ConstantString::ConstantString(JSC::UString value) :
 {
 }
 
+void ConstantString::accept(Visitor* visitor) 
+{
+	visitor->visit(this); 	
+}
+
 }
 
 #endif

@@ -30,6 +30,11 @@ BooleanCoercion::BooleanCoercion(Expression* expression) :
 {
 }
 
+void BooleanCoercion::accept(Visitor* visitor) 
+{
+	visitor->visit(this); 	
+}
+
 }
 
 #endif

@@ -30,6 +30,11 @@ SymbolicString::SymbolicString(std::string identifier) :
 {
 }
 
+void SymbolicString::accept(Visitor* visitor) 
+{
+	visitor->visit(this); 	
+}
+
 }
 
 #endif

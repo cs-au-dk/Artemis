@@ -24,6 +24,7 @@
 #include "JavaScriptCore/wtf/ExportMacros.h"
 #include "JavaScriptCore/runtime/UString.h"
 
+#include "visitor.h"
 #include "integerexpression.h"
 
 #ifdef ARTEMIS
@@ -35,6 +36,7 @@ class ConstantInteger : public IntegerExpression
 {
 public:
     explicit ConstantInteger(double value);
+    void accept(Visitor* visitor);
 
 	inline double getValue() {
 		return m_value;

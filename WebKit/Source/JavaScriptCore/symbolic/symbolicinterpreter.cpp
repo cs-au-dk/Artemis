@@ -84,7 +84,103 @@ JSC::JSValue SymbolicInterpreter::ail_op_binary(JSC::CallFrame* callFrame, const
 
     switch (op) {
 
-    case EQUAL:
+    case EQUAL: {
+
+        // Case 1: Number
+        if (x.isNumber() && y.isNumber()) {
+
+            Symbolic::IntegerExpression* sx = x.isSymbolic() ? (Symbolic::IntegerExpression*)x.asSymbolic() : new ConstantInteger(x.asNumber());
+            Symbolic::IntegerExpression* sy = y.isSymbolic() ? (Symbolic::IntegerExpression*)y.asSymbolic() : new ConstantInteger(y.asNumber());
+
+            result.makeSymbolic(new IntegerBinaryOperation(sx, INT_EQ, sy));
+
+            ASSERT(result.isSymbolic());
+
+            return result;
+
+        }
+
+        bool xIsString = x.isString();
+        bool yIsString = y.isString();
+
+        // Case 2: String
+        if (xIsString && yIsString) {
+            Symbolic::StringExpression* sx = x.isSymbolic() ? (Symbolic::StringExpression*)x.asSymbolic() : new ConstantString(x.toString(callFrame));
+            Symbolic::StringExpression* sy = y.isSymbolic() ? (Symbolic::StringExpression*)y.asSymbolic() : new ConstantString(y.toString(callFrame));
+
+            result.makeSymbolic(new StringBinaryOperation(sx, STRING_EQ, sy));
+
+            ASSERT(result.isSymbolic());
+
+            return result;
+        }
+
+        // Case 3: Object nullness
+        if (x.isUndefinedOrNull()) {
+            return result;
+        }
+
+        if (y.isUndefinedOrNull()) {
+            return result;
+        }
+
+        // Case 4: Object identity
+        if (x.isObject() || y.isObject()) {
+            return result;
+
+            // TODO support primitives
+        }
+
+        // Case 5: Mixed string and <other>
+        if (xIsString || yIsString) {
+
+            Symbolic::IntegerExpression* sx = NULL;
+            Symbolic::IntegerExpression* sy = NULL;
+
+            if (x.isNumber()) {
+                sx = x.isSymbolic() ? (Symbolic::IntegerExpression*)x.asSymbolic() : new ConstantInteger(x.asNumber());
+            } else {
+                sx = x.isSymbolic() ? (Symbolic::IntegerExpression*)new IntegerCoercion(x.asSymbolic()) : new ConstantInteger(x.toNumber(callFrame));
+            }
+
+            if (y.isNumber()) {
+                sy = y.isSymbolic() ? (Symbolic::IntegerExpression*)y.asSymbolic() : new ConstantInteger(y.asNumber());
+            } else {
+                sy = y.isSymbolic() ? (Symbolic::IntegerExpression*)new IntegerCoercion(y.asSymbolic()) : new ConstantInteger(y.toNumber(callFrame));
+            }
+
+            ASSERT(sx != NULL);
+            ASSERT(sy != NULL);
+
+            result.makeSymbolic(new IntegerBinaryOperation(sx, INT_EQ, sy));
+
+            ASSERT(result.isSymbolic());
+
+            return result;
+        }
+
+        // Case 6: Mixed boolean and number
+        if (x.isBoolean()) {
+            if (y.isNumber())
+
+                // TODO
+                return result;
+
+        } else if (y.isBoolean()) {
+            if (x.isNumber())
+
+                // TODO
+                return result;
+        }
+
+        // Case 7: Basecase, (pure boolean?)
+        // TODO
+        return result;
+
+        break;
+
+    }
+
     case NOT_EQUAL:
         break;
 
@@ -100,8 +196,10 @@ JSC::JSValue SymbolicInterpreter::ail_op_binary(JSC::CallFrame* callFrame, const
     case GREATER_STRICT:
         break;
 
-    case ADD:
-    case SUBTRACT: {
+    case SUBTRACT:
+        break;
+
+    case ADD: {
 
         // case 1: number
         if (x.isNumber() && y.isNumber()) {
@@ -247,9 +345,7 @@ void SymbolicInterpreter::ail_jmp_iff(JSC::CallFrame* callFrame, const JSC::Inst
 {
     if (condition.isSymbolic()) {
         info.setSymbolic();
-        //std::cout << "AIL_JMP_IFF " << condition.asSymbolic()->value << std::endl;
-    } else {
-        //std::cout << "AIL_JMP_IFF" << std::endl;
+        m_pc.append(condition.asSymbolic());
     }
 
 }
@@ -287,6 +383,7 @@ void SymbolicInterpreter::beginSession()
 
 void SymbolicInterpreter::endSession()
 {
+    std::cout << "PC size: " << m_pc.size() << std::endl;
 }
 
 }

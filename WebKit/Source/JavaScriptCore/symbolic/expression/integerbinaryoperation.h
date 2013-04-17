@@ -25,6 +25,7 @@
 #include "JavaScriptCore/runtime/UString.h"
 
 #include "integerexpression.h"
+#include "visitor.h"
 
 #ifdef ARTEMIS
 
@@ -32,7 +33,7 @@ namespace Symbolic
 {
 
 typedef enum {
-	INT_ADD, INT_SUBTRACT, INT_MULTIPLY, INT_DIVIDE
+	INT_ADD, INT_SUBTRACT, INT_MULTIPLY, INT_DIVIDE, INT_EQ
 } IntegerBinaryOp;
 
 
@@ -40,6 +41,7 @@ class IntegerBinaryOperation : public IntegerExpression
 {
 public:
     explicit IntegerBinaryOperation(IntegerExpression* lhs, IntegerBinaryOp op, IntegerExpression* rhs);
+    void accept(Visitor* visitor);
 
 	inline IntegerExpression* getLhs() {
 		return m_lhs;

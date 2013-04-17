@@ -69,6 +69,8 @@ protected:
 
 def generate_expression(target_dir, ID, parent, fields, enums):
 	
+	########### HEADER ##############
+
 	signature = ', '.join(
 		['%s %s' % (field_type, field_name) for (field_type, field_name) in fields])
 
@@ -108,6 +110,7 @@ def generate_expression(target_dir, ID, parent, fields, enums):
 			if not field_type.islower() and \
 			field_type.replace('*', '') not in enum_ids and \
 			'::' not in field_type]
+		dependencies.append("visitor")
 		dependencies.append(parent)
 
 		for dependency in set(dependencies):
@@ -133,6 +136,7 @@ class %s : public %s
 {
 public:
     explicit %s(%s);
+    void accept(Visitor* visitor);
 """ % (ID, parent, ID, signature))
 
 		for field_type, field_name in fields:
@@ -154,6 +158,8 @@ public:
 """)
 
 		fp.write("#endif // SYMBOLIC_%s_H" % ID.upper())
+
+	############# Definitions ############
 
 	with open(os.path.join(target_dir, '%s.cpp' % ID.lower()), 'w') as fp:
 
@@ -200,11 +206,115 @@ public:
 }
 """ % (ID, ID, signature, parent, init))
 
+		# visitor
+
+		fp.write("""
+void %s::accept(Visitor* visitor) 
+{
+	visitor->visit(this); 	
+}
+""" % ID)
+
 		fp.write("""
 }
 
 #endif
 """)
+
+def generate_visitor(target_dir, object_IDs):
+
+	############# VISITOR ###########
+
+	with open(os.path.join(target_dir, 'visitor.h'), 'w') as fp:
+
+		fp.write(
+"""/*
+ * Copyright 2012 Aarhus University
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+ // AUTO GENERATED - DO NOT MODIFY
+
+#ifdef ARTEMIS
+
+
+#ifndef SYMBOLIC_VISITOR_H
+#define SYMBOLIC_VISITOR_H
+
+namespace Symbolic
+{
+
+""")
+
+		for object_ID in object_IDs:
+
+			fp.write("    class %s;\n" % object_ID)
+
+		fp.write("""
+class Visitor
+{
+
+public:
+""")
+
+		for object_ID in object_IDs:
+			name = object_ID.lower()
+			fp.write("    virtual void visit(%s* %s) = 0;\n" % (object_ID, name))
+
+
+		fp.write("""
+};
+
+}
+
+#endif
+#endif
+""")
+
+def generate_index(target_dir, object_IDs):
+
+	############# VISITOR ###########
+
+	with open(os.path.join(target_dir, '..', 'expr.h'), 'w') as fp:
+
+		fp.write(
+"""/*
+ * Copyright 2012 Aarhus University
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+ // AUTO GENERATED - DO NOT MODIFY
+
+#ifdef ARTEMIS
+
+""")
+
+		for object_ID in object_IDs:
+			fp.write("#include \"expression/%s.h\"\n" % object_ID.lower())
+
+		fp.write("#endif")
 
 if __name__ == '__main__':
 
@@ -237,11 +347,20 @@ if __name__ == '__main__':
 					fields,
 					expression.get('enums', []))
 
+		cexps = [expression['ID'] for expression in expressions \
+					if expression['type'] == 'expression']
+
+		generate_visitor(target_dir, cexps)
+		generate_index(target_dir, cexps)
+
 		print 'Add the following to your .pri file\n'
 
 		for expression in expressions:
 
 			print '    symbolic/expression/%s.h \\' % expression['ID'].lower()
+
+		print '    symbolic/expression/visitor.h \\'
+		print '    symbolic/expr.h'
 
 		print ''
 
@@ -249,3 +368,4 @@ if __name__ == '__main__':
 
 			if expression['type'] == 'expression':
 				print '    symbolic/expression/%s.cpp \\' % expression['ID'].lower()
+

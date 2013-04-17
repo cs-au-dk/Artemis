@@ -30,6 +30,11 @@ StringCoercion::StringCoercion(Expression* expression) :
 {
 }
 
+void StringCoercion::accept(Visitor* visitor) 
+{
+	visitor->visit(this); 	
+}
+
 }
 
 #endif

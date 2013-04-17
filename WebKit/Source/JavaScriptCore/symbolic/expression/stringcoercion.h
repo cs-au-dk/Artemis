@@ -24,6 +24,7 @@
 #include "JavaScriptCore/wtf/ExportMacros.h"
 #include "JavaScriptCore/runtime/UString.h"
 
+#include "visitor.h"
 #include "expression.h"
 #include "stringexpression.h"
 
@@ -36,6 +37,7 @@ class StringCoercion : public StringExpression
 {
 public:
     explicit StringCoercion(Expression* expression);
+    void accept(Visitor* visitor);
 
 	inline Expression* getExpression() {
 		return m_expression;

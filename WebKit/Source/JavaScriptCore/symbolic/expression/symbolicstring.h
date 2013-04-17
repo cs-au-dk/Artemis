@@ -24,6 +24,7 @@
 #include "JavaScriptCore/wtf/ExportMacros.h"
 #include "JavaScriptCore/runtime/UString.h"
 
+#include "visitor.h"
 #include "stringexpression.h"
 
 #ifdef ARTEMIS
@@ -35,6 +36,7 @@ class SymbolicString : public StringExpression
 {
 public:
     explicit SymbolicString(std::string identifier);
+    void accept(Visitor* visitor);
 
 	inline std::string getIdentifier() {
 		return m_identifier;

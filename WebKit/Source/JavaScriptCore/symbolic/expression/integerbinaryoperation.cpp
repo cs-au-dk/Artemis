@@ -32,6 +32,11 @@ IntegerBinaryOperation::IntegerBinaryOperation(IntegerExpression* lhs, IntegerBi
 {
 }
 
+void IntegerBinaryOperation::accept(Visitor* visitor) 
+{
+	visitor->visit(this); 	
+}
+
 }
 
 #endif

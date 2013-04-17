@@ -24,6 +24,7 @@
 #include "JavaScriptCore/wtf/ExportMacros.h"
 #include "JavaScriptCore/runtime/UString.h"
 
+#include "visitor.h"
 #include "booleanexpression.h"
 #include "expression.h"
 
@@ -36,6 +37,7 @@ class BooleanCoercion : public BooleanExpression
 {
 public:
     explicit BooleanCoercion(Expression* expression);
+    void accept(Visitor* visitor);
 
 	inline Expression* getExpression() {
 		return m_expression;

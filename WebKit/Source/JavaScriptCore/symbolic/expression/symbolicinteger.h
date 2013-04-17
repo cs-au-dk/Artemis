@@ -24,6 +24,7 @@
 #include "JavaScriptCore/wtf/ExportMacros.h"
 #include "JavaScriptCore/runtime/UString.h"
 
+#include "visitor.h"
 #include "integerexpression.h"
 
 #ifdef ARTEMIS
@@ -35,6 +36,7 @@ class SymbolicInteger : public IntegerExpression
 {
 public:
     explicit SymbolicInteger(std::string identifier);
+    void accept(Visitor* visitor);
 
 	inline std::string getIdentifier() {
 		return m_identifier;

@@ -24,6 +24,7 @@
 #include "JavaScriptCore/wtf/ExportMacros.h"
 #include "JavaScriptCore/runtime/UString.h"
 
+#include "visitor.h"
 #include "booleanexpression.h"
 
 #ifdef ARTEMIS
@@ -35,6 +36,7 @@ class ConstantBoolean : public BooleanExpression
 {
 public:
     explicit ConstantBoolean(bool value);
+    void accept(Visitor* visitor);
 
 	inline bool getValue() {
 		return m_value;
