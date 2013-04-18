@@ -33,7 +33,7 @@ namespace Symbolic
 {
 
 typedef enum {
-	INT_ADD, INT_SUBTRACT, INT_MULTIPLY, INT_DIVIDE, INT_EQ
+    INT_ADD, INT_SUBTRACT, INT_MULTIPLY, INT_DIVIDE, INT_EQ, INT_MODULO
 } IntegerBinaryOp;
 
 
