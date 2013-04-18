@@ -319,15 +319,51 @@ JSC::JSValue SymbolicInterpreter::ail_op_binary(JSC::CallFrame* callFrame, const
         return result;
     }
 
-    case MULTIPLY:
-        break;
+    case MULTIPLY: {
+        Symbolic::IntegerExpression* sx = NULL;
+        Symbolic::IntegerExpression* sy = NULL;
+        sx = x.isSymbolic()? (Symbolic::IntegerExpression*)x.asSymbolic(): new ConstantInteger(x.asNumber());
+        sy = y.isSymbolic()? (Symbolic::IntegerExpression*)y.asSymbolic(): new ConstantInteger(y.asNumber());
 
-    case DIVIDE:
-        break;
+        ASSERT(sx != NULL);
+        ASSERT(sy != NULL);
 
-    case MODULO:
-        break;
+        result.makeSymbolic(new IntegerBinaryOperation(sx,INT_MULTIPLY,sy));
+        ASSERT(result.isSymbolic());
+        return result;
 
+        break;
+}
+    case DIVIDE: {
+        Symbolic::IntegerExpression* sx = NULL;
+        Symbolic::IntegerExpression* sy = NULL;
+        sx = x.isSymbolic()? (Symbolic::IntegerExpression*)x.asSymbolic(): new ConstantInteger(x.asNumber());
+        sy = y.isSymbolic()? (Symbolic::IntegerExpression*)y.asSymbolic(): new ConstantInteger(y.asNumber());
+
+        ASSERT(sx != NULL);
+        ASSERT(sy != NULL);
+
+        result.makeSymbolic(new IntegerBinaryOperation(sx,INT_DIVIDE,sy));
+        ASSERT(result.isSymbolic());
+        return result;
+
+        break;
+    }
+    case MODULO: {
+        Symbolic::IntegerExpression* sx = NULL;
+        Symbolic::IntegerExpression* sy = NULL;
+        sx = x.isSymbolic()? (Symbolic::IntegerExpression*)x.asSymbolic(): new ConstantInteger(x.asNumber());
+        sy = y.isSymbolic()? (Symbolic::IntegerExpression*)y.asSymbolic(): new ConstantInteger(y.asNumber());
+
+        ASSERT(sx != NULL);
+        ASSERT(sy != NULL);
+
+        result.makeSymbolic(new IntegerBinaryOperation(sx,INT_MODULO,sy));
+        ASSERT(result.isSymbolic());
+        return result;
+
+        break;
+    }
     }
 
     //std::string xValue = x.isSymbolic() ? x.asSymbolic()->value : std::string(x.toString(callFrame).ascii().data());
