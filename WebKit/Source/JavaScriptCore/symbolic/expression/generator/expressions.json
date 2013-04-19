@@ -45,7 +45,7 @@
 		"enums": [
 			{
 				"ID": "IntegerBinaryOp",
-				"values": ["INT_ADD", "INT_SUBTRACT", "INT_MULTIPLY", "INT_DIVIDE", "INT_EQ"]
+				"values": ["INT_ADD", "INT_SUBTRACT", "INT_MULTIPLY", "INT_DIVIDE", "INT_EQ", "INT_MODULO"]
 			}
 		]
 	},
