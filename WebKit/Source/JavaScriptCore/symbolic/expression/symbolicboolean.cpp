@@ -21,7 +21,6 @@
 #include "symbolicboolean.h"
 
 namespace Symbolic
-
 {
 
 SymbolicBoolean::SymbolicBoolean(std::string identifier) :

@@ -24,13 +24,8 @@
 #include "JavaScriptCore/instrumentation/bytecodeinfo.h"
 #include "JavaScriptCore/runtime/JSString.h"
 
-#include "JavaScriptCore/symbolic/expression/integerbinaryoperation.h"
-#include "JavaScriptCore/symbolic/expression/symbolicinteger.h"
-#include "JavaScriptCore/symbolic/expression/constantinteger.h"
-#include "JavaScriptCore/symbolic/expression/constantstring.h"
-#include "JavaScriptCore/symbolic/expression/stringcoercion.h"
-#include "JavaScriptCore/symbolic/expression/integercoercion.h"
-#include "JavaScriptCore/symbolic/expression/stringbinaryoperation.h"
+#include "JavaScriptCore/symbolic/expr.h"
+#include "JavaScriptCore/symbolic/expression/visitors/printer.h"
 
 #include "symbolicinterpreter.h"
 
@@ -174,7 +169,16 @@ JSC::JSValue SymbolicInterpreter::ail_op_binary(JSC::CallFrame* callFrame, const
         }
 
         // Case 7: Basecase, (pure boolean?)
-        // TODO
+        if (x.isBoolean() && y.isBoolean()) {
+            Symbolic::BooleanExpression* sx = x.isSymbolic() ? (Symbolic::BooleanExpression*)x.asSymbolic() : new ConstantBoolean(x.asBoolean());
+            Symbolic::BooleanExpression* sy = y.isSymbolic() ? (Symbolic::BooleanExpression*)y.asSymbolic() : new ConstantBoolean(y.asBoolean());
+
+            result.makeSymbolic(new BooleanBinaryOperation(sx, BOOL_EQ, sy));
+            return result;
+        }
+
+        // Case ?
+
         return result;
 
         break;
@@ -384,6 +388,14 @@ void SymbolicInterpreter::beginSession()
 void SymbolicInterpreter::endSession()
 {
     std::cout << "PC size: " << m_pc.size() << std::endl;
+
+    int i;
+    for (i = 0; i < m_pc.size(); i++) {
+
+        Printer printer;
+        m_pc.get(i)->accept(&printer);
+        std::cout << "PC[" << i << "]: " << printer.getResult() << std::endl;
+    }
 }
 
 }

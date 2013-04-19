@@ -21,7 +21,6 @@
 #include "integercoercion.h"
 
 namespace Symbolic
-
 {
 
 IntegerCoercion::IntegerCoercion(Expression* expression) :

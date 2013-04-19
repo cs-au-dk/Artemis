@@ -21,7 +21,6 @@
 #include "symbolicstring.h"
 
 namespace Symbolic
-
 {
 
 SymbolicString::SymbolicString(std::string identifier) :

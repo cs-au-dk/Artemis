@@ -21,7 +21,6 @@
 #include "constantstring.h"
 
 namespace Symbolic
-
 {
 
 ConstantString::ConstantString(JSC::UString value) :

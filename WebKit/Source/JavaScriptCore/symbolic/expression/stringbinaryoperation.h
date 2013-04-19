@@ -36,6 +36,8 @@ typedef enum {
 	CONCAT, STRING_EQ
 } StringBinaryOp;
 
+const char* opToString(StringBinaryOp op);
+
 
 class StringBinaryOperation : public StringExpression
 {

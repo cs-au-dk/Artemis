@@ -22,6 +22,7 @@
 #ifdef ARTEMIS
 
 #include "expression.h"
+#include "visitor.h"
 
 
 namespace Symbolic
@@ -29,8 +30,8 @@ namespace Symbolic
 
 class StringExpression : public Expression
 {
-protected:
-    explicit StringExpression() : Expression() {}
+public:
+    virtual void accept(Visitor* visitor) = 0;
 };
 
 }

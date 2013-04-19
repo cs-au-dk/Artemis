@@ -45,7 +45,8 @@
 		"enums": [
 			{
 				"ID": "IntegerBinaryOp",
-				"values": ["INT_ADD", "INT_SUBTRACT", "INT_MULTIPLY", "INT_DIVIDE", "INT_EQ"]
+				"values": ["INT_ADD", "INT_SUBTRACT", "INT_MULTIPLY", "INT_DIVIDE", "INT_EQ"],
+				"names": ["+", "-", "*", "/", "=="]
 			}
 		]
 	},
@@ -96,7 +97,8 @@
 		"enums": [
 			{
 				"ID": "StringBinaryOp",
-				"values": ["CONCAT", "STRING_EQ"]
+				"values": ["CONCAT", "STRING_EQ"],
+				"names": ["+", "=="]
 			}
 		]
 	},
@@ -143,6 +145,24 @@
 		"parent": "BooleanExpression",
 		"fields": [
 			["Expression*", "expression"]
+		]
+	},
+
+	{
+		"ID": "BooleanBinaryOperation",
+		"type": "expression",
+		"parent": "BooleanExpression",
+		"fields": [
+			["BooleanExpression*", "lhs"],
+			["BooleanBinaryOp", "op"],
+			["BooleanExpression*", "rhs"]
+		],
+		"enums": [
+			{
+				"ID": "BooleanBinaryOp",
+				"values": ["BOOL_EQ"],
+				"names": ["=="]
+			}
 		]
 	}
 			

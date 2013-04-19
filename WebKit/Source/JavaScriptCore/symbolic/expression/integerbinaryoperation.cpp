@@ -21,8 +21,17 @@
 #include "integerbinaryoperation.h"
 
 namespace Symbolic
-
 {
+
+const char* opToString(IntegerBinaryOp op)
+{
+	static const char* OPStrings[] = {
+        "+", "-", "*", "/", "=="
+    };
+
+    return OPStrings[op];
+}
+
 
 IntegerBinaryOperation::IntegerBinaryOperation(IntegerExpression* lhs, IntegerBinaryOp op, IntegerExpression* rhs) :
     IntegerExpression(),

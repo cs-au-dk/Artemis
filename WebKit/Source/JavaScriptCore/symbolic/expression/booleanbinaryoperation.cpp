@@ -14,26 +14,38 @@
  * limitations under the License.
  */
 
-// AUTO GENERATED - DO NOT MODIFY
-
-#ifndef SYMBOLIC_EXPRESSION_H
-#define SYMBOLIC_EXPRESSION_H
+ // AUTO GENERATED - DO NOT MODIFY
 
 #ifdef ARTEMIS
 
-#include "visitor.h"
-
+#include "booleanbinaryoperation.h"
 
 namespace Symbolic
 {
 
-class Expression 
+const char* opToString(BooleanBinaryOp op)
 {
-public:
-    virtual void accept(Visitor* visitor) = 0;
-};
+	static const char* OPStrings[] = {
+        "=="
+    };
+
+    return OPStrings[op];
+}
+
+
+BooleanBinaryOperation::BooleanBinaryOperation(BooleanExpression* lhs, BooleanBinaryOp op, BooleanExpression* rhs) :
+    BooleanExpression(),
+    m_lhs(lhs),
+    m_op(op),
+    m_rhs(rhs)
+{
+}
+
+void BooleanBinaryOperation::accept(Visitor* visitor) 
+{
+	visitor->visit(this); 	
+}
 
 }
 
 #endif
-#endif // SYMBOLIC_EXPRESSION_H
