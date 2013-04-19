@@ -71,6 +71,26 @@ void SymbolicInterpreter::ail_call_native(JSC::CallFrame* callFrame, const JSC::
     //std::cout << "AIL_CALL_NATIVE <" << nativeFunction->getName() << ">" << std::endl;
 }
 
+Symbolic::IntegerExpression* generateIntegerExpression(JSC::JSValue& val){
+    return val.isSymbolic()?(Symbolic::IntegerExpression*)val.asSymbolic() : new ConstantInteger(val.asNumber());
+}
+
+Symbolic::StringExpression* generateStringExpression(JSC::JSValue& val, JSC::CallFrame* callFrame){
+    return val.isSymbolic()?(Symbolic::StringExpression*) val.asSymbolic(): new ConstantString(val.toString(callFrame));
+}
+
+Symbolic::IntegerExpression* generateIntegerCoercionExpression(JSC::JSValue& val, JSC::CallFrame* callFrame){
+    return val.isSymbolic() ? (Symbolic::IntegerExpression*)new IntegerCoercion(val.asSymbolic()) : new ConstantInteger(val.toPrimitive(callFrame).toNumber(callFrame));
+}
+
+Symbolic::StringExpression* generateStringCoercionExpression(JSC::JSValue& val, JSC::CallFrame* callFrame){
+    return val.isSymbolic() ? (Symbolic::StringExpression*)new StringCoercion(val.asSymbolic()) :
+                            (Symbolic::StringExpression*)new ConstantString(val.toPrimitiveString(callFrame)->toString(callFrame));
+}
+
+
+
+
 JSC::JSValue SymbolicInterpreter::ail_op_binary(JSC::CallFrame* callFrame, const JSC::Instruction*, JSC::BytecodeInfo& info,
                                                 JSC::JSValue& x, OP op, JSC::JSValue& y,
                                                 JSC::JSValue result)
@@ -89,8 +109,8 @@ JSC::JSValue SymbolicInterpreter::ail_op_binary(JSC::CallFrame* callFrame, const
         // Case 1: Number
         if (x.isNumber() && y.isNumber()) {
 
-            Symbolic::IntegerExpression* sx = x.isSymbolic() ? (Symbolic::IntegerExpression*)x.asSymbolic() : new ConstantInteger(x.asNumber());
-            Symbolic::IntegerExpression* sy = y.isSymbolic() ? (Symbolic::IntegerExpression*)y.asSymbolic() : new ConstantInteger(y.asNumber());
+            Symbolic::IntegerExpression* sx = generateIntegerExpression(x);
+            Symbolic::IntegerExpression* sy = generateIntegerExpression(y);
 
             result.makeSymbolic(new IntegerBinaryOperation(sx, INT_EQ, sy));
 
@@ -105,8 +125,8 @@ JSC::JSValue SymbolicInterpreter::ail_op_binary(JSC::CallFrame* callFrame, const
 
         // Case 2: String
         if (xIsString && yIsString) {
-            Symbolic::StringExpression* sx = x.isSymbolic() ? (Symbolic::StringExpression*)x.asSymbolic() : new ConstantString(x.toString(callFrame));
-            Symbolic::StringExpression* sy = y.isSymbolic() ? (Symbolic::StringExpression*)y.asSymbolic() : new ConstantString(y.toString(callFrame));
+            Symbolic::StringExpression* sx = generateStringExpression(x,callFrame);
+            Symbolic::StringExpression* sy = generateStringExpression(y,callFrame);
 
             result.makeSymbolic(new StringBinaryOperation(sx, STRING_EQ, sy));
 
@@ -138,15 +158,15 @@ JSC::JSValue SymbolicInterpreter::ail_op_binary(JSC::CallFrame* callFrame, const
             Symbolic::IntegerExpression* sy = NULL;
 
             if (x.isNumber()) {
-                sx = x.isSymbolic() ? (Symbolic::IntegerExpression*)x.asSymbolic() : new ConstantInteger(x.asNumber());
+                sx = generateIntegerExpression(x);
             } else {
-                sx = x.isSymbolic() ? (Symbolic::IntegerExpression*)new IntegerCoercion(x.asSymbolic()) : new ConstantInteger(x.toNumber(callFrame));
+                sx = generateIntegerCoercionExpression(x,callFrame);
             }
 
             if (y.isNumber()) {
-                sy = y.isSymbolic() ? (Symbolic::IntegerExpression*)y.asSymbolic() : new ConstantInteger(y.asNumber());
+                sy = generateIntegerExpression(y);
             } else {
-                sy = y.isSymbolic() ? (Symbolic::IntegerExpression*)new IntegerCoercion(y.asSymbolic()) : new ConstantInteger(y.toNumber(callFrame));
+                sy = generateIntegerCoercionExpression(y,callFrame);
             }
 
             ASSERT(sx != NULL);
@@ -196,16 +216,32 @@ JSC::JSValue SymbolicInterpreter::ail_op_binary(JSC::CallFrame* callFrame, const
     case GREATER_STRICT:
         break;
 
-    case SUBTRACT:
+    case SUBTRACT:{
+        Symbolic::IntegerExpression* sx = NULL;
+        Symbolic::IntegerExpression* sy = NULL;
+        sx = generateIntegerExpression(x);
+        sy = generateIntegerExpression(y);
+
+        ASSERT(sx != NULL);
+        ASSERT(sy != NULL);
+
+        result.makeSymbolic(new IntegerBinaryOperation(sx,INT_SUBTRACT,sy));
+        ASSERT(result.isSymbolic());
+        return result;
+
         break;
+    }
 
     case ADD: {
 
         // case 1: number
         if (x.isNumber() && y.isNumber()) {
 
-            Symbolic::IntegerExpression* sx = x.isSymbolic() ? (Symbolic::IntegerExpression*)x.asSymbolic() : new ConstantInteger(x.asNumber());
-            Symbolic::IntegerExpression* sy = y.isSymbolic() ? (Symbolic::IntegerExpression*)y.asSymbolic() : new ConstantInteger(y.asNumber());
+            Symbolic::IntegerExpression* sx = generateIntegerExpression(x);
+            Symbolic::IntegerExpression* sy = generateIntegerExpression(y);
+
+            ASSERT(sx);
+            ASSERT(sy);
 
             result.makeSymbolic(new IntegerBinaryOperation(sx, INT_ADD, sy));
 
@@ -220,14 +256,13 @@ JSC::JSValue SymbolicInterpreter::ail_op_binary(JSC::CallFrame* callFrame, const
             Symbolic::StringExpression* sx = NULL;
             Symbolic::StringExpression* sy = NULL;
 
-            sx = x.isSymbolic() ? (Symbolic::StringExpression*)x.asSymbolic() : new ConstantString(x.toString(callFrame));
+            sx = generateStringExpression(x,callFrame);
 
             if (y.isString()) {
-                sy = y.isSymbolic() ? (Symbolic::StringExpression*)y.asSymbolic() : new ConstantString(y.toString(callFrame));
+                sy = generateStringExpression(y,callFrame);
             } else {
                 // y string coercion
-                sy = y.isSymbolic() ? (Symbolic::StringExpression*)new StringCoercion(y.asSymbolic()) :
-                                      (Symbolic::StringExpression*)new ConstantString(y.toPrimitiveString(callFrame)->toString(callFrame));
+                sy = generateStringCoercionExpression(y,callFrame);
             }
 
             ASSERT(sx != NULL);
@@ -249,15 +284,14 @@ JSC::JSValue SymbolicInterpreter::ail_op_binary(JSC::CallFrame* callFrame, const
             Symbolic::StringExpression* sx = NULL;
             Symbolic::StringExpression* sy = NULL;
 
-            sx = x.isSymbolic() ? (Symbolic::StringExpression*)x.asSymbolic() : new ConstantString(xx.toString(callFrame));
+            sx = generateStringExpression(xx,callFrame);
 
             if (yy.isString()) {
-                sy = y.isSymbolic() ? (Symbolic::StringExpression*)y.asSymbolic() : new ConstantString(yy.toString(callFrame));
+                sy = generateStringExpression(yy, callFrame);
 
             } else {
                 // yy string coercion
-                sy = y.isSymbolic() ? (Symbolic::StringExpression*)new StringCoercion(y.asSymbolic()) :
-                                      (Symbolic::StringExpression*)new ConstantString(yy.toString(callFrame));
+                sy = generateStringCoercionExpression(y, callFrame);
             }
 
             ASSERT(sx != NULL);
@@ -276,8 +310,7 @@ JSC::JSValue SymbolicInterpreter::ail_op_binary(JSC::CallFrame* callFrame, const
             Symbolic::StringExpression* sx = NULL;
             Symbolic::StringExpression* sy = NULL;
 
-            sx = x.isSymbolic() ? (Symbolic::StringExpression*)new StringCoercion(x.asSymbolic()) :
-                                  (Symbolic::StringExpression*)new ConstantString(xx.toString(callFrame));
+            sx = generateStringCoercionExpression(x, callFrame);
             sy = y.isSymbolic() ? (Symbolic::StringExpression*)y.asSymbolic() : new ConstantString(yy.toString(callFrame));
 
             ASSERT(sx != NULL);
@@ -298,15 +331,13 @@ JSC::JSValue SymbolicInterpreter::ail_op_binary(JSC::CallFrame* callFrame, const
         if (xx.isNumber()) {
             sx = x.isSymbolic() ? (Symbolic::IntegerExpression*)x.asSymbolic() : new ConstantInteger(xx.asNumber());
         } else {
-            sx = x.isSymbolic() ? (Symbolic::IntegerExpression*)new IntegerCoercion(x.asSymbolic()) :
-                                  (Symbolic::IntegerExpression*)new ConstantInteger(xx.asNumber());
+            sx = generateIntegerCoercionExpression(x, callFrame);
         }
 
         if (yy.isNumber()) {
             sy = y.isSymbolic() ? (Symbolic::IntegerExpression*)y.asSymbolic() : new ConstantInteger(yy.asNumber());
         } else {
-            sy = y.isSymbolic() ? (Symbolic::IntegerExpression*)new IntegerCoercion(y.asSymbolic()) :
-                                  (Symbolic::IntegerExpression*)new ConstantInteger(yy.asNumber());
+            sy = generateIntegerCoercionExpression(y, callFrame);
         }
 
         ASSERT(sx != NULL);
@@ -322,8 +353,8 @@ JSC::JSValue SymbolicInterpreter::ail_op_binary(JSC::CallFrame* callFrame, const
     case MULTIPLY: {
         Symbolic::IntegerExpression* sx = NULL;
         Symbolic::IntegerExpression* sy = NULL;
-        sx = x.isSymbolic()? (Symbolic::IntegerExpression*)x.asSymbolic(): new ConstantInteger(x.asNumber());
-        sy = y.isSymbolic()? (Symbolic::IntegerExpression*)y.asSymbolic(): new ConstantInteger(y.asNumber());
+        sx = generateIntegerExpression(x);
+        sy = generateIntegerExpression(y);
 
         ASSERT(sx != NULL);
         ASSERT(sy != NULL);
@@ -337,8 +368,8 @@ JSC::JSValue SymbolicInterpreter::ail_op_binary(JSC::CallFrame* callFrame, const
     case DIVIDE: {
         Symbolic::IntegerExpression* sx = NULL;
         Symbolic::IntegerExpression* sy = NULL;
-        sx = x.isSymbolic()? (Symbolic::IntegerExpression*)x.asSymbolic(): new ConstantInteger(x.asNumber());
-        sy = y.isSymbolic()? (Symbolic::IntegerExpression*)y.asSymbolic(): new ConstantInteger(y.asNumber());
+        sx = generateIntegerExpression(x);
+        sy = generateIntegerExpression(y);
 
         ASSERT(sx != NULL);
         ASSERT(sy != NULL);
@@ -352,8 +383,8 @@ JSC::JSValue SymbolicInterpreter::ail_op_binary(JSC::CallFrame* callFrame, const
     case MODULO: {
         Symbolic::IntegerExpression* sx = NULL;
         Symbolic::IntegerExpression* sy = NULL;
-        sx = x.isSymbolic()? (Symbolic::IntegerExpression*)x.asSymbolic(): new ConstantInteger(x.asNumber());
-        sy = y.isSymbolic()? (Symbolic::IntegerExpression*)y.asSymbolic(): new ConstantInteger(y.asNumber());
+        sx = generateIntegerExpression(x);
+        sy = generateIntegerExpression(y);
 
         ASSERT(sx != NULL);
         ASSERT(sy != NULL);
