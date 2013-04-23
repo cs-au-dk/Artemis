@@ -197,22 +197,22 @@ JSC::JSValue SymbolicInterpreter::ail_op_binary(JSC::CallFrame* callFrame, const
         neq = true;
     case STRICT_EQUAL:
         if(x.isString() && y.isString()){
-            Symbolic::StringExpression sx = generateStringExpression(x, callFrame);
-            Symbolic::StringExpression sy = generateStringExpression(y, callFrame);
+            Symbolic::StringExpression* sx = generateStringExpression(x, callFrame);
+            Symbolic::StringExpression* sy = generateStringExpression(y, callFrame);
             result.makeSymbolic(new StringBinaryOperation(sx,neq?STRING_SNEQ:STRING_SEQ,sy));
             return result;
         }
 
         if(x.isNumber() && y.isNumber()){
-            Symbolic::IntegerExpression sx = generateIntegerExpression(x,callFrame);
-            Symbolic::IntegerExpression sy = generateIntegerExpression(y,callFrame);
+            Symbolic::IntegerExpression* sx = generateIntegerExpression(x,callFrame);
+            Symbolic::IntegerExpression* sy = generateIntegerExpression(y,callFrame);
             result.makeSymbolic(new IntegerBinaryOperation(sx,neq?INT_SNEQ:INT_SEQ,sy));
             return result;
         }
 
         if(x.isBoolean() && y.isBoolean()){
-            Symbolic::BooleanExpression sx = generateBooleanExpression(x,callFrame);
-            Symbolic::BooleanExpression sy = generateBooleanExpression(y,callFrame);
+            Symbolic::BooleanExpression* sx = generateBooleanExpression(x,callFrame);
+            Symbolic::BooleanExpression* sy = generateBooleanExpression(y,callFrame);
             result.makeSymbolic(new BooleanBinaryOperation(sx,neq?BOOL_SNEQ:BOOL_SEQ,sy));
             return result;
         }
