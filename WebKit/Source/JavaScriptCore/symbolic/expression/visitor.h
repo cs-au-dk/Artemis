@@ -28,6 +28,7 @@ namespace Symbolic
     class SymbolicInteger;
     class ConstantInteger;
     class IntegerBinaryOperation;
+    class BooleanBinaryOperation;
     class IntegerCoercion;
     class SymbolicString;
     class ConstantString;
@@ -44,6 +45,7 @@ public:
     virtual void visit(SymbolicInteger* symbolicinteger) = 0;
     virtual void visit(ConstantInteger* constantinteger) = 0;
     virtual void visit(IntegerBinaryOperation* integerbinaryoperation) = 0;
+    virtual void visit(BooleanBinaryOperation* booleanbinaryoperation) = 0;
     virtual void visit(IntegerCoercion* integercoercion) = 0;
     virtual void visit(SymbolicString* symbolicstring) = 0;
     virtual void visit(ConstantString* constantstring) = 0;

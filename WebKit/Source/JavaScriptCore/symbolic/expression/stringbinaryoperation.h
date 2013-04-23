@@ -33,7 +33,7 @@ namespace Symbolic
 {
 
 typedef enum {
-	CONCAT, STRING_EQ
+	CONCAT, STRING_EQ, STRING_NEQ, STRING_LT, STRING_LEQ, STRING_GT, STRING_GEQ, STRING_SEQ, STRING_SNEQ
 } StringBinaryOp;
 
 
