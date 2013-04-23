@@ -84,7 +84,7 @@ endif
 
 DEPENDENCIES = g++ flex bison gperf ruby cmake lemon re2c libxext-dev libfontconfig-dev libxrender-dev libsqlite3-dev php5 libqt4-dev-bin qt4-qmake libqt4-core  
 
-YUM_DEPENDENCIES = gcc-c++ flex bison gperf ruby cmake lemon re2c fontconfig-devel libXext-devel patch sqlite-devel php
+YUM_DEPENDENCIES = gcc-c++ flex bison gperf ruby cmake lemon re2c fontconfig-devel libXext-devel patch sqlite-devel php perl-Tk perl-Digest-MD5
 
 fetch-apt:
 	sudo apt-get install ${DEPENDENCIES}
