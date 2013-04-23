@@ -273,14 +273,14 @@ JSC::JSValue SymbolicInterpreter::ail_op_binary(JSC::CallFrame* callFrame, const
         JSC::JSValue yy = y.toPrimitive(callFrame);
 
         // case 2: string
-        if (x.isString() || xx.isString()) {
+        if (xx.isString()) {
 
             Symbolic::StringExpression* sx = NULL;
             Symbolic::StringExpression* sy = NULL;
 
             sx = generateStringExpression(x,callFrame);
 
-            if (y.isString() || yy.isString()) {
+            if (yy.isString()) {
                 sy = generateStringExpression(y,callFrame);
             } else {
                 // y string coercion
