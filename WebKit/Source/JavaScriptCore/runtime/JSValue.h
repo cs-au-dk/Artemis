@@ -36,6 +36,16 @@
 
 #ifdef ARTEMIS
 #include "symbolic/expression/expression.h"
+#include "symbolic/expression/integerexpression.h"
+#include "symbolic/expression/integercoercion.h"
+#include "symbolic/expression/booleanexpression.h"
+#include "symbolic/expression/booleancoercion.h"
+#include "symbolic/expression/stringexpression.h"
+#include "symbolic/expression/stringcoercion.h"
+#include "symbolic/expression/constantstring.h"
+#include "symbolic/expression/constantinteger.h"
+#include "symbolic/expression/constantboolean.h"
+
 #endif
 
 namespace JSC {
@@ -216,6 +226,11 @@ namespace JSC {
         void makeSymbolic(Symbolic::Expression* symbolic);
 
         Symbolic::Expression* asSymbolic() const;
+        Symbolic::IntegerExpression* generateIntegerExpression(ExecState* exec);
+        Symbolic::StringExpression* generateStringExpression(ExecState* exec);
+        Symbolic::IntegerExpression* generateIntegerCoercionExpression(ExecState* exec);
+        Symbolic::StringExpression* generateStringCoercionExpression(ExecState* exec);
+        Symbolic::BooleanExpression* generateBooleanExpression(ExecState* exec);
 #endif
         
         // Extracting the value.

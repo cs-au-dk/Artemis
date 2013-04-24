@@ -270,6 +270,29 @@ Symbolic::Expression* JSValue::asSymbolic() const
     SymbolicImmediate* immediate = getImmediate();
     return immediate->symbolic;
 }
+
+Symbolic::IntegerExpression* JSValue::generateIntegerExpression(ExecState* exec){
+    return this->isSymbolic()?(Symbolic::IntegerExpression*)this->asSymbolic() : new Symbolic::ConstantInteger(this->toPrimitive(exec).asNumber());
+}
+
+Symbolic::StringExpression* JSValue::generateStringExpression(ExecState* exec){
+    return this->isSymbolic()?(Symbolic::StringExpression*) this->asSymbolic(): new Symbolic::ConstantString(this->toPrimitive(exec).toString(exec));
+}
+
+Symbolic::IntegerExpression* JSValue::generateIntegerCoercionExpression(ExecState* exec){
+    return this->isSymbolic() ? (Symbolic::IntegerExpression*)new Symbolic::IntegerCoercion(this->asSymbolic()) : new Symbolic::ConstantInteger(this->toPrimitive(exec).toNumber(exec));
+}
+
+Symbolic::StringExpression* JSValue::generateStringCoercionExpression(ExecState* exec){
+    return this->isSymbolic() ? (Symbolic::StringExpression*)new Symbolic::StringCoercion(this->asSymbolic()) :
+                            (Symbolic::StringExpression*)new Symbolic::ConstantString(this->toPrimitiveString(exec)->toString(exec));
+}
+
+Symbolic::BooleanExpression* JSValue::generateBooleanExpression(ExecState* exec){
+    return this->isSymbolic()?(Symbolic::BooleanExpression*) this->asSymbolic():new Symbolic::ConstantBoolean(this->toPrimitive(exec).toBoolean(exec));
+}
+
+
 #endif
 
 } // namespace JSC
