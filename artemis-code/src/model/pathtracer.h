@@ -30,6 +30,7 @@
 
 #include "runtime/options.h"
 #include "runtime/input/baseinput.h"
+#include "model/coverage/sourceinfo.h"
 
 namespace artemis
 {
@@ -43,7 +44,7 @@ public:
     void notifyStartingLoad();
     void notifyStartingEvent(QSharedPointer<const BaseInput> inputEvent);
     void write();
-    void writePathTraceHTML();
+    void writePathTraceHTML(bool linkWithCoverage, QString coveragePath);
 
 private:
     enum ItemType {FUNCALL, FUNRET, BYTECODE, ALERT};
@@ -53,6 +54,7 @@ private:
         // The following are not present in all item types.
         QString sourceUrl;
         uint sourceOffset, sourceStartLine, lineInFile, bytecodeOffset;
+        sourceid_t sourceID;
         QString message;
     };
     enum TraceType {OTHER, CLICK, LOAD, MOUSE};

@@ -69,6 +69,7 @@ void PathTracer::slJavascriptFunctionCalled(QString functionName, size_t bytecod
     item.sourceOffset = sourceOffset;
     item.sourceStartLine = source->getStartLine();
     item.lineInFile = functionStartLine;
+    item.sourceID = SourceInfo::getId(source->getUrl(), source->getStartLine());
     appendItem(item);
 }
 
@@ -183,14 +184,15 @@ void PathTracer::write()
     }
 }
 
-void PathTracer::writePathTraceHTML(){
-    TraceItem item, peek;
+void PathTracer::writePathTraceHTML(bool linkWithCoverage, QString coveragePath){
+    TraceItem item;
     PathTrace trace;
     QString itemStr;
     QString extraStr, functionLink;
     uint indentLevel;
     QString indent;
     QString defaultClasses = "hidebytecode";
+    QString codeID;
 
     QString style = ".controls a{text-decoration:underline;cursor:pointer;}ol{list-style:none;}ol#tracelist{margin-left:170px;}ol#tracelist>li{margin-bottom:30px;}ol#tracelist>li>span.label{font-weight:bold;}ol.functionbody{border-left:1px solid lightgray;}span.label{position:absolute;left:0;display:block;width:150px;text-align:right;}span.extrainfo{position:absolute;left:700px;white-space:nowrap;}span.itemname{font-family:monospace;}li.funcall>span.itemname,li.trace>span.description{cursor:pointer;margin-left:-1.2em;}li.funcall>span.itemname:before{content:'\\25BD\\00A0';}li.trace>span.description:before{content:'\\25BF\\00A0';}li.funcall.collapsed>span.itemname:before{content:'\\25B7\\00A0';}li.trace.collapsed>span.description:before{content:'\\25B9\\00A0';}li.funcall.collapsed>ol,li.trace.collapsed>ol{display:none;}";
     style += " ol#tracelist.hidebytecode ol.singletrace li.bytecode{display:none;} ol#tracelist.showclicktracesonly li.trace:not(.click){display:none;} ol#tracelist.hideloadtraces li.trace.load{display:none;} ol#tracelist.hidemousetraces li.trace.mouse{display:none;}";
@@ -235,14 +237,11 @@ void PathTracer::writePathTraceHTML(){
 
                 switch(item.type){
                 case FUNCALL:
-                    // Peek ahead in the trace to find the unique id of the following bytecode. This provides a link to this function in the coverage report.
-                    functionLink = "Could not find link to coverage report";
-                    if(itemIt.hasNext()){
-                        peek = itemIt.peekNext();
-                        if(peek.type == BYTECODE){
-                            functionLink = QString("%1-%2").arg(CodeBlockInfo::getId(peek.sourceOffset, peek.sourceUrl, peek.sourceStartLine)).arg(peek.bytecodeOffset); // This is the bytecode-id.
-                            functionLink = "<a href=\"#" + functionLink + "\" onclick=\"alert('Bytecode ID is " + functionLink + "');return false;\">View Code</a>";
-                        }
+                    if(linkWithCoverage){
+                        codeID = "ID"+QString::number(item.sourceID).replace("-","m"); // Matches the definition in coverageoutputstream.cpp
+                        functionLink = QString("<a href=\"%1#%2-L%3\" target=\"coverageReport\" >View Code</a>").arg(coveragePath).arg(codeID).arg(item.lineInFile);
+                    }else{
+                        functionLink = "";
                     }
                     extraStr = QString("<span class=\"extrainfo\">File: <a href=\"%1\">%2</a>, Line: %3, %4</span>").arg(item.sourceUrl).arg(displayedUrl(item.sourceUrl, true)).arg(item.lineInFile).arg(functionLink);
                     res += "<li class=\"funcall\">\n"+indent+"\t<span class=\"label\">Function Call:</span> " + itemStr + extraStr + "\n"+indent+"\t<ol class=\"functionbody\">\n";
