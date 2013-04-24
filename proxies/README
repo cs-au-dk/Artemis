@@ -1,0 +1,16 @@
+Prettify Proxy
+==============
+
+Prettify Proxy is a web proxy for automatically prettifying JavaScript code. All requests to files containing ".js" will be passed through JSBeautifier (http://jsbeautifier.org), while all other requests are passed through untouched.
+
+The proxy requires node.js (http://nodejs.org/) and the js-beautify package (https://npmjs.org/package/js-beautify).
+
+Install and Run
+===============
+
+1. Install node.js from http://nodejs.org
+2. Run 
+	> npm install js-beautify 
+3. Run
+	> node prettifyproxy.js
+
