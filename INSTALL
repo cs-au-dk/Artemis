@@ -1,25 +1,30 @@
+ 
+The following instructions assumes you are using a Linux-based system. 
+Artemis have been successfully installed on Ubuntu 12.10 and Fedora 18.
+
  0. Fetch all software dependencies using
     
       make fetch-[apt|yum] (requires root privileges)
 	
-    If you have no Qt or a version older than 4.8.x then run: 
+    Artemis requires Qt version 4.8.x. If a suitable version of Qt is not 
+    provided by your distribution, then you can use the following command
+    to download and compile a version compatible with Artemis.
 
       make fetch-qt
 
-    This will fetch and compile a compatible Qt version and place it in
-    the ``qt/`` folder.
+    This will place a version of Qt 4.8 in the `qt/` folder.
 
-    You can check your qt version using the command ``qmake --version``
-    (if qmake is not present then Qt is not installed).
+    You can check your Qt version using the command ``qmake --version``
+    (if qmake is missing then Qt is not installed).
     
- 1. Set up your environment variables by running
+ 1. Configure your environment variables by running
     
       export QTDIR=<qtpath>
       export PATH=$QTDIR/bin:$PATH
 
     where `<qtpath>` is the QT 4.8 installation directory, either
-    the one provided by your distribution or the ``qt/`` folder 
-    from step 0.
+    the one provided by your distribution or the `qt/` folder 
+    mentioned in step 0.
 
     On Ubuntu this is /usr/share/qt4
      
@@ -33,5 +38,5 @@
 
     where `<path>` is the root directory of the Artemis repository.
 
-    You will need to add this environment variable every time you
-    subsequently wish to use Artemis.
+    This environment variable is needed every time you wish to
+    execute Artemis.
