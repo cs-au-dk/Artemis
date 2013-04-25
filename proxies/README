@@ -9,8 +9,12 @@ Install and Run
 ===============
 
 1. Install node.js from http://nodejs.org
+
 2. Run 
-	> npm install js-beautify 
+	> sudo npm -g install js-beautify 
+
+3. Set node.js module path (e.g. for Ubuntu)
+	> export NODE_PATH=/usr/local/lib/node_modules/
+
 3. Run
 	> node prettifyproxy.js
-
