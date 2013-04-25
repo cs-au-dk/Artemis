@@ -21,7 +21,6 @@
 #include "expression/symbolicinteger.h"
 #include "expression/constantinteger.h"
 #include "expression/integerbinaryoperation.h"
-#include "expression/booleanbinaryoperation.h"
 #include "expression/integercoercion.h"
 #include "expression/symbolicstring.h"
 #include "expression/constantstring.h"

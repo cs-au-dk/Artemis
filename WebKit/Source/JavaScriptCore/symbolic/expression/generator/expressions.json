@@ -51,24 +51,6 @@
 	},
 
 	{
-		"ID": "BooleanBinaryOperation",
-		"type": "expression",
-		"parent": "BooleanExpression",
-		"fields": [
-			["BooleanExpression*", "lhs"],
-			["BooleanBinaryOp", "op"],
-			["BooleanExpression*", "rhs"]
-		],
-		"enums": [
-			{
-				"ID": "BooleanBinaryOp",
-				"values": ["BOOL_EQ", "BOOL_NEQ","BOOL_SEQ", "BOOL_SNEQ"],
-				"names": ["==", "!=", "===", "!=="]
-			}
-		]
-	},
-
-	{
 		"ID": "IntegerCoercion",
 		"type": "expression",
 		"parent": "IntegerExpression",
@@ -175,8 +157,8 @@
 		"enums": [
 			{
 				"ID": "BooleanBinaryOp",
-				"values": ["BOOL_EQ"],
-				"names": ["=="]
+				"values": ["BOOL_EQ", "BOOL_NEQ","BOOL_SEQ", "BOOL_SNEQ"],
+				"names": ["==", "!=", "===", "!=="]
 			}
 		]
 	}

@@ -33,7 +33,7 @@ namespace Symbolic
 {
 
 typedef enum {
-	BOOL_EQ
+	BOOL_EQ, BOOL_NEQ, BOOL_SEQ, BOOL_SNEQ
 } BooleanBinaryOp;
 
 const char* opToString(BooleanBinaryOp op);

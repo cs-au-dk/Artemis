@@ -26,7 +26,7 @@ namespace Symbolic
 const char* opToString(BooleanBinaryOp op)
 {
 	static const char* OPStrings[] = {
-        "=="
+        "==", "!=", "===", "!=="
     };
 
     return OPStrings[op];
