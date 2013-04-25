@@ -134,11 +134,13 @@ Runtime::Runtime(QObject* parent, const Options& options, const QUrl& url) : QOb
 
 void Runtime::done()
 {
+    QString coveragePath;
+
     Log::info("Artemis: Testing done...");
 
     switch (mOptions.outputCoverage) {
     case HTML:
-        writeCoverageHtml(mAppmodel->getCoverageListener());
+        writeCoverageHtml(mAppmodel->getCoverageListener(), coveragePath);
         break;
     case STDOUT:
          writeCoverageStdout(mAppmodel->getCoverageListener());
@@ -148,7 +150,7 @@ void Runtime::done()
     }
 
     if (mOptions.reportPathTrace == HTML_TRACES) {
-        mAppmodel->getPathTracer()->writePathTraceHTML();
+        mAppmodel->getPathTracer()->writePathTraceHTML(mOptions.outputCoverage == HTML, coveragePath);
     } else if(mOptions.reportPathTrace != NO_TRACES) {
         Log::info("\n=== Path Tracer ===\n");
         mAppmodel->getPathTracer()->write();
