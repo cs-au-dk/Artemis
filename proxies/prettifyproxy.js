@@ -46,11 +46,9 @@ function requestHandler(request, response) {
             headers: request.headers
         };
 
-        var isJavaScript = request.url.indexOf('.js') != -1;
+        var isJavaScript = request.url.indexOf('.js') != -1; //&& request.url.indexOf("main.js") == "-1";
 
         var proxy_request = http.request(options, function(proxy_response) {
-
-            response.writeHead(proxy_response.statusCode, proxy_response.headers);
 
             var response_chunks = [];
 
@@ -60,16 +58,17 @@ function requestHandler(request, response) {
 
             proxy_response.addListener('end', function() {
 
-                var response_buffer = Buffer.concat(response_chunks);
+                var response_content = Buffer.concat(response_chunks);
+                var response_headers = proxy_response.headers;
 
                 if (isJavaScript) {
-                    response.write(jsbeautify.js_beautify(response_buffer.toString("utf-8")), 'utf-8');
-                } else {
-                    response.write(response_buffer, 'binary');
-
+                    response_content = new Buffer(jsbeautify.js_beautify(response_content.toString('utf-8')), 'utf-8');
+                    response_headers['content-length'] = response_content.length;
                 }
 
-                response.end();
+                response.writeHead(proxy_response.statusCode, response_headers);
+                response.end(response_content);
+
                 console.log("Req-end: " + request.url);
             });
 
