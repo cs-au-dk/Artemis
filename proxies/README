@@ -5,6 +5,8 @@ Prettify Proxy is a web proxy for automatically prettifying JavaScript code. All
 
 The proxy requires node.js (http://nodejs.org/) and the js-beautify package (https://npmjs.org/package/js-beautify).
 
+NOTE: The Prettify Proxy does not handle SSL connections well. The suggested solution, if a website uses SSL, is to download the website and create a non-SSL version of it.
+
 Install and Run
 ===============
 

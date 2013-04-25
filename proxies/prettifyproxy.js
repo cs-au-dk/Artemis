@@ -20,11 +20,14 @@ var path = require('path');
 var jsbeautify = require('js-beautify')
 
 function requestHandler(request, response) {
+
     var request_url = url.parse(request.url, true);
-    var request_data = "";
+    var request_chunks = [];
+
+    console.log("Req-start: " + request.url);
 
 	request.addListener('data', function(chunk) {
-	    request_data = request_data + chunk;
+        request_chunks.push(chunk);
 	});
 
 	request.addListener('end', function() {
@@ -49,30 +52,26 @@ function requestHandler(request, response) {
 
             response.writeHead(proxy_response.statusCode, proxy_response.headers);
 
-            if (isJavaScript) {
+            var response_chunks = [];
 
-                var response_data = "";
+            proxy_response.addListener('data', function(chunk) {
+                response_chunks.push(chunk);
+            });
 
-                proxy_response.addListener('data', function(chunk) {
-                    response_data = response_data + chunk.toString("utf-8");
-                });
+            proxy_response.addListener('end', function() {
 
-                proxy_response.addListener('end', function() {
-                    response.write(jsbeautify.js_beautify(response_data), 'utf-8');
-                    response.end();
-                });
+                var response_buffer = Buffer.concat(response_chunks);
 
-            } else {
+                if (isJavaScript) {
+                    response.write(jsbeautify.js_beautify(response_buffer.toString("utf-8")), 'utf-8');
+                } else {
+                    response.write(response_buffer, 'binary');
 
-                proxy_response.addListener('data', function(chunk) {
-                    response.write(chunk, 'binary');
-                });
+                }
 
-                proxy_response.addListener('end', function() {
-                    response.end();
-                });
-
-            }
+                response.end();
+                console.log("Req-end: " + request.url);
+            });
 
         });
 
@@ -81,7 +80,7 @@ function requestHandler(request, response) {
             response.end();
         });
 
-        proxy_request.write(request_data, 'binary');
+        proxy_request.write(Buffer.concat(request_chunks), 'binary');
         proxy_request.end();
 
 	});
