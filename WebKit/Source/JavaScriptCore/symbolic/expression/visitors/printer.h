@@ -17,6 +17,8 @@
 #ifndef PRINTER_H
 #define PRINTER_H
 
+#include <string>
+
 #include "symbolic/expr.h"
 
 #include "symbolic/expression/visitor.h"
@@ -44,6 +46,14 @@ public:
     void visit(SymbolicBoolean* symbolicboolean);
     void visit(ConstantBoolean* constantboolean);
     void visit(BooleanCoercion* booleancoercion);
+    void visit(BooleanBinaryOperation* booleanbinaryoperation);
+
+    inline std::string getResult() const {
+        return m_result;
+    }
+
+private:
+    std::string m_result;
 
 };
 

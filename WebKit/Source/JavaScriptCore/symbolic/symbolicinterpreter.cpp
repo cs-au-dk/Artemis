@@ -24,15 +24,8 @@
 #include "JavaScriptCore/instrumentation/bytecodeinfo.h"
 #include "JavaScriptCore/runtime/JSString.h"
 
-#include "JavaScriptCore/symbolic/expression/integerbinaryoperation.h"
-#include "JavaScriptCore/symbolic/expression/symbolicinteger.h"
-#include "JavaScriptCore/symbolic/expression/constantinteger.h"
-#include "JavaScriptCore/symbolic/expression/constantstring.h"
-#include "JavaScriptCore/symbolic/expression/constantboolean.h"
-#include "JavaScriptCore/symbolic/expression/stringcoercion.h"
-#include "JavaScriptCore/symbolic/expression/integercoercion.h"
-#include "JavaScriptCore/symbolic/expression/stringbinaryoperation.h"
-#include "JavaScriptCore/symbolic/expression/booleanbinaryoperation.h"
+#include "JavaScriptCore/symbolic/expr.h"
+#include "JavaScriptCore/symbolic/expression/visitors/printer.h"
 
 #include "symbolicinterpreter.h"
 
@@ -148,7 +141,7 @@ JSC::JSValue SymbolicInterpreter::ail_op_binary(JSC::CallFrame* callFrame, const
             return result;
         }
 
-        // Case 4: Mixed string and <other>
+        // Case 6: Mixed string/boolean and <other>
         if (xx.isString() || yy.isString() || xx.isBoolean() || yy.isBoolean()) {
 
             Symbolic::IntegerExpression* sx = NULL;
@@ -392,6 +385,14 @@ void SymbolicInterpreter::beginSession()
 void SymbolicInterpreter::endSession()
 {
     std::cout << "PC size: " << m_pc.size() << std::endl;
+
+    int i;
+    for (i = 0; i < m_pc.size(); i++) {
+
+        Printer printer;
+        m_pc.get(i)->accept(&printer);
+        std::cout << "PC[" << i << "]: " << printer.getResult() << std::endl;
+    }
 }
 
 }

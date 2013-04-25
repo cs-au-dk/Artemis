@@ -30,4 +30,5 @@
 #include "expression/symbolicboolean.h"
 #include "expression/constantboolean.h"
 #include "expression/booleancoercion.h"
+#include "expression/booleanbinaryoperation.h"
 #endif

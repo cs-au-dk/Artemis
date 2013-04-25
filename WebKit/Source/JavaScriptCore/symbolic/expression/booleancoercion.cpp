@@ -21,7 +21,6 @@
 #include "booleancoercion.h"
 
 namespace Symbolic
-
 {
 
 BooleanCoercion::BooleanCoercion(Expression* expression) :

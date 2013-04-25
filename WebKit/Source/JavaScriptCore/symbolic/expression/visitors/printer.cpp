@@ -27,46 +27,86 @@ Printer::Printer()
 
 void Printer::visit(SymbolicInteger* symbolicinteger)
 {
+    m_result += "SymbolicInteger";
 }
 
 void Printer::visit(ConstantInteger* constantinteger)
 {
+    m_result += "ConstantInteger";
 }
 
 void Printer::visit(IntegerBinaryOperation* integerbinaryoperation)
 {
+    m_result += "(";
+    integerbinaryoperation->getLhs()->accept(this);
+    m_result += " ";
+    m_result += opToString(integerbinaryoperation->getOp());
+    m_result += " ";
+    integerbinaryoperation->getRhs()->accept(this);
+    m_result += ")";
 }
 
 void Printer::visit(IntegerCoercion* integercoercion)
 {
+     m_result += "IntegerCoercion( ";
+     integercoercion->getExpression()->accept(this);
+     m_result += " )";
 }
 
 void Printer::visit(SymbolicString* symbolicstring)
 {
+    m_result += "SymbolicString";
 }
 
 void Printer::visit(ConstantString* constantstring)
 {
+    m_result += "ConstantString";
 }
 
 void Printer::visit(StringBinaryOperation* stringbinaryoperation)
 {
+    m_result += "(";
+    stringbinaryoperation->getLhs()->accept(this);
+    m_result += " ";
+    m_result += opToString(stringbinaryoperation->getOp());
+    m_result += " ";
+    stringbinaryoperation->getRhs()->accept(this);
+    m_result += ")";
 }
 
 void Printer::visit(StringCoercion* stringcoercion)
 {
+    m_result += "StringCoercion( ";
+    stringcoercion->getExpression()->accept(this);
+    m_result += " )";
 }
 
 void Printer::visit(SymbolicBoolean* symbolicboolean)
 {
+    m_result += "SymbolicBoolean";
 }
 
 void Printer::visit(ConstantBoolean* constantboolean)
 {
+    m_result += "ConstantBoolean";
 }
 
 void Printer::visit(BooleanCoercion* booleancoercion)
 {
+    m_result += "BooleanCoercion( ";
+    booleancoercion->getExpression()->accept(this);
+    m_result += " )";
+}
+
+void Printer::visit(BooleanBinaryOperation* booleanbinaryoperation)
+{
+    m_result += "(";
+    booleanbinaryoperation->getLhs()->accept(this);
+    m_result += " ";
+    m_result += opToString(booleanbinaryoperation->getOp());
+    m_result += " ";
+    booleanbinaryoperation->getRhs()->accept(this);
+    m_result += ")";
 }
 
 }

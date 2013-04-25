@@ -21,7 +21,6 @@
 #include "symbolicinteger.h"
 
 namespace Symbolic
-
 {
 
 SymbolicInteger::SymbolicInteger(std::string identifier) :

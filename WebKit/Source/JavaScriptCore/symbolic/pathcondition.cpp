@@ -35,6 +35,11 @@ int PathCondition::size() const
     return m_pc.size();
 }
 
+Symbolic::Expression* PathCondition::get(unsigned int index)
+{
+    return m_pc.at(index);
+}
+
 
 }
 

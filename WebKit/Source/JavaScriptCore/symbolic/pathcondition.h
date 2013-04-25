@@ -33,6 +33,7 @@ public:
     PathCondition();
 
     void append(Symbolic::Expression* condition);
+    Symbolic::Expression* get(unsigned int index);
     int size() const;
 
 private:

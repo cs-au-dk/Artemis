@@ -37,6 +37,7 @@ namespace Symbolic
     class SymbolicBoolean;
     class ConstantBoolean;
     class BooleanCoercion;
+    class BooleanBinaryOperation;
 
 class Visitor
 {
@@ -54,6 +55,7 @@ public:
     virtual void visit(SymbolicBoolean* symbolicboolean) = 0;
     virtual void visit(ConstantBoolean* constantboolean) = 0;
     virtual void visit(BooleanCoercion* booleancoercion) = 0;
+    virtual void visit(BooleanBinaryOperation* booleanbinaryoperation) = 0;
 
 };
 

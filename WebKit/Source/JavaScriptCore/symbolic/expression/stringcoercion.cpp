@@ -21,7 +21,6 @@
 #include "stringcoercion.h"
 
 namespace Symbolic
-
 {
 
 StringCoercion::StringCoercion(Expression* expression) :
