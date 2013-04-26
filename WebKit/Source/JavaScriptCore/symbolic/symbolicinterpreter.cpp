@@ -39,7 +39,7 @@ namespace Symbolic
 const char* opToString(OP op) {
     static const char* OPStrings[] = {
         "==", "!=", "===", "!==", "<=", "<", ">=", ">",
-        "+", "-", "*", "/" "%"
+        "+", "-", "*", "/", "%"
     };
 
     return OPStrings[op];
