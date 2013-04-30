@@ -11,9 +11,11 @@ STATS_END = '=== Statistics END ==='
 
 PATHCOND_START = '=== Last pathconditions ==='
 
-PATHCOND_END = '=== Last pathconditions ==='
+PATHCOND_END = '=== Last pathconditions END ==='
 
 RE_STATS_LINE = re.compile(r'^(.*):(.*)$')
+
+RE_PATHCOND_LINE = re.compile(r'^PC\[([0-9]*)\]:(.+)$')
 
 
 def execute_artemis(execution_uuid, url, iterations=1,
@@ -76,9 +78,18 @@ def execute_artemis(execution_uuid, url, iterations=1,
 
                     report[key] = value
                 except:
-                    print
-                    'Error parsing statistics result for line %s' % line
+                    print 'Error parsing statistics result for line %s' % line
 
+        condOffset1 = stdout.find(PATHCOND_START) + len(PATHCOND_START)
+        condOffset2 = stdout.find(PATHCOND_END)
+        pathCond = stdout[condOffset1:condOffset2]
+        pc = []
+        for line in pathCond.splitlines():
+            m = RE_PATHCOND_LINE.match(line)
+            if m is not None:
+                    value = m.group(2).strip()
+                    pc.append(value)
+        report['pathCondition'] = pc
         return report
 
 

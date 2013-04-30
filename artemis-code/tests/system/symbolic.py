@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 WEBSERVER_PORT = 8001
-WEBSERVER_ROOT = './fixtures/symbolic-expression/'
+WEBSERVER_ROOT = './fixtures/symbolic-expression'
 WEBSERVER_URL = 'http://localhost:%s' % WEBSERVER_PORT
 
 import unittest
@@ -17,9 +17,13 @@ class TestSequence(unittest.TestCase):
     pass
 
 
-def test_generator(filename, path_condition):
+def test_generator(filename, name, path_condition):
     def test(self):
-        print setupTempFile(WEBSERVER_ROOT, filename)
+        newFilename = setupTempFile(WEBSERVER_ROOT, filename)
+        report = execute_artemis(name, "{0}/{1}".format(WEBSERVER_URL, newFilename), iterations=5)
+        self.assertTrue(len(report['pathCondition']) > 0)
+        pc = report['pathCondition'][-1]
+        self.assertEqual(path_condition.replace(" ", ""), pc.replace(" ", ""))
 
     return test
 
@@ -60,7 +64,7 @@ if __name__ == '__main__':
     server = WebServer(WEBSERVER_ROOT, WEBSERVER_PORT)
     for t in generate_tests_from_folder(WEBSERVER_ROOT):
         test_name = 'test_%s' % t['name']
-        test = test_generator(t['file_name'], t['path_condition'])
+        test = test_generator(t['file_name'], t['name'], t['path_condition'])
         setattr(TestSequence, test_name, test)
     unittest.main()
     del server
