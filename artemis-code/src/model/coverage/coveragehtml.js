@@ -226,6 +226,7 @@ function linkToCode() {
                 }
                 $('li', this).eq(line - start).scrollToLine();
                 $('li', this).eq(line - start).blinkLine();
+                $('li', this).eq(line - start).addClass('linkedLine');
             });
         });
     }
