@@ -1,0 +1,36 @@
+TEST PC:(((SymbolicString + SymbolicString) == ConstantString) == ConstantBoolean)
+<!doctype html><html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+	<title>Caper Svenning Jensen</title>
+	<meta name="author" content="Caper Svenning Jensen">
+	<script type="text/javascript">
+		var x = "testme";
+		var struct = {};
+
+		function doSomething() {
+			var y = document.getElementById("testinput").value;
+			var z = document.getElementById("testinput").value;
+			struct.y = y;
+			struct.z = z;
+
+			var a = struct['y'] + struct['z'];
+			if (a == x) {
+				alert(x);
+			}
+		}
+	</script>
+
+</head>
+<body>
+
+	<p>Write <i>testme</i> in the field to do something.</p>
+
+	<input type="text" name="testinput" id="testinput" />
+	<input type="text" name="testinput2" id="testinput2" />
+	<button onclick="doSomething();">DO</button>
+
+</body>
+</html>

@@ -1,0 +1,66 @@
+#!/usr/bin/env python
+
+WEBSERVER_PORT = 8001
+WEBSERVER_ROOT = './fixtures/symbolic-expression/'
+WEBSERVER_URL = 'http://localhost:%s' % WEBSERVER_PORT
+
+import unittest
+import re
+
+from harness.environment import WebServer
+from harness.artemis import execute_artemis
+from os import listdir
+from os.path import isfile, join
+
+
+class TestSequence(unittest.TestCase):
+    pass
+
+
+def test_generator(filename, path_condition):
+    def test(self):
+        print setupTempFile(WEBSERVER_ROOT, filename)
+
+    return test
+
+
+def setupTempFile(path, filename):
+    tmpName = "_%s" % filename
+    tmpPath = join(path, tmpName)
+    try:
+        with open(tmpPath):
+            pass
+    except IOError:
+        with open(tmpPath, 'w') as tf:
+            with open(join(path, filename)) as ff:
+                first = True
+                for l in ff:
+                    if first:
+                        first = False
+                    else:
+                        tf.write(l)
+    return tmpName
+
+
+def generate_tests_from_folder(folder):
+    out = []
+    for f in listdir(folder):
+        p = join(folder, f)
+        if isfile(p):
+            with open(p, 'r') as fl:
+                first_line = fl.readline()
+                m = re.match("\s*TEST PC:(.+)$", first_line)
+                if m:
+                    res = {'path_condition': m.group(1), 'file_name': f, 'name': f.replace('.', '_')}
+                    out.append(res)
+    return out
+
+
+if __name__ == '__main__':
+    server = WebServer(WEBSERVER_ROOT, WEBSERVER_PORT)
+    for t in generate_tests_from_folder(WEBSERVER_ROOT):
+        test_name = 'test_%s' % t['name']
+        test = test_generator(t['file_name'], t['path_condition'])
+        setattr(TestSequence, test_name, test)
+    unittest.main()
+    del server
