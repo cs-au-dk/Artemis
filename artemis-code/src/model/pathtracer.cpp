@@ -238,7 +238,7 @@ void PathTracer::writePathTraceHTML(bool linkWithCoverage, QString coveragePath)
                 switch(item.type){
                 case FUNCALL:
                     if(linkWithCoverage){
-                        codeID = "ID"+QString::number(item.sourceID).replace("-","m"); // Matches the definition in coverageoutputstream.cpp
+                        codeID = "ID"+QString::number(item.sourceID); // Matches the definition in coverageoutputstream.cpp
                         functionLink = QString("<a href=\"%1#%2-L%3\" target=\"coverageReport\" >View Code</a>").arg(coveragePath).arg(codeID).arg(item.lineInFile);
                     }else{
                         functionLink = "";
