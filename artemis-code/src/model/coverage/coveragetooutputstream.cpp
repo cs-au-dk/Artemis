@@ -118,7 +118,7 @@ void writeCoverageHtml(CoverageListenerPtr cov, QString& pathToFile)
     res += "</div>";
     QString coverageJSString = "", symbolicCoverageJSString = "", coverageRangeString = "", symbolicCoverageRangeString = "";
     bool first = true;
-    foreach(int sourceID, cov->getSourceIDs()) {
+    foreach(uint sourceID, cov->getSourceIDs()) {
 
         QString url = Qt::escape(cov->getSourceInfo(sourceID)->getURL()).trimmed(), id = "ID"+QString::number(sourceID).replace("-","m");
 
