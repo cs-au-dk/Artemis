@@ -9,6 +9,10 @@ OUTPUT_DIR = '.output'
 STATS_START = '=== Statistics ==='
 STATS_END = '=== Statistics END ==='
 
+PATHCOND_START = '=== Last pathconditions ==='
+
+PATHCOND_END = '=== Last pathconditions ==='
+
 RE_STATS_LINE = re.compile(r'^(.*):(.*)$')
 
 
@@ -49,7 +53,7 @@ def execute_artemis(execution_uuid, url, iterations=1,
             args.append(file)
 
     cmd = [ARTEMIS_EXEC] + [url] + args
-    
+
     try:
         stdout = (subprocess.check_output(cmd, cwd=output_dir, stderr=subprocess.STDOUT)).decode("utf-8")
 
@@ -76,6 +80,7 @@ def execute_artemis(execution_uuid, url, iterations=1,
                     'Error parsing statistics result for line %s' % line
 
         return report
+
 
     except subprocess.CalledProcessError as e:
         raise Exception("Exception thrown by call %s \n\n %s \n\n Exception thrown by call %s" \

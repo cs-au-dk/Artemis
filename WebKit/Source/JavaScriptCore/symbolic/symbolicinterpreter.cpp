@@ -28,8 +28,10 @@
 #include "JavaScriptCore/symbolic/expression/visitors/printer.h"
 
 #include "symbolicinterpreter.h"
+#include <QDebug>
 
 #ifdef ARTEMIS
+
 
 namespace Symbolic
 {
@@ -384,16 +386,27 @@ void SymbolicInterpreter::beginSession()
 
 void SymbolicInterpreter::endSession()
 {
-    std::cout << "PC size: " << m_pc.size() << std::endl;
+    qDebug() << "PC size: " << m_pc.size();
 
     int i;
     for (i = 0; i < m_pc.size(); i++) {
+        Printer printer;
+        m_pc.get(i)->accept(&printer);
+        qDebug() << "PC[" << i << "]: " << QString::fromStdString(printer.getResult());
+    }
+}
+
+std::string SymbolicInterpreter::generatePathConditionString(){
+    std::stringstream sstrm;
+    for (int i = 0; i < m_pc.size(); i++) {
 
         Printer printer;
         m_pc.get(i)->accept(&printer);
-        std::cout << "PC[" << i << "]: " << printer.getResult() << std::endl;
+        sstrm << "PC[" << i << "]: " << printer.getResult() << std::endl;
     }
+    return sstrm.str();
 }
+
 
 }
 

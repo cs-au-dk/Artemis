@@ -379,6 +379,12 @@ void QWebExecutionListener::endSymbolicSession()
     JSC::Interpreter::m_symbolic->endSession();
 }
 
+
+QString QWebExecutionListener::generatePathConditionString(){
+    return QString::fromStdString(JSC::Interpreter::m_symbolic->generatePathConditionString());
+}
+
+
 namespace inst {
 
 ExecutionListener* listener = 0;
