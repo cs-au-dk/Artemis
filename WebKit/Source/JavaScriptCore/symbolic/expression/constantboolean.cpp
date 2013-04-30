@@ -21,7 +21,6 @@
 #include "constantboolean.h"
 
 namespace Symbolic
-
 {
 
 ConstantBoolean::ConstantBoolean(bool value) :

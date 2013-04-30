@@ -36,6 +36,8 @@ typedef enum {
 	INT_ADD, INT_SUBTRACT, INT_MULTIPLY, INT_DIVIDE, INT_EQ, INT_NEQ, INT_LEQ, INT_LT, INT_GEQ, INT_GT, INT_MODULO, INT_SNEQ, INT_SEQ
 } IntegerBinaryOp;
 
+const char* opToString(IntegerBinaryOp op);
+
 
 class IntegerBinaryOperation : public IntegerExpression
 {

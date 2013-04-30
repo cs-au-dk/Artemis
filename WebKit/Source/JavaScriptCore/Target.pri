@@ -226,7 +226,8 @@ SOURCES += \
     symbolic/expression/constantboolean.cpp \
     symbolic/expression/booleancoercion.cpp \
     symbolic/pathcondition.cpp \
-    symbolic/expression/visitors/printer.cpp
+    symbolic/expression/visitors/printer.cpp \
+    symbolic/expression/booleanbinaryoperation.cpp
 
 *sh4* {
     QMAKE_CXXFLAGS += -mieee -w
@@ -279,4 +280,5 @@ HEADERS += \
     symbolic/expression/constantboolean.h \
     symbolic/expression/booleancoercion.h \
     symbolic/expression/visitor.h \
-    symbolic/expr.h
+    symbolic/expr.h \
+    symbolic/expression/booleanbinaryoperation.h

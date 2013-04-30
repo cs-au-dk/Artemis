@@ -21,6 +21,7 @@
 
 #ifdef ARTEMIS
 
+#include "visitor.h"
 
 
 namespace Symbolic
@@ -28,8 +29,8 @@ namespace Symbolic
 
 class Expression 
 {
-protected:
-    explicit Expression()  {}
+public:
+    virtual void accept(Visitor* visitor) = 0;
 };
 
 }

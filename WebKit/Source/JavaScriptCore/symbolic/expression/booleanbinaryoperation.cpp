@@ -21,8 +21,17 @@
 #include "booleanbinaryoperation.h"
 
 namespace Symbolic
-
 {
+
+const char* opToString(BooleanBinaryOp op)
+{
+	static const char* OPStrings[] = {
+        "==", "!=", "===", "!=="
+    };
+
+    return OPStrings[op];
+}
+
 
 BooleanBinaryOperation::BooleanBinaryOperation(BooleanExpression* lhs, BooleanBinaryOp op, BooleanExpression* rhs) :
     BooleanExpression(),

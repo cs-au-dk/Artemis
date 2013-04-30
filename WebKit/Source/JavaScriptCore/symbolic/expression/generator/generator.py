@@ -38,6 +38,7 @@ def generate_interface(target_dir, ID, parent):
 		fp.write("#ifdef ARTEMIS\n\n");
 
 		dependencies = [parent] if parent is not None else []
+		dependencies.append('visitor')
 
 		for dependency in dependencies:
 			fp.write("#include \"%s.h\"\n" % field_filter_include(dependency))
@@ -56,14 +57,14 @@ namespace Symbolic
 
 class %s %s
 {
-protected:
-    explicit %s() %s {}
+public:
+    virtual void accept(Visitor* visitor) = 0;
 };
 
 }
 
 #endif
-""" % (ID, parent_inherit, ID, parent_init))
+""" % (ID, parent_inherit))
 
 		fp.write("#endif // SYMBOLIC_%s_H" % ID.upper())
 
@@ -129,7 +130,9 @@ typedef enum {
 	%s
 } %s;
 
-""" % (', '.join(enum['values']), enum['ID']))
+const char* opToString(%s op);
+
+""" % (', '.join(enum['values']), enum['ID'], enum['ID']))
 
 		fp.write("""
 class %s : public %s
@@ -191,14 +194,29 @@ public:
 		for dependency in dependencies:
 			fp.write("#include \"%s.h\"\n" % field_filter_include(dependency))
 
-		fp.write("\nnamespace Symbolic\n");
+		fp.write("\nnamespace Symbolic\n{\n");
+
+		# enums
+
+		for enum in enums:
+			fp.write("""
+const char* opToString(%s op)
+{
+	static const char* OPStrings[] = {
+        %s
+    };
+
+    return OPStrings[op];
+}
+
+""" % (enum['ID'], ', '.join(['"%s"' % name for name in enum['names']])))
+
+		# functions
 
 		init = ',\n'.join(
 			['    m_%s(%s)' % (field_name, field_name) for (field_type, field_name) in fields])
 
 		fp.write("""
-{
-
 %s::%s(%s) :
     %s(),
 %s

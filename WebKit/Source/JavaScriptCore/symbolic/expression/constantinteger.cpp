@@ -21,7 +21,6 @@
 #include "constantinteger.h"
 
 namespace Symbolic
-
 {
 
 ConstantInteger::ConstantInteger(double value) :

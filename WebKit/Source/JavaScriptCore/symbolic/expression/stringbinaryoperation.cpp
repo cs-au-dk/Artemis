@@ -21,8 +21,17 @@
 #include "stringbinaryoperation.h"
 
 namespace Symbolic
-
 {
+
+const char* opToString(StringBinaryOp op)
+{
+	static const char* OPStrings[] = {
+        "+", "==", "!=", "<", "<=", ">", ">=", "===", "!=="
+    };
+
+    return OPStrings[op];
+}
+
 
 StringBinaryOperation::StringBinaryOperation(StringExpression* lhs, StringBinaryOp op, StringExpression* rhs) :
     StringExpression(),
