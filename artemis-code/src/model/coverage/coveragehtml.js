@@ -197,12 +197,45 @@ function setUpSymbolicInfo() {
 
 }
 
+function linkToCode() {
+    var query = window.location.search.substr(1).split('&');
+    var code = null;
+    var line = null;
+    
+    for(var i=0; i<query.length; i++){
+        var pieces = query[i].split('=');
+        if(pieces.length == 2){
+            if(pieces[0] == 'code'){
+                code = pieces[1];
+            }else if(pieces[0] == 'line'){
+                line = parseInt(pieces[1], 10);
+            }
+        }
+    }
+    
+    if(code !== null && line !== null){
+        $('#' + code).first().each(function(){
+            $('.expandLink', this).first().toggleExpandCode();
+            
+            $('ol.linenums', this).first().each(function(){
+                var start;
+                if ($(this).attr('start') === undefined) {
+                    start = 1
+                } else {
+                    start = parseInt($(this).attr('start'), 10)
+                }
+                $('li', this).eq(line - start).scrollToLine();
+                $('li', this).eq(line - start).blinkLine();
+            });
+        });
+    }
+}
+
 $(document).ready(function () {
     var updateExpanded = function () {
         $('.expandLink.expanded').updateOffset();
     };
 
-    $('.expandLink').first().toggleExpandCode(); // TO BE REMOVED
     $(window).scroll(updateExpanded);
     $(window).resize(updateExpanded);
     $('.expandLink').click(function () {
@@ -210,4 +243,5 @@ $(document).ready(function () {
         return false;
     });
     setUpSymbolicInfo();
+    linkToCode();
 });
