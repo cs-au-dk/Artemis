@@ -17,14 +17,17 @@
 var http = require('http');
 var url = require('url');
 var path = require('path');
-var jsbeautify = require('js-beautify')
+var jsbeautify = require('js-beautify');
+var ent = require('ent');
+
+var known_js_files = {};
 
 function requestHandler(request, response) {
 
     var request_url = url.parse(request.url, true);
     var request_chunks = [];
 
-    console.log("Req-start: " + request.url);
+    console.log("Handling: " + request_url.path);
 
 	request.addListener('data', function(chunk) {
         request_chunks.push(chunk);
@@ -46,7 +49,9 @@ function requestHandler(request, response) {
             headers: request.headers
         };
 
-        var isJavaScript = request.url.indexOf('.js') != -1; //&& request.url.indexOf("main.js") == "-1";
+        var isJavaScript = request.url.indexOf('.js') != -1 ||
+            request_url.path in known_js_files ||
+            request.url.indexOf('ScriptResource.axd') != -1;
 
         var proxy_request = http.request(options, function(proxy_response) {
 
@@ -61,6 +66,26 @@ function requestHandler(request, response) {
                 var response_content = Buffer.concat(response_chunks);
                 var response_headers = proxy_response.headers;
 
+                var content_type_header = proxy_response.headers['content-type'];
+                var accept_header = request.headers['accept'];
+
+                var isHtml = (content_type_header != undefined && content_type_header.indexOf('html') != -1) ||
+                    (accept_header != undefined && accept_header.indexOf('html') != -1);
+
+                if (isHtml) {
+                    var html = response_content.toString('utf-8');
+
+                    var jscript_re = /<script.*src=["'](.*)["']>/ig;
+
+                    var match;
+                    while (match = jscript_re.exec(html)) {
+                        if (match.length > 1) {
+                            var script_url = url.parse(ent.decode(match[1]), true);
+                            known_js_files[script_url.path] = true;
+                        }
+                    }
+                }
+
                 if (isJavaScript) {
                     response_content = new Buffer(jsbeautify.js_beautify(response_content.toString('utf-8')), 'utf-8');
                     response_headers['content-length'] = response_content.length;
@@ -69,7 +94,6 @@ function requestHandler(request, response) {
                 response.writeHead(proxy_response.statusCode, response_headers);
                 response.end(response_content);
 
-                console.log("Req-end: " + request.url);
             });
 
         });
