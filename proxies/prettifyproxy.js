@@ -87,7 +87,9 @@ function requestHandler(request, response) {
                 }
 
                 if (isJavaScript || isHtml) {
-                    response_content = new Buffer(jsbeautify.js_beautify(response_content.toString('utf-8')), 'utf-8');
+                    var func = isJavaScript ? jsbeautify.js_beautify : jsbeautify.html_beautify;
+
+                    response_content = new Buffer(func(response_content.toString('utf-8')), 'utf-8');
                     response_headers['content-length'] = response_content.length;
                 }
 
