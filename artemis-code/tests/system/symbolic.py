@@ -50,7 +50,7 @@ def generate_tests_from_folder(folder):
     out = []
     for f in listdir(folder):
         p = join(folder, f)
-        if isfile(p):
+        if isfile(p) and f[0:1] != "_":
             with open(p, 'r') as fl:
                 first_line = fl.readline()
                 m = re.match("\s*TEST PC:(.+)$", first_line)
