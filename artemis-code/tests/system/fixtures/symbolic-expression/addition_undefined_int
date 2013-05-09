@@ -1,0 +1,4 @@
+TEST PC: ((ConstantInteger + (SymbolicString*ConstantInteger))== ConstantInteger)
+if (undefined + (x*5)) {
+    alert(x);
+}
