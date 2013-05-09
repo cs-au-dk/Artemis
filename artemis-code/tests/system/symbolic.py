@@ -27,8 +27,10 @@ def test_generator(filename, name, path_condition, page):
             newFilename = setUpTempFileFromTemplate(WEBSERVER_ROOT, filename)
 
         report = execute_artemis(name, "{0}/{1}".format(WEBSERVER_URL, newFilename), iterations=5)
-        self.assertTrue(len(report['pathCondition']) > 0)
-        pc = report['pathCondition'][-1]
+        if len(report['pathCondition']) > 0:
+            pc = report['pathCondition'][-1]
+        else:
+            pc = ""
         self.assertEqual(path_condition.replace(" ", ""), pc.replace(" ", ""))
 
     return test
@@ -68,7 +70,7 @@ def generate_tests_from_folder(folder):
         if isfile(p) and f[0:1] != "_" and f[0:1] != "%":
             with open(p, 'r') as fl:
                 first_line = fl.readline()
-                m = re.match("\s*TEST PC:(.+)$", first_line)
+                m = re.match("\s*TEST PC:(.*)$", first_line)
                 if m:
                     res = {'path_condition': m.group(1), 'file_name': f, 'page': f[-5:] == '.html',
                            'name': f.replace('.', '_')}

@@ -1,5 +1,0 @@
-TEST PC:(((SymbolicString + SymbolicString) == ConstantString) == ConstantBoolean)
-var a = y+x;
-if (a == 'test') {
-    alert(x);
-}
