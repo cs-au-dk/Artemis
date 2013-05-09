@@ -1,0 +1,4 @@
+TEST PC: (((SymbolicString == ConstantString) === (SymbolicString == ConstantString)) == ConstantBoolean)
+if ((x=="x") === (y=="y")) {
+    alert(x);
+}

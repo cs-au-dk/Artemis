@@ -1,0 +1,4 @@
+TEST PC:
+if (new Object("test") !== x-1 ) {
+    alert(x);
+}

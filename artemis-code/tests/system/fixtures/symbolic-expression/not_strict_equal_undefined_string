@@ -1,0 +1,4 @@
+TEST PC:
+if (undefined !== x) {
+    alert(x);
+}
