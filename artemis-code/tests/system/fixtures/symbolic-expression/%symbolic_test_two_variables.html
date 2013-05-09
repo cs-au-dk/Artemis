@@ -1,17 +1,11 @@
-TEST PC:(((SymbolicString + SymbolicString) == ConstantString) == ConstantBoolean)
 <!DOCTYPE html>
 <html lang="en">
 <head>
 	<script type="text/javascript">
-		var x = "testme";
-		var struct = {};
 		function doSomething() {
 			var y = document.getElementById("testinput").value;
-			var z = document.getElementById("testinput").value;
-			var a = y+z;
-			if (a == x) {
-				alert(x);
-			}
+			var x = document.getElementById("testinput").value;
+            $TESTSTATEMENT
 		}
 	</script>
 </head>
