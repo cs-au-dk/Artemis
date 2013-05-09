@@ -33,14 +33,13 @@ def test_generator(filename, name, path_condition):
 def setupTempFile(path, filename):
     tmpName = "_%s" % filename
     tmpPath = join(path, tmpName)
+
+    # always overwrite the file
     with open(tmpPath, 'w') as tf:
-        with open(join(path, filename)) as ff:
-            first = True
-            for l in ff:
-                if first:
-                    first = False
-                else:
-                    tf.write(l)
+        with open(join(path, filename), 'r') as ff:
+            lines = ff.readlines()
+            for line in lines[1:]:
+                tf.write(line)
     return tmpName
 
 
