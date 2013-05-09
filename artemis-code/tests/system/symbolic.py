@@ -4,6 +4,8 @@ WEBSERVER_PORT = 8001
 WEBSERVER_ROOT = './fixtures/symbolic-expression'
 WEBSERVER_URL = 'http://localhost:%s' % WEBSERVER_PORT
 
+TWO_VARIABLES_TEMPLATE_FILE = WEBSERVER_ROOT+'/_symbolic_test_two_variables.html'
+
 import unittest
 import re
 
@@ -51,7 +53,12 @@ def generate_tests_from_folder(folder):
                 first_line = fl.readline()
                 m = re.match("\s*TEST PC:(.+)$", first_line)
                 if m:
-                    res = {'path_condition': m.group(1), 'file_name': f, 'name': f.replace('.', '_')}
+                    if f[-5:] == '.html':
+                        res = {'path_condition': m.group(1), 'file_name': f, 'type': 'page',
+                               'name': f.replace('.', '_')}
+                    else:
+                        res = {'path_condition': m.group(1), 'file_name': f, 'type': 'nonPage',
+                               'name': f.replace('.', '_')}
                     out.append(res)
     return out
 
