@@ -1,0 +1,5 @@
+TEST PC:((SymbolicString / SymbolicString) == ConstantInteger)
+var k = x/y;
+if (k) {
+    alert(x);
+}

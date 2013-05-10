@@ -1,0 +1,4 @@
+TEST PC: (IntegerCoercion((ConstantString + SymbolicString)) == ConstantInteger)
+if (false + x) {
+    alert(x);
+}

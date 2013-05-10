@@ -1,0 +1,4 @@
+TEST PC:
+if ("test" === (x=="test")) {
+    alert(x);
+}

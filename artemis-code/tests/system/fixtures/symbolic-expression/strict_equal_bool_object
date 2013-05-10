@@ -1,0 +1,4 @@
+TEST PC:
+if ((y=="test") === new Object('asd')) {
+    alert(x);
+}

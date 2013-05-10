@@ -1,0 +1,4 @@
+TEST PC: ((SymbolicString === ConstantString) == ConstantBoolean)
+if (x === 'test') {
+    alert(x);
+}

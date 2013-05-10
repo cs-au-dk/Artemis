@@ -1,0 +1,4 @@
+TEST PC: (IntegerCoercion((ConstantString+StringCoercion((SymbolicString*ConstantInteger))))==ConstantInteger)
+if ("test" + (x*5)) {
+    alert(x);
+}

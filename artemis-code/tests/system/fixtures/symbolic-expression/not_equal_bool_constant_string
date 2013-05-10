@@ -1,0 +1,4 @@
+TEST PC:((IntegerCoercion((SymbolicString==ConstantString)) != ConstantInteger)==ConstantBoolean)
+if ((y=="test") != "test") {
+    alert(x);
+}

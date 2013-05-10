@@ -1,0 +1,4 @@
+TEST PC:
+if ((y=="test") == null) {
+    alert(x);
+}

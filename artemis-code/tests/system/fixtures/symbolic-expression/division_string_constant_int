@@ -1,0 +1,4 @@
+TEST PC:((SymbolicString / ConstantInteger) == ConstantInteger)
+if (x/3) {
+    alert(x);
+}
