@@ -40,6 +40,8 @@
 #include <wtf/MathExtras.h>
 #include <wtf/unicode/Collator.h>
 
+#include "JavaScriptCore/symbolic/expr.h"
+
 using namespace WTF;
 
 namespace JSC {
@@ -668,9 +670,32 @@ EncodedJSValue JSC_HOST_CALL stringProtoFuncReplace(ExecState* exec)
     JSValue searchValue = exec->argument(0);
     JSValue replaceValue = exec->argument(1);
 
+#ifdef ARTEMIS
+    if (searchValue.inherits(&RegExpObject::s_info)) {
+        if (thisValue.isSymbolic()) {
+            JSValue value = JSValue::decode(replaceUsingRegExpSearch(exec, string, searchValue, replaceValue));
+            value.makeSymbolic(new Symbolic::StringRegexReplace((Symbolic::StringExpression*)thisValue.asSymbolic(), searchValue.toString(exec), replaceValue.toString(exec)));
+            return JSValue::encode(value);
+        } else {
+            return replaceUsingRegExpSearch(exec, string, searchValue, replaceValue);
+        }
+    }
+#else
     if (searchValue.inherits(&RegExpObject::s_info))
         return replaceUsingRegExpSearch(exec, string, searchValue, replaceValue);
+#endif
+
+#ifdef ARTEMIS
+    if (thisValue.isSymbolic()) {
+        JSValue value = JSValue::decode(replaceUsingStringSearch(exec, string, searchValue, replaceValue));
+        value.makeSymbolic(new Symbolic::StringReplace((Symbolic::StringExpression*)thisValue.asSymbolic(), searchValue.toString(exec), replaceValue.toString(exec)));
+        return JSValue::encode(value);
+    } else {
+        return replaceUsingStringSearch(exec, string, searchValue, replaceValue);
+    }
+#else
     return replaceUsingStringSearch(exec, string, searchValue, replaceValue);
+#endif
 }
 
 EncodedJSValue JSC_HOST_CALL stringProtoFuncToString(ExecState* exec)

@@ -18,18 +18,24 @@
 
 #ifdef ARTEMIS
 
-#include "expression/symbolicinteger.h"
-#include "expression/constantinteger.h"
-#include "expression/integerbinaryoperation.h"
-#include "expression/integercoercion.h"
-#include "expression/symbolicstring.h"
-#include "expression/constantstring.h"
-#include "expression/stringbinaryoperation.h"
-#include "expression/stringcoercion.h"
-#include "expression/stringreplace.h"
-#include "expression/stringregexreplace.h"
-#include "expression/symbolicboolean.h"
-#include "expression/constantboolean.h"
-#include "expression/booleancoercion.h"
-#include "expression/booleanbinaryoperation.h"
+#include "stringreplace.h"
+
+namespace Symbolic
+{
+
+StringReplace::StringReplace(StringExpression* source, JSC::UString pattern, JSC::UString replace) :
+    StringExpression(),
+    m_source(source),
+    m_pattern(pattern),
+    m_replace(replace)
+{
+}
+
+void StringReplace::accept(Visitor* visitor) 
+{
+	visitor->visit(this); 	
+}
+
+}
+
 #endif

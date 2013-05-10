@@ -1,0 +1,23 @@
+TEST PC:((StringRegexReplace(SymbolicString,"/SEARCHPATTERN/g","REPLACETEXT")==ConstantString)==ConstantBoolean)
+<!doctype html><html lang="en">
+<head>
+	<script type="text/javascript">
+		var x = "testme";
+
+		function doTest() {
+			var rpattern = /SEARCHPATTERN/g;
+			var y = document.getElementById("testinput").value;
+			y = y.replace(rpattern, "REPLACETEXT");
+
+			if (y == x) {
+				alert(x);
+			}
+		}
+	</script>
+
+</head>
+<body>
+	<input type="text" name="testinput" id="testinput" />
+	<button onclick="doTest();">TEST</button>
+</body>
+</html>

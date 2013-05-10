@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 
+#include <config.h>
+#include "JavaScriptCore/wtf/text/CString.h"
+
 #include "printer.h"
 
 #ifdef ARTEMIS
@@ -72,6 +75,28 @@ void Printer::visit(StringBinaryOperation* stringbinaryoperation)
     m_result += " ";
     stringbinaryoperation->getRhs()->accept(this);
     m_result += ")";
+}
+
+void Printer::visit(StringRegexReplace* stringregexreplace)
+{
+    m_result += "StringRegexReplace( ";
+    stringregexreplace->getSource()->accept(this);
+    m_result += ", \"";
+    m_result += stringregexreplace->getRegexpattern().ascii().data();
+    m_result += "\", \"";
+    m_result += stringregexreplace->getReplace().ascii().data();
+    m_result += "\" )";
+}
+
+void Printer::visit(StringReplace* stringreplace)
+{
+    m_result += "StringReplace( ";
+    stringreplace->getSource()->accept(this);
+    m_result += ", \"";
+    m_result += stringreplace->getPattern().ascii().data();
+    m_result += "\", \"";
+    m_result += stringreplace->getReplace().ascii().data();
+    m_result += "\" )";
 }
 
 void Printer::visit(StringCoercion* stringcoercion)

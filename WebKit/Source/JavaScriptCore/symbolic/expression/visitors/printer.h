@@ -43,6 +43,8 @@ public:
     void visit(ConstantString* constantstring);
     void visit(StringBinaryOperation* stringbinaryoperation);
     void visit(StringCoercion* stringcoercion);
+    void visit(StringRegexReplace* stringregexreplace);
+    void visit(StringReplace* stringreplace);
     void visit(SymbolicBoolean* symbolicboolean);
     void visit(ConstantBoolean* constantboolean);
     void visit(BooleanCoercion* booleancoercion);

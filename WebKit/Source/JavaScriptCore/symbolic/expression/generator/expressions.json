@@ -113,6 +113,29 @@
 
 
 	{
+		"ID": "StringReplace",
+		"type": "expression",
+		"parent": "StringExpression",
+		"fields": [
+			["StringExpression*", "source"],
+			["JSC::UString", "pattern"],
+			["JSC::UString", "replace"]
+		]
+	},
+
+	{
+		"ID": "StringRegexReplace",
+		"type": "expression",
+		"parent": "StringExpression",
+		"fields": [
+			["StringExpression*", "source"],
+			["JSC::UString", "regexpattern"],
+			["JSC::UString", "replace"]
+		]
+	},
+
+
+	{
 		"ID": "BooleanExpression",
 		"type": "interface",
 		"parent": "Expression"

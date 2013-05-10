@@ -33,6 +33,8 @@ namespace Symbolic
     class ConstantString;
     class StringBinaryOperation;
     class StringCoercion;
+    class StringReplace;
+    class StringRegexReplace;
     class SymbolicBoolean;
     class ConstantBoolean;
     class BooleanCoercion;
@@ -50,6 +52,8 @@ public:
     virtual void visit(ConstantString* constantstring) = 0;
     virtual void visit(StringBinaryOperation* stringbinaryoperation) = 0;
     virtual void visit(StringCoercion* stringcoercion) = 0;
+    virtual void visit(StringReplace* stringreplace) = 0;
+    virtual void visit(StringRegexReplace* stringregexreplace) = 0;
     virtual void visit(SymbolicBoolean* symbolicboolean) = 0;
     virtual void visit(ConstantBoolean* constantboolean) = 0;
     virtual void visit(BooleanCoercion* booleancoercion) = 0;
