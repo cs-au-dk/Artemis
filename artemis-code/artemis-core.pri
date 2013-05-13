@@ -76,7 +76,11 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/model/pathtracer.h \
     src/runtime/toplevel/artemisruntime.h \
     src/runtime/toplevel/manualruntime.h \
-    src/runtime/browser/artemiswebview.h
+    src/runtime/browser/artemiswebview.h \
+    src/pathexploration/pathtree.h \
+    src/pathexploration/concreteinput.h \
+    src/pathexploration/search.h \
+    src/pathexploration/solver.h
 
 SOURCES += src/runtime/input/ajaxinput.cpp \
     src/strategies/prioritizer/constantprioritizer.cpp \
@@ -134,6 +138,10 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/model/pathtracer.cpp \
     src/runtime/toplevel/artemisruntime.cpp \
     src/runtime/toplevel/manualruntime.cpp \
-    src/runtime/browser/artemiswebview.cpp
+    src/runtime/browser/artemiswebview.cpp \
+    src/pathexploration/pathtree.cpp \
+    src/pathexploration/concreteinput.cpp \
+    src/pathexploration/search.cpp \
+    src/pathexploration/solver.cpp
 
 QT += network

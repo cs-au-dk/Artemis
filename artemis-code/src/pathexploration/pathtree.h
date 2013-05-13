@@ -1,0 +1,95 @@
+/*
+ * Copyright 2012 Aarhus University
+ *
+ * Licensed under the Apache License, Version 2.0 (the "License");
+ * you may not use this file except in compliance with the License.
+ * You may obtain a copy of the License at
+ *
+ *     http://www.apache.org/licenses/LICENSE-2.0
+ *
+ * Unless required by applicable law or agreed to in writing, software
+ * distributed under the License is distributed on an "AS IS" BASIS,
+ * WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+ * See the License for the specific language governing permissions and
+ * limitations under the License.
+ */
+
+#ifndef PATHTREE_H
+#define PATHTREE_H
+
+#include <QList>
+
+#include "concreteinput.h"
+
+//#include "symbolic/expression/expression.h"
+
+
+#ifdef ARTEMIS
+
+namespace PathExploration // ??
+{
+
+
+
+
+// See notes from 13/5/13 for more discussion/questions.
+
+
+// Main interface
+class PathTree
+{
+public:
+    PathTree(); // Parametrised by search strategy?
+    ~PathTree();
+
+    // Some methods to get info from the tree or put it in.
+
+private:
+    PathTreeNode root;
+
+};
+
+
+
+class PathTreeNode
+{
+    // Abstract node implemented by the three classes below.
+};
+
+
+class PathTreeCondition : PathTreeNode
+{
+public:
+    PathTreeCondition();
+    ~PathTreeCondition();
+
+private:
+    PathTreeCondition* parent; // May be null if this is the root.
+    PathTreeNode* branchTrue; // May not be null
+    PathTreeNode* branchFalse; // May not be null
+
+    Symbolic::Expression condition; // TODO: will this always be the same at this node? Probably not.
+    QList<ConcreteInput> reachingInputs;
+
+    // Also some link to bytecodes or source?
+
+};
+
+
+class PathTreeUnexplored : PathTreeNode
+{
+    // Maybe store data about
+};
+
+
+class PathTreeEndOfExecution : PathTreeNode
+{
+
+};
+
+
+
+
+}
+
+#endif // PATHTREE_H
