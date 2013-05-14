@@ -1,4 +1,4 @@
-TEST PC: ((ConstantInteger + (SymbolicString*ConstantInteger))== ConstantInteger)
+TEST PC: ((ConstantInteger + (IntegerCoercion(SymbolicString)*ConstantInteger))== ConstantInteger)
 if (undefined + (x*5)) {
     alert(x);
 }

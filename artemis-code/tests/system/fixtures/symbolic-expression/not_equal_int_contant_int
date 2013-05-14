@@ -1,4 +1,4 @@
-TEST PC:(((SymbolicString-ConstantInteger) != ConstantInteger) == ConstantBoolean)
+TEST PC:(((IntegerCoercion(SymbolicString)-ConstantInteger) != ConstantInteger) == ConstantBoolean)
 if ((x-1) != 1) {
     alert(x);
 }
