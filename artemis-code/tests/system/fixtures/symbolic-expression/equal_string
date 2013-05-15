@@ -1,0 +1,4 @@
+TEST PC:((SymbolicString == SymbolicString) == ConstantBoolean)
+if (x == y) {
+    alert(x);
+}

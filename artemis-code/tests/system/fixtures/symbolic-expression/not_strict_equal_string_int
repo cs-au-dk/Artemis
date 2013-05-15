@@ -1,0 +1,4 @@
+TEST PC:
+if (y !== x-2) {
+    alert(x);
+}

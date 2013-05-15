@@ -1,0 +1,23 @@
+TEST PC:( ( StringRegexReplace ( SymbolicString, "/\r/g", "" ) == ConstantString ) == ConstantBoolean )
+<!doctype html><html lang="en">
+<head>
+	<script src="//ajax.googleapis.com/ajax/libs/jquery/1.9.1/jquery.js"></script>
+
+	<script type="text/javascript">
+		var x = "testme";
+
+		function doTest() {
+			var y = $('#testinput').val();
+
+			if (y == x) {
+				alert(x);
+			}
+		}
+	</script>
+
+</head>
+<body>
+	<input type="text" name="testinput" id="testinput" />
+	<button onclick="doTest();">TEST</button>
+</body>
+</html>

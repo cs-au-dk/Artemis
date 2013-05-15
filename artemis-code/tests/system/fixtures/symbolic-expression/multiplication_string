@@ -1,0 +1,6 @@
+TEST PC:((IntegerCoercion(SymbolicString) * IntegerCoercion(SymbolicString)) == ConstantInteger)
+			var a = y*x;
+			if (a) {
+				alert(x);
+			}
+

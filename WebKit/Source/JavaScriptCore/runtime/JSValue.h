@@ -34,6 +34,20 @@
 #include <wtf/MathExtras.h>
 #include <wtf/StdLibExtras.h>
 
+#ifdef ARTEMIS
+#include "symbolic/expression/expression.h"
+#include "symbolic/expression/integerexpression.h"
+#include "symbolic/expression/integercoercion.h"
+#include "symbolic/expression/booleanexpression.h"
+#include "symbolic/expression/booleancoercion.h"
+#include "symbolic/expression/stringexpression.h"
+#include "symbolic/expression/stringcoercion.h"
+#include "symbolic/expression/constantstring.h"
+#include "symbolic/expression/constantinteger.h"
+#include "symbolic/expression/constantboolean.h"
+
+#endif
+
 namespace JSC {
 
     class ExecState;
@@ -66,16 +80,6 @@ namespace JSC {
     enum PreferredPrimitiveType { NoPreference, PreferNumber, PreferString };
 
 #ifdef ARTEMIS
-    typedef struct symbolic_value_t {
-
-        std::string value;
-
-        symbolic_value_t(std::string value) :
-            value(value)
-        {
-        }
-
-    } SymbolicValue;
 
     typedef struct {
 
@@ -96,7 +100,7 @@ namespace JSC {
             #endif
         } u;
 
-        SymbolicValue* symbolic;
+        Symbolic::Expression* symbolic;
 
     } SymbolicImmediate;
 #endif
@@ -219,10 +223,14 @@ namespace JSC {
 #ifdef ARTEMIS
         // Symbolic operations
         bool isSymbolic() const;
-        void makeSymbolic(std::string value);
-        void makeSymbolic(SymbolicValue* symbolicValue);
+        void makeSymbolic(Symbolic::Expression* symbolic);
 
-        SymbolicValue* asSymbolic() const;
+        Symbolic::Expression* asSymbolic() const;
+        Symbolic::IntegerExpression* generateIntegerExpression(ExecState* exec);
+        Symbolic::StringExpression* generateStringExpression(ExecState* exec);
+        Symbolic::IntegerExpression* generateIntegerCoercionExpression(ExecState* exec);
+        Symbolic::StringExpression* generateStringCoercionExpression(ExecState* exec);
+        Symbolic::BooleanExpression* generateBooleanExpression(ExecState* exec);
 #endif
         
         // Extracting the value.

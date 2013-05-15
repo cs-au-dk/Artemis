@@ -17,14 +17,20 @@
 var http = require('http');
 var url = require('url');
 var path = require('path');
-var jsbeautify = require('js-beautify')
+var jsbeautify = require('js-beautify');
+var ent = require('ent');
+
+var known_js_files = {};
 
 function requestHandler(request, response) {
+
     var request_url = url.parse(request.url, true);
-    var request_data = "";
+    var request_chunks = [];
+
+    console.log("Handling: " + request_url.path);
 
 	request.addListener('data', function(chunk) {
-	    request_data = request_data + chunk;
+        request_chunks.push(chunk);
 	});
 
 	request.addListener('end', function() {
@@ -43,36 +49,54 @@ function requestHandler(request, response) {
             headers: request.headers
         };
 
-        var isJavaScript = request.url.indexOf('.js') != -1;
+        var isJavaScript = request.url.indexOf('.js') != -1 ||
+            request_url.path in known_js_files ||
+            request.url.indexOf('ScriptResource.axd') != -1;
 
         var proxy_request = http.request(options, function(proxy_response) {
 
-            response.writeHead(proxy_response.statusCode, proxy_response.headers);
+            var response_chunks = [];
 
-            if (isJavaScript) {
+            proxy_response.addListener('data', function(chunk) {
+                response_chunks.push(chunk);
+            });
 
-                var response_data = "";
+            proxy_response.addListener('end', function() {
 
-                proxy_response.addListener('data', function(chunk) {
-                    response_data = response_data + chunk.toString("utf-8");
-                });
+                var response_content = Buffer.concat(response_chunks);
+                var response_headers = proxy_response.headers;
 
-                proxy_response.addListener('end', function() {
-                    response.write(jsbeautify.js_beautify(response_data), 'utf-8');
-                    response.end();
-                });
+                var content_type_header = proxy_response.headers['content-type'];
+                var accept_header = request.headers['accept'];
 
-            } else {
+                var isHtml = (content_type_header != undefined && content_type_header.indexOf('html') != -1) ||
+                    (accept_header != undefined && accept_header.indexOf('html') != -1);
 
-                proxy_response.addListener('data', function(chunk) {
-                    response.write(chunk, 'binary');
-                });
+                if (isHtml) {
+                    var html = response_content.toString('utf-8');
 
-                proxy_response.addListener('end', function() {
-                    response.end();
-                });
+                    var jscript_re = /<script.*src=["'](.*)["']>/ig;
 
-            }
+                    var match;
+                    while (match = jscript_re.exec(html)) {
+                        if (match.length > 1) {
+                            var script_url = url.parse(ent.decode(match[1]), true);
+                            known_js_files[script_url.path] = true;
+                        }
+                    }
+                }
+
+                if (isJavaScript || isHtml) {
+                    var func = isJavaScript ? jsbeautify.js_beautify : jsbeautify.html_beautify;
+
+                    response_content = new Buffer(func(response_content.toString('utf-8')), 'utf-8');
+                    response_headers['content-length'] = response_content.length;
+                }
+
+                response.writeHead(proxy_response.statusCode, response_headers);
+                response.end(response_content);
+
+            });
 
         });
 
@@ -81,7 +105,7 @@ function requestHandler(request, response) {
             response.end();
         });
 
-        proxy_request.write(request_data, 'binary');
+        proxy_request.write(Buffer.concat(request_chunks), 'binary');
         proxy_request.end();
 
 	});

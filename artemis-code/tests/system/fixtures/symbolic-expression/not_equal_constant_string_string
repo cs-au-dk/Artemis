@@ -1,0 +1,4 @@
+TEST PC:((ConstantString != SymbolicString) == ConstantBoolean)
+if ('test' != x) {
+    alert(x);
+}

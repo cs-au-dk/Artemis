@@ -1,0 +1,5 @@
+TEST PC:((IntegerCoercion(SymbolicString) / IntegerCoercion(SymbolicString)) == ConstantInteger)
+var k = x/y;
+if (k) {
+    alert(x);
+}

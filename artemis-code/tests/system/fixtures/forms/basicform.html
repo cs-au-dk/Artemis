@@ -9,17 +9,22 @@
 		var x = "testme";
 		//var x = 2;
 
+		var struct = {};
+
 		function doSomething() {
 			//Math.abs(4);
 			var y = document.getElementById("testinput").value;
 			var z = document.getElementById("testinput").value;
 			//var y = 2;
 
-			var a = y + z;
+			struct.y = y;
+			struct.z = z;
+
+			var a = struct['y'] + struct['z'];
 			//var z = x + y;
 
 			//if (z == 5) {
-			if (a) {
+			if (a == x) {
 				alert(x);
 			}
 		}

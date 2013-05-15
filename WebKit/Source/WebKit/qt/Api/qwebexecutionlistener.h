@@ -85,6 +85,8 @@ public:
 
     void beginSymbolicSession();
     void endSymbolicSession();
+    QString generatePathConditionString();
+
 
     static QWebExecutionListener* getListener();
     static void attachListeners();

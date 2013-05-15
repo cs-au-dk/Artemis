@@ -23,6 +23,7 @@
 #include "JavaScriptCore/runtime/CallData.h"
 #include "JavaScriptCore/instrumentation/bytecodeinfo.h"
 
+#include "pathcondition.h"
 #include "native/nativelookup.h"
 
 #ifdef ARTEMIS
@@ -67,9 +68,12 @@ public:
     // called from Artemis
     void beginSession();
     void endSession();
+    std::string generatePathConditionString();
 
 private:
     void fatalError(JSC::CodeBlock* codeBlock, std::string reason) __attribute__((noreturn));
+
+    PathCondition m_pc;
 
     NativeLookup m_nativeFunctions;
     int m_nextSymbolicValue;

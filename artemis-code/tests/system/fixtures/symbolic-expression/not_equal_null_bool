@@ -1,0 +1,4 @@
+TEST PC:
+if (null != (x=="x")) {
+    alert(x);
+}

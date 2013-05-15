@@ -1,0 +1,4 @@
+TEST PC:
+if (x-2 === y) {
+    alert(x);
+}

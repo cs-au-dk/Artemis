@@ -1,0 +1,4 @@
+TEST PC:
+if (new Object(12390123) !== x ) {
+    alert(x);
+}

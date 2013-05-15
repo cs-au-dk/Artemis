@@ -3177,7 +3177,16 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         JSValue result = baseValue.get(callFrame, ident, slot);
         CHECK_FOR_EXCEPTION();
 
+#ifndef ARTEMIS
+        // Disable op_get_by_id optimisation
         tryCacheGetByID(callFrame, codeBlock, vPC, baseValue, ident, slot);
+#endif
+
+#ifdef ARTEMIS
+        if (result.isSymbolic()) {
+            bytecodeInfo.setSymbolic();
+        }
+#endif
 
         callFrame->uncheckedR(dst) = result;
         vPC += OPCODE_LENGTH(op_get_by_id);
@@ -3190,6 +3199,11 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
            value base. If the cache misses, op_get_by_id_self reverts to
            op_get_by_id.
         */
+
+#ifdef ARTEMIS
+        ASSERT(false);
+#endif
+
         int base = vPC[2].u.operand;
         JSValue baseValue = callFrame->r(base).jsValue();
 
@@ -3226,6 +3240,11 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
            value base's prototype. If the cache misses, op_get_by_id_proto
            reverts to op_get_by_id.
         */
+
+#ifdef ARTEMIS
+        ASSERT(false);
+#endif
+
         int base = vPC[2].u.operand;
         JSValue baseValue = callFrame->r(base).jsValue();
 
@@ -3270,6 +3289,11 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
          value base's prototype. If the cache misses, op_get_by_id_getter_proto
          reverts to op_get_by_id.
          */
+
+#ifdef ARTEMIS
+        ASSERT(false);
+#endif
+
         int base = vPC[2].u.operand;
         JSValue baseValue = callFrame->r(base).jsValue();
         
@@ -3320,6 +3344,11 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
          from the value base's prototype. If the cache misses, op_get_by_id_custom_proto
          reverts to op_get_by_id.
          */
+
+#ifdef ARTEMIS
+        ASSERT(false);
+#endif
+
         int base = vPC[2].u.operand;
         JSValue baseValue = callFrame->r(base).jsValue();
         
@@ -3367,6 +3396,11 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
            value base's prototype chain. If the cache misses, op_get_by_id_chain
            reverts to op_get_by_id.
         */
+
+#ifdef ARTEMIS
+        ASSERT(false);
+#endif
+
         int base = vPC[2].u.operand;
         JSValue baseValue = callFrame->r(base).jsValue();
 
@@ -3422,6 +3456,11 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
          value base. If the cache misses, op_get_by_id_getter_self reverts to
          op_get_by_id.
          */
+
+#ifdef ARTEMIS
+        ASSERT(false);
+#endif
+
         int base = vPC[2].u.operand;
         JSValue baseValue = callFrame->r(base).jsValue();
         
@@ -3470,6 +3509,11 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
          from the value base. If the cache misses, op_get_by_id_custom_self reverts to
          op_get_by_id.
          */
+
+#ifdef ARTEMIS
+        ASSERT(false);
+#endif
+
         int base = vPC[2].u.operand;
         JSValue baseValue = callFrame->r(base).jsValue();
         
@@ -3508,6 +3552,11 @@ skip_id_custom_self:
            Generic property access: Gets the property named by identifier
            property from the value base, and puts the result in register dst.
         */
+
+#ifdef ARTEMIS
+        ASSERT(false);
+#endif
+
         int dst = vPC[1].u.operand;
         int base = vPC[2].u.operand;
         int property = vPC[3].u.operand;
@@ -3537,6 +3586,11 @@ skip_id_custom_self:
          value base's prototype chain. If the cache misses, op_get_by_id_getter_chain
          reverts to op_get_by_id.
          */
+
+#ifdef ARTEMIS
+        ASSERT(false);
+#endif
+
         int base = vPC[2].u.operand;
         JSValue baseValue = callFrame->r(base).jsValue();
         
@@ -3597,6 +3651,11 @@ skip_id_custom_self:
          value base's prototype chain. If the cache misses, op_get_by_id_custom_chain
          reverts to op_get_by_id.
          */
+
+#ifdef ARTEMIS
+        ASSERT(false);
+#endif
+
         int base = vPC[2].u.operand;
         JSValue baseValue = callFrame->r(base).jsValue();
         
@@ -3725,7 +3784,16 @@ skip_id_custom_self:
             baseValue.put(callFrame, ident, callFrame->r(value).jsValue(), slot);
         CHECK_FOR_EXCEPTION();
 
+#ifndef ARTEMIS
+        // Disable op_put_by_id optimisation
         tryCachePutByID(callFrame, codeBlock, vPC, baseValue, slot);
+#endif
+
+#ifdef ARTEMIS
+        if (callFrame->r(value).jsValue().isSymbolic()) {
+            bytecodeInfo.setSymbolic();
+        }
+#endif
 
         vPC += OPCODE_LENGTH(op_put_by_id);
         NEXT_INSTRUCTION();
@@ -3744,6 +3812,11 @@ skip_id_custom_self:
            Unlike many opcodes, this one does not write any output to
            the register file.
          */
+
+#ifdef ARTEMIS
+        ASSERT(false);
+#endif
+
         int base = vPC[1].u.operand;
         JSValue baseValue = callFrame->r(base).jsValue();
         
@@ -3801,6 +3874,11 @@ skip_id_custom_self:
            Unlike many opcodes, this one does not write any output to
            the register file.
         */
+
+#ifdef ARTEMIS
+        ASSERT(false);
+#endif
+
         int base = vPC[1].u.operand;
         JSValue baseValue = callFrame->r(base).jsValue();
 
@@ -3839,6 +3917,11 @@ skip_id_custom_self:
            Unlike many opcodes, this one does not write any output to
            the register file.
         */
+
+#ifdef ARTEMIS
+        ASSERT(false);
+#endif
+
         int base = vPC[1].u.operand;
         int property = vPC[2].u.operand;
         int value = vPC[3].u.operand;
