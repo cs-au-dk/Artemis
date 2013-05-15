@@ -14,8 +14,43 @@
  * limitations under the License.
  */
 
+
+#include "pathtree.h"
+
 #ifdef ARTEMIS
 
 
+namespace artemis
+{
+
+
+
+PathTree::PathTree()
+{
+    root = new PathTreeUnexplored();
+}
+
+
+
+
+
+PathTreeCondition::PathTreeCondition()
+{
+
+}
+
+
+
+PathTreeCondition::~PathTreeCondition()
+{
+
+}
+
+
+
+
+
+
+}
 
 #endif

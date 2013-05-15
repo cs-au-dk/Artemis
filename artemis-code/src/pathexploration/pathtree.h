@@ -17,18 +17,27 @@
 #ifndef PATHTREE_H
 #define PATHTREE_H
 
+#include <QString>
 #include <QList>
+#include <QSharedPointer>
 
 #include "concreteinput.h"
 
 //#include "symbolic/expression/expression.h"
 
 
-#ifdef ARTEMIS
 
-namespace PathExploration // ??
+namespace artemis
 {
 
+
+class PathTreeNode;
+class PathTreeCondition;
+class PathTreeUnexplored;
+
+typedef QSharedPointer<PathTreeNode> PathTreeNodePtr;
+typedef QSharedPointer<PathTreeCondition> PathTreeConditionPtr;
+typedef QSharedPointer<PathTreeUnexplored> PathTreeUnexploredPtr;
 
 
 
@@ -45,7 +54,7 @@ public:
     // Some methods to get info from the tree or put it in.
 
 private:
-    PathTreeNode root;
+    PathTreeNodePtr root;
 
 };
 
@@ -64,11 +73,11 @@ public:
     ~PathTreeCondition();
 
 private:
-    PathTreeCondition* parent; // May be null if this is the root.
-    PathTreeNode* branchTrue; // May not be null
-    PathTreeNode* branchFalse; // May not be null
+    PathTreeConditionPtr parent; // May be null if this is the root.
+    PathTreeNodePtr branchTrue; // May not be null
+    PathTreeNodePtr branchFalse; // May not be null
 
-    Symbolic::Expression condition; // TODO: will this always be the same at this node? Probably not.
+    QString /*Symbolic::Expression*/ condition; // TODO: will this always be the same at this node? Probably not.
     QList<ConcreteInput> reachingInputs;
 
     // Also some link to bytecodes or source?
@@ -90,6 +99,8 @@ class PathTreeEndOfExecution : PathTreeNode
 
 
 
+
 }
+
 
 #endif // PATHTREE_H

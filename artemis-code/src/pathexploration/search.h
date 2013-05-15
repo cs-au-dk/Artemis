@@ -21,9 +21,8 @@
 #include "pathtree.h"
 
 
-#ifdef ARTEMIS
 
-namespace PathExploration // ??
+namespace artemis
 {
 
 
@@ -32,16 +31,16 @@ namespace PathExploration // ??
 class TreeSearch
 {
 public:
-    PathTreeUnexplored* chooseNextTarget() = 0; // What should the signature for this be?
+    PathTreeUnexploredPtr chooseNextTarget() = 0; // What should the signature for this be?
 };
 
 
 class DepthFirstSearch : TreeSearch
 {
 public:
-    DepthFirstSearch(PathTreeNode* tree);
+    DepthFirstSearch(PathTreeNodePtr tree);
 
-    PathTreeUnexplored* chooseNextTarget();
+    PathTreeUnexploredPtr chooseNextTarget();
 };
 
 

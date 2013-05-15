@@ -19,7 +19,8 @@
 #include "util/fileutil.h"
 #include "model/coverage/codeblockinfo.h"
 
-namespace artemis{
+namespace artemis
+{
 
 PathTracer::PathTracer(PathTraceReport reportLevel, bool reportBytecode) :
     mTraces(QList<PathTrace>()),

@@ -19,14 +19,13 @@
 
 
 
-#ifdef ARTEMIS
 
-namespace PathExploration // ??
+namespace artemis
 {
 
 
 
-
+// Generic solver interface
 class Solver
 {
 public:

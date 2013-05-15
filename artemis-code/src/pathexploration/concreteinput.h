@@ -20,9 +20,9 @@
 #include <QString>
 #include <QMap>
 
-#ifdef ARTEMIS
 
-namespace PathExploration // ??
+
+namespace artemis
 {
 
 
@@ -36,5 +36,6 @@ public:
 
 
 }
+
 
 #endif // CONCRETEINPUT_H
