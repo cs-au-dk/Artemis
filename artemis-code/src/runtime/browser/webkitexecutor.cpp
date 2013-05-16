@@ -28,7 +28,7 @@
 #include "runtime/input/events/domelementdescriptor.h"
 #include "strategies/inputgenerator/targets/jquerylistener.h"
 #include "runtime/input/baseinput.h"
-
+#include "util/loggingutil.h"
 #include "webkitexecutor.h"
 
 using namespace std;
@@ -170,11 +170,14 @@ void WebKitExecutor::slLoadFinished(bool ok)
         return;
     }
 
-    if (!ok) {
-        emit sigAbortedExecution(QString("Error: The requested URL ") + currentConf->getUrl().toString() + QString(" could not be loaded"));
-        return;
-    }
+    if(!ok){
+        QString html = mPage->mainFrame()->toHtml();
 
+        if(html == "<html><head></head><body></body></html>"){
+            emit sigAbortedExecution(QString("Error: The requested URL ") + currentConf->getUrl().toString() + QString(" could not be loaded"));
+            return;
+        }
+    }
     mResultBuilder->notifyPageLoaded();
 
     // Populate forms (preset)
