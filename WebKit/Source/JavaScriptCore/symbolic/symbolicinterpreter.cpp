@@ -195,9 +195,10 @@ JSC::JSValue SymbolicInterpreter::ail_op_binary(JSC::CallFrame* callFrame, const
 
 
         break;
-    case LESS_EQ:
+    case LESS_EQ:{
         intOp = INT_LEQ;
         strOp = STRING_LEQ;
+    }
     case LESS_STRICT:
         if(intOp == INT_MODULO){
             intOp = INT_LT;

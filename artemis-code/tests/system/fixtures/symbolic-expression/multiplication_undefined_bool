@@ -1,0 +1,4 @@
+TEST PC: ((ConstantInteger * IntegerCoercion((SymbolicString == ConstantString))) == ConstantInteger)
+if (undefined * (x=="x")) {
+    alert(x);
+}

@@ -1,0 +1,4 @@
+TEST PC: ((ConstantInteger * (IntegerCoercion(SymbolicString)*ConstantInteger)) ==ConstantInteger)
+if (new Object(1322) * (x*2) ) {
+    alert(x);
+}
