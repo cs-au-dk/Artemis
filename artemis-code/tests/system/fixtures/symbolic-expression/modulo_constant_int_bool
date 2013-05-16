@@ -1,0 +1,4 @@
+TEST PC: ((ConstantInteger % IntegerCoercion((SymbolicString==ConstantString))) == ConstantInteger)
+if (33 % (x=="test")) {
+    alert(x);
+}

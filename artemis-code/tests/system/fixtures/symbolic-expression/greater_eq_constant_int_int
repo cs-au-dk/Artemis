@@ -1,0 +1,4 @@
+TEST PC: (ConstantInteger > (IntegerCoercion(SymbolicString)*ConstantInteger))
+if (1 >= (x*3)) {
+    alert(x);
+}

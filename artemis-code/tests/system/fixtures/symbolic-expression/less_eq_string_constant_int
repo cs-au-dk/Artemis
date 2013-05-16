@@ -1,0 +1,4 @@
+TEST PC: (IntegerCoercion(SymbolicString) > ConstantInteger)
+if (y<=1) {
+    alert(x);
+}

@@ -1,0 +1,4 @@
+TEST PC: (ConstantInteger <= (IntegerCoercion(SymbolicString)*ConstantInteger))
+if (undefined > (x*5)) {
+    alert(x);
+}
