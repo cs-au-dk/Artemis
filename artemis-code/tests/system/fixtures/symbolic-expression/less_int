@@ -1,0 +1,4 @@
+TEST PC: ((IntegerCoercion(SymbolicString) * ConstantInteger) >= (IntegerCoercion(SymbolicString) * ConstantInteger))
+if ((x*2) < (y*2)) {
+    alert(x);
+}
