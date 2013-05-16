@@ -43,7 +43,7 @@ WebKitExecutor::WebKitExecutor(QObject* parent,
                                AjaxRequestListener* ajaxListener,
                                bool enableConstantStringInstrumentation) :
     QObject(parent),
-    mKeepOpen(false)
+    mKeepOpen(false), testingDone(false)
 {
 
     mPresetFields = presetFields;
@@ -160,14 +160,22 @@ void WebKitExecutor::executeSequence(ExecutableConfigurationConstPtr conf, bool 
     mPage->mainFrame()->load(conf->getUrl());
 }
 
+void WebKitExecutor::slTestingDone(){
+    testingDone = true;
+}
+
 void WebKitExecutor::slLoadFinished(bool ok)
 {
-    mResultBuilder->notifyPageLoaded();
+    if(testingDone){
+        return;
+    }
 
     if (!ok) {
         emit sigAbortedExecution(QString("Error: The requested URL ") + currentConf->getUrl().toString() + QString(" could not be loaded"));
         return;
     }
+
+    mResultBuilder->notifyPageLoaded();
 
     // Populate forms (preset)
 

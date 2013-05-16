@@ -73,6 +73,7 @@ private:
     PathTracerPtr mPathTracer;
 
     bool mKeepOpen;
+    bool testingDone;
 
 signals:
     void sigExecutedSequence(ExecutableConfigurationConstPtr conf, QSharedPointer<ExecutionResult> res);
@@ -80,6 +81,7 @@ signals:
 
 public slots:
     void slLoadFinished(bool ok);
+    void slTestingDone();
 
 
 };
