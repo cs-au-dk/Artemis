@@ -1,0 +1,4 @@
+TEST PC: (ConstantInteger <= IntegerCoercion(SymbolicString))
+if (null > x) {
+    alert(x);
+}
