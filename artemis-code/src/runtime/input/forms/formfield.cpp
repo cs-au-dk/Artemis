@@ -89,8 +89,21 @@ FormFieldTypes getTypeFromAttr(QString typeAttr)
     if (typeAttr == "password"
         || typeAttr == "text"
         || typeAttr == "textbox" //YAHOO FIX
-        || typeAttr == "email"
-        || typeAttr == "file")
+        || typeAttr == "email" //HTML5
+        || typeAttr == "file"
+        || typeAttr == "search" //HTML5
+        || typeAttr == "url" //HTML5
+        || typeAttr == "week" //HTML5
+        || typeAttr == "time" //HTML5
+        || typeAttr == "tel" //HTML5
+        || typeAttr == "range" //HTML5
+        || typeAttr == "number" //HTML5
+        || typeAttr == "month" //HTML5
+        || typeAttr == "datetime-local" //HTML5
+        || typeAttr == "datetime" //HTML5
+        || typeAttr == "date" //HTML5
+        || typeAttr == "color" //HTML5
+            )
         { return TEXT; }
 
     qDebug() << "Unknown type attribute on form element: %s"<< typeAttr;
