@@ -1,4 +1,4 @@
-TEST PC:(((SymbolicString - SymbolicString) == ConstantInteger) == ConstantBoolean)
+TEST PC:(((IntegerCoercion(SymbolicString) - IntegerCoercion(SymbolicString)) == ConstantInteger) == ConstantBoolean)
 var a = y-x;
 if (a =='̈́test') {
     alert(x);

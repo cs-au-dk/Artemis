@@ -195,9 +195,10 @@ JSC::JSValue SymbolicInterpreter::ail_op_binary(JSC::CallFrame* callFrame, const
 
 
         break;
-    case LESS_EQ:
+    case LESS_EQ:{
         intOp = INT_LEQ;
         strOp = STRING_LEQ;
+    }
     case LESS_STRICT:
         if(intOp == INT_MODULO){
             intOp = INT_LT;
@@ -319,8 +320,8 @@ JSC::JSValue SymbolicInterpreter::ail_op_binary(JSC::CallFrame* callFrame, const
     case MODULO: {
         Symbolic::IntegerExpression* sx = NULL;
         Symbolic::IntegerExpression* sy = NULL;
-        sx = x.generateIntegerExpression(callFrame);
-        sy = y.generateIntegerExpression(callFrame);
+        sx = x.toPrimitive(callFrame).isNumber()?x.generateIntegerExpression(callFrame):x.generateIntegerCoercionExpression(callFrame);
+        sy = y.toPrimitive(callFrame).isNumber()?y.generateIntegerExpression(callFrame):y.generateIntegerCoercionExpression(callFrame);
 
         ASSERT(sx != NULL);
         ASSERT(sy != NULL);

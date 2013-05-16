@@ -1,0 +1,4 @@
+TEST PC: (IntegerCoercion((SymbolicString == ConstantString))> IntegerCoercion(SymbolicString))
+if ((y=="test") >= x) {
+    alert(x);
+}

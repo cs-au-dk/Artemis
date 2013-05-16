@@ -1,4 +1,4 @@
-TEST PC: (IntegerCoercion((StringCoercion((SymbolicString*ConstantInteger))+SymbolicString))==ConstantInteger)
+TEST PC: (IntegerCoercion((StringCoercion((IntegerCoercion(SymbolicString)*ConstantInteger))+SymbolicString))==ConstantInteger)
 if ((x*2) + y) {
     alert(x);
 }

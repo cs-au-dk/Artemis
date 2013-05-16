@@ -41,7 +41,7 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             "\n"
             "-c <URl> : Cookies - // TODO\n"
             "\n"
-            "-t <URL> : Proxy - // TODO\n"
+            "-t <URL>:<PORT> : Set proxy\n"
             "\n"
             "-r       : set_recreate_page(true) // TODO\n"
             "\n"
@@ -304,6 +304,12 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
 
     QStringList rawurl = QString(argv[optind]).split("@");
     QUrl url = rawurl.last();
+
+
+    if (url.host() == "localhost") {
+        cerr << "Error: You can not use the proxy setting in Artemis for content hosted on localhost" << endl;
+        exit(1);
+    }
 
     if (url.scheme().isEmpty()) {
         // the http:// part is missing

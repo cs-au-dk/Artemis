@@ -1,0 +1,4 @@
+TEST PC: (SymbolicString <= ConstantString)
+if (x >'test') {
+    alert(x);
+}

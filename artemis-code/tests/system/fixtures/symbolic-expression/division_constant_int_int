@@ -1,0 +1,4 @@
+TEST PC: ((ConstantInteger / (IntegerCoercion(SymbolicString)/ConstantInteger))== ConstantInteger)
+if (15 / (x/3)) {
+    alert(x);
+}
