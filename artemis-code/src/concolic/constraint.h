@@ -14,37 +14,33 @@
  * limitations under the License.
  */
 
-#ifndef SOLVER_H
-#define SOLVER_H
-
-
-
+#ifndef CONSTRAINT_H
+#define CONSTRAINT_H
 
 namespace artemis
 {
 
 
+// TODO: both of these are defined in the Symbolic namespace within WebKit, so we should use the definitions from there instead!.
 
-// Generic solver interface
-class Solver
+
+/*
+ *  A symbolic constraint for a single branch point.
+ */
+class Constriant
 {
-public:
-    void solve(Symbolic::PathCodition pc) = 0; // TODO: signature?
+
 };
 
-
-
-// Translates from our representation of path constraints to Kaluza's input language and runs it.
-class KaluzaTranslator : Solver
+/*
+ *  A symbolic path constraint.
+ */
+class PathConstraint
 {
-public:
-    KaluzaSolver();
-    void solve(Symbolic::PathCondition pc);
+
 };
-
-
-
 
 }
 
-#endif // SOLVER_H
+
+#endif // CONSTRAINT_H

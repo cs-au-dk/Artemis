@@ -14,38 +14,27 @@
  * limitations under the License.
  */
 
-#ifndef SEARCH_H
-#define SEARCH_H
-
-
-#include "pathtree.h"
-
-
+#ifndef EXITPOINTS_H
+#define EXITPOINTS_H
 
 namespace artemis
 {
 
 
+/*
+ *  Detects exit points in a test and classifies them as successes or failures.
+ */
 
-
-class TreeSearch
+class ExitPointDetector
 {
-public:
-    PathTreeUnexploredPtr chooseNextTarget() = 0; // What should the signature for this be?
+
+
+
 };
-
-
-class DepthFirstSearch : TreeSearch
-{
-public:
-    DepthFirstSearch(PathTreeNodePtr tree);
-
-    PathTreeUnexploredPtr chooseNextTarget();
-};
-
 
 
 
 }
 
-#endif // SEARCH_H
+
+#endif // EXITPOINTS_H

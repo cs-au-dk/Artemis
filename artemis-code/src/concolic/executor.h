@@ -14,28 +14,27 @@
  * limitations under the License.
  */
 
-#ifndef CONCRETEINPUT_H
-#define CONCRETEINPUT_H
-
-#include <QString>
-#include <QMap>
-
-
+#ifndef EXECUTOR_H
+#define EXECUTOR_H
 
 namespace artemis
 {
 
 
-class ConcreteInput
-{
-public:
-    QMap<QString, QString> inputs; // Mapping from some identifier (xpath? DOM id? fields name?) to form values.
-};
+/*
+ *  Manages the execution of each test/run of a specific set of input values.
+ */
 
+class Executor
+{
+
+
+
+};
 
 
 
 }
 
 
-#endif // CONCRETEINPUT_H
+#endif // EXECUTOR_H
