@@ -14,6 +14,9 @@
  * limitations under the License.
  */
 
+#include <QString>
+#include <QList>
+
 #ifndef ENTRYPOINTS_H
 #define ENTRYPOINTS_H
 
@@ -21,15 +24,35 @@ namespace artemis
 {
 
 
+
+/*
+ *  Represents a potential "entry point" on a page.
+ *  These are the submit buttons which we will use as the start of our analysis.
+ */
+
+class EntryPoint
+{
+public:
+    QString name; // TODO: ??
+    QString location;
+};
+
+
 /*
  *  Inspects the page to detect any entry points (i.e. forms and buttons) we may wish to analyse.
+ *  Assumes Artemis is running with a page loaded.
  */
 
 class EntryPointDetector
 {
+public:
+    EntryPointDetector();
 
+    QList<EntryPoint> detectAll();
 
-
+private:
+    QList<QString> detectAllEventHandlers(); // TODO: signature?
+    QList<QString> detectAllFormElements(); // TODO: signature?
 };
 
 

@@ -15,8 +15,8 @@
  */
 
 
-#include "pathtree.h"
-
+#include "entrypoints.h"
+#include "util/loggingutil.h"
 
 
 namespace artemis
@@ -24,30 +24,29 @@ namespace artemis
 
 
 
-PathTree::PathTree()
+EntryPointDetector::EntryPointDetector()
 {
-
+    Log::info("Detecting Entry Points");
 }
 
 
-
-
-
-PathTreeCondition::PathTreeCondition()
+QList<EntryPoint> EntryPointDetector::detectAll()
 {
-
+    // TODO: this is a dummy implementation.
+    // How do we really get this infor from Artemis?
+    // See
+    QList<EntryPoint> l;
+    EntryPoint a,b,c;
+    a.name = "A";
+    b.name = "B";
+    c.name = "C";
+    l.append(a);
+    l.append(b);
+    l.append(c);
+    return l;
 }
 
 
 
-PathTreeCondition::~PathTreeCondition()
-{
-
 }
 
-
-
-
-
-
-}

@@ -40,9 +40,14 @@ enum MajorMode {
     AUTOMATED, MANUAL
 };
 
+enum ConcolicMode {
+    CONCOLIC_NONE, CONCOLIC_DEMO, CONCOLIC_AUTO
+};
+
 enum PathTraceReport {
     ALL_TRACES, CLICK_TRACES, NO_TRACES, HTML_TRACES
 };
+
 
 typedef struct OptionsType {
 
@@ -55,6 +60,7 @@ typedef struct OptionsType {
         prioritizerStrategy(CONSTANT),
         outputCoverage(NONE),
         majorMode(AUTOMATED),
+        concolicMode(CONCOLIC_NONE),
         reportPathTrace(NO_TRACES),
         reportPathTraceBytecode(false)
     {}
@@ -78,6 +84,8 @@ typedef struct OptionsType {
     CoverageReport outputCoverage;
 
     MajorMode majorMode;
+
+    ConcolicMode concolicMode;
 
     PathTraceReport reportPathTrace;
     bool reportPathTraceBytecode;
