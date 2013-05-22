@@ -14,10 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef TRACEBUILDER_H
-#define TRACEBUILDER_H
 
-#include "trace.h"
+#include "tracebuilder.h"
 
 
 namespace artemis
@@ -25,26 +23,26 @@ namespace artemis
 
 
 
-// TODO: this should probably be defined in webkit's symbolic interpreter and referenced from this concolic execution.
-
-
-/*
- *  A trace of the entire execution along a single path.
- */
-
-class TraceBuilder
+TraceBuilder::TraceBuilder()
 {
-public:
-    TraceBuilder();
+    // TODO
+}
 
-    void beginRecording();
-    void endRecording();
-    Trace trace();
+void TraceBuilder::beginRecording()
+{
+    // TODO
+}
 
+void TraceBuilder::endRecording()
+{
+    // TODO
+}
 
-};
+Trace TraceBuilder::trace()
+{
+    // TODO
+    return Trace();
+}
 
 
 } // namespace artemis
-
-#endif // TRACEBUILDER_H

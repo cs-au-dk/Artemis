@@ -1,3 +1,4 @@
+
 /*
  * Copyright 2012 Aarhus University
  *
@@ -14,10 +15,8 @@
  * limitations under the License.
  */
 
-#ifndef TRACEBUILDER_H
-#define TRACEBUILDER_H
 
-#include "trace.h"
+#include "traceclassifier.h"
 
 
 namespace artemis
@@ -25,26 +24,16 @@ namespace artemis
 
 
 
-// TODO: this should probably be defined in webkit's symbolic interpreter and referenced from this concolic execution.
-
-
-/*
- *  A trace of the entire execution along a single path.
- */
-
-class TraceBuilder
+TraceClassifier::TraceClassifier()
 {
-public:
-    TraceBuilder();
+    // TODO
+}
 
-    void beginRecording();
-    void endRecording();
-    Trace trace();
-
-
-};
+TraceClassificationResult TraceClassifier::classify(Trace trace)
+{
+    // TODO
+    return TraceClassificationResult();
+}
 
 
 } // namespace artemis
-
-#endif // TRACEBUILDER_H

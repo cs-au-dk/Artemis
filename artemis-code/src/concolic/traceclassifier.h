@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef TRACEBUILDER_H
-#define TRACEBUILDER_H
+#ifndef TRACECLASSIFIER_H
+#define TRACECLASSIFIER_H
 
 #include "trace.h"
 
@@ -25,26 +25,27 @@ namespace artemis
 
 
 
-// TODO: this should probably be defined in webkit's symbolic interpreter and referenced from this concolic execution.
+class TraceClassificationResult
+{
+public:
+    bool successful;
+    Trace modifiedTrace;
+};
 
 
 /*
- *  A trace of the entire execution along a single path.
+ *  Classifies a complete annotated trace as either a success or a failure.
+ *  TODO: also modifies (or returns a new one) the trace to include an END-SUCCESS or END-FAILURE marker.
  */
-
-class TraceBuilder
+class TraceClassifier
 {
 public:
-    TraceBuilder();
+    TraceClassifier();
 
-    void beginRecording();
-    void endRecording();
-    Trace trace();
-
-
+    TraceClassificationResult classify(Trace trace);
 };
 
 
 } // namespace artemis
 
-#endif // TRACEBUILDER_H
+#endif // TRACECLASSIFIER_H

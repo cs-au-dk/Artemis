@@ -34,7 +34,7 @@ class EntryPoint
 {
 public:
     QString name; // TODO: ??
-    QString location;
+    QString location; // TODO: ??
 };
 
 

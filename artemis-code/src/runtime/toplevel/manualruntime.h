@@ -20,8 +20,10 @@
 #include <QObject>
 
 #include "runtime/browser/artemiswebview.h"
-
 #include "runtime/runtime.h"
+#include "concolic/entrypoints.h"
+#include "concolic/tracebuilder.h"
+#include "concolic/traceclassifier.h"
 
 namespace artemis
 {
@@ -40,9 +42,20 @@ protected:
 
     ArtemisWebViewPtr mWebView;
 
+private:
+    bool mWaitingForInitialLoad;
+    EntryPointDetector mEntryPointDetector;
+    TraceBuilder mTraceBuilder;
+    TraceClassifier mTraceClassifier;
+
+    void preTraceExecution();
+    void postTraceExecution();
+
 private slots:
 
     void slWebViewClosed();
+
+    void slLoadFinished(ExecutableConfigurationConstPtr configuration, QSharedPointer<ExecutionResult> result);
 
 };
 

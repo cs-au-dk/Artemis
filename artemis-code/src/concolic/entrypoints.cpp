@@ -33,8 +33,7 @@ EntryPointDetector::EntryPointDetector()
 QList<EntryPoint> EntryPointDetector::detectAll()
 {
     // TODO: this is a dummy implementation.
-    // How do we really get this infor from Artemis?
-    // See
+    // How do we really get this info from Artemis?
     QList<EntryPoint> l;
     EntryPoint a,b,c;
     a.name = "A";
