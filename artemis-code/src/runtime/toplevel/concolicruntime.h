@@ -15,43 +15,32 @@
  */
 
 
-#ifndef CONCOLICDEMORUNTIME_H
-#define CONCOLICDEMORUNTIME_H
+#ifndef CONCOLICRUNTIME_H
+#define CONCOLICRUNTIME_H
 
 
 
 #include <QObject>
 
-#include "runtime/browser/artemiswebview.h"
 #include "runtime/runtime.h"
-#include "runtime/toplevel/manualruntime.h"
 
 namespace artemis
 {
 
 
 /*
- *  The concolic demo runtime opens a GUI window (as in ManualRuntime) and also records and displays all the
- *  information used in the full concolic analysis.
+ *  The concolic runtime finds entry points on a page and uses concolic analysis to explore the code triggered
+ *  by those entry points.
  */
 
-class ConcolicDemoRuntime : public ManualRuntime
+class ConcolicRuntime : public Runtime
 {
     Q_OBJECT
 
 public:
-    ConcolicDemoRuntime(QObject* parent, const Options& options, const QUrl& url);
+    ConcolicRuntime(QObject* parent, const Options& options, const QUrl& url);
 
     void run(const QUrl& url);
-
-protected:
-    bool waitingForFirstLoad;
-
-private:
-    void concolicSetup();
-
-private slots:
-    void slPageLoadComplete(); // TODO: name? Does this exist somewhere already?
 
 };
 
@@ -60,4 +49,4 @@ private slots:
 
 } // namespace artemis
 
-#endif // CONCOLICDEMORUNTIME_H
+#endif // CONCOLICRUNTIME_H

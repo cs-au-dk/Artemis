@@ -131,22 +131,6 @@ Runtime::Runtime(QObject* parent, const Options& options, const QUrl& url) : QOb
     /** Visited states **/
     mVisitedStates = new set<long>();
 
-    /** Concolic Execution **/
-    switch (options.concolicMode) {
-    case CONCOLIC_NONE:
-        mConcolicAnalysis = ConcolicAnalysisPtr();
-        break;
-    case CONCOLIC_DEMO:
-        mConcolicAnalysis = ConcolicAnalysisPtr(new ConcolicAnalysis(true));
-        mConcolicAnalysis->run(); // TODO: Where should this really be started?
-        break;
-    case CONCOLIC_AUTO:
-        mConcolicAnalysis = ConcolicAnalysisPtr(new ConcolicAnalysis(false));
-        mConcolicAnalysis->run(); // TODO: Where should this really be started?
-       break;
-    default:
-        assert(false);
-    }
 }
 
 void Runtime::done()

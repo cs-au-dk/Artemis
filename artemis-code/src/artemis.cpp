@@ -54,13 +54,7 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             "\n"
             "           artemis - (default) the top-level test algorithm described in the ICSE'11 Artemis paper\n"
             "           manual - open a browser window for manual testing of web applications\n"
-            "\n"
-            "--concolic-analysis <mode>:\n"
-            "           Artemis can use symbolic execution to analyse a given page. Modes available:\n"
-            "\n"
-            "           none - (default) no concolic analysis is performed\n"
-            "           demo - outputs symbolic information about the page (useful with --major-mode manual)\n"
-            "           auto - performs a full concolic analysis of the page (NOT YET IMPLEMENTED)\n"
+            "           concolic - perform an automated concolic analysis of form validation code\n"
             "\n"
             "--strategy-form-input-generation <strategy>:\n"
             "           Select form input generation strategy.\n"
@@ -111,7 +105,6 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
     {"major-mode", required_argument, NULL, 'm'},
     {"path-trace-report", required_argument, NULL, 'a'},
     {"path-trace-report-bytecode", required_argument, NULL, 'b'},
-    {"concolic-analysis", required_argument, NULL, 'd'},
     {"help", no_argument, NULL, 'h'},
     {0, 0, 0, 0}
     };
@@ -262,6 +255,8 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
                 options.majorMode = artemis::AUTOMATED;
             } else if (string(optarg).compare("manual") == 0) {
                 options.majorMode = artemis::MANUAL;
+            } else if (string(optarg).compare("concolic") == 0) {
+                options.majorMode = artemis::CONCOLIC;
             } else {
                 cerr << "ERROR: Invalid choice of major-mode " << optarg << endl;
                 exit(1);
@@ -296,22 +291,6 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
                 options.reportPathTraceBytecode = false;
             } else {
                 cerr << "ERROR: Invalid choice of path-trace-report-bytecode " << optarg << endl;
-                exit(1);
-            }
-
-            break;
-        }
-
-        case 'd': {
-
-            if (string(optarg).compare("none") == 0) {
-                options.concolicMode  = artemis::CONCOLIC_NONE;
-            } else if (string(optarg).compare("demo") == 0) {
-                options.concolicMode  = artemis::CONCOLIC_DEMO;
-            } else if (string(optarg).compare("auto") == 0) {
-                options.concolicMode  = artemis::CONCOLIC_AUTO;
-            } else {
-                cerr << "ERROR: Invalid choice of concolic-analysis " << optarg << endl;
                 exit(1);
             }
 
