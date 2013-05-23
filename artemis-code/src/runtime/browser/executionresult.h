@@ -75,6 +75,8 @@ private:
 
 };
 
+typedef QSharedPointer<ExecutionResult> ExecutionResultPtr;
+
 }
 
 #endif // EXECUTIONRESULT_H

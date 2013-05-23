@@ -26,26 +26,55 @@ namespace artemis
 
 EntryPointDetector::EntryPointDetector()
 {
-    Log::info("Detecting Entry Points");
+
 }
 
 
-QList<EntryPoint> EntryPointDetector::detectAll()
+QList<EventHandlerDescriptor*> EntryPointDetector::detectAll(ExecutionResultPtr result)
 {
-    // TODO: this is a dummy implementation.
-    // How do we really get this info from Artemis?
-    QList<EntryPoint> l;
-    EntryPoint a,b,c;
-    a.name = "A";
-    b.name = "B";
-    c.name = "C";
-    l.append(a);
-    l.append(b);
-    l.append(c);
-    return l;
+    // TEMP: for development...
+    printResultInfo(result);
+
+    // Build a list of potential entry points.
+
+    // For now we have a very simple implementation which only checks any for 'click' events on 'button' inputs.
+    // TODO: at least also 'submit' on 'form' and maybe check where these buttons are...
+
+    QList<EventHandlerDescriptor*> entryEvents;
+
+    foreach(EventHandlerDescriptor* event , result->getEventHandlers()){
+        if(event->name().compare("click", Qt::CaseInsensitive) == 0 &&
+                event->domElement()->getTagName().compare("button", Qt::CaseInsensitive) == 0){
+            entryEvents.append(event);
+        }
+    }
+
+    return entryEvents;
 }
 
 
+
+void EntryPointDetector::printResultInfo(ExecutionResultPtr result)
+{
+    Log::info("CONCOLIC-INFO: Detecting entry points on page.");
+
+    // Begin by just listing some relevant information from the execution result...
+    QString eventNames;
+    foreach(EventHandlerDescriptor* event , result->getEventHandlers()){
+        eventNames.append(QString("%1 on %2, ").arg(event->name()).arg(event->domElement()->getTagName()));
+    }
+    Log::info(QString("CONCOLIC-INFO: Event Handlers (%1): %2").arg(result->getEventHandlers().length()).arg(eventNames).toStdString());
+
+    QString formNames;
+    foreach(QSharedPointer<const FormField> field, result->getFormFields()){
+        formNames.append(field->getDomElement()->getTagName());
+        formNames.append(", ");
+    }
+    Log::info(QString("CONCOLIC-INFO: Form Fileds (%1): %2").arg(result->getFormFields().size()).arg(formNames).toStdString());
+
+    Log::info(QString("CONCOLIC-INFO: Is DOM Modified: %1").arg(result->isDomModified() ? "Yes" : "No").toStdString());
+
+}
 
 }
 

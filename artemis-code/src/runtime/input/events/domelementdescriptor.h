@@ -35,9 +35,9 @@ public:
     DOMElementDescriptor(QObject* parent, const DOMElementDescriptor* other);
 
     QWebElement getElement(ArtemisWebPagePtr page) const;
-    QString getTagName();
-    QString getId();
-    QString getClass();
+    QString getTagName() const;
+    QString getId() const;
+    QString getClass() const;
     bool isInvalid() const;
 
     uint hashCode() const;

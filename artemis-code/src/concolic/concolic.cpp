@@ -38,7 +38,7 @@ ConcolicAnalysis::ConcolicAnalysis(bool demoMode) :
 // Run the concolic execution
 void ConcolicAnalysis::run()
 {
-    QList<EntryPoint> allEntryPoints;
+    //QList<EntryPoint> allEntryPoints;
 
     if(mDemoMode){
         Log::info("CONCOLIC :: Running the concolic execution in demo mode.");
@@ -49,12 +49,12 @@ void ConcolicAnalysis::run()
         // TODO: HOW??
 
         // Detect all potential entry points on the page.
-        allEntryPoints = mEntryPointDetector.detectAll();
+        //allEntryPoints = mEntryPointDetector.detectAll(); // Signature for detectAll has changed...
 
         // List them all
-        foreach(EntryPoint ep, allEntryPoints){
-            Log::info(QString("CONCOLIC :: Potential entry point :: %1").arg(ep.name).toStdString());
-        }
+        //foreach(EntryPoint ep, allEntryPoints){
+        //    Log::info(QString("CONCOLIC :: Potential entry point :: %1").arg(ep.name).toStdString());
+        //}
 
 
     }else{

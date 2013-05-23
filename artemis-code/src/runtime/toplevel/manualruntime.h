@@ -48,7 +48,7 @@ private:
     TraceBuilder mTraceBuilder;
     TraceClassifier mTraceClassifier;
 
-    void preTraceExecution();
+    void preTraceExecution(ExecutionResultPtr result);
     void postTraceExecution();
 
 private slots:

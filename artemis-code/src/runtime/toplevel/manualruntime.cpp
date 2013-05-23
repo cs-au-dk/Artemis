@@ -58,7 +58,7 @@ void ManualRuntime::slLoadFinished(ExecutableConfigurationConstPtr configuration
     Log::info("CONCOLIC-INFO: Finished page load");
     if(mWaitingForInitialLoad){
         mWaitingForInitialLoad = false;
-        preTraceExecution();
+        preTraceExecution(result);
     }else{
         Log::info("CONCOLIC-INFO: Page load was not the initial load, so not analysing...");
     }
@@ -77,7 +77,7 @@ void ManualRuntime::slWebViewClosed()
 
 
 // Performs the analysis of the initial page load and reports its results.
-void ManualRuntime::preTraceExecution()
+void ManualRuntime::preTraceExecution(ExecutionResultPtr result)
 {
     // Begin recording trace events.
     mTraceBuilder.beginRecording();
@@ -85,14 +85,17 @@ void ManualRuntime::preTraceExecution()
     // Simply run the entry-point detector and print out its results.
     Log::info("CONCOLIC-INFO: Analysing page entrypoints...");
 
-    QList<EntryPoint> allEntryPoints;
+    QList<EventHandlerDescriptor*> allEntryPoints;
 
     // Detect all potential entry points on the page.
-    allEntryPoints = mEntryPointDetector.detectAll();
+    allEntryPoints = mEntryPointDetector.detectAll(result);
 
     // List them all
-    foreach(EntryPoint ep, allEntryPoints){
-        Log::info(QString("CONCOLIC-INFO: Potential entry point :: %1").arg(ep.name).toStdString());
+    Log::info(QString("CONCOLIC-INFO: Found %1 potential entry points.").arg(allEntryPoints.length()).toStdString());
+    foreach(EventHandlerDescriptor* ep, allEntryPoints){
+        Log::info(QString("CONCOLIC-INFO: Potential entry point :: %1").arg(ep->toString()).toStdString());
+
+        ep->domElement()->getElement(mWebkitExecutor->getPage()).setStyleProperty("outline", "10px solid green");
     }
 
     // Display the page for the user to interact with.

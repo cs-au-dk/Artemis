@@ -17,6 +17,8 @@
 #include <QString>
 #include <QList>
 
+#include "runtime/browser/executionresult.h"
+
 #ifndef ENTRYPOINTS_H
 #define ENTRYPOINTS_H
 
@@ -24,18 +26,6 @@ namespace artemis
 {
 
 
-
-/*
- *  Represents a potential "entry point" on a page.
- *  These are the submit buttons which we will use as the start of our analysis.
- */
-
-class EntryPoint
-{
-public:
-    QString name; // TODO: ??
-    QString location; // TODO: ??
-};
 
 
 /*
@@ -48,11 +38,10 @@ class EntryPointDetector
 public:
     EntryPointDetector();
 
-    QList<EntryPoint> detectAll();
+    QList<EventHandlerDescriptor*> detectAll(ExecutionResultPtr result);
 
 private:
-    QList<QString> detectAllEventHandlers(); // TODO: signature?
-    QList<QString> detectAllFormElements(); // TODO: signature?
+    void printResultInfo(ExecutionResultPtr result);
 };
 
 
