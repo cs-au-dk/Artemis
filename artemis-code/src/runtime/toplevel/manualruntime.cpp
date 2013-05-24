@@ -28,15 +28,15 @@ ManualRuntime::ManualRuntime(QObject* parent, const Options& options, const QUrl
     Runtime(parent, options, url),
     mWaitingForInitialLoad(false)
 {
-    QObject::connect(mWebkitExecutor, SIGNAL(sigExecutedSequence(ExecutableConfigurationConstPtr, QSharedPointer<ExecutionResult>)),
-                     this, SLOT(slLoadFinished(ExecutableConfigurationConstPtr, QSharedPointer<ExecutionResult>)));
-
     mWebView = ArtemisWebViewPtr(new ArtemisWebView());
     mWebView->setPage(mWebkitExecutor->getPage().data());
     mWebView->resize(1024,768);
 
     QObject::connect(mWebView.data(), SIGNAL(sigClose()),
                      this, SLOT(slWebViewClosed()));
+
+    QObject::connect(mWebkitExecutor, SIGNAL(sigExecutedSequence(ExecutableConfigurationConstPtr, QSharedPointer<ExecutionResult>)),
+                     this, SLOT(slLoadFinished(ExecutableConfigurationConstPtr, QSharedPointer<ExecutionResult>)));
 }
 
 void ManualRuntime::run(const QUrl& url)
@@ -47,7 +47,8 @@ void ManualRuntime::run(const QUrl& url)
     Log::info("CONCOLIC-INFO: Beginning initial page load...");
     mWaitingForInitialLoad = true;
     mWebkitExecutor->executeSequence(initial, true); // Calls slLoadFinished method as callback.
-    //mWebView->show(); // Not shown until the analysis is done (prevents the user from interfering...).
+    mWebView->show();
+    mWebView->setDisabled(true); // Not enabled until the analysis is done (prevents the user from interfering...).
 }
 
 
@@ -99,7 +100,7 @@ void ManualRuntime::preTraceExecution(ExecutionResultPtr result)
     }
 
     // Display the page for the user to interact with.
-    mWebView->show();
+    mWebView->setEnabled(true);
 }
 
 

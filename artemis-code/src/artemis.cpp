@@ -55,6 +55,7 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             "           artemis - (default) the top-level test algorithm described in the ICSE'11 Artemis paper\n"
             "           manual - open a browser window for manual testing of web applications\n"
             "           concolic - perform an automated concolic analysis of form validation code\n"
+            "           demo - show a GUI demonstration mode of Artemis' symbolic capabilities\n"
             "\n"
             "--strategy-form-input-generation <strategy>:\n"
             "           Select form input generation strategy.\n"
@@ -257,6 +258,8 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
                 options.majorMode = artemis::MANUAL;
             } else if (string(optarg).compare("concolic") == 0) {
                 options.majorMode = artemis::CONCOLIC;
+            } else if (string(optarg).compare("demo") == 0) {
+                options.majorMode = artemis::DEMO;
             } else {
                 cerr << "ERROR: Invalid choice of major-mode " << optarg << endl;
                 exit(1);

@@ -92,7 +92,9 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/concolic/constraint.h \
     src/concolic/tracebuilder.h \
     src/runtime/toplevel/concolicruntime.h \
-    src/concolic/traceclassifier.h
+    src/concolic/traceclassifier.h \
+    src/runtime/demomode/demowindow.h \
+    src/runtime/toplevel/demoruntime.h
 
 SOURCES += src/runtime/input/ajaxinput.cpp \
     src/strategies/prioritizer/constantprioritizer.cpp \
@@ -159,6 +161,8 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/concolic/entrypoints.cpp \
     src/runtime/toplevel/concolicruntime.cpp \
     src/concolic/tracebuilder.cpp \
-    src/concolic/traceclassifier.cpp
+    src/concolic/traceclassifier.cpp \
+    src/runtime/demomode/demowindow.cpp \
+    src/runtime/toplevel/demoruntime.cpp
 
 QT += network
