@@ -38,10 +38,10 @@ void TraceBuilder::endRecording()
     // TODO
 }
 
-Trace TraceBuilder::trace()
+TraceNodePtr TraceBuilder::trace()
 {
     // TODO
-    return Trace();
+    return QSharedPointer<TraceUnexplored>(new TraceUnexplored());
 }
 
 

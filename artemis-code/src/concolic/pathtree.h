@@ -60,6 +60,13 @@ private:
 
 
 
+
+
+
+// TODO
+
+// THESE HAVE NOW BEEN REPLACED BY THE CLASSES IN TRACE.H
+
 class PathTreeNode
 {
     // Abstract node implemented by the three classes below.

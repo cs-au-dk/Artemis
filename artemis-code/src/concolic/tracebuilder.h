@@ -25,7 +25,19 @@ namespace artemis
 
 
 
-// TODO: this should probably be defined in webkit's symbolic interpreter and referenced from this concolic execution.
+/*
+ *  A trace of the entire execution along a single path.
+ */
+
+class Trace
+{
+    // TODO: this is just a list of TraceNode, so maybe doesn't need its own object?
+
+
+};
+
+
+
 
 
 /*
@@ -39,7 +51,7 @@ public:
 
     void beginRecording();
     void endRecording();
-    Trace trace();
+    TraceNodePtr trace();
 
 
 };

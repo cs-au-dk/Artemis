@@ -22,8 +22,10 @@
 #include "runtime/browser/artemiswebview.h"
 #include "runtime/runtime.h"
 #include "concolic/entrypoints.h"
+#include "concolic/trace.h"
 #include "concolic/tracebuilder.h"
 #include "concolic/traceclassifier.h"
+#include "concolic/traceprinter.h"
 
 namespace artemis
 {

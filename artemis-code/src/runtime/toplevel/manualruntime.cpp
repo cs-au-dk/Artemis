@@ -41,7 +41,44 @@ ManualRuntime::ManualRuntime(QObject* parent, const Options& options, const QUrl
 
 void ManualRuntime::run(const QUrl& url)
 {
-   ExecutableConfigurationPtr initial =
+    // TEMP... testing the trace visiting.
+
+    Log::info("Building a simple sample trace.");
+
+    TraceBranch a;
+    a.branchFalse = QSharedPointer<TraceUnexplored>(new TraceUnexplored());
+
+    TraceAlert b;
+    b.message = "Hello, World!";
+    b.next = QSharedPointer<TraceEndSuccess>(new TraceEndSuccess());
+
+    a.branchTrue = QSharedPointer<TraceAlert>(&b);
+
+    TraceNodePtr trace(&a);
+
+    TraceVisitorPtr boring(new VeryBoringTracePrintingVisitor());
+    TraceVisitorPtr complete(new CompleteTracePrintingVisitor());
+    TraceVisitorPtr search(new SearchStylePrintingVisitor());
+
+    Log::info("Some testing...");
+    boring->visit(QSharedPointer<TraceNode>(&a));
+    //boring->visit(QSharedPointer<TraceBranch>(&a));
+
+    //Log::info("Visiting with boring printer.");
+    //trace->accept(boring);
+
+    //Log::info("Visiting with complete printer.");
+    //trace->accept(complete);
+
+    //Log::info("Visiting with search style printer.");
+    //trace->accept(search);
+
+    Log::info("Finished testing visitors.");
+    exit(1);
+
+
+
+    ExecutableConfigurationPtr initial =
         ExecutableConfigurationPtr(new ExecutableConfiguration(InputSequencePtr(new InputSequence()), url));
 
     Log::info("CONCOLIC-INFO: Beginning initial page load...");
@@ -110,7 +147,7 @@ void ManualRuntime::postTraceExecution()
     Log::info("CONCOLIC-INFO: Analysing trace...");
     mTraceBuilder.endRecording();
 
-    Trace trace = mTraceBuilder.trace();
+    TraceNodePtr trace = mTraceBuilder.trace();
 
     TraceClassificationResult result = mTraceClassifier.classify(trace);
 
@@ -119,6 +156,7 @@ void ManualRuntime::postTraceExecution()
     }else{
         Log::info("CONCOLIC-INFO: This trace was classified as a FAILURE (did not submit a form).");
     }
+
 
 }
 

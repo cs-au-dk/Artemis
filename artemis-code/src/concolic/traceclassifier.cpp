@@ -1,4 +1,3 @@
-
 /*
  * Copyright 2012 Aarhus University
  *
@@ -29,7 +28,7 @@ TraceClassifier::TraceClassifier()
     // TODO
 }
 
-TraceClassificationResult TraceClassifier::classify(Trace trace)
+TraceClassificationResult TraceClassifier::classify(TraceNodePtr trace)
 {
     // TODO
     return TraceClassificationResult();

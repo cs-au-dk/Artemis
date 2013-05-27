@@ -29,7 +29,7 @@ class TraceClassificationResult
 {
 public:
     bool successful;
-    Trace modifiedTrace;
+    TraceNodePtr modifiedTrace;
 };
 
 
@@ -42,7 +42,7 @@ class TraceClassifier
 public:
     TraceClassifier();
 
-    TraceClassificationResult classify(Trace trace);
+    TraceClassificationResult classify(TraceNodePtr trace);
 };
 
 
