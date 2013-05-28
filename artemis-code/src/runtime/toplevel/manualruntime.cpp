@@ -60,18 +60,14 @@ void ManualRuntime::run(const QUrl& url)
     TraceVisitorPtr complete(new CompleteTracePrintingVisitor());
     TraceVisitorPtr search(new SearchStylePrintingVisitor());
 
-    Log::info("Some testing...");
-    boring->visit(QSharedPointer<TraceNode>(&a));
-    //boring->visit(QSharedPointer<TraceBranch>(&a));
+    Log::info("Visiting with boring printer.");
+    trace->accept(boring);
 
-    //Log::info("Visiting with boring printer.");
-    //trace->accept(boring);
+    Log::info("Visiting with complete printer.");
+    trace->accept(complete);
 
-    //Log::info("Visiting with complete printer.");
-    //trace->accept(complete);
-
-    //Log::info("Visiting with search style printer.");
-    //trace->accept(search);
+    Log::info("Visiting with search style printer.");
+    trace->accept(search);
 
     Log::info("Finished testing visitors.");
     exit(1);

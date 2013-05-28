@@ -95,7 +95,8 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/concolic/traceclassifier.h \
     src/runtime/demomode/demowindow.h \
     src/runtime/toplevel/demoruntime.h \
-    src/concolic/traceprinter.h
+    src/concolic/traceprinter.h \
+    src/concolic/tracevisitor.h
 
 SOURCES += src/runtime/input/ajaxinput.cpp \
     src/strategies/prioritizer/constantprioritizer.cpp \
@@ -165,6 +166,7 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/concolic/traceclassifier.cpp \
     src/runtime/demomode/demowindow.cpp \
     src/runtime/toplevel/demoruntime.cpp \
-    src/concolic/traceprinter.cpp
+    src/concolic/traceprinter.cpp \
+    src/concolic/tracevisitor.cpp
 
 QT += network

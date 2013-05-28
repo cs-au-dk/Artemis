@@ -19,10 +19,13 @@
 #include <QString>
 #include <QList>
 
-#include "concreteinput.h"
 
 #ifndef TRACE_H
 #define TRACE_H
+
+#include "concreteinput.h"
+#include "tracevisitor.h"
+
 
 namespace artemis
 {
@@ -47,51 +50,11 @@ namespace artemis
 
 
 
-// Need to forward declare the concrete nodes so we can reference them in the visitor.
-class TraceNode; //...?
-class TraceBranch;
-class TraceUnexplored;
-class TraceAlert;
-class TraceDomModification;
-class TracePageLoad;
-class TraceEndSuccess;
-class TraceEndFailure;
-class TraceEndUnknown;
-
-
-// The visitor interface.
-/*
-class TraceVisitor
-{
-public:
-    virtual void visit(QSharedPointer<TraceBranch> node) = 0;
-    virtual void visit(QSharedPointer<TraceUnexplored> node) = 0;
-    virtual void visit(QSharedPointer<TraceAlert> node) = 0;
-    virtual void visit(QSharedPointer<TraceDomModification> node) = 0;
-    virtual void visit(QSharedPointer<TracePageLoad> node) = 0;
-    virtual void visit(QSharedPointer<TraceEndSuccess> node) = 0;
-    virtual void visit(QSharedPointer<TraceEndFailure> node) = 0;
-    virtual void visit(QSharedPointer<TraceEndUnknown> node) = 0;
-    virtual ~TraceVisitor(){}
-};
-*/
-class TraceVisitor
-{
-public:
-    virtual void visit(QSharedPointer<TraceNode>) = 0;
-    virtual ~TraceVisitor(){}
-};
-
-typedef QSharedPointer<TraceVisitor> TraceVisitorPtr;
-
-
-
-// The node types.
 class TraceNode
 {
     // Abstract
 public:
-    virtual void accept(TraceVisitorPtr visitor) = 0;
+    virtual void accept(QSharedPointer<TraceVisitor> visitor) = 0;
     virtual ~TraceNode(){}
 };
 
@@ -105,7 +68,7 @@ public:
     TraceNodePtr branchFalse;
     QString condition; // TODO: type?
     QString symCondition; // TODO; type? is this needed?
-    void accept(TraceVisitorPtr visitor){visitor->visit(QSharedPointer<TraceBranch>(this));}
+    void accept(QSharedPointer<TraceVisitor> visitor){visitor->visit(this);}
     ~TraceBranch(){}
 };
 
@@ -114,7 +77,7 @@ class TraceUnexplored : public TraceNode
 {
     // This is just a placeholder for unexplored parts of the tree.
 public:
-    void accept(TraceVisitorPtr visitor){visitor->visit(QSharedPointer<TraceUnexplored>(this));}
+    void accept(QSharedPointer<TraceVisitor> visitor){visitor->visit(this);}
     ~TraceUnexplored(){}
 };
 
@@ -131,7 +94,7 @@ class TraceAlert : public TraceAnnotation
 {
 public:
     QString message;
-    void accept(TraceVisitorPtr visitor){visitor->visit(QSharedPointer<TraceAlert>(this));}
+    void accept(QSharedPointer<TraceVisitor> visitor){visitor->visit(this);}
     ~TraceAlert(){}
 };
 
@@ -140,7 +103,7 @@ class TraceDomModification : public TraceAnnotation
 {
 public:
     int amountModified; // TODO: type? how is this measured?
-    void accept(TraceVisitorPtr visitor){visitor->visit(QSharedPointer<TraceDomModification>(this));}
+    void accept(QSharedPointer<TraceVisitor> visitor){visitor->visit(this);}
     ~TraceDomModification(){}
 };
 
@@ -149,7 +112,7 @@ class TracePageLoad : public TraceAnnotation
 {
 public:
     QString page; // TODO: should we keep both the old and new pages?
-    void accept(TraceVisitorPtr visitor){visitor->visit(QSharedPointer<TracePageLoad>(this));}
+    void accept(QSharedPointer<TraceVisitor> visitor){visitor->visit(this);}
     ~TracePageLoad(){}
 };
 
@@ -164,7 +127,7 @@ class TraceEndSuccess : public TraceEnd
 {
     // Empty placeholder.
 public:
-    void accept(TraceVisitorPtr visitor){visitor->visit(QSharedPointer<TraceEndSuccess>(this));}
+    void accept(QSharedPointer<TraceVisitor> visitor){visitor->visit(this);}
     ~TraceEndSuccess(){}
 };
 
@@ -173,7 +136,7 @@ class TraceEndFailure : public TraceEnd
 {
     // Empty placeholder.
 public:
-    void accept(TraceVisitorPtr visitor){visitor->visit(QSharedPointer<TraceEndFailure>(this));}
+    void accept(QSharedPointer<TraceVisitor> visitor){visitor->visit(this);}
     ~TraceEndFailure(){}
 };
 
@@ -182,7 +145,7 @@ class TraceEndUnknown : public TraceEnd
 {
     // Empty placeholder.
 public:
-    void accept(TraceVisitorPtr visitor){visitor->visit(QSharedPointer<TraceEndUnknown>(this));}
+    void accept(QSharedPointer<TraceVisitor> visitor){visitor->visit(this);}
     ~TraceEndUnknown(){}
 };
 

@@ -36,37 +36,35 @@ namespace artemis
 class VeryBoringTracePrintingVisitor : public TraceVisitor
 {
 public:
-    void visit(QSharedPointer<TraceNode> node);
+    void visit(TraceNode* node);
 };
 
 
 class CompleteTracePrintingVisitor : public TraceVisitor
 {
 public:
-    void visit(QSharedPointer<TraceNode> node);
-    void visit(QSharedPointer<TraceBranch> node);
-    void visit(QSharedPointer<TraceUnexplored> node);
-    //void visit(QSharedPointer<TraceAnnotation> node);
-    void visit(QSharedPointer<TraceAlert> node);
-    void visit(QSharedPointer<TraceDomModification> node);
-    void visit(QSharedPointer<TracePageLoad> node);
-    //void visit(QSharedPointer<TraceEnd> node);
-    void visit(QSharedPointer<TraceEndSuccess> node);
-    void visit(QSharedPointer<TraceEndFailure> node);
-    void visit(QSharedPointer<TraceEndUnknown> node);
+    void visit(TraceNode* node);
+    void visit(TraceBranch* node);
+    void visit(TraceUnexplored* node);
+    void visit(TraceAlert* node);
+    void visit(TraceDomModification* node);
+    void visit(TracePageLoad* node);
+    void visit(TraceEndSuccess* node);
+    void visit(TraceEndFailure* node);
+    void visit(TraceEndUnknown* node);
 };
 
 
 class SearchStylePrintingVisitor : public TraceVisitor
 {
 public:
-    void visit(QSharedPointer<TraceNode> node);
-    void visit(QSharedPointer<TraceBranch> node);
-    void visit(QSharedPointer<TraceUnexplored> node);
-    void visit(QSharedPointer<TraceAnnotation> node);
-    void visit(QSharedPointer<TraceEndSuccess> node);
-    void visit(QSharedPointer<TraceEndFailure> node);
-    void visit(QSharedPointer<TraceEndUnknown> node);
+    void visit(TraceNode* node);
+    void visit(TraceBranch* node);
+    void visit(TraceUnexplored* node);
+    void visit(TraceAnnotation* node);
+    void visit(TraceEndSuccess* node);
+    void visit(TraceEndFailure* node);
+    void visit(TraceEndUnknown* node);
 };
 
 

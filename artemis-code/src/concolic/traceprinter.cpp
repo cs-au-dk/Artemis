@@ -29,9 +29,9 @@ namespace artemis
 
 
 
-void VeryBoringTracePrintingVisitor::visit(QSharedPointer<TraceNode> node)
+void VeryBoringTracePrintingVisitor::visit(TraceNode* node)
 {
-    Log::info("At a NODE.");
+    Log::info("VBTP: At a NODE.");
 }
 
 
@@ -40,49 +40,49 @@ void VeryBoringTracePrintingVisitor::visit(QSharedPointer<TraceNode> node)
 
 
 
-void CompleteTracePrintingVisitor::visit(QSharedPointer<TraceNode> node)
+void CompleteTracePrintingVisitor::visit(TraceNode* node)
 {
-    Log::info("At a NODE. THIS SHOULD NEVER BE REACHED!");
+    Log::info("CTPV: At a NODE. THIS SHOULD NEVER BE REACHED!");
 }
 
-void CompleteTracePrintingVisitor::visit(QSharedPointer<TraceBranch> node)
+void CompleteTracePrintingVisitor::visit(TraceBranch* node)
 {
-    Log::info("At a BRANCH.");
+    Log::info("CTPV: At a BRANCH.");
 }
 
-void CompleteTracePrintingVisitor::visit(QSharedPointer<TraceUnexplored> node)
+void CompleteTracePrintingVisitor::visit(TraceUnexplored* node)
 {
-    Log::info("At an UNEXPLORED.");
+    Log::info("CTPV: At an UNEXPLORED.");
 }
 
-void CompleteTracePrintingVisitor::visit(QSharedPointer<TraceAlert> node)
+void CompleteTracePrintingVisitor::visit(TraceAlert* node)
 {
-    Log::info("At an ALERT.");
+    Log::info("CTPV: At an ALERT.");
 }
 
-void CompleteTracePrintingVisitor::visit(QSharedPointer<TraceDomModification> node)
+void CompleteTracePrintingVisitor::visit(TraceDomModification* node)
 {
-    Log::info("At a DOM CHANGE.");
+    Log::info("CTPV: At a DOM CHANGE.");
 }
 
-void CompleteTracePrintingVisitor::visit(QSharedPointer<TracePageLoad> node)
+void CompleteTracePrintingVisitor::visit(TracePageLoad* node)
 {
-    Log::info("At a PAGE LOAD.");
+    Log::info("CTPV: At a PAGE LOAD.");
 }
 
-void CompleteTracePrintingVisitor::visit(QSharedPointer<TraceEndSuccess> node)
+void CompleteTracePrintingVisitor::visit(TraceEndSuccess* node)
 {
-    Log::info("At an END SUCCESS.");
+    Log::info("CTPV: At an END SUCCESS.");
 }
 
-void CompleteTracePrintingVisitor::visit(QSharedPointer<TraceEndFailure> node)
+void CompleteTracePrintingVisitor::visit(TraceEndFailure* node)
 {
-    Log::info("At an END FAIL.");
+    Log::info("CTPV: At an END FAIL.");
 }
 
-void CompleteTracePrintingVisitor::visit(QSharedPointer<TraceEndUnknown> node)
+void CompleteTracePrintingVisitor::visit(TraceEndUnknown* node)
 {
-    Log::info("At an END UNK.");
+    Log::info("CTPV: At an END UNK.");
 }
 
 
@@ -93,39 +93,39 @@ void CompleteTracePrintingVisitor::visit(QSharedPointer<TraceEndUnknown> node)
 
 
 
-void SearchStylePrintingVisitor::visit(QSharedPointer<TraceNode> node)
+void SearchStylePrintingVisitor::visit(TraceNode* node)
 {
-    Log::info("At a NODE. SHOULD NOT BE REACHABLE.");
+    Log::info("SSPV: At a NODE. SHOULD NOT BE REACHABLE.");
 }
 
-void SearchStylePrintingVisitor::visit(QSharedPointer<TraceBranch> node)
+void SearchStylePrintingVisitor::visit(TraceBranch* node)
 {
-    Log::info("At a BRANCH.");
+    Log::info("SSPV: At a BRANCH.");
 }
 
-void SearchStylePrintingVisitor::visit(QSharedPointer<TraceUnexplored> node)
+void SearchStylePrintingVisitor::visit(TraceUnexplored* node)
 {
-    Log::info("At an UNEXPLORED.");
+    Log::info("SSPV: At an UNEXPLORED.");
 }
 
-void SearchStylePrintingVisitor::visit(QSharedPointer<TraceAnnotation> node)
+void SearchStylePrintingVisitor::visit(TraceAnnotation* node)
 {
-    Log::info("At an ANNOTATION (of some kind).");
+    Log::info("SSPV: At an ANNOTATION (of some kind).");
 }
 
-void SearchStylePrintingVisitor::visit(QSharedPointer<TraceEndSuccess> node)
+void SearchStylePrintingVisitor::visit(TraceEndSuccess* node)
 {
-    Log::info("At an END SUCCESS.");
+    Log::info("SSPV: At an END SUCCESS.");
 }
 
-void SearchStylePrintingVisitor::visit(QSharedPointer<TraceEndFailure> node)
+void SearchStylePrintingVisitor::visit(TraceEndFailure* node)
 {
-    Log::info("At an ENS FAILURE.");
+    Log::info("SSPV: At an ENS FAILURE.");
 }
 
-void SearchStylePrintingVisitor::visit(QSharedPointer<TraceEndUnknown> node)
+void SearchStylePrintingVisitor::visit(TraceEndUnknown* node)
 {
-    Log::info("At an END UNK.");
+    Log::info("SSPV: At an END UNK.");
 }
 
 
