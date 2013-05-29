@@ -96,7 +96,9 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/runtime/demomode/demowindow.h \
     src/runtime/toplevel/demoruntime.h \
     src/concolic/traceprinter.h \
-    src/concolic/tracevisitor.h
+    src/concolic/tracevisitor.h \
+    src/runtime/demomode/initialanalysiswidget.h \
+    src/runtime/demomode/artemisbrowserwidget.h
 
 SOURCES += src/runtime/input/ajaxinput.cpp \
     src/strategies/prioritizer/constantprioritizer.cpp \
@@ -167,6 +169,8 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/runtime/demomode/demowindow.cpp \
     src/runtime/toplevel/demoruntime.cpp \
     src/concolic/traceprinter.cpp \
-    src/concolic/tracevisitor.cpp
+    src/concolic/tracevisitor.cpp \
+    src/runtime/demomode/initialanalysiswidget.cpp \
+    src/runtime/demomode/artemisbrowserwidget.cpp
 
 QT += network

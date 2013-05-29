@@ -21,14 +21,17 @@
 
 
 #include <QtGui>
-#include <QWebView>
 #include <QLineEdit>
 #include <QSharedPointer>
+#include <QUrl>
 
+#include "runtime/browser/artemiswebview.h"
+#include "runtime/browser/webkitexecutor.h"
+#include "artemisbrowserwidget.h"
+#include "initialanalysiswidget.h"
 
 namespace artemis
 {
-
 
 
 
@@ -37,14 +40,36 @@ class DemoModeMainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    DemoModeMainWindow();
-
-protected slots:
+    DemoModeMainWindow(WebKitExecutor *webkitExecutor, const QUrl& url);
+    ~DemoModeMainWindow();
 
 private:
-    QWebView *mWebView;
-    QLineEdit *mAddressBar;
+    // Artemis
+    ArtemisWebViewPtr mWebView;
+    WebKitExecutor* mWebkitExecutor;
 
+    // GUI
+    // TODO: for some reason replacing these with QSharedPointer causes problems (in some cases).
+    QToolBar* mToolBar;
+    QLineEdit* mAddressBar;
+    QProgressBar* mProgressBar;
+
+    // The initial analysis panel is provided as its own widget.
+    InitialAnalysisWidget* mInitialAnalysis;
+
+    // The artemis browser widget.
+    ArtemisBrowserWidget* mArtemisBrowser;
+
+
+protected slots:
+    void slChangeLocation();
+    void slAdjustLocation();
+    void slLoadStarted();
+    void slLoadFinished(bool ok);
+    void slSetProgress(int p);
+
+signals:
+    void sigClose();
 };
 
 

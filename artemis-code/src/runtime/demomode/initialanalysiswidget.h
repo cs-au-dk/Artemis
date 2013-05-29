@@ -15,35 +15,15 @@
  */
 
 
-#ifndef DEMORUNTIME_H
-#define DEMORUNTIME_H
+#ifndef INITIALANALYSISWIDGET_H
+#define INITIALANALYSISWIDGET_H
 
-#include <QObject>
+#include <QtGui>
 
-#include "runtime/runtime.h"
-#include "runtime/demomode/demowindow.h"
-
-
-namespace artemis
+class InitialAnalysisWidget : public QGroupBox
 {
-
-class DemoRuntime : public Runtime
-{
-    Q_OBJECT
-
 public:
-    DemoRuntime(QObject* parent, const Options& options, const QUrl& url);
-
-    void run(const QUrl& url);
-
-protected:
-    DemoModeMainWindowPtr mDemoApp;
-
-private slots:
-    void slApplicationClosed();
+    InitialAnalysisWidget(QWidget* parent = 0);
 };
 
-}
-
-
-#endif // DEMORUNTIME_H
+#endif // INITIALANALYSISWIDGET_H

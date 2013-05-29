@@ -25,7 +25,7 @@ namespace artemis
 DemoRuntime::DemoRuntime(QObject* parent, const Options& options, const QUrl& url) :
     Runtime(parent, options, url)
 {
-    mDemoApp = DemoModeMainWindowPtr(new DemoModeMainWindow());
+    mDemoApp = DemoModeMainWindowPtr(new DemoModeMainWindow(mWebkitExecutor, url));
 
     QObject::connect(mDemoApp.data(), SIGNAL(sigClose()),
                      this, SLOT(slApplicationClosed()));
@@ -33,6 +33,11 @@ DemoRuntime::DemoRuntime(QObject* parent, const Options& options, const QUrl& ur
 
 void DemoRuntime::run(const QUrl& url)
 {
+    ExecutableConfigurationPtr initial =
+         ExecutableConfigurationPtr(new ExecutableConfiguration(InputSequencePtr(new InputSequence()), url));
+
+     mWebkitExecutor->executeSequence(initial, true);
+
     mDemoApp->show();
 }
 

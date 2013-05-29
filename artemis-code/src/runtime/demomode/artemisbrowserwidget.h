@@ -14,36 +14,15 @@
  * limitations under the License.
  */
 
+#include <QtGui>
 
-#ifndef DEMORUNTIME_H
-#define DEMORUNTIME_H
+#ifndef ARTEMISBROWSERWIDGET_H
+#define ARTEMISBROWSERWIDGET_H
 
-#include <QObject>
-
-#include "runtime/runtime.h"
-#include "runtime/demomode/demowindow.h"
-
-
-namespace artemis
+class ArtemisBrowserWidget : public QGroupBox
 {
-
-class DemoRuntime : public Runtime
-{
-    Q_OBJECT
-
 public:
-    DemoRuntime(QObject* parent, const Options& options, const QUrl& url);
-
-    void run(const QUrl& url);
-
-protected:
-    DemoModeMainWindowPtr mDemoApp;
-
-private slots:
-    void slApplicationClosed();
+    ArtemisBrowserWidget(QWidget* parent = 0);
 };
 
-}
-
-
-#endif // DEMORUNTIME_H
+#endif // ARTEMISBROWSERWIDGET_H
