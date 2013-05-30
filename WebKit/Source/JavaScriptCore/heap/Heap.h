@@ -100,6 +100,7 @@ namespace JSC {
 
 #ifdef ARTEMIS
         void notifyIsNotSafeToCollect() { m_isSafeToCollect = false; }
+        std::string heapAsString(ExecState*);
 #endif
         void collectAllGarbage();
 

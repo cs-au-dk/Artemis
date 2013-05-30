@@ -33,7 +33,9 @@
 #include "Tracing.h"
 #include <algorithm>
 #include <wtf/CurrentTime.h>
-
+#include <QString>
+#include <QDebug>
+#include <QSet>
 
 using namespace std;
 using namespace JSC;
@@ -269,6 +271,103 @@ inline void CountIfGlobalObject::operator()(JSCell* cell)
     count(1);
 }
 
+#ifdef ARTEMIS
+
+class HeapStringGeneratorFunctor {
+public:
+    ExecState* m_execState;
+    HeapStringGeneratorFunctor(ExecState* execState):m_execState(execState){}
+    typedef std::string ReturnType;
+    ReturnType returnValue();
+    void operator ()(JSCell*);
+private:
+    ReturnType childrenString(JSValue);
+    ReturnType m_string;
+    ReturnType objectString(JSObject* );
+    ReturnType classNameString(JSObject*);
+    QSet<QString> m_visited;
+};
+
+string ustringToString(UString s){
+    string rets = (char *) s.impl()->characters16();
+    return rets.substr(0,s.length());
+}
+
+HeapStringGeneratorFunctor::ReturnType HeapStringGeneratorFunctor::childrenString(JSValue val){
+        if(val.isString()){
+            return "\""+ustringToString(val.getString(m_execState))+"\"";
+        }
+        if(val.isBoolean()){
+            return val.isTrue()?"true":"false";
+        }
+        if(val.isNull()){
+            return "null";
+        }
+        if(val.isUndefined()){
+            return "\"#UNDEFINED#\"";
+        }
+        if(val.isNumber()){
+            uint32_t i = 0;
+            val.getUInt32(i);
+            return QString::number(i).toStdString();
+        }
+        JSObject* o;
+        if(val.isObject() && (o = val.getObject()) > 0){
+            return "{"+objectString(o)+"}";
+        }
+    ASSERT(false);
+    return "";
+}
+
+HeapStringGeneratorFunctor::ReturnType HeapStringGeneratorFunctor::objectString(JSObject* o){
+    PropertyNameArray array = PropertyNameArray(m_execState);
+    o->getOwnPropertyNames(o,m_execState,array,IncludeDontEnumProperties);
+    WTF::Vector<Identifier,20> v = array.data()->propertyNameVector();
+    string cnString = classNameString(o);
+    string s = "\"#OBJECT_NAME#\":\""+cnString+"\"";
+    if(m_visited.contains(QString::fromStdString(cnString))){
+        return s;
+    }
+    m_visited.insert(QString::fromStdString(cnString));
+    for(Identifier* it = v.begin(); it != v.end(); it++){
+        s += ", \""+ustringToString(it->ustring())+"\"";
+        PropertyDescriptor p;
+        Identifier i = Identifier(m_execState,it->impl());
+        JSValue v;
+        if(o->getPropertyDescriptor(m_execState,i,p) && !p.isEmpty() && (v = p.value())){
+            s +=":"+childrenString(v);
+        } else {
+            s +=": \"#EMPTY#\"";
+        }
+    }
+    return s;
+
+}
+HeapStringGeneratorFunctor::ReturnType HeapStringGeneratorFunctor::classNameString(JSObject* object){
+    std::stringstream ss;
+    ss << ustringToString(JSObject::className(object));
+    ss << "@";
+    ss << (const void *) static_cast<const void*>(object);
+    return ss.str();
+}
+
+
+inline void HeapStringGeneratorFunctor::operator ()(JSCell* cell){
+    JSObject* o;
+    if(!cell->isObject() || !(o = asObject(cell))->isGlobalObject()){
+        return;
+    }
+    m_string = objectString(o);
+
+}
+
+inline HeapStringGeneratorFunctor::ReturnType HeapStringGeneratorFunctor::returnValue(){
+    return "{"+m_string+"}";
+}
+
+#endif
+
+
 class RecordType {
 public:
     typedef PassOwnPtr<TypeCountSet> ReturnType;
@@ -384,6 +483,15 @@ void Heap::destroy()
 
     m_globalData = 0;
 }
+
+
+#ifdef ARTEMIS
+    std::string Heap::heapAsString(ExecState* execState){
+        HeapStringGeneratorFunctor f = HeapStringGeneratorFunctor(execState);
+        return m_objectSpace.forEachCell<HeapStringGeneratorFunctor>(f);
+    }
+
+#endif
 
 void Heap::waitForRelativeTimeWhileHoldingLock(double relative)
 {
