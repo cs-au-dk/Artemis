@@ -306,7 +306,7 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
     QUrl url = rawurl.last();
 
 
-    if (url.host() == "localhost") {
+    if (options.useProxy.length() > 0 && url.host() == "localhost") {
         cerr << "Error: You can not use the proxy setting in Artemis for content hosted on localhost" << endl;
         exit(1);
     }
