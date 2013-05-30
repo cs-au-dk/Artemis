@@ -36,7 +36,7 @@ void DemoRuntime::run(const QUrl& url)
     ExecutableConfigurationPtr initial =
          ExecutableConfigurationPtr(new ExecutableConfiguration(InputSequencePtr(new InputSequence()), url));
 
-     mWebkitExecutor->executeSequence(initial, true);
+    mWebkitExecutor->executeSequence(initial, true);
 
     mDemoApp->show();
 }

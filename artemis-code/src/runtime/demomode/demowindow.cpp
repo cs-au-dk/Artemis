@@ -28,6 +28,8 @@ DemoModeMainWindow::DemoModeMainWindow(WebKitExecutor* webkitExecutor, const QUr
     mWebkitExecutor(webkitExecutor)
 {
     Log::info("DEMO: Constructing main window.");
+
+    // Artemis' browser.
     mWebView = ArtemisWebViewPtr(new ArtemisWebView());
     mWebView->setPage(mWebkitExecutor->getPage().data());
 
@@ -39,14 +41,14 @@ DemoModeMainWindow::DemoModeMainWindow(WebKitExecutor* webkitExecutor, const QUr
                      this, SLOT(slAdjustLocation()));
 
     // The address bar for artemis' browser.
-    mAddressBar = new QLineEdit(this);
+    mAddressBar = new QLineEdit();
     mAddressBar->setSizePolicy(QSizePolicy::Expanding, mAddressBar->sizePolicy().verticalPolicy());
     mAddressBar->setText(url.toString());
     QObject::connect(mAddressBar, SIGNAL(returnPressed()),
                      this, SLOT(slChangeLocation()));
 
     // Toolbar used to control the artemis browser instance.
-    mToolBar = addToolBar(tr("Navigation"));
+    mToolBar = new QToolBar();
     mToolBar->addAction(mWebView->pageAction(QWebPage::Back));
     mToolBar->addAction(mWebView->pageAction(QWebPage::Forward));
     mToolBar->addAction(mWebView->pageAction(QWebPage::Reload));
@@ -54,7 +56,7 @@ DemoModeMainWindow::DemoModeMainWindow(WebKitExecutor* webkitExecutor, const QUr
     mToolBar->addWidget(mAddressBar);
 
     // Progress bar for artemis' browser.
-    mProgressBar = new QProgressBar(this);
+    mProgressBar = new QProgressBar();
     mProgressBar->setRange(0,100);
     mProgressBar->setFixedWidth(100);
     slSetProgress(0);
@@ -62,10 +64,96 @@ DemoModeMainWindow::DemoModeMainWindow(WebKitExecutor* webkitExecutor, const QUr
     QObject::connect(mWebView.data(), SIGNAL(loadProgress(int)),
                      this, SLOT(slSetProgress(int)));
 
+    // The layout for the Artemis panel.
+    mArtemisLayout = new QVBoxLayout();
+    mArtemisLayout->addWidget(mToolBar);
+    mArtemisLayout->addWidget(mWebView.data());
+    mArtemisLayout->setContentsMargins(0,0,0,0);
+    mArtemisWidget = new QWidget();
+    mArtemisWidget->setLayout(mArtemisLayout);
 
-    // TODO: This is not the central widget (with others docked around it. We want a more sophisticated layout.
-    setCentralWidget(mWebView.data());
+    // Toolbox for analysis panel.
+    //QToolBox* mAnalysisToolBox = new QToolBox();
+    //mAnalysisToolBox->addItem(new QPushButton("Hi There"), "Informal");
+    //mAnalysisToolBox->addItem(new QPushButton("Good morning"), "Formal");
 
+    // Entry points list for the analysis panel.
+    mEntryPointList = new QListWidget();
+    mEntryPointList->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
+
+    // The Layout for the initial analysis panel.
+    mAnalysisLayout = new QVBoxLayout();
+    QLabel* analysisLabel = new QLabel("Page Analysis");
+    QFont labelFont;
+    labelFont.setPointSize(18);
+    analysisLabel->setFont(labelFont);
+    mAnalysisLayout->addSpacing(5);
+    mAnalysisLayout->addWidget(analysisLabel);
+    //mAnalysisLayout->addWidget(new QPushButton("Hello A"));
+    //mAnalysisLayout->addWidget(new QPushButton("Hello B"));
+    //mAnalysisLayout->addWidget(new QPushButton("Hello C"));
+    //mAnalysisLayout->addWidget(new QPushButton("Hello D"));
+    //mAnalysisLayout->addWidget(mAnalysisToolBox);
+    mAnalysisLayout->addSpacing(10);
+
+    QFont sectionFont;
+    sectionFont.setBold(true);
+
+    QLabel* entryPointLabel = new QLabel("Potential Entry Points:");
+    entryPointLabel->setFont(sectionFont);
+    mAnalysisLayout->addWidget(entryPointLabel);
+    mAnalysisLayout->addWidget(mEntryPointList);
+    mAnalysisLayout->addSpacing(10);
+
+    QLabel* curTraceLabel = new QLabel("Current Trace:");
+    curTraceLabel->setFont(sectionFont);
+    mAnalysisLayout->addWidget(curTraceLabel);
+    mAnalysisLayout->addWidget(new QLabel("(nothing here yet)"));
+    mAnalysisLayout->addSpacing(10);
+
+    QLabel* traceClassLabel = new QLabel("Trace Classification:");
+    traceClassLabel->setFont(sectionFont);
+    mAnalysisLayout->addWidget(traceClassLabel);
+    mAnalysisLayout->addWidget(new QLabel("(nothing here yet)"));
+    mAnalysisLayout->addSpacing(10);
+
+    QLabel* otherInfoLabel = new QLabel("Other Info:");
+    otherInfoLabel->setFont(sectionFont);
+    mAnalysisLayout->addWidget(otherInfoLabel);
+    mAnalysisLayout->addWidget(new QLabel("(nothing here yet)"));
+
+    mAnalysisLayout->setContentsMargins(0,0,0,0);
+    mAnalysisLayout->setAlignment(Qt::AlignTop);
+    mAnalysisWidget = new QWidget();
+    mAnalysisWidget->setLayout(mAnalysisLayout);
+    mAnalysisWidget->setFixedWidth(300);
+
+    // The layout for the main window.
+    mLayout = new QHBoxLayout();
+    mLayout->addWidget(mArtemisWidget);
+    //QFrame* separatingLine = new QFrame();
+    //separatingLine->setFrameShape(QFrame::VLine);
+    //mLayout->addWidget(separatingLine);
+    mLayout->addWidget(mAnalysisWidget);
+    mLayout->setContentsMargins(0,0,11,0);
+    mLayout->setSpacing(11);
+
+    // Main window needs to have a central widget containing the main content...
+    mCentralWidget = new QWidget(this);
+    mCentralWidget->setLayout(mLayout);
+    setCentralWidget(mCentralWidget);
+
+    // Enable the status bar.
+    // For now we are not puttin anything in here, but it makes it much easier to resize the window!
+    mStatusBar = statusBar();
+
+    // Set what the window looks like
+    resize(1300, 800);
+    setWindowTitle("Artemis Demonstration Mode");
+
+
+    // TEMP
+    addEntryPoint("Not yet implemented...", NULL);
 
 
     // TODO: all the above is temp and needs to move into ArtemisBrowserWidget.
@@ -94,10 +182,7 @@ DemoModeMainWindow::~DemoModeMainWindow()
 {
     Log::info("DEMO: Destroying main window.");
     // Do not delete mWebkitExecutor, that is managed from elsewhere.
-    delete mAddressBar;
-    delete mToolBar;
-    delete mProgressBar;
-    delete mInitialAnalysis;
+    // TODO: do we need to manually delete all the widget objects or are they handled automatically by their parents?
     emit sigClose();
 }
 
@@ -144,5 +229,15 @@ void DemoModeMainWindow::slSetProgress(int p)
     }
 }
 
+
+// Called to add a new potential entry point to the entry point list.
+void DemoModeMainWindow::addEntryPoint(QString name, DOMElementDescriptor* element)
+{
+    mEntryPointList->addItem(name);
+    // TODO: is it possible to resize this to fit the contents?
+    // Seems to be non-trivial but probably not too hard...
 }
+
+
+} // namespace artemis
 

@@ -43,6 +43,9 @@ public:
     DemoModeMainWindow(WebKitExecutor *webkitExecutor, const QUrl& url);
     ~DemoModeMainWindow();
 
+    // For the analysis panel.
+    void addEntryPoint(QString name, DOMElementDescriptor* element);
+
 private:
     // Artemis
     ArtemisWebViewPtr mWebView;
@@ -50,9 +53,17 @@ private:
 
     // GUI
     // TODO: for some reason replacing these with QSharedPointer causes problems (in some cases).
+    QWidget* mCentralWidget;
+    QWidget* mArtemisWidget;
+    QWidget* mAnalysisWidget;
+    QLayout* mLayout;
+    QLayout* mArtemisLayout;
+    QVBoxLayout* mAnalysisLayout;
     QToolBar* mToolBar;
     QLineEdit* mAddressBar;
     QProgressBar* mProgressBar;
+    QStatusBar* mStatusBar;
+    QListWidget* mEntryPointList;
 
     // The initial analysis panel is provided as its own widget.
     InitialAnalysisWidget* mInitialAnalysis;
