@@ -24,11 +24,19 @@
 #include <QLineEdit>
 #include <QSharedPointer>
 #include <QUrl>
+#include <QList>
+#include <QPair>
 
 #include "runtime/browser/artemiswebview.h"
 #include "runtime/browser/webkitexecutor.h"
 #include "artemisbrowserwidget.h"
 #include "initialanalysiswidget.h"
+
+#include "concolic/entrypoints.h"
+#include "concolic/trace.h"
+#include "concolic/tracebuilder.h"
+#include "concolic/traceclassifier.h"
+#include "concolic/traceprinter.h"
 
 namespace artemis
 {
@@ -43,8 +51,7 @@ public:
     DemoModeMainWindow(WebKitExecutor *webkitExecutor, const QUrl& url);
     ~DemoModeMainWindow();
 
-    // For the analysis panel.
-    void addEntryPoint(QString name, DOMElementDescriptor* element);
+    void run(const QUrl &url);
 
 private:
     // Artemis
@@ -71,13 +78,37 @@ private:
     // The artemis browser widget.
     ArtemisBrowserWidget* mArtemisBrowser;
 
+    void addEntryPoint(QString name, const DOMElementDescriptor* element);
+    void highlightDomElement(const DOMElementDescriptor* element);
+    void unHighlightDomElement(const DOMElementDescriptor* element);
+
+    // The analysis logic itself.
+    bool mWaitingForInitialLoad;
+    EntryPointDetector mEntryPointDetector;
+    TraceBuilder mTraceBuilder;
+    TraceClassifier mTraceClassifier;
+
+    void preTraceExecution(ExecutionResultPtr result);
+    void postTraceExecution();
+
+    // The analysis/GUI interaction
+    typedef QPair<QString, const DOMElementDescriptor*> EntryPointInfo;
+    QList<EntryPointInfo > mKnownEntryPoints;
+
 
 protected slots:
+    // For the GUI.
     void slChangeLocation();
     void slAdjustLocation();
     void slLoadStarted();
     void slLoadFinished(bool ok);
     void slSetProgress(int p);
+
+    // For the analysis logic.
+    void slExecutedSequence(ExecutableConfigurationConstPtr configuration, QSharedPointer<ExecutionResult> result);
+
+    // For the analysis/GUI interaction.
+    void slEntryPointSelectionChanged();
 
 signals:
     void sigClose();

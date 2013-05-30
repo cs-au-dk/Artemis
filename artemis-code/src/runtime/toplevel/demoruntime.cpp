@@ -33,11 +33,7 @@ DemoRuntime::DemoRuntime(QObject* parent, const Options& options, const QUrl& ur
 
 void DemoRuntime::run(const QUrl& url)
 {
-    ExecutableConfigurationPtr initial =
-         ExecutableConfigurationPtr(new ExecutableConfiguration(InputSequencePtr(new InputSequence()), url));
-
-    mWebkitExecutor->executeSequence(initial, true);
-
+    mDemoApp->run(url);
     mDemoApp->show();
 }
 

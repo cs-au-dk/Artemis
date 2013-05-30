@@ -25,7 +25,8 @@ namespace artemis
 
 
 DemoModeMainWindow::DemoModeMainWindow(WebKitExecutor* webkitExecutor, const QUrl &url) :
-    mWebkitExecutor(webkitExecutor)
+    mWebkitExecutor(webkitExecutor),
+    mWaitingForInitialLoad(false)
 {
     Log::info("DEMO: Constructing main window.");
 
@@ -103,6 +104,7 @@ DemoModeMainWindow::DemoModeMainWindow(WebKitExecutor* webkitExecutor, const QUr
     entryPointLabel->setFont(sectionFont);
     mAnalysisLayout->addWidget(entryPointLabel);
     mAnalysisLayout->addWidget(mEntryPointList);
+    mAnalysisLayout->addWidget(new QLabel("Currently we only detect 'click' events on\n'button' elements."));
     mAnalysisLayout->addSpacing(10);
 
     QLabel* curTraceLabel = new QLabel("Current Trace:");
@@ -152,8 +154,15 @@ DemoModeMainWindow::DemoModeMainWindow(WebKitExecutor* webkitExecutor, const QUr
     setWindowTitle("Artemis Demonstration Mode");
 
 
-    // TEMP
-    addEntryPoint("Not yet implemented...", NULL);
+    // Signals used by the analysis itself.
+    QObject::connect(mWebkitExecutor, SIGNAL(sigExecutedSequence(ExecutableConfigurationConstPtr, QSharedPointer<ExecutionResult>)),
+                     this, SLOT(slExecutedSequence(ExecutableConfigurationConstPtr,QSharedPointer<ExecutionResult>)));
+
+    // Signals used by the analysis/GUI interaction.
+    QObject::connect(mEntryPointList, SIGNAL(itemSelectionChanged()),
+                     this, SLOT(slEntryPointSelectionChanged()));
+
+
 
 
     // TODO: all the above is temp and needs to move into ArtemisBrowserWidget.
@@ -230,13 +239,147 @@ void DemoModeMainWindow::slSetProgress(int p)
 }
 
 
-// Called to add a new potential entry point to the entry point list.
-void DemoModeMainWindow::addEntryPoint(QString name, DOMElementDescriptor* element)
+
+
+// Called to start the analysis.
+void DemoModeMainWindow::run(const QUrl& url)
 {
-    mEntryPointList->addItem(name);
-    // TODO: is it possible to resize this to fit the contents?
+    ExecutableConfigurationPtr initial =
+        ExecutableConfigurationPtr(new ExecutableConfiguration(InputSequencePtr(new InputSequence()), url));
+
+    Log::info("CONCOLIC-INFO: Beginning initial page load...");
+    mWaitingForInitialLoad = true;
+    mWebkitExecutor->executeSequence(initial, true); // Calls slExecutedSequence method as callback.
+
+    mWebView->setDisabled(true); // Not enabled until the analysis is done (prevents the user from interfering...).
+}
+
+
+
+// Called when the webkit executor finishes running an execution sequence.
+// In our case that is after the initial load.
+void DemoModeMainWindow::slExecutedSequence(ExecutableConfigurationConstPtr configuration, QSharedPointer<ExecutionResult> result)
+{
+    // The sequence we are currently running has finished.
+    Log::info("CONCOLIC-INFO: Finished execution sequence.");
+    if(mWaitingForInitialLoad){
+        mWaitingForInitialLoad = false;
+        preTraceExecution(result);
+    }else{
+        Log::info("CONCOLIC-INFO: Page load was not the initial load, so not analysing...");
+    }
+}
+
+
+
+// Called to run the pre-trace analysis and start recording a trace.
+void DemoModeMainWindow::preTraceExecution(ExecutionResultPtr result)
+{
+    // Simply run the entry-point detector and display its results.
+    Log::info("CONCOLIC-INFO: Analysing page entrypoints...");
+
+    QList<EventHandlerDescriptor*> allEntryPoints;
+
+    // Detect all potential entry points on the page.
+    allEntryPoints = mEntryPointDetector.detectAll(result);
+
+    // List them all
+    Log::info(QString("CONCOLIC-INFO: Found %1 potential entry points.").arg(allEntryPoints.length()).toStdString());
+    foreach(EventHandlerDescriptor* ep, allEntryPoints){
+        // Log to termianl
+        Log::info(QString("CONCOLIC-INFO: Potential entry point :: %1").arg(ep->toString()).toStdString());
+        // Log to GUI.
+        addEntryPoint(ep->toString(), ep->domElement());
+        // Highlight in browser window.
+        //highlightDomElement(ep->domElement()); // This is now done by selecting them in the list box.
+    }
+
+
+    // Begin recording trace events.
+    mTraceBuilder.beginRecording();
+
+    // Display the page for the user to interact with.
+    mWebView->setEnabled(true);
+
+}
+
+// Called once the trace recording is over (signalled by the user).
+// TODO: this is never called from anywhere yet!
+void DemoModeMainWindow::postTraceExecution()
+{
+    Log::info("CONCOLIC-INFO: Analysing trace...");
+    mTraceBuilder.endRecording();
+
+    TraceNodePtr trace = mTraceBuilder.trace();
+
+    TraceClassificationResult result = mTraceClassifier.classify(trace);
+
+    if(result.successful){
+        Log::info("CONCOLIC-INFO: This trace was classified as a SUCCESS.");
+    }else{
+        Log::info("CONCOLIC-INFO: This trace was classified as a FAILURE (did not submit a form).");
+    }
+}
+
+
+
+
+
+
+// Called to add a new potential entry point to the entry point list.
+void DemoModeMainWindow::addEntryPoint(QString name, const DOMElementDescriptor* element)
+{
+    // First we add this entry point to the list.
+    int index = mKnownEntryPoints.size();
+    mKnownEntryPoints.append(EntryPointInfo(name, element));
+
+    // Then create a QListWidgetitem with the name and store the index in the list so we can reference the element pointer later.
+    QListWidgetItem* item = new QListWidgetItem();
+    item->setText(name);
+    item->setData(Qt::UserRole, index);
+
+    mEntryPointList->addItem(item);
+
+    // TODO: is it possible to resize this list widget to fit the contents?
     // Seems to be non-trivial but probably not too hard...
 }
+
+
+// Called whenever the selection of elements in the entry point list changes.
+void DemoModeMainWindow::slEntryPointSelectionChanged()
+{
+    //Log::info("CONCOLIC-INFO: Entry point selection changed.");
+
+    // Un-highlight any previously highlighted elements.
+    foreach(EntryPointInfo entry, mKnownEntryPoints){
+        unHighlightDomElement(entry.second);
+    }
+
+    QList<QListWidgetItem*> items = mEntryPointList->selectedItems();
+
+    foreach(QListWidgetItem* selected, items){
+        //Log::info(QString("CONCOLIC-INFO: Highlighting %1").arg(selected->text()).toStdString());
+        int index = selected->data(Qt::UserRole).value<int>();
+        highlightDomElement(mKnownEntryPoints.at(index).second);
+    }
+}
+
+
+// Called to highlight a particular DOM element in the artemis web view.
+void DemoModeMainWindow::highlightDomElement(const DOMElementDescriptor *element)
+{
+    element->getElement(mWebkitExecutor->getPage()).setStyleProperty("outline", "10px solid green");
+}
+
+void DemoModeMainWindow::unHighlightDomElement(const DOMElementDescriptor *element)
+{
+    element->getElement(mWebkitExecutor->getPage()).setStyleProperty("outline", "none");
+    // TODO: what if it had an outline to begin with?
+}
+
+
+
+
 
 
 } // namespace artemis
