@@ -21,6 +21,7 @@
 
 #include "model/coverage/coveragetooutputstream.h"
 #include "util/loggingutil.h"
+#include "util/fileutil.h"
 #include "model/pathtracer.h"
 
 #include "statistics/statsstorage.h"
@@ -79,6 +80,10 @@ Runtime::Runtime(QObject* parent, const Options& options, const QUrl& url) : QOb
 
     bool enableConstantStringInstrumentation = options.formInputGenerationStrategy == ConstantString;
     mWebkitExecutor = new WebKitExecutor(this, mAppmodel, options.presetFormfields, jqueryListener, ajaxRequestListner, enableConstantStringInstrumentation);
+
+    if(options.reportHeap != NO_CALLS){
+        mWebkitExecutor->webkitListener->enableHeapReport(options.reportHeap == NAMED_CALLS);
+    }
 
     QSharedPointer<FormInputGenerator> formInputGenerator;
     switch (options.formInputGenerationStrategy) {
@@ -150,6 +155,7 @@ void Runtime::done()
         break;
     }
 
+
     if (mOptions.reportPathTrace == HTML_TRACES) {
         mAppmodel->getPathTracer()->writePathTraceHTML(mOptions.outputCoverage == HTML, coveragePath);
     } else if(mOptions.reportPathTrace != NO_TRACES) {
@@ -159,7 +165,10 @@ void Runtime::done()
     }
 
     statistics()->accumulate("WebKit::coverage::covered-unique", mAppmodel->getCoverageListener()->getNumCoveredLines());
+    if(mOptions.reportHeap != NO_CALLS){
 
+        writeStringToFile(QString("heap-report-") + QDateTime::currentDateTime().toString("dd-MM-yy-hh-mm-ss"),mWebkitExecutor->webkitListener->getHeapReport());
+    }
     Log::info("\n=== Statistics ===\n");
     StatsPrettyWriter::write(statistics());
     Log::info("\n=== Statistics END ===\n\n");

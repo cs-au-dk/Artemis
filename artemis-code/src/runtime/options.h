@@ -44,6 +44,10 @@ enum PathTraceReport {
     ALL_TRACES, CLICK_TRACES, NO_TRACES, HTML_TRACES
 };
 
+enum HeapReport{
+    ALL_CALLS, NAMED_CALLS, NO_CALLS
+};
+
 typedef struct OptionsType {
 
     OptionsType() :
@@ -56,7 +60,8 @@ typedef struct OptionsType {
         outputCoverage(NONE),
         majorMode(AUTOMATED),
         reportPathTrace(NO_TRACES),
-        reportPathTraceBytecode(false)
+        reportPathTraceBytecode(false),
+        reportHeap(NO_CALLS)
     {}
 
     QMap<QString, QString> presetFormfields;
@@ -81,6 +86,9 @@ typedef struct OptionsType {
 
     PathTraceReport reportPathTrace;
     bool reportPathTraceBytecode;
+
+    HeapReport reportHeap;
+
 
 } Options;
 

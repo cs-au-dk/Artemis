@@ -21,6 +21,7 @@
 #include <QUrl>
 #include <QNetworkProxy>
 #include <set>
+#include <QString>
 
 #include "strategies/inputgenerator/inputgeneratorstrategy.h"
 #include "strategies/inputgenerator/targets/targetgenerator.h"
@@ -59,6 +60,8 @@ protected:
     InputGeneratorStrategy* mInputgenerator;
 
     Options mOptions;
+private:
+    QString* mHeapReport;
 
 private slots:
     void slAbortedExecution(QString reason);

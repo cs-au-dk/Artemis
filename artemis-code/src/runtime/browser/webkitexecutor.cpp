@@ -73,6 +73,7 @@ WebKitExecutor::WebKitExecutor(QObject* parent,
         webkitListener->enableConstantStringInstrumentation();
     }
 
+
     QObject::connect(webkitListener, SIGNAL(jqueryEventAdded(QString, QString, QString)),
                      mJquery, SLOT(slEventAdded(QString, QString, QString)));
 

@@ -34,6 +34,7 @@
 #include <wtf/Forward.h>
 #include <wtf/HashCountedSet.h>
 #include <wtf/HashSet.h>
+#include <QString>
 
 namespace JSC {
 
@@ -100,7 +101,7 @@ namespace JSC {
 
 #ifdef ARTEMIS
         void notifyIsNotSafeToCollect() { m_isSafeToCollect = false; }
-        std::string heapAsString(ExecState*);
+        QString heapAsString(ExecState*);
 #endif
         void collectAllGarbage();
 

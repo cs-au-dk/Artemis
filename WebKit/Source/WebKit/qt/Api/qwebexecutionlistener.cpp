@@ -18,6 +18,7 @@
 #include <config.h>
 #include <DOMWindow.h>
 #include <QString>
+#include <QDebug>
 #include <iostream>
 #include "wtf/text/CString.h"
 
@@ -46,7 +47,8 @@ QWebExecutionListener::QWebExecutionListener(QObject *parent) :
     QObject(parent),
     inst::ExecutionListener(),
     jscinst::JSCExecutionListener(),
-    m_ajax_callback_next_id(0)
+    m_ajax_callback_next_id(0),
+    m_reportHeapMode(0)
 {
 }
 
@@ -67,6 +69,14 @@ void QWebExecutionListener::eventAdded(WebCore::EventTarget * target, const char
     }
 
     return;
+}
+
+void QWebExecutionListener::enableHeapReport(bool namedOnly){
+    m_reportHeapMode = namedOnly?1:2;
+}
+
+QString QWebExecutionListener::getHeapReport(){
+    return m_heapReport;
 }
 
 void QWebExecutionListener::eventCleared(WebCore::EventTarget * target, const char* type) {
@@ -220,7 +230,15 @@ bool domNodeSignature(JSC::CallFrame * cframe, JSC::JSObject * domElement, QStri
 **/
 void QWebExecutionListener::javascript_called_function(const JSC::DebuggerCallFrame& frame) {
 
+
+
     std::string functionName = std::string(frame.calculatedFunctionName().ascii().data());
+    if(m_reportHeapMode > 0 && (m_reportHeapMode > 1 || functionName.length() > 0)){
+
+        QString s = QString::fromStdString("Function Called (")+QString::fromStdString(functionName)+QString::fromStdString("). Heap string:\n")+ frame.callFrame()->heap()->heapAsString(frame.callFrame());
+        s.append(QString::fromStdString("\n\n"));
+        m_heapReport.append(s);
+    }
 
     JSC::CodeBlock* codeBlock = frame.callFrame()->codeBlock();
 

@@ -60,6 +60,7 @@ public:
 
     ArtemisWebPagePtr getPage();
 
+
 private:
     ArtemisWebPagePtr mPage;
     ExecutionResultBuilderPtr mResultBuilder;
@@ -71,7 +72,6 @@ private:
     CoverageListenerPtr mCoverageListener;
     JavascriptStatisticsPtr mJavascriptStatistics;
     PathTracerPtr mPathTracer;
-
     bool mKeepOpen;
     bool testingDone;
 

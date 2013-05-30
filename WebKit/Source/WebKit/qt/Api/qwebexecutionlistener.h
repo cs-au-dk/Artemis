@@ -54,6 +54,8 @@ class QWEBKIT_EXPORT QWebExecutionListener : public QObject, public inst::Execut
 public:
     explicit QWebExecutionListener(QObject *parent = 0);
 
+
+
     virtual void eventAdded(WebCore::EventTarget * target, const char* type);
     virtual void eventCleared(WebCore::EventTarget * target, const char* type);
     virtual void eventTriggered(WebCore::EventTarget * target, const char* type);
@@ -83,6 +85,9 @@ public:
     void timerFire(int timerId);
     void clearTimers();
 
+    void enableHeapReport(bool namedOnly);
+    QString getHeapReport();
+
     void beginSymbolicSession();
     void endSymbolicSession();
     QString generatePathConditionString();
@@ -98,6 +103,8 @@ private:
     int m_ajax_callback_next_id;
 
     QSourceRegistry m_sourceRegistry;
+    QString m_heapReport;
+    int m_reportHeapMode;
 
 signals:
     void addedEventListener(QWebElement*, QString);
