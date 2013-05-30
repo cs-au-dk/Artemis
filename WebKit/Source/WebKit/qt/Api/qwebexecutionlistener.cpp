@@ -230,17 +230,20 @@ bool domNodeSignature(JSC::CallFrame * cframe, JSC::JSObject * domElement, QStri
 **/
 void QWebExecutionListener::javascript_called_function(const JSC::DebuggerCallFrame& frame) {
 
-
-
     std::string functionName = std::string(frame.calculatedFunctionName().ascii().data());
-    if(m_reportHeapMode > 0 && (m_reportHeapMode > 1 || functionName.length() > 0)){
+    JSC::CodeBlock* codeBlock = frame.callFrame()->codeBlock();
 
-        QString s = QString::fromStdString("Function Called (")+QString::fromStdString(functionName)+QString::fromStdString("). Heap string:\n")+ frame.callFrame()->heap()->heapAsString(frame.callFrame());
-        s.append(QString::fromStdString("\n\n"));
-        m_heapReport.append(s);
+    if(m_reportHeapMode > 0 && (m_reportHeapMode > 1 || functionName.length() > 0)){
+        QString url = m_sourceRegistry.get(frame.callFrame()->codeBlock()->source())->getUrl();
+        string fn = functionName.length() >0 ? functionName : "<no-name>";
+        string s = "Function Called: "+fn+"@"+url.toStdString()+"[";
+        m_heapReport.append(QString::fromStdString(s));
+        m_heapReport.append(QString::number(codeBlock->lineNumberForBytecodeOffset(0)));
+        m_heapReport.append(QString::fromStdString("]. Heap string:\n"));
+        m_heapReport.append(frame.callFrame()->heap()->heapAsString(frame.callFrame()));
+        m_heapReport.append(QString::fromStdString("\n\n"));
     }
 
-    JSC::CodeBlock* codeBlock = frame.callFrame()->codeBlock();
 
     emit sigJavascriptFunctionCalled(QString::fromStdString(functionName),
                                      codeBlock->numberOfInstructions(),
