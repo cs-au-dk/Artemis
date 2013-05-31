@@ -43,6 +43,18 @@ class TraceEndUnknown;
  *  Implementations of this interface must implement visit() at least for TraceBranch but can also choose to
  *  implement special cases for specific node types as desired.
  */
+
+/*
+ *  Note on pointers:
+ *  We must use standard pointers instead of smart pointers here, because in the visitor pattern a node must pass
+ *  out a reference to itself. If this reference is wrapped in a shared pointer then as soon as that pointer goes
+ *  out of scope the node will be deleted.
+ *  So the visitor parts use standard pointers and have the following restrictions:
+ *      * A visitor must never store a node pointer.
+ *      * A visitor cannot guarantee that a pointer is still valid if modifications are made higher up the tree
+ *          which may have caused it to become unreferenced by any smart pointer.
+ */
+
 class TraceVisitor
 {
 public:

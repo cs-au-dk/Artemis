@@ -61,13 +61,13 @@ void ManualRuntime::run(const QUrl& url)
     TraceVisitorPtr search(new SearchStylePrintingVisitor());
 
     Log::info("Visiting with boring printer.");
-    trace->accept(boring);
+    b.accept(boring.data());
 
     Log::info("Visiting with complete printer.");
-    trace->accept(complete);
+    b.accept(complete.data());
 
     Log::info("Visiting with search style printer.");
-    trace->accept(search);
+    b.accept(search.data());
 
     Log::info("Finished testing visitors.");
     exit(1);

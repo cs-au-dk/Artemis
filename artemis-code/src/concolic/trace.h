@@ -48,13 +48,23 @@ namespace artemis
  *  We also have a visitor interface to allow these traces (and trees) to be explored.
  */
 
+/*
+ *  Note on pointers:
+ *  We must use standard pointers instead of smart pointers here, because in the visitor pattern a node must pass
+ *  out a reference to itself. If this reference is wrapped in a shared pointer then as soon as that pointer goes
+ *  out of scope the node will be deleted.
+ *  So the visitor parts use standard pointers and have the following restrictions:
+ *      * A visitor must never store a node pointer.
+ *      * A visitor cannot guarantee that a pointer is still valid if modifications are made higher up the tree
+ *          which may have caused it to become unreferenced by any smart pointer.
+ */
 
 
 class TraceNode
 {
     // Abstract
 public:
-    virtual void accept(QSharedPointer<TraceVisitor> visitor) = 0;
+    virtual void accept(TraceVisitor* visitor) = 0;
     virtual ~TraceNode(){}
 };
 
@@ -68,7 +78,7 @@ public:
     TraceNodePtr branchFalse;
     QString condition; // TODO: type?
     QString symCondition; // TODO; type? is this needed?
-    void accept(QSharedPointer<TraceVisitor> visitor){visitor->visit(this);}
+    void accept(TraceVisitor* visitor){visitor->visit(this);}
     ~TraceBranch(){}
 };
 
@@ -77,7 +87,7 @@ class TraceUnexplored : public TraceNode
 {
     // This is just a placeholder for unexplored parts of the tree.
 public:
-    void accept(QSharedPointer<TraceVisitor> visitor){visitor->visit(this);}
+    void accept(TraceVisitor* visitor){visitor->visit(this);}
     ~TraceUnexplored(){}
 };
 
@@ -94,7 +104,7 @@ class TraceAlert : public TraceAnnotation
 {
 public:
     QString message;
-    void accept(QSharedPointer<TraceVisitor> visitor){visitor->visit(this);}
+    void accept(TraceVisitor* visitor){visitor->visit(this);}
     ~TraceAlert(){}
 };
 
@@ -103,7 +113,7 @@ class TraceDomModification : public TraceAnnotation
 {
 public:
     int amountModified; // TODO: type? how is this measured?
-    void accept(QSharedPointer<TraceVisitor> visitor){visitor->visit(this);}
+    void accept(TraceVisitor* visitor){visitor->visit(this);}
     ~TraceDomModification(){}
 };
 
@@ -112,7 +122,7 @@ class TracePageLoad : public TraceAnnotation
 {
 public:
     QString page; // TODO: should we keep both the old and new pages?
-    void accept(QSharedPointer<TraceVisitor> visitor){visitor->visit(this);}
+    void accept(TraceVisitor* visitor){visitor->visit(this);}
     ~TracePageLoad(){}
 };
 
@@ -127,7 +137,7 @@ class TraceEndSuccess : public TraceEnd
 {
     // Empty placeholder.
 public:
-    void accept(QSharedPointer<TraceVisitor> visitor){visitor->visit(this);}
+    void accept(TraceVisitor* visitor){visitor->visit(this);}
     ~TraceEndSuccess(){}
 };
 
@@ -136,7 +146,7 @@ class TraceEndFailure : public TraceEnd
 {
     // Empty placeholder.
 public:
-    void accept(QSharedPointer<TraceVisitor> visitor){visitor->visit(this);}
+    void accept(TraceVisitor* visitor){visitor->visit(this);}
     ~TraceEndFailure(){}
 };
 
@@ -145,7 +155,7 @@ class TraceEndUnknown : public TraceEnd
 {
     // Empty placeholder.
 public:
-    void accept(QSharedPointer<TraceVisitor> visitor){visitor->visit(this);}
+    void accept(TraceVisitor* visitor){visitor->visit(this);}
     ~TraceEndUnknown(){}
 };
 
