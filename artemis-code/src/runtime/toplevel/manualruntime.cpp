@@ -45,31 +45,47 @@ void ManualRuntime::run(const QUrl& url)
 
     Log::info("Building a simple sample trace.");
 
-    TraceBranch a;
-    a.branchFalse = QSharedPointer<TraceUnexplored>(new TraceUnexplored());
+    TraceBranch b1;
+    b1.branchFalse = QSharedPointer<TraceUnexplored>(new TraceUnexplored());
 
-    TraceAlert b;
-    b.message = "Hello, World!";
-    b.next = QSharedPointer<TraceEndSuccess>(new TraceEndSuccess());
+    TraceDomModification dom;
 
-    a.branchTrue = QSharedPointer<TraceAlert>(&b);
+    b1.branchTrue = QSharedPointer<TraceDomModification>(&dom);
 
-    TraceNodePtr trace(&a);
+    TraceBranch b2;
+    b2.branchTrue = QSharedPointer<TraceUnexplored>(new TraceUnexplored());
+
+    dom.next = QSharedPointer<TraceBranch>(&b2);
+
+    TraceAlert alt;
+    alt.message = "Hello, World!";
+    alt.next = QSharedPointer<TraceEndSuccess>(new TraceEndSuccess());
+
+    b2.branchFalse = QSharedPointer<TraceAlert>(&alt);
+
+    TraceNodePtr trace(&b1);
 
     TraceVisitorPtr boring(new VeryBoringTracePrintingVisitor());
     TraceVisitorPtr complete(new CompleteTracePrintingVisitor());
     TraceVisitorPtr search(new SearchStylePrintingVisitor());
 
     Log::info("Visiting with boring printer.");
-    b.accept(boring.data());
+    alt.accept(boring.data());
 
     Log::info("Visiting with complete printer.");
-    b.accept(complete.data());
+    alt.accept(complete.data());
 
     Log::info("Visiting with search style printer.");
-    b.accept(search.data());
+    alt.accept(search.data());
 
     Log::info("Finished testing visitors.");
+
+    Log::info("Printing an entire trace:");
+
+    TerminalTracePrinter printer;
+    printer.printTraceTree(trace);
+
+    // TEMP... don't continue with the normal manual mode!
     exit(1);
 
 

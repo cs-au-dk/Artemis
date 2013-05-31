@@ -17,6 +17,9 @@
 
 #include "trace.h"
 
+#include <QStack>
+#include <QList>
+#include <QString>
 
 #ifndef TRACEPRINTER_H
 #define TRACEPRINTER_H
@@ -67,6 +70,44 @@ public:
     void visit(TraceEndUnknown* node);
 };
 
+
+
+/*
+ *  Here is a "real" visitor which can be used to print an entire trace or tree onto the terminal.
+ */
+class TerminalTracePrinter : public TraceVisitor
+{
+public:
+    TerminalTracePrinter();
+
+    void visit(TraceNode* node); // Never called unless node types change.
+    void visit(TraceBranch* node);
+    void visit(TraceUnexplored* node);
+    void visit(TraceAlert* node);
+    void visit(TraceDomModification* node);
+    void visit(TracePageLoad* node);
+    void visit(TraceEndSuccess* node);
+    void visit(TraceEndFailure* node);
+    void visit(TraceEndUnknown* node);
+
+    void printTraceTree(TraceNodePtr root);
+
+private:
+    struct PrintableTree
+    {
+        PrintableTree():width(0),connector(0){}
+        void clear(){width=0;connector=0;lines.clear();}
+        QList<QString> lines;
+        int width;
+        int connector;
+    };
+    PrintableTree mCurrentTree;
+    QStack<PrintableTree> mCompletedLeftTrees;
+    void addSingleValue(QString nodeText);
+    void addBranch(QString nodeText);
+    static QString padToConnector(QString text, int connector, int width);
+
+};
 
 } // namespace artemis
 
