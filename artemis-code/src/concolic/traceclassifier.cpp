@@ -17,22 +17,102 @@
 
 #include "traceclassifier.h"
 
+#include "util/loggingutil.h"
+
 
 namespace artemis
 {
 
 
 
-TraceClassifier::TraceClassifier()
+TraceClassifier::TraceClassifier() :
+    mWasAlert(false)
 {
-    // TODO
 }
 
-TraceClassificationResult TraceClassifier::classify(TraceNodePtr trace)
+bool TraceClassifier::classify(TraceNodePtr trace)
 {
-    // TODO
-    return TraceClassificationResult();
+    // First simple implementation: scan the trace looking for an alert() call.
+    // If there is an alert() then the trace is a failure, otherwise a success.
+
+    trace->accept(this);
+
+    // TODO: add the end marker into the trace.
+
+    return mWasAlert;
 }
+
+
+
+
+
+
+
+
+
+/* Definitions the visitor part **********************************************/
+
+
+
+void TraceClassifier::visit(TraceAlert *node)
+{
+    mAlert = true;
+    node->next->accept(this);
+}
+
+void TraceClassifier::visit(TraceDomModification *node)
+{
+    node->next->accept(this);
+}
+
+void TraceClassifier::visit(TracePageLoad *node)
+{
+    node->next->accept(this);
+}
+
+void TraceClassifier::visit(TraceNode *node)
+{
+    Log::fatal("Trace Classifier: visited a node which was not handled correctly.");
+    exit(1);
+}
+
+void TraceClassifier::visit(TraceBranch *node)
+{
+    // We expect one branch to be "capped" by an immediate TraceUnexplored and the other to be the successor.
+    // Anything else is an error (should not be present in a single trace direct from the trace builder).
+
+    if(isImmediatelyUnexplored(node->branchFalse)){
+        // Took 'true' branch.
+        node->branchTrue->accept(this);
+    } else if(isImmediatelyUnexplored(node->branchTrue)){
+        // Took 'false' branch.
+        node->branchFalse->accept(this);
+    } else {
+        // Invalid branch node
+        Log::fatal("Trace Classifier: reached an invalid branch node.");
+        exit(1);
+    }
+}
+
+void TraceClassifier::visit(TraceUnexplored *node)
+{
+    // Reached the end of the trace, so stop.
+}
+
+void TraceClassifier::visit(TraceEndUnknown *node)
+{
+    // Reached the end of the trace, so stop.
+}
+
+void TraceClassifier::visit(TraceEnd *node)
+{
+    Log::fatal("Trace Classifier: classifying a trace which has already been classified.");
+    exit(1);
+}
+
+
+
+
 
 
 } // namespace artemis

@@ -18,6 +18,7 @@
 #define TRACECLASSIFIER_H
 
 #include "trace.h"
+#include "tracevisitor.h"
 
 
 namespace artemis
@@ -25,25 +26,45 @@ namespace artemis
 
 
 
-class TraceClassificationResult
-{
-public:
-    bool successful;
-    TraceNodePtr modifiedTrace;
-};
 
 
 /*
  *  Classifies a complete annotated trace as either a success or a failure.
- *  TODO: also modifies (or returns a new one) the trace to include an END-SUCCESS or END-FAILURE marker.
+ *  TODO: Also modifies the trace to include an END-SUCCESS or END-FAILURE marker.
  */
-class TraceClassifier
+class TraceClassifier : public TraceVisitor
 {
 public:
     TraceClassifier();
 
-    TraceClassificationResult classify(TraceNodePtr trace);
+    bool classify(TraceNodePtr trace);
+    bool mWasAlert;
+
+
+    // Annotation nodes are used in the classification
+    virtual void visit(TraceAlert* node);
+    virtual void visit(TraceDomModification* node);
+    virtual void visit(TracePageLoad* node);
+
+    // Catch-all. Should not be called.
+    virtual void visit(TraceNode* node);
+
+    // Ignored for classification.
+    virtual void visit(TraceBranch* node);
+
+    // Should not be encountered on the main trace.
+    virtual void visit(TraceUnexplored* node);
+
+    // Traces should end with TraceEndUnknown nodes when they come from the trace builder.
+    virtual void visit(TraceEndUnknown* node);
+
+    // Catch-all for other end types (i.e. an error).
+    virtual void visit(TraceEnd* node);
 };
+
+
+
+
 
 
 } // namespace artemis

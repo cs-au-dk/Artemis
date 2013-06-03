@@ -25,6 +25,7 @@ namespace artemis
 
 
 DemoModeMainWindow::DemoModeMainWindow(WebKitExecutor* webkitExecutor, const QUrl &url) :
+    mTraceBuilder(webkitExecutor),
     mWebkitExecutor(webkitExecutor),
     mWaitingForInitialLoad(false)
 {
@@ -312,13 +313,17 @@ void DemoModeMainWindow::postTraceExecution()
 
     TraceNodePtr trace = mTraceBuilder.trace();
 
-    TraceClassificationResult result = mTraceClassifier.classify(trace);
+    bool result = mTraceClassifier.classify(trace);
 
-    if(result.successful){
+    if(result){
         Log::info("CONCOLIC-INFO: This trace was classified as a SUCCESS.");
     }else{
         Log::info("CONCOLIC-INFO: This trace was classified as a FAILURE (did not submit a form).");
     }
+
+    Log::info("CONCOLIC-INFO: Printout of the trace:");
+    TerminalTracePrinter printer;
+    trace->accept(&printer);
 }
 
 

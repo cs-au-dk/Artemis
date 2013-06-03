@@ -74,6 +74,9 @@ public:
     virtual void visit(TraceEndFailure* node);
     virtual void visit(TraceEndUnknown* node);
 
+    // Helper methods for concrete visitors.
+    static bool isImmediatelyUnexplored(QSharedPointer<TraceNode> trace);
+
     virtual ~TraceVisitor(){}
 };
 

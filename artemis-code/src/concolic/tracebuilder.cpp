@@ -16,6 +16,9 @@
 
 
 #include "tracebuilder.h"
+#include "traceeventdetectors.h"
+
+#include "util/loggingutil.h"
 
 
 namespace artemis
@@ -23,25 +26,74 @@ namespace artemis
 
 
 
-TraceBuilder::TraceBuilder()
+
+TraceBuilder::TraceBuilder(WebKitExecutor* webkitExecutor)
 {
-    // TODO
+    // The branch detector.
+    QSharedPointer<TraceBranchDetector> branchDetector(new TraceBranchDetector(this));
+    // TODO: connect the branch signal for this detector.
+    mDetectors.append(branchDetector.staticCast<TraceEventDetector>());
+
+    // The alert detector.
+    QSharedPointer<TraceAlertDetector> alertDetector(new TraceAlertDetector(this));
+    QObject::connect(webkitExecutor->mPage.data(), SIGNAL(sigJavascriptAlert(QWebFrame*, QString)),
+                     alertDetector.data(), SLOT(slJavascriptAlert(QWebFrame*, QString)));
+    mDetectors.append(alertDetector.staticCast<TraceEventDetector>());
+
 }
 
 void TraceBuilder::beginRecording()
 {
-    // TODO
+    if(mRecording){
+        Log::fatal("TraceRecorder: Began recording during an existing recording.");
+        exit(1);
+    }
+
+    mRecording = true;
+
+    // Reset the trace to be empty.
+    mTrace = QSharedPointer<TraceNode>();
+    mSuccessor = &mTrace;
+
 }
 
 void TraceBuilder::endRecording()
 {
-    // TODO
+    if(!mRecording){
+        Log::fatal("TraceRecorder: Ended recording without starting one.");
+        exit(1);
+    }
+
+    mRecording = false;
+
+    // Finish off the trace with an EndUnknown node.
+    *mSuccessor = QSharedPointer<TraceNode>(new TraceEndUnknown());
+    mSuccessor = NULL;
+
+}
+
+void TraceBuilder::newNode(QSharedPointer<TraceNode> node, QSharedPointer<TraceNode>* successor)
+{
+    // ignore the new node unless we are recording a trace.
+    if(mRecording){
+
+        // Add the new node to the current successor pointer.
+        *mSuccessor = node;
+
+        // Update the new successor pointer
+        mSuccessor = successor;
+
+    }
 }
 
 TraceNodePtr TraceBuilder::trace()
 {
-    // TODO
-    return QSharedPointer<TraceUnexplored>(new TraceUnexplored());
+    if(mRecording){
+        Log::fatal("TraceRecorder: Requested trace during recording.");
+        exit(1);
+    }
+
+    return mTrace;
 }
 
 

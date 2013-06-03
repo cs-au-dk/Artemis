@@ -59,7 +59,8 @@ private:
     WebKitExecutor* mWebkitExecutor;
 
     // GUI
-    // TODO: for some reason replacing these with QSharedPointer causes problems (in some cases).
+    // QWidgets are owned by their parent widget and so should not be QSharedPointer.
+    // TODO: so we probably should also not be storing most of these here... only the ones we access directly later.
     QWidget* mCentralWidget;
     QWidget* mArtemisWidget;
     QWidget* mAnalysisWidget;

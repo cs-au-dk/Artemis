@@ -25,7 +25,7 @@ namespace artemis
 
 
 
-//---------------------------------------------------------------------------//
+/* Boring Trace Printer ******************************************************/
 
 
 
@@ -36,7 +36,7 @@ void VeryBoringTracePrintingVisitor::visit(TraceNode* node)
 
 
 
-//---------------------------------------------------------------------------//
+/* Detailed Trace Printer ****************************************************/
 
 
 
@@ -87,7 +87,7 @@ void CompleteTracePrintingVisitor::visit(TraceEndUnknown* node)
 
 
 
-//---------------------------------------------------------------------------//
+/* Search-Style Trace Printer ************************************************/
 
 
 
@@ -130,7 +130,7 @@ void SearchStylePrintingVisitor::visit(TraceEndUnknown* node)
 
 
 
-//---------------------------------------------------------------------------//
+/* Termianl Trace Printer ****************************************************/
 
 
 TerminalTracePrinter::TerminalTracePrinter()
@@ -371,7 +371,6 @@ QString TerminalTracePrinter::padToConnector(QString text, int connector, int wi
     return text;
 }
 
-//---------------------------------------------------------------------------//
 
 
 

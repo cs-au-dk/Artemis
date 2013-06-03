@@ -17,46 +17,54 @@
 #ifndef TRACEBUILDER_H
 #define TRACEBUILDER_H
 
+#include <QList>
+#include <QSharedPointer>
+
 #include "trace.h"
+
+#include "runtime/browser/webkitexecutor.h"
 
 
 namespace artemis
 {
 
-
-
-/*
- *  A trace of the entire execution along a single path.
- */
-
-class Trace
-{
-    // TODO: this is just a list of TraceNode, so maybe doesn't need its own object?
-
-
-};
-
-
-
-
+class TraceEventDetector;
 
 /*
- *  A trace of the entire execution along a single path.
+ *  Records a trace of the entire execution along a single path.
  */
 
 class TraceBuilder
 {
 public:
-    TraceBuilder();
+    TraceBuilder(WebKitExecutor* webkitExecutor);
 
     void beginRecording();
     void endRecording();
     TraceNodePtr trace();
 
+    // Called by the detectors to add a new node to the trace.
+    // 'successor' must be a pointer to the 'next' 'branchTrue', 'branchFalse', etc. member of that node,
+    // which will itself be null.
+    void newNode(QSharedPointer<TraceNode> node, QSharedPointer<TraceNode>* successor);
+
+private:
+    bool mRecording; // Whether we are currently recording a trace.
+
+    TraceNodePtr mTrace; // The current trace.
+    QSharedPointer<TraceNode>* mSuccessor; // Where in the trace to add the next node.
+    // Can't be QSharedPointer<QSharedPointer<TraceNode>> otherwise it would delete the pointed-to values too early.
+    // It should be valid whenever mRecording is true.
+
+    QList<QSharedPointer<TraceEventDetector> > mDetectors; // The interesting event detectors which add nodes to the traces.
 
 };
 
 
 } // namespace artemis
+
+
+
+
 
 #endif // TRACEBUILDER_H
