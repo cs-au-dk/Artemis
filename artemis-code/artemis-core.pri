@@ -75,7 +75,6 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/runtime/input/events/toucheventparameters.h \
     src/model/pathtracer.h \
     src/runtime/toplevel/artemisruntime.h \
-    src/runtime/toplevel/manualruntime.h \
     src/runtime/browser/artemiswebview.h \
     src/concolic/concolic.h \
     src/concolic/pathtree.h \
@@ -94,11 +93,11 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/runtime/toplevel/concolicruntime.h \
     src/concolic/traceclassifier.h \
     src/runtime/demomode/demowindow.h \
-    src/runtime/toplevel/demoruntime.h \
     src/concolic/traceprinter.h \
     src/concolic/tracevisitor.h \
     src/runtime/demomode/initialanalysiswidget.h \
-    src/runtime/demomode/artemisbrowserwidget.h
+    src/runtime/demomode/artemisbrowserwidget.h \
+    src/runtime/toplevel/manualruntime.h
 
 SOURCES += src/runtime/input/ajaxinput.cpp \
     src/strategies/prioritizer/constantprioritizer.cpp \
@@ -155,7 +154,6 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/runtime/input/events/toucheventparameters.cpp \
     src/model/pathtracer.cpp \
     src/runtime/toplevel/artemisruntime.cpp \
-    src/runtime/toplevel/manualruntime.cpp \
     src/runtime/browser/artemiswebview.cpp \
     src/concolic/concolic.cpp \
     src/concolic/pathtree.cpp \
@@ -167,10 +165,10 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/concolic/tracebuilder.cpp \
     src/concolic/traceclassifier.cpp \
     src/runtime/demomode/demowindow.cpp \
-    src/runtime/toplevel/demoruntime.cpp \
     src/concolic/traceprinter.cpp \
     src/concolic/tracevisitor.cpp \
     src/runtime/demomode/initialanalysiswidget.cpp \
-    src/runtime/demomode/artemisbrowserwidget.cpp
+    src/runtime/demomode/artemisbrowserwidget.cpp \
+    src/runtime/toplevel/manualruntime.cpp
 
 QT += network

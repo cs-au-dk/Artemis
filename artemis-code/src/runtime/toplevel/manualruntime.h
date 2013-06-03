@@ -14,25 +14,21 @@
  * limitations under the License.
  */
 
+
 #ifndef MANUALRUNTIME_H
 #define MANUALRUNTIME_H
 
 #include <QObject>
 
-#include "runtime/browser/artemiswebview.h"
 #include "runtime/runtime.h"
-#include "concolic/entrypoints.h"
-#include "concolic/trace.h"
-#include "concolic/tracebuilder.h"
-#include "concolic/traceclassifier.h"
-#include "concolic/traceprinter.h"
+#include "runtime/demomode/demowindow.h"
+
 
 namespace artemis
 {
 
 class ManualRuntime : public Runtime
 {
-
     Q_OBJECT
 
 public:
@@ -41,26 +37,13 @@ public:
     void run(const QUrl& url);
 
 protected:
-
-    ArtemisWebViewPtr mWebView;
-
-private:
-    bool mWaitingForInitialLoad;
-    EntryPointDetector mEntryPointDetector;
-    TraceBuilder mTraceBuilder;
-    TraceClassifier mTraceClassifier;
-
-    void preTraceExecution(ExecutionResultPtr result);
-    void postTraceExecution();
+    DemoModeMainWindowPtr mDemoApp;
 
 private slots:
-
-    void slWebViewClosed();
-
-    void slLoadFinished(ExecutableConfigurationConstPtr configuration, QSharedPointer<ExecutionResult> result);
-
+    void slApplicationClosed();
 };
 
 }
+
 
 #endif // MANUALRUNTIME_H
