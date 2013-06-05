@@ -30,7 +30,7 @@ namespace artemis
 TraceBuilder::TraceBuilder()
 {
 }
-/*
+
 void TraceBuilder::addDetector(QSharedPointer<TraceEventDetector> detector)
 {
     mDetectors.append(detector);
@@ -90,6 +90,6 @@ TraceNodePtr TraceBuilder::trace()
 
     return mTrace;
 }
-*/
+
 
 } // namespace artemis

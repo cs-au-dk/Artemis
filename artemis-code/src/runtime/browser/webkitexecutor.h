@@ -63,7 +63,7 @@ public:
 
     ArtemisWebPagePtr getPage();
 
-    //TraceBuilderPtr getTraceBuilder();
+    TraceBuilderPtr getTraceBuilder();
 
 private:
     ArtemisWebPagePtr mPage;
@@ -79,7 +79,7 @@ private:
 
     bool mKeepOpen;
 
-    TraceBuilderPtr mTraceBuilder;
+    TraceBuilderPtr mTraceBuilder; // TODO: including this member causes a segfault when everything is being destructed and I haven't yet worked out why. This happens even when I remove all initialisation/use and all members and methods of TraceBuilder.
 
 signals:
     void sigExecutedSequence(ExecutableConfigurationConstPtr conf, QSharedPointer<ExecutionResult> res);

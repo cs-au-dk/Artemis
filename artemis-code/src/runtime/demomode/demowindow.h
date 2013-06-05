@@ -88,7 +88,7 @@ private:
 
     // The analysis logic itself.
     bool mWaitingForInitialLoad;
-    //TraceBuilderPtr mTraceBuilder;
+    TraceBuilderPtr mTraceBuilder;
     EntryPointDetector mEntryPointDetector;
     TraceClassifier mTraceClassifier;
 

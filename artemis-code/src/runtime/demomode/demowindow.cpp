@@ -26,8 +26,8 @@ namespace artemis
 
 DemoModeMainWindow::DemoModeMainWindow(WebKitExecutor* webkitExecutor, const QUrl &url) :
     mWebkitExecutor(webkitExecutor),
-    mWaitingForInitialLoad(false)//,
-    //mTraceBuilder(webkitExecutor->getTraceBuilder())
+    mWaitingForInitialLoad(false),
+    mTraceBuilder(webkitExecutor->getTraceBuilder())
 {
     Log::info("DEMO: Constructing main window.");
 
@@ -307,7 +307,7 @@ void DemoModeMainWindow::preTraceExecution(ExecutionResultPtr result)
 
 
     // Begin recording trace events.
-    //mWebkitExecutor->getTraceBuilder()->beginRecording();
+    mTraceBuilder->beginRecording();
 
     // Display the page for the user to interact with.
     mWebView->setEnabled(true);
@@ -319,9 +319,9 @@ void DemoModeMainWindow::preTraceExecution(ExecutionResultPtr result)
 void DemoModeMainWindow::postTraceExecution()
 {
     Log::info("CONCOLIC-INFO: Analysing trace...");
-    /*mWebkitExecutor->getTraceBuilder()->endRecording();
+    mTraceBuilder->endRecording();
 
-    TraceNodePtr trace = mWebkitExecutor->getTraceBuilder()->trace();
+    TraceNodePtr trace = mTraceBuilder->trace();
 
     bool result = mTraceClassifier.classify(trace);
 
@@ -333,7 +333,7 @@ void DemoModeMainWindow::postTraceExecution()
 
     Log::info("CONCOLIC-INFO: Printout of the trace:");
     TerminalTracePrinter printer;
-    printer.printTraceTree(trace);*/
+    printer.printTraceTree(trace);
 }
 
 

@@ -37,26 +37,26 @@ class TraceBuilder
 public:
     TraceBuilder();
 
-    //void addDetector(QSharedPointer<TraceEventDetector> detector);
+    void addDetector(QSharedPointer<TraceEventDetector> detector);
 
-    //void beginRecording();
-    //void endRecording();
-    //TraceNodePtr trace();
+    void beginRecording();
+    void endRecording();
+    TraceNodePtr trace();
 
     // Called by the detectors to add a new node to the trace.
     // 'successor' must be a pointer to the 'next' 'branchTrue', 'branchFalse', etc. member of that node,
     // which will itself be null.
-    //void newNode(QSharedPointer<TraceNode> node, QSharedPointer<TraceNode>* successor);
+    void newNode(QSharedPointer<TraceNode> node, QSharedPointer<TraceNode>* successor);
 
 private:
-    //bool mRecording; // Whether we are currently recording a trace.
+    bool mRecording; // Whether we are currently recording a trace.
 
-    //TraceNodePtr mTrace; // The current trace.
-    //QSharedPointer<TraceNode>* mSuccessor; // Where in the trace to add the next node.
+    TraceNodePtr mTrace; // The current trace.
+    QSharedPointer<TraceNode>* mSuccessor; // Where in the trace to add the next node.
     // Can't be QSharedPointer<QSharedPointer<TraceNode>> otherwise it would delete the pointed-to values too early.
     // It should be valid whenever mRecording is true.
 
-    //QList<QSharedPointer<TraceEventDetector> > mDetectors; // The interesting event detectors which add nodes to the traces.
+    QList<QSharedPointer<TraceEventDetector> > mDetectors; // The interesting event detectors which add nodes to the traces.
 
 };
 

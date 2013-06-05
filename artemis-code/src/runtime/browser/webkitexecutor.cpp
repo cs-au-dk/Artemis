@@ -127,8 +127,8 @@ WebKitExecutor::WebKitExecutor(QObject* parent,
 
 
     // Set up the trace builder and event detectors.
-    mTraceBuilder = TraceBuilderPtr(new TraceBuilder());
-/*
+    mTraceBuilder = TraceBuilderPtr(new TraceBuilder()); // TODO: this
+
     // The branch detector.
     QSharedPointer<TraceBranchDetector> branchDetector(new TraceBranchDetector());
     // TODO: implement and connect the branch signal for this detector.
@@ -139,7 +139,6 @@ WebKitExecutor::WebKitExecutor(QObject* parent,
     QObject::connect(mPage.data(), SIGNAL(sigJavascriptAlert(QWebFrame*, QString)),
                      alertDetector.data(), SLOT(slJavascriptAlert(QWebFrame*, QString)));
     mTraceBuilder->addDetector(alertDetector.staticCast<TraceEventDetector>());
-*/
 
 }
 
@@ -230,9 +229,9 @@ ArtemisWebPagePtr WebKitExecutor::getPage()
     return mPage;
 }
 
-//TraceBuilderPtr WebKitExecutor::getTraceBuilder()
-//{
-//    return mTraceBuilder;
-//}
+TraceBuilderPtr WebKitExecutor::getTraceBuilder()
+{
+    return mTraceBuilder;
+}
 
 }
