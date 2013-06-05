@@ -25,9 +25,9 @@ namespace artemis
 
 
 DemoModeMainWindow::DemoModeMainWindow(WebKitExecutor* webkitExecutor, const QUrl &url) :
-    mTraceBuilder(webkitExecutor),
     mWebkitExecutor(webkitExecutor),
-    mWaitingForInitialLoad(false)
+    mWaitingForInitialLoad(false)//,
+    //mTraceBuilder(webkitExecutor->getTraceBuilder())
 {
     Log::info("DEMO: Constructing main window.");
 
@@ -193,9 +193,19 @@ DemoModeMainWindow::~DemoModeMainWindow()
     Log::info("DEMO: Destroying main window.");
     // Do not delete mWebkitExecutor, that is managed from elsewhere.
     // TODO: do we need to manually delete all the widget objects or are they handled automatically by their parents?
-    emit sigClose();
 }
 
+
+// Called when the window is closed.
+void DemoModeMainWindow::closeEvent(QCloseEvent *)
+{
+    Log::info("DEMO: Window closed.");
+
+    // TODO: instead of calling this when the window closes, we would prefer a button in the UI to finish and analyse the trace.
+    postTraceExecution();
+
+    emit sigClose();
+}
 
 
 // Called when we choose a new page via the loaction bar.
@@ -297,7 +307,7 @@ void DemoModeMainWindow::preTraceExecution(ExecutionResultPtr result)
 
 
     // Begin recording trace events.
-    mTraceBuilder.beginRecording();
+    //mWebkitExecutor->getTraceBuilder()->beginRecording();
 
     // Display the page for the user to interact with.
     mWebView->setEnabled(true);
@@ -305,25 +315,25 @@ void DemoModeMainWindow::preTraceExecution(ExecutionResultPtr result)
 }
 
 // Called once the trace recording is over (signalled by the user).
-// TODO: this is never called from anywhere yet!
+// TODO: called when the window is closed, but would prefer a button (or similar).
 void DemoModeMainWindow::postTraceExecution()
 {
     Log::info("CONCOLIC-INFO: Analysing trace...");
-    mTraceBuilder.endRecording();
+    /*mWebkitExecutor->getTraceBuilder()->endRecording();
 
-    TraceNodePtr trace = mTraceBuilder.trace();
+    TraceNodePtr trace = mWebkitExecutor->getTraceBuilder()->trace();
 
     bool result = mTraceClassifier.classify(trace);
 
     if(result){
         Log::info("CONCOLIC-INFO: This trace was classified as a SUCCESS.");
     }else{
-        Log::info("CONCOLIC-INFO: This trace was classified as a FAILURE (did not submit a form).");
+        Log::info("CONCOLIC-INFO: This trace was classified as a FAILURE.");
     }
 
     Log::info("CONCOLIC-INFO: Printout of the trace:");
     TerminalTracePrinter printer;
-    trace->accept(&printer);
+    printer.printTraceTree(trace);*/
 }
 
 

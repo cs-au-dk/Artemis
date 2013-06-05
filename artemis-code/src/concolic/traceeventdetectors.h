@@ -41,15 +41,18 @@ class TraceBuilder;
  *  This class is extended by classes which will detect events, create trace nodes and call newNode on those nodes.
  */
 
-class TraceEventDetector
+class TraceEventDetector : public QObject
 {
     Q_OBJECT
 
 public:
-    TraceEventDetector(TraceBuilder* traceBuilder):mTraceBuilder(traceBuilder){}
+    virtual ~TraceEventDetector(){}
+
+    void setTraceBuilder(TraceBuilder* traceBuilder);
 
 private:
     TraceBuilder* mTraceBuilder; // Must use standard pointer as this is set via the 'this' pointer of the parent trace builder.
+    // TODO: can probably be a QWeakPointer? Still should not be QSharedPointer to avoid a circular reference.
 
 protected:
     // See TraceBuilder::newNode comment in tracebuilder.h.
@@ -64,8 +67,7 @@ protected:
  */
 class TraceBranchDetector : public TraceEventDetector
 {
-public:
-    TraceBranchDetector(TraceBuilder* traceBuilder):TraceEventDetector(traceBuilder){}
+    Q_OBJECT
 
 protected slots:
     void slBranch(); // TODO: not connected to anything!
@@ -79,8 +81,7 @@ protected slots:
  */
 class TraceAlertDetector : public TraceEventDetector
 {
-public:
-    TraceAlertDetector(TraceBuilder* traceBuilder):TraceEventDetector(traceBuilder){}
+    Q_OBJECT
 
 public slots:
     void slJavascriptAlert(QWebFrame *frame, QString msg);

@@ -20,10 +20,17 @@
 
 #include <QtGui>
 
+namespace artemis
+{
+
+
 class InitialAnalysisWidget : public QGroupBox
 {
 public:
     InitialAnalysisWidget(QWidget* parent = 0);
 };
+
+
+} //namespace artemis
 
 #endif // INITIALANALYSISWIDGET_H

@@ -53,6 +53,9 @@ public:
 
     void run(const QUrl &url);
 
+protected:
+    void closeEvent(QCloseEvent *);
+
 private:
     // Artemis
     ArtemisWebViewPtr mWebView;
@@ -85,8 +88,8 @@ private:
 
     // The analysis logic itself.
     bool mWaitingForInitialLoad;
+    //TraceBuilderPtr mTraceBuilder;
     EntryPointDetector mEntryPointDetector;
-    TraceBuilder mTraceBuilder;
     TraceClassifier mTraceClassifier;
 
     void preTraceExecution(ExecutionResultPtr result);

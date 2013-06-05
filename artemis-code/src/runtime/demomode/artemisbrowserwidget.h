@@ -19,10 +19,19 @@
 #ifndef ARTEMISBROWSERWIDGET_H
 #define ARTEMISBROWSERWIDGET_H
 
+
+namespace artemis
+{
+
+
+
 class ArtemisBrowserWidget : public QGroupBox
 {
 public:
     ArtemisBrowserWidget(QWidget* parent = 0);
 };
+
+
+} // namespace artemis
 
 #endif // ARTEMISBROWSERWIDGET_H

@@ -27,19 +27,14 @@ namespace artemis
 
 
 
-TraceBuilder::TraceBuilder(WebKitExecutor* webkitExecutor)
+TraceBuilder::TraceBuilder()
 {
-    // The branch detector.
-    QSharedPointer<TraceBranchDetector> branchDetector(new TraceBranchDetector(this));
-    // TODO: connect the branch signal for this detector.
-    mDetectors.append(branchDetector.staticCast<TraceEventDetector>());
-
-    // The alert detector.
-    QSharedPointer<TraceAlertDetector> alertDetector(new TraceAlertDetector(this));
-    QObject::connect(webkitExecutor->mPage.data(), SIGNAL(sigJavascriptAlert(QWebFrame*, QString)),
-                     alertDetector.data(), SLOT(slJavascriptAlert(QWebFrame*, QString)));
-    mDetectors.append(alertDetector.staticCast<TraceEventDetector>());
-
+}
+/*
+void TraceBuilder::addDetector(QSharedPointer<TraceEventDetector> detector)
+{
+    mDetectors.append(detector);
+    detector->setTraceBuilder(this);
 }
 
 void TraceBuilder::beginRecording()
@@ -95,6 +90,6 @@ TraceNodePtr TraceBuilder::trace()
 
     return mTrace;
 }
-
+*/
 
 } // namespace artemis

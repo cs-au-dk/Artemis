@@ -19,6 +19,7 @@
 #include "traceeventdetectors.h"
 #include "tracebuilder.h"
 
+#include "util/loggingutil.h"
 
 
 namespace artemis
@@ -27,9 +28,19 @@ namespace artemis
 
 /* Base Detector Class *******************************************************/
 
+void TraceEventDetector::setTraceBuilder(TraceBuilder* traceBuilder)
+{
+    mTraceBuilder = traceBuilder;
+}
+
 void TraceEventDetector::newNode(QSharedPointer<TraceNode> node, QSharedPointer<TraceNode>* successor)
 {
-    mTraceBuilder->newNode(node, successor);
+    if(mTraceBuilder){
+        //mTraceBuilder->newNode(node, successor);
+    }else{
+        Log::fatal("Trace Event Detector being used with no associated Trace Builder.");
+        exit(1);
+    }
 }
 
 

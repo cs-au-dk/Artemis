@@ -36,6 +36,9 @@
 #include "artemiswebpage.h"
 #include "runtime/appmodel.h"
 
+#include "concolic/tracebuilder.h"
+#include "concolic/traceeventdetectors.h"
+
 namespace artemis
 {
 
@@ -60,6 +63,8 @@ public:
 
     ArtemisWebPagePtr getPage();
 
+    //TraceBuilderPtr getTraceBuilder();
+
 private:
     ArtemisWebPagePtr mPage;
     ExecutionResultBuilderPtr mResultBuilder;
@@ -73,6 +78,8 @@ private:
     PathTracerPtr mPathTracer;
 
     bool mKeepOpen;
+
+    TraceBuilderPtr mTraceBuilder;
 
 signals:
     void sigExecutedSequence(ExecutableConfigurationConstPtr conf, QSharedPointer<ExecutionResult> res);

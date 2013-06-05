@@ -184,7 +184,7 @@ void TerminalTracePrinter::visit(TraceBranch* node)
     node->branchTrue->accept(this);
 
     // Now we have both trees, so join them.
-    addBranch("Brn");
+    addBranch("Branch");
 }
 
 void TerminalTracePrinter::visit(TraceUnexplored* node)

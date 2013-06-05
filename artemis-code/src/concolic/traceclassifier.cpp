@@ -39,7 +39,7 @@ bool TraceClassifier::classify(TraceNodePtr trace)
 
     // TODO: add the end marker into the trace.
 
-    return mWasAlert;
+    return !mWasAlert;
 }
 
 
@@ -56,7 +56,7 @@ bool TraceClassifier::classify(TraceNodePtr trace)
 
 void TraceClassifier::visit(TraceAlert *node)
 {
-    mAlert = true;
+    mWasAlert = true;
     node->next->accept(this);
 }
 
