@@ -261,9 +261,12 @@ void TerminalTracePrinter::addSingleValue(QString nodeText)
             QString leftPad = QString((nodeText.length() - mCurrentTree.width) / 2, ' ');
             QString rightPad = QString(nodeText.length() - mCurrentTree.width - leftPad.length(), ' ');
             // Pad the current tree (every line must be exaclty nodeText.length() chars in all)
-            foreach(QString line, mCurrentTree.lines){
+            QMutableListIterator<QString> it(mCurrentTree.lines);
+            while(it.hasNext()){
+                QString line = it.next();
                 line.prepend(leftPad);
                 line.append(rightPad);
+                it.setValue(line);
             }
             // Reset the width and connector position.
             mCurrentTree.width = nodeText.length();

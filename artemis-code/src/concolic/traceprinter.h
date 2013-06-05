@@ -19,6 +19,7 @@
 
 #include <QStack>
 #include <QList>
+#include <QMutableListIterator>
 #include <QString>
 
 #ifndef TRACEPRINTER_H
