@@ -70,6 +70,11 @@ void CompleteTracePrintingVisitor::visit(TracePageLoad* node)
     Log::info("CTPV: At a PAGE LOAD.");
 }
 
+void CompleteTracePrintingVisitor::visit(TraceFunctionCall* node)
+{
+    Log::info("CTPV: At a FUNCTION CALL.");
+}
+
 void CompleteTracePrintingVisitor::visit(TraceEndSuccess* node)
 {
     Log::info("CTPV: At an END SUCCESS.");
@@ -208,6 +213,12 @@ void TerminalTracePrinter::visit(TracePageLoad* node)
 {
     node->next->accept(this);
     addSingleValue("Load");
+}
+
+void TerminalTracePrinter::visit(TraceFunctionCall* node)
+{
+    node->next->accept(this);
+    addSingleValue(QString("Fn \"%1\"").arg(node->name));
 }
 
 void TerminalTracePrinter::visit(TraceEndSuccess* node)

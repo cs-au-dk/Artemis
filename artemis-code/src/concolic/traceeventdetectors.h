@@ -17,6 +17,7 @@
 #include <QString>
 #include <QWebFrame>
 #include <QSharedPointer>
+#include <QSource>
 
 #include "trace.h"
 
@@ -88,6 +89,19 @@ public slots:
 
 };
 
+
+
+/*
+ *  Detector for application-code function calls.
+ */
+class TraceFunctionCallDetector : public TraceEventDetector
+{
+    Q_OBJECT
+
+public slots:
+    void slJavascriptFunctionCalled(QString functionName, size_t bytecodeSize, uint functionStartLine, uint sourceOffset, QSource* source);
+
+};
 
 
 } // namespace artemis

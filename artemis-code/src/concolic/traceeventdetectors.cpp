@@ -78,4 +78,20 @@ void TraceAlertDetector::slJavascriptAlert(QWebFrame* frame, QString msg)
 
 
 
+/* Function Call Detector ****************************************************/
+
+void TraceFunctionCallDetector::slJavascriptFunctionCalled(QString functionName, size_t bytecodeSize, uint functionStartLine, uint sourceOffset, QSource* source)
+{
+    // Create a new function call node.
+    QSharedPointer<TraceFunctionCall> node = QSharedPointer<TraceFunctionCall>(new TraceFunctionCall());
+    node->name = functionName;
+    // Leave node.next as null.
+
+    // Pass this new node to the trace builder and pass a pointer to where the sucessor should be attached.
+    newNode(node.staticCast<TraceNode>(), &(node->next));
+}
+
+
+
+
 } //namespace artmeis

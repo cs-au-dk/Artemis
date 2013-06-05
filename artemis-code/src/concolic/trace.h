@@ -127,6 +127,15 @@ public:
 };
 
 
+class TraceFunctionCall : public TraceAnnotation
+{
+public:
+    QString name;
+    void accept(TraceVisitor* visitor){visitor->visit(this);}
+    ~TraceFunctionCall(){}
+};
+
+
 class TraceEnd : public TraceNode
 {
     // Abstract

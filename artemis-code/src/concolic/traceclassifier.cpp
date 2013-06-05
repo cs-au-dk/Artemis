@@ -70,6 +70,11 @@ void TraceClassifier::visit(TracePageLoad *node)
     node->next->accept(this);
 }
 
+void TraceClassifier::visit(TraceFunctionCall *node)
+{
+    node->next->accept(this);
+}
+
 void TraceClassifier::visit(TraceNode *node)
 {
     Log::fatal("Trace Classifier: visited a node which was not handled correctly.");

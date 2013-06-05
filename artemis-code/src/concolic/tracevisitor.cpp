@@ -30,6 +30,7 @@ void TraceVisitor::visit(TraceAnnotation* node)         { visit(static_cast<Trac
 void TraceVisitor::visit(TraceAlert* node)              { visit(static_cast<TraceAnnotation*>(node)); }
 void TraceVisitor::visit(TraceDomModification* node)    { visit(static_cast<TraceAnnotation*>(node)); }
 void TraceVisitor::visit(TracePageLoad* node)           { visit(static_cast<TraceAnnotation*>(node)); }
+void TraceVisitor::visit(TraceFunctionCall* node)       { visit(static_cast<TraceAnnotation*>(node)); }
 void TraceVisitor::visit(TraceEnd* node)                { visit(static_cast<TraceNode*>(node)); }
 void TraceVisitor::visit(TraceEndSuccess* node)         { visit(static_cast<TraceEnd*>(node)); }
 void TraceVisitor::visit(TraceEndFailure* node)         { visit(static_cast<TraceEnd*>(node)); }
