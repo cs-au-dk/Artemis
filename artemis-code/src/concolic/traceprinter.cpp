@@ -245,10 +245,6 @@ void TerminalTracePrinter::addSingleValue(QString nodeText)
         if(nodeText.length() <= mCurrentTree.width){
             // Pad the node text (making sure it will be exactly mCurrentTree.width chars in all)
             nodeText = padToConnector(nodeText, mCurrentTree.connector, mCurrentTree.width);
-            //QString leftPad = QString((mCurrentTree.width - nodeText.length()) / 2, ' ');
-            //QString rightPad = QString(mCurrentTree.width - nodeText.length() - leftPad.length(), ' ');
-            //nodeText.prepend(leftPad);
-            //nodeText.append(rightPad);
 
         }else{
             QString leftPad = QString((nodeText.length() - mCurrentTree.width) / 2, ' ');
