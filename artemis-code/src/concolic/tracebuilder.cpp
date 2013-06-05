@@ -27,7 +27,8 @@ namespace artemis
 
 
 
-TraceBuilder::TraceBuilder()
+TraceBuilder::TraceBuilder() :
+    mRecording(false)
 {
 }
 

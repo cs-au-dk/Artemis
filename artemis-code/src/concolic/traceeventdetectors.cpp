@@ -36,7 +36,7 @@ void TraceEventDetector::setTraceBuilder(TraceBuilder* traceBuilder)
 void TraceEventDetector::newNode(QSharedPointer<TraceNode> node, QSharedPointer<TraceNode>* successor)
 {
     if(mTraceBuilder){
-        //mTraceBuilder->newNode(node, successor);
+        mTraceBuilder->newNode(node, successor);
     }else{
         Log::fatal("Trace Event Detector being used with no associated Trace Builder.");
         exit(1);
