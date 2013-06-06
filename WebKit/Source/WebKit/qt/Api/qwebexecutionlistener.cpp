@@ -19,6 +19,7 @@
 #include <DOMWindow.h>
 #include <QString>
 #include <QDebug>
+#include <QDateTime>
 #include <iostream>
 #include "wtf/text/CString.h"
 
@@ -76,7 +77,10 @@ void QWebExecutionListener::enableHeapReport(bool namedOnly){
 }
 
 QString QWebExecutionListener::getHeapReport(){
-    return m_heapReport;
+    QString s = QString::fromStdString("{\"heap-report\":[");
+    s.append(m_heapReport);
+    s.append(QString::fromStdString("]}"));
+    return s;
 }
 
 void QWebExecutionListener::eventCleared(WebCore::EventTarget * target, const char* type) {
@@ -235,13 +239,22 @@ void QWebExecutionListener::javascript_called_function(const JSC::DebuggerCallFr
 
     if(m_reportHeapMode > 0 && (m_reportHeapMode > 1 || functionName.length() > 0)){
         QString url = m_sourceRegistry.get(frame.callFrame()->codeBlock()->source())->getUrl();
-        string fn = functionName.length() >0 ? functionName : "<no-name>";
-        string s = "Function Called: "+fn+"@"+url.toStdString()+"[";
+        string fn = functionName.length() >0 ? "\""+functionName + "\"" : "null";
+
+//        string s = "Function Called: "+fn+"@"+url.toStdString()+"[";
+        string s = "{\"function-name\":"+fn+", \"source\":\""+url.toStdString()+"[";
+
+        if(m_heapReport.length() > 0){
+            m_heapReport.append(QString::fromStdString(", "));
+        }
+
         m_heapReport.append(QString::fromStdString(s));
         m_heapReport.append(QString::number(codeBlock->lineNumberForBytecodeOffset(0)));
-        m_heapReport.append(QString::fromStdString("]. Heap string:\n"));
+        QString dt = QDateTime::currentDateTime().toString(QString::fromStdString("dd-MM-yy-hh-mm-ss"));
+        m_heapReport.append(QString::fromStdString("]\", \"time\":\"").append(dt).append(QString::fromStdString("\", \"state\":")));
         m_heapReport.append(frame.callFrame()->heap()->heapAsString(frame.callFrame()));
-        m_heapReport.append(QString::fromStdString("\n\n"));
+        m_heapReport.append(QString::fromStdString("}"));
+
     }
 
 

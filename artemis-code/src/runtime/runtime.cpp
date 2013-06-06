@@ -167,7 +167,7 @@ void Runtime::done()
     statistics()->accumulate("WebKit::coverage::covered-unique", mAppmodel->getCoverageListener()->getNumCoveredLines());
     if(mOptions.reportHeap != NO_CALLS){
 
-        writeStringToFile(QString("heap-report-") + QDateTime::currentDateTime().toString("dd-MM-yy-hh-mm-ss"),mWebkitExecutor->webkitListener->getHeapReport());
+        writeStringToFile(QString("heap-report-") + QDateTime::currentDateTime().toString("dd-MM-yy-hh-mm-ss")+".json",mWebkitExecutor->webkitListener->getHeapReport());
     }
     Log::info("\n=== Statistics ===\n");
     StatsPrettyWriter::write(statistics());
