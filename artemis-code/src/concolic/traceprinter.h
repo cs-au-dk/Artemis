@@ -107,8 +107,11 @@ private:
     PrintableTree mCurrentTree;
     QStack<PrintableTree> mCompletedLeftTrees;
     void addSingleValue(QString nodeText);
+    void addSingleValue(QList<QString> nodeText);
     void addBranch(QString nodeText);
+    void addBranch(QList<QString> nodeText);
     static QString padToConnector(QString text, int connector, int width);
+    static QList<QString> processNodeTextLines(QList<QString> nodeText);
 
 };
 
