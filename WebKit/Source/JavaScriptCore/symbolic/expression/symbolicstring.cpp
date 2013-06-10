@@ -23,7 +23,7 @@
 namespace Symbolic
 {
 
-SymbolicString::SymbolicString(std::string identifier) :
+SymbolicString::SymbolicString(std::string* identifier) :
     StringExpression(),
     m_identifier(identifier)
 {

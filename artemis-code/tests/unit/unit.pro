@@ -11,7 +11,8 @@ LIBS += ../../../WebKit/WebKitBuild/Release/lib/libQtWebKit.so
 
 INCLUDEPATH += ../../../WebKit/WebKitBuild/Release/include/ \
     ../../../WebKit/WebKitBuild/Release/include/QtWebKit/ \
-    ../../../WebKit/Source/WebCore \
+    ../../../WebKit/Source/WebCore/ \
+    ../../../WebKit/Source/ \
     ../../src/
 
 VPATH += ../../
@@ -25,5 +26,4 @@ SOURCES += \
     src/gtest/gtest_main.cc \
     src/gtest/gtest-all.cc \
     src/gmock/gmock-all.cc \
-    src/runtime/worklist/deterministicworklisttest.cpp \
     src/strategies/inputgenerator/form/constantstringforminputgeneratortest.cpp

@@ -17,7 +17,7 @@
 #ifndef SOLVER_H
 #define SOLVER_H
 
-#include "../JavaScriptCore/symbolic/pathcondition.h"
+#include "JavaScriptCore/symbolic/pathcondition.h"
 
 namespace artemis
 {

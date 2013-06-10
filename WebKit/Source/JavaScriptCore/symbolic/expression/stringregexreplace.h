@@ -21,9 +21,6 @@
 
 #include <string>
 
-#include "JavaScriptCore/wtf/ExportMacros.h"
-#include "JavaScriptCore/runtime/UString.h"
-
 #include "visitor.h"
 #include "stringexpression.h"
 
@@ -35,23 +32,23 @@ namespace Symbolic
 class StringRegexReplace : public StringExpression
 {
 public:
-    explicit StringRegexReplace(StringExpression* source, JSC::UString regexpattern, JSC::UString replace);
+    explicit StringRegexReplace(StringExpression* source, std::string* regexpattern, std::string* replace);
     void accept(Visitor* visitor);
 
 	inline StringExpression* getSource() {
 		return m_source;
 	}
-	inline JSC::UString getRegexpattern() {
+	inline std::string* getRegexpattern() {
 		return m_regexpattern;
 	}
-	inline JSC::UString getReplace() {
+	inline std::string* getReplace() {
 		return m_replace;
 	}
 
 private:
 	StringExpression* m_source;
-	JSC::UString m_regexpattern;
-	JSC::UString m_replace;
+	std::string* m_regexpattern;
+	std::string* m_replace;
 
 };
 }

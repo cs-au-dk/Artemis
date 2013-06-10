@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+#include <stdlib.h>
+
 #include "solver.h"
 
 namespace artemis
@@ -21,6 +23,12 @@ namespace artemis
 
 bool Solver::solve(Symbolic::PathCondition pc)
 {
+
+    // 1. translate pc to something solvable using the translator
+
+    // 2. save the result to a file
+
+    // 3. run the solver on the file
 
     return true;
 

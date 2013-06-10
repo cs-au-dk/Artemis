@@ -21,9 +21,6 @@
 
 #include <string>
 
-#include "JavaScriptCore/wtf/ExportMacros.h"
-#include "JavaScriptCore/runtime/UString.h"
-
 #include "visitor.h"
 #include "integerexpression.h"
 
