@@ -17,13 +17,10 @@
 #ifndef SOLVER_H
 #define SOLVER_H
 
-
-#include "constraint.h" // TODO: this should come from WebKit's symbolic stuff.
+#include "../JavaScriptCore/symbolic/pathcondition.h"
 
 namespace artemis
 {
-
-
 
 /*
  *  Generic symbolic constrint solver interface.
@@ -32,7 +29,7 @@ namespace artemis
 class Solver
 {
 public:
-    void solve(Symbolic::PathCodition pc) = 0; // TODO: signature?
+    bool solve(Symbolic::PathCondition pc);
 };
 
 

@@ -88,7 +88,6 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/concolic/trace.h \
     src/concolic/entrypoints.h \
     src/concolic/exitpoints.h \
-    src/concolic/constraint.h \
     src/concolic/tracebuilder.h \
     src/runtime/toplevel/concolicruntime.h \
     src/concolic/traceclassifier.h \

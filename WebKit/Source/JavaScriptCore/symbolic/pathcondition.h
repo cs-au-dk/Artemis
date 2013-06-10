@@ -20,7 +20,7 @@
 #include <inttypes.h>
 #include <vector>
 
-#include "symbolic/expression/expression.h"
+#include "JavaScriptCore/symbolic/expression/expression.h"
 
 #ifdef ARTEMIS
 
