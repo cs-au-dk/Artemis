@@ -125,6 +125,27 @@ WebKitExecutor::WebKitExecutor(QObject* parent,
     QObject::connect(webkitListener, SIGNAL(sigJavascriptConstantStringEncountered(QString)),
                      mResultBuilder.data(), SLOT(slJavascriptConstantStringEncountered(QString)));
 
+
+    // Set up the trace builder and event detectors.
+    mTraceBuilder = TraceBuilderPtr(new TraceBuilder()); // TODO: this
+
+    // The branch detector.
+    QSharedPointer<TraceBranchDetector> branchDetector(new TraceBranchDetector());
+    // TODO: implement and connect the branch signal for this detector.
+    mTraceBuilder->addDetector(branchDetector.staticCast<TraceEventDetector>());
+
+    // The alert detector.
+    QSharedPointer<TraceAlertDetector> alertDetector(new TraceAlertDetector());
+    QObject::connect(mPage.data(), SIGNAL(sigJavascriptAlert(QWebFrame*, QString)),
+                     alertDetector.data(), SLOT(slJavascriptAlert(QWebFrame*, QString)));
+    mTraceBuilder->addDetector(alertDetector.staticCast<TraceEventDetector>());
+
+    // The function call detector.
+    QSharedPointer<TraceFunctionCallDetector> functionCallDetector(new TraceFunctionCallDetector());
+    QObject::connect(webkitListener, SIGNAL(sigJavascriptFunctionCalled(QString, size_t, uint, uint, QSource*)),
+                     functionCallDetector.data(), SLOT(slJavascriptFunctionCalled(QString, size_t, uint, uint, QSource*)));
+    mTraceBuilder->addDetector(functionCallDetector.staticCast<TraceEventDetector>());
+
 }
 
 WebKitExecutor::~WebKitExecutor()
@@ -223,6 +244,11 @@ void WebKitExecutor::slLoadFinished(bool ok)
 ArtemisWebPagePtr WebKitExecutor::getPage()
 {
     return mPage;
+}
+
+TraceBuilderPtr WebKitExecutor::getTraceBuilder()
+{
+    return mTraceBuilder;
 }
 
 }

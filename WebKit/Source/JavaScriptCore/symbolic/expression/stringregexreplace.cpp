@@ -23,7 +23,7 @@
 namespace Symbolic
 {
 
-StringRegexReplace::StringRegexReplace(StringExpression* source, JSC::UString regexpattern, JSC::UString replace) :
+StringRegexReplace::StringRegexReplace(StringExpression* source, std::string* regexpattern, std::string* replace) :
     StringExpression(),
     m_source(source),
     m_regexpattern(regexpattern),

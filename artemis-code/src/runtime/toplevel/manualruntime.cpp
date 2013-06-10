@@ -14,7 +14,10 @@
  * limitations under the License.
  */
 
+#include <QList>
+
 #include "manualruntime.h"
+
 
 namespace artemis
 {
@@ -22,27 +25,27 @@ namespace artemis
 ManualRuntime::ManualRuntime(QObject* parent, const Options& options, const QUrl& url) :
     Runtime(parent, options, url)
 {
+    mDemoApp = DemoModeMainWindowPtr(new DemoModeMainWindow(mWebkitExecutor, url));
 
-    mWebView = ArtemisWebViewPtr(new ArtemisWebView());
-    mWebView->setPage(mWebkitExecutor->getPage().data());
-
-    QObject::connect(mWebView.data(), SIGNAL(sigClose()),
-                     this, SLOT(slWebViewClosed()));
+    QObject::connect(mDemoApp.data(), SIGNAL(sigClose()),
+                     this, SLOT(slApplicationClosed()));
 }
 
 void ManualRuntime::run(const QUrl& url)
 {
-   ExecutableConfigurationPtr initial =
-        ExecutableConfigurationPtr(new ExecutableConfiguration(InputSequencePtr(new InputSequence()), url));
-
-    mWebkitExecutor->executeSequence(initial, true);
-    mWebView->show();
+    mDemoApp->run(url);
+    mDemoApp->show();
 }
 
-void ManualRuntime::slWebViewClosed()
+
+
+
+void ManualRuntime::slApplicationClosed()
 {
-    mWebkitExecutor->detach();
     done();
 }
 
-}
+
+
+} // namespace artemis
+

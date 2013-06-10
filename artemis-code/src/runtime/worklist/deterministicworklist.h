@@ -20,6 +20,7 @@
 #include <vector>
 
 #include <QPair>
+#include <QSharedPointer>
 
 #include "strategies/prioritizer/prioritizerstrategy.h"
 
@@ -61,6 +62,8 @@ private:
     PrioritizerStrategyPtr mPrioritizer;
 
 };
+
+typedef QSharedPointer<DeterministicWorkList> DeterministicWorkListPtr;
 
 }
 

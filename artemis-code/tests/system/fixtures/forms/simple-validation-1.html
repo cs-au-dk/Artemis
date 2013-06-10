@@ -1,0 +1,37 @@
+<!doctype html><html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+	<title>Ben Spencer</title>
+	<meta name="author" content="Ben Spencer">
+	<script type="text/javascript">
+		var x = "testme";
+
+		function validate() {
+			var y = document.getElementById("testinput").value;
+
+			if (y != x) {
+				alert("Error!");
+				return false;
+			}else{
+				return true;
+			}
+		}
+	</script>
+
+</head>
+<body>
+
+	<p>Write <i>testme</i> in the field to do something.</p>
+
+	<form method="GET" action="about:blank" >
+
+		<input type="text" name="testinput" id="testinput" />
+
+		<button type="submit" onclick="return validate();">Submit</button>
+
+	</form>
+
+</body>
+</html>

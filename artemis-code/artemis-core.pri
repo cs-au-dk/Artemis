@@ -75,9 +75,31 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/runtime/input/events/toucheventparameters.h \
     src/model/pathtracer.h \
     src/runtime/toplevel/artemisruntime.h \
+    src/runtime/browser/artemiswebview.h \
+    src/concolic/concolic.h \
+    src/concolic/pathtree.h \
+    src/concolic/concreteinput.h \
+    src/concolic/search.h \
+    src/concolic/solver.h \
+    src/concolic/searchdfs.h \
+    src/concolic/searchrandom.h \
+    src/concolic/kaluzasolver.h \
+    src/concolic/executor.h \
+    src/concolic/trace.h \
+    src/concolic/entrypoints.h \
+    src/concolic/exitpoints.h \
+    src/concolic/tracebuilder.h \
+    src/runtime/toplevel/concolicruntime.h \
+    src/concolic/traceclassifier.h \
+    src/runtime/demomode/demowindow.h \
+    src/concolic/traceprinter.h \
+    src/concolic/tracevisitor.h \
+    src/runtime/demomode/initialanalysiswidget.h \
+    src/runtime/demomode/artemisbrowserwidget.h \
     src/runtime/toplevel/manualruntime.h \
     src/runtime/browser/artemiswebview.h \
-    src/runtime/input/events/unknowneventparameters.h
+    src/runtime/input/events/unknowneventparameters.h \
+    src/concolic/traceeventdetectors.h
 
 SOURCES += src/runtime/input/ajaxinput.cpp \
     src/strategies/prioritizer/constantprioritizer.cpp \
@@ -134,8 +156,24 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/runtime/input/events/toucheventparameters.cpp \
     src/model/pathtracer.cpp \
     src/runtime/toplevel/artemisruntime.cpp \
+    src/runtime/browser/artemiswebview.cpp \
+    src/concolic/concolic.cpp \
+    src/concolic/pathtree.cpp \
+    src/concolic/concreteinput.cpp \
+    src/concolic/search.cpp \
+    src/concolic/solver.cpp \
+    src/concolic/entrypoints.cpp \
+    src/runtime/toplevel/concolicruntime.cpp \
+    src/concolic/tracebuilder.cpp \
+    src/concolic/traceclassifier.cpp \
+    src/runtime/demomode/demowindow.cpp \
+    src/concolic/traceprinter.cpp \
+    src/concolic/tracevisitor.cpp \
+    src/runtime/demomode/initialanalysiswidget.cpp \
+    src/runtime/demomode/artemisbrowserwidget.cpp \
     src/runtime/toplevel/manualruntime.cpp \
     src/runtime/browser/artemiswebview.cpp \
-    src/runtime/input/events/unknowneventparameters.cpp
+    src/runtime/input/events/unknowneventparameters.cpp \
+    src/concolic/traceeventdetectors.cpp
 
 QT += network

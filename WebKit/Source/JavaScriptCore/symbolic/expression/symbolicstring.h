@@ -21,9 +21,6 @@
 
 #include <string>
 
-#include "JavaScriptCore/wtf/ExportMacros.h"
-#include "JavaScriptCore/runtime/UString.h"
-
 #include "visitor.h"
 #include "stringexpression.h"
 
@@ -35,15 +32,15 @@ namespace Symbolic
 class SymbolicString : public StringExpression
 {
 public:
-    explicit SymbolicString(std::string identifier);
+    explicit SymbolicString(std::string* identifier);
     void accept(Visitor* visitor);
 
-	inline std::string getIdentifier() {
+	inline std::string* getIdentifier() {
 		return m_identifier;
 	}
 
 private:
-	std::string m_identifier;
+	std::string* m_identifier;
 
 };
 }

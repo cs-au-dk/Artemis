@@ -23,7 +23,7 @@
 namespace Symbolic
 {
 
-SymbolicInteger::SymbolicInteger(std::string identifier) :
+SymbolicInteger::SymbolicInteger(std::string* identifier) :
     IntegerExpression(),
     m_identifier(identifier)
 {

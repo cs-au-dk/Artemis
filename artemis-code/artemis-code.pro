@@ -5,7 +5,8 @@ DEPENDPATH += .
 INCLUDEPATH += \
     ../WebKit/WebKitBuild/Release/include/ \
     ../WebKit/WebKitBuild/Release/include/QtWebKit/ \
-    ../WebKit/Source/WebCore \
+    ../WebKit/Source/WebCore/ \
+    ../WebKit/Source/ \
     src
 
 INCLUDEPATH += WebKit/WebKitBuild/Debug/include/QtWebKit

@@ -674,7 +674,9 @@ EncodedJSValue JSC_HOST_CALL stringProtoFuncReplace(ExecState* exec)
     if (searchValue.inherits(&RegExpObject::s_info)) {
         if (thisValue.isSymbolic()) {
             JSValue value = JSValue::decode(replaceUsingRegExpSearch(exec, string, searchValue, replaceValue));
-            value.makeSymbolic(new Symbolic::StringRegexReplace((Symbolic::StringExpression*)thisValue.asSymbolic(), searchValue.toString(exec), replaceValue.toString(exec)));
+            value.makeSymbolic(new Symbolic::StringRegexReplace((Symbolic::StringExpression*)thisValue.asSymbolic(),
+                                                                new std::string(searchValue.toString(exec).ascii().data()),
+                                                                new std::string(replaceValue.toString(exec).ascii().data())));
             return JSValue::encode(value);
         } else {
             return replaceUsingRegExpSearch(exec, string, searchValue, replaceValue);
@@ -688,7 +690,9 @@ EncodedJSValue JSC_HOST_CALL stringProtoFuncReplace(ExecState* exec)
 #ifdef ARTEMIS
     if (thisValue.isSymbolic()) {
         JSValue value = JSValue::decode(replaceUsingStringSearch(exec, string, searchValue, replaceValue));
-        value.makeSymbolic(new Symbolic::StringReplace((Symbolic::StringExpression*)thisValue.asSymbolic(), searchValue.toString(exec), replaceValue.toString(exec)));
+        value.makeSymbolic(new Symbolic::StringReplace((Symbolic::StringExpression*)thisValue.asSymbolic(),
+                                                       new std::string(searchValue.toString(exec).ascii().data()),
+                                                       new std::string(replaceValue.toString(exec).ascii().data())));
         return JSValue::encode(value);
     } else {
         return replaceUsingStringSearch(exec, string, searchValue, replaceValue);

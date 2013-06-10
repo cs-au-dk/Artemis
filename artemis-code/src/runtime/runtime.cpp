@@ -131,6 +131,7 @@ Runtime::Runtime(QObject* parent, const Options& options, const QUrl& url) : QOb
 
     /** Visited states **/
     mVisitedStates = new set<long>();
+
 }
 
 void Runtime::done()

@@ -34,6 +34,8 @@
 #include "runtime/executableconfiguration.h"
 #include "runtime/appmodel.h"
 
+#include "concolic/concolic.h"
+
 namespace artemis
 {
 
@@ -59,6 +61,8 @@ protected:
     InputGeneratorStrategy* mInputgenerator;
 
     Options mOptions;
+
+    ConcolicAnalysisPtr mConcolicAnalysis;
 
 private slots:
     void slAbortedExecution(QString reason);

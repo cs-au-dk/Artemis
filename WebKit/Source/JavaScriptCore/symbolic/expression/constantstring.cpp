@@ -23,7 +23,7 @@
 namespace Symbolic
 {
 
-ConstantString::ConstantString(JSC::UString value) :
+ConstantString::ConstantString(std::string* value) :
     StringExpression(),
     m_value(value)
 {

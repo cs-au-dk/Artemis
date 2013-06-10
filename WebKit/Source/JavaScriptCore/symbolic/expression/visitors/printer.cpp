@@ -82,9 +82,9 @@ void Printer::visit(StringRegexReplace* stringregexreplace)
     m_result += "StringRegexReplace( ";
     stringregexreplace->getSource()->accept(this);
     m_result += ", \"";
-    m_result += stringregexreplace->getRegexpattern().ascii().data();
+    m_result += stringregexreplace->getRegexpattern()->data();
     m_result += "\", \"";
-    m_result += stringregexreplace->getReplace().ascii().data();
+    m_result += stringregexreplace->getReplace()->data();
     m_result += "\" )";
 }
 
@@ -93,9 +93,9 @@ void Printer::visit(StringReplace* stringreplace)
     m_result += "StringReplace( ";
     stringreplace->getSource()->accept(this);
     m_result += ", \"";
-    m_result += stringreplace->getPattern().ascii().data();
+    m_result += stringreplace->getPattern()->data();
     m_result += "\", \"";
-    m_result += stringreplace->getReplace().ascii().data();
+    m_result += stringreplace->getReplace()->data();
     m_result += "\" )";
 }
 
