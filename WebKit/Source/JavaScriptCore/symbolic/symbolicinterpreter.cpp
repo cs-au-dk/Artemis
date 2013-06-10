@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-#include <iostream>
 #include <tr1/unordered_set>
 #include <inttypes.h>
 
@@ -26,6 +25,7 @@
 
 #include "JavaScriptCore/symbolic/expr.h"
 #include "JavaScriptCore/symbolic/expression/visitors/printer.h"
+#include "JavaScriptCore/symbolic/expression/visitors/constraintwriter.h"
 
 #include "symbolicinterpreter.h"
 #include <QDebug>
@@ -398,13 +398,22 @@ void SymbolicInterpreter::endSession()
 }
 
 std::string SymbolicInterpreter::generatePathConditionString(){
+
+    Symbolic::ConstraintWriter writer("/tmp/kaluza");
+
     std::stringstream sstrm;
+
     for (int i = 0; i < m_pc.size(); i++) {
 
         Printer printer;
         m_pc.get(i)->accept(&printer);
+        m_pc.get(i)->accept(&writer);
+
         sstrm << "PC[" << i << "]: " << printer.getResult() << std::endl;
     }
+
+    writer.commit();
+
     return sstrm.str();
 }
 

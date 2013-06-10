@@ -229,7 +229,8 @@ SOURCES += \
     symbolic/expression/visitors/printer.cpp \
     symbolic/expression/booleanbinaryoperation.cpp \
     symbolic/expression/stringreplace.cpp \
-    symbolic/expression/stringregexreplace.cpp
+    symbolic/expression/stringregexreplace.cpp \
+    symbolic/expression/visitors/constraintwriter.cpp
 
 *sh4* {
     QMAKE_CXXFLAGS += -mieee -w
@@ -285,4 +286,5 @@ HEADERS += \
     symbolic/expr.h \
     symbolic/expression/booleanbinaryoperation.h \
     symbolic/expression/stringreplace.h \
-    symbolic/expression/stringregexreplace.h
+    symbolic/expression/stringregexreplace.h \
+    symbolic/expression/visitors/constraintwriter.h
