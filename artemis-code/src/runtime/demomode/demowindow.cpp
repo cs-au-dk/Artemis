@@ -85,6 +85,13 @@ DemoModeMainWindow::DemoModeMainWindow(WebKitExecutor* webkitExecutor, const QUr
                      this, SLOT(slEndTraceRecording()));
     mEndTraceRecordingBtn->setEnabled(false);
 
+    // Button and text for trace analysis panel.
+    mViewTraceBtn = new QPushButton("View Trace");
+    QObject::connect(mViewTraceBtn, SIGNAL(released()),
+                     this, SLOT(slViewTrace()));
+    mViewTraceBtn->setEnabled(false);
+    mTraceAnalysisText = new QLabel("No trace has been run yet.");
+
     // The Layout for the initial analysis panel.
     mAnalysisLayout = new QVBoxLayout();
     QLabel* analysisLabel = new QLabel("Page Analysis");
@@ -102,7 +109,7 @@ DemoModeMainWindow::DemoModeMainWindow(WebKitExecutor* webkitExecutor, const QUr
     entryPointLabel->setFont(sectionFont);
     mAnalysisLayout->addWidget(entryPointLabel);
     mAnalysisLayout->addWidget(mEntryPointList);
-    mAnalysisLayout->addWidget(new QLabel("Currently we only detect 'click' events on\n'button' elements."));
+    mAnalysisLayout->addWidget(new QLabel("Currently we only detect 'click' events on\n'button' elements.\n\nSelect an entry above to highlight it on the page."));
     mAnalysisLayout->addSpacing(10);
 
     QLabel* curTraceLabel = new QLabel("Trace Recording:");
@@ -111,28 +118,24 @@ DemoModeMainWindow::DemoModeMainWindow(WebKitExecutor* webkitExecutor, const QUr
     mAnalysisLayout->addWidget(mStartTraceRecordingBtn);
     mAnalysisLayout->addWidget(mEndTraceRecordingBtn);
 
-    mTraceRecordingProgress = new QLabel("Trace Nodes Recorded: <not implemented yet>");
+    mTraceRecordingProgress = new QLabel("Trace Nodes Recorded: No trace running.");
     mAnalysisLayout->addWidget(mTraceRecordingProgress);
     mAnalysisLayout->addSpacing(10);
 
-    QLabel* traceAnalysisLabel = new QLabel("Trace Analysis:");
+    QLabel* traceAnalysisLabel = new QLabel("Previous Trace Analysis:");
     traceAnalysisLabel->setFont(sectionFont);
     mAnalysisLayout->addWidget(traceAnalysisLabel);
-    mAnalysisLayout->addWidget(new QLabel("(nothing here yet)"));
+    mAnalysisLayout->addWidget(mTraceAnalysisText);
+    mAnalysisLayout->addWidget(mViewTraceBtn);
     mAnalysisLayout->addSpacing(10);
 
-    QLabel* traceClassLabel = new QLabel("Trace Classification:");
+    QLabel* traceClassLabel = new QLabel("Previous Trace Classification:");
     traceClassLabel->setFont(sectionFont);
     mAnalysisLayout->addWidget(traceClassLabel);
 
     mTraceClassificationResult = new QLabel("Result: <no trace run yet>");
     mAnalysisLayout->addWidget(mTraceClassificationResult);
     mAnalysisLayout->addSpacing(10);
-
-    QLabel* otherInfoLabel = new QLabel("Other Info:");
-    otherInfoLabel->setFont(sectionFont);
-    mAnalysisLayout->addWidget(otherInfoLabel);
-    mAnalysisLayout->addWidget(new QLabel("(nothing here yet)"));
 
     mAnalysisLayout->setContentsMargins(0,0,0,0);
     mAnalysisLayout->setAlignment(Qt::AlignTop);
@@ -172,6 +175,8 @@ DemoModeMainWindow::DemoModeMainWindow(WebKitExecutor* webkitExecutor, const QUr
     QObject::connect(mEntryPointList, SIGNAL(itemSelectionChanged()),
                      this, SLOT(slEntryPointSelectionChanged()));
 
+    QObject::connect(mTraceBuilder.data(), SIGNAL(sigAddedNode()),
+                     this, SLOT(slAddedTraceNode()));
 
 
 
@@ -289,7 +294,7 @@ void DemoModeMainWindow::slExecutedSequence(ExecutableConfigurationConstPtr conf
 
 
 
-// Called to run the pre-trace analysis and start recording a trace.
+// Called to run the pre-trace analysis before ANY trace is run.
 void DemoModeMainWindow::preTraceExecution(ExecutionResultPtr result)
 {
     // Simply run the entry-point detector and display its results.
@@ -323,25 +328,43 @@ void DemoModeMainWindow::postTraceExecution()
     Log::info("CONCOLIC-INFO: Analysing trace...");
     mTraceBuilder->endRecording();
 
-    TraceNodePtr trace = mTraceBuilder->trace();
+    mPreviousTrace = mTraceBuilder->trace();
 
-    bool result = mTraceClassifier.classify(trace);
+    bool result = mTraceClassifier.classify(mPreviousTrace);
 
     if(result){
         Log::info("CONCOLIC-INFO: This trace was classified as a SUCCESS.");
-        mTraceClassificationResult->setText("Result: SUCCESS");
+        mTraceClassificationResult->setText("Result: <font color='green'>SUCCESS</font>");
     }else{
         Log::info("CONCOLIC-INFO: This trace was classified as a FAILURE.");
-        mTraceClassificationResult->setText("Result: FAILURE");
+        mTraceClassificationResult->setText("Result: <font color='red'>FAILURE</font>");
     }
 
     Log::info("CONCOLIC-INFO: Printout of the trace:");
     TerminalTracePrinter printer;
-    printer.printTraceTree(trace);
+    printer.printTraceTree(mPreviousTrace);
+
+    // Reset the trace tracking text in the GUI.
+    mTraceRecordingProgress->setText("Trace Nodes Recorded: No trace running.");
+
+    // Generate and display some information about this trace.
+    displayTraceInformation();
 }
 
 
+// Add some information about a trace to the GUI.
+// Populates the "Trace Analysis" panel.
+void DemoModeMainWindow::displayTraceInformation()
+{
+    mViewTraceBtn->setEnabled(true); // TODO: this doesn't do anything yet!
 
+    TraceStatistics stats;
+    stats.processTrace(mPreviousTrace);
+
+    mTraceAnalysisText->setText(QString("Events Recorded: %1\nBranches: %2\nAlerts: %3\nFunction Calls: %4\n")
+                                .arg(stats.mNumNodes).arg(stats.mNumBranches).arg(stats.mNumAlerts)
+                                .arg(stats.mNumFunctionCalls));
+}
 
 
 
@@ -408,6 +431,8 @@ void DemoModeMainWindow::slStartTraceRecording()
     // Begin recording trace events.
     mTraceBuilder->beginRecording();
 
+    mTraceRecordingProgress->setText("Trace Nodes Recorded: 0");
+    mTraceNodesRecorded = 0;
 }
 
 
@@ -420,6 +445,29 @@ void DemoModeMainWindow::slEndTraceRecording()
 
     // Stop recording and analyse trace events.
     postTraceExecution();
+}
+
+
+// Called when a new node is added by the trace builder.
+void DemoModeMainWindow::slAddedTraceNode()
+{
+    Log::info("CONCOLIC-INFO: Added new node to trace.");
+
+    mTraceNodesRecorded++;
+    mTraceRecordingProgress->setText(QString("Trace Nodes Recorded: %1").arg(mTraceNodesRecorded));
+}
+
+
+// Called when the "View Trace" button is clicked.
+void DemoModeMainWindow::slViewTrace()
+{
+    Log::info("DEMO: Viewing trace.");
+
+    // TODO: create a new trace viewing dialog and show it here.
+    QMessageBox* tempMsg = new QMessageBox(this);
+    tempMsg->setWindowTitle("View Previous Trace");
+    tempMsg->setText("Trace viewing is not yet implemented. See terminal for a text printout.");
+    tempMsg->exec();
 }
 
 

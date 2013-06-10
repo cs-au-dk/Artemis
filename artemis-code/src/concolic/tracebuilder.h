@@ -22,18 +22,20 @@
 
 #include "trace.h"
 
+#include "traceeventdetectors.h"
+
 
 namespace artemis
 {
-
-class TraceEventDetector;
 
 /*
  *  Records a trace of the entire execution along a single path.
  */
 
-class TraceBuilder
+class TraceBuilder : public QObject
 {
+    Q_OBJECT
+
 public:
     TraceBuilder();
 
@@ -58,6 +60,8 @@ private:
 
     QList<QSharedPointer<TraceEventDetector> > mDetectors; // The interesting event detectors which add nodes to the traces.
 
+signals:
+    void sigAddedNode();
 };
 
 
