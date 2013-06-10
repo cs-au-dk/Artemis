@@ -19,6 +19,7 @@
 
 #include <fstream>
 #include <string>
+#include <map>
 
 #include "symbolic/expr.h"
 
@@ -29,6 +30,29 @@
 namespace Symbolic
 {
 
+enum Type {
+    INT, STRING, BOOL, ERROR
+};
+
+/**
+ * Visitor generating symbolic constraints for the
+ * SMT solver Kaluza[1].
+ *
+ * The visitor takes a file path as an argument in
+ * its construct. All constraints will be written to
+ * this file.
+ *
+ * The commit() function should called after applying
+ * the visitor to all constraints in a path condition.
+ * Don't use the constraint file before calling commit().
+ *
+ * If commit() returns false then the constraints can
+ * not be solved by Kaluza. In this case the content
+ * of the constraint file is undefined and the result
+ * should be interpreted as unsat.
+ *
+ * [1] http://webblaze.cs.berkeley.edu/2010/kaluza/
+ */
 class ConstraintWriter : public Visitor
 {
 public:
@@ -49,11 +73,24 @@ public:
     void visit(BooleanCoercion* booleancoercion);
     void visit(BooleanBinaryOperation* booleanbinaryoperation);
 
-    void commit();
+    bool commit();
 
 private:
-    std::ofstream mOutput;
 
+    /**
+     * Kaluza does not support mixing constraints on strings,
+     * bools and integers. Thus, we allow type coercions but
+     * we only support one type of constraint to be applied
+     * to any symbol.
+     *
+     * E.g. an input string can be coerced into an int, and
+     * we can apply as many integer constraints to it as we
+     * want.
+     */
+    void recordType(const std::string& identifer, Type type);
+
+    std::map<std::string, Type> mTypemap;
+    std::ofstream mOutput;
     std::string* mIdentifierStore;
     unsigned int mNextTemporaryIdentifier;
 };

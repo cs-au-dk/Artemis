@@ -1,0 +1,4 @@
+RESULT: sat=false
+if (x == 1 && x == "1") {
+    alert(x);
+}

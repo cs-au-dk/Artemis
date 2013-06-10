@@ -34,9 +34,21 @@ ConstraintWriter::ConstraintWriter(std::string output_filename) :
     mOutput.open(output_filename.data());
 }
 
-void ConstraintWriter::commit()
+bool ConstraintWriter::commit()
 {
+    bool typeError = false;
+
+    for (std::map<std::string, Type>::iterator iter = mTypemap.begin(); iter != mTypemap.end(); iter++) {
+        typeError = typeError || iter->second;
+    }
+
+    if (typeError) {
+        std::cerr << "Artemis is unable generate constraints - a type-error was found." << std::endl;
+    }
+
     mOutput.close();
+
+    return !typeError;
 }
 
 void ConstraintWriter::visit(SymbolicInteger* symbolicinteger)
@@ -56,9 +68,11 @@ void ConstraintWriter::visit(IntegerBinaryOperation* integerbinaryoperation)
 {
     integerbinaryoperation->getLhs()->accept(this);
     std::string* lhs = mIdentifierStore;
+    recordType(*lhs, INT);
 
     integerbinaryoperation->getRhs()->accept(this);
     std::string* rhs = mIdentifierStore;
+    recordType(*rhs, INT);
 
     // construct temporary identifier
     std::ostringstream strs;
@@ -66,12 +80,13 @@ void ConstraintWriter::visit(IntegerBinaryOperation* integerbinaryoperation)
     strs << mNextTemporaryIdentifier++;
 
     mIdentifierStore = new std::string(strs.str());
+    recordType(*mIdentifierStore, INT);
+
     mOutput << *mIdentifierStore << " := " << *lhs << " " << opToString(integerbinaryoperation->getOp()) << " " << *rhs << ";\n";
 }
 
 void ConstraintWriter::visit(IntegerCoercion* integercoercion)
 {
-    // TODO fix
     integercoercion->getExpression()->accept(this);
 }
 
@@ -82,17 +97,20 @@ void ConstraintWriter::visit(SymbolicString* symbolicstring)
 
 void ConstraintWriter::visit(ConstantString* constantstring)
 {
-    // TODO add "
-    mIdentifierStore = constantstring->getValue();
+    std::ostringstream strs;
+    strs << "\"" << *constantstring->getValue() << "\"";
+    mIdentifierStore = new std::string(strs.str());
 }
 
 void ConstraintWriter::visit(StringBinaryOperation* stringbinaryoperation)
 {
     stringbinaryoperation->getLhs()->accept(this);
     std::string* lhs = mIdentifierStore;
+    recordType(*lhs, STRING);
 
     stringbinaryoperation->getRhs()->accept(this);
     std::string* rhs = mIdentifierStore;
+    recordType(*rhs, STRING);
 
     // construct temporary identifier
     std::ostringstream strs;
@@ -100,6 +118,8 @@ void ConstraintWriter::visit(StringBinaryOperation* stringbinaryoperation)
     strs << mNextTemporaryIdentifier++;
 
     mIdentifierStore = new std::string(strs.str());
+    recordType(*mIdentifierStore, STRING);
+
     mOutput << *mIdentifierStore << " := " << *lhs << " " << opToString(stringbinaryoperation->getOp()) << " " << *rhs << ";\n";
 }
 
@@ -117,7 +137,6 @@ void ConstraintWriter::visit(StringReplace* stringreplace)
 
 void ConstraintWriter::visit(StringCoercion* stringcoercion)
 {
-    // TODO fix
     stringcoercion->getExpression()->accept(this);
 }
 
@@ -133,7 +152,6 @@ void ConstraintWriter::visit(ConstantBoolean* constantboolean)
 
 void ConstraintWriter::visit(BooleanCoercion* booleancoercion)
 {
-    // TODO fix
     booleancoercion->getExpression()->accept(this);
 }
 
@@ -141,9 +159,11 @@ void ConstraintWriter::visit(BooleanBinaryOperation* booleanbinaryoperation)
 {
     booleanbinaryoperation->getLhs()->accept(this);
     std::string* lhs = mIdentifierStore;
+    recordType(*lhs, BOOL);
 
     booleanbinaryoperation->getRhs()->accept(this);
     std::string* rhs = mIdentifierStore;
+    recordType(*rhs, BOOL);
 
     // construct temporary identifier
     std::ostringstream strs;
@@ -151,8 +171,24 @@ void ConstraintWriter::visit(BooleanBinaryOperation* booleanbinaryoperation)
     strs << mNextTemporaryIdentifier++;
 
     mIdentifierStore = new std::string(strs.str());
+    recordType(*mIdentifierStore, BOOL);
+
     mOutput << *mIdentifierStore << " := " << *lhs << " " << opToString(booleanbinaryoperation->getOp()) << " " << *rhs << ";\n";
 }
+
+void ConstraintWriter::recordType(const std::string& identifier, Type type)
+{
+
+    std::map<std::string, Type>::iterator iter = mTypemap.find(identifier);
+
+    if (iter != mTypemap.end()) {
+        iter->second = iter->second == type ? type : ERROR;
+    } else {
+        mTypemap.insert(std::pair<std::string, Type>(identifier, type));
+    }
+
+}
+
 
 }
 
