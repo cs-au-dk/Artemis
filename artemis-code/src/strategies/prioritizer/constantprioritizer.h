@@ -16,6 +16,8 @@
 #ifndef CONSTANTPRIORITIZER_H
 #define CONSTANTPRIORITIZER_H
 
+#include <QSharedPointer>
+
 #include "prioritizerstrategy.h"
 
 namespace artemis
@@ -28,6 +30,8 @@ public:
     double prioritize(QSharedPointer<const ExecutableConfiguration> newConf,
                       AppModelConstPtr);
 };
+
+typedef QSharedPointer<ConstantPrioritizer> ConstantPrioritizerPtr;
 
 }
 #endif // CONSTANTPRIORITIZER_H

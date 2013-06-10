@@ -19,7 +19,7 @@
 		"type": "expression",
 		"parent": "IntegerExpression",
 		"fields": [
-			["std::string", "identifier"]
+			["std::string*", "identifier"]
 		]
 	},
 
@@ -71,7 +71,7 @@
 		"type": "expression",
 		"parent": "StringExpression",
 		"fields": [
-			["std::string", "identifier"]
+			["std::string*", "identifier"]
 		]
 	},
 
@@ -80,7 +80,7 @@
 		"type": "expression",
 		"parent": "StringExpression",
 		"fields": [
-			["JSC::UString", "value"]
+			["std::string*", "value"]
 		]
 	},
 
@@ -118,8 +118,8 @@
 		"parent": "StringExpression",
 		"fields": [
 			["StringExpression*", "source"],
-			["JSC::UString", "pattern"],
-			["JSC::UString", "replace"]
+			["std::string*", "pattern"],
+			["std::string*", "replace"]
 		]
 	},
 
@@ -129,8 +129,8 @@
 		"parent": "StringExpression",
 		"fields": [
 			["StringExpression*", "source"],
-			["JSC::UString", "regexpattern"],
-			["JSC::UString", "replace"]
+			["std::string*", "regexpattern"],
+			["std::string*", "replace"]
 		]
 	},
 
@@ -146,7 +146,7 @@
 		"type": "expression",
 		"parent": "BooleanExpression",
 		"fields": [
-			["std::string", "identifier"]
+			["std::string*", "identifier"]
 		]
 	},
 

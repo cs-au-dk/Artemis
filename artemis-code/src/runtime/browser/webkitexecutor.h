@@ -78,6 +78,7 @@ private:
     PathTracerPtr mPathTracer;
 
     bool mKeepOpen;
+    bool testingDone;
 
     TraceBuilderPtr mTraceBuilder; // TODO: including this member causes a segfault when everything is being destructed and I haven't yet worked out why. This happens even when I remove all initialisation/use and all members and methods of TraceBuilder.
 
@@ -87,6 +88,7 @@ signals:
 
 public slots:
     void slLoadFinished(bool ok);
+    void slTestingDone();
 
 
 };

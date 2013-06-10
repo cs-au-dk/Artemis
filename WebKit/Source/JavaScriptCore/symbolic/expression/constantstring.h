@@ -21,9 +21,6 @@
 
 #include <string>
 
-#include "JavaScriptCore/wtf/ExportMacros.h"
-#include "JavaScriptCore/runtime/UString.h"
-
 #include "visitor.h"
 #include "stringexpression.h"
 
@@ -35,15 +32,15 @@ namespace Symbolic
 class ConstantString : public StringExpression
 {
 public:
-    explicit ConstantString(JSC::UString value);
+    explicit ConstantString(std::string* value);
     void accept(Visitor* visitor);
 
-	inline JSC::UString getValue() {
+	inline std::string* getValue() {
 		return m_value;
 	}
 
 private:
-	JSC::UString m_value;
+	std::string* m_value;
 
 };
 }

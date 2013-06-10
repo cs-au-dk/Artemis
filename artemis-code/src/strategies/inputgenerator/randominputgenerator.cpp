@@ -23,6 +23,7 @@
 #include "runtime/input/dominput.h"
 #include "runtime/input/timerinput.h"
 #include "runtime/input/ajaxinput.h"
+#include "runtime/input/events/unknowneventparameters.h"
 
 #include "randominputgenerator.h"
 
@@ -102,15 +103,18 @@ QList<QSharedPointer<ExecutableConfiguration> > RandomInputGenerator::insertExte
 
     foreach (EventHandlerDescriptor* ee, result->getEventHandlers()) {
         EventParameters* newParams = mEventParameterGenerator->generateEventParameters(NULL, ee);
-        TargetDescriptor* target = mTargetGenerator->generateTarget(NULL, ee);
-        QSharedPointer<FormInput> newForm = mFormInputGenerator->generateFormFields(NULL, result->getFormFields(), result);
-        QSharedPointer<const DomInput> domInput = QSharedPointer<const DomInput>(new DomInput(ee, newForm, newParams, target));
+        if(dynamic_cast<UnknownEventParameters*>(newParams) == 0){
+            TargetDescriptor* target = mTargetGenerator->generateTarget(NULL, ee);
+            QSharedPointer<FormInput> newForm = mFormInputGenerator->generateFormFields(NULL, result->getFormFields(), result);
+            QSharedPointer<const DomInput> domInput = QSharedPointer<const DomInput>(new DomInput(ee, newForm, newParams, target));
 
-        QSharedPointer<const InputSequence> newInputSequence = oldConfiguration->getInputSequence()->extend(domInput);
+            QSharedPointer<const InputSequence> newInputSequence = oldConfiguration->getInputSequence()->extend(domInput);
 
-        QSharedPointer<ExecutableConfiguration> newConfiguration = QSharedPointer<ExecutableConfiguration>(new ExecutableConfiguration(newInputSequence, oldConfiguration->getUrl()));
+            QSharedPointer<ExecutableConfiguration> newConfiguration = QSharedPointer<ExecutableConfiguration>(new ExecutableConfiguration(newInputSequence, oldConfiguration->getUrl()));
 
-        newConfigurations.append(newConfiguration);
+            newConfigurations.append(newConfiguration);
+        }
+
     }
 
     foreach (QSharedPointer<const Timer> timer, result->getTimers()) {

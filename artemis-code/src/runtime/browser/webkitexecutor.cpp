@@ -28,7 +28,7 @@
 #include "runtime/input/events/domelementdescriptor.h"
 #include "strategies/inputgenerator/targets/jquerylistener.h"
 #include "runtime/input/baseinput.h"
-
+#include "util/loggingutil.h"
 #include "webkitexecutor.h"
 
 using namespace std;
@@ -43,7 +43,7 @@ WebKitExecutor::WebKitExecutor(QObject* parent,
                                AjaxRequestListener* ajaxListener,
                                bool enableConstantStringInstrumentation) :
     QObject(parent),
-    mKeepOpen(false)
+    mKeepOpen(false), testingDone(false)
 {
 
     mPresetFields = presetFields;
@@ -181,14 +181,25 @@ void WebKitExecutor::executeSequence(ExecutableConfigurationConstPtr conf, bool 
     mPage->mainFrame()->load(conf->getUrl());
 }
 
+void WebKitExecutor::slTestingDone(){
+    testingDone = true;
+}
+
 void WebKitExecutor::slLoadFinished(bool ok)
 {
-    mResultBuilder->notifyPageLoaded();
-
-    if (!ok) {
-        emit sigAbortedExecution(QString("Error: The requested URL ") + currentConf->getUrl().toString() + QString(" could not be loaded"));
+    if(testingDone){
         return;
     }
+
+    if(!ok){
+        QString html = mPage->mainFrame()->toHtml();
+
+        if(html == "<html><head></head><body></body></html>"){
+            emit sigAbortedExecution(QString("Error: The requested URL ") + currentConf->getUrl().toString() + QString(" could not be loaded"));
+            return;
+        }
+    }
+    mResultBuilder->notifyPageLoaded();
 
     // Populate forms (preset)
 

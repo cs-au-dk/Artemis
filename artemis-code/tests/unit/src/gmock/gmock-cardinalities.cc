@@ -40,7 +40,7 @@
 #include <sstream>
 #include <string>
 #include "include/gmock/internal/gmock-internal-utils.h"
-#include "gtest/gtest.h"
+#include "include/gtest/gtest.h"
 
 namespace testing {
 

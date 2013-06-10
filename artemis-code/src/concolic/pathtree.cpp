@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
+/* This is similar to a Symbolic Execution Tree
+ * (Symbolic Execution and Program Testing, James C. King).
+ */
 
 #include "pathtree.h"
-
-
 
 namespace artemis
 {

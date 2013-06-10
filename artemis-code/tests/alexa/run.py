@@ -5,7 +5,7 @@ import subprocess
 import shlex
 
 if __name__ == '__main__':
-    
+    failures = []
     if len(sys.argv) < 4:
         print 'Usage: %s <alexalist.cvs> <top-x-sites> <iterations>' % sys.argv[0]
         exit(1)
@@ -17,40 +17,42 @@ if __name__ == '__main__':
     failure = 0
 
     with open(sys.argv[1], 'r') as fp:
-    	for line in fp:
-    		
-    		if top_x_sites <= 0:
-    			break
-    		
-    		top_x_sites -= 1
+        for line in fp:
 
-    		index, url = line.split(',')
+            if top_x_sites <= 0:
+                break
 
-    		print '=========================='
-    		print 'Visit %s' % url
-    		print '=========================='
-    		print ''
+            top_x_sites -= 1
 
-    		cmd = '/usr/local/bin/artemis http://%s/' % url
+            index, url = line.split(',')
 
-    		process = subprocess.Popen(shlex.split(cmd))
-    		process.wait()
+            print '=========================='
+            print 'Visit %s' % url
+            print '=========================='
+            print ''
 
-    		print '=========================='
-    		
-    		if process.returncode == 0:
-    			print ' success'
-    			success += 1
-    		else:
-    			print ' failed'
-    			failure += 1
+            cmd = '/usr/local/bin/artemis http://%s/' % url
 
-			print '=========================='
-			print ''
+            process = subprocess.Popen(shlex.split(cmd))
+            process.wait()
+
+            print '=========================='
+
+            if process.returncode == 0:
+                print ' success'
+                success += 1
+            else:
+                failures.append(url)
+                print ' failed'
+                failure += 1
+
+                print '=========================='
+                print ''
 
     print 'Statistics'
     print 'Success: %s' % success
     print 'Failure: %s' % failure
-
-
-    
+    if failure > 0:
+        print 'Failed sites'
+        for f in failures:
+            print "  %s" % f
