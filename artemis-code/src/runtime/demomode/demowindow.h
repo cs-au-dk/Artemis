@@ -75,6 +75,10 @@ private:
     QProgressBar* mProgressBar;
     QStatusBar* mStatusBar;
     QListWidget* mEntryPointList;
+    QPushButton* mStartTraceRecordingBtn;
+    QPushButton* mEndTraceRecordingBtn;
+    QLabel* mTraceRecordingProgress;
+    QLabel* mTraceClassificationResult;
 
     // The initial analysis panel is provided as its own widget.
     InitialAnalysisWidget* mInitialAnalysis;
@@ -113,6 +117,9 @@ protected slots:
 
     // For the analysis/GUI interaction.
     void slEntryPointSelectionChanged();
+
+    void slStartTraceRecording();
+    void slEndTraceRecording();
 
 signals:
     void sigClose();

@@ -74,14 +74,18 @@ DemoModeMainWindow::DemoModeMainWindow(WebKitExecutor* webkitExecutor, const QUr
     mArtemisWidget = new QWidget();
     mArtemisWidget->setLayout(mArtemisLayout);
 
-    // Toolbox for analysis panel.
-    //QToolBox* mAnalysisToolBox = new QToolBox();
-    //mAnalysisToolBox->addItem(new QPushButton("Hi There"), "Informal");
-    //mAnalysisToolBox->addItem(new QPushButton("Good morning"), "Formal");
-
     // Entry points list for the analysis panel.
     mEntryPointList = new QListWidget();
     mEntryPointList->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
+
+    // Buttons for Trace Recording panel.
+    mStartTraceRecordingBtn = new QPushButton("Start Recording");
+    mEndTraceRecordingBtn = new QPushButton("End Recording");
+    QObject::connect(mStartTraceRecordingBtn, SIGNAL(released()),
+                     this, SLOT(slStartTraceRecording()));
+    QObject::connect(mEndTraceRecordingBtn, SIGNAL(released()),
+                     this, SLOT(slEndTraceRecording()));
+    mEndTraceRecordingBtn->setEnabled(false);
 
     // The Layout for the initial analysis panel.
     mAnalysisLayout = new QVBoxLayout();
@@ -91,11 +95,6 @@ DemoModeMainWindow::DemoModeMainWindow(WebKitExecutor* webkitExecutor, const QUr
     analysisLabel->setFont(labelFont);
     mAnalysisLayout->addSpacing(5);
     mAnalysisLayout->addWidget(analysisLabel);
-    //mAnalysisLayout->addWidget(new QPushButton("Hello A"));
-    //mAnalysisLayout->addWidget(new QPushButton("Hello B"));
-    //mAnalysisLayout->addWidget(new QPushButton("Hello C"));
-    //mAnalysisLayout->addWidget(new QPushButton("Hello D"));
-    //mAnalysisLayout->addWidget(mAnalysisToolBox);
     mAnalysisLayout->addSpacing(10);
 
     QFont sectionFont;
@@ -108,16 +107,28 @@ DemoModeMainWindow::DemoModeMainWindow(WebKitExecutor* webkitExecutor, const QUr
     mAnalysisLayout->addWidget(new QLabel("Currently we only detect 'click' events on\n'button' elements."));
     mAnalysisLayout->addSpacing(10);
 
-    QLabel* curTraceLabel = new QLabel("Current Trace:");
+    QLabel* curTraceLabel = new QLabel("Trace Recording:");
     curTraceLabel->setFont(sectionFont);
     mAnalysisLayout->addWidget(curTraceLabel);
+    mAnalysisLayout->addWidget(mStartTraceRecordingBtn);
+    mAnalysisLayout->addWidget(mEndTraceRecordingBtn);
+
+    mTraceRecordingProgress = new QLabel("Trace Nodes Recorded: <not implemented yet>");
+    mAnalysisLayout->addWidget(mTraceRecordingProgress);
+    mAnalysisLayout->addSpacing(10);
+
+    QLabel* traceAnalysisLabel = new QLabel("Trace Analysis:");
+    traceAnalysisLabel->setFont(sectionFont);
+    mAnalysisLayout->addWidget(traceAnalysisLabel);
     mAnalysisLayout->addWidget(new QLabel("(nothing here yet)"));
     mAnalysisLayout->addSpacing(10);
 
     QLabel* traceClassLabel = new QLabel("Trace Classification:");
     traceClassLabel->setFont(sectionFont);
     mAnalysisLayout->addWidget(traceClassLabel);
-    mAnalysisLayout->addWidget(new QLabel("(nothing here yet)"));
+
+    mTraceClassificationResult = new QLabel("Result: <no trace run yet>");
+    mAnalysisLayout->addWidget(mTraceClassificationResult);
     mAnalysisLayout->addSpacing(10);
 
     QLabel* otherInfoLabel = new QLabel("Other Info:");
@@ -200,9 +211,6 @@ DemoModeMainWindow::~DemoModeMainWindow()
 void DemoModeMainWindow::closeEvent(QCloseEvent *)
 {
     Log::info("DEMO: Window closed.");
-
-    // TODO: instead of calling this when the window closes, we would prefer a button in the UI to finish and analyse the trace.
-    postTraceExecution();
 
     emit sigClose();
 }
@@ -306,16 +314,12 @@ void DemoModeMainWindow::preTraceExecution(ExecutionResultPtr result)
     }
 
 
-    // Begin recording trace events.
-    mTraceBuilder->beginRecording();
-
     // Display the page for the user to interact with.
     mWebView->setEnabled(true);
 
 }
 
 // Called once the trace recording is over (signalled by the user).
-// TODO: called when the window is closed, but would prefer a button (or similar).
 void DemoModeMainWindow::postTraceExecution()
 {
     Log::info("CONCOLIC-INFO: Analysing trace...");
@@ -327,8 +331,10 @@ void DemoModeMainWindow::postTraceExecution()
 
     if(result){
         Log::info("CONCOLIC-INFO: This trace was classified as a SUCCESS.");
+        mTraceClassificationResult->setText("Result: SUCCESS");
     }else{
         Log::info("CONCOLIC-INFO: This trace was classified as a FAILURE.");
+        mTraceClassificationResult->setText("Result: FAILURE");
     }
 
     Log::info("CONCOLIC-INFO: Printout of the trace:");
@@ -394,6 +400,29 @@ void DemoModeMainWindow::unHighlightDomElement(const DOMElementDescriptor *eleme
 
 
 
+// Called when the button to start a trace recording is used.
+void DemoModeMainWindow::slStartTraceRecording()
+{
+    Log::info("CONCOLIC-INFO: Pressed 'Start Recording' button.");
+    mStartTraceRecordingBtn->setEnabled(false);
+    mEndTraceRecordingBtn->setEnabled(true);
+
+    // Begin recording trace events.
+    mTraceBuilder->beginRecording();
+
+}
+
+
+// Called when the button to end a trace recording is used.
+void DemoModeMainWindow::slEndTraceRecording()
+{
+    Log::info("CONCOLIC-INFO: Pressed 'End Recording' button.");
+    mStartTraceRecordingBtn->setEnabled(true);
+    mEndTraceRecordingBtn->setEnabled(false);
+
+    // Stop recording and analyse trace events.
+    postTraceExecution();
+}
 
 
 
