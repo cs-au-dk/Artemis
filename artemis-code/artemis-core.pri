@@ -29,7 +29,6 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/runtime/input/forms/forminput.h \
     src/runtime/input/events/keyboardeventparameters.h \
     src/runtime/input/events/mouseeventparameters.h \
-    src/runtime/browser/artemiswebpage.h \
     src/runtime/executableconfiguration.h \
     src/runtime/input/baseinput.h \
     src/runtime/input/dominput.h \
@@ -76,6 +75,7 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/model/pathtracer.h \
     src/runtime/toplevel/artemisruntime.h \
     src/runtime/browser/artemiswebview.h \
+    src/runtime/browser/artemiswebpage.h \
     src/concolic/concolic.h \
     src/concolic/pathtree.h \
     src/concolic/concreteinput.h \
@@ -97,7 +97,6 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/runtime/demomode/initialanalysiswidget.h \
     src/runtime/demomode/artemisbrowserwidget.h \
     src/runtime/toplevel/manualruntime.h \
-    src/runtime/browser/artemiswebview.h \
     src/runtime/input/events/unknowneventparameters.h \
     src/concolic/traceeventdetectors.h
 
@@ -117,6 +116,7 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/runtime/input/forms/forminput.cpp \
     src/runtime/input/events/keyboardeventparameters.cpp \
     src/runtime/input/events/mouseeventparameters.cpp \
+    src/runtime/browser/artemiswebview.cpp \
     src/runtime/browser/artemiswebpage.cpp \
     src/runtime/executableconfiguration.cpp \
     src/runtime/input/dominput.cpp \
@@ -156,7 +156,6 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/runtime/input/events/toucheventparameters.cpp \
     src/model/pathtracer.cpp \
     src/runtime/toplevel/artemisruntime.cpp \
-    src/runtime/browser/artemiswebview.cpp \
     src/concolic/concolic.cpp \
     src/concolic/pathtree.cpp \
     src/concolic/concreteinput.cpp \
@@ -172,7 +171,6 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/runtime/demomode/initialanalysiswidget.cpp \
     src/runtime/demomode/artemisbrowserwidget.cpp \
     src/runtime/toplevel/manualruntime.cpp \
-    src/runtime/browser/artemiswebview.cpp \
     src/runtime/input/events/unknowneventparameters.cpp \
     src/concolic/traceeventdetectors.cpp
 

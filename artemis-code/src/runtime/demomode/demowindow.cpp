@@ -22,8 +22,6 @@
 namespace artemis
 {
 
-
-
 DemoModeMainWindow::DemoModeMainWindow(WebKitExecutor* webkitExecutor, const QUrl &url) :
     mWebkitExecutor(webkitExecutor),
     mWaitingForInitialLoad(false),
