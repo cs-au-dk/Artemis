@@ -65,7 +65,16 @@ public:
     // called from the interpreter before it starts executing (a single trace)
     void preExecution(JSC::CallFrame* callFrame);
 
-    // called from Artemis
+    /*
+     * Called from Artemis
+     * Path constraints are only collected when the session is active.
+     *
+     * When the session is ended, the resulting path condition is made
+     * available through the getPathCondition function.
+     *
+     * It is the responsibility of Artemis to collect and destroy the path condition!
+     *
+     */
     void beginSession();
     void endSession();
     PathCondition* getPathCondition();
@@ -74,11 +83,12 @@ public:
 private:
     void fatalError(JSC::CodeBlock* codeBlock, std::string reason) __attribute__((noreturn));
 
-    PathCondition m_pc;
+    PathCondition* m_pc;
 
     NativeLookup m_nativeFunctions;
     int m_nextSymbolicValue;
 
+    bool m_inSession;
     bool m_shouldGC;
 };
 
