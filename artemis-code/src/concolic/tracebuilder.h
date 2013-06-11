@@ -37,7 +37,7 @@ class TraceBuilder : public QObject
     Q_OBJECT
 
 public:
-    TraceBuilder();
+    TraceBuilder(QObject* parent);
 
     void addDetector(QSharedPointer<TraceEventDetector> detector);
 
@@ -63,9 +63,6 @@ private:
 signals:
     void sigAddedNode();
 };
-
-
-typedef QSharedPointer<TraceBuilder> TraceBuilderPtr;
 
 
 } // namespace artemis

@@ -31,6 +31,8 @@
 #include "util/loggingutil.h"
 #include "webkitexecutor.h"
 
+#include "concolic/tracebuilder.h"
+
 using namespace std;
 
 namespace artemis
@@ -127,7 +129,7 @@ WebKitExecutor::WebKitExecutor(QObject* parent,
 
 
     // Set up the trace builder and event detectors.
-    mTraceBuilder = TraceBuilderPtr(new TraceBuilder()); // TODO: this
+    mTraceBuilder = new TraceBuilder(this);
 
     // The branch detector.
     QSharedPointer<TraceBranchDetector> branchDetector(new TraceBranchDetector());
@@ -246,7 +248,7 @@ ArtemisWebPagePtr WebKitExecutor::getPage()
     return mPage;
 }
 
-TraceBuilderPtr WebKitExecutor::getTraceBuilder()
+TraceBuilder* WebKitExecutor::getTraceBuilder()
 {
     return mTraceBuilder;
 }

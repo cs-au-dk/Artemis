@@ -27,7 +27,8 @@ namespace artemis
 
 
 
-TraceBuilder::TraceBuilder() :
+TraceBuilder::TraceBuilder(QObject* parent) :
+    QObject(parent),
     mRecording(false)
 {
 }
