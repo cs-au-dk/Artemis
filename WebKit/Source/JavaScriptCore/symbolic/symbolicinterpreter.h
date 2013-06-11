@@ -39,6 +39,8 @@ namespace JSC {
 namespace Symbolic
 {
 
+extern unsigned int NEXT_SYMBOLIC_ID;
+
 typedef enum {
     EQUAL, NOT_EQUAL, STRICT_EQUAL, NOT_STRICT_EQUAL, LESS_EQ, LESS_STRICT, GREATER_EQ, GREATER_STRICT,
     ADD, SUBTRACT, MULTIPLY, DIVIDE, MODULO

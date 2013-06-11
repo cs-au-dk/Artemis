@@ -1401,7 +1401,11 @@ sub GenerateImplementation
     $implIncludes{"<runtime/PropertyNameArray.h>"} = 1 if $dataNode->extendedAttributes->{"HasIndexGetter"} || $dataNode->extendedAttributes->{"HasCustomIndexGetter"} || $dataNode->extendedAttributes->{"HasNumericIndexGetter"};
 
     # ARTEMIS BEGIN
+    $implIncludes{"\"symbolic/symbolicinterpreter.h\""} = 1;
     $implIncludes{"\"symbolic/expression/symbolicstring.h\""} = 1;
+    $implIncludes{"<iostream>"} = 1;
+    $implIncludes{"<ostream>"} = 1;
+    $implIncludes{"<sstream>"} = 1;
     # ARTEMIS END
 
     AddIncludesForTypeInImpl($interfaceName);
@@ -1846,7 +1850,10 @@ sub GenerateImplementation
                     if ($attribute->signature->extendedAttributes->{"Symbolic"}) {
                         # ARTEMIS BEGIN
                         push(@implContent, "    if (castedThis->m_" . $attribute->signature->name . "Symbolic == NULL) {\n");
-                        push(@implContent, "        result.makeSymbolic(new Symbolic::SymbolicString(new std::string(\"SYM\")));\n");
+                        push(@implContent, "        std::ostringstream strs;\n");
+                        push(@implContent, "        strs << \"SYM_IN_\";\n");
+                        push(@implContent, "        strs << Symbolic::NEXT_SYMBOLIC_ID++;\n");
+                        push(@implContent, "        result.makeSymbolic(new Symbolic::SymbolicString(new std::string(strs.str())));\n");
                         push(@implContent, "    } else {\n");
                         push(@implContent, "        result.makeSymbolic(castedThis->m_" . $attribute->signature->name . "Symbolic);\n");
                         push(@implContent, "    }\n");

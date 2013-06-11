@@ -35,6 +35,8 @@
 namespace Symbolic
 {
 
+unsigned int NEXT_SYMBOLIC_ID = 0;
+
 const char* opToString(OP op) {
     static const char* OPStrings[] = {
         "==", "!=", "===", "!==", "<=", "<", ">=", ">",
