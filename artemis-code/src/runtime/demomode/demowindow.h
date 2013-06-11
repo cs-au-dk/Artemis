@@ -37,6 +37,7 @@
 #include "concolic/tracebuilder.h"
 #include "concolic/traceclassifier.h"
 #include "concolic/traceprinter.h"
+#include "concolic/tracestatistics.h"
 
 namespace artemis
 {
@@ -75,6 +76,12 @@ private:
     QProgressBar* mProgressBar;
     QStatusBar* mStatusBar;
     QListWidget* mEntryPointList;
+    QPushButton* mStartTraceRecordingBtn;
+    QPushButton* mEndTraceRecordingBtn;
+    QLabel* mTraceRecordingProgress;
+    QLabel* mTraceClassificationResult;
+    QPushButton* mViewTraceBtn;
+    QLabel* mTraceAnalysisText;
 
     // The initial analysis panel is provided as its own widget.
     InitialAnalysisWidget* mInitialAnalysis;
@@ -91,6 +98,7 @@ private:
     TraceBuilderPtr mTraceBuilder;
     EntryPointDetector mEntryPointDetector;
     TraceClassifier mTraceClassifier;
+    TraceNodePtr mPreviousTrace;
 
     void preTraceExecution(ExecutionResultPtr result);
     void postTraceExecution();
@@ -98,6 +106,9 @@ private:
     // The analysis/GUI interaction
     typedef QPair<QString, const DOMElementDescriptor*> EntryPointInfo;
     QList<EntryPointInfo > mKnownEntryPoints;
+    int mTraceNodesRecorded;
+
+    void displayTraceInformation();
 
 
 protected slots:
@@ -107,12 +118,17 @@ protected slots:
     void slLoadStarted();
     void slLoadFinished(bool ok);
     void slSetProgress(int p);
+    void slViewTrace();
 
     // For the analysis logic.
     void slExecutedSequence(ExecutableConfigurationConstPtr configuration, QSharedPointer<ExecutionResult> result);
 
     // For the analysis/GUI interaction.
     void slEntryPointSelectionChanged();
+
+    void slStartTraceRecording();
+    void slEndTraceRecording();
+    void slAddedTraceNode();
 
 signals:
     void sigClose();

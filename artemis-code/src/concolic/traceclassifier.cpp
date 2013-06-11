@@ -25,8 +25,7 @@ namespace artemis
 
 
 
-TraceClassifier::TraceClassifier() :
-    mWasAlert(false)
+TraceClassifier::TraceClassifier()
 {
 }
 
@@ -34,6 +33,8 @@ bool TraceClassifier::classify(TraceNodePtr trace)
 {
     // First simple implementation: scan the trace looking for an alert() call.
     // If there is an alert() then the trace is a failure, otherwise a success.
+
+    mWasAlert = false;
 
     trace->accept(this);
 

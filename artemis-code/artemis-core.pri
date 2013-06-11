@@ -98,7 +98,8 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/runtime/demomode/artemisbrowserwidget.h \
     src/runtime/toplevel/manualruntime.h \
     src/runtime/input/events/unknowneventparameters.h \
-    src/concolic/traceeventdetectors.h
+    src/concolic/traceeventdetectors.h \
+    src/concolic/tracestatistics.h
 
 SOURCES += src/runtime/input/ajaxinput.cpp \
     src/strategies/prioritizer/constantprioritizer.cpp \
@@ -173,6 +174,7 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/runtime/demomode/artemisbrowserwidget.cpp \
     src/runtime/toplevel/manualruntime.cpp \
     src/runtime/input/events/unknowneventparameters.cpp \
-    src/concolic/traceeventdetectors.cpp
+    src/concolic/traceeventdetectors.cpp \
+    src/concolic/tracestatistics.cpp
 
 QT += network

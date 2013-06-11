@@ -79,6 +79,8 @@ void TraceBuilder::newNode(QSharedPointer<TraceNode> node, QSharedPointer<TraceN
         // Update the new successor pointer
         mSuccessor = successor;
 
+        // Notify the GUI (or anyone else) of the new node)
+        emit sigAddedNode();
     }
 }
 

@@ -173,7 +173,8 @@ void TerminalTracePrinter::visit(TraceNode* node)
 {
     // Should never be reached.
     // There is nowhere we can go from here as general nodes don't have a successor!
-    addSingleValue("ERROR");
+    Log::fatal("Trace printer visited a node of unknown type.");
+    exit(1);
 }
 
 void TerminalTracePrinter::visit(TraceBranch* node)
