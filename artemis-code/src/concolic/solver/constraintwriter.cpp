@@ -202,6 +202,7 @@ void ConstraintWriter::recordType(const std::string& identifier, Symbolic::Type 
     std::map<std::string, Symbolic::Type>::iterator iter = mTypemap.find(identifier);
 
     if (iter != mTypemap.end()) {
+        qDebug() << "Combining: " << iter->second << " " << type;
         iter->second = iter->second == type ? type : Symbolic::TYPEERROR;
     } else {
         mTypemap.insert(std::pair<std::string, Symbolic::Type>(identifier, type));

@@ -23,7 +23,9 @@ def test_generator(filename, name, result):
 
         report = execute_artemis(name, "%s/%s" % (WEBSERVER_URL, newFilename), iterations=2)
 
-        self.assertEqual(True, True)
+        for condition in result.split(';'):
+            subject, value = condition.split('=')
+            self.assertEqual(report.get(subject.strip(), -1), int(value))
 
     return test
 

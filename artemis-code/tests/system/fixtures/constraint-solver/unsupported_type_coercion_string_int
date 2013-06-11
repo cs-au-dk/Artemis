@@ -1,4 +1,4 @@
-RESULT: sat=false
-if (x == 1 && x == "1") {
+RESULT: Concolic::Solver::ConstraintsWritten=0
+if (x != 1 && x != "1") {
     alert(x);
 }
