@@ -158,8 +158,23 @@ DemoModeMainWindow::DemoModeMainWindow(WebKitExecutor* webkitExecutor, const QUr
     setCentralWidget(mCentralWidget);
 
     // Enable the status bar.
-    // For now we are not puttin anything in here, but it makes it much easier to resize the window!
+    // For now we are not putting anything in here, but it makes it much easier to resize the window!
     mStatusBar = statusBar();
+
+    // Enable menu bar
+    mMenuBar = new QMenuBar(this);
+
+    QMenu* fileMenu = new QMenu("&File", mMenuBar);
+    QAction* exitAction = fileMenu->addAction("&Exit");
+    connect(exitAction, SIGNAL(triggered()), this, SLOT(close()));
+
+    QMenu* helpMenu = new QMenu("&Help", mMenuBar);
+    QAction* aboutAction = helpMenu->addAction("&About");
+    connect(aboutAction, SIGNAL(triggered()), this, SLOT(slAboutDialog()));
+
+    mMenuBar->addMenu(fileMenu);
+    mMenuBar->addMenu(helpMenu);
+    setMenuBar(mMenuBar);
 
     // Set what the window looks like
     resize(1300, 800);
@@ -467,6 +482,13 @@ void DemoModeMainWindow::slViewTrace()
     QDialog* traceViewer = new TraceViewerDialog(mPreviousTrace, this);
     //traceViewer->exec();
     traceViewer->show();
+}
+
+
+// Called when Help>About is triggered.
+void DemoModeMainWindow::slAboutDialog()
+{
+    QMessageBox::about(this, "About Artemis", "Artemis is a tool that performs automated, feedback-directed testing of JavaScript applications. <br/><br/>This demonstration mode shows off some of Artemis' symbolic features. <br/><br/>Please see the <a href='http://github.com/cs-au-dk/Artemis' >GitHub page</a> for more information.");
 }
 
 
