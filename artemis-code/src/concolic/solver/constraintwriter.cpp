@@ -27,31 +27,34 @@ namespace artemis
 {
 
 ConstraintWriter::ConstraintWriter(std::string output_filename) :
-    mNextTemporaryIdentifier(0)
+    mNextTemporaryIdentifier(0),
+    mError(false)
 {
     mOutput.open(output_filename.data());
 }
 
 bool ConstraintWriter::commit()
 {
-    bool typeError = false;
-
-    for (std::map<std::string, Type>::iterator iter = mTypemap.begin(); iter != mTypemap.end(); iter++) {
-        typeError = typeError || iter->second;
-    }
-
-    if (typeError) {
-        std::cerr << "Artemis is unable generate constraints - a type-error was found." << std::endl;
-    }
-
     mOutput.close();
 
-    return !typeError;
+    if (mError) {
+        std::cerr << "Artemis is unable generate constraints - " << mErrorReason << "." << std::endl;
+        return false;
+    }
+
+    for (std::map<std::string, Type>::iterator iter = mTypemap.begin(); iter != mTypemap.end(); iter++) {
+        if (iter->second == TYPEERROR) {
+            std::cerr << "Artemis is unable generate constraints - a type-error was found." << std::endl;
+            return false;
+        }
+    }
+
+    return true;
 }
 
 void ConstraintWriter::visit(Symbolic::SymbolicInteger* symbolicinteger)
 {
-    mIdentifierStore = symbolicinteger->getIdentifier();
+    mIdentifierStore = *symbolicinteger->getIdentifier();
 }
 
 void ConstraintWriter::visit(Symbolic::ConstantInteger* constantinteger)
@@ -59,28 +62,28 @@ void ConstraintWriter::visit(Symbolic::ConstantInteger* constantinteger)
     std::ostringstream strs;
     strs << constantinteger->getValue();
 
-    mIdentifierStore = new std::string(strs.str());
+    mIdentifierStore = strs.str();
 }
 
 void ConstraintWriter::visit(Symbolic::IntegerBinaryOperation* integerbinaryoperation)
 {
     integerbinaryoperation->getLhs()->accept(this);
-    std::string* lhs = mIdentifierStore;
-    recordType(*lhs, INT);
+    std::string lhs = mIdentifierStore;
+    recordType(lhs, INT);
 
     integerbinaryoperation->getRhs()->accept(this);
-    std::string* rhs = mIdentifierStore;
-    recordType(*rhs, INT);
+    std::string rhs = mIdentifierStore;
+    recordType(rhs, INT);
 
     // construct temporary identifier
     std::ostringstream strs;
     strs << "tmp";
     strs << mNextTemporaryIdentifier++;
 
-    mIdentifierStore = new std::string(strs.str());
-    recordType(*mIdentifierStore, INT);
+    mIdentifierStore = strs.str();
+    recordType(mIdentifierStore, INT);
 
-    mOutput << *mIdentifierStore << " := " << *lhs << " " << opToString(integerbinaryoperation->getOp()) << " " << *rhs << ";\n";
+    mOutput << mIdentifierStore << " := " << lhs << " " << opToString(integerbinaryoperation->getOp()) << " " << rhs << ";\n";
 }
 
 void ConstraintWriter::visit(Symbolic::IntegerCoercion* integercoercion)
@@ -90,47 +93,49 @@ void ConstraintWriter::visit(Symbolic::IntegerCoercion* integercoercion)
 
 void ConstraintWriter::visit(Symbolic::SymbolicString* symbolicstring)
 {
-    mIdentifierStore = symbolicstring->getIdentifier();
+    mIdentifierStore = *symbolicstring->getIdentifier();
 }
 
 void ConstraintWriter::visit(Symbolic::ConstantString* constantstring)
 {
     std::ostringstream strs;
     strs << "\"" << *constantstring->getValue() << "\"";
-    mIdentifierStore = new std::string(strs.str());
+    mIdentifierStore = strs.str();
 }
 
 void ConstraintWriter::visit(Symbolic::StringBinaryOperation* stringbinaryoperation)
 {
     stringbinaryoperation->getLhs()->accept(this);
-    std::string* lhs = mIdentifierStore;
-    recordType(*lhs, STRING);
+    std::string lhs = mIdentifierStore;
+    recordType(lhs, STRING);
 
     stringbinaryoperation->getRhs()->accept(this);
-    std::string* rhs = mIdentifierStore;
-    recordType(*rhs, STRING);
+    std::string rhs = mIdentifierStore;
+    recordType(rhs, STRING);
 
     // construct temporary identifier
     std::ostringstream strs;
     strs << "tmp";
     strs << mNextTemporaryIdentifier++;
 
-    mIdentifierStore = new std::string(strs.str());
-    recordType(*mIdentifierStore, STRING);
+    mIdentifierStore = strs.str();
+    recordType(mIdentifierStore, STRING);
 
-    mOutput << *mIdentifierStore << " := " << *lhs << " " << opToString(stringbinaryoperation->getOp()) << " " << *rhs << ";\n";
+    mOutput << mIdentifierStore << " := " << lhs << " " << opToString(stringbinaryoperation->getOp()) << " " << rhs << ";\n";
 }
 
-void ConstraintWriter::visit(Symbolic::StringRegexReplace* stringregexreplace)
+void ConstraintWriter::visit(Symbolic::StringRegexReplace*)
 {
-    std::cerr << "Regex constraints not supported" << std::endl;
-    std::exit(1);
+    mError = true;
+    mErrorReason = "Regex constraints not supported";
+    mIdentifierStore = "ERROR";
 }
 
-void ConstraintWriter::visit(Symbolic::StringReplace* stringreplace)
+void ConstraintWriter::visit(Symbolic::StringReplace*)
 {
-    std::cerr << "String replace constraints not supported" << std::endl;
-    std::exit(1);
+    mError = true;
+    mErrorReason = "String replace constraints not supported";
+    mIdentifierStore = "ERROR";
 }
 
 void ConstraintWriter::visit(Symbolic::StringCoercion* stringcoercion)
@@ -140,12 +145,12 @@ void ConstraintWriter::visit(Symbolic::StringCoercion* stringcoercion)
 
 void ConstraintWriter::visit(Symbolic::SymbolicBoolean* symbolicboolean)
 {
-    mIdentifierStore = symbolicboolean->getIdentifier();
+    mIdentifierStore = *symbolicboolean->getIdentifier();
 }
 
 void ConstraintWriter::visit(Symbolic::ConstantBoolean* constantboolean)
 {
-    mIdentifierStore = new std::string(constantboolean->getValue() == true ? "true" : "false");
+    mIdentifierStore = constantboolean->getValue() == true ? "true" : "false";
 }
 
 void ConstraintWriter::visit(Symbolic::BooleanCoercion* booleancoercion)
@@ -156,22 +161,22 @@ void ConstraintWriter::visit(Symbolic::BooleanCoercion* booleancoercion)
 void ConstraintWriter::visit(Symbolic::BooleanBinaryOperation* booleanbinaryoperation)
 {
     booleanbinaryoperation->getLhs()->accept(this);
-    std::string* lhs = mIdentifierStore;
-    recordType(*lhs, BOOL);
+    std::string lhs = mIdentifierStore;
+    recordType(lhs, BOOL);
 
     booleanbinaryoperation->getRhs()->accept(this);
-    std::string* rhs = mIdentifierStore;
-    recordType(*rhs, BOOL);
+    std::string rhs = mIdentifierStore;
+    recordType(rhs, BOOL);
 
     // construct temporary identifier
     std::ostringstream strs;
     strs << "tmp";
     strs << mNextTemporaryIdentifier++;
 
-    mIdentifierStore = new std::string(strs.str());
-    recordType(*mIdentifierStore, BOOL);
+    mIdentifierStore = strs.str();
+    recordType(mIdentifierStore, BOOL);
 
-    mOutput << *mIdentifierStore << " := " << *lhs << " " << opToString(booleanbinaryoperation->getOp()) << " " << *rhs << ";\n";
+    mOutput << mIdentifierStore << " := " << lhs << " " << opToString(booleanbinaryoperation->getOp()) << " " << rhs << ";\n";
 }
 
 void ConstraintWriter::recordType(const std::string& identifier, Type type)

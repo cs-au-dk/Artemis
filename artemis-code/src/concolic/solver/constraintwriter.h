@@ -65,8 +65,8 @@ public:
     void visit(Symbolic::ConstantString* constantstring);
     void visit(Symbolic::StringBinaryOperation* stringbinaryoperation);
     void visit(Symbolic::StringCoercion* stringcoercion);
-    void visit(Symbolic::StringRegexReplace* stringregexreplace) __attribute__((noreturn));
-    void visit(Symbolic::StringReplace* stringreplace) __attribute__((noreturn));
+    void visit(Symbolic::StringRegexReplace* stringregexreplace);
+    void visit(Symbolic::StringReplace* stringreplace);
     void visit(Symbolic::SymbolicBoolean* symbolicboolean);
     void visit(Symbolic::ConstantBoolean* constantboolean);
     void visit(Symbolic::BooleanCoercion* booleancoercion);
@@ -90,8 +90,11 @@ private:
 
     std::map<std::string, Type> mTypemap;
     std::ofstream mOutput;
-    std::string* mIdentifierStore;
+    std::string mIdentifierStore;
     unsigned int mNextTemporaryIdentifier;
+
+    bool mError; // indicates that an error occured when writing the file
+    std::string mErrorReason;
 };
 
 }

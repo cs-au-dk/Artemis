@@ -183,6 +183,7 @@ void Runtime::done()
         pc->get(i)->accept(&writer);
     }
     writer.commit();
+
     Log::info("\n=== Last pathcondition sat. END ===\n");
 
 
