@@ -45,7 +45,8 @@
 			{
 				"ID": "IntegerBinaryOp",
 				"values": ["INT_ADD", "INT_SUBTRACT", "INT_MULTIPLY", "INT_DIVIDE", "INT_EQ","INT_NEQ", "INT_LEQ", "INT_LT", "INT_GEQ", "INT_GT", "INT_MODULO","INT_SNEQ", "INT_SEQ"],
-				"names": ["+", "-", "*", "/", "==", "!=", "<=", "<", ">=", ">", "%", "!==", "==="]
+				"names": ["+", "-", "*", "/", "==", "!=", "<=", "<", ">=", ">", "%", "!==", "==="],
+				"types": ["INT", "INT", "INT", "INT", "BOOL", "BOOL", "BOOL", "BOOL", "BOOL", "BOOL", "INT", "BOOL", "BOOL"]
 			}
 		]
 	},
@@ -97,7 +98,8 @@
 			{
 				"ID": "StringBinaryOp",
 				"values": ["CONCAT", "STRING_EQ", "STRING_NEQ", "STRING_LT", "STRING_LEQ", "STRING_GT", "STRING_GEQ", "STRING_SEQ", "STRING_SNEQ"],
-				"names": ["+", "==", "!=", "<", "<=", ">", ">=", "===", "!=="]
+				"names": ["+", "==", "!=", "<", "<=", ">", ">=", "===", "!=="],
+				"types": ["STRING", "BOOL", "BOOL", "BOOL", "BOOL", "BOOL", "BOOL", "BOOL", "BOOL"]
 			}
 		]
 	},
@@ -181,7 +183,8 @@
 			{
 				"ID": "BooleanBinaryOp",
 				"values": ["BOOL_EQ", "BOOL_NEQ","BOOL_SEQ", "BOOL_SNEQ"],
-				"names": ["==", "!=", "===", "!=="]
+				"names": ["==", "!=", "===", "!=="],
+				"types": ["BOOL", "BOOL", "BOOL", "BOOL"]
 			}
 		]
 	}

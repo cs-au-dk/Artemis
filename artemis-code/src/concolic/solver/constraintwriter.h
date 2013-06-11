@@ -21,17 +21,16 @@
 #include <string>
 #include <map>
 
+#include <QSharedPointer>
+
 #include "JavaScriptCore/symbolic/expr.h"
 #include "JavaScriptCore/symbolic/expression/visitor.h"
+#include "JavaScriptCore/symbolic/pathcondition.h"
 
 #ifdef ARTEMIS
 
 namespace artemis
 {
-
-enum Type {
-    INT, STRING, BOOL, TYPEERROR
-};
 
 /**
  * Visitor generating symbolic constraints for the
@@ -41,11 +40,11 @@ enum Type {
  * its construct. All constraints will be written to
  * this file.
  *
- * The commit() function should called after applying
+ * The write() function should called after applying
  * the visitor to all constraints in a path condition.
- * Don't use the constraint file before calling commit().
+ * Don't use the constraint file before calling write().
  *
- * If commit() returns false then the constraints can
+ * If write() returns false then the constraints can
  * not be solved by Kaluza. In this case the content
  * of the constraint file is undefined and the result
  * should be interpreted as unsat.
@@ -55,7 +54,13 @@ enum Type {
 class ConstraintWriter : public Symbolic::Visitor
 {
 public:
-    ConstraintWriter(std::string output_filename);
+
+    static bool write(QSharedPointer<Symbolic::PathCondition> pathCondition, std::string outputFile);
+
+private:
+
+    ConstraintWriter(std::string outputFile);
+    bool commit();
 
     void visit(Symbolic::SymbolicInteger* symbolicinteger);
     void visit(Symbolic::ConstantInteger* constantinteger);
@@ -72,10 +77,6 @@ public:
     void visit(Symbolic::BooleanCoercion* booleancoercion);
     void visit(Symbolic::BooleanBinaryOperation* booleanbinaryoperation);
 
-    bool commit();
-
-private:
-
     /**
      * Kaluza does not support mixing constraints on strings,
      * bools and integers. Thus, we allow type coercions but
@@ -86,9 +87,9 @@ private:
      * we can apply as many integer constraints to it as we
      * want.
      */
-    void recordType(const std::string& identifer, Type type);
+    void recordType(const std::string& identifer, Symbolic::Type type);
 
-    std::map<std::string, Type> mTypemap;
+    std::map<std::string, Symbolic::Type> mTypemap;
     std::ofstream mOutput;
     std::string mIdentifierStore;
     unsigned int mNextTemporaryIdentifier;

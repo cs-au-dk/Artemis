@@ -25,6 +25,11 @@
 namespace Symbolic
 {
 
+// Move this to another file?
+enum Type {
+	INT, BOOL, STRING, TYPEERROR
+};
+
     class SymbolicInteger;
     class ConstantInteger;
     class IntegerBinaryOperation;

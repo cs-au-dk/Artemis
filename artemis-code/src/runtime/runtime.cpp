@@ -155,6 +155,20 @@ void Runtime::done()
         break;
     }
 
+    // Do some last-minute statistics
+
+    statistics()->accumulate("WebKit::coverage::covered-unique", mAppmodel->getCoverageListener()->getNumCoveredLines());
+
+    QSharedPointer<Symbolic::PathCondition> pc = QSharedPointer<Symbolic::PathCondition>(mWebkitExecutor->webkitListener->getLastPathCondition());
+    if (ConstraintWriter::write(pc, "/tmp/kaluza")) {
+        statistics()->accumulate("Concolic::Solver::ConstraintsWritten", 1);
+    } else {
+        statistics()->accumulate("Concolic::Solver::ConstraintsWritten", 0);
+    }
+
+
+    // Print final output
+
     if (mOptions.reportPathTrace == HTML_TRACES) {
         mAppmodel->getPathTracer()->writePathTraceHTML(mOptions.outputCoverage == HTML, coveragePath);
     } else if(mOptions.reportPathTrace != NO_TRACES) {
@@ -163,8 +177,6 @@ void Runtime::done()
         Log::info("=== Path Tracer END ===\n");
     }
 
-    statistics()->accumulate("WebKit::coverage::covered-unique", mAppmodel->getCoverageListener()->getNumCoveredLines());
-
     Log::info("\n=== Statistics ===\n");
     StatsPrettyWriter::write(statistics());
     Log::info("\n=== Statistics END ===\n\n");
@@ -172,20 +184,6 @@ void Runtime::done()
     Log::info("\n=== Last pathconditions ===\n");
     Log::info(mWebkitExecutor->webkitListener->generatePathConditionString().toStdString());
     Log::info("=== Last pathconditions END ===\n\n");
-
-    Log::info("\n=== Last pathcondition sat. ===\n");
-
-    // TODO memory
-    Symbolic::PathCondition* pc = mWebkitExecutor->webkitListener->getLastPathCondition();
-
-    ConstraintWriter writer("/tmp/kaluza");
-    for (int i = 0; i < pc->size(); i++) {
-        pc->get(i)->accept(&writer);
-    }
-    writer.commit();
-
-    Log::info("\n=== Last pathcondition sat. END ===\n");
-
 
     Log::info("Artemis terminated on: "+ QDateTime::currentDateTime().toString().toStdString());
 

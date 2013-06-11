@@ -129,8 +129,9 @@ typedef enum {
 } %s;
 
 const char* opToString(%s op);
+Type opGetType(%s op);
 
-""" % (', '.join(enum['values']), enum['ID'], enum['ID']))
+""" % (', '.join(enum['values']), enum['ID'], enum['ID'], enum['ID']))
 
 		fp.write("""
 class %s : public %s
@@ -207,7 +208,17 @@ const char* opToString(%s op)
     return OPStrings[op];
 }
 
-""" % (enum['ID'], ', '.join(['"%s"' % name for name in enum['names']])))
+Type opGetType(%s op)
+{
+	static const Type types[] = {
+	    %s
+	};
+
+	return types[op];
+}
+
+""" % (enum['ID'], ', '.join(['"%s"' % name for name in enum['names']]),
+	   enum['ID'], ', '.join(['%s' % typename for typename in enum['types']])))
 
 		# functions
 
@@ -270,6 +281,11 @@ def generate_visitor(target_dir, object_IDs):
 
 namespace Symbolic
 {
+
+// Move this to another file?
+enum Type {
+	INT, BOOL, STRING, TYPEERROR
+};
 
 """)
 

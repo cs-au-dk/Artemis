@@ -19,6 +19,8 @@
 #include <ostream>
 #include <sstream>
 
+#include <QDebug>
+
 #include "constraintwriter.h"
 
 #ifdef ARTEMIS
@@ -26,11 +28,25 @@
 namespace artemis
 {
 
-ConstraintWriter::ConstraintWriter(std::string output_filename) :
+bool ConstraintWriter::write(QSharedPointer<Symbolic::PathCondition> pathCondition,
+                                    std::string outputFile)
+{
+
+    ConstraintWriter writer(outputFile);
+
+    for (int i = 0; i < pathCondition->size(); i++) {
+        pathCondition->get(i)->accept(&writer);
+    }
+
+    return writer.commit();
+
+}
+
+ConstraintWriter::ConstraintWriter(std::string outputFile) :
     mNextTemporaryIdentifier(0),
     mError(false)
 {
-    mOutput.open(output_filename.data());
+    mOutput.open(outputFile.data());
 }
 
 bool ConstraintWriter::commit()
@@ -38,13 +54,14 @@ bool ConstraintWriter::commit()
     mOutput.close();
 
     if (mError) {
-        std::cerr << "Artemis is unable generate constraints - " << mErrorReason << "." << std::endl;
+        std::string error = std::string("Artemis is unable generate constraints - ") + mErrorReason + ".";
+        qDebug(error.c_str());
         return false;
     }
 
-    for (std::map<std::string, Type>::iterator iter = mTypemap.begin(); iter != mTypemap.end(); iter++) {
-        if (iter->second == TYPEERROR) {
-            std::cerr << "Artemis is unable generate constraints - a type-error was found." << std::endl;
+    for (std::map<std::string, Symbolic::Type>::iterator iter = mTypemap.begin(); iter != mTypemap.end(); iter++) {
+        if (iter->second == Symbolic::TYPEERROR) {
+            qDebug("Artemis is unable generate constraints - a type-error was found.");
             return false;
         }
     }
@@ -69,11 +86,11 @@ void ConstraintWriter::visit(Symbolic::IntegerBinaryOperation* integerbinaryoper
 {
     integerbinaryoperation->getLhs()->accept(this);
     std::string lhs = mIdentifierStore;
-    recordType(lhs, INT);
+    recordType(lhs, Symbolic::INT);
 
     integerbinaryoperation->getRhs()->accept(this);
     std::string rhs = mIdentifierStore;
-    recordType(rhs, INT);
+    recordType(rhs, Symbolic::INT);
 
     // construct temporary identifier
     std::ostringstream strs;
@@ -81,7 +98,7 @@ void ConstraintWriter::visit(Symbolic::IntegerBinaryOperation* integerbinaryoper
     strs << mNextTemporaryIdentifier++;
 
     mIdentifierStore = strs.str();
-    recordType(mIdentifierStore, INT);
+    recordType(mIdentifierStore, Symbolic::opGetType(integerbinaryoperation->getOp()));
 
     mOutput << mIdentifierStore << " := " << lhs << " " << opToString(integerbinaryoperation->getOp()) << " " << rhs << ";\n";
 }
@@ -107,11 +124,11 @@ void ConstraintWriter::visit(Symbolic::StringBinaryOperation* stringbinaryoperat
 {
     stringbinaryoperation->getLhs()->accept(this);
     std::string lhs = mIdentifierStore;
-    recordType(lhs, STRING);
+    recordType(lhs, Symbolic::STRING);
 
     stringbinaryoperation->getRhs()->accept(this);
     std::string rhs = mIdentifierStore;
-    recordType(rhs, STRING);
+    recordType(rhs, Symbolic::STRING);
 
     // construct temporary identifier
     std::ostringstream strs;
@@ -119,7 +136,7 @@ void ConstraintWriter::visit(Symbolic::StringBinaryOperation* stringbinaryoperat
     strs << mNextTemporaryIdentifier++;
 
     mIdentifierStore = strs.str();
-    recordType(mIdentifierStore, STRING);
+    recordType(mIdentifierStore, Symbolic::opGetType(stringbinaryoperation->getOp()));
 
     mOutput << mIdentifierStore << " := " << lhs << " " << opToString(stringbinaryoperation->getOp()) << " " << rhs << ";\n";
 }
@@ -162,11 +179,11 @@ void ConstraintWriter::visit(Symbolic::BooleanBinaryOperation* booleanbinaryoper
 {
     booleanbinaryoperation->getLhs()->accept(this);
     std::string lhs = mIdentifierStore;
-    recordType(lhs, BOOL);
+    recordType(lhs, Symbolic::BOOL);
 
     booleanbinaryoperation->getRhs()->accept(this);
     std::string rhs = mIdentifierStore;
-    recordType(rhs, BOOL);
+    recordType(rhs, Symbolic::BOOL);
 
     // construct temporary identifier
     std::ostringstream strs;
@@ -174,20 +191,20 @@ void ConstraintWriter::visit(Symbolic::BooleanBinaryOperation* booleanbinaryoper
     strs << mNextTemporaryIdentifier++;
 
     mIdentifierStore = strs.str();
-    recordType(mIdentifierStore, BOOL);
+    recordType(mIdentifierStore, Symbolic::opGetType(booleanbinaryoperation->getOp()));
 
     mOutput << mIdentifierStore << " := " << lhs << " " << opToString(booleanbinaryoperation->getOp()) << " " << rhs << ";\n";
 }
 
-void ConstraintWriter::recordType(const std::string& identifier, Type type)
+void ConstraintWriter::recordType(const std::string& identifier, Symbolic::Type type)
 {
 
-    std::map<std::string, Type>::iterator iter = mTypemap.find(identifier);
+    std::map<std::string, Symbolic::Type>::iterator iter = mTypemap.find(identifier);
 
     if (iter != mTypemap.end()) {
-        iter->second = iter->second == type ? type : TYPEERROR;
+        iter->second = iter->second == type ? type : Symbolic::TYPEERROR;
     } else {
-        mTypemap.insert(std::pair<std::string, Type>(identifier, type));
+        mTypemap.insert(std::pair<std::string, Symbolic::Type>(identifier, type));
     }
 
 }

@@ -166,8 +166,10 @@ qwk_1.0 {
         Symbolic::PathCondition*;
         non-virtual?thunk?to?Symbolic::PathCondition*;
         Symbolic::PathCondition::*;
-        
+
         Symbolic::opToString*;
+        Symbolic::opGetType*;
+        Symbolic::Type*;
 
     };
     local: *;
