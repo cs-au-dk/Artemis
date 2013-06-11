@@ -99,7 +99,8 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/runtime/toplevel/manualruntime.h \
     src/runtime/input/events/unknowneventparameters.h \
     src/concolic/traceeventdetectors.h \
-    src/concolic/tracestatistics.h
+    src/concolic/tracestatistics.h \
+    src/runtime/demomode/traceviewerdialog.h
 
 SOURCES += src/runtime/input/ajaxinput.cpp \
     src/strategies/prioritizer/constantprioritizer.cpp \
@@ -174,6 +175,7 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/runtime/toplevel/manualruntime.cpp \
     src/runtime/input/events/unknowneventparameters.cpp \
     src/concolic/traceeventdetectors.cpp \
-    src/concolic/tracestatistics.cpp
+    src/concolic/tracestatistics.cpp \
+    src/runtime/demomode/traceviewerdialog.cpp
 
 QT += network

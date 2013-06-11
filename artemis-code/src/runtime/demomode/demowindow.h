@@ -39,6 +39,9 @@
 #include "concolic/traceprinter.h"
 #include "concolic/tracestatistics.h"
 
+#include "traceviewerdialog.h"
+
+
 namespace artemis
 {
 

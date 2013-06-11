@@ -126,16 +126,15 @@ DemoModeMainWindow::DemoModeMainWindow(WebKitExecutor* webkitExecutor, const QUr
     traceAnalysisLabel->setFont(sectionFont);
     mAnalysisLayout->addWidget(traceAnalysisLabel);
     mAnalysisLayout->addWidget(mTraceAnalysisText);
-    mAnalysisLayout->addWidget(mViewTraceBtn);
-    mAnalysisLayout->addSpacing(10);
 
-    QLabel* traceClassLabel = new QLabel("Previous Trace Classification:");
-    traceClassLabel->setFont(sectionFont);
-    mAnalysisLayout->addWidget(traceClassLabel);
-
-    mTraceClassificationResult = new QLabel("Result: <no trace run yet>");
+    mTraceClassificationResult = new QLabel("");
+    mTraceClassificationResult->setVisible(false);
     mAnalysisLayout->addWidget(mTraceClassificationResult);
+
+    mAnalysisLayout->addWidget(mViewTraceBtn);
+
     mAnalysisLayout->addSpacing(10);
+
 
     mAnalysisLayout->setContentsMargins(0,0,0,0);
     mAnalysisLayout->setAlignment(Qt::AlignTop);
@@ -332,12 +331,13 @@ void DemoModeMainWindow::postTraceExecution()
 
     bool result = mTraceClassifier.classify(mPreviousTrace);
 
+    mTraceClassificationResult->setVisible(true);
     if(result){
         Log::info("CONCOLIC-INFO: This trace was classified as a SUCCESS.");
-        mTraceClassificationResult->setText("Result: <font color='green'>SUCCESS</font>");
+        mTraceClassificationResult->setText("Classification: <font color='green'>SUCCESS</font>");
     }else{
         Log::info("CONCOLIC-INFO: This trace was classified as a FAILURE.");
-        mTraceClassificationResult->setText("Result: <font color='red'>FAILURE</font>");
+        mTraceClassificationResult->setText("Classification: <font color='red'>FAILURE</font>");
     }
 
     Log::info("CONCOLIC-INFO: Printout of the trace:");
@@ -361,7 +361,7 @@ void DemoModeMainWindow::displayTraceInformation()
     TraceStatistics stats;
     stats.processTrace(mPreviousTrace);
 
-    mTraceAnalysisText->setText(QString("Events Recorded: %1\nBranches: %2\nAlerts: %3\nFunction Calls: %4\n")
+    mTraceAnalysisText->setText(QString("Events Recorded: %1\nBranches: %2\nAlerts: %3\nFunction Calls: %4")
                                 .arg(stats.mNumNodes).arg(stats.mNumBranches).arg(stats.mNumAlerts)
                                 .arg(stats.mNumFunctionCalls));
 }
@@ -464,10 +464,9 @@ void DemoModeMainWindow::slViewTrace()
     Log::info("DEMO: Viewing trace.");
 
     // TODO: create a new trace viewing dialog and show it here.
-    QMessageBox* tempMsg = new QMessageBox(this);
-    tempMsg->setWindowTitle("View Previous Trace");
-    tempMsg->setText("Trace viewing is not yet implemented. See terminal for a text printout.");
-    tempMsg->exec();
+    QDialog* traceViewer = new TraceViewerDialog(mPreviousTrace, this);
+    //traceViewer->exec();
+    traceViewer->show();
 }
 
 
