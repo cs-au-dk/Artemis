@@ -25,10 +25,12 @@
 
 #include "statistics/statsstorage.h"
 #include "statistics/writers/pretty.h"
+
 #include "strategies/inputgenerator/randominputgenerator.h"
 #include "strategies/inputgenerator/event/staticeventparametergenerator.h"
 #include "strategies/inputgenerator/form/staticforminputgenerator.h"
 #include "strategies/inputgenerator/form/constantstringforminputgenerator.h"
+
 #include "strategies/termination/numberofiterationstermination.h"
 
 #include "strategies/prioritizer/constantprioritizer.h"
@@ -36,6 +38,8 @@
 #include "strategies/prioritizer/coverageprioritizer.h"
 #include "strategies/prioritizer/readwriteprioritizer.h"
 #include "strategies/prioritizer/collectedprioritizer.h"
+
+#include "concolic/solver/constraintwriter.h"
 
 #include "runtime.h"
 
@@ -168,6 +172,19 @@ void Runtime::done()
     Log::info("\n=== Last pathconditions ===\n");
     Log::info(mWebkitExecutor->webkitListener->generatePathConditionString().toStdString());
     Log::info("=== Last pathconditions END ===\n\n");
+
+    Log::info("\n=== Last pathcondition sat. ===\n");
+
+    // TODO memory
+    Symbolic::PathCondition* pc = mWebkitExecutor->webkitListener->getLastPathCondition();
+
+    ConstraintWriter writer("/tmp/kaluza");
+    for (int i = 0; i < pc->size(); i++) {
+        pc->get(i)->accept(&writer);
+    }
+    writer.commit();
+    Log::info("\n=== Last pathcondition sat. END ===\n");
+
 
     Log::info("Artemis terminated on: "+ QDateTime::currentDateTime().toString().toStdString());
 

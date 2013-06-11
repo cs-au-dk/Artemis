@@ -379,6 +379,11 @@ void QWebExecutionListener::endSymbolicSession()
     JSC::Interpreter::m_symbolic->endSession();
 }
 
+Symbolic::PathCondition* QWebExecutionListener::getLastPathCondition()
+{
+    return JSC::Interpreter::m_symbolic->getPathCondition();
+}
+
 
 QString QWebExecutionListener::generatePathConditionString(){
     return QString::fromStdString(JSC::Interpreter::m_symbolic->generatePathConditionString());

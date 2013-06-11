@@ -14,18 +14,16 @@
  * limitations under the License.
  */
 
+#include <cstdlib>
 #include <iostream>
 #include <ostream>
 #include <sstream>
-
-#include <config.h>
-#include "JavaScriptCore/wtf/text/CString.h"
 
 #include "constraintwriter.h"
 
 #ifdef ARTEMIS
 
-namespace Symbolic
+namespace artemis
 {
 
 ConstraintWriter::ConstraintWriter(std::string output_filename) :
@@ -51,12 +49,12 @@ bool ConstraintWriter::commit()
     return !typeError;
 }
 
-void ConstraintWriter::visit(SymbolicInteger* symbolicinteger)
+void ConstraintWriter::visit(Symbolic::SymbolicInteger* symbolicinteger)
 {
     mIdentifierStore = symbolicinteger->getIdentifier();
 }
 
-void ConstraintWriter::visit(ConstantInteger* constantinteger)
+void ConstraintWriter::visit(Symbolic::ConstantInteger* constantinteger)
 {
     std::ostringstream strs;
     strs << constantinteger->getValue();
@@ -64,7 +62,7 @@ void ConstraintWriter::visit(ConstantInteger* constantinteger)
     mIdentifierStore = new std::string(strs.str());
 }
 
-void ConstraintWriter::visit(IntegerBinaryOperation* integerbinaryoperation)
+void ConstraintWriter::visit(Symbolic::IntegerBinaryOperation* integerbinaryoperation)
 {
     integerbinaryoperation->getLhs()->accept(this);
     std::string* lhs = mIdentifierStore;
@@ -85,24 +83,24 @@ void ConstraintWriter::visit(IntegerBinaryOperation* integerbinaryoperation)
     mOutput << *mIdentifierStore << " := " << *lhs << " " << opToString(integerbinaryoperation->getOp()) << " " << *rhs << ";\n";
 }
 
-void ConstraintWriter::visit(IntegerCoercion* integercoercion)
+void ConstraintWriter::visit(Symbolic::IntegerCoercion* integercoercion)
 {
     integercoercion->getExpression()->accept(this);
 }
 
-void ConstraintWriter::visit(SymbolicString* symbolicstring)
+void ConstraintWriter::visit(Symbolic::SymbolicString* symbolicstring)
 {
     mIdentifierStore = symbolicstring->getIdentifier();
 }
 
-void ConstraintWriter::visit(ConstantString* constantstring)
+void ConstraintWriter::visit(Symbolic::ConstantString* constantstring)
 {
     std::ostringstream strs;
     strs << "\"" << *constantstring->getValue() << "\"";
     mIdentifierStore = new std::string(strs.str());
 }
 
-void ConstraintWriter::visit(StringBinaryOperation* stringbinaryoperation)
+void ConstraintWriter::visit(Symbolic::StringBinaryOperation* stringbinaryoperation)
 {
     stringbinaryoperation->getLhs()->accept(this);
     std::string* lhs = mIdentifierStore;
@@ -123,39 +121,39 @@ void ConstraintWriter::visit(StringBinaryOperation* stringbinaryoperation)
     mOutput << *mIdentifierStore << " := " << *lhs << " " << opToString(stringbinaryoperation->getOp()) << " " << *rhs << ";\n";
 }
 
-void ConstraintWriter::visit(StringRegexReplace* stringregexreplace)
+void ConstraintWriter::visit(Symbolic::StringRegexReplace* stringregexreplace)
 {
     std::cerr << "Regex constraints not supported" << std::endl;
     std::exit(1);
 }
 
-void ConstraintWriter::visit(StringReplace* stringreplace)
+void ConstraintWriter::visit(Symbolic::StringReplace* stringreplace)
 {
     std::cerr << "String replace constraints not supported" << std::endl;
     std::exit(1);
 }
 
-void ConstraintWriter::visit(StringCoercion* stringcoercion)
+void ConstraintWriter::visit(Symbolic::StringCoercion* stringcoercion)
 {
     stringcoercion->getExpression()->accept(this);
 }
 
-void ConstraintWriter::visit(SymbolicBoolean* symbolicboolean)
+void ConstraintWriter::visit(Symbolic::SymbolicBoolean* symbolicboolean)
 {
     mIdentifierStore = symbolicboolean->getIdentifier();
 }
 
-void ConstraintWriter::visit(ConstantBoolean* constantboolean)
+void ConstraintWriter::visit(Symbolic::ConstantBoolean* constantboolean)
 {
     mIdentifierStore = new std::string(constantboolean->getValue() == true ? "true" : "false");
 }
 
-void ConstraintWriter::visit(BooleanCoercion* booleancoercion)
+void ConstraintWriter::visit(Symbolic::BooleanCoercion* booleancoercion)
 {
     booleancoercion->getExpression()->accept(this);
 }
 
-void ConstraintWriter::visit(BooleanBinaryOperation* booleanbinaryoperation)
+void ConstraintWriter::visit(Symbolic::BooleanBinaryOperation* booleanbinaryoperation)
 {
     booleanbinaryoperation->getLhs()->accept(this);
     std::string* lhs = mIdentifierStore;
@@ -182,7 +180,7 @@ void ConstraintWriter::recordType(const std::string& identifier, Type type)
     std::map<std::string, Type>::iterator iter = mTypemap.find(identifier);
 
     if (iter != mTypemap.end()) {
-        iter->second = iter->second == type ? type : ERROR;
+        iter->second = iter->second == type ? type : TYPEERROR;
     } else {
         mTypemap.insert(std::pair<std::string, Type>(identifier, type));
     }

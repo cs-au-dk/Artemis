@@ -21,17 +21,16 @@
 #include <string>
 #include <map>
 
-#include "symbolic/expr.h"
-
-#include "symbolic/expression/visitor.h"
+#include "JavaScriptCore/symbolic/expr.h"
+#include "JavaScriptCore/symbolic/expression/visitor.h"
 
 #ifdef ARTEMIS
 
-namespace Symbolic
+namespace artemis
 {
 
 enum Type {
-    INT, STRING, BOOL, ERROR
+    INT, STRING, BOOL, TYPEERROR
 };
 
 /**
@@ -53,25 +52,25 @@ enum Type {
  *
  * [1] http://webblaze.cs.berkeley.edu/2010/kaluza/
  */
-class ConstraintWriter : public Visitor
+class ConstraintWriter : public Symbolic::Visitor
 {
 public:
     ConstraintWriter(std::string output_filename);
 
-    void visit(SymbolicInteger* symbolicinteger);
-    void visit(ConstantInteger* constantinteger);
-    void visit(IntegerBinaryOperation* integerbinaryoperation);
-    void visit(IntegerCoercion* integercoercion);
-    void visit(SymbolicString* symbolicstring);
-    void visit(ConstantString* constantstring);
-    void visit(StringBinaryOperation* stringbinaryoperation);
-    void visit(StringCoercion* stringcoercion);
-    void visit(StringRegexReplace* stringregexreplace) __attribute__((noreturn));
-    void visit(StringReplace* stringreplace) __attribute__((noreturn));
-    void visit(SymbolicBoolean* symbolicboolean);
-    void visit(ConstantBoolean* constantboolean);
-    void visit(BooleanCoercion* booleancoercion);
-    void visit(BooleanBinaryOperation* booleanbinaryoperation);
+    void visit(Symbolic::SymbolicInteger* symbolicinteger);
+    void visit(Symbolic::ConstantInteger* constantinteger);
+    void visit(Symbolic::IntegerBinaryOperation* integerbinaryoperation);
+    void visit(Symbolic::IntegerCoercion* integercoercion);
+    void visit(Symbolic::SymbolicString* symbolicstring);
+    void visit(Symbolic::ConstantString* constantstring);
+    void visit(Symbolic::StringBinaryOperation* stringbinaryoperation);
+    void visit(Symbolic::StringCoercion* stringcoercion);
+    void visit(Symbolic::StringRegexReplace* stringregexreplace) __attribute__((noreturn));
+    void visit(Symbolic::StringReplace* stringreplace) __attribute__((noreturn));
+    void visit(Symbolic::SymbolicBoolean* symbolicboolean);
+    void visit(Symbolic::ConstantBoolean* constantboolean);
+    void visit(Symbolic::BooleanCoercion* booleancoercion);
+    void visit(Symbolic::BooleanBinaryOperation* booleanbinaryoperation);
 
     bool commit();
 

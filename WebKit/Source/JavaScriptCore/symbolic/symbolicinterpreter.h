@@ -46,7 +46,7 @@ typedef enum {
 
 const char* opToString(OP op);
 
-class SymbolicInterpreter
+WTF_EXPORT_PRIVATE class SymbolicInterpreter
 {
 
 public:
@@ -68,6 +68,7 @@ public:
     // called from Artemis
     void beginSession();
     void endSession();
+    PathCondition* getPathCondition();
     std::string generatePathConditionString();
 
 private:

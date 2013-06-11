@@ -161,6 +161,14 @@ qwk_1.0 {
         WKStringCopyQString*;
         WKStringCreateWithQString*;
         WKImageCreateQImage*;
+
+        # Artemis 
+        Symbolic::PathCondition*;
+        non-virtual?thunk?to?Symbolic::PathCondition*;
+        Symbolic::PathCondition::*;
+        
+        Symbolic::opToString*;
+
     };
     local: *;
 };
