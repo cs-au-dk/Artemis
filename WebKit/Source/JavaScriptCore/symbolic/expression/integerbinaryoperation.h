@@ -34,6 +34,7 @@ typedef enum {
 } IntegerBinaryOp;
 
 const char* opToString(IntegerBinaryOp op);
+Type opGetType(IntegerBinaryOp op);
 
 
 class IntegerBinaryOperation : public IntegerExpression

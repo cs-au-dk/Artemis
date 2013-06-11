@@ -34,6 +34,7 @@ typedef enum {
 } BooleanBinaryOp;
 
 const char* opToString(BooleanBinaryOp op);
+Type opGetType(BooleanBinaryOp op);
 
 
 class BooleanBinaryOperation : public BooleanExpression

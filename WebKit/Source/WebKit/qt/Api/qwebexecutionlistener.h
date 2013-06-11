@@ -24,6 +24,7 @@
 
 #include "../JavaScriptCore/instrumentation/jscexecutionlistener.h"
 #include "../JavaScriptCore/instrumentation/bytecodeinfo.h"
+#include "../JavaScriptCore/symbolic/pathcondition.h"
 
 #include "artemis/qsource.h"
 #include "artemis/qsourceregistry.h"
@@ -85,6 +86,7 @@ public:
 
     void beginSymbolicSession();
     void endSymbolicSession();
+    Symbolic::PathCondition* getLastPathCondition();
     QString generatePathConditionString();
 
 

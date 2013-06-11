@@ -1,0 +1,4 @@
+RESULT: Concolic::Solver::ConstraintsWritten=1
+if (x == 1) {
+    alert(x);
+}

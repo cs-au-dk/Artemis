@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-#include <iostream>
 #include <tr1/unordered_set>
 #include <inttypes.h>
 
@@ -36,6 +35,8 @@
 namespace Symbolic
 {
 
+unsigned int NEXT_SYMBOLIC_ID = 0;
+
 const char* opToString(OP op) {
     static const char* OPStrings[] = {
         "==", "!=", "===", "!==", "<=", "<", ">=", ">",
@@ -46,7 +47,9 @@ const char* opToString(OP op) {
 }
 
 SymbolicInterpreter::SymbolicInterpreter() :
+    m_pc(NULL),
     m_nextSymbolicValue(0),
+    m_inSession(false),
     m_shouldGC(false)
 {
 }
@@ -55,9 +58,14 @@ void SymbolicInterpreter::ail_call(JSC::CallFrame*, const JSC::Instruction*, JSC
 {
 }
 
-void SymbolicInterpreter::ail_call_native(JSC::CallFrame* callFrame, const JSC::Instruction*, JSC::BytecodeInfo&,
+void SymbolicInterpreter::ail_call_native(JSC::CallFrame* callFrame,
+                                          const JSC::Instruction*,
+                                          JSC::BytecodeInfo&,
                                           JSC::native_function_ID_t functionID)
 {
+
+    if (!m_inSession) return;
+
     const NativeFunction* nativeFunction = m_nativeFunctions.find(functionID);
 
     if (nativeFunction == NULL) {
@@ -71,10 +79,16 @@ void SymbolicInterpreter::ail_call_native(JSC::CallFrame* callFrame, const JSC::
 
 
 
-JSC::JSValue SymbolicInterpreter::ail_op_binary(JSC::CallFrame* callFrame, const JSC::Instruction*, JSC::BytecodeInfo& info,
-                                                JSC::JSValue& x, OP op, JSC::JSValue& y,
+JSC::JSValue SymbolicInterpreter::ail_op_binary(JSC::CallFrame* callFrame,
+                                                const JSC::Instruction*,
+                                                JSC::BytecodeInfo& info,
+                                                JSC::JSValue& x,
+                                                OP op,
+                                                JSC::JSValue& y,
                                                 JSC::JSValue result)
 {
+
+    if (!m_inSession) return result;
 
     if (!x.isSymbolic() && !y.isSymbolic()) {
         return result; // not symbolic
@@ -344,12 +358,18 @@ JSC::JSValue SymbolicInterpreter::ail_op_binary(JSC::CallFrame* callFrame, const
     return result;
 }
 
-void SymbolicInterpreter::ail_jmp_iff(JSC::CallFrame* callFrame, const JSC::Instruction* vPC, JSC::BytecodeInfo& info,
-                                      JSC::JSValue& condition, bool jumps)
+void SymbolicInterpreter::ail_jmp_iff(JSC::CallFrame* callFrame,
+                                      const JSC::Instruction* vPC,
+                                      JSC::BytecodeInfo& info,
+                                      JSC::JSValue& condition,
+                                      bool jumps)
 {
+
+    if (!m_inSession) return;
+
     if (condition.isSymbolic()) {
         info.setSymbolic();
-        m_pc.append(condition.asSymbolic());
+        m_pc->append(condition.asSymbolic());
     }
 
 }
@@ -383,28 +403,41 @@ void SymbolicInterpreter::preExecution(JSC::CallFrame* callFrame)
 void SymbolicInterpreter::beginSession()
 {
     m_shouldGC = true;
+    m_inSession = true;
+    m_pc = new PathCondition();
 }
 
 void SymbolicInterpreter::endSession()
 {
-    qDebug() << "PC size: " << m_pc.size();
+    m_inSession = false;
+
+    qDebug() << "PC size: " << m_pc->size();
 
     int i;
-    for (i = 0; i < m_pc.size(); i++) {
+    for (i = 0; i < m_pc->size(); i++) {
         Printer printer;
-        m_pc.get(i)->accept(&printer);
+        m_pc->get(i)->accept(&printer);
         qDebug() << "PC[" << i << "]: " << QString::fromStdString(printer.getResult());
     }
 }
 
-std::string SymbolicInterpreter::generatePathConditionString(){
+PathCondition* SymbolicInterpreter::getPathCondition()
+{
+    return m_pc;
+}
+
+std::string SymbolicInterpreter::generatePathConditionString() {
+
     std::stringstream sstrm;
-    for (int i = 0; i < m_pc.size(); i++) {
+
+    for (int i = 0; i < m_pc->size(); i++) {
 
         Printer printer;
-        m_pc.get(i)->accept(&printer);
+        m_pc->get(i)->accept(&printer);
+
         sstrm << "PC[" << i << "]: " << printer.getResult() << std::endl;
     }
+
     return sstrm.str();
 }
 

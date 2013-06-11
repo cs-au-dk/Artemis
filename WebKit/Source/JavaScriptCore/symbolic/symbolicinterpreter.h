@@ -39,6 +39,8 @@ namespace JSC {
 namespace Symbolic
 {
 
+extern unsigned int NEXT_SYMBOLIC_ID;
+
 typedef enum {
     EQUAL, NOT_EQUAL, STRICT_EQUAL, NOT_STRICT_EQUAL, LESS_EQ, LESS_STRICT, GREATER_EQ, GREATER_STRICT,
     ADD, SUBTRACT, MULTIPLY, DIVIDE, MODULO
@@ -46,7 +48,7 @@ typedef enum {
 
 const char* opToString(OP op);
 
-class SymbolicInterpreter
+WTF_EXPORT_PRIVATE class SymbolicInterpreter
 {
 
 public:
@@ -65,19 +67,30 @@ public:
     // called from the interpreter before it starts executing (a single trace)
     void preExecution(JSC::CallFrame* callFrame);
 
-    // called from Artemis
+    /*
+     * Called from Artemis
+     * Path constraints are only collected when the session is active.
+     *
+     * When the session is ended, the resulting path condition is made
+     * available through the getPathCondition function.
+     *
+     * It is the responsibility of Artemis to collect and destroy the path condition!
+     *
+     */
     void beginSession();
     void endSession();
+    PathCondition* getPathCondition();
     std::string generatePathConditionString();
 
 private:
     void fatalError(JSC::CodeBlock* codeBlock, std::string reason) __attribute__((noreturn));
 
-    PathCondition m_pc;
+    PathCondition* m_pc;
 
     NativeLookup m_nativeFunctions;
     int m_nextSymbolicValue;
 
+    bool m_inSession;
     bool m_shouldGC;
 };
 

@@ -32,6 +32,15 @@ const char* opToString(BooleanBinaryOp op)
     return OPStrings[op];
 }
 
+Type opGetType(BooleanBinaryOp op)
+{
+	static const Type types[] = {
+	    BOOL, BOOL, BOOL, BOOL
+	};
+
+	return types[op];
+}
+
 
 BooleanBinaryOperation::BooleanBinaryOperation(BooleanExpression* lhs, BooleanBinaryOp op, BooleanExpression* rhs) :
     BooleanExpression(),

@@ -34,7 +34,6 @@
 
 #include "concolic/entrypoints.h"
 #include "concolic/trace.h"
-#include "concolic/tracebuilder.h"
 #include "concolic/traceclassifier.h"
 #include "concolic/traceprinter.h"
 #include "concolic/tracestatistics.h"
@@ -99,7 +98,6 @@ private:
 
     // The analysis logic itself.
     bool mWaitingForInitialLoad;
-    TraceBuilderPtr mTraceBuilder;
     EntryPointDetector mEntryPointDetector;
     TraceClassifier mTraceClassifier;
     TraceNodePtr mPreviousTrace;

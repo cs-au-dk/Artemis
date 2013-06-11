@@ -32,6 +32,15 @@ const char* opToString(StringBinaryOp op)
     return OPStrings[op];
 }
 
+Type opGetType(StringBinaryOp op)
+{
+	static const Type types[] = {
+	    STRING, BOOL, BOOL, BOOL, BOOL, BOOL, BOOL, BOOL, BOOL
+	};
+
+	return types[op];
+}
+
 
 StringBinaryOperation::StringBinaryOperation(StringExpression* lhs, StringBinaryOp op, StringExpression* rhs) :
     StringExpression(),

@@ -25,10 +25,12 @@
 
 #include "statistics/statsstorage.h"
 #include "statistics/writers/pretty.h"
+
 #include "strategies/inputgenerator/randominputgenerator.h"
 #include "strategies/inputgenerator/event/staticeventparametergenerator.h"
 #include "strategies/inputgenerator/form/staticforminputgenerator.h"
 #include "strategies/inputgenerator/form/constantstringforminputgenerator.h"
+
 #include "strategies/termination/numberofiterationstermination.h"
 
 #include "strategies/prioritizer/constantprioritizer.h"
@@ -36,6 +38,8 @@
 #include "strategies/prioritizer/coverageprioritizer.h"
 #include "strategies/prioritizer/readwriteprioritizer.h"
 #include "strategies/prioritizer/collectedprioritizer.h"
+
+#include "concolic/solver/constraintwriter.h"
 
 #include "runtime.h"
 
@@ -151,6 +155,20 @@ void Runtime::done()
         break;
     }
 
+    // Do some last-minute statistics
+
+    statistics()->accumulate("WebKit::coverage::covered-unique", mAppmodel->getCoverageListener()->getNumCoveredLines());
+
+    QSharedPointer<Symbolic::PathCondition> pc = QSharedPointer<Symbolic::PathCondition>(mWebkitExecutor->webkitListener->getLastPathCondition());
+    if (ConstraintWriter::write(pc, "/tmp/kaluza")) {
+        statistics()->accumulate("Concolic::Solver::ConstraintsWritten", 1);
+    } else {
+        statistics()->accumulate("Concolic::Solver::ConstraintsWritten", 0);
+    }
+
+
+    // Print final output
+
     if (mOptions.reportPathTrace == HTML_TRACES) {
         mAppmodel->getPathTracer()->writePathTraceHTML(mOptions.outputCoverage == HTML, coveragePath);
     } else if(mOptions.reportPathTrace != NO_TRACES) {
@@ -158,8 +176,6 @@ void Runtime::done()
         mAppmodel->getPathTracer()->write();
         Log::info("=== Path Tracer END ===\n");
     }
-
-    statistics()->accumulate("WebKit::coverage::covered-unique", mAppmodel->getCoverageListener()->getNumCoveredLines());
 
     Log::info("\n=== Statistics ===\n");
     StatsPrettyWriter::write(statistics());

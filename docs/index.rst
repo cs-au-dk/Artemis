@@ -12,6 +12,7 @@ Contents:
    sections/overview
    
    sections/webkit
+   sections/webkithacking
    sections/codingstyle
 
 

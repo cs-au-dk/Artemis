@@ -24,8 +24,7 @@ namespace artemis
 
 DemoModeMainWindow::DemoModeMainWindow(WebKitExecutor* webkitExecutor, const QUrl &url) :
     mWebkitExecutor(webkitExecutor),
-    mWaitingForInitialLoad(false),
-    mTraceBuilder(webkitExecutor->getTraceBuilder())
+    mWaitingForInitialLoad(false)
 {
     Log::info("DEMO: Constructing main window.");
 
@@ -189,7 +188,7 @@ DemoModeMainWindow::DemoModeMainWindow(WebKitExecutor* webkitExecutor, const QUr
     QObject::connect(mEntryPointList, SIGNAL(itemSelectionChanged()),
                      this, SLOT(slEntryPointSelectionChanged()));
 
-    QObject::connect(mTraceBuilder.data(), SIGNAL(sigAddedNode()),
+    QObject::connect(mWebkitExecutor->getTraceBuilder(), SIGNAL(sigAddedNode()),
                      this, SLOT(slAddedTraceNode()));
 
 
@@ -340,9 +339,9 @@ void DemoModeMainWindow::preTraceExecution(ExecutionResultPtr result)
 void DemoModeMainWindow::postTraceExecution()
 {
     Log::info("CONCOLIC-INFO: Analysing trace...");
-    mTraceBuilder->endRecording();
+    mWebkitExecutor->getTraceBuilder()->endRecording();
 
-    mPreviousTrace = mTraceBuilder->trace();
+    mPreviousTrace = mWebkitExecutor->getTraceBuilder()->trace();
 
     bool result = mTraceClassifier.classify(mPreviousTrace);
 
@@ -444,7 +443,7 @@ void DemoModeMainWindow::slStartTraceRecording()
     mEndTraceRecordingBtn->setEnabled(true);
 
     // Begin recording trace events.
-    mTraceBuilder->beginRecording();
+    mWebkitExecutor->getTraceBuilder()->beginRecording();
 
     mTraceRecordingProgress->setText("Trace Nodes Recorded: 0");
     mTraceNodesRecorded = 0;

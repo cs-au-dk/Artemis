@@ -80,10 +80,10 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/concolic/pathtree.h \
     src/concolic/concreteinput.h \
     src/concolic/search.h \
-    src/concolic/solver.h \
+    src/concolic/solver/solver.h \
+    src/concolic/solver/constraintwriter.h \
     src/concolic/searchdfs.h \
     src/concolic/searchrandom.h \
-    src/concolic/kaluzasolver.h \
     src/concolic/executor.h \
     src/concolic/trace.h \
     src/concolic/entrypoints.h \
@@ -162,7 +162,8 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/concolic/pathtree.cpp \
     src/concolic/concreteinput.cpp \
     src/concolic/search.cpp \
-    src/concolic/solver.cpp \
+    src/concolic/solver/solver.cpp \
+    src/concolic/solver/constraintwriter.cpp \
     src/concolic/entrypoints.cpp \
     src/runtime/toplevel/concolicruntime.cpp \
     src/concolic/tracebuilder.cpp \
