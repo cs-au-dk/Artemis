@@ -39,7 +39,7 @@
 #include "strategies/prioritizer/readwriteprioritizer.h"
 #include "strategies/prioritizer/collectedprioritizer.h"
 
-#include "concolic/solver/constraintwriter.h"
+#include "concolic/solver/solver.h"
 
 #include "runtime.h"
 
@@ -159,13 +159,9 @@ void Runtime::done()
 
     statistics()->accumulate("WebKit::coverage::covered-unique", mAppmodel->getCoverageListener()->getNumCoveredLines());
 
+    // solve the last PC - this is needed by some system tests
     QSharedPointer<Symbolic::PathCondition> pc = QSharedPointer<Symbolic::PathCondition>(mWebkitExecutor->webkitListener->getLastPathCondition());
-    if (ConstraintWriter::write(pc, "/tmp/kaluza")) {
-        statistics()->accumulate("Concolic::Solver::ConstraintsWritten", 1);
-    } else {
-        statistics()->accumulate("Concolic::Solver::ConstraintsWritten", 0);
-    }
-
+    Solver::solve(pc);
 
     // Print final output
 

@@ -25,7 +25,7 @@ def test_generator(filename, name, result):
 
         for condition in result.split(';'):
             subject, value = condition.split('=')
-            self.assertEqual(report.get(subject.strip(), -1), int(value))
+            self.assertEqual(report.get(subject.strip(), 0), int(value))
 
     return test
 

@@ -14,34 +14,44 @@
  * limitations under the License.
  */
 
-#ifndef SOLVER_H
-#define SOLVER_H
+#ifndef SOLUTION_H
+#define SOLUTION_H
+
+#include <string>
 
 #include <QSharedPointer>
 
-#include "JavaScriptCore/symbolic/pathcondition.h"
-
-#include "solution.h"
+#include "JavaScriptCore/symbolic/expression/visitor.h"
 
 namespace artemis
 {
 
-/*
- *  Generic symbolic constrint solver interface.
- */
+typedef struct {
+    bool found;
+    Symbolic::Type kind;
 
-class Solver
+    union {
+       bool boolean;
+       int integer;
+    } u;
+
+    std::string string; // we can't add the string inside the union :(
+
+} Symbolvalue;
+
+
+class Solution
 {
-public:
-    static Solution solve(QSharedPointer<Symbolic::PathCondition> pc);
 
-private:
-    Solver();
+public:
+    Solution(bool success);
+
+    void insertSymbol(std::string symbol, Symbolvalue value);
+    Symbolvalue findSymbol(std::string symbol);
 };
 
-
-
+typedef QSharedPointer<Solution> SolutionPtr;
 
 }
 
-#endif // SOLVER_H
+#endif // SOLUTION_H
