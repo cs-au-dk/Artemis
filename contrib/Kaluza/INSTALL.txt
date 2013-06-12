@@ -1,0 +1,17 @@
+$ sudo apt-get install g++ ocaml-native-compilers ant perl
+$ cd KaluzaBin
+$ # Install HAMPI dependencies. Please see http://people.csail.mit.edu/akiezun/hampi/
+
+$ cd hampi
+$ ./configure 
+$ make
+$ cd ..
+
+$ # Install external yices solver version 1.0.27 for 32-bit Linux. 
+$ # Yices available at: http://yices.csl.sri.com/cgi-bin/yices-newlicense.cgi?file=yices-1.0.27-i686-pc-linux-gnu-static-gmp.tar.gz
+$ tar xzvf ~/Downloads/yices-1.0.27-i686-pc-linux-gnu-static-gmp\(2\).tar.gz 
+
+$ export KALUZABIN=`pwd`
+$ ./RunKal.sh example.txt var_0xINPUT_2
+$ # You can try out testcases in the SATKaluzaRegTests/ directory. Several other benchmarks are available on our web page.
+$ for file in `find SATKaluzaRegTests -name *.readable` ; do ./RunKal.sh $file var; done;
