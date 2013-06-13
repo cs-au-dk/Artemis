@@ -295,7 +295,7 @@ string ustringToString(UString s){
 
 HeapStringGeneratorFunctor::ReturnType HeapStringGeneratorFunctor::childrenString(JSValue val){
         if(val.isString()){
-            return QString::fromStdString("\""+ustringToString(val.getString(m_execState))+"\"");
+            return QString::fromStdString("\""+ustringToString(val.getString(m_execState))+"\"").replace(QChar::fromAscii('\n'),QString::fromStdString("\\n"));
         }
         if(val.isBoolean()){
             return QString::fromStdString(val.isTrue()?"true":"false");

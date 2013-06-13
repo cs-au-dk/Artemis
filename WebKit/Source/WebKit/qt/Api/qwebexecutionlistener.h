@@ -86,7 +86,7 @@ public:
     void clearTimers();
 
     void enableHeapReport(bool namedOnly);
-    QString getHeapReport();
+    QList<QString> getHeapReport();
 
     void beginSymbolicSession();
     void endSymbolicSession();
@@ -103,9 +103,8 @@ private:
     int m_ajax_callback_next_id;
 
     QSourceRegistry m_sourceRegistry;
-    QString m_heapReport;
+    QList<QString> m_heapReport;
     int m_reportHeapMode;
-
 signals:
     void addedEventListener(QWebElement*, QString);
     void removedEventListener(QWebElement*, QString);

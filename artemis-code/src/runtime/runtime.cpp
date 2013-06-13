@@ -138,6 +138,13 @@ Runtime::Runtime(QObject* parent, const Options& options, const QUrl& url) : QOb
     mVisitedStates = new set<long>();
 }
 
+void writeAndWrapReportBuffer(int nm, QString buffer){
+    QString numberStr = QString::number(nm);
+    buffer = QString("{\"heap-report\":[").append(buffer).append(QString("]}"));
+    writeStringToFile(QString("heap-report-") + QDateTime::currentDateTime().toString("dd-MM-yy-hh-mm-ss")+" ("+numberStr+").json",buffer);
+
+}
+
 void Runtime::done()
 {
     QString coveragePath;
@@ -166,8 +173,24 @@ void Runtime::done()
 
     statistics()->accumulate("WebKit::coverage::covered-unique", mAppmodel->getCoverageListener()->getNumCoveredLines());
     if(mOptions.reportHeap != NO_CALLS){
+        QString buffer = "";
+        int i = 0, nm = 0;
+        QList<QString> report = mWebkitExecutor->webkitListener->getHeapReport();
+        foreach(QString rap, report){
+            buffer += rap;
+            if(!(i%100) && i){
+                writeAndWrapReportBuffer(nm,buffer);
+                nm++;
+                buffer = "";
+            } else if (i < report.length()-1){
+                buffer += QString(", ");
+            }
+            i++;
+        }
+        if(buffer.length() > 0){
+            writeAndWrapReportBuffer(nm,buffer);
+        }
 
-        writeStringToFile(QString("heap-report-") + QDateTime::currentDateTime().toString("dd-MM-yy-hh-mm-ss")+".json",mWebkitExecutor->webkitListener->getHeapReport());
     }
     Log::info("\n=== Statistics ===\n");
     StatsPrettyWriter::write(statistics());
