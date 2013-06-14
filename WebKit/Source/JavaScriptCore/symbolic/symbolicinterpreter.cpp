@@ -365,13 +365,17 @@ void SymbolicInterpreter::ail_jmp_iff(JSC::CallFrame* callFrame,
                                       bool jumps)
 {
 
+    // Notify Artemis directly about this branch.
+    // TODO: what to send?
+    // TODO: should this be after the m_inSession guard?
+    jscinst::get_jsc_listener()->javascript_branch_executed(condition.toString(callFrame).ascii().data(), jumps, condition.isSymbolic());
+
     if (!m_inSession) return;
 
     if (condition.isSymbolic()) {
         info.setSymbolic();
         m_pc->append(condition.asSymbolic());
     }
-
 }
 
 void SymbolicInterpreter::fatalError(JSC::CodeBlock* codeBlock, std::string reason)

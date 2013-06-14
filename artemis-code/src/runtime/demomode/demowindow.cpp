@@ -125,16 +125,25 @@ DemoModeMainWindow::DemoModeMainWindow(WebKitExecutor* webkitExecutor, const QUr
     traceAnalysisLabel->setFont(sectionFont);
     mAnalysisLayout->addWidget(traceAnalysisLabel);
     mAnalysisLayout->addWidget(mTraceAnalysisText);
+
+    mTraceClassificationResult = new QLabel("");
+    mTraceClassificationResult->setVisible(false);
+    mAnalysisLayout->addWidget(mTraceClassificationResult);
+
     mAnalysisLayout->addWidget(mViewTraceBtn);
     mAnalysisLayout->addSpacing(10);
 
-    QLabel* traceClassLabel = new QLabel("Previous Trace Classification:");
-    traceClassLabel->setFont(sectionFont);
-    mAnalysisLayout->addWidget(traceClassLabel);
-
-    mTraceClassificationResult = new QLabel("Result: <no trace run yet>");
-    mAnalysisLayout->addWidget(mTraceClassificationResult);
+    QLabel* reportsLabel = new QLabel("Execution Reports (not yet in GUI)");
+    reportsLabel->setFont(sectionFont);
+    mAnalysisLayout->addWidget(reportsLabel);
+    QPushButton* pathTraceReportBtn = new QPushButton("Path Trace Report");
+    pathTraceReportBtn->setDisabled(true);
+    mAnalysisLayout->addWidget(pathTraceReportBtn);
+    QPushButton* coverageReportBtn = new QPushButton("Coverage Report");
+    coverageReportBtn->setDisabled(true);
+    mAnalysisLayout->addWidget(coverageReportBtn);
     mAnalysisLayout->addSpacing(10);
+
 
     mAnalysisLayout->setContentsMargins(0,0,0,0);
     mAnalysisLayout->setAlignment(Qt::AlignTop);
@@ -158,8 +167,23 @@ DemoModeMainWindow::DemoModeMainWindow(WebKitExecutor* webkitExecutor, const QUr
     setCentralWidget(mCentralWidget);
 
     // Enable the status bar.
-    // For now we are not puttin anything in here, but it makes it much easier to resize the window!
+    // For now we are not putting anything in here, but it makes it much easier to resize the window!
     mStatusBar = statusBar();
+
+    // Enable menu bar
+    mMenuBar = new QMenuBar(this);
+
+    QMenu* fileMenu = new QMenu("&File", mMenuBar);
+    QAction* exitAction = fileMenu->addAction("&Exit");
+    connect(exitAction, SIGNAL(triggered()), this, SLOT(close()));
+
+    QMenu* helpMenu = new QMenu("&Help", mMenuBar);
+    QAction* aboutAction = helpMenu->addAction("&About");
+    connect(aboutAction, SIGNAL(triggered()), this, SLOT(slAboutDialog()));
+
+    mMenuBar->addMenu(fileMenu);
+    mMenuBar->addMenu(helpMenu);
+    setMenuBar(mMenuBar);
 
     // Set what the window looks like
     resize(1300, 800);
@@ -331,12 +355,13 @@ void DemoModeMainWindow::postTraceExecution()
 
     bool result = mTraceClassifier.classify(mPreviousTrace);
 
+    mTraceClassificationResult->setVisible(true);
     if(result){
         Log::info("CONCOLIC-INFO: This trace was classified as a SUCCESS.");
-        mTraceClassificationResult->setText("Result: <font color='green'>SUCCESS</font>");
+        mTraceClassificationResult->setText("Classification: <font color='green'>SUCCESS</font>");
     }else{
         Log::info("CONCOLIC-INFO: This trace was classified as a FAILURE.");
-        mTraceClassificationResult->setText("Result: <font color='red'>FAILURE</font>");
+        mTraceClassificationResult->setText("Classification: <font color='red'>FAILURE</font>");
     }
 
     Log::info("CONCOLIC-INFO: Printout of the trace:");
@@ -360,7 +385,7 @@ void DemoModeMainWindow::displayTraceInformation()
     TraceStatistics stats;
     stats.processTrace(mPreviousTrace);
 
-    mTraceAnalysisText->setText(QString("Events Recorded: %1\nBranches: %2\nAlerts: %3\nFunction Calls: %4\n")
+    mTraceAnalysisText->setText(QString("Events Recorded: %1\nBranches: %2\nAlerts: %3\nFunction Calls: %4")
                                 .arg(stats.mNumNodes).arg(stats.mNumBranches).arg(stats.mNumAlerts)
                                 .arg(stats.mNumFunctionCalls));
 }
@@ -463,10 +488,16 @@ void DemoModeMainWindow::slViewTrace()
     Log::info("DEMO: Viewing trace.");
 
     // TODO: create a new trace viewing dialog and show it here.
-    QMessageBox* tempMsg = new QMessageBox(this);
-    tempMsg->setWindowTitle("View Previous Trace");
-    tempMsg->setText("Trace viewing is not yet implemented. See terminal for a text printout.");
-    tempMsg->exec();
+    QDialog* traceViewer = new TraceViewerDialog(mPreviousTrace, this);
+    //traceViewer->exec();
+    traceViewer->show();
+}
+
+
+// Called when Help>About is triggered.
+void DemoModeMainWindow::slAboutDialog()
+{
+    QMessageBox::about(this, "About Artemis", "Artemis is a tool that performs automated, feedback-directed testing of JavaScript applications. <br/><br/>This demonstration mode shows off some of Artemis' symbolic features. <br/><br/>Please see the <a href='http://github.com/cs-au-dk/Artemis' >GitHub page</a> for more information.");
 }
 
 

@@ -38,6 +38,9 @@
 #include "concolic/traceprinter.h"
 #include "concolic/tracestatistics.h"
 
+#include "traceviewerdialog.h"
+
+
 namespace artemis
 {
 
@@ -64,6 +67,7 @@ private:
     // GUI
     // QWidgets are owned by their parent widget and so should not be QSharedPointer.
     // TODO: so we probably should also not be storing most of these here... only the ones we access directly later.
+    QMenuBar* mMenuBar;
     QWidget* mCentralWidget;
     QWidget* mArtemisWidget;
     QWidget* mAnalysisWidget;
@@ -117,6 +121,7 @@ protected slots:
     void slLoadFinished(bool ok);
     void slSetProgress(int p);
     void slViewTrace();
+    void slAboutDialog();
 
     // For the analysis logic.
     void slExecutedSequence(ExecutableConfigurationConstPtr configuration, QSharedPointer<ExecutionResult> result);

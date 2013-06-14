@@ -15,46 +15,43 @@
  */
 
 
-#include "trace.h"
+#include <QtGui>
+#include "concolic/trace.h"
 
-#ifndef TRACESTATISTICS_H
-#define TRACESTATISTICS_H
+
+#ifndef TRACEVIEWERDIALOG_H
+#define TRACEVIEWERDIALOG_H
 
 namespace artemis
 {
 
 
-/*
- *  Gathers statistics about a complete trace which may be helpful for analysis of that trace.
- *
- *  TODO: find a better name for this class!
- */
 
-class TraceStatistics : public TraceVisitor
+class TraceViewerDialog : public QDialog, public TraceVisitor
 {
+    Q_OBJECT
+
 public:
-    TraceStatistics();
+    TraceViewerDialog(TraceNodePtr trace, QWidget* parent = 0);
 
-    int mNumNodes;
-    int mNumBranches;
-    int mNumAlerts;
-    int mNumFunctionCalls;
 
-    void processTrace(TraceNodePtr trace);
-
-    // Cases we need to ignore or which cause an error.
+    // Visitor part used to populate the GUI display of this trace.
     virtual void visit(TraceNode* node);
-    virtual void visit(TraceAnnotation* node);
-    virtual void visit(TraceEnd* node);
-    virtual void visit(TraceUnexplored* node);
-
-    // Cases we will implement.
     virtual void visit(TraceBranch* node);
+    virtual void visit(TraceUnexplored* node);
     virtual void visit(TraceAlert* node);
+    virtual void visit(TraceDomModification* node);
+    virtual void visit(TracePageLoad* node);
     virtual void visit(TraceFunctionCall* node);
+    virtual void visit(TraceEndSuccess* node);
+    virtual void visit(TraceEndFailure* node);
+    virtual void visit(TraceEndUnknown* node);
+
+private:
+    QListWidget* mNodeList;
 };
 
 
-} // namespace artemis
+} //namespace artemis
 
-#endif // TRACESTATISTICS_H
+#endif // TRACEVIEWERDIALOG_H
