@@ -77,6 +77,7 @@ public:
     TraceNodePtr branchTrue;
     TraceNodePtr branchFalse;
     QString condition; // TODO: type?
+    bool symbolic;
     QString symCondition; // TODO; type? is this needed?
     void accept(TraceVisitor* visitor){visitor->visit(this);}
     ~TraceBranch(){}

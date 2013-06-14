@@ -131,7 +131,17 @@ DemoModeMainWindow::DemoModeMainWindow(WebKitExecutor* webkitExecutor, const QUr
     mAnalysisLayout->addWidget(mTraceClassificationResult);
 
     mAnalysisLayout->addWidget(mViewTraceBtn);
+    mAnalysisLayout->addSpacing(10);
 
+    QLabel* reportsLabel = new QLabel("Execution Reports (not yet in GUI)");
+    reportsLabel->setFont(sectionFont);
+    mAnalysisLayout->addWidget(reportsLabel);
+    QPushButton* pathTraceReportBtn = new QPushButton("Path Trace Report");
+    pathTraceReportBtn->setDisabled(true);
+    mAnalysisLayout->addWidget(pathTraceReportBtn);
+    QPushButton* coverageReportBtn = new QPushButton("Coverage Report");
+    coverageReportBtn->setDisabled(true);
+    mAnalysisLayout->addWidget(coverageReportBtn);
     mAnalysisLayout->addSpacing(10);
 
 

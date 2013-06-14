@@ -133,7 +133,8 @@ WebKitExecutor::WebKitExecutor(QObject* parent,
 
     // The branch detector.
     QSharedPointer<TraceBranchDetector> branchDetector(new TraceBranchDetector());
-    // TODO: implement and connect the branch signal for this detector.
+    QObject::connect(webkitListener, SIGNAL(sigJavascriptBranchExecuted(QString, bool, bool)),
+            branchDetector.data(), SLOT(slBranch(QString, bool, bool)));
     mTraceBuilder->addDetector(branchDetector.staticCast<TraceEventDetector>());
 
     // The alert detector.

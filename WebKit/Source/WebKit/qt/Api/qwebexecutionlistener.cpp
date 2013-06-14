@@ -352,6 +352,12 @@ void QWebExecutionListener::javascript_property_written(std::string propertyName
                                       m_sourceRegistry.get(callFrame->codeBlock()->source()));
 }
 
+void QWebExecutionListener::javascript_branch_executed(const char* condition, bool jump, bool symbolic)
+{
+    std::cout << "BRANCH DETECTED IN Q.W.E.L." << std::endl;
+    emit sigJavascriptBranchExecuted(QString::fromLocal8Bit(condition), jump, symbolic);
+}
+
 QWebExecutionListener* QWebExecutionListener::getListener() {
     return (QWebExecutionListener*)inst::getListener();
 }

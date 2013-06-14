@@ -48,15 +48,22 @@ void TraceEventDetector::newNode(QSharedPointer<TraceNode> node, QSharedPointer<
 /* Branch Detector ***********************************************************/
 
 
-void TraceBranchDetector::slBranch()
+void TraceBranchDetector::slBranch(QString condition, bool jump, bool symbolic)
 {
     // Create a new branch node.
+    QSharedPointer<TraceBranch> node = QSharedPointer<TraceBranch>(new TraceBranch());
+    node->condition = condition;
+    node->symbolic = symbolic;
 
-    // Set the branch we did not take to "unexplored". The one we took is null.
-
+    // Set the branch we did not take to "unexplored". The one we took is left null.
     // Pass this new node to the trace builder and the branch pointer to use as a successor.
-
-    // TODO
+    if(jump){
+        node->branchFalse = QSharedPointer<TraceUnexplored>(new TraceUnexplored());
+        newNode(node.staticCast<TraceNode>(), &(node->branchTrue));
+    }else{
+        node->branchTrue = QSharedPointer<TraceUnexplored>(new TraceUnexplored());
+        newNode(node.staticCast<TraceNode>(), &(node->branchFalse));
+    }
 }
 
 

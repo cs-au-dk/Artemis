@@ -71,7 +71,7 @@ class TraceBranchDetector : public TraceEventDetector
     Q_OBJECT
 
 protected slots:
-    void slBranch(); // TODO: not connected to anything!
+    void slBranch(QString condition, bool jump, bool symbolic);
 };
 
 

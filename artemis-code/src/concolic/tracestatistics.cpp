@@ -65,6 +65,11 @@ void TraceStatistics::visit(TraceEnd *node)
     mNumNodes++;
 }
 
+void TraceStatistics::visit(TraceUnexplored *node)
+{
+    mNumNodes++;
+}
+
 // For branch nodes, search both children and add to branch counter.
 void TraceStatistics::visit(TraceBranch *node)
 {

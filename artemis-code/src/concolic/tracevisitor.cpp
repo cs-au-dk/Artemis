@@ -44,7 +44,7 @@ void TraceVisitor::visit(TraceEndUnknown* node)         { visit(static_cast<Trac
 // Useful for checking the branch conditions in visitors which work on straight-line traces.
 bool TraceVisitor::isImmediatelyUnexplored(QSharedPointer<TraceNode> trace)
 {
-    return trace.dynamicCast<TraceUnexplored>().isNull(); // Is there a more elegant way to do this?
+    return !trace.dynamicCast<TraceUnexplored>().isNull(); // Is there a more elegant way to do this?
 }
 
 

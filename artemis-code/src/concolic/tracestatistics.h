@@ -46,6 +46,7 @@ public:
     virtual void visit(TraceNode* node);
     virtual void visit(TraceAnnotation* node);
     virtual void visit(TraceEnd* node);
+    virtual void visit(TraceUnexplored* node);
 
     // Cases we will implement.
     virtual void visit(TraceBranch* node);

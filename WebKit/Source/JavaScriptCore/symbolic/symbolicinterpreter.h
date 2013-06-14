@@ -22,6 +22,7 @@
 #include "JavaScriptCore/wtf/ExportMacros.h"
 #include "JavaScriptCore/runtime/CallData.h"
 #include "JavaScriptCore/instrumentation/bytecodeinfo.h"
+#include "instrumentation/jscexecutionlistener.h"
 
 #include "pathcondition.h"
 #include "native/nativelookup.h"
