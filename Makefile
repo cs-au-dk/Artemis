@@ -92,3 +92,10 @@ fetch-apt:
 
 fetch-yum:
 	sudo yum install ${YUM_DEPENDENCIES}
+	
+test-solver: check-env
+	@echo "Testing solver"
+	@${ARTEMISDIR}/contrib/Kaluza/artemiskaluza.sh ${ARTEMISDIR}/contrib/Kaluza/test.txt
+	@cat /tmp/kaluza-result | grep "tmp1 true"
+	@rm /tmp/kaluza-result
+	@echo "..success.."
