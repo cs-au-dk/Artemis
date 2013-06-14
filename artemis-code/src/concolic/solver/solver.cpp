@@ -18,7 +18,10 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+
 #include <QDebug>
+#include <QDir>
+#include <QString>
 
 #include "statistics/statsstorage.h"
 
@@ -43,7 +46,22 @@ Solution Solver::solve(QSharedPointer<Symbolic::PathCondition> pc)
 
     // 2. run the solver on the file
 
-    int result = std::system("/home/semadk/Downloads/KaluzaBin/artemiskaluza.sh");
+    char* artemisdir;
+    artemisdir = std::getenv("ARTEMISDIR");
+
+    if (artemisdir == NULL) {
+        qDebug() << "Warning, ARTEMISDIR environment variable not set!";
+        return Solution(false);
+    }
+
+    QDir solverpath = QDir(QString(artemisdir));
+
+    if (!solverpath.cd("contrib") || !solverpath.cd("Kaluza") || !solverpath.exists("artemiskaluza.sh")) {
+        qDebug() << "Warning, could not find artemiskaluza.sh";
+        return Solution(false);
+    }
+
+    int result = std::system(solverpath.filePath("artemiskaluza.sh").toStdString().data());
 
     if (result != 0) {
         statistics()->accumulate("Concolic::Solver::ConstraintsNotSolved", 1);

@@ -19,12 +19,14 @@ Artemis have been successfully installed on Ubuntu 12.10 and Fedora 18.
     
  1. Configure your environment variables by running
     
-      export QTDIR=<qtpath>
+      export QTDIR=<qt_path>
       export PATH=$QTDIR/bin:$PATH
+      export ARTEMISDIR=<artemis_git_reposity_patn>
 
-    where `<qtpath>` is the QT 4.8 installation directory, either
+    where `<qt_path>` is the QT 4.8 installation directory, either
     the one provided by your distribution or the `qt/` folder 
-    mentioned in step 0.
+    mentioned in step 0, and where `<artemis_git_repository_path>` 
+    is the directory with this INSTALL file in it.
 
     On Ubuntu this is /usr/share/qt4
      

@@ -9,12 +9,14 @@
 INPUT=/tmp/kaluza
 OUTPUT=/tmp/kaluza-result
 
-if [ -z "${KALUZABIN+xxx}" ]; 
+if [ -z "${ARTEMISDIR+xxx}" ]; 
 then 
     # Default
-    echo "Please set KALUZABIN env variable to the directory containing KALUZA binaries"
+    echo "Please set ARTEMISDIR env variable to the directory containing the Artemis INSTALL file"
     exit 1
 fi;
+
+KALUZABIN=$ARTEMISDIR/contrib/Kaluza/
 
 YICESPATH="$KALUZABIN/yices-1.0.27/bin/yices"
 
