@@ -20,6 +20,7 @@
 #include <string>
 
 #include <QSharedPointer>
+#include <QMap>
 
 #include "JavaScriptCore/symbolic/expression/visitor.h"
 
@@ -46,8 +47,16 @@ class Solution
 public:
     Solution(bool success);
 
+    bool isSolved() const;
     void insertSymbol(std::string symbol, Symbolvalue value);
     Symbolvalue findSymbol(std::string symbol);
+
+    QMap<std::string, Symbolvalue>::const_iterator getIter() const;
+    QMap<std::string, Symbolvalue>::const_iterator getIterEnd() const;
+
+private:
+    bool mSuccess;
+    QMap<std::string, Symbolvalue> mSymbols;
 };
 
 typedef QSharedPointer<Solution> SolutionPtr;

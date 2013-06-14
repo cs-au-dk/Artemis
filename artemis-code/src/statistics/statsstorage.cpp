@@ -30,6 +30,11 @@ void StatsStorage::accumulate(QString key, int value)
     this->intStorage.insert(key, value);
 }
 
+void StatsStorage::set(QString key, int value)
+{
+    this->intStorage.insert(key, value);
+}
+
 StatsStorage* statistics()
 {
     static StatsStorage instance;

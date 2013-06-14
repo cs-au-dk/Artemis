@@ -135,19 +135,19 @@ WebKitExecutor::WebKitExecutor(QObject* parent,
     QSharedPointer<TraceBranchDetector> branchDetector(new TraceBranchDetector());
     QObject::connect(webkitListener, SIGNAL(sigJavascriptBranchExecuted(QString, bool, bool)),
             branchDetector.data(), SLOT(slBranch(QString, bool, bool)));
-    mTraceBuilder->addDetector(branchDetector.staticCast<TraceEventDetector>());
+    mTraceBuilder->addDetector(branchDetector);
 
     // The alert detector.
     QSharedPointer<TraceAlertDetector> alertDetector(new TraceAlertDetector());
     QObject::connect(mPage.data(), SIGNAL(sigJavascriptAlert(QWebFrame*, QString)),
                      alertDetector.data(), SLOT(slJavascriptAlert(QWebFrame*, QString)));
-    mTraceBuilder->addDetector(alertDetector.staticCast<TraceEventDetector>());
+    mTraceBuilder->addDetector(alertDetector);
 
     // The function call detector.
     QSharedPointer<TraceFunctionCallDetector> functionCallDetector(new TraceFunctionCallDetector());
     QObject::connect(webkitListener, SIGNAL(sigJavascriptFunctionCalled(QString, size_t, uint, uint, QSource*)),
                      functionCallDetector.data(), SLOT(slJavascriptFunctionCalled(QString, size_t, uint, uint, QSource*)));
-    mTraceBuilder->addDetector(functionCallDetector.staticCast<TraceEventDetector>());
+    mTraceBuilder->addDetector(functionCallDetector);
 
 }
 

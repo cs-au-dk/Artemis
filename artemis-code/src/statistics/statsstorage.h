@@ -29,6 +29,7 @@ class StatsStorage
 public:
     StatsStorage();
     void accumulate(QString key, int value);
+    void set(QString key, int value);
 
 private:
     QHash<QString, int> intStorage;

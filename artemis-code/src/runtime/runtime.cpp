@@ -161,7 +161,12 @@ void Runtime::done()
 
     // solve the last PC - this is needed by some system tests
     QSharedPointer<Symbolic::PathCondition> pc = QSharedPointer<Symbolic::PathCondition>(mWebkitExecutor->webkitListener->getLastPathCondition());
-    Solver::solve(pc);
+    SolutionPtr solution = Solver::solve(pc);
+
+    //QMap<std::string, Symbolvalue>::const_iterator iter = solution->getIter();
+    //for (; iter != solution->getIterEnd(); iter++) {
+        //Log::info(iter.key());
+    //}
 
     // Print final output
 

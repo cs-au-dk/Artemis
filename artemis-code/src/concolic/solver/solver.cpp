@@ -32,14 +32,14 @@
 namespace artemis
 {
 
-Solution Solver::solve(QSharedPointer<Symbolic::PathCondition> pc)
+SolutionPtr Solver::solve(QSharedPointer<Symbolic::PathCondition> pc)
 {
 
     // 1. translate pc to something solvable using the translator
 
     if (!ConstraintWriter::write(pc, "/tmp/kaluza")) {
         statistics()->accumulate("Concolic::Solver::ConstraintsNotWritten", 1);
-        return Solution(false);
+        return SolutionPtr(new Solution(false));
     }
 
     statistics()->accumulate("Concolic::Solver::ConstraintsWritten", 1);
@@ -51,28 +51,31 @@ Solution Solver::solve(QSharedPointer<Symbolic::PathCondition> pc)
 
     if (artemisdir == NULL) {
         qDebug() << "Warning, ARTEMISDIR environment variable not set!";
-        return Solution(false);
+        return SolutionPtr(new Solution(false));
     }
 
     QDir solverpath = QDir(QString(artemisdir));
 
     if (!solverpath.cd("contrib") || !solverpath.cd("Kaluza") || !solverpath.exists("artemiskaluza.sh")) {
         qDebug() << "Warning, could not find artemiskaluza.sh";
-        return Solution(false);
+        return SolutionPtr(new Solution(false));
     }
 
     int result = std::system(solverpath.filePath("artemiskaluza.sh").toStdString().data());
 
     if (result != 0) {
         statistics()->accumulate("Concolic::Solver::ConstraintsNotSolved", 1);
-        return Solution(false);
+        return SolutionPtr(new Solution(false));
     }
 
     statistics()->accumulate("Concolic::Solver::ConstraintsSolved", 1);
 
     // 3. interpret the result
 
-    Solution solution(true);
+    SolutionPtr solution = SolutionPtr(new Solution(true));
+    if (solution->isSolved()) {
+
+    }
 
     std::string line;
     std::ifstream fp("/tmp/kaluza-result");
@@ -110,7 +113,7 @@ Solution Solver::solve(QSharedPointer<Symbolic::PathCondition> pc)
             // TODO add string support
 
             // save result
-            solution.insertSymbol(symbol, symbolvalue);
+            solution->insertSymbol(symbol, symbolvalue);
         }
     }
 

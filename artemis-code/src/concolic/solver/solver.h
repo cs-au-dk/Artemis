@@ -33,7 +33,7 @@ namespace artemis
 class Solver
 {
 public:
-    static Solution solve(QSharedPointer<Symbolic::PathCondition> pc);
+    static SolutionPtr solve(QSharedPointer<Symbolic::PathCondition> pc);
 
 private:
     Solver();

@@ -21,18 +21,43 @@
 namespace artemis
 {
 
-Solution::Solution(bool success)
+Solution::Solution(bool success) :
+    mSuccess(success)
 {
+}
+
+bool Solution::isSolved() const
+{
+    return mSuccess;
 }
 
 void Solution::insertSymbol(std::string symbol, Symbolvalue value)
 {
-
+    mSymbols.insert(symbol, value);
 }
 
 Symbolvalue Solution::findSymbol(std::string symbol)
 {
+    QMap<std::string, Symbolvalue>::iterator iter = mSymbols.find(symbol);
 
+    if (iter == mSymbols.end()) {
+        Symbolvalue result;
+        result.found = false;
+
+        return result;
+    }
+
+    return iter.value();
+}
+
+QMap<std::string, Symbolvalue>::const_iterator Solution::getIter() const
+{
+    return mSymbols.constBegin();
+}
+
+QMap<std::string, Symbolvalue>::const_iterator Solution::getIterEnd() const
+{
+    return mSymbols.constEnd();
 }
 
 } // namespace artemis
