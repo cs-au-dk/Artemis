@@ -93,6 +93,10 @@ SolutionPtr Solver::solve(QSharedPointer<Symbolic::PathCondition> pc)
             std::getline(lines, symbol, ' ');
             std::getline(lines, value, ' ');
 
+            if (symbol.compare("") == 0) {
+                continue; // ignore blank lines
+            }
+
             // decode type of value
             Symbolvalue symbolvalue;
             symbolvalue.found = true;
@@ -113,11 +117,13 @@ SolutionPtr Solver::solve(QSharedPointer<Symbolic::PathCondition> pc)
             // TODO add string support
 
             // save result
-            solution->insertSymbol(symbol, symbolvalue);
+            solution->insertSymbol(symbol.c_str(), symbolvalue);
         }
     }
 
     fp.close();
+
+    return solution;
 
 }
 

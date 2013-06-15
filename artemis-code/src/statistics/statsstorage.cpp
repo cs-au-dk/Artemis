@@ -35,6 +35,16 @@ void StatsStorage::set(QString key, int value)
     this->intStorage.insert(key, value);
 }
 
+void StatsStorage::set(QString key, bool value)
+{
+    this->stringStorage.insert(key, value ? "true" : "false");
+}
+
+void StatsStorage::set(QString key, QString value)
+{
+    this->stringStorage.insert(key, value);
+}
+
 StatsStorage* statistics()
 {
     static StatsStorage instance;

@@ -30,9 +30,12 @@ public:
     StatsStorage();
     void accumulate(QString key, int value);
     void set(QString key, int value);
+    void set(QString key, bool value);
+    void set(QString key, QString value);
 
 private:
     QHash<QString, int> intStorage;
+    QHash<QString, QString> stringStorage;
 };
 
 StatsStorage* statistics();

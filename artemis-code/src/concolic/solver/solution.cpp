@@ -16,7 +16,11 @@
 
 #include <iostream>
 
+#include <QDebug>
+
 #include "solution.h"
+
+#include "statistics/statsstorage.h"
 
 namespace artemis
 {
@@ -31,14 +35,14 @@ bool Solution::isSolved() const
     return mSuccess;
 }
 
-void Solution::insertSymbol(std::string symbol, Symbolvalue value)
+void Solution::insertSymbol(QString symbol, Symbolvalue value)
 {
     mSymbols.insert(symbol, value);
 }
 
-Symbolvalue Solution::findSymbol(std::string symbol)
+Symbolvalue Solution::findSymbol(QString symbol)
 {
-    QMap<std::string, Symbolvalue>::iterator iter = mSymbols.find(symbol);
+    QHash<QString, Symbolvalue>::iterator iter = mSymbols.find(symbol);
 
     if (iter == mSymbols.end()) {
         Symbolvalue result;
@@ -50,14 +54,26 @@ Symbolvalue Solution::findSymbol(std::string symbol)
     return iter.value();
 }
 
-QMap<std::string, Symbolvalue>::const_iterator Solution::getIter() const
+void Solution::toStatistics()
 {
-    return mSymbols.constBegin();
-}
+    QHash<QString, Symbolvalue>::iterator iter = mSymbols.begin();
+    for (; iter != mSymbols.end(); iter++) {
+        QString key = QString("Concolic::Solver::Constraint.") + iter.key();
 
-QMap<std::string, Symbolvalue>::const_iterator Solution::getIterEnd() const
-{
-    return mSymbols.constEnd();
+        Symbolvalue value = iter.value();
+
+        switch (value.kind) {
+        case Symbolic::INT:
+            statistics()->set(key, value.u.integer);
+            break;
+        case Symbolic::BOOL:
+            statistics()->set(key, value.u.boolean);
+            break;
+        default:
+            std::cerr << "Unimplemented value type encountered" << std::endl;
+            std::exit(1);
+        }
+    }
 }
 
 } // namespace artemis

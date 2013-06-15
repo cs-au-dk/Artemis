@@ -17,10 +17,9 @@
 #ifndef SOLUTION_H
 #define SOLUTION_H
 
-#include <string>
-
 #include <QSharedPointer>
-#include <QMap>
+#include <QHash>
+#include <QString>
 
 #include "JavaScriptCore/symbolic/expression/visitor.h"
 
@@ -36,7 +35,7 @@ typedef struct {
        int integer;
     } u;
 
-    std::string string; // we can't add the string inside the union :(
+    std::string* string; // we can't add the string inside the union :(
 
 } Symbolvalue;
 
@@ -48,15 +47,14 @@ public:
     Solution(bool success);
 
     bool isSolved() const;
-    void insertSymbol(std::string symbol, Symbolvalue value);
-    Symbolvalue findSymbol(std::string symbol);
+    void insertSymbol(QString symbol, Symbolvalue value);
+    Symbolvalue findSymbol(QString symbol);
 
-    QMap<std::string, Symbolvalue>::const_iterator getIter() const;
-    QMap<std::string, Symbolvalue>::const_iterator getIterEnd() const;
+    void toStatistics();
 
 private:
     bool mSuccess;
-    QMap<std::string, Symbolvalue> mSymbols;
+    QHash<QString, Symbolvalue> mSymbols;
 };
 
 typedef QSharedPointer<Solution> SolutionPtr;
