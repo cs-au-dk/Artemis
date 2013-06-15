@@ -4,6 +4,7 @@
 		function doSomething() {
 			var y = document.getElementById("testinput").value;
 			var x = document.getElementById("testinput").value;
+			var x_1 = document.getElementById("testinput2").value;
             if (x != 1 && x != "1") {
     alert(x);
 }
@@ -13,7 +14,7 @@
 </head>
 <body>
 	<input type="text" name="testinput" id="testinput" />
-	<input type="text" name="testinput2" id="testinput2" />
+	<input type="text" name="testinput2" id="testinput2" value="1" />
 	<button onclick="doSomething();">DO</button>
 </body>
 </html>

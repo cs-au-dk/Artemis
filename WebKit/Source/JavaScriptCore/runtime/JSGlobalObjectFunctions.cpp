@@ -538,7 +538,17 @@ EncodedJSValue JSC_HOST_CALL globalFuncParseInt(ExecState* exec)
     if (exec->hadException())
         return JSValue::encode(jsUndefined());
 
+#ifdef ARTEMIS
+    if (value.isSymbolic()) {
+        JSValue v = jsNumber(parseInt(s, radixValue.toInt32(exec)));
+        v.makeSymbolic(new Symbolic::IntegerCoercion(value.asSymbolic()));
+        return JSValue::encode(v);
+    } else {
+        return JSValue::encode(jsNumber(parseInt(s, radixValue.toInt32(exec))));
+    }
+#else
     return JSValue::encode(jsNumber(parseInt(s, radixValue.toInt32(exec))));
+#endif
 }
 
 EncodedJSValue JSC_HOST_CALL globalFuncParseFloat(ExecState* exec)
