@@ -1,0 +1,1 @@
+params=%5B%22http%3A%2F%2Fexample.org%22%2C700%2C500%2C%22some%20link%22%2C%22home%3A%2F%2F~username%2FImages%22%2C%22index.php%3Fextern%3Dimages%2F48x48%2Fmimetypes%2Fapplication-x-mswinurl.png%22%2Cfalse%5D

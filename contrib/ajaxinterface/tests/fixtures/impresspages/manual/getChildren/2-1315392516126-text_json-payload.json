@@ -1,0 +1,18 @@
+[
+    {
+        "attr": {
+            "id": "page_0_344_left_80", 
+            "languageId": "344", 
+            "pageId": "80", 
+            "rel": "page", 
+            "websiteId": "0", 
+            "zoneName": "left"
+        }, 
+        "children": false, 
+        "data": {
+            "icon": "", 
+            "title": "All In One"
+        }, 
+        "state": "closed"
+    }
+]

@@ -1,0 +1,7 @@
+{
+    "headers": "{\"date\":\"Wed, 07 Sep 2011 10:54:22 GMT\",\"server\":\"Apache/2.2.17 (Ubuntu)\",\"x-powered-by\":\"PHP/5.3.5-1ubuntu7.2\",\"expires\":\"Mon, 26 Jul 1997 05:00:00 GMT\",\"cache-control\":\"no-cache, must-revalidate\",\"pragma\":\"no-cache\",\"content-length\":\"20\",\"connection\":\"close\",\"content-type\":\"text/json; charset=utf-8\"}", 
+    "httpVersion": "1.0", 
+    "method": null, 
+    "statusCode": 200, 
+    "url": ""
+}

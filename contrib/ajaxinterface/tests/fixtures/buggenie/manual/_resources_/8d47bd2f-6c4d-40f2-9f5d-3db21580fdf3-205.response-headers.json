@@ -1,0 +1,7 @@
+{
+    "headers": "{\"accept-ranges\":\"bytes\",\"content-type\":\"application/x-javascript; charset=utf-8\",\"date\":\"Wed, 19 Oct 2011 13:48:33 GMT\",\"etag\":\"\\\"30c0af8-14fa5-4d2110c0+gzip\\\"\",\"last-modified\":\"Thu, 31 Mar 2011 19:28:43 GMT\",\"server\":\"ECS (ams/49B1)\",\"vary\":\"Accept-Encoding\",\"x-cache\":\"HIT\"}", 
+    "httpVersion": "1.1", 
+    "method": null, 
+    "statusCode": 304, 
+    "url": ""
+}

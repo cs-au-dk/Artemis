@@ -1,0 +1,7 @@
+{
+    "headers": "{\"server\":\"Apache-Coyote/1.1\",\"content-type\":\"text/html;charset=utf-8\",\"content-length\":\"1105\",\"date\":\"Tue, 18 Oct 2011 15:07:59 GMT\"}", 
+    "httpVersion": "1.1", 
+    "method": null, 
+    "statusCode": 404, 
+    "url": ""
+}

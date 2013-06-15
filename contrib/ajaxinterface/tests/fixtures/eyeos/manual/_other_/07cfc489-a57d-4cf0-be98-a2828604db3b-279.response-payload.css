@@ -1,0 +1,455 @@
+/*
+
+   IANA Style Sheet for Screen Display
+   Kim Davies <kim.davies@icann.org>
+   June 7, 2006
+
+*/
+
+/* --- Site wide styles --- */
+
+body {
+	background: #fff;
+	color: #333;
+	text-align: left;
+}
+a:link, a:visited {
+	color: #235fb3;
+}
+
+p {
+	margin: 1em 0;
+}
+h1 {
+	font-size: 189%;
+	color: #000;
+}
+h2 {
+	font-size: 159%;
+	margin: 1em 0 0.5em 0;
+	color: #000;
+}
+h3 {
+	font-size: 129%;
+	color: #000;
+}
+h4 {
+	color: #000;
+	margin-top: 1em;
+	font-weight: bold;
+}
+ul {
+	display: block;
+	list-style-type: square;
+	margin: 1em 0;
+}
+li {
+	margin-left: 2em;
+}
+b, strong {
+	font-weight: bold;
+}
+strong {
+	color: #000;
+}
+blockquote {
+	margin-left: 40px;
+}
+ol {
+	list-style: decimal;
+}
+dt {
+	font-weight: bold:
+}
+dd {
+	margin-left: 40px;
+}
+
+
+/* --- Common Page Header --- */
+
+#header-frame {
+	width: 100%;
+	background: url(/_img/page-header-gradient.png) bottom repeat-x;
+}
+#header {
+	width: 800px;
+	margin: 0px auto;
+	padding: 25px;
+}
+
+#header-logo {
+	float: left;
+}
+
+#header-nav {
+	text-align: right;
+	float: right;
+	margin-top: 45px;
+}
+#header-nav ul {
+	xdisplay: inline;
+	xfloat: right;
+}
+
+#header-nav li {
+	list-style: none;
+	display: inline;
+	float: left;
+	margin: 0;
+}
+#header-nav li a {
+	margin-left: 4px;
+	padding: 4px 8px;
+	text-decoration: none;
+}
+#header:after { 
+	content: ".";
+	display: block;
+	height: 0;
+	clear: both; 
+	visibility: hidden;
+}
+
+/* --- Common Page Container --- */
+
+#body-container {
+	background: #fff;
+	padding: 40px;
+}
+
+#body {
+	width: 800px;
+	margin: 0 auto;
+}
+
+/* --- Common Page Footer --- */
+
+#footer-frame {
+	width: 100%;
+	background: url(/_img/page-footer-gradient.png) top repeat-x;
+	padding-top: 40px;
+}
+#footer {
+	width: 800px;
+	margin: 0px auto;
+	color: #999;
+	font-size: 12px;
+}
+
+#footer p {
+	text-align: center;
+}
+
+/* Section specific colours */
+
+.section-domains h1, .section-domains h2, .section-domains h3 {
+	color: #579d4f;
+}
+
+
+/* @import url("/_css/homepage.css"); */
+/* CSS Specific for Homepage etc */
+
+#home-header {
+	background: #fff;
+	margin: 0;
+	padding: 20px;
+	border: 0;
+}
+#home-title {
+	display: block;
+	text-align: center;
+	margin: 0px auto;
+	background-image: url(/_img/iana-logo-large.png);
+	height: 162px;
+	width: 426px;
+}
+#home-title span {
+	display: none;
+}
+#home-intro {
+	width: 570px;
+	margin: 0px auto;
+	padding: 10px 0 0 0;
+	color: #77797c;
+}
+#home-main {
+	width: 100%;
+	padding: 20px 0 0 0;
+	background: url(/_img/page-footer-gradient.png) top repeat-x;
+}
+#home-functions {
+	width: 770px;
+	margin: 0px auto;
+}
+#home-panels {
+	float: left;
+	margin: 0 0 20px 0;
+	width: 770px;
+}
+#home-panels b {
+	display: block;
+	width: 770px;
+	height: 11px;
+	clear: both;
+}
+.home-panel {
+	width: 228px;
+    padding: 10px;
+    margin: 1px;
+	clear: none;
+	background: url(/_img/page-header-gradient.png) bottom repeat-x #fff;
+}
+.home-panel h2 {
+	color: #345;
+	text-align: center;
+	font-size: 18px;
+	margin: 10px 0;
+}
+#home-panel-domains, #home-panel-numbers {
+	float: left;
+	margin-right: 8px;
+	border: 1px solid #ccc;
+}
+#home-panel-protocols {
+	float: right;
+	border: 1px solid #ccc;	
+}
+#home-panel-search {
+	clear: both;
+	padding: 10px;
+	background-color: #ddd;
+	border: 1px solid #bbb;
+	margin-bottom: 40px;
+}
+#home-panel-search h2 {
+	float: left;
+	font-size: 13px;
+	padding: 3px 20px 0px 0px;
+	margin: 5px 0 0 0;
+}
+#home-panel-search p {
+	font-size: 11px;
+	color: #666;
+	margin: 0;
+}
+#home-panel-search h2:after {
+	content: ":"
+}
+#home-panel-search-input {
+	font-size: 16px;
+	font-weight: bold;
+	width: 400px;
+	padding: 5px;
+	margin: 0 0 10px 0;
+}
+#home-panel-search-submit {
+	display: none;
+}
+
+#home-panel-news {
+        clear: both;
+        padding: 10px;
+        background-color: #eec;
+        border: 1px solid #bbb;
+        margin-bottom: 40px;
+}
+
+#home-footer {
+	text-align: center;
+	padding: 10px 0 0 0;
+	margin: 0px auto;
+}
+
+/* --- IANA Data Table --- */
+
+.iana-table-frame {
+	background-color: #f0f0f0;
+	border: 1px solid #e0e0e0;
+	padding: 10px;
+	margin: 30px 0;
+}
+
+.iana-table {
+	background-color: #ffffff;
+	width: 100%;
+}
+
+.iana-table-navigation {
+	background-color: #e0e0e0;
+	padding: 5px;
+	text-align: center;
+}
+
+.iana-table td {
+	padding: 5px;
+	vertical-align: top;
+}
+
+.iana-table tr {
+	border-left: 1px solid #e6e6e6;
+	border-right: 1px solid #e6e6e6;
+}
+.iana-table thead tr {
+	border-left: none;
+	border-right: none;
+}
+.iana-table th {
+	padding: 5px;
+	background-color: #f0f0f0;
+	border-bottom: 1px solid #e0e0e0;
+}
+.iana-table tr {
+	border-bottom: 1px solid #e0e0e0;
+}
+
+/* --- --- */
+
+.tld-table-so {
+	color: #999;
+	font-size: 85%;
+}
+#iana-table-notice {
+	padding: 15px;
+	color: #f88;
+	font-weight: bold;
+}
+.iana-table-hover {
+	background-color: #f0f0e0;
+}
+.iana-table-nav-cell {
+	padding: 2px; 
+}
+.iana-table-nav-hl {
+	background-color: #ccc;
+}
+.iana-protocol-group {
+	background-color: #aaa;
+	color: #fff;
+}
+#iana-table-icon {
+	margin-top: 2px;
+}
+.iana-note {
+        background-color: #f5f5c0;
+        border: 1px solid #e6e6e6;
+        padding: 10px;
+        margin-top: 30px;
+}
+.iana-note h2, .iana-notep {
+	margin: 0;
+}
+
+#footer {
+	color: #999;
+	font-size: 92%;
+}
+#footer a {
+	color: #666;
+}
+#footer td {
+	vertical-align: top;
+	border-left: 1px solid #ccc;
+	padding-left: 12px;
+	color: #666;
+}
+#footer td#iana-footer-first {
+	border: none;
+}
+#search-note {
+	background: url(/_img/icons/error.png) left no-repeat;
+	padding-left: 20px;
+}
+
+.inline-right-nav {
+	float: right;
+	margin-left: 30px;
+	margin-bottom: 30px;
+	width: 200px;
+	background: #f0f0f0;
+	border: 1px solid #ccc;
+}
+.inline-right-nav ul {
+	margin: 0;
+}
+.inline-right-nav li {
+	list-style: none;
+	display: block;
+	width: 200px;
+        float: left;
+        margin: 0px;
+	padding: 5px 5px;
+	border-top: 1px solid #fff;
+}
+.inline-right-nav p {
+	font-size: 85%;
+	margin: 0;
+	padding-right: 10px;
+}
+#footer-beta-feedback {
+	padding: 5px;
+	text-align: center;
+	margin-top: 20px;
+}
+#home-footer #footer-beta-feedback span, #footer #footer-beta-feedback p {
+	background: url(/_img/icons/email_edit.png) left no-repeat;
+	padding-left: 20px;
+	text-align: left;
+	margin: 0;
+
+}
+#home-footer {
+        color: #999;
+        font-size: 92%;
+}
+#home-footer table {
+	margin: 0 auto;
+}
+#home-footer td {
+	text-align: left;
+	padding: 5px;
+}
+#home-footer p {
+	text-align: center;
+}
+#home-footer a {
+        color: #666;
+}
+#iana-idn-nav {
+	text-align: right;
+}
+
+/* --- --- */
+
+.iana-accreditation-hint {
+	padding: 10px;
+	padding-left: 80px;
+	background: url(/_img/icann-accredited-small.png) left no-repeat #ccf;
+	border: 1px solid #99c;
+	margin: 10px 0 10px 0;
+	min-height: 60px;
+}
+
+/* --- --- */
+.reg-table td {
+	vertical-align: top;
+	padding: 0 20px 5px 0;
+}
+.reg-table thead th {
+	font-weight: bold;
+	padding-bottom: 5px;
+}
+.reg-table {
+ 	margin: 20px 0;
+}
+
+/* --- ipv6 gunk --- */
+
+.v6alert {
+        clear: both;
+        padding: 10px;
+        background-color: #eec;
+        border: 1px solid #bbb;
+        margin-bottom: 40px;
+}

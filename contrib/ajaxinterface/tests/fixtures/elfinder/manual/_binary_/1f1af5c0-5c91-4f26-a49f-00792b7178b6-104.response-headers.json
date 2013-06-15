@@ -1,0 +1,7 @@
+{
+    "headers": "{\"x-powered-by\":\"PHP/5.3.5-1ubuntu7.3\",\"content-type\":\"application/octet-stream\",\"content-disposition\":\"attachment; filename=test.something%20copy1.txt\",\"content-location\":\"test.something copy1.txt\",\"content-transfer-encoding\":\"binary\",\"content-length\":\"26\",\"connection\":\"close\",\"date\":\"Wed, 19 Oct 2011 16:34:17 GMT\",\"server\":\"lighttpd/1.4.28\"}", 
+    "httpVersion": "1.1", 
+    "method": null, 
+    "statusCode": 200, 
+    "url": ""
+}

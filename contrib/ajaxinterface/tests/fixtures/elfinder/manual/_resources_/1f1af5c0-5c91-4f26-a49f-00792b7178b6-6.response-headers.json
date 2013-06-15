@@ -1,0 +1,7 @@
+{
+    "headers": "{\"vary\":\"Accept-Encoding\",\"content-encoding\":\"gzip\",\"content-type\":\"text/javascript; charset=UTF-8\",\"last-modified\":\"Thu, 22 Sep 2011 14:12:07 GMT\",\"date\":\"Wed, 19 Oct 2011 16:29:55 GMT\",\"expires\":\"Wed, 19 Oct 2011 16:29:55 GMT\",\"cache-control\":\"private, x-gzip-ok=\\\"\\\", max-age=31536000\",\"x-content-type-options\":\"nosniff\",\"server\":\"sffe\",\"content-length\":\"52013\",\"x-xss-protection\":\"1; mode=block\"}", 
+    "httpVersion": "1.1", 
+    "method": null, 
+    "statusCode": 200, 
+    "url": ""
+}

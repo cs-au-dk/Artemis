@@ -1,0 +1,17 @@
+{
+    "absolutepath": "home://~username/Images/Folder 1", 
+    "allTags": null, 
+    "contentsize": 0, 
+    "created": "12/10/2011", 
+    "extension": "", 
+    "modified": "12/10/2011", 
+    "name": "Folder 1", 
+    "owner": "username", 
+    "path": "home://~username/Images", 
+    "permissions": "-rwx------", 
+    "rating": 0, 
+    "shared": "0", 
+    "size": 0, 
+    "tags": null, 
+    "type": "folder"
+}

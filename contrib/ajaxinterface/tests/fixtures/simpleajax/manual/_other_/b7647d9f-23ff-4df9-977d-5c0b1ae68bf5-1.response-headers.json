@@ -1,0 +1,7 @@
+{
+    "headers": "{\"date\":\"Wed, 12 Oct 2011 12:34:41 GMT\",\"server\":\"WSGIServer/0.1 Python/2.7.1+\",\"content-type\":\"text/html\"}", 
+    "httpVersion": "1.0", 
+    "method": null, 
+    "statusCode": 404, 
+    "url": ""
+}

@@ -1,0 +1,55 @@
+
+
+/*
+*                 eyeos - The Open Source Cloud's Web Desktop
+*                               Version 2.0
+*                   Copyright (C) 2007 - 2010 eyeos Team 
+* 
+* This program is free software; you can redistribute it and/or modify it under
+* the terms of the GNU Affero General Public License version 3 as published by the
+* Free Software Foundation.
+* 
+* This program is distributed in the hope that it will be useful, but WITHOUT
+* ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+* FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more
+* details.
+* 
+* You should have received a copy of the GNU Affero General Public License
+* version 3 along with this program in the file "LICENSE".  If not, see 
+* <http://www.gnu.org/licenses/agpl-3.0.txt>.
+* 
+* See www.eyeos.org for more details. All requests should be sent to licensing@eyeos.org
+* 
+* The interactive user interfaces in modified source and object code versions
+* of this program must display Appropriate Legal Notices, as required under
+* Section 5 of the GNU Affero General Public License version 3.
+* 
+* In accordance with Section 7(b) of the GNU Affero General Public License version 3,
+* these Appropriate Legal Notices must retain the display of the "Powered by
+* eyeos" logo and retain the original copyright notice. If the display of the 
+* logo is not reasonably feasible for technical reasons, the Appropriate Legal Notices
+* must display the words "Powered by eyeos" and retain the original copyright notice. 
+*/
+
+function session_application(checknum, pid, args) {
+	try {
+		eyeos.cleanSession();
+	} catch (e) {
+		eyeos.consoleWarn(e);
+	}
+	
+	if (args) {
+		// User data
+		if (args[0]) {
+			eyeos.setCurrentUserData(args[0]);
+		}
+		// Init apps
+		if (args[1]) {
+			for(var i = 0; i < args[1].length; i++) {
+				eyeos.execute(args[1][i], checknum);
+			}
+		}
+	}
+}
+
+session_application(978212848, 1409, [{"primaryGroupId":"eyeID_EyeosGroup_users","id":"eyeID_EyeosUser_3","name":"username","status":0,"metadata":{"eyeos.user.lastname":"Doe","eyeos.desktop.dashboard.nbcolumns":2,"eyeos.user.desktop.wallpaper":"sys:\/\/\/extern\/images\/wallpapers\/nature\/default.jpg","eyeos.user.language":"en","eyeos.desktop.mode":"dashboard","eyeos.user.desktop.wallpaperId":"nature","eyeos.user.applications.favorite":{"calculator":"0","files":"0","calendar":"0","documents":"0","notepad":"0"},"eyeos.user.applications.installed":{"calculator":"0","mail":"0","files":"0","calendar":"0","documents":"0","notepad":"0"},"eyeos.user.desktop.widgets":{"desktop":{"title":"Desktop","installed":"false","column":"1","position":"1"},"files":{"title":"Files","installed":"true","column":1,"position":0,"minimized":false},"groups":{"title":"My Groups","installed":"true","column":1,"position":1,"minimized":false},"events":{"title":"Events","installed":"true","items":"5","column":3,"position":1,"minimized":false},"favorites":{"title":"Favorites Applications","installed":"true","column":3,"position":0,"minimized":false},"notes":{"title":"Notes","installed":"true","column":3,"position":2,"minimized":false},"1":{"column":1,"position":0,"minimized":false}},"eyeos.user.desktop.backgroundColors":{"#E6E6E6":"true","#CCDADA":"false","#A1C4E0":"false","#A7AFC4":"false","#999999":"false","#6293BB":"false","#679966":"false","#787B9A":"false","#6E829A":"false"},"eyeos.user.desktop.wallpaperMode":"image","eyeos.user.email":"s@s.dk","eyeos.user.desktop.showWelcome":"false","eyeos.user.applications.onLogin":{"calculator":"false","mail":"false","files":"false","calendar":"false","documents":"false","notepad":"false"},"eyeos.user.firstname":"John"}},["desktop","contactmanager","netsync"]]);eyeos._callbackProxyWithContent(null, null, null, {"__eyeos_specialControlMessage_header":"__control_enhancedData","__eyeos_specialControlMessage_body":{"messages":[{"type":"application","eventName":"start","eventData":{"name":"session","pid":1409,"loginContext":{"user":"username","group":"users"},"checknum":978212848,"time":1318409256,"args":{}}},{"type":"application","eventName":"stop","eventData":{"name":"login","pid":3357,"loginContext":{"user":"username","group":"users"},"checknum":825852019,"time":1318409252,"args":{"0":0}}}],"data":"\n\n\/*\n*                 eyeos - The Open Source Cloud's Web Desktop\n*                               Version 2.0\n*                   Copyright (C) 2007 - 2010 eyeos Team \n* \n* This program is free software; you can redistribute it and\/or modify it under\n* the terms of the GNU Affero General Public License version 3 as published by the\n* Free Software Foundation.\n* \n* This program is distributed in the hope that it will be useful, but WITHOUT\n* ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS\n* FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more\n* details.\n* \n* You should have received a copy of the GNU Affero General Public License\n* version 3 along with this program in the file \"LICENSE\".  If not, see \n* <http:\/\/www.gnu.org\/licenses\/agpl-3.0.txt>.\n* \n* See www.eyeos.org for more details. All requests should be sent to licensing@eyeos.org\n* \n* The interactive user interfaces in modified source and object code versions\n* of this program must display Appropriate Legal Notices, as required under\n* Section 5 of the GNU Affero General Public License version 3.\n* \n* In accordance with Section 7(b) of the GNU Affero General Public License version 3,\n* these Appropriate Legal Notices must retain the display of the \"Powered by\n* eyeos\" logo and retain the original copyright notice. If the display of the \n* logo is not reasonably feasible for technical reasons, the Appropriate Legal Notices\n* must display the words \"Powered by eyeos\" and retain the original copyright notice. \n*\/\n\nfunction session_application(checknum, pid, args) {\n\ttry {\n\t\teyeos.cleanSession();\n\t} catch (e) {\n\t\teyeos.consoleWarn(e);\n\t}\n\t\n\tif (args) {\n\t\t\/\/ User data\n\t\tif (args[0]) {\n\t\t\teyeos.setCurrentUserData(args[0]);\n\t\t}\n\t\t\/\/ Init apps\n\t\tif (args[1]) {\n\t\t\tfor(var i = 0; i < args[1].length; i++) {\n\t\t\t\teyeos.execute(args[1][i], checknum);\n\t\t\t}\n\t\t}\n\t}\n}\n\nsession_application(978212848, 1409, [{\"primaryGroupId\":\"eyeID_EyeosGroup_users\",\"id\":\"eyeID_EyeosUser_3\",\"name\":\"username\",\"status\":0,\"metadata\":{\"eyeos.user.lastname\":\"Doe\",\"eyeos.desktop.dashboard.nbcolumns\":2,\"eyeos.user.desktop.wallpaper\":\"sys:\\\/\\\/\\\/extern\\\/images\\\/wallpapers\\\/nature\\\/default.jpg\",\"eyeos.user.language\":\"en\",\"eyeos.desktop.mode\":\"dashboard\",\"eyeos.user.desktop.wallpaperId\":\"nature\",\"eyeos.user.applications.favorite\":{\"calculator\":\"0\",\"files\":\"0\",\"calendar\":\"0\",\"documents\":\"0\",\"notepad\":\"0\"},\"eyeos.user.applications.installed\":{\"calculator\":\"0\",\"mail\":\"0\",\"files\":\"0\",\"calendar\":\"0\",\"documents\":\"0\",\"notepad\":\"0\"},\"eyeos.user.desktop.widgets\":{\"desktop\":{\"title\":\"Desktop\",\"installed\":\"false\",\"column\":\"1\",\"position\":\"1\"},\"files\":{\"title\":\"Files\",\"installed\":\"true\",\"column\":1,\"position\":0,\"minimized\":false},\"groups\":{\"title\":\"My Groups\",\"installed\":\"true\",\"column\":1,\"position\":1,\"minimized\":false},\"events\":{\"title\":\"Events\",\"installed\":\"true\",\"items\":\"5\",\"column\":3,\"position\":1,\"minimized\":false},\"favorites\":{\"title\":\"Favorites Applications\",\"installed\":\"true\",\"column\":3,\"position\":0,\"minimized\":false},\"notes\":{\"title\":\"Notes\",\"installed\":\"true\",\"column\":3,\"position\":2,\"minimized\":false},\"1\":{\"column\":1,\"position\":0,\"minimized\":false}},\"eyeos.user.desktop.backgroundColors\":{\"#E6E6E6\":\"true\",\"#CCDADA\":\"false\",\"#A1C4E0\":\"false\",\"#A7AFC4\":\"false\",\"#999999\":\"false\",\"#6293BB\":\"false\",\"#679966\":\"false\",\"#787B9A\":\"false\",\"#6E829A\":\"false\"},\"eyeos.user.desktop.wallpaperMode\":\"image\",\"eyeos.user.email\":\"s@s.dk\",\"eyeos.user.desktop.showWelcome\":\"false\",\"eyeos.user.applications.onLogin\":{\"calculator\":\"false\",\"mail\":\"false\",\"files\":\"false\",\"calendar\":\"false\",\"documents\":\"false\",\"notepad\":\"false\"},\"eyeos.user.firstname\":\"John\"}},[\"desktop\",\"contactmanager\",\"netsync\"]]);"},"__eyeos_specialControlMessage_options":null});

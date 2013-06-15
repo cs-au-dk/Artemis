@@ -1,0 +1,5 @@
+{
+    "group": "users", 
+    "owner": "username", 
+    "permissions": "-rw-------"
+}

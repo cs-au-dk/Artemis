@@ -1,0 +1,166 @@
+-----------------------------63339721750260592288919687
+Content-Disposition: form-data; name="products_name[1]"
+
+Dell XPS 630
+-----------------------------63339721750260592288919687
+Content-Disposition: form-data; name="products_tags[1]"
+
+
+-----------------------------63339721750260592288919687
+Content-Disposition: form-data; name="products_short_description[1]"
+
+
+-----------------------------63339721750260592288919687
+Content-Disposition: form-data; name="products_description[1]"
+
+<h2>Features </h2><ul><li>Experience the latest technology and innovative design with the XPS? 630 - a sleek, head turning warrior created for smashing game performance </li><li>A supersonic gaming extravaganza ? the XPS? 630 offers full-on power with overclocking via BIOS or Nvidia?? nTune GeForce 9800GT, a Quad Intel?? Q9300 processor and a 750W power supply for an extreme experience </li><li>Front: USB 2.0 (2), 1394a, headphone jack, mic, optional 19-in-1 media card reader </li><li>Back (Audio): S/PDIF optical, line-in, line-out, microphone, surround, center/LFE; integrated HDA 7.1 channel sound </li><li>Back (Other): USB 2.0 (4), 1394a, PS/2 Mouse and Keyboard, Gigabit Ethernet8</li><li>Vista Premium 64bit SP1<br></li></ul><p><br></p>
+-----------------------------63339721750260592288919687
+Content-Disposition: form-data; name="products_url[1]"
+
+
+-----------------------------63339721750260592288919687
+Content-Disposition: form-data; name="products_page_title[1]"
+
+WOW!
+-----------------------------63339721750260592288919687
+Content-Disposition: form-data; name="products_meta_keywords[1]"
+
+
+-----------------------------63339721750260592288919687
+Content-Disposition: form-data; name="products_meta_description[1]"
+
+
+-----------------------------63339721750260592288919687
+Content-Disposition: form-data; name="products_friendly_url[1]"
+
+dell-xps-630
+-----------------------------63339721750260592288919687
+Content-Disposition: form-data; name="products_status"
+
+1
+-----------------------------63339721750260592288919687
+Content-Disposition: form-data; name="products_date_available"
+
+
+-----------------------------63339721750260592288919687
+Content-Disposition: form-data; name="products_sku"
+
+
+-----------------------------63339721750260592288919687
+Content-Disposition: form-data; name="products_model"
+
+
+-----------------------------63339721750260592288919687
+Content-Disposition: form-data; name="manufacturers_id"
+
+2
+-----------------------------63339721750260592288919687
+Content-Disposition: form-data; name="products_weight"
+
+10.00
+-----------------------------63339721750260592288919687
+Content-Disposition: form-data; name="products_weight_class"
+
+2
+-----------------------------63339721750260592288919687
+Content-Disposition: form-data; name="products_tax_class_id"
+
+0
+-----------------------------63339721750260592288919687
+Content-Disposition: form-data; name="products_price"
+
+799.0000
+-----------------------------63339721750260592288919687
+Content-Disposition: form-data; name="products_price_gross"
+
+799
+-----------------------------63339721750260592288919687
+Content-Disposition: form-data; name="quantity_discount_groups_id"
+
+0
+-----------------------------63339721750260592288919687
+Content-Disposition: form-data; name="products_quantity"
+
+10
+-----------------------------63339721750260592288919687
+Content-Disposition: form-data; name="products_moq"
+
+1
+-----------------------------63339721750260592288919687
+Content-Disposition: form-data; name="order_increment"
+
+1
+-----------------------------63339721750260592288919687
+Content-Disposition: form-data; name="quantity_unit_class"
+
+1
+-----------------------------63339721750260592288919687
+Content-Disposition: form-data; name="unlimited"
+
+on
+-----------------------------63339721750260592288919687
+Content-Disposition: form-data; name="file"; filename=""
+Content-Type: application/octet-stream
+
+
+-----------------------------63339721750260592288919687
+Content-Disposition: form-data; name="multiselect"
+
+
+-----------------------------63339721750260592288919687
+Content-Disposition: form-data; name="products_attributes_groups_id"
+
+
+-----------------------------63339721750260592288919687
+Content-Disposition: form-data; name="xsellproducts"
+
+Xsell Products
+-----------------------------63339721750260592288919687
+Content-Disposition: form-data; name="accessories_name"
+
+Accessories
+-----------------------------63339721750260592288919687
+Content-Disposition: form-data; name="action"
+
+save_product
+-----------------------------63339721750260592288919687
+Content-Disposition: form-data; name="accessories_ids"
+
+8
+-----------------------------63339721750260592288919687
+Content-Disposition: form-data; name="xsell_ids"
+
+5;12
+-----------------------------63339721750260592288919687
+Content-Disposition: form-data; name="products_variants"
+
+
+-----------------------------63339721750260592288919687
+Content-Disposition: form-data; name="products_id"
+
+1
+-----------------------------63339721750260592288919687
+Content-Disposition: form-data; name="attachments_ids"
+
+
+-----------------------------63339721750260592288919687
+Content-Disposition: form-data; name="categories_id"
+
+2,3
+-----------------------------63339721750260592288919687
+Content-Disposition: form-data; name="customization_fields"
+
+1::1::0::{"name1":"something"};;2::1::1::{"name1":"someotherthing"}
+-----------------------------63339721750260592288919687
+Content-Disposition: form-data; name="products_type"
+
+0
+-----------------------------63339721750260592288919687
+Content-Disposition: form-data; name="module"
+
+products
+-----------------------------63339721750260592288919687
+Content-Disposition: form-data; name="token"
+
+5373cddd9f26b62dd30d6d142503343c
+-----------------------------63339721750260592288919687--

@@ -1,0 +1,20 @@
+[
+    {
+        "expirationDate": "2147483647", 
+        "fileId": "1", 
+        "id": "1", 
+        "lastDownloadDate": null, 
+        "name": "BECEEEEAEBEACBBI", 
+        "password": "", 
+        "publicationDate": "1318409424"
+    }, 
+    {
+        "expirationDate": "2147483647", 
+        "fileId": "1", 
+        "id": "3", 
+        "lastDownloadDate": null, 
+        "name": "ACCEACBECCCEBBAZ", 
+        "password": "1234", 
+        "publicationDate": "1318409511"
+    }
+]

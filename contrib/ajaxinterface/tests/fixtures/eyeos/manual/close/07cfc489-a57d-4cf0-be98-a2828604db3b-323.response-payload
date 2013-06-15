@@ -1,0 +1,26 @@
+{
+    "__eyeos_specialControlMessage_body": {
+        "data": "null", 
+        "messages": [
+            {
+                "eventData": {
+                    "args": {
+                        "0": "home://~username/Documents"
+                    }, 
+                    "checknum": 993067192, 
+                    "loginContext": {
+                        "group": "users", 
+                        "user": "username"
+                    }, 
+                    "name": "upload", 
+                    "pid": 2959, 
+                    "time": 1318409646
+                }, 
+                "eventName": "stop", 
+                "type": "application"
+            }
+        ]
+    }, 
+    "__eyeos_specialControlMessage_header": "__control_enhancedData", 
+    "__eyeos_specialControlMessage_options": null
+}

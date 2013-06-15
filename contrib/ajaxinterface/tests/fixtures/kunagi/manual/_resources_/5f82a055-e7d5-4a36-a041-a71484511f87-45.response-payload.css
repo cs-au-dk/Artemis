@@ -1,0 +1,36 @@
+html {
+  cursor: text;
+}
+
+.editbox {
+  margin: 5px;
+  padding: 0;
+  line-height: 16px;
+  font-size: 12px;
+  font-family: Arial Unicode MS, Arial, sans-serif;
+  color: black;
+  background: #FAFAFF;
+  border: 1px solid gray;
+}
+
+.editbox p { margin: 0; }
+.editbox span.whitespace {font-family: monospace;}
+
+.editbox span.wiki-text {color: black; color: black;}
+.editbox span.wiki-keyword {font-weight: bold; color: blue; font-family: monospace;}
+
+.editbox span.wiki-bold {font-weight: bold;}
+.editbox span.wiki-italic {font-style: italic;}
+.editbox span.wiki-bold-italic {font-weight: bold; font-style: italic;}
+
+.editbox span.wiki-h1 {color: navy; font-weight: bold; font-size: 18px;}
+.editbox span.wiki-h2 {color: navy; font-weight: bold; font-size: 16px;}
+.editbox span.wiki-h3 {color: navy; font-weight: bold; font-size: 15px;}
+.editbox span.wiki-h4 {color: navy; font-weight: bold; font-size: 14px;}
+
+.editbox span.wiki-list {color: blue; font-weight: bold; font-family: monospace;}
+
+.editbox span.wiki-table {color: blue; font-weight: bold; font-family: monospace;}
+
+.editbox span.wiki-code {color: green; font-family: monospace;}
+.editbox span.wiki-preformated {color: green; font-family: monospace;}

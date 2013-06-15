@@ -1,0 +1,7 @@
+{
+    "headers": "{\"server\":\"Apache\",\"location\":\"http://feeds.bbci.co.uk/news/rss.xml?edition=int\",\"content-length\":\"256\",\"content-type\":\"text/html; charset=iso-8859-1\",\"cache-control\":\"max-age=87997123\",\"expires\":\"Sun, 03 Aug 2014 01:49:23 GMT\",\"date\":\"Wed, 19 Oct 2011 14:10:40 GMT\",\"connection\":\"close\",\"vary\":\"Accept-Encoding\"}", 
+    "httpVersion": "1.1", 
+    "method": null, 
+    "statusCode": 301, 
+    "url": ""
+}
