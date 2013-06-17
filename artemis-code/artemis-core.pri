@@ -179,6 +179,7 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/concolic/traceeventdetectors.cpp \
     src/concolic/tracestatistics.cpp \
     src/concolic/solver/solution.cpp \
-    src/runtime/demomode/traceviewerdialog.cpp
+    src/runtime/demomode/traceviewerdialog.cpp \
+    src/strategies/inputgenerator/form/forminputgenerator.cpp
 
 QT += network

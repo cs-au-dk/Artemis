@@ -21,7 +21,11 @@ def test_generator(filename, name, result):
     def test(self):
         newFilename = setUpTempFileFromTemplate(WEBSERVER_ROOT, filename)
 
-        report = execute_artemis(name, "%s/%s" % (WEBSERVER_URL, newFilename), iterations=2)
+        report = execute_artemis(name, "%s/%s" % (
+            WEBSERVER_URL, 
+            newFilename), 
+            iterations=2,
+            fields=["#testinput2=1"])
 
         for condition in result.split(';'):
             subject, value = condition.split('=')

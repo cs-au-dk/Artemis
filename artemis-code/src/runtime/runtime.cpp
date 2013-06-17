@@ -87,11 +87,11 @@ Runtime::Runtime(QObject* parent, const Options& options, const QUrl& url) : QOb
     QSharedPointer<FormInputGenerator> formInputGenerator;
     switch (options.formInputGenerationStrategy) {
     case Random:
-        formInputGenerator = QSharedPointer<StaticFormInputGenerator>(new StaticFormInputGenerator());
+        formInputGenerator = StaticFormInputGeneratorPtr(new StaticFormInputGenerator(options.presetFormfields.keys()));
         break;
 
     case ConstantString:
-        formInputGenerator = QSharedPointer<ConstantStringFormInputGenerator>(new ConstantStringFormInputGenerator());
+        formInputGenerator = ConstantStringFormInputGeneratorPtr(new ConstantStringFormInputGenerator(options.presetFormfields.keys()));
         break;
 
     default:

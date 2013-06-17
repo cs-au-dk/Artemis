@@ -13,30 +13,17 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef STATICFORMINPUTGENERATOR_H
-#define STATICFORMINPUTGENERATOR_H
-
-#include <QSharedPointer>
 
 #include "forminputgenerator.h"
 
 namespace artemis
 {
 
-class StaticFormInputGenerator : public FormInputGenerator
+FormInputGenerator::FormInputGenerator(QList<QString> excludedFormFields)
 {
-public:
-
-    StaticFormInputGenerator(QList<QString> excludedFormFields);
-
-    QSharedPointer<FormInput> generateFormFields(QObject* parent,
-                                                 QSet<QSharedPointer<const FormField> > fi,
-                                                 QSharedPointer<const ExecutionResult> executionResult) const;
-
-};
-
-typedef QSharedPointer<StaticFormInputGenerator> StaticFormInputGeneratorPtr;
-
+    foreach(QString formFieldId, excludedFormFields) {
+        mExcludedFormFields.append(formFieldId.remove(0, 1));
+    }
 }
 
-#endif // STATICFORMINPUTGENERATOR_H
+}

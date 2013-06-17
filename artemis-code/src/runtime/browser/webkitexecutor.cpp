@@ -210,6 +210,7 @@ void WebKitExecutor::slLoadFinished(bool ok)
         QWebElement elm = mPage->mainFrame()->findFirstElement(f);
 
         if (elm.isNull()) {
+            qDebug() << "Warning, preset field " << f << "not found.";
             continue;
         }
 
@@ -228,6 +229,7 @@ void WebKitExecutor::slLoadFinished(bool ok)
         mCoverageListener->notifyStartingEvent(input);
         mJavascriptStatistics->notifyStartingEvent(input);
         mPathTracer->notifyStartingEvent(input);
+
         input->apply(this->mPage, this->webkitListener);
     }
 

@@ -19,6 +19,8 @@
 #include <QObject>
 #include <QSet>
 #include <QSharedPointer>
+#include <QList>
+#include <QString>
 
 #include "runtime/input/forms/formfield.h"
 #include "runtime/input/forms/forminput.h"
@@ -31,12 +33,16 @@ class FormInputGenerator
 {
 
 public:
-    FormInputGenerator() {}
+    FormInputGenerator(QList<QString> excludedFormFields);
+
     virtual ~FormInputGenerator() {}
 
     virtual QSharedPointer<FormInput> generateFormFields(QObject* parent,
                                                          QSet<QSharedPointer<const FormField> > fi,
                                                          QSharedPointer<const ExecutionResult> executionResult) const = 0;
+
+protected:
+    QList<QString> mExcludedFormFields;
 };
 
 }

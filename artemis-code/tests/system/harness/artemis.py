@@ -22,6 +22,7 @@ def execute_artemis(execution_uuid, url, iterations=1,
                     strategy_priority=None,
                     coverage=None,
                     exclude=None,
+                    fields=None,
                     **kwargs):
     output_dir = os.path.join(OUTPUT_DIR, execution_uuid)
 
@@ -52,6 +53,13 @@ def execute_artemis(execution_uuid, url, iterations=1,
         for file in exclude:
             args.append('--coverage-report-ignore')
             args.append(file)
+
+    if fields is None:
+        fields = []
+        
+    for field in fields:
+        args.append('-f')
+        args.append(field)
 
     cmd = [ARTEMIS_EXEC] + [url] + args
 
