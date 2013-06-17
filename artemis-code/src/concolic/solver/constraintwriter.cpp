@@ -36,6 +36,7 @@ bool ConstraintWriter::write(QSharedPointer<Symbolic::PathCondition> pathConditi
 
     for (int i = 0; i < pathCondition->size(); i++) {
         pathCondition->get(i)->accept(&writer);
+        writer.mOutput << writer.mIdentifierStore << " == true;\n\n";
     }
 
     return writer.commit();

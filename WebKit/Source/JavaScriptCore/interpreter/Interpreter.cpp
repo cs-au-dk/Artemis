@@ -4255,7 +4255,7 @@ skip_id_custom_self:
         JSValue _r = jsBoolean(_jumped);
 
         _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
-                                                    _v, Symbolic::EQUAL, _jst,
+                                                    _v, _jumped ? Symbolic::EQUAL : Symbolic::NOT_EQUAL, _jst,
                                                     _r);
 
         Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC, bytecodeInfo,
@@ -4297,7 +4297,7 @@ skip_id_custom_self:
         JSValue _r = jsBoolean(_jumped);
 
         _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
-                                                    _v, Symbolic::EQUAL, _jsf,
+                                                    _v, _jumped ? Symbolic::EQUAL : Symbolic::NOT_EQUAL, _jsf,
                                                     _r);
 
         Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC, bytecodeInfo,
@@ -4337,7 +4337,7 @@ skip_id_custom_self:
         JSValue _r = jsBoolean(_jumped);
 
         _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
-                                                    _v, Symbolic::EQUAL, _jst,
+                                                    _v, _jumped ? Symbolic::EQUAL : Symbolic::NOT_EQUAL, _jst,
                                                     _r);
 
         Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC, bytecodeInfo,
@@ -4374,7 +4374,7 @@ skip_id_custom_self:
         JSValue _r = jsBoolean(_jumped);
 
         _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
-                                                    _v, Symbolic::EQUAL, _jsf,
+                                                    _v, _jumped ? Symbolic::EQUAL : Symbolic::NOT_EQUAL, _jsf,
                                                     _r);
 
         Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC, bytecodeInfo,
@@ -4412,7 +4412,7 @@ skip_id_custom_self:
         JSValue _r = jsBoolean(_jumped);
 
         _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
-                                                    srcValue, Symbolic::EQUAL, _jsn,
+                                                    srcValue, _jumped ? Symbolic::EQUAL : Symbolic::NOT_EQUAL, _jsn,
                                                     _r);
 
         Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC, bytecodeInfo,
@@ -4449,7 +4449,7 @@ skip_id_custom_self:
         JSValue _r = jsBoolean(_jumped);
 
         _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
-                                                    srcValue, Symbolic::NOT_EQUAL, _jsn,
+                                                    srcValue, _jumped ? Symbolic::NOT_EQUAL : Symbolic::EQUAL, _jsn,
                                                     _r);
 
         Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC, bytecodeInfo,
@@ -4509,7 +4509,7 @@ skip_id_custom_self:
         JSValue _r = jsBoolean(result);
 
         _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
-                                                    src1, Symbolic::LESS_STRICT, src2,
+                                                    src1, result ? Symbolic::LESS_STRICT : Symbolic::GREATER_EQ, src2,
                                                     _r);
 
         Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC, bytecodeInfo,
@@ -4547,7 +4547,7 @@ skip_id_custom_self:
         JSValue _r = jsBoolean(result);
 
         _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
-                                                    src1, Symbolic::LESS_STRICT, src2,
+                                                    src1, result ? Symbolic::LESS_STRICT : Symbolic::GREATER_EQ, src2,
                                                     _r);
 
         Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC, bytecodeInfo,
@@ -4585,7 +4585,7 @@ skip_id_custom_self:
         JSValue _r = jsBoolean(result);
 
         _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
-                                                    src1, Symbolic::GREATER_STRICT, src2,
+                                                    src1, result ? Symbolic::GREATER_STRICT : Symbolic::LESS_EQ, src2,
                                                     _r);
 
         Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC, bytecodeInfo,
@@ -4623,7 +4623,7 @@ skip_id_custom_self:
         JSValue _r = jsBoolean(result);
 
         _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
-                                                    src1, Symbolic::GREATER_EQ, src2,
+                                                    src1, result ? Symbolic::GREATER_EQ : Symbolic::LESS_STRICT, src2,
                                                     _r);
 
         Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC, bytecodeInfo,
@@ -4658,7 +4658,7 @@ skip_id_custom_self:
         JSValue _r = jsBoolean(result);
 
         _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
-                                                    src1, Symbolic::LESS_STRICT, src2,
+                                                    src1, result ? Symbolic::LESS_STRICT : Symbolic::GREATER_EQ, src2,
                                                     _r);
 
         Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC, bytecodeInfo,
@@ -4692,7 +4692,7 @@ skip_id_custom_self:
         JSValue _r = jsBoolean(result);
 
         _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
-                                                    src1, Symbolic::LESS_EQ, src2,
+                                                    src1, result ? Symbolic::LESS_EQ : Symbolic::GREATER_STRICT, src2,
                                                     _r);
 
         Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC, bytecodeInfo,
@@ -4726,7 +4726,7 @@ skip_id_custom_self:
         JSValue _r = jsBoolean(result);
 
         _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
-                                                    src1, Symbolic::GREATER_STRICT, src2,
+                                                    src1, result ? Symbolic::GREATER_STRICT : Symbolic::LESS_EQ, src2,
                                                     _r);
 
         Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC, bytecodeInfo,
@@ -4760,7 +4760,7 @@ skip_id_custom_self:
         JSValue _r = jsBoolean(result);
 
         _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
-                                                    src1, Symbolic::GREATER_EQ, src2,
+                                                    src1, result ? Symbolic::GREATER_EQ : Symbolic::LESS_STRICT, src2,
                                                     _r);
 
         Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC, bytecodeInfo,
@@ -4794,7 +4794,7 @@ skip_id_custom_self:
         JSValue _r = jsBoolean(!result);
 
         _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
-                                                    src1, Symbolic::GREATER_EQ, src2,
+                                                    src1, !result ? Symbolic::GREATER_EQ : Symbolic::LESS_STRICT, src2,
                                                     _r);
 
         Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC, bytecodeInfo,
@@ -4828,7 +4828,7 @@ skip_id_custom_self:
         JSValue _r = jsBoolean(!result);
 
         _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
-                                                    src1, Symbolic::GREATER_STRICT, src2,
+                                                    src1, !result ? Symbolic::GREATER_STRICT : Symbolic::LESS_EQ, src2,
                                                     _r);
 
         Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC, bytecodeInfo,
@@ -4862,7 +4862,7 @@ skip_id_custom_self:
         JSValue _r = jsBoolean(!result);
 
         _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
-                                                    src1, Symbolic::LESS_EQ, src2,
+                                                    src1, !result ? Symbolic::LESS_EQ : Symbolic::GREATER_STRICT, src2,
                                                     _r);
 
         Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC, bytecodeInfo,
@@ -4896,7 +4896,7 @@ skip_id_custom_self:
         JSValue _r = jsBoolean(!result);
 
         _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
-                                                    src1, Symbolic::GREATER_STRICT, src2,
+                                                    src1, !result ? Symbolic::GREATER_STRICT : Symbolic::LESS_EQ, src2,
                                                     _r);
 
         Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC, bytecodeInfo,
