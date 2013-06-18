@@ -374,7 +374,7 @@ void SymbolicInterpreter::ail_jmp_iff(JSC::CallFrame* callFrame,
 
     if (condition.isSymbolic()) {
         info.setSymbolic();
-        m_pc->append(condition.asSymbolic());
+        m_pc->append(condition.asSymbolic(), jumps);
     }
 }
 
@@ -420,7 +420,7 @@ void SymbolicInterpreter::endSession()
     int i;
     for (i = 0; i < m_pc->size(); i++) {
         Printer printer;
-        m_pc->get(i)->accept(&printer);
+        m_pc->get(i).first->accept(&printer);
         qDebug() << "PC[" << i << "]: " << QString::fromStdString(printer.getResult());
     }
 }
@@ -437,7 +437,7 @@ std::string SymbolicInterpreter::generatePathConditionString() {
     for (int i = 0; i < m_pc->size(); i++) {
 
         Printer printer;
-        m_pc->get(i)->accept(&printer);
+        m_pc->get(i).first->accept(&printer);
 
         sstrm << "PC[" << i << "]: " << printer.getResult() << std::endl;
     }

@@ -19,6 +19,7 @@
 
 #include <inttypes.h>
 #include <vector>
+#include <utility>
 
 #include "JavaScriptCore/symbolic/expression/expression.h"
 
@@ -27,17 +28,19 @@
 namespace Symbolic
 {
 
+// TODO we need to figure out how to do memory management of this data structure
+
 class PathCondition
 {
 public:
     PathCondition();
 
-    void append(Symbolic::Expression* condition);
-    Symbolic::Expression* get(unsigned int index);
+    void append(Symbolic::Expression* condition, bool followed);
+    std::pair<Symbolic::Expression*, bool> get(unsigned int index);
     int size() const;
 
 private:
-    std::vector<Symbolic::Expression*> m_pc;
+    std::vector<std::pair<Symbolic::Expression*, bool> > m_pc;
 };
 
 }
