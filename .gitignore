@@ -27,3 +27,7 @@ WebKit/config.log
 *sublime*
 
 WebKit/WebKit.pro.user*
+
+contrib/Kaluza/corecstrs.tmp*
+contrib/Kaluza/stderr
+contrib/Kaluza/stdout

@@ -44,7 +44,7 @@ webkit-clean-debug:
 	@echo "Cleaning WebKit build"
 	${WEBKIT_BUILD_SCRIPT} --debug --clean
 
-artemis:
+artemis: check-env
 	cd artemis-code && qmake && make -j8
 
 artemis-clean:
@@ -74,6 +74,7 @@ check:
 check-env:
 	@echo "Checking environment variables"
 	@echo $${QTDIR:?"Please set the QTDIR environment variable to the Qt install dir"} > /dev/null;
+	@echo $${ARTEMISDIR:?"Please set the ARTEMISDIR environment variable to the folder containing this Makefile"} > /dev/null;
 
 check-sys:
 	@echo "Checking system compatibility"
@@ -91,3 +92,10 @@ fetch-apt:
 
 fetch-yum:
 	sudo yum install ${YUM_DEPENDENCIES}
+	
+test-solver: check-env
+	@echo "Testing solver"
+	@${ARTEMISDIR}/contrib/Kaluza/artemiskaluza.sh ${ARTEMISDIR}/contrib/Kaluza/test.txt
+	@cat /tmp/kaluza-result | grep "tmp1 true"
+	@rm /tmp/kaluza-result
+	@echo "..success.."

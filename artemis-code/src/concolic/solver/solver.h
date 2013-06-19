@@ -17,7 +17,11 @@
 #ifndef SOLVER_H
 #define SOLVER_H
 
+#include <QSharedPointer>
+
 #include "JavaScriptCore/symbolic/pathcondition.h"
+
+#include "solution.h"
 
 namespace artemis
 {
@@ -29,7 +33,10 @@ namespace artemis
 class Solver
 {
 public:
-    bool solve(Symbolic::PathCondition pc);
+    static SolutionPtr solve(QSharedPointer<Symbolic::PathCondition> pc);
+
+private:
+    Solver();
 };
 
 

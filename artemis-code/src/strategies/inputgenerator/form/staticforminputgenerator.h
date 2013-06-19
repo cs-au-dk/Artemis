@@ -16,6 +16,8 @@
 #ifndef STATICFORMINPUTGENERATOR_H
 #define STATICFORMINPUTGENERATOR_H
 
+#include <QSharedPointer>
+
 #include "forminputgenerator.h"
 
 namespace artemis
@@ -25,13 +27,15 @@ class StaticFormInputGenerator : public FormInputGenerator
 {
 public:
 
-    StaticFormInputGenerator();
+    StaticFormInputGenerator(QList<QString> excludedFormFields);
 
     QSharedPointer<FormInput> generateFormFields(QObject* parent,
                                                  QSet<QSharedPointer<const FormField> > fi,
                                                  QSharedPointer<const ExecutionResult> executionResult) const;
 
 };
+
+typedef QSharedPointer<StaticFormInputGenerator> StaticFormInputGeneratorPtr;
 
 }
 

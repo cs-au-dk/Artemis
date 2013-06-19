@@ -39,6 +39,8 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             "-i <n>   : Iterations - Artemis will generate and execute <n>\n"
             "           sequences of events. Default is 4.\n"
             "\n"
+            "-f #<formElementId>=<formElementValue> : Set the form element with ID #<formElementId> to the value <formElementValue> at each iteration. Remember to write the # for the element ID."
+            "\n"
             "-c <URl> : Cookies - // TODO\n"
             "\n"
             "-t <URL>:<PORT> : Set proxy\n"

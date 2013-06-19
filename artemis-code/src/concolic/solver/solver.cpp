@@ -14,23 +14,116 @@
  * limitations under the License.
  */
 
-#include <stdlib.h>
+#include <cstdlib>
+#include <iostream>
+#include <fstream>
+#include <sstream>
+
+#include <QDebug>
+#include <QDir>
+#include <QString>
+
+#include "statistics/statsstorage.h"
+
+#include "concolic/solver/constraintwriter.h"
 
 #include "solver.h"
 
 namespace artemis
 {
 
-bool Solver::solve(Symbolic::PathCondition pc)
+SolutionPtr Solver::solve(QSharedPointer<Symbolic::PathCondition> pc)
 {
 
     // 1. translate pc to something solvable using the translator
 
-    // 2. save the result to a file
+    if (!ConstraintWriter::write(pc, "/tmp/kaluza")) {
+        statistics()->accumulate("Concolic::Solver::ConstraintsNotWritten", 1);
+        return SolutionPtr(new Solution(false));
+    }
 
-    // 3. run the solver on the file
+    statistics()->accumulate("Concolic::Solver::ConstraintsWritten", 1);
 
-    return true;
+    // 2. run the solver on the file
+
+    char* artemisdir;
+    artemisdir = std::getenv("ARTEMISDIR");
+
+    if (artemisdir == NULL) {
+        qDebug() << "Warning, ARTEMISDIR environment variable not set!";
+        return SolutionPtr(new Solution(false));
+    }
+
+    QDir solverpath = QDir(QString(artemisdir));
+
+    if (!solverpath.cd("contrib") || !solverpath.cd("Kaluza") || !solverpath.exists("artemiskaluza.sh")) {
+        qDebug() << "Warning, could not find artemiskaluza.sh";
+        return SolutionPtr(new Solution(false));
+    }
+
+    int result = std::system(solverpath.filePath("artemiskaluza.sh").toStdString().data());
+
+    if (result != 0) {
+        statistics()->accumulate("Concolic::Solver::ConstraintsNotSolved", 1);
+        return SolutionPtr(new Solution(false));
+    }
+
+    statistics()->accumulate("Concolic::Solver::ConstraintsSolved", 1);
+
+    // 3. interpret the result
+
+    SolutionPtr solution = SolutionPtr(new Solution(true));
+    if (solution->isSolved()) {
+
+    }
+
+    std::string line;
+    std::ifstream fp("/tmp/kaluza-result");
+
+    if (fp.is_open()) {
+        while (fp.good()) {
+
+            // split each line
+            std::getline(fp, line);
+
+            std::string symbol;
+            std::string value;
+
+            std::stringstream lines(line);
+            std::getline(lines, symbol, ' ');
+            std::getline(lines, value, ' ');
+
+            if (symbol.compare("") == 0) {
+                continue; // ignore blank lines
+            }
+
+            // decode type of value
+            Symbolvalue symbolvalue;
+            symbolvalue.found = true;
+
+            if (value.compare("false") == 0) {
+                symbolvalue.kind = Symbolic::BOOL;
+                symbolvalue.u.boolean = false;
+
+            } else if (value.compare("true") == 0) {
+                symbolvalue.kind = Symbolic::BOOL;
+                symbolvalue.u.boolean = true;
+
+            } else {
+                symbolvalue.kind = Symbolic::INT;
+                symbolvalue.u.integer = std::atoi(value.c_str());
+            }
+
+            // TODO add string support
+
+            // save result
+            solution->insertSymbol(symbol.c_str(), symbolvalue);
+        }
+    }
+
+    fp.close();
+
+    return solution;
 
 }
 

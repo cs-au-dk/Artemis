@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<classpath>
+	<classpathentry kind="src" output="bin" path="src"/>
+	<classpathentry kind="var" path="JRE_LIB" rootpath="JRE_SRCROOT" sourcepath="JRE_SRC"/>
+	<classpathentry kind="con" path="/home/devdatta/projects/hampi-read-only/bin"/>
+	<classpathentry kind="lib" path="/home/devdatta/projects/hampi-read-only/lib/jpaul.jar"/>
+	<classpathentry kind="lib" path="/home/devdatta/projects/hampi-read-only/lib/STPJNI.jar"/>
+	<classpathentry kind="lib" path="/home/devdatta/projects/hampi-read-only/lib/antlr-3.1b1.jar"/>
+	<classpathentry kind="lib" path="/home/devdatta/projects/hampi-read-only/lib/antlr-2.7.7.jar"/>
+	<classpathentry kind="lib" path="/home/devdatta/projects/hampi-read-only/lib/stringtemplate-3.1.jar"/>
+	<classpathentry kind="lib" path="/home/devdatta/projects/hampi-read-only/lib/junit.jar"/>
+	<classpathentry kind="output" path="bin"/>
+</classpath>

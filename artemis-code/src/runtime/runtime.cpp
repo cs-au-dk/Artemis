@@ -39,7 +39,7 @@
 #include "strategies/prioritizer/readwriteprioritizer.h"
 #include "strategies/prioritizer/collectedprioritizer.h"
 
-#include "concolic/solver/constraintwriter.h"
+#include "concolic/solver/solver.h"
 
 #include "runtime.h"
 
@@ -87,11 +87,11 @@ Runtime::Runtime(QObject* parent, const Options& options, const QUrl& url) : QOb
     QSharedPointer<FormInputGenerator> formInputGenerator;
     switch (options.formInputGenerationStrategy) {
     case Random:
-        formInputGenerator = QSharedPointer<StaticFormInputGenerator>(new StaticFormInputGenerator());
+        formInputGenerator = StaticFormInputGeneratorPtr(new StaticFormInputGenerator(options.presetFormfields.keys()));
         break;
 
     case ConstantString:
-        formInputGenerator = QSharedPointer<ConstantStringFormInputGenerator>(new ConstantStringFormInputGenerator());
+        formInputGenerator = ConstantStringFormInputGeneratorPtr(new ConstantStringFormInputGenerator(options.presetFormfields.keys()));
         break;
 
     default:
@@ -159,13 +159,11 @@ void Runtime::done()
 
     statistics()->accumulate("WebKit::coverage::covered-unique", mAppmodel->getCoverageListener()->getNumCoveredLines());
 
+    // solve the last PC - this is needed by some system tests
     QSharedPointer<Symbolic::PathCondition> pc = QSharedPointer<Symbolic::PathCondition>(mWebkitExecutor->webkitListener->getLastPathCondition());
-    if (ConstraintWriter::write(pc, "/tmp/kaluza")) {
-        statistics()->accumulate("Concolic::Solver::ConstraintsWritten", 1);
-    } else {
-        statistics()->accumulate("Concolic::Solver::ConstraintsWritten", 0);
-    }
 
+    SolutionPtr solution = Solver::solve(pc);
+    solution->toStatistics();
 
     // Print final output
 
@@ -187,12 +185,18 @@ void Runtime::done()
 
     Log::info("Artemis terminated on: "+ QDateTime::currentDateTime().toString().toStdString());
 
+    exit(0);
+
+    // TODO, see next TODO
     emit sigTestingDone();
 }
 
 void Runtime::slAbortedExecution(QString reason)
 {
     cerr << reason.toStdString() << std::endl;
+    exit(1);
+
+    // TODO we should use this emit, but we have some race conditions happening when Artemis shuts down.
     emit sigTestingDone();
 }
 

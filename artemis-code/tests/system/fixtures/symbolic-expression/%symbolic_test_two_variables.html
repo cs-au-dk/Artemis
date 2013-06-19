@@ -4,14 +4,16 @@
 	<script type="text/javascript">
 		function doSomething() {
 			var y = document.getElementById("testinput").value;
-			var x = document.getElementById("testinput").value;
+			var x = document.getElementById("testinput1").value;
+			var x_1 = document.getElementById("testinput2").value;
             $TESTSTATEMENT
 		}
 	</script>
 </head>
 <body>
 	<input type="text" name="testinput" id="testinput" />
-	<input type="text" name="testinput2" id="testinput2" />
+	<input type="text" name="testinput1" id="testinput1" />
+	<input type="text" name="testinput2" id="testinput2" value="1" />
 	<button onclick="doSomething();">DO</button>
 </body>
 </html>

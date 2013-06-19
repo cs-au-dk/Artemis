@@ -25,9 +25,9 @@ PathCondition::PathCondition()
 {
 }
 
-void PathCondition::append(Symbolic::Expression* condition)
+void PathCondition::append(Symbolic::Expression* condition, bool followed)
 {
-    m_pc.push_back(condition);
+    m_pc.push_back(std::pair<Symbolic::Expression*, bool>(condition, followed));
 }
 
 int PathCondition::size() const
@@ -35,7 +35,7 @@ int PathCondition::size() const
     return m_pc.size();
 }
 
-Symbolic::Expression* PathCondition::get(unsigned int index)
+std::pair<Symbolic::Expression*, bool> PathCondition::get(unsigned int index)
 {
     return m_pc.at(index);
 }

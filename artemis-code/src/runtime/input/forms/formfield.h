@@ -18,6 +18,7 @@
 
 #include <QSet>
 #include <QString>
+#include <QSharedPointer>
 
 #include "formfieldtypes.h"
 #include "runtime/input/events/domelementdescriptor.h"
@@ -44,6 +45,9 @@ private:
     QSet<QString> mDefaultInputs;
 
 };
+
+typedef QSharedPointer<FormField> FormFieldPtr;
+typedef QSharedPointer<const FormField> FormFieldConstPtr;
 
 }
 
