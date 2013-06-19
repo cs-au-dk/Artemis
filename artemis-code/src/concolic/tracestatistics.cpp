@@ -33,6 +33,7 @@ void TraceStatistics::processTrace(TraceNodePtr trace)
     // Initialise the statistic variables.
     mNumNodes = 0;
     mNumBranches = 0;
+    mNumSymBranches = 0;
     mNumAlerts = 0;
     mNumFunctionCalls = 0;
 
@@ -75,6 +76,9 @@ void TraceStatistics::visit(TraceBranch *node)
 {
     mNumNodes++;
     mNumBranches++;
+    if(node->symbolic){
+        mNumSymBranches++;
+    }
     node->branchFalse->accept(this);
     node->branchTrue->accept(this);
 }

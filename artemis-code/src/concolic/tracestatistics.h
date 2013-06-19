@@ -37,6 +37,7 @@ public:
 
     int mNumNodes;
     int mNumBranches;
+    int mNumSymBranches;
     int mNumAlerts;
     int mNumFunctionCalls;
 

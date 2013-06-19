@@ -24,9 +24,9 @@ namespace artemis
 
 
 
-EntryPointDetector::EntryPointDetector()
+EntryPointDetector::EntryPointDetector(ArtemisWebPagePtr page) :
+    mPage(page)
 {
-
 }
 
 
@@ -37,7 +37,7 @@ QList<EventHandlerDescriptor*> EntryPointDetector::detectAll(ExecutionResultPtr 
 
     // Build a list of potential entry points.
 
-    // For now we have a very simple implementation which only checks any for 'click' events on 'button' inputs.
+    // For now we have a simple implementation which checks for 'click' events on 'button' or 'a' elements.
     // TODO: at least also 'submit' on 'form' and maybe check where these buttons are...
 
     QList<EventHandlerDescriptor*> entryEvents;
@@ -45,8 +45,25 @@ QList<EventHandlerDescriptor*> EntryPointDetector::detectAll(ExecutionResultPtr 
     foreach(EventHandlerDescriptor* event , result->getEventHandlers()){
         if(event->name().compare("click", Qt::CaseInsensitive) == 0 &&
                 event->domElement()->getTagName().compare("button", Qt::CaseInsensitive) == 0){
+            // Accept any click on a button
             entryEvents.append(event);
+
+        }else if(event->name().compare("click", Qt::CaseInsensitive) == 0 &&
+                 event->domElement()->getTagName().compare("a", Qt::CaseInsensitive) == 0){
+
+            // Accept a click on a link only if it is inside a form.
+            QWebElement element = event->domElement()->getElement(mPage);
+            // Search upwards until we find a form or reach the top of the hierarchy.
+            while(element.tagName().compare("form", Qt::CaseInsensitive) != 0 &&
+                  !element.isNull()){
+                element = element.parent();
+            }
+            // If we did find a form element then we know the original event was on an element we consider interesting.
+            if(element.tagName().compare("form", Qt::CaseInsensitive) == 0){
+                entryEvents.append(event);
+            }
         }
+
     }
 
     return entryEvents;

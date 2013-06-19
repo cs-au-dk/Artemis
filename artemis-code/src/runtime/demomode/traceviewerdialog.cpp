@@ -71,12 +71,12 @@ void TraceViewerDialog::visit(TraceBranch *node)
 
     if(isImmediatelyUnexplored(node->branchFalse)){
         // Took 'true' branch.
-        mNodeList->addItem(QString("Branch: Condition: %1; Took true branch.").arg(node->condition));
+        mNodeList->addItem(QString("Branch: Condition: %1; Took true branch; %2").arg(node->condition).arg(node->symbolic ? "Symbolic" : ""));
         node->branchTrue->accept(this);
 
     } else if(isImmediatelyUnexplored(node->branchTrue)){
         // Took 'false' branch.
-    mNodeList->addItem(QString("Branch: Condition: %1; Took false branch.").arg(node->condition));
+    mNodeList->addItem(QString("Branch: Condition: %1; Took false branch; %2").arg(node->condition).arg(node->symbolic ? "Symbolic" : ""));
         node->branchFalse->accept(this);
 
     } else {

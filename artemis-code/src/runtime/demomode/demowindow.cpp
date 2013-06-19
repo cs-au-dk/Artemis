@@ -24,7 +24,8 @@ namespace artemis
 
 DemoModeMainWindow::DemoModeMainWindow(WebKitExecutor* webkitExecutor, const QUrl &url) :
     mWebkitExecutor(webkitExecutor),
-    mWaitingForInitialLoad(false)
+    mWaitingForInitialLoad(false),
+    mEntryPointDetector(mWebkitExecutor->getPage())
 {
     Log::info("DEMO: Constructing main window.");
 
@@ -133,7 +134,7 @@ DemoModeMainWindow::DemoModeMainWindow(WebKitExecutor* webkitExecutor, const QUr
     mAnalysisLayout->addWidget(mViewTraceBtn);
     mAnalysisLayout->addSpacing(10);
 
-    QLabel* reportsLabel = new QLabel("Execution Reports (not yet in GUI)");
+    QLabel* reportsLabel = new QLabel("Execution Reports");
     reportsLabel->setFont(sectionFont);
     mAnalysisLayout->addWidget(reportsLabel);
     QPushButton* pathTraceReportBtn = new QPushButton("Path Trace Report");
@@ -364,10 +365,6 @@ void DemoModeMainWindow::postTraceExecution()
         mTraceClassificationResult->setText("Classification: <font color='red'>FAILURE</font>");
     }
 
-    Log::info("CONCOLIC-INFO: Printout of the trace:");
-    TerminalTracePrinter printer;
-    printer.printTraceTree(mPreviousTrace);
-
     // Reset the trace tracking text in the GUI.
     mTraceRecordingProgress->setText("Trace Nodes Recorded: No trace running.");
 
@@ -385,9 +382,18 @@ void DemoModeMainWindow::displayTraceInformation()
     TraceStatistics stats;
     stats.processTrace(mPreviousTrace);
 
-    mTraceAnalysisText->setText(QString("Events Recorded: %1\nBranches: %2\nAlerts: %3\nFunction Calls: %4")
-                                .arg(stats.mNumNodes).arg(stats.mNumBranches).arg(stats.mNumAlerts)
+    mTraceAnalysisText->setText(QString("Events Recorded: %1\nBranches: %2\nSymbolic Branches: %3\nAlerts: %4\nFunction Calls: %5")
+                                .arg(stats.mNumNodes).arg(stats.mNumBranches).arg(stats.mNumSymBranches).arg(stats.mNumAlerts)
                                 .arg(stats.mNumFunctionCalls));
+
+    // If the trace is small enough to usefully disply, then print it in the temrinal.
+    Log::info("CONCOLIC-INFO: Printout of the trace:");
+    if(stats.mNumNodes < 50){
+        TerminalTracePrinter printer;
+        printer.printTraceTree(mPreviousTrace);
+    }else{
+        Log::info("CONCOLIC-INFO: Trace is too large to print to terminal.");
+    }
 }
 
 

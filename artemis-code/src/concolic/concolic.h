@@ -59,7 +59,7 @@ public:
 
 private:
     bool mDemoMode;
-    EntryPointDetector mEntryPointDetector;
+    //EntryPointDetector mEntryPointDetector;
 
 };
 

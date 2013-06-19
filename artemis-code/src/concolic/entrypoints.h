@@ -36,11 +36,12 @@ namespace artemis
 class EntryPointDetector
 {
 public:
-    EntryPointDetector();
+    EntryPointDetector(ArtemisWebPagePtr page);
 
     QList<EventHandlerDescriptor*> detectAll(ExecutionResultPtr result);
 
 private:
+    ArtemisWebPagePtr mPage;
     void printResultInfo(ExecutionResultPtr result);
 };
 
