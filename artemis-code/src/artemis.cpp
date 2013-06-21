@@ -25,6 +25,7 @@
 #include "runtime/options.h"
 #include "artemisapplication.h"
 #include "util/loggingutil.h"
+#include "artemisglobals.h"
 
 using namespace std;
 
@@ -310,15 +311,7 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             cerr << "Error: You must specify a URL" << endl;
             exit(1);
         }else{
-            // The defualt URL will be artemis-code/tests/system/fixtures/forms/examples-index.html
-            // TODO: Where should this be set (instead of hardcoded here)?
-            char* artemisdir = getenv("ARTEMISDIR");
-            if(!artemisdir){
-                cerr << "Could not read ARTEMISDIR environment variable." << endl;
-                exit(1);
-            }
-
-            url = QString("file://%1/artemis-code/tests/system/fixtures/forms/examples-index.html").arg(artemisdir);
+            url = artemis::examplesIndexUrl();
         }
 
     }else{

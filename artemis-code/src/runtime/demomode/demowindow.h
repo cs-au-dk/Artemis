@@ -31,6 +31,7 @@
 #include "runtime/browser/webkitexecutor.h"
 #include "artemisbrowserwidget.h"
 #include "initialanalysiswidget.h"
+#include "artemisglobals.h"
 
 #include "concolic/entrypoints.h"
 #include "concolic/trace.h"
@@ -77,6 +78,7 @@ private:
     QToolBar* mToolBar;
     QLineEdit* mAddressBar;
     QProgressBar* mProgressBar;
+    QPushButton* mExamplesButton;
     QStatusBar* mStatusBar;
     QListWidget* mEntryPointList;
     QPushButton* mStartTraceRecordingBtn;
@@ -128,6 +130,7 @@ protected slots:
     void slAboutDialog();
     void slLinkHovered(const QString & link, const QString & title, const QString & textContent);
     void slJavascriptAlert(QWebFrame* frame, QString message);
+    void slShowExamples();
 
     // For the analysis logic.
     void slExecutedSequence(ExecutableConfigurationConstPtr configuration, QSharedPointer<ExecutionResult> result);

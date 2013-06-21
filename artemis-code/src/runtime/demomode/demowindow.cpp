@@ -50,8 +50,14 @@ DemoModeMainWindow::DemoModeMainWindow(WebKitExecutor* webkitExecutor, const QUr
     QObject::connect(mAddressBar, SIGNAL(returnPressed()),
                      this, SLOT(slChangeLocation()));
 
+    // Button to take you to the index of built-in examples.
+    mExamplesButton = new QPushButton("Examples");
+    QObject::connect(mExamplesButton, SIGNAL(released()),
+                     this, SLOT(slShowExamples()));
+
     // Toolbar used to control the artemis browser instance.
     mToolBar = new QToolBar();
+    mToolBar->addWidget(mExamplesButton);
     mToolBar->addAction(mWebView->pageAction(QWebPage::Back));
     mToolBar->addAction(mWebView->pageAction(QWebPage::Forward));
     mToolBar->addAction(mWebView->pageAction(QWebPage::Reload));
@@ -546,6 +552,13 @@ void DemoModeMainWindow::slJavascriptAlert(QWebFrame *frame, QString message)
 {
     // TODO: might be useful to have some way to turn these off!
     QMessageBox::critical(this, "Alert", message);
+}
+
+
+// Called when the Examples button is pressed to display the examples index.
+void DemoModeMainWindow::slShowExamples()
+{
+    loadUrl(examplesIndexUrl());
 }
 
 
