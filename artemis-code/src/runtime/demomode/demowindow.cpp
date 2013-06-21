@@ -38,6 +38,10 @@ DemoModeMainWindow::DemoModeMainWindow(WebKitExecutor* webkitExecutor, const QUr
                      this, SLOT(slLoadFinished(bool)));
     QObject::connect(mWebView.data(), SIGNAL(loadFinished(bool)),
                      this, SLOT(slAdjustLocation()));
+    QObject::connect(mWebView.data(), SIGNAL(urlChanged(QUrl)),
+                     this, SLOT(slUrlChanged(QUrl)));
+    QObject::connect(mWebView->page(), SIGNAL(sigJavascriptAlert(QWebFrame*, QString)),
+                     this, SLOT(slJavascriptAlert(QWebFrame*, QString)));
 
     // The address bar for artemis' browser.
     mAddressBar = new QLineEdit();
@@ -62,6 +66,11 @@ DemoModeMainWindow::DemoModeMainWindow(WebKitExecutor* webkitExecutor, const QUr
     mToolBar->addWidget(mProgressBar);
     QObject::connect(mWebView.data(), SIGNAL(loadProgress(int)),
                      this, SLOT(slSetProgress(int)));
+
+    // Enable the status bar.
+    mStatusBar = statusBar();
+    QObject::connect(mWebView->page(), SIGNAL(linkHovered(QString, QString, QString)),
+                     this, SLOT(slLinkHovered(QString, QString, QString)));
 
     // The layout for the Artemis panel.
     mArtemisLayout = new QVBoxLayout();
@@ -166,10 +175,6 @@ DemoModeMainWindow::DemoModeMainWindow(WebKitExecutor* webkitExecutor, const QUr
     mCentralWidget->setLayout(mLayout);
     setCentralWidget(mCentralWidget);
 
-    // Enable the status bar.
-    // For now we are not putting anything in here, but it makes it much easier to resize the window!
-    mStatusBar = statusBar();
-
     // Enable menu bar
     mMenuBar = new QMenuBar(this);
 
@@ -249,6 +254,7 @@ void DemoModeMainWindow::slChangeLocation()
     QUrl url = QUrl(mAddressBar->text());
 
     // Validate the URL (as in artemis.cpp).
+    // TODO: it is not clear whether this is needed, as WebKit seems to do something similar on its own.
     if(url.scheme().isEmpty()){
         url = QUrl("http://" + url.toString());
     }
@@ -261,6 +267,7 @@ void DemoModeMainWindow::slChangeLocation()
         urlError.exec();
     }
 }
+
 
 // Called when we need to update the contents of the address bar.
 void DemoModeMainWindow::slAdjustLocation()
@@ -294,6 +301,12 @@ void DemoModeMainWindow::slSetProgress(int p)
     }
 }
 
+
+// Called whenever the URL of the page changes.
+void DemoModeMainWindow::slUrlChanged(const QUrl &url)
+{
+    Log::info(QString("DEMO: URL changed to %1").arg(url.toString()).toStdString());
+}
 
 
 
@@ -373,7 +386,7 @@ void DemoModeMainWindow::postTraceExecution()
 // Populates the "Trace Analysis" panel.
 void DemoModeMainWindow::displayTraceInformation()
 {
-    mViewTraceBtn->setEnabled(true); // TODO: this doesn't do anything yet!
+    mViewTraceBtn->setEnabled(true);
 
     TraceStatistics stats;
     stats.processTrace(mPreviousTrace);
@@ -399,10 +412,11 @@ void DemoModeMainWindow::loadUrl(QUrl url)
     Log::info(QString("CONCOLIC-INFO: Loading page %1").arg(url.toString()).toStdString());
     ExecutableConfigurationPtr initial = ExecutableConfigurationPtr(new ExecutableConfiguration(InputSequencePtr(new InputSequence()), url));
     mWebkitExecutor->executeSequence(initial, true); // Calls slExecutedSequence method as callback.
+
     resetPageAnlaysis();
 }
 
-// Called when we load a new page to reset the entry point analysis iformation (in the app state and in the GUI).
+// Called when we load a new page to reset the entry point analysis information (in the app state and in the GUI).
 void DemoModeMainWindow::resetPageAnlaysis()
 {
     mKnownEntryPoints.clear();
@@ -519,6 +533,20 @@ void DemoModeMainWindow::slAboutDialog()
     QMessageBox::about(this, "About Artemis", "Artemis is a tool that performs automated, feedback-directed testing of JavaScript applications. <br/><br/>This demonstration mode shows off some of Artemis' symbolic features. <br/><br/>Please see the <a href='http://github.com/cs-au-dk/Artemis' >GitHub page</a> for more information.");
 }
 
+
+// Called when a link is hovered over in the artemis browser.
+void DemoModeMainWindow::slLinkHovered(const QString & link, const QString & title, const QString & textContent)
+{
+    mStatusBar->showMessage(link);
+}
+
+
+// Called when an alert() call is made in javascript.
+void DemoModeMainWindow::slJavascriptAlert(QWebFrame *frame, QString message)
+{
+    // TODO: might be useful to have some way to turn these off!
+    QMessageBox::critical(this, "Alert", message);
+}
 
 
 } // namespace artemis

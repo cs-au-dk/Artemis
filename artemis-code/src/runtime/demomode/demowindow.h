@@ -111,6 +111,7 @@ private:
 
     void displayTraceInformation();
 
+    // Utility methods
     void loadUrl(QUrl url);
     void resetPageAnlaysis();
 
@@ -122,8 +123,11 @@ protected slots:
     void slLoadStarted();
     void slLoadFinished(bool ok);
     void slSetProgress(int p);
+    void slUrlChanged(const QUrl & url);
     void slViewTrace();
     void slAboutDialog();
+    void slLinkHovered(const QString & link, const QString & title, const QString & textContent);
+    void slJavascriptAlert(QWebFrame* frame, QString message);
 
     // For the analysis logic.
     void slExecutedSequence(ExecutableConfigurationConstPtr configuration, QSharedPointer<ExecutionResult> result);
