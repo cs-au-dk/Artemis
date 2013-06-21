@@ -302,34 +302,51 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
         }
     }
 
+    QUrl url;
+
     if (optind >= argc) {
-        cerr << "Error: You must specify a URL" << endl;
-        exit(1);
-    }
+        // If we are in manual mode then the url is optional.
+        if(options.majorMode != artemis::MANUAL){
+            cerr << "Error: You must specify a URL" << endl;
+            exit(1);
+        }else{
+            // The defualt URL will be artemis-code/tests/system/fixtures/forms/examples-index.html
+            // TODO: Where should this be set (instead of hardcoded here)?
+            char* artemisdir = getenv("ARTEMISDIR");
+            if(!artemisdir){
+                cerr << "Could not read ARTEMISDIR environment variable." << endl;
+                exit(1);
+            }
 
-    QStringList rawurl = QString(argv[optind]).split("@");
-    QUrl url = rawurl.last();
+            url = QString("file://%1/artemis-code/tests/system/fixtures/forms/examples-index.html").arg(artemisdir);
+        }
 
+    }else{
 
-    if (options.useProxy.length() > 0 && url.host() == "localhost") {
-        cerr << "Error: You can not use the proxy setting in Artemis for content hosted on localhost" << endl;
-        exit(1);
-    }
+        QStringList rawurl = QString(argv[optind]).split("@");
+        url = rawurl.last();
 
-    if (url.scheme().isEmpty()) {
-        // the http:// part is missing
-        url = QUrl("http://" + url.toString());
-    }
+        if (options.useProxy.length() > 0 && url.host() == "localhost") {
+            cerr << "Error: You can not use the proxy setting in Artemis for content hosted on localhost" << endl;
+            exit(1);
+        }
 
-    if (!url.isValid()) {
-        cerr << "Error: The URL " << url.toString().toStdString() << " is not valid" << endl;
-        exit(1);
-    }
+        if (url.scheme().isEmpty()) {
+            // the http:// part is missing
+            url = QUrl("http://" + url.toString());
+        }
 
-    if (rawurl.size() > 1) {
-        QStringList rawauth = rawurl.first().split(":");
-        url.setUserName(rawauth.first());
-        url.setPassword(rawauth.last());
+        if (!url.isValid()) {
+            cerr << "Error: The URL " << url.toString().toStdString() << " is not valid" << endl;
+            exit(1);
+        }
+
+        if (rawurl.size() > 1) {
+            QStringList rawauth = rawurl.first().split(":");
+            url.setUserName(rawauth.first());
+            url.setPassword(rawauth.last());
+        }
+
     }
 
     return url;
