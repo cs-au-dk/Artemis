@@ -97,7 +97,6 @@ private:
     void unHighlightDomElement(const DOMElementDescriptor* element);
 
     // The analysis logic itself.
-    bool mWaitingForInitialLoad;
     EntryPointDetector mEntryPointDetector;
     TraceClassifier mTraceClassifier;
     TraceNodePtr mPreviousTrace;
@@ -111,6 +110,9 @@ private:
     int mTraceNodesRecorded;
 
     void displayTraceInformation();
+
+    void loadUrl(QUrl url);
+    void resetPageAnlaysis();
 
 
 protected slots:

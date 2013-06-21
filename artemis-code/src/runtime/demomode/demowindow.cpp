@@ -24,7 +24,6 @@ namespace artemis
 
 DemoModeMainWindow::DemoModeMainWindow(WebKitExecutor* webkitExecutor, const QUrl &url) :
     mWebkitExecutor(webkitExecutor),
-    mWaitingForInitialLoad(false),
     mEntryPointDetector(mWebkitExecutor->getPage())
 {
     Log::info("DEMO: Constructing main window.");
@@ -248,8 +247,19 @@ void DemoModeMainWindow::slChangeLocation()
 {
     Log::info(QString("DEMO: Changed loaction to %1").arg(mAddressBar->text()).toStdString());
     QUrl url = QUrl(mAddressBar->text());
-    mWebView->load(url);
-    mWebView->setFocus();
+
+    // Validate the URL (as in artemis.cpp).
+    if(url.scheme().isEmpty()){
+        url = QUrl("http://" + url.toString());
+    }
+
+    if(url.isValid()){
+        loadUrl(url);
+    }else{
+        QMessageBox urlError(this);
+        urlError.setText("Error: The URL is invalid.");
+        urlError.exec();
+    }
 }
 
 // Called when we need to update the contents of the address bar.
@@ -290,30 +300,19 @@ void DemoModeMainWindow::slSetProgress(int p)
 // Called to start the analysis.
 void DemoModeMainWindow::run(const QUrl& url)
 {
-    ExecutableConfigurationPtr initial =
-        ExecutableConfigurationPtr(new ExecutableConfiguration(InputSequencePtr(new InputSequence()), url));
-
     Log::info("CONCOLIC-INFO: Beginning initial page load...");
-    mWaitingForInitialLoad = true;
-    mWebkitExecutor->executeSequence(initial, true); // Calls slExecutedSequence method as callback.
-
-    mWebView->setDisabled(true); // Not enabled until the analysis is done (prevents the user from interfering...).
+    loadUrl(url);
 }
 
 
 
 // Called when the webkit executor finishes running an execution sequence.
-// In our case that is after the initial load.
+// In our case that is after any page load.
 void DemoModeMainWindow::slExecutedSequence(ExecutableConfigurationConstPtr configuration, QSharedPointer<ExecutionResult> result)
 {
     // The sequence we are currently running has finished.
     Log::info("CONCOLIC-INFO: Finished execution sequence.");
-    if(mWaitingForInitialLoad){
-        mWaitingForInitialLoad = false;
-        preTraceExecution(result);
-    }else{
-        Log::info("CONCOLIC-INFO: Page load was not the initial load, so not analysing...");
-    }
+    preTraceExecution(result);
 }
 
 
@@ -336,10 +335,7 @@ void DemoModeMainWindow::preTraceExecution(ExecutionResultPtr result)
         Log::info(QString("CONCOLIC-INFO: Potential entry point :: %1").arg(ep->toString()).toStdString());
         // Log to GUI.
         addEntryPoint(ep->toString(), ep->domElement());
-        // Highlight in browser window.
-        //highlightDomElement(ep->domElement()); // This is now done by selecting them in the list box.
     }
-
 
     // Display the page for the user to interact with.
     mWebView->setEnabled(true);
@@ -394,6 +390,23 @@ void DemoModeMainWindow::displayTraceInformation()
     }else{
         Log::info("CONCOLIC-INFO: Trace is too large to print to terminal.");
     }
+}
+
+
+// Uses the webkit executor to load a URL.
+void DemoModeMainWindow::loadUrl(QUrl url)
+{
+    Log::info(QString("CONCOLIC-INFO: Loading page %1").arg(url.toString()).toStdString());
+    ExecutableConfigurationPtr initial = ExecutableConfigurationPtr(new ExecutableConfiguration(InputSequencePtr(new InputSequence()), url));
+    mWebkitExecutor->executeSequence(initial, true); // Calls slExecutedSequence method as callback.
+    resetPageAnlaysis();
+}
+
+// Called when we load a new page to reset the entry point analysis iformation (in the app state and in the GUI).
+void DemoModeMainWindow::resetPageAnlaysis()
+{
+    mKnownEntryPoints.clear();
+    mEntryPointList->clear();
 }
 
 
