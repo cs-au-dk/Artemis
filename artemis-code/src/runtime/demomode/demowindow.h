@@ -28,6 +28,7 @@
 #include <QPair>
 
 #include "runtime/browser/artemiswebview.h"
+#include "runtime/browser/artemiswebpage.h"
 #include "runtime/browser/webkitexecutor.h"
 #include "artemisbrowserwidget.h"
 #include "initialanalysiswidget.h"
@@ -63,6 +64,7 @@ protected:
 private:
     // Artemis
     ArtemisWebViewPtr mWebView;
+    ArtemisWebPage* mWebPage;
     WebKitExecutor* mWebkitExecutor;
 
     // GUI
@@ -134,6 +136,7 @@ protected slots:
 
     // For the analysis logic.
     void slExecutedSequence(ExecutableConfigurationConstPtr configuration, QSharedPointer<ExecutionResult> result);
+    void slNavigationRequest(QWebFrame *frame, const QNetworkRequest &request, QWebPage::NavigationType type);
 
     // For the analysis/GUI interaction.
     void slEntryPointSelectionChanged();

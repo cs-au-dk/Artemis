@@ -123,7 +123,7 @@ DemoModeMainWindow::DemoModeMainWindow(WebKitExecutor* webkitExecutor, const QUr
     entryPointLabel->setFont(sectionFont);
     mAnalysisLayout->addWidget(entryPointLabel);
     mAnalysisLayout->addWidget(mEntryPointList);
-    mAnalysisLayout->addWidget(new QLabel("Currently we only detect 'click' events on\n'button' elements.\n\nSelect an entry above to highlight it on the page."));
+    mAnalysisLayout->addWidget(new QLabel("Currently we only detect 'click' events on\n'button' elements and 'a' elements within\nforms.\n\nSelect an entry above to highlight it on the page."));
     mAnalysisLayout->addSpacing(10);
 
     QLabel* curTraceLabel = new QLabel("Trace Recording:");
@@ -213,6 +213,20 @@ DemoModeMainWindow::DemoModeMainWindow(WebKitExecutor* webkitExecutor, const QUr
                      this, SLOT(slAddedTraceNode()));
 
 
+    // Configure the connection with ArtemisWebPage which allows interception of page loads.
+    // TODO: the pointer from mWebViw is only to QWebPage, but we need ArtemisWebPage.
+    // This cast seems a bit of a hack, but we also don't want to modify QWebPage with the extra functionality we need.
+    // Maybe it would be better to modift ArtemisWebView to return ArtemisWebPage from the page() method?
+    mWebPage = dynamic_cast<ArtemisWebPage*>(mWebView->page());
+    if(!mWebPage){
+        Log::fatal("Using an ArtemisWebView which does not use an ArtemisWebPage.");
+        exit(1);
+    }
+    QObject::connect(mWebPage, SIGNAL(sigNavigationRequest(QWebFrame*,QNetworkRequest,QWebPage::NavigationType)),
+                     this, SLOT(slNavigationRequest(QWebFrame*,QNetworkRequest,QWebPage::NavigationType)));
+    mWebPage->mAcceptNavigation = false;
+
+
 
     // TODO: all the above is temp and needs to move into ArtemisBrowserWidget.
 /*
@@ -293,6 +307,8 @@ void DemoModeMainWindow::slLoadStarted()
 void DemoModeMainWindow::slLoadFinished(bool ok)
 {
     Log::info("DEMO: Finished page load.");
+    mWebPage->mAcceptNavigation = false; // Now that we are done loading, any further navigation must be via loadUrl().
+    mWebView->setEnabled(true); // Re-allow interaction with the page once it is loaded completely.
 }
 
 // Called when the page loading progress needs to be updated.
@@ -332,6 +348,16 @@ void DemoModeMainWindow::slExecutedSequence(ExecutableConfigurationConstPtr conf
     // The sequence we are currently running has finished.
     Log::info("CONCOLIC-INFO: Finished execution sequence.");
     preTraceExecution(result);
+}
+
+
+// Called when the ArtemisWebPage receives a request for navigation and we have set it's mAcceptingNavigation flag to false.
+// i.e. when we want to intercept the load and pass it to WebkitExecutor instead.
+void DemoModeMainWindow::slNavigationRequest(QWebFrame *frame, const QNetworkRequest &request, QWebPage::NavigationType type)
+{
+    Log::info(QString("DEMO: Navigation intercepted to %1").arg(request.url().toString()).toStdString());
+
+    loadUrl(request.url());
 }
 
 
@@ -413,8 +439,13 @@ void DemoModeMainWindow::displayTraceInformation()
 
 
 // Uses the webkit executor to load a URL.
+// All page loads (excluding navigations done during another load, such as fetching adverts, some redirections etc)
+// should be done via this function. mWebPage->mAcceptNavigation helps to ensure this is the case.
 void DemoModeMainWindow::loadUrl(QUrl url)
 {
+    mWebPage->mAcceptNavigation = true; // Allow navigation during load. This will be reset once the loading phase is finished.
+    mWebView->setEnabled(false); // Disable interaction with the page during load.
+
     Log::info(QString("CONCOLIC-INFO: Loading page %1").arg(url.toString()).toStdString());
     ExecutableConfigurationPtr initial = ExecutableConfigurationPtr(new ExecutableConfiguration(InputSequencePtr(new InputSequence()), url));
     mWebkitExecutor->executeSequence(initial, true); // Calls slExecutedSequence method as callback.
