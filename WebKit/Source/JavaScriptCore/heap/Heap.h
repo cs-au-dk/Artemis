@@ -101,7 +101,7 @@ namespace JSC {
 
 #ifdef ARTEMIS
         void notifyIsNotSafeToCollect() { m_isSafeToCollect = false; }
-        QString heapAsString(ExecState*);
+        void heapAsString(ExecState*, QString*);
 #endif
         void collectAllGarbage();
 
@@ -216,7 +216,6 @@ namespace JSC {
         FinalizerOwner m_finalizerOwner;
         
         bool m_isSafeToCollect;
-
         JSGlobalData* m_globalData;
     };
 

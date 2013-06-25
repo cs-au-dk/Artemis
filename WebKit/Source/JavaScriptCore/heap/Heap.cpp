@@ -275,17 +275,19 @@ inline void CountIfGlobalObject::operator()(JSCell* cell)
 
 class HeapStringGeneratorFunctor {
 public:
-    ExecState* m_execState;
-    HeapStringGeneratorFunctor(ExecState* execState):m_execState(execState){}
-    typedef QString ReturnType;
+    HeapStringGeneratorFunctor(ExecState* execState, QString* s):m_execState(execState), m_string(s){
+        m_visited = new QSet<QString>();
+    }
+    typedef void ReturnType;
     ReturnType returnValue();
     void operator ()(JSCell*);
 private:
-    ReturnType childrenString(JSValue);
-    ReturnType m_string;
-    ReturnType objectString(JSObject* );
-    ReturnType classNameString(JSObject*);
-    QSet<QString> m_visited;
+    ExecState* m_execState;
+    QString* m_string;
+    void childrenString(JSValue, QString*);
+    void objectString(JSObject*, QString* );
+    QString classNameString(JSObject*);
+    QSet<QString>* m_visited;
 };
 
 string ustringToString(UString s){
@@ -293,57 +295,70 @@ string ustringToString(UString s){
     return rets.substr(0,s.length());
 }
 
-HeapStringGeneratorFunctor::ReturnType HeapStringGeneratorFunctor::childrenString(JSValue val){
-        if(val.isString()){
-            return QString::fromStdString("\""+ustringToString(val.getString(m_execState))+"\"").replace(QChar::fromAscii('\n'),QString::fromStdString("\\n"));
+
+void HeapStringGeneratorFunctor::childrenString(JSValue val, QString* s){
+    if(val.isString()){
+            s->append(QString::fromStdString("\""+ustringToString(val.getString(m_execState))+"\"").replace(QChar::fromAscii('\n'),QString::fromStdString("\\n")));
         }
         if(val.isBoolean()){
-            return QString::fromStdString(val.isTrue()?"true":"false");
+            s->append(QString::fromStdString(val.isTrue()?"true":"false"));
         }
+
         if(val.isNull()){
-            return QString::fromStdString("null");
+            s->append(QString::fromStdString("null"));
         }
+
         if(val.isUndefined()){
-            return QString::fromStdString("\"#UNDEFINED#\"");
+            s->append(QString::fromStdString("\"#UNDEFINED#\""));
         }
+
         if(val.isNumber()){
             uint32_t i = 0;
             val.getUInt32(i);
-            return QString::number(i);
+            s->append(QString::number(i));
         }
+
         JSObject* o;
         if(val.isObject() && (o = val.getObject()) > 0){
-            return QString::fromStdString("{")+objectString(o)+QString::fromStdString("}");
+            s->append(QString::fromStdString("{"));
+            objectString(o, s);
+            s->append(QString::fromStdString("}"));
         }
-    ASSERT(false);
-    return QString();
+
 }
 
-HeapStringGeneratorFunctor::ReturnType HeapStringGeneratorFunctor::objectString(JSObject* o){
-    PropertyNameArray array = PropertyNameArray(m_execState);
-    o->getOwnPropertyNames(o,m_execState,array,IncludeDontEnumProperties);
-    WTF::Vector<Identifier,20> v = array.data()->propertyNameVector();
+void HeapStringGeneratorFunctor::objectString(JSObject* o, QString* retString){
+    JSGlobalData* jsGlobalData = &m_execState->globalData();
+    PropertyNameArray propertyNames(jsGlobalData);
+    JSObject::getPropertyNames(o,m_execState,propertyNames,ExcludeDontEnumProperties);
+    PropertyNameArrayData::PropertyNameVector::const_iterator iter = propertyNames.data()->propertyNameVector().begin();
+    PropertyNameArrayData::PropertyNameVector::const_iterator end = propertyNames.data()->propertyNameVector().end();
     QString cnString = classNameString(o);
-    QString s = QString::fromStdString("\"#OBJECT_NAME#\":\"")+cnString+QString::fromStdString("\"");
-    if(m_visited.contains(cnString)){
-        return s;
+
+    QString s = QString::fromStdString("\"#OBJECT_NAME#\":\"").append(cnString).append(QString::fromStdString("\""));
+    retString->append(s);
+    if(m_visited->contains(cnString)){
+        return;
     }
-    m_visited.insert(cnString);
-    for(Identifier* it = v.begin(); it != v.end(); it++){
-        s += QString::fromStdString(", \""+ustringToString(it->ustring())+"\"");
-        PropertyDescriptor p;
-        Identifier i = Identifier(m_execState,it->impl());
-        JSValue v;
-        if(o->getPropertyDescriptor(m_execState,i,p) && !p.isEmpty() && (v = p.value())){
-            s +=QString::fromStdString(":")+childrenString(v);
+    m_visited->insert(cnString);
+
+    for(; iter != end; ++iter){
+        //        qDebug() << cnString << i << QString::fromStdString(ustringToString(it->ustring()));
+        retString->append(QString::fromStdString(", \""+ustringToString(iter->ustring())+"\""));
+        JSValue propertyValue;
+        Identifier i = Identifier(m_execState,iter->impl());
+        if((propertyValue = o->get(m_execState, i))){
+            retString->append(QString::fromStdString(":"));
+            childrenString(propertyValue,retString);
         } else {
-            s +=QString::fromStdString(": \"#EMPTY#\"");
+            retString->append(QString::fromStdString(": \"#EMPTY#\""));
         }
+
     }
-    return s;
+
 
 }
-HeapStringGeneratorFunctor::ReturnType HeapStringGeneratorFunctor::classNameString(JSObject* object){
+QString HeapStringGeneratorFunctor::classNameString(JSObject* object){
     std::stringstream ss;
     ss << ustringToString(JSObject::className(object));
     ss << "@";
@@ -352,18 +367,17 @@ HeapStringGeneratorFunctor::ReturnType HeapStringGeneratorFunctor::classNameStri
 }
 
 
-inline void HeapStringGeneratorFunctor::operator ()(JSCell* cell){
+void HeapStringGeneratorFunctor::operator ()(JSCell* cell){
     JSObject* o;
-    if(!cell->isObject() || !(o = asObject(cell))->isGlobalObject()){
+    if(!cell || !cell->isObject() || !(o = asObject(cell)) || !o->isGlobalObject()){
         return;
     }
-    m_string = objectString(o);
-
+    m_string->append(QString::fromStdString("{"));
+    objectString(o, m_string);
+    m_string->append(QString::fromStdString("}"));
 }
 
-inline HeapStringGeneratorFunctor::ReturnType HeapStringGeneratorFunctor::returnValue(){
-    return QString::fromStdString("{").append(m_string)+QString::fromStdString("}");
-}
+HeapStringGeneratorFunctor::ReturnType HeapStringGeneratorFunctor::returnValue(){}
 
 #endif
 
@@ -486,9 +500,16 @@ void Heap::destroy()
 
 
 #ifdef ARTEMIS
-    QString Heap::heapAsString(ExecState* execState){
-        HeapStringGeneratorFunctor f = HeapStringGeneratorFunctor(execState);
-        return m_objectSpace.forEachCell<HeapStringGeneratorFunctor>(f);
+    void Heap::heapAsString(ExecState* execState, QString* s){
+        bool oldSetting = m_isSafeToCollect;
+        notifyIsNotSafeToCollect();
+        HeapStringGeneratorFunctor f = HeapStringGeneratorFunctor(execState, s);
+        //m_objectSpace.forEachCell<HeapStringGeneratorFunctor>(f);
+        f(execState->codeBlock()->globalObject());
+        if(oldSetting){
+            notifyIsSafeToCollect();
+        }
+
     }
 
 #endif
@@ -522,6 +543,7 @@ void Heap::blockFreeingThreadMain()
         // Generally wait for one second before scavenging free blocks. This
         // may return early, particularly when we're being asked to quit.
         waitForRelativeTime(1.0);
+
         if (m_blockFreeingThreadShouldQuit)
             break;
         

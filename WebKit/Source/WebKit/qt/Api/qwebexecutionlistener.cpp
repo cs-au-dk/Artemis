@@ -239,12 +239,14 @@ void QWebExecutionListener::javascript_called_function(const JSC::DebuggerCallFr
     JSC::CodeBlock* codeBlock = frame.callFrame()->codeBlock();
 
     if(m_reportHeapMode > 0 && (m_reportHeapMode > 1 || functionName.length() > 0)){
+
+
         JSC::JSObject* functionObject = frame.callFrame()->callee();
         std::stringstream ss;
         ss << std::string(JSC::JSObject::className(functionObject).ascii().data()) ;
         ss << "@";
         ss << (const void *) static_cast<const void*>(functionObject);
-
+        qDebug() << "========" << QString::fromStdString(ss.str()) << "========";
         QString url = m_sourceRegistry.get(frame.callFrame()->codeBlock()->source())->getUrl();
         string fn = functionName.length() >0 ? "\""+functionName + "\"" : "null";
 
@@ -256,10 +258,11 @@ void QWebExecutionListener::javascript_called_function(const JSC::DebuggerCallFr
                 .append(QString::fromStdString(", \"char-offset\":"+offset+", "))
                 .append(QString::fromStdString("\"time\":\""))
                 .append(dt)
-                .append(QString::fromStdString("\", \"state\":"))
-                .append(frame.callFrame()->heap()->heapAsString(frame.callFrame()))
-                .append(QString::fromStdString("}"));
+                .append(QString::fromStdString("\", \"state\":"));
+        frame.callFrame()->heap()->heapAsString(frame.callFrame(), &hReport);
+        hReport.append(QString::fromStdString("}"));
         m_heapReport.append(hReport);
+
 
     }
 
