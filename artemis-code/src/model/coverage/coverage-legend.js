@@ -41,8 +41,14 @@ $(document).ready(function(){
 
 
 function toggleBackground(turnOn, selector, colour, isAWholeLine){
+    /*
+     * We need to set !important on (some of) these rules, as that is used in some of the styles we are overriding
+     * (specifically the symbolic coverage rule). However, jQuery's .css() method does not support this (at least in 
+     * firefox, I have heard it works in Chrome), so we set the style attribute instead. 
+     * This will overwrite any existing style!
+     */
     if(turnOn){
-        $(selector).css('background', colour);
+        $(selector).attr('style', 'background: ' + colour + ' !important');
     }else{
         // If the element is a li and has a line marker which is odd, then mark it with a grey background, otherwise white.
         // If the element is not a whole line, then just remove any background.
@@ -53,13 +59,13 @@ function toggleBackground(turnOn, selector, colour, isAWholeLine){
                         $(this).hasClass('L5') || 
                         $(this).hasClass('L7') || 
                         $(this).hasClass('L9')){
-                    $(this).css('background', '#EEEEEE');
+                    $(this).attr('style', 'background: #EEEEEE !important');
                 }else{
-                    $(this).css('background', '#FFFFFF');
+                    $(this).attr('style', 'background: #FFFFFF !important');
                 }
             });
         }else{
-            $(selector).css('background', 'none');
+            $(selector).attr('style', 'background: none !important');
         }
     }
 }
