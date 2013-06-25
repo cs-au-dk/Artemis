@@ -18,8 +18,6 @@
 #include "demowindow.h"
 
 #include "util/loggingutil.h"
-#include "model/coverage/coveragetooutputstream.h"
-
 
 namespace artemis
 {
@@ -612,7 +610,10 @@ void DemoModeMainWindow::slShowExamples()
 // Prevented (by UI) from being called until mPathTraceFilename is set.
 void DemoModeMainWindow::slShowTraceReport()
 {
-    QMessageBox::critical(this, "Not Implemented", "Display of the trace reports is not yet implemented.");
+    bool success = QDesktopServices::openUrl(mPathTraceFilename);
+    if(!success){
+        QMessageBox::critical(this, "Error", "There was a problem opening the browser for viewing.");
+    }
 }
 
 
@@ -620,7 +621,10 @@ void DemoModeMainWindow::slShowTraceReport()
 // Prevented (by UI) from being called until mCoverageFilename is set.
 void DemoModeMainWindow::slShowCoverageReport()
 {
-    QMessageBox::critical(this, "Not Implemented", "Display of the coverage reports is not yet implemented.");
+    bool success = QDesktopServices::openUrl(mCoverageFilename);
+    if(!success){
+        QMessageBox::critical(this, "Error", "There was a problem opening the browser for viewing.");
+    }
 }
 
 
@@ -635,9 +639,14 @@ void DemoModeMainWindow::slExportLinkedReports()
     QMessageBox::about(this, "Report Export", QString("Exported the following report files:\n\n%1\n%2").arg(mPathTraceFilename).arg(mCoverageFilename));
     // TODO: Remove this once we can view the reports from within artemis.
 
+    // Add the current working directory to these paths so they are full file:// URLs.
+    // TODO: do this in a more robust way!
+    mPathTraceFilename = "file://" + QDir::currentPath() + "/" + mPathTraceFilename;
+    mCoverageFilename = "file://" + QDir::currentPath() + "/" + mCoverageFilename;
+
     // Enable the report viewing buttons now that there are reports to view.
-    //mPathTraceReportBtn->setEnabled(true);
-    //mCoverageReportBtn->setEnabled(true);
+    mPathTraceReportBtn->setEnabled(true);
+    mCoverageReportBtn->setEnabled(true);
 }
 
 

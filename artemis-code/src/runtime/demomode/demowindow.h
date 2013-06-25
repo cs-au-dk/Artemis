@@ -26,6 +26,8 @@
 #include <QUrl>
 #include <QList>
 #include <QPair>
+#include <QDir>
+#include <QDesktopServices>
 
 #include "runtime/browser/artemiswebview.h"
 #include "runtime/browser/artemiswebpage.h"
@@ -33,6 +35,7 @@
 #include "artemisbrowserwidget.h"
 #include "initialanalysiswidget.h"
 #include "artemisglobals.h"
+#include "model/coverage/coveragetooutputstream.h"
 
 #include "concolic/entrypoints.h"
 #include "concolic/trace.h"
