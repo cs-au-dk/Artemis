@@ -20,6 +20,8 @@
 #include <QString>
 #include <QDebug>
 #include <QDateTime>
+#include <QFile>
+#include <QTextStream>
 #include <iostream>
 #include "wtf/text/CString.h"
 
@@ -74,11 +76,14 @@ void QWebExecutionListener::eventAdded(WebCore::EventTarget * target, const char
     return;
 }
 
-void QWebExecutionListener::enableHeapReport(bool namedOnly){
+void QWebExecutionListener::enableHeapReport(bool namedOnly, int heapReportNumber){
     m_reportHeapMode = namedOnly?1:2;
+    qDebug() << "SETTING HEAPN" << heapReportNumber;
+    m_heapReportNumber = heapReportNumber;
 }
 
-QList<QString> QWebExecutionListener::getHeapReport(){
+QList<QString> QWebExecutionListener::getHeapReport(int &heapReportNumber){
+    heapReportNumber = m_heapReportNumber;
     return m_heapReport;
 }
 
@@ -246,7 +251,6 @@ void QWebExecutionListener::javascript_called_function(const JSC::DebuggerCallFr
         ss << std::string(JSC::JSObject::className(functionObject).ascii().data()) ;
         ss << "@";
         ss << (const void *) static_cast<const void*>(functionObject);
-        qDebug() << "========" << QString::fromStdString(ss.str()) << "========";
         QString url = m_sourceRegistry.get(frame.callFrame()->codeBlock()->source())->getUrl();
         string fn = functionName.length() >0 ? "\""+functionName + "\"" : "null";
 
@@ -262,6 +266,29 @@ void QWebExecutionListener::javascript_called_function(const JSC::DebuggerCallFr
         frame.callFrame()->heap()->heapAsString(frame.callFrame(), &hReport);
         hReport.append(QString::fromStdString("}"));
         m_heapReport.append(hReport);
+
+        if(m_heapReport.length() >=100){
+            QString buffer;
+            int i = 0 ;
+            foreach(QString rap, m_heapReport){
+                buffer += rap;
+                if (i < m_heapReport.length()-1){
+                    buffer += QString::fromStdString(", ");
+                }
+                i++;
+            }
+            QString numberStr = QString::number(m_heapReportNumber);
+            buffer = QString::fromStdString("{\"heap-report\":[").append(buffer).append(QString::fromStdString("]}"));
+            QFile file(QString::fromStdString("heap-report-") + QDateTime::currentDateTime().toString(QString::fromStdString("dd-MM-yy-hh-mm-ss"))+QString::fromStdString(" (")+numberStr+QString::fromStdString(").json"));
+            file.open(QIODevice::WriteOnly | QIODevice::Text);
+            QTextStream out(&file);
+            out << (buffer.isEmpty() ? QString::fromStdString(" ") : buffer);
+            file.close();
+            out.flush();
+            m_heapReportNumber++;
+            m_heapReport.clear();
+
+        }
 
 
     }

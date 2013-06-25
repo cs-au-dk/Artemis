@@ -18,6 +18,7 @@
 #include <iostream>
 
 #include <QSharedPointer>
+#include <QDebug>
 
 #include "model/coverage/coveragetooutputstream.h"
 #include "util/loggingutil.h"
@@ -82,7 +83,7 @@ Runtime::Runtime(QObject* parent, const Options& options, const QUrl& url) : QOb
     mWebkitExecutor = new WebKitExecutor(this, mAppmodel, options.presetFormfields, jqueryListener, ajaxRequestListner, enableConstantStringInstrumentation);
 
     if(options.reportHeap != NO_CALLS){
-        mWebkitExecutor->webkitListener->enableHeapReport(options.reportHeap == NAMED_CALLS);
+        mWebkitExecutor->webkitListener->enableHeapReport(options.reportHeap == NAMED_CALLS, 0);
     }
 
     QSharedPointer<FormInputGenerator> formInputGenerator;
@@ -174,15 +175,12 @@ void Runtime::done()
     statistics()->accumulate("WebKit::coverage::covered-unique", mAppmodel->getCoverageListener()->getNumCoveredLines());
     if(mOptions.reportHeap != NO_CALLS){
         QString buffer = "";
-        int i = 0, nm = 0;
-        QList<QString> report = mWebkitExecutor->webkitListener->getHeapReport();
+        int i = 0;
+        int nm;
+        QList<QString> report = mWebkitExecutor->webkitListener->getHeapReport(nm);
         foreach(QString rap, report){
             buffer += rap;
-            if(!(i%100) && i){
-                writeAndWrapReportBuffer(nm,buffer);
-                nm++;
-                buffer = "";
-            } else if (i < report.length()-1){
+            if (i < report.length()-1){
                 buffer += QString(", ");
             }
             i++;
