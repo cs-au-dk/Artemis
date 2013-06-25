@@ -13,8 +13,10 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+#include "assert.h"
 #include "randomutil.h"
 #include <QSet>
+#include <QDebug>
 
 namespace artemis
 {
@@ -43,6 +45,7 @@ bool randomBool()
 
 QWebElement pickRand(QList<QWebElement> s)
 {
+    assert(s.size()>0);
     if (s.size() == 1) {
         return s.at(0);
     }
@@ -58,6 +61,7 @@ QString pickRand(QList<QString> s)
     }
 
     int elem = rand() % (s.size() - 1);
+    assert(s.size()>0);
     return s.at(elem);
 }
 
