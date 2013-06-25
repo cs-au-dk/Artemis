@@ -44,7 +44,7 @@ public:
     void notifyStartingLoad();
     void notifyStartingEvent(QSharedPointer<const BaseInput> inputEvent);
     void write();
-    void writePathTraceHTML(bool linkWithCoverage, QString coveragePath);
+    void writePathTraceHTML(bool linkWithCoverage, QString coveragePath, QString& pathToFile);
 
 private:
     enum ItemType {FUNCALL, FUNRET, BYTECODE, ALERT};

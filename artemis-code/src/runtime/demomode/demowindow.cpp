@@ -18,11 +18,14 @@
 #include "demowindow.h"
 
 #include "util/loggingutil.h"
+#include "model/coverage/coveragetooutputstream.h"
+
 
 namespace artemis
 {
 
-DemoModeMainWindow::DemoModeMainWindow(WebKitExecutor* webkitExecutor, const QUrl &url) :
+DemoModeMainWindow::DemoModeMainWindow(AppModelPtr appModel, WebKitExecutor* webkitExecutor, const QUrl &url) :
+    mAppModel(appModel),
     mWebkitExecutor(webkitExecutor),
     mEntryPointDetector(mWebkitExecutor->getPage())
 {
@@ -148,15 +151,26 @@ DemoModeMainWindow::DemoModeMainWindow(WebKitExecutor* webkitExecutor, const QUr
     mAnalysisLayout->addWidget(mViewTraceBtn);
     mAnalysisLayout->addSpacing(10);
 
+    // Execution reports section.
     QLabel* reportsLabel = new QLabel("Execution Reports");
     reportsLabel->setFont(sectionFont);
+    QLabel* reportsExplanation = new QLabel("These reports (currently) record all trace and coverage information since the start of the session.");
     mAnalysisLayout->addWidget(reportsLabel);
-    QPushButton* pathTraceReportBtn = new QPushButton("Path Trace Report");
-    pathTraceReportBtn->setDisabled(true);
-    mAnalysisLayout->addWidget(pathTraceReportBtn);
-    QPushButton* coverageReportBtn = new QPushButton("Coverage Report");
-    coverageReportBtn->setDisabled(true);
-    mAnalysisLayout->addWidget(coverageReportBtn);
+    mAnalysisLayout->addWidget(reportsExplanation);
+    mGenerateReportsBtn = new QPushButton("Generate Reports");
+    QObject::connect(mGenerateReportsBtn, SIGNAL(released()),
+                     this, SLOT(slExportLinkedReports()));
+    mAnalysisLayout->addWidget(mGenerateReportsBtn);
+    mPathTraceReportBtn = new QPushButton("Path Trace Report");
+    QObject::connect(mPathTraceReportBtn, SIGNAL(released()),
+                     this, SLOT(slShowTraceReport()));
+    mPathTraceReportBtn->setDisabled(true);
+    mAnalysisLayout->addWidget(mPathTraceReportBtn);
+    mCoverageReportBtn = new QPushButton("Coverage Report");
+    QObject::connect(mCoverageReportBtn, SIGNAL(released()),
+                     this, SLOT(slShowCoverageReport()));
+    mCoverageReportBtn->setDisabled(true);
+    mAnalysisLayout->addWidget(mCoverageReportBtn);
     mAnalysisLayout->addSpacing(10);
 
 
@@ -591,6 +605,41 @@ void DemoModeMainWindow::slShowExamples()
 {
     loadUrl(examplesIndexUrl());
 }
+
+
+
+// Attached to the "View trace report" button.
+// Prevented (by UI) from being called until mPathTraceFilename is set.
+void DemoModeMainWindow::slShowTraceReport()
+{
+    QMessageBox::critical(this, "Not Implemented", "Display of the trace reports is not yet implemented.");
+}
+
+
+// Attached to the "View coverage report" button.
+// Prevented (by UI) from being called until mCoverageFilename is set.
+void DemoModeMainWindow::slShowCoverageReport()
+{
+    QMessageBox::critical(this, "Not Implemented", "Display of the coverage reports is not yet implemented.");
+}
+
+
+// Attached to the "Generate Reports" button.
+void DemoModeMainWindow::slExportLinkedReports()
+{
+    // Write out the reports (and set the file names used for viewing).
+    writeCoverageHtml(mAppModel->getCoverageListener(), mCoverageFilename);
+    mAppModel->getPathTracer()->writePathTraceHTML(true, mCoverageFilename, mPathTraceFilename);
+
+    // Tell the user what we have done.
+    QMessageBox::about(this, "Report Export", QString("Exported the following report files:\n\n%1\n%2").arg(mPathTraceFilename).arg(mCoverageFilename));
+    // TODO: Remove this once we can view the reports from within artemis.
+
+    // Enable the report viewing buttons now that there are reports to view.
+    //mPathTraceReportBtn->setEnabled(true);
+    //mCoverageReportBtn->setEnabled(true);
+}
+
 
 
 } // namespace artemis

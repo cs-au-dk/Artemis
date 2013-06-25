@@ -25,7 +25,7 @@ namespace artemis
 ManualRuntime::ManualRuntime(QObject* parent, const Options& options, const QUrl& url) :
     Runtime(parent, options, url)
 {
-    mDemoApp = DemoModeMainWindowPtr(new DemoModeMainWindow(mWebkitExecutor, url));
+    mDemoApp = DemoModeMainWindowPtr(new DemoModeMainWindow(mAppmodel, mWebkitExecutor, url));
 
     QObject::connect(mDemoApp.data(), SIGNAL(sigClose()),
                      this, SLOT(slApplicationClosed()));

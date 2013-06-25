@@ -53,7 +53,7 @@ class DemoModeMainWindow : public QMainWindow
     Q_OBJECT
 
 public:
-    DemoModeMainWindow(WebKitExecutor *webkitExecutor, const QUrl& url);
+    DemoModeMainWindow(AppModelPtr appModel, WebKitExecutor *webkitExecutor, const QUrl& url);
     ~DemoModeMainWindow();
 
     void run(const QUrl &url);
@@ -63,6 +63,7 @@ protected:
 
 private:
     // Artemis
+    AppModelPtr mAppModel;
     ArtemisWebViewPtr mWebView;
     ArtemisWebPage* mWebPage;
     WebKitExecutor* mWebkitExecutor;
@@ -89,6 +90,9 @@ private:
     QLabel* mTraceClassificationResult;
     QPushButton* mViewTraceBtn;
     QLabel* mTraceAnalysisText;
+    QPushButton* mGenerateReportsBtn;
+    QPushButton* mPathTraceReportBtn;
+    QPushButton* mCoverageReportBtn;
 
     // The initial analysis panel is provided as its own widget.
     InitialAnalysisWidget* mInitialAnalysis;
@@ -119,6 +123,10 @@ private:
     void loadUrl(QUrl url);
     void resetPageAnlaysis();
 
+    // Trace and Coverage report names.
+    QString mPathTraceFilename;
+    QString mCoverageFilename;
+
 
 protected slots:
     // For the GUI.
@@ -144,6 +152,10 @@ protected slots:
     void slStartTraceRecording();
     void slEndTraceRecording();
     void slAddedTraceNode();
+
+    void slShowTraceReport();
+    void slShowCoverageReport();
+    void slExportLinkedReports();
 
 signals:
     void sigClose();
