@@ -105,7 +105,7 @@ FormFieldTypes getTypeFromAttr(QString typeAttr)
             )
         { return TEXT; }
 
-    qWarning(); << "WARN: Unknown type attribute on form element: "<< typeAttr;
+    qWarning() << "WARN: Unknown type attribute on form element: " << typeAttr;
     return TEXT;
 }
 }
