@@ -22,8 +22,10 @@ def run_artemis(address, iterations):
             if match is not None:
                 try:
                     key = match.group(1).strip()
-                    value = int(match.group(2).strip())
-
+                    try:
+                        value = int(match.group(2).strip().replace(" ", ""))
+                    except ValueError:
+                        value = match.group(2).strip()
                     report[key] = value
                 except IndexError:
                     continue
@@ -35,11 +37,17 @@ def run_artemis(address, iterations):
     return end_t - start_t, covered_lines
 
 
-def save_result_to_file(result):
+def log_result_to_file(file_name, result):
+    with open(file_name, 'a') as fp:
+        fp.writelines(
+            ('%s,%s,%s,%s,%s,%s,%s\n' % (e[0], e[1][0], e[2][0], e[1][1], e[2][1], e[1][2], e[2][2])) for e in result)
+    return file_name
+
+
+def initialize_file():
     fn = 'result_file-%s.csv' % int(time.time())
-    with open(fn , 'w') as fp:
+    with open(fn, 'w') as fp:
         fp.write("Site,Min Iteration,Max Iteration,Min Time,Max Time,Min Coverage,Max Coverage\n")
-        fp.writelines(('%s,%s,%s,%s,%s,%s,%s\n' % (e[0], e[1][0], e[2][0], e[1][1], e[2][1], e[1][2], e[2][2])) for e in result)
     return fn
 
 if __name__ == '__main__':
@@ -52,6 +60,7 @@ if __name__ == '__main__':
     min_iteration = int(sys.argv[3]) if len(sys.argv) > 3 else 1
     max_iteration = int(sys.argv[4]) if len(sys.argv) > 4 else 100
     result = []
+    fn = initialize_file()
     with open(site_list, 'r') as fp:
         for line in fp:
             if top_n_sites <= 0:
@@ -72,7 +81,8 @@ if __name__ == '__main__':
             print 'Ran %s seconds with %s unique covered lines' % second_run
             print ''
             result.append([url, [min_iteration] + list(first_run), [max_iteration] + list(second_run)])
-    print '\n\n Saving result in %s \n' % save_result_to_file(result)
+            log_result_to_file(fn, result)
+            result = []
     print '=========================='
     print 'Run finished'
     print '=========================='
