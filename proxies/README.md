@@ -6,7 +6,7 @@ AIL Proxy
 
 Artemis supports the usage of AIL descriptions when testing web applications. An AIL description is a specification of the client-server communication conducted using Ajax. These descriptions allow Artemis to test the client-side without a concrete instance of the server-side.
 
-This functionality is described in more detail in Server Interface Descriptions for Automated Testing of JavaScript Web Applications, Casper S. Jensen, Anders Møller and Zhendong Su. ESEC/FSE 2013.
+This functionality is described in more detail in *Server Interface Descriptions for Automated Testing of JavaScript Web Applications, Casper S. Jensen, Anders Møller and Zhendong Su. ESEC/FSE 2013*.
 
 ###Install###
 
@@ -71,7 +71,7 @@ NOTE: The Prettify Proxy does not handle SSL connections well. The suggested sol
 	
     Add the argument -t localhost:8080 to Artemis to direct all traffic through the proxy.
 
-    Notice, that Artemis ignores the -t argument if it operates on content hosted on the localhost domain[1].
+    Notice, that Artemis ignores the -t argument if it operates on content hosted on the localhost domain [1].
 
 
 [1] https://github.com/cs-au-dk/Artemis/issues/46
