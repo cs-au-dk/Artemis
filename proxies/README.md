@@ -44,17 +44,17 @@ NOTE: The Prettify Proxy does not handle SSL connections well. The suggested sol
 
 2. Install modules
    
-       make install-pp-modules 
+        make install-pp-modules 
 
 ###Run###
 
 3. Set node.js module path (e.g. for Ubuntu)
 
-       export NODE_PATH=/usr/local/lib/node_modules/
+        export NODE_PATH=/usr/local/lib/node_modules/
 
 3. Run
 
-       node prettifyproxy.js
+        node prettifyproxy.js
 
 4. Run with Artemis
 	
