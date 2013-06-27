@@ -9,17 +9,20 @@ AIL Proxy
 ###Install###
 
 1. Install node.js and npm from http://nodejs.org. 
+
    For installation by package manager see https://github.com/joyent/node/wiki/Installing-Node.js-via-package-manager .
 
 2. Install AIL
-    make install-ail
+   
+       make install-ail
 
    This will install the latest version of yajl, node-gyp and eventually build the AIL module.
 
 ### Run ###
 
 1. Run AIL proxy
-    node ailproxy.js <path to schema> <options>
+    
+       node ailproxy.js <path to schema> <options>
 
    Run ````node ailproxy.js```` for more information 
 
@@ -40,21 +43,24 @@ NOTE: The Prettify Proxy does not handle SSL connections well. The suggested sol
 1. Install node.js and npm from http://nodejs.org. For installation by package manager see https://github.com/joyent/node/wiki/Installing-Node.js-via-package-manager .
 
 2. Install modules
-       > make install-pp-modules 
+   
+       make install-pp-modules 
 
 ###Run###
 
 3. Set node.js module path (e.g. for Ubuntu)
-	> export NODE_PATH=/usr/local/lib/node_modules/
+
+       export NODE_PATH=/usr/local/lib/node_modules/
 
 3. Run
-	> node prettifyproxy.js
+
+       node prettifyproxy.js
 
 4. Run with Artemis
 	
-	Add the argument -t localhost:8080 to Artemis to direct all traffic through the proxy.
+   Add the argument -t localhost:8080 to Artemis to direct all traffic through the proxy.
 
-	Notice, that Artemis ignores the -t argument if it operates on content hosted on the localhost domain[1].
+   Notice, that Artemis ignores the -t argument if it operates on content hosted on the localhost domain[1].
 
 
 [1] https://github.com/cs-au-dk/Artemis/issues/46
