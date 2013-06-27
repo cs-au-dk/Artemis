@@ -14,41 +14,18 @@
  * limitations under the License.
  */
 
-#include <QSharedPointer>
+#include <stdlib.h>
+#include <QDebug>
 
-#include "entrypoints.h"
-
-
-#ifndef CONCOLIC_H
-#define CONCOLIC_H
+#include "tracemerger.h"
 
 namespace artemis
 {
 
-
-
-
-class ConcolicAnalysis
+void TraceMerger::merge(TraceNodePtr trace, TraceNodePtr executiontree)
 {
-public:
-    ConcolicAnalysis(bool demoMode);
+    qWarning() << "TraceMerger::merge not implemented";
+    exit(1);
+}
 
-    void run();
-
-private:
-    bool mDemoMode;
-    //EntryPointDetector mEntryPointDetector;
-
-};
-
-
-typedef QSharedPointer<ConcolicAnalysis> ConcolicAnalysisPtr;
-
-
-
-
-
-} // namespace artemis
-
-
-#endif // CONCOLIC_H
+}

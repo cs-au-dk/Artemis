@@ -14,9 +14,10 @@
  * limitations under the License.
  */
 
-#include "concolicruntime.h"
-
 #include "util/loggingutil.h"
+#include "concolic/executiontree/tracemerger.h"
+
+#include "concolicruntime.h"
 
 namespace artemis
 {
@@ -59,7 +60,7 @@ void ConcolicRuntime::preConcreteExecution()
 void ConcolicRuntime::postConcreteExecution(ExecutableConfigurationConstPtr configuration, QSharedPointer<ExecutionResult> result)
 {
     // Merge trace with tracegraph
-    // TODO
+    TraceMerger::merge(mSymbolicExecutionGraph, mWebkitExecutor->getTraceBuilder()->trace());
 
     // Generate new input
     // TODO

@@ -108,7 +108,8 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/concolic/executiontree/nodes/tracebranch.h \
     src/concolic/executiontree/nodes/traceconcretebranch.h \
     src/concolic/executiontree/nodes/tracesymbolicbranch.h \
-    src/concolic/executiontree/tracenodes.h
+    src/concolic/executiontree/tracenodes.h \
+    src/concolic/executiontree/tracemerger.h
 
 SOURCES += src/runtime/input/ajaxinput.cpp \
     src/strategies/prioritizer/constantprioritizer.cpp \
@@ -193,6 +194,7 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/concolic/executiontree/nodes/traceunexplored.cpp \
     src/concolic/executiontree/nodes/tracebranch.cpp \
     src/concolic/executiontree/nodes/traceconcretebranch.cpp \
-    src/concolic/executiontree/nodes/tracesymbolicbranch.cpp
+    src/concolic/executiontree/nodes/tracesymbolicbranch.cpp \
+    src/concolic/executiontree/tracemerger.cpp
 
 QT += network

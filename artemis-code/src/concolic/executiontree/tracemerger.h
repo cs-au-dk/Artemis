@@ -14,41 +14,29 @@
  * limitations under the License.
  */
 
-#include <QSharedPointer>
+#include "concolic/executiontree/tracenodes.h"
 
-#include "entrypoints.h"
-
-
-#ifndef CONCOLIC_H
-#define CONCOLIC_H
+#ifndef TRACEMERGER_H
+#define TRACEMERGER_H
 
 namespace artemis
 {
 
-
-
-
-class ConcolicAnalysis
+/**
+ * This class provides the static function `merge` that merges a trace into an execution tree
+ *
+ * Both structures are perserved. However, be careful since they will share nodes, so don't modify the trace
+ * after merging the two.
+ */
+class TraceMerger
 {
 public:
-    ConcolicAnalysis(bool demoMode);
-
-    void run();
+    static void merge(TraceNodePtr trace, TraceNodePtr executiontree);
 
 private:
-    bool mDemoMode;
-    //EntryPointDetector mEntryPointDetector;
-
+    TraceMerger() {}
 };
 
+}
 
-typedef QSharedPointer<ConcolicAnalysis> ConcolicAnalysisPtr;
-
-
-
-
-
-} // namespace artemis
-
-
-#endif // CONCOLIC_H
+#endif // TRACEMERGER_H
