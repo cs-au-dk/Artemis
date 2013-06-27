@@ -1,5 +1,10 @@
+Installing and running proxies
+==============================
+
+
+
 Prettify Proxy
-==============
+--------------
 
 Prettify Proxy is a web proxy for automatically prettifying JavaScript code. All requests to files containing ".js" will be passed through JSBeautifier (http://jsbeautifier.org), while all other requests are passed through untouched.
 
@@ -9,14 +14,16 @@ The proxy requires node.js (http://nodejs.org/) and the js-beautify package (htt
 
 NOTE: The Prettify Proxy does not handle SSL connections well. The suggested solution, if a website uses SSL, is to download the website and create a non-SSL version of it.
 
-Install and Run
-===============
+###Install###
 
-1. Install node.js from http://nodejs.org
 
-2. Run 
-	> sudo npm -g install js-beautify 
-	> sudo npm -g install ent
+1. Install node.js and npm from http://nodejs.org 
+   (https://github.com/joyent/node/wiki/Installing-Node.js-via-package-manager) 
+
+2. Install modules
+       > make install-pp-modules 
+
+###Run###
 
 3. Set node.js module path (e.g. for Ubuntu)
 	> export NODE_PATH=/usr/local/lib/node_modules/
