@@ -25,17 +25,48 @@ namespace artemis
 ConcolicRuntime::ConcolicRuntime(QObject* parent, const Options& options, const QUrl& url) :
     Runtime(parent, options, url)
 {
-    Log::fatal("Fully automatic concolic execution is not yet implemented.");
-    Log::fatal("Try 'manual' mode for a demo of some of the symbolic features.");
-    exit(1);
+    QObject::connect(mWebkitExecutor, SIGNAL(sigExecutedSequence(ExecutableConfigurationConstPtr, QSharedPointer<ExecutionResult>)),
+                     this, SLOT(postConcreteExecution(ExecutableConfigurationConstPtr, QSharedPointer<ExecutionResult>)));
+
+
 }
-
-
 
 void ConcolicRuntime::run(const QUrl& url)
 {
+    QSharedPointer<ExecutableConfiguration> initialConfiguration =
+        QSharedPointer<ExecutableConfiguration>(new ExecutableConfiguration(QSharedPointer<InputSequence>(new InputSequence()), url));
 
+    mNextConfiguration = initialConfiguration;
 
+    preConcreteExecution();
+}
+
+void ConcolicRuntime::preConcreteExecution()
+{
+    if (mNextConfiguration.isNull()) {
+        mWebkitExecutor->detach();
+        done();
+        return;
+    }
+
+    Log::debug("\n============= New-Iteration =============");
+    Log::debug("--------------- COVERAGE ----------------\n");
+    Log::debug(mAppmodel->getCoverageListener()->toString().toStdString());
+
+    mWebkitExecutor->executeSequence(mNextConfiguration); // calls the postConcreteExecution method as callback
+}
+
+void ConcolicRuntime::postConcreteExecution(ExecutableConfigurationConstPtr configuration, QSharedPointer<ExecutionResult> result)
+{
+    // Merge trace with tracegraph
+    // TODO
+
+    // Generate new input
+    // TODO
+    mNextConfiguration.clear();
+
+    // Execute next iteration
+    preConcreteExecution();
 }
 
 

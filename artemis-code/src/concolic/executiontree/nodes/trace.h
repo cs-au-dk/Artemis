@@ -33,7 +33,7 @@ class TraceNode
     // Abstract
 public:
     virtual void accept(TraceVisitor* visitor) = 0;
-    virtual ~TraceNode(){}
+    virtual ~TraceNode() {}
 };
 
 typedef QSharedPointer<TraceNode> TraceNodePtr;

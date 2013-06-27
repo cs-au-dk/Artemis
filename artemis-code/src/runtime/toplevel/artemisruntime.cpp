@@ -60,7 +60,7 @@ void ArtemisRuntime::preConcreteExecution()
 
     ExecutableConfigurationConstPtr nextConfiguration = mWorklist->remove();
 
-    mWebkitExecutor->executeSequence(nextConfiguration); // calls the slExecutedSequence method as callback
+    mWebkitExecutor->executeSequence(nextConfiguration); // calls the postConcreteExecution method as callback
 }
 
 void ArtemisRuntime::postConcreteExecution(ExecutableConfigurationConstPtr configuration, QSharedPointer<ExecutionResult> result)

@@ -14,11 +14,8 @@
  * limitations under the License.
  */
 
-
 #ifndef CONCOLICRUNTIME_H
 #define CONCOLICRUNTIME_H
-
-
 
 #include <QObject>
 
@@ -27,12 +24,10 @@
 namespace artemis
 {
 
-
 /*
  *  The concolic runtime finds entry points on a page and uses concolic analysis to explore the code triggered
- *  by those entry points.
+ *  by those entry points. (or that is the plan)
  */
-
 class ConcolicRuntime : public Runtime
 {
     Q_OBJECT
@@ -42,10 +37,15 @@ public:
 
     void run(const QUrl& url);
 
+protected:
+    void preConcreteExecution();
+
+    QSharedPointer<ExecutableConfiguration> mNextConfiguration;
+
+private slots:
+    void postConcreteExecution(ExecutableConfigurationConstPtr configuration, QSharedPointer<ExecutionResult> result);
+
 };
-
-
-
 
 } // namespace artemis
 
