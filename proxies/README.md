@@ -12,14 +12,14 @@ AIL Proxy
    For installation by package manager see https://github.com/joyent/node/wiki/Installing-Node.js-via-package-manager .
 
 2. Install AIL
-    > make install-ail
+    make install-ail
 
    This will install the latest version of yajl, node-gyp and eventually build the AIL module.
 
 ### Run ###
 
 1. Run AIL proxy
-    > node ailproxy.js <path to schema> <options>
+    node ailproxy.js <path to schema> <options>
 
    Run ````node ailproxy.js```` for more information 
 
