@@ -36,7 +36,7 @@
 #include "executionresultbuilder.h"
 #include "artemiswebpage.h"
 
-#include "concolic/tracebuilder.h"
+#include "concolic/executiontree/tracebuilder.h"
 #include "concolic/traceeventdetectors.h"
 
 namespace artemis

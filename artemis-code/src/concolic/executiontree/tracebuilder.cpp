@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-#include "tracebuilder.h"
-#include "traceeventdetectors.h"
-
+#include "concolic/traceeventdetectors.h"
 #include "util/loggingutil.h"
+
+#include "tracebuilder.h"
 
 namespace artemis
 {

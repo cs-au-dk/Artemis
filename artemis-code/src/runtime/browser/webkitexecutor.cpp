@@ -29,7 +29,7 @@
 #include "runtime/input/baseinput.h"
 #include "strategies/inputgenerator/targets/jquerylistener.h"
 #include "util/loggingutil.h"
-#include "concolic/tracebuilder.h"
+#include "concolic/executiontree/tracebuilder.h"
 
 #include "webkitexecutor.h"
 

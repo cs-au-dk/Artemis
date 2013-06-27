@@ -88,11 +88,11 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/concolic/executiontree/nodes/trace.h \
     src/concolic/entrypoints.h \
     src/concolic/exitpoints.h \
-    src/concolic/tracebuilder.h \
+    src/concolic/executiontree/tracebuilder.h \
     src/runtime/toplevel/concolicruntime.h \
     src/concolic/traceclassifier.h \
     src/runtime/demomode/demowindow.h \
-    src/concolic/traceprinter.h \
+    src/concolic/executiontree/traceprinter.h \
     src/concolic/executiontree/tracevisitor.h \
     src/runtime/demomode/initialanalysiswidget.h \
     src/runtime/demomode/artemisbrowserwidget.h \
@@ -175,10 +175,10 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/concolic/solver/constraintwriter.cpp \
     src/concolic/entrypoints.cpp \
     src/runtime/toplevel/concolicruntime.cpp \
-    src/concolic/tracebuilder.cpp \
+    src/concolic/executiontree/tracebuilder.cpp \
     src/concolic/traceclassifier.cpp \
     src/runtime/demomode/demowindow.cpp \
-    src/concolic/traceprinter.cpp \
+    src/concolic/executiontree/traceprinter.cpp \
     src/concolic/executiontree/tracevisitor.cpp \
     src/runtime/demomode/initialanalysiswidget.cpp \
     src/runtime/demomode/artemisbrowserwidget.cpp \

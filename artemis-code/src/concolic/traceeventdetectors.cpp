@@ -17,7 +17,7 @@
 #include <assert.h>
 
 #include "traceeventdetectors.h"
-#include "tracebuilder.h"
+#include "concolic/executiontree/tracebuilder.h"
 
 #include "util/loggingutil.h"
 

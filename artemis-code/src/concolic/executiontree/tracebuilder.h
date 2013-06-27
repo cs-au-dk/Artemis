@@ -22,7 +22,7 @@
 
 #include "concolic/executiontree/tracenodes.h"
 
-#include "traceeventdetectors.h"
+#include "concolic/traceeventdetectors.h"
 
 
 namespace artemis

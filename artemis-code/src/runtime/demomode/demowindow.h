@@ -40,7 +40,7 @@
 #include "concolic/entrypoints.h"
 #include "concolic/executiontree/tracenodes.h"
 #include "concolic/traceclassifier.h"
-#include "concolic/traceprinter.h"
+#include "concolic/executiontree/traceprinter.h"
 #include "concolic/tracestatistics.h"
 
 #include "traceviewerdialog.h"
