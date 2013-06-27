@@ -14,33 +14,21 @@
  * limitations under the License.
  */
 
-#include "pathcondition.h"
+#include <assert.h>
 
-#ifdef ARTEMIS
+#include "tracesymbolicbranch.h"
 
-namespace Symbolic
+namespace artemis {
+
+TraceSymbolicBranch::TraceSymbolicBranch(Symbolic::Expression* condition) :
+    TraceBranch(),
+    mCondition(condition)
 {
-
-PathCondition::PathCondition()
-{
+    assert(condition != NULL);
 }
 
-void PathCondition::append(Symbolic::Expression* condition, bool followed)
-{
-    m_pc.push_back(std::pair<Symbolic::Expression*, bool>(condition, followed));
+void TraceSymbolicBranch::accept(TraceVisitor* visitor) {
+    visitor->visit(this);
 }
 
-int PathCondition::size() const
-{
-    return m_pc.size();
 }
-
-std::pair<Symbolic::Expression*, bool> PathCondition::get(unsigned int index)
-{
-    return m_pc.at(index);
-}
-
-
-}
-
-#endif

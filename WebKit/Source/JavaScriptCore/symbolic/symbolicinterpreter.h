@@ -24,7 +24,6 @@
 #include "JavaScriptCore/instrumentation/bytecodeinfo.h"
 #include "instrumentation/jscexecutionlistener.h"
 
-#include "pathcondition.h"
 #include "native/nativelookup.h"
 
 #ifdef ARTEMIS
@@ -70,23 +69,12 @@ public:
 
     /*
      * Called from Artemis
-     * Path constraints are only collected when the session is active.
-     *
-     * When the session is ended, the resulting path condition is made
-     * available through the getPathCondition function.
-     *
-     * It is the responsibility of Artemis to collect and destroy the path condition!
-     *
      */
     void beginSession();
     void endSession();
-    PathCondition* getPathCondition();
-    std::string generatePathConditionString();
 
 private:
     void fatalError(JSC::CodeBlock* codeBlock, std::string reason) __attribute__((noreturn));
-
-    PathCondition* m_pc;
 
     NativeLookup m_nativeFunctions;
     int m_nextSymbolicValue;

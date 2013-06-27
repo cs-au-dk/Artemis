@@ -28,13 +28,15 @@
 namespace artemis
 {
 
-bool ConstraintWriter::write(QSharedPointer<Symbolic::PathCondition> pathCondition,
+bool ConstraintWriter::write(PathConditionPtr pathCondition,
                                     std::string outputFile)
 {
 
     ConstraintWriter writer(outputFile);
 
-    for (int i = 0; i < pathCondition->size(); i++) {
+    for (uint i = 0; i < pathCondition->size(); i++) {
+        pathCondition->get(i);
+        pathCondition->get(i).first;
         pathCondition->get(i).first->accept(&writer);
 
         if (pathCondition->get(i).second) {

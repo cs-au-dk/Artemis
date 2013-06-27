@@ -18,7 +18,6 @@
 #include "traceprinter.h"
 #include "util/loggingutil.h"
 
-
 namespace artemis
 {
 
@@ -180,14 +179,14 @@ void TerminalTracePrinter::visit(TraceNode* node)
 void TerminalTracePrinter::visit(TraceBranch* node)
 {
     // First process the left tree.
-    node->branchFalse->accept(this);
+    node->getFalseBranch()->accept(this);
 
     // Now mCurrentTree represents the left subtree, so copy it into mCompletedLeftSubtrees.
     mCompletedLeftTrees.push(mCurrentTree);
 
     // Now clear the current tree and process the right subtree.
     mCurrentTree.clear();
-    node->branchTrue->accept(this);
+    node->getTrueBranch()->accept(this);
 
     // Now we have both trees, so join them.
     addBranch("Branch");

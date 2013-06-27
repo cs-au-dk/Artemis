@@ -40,7 +40,7 @@ void JSCExecutionListener::javascript_bytecode_executed(JSC::Interpreter*, JSC::
     //exit(1);
 }
 
-void JSCExecutionListener::javascript_branch_executed(const char* condition, bool jump, bool symbolic) {
+void JSCExecutionListener::javascript_branch_executed(bool jump, Symbolic::Expression* condition, JSC::ExecState*, const JSC::Instruction*, const JSC::BytecodeInfo&) {
     cerr << "Warning: Default listener for javascript_branch_executed was invoked " << endl;
     //exit(1);
 }

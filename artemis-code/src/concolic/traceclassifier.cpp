@@ -87,12 +87,12 @@ void TraceClassifier::visit(TraceBranch *node)
     // We expect one branch to be "capped" by an immediate TraceUnexplored and the other to be the successor.
     // Anything else is an error (should not be present in a single trace direct from the trace builder).
 
-    if(isImmediatelyUnexplored(node->branchFalse)){
+    if(isImmediatelyUnexplored(node->getFalseBranch())){
         // Took 'true' branch.
-        node->branchTrue->accept(this);
-    } else if(isImmediatelyUnexplored(node->branchTrue)){
+        node->getTrueBranch()->accept(this);
+    } else if(isImmediatelyUnexplored(node->getTrueBranch())){
         // Took 'false' branch.
-        node->branchFalse->accept(this);
+        node->getFalseBranch()->accept(this);
     } else {
         // Invalid branch node
         Log::fatal("Trace Classifier: reached an invalid branch node.");

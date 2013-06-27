@@ -17,16 +17,11 @@
 #ifndef TRACECLASSIFIER_H
 #define TRACECLASSIFIER_H
 
-#include "trace.h"
-#include "tracevisitor.h"
-
+#include "concolic/executiontree/tracenodes.h"
+#include "concolic/executiontree/tracevisitor.h"
 
 namespace artemis
 {
-
-
-
-
 
 /*
  *  Classifies a complete annotated trace as either a success or a failure.

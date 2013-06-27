@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-
-#include "trace.h"
+#include "concolic/executiontree/tracenodes.h"
+#include "concolic/executiontree/tracevisitor.h"
 
 #ifndef TRACESTATISTICS_H
 #define TRACESTATISTICS_H
@@ -50,7 +50,8 @@ public:
     virtual void visit(TraceUnexplored* node);
 
     // Cases we will implement.
-    virtual void visit(TraceBranch* node);
+    virtual void visit(TraceConcreteBranch* node);
+    virtual void visit(TraceSymbolicBranch* node);
     virtual void visit(TraceAlert* node);
     virtual void visit(TraceFunctionCall* node);
 };

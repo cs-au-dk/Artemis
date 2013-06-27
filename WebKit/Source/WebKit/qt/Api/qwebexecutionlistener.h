@@ -24,7 +24,7 @@
 
 #include "../JavaScriptCore/instrumentation/jscexecutionlistener.h"
 #include "../JavaScriptCore/instrumentation/bytecodeinfo.h"
-#include "../JavaScriptCore/symbolic/pathcondition.h"
+#include "../JavaScriptCore/symbolic/expr.h"
 
 #include "artemis/qsource.h"
 #include "artemis/qsourceregistry.h"
@@ -70,7 +70,7 @@ public:
     virtual void javascript_bytecode_executed(JSC::Interpreter* interpreter, JSC::CodeBlock*, JSC::Instruction* inst, const JSC::BytecodeInfo& info); // interpreter instrumentation
     virtual void javascript_property_read(std::string propertyName, JSC::ExecState*);
     virtual void javascript_property_written(std::string propertyName, JSC::ExecState*);
-    virtual void javascript_branch_executed(const char* condition, bool jump, bool symbolic);
+    virtual void javascript_branch_executed(bool jump, Symbolic::Expression* condition, JSC::ExecState*, const JSC::Instruction*, const JSC::BytecodeInfo&);
 
     void javascriptConstantStringEncountered(std::string constant);
     virtual void webkit_eval_call(const char * eval_string);
@@ -87,9 +87,6 @@ public:
 
     void beginSymbolicSession();
     void endSymbolicSession();
-    Symbolic::PathCondition* getLastPathCondition();
-    QString generatePathConditionString();
-
 
     static QWebExecutionListener* getListener();
     static void attachListeners();
@@ -131,7 +128,7 @@ signals:
     void sigJavascriptFunctionCalled(QString functionName, size_t bytecodeSize, uint functionLine, uint sourceOffset, QSource* source);
     void sigJavascriptFunctionReturned(QString functionName);
     void sigJavascriptBytecodeExecuted(QString opcode, uint sourceOffset, QSource* source, const ByteCodeInfoStruct byteInfo);
-    void sigJavascriptBranchExecuted(QString condition, bool jump, bool symbolic);
+    void sigJavascriptBranchExecuted(bool jump, Symbolic::Expression* condition, uint sourceOffset, QSource* source, const ByteCodeInfoStruct byteInfo);
 
 };
 

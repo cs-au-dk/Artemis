@@ -24,7 +24,6 @@
 #include "JavaScriptCore/runtime/JSString.h"
 
 #include "JavaScriptCore/symbolic/expr.h"
-#include "JavaScriptCore/symbolic/expression/visitors/printer.h"
 
 #include "symbolicinterpreter.h"
 #include <QDebug>
@@ -47,7 +46,6 @@ const char* opToString(OP op) {
 }
 
 SymbolicInterpreter::SymbolicInterpreter() :
-    m_pc(NULL),
     m_nextSymbolicValue(0),
     m_inSession(false),
     m_shouldGC(false)
@@ -365,17 +363,19 @@ void SymbolicInterpreter::ail_jmp_iff(JSC::CallFrame* callFrame,
                                       bool jumps)
 {
 
-    // Notify Artemis directly about this branch.
-    // TODO: what to send?
-    // TODO: should this be after the m_inSession guard?
-    jscinst::get_jsc_listener()->javascript_branch_executed(condition.toString(callFrame).ascii().data(), jumps, condition.isSymbolic());
+    if (!m_inSession) {
 
-    if (!m_inSession) return;
+        // Notify Artemis directly about this branch
+        jscinst::get_jsc_listener()->javascript_branch_executed(jumps, NULL, callFrame, vPC, info);
+
+        return;
+    }
 
     if (condition.isSymbolic()) {
         info.setSymbolic();
-        m_pc->append(condition.asSymbolic(), jumps);
     }
+
+    jscinst::get_jsc_listener()->javascript_branch_executed(jumps, condition.isSymbolic() ? condition.asSymbolic() : NULL, callFrame, vPC, info);
 }
 
 void SymbolicInterpreter::fatalError(JSC::CodeBlock* codeBlock, std::string reason)
@@ -408,41 +408,11 @@ void SymbolicInterpreter::beginSession()
 {
     m_shouldGC = true;
     m_inSession = true;
-    m_pc = new PathCondition();
 }
 
 void SymbolicInterpreter::endSession()
 {
     m_inSession = false;
-
-    qDebug() << "PC size: " << m_pc->size();
-
-    int i;
-    for (i = 0; i < m_pc->size(); i++) {
-        Printer printer;
-        m_pc->get(i).first->accept(&printer);
-        qDebug() << "PC[" << i << "]: " << QString::fromStdString(printer.getResult());
-    }
-}
-
-PathCondition* SymbolicInterpreter::getPathCondition()
-{
-    return m_pc;
-}
-
-std::string SymbolicInterpreter::generatePathConditionString() {
-
-    std::stringstream sstrm;
-
-    for (int i = 0; i < m_pc->size(); i++) {
-
-        Printer printer;
-        m_pc->get(i).first->accept(&printer);
-
-        sstrm << "PC[" << i << "]: " << printer.getResult() << std::endl;
-    }
-
-    return sstrm.str();
 }
 
 

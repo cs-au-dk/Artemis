@@ -14,34 +14,20 @@
  * limitations under the License.
  */
 
-#ifndef SOLVER_H
-#define SOLVER_H
+#include "traceunexplored.h"
 
-#include <QSharedPointer>
+namespace artemis {
 
-#include "concolic/pathcondition.h"
+QSharedPointer<TraceUnexplored>* TraceUnexplored::mInstance = new QSharedPointer<TraceUnexplored>(new TraceUnexplored());
 
-#include "solution.h"
-
-namespace artemis
+QSharedPointer<TraceUnexplored> TraceUnexplored::getInstance()
 {
-
-/*
- *  Generic symbolic constrint solver interface.
- */
-
-class Solver
-{
-public:
-    static SolutionPtr solve(PathConditionPtr pc);
-
-private:
-    Solver();
-};
-
-
-
-
+    return *TraceUnexplored::mInstance;
 }
 
-#endif // SOLVER_H
+void TraceUnexplored::accept(TraceVisitor* visitor)
+{
+    visitor->visit(this);
+}
+
+}

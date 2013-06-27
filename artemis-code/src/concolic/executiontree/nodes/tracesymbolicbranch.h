@@ -14,34 +14,31 @@
  * limitations under the License.
  */
 
-#ifndef SOLVER_H
-#define SOLVER_H
+#ifndef TRACESYMBOLICBRANCH_H
+#define TRACESYMBOLICBRANCH_H
 
-#include <QSharedPointer>
+#include "tracebranch.h"
 
-#include "concolic/pathcondition.h"
+namespace artemis {
 
-#include "solution.h"
-
-namespace artemis
-{
-
-/*
- *  Generic symbolic constrint solver interface.
- */
-
-class Solver
+class TraceSymbolicBranch : public TraceBranch
 {
 public:
-    static SolutionPtr solve(PathConditionPtr pc);
+
+    TraceSymbolicBranch(Symbolic::Expression* condition);
+    ~TraceSymbolicBranch() {}
+
+    void accept(TraceVisitor* visitor);
+
+    inline Symbolic::Expression* getSymbolicCondition() const {
+        return mCondition;
+    }
 
 private:
-    Solver();
+    Symbolic::Expression* mCondition; // TODO: MEMORY
+
 };
-
-
-
 
 }
 
-#endif // SOLVER_H
+#endif // TRACESYMBOLICBRANCH_H

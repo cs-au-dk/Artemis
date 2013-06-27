@@ -16,7 +16,8 @@
 
 
 #include <QtGui>
-#include "concolic/trace.h"
+#include "concolic/executiontree/tracenodes.h"
+#include "concolic/executiontree/tracevisitor.h"
 
 
 #ifndef TRACEVIEWERDIALOG_H
@@ -37,7 +38,8 @@ public:
 
     // Visitor part used to populate the GUI display of this trace.
     virtual void visit(TraceNode* node);
-    virtual void visit(TraceBranch* node);
+    virtual void visit(TraceConcreteBranch* node);
+    virtual void visit(TraceSymbolicBranch* node);
     virtual void visit(TraceUnexplored* node);
     virtual void visit(TraceAlert* node);
     virtual void visit(TraceDomModification* node);

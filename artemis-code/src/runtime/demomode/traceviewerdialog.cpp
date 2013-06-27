@@ -17,6 +17,7 @@
 
 #include "traceviewerdialog.h"
 
+#include "concolic/solver/expressionprinter.h"
 #include "util/loggingutil.h"
 
 
@@ -64,23 +65,54 @@ void TraceViewerDialog::visit(TraceNode *node)
     exit(1);
 }
 
-void TraceViewerDialog::visit(TraceBranch *node)
+void TraceViewerDialog::visit(TraceConcreteBranch *node)
 {
     // This printer only works for straight-line traces, so we require branches that one side is alwyas "capped"
     // by a TraceUnexplored node immediately.
 
-    if(isImmediatelyUnexplored(node->branchFalse)){
+    if(isImmediatelyUnexplored(node->getFalseBranch())){
         // Took 'true' branch.
-        mNodeList->addItem(QString("Branch: Condition: %1; Took true branch; %2").arg(node->condition).arg(node->symbolic ? "Symbolic" : ""));
-        node->branchTrue->accept(this);
 
-    } else if(isImmediatelyUnexplored(node->branchTrue)){
+        mNodeList->addItem("Branch: Took true branch;");
+        node->getTrueBranch()->accept(this);
+
+    } else if(isImmediatelyUnexplored(node->getTrueBranch())){
         // Took 'false' branch.
-    mNodeList->addItem(QString("Branch: Condition: %1; Took false branch; %2").arg(node->condition).arg(node->symbolic ? "Symbolic" : ""));
-        node->branchFalse->accept(this);
+
+        mNodeList->addItem("Branch: Took false branch;");
+        node->getFalseBranch()->accept(this);
 
     } else {
         // Invalid branch node
+
+        Log::fatal("Trace Display: reached an invalid branch node.");
+        exit(1);
+    }
+}
+
+void TraceViewerDialog::visit(TraceSymbolicBranch *node)
+{
+    // This printer only works for straight-line traces, so we require branches that one side is alwyas "capped"
+    // by a TraceUnexplored node immediately.
+
+    ExpressionPrinter printer;
+    node->getSymbolicCondition()->accept(&printer);
+
+    if(isImmediatelyUnexplored(node->getFalseBranch())){
+        // Took 'true' branch.
+
+        mNodeList->addItem(QString("Branch: Condition: %1; Took true branch; Symbolic").arg(printer.getResult().data()));
+        node->getTrueBranch()->accept(this);
+
+    } else if(isImmediatelyUnexplored(node->getTrueBranch())){
+        // Took 'false' branch.
+
+        mNodeList->addItem(QString("Branch: Condition: %1; Took false branch; Symbolic").arg(printer.getResult().data()));
+        node->getFalseBranch()->accept(this);
+
+    } else {
+        // Invalid branch node
+
         Log::fatal("Trace Display: reached an invalid branch node.");
         exit(1);
     }

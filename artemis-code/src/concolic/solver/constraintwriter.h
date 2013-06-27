@@ -25,7 +25,8 @@
 
 #include "JavaScriptCore/symbolic/expr.h"
 #include "JavaScriptCore/symbolic/expression/visitor.h"
-#include "JavaScriptCore/symbolic/pathcondition.h"
+
+#include "concolic/pathcondition.h"
 
 #ifdef ARTEMIS
 
@@ -55,7 +56,7 @@ class ConstraintWriter : public Symbolic::Visitor
 {
 public:
 
-    static bool write(QSharedPointer<Symbolic::PathCondition> pathCondition, std::string outputFile);
+    static bool write(PathConditionPtr pathCondition, std::string outputFile);
 
 private:
 

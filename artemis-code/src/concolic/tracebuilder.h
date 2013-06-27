@@ -20,7 +20,7 @@
 #include <QList>
 #include <QSharedPointer>
 
-#include "trace.h"
+#include "concolic/executiontree/tracenodes.h"
 
 #include "traceeventdetectors.h"
 

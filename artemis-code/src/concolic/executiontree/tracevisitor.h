@@ -27,6 +27,8 @@ namespace artemis
 // Need to forward declare the concrete nodes so we can reference them in the visitor.
 class TraceNode;
 class TraceBranch;
+class TraceConcreteBranch;
+class TraceSymbolicBranch;
 class TraceUnexplored;
 class TraceAnnotation;
 class TraceAlert;
@@ -65,6 +67,8 @@ public:
     // Supply a default implementation for each node type which relays the call to the node type's parent type.
     // These can be overrriden as required by a concrete visitor.
     virtual void visit(TraceBranch* node);
+    virtual void visit(TraceConcreteBranch* node);
+    virtual void visit(TraceSymbolicBranch* node);
     virtual void visit(TraceUnexplored* node);
     virtual void visit(TraceAnnotation* node);
     virtual void visit(TraceAlert* node);

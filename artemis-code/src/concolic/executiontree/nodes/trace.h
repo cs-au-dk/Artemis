@@ -14,51 +14,19 @@
  * limitations under the License.
  */
 
+#ifndef TRACE_H
+#define TRACE_H
 
 #include <QSharedPointer>
 #include <QString>
 #include <QList>
 
+#include "JavaScriptCore/symbolic/expr.h"
 
-#ifndef TRACE_H
-#define TRACE_H
-
-#include "concreteinput.h"
-#include "tracevisitor.h"
-
+#include "concolic/executiontree/tracevisitor.h"
 
 namespace artemis
 {
-
-
-
-
-
-/*
- *  The various types of trace node which are used.
- *  These are used both for recording a single trace and the nodes in the path tree.
- *
- *  A single trace is jsut a sequence of TraceNodes.
- *  TraceBranch nodes come from the WebKit instrumentation.
- *  TraceAnnotation nodes come from the "interesting event detectors".
- *      They are used by the classifier and must be ignored by the search algorithm.
- *  TraceEnd nodes are added by the classifier and used by the search algorithm.
- *  TraceUnexplored nodes are only used in the path tree and
- *
- *  We also have a visitor interface to allow these traces (and trees) to be explored.
- */
-
-/*
- *  Note on pointers:
- *  We must use standard pointers instead of smart pointers here, because in the visitor pattern a node must pass
- *  out a reference to itself. If this reference is wrapped in a shared pointer then as soon as that pointer goes
- *  out of scope the node will be deleted.
- *  So the visitor parts use standard pointers and have the following restrictions:
- *      * A visitor must never store a node pointer.
- *      * A visitor cannot guarantee that a pointer is still valid if modifications are made higher up the tree
- *          which may have caused it to become unreferenced by any smart pointer.
- */
-
 
 class TraceNode
 {
@@ -69,29 +37,6 @@ public:
 };
 
 typedef QSharedPointer<TraceNode> TraceNodePtr;
-
-
-class TraceBranch : public TraceNode
-{
-public:
-    TraceNodePtr branchTrue;
-    TraceNodePtr branchFalse;
-    QString condition; // TODO: type?
-    bool symbolic;
-    QString symCondition; // TODO; type? is this needed?
-    void accept(TraceVisitor* visitor){visitor->visit(this);}
-    ~TraceBranch(){}
-};
-
-
-class TraceUnexplored : public TraceNode
-{
-    // This is just a placeholder for unexplored parts of the tree.
-public:
-    void accept(TraceVisitor* visitor){visitor->visit(this);}
-    ~TraceUnexplored(){}
-};
-
 
 class TraceAnnotation : public TraceNode
 {

@@ -32,7 +32,7 @@
 namespace artemis
 {
 
-SolutionPtr Solver::solve(QSharedPointer<Symbolic::PathCondition> pc)
+SolutionPtr Solver::solve(PathConditionPtr pc)
 {
 
     // 1. translate pc to something solvable using the translator

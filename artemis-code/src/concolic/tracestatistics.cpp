@@ -71,16 +71,23 @@ void TraceStatistics::visit(TraceUnexplored *node)
     mNumNodes++;
 }
 
-// For branch nodes, search both children and add to branch counter.
-void TraceStatistics::visit(TraceBranch *node)
+// For concrete branch nodes, search both children and add to branch counter.
+void TraceStatistics::visit(TraceConcreteBranch *node)
 {
     mNumNodes++;
     mNumBranches++;
-    if(node->symbolic){
-        mNumSymBranches++;
-    }
-    node->branchFalse->accept(this);
-    node->branchTrue->accept(this);
+    node->getFalseBranch()->accept(this);
+    node->getTrueBranch()->accept(this);
+}
+
+// For symbolic branch nodes, search both children and add to branch and symbolic counter.
+void TraceStatistics::visit(TraceSymbolicBranch *node)
+{
+    mNumNodes++;
+    mNumBranches++;
+    mNumSymBranches++;
+    node->getFalseBranch()->accept(this);
+    node->getTrueBranch()->accept(this);
 }
 
 // Add to alert counter and continue.

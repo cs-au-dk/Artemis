@@ -14,36 +14,42 @@
  * limitations under the License.
  */
 
-#ifndef PATHCONDITION_H
-#define PATHCONDITION_H
+#include "trace.h"
 
-#include <inttypes.h>
-#include <vector>
-#include <utility>
+#ifndef TRACEBRANCH_H
+#define TRACEBRANCH_H
 
-#include "JavaScriptCore/symbolic/expression/expression.h"
+namespace artemis {
 
-#ifdef ARTEMIS
-
-namespace Symbolic
+/**
+ * Abstract base class
+ */
+class TraceBranch : public TraceNode
 {
 
-// TODO we need to figure out how to do memory management of this data structure
-
-class PathCondition
-{
 public:
-    PathCondition();
 
-    void append(Symbolic::Expression* condition, bool followed);
-    std::pair<Symbolic::Expression*, bool> get(unsigned int index);
-    int size() const;
+    friend class TraceBranchDetector; // direct modification of mBranchTrue and mBranchFalse
 
-private:
-    std::vector<std::pair<Symbolic::Expression*, bool> > m_pc;
+    ~TraceBranch() {}
+
+    inline TraceNodePtr getTrueBranch()
+    {
+        return mBranchTrue;
+    }
+
+    inline TraceNodePtr getFalseBranch()
+    {
+        return mBranchFalse;
+    }
+
+protected:
+    TraceBranch(); // we should only use the concrete or symbolic subclasses
+
+    TraceNodePtr mBranchTrue;
+    TraceNodePtr mBranchFalse;
 };
 
 }
 
-#endif
-#endif // PATHCONDITION_H
+#endif // TRACEBRANCH_H

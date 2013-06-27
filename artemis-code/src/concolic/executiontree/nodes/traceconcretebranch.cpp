@@ -14,34 +14,19 @@
  * limitations under the License.
  */
 
-#ifndef SOLVER_H
-#define SOLVER_H
+#include "traceconcretebranch.h"
 
-#include <QSharedPointer>
+namespace artemis {
 
-#include "concolic/pathcondition.h"
-
-#include "solution.h"
-
-namespace artemis
+TraceConcreteBranch::TraceConcreteBranch() :
+    TraceBranch()
 {
-
-/*
- *  Generic symbolic constrint solver interface.
- */
-
-class Solver
-{
-public:
-    static SolutionPtr solve(PathConditionPtr pc);
-
-private:
-    Solver();
-};
-
-
-
-
 }
 
-#endif // SOLVER_H
+void TraceConcreteBranch::accept(TraceVisitor* visitor)
+{
+    visitor->visit(this);
+}
+
+
+} // END NAMESPACE

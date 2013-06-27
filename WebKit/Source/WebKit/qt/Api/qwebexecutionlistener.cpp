@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include <assert.h>
 
 #include <config.h>
 #include <DOMWindow.h>
@@ -352,9 +353,16 @@ void QWebExecutionListener::javascript_property_written(std::string propertyName
                                       m_sourceRegistry.get(callFrame->codeBlock()->source()));
 }
 
-void QWebExecutionListener::javascript_branch_executed(const char* condition, bool jump, bool symbolic)
+void QWebExecutionListener::javascript_branch_executed(bool jump, Symbolic::Expression* condition, JSC::ExecState* callFrame, const JSC::Instruction* instruction, const JSC::BytecodeInfo& info)
 {
-    emit sigJavascriptBranchExecuted(QString::fromLocal8Bit(condition), jump, symbolic);
+    uint bytecodeOffset = instruction - callFrame->codeBlock()->instructions().begin();
+
+    ByteCodeInfoStruct binfo;
+    binfo.linenumber = callFrame->codeBlock()->lineNumberForBytecodeOffset(bytecodeOffset);
+    binfo.isSymbolic = info.isSymbolic();
+    binfo.bytecodeOffset = bytecodeOffset;
+
+    emit sigJavascriptBranchExecuted(jump, condition, callFrame->codeBlock()->sourceOffset(), m_sourceRegistry.get(callFrame->codeBlock()->source()), binfo);
 }
 
 QWebExecutionListener* QWebExecutionListener::getListener() {
@@ -383,17 +391,6 @@ void QWebExecutionListener::endSymbolicSession()
 {
     JSC::Interpreter::m_symbolic->endSession();
 }
-
-Symbolic::PathCondition* QWebExecutionListener::getLastPathCondition()
-{
-    return JSC::Interpreter::m_symbolic->getPathCondition();
-}
-
-
-QString QWebExecutionListener::generatePathConditionString(){
-    return QString::fromStdString(JSC::Interpreter::m_symbolic->generatePathConditionString());
-}
-
 
 namespace inst {
 

@@ -40,6 +40,7 @@
 #include "strategies/prioritizer/collectedprioritizer.h"
 
 #include "concolic/solver/solver.h"
+#include "concolic/pathcondition.h"
 
 #include "runtime.h"
 
@@ -161,7 +162,7 @@ void Runtime::done()
     statistics()->accumulate("WebKit::coverage::covered-unique", mAppmodel->getCoverageListener()->getNumCoveredLines());
 
     // solve the last PC - this is needed by some system tests
-    QSharedPointer<Symbolic::PathCondition> pc = QSharedPointer<Symbolic::PathCondition>(mWebkitExecutor->webkitListener->getLastPathCondition());
+    PathConditionPtr pc = PathCondition::createFromTrace(mWebkitExecutor->getTraceBuilder()->trace());
 
     SolutionPtr solution = Solver::solve(pc);
     solution->toStatistics();
@@ -181,7 +182,7 @@ void Runtime::done()
     Log::info("\n=== Statistics END ===\n\n");
 
     Log::info("\n=== Last pathconditions ===\n");
-    Log::info(mWebkitExecutor->webkitListener->generatePathConditionString().toStdString());
+    Log::info(pc->toStatisticsString());
     Log::info("=== Last pathconditions END ===\n\n");
 
     Log::info("Artemis terminated on: "+ QDateTime::currentDateTime().toString().toStdString());

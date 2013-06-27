@@ -14,8 +14,7 @@
  * limitations under the License.
  */
 
-
-#include "trace.h"
+#include "concolic/executiontree/tracenodes.h"
 
 #include <QStack>
 #include <QList>

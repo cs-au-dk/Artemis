@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-
+#include <assert.h>
 
 #include "traceeventdetectors.h"
 #include "tracebuilder.h"
@@ -48,21 +48,24 @@ void TraceEventDetector::newNode(QSharedPointer<TraceNode> node, QSharedPointer<
 /* Branch Detector ***********************************************************/
 
 
-void TraceBranchDetector::slBranch(QString condition, bool jump, bool symbolic)
+void TraceBranchDetector::slBranch(bool jump, Symbolic::Expression* condition, uint sourceOffset, QSource* source, const ByteCodeInfoStruct byteInfo)
 {
-    // Create a new branch node.
-    QSharedPointer<TraceBranch> node = QSharedPointer<TraceBranch>(new TraceBranch());
-    node->condition = condition;
-    node->symbolic = symbolic;
+    QSharedPointer<TraceBranch> node;
+
+    if (condition == NULL) {
+        // concrete branch
+        node = QSharedPointer<TraceBranch>(new TraceConcreteBranch());
+    } else {
+        // symbolic branch
+        node = QSharedPointer<TraceBranch>(new TraceSymbolicBranch(condition));
+    }
 
     // Set the branch we did not take to "unexplored". The one we took is left null.
     // Pass this new node to the trace builder and the branch pointer to use as a successor.
     if(jump){
-        node->branchFalse = QSharedPointer<TraceUnexplored>(new TraceUnexplored());
-        newNode(node.staticCast<TraceNode>(), &(node->branchTrue));
+        newNode(node, &(node->mBranchTrue));
     }else{
-        node->branchTrue = QSharedPointer<TraceUnexplored>(new TraceUnexplored());
-        newNode(node.staticCast<TraceNode>(), &(node->branchFalse));
+        newNode(node, &(node->mBranchFalse));
     }
 }
 

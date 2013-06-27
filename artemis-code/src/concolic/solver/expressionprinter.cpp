@@ -14,31 +14,28 @@
  * limitations under the License.
  */
 
-#include <config.h>
-#include "JavaScriptCore/wtf/text/CString.h"
-
-#include "printer.h"
+#include "expressionprinter.h"
 
 #ifdef ARTEMIS
 
-namespace Symbolic
+namespace artemis
 {
 
-Printer::Printer()
+ExpressionPrinter::ExpressionPrinter()
 {
 }
 
-void Printer::visit(SymbolicInteger* symbolicinteger)
+void ExpressionPrinter::visit(Symbolic::SymbolicInteger* symbolicinteger)
 {
     m_result += "SymbolicInteger";
 }
 
-void Printer::visit(ConstantInteger* constantinteger)
+void ExpressionPrinter::visit(Symbolic::ConstantInteger* constantinteger)
 {
     m_result += "ConstantInteger";
 }
 
-void Printer::visit(IntegerBinaryOperation* integerbinaryoperation)
+void ExpressionPrinter::visit(Symbolic::IntegerBinaryOperation* integerbinaryoperation)
 {
     m_result += "(";
     integerbinaryoperation->getLhs()->accept(this);
@@ -49,24 +46,24 @@ void Printer::visit(IntegerBinaryOperation* integerbinaryoperation)
     m_result += ")";
 }
 
-void Printer::visit(IntegerCoercion* integercoercion)
+void ExpressionPrinter::visit(Symbolic::IntegerCoercion* integercoercion)
 {
      m_result += "IntegerCoercion( ";
      integercoercion->getExpression()->accept(this);
      m_result += " )";
 }
 
-void Printer::visit(SymbolicString* symbolicstring)
+void ExpressionPrinter::visit(Symbolic::SymbolicString* symbolicstring)
 {
     m_result += "SymbolicString";
 }
 
-void Printer::visit(ConstantString* constantstring)
+void ExpressionPrinter::visit(Symbolic::ConstantString* constantstring)
 {
     m_result += "ConstantString";
 }
 
-void Printer::visit(StringBinaryOperation* stringbinaryoperation)
+void ExpressionPrinter::visit(Symbolic::StringBinaryOperation* stringbinaryoperation)
 {
     m_result += "(";
     stringbinaryoperation->getLhs()->accept(this);
@@ -77,7 +74,7 @@ void Printer::visit(StringBinaryOperation* stringbinaryoperation)
     m_result += ")";
 }
 
-void Printer::visit(StringRegexReplace* stringregexreplace)
+void ExpressionPrinter::visit(Symbolic::StringRegexReplace* stringregexreplace)
 {
     m_result += "StringRegexReplace( ";
     stringregexreplace->getSource()->accept(this);
@@ -88,7 +85,7 @@ void Printer::visit(StringRegexReplace* stringregexreplace)
     m_result += "\" )";
 }
 
-void Printer::visit(StringReplace* stringreplace)
+void ExpressionPrinter::visit(Symbolic::StringReplace* stringreplace)
 {
     m_result += "StringReplace( ";
     stringreplace->getSource()->accept(this);
@@ -99,31 +96,31 @@ void Printer::visit(StringReplace* stringreplace)
     m_result += "\" )";
 }
 
-void Printer::visit(StringCoercion* stringcoercion)
+void ExpressionPrinter::visit(Symbolic::StringCoercion* stringcoercion)
 {
     m_result += "StringCoercion( ";
     stringcoercion->getExpression()->accept(this);
     m_result += " )";
 }
 
-void Printer::visit(SymbolicBoolean* symbolicboolean)
+void ExpressionPrinter::visit(Symbolic::SymbolicBoolean* symbolicboolean)
 {
     m_result += "SymbolicBoolean";
 }
 
-void Printer::visit(ConstantBoolean* constantboolean)
+void ExpressionPrinter::visit(Symbolic::ConstantBoolean* constantboolean)
 {
     m_result += "ConstantBoolean";
 }
 
-void Printer::visit(BooleanCoercion* booleancoercion)
+void ExpressionPrinter::visit(Symbolic::BooleanCoercion* booleancoercion)
 {
     m_result += "BooleanCoercion( ";
     booleancoercion->getExpression()->accept(this);
     m_result += " )";
 }
 
-void Printer::visit(BooleanBinaryOperation* booleanbinaryoperation)
+void ExpressionPrinter::visit(Symbolic::BooleanBinaryOperation* booleanbinaryoperation)
 {
     m_result += "(";
     booleanbinaryoperation->getLhs()->accept(this);

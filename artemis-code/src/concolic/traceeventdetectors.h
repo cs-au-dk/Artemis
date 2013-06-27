@@ -18,8 +18,9 @@
 #include <QWebFrame>
 #include <QSharedPointer>
 #include <QSource>
+#include <QWebExecutionListener>
 
-#include "trace.h"
+#include "concolic/executiontree/tracenodes.h"
 
 #ifndef TRACEEVENTDETECTORS_H
 #define TRACEEVENTDETECTORS_H
@@ -71,7 +72,7 @@ class TraceBranchDetector : public TraceEventDetector
     Q_OBJECT
 
 protected slots:
-    void slBranch(QString condition, bool jump, bool symbolic);
+    void slBranch(bool jump, Symbolic::Expression* condition, uint sourceOffset, QSource* source, const ByteCodeInfoStruct byteInfo);
 };
 
 

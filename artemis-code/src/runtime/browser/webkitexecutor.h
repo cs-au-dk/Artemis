@@ -27,6 +27,7 @@
 
 #include "runtime/executableconfiguration.h"
 #include "runtime/browser/ajax/ajaxrequestlistener.h"
+#include "runtime/appmodel.h"
 #include "model/coverage/coveragelistener.h"
 #include "model/pathtracer.h"
 #include "strategies/inputgenerator/targets/jquerylistener.h"
@@ -34,7 +35,6 @@
 #include "executionresult.h"
 #include "executionresultbuilder.h"
 #include "artemiswebpage.h"
-#include "runtime/appmodel.h"
 
 #include "concolic/tracebuilder.h"
 #include "concolic/traceeventdetectors.h"

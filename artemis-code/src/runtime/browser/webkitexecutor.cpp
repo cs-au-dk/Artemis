@@ -26,12 +26,12 @@
 
 #include "runtime/input/forms/formfield.h"
 #include "runtime/input/events/domelementdescriptor.h"
-#include "strategies/inputgenerator/targets/jquerylistener.h"
 #include "runtime/input/baseinput.h"
+#include "strategies/inputgenerator/targets/jquerylistener.h"
 #include "util/loggingutil.h"
-#include "webkitexecutor.h"
-
 #include "concolic/tracebuilder.h"
+
+#include "webkitexecutor.h"
 
 using namespace std;
 
@@ -133,8 +133,8 @@ WebKitExecutor::WebKitExecutor(QObject* parent,
 
     // The branch detector.
     QSharedPointer<TraceBranchDetector> branchDetector(new TraceBranchDetector());
-    QObject::connect(webkitListener, SIGNAL(sigJavascriptBranchExecuted(QString, bool, bool)),
-            branchDetector.data(), SLOT(slBranch(QString, bool, bool)));
+    QObject::connect(webkitListener, SIGNAL(sigJavascriptBranchExecuted(bool, Symbolic::Expression*, uint, QSource*, const ByteCodeInfoStruct)),
+            branchDetector.data(), SLOT(slBranch(bool, Symbolic::Expression*, uint, QSource*, const ByteCodeInfoStruct)));
     mTraceBuilder->addDetector(branchDetector);
 
     // The alert detector.
@@ -157,6 +157,7 @@ WebKitExecutor::~WebKitExecutor()
 
 void WebKitExecutor::detach() {
     webkitListener->endSymbolicSession();
+    mTraceBuilder->endRecording();
 
     // ignore events emitted from webkit on deallocation
     webkitListener->disconnect(mResultBuilder.data());
@@ -223,6 +224,7 @@ void WebKitExecutor::slLoadFinished(bool ok)
     qDebug() << "\n------------ EXECUTE SEQUENCE -----------" << endl;
 
     webkitListener->beginSymbolicSession();
+    mTraceBuilder->beginRecording();
 
     foreach(QSharedPointer<const BaseInput> input, currentConf->getInputSequence()->toList()) {
         mResultBuilder->notifyStartingEvent();
@@ -235,6 +237,7 @@ void WebKitExecutor::slLoadFinished(bool ok)
 
     if (!mKeepOpen) {
         webkitListener->endSymbolicSession();
+        mTraceBuilder->endRecording();
     }
 
     // DONE

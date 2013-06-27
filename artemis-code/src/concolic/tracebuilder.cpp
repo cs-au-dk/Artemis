@@ -14,18 +14,13 @@
  * limitations under the License.
  */
 
-
 #include "tracebuilder.h"
 #include "traceeventdetectors.h"
 
 #include "util/loggingutil.h"
 
-
 namespace artemis
 {
-
-
-
 
 TraceBuilder::TraceBuilder(QObject* parent) :
     QObject(parent),
@@ -57,8 +52,7 @@ void TraceBuilder::beginRecording()
 void TraceBuilder::endRecording()
 {
     if(!mRecording){
-        Log::fatal("TraceRecorder: Ended recording without starting one.");
-        exit(1);
+        return;
     }
 
     mRecording = false;

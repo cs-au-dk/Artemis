@@ -38,7 +38,7 @@
 #include "model/coverage/coveragetooutputstream.h"
 
 #include "concolic/entrypoints.h"
-#include "concolic/trace.h"
+#include "concolic/executiontree/tracenodes.h"
 #include "concolic/traceclassifier.h"
 #include "concolic/traceprinter.h"
 #include "concolic/tracestatistics.h"
