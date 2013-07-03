@@ -12,11 +12,13 @@ remove-yajl-folder:
 install-node-gyp:
 	sudo npm -g install node-gyp
 
-build-ail-module: install-node-gyp 
-	cd ail-module; 	node-gyp configure; node-gyp build
+build-ail-module:  
+	cd ail-module/ailreader/; make 
+	cd ail-module;  sed "s?#PATH?"`pwd`"?" binding.gyp-orig > binding.gyp; node-gyp rebuild
 
 ail-clean: 
-	cd ail-module; node-gyp clean
+	cd ail-module/ailreader/; make clean
+	cd ail-module; node-gyp clean; rm binding.gyp
 
 install-pp-modules:
 	sudo npm -g install js-beautify
