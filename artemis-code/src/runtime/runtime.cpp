@@ -133,7 +133,6 @@ Runtime::Runtime(QObject* parent, const Options& options, const QUrl& url) : QOb
 
     QObject::connect(mWebkitExecutor, SIGNAL(sigAbortedExecution(QString)),
                      this, SLOT(slAbortedExecution(QString)));
-    QObject::connect(this, SIGNAL(sigTestingDone()), mWebkitExecutor, SLOT(slTestingDone()));
 
     /** Visited states **/
     mVisitedStates = new set<long>();

@@ -43,7 +43,7 @@ WebKitExecutor::WebKitExecutor(QObject* parent,
                                AjaxRequestListener* ajaxListener,
                                bool enableConstantStringInstrumentation) :
     QObject(parent),
-    mKeepOpen(false), testingDone(false), nextOpCanceled(false)
+    mKeepOpen(false),  mNextOpCanceled(false)
 {
 
     mPresetFields = presetFields;
@@ -162,14 +162,10 @@ void WebKitExecutor::executeSequence(ExecutableConfigurationConstPtr conf, bool 
     mPage->mainFrame()->load(conf->getUrl());
 }
 
-void WebKitExecutor::slTestingDone(){
-    testingDone = true;
-}
-
 void WebKitExecutor::slLoadProgress(int i){
-    if(!nextOpCanceled)
+    if(!mNextOpCanceled)
         qDebug() << "Page loaded " << i << "%";
-    nextOpCanceled = false;
+    mNextOpCanceled = false;
 }
 
 
@@ -178,7 +174,7 @@ void WebKitExecutor::slNAMFinished(QNetworkReply* reply){
     case QNetworkReply::NoError:
         break;
     case QNetworkReply::OperationCanceledError:
-        nextOpCanceled = true;
+        mNextOpCanceled = true;
         break;
     default:
         qDebug() << "REPLY" << reply->errorString();
@@ -190,13 +186,14 @@ void WebKitExecutor::slNAMFinished(QNetworkReply* reply){
 void WebKitExecutor::slLoadFinished(bool ok)
 {
 
-    if(nextOpCanceled){
-        nextOpCanceled = false;
+    if(mNextOpCanceled){
+        mNextOpCanceled = false;
         qDebug() << "Page load canceled";
         return;
     }
     qDebug() << "Page loaded "<< mPage->mainFrame()->url();
 
+    qDebug() << mPage->mainFrame()->toHtml();
     if(!ok){
         QString html = mPage->mainFrame()->toHtml();
         if(html == "<html><head></head><body></body></html>"){

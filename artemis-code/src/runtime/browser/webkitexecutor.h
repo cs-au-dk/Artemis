@@ -72,9 +72,8 @@ private:
     CoverageListenerPtr mCoverageListener;
     JavascriptStatisticsPtr mJavascriptStatistics;
     PathTracerPtr mPathTracer;
-    bool nextOpCanceled;
+    bool mNextOpCanceled;
     bool mKeepOpen;
-    bool testingDone;
 
 signals:
     void sigExecutedSequence(ExecutableConfigurationConstPtr conf, QSharedPointer<ExecutionResult> res);
@@ -83,7 +82,6 @@ signals:
 public slots:
     void slNAMFinished(QNetworkReply* reply);
     void slLoadFinished(bool ok);
-    void slTestingDone();
     void slLoadProgress(int i);
 
 
