@@ -26,6 +26,7 @@ namespace artemis
 ArtemisRuntime::ArtemisRuntime(QObject* parent, const Options& options, const QUrl& url) :
     Runtime(parent, options, url)
 {
+    mIterations = 1;
     QObject::connect(mWebkitExecutor, SIGNAL(sigExecutedSequence(ExecutableConfigurationConstPtr, QSharedPointer<ExecutionResult>)),
                      this, SLOT(postConcreteExecution(ExecutableConfigurationConstPtr, QSharedPointer<ExecutionResult>)));
 
@@ -46,12 +47,42 @@ void ArtemisRuntime::preConcreteExecution()
 {
     if (mWorklist->empty() ||
         mTerminationStrategy->shouldTerminate()) {
+        if(!((mIterations-1)%25)){
+            cout << "\n";
+        }
+        cout << "\n" << endl;
 
         mWebkitExecutor->detach();
         done();
         return;
     }
 
+    int mod = mIterations%25;
+
+    if(!(mod) && mIterations){
+        cout << "\r ..... ..... ..... ..... .....    " << mIterations << " ";
+    } else {
+        if(mod == 1){
+            cout << endl;
+        }
+        cout << "\r";
+        for(int i=0; i < mod; i++){
+            if(!(i%5)){
+                cout << " ";
+            }
+            cout << ".";
+        }
+        for(int i= mod; i < 25; i++){
+            if(!(i%5)){
+                cout << " ";
+            }
+            cout << " ";
+        }
+        cout << "    "<< mIterations << " ";
+    }
+    cout.flush();
+
+    mIterations++;
     Log::debug("\n============= New-Iteration =============");
     Log::debug("--------------- WORKLIST ----------------\n");
     Log::debug(mWorklist->toString().toStdString());
