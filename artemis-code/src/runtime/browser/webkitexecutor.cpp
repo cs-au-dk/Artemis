@@ -191,7 +191,7 @@ void WebKitExecutor::slLoadFinished(bool ok)
         qDebug() << "Page load canceled";
         return;
     }
-    qDebug() << "Page loaded "<< mPage->mainFrame()->url();
+//    qDebug() << "Page loaded "<< mPage->mainFrame()->url();
 
     qDebug() << mPage->mainFrame()->toHtml();
     if(!ok){
