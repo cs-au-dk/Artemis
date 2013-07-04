@@ -39,28 +39,29 @@ def run_artemis(address, iterations):
 
 def log_result_to_file(file_name, result):
     with open(file_name, 'a') as fp:
-        fp.writelines(
-            ('%s,%s,%s,%s,%s,%s,%s\n' % (e[0], e[1][0], e[2][0], e[1][1], e[2][1], e[1][2], e[2][2])) for e in result)
+        fp.writelines("%s,%s\n" % (row[0], ",".join(",".join(str(ii) for ii in i) for i in row[1:])) for row in result)
+
     return file_name
 
 
-def initialize_file():
+def initialize_file(n):
     fn = 'result_file-%s.csv' % int(time.time())
     with open(fn, 'w') as fp:
-        fp.write("Site,Min Iteration,Max Iteration,Min Time,Max Time,Min Coverage,Max Coverage\n")
+        fp.write("Site,%s\n" % (
+            ",".join("Num iterations #%s,Runtime #%s,Unique covered lines #%s" % (i, i, i) for i in range(1, n+1))))
     return fn
 
+
 if __name__ == '__main__':
-    if len(sys.argv) < 3:
-        print 'Usage: %s <alexalist.csv> <top-n-sites> <min-iterations[default=1]> <max-iterations[default=100]>' % \
+    if len(sys.argv) < 4:
+        print 'Usage: %s <alexalist.csv> <top-n-sites> <num iterations>  <num iterations> ...  <num iterations> ' % \
               sys.argv[0]
         exit(1)
     site_list = sys.argv[1]
     top_n_sites = int(sys.argv[2])
-    min_iteration = int(sys.argv[3]) if len(sys.argv) > 3 else 1
-    max_iteration = int(sys.argv[4]) if len(sys.argv) > 4 else 100
+    iterations = [int(i) for i in sys.argv[3:]]
     result = []
-    fn = initialize_file()
+    fn = initialize_file(len(iterations))
     with open(site_list, 'r') as fp:
         for line in fp:
             if top_n_sites <= 0:
@@ -72,15 +73,14 @@ if __name__ == '__main__':
             print 'Visit %s' % url
             print '=========================='
             print ''
-            print '%s iteration(s)' % min_iteration
-            first_run = run_artemis(url, min_iteration)
-            print 'Ran %s seconds with %s unique covered lines' % first_run
-            print ''
-            print '%s iteration(s)' % max_iteration
-            second_run = run_artemis(url, max_iteration)
-            print 'Ran %s seconds with %s unique covered lines' % second_run
-            print ''
-            result.append([url, [min_iteration] + list(first_run), [max_iteration] + list(second_run)])
+            runs = []
+            for it in iterations:
+                print '%s iteration(s)' % it
+                run = run_artemis(url, it)
+                print 'Ran %s seconds with %s unique covered lines' % run
+                print ''
+                runs.append([it] + list(run))
+            result.append([url] + runs)
             log_result_to_file(fn, result)
             result = []
     print '=========================='
