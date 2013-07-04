@@ -185,15 +185,12 @@ void WebKitExecutor::slNAMFinished(QNetworkReply* reply){
 
 void WebKitExecutor::slLoadFinished(bool ok)
 {
-
     if(mNextOpCanceled){
         mNextOpCanceled = false;
         qDebug() << "Page load canceled";
         return;
     }
-//    qDebug() << "Page loaded "<< mPage->mainFrame()->url();
 
-    qDebug() << mPage->mainFrame()->toHtml();
     if(!ok){
         QString html = mPage->mainFrame()->toHtml();
         if(html == "<html><head></head><body></body></html>"){
