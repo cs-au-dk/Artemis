@@ -18,7 +18,7 @@ CORES = `grep -c ^processor /proc/cpuinfo`
 WEBKIT_BUILD_SCRIPT = ./WebKit/Tools/Scripts/build-webkit --qt --qmakearg="DEFINES+=ARTEMIS=1" --makearg="-j$(CORES)" --qmakearg="CC=gcc-4.7" --qmakearg="CXX=g++-4.7" --no-webkit2 --inspector --javascript-debugger
 WEBKIT_TEST_SCRIPT = ./WebKit/Tools/Scripts/run-javascriptcore-tests --qmakearg="DEFINES+=ARTEMIS=1" --debug
 
-build: check webkit artemis
+build: check webkit-minimal artemis
 
 install: webkit-install artemis-install
 
