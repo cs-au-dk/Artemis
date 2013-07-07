@@ -1,0 +1,49 @@
+{
+    "1": {
+        "column": 1, 
+        "minimized": false, 
+        "position": 0
+    }, 
+    "desktop": {
+        "column": "1", 
+        "installed": "false", 
+        "position": "1", 
+        "title": "Desktop"
+    }, 
+    "events": {
+        "column": 3, 
+        "installed": "true", 
+        "items": "5", 
+        "minimized": false, 
+        "position": 1, 
+        "title": "Events"
+    }, 
+    "favorites": {
+        "column": 3, 
+        "installed": "true", 
+        "minimized": false, 
+        "position": 0, 
+        "title": "Favorites Applications"
+    }, 
+    "files": {
+        "column": 1, 
+        "installed": "true", 
+        "minimized": false, 
+        "position": 0, 
+        "title": "Files"
+    }, 
+    "groups": {
+        "column": 1, 
+        "installed": "true", 
+        "minimized": false, 
+        "position": 1, 
+        "title": "My Groups"
+    }, 
+    "notes": {
+        "column": 3, 
+        "installed": "true", 
+        "minimized": false, 
+        "position": 2, 
+        "title": "Notes"
+    }
+}

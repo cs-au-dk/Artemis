@@ -1,0 +1,166 @@
+-----------------------------7081004282000241817257315699
+Content-Disposition: form-data; name="products_name[1]"
+
+HP Pavilion DV7-1240US 17.0-Inch Laptop
+-----------------------------7081004282000241817257315699
+Content-Disposition: form-data; name="products_tags[1]"
+
+wow
+-----------------------------7081004282000241817257315699
+Content-Disposition: form-data; name="products_short_description[1]"
+
+
+-----------------------------7081004282000241817257315699
+Content-Disposition: form-data; name="products_description[1]"
+
+<h2>Products Features</h2><br><ul><li>Entertainment-centric notebook PC with fluid, modern lines in bronze and chrome with argyle-like patterning; widescreen 17-inch LCD </li><li>2.1 GHz AMD Turion X2 RM-72 dual-core processor, 320 GB hard drive, 4 GB RAM (8 GB max), LightScribe dual-layer DVD drive </li><li>Draft-N Wi-Fi (802.11a/b/g/n); Gigabit Ethernet; ATI Radeon HD 3200 graphics (up to 1918 MB total) </li><li>Connectivity: 4 USB (with 1 shared eSATA), 1 HDMI, 1 VGA, ExpressCard 54/34, 5-in-1 memory card reader </li><li>Pre-installed with Windows Vista Home Premium with SP1 (64-bit version); includes remote control....</li></ul>
+-----------------------------7081004282000241817257315699
+Content-Disposition: form-data; name="products_url[1]"
+
+
+-----------------------------7081004282000241817257315699
+Content-Disposition: form-data; name="products_page_title[1]"
+
+..dfj
+-----------------------------7081004282000241817257315699
+Content-Disposition: form-data; name="products_meta_keywords[1]"
+
+wow
+-----------------------------7081004282000241817257315699
+Content-Disposition: form-data; name="products_meta_description[1]"
+
+
+-----------------------------7081004282000241817257315699
+Content-Disposition: form-data; name="products_friendly_url[1]"
+
+hp-pavilion-dv7-1240us-17-0-inch-laptop
+-----------------------------7081004282000241817257315699
+Content-Disposition: form-data; name="products_status"
+
+0
+-----------------------------7081004282000241817257315699
+Content-Disposition: form-data; name="products_date_available"
+
+
+-----------------------------7081004282000241817257315699
+Content-Disposition: form-data; name="products_sku"
+
+hp1
+-----------------------------7081004282000241817257315699
+Content-Disposition: form-data; name="products_model"
+
+
+-----------------------------7081004282000241817257315699
+Content-Disposition: form-data; name="manufacturers_id"
+
+3
+-----------------------------7081004282000241817257315699
+Content-Disposition: form-data; name="products_weight"
+
+10.00
+-----------------------------7081004282000241817257315699
+Content-Disposition: form-data; name="products_weight_class"
+
+2
+-----------------------------7081004282000241817257315699
+Content-Disposition: form-data; name="products_tax_class_id"
+
+0
+-----------------------------7081004282000241817257315699
+Content-Disposition: form-data; name="products_price"
+
+499.0000
+-----------------------------7081004282000241817257315699
+Content-Disposition: form-data; name="products_price_gross"
+
+499
+-----------------------------7081004282000241817257315699
+Content-Disposition: form-data; name="quantity_discount_groups_id"
+
+0
+-----------------------------7081004282000241817257315699
+Content-Disposition: form-data; name="products_quantity"
+
+1000
+-----------------------------7081004282000241817257315699
+Content-Disposition: form-data; name="products_moq"
+
+1
+-----------------------------7081004282000241817257315699
+Content-Disposition: form-data; name="order_increment"
+
+1
+-----------------------------7081004282000241817257315699
+Content-Disposition: form-data; name="quantity_unit_class"
+
+1
+-----------------------------7081004282000241817257315699
+Content-Disposition: form-data; name="unlimited"
+
+on
+-----------------------------7081004282000241817257315699
+Content-Disposition: form-data; name="file"; filename=""
+Content-Type: application/octet-stream
+
+
+-----------------------------7081004282000241817257315699
+Content-Disposition: form-data; name="multiselect"
+
+
+-----------------------------7081004282000241817257315699
+Content-Disposition: form-data; name="products_attributes_groups_id"
+
+
+-----------------------------7081004282000241817257315699
+Content-Disposition: form-data; name="xsellproducts"
+
+Lenovo ThinkPad X200
+-----------------------------7081004282000241817257315699
+Content-Disposition: form-data; name="accessories_name"
+
+LENOVO THINKPAD X301, SU9400 1.4GHZ CPU
+-----------------------------7081004282000241817257315699
+Content-Disposition: form-data; name="action"
+
+save_product
+-----------------------------7081004282000241817257315699
+Content-Disposition: form-data; name="accessories_ids"
+
+23;7
+-----------------------------7081004282000241817257315699
+Content-Disposition: form-data; name="xsell_ids"
+
+23;8
+-----------------------------7081004282000241817257315699
+Content-Disposition: form-data; name="products_variants"
+
+
+-----------------------------7081004282000241817257315699
+Content-Disposition: form-data; name="products_id"
+
+10
+-----------------------------7081004282000241817257315699
+Content-Disposition: form-data; name="attachments_ids"
+
+
+-----------------------------7081004282000241817257315699
+Content-Disposition: form-data; name="categories_id"
+
+1,3,4,8
+-----------------------------7081004282000241817257315699
+Content-Disposition: form-data; name="customization_fields"
+
+4::1::0::{"name1":"wow"};;5::1::0::{"name1":"notwow"}
+-----------------------------7081004282000241817257315699
+Content-Disposition: form-data; name="products_type"
+
+0
+-----------------------------7081004282000241817257315699
+Content-Disposition: form-data; name="module"
+
+products
+-----------------------------7081004282000241817257315699
+Content-Disposition: form-data; name="token"
+
+01343fd85986eeb00d121f758453be3c
+-----------------------------7081004282000241817257315699--

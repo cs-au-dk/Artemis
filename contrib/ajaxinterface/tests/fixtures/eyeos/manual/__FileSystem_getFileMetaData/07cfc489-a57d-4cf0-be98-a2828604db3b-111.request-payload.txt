@@ -1,0 +1,1 @@
+params=%7B%22path%22%3A%22home%3A%2F%2F~username%2FDesktop%22%7D

@@ -1,0 +1,58 @@
+[
+    {
+        "attr": {
+            "id": "page_0_344_left_66", 
+            "languageId": "344", 
+            "pageId": "66", 
+            "rel": "page", 
+            "websiteId": "0", 
+            "zoneName": "left"
+        }, 
+        "children": false, 
+        "data": "Text", 
+        "state": "leaf"
+    }, 
+    {
+        "attr": {
+            "id": "page_0_344_left_68", 
+            "languageId": "344", 
+            "pageId": "68", 
+            "rel": "page", 
+            "websiteId": "0", 
+            "zoneName": "left"
+        }, 
+        "children": false, 
+        "data": "Video or something else", 
+        "state": "leaf"
+    }, 
+    {
+        "attr": {
+            "id": "page_0_344_left_69", 
+            "languageId": "344", 
+            "pageId": "69", 
+            "rel": "page", 
+            "websiteId": "0", 
+            "zoneName": "left"
+        }, 
+        "children": [
+            {
+                "attr": {
+                    "id": "page_0_344_left_81", 
+                    "languageId": "344", 
+                    "pageId": "81", 
+                    "rel": "page", 
+                    "websiteId": "0", 
+                    "zoneName": "left"
+                }, 
+                "children": false, 
+                "data": {
+                    "icon": "", 
+                    "title": "Lorem ipsum"
+                }, 
+                "state": "leaf"
+            }
+        ], 
+        "data": "All In One", 
+        "state": "open"
+    }
+]

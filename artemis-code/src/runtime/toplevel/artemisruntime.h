@@ -45,6 +45,9 @@ protected:
     WorkListPtr mWorklist;
     EntryPointDetector mEntryPointDetector;
 
+private:
+    int mIterations;
+
 private slots:
     void postConcreteExecution(ExecutableConfigurationConstPtr configuration, QSharedPointer<ExecutionResult> result);
 

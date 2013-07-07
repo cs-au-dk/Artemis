@@ -1,0 +1,7 @@
+{
+    "headers": "{\"content-type\":\"application/vnd.google.safebrowsing-chunk\",\"x-content-type-options\":\"nosniff\",\"date\":\"Wed, 12 Oct 2011 05:56:15 GMT\",\"server\":\"Chunked Update Server\",\"content-length\":\"54138\",\"x-xss-protection\":\"1; mode=block\",\"x-frame-options\":\"SAMEORIGIN\",\"cache-control\":\"public,max-age=172800\",\"age\":\"10554\"}", 
+    "httpVersion": "1.1", 
+    "method": null, 
+    "statusCode": 200, 
+    "url": ""
+}

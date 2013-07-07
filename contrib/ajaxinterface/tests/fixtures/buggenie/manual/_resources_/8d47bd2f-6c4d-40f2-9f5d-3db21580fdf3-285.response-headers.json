@@ -1,0 +1,7 @@
+{
+    "headers": "{\"x-powered-by\":\"PHP/5.3.5-1ubuntu7.3\",\"set-cookie\":[\"tbg3_password=bf653e7725b4c982551dbc373908355741695ff6; expires=Sat, 29-Oct-2011 13:50:51 GMT; path=/buggenie/thebuggenie/\",\"tbg3_username=administrator; expires=Sat, 29-Oct-2011 13:50:51 GMT; path=/buggenie/thebuggenie/\"],\"expires\":\"Mon, 26 Jul 1997 05:00:00 GMT\",\"last-modified\":\"Wed, 19 Oct 2011 13:50:53 GMT\",\"cache-control\":\"no-cache, must-revalidate\",\"pragma\":\"no-cache\",\"content-type\":\"text/html; charset=utf-8\",\"transfer-encoding\":\"chunked\",\"date\":\"Wed, 19 Oct 2011 13:50:53 GMT\",\"server\":\"lighttpd/1.4.28\"}", 
+    "httpVersion": "1.1", 
+    "method": null, 
+    "statusCode": 200, 
+    "url": ""
+}

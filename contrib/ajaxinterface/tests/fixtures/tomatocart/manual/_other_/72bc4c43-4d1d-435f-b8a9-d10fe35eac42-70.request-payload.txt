@@ -1,0 +1,166 @@
+-----------------------------21167425731716260282100890498
+Content-Disposition: form-data; name="products_name[1]"
+
+HP Pavilion DV7-1240US 17.0-Inch Laptop
+-----------------------------21167425731716260282100890498
+Content-Disposition: form-data; name="products_tags[1]"
+
+wow
+-----------------------------21167425731716260282100890498
+Content-Disposition: form-data; name="products_short_description[1]"
+
+
+-----------------------------21167425731716260282100890498
+Content-Disposition: form-data; name="products_description[1]"
+
+<h2>Products Features</h2><br><ul><li>Entertainment-centric notebook PC with fluid, modern lines in bronze and chrome with argyle-like patterning; widescreen 17-inch LCD </li><li>2.1 GHz AMD Turion X2 RM-72 dual-core processor, 320 GB hard drive, 4 GB RAM (8 GB max), LightScribe dual-layer DVD drive </li><li>Draft-N Wi-Fi (802.11a/b/g/n); Gigabit Ethernet; ATI Radeon HD 3200 graphics (up to 1918 MB total) </li><li>Connectivity: 4 USB (with 1 shared eSATA), 1 HDMI, 1 VGA, ExpressCard 54/34, 5-in-1 memory card reader </li><li>Pre-installed with Windows Vista Home Premium with SP1 (64-bit version); includes remote control....</li></ul>
+-----------------------------21167425731716260282100890498
+Content-Disposition: form-data; name="products_url[1]"
+
+
+-----------------------------21167425731716260282100890498
+Content-Disposition: form-data; name="products_page_title[1]"
+
+
+-----------------------------21167425731716260282100890498
+Content-Disposition: form-data; name="products_meta_keywords[1]"
+
+
+-----------------------------21167425731716260282100890498
+Content-Disposition: form-data; name="products_meta_description[1]"
+
+
+-----------------------------21167425731716260282100890498
+Content-Disposition: form-data; name="products_friendly_url[1]"
+
+hp-pavilion-dv7-1240us-17-0-inch-laptop
+-----------------------------21167425731716260282100890498
+Content-Disposition: form-data; name="products_status"
+
+1
+-----------------------------21167425731716260282100890498
+Content-Disposition: form-data; name="products_date_available"
+
+
+-----------------------------21167425731716260282100890498
+Content-Disposition: form-data; name="products_sku"
+
+
+-----------------------------21167425731716260282100890498
+Content-Disposition: form-data; name="products_model"
+
+
+-----------------------------21167425731716260282100890498
+Content-Disposition: form-data; name="manufacturers_id"
+
+3
+-----------------------------21167425731716260282100890498
+Content-Disposition: form-data; name="products_weight"
+
+10.00
+-----------------------------21167425731716260282100890498
+Content-Disposition: form-data; name="products_weight_class"
+
+2
+-----------------------------21167425731716260282100890498
+Content-Disposition: form-data; name="products_tax_class_id"
+
+0
+-----------------------------21167425731716260282100890498
+Content-Disposition: form-data; name="products_price"
+
+499.0000
+-----------------------------21167425731716260282100890498
+Content-Disposition: form-data; name="products_price_gross"
+
+499
+-----------------------------21167425731716260282100890498
+Content-Disposition: form-data; name="quantity_discount_groups_id"
+
+0
+-----------------------------21167425731716260282100890498
+Content-Disposition: form-data; name="products_quantity"
+
+10
+-----------------------------21167425731716260282100890498
+Content-Disposition: form-data; name="products_moq"
+
+1
+-----------------------------21167425731716260282100890498
+Content-Disposition: form-data; name="order_increment"
+
+1
+-----------------------------21167425731716260282100890498
+Content-Disposition: form-data; name="quantity_unit_class"
+
+1
+-----------------------------21167425731716260282100890498
+Content-Disposition: form-data; name="unlimited"
+
+on
+-----------------------------21167425731716260282100890498
+Content-Disposition: form-data; name="file"; filename=""
+Content-Type: application/octet-stream
+
+
+-----------------------------21167425731716260282100890498
+Content-Disposition: form-data; name="multiselect"
+
+
+-----------------------------21167425731716260282100890498
+Content-Disposition: form-data; name="products_attributes_groups_id"
+
+
+-----------------------------21167425731716260282100890498
+Content-Disposition: form-data; name="xsellproducts"
+
+Xsell Products
+-----------------------------21167425731716260282100890498
+Content-Disposition: form-data; name="accessories_name"
+
+Accessories
+-----------------------------21167425731716260282100890498
+Content-Disposition: form-data; name="action"
+
+save_product
+-----------------------------21167425731716260282100890498
+Content-Disposition: form-data; name="accessories_ids"
+
+
+-----------------------------21167425731716260282100890498
+Content-Disposition: form-data; name="xsell_ids"
+
+
+-----------------------------21167425731716260282100890498
+Content-Disposition: form-data; name="products_variants"
+
+
+-----------------------------21167425731716260282100890498
+Content-Disposition: form-data; name="products_id"
+
+10
+-----------------------------21167425731716260282100890498
+Content-Disposition: form-data; name="attachments_ids"
+
+
+-----------------------------21167425731716260282100890498
+Content-Disposition: form-data; name="categories_id"
+
+1
+-----------------------------21167425731716260282100890498
+Content-Disposition: form-data; name="customization_fields"
+
+
+-----------------------------21167425731716260282100890498
+Content-Disposition: form-data; name="products_type"
+
+0
+-----------------------------21167425731716260282100890498
+Content-Disposition: form-data; name="module"
+
+products
+-----------------------------21167425731716260282100890498
+Content-Disposition: form-data; name="token"
+
+01343fd85986eeb00d121f758453be3c
+-----------------------------21167425731716260282100890498--

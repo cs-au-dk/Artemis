@@ -1,0 +1,16 @@
+{
+    "absolutepath": "home://~username/Music/New Spreadsheet.xls", 
+    "allTags": null, 
+    "created": "12/10/2011", 
+    "extension": "XLS", 
+    "modified": "12/10/2011", 
+    "name": "New Spreadsheet.xls", 
+    "owner": "username", 
+    "path": "home://~username/Music", 
+    "permissions": "-rw-------", 
+    "rating": 0, 
+    "shared": "0", 
+    "size": 0, 
+    "tags": null, 
+    "type": "file"
+}

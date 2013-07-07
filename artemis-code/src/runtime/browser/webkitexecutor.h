@@ -22,6 +22,7 @@
 #include <QtWebKit>
 #include <QtWebKit/qwebexecutionlistener.h>
 #include <QSharedPointer>
+#include <QNetworkReply>
 
 #include "artemisglobals.h"
 
@@ -76,9 +77,8 @@ private:
     CoverageListenerPtr mCoverageListener;
     JavascriptStatisticsPtr mJavascriptStatistics;
     PathTracerPtr mPathTracer;
-
+    bool mNextOpCanceled;
     bool mKeepOpen;
-    bool testingDone;
 
     TraceBuilder* mTraceBuilder;
 
@@ -87,8 +87,9 @@ signals:
     void sigAbortedExecution(QString reason);
 
 public slots:
+    void slNAMFinished(QNetworkReply* reply);
     void slLoadFinished(bool ok);
-    void slTestingDone();
+    void slLoadProgress(int i);
 
 
 };

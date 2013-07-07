@@ -1,0 +1,7 @@
+{
+    "headers": "{\"server\":\"nginx\",\"date\":\"Wed, 19 Oct 2011 13:40:49 GMT\",\"content-type\":\"image/png\",\"connection\":\"keep-alive\",\"last-modified\":\"Tue, 23 Mar 2010 23:51:21 GMT\",\"access-control-allow-origin\":\"*\",\"content-length\":\"1212\",\"x-varnish\":\"160970740 153537165\",\"via\":\"1.1 varnish\",\"expires\":\"Wed, 19 Oct 2011 13:45:49 GMT\",\"cache-control\":\"max-age=300\",\"source-age\":\"1822\"}", 
+    "httpVersion": "1.1", 
+    "method": null, 
+    "statusCode": 200, 
+    "url": ""
+}

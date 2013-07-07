@@ -1,0 +1,12 @@
+{
+    "changeDirectory": [
+        "eyeos.suhandlers.ShareFolder.js", 
+        "eyeos.suhandlers.LocalFolder.js", 
+        "eyeos.suhandlers.WorkgroupFolder.js"
+    ], 
+    "changeSelection": [
+        "eyeos.suhandlers.WorkgroupFile.js", 
+        "eyeos.suhandlers.LocalFile.js", 
+        "eyeos.suhandlers.ShareFile.js"
+    ]
+}

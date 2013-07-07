@@ -1,0 +1,77 @@
+
+
+/*
+*                 eyeos - The Open Source Cloud's Web Desktop
+*                               Version 2.0
+*                   Copyright (C) 2007 - 2010 eyeos Team
+*
+* This program is free software; you can redistribute it and/or modify it under
+* the terms of the GNU Affero General Public License version 3 as published by the
+* Free Software Foundation.
+*
+* This program is distributed in the hope that it will be useful, but WITHOUT
+* ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+* FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more
+* details.
+*
+* You should have received a copy of the GNU Affero General Public License
+* version 3 along with this program in the file "LICENSE".  If not, see
+* <http://www.gnu.org/licenses/agpl-3.0.txt>.
+*
+* See www.eyeos.org for more details. All requests should be sent to licensing@eyeos.org
+*
+* The interactive user interfaces in modified source and object code versions
+* of this program must display Appropriate Legal Notices, as required under
+* Section 5 of the GNU Affero General Public License version 3.
+*
+* In accordance with Section 7(b) of the GNU Affero General Public License version 3,
+* these Appropriate Legal Notices must retain the display of the "Powered by
+* eyeos" logo and retain the original copyright notice. If the display of the
+* logo is not reasonably feasible for technical reasons, the Appropriate Legal Notices
+* must display the words "Powered by eyeos" and retain the original copyright notice.
+*/
+function iframize_application(checknum, pid, args) {
+    var app = new eyeos.application.Iframize(checknum, pid, args);
+    app.drawGUI();
+}
+
+qx.Class.define('eyeos.application.Iframize', {
+    extend: eyeos.system.EyeApplication,
+
+    construct: function(checknum, pid, args) {
+        arguments.callee.base.call(this, 'iframize', checknum, pid);
+        if(args && args[0]) {
+            this.__url = args[0];
+            if(args[1]) {
+                this.__customWidth = args[1];
+            } 
+
+            if(args[2]) {
+                this.__customHeight = args[2];
+            }
+        } else {
+            this.__url = 'index.php?checknum='+checknum+'&appName=iframize&appFile=error.html';
+        }
+        
+    },
+
+    members: {
+        __url: null,
+        __customWidth: 700,
+        __customHeight: 500,
+        drawGUI: function() {
+            //var mainWindow = new eyeos.ui.Window(this, 'External Resource');
+            var mainWindow = new eyeos.ui.Window(this, this.__url);
+            mainWindow.setWidth(this.__customWidth);
+            mainWindow.setHeight(this.__customHeight)
+            mainWindow.setLayout(new qx.ui.layout.Grow());
+            mainWindow.setAllowMaximize(true);
+            var iframe = new qx.ui.embed.Iframe(this.__url);
+            iframe.set({decorator:null});
+            mainWindow.add(iframe);
+
+            mainWindow.open();
+        }
+    }
+});
+iframize_application(595058051, 8008, ["http:\/\/example.org",700,500]);eyeos._callbackProxyWithContent(null, null, null, {"__eyeos_specialControlMessage_header":"__control_enhancedData","__eyeos_specialControlMessage_body":{"messages":[{"type":"application","eventName":"start","eventData":{"name":"iframize","pid":8008,"loginContext":{"user":"username","group":"users"},"checknum":595058051,"time":1318409602,"args":{}}}],"data":"\n\n\/*\n*                 eyeos - The Open Source Cloud's Web Desktop\n*                               Version 2.0\n*                   Copyright (C) 2007 - 2010 eyeos Team\n*\n* This program is free software; you can redistribute it and\/or modify it under\n* the terms of the GNU Affero General Public License version 3 as published by the\n* Free Software Foundation.\n*\n* This program is distributed in the hope that it will be useful, but WITHOUT\n* ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS\n* FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more\n* details.\n*\n* You should have received a copy of the GNU Affero General Public License\n* version 3 along with this program in the file \"LICENSE\".  If not, see\n* <http:\/\/www.gnu.org\/licenses\/agpl-3.0.txt>.\n*\n* See www.eyeos.org for more details. All requests should be sent to licensing@eyeos.org\n*\n* The interactive user interfaces in modified source and object code versions\n* of this program must display Appropriate Legal Notices, as required under\n* Section 5 of the GNU Affero General Public License version 3.\n*\n* In accordance with Section 7(b) of the GNU Affero General Public License version 3,\n* these Appropriate Legal Notices must retain the display of the \"Powered by\n* eyeos\" logo and retain the original copyright notice. If the display of the\n* logo is not reasonably feasible for technical reasons, the Appropriate Legal Notices\n* must display the words \"Powered by eyeos\" and retain the original copyright notice.\n*\/\nfunction iframize_application(checknum, pid, args) {\n    var app = new eyeos.application.Iframize(checknum, pid, args);\n    app.drawGUI();\n}\n\nqx.Class.define('eyeos.application.Iframize', {\n    extend: eyeos.system.EyeApplication,\n\n    construct: function(checknum, pid, args) {\n        arguments.callee.base.call(this, 'iframize', checknum, pid);\n        if(args && args[0]) {\n            this.__url = args[0];\n            if(args[1]) {\n                this.__customWidth = args[1];\n            } \n\n            if(args[2]) {\n                this.__customHeight = args[2];\n            }\n        } else {\n            this.__url = 'index.php?checknum='+checknum+'&appName=iframize&appFile=error.html';\n        }\n        \n    },\n\n    members: {\n        __url: null,\n        __customWidth: 700,\n        __customHeight: 500,\n        drawGUI: function() {\n            \/\/var mainWindow = new eyeos.ui.Window(this, 'External Resource');\n            var mainWindow = new eyeos.ui.Window(this, this.__url);\n            mainWindow.setWidth(this.__customWidth);\n            mainWindow.setHeight(this.__customHeight)\n            mainWindow.setLayout(new qx.ui.layout.Grow());\n            mainWindow.setAllowMaximize(true);\n            var iframe = new qx.ui.embed.Iframe(this.__url);\n            iframe.set({decorator:null});\n            mainWindow.add(iframe);\n\n            mainWindow.open();\n        }\n    }\n});\niframize_application(595058051, 8008, [\"http:\\\/\\\/example.org\",700,500]);"},"__eyeos_specialControlMessage_options":null});

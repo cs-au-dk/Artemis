@@ -1,0 +1,14 @@
+{
+    "changed": true, 
+    "field": {
+        "id": 1, 
+        "name": "3 months"
+    }, 
+    "values": {
+        "days": 0, 
+        "hours": 0, 
+        "months": 3, 
+        "points": 0, 
+        "weeks": 0
+    }
+}

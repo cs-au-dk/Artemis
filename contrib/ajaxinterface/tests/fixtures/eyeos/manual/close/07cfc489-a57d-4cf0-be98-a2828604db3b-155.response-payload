@@ -1,0 +1,27 @@
+{
+    "__eyeos_specialControlMessage_body": {
+        "data": "null", 
+        "messages": [
+            {
+                "eventData": {
+                    "args": {
+                        "0": "home://~username/Images/Slovakia.jpg", 
+                        "1": true
+                    }, 
+                    "checknum": 840215071, 
+                    "loginContext": {
+                        "group": "users", 
+                        "user": "username"
+                    }, 
+                    "name": "urlshare", 
+                    "pid": 8183, 
+                    "time": 1318409458
+                }, 
+                "eventName": "stop", 
+                "type": "application"
+            }
+        ]
+    }, 
+    "__eyeos_specialControlMessage_header": "__control_enhancedData", 
+    "__eyeos_specialControlMessage_options": null
+}

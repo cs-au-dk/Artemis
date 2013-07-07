@@ -1,0 +1,26 @@
+{
+    "__eyeos_specialControlMessage_body": {
+        "data": "null", 
+        "messages": [
+            {
+                "eventData": {
+                    "args": {
+                        "0": "home://~username/Images"
+                    }, 
+                    "checknum": 172670420, 
+                    "loginContext": {
+                        "group": "users", 
+                        "user": "username"
+                    }, 
+                    "name": "newlink", 
+                    "pid": 6833, 
+                    "time": 1318409589
+                }, 
+                "eventName": "stop", 
+                "type": "application"
+            }
+        ]
+    }, 
+    "__eyeos_specialControlMessage_header": "__control_enhancedData", 
+    "__eyeos_specialControlMessage_options": null
+}

@@ -1,0 +1,16 @@
+{
+    "absolutepath": "home://~username/Images/Some adv document.edoc", 
+    "allTags": null, 
+    "created": "12/10/2011", 
+    "extension": "EDOC", 
+    "modified": "12/10/2011", 
+    "name": "Some adv document.edoc", 
+    "owner": "username", 
+    "path": "home://~username/Images", 
+    "permissions": "-rw-------", 
+    "rating": 0, 
+    "shared": "0", 
+    "size": 325, 
+    "tags": null, 
+    "type": "file"
+}

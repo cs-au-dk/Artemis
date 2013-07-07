@@ -1,0 +1,28 @@
+{
+    "__eyeos_specialControlMessage_body": {
+        "data": "null", 
+        "messages": [
+            {
+                "eventData": {
+                    "absolutepath": "home://~username/Images/some link.lnk", 
+                    "content": "{\"url\":\"http:\\/\\/example.org\",\"width\":700,\"height\":500,\"icon\":\"index.php?extern=images\\/48x48\\/mimetypes\\/application-x-mswinurl.png\",\"openInNewWindow\":false,\"type\":\"web\"}", 
+                    "created": "12/10/2011", 
+                    "extension": "LNK", 
+                    "modified": "12/10/2011", 
+                    "name": "some link.lnk", 
+                    "owner": "username", 
+                    "path": "home://~username/Images", 
+                    "permissions": "-rw-------", 
+                    "rating": 0, 
+                    "shared": "0", 
+                    "size": 171, 
+                    "type": "file"
+                }, 
+                "eventName": "uploadComplete", 
+                "type": "file"
+            }
+        ]
+    }, 
+    "__eyeos_specialControlMessage_header": "__control_enhancedData", 
+    "__eyeos_specialControlMessage_options": null
+}

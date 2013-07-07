@@ -1,0 +1,295 @@
+lang['Calculator'] = 'Calculator';
+
+/*
+*                 eyeos - The Open Source Cloud's Web Desktop
+*                               Version 2.0
+*                   Copyright (C) 2007 - 2010 eyeos Team 
+* 
+* This program is free software; you can redistribute it and/or modify it under
+* the terms of the GNU Affero General Public License version 3 as published by the
+* Free Software Foundation.
+* 
+* This program is distributed in the hope that it will be useful, but WITHOUT
+* ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+* FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more
+* details.
+* 
+* You should have received a copy of the GNU Affero General Public License
+* version 3 along with this program in the file "LICENSE".  If not, see 
+* <http://www.gnu.org/licenses/agpl-3.0.txt>.
+* 
+* See www.eyeos.org for more details. All requests should be sent to licensing@eyeos.org
+* 
+* The interactive user interfaces in modified source and object code versions
+* of this program must display Appropriate Legal Notices, as required under
+* Section 5 of the GNU Affero General Public License version 3.
+* 
+* In accordance with Section 7(b) of the GNU Affero General Public License version 3,
+* these Appropriate Legal Notices must retain the display of the "Powered by
+* eyeos" logo and retain the original copyright notice. If the display of the 
+* logo is not reasonably feasible for technical reasons, the Appropriate Legal Notices
+* must display the words "Powered by eyeos" and retain the original copyright notice. 
+*/
+
+function calculator_application(checknum, pid, args) {
+	var app = new eyeos.application.Calculator(checknum, pid);
+	app.drawGUI();
+}
+
+qx.Class.define("eyeos.application.Calculator", {
+	extend: eyeos.system.EyeApplication,
+
+	construct: function(checknum, pid) {
+		arguments.callee.base.call(this,"Calculator", checknum, pid);
+	},
+
+	members: {
+
+		drawGUI: function() {
+			var mainWindow = new eyeos.ui.Window(this, tr("Calculator"), 'index.php?extern=/images/16x16/apps/accessories-calculator.png');
+			mainWindow.setLayout(new qx.ui.layout.VBox(3));
+			mainWindow.setAllowMaximize(false);
+			
+			var buttonContainer = new qx.ui.container.Composite();
+			var grid = new qx.ui.layout.Grid(3, 3);
+			buttonContainer.setLayout(grid);
+			mainWindow.add(buttonContainer, {flex:6});
+			
+			firstInit = 0;
+			
+			var display = new qx.ui.basic.Label("0").set({
+				allowGrowX: true,
+				allowGrowY: true,
+				textAlign : "right",
+				font: "bold",
+				decorator: "main"
+			});
+			//mainWindow.add(display, {flex: 1});
+			buttonContainer.add(display,{column: 0, row: 0});
+			grid.setColumnFlex(0, 100);
+			grid.setRowFlex(0, 100);
+			display.setLayoutProperties({colSpan: 4});
+			
+			var b1 = new qx.ui.form.Button("1");
+			buttonContainer.add(b1, {column: 0, row: 2});
+			grid.setColumnFlex(0, 100);
+			grid.setRowFlex(2, 100);
+			
+			b1.addListener("execute", function () {
+				if(display.getValue() == "0") {
+					display.setValue("1");
+				} else {
+					display.setValue(String(parseFloat(display.getValue() * 10 + 1)));
+				}
+			});
+			
+			var b2 = new qx.ui.form.Button("2");
+			buttonContainer.add(b2, {column: 1, row: 2});
+			grid.setColumnFlex(1, 100);
+			grid.setRowFlex(2, 100);
+			
+			b2.addListener("execute", function () {
+				if(display.getValue() == "0") {
+					display.setValue("2");
+				} else {
+					display.setValue(String(parseFloat(display.getValue() * 10 + 2)));
+				}
+			});
+			
+			var b3 = new qx.ui.form.Button("3");
+			buttonContainer.add(b3, {column: 2, row: 2});
+			grid.setColumnFlex(2, 100);
+			grid.setRowFlex(2, 100);
+			
+			b3.addListener("execute", function () {
+				if(display.getValue() == "0") {
+					display.setValue("3");
+				} else {
+					display.setValue(String(parseFloat(display.getValue() * 10 + 3)));
+				}
+			});
+			
+			var b4 = new qx.ui.form.Button("4");
+			buttonContainer.add(b4, {column: 0, row: 3});
+			grid.setColumnFlex(0, 100);
+			grid.setRowFlex(3, 100);
+			
+			b4.addListener("execute", function () {
+				if(display.getValue() == "0") {
+					display.setValue("4");
+				} else {
+					display.setValue(String(parseFloat(display.getValue() * 10 + 4)));
+				}
+			});
+			
+			var b5 = new qx.ui.form.Button("5");
+			buttonContainer.add(b5, {column: 1, row: 3});
+			grid.setColumnFlex(1, 100);
+			grid.setRowFlex(3, 100);
+			
+			b5.addListener("execute", function () {
+				if(display.getValue() == "0") {
+					display.setValue("5");
+				} else {
+					display.setValue(String(parseFloat(display.getValue() * 10 + 5)));
+				}
+			});
+			
+			var b6 = new qx.ui.form.Button("6");
+			buttonContainer.add(b6, {column: 2, row: 3});
+			grid.setColumnFlex(2, 100);
+			grid.setRowFlex(3, 100);
+			
+			b6.addListener("execute", function () {
+				if(display.getValue() == "0") {
+					display.setValue("6");
+				} else {
+					display.setValue(String(parseFloat(display.getValue() * 10 + 6)));
+				}
+			});
+			
+			var b7 = new qx.ui.form.Button("7");
+			buttonContainer.add(b7, {column: 0, row: 4});
+			grid.setColumnFlex(0, 100);
+			grid.setRowFlex(4, 100);
+			
+			b7.addListener("execute", function () {
+				if(display.getValue() == "0") {
+					display.setValue("7");
+				} else {
+					display.setValue(String(parseFloat(display.getValue() * 10 + 7)));
+				}
+			});
+			
+			var b8 = new qx.ui.form.Button("8");
+			buttonContainer.add(b8, {column: 1, row: 4});
+			grid.setColumnFlex(1, 100);
+			grid.setRowFlex(4, 100);
+			
+			b8.addListener("execute", function () {
+				if(display.getValue() == "0") {
+					display.setValue("8");
+				} else {
+					display.setValue(String(parseFloat(display.getValue() * 10 + 8)));
+				}
+			});
+			
+			var b9 = new qx.ui.form.Button("9");
+			buttonContainer.add(b9, {column: 2, row: 4});
+			grid.setColumnFlex(2, 100);
+			grid.setRowFlex(4, 100);
+			
+			b9.addListener("execute", function () {
+				if(display.getValue() == "0") {
+					display.setValue("9");
+				} else {
+					display.setValue(String(parseFloat(display.getValue() * 10 + 9)));
+				}
+			});
+			
+			var b0 = new qx.ui.form.Button("0");
+			buttonContainer.add(b0, {column: 0, row: 5});
+			grid.setColumnFlex(0, 100);
+			grid.setRowFlex(5, 100);
+			
+			b0.addListener("execute", function () {
+				if(display.getValue() == "0") {
+					display.setValue("0");
+				} else {
+					display.setValue(String(parseFloat(display.getValue() * 10)));
+				}
+			});
+			
+			var bC = new qx.ui.form.Button("C");
+			buttonContainer.add(bC, {column: 1, row: 5});
+			grid.setColumnFlex(1, 100);
+			grid.setRowFlex(5, 100);
+			
+			bC.addListener("execute", function () {
+				display.setValue("0");
+				currentOperation = "nothing";
+				lastNumber = "0";
+			});
+			
+			var bSum = new qx.ui.form.Button("+");
+			buttonContainer.add(bSum, {column: 3, row: 2});
+			grid.setColumnFlex(3, 100);
+			grid.setRowFlex(2, 100);
+			
+			bSum.addListener("execute", function () {
+				lastNumber = parseInt(display.getValue());
+				currentOperation = "sum";
+				display.setValue("0");
+			});
+			
+			var bRest = new qx.ui.form.Button("-");
+			buttonContainer.add(bRest, {column: 3, row: 3});
+			grid.setColumnFlex(3, 100);
+			grid.setRowFlex(3, 100);
+			
+			bRest.addListener("execute", function () {
+				lastNumber = parseInt(display.getValue());
+				currentOperation = "rest";
+				display.setValue("0");
+			});
+			
+			var bMult = new qx.ui.form.Button("*");
+			buttonContainer.add(bMult, {column: 3, row: 4});
+			grid.setColumnFlex(3, 100);
+			grid.setRowFlex(3, 100);
+			
+			bMult.addListener("execute", function () {
+				lastNumber = parseInt(display.getValue());
+				currentOperation = "mult";
+				display.setValue("0");
+			});
+			
+			var bDiv = new qx.ui.form.Button("/");
+			buttonContainer.add(bDiv, {column: 3, row: 5});
+			grid.setColumnFlex(3, 100);
+			grid.setRowFlex(4, 100);
+			
+			bDiv.addListener("execute", function () {
+				lastNumber = parseInt(display.getValue());
+				currentOperation = "div";
+				display.setValue("0");
+			});
+			
+			var bEqual = new qx.ui.form.Button("=");
+			buttonContainer.add(bEqual, {column: 2, row: 5});
+			grid.setColumnFlex(3, 100);
+			grid.setRowFlex(5, 100);
+			
+			bEqual.addListener("execute", function () {
+				if (currentOperation == "sum") {
+					display.setValue(String(lastNumber + parseInt(display.getValue())));
+				} else if (currentOperation == "rest") {
+					display.setValue(String(lastNumber - parseInt(display.getValue())));
+				} else if (currentOperation == "mult") {
+					display.setValue(String(lastNumber * parseInt(display.getValue())));
+				} else if (currentOperation == "div") {
+					if (lastNumber == 0){
+						display.setValue("0");
+					} else {
+						display.setValue(String(lastNumber / parseInt(display.getValue())));
+					}
+				}
+			});
+			
+			mainWindow.addListener("resize", function() {
+				if (firstInit == 0) {
+					mainWindow.addListener("activate", function(){
+						firstInit = 1;
+					});
+				} else {
+					var changeFontSize = display.getBounds();
+					var stringSize = changeFontSize["height"] + "px sans-serif bold";
+					display.setFont(new qx.bom.Font.fromString(stringSize));
+				}
+			});
+			
+			mainWindow.open();
+		}
+	}
+});
+calculator_application(194111012, 2169, []);eyeos._callbackProxyWithContent(null, null, null, {"__eyeos_specialControlMessage_header":"__control_enhancedData","__eyeos_specialControlMessage_body":{"messages":[{"type":"application","eventName":"start","eventData":{"name":"calculator","pid":2169,"loginContext":{"user":"username","group":"users"},"checknum":194111012,"time":1318409268,"args":{}}}],"data":"lang['Calculator'] = 'Calculator';\n\n\/*\n*                 eyeos - The Open Source Cloud's Web Desktop\n*                               Version 2.0\n*                   Copyright (C) 2007 - 2010 eyeos Team \n* \n* This program is free software; you can redistribute it and\/or modify it under\n* the terms of the GNU Affero General Public License version 3 as published by the\n* Free Software Foundation.\n* \n* This program is distributed in the hope that it will be useful, but WITHOUT\n* ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS\n* FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more\n* details.\n* \n* You should have received a copy of the GNU Affero General Public License\n* version 3 along with this program in the file \"LICENSE\".  If not, see \n* <http:\/\/www.gnu.org\/licenses\/agpl-3.0.txt>.\n* \n* See www.eyeos.org for more details. All requests should be sent to licensing@eyeos.org\n* \n* The interactive user interfaces in modified source and object code versions\n* of this program must display Appropriate Legal Notices, as required under\n* Section 5 of the GNU Affero General Public License version 3.\n* \n* In accordance with Section 7(b) of the GNU Affero General Public License version 3,\n* these Appropriate Legal Notices must retain the display of the \"Powered by\n* eyeos\" logo and retain the original copyright notice. If the display of the \n* logo is not reasonably feasible for technical reasons, the Appropriate Legal Notices\n* must display the words \"Powered by eyeos\" and retain the original copyright notice. \n*\/\n\nfunction calculator_application(checknum, pid, args) {\n\tvar app = new eyeos.application.Calculator(checknum, pid);\n\tapp.drawGUI();\n}\n\nqx.Class.define(\"eyeos.application.Calculator\", {\n\textend: eyeos.system.EyeApplication,\n\n\tconstruct: function(checknum, pid) {\n\t\targuments.callee.base.call(this,\"Calculator\", checknum, pid);\n\t},\n\n\tmembers: {\n\n\t\tdrawGUI: function() {\n\t\t\tvar mainWindow = new eyeos.ui.Window(this, tr(\"Calculator\"), 'index.php?extern=\/images\/16x16\/apps\/accessories-calculator.png');\n\t\t\tmainWindow.setLayout(new qx.ui.layout.VBox(3));\n\t\t\tmainWindow.setAllowMaximize(false);\n\t\t\t\n\t\t\tvar buttonContainer = new qx.ui.container.Composite();\n\t\t\tvar grid = new qx.ui.layout.Grid(3, 3);\n\t\t\tbuttonContainer.setLayout(grid);\n\t\t\tmainWindow.add(buttonContainer, {flex:6});\n\t\t\t\n\t\t\tfirstInit = 0;\n\t\t\t\n\t\t\tvar display = new qx.ui.basic.Label(\"0\").set({\n\t\t\t\tallowGrowX: true,\n\t\t\t\tallowGrowY: true,\n\t\t\t\ttextAlign : \"right\",\n\t\t\t\tfont: \"bold\",\n\t\t\t\tdecorator: \"main\"\n\t\t\t});\n\t\t\t\/\/mainWindow.add(display, {flex: 1});\n\t\t\tbuttonContainer.add(display,{column: 0, row: 0});\n\t\t\tgrid.setColumnFlex(0, 100);\n\t\t\tgrid.setRowFlex(0, 100);\n\t\t\tdisplay.setLayoutProperties({colSpan: 4});\n\t\t\t\n\t\t\tvar b1 = new qx.ui.form.Button(\"1\");\n\t\t\tbuttonContainer.add(b1, {column: 0, row: 2});\n\t\t\tgrid.setColumnFlex(0, 100);\n\t\t\tgrid.setRowFlex(2, 100);\n\t\t\t\n\t\t\tb1.addListener(\"execute\", function () {\n\t\t\t\tif(display.getValue() == \"0\") {\n\t\t\t\t\tdisplay.setValue(\"1\");\n\t\t\t\t} else {\n\t\t\t\t\tdisplay.setValue(String(parseFloat(display.getValue() * 10 + 1)));\n\t\t\t\t}\n\t\t\t});\n\t\t\t\n\t\t\tvar b2 = new qx.ui.form.Button(\"2\");\n\t\t\tbuttonContainer.add(b2, {column: 1, row: 2});\n\t\t\tgrid.setColumnFlex(1, 100);\n\t\t\tgrid.setRowFlex(2, 100);\n\t\t\t\n\t\t\tb2.addListener(\"execute\", function () {\n\t\t\t\tif(display.getValue() == \"0\") {\n\t\t\t\t\tdisplay.setValue(\"2\");\n\t\t\t\t} else {\n\t\t\t\t\tdisplay.setValue(String(parseFloat(display.getValue() * 10 + 2)));\n\t\t\t\t}\n\t\t\t});\n\t\t\t\n\t\t\tvar b3 = new qx.ui.form.Button(\"3\");\n\t\t\tbuttonContainer.add(b3, {column: 2, row: 2});\n\t\t\tgrid.setColumnFlex(2, 100);\n\t\t\tgrid.setRowFlex(2, 100);\n\t\t\t\n\t\t\tb3.addListener(\"execute\", function () {\n\t\t\t\tif(display.getValue() == \"0\") {\n\t\t\t\t\tdisplay.setValue(\"3\");\n\t\t\t\t} else {\n\t\t\t\t\tdisplay.setValue(String(parseFloat(display.getValue() * 10 + 3)));\n\t\t\t\t}\n\t\t\t});\n\t\t\t\n\t\t\tvar b4 = new qx.ui.form.Button(\"4\");\n\t\t\tbuttonContainer.add(b4, {column: 0, row: 3});\n\t\t\tgrid.setColumnFlex(0, 100);\n\t\t\tgrid.setRowFlex(3, 100);\n\t\t\t\n\t\t\tb4.addListener(\"execute\", function () {\n\t\t\t\tif(display.getValue() == \"0\") {\n\t\t\t\t\tdisplay.setValue(\"4\");\n\t\t\t\t} else {\n\t\t\t\t\tdisplay.setValue(String(parseFloat(display.getValue() * 10 + 4)));\n\t\t\t\t}\n\t\t\t});\n\t\t\t\n\t\t\tvar b5 = new qx.ui.form.Button(\"5\");\n\t\t\tbuttonContainer.add(b5, {column: 1, row: 3});\n\t\t\tgrid.setColumnFlex(1, 100);\n\t\t\tgrid.setRowFlex(3, 100);\n\t\t\t\n\t\t\tb5.addListener(\"execute\", function () {\n\t\t\t\tif(display.getValue() == \"0\") {\n\t\t\t\t\tdisplay.setValue(\"5\");\n\t\t\t\t} else {\n\t\t\t\t\tdisplay.setValue(String(parseFloat(display.getValue() * 10 + 5)));\n\t\t\t\t}\n\t\t\t});\n\t\t\t\n\t\t\tvar b6 = new qx.ui.form.Button(\"6\");\n\t\t\tbuttonContainer.add(b6, {column: 2, row: 3});\n\t\t\tgrid.setColumnFlex(2, 100);\n\t\t\tgrid.setRowFlex(3, 100);\n\t\t\t\n\t\t\tb6.addListener(\"execute\", function () {\n\t\t\t\tif(display.getValue() == \"0\") {\n\t\t\t\t\tdisplay.setValue(\"6\");\n\t\t\t\t} else {\n\t\t\t\t\tdisplay.setValue(String(parseFloat(display.getValue() * 10 + 6)));\n\t\t\t\t}\n\t\t\t});\n\t\t\t\n\t\t\tvar b7 = new qx.ui.form.Button(\"7\");\n\t\t\tbuttonContainer.add(b7, {column: 0, row: 4});\n\t\t\tgrid.setColumnFlex(0, 100);\n\t\t\tgrid.setRowFlex(4, 100);\n\t\t\t\n\t\t\tb7.addListener(\"execute\", function () {\n\t\t\t\tif(display.getValue() == \"0\") {\n\t\t\t\t\tdisplay.setValue(\"7\");\n\t\t\t\t} else {\n\t\t\t\t\tdisplay.setValue(String(parseFloat(display.getValue() * 10 + 7)));\n\t\t\t\t}\n\t\t\t});\n\t\t\t\n\t\t\tvar b8 = new qx.ui.form.Button(\"8\");\n\t\t\tbuttonContainer.add(b8, {column: 1, row: 4});\n\t\t\tgrid.setColumnFlex(1, 100);\n\t\t\tgrid.setRowFlex(4, 100);\n\t\t\t\n\t\t\tb8.addListener(\"execute\", function () {\n\t\t\t\tif(display.getValue() == \"0\") {\n\t\t\t\t\tdisplay.setValue(\"8\");\n\t\t\t\t} else {\n\t\t\t\t\tdisplay.setValue(String(parseFloat(display.getValue() * 10 + 8)));\n\t\t\t\t}\n\t\t\t});\n\t\t\t\n\t\t\tvar b9 = new qx.ui.form.Button(\"9\");\n\t\t\tbuttonContainer.add(b9, {column: 2, row: 4});\n\t\t\tgrid.setColumnFlex(2, 100);\n\t\t\tgrid.setRowFlex(4, 100);\n\t\t\t\n\t\t\tb9.addListener(\"execute\", function () {\n\t\t\t\tif(display.getValue() == \"0\") {\n\t\t\t\t\tdisplay.setValue(\"9\");\n\t\t\t\t} else {\n\t\t\t\t\tdisplay.setValue(String(parseFloat(display.getValue() * 10 + 9)));\n\t\t\t\t}\n\t\t\t});\n\t\t\t\n\t\t\tvar b0 = new qx.ui.form.Button(\"0\");\n\t\t\tbuttonContainer.add(b0, {column: 0, row: 5});\n\t\t\tgrid.setColumnFlex(0, 100);\n\t\t\tgrid.setRowFlex(5, 100);\n\t\t\t\n\t\t\tb0.addListener(\"execute\", function () {\n\t\t\t\tif(display.getValue() == \"0\") {\n\t\t\t\t\tdisplay.setValue(\"0\");\n\t\t\t\t} else {\n\t\t\t\t\tdisplay.setValue(String(parseFloat(display.getValue() * 10)));\n\t\t\t\t}\n\t\t\t});\n\t\t\t\n\t\t\tvar bC = new qx.ui.form.Button(\"C\");\n\t\t\tbuttonContainer.add(bC, {column: 1, row: 5});\n\t\t\tgrid.setColumnFlex(1, 100);\n\t\t\tgrid.setRowFlex(5, 100);\n\t\t\t\n\t\t\tbC.addListener(\"execute\", function () {\n\t\t\t\tdisplay.setValue(\"0\");\n\t\t\t\tcurrentOperation = \"nothing\";\n\t\t\t\tlastNumber = \"0\";\n\t\t\t});\n\t\t\t\n\t\t\tvar bSum = new qx.ui.form.Button(\"+\");\n\t\t\tbuttonContainer.add(bSum, {column: 3, row: 2});\n\t\t\tgrid.setColumnFlex(3, 100);\n\t\t\tgrid.setRowFlex(2, 100);\n\t\t\t\n\t\t\tbSum.addListener(\"execute\", function () {\n\t\t\t\tlastNumber = parseInt(display.getValue());\n\t\t\t\tcurrentOperation = \"sum\";\n\t\t\t\tdisplay.setValue(\"0\");\n\t\t\t});\n\t\t\t\n\t\t\tvar bRest = new qx.ui.form.Button(\"-\");\n\t\t\tbuttonContainer.add(bRest, {column: 3, row: 3});\n\t\t\tgrid.setColumnFlex(3, 100);\n\t\t\tgrid.setRowFlex(3, 100);\n\t\t\t\n\t\t\tbRest.addListener(\"execute\", function () {\n\t\t\t\tlastNumber = parseInt(display.getValue());\n\t\t\t\tcurrentOperation = \"rest\";\n\t\t\t\tdisplay.setValue(\"0\");\n\t\t\t});\n\t\t\t\n\t\t\tvar bMult = new qx.ui.form.Button(\"*\");\n\t\t\tbuttonContainer.add(bMult, {column: 3, row: 4});\n\t\t\tgrid.setColumnFlex(3, 100);\n\t\t\tgrid.setRowFlex(3, 100);\n\t\t\t\n\t\t\tbMult.addListener(\"execute\", function () {\n\t\t\t\tlastNumber = parseInt(display.getValue());\n\t\t\t\tcurrentOperation = \"mult\";\n\t\t\t\tdisplay.setValue(\"0\");\n\t\t\t});\n\t\t\t\n\t\t\tvar bDiv = new qx.ui.form.Button(\"\/\");\n\t\t\tbuttonContainer.add(bDiv, {column: 3, row: 5});\n\t\t\tgrid.setColumnFlex(3, 100);\n\t\t\tgrid.setRowFlex(4, 100);\n\t\t\t\n\t\t\tbDiv.addListener(\"execute\", function () {\n\t\t\t\tlastNumber = parseInt(display.getValue());\n\t\t\t\tcurrentOperation = \"div\";\n\t\t\t\tdisplay.setValue(\"0\");\n\t\t\t});\n\t\t\t\n\t\t\tvar bEqual = new qx.ui.form.Button(\"=\");\n\t\t\tbuttonContainer.add(bEqual, {column: 2, row: 5});\n\t\t\tgrid.setColumnFlex(3, 100);\n\t\t\tgrid.setRowFlex(5, 100);\n\t\t\t\n\t\t\tbEqual.addListener(\"execute\", function () {\n\t\t\t\tif (currentOperation == \"sum\") {\n\t\t\t\t\tdisplay.setValue(String(lastNumber + parseInt(display.getValue())));\n\t\t\t\t} else if (currentOperation == \"rest\") {\n\t\t\t\t\tdisplay.setValue(String(lastNumber - parseInt(display.getValue())));\n\t\t\t\t} else if (currentOperation == \"mult\") {\n\t\t\t\t\tdisplay.setValue(String(lastNumber * parseInt(display.getValue())));\n\t\t\t\t} else if (currentOperation == \"div\") {\n\t\t\t\t\tif (lastNumber == 0){\n\t\t\t\t\t\tdisplay.setValue(\"0\");\n\t\t\t\t\t} else {\n\t\t\t\t\t\tdisplay.setValue(String(lastNumber \/ parseInt(display.getValue())));\n\t\t\t\t\t}\n\t\t\t\t}\n\t\t\t});\n\t\t\t\n\t\t\tmainWindow.addListener(\"resize\", function() {\n\t\t\t\tif (firstInit == 0) {\n\t\t\t\t\tmainWindow.addListener(\"activate\", function(){\n\t\t\t\t\t\tfirstInit = 1;\n\t\t\t\t\t});\n\t\t\t\t} else {\n\t\t\t\t\tvar changeFontSize = display.getBounds();\n\t\t\t\t\tvar stringSize = changeFontSize[\"height\"] + \"px sans-serif bold\";\n\t\t\t\t\tdisplay.setFont(new qx.bom.Font.fromString(stringSize));\n\t\t\t\t}\n\t\t\t});\n\t\t\t\n\t\t\tmainWindow.open();\n\t\t}\n\t}\n});\ncalculator_application(194111012, 2169, []);"},"__eyeos_specialControlMessage_options":null});

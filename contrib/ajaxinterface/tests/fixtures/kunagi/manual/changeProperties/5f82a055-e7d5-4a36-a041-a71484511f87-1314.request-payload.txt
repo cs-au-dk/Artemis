@@ -1,0 +1,1 @@
+7|0|11|http://10.11.103.178:8080/kunagi/scrum.ScrumGwtApplication/|757503BC6AB6EC8FD48D4F4B83F4CE6D|scrum.client.ScrumService|changeProperties|I|java.lang.String/2004016611|java.util.Map|1654a672-43f3-44b6-ac79-9eefebdca43a|java.util.HashMap/1797211028|ownerId|a89603b6-fd3f-44ac-ab18-90cb79df2ecc|1|2|3|4|3|5|6|7|4|8|9|1|6|10|6|11|

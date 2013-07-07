@@ -1,0 +1,61 @@
+[
+    {
+        "attr": {
+            "id": "page_0_344_top_64", 
+            "languageId": "344", 
+            "pageId": "64", 
+            "rel": "page", 
+            "websiteId": "0", 
+            "zoneName": "top"
+        }, 
+        "children": [
+            {
+                "attr": {
+                    "id": "page_0_344_top_77", 
+                    "languageId": "344", 
+                    "pageId": "77", 
+                    "rel": "page", 
+                    "websiteId": "0", 
+                    "zoneName": "top"
+                }, 
+                "children": false, 
+                "data": {
+                    "icon": "http://localhost/impresspages/ip_cms/modules/standard/menu_management/img/file_hidden.png", 
+                    "title": "Third level page 2"
+                }, 
+                "state": "closed"
+            }, 
+            {
+                "attr": {
+                    "id": "page_0_344_top_82", 
+                    "languageId": "344", 
+                    "pageId": "82", 
+                    "rel": "page", 
+                    "websiteId": "0", 
+                    "zoneName": "top"
+                }, 
+                "children": false, 
+                "data": {
+                    "icon": "", 
+                    "title": "Lorem ipsum"
+                }, 
+                "state": "leaf"
+            }
+        ], 
+        "data": "Welcome!", 
+        "state": "open"
+    }, 
+    {
+        "attr": {
+            "id": "page_0_344_top_83", 
+            "languageId": "344", 
+            "pageId": "83", 
+            "rel": "page", 
+            "websiteId": "0", 
+            "zoneName": "top"
+        }, 
+        "children": false, 
+        "data": "Lorem ipsum", 
+        "state": "leaf"
+    }
+]

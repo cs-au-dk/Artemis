@@ -1,0 +1,67 @@
+[
+    {
+        "author": "eyeOS Team", 
+        "category": "Utils", 
+        "displayName": "Calculator", 
+        "imagePath": "index.php?extern=/images/48x48/apps/accessories-calculator.png", 
+        "installed": 1, 
+        "license": "AGPL", 
+        "listable": 1, 
+        "name": "calculator", 
+        "shortDescription": "A calculator", 
+        "smallImagePath": "index.php?extern=/images/16x16/apps/accessories-calculator.png", 
+        "version": "1.0"
+    }, 
+    {
+        "author": "eyeOS Team", 
+        "category": "Desktop", 
+        "displayName": "File Manager", 
+        "imagePath": "index.php?extern=/images/48x48/apps/system-file-manager.png", 
+        "installed": 1, 
+        "license": "AGPL", 
+        "listable": 1, 
+        "name": "files", 
+        "shortDescription": "Access and manage your files", 
+        "smallImagePath": "index.php?extern=/images/16x16/apps/system-file-manager.png", 
+        "version": "1.0"
+    }, 
+    {
+        "author": "eyeOS Team", 
+        "category": "Office", 
+        "displayName": "Calendar", 
+        "imagePath": "index.php?extern=/images/48x48/actions/view-pim-calendar.png", 
+        "installed": 1, 
+        "license": "AGPL", 
+        "listable": 1, 
+        "name": "calendar", 
+        "shortDescription": "Organize your planning and share events with people", 
+        "smallImagePath": "index.php?extern=/images/16x16/actions/view-pim-calendar.png", 
+        "version": "1.0"
+    }, 
+    {
+        "author": "eyeOS Team", 
+        "category": "Office", 
+        "displayName": "Documents", 
+        "imagePath": "index.php?extern=/images/48x48/apps/okteta.png", 
+        "installed": 1, 
+        "license": "AGPL", 
+        "listable": 1, 
+        "name": "documents", 
+        "shortDescription": "Create office documents", 
+        "smallImagePath": "index.php?extern=/images/16x16/apps/okteta.png", 
+        "version": "1.0"
+    }, 
+    {
+        "author": "eyeOS Team", 
+        "category": "Utils", 
+        "displayName": "Notepad", 
+        "imagePath": "index.php?extern=/images/48x48/apps/scribus.png", 
+        "installed": 1, 
+        "license": "AGPL", 
+        "listable": 1, 
+        "name": "notepad", 
+        "shortDescription": "A very simple text editor", 
+        "smallImagePath": "index.php?extern=/images/16x16/apps/notepad.png", 
+        "version": "1.0"
+    }
+]

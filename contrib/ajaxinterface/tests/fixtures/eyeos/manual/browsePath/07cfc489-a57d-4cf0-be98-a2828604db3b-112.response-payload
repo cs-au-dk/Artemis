@@ -1,0 +1,37 @@
+{
+    "absolutepath": "home://~username/Images", 
+    "files": [
+        {
+            "absolutepath": "home://~username/Images/Megaptera.jpg", 
+            "allTags": null, 
+            "created": 0, 
+            "extension": "JPG", 
+            "modified": 0, 
+            "name": "Megaptera.jpg", 
+            "owner": "username", 
+            "path": "home://~username/Images", 
+            "permissions": "-rw-------", 
+            "rating": 0, 
+            "shared": "0", 
+            "size": 71883, 
+            "tags": null, 
+            "type": "file"
+        }, 
+        {
+            "absolutepath": "home://~username/Images/Slovakia.jpg", 
+            "allTags": null, 
+            "created": 0, 
+            "extension": "JPG", 
+            "modified": 0, 
+            "name": "Slovakia.jpg", 
+            "owner": "username", 
+            "path": "home://~username/Images", 
+            "permissions": "-rw-------", 
+            "rating": 0, 
+            "shared": "0", 
+            "size": 94338, 
+            "tags": null, 
+            "type": "file"
+        }
+    ]
+}

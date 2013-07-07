@@ -1,0 +1,7 @@
+{
+    "headers": "{\"location\":\"http://www.iana.org/domains/example/\",\"server\":\"BigIP\",\"connection\":\"Keep-Alive\",\"content-length\":\"0\"}", 
+    "httpVersion": "1.0", 
+    "method": null, 
+    "statusCode": 302, 
+    "url": ""
+}

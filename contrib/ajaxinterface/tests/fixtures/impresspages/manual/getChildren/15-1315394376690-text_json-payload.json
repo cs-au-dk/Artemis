@@ -1,0 +1,28 @@
+[
+    {
+        "attr": {
+            "id": "page_0_344_left_88", 
+            "languageId": "344", 
+            "pageId": "88", 
+            "rel": "page", 
+            "websiteId": "0", 
+            "zoneName": "left"
+        }, 
+        "children": false, 
+        "data": "Lorem ipsum", 
+        "state": "closed"
+    }, 
+    {
+        "attr": {
+            "id": "page_0_344_left_90", 
+            "languageId": "344", 
+            "pageId": "90", 
+            "rel": "page", 
+            "websiteId": "0", 
+            "zoneName": "left"
+        }, 
+        "children": false, 
+        "data": "Lorem ipsum", 
+        "state": "closed"
+    }
+]

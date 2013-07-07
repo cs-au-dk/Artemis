@@ -1,0 +1,14 @@
+{
+    "changed": true, 
+    "field": {
+        "id": 1, 
+        "name": "5 days"
+    }, 
+    "values": {
+        "days": 5, 
+        "hours": 0, 
+        "months": 0, 
+        "points": 0, 
+        "weeks": 0
+    }
+}

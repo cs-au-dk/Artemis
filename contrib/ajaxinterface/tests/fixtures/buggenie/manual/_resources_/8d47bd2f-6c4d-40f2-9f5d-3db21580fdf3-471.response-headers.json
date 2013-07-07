@@ -1,0 +1,7 @@
+{
+    "headers": "{\"accept-ranges\":\"bytes\",\"cache-control\":\"max-age=604800\",\"content-type\":\"text/html; charset=iso-8859-1\",\"date\":\"Wed, 19 Oct 2011 14:10:40 GMT\",\"expires\":\"Wed, 26 Oct 2011 14:10:40 GMT\",\"last-modified\":\"Thu, 13 Oct 2011 17:29:21 GMT\",\"location\":\"http://en-us.fxfeeds.mozilla.com/firefox/headlines.xml\",\"server\":\"ECS (ams/49B8)\",\"x-backend-server\":\"pm-web01\",\"x-cache\":\"302-HIT\",\"x-cache-info\":\"cached\",\"content-length\":\"232\"}", 
+    "httpVersion": "1.1", 
+    "method": null, 
+    "statusCode": 302, 
+    "url": ""
+}

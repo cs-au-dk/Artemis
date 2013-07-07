@@ -1,0 +1,1 @@
+module=products&action=batch_set_status&batch=19%2C18%2C17%2C16%2C15%2C14%2C13%2C12%2C11%2C10%2C9%2C8%2C7%2C6%2C4%2C3%2C1&status=0&token=5373cddd9f26b62dd30d6d142503343c

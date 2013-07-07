@@ -1,0 +1,7 @@
+{
+    "headers": "{\"server\":\"Apache-Coyote/1.1\",\"accept-ranges\":\"bytes\",\"etag\":\"W/\\\"987-1313974130000\\\"\",\"last-modified\":\"Mon, 22 Aug 2011 00:48:50 GMT\",\"content-type\":\"image/png\",\"content-length\":\"987\",\"date\":\"Tue, 18 Oct 2011 14:52:47 GMT\"}", 
+    "httpVersion": "1.1", 
+    "method": null, 
+    "statusCode": 200, 
+    "url": ""
+}

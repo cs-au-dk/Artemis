@@ -1,0 +1,7 @@
+{
+    "headers": "{\"host\":\"10.11.103.178\",\"user-agent\":\"Mozilla/5.0 (X11; Linux x86_64; rv:7.0.1) Gecko/20100101 Firefox/7.0.1\",\"accept\":\"application/json, text/javascript, */*; q=0.01\",\"accept-language\":\"en-us,en;q=0.5\",\"accept-encoding\":\"gzip, deflate\",\"accept-charset\":\"ISO-8859-1,utf-8;q=0.7,*;q=0.7\",\"proxy-connection\":\"keep-alive\",\"x-requested-with\":\"XMLHttpRequest\",\"referer\":\"http://10.11.103.178/elfinder/2/elfinder.html\",\"cookie\":\"THEBUGGENIE=m4ult4q3nbqjsnqftihbh8qa61\"}", 
+    "httpVersion": "1.1", 
+    "method": "GET", 
+    "statusCode": null, 
+    "url": "http://10.11.103.178/elfinder/2/php/connector.php?token=42&test=test&cmd=open&target=l1_amxrIGNvcHkvYW5kIGEgZm9sZGVy&_=1319041957228"
+}
