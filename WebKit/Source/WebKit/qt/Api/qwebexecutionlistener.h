@@ -73,7 +73,7 @@ public:
     virtual void javascript_branch_executed(bool jump, Symbolic::Expression* condition, JSC::ExecState*, const JSC::Instruction*, const JSC::BytecodeInfo&);
 
     void javascriptConstantStringEncountered(std::string constant);
-    virtual void webkit_eval_call(const char * eval_string);
+    virtual void javascript_eval_call(const char * eval_string);
 
     virtual void ajaxCallbackEventAdded(WebCore::LazyXMLHttpRequest*);
 
