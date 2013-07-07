@@ -24,7 +24,8 @@ namespace artemis
 {
 
 ArtemisRuntime::ArtemisRuntime(QObject* parent, const Options& options, const QUrl& url) :
-    Runtime(parent, options, url)
+    Runtime(parent, options, url),
+    mEntryPointDetector(mWebkitExecutor->getPage())
 {
     QObject::connect(mWebkitExecutor, SIGNAL(sigExecutedSequence(ExecutableConfigurationConstPtr, QSharedPointer<ExecutionResult>)),
                      this, SLOT(postConcreteExecution(ExecutableConfigurationConstPtr, QSharedPointer<ExecutionResult>)));
@@ -63,7 +64,7 @@ void ArtemisRuntime::preConcreteExecution()
     mWebkitExecutor->executeSequence(nextConfiguration); // calls the postConcreteExecution method as callback
 }
 
-void ArtemisRuntime::postConcreteExecution(ExecutableConfigurationConstPtr configuration, QSharedPointer<ExecutionResult> result)
+void ArtemisRuntime::postConcreteExecution(ExecutableConfigurationConstPtr configuration, ExecutionResultPtr result)
 {
     mWorklist->reprioritize(mAppmodel);
 
@@ -71,11 +72,15 @@ void ArtemisRuntime::postConcreteExecution(ExecutableConfigurationConstPtr confi
     if (mOptions.disableStateCheck ||
             mVisitedStates->find(hash = result->getPageStateHash()) == mVisitedStates->end()) {
 
+        // Store the state
         qDebug() << "Visiting new state";
-
         mVisitedStates->insert(hash);
-        QList<QSharedPointer<ExecutableConfiguration> > newConfigurations = mInputgenerator->addNewConfigurations(configuration, result);
 
+        // FormCrawl (generate statistics)
+        mEntryPointDetector.detectAll(result);
+
+        // Generate new inputs
+        QList<QSharedPointer<ExecutableConfiguration> > newConfigurations = mInputgenerator->addNewConfigurations(configuration, result);
         foreach(QSharedPointer<ExecutableConfiguration> newConfiguration, newConfigurations) {
             mWorklist->add(newConfiguration, mAppmodel);
         }
