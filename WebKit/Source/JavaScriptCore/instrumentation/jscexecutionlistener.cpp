@@ -31,7 +31,7 @@ JSCExecutionListener::JSCExecutionListener() :
 }
 
 void JSCExecutionListener::javascript_eval_call(const char* eval_string) {
-    cerr << "Warning: Default listener for javascript_eval_call was invoked, args: " << eval_string << endl;
+    cerr << "Warning: Default listener for javascript_eval_call was invoked" << endl;
     //exit(1);
 }
 
