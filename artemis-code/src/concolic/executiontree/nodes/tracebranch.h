@@ -29,6 +29,7 @@ class TraceBranch : public TraceNode
 
 public:
 
+    // TODO remove and use the set* functions
     friend class TraceBranchDetector; // direct modification of mBranchTrue and mBranchFalse
 
     ~TraceBranch() {}
@@ -38,9 +39,19 @@ public:
         return mBranchTrue;
     }
 
+    inline void setTrueBranch(TraceNodePtr node)
+    {
+        mBranchTrue = node;
+    }
+
     inline TraceNodePtr getFalseBranch()
     {
         return mBranchFalse;
+    }
+
+    inline void setFalseBranch(TraceNodePtr node)
+    {
+        mBranchFalse = node;
     }
 
 protected:
@@ -49,6 +60,8 @@ protected:
     TraceNodePtr mBranchTrue;
     TraceNodePtr mBranchFalse;
 };
+
+typedef QSharedPointer<TraceBranch> TraceBranchPtr;
 
 }
 

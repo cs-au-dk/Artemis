@@ -60,7 +60,7 @@ void ConcolicRuntime::preConcreteExecution()
 void ConcolicRuntime::postConcreteExecution(ExecutableConfigurationConstPtr configuration, QSharedPointer<ExecutionResult> result)
 {
     // Merge trace with tracegraph
-    TraceMerger::merge(mSymbolicExecutionGraph, mWebkitExecutor->getTraceBuilder()->trace());
+    mSymbolicExecutionGraph = TraceMerger::merge(mWebkitExecutor->getTraceBuilder()->trace(), mSymbolicExecutionGraph);
 
     // Generate new input
     // TODO

@@ -30,4 +30,9 @@ void TraceUnexplored::accept(TraceVisitor* visitor)
     visitor->visit(this);
 }
 
+bool TraceUnexplored::isEqualShallow(const QSharedPointer<const TraceNode>& other)
+{
+    return !other.dynamicCast<const TraceUnexplored>().isNull();
+}
+
 }

@@ -29,6 +29,7 @@ public:
     ~TraceSymbolicBranch() {}
 
     void accept(TraceVisitor* visitor);
+    bool isEqualShallow(const QSharedPointer<const TraceNode>& other);
 
     inline Symbolic::Expression* getSymbolicCondition() const {
         return mCondition;

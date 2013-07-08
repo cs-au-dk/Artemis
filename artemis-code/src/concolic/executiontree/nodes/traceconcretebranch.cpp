@@ -28,5 +28,12 @@ void TraceConcreteBranch::accept(TraceVisitor* visitor)
     visitor->visit(this);
 }
 
+bool TraceConcreteBranch::isEqualShallow(const QSharedPointer<const TraceNode>& other)
+{
+    QSharedPointer<const TraceConcreteBranch> otherCasted = other.dynamicCast<const TraceConcreteBranch>();
+
+    return !otherCasted.isNull();
+}
+
 
 } // END NAMESPACE

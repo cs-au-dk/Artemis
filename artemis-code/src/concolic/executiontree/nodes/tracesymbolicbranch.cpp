@@ -31,4 +31,17 @@ void TraceSymbolicBranch::accept(TraceVisitor* visitor) {
     visitor->visit(this);
 }
 
+bool TraceSymbolicBranch::isEqualShallow(const QSharedPointer<const TraceNode>& other)
+{
+    QSharedPointer<const TraceSymbolicBranch> otherCasted = other.dynamicCast<const TraceSymbolicBranch>();
+
+    if (otherCasted.isNull()) {
+        return false;
+    }
+
+    // TODO, should we also check equality of the symbolic expression?
+
+    return true;
+}
+
 }

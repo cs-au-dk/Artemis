@@ -30,6 +30,7 @@ public:
     ~TraceConcreteBranch() {}
 
     void accept(TraceVisitor* visitor);
+    bool isEqualShallow(const QSharedPointer<const TraceNode>& other);
 };
 
 }

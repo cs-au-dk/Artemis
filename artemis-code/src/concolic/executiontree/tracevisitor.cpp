@@ -26,7 +26,7 @@ void TraceVisitor::visit(TraceUnexplored* node)         { visit(static_cast<Trac
 
 void TraceVisitor::visit(TraceBranch* node)             { visit(static_cast<TraceNode*>(node)); }
 void TraceVisitor::visit(TraceConcreteBranch* node)     { visit(static_cast<TraceBranch*>(node)); }
-void TraceVisitor::visit(TraceSymbolicBranch* node)             { visit(static_cast<TraceBranch*>(node)); }
+void TraceVisitor::visit(TraceSymbolicBranch* node)     { visit(static_cast<TraceBranch*>(node)); }
 
 void TraceVisitor::visit(TraceAnnotation* node)         { visit(static_cast<TraceNode*>(node)); }
 void TraceVisitor::visit(TraceAlert* node)              { visit(static_cast<TraceAnnotation*>(node)); }

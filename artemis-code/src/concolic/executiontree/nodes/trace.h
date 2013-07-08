@@ -33,6 +33,7 @@ class TraceNode
     // Abstract
 public:
     virtual void accept(TraceVisitor* visitor) = 0;
+    virtual bool isEqualShallow(const QSharedPointer<const TraceNode>& other) = 0;
     virtual ~TraceNode() {}
 };
 
@@ -45,22 +46,46 @@ public:
     TraceNodePtr next;
 };
 
+typedef QSharedPointer<TraceAnnotation> TraceAnnotationPtr;
+
 
 class TraceAlert : public TraceAnnotation
 {
+
 public:
+
+    void accept(TraceVisitor* visitor)
+    {
+        visitor->visit(this);
+    }
+
+    bool isEqualShallow(const QSharedPointer<const TraceNode>& other)
+    {
+        return !other.dynamicCast<const TraceAlert>().isNull();
+    }
+
+    ~TraceAlert() {}
+
     QString message;
-    void accept(TraceVisitor* visitor){visitor->visit(this);}
-    ~TraceAlert(){}
 };
 
 
 class TraceDomModification : public TraceAnnotation
 {
 public:
+
+    void accept(TraceVisitor* visitor) {
+        visitor->visit(this);
+    }
+
+    bool isEqualShallow(const QSharedPointer<const TraceNode>& other)
+    {
+        return !other.dynamicCast<const TraceDomModification>().isNull();
+    }
+
+     ~TraceDomModification() {}
+
     int amountModified; // TODO: type? how is this measured?
-    void accept(TraceVisitor* visitor){visitor->visit(this);}
-    ~TraceDomModification(){}
 };
 
 
@@ -68,7 +93,16 @@ class TracePageLoad : public TraceAnnotation
 {
 public:
     QString page; // TODO: should we keep both the old and new pages?
-    void accept(TraceVisitor* visitor){visitor->visit(this);}
+
+    bool isEqualShallow(const QSharedPointer<const TraceNode>& other)
+    {
+        return !other.dynamicCast<const TracePageLoad>().isNull();
+    }
+
+    void accept(TraceVisitor* visitor) {
+        visitor->visit(this);
+    }
+
     ~TracePageLoad(){}
 };
 
@@ -77,7 +111,18 @@ class TraceFunctionCall : public TraceAnnotation
 {
 public:
     QString name;
-    void accept(TraceVisitor* visitor){visitor->visit(this);}
+
+    void accept(TraceVisitor* visitor) {
+        visitor->visit(this);
+    }
+
+    bool isEqualShallow(const QSharedPointer<const TraceNode>& other)
+    {
+         const QSharedPointer<const TraceFunctionCall> otherCasted = other.dynamicCast<const TraceFunctionCall>();
+
+         return !otherCasted.isNull() && name.compare(otherCasted->name) == 0;
+    }
+
     ~TraceFunctionCall(){}
 };
 
@@ -92,7 +137,15 @@ class TraceEndSuccess : public TraceEnd
 {
     // Empty placeholder.
 public:
-    void accept(TraceVisitor* visitor){visitor->visit(this);}
+    void accept(TraceVisitor* visitor) {
+        visitor->visit(this);
+    }
+
+    bool isEqualShallow(const QSharedPointer<const TraceNode>& other)
+    {
+        return !other.dynamicCast<const TraceEndSuccess>().isNull();
+    }
+
     ~TraceEndSuccess(){}
 };
 
@@ -101,7 +154,16 @@ class TraceEndFailure : public TraceEnd
 {
     // Empty placeholder.
 public:
-    void accept(TraceVisitor* visitor){visitor->visit(this);}
+
+    void accept(TraceVisitor* visitor) {
+        visitor->visit(this);
+    }
+
+    bool isEqualShallow(const QSharedPointer<const TraceNode>& other)
+    {
+        return !other.dynamicCast<const TraceEndFailure>().isNull();
+    }
+
     ~TraceEndFailure(){}
 };
 
@@ -110,7 +172,16 @@ class TraceEndUnknown : public TraceEnd
 {
     // Empty placeholder.
 public:
-    void accept(TraceVisitor* visitor){visitor->visit(this);}
+
+    void accept(TraceVisitor* visitor) {
+        visitor->visit(this);
+    }
+
+    bool isEqualShallow(const QSharedPointer<const TraceNode>& other)
+    {
+        return !other.dynamicCast<const TraceEndUnknown>().isNull();
+    }
+
     ~TraceEndUnknown(){}
 };
 
