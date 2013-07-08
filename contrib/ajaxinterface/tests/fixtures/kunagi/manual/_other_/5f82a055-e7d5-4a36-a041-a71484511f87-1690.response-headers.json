@@ -1,0 +1,7 @@
+{
+    "headers": "{\"server\":\"Apache-Coyote/1.1\",\"cache-control\":\"no-cache\",\"pragma\":\"no-cache\",\"expires\":\"Thu, 01 Jan 1970 00:00:00 GMT\",\"content-type\":\"text/html\",\"transfer-encoding\":\"chunked\",\"date\":\"Tue, 18 Oct 2011 15:14:12 GMT\"}", 
+    "httpVersion": "1.1", 
+    "method": null, 
+    "statusCode": 200, 
+    "url": ""
+}

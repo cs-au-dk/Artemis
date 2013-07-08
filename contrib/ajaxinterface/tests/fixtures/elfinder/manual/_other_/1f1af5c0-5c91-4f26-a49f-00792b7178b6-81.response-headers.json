@@ -1,0 +1,7 @@
+{
+    "headers": "{\"content-type\":\"text/plain\",\"accept-ranges\":\"bytes\",\"etag\":\"\\\"695448966\\\"\",\"last-modified\":\"Wed, 19 Oct 2011 16:33:00 GMT\",\"content-length\":\"0\",\"date\":\"Wed, 19 Oct 2011 16:33:05 GMT\",\"server\":\"lighttpd/1.4.28\"}", 
+    "httpVersion": "1.1", 
+    "method": null, 
+    "statusCode": 200, 
+    "url": ""
+}

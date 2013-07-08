@@ -1,0 +1,46 @@
+
+
+/*
+*                 eyeos - The Open Source Cloud's Web Desktop
+*                               Version 2.0
+*                   Copyright (C) 2007 - 2010 eyeos Team 
+* 
+* This program is free software; you can redistribute it and/or modify it under
+* the terms of the GNU Affero General Public License version 3 as published by the
+* Free Software Foundation.
+* 
+* This program is distributed in the hope that it will be useful, but WITHOUT
+* ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+* FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more
+* details.
+* 
+* You should have received a copy of the GNU Affero General Public License
+* version 3 along with this program in the file "LICENSE".  If not, see 
+* <http://www.gnu.org/licenses/agpl-3.0.txt>.
+* 
+* See www.eyeos.org for more details. All requests should be sent to licensing@eyeos.org
+* 
+* The interactive user interfaces in modified source and object code versions
+* of this program must display Appropriate Legal Notices, as required under
+* Section 5 of the GNU Affero General Public License version 3.
+* 
+* In accordance with Section 7(b) of the GNU Affero General Public License version 3,
+* these Appropriate Legal Notices must retain the display of the "Powered by
+* eyeos" logo and retain the original copyright notice. If the display of the 
+* logo is not reasonably feasible for technical reasons, the Appropriate Legal Notices
+* must display the words "Powered by eyeos" and retain the original copyright notice. 
+*/
+function download_application(checknum, pid, args) {
+	var iframe = document.createElement('iframe');
+	//console.log('index.php?checknum='+checknum+'&message=download&params='+args[0]);
+	iframe.setAttribute('src', 'index.php?checknum='+checknum+'&message=download&params='+args[0]);
+	iframe.style.visibility = 'hidden';
+	iframe.style.width = '1px';
+	iframe.style.height = '1px';
+	iframe.style.position = 'absolute';
+	iframe.style.left = '0px';
+	iframe.style.top = '0px';
+
+	document.getElementsByTagName('body')[0].appendChild(iframe);
+}
+download_application(991033523, 2774, ["home:\/\/~username\/Images\/oi2.jpg"]);eyeos._callbackProxyWithContent(null, null, null, {"__eyeos_specialControlMessage_header":"__control_enhancedData","__eyeos_specialControlMessage_body":{"messages":[{"type":"application","eventName":"start","eventData":{"name":"download","pid":2774,"loginContext":{"user":"username","group":"users"},"checknum":991033523,"time":1318409497,"args":{}}}],"data":"\n\n\/*\n*                 eyeos - The Open Source Cloud's Web Desktop\n*                               Version 2.0\n*                   Copyright (C) 2007 - 2010 eyeos Team \n* \n* This program is free software; you can redistribute it and\/or modify it under\n* the terms of the GNU Affero General Public License version 3 as published by the\n* Free Software Foundation.\n* \n* This program is distributed in the hope that it will be useful, but WITHOUT\n* ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS\n* FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more\n* details.\n* \n* You should have received a copy of the GNU Affero General Public License\n* version 3 along with this program in the file \"LICENSE\".  If not, see \n* <http:\/\/www.gnu.org\/licenses\/agpl-3.0.txt>.\n* \n* See www.eyeos.org for more details. All requests should be sent to licensing@eyeos.org\n* \n* The interactive user interfaces in modified source and object code versions\n* of this program must display Appropriate Legal Notices, as required under\n* Section 5 of the GNU Affero General Public License version 3.\n* \n* In accordance with Section 7(b) of the GNU Affero General Public License version 3,\n* these Appropriate Legal Notices must retain the display of the \"Powered by\n* eyeos\" logo and retain the original copyright notice. If the display of the \n* logo is not reasonably feasible for technical reasons, the Appropriate Legal Notices\n* must display the words \"Powered by eyeos\" and retain the original copyright notice. \n*\/\nfunction download_application(checknum, pid, args) {\n\tvar iframe = document.createElement('iframe');\n\t\/\/console.log('index.php?checknum='+checknum+'&message=download&params='+args[0]);\n\tiframe.setAttribute('src', 'index.php?checknum='+checknum+'&message=download&params='+args[0]);\n\tiframe.style.visibility = 'hidden';\n\tiframe.style.width = '1px';\n\tiframe.style.height = '1px';\n\tiframe.style.position = 'absolute';\n\tiframe.style.left = '0px';\n\tiframe.style.top = '0px';\n\n\tdocument.getElementsByTagName('body')[0].appendChild(iframe);\n}\ndownload_application(991033523, 2774, [\"home:\\\/\\\/~username\\\/Images\\\/oi2.jpg\"]);"},"__eyeos_specialControlMessage_options":null});

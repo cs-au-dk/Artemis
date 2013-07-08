@@ -1,0 +1,7 @@
+{
+    "headers": "{\"date\":\"Wed, 12 Oct 2011 08:47:31 GMT\",\"server\":\"Apache/2.2.17 (Ubuntu)\",\"x-powered-by\":\"PHP/5.3.5-1ubuntu7.2\",\"pragma\":\"public\",\"cache-control\":\"max-age=7776000, must-revalidate\",\"expires\":\"Tue, 10 Jan 2012 08:47:31 GMT\",\"content-encoding\":\"gzip\",\"vary\":\"Accept-Encoding\",\"transfer-encoding\":\"chunked\",\"content-type\":\"text/html; charset=UTF-8\"}", 
+    "httpVersion": "1.1", 
+    "method": null, 
+    "statusCode": 200, 
+    "url": ""
+}

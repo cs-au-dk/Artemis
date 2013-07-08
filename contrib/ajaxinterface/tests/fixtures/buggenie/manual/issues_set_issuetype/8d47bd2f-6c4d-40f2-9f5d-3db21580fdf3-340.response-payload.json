@@ -1,0 +1,42 @@
+{
+    "changed": true, 
+    "field": {
+        "id": "1", 
+        "name": "Bug report", 
+        "src": "/buggenie/thebuggenie/themes/oxygen/bug_report_small.png"
+    }, 
+    "visible_fields": {
+        "category": {
+            "additional": true, 
+            "required": false
+        }, 
+        "description": {
+            "additional": false, 
+            "required": true
+        }, 
+        "estimated_time": {
+            "additional": true, 
+            "required": false
+        }, 
+        "milestone": {
+            "additional": true, 
+            "required": false
+        }, 
+        "percent_complete": {
+            "additional": true, 
+            "required": false
+        }, 
+        "priority": {
+            "additional": true, 
+            "required": false
+        }, 
+        "spent_time": {
+            "additional": false, 
+            "required": false
+        }, 
+        "votes": {
+            "additional": false, 
+            "required": false
+        }
+    }
+}

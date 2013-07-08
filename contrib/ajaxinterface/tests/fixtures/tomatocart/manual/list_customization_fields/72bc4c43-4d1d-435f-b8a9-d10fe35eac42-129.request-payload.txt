@@ -1,0 +1,1 @@
+module=products&products_id=10&action=list_customization_fields&token=01343fd85986eeb00d121f758453be3c

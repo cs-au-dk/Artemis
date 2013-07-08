@@ -1,0 +1,1 @@
+module=desktop_settings&action=render_data&gadget=new_customers&token=5373cddd9f26b62dd30d6d142503343c

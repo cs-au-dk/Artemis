@@ -1,0 +1,18 @@
+[
+    {
+        "absolutepath": "home://~username/Images/oi2 2.jpg", 
+        "allTags": null, 
+        "created": 0, 
+        "extension": "JPG", 
+        "modified": 0, 
+        "name": "oi2 2.jpg", 
+        "owner": "username", 
+        "path": "home://~username/Images", 
+        "permissions": "-rw-------", 
+        "rating": "4", 
+        "shared": "0", 
+        "size": 71883, 
+        "tags": null, 
+        "type": "file"
+    }
+]

@@ -1,0 +1,7 @@
+{
+    "headers": "{\"host\":\"10.11.103.178\",\"user-agent\":\"Mozilla/5.0 (X11; Linux x86_64; rv:7.0.1) Gecko/20100101 Firefox/7.0.1\",\"accept\":\"image/png,image/*;q=0.8,*/*;q=0.5\",\"accept-language\":\"en-us,en;q=0.5\",\"accept-encoding\":\"gzip, deflate\",\"accept-charset\":\"ISO-8859-1,utf-8;q=0.7,*;q=0.7\",\"proxy-connection\":\"keep-alive\",\"referer\":\"http://10.11.103.178/buggenie/thebuggenie/sampleproject1/issues/41\",\"cookie\":\"tbg3_password=bf653e7725b4c982551dbc373908355741695ff6; tbg3_username=administrator; THEBUGGENIE=m4ult4q3nbqjsnqftihbh8qa61\",\"if-modified-since\":\"Sat, 20 Aug 2011 11:42:40 GMT\",\"if-none-match\":\"\\\"3694948447\\\"\",\"cache-control\":\"max-age=0\"}", 
+    "httpVersion": "1.1", 
+    "method": "GET", 
+    "statusCode": null, 
+    "url": "http://10.11.103.178/buggenie/thebuggenie/themes/oxygen/tabmenu_dropdown.png"
+}

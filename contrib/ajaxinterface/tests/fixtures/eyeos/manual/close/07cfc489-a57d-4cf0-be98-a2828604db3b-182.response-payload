@@ -1,0 +1,27 @@
+{
+    "__eyeos_specialControlMessage_body": {
+        "data": "null", 
+        "messages": [
+            {
+                "eventData": {
+                    "args": {
+                        "0": "home://~username/Images/oi2.jpg", 
+                        "1": true
+                    }, 
+                    "checknum": 103451451, 
+                    "loginContext": {
+                        "group": "users", 
+                        "user": "username"
+                    }, 
+                    "name": "urlshare", 
+                    "pid": 4207, 
+                    "time": 1318409504
+                }, 
+                "eventName": "stop", 
+                "type": "application"
+            }
+        ]
+    }, 
+    "__eyeos_specialControlMessage_header": "__control_enhancedData", 
+    "__eyeos_specialControlMessage_options": null
+}

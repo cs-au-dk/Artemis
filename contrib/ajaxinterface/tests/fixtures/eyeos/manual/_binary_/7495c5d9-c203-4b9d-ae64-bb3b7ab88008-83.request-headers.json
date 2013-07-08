@@ -1,0 +1,7 @@
+{
+    "headers": "{\"host\":\"localhost\",\"user-agent\":\"Mozilla/5.0 (X11; Linux x86_64; rv:7.0.1) Gecko/20100101 Firefox/7.0.1\",\"accept\":\"image/png,image/*;q=0.8,*/*;q=0.5\",\"accept-language\":\"en-us,en;q=0.5\",\"accept-encoding\":\"gzip, deflate\",\"accept-charset\":\"ISO-8859-1,utf-8;q=0.7,*;q=0.7\",\"proxy-connection\":\"keep-alive\",\"referer\":\"http://localhost/eyeos/\",\"cookie\":\"eyeos=pmi06454c8u1nsbof8ocbsrkv1; __utma=111872281.589926113.1309729110.1309729110.1309729110.1; __utmz=111872281.1309729110.1.1.utmcsr=(direct)|utmccn=(direct)|utmcmd=(none); ys-products-win=o%3Awidth%3Dn%253A1266%5Eheight%3Dn%253A726%5Ex%3Dn%253A226%5Ey%3Dn%253A117\"}", 
+    "httpVersion": "1.1", 
+    "method": "GET", 
+    "statusCode": null, 
+    "url": "http://localhost/eyeos/resource/aristo/decoration/window/minimize-active.png"
+}

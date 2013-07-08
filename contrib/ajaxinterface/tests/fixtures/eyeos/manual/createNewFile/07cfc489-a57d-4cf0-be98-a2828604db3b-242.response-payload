@@ -1,0 +1,16 @@
+{
+    "absolutepath": "home://~username/Images/New File.txt", 
+    "allTags": null, 
+    "created": "12/10/2011", 
+    "extension": "TXT", 
+    "modified": "12/10/2011", 
+    "name": "New File.txt", 
+    "owner": "username", 
+    "path": "home://~username/Images", 
+    "permissions": "-rw-------", 
+    "rating": 0, 
+    "shared": "0", 
+    "size": 0, 
+    "tags": null, 
+    "type": "file"
+}

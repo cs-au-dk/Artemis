@@ -1,0 +1,7 @@
+{
+    "headers": "{\"x-powered-by\":\"PHP/5.3.5-1ubuntu7.3\",\"set-cookie\":[\"tbg3_password=bf653e7725b4c982551dbc373908355741695ff6; expires=Sat, 29-Oct-2011 13:43:09 GMT; path=/buggenie/thebuggenie/\",\"tbg3_username=administrator; expires=Sat, 29-Oct-2011 13:43:09 GMT; path=/buggenie/thebuggenie/\"],\"expires\":\"Wed, 19 Oct 2011 14:13:09 GMT\",\"vary\":\"Accept-Encoding\",\"last-modified\":\"Sat, 20 Aug 2011 11:42:40 GMT\",\"etag\":\"\\\"pub1313840560;gz\\\"\",\"cache-control\":\"max-age=1800, public\",\"content-length\":\"60003\",\"content-encoding\":\"gzip\",\"content-type\":\"text/javascript\",\"date\":\"Wed, 19 Oct 2011 13:43:09 GMT\",\"server\":\"lighttpd/1.4.28\"}", 
+    "httpVersion": "1.1", 
+    "method": null, 
+    "statusCode": 200, 
+    "url": ""
+}

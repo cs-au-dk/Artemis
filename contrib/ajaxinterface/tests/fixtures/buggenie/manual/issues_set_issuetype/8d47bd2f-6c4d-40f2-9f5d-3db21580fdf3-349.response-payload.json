@@ -1,0 +1,62 @@
+{
+    "changed": true, 
+    "field": {
+        "id": "6", 
+        "name": "Idea", 
+        "src": "/buggenie/thebuggenie/themes/oxygen/idea_small.png"
+    }, 
+    "visible_fields": {
+        "build": {
+            "additional": false, 
+            "required": false
+        }, 
+        "category": {
+            "additional": false, 
+            "required": false
+        }, 
+        "component": {
+            "additional": false, 
+            "required": false
+        }, 
+        "description": {
+            "additional": false, 
+            "required": true
+        }, 
+        "edition": {
+            "additional": false, 
+            "required": false
+        }, 
+        "estimated_time": {
+            "additional": true, 
+            "required": false
+        }, 
+        "milestone": {
+            "additional": true, 
+            "required": false
+        }, 
+        "priority": {
+            "additional": true, 
+            "required": false
+        }, 
+        "reproducability": {
+            "additional": false, 
+            "required": false
+        }, 
+        "reproduction_steps": {
+            "additional": false, 
+            "required": true
+        }, 
+        "resolution": {
+            "additional": true, 
+            "required": false
+        }, 
+        "severity": {
+            "additional": true, 
+            "required": false
+        }, 
+        "spent_time": {
+            "additional": false, 
+            "required": false
+        }
+    }
+}

@@ -299,7 +299,7 @@ void QWebExecutionListener::javascriptConstantStringEncountered(std::string cons
     emit sigJavascriptConstantStringEncountered(QString::fromStdString(constant));
 }
 
-void QWebExecutionListener::webkit_eval_call(const char * eval_string) {
+void QWebExecutionListener::javascript_eval_call(const char * eval_string) {
     Q_CHECK_PTR(eval_string);
     emit this->eval_call(QString(tr(eval_string)));
 }

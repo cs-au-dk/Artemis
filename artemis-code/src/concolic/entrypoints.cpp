@@ -14,10 +14,10 @@
  * limitations under the License.
  */
 
-
-#include "entrypoints.h"
+#include "statistics/statsstorage.h"
 #include "util/loggingutil.h"
 
+#include "entrypoints.h"
 
 namespace artemis
 {
@@ -65,6 +65,8 @@ QList<EventHandlerDescriptor*> EntryPointDetector::detectAll(ExecutionResultPtr 
         }
 
     }
+
+    statistics()->accumulate("FormCrawl::Entrypoints", entryEvents.size());
 
     return entryEvents;
 }

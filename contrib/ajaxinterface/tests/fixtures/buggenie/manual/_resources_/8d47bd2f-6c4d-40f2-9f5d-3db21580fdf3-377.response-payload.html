@@ -1,0 +1,926 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"
+   "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>The Bug Genie ~ "Sample project 1" project dashboard</title>
+				<meta name="description" content="The bug genie, friendly issue tracking">
+		<meta name="keywords" content="thebuggenie friendly issue tracking">
+		<meta name="author" content="thebuggenie.com">
+		<meta http-equiv="Content-Type" content="text/html charset=utf-8">
+					<link rel="shortcut icon" href="/buggenie/thebuggenie/themes/oxygen/favicon.png">
+				<link rel="shortcut icon" href="/buggenie/thebuggenie/themes/oxygen/favicon.png">
+		<link title="Sample project 1 search" href="/buggenie/thebuggenie/sampleproject1/opensearch.xml" type="application/opensearchdescription+xml" rel="search">
+							<link rel="alternate" type="application/rss+xml" title="'Sample project 1' project timeline" href="/buggenie/thebuggenie/sampleproject1/timeline/format/rss">
+																								<script type="text/javascript" src="http://code.jquery.com/jquery-1.5.2.min.js"></script>
+		<script type="text/javascript">jQuery.noConflict();</script>
+		<link rel="stylesheet" type="text/css" href="/buggenie/thebuggenie/serve&g=css&files=Y3NzL294eWdlbi5jc3MsY3NzL294eWdlbl9wdWJsaXNoLmNzcw==">
+		<script type="text/javascript" src="/buggenie/thebuggenie/serve&g=js&files=anMvY29uZmlnL3Byb2plY3RzX2FqYXguanMsanMvcHJvdG90eXBlLmpzLGpzL2J1aWxkZXIuanMsanMvZWZmZWN0cy5qcyxqcy9kcmFnZHJvcC5qcyxqcy9jb250cm9scy5qcyxqcy9qcXVlcnkubWFya2l0dXAuanMsanMvdGhlYnVnZ2VuaWUuanM="></script>
+		<script type="text/javascript">
+			jQuery(document).ready(function(){jQuery('textarea').markItUp({
+				previewParserPath:	'', // path to your Wiki parser
+				onShiftEnter:		{keepDefault:false, replaceWith:'\n\n'},
+				markupSet: [
+					{name:'Heading 1', key:'1', openWith:'== ', closeWith:' ==', placeHolder:'Your title here...' },
+					{name:'Heading 2', key:'2', openWith:'=== ', closeWith:' ===', placeHolder:'Your title here...' },
+					{name:'Heading 3', key:'3', openWith:'==== ', closeWith:' ====', placeHolder:'Your title here...' },
+					{name:'Heading 4', key:'4', openWith:'===== ', closeWith:' =====', placeHolder:'Your title here...' },
+					{name:'Heading 5', key:'5', openWith:'====== ', closeWith:' ======', placeHolder:'Your title here...' },
+					{separator:'---------------' },		
+					{name:'Bold', key:'B', openWith:"'''", closeWith:"'''"}, 
+					{name:'Italic', key:'I', openWith:"''", closeWith:"''"}, 
+					{name:'Stroke through', key:'S', openWith:'<s>', closeWith:'</s>'}, 
+					{separator:'---------------' },
+					{name:'Bulleted list', openWith:'(!(* |!|*)!)'}, 
+					{name:'Numeric list', openWith:'(!(# |!|#)!)'}, 
+					{separator:'---------------' },
+					{name:'Picture', key:"P", replaceWith:'[[Image:[![Url:!:http://]!]|[![name]!]]]'}, 
+					{name:'Link', key:"L", openWith:"[[![Link]!] ", closeWith:']', placeHolder:'Your text to link here...' },
+					{name:'Url', openWith:"[[![Url:!:http://]!] ", closeWith:']', placeHolder:'Your text to link here...' },
+					{separator:'---------------' },
+					{name:'Quotes', openWith:'(!(> |!|>)!)', placeHolder:''},
+					{name:'Code', openWith:'(!(<source lang="[![Language:!:php]!]">|!|<pre>)!)', closeWith:'(!(</source>|!|</pre>)!)'}
+				]
+			});});
+		</script>
+		<style type="text/css">
+			/* -------------------------------------------------------------------
+			// markItUp! Universal MarkUp Engine, JQuery plugin
+			// By Jay Salvat - http://markitup.jaysalvat.com/
+			// ------------------------------------------------------------------*/
+			.markItUp .markItUpButton1 a {
+				background-image:url(http://10.11.103.178/buggenie/thebuggenie/themes/oxygen/markitup/h1.png); 
+			}
+			.markItUp .markItUpButton2 a {
+				background-image:url(http://10.11.103.178/buggenie/thebuggenie/themes/oxygen/markitup/h2.png); 
+			}
+			.markItUp .markItUpButton3 a {
+				background-image:url(http://10.11.103.178/buggenie/thebuggenie/themes/oxygen/markitup/h3.png); 
+			}
+			.markItUp .markItUpButton4 a {
+				background-image:url(http://10.11.103.178/buggenie/thebuggenie/themes/oxygen/markitup/h4.png); 
+			}
+			.markItUp .markItUpButton5 a {
+				background-image:url(http://10.11.103.178/buggenie/thebuggenie/themes/oxygen/markitup/h5.png); 
+			}
+
+			.markItUp .markItUpButton6 a {
+				background-image:url(http://10.11.103.178/buggenie/thebuggenie/themes/oxygen/markitup/bold.png);
+			}
+			.markItUp .markItUpButton7 a {
+				background-image:url(http://10.11.103.178/buggenie/thebuggenie/themes/oxygen/markitup/italic.png);
+			}
+			.markItUp .markItUpButton8 a {
+				background-image:url(http://10.11.103.178/buggenie/thebuggenie/themes/oxygen/markitup/stroke.png);
+			}
+
+			.markItUp .markItUpButton9 a {
+				background-image:url(http://10.11.103.178/buggenie/thebuggenie/themes/oxygen/markitup/list-bullet.png);
+			}
+			.markItUp .markItUpButton10 a {
+				background-image:url(http://10.11.103.178/buggenie/thebuggenie/themes/oxygen/markitup/list-numeric.png);
+			}
+
+			.markItUp .markItUpButton11 a {
+				background-image:url(http://10.11.103.178/buggenie/thebuggenie/themes/oxygen/markitup/picture.png); 
+			}
+			.markItUp .markItUpButton12 a {
+				background-image:url(http://10.11.103.178/buggenie/thebuggenie/themes/oxygen/markitup/link.png);
+			}
+			.markItUp .markItUpButton13 a {
+				background-image:url(http://10.11.103.178/buggenie/thebuggenie/themes/oxygen/markitup/url.png);
+			}
+
+			.markItUp .markItUpButton14 a	{
+				background-image:url(http://10.11.103.178/buggenie/thebuggenie/themes/oxygen/markitup/quotes.png);
+			}
+			.markItUp .markItUpButton15 a	{
+				background-image:url(http://10.11.103.178/buggenie/thebuggenie/themes/oxygen/markitup/code.png);
+			}
+
+			.markItUp .preview a {
+				background-image:url(http://10.11.103.178/buggenie/thebuggenie/themes/oxygen/markitup/preview.png);
+			}
+			.markItUp * {
+				margin:0px; padding:0px;
+				outline:none;
+			}
+			.markItUp a:link,
+			.markItUp a:visited {
+				color:#000;
+				text-decoration:none;
+			}
+			.markItUp  {
+/*				width:700px;*/
+				margin:5px 0 5px 0;
+			}
+			.markItUpContainer  {
+				font:11px 'Droid Sans', sans-serif;
+			}
+			.markItUpEditor {
+				font:12px 'Droid Sans Mono', monospace;
+				padding:5px;
+				width:690px;
+				height:320px;
+				clear:both;
+				line-height:18px;
+				overflow:auto;
+			}
+			.markItUpPreviewFrame	{
+				overflow:auto;
+				background-color:#FFF;
+				width:99.9%;
+				height:300px;
+				margin:5px 0;
+			}
+			.markItUpFooter {
+				width:100%;
+			}
+			.markItUpResizeHandle {
+				overflow:hidden;
+				width:22px; height:5px;
+				margin-left:auto;
+				margin-right:auto;
+				background-image:url(http://10.11.103.178/buggenie/thebuggenie/themes/oxygen/markitup/handle.png);
+				cursor:n-resize;
+			}
+			/***************************************************************************************/
+			/* first row of buttons */
+			.markItUpHeader ul li	{
+				list-style:none;
+				float:left;
+				position:relative;
+			}
+			.markItUpHeader ul li:hover > ul{
+				display:block;
+			}
+			.markItUpHeader ul .markItUpDropMenu {
+				background:transparent url(http://10.11.103.178/buggenie/thebuggenie/themes/oxygen/markitup/menu.png) no-repeat 115% 50%;
+				margin-right:5px;
+			}
+			.markItUpHeader ul .markItUpDropMenu li {
+				margin-right:0px;
+			}
+			/* next rows of buttons */
+			.markItUpHeader ul ul {
+				display:none;
+				position:absolute;
+				top:18px; left:0px;	
+				background:#FFF;
+				border:1px solid #000;
+			}
+			.markItUpHeader ul ul li {
+				float:none;
+				border-bottom:1px solid #000;
+			}
+			.markItUpHeader ul ul .markItUpDropMenu {
+				background:#FFF url(http://10.11.103.178/buggenie/thebuggenie/themes/oxygen/markitup/submenu.png) no-repeat 100% 50%;
+			}
+			.markItUpHeader ul .markItUpSeparator {
+				margin:0 10px;
+				width:1px;
+				height:16px;
+				overflow:hidden;
+				background-color:#CCC;
+			}
+			.markItUpHeader ul ul .markItUpSeparator {
+				width:auto; height:1px;
+				margin:0px;
+			}
+			/* next rows of buttons */
+			.markItUpHeader ul ul ul {
+				position:absolute;
+				top:-1px; left:150px; 
+			}
+			.markItUpHeader ul ul ul li {
+				float:none;
+			}
+			.markItUpHeader ul a {
+				display:block;
+				width:16px; height:16px;
+				text-indent:-10000px;
+				background-repeat:no-repeat;
+				padding:3px;
+				margin:0px;
+			}
+			.markItUpHeader ul ul a {
+				display:block;
+				padding-left:0px;
+				text-indent:0;
+				width:120px; 
+				padding:5px 5px 5px 25px;
+				background-position:2px 50%;
+			}
+			.markItUpHeader ul ul a:hover  {
+				color:#FFF;
+				background-color:#000;
+			}
+			.markItUpHeader a:hover  {
+				border-bottom: none;
+			}			
+		</style>
+			</head>
+	<body>
+		<div class="medium_transparent rounded_box shadowed popup_message failure" onclick="clearPopupMessages();" style="display: none;" id="thebuggenie_failuremessage">
+			<div style="padding: 10px 0 10px 0;">
+				<div class="dismiss_me">Click this message to dismiss it</div>
+				<span style="color: #000; font-weight: bold;" id="thebuggenie_failuremessage_title"></span><br>
+				<span id="thebuggenie_failuremessage_content"></span>
+			</div>
+		</div>
+		<div class="medium_transparent rounded_box shadowed popup_message success" onclick="clearPopupMessages();" style="display: none;" id="thebuggenie_successMessage">
+			<div style="padding: 10px 0 10px 0;">
+				<div class="dismiss_me">Click this message to dismiss it</div>
+				<span style="color: #000; font-weight: bold;" id="thebuggenie_successMessage_title"></span><br>
+				<span id="thebuggenie_successMessage_content"></span>
+			</div>
+		</div>
+		<div id="fullpage_backdrop" style="display: none; background-color: transparent; z-index: 1; width: 100%; height: 100%; position: fixed; top: 0; left: 0; margin: 0; padding: 0; text-align: center;">
+			<div style="position: absolute; top: 45%; left: 40%; z-index: 100001; color: #FFF; font-size: 15px; font-weight: bold;" id="fullpage_backdrop_indicator">
+				<img src="/buggenie/thebuggenie/themes/oxygen/spinning_32.gif" alt="spinning_32.gif"><br>
+				Please wait, loading content...
+			</div>
+			<div id="fullpage_backdrop_content"> </div>
+			<div style="background-color: #000; width: 100%; height: 100%; position: absolute; top: 0; left: 0; margin: 0; padding: 0; z-index: 100000;" class="semi_transparent" onclick="resetFadedBackdrop();"> </div>
+		</div>
+		<table style="width: 100%; height: 100%; table-layout: fixed; min-width: 1020px;" cellpadding=0 cellspacing=0>
+			<tr>
+				<td style="height: auto; overflow: hidden;" valign="top" id="maintd">
+					<table class="main_header" cellpadding=0 cellspacing=0 width="100%" style="table-layout: fixed;">
+						<tr>
+							<td align="left" valign="middle" id="logo_td">
+																									<a class="logo" href="/buggenie/thebuggenie/"><img alt="[logo]" title="[logo]" src="/buggenie/thebuggenie/themes/oxygen/logo_24.png"></a>
+																<div class="logo_large">The Bug Genie</div>
+								<div class="logo_small"><b>Friendly</b> issue tracking and project management</div>
+							</td>
+							<td style="width: auto;">
+								<div class="tab_menu header_menu project_context">
+									<ul>
+																					<li class="selected">
+												<div>
+													<a href="/buggenie/thebuggenie/sampleproject1"><img src="/buggenie/thebuggenie/themes/oxygen/icon_dashboard_small.png" alt="icon_dashboard_small.png">Summary</a>													<a onmouseover="" href="javascript:void(0);"><img class="menu_dropdown" src="/buggenie/thebuggenie/themes/oxygen/tabmenu_dropdown.png" alt="tabmenu_dropdown.png"></a>												</div>
+												<div id="project_information_menu" class="tab_menu_dropdown shadowed">
+														<a class="selected first" href="/buggenie/thebuggenie/sampleproject1">Dashboard</a>		<a id="sidebar_link_scrum" href="/buggenie/thebuggenie/sampleproject1/scrum">Sprint planning</a>			<a href="/buggenie/thebuggenie/sampleproject1/roadmap">Roadmap</a>		<a href="/buggenie/thebuggenie/sampleproject1/team">Team overview</a>		<a href="/buggenie/thebuggenie/sampleproject1/statistics">Statistics</a>			<a class="last" href="/buggenie/thebuggenie/sampleproject1/timeline">Timeline</a>													</div>
+											</li>
+																																									<li>
+												<div>
+													<a href="/buggenie/thebuggenie/sampleproject1/issues/new"><img src="/buggenie/thebuggenie/themes/oxygen/tab_reportissue.png" alt="tab_reportissue.png">Report an issue</a>													<a onmouseover="" href="javascript:void(0);"><img class="menu_dropdown" src="/buggenie/thebuggenie/themes/oxygen/tabmenu_dropdown.png" alt="tabmenu_dropdown.png"></a>													</div>
+													<div id="project_issue_menu" class="tab_menu_dropdown shadowed">
+																											<a href="/buggenie/thebuggenie/sampleproject1/issues/new/bugreport"><img src="/buggenie/thebuggenie/themes/oxygen/bug_report_tiny.png" alt="bug_report_tiny.png">Bug report</a>																											<a href="/buggenie/thebuggenie/sampleproject1/issues/new/featurerequest"><img src="/buggenie/thebuggenie/themes/oxygen/feature_request_tiny.png" alt="feature_request_tiny.png">Feature request</a>																											<a href="/buggenie/thebuggenie/sampleproject1/issues/new/enhancement"><img src="/buggenie/thebuggenie/themes/oxygen/enhancement_tiny.png" alt="enhancement_tiny.png">Enhancement</a>																									</div>											
+											</li>
+																															<li>
+												<div>
+													<a href="/buggenie/thebuggenie/sampleproject1/issues/find"><img src="/buggenie/thebuggenie/themes/oxygen/tab_search.png" alt="tab_search.png">Issues</a>																											<a onmouseover="" href="javascript:void(0);"><img class="menu_dropdown" src="/buggenie/thebuggenie/themes/oxygen/tabmenu_dropdown.png" alt="tabmenu_dropdown.png"></a>																									</div>
+																									<div id="issues_menu" class="tab_menu_dropdown shadowed">
+														<a href="/buggenie/thebuggenie/sampleproject1/issues/open"><img src="/buggenie/thebuggenie/themes/oxygen/icon_savedsearch.png" alt="icon_savedsearch.png">Open issues for this project</a>														<a href="/buggenie/thebuggenie/sampleproject1/issues/closed"><img src="/buggenie/thebuggenie/themes/oxygen/icon_savedsearch.png" alt="icon_savedsearch.png">Closed issues for this project</a>														<a href="/buggenie/thebuggenie/sampleproject1/issues/todo"><img src="/buggenie/thebuggenie/themes/oxygen/icon_savedsearch.png" alt="icon_savedsearch.png">Milestone todo-list for this project</a>														<a href="/buggenie/thebuggenie/sampleproject1/issues/mostvoted"><img src="/buggenie/thebuggenie/themes/oxygen/icon_savedsearch.png" alt="icon_savedsearch.png">Most voted for issues</a>													</div>
+																							</li>
+																																								<li>
+	<div>
+		<a href="/buggenie/thebuggenie/wiki/Sampleproject1%3AMainPage"><img src="/buggenie/thebuggenie/themes/modules/publish/oxygen/tab_publish.png" alt="tab_publish.png">Project wiki</a>					<a href="javascript:void(0);"><img class="menu_dropdown" src="/buggenie/thebuggenie/themes/oxygen/tabmenu_dropdown.png" alt="tabmenu_dropdown.png"></a>			</div>
+			<div id="wiki_dropdown_menu" class="tab_menu_dropdown shadowed">
+							<div class="header">Currently selected project</div>
+				<a href="/buggenie/thebuggenie/wiki/Sampleproject1%3AMainPage">Project wiki frontpage</a>								<div style="font-weight: normal; margin: 0 0 15px 5px;">
+					<form action="/buggenie/thebuggenie/wiki/sampleproject1/find" method="get" accept-charset="utf-8">
+						<input type="text" name="articlename" value="Find project article (press enter to search)" style="width: 230px; font-size: 0.9em;" onblur="if ($(this).getValue() == '') { $(this).value = 'Find project article (press enter to search)'; $(this).addClassName('faded_out'); }" onfocus="if ($(this).getValue() == 'Find project article (press enter to search)') { $(this).clear(); } $(this).removeClassName('faded_out');" class="faded_out">
+					</form>
+				</div>
+						<div class="header">Global content</div>
+			<a href="/buggenie/thebuggenie/wiki">Wiki</a>						<div style="font-weight: normal; margin: 0 0 15px 5px;">
+				<form action="/buggenie/thebuggenie/wiki/find" method="get" accept-charset="utf-8">
+					<input type="text" name="articlename" value="Find any article (press enter to search)" style="width: 230px; font-size: 0.9em;" onblur="if ($(this).getValue() == '') { $(this).value = 'Find any article (press enter to search)'; $(this).addClassName('faded_out'); }" onfocus="if ($(this).getValue() == 'Find any article (press enter to search)') { $(this).clear(); } $(this).removeClassName('faded_out');" class="faded_out">
+				</form>
+			</div>
+							<div class="header">Project wikis</div>
+																			<a href="/buggenie/thebuggenie/wiki/Sampleproject2%3AMainPage">Sample project 2</a>									</div>
+	</li>									</ul>
+																		<div class="rounded_box blue tab_menu_container" id="header_userinfo">
+										<table style="width: auto;" cellpadding="0" cellspacing="0">
+											<tr>
+												<td style="width: 30px; padding-top: 4px;" valign="middle">
+													<img alt="[avatar]" src="http://www.gravatar.com/avatar/d41d8cd98f00b204e9800998ecf8427e.png?d=wavatar&amp;s=22">												</td>
+												<td id="header_username" valign="middle">
+																																									<a href="/buggenie/thebuggenie/dashboard">Administrator</a>																									</td>
+												<td class="header_userlinks">
+													<div class="dropdown_separator">
+														<a onmouseover="" href="javascript:void(0);"><img class="menu_dropdown" src="/buggenie/thebuggenie/themes/oxygen/tabmenu_dropdown.png" alt="tabmenu_dropdown.png"></a>													</div>
+												</td>
+											</tr>
+										</table>
+										<div class="rounded_box blue tab_menu_dropdown user_menu_dropdown shadowed">
+																							<div class="header">You are: <span class="userstate">Available</span></div>
+												<a href="/buggenie/thebuggenie/dashboard"><img src="/buggenie/thebuggenie/themes/oxygen/icon_dashboard_small.png" alt="icon_dashboard_small.png">Your dashboard</a>	
+												<a href="/buggenie/thebuggenie/account"><img src="/buggenie/thebuggenie/themes/oxygen/icon_account.png" alt="icon_account.png">Your account</a>																									<a href="/buggenie/thebuggenie/configure"><img src="/buggenie/thebuggenie/themes/oxygen/tab_config.png" alt="tab_config.png">Configure The Bug Genie</a>																								<a href="/buggenie/thebuggenie/wiki/Category%3AHelp"><img src="/buggenie/thebuggenie/themes/oxygen/help.png" alt="help.png">Help</a>												<a href="/buggenie/thebuggenie/logout"><img src="/buggenie/thebuggenie/themes/oxygen/logout.png" alt="logout.png">Logout</a>												<div class="header">Your issues</div>
+												<a href="/buggenie/thebuggenie/issues/my"><img src="/buggenie/thebuggenie/themes/oxygen/icon_savedsearch.png" alt="icon_savedsearch.png">Issues reported by me</a>												<a href="/buggenie/thebuggenie/issues/my/assigned"><img src="/buggenie/thebuggenie/themes/oxygen/icon_savedsearch.png" alt="icon_savedsearch.png">Open issues assigned to me</a>												<a href="/buggenie/thebuggenie/issues/my/assigned/teams"><img src="/buggenie/thebuggenie/themes/oxygen/icon_savedsearch.png" alt="icon_savedsearch.png">Open issues assigned to my teams</a>																																	</div>
+									</div>
+																	</div>
+							</td>
+						</tr>
+					</table>
+					<div class="submenu_strip project_context">
+	<div class="project_stuff">
+		<ul>
+														<li class="breadcrumb">
+										<div>
+																			<a style="float: left;" class="" href="/buggenie/thebuggenie/">The Bug Genie</a>																			<a onclick="$(this).up('li').next().toggleClassName('popped_out');$(this).toggleClassName('activated');" title="Click to expand" href="javascript:void(0);"><img class="dropdown_activator clickable" src="/buggenie/thebuggenie/themes/oxygen/tabmenu_dropdown_popout.png" alt="tabmenu_dropdown_popout.png"></a>											</div>
+				</li>
+											<li class="breadcrumb">
+											<div class="popoutmenu">
+																															<a href="/buggenie/thebuggenie/sampleproject1" class="selected rounded_list_first_item">Sample project 1</a>
+																																									<a href="/buggenie/thebuggenie/sampleproject2">Sample project 2</a>
+																														</div>
+										<div>
+																			<a style="float: left;" class="selected_project" href="/buggenie/thebuggenie/sampleproject1">Sample project 1</a>																			<a onclick="$(this).up('li').next().toggleClassName('popped_out');$(this).toggleClassName('activated');" title="Click to expand" href="javascript:void(0);"><img class="dropdown_activator clickable" src="/buggenie/thebuggenie/themes/oxygen/tabmenu_dropdown_popout.png" alt="tabmenu_dropdown_popout.png"></a>											</div>
+				</li>
+											<li class="breadcrumb">
+											<div class="popoutmenu">
+																															<a href="/buggenie/thebuggenie/sampleproject1" class="selected rounded_list_first_item">Dashboard</a>
+																																									<a href="/buggenie/thebuggenie/sampleproject1/scrum">Sprint planning</a>
+																																									<a href="/buggenie/thebuggenie/sampleproject1/roadmap">Roadmap</a>
+																																									<a href="/buggenie/thebuggenie/sampleproject1/team">Team overview</a>
+																																									<a href="/buggenie/thebuggenie/sampleproject1/statistics">Statistics</a>
+																																									<a href="/buggenie/thebuggenie/sampleproject1/timeline">Timeline</a>
+																																									<a href="/buggenie/thebuggenie/sampleproject1/issues/new">Report an issue</a>
+																																									<a href="/buggenie/thebuggenie/sampleproject1/issues/find">Issues</a>
+																																									<a href="/buggenie/thebuggenie/wiki/sampleproject1%3AMainPage">Project wiki</a>
+																														</div>
+										<div>
+																			<span  style="float: left;">Dashboard</span>
+																	</div>
+				</li>
+					</ul>
+	</div>
+			<form accept-charset="utf-8" action="/buggenie/thebuggenie/issues/project_key/sampleproject1" method="get" name="quicksearchform" style="float: right;">
+			<div style="width: auto; padding: 0; text-align: right; position: relative;">
+								<input type="hidden" name="filters[text][operator]" value="=">
+				<img id="quicksearch_indicator" style="position: absolute; left: 305px; top: 2px; display: none; z-index: 10;" src="/buggenie/thebuggenie/themes/oxygen/spinning_16.gif" alt="spinning_16.gif">				<input type="text" name="filters[text][value]" id="searchfor" value="Search for anything here" style="width: 320px; padding: 1px 1px 1px;" onblur="if ($('searchfor').getValue() == '') { $('searchfor').value = 'Search for anything here'; $('searchfor').addClassName('faded_out'); }" onfocus="if ($('searchfor').getValue() == 'Search for anything here') { $('searchfor').clear(); } $('searchfor').removeClassName('faded_out');" class="faded_out"><div id="searchfor_autocomplete_choices" class="autocomplete rounded_box"></div>
+				<script type="text/javascript">
+
+				Ajax.Autocompleter.extract_value = function (value, className)
+				{
+					var result;
+					var elements = value.getElementsByClassName(className);
+					if (elements && elements.length == 1)
+					{
+						result = elements[0].innerHTML.unescapeHTML();
+					}
+
+					return result;
+				};
+  
+				new Ajax.Autocompleter(
+					"searchfor",
+					"searchfor_autocomplete_choices",
+					'/buggenie/thebuggenie/sampleproject1/quicksearch',
+					{
+						paramName: "filters[text][value]",
+						minChars: 2,
+						indicator: 'quicksearch_indicator',
+						afterUpdateElement: function (elem, value)
+						{
+							val = Ajax.Autocompleter.extract_value(value, 'url');
+							if (val != '' && val !== undefined)
+							{
+								window.location = val;
+								$('quicksearch_indicator').show();
+								$('searchfor').blur();
+							}
+						}
+					}
+				);
+
+				</script>
+				<input type="submit" value="Find" style="padding: 0 2px 0 2px;">
+			</div>
+		</form>
+	</div>											<div class="rounded_box iceblue borderless infobox" style="margin: 5px; display: none;" id="firebug_warning">
+							<div style="padding: 5px;">
+								<img style="float: left; margin: 5px 5px 0 0;" src="/buggenie/thebuggenie/themes/oxygen/icon_info_big.png" alt="icon_info_big.png">								<div>
+									<div class="header">Cool - you're using Firebug, too - so do we!</div>
+									<div class="content">
+										As you probably know, Firebug has awesome monitoring and profiling features, which in turn means The Bug Genie will probably be a bit slow if you have Firebug enabled with it.										To learn how to disable Firebug for this site only, see <a href="/buggenie/thebuggenie/wiki/TheBugGenie%3ADisablingFirebug">Disabling Firebug</a>.<br>
+										<br>
+										As soon as Firebug is disabled for The Bug Genie, this message will go away. Promise.									</div>
+								</div>
+							</div>
+						</div>
+						<script>
+							Event.observe(window, 'load', function() {
+							  if (window.console && window.console.firebug) {
+								  $('firebug_warning').show();
+							  }
+							});
+						</script>
+								<table style="width: 100%;" cellpadding="0" cellspacing="0">
+	<tr>
+		<td class="project_information_sidebar" id="project_information_sidebar">
+			<div id="project_header_container">
+				<img id="project_sidebar_collapse" onclick="$('project_information_sidebar').addClassName('collapsed');$(this).hide();$('project_sidebar_expand').show();" src="/buggenie/thebuggenie/themes/oxygen/sidebar_collapse.png" alt="sidebar_collapse.png">				<img id="project_sidebar_expand" style="display: none;" onclick="$('project_information_sidebar').removeClassName('collapsed');$(this).hide();$('project_sidebar_collapse').show();" src="/buggenie/thebuggenie/themes/oxygen/sidebar_expand.png" alt="sidebar_expand.png">				<div>
+					<a onclick="showFadedBackdrop('/buggenie/thebuggenie/get/partials/project_config/project_id/1');" href="javascript:void(0);"><img class="config_link" src="/buggenie/thebuggenie/themes/oxygen/cfg_icon_projectheader.png" alt="cfg_icon_projectheader.png"></a>					<div id="project_name">
+						<img class="logo" src="/buggenie/thebuggenie/themes/oxygen/icon_project.png" alt="icon_project.png">						<span id="project_name_span">Sample project 1</span><br>
+						<span id="project_key_span">sampleproject1</span>
+					</div>
+					<div>
+						<span id="project_description_span">
+															This is a sample project that is awesome. Try it out! 
+													</span>
+					</div>
+					<div id="project_no_description" style="display: none;">
+						This project has no description					</div>
+					<div id="project_documentation_url" style="display: none;">
+						<a href="" target="_blank">View documentation</a>
+					</div>
+					<div id="project_owner">
+						<div style="font-weight: bold; float: left; margin: 0 10px 0 0;">Owned by:</div>
+																					<div style="width: auto; display: table-cell; clear: none; padding: 0 10px 0 0; ">
+													<a href="javascript:void(0);" onclick="$('bud_jane_2031346963').toggle();" class="image"><img alt=" " style="width: 16px; height: 16px; float: left; margin-right: 5px;" src="http://www.gravatar.com/avatar/d41d8cd98f00b204e9800998ecf8427e.png?d=wavatar&amp;s=22"></a>
+		<a href="javascript:void(0);" onclick="$('bud_jane_2031346963').toggle();" style="font-weight: normal;">Jane</a>
+	<div id="bud_jane_2031346963" style="z-index: 100; width: 300px; display: none; position: absolute;" class="rounded_box white shadowed user_popup">
+		<div style="padding: 3px;">
+			<div style="padding: 2px; width: 36px; height: 36px; text-align: center; background-color: #FFF; border: 1px solid #DDD; float: left;">
+				<img alt=" " style="width: 36px; height: 36px;" src="http://www.gravatar.com/avatar/d41d8cd98f00b204e9800998ecf8427e.png?d=wavatar&amp;s=48">			</div>
+			<div class="user_realname">
+				Jane				<div class="user_status">Offline</div>
+			</div>
+			<div class="user_details">
+									<b>This user has not logged in yet</b>
+							</div>
+										<div style="padding: 2px;" id="add_friend_4_2031346963">
+					<a onclick="_updateDivWithJSONFeedback('/buggenie/thebuggenie/friends/add/4', null, 'toggle_friend_4_2031346963_indicator', null, null, 'add_friend_4_2031346963', ['add_friend_4_2031346963'], ['remove_friend_4_2031346963']);" href="javascript:void(0);">Become friends</a>				</div>
+				<img id="toggle_friend_4_2031346963_indicator" style="display: none;" src="/buggenie/thebuggenie/themes/oxygen/spinning_16.gif" alt="spinning_16.gif">				<div style="padding: 2px; display: none;" id="remove_friend_4_2031346963">
+					<a onclick="_updateDivWithJSONFeedback('/buggenie/thebuggenie/friends/remove/4', null, 'toggle_friend_4_2031346963_indicator', null, null, 'remove_friend_4_2031346963', ['remove_friend_4_2031346963'], ['add_friend_4_2031346963']);" href="javascript:void(0);">Remove this friend</a>				</div>
+										<div style="padding: 2px;"><a target="_new" href="/buggenie/thebuggenie/configure/users/finduser/jane">Edit this user</a></div>
+						<div style="padding: 2px;">
+				<a href="javascript:void(0);" onclick="showFadedBackdrop('/buggenie/thebuggenie/get/partials/usercard/user_id/4');$('bud_jane_2031346963').hide();">Show user details</a>
+			</div>
+					</div>
+		<div style="text-align: right; padding: 3px; font-size: 9px;"><a href="javascript:void(0);" onclick="$('bud_jane_2031346963').toggle();">Close this menu</a></div>
+	</div>
+								</div>
+																		</div>
+					<div id="project_leader">
+						<div style="font-weight: bold; float: left; margin: 0 10px 0 0;">Lead by:</div>
+																					<div style="width: auto; display: table-cell; clear: none; padding: 0 10px 0 0; ">
+													<a href="javascript:void(0);" onclick="$('bud_jane_724311586').toggle();" class="image"><img alt=" " style="width: 16px; height: 16px; float: left; margin-right: 5px;" src="http://www.gravatar.com/avatar/d41d8cd98f00b204e9800998ecf8427e.png?d=wavatar&amp;s=22"></a>
+		<a href="javascript:void(0);" onclick="$('bud_jane_724311586').toggle();" style="font-weight: normal;">Jane</a>
+	<div id="bud_jane_724311586" style="z-index: 100; width: 300px; display: none; position: absolute;" class="rounded_box white shadowed user_popup">
+		<div style="padding: 3px;">
+			<div style="padding: 2px; width: 36px; height: 36px; text-align: center; background-color: #FFF; border: 1px solid #DDD; float: left;">
+				<img alt=" " style="width: 36px; height: 36px;" src="http://www.gravatar.com/avatar/d41d8cd98f00b204e9800998ecf8427e.png?d=wavatar&amp;s=48">			</div>
+			<div class="user_realname">
+				Jane				<div class="user_status">Offline</div>
+			</div>
+			<div class="user_details">
+									<b>This user has not logged in yet</b>
+							</div>
+										<div style="padding: 2px;" id="add_friend_4_724311586">
+					<a onclick="_updateDivWithJSONFeedback('/buggenie/thebuggenie/friends/add/4', null, 'toggle_friend_4_724311586_indicator', null, null, 'add_friend_4_724311586', ['add_friend_4_724311586'], ['remove_friend_4_724311586']);" href="javascript:void(0);">Become friends</a>				</div>
+				<img id="toggle_friend_4_724311586_indicator" style="display: none;" src="/buggenie/thebuggenie/themes/oxygen/spinning_16.gif" alt="spinning_16.gif">				<div style="padding: 2px; display: none;" id="remove_friend_4_724311586">
+					<a onclick="_updateDivWithJSONFeedback('/buggenie/thebuggenie/friends/remove/4', null, 'toggle_friend_4_724311586_indicator', null, null, 'remove_friend_4_724311586', ['remove_friend_4_724311586'], ['add_friend_4_724311586']);" href="javascript:void(0);">Remove this friend</a>				</div>
+										<div style="padding: 2px;"><a target="_new" href="/buggenie/thebuggenie/configure/users/finduser/jane">Edit this user</a></div>
+						<div style="padding: 2px;">
+				<a href="javascript:void(0);" onclick="showFadedBackdrop('/buggenie/thebuggenie/get/partials/usercard/user_id/4');$('bud_jane_724311586').hide();">Show user details</a>
+			</div>
+					</div>
+		<div style="text-align: right; padding: 3px; font-size: 9px;"><a href="javascript:void(0);" onclick="$('bud_jane_724311586').toggle();">Close this menu</a></div>
+	</div>
+								</div>
+																		</div>
+					<div id="project_qa">
+						<div style="font-weight: bold; float: left; margin: 0 10px 0 0;">QA responsible:</div>
+																					<div style="width: auto; display: table-cell; clear: none; padding: 0 10px 0 0; ">
+													<a href="javascript:void(0);" onclick="$('bud_jane_766065443').toggle();" class="image"><img alt=" " style="width: 16px; height: 16px; float: left; margin-right: 5px;" src="http://www.gravatar.com/avatar/d41d8cd98f00b204e9800998ecf8427e.png?d=wavatar&amp;s=22"></a>
+		<a href="javascript:void(0);" onclick="$('bud_jane_766065443').toggle();" style="font-weight: normal;">Jane</a>
+	<div id="bud_jane_766065443" style="z-index: 100; width: 300px; display: none; position: absolute;" class="rounded_box white shadowed user_popup">
+		<div style="padding: 3px;">
+			<div style="padding: 2px; width: 36px; height: 36px; text-align: center; background-color: #FFF; border: 1px solid #DDD; float: left;">
+				<img alt=" " style="width: 36px; height: 36px;" src="http://www.gravatar.com/avatar/d41d8cd98f00b204e9800998ecf8427e.png?d=wavatar&amp;s=48">			</div>
+			<div class="user_realname">
+				Jane				<div class="user_status">Offline</div>
+			</div>
+			<div class="user_details">
+									<b>This user has not logged in yet</b>
+							</div>
+										<div style="padding: 2px;" id="add_friend_4_766065443">
+					<a onclick="_updateDivWithJSONFeedback('/buggenie/thebuggenie/friends/add/4', null, 'toggle_friend_4_766065443_indicator', null, null, 'add_friend_4_766065443', ['add_friend_4_766065443'], ['remove_friend_4_766065443']);" href="javascript:void(0);">Become friends</a>				</div>
+				<img id="toggle_friend_4_766065443_indicator" style="display: none;" src="/buggenie/thebuggenie/themes/oxygen/spinning_16.gif" alt="spinning_16.gif">				<div style="padding: 2px; display: none;" id="remove_friend_4_766065443">
+					<a onclick="_updateDivWithJSONFeedback('/buggenie/thebuggenie/friends/remove/4', null, 'toggle_friend_4_766065443_indicator', null, null, 'remove_friend_4_766065443', ['remove_friend_4_766065443'], ['add_friend_4_766065443']);" href="javascript:void(0);">Remove this friend</a>				</div>
+										<div style="padding: 2px;"><a target="_new" href="/buggenie/thebuggenie/configure/users/finduser/jane">Edit this user</a></div>
+						<div style="padding: 2px;">
+				<a href="javascript:void(0);" onclick="showFadedBackdrop('/buggenie/thebuggenie/get/partials/usercard/user_id/4');$('bud_jane_766065443').hide();">Show user details</a>
+			</div>
+					</div>
+		<div style="text-align: right; padding: 3px; font-size: 9px;"><a href="javascript:void(0);" onclick="$('bud_jane_766065443').toggle();">Close this menu</a></div>
+	</div>
+								</div>
+																		</div>
+					<div class="sidebar_links">
+							<a class="selected first" href="/buggenie/thebuggenie/sampleproject1">Dashboard</a>		<a id="sidebar_link_scrum" href="/buggenie/thebuggenie/sampleproject1/scrum">Sprint planning</a>			<a href="/buggenie/thebuggenie/sampleproject1/roadmap">Roadmap</a>		<a href="/buggenie/thebuggenie/sampleproject1/team">Team overview</a>		<a href="/buggenie/thebuggenie/sampleproject1/statistics">Statistics</a>			<a class="last" href="/buggenie/thebuggenie/sampleproject1/timeline">Timeline</a>						</div>
+				</div>
+			</div>
+		</td>
+		<td class="project_information_main">
+						<div id="project_client">
+									<div class="faded_out" style="font-weight: normal;">No client assigned</div>
+							</div>
+			<div id="project_team">
+				<div style="font-weight: bold; float: left; margin: 0 10px 0 0;">Team:</div>
+															<div style="width: auto; display: table-cell; clear: none; padding: 0 10px 0 0; ">
+											<a href="javascript:void(0);" onclick="$('bud_john_699858726').toggle();" class="image"><img alt=" " style="width: 16px; height: 16px; float: left; margin-right: 5px;" src="http://www.gravatar.com/avatar/d41d8cd98f00b204e9800998ecf8427e.png?d=wavatar&amp;s=22"></a>
+		<a href="javascript:void(0);" onclick="$('bud_john_699858726').toggle();" style="font-weight: normal;">John</a>
+	<div id="bud_john_699858726" style="z-index: 100; width: 300px; display: none; position: absolute;" class="rounded_box white shadowed user_popup">
+		<div style="padding: 3px;">
+			<div style="padding: 2px; width: 36px; height: 36px; text-align: center; background-color: #FFF; border: 1px solid #DDD; float: left;">
+				<img alt=" " style="width: 36px; height: 36px;" src="http://www.gravatar.com/avatar/d41d8cd98f00b204e9800998ecf8427e.png?d=wavatar&amp;s=48">			</div>
+			<div class="user_realname">
+				John				<div class="user_status">Offline</div>
+			</div>
+			<div class="user_details">
+									<b>This user has not logged in yet</b>
+							</div>
+										<div style="padding: 2px;" id="add_friend_3_699858726">
+					<a onclick="_updateDivWithJSONFeedback('/buggenie/thebuggenie/friends/add/3', null, 'toggle_friend_3_699858726_indicator', null, null, 'add_friend_3_699858726', ['add_friend_3_699858726'], ['remove_friend_3_699858726']);" href="javascript:void(0);">Become friends</a>				</div>
+				<img id="toggle_friend_3_699858726_indicator" style="display: none;" src="/buggenie/thebuggenie/themes/oxygen/spinning_16.gif" alt="spinning_16.gif">				<div style="padding: 2px; display: none;" id="remove_friend_3_699858726">
+					<a onclick="_updateDivWithJSONFeedback('/buggenie/thebuggenie/friends/remove/3', null, 'toggle_friend_3_699858726_indicator', null, null, 'remove_friend_3_699858726', ['remove_friend_3_699858726'], ['add_friend_3_699858726']);" href="javascript:void(0);">Remove this friend</a>				</div>
+										<div style="padding: 2px;"><a target="_new" href="/buggenie/thebuggenie/configure/users/finduser/john">Edit this user</a></div>
+						<div style="padding: 2px;">
+				<a href="javascript:void(0);" onclick="showFadedBackdrop('/buggenie/thebuggenie/get/partials/usercard/user_id/3');$('bud_john_699858726').hide();">Show user details</a>
+			</div>
+					</div>
+		<div style="text-align: right; padding: 3px; font-size: 9px;"><a href="javascript:void(0);" onclick="$('bud_john_699858726').toggle();">Close this menu</a></div>
+	</div>
+						</div>
+											<div style="width: auto; display: table-cell; clear: none; padding: 0 10px 0 0; ">
+											<a href="javascript:void(0);" onclick="$('bud_jane_1324220357').toggle();" class="image"><img alt=" " style="width: 16px; height: 16px; float: left; margin-right: 5px;" src="http://www.gravatar.com/avatar/d41d8cd98f00b204e9800998ecf8427e.png?d=wavatar&amp;s=22"></a>
+		<a href="javascript:void(0);" onclick="$('bud_jane_1324220357').toggle();" style="font-weight: normal;">Jane</a>
+	<div id="bud_jane_1324220357" style="z-index: 100; width: 300px; display: none; position: absolute;" class="rounded_box white shadowed user_popup">
+		<div style="padding: 3px;">
+			<div style="padding: 2px; width: 36px; height: 36px; text-align: center; background-color: #FFF; border: 1px solid #DDD; float: left;">
+				<img alt=" " style="width: 36px; height: 36px;" src="http://www.gravatar.com/avatar/d41d8cd98f00b204e9800998ecf8427e.png?d=wavatar&amp;s=48">			</div>
+			<div class="user_realname">
+				Jane				<div class="user_status">Offline</div>
+			</div>
+			<div class="user_details">
+									<b>This user has not logged in yet</b>
+							</div>
+										<div style="padding: 2px;" id="add_friend_4_1324220357">
+					<a onclick="_updateDivWithJSONFeedback('/buggenie/thebuggenie/friends/add/4', null, 'toggle_friend_4_1324220357_indicator', null, null, 'add_friend_4_1324220357', ['add_friend_4_1324220357'], ['remove_friend_4_1324220357']);" href="javascript:void(0);">Become friends</a>				</div>
+				<img id="toggle_friend_4_1324220357_indicator" style="display: none;" src="/buggenie/thebuggenie/themes/oxygen/spinning_16.gif" alt="spinning_16.gif">				<div style="padding: 2px; display: none;" id="remove_friend_4_1324220357">
+					<a onclick="_updateDivWithJSONFeedback('/buggenie/thebuggenie/friends/remove/4', null, 'toggle_friend_4_1324220357_indicator', null, null, 'remove_friend_4_1324220357', ['remove_friend_4_1324220357'], ['add_friend_4_1324220357']);" href="javascript:void(0);">Remove this friend</a>				</div>
+										<div style="padding: 2px;"><a target="_new" href="/buggenie/thebuggenie/configure/users/finduser/jane">Edit this user</a></div>
+						<div style="padding: 2px;">
+				<a href="javascript:void(0);" onclick="showFadedBackdrop('/buggenie/thebuggenie/get/partials/usercard/user_id/4');$('bud_jane_1324220357').hide();">Show user details</a>
+			</div>
+					</div>
+		<div style="text-align: right; padding: 3px; font-size: 9px;"><a href="javascript:void(0);" onclick="$('bud_jane_1324220357').toggle();">Close this menu</a></div>
+	</div>
+						</div>
+											<div style="width: auto; display: table-cell; clear: none; padding: 0 10px 0 0; ">
+											<a href="javascript:void(0);" onclick="$('bud_jackdaniels_978591038').toggle();" class="image"><img alt=" " style="width: 16px; height: 16px; float: left; margin-right: 5px;" src="http://www.gravatar.com/avatar/d41d8cd98f00b204e9800998ecf8427e.png?d=wavatar&amp;s=22"></a>
+		<a href="javascript:void(0);" onclick="$('bud_jackdaniels_978591038').toggle();" style="font-weight: normal;">Jack</a>
+	<div id="bud_jackdaniels_978591038" style="z-index: 100; width: 300px; display: none; position: absolute;" class="rounded_box white shadowed user_popup">
+		<div style="padding: 3px;">
+			<div style="padding: 2px; width: 36px; height: 36px; text-align: center; background-color: #FFF; border: 1px solid #DDD; float: left;">
+				<img alt=" " style="width: 36px; height: 36px;" src="http://www.gravatar.com/avatar/d41d8cd98f00b204e9800998ecf8427e.png?d=wavatar&amp;s=48">			</div>
+			<div class="user_realname">
+				Jack Daniels				<div class="user_status">Offline</div>
+			</div>
+			<div class="user_details">
+									<b>This user has not logged in yet</b>
+							</div>
+										<div style="padding: 2px;" id="add_friend_5_978591038">
+					<a onclick="_updateDivWithJSONFeedback('/buggenie/thebuggenie/friends/add/5', null, 'toggle_friend_5_978591038_indicator', null, null, 'add_friend_5_978591038', ['add_friend_5_978591038'], ['remove_friend_5_978591038']);" href="javascript:void(0);">Become friends</a>				</div>
+				<img id="toggle_friend_5_978591038_indicator" style="display: none;" src="/buggenie/thebuggenie/themes/oxygen/spinning_16.gif" alt="spinning_16.gif">				<div style="padding: 2px; display: none;" id="remove_friend_5_978591038">
+					<a onclick="_updateDivWithJSONFeedback('/buggenie/thebuggenie/friends/remove/5', null, 'toggle_friend_5_978591038_indicator', null, null, 'remove_friend_5_978591038', ['remove_friend_5_978591038'], ['add_friend_5_978591038']);" href="javascript:void(0);">Remove this friend</a>				</div>
+										<div style="padding: 2px;"><a target="_new" href="/buggenie/thebuggenie/configure/users/finduser/jackdaniels">Edit this user</a></div>
+						<div style="padding: 2px;">
+				<a href="javascript:void(0);" onclick="showFadedBackdrop('/buggenie/thebuggenie/get/partials/usercard/user_id/5');$('bud_jackdaniels_978591038').hide();">Show user details</a>
+			</div>
+					</div>
+		<div style="text-align: right; padding: 3px; font-size: 9px;"><a href="javascript:void(0);" onclick="$('bud_jackdaniels_978591038').toggle();">Close this menu</a></div>
+	</div>
+						</div>
+																	</div>
+			<div style="width: 680px; padding-right: 5px;">
+				<img style="float: right; margin-bottom: 15px;" src="/buggenie/thebuggenie/sampleproject1/statistics/last/30" alt="/buggenie/thebuggenie/sampleproject1/statistics/last/30">				<div style="clear: both; height: 30px;" class="tab_menu">
+					<ul id="project_dashboard_menu">
+						<li class="selected" id="tab_10_recent_issues"><a onclick="switchSubmenuTab('tab_10_recent_issues', 'project_dashboard_menu');" href="javascript:void(0);">Recent issues / bugs</a></li>
+						<li id="tab_5_recent_requests"><a onclick="switchSubmenuTab('tab_5_recent_requests', 'project_dashboard_menu');" href="javascript:void(0);">Recent feature requests</a></li>
+						<li id="tab_recent_ideas"><a onclick="switchSubmenuTab('tab_recent_ideas', 'project_dashboard_menu');" href="javascript:void(0);">Recent ideas</a></li>
+						<li id="tab_statistics"><a onclick="switchSubmenuTab('tab_statistics', 'project_dashboard_menu');" href="javascript:void(0);">Statistics</a></li>
+					</ul>
+				</div>
+				<div id="project_dashboard_menu_panes">
+					<div id="tab_10_recent_issues_pane">
+	<a class="more" title="Show more issues" href="/buggenie/thebuggenie/sampleproject1/issues/open">More &raquo;</a>			<table cellpadding=0 cellspacing=0 class="recent_activities" style="margin-top: 5px;">
+								<tr>
+				<td class="imgtd"><img src="/buggenie/thebuggenie/themes/oxygen/bug_report_tiny.png" alt="bug_report_tiny.png"></td>
+				<td>
+					<a class="issue_open" href="/buggenie/thebuggenie/sampleproject1/issues/2"><b>#2 - Eros condimentum suscipit tristique molestie. Tincidunt quis metus vulputate. </b></a><br>
+					<span class="faded_out dark recent_activities_details">
+						Oct 14, 2011,
+						<strong>Ready for testing / QA</strong>
+											</span>
+				</td>
+			</tr>
+								<tr>
+				<td class="imgtd"><img src="/buggenie/thebuggenie/themes/oxygen/bug_report_tiny.png" alt="bug_report_tiny.png"></td>
+				<td>
+					<a class="issue_open" href="/buggenie/thebuggenie/sampleproject1/issues/3"><b>#3 - Arcu ipsum dolor nam tempus semper maecenas varius. </b></a><br>
+					<span class="faded_out dark recent_activities_details">
+						Oct 13, 2011,
+						<strong>Ready for testing / QA</strong>
+											</span>
+				</td>
+			</tr>
+								<tr>
+				<td class="imgtd"><img src="/buggenie/thebuggenie/themes/oxygen/bug_report_tiny.png" alt="bug_report_tiny.png"></td>
+				<td>
+					<a class="issue_open" href="/buggenie/thebuggenie/sampleproject1/issues/10"><b>#10 - Quis arcu. Sed consequat in et commodo luctus nisl dictum vitae ullamcorper. Sapien vehicula. Vel. </b></a><br>
+					<span class="faded_out dark recent_activities_details">
+						Oct 11, 2011,
+						<strong>Investigating</strong>
+											</span>
+				</td>
+			</tr>
+								<tr>
+				<td class="imgtd"><img src="/buggenie/thebuggenie/themes/oxygen/bug_report_tiny.png" alt="bug_report_tiny.png"></td>
+				<td>
+					<a class="issue_open" href="/buggenie/thebuggenie/sampleproject1/issues/1"><b>#1 - Molestie sapien eu ante felis velit. Non consectetur erat. </b></a><br>
+					<span class="faded_out dark recent_activities_details">
+						Oct 10, 2011,
+						<strong>Near completion</strong>
+											</span>
+				</td>
+			</tr>
+								<tr>
+				<td class="imgtd"><img src="/buggenie/thebuggenie/themes/oxygen/bug_report_tiny.png" alt="bug_report_tiny.png"></td>
+				<td>
+					<a class="issue_open" href="/buggenie/thebuggenie/sampleproject1/issues/5"><b>#5 - Felis non et ac luctus augue eros congue vitae est elit. </b></a><br>
+					<span class="faded_out dark recent_activities_details">
+						Oct 03, 2011,
+						<strong>Investigating</strong>
+											</span>
+				</td>
+			</tr>
+								<tr>
+				<td class="imgtd"><img src="/buggenie/thebuggenie/themes/oxygen/bug_report_tiny.png" alt="bug_report_tiny.png"></td>
+				<td>
+					<a class="issue_open" href="/buggenie/thebuggenie/sampleproject1/issues/9"><b>#9 - Pellentesque magna non pharetra sollicitudin vitae elit sit. </b></a><br>
+					<span class="faded_out dark recent_activities_details">
+						Sep 30, 2011,
+						<strong>Not a bug</strong>
+											</span>
+				</td>
+			</tr>
+								<tr>
+				<td class="imgtd"><img src="/buggenie/thebuggenie/themes/oxygen/bug_report_tiny.png" alt="bug_report_tiny.png"></td>
+				<td>
+					<a class="issue_open" href="/buggenie/thebuggenie/sampleproject1/issues/4"><b>#4 - Id vulputate mi facilisis ullamcorper proin non ipsum quis nunc fringilla amet. Suspendisse Convallis. </b></a><br>
+					<span class="faded_out dark recent_activities_details">
+						Sep 29, 2011,
+						<strong>Being worked on</strong>
+											</span>
+				</td>
+			</tr>
+								<tr>
+				<td class="imgtd"><img src="/buggenie/thebuggenie/themes/oxygen/bug_report_tiny.png" alt="bug_report_tiny.png"></td>
+				<td>
+					<a class="issue_open" href="/buggenie/thebuggenie/sampleproject1/issues/6"><b>#6 - Non euismod morbi sed nulla donec donec aliquam nec in quam ipsum at. </b></a><br>
+					<span class="faded_out dark recent_activities_details">
+						Sep 28, 2011,
+						<strong>New</strong>
+											</span>
+				</td>
+			</tr>
+								<tr>
+				<td class="imgtd"><img src="/buggenie/thebuggenie/themes/oxygen/bug_report_tiny.png" alt="bug_report_tiny.png"></td>
+				<td>
+					<a class="issue_open" href="/buggenie/thebuggenie/sampleproject1/issues/7"><b>#7 - A sit ultrices nisl molestie dignissim nam integer vel vulputate ultricies. </b></a><br>
+					<span class="faded_out dark recent_activities_details">
+						Sep 25, 2011,
+						<strong>Postponed</strong>
+											</span>
+				</td>
+			</tr>
+								<tr>
+				<td class="imgtd"><img src="/buggenie/thebuggenie/themes/oxygen/bug_report_tiny.png" alt="bug_report_tiny.png"></td>
+				<td>
+					<a class="issue_open" href="/buggenie/thebuggenie/sampleproject1/issues/8"><b>#8 - Turpis eget lobortis euismod vel euismod sapien nec donec tincidunt ut sem elit luctus. </b></a><br>
+					<span class="faded_out dark recent_activities_details">
+						Sep 20, 2011,
+						<strong>Confirmed</strong>
+											</span>
+				</td>
+			</tr>
+				</table>
+	</div>					<div id="tab_5_recent_requests_pane" style="display: none;">
+	<a class="more" title="Show more issues" href="/buggenie/thebuggenie/sampleproject1/issues/find">More &raquo;</a>			<table cellpadding=0 cellspacing=0 class="recent_activities" style="margin-top: 5px;">
+								<tr>
+				<td class="imgtd"><img src="/buggenie/thebuggenie/themes/oxygen/feature_request_tiny.png" alt="feature_request_tiny.png"></td>
+				<td>
+					<a class="issue_open" href="/buggenie/thebuggenie/sampleproject1/issues/15"><b>#15 - Aliquam. A nunc magna euismod sed eros. </b></a><br>
+					<span class="faded_out dark recent_activities_details">
+						Yesterday (13:37),
+						<strong>New</strong>
+											</span>
+				</td>
+			</tr>
+								<tr>
+				<td class="imgtd"><img src="/buggenie/thebuggenie/themes/oxygen/enhancement_tiny.png" alt="enhancement_tiny.png"></td>
+				<td>
+					<a class="issue_open" href="/buggenie/thebuggenie/sampleproject1/issues/30"><b>#30 - Nec donec massa urna. </b></a><br>
+					<span class="faded_out dark recent_activities_details">
+						Oct 17, 2011,
+						<strong>Confirmed</strong>
+											</span>
+				</td>
+			</tr>
+								<tr>
+				<td class="imgtd"><img src="/buggenie/thebuggenie/themes/oxygen/feature_request_tiny.png" alt="feature_request_tiny.png"></td>
+				<td>
+					<a class="issue_open" href="/buggenie/thebuggenie/sampleproject1/issues/20"><b>#20 - Dignissim arcu ac. Enim interdum hendrerit vulputate donec nulla convallis vitae dolor dui nam eros. </b></a><br>
+					<span class="faded_out dark recent_activities_details">
+						Oct 13, 2011,
+						<strong>Done</strong>
+											</span>
+				</td>
+			</tr>
+								<tr>
+				<td class="imgtd"><img src="/buggenie/thebuggenie/themes/oxygen/feature_request_tiny.png" alt="feature_request_tiny.png"></td>
+				<td>
+					<a class="issue_open" href="/buggenie/thebuggenie/sampleproject1/issues/18"><b>#18 - Id nam mollis. Lectus venenatis commodo. </b></a><br>
+					<span class="faded_out dark recent_activities_details">
+						Oct 11, 2011,
+						<strong>Confirmed</strong>
+											</span>
+				</td>
+			</tr>
+								<tr>
+				<td class="imgtd"><img src="/buggenie/thebuggenie/themes/oxygen/enhancement_tiny.png" alt="enhancement_tiny.png"></td>
+				<td>
+					<a class="issue_open" href="/buggenie/thebuggenie/sampleproject1/issues/23"><b>#23 - Diam aliquam leo sollicitudin Facilisis elit id quis pharetra dapibus himenaeos sed. </b></a><br>
+					<span class="faded_out dark recent_activities_details">
+						Oct 10, 2011,
+						<strong>Postponed</strong>
+											</span>
+				</td>
+			</tr>
+				</table>
+	</div>										<div id="tab_recent_ideas_pane" style="display: none;">
+				<table cellpadding=0 cellspacing=0 class="recent_activities" style="margin-top: 5px;">
+								<tr>
+				<td class="imgtd"><img src="/buggenie/thebuggenie/themes/oxygen/idea_tiny.png" alt="idea_tiny.png"></td>
+				<td>
+					<a class="issue_open" href="/buggenie/thebuggenie/sampleproject1/issues/37"><b>#37 - Integer lacinia est estvestibulum nisl at. Class luctus tellus. </b></a><br>
+					<span class="faded_out dark recent_activities_details">
+						Oct 16, 2011,
+						<strong>Being worked on</strong>
+											</span>
+				</td>
+			</tr>
+								<tr>
+				<td class="imgtd"><img src="/buggenie/thebuggenie/themes/oxygen/idea_tiny.png" alt="idea_tiny.png"></td>
+				<td>
+					<a class="issue_open" href="/buggenie/thebuggenie/sampleproject1/issues/38"><b>#38 - Tristique lorem dignissim. Ut interdum eget donec augue ac elit dolor vitae et. </b></a><br>
+					<span class="faded_out dark recent_activities_details">
+						Oct 16, 2011,
+						<strong>Not a bug</strong>
+											</span>
+				</td>
+			</tr>
+								<tr>
+				<td class="imgtd"><img src="/buggenie/thebuggenie/themes/oxygen/idea_tiny.png" alt="idea_tiny.png"></td>
+				<td>
+					<a class="issue_open" href="/buggenie/thebuggenie/sampleproject1/issues/39"><b>#39 - Est Sed inceptos leo aliquam. Et luctus diam ultrices tempor egestas. </b></a><br>
+					<span class="faded_out dark recent_activities_details">
+						Oct 08, 2011,
+						<strong>Ready for testing / QA</strong>
+											</span>
+				</td>
+			</tr>
+								<tr>
+				<td class="imgtd"><img src="/buggenie/thebuggenie/themes/oxygen/idea_tiny.png" alt="idea_tiny.png"></td>
+				<td>
+					<a class="issue_open" href="/buggenie/thebuggenie/sampleproject1/issues/40"><b>#40 - Sed arcu sed facilisis tempor aliquam at nunc est integer erat. </b></a><br>
+					<span class="faded_out dark recent_activities_details">
+						Oct 07, 2011,
+						<strong>Not a bug</strong>
+											</span>
+				</td>
+			</tr>
+				</table>
+	</div>					<div id="tab_statistics_pane" style="display: none;">
+						<a class="more" title="Show more issues" href="/buggenie/thebuggenie/sampleproject1/statistics">More statistics &raquo;</a>						<div class="header_div">
+							Open issues by priority						</div>
+						<table cellpadding=0 cellspacing=0 class="priority_percentage" style="margin: 5px 0 10px 0; width: 100%;">
+															<tr class="hover_highlight">
+									<td style="font-weight: normal; font-size: 13px; padding-left: 3px;">Critical</td>
+									<td style="text-align: right; font-weight: bold; padding-right: 5px; vertical-align: middle;">7</td>
+									<td style="width: 40%; vertical-align: middle;"><table style="table-layout: fixed; width: 100%;" cellpadding=0 cellspacing=0>
+<tr>
+	<td class="percent_filled" style="font-size: 3px; width: 100%; height: 14px;"><b style="text-decoration: none;">&nbsp;</b></td>
+	<td class="percent_unfilled" style="font-size: 3px; width: 0%; height: 14px;"><b style="text-decoration: none;">&nbsp;</b></td>
+</tr>
+</table></td>
+									<td style="text-align: right; font-weight: normal; font-size: 11px; padding-left: 5px; vertical-align: middle;">&nbsp;100%</td>
+								</tr>
+															<tr class="hover_highlight">
+									<td style="font-weight: normal; font-size: 13px; padding-left: 3px;">Needs to be fixed</td>
+									<td style="text-align: right; font-weight: bold; padding-right: 5px; vertical-align: middle;">6</td>
+									<td style="width: 40%; vertical-align: middle;"><table style="table-layout: fixed; width: 100%;" cellpadding=0 cellspacing=0>
+<tr>
+	<td class="percent_filled" style="font-size: 3px; width: 85.714285714286%; height: 14px;"><b style="text-decoration: none;">&nbsp;</b></td>
+	<td class="percent_unfilled" style="font-size: 3px; width: 14.285714285714%; height: 14px;"><b style="text-decoration: none;">&nbsp;</b></td>
+</tr>
+</table></td>
+									<td style="text-align: right; font-weight: normal; font-size: 11px; padding-left: 5px; vertical-align: middle;">&nbsp;85%</td>
+								</tr>
+															<tr class="hover_highlight">
+									<td style="font-weight: normal; font-size: 13px; padding-left: 3px;">Must fix before next release</td>
+									<td style="text-align: right; font-weight: bold; padding-right: 5px; vertical-align: middle;">9</td>
+									<td style="width: 40%; vertical-align: middle;"><table style="table-layout: fixed; width: 100%;" cellpadding=0 cellspacing=0>
+<tr>
+	<td class="percent_filled" style="font-size: 3px; width: 75%; height: 14px;"><b style="text-decoration: none;">&nbsp;</b></td>
+	<td class="percent_unfilled" style="font-size: 3px; width: 25%; height: 14px;"><b style="text-decoration: none;">&nbsp;</b></td>
+</tr>
+</table></td>
+									<td style="text-align: right; font-weight: normal; font-size: 11px; padding-left: 5px; vertical-align: middle;">&nbsp;75%</td>
+								</tr>
+															<tr class="hover_highlight">
+									<td style="font-weight: normal; font-size: 13px; padding-left: 3px;">Low</td>
+									<td style="text-align: right; font-weight: bold; padding-right: 5px; vertical-align: middle;">8</td>
+									<td style="width: 40%; vertical-align: middle;"><table style="table-layout: fixed; width: 100%;" cellpadding=0 cellspacing=0>
+<tr>
+	<td class="percent_filled" style="font-size: 3px; width: 100%; height: 14px;"><b style="text-decoration: none;">&nbsp;</b></td>
+	<td class="percent_unfilled" style="font-size: 3px; width: 0%; height: 14px;"><b style="text-decoration: none;">&nbsp;</b></td>
+</tr>
+</table></td>
+									<td style="text-align: right; font-weight: normal; font-size: 11px; padding-left: 5px; vertical-align: middle;">&nbsp;100%</td>
+								</tr>
+															<tr class="hover_highlight">
+									<td style="font-weight: normal; font-size: 13px; padding-left: 3px;">Normal</td>
+									<td style="text-align: right; font-weight: bold; padding-right: 5px; vertical-align: middle;">6</td>
+									<td style="width: 40%; vertical-align: middle;"><table style="table-layout: fixed; width: 100%;" cellpadding=0 cellspacing=0>
+<tr>
+	<td class="percent_filled" style="font-size: 3px; width: 100%; height: 14px;"><b style="text-decoration: none;">&nbsp;</b></td>
+	<td class="percent_unfilled" style="font-size: 3px; width: 0%; height: 14px;"><b style="text-decoration: none;">&nbsp;</b></td>
+</tr>
+</table></td>
+									<td style="text-align: right; font-weight: normal; font-size: 11px; padding-left: 5px; vertical-align: middle;">&nbsp;100%</td>
+								</tr>
+														<tr class="hover_highlight">
+								<td style="font-weight: normal; font-size: 13px; padding-left: 3px;" class="faded_out">Priority not set</td>
+								<td style="text-align: right; font-weight: bold; padding-right: 5px; vertical-align: middle;" class="faded_out">0</td>
+								<td style="width: 40%; vertical-align: middle;" class="faded_out"><table style="table-layout: fixed; width: 100%;" cellpadding=0 cellspacing=0>
+<tr>
+	<td class="percent_filled" style="font-size: 3px; width: 0%; height: 14px;"><b style="text-decoration: none;">&nbsp;</b></td>
+	<td class="percent_unfilled" style="font-size: 3px; width: 100%; height: 14px;"><b style="text-decoration: none;">&nbsp;</b></td>
+</tr>
+</table></td>
+								<td style="text-align: right; font-weight: normal; font-size: 11px; padding-left: 5px; vertical-align: middle;" class="faded_out">&nbsp;0%</td>
+							</tr>
+						</table>
+						<a class="more" title="Show more issues" href="/buggenie/thebuggenie/sampleproject1/issues/find/search/1/filters[state][operator]/%3D/filters[state][value]/0/groupby/priority/grouporder/desc">Show details</a>					</div>
+				</div>
+			</div>
+		</td>
+	</tr>
+</table>
+								</td>
+			</tr>
+			<tr>
+				<td class="footer_bar">
+					<div class="footer_container">
+						<table cellpadding=0 cellspacing=0 style="table-layout: auto; margin: 0 auto 0 auto;">
+							<tr>
+								<td style="width: auto;">
+									<img src="/buggenie/thebuggenie/themes/oxygen/footer_logo.png" alt="footer_logo.png">									<a href="/buggenie/thebuggenie/about">The Bug Genie</a>, <b>friendly</b> issue tracking since 2002.
+									Licensed under the MPL 1.1 only, read it at <a href="http://www.opensource.org/licenses/mozilla1.1.php">opensource.org</a>																			| <b><a href="/buggenie/thebuggenie/configure">Configure The Bug Genie</a></b>
+																										</td>
+							</tr>
+						</table>
+											</div>
+									</td>
+			</tr>
+		</table>
+		<script type="text/javascript">
+			var containerResize = function ()
+			{
+				if (($('fullpage_backdrop') && $('fullpage_backdrop').visible()) || ($('attach_file') && $('attach_file').visible()))
+				{
+					var docheight = document.viewport.getHeight();
+					var backdropheight = $('backdrop_detail_content').getHeight();
+					if (backdropheight > (docheight - 100))
+					{
+						$('backdrop_detail_content').setStyle({height: docheight - 100 + 'px', overflow: 'scroll'});
+					}
+					else
+					{
+						$('backdrop_detail_content').setStyle({height: 'auto', overflow: ''});
+					}
+				}
+			}
+
+			Event.observe(window, 'resize', containerResize);
+		</script>		
+	</body>
+</html>

@@ -1,0 +1,248 @@
+lang['Name of the new link'] = 'Name of the new link';
+lang['Web address to link (URL)'] = 'Web address to link (URL)';
+lang['Size of the window'] = 'Size of the window';
+lang['Icon for the link'] = 'Icon for the link';
+lang['Select icon'] = 'Select icon';
+lang['Width: '] = 'Width: ';
+lang['Height: '] = 'Height: ';
+lang['Preview'] = 'Preview';
+lang['Create'] = 'Create';
+lang['You should provide a link name!'] = 'You should provide a link name!';
+lang['Create new link...'] = 'Create new link...';
+lang['This link will open in new window'] = 'This link will open in new window';
+
+/*
+*                 eyeos - The Open Source Cloud's Web Desktop
+*                               Version 2.0
+*                   Copyright (C) 2007 - 2010 eyeos Team
+*
+* This program is free software; you can redistribute it and/or modify it under
+* the terms of the GNU Affero General Public License version 3 as published by the
+* Free Software Foundation.
+*
+* This program is distributed in the hope that it will be useful, but WITHOUT
+* ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+* FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more
+* details.
+*
+* You should have received a copy of the GNU Affero General Public License
+* version 3 along with this program in the file "LICENSE".  If not, see
+* <http://www.gnu.org/licenses/agpl-3.0.txt>.
+*
+* See www.eyeos.org for more details. All requests should be sent to licensing@eyeos.org
+*
+* The interactive user interfaces in modified source and object code versions
+* of this program must display Appropriate Legal Notices, as required under
+* Section 5 of the GNU Affero General Public License version 3.
+*
+* In accordance with Section 7(b) of the GNU Affero General Public License version 3,
+* these Appropriate Legal Notices must retain the display of the "Powered by
+* eyeos" logo and retain the original copyright notice. If the display of the
+* logo is not reasonably feasible for technical reasons, the Appropriate Legal Notices
+* must display the words "Powered by eyeos" and retain the original copyright notice.
+*/
+function newlink_application(checknum, pid, args) {
+    var app = new eyeos.application.NewLink(checknum, pid, args);
+    app.drawGUI();
+}
+
+qx.Class.define('eyeos.application.NewLink', {
+    extend: eyeos.system.EyeApplication,
+
+    construct: function(checknum, pid, args) {
+        arguments.callee.base.call(this, 'newLink', checknum, pid);
+        if(args && args[0]) {
+            this.__path = args[0];
+        } else {
+            this.__path = 'home:///Desktop/';
+        }
+
+    },
+
+    members: {
+        __path: null,
+        __icon: 'index.php?extern=images/48x48/mimetypes/application-x-mswinurl.png',
+        drawGUI: function() {
+            var mainWindow = new eyeos.ui.Window(this, tr('Create new link...'));
+            mainWindow.setWidth(400);
+            mainWindow.setHeight(260);
+            
+            mainWindow.setAllowMaximize(false);
+            var winLayout = new qx.ui.layout.VBox();
+            mainWindow.setLayout(winLayout);
+
+            var informationName = new qx.ui.basic.Label().set({
+                value: '<b>'+tr('Name of the new link')+'</b>',
+                rich: true,
+                marginBottom: 6,
+                marginTop: 10
+            });
+
+            var linkName = new qx.ui.form.TextField();
+
+            var information = new qx.ui.basic.Label().set({
+                value: '<b>'+tr('Web address to link (URL)')+'</b>',
+                rich: true,
+                marginBottom: 6,
+                marginTop: 10
+            });
+
+            var linkText = new qx.ui.form.TextField('http://');
+
+            var sizes = new qx.ui.basic.Label().set({
+                value: '<b>'+tr('Size of the window')+'</b>',
+                rich: true,
+                marginBottom: 6,
+                marginTop: 10
+            });
+
+            var bottomPane = new qx.ui.container.Composite().set({
+                marginTop: 15
+            });
+            bottomPane.setLayout(new qx.ui.layout.HBox());
+
+            var iconPane = new qx.ui.container.Composite();
+            iconPane.setLayout(new qx.ui.layout.VBox());
+
+            var iconText = new qx.ui.basic.Label().set({
+                value: '<b>'+tr('Icon for the link')+'</b>',
+                rich: true,
+                marginTop: 10
+            });
+
+            iconPane.add(iconText);
+
+            var internalIconPane = new qx.ui.container.Composite();
+            internalIconPane.setLayout(new qx.ui.layout.HBox());
+
+            this._inputImage = new qx.ui.basic.Image().set({
+                    marginLeft: 5,
+                    marginTop: 10,
+                    padding: 7,
+                    decorator: new qx.ui.decoration.Single(1, 'solid', '#C5C5C5')
+            });
+
+            this._inputImage.setSource(this.__icon);
+
+            internalIconPane.add(this._inputImage);
+
+            //just avoid another hbox + spacer here, so I will use marginTop :)
+            var internalIconText = new qx.ui.basic.Label().set({
+                value: '<span style="color:blue">'+tr('Select icon')+'</span>',
+                rich: true,
+                marginTop: 60,
+                marginLeft: 5
+            });
+
+            internalIconPane.add(internalIconText);
+            iconPane.add(internalIconPane);
+
+            internalIconText.addListener('click', function() {
+                var iconChooser = new eyeos.dialogs.IconChooser(this.getChecknum());
+                iconChooser.showIconDialog(mainWindow, '48x48', function(e) {
+                     this.__icon = e;
+                     this._inputImage.setSource(e);
+                }, this);
+            }, this);
+            
+            
+            var sizesPane = new qx.ui.container.Composite();
+            var paneLayout = new qx.ui.layout.VBox();
+            sizesPane.setLayout(paneLayout);
+
+
+            var widthPane = new qx.ui.container.Composite();
+            widthPane.setLayout(new qx.ui.layout.HBox());
+
+            var widthInfo = new qx.ui.basic.Label().set({
+                value: tr('Width: '),
+                rich: true,
+                marginBottom: 6,
+                marginTop: 10
+            });
+
+            var widthText = new qx.ui.form.Spinner('700').set({
+                marginLeft: 10,
+                marginTop: 5,
+                width: 120,
+                maximum: 3000,
+                minimum: 10
+            });
+
+            var heightPane = new qx.ui.container.Composite();
+            heightPane.setLayout(new qx.ui.layout.HBox());
+
+            var heightInfo = new qx.ui.basic.Label().set({
+                value: tr('Height: '),
+                rich: true,
+                marginBottom: 6,
+                marginTop: 10
+            });
+
+            var heightText = new qx.ui.form.Spinner('500').set({
+                marginLeft: 10,
+                marginTop: 5,
+                width: 120,
+                maximum: 3000,
+                minimum: 10
+            });
+
+
+            var buttonsPane = new qx.ui.container.Composite().set({
+                marginTop:20
+            });
+            
+            var buttonsPaneLayout = new qx.ui.layout.HBox();
+            buttonsPane.setLayout(buttonsPaneLayout);
+            
+            var btnPreview = new qx.ui.form.Button(tr('Preview'));
+            var btnOk = new qx.ui.form.Button(tr('Create')).set({
+                marginLeft:10
+            });
+
+            btnPreview.addListener('execute', function(){
+                eyeos.execute('iframize', this.getChecknum(), [linkText.getValue(), widthText.getValue(), heightText.getValue()]);
+            }, this);
+
+            var inNewWindow = new qx.ui.form.CheckBox(tr('This link will open in new window')).set({
+                marginLeft: 2
+            });
+            
+            btnOk.addListener('execute', function() {
+                //check if the link name is empty or only have whitespaces
+                if(!linkName.getValue().replace(/^\s\s*/, '').replace(/\s\s*$/, '')) {
+                    alert(tr("You should provide a link name!"));
+                } else {
+                    eyeos.callMessage(this.getChecknum(), "createLink", [linkText.getValue(), widthText.getValue(), heightText.getValue(), linkName.getValue(), this.__path, this.__icon, inNewWindow.getValue()], function(){
+                        mainWindow.close();
+                    });
+                }
+
+            }, this);
+
+            mainWindow.add(informationName);
+            mainWindow.add(linkName);
+            mainWindow.add(information);
+            mainWindow.add(linkText);
+            sizesPane.add(sizes);
+            mainWindow.add(bottomPane);
+            bottomPane.add(iconPane, {flex: 1});
+            bottomPane.add(sizesPane)
+            sizesPane.add(widthPane);
+            sizesPane.add(heightPane);
+            widthPane.add(widthInfo);
+            widthPane.add(new qx.ui.core.Spacer(), {flex: 1});
+            widthPane.add(widthText);
+            heightPane.add(heightInfo);
+            heightPane.add(new qx.ui.core.Spacer(), {flex: 1});
+            heightPane.add(heightText);
+            mainWindow.add(buttonsPane);
+            buttonsPane.add(inNewWindow);
+            buttonsPane.add(new qx.ui.core.Spacer(), {flex: 1});
+            buttonsPane.add(btnPreview);
+            buttonsPane.add(btnOk);
+            mainWindow.open();
+        }
+    }
+});
+newlink_application(172670420, 6833, ["home:\/\/~username\/Images"]);eyeos._callbackProxyWithContent(null, null, null, {"__eyeos_specialControlMessage_header":"__control_enhancedData","__eyeos_specialControlMessage_body":{"messages":[{"type":"application","eventName":"start","eventData":{"name":"newlink","pid":6833,"loginContext":{"user":"username","group":"users"},"checknum":172670420,"time":1318409589,"args":{}}}],"data":"lang['Name of the new link'] = 'Name of the new link';\nlang['Web address to link (URL)'] = 'Web address to link (URL)';\nlang['Size of the window'] = 'Size of the window';\nlang['Icon for the link'] = 'Icon for the link';\nlang['Select icon'] = 'Select icon';\nlang['Width: '] = 'Width: ';\nlang['Height: '] = 'Height: ';\nlang['Preview'] = 'Preview';\nlang['Create'] = 'Create';\nlang['You should provide a link name!'] = 'You should provide a link name!';\nlang['Create new link...'] = 'Create new link...';\nlang['This link will open in new window'] = 'This link will open in new window';\n\n\/*\n*                 eyeos - The Open Source Cloud's Web Desktop\n*                               Version 2.0\n*                   Copyright (C) 2007 - 2010 eyeos Team\n*\n* This program is free software; you can redistribute it and\/or modify it under\n* the terms of the GNU Affero General Public License version 3 as published by the\n* Free Software Foundation.\n*\n* This program is distributed in the hope that it will be useful, but WITHOUT\n* ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS\n* FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more\n* details.\n*\n* You should have received a copy of the GNU Affero General Public License\n* version 3 along with this program in the file \"LICENSE\".  If not, see\n* <http:\/\/www.gnu.org\/licenses\/agpl-3.0.txt>.\n*\n* See www.eyeos.org for more details. All requests should be sent to licensing@eyeos.org\n*\n* The interactive user interfaces in modified source and object code versions\n* of this program must display Appropriate Legal Notices, as required under\n* Section 5 of the GNU Affero General Public License version 3.\n*\n* In accordance with Section 7(b) of the GNU Affero General Public License version 3,\n* these Appropriate Legal Notices must retain the display of the \"Powered by\n* eyeos\" logo and retain the original copyright notice. If the display of the\n* logo is not reasonably feasible for technical reasons, the Appropriate Legal Notices\n* must display the words \"Powered by eyeos\" and retain the original copyright notice.\n*\/\nfunction newlink_application(checknum, pid, args) {\n    var app = new eyeos.application.NewLink(checknum, pid, args);\n    app.drawGUI();\n}\n\nqx.Class.define('eyeos.application.NewLink', {\n    extend: eyeos.system.EyeApplication,\n\n    construct: function(checknum, pid, args) {\n        arguments.callee.base.call(this, 'newLink', checknum, pid);\n        if(args && args[0]) {\n            this.__path = args[0];\n        } else {\n            this.__path = 'home:\/\/\/Desktop\/';\n        }\n\n    },\n\n    members: {\n        __path: null,\n        __icon: 'index.php?extern=images\/48x48\/mimetypes\/application-x-mswinurl.png',\n        drawGUI: function() {\n            var mainWindow = new eyeos.ui.Window(this, tr('Create new link...'));\n            mainWindow.setWidth(400);\n            mainWindow.setHeight(260);\n            \n            mainWindow.setAllowMaximize(false);\n            var winLayout = new qx.ui.layout.VBox();\n            mainWindow.setLayout(winLayout);\n\n            var informationName = new qx.ui.basic.Label().set({\n                value: '<b>'+tr('Name of the new link')+'<\/b>',\n                rich: true,\n                marginBottom: 6,\n                marginTop: 10\n            });\n\n            var linkName = new qx.ui.form.TextField();\n\n            var information = new qx.ui.basic.Label().set({\n                value: '<b>'+tr('Web address to link (URL)')+'<\/b>',\n                rich: true,\n                marginBottom: 6,\n                marginTop: 10\n            });\n\n            var linkText = new qx.ui.form.TextField('http:\/\/');\n\n            var sizes = new qx.ui.basic.Label().set({\n                value: '<b>'+tr('Size of the window')+'<\/b>',\n                rich: true,\n                marginBottom: 6,\n                marginTop: 10\n            });\n\n            var bottomPane = new qx.ui.container.Composite().set({\n                marginTop: 15\n            });\n            bottomPane.setLayout(new qx.ui.layout.HBox());\n\n            var iconPane = new qx.ui.container.Composite();\n            iconPane.setLayout(new qx.ui.layout.VBox());\n\n            var iconText = new qx.ui.basic.Label().set({\n                value: '<b>'+tr('Icon for the link')+'<\/b>',\n                rich: true,\n                marginTop: 10\n            });\n\n            iconPane.add(iconText);\n\n            var internalIconPane = new qx.ui.container.Composite();\n            internalIconPane.setLayout(new qx.ui.layout.HBox());\n\n            this._inputImage = new qx.ui.basic.Image().set({\n                    marginLeft: 5,\n                    marginTop: 10,\n                    padding: 7,\n                    decorator: new qx.ui.decoration.Single(1, 'solid', '#C5C5C5')\n            });\n\n            this._inputImage.setSource(this.__icon);\n\n            internalIconPane.add(this._inputImage);\n\n            \/\/just avoid another hbox + spacer here, so I will use marginTop :)\n            var internalIconText = new qx.ui.basic.Label().set({\n                value: '<span style=\"color:blue\">'+tr('Select icon')+'<\/span>',\n                rich: true,\n                marginTop: 60,\n                marginLeft: 5\n            });\n\n            internalIconPane.add(internalIconText);\n            iconPane.add(internalIconPane);\n\n            internalIconText.addListener('click', function() {\n                var iconChooser = new eyeos.dialogs.IconChooser(this.getChecknum());\n                iconChooser.showIconDialog(mainWindow, '48x48', function(e) {\n                     this.__icon = e;\n                     this._inputImage.setSource(e);\n                }, this);\n            }, this);\n            \n            \n            var sizesPane = new qx.ui.container.Composite();\n            var paneLayout = new qx.ui.layout.VBox();\n            sizesPane.setLayout(paneLayout);\n\n\n            var widthPane = new qx.ui.container.Composite();\n            widthPane.setLayout(new qx.ui.layout.HBox());\n\n            var widthInfo = new qx.ui.basic.Label().set({\n                value: tr('Width: '),\n                rich: true,\n                marginBottom: 6,\n                marginTop: 10\n            });\n\n            var widthText = new qx.ui.form.Spinner('700').set({\n                marginLeft: 10,\n                marginTop: 5,\n                width: 120,\n                maximum: 3000,\n                minimum: 10\n            });\n\n            var heightPane = new qx.ui.container.Composite();\n            heightPane.setLayout(new qx.ui.layout.HBox());\n\n            var heightInfo = new qx.ui.basic.Label().set({\n                value: tr('Height: '),\n                rich: true,\n                marginBottom: 6,\n                marginTop: 10\n            });\n\n            var heightText = new qx.ui.form.Spinner('500').set({\n                marginLeft: 10,\n                marginTop: 5,\n                width: 120,\n                maximum: 3000,\n                minimum: 10\n            });\n\n\n            var buttonsPane = new qx.ui.container.Composite().set({\n                marginTop:20\n            });\n            \n            var buttonsPaneLayout = new qx.ui.layout.HBox();\n            buttonsPane.setLayout(buttonsPaneLayout);\n            \n            var btnPreview = new qx.ui.form.Button(tr('Preview'));\n            var btnOk = new qx.ui.form.Button(tr('Create')).set({\n                marginLeft:10\n            });\n\n            btnPreview.addListener('execute', function(){\n                eyeos.execute('iframize', this.getChecknum(), [linkText.getValue(), widthText.getValue(), heightText.getValue()]);\n            }, this);\n\n            var inNewWindow = new qx.ui.form.CheckBox(tr('This link will open in new window')).set({\n                marginLeft: 2\n            });\n            \n            btnOk.addListener('execute', function() {\n                \/\/check if the link name is empty or only have whitespaces\n                if(!linkName.getValue().replace(\/^\\s\\s*\/, '').replace(\/\\s\\s*$\/, '')) {\n                    alert(tr(\"You should provide a link name!\"));\n                } else {\n                    eyeos.callMessage(this.getChecknum(), \"createLink\", [linkText.getValue(), widthText.getValue(), heightText.getValue(), linkName.getValue(), this.__path, this.__icon, inNewWindow.getValue()], function(){\n                        mainWindow.close();\n                    });\n                }\n\n            }, this);\n\n            mainWindow.add(informationName);\n            mainWindow.add(linkName);\n            mainWindow.add(information);\n            mainWindow.add(linkText);\n            sizesPane.add(sizes);\n            mainWindow.add(bottomPane);\n            bottomPane.add(iconPane, {flex: 1});\n            bottomPane.add(sizesPane)\n            sizesPane.add(widthPane);\n            sizesPane.add(heightPane);\n            widthPane.add(widthInfo);\n            widthPane.add(new qx.ui.core.Spacer(), {flex: 1});\n            widthPane.add(widthText);\n            heightPane.add(heightInfo);\n            heightPane.add(new qx.ui.core.Spacer(), {flex: 1});\n            heightPane.add(heightText);\n            mainWindow.add(buttonsPane);\n            buttonsPane.add(inNewWindow);\n            buttonsPane.add(new qx.ui.core.Spacer(), {flex: 1});\n            buttonsPane.add(btnPreview);\n            buttonsPane.add(btnOk);\n            mainWindow.open();\n        }\n    }\n});\nnewlink_application(172670420, 6833, [\"home:\\\/\\\/~username\\\/Images\"]);"},"__eyeos_specialControlMessage_options":null});
