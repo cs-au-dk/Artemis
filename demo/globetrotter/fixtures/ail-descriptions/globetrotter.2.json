@@ -1,0 +1,580 @@
+{
+"required": true,
+"type": "array",
+"minItems": 48,
+"maxItems": 49,
+"items": [
+   {
+      "required": true,
+      "type": "object",
+      "properties": {
+         "Denmark": 
+         {
+            "required": true,
+            "type": "integer"
+         }
+      }
+   },
+   {
+      "required": true,
+      "type": "object",
+      "properties": {
+         "USA": 
+         {
+            "required": true,
+            "type": "integer"
+         }
+      }
+   },
+   {
+      "required": true,
+      "type": "object",
+      "properties": {
+         "Australia": 
+         {
+            "required": true,
+            "type": "integer"
+         }
+      }
+   },
+   {
+      "required": true,
+      "type": "object",
+      "properties": {
+         "Austria": 
+         {
+            "required": true,
+            "type": "integer"
+         }
+      }
+   },
+   {
+      "required": true,
+      "type": "object",
+      "properties": {
+         "Belgium": 
+         {
+            "required": true,
+            "type": "integer"
+         }
+      }
+   },
+   {
+      "required": true,
+      "type": "object",
+      "properties": {
+         "Brazil": 
+         {
+            "required": true,
+            "type": "integer"
+         }
+      }
+   },
+   {
+      "required": true,
+      "type": "object",
+      "properties": {
+         "Bulgaria": 
+         {
+            "required": true,
+            "type": "integer"
+         }
+      }
+   },
+   {
+      "required": true,
+      "type": "object",
+      "properties": {
+         "Canada": 
+         {
+            "required": true,
+            "type": "integer"
+         }
+      }
+   },
+   {
+      "required": true,
+      "type": "object",
+      "properties": {
+         "Chile": 
+         {
+            "required": true,
+            "type": "integer"
+         }
+      }
+   },
+   {
+      "required": true,
+      "type": "object",
+      "properties": {
+         "China": 
+         {
+            "required": true,
+            "type": "integer"
+         }
+      }
+   },
+   {
+      "required": true,
+      "type": "object",
+      "properties": {
+         "Croatia": 
+         {
+            "required": true,
+            "type": "integer"
+         }
+      }
+   },
+   {
+      "required": true,
+      "type": "object",
+      "properties": {
+         "Cyprus": 
+         {
+            "required": true,
+            "type": "integer"
+         }
+      }
+   },
+   {
+      "required": true,
+      "type": "object",
+      "properties": {
+         "Czech Republic": 
+         {
+            "required": true,
+            "type": "integer"
+         }
+      }
+   },
+   {
+      "required": true,
+      "type": "object",
+      "properties": {
+         "Estonia": 
+         {
+            "required": true,
+            "type": "integer"
+         }
+      }
+   },
+   {
+      "required": true,
+      "type": "object",
+      "properties": {
+         "Finland": 
+         {
+            "required": true,
+            "type": "integer"
+         }
+      }
+   },
+   {
+      "required": true,
+      "type": "object",
+      "properties": {
+         "France": 
+         {
+            "required": true,
+            "type": "integer"
+         }
+      }
+   },
+   {
+      "required": true,
+      "type": "object",
+      "properties": {
+         "Germany": 
+         {
+            "required": true,
+            "type": "integer"
+         }
+      }
+   },
+   {
+      "required": true,
+      "type": "object",
+      "properties": {
+         "Great Britain": 
+         {
+            "required": true,
+            "type": "integer"
+         }
+      }
+   },
+   {
+      "required": true,
+      "type": "object",
+      "properties": {
+         "Greece": 
+         {
+            "required": true,
+            "type": "integer"
+         }
+      }
+   },
+   {
+      "required": true,
+      "type": "object",
+      "properties": {
+         "Greenland": 
+         {
+            "required": true,
+            "type": "integer"
+         }
+      }
+   },
+   {
+      "required": true,
+      "type": "object",
+      "properties": {
+         "Hong Kong": 
+         {
+            "required": true,
+            "type": "integer"
+         }
+      }
+   },
+   {
+      "required": true,
+      "type": "object",
+      "properties": {
+         "Hungary": 
+         {
+            "required": true,
+            "type": "integer"
+         }
+      }
+   },
+   {
+      "required": true,
+      "type": "object",
+      "properties": {
+         "Iceland": 
+         {
+            "required": true,
+            "type": "integer"
+         }
+      }
+   },
+   {
+      "required": true,
+      "type": "object",
+      "properties": {
+         "India": 
+         {
+            "required": true,
+            "type": "integer"
+         }
+      }
+   },
+   {
+      "required": true,
+      "type": "object",
+      "properties": {
+         "Indonesia": 
+         {
+            "required": true,
+            "type": "integer"
+         }
+      }
+   },
+   {
+      "required": true,
+      "type": "object",
+      "properties": {
+         "Ireland": 
+         {
+            "required": true,
+            "type": "integer"
+         }
+      }
+   },
+   {
+      "required": true,
+      "type": "object",
+      "properties": {
+         "Israel": 
+         {
+            "required": true,
+            "type": "integer"
+         }
+      }
+   },
+   {
+      "required": true,
+      "type": "object",
+      "properties": {
+         "Italy": 
+         {
+            "required": true,
+            "type": "integer"
+         }
+      }
+   },
+   {
+      "required": true,
+      "type": "object",
+      "properties": {
+         "Japan": 
+         {
+            "required": true,
+            "type": "integer"
+         }
+      }
+   },
+   {
+      "required": true,
+      "type": "object",
+      "properties": {
+         "South Korea": 
+         {
+            "required": true,
+            "type": "integer"
+         }
+      }
+   },
+   {
+      "required": true,
+      "type": "object",
+      "properties": {
+         "Latvia": 
+         {
+            "required": true,
+            "type": "integer"
+         }
+      }
+   },
+   {
+      "required": true,
+      "type": "object",
+      "properties": {
+         "Lithuania": 
+         {
+            "required": true,
+            "type": "integer"
+         }
+      }
+   },
+   {
+      "required": true,
+      "type": "object",
+      "properties": {
+         "Luxembourg": 
+         {
+            "required": true,
+            "type": "integer"
+         }
+      }
+   },
+   {
+      "required": true,
+      "type": "object",
+      "properties": {
+         "Mexico": 
+         {
+            "required": true,
+            "type": "integer"
+         }
+      }
+   },
+   {
+      "required": true,
+      "type": "object",
+      "properties": {
+         "Netherlands": 
+         {
+            "required": true,
+            "type": "integer"
+         }
+      }
+   },
+   {
+      "required": true,
+      "type": "object",
+      "properties": {
+         "New Zealand": 
+         {
+            "required": true,
+            "type": "integer"
+         }
+      }
+   },
+   {
+      "required": true,
+      "type": "object",
+      "properties": {
+         "Norway": 
+         {
+            "required": true,
+            "type": "integer"
+         }
+      }
+   },
+   {
+      "required": true,
+      "type": "object",
+      "properties": {
+         "Poland": 
+         {
+            "required": true,
+            "type": "integer"
+         }
+      }
+   },
+   {
+      "required": true,
+      "type": "object",
+      "properties": {
+         "Portugal": 
+         {
+            "required": true,
+            "type": "integer"
+         }
+      }
+   },
+   {
+      "required": true,
+      "type": "object",
+      "properties": {
+         "Romania": 
+         {
+            "required": true,
+            "type": "integer"
+         }
+      }
+   },
+   {
+      "required": true,
+      "type": "object",
+      "properties": {
+         "Russia": 
+         {
+            "required": true,
+            "type": "integer"
+         }
+      }
+   },
+   {
+      "required": true,
+      "type": "object",
+      "properties": {
+         "Slovakia": 
+         {
+            "required": true,
+            "type": "integer"
+         }
+      }
+   },
+   {
+      "required": true,
+      "type": "object",
+      "properties": {
+         "Slovenia": 
+         {
+            "required": true,
+            "type": "integer"
+         }
+      }
+   },
+   {
+      "required": true,
+      "type": "object",
+      "properties": {
+         "South Africa": 
+         {
+            "required": true,
+            "type": "integer"
+         }
+      }
+   },
+   {
+      "required": true,
+      "type": "object",
+      "properties": {
+         "Spain": 
+         {
+            "required": true,
+            "type": "integer"
+         }
+      }
+   },
+   {
+      "required": true,
+      "type": "object",
+      "properties": {
+         "Sweden": 
+         {
+            "required": true,
+            "type": "integer"
+         }
+      }
+   },
+   {
+      "required": true,
+      "type": "object",
+      "properties": {
+         "Switzerland": 
+         {
+            "required": true,
+            "type": "integer"
+         }
+      }
+   },
+   {
+      "required": true,
+      "type": "object",
+      "properties": {
+         "Taiwan": 
+         {
+            "required": true,
+            "type": "integer"
+         }
+      }
+   },
+   {
+      "required": true,
+      "type": "object",
+      "properties": {
+         "Turkey": 
+         {
+            "required": true,
+            "type": "integer"
+         }
+      }
+   },
+   {
+      "required": true,
+      "type": "object",
+      "properties": {
+         "United Kingdom": 
+         {
+            "required": true,
+            "type": "integer"
+         }
+      }
+   },
+   {
+      "required": true,
+      "type": "object",
+      "properties": {
+         "United States of America": 
+         {
+            "required": true,
+            "type": "integer"
+         }
+      }
+   },
+   {
+      "required": true,
+      "type": "object",
+      "properties": {
+         "Vietnam": 
+         {
+            "required": true,
+            "type": "integer"
+         }
+      }
+   }
+]
+}

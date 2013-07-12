@@ -1,0 +1,153 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+<html>
+<head>
+
+<!-- Copyright (C) 2012 Anders Moeller and Mathias Schwarz -->
+
+<title>Travel Application</title>
+
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+
+<link rel="stylesheet" href="jquery-ui-1.8.16.custom.css">
+
+<script type="text/javascript" src="jquery-1.7.min.js"></script>
+<script type="text/javascript" src="jquery-ui-1.8.16.custom.min.js"></script>
+<script type="text/javascript" src="jquery.ui.datepicker-en-GB.js"></script>
+
+<script type="text/javascript" src="travel.js"></script>
+
+<link rel="stylesheet" href="style.css">
+
+</head>
+
+<body>
+
+<div class="page" id="application">
+
+<h1>Application for travel support</h1>
+<noscript><span class="noscript">Your browser does not support JavaScript!</span></noscript>
+
+<form action="" method="POST" id="form">
+
+<div class="area">
+  <label>Applicant: <input type="text" name="applicant" readonly class="readonly"></label><br>
+  <span class="smallArea"><label>Date of application: <input type="text" name="date" readonly size="10" class="readonly"></label><br></span>
+</div>  
+
+<div class="area smallArea">
+  Status:<br>
+  <label><input type="radio" name="status" value="faculty" class="applicantOnly">Faculty/postdoc/adm.</label><br>
+  <label><input type="radio" name="status" value="phd" class="applicantOnly">PhD student</label><br>
+  <label><input type="radio" name="status" value="msc" class="applicantOnly">MSc student</label><br>
+</div>
+
+<div class="bigArea">
+
+<div class="area">
+  Funding source:<br>
+  <div class="phdArea"><label><input type="radio" name="source" value="phdpool" >PhD pool</label></div>
+  <label><input type="radio" name="source" value="department">Dept. of Computer Science</label><br>
+  <label><input type="radio" name="source" value="other">other,</label>
+  <label>project name: <input type="text" name="projectName" id="projectName" size="20"></label>
+  <label>grant holder: <select name="grantHolder" id="grantHolder">
+    <option value=""></option>
+  </select></label>
+  <br>
+</div>
+
+<div class="area">
+  <label>Research group: <select name="group" id="researchGroup" class="applicantOnly">
+    <option value=""></option>
+  </select></label><br>
+  <span class="supervisorArea">
+    <label>Supervisor: <select name="supervisor" id="supervisor" class="applicantOnly">
+      <option value=""></option>
+    </select></label>
+  </span>
+</div>
+
+<div class="area">
+  <label>Destination city: <input type="text" name="destinationCity" class="applicantOnly" id="destinationCity"></label>
+  <label>country: <input type="text" name="destinationCountry" id="destinationCountry" class="applicantOnly"></label>
+  <label><select name="countrySuggest" id="countrySuggest" style="width: 16px" class="applicantOnly"><option value=""></option></select></label><br>
+  <label>Travel dates (dd/mm/yyyy): <input type="text" name="travelStart" id="travelStart" size="10" class="applicantOnly"></label> <label>- <input type="text" name="travelEnd" id="travelEnd" size="10" class="applicantOnly"></label><br>
+  <label>Days (excluding personal time): <input type="text" name="days" id="days" size="3" class="applicantOnly"></label>
+</div>
+
+<div class="area">
+  Purpose:<br>
+  <label><input type="radio" name="purpose" value="participation" class="applicantOnly">Conference/workshop/course</label> <label><input type="checkbox" name="presenting" id="presenting" class="applicantOnly">with presentation</label><br>
+  <label><input type="radio" name="purpose" value="collaboration" class="applicantOnly">Study or research collaboration</label><br>
+  <label><input type="radio" name="purpose" value="guest" class="applicantOnly">Guest,</label> <label>name: <input type="text" name="guestName" class="applicantOnly" id="guestName"></label><br>
+  <label><input type="radio" name="purpose" value="other" class="applicantOnly">Other:</label> <label><input type="text" name="otherPurpose" id="otherPurpose" class="applicantOnly"></label><br>
+  <label for="purposeDetails">Detailed description (ex. name of meeting/institution/host):</label><br>
+  <textarea name="purposeDetails" id="purposeDetails" cols="60" rows="4" class="wide applicantOnly"></textarea>
+</div>
+
+<div class="area">
+  <table>
+  <tr><td><label for="travelExpenses">Travel expenses:</label></td><td> <input type="text" name="travelExpenses" id="travelExpenses" size="10" class="number applicantOnly expense" value="0">kr.</tr>
+  <tr><td><label for="registrationFee">Registration fee:</label></td><td> <input type="text" name="registrationFee" id="registrationFee" size="10" class="number applicantOnly expense" value="0">kr.</tr>
+  <tr><td><label for="receiveDailyAllowance">Daily allowance:</label> <input type="checkbox" name="receiveDailyAllowance" id="receiveDailyAllowance"></td><td> <label><input type="text" name="dailyExpenses" id="dailyExpenses" size="10" readonly class="readonly number expense" value="0">kr.</label></tr>
+  <tr><td><label for="hotelExpenses">Hotel:</label></td><td> <input type="text" name="hotelExpenses" id="hotelExpenses" size="10" class="number applicantOnly expense" value="0">kr.</tr>
+  <tr><td><label for="otherExpensesDescription">Other (please specify):</label> <input type="text" class="applicantOnly" name="otherExpensesDescription" id="otherExpensesDescription" size="40"></td><td> <label><input type="text" name="otherExpenses" id="otherExpenses" size="10" class="number applicantOnly expense" value="0">kr.</label></tr>
+  <tr><td><label for="totalExpenses">Total:</label></td><td> <input type="text" name="totalExpenses" id="totalExpenses" size="10" readonly class="readonly number" value="0">kr.</tr>
+  </table>
+</div>
+
+<div class="area">
+  <div class="supervisorArea"><label for="recommendationSupervisor" class="supervisorHighlight">Recommendation from supervisor:</label><br>
+  <textarea id="recommendationSupervisor" name="recommendationSupervisor" class="supervisorOnly wide" cols="60" rows="4"></textarea><br></div>
+  <label>Remarks (ex. funding from other sources):<br>
+  <textarea name="remarks" cols="60" rows="4" class="wide"></textarea></label>
+</div>
+
+<div class="area approvalArea">
+  <div class="supervisorArea"><label><span class="supervisorHighlight">Approved by supervisor:</span><img src="unchecked.png" class="checkbox" alt=""> 
+    <input type="checkbox" name="supervisorApproved" id="supervisorApproved" class="approval supervisorOnly supervisorHighlight approvalCheckbox"></label><br>
+  </div>
+  <label><span class="grantAdministratorHighlight">Approved by grant holder:</span><img src="unchecked.png" class="checkbox" alt=""> 
+  <input type="checkbox" name="grantAdministratorApproved" id="grantAdministratorApproved" class="approval administratorOnly grantAdministratorHighlight approvalCheckbox"></label><br>
+</div>
+
+<div class="area commentToCurrentArea">
+  <label>Comments from sender:<br>
+  <textarea name="commentToCurrent" cols="60" rows="3" class="wide readonly"></textarea>
+  </label>
+</div>
+
+<div class="last" id="continue">
+  <input type="submit" name="send" value="Send" id="send">
+  <div class="supervisorGrantAdminOnly">
+  	<label>Comments if not approved:<br>
+  	<textarea name="commentsToReceiver" id="commentsToReceiver" cols="60" rows="3" class="wide"></textarea>
+  	</label>
+  </div>
+</div>
+
+<div id="pdf" style="text-align: right;">
+    <b><a id="pdfLink" href="">PDF version of completed application</a></b>
+</div>
+
+</div>
+
+<input type="hidden" name="id" id="id" value="">
+
+</form>
+
+</div>
+
+<div id="thanks">
+  <h2>Thank you! The application has been sent.</h2>
+</div>
+
+<div id="authorizationFailed">
+  <h2>Authorization failed :-(</h2>
+</div>
+
+<div class="caption">
+  maintained by <a href="mailto:amoeller@cs.au.dk?subject=Travel%20applications">amoeller@cs.au.dk</a>
+</div>
+
+</body>
+</html>
