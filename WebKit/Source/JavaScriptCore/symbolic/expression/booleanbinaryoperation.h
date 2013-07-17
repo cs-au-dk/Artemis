@@ -21,9 +21,6 @@
 
 #include <string>
 
-#include "JavaScriptCore/wtf/ExportMacros.h"
-#include "JavaScriptCore/runtime/UString.h"
-
 #include "visitor.h"
 #include "booleanexpression.h"
 
@@ -37,6 +34,7 @@ typedef enum {
 } BooleanBinaryOp;
 
 const char* opToString(BooleanBinaryOp op);
+Type opGetType(BooleanBinaryOp op);
 
 
 class BooleanBinaryOperation : public BooleanExpression

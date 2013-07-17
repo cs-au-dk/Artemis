@@ -13,6 +13,7 @@ Contents:
    
    sections/ail
    sections/webkit
+   sections/webkithacking
    sections/codingstyle
 
 

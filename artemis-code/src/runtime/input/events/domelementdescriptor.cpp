@@ -72,17 +72,17 @@ QWebElement DOMElementDescriptor::getElement(ArtemisWebPagePtr page) const
     return elm;
 }
 
-QString DOMElementDescriptor::getTagName()
+QString DOMElementDescriptor::getTagName() const
 {
     return this->tagName;
 }
 
-QString DOMElementDescriptor::getId()
+QString DOMElementDescriptor::getId() const
 {
     return this->id;
 }
 
-QString DOMElementDescriptor::getClass()
+QString DOMElementDescriptor::getClass() const
 {
     return this->classLine;
 }

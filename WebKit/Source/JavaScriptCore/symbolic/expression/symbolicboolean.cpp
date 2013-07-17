@@ -23,7 +23,7 @@
 namespace Symbolic
 {
 
-SymbolicBoolean::SymbolicBoolean(std::string identifier) :
+SymbolicBoolean::SymbolicBoolean(std::string* identifier) :
     BooleanExpression(),
     m_identifier(identifier)
 {

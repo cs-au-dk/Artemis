@@ -21,9 +21,6 @@
 
 #include <string>
 
-#include "JavaScriptCore/wtf/ExportMacros.h"
-#include "JavaScriptCore/runtime/UString.h"
-
 #include "visitor.h"
 #include "stringexpression.h"
 
@@ -37,6 +34,7 @@ typedef enum {
 } StringBinaryOp;
 
 const char* opToString(StringBinaryOp op);
+Type opGetType(StringBinaryOp op);
 
 
 class StringBinaryOperation : public StringExpression

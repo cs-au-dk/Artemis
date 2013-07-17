@@ -25,6 +25,7 @@
 #include "runtime/options.h"
 #include "artemisapplication.h"
 #include "util/loggingutil.h"
+#include "artemisglobals.h"
 
 using namespace std;
 
@@ -38,6 +39,8 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             "\n"
             "-i <n>   : Iterations - Artemis will generate and execute <n>\n"
             "           sequences of events. Default is 4.\n"
+            "\n"
+            "-f #<formElementId>=<formElementValue> : Set the form element with ID #<formElementId> to the value <formElementValue> at each iteration. Remember to write the # for the element ID."
             "\n"
             "-c <URl> : Cookies - // TODO\n"
             "\n"
@@ -54,6 +57,7 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             "\n"
             "           artemis - (default) the top-level test algorithm described in the ICSE'11 Artemis paper\n"
             "           manual - open a browser window for manual testing of web applications\n"
+            "           concolic - perform an automated concolic analysis of form validation code\n"
             "\n"
             "--strategy-form-input-generation <strategy>:\n"
             "           Select form input generation strategy.\n"
@@ -254,6 +258,8 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
                 options.majorMode = artemis::AUTOMATED;
             } else if (string(optarg).compare("manual") == 0) {
                 options.majorMode = artemis::MANUAL;
+            } else if (string(optarg).compare("concolic") == 0) {
+                options.majorMode = artemis::CONCOLIC;
             } else {
                 cerr << "ERROR: Invalid choice of major-mode " << optarg << endl;
                 exit(1);
@@ -297,34 +303,43 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
         }
     }
 
+    QUrl url;
+
     if (optind >= argc) {
-        cerr << "Error: You must specify a URL" << endl;
-        exit(1);
-    }
+        // If we are in manual mode then the url is optional.
+        if(options.majorMode != artemis::MANUAL){
+            cerr << "Error: You must specify a URL" << endl;
+            exit(1);
+        }else{
+            url = artemis::examplesIndexUrl();
+        }
 
-    QStringList rawurl = QString(argv[optind]).split("@");
-    QUrl url = rawurl.last();
+    }else{
 
+        QStringList rawurl = QString(argv[optind]).split("@");
+        url = rawurl.last();
 
-    if (options.useProxy.length() > 0 && url.host() == "localhost") {
-        cerr << "Error: You can not use the proxy setting in Artemis for content hosted on localhost" << endl;
-        exit(1);
-    }
+        if (options.useProxy.length() > 0 && url.host() == "localhost") {
+            cerr << "Error: You can not use the proxy setting in Artemis for content hosted on localhost" << endl;
+            exit(1);
+        }
 
-    if (url.scheme().isEmpty()) {
-        // the http:// part is missing
-        url = QUrl("http://" + url.toString());
-    }
+        if (url.scheme().isEmpty()) {
+            // the http:// part is missing
+            url = QUrl("http://" + url.toString());
+        }
 
-    if (!url.isValid()) {
-        cerr << "Error: The URL " << url.toString().toStdString() << " is not valid" << endl;
-        exit(1);
-    }
+        if (!url.isValid()) {
+            cerr << "Error: The URL " << url.toString().toStdString() << " is not valid" << endl;
+            exit(1);
+        }
 
-    if (rawurl.size() > 1) {
-        QStringList rawauth = rawurl.first().split(":");
-        url.setUserName(rawauth.first());
-        url.setPassword(rawauth.last());
+        if (rawurl.size() > 1) {
+            QStringList rawauth = rawurl.first().split(":");
+            url.setUserName(rawauth.first());
+            url.setPassword(rawauth.last());
+        }
+
     }
 
     return url;

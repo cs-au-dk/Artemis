@@ -25,10 +25,12 @@
 
 #include "statistics/statsstorage.h"
 #include "statistics/writers/pretty.h"
+
 #include "strategies/inputgenerator/randominputgenerator.h"
 #include "strategies/inputgenerator/event/staticeventparametergenerator.h"
 #include "strategies/inputgenerator/form/staticforminputgenerator.h"
 #include "strategies/inputgenerator/form/constantstringforminputgenerator.h"
+
 #include "strategies/termination/numberofiterationstermination.h"
 
 #include "strategies/prioritizer/constantprioritizer.h"
@@ -36,6 +38,9 @@
 #include "strategies/prioritizer/coverageprioritizer.h"
 #include "strategies/prioritizer/readwriteprioritizer.h"
 #include "strategies/prioritizer/collectedprioritizer.h"
+
+#include "concolic/solver/solver.h"
+#include "concolic/pathcondition.h"
 
 #include "runtime.h"
 
@@ -89,11 +94,11 @@ Runtime::Runtime(QObject* parent, const Options& options, const QUrl& url) : QOb
     QSharedPointer<FormInputGenerator> formInputGenerator;
     switch (options.formInputGenerationStrategy) {
     case Random:
-        formInputGenerator = QSharedPointer<StaticFormInputGenerator>(new StaticFormInputGenerator());
+        formInputGenerator = StaticFormInputGeneratorPtr(new StaticFormInputGenerator(options.presetFormfields.keys()));
         break;
 
     case ConstantString:
-        formInputGenerator = QSharedPointer<ConstantStringFormInputGenerator>(new ConstantStringFormInputGenerator());
+        formInputGenerator = ConstantStringFormInputGeneratorPtr(new ConstantStringFormInputGenerator(options.presetFormfields.keys()));
         break;
 
     default:
@@ -136,11 +141,13 @@ Runtime::Runtime(QObject* parent, const Options& options, const QUrl& url) : QOb
 
     /** Visited states **/
     mVisitedStates = new set<long>();
+
 }
 
 void Runtime::done()
 {
     QString coveragePath;
+    QString tracerPath;
 
     Log::info("Artemis: Testing done...");
 
@@ -155,32 +162,48 @@ void Runtime::done()
         break;
     }
 
+    // Do some last-minute statistics
+
+    statistics()->accumulate("WebKit::coverage::covered-unique", mAppmodel->getCoverageListener()->getNumCoveredLines());
+
+    // solve the last PC - this is needed by some system tests
+    PathConditionPtr pc = PathCondition::createFromTrace(mWebkitExecutor->getTraceBuilder()->trace());
+
+    SolutionPtr solution = Solver::solve(pc);
+    solution->toStatistics();
+
+    // Print final output
+
     if (mOptions.reportPathTrace == HTML_TRACES) {
-        mAppmodel->getPathTracer()->writePathTraceHTML(mOptions.outputCoverage == HTML, coveragePath);
+        mAppmodel->getPathTracer()->writePathTraceHTML(mOptions.outputCoverage == HTML, coveragePath, tracerPath);
     } else if(mOptions.reportPathTrace != NO_TRACES) {
         Log::info("\n=== Path Tracer ===\n");
         mAppmodel->getPathTracer()->write();
         Log::info("=== Path Tracer END ===\n");
     }
 
-    statistics()->accumulate("WebKit::coverage::covered-unique", mAppmodel->getCoverageListener()->getNumCoveredLines());
-
     Log::info("\n=== Statistics ===\n");
     StatsPrettyWriter::write(statistics());
     Log::info("\n=== Statistics END ===\n\n");
 
     Log::info("\n=== Last pathconditions ===\n");
-    Log::info(mWebkitExecutor->webkitListener->generatePathConditionString().toStdString());
+    Log::info(pc->toStatisticsString());
     Log::info("=== Last pathconditions END ===\n\n");
 
     Log::info("Artemis terminated on: "+ QDateTime::currentDateTime().toString().toStdString());
 
+    exit(0);
+
+    // TODO, see next TODO
     emit sigTestingDone();
 }
 
 void Runtime::slAbortedExecution(QString reason)
 {
     cerr << reason.toStdString() << std::endl;
+    exit(1);
+
+    // TODO we should use this emit, but we have some race conditions happening when Artemis shuts down.
     emit sigTestingDone();
 }
 

@@ -16,6 +16,7 @@
 
 #include "runtime/toplevel/artemisruntime.h"
 #include "runtime/toplevel/manualruntime.h"
+#include "runtime/toplevel/concolicruntime.h"
 
 #include "artemisapplication.h"
 
@@ -34,10 +35,16 @@ ArtemisApplication::ArtemisApplication(QObject* parent,
 
     srand(0); //Better way to get random numbers?
 
-    if (options.majorMode == AUTOMATED) {
-        mRuntime = new ArtemisRuntime(this, options, url);
-    } else {
+    switch (options.majorMode) {
+    case MANUAL:
         mRuntime = new ManualRuntime(this, options, url);
+        break;
+    case CONCOLIC:
+        mRuntime = new ConcolicRuntime(this, options, url);
+        break;
+    default:
+        mRuntime = new ArtemisRuntime(this, options, url);
+        break;
     }
 
     QObject::connect(mRuntime, SIGNAL(sigTestingDone()),

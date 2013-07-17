@@ -22,8 +22,8 @@
 #include "JavaScriptCore/wtf/ExportMacros.h"
 #include "JavaScriptCore/runtime/CallData.h"
 #include "JavaScriptCore/instrumentation/bytecodeinfo.h"
+#include "instrumentation/jscexecutionlistener.h"
 
-#include "pathcondition.h"
 #include "native/nativelookup.h"
 
 #ifdef ARTEMIS
@@ -39,6 +39,8 @@ namespace JSC {
 namespace Symbolic
 {
 
+extern unsigned int NEXT_SYMBOLIC_ID;
+
 typedef enum {
     EQUAL, NOT_EQUAL, STRICT_EQUAL, NOT_STRICT_EQUAL, LESS_EQ, LESS_STRICT, GREATER_EQ, GREATER_STRICT,
     ADD, SUBTRACT, MULTIPLY, DIVIDE, MODULO
@@ -46,7 +48,7 @@ typedef enum {
 
 const char* opToString(OP op);
 
-class SymbolicInterpreter
+WTF_EXPORT_PRIVATE class SymbolicInterpreter
 {
 
 public:
@@ -65,19 +67,19 @@ public:
     // called from the interpreter before it starts executing (a single trace)
     void preExecution(JSC::CallFrame* callFrame);
 
-    // called from Artemis
+    /*
+     * Called from Artemis
+     */
     void beginSession();
     void endSession();
-    std::string generatePathConditionString();
 
 private:
     void fatalError(JSC::CodeBlock* codeBlock, std::string reason) __attribute__((noreturn));
 
-    PathCondition m_pc;
-
     NativeLookup m_nativeFunctions;
     int m_nextSymbolicValue;
 
+    bool m_inSession;
     bool m_shouldGC;
 };
 

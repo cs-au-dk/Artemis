@@ -33,11 +33,15 @@ JSCExecutionListener::JSCExecutionListener() :
 
 void JSCExecutionListener::javascript_eval_call(const char* eval_string) {
     qWarning()  << "Warning: Default listener for javascript_eval_call was invoked, args: " << eval_string << endl;
-    //exit(1);
 }
 
 void JSCExecutionListener::javascript_bytecode_executed(JSC::Interpreter*, JSC::CodeBlock*, JSC::Instruction*, const JSC::BytecodeInfo&) {
     qWarning()  << "Warning: Default listener for javascript_bytecode_executed was invoked " << endl;
+    //exit(1);
+}
+
+void JSCExecutionListener::javascript_branch_executed(bool jump, Symbolic::Expression* condition, JSC::ExecState*, const JSC::Instruction*, const JSC::BytecodeInfo&) {
+    cerr << "Warning: Default listener for javascript_branch_executed was invoked " << endl;
     //exit(1);
 }
 

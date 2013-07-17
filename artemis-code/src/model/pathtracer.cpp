@@ -19,7 +19,8 @@
 #include "util/fileutil.h"
 #include "model/coverage/codeblockinfo.h"
 
-namespace artemis{
+namespace artemis
+{
 
 PathTracer::PathTracer(PathTraceReport reportLevel, bool reportBytecode) :
     mTraces(QList<PathTrace>()),
@@ -184,7 +185,7 @@ void PathTracer::write()
     }
 }
 
-void PathTracer::writePathTraceHTML(bool linkWithCoverage, QString coveragePath){
+void PathTracer::writePathTraceHTML(bool linkWithCoverage, QString coveragePath, QString& pathToFile){
     TraceItem item;
     PathTrace trace;
     QString itemStr;
@@ -272,7 +273,7 @@ void PathTracer::writePathTraceHTML(bool linkWithCoverage, QString coveragePath)
 
     res += "</body>\n</html>\n";
 
-    QString pathToFile = QString("traces-") + QDateTime::currentDateTime().toString("dd-MM-yy-hh-mm-ss") + ".html";
+    pathToFile = QString("traces-") + QDateTime::currentDateTime().toString("dd-MM-yy-hh-mm-ss") + ".html";
     writeStringToFile(pathToFile, res);
 }
 

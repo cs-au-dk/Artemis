@@ -28,7 +28,8 @@
 namespace artemis
 {
 
-ConstantStringFormInputGenerator::ConstantStringFormInputGenerator() : FormInputGenerator()
+ConstantStringFormInputGenerator::ConstantStringFormInputGenerator(QList<QString> excludedFormFields) :
+    FormInputGenerator(excludedFormFields)
 {
 
 }
@@ -45,6 +46,10 @@ QSharedPointer<FormInput> ConstantStringFormInputGenerator::generateFormFields(Q
     QSet<QPair<QSharedPointer<const FormField>, const FormFieldValue*> > inputs;
 
     foreach(QSharedPointer<const FormField> field, fields) {
+
+        if (mExcludedFormFields.contains(field->getDomElement()->getId())) {
+            continue;
+        }
 
         switch (field->getType()) {
         case TEXT:

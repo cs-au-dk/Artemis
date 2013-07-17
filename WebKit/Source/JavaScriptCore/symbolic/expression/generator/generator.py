@@ -102,8 +102,6 @@ def generate_expression(target_dir, ID, parent, fields, enums):
 		fp.write("#define SYMBOLIC_%s_H\n\n" % ID.upper())
 
 		fp.write("#include <string>\n\n")
-		fp.write("#include \"JavaScriptCore/wtf/ExportMacros.h\"\n")
-		fp.write("#include \"JavaScriptCore/runtime/UString.h\"\n\n")
 
 		enum_ids = [enum['ID'] for enum in enums]
 
@@ -131,8 +129,9 @@ typedef enum {
 } %s;
 
 const char* opToString(%s op);
+Type opGetType(%s op);
 
-""" % (', '.join(enum['values']), enum['ID'], enum['ID']))
+""" % (', '.join(enum['values']), enum['ID'], enum['ID'], enum['ID']))
 
 		fp.write("""
 class %s : public %s
@@ -209,7 +208,17 @@ const char* opToString(%s op)
     return OPStrings[op];
 }
 
-""" % (enum['ID'], ', '.join(['"%s"' % name for name in enum['names']])))
+Type opGetType(%s op)
+{
+	static const Type types[] = {
+	    %s
+	};
+
+	return types[op];
+}
+
+""" % (enum['ID'], ', '.join(['"%s"' % name for name in enum['names']]),
+	   enum['ID'], ', '.join(['%s' % typename for typename in enum['types']])))
 
 		# functions
 
@@ -272,6 +281,11 @@ def generate_visitor(target_dir, object_IDs):
 
 namespace Symbolic
 {
+
+// Move this to another file?
+enum Type {
+	INT, BOOL, STRING, TYPEERROR
+};
 
 """)
 

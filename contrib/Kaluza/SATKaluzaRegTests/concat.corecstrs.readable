@@ -1,0 +1,22 @@
+PCTEMP_LHS_1 := T1_2 . T2_2;
+
+T2_2 == "=Online";
+
+T1_2 == var_0xINPUT_2;
+
+T_2 := T1_6 . T2_6;
+
+T2_6 == "Now";
+
+T1_6 == PCTEMP_LHS_1;
+
+T_3 :=T_2 != "Hello=Joe=OnlineNow";
+
+T_4 := ! T_3;
+
+ASSERT (T_4);
+
+type T2_2 : CSTR;
+type T1_2 : CSTR;
+type T2_6 : CSTR;
+type T1_6 : CSTR;

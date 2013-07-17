@@ -276,7 +276,7 @@ Symbolic::IntegerExpression* JSValue::generateIntegerExpression(ExecState* exec)
 }
 
 Symbolic::StringExpression* JSValue::generateStringExpression(ExecState* exec){
-    return this->isSymbolic()?(Symbolic::StringExpression*) this->asSymbolic(): new Symbolic::ConstantString(this->toPrimitive(exec).toString(exec));
+    return this->isSymbolic()?(Symbolic::StringExpression*) this->asSymbolic(): new Symbolic::ConstantString(new std::string(this->toPrimitive(exec).toString(exec).ascii().data()));
 }
 
 Symbolic::IntegerExpression* JSValue::generateIntegerCoercionExpression(ExecState* exec){
@@ -285,7 +285,7 @@ Symbolic::IntegerExpression* JSValue::generateIntegerCoercionExpression(ExecStat
 
 Symbolic::StringExpression* JSValue::generateStringCoercionExpression(ExecState* exec){
     return this->isSymbolic() ? (Symbolic::StringExpression*)new Symbolic::StringCoercion(this->asSymbolic()) :
-                            (Symbolic::StringExpression*)new Symbolic::ConstantString(this->toPrimitiveString(exec)->toString(exec));
+                            (Symbolic::StringExpression*)new Symbolic::ConstantString(new std::string(this->toPrimitiveString(exec)->toString(exec).ascii().data()));
 }
 
 Symbolic::BooleanExpression* JSValue::generateBooleanExpression(ExecState* exec){

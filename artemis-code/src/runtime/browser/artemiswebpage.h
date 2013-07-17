@@ -19,6 +19,7 @@
 #include <QWebPage>
 #include <QString>
 #include <QSharedPointer>
+#include <QNetworkRequest>
 
 namespace artemis
 {
@@ -34,8 +35,14 @@ public:
     void javaScriptConsoleMessage(const QString& message, int lineNumber, const QString& sourceID);
     bool javaScriptPrompt(QWebFrame* frame, const QString& msg, const QString& defaultValue, QString* result);
 
+    bool mAcceptNavigation; // Used when in manual mode; see acceptNavigationRequest.
+
+protected:
+    virtual bool acceptNavigationRequest(QWebFrame *frame, const QNetworkRequest &request, NavigationType type);
+
 signals:
     void sigJavascriptAlert(QWebFrame* frame, QString msg);
+    void sigNavigationRequest(QWebFrame *frame, const QNetworkRequest &request, QWebPage::NavigationType type);
 };
 
 typedef QSharedPointer<ArtemisWebPage> ArtemisWebPagePtr;

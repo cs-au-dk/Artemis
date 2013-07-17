@@ -22,11 +22,13 @@
 #include <QtWebKit>
 #include <QtWebKit/qwebexecutionlistener.h>
 #include <QSharedPointer>
+#include <QNetworkReply>
 
 #include "artemisglobals.h"
 
 #include "runtime/executableconfiguration.h"
 #include "runtime/browser/ajax/ajaxrequestlistener.h"
+#include "runtime/appmodel.h"
 #include "model/coverage/coveragelistener.h"
 #include "model/pathtracer.h"
 #include "strategies/inputgenerator/targets/jquerylistener.h"
@@ -34,8 +36,9 @@
 #include "executionresult.h"
 #include "executionresultbuilder.h"
 #include "artemiswebpage.h"
-#include "runtime/appmodel.h"
-#include <QNetworkReply>
+
+#include "concolic/executiontree/tracebuilder.h"
+#include "concolic/traceeventdetectors.h"
 
 namespace artemis
 {
@@ -61,6 +64,8 @@ public:
 
     ArtemisWebPagePtr getPage();
 
+    TraceBuilder* getTraceBuilder();
+
 private:
     ArtemisWebPagePtr mPage;
     ExecutionResultBuilderPtr mResultBuilder;
@@ -74,6 +79,8 @@ private:
     PathTracerPtr mPathTracer;
     bool mNextOpCanceled;
     bool mKeepOpen;
+
+    TraceBuilder* mTraceBuilder;
 
 signals:
     void sigExecutedSequence(ExecutableConfigurationConstPtr conf, QSharedPointer<ExecutionResult> res);

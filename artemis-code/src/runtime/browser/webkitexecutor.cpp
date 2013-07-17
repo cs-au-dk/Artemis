@@ -26,9 +26,11 @@
 
 #include "runtime/input/forms/formfield.h"
 #include "runtime/input/events/domelementdescriptor.h"
-#include "strategies/inputgenerator/targets/jquerylistener.h"
 #include "runtime/input/baseinput.h"
+#include "strategies/inputgenerator/targets/jquerylistener.h"
 #include "util/loggingutil.h"
+#include "concolic/executiontree/tracebuilder.h"
+
 #include "webkitexecutor.h"
 
 using namespace std;
@@ -127,6 +129,28 @@ WebKitExecutor::WebKitExecutor(QObject* parent,
     QObject::connect(webkitListener, SIGNAL(sigJavascriptConstantStringEncountered(QString)),
                      mResultBuilder.data(), SLOT(slJavascriptConstantStringEncountered(QString)));
 
+
+    // Set up the trace builder and event detectors.
+    mTraceBuilder = new TraceBuilder(this);
+
+    // The branch detector.
+    QSharedPointer<TraceBranchDetector> branchDetector(new TraceBranchDetector());
+    QObject::connect(webkitListener, SIGNAL(sigJavascriptBranchExecuted(bool, Symbolic::Expression*, uint, QSource*, const ByteCodeInfoStruct)),
+            branchDetector.data(), SLOT(slBranch(bool, Symbolic::Expression*, uint, QSource*, const ByteCodeInfoStruct)));
+    mTraceBuilder->addDetector(branchDetector);
+
+    // The alert detector.
+    QSharedPointer<TraceAlertDetector> alertDetector(new TraceAlertDetector());
+    QObject::connect(mPage.data(), SIGNAL(sigJavascriptAlert(QWebFrame*, QString)),
+                     alertDetector.data(), SLOT(slJavascriptAlert(QWebFrame*, QString)));
+    mTraceBuilder->addDetector(alertDetector);
+
+    // The function call detector.
+    QSharedPointer<TraceFunctionCallDetector> functionCallDetector(new TraceFunctionCallDetector());
+    QObject::connect(webkitListener, SIGNAL(sigJavascriptFunctionCalled(QString, size_t, uint, uint, QSource*)),
+                     functionCallDetector.data(), SLOT(slJavascriptFunctionCalled(QString, size_t, uint, uint, QSource*)));
+    mTraceBuilder->addDetector(functionCallDetector);
+
 }
 
 WebKitExecutor::~WebKitExecutor()
@@ -135,6 +159,7 @@ WebKitExecutor::~WebKitExecutor()
 
 void WebKitExecutor::detach() {
     webkitListener->endSymbolicSession();
+    mTraceBuilder->endRecording();
 
     // ignore events emitted from webkit on deallocation
     webkitListener->disconnect(mResultBuilder.data());
@@ -206,6 +231,7 @@ void WebKitExecutor::slLoadFinished(bool ok)
         QWebElement elm = mPage->mainFrame()->findFirstElement(f);
 
         if (elm.isNull()) {
+            qDebug() << "Warning, preset field " << f << "not found.";
             continue;
         }
 
@@ -218,17 +244,20 @@ void WebKitExecutor::slLoadFinished(bool ok)
     qDebug() << "\n------------ EXECUTE SEQUENCE -----------" << endl;
 
     webkitListener->beginSymbolicSession();
+    mTraceBuilder->beginRecording();
 
     foreach(QSharedPointer<const BaseInput> input, currentConf->getInputSequence()->toList()) {
         mResultBuilder->notifyStartingEvent();
         mCoverageListener->notifyStartingEvent(input);
         mJavascriptStatistics->notifyStartingEvent(input);
         mPathTracer->notifyStartingEvent(input);
+
         input->apply(this->mPage, this->webkitListener);
     }
 
     if (!mKeepOpen) {
         webkitListener->endSymbolicSession();
+        mTraceBuilder->endRecording();
     }
 
     // DONE
@@ -243,6 +272,11 @@ void WebKitExecutor::slLoadFinished(bool ok)
 ArtemisWebPagePtr WebKitExecutor::getPage()
 {
     return mPage;
+}
+
+TraceBuilder* WebKitExecutor::getTraceBuilder()
+{
+    return mTraceBuilder;
 }
 
 }

@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 
+#include <assert.h>
 
 #include <config.h>
 #include <DOMWindow.h>
@@ -298,7 +299,7 @@ void QWebExecutionListener::javascriptConstantStringEncountered(std::string cons
     emit sigJavascriptConstantStringEncountered(QString::fromStdString(constant));
 }
 
-void QWebExecutionListener::webkit_eval_call(const char * eval_string) {
+void QWebExecutionListener::javascript_eval_call(const char * eval_string) {
     Q_CHECK_PTR(eval_string);
     emit this->eval_call(QString(tr(eval_string)));
 }
@@ -352,6 +353,18 @@ void QWebExecutionListener::javascript_property_written(std::string propertyName
                                       m_sourceRegistry.get(callFrame->codeBlock()->source()));
 }
 
+void QWebExecutionListener::javascript_branch_executed(bool jump, Symbolic::Expression* condition, JSC::ExecState* callFrame, const JSC::Instruction* instruction, const JSC::BytecodeInfo& info)
+{
+    uint bytecodeOffset = instruction - callFrame->codeBlock()->instructions().begin();
+
+    ByteCodeInfoStruct binfo;
+    binfo.linenumber = callFrame->codeBlock()->lineNumberForBytecodeOffset(bytecodeOffset);
+    binfo.isSymbolic = info.isSymbolic();
+    binfo.bytecodeOffset = bytecodeOffset;
+
+    emit sigJavascriptBranchExecuted(jump, condition, callFrame->codeBlock()->sourceOffset(), m_sourceRegistry.get(callFrame->codeBlock()->source()), binfo);
+}
+
 QWebExecutionListener* QWebExecutionListener::getListener() {
     return (QWebExecutionListener*)inst::getListener();
 }
@@ -378,12 +391,6 @@ void QWebExecutionListener::endSymbolicSession()
 {
     JSC::Interpreter::m_symbolic->endSession();
 }
-
-
-QString QWebExecutionListener::generatePathConditionString(){
-    return QString::fromStdString(JSC::Interpreter::m_symbolic->generatePathConditionString());
-}
-
 
 namespace inst {
 

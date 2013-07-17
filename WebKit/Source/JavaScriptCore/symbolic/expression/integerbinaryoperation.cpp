@@ -32,6 +32,15 @@ const char* opToString(IntegerBinaryOp op)
     return OPStrings[op];
 }
 
+Type opGetType(IntegerBinaryOp op)
+{
+	static const Type types[] = {
+	    INT, INT, INT, INT, BOOL, BOOL, BOOL, BOOL, BOOL, BOOL, INT, BOOL, BOOL
+	};
+
+	return types[op];
+}
+
 
 IntegerBinaryOperation::IntegerBinaryOperation(IntegerExpression* lhs, IntegerBinaryOp op, IntegerExpression* rhs) :
     IntegerExpression(),

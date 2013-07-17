@@ -1,0 +1,33 @@
+#********************************************************************
+# Copyright 2010 Prateek Saxena, Devdatta Akhawe.
+#********************************************************************
+# AUTHORS: Prateek Saxena, Devdatta Akhawe
+#
+# BEGIN DATE: January/February 2010
+#
+# This file belongs to the Kaluza string solver project (solver for
+#  word equations )
+# 
+#********************************************************************
+
+This is the Kaluza String Solver.
+
+This software is released by Prateek Saxena (prateeks@eecs.berkeley.edu), 
+Devdatta Akhawe (devdatta@eecs.berkeley.edu) and others.
+
+This software may include software and data by others, released under
+their own licenses.
+
+The software is released under a Creative Commons Attribution-Noncommercial-
+No Derivative Works 3.0 Unported License. The license can be found at 
+http://creativecommons.org/licenses/by-nc-nd/3.0/
+
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND,
+EXPRESS OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF
+MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND
+NONINFRINGEMENT. IN NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE
+LIABLE FOR ANY CLAIM, DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION
+OF CONTRACT, TORT OR OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION
+WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE SOFTWARE.
+

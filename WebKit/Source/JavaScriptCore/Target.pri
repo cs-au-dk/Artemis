@@ -225,8 +225,6 @@ SOURCES += \
     symbolic/expression/symbolicboolean.cpp \
     symbolic/expression/constantboolean.cpp \
     symbolic/expression/booleancoercion.cpp \
-    symbolic/pathcondition.cpp \
-    symbolic/expression/visitors/printer.cpp \
     symbolic/expression/booleanbinaryoperation.cpp \
     symbolic/expression/stringreplace.cpp \
     symbolic/expression/stringregexreplace.cpp
@@ -256,7 +254,6 @@ lessThan(QT_GCC_MAJOR_VERSION, 5) {
 }
 
 HEADERS += \
-    symbolic/expression/visitors/printer.h \
     instrumentation/jscexecutionlistener.h \
     instrumentation/jscexecutionlistener.h \
     symbolic/symbolicinterpreter.h \

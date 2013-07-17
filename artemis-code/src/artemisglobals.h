@@ -16,6 +16,8 @@
 #ifndef ARTEMISGLOBALS_H
 #define ARTEMISGLOBALS_H
 
+#include <cstdlib>
+#include <iostream>
 #include <QWebElement>
 
 using namespace std;
@@ -40,6 +42,18 @@ inline QString intTostring(const int i)
     QString res = "";
     res.setNum(i);
     return res;
+}
+
+inline QUrl examplesIndexUrl()
+{
+    // The defualt URL will be artemis-code/tests/system/fixtures/forms/examples-index.html
+    char* artemisdir = std::getenv("ARTEMISDIR");
+    if(!artemisdir){
+        std::cerr << "Could not read ARTEMISDIR environment variable." << std::endl;
+        exit(1);
+    }
+
+    return QUrl(QString("file://%1/artemis-code/tests/system/fixtures/forms/examples-index.html").arg(artemisdir));
 }
 
 }

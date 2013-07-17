@@ -43,6 +43,8 @@ protected:
     void preConcreteExecution();
 
     WorkListPtr mWorklist;
+    EntryPointDetector mEntryPointDetector;
+
 private:
     int mIterations;
 

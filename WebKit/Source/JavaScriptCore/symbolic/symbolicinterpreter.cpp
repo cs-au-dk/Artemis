@@ -14,7 +14,6 @@
  * limitations under the License.
  */
 
-#include <iostream>
 #include <tr1/unordered_set>
 #include <inttypes.h>
 
@@ -25,7 +24,6 @@
 #include "JavaScriptCore/runtime/JSString.h"
 
 #include "JavaScriptCore/symbolic/expr.h"
-#include "JavaScriptCore/symbolic/expression/visitors/printer.h"
 
 #include "symbolicinterpreter.h"
 #include <QDebug>
@@ -35,6 +33,8 @@
 
 namespace Symbolic
 {
+
+unsigned int NEXT_SYMBOLIC_ID = 0;
 
 const char* opToString(OP op) {
     static const char* OPStrings[] = {
@@ -47,6 +47,7 @@ const char* opToString(OP op) {
 
 SymbolicInterpreter::SymbolicInterpreter() :
     m_nextSymbolicValue(0),
+    m_inSession(false),
     m_shouldGC(false)
 {
 }
@@ -55,9 +56,14 @@ void SymbolicInterpreter::ail_call(JSC::CallFrame*, const JSC::Instruction*, JSC
 {
 }
 
-void SymbolicInterpreter::ail_call_native(JSC::CallFrame* callFrame, const JSC::Instruction*, JSC::BytecodeInfo&,
+void SymbolicInterpreter::ail_call_native(JSC::CallFrame* callFrame,
+                                          const JSC::Instruction*,
+                                          JSC::BytecodeInfo&,
                                           JSC::native_function_ID_t functionID)
 {
+
+    if (!m_inSession) return;
+
     const NativeFunction* nativeFunction = m_nativeFunctions.find(functionID);
 
     if (nativeFunction == NULL) {
@@ -71,10 +77,16 @@ void SymbolicInterpreter::ail_call_native(JSC::CallFrame* callFrame, const JSC::
 
 
 
-JSC::JSValue SymbolicInterpreter::ail_op_binary(JSC::CallFrame* callFrame, const JSC::Instruction*, JSC::BytecodeInfo& info,
-                                                JSC::JSValue& x, OP op, JSC::JSValue& y,
+JSC::JSValue SymbolicInterpreter::ail_op_binary(JSC::CallFrame* callFrame,
+                                                const JSC::Instruction*,
+                                                JSC::BytecodeInfo& info,
+                                                JSC::JSValue& x,
+                                                OP op,
+                                                JSC::JSValue& y,
                                                 JSC::JSValue result)
 {
+
+    if (!m_inSession) return result;
 
     if (!x.isSymbolic() && !y.isSymbolic()) {
         return result; // not symbolic
@@ -344,14 +356,26 @@ JSC::JSValue SymbolicInterpreter::ail_op_binary(JSC::CallFrame* callFrame, const
     return result;
 }
 
-void SymbolicInterpreter::ail_jmp_iff(JSC::CallFrame* callFrame, const JSC::Instruction* vPC, JSC::BytecodeInfo& info,
-                                      JSC::JSValue& condition, bool jumps)
+void SymbolicInterpreter::ail_jmp_iff(JSC::CallFrame* callFrame,
+                                      const JSC::Instruction* vPC,
+                                      JSC::BytecodeInfo& info,
+                                      JSC::JSValue& condition,
+                                      bool jumps)
 {
-    if (condition.isSymbolic()) {
-        info.setSymbolic();
-        m_pc.append(condition.asSymbolic());
+
+    if (!m_inSession) {
+
+        // Notify Artemis directly about this branch
+        jscinst::get_jsc_listener()->javascript_branch_executed(jumps, NULL, callFrame, vPC, info);
+
+        return;
     }
 
+    if (condition.isSymbolic()) {
+        info.setSymbolic();
+    }
+
+    jscinst::get_jsc_listener()->javascript_branch_executed(jumps, condition.isSymbolic() ? condition.asSymbolic() : NULL, callFrame, vPC, info);
 }
 
 void SymbolicInterpreter::fatalError(JSC::CodeBlock* codeBlock, std::string reason)
@@ -383,29 +407,12 @@ void SymbolicInterpreter::preExecution(JSC::CallFrame* callFrame)
 void SymbolicInterpreter::beginSession()
 {
     m_shouldGC = true;
+    m_inSession = true;
 }
 
 void SymbolicInterpreter::endSession()
 {
-    qDebug() << "PC size: " << m_pc.size();
-
-    int i;
-    for (i = 0; i < m_pc.size(); i++) {
-        Printer printer;
-        m_pc.get(i)->accept(&printer);
-        qDebug() << "PC[" << i << "]: " << QString::fromStdString(printer.getResult());
-    }
-}
-
-std::string SymbolicInterpreter::generatePathConditionString(){
-    std::stringstream sstrm;
-    for (int i = 0; i < m_pc.size(); i++) {
-
-        Printer printer;
-        m_pc.get(i)->accept(&printer);
-        sstrm << "PC[" << i << "]: " << printer.getResult() << std::endl;
-    }
-    return sstrm.str();
+    m_inSession = false;
 }
 
 

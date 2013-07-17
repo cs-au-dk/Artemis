@@ -29,7 +29,6 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/runtime/input/forms/forminput.h \
     src/runtime/input/events/keyboardeventparameters.h \
     src/runtime/input/events/mouseeventparameters.h \
-    src/runtime/browser/artemiswebpage.h \
     src/runtime/executableconfiguration.h \
     src/runtime/input/baseinput.h \
     src/runtime/input/dominput.h \
@@ -75,9 +74,42 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/runtime/input/events/toucheventparameters.h \
     src/model/pathtracer.h \
     src/runtime/toplevel/artemisruntime.h \
-    src/runtime/toplevel/manualruntime.h \
     src/runtime/browser/artemiswebview.h \
-    src/runtime/input/events/unknowneventparameters.h
+    src/runtime/browser/artemiswebpage.h \
+    src/concolic/concolic.h \
+    src/concolic/pathtree.h \
+    src/concolic/concreteinput.h \
+    src/concolic/search/search.h \
+    src/concolic/solver/solver.h \
+    src/concolic/solver/constraintwriter.h \
+    src/concolic/search/searchdfs.h \
+    src/concolic/search/searchrandom.h \
+    src/concolic/executor.h \
+    src/concolic/executiontree/nodes/trace.h \
+    src/concolic/entrypoints.h \
+    src/concolic/exitpoints.h \
+    src/concolic/executiontree/tracebuilder.h \
+    src/runtime/toplevel/concolicruntime.h \
+    src/concolic/traceclassifier.h \
+    src/runtime/demomode/demowindow.h \
+    src/concolic/executiontree/traceprinter.h \
+    src/concolic/executiontree/tracevisitor.h \
+    src/runtime/demomode/initialanalysiswidget.h \
+    src/runtime/demomode/artemisbrowserwidget.h \
+    src/runtime/toplevel/manualruntime.h \
+    src/runtime/input/events/unknowneventparameters.h \
+    src/concolic/traceeventdetectors.h \
+    src/concolic/tracestatistics.h \
+    src/concolic/solver/solution.h \
+    src/concolic/solver/expressionprinter.h \
+    src/runtime/demomode/traceviewerdialog.h \
+    src/concolic/pathcondition.h \
+    src/concolic/executiontree/nodes/traceunexplored.h \
+    src/concolic/executiontree/nodes/tracebranch.h \
+    src/concolic/executiontree/nodes/traceconcretebranch.h \
+    src/concolic/executiontree/nodes/tracesymbolicbranch.h \
+    src/concolic/executiontree/tracenodes.h \
+    src/concolic/executiontree/tracemerger.h
 
 SOURCES += src/runtime/input/ajaxinput.cpp \
     src/strategies/prioritizer/constantprioritizer.cpp \
@@ -95,6 +127,7 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/runtime/input/forms/forminput.cpp \
     src/runtime/input/events/keyboardeventparameters.cpp \
     src/runtime/input/events/mouseeventparameters.cpp \
+    src/runtime/browser/artemiswebview.cpp \
     src/runtime/browser/artemiswebpage.cpp \
     src/runtime/executableconfiguration.cpp \
     src/runtime/input/dominput.cpp \
@@ -134,8 +167,34 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/runtime/input/events/toucheventparameters.cpp \
     src/model/pathtracer.cpp \
     src/runtime/toplevel/artemisruntime.cpp \
+    src/concolic/concolic.cpp \
+    src/concolic/pathtree.cpp \
+    src/concolic/solver/expressionprinter.cpp \
+    src/concolic/concreteinput.cpp \
+    src/concolic/search/search.cpp \
+    src/concolic/solver/solver.cpp \
+    src/concolic/solver/constraintwriter.cpp \
+    src/concolic/entrypoints.cpp \
+    src/runtime/toplevel/concolicruntime.cpp \
+    src/concolic/executiontree/tracebuilder.cpp \
+    src/concolic/traceclassifier.cpp \
+    src/runtime/demomode/demowindow.cpp \
+    src/concolic/executiontree/traceprinter.cpp \
+    src/concolic/executiontree/tracevisitor.cpp \
+    src/runtime/demomode/initialanalysiswidget.cpp \
+    src/runtime/demomode/artemisbrowserwidget.cpp \
     src/runtime/toplevel/manualruntime.cpp \
-    src/runtime/browser/artemiswebview.cpp \
-    src/runtime/input/events/unknowneventparameters.cpp
+    src/runtime/input/events/unknowneventparameters.cpp \
+    src/concolic/traceeventdetectors.cpp \
+    src/concolic/tracestatistics.cpp \
+    src/concolic/solver/solution.cpp \
+    src/runtime/demomode/traceviewerdialog.cpp \
+    src/strategies/inputgenerator/form/forminputgenerator.cpp \
+    src/concolic/pathcondition.cpp \
+    src/concolic/executiontree/nodes/traceunexplored.cpp \
+    src/concolic/executiontree/nodes/tracebranch.cpp \
+    src/concolic/executiontree/nodes/traceconcretebranch.cpp \
+    src/concolic/executiontree/nodes/tracesymbolicbranch.cpp \
+    src/concolic/executiontree/tracemerger.cpp
 
 QT += network

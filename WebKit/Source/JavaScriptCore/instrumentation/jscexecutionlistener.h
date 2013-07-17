@@ -18,6 +18,8 @@
 #ifndef JSCEXECUTIONLISTENER_H
 #define JSCEXECUTIONLISTENER_H
 
+#include "JavaScriptCore/symbolic/expr.h"
+
 #include "bytecodeinfo.h"
 
 namespace JSC {
@@ -37,6 +39,7 @@ public:
     JSCExecutionListener();
     virtual void javascript_eval_call(const char * eval_string); //__attribute__((noreturn));
     virtual void javascript_bytecode_executed(JSC::Interpreter* interpreter, JSC::CodeBlock*, JSC::Instruction* inst, const JSC::BytecodeInfo&); //__attribute__((noreturn));
+    virtual void javascript_branch_executed(bool jump, Symbolic::Expression* condition, JSC::ExecState*, const JSC::Instruction*, const JSC::BytecodeInfo&);
     virtual void javascriptConstantStringEncountered(std::string constant); //__attribute__((noreturn));
     virtual void javascript_property_read(std::string propertyName, JSC::ExecState*); //__attribute__((noreturn));
     virtual void javascript_property_written(std::string propertyName, JSC::ExecState*); //__attribute__((noreturn));

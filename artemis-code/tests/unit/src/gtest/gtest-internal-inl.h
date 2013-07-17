@@ -56,14 +56,14 @@
 #include <string>
 #include <vector>
 
-#include "gtest/internal/gtest-port.h"
+#include "include/gtest/internal/gtest-port.h"
 
 #if GTEST_OS_WINDOWS
 # include <windows.h>  // NOLINT
 #endif  // GTEST_OS_WINDOWS
 
-#include "gtest/gtest.h"  // NOLINT
-#include "gtest/gtest-spi.h"
+#include "include/gtest/gtest.h"  // NOLINT
+#include "include/gtest/gtest-spi.h"
 
 namespace testing {
 
