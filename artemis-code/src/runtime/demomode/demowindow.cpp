@@ -105,6 +105,12 @@ DemoModeMainWindow::DemoModeMainWindow(AppModelPtr appModel, WebKitExecutor* web
     QObject::connect(mViewTraceBtn, SIGNAL(released()),
                      this, SLOT(slViewTrace()));
     mViewTraceBtn->setEnabled(false);
+
+    mGenerateTraceGraphButton = new QPushButton("Generate Graph");
+    QObject::connect(mGenerateTraceGraphButton, SIGNAL(released()),
+                     this, SLOT(slGenerateTraceGraph()));
+    mGenerateTraceGraphButton->setEnabled(false);
+
     mTraceAnalysisText = new QLabel("No trace has been run yet.");
 
     // The Layout for the initial analysis panel.
@@ -147,6 +153,7 @@ DemoModeMainWindow::DemoModeMainWindow(AppModelPtr appModel, WebKitExecutor* web
     mAnalysisLayout->addWidget(mTraceClassificationResult);
 
     mAnalysisLayout->addWidget(mViewTraceBtn);
+    mAnalysisLayout->addWidget(mGenerateTraceGraphButton);
     mAnalysisLayout->addSpacing(10);
 
     // Execution reports section.
@@ -431,6 +438,7 @@ void DemoModeMainWindow::postTraceExecution()
 void DemoModeMainWindow::displayTraceInformation()
 {
     mViewTraceBtn->setEnabled(true);
+    mGenerateTraceGraphButton->setEnabled(true);
 
     TraceStatistics stats;
     stats.processTrace(mPreviousTrace);
@@ -569,10 +577,33 @@ void DemoModeMainWindow::slViewTrace()
 {
     Log::info("DEMO: Viewing trace.");
 
-    // TODO: create a new trace viewing dialog and show it here.
     QDialog* traceViewer = new TraceViewerDialog(mPreviousTrace, this);
-    //traceViewer->exec();
     traceViewer->show();
+}
+
+
+// Called when the "Generate Trace Graph" button is clicked.
+void DemoModeMainWindow::slGenerateTraceGraph()
+{
+    QString graphFile, pngFile;
+
+    Log::info("DEMO: Generating trace graph.");
+    TraceDisplay display;
+    display.writeGraphFile(mPreviousTrace, graphFile);
+
+    pngFile = graphFile + ".png";
+
+    // Convert to PNG
+    QString command = QString("dot -Tpng %1 -o %2").arg(graphFile).arg(pngFile);
+    Log::info((QString("DEMO: running command: ") + command).toStdString());
+    QProcess process;
+    process.startDetached(command);
+
+    // Display the PNG.
+    // TODO: view the images in a more portable way!
+    process.waitForFinished(); // Blocks until the png is generated.
+    process.startDetached("ristretto " + pngFile);
+
 }
 
 
