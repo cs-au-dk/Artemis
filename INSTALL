@@ -21,7 +21,7 @@ Artemis have been successfully installed on Ubuntu 12.10 and Fedora 18.
     
       export QTDIR=<qt_path>
       export PATH=$QTDIR/bin:$PATH
-      export ARTEMISDIR=<artemis_git_reposity_patn>
+      export ARTEMISDIR=<artemis_git_reposity_path>
 
     where `<qt_path>` is the QT 4.8 installation directory, either
     the one provided by your distribution or the `qt/` folder 
