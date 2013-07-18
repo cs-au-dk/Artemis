@@ -27,6 +27,7 @@ using namespace std;
 namespace jscinst {
 
 JSCExecutionListener::JSCExecutionListener() :
+    m_propertyAccessInstrumentationEnabled(false),
     m_constantStringInstrumentationEnabled(false)
 {
 }

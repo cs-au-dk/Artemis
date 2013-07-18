@@ -113,7 +113,9 @@ NEVER_INLINE bool Interpreter::resolve(CallFrame* callFrame, Instruction* vPC, J
     Identifier& ident = codeBlock->identifier(property);
 
 #ifdef ARTEMIS
-    readProperty(callFrame, ident.ascii().data());
+    if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
+		readProperty(callFrame, ident.ascii().data());
+	}
 #endif
 
     do {
@@ -157,7 +159,9 @@ NEVER_INLINE bool Interpreter::resolveSkip(CallFrame* callFrame, Instruction* vP
     Identifier& ident = codeBlock->identifier(property);
 
 #ifdef ARTEMIS
-    readProperty(callFrame, ident.ascii().data());
+    if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
+		readProperty(callFrame, ident.ascii().data());
+	}
 #endif
 
     do {
@@ -188,7 +192,9 @@ NEVER_INLINE bool Interpreter::resolveGlobal(CallFrame* callFrame, Instruction* 
     int offset = vPC[4].u.operand;
 
 #ifdef ARTEMIS
-    readProperty(callFrame, codeBlock->identifier(property).ascii().data());
+    if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
+		readProperty(callFrame, codeBlock->identifier(property).ascii().data());
+	}
 #endif
 
     if (structure == globalObject->structure()) {
@@ -230,7 +236,9 @@ NEVER_INLINE bool Interpreter::resolveGlobalDynamic(CallFrame* callFrame, Instru
     int skip = vPC[5].u.operand;
 
 #ifdef ARTEMIS
-    readProperty(callFrame, codeBlock->identifier(property).ascii().data());
+    if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
+		readProperty(callFrame, codeBlock->identifier(property).ascii().data());
+	}
 #endif
 
     ScopeChainNode* scopeChain = callFrame->scopeChain();
@@ -307,7 +315,9 @@ NEVER_INLINE void Interpreter::resolveBase(CallFrame* callFrame, Instruction* vP
     Identifier ident = callFrame->codeBlock()->identifier(property);
 
 #ifdef ARTEMIS
-    readProperty(callFrame, ident.ascii().data());
+    if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
+		readProperty(callFrame, ident.ascii().data());
+	}
 #endif
 
     JSValue result = JSC::resolveBase(callFrame, ident, callFrame->scopeChain(), isStrictPut);
@@ -372,7 +382,9 @@ NEVER_INLINE bool Interpreter::resolveThisAndProperty(CallFrame* callFrame, Inst
     Identifier& ident = codeBlock->identifier(property);
 
 #ifdef ARTEMIS
-    readProperty(callFrame, ident.ascii().data());
+    if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
+		readProperty(callFrame, ident.ascii().data());
+	}
 #endif
 
     JSObject* base;
@@ -442,7 +454,6 @@ ALWAYS_INLINE void Interpreter::checkForConstantString(CallFrame* callFrame, con
 
 ALWAYS_INLINE void Interpreter::readProperty(CallFrame* callFrame, std::string identifier)
 {
-    //printf("READ %s\n", identifier.c_str());
     jscinst::get_jsc_listener()->javascript_property_read(identifier, callFrame);
 }
 
@@ -2974,7 +2985,9 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         int index = vPC[2].u.operand;
 
 #ifdef ARTEMIS
-        readProperty(callFrame, scope->symbolTable(), index);
+        if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
+		readProperty(callFrame, scope->symbolTable(), index);
+	}
 #endif
 
         callFrame->uncheckedR(dst) = scope->registerAt(index).get();
@@ -2992,7 +3005,9 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         int value = vPC[2].u.operand;
 
 #ifdef ARTEMIS
-        writeProperty(callFrame, scope->symbolTable(), index);
+        if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
+		readProperty(callFrame, scope->symbolTable(), index);
+	}
 #endif
 
         scope->registerAt(index).set(*globalData, scope, callFrame->r(value).jsValue());
@@ -3036,7 +3051,9 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         ASSERT(callFrame->r(dst).jsValue());
 
 #ifdef ARTEMIS
-        readProperty(callFrame, scope->symbolTable(), index);
+        if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
+		readProperty(callFrame, scope->symbolTable(), index);
+	}
 #endif
 
         vPC += OPCODE_LENGTH(op_get_scoped_var);
@@ -3077,7 +3094,9 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         scope->registerAt(index).set(*globalData, scope, callFrame->r(value).jsValue());
 
 #ifdef ARTEMIS
-        writeProperty(callFrame, scope->symbolTable(), index);
+        if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
+		readProperty(callFrame, scope->symbolTable(), index);
+	}
 #endif
 
         vPC += OPCODE_LENGTH(op_put_scoped_var);
@@ -3108,7 +3127,9 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         Identifier& ident = codeBlock->identifier(property);
 
 #ifdef ARTEMIS
-        readProperty(callFrame, ident.ascii().data());
+        if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
+		readProperty(callFrame, ident.ascii().data());
+	}
 #endif
 
         JSValue baseVal = callFrame->r(base).jsValue();
@@ -3169,7 +3190,9 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         Identifier& ident = codeBlock->identifier(property);
 
 #ifdef ARTEMIS
-        readProperty(callFrame, ident.ascii().data());
+        if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
+		readProperty(callFrame, ident.ascii().data());
+	}
 #endif
 
         JSValue baseValue = callFrame->r(base).jsValue();
@@ -3209,7 +3232,9 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
 
 #ifdef ARTEMIS
         int property = vPC[3].u.operand;
-        readProperty(callFrame, codeBlock->identifier(property).ascii().data());
+        if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
+		readProperty(callFrame, codeBlock->identifier(property).ascii().data());
+	}
 #endif
 
         if (LIKELY(baseValue.isCell())) {
@@ -3250,7 +3275,9 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
 
 #ifdef ARTEMIS
         int property = vPC[3].u.operand;
-        readProperty(callFrame, codeBlock->identifier(property).ascii().data());
+        if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
+		readProperty(callFrame, codeBlock->identifier(property).ascii().data());
+	}
 #endif
 
         if (LIKELY(baseValue.isCell())) {
@@ -3299,7 +3326,9 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
 
 #ifdef ARTEMIS
         int property = vPC[3].u.operand;
-        readProperty(callFrame, codeBlock->identifier(property).ascii().data());
+        if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
+		readProperty(callFrame, codeBlock->identifier(property).ascii().data());
+	}
 #endif
 
         if (LIKELY(baseValue.isCell())) {
@@ -3354,7 +3383,9 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
 
 #ifdef ARTEMIS
         int property = vPC[3].u.operand;
-        readProperty(callFrame, codeBlock->identifier(property).ascii().data());
+        if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
+		readProperty(callFrame, codeBlock->identifier(property).ascii().data());
+	}
 #endif
 
         if (LIKELY(baseValue.isCell())) {
@@ -3406,7 +3437,9 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
 
 #ifdef ARTEMIS
         int property = vPC[3].u.operand;
-        readProperty(callFrame, codeBlock->identifier(property).ascii().data());
+        if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
+		readProperty(callFrame, codeBlock->identifier(property).ascii().data());
+	}
 #endif
 
         if (LIKELY(baseValue.isCell())) {
@@ -3466,7 +3499,9 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
 
 #ifdef ARTEMIS
         int property = vPC[3].u.operand;
-        readProperty(callFrame, codeBlock->identifier(property).ascii().data());
+        if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
+		readProperty(callFrame, codeBlock->identifier(property).ascii().data());
+	}
 #endif
 
         if (LIKELY(baseValue.isCell())) {
@@ -3519,7 +3554,9 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
 
 #ifdef ARTEMIS
         int property = vPC[3].u.operand;
-        readProperty(callFrame, codeBlock->identifier(property).ascii().data());
+        if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
+		readProperty(callFrame, codeBlock->identifier(property).ascii().data());
+	}
 #endif
 
         if (LIKELY(baseValue.isCell())) {
@@ -3564,7 +3601,9 @@ skip_id_custom_self:
         Identifier& ident = codeBlock->identifier(property);
 
 #ifdef ARTEMIS
-        readProperty(callFrame, ident.ascii().data());
+        if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
+		readProperty(callFrame, ident.ascii().data());
+	}
 #endif
 
         JSValue baseValue = callFrame->r(base).jsValue();
@@ -3596,7 +3635,9 @@ skip_id_custom_self:
 
 #ifdef ARTEMIS
         int property = vPC[3].u.operand;
-        readProperty(callFrame, codeBlock->identifier(property).ascii().data());
+        if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
+		readProperty(callFrame, codeBlock->identifier(property).ascii().data());
+	}
 #endif
 
         if (LIKELY(baseValue.isCell())) {
@@ -3661,7 +3702,9 @@ skip_id_custom_self:
 
 #ifdef ARTEMIS
         int property = vPC[3].u.operand;
-        readProperty(callFrame, codeBlock->identifier(property).ascii().data());
+        if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
+		readProperty(callFrame, codeBlock->identifier(property).ascii().data());
+	}
 #endif
 
         if (LIKELY(baseValue.isCell())) {
@@ -3774,7 +3817,9 @@ skip_id_custom_self:
         Identifier& ident = codeBlock->identifier(property);
 
 #ifdef ARTEMIS
-        writeProperty(callFrame, ident.ascii().data());
+        if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
+		readProperty(callFrame, ident.ascii().data());
+	}
 #endif
 
         PutPropertySlot slot(codeBlock->isStrictMode());
@@ -3822,7 +3867,9 @@ skip_id_custom_self:
 
 #ifdef ARTEMIS
         int property = vPC[2].u.operand;
-        writeProperty(callFrame, codeBlock->identifier(property).ascii().data());
+        if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
+		readProperty(callFrame, codeBlock->identifier(property).ascii().data());
+	}
 #endif
 
         if (LIKELY(baseValue.isCell())) {
@@ -3884,7 +3931,9 @@ skip_id_custom_self:
 
 #ifdef ARTEMIS
         int property = vPC[2].u.operand;
-        writeProperty(callFrame, codeBlock->identifier(property).ascii().data());
+        if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
+		readProperty(callFrame, codeBlock->identifier(property).ascii().data());
+	}
 #endif
 
         if (LIKELY(baseValue.isCell())) {
@@ -3931,7 +3980,9 @@ skip_id_custom_self:
         Identifier& ident = codeBlock->identifier(property);
 
 #ifdef ARTEMIS
-        writeProperty(callFrame, ident.ascii().data());
+        if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
+		readProperty(callFrame, ident.ascii().data());
+	}
 #endif
 
         PutPropertySlot slot(codeBlock->isStrictMode());
@@ -3960,7 +4011,9 @@ skip_id_custom_self:
         Identifier& ident = codeBlock->identifier(property);
 
 #ifdef ARTEMIS
-        writeProperty(callFrame, ident.ascii().data());
+        if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
+		readProperty(callFrame, ident.ascii().data());
+	}
 #endif
 
         bool result = baseObj->methodTable()->deleteProperty(baseObj, callFrame, ident);
@@ -3987,7 +4040,9 @@ skip_id_custom_self:
         JSValue expectedSubscript = callFrame->r(expected).jsValue();
 
 #ifdef ARTEMIS
-        readProperty(callFrame, subscript.toString(callFrame).ascii().data());
+        if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
+		readProperty(callFrame, subscript.toString(callFrame).ascii().data());
+	}
 #endif
 
         int index = callFrame->r(i).i() - 1;
@@ -4058,7 +4113,9 @@ skip_id_custom_self:
         JSValue subscript = callFrame->r(property).jsValue();
 
 #ifdef ARTEMIS
-        readProperty(callFrame, subscript.toString(callFrame).ascii().data());
+        if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
+		readProperty(callFrame, subscript.toString(callFrame).ascii().data());
+	}
 #endif
 
         JSValue result;
@@ -4106,7 +4163,9 @@ skip_id_custom_self:
         JSValue subscript = callFrame->r(property).jsValue();
 
 #ifdef ARTEMIS
-        writeProperty(callFrame, subscript.toString(callFrame).ascii().data());
+        if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
+		readProperty(callFrame, subscript.toString(callFrame).ascii().data());
+	}
 #endif
 
         if (LIKELY(subscript.isUInt32())) {
@@ -4156,7 +4215,9 @@ skip_id_custom_self:
         JSValue subscript = callFrame->r(property).jsValue();
 
 #ifdef ARTEMIS
-        readProperty(callFrame, subscript.toString(callFrame).ascii().data());
+        if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
+		readProperty(callFrame, subscript.toString(callFrame).ascii().data());
+	}
 #endif
 
         bool result;

@@ -43,7 +43,8 @@ WebKitExecutor::WebKitExecutor(QObject* parent,
                                QMap<QString, QString> presetFields,
                                JQueryListener* jqueryListener,
                                AjaxRequestListener* ajaxListener,
-                               bool enableConstantStringInstrumentation) :
+                               bool enableConstantStringInstrumentation,
+                               bool enablePropertyAccessInstrumentation) :
     QObject(parent),
     mKeepOpen(false),  mNextOpCanceled(false)
 {
@@ -75,6 +76,10 @@ WebKitExecutor::WebKitExecutor(QObject* parent,
 
     if (enableConstantStringInstrumentation) {
         webkitListener->enableConstantStringInstrumentation();
+    }
+
+    if (enablePropertyAccessInstrumentation) {
+        webkitListener->enablePropertyAccessInstrumentation();
     }
 
     QObject::connect(webkitListener, SIGNAL(jqueryEventAdded(QString, QString, QString)),

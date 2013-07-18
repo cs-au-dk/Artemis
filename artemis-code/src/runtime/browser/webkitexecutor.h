@@ -53,7 +53,8 @@ public:
                    QMap<QString, QString> presetFields,
                    JQueryListener* jqueryListener,
                    AjaxRequestListener* ajaxListener,
-                   bool enableConstantStringInstrumentation);
+                   bool enableConstantStringInstrumentation,
+                   bool enablePropertyAccessInstrumentation);
     ~WebKitExecutor();
 
     void executeSequence(ExecutableConfigurationConstPtr conf);
