@@ -33,7 +33,7 @@
 #include <algorithm>
 #include <string.h>
 
-#include <wtf/Assertions.h>
+#include <JavaScriptCore/wtf/Assertions.h>
 
 namespace JSC {
 

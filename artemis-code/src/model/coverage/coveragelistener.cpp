@@ -152,11 +152,12 @@ void CoverageListener::slJavascriptFunctionCalled(QString functionName, size_t b
 
 }
 
-void CoverageListener::slJavascriptBytecodeExecuted(const QString& opcode, uint sourceOffset, QSource* source, const ByteCodeInfoStruct binfo)
+void CoverageListener::slJavascriptBytecodeExecuted(const ByteCodeInfoStruct binfo, uint sourceOffset, QSource* source)
 {
     /*if (mIgnoredUrls.contains(sourceUrl)) {
         return;
     }*/
+
     codeblockid_t codeBlockID = CodeBlockInfo::getId(sourceOffset, source->getUrl(), source->getStartLine());
     QSharedPointer<CodeBlockInfo> codeBlockInfo = mCodeBlocks.value(codeBlockID, QSharedPointer<CodeBlockInfo>(NULL));
 

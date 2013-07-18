@@ -171,6 +171,8 @@ qwk_1.0 {
         Symbolic::opGetType*;
         Symbolic::Type*;
 
+		JSC::opcodeNames;
+
     };
     local: *;
 };

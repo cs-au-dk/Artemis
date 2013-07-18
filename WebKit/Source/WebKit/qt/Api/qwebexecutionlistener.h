@@ -22,9 +22,11 @@
 
 #include "instrumentation/executionlistener.h"
 
+#include "../JavaScriptCore/wtf/ExportMacros.h"
 #include "../JavaScriptCore/instrumentation/jscexecutionlistener.h"
 #include "../JavaScriptCore/instrumentation/bytecodeinfo.h"
 #include "../JavaScriptCore/symbolic/expr.h"
+#include "../JavaScriptCore/bytecode/Opcode.h"
 
 #include "artemis/qsource.h"
 #include "artemis/qsourceregistry.h"
@@ -38,12 +40,17 @@ namespace JSC {
 
 struct ByteCodeInfoStruct
 {
+    JSC::OpcodeID opcodeId;
     unsigned int linenumber;
     unsigned int bytecodeOffset;
     int divot;
     int startOffset;
     int endOffset;
     bool isSymbolic;
+
+    QString getOpcodeName() const {
+        return QString::fromStdString(JSC::opcodeNames[opcodeId]);
+    }
 };
 
 Q_DECLARE_METATYPE(ByteCodeInfoStruct);
@@ -127,7 +134,7 @@ signals:
     void statementExecuted(uint linenumber, QSource* source);
     void sigJavascriptFunctionCalled(QString functionName, size_t bytecodeSize, uint functionLine, uint sourceOffset, QSource* source);
     void sigJavascriptFunctionReturned(QString functionName);
-    void sigJavascriptBytecodeExecuted(QString opcode, uint sourceOffset, QSource* source, const ByteCodeInfoStruct byteInfo);
+    void sigJavascriptBytecodeExecuted(const ByteCodeInfoStruct byteInfo, uint sourceOffset, QSource* source);
     void sigJavascriptBranchExecuted(bool jump, Symbolic::Expression* condition, uint sourceOffset, QSource* source, const ByteCodeInfoStruct byteInfo);
 
 };

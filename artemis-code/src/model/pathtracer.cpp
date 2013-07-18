@@ -14,10 +14,11 @@
  * limitations under the License.
  */
 
-#include "pathtracer.h"
 #include "util/loggingutil.h"
 #include "util/fileutil.h"
 #include "model/coverage/codeblockinfo.h"
+
+#include "pathtracer.h"
 
 namespace artemis
 {
@@ -79,11 +80,11 @@ void PathTracer::slJavascriptFunctionReturned(QString functionName)
     appendItem(FUNRET, displayedFunctionName(functionName), "");
 }
 
-void PathTracer::slJavascriptBytecodeExecuted(const QString& opcode, uint sourceOffset, QSource* source, const ByteCodeInfoStruct binfo )
+void PathTracer::slJavascriptBytecodeExecuted(const ByteCodeInfoStruct binfo, uint sourceOffset, QSource* source)
 {
     TraceItem item;
     item.type = BYTECODE;
-    item.name = opcode;
+    item.name = binfo.getOpcodeName();
     item.message = binfo.isSymbolic ? "Symbolic" : "";
     item.sourceUrl = source->getUrl();
     item.sourceOffset = sourceOffset;

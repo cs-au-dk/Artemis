@@ -323,20 +323,24 @@ void QWebExecutionListener::javascript_executed_statement(const JSC::DebuggerCal
                            m_sourceRegistry.get(sourceProvider));
 }
 
-void QWebExecutionListener::javascript_bytecode_executed(JSC::Interpreter* interpreter, JSC::CodeBlock* codeBlock, JSC::Instruction* instruction, const JSC::BytecodeInfo& info) {
+void QWebExecutionListener::javascript_bytecode_executed(JSC::Interpreter* interpreter,
+                                                         JSC::CodeBlock* codeBlock,
+                                                         JSC::Instruction* instruction,
+                                                         const JSC::BytecodeInfo& info) {
 
     uint bytecodeOffset = instruction - codeBlock->instructions().begin();
 
     ByteCodeInfoStruct binfo;
-    codeBlock->expressionRangeForBytecodeOffset(bytecodeOffset,binfo.divot,binfo.startOffset,binfo.endOffset);
+    binfo.opcodeId = interpreter->getOpcodeID(instruction->u.opcode);
     binfo.linenumber = codeBlock->lineNumberForBytecodeOffset(bytecodeOffset);
     binfo.isSymbolic = info.isSymbolic();
     binfo.bytecodeOffset = bytecodeOffset;
 
-    emit sigJavascriptBytecodeExecuted(tr(JSC::opcodeNames[interpreter->getOpcodeID(instruction->u.opcode)]),
+    codeBlock->expressionRangeForBytecodeOffset(bytecodeOffset, binfo.divot, binfo.startOffset, binfo.endOffset);
+
+    emit sigJavascriptBytecodeExecuted(binfo,
                                        codeBlock->sourceOffset(),
-                                       m_sourceRegistry.get(codeBlock->source()),
-                                       binfo);
+                                       m_sourceRegistry.get(codeBlock->source()));
 }
 
 void QWebExecutionListener::javascript_property_read(std::string propertyName, JSC::CallFrame* callFrame)
@@ -358,6 +362,8 @@ void QWebExecutionListener::javascript_property_written(std::string propertyName
 void QWebExecutionListener::javascript_branch_executed(bool jump, Symbolic::Expression* condition, JSC::ExecState* callFrame, const JSC::Instruction* instruction, const JSC::BytecodeInfo& info)
 {
     uint bytecodeOffset = instruction - callFrame->codeBlock()->instructions().begin();
+
+    // TODO we should set the opcodeID on binfo ... in fact we should add a constructor to ByteCodeInfoStruct
 
     ByteCodeInfoStruct binfo;
     binfo.linenumber = callFrame->codeBlock()->lineNumberForBytecodeOffset(bytecodeOffset);
