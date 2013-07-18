@@ -110,7 +110,9 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/concolic/executiontree/nodes/tracesymbolicbranch.h \
     src/concolic/executiontree/tracenodes.h \
     src/concolic/executiontree/tracemerger.h \
-    src/concolic/executiontree/tracedisplay.h
+    src/concolic/executiontree/tracedisplay.h \
+    src/runtime/demomode/imageviewer/imageviewerwidget.h \
+    src/runtime/demomode/imageviewer/imageviewerdialog.h
 
 SOURCES += src/runtime/input/ajaxinput.cpp \
     src/strategies/prioritizer/constantprioritizer.cpp \
@@ -197,6 +199,8 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/concolic/executiontree/nodes/traceconcretebranch.cpp \
     src/concolic/executiontree/nodes/tracesymbolicbranch.cpp \
     src/concolic/executiontree/tracemerger.cpp \
-    src/concolic/executiontree/tracedisplay.cpp
+    src/concolic/executiontree/tracedisplay.cpp \
+    src/runtime/demomode/imageviewer/imageviewerwidget.cpp \
+    src/runtime/demomode/imageviewer/imageviewerdialog.cpp
 
 QT += network

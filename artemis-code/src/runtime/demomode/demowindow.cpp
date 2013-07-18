@@ -591,18 +591,26 @@ void DemoModeMainWindow::slGenerateTraceGraph()
     TraceDisplay display;
     display.writeGraphFile(mPreviousTrace, graphFile);
 
-    pngFile = graphFile + ".png";
+    if(graphFile.endsWith(".gv")){
+        pngFile = graphFile;
+        pngFile.chop(3);
+        pngFile += ".png";
+    }else{
+        pngFile = graphFile + ".png";
+    }
 
     // Convert to PNG
     QString command = QString("dot -Tpng %1 -o %2").arg(graphFile).arg(pngFile);
-    Log::info((QString("DEMO: running command: ") + command).toStdString());
     QProcess process;
-    process.startDetached(command);
+    process.start(command);
 
     // Display the PNG.
-    // TODO: view the images in a more portable way!
     process.waitForFinished(); // Blocks until the png is generated.
-    process.startDetached("ristretto " + pngFile);
+
+    // TODO: what do we do if there was any problem?
+    ImageViewerDialog imageView(pngFile);
+    imageView.exec();
+
 
 }
 
