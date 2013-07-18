@@ -21,7 +21,7 @@ Step 2: Run the AIL proxy
  - Navigate (in a terminal) to the ``proxies`` folder
  - Run the command
  
-   > node ailproxy.js ../demo/globetrotter/fixtures/ail-descriptions/globetrotter.ail --server-only-mode ../demo/globetrotter/fixtures/static-files
+   > nodejs ailproxy.js ../demo/globetrotter/fixtures/ail-descriptions/globetrotter.ail --server-only-mode ../demo/globetrotter/fixtures/static-files
 
    Verify that the proxy is working by visiting the URL 
    ``http://localhost:8080/globetrotter/`` in your favorite browser. You should see 
