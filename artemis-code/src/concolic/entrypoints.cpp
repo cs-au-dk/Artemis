@@ -75,23 +75,23 @@ QList<EventHandlerDescriptor*> EntryPointDetector::detectAll(ExecutionResultPtr 
 
 void EntryPointDetector::printResultInfo(ExecutionResultPtr result)
 {
-    Log::info("CONCOLIC-INFO: Detecting entry points on page.");
+    Log::debug("CONCOLIC-INFO: Detecting entry points on page.");
 
     // Begin by just listing some relevant information from the execution result...
     QString eventNames;
     foreach(EventHandlerDescriptor* event , result->getEventHandlers()){
         eventNames.append(QString("%1 on %2, ").arg(event->name()).arg(event->domElement()->getTagName()));
     }
-    Log::info(QString("CONCOLIC-INFO: Event Handlers (%1): %2").arg(result->getEventHandlers().length()).arg(eventNames).toStdString());
+    Log::debug(QString("CONCOLIC-INFO: Event Handlers (%1): %2").arg(result->getEventHandlers().length()).arg(eventNames).toStdString());
 
     QString formNames;
     foreach(QSharedPointer<const FormField> field, result->getFormFields()){
         formNames.append(field->getDomElement()->getTagName());
         formNames.append(", ");
     }
-    Log::info(QString("CONCOLIC-INFO: Form Fileds (%1): %2").arg(result->getFormFields().size()).arg(formNames).toStdString());
+    Log::debug(QString("CONCOLIC-INFO: Form Fileds (%1): %2").arg(result->getFormFields().size()).arg(formNames).toStdString());
 
-    Log::info(QString("CONCOLIC-INFO: Is DOM Modified: %1").arg(result->isDomModified() ? "Yes" : "No").toStdString());
+    Log::debug(QString("CONCOLIC-INFO: Is DOM Modified: %1").arg(result->isDomModified() ? "Yes" : "No").toStdString());
 
 }
 
