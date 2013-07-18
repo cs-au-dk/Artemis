@@ -1,4 +1,7 @@
-install-ail: install-yajl remove-yajl-folder install-node-gyp build-ail-module  
+install-ail: fetch-apt install-yajl remove-yajl-folder install-node-gyp build-ail-module  
+
+fetch-apt:
+	sudo apt-get install nodejs npm
 
 get-yajl: remove-yajl-folder
 	git clone git://github.com/lloyd/yajl yajl 
