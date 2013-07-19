@@ -1,0 +1,7 @@
+{
+    "headers": "{\"server\":\"Apache\",\"last-modified\":\"Tue, 18 Oct 2011 15:04:37 GMT\",\"content-type\":\"text/xml\",\"content-encoding\":\"gzip\",\"content-length\":\"11290\",\"cache-control\":\"max-age=40\",\"expires\":\"Tue, 18 Oct 2011 15:06:39 GMT\",\"date\":\"Tue, 18 Oct 2011 15:05:59 GMT\",\"connection\":\"close\",\"vary\":\"Accept-Encoding\"}", 
+    "httpVersion": "1.1", 
+    "method": null, 
+    "statusCode": 200, 
+    "url": ""
+}

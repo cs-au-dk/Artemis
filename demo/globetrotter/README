@@ -1,0 +1,41 @@
+
+The Globetrotter Demo
+=====================
+
+This demo illustrates a simple application that can be tested through Artemis and 
+Artemis' support for AIL descriptions.
+
+The tested application, Globetrotter, is a travel application system used internally
+by the Department of Computer Science at Aarhus University. In the ``fixtures`` folder
+you will find an AIL description[1] detailing Globetrotter's client-server 
+communication and any static HTML and JavaScript files used by Globetrotter.
+
+Two tools are required to test this Globetrotter, an AIL proxy and Artemis itself.
+Follow these three steps:
+
+Step 1: Compile prerequisites
+ - Compile the AIL proxy (See the README file in the ``proxies`` folder)
+ - Compile Artemis (see the INSTALL file in root of the repository)
+
+Step 2: Run the AIL proxy
+ - Navigate (in a terminal) to the ``proxies`` folder
+ - Run the command
+ 
+   > node ailproxy.js ../demo/globetrotter/fixtures/ail-descriptions/globetrotter.ail --server-only-mode ../demo/globetrotter/fixtures/static-files
+
+   Verify that the proxy is working by visiting the URL 
+   ``http://localhost:8080/globetrotter/`` in your favorite browser. You should see 
+   the Globetrotter application.
+
+Step 3: Run Artemis
+ - In another terminal, run the following command
+
+   > artemis -t localhost:8080 -i 10 http://local.tld/globetrotter/
+
+   Notice, use local.tld and not localhost (see issue [2])
+
+
+
+
+[1] Server Interface Descriptions for Automated Testing of JavaScript Web Applications, Casper S. Jensen, Anders Møller and Zhendong Su. ESEC/FSE 2013
+[2] https://github.com/cs-au-dk/Artemis/issues/46

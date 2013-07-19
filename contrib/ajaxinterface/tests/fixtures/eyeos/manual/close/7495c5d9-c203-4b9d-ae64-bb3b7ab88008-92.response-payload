@@ -1,0 +1,24 @@
+{
+    "__eyeos_specialControlMessage_body": {
+        "data": "null", 
+        "messages": [
+            {
+                "eventData": {
+                    "args": {}, 
+                    "checknum": 194111012, 
+                    "loginContext": {
+                        "group": "users", 
+                        "user": "username"
+                    }, 
+                    "name": "calculator", 
+                    "pid": 2169, 
+                    "time": 1318409268
+                }, 
+                "eventName": "stop", 
+                "type": "application"
+            }
+        ]
+    }, 
+    "__eyeos_specialControlMessage_header": "__control_enhancedData", 
+    "__eyeos_specialControlMessage_options": null
+}

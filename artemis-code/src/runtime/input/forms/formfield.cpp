@@ -88,7 +88,6 @@ FormFieldTypes getTypeFromAttr(QString typeAttr)
 
     if (typeAttr == "password"
         || typeAttr == "text"
-        || typeAttr == "textbox" //YAHOO FIX
         || typeAttr == "email" //HTML5
         || typeAttr == "file"
         || typeAttr == "search" //HTML5
@@ -106,7 +105,7 @@ FormFieldTypes getTypeFromAttr(QString typeAttr)
             )
         { return TEXT; }
 
-    qDebug() << "Unknown type attribute on form element: %s"<< typeAttr;
-    assert(false);
+    qWarning() << "WARN: Unknown type attribute on form element: " << typeAttr;
+    return TEXT;
 }
 }

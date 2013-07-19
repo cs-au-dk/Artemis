@@ -1,0 +1,20 @@
+
+function netsync_application(checknum, pid, args) {
+    //new eyeos.application.NetSync(checknum, pid);
+    var netSync = eyeos.netSync.NetSync.getInstance();
+    netSync.init(checknum);
+    netSync.subscribe('pressence');
+    netSync.subscribe('@userchannel');
+    netSync.listen();
+}
+
+function netsync_application(checknum, pid, args) {
+    //new eyeos.application.NetSync(checknum, pid);
+    var netSync = eyeos.netSync.NetSync.getInstance();
+    netSync.init(checknum);
+    netSync.subscribe('pressence');
+    netSync.subscribe('@userchannel');
+    netSync.listen();
+}
+
+netsync_application(234962473, 5737, []);eyeos._callbackProxyWithContent(null, null, null, {"__eyeos_specialControlMessage_header":"__control_enhancedData","__eyeos_specialControlMessage_body":{"messages":[{"type":"application","eventName":"start","eventData":{"name":"netsync","pid":5737,"loginContext":{"user":"username","group":"users"},"checknum":234962473,"time":1318409257,"args":{}}}],"data":"\nfunction netsync_application(checknum, pid, args) {\n    \/\/new eyeos.application.NetSync(checknum, pid);\n    var netSync = eyeos.netSync.NetSync.getInstance();\n    netSync.init(checknum);\n    netSync.subscribe('pressence');\n    netSync.subscribe('@userchannel');\n    netSync.listen();\n}\n\nfunction netsync_application(checknum, pid, args) {\n    \/\/new eyeos.application.NetSync(checknum, pid);\n    var netSync = eyeos.netSync.NetSync.getInstance();\n    netSync.init(checknum);\n    netSync.subscribe('pressence');\n    netSync.subscribe('@userchannel');\n    netSync.listen();\n}\n\nnetsync_application(234962473, 5737, []);"},"__eyeos_specialControlMessage_options":null});

@@ -1,0 +1,7 @@
+{
+    "headers": "{\"content-type\":\"application/vnd.google.safebrowsing-update\",\"x-content-type-options\":\"nosniff\",\"date\":\"Tue, 18 Oct 2011 14:55:07 GMT\",\"server\":\"Chunked Update Server\",\"content-length\":\"886\",\"x-xss-protection\":\"1; mode=block\",\"x-frame-options\":\"SAMEORIGIN\"}", 
+    "httpVersion": "1.1", 
+    "method": null, 
+    "statusCode": 200, 
+    "url": ""
+}

@@ -18,6 +18,7 @@
 
 #include <iostream>
 #include <cstdlib>
+#include <QDebug>
 
 #include "jscexecutionlistener.h"
 
@@ -31,29 +32,29 @@ JSCExecutionListener::JSCExecutionListener() :
 }
 
 void JSCExecutionListener::javascript_eval_call(const char* eval_string) {
-    cerr << "Warning: Default listener for javascript_eval_call was invoked, args: " << eval_string << endl;
+    qWarning()  << "Warning: Default listener for javascript_eval_call was invoked, args: " << eval_string << endl;
     //exit(1);
 }
 
 void JSCExecutionListener::javascript_bytecode_executed(JSC::Interpreter*, JSC::CodeBlock*, JSC::Instruction*, const JSC::BytecodeInfo&) {
-    cerr << "Warning: Default listener for javascript_bytecode_executed was invoked " << endl;
+    qWarning()  << "Warning: Default listener for javascript_bytecode_executed was invoked " << endl;
     //exit(1);
 }
 
 void JSCExecutionListener::javascriptConstantStringEncountered(std::string) {
-    cerr << "Warning: Default listener for javascript_constant_encountered was invoked " << endl;
+    qWarning()  << "Warning: Default listener for javascript_constant_encountered was invoked " << endl;
     //exit(1);
 }
 
 void JSCExecutionListener::javascript_property_read(std::string, JSC::ExecState*)
 {
-    cerr << "Warning: Default listener for javascript_property_read was invoked " << endl;
+    qWarning()  << "Warning: Default listener for javascript_property_read was invoked " << endl;
     //exit(1);
 }
 
 void JSCExecutionListener::javascript_property_written(std::string, JSC::ExecState*)
 {
-    cerr << "Warning: Default listener for javascript_property_written was invoked " << endl;
+    qWarning()  << "Warning: Default listener for javascript_property_written was invoked " << endl;
     //exit(1);
 }
 

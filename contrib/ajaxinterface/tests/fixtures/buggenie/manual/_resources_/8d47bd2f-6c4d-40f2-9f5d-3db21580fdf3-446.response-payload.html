@@ -1,0 +1,1376 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"
+   "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>The Bug Genie ~ "Sample project 1" roadmap</title>
+				<meta name="description" content="The bug genie, friendly issue tracking">
+		<meta name="keywords" content="thebuggenie friendly issue tracking">
+		<meta name="author" content="thebuggenie.com">
+		<meta http-equiv="Content-Type" content="text/html charset=utf-8">
+					<link rel="shortcut icon" href="/buggenie/thebuggenie/themes/oxygen/favicon.png">
+				<link rel="shortcut icon" href="/buggenie/thebuggenie/themes/oxygen/favicon.png">
+		<link title="Sample project 1 search" href="/buggenie/thebuggenie/sampleproject1/opensearch.xml" type="application/opensearchdescription+xml" rel="search">
+																										<script type="text/javascript" src="http://code.jquery.com/jquery-1.5.2.min.js"></script>
+		<script type="text/javascript">jQuery.noConflict();</script>
+		<link rel="stylesheet" type="text/css" href="/buggenie/thebuggenie/serve&g=css&files=Y3NzL294eWdlbi5jc3MsY3NzL294eWdlbl9wdWJsaXNoLmNzcw==">
+		<script type="text/javascript" src="/buggenie/thebuggenie/serve&g=js&files=anMvY29uZmlnL3Byb2plY3RzX2FqYXguanMsanMvcHJvdG90eXBlLmpzLGpzL2J1aWxkZXIuanMsanMvZWZmZWN0cy5qcyxqcy9kcmFnZHJvcC5qcyxqcy9jb250cm9scy5qcyxqcy9qcXVlcnkubWFya2l0dXAuanMsanMvdGhlYnVnZ2VuaWUuanM="></script>
+		<script type="text/javascript">
+			jQuery(document).ready(function(){jQuery('textarea').markItUp({
+				previewParserPath:	'', // path to your Wiki parser
+				onShiftEnter:		{keepDefault:false, replaceWith:'\n\n'},
+				markupSet: [
+					{name:'Heading 1', key:'1', openWith:'== ', closeWith:' ==', placeHolder:'Your title here...' },
+					{name:'Heading 2', key:'2', openWith:'=== ', closeWith:' ===', placeHolder:'Your title here...' },
+					{name:'Heading 3', key:'3', openWith:'==== ', closeWith:' ====', placeHolder:'Your title here...' },
+					{name:'Heading 4', key:'4', openWith:'===== ', closeWith:' =====', placeHolder:'Your title here...' },
+					{name:'Heading 5', key:'5', openWith:'====== ', closeWith:' ======', placeHolder:'Your title here...' },
+					{separator:'---------------' },		
+					{name:'Bold', key:'B', openWith:"'''", closeWith:"'''"}, 
+					{name:'Italic', key:'I', openWith:"''", closeWith:"''"}, 
+					{name:'Stroke through', key:'S', openWith:'<s>', closeWith:'</s>'}, 
+					{separator:'---------------' },
+					{name:'Bulleted list', openWith:'(!(* |!|*)!)'}, 
+					{name:'Numeric list', openWith:'(!(# |!|#)!)'}, 
+					{separator:'---------------' },
+					{name:'Picture', key:"P", replaceWith:'[[Image:[![Url:!:http://]!]|[![name]!]]]'}, 
+					{name:'Link', key:"L", openWith:"[[![Link]!] ", closeWith:']', placeHolder:'Your text to link here...' },
+					{name:'Url', openWith:"[[![Url:!:http://]!] ", closeWith:']', placeHolder:'Your text to link here...' },
+					{separator:'---------------' },
+					{name:'Quotes', openWith:'(!(> |!|>)!)', placeHolder:''},
+					{name:'Code', openWith:'(!(<source lang="[![Language:!:php]!]">|!|<pre>)!)', closeWith:'(!(</source>|!|</pre>)!)'}
+				]
+			});});
+		</script>
+		<style type="text/css">
+			/* -------------------------------------------------------------------
+			// markItUp! Universal MarkUp Engine, JQuery plugin
+			// By Jay Salvat - http://markitup.jaysalvat.com/
+			// ------------------------------------------------------------------*/
+			.markItUp .markItUpButton1 a {
+				background-image:url(http://10.11.103.178/buggenie/thebuggenie/themes/oxygen/markitup/h1.png); 
+			}
+			.markItUp .markItUpButton2 a {
+				background-image:url(http://10.11.103.178/buggenie/thebuggenie/themes/oxygen/markitup/h2.png); 
+			}
+			.markItUp .markItUpButton3 a {
+				background-image:url(http://10.11.103.178/buggenie/thebuggenie/themes/oxygen/markitup/h3.png); 
+			}
+			.markItUp .markItUpButton4 a {
+				background-image:url(http://10.11.103.178/buggenie/thebuggenie/themes/oxygen/markitup/h4.png); 
+			}
+			.markItUp .markItUpButton5 a {
+				background-image:url(http://10.11.103.178/buggenie/thebuggenie/themes/oxygen/markitup/h5.png); 
+			}
+
+			.markItUp .markItUpButton6 a {
+				background-image:url(http://10.11.103.178/buggenie/thebuggenie/themes/oxygen/markitup/bold.png);
+			}
+			.markItUp .markItUpButton7 a {
+				background-image:url(http://10.11.103.178/buggenie/thebuggenie/themes/oxygen/markitup/italic.png);
+			}
+			.markItUp .markItUpButton8 a {
+				background-image:url(http://10.11.103.178/buggenie/thebuggenie/themes/oxygen/markitup/stroke.png);
+			}
+
+			.markItUp .markItUpButton9 a {
+				background-image:url(http://10.11.103.178/buggenie/thebuggenie/themes/oxygen/markitup/list-bullet.png);
+			}
+			.markItUp .markItUpButton10 a {
+				background-image:url(http://10.11.103.178/buggenie/thebuggenie/themes/oxygen/markitup/list-numeric.png);
+			}
+
+			.markItUp .markItUpButton11 a {
+				background-image:url(http://10.11.103.178/buggenie/thebuggenie/themes/oxygen/markitup/picture.png); 
+			}
+			.markItUp .markItUpButton12 a {
+				background-image:url(http://10.11.103.178/buggenie/thebuggenie/themes/oxygen/markitup/link.png);
+			}
+			.markItUp .markItUpButton13 a {
+				background-image:url(http://10.11.103.178/buggenie/thebuggenie/themes/oxygen/markitup/url.png);
+			}
+
+			.markItUp .markItUpButton14 a	{
+				background-image:url(http://10.11.103.178/buggenie/thebuggenie/themes/oxygen/markitup/quotes.png);
+			}
+			.markItUp .markItUpButton15 a	{
+				background-image:url(http://10.11.103.178/buggenie/thebuggenie/themes/oxygen/markitup/code.png);
+			}
+
+			.markItUp .preview a {
+				background-image:url(http://10.11.103.178/buggenie/thebuggenie/themes/oxygen/markitup/preview.png);
+			}
+			.markItUp * {
+				margin:0px; padding:0px;
+				outline:none;
+			}
+			.markItUp a:link,
+			.markItUp a:visited {
+				color:#000;
+				text-decoration:none;
+			}
+			.markItUp  {
+/*				width:700px;*/
+				margin:5px 0 5px 0;
+			}
+			.markItUpContainer  {
+				font:11px 'Droid Sans', sans-serif;
+			}
+			.markItUpEditor {
+				font:12px 'Droid Sans Mono', monospace;
+				padding:5px;
+				width:690px;
+				height:320px;
+				clear:both;
+				line-height:18px;
+				overflow:auto;
+			}
+			.markItUpPreviewFrame	{
+				overflow:auto;
+				background-color:#FFF;
+				width:99.9%;
+				height:300px;
+				margin:5px 0;
+			}
+			.markItUpFooter {
+				width:100%;
+			}
+			.markItUpResizeHandle {
+				overflow:hidden;
+				width:22px; height:5px;
+				margin-left:auto;
+				margin-right:auto;
+				background-image:url(http://10.11.103.178/buggenie/thebuggenie/themes/oxygen/markitup/handle.png);
+				cursor:n-resize;
+			}
+			/***************************************************************************************/
+			/* first row of buttons */
+			.markItUpHeader ul li	{
+				list-style:none;
+				float:left;
+				position:relative;
+			}
+			.markItUpHeader ul li:hover > ul{
+				display:block;
+			}
+			.markItUpHeader ul .markItUpDropMenu {
+				background:transparent url(http://10.11.103.178/buggenie/thebuggenie/themes/oxygen/markitup/menu.png) no-repeat 115% 50%;
+				margin-right:5px;
+			}
+			.markItUpHeader ul .markItUpDropMenu li {
+				margin-right:0px;
+			}
+			/* next rows of buttons */
+			.markItUpHeader ul ul {
+				display:none;
+				position:absolute;
+				top:18px; left:0px;	
+				background:#FFF;
+				border:1px solid #000;
+			}
+			.markItUpHeader ul ul li {
+				float:none;
+				border-bottom:1px solid #000;
+			}
+			.markItUpHeader ul ul .markItUpDropMenu {
+				background:#FFF url(http://10.11.103.178/buggenie/thebuggenie/themes/oxygen/markitup/submenu.png) no-repeat 100% 50%;
+			}
+			.markItUpHeader ul .markItUpSeparator {
+				margin:0 10px;
+				width:1px;
+				height:16px;
+				overflow:hidden;
+				background-color:#CCC;
+			}
+			.markItUpHeader ul ul .markItUpSeparator {
+				width:auto; height:1px;
+				margin:0px;
+			}
+			/* next rows of buttons */
+			.markItUpHeader ul ul ul {
+				position:absolute;
+				top:-1px; left:150px; 
+			}
+			.markItUpHeader ul ul ul li {
+				float:none;
+			}
+			.markItUpHeader ul a {
+				display:block;
+				width:16px; height:16px;
+				text-indent:-10000px;
+				background-repeat:no-repeat;
+				padding:3px;
+				margin:0px;
+			}
+			.markItUpHeader ul ul a {
+				display:block;
+				padding-left:0px;
+				text-indent:0;
+				width:120px; 
+				padding:5px 5px 5px 25px;
+				background-position:2px 50%;
+			}
+			.markItUpHeader ul ul a:hover  {
+				color:#FFF;
+				background-color:#000;
+			}
+			.markItUpHeader a:hover  {
+				border-bottom: none;
+			}			
+		</style>
+			</head>
+	<body>
+		<div class="medium_transparent rounded_box shadowed popup_message failure" onclick="clearPopupMessages();" style="display: none;" id="thebuggenie_failuremessage">
+			<div style="padding: 10px 0 10px 0;">
+				<div class="dismiss_me">Click this message to dismiss it</div>
+				<span style="color: #000; font-weight: bold;" id="thebuggenie_failuremessage_title"></span><br>
+				<span id="thebuggenie_failuremessage_content"></span>
+			</div>
+		</div>
+		<div class="medium_transparent rounded_box shadowed popup_message success" onclick="clearPopupMessages();" style="display: none;" id="thebuggenie_successMessage">
+			<div style="padding: 10px 0 10px 0;">
+				<div class="dismiss_me">Click this message to dismiss it</div>
+				<span style="color: #000; font-weight: bold;" id="thebuggenie_successMessage_title"></span><br>
+				<span id="thebuggenie_successMessage_content"></span>
+			</div>
+		</div>
+		<div id="fullpage_backdrop" style="display: none; background-color: transparent; z-index: 1; width: 100%; height: 100%; position: fixed; top: 0; left: 0; margin: 0; padding: 0; text-align: center;">
+			<div style="position: absolute; top: 45%; left: 40%; z-index: 100001; color: #FFF; font-size: 15px; font-weight: bold;" id="fullpage_backdrop_indicator">
+				<img src="/buggenie/thebuggenie/themes/oxygen/spinning_32.gif" alt="spinning_32.gif"><br>
+				Please wait, loading content...
+			</div>
+			<div id="fullpage_backdrop_content"> </div>
+			<div style="background-color: #000; width: 100%; height: 100%; position: absolute; top: 0; left: 0; margin: 0; padding: 0; z-index: 100000;" class="semi_transparent" onclick="resetFadedBackdrop();"> </div>
+		</div>
+		<table style="width: 100%; height: 100%; table-layout: fixed; min-width: 1020px;" cellpadding=0 cellspacing=0>
+			<tr>
+				<td style="height: auto; overflow: hidden;" valign="top" id="maintd">
+					<table class="main_header" cellpadding=0 cellspacing=0 width="100%" style="table-layout: fixed;">
+						<tr>
+							<td align="left" valign="middle" id="logo_td">
+																									<a class="logo" href="/buggenie/thebuggenie/"><img alt="[logo]" title="[logo]" src="/buggenie/thebuggenie/themes/oxygen/logo_24.png"></a>
+																<div class="logo_large">The Bug Genie</div>
+								<div class="logo_small"><b>Friendly</b> issue tracking and project management</div>
+							</td>
+							<td style="width: auto;">
+								<div class="tab_menu header_menu project_context">
+									<ul>
+																					<li class="selected">
+												<div>
+													<a href="/buggenie/thebuggenie/sampleproject1"><img src="/buggenie/thebuggenie/themes/oxygen/icon_dashboard_small.png" alt="icon_dashboard_small.png">Summary</a>													<a onmouseover="" href="javascript:void(0);"><img class="menu_dropdown" src="/buggenie/thebuggenie/themes/oxygen/tabmenu_dropdown.png" alt="tabmenu_dropdown.png"></a>												</div>
+												<div id="project_information_menu" class="tab_menu_dropdown shadowed">
+														<a class="first" href="/buggenie/thebuggenie/sampleproject1">Dashboard</a>		<a id="sidebar_link_scrum" href="/buggenie/thebuggenie/sampleproject1/scrum">Sprint planning</a>			<a class="selected" href="/buggenie/thebuggenie/sampleproject1/roadmap">Roadmap</a>		<a href="/buggenie/thebuggenie/sampleproject1/team">Team overview</a>		<a href="/buggenie/thebuggenie/sampleproject1/statistics">Statistics</a>			<a class="last" href="/buggenie/thebuggenie/sampleproject1/timeline">Timeline</a>													</div>
+											</li>
+																																									<li>
+												<div>
+													<a href="/buggenie/thebuggenie/sampleproject1/issues/new"><img src="/buggenie/thebuggenie/themes/oxygen/tab_reportissue.png" alt="tab_reportissue.png">Report an issue</a>													<a onmouseover="" href="javascript:void(0);"><img class="menu_dropdown" src="/buggenie/thebuggenie/themes/oxygen/tabmenu_dropdown.png" alt="tabmenu_dropdown.png"></a>													</div>
+													<div id="project_issue_menu" class="tab_menu_dropdown shadowed">
+																											<a href="/buggenie/thebuggenie/sampleproject1/issues/new/bugreport"><img src="/buggenie/thebuggenie/themes/oxygen/bug_report_tiny.png" alt="bug_report_tiny.png">Bug report</a>																											<a href="/buggenie/thebuggenie/sampleproject1/issues/new/featurerequest"><img src="/buggenie/thebuggenie/themes/oxygen/feature_request_tiny.png" alt="feature_request_tiny.png">Feature request</a>																											<a href="/buggenie/thebuggenie/sampleproject1/issues/new/enhancement"><img src="/buggenie/thebuggenie/themes/oxygen/enhancement_tiny.png" alt="enhancement_tiny.png">Enhancement</a>																									</div>											
+											</li>
+																															<li>
+												<div>
+													<a href="/buggenie/thebuggenie/sampleproject1/issues/find"><img src="/buggenie/thebuggenie/themes/oxygen/tab_search.png" alt="tab_search.png">Issues</a>																											<a onmouseover="" href="javascript:void(0);"><img class="menu_dropdown" src="/buggenie/thebuggenie/themes/oxygen/tabmenu_dropdown.png" alt="tabmenu_dropdown.png"></a>																									</div>
+																									<div id="issues_menu" class="tab_menu_dropdown shadowed">
+														<a href="/buggenie/thebuggenie/sampleproject1/issues/open"><img src="/buggenie/thebuggenie/themes/oxygen/icon_savedsearch.png" alt="icon_savedsearch.png">Open issues for this project</a>														<a href="/buggenie/thebuggenie/sampleproject1/issues/closed"><img src="/buggenie/thebuggenie/themes/oxygen/icon_savedsearch.png" alt="icon_savedsearch.png">Closed issues for this project</a>														<a href="/buggenie/thebuggenie/sampleproject1/issues/todo"><img src="/buggenie/thebuggenie/themes/oxygen/icon_savedsearch.png" alt="icon_savedsearch.png">Milestone todo-list for this project</a>														<a href="/buggenie/thebuggenie/sampleproject1/issues/mostvoted"><img src="/buggenie/thebuggenie/themes/oxygen/icon_savedsearch.png" alt="icon_savedsearch.png">Most voted for issues</a>													</div>
+																							</li>
+																																								<li>
+	<div>
+		<a href="/buggenie/thebuggenie/wiki/Sampleproject1%3AMainPage"><img src="/buggenie/thebuggenie/themes/modules/publish/oxygen/tab_publish.png" alt="tab_publish.png">Project wiki</a>					<a href="javascript:void(0);"><img class="menu_dropdown" src="/buggenie/thebuggenie/themes/oxygen/tabmenu_dropdown.png" alt="tabmenu_dropdown.png"></a>			</div>
+			<div id="wiki_dropdown_menu" class="tab_menu_dropdown shadowed">
+							<div class="header">Currently selected project</div>
+				<a href="/buggenie/thebuggenie/wiki/Sampleproject1%3AMainPage">Project wiki frontpage</a>								<div style="font-weight: normal; margin: 0 0 15px 5px;">
+					<form action="/buggenie/thebuggenie/wiki/sampleproject1/find" method="get" accept-charset="utf-8">
+						<input type="text" name="articlename" value="Find project article (press enter to search)" style="width: 230px; font-size: 0.9em;" onblur="if ($(this).getValue() == '') { $(this).value = 'Find project article (press enter to search)'; $(this).addClassName('faded_out'); }" onfocus="if ($(this).getValue() == 'Find project article (press enter to search)') { $(this).clear(); } $(this).removeClassName('faded_out');" class="faded_out">
+					</form>
+				</div>
+						<div class="header">Global content</div>
+			<a href="/buggenie/thebuggenie/wiki">Wiki</a>						<div style="font-weight: normal; margin: 0 0 15px 5px;">
+				<form action="/buggenie/thebuggenie/wiki/find" method="get" accept-charset="utf-8">
+					<input type="text" name="articlename" value="Find any article (press enter to search)" style="width: 230px; font-size: 0.9em;" onblur="if ($(this).getValue() == '') { $(this).value = 'Find any article (press enter to search)'; $(this).addClassName('faded_out'); }" onfocus="if ($(this).getValue() == 'Find any article (press enter to search)') { $(this).clear(); } $(this).removeClassName('faded_out');" class="faded_out">
+				</form>
+			</div>
+							<div class="header">Project wikis</div>
+																			<a href="/buggenie/thebuggenie/wiki/Sampleproject2%3AMainPage">Sample project 2</a>									</div>
+	</li>									</ul>
+																		<div class="rounded_box blue tab_menu_container" id="header_userinfo">
+										<table style="width: auto;" cellpadding="0" cellspacing="0">
+											<tr>
+												<td style="width: 30px; padding-top: 4px;" valign="middle">
+													<img alt="[avatar]" src="http://www.gravatar.com/avatar/d41d8cd98f00b204e9800998ecf8427e.png?d=wavatar&amp;s=22">												</td>
+												<td id="header_username" valign="middle">
+																																									<a href="/buggenie/thebuggenie/dashboard">Administrator</a>																									</td>
+												<td class="header_userlinks">
+													<div class="dropdown_separator">
+														<a onmouseover="" href="javascript:void(0);"><img class="menu_dropdown" src="/buggenie/thebuggenie/themes/oxygen/tabmenu_dropdown.png" alt="tabmenu_dropdown.png"></a>													</div>
+												</td>
+											</tr>
+										</table>
+										<div class="rounded_box blue tab_menu_dropdown user_menu_dropdown shadowed">
+																							<div class="header">You are: <span class="userstate">Available</span></div>
+												<a href="/buggenie/thebuggenie/dashboard"><img src="/buggenie/thebuggenie/themes/oxygen/icon_dashboard_small.png" alt="icon_dashboard_small.png">Your dashboard</a>	
+												<a href="/buggenie/thebuggenie/account"><img src="/buggenie/thebuggenie/themes/oxygen/icon_account.png" alt="icon_account.png">Your account</a>																									<a href="/buggenie/thebuggenie/configure"><img src="/buggenie/thebuggenie/themes/oxygen/tab_config.png" alt="tab_config.png">Configure The Bug Genie</a>																								<a href="/buggenie/thebuggenie/wiki/Category%3AHelp"><img src="/buggenie/thebuggenie/themes/oxygen/help.png" alt="help.png">Help</a>												<a href="/buggenie/thebuggenie/logout"><img src="/buggenie/thebuggenie/themes/oxygen/logout.png" alt="logout.png">Logout</a>												<div class="header">Your issues</div>
+												<a href="/buggenie/thebuggenie/issues/my"><img src="/buggenie/thebuggenie/themes/oxygen/icon_savedsearch.png" alt="icon_savedsearch.png">Issues reported by me</a>												<a href="/buggenie/thebuggenie/issues/my/assigned"><img src="/buggenie/thebuggenie/themes/oxygen/icon_savedsearch.png" alt="icon_savedsearch.png">Open issues assigned to me</a>												<a href="/buggenie/thebuggenie/issues/my/assigned/teams"><img src="/buggenie/thebuggenie/themes/oxygen/icon_savedsearch.png" alt="icon_savedsearch.png">Open issues assigned to my teams</a>																																	</div>
+									</div>
+																	</div>
+							</td>
+						</tr>
+					</table>
+					<div class="submenu_strip project_context">
+	<div class="project_stuff">
+		<ul>
+														<li class="breadcrumb">
+										<div>
+																			<a style="float: left;" class="" href="/buggenie/thebuggenie/">The Bug Genie</a>																			<a onclick="$(this).up('li').next().toggleClassName('popped_out');$(this).toggleClassName('activated');" title="Click to expand" href="javascript:void(0);"><img class="dropdown_activator clickable" src="/buggenie/thebuggenie/themes/oxygen/tabmenu_dropdown_popout.png" alt="tabmenu_dropdown_popout.png"></a>											</div>
+				</li>
+											<li class="breadcrumb">
+											<div class="popoutmenu">
+																															<a href="/buggenie/thebuggenie/sampleproject1" class="selected rounded_list_first_item">Sample project 1</a>
+																																									<a href="/buggenie/thebuggenie/sampleproject2">Sample project 2</a>
+																														</div>
+										<div>
+																			<a style="float: left;" class="selected_project" href="/buggenie/thebuggenie/sampleproject1">Sample project 1</a>																			<a onclick="$(this).up('li').next().toggleClassName('popped_out');$(this).toggleClassName('activated');" title="Click to expand" href="javascript:void(0);"><img class="dropdown_activator clickable" src="/buggenie/thebuggenie/themes/oxygen/tabmenu_dropdown_popout.png" alt="tabmenu_dropdown_popout.png"></a>											</div>
+				</li>
+											<li class="breadcrumb">
+											<div class="popoutmenu">
+																															<a href="/buggenie/thebuggenie/sampleproject1">Dashboard</a>
+																																									<a href="/buggenie/thebuggenie/sampleproject1/scrum">Sprint planning</a>
+																																									<a href="/buggenie/thebuggenie/sampleproject1/roadmap" class="selected">Roadmap</a>
+																																									<a href="/buggenie/thebuggenie/sampleproject1/team">Team overview</a>
+																																									<a href="/buggenie/thebuggenie/sampleproject1/statistics">Statistics</a>
+																																									<a href="/buggenie/thebuggenie/sampleproject1/timeline">Timeline</a>
+																																									<a href="/buggenie/thebuggenie/sampleproject1/issues/new">Report an issue</a>
+																																									<a href="/buggenie/thebuggenie/sampleproject1/issues/find">Issues</a>
+																																									<a href="/buggenie/thebuggenie/wiki/sampleproject1%3AMainPage">Project wiki</a>
+																														</div>
+										<div>
+																			<span  style="float: left;">Roadmap</span>
+																	</div>
+				</li>
+					</ul>
+	</div>
+			<form accept-charset="utf-8" action="/buggenie/thebuggenie/issues/project_key/sampleproject1" method="get" name="quicksearchform" style="float: right;">
+			<div style="width: auto; padding: 0; text-align: right; position: relative;">
+								<input type="hidden" name="filters[text][operator]" value="=">
+				<img id="quicksearch_indicator" style="position: absolute; left: 305px; top: 2px; display: none; z-index: 10;" src="/buggenie/thebuggenie/themes/oxygen/spinning_16.gif" alt="spinning_16.gif">				<input type="text" name="filters[text][value]" id="searchfor" value="Search for anything here" style="width: 320px; padding: 1px 1px 1px;" onblur="if ($('searchfor').getValue() == '') { $('searchfor').value = 'Search for anything here'; $('searchfor').addClassName('faded_out'); }" onfocus="if ($('searchfor').getValue() == 'Search for anything here') { $('searchfor').clear(); } $('searchfor').removeClassName('faded_out');" class="faded_out"><div id="searchfor_autocomplete_choices" class="autocomplete rounded_box"></div>
+				<script type="text/javascript">
+
+				Ajax.Autocompleter.extract_value = function (value, className)
+				{
+					var result;
+					var elements = value.getElementsByClassName(className);
+					if (elements && elements.length == 1)
+					{
+						result = elements[0].innerHTML.unescapeHTML();
+					}
+
+					return result;
+				};
+  
+				new Ajax.Autocompleter(
+					"searchfor",
+					"searchfor_autocomplete_choices",
+					'/buggenie/thebuggenie/sampleproject1/quicksearch',
+					{
+						paramName: "filters[text][value]",
+						minChars: 2,
+						indicator: 'quicksearch_indicator',
+						afterUpdateElement: function (elem, value)
+						{
+							val = Ajax.Autocompleter.extract_value(value, 'url');
+							if (val != '' && val !== undefined)
+							{
+								window.location = val;
+								$('quicksearch_indicator').show();
+								$('searchfor').blur();
+							}
+						}
+					}
+				);
+
+				</script>
+				<input type="submit" value="Find" style="padding: 0 2px 0 2px;">
+			</div>
+		</form>
+	</div>											<div class="rounded_box iceblue borderless infobox" style="margin: 5px; display: none;" id="firebug_warning">
+							<div style="padding: 5px;">
+								<img style="float: left; margin: 5px 5px 0 0;" src="/buggenie/thebuggenie/themes/oxygen/icon_info_big.png" alt="icon_info_big.png">								<div>
+									<div class="header">Cool - you're using Firebug, too - so do we!</div>
+									<div class="content">
+										As you probably know, Firebug has awesome monitoring and profiling features, which in turn means The Bug Genie will probably be a bit slow if you have Firebug enabled with it.										To learn how to disable Firebug for this site only, see <a href="/buggenie/thebuggenie/wiki/TheBugGenie%3ADisablingFirebug">Disabling Firebug</a>.<br>
+										<br>
+										As soon as Firebug is disabled for The Bug Genie, this message will go away. Promise.									</div>
+								</div>
+							</div>
+						</div>
+						<script>
+							Event.observe(window, 'load', function() {
+							  if (window.console && window.console.firebug) {
+								  $('firebug_warning').show();
+							  }
+							});
+						</script>
+								<table style="width: 100%;" cellpadding="0" cellspacing="0">
+	<tr>
+		<td class="project_information_sidebar" id="project_information_sidebar">
+			<div id="project_header_container">
+				<img id="project_sidebar_collapse" onclick="$('project_information_sidebar').addClassName('collapsed');$(this).hide();$('project_sidebar_expand').show();" src="/buggenie/thebuggenie/themes/oxygen/sidebar_collapse.png" alt="sidebar_collapse.png">				<img id="project_sidebar_expand" style="display: none;" onclick="$('project_information_sidebar').removeClassName('collapsed');$(this).hide();$('project_sidebar_collapse').show();" src="/buggenie/thebuggenie/themes/oxygen/sidebar_expand.png" alt="sidebar_expand.png">				<div>
+					<a onclick="showFadedBackdrop('/buggenie/thebuggenie/get/partials/project_config/project_id/1');" href="javascript:void(0);"><img class="config_link" src="/buggenie/thebuggenie/themes/oxygen/cfg_icon_projectheader.png" alt="cfg_icon_projectheader.png"></a>					<div id="project_name">
+						<img class="logo" src="/buggenie/thebuggenie/themes/oxygen/icon_project.png" alt="icon_project.png">						<span id="project_name_span">Sample project 1</span><br>
+						<span id="project_key_span">sampleproject1</span>
+					</div>
+					<div>
+						<span id="project_description_span">
+															This is a sample project that is awesome. Try it out! 
+													</span>
+					</div>
+					<div id="project_no_description" style="display: none;">
+						This project has no description					</div>
+					<div id="project_documentation_url" style="display: none;">
+						<a href="" target="_blank">View documentation</a>
+					</div>
+					<div id="project_owner">
+						<div style="font-weight: bold; float: left; margin: 0 10px 0 0;">Owned by:</div>
+																					<div style="width: auto; display: table-cell; clear: none; padding: 0 10px 0 0; ">
+													<a href="javascript:void(0);" onclick="$('bud_jane_1056225502').toggle();" class="image"><img alt=" " style="width: 16px; height: 16px; float: left; margin-right: 5px;" src="http://www.gravatar.com/avatar/d41d8cd98f00b204e9800998ecf8427e.png?d=wavatar&amp;s=22"></a>
+		<a href="javascript:void(0);" onclick="$('bud_jane_1056225502').toggle();" style="font-weight: normal;">Jane</a>
+	<div id="bud_jane_1056225502" style="z-index: 100; width: 300px; display: none; position: absolute;" class="rounded_box white shadowed user_popup">
+		<div style="padding: 3px;">
+			<div style="padding: 2px; width: 36px; height: 36px; text-align: center; background-color: #FFF; border: 1px solid #DDD; float: left;">
+				<img alt=" " style="width: 36px; height: 36px;" src="http://www.gravatar.com/avatar/d41d8cd98f00b204e9800998ecf8427e.png?d=wavatar&amp;s=48">			</div>
+			<div class="user_realname">
+				Jane				<div class="user_status">Offline</div>
+			</div>
+			<div class="user_details">
+									<b>This user has not logged in yet</b>
+							</div>
+										<div style="padding: 2px;" id="add_friend_4_1056225502">
+					<a onclick="_updateDivWithJSONFeedback('/buggenie/thebuggenie/friends/add/4', null, 'toggle_friend_4_1056225502_indicator', null, null, 'add_friend_4_1056225502', ['add_friend_4_1056225502'], ['remove_friend_4_1056225502']);" href="javascript:void(0);">Become friends</a>				</div>
+				<img id="toggle_friend_4_1056225502_indicator" style="display: none;" src="/buggenie/thebuggenie/themes/oxygen/spinning_16.gif" alt="spinning_16.gif">				<div style="padding: 2px; display: none;" id="remove_friend_4_1056225502">
+					<a onclick="_updateDivWithJSONFeedback('/buggenie/thebuggenie/friends/remove/4', null, 'toggle_friend_4_1056225502_indicator', null, null, 'remove_friend_4_1056225502', ['remove_friend_4_1056225502'], ['add_friend_4_1056225502']);" href="javascript:void(0);">Remove this friend</a>				</div>
+										<div style="padding: 2px;"><a target="_new" href="/buggenie/thebuggenie/configure/users/finduser/jane">Edit this user</a></div>
+						<div style="padding: 2px;">
+				<a href="javascript:void(0);" onclick="showFadedBackdrop('/buggenie/thebuggenie/get/partials/usercard/user_id/4');$('bud_jane_1056225502').hide();">Show user details</a>
+			</div>
+					</div>
+		<div style="text-align: right; padding: 3px; font-size: 9px;"><a href="javascript:void(0);" onclick="$('bud_jane_1056225502').toggle();">Close this menu</a></div>
+	</div>
+								</div>
+																		</div>
+					<div id="project_leader">
+						<div style="font-weight: bold; float: left; margin: 0 10px 0 0;">Lead by:</div>
+																					<div style="width: auto; display: table-cell; clear: none; padding: 0 10px 0 0; ">
+													<a href="javascript:void(0);" onclick="$('bud_jane_125810592').toggle();" class="image"><img alt=" " style="width: 16px; height: 16px; float: left; margin-right: 5px;" src="http://www.gravatar.com/avatar/d41d8cd98f00b204e9800998ecf8427e.png?d=wavatar&amp;s=22"></a>
+		<a href="javascript:void(0);" onclick="$('bud_jane_125810592').toggle();" style="font-weight: normal;">Jane</a>
+	<div id="bud_jane_125810592" style="z-index: 100; width: 300px; display: none; position: absolute;" class="rounded_box white shadowed user_popup">
+		<div style="padding: 3px;">
+			<div style="padding: 2px; width: 36px; height: 36px; text-align: center; background-color: #FFF; border: 1px solid #DDD; float: left;">
+				<img alt=" " style="width: 36px; height: 36px;" src="http://www.gravatar.com/avatar/d41d8cd98f00b204e9800998ecf8427e.png?d=wavatar&amp;s=48">			</div>
+			<div class="user_realname">
+				Jane				<div class="user_status">Offline</div>
+			</div>
+			<div class="user_details">
+									<b>This user has not logged in yet</b>
+							</div>
+										<div style="padding: 2px;" id="add_friend_4_125810592">
+					<a onclick="_updateDivWithJSONFeedback('/buggenie/thebuggenie/friends/add/4', null, 'toggle_friend_4_125810592_indicator', null, null, 'add_friend_4_125810592', ['add_friend_4_125810592'], ['remove_friend_4_125810592']);" href="javascript:void(0);">Become friends</a>				</div>
+				<img id="toggle_friend_4_125810592_indicator" style="display: none;" src="/buggenie/thebuggenie/themes/oxygen/spinning_16.gif" alt="spinning_16.gif">				<div style="padding: 2px; display: none;" id="remove_friend_4_125810592">
+					<a onclick="_updateDivWithJSONFeedback('/buggenie/thebuggenie/friends/remove/4', null, 'toggle_friend_4_125810592_indicator', null, null, 'remove_friend_4_125810592', ['remove_friend_4_125810592'], ['add_friend_4_125810592']);" href="javascript:void(0);">Remove this friend</a>				</div>
+										<div style="padding: 2px;"><a target="_new" href="/buggenie/thebuggenie/configure/users/finduser/jane">Edit this user</a></div>
+						<div style="padding: 2px;">
+				<a href="javascript:void(0);" onclick="showFadedBackdrop('/buggenie/thebuggenie/get/partials/usercard/user_id/4');$('bud_jane_125810592').hide();">Show user details</a>
+			</div>
+					</div>
+		<div style="text-align: right; padding: 3px; font-size: 9px;"><a href="javascript:void(0);" onclick="$('bud_jane_125810592').toggle();">Close this menu</a></div>
+	</div>
+								</div>
+																		</div>
+					<div id="project_qa">
+						<div style="font-weight: bold; float: left; margin: 0 10px 0 0;">QA responsible:</div>
+																					<div style="width: auto; display: table-cell; clear: none; padding: 0 10px 0 0; ">
+													<a href="javascript:void(0);" onclick="$('bud_jane_677119718').toggle();" class="image"><img alt=" " style="width: 16px; height: 16px; float: left; margin-right: 5px;" src="http://www.gravatar.com/avatar/d41d8cd98f00b204e9800998ecf8427e.png?d=wavatar&amp;s=22"></a>
+		<a href="javascript:void(0);" onclick="$('bud_jane_677119718').toggle();" style="font-weight: normal;">Jane</a>
+	<div id="bud_jane_677119718" style="z-index: 100; width: 300px; display: none; position: absolute;" class="rounded_box white shadowed user_popup">
+		<div style="padding: 3px;">
+			<div style="padding: 2px; width: 36px; height: 36px; text-align: center; background-color: #FFF; border: 1px solid #DDD; float: left;">
+				<img alt=" " style="width: 36px; height: 36px;" src="http://www.gravatar.com/avatar/d41d8cd98f00b204e9800998ecf8427e.png?d=wavatar&amp;s=48">			</div>
+			<div class="user_realname">
+				Jane				<div class="user_status">Offline</div>
+			</div>
+			<div class="user_details">
+									<b>This user has not logged in yet</b>
+							</div>
+										<div style="padding: 2px;" id="add_friend_4_677119718">
+					<a onclick="_updateDivWithJSONFeedback('/buggenie/thebuggenie/friends/add/4', null, 'toggle_friend_4_677119718_indicator', null, null, 'add_friend_4_677119718', ['add_friend_4_677119718'], ['remove_friend_4_677119718']);" href="javascript:void(0);">Become friends</a>				</div>
+				<img id="toggle_friend_4_677119718_indicator" style="display: none;" src="/buggenie/thebuggenie/themes/oxygen/spinning_16.gif" alt="spinning_16.gif">				<div style="padding: 2px; display: none;" id="remove_friend_4_677119718">
+					<a onclick="_updateDivWithJSONFeedback('/buggenie/thebuggenie/friends/remove/4', null, 'toggle_friend_4_677119718_indicator', null, null, 'remove_friend_4_677119718', ['remove_friend_4_677119718'], ['add_friend_4_677119718']);" href="javascript:void(0);">Remove this friend</a>				</div>
+										<div style="padding: 2px;"><a target="_new" href="/buggenie/thebuggenie/configure/users/finduser/jane">Edit this user</a></div>
+						<div style="padding: 2px;">
+				<a href="javascript:void(0);" onclick="showFadedBackdrop('/buggenie/thebuggenie/get/partials/usercard/user_id/4');$('bud_jane_677119718').hide();">Show user details</a>
+			</div>
+					</div>
+		<div style="text-align: right; padding: 3px; font-size: 9px;"><a href="javascript:void(0);" onclick="$('bud_jane_677119718').toggle();">Close this menu</a></div>
+	</div>
+								</div>
+																		</div>
+					<div class="sidebar_links">
+							<a class="first" href="/buggenie/thebuggenie/sampleproject1">Dashboard</a>		<a id="sidebar_link_scrum" href="/buggenie/thebuggenie/sampleproject1/scrum">Sprint planning</a>			<a class="selected" href="/buggenie/thebuggenie/sampleproject1/roadmap">Roadmap</a>		<a href="/buggenie/thebuggenie/sampleproject1/team">Team overview</a>		<a href="/buggenie/thebuggenie/sampleproject1/statistics">Statistics</a>			<a class="last" href="/buggenie/thebuggenie/sampleproject1/timeline">Timeline</a>						</div>
+				</div>
+			</div>
+		</td>
+		<td class="project_information_main">
+			<div id="project_roadmap">
+															<div class="roadmap_milestone" id="roadmap_milestone_2">
+							<div class="roadmap_header">
+								Milestone 2								<div class="roadmap_dates" id="milestone_2_date_string">In progress</div>
+							</div>
+							<div class="roadmap_percentbar">
+								<table style="table-layout: fixed; width: 100%;" cellpadding=0 cellspacing=0>
+<tr id="milestone_2_percent">
+	<td class="percent_filled" style="font-size: 3px; width: 0%; height: 22px;"><b style="text-decoration: none;">&nbsp;</b></td>
+	<td class="percent_unfilled" style="font-size: 3px; width: 100%; height: 22px;"><b style="text-decoration: none;">&nbsp;</b></td>
+</tr>
+</table>							</div>
+							<div class="roadmap_percentdescription">
+																	<b id="milestone_2_closed_issues">0</b> issue(s) closed of <b id="milestone_2_assigned_issues">6</b> assigned																<a onclick="toggleMilestoneIssues('/buggenie/thebuggenie/sampleproject1/milestone/2/get/issues', 2);" href="javascript:void(0);"><img style="float: right;" title="Show issues" src="/buggenie/thebuggenie/themes/oxygen/view_list_details.png" alt="view_list_details.png"></a>								<a onclick="refreshMilestoneDetails('/buggenie/thebuggenie/sampleproject1/milestone/2/get/details', 2);" href="javascript:void(0);"><img style="float: right; margin-right: 10px;" title="Update (regenerate) milestone details" src="/buggenie/thebuggenie/themes/oxygen/refresh.png" alt="refresh.png"></a>							</div>
+							<br style="clear: both;">
+							<div id="milestone_2_changed" class="milestones_indicator" style="display: none;">
+								Milestone details have changed. To see the updated list of issues, click the "Show issues" icon...
+								<button onclick="$('milestone_2_changed').hide();">Ok</button>
+							</div>
+							<div id="milestone_2_indicator" class="milestones_indicator" style="display: none;">
+								<img src="/buggenie/thebuggenie/themes/oxygen/spinning_32.gif" alt="spinning_32.gif">								Please wait...
+							</div>
+														<div class="roadmap_issues" id="milestone_2_issues">
+																				<div class="roadmap_issue">
+			<div class="issue_status"><div style="border: 1px solid #AAA; background-color: #FFF; font-size: 1px; width: 13px; height: 13px;" title="New">&nbsp;</div></div>
+						<a href="/buggenie/thebuggenie/sampleproject1/issues/6">Bug report #6 - <span class="issue_title">Non euismod morbi sed nulla donec donec aliquam nec in quam ipsum at. </span></a>					</div>
+				<div class="roadmap_issue">
+			<div class="issue_status"><div style="border: 1px solid #AAA; background-color: #FA5; font-size: 1px; width: 13px; height: 13px;" title="Postponed">&nbsp;</div></div>
+						<a href="/buggenie/thebuggenie/sampleproject1/issues/7">Bug report #7 - <span class="issue_title">A sit ultrices nisl molestie dignissim nam integer vel vulputate ultricies. </span></a>					</div>
+				<div class="roadmap_issue">
+			<div class="issue_status"><div style="border: 1px solid #AAA; background-color: #7D3; font-size: 1px; width: 13px; height: 13px;" title="Done">&nbsp;</div></div>
+						<a href="/buggenie/thebuggenie/sampleproject1/issues/25">Enhancement #25 - <span class="issue_title">In in dui lectus eros at id luctus imperdiet vel. </span></a>					</div>
+				<div class="roadmap_issue">
+			<div class="issue_status"><div style="border: 1px solid #AAA; background-color: #C2F533; font-size: 1px; width: 13px; height: 13px;" title="Investigating">&nbsp;</div></div>
+						<a href="/buggenie/thebuggenie/sampleproject1/issues/29">Enhancement #29 - <span class="issue_title">Vehicula massa. Laoreet nulla. Egestas posuere sem. </span></a>					</div>
+				<div class="roadmap_issue">
+			<div class="issue_status"><div style="border: 1px solid #AAA; background-color: #FF55AA; font-size: 1px; width: 13px; height: 13px;" title="Confirmed">&nbsp;</div></div>
+						<a href="/buggenie/thebuggenie/sampleproject1/issues/30">Enhancement #30 - <span class="issue_title">Nec donec massa urna. </span></a>					</div>
+				<div class="roadmap_issue">
+			<div class="issue_status"><div style="border: 1px solid #AAA; background-color: #FA5; font-size: 1px; width: 13px; height: 13px;" title="Postponed">&nbsp;</div></div>
+							<span class="faded_out">
+											(Assigned to 			<a href="javascript:void(0);" onclick="$('bud_jackdaniels_2070438998').toggle();" style="font-weight: normal;">Jack</a>
+	<div id="bud_jackdaniels_2070438998" style="z-index: 100; width: 300px; display: none; position: absolute;" class="rounded_box white shadowed user_popup">
+		<div style="padding: 3px;">
+			<div style="padding: 2px; width: 36px; height: 36px; text-align: center; background-color: #FFF; border: 1px solid #DDD; float: left;">
+				<img alt=" " style="width: 36px; height: 36px;" src="http://www.gravatar.com/avatar/d41d8cd98f00b204e9800998ecf8427e.png?d=wavatar&amp;s=48">			</div>
+			<div class="user_realname">
+				Jack Daniels				<div class="user_status">Offline</div>
+			</div>
+			<div class="user_details">
+									<b>This user has not logged in yet</b>
+							</div>
+										<div style="padding: 2px;" id="add_friend_5_2070438998">
+					<a onclick="_updateDivWithJSONFeedback('/buggenie/thebuggenie/friends/add/5', null, 'toggle_friend_5_2070438998_indicator', null, null, 'add_friend_5_2070438998', ['add_friend_5_2070438998'], ['remove_friend_5_2070438998']);" href="javascript:void(0);">Become friends</a>				</div>
+				<img id="toggle_friend_5_2070438998_indicator" style="display: none;" src="/buggenie/thebuggenie/themes/oxygen/spinning_16.gif" alt="spinning_16.gif">				<div style="padding: 2px; display: none;" id="remove_friend_5_2070438998">
+					<a onclick="_updateDivWithJSONFeedback('/buggenie/thebuggenie/friends/remove/5', null, 'toggle_friend_5_2070438998_indicator', null, null, 'remove_friend_5_2070438998', ['remove_friend_5_2070438998'], ['add_friend_5_2070438998']);" href="javascript:void(0);">Remove this friend</a>				</div>
+										<div style="padding: 2px;"><a target="_new" href="/buggenie/thebuggenie/configure/users/finduser/jackdaniels">Edit this user</a></div>
+						<div style="padding: 2px;">
+				<a href="javascript:void(0);" onclick="showFadedBackdrop('/buggenie/thebuggenie/get/partials/usercard/user_id/5');$('bud_jackdaniels_2070438998').hide();">Show user details</a>
+			</div>
+					</div>
+		<div style="text-align: right; padding: 3px; font-size: 9px;"><a href="javascript:void(0);" onclick="$('bud_jackdaniels_2070438998').toggle();">Close this menu</a></div>
+	</div>
+)
+									</span>
+						<a href="/buggenie/thebuggenie/sampleproject1/issues/33">Idea #33 - <span class="issue_title">Donec fusce metus nec porta. </span></a>					</div>
+																</div>
+						</div>
+											<div class="roadmap_milestone" id="roadmap_milestone_3">
+							<div class="roadmap_header">
+								Milestone 3								<div class="roadmap_dates" id="milestone_3_date_string">In progress</div>
+							</div>
+							<div class="roadmap_percentbar">
+								<table style="table-layout: fixed; width: 100%;" cellpadding=0 cellspacing=0>
+<tr id="milestone_3_percent">
+	<td class="percent_filled" style="font-size: 3px; width: 10%; height: 22px;"><b style="text-decoration: none;">&nbsp;</b></td>
+	<td class="percent_unfilled" style="font-size: 3px; width: 90%; height: 22px;"><b style="text-decoration: none;">&nbsp;</b></td>
+</tr>
+</table>							</div>
+							<div class="roadmap_percentdescription">
+																	<b id="milestone_3_closed_issues">1</b> issue(s) closed of <b id="milestone_3_assigned_issues">10</b> assigned																<a onclick="toggleMilestoneIssues('/buggenie/thebuggenie/sampleproject1/milestone/3/get/issues', 3);" href="javascript:void(0);"><img style="float: right;" title="Show issues" src="/buggenie/thebuggenie/themes/oxygen/view_list_details.png" alt="view_list_details.png"></a>								<a onclick="refreshMilestoneDetails('/buggenie/thebuggenie/sampleproject1/milestone/3/get/details', 3);" href="javascript:void(0);"><img style="float: right; margin-right: 10px;" title="Update (regenerate) milestone details" src="/buggenie/thebuggenie/themes/oxygen/refresh.png" alt="refresh.png"></a>							</div>
+							<br style="clear: both;">
+							<div id="milestone_3_changed" class="milestones_indicator" style="display: none;">
+								Milestone details have changed. To see the updated list of issues, click the "Show issues" icon...
+								<button onclick="$('milestone_3_changed').hide();">Ok</button>
+							</div>
+							<div id="milestone_3_indicator" class="milestones_indicator" style="display: none;">
+								<img src="/buggenie/thebuggenie/themes/oxygen/spinning_32.gif" alt="spinning_32.gif">								Please wait...
+							</div>
+														<div class="roadmap_issues" id="milestone_3_issues">
+																				<div class="roadmap_issue">
+			<div class="issue_status"><div style="border: 1px solid #AAA; background-color: #55C; font-size: 1px; width: 13px; height: 13px;" title="Ready for testing / QA">&nbsp;</div></div>
+							<span class="faded_out">
+											(Assigned to 			<a href="javascript:void(0);" onclick="$('bud_jane_1726093469').toggle();" style="font-weight: normal;">Jane</a>
+	<div id="bud_jane_1726093469" style="z-index: 100; width: 300px; display: none; position: absolute;" class="rounded_box white shadowed user_popup">
+		<div style="padding: 3px;">
+			<div style="padding: 2px; width: 36px; height: 36px; text-align: center; background-color: #FFF; border: 1px solid #DDD; float: left;">
+				<img alt=" " style="width: 36px; height: 36px;" src="http://www.gravatar.com/avatar/d41d8cd98f00b204e9800998ecf8427e.png?d=wavatar&amp;s=48">			</div>
+			<div class="user_realname">
+				Jane				<div class="user_status">Offline</div>
+			</div>
+			<div class="user_details">
+									<b>This user has not logged in yet</b>
+							</div>
+										<div style="padding: 2px;" id="add_friend_4_1726093469">
+					<a onclick="_updateDivWithJSONFeedback('/buggenie/thebuggenie/friends/add/4', null, 'toggle_friend_4_1726093469_indicator', null, null, 'add_friend_4_1726093469', ['add_friend_4_1726093469'], ['remove_friend_4_1726093469']);" href="javascript:void(0);">Become friends</a>				</div>
+				<img id="toggle_friend_4_1726093469_indicator" style="display: none;" src="/buggenie/thebuggenie/themes/oxygen/spinning_16.gif" alt="spinning_16.gif">				<div style="padding: 2px; display: none;" id="remove_friend_4_1726093469">
+					<a onclick="_updateDivWithJSONFeedback('/buggenie/thebuggenie/friends/remove/4', null, 'toggle_friend_4_1726093469_indicator', null, null, 'remove_friend_4_1726093469', ['remove_friend_4_1726093469'], ['add_friend_4_1726093469']);" href="javascript:void(0);">Remove this friend</a>				</div>
+										<div style="padding: 2px;"><a target="_new" href="/buggenie/thebuggenie/configure/users/finduser/jane">Edit this user</a></div>
+						<div style="padding: 2px;">
+				<a href="javascript:void(0);" onclick="showFadedBackdrop('/buggenie/thebuggenie/get/partials/usercard/user_id/4');$('bud_jane_1726093469').hide();">Show user details</a>
+			</div>
+					</div>
+		<div style="text-align: right; padding: 3px; font-size: 9px;"><a href="javascript:void(0);" onclick="$('bud_jane_1726093469').toggle();">Close this menu</a></div>
+	</div>
+)
+									</span>
+						<a href="/buggenie/thebuggenie/sampleproject1/issues/2">Bug report #2 - <span class="issue_title">Eros condimentum suscipit tristique molestie. Tincidunt quis metus vulputate. </span></a>					</div>
+				<div class="roadmap_issue">
+			<div class="issue_status"><div style="border: 1px solid #AAA; background-color: #5C5; font-size: 1px; width: 13px; height: 13px;" title="Being worked on">&nbsp;</div></div>
+							<span class="faded_out">
+											(Assigned to 			<a href="javascript:void(0);" onclick="$('bud_john_1393648905').toggle();" style="font-weight: normal;">John</a>
+	<div id="bud_john_1393648905" style="z-index: 100; width: 300px; display: none; position: absolute;" class="rounded_box white shadowed user_popup">
+		<div style="padding: 3px;">
+			<div style="padding: 2px; width: 36px; height: 36px; text-align: center; background-color: #FFF; border: 1px solid #DDD; float: left;">
+				<img alt=" " style="width: 36px; height: 36px;" src="http://www.gravatar.com/avatar/d41d8cd98f00b204e9800998ecf8427e.png?d=wavatar&amp;s=48">			</div>
+			<div class="user_realname">
+				John				<div class="user_status">Offline</div>
+			</div>
+			<div class="user_details">
+									<b>This user has not logged in yet</b>
+							</div>
+										<div style="padding: 2px;" id="add_friend_3_1393648905">
+					<a onclick="_updateDivWithJSONFeedback('/buggenie/thebuggenie/friends/add/3', null, 'toggle_friend_3_1393648905_indicator', null, null, 'add_friend_3_1393648905', ['add_friend_3_1393648905'], ['remove_friend_3_1393648905']);" href="javascript:void(0);">Become friends</a>				</div>
+				<img id="toggle_friend_3_1393648905_indicator" style="display: none;" src="/buggenie/thebuggenie/themes/oxygen/spinning_16.gif" alt="spinning_16.gif">				<div style="padding: 2px; display: none;" id="remove_friend_3_1393648905">
+					<a onclick="_updateDivWithJSONFeedback('/buggenie/thebuggenie/friends/remove/3', null, 'toggle_friend_3_1393648905_indicator', null, null, 'remove_friend_3_1393648905', ['remove_friend_3_1393648905'], ['add_friend_3_1393648905']);" href="javascript:void(0);">Remove this friend</a>				</div>
+										<div style="padding: 2px;"><a target="_new" href="/buggenie/thebuggenie/configure/users/finduser/john">Edit this user</a></div>
+						<div style="padding: 2px;">
+				<a href="javascript:void(0);" onclick="showFadedBackdrop('/buggenie/thebuggenie/get/partials/usercard/user_id/3');$('bud_john_1393648905').hide();">Show user details</a>
+			</div>
+					</div>
+		<div style="text-align: right; padding: 3px; font-size: 9px;"><a href="javascript:void(0);" onclick="$('bud_john_1393648905').toggle();">Close this menu</a></div>
+	</div>
+)
+									</span>
+						<a href="/buggenie/thebuggenie/sampleproject1/issues/4">Bug report #4 - <span class="issue_title">Id vulputate mi facilisis ullamcorper proin non ipsum quis nunc fringilla amet. Suspendisse Convallis. </span></a>					</div>
+				<div class="roadmap_issue">
+			<div class="issue_status"><div style="border: 1px solid #AAA; background-color: #44FC1D; font-size: 1px; width: 13px; height: 13px;" title="Not a bug">&nbsp;</div></div>
+						<a href="/buggenie/thebuggenie/sampleproject1/issues/9">Bug report #9 - <span class="issue_title">Pellentesque magna non pharetra sollicitudin vitae elit sit. </span></a>					</div>
+				<div class="roadmap_issue">
+			<div class="issue_status"><div style="border: 1px solid #AAA; background-color: #5C5; font-size: 1px; width: 13px; height: 13px;" title="Fixed">&nbsp;</div></div>
+						<a href="/buggenie/thebuggenie/sampleproject1/issues/11">Feature request #11 - <span class="issue_title">Et eget sociosqu morbi non in nunc in felis non nunc. </span></a>					</div>
+				<div class="roadmap_issue">
+			<div class="issue_status"><div style="border: 1px solid #AAA; background-color: #5C5; font-size: 1px; width: 13px; height: 13px;" title="Being worked on">&nbsp;</div></div>
+						<a href="/buggenie/thebuggenie/sampleproject1/issues/12">Feature request #12 - <span class="issue_title">Litora cum nunc mi volutpat ut estvestibulum posuere donec est velit turpis eget. Consequat. </span></a>					</div>
+				<div class="roadmap_issue faded_out issue_closed">
+			<div class="issue_status"><div style="border: 1px solid #AAA; background-color: #5C5; font-size: 1px; width: 13px; height: 13px;" title="Being worked on">&nbsp;</div></div>
+							<span class="faded_out">
+											(Assigned to 			<a href="javascript:void(0);" onclick="$('bud_jackdaniels_1711777949').toggle();" style="font-weight: normal;">Jack</a>
+	<div id="bud_jackdaniels_1711777949" style="z-index: 100; width: 300px; display: none; position: absolute;" class="rounded_box white shadowed user_popup">
+		<div style="padding: 3px;">
+			<div style="padding: 2px; width: 36px; height: 36px; text-align: center; background-color: #FFF; border: 1px solid #DDD; float: left;">
+				<img alt=" " style="width: 36px; height: 36px;" src="http://www.gravatar.com/avatar/d41d8cd98f00b204e9800998ecf8427e.png?d=wavatar&amp;s=48">			</div>
+			<div class="user_realname">
+				Jack Daniels				<div class="user_status">Offline</div>
+			</div>
+			<div class="user_details">
+									<b>This user has not logged in yet</b>
+							</div>
+										<div style="padding: 2px;" id="add_friend_5_1711777949">
+					<a onclick="_updateDivWithJSONFeedback('/buggenie/thebuggenie/friends/add/5', null, 'toggle_friend_5_1711777949_indicator', null, null, 'add_friend_5_1711777949', ['add_friend_5_1711777949'], ['remove_friend_5_1711777949']);" href="javascript:void(0);">Become friends</a>				</div>
+				<img id="toggle_friend_5_1711777949_indicator" style="display: none;" src="/buggenie/thebuggenie/themes/oxygen/spinning_16.gif" alt="spinning_16.gif">				<div style="padding: 2px; display: none;" id="remove_friend_5_1711777949">
+					<a onclick="_updateDivWithJSONFeedback('/buggenie/thebuggenie/friends/remove/5', null, 'toggle_friend_5_1711777949_indicator', null, null, 'remove_friend_5_1711777949', ['remove_friend_5_1711777949'], ['add_friend_5_1711777949']);" href="javascript:void(0);">Remove this friend</a>				</div>
+										<div style="padding: 2px;"><a target="_new" href="/buggenie/thebuggenie/configure/users/finduser/jackdaniels">Edit this user</a></div>
+						<div style="padding: 2px;">
+				<a href="javascript:void(0);" onclick="showFadedBackdrop('/buggenie/thebuggenie/get/partials/usercard/user_id/5');$('bud_jackdaniels_1711777949').hide();">Show user details</a>
+			</div>
+					</div>
+		<div style="text-align: right; padding: 3px; font-size: 9px;"><a href="javascript:void(0);" onclick="$('bud_jackdaniels_1711777949').toggle();">Close this menu</a></div>
+	</div>
+)
+									</span>
+						<a href="/buggenie/thebuggenie/sampleproject1/issues/14">Feature request #14 - <span class="issue_title">Consectetur. Bibendum ut iaculis. </span></a>					</div>
+				<div class="roadmap_issue">
+			<div class="issue_status"><div style="border: 1px solid #AAA; background-color: #C2F533; font-size: 1px; width: 13px; height: 13px;" title="Investigating">&nbsp;</div></div>
+							<span class="faded_out">
+											(Assigned to 			<a href="javascript:void(0);" onclick="$('bud_john_1958054879').toggle();" style="font-weight: normal;">John</a>
+	<div id="bud_john_1958054879" style="z-index: 100; width: 300px; display: none; position: absolute;" class="rounded_box white shadowed user_popup">
+		<div style="padding: 3px;">
+			<div style="padding: 2px; width: 36px; height: 36px; text-align: center; background-color: #FFF; border: 1px solid #DDD; float: left;">
+				<img alt=" " style="width: 36px; height: 36px;" src="http://www.gravatar.com/avatar/d41d8cd98f00b204e9800998ecf8427e.png?d=wavatar&amp;s=48">			</div>
+			<div class="user_realname">
+				John				<div class="user_status">Offline</div>
+			</div>
+			<div class="user_details">
+									<b>This user has not logged in yet</b>
+							</div>
+										<div style="padding: 2px;" id="add_friend_3_1958054879">
+					<a onclick="_updateDivWithJSONFeedback('/buggenie/thebuggenie/friends/add/3', null, 'toggle_friend_3_1958054879_indicator', null, null, 'add_friend_3_1958054879', ['add_friend_3_1958054879'], ['remove_friend_3_1958054879']);" href="javascript:void(0);">Become friends</a>				</div>
+				<img id="toggle_friend_3_1958054879_indicator" style="display: none;" src="/buggenie/thebuggenie/themes/oxygen/spinning_16.gif" alt="spinning_16.gif">				<div style="padding: 2px; display: none;" id="remove_friend_3_1958054879">
+					<a onclick="_updateDivWithJSONFeedback('/buggenie/thebuggenie/friends/remove/3', null, 'toggle_friend_3_1958054879_indicator', null, null, 'remove_friend_3_1958054879', ['remove_friend_3_1958054879'], ['add_friend_3_1958054879']);" href="javascript:void(0);">Remove this friend</a>				</div>
+										<div style="padding: 2px;"><a target="_new" href="/buggenie/thebuggenie/configure/users/finduser/john">Edit this user</a></div>
+						<div style="padding: 2px;">
+				<a href="javascript:void(0);" onclick="showFadedBackdrop('/buggenie/thebuggenie/get/partials/usercard/user_id/3');$('bud_john_1958054879').hide();">Show user details</a>
+			</div>
+					</div>
+		<div style="text-align: right; padding: 3px; font-size: 9px;"><a href="javascript:void(0);" onclick="$('bud_john_1958054879').toggle();">Close this menu</a></div>
+	</div>
+)
+									</span>
+						<a href="/buggenie/thebuggenie/sampleproject1/issues/19">Feature request #19 - <span class="issue_title">Tortor volutpat tristique id nec facilisis venenatis sollicitudin himenaeos eu torquent risus velit condimentum. </span></a>					</div>
+				<div class="roadmap_issue">
+			<div class="issue_status"><div style="border: 1px solid #AAA; background-color: #7D3; font-size: 1px; width: 13px; height: 13px;" title="Done">&nbsp;</div></div>
+						<a href="/buggenie/thebuggenie/sampleproject1/issues/20">Feature request #20 - <span class="issue_title">Dignissim arcu ac. Enim interdum hendrerit vulputate donec nulla convallis vitae dolor dui nam eros. </span></a>					</div>
+				<div class="roadmap_issue">
+			<div class="issue_status"><div style="border: 1px solid #AAA; background-color: #FA5; font-size: 1px; width: 13px; height: 13px;" title="Postponed">&nbsp;</div></div>
+						<a href="/buggenie/thebuggenie/sampleproject1/issues/23">Enhancement #23 - <span class="issue_title">Diam aliquam leo sollicitudin Facilisis elit id quis pharetra dapibus himenaeos sed. </span></a>					</div>
+				<div class="roadmap_issue">
+			<div class="issue_status"><div style="border: 1px solid #AAA; background-color: #55C; font-size: 1px; width: 13px; height: 13px;" title="Ready for testing / QA">&nbsp;</div></div>
+							<span class="faded_out">
+											(Assigned to 			<a href="javascript:void(0);" onclick="$('bud_jackdaniels_2035673755').toggle();" style="font-weight: normal;">Jack</a>
+	<div id="bud_jackdaniels_2035673755" style="z-index: 100; width: 300px; display: none; position: absolute;" class="rounded_box white shadowed user_popup">
+		<div style="padding: 3px;">
+			<div style="padding: 2px; width: 36px; height: 36px; text-align: center; background-color: #FFF; border: 1px solid #DDD; float: left;">
+				<img alt=" " style="width: 36px; height: 36px;" src="http://www.gravatar.com/avatar/d41d8cd98f00b204e9800998ecf8427e.png?d=wavatar&amp;s=48">			</div>
+			<div class="user_realname">
+				Jack Daniels				<div class="user_status">Offline</div>
+			</div>
+			<div class="user_details">
+									<b>This user has not logged in yet</b>
+							</div>
+										<div style="padding: 2px;" id="add_friend_5_2035673755">
+					<a onclick="_updateDivWithJSONFeedback('/buggenie/thebuggenie/friends/add/5', null, 'toggle_friend_5_2035673755_indicator', null, null, 'add_friend_5_2035673755', ['add_friend_5_2035673755'], ['remove_friend_5_2035673755']);" href="javascript:void(0);">Become friends</a>				</div>
+				<img id="toggle_friend_5_2035673755_indicator" style="display: none;" src="/buggenie/thebuggenie/themes/oxygen/spinning_16.gif" alt="spinning_16.gif">				<div style="padding: 2px; display: none;" id="remove_friend_5_2035673755">
+					<a onclick="_updateDivWithJSONFeedback('/buggenie/thebuggenie/friends/remove/5', null, 'toggle_friend_5_2035673755_indicator', null, null, 'remove_friend_5_2035673755', ['remove_friend_5_2035673755'], ['add_friend_5_2035673755']);" href="javascript:void(0);">Remove this friend</a>				</div>
+										<div style="padding: 2px;"><a target="_new" href="/buggenie/thebuggenie/configure/users/finduser/jackdaniels">Edit this user</a></div>
+						<div style="padding: 2px;">
+				<a href="javascript:void(0);" onclick="showFadedBackdrop('/buggenie/thebuggenie/get/partials/usercard/user_id/5');$('bud_jackdaniels_2035673755').hide();">Show user details</a>
+			</div>
+					</div>
+		<div style="text-align: right; padding: 3px; font-size: 9px;"><a href="javascript:void(0);" onclick="$('bud_jackdaniels_2035673755').toggle();">Close this menu</a></div>
+	</div>
+)
+									</span>
+						<a href="/buggenie/thebuggenie/sampleproject1/issues/39">Idea #39 - <span class="issue_title">Est Sed inceptos leo aliquam. Et luctus diam ultrices tempor egestas. </span></a>					</div>
+																</div>
+						</div>
+											<div class="roadmap_milestone" id="roadmap_milestone_11">
+							<div class="roadmap_header">
+								Sprint 0								<div class="roadmap_dates" id="milestone_11_date_string"> (started Today - ends Today)</div>
+							</div>
+							<div class="roadmap_percentbar">
+								<table style="table-layout: fixed; width: 100%;" cellpadding=0 cellspacing=0>
+<tr id="milestone_11_percent">
+	<td class="percent_filled" style="font-size: 3px; width: 0%; height: 22px;"><b style="text-decoration: none;">&nbsp;</b></td>
+	<td class="percent_unfilled" style="font-size: 3px; width: 100%; height: 22px;"><b style="text-decoration: none;">&nbsp;</b></td>
+</tr>
+</table>							</div>
+							<div class="roadmap_percentdescription">
+																											<b id="milestone_11_closed_issues">0</b> stories (<i id="milestone_11_closed_points">0</i> pts) closed of <b id="milestone_11_assigned_issues">0</b> (<i id="milestone_11_assigned_points">0</i> pts) assigned																									<a onclick="toggleMilestoneIssues('/buggenie/thebuggenie/sampleproject1/milestone/11/get/issues', 11);" href="javascript:void(0);"><img style="float: right;" title="Show issues" src="/buggenie/thebuggenie/themes/oxygen/view_list_details.png" alt="view_list_details.png"></a>								<a onclick="refreshMilestoneDetails('/buggenie/thebuggenie/sampleproject1/milestone/11/get/details', 11);" href="javascript:void(0);"><img style="float: right; margin-right: 10px;" title="Update (regenerate) milestone details" src="/buggenie/thebuggenie/themes/oxygen/refresh.png" alt="refresh.png"></a>							</div>
+							<br style="clear: both;">
+							<div id="milestone_11_changed" class="milestones_indicator" style="display: none;">
+								Milestone details have changed. To see the updated list of issues, click the "Show issues" icon...
+								<button onclick="$('milestone_11_changed').hide();">Ok</button>
+							</div>
+							<div id="milestone_11_indicator" class="milestones_indicator" style="display: none;">
+								<img src="/buggenie/thebuggenie/themes/oxygen/spinning_32.gif" alt="spinning_32.gif">								Please wait...
+							</div>
+														<div class="roadmap_issues" id="milestone_11_issues">
+																																</div>
+						</div>
+											<div class="roadmap_milestone" id="roadmap_milestone_1">
+							<div class="roadmap_header">
+								Milestone 1								<div class="roadmap_dates" id="milestone_1_date_string"> (will be released: Nov 11, 2011)</div>
+							</div>
+							<div class="roadmap_percentbar">
+								<table style="table-layout: fixed; width: 100%;" cellpadding=0 cellspacing=0>
+<tr id="milestone_1_percent">
+	<td class="percent_filled" style="font-size: 3px; width: 0%; height: 22px;"><b style="text-decoration: none;">&nbsp;</b></td>
+	<td class="percent_unfilled" style="font-size: 3px; width: 100%; height: 22px;"><b style="text-decoration: none;">&nbsp;</b></td>
+</tr>
+</table>							</div>
+							<div class="roadmap_percentdescription">
+																	<b id="milestone_1_closed_issues">0</b> issue(s) closed of <b id="milestone_1_assigned_issues">5</b> assigned																<a onclick="toggleMilestoneIssues('/buggenie/thebuggenie/sampleproject1/milestone/1/get/issues', 1);" href="javascript:void(0);"><img style="float: right;" title="Show issues" src="/buggenie/thebuggenie/themes/oxygen/view_list_details.png" alt="view_list_details.png"></a>								<a onclick="refreshMilestoneDetails('/buggenie/thebuggenie/sampleproject1/milestone/1/get/details', 1);" href="javascript:void(0);"><img style="float: right; margin-right: 10px;" title="Update (regenerate) milestone details" src="/buggenie/thebuggenie/themes/oxygen/refresh.png" alt="refresh.png"></a>							</div>
+							<br style="clear: both;">
+							<div id="milestone_1_changed" class="milestones_indicator" style="display: none;">
+								Milestone details have changed. To see the updated list of issues, click the "Show issues" icon...
+								<button onclick="$('milestone_1_changed').hide();">Ok</button>
+							</div>
+							<div id="milestone_1_indicator" class="milestones_indicator" style="display: none;">
+								<img src="/buggenie/thebuggenie/themes/oxygen/spinning_32.gif" alt="spinning_32.gif">								Please wait...
+							</div>
+														<div class="roadmap_issues" id="milestone_1_issues">
+																				<div class="roadmap_issue">
+			<div class="issue_status"><div style="border: 1px solid #AAA; background-color: #FA5; font-size: 1px; width: 13px; height: 13px;" title="Postponed">&nbsp;</div></div>
+							<span class="faded_out">
+											(Assigned to 			<a href="javascript:void(0);" onclick="$('bud_jackdaniels_1296072555').toggle();" style="font-weight: normal;">Jack</a>
+	<div id="bud_jackdaniels_1296072555" style="z-index: 100; width: 300px; display: none; position: absolute;" class="rounded_box white shadowed user_popup">
+		<div style="padding: 3px;">
+			<div style="padding: 2px; width: 36px; height: 36px; text-align: center; background-color: #FFF; border: 1px solid #DDD; float: left;">
+				<img alt=" " style="width: 36px; height: 36px;" src="http://www.gravatar.com/avatar/d41d8cd98f00b204e9800998ecf8427e.png?d=wavatar&amp;s=48">			</div>
+			<div class="user_realname">
+				Jack Daniels				<div class="user_status">Offline</div>
+			</div>
+			<div class="user_details">
+									<b>This user has not logged in yet</b>
+							</div>
+										<div style="padding: 2px;" id="add_friend_5_1296072555">
+					<a onclick="_updateDivWithJSONFeedback('/buggenie/thebuggenie/friends/add/5', null, 'toggle_friend_5_1296072555_indicator', null, null, 'add_friend_5_1296072555', ['add_friend_5_1296072555'], ['remove_friend_5_1296072555']);" href="javascript:void(0);">Become friends</a>				</div>
+				<img id="toggle_friend_5_1296072555_indicator" style="display: none;" src="/buggenie/thebuggenie/themes/oxygen/spinning_16.gif" alt="spinning_16.gif">				<div style="padding: 2px; display: none;" id="remove_friend_5_1296072555">
+					<a onclick="_updateDivWithJSONFeedback('/buggenie/thebuggenie/friends/remove/5', null, 'toggle_friend_5_1296072555_indicator', null, null, 'remove_friend_5_1296072555', ['remove_friend_5_1296072555'], ['add_friend_5_1296072555']);" href="javascript:void(0);">Remove this friend</a>				</div>
+										<div style="padding: 2px;"><a target="_new" href="/buggenie/thebuggenie/configure/users/finduser/jackdaniels">Edit this user</a></div>
+						<div style="padding: 2px;">
+				<a href="javascript:void(0);" onclick="showFadedBackdrop('/buggenie/thebuggenie/get/partials/usercard/user_id/5');$('bud_jackdaniels_1296072555').hide();">Show user details</a>
+			</div>
+					</div>
+		<div style="text-align: right; padding: 3px; font-size: 9px;"><a href="javascript:void(0);" onclick="$('bud_jackdaniels_1296072555').toggle();">Close this menu</a></div>
+	</div>
+)
+									</span>
+						<a href="/buggenie/thebuggenie/sampleproject1/issues/17">Feature request #17 - <span class="issue_title">Magna sed eu faucibus ac. </span></a>					</div>
+				<div class="roadmap_issue">
+			<div class="issue_status"><div style="border: 1px solid #AAA; background-color: #5C5; font-size: 1px; width: 13px; height: 13px;" title="Being worked on">&nbsp;</div></div>
+							<span class="faded_out">
+											(Assigned to 			<a href="javascript:void(0);" onclick="$('bud_john_439231124').toggle();" style="font-weight: normal;">John</a>
+	<div id="bud_john_439231124" style="z-index: 100; width: 300px; display: none; position: absolute;" class="rounded_box white shadowed user_popup">
+		<div style="padding: 3px;">
+			<div style="padding: 2px; width: 36px; height: 36px; text-align: center; background-color: #FFF; border: 1px solid #DDD; float: left;">
+				<img alt=" " style="width: 36px; height: 36px;" src="http://www.gravatar.com/avatar/d41d8cd98f00b204e9800998ecf8427e.png?d=wavatar&amp;s=48">			</div>
+			<div class="user_realname">
+				John				<div class="user_status">Offline</div>
+			</div>
+			<div class="user_details">
+									<b>This user has not logged in yet</b>
+							</div>
+										<div style="padding: 2px;" id="add_friend_3_439231124">
+					<a onclick="_updateDivWithJSONFeedback('/buggenie/thebuggenie/friends/add/3', null, 'toggle_friend_3_439231124_indicator', null, null, 'add_friend_3_439231124', ['add_friend_3_439231124'], ['remove_friend_3_439231124']);" href="javascript:void(0);">Become friends</a>				</div>
+				<img id="toggle_friend_3_439231124_indicator" style="display: none;" src="/buggenie/thebuggenie/themes/oxygen/spinning_16.gif" alt="spinning_16.gif">				<div style="padding: 2px; display: none;" id="remove_friend_3_439231124">
+					<a onclick="_updateDivWithJSONFeedback('/buggenie/thebuggenie/friends/remove/3', null, 'toggle_friend_3_439231124_indicator', null, null, 'remove_friend_3_439231124', ['remove_friend_3_439231124'], ['add_friend_3_439231124']);" href="javascript:void(0);">Remove this friend</a>				</div>
+										<div style="padding: 2px;"><a target="_new" href="/buggenie/thebuggenie/configure/users/finduser/john">Edit this user</a></div>
+						<div style="padding: 2px;">
+				<a href="javascript:void(0);" onclick="showFadedBackdrop('/buggenie/thebuggenie/get/partials/usercard/user_id/3');$('bud_john_439231124').hide();">Show user details</a>
+			</div>
+					</div>
+		<div style="text-align: right; padding: 3px; font-size: 9px;"><a href="javascript:void(0);" onclick="$('bud_john_439231124').toggle();">Close this menu</a></div>
+	</div>
+)
+									</span>
+						<a href="/buggenie/thebuggenie/sampleproject1/issues/26">Enhancement #26 - <span class="issue_title">Molestie consequat. Nunc aliquam aliquam ante cursus ipsum at nunc. </span></a>					</div>
+				<div class="roadmap_issue">
+			<div class="issue_status"><div style="border: 1px solid #AAA; background-color: #C2F588; font-size: 1px; width: 13px; height: 13px;" title="Closed">&nbsp;</div></div>
+						<a href="/buggenie/thebuggenie/sampleproject1/issues/27">Enhancement #27 - <span class="issue_title">Sed a nam nec tempor venenatis. </span></a>					</div>
+				<div class="roadmap_issue">
+			<div class="issue_status"><div style="border: 1px solid #AAA; background-color: #5C5; font-size: 1px; width: 13px; height: 13px;" title="Being worked on">&nbsp;</div></div>
+							<span class="faded_out">
+											(Assigned to 			<a href="javascript:void(0);" onclick="$('bud_jane_1788639887').toggle();" style="font-weight: normal;">Jane</a>
+	<div id="bud_jane_1788639887" style="z-index: 100; width: 300px; display: none; position: absolute;" class="rounded_box white shadowed user_popup">
+		<div style="padding: 3px;">
+			<div style="padding: 2px; width: 36px; height: 36px; text-align: center; background-color: #FFF; border: 1px solid #DDD; float: left;">
+				<img alt=" " style="width: 36px; height: 36px;" src="http://www.gravatar.com/avatar/d41d8cd98f00b204e9800998ecf8427e.png?d=wavatar&amp;s=48">			</div>
+			<div class="user_realname">
+				Jane				<div class="user_status">Offline</div>
+			</div>
+			<div class="user_details">
+									<b>This user has not logged in yet</b>
+							</div>
+										<div style="padding: 2px;" id="add_friend_4_1788639887">
+					<a onclick="_updateDivWithJSONFeedback('/buggenie/thebuggenie/friends/add/4', null, 'toggle_friend_4_1788639887_indicator', null, null, 'add_friend_4_1788639887', ['add_friend_4_1788639887'], ['remove_friend_4_1788639887']);" href="javascript:void(0);">Become friends</a>				</div>
+				<img id="toggle_friend_4_1788639887_indicator" style="display: none;" src="/buggenie/thebuggenie/themes/oxygen/spinning_16.gif" alt="spinning_16.gif">				<div style="padding: 2px; display: none;" id="remove_friend_4_1788639887">
+					<a onclick="_updateDivWithJSONFeedback('/buggenie/thebuggenie/friends/remove/4', null, 'toggle_friend_4_1788639887_indicator', null, null, 'remove_friend_4_1788639887', ['remove_friend_4_1788639887'], ['add_friend_4_1788639887']);" href="javascript:void(0);">Remove this friend</a>				</div>
+										<div style="padding: 2px;"><a target="_new" href="/buggenie/thebuggenie/configure/users/finduser/jane">Edit this user</a></div>
+						<div style="padding: 2px;">
+				<a href="javascript:void(0);" onclick="showFadedBackdrop('/buggenie/thebuggenie/get/partials/usercard/user_id/4');$('bud_jane_1788639887').hide();">Show user details</a>
+			</div>
+					</div>
+		<div style="text-align: right; padding: 3px; font-size: 9px;"><a href="javascript:void(0);" onclick="$('bud_jane_1788639887').toggle();">Close this menu</a></div>
+	</div>
+)
+									</span>
+						<a href="/buggenie/thebuggenie/sampleproject1/issues/28">Enhancement #28 - <span class="issue_title">In dui et conubia orci leo consequat. </span></a>					</div>
+				<div class="roadmap_issue">
+			<div class="issue_status"><div style="border: 1px solid #AAA; background-color: #FF55AA; font-size: 1px; width: 13px; height: 13px;" title="Confirmed">&nbsp;</div></div>
+						<a href="/buggenie/thebuggenie/sampleproject1/issues/31">Idea #31 - <span class="issue_title">Cras. Neque phasellus nibh sem massa lectus facilisi. </span></a>					</div>
+																</div>
+						</div>
+											<div class="roadmap_milestone" id="roadmap_milestone_12">
+							<div class="roadmap_header">
+								Sprint 1								<div class="roadmap_dates" id="milestone_12_date_string"> (starts Nov 19, 2011 - ended Dec 19, 2011)</div>
+							</div>
+							<div class="roadmap_percentbar">
+								<table style="table-layout: fixed; width: 100%;" cellpadding=0 cellspacing=0>
+<tr id="milestone_12_percent">
+	<td class="percent_filled" style="font-size: 3px; width: 0%; height: 22px;"><b style="text-decoration: none;">&nbsp;</b></td>
+	<td class="percent_unfilled" style="font-size: 3px; width: 100%; height: 22px;"><b style="text-decoration: none;">&nbsp;</b></td>
+</tr>
+</table>							</div>
+							<div class="roadmap_percentdescription">
+																											<b id="milestone_12_closed_issues">0</b> stories (<i id="milestone_12_closed_points">0</i> pts) closed of <b id="milestone_12_assigned_issues">1</b> (<i id="milestone_12_assigned_points">45</i> pts) assigned																									<a onclick="toggleMilestoneIssues('/buggenie/thebuggenie/sampleproject1/milestone/12/get/issues', 12);" href="javascript:void(0);"><img style="float: right;" title="Show issues" src="/buggenie/thebuggenie/themes/oxygen/view_list_details.png" alt="view_list_details.png"></a>								<a onclick="refreshMilestoneDetails('/buggenie/thebuggenie/sampleproject1/milestone/12/get/details', 12);" href="javascript:void(0);"><img style="float: right; margin-right: 10px;" title="Update (regenerate) milestone details" src="/buggenie/thebuggenie/themes/oxygen/refresh.png" alt="refresh.png"></a>							</div>
+							<br style="clear: both;">
+							<div id="milestone_12_changed" class="milestones_indicator" style="display: none;">
+								Milestone details have changed. To see the updated list of issues, click the "Show issues" icon...
+								<button onclick="$('milestone_12_changed').hide();">Ok</button>
+							</div>
+							<div id="milestone_12_indicator" class="milestones_indicator" style="display: none;">
+								<img src="/buggenie/thebuggenie/themes/oxygen/spinning_32.gif" alt="spinning_32.gif">								Please wait...
+							</div>
+														<div class="roadmap_issues" id="milestone_12_issues">
+																				<div class="roadmap_issue">
+			<div class="issue_status"><div style="border: 1px solid #AAA; background-color: #FFF; font-size: 1px; width: 13px; height: 13px;" title="New">&nbsp;</div></div>
+						<a href="/buggenie/thebuggenie/sampleproject1/issues/42">User story #42 - <span class="issue_title">Another story</span></a>							<div class="issue_points">45 points</div>
+					</div>
+																</div>
+						</div>
+											<div class="roadmap_milestone" id="roadmap_milestone_4">
+							<div class="roadmap_header">
+								Milestone 4								<div class="roadmap_dates" id="milestone_4_date_string"> (will be released: Jan 20, 2012)</div>
+							</div>
+							<div class="roadmap_percentbar">
+								<table style="table-layout: fixed; width: 100%;" cellpadding=0 cellspacing=0>
+<tr id="milestone_4_percent">
+	<td class="percent_filled" style="font-size: 3px; width: 33%; height: 22px;"><b style="text-decoration: none;">&nbsp;</b></td>
+	<td class="percent_unfilled" style="font-size: 3px; width: 67%; height: 22px;"><b style="text-decoration: none;">&nbsp;</b></td>
+</tr>
+</table>							</div>
+							<div class="roadmap_percentdescription">
+																	<b id="milestone_4_closed_issues">3</b> issue(s) closed of <b id="milestone_4_assigned_issues">9</b> assigned																<a onclick="toggleMilestoneIssues('/buggenie/thebuggenie/sampleproject1/milestone/4/get/issues', 4);" href="javascript:void(0);"><img style="float: right;" title="Show issues" src="/buggenie/thebuggenie/themes/oxygen/view_list_details.png" alt="view_list_details.png"></a>								<a onclick="refreshMilestoneDetails('/buggenie/thebuggenie/sampleproject1/milestone/4/get/details', 4);" href="javascript:void(0);"><img style="float: right; margin-right: 10px;" title="Update (regenerate) milestone details" src="/buggenie/thebuggenie/themes/oxygen/refresh.png" alt="refresh.png"></a>							</div>
+							<br style="clear: both;">
+							<div id="milestone_4_changed" class="milestones_indicator" style="display: none;">
+								Milestone details have changed. To see the updated list of issues, click the "Show issues" icon...
+								<button onclick="$('milestone_4_changed').hide();">Ok</button>
+							</div>
+							<div id="milestone_4_indicator" class="milestones_indicator" style="display: none;">
+								<img src="/buggenie/thebuggenie/themes/oxygen/spinning_32.gif" alt="spinning_32.gif">								Please wait...
+							</div>
+														<div class="roadmap_issues" id="milestone_4_issues">
+																				<div class="roadmap_issue">
+			<div class="issue_status"><div style="border: 1px solid #AAA; background-color: #7D3; font-size: 1px; width: 13px; height: 13px;" title="Near completion">&nbsp;</div></div>
+							<span class="faded_out">
+											(Assigned to 			<a href="javascript:void(0);" onclick="$('bud_jane_1194167037').toggle();" style="font-weight: normal;">Jane</a>
+	<div id="bud_jane_1194167037" style="z-index: 100; width: 300px; display: none; position: absolute;" class="rounded_box white shadowed user_popup">
+		<div style="padding: 3px;">
+			<div style="padding: 2px; width: 36px; height: 36px; text-align: center; background-color: #FFF; border: 1px solid #DDD; float: left;">
+				<img alt=" " style="width: 36px; height: 36px;" src="http://www.gravatar.com/avatar/d41d8cd98f00b204e9800998ecf8427e.png?d=wavatar&amp;s=48">			</div>
+			<div class="user_realname">
+				Jane				<div class="user_status">Offline</div>
+			</div>
+			<div class="user_details">
+									<b>This user has not logged in yet</b>
+							</div>
+										<div style="padding: 2px;" id="add_friend_4_1194167037">
+					<a onclick="_updateDivWithJSONFeedback('/buggenie/thebuggenie/friends/add/4', null, 'toggle_friend_4_1194167037_indicator', null, null, 'add_friend_4_1194167037', ['add_friend_4_1194167037'], ['remove_friend_4_1194167037']);" href="javascript:void(0);">Become friends</a>				</div>
+				<img id="toggle_friend_4_1194167037_indicator" style="display: none;" src="/buggenie/thebuggenie/themes/oxygen/spinning_16.gif" alt="spinning_16.gif">				<div style="padding: 2px; display: none;" id="remove_friend_4_1194167037">
+					<a onclick="_updateDivWithJSONFeedback('/buggenie/thebuggenie/friends/remove/4', null, 'toggle_friend_4_1194167037_indicator', null, null, 'remove_friend_4_1194167037', ['remove_friend_4_1194167037'], ['add_friend_4_1194167037']);" href="javascript:void(0);">Remove this friend</a>				</div>
+										<div style="padding: 2px;"><a target="_new" href="/buggenie/thebuggenie/configure/users/finduser/jane">Edit this user</a></div>
+						<div style="padding: 2px;">
+				<a href="javascript:void(0);" onclick="showFadedBackdrop('/buggenie/thebuggenie/get/partials/usercard/user_id/4');$('bud_jane_1194167037').hide();">Show user details</a>
+			</div>
+					</div>
+		<div style="text-align: right; padding: 3px; font-size: 9px;"><a href="javascript:void(0);" onclick="$('bud_jane_1194167037').toggle();">Close this menu</a></div>
+	</div>
+)
+									</span>
+						<a href="/buggenie/thebuggenie/sampleproject1/issues/1">Bug report #1 - <span class="issue_title">Molestie sapien eu ante felis velit. Non consectetur erat. </span></a>					</div>
+				<div class="roadmap_issue">
+			<div class="issue_status"><div style="border: 1px solid #AAA; background-color: #55C; font-size: 1px; width: 13px; height: 13px;" title="Ready for testing / QA">&nbsp;</div></div>
+							<span class="faded_out">
+											(Assigned to 			<a href="javascript:void(0);" onclick="$('bud_jackdaniels_717130022').toggle();" style="font-weight: normal;">Jack</a>
+	<div id="bud_jackdaniels_717130022" style="z-index: 100; width: 300px; display: none; position: absolute;" class="rounded_box white shadowed user_popup">
+		<div style="padding: 3px;">
+			<div style="padding: 2px; width: 36px; height: 36px; text-align: center; background-color: #FFF; border: 1px solid #DDD; float: left;">
+				<img alt=" " style="width: 36px; height: 36px;" src="http://www.gravatar.com/avatar/d41d8cd98f00b204e9800998ecf8427e.png?d=wavatar&amp;s=48">			</div>
+			<div class="user_realname">
+				Jack Daniels				<div class="user_status">Offline</div>
+			</div>
+			<div class="user_details">
+									<b>This user has not logged in yet</b>
+							</div>
+										<div style="padding: 2px;" id="add_friend_5_717130022">
+					<a onclick="_updateDivWithJSONFeedback('/buggenie/thebuggenie/friends/add/5', null, 'toggle_friend_5_717130022_indicator', null, null, 'add_friend_5_717130022', ['add_friend_5_717130022'], ['remove_friend_5_717130022']);" href="javascript:void(0);">Become friends</a>				</div>
+				<img id="toggle_friend_5_717130022_indicator" style="display: none;" src="/buggenie/thebuggenie/themes/oxygen/spinning_16.gif" alt="spinning_16.gif">				<div style="padding: 2px; display: none;" id="remove_friend_5_717130022">
+					<a onclick="_updateDivWithJSONFeedback('/buggenie/thebuggenie/friends/remove/5', null, 'toggle_friend_5_717130022_indicator', null, null, 'remove_friend_5_717130022', ['remove_friend_5_717130022'], ['add_friend_5_717130022']);" href="javascript:void(0);">Remove this friend</a>				</div>
+										<div style="padding: 2px;"><a target="_new" href="/buggenie/thebuggenie/configure/users/finduser/jackdaniels">Edit this user</a></div>
+						<div style="padding: 2px;">
+				<a href="javascript:void(0);" onclick="showFadedBackdrop('/buggenie/thebuggenie/get/partials/usercard/user_id/5');$('bud_jackdaniels_717130022').hide();">Show user details</a>
+			</div>
+					</div>
+		<div style="text-align: right; padding: 3px; font-size: 9px;"><a href="javascript:void(0);" onclick="$('bud_jackdaniels_717130022').toggle();">Close this menu</a></div>
+	</div>
+)
+									</span>
+						<a href="/buggenie/thebuggenie/sampleproject1/issues/3">Bug report #3 - <span class="issue_title">Arcu ipsum dolor nam tempus semper maecenas varius. </span></a>					</div>
+				<div class="roadmap_issue">
+			<div class="issue_status"><div style="border: 1px solid #AAA; background-color: #C2F533; font-size: 1px; width: 13px; height: 13px;" title="Investigating">&nbsp;</div></div>
+							<span class="faded_out">
+											(Assigned to 			<a href="javascript:void(0);" onclick="$('bud_john_1095903571').toggle();" style="font-weight: normal;">John</a>
+	<div id="bud_john_1095903571" style="z-index: 100; width: 300px; display: none; position: absolute;" class="rounded_box white shadowed user_popup">
+		<div style="padding: 3px;">
+			<div style="padding: 2px; width: 36px; height: 36px; text-align: center; background-color: #FFF; border: 1px solid #DDD; float: left;">
+				<img alt=" " style="width: 36px; height: 36px;" src="http://www.gravatar.com/avatar/d41d8cd98f00b204e9800998ecf8427e.png?d=wavatar&amp;s=48">			</div>
+			<div class="user_realname">
+				John				<div class="user_status">Offline</div>
+			</div>
+			<div class="user_details">
+									<b>This user has not logged in yet</b>
+							</div>
+										<div style="padding: 2px;" id="add_friend_3_1095903571">
+					<a onclick="_updateDivWithJSONFeedback('/buggenie/thebuggenie/friends/add/3', null, 'toggle_friend_3_1095903571_indicator', null, null, 'add_friend_3_1095903571', ['add_friend_3_1095903571'], ['remove_friend_3_1095903571']);" href="javascript:void(0);">Become friends</a>				</div>
+				<img id="toggle_friend_3_1095903571_indicator" style="display: none;" src="/buggenie/thebuggenie/themes/oxygen/spinning_16.gif" alt="spinning_16.gif">				<div style="padding: 2px; display: none;" id="remove_friend_3_1095903571">
+					<a onclick="_updateDivWithJSONFeedback('/buggenie/thebuggenie/friends/remove/3', null, 'toggle_friend_3_1095903571_indicator', null, null, 'remove_friend_3_1095903571', ['remove_friend_3_1095903571'], ['add_friend_3_1095903571']);" href="javascript:void(0);">Remove this friend</a>				</div>
+										<div style="padding: 2px;"><a target="_new" href="/buggenie/thebuggenie/configure/users/finduser/john">Edit this user</a></div>
+						<div style="padding: 2px;">
+				<a href="javascript:void(0);" onclick="showFadedBackdrop('/buggenie/thebuggenie/get/partials/usercard/user_id/3');$('bud_john_1095903571').hide();">Show user details</a>
+			</div>
+					</div>
+		<div style="text-align: right; padding: 3px; font-size: 9px;"><a href="javascript:void(0);" onclick="$('bud_john_1095903571').toggle();">Close this menu</a></div>
+	</div>
+)
+									</span>
+						<a href="/buggenie/thebuggenie/sampleproject1/issues/10">Bug report #10 - <span class="issue_title">Quis arcu. Sed consequat in et commodo luctus nisl dictum vitae ullamcorper. Sapien vehicula. Vel. </span></a>					</div>
+				<div class="roadmap_issue">
+			<div class="issue_status"><div style="border: 1px solid #AAA; background-color: #55C; font-size: 1px; width: 13px; height: 13px;" title="Ready for testing / QA">&nbsp;</div></div>
+						<a href="/buggenie/thebuggenie/sampleproject1/issues/13">Feature request #13 - <span class="issue_title">Vitae dolor facilisis donec congue vestibulum nec turpis Nunc. Laoreet nisi felis interdum donec tristique. </span></a>					</div>
+				<div class="roadmap_issue faded_out issue_closed">
+			<div class="issue_status"><div style="border: 1px solid #AAA; background-color: #FFF; font-size: 1px; width: 13px; height: 13px;" title="New">&nbsp;</div></div>
+							<span class="faded_out">
+											(Assigned to 			<a href="javascript:void(0);" onclick="$('bud_john_741306183').toggle();" style="font-weight: normal;">John</a>
+	<div id="bud_john_741306183" style="z-index: 100; width: 300px; display: none; position: absolute;" class="rounded_box white shadowed user_popup">
+		<div style="padding: 3px;">
+			<div style="padding: 2px; width: 36px; height: 36px; text-align: center; background-color: #FFF; border: 1px solid #DDD; float: left;">
+				<img alt=" " style="width: 36px; height: 36px;" src="http://www.gravatar.com/avatar/d41d8cd98f00b204e9800998ecf8427e.png?d=wavatar&amp;s=48">			</div>
+			<div class="user_realname">
+				John				<div class="user_status">Offline</div>
+			</div>
+			<div class="user_details">
+									<b>This user has not logged in yet</b>
+							</div>
+										<div style="padding: 2px;" id="add_friend_3_741306183">
+					<a onclick="_updateDivWithJSONFeedback('/buggenie/thebuggenie/friends/add/3', null, 'toggle_friend_3_741306183_indicator', null, null, 'add_friend_3_741306183', ['add_friend_3_741306183'], ['remove_friend_3_741306183']);" href="javascript:void(0);">Become friends</a>				</div>
+				<img id="toggle_friend_3_741306183_indicator" style="display: none;" src="/buggenie/thebuggenie/themes/oxygen/spinning_16.gif" alt="spinning_16.gif">				<div style="padding: 2px; display: none;" id="remove_friend_3_741306183">
+					<a onclick="_updateDivWithJSONFeedback('/buggenie/thebuggenie/friends/remove/3', null, 'toggle_friend_3_741306183_indicator', null, null, 'remove_friend_3_741306183', ['remove_friend_3_741306183'], ['add_friend_3_741306183']);" href="javascript:void(0);">Remove this friend</a>				</div>
+										<div style="padding: 2px;"><a target="_new" href="/buggenie/thebuggenie/configure/users/finduser/john">Edit this user</a></div>
+						<div style="padding: 2px;">
+				<a href="javascript:void(0);" onclick="showFadedBackdrop('/buggenie/thebuggenie/get/partials/usercard/user_id/3');$('bud_john_741306183').hide();">Show user details</a>
+			</div>
+					</div>
+		<div style="text-align: right; padding: 3px; font-size: 9px;"><a href="javascript:void(0);" onclick="$('bud_john_741306183').toggle();">Close this menu</a></div>
+	</div>
+)
+									</span>
+						<a href="/buggenie/thebuggenie/sampleproject1/issues/21">Enhancement #21 - <span class="issue_title">Arcu nam dui integer luctus condimentum pharetra accumsan in ultrices lorem vehicula. </span></a>					</div>
+				<div class="roadmap_issue faded_out issue_closed">
+			<div class="issue_status"><div style="border: 1px solid #AAA; background-color: #44FC1D; font-size: 1px; width: 13px; height: 13px;" title="Not a bug">&nbsp;</div></div>
+							<span class="faded_out">
+											(Assigned to 			<a href="javascript:void(0);" onclick="$('bud_jackdaniels_1977518914').toggle();" style="font-weight: normal;">Jack</a>
+	<div id="bud_jackdaniels_1977518914" style="z-index: 100; width: 300px; display: none; position: absolute;" class="rounded_box white shadowed user_popup">
+		<div style="padding: 3px;">
+			<div style="padding: 2px; width: 36px; height: 36px; text-align: center; background-color: #FFF; border: 1px solid #DDD; float: left;">
+				<img alt=" " style="width: 36px; height: 36px;" src="http://www.gravatar.com/avatar/d41d8cd98f00b204e9800998ecf8427e.png?d=wavatar&amp;s=48">			</div>
+			<div class="user_realname">
+				Jack Daniels				<div class="user_status">Offline</div>
+			</div>
+			<div class="user_details">
+									<b>This user has not logged in yet</b>
+							</div>
+										<div style="padding: 2px;" id="add_friend_5_1977518914">
+					<a onclick="_updateDivWithJSONFeedback('/buggenie/thebuggenie/friends/add/5', null, 'toggle_friend_5_1977518914_indicator', null, null, 'add_friend_5_1977518914', ['add_friend_5_1977518914'], ['remove_friend_5_1977518914']);" href="javascript:void(0);">Become friends</a>				</div>
+				<img id="toggle_friend_5_1977518914_indicator" style="display: none;" src="/buggenie/thebuggenie/themes/oxygen/spinning_16.gif" alt="spinning_16.gif">				<div style="padding: 2px; display: none;" id="remove_friend_5_1977518914">
+					<a onclick="_updateDivWithJSONFeedback('/buggenie/thebuggenie/friends/remove/5', null, 'toggle_friend_5_1977518914_indicator', null, null, 'remove_friend_5_1977518914', ['remove_friend_5_1977518914'], ['add_friend_5_1977518914']);" href="javascript:void(0);">Remove this friend</a>				</div>
+										<div style="padding: 2px;"><a target="_new" href="/buggenie/thebuggenie/configure/users/finduser/jackdaniels">Edit this user</a></div>
+						<div style="padding: 2px;">
+				<a href="javascript:void(0);" onclick="showFadedBackdrop('/buggenie/thebuggenie/get/partials/usercard/user_id/5');$('bud_jackdaniels_1977518914').hide();">Show user details</a>
+			</div>
+					</div>
+		<div style="text-align: right; padding: 3px; font-size: 9px;"><a href="javascript:void(0);" onclick="$('bud_jackdaniels_1977518914').toggle();">Close this menu</a></div>
+	</div>
+)
+									</span>
+						<a href="/buggenie/thebuggenie/sampleproject1/issues/32">Idea #32 - <span class="issue_title">Nascetur eu non donec nulla vehicula pretium. Proin. Sagittis. Pharetra a. Donec. Sit. </span></a>					</div>
+				<div class="roadmap_issue faded_out issue_closed">
+			<div class="issue_status"><div style="border: 1px solid #AAA; background-color: #7D3; font-size: 1px; width: 13px; height: 13px;" title="Near completion">&nbsp;</div></div>
+							<span class="faded_out">
+											(Assigned to 			<a href="javascript:void(0);" onclick="$('bud_jackdaniels_1267928066').toggle();" style="font-weight: normal;">Jack</a>
+	<div id="bud_jackdaniels_1267928066" style="z-index: 100; width: 300px; display: none; position: absolute;" class="rounded_box white shadowed user_popup">
+		<div style="padding: 3px;">
+			<div style="padding: 2px; width: 36px; height: 36px; text-align: center; background-color: #FFF; border: 1px solid #DDD; float: left;">
+				<img alt=" " style="width: 36px; height: 36px;" src="http://www.gravatar.com/avatar/d41d8cd98f00b204e9800998ecf8427e.png?d=wavatar&amp;s=48">			</div>
+			<div class="user_realname">
+				Jack Daniels				<div class="user_status">Offline</div>
+			</div>
+			<div class="user_details">
+									<b>This user has not logged in yet</b>
+							</div>
+										<div style="padding: 2px;" id="add_friend_5_1267928066">
+					<a onclick="_updateDivWithJSONFeedback('/buggenie/thebuggenie/friends/add/5', null, 'toggle_friend_5_1267928066_indicator', null, null, 'add_friend_5_1267928066', ['add_friend_5_1267928066'], ['remove_friend_5_1267928066']);" href="javascript:void(0);">Become friends</a>				</div>
+				<img id="toggle_friend_5_1267928066_indicator" style="display: none;" src="/buggenie/thebuggenie/themes/oxygen/spinning_16.gif" alt="spinning_16.gif">				<div style="padding: 2px; display: none;" id="remove_friend_5_1267928066">
+					<a onclick="_updateDivWithJSONFeedback('/buggenie/thebuggenie/friends/remove/5', null, 'toggle_friend_5_1267928066_indicator', null, null, 'remove_friend_5_1267928066', ['remove_friend_5_1267928066'], ['add_friend_5_1267928066']);" href="javascript:void(0);">Remove this friend</a>				</div>
+										<div style="padding: 2px;"><a target="_new" href="/buggenie/thebuggenie/configure/users/finduser/jackdaniels">Edit this user</a></div>
+						<div style="padding: 2px;">
+				<a href="javascript:void(0);" onclick="showFadedBackdrop('/buggenie/thebuggenie/get/partials/usercard/user_id/5');$('bud_jackdaniels_1267928066').hide();">Show user details</a>
+			</div>
+					</div>
+		<div style="text-align: right; padding: 3px; font-size: 9px;"><a href="javascript:void(0);" onclick="$('bud_jackdaniels_1267928066').toggle();">Close this menu</a></div>
+	</div>
+)
+									</span>
+						<a href="/buggenie/thebuggenie/sampleproject1/issues/34">Idea #34 - <span class="issue_title">Ipsum ut. Sit id sed. At auctor Urna vel et commodo et tempor aliquam. </span></a>					</div>
+				<div class="roadmap_issue">
+			<div class="issue_status"><div style="border: 1px solid #AAA; background-color: #FFF; font-size: 1px; width: 13px; height: 13px;" title="New">&nbsp;</div></div>
+							<span class="faded_out">
+											(Assigned to 			<a href="javascript:void(0);" onclick="$('bud_john_625618388').toggle();" style="font-weight: normal;">John</a>
+	<div id="bud_john_625618388" style="z-index: 100; width: 300px; display: none; position: absolute;" class="rounded_box white shadowed user_popup">
+		<div style="padding: 3px;">
+			<div style="padding: 2px; width: 36px; height: 36px; text-align: center; background-color: #FFF; border: 1px solid #DDD; float: left;">
+				<img alt=" " style="width: 36px; height: 36px;" src="http://www.gravatar.com/avatar/d41d8cd98f00b204e9800998ecf8427e.png?d=wavatar&amp;s=48">			</div>
+			<div class="user_realname">
+				John				<div class="user_status">Offline</div>
+			</div>
+			<div class="user_details">
+									<b>This user has not logged in yet</b>
+							</div>
+										<div style="padding: 2px;" id="add_friend_3_625618388">
+					<a onclick="_updateDivWithJSONFeedback('/buggenie/thebuggenie/friends/add/3', null, 'toggle_friend_3_625618388_indicator', null, null, 'add_friend_3_625618388', ['add_friend_3_625618388'], ['remove_friend_3_625618388']);" href="javascript:void(0);">Become friends</a>				</div>
+				<img id="toggle_friend_3_625618388_indicator" style="display: none;" src="/buggenie/thebuggenie/themes/oxygen/spinning_16.gif" alt="spinning_16.gif">				<div style="padding: 2px; display: none;" id="remove_friend_3_625618388">
+					<a onclick="_updateDivWithJSONFeedback('/buggenie/thebuggenie/friends/remove/3', null, 'toggle_friend_3_625618388_indicator', null, null, 'remove_friend_3_625618388', ['remove_friend_3_625618388'], ['add_friend_3_625618388']);" href="javascript:void(0);">Remove this friend</a>				</div>
+										<div style="padding: 2px;"><a target="_new" href="/buggenie/thebuggenie/configure/users/finduser/john">Edit this user</a></div>
+						<div style="padding: 2px;">
+				<a href="javascript:void(0);" onclick="showFadedBackdrop('/buggenie/thebuggenie/get/partials/usercard/user_id/3');$('bud_john_625618388').hide();">Show user details</a>
+			</div>
+					</div>
+		<div style="text-align: right; padding: 3px; font-size: 9px;"><a href="javascript:void(0);" onclick="$('bud_john_625618388').toggle();">Close this menu</a></div>
+	</div>
+)
+									</span>
+						<a href="/buggenie/thebuggenie/sampleproject1/issues/36">Idea #36 - <span class="issue_title">Arcu nullam tortor erat venenatis commodo quis sed vel Imperdiet semper fringilla non non. </span></a>					</div>
+				<div class="roadmap_issue">
+			<div class="issue_status"><div style="border: 1px solid #AAA; background-color: #44FC1D; font-size: 1px; width: 13px; height: 13px;" title="Not a bug">&nbsp;</div></div>
+						<a href="/buggenie/thebuggenie/sampleproject1/issues/38">Idea #38 - <span class="issue_title">Tristique lorem dignissim. Ut interdum eget donec augue ac elit dolor vitae et. </span></a>					</div>
+																</div>
+						</div>
+											<div class="roadmap_milestone" id="roadmap_milestone_5">
+							<div class="roadmap_header">
+								Milestone 5								<div class="roadmap_dates" id="milestone_5_date_string"> (will be released: Feb 12, 2012)</div>
+							</div>
+							<div class="roadmap_percentbar">
+								<table style="table-layout: fixed; width: 100%;" cellpadding=0 cellspacing=0>
+<tr id="milestone_5_percent">
+	<td class="percent_filled" style="font-size: 3px; width: 0%; height: 22px;"><b style="text-decoration: none;">&nbsp;</b></td>
+	<td class="percent_unfilled" style="font-size: 3px; width: 100%; height: 22px;"><b style="text-decoration: none;">&nbsp;</b></td>
+</tr>
+</table>							</div>
+							<div class="roadmap_percentdescription">
+																	<b id="milestone_5_closed_issues">0</b> issue(s) closed of <b id="milestone_5_assigned_issues">9</b> assigned																<a onclick="toggleMilestoneIssues('/buggenie/thebuggenie/sampleproject1/milestone/5/get/issues', 5);" href="javascript:void(0);"><img style="float: right;" title="Show issues" src="/buggenie/thebuggenie/themes/oxygen/view_list_details.png" alt="view_list_details.png"></a>								<a onclick="refreshMilestoneDetails('/buggenie/thebuggenie/sampleproject1/milestone/5/get/details', 5);" href="javascript:void(0);"><img style="float: right; margin-right: 10px;" title="Update (regenerate) milestone details" src="/buggenie/thebuggenie/themes/oxygen/refresh.png" alt="refresh.png"></a>							</div>
+							<br style="clear: both;">
+							<div id="milestone_5_changed" class="milestones_indicator" style="display: none;">
+								Milestone details have changed. To see the updated list of issues, click the "Show issues" icon...
+								<button onclick="$('milestone_5_changed').hide();">Ok</button>
+							</div>
+							<div id="milestone_5_indicator" class="milestones_indicator" style="display: none;">
+								<img src="/buggenie/thebuggenie/themes/oxygen/spinning_32.gif" alt="spinning_32.gif">								Please wait...
+							</div>
+														<div class="roadmap_issues" id="milestone_5_issues">
+																				<div class="roadmap_issue">
+			<div class="issue_status"><div style="border: 1px solid #AAA; background-color: #C2F533; font-size: 1px; width: 13px; height: 13px;" title="Investigating">&nbsp;</div></div>
+							<span class="faded_out">
+											(Assigned to 			<a href="javascript:void(0);" onclick="$('bud_jackdaniels_1857676036').toggle();" style="font-weight: normal;">Jack</a>
+	<div id="bud_jackdaniels_1857676036" style="z-index: 100; width: 300px; display: none; position: absolute;" class="rounded_box white shadowed user_popup">
+		<div style="padding: 3px;">
+			<div style="padding: 2px; width: 36px; height: 36px; text-align: center; background-color: #FFF; border: 1px solid #DDD; float: left;">
+				<img alt=" " style="width: 36px; height: 36px;" src="http://www.gravatar.com/avatar/d41d8cd98f00b204e9800998ecf8427e.png?d=wavatar&amp;s=48">			</div>
+			<div class="user_realname">
+				Jack Daniels				<div class="user_status">Offline</div>
+			</div>
+			<div class="user_details">
+									<b>This user has not logged in yet</b>
+							</div>
+										<div style="padding: 2px;" id="add_friend_5_1857676036">
+					<a onclick="_updateDivWithJSONFeedback('/buggenie/thebuggenie/friends/add/5', null, 'toggle_friend_5_1857676036_indicator', null, null, 'add_friend_5_1857676036', ['add_friend_5_1857676036'], ['remove_friend_5_1857676036']);" href="javascript:void(0);">Become friends</a>				</div>
+				<img id="toggle_friend_5_1857676036_indicator" style="display: none;" src="/buggenie/thebuggenie/themes/oxygen/spinning_16.gif" alt="spinning_16.gif">				<div style="padding: 2px; display: none;" id="remove_friend_5_1857676036">
+					<a onclick="_updateDivWithJSONFeedback('/buggenie/thebuggenie/friends/remove/5', null, 'toggle_friend_5_1857676036_indicator', null, null, 'remove_friend_5_1857676036', ['remove_friend_5_1857676036'], ['add_friend_5_1857676036']);" href="javascript:void(0);">Remove this friend</a>				</div>
+										<div style="padding: 2px;"><a target="_new" href="/buggenie/thebuggenie/configure/users/finduser/jackdaniels">Edit this user</a></div>
+						<div style="padding: 2px;">
+				<a href="javascript:void(0);" onclick="showFadedBackdrop('/buggenie/thebuggenie/get/partials/usercard/user_id/5');$('bud_jackdaniels_1857676036').hide();">Show user details</a>
+			</div>
+					</div>
+		<div style="text-align: right; padding: 3px; font-size: 9px;"><a href="javascript:void(0);" onclick="$('bud_jackdaniels_1857676036').toggle();">Close this menu</a></div>
+	</div>
+)
+									</span>
+						<a href="/buggenie/thebuggenie/sampleproject1/issues/5">Bug report #5 - <span class="issue_title">Felis non et ac luctus augue eros congue vitae est elit. </span></a>					</div>
+				<div class="roadmap_issue">
+			<div class="issue_status"><div style="border: 1px solid #AAA; background-color: #FFF; font-size: 1px; width: 13px; height: 13px;" title="New">&nbsp;</div></div>
+							<span class="faded_out">
+											(Assigned to 			<a href="javascript:void(0);" onclick="$('bud_john_1003594505').toggle();" style="font-weight: normal;">John</a>
+	<div id="bud_john_1003594505" style="z-index: 100; width: 300px; display: none; position: absolute;" class="rounded_box white shadowed user_popup">
+		<div style="padding: 3px;">
+			<div style="padding: 2px; width: 36px; height: 36px; text-align: center; background-color: #FFF; border: 1px solid #DDD; float: left;">
+				<img alt=" " style="width: 36px; height: 36px;" src="http://www.gravatar.com/avatar/d41d8cd98f00b204e9800998ecf8427e.png?d=wavatar&amp;s=48">			</div>
+			<div class="user_realname">
+				John				<div class="user_status">Offline</div>
+			</div>
+			<div class="user_details">
+									<b>This user has not logged in yet</b>
+							</div>
+										<div style="padding: 2px;" id="add_friend_3_1003594505">
+					<a onclick="_updateDivWithJSONFeedback('/buggenie/thebuggenie/friends/add/3', null, 'toggle_friend_3_1003594505_indicator', null, null, 'add_friend_3_1003594505', ['add_friend_3_1003594505'], ['remove_friend_3_1003594505']);" href="javascript:void(0);">Become friends</a>				</div>
+				<img id="toggle_friend_3_1003594505_indicator" style="display: none;" src="/buggenie/thebuggenie/themes/oxygen/spinning_16.gif" alt="spinning_16.gif">				<div style="padding: 2px; display: none;" id="remove_friend_3_1003594505">
+					<a onclick="_updateDivWithJSONFeedback('/buggenie/thebuggenie/friends/remove/3', null, 'toggle_friend_3_1003594505_indicator', null, null, 'remove_friend_3_1003594505', ['remove_friend_3_1003594505'], ['add_friend_3_1003594505']);" href="javascript:void(0);">Remove this friend</a>				</div>
+										<div style="padding: 2px;"><a target="_new" href="/buggenie/thebuggenie/configure/users/finduser/john">Edit this user</a></div>
+						<div style="padding: 2px;">
+				<a href="javascript:void(0);" onclick="showFadedBackdrop('/buggenie/thebuggenie/get/partials/usercard/user_id/3');$('bud_john_1003594505').hide();">Show user details</a>
+			</div>
+					</div>
+		<div style="text-align: right; padding: 3px; font-size: 9px;"><a href="javascript:void(0);" onclick="$('bud_john_1003594505').toggle();">Close this menu</a></div>
+	</div>
+)
+									</span>
+						<a href="/buggenie/thebuggenie/sampleproject1/issues/15">Feature request #15 - <span class="issue_title">Aliquam. A nunc magna euismod sed eros. </span></a>					</div>
+				<div class="roadmap_issue">
+			<div class="issue_status"><div style="border: 1px solid #AAA; background-color: #5C5; font-size: 1px; width: 13px; height: 13px;" title="Being worked on">&nbsp;</div></div>
+							<span class="faded_out">
+											(Assigned to 			<a href="javascript:void(0);" onclick="$('bud_jane_904997419').toggle();" style="font-weight: normal;">Jane</a>
+	<div id="bud_jane_904997419" style="z-index: 100; width: 300px; display: none; position: absolute;" class="rounded_box white shadowed user_popup">
+		<div style="padding: 3px;">
+			<div style="padding: 2px; width: 36px; height: 36px; text-align: center; background-color: #FFF; border: 1px solid #DDD; float: left;">
+				<img alt=" " style="width: 36px; height: 36px;" src="http://www.gravatar.com/avatar/d41d8cd98f00b204e9800998ecf8427e.png?d=wavatar&amp;s=48">			</div>
+			<div class="user_realname">
+				Jane				<div class="user_status">Offline</div>
+			</div>
+			<div class="user_details">
+									<b>This user has not logged in yet</b>
+							</div>
+										<div style="padding: 2px;" id="add_friend_4_904997419">
+					<a onclick="_updateDivWithJSONFeedback('/buggenie/thebuggenie/friends/add/4', null, 'toggle_friend_4_904997419_indicator', null, null, 'add_friend_4_904997419', ['add_friend_4_904997419'], ['remove_friend_4_904997419']);" href="javascript:void(0);">Become friends</a>				</div>
+				<img id="toggle_friend_4_904997419_indicator" style="display: none;" src="/buggenie/thebuggenie/themes/oxygen/spinning_16.gif" alt="spinning_16.gif">				<div style="padding: 2px; display: none;" id="remove_friend_4_904997419">
+					<a onclick="_updateDivWithJSONFeedback('/buggenie/thebuggenie/friends/remove/4', null, 'toggle_friend_4_904997419_indicator', null, null, 'remove_friend_4_904997419', ['remove_friend_4_904997419'], ['add_friend_4_904997419']);" href="javascript:void(0);">Remove this friend</a>				</div>
+										<div style="padding: 2px;"><a target="_new" href="/buggenie/thebuggenie/configure/users/finduser/jane">Edit this user</a></div>
+						<div style="padding: 2px;">
+				<a href="javascript:void(0);" onclick="showFadedBackdrop('/buggenie/thebuggenie/get/partials/usercard/user_id/4');$('bud_jane_904997419').hide();">Show user details</a>
+			</div>
+					</div>
+		<div style="text-align: right; padding: 3px; font-size: 9px;"><a href="javascript:void(0);" onclick="$('bud_jane_904997419').toggle();">Close this menu</a></div>
+	</div>
+)
+									</span>
+						<a href="/buggenie/thebuggenie/sampleproject1/issues/16">Feature request #16 - <span class="issue_title">Facilisi nunc a dui. Rutrum nulla tincidunt. </span></a>					</div>
+				<div class="roadmap_issue">
+			<div class="issue_status"><div style="border: 1px solid #AAA; background-color: #FF55AA; font-size: 1px; width: 13px; height: 13px;" title="Confirmed">&nbsp;</div></div>
+						<a href="/buggenie/thebuggenie/sampleproject1/issues/18">Feature request #18 - <span class="issue_title">Id nam mollis. Lectus venenatis commodo. </span></a>					</div>
+				<div class="roadmap_issue">
+			<div class="issue_status"><div style="border: 1px solid #AAA; background-color: #FF55AA; font-size: 1px; width: 13px; height: 13px;" title="Confirmed">&nbsp;</div></div>
+						<a href="/buggenie/thebuggenie/sampleproject1/issues/22">Enhancement #22 - <span class="issue_title">Laoreet vitae donec pellentesque. </span></a>					</div>
+				<div class="roadmap_issue">
+			<div class="issue_status"><div style="border: 1px solid #AAA; background-color: #FF55AA; font-size: 1px; width: 13px; height: 13px;" title="Confirmed">&nbsp;</div></div>
+						<a href="/buggenie/thebuggenie/sampleproject1/issues/24">Enhancement #24 - <span class="issue_title">In felis laoreet aliquam nec nulla. Id ac varius. Fusce vel. Amet lobortis. </span></a>					</div>
+				<div class="roadmap_issue">
+			<div class="issue_status"><div style="border: 1px solid #AAA; background-color: #7D3; font-size: 1px; width: 13px; height: 13px;" title="Near completion">&nbsp;</div></div>
+							<span class="faded_out">
+											(Assigned to 			<a href="javascript:void(0);" onclick="$('bud_jackdaniels_922862150').toggle();" style="font-weight: normal;">Jack</a>
+	<div id="bud_jackdaniels_922862150" style="z-index: 100; width: 300px; display: none; position: absolute;" class="rounded_box white shadowed user_popup">
+		<div style="padding: 3px;">
+			<div style="padding: 2px; width: 36px; height: 36px; text-align: center; background-color: #FFF; border: 1px solid #DDD; float: left;">
+				<img alt=" " style="width: 36px; height: 36px;" src="http://www.gravatar.com/avatar/d41d8cd98f00b204e9800998ecf8427e.png?d=wavatar&amp;s=48">			</div>
+			<div class="user_realname">
+				Jack Daniels				<div class="user_status">Offline</div>
+			</div>
+			<div class="user_details">
+									<b>This user has not logged in yet</b>
+							</div>
+										<div style="padding: 2px;" id="add_friend_5_922862150">
+					<a onclick="_updateDivWithJSONFeedback('/buggenie/thebuggenie/friends/add/5', null, 'toggle_friend_5_922862150_indicator', null, null, 'add_friend_5_922862150', ['add_friend_5_922862150'], ['remove_friend_5_922862150']);" href="javascript:void(0);">Become friends</a>				</div>
+				<img id="toggle_friend_5_922862150_indicator" style="display: none;" src="/buggenie/thebuggenie/themes/oxygen/spinning_16.gif" alt="spinning_16.gif">				<div style="padding: 2px; display: none;" id="remove_friend_5_922862150">
+					<a onclick="_updateDivWithJSONFeedback('/buggenie/thebuggenie/friends/remove/5', null, 'toggle_friend_5_922862150_indicator', null, null, 'remove_friend_5_922862150', ['remove_friend_5_922862150'], ['add_friend_5_922862150']);" href="javascript:void(0);">Remove this friend</a>				</div>
+										<div style="padding: 2px;"><a target="_new" href="/buggenie/thebuggenie/configure/users/finduser/jackdaniels">Edit this user</a></div>
+						<div style="padding: 2px;">
+				<a href="javascript:void(0);" onclick="showFadedBackdrop('/buggenie/thebuggenie/get/partials/usercard/user_id/5');$('bud_jackdaniels_922862150').hide();">Show user details</a>
+			</div>
+					</div>
+		<div style="text-align: right; padding: 3px; font-size: 9px;"><a href="javascript:void(0);" onclick="$('bud_jackdaniels_922862150').toggle();">Close this menu</a></div>
+	</div>
+)
+									</span>
+						<a href="/buggenie/thebuggenie/sampleproject1/issues/35">Idea #35 - <span class="issue_title">Laoreet et a in ipsum tincidunt lacus eget congue rhoncus nisi.  sagittis. </span></a>					</div>
+				<div class="roadmap_issue">
+			<div class="issue_status"><div style="border: 1px solid #AAA; background-color: #5C5; font-size: 1px; width: 13px; height: 13px;" title="Being worked on">&nbsp;</div></div>
+						<a href="/buggenie/thebuggenie/sampleproject1/issues/37">Idea #37 - <span class="issue_title">Integer lacinia est estvestibulum nisl at. Class luctus tellus. </span></a>					</div>
+				<div class="roadmap_issue">
+			<div class="issue_status"><div style="border: 1px solid #AAA; background-color: #44FC1D; font-size: 1px; width: 13px; height: 13px;" title="Not a bug">&nbsp;</div></div>
+							<span class="faded_out">
+											(Assigned to 			<a href="javascript:void(0);" onclick="$('bud_jackdaniels_58166127').toggle();" style="font-weight: normal;">Jack</a>
+	<div id="bud_jackdaniels_58166127" style="z-index: 100; width: 300px; display: none; position: absolute;" class="rounded_box white shadowed user_popup">
+		<div style="padding: 3px;">
+			<div style="padding: 2px; width: 36px; height: 36px; text-align: center; background-color: #FFF; border: 1px solid #DDD; float: left;">
+				<img alt=" " style="width: 36px; height: 36px;" src="http://www.gravatar.com/avatar/d41d8cd98f00b204e9800998ecf8427e.png?d=wavatar&amp;s=48">			</div>
+			<div class="user_realname">
+				Jack Daniels				<div class="user_status">Offline</div>
+			</div>
+			<div class="user_details">
+									<b>This user has not logged in yet</b>
+							</div>
+										<div style="padding: 2px;" id="add_friend_5_58166127">
+					<a onclick="_updateDivWithJSONFeedback('/buggenie/thebuggenie/friends/add/5', null, 'toggle_friend_5_58166127_indicator', null, null, 'add_friend_5_58166127', ['add_friend_5_58166127'], ['remove_friend_5_58166127']);" href="javascript:void(0);">Become friends</a>				</div>
+				<img id="toggle_friend_5_58166127_indicator" style="display: none;" src="/buggenie/thebuggenie/themes/oxygen/spinning_16.gif" alt="spinning_16.gif">				<div style="padding: 2px; display: none;" id="remove_friend_5_58166127">
+					<a onclick="_updateDivWithJSONFeedback('/buggenie/thebuggenie/friends/remove/5', null, 'toggle_friend_5_58166127_indicator', null, null, 'remove_friend_5_58166127', ['remove_friend_5_58166127'], ['add_friend_5_58166127']);" href="javascript:void(0);">Remove this friend</a>				</div>
+										<div style="padding: 2px;"><a target="_new" href="/buggenie/thebuggenie/configure/users/finduser/jackdaniels">Edit this user</a></div>
+						<div style="padding: 2px;">
+				<a href="javascript:void(0);" onclick="showFadedBackdrop('/buggenie/thebuggenie/get/partials/usercard/user_id/5');$('bud_jackdaniels_58166127').hide();">Show user details</a>
+			</div>
+					</div>
+		<div style="text-align: right; padding: 3px; font-size: 9px;"><a href="javascript:void(0);" onclick="$('bud_jackdaniels_58166127').toggle();">Close this menu</a></div>
+	</div>
+)
+									</span>
+						<a href="/buggenie/thebuggenie/sampleproject1/issues/40">Idea #40 - <span class="issue_title">Sed arcu sed facilisis tempor aliquam at nunc est integer erat. </span></a>					</div>
+																</div>
+						</div>
+												</div>
+		</td>
+	</tr>
+</table>								</td>
+			</tr>
+			<tr>
+				<td class="footer_bar">
+					<div class="footer_container">
+						<table cellpadding=0 cellspacing=0 style="table-layout: auto; margin: 0 auto 0 auto;">
+							<tr>
+								<td style="width: auto;">
+									<img src="/buggenie/thebuggenie/themes/oxygen/footer_logo.png" alt="footer_logo.png">									<a href="/buggenie/thebuggenie/about">The Bug Genie</a>, <b>friendly</b> issue tracking since 2002.
+									Licensed under the MPL 1.1 only, read it at <a href="http://www.opensource.org/licenses/mozilla1.1.php">opensource.org</a>																			| <b><a href="/buggenie/thebuggenie/configure">Configure The Bug Genie</a></b>
+																										</td>
+							</tr>
+						</table>
+											</div>
+									</td>
+			</tr>
+		</table>
+		<script type="text/javascript">
+			var containerResize = function ()
+			{
+				if (($('fullpage_backdrop') && $('fullpage_backdrop').visible()) || ($('attach_file') && $('attach_file').visible()))
+				{
+					var docheight = document.viewport.getHeight();
+					var backdropheight = $('backdrop_detail_content').getHeight();
+					if (backdropheight > (docheight - 100))
+					{
+						$('backdrop_detail_content').setStyle({height: docheight - 100 + 'px', overflow: 'scroll'});
+					}
+					else
+					{
+						$('backdrop_detail_content').setStyle({height: 'auto', overflow: ''});
+					}
+				}
+			}
+
+			Event.observe(window, 'resize', containerResize);
+		</script>		
+	</body>
+</html>

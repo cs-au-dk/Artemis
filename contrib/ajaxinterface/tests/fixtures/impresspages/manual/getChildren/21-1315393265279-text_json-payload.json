@@ -1,0 +1,18 @@
+[
+    {
+        "attr": {
+            "id": "page_0_344_top_71", 
+            "languageId": "344", 
+            "pageId": "71", 
+            "rel": "page", 
+            "websiteId": "0", 
+            "zoneName": "top"
+        }, 
+        "children": false, 
+        "data": {
+            "icon": "http://localhost/impresspages/ip_cms/modules/standard/menu_management/img/file_hidden.png", 
+            "title": "Subpage"
+        }, 
+        "state": "closed"
+    }
+]

@@ -1886,7 +1886,7 @@ int CodeBlock::lineNumberForBytecodeOffset(unsigned bytecodeOffset)
     ASSERT(bytecodeOffset < m_instructionCount);
 
     if (!m_rareData) {
-        std::cout << "NO RARE!!" << std::endl;
+//        std::cout << "NO RARE!!" << std::endl;
         return m_ownerExecutable->source().firstLine();
     }
 

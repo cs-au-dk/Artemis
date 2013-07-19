@@ -43,7 +43,7 @@ WebKitExecutor::WebKitExecutor(QObject* parent,
                                AjaxRequestListener* ajaxListener,
                                bool enableConstantStringInstrumentation) :
     QObject(parent),
-    mKeepOpen(false), testingDone(false)
+    mKeepOpen(false),  mNextOpCanceled(false)
 {
 
     mPresetFields = presetFields;
@@ -57,7 +57,9 @@ WebKitExecutor::WebKitExecutor(QObject* parent,
 
     QObject::connect(mPage.data(), SIGNAL(loadFinished(bool)),
                      this, SLOT(slLoadFinished(bool)));
-
+    QObject::connect(mPage.data()->networkAccessManager(), SIGNAL(finished(QNetworkReply*)), this, SLOT(slNAMFinished(QNetworkReply*)));
+    QObject::connect(mPage.data(), SIGNAL(loadProgress(int)),
+                     this, SLOT(slLoadProgress(int)));
     mResultBuilder = ExecutionResultBuilderPtr(new ExecutionResultBuilder(mPage));
 
     mCoverageListener = appmodel->getCoverageListener();
@@ -161,23 +163,41 @@ void WebKitExecutor::executeSequence(ExecutableConfigurationConstPtr conf, bool 
     mPage->mainFrame()->load(conf->getUrl());
 }
 
-void WebKitExecutor::slTestingDone(){
-    testingDone = true;
+void WebKitExecutor::slLoadProgress(int i){
+    if(!mNextOpCanceled)
+        qDebug() << "Page loaded " << i << "%";
+    mNextOpCanceled = false;
+}
+
+
+void WebKitExecutor::slNAMFinished(QNetworkReply* reply){
+    switch(reply->error()){
+    case QNetworkReply::NoError:
+        break;
+    case QNetworkReply::OperationCanceledError:
+        mNextOpCanceled = true;
+        break;
+    default:
+        qDebug() << "REPLY" << reply->errorString();
+
+    }
+
 }
 
 void WebKitExecutor::slLoadFinished(bool ok)
 {
-    if(testingDone){
+    if(mNextOpCanceled){
+        mNextOpCanceled = false;
+        qDebug() << "Page load canceled";
         return;
     }
 
     if(!ok){
         QString html = mPage->mainFrame()->toHtml();
-
         if(html == "<html><head></head><body></body></html>"){
             emit sigAbortedExecution(QString("Error: The requested URL ") + currentConf->getUrl().toString() + QString(" could not be loaded"));
             return;
-        }
+        }        
     }
     mResultBuilder->notifyPageLoaded();
 

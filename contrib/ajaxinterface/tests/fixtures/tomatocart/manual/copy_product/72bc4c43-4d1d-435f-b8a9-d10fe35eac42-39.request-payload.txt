@@ -1,0 +1,1 @@
+module=products&action=copy_product&products_id=17&token=01343fd85986eeb00d121f758453be3c&copy_images=1&copy_variants=1&copy_attributes=1&copy_customization_fields=1&copy_attachments=1&copy_accessories=1&copy_xsell=1

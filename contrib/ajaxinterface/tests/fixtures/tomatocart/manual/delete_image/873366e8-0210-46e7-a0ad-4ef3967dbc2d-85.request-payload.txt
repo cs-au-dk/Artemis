@@ -1,0 +1,1 @@
+module=products&action=delete_image&image=48&token=5373cddd9f26b62dd30d6d142503343c

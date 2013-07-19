@@ -1,0 +1,2057 @@
+<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01//EN"
+   "http://www.w3.org/TR/html4/strict.dtd">
+<html>
+	<head>
+		<title>The Bug Genie ~ [OPEN] #43 - Give me t3h codes</title>
+				<meta name="description" content="The bug genie, friendly issue tracking">
+		<meta name="keywords" content="thebuggenie friendly issue tracking">
+		<meta name="author" content="thebuggenie.com">
+		<meta http-equiv="Content-Type" content="text/html charset=utf-8">
+					<link rel="shortcut icon" href="/buggenie/thebuggenie/themes/oxygen/favicon.png">
+				<link rel="shortcut icon" href="/buggenie/thebuggenie/themes/oxygen/favicon.png">
+		<link title="Sample project 1 search" href="/buggenie/thebuggenie/sampleproject1/opensearch.xml" type="application/opensearchdescription+xml" rel="search">
+																										<script type="text/javascript" src="http://code.jquery.com/jquery-1.5.2.min.js"></script>
+		<script type="text/javascript">jQuery.noConflict();</script>
+		<link rel="stylesheet" type="text/css" href="/buggenie/thebuggenie/serve&g=css&files=Y3NzL294eWdlbi5jc3MsY3NzL294eWdlbl9wdWJsaXNoLmNzcw==">
+		<script type="text/javascript" src="/buggenie/thebuggenie/serve&g=js&files=anMvdmlld2lzc3VlLmpzLGpzL3Byb3RvdHlwZS5qcyxqcy9idWlsZGVyLmpzLGpzL2VmZmVjdHMuanMsanMvZHJhZ2Ryb3AuanMsanMvY29udHJvbHMuanMsanMvanF1ZXJ5Lm1hcmtpdHVwLmpzLGpzL3RoZWJ1Z2dlbmllLmpz"></script>
+		<script type="text/javascript">
+			jQuery(document).ready(function(){jQuery('textarea').markItUp({
+				previewParserPath:	'', // path to your Wiki parser
+				onShiftEnter:		{keepDefault:false, replaceWith:'\n\n'},
+				markupSet: [
+					{name:'Heading 1', key:'1', openWith:'== ', closeWith:' ==', placeHolder:'Your title here...' },
+					{name:'Heading 2', key:'2', openWith:'=== ', closeWith:' ===', placeHolder:'Your title here...' },
+					{name:'Heading 3', key:'3', openWith:'==== ', closeWith:' ====', placeHolder:'Your title here...' },
+					{name:'Heading 4', key:'4', openWith:'===== ', closeWith:' =====', placeHolder:'Your title here...' },
+					{name:'Heading 5', key:'5', openWith:'====== ', closeWith:' ======', placeHolder:'Your title here...' },
+					{separator:'---------------' },		
+					{name:'Bold', key:'B', openWith:"'''", closeWith:"'''"}, 
+					{name:'Italic', key:'I', openWith:"''", closeWith:"''"}, 
+					{name:'Stroke through', key:'S', openWith:'<s>', closeWith:'</s>'}, 
+					{separator:'---------------' },
+					{name:'Bulleted list', openWith:'(!(* |!|*)!)'}, 
+					{name:'Numeric list', openWith:'(!(# |!|#)!)'}, 
+					{separator:'---------------' },
+					{name:'Picture', key:"P", replaceWith:'[[Image:[![Url:!:http://]!]|[![name]!]]]'}, 
+					{name:'Link', key:"L", openWith:"[[![Link]!] ", closeWith:']', placeHolder:'Your text to link here...' },
+					{name:'Url', openWith:"[[![Url:!:http://]!] ", closeWith:']', placeHolder:'Your text to link here...' },
+					{separator:'---------------' },
+					{name:'Quotes', openWith:'(!(> |!|>)!)', placeHolder:''},
+					{name:'Code', openWith:'(!(<source lang="[![Language:!:php]!]">|!|<pre>)!)', closeWith:'(!(</source>|!|</pre>)!)'}
+				]
+			});});
+		</script>
+		<style type="text/css">
+			/* -------------------------------------------------------------------
+			// markItUp! Universal MarkUp Engine, JQuery plugin
+			// By Jay Salvat - http://markitup.jaysalvat.com/
+			// ------------------------------------------------------------------*/
+			.markItUp .markItUpButton1 a {
+				background-image:url(http://10.11.103.178/buggenie/thebuggenie/themes/oxygen/markitup/h1.png); 
+			}
+			.markItUp .markItUpButton2 a {
+				background-image:url(http://10.11.103.178/buggenie/thebuggenie/themes/oxygen/markitup/h2.png); 
+			}
+			.markItUp .markItUpButton3 a {
+				background-image:url(http://10.11.103.178/buggenie/thebuggenie/themes/oxygen/markitup/h3.png); 
+			}
+			.markItUp .markItUpButton4 a {
+				background-image:url(http://10.11.103.178/buggenie/thebuggenie/themes/oxygen/markitup/h4.png); 
+			}
+			.markItUp .markItUpButton5 a {
+				background-image:url(http://10.11.103.178/buggenie/thebuggenie/themes/oxygen/markitup/h5.png); 
+			}
+
+			.markItUp .markItUpButton6 a {
+				background-image:url(http://10.11.103.178/buggenie/thebuggenie/themes/oxygen/markitup/bold.png);
+			}
+			.markItUp .markItUpButton7 a {
+				background-image:url(http://10.11.103.178/buggenie/thebuggenie/themes/oxygen/markitup/italic.png);
+			}
+			.markItUp .markItUpButton8 a {
+				background-image:url(http://10.11.103.178/buggenie/thebuggenie/themes/oxygen/markitup/stroke.png);
+			}
+
+			.markItUp .markItUpButton9 a {
+				background-image:url(http://10.11.103.178/buggenie/thebuggenie/themes/oxygen/markitup/list-bullet.png);
+			}
+			.markItUp .markItUpButton10 a {
+				background-image:url(http://10.11.103.178/buggenie/thebuggenie/themes/oxygen/markitup/list-numeric.png);
+			}
+
+			.markItUp .markItUpButton11 a {
+				background-image:url(http://10.11.103.178/buggenie/thebuggenie/themes/oxygen/markitup/picture.png); 
+			}
+			.markItUp .markItUpButton12 a {
+				background-image:url(http://10.11.103.178/buggenie/thebuggenie/themes/oxygen/markitup/link.png);
+			}
+			.markItUp .markItUpButton13 a {
+				background-image:url(http://10.11.103.178/buggenie/thebuggenie/themes/oxygen/markitup/url.png);
+			}
+
+			.markItUp .markItUpButton14 a	{
+				background-image:url(http://10.11.103.178/buggenie/thebuggenie/themes/oxygen/markitup/quotes.png);
+			}
+			.markItUp .markItUpButton15 a	{
+				background-image:url(http://10.11.103.178/buggenie/thebuggenie/themes/oxygen/markitup/code.png);
+			}
+
+			.markItUp .preview a {
+				background-image:url(http://10.11.103.178/buggenie/thebuggenie/themes/oxygen/markitup/preview.png);
+			}
+			.markItUp * {
+				margin:0px; padding:0px;
+				outline:none;
+			}
+			.markItUp a:link,
+			.markItUp a:visited {
+				color:#000;
+				text-decoration:none;
+			}
+			.markItUp  {
+/*				width:700px;*/
+				margin:5px 0 5px 0;
+			}
+			.markItUpContainer  {
+				font:11px 'Droid Sans', sans-serif;
+			}
+			.markItUpEditor {
+				font:12px 'Droid Sans Mono', monospace;
+				padding:5px;
+				width:690px;
+				height:320px;
+				clear:both;
+				line-height:18px;
+				overflow:auto;
+			}
+			.markItUpPreviewFrame	{
+				overflow:auto;
+				background-color:#FFF;
+				width:99.9%;
+				height:300px;
+				margin:5px 0;
+			}
+			.markItUpFooter {
+				width:100%;
+			}
+			.markItUpResizeHandle {
+				overflow:hidden;
+				width:22px; height:5px;
+				margin-left:auto;
+				margin-right:auto;
+				background-image:url(http://10.11.103.178/buggenie/thebuggenie/themes/oxygen/markitup/handle.png);
+				cursor:n-resize;
+			}
+			/***************************************************************************************/
+			/* first row of buttons */
+			.markItUpHeader ul li	{
+				list-style:none;
+				float:left;
+				position:relative;
+			}
+			.markItUpHeader ul li:hover > ul{
+				display:block;
+			}
+			.markItUpHeader ul .markItUpDropMenu {
+				background:transparent url(http://10.11.103.178/buggenie/thebuggenie/themes/oxygen/markitup/menu.png) no-repeat 115% 50%;
+				margin-right:5px;
+			}
+			.markItUpHeader ul .markItUpDropMenu li {
+				margin-right:0px;
+			}
+			/* next rows of buttons */
+			.markItUpHeader ul ul {
+				display:none;
+				position:absolute;
+				top:18px; left:0px;	
+				background:#FFF;
+				border:1px solid #000;
+			}
+			.markItUpHeader ul ul li {
+				float:none;
+				border-bottom:1px solid #000;
+			}
+			.markItUpHeader ul ul .markItUpDropMenu {
+				background:#FFF url(http://10.11.103.178/buggenie/thebuggenie/themes/oxygen/markitup/submenu.png) no-repeat 100% 50%;
+			}
+			.markItUpHeader ul .markItUpSeparator {
+				margin:0 10px;
+				width:1px;
+				height:16px;
+				overflow:hidden;
+				background-color:#CCC;
+			}
+			.markItUpHeader ul ul .markItUpSeparator {
+				width:auto; height:1px;
+				margin:0px;
+			}
+			/* next rows of buttons */
+			.markItUpHeader ul ul ul {
+				position:absolute;
+				top:-1px; left:150px; 
+			}
+			.markItUpHeader ul ul ul li {
+				float:none;
+			}
+			.markItUpHeader ul a {
+				display:block;
+				width:16px; height:16px;
+				text-indent:-10000px;
+				background-repeat:no-repeat;
+				padding:3px;
+				margin:0px;
+			}
+			.markItUpHeader ul ul a {
+				display:block;
+				padding-left:0px;
+				text-indent:0;
+				width:120px; 
+				padding:5px 5px 5px 25px;
+				background-position:2px 50%;
+			}
+			.markItUpHeader ul ul a:hover  {
+				color:#FFF;
+				background-color:#000;
+			}
+			.markItUpHeader a:hover  {
+				border-bottom: none;
+			}			
+		</style>
+			</head>
+	<body>
+		<div class="medium_transparent rounded_box shadowed popup_message failure" onclick="clearPopupMessages();" style="display: none;" id="thebuggenie_failuremessage">
+			<div style="padding: 10px 0 10px 0;">
+				<div class="dismiss_me">Click this message to dismiss it</div>
+				<span style="color: #000; font-weight: bold;" id="thebuggenie_failuremessage_title"></span><br>
+				<span id="thebuggenie_failuremessage_content"></span>
+			</div>
+		</div>
+		<div class="medium_transparent rounded_box shadowed popup_message success" onclick="clearPopupMessages();" style="display: none;" id="thebuggenie_successMessage">
+			<div style="padding: 10px 0 10px 0;">
+				<div class="dismiss_me">Click this message to dismiss it</div>
+				<span style="color: #000; font-weight: bold;" id="thebuggenie_successMessage_title"></span><br>
+				<span id="thebuggenie_successMessage_content"></span>
+			</div>
+		</div>
+		<div id="fullpage_backdrop" style="display: none; background-color: transparent; z-index: 1; width: 100%; height: 100%; position: fixed; top: 0; left: 0; margin: 0; padding: 0; text-align: center;">
+			<div style="position: absolute; top: 45%; left: 40%; z-index: 100001; color: #FFF; font-size: 15px; font-weight: bold;" id="fullpage_backdrop_indicator">
+				<img src="/buggenie/thebuggenie/themes/oxygen/spinning_32.gif" alt="spinning_32.gif"><br>
+				Please wait, loading content...
+			</div>
+			<div id="fullpage_backdrop_content"> </div>
+			<div style="background-color: #000; width: 100%; height: 100%; position: absolute; top: 0; left: 0; margin: 0; padding: 0; z-index: 100000;" class="semi_transparent" onclick="resetFadedBackdrop();"> </div>
+		</div>
+		<table style="width: 100%; height: 100%; table-layout: fixed; min-width: 1020px;" cellpadding=0 cellspacing=0>
+			<tr>
+				<td style="height: auto; overflow: hidden;" valign="top" id="maintd">
+					<table class="main_header" cellpadding=0 cellspacing=0 width="100%" style="table-layout: fixed;">
+						<tr>
+							<td align="left" valign="middle" id="logo_td">
+																									<a class="logo" href="/buggenie/thebuggenie/"><img alt="[logo]" title="[logo]" src="/buggenie/thebuggenie/themes/oxygen/logo_24.png"></a>
+																<div class="logo_large">The Bug Genie</div>
+								<div class="logo_small"><b>Friendly</b> issue tracking and project management</div>
+							</td>
+							<td style="width: auto;">
+								<div class="tab_menu header_menu project_context">
+									<ul>
+																					<li>
+												<div>
+													<a href="/buggenie/thebuggenie/sampleproject1"><img src="/buggenie/thebuggenie/themes/oxygen/icon_dashboard_small.png" alt="icon_dashboard_small.png">Summary</a>													<a onmouseover="" href="javascript:void(0);"><img class="menu_dropdown" src="/buggenie/thebuggenie/themes/oxygen/tabmenu_dropdown.png" alt="tabmenu_dropdown.png"></a>												</div>
+												<div id="project_information_menu" class="tab_menu_dropdown shadowed">
+														<a class="first" href="/buggenie/thebuggenie/sampleproject1">Dashboard</a>		<a id="sidebar_link_scrum" href="/buggenie/thebuggenie/sampleproject1/scrum">Sprint planning</a>			<a href="/buggenie/thebuggenie/sampleproject1/roadmap">Roadmap</a>		<a href="/buggenie/thebuggenie/sampleproject1/team">Team overview</a>		<a href="/buggenie/thebuggenie/sampleproject1/statistics">Statistics</a>			<a class="last" href="/buggenie/thebuggenie/sampleproject1/timeline">Timeline</a>													</div>
+											</li>
+																																									<li>
+												<div>
+													<a href="/buggenie/thebuggenie/sampleproject1/issues/new"><img src="/buggenie/thebuggenie/themes/oxygen/tab_reportissue.png" alt="tab_reportissue.png">Report an issue</a>													<a onmouseover="" href="javascript:void(0);"><img class="menu_dropdown" src="/buggenie/thebuggenie/themes/oxygen/tabmenu_dropdown.png" alt="tabmenu_dropdown.png"></a>													</div>
+													<div id="project_issue_menu" class="tab_menu_dropdown shadowed">
+																											<a href="/buggenie/thebuggenie/sampleproject1/issues/new/bugreport"><img src="/buggenie/thebuggenie/themes/oxygen/bug_report_tiny.png" alt="bug_report_tiny.png">Bug report</a>																											<a href="/buggenie/thebuggenie/sampleproject1/issues/new/featurerequest"><img src="/buggenie/thebuggenie/themes/oxygen/feature_request_tiny.png" alt="feature_request_tiny.png">Feature request</a>																											<a href="/buggenie/thebuggenie/sampleproject1/issues/new/enhancement"><img src="/buggenie/thebuggenie/themes/oxygen/enhancement_tiny.png" alt="enhancement_tiny.png">Enhancement</a>																									</div>											
+											</li>
+																															<li class="selected">
+												<div>
+													<a href="/buggenie/thebuggenie/sampleproject1/issues/find"><img src="/buggenie/thebuggenie/themes/oxygen/tab_search.png" alt="tab_search.png">Issues</a>																											<a onmouseover="" href="javascript:void(0);"><img class="menu_dropdown" src="/buggenie/thebuggenie/themes/oxygen/tabmenu_dropdown.png" alt="tabmenu_dropdown.png"></a>																									</div>
+																									<div id="issues_menu" class="tab_menu_dropdown shadowed">
+														<a href="/buggenie/thebuggenie/sampleproject1/issues/open"><img src="/buggenie/thebuggenie/themes/oxygen/icon_savedsearch.png" alt="icon_savedsearch.png">Open issues for this project</a>														<a href="/buggenie/thebuggenie/sampleproject1/issues/closed"><img src="/buggenie/thebuggenie/themes/oxygen/icon_savedsearch.png" alt="icon_savedsearch.png">Closed issues for this project</a>														<a href="/buggenie/thebuggenie/sampleproject1/issues/todo"><img src="/buggenie/thebuggenie/themes/oxygen/icon_savedsearch.png" alt="icon_savedsearch.png">Milestone todo-list for this project</a>														<a href="/buggenie/thebuggenie/sampleproject1/issues/mostvoted"><img src="/buggenie/thebuggenie/themes/oxygen/icon_savedsearch.png" alt="icon_savedsearch.png">Most voted for issues</a>													</div>
+																							</li>
+																																								<li>
+	<div>
+		<a href="/buggenie/thebuggenie/wiki/Sampleproject1%3AMainPage"><img src="/buggenie/thebuggenie/themes/modules/publish/oxygen/tab_publish.png" alt="tab_publish.png">Project wiki</a>					<a href="javascript:void(0);"><img class="menu_dropdown" src="/buggenie/thebuggenie/themes/oxygen/tabmenu_dropdown.png" alt="tabmenu_dropdown.png"></a>			</div>
+			<div id="wiki_dropdown_menu" class="tab_menu_dropdown shadowed">
+							<div class="header">Currently selected project</div>
+				<a href="/buggenie/thebuggenie/wiki/Sampleproject1%3AMainPage">Project wiki frontpage</a>								<div style="font-weight: normal; margin: 0 0 15px 5px;">
+					<form action="/buggenie/thebuggenie/wiki/sampleproject1/find" method="get" accept-charset="utf-8">
+						<input type="text" name="articlename" value="Find project article (press enter to search)" style="width: 230px; font-size: 0.9em;" onblur="if ($(this).getValue() == '') { $(this).value = 'Find project article (press enter to search)'; $(this).addClassName('faded_out'); }" onfocus="if ($(this).getValue() == 'Find project article (press enter to search)') { $(this).clear(); } $(this).removeClassName('faded_out');" class="faded_out">
+					</form>
+				</div>
+						<div class="header">Global content</div>
+			<a href="/buggenie/thebuggenie/wiki">Wiki</a>						<div style="font-weight: normal; margin: 0 0 15px 5px;">
+				<form action="/buggenie/thebuggenie/wiki/find" method="get" accept-charset="utf-8">
+					<input type="text" name="articlename" value="Find any article (press enter to search)" style="width: 230px; font-size: 0.9em;" onblur="if ($(this).getValue() == '') { $(this).value = 'Find any article (press enter to search)'; $(this).addClassName('faded_out'); }" onfocus="if ($(this).getValue() == 'Find any article (press enter to search)') { $(this).clear(); } $(this).removeClassName('faded_out');" class="faded_out">
+				</form>
+			</div>
+							<div class="header">Project wikis</div>
+																			<a href="/buggenie/thebuggenie/wiki/Sampleproject2%3AMainPage">Sample project 2</a>									</div>
+	</li>									</ul>
+																		<div class="rounded_box blue tab_menu_container" id="header_userinfo">
+										<table style="width: auto;" cellpadding="0" cellspacing="0">
+											<tr>
+												<td style="width: 30px; padding-top: 4px;" valign="middle">
+													<img alt="[avatar]" src="http://www.gravatar.com/avatar/d41d8cd98f00b204e9800998ecf8427e.png?d=wavatar&amp;s=22">												</td>
+												<td id="header_username" valign="middle">
+																																									<a href="/buggenie/thebuggenie/dashboard">Administrator</a>																									</td>
+												<td class="header_userlinks">
+													<div class="dropdown_separator">
+														<a onmouseover="" href="javascript:void(0);"><img class="menu_dropdown" src="/buggenie/thebuggenie/themes/oxygen/tabmenu_dropdown.png" alt="tabmenu_dropdown.png"></a>													</div>
+												</td>
+											</tr>
+										</table>
+										<div class="rounded_box blue tab_menu_dropdown user_menu_dropdown shadowed">
+																							<div class="header">You are: <span class="userstate">Available</span></div>
+												<a href="/buggenie/thebuggenie/dashboard"><img src="/buggenie/thebuggenie/themes/oxygen/icon_dashboard_small.png" alt="icon_dashboard_small.png">Your dashboard</a>	
+												<a href="/buggenie/thebuggenie/account"><img src="/buggenie/thebuggenie/themes/oxygen/icon_account.png" alt="icon_account.png">Your account</a>																									<a href="/buggenie/thebuggenie/configure"><img src="/buggenie/thebuggenie/themes/oxygen/tab_config.png" alt="tab_config.png">Configure The Bug Genie</a>																								<a href="/buggenie/thebuggenie/wiki/Category%3AHelp"><img src="/buggenie/thebuggenie/themes/oxygen/help.png" alt="help.png">Help</a>												<a href="/buggenie/thebuggenie/logout"><img src="/buggenie/thebuggenie/themes/oxygen/logout.png" alt="logout.png">Logout</a>												<div class="header">Your issues</div>
+												<a href="/buggenie/thebuggenie/issues/my"><img src="/buggenie/thebuggenie/themes/oxygen/icon_savedsearch.png" alt="icon_savedsearch.png">Issues reported by me</a>												<a href="/buggenie/thebuggenie/issues/my/assigned"><img src="/buggenie/thebuggenie/themes/oxygen/icon_savedsearch.png" alt="icon_savedsearch.png">Open issues assigned to me</a>												<a href="/buggenie/thebuggenie/issues/my/assigned/teams"><img src="/buggenie/thebuggenie/themes/oxygen/icon_savedsearch.png" alt="icon_savedsearch.png">Open issues assigned to my teams</a>																																	</div>
+									</div>
+																	</div>
+							</td>
+						</tr>
+					</table>
+					<div class="submenu_strip project_context">
+	<div class="project_stuff">
+		<ul>
+														<li class="breadcrumb">
+										<div>
+																			<a style="float: left;" class="" href="/buggenie/thebuggenie/">The Bug Genie</a>																			<a onclick="$(this).up('li').next().toggleClassName('popped_out');$(this).toggleClassName('activated');" title="Click to expand" href="javascript:void(0);"><img class="dropdown_activator clickable" src="/buggenie/thebuggenie/themes/oxygen/tabmenu_dropdown_popout.png" alt="tabmenu_dropdown_popout.png"></a>											</div>
+				</li>
+											<li class="breadcrumb">
+											<div class="popoutmenu">
+																															<a href="/buggenie/thebuggenie/sampleproject1" class="selected rounded_list_first_item">Sample project 1</a>
+																																									<a href="/buggenie/thebuggenie/sampleproject2">Sample project 2</a>
+																														</div>
+										<div>
+																			<a style="float: left;" class="selected_project" href="/buggenie/thebuggenie/sampleproject1">Sample project 1</a>																			<a onclick="$(this).up('li').next().toggleClassName('popped_out');$(this).toggleClassName('activated');" title="Click to expand" href="javascript:void(0);"><img class="dropdown_activator clickable" src="/buggenie/thebuggenie/themes/oxygen/tabmenu_dropdown_popout.png" alt="tabmenu_dropdown_popout.png"></a>											</div>
+				</li>
+											<li class="breadcrumb">
+											<div class="popoutmenu">
+																															<a href="/buggenie/thebuggenie/sampleproject1">Dashboard</a>
+																																									<a href="/buggenie/thebuggenie/sampleproject1/scrum">Sprint planning</a>
+																																									<a href="/buggenie/thebuggenie/sampleproject1/roadmap">Roadmap</a>
+																																									<a href="/buggenie/thebuggenie/sampleproject1/team">Team overview</a>
+																																									<a href="/buggenie/thebuggenie/sampleproject1/statistics">Statistics</a>
+																																									<a href="/buggenie/thebuggenie/sampleproject1/timeline">Timeline</a>
+																																									<a href="/buggenie/thebuggenie/sampleproject1/issues/new">Report an issue</a>
+																																									<a href="/buggenie/thebuggenie/sampleproject1/issues/find" class="selected">Issues</a>
+																																									<a href="/buggenie/thebuggenie/wiki/sampleproject1%3AMainPage">Project wiki</a>
+																														</div>
+										<div>
+																			<a style="float: left;" class="" href="/buggenie/thebuggenie/sampleproject1/issues/find">Issues</a>																			<a onclick="$(this).up('li').next().toggleClassName('popped_out');$(this).toggleClassName('activated');" title="Click to expand" href="javascript:void(0);"><img class="dropdown_activator clickable" src="/buggenie/thebuggenie/themes/oxygen/tabmenu_dropdown_popout.png" alt="tabmenu_dropdown_popout.png"></a>											</div>
+				</li>
+											<li class="breadcrumb">
+											<div class="popoutmenu">
+																															<a href="/buggenie/thebuggenie/sampleproject1/issues/43" class="selected rounded_list_first_item">User story #43 - Give me t3h codes</a>
+																																									<a href="/buggenie/thebuggenie/sampleproject1/issues/44">Task #44 - task 1</a>
+																														</div>
+										<div>
+																			<a style="float: left;" class="" href="/buggenie/thebuggenie/sampleproject1/issues/43">User story #43 - Give me t3h codes</a>																	</div>
+				</li>
+					</ul>
+	</div>
+			<form accept-charset="utf-8" action="/buggenie/thebuggenie/issues/project_key/sampleproject1" method="get" name="quicksearchform" style="float: right;">
+			<div style="width: auto; padding: 0; text-align: right; position: relative;">
+								<input type="hidden" name="filters[text][operator]" value="=">
+				<img id="quicksearch_indicator" style="position: absolute; left: 305px; top: 2px; display: none; z-index: 10;" src="/buggenie/thebuggenie/themes/oxygen/spinning_16.gif" alt="spinning_16.gif">				<input type="text" name="filters[text][value]" id="searchfor" value="Search for anything here" style="width: 320px; padding: 1px 1px 1px;" onblur="if ($('searchfor').getValue() == '') { $('searchfor').value = 'Search for anything here'; $('searchfor').addClassName('faded_out'); }" onfocus="if ($('searchfor').getValue() == 'Search for anything here') { $('searchfor').clear(); } $('searchfor').removeClassName('faded_out');" class="faded_out"><div id="searchfor_autocomplete_choices" class="autocomplete rounded_box"></div>
+				<script type="text/javascript">
+
+				Ajax.Autocompleter.extract_value = function (value, className)
+				{
+					var result;
+					var elements = value.getElementsByClassName(className);
+					if (elements && elements.length == 1)
+					{
+						result = elements[0].innerHTML.unescapeHTML();
+					}
+
+					return result;
+				};
+  
+				new Ajax.Autocompleter(
+					"searchfor",
+					"searchfor_autocomplete_choices",
+					'/buggenie/thebuggenie/sampleproject1/quicksearch',
+					{
+						paramName: "filters[text][value]",
+						minChars: 2,
+						indicator: 'quicksearch_indicator',
+						afterUpdateElement: function (elem, value)
+						{
+							val = Ajax.Autocompleter.extract_value(value, 'url');
+							if (val != '' && val !== undefined)
+							{
+								window.location = val;
+								$('quicksearch_indicator').show();
+								$('searchfor').blur();
+							}
+						}
+					}
+				);
+
+				</script>
+				<input type="submit" value="Find" style="padding: 0 2px 0 2px;">
+			</div>
+		</form>
+	</div>											<div class="rounded_box iceblue borderless infobox" style="margin: 5px; display: none;" id="firebug_warning">
+							<div style="padding: 5px;">
+								<img style="float: left; margin: 5px 5px 0 0;" src="/buggenie/thebuggenie/themes/oxygen/icon_info_big.png" alt="icon_info_big.png">								<div>
+									<div class="header">Cool - you're using Firebug, too - so do we!</div>
+									<div class="content">
+										As you probably know, Firebug has awesome monitoring and profiling features, which in turn means The Bug Genie will probably be a bit slow if you have Firebug enabled with it.										To learn how to disable Firebug for this site only, see <a href="/buggenie/thebuggenie/wiki/TheBugGenie%3ADisablingFirebug">Disabling Firebug</a>.<br>
+										<br>
+										As soon as Firebug is disabled for The Bug Genie, this message will go away. Promise.									</div>
+								</div>
+							</div>
+						</div>
+						<script>
+							Event.observe(window, 'load', function() {
+							  if (window.console && window.console.firebug) {
+								  $('firebug_warning').show();
+							  }
+							});
+						</script>
+										<div id="issuetype_indicator_fullpage" style="background-color: transparent; width: 100%; height: 100%; position: absolute; top: 0; left: 0; margin: 0; padding: 0; text-align: center; display: none;">
+		<div style="position: absolute; top: 45%; left: 40%; z-index: 100001; color: #FFF; font-size: 15px; font-weight: bold;">
+			<img src="/buggenie/thebuggenie/themes/oxygen/spinning_32.gif" alt="spinning_32.gif"><br>
+			Please wait while updating issue type...
+		</div>
+		<div style="background-color: #000; width: 100%; height: 100%; position: absolute; top: 0; left: 0; margin: 0; padding: 0; z-index: 100000;" class="semi_transparent"> </div>
+	</div>
+	<div class="rounded_box red borderless issue_info aligned" id="viewissue_unsaved" style="display: none;">
+		<div class="header">Could not save your changes</div>
+	</div>
+	<div class="rounded_box red borderless issue_info full_width" id="viewissue_merge_errors" style="display: none;">
+		<div class="header">This issue has been changed since you started editing it</div>
+		<div class="content">Data that has been changed is highlighted in red below. Undo your changes to see the updated information</div>
+	</div>
+
+	<div class="rounded_box iceblue borderless issue_info full_width" id="viewissue_changed" style="display: none;">
+		<button onclick="$('comment_add_button').hide(); $('comment_add').show();$('comment_save_changes').checked = true;$('comment_bodybox').focus();return false;">Add comment and save changes</button>
+		<form action="/buggenie/thebuggenie/sampleproject1/issues/43" method="post">
+			<input type="submit" value="Save changes">
+			<div class="header">You have unsaved changes</div>
+			<div class="content">
+				<input type="hidden" name="issue_action" value="save">
+				You have changed this issue, but haven't saved your changes yet. To save it, press the <b>Save changes</b> button to the right			</div>
+		</form>
+	</div>
+									<div style="width: 1000px; padding: 5px; margin: 0 auto 0 auto;">
+		<div style="vertical-align: middle; padding: 5px 0 0 0;">
+			<table style="table-layout: fixed; width: 100%; margin: 0 0 10px 0; background-color: transparent;" cellpadding=0 cellspacing=0>
+				<tr>
+					<td style="width: 80px; display: none;" id="user_pain_additional">
+						<div class="rounded_box green borderless" title="This is the user pain value for this issue" id="viewissue_triaging" style="margin: 0 5px 0 0; vertical-align: middle; padding: 5px; font-weight: bold; font-size: 13px; text-align: center">
+							<div class="user_pain" id="issue_user_pain">0</div>
+							<div class="user_pain_calculated" id="issue_user_pain_calculated">0 + 0</div>
+						</div>
+					</td>
+					<td style="width: 22px; padding: 0 5px 0 5px;">
+													<img id="issue_favourite_indicator" style="display: none;" src="/buggenie/thebuggenie/themes/oxygen/spinning_20.gif" alt="spinning_20.gif">							<img id="issue_favourite_faded" style="cursor: pointer;" title="Click to start following this issue" onclick="toggleFavourite('/buggenie/thebuggenie/toggle_favourite_issue/83', 83);" src="/buggenie/thebuggenie/themes/oxygen/star_faded.png" alt="star_faded.png">							<img id="issue_favourite_normal" style="cursor: pointer;display: none;" title="Click to stop following this issue" onclick="toggleFavourite('/buggenie/thebuggenie/toggle_favourite_issue/83', 83);" src="/buggenie/thebuggenie/themes/oxygen/star.png" alt="star.png">											</td>
+					<td style="font-size: 17px; width: auto; padding: 0; padding-left: 7px;" id="title_field">
+						<div class="viewissue_title hoverable">
+							<span class="faded_out " id="title_header">
+																	<img class="dropdown" id="title_edit" onclick="$('title_change').show(); $('title_name').hide(); $('no_title').hide();" src="/buggenie/thebuggenie/themes/oxygen/icon_edit.png" alt="icon_edit.png">									<a class="undo" href="javascript:void(0);" onclick="revertField('/buggenie/thebuggenie/sampleproject1/issues/83/revert/title', 'title');" title="Undo this change"><img class="undo" src="/buggenie/thebuggenie/themes/oxygen/undo.png" alt="undo.png"></a>
+									<img style="display: none; float: left; margin-right: 5px;" id="title_undo_spinning" src="/buggenie/thebuggenie/themes/oxygen/spinning_16.gif" alt="spinning_16.gif">																OPEN&nbsp;&nbsp;<b><a href="/buggenie/thebuggenie/sampleproject1/issues/43">User story #43</a>&nbsp;&nbsp;-&nbsp;</b>
+							</span>
+							<span id="issue_title">
+								<span id="title_content" class="">
+									<span class="faded_out" id="no_title"  style="display: none;" >Nothing entered.</span>
+									<span id="title_name" style="font-weight: bold;">
+										Give me t3h codes									</span>
+								</span>
+							</span>
+														<span id="title_change" style="display: none;">
+								<form id="title_form" action="/buggenie/thebuggenie/sampleproject1/issues/83/set/title" method="post" onSubmit="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/title', 'title'); return false;">
+									<input type="text" name="value" value="Give me t3h codes" /><input type="submit" value="Save"> or <a href="#" onClick="$('title_change').hide(); $('title_name').show(); return false;">cancel</a>								</form>
+								<img style="display: none; float: left; margin-right: 5px;" id="title_spinning" src="/buggenie/thebuggenie/themes/oxygen/spinning_16.gif" alt="spinning_16.gif">								<span id="title_change_error" class="error_message" style="display: none;"></span>
+							</span>
+													</div>
+						<div style="font-size: 12px;">
+							<b>Posted </b><i title="Wed, 19 Oct 2011 13:41:05 GMT">Today (13:41)</i><b> - updated </b><i title="Wed, 19 Oct 2011 13:42:35 GMT">Today (13:42)</i>						</div>
+					</td>
+					<td style="width: 100px; text-align: right; display: none;" id="votes_additional">
+						<div id="viewissue_votes">
+							<table align="right">
+								<tr>
+									<td id="vote_down">
+																														<a onclick="voteDown('/buggenie/thebuggenie/vote/for/issue/83/down');" id="vote_down_link" class="image" style="" href="javascript:void(0);"><img src="/buggenie/thebuggenie/themes/oxygen/action_vote_minus.png" alt="action_vote_minus.png"></a>										<img id="vote_down_indicator" style="display: none;" src="/buggenie/thebuggenie/themes/oxygen/spinning_16.gif" alt="spinning_16.gif">										<img id="vote_down_faded" style="display: none;" src="/buggenie/thebuggenie/themes/oxygen/action_vote_minus_faded.png" alt="action_vote_minus_faded.png">									</td>
+									<td class="votes">
+										<div id="issue_votes">0</div>
+										<div class="votes_header">Votes</div>
+									</td>
+									<td id="vote_up">
+																														<a onclick="voteUp('/buggenie/thebuggenie/vote/for/issue/83/up');" id="vote_up_link" class="image" style="" href="javascript:void(0);"><img src="/buggenie/thebuggenie/themes/oxygen/action_vote_plus.png" alt="action_vote_plus.png"></a>										<img id="vote_up_indicator" style="display: none;" src="/buggenie/thebuggenie/themes/oxygen/spinning_16.gif" alt="spinning_16.gif">										<img id="vote_up_faded" style="display: none;" src="/buggenie/thebuggenie/themes/oxygen/action_vote_plus_faded.png" alt="action_vote_plus_faded.png">									</td>
+								</tr>
+							</table>
+						</div>
+					</td>
+				</tr>
+			</table>
+		</div>
+		<div class="rounded_box verylightyellow shadowed" id="viewissue_left_box_top">
+			<table style="table-layout: auto; width: 100%; clear: both;" cellpadding=0 cellspacing=0 id="issue_view">
+				<tr>
+					<td class="issue_lefthand">
+												<div id="viewissue_left_box_issuetype">
+	<div id="issuetype_header" class="hoverable ">
+					<a href="javascript:void(0);" onclick="revertField('/buggenie/thebuggenie/sampleproject1/issues/83/revert/issuetype', 'issuetype');" title="Undo this change"><img class="undo" src="/buggenie/thebuggenie/themes/oxygen/undo.png" alt="undo.png"></a>
+			<img style="display: none; float: left; margin: 5px 5px 0 0;" id="issuetype_undo_spinning" src="/buggenie/thebuggenie/themes/oxygen/spinning_20.gif" alt="spinning_20.gif">			<a href="javascript:void(0);" onclick="$('issuetype_change').toggle();" title="Click to change issue type"><img class="dropdown" src="/buggenie/thebuggenie/themes/oxygen/action_dropdown_small.png" alt="action_dropdown_small.png"></a>
+				<table cellpadding=0 cellspacing=0 id="issuetype_table">
+			<tr>
+				<td style="width: 24px; padding: 2px 0 0 0;"><img id="issuetype_image" src="/buggenie/thebuggenie/themes/oxygen/developer_report_small.png" alt="developer_report_small.png"></td>
+				<td style="padding: 0 0 0 5px;" id="issuetype_content">User story</td>
+			</tr>
+		</table>
+		<div class="faded_out" id="no_issuetype" style="display: none;">Unknown issue type</div>
+	</div>
+</div>
+	<div id="issuetype_change" class="rounded_box white shadowed" style="display: none; width: 280px; position: absolute; z-index: 10001; margin: 5px 0 5px 0;">
+		<div class="dropdown_header">Set issue type</div>
+		<div class="dropdown_content">
+			Select a new issue type:<br>
+			<table cellpadding="0" cellspacing="0">
+									<tr>
+						<td style="width: 16px;"><img src="/buggenie/thebuggenie/themes/oxygen/bug_report_tiny.png" alt="bug_report_tiny.png"></td>
+						<td style="padding-left: 5px;"><a href="javascript:void(0);" onclick="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/issuetype/issuetype_id/1', 'issuetype');">Bug report</a></td>
+					</tr>
+									<tr>
+						<td style="width: 16px;"><img src="/buggenie/thebuggenie/themes/oxygen/feature_request_tiny.png" alt="feature_request_tiny.png"></td>
+						<td style="padding-left: 5px;"><a href="javascript:void(0);" onclick="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/issuetype/issuetype_id/2', 'issuetype');">Feature request</a></td>
+					</tr>
+									<tr>
+						<td style="width: 16px;"><img src="/buggenie/thebuggenie/themes/oxygen/enhancement_tiny.png" alt="enhancement_tiny.png"></td>
+						<td style="padding-left: 5px;"><a href="javascript:void(0);" onclick="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/issuetype/issuetype_id/3', 'issuetype');">Enhancement</a></td>
+					</tr>
+									<tr>
+						<td style="width: 16px;"><img src="/buggenie/thebuggenie/themes/oxygen/task_tiny.png" alt="task_tiny.png"></td>
+						<td style="padding-left: 5px;"><a href="javascript:void(0);" onclick="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/issuetype/issuetype_id/4', 'issuetype');">Task</a></td>
+					</tr>
+									<tr>
+						<td style="width: 16px;"><img src="/buggenie/thebuggenie/themes/oxygen/developer_report_tiny.png" alt="developer_report_tiny.png"></td>
+						<td style="padding-left: 5px;"><a href="javascript:void(0);" onclick="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/issuetype/issuetype_id/5', 'issuetype');">User story</a></td>
+					</tr>
+									<tr>
+						<td style="width: 16px;"><img src="/buggenie/thebuggenie/themes/oxygen/idea_tiny.png" alt="idea_tiny.png"></td>
+						<td style="padding-left: 5px;"><a href="javascript:void(0);" onclick="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/issuetype/issuetype_id/6', 'issuetype');">Idea</a></td>
+					</tr>
+							</table>
+			<div id="issuetype_spinning" style="margin-top: 3px; display: none;"><img style="float: left; margin-right: 5px;" src="/buggenie/thebuggenie/themes/oxygen/spinning_20.gif" alt="spinning_20.gif">&nbsp;Please wait...</div>
+		</div>
+		<div id="issuetype_change_error" class="error_message" style="display: none;"></div>
+	</div>
+<div id="viewissue_left_box_status">
+	<div id="status_header" class="hoverable ">
+					<a href="javascript:void(0);" onclick="revertField('/buggenie/thebuggenie/sampleproject1/issues/83/revert/status', 'status');" title="Undo this change"><img class="undo" src="/buggenie/thebuggenie/themes/oxygen/undo.png" alt="undo.png"></a>
+			<img style="display: none; float: left; margin-right: 5px;" id="status_undo_spinning" src="/buggenie/thebuggenie/themes/oxygen/spinning_16.gif" alt="spinning_16.gif">			<a href="javascript:void(0);" onclick="$('status_change').toggle();" title="Click to change status"><img class="dropdown" src="/buggenie/thebuggenie/themes/oxygen/action_dropdown_small.png" alt="action_dropdown_small.png"></a>
+				<table style="table-layout: auto; width: 240px;" cellpadding=0 cellspacing=0 id="status_table">
+			<tr>
+				<td style="width: 24px;"><div style="border: 1px solid #AAA; background-color: #FFF; font-size: 1px; width: 20px; height: 15px; margin-right: 2px;" id="status_color">&nbsp;</div></td>
+				<td style="padding-left: 5px;" id="status_content" class="">New</td>
+			</tr>
+		</table>
+		<span class="faded_out" id="no_status" style="display: none;">Status not determined</span>
+	</div>
+</div>
+	<div class="rounded_box white shadowed" id="status_change" style="display: none; width: 280px; position: absolute; z-index: 10001; margin: 5px 0 5px 0; padding: 5px;">
+		<div class="dropdown_header">Set status</div>
+		<div class="dropdown_content">
+			<a href="javascript:void(0);" onclick="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/status/status_id/0', 'status');">Clear the status</a><br>
+		</div>
+		<div class="dropdown_content">
+			 or click to select a new status:<br>
+			<table cellpadding="0" cellspacing="0">
+														<tr>
+						<td style="width: 16px;"><div style="border: 1px solid #AAA; background-color: #FFF; font-size: 1px; width: 16px; height: 15px; margin-right: 2px;">&nbsp;</div></td>
+						<td style="padding-left: 5px;"><a href="javascript:void(0);" onclick="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/status/status_id/23', 'status');">New</a></td>
+					</tr>
+														<tr>
+						<td style="width: 16px;"><div style="border: 1px solid #AAA; background-color: #C2F533; font-size: 1px; width: 16px; height: 15px; margin-right: 2px;">&nbsp;</div></td>
+						<td style="padding-left: 5px;"><a href="javascript:void(0);" onclick="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/status/status_id/24', 'status');">Investigating</a></td>
+					</tr>
+														<tr>
+						<td style="width: 16px;"><div style="border: 1px solid #AAA; background-color: #FF55AA; font-size: 1px; width: 16px; height: 15px; margin-right: 2px;">&nbsp;</div></td>
+						<td style="padding-left: 5px;"><a href="javascript:void(0);" onclick="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/status/status_id/25', 'status');">Confirmed</a></td>
+					</tr>
+														<tr>
+						<td style="width: 16px;"><div style="border: 1px solid #AAA; background-color: #44FC1D; font-size: 1px; width: 16px; height: 15px; margin-right: 2px;">&nbsp;</div></td>
+						<td style="padding-left: 5px;"><a href="javascript:void(0);" onclick="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/status/status_id/26', 'status');">Not a bug</a></td>
+					</tr>
+														<tr>
+						<td style="width: 16px;"><div style="border: 1px solid #AAA; background-color: #5C5; font-size: 1px; width: 16px; height: 15px; margin-right: 2px;">&nbsp;</div></td>
+						<td style="padding-left: 5px;"><a href="javascript:void(0);" onclick="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/status/status_id/27', 'status');">Being worked on</a></td>
+					</tr>
+														<tr>
+						<td style="width: 16px;"><div style="border: 1px solid #AAA; background-color: #7D3; font-size: 1px; width: 16px; height: 15px; margin-right: 2px;">&nbsp;</div></td>
+						<td style="padding-left: 5px;"><a href="javascript:void(0);" onclick="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/status/status_id/28', 'status');">Near completion</a></td>
+					</tr>
+														<tr>
+						<td style="width: 16px;"><div style="border: 1px solid #AAA; background-color: #55C; font-size: 1px; width: 16px; height: 15px; margin-right: 2px;">&nbsp;</div></td>
+						<td style="padding-left: 5px;"><a href="javascript:void(0);" onclick="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/status/status_id/29', 'status');">Ready for testing / QA</a></td>
+					</tr>
+														<tr>
+						<td style="width: 16px;"><div style="border: 1px solid #AAA; background-color: #77C; font-size: 1px; width: 16px; height: 15px; margin-right: 2px;">&nbsp;</div></td>
+						<td style="padding-left: 5px;"><a href="javascript:void(0);" onclick="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/status/status_id/30', 'status');">Testing / QA</a></td>
+					</tr>
+														<tr>
+						<td style="width: 16px;"><div style="border: 1px solid #AAA; background-color: #C2F588; font-size: 1px; width: 16px; height: 15px; margin-right: 2px;">&nbsp;</div></td>
+						<td style="padding-left: 5px;"><a href="javascript:void(0);" onclick="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/status/status_id/31', 'status');">Closed</a></td>
+					</tr>
+														<tr>
+						<td style="width: 16px;"><div style="border: 1px solid #AAA; background-color: #FA5; font-size: 1px; width: 16px; height: 15px; margin-right: 2px;">&nbsp;</div></td>
+						<td style="padding-left: 5px;"><a href="javascript:void(0);" onclick="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/status/status_id/32', 'status');">Postponed</a></td>
+					</tr>
+														<tr>
+						<td style="width: 16px;"><div style="border: 1px solid #AAA; background-color: #7D3; font-size: 1px; width: 16px; height: 15px; margin-right: 2px;">&nbsp;</div></td>
+						<td style="padding-left: 5px;"><a href="javascript:void(0);" onclick="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/status/status_id/33', 'status');">Done</a></td>
+					</tr>
+														<tr>
+						<td style="width: 16px;"><div style="border: 1px solid #AAA; background-color: #5C5; font-size: 1px; width: 16px; height: 15px; margin-right: 2px;">&nbsp;</div></td>
+						<td style="padding-left: 5px;"><a href="javascript:void(0);" onclick="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/status/status_id/34', 'status');">Fixed</a></td>
+					</tr>
+							</table>
+			<div id="status_spinning" style="margin-top: 3px; display: none;"><img style="float: left; margin-right: 5px;" src="/buggenie/thebuggenie/themes/oxygen/spinning_20.gif" alt="spinning_20.gif">&nbsp;Please wait...</div>
+		</div>
+		<div id="status_change_error" class="error_message" style="display: none;"></div>
+	</div>
+<dl class="viewissue_list" id="assigned_to_field">
+	<dt id="assigned_to_header" class="">Assigned to</dt>
+	<dd id="assigned_to_content" class="">
+					<a href="javascript:void(0);" onclick="revertField('/buggenie/thebuggenie/sampleproject1/issues/83/revert/assigned_to', 'assigned_to');" title="Undo this change"><img class="undo" src="/buggenie/thebuggenie/themes/oxygen/undo.png" alt="undo.png"></a>
+			<img style="display: none; float: left; margin-right: 5px;" id="assigned_to_undo_spinning" src="/buggenie/thebuggenie/themes/oxygen/spinning_16.gif" alt="spinning_16.gif">			<a href="javascript:void(0);" onclick="$('assigned_to_change').toggle();" title="Click to change assignee"><img class="dropdown" src="/buggenie/thebuggenie/themes/oxygen/action_dropdown_small.png" alt="action_dropdown_small.png"></a>
+				<div style="width: 170px; display: none;" id="assigned_to_name">
+					</div>
+		<span class="faded_out" id="no_assigned_to">Not assigned to anyone</span>
+	</dd>
+</dl>
+	<div class="rounded_box white shadowed" id="assigned_to_change" style="position: absolute; display: none; width: 324px; z-index: 10001; ">
+	<form id="assigned_to_form" accept-charset="utf-8" method="post" action="" onsubmit="findIdentifiable('/buggenie/thebuggenie/find/identifiable/by', 'assigned_to');return false;">
+		<div class="dropdown_header">Assign this issue</div>
+					<div class="dropdown_content">
+				<a href="javascript:void(0);" onclick="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/assigned_to/identifiable_type/0/value/0', 'assigned_to');">Clear current assignee</a><br>
+			</div>
+				<div class="dropdown_content">
+						<label for="assigned_to_input">Find a user or team:</label><br>
+													<input type="hidden" name="teamup_callback" value="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/assigned_to/identifiable_type/%25identifiable_type%25/value/%25identifiable_value%25/teamup/1', 'assigned_to');">
+						<input type="hidden" name="callback" value="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/assigned_to/identifiable_type/%25identifiable_type%25/value/%25identifiable_value%25', 'assigned_to');">
+			<input type="hidden" name="include_teams" value="1">
+			<input type="text" name="find_identifiable_by" id="assigned_to_input" value="Enter a name here" style="width: 240px; padding: 1px 1px 1px;" onblur="if (this.getValue() == '') { this.value = 'Enter a name here'; this.addClassName('faded_out'); }" onfocus="if (this.getValue() == 'Enter a name here') { this.clear(); } this.removeClassName('faded_out');" class="faded_out">
+			<input type="submit" style="width: 60px;" value="Find"></input>
+		</div>
+		<div class="dropdown_content" id="assigned_to_results">
+		</div>
+	</form>
+	<div class="dropdown_content">
+		<b>Select yourself or a friend below:</b><br>
+		<a href="javascript:void(0);" onclick="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/assigned_to/identifiable_type/1/value/1', 'assigned_to');">Select yourself (administrator)</a><br>
+					<span class="faded_out">Your friends will appear here</span><br>
+					</div>
+	<div id="assigned_to_spinning" style="margin-top: 3px; display: none;"><img style="float: left; margin-right: 5px;" src="/buggenie/thebuggenie/themes/oxygen/spinning_20.gif" alt="spinning_20.gif">&nbsp;Please wait...</div>
+	<div id="assigned_to_change_error" class="error_message" style="display: none;"></div>
+</div><dl class="viewissue_list" id="percent_complete_field">
+	<dt id="percent_header" class="">Progress</dt>
+	<dd id="percent_content" class="">
+		<div style="width: 210px;">
+							<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/revert/percent', 'percent');" title="Undo this change"><img class="undo" src="/buggenie/thebuggenie/themes/oxygen/undo.png" alt="undo.png"></a>
+				<img style="display: none; float: right; margin-left: 5px;" id="percent_spinning" src="/buggenie/thebuggenie/themes/oxygen/spinning_16.gif" alt="spinning_16.gif">				<table style="table-layout: fixed; width: 165px;" cellpadding=0 cellspacing=0>
+					<tr id="percentage_tds">
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/0', 'set');" title="Set to 0 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/1', 'set');" title="Set to 1 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/2', 'set');" title="Set to 2 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/3', 'set');" title="Set to 3 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/4', 'set');" title="Set to 4 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/5', 'set');" title="Set to 5 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/6', 'set');" title="Set to 6 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/7', 'set');" title="Set to 7 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/8', 'set');" title="Set to 8 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/9', 'set');" title="Set to 9 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/10', 'set');" title="Set to 10 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/11', 'set');" title="Set to 11 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/12', 'set');" title="Set to 12 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/13', 'set');" title="Set to 13 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/14', 'set');" title="Set to 14 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/15', 'set');" title="Set to 15 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/16', 'set');" title="Set to 16 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/17', 'set');" title="Set to 17 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/18', 'set');" title="Set to 18 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/19', 'set');" title="Set to 19 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/20', 'set');" title="Set to 20 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/21', 'set');" title="Set to 21 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/22', 'set');" title="Set to 22 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/23', 'set');" title="Set to 23 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/24', 'set');" title="Set to 24 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/25', 'set');" title="Set to 25 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/26', 'set');" title="Set to 26 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/27', 'set');" title="Set to 27 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/28', 'set');" title="Set to 28 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/29', 'set');" title="Set to 29 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/30', 'set');" title="Set to 30 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/31', 'set');" title="Set to 31 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/32', 'set');" title="Set to 32 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/33', 'set');" title="Set to 33 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/34', 'set');" title="Set to 34 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/35', 'set');" title="Set to 35 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/36', 'set');" title="Set to 36 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/37', 'set');" title="Set to 37 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/38', 'set');" title="Set to 38 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/39', 'set');" title="Set to 39 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/40', 'set');" title="Set to 40 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/41', 'set');" title="Set to 41 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/42', 'set');" title="Set to 42 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/43', 'set');" title="Set to 43 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/44', 'set');" title="Set to 44 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/45', 'set');" title="Set to 45 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/46', 'set');" title="Set to 46 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/47', 'set');" title="Set to 47 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/48', 'set');" title="Set to 48 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/49', 'set');" title="Set to 49 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/50', 'set');" title="Set to 50 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/51', 'set');" title="Set to 51 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/52', 'set');" title="Set to 52 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/53', 'set');" title="Set to 53 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/54', 'set');" title="Set to 54 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/55', 'set');" title="Set to 55 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/56', 'set');" title="Set to 56 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/57', 'set');" title="Set to 57 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/58', 'set');" title="Set to 58 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/59', 'set');" title="Set to 59 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/60', 'set');" title="Set to 60 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/61', 'set');" title="Set to 61 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/62', 'set');" title="Set to 62 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/63', 'set');" title="Set to 63 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/64', 'set');" title="Set to 64 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/65', 'set');" title="Set to 65 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/66', 'set');" title="Set to 66 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/67', 'set');" title="Set to 67 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/68', 'set');" title="Set to 68 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/69', 'set');" title="Set to 69 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/70', 'set');" title="Set to 70 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/71', 'set');" title="Set to 71 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/72', 'set');" title="Set to 72 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/73', 'set');" title="Set to 73 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/74', 'set');" title="Set to 74 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/75', 'set');" title="Set to 75 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/76', 'set');" title="Set to 76 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/77', 'set');" title="Set to 77 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/78', 'set');" title="Set to 78 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/79', 'set');" title="Set to 79 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/80', 'set');" title="Set to 80 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/81', 'set');" title="Set to 81 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/82', 'set');" title="Set to 82 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/83', 'set');" title="Set to 83 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/84', 'set');" title="Set to 84 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/85', 'set');" title="Set to 85 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/86', 'set');" title="Set to 86 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/87', 'set');" title="Set to 87 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/88', 'set');" title="Set to 88 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/89', 'set');" title="Set to 89 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/90', 'set');" title="Set to 90 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/91', 'set');" title="Set to 91 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/92', 'set');" title="Set to 92 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/93', 'set');" title="Set to 93 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/94', 'set');" title="Set to 94 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/95', 'set');" title="Set to 95 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/96', 'set');" title="Set to 96 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/97', 'set');" title="Set to 97 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/98', 'set');" title="Set to 98 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/99', 'set');" title="Set to 99 percent">&nbsp;</a>
+							</td>
+													<td class="percent_unfilled" style="font-size: 1px; width: 1%; height: 14px;">
+								<a href="javascript:void(0);" onclick="updatePercent('/buggenie/thebuggenie/sampleproject1/issues/83/set/percent/percent/100', 'set');" title="Set to 100 percent">&nbsp;</a>
+							</td>
+											</tr>
+				</table>
+					</div>
+	</dd>
+</dl>
+<div style="clear: both;"> </div>
+<div style="margin: 0; display: none;" id="user_pain_field">
+	<dl class="viewissue_list" id="pain_bug_type_field">
+		<dt id="pain_bug_type_header" class="">Type of bug</dt>
+		<dd id="pain_bug_type_content" class="">
+							<a href="javascript:void(0);" onclick="revertField('/buggenie/thebuggenie/sampleproject1/issues/83/revert/pain_bug_type', 'pain_bug_type');" title="Undo this change"><img class="undo" src="/buggenie/thebuggenie/themes/oxygen/undo.png" alt="undo.png"></a>
+				<img style="display: none; float: left; margin-right: 5px;" id="pain_bug_type_undo_spinning" src="/buggenie/thebuggenie/themes/oxygen/spinning_16.gif" alt="spinning_16.gif">				<a href="javascript:void(0);" onclick="$('pain_bug_type_change').toggle();" title="Click to triage type of bug"><img class="dropdown" src="/buggenie/thebuggenie/themes/oxygen/action_dropdown_small.png" alt="action_dropdown_small.png"></a>
+						<span id="pain_bug_type_name" style="display: none;">
+							</span>
+			<span class="faded_out" id="no_pain_bug_type">Not triaged</span>
+		</dd>
+	</dl>
+			<div class="rounded_box white shadowed" id="pain_bug_type_change" style="display: none; width: 280px; position: absolute; z-index: 10001; margin: 5px 0 5px 0; padding: 5px;">
+			<div class="dropdown_header">Triage bug type</div>
+			<div class="dropdown_content">
+				<a href="javascript:void(0);" onclick="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/pain_bug_type/pain_bug_type_id/0', 'pain_bug_type');">Clear bug type</a><br>
+			</div>
+			<div class="dropdown_content">
+				 or click to select a new bug type:<br>
+				<ul class="choices">
+											<li>
+							<a href="javascript:void(0);" onclick="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/pain_bug_type/pain_bug_type_id/7', 'pain_bug_type');">Crash: Bug causes crash or data loss / asserts in the debug release</a>
+						</li>
+											<li>
+							<a href="javascript:void(0);" onclick="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/pain_bug_type/pain_bug_type_id/6', 'pain_bug_type');">Major usability: Impairs usability in key scenarios</a>
+						</li>
+											<li>
+							<a href="javascript:void(0);" onclick="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/pain_bug_type/pain_bug_type_id/5', 'pain_bug_type');">Minor usability: Impairs usability in secondary scenarios</a>
+						</li>
+											<li>
+							<a href="javascript:void(0);" onclick="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/pain_bug_type/pain_bug_type_id/4', 'pain_bug_type');">Balancing: Enables degenerate usage strategies that harm the experience</a>
+						</li>
+											<li>
+							<a href="javascript:void(0);" onclick="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/pain_bug_type/pain_bug_type_id/3', 'pain_bug_type');">Visual and Sound Polish: Aesthetic issues</a>
+						</li>
+											<li>
+							<a href="javascript:void(0);" onclick="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/pain_bug_type/pain_bug_type_id/2', 'pain_bug_type');">Localization</a>
+						</li>
+											<li>
+							<a href="javascript:void(0);" onclick="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/pain_bug_type/pain_bug_type_id/1', 'pain_bug_type');">Documentation: A documentation issue</a>
+						</li>
+									</ul>
+				<div id="pain_bug_type_spinning" style="margin-top: 3px; display: none;"><img style="float: left; margin-right: 5px;" src="/buggenie/thebuggenie/themes/oxygen/spinning_20.gif" alt="spinning_20.gif">&nbsp;Please wait...</div>
+			</div>
+			<div id="pain_bug_type_change_error" class="error_message" style="display: none;"></div>
+		</div>
+		<dl class="viewissue_list" id="pain_likelihood_field">
+		<dt id="pain_likelihood_header" class="">Likelihood</dt>
+		<dd id="pain_likelihood_content" class="">
+							<a href="javascript:void(0);" onclick="revertField('/buggenie/thebuggenie/sampleproject1/issues/83/revert/pain_likelihood', 'pain_likelihood');" title="Undo this change"><img class="undo" src="/buggenie/thebuggenie/themes/oxygen/undo.png" alt="undo.png"></a>
+				<img style="display: none; float: left; margin-right: 5px;" id="pain_likelihood_undo_spinning" src="/buggenie/thebuggenie/themes/oxygen/spinning_16.gif" alt="spinning_16.gif">				<a href="javascript:void(0);" onclick="$('pain_likelihood_change').toggle();" title="Click to triage likelihood"><img class="dropdown" src="/buggenie/thebuggenie/themes/oxygen/action_dropdown_small.png" alt="action_dropdown_small.png"></a>
+						<span id="pain_likelihood_name" style="display: none;">
+							</span>
+			<span class="faded_out" id="no_pain_likelihood">Not triaged</span>
+		</dd>
+	</dl>
+			<div class="rounded_box white shadowed" id="pain_likelihood_change" style="display: none; width: 280px; position: absolute; z-index: 10001; margin: 5px 0 5px 0; padding: 5px;">
+			<div class="dropdown_header">Triage likelihood</div>
+			<div class="dropdown_content">
+				<a href="javascript:void(0);" onclick="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/pain_likelihood/pain_likelihood_id/0', 'pain_likelihood');">Clear likelihood</a><br>
+			</div>
+			<div class="dropdown_content">
+				 or click to select a new likelihood:<br>
+				<ul class="choices">
+											<li>
+							<a href="javascript:void(0);" onclick="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/pain_likelihood/pain_likelihood_id/5', 'pain_likelihood');">Blocking further progress on the daily build</a>
+						</li>
+											<li>
+							<a href="javascript:void(0);" onclick="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/pain_likelihood/pain_likelihood_id/4', 'pain_likelihood');">A User would return the product / cannot RTM / the team would hold the release for this bug</a>
+						</li>
+											<li>
+							<a href="javascript:void(0);" onclick="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/pain_likelihood/pain_likelihood_id/3', 'pain_likelihood');">A User would likely not purchase the product / will show up in review / clearly a noticeable issue</a>
+						</li>
+											<li>
+							<a href="javascript:void(0);" onclick="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/pain_likelihood/pain_likelihood_id/2', 'pain_likelihood');">A Pain – users won't like this once they notice it / a moderate number of users won't buy</a>
+						</li>
+											<li>
+							<a href="javascript:void(0);" onclick="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/pain_likelihood/pain_likelihood_id/1', 'pain_likelihood');">Nuisance – not a big deal but noticeable / extremely unlikely to affect sales</a>
+						</li>
+									</ul>
+				<div id="pain_likelihood_spinning" style="margin-top: 3px; display: none;"><img style="float: left; margin-right: 5px;" src="/buggenie/thebuggenie/themes/oxygen/spinning_20.gif" alt="spinning_20.gif">&nbsp;Please wait...</div>
+			</div>
+			<div id="pain_likelihood_change_error" class="error_message" style="display: none;"></div>
+		</div>
+		<dl class="viewissue_list" id="pain_effect_field">
+		<dt id="pain_effect_header" class="">Effect</dt>
+		<dd id="pain_effect_content" class="">
+							<a href="javascript:void(0);" onclick="revertField('/buggenie/thebuggenie/sampleproject1/issues/83/revert/pain_effect', 'pain_effect');" title="Undo this change"><img class="undo" src="/buggenie/thebuggenie/themes/oxygen/undo.png" alt="undo.png"></a>
+				<img style="display: none; float: left; margin-right: 5px;" id="pain_effect_undo_spinning" src="/buggenie/thebuggenie/themes/oxygen/spinning_16.gif" alt="spinning_16.gif">				<a href="javascript:void(0);" onclick="$('pain_effect_change').toggle();" title="Click to triage effect"><img class="dropdown" src="/buggenie/thebuggenie/themes/oxygen/action_dropdown_small.png" alt="action_dropdown_small.png"></a>
+						<span id="pain_effect_name" style="display: none;">
+							</span>
+			<span class="faded_out" id="no_pain_effect">Not triaged</span>
+		</dd>
+	</dl>
+			<div class="rounded_box white shadowed" id="pain_effect_change" style="display: none; width: 280px; position: absolute; z-index: 10001; margin: 5px 0 5px 0; padding: 5px;">
+			<div class="dropdown_header">Triage effect</div>
+			<div class="dropdown_content">
+				<a href="javascript:void(0);" onclick="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/pain_effect/pain_effect_id/0', 'pain_effect');">Clear effect</a><br>
+			</div>
+			<div class="dropdown_content">
+				 or click to select a new effect:<br>
+				<ul class="choices">
+											<li>
+							<a href="javascript:void(0);" onclick="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/pain_effect/pain_effect_id/5', 'pain_effect');">Will affect all users</a>
+						</li>
+											<li>
+							<a href="javascript:void(0);" onclick="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/pain_effect/pain_effect_id/4', 'pain_effect');">Will affect most users</a>
+						</li>
+											<li>
+							<a href="javascript:void(0);" onclick="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/pain_effect/pain_effect_id/3', 'pain_effect');">Will affect average number of users</a>
+						</li>
+											<li>
+							<a href="javascript:void(0);" onclick="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/pain_effect/pain_effect_id/2', 'pain_effect');">Will only affect a few users</a>
+						</li>
+											<li>
+							<a href="javascript:void(0);" onclick="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/pain_effect/pain_effect_id/1', 'pain_effect');">Will affect almost no one</a>
+						</li>
+									</ul>
+				<div id="pain_effect_spinning" style="margin-top: 3px; display: none;"><img style="float: left; margin-right: 5px;" src="/buggenie/thebuggenie/themes/oxygen/spinning_20.gif" alt="spinning_20.gif">&nbsp;Please wait...</div>
+			</div>
+			<div id="pain_effect_change_error" class="error_message" style="display: none;"></div>
+		</div>
+	</div>
+<dl class="viewissue_list" id="posted_by_field">
+	<dt id="posted_by_header" class="">Posted by</dt>
+	<dd id="posted_by_content" class="">
+					<a href="javascript:void(0);" onclick="revertField('/buggenie/thebuggenie/sampleproject1/issues/83/revert/posted_by', 'posted_by');" title="Undo this change"><img class="undo" src="/buggenie/thebuggenie/themes/oxygen/undo.png" alt="undo.png"></a>
+			<img style="display: none; float: left; margin-right: 5px;" id="posted_by_undo_spinning" src="/buggenie/thebuggenie/themes/oxygen/spinning_16.gif" alt="spinning_16.gif">			<a href="javascript:void(0);" onclick="$('posted_by_change').toggle();" title="Click to change owner"><img class="dropdown" src="/buggenie/thebuggenie/themes/oxygen/action_dropdown_small.png" alt="action_dropdown_small.png"></a>
+				<div style="width: 170px; display: inline;" id="posted_by_name">
+							<a href="javascript:void(0);" onclick="$('bud_administrator_380829698').toggle();" class="image"><img alt=" " style="width: 16px; height: 16px; float: left; margin-right: 5px;" src="http://www.gravatar.com/avatar/d41d8cd98f00b204e9800998ecf8427e.png?d=wavatar&amp;s=22"></a>
+		<a href="javascript:void(0);" onclick="$('bud_administrator_380829698').toggle();" style="font-weight: normal;">Admin</a>
+	<div id="bud_administrator_380829698" style="z-index: 100; width: 300px; display: none; position: absolute;" class="rounded_box white shadowed user_popup">
+		<div style="padding: 3px;">
+			<div style="padding: 2px; width: 36px; height: 36px; text-align: center; background-color: #FFF; border: 1px solid #DDD; float: left;">
+				<img alt=" " style="width: 36px; height: 36px;" src="http://www.gravatar.com/avatar/d41d8cd98f00b204e9800998ecf8427e.png?d=wavatar&amp;s=48">			</div>
+			<div class="user_realname">
+				Administrator				<div class="user_status">Available</div>
+			</div>
+			<div class="user_details">
+									<b>This user was last seen online at </b>Oct 19, 2011 - 14:02 
+							</div>
+													<div style="padding: 2px;"><a target="_new" href="/buggenie/thebuggenie/configure/users/finduser/administrator">Edit this user</a></div>
+						<div style="padding: 2px;">
+				<a href="javascript:void(0);" onclick="showFadedBackdrop('/buggenie/thebuggenie/get/partials/usercard/user_id/1');$('bud_administrator_380829698').hide();">Show user details</a>
+			</div>
+					</div>
+		<div style="text-align: right; padding: 3px; font-size: 9px;"><a href="javascript:void(0);" onclick="$('bud_administrator_380829698').toggle();">Close this menu</a></div>
+	</div>
+		</div>
+		<span id="no_posted_by" style="display: none;"> </span>
+	</dd>
+</dl>
+	<div class="rounded_box white shadowed" id="posted_by_change" style="position: absolute; display: none; width: 324px; z-index: 10001; ">
+	<form id="posted_by_form" accept-charset="utf-8" method="post" action="" onsubmit="findIdentifiable('/buggenie/thebuggenie/find/identifiable/by', 'posted_by');return false;">
+		<div class="dropdown_header">Change poster</div>
+				<div class="dropdown_content">
+						<label for="posted_by_input">Find a user:</label><br>
+												<input type="hidden" name="callback" value="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/posted_by/value/%25identifiable_value%25', 'posted_by');">
+			<input type="hidden" name="include_teams" value="0">
+			<input type="text" name="find_identifiable_by" id="posted_by_input" value="Enter a name here" style="width: 240px; padding: 1px 1px 1px;" onblur="if (this.getValue() == '') { this.value = 'Enter a name here'; this.addClassName('faded_out'); }" onfocus="if (this.getValue() == 'Enter a name here') { this.clear(); } this.removeClassName('faded_out');" class="faded_out">
+			<input type="submit" style="width: 60px;" value="Find"></input>
+		</div>
+		<div class="dropdown_content" id="posted_by_results">
+		</div>
+	</form>
+	<div class="dropdown_content">
+		<b>Select yourself or a friend below:</b><br>
+		<a href="javascript:void(0);" onclick="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/posted_by/value/1', 'posted_by');">Select yourself (administrator)</a><br>
+					<span class="faded_out">Your friends will appear here</span><br>
+					</div>
+	<div id="posted_by_spinning" style="margin-top: 3px; display: none;"><img style="float: left; margin-right: 5px;" src="/buggenie/thebuggenie/themes/oxygen/spinning_20.gif" alt="spinning_20.gif">&nbsp;Please wait...</div>
+	<div id="posted_by_change_error" class="error_message" style="display: none;"></div>
+</div><dl class="viewissue_list" id="owned_by_field">
+	<dt id="owned_by_header" class="">Owned by</dt>
+	<dd id="owned_by_content" class="">
+					<a href="javascript:void(0);" onclick="revertField('/buggenie/thebuggenie/sampleproject1/issues/83/revert/owned_by', 'owned_by');" title="Undo this change"><img class="undo" src="/buggenie/thebuggenie/themes/oxygen/undo.png" alt="undo.png"></a>
+			<img style="display: none; float: left; margin-right: 5px;" id="owned_by_undo_spinning" src="/buggenie/thebuggenie/themes/oxygen/spinning_16.gif" alt="spinning_16.gif">			<a href="javascript:void(0);" onclick="$('owned_by_change').toggle();" title="Click to change owner"><img class="dropdown" src="/buggenie/thebuggenie/themes/oxygen/action_dropdown_small.png" alt="action_dropdown_small.png"></a>
+				<div style="width: 170px; display: none;" id="owned_by_name">
+					</div>
+		<span class="faded_out" id="no_owned_by">Not owned by anyone</span>
+	</dd>
+</dl>
+	<div class="rounded_box white shadowed" id="owned_by_change" style="position: absolute; display: none; width: 324px; z-index: 10001; ">
+	<form id="owned_by_form" accept-charset="utf-8" method="post" action="" onsubmit="findIdentifiable('/buggenie/thebuggenie/find/identifiable/by', 'owned_by');return false;">
+		<div class="dropdown_header">Change issue owner</div>
+					<div class="dropdown_content">
+				<a href="javascript:void(0);" onclick="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/owned_by/identifiable_type/0/value/0', 'owned_by');">Clear current owner</a><br>
+			</div>
+				<div class="dropdown_content">
+						<label for="owned_by_input">Find a user or team:</label><br>
+													<input type="hidden" name="teamup_callback" value="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/owned_by/identifiable_type/%25identifiable_type%25/value/%25identifiable_value%25/teamup/1', 'owned_by');">
+						<input type="hidden" name="callback" value="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/owned_by/identifiable_type/%25identifiable_type%25/value/%25identifiable_value%25', 'owned_by');">
+			<input type="hidden" name="include_teams" value="1">
+			<input type="text" name="find_identifiable_by" id="owned_by_input" value="Enter a name here" style="width: 240px; padding: 1px 1px 1px;" onblur="if (this.getValue() == '') { this.value = 'Enter a name here'; this.addClassName('faded_out'); }" onfocus="if (this.getValue() == 'Enter a name here') { this.clear(); } this.removeClassName('faded_out');" class="faded_out">
+			<input type="submit" style="width: 60px;" value="Find"></input>
+		</div>
+		<div class="dropdown_content" id="owned_by_results">
+		</div>
+	</form>
+	<div class="dropdown_content">
+		<b>Select yourself or a friend below:</b><br>
+		<a href="javascript:void(0);" onclick="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/owned_by/identifiable_type/1/value/1', 'owned_by');">Select yourself (administrator)</a><br>
+					<span class="faded_out">Your friends will appear here</span><br>
+					</div>
+	<div id="owned_by_spinning" style="margin-top: 3px; display: none;"><img style="float: left; margin-right: 5px;" src="/buggenie/thebuggenie/themes/oxygen/spinning_20.gif" alt="spinning_20.gif">&nbsp;Please wait...</div>
+	<div id="owned_by_change_error" class="error_message" style="display: none;"></div>
+</div><dl class="viewissue_list" id="estimated_time_field">
+	<dt id="estimated_time_header" class="">Estimated time</dt>
+	<dd id="estimated_time_content" class="">
+					<a href="javascript:void(0);" onclick="revertField('/buggenie/thebuggenie/sampleproject1/issues/83/revert/estimated_time', 'estimated_time');" title="Undo this change"><img class="undo" src="/buggenie/thebuggenie/themes/oxygen/undo.png" alt="undo.png"></a>
+			<img style="display: none; float: left; margin-right: 5px;" id="estimated_time_undo_spinning" src="/buggenie/thebuggenie/themes/oxygen/spinning_16.gif" alt="spinning_16.gif">			<a href="javascript:void(0);" onclick="$('estimated_time_change').toggle();" title="Click to estimate this issue"><img class="dropdown" src="/buggenie/thebuggenie/themes/oxygen/action_dropdown_small.png" alt="action_dropdown_small.png"></a>
+				<span id="estimated_time_name" style="display: none;">
+			No time		</span>
+		<span class="faded_out" id="no_estimated_time">Not estimated</span>
+	</dd>
+</dl>
+	<div class="rounded_box white shadowed" id="estimated_time_change" style="display: none; width: 280px; position: absolute; z-index: 10001; margin: 5px 0 5px 0; padding: 5px;">
+		<form id="estimated_time_form" method="post" accept-charset="utf-8" action="" onsubmit="setTimeField('/buggenie/thebuggenie/sampleproject1/issues/83/set/estimated_time', 'estimated_time');return false;">
+			<div class="dropdown_header">Estimate this issue</div>
+			<div class="dropdown_content">
+				<a href="javascript:void(0);" onclick="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/estimated_time/value/0', 'estimated_time');">Clear current estimate</a><br>
+			</div>
+			<div class="dropdown_content">
+				<label for="estimated_time_input">type a new estimate:</label><br>
+								<input type="text" name="estimated_time" id="estimated_time_input" value="Enter your estimate here" style="width: 240px; padding: 1px 1px 1px;" onblur="if (this.getValue() == '') { this.value = 'Enter your estimate here'; this.addClassName('faded_out'); }" onfocus="if (this.getValue() == 'Enter your estimate here') { this.clear(); } this.removeClassName('faded_out');" class="faded_out">
+				<input type="submit" style="width: 60px;" value="Estimate">
+				<div class="faded_out" style="padding: 5px 0 5px 0;">Enter an estimate in plain text, like "1 week, 2 hours", "3 months and 1 day", or similar.</div>
+			</div>
+			<div class="dropdown_content">
+				<label for="estimated_time_months">or enter an estimate below:</label><br>
+				<input type="text" style="width: 20px;" value="0" name="estimated_time_months" id="estimated_time_months"><b> months</b><br>
+				<input type="text" style="width: 20px;" value="0" name="estimated_time_weeks" id="estimated_time_weeks"><b> weeks</b><br>
+				<input type="text" style="width: 20px;" value="0" name="estimated_time_days" id="estimated_time_days"><b> days</b><br>
+				<input type="text" style="width: 20px;" value="0" name="estimated_time_hours" id="estimated_time_hours"><b> hours</b><br>
+				<input type="submit" style="width: 60px; float: right;" value="Estimate">
+				<input type="text" style="width: 20px;" value="0" name="estimated_time_points" id="estimated_time_points"><b> points</b><br>
+			</div>
+		</form>
+		<div id="estimated_time_spinning" style="margin-top: 3px; display: none;"><img style="float: left; margin-right: 5px;" src="/buggenie/thebuggenie/themes/oxygen/spinning_20.gif" alt="spinning_20.gif">&nbsp;Please wait...</div>
+		<div id="estimated_time_change_error" class="error_message" style="display: none;"></div>
+	</div>
+<dl class="viewissue_list" id="spent_time_field">
+	<dt id="spent_time_header" class="">Time spent</dt>
+	<dd id="spent_time_content" class="">
+					<a href="javascript:void(0);" onclick="revertField('/buggenie/thebuggenie/sampleproject1/issues/83/revert/spent_time', 'spent_time');" title="Undo this change"><img class="undo" src="/buggenie/thebuggenie/themes/oxygen/undo.png" alt="undo.png"></a>
+			<img style="display: none; float: left; margin-right: 5px;" id="spent_time_undo_spinning" src="/buggenie/thebuggenie/themes/oxygen/spinning_16.gif" alt="spinning_16.gif">			<a href="javascript:void(0);" onclick="$('spent_time_change').toggle();" title="Click to enter time spent on this issue"><img class="dropdown" src="/buggenie/thebuggenie/themes/oxygen/action_dropdown_small.png" alt="action_dropdown_small.png"></a>
+				<span id="spent_time_name" style="display: none;">
+			No time		</span>
+		<span class="faded_out" id="no_spent_time">No time spent</span>
+	</dd>
+</dl>
+	<div class="rounded_box white shadowed" id="spent_time_change" style="display: none; width: 280px; position: absolute; z-index: 10001; margin: 5px 0 5px 0; padding: 5px;">
+		<form id="spent_time_form" method="post" accept-charset="utf-8" action="" onsubmit="setTimeField('/buggenie/thebuggenie/sampleproject1/issues/83/set/spent_time', 'spent_time');return false;">
+			<div class="dropdown_header">Set time spent on this issue</div>
+			<div class="dropdown_content">
+				<a href="javascript:void(0);" onclick="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/spent_time/value/0', 'spent_time');">Clear time spent on this issue</a><br>
+			</div>
+			<div class="dropdown_content">
+				<label for="spent_time_input">enter how much time you've spent:</label><br>
+								<input type="text" name="spent_time" id="spent_time_input" value="Enter time spent here" style="width: 180px; padding: 1px 1px 1px;" onblur="if (this.getValue() == '') { this.value = 'Enter time spent here'; this.addClassName('faded_out'); }" onfocus="if (this.getValue() == 'Enter time spent here') { this.clear(); } this.removeClassName('faded_out');" class="faded_out">
+				<input type="submit" style="width: 80px;" value="Spend time"><br>
+				<input type="checkbox" checked="checked" name="spent_time_added_text" value="true" id="spent_time_added_text"><label for="spent_time_added_text">Add entered time to total time spent</label>
+				<div class="faded_out" style="padding: 5px 0 5px 0;">Enter time spent as plain text, like "1 day, 2 hours", "12 hours / 2 points", or similar.</div>
+			</div>
+			<div class="dropdown_content">
+				<label for="spent_time_months">or enter time spent below:</label><br>
+				<input type="text" style="width: 20px;" value="0" name="spent_time_months" id="spent_time_months"><b> months</b><br>
+				<input type="text" style="width: 20px;" value="0" name="spent_time_weeks" id="spent_time_weeks"><b> weeks</b><br>
+				<input type="text" style="width: 20px;" value="0" name="spent_time_days" id="spent_time_days"><b> days</b><br>
+				<input type="text" style="width: 20px;" value="0" name="spent_time_hours" id="spent_time_hours"><b> hours</b><br>
+				<input type="submit" style="width: 80px; float: right;" value="Spend time">
+				<input type="text" style="width: 20px;" value="0" name="spent_time_points" id="spent_time_points"><b> points</b><br>
+				<input type="checkbox" name="spent_time_added_input" value="true" id="spent_time_added_input"><label for="spent_time_added_text">Add entered time to total time spent</label>
+			</div>
+		</form>
+		<div id="spent_time_spinning" style="margin-top: 3px; display: none;"><img style="float: left; margin-right: 5px;" src="/buggenie/thebuggenie/themes/oxygen/spinning_20.gif" alt="spinning_20.gif">&nbsp;Please wait...</div>
+		<div id="spent_time_change_error" class="error_message" style="display: none;"></div>
+	</div>
+	<dl class="viewissue_list" id="category_field">
+		<dt id="category_header" class="">
+			Category		</dt>
+		<dd id="category_content" class="">
+							<a href="javascript:void(0);" onclick="revertField('/buggenie/thebuggenie/sampleproject1/issues/83/revert/category', 'category');" title="Undo this change"><img class="undo" src="/buggenie/thebuggenie/themes/oxygen/undo.png" alt="undo.png"></a>
+				<img style="display: none; float: left; margin-right: 5px;" id="category_undo_spinning" src="/buggenie/thebuggenie/themes/oxygen/spinning_16.gif" alt="spinning_16.gif">				<a href="javascript:void(0);" onclick="$('category_change').toggle();" title="Click to change category"><img class="dropdown" src="/buggenie/thebuggenie/themes/oxygen/action_dropdown_small.png" alt="action_dropdown_small.png"></a>
+									<span id="category_name" style="display: none;"></span>
+			<span class="faded_out" id="no_category">Not determined</span>
+		</dd>
+	</dl>
+	<div style="clear: both;"> </div>
+			<div class="rounded_box white shadowed" id="category_change" style="display: none; width: 280px; position: absolute; z-index: 10001; margin: 5px 0 5px 0; padding: 5px;">
+			<div class="dropdown_header">Change category</div>
+			<div class="dropdown_content">
+				<a href="javascript:void(0);" onclick="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/category/category_id/0', 'category');">Clear the category</a><br>
+			</div>
+			<div class="dropdown_content">
+				 or click to select a new category:<br>
+				<ul class="choices">
+																	<li>
+							<img style="float: left; margin-right: 5px;" src="/buggenie/thebuggenie/themes/oxygen/icon_category.png" alt="icon_category.png"><a href="javascript:void(0);" onclick="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/category/category_id/1', 'category');">General</a>
+						</li>
+																	<li>
+							<img style="float: left; margin-right: 5px;" src="/buggenie/thebuggenie/themes/oxygen/icon_category.png" alt="icon_category.png"><a href="javascript:void(0);" onclick="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/category/category_id/2', 'category');">Security</a>
+						</li>
+																	<li>
+							<img style="float: left; margin-right: 5px;" src="/buggenie/thebuggenie/themes/oxygen/icon_category.png" alt="icon_category.png"><a href="javascript:void(0);" onclick="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/category/category_id/3', 'category');">User interface</a>
+						</li>
+									</ul>
+				<div id="category_spinning" style="margin-top: 3px; display: none;"><img style="float: left; margin-right: 5px;" src="/buggenie/thebuggenie/themes/oxygen/spinning_20.gif" alt="spinning_20.gif">&nbsp;Please wait...</div>
+			</div>
+			<div id="category_change_error" class="error_message" style="display: none;"></div>
+		</div>
+		<dl class="viewissue_list" id="resolution_field" style="display: none;">
+		<dt id="resolution_header" class="">
+			Resolution		</dt>
+		<dd id="resolution_content" class="">
+							<a href="javascript:void(0);" onclick="revertField('/buggenie/thebuggenie/sampleproject1/issues/83/revert/resolution', 'resolution');" title="Undo this change"><img class="undo" src="/buggenie/thebuggenie/themes/oxygen/undo.png" alt="undo.png"></a>
+				<img style="display: none; float: left; margin-right: 5px;" id="resolution_undo_spinning" src="/buggenie/thebuggenie/themes/oxygen/spinning_16.gif" alt="spinning_16.gif">				<a href="javascript:void(0);" onclick="$('resolution_change').toggle();" title="Click to change resolution"><img class="dropdown" src="/buggenie/thebuggenie/themes/oxygen/action_dropdown_small.png" alt="action_dropdown_small.png"></a>
+									<span id="resolution_name" style="display: none;"></span>
+			<span class="faded_out" id="no_resolution">Not determined</span>
+		</dd>
+	</dl>
+	<div style="clear: both;"> </div>
+			<div class="rounded_box white shadowed" id="resolution_change" style="display: none; width: 280px; position: absolute; z-index: 10001; margin: 5px 0 5px 0; padding: 5px;">
+			<div class="dropdown_header">Change resolution</div>
+			<div class="dropdown_content">
+				<a href="javascript:void(0);" onclick="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/resolution/resolution_id/0', 'resolution');">Clear the resolution</a><br>
+			</div>
+			<div class="dropdown_content">
+				 or click to select a new resolution:<br>
+				<ul class="choices">
+																	<li>
+							<img style="float: left; margin-right: 5px;" src="/buggenie/thebuggenie/themes/oxygen/icon_resolution.png" alt="icon_resolution.png"><a href="javascript:void(0);" onclick="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/resolution/resolution_id/13', 'resolution');">CAN'T REPRODUCE</a>
+						</li>
+																	<li>
+							<img style="float: left; margin-right: 5px;" src="/buggenie/thebuggenie/themes/oxygen/icon_resolution.png" alt="icon_resolution.png"><a href="javascript:void(0);" onclick="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/resolution/resolution_id/14', 'resolution');">WON'T FIX</a>
+						</li>
+																	<li>
+							<img style="float: left; margin-right: 5px;" src="/buggenie/thebuggenie/themes/oxygen/icon_resolution.png" alt="icon_resolution.png"><a href="javascript:void(0);" onclick="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/resolution/resolution_id/15', 'resolution');">NOT AN ISSUE</a>
+						</li>
+																	<li>
+							<img style="float: left; margin-right: 5px;" src="/buggenie/thebuggenie/themes/oxygen/icon_resolution.png" alt="icon_resolution.png"><a href="javascript:void(0);" onclick="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/resolution/resolution_id/16', 'resolution');">POSTPONED</a>
+						</li>
+																	<li>
+							<img style="float: left; margin-right: 5px;" src="/buggenie/thebuggenie/themes/oxygen/icon_resolution.png" alt="icon_resolution.png"><a href="javascript:void(0);" onclick="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/resolution/resolution_id/17', 'resolution');">RESOLVED</a>
+						</li>
+																	<li>
+							<img style="float: left; margin-right: 5px;" src="/buggenie/thebuggenie/themes/oxygen/icon_resolution.png" alt="icon_resolution.png"><a href="javascript:void(0);" onclick="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/resolution/resolution_id/18', 'resolution');">CAN'T FIX</a>
+						</li>
+																	<li>
+							<img style="float: left; margin-right: 5px;" src="/buggenie/thebuggenie/themes/oxygen/icon_resolution.png" alt="icon_resolution.png"><a href="javascript:void(0);" onclick="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/resolution/resolution_id/19', 'resolution');">DUPLICATE</a>
+						</li>
+									</ul>
+				<div id="resolution_spinning" style="margin-top: 3px; display: none;"><img style="float: left; margin-right: 5px;" src="/buggenie/thebuggenie/themes/oxygen/spinning_20.gif" alt="spinning_20.gif">&nbsp;Please wait...</div>
+			</div>
+			<div id="resolution_change_error" class="error_message" style="display: none;"></div>
+		</div>
+		<dl class="viewissue_list" id="priority_field">
+		<dt id="priority_header" class="">
+			Priority		</dt>
+		<dd id="priority_content" class="">
+							<a href="javascript:void(0);" onclick="revertField('/buggenie/thebuggenie/sampleproject1/issues/83/revert/priority', 'priority');" title="Undo this change"><img class="undo" src="/buggenie/thebuggenie/themes/oxygen/undo.png" alt="undo.png"></a>
+				<img style="display: none; float: left; margin-right: 5px;" id="priority_undo_spinning" src="/buggenie/thebuggenie/themes/oxygen/spinning_16.gif" alt="spinning_16.gif">				<a href="javascript:void(0);" onclick="$('priority_change').toggle();" title="Click to change priority"><img class="dropdown" src="/buggenie/thebuggenie/themes/oxygen/action_dropdown_small.png" alt="action_dropdown_small.png"></a>
+									<span id="priority_name" style="display: none;"></span>
+			<span class="faded_out" id="no_priority">Not determined</span>
+		</dd>
+	</dl>
+	<div style="clear: both;"> </div>
+			<div class="rounded_box white shadowed" id="priority_change" style="display: none; width: 280px; position: absolute; z-index: 10001; margin: 5px 0 5px 0; padding: 5px;">
+			<div class="dropdown_header">Change priority</div>
+			<div class="dropdown_content">
+				<a href="javascript:void(0);" onclick="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/priority/priority_id/0', 'priority');">Clear the priority</a><br>
+			</div>
+			<div class="dropdown_content">
+				 or click to select a new priority:<br>
+				<ul class="choices">
+																	<li>
+							<img style="float: left; margin-right: 5px;" src="/buggenie/thebuggenie/themes/oxygen/icon_priority.png" alt="icon_priority.png"><a href="javascript:void(0);" onclick="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/priority/priority_id/4', 'priority');">Critical</a>
+						</li>
+																	<li>
+							<img style="float: left; margin-right: 5px;" src="/buggenie/thebuggenie/themes/oxygen/icon_priority.png" alt="icon_priority.png"><a href="javascript:void(0);" onclick="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/priority/priority_id/5', 'priority');">Needs to be fixed</a>
+						</li>
+																	<li>
+							<img style="float: left; margin-right: 5px;" src="/buggenie/thebuggenie/themes/oxygen/icon_priority.png" alt="icon_priority.png"><a href="javascript:void(0);" onclick="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/priority/priority_id/6', 'priority');">Must fix before next release</a>
+						</li>
+																	<li>
+							<img style="float: left; margin-right: 5px;" src="/buggenie/thebuggenie/themes/oxygen/icon_priority.png" alt="icon_priority.png"><a href="javascript:void(0);" onclick="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/priority/priority_id/7', 'priority');">Low</a>
+						</li>
+																	<li>
+							<img style="float: left; margin-right: 5px;" src="/buggenie/thebuggenie/themes/oxygen/icon_priority.png" alt="icon_priority.png"><a href="javascript:void(0);" onclick="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/priority/priority_id/8', 'priority');">Normal</a>
+						</li>
+									</ul>
+				<div id="priority_spinning" style="margin-top: 3px; display: none;"><img style="float: left; margin-right: 5px;" src="/buggenie/thebuggenie/themes/oxygen/spinning_20.gif" alt="spinning_20.gif">&nbsp;Please wait...</div>
+			</div>
+			<div id="priority_change_error" class="error_message" style="display: none;"></div>
+		</div>
+		<dl class="viewissue_list" id="reproducability_field" style="display: none;">
+		<dt id="reproducability_header" class="">
+			Reproducability		</dt>
+		<dd id="reproducability_content" class="">
+							<a href="javascript:void(0);" onclick="revertField('/buggenie/thebuggenie/sampleproject1/issues/83/revert/reproducability', 'reproducability');" title="Undo this change"><img class="undo" src="/buggenie/thebuggenie/themes/oxygen/undo.png" alt="undo.png"></a>
+				<img style="display: none; float: left; margin-right: 5px;" id="reproducability_undo_spinning" src="/buggenie/thebuggenie/themes/oxygen/spinning_16.gif" alt="spinning_16.gif">				<a href="javascript:void(0);" onclick="$('reproducability_change').toggle();" title="Click to change reproducability"><img class="dropdown" src="/buggenie/thebuggenie/themes/oxygen/action_dropdown_small.png" alt="action_dropdown_small.png"></a>
+									<span id="reproducability_name" style="display: none;"></span>
+			<span class="faded_out" id="no_reproducability">Not determined</span>
+		</dd>
+	</dl>
+	<div style="clear: both;"> </div>
+			<div class="rounded_box white shadowed" id="reproducability_change" style="display: none; width: 280px; position: absolute; z-index: 10001; margin: 5px 0 5px 0; padding: 5px;">
+			<div class="dropdown_header">Change reproducability</div>
+			<div class="dropdown_content">
+				<a href="javascript:void(0);" onclick="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/reproducability/reproducability_id/0', 'reproducability');">Clear the reproducability</a><br>
+			</div>
+			<div class="dropdown_content">
+				 or click to select a new reproducability:<br>
+				<ul class="choices">
+																	<li>
+							<img style="float: left; margin-right: 5px;" src="/buggenie/thebuggenie/themes/oxygen/icon_reproducability.png" alt="icon_reproducability.png"><a href="javascript:void(0);" onclick="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/reproducability/reproducability_id/9', 'reproducability');">Can't reproduce</a>
+						</li>
+																	<li>
+							<img style="float: left; margin-right: 5px;" src="/buggenie/thebuggenie/themes/oxygen/icon_reproducability.png" alt="icon_reproducability.png"><a href="javascript:void(0);" onclick="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/reproducability/reproducability_id/10', 'reproducability');">Rarely</a>
+						</li>
+																	<li>
+							<img style="float: left; margin-right: 5px;" src="/buggenie/thebuggenie/themes/oxygen/icon_reproducability.png" alt="icon_reproducability.png"><a href="javascript:void(0);" onclick="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/reproducability/reproducability_id/11', 'reproducability');">Often</a>
+						</li>
+																	<li>
+							<img style="float: left; margin-right: 5px;" src="/buggenie/thebuggenie/themes/oxygen/icon_reproducability.png" alt="icon_reproducability.png"><a href="javascript:void(0);" onclick="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/reproducability/reproducability_id/12', 'reproducability');">Always</a>
+						</li>
+									</ul>
+				<div id="reproducability_spinning" style="margin-top: 3px; display: none;"><img style="float: left; margin-right: 5px;" src="/buggenie/thebuggenie/themes/oxygen/spinning_20.gif" alt="spinning_20.gif">&nbsp;Please wait...</div>
+			</div>
+			<div id="reproducability_change_error" class="error_message" style="display: none;"></div>
+		</div>
+		<dl class="viewissue_list" id="severity_field" style="display: none;">
+		<dt id="severity_header" class="">
+			Severity		</dt>
+		<dd id="severity_content" class="">
+							<a href="javascript:void(0);" onclick="revertField('/buggenie/thebuggenie/sampleproject1/issues/83/revert/severity', 'severity');" title="Undo this change"><img class="undo" src="/buggenie/thebuggenie/themes/oxygen/undo.png" alt="undo.png"></a>
+				<img style="display: none; float: left; margin-right: 5px;" id="severity_undo_spinning" src="/buggenie/thebuggenie/themes/oxygen/spinning_16.gif" alt="spinning_16.gif">				<a href="javascript:void(0);" onclick="$('severity_change').toggle();" title="Click to change severity"><img class="dropdown" src="/buggenie/thebuggenie/themes/oxygen/action_dropdown_small.png" alt="action_dropdown_small.png"></a>
+									<span id="severity_name" style="display: none;"></span>
+			<span class="faded_out" id="no_severity">Not determined</span>
+		</dd>
+	</dl>
+	<div style="clear: both;"> </div>
+			<div class="rounded_box white shadowed" id="severity_change" style="display: none; width: 280px; position: absolute; z-index: 10001; margin: 5px 0 5px 0; padding: 5px;">
+			<div class="dropdown_header">Change severity</div>
+			<div class="dropdown_content">
+				<a href="javascript:void(0);" onclick="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/severity/severity_id/0', 'severity');">Clear the severity</a><br>
+			</div>
+			<div class="dropdown_content">
+				 or click to select a new severity:<br>
+				<ul class="choices">
+																	<li>
+							<img style="float: left; margin-right: 5px;" src="/buggenie/thebuggenie/themes/oxygen/icon_severity.png" alt="icon_severity.png"><a href="javascript:void(0);" onclick="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/severity/severity_id/20', 'severity');">Low</a>
+						</li>
+																	<li>
+							<img style="float: left; margin-right: 5px;" src="/buggenie/thebuggenie/themes/oxygen/icon_severity.png" alt="icon_severity.png"><a href="javascript:void(0);" onclick="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/severity/severity_id/21', 'severity');">Normal</a>
+						</li>
+																	<li>
+							<img style="float: left; margin-right: 5px;" src="/buggenie/thebuggenie/themes/oxygen/icon_severity.png" alt="icon_severity.png"><a href="javascript:void(0);" onclick="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/severity/severity_id/22', 'severity');">Critical</a>
+						</li>
+									</ul>
+				<div id="severity_spinning" style="margin-top: 3px; display: none;"><img style="float: left; margin-right: 5px;" src="/buggenie/thebuggenie/themes/oxygen/spinning_20.gif" alt="spinning_20.gif">&nbsp;Please wait...</div>
+			</div>
+			<div id="severity_change_error" class="error_message" style="display: none;"></div>
+		</div>
+		<dl class="viewissue_list" id="milestone_field">
+		<dt id="milestone_header" class="">
+			Targetted for		</dt>
+		<dd id="milestone_content" class="">
+							<a href="javascript:void(0);" onclick="revertField('/buggenie/thebuggenie/sampleproject1/issues/83/revert/milestone', 'milestone');" title="Undo this change"><img class="undo" src="/buggenie/thebuggenie/themes/oxygen/undo.png" alt="undo.png"></a>
+				<img style="display: none; float: left; margin-right: 5px;" id="milestone_undo_spinning" src="/buggenie/thebuggenie/themes/oxygen/spinning_16.gif" alt="spinning_16.gif">				<a href="javascript:void(0);" onclick="$('milestone_change').toggle();" title="Click to change which milestone this issue is targetted for"><img class="dropdown" src="/buggenie/thebuggenie/themes/oxygen/action_dropdown_small.png" alt="action_dropdown_small.png"></a>
+										<img style="float: left; margin-right: 5px;" src="/buggenie/thebuggenie/themes/oxygen/icon_milestones.png" alt="icon_milestones.png">						<span id="milestone_name">Sprint 1</span>
+			<span class="faded_out" id="no_milestone" style="display: none;">Not determined</span>
+		</dd>
+	</dl>
+	<div style="clear: both;"> </div>
+			<div class="rounded_box white shadowed" id="milestone_change" style="display: none; width: 280px; position: absolute; z-index: 10001; margin: 5px 0 5px 0; padding: 5px;">
+			<div class="dropdown_header">Set issue target / milestone</div>
+			<div class="dropdown_content">
+				<a href="javascript:void(0);" onclick="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/milestone/milestone_id/0', 'milestone');">Set as not targetted</a><br>
+			</div>
+			<div class="dropdown_content">
+				 or click to set a new target milestone:<br>
+				<ul class="choices">
+																	<li>
+							<img style="float: left; margin-right: 5px;" src="/buggenie/thebuggenie/themes/oxygen/icon_milestone.png" alt="icon_milestone.png"><a href="javascript:void(0);" onclick="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/milestone/milestone_id/2', 'milestone');">Milestone 2</a>
+						</li>
+																	<li>
+							<img style="float: left; margin-right: 5px;" src="/buggenie/thebuggenie/themes/oxygen/icon_milestone.png" alt="icon_milestone.png"><a href="javascript:void(0);" onclick="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/milestone/milestone_id/3', 'milestone');">Milestone 3</a>
+						</li>
+																	<li>
+							<img style="float: left; margin-right: 5px;" src="/buggenie/thebuggenie/themes/oxygen/icon_milestone.png" alt="icon_milestone.png"><a href="javascript:void(0);" onclick="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/milestone/milestone_id/11', 'milestone');">Sprint 0</a>
+						</li>
+																	<li>
+							<img style="float: left; margin-right: 5px;" src="/buggenie/thebuggenie/themes/oxygen/icon_milestone.png" alt="icon_milestone.png"><a href="javascript:void(0);" onclick="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/milestone/milestone_id/1', 'milestone');">Milestone 1</a>
+						</li>
+																	<li>
+							<img style="float: left; margin-right: 5px;" src="/buggenie/thebuggenie/themes/oxygen/icon_milestone.png" alt="icon_milestone.png"><a href="javascript:void(0);" onclick="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/milestone/milestone_id/12', 'milestone');">Sprint 1</a>
+						</li>
+																	<li>
+							<img style="float: left; margin-right: 5px;" src="/buggenie/thebuggenie/themes/oxygen/icon_milestone.png" alt="icon_milestone.png"><a href="javascript:void(0);" onclick="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/milestone/milestone_id/4', 'milestone');">Milestone 4</a>
+						</li>
+																	<li>
+							<img style="float: left; margin-right: 5px;" src="/buggenie/thebuggenie/themes/oxygen/icon_milestone.png" alt="icon_milestone.png"><a href="javascript:void(0);" onclick="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/milestone/milestone_id/5', 'milestone');">Milestone 5</a>
+						</li>
+									</ul>
+				<div id="milestone_spinning" style="margin-top: 3px; display: none;"><img style="float: left; margin-right: 5px;" src="/buggenie/thebuggenie/themes/oxygen/spinning_20.gif" alt="spinning_20.gif">&nbsp;Please wait...</div>
+			</div>
+			<div id="milestone_change_error" class="error_message" style="display: none;"></div>
+		</div>
+	<div style="clear: both; margin-bottom: 5px;"> </div>
+<div id="more_actions" style="display: none;">
+	<div class="rounded_box white shadowed">
+		<div style="padding: 5px;">
+			<ul>
+									<li><a href="/buggenie/thebuggenie/sampleproject1/issues/83/block"><img style="float: left; margin-right: 5px;" src="/buggenie/thebuggenie/themes/oxygen/icon_block.png" alt="icon_block.png">Mark as blocking the next release</a></li>
+													<li><a href="javascript:void(0);" onclick="showFadedBackdrop('/buggenie/thebuggenie/get/partials/markasduplicate_issue/issue_id/83');"><img style="float: left; margin-right: 5px;" src="/buggenie/thebuggenie/themes/oxygen/icon_duplicate_issues.png" alt="icon_duplicate_issues.png">Mark this issue as a duplicate of another</a></li>
+								<li><a href="javascript:void(0)" onClick="$('move_issue').toggle();"><img style="float: left; margin-right: 5px;" src="/buggenie/thebuggenie/themes/oxygen/icon_move.png" alt="icon_move.png">Move issue to another project</a></li>
+				<li style="display: none;" id="move_issue">
+					<form action="/buggenie/thebuggenie/issue/83/move" method="post">
+						<div class="rounded_box borderless yellow" style="margin: 5px 0 20px 0;">
+							<b>Move issue to a different project</b>
+							<p>Please be aware that moving this issue to a different project will reset details such as status, category, etc., and may also make some fields invisible, depending on the issue type configuration for that project.</p>
+							<br>
+							<label for="move_issue_project">Move issue to</label><br>
+							<select name="project_id">
+																										<option value="1" selected>Sample project 1</option>
+																										<option value="2">Sample project 2</option>
+															</select>
+							<div style="text-align: right; padding-top: 5px;">
+								<input type="submit" value="Move issue" onclick="$(this).hide();$('move_issue_indicator').show();">
+								<img id="move_issue_indicator" style="display: none; margin-right: 5px;" src="/buggenie/thebuggenie/themes/oxygen/spinning_16.gif" alt="spinning_16.gif">								 or 								<a href="javascript:void(0)" onclick="$('move_issue').hide();">cancel</a>
+							</div>
+						</div>
+					</form>
+				</li>
+									<li><a href="javascript:void(0)" onClick="$('delete_issue').toggle();"><img style="float: left; margin-right: 5px;" src="/buggenie/thebuggenie/themes/oxygen/icon_delete.png" alt="icon_delete.png">Permanently delete this issue</a></li>
+							</ul>
+			<div class="rounded_box borderless red" style="display: none;" id="delete_issue"> 
+				<b>Permanently delete this issue</b>
+				<p>Are you sure you wish to delete this issue? It will remain in the database for your records, but will not be accessible via The Bug Genie.</p>
+				<a href="/buggenie/thebuggenie/sampleproject1/issues/83/delete">Yes</a> | <a href="javascript:void(0)" onClick="$('delete_issue').hide();">No</a>
+			</div>
+		</div>
+	</div>
+	<div style="text-align: center; font-size: 14px; width: 200px; margin: 5px auto 0 auto; padding: 5px 0 5px 0; height: 20px;">
+		<a href="javascript:void(0);" onclick="$('more_actions').hide();$('more_actions_div').show();"><img style="float: left; margin-right: 5px;" src="/buggenie/thebuggenie/themes/oxygen/action_remove_small.png" alt="action_remove_small.png"><span style="float: left;">Hide further actions</span></a>
+	</div>
+</div>
+<div style="text-align: center; font-size: 14px; width: 200px; margin: 5px auto 0 auto; padding: 5px 0 5px 0; height: 20px;" id="more_actions_div">
+	<a href="javascript:void(0);" onclick="$('more_actions').show();$('more_actions_div').hide();"><img style="float: left; margin-right: 5px;" src="/buggenie/thebuggenie/themes/oxygen/action_add_small_faded.png" alt="action_add_small_faded.png"><span style="float: left; font-weight: bold;">Show further actions</span></a>
+</div>
+						<div style="clear: both; margin-bottom: 5px;"> </div>
+											</td>
+					<td valign="top" align="left" style="padding: 5px; height: 100%;" class="issue_main">
+													<div id="workflow_actions">
+								<ul class="workflow_actions simple_list">
+																												<li class="nice_button workflow first">
+																							<form action="/buggenie/thebuggenie/sampleproject1/83/transition/1" method="post">
+													<input type="submit" value="Investigate issue">
+												</form>
+																					</li>
+																													<li class="nice_button workflow">
+																							<form action="/buggenie/thebuggenie/sampleproject1/83/transition/3" method="post">
+													<input type="submit" value="Confirm issue">
+												</form>
+																					</li>
+																													<li class="nice_button workflow">
+																							<input type="button" value="Reject issue" onclick="showFadedBackdrop('/buggenie/thebuggenie/get/partials/workflow_transition/transition_id/4/issue_id/83');">
+																					</li>
+																													<li class="nice_button workflow">
+																							<form action="/buggenie/thebuggenie/sampleproject1/83/transition/5" method="post">
+													<input type="submit" value="Accept issue">
+												</form>
+																					</li>
+																													<li class="nice_button workflow last">
+																							<input type="button" value="Resolve issue" onclick="showFadedBackdrop('/buggenie/thebuggenie/get/partials/workflow_transition/transition_id/9/issue_id/83');">
+																					</li>
+																											</ul>
+							</div>
+												<br style="clear: both;">
+												<div id="description_field" class="hoverable">
+							<div class="rounded_box invisible nohover viewissue_description" id="description_header" style="margin: 0;">
+								<div class="viewissue_description_header">
+																			<a href="javascript:void(0);" onclick="revertField('/buggenie/thebuggenie/sampleproject1/issues/83/revert/description', 'description');" title="Undo this change"><img class="undo" src="/buggenie/thebuggenie/themes/oxygen/undo.png" alt="undo.png"></a> <img style="display: none; float: left; margin-right: 5px;" id="description_undo_spinning" src="/buggenie/thebuggenie/themes/oxygen/spinning_16.gif" alt="spinning_16.gif">										<img class="dropdown" id="description_edit" onclick="$('description_change').show(); $('description_name').hide(); $('no_description').hide();" title="Click here to edit description" src="/buggenie/thebuggenie/themes/oxygen/icon_edit.png" alt="icon_edit.png">																		Description:
+								</div>
+								<div id="description_content" class="">
+									<div class="faded_out" id="no_description" >Nothing entered.</div>
+									<div id="description_name" class="issue_inline_description">
+																			</div>
+								</div>
+																	<div id="description_change" style="display: none;">
+										<form id="description_form" action="/buggenie/thebuggenie/sampleproject1/issues/83/set/description" method="post" onSubmit="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/description', 'description'); return false;">
+											<textarea name="value" id="description_form_value" style="height: 100px; width: 100%;"></textarea>
+	<div class="textarea_hint">
+		<div class="header">Formatting tips</div>
+		<p>
+			Code samples are best presented in &lt;source&gt;&lt;/source&gt; tags. The Bug Genie uses <a tabindex="-1" href="http://qbnz.com/highlighter/">GeSHi</a> for syntax highlighting with support for over 100 languages! (&lt;source lang=&quot;php&quot;&gt;&lt;?php echo &quot;fu&quot;; ?&gt;&lt;/source&gt;)<br>
+			See more formatting tips in <a target="_new" tabindex="-1" href="/buggenie/thebuggenie/wiki/WikiFormatting">WikiFormatting</a>.		</p>
+	</div>
+											<br>
+											<input type="submit" value="Save" style="font-weight: bold;"> or <a style="font-weight: bold;" onclick="$('description_change').hide();$('no_description').show();return false;" href="javascript:void(0);">cancel</a>										</form>
+										<img style="display: none; float: left; margin-right: 5px;" id="description_spinning" src="/buggenie/thebuggenie/themes/oxygen/spinning_16.gif" alt="spinning_16.gif">										<div id="description_change_error" class="error_message" style="display: none;"></div>
+									</div>
+																<br style="clear: both;">
+							</div>
+						</div>
+						<br />
+						<div id="reproduction_steps_field" style="display: none;" class="hoverable">
+							<div id="reproduction_steps_header" class="rounded_box invisible nohover viewissue_reproduction_steps" style="margin: 0;">
+								<div class="viewissue_reproduction_steps_header">
+																			<a href="javascript:void(0);" onclick="revertField('/buggenie/thebuggenie/sampleproject1/issues/83/revert/reproduction_steps', 'reproduction_steps');" title="Undo this change"><img class="undo" src="/buggenie/thebuggenie/themes/oxygen/undo.png" alt="undo.png"></a> <img style="display: none; float: left; margin-right: 5px;" id="reproduction_steps_undo_spinning" src="/buggenie/thebuggenie/themes/oxygen/spinning_16.gif" alt="spinning_16.gif">										<img class="dropdown" id="reproduction_steps_edit" onclick="$('reproduction_steps_change').show(); $('reproduction_steps_name').hide(); $('no_reproduction_steps').hide();" title="Click here to edit reproduction steps" src="/buggenie/thebuggenie/themes/oxygen/icon_edit.png" alt="icon_edit.png">																		Reproduction steps:
+								</div>
+								<div id="reproduction_steps_content" class="">
+									<div class="faded_out" id="no_reproduction_steps" >Nothing entered.</div>
+									<div id="reproduction_steps_name" class="issue_inline_description">
+																			</div>
+								</div>
+																	<div id="reproduction_steps_change" style="display: none;">
+										<form id="reproduction_steps_form" action="/buggenie/thebuggenie/sampleproject1/issues/83/set/reproduction_steps" method="post" onSubmit="setField('/buggenie/thebuggenie/sampleproject1/issues/83/set/reproduction_steps', 'reproduction_steps'); return false;">
+											<textarea name="value" id="reproduction_steps_form_value" style="height: 100px; width: 100%;"></textarea>
+	<div class="textarea_hint">
+		<div class="header">Formatting tips</div>
+		<p>
+			If you have certain text you don't want to be formatted, enclose it in &lt;nowiki&gt;&lt;/nowiki&gt; tags: &quot;'''formatted''' text &lt;nowiki&gt;'''non-formatted''' text&lt;/nowiki&gt;.<br>
+			See more formatting tips in <a target="_new" tabindex="-1" href="/buggenie/thebuggenie/wiki/WikiFormatting">WikiFormatting</a>.		</p>
+	</div>
+											<br>
+											<input type="submit" value="Save" style="font-weight: bold;"> or <a style="font-weight: bold;" onclick="$('reproduction_steps_change').hide();$('no_reproduction_steps').show();return false;" href="javascript:void(0);">cancel</a>										</form>
+										<img style="display: none; float: left; margin-right: 5px;" id="reproduction_steps_spinning" src="/buggenie/thebuggenie/themes/oxygen/spinning_16.gif" alt="spinning_16.gif">										<div id="reproduction_steps_change_error" class="error_message" style="display: none;"></div>
+									</div>
+																<br style="clear: both;">
+							</div>
+						</div>
+						<br />
+																								</td>
+				</tr>
+			</table>
+		</div>
+				<div style="clear: both; height: 30px; margin: 20px 5px 0 5px;" class="tab_menu">
+			<ul id="viewissue_menu">
+				<li id="tab_comments" class="selected"><a onclick="switchSubmenuTab('tab_comments', 'viewissue_menu');" href="javascript:void(0);"><img style="float: left; margin-right: 5px;" src="/buggenie/thebuggenie/themes/oxygen/icon_comments.png" alt="icon_comments.png">Comments (<span id="viewissue_comment_count">4</span>)</a></li>
+				<li id="tab_attached_information"><a onclick="switchSubmenuTab('tab_attached_information', 'viewissue_menu');" href="javascript:void(0);"><img style="float: left; margin-right: 5px;" src="/buggenie/thebuggenie/themes/oxygen/icon_attached_information.png" alt="icon_attached_information.png">Attached information (<span id="viewissue_uploaded_attachments_count">0</span>)</a></li>
+								<li id="tab_affected"><a onclick="switchSubmenuTab('tab_affected', 'viewissue_menu');" href="javascript:void(0);"><img style="float: left; margin-right: 5px;" src="/buggenie/thebuggenie/themes/oxygen/cfg_icon_projecteditionsbuilds.png" alt="cfg_icon_projecteditionsbuilds.png">Affected items (<span id="viewissue_affects_count">0</span>)</a></li>
+				<li id="tab_related_issues_and_tasks"><a onclick="switchSubmenuTab('tab_related_issues_and_tasks', 'viewissue_menu');" href="javascript:void(0);"><img style="float: left; margin-right: 5px;" src="/buggenie/thebuggenie/themes/oxygen/icon_related_issues.png" alt="icon_related_issues.png">Related issues and tasks (<span id="viewissue_duplicate_issues_count">0</span>)</a></li>
+				<li id="tab_duplicate_issues"><a onclick="switchSubmenuTab('tab_duplicate_issues', 'viewissue_menu');" href="javascript:void(0);"><img style="float: left; margin-right: 5px;" src="/buggenie/thebuggenie/themes/oxygen/icon_duplicate_issues.png" alt="icon_duplicate_issues.png">Duplicate issues (<span id="viewissue_duplicate_issues_count">0</span>)</a></li>
+							</ul>
+		</div>
+		<div id="viewissue_menu_panes">
+						<div id="tab_comments_pane" style="padding-top: 0; margin: 0 5px 0 5px;" class="comments">
+				<div id="viewissue_comments">
+						<div style="float: right; padding: 5px;"><label>Show system-generated comments<input type="checkbox" id="comments_show_system_comments_toggle" onchange="$$('#comments_box .system_comment').each(function (elm) { $(elm).toggle(); })" /></label></div>
+	<table border="0" cellpadding="0" cellspacing="0" style="margin: 5px;" id="comment_add_button"><tr><td class="nice_button" style="font-size: 13px; margin-left: 0;"><input type="button" onclick="$('comment_add_button').hide(); $('comment_add').show();$('comment_bodybox').focus();" value="Add new comment"></td></tr></table>
+	<div id="comment_add" class="comment_add" style="display: none; margin-top: 5px;">
+		<div class="comment_add_main">
+			<div class="comment_add_title">Create a comment</div><br>
+			<form id="comment_form" accept-charset="UTF-8" action="/buggenie/thebuggenie/comment/add/for/module/core/item/type/1/id/83" method="post" onSubmit="addComment('/buggenie/thebuggenie/comment/add/for/module/core/item/type/1/id/83', 'viewissue_comment_count');return false;">
+				<label for="comment_visibility">Comment visibility <span class="faded_out">(whether to hide this comment for "regular users")</span></label><br />
+				<select class="comment_visibilitybox" id="comment_visibility" name="comment_visibility">
+					<option value="1">Visible for all users</option>
+					<option value="0">Visible for me, developers and administrators only</option>
+				</select>
+				<br />
+				<label for="comment_bodybox">Comment</label><br />
+				<textarea name="comment_body" id="comment_bodybox" style="height: 200px; width: 970px;"></textarea>
+	<div class="textarea_hint">
+		<div class="header">Formatting tips</div>
+		<p>
+			To create a bulleted list, start one or more lines with a star (&quot;* bulleted list item&quot;). You can create a numbered list by using the hash/pund sign instead (&quot;# numbered list item&quot;).<br>
+			See more formatting tips in <a target="_new" tabindex="-1" href="/buggenie/thebuggenie/wiki/WikiFormatting">WikiFormatting</a>.		</p>
+	</div>
+				<div id="comment_add_indicator" style="display: none;">
+					<img src="/buggenie/thebuggenie/themes/oxygen/spinning_20.gif" alt="spinning_20.gif">				</div>
+
+				<div id="comment_add_controls" style="font-size: 12px;" class="comment_controls">
+											<input type="checkbox" name="comment_save_changes" id="comment_save_changes" value="1">&nbsp;<label for="comment_save_changes">Save my changes with this comment</label>
+						<br><br>
+										<input type="hidden" name="forward_url" value="http://10.11.103.178/buggenie/thebuggenie/sampleproject1/issues/43">
+					<input type="submit" class="comment_addsave" value="Create comment" /> or <a href="javascript:void(0);" onClick="$('comment_add').hide();$('comment_add_button').show();">cancel</a>				</div>
+			</form>
+		</div>
+	</div>
+<div class="faded_out comments_none" id="comments_none" style="display: none;">There are no comments</div>
+<div id="comments_box">
+			<div class="comment system_comment" id="comment_86" style="display: none;">
+	<div style="position: relative; overflow: visible; padding: 5px;" id="comment_view_86" class="comment_main">
+		<div id="comment_86_header" class="commentheader">
+			<a href="#comment_1_83_86" class="comment_hash">#1</a>
+							<div class="commenttools">
+										<a href="javascript:void(0)" onClick="$('comment_delete_confirm_86').toggle();"><img title="Delete" src="/buggenie/thebuggenie/themes/oxygen/icon_comment_delete.png" alt="icon_comment_delete.png">Delete</a>				</div>
+						<div class="commenttitle">
+									Comment posted on behalf of <div style="display: inline;">				<a href="javascript:void(0);" onclick="$('bud_administrator_1184626143').toggle();" class="image"><img alt=" " style="width: 16px; height: 16px; float: left; margin-right: 5px;" src="http://www.gravatar.com/avatar/d41d8cd98f00b204e9800998ecf8427e.png?d=wavatar&amp;s=22"></a>
+		<a href="javascript:void(0);" onclick="$('bud_administrator_1184626143').toggle();" style="font-weight: normal;">Admin</a>
+	<div id="bud_administrator_1184626143" style="z-index: 100; width: 300px; display: none; position: absolute;" class="rounded_box white shadowed user_popup">
+		<div style="padding: 3px;">
+			<div style="padding: 2px; width: 36px; height: 36px; text-align: center; background-color: #FFF; border: 1px solid #DDD; float: left;">
+				<img alt=" " style="width: 36px; height: 36px;" src="http://www.gravatar.com/avatar/d41d8cd98f00b204e9800998ecf8427e.png?d=wavatar&amp;s=48">			</div>
+			<div class="user_realname">
+				Administrator				<div class="user_status">Available</div>
+			</div>
+			<div class="user_details">
+									<b>This user was last seen online at </b>Oct 19, 2011 - 14:02 
+							</div>
+													<div style="padding: 2px;"><a target="_new" href="/buggenie/thebuggenie/configure/users/finduser/administrator">Edit this user</a></div>
+						<div style="padding: 2px;">
+				<a href="javascript:void(0);" onclick="showFadedBackdrop('/buggenie/thebuggenie/get/partials/usercard/user_id/1');$('bud_administrator_1184626143').hide();">Show user details</a>
+			</div>
+					</div>
+		<div style="text-align: right; padding: 3px; font-size: 9px;"><a href="javascript:void(0);" onclick="$('bud_administrator_1184626143').toggle();">Close this menu</a></div>
+	</div>
+</div>							</div>
+			<div class="commentdate" id="comment_86_date">Today, 13:41</div>
+		</div>
+		<div class="rounded_box lightyellow borderless shadowed comment_delete" id="comment_delete_confirm_86" style="display: none; width: 300px; position: absolute; right: 0; top: 0; padding: 5px; z-index: 20;">
+			<h5>Really delete this comment?</h5>
+			<div id="comment_delete_controls_86" style="text-align: right; font-size: 12px;">
+				<a href="javascript:void(0)" onClick="deleteComment('/buggenie/thebuggenie/comment/delete/86', 86)" class="xboxlink">Yes</a> :: <a href="javascript:void(0)" onClick="$('comment_delete_confirm_86').hide();" class="xboxlink">No</a>
+			</div>
+			<div id="comment_delete_indicator_86" style="display: none;">
+				<img class="spinning" src="/buggenie/thebuggenie/themes/oxygen/spinning_16.gif" alt="spinning_16.gif">			</div>
+		</div>
+		<div class="commentbody article" id="comment_86_body">
+			The issue has been updated 
+		</div>
+	</div>
+	
+	<div id="comment_edit_86" class="comment_edit" style="display: none;">
+		<form id="comment_edit_form_86" action="/buggenie/thebuggenie/comment/update/86" method="post" onSubmit="updateComment('/buggenie/thebuggenie/comment/update/86', '86'); return false;">
+			<input type="hidden" name="comment_id" value="86" />
+			<label for="comment_visibility">Comment visibility <span class="faded_out">(whether to hide this comment for "regular users")</span></label><br />
+			<select class="comment_visibilitybox" id="comment_visibility" name="comment_visibility">
+				<option value="1" selected="selected" >Visible for all users</option>
+				<option value="0">Visible for me, developers and administrators only</option>
+			</select>
+			<br />
+			<label for="comment_bodybox">Comment</label><br />
+			<textarea name="comment_body" id="comment_bodybox" style="height: 200px; width: 970px;">The issue has been updated</textarea>
+	<div class="textarea_hint">
+		<div class="header">Formatting tips</div>
+		<p>
+			The Bug Genie will automatically add new lines when you add two new lines in your text, whereas one new line is used for formatting as you type. To force a new line, use the &lt;br&gt; tag: &quot;There is a new&lt;br&gt;line here&quot;.<br>
+			See more formatting tips in <a target="_new" tabindex="-1" href="/buggenie/thebuggenie/wiki/WikiFormatting">WikiFormatting</a>.		</p>
+	</div>
+			<div id="comment_edit_indicator_86" style="display: none;">
+				<img class="spinning" src="/buggenie/thebuggenie/themes/oxygen/spinning_16.gif" alt="spinning_16.gif">			</div>
+			<div id="comment_edit_controls_86" class="comment_controls">
+				<input type="submit" class="comment_editsave" value="Save changes" /> <a href="javascript:void(0)" onClick="$('comment_edit_86').hide();$('comment_view_86').show();">or cancel</a>
+			</div>
+		</form>
+	</div>
+</div>			<div class="comment system_comment" id="comment_87" style="display: none;">
+	<div style="position: relative; overflow: visible; padding: 5px;" id="comment_view_87" class="comment_main">
+		<div id="comment_87_header" class="commentheader">
+			<a href="#comment_1_83_87" class="comment_hash">#2</a>
+							<div class="commenttools">
+										<a href="javascript:void(0)" onClick="$('comment_delete_confirm_87').toggle();"><img title="Delete" src="/buggenie/thebuggenie/themes/oxygen/icon_comment_delete.png" alt="icon_comment_delete.png">Delete</a>				</div>
+						<div class="commenttitle">
+									Comment posted on behalf of <div style="display: inline;">				<a href="javascript:void(0);" onclick="$('bud_administrator_592024817').toggle();" class="image"><img alt=" " style="width: 16px; height: 16px; float: left; margin-right: 5px;" src="http://www.gravatar.com/avatar/d41d8cd98f00b204e9800998ecf8427e.png?d=wavatar&amp;s=22"></a>
+		<a href="javascript:void(0);" onclick="$('bud_administrator_592024817').toggle();" style="font-weight: normal;">Admin</a>
+	<div id="bud_administrator_592024817" style="z-index: 100; width: 300px; display: none; position: absolute;" class="rounded_box white shadowed user_popup">
+		<div style="padding: 3px;">
+			<div style="padding: 2px; width: 36px; height: 36px; text-align: center; background-color: #FFF; border: 1px solid #DDD; float: left;">
+				<img alt=" " style="width: 36px; height: 36px;" src="http://www.gravatar.com/avatar/d41d8cd98f00b204e9800998ecf8427e.png?d=wavatar&amp;s=48">			</div>
+			<div class="user_realname">
+				Administrator				<div class="user_status">Available</div>
+			</div>
+			<div class="user_details">
+									<b>This user was last seen online at </b>Oct 19, 2011 - 14:02 
+							</div>
+													<div style="padding: 2px;"><a target="_new" href="/buggenie/thebuggenie/configure/users/finduser/administrator">Edit this user</a></div>
+						<div style="padding: 2px;">
+				<a href="javascript:void(0);" onclick="showFadedBackdrop('/buggenie/thebuggenie/get/partials/usercard/user_id/1');$('bud_administrator_592024817').hide();">Show user details</a>
+			</div>
+					</div>
+		<div style="text-align: right; padding: 3px; font-size: 9px;"><a href="javascript:void(0);" onclick="$('bud_administrator_592024817').toggle();">Close this menu</a></div>
+	</div>
+</div>							</div>
+			<div class="commentdate" id="comment_87_date">Today, 13:41</div>
+		</div>
+		<div class="rounded_box lightyellow borderless shadowed comment_delete" id="comment_delete_confirm_87" style="display: none; width: 300px; position: absolute; right: 0; top: 0; padding: 5px; z-index: 20;">
+			<h5>Really delete this comment?</h5>
+			<div id="comment_delete_controls_87" style="text-align: right; font-size: 12px;">
+				<a href="javascript:void(0)" onClick="deleteComment('/buggenie/thebuggenie/comment/delete/87', 87)" class="xboxlink">Yes</a> :: <a href="javascript:void(0)" onClick="$('comment_delete_confirm_87').hide();" class="xboxlink">No</a>
+			</div>
+			<div id="comment_delete_indicator_87" style="display: none;">
+				<img class="spinning" src="/buggenie/thebuggenie/themes/oxygen/spinning_16.gif" alt="spinning_16.gif">			</div>
+		</div>
+		<div class="commentbody article" id="comment_87_body">
+			The issue was updated with the following change(s): 
+
+<ul>
+<li> The milestone has been updated, from <b>Not determined</b> to <b>Sprint 0</b>.</li>
+		</div>
+	</div>
+	
+	<div id="comment_edit_87" class="comment_edit" style="display: none;">
+		<form id="comment_edit_form_87" action="/buggenie/thebuggenie/comment/update/87" method="post" onSubmit="updateComment('/buggenie/thebuggenie/comment/update/87', '87'); return false;">
+			<input type="hidden" name="comment_id" value="87" />
+			<label for="comment_visibility">Comment visibility <span class="faded_out">(whether to hide this comment for "regular users")</span></label><br />
+			<select class="comment_visibilitybox" id="comment_visibility" name="comment_visibility">
+				<option value="1" selected="selected" >Visible for all users</option>
+				<option value="0">Visible for me, developers and administrators only</option>
+			</select>
+			<br />
+			<label for="comment_bodybox">Comment</label><br />
+			<textarea name="comment_body" id="comment_bodybox" style="height: 200px; width: 970px;">The issue was updated with the following change(s):
+* The milestone has been updated, from '''Not determined''' to '''Sprint 0'''.</textarea>
+	<div class="textarea_hint">
+		<div class="header">Formatting tips</div>
+		<p>
+			Code samples are best presented in &lt;source&gt;&lt;/source&gt; tags. The Bug Genie uses <a tabindex="-1" href="http://qbnz.com/highlighter/">GeSHi</a> for syntax highlighting with support for over 100 languages! (&lt;source lang=&quot;php&quot;&gt;&lt;?php echo &quot;fu&quot;; ?&gt;&lt;/source&gt;)<br>
+			See more formatting tips in <a target="_new" tabindex="-1" href="/buggenie/thebuggenie/wiki/WikiFormatting">WikiFormatting</a>.		</p>
+	</div>
+			<div id="comment_edit_indicator_87" style="display: none;">
+				<img class="spinning" src="/buggenie/thebuggenie/themes/oxygen/spinning_16.gif" alt="spinning_16.gif">			</div>
+			<div id="comment_edit_controls_87" class="comment_controls">
+				<input type="submit" class="comment_editsave" value="Save changes" /> <a href="javascript:void(0)" onClick="$('comment_edit_87').hide();$('comment_view_87').show();">or cancel</a>
+			</div>
+		</form>
+	</div>
+</div>			<div class="comment system_comment" id="comment_103" style="display: none;">
+	<div style="position: relative; overflow: visible; padding: 5px;" id="comment_view_103" class="comment_main">
+		<div id="comment_103_header" class="commentheader">
+			<a href="#comment_1_83_103" class="comment_hash">#3</a>
+							<div class="commenttools">
+										<a href="javascript:void(0)" onClick="$('comment_delete_confirm_103').toggle();"><img title="Delete" src="/buggenie/thebuggenie/themes/oxygen/icon_comment_delete.png" alt="icon_comment_delete.png">Delete</a>				</div>
+						<div class="commenttitle">
+									Comment posted on behalf of <div style="display: inline;">				<a href="javascript:void(0);" onclick="$('bud_administrator_547320481').toggle();" class="image"><img alt=" " style="width: 16px; height: 16px; float: left; margin-right: 5px;" src="http://www.gravatar.com/avatar/d41d8cd98f00b204e9800998ecf8427e.png?d=wavatar&amp;s=22"></a>
+		<a href="javascript:void(0);" onclick="$('bud_administrator_547320481').toggle();" style="font-weight: normal;">Admin</a>
+	<div id="bud_administrator_547320481" style="z-index: 100; width: 300px; display: none; position: absolute;" class="rounded_box white shadowed user_popup">
+		<div style="padding: 3px;">
+			<div style="padding: 2px; width: 36px; height: 36px; text-align: center; background-color: #FFF; border: 1px solid #DDD; float: left;">
+				<img alt=" " style="width: 36px; height: 36px;" src="http://www.gravatar.com/avatar/d41d8cd98f00b204e9800998ecf8427e.png?d=wavatar&amp;s=48">			</div>
+			<div class="user_realname">
+				Administrator				<div class="user_status">Available</div>
+			</div>
+			<div class="user_details">
+									<b>This user was last seen online at </b>Oct 19, 2011 - 14:02 
+							</div>
+													<div style="padding: 2px;"><a target="_new" href="/buggenie/thebuggenie/configure/users/finduser/administrator">Edit this user</a></div>
+						<div style="padding: 2px;">
+				<a href="javascript:void(0);" onclick="showFadedBackdrop('/buggenie/thebuggenie/get/partials/usercard/user_id/1');$('bud_administrator_547320481').hide();">Show user details</a>
+			</div>
+					</div>
+		<div style="text-align: right; padding: 3px; font-size: 9px;"><a href="javascript:void(0);" onclick="$('bud_administrator_547320481').toggle();">Close this menu</a></div>
+	</div>
+</div>							</div>
+			<div class="commentdate" id="comment_103_date">Today, 13:42</div>
+		</div>
+		<div class="rounded_box lightyellow borderless shadowed comment_delete" id="comment_delete_confirm_103" style="display: none; width: 300px; position: absolute; right: 0; top: 0; padding: 5px; z-index: 20;">
+			<h5>Really delete this comment?</h5>
+			<div id="comment_delete_controls_103" style="text-align: right; font-size: 12px;">
+				<a href="javascript:void(0)" onClick="deleteComment('/buggenie/thebuggenie/comment/delete/103', 103)" class="xboxlink">Yes</a> :: <a href="javascript:void(0)" onClick="$('comment_delete_confirm_103').hide();" class="xboxlink">No</a>
+			</div>
+			<div id="comment_delete_indicator_103" style="display: none;">
+				<img class="spinning" src="/buggenie/thebuggenie/themes/oxygen/spinning_16.gif" alt="spinning_16.gif">			</div>
+		</div>
+		<div class="commentbody article" id="comment_103_body">
+			The issue was updated with the following change(s): 
+
+<ul>
+<li> The milestone has been updated, from <b>Sprint 0</b> to <b>Not determined</b>.</li>
+		</div>
+	</div>
+	
+	<div id="comment_edit_103" class="comment_edit" style="display: none;">
+		<form id="comment_edit_form_103" action="/buggenie/thebuggenie/comment/update/103" method="post" onSubmit="updateComment('/buggenie/thebuggenie/comment/update/103', '103'); return false;">
+			<input type="hidden" name="comment_id" value="103" />
+			<label for="comment_visibility">Comment visibility <span class="faded_out">(whether to hide this comment for "regular users")</span></label><br />
+			<select class="comment_visibilitybox" id="comment_visibility" name="comment_visibility">
+				<option value="1" selected="selected" >Visible for all users</option>
+				<option value="0">Visible for me, developers and administrators only</option>
+			</select>
+			<br />
+			<label for="comment_bodybox">Comment</label><br />
+			<textarea name="comment_body" id="comment_bodybox" style="height: 200px; width: 970px;">The issue was updated with the following change(s):
+* The milestone has been updated, from '''Sprint 0''' to '''Not determined'''.</textarea>
+	<div class="textarea_hint">
+		<div class="header">Formatting tips</div>
+		<p>
+			To create a bulleted list, start one or more lines with a star (&quot;* bulleted list item&quot;). You can create a numbered list by using the hash/pund sign instead (&quot;# numbered list item&quot;).<br>
+			See more formatting tips in <a target="_new" tabindex="-1" href="/buggenie/thebuggenie/wiki/WikiFormatting">WikiFormatting</a>.		</p>
+	</div>
+			<div id="comment_edit_indicator_103" style="display: none;">
+				<img class="spinning" src="/buggenie/thebuggenie/themes/oxygen/spinning_16.gif" alt="spinning_16.gif">			</div>
+			<div id="comment_edit_controls_103" class="comment_controls">
+				<input type="submit" class="comment_editsave" value="Save changes" /> <a href="javascript:void(0)" onClick="$('comment_edit_103').hide();$('comment_view_103').show();">or cancel</a>
+			</div>
+		</form>
+	</div>
+</div>			<div class="comment system_comment" id="comment_104" style="display: none;">
+	<div style="position: relative; overflow: visible; padding: 5px;" id="comment_view_104" class="comment_main">
+		<div id="comment_104_header" class="commentheader">
+			<a href="#comment_1_83_104" class="comment_hash">#4</a>
+							<div class="commenttools">
+										<a href="javascript:void(0)" onClick="$('comment_delete_confirm_104').toggle();"><img title="Delete" src="/buggenie/thebuggenie/themes/oxygen/icon_comment_delete.png" alt="icon_comment_delete.png">Delete</a>				</div>
+						<div class="commenttitle">
+									Comment posted on behalf of <div style="display: inline;">				<a href="javascript:void(0);" onclick="$('bud_administrator_665020173').toggle();" class="image"><img alt=" " style="width: 16px; height: 16px; float: left; margin-right: 5px;" src="http://www.gravatar.com/avatar/d41d8cd98f00b204e9800998ecf8427e.png?d=wavatar&amp;s=22"></a>
+		<a href="javascript:void(0);" onclick="$('bud_administrator_665020173').toggle();" style="font-weight: normal;">Admin</a>
+	<div id="bud_administrator_665020173" style="z-index: 100; width: 300px; display: none; position: absolute;" class="rounded_box white shadowed user_popup">
+		<div style="padding: 3px;">
+			<div style="padding: 2px; width: 36px; height: 36px; text-align: center; background-color: #FFF; border: 1px solid #DDD; float: left;">
+				<img alt=" " style="width: 36px; height: 36px;" src="http://www.gravatar.com/avatar/d41d8cd98f00b204e9800998ecf8427e.png?d=wavatar&amp;s=48">			</div>
+			<div class="user_realname">
+				Administrator				<div class="user_status">Available</div>
+			</div>
+			<div class="user_details">
+									<b>This user was last seen online at </b>Oct 19, 2011 - 14:02 
+							</div>
+													<div style="padding: 2px;"><a target="_new" href="/buggenie/thebuggenie/configure/users/finduser/administrator">Edit this user</a></div>
+						<div style="padding: 2px;">
+				<a href="javascript:void(0);" onclick="showFadedBackdrop('/buggenie/thebuggenie/get/partials/usercard/user_id/1');$('bud_administrator_665020173').hide();">Show user details</a>
+			</div>
+					</div>
+		<div style="text-align: right; padding: 3px; font-size: 9px;"><a href="javascript:void(0);" onclick="$('bud_administrator_665020173').toggle();">Close this menu</a></div>
+	</div>
+</div>							</div>
+			<div class="commentdate" id="comment_104_date">Today, 13:42</div>
+		</div>
+		<div class="rounded_box lightyellow borderless shadowed comment_delete" id="comment_delete_confirm_104" style="display: none; width: 300px; position: absolute; right: 0; top: 0; padding: 5px; z-index: 20;">
+			<h5>Really delete this comment?</h5>
+			<div id="comment_delete_controls_104" style="text-align: right; font-size: 12px;">
+				<a href="javascript:void(0)" onClick="deleteComment('/buggenie/thebuggenie/comment/delete/104', 104)" class="xboxlink">Yes</a> :: <a href="javascript:void(0)" onClick="$('comment_delete_confirm_104').hide();" class="xboxlink">No</a>
+			</div>
+			<div id="comment_delete_indicator_104" style="display: none;">
+				<img class="spinning" src="/buggenie/thebuggenie/themes/oxygen/spinning_16.gif" alt="spinning_16.gif">			</div>
+		</div>
+		<div class="commentbody article" id="comment_104_body">
+			The issue was updated with the following change(s): 
+
+<ul>
+<li> The milestone has been updated, from <b>Not determined</b> to <b>Sprint 1</b>.</li>
+		</div>
+	</div>
+	
+	<div id="comment_edit_104" class="comment_edit" style="display: none;">
+		<form id="comment_edit_form_104" action="/buggenie/thebuggenie/comment/update/104" method="post" onSubmit="updateComment('/buggenie/thebuggenie/comment/update/104', '104'); return false;">
+			<input type="hidden" name="comment_id" value="104" />
+			<label for="comment_visibility">Comment visibility <span class="faded_out">(whether to hide this comment for "regular users")</span></label><br />
+			<select class="comment_visibilitybox" id="comment_visibility" name="comment_visibility">
+				<option value="1" selected="selected" >Visible for all users</option>
+				<option value="0">Visible for me, developers and administrators only</option>
+			</select>
+			<br />
+			<label for="comment_bodybox">Comment</label><br />
+			<textarea name="comment_body" id="comment_bodybox" style="height: 200px; width: 970px;">The issue was updated with the following change(s):
+* The milestone has been updated, from '''Not determined''' to '''Sprint 1'''.</textarea>
+	<div class="textarea_hint">
+		<div class="header">Formatting tips</div>
+		<p>
+			If you have certain text you don't want to be formatted, enclose it in &lt;nowiki&gt;&lt;/nowiki&gt; tags: &quot;'''formatted''' text &lt;nowiki&gt;'''non-formatted''' text&lt;/nowiki&gt;.<br>
+			See more formatting tips in <a target="_new" tabindex="-1" href="/buggenie/thebuggenie/wiki/WikiFormatting">WikiFormatting</a>.		</p>
+	</div>
+			<div id="comment_edit_indicator_104" style="display: none;">
+				<img class="spinning" src="/buggenie/thebuggenie/themes/oxygen/spinning_16.gif" alt="spinning_16.gif">			</div>
+			<div id="comment_edit_controls_104" class="comment_controls">
+				<input type="submit" class="comment_editsave" value="Save changes" /> <a href="javascript:void(0)" onClick="$('comment_edit_104').hide();$('comment_view_104').show();">or cancel</a>
+			</div>
+		</form>
+	</div>
+</div>	</div>				</div>
+			</div>
+			<div id="tab_attached_information_pane" style="padding-top: 0; margin: 0 5px 0 5px; display: none;">
+				<div id="viewissue_attached_information">
+																		<table border="0" cellpadding="0" cellspacing="0" style="margin: 5px; float: left;" id="attach_link_button"><tr><td class="nice_button" style="font-size: 13px; margin-left: 0;"><input type="button" onclick="$('attach_link').show();" value="Attach a link"></td></tr></table>
+																			<table border="0" cellpadding="0" cellspacing="0" style="margin: 5px; float: left;" id="attach_file_button"><tr><td class="nice_button disabled" style="font-size: 13px; margin-left: 0;"><input type="button" onclick="failedMessage('File uploads are not enabled');" value="Attach a file"></td></tr></table>
+												<br style="clear: both;">
+										<div class="rounded_box mediumgrey shadowed" id="attach_link" style="margin: 5px 0 5px 0; display: none; position: absolute; width: 350px;">
+						<div class="header_div" style="margin: 0 0 5px 0;">Attach a link:</div>
+						<form action="/buggenie/thebuggenie/update/attach/link/to/issue/83/csrf_token/9287223484e9ed38a741c64_34904988" method="post" onsubmit="attachLink('/buggenie/thebuggenie/update/attach/link/to/issue/83/csrf_token/9287223484e9ed38a741c64_34904988');return false;" id="attach_link_form">
+							<dl style="margin: 0;">
+								<dt style="width: 80px; padding-top: 3px;"><label for="attach_link_url">URL:</label></dt>
+								<dd style="margin-bottom: 0px;"><input type="text" name="link_url" id="attach_link_url" style="width: 235px;"></dd>
+								<dt style="width: 80px; font-size: 10px; padding-top: 4px;"><label for="attach_link_description">Description:</label></dt>
+								<dd style="margin-bottom: 0px;"><input type="text" name="description" id="attach_link_description" style="width: 235px;"></dd>
+							</dl>
+							<div style="font-size: 12px; padding: 15px 2px 10px 2px;" class="faded_out" id="attach_link_submit">Enter the link URL here, along with an optional description. Press "Attach link" to attach it to the issue.</div>
+							<div style="text-align: center; padding: 10px; display: none;" id="attach_link_indicator"><img src="/buggenie/thebuggenie/themes/oxygen/spinning_26.gif" alt="spinning_26.gif"></div>
+							<div style="text-align: center;"><input type="submit" value="Attach link" style="font-weight: bold;"> or <b><a onclick="$('attach_link').toggle();" href="javascript:void(0);">cancel</a></b></div>
+						</form>
+					</div>
+					<div class="no_items" id="viewissue_no_uploaded_files">There is nothing attached to this issue</div>
+					<table style="table-layout: fixed; width: 100%; background-color: #FFF;" cellpadding=0 cellspacing=0>
+						<tbody id="viewissue_uploaded_links" class="hover_highlight">
+													</tbody>
+					</table>
+					<table style="table-layout: fixed; width: 100%; background-color: #FFF;" cellpadding=0 cellspacing=0>
+						<tbody id="viewissue_uploaded_files" class="hover_highlight">
+													</tbody>
+					</table>
+				</div>
+			</div>
+			<div id="tab_related_issues_and_tasks_pane" style="padding-top: 5px; margin: 0 5px 0 5px; display: none;">
+				<div id="viewissue_related">
+											<table border="0" cellpadding="0" cellspacing="0" style="margin-left: 5px; margin-right: 5px; float: left;" id="add_task_button"><tr><td class="nice_button" style="font-size: 13px; margin-left: 0;"><input type="button" onclick="$('viewissue_add_task_div').toggle();" value="Add a task to this issue"></td></tr></table>
+						<table border="0" cellpadding="0" cellspacing="0" style="margin-left: 5px; float: left;" id="relate_to_existing_issue_button"><tr><td class="nice_button" style="font-size: 13px; margin-left: 0;"><input type="button" onclick="showFadedBackdrop('/buggenie/thebuggenie/get/partials/relate_issue/issue_id/83');" value="Relate to an existing issue"></td></tr></table>
+						<br style="clear: both;">
+						<div class="rounded_box mediumgrey shadowed" id="viewissue_add_task_div" style="margin: 5px 0 5px 0; display: none; position: absolute; font-size: 12px; width: 400px;">
+							<form id="viewissue_add_task_form" action="/buggenie/thebuggenie/sampleproject1/scrum/add/task/for/story/83/mode/issue" method="post" accept-charset="" onsubmit="addUserStoryTask('/buggenie/thebuggenie/sampleproject1/scrum/add/task/for/story/83/mode/issue', 83, 'issue');return false;">
+								<div>
+									<label for="viewissue_task_name_input">Add task&nbsp;</label>
+									<input type="text" name="task_name" id="viewissue_task_name_input">
+									<input type="submit" value="Add task">
+									<a class="close_micro_popup_link" href="javascript:void(0);" onclick="$('viewissue_add_task_div').toggle();">Done</a>
+									<img id="add_task_indicator" style="display: none;" src="/buggenie/thebuggenie/themes/oxygen/spinning_20.gif" alt="spinning_20.gif"><br>
+								</div>
+							</form>
+						</div>
+										<table border="0" cellpadding="0" cellspacing="0" style="width: 100%;">
+						<tr>
+							<td id="related_parent_issues_inline" style="width: 360px;">
+																								<div class="no_items" id="no_parent_issues">No other issues depends on this issue</div>
+							</td>
+							<td style="width: 40px; text-align: center; padding: 0;"><img src="/buggenie/thebuggenie/themes/oxygen/left.png" alt="left.png"></td>
+							<td style="width: auto;">
+								<div class="rounded_box mediumgrey borderless" id="related_issues_this_issue" style="margin: 5px auto 5px auto;">
+									This issue								</div>
+							</td>
+							<td style="width: 40px; text-align: center; padding: 0;"><img src="/buggenie/thebuggenie/themes/oxygen/right.png" alt="right.png"></td>
+							<td id="related_child_issues_inline" style="width: 360px;">
+																								<div class="no_items" id="no_child_issues">This issue does not depend on any other issues</div>
+							</td>
+						</tr>
+					</table>
+				</div>
+			</div>
+			<div id="tab_duplicate_issues_pane" style="padding-top: 0; margin: 0 5px 0 5px; display: none;">
+				<div id="viewissue_duplicates">
+															<div class="no_items">This issue has no duplicates</div>
+										<ul>
+											</ul>
+				</div>
+			</div>
+			<div id="tab_affected_pane" style="padding-top: 0; margin: 0 5px 0 5px; display: none;">
+				<div id="viewissue_affected">
+								<table border="0" cellpadding="0" cellspacing="0" style="margin: 5px; float: left;" id="affected_add_button"><tr><td class="nice_button" style="font-size: 13px; margin-left: 0;"><input type="button" onclick="showFadedBackdrop('/buggenie/thebuggenie/get/partials/issue_add_item/issue_id/83');" value="Add an item" value="Add an item"></td></tr></table>
+		<br>
+<br>
+	
+
+<table style="width: 100%;" cellpadding="0" cellspacing="0" class="issue_affects" id="affected_list">
+	<tr>
+		<th style="width: 16px; text-align: right; padding-top: 0px; padding-right: 0px; padding-bottom: 0px; padding-left: 3px;"></th><th>Name</th><th>Status</th><th style="width: 90px; text-align: right; padding-top: 0px; padding-right: 3px; padding-bottom: 0px; padding-left: 0px;">Confirmed</th>
+	</tr>
+		<tr id="no_affected" ><td colspan="4"><span class="faded_out">There are no items</span></td></tr>
+			</table>
+				</div>
+			</div>
+					</div>
+			</div>
+								</td>
+			</tr>
+			<tr>
+				<td class="footer_bar">
+					<div class="footer_container">
+						<table cellpadding=0 cellspacing=0 style="table-layout: auto; margin: 0 auto 0 auto;">
+							<tr>
+								<td style="width: auto;">
+									<img src="/buggenie/thebuggenie/themes/oxygen/footer_logo.png" alt="footer_logo.png">									<a href="/buggenie/thebuggenie/about">The Bug Genie</a>, <b>friendly</b> issue tracking since 2002.
+									Licensed under the MPL 1.1 only, read it at <a href="http://www.opensource.org/licenses/mozilla1.1.php">opensource.org</a>																			| <b><a href="/buggenie/thebuggenie/configure">Configure The Bug Genie</a></b>
+																										</td>
+							</tr>
+						</table>
+											</div>
+									</td>
+			</tr>
+		</table>
+		<script type="text/javascript">
+			var containerResize = function ()
+			{
+				if (($('fullpage_backdrop') && $('fullpage_backdrop').visible()) || ($('attach_file') && $('attach_file').visible()))
+				{
+					var docheight = document.viewport.getHeight();
+					var backdropheight = $('backdrop_detail_content').getHeight();
+					if (backdropheight > (docheight - 100))
+					{
+						$('backdrop_detail_content').setStyle({height: docheight - 100 + 'px', overflow: 'scroll'});
+					}
+					else
+					{
+						$('backdrop_detail_content').setStyle({height: 'auto', overflow: ''});
+					}
+				}
+			}
+
+			Event.observe(window, 'resize', containerResize);
+		</script>		
+	</body>
+</html>

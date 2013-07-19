@@ -1,0 +1,7 @@
+{
+    "headers": "{\"content-type\":\"image/png\",\"accept-ranges\":\"bytes\",\"etag\":\"\\\"1333676113\\\"\",\"last-modified\":\"Sat, 20 Aug 2011 11:42:40 GMT\",\"date\":\"Wed, 19 Oct 2011 13:47:29 GMT\",\"server\":\"lighttpd/1.4.28\"}", 
+    "httpVersion": "1.1", 
+    "method": null, 
+    "statusCode": 304, 
+    "url": ""
+}

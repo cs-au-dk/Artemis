@@ -49,8 +49,10 @@ QSharedPointer<FormInput> StaticFormInputGenerator::generateFormFields(QObject* 
             inputs.insert(QPair<QSharedPointer<const FormField>, const FormFieldValue*>(field, new FormFieldValue(parent, randomBool())));
             break;
         case FIXED_INPUT:
-            inputs.insert(QPair<QSharedPointer<const FormField>, const FormFieldValue*>(field, new FormFieldValue(parent, pickRand(field->getInputOptions()))));
-            break;
+            if(field->getInputOptions().size()>0){
+                inputs.insert(QPair<QSharedPointer<const FormField>, const FormFieldValue*>(field, new FormFieldValue(parent, pickRand(field->getInputOptions()))));
+                break;
+            }
         default:
             inputs.insert(QPair<QSharedPointer<const FormField>, const FormFieldValue*>(field, new FormFieldValue(parent)));
         }

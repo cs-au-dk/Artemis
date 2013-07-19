@@ -1,0 +1,7 @@
+{
+    "headers": "{\"host\":\"code.jquery.com\",\"user-agent\":\"Mozilla/5.0 (X11; Linux x86_64; rv:7.0.1) Gecko/20100101 Firefox/7.0.1\",\"accept\":\"*/*\",\"accept-language\":\"en-us,en;q=0.5\",\"accept-encoding\":\"gzip, deflate\",\"accept-charset\":\"ISO-8859-1,utf-8;q=0.7,*;q=0.7\",\"proxy-connection\":\"keep-alive\",\"referer\":\"http://10.11.103.178/buggenie/thebuggenie/sampleproject1/issues/41\",\"if-modified-since\":\"Thu, 31 Mar 2011 19:28:43 GMT\",\"if-none-match\":\"\\\"30c0af8-14fa5-4d2110c0+gzip\\\"\",\"cache-control\":\"max-age=0\"}", 
+    "httpVersion": "1.1", 
+    "method": "GET", 
+    "statusCode": null, 
+    "url": "http://code.jquery.com/jquery-1.5.2.min.js"
+}

@@ -14,7 +14,7 @@
  * limitations under the License.
  */
 
-
+#include <QDebug>
 #include <config.h>
 #include <DOMWindow.h>
 #include <QString>
@@ -67,10 +67,10 @@ void QWebExecutionListener::eventAdded(WebCore::EventTarget * target, const char
         emit addedEventListener(new QWebElement(target->toDOMWindow()->frameElement()), QString(tr(typeString.c_str())));
 
     } else if (typeString.compare("readystatechange") == 0) {
-        std::cout << "WEBKIT::AJAX CALLBACK DETECTED (and ignored in event added)" << std::endl;
+        qDebug() << QString::fromStdString("WEBKIT::AJAX CALLBACK DETECTED (and ignored in event added)");
 
     } else {
-        std::cout << "ERROR: Strange event: " << typeString << std::endl;
+        qWarning() << QString::fromStdString("Strange event: ") << QString::fromStdString(typeString);
     }
 
     return;
@@ -97,7 +97,7 @@ void QWebExecutionListener::eventCleared(WebCore::EventTarget * target, const ch
         emit removedEventListener(new QWebElement(target->toDOMWindow()->frameElement()), QString(tr(typeString.c_str())));
 
     } else {
-        std::cout << "ERROR: Strange event cleared:" << typeString << std::endl;
+        qWarning() << QString::fromStdString("Strange event cleared: ") << QString::fromStdString(typeString);
     }
 
     return;
@@ -113,7 +113,7 @@ void QWebExecutionListener::eventTriggered(WebCore::EventTarget * target, const 
         emit triggeredEventListener(new QWebElement(target->toDOMWindow()->frameElement()), QString(tr(typeString.c_str())));
 
     } else {
-        std::cout << "ERROR: Strange event triggered:" << typeString << std::endl;
+        qWarning() << QString::fromStdString("Strange event triggered: ") << QString::fromStdString(typeString);
     }
 
     return;
@@ -305,7 +305,7 @@ void QWebExecutionListener::javascript_called_function(const JSC::DebuggerCallFr
         JSC::CallFrame* cframe = frame.callFrame(); JSC::JSValue element = cframe->argument(0);
         
         if (element.isObject() == false) {
-            cout << "WARNING: unknown element encountered when handling JQuery support" << endl;
+            qWarning() << "WARNING: unknown element encountered when handling JQuery support";
             return;
 
         }
@@ -316,7 +316,7 @@ void QWebExecutionListener::javascript_called_function(const JSC::DebuggerCallFr
         JSC::JSValue event = cframe->argument(1);
         
         if (event.isString() == false) {
-            cout << "WARNING: unknown event encountered when handling JQuery support" << endl;
+            qWarning() << "WARNING: unknown event encountered when handling JQuery support";
             return;
         }
 
@@ -326,7 +326,7 @@ void QWebExecutionListener::javascript_called_function(const JSC::DebuggerCallFr
             // This is not really fatal, in some cases an undefined
             // or null selector is given (presumably when doing a 
             // direct bind)
-            cout << "WARNING: unknown selector encountered when handling JQuery support" << endl;
+            qWarning() << "WARNING: unknown selector encountered when handling JQuery support";
             return;
         }
 

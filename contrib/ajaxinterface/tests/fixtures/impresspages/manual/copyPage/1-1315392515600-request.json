@@ -1,0 +1,7 @@
+{
+    "headers": "{\"host\":\"localhost\",\"user-agent\":\"Mozilla/5.0 (X11; Linux x86_64; rv:6.0.1) Gecko/20100101 Firefox/6.0.1\",\"accept\":\"application/json, text/javascript, */*; q=0.01\",\"accept-language\":\"en-us,en;q=0.5\",\"accept-encoding\":\"gzip, deflate\",\"accept-charset\":\"ISO-8859-1,utf-8;q=0.7,*;q=0.7\",\"proxy-connection\":\"keep-alive\",\"content-type\":\"application/x-www-form-urlencoded; charset=UTF-8\",\"x-requested-with\":\"XMLHttpRequest\",\"referer\":\"http://localhost/impresspages/admin.php?module_id=347&security_token=7a8f0938cef726138df0c07fc52559ec\",\"content-length\":\"173\",\"cookie\":\"__utma=111872281.589926113.1309729110.1309729110.1309729110.1; __utmz=111872281.1309729110.1.1.utmcsr=(direct)|utmccn=(direct)|utmcmd=(none); ses1531488096=68tp6i6qc34dllbbshg0pk0ju5\",\"pragma\":\"no-cache\",\"cache-control\":\"no-cache\"}", 
+    "httpVersion": "1.1", 
+    "method": "POST", 
+    "statusCode": null, 
+    "url": "http://localhost/impresspages/ip_backend_worker.php?module_id=347&security_token=7a8f0938cef726138df0c07fc52559ec"
+}

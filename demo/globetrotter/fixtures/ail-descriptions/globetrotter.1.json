@@ -1,0 +1,16 @@
+{
+"required": true,
+"type": "object",
+"properties": {
+   "username": 
+   {
+      "required": true,
+      "type": "string"
+   },
+   "name": 
+   {
+      "required": true,
+      "type": "string"
+   }
+}
+}

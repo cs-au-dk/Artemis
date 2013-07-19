@@ -1,0 +1,12 @@
+{
+    "targets" : [
+        {
+	    "target_name": "AIL",
+	    "sources": ["AIL.cc", "reader.cc"],
+	    "link_settings" : {
+	        "libraries":['-l:#PATH/ailreader/ail.so'],
+	    }
+	    }
+
+    ]
+}

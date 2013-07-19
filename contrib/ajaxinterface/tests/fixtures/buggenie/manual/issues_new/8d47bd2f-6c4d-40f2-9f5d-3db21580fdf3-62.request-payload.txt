@@ -1,0 +1,1 @@
+issuetype_id=5&return_format=scrum&title=Some%20story

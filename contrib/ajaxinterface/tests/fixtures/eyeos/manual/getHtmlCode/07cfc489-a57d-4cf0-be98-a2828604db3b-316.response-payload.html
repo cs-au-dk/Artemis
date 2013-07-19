@@ -1,0 +1,242 @@
+            <html>
+                <head>
+				<style type="text/css">
+					.btnDelete
+					{
+						float:right;
+						padding:5px;
+					}
+					.divFileName
+					{
+						font-family:Verdana, Sans, FreeSans, Helvetica;
+						font-size:12px;
+						padding:10px;
+					}
+				</style>
+				<script language="JavaScript"> function MultiFiles(list_target){
+	this.list_target = list_target;
+	this.count = 0;
+	this.id = 0;
+	this.currentColor = "#DDDDDD";
+	this.addElement = function(element){
+		if(element.tagName == 'INPUT' && element.type == 'file'){
+			element.name = 'Filedata[' + this.id++ + ']';
+			element.multi_selector = this;
+			element.onchange = function(){
+				var new_element = document.createElement('input');
+				new_element.type = 'file';
+				this.parentNode.insertBefore(new_element, this);
+				this.multi_selector.addElement(new_element);
+				this.multi_selector.addListRow(this);
+				this.style.display = 'none';
+			};
+			this.count++;
+			this.current_element = element;
+		}
+	};
+
+	this.addListRow = function(element){
+		var new_row = document.createElement('div');
+		var new_row_button = document.createElement('input');
+		new_row_button.type = 'button';
+		new_row_button.value = 'Remove';
+		new_row_button.className = 'btnDelete';
+		new_row.element = element;
+		new_row_button.onclick= function(){
+			/*this.parentNode.parentNode.element.parentNode.removeChild(this.parentNode.parentNode.element);
+			this.parentNode.parentNode.parentNode.removeChild(this.parentNode.parentNode);
+			this.parentNode.parentNode.element.multi_selector.count--;
+			this.parentNode.parentNode.element.multi_selector.current_element.disabled = false;*/
+			this.parentNode.element.parentNode.removeChild(this.parentNode.element);
+			this.parentNode.parentNode.removeChild(this.parentNode);
+			this.parentNode.element.multi_selector.count--;
+			this.parentNode.element.multi_selector.current_element.disabled = false;
+			return false;
+		};
+		var new_row_div = document.createElement('div');
+		new_row_div.className = 'divFileName';
+		new_row_div.innerText = element.value;
+		if(new_row_div.innerText) {
+			new_row_div.textContent = element.value;
+		}
+		new_row.style.backgroundColor = this.currentColor;
+		if(this.currentColor == "#DDDDDD") {
+			this.currentColor = "white";
+		} else {
+			this.currentColor = "#DDDDDD";
+		}
+		new_row.appendChild(new_row_button);
+		//new_row_div.appendChild(new_row_button);
+		new_row.appendChild(new_row_div);
+		this.list_target.appendChild(new_row);
+
+	};
+
+};</script>
+                <script>
+                function startProgress() {
+                    document.getElementById("fileForm").style.display = "none";
+                    document.getElementById("progressbar").style.display = "block";
+                    
+                    var http_request = false;
+                    var url = "index.php";
+                    if (window.XMLHttpRequest) {
+                            http_request = new XMLHttpRequest();
+                    } else if (window.ActiveXObject && ActiveXObject) {
+                            try {
+                                    http_request = new ActiveXObject("Msxml2.XMLHTTP");
+                            } catch (err) {
+                                    try {
+                                            http_request = new ActiveXObject("Microsoft.XMLHTTP");
+                                    } catch (error) {}
+                            }
+                    }
+                    if (!http_request) {
+                            alert(tr("Sorry, but eyeOS only works with AJAX capable browsers!"));
+                            return false;
+                    }
+
+                    http_request.onreadystatechange = function() {
+						if (http_request.readyState == 4) {
+							var rtext = http_request.responseText;
+							var myObject = eval('(' + rtext + ')');
+							var percent =  myObject.bytes_uploaded / myObject.bytes_total * 100;
+							if(isNaN(percent)) {
+								percent = 0;
+							}
+							var newWidth = parseInt(percent * 4.1) + "px";
+							
+							document.getElementById("internal").style.width = newWidth;
+							document.getElementById("internalText").innerHTML = "<center>"+parseInt(percent)+"%</center>";
+							setTimeout("startProgress();", 1000);
+							if(myObject.speed_last) {
+								document.getElementById("speed").innerHTML = "Transfer rate: "+bytesToSize(myObject.speed_last);
+							}
+							if(myObject.est_sec) {
+								document.getElementById("time").innerHTML = "Estimated time: "+getHumanTime(myObject.est_sec);
+							}
+						}
+                    };
+                    var checknum = "993067192";
+                    http_request.open("POST", url+"?checknum=" + checknum + "&message=getProgress", true);
+                    http_request.setRequestHeader("Content-Type", "application/x-www-form-urlencoded;");
+                    setTimeout(function() {
+                        http_request.send("params=" + encodeURIComponent(document.getElementById("progress_key").value));
+
+                    }, 500);
+                }
+
+                function bytesToSize(bytes, precision) {
+                        var kilobyte = 1024;
+                        var megabyte = kilobyte * 1024;
+                        var gigabyte = megabyte * 1024;
+                        var terabyte = gigabyte * 1024;
+
+                        if ((bytes >= 0) && (bytes < kilobyte)) {
+                                return bytes + " b/s";
+
+                        } else if ((bytes >= kilobyte) && (bytes < megabyte)) {
+                                return (bytes / kilobyte).toFixed(precision) + " kb/s";
+
+                        } else if ((bytes >= megabyte) && (bytes < gigabyte)) {
+                                return (bytes / megabyte).toFixed(precision) + " mb/s";
+
+                        } else if ((bytes >= gigabyte) && (bytes < terabyte)) {
+                                return (bytes / gigabyte).toFixed(precision) + " gb/s";
+
+                        } else if (bytes >= terabyte) {
+                                return (bytes / terabyte).toFixed(precision) + " tb/s";
+
+                        } else {
+                                return bytes + " b/s";
+                        }
+                }
+
+                function getHumanTime(s) {
+                        var m = s / 60;
+                        h = s / 3600;
+                        d = s / 86400;
+                        if (m > 1) {
+                                if (h > 1) {
+                                        if (d > 1) {
+                                                return parseInt(d)+" days";
+                                        } else {
+                                                return parseInt(h)+" hours";
+                                        }
+                                } else {
+                                        return parseInt(m)+" minutes";
+                                }
+                        } else {
+                                return parseInt(s)+" seconds";
+                        }
+                }
+
+                function uploadDragAndDrop() {
+					document.getElementById("progressbar").style.display = "block";
+                    var data = window.parent.document.uploadDrop;
+					//data = data.replace("ID_UPLOAD_HERE", "'.$id.'");
+                    var boundary = window.parent.document.boundary;
+                    var xhr = new XMLHttpRequest();
+
+					xhr.upload.onprogress=updateProgress;
+                    xhr.open("POST", "index.php?message=submitFile&checknum=993067192&params=home%3A%2F%2F%7Eusername%2FDocuments", true);
+                    xhr.setRequestHeader('content-type', 'multipart/form-data; boundary=' + boundary);
+					xhr.setRequestHeader("If-Modified-Since", "Mon, 26 Jul 1997 05:00:00 GMT");
+					xhr.setRequestHeader("Cache-Control", "no-cache");
+                    xhr.sendAsBinary(data);
+                    xhr.onload = function(event) {
+                        /* If we got an error display it. */
+                        if (xhr.responseText) {
+                            document.body.innerHTML = xhr.responseText;
+                            var re = /<script\b[\s\S]*?>([\s\S]*?)<\//ig;
+                            var match;
+                            while (match = re.exec(xhr.responseText)) {
+                                eval(match[1]);
+                            }
+                        }      
+                    };
+                }
+
+				function updateProgress(e) {
+					var percent =  (e.position / e.totalSize)*100;
+					if(isNaN(percent)) {
+						percent = 0;
+					}
+					var newWidth = parseInt(percent * 4.1) + "px";
+					document.getElementById("internal").style.width = newWidth;
+					document.getElementById("internalText").innerHTML = "<center>"+parseInt(percent)+"%</center>";
+				}
+                </script>
+                </head>
+                <body onload="">
+                <div style="margin-left:12px;font-family:Helvetica, Arial, Verdana, Sans, FreeSans;font-size:15px;">
+				<img style="position:relative;top:5px;" src="eyeos/extern/images/22x22/actions/arrow-up-double.png" />&nbsp;Upload files to eyeOS                </div>
+                <div id="progressbar" style="margin-top:60px;display:none;">
+					<div style="margin-bottom:6px;font-family:Helvetica, Arial, Verdana, Sans, FreeSans"><center>Uploading files ...</center></div>
+                    <div id="wrapper" style="width:410px;border:1px solid black;height:18px;margin-left:10px">
+                        <div id="internal" style="width:0px; background-repeat: repeat-x; height: 18px; background-image: url('index.php?extern=images/bg_progress.png')"></div>
+                        <div id="internalText" style="width:410px;height:18px;position:relative;top:-17px;"></div>
+                    </div>
+                    <div id="informationText" style="margin-left:12px;margin-top:10px;font-family:Helvetica, Arial, Verdana, Sans, FreeSans;font-size:12px;">
+                        <div id="speed"></div>
+                        <div id="time"></div>
+                    </div>
+                </div>
+
+                <form id="fileForm" style="margin-top:20px;margin-left:10px" action="index.php?message=submitFile&checknum=993067192&params=home%3A%2F%2F%7Eusername%2FDocuments" method="post" enctype="multipart/form-data">
+                    <input type="hidden" name="UPLOAD_IDENTIFIER" id="progress_key"  value="e1247b1360fdad8c85cd09168b425526" />
+                    <div id="filedatas" style="overflow:auto">
+                    <input type="file" name="Filedata[0]" size="22" id="Filedata[0]" />
+                    </div>
+                    <div id="files_list" style="overflow:auto;border: 1px solid grey;height:230px;margin-top:10px;margin-right:10px">
+                    </div>
+					<script>
+						var multi_selector = new MultiFiles( document.getElementById( "files_list" ));
+						multi_selector.addElement( document.getElementById( "Filedata[0]" ) );
+					</script>
+                    <div>
+                    <input type="submit" onclick="startProgress()" value="Upload" style="position:absolute;bottom:5px;right:9px;"/>
+                    </div>
+                </form>
+            </html>
+	

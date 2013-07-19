@@ -7,7 +7,7 @@ import shlex
 if __name__ == '__main__':
     failures = []
     if len(sys.argv) < 4:
-        print 'Usage: %s <alexalist.cvs> <top-x-sites> <iterations>' % sys.argv[0]
+        print 'Usage: %s <alexalist.csv> <top-x-sites> <iterations>' % sys.argv[0]
         exit(1)
 
     top_x_sites = int(sys.argv[2])
@@ -25,14 +25,13 @@ if __name__ == '__main__':
             top_x_sites -= 1
 
             index, url = line.split(',')
-
+            url = url.strip()
             print '=========================='
             print 'Visit %s' % url
             print '=========================='
             print ''
 
-            cmd = '/usr/local/bin/artemis http://%s/' % url
-
+            cmd = '/usr/local/bin/artemis http://%s/ -i %s > /dev/null 2>/dev/null' % (url, iterations)
             process = subprocess.Popen(shlex.split(cmd))
             process.wait()
 

@@ -1,0 +1,7 @@
+{
+    "headers": "{\"host\":\"10.11.103.178:8080\",\"user-agent\":\"Mozilla/5.0 (X11; Linux x86_64; rv:7.0.1) Gecko/20100101 Firefox/7.0.1\",\"accept\":\"text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8\",\"accept-language\":\"en-us,en;q=0.5\",\"accept-encoding\":\"gzip, deflate\",\"accept-charset\":\"ISO-8859-1,utf-8;q=0.7,*;q=0.7\",\"proxy-connection\":\"keep-alive\",\"content-type\":\"text/x-gwt-rpc; charset=utf-8\",\"x-gwt-permutation\":\"BD26B823551ED3DE31A532D8776502CF\",\"x-gwt-module-base\":\"http://10.11.103.178:8080/kunagi/scrum.ScrumGwtApplication/\",\"referer\":\"http://10.11.103.178:8080/kunagi/\",\"content-length\":\"343\",\"cookie\":\"JSESSIONID=DE9EBEE2E42A6E7AE37B9CBB45EC0AE8\",\"pragma\":\"no-cache\",\"cache-control\":\"no-cache\"}", 
+    "httpVersion": "1.1", 
+    "method": "POST", 
+    "statusCode": null, 
+    "url": "http://10.11.103.178:8080/kunagi/scrum.ScrumGwtApplication/scrum"
+}

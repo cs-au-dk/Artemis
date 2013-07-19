@@ -35,6 +35,7 @@
 #include "executionresultbuilder.h"
 #include "artemiswebpage.h"
 #include "runtime/appmodel.h"
+#include <QNetworkReply>
 
 namespace artemis
 {
@@ -60,7 +61,6 @@ public:
 
     ArtemisWebPagePtr getPage();
 
-
 private:
     ArtemisWebPagePtr mPage;
     ExecutionResultBuilderPtr mResultBuilder;
@@ -72,6 +72,7 @@ private:
     CoverageListenerPtr mCoverageListener;
     JavascriptStatisticsPtr mJavascriptStatistics;
     PathTracerPtr mPathTracer;
+    bool mNextOpCanceled;
     bool mKeepOpen;
     bool testingDone;
 
@@ -80,7 +81,9 @@ signals:
     void sigAbortedExecution(QString reason);
 
 public slots:
+    void slNAMFinished(QNetworkReply* reply);
     void slLoadFinished(bool ok);
+    void slLoadProgress(int i);
     void slTestingDone();
 
 

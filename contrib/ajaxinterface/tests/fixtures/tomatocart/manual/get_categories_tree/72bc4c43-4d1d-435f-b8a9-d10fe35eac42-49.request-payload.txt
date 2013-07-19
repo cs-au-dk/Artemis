@@ -1,0 +1,1 @@
+module=products&action=get_categories_tree&node=root&token=01343fd85986eeb00d121f758453be3c

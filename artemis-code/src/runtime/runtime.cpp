@@ -59,7 +59,13 @@ Runtime::Runtime(QObject* parent, const Options& options, const QUrl& url) : QOb
 
     if (!options.useProxy.isNull()) {
         QStringList parts = options.useProxy.split(QString(":"));
-        QNetworkProxy proxy(QNetworkProxy::HttpProxy, parts.at(0), parts.at(1).toShort());
+
+        QNetworkProxy proxy;
+        proxy.setType(QNetworkProxy::HttpProxy);
+        proxy.setHostName(parts.at(0));
+        if(parts.length() > 1){
+            proxy.setPort(parts.at(1).toShort());
+        }
         QNetworkProxy::setApplicationProxy(proxy);
     }
 
@@ -133,7 +139,6 @@ Runtime::Runtime(QObject* parent, const Options& options, const QUrl& url) : QOb
 
     QObject::connect(mWebkitExecutor, SIGNAL(sigAbortedExecution(QString)),
                      this, SLOT(slAbortedExecution(QString)));
-    QObject::connect(this, SIGNAL(sigTestingDone()), mWebkitExecutor, SLOT(slTestingDone()));
 
     /** Visited states **/
     mVisitedStates = new set<long>();

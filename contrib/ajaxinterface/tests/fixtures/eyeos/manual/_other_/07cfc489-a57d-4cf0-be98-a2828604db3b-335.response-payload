@@ -1,0 +1,257 @@
+
+
+/*
+*                 eyeos - The Open Source Cloud's Web Desktop
+*                               Version 2.0
+*                   Copyright (C) 2007 - 2010 eyeos Team
+*
+* This program is free software; you can redistribute it and/or modify it under
+* the terms of the GNU Affero General Public License version 3 as published by the
+* Free Software Foundation.
+*
+* This program is distributed in the hope that it will be useful, but WITHOUT
+* ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+* FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more
+* details.
+*
+* You should have received a copy of the GNU Affero General Public License
+* version 3 along with this program in the file "LICENSE".  If not, see
+* <http://www.gnu.org/licenses/agpl-3.0.txt>.
+*
+* See www.eyeos.org for more details. All requests should be sent to licensing@eyeos.org
+*
+* The interactive user interfaces in modified source and object code versions
+* of this program must display Appropriate Legal Notices, as required under
+* Section 5 of the GNU Affero General Public License version 3.
+*
+* In accordance with Section 7(b) of the GNU Affero General Public License version 3,
+* these Appropriate Legal Notices must retain the display of the "Powered by
+* eyeos" logo and retain the original copyright notice. If the display of the
+* logo is not reasonably feasible for technical reasons, the Appropriate Legal Notices
+* must display the words "Powered by eyeos" and retain the original copyright notice.
+*/
+function imageviewer_application(checknum, pid, args) {
+    var app = new eyeos.application.ImageViewer(checknum, pid, args);
+    app.drawGUI();
+}
+
+qx.Class.define('eyeos.application.ImageViewer', {
+    extend: eyeos.system.EyeApplication,
+
+    construct: function(checknum, pid, args) {
+        arguments.callee.base.call(this, 'imageviewer', checknum, pid);
+        if(args && args[0]) {
+            this.__files = args;
+        } 
+    },
+
+    members: {
+        __path: null,
+        drawGUI: function() {
+            var mainWindow = new eyeos.ui.Window(this, 'Image Viewer');
+            mainWindow.setWidth(900);
+            mainWindow.setHeight(660);
+
+            var winLayout = new qx.ui.layout.HBox();
+            mainWindow.setLayout(winLayout);
+
+            var leftPane = new qx.ui.container.Composite().set({
+                    decorator: new qx.ui.decoration.Single(1, 'solid', '#C5C5C5').set({
+                       widthBottom: 0,
+                       widthLeft: 0,
+                       widthRight: 2,
+                       widthTop: 0
+                    })
+            });
+
+            leftPane.setLayout(new qx.ui.layout.HBox());
+
+            leftPane.addListener('resize', function(e) {
+                if(this.mainImage) {
+                    var bounds = leftPane.getBounds();
+                    var imageBounds = this.mainImage.getBounds();
+                    if(bounds.width > imageBounds.width) {
+                        var newMargin = (bounds.width - imageBounds.width) / 2;
+                        this.mainImage.setMarginLeft(newMargin);
+                    }
+                }
+            }, this);
+            var scrollMain = new qx.ui.container.Scroll().set({
+                
+            });
+            scrollMain.add(leftPane);
+
+            var rightPane = new qx.ui.container.Composite().set({
+                minWidth: 200,
+                width: 200
+            });
+
+            rightPane.setLayout(new qx.ui.layout.VBox());
+
+            var scrollContainer = new qx.ui.container.Scroll().set({
+                minWidth: 200,
+                width: 200,
+                scrollbarX: 'off'
+            });
+            scrollContainer.add(rightPane);
+
+
+            var contentPane = new qx.ui.container.Composite();
+            contentPane.setLayout(new qx.ui.layout.VBox());
+
+            var topPane = new qx.ui.container.Composite().set({
+                height: 50,
+                decorator: new qx.ui.decoration.Single(1, 'solid', '#C5C5C5').set({
+                   widthBottom: 1,
+                   widthLeft: 0,
+                   widthRight: 0,
+                   widthTop: 0
+                })
+            });
+
+            var zoomIn = new qx.ui.basic.Atom('Zoom in', 'eyeos/extern/images/22x22/actions/zoom-in.png').set({
+                rich: true,
+                'iconPosition': 'top',
+                //'font': new qx.bom.Font(12, ['Helvetica', 'Arial', 'Sans-serif']),
+                //'textColor': '#FFFFFF',
+                'paddingTop': 5
+            });
+
+            zoomIn.addListener('click', function(e) {
+				var bounds = this.mainImage.getBounds();
+				if(this.currentScale > 0) {
+					this.currentScale = 1;
+				}
+                this.currentScale = this.currentScale / 2;
+                var newWidth = parseInt(bounds.width / this.currentScale);
+                var newHeight = parseInt(bounds.height / this.currentScale);
+				
+				var newImage = this.mainImage.clone();
+				leftPane.add(newImage);
+				this.mainImage.destroy();
+				this.mainImage = newImage;
+                this.mainImage.set({
+                   width: newWidth,
+                   height: newHeight
+                });
+            }, this);
+
+            var zoomOut = new qx.ui.basic.Atom('Zoom Out', 'eyeos/extern/images/22x22/actions/zoom-out.png').set({
+                rich: true,
+                'iconPosition': 'top',
+                //'font': new qx.bom.Font(12, ['Helvetica', 'Arial', 'Sans-serif']),
+                //'textColor': '#FFFFFF',
+                'paddingTop': 5,
+                'marginLeft': 20
+            });
+
+            zoomOut.addListener('click', function(e) {
+				var bounds = this.mainImage.getBounds();
+				if(this.currentScale < 0) {
+					this.currentScale = 1;
+				}
+                this.currentScale = this.currentScale * 2;
+                var newWidth = parseInt(bounds.width / this.currentScale);
+                var newHeight = parseInt(bounds.height / this.currentScale);
+
+				var newImage = this.mainImage.clone();
+				leftPane.add(newImage);
+				this.mainImage.destroy();
+				this.mainImage = newImage;
+                this.mainImage.set({
+                   width: newWidth,
+                   height: newHeight
+                });
+            }, this);
+
+
+            topPane.setLayout(new qx.ui.layout.HBox());
+            topPane.add(new qx.ui.core.Spacer(), {flex: 1});
+            topPane.add(zoomIn);
+            topPane.add(zoomOut);
+            topPane.add(new qx.ui.core.Spacer(), {flex: 1});
+            var bottomPane = new qx.ui.container.Composite();
+            bottomPane.setLayout(new qx.ui.layout.HBox());
+
+            contentPane.add(topPane);
+            contentPane.add(bottomPane, {flex: 1});
+            bottomPane.add(scrollMain, {flex: 1});
+            bottomPane.add(scrollContainer);
+            mainWindow.add(contentPane, {flex: 1});
+            mainWindow.open();
+
+            //lets rock and roll :)
+            leftPane.removeAll();
+				
+            this.current = 0;
+			this.thubnail = [];
+			for(var i = 0; i < this.__files.length; i++) {
+				if(i == 0) {
+					var border = 2;
+					var marginTop = 10;
+				} else {
+					var marginTop = 0;
+					var border = 0;
+				}
+				
+				this.thubnail[i] = new qx.ui.basic.Image().set({
+					padding: 5,
+					marginLeft: 25,
+					marginTop: marginTop,
+					decorator: new qx.ui.decoration.Single(border, 'solid', 'blue')
+				});
+
+				this.thubnail[i].setUserData('number', i);
+				this.thubnail[i].setSource('index.php?checknum='+this.getChecknum()+'&message=getScaledImage&params[path]='+encodeURIComponent(this.__files[i])+'&params[maxHeight]=140&params[maxWidth]=140');
+		
+				this.thubnail[i].addListener('click', function(e) {
+					var item = e.getTarget();
+					this.thubnail[this.current].setDecorator(null);
+					item.setDecorator(new qx.ui.decoration.Single(2, 'solid', 'blue'));
+					this.current = item.getUserData('number');
+					this.mainImage.setSource('index.php?checknum='+this.getChecknum()+'&message=getFile&params='+encodeURIComponent(this.__files[this.current]));
+				}, this);
+
+				rightPane.add(this.thubnail[i]);
+			}
+			this.currentScale = 1;
+			this.mainImage = new qx.ui.basic.Image().set({
+				padding: 5,
+				scale: true,
+				marginTop: 10
+			});
+			this.mainImage.setDecorator(new qx.ui.decoration.RoundBorderBeveled('#aaaaaa', null, 1, 0, 0, 0, 0, "0 5px 16px -3px black"));
+			this.mainImage.setSource('index.php?checknum='+this.getChecknum()+'&message=getFile&params='+encodeURIComponent(this.__files[0]));
+
+			this.mainImage.addListener('resize', function(e) {
+				    var bounds = scrollMain.getBounds();
+                    var imageBounds = this.mainImage.getBounds();
+					//check if we need to resize the image!
+					if(bounds.width < imageBounds.width) {
+						//tenemos que redimensionar
+						var proportion =  imageBounds.height / imageBounds.width;
+						// use this for debug the problem
+						var newWidth = bounds.width;
+						var reduction = bounds.width / imageBounds.width;
+						var newHeight = parseInt(imageBounds.height * reduction);
+
+						this.mainImage.set({
+							width: newWidth,
+							height: newHeight
+						});
+					}
+					
+
+                    var bounds = leftPane.getBounds();
+                    var imageBounds = this.mainImage.getBounds();
+                    if(bounds.width > imageBounds.width) {
+                        var newMargin = (bounds.width - imageBounds.width) / 2;
+                        this.mainImage.setMarginLeft(newMargin);
+                    }
+			}, this);
+			leftPane.add(this.mainImage);
+				
+        }
+    }
+});
+imageviewer_application(464203525, 1109, ["home:\/\/~username\/Documents\/IMG_0980.JPG"]);eyeos._callbackProxyWithContent(null, null, null, {"__eyeos_specialControlMessage_header":"__control_enhancedData","__eyeos_specialControlMessage_body":{"messages":[{"type":"application","eventName":"start","eventData":{"name":"imageviewer","pid":1109,"loginContext":{"user":"username","group":"users"},"checknum":464203525,"time":1318409671,"args":{}}}],"data":"\n\n\/*\n*                 eyeos - The Open Source Cloud's Web Desktop\n*                               Version 2.0\n*                   Copyright (C) 2007 - 2010 eyeos Team\n*\n* This program is free software; you can redistribute it and\/or modify it under\n* the terms of the GNU Affero General Public License version 3 as published by the\n* Free Software Foundation.\n*\n* This program is distributed in the hope that it will be useful, but WITHOUT\n* ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS\n* FOR A PARTICULAR PURPOSE.  See the GNU Affero General Public License for more\n* details.\n*\n* You should have received a copy of the GNU Affero General Public License\n* version 3 along with this program in the file \"LICENSE\".  If not, see\n* <http:\/\/www.gnu.org\/licenses\/agpl-3.0.txt>.\n*\n* See www.eyeos.org for more details. All requests should be sent to licensing@eyeos.org\n*\n* The interactive user interfaces in modified source and object code versions\n* of this program must display Appropriate Legal Notices, as required under\n* Section 5 of the GNU Affero General Public License version 3.\n*\n* In accordance with Section 7(b) of the GNU Affero General Public License version 3,\n* these Appropriate Legal Notices must retain the display of the \"Powered by\n* eyeos\" logo and retain the original copyright notice. If the display of the\n* logo is not reasonably feasible for technical reasons, the Appropriate Legal Notices\n* must display the words \"Powered by eyeos\" and retain the original copyright notice.\n*\/\nfunction imageviewer_application(checknum, pid, args) {\n    var app = new eyeos.application.ImageViewer(checknum, pid, args);\n    app.drawGUI();\n}\n\nqx.Class.define('eyeos.application.ImageViewer', {\n    extend: eyeos.system.EyeApplication,\n\n    construct: function(checknum, pid, args) {\n        arguments.callee.base.call(this, 'imageviewer', checknum, pid);\n        if(args && args[0]) {\n            this.__files = args;\n        } \n    },\n\n    members: {\n        __path: null,\n        drawGUI: function() {\n            var mainWindow = new eyeos.ui.Window(this, 'Image Viewer');\n            mainWindow.setWidth(900);\n            mainWindow.setHeight(660);\n\n            var winLayout = new qx.ui.layout.HBox();\n            mainWindow.setLayout(winLayout);\n\n            var leftPane = new qx.ui.container.Composite().set({\n                    decorator: new qx.ui.decoration.Single(1, 'solid', '#C5C5C5').set({\n                       widthBottom: 0,\n                       widthLeft: 0,\n                       widthRight: 2,\n                       widthTop: 0\n                    })\n            });\n\n            leftPane.setLayout(new qx.ui.layout.HBox());\n\n            leftPane.addListener('resize', function(e) {\n                if(this.mainImage) {\n                    var bounds = leftPane.getBounds();\n                    var imageBounds = this.mainImage.getBounds();\n                    if(bounds.width > imageBounds.width) {\n                        var newMargin = (bounds.width - imageBounds.width) \/ 2;\n                        this.mainImage.setMarginLeft(newMargin);\n                    }\n                }\n            }, this);\n            var scrollMain = new qx.ui.container.Scroll().set({\n                \n            });\n            scrollMain.add(leftPane);\n\n            var rightPane = new qx.ui.container.Composite().set({\n                minWidth: 200,\n                width: 200\n            });\n\n            rightPane.setLayout(new qx.ui.layout.VBox());\n\n            var scrollContainer = new qx.ui.container.Scroll().set({\n                minWidth: 200,\n                width: 200,\n                scrollbarX: 'off'\n            });\n            scrollContainer.add(rightPane);\n\n\n            var contentPane = new qx.ui.container.Composite();\n            contentPane.setLayout(new qx.ui.layout.VBox());\n\n            var topPane = new qx.ui.container.Composite().set({\n                height: 50,\n                decorator: new qx.ui.decoration.Single(1, 'solid', '#C5C5C5').set({\n                   widthBottom: 1,\n                   widthLeft: 0,\n                   widthRight: 0,\n                   widthTop: 0\n                })\n            });\n\n            var zoomIn = new qx.ui.basic.Atom('Zoom in', 'eyeos\/extern\/images\/22x22\/actions\/zoom-in.png').set({\n                rich: true,\n                'iconPosition': 'top',\n                \/\/'font': new qx.bom.Font(12, ['Helvetica', 'Arial', 'Sans-serif']),\n                \/\/'textColor': '#FFFFFF',\n                'paddingTop': 5\n            });\n\n            zoomIn.addListener('click', function(e) {\n\t\t\t\tvar bounds = this.mainImage.getBounds();\n\t\t\t\tif(this.currentScale > 0) {\n\t\t\t\t\tthis.currentScale = 1;\n\t\t\t\t}\n                this.currentScale = this.currentScale \/ 2;\n                var newWidth = parseInt(bounds.width \/ this.currentScale);\n                var newHeight = parseInt(bounds.height \/ this.currentScale);\n\t\t\t\t\n\t\t\t\tvar newImage = this.mainImage.clone();\n\t\t\t\tleftPane.add(newImage);\n\t\t\t\tthis.mainImage.destroy();\n\t\t\t\tthis.mainImage = newImage;\n                this.mainImage.set({\n                   width: newWidth,\n                   height: newHeight\n                });\n            }, this);\n\n            var zoomOut = new qx.ui.basic.Atom('Zoom Out', 'eyeos\/extern\/images\/22x22\/actions\/zoom-out.png').set({\n                rich: true,\n                'iconPosition': 'top',\n                \/\/'font': new qx.bom.Font(12, ['Helvetica', 'Arial', 'Sans-serif']),\n                \/\/'textColor': '#FFFFFF',\n                'paddingTop': 5,\n                'marginLeft': 20\n            });\n\n            zoomOut.addListener('click', function(e) {\n\t\t\t\tvar bounds = this.mainImage.getBounds();\n\t\t\t\tif(this.currentScale < 0) {\n\t\t\t\t\tthis.currentScale = 1;\n\t\t\t\t}\n                this.currentScale = this.currentScale * 2;\n                var newWidth = parseInt(bounds.width \/ this.currentScale);\n                var newHeight = parseInt(bounds.height \/ this.currentScale);\n\n\t\t\t\tvar newImage = this.mainImage.clone();\n\t\t\t\tleftPane.add(newImage);\n\t\t\t\tthis.mainImage.destroy();\n\t\t\t\tthis.mainImage = newImage;\n                this.mainImage.set({\n                   width: newWidth,\n                   height: newHeight\n                });\n            }, this);\n\n\n            topPane.setLayout(new qx.ui.layout.HBox());\n            topPane.add(new qx.ui.core.Spacer(), {flex: 1});\n            topPane.add(zoomIn);\n            topPane.add(zoomOut);\n            topPane.add(new qx.ui.core.Spacer(), {flex: 1});\n            var bottomPane = new qx.ui.container.Composite();\n            bottomPane.setLayout(new qx.ui.layout.HBox());\n\n            contentPane.add(topPane);\n            contentPane.add(bottomPane, {flex: 1});\n            bottomPane.add(scrollMain, {flex: 1});\n            bottomPane.add(scrollContainer);\n            mainWindow.add(contentPane, {flex: 1});\n            mainWindow.open();\n\n            \/\/lets rock and roll :)\n            leftPane.removeAll();\n\t\t\t\t\n            this.current = 0;\n\t\t\tthis.thubnail = [];\n\t\t\tfor(var i = 0; i < this.__files.length; i++) {\n\t\t\t\tif(i == 0) {\n\t\t\t\t\tvar border = 2;\n\t\t\t\t\tvar marginTop = 10;\n\t\t\t\t} else {\n\t\t\t\t\tvar marginTop = 0;\n\t\t\t\t\tvar border = 0;\n\t\t\t\t}\n\t\t\t\t\n\t\t\t\tthis.thubnail[i] = new qx.ui.basic.Image().set({\n\t\t\t\t\tpadding: 5,\n\t\t\t\t\tmarginLeft: 25,\n\t\t\t\t\tmarginTop: marginTop,\n\t\t\t\t\tdecorator: new qx.ui.decoration.Single(border, 'solid', 'blue')\n\t\t\t\t});\n\n\t\t\t\tthis.thubnail[i].setUserData('number', i);\n\t\t\t\tthis.thubnail[i].setSource('index.php?checknum='+this.getChecknum()+'&message=getScaledImage&params[path]='+encodeURIComponent(this.__files[i])+'&params[maxHeight]=140&params[maxWidth]=140');\n\t\t\n\t\t\t\tthis.thubnail[i].addListener('click', function(e) {\n\t\t\t\t\tvar item = e.getTarget();\n\t\t\t\t\tthis.thubnail[this.current].setDecorator(null);\n\t\t\t\t\titem.setDecorator(new qx.ui.decoration.Single(2, 'solid', 'blue'));\n\t\t\t\t\tthis.current = item.getUserData('number');\n\t\t\t\t\tthis.mainImage.setSource('index.php?checknum='+this.getChecknum()+'&message=getFile&params='+encodeURIComponent(this.__files[this.current]));\n\t\t\t\t}, this);\n\n\t\t\t\trightPane.add(this.thubnail[i]);\n\t\t\t}\n\t\t\tthis.currentScale = 1;\n\t\t\tthis.mainImage = new qx.ui.basic.Image().set({\n\t\t\t\tpadding: 5,\n\t\t\t\tscale: true,\n\t\t\t\tmarginTop: 10\n\t\t\t});\n\t\t\tthis.mainImage.setDecorator(new qx.ui.decoration.RoundBorderBeveled('#aaaaaa', null, 1, 0, 0, 0, 0, \"0 5px 16px -3px black\"));\n\t\t\tthis.mainImage.setSource('index.php?checknum='+this.getChecknum()+'&message=getFile&params='+encodeURIComponent(this.__files[0]));\n\n\t\t\tthis.mainImage.addListener('resize', function(e) {\n\t\t\t\t    var bounds = scrollMain.getBounds();\n                    var imageBounds = this.mainImage.getBounds();\n\t\t\t\t\t\/\/check if we need to resize the image!\n\t\t\t\t\tif(bounds.width < imageBounds.width) {\n\t\t\t\t\t\t\/\/tenemos que redimensionar\n\t\t\t\t\t\tvar proportion =  imageBounds.height \/ imageBounds.width;\n\t\t\t\t\t\t\/\/ use this for debug the problem\n\t\t\t\t\t\tvar newWidth = bounds.width;\n\t\t\t\t\t\tvar reduction = bounds.width \/ imageBounds.width;\n\t\t\t\t\t\tvar newHeight = parseInt(imageBounds.height * reduction);\n\n\t\t\t\t\t\tthis.mainImage.set({\n\t\t\t\t\t\t\twidth: newWidth,\n\t\t\t\t\t\t\theight: newHeight\n\t\t\t\t\t\t});\n\t\t\t\t\t}\n\t\t\t\t\t\n\n                    var bounds = leftPane.getBounds();\n                    var imageBounds = this.mainImage.getBounds();\n                    if(bounds.width > imageBounds.width) {\n                        var newMargin = (bounds.width - imageBounds.width) \/ 2;\n                        this.mainImage.setMarginLeft(newMargin);\n                    }\n\t\t\t}, this);\n\t\t\tleftPane.add(this.mainImage);\n\t\t\t\t\n        }\n    }\n});\nimageviewer_application(464203525, 1109, [\"home:\\\/\\\/~username\\\/Documents\\\/IMG_0980.JPG\"]);"},"__eyeos_specialControlMessage_options":null});
