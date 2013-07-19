@@ -31,12 +31,22 @@ namespace artemis
  */
 class ImageViewerWidget : public QScrollArea
 {
+    Q_OBJECT
+
 public:
     ImageViewerWidget(QString filename, QWidget* parent = 0);
 
 private:
     QLabel* mImage;
     QPixmap mPixmap;
+
+    static qreal mZoomAmount;
+    QSize mOriginalSize;
+
+public slots:
+    void slZoomIn();
+    void slZoomOut();
+    void slZoomOriginal();
 };
 
 

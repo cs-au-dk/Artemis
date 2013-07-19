@@ -31,6 +31,31 @@ ImageViewerWidget::ImageViewerWidget(QString filename, QWidget* parent)
     mImage->setPixmap(mPixmap);
 
     setWidget(mImage);
+
+    mImage->setScaledContents(true);
+    mOriginalSize = mImage->size();
+}
+
+
+// The zoom factor.
+qreal ImageViewerWidget::mZoomAmount = 1.5;
+
+// Scales the image up by mZoomAmount
+void ImageViewerWidget::slZoomIn()
+{
+    mImage->resize(mImage->size() * mZoomAmount);
+}
+
+// Scales the image down by mZoomAmount
+void ImageViewerWidget::slZoomOut()
+{
+    mImage->resize(mImage->size() / mZoomAmount);
+}
+
+// Reset the scale to 100%
+void ImageViewerWidget::slZoomOriginal()
+{
+    mImage->resize(mOriginalSize);
 }
 
 
