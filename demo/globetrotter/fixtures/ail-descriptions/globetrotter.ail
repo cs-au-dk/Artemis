@@ -1,0 +1,12 @@
+URL http://10.11.127.157:8080
+
+GET globetrotter/travel/getUsers(usernames:*) : @globetrotter.0.json
+
+GET globetrotter/travel/currentUser() : @globetrotter.1.json
+
+GET globetrotter/countries.json() : @globetrotter.2.json
+
+GET globetrotter/groups.json() : @globetrotter.3.json
+
+GET globetrotter/travel/getApplication(application:*) : @globetrotter.4.json
+

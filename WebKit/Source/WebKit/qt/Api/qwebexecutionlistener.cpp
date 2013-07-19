@@ -235,7 +235,7 @@ void QWebExecutionListener::javascript_called_function(const JSC::DebuggerCallFr
         JSC::CallFrame* cframe = frame.callFrame(); JSC::JSValue element = cframe->argument(0);
         
         if (element.isObject() == false) {
-            cout << "WARNING: unknown element encountered when handling JQuery support" << endl;
+            qWarning() << "WARNING: unknown element encountered when handling JQuery support";
             return;
 
         }
@@ -246,7 +246,7 @@ void QWebExecutionListener::javascript_called_function(const JSC::DebuggerCallFr
         JSC::JSValue event = cframe->argument(1);
         
         if (event.isString() == false) {
-            cout << "WARNING: unknown event encountered when handling JQuery support" << endl;
+            qWarning() << "WARNING: unknown event encountered when handling JQuery support";
             return;
         }
 
@@ -256,7 +256,7 @@ void QWebExecutionListener::javascript_called_function(const JSC::DebuggerCallFr
             // This is not really fatal, in some cases an undefined
             // or null selector is given (presumably when doing a 
             // direct bind)
-            cout << "WARNING: unknown selector encountered when handling JQuery support" << endl;
+            qWarning() << "WARNING: unknown selector encountered when handling JQuery support";
             return;
         }
 

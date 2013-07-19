@@ -1,0 +1,24 @@
+{
+"required": true,
+"type": "array",
+"minItems": 29,
+"maxItems": 30,
+"items": [
+   {
+      "required": true,
+      "type": "object",
+      "properties": {
+         "username": 
+         {
+            "required": true,
+            "type": "string"
+         },
+         "name": 
+         {
+            "required": true,
+            "type": "string"
+         }
+      }
+   }
+]
+}

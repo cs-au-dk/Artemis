@@ -1,0 +1,45 @@
+{
+"required": true,
+"type": "array",
+"minItems": 8,
+"maxItems": 9,
+"items": [
+   {
+      "required": true,
+      "type": "object",
+      "properties": {
+         "admin": 
+         {
+            "required": true,
+            "type": "string"
+         },
+         "phdadmin": 
+         {
+            "required": true,
+            "type": "string"
+         },
+         "csadmin": 
+         {
+            "required": true,
+            "type": "string"
+         },
+         "members": 
+         {
+            "required": true,
+            "type": "array",
+            "items": [
+               {
+                  "required": true,
+                  "type": "string"
+               }
+            ]
+         },
+         "name": 
+         {
+            "required": true,
+            "type": "string"
+         }
+      }
+   }
+]
+}

@@ -1,0 +1,213 @@
+{
+"required": true,
+"type": "object",
+   "properties": {
+      "id": 
+      {
+         "required": true,
+         "type": "integer"
+      },
+      "stage": 
+      {
+         "required": true,
+         "type": "string",
+         "enum": ["applicant","supervisor","grantholder","supervisorgrantholder","completed"]
+      },
+      "applicant": 
+      {
+         "required": true,
+         "type": "object",
+         "properties": {
+            "username": 
+            {
+               "required": true,
+               "type": "string"
+            },
+            "name": 
+            {
+               "required": true,
+               "type": "string"
+            }
+         }
+      },
+      "dateOfApplication": 
+      {
+         "required": true,
+         "type": "integer"
+      },
+      "days": 
+      {
+         "required": true,
+         "type": "integer"
+      },
+      "expenses": 
+      {
+         "required": true,
+         "type": "object",
+         "properties": {
+            "otherExpense": 
+            {
+               "required": true,
+               "type": "integer"
+            },
+            "registrationFee": 
+            {
+               "required": true,
+               "type": "integer"
+            },
+            "travelExpense": 
+            {
+               "required": true,
+               "type": "integer"
+            },
+            "receiveDailyAllowance": 
+            {
+               "required": true,
+               "type": "boolean"
+            },
+            "otherText": 
+            {
+               "required": true,
+               "type": "string"
+            },
+            "hotelExpense": 
+            {
+               "required": true,
+               "type": "integer"
+            }
+         }
+      },
+      "status": 
+      {
+         "required": false,
+         "type": "string",
+         "enum": ["faculty", "phd", "msc"]
+      },
+      "source": 
+      {
+         "required": false,
+         "type": "object",
+         "properties": {
+            "type": 
+            {
+               "required": true,
+               "type": "string",
+               "enum": ["department", "phdpool", "other"]
+            }
+         }
+      },
+      "researchGroup": 
+      {
+         "required": false,
+         "type": "string"
+      },
+      "supervisor": 
+      {
+         "required": false,
+         "type": "object",
+         "properties": {
+            "username": 
+            {
+               "required": true,
+               "type": "string"
+            },
+            "name": 
+            {
+               "required": true,
+               "type": "string"
+            }
+         }
+      },
+      "destinationCity": 
+      {
+         "required": false,
+         "type": "string"
+      },
+      "destinationCountry": 
+      {
+         "required": false,
+         "type": "string"
+      },
+      "travelStart": 
+      {
+         "required": false,
+         "type": "integer"
+      },
+      "travelEnd": 
+      {
+         "required": false,
+         "type": "integer"
+      },
+      "purpose": 
+      {
+         "required": false,
+         "type": "object",
+         "properties": {
+            "presentation": 
+            {
+               "required": true,
+               "type": "boolean"
+            },
+            "type": 
+            {
+               "required": true,
+               "type": "string"
+            },
+            "description": 
+            {
+               "required": true,
+               "type": "string"
+            }
+         }
+      },
+      "recommendationSupervisor": 
+      {
+         "required": false,
+         "type": "string"
+      },
+      "remarks": 
+      {
+         "required": false,
+         "type": "string"
+      },
+      "commentToCurrent": 
+      {
+         "required": false,
+         "type": "string"
+      },
+      "supervisorApproved": 
+      {
+         "required": false,
+         "type": "object",
+         "properties": {
+            "username": 
+            {
+               "required": true,
+               "type": "string"
+            },
+            "name": 
+            {
+               "required": true,
+               "type": "string"
+            }
+         }
+      },
+      "grantAdministratorApproved": 
+      {
+         "required": false,
+         "type": "object",
+         "properties": {
+            "username": 
+            {
+               "required": true,
+               "type": "string"
+            },
+            "name": 
+            {
+               "required": true,
+               "type": "string"
+            }
+         }
+      }
+   }
+}
