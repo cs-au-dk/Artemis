@@ -76,17 +76,12 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/runtime/toplevel/artemisruntime.h \
     src/runtime/browser/artemiswebview.h \
     src/runtime/browser/artemiswebpage.h \
-    src/concolic/pathtree.h \
-    src/concolic/concreteinput.h \
     src/concolic/search/search.h \
     src/concolic/solver/solver.h \
     src/concolic/solver/constraintwriter.h \
     src/concolic/search/searchdfs.h \
-    src/concolic/search/searchrandom.h \
-    src/concolic/executor.h \
     src/concolic/executiontree/nodes/trace.h \
     src/concolic/entrypoints.h \
-    src/concolic/exitpoints.h \
     src/concolic/executiontree/tracebuilder.h \
     src/runtime/toplevel/concolicruntime.h \
     src/concolic/traceclassifier.h \
@@ -169,9 +164,7 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/runtime/input/events/toucheventparameters.cpp \
     src/model/pathtracer.cpp \
     src/runtime/toplevel/artemisruntime.cpp \
-    src/concolic/pathtree.cpp \
     src/concolic/solver/expressionprinter.cpp \
-    src/concolic/concreteinput.cpp \
     src/concolic/search/search.cpp \
     src/concolic/solver/solver.cpp \
     src/concolic/solver/constraintwriter.cpp \
