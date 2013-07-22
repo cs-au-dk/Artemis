@@ -28,58 +28,13 @@
 namespace artemis
 {
 
-
-/*
- *  These three printing visitors are simply to test out the visitor functionality and make sure we can
- *  create visitors which work at different levels of abstraction. For example, the "search style" visitor below
- *  can treat all kinds of annotation the same, while the "complete" one differentiates them.
- */
-
-
-class VeryBoringTracePrintingVisitor : public TraceVisitor
-{
-public:
-    void visit(TraceNode* node);
-};
-
-
-class CompleteTracePrintingVisitor : public TraceVisitor
-{
-public:
-    void visit(TraceNode* node);
-    void visit(TraceBranch* node);
-    void visit(TraceUnexplored* node);
-    void visit(TraceAlert* node);
-    void visit(TraceDomModification* node);
-    void visit(TracePageLoad* node);
-    void visit(TraceFunctionCall* node);
-    void visit(TraceEndSuccess* node);
-    void visit(TraceEndFailure* node);
-    void visit(TraceEndUnknown* node);
-};
-
-
-class SearchStylePrintingVisitor : public TraceVisitor
-{
-public:
-    void visit(TraceNode* node);
-    void visit(TraceBranch* node);
-    void visit(TraceUnexplored* node);
-    void visit(TraceAnnotation* node);
-    void visit(TraceEndSuccess* node);
-    void visit(TraceEndFailure* node);
-    void visit(TraceEndUnknown* node);
-};
-
-
-
-/*
- *  Here is a "real" visitor which can be used to print an entire trace or tree onto the terminal.
+/**
+ *  A visitor for traces or trace trees which can print the tree to the terminal.
+ *  Obviously this only works well on extremely small trees.
  */
 class TerminalTracePrinter : public TraceVisitor
 {
 public:
-    TerminalTracePrinter();
 
     void visit(TraceNode* node); // Never called unless node types change.
     void visit(TraceBranch* node);
