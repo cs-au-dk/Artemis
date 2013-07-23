@@ -165,7 +165,6 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/model/pathtracer.cpp \
     src/runtime/toplevel/artemisruntime.cpp \
     src/concolic/solver/expressionprinter.cpp \
-    src/concolic/search/search.cpp \
     src/concolic/solver/solver.cpp \
     src/concolic/solver/constraintwriter.cpp \
     src/concolic/entrypoints.cpp \
@@ -192,6 +191,7 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/concolic/executiontree/tracemerger.cpp \
     src/concolic/executiontree/tracedisplay.cpp \
     src/runtime/demomode/imageviewer/imageviewerwidget.cpp \
-    src/runtime/demomode/imageviewer/imageviewerdialog.cpp
+    src/runtime/demomode/imageviewer/imageviewerdialog.cpp \
+    src/concolic/search/searchdfs.cpp
 
 QT += network

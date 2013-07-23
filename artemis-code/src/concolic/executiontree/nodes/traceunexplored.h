@@ -51,6 +51,8 @@ private:
 
 };
 
+typedef QSharedPointer<TraceUnexplored> TraceUnexploredPtr;
+
 
 }
 

@@ -14,11 +14,11 @@
  * limitations under the License.
  */
 
+#include "concolic/executiontree/tracenodes.h"
+
 #ifndef SEARCH_H
 #define SEARCH_H
 
-
-#include "pathtree.h"
 
 
 
@@ -30,10 +30,15 @@ namespace artemis
 /*
  *  Abstract interface for searching for the next node to explore in the path tree.
  */
-class TreeSearch
+
+// TODO: decide which methods from DepthFirstSearch should become part of this interface!
+
+class TreeSearch : public TraceVisitor
 {
 public:
-    PathTreeUnexploredPtr chooseNextTarget() = 0; // What should the signature for this be?
+    virtual TraceUnexplored* chooseNextTarget() = 0;
+    // N.B. We need to use a standard pointer here as that is all we get from the vsitor which does the searching.
+    // The pointer returned by this is owned by the tree (and possibly others) and is only valid while the node is still in the tree (i.e. until the next run).
 };
 
 
