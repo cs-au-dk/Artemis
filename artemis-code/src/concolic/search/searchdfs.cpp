@@ -65,15 +65,13 @@ bool DepthFirstSearch::chooseNextTarget()
             // We are interested in the 'false' branch of mPreviousParent.
             current = mPreviousParent->getFalseBranch();
         }
+        // The depth, PC, etc. are all already set from the previous call.
+
 
         if(isImmediatelyUnexplored(current)){
             // Then the previous run did not reach the intended target.
             // Use the same method as continueFromLeaf() to jump to the next node to be searched.
-            assert(!mParentStack.empty());
-            SavedPosition parent = mParentStack.pop();
-            mCurrentDepth = parent.depth;
-            mCurrentPC = parent.condition;
-            current = parent.node->getTrueBranch();
+            current = nextAfterLeaf();
         }
 
     }else{
@@ -196,14 +194,14 @@ void DepthFirstSearch::continueFromLeaf()
     if(mParentStack.empty()){
         mFoundTarget = false;
     }else{
-        nextFromLeaf()->accept(this);
+        nextAfterLeaf()->accept(this);
     }
 }
 
 // From a leaf node, does any bookwork required to move to the next node to explore and returns that node.
 // It reminas for the caller to call accept() on the branch this function returns.
 // PRECONDITION: Parent stack is non-empty.
-TraceNodePtr DepthFirstSearch::nextFromLeaf()
+TraceNodePtr DepthFirstSearch::nextAfterLeaf()
 {
     assert(!mParentStack.empty());
 

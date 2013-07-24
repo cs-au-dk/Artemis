@@ -106,7 +106,7 @@ private:
 
     // Helper methods for the visitors.
     void continueFromLeaf();
-    TraceNodePtr nextFromLeaf();
+    TraceNodePtr nextAfterLeaf();
 };
 
 
