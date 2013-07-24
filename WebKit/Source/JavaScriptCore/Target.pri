@@ -282,4 +282,5 @@ HEADERS += \
     symbolic/expr.h \
     symbolic/expression/booleanbinaryoperation.h \
     symbolic/expression/stringreplace.h \
-    symbolic/expression/stringregexreplace.h
+    symbolic/expression/stringregexreplace.h \
+    symbolic/expression/symbolicsource.h

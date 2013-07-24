@@ -127,9 +127,13 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
         }
 
         case 'f': {
-            QStringList rawformfield = QString(optarg).split("=");
-            Q_ASSERT(rawformfield.size() == 2);
-            options.presetFormfields.insert(rawformfield.at(0), rawformfield.at(1));
+
+            QString input = QString(optarg);
+
+            int lastEqualsIndex = QString(optarg).lastIndexOf("=");
+            Q_ASSERT(lastEqualsIndex >= 0);
+
+            options.presetFormfields.insert(input.left(lastEqualsIndex), input.mid(lastEqualsIndex+1));
             break;
         }
 

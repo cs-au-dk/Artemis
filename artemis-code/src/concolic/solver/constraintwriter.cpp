@@ -80,7 +80,7 @@ bool ConstraintWriter::commit()
 
 void ConstraintWriter::visit(Symbolic::SymbolicInteger* symbolicinteger)
 {
-    mIdentifierStore = *symbolicinteger->getIdentifier();
+    mIdentifierStore = symbolicinteger->getSource().getIdentifier();
 }
 
 void ConstraintWriter::visit(Symbolic::ConstantInteger* constantinteger)
@@ -119,7 +119,7 @@ void ConstraintWriter::visit(Symbolic::IntegerCoercion* integercoercion)
 
 void ConstraintWriter::visit(Symbolic::SymbolicString* symbolicstring)
 {
-    mIdentifierStore = *symbolicstring->getIdentifier();
+    mIdentifierStore = symbolicstring->getSource().getIdentifier();
 }
 
 void ConstraintWriter::visit(Symbolic::ConstantString* constantstring)
@@ -171,7 +171,7 @@ void ConstraintWriter::visit(Symbolic::StringCoercion* stringcoercion)
 
 void ConstraintWriter::visit(Symbolic::SymbolicBoolean* symbolicboolean)
 {
-    mIdentifierStore = *symbolicboolean->getIdentifier();
+    mIdentifierStore = symbolicboolean->getSource().getIdentifier();
 }
 
 void ConstraintWriter::visit(Symbolic::ConstantBoolean* constantboolean)

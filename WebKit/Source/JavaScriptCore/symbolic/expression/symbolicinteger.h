@@ -22,6 +22,7 @@
 #include <string>
 
 #include "visitor.h"
+#include "symbolicsource.h"
 #include "integerexpression.h"
 
 #ifdef ARTEMIS
@@ -32,15 +33,15 @@ namespace Symbolic
 class SymbolicInteger : public IntegerExpression
 {
 public:
-    explicit SymbolicInteger(std::string* identifier);
+    explicit SymbolicInteger(SymbolicSource source);
     void accept(Visitor* visitor);
 
-	inline std::string* getIdentifier() {
-		return m_identifier;
+	inline SymbolicSource getSource() {
+		return m_source;
 	}
 
 private:
-	std::string* m_identifier;
+	SymbolicSource m_source;
 
 };
 }

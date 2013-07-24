@@ -1,0 +1,4 @@
+RESULT: Concolic::Solver::ConstraintsWritten=1; Concolic::Solver::Constraint.SYM_IN_testinputName=1
+if (parseInt(elmName) == 1) {
+    alert(elmName);
+}

@@ -3,16 +3,21 @@
 <head>
 	<script type="text/javascript">
 		function doSomething() {
-			var y = document.getElementById("testinput").value;
-			var x = document.getElementById("testinput").value;
-			var x_1 = document.getElementById("testinput2").value;
+			var y = document.getElementById("testinputy").value;
+			var x_1 = document.getElementById("testinputx").value;
+
+			var elmName = document.getElementsByName("testinputName")[0].value;
+			var elmId = document.getElementById("testinputId").value;
             $TESTSTATEMENT
 		}
 	</script>
 </head>
 <body>
-	<input type="text" name="testinput" id="testinput" />
-	<input type="text" name="testinput2" id="testinput2" value="1" />
+	<input type="text" name="testinputy" id="testinputy" />
+	<input type="text" name="testinputx" id="testinputx" value="1" />
+	
+	<input type="text" name="testinputName" id="testinputNameId" value="1" />
+	<input type="text" id="testinputId" value="1" />
 	<button onclick="doSomething();">DO</button>
 </body>
 </html>

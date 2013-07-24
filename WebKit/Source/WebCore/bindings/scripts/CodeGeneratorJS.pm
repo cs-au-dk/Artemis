@@ -1852,8 +1852,26 @@ sub GenerateImplementation
                         push(@implContent, "    if (castedThis->m_" . $attribute->signature->name . "Symbolic == NULL) {\n");
                         push(@implContent, "        std::ostringstream strs;\n");
                         push(@implContent, "        strs << \"SYM_IN_\";\n");
-                        push(@implContent, "        strs << Symbolic::NEXT_SYMBOLIC_ID++;\n");
-                        push(@implContent, "        result.makeSymbolic(new Symbolic::SymbolicString(new std::string(strs.str())));\n");
+                        push(@implContent, "\n");
+                        push(@implContent, "        WTF::AtomicString inputName = impl->getAttribute(WebCore::HTMLNames::nameAttr);\n");
+                        push(@implContent, "        WTF::AtomicString inputId = impl->getAttribute(WebCore::HTMLNames::idAttr);\n");
+                        push(@implContent, "\n");
+                        push(@implContent, "        Symbolic::SourceIdentifierMethod method;\n");
+
+                        push(@implContent, "        if (inputName.length() != 0) {\n");
+                        push(@implContent, "            strs << inputName.string().ascii().data();\n");
+                        push(@implContent, "            method = Symbolic::INPUT_NAME;\n");
+                        push(@implContent, "        } else if (inputId.length() != 0) {\n");
+                        push(@implContent, "            strs << inputId.string().ascii().data();\n");
+                        push(@implContent, "            method = Symbolic::ELEMENT_ID;\n");
+                        push(@implContent, "        } else {\n");
+                        push(@implContent, "            std::cout << \"Warning: Form input element without ID or name used - a sequential ID was used for the symbolic value. This will break concolic execution!\" << std::endl;\n");
+                        push(@implContent, "            strs << Symbolic::NEXT_SYMBOLIC_ID++;\n");
+                        push(@implContent, "            method = Symbolic::LEGACY;\n");
+                        push(@implContent, "        }\n");
+                        push(@implContent, "\n");
+                        push(@implContent, "        result.makeSymbolic(new Symbolic::SymbolicString(Symbolic::SymbolicSource(Symbolic::INPUT, method, std::string(strs.str()))));");
+                        push(@implContent, "\n");
                         push(@implContent, "    } else {\n");
                         push(@implContent, "        result.makeSymbolic(castedThis->m_" . $attribute->signature->name . "Symbolic);\n");
                         push(@implContent, "    }\n");
