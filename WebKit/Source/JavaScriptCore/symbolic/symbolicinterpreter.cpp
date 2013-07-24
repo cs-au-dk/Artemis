@@ -34,7 +34,7 @@
 namespace Symbolic
 {
 
-unsigned int NEXT_SYMBOLIC_ID = 0;
+unsigned int NEXT_SYMBOLIC_ID = 0; // backwards compatibility, used to generate sequential symbolic IDs
 
 const char* opToString(OP op) {
     static const char* OPStrings[] = {

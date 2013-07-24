@@ -23,6 +23,7 @@
 
 #include "visitor.h"
 #include "booleanexpression.h"
+#include "symbolicsource.h"
 
 #ifdef ARTEMIS
 
@@ -32,15 +33,15 @@ namespace Symbolic
 class SymbolicBoolean : public BooleanExpression
 {
 public:
-    explicit SymbolicBoolean(std::string* identifier);
+    explicit SymbolicBoolean(SymbolicSource source);
     void accept(Visitor* visitor);
 
-	inline std::string* getIdentifier() {
-		return m_identifier;
+	inline SymbolicSource getSource() {
+		return m_source;
 	}
 
 private:
-	std::string* m_identifier;
+	SymbolicSource m_source;
 
 };
 }

@@ -23,9 +23,9 @@
 namespace Symbolic
 {
 
-SymbolicInteger::SymbolicInteger(std::string* identifier) :
+SymbolicInteger::SymbolicInteger(SymbolicSource source) :
     IntegerExpression(),
-    m_identifier(identifier)
+    m_source(source)
 {
 }
 

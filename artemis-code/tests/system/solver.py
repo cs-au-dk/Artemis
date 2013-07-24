@@ -25,7 +25,7 @@ def test_generator(filename, name, result):
             WEBSERVER_URL, 
             newFilename), 
             iterations=2,
-            fields=["#testinput2=1"])
+            fields=["#testinputx=1", "#testinputNameId=1", "#testinputId=1"])
 
         for condition in result.split(';'):
             subject, value = condition.split('=')
