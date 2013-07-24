@@ -34,7 +34,9 @@ DepthFirstSearch::DepthFirstSearch(TraceNodePtr tree, unsigned int depthLimit) :
 
 /**
  *  Selects an unexplored node from the tree to be explored next.
- *  Returns a null pointer if the search reaches the end of the tree.
+ *  Calculates the constraint [hopefully] leading to the unexplored node it has chosen.
+ *  Returns true if an unexplored node was found (then the constraint can be retrieved with getTargetPC())
+ *  and false when we reached the end of the tree.
  *  N.B. in this case there may still be unexplored areas in the following cases:
  *      * They were lower than the current search depth in the tree.
  *      * They were skipped (i.e. the first attempt to explore them failed).
@@ -43,7 +45,7 @@ DepthFirstSearch::DepthFirstSearch(TraceNodePtr tree, unsigned int depthLimit) :
  *  TODO: I think this mehtod assumes there will be at least one branch above any unexplored node.
  *        This means we should only run it on a tree containing at least one trace for now.
  */
-TraceUnexplored *DepthFirstSearch::chooseNextTarget()
+bool DepthFirstSearch::chooseNextTarget()
 {
     TraceNodePtr current;
 
@@ -68,9 +70,10 @@ TraceUnexplored *DepthFirstSearch::chooseNextTarget()
             // Then the previous run did not reach the intended target.
             // Use the same method as continueFromLeaf() to jump to the next node to be searched.
             assert(!mParentStack.empty());
-            QPair<TraceBranch*, unsigned int> parent = mParentStack.pop();
-            mCurrentDepth = parent.second;
-            current = parent.first->getTrueBranch();
+            SavedPosition parent = mParentStack.pop();
+            mCurrentDepth = parent.depth;
+            mCurrentPC = parent.condition;
+            current = parent.node->getTrueBranch();
         }
 
     }else{
@@ -84,13 +87,20 @@ TraceUnexplored *DepthFirstSearch::chooseNextTarget()
     // Future runs should ocntinue wherever we left off.
     mIsPreviousRun = true;
 
-    // The visitor will set its own "output".
-    // Will be null if we reach the end of the tree (see header for this function).
-    return mNextToExplore;
+    // The visitor will set its own "output" in mCurrentPC.
+    // This function returns whether we reached the end of the iteration or not.
+    return mFoundTarget;
 
 }
 
-
+/**
+ *  Returns the target node's PC.
+ *  Only valid after a call to chooseNextTarget() which returned true.
+ */
+PathCondition DepthFirstSearch::getTargetPC()
+{
+    return mCurrentPC;
+}
 
 void DepthFirstSearch::setDepthLimit(unsigned int depth)
 {
@@ -102,13 +112,13 @@ unsigned int DepthFirstSearch::getDepthLimit()
     return mDepthLimit;
 }
 
-
 // Reset the search to the beginning of the tree.
 void DepthFirstSearch::restartSearch()
 {
     mIsPreviousRun = false;
     mParentStack.clear();
     mCurrentDepth = 0;
+    mCurrentPC = PathCondition();
 }
 
 
@@ -116,6 +126,8 @@ void DepthFirstSearch::restartSearch()
 
 
 // The visitor part of this class preforms the actual searching.
+// Note at any point where the search stops (i.e. there is no call to accept(this) or continueFromLeaf()) then
+// we MUST set mFoundTarget appropriately! (This includes in the body of continueFromLeaf().)
 
 void DepthFirstSearch::visit(TraceNode *node)
 {
@@ -123,19 +135,35 @@ void DepthFirstSearch::visit(TraceNode *node)
     exit(1); // TODO: is this appropriate?
 }
 
-void DepthFirstSearch::visit(TraceBranch *node)
+void DepthFirstSearch::visit(TraceConcreteBranch *node)
 {
     // At a branch, we explore only the 'false' subtree.
     // Once we reach a leaf, the parent stack is used to return to branches and explore their 'true' children (see continueFromLeaf()).
     // This allows us to stop the search once we find a node we would like to explore.
     // The depth limit is also enforced here.
     if(mCurrentDepth < mDepthLimit){
-        mParentStack.push(qMakePair(node, mCurrentDepth));
+        mParentStack.push(SavedPosition(node, mCurrentDepth, mCurrentPC));
         mCurrentDepth++;
         mPreviousParent = node;
         node->getFalseBranch()->accept(this);
+        // TODO: do we want to record in mCurrentPC that we went throug a brnach we could not analyse?
+        // e.g. add in some NONDET or CONST constraint or something. Would this be any use?
     }else{
         // If we have reached the depth limit, then treat this node as a leaf and skip to whatever we are supposed to search next.
+        continueFromLeaf();
+    }
+}
+
+void DepthFirstSearch::visit(TraceSymbolicBranch *node)
+{
+    // See TraceConcreteBranch above.
+    if(mCurrentDepth < mDepthLimit){
+        mParentStack.push(SavedPosition(node, mCurrentDepth, mCurrentPC));
+        mCurrentDepth++;
+        mPreviousParent = node;
+        mCurrentPC.addCondition(node->getSymbolicCondition(), false); // We are always taking the false branch here.
+        node->getFalseBranch()->accept(this);
+    }else{
         continueFromLeaf();
     }
 }
@@ -143,7 +171,8 @@ void DepthFirstSearch::visit(TraceBranch *node)
 void DepthFirstSearch::visit(TraceUnexplored *node)
 {
     // When we reach an unexplored node, we want to return it.
-    mNextToExplore = node;
+    // Stop the visitor. The PC to return is in mCurrentPC.
+    mFoundTarget = true;
 }
 
 void DepthFirstSearch::visit(TraceAnnotation *node)
@@ -165,12 +194,30 @@ void DepthFirstSearch::continueFromLeaf()
     // Simply pop from the parent stack and take the 'true' branch from there (see visit(TraceBranch*)).
     // If the parent stack is empty, then we are finished.
     if(mParentStack.empty()){
-        mNextToExplore = NULL;
+        mFoundTarget = false;
     }else{
-        QPair<TraceBranch*, unsigned int> parent = mParentStack.pop();
-        mCurrentDepth = parent.second;
-        parent.first->getTrueBranch()->accept(this);
+        nextFromLeaf()->accept(this);
     }
+}
+
+// From a leaf node, does any bookwork required to move to the next node to explore and returns that node.
+// It reminas for the caller to call accept() on the branch this function returns.
+// PRECONDITION: Parent stack is non-empty.
+TraceNodePtr DepthFirstSearch::nextFromLeaf()
+{
+    assert(!mParentStack.empty());
+
+    SavedPosition parent = mParentStack.pop();
+    mCurrentDepth = parent.depth;
+    mCurrentPC = parent.condition;
+
+    // If the branch is symbolic, we need to add its condition to the current PC.
+    TraceSymbolicBranch* sym = dynamic_cast<TraceSymbolicBranch*>(parent.node);
+    if(sym){
+        mCurrentPC.addCondition(sym->getSymbolicCondition(), true); // We are always taking the true branch here.
+    }
+
+    return parent.node->getTrueBranch();
 }
 
 

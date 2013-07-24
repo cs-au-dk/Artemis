@@ -15,6 +15,7 @@
  */
 
 #include "concolic/executiontree/tracenodes.h"
+#include "concolic/pathcondition.h"
 
 #ifndef SEARCH_H
 #define SEARCH_H
@@ -36,9 +37,8 @@ namespace artemis
 class TreeSearch : public TraceVisitor
 {
 public:
-    virtual TraceUnexplored* chooseNextTarget() = 0;
-    // N.B. We need to use a standard pointer here as that is all we get from the vsitor which does the searching.
-    // The pointer returned by this is owned by the tree (and possibly others) and is only valid while the node is still in the tree (i.e. until the next run).
+    virtual bool chooseNextTarget() = 0;     // Returns true iff a target was found.
+    virtual PathCondition getTragetPC() = 0; // Returns the target's PC after a call to chooseNextTarget() returns true.
 };
 
 

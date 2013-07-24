@@ -95,6 +95,11 @@ void PathCondition::visit(TraceEnd* node)
     // Ignore the end node
 }
 
+void PathCondition::addCondition(Symbolic::Expression* condition, bool outcome)
+{
+    mConditions.append(qMakePair(condition, outcome));
+}
+
 const QPair<Symbolic::Expression*, bool> PathCondition::get(int index)
 {
     return mConditions.at(index);

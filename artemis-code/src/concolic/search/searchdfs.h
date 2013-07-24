@@ -21,7 +21,7 @@
 #include <QPair>
 
 #include "search.h"
-
+#include "concolic/pathcondition.h"
 
 
 namespace artemis
@@ -45,10 +45,13 @@ namespace artemis
 class DepthFirstSearch : TreeSearch
 {
 public:
-    DepthFirstSearch(TraceNodePtr tree, unsigned int depthLimit = 5);
+    DepthFirstSearch(TraceNodePtr tree, unsigned int depthLimit = 5); // TODO: what is a sensible default?
 
     // Selects an unexplored node from the tree to be explored next.
-    TraceUnexplored* chooseNextTarget();
+    bool chooseNextTarget();
+
+    // Retrieves the PC of any target node which was selected.
+    PathCondition getTargetPC();
 
     // The depth limit for our DFS.
     void setDepthLimit(unsigned int depth);
@@ -58,11 +61,12 @@ public:
     void restartSearch();
 
     // The visitor part which does the actual searching.
-    void visit(TraceNode* node);        // Abstract nodes. An error if we reach this.
-    void visit(TraceBranch* node);      // Treat all banches equally.
+    void visit(TraceNode* node);            // Abstract nodes. An error if we reach this.
+    void visit(TraceConcreteBranch* node);
+    void visit(TraceSymbolicBranch* node);
     void visit(TraceUnexplored* node);
-    void visit(TraceAnnotation* node);  // Ignore all annotations.
-    void visit(TraceEnd* node);         // Stop searching at *any* end node.
+    void visit(TraceAnnotation* node);      // Ignore all annotations.
+    void visit(TraceEnd* node);             // Stop searching at *any* end node.
 
 private:
     // The root of the tree we are searching.
@@ -71,6 +75,12 @@ private:
     // The maximum depth (in branches only) that we will search in the tree.
     unsigned int mDepthLimit;
     unsigned int mCurrentDepth;
+
+    // The PC which is accumulated as we move down the tree.
+    PathCondition mCurrentPC;
+
+    // Stores whether or not the iteration is finished.
+    bool mFoundTarget;
 
     // We store the position which we left off the search on the previos call to chooseNextTarget.
     // We store the parent branch of the unexplored node and the "direction" (i.e. true or false branch)
@@ -82,16 +92,21 @@ private:
     bool mPreviousDirection;
 
     // A stack of the ancestor branch nodes to the current position in the search.
-    // Each ancestor node is paired with its depth in the tree.
+    // Each ancestor node is paired with its depth in the tree and the PC up to that point.
     // This is used for backtracking during the DFS.
-    // We could avoid this if we included parent pointers in the tree.
-    QStack<QPair<TraceBranch*, unsigned int> > mParentStack;
-
-    // The result of the visitor part.
-    TraceUnexplored* mNextToExplore;
+    // N.B. We could avoid this if we included parent pointers in the tree, but this would involve some iterative traversal, going against the idea of using a visitor in the first place!
+    struct SavedPosition {
+        SavedPosition(){}
+        SavedPosition(TraceBranch* node, unsigned int depth, PathCondition condition) : node(node), depth(depth), condition(condition) {}
+        TraceBranch* node;
+        unsigned int depth;
+        PathCondition condition; // Condition to reach this node, not including the symbolic condition of this particular node if it is symbolic.
+    };
+    QStack<SavedPosition> mParentStack;
 
     // Helper methods for the visitors.
     void continueFromLeaf();
+    TraceNodePtr nextFromLeaf();
 };
 
 
