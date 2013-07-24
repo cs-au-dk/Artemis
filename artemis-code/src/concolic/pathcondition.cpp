@@ -82,6 +82,12 @@ void PathCondition::visit(TraceAnnotation* node)
 void PathCondition::visit(TraceConcreteBranch *node)
 {
     // Ignore the concrete branches
+
+    if (TraceVisitor::isImmediatelyUnexplored(node->getFalseBranch())) {
+        node->getTrueBranch()->accept(this);
+    } else {
+        node->getFalseBranch()->accept(this);
+    }
 }
 
 void PathCondition::visit(TraceEnd* node)
