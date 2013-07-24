@@ -20,6 +20,7 @@
 #include "runtime/worklist/worklist.h"
 
 #include "runtime/runtime.h"
+#include "concolic/entrypoints.h"
 
 namespace artemis
 {

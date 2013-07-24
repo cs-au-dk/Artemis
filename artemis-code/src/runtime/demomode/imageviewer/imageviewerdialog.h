@@ -14,27 +14,33 @@
  * limitations under the License.
  */
 
-#ifndef EXECUTOR_H
-#define EXECUTOR_H
+
+#include <QtGui>
+
+#include "imageviewerwidget.h"
+
+#ifndef IMAGEVIEWERDIALOG_H
+#define IMAGEVIEWERDIALOG_H
 
 namespace artemis
 {
 
 
-/*
- *  Manages the execution of each test/run of a specific set of input values.
+/**
+ *  A dialog box which displays images.
+ *  In our case it is used to display the generated graphs of trace trees.
+ *  Uses ImageViewerWidget for the actual image display.
  */
-
-class Executor
+class ImageViewerDialog : public QDialog
 {
+public:
+    ImageViewerDialog(QString filename, QWidget* parent = 0);
 
-
-
+private:
+    ImageViewerWidget* mImageView;
 };
 
 
+} // namespace artemis
 
-}
-
-
-#endif // EXECUTOR_H
+#endif // IMAGEVIEWERDIALOG_H

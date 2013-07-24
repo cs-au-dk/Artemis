@@ -14,27 +14,42 @@
  * limitations under the License.
  */
 
-#ifndef EXITPOINTS_H
-#define EXITPOINTS_H
+
+#include <QtGui>
+
+
+#ifndef IMAGEVIEWERWIDGET_H
+#define IMAGEVIEWERWIDGET_H
 
 namespace artemis
 {
 
 
-/*
- *  Detects exit points in a test and classifies them as successes or failures.
+/**
+ *  A widget for displaying images.
+ *  The images can be scrolled and zoomed from the widget.
  */
-
-class ExitPointDetector
+class ImageViewerWidget : public QScrollArea
 {
+    Q_OBJECT
 
+public:
+    ImageViewerWidget(QString filename, QWidget* parent = 0);
 
+private:
+    QLabel* mImage;
+    QPixmap mPixmap;
 
+    static qreal mZoomAmount;
+    QSize mOriginalSize;
+
+public slots:
+    void slZoomIn();
+    void slZoomOut();
+    void slZoomOriginal();
 };
 
 
+} // namespace artemis
 
-}
-
-
-#endif // EXITPOINTS_H
+#endif // IMAGEVIEWERWIDGET_H

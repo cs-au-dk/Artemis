@@ -23,124 +23,6 @@ namespace artemis
 
 
 
-
-/* Boring Trace Printer ******************************************************/
-
-
-
-void VeryBoringTracePrintingVisitor::visit(TraceNode* node)
-{
-    Log::info("VBTP: At a NODE.");
-}
-
-
-
-/* Detailed Trace Printer ****************************************************/
-
-
-
-void CompleteTracePrintingVisitor::visit(TraceNode* node)
-{
-    Log::info("CTPV: At a NODE. THIS SHOULD NEVER BE REACHED!");
-}
-
-void CompleteTracePrintingVisitor::visit(TraceBranch* node)
-{
-    Log::info("CTPV: At a BRANCH.");
-}
-
-void CompleteTracePrintingVisitor::visit(TraceUnexplored* node)
-{
-    Log::info("CTPV: At an UNEXPLORED.");
-}
-
-void CompleteTracePrintingVisitor::visit(TraceAlert* node)
-{
-    Log::info("CTPV: At an ALERT.");
-}
-
-void CompleteTracePrintingVisitor::visit(TraceDomModification* node)
-{
-    Log::info("CTPV: At a DOM CHANGE.");
-}
-
-void CompleteTracePrintingVisitor::visit(TracePageLoad* node)
-{
-    Log::info("CTPV: At a PAGE LOAD.");
-}
-
-void CompleteTracePrintingVisitor::visit(TraceFunctionCall* node)
-{
-    Log::info("CTPV: At a FUNCTION CALL.");
-}
-
-void CompleteTracePrintingVisitor::visit(TraceEndSuccess* node)
-{
-    Log::info("CTPV: At an END SUCCESS.");
-}
-
-void CompleteTracePrintingVisitor::visit(TraceEndFailure* node)
-{
-    Log::info("CTPV: At an END FAIL.");
-}
-
-void CompleteTracePrintingVisitor::visit(TraceEndUnknown* node)
-{
-    Log::info("CTPV: At an END UNK.");
-}
-
-
-
-/* Search-Style Trace Printer ************************************************/
-
-
-
-
-
-void SearchStylePrintingVisitor::visit(TraceNode* node)
-{
-    Log::info("SSPV: At a NODE. SHOULD NOT BE REACHABLE.");
-}
-
-void SearchStylePrintingVisitor::visit(TraceBranch* node)
-{
-    Log::info("SSPV: At a BRANCH.");
-}
-
-void SearchStylePrintingVisitor::visit(TraceUnexplored* node)
-{
-    Log::info("SSPV: At an UNEXPLORED.");
-}
-
-void SearchStylePrintingVisitor::visit(TraceAnnotation* node)
-{
-    Log::info("SSPV: At an ANNOTATION (of some kind).");
-}
-
-void SearchStylePrintingVisitor::visit(TraceEndSuccess* node)
-{
-    Log::info("SSPV: At an END SUCCESS.");
-}
-
-void SearchStylePrintingVisitor::visit(TraceEndFailure* node)
-{
-    Log::info("SSPV: At an ENS FAILURE.");
-}
-
-void SearchStylePrintingVisitor::visit(TraceEndUnknown* node)
-{
-    Log::info("SSPV: At an END UNK.");
-}
-
-
-
-/* Termianl Trace Printer ****************************************************/
-
-
-TerminalTracePrinter::TerminalTracePrinter()
-{
-}
-
 void TerminalTracePrinter::printTraceTree(TraceNodePtr root)
 {
     // Reset the current state.
@@ -447,9 +329,6 @@ QList<QString> TerminalTracePrinter::processNodeTextLines(QList<QString> nodeTex
         line.append(" ]");
         it.setValue(line);
     }
-
-    //nodeText.prepend("+" + QString(maxLen+2, '-') + "+");
-    //nodeText.append("+" + QString(maxLen+2, '-') + "+");
 
     return nodeText;
 }

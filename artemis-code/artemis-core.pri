@@ -76,18 +76,12 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/runtime/toplevel/artemisruntime.h \
     src/runtime/browser/artemiswebview.h \
     src/runtime/browser/artemiswebpage.h \
-    src/concolic/concolic.h \
-    src/concolic/pathtree.h \
-    src/concolic/concreteinput.h \
     src/concolic/search/search.h \
     src/concolic/solver/solver.h \
     src/concolic/solver/constraintwriter.h \
     src/concolic/search/searchdfs.h \
-    src/concolic/search/searchrandom.h \
-    src/concolic/executor.h \
     src/concolic/executiontree/nodes/trace.h \
     src/concolic/entrypoints.h \
-    src/concolic/exitpoints.h \
     src/concolic/executiontree/tracebuilder.h \
     src/runtime/toplevel/concolicruntime.h \
     src/concolic/traceclassifier.h \
@@ -109,7 +103,10 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/concolic/executiontree/nodes/traceconcretebranch.h \
     src/concolic/executiontree/nodes/tracesymbolicbranch.h \
     src/concolic/executiontree/tracenodes.h \
-    src/concolic/executiontree/tracemerger.h
+    src/concolic/executiontree/tracemerger.h \
+    src/concolic/executiontree/tracedisplay.h \
+    src/runtime/demomode/imageviewer/imageviewerwidget.h \
+    src/runtime/demomode/imageviewer/imageviewerdialog.h
 
 SOURCES += src/runtime/input/ajaxinput.cpp \
     src/strategies/prioritizer/constantprioritizer.cpp \
@@ -167,11 +164,7 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/runtime/input/events/toucheventparameters.cpp \
     src/model/pathtracer.cpp \
     src/runtime/toplevel/artemisruntime.cpp \
-    src/concolic/concolic.cpp \
-    src/concolic/pathtree.cpp \
     src/concolic/solver/expressionprinter.cpp \
-    src/concolic/concreteinput.cpp \
-    src/concolic/search/search.cpp \
     src/concolic/solver/solver.cpp \
     src/concolic/solver/constraintwriter.cpp \
     src/concolic/entrypoints.cpp \
@@ -195,6 +188,10 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/concolic/executiontree/nodes/tracebranch.cpp \
     src/concolic/executiontree/nodes/traceconcretebranch.cpp \
     src/concolic/executiontree/nodes/tracesymbolicbranch.cpp \
-    src/concolic/executiontree/tracemerger.cpp
+    src/concolic/executiontree/tracemerger.cpp \
+    src/concolic/executiontree/tracedisplay.cpp \
+    src/runtime/demomode/imageviewer/imageviewerwidget.cpp \
+    src/runtime/demomode/imageviewer/imageviewerdialog.cpp \
+    src/concolic/search/searchdfs.cpp
 
 QT += network
