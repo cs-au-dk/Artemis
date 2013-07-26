@@ -9,7 +9,7 @@ import subprocess
 
 # "solver" should point to the binary built. 
 # e.g. "/home/z3-str/str"
-solver = ""
+solver = os.path.join(os.environ["ARTEMISDIR"], "contrib", "Z3-str", "str")
 
 
 #=================================================================== 
