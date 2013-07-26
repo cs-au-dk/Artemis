@@ -84,7 +84,7 @@ private:
     void addInEdge(QString endpoint);
 
     // Used to print any symbolic constraints.
-    ExpressionPrinter* mExpressionPrinter;
+    QSharedPointer<ExpressionPrinter> mExpressionPrinter;
 };
 
 
