@@ -16,6 +16,7 @@
 
 
 #include "concolic/executiontree/tracenodes.h"
+#include "concolic/solver/expressionprinter.h"
 
 #include <QString>
 #include <QList>
@@ -38,6 +39,8 @@ namespace artemis
 class TraceDisplay : public TraceVisitor
 {
 public:
+    TraceDisplay();
+
     // The function which is called to generate the output.
     QString makeGraph(TraceNodePtr tree);
     void writeGraphFile(TraceNodePtr tree, QString &pathToFile);
@@ -79,6 +82,9 @@ private:
     // Helpers
     void clearData();
     void addInEdge(QString endpoint);
+
+    // Used to print any symbolic constraints.
+    ExpressionPrinter* mExpressionPrinter;
 };
 
 
