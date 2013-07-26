@@ -18,6 +18,9 @@ CORES = `grep -c ^processor /proc/cpuinfo`
 WEBKIT_BUILD_SCRIPT = ./WebKit/Tools/Scripts/build-webkit --qt --qmakearg="DEFINES+=ARTEMIS=1" --makearg="-j$(CORES)" --qmakearg="CC=gcc-4.7" --qmakearg="CXX=g++-4.7" --no-webkit2 --inspector --javascript-debugger
 WEBKIT_TEST_SCRIPT = ./WebKit/Tools/Scripts/run-javascriptcore-tests --qmakearg="DEFINES+=ARTEMIS=1" --debug
 
+CONTRIB_Z3 = ./contrib/Z3
+CONTRIB_Z3_STR = ./contrib/Z3-str
+
 build: check webkit artemis
 
 install: webkit-install artemis-install
@@ -59,6 +62,14 @@ artemis-format-code:
 fetch-qt:
 	git clone git://gitorious.org/qt/qt.git && cd qt && echo -e 'o\nyes\n' | ./configure -prefix `pwd` -no-webkit && make
 
+constraint-solver:
+	cd ${CONTRIB_Z3}; autoconf
+	cd ${CONTRIB_Z3}; ./configure
+	cd ${CONTRIB_Z3}; make
+	cd ${CONTRIB_Z3}; make a
+
+	cd ${CONTRIB_Z3_STR}; make
+
 check:
 	@echo "Testing for software dependencies - if an error occurs, consult your local package manager for the program immeadiately checked for"
 	which g++ > /dev/null
@@ -83,16 +94,16 @@ ifneq ($(ARCH),x86_64)
 	@exit 1
 endif
 
-DEPENDENCIES = g++ flex bison gperf ruby cmake lemon re2c libxext-dev libfontconfig-dev libxrender-dev libsqlite3-dev php5 libqt4-dev-bin qt4-qmake libqt4-core  
+DEPENDENCIES = g++ flex bison gperf ruby cmake lemon re2c libxext-dev libfontconfig-dev libxrender-dev libsqlite3-dev php5 libqt4-dev-bin qt4-qmake libqt4-core  autoconf
 
-YUM_DEPENDENCIES = gcc-c++ flex bison gperf ruby cmake lemon re2c fontconfig-devel libXext-devel patch sqlite-devel php perl-Tk perl-Digest-MD5
+YUM_DEPENDENCIES = gcc-c++ flex bison gperf ruby cmake lemon re2c fontconfig-devel libXext-devel patch sqlite-devel php perl-Tk perl-Digest-MD5 autoconf
 
 fetch-apt:
 	sudo apt-get install ${DEPENDENCIES}
 
 fetch-yum:
 	sudo yum install ${YUM_DEPENDENCIES}
-	
+
 test-solver: check-env
 	@echo "Testing solver"
 	@${ARTEMISDIR}/contrib/Kaluza/artemiskaluza.sh ${ARTEMISDIR}/contrib/Kaluza/test.txt
