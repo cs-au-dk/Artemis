@@ -48,7 +48,7 @@ enum PathTraceReport {
 typedef struct OptionsType {
 
     OptionsType() :
-        iterationLimit(1),
+        iterationLimit(4),
         numberSameLength(1),
         recreatePage(false),
         disableStateCheck(true),
