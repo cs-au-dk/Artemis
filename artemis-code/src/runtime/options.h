@@ -61,7 +61,8 @@ typedef struct OptionsType {
         majorMode(AUTOMATED),
         reportPathTrace(NO_TRACES),
         reportPathTraceBytecode(false),
-        reportHeap(NO_CALLS)
+        reportHeap(NO_CALLS),
+        heapReportFactor(1)
     {}
 
     QMap<QString, QString> presetFormfields;
@@ -88,6 +89,8 @@ typedef struct OptionsType {
     bool reportPathTraceBytecode;
 
     HeapReport reportHeap;
+
+    int heapReportFactor;
 
 
 } Options;

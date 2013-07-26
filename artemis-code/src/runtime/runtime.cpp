@@ -89,7 +89,7 @@ Runtime::Runtime(QObject* parent, const Options& options, const QUrl& url) : QOb
     mWebkitExecutor = new WebKitExecutor(this, mAppmodel, options.presetFormfields, jqueryListener, ajaxRequestListner, enableConstantStringInstrumentation);
 
     if(options.reportHeap != NO_CALLS){
-        mWebkitExecutor->webkitListener->enableHeapReport(options.reportHeap == NAMED_CALLS, 0);
+        mWebkitExecutor->webkitListener->enableHeapReport(options.reportHeap == NAMED_CALLS, 0, options.heapReportFactor);
     }
 
     QSharedPointer<FormInputGenerator> formInputGenerator;

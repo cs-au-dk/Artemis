@@ -101,7 +101,7 @@ namespace JSC {
 
 #ifdef ARTEMIS
         void notifyIsNotSafeToCollect() { m_isSafeToCollect = false; }
-        void heapAsString(ExecState*, QString*);
+        void heapAsString(ExecState*, QString*, QSet<QString>* visitedObjects);
 #endif
         void collectAllGarbage();
 

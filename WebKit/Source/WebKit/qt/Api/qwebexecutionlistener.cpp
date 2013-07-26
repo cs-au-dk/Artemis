@@ -26,6 +26,7 @@
 #include "wtf/text/CString.h"
 
 #include "JavaScriptCore/runtime/UString.h"
+#include "ScopeChain.h"
 
 #include "JavaScriptCore/debugger/DebuggerCallFrame.h"
 #include "JavaScriptCore/interpreter/Register.h"
@@ -76,10 +77,11 @@ void QWebExecutionListener::eventAdded(WebCore::EventTarget * target, const char
     return;
 }
 
-void QWebExecutionListener::enableHeapReport(bool namedOnly, int heapReportNumber){
+void QWebExecutionListener::enableHeapReport(bool namedOnly, int heapReportNumber, int factor){
     m_reportHeapMode = namedOnly?1:2;
     qDebug() << "SETTING HEAPN" << heapReportNumber;
     m_heapReportNumber = heapReportNumber;
+    m_heapReportFactor = factor;
 }
 
 QList<QString> QWebExecutionListener::getHeapReport(int &heapReportNumber){
@@ -243,10 +245,9 @@ void QWebExecutionListener::javascript_called_function(const JSC::DebuggerCallFr
     std::string functionName = std::string(frame.calculatedFunctionName().ascii().data());
     JSC::CodeBlock* codeBlock = frame.callFrame()->codeBlock();
 
-    if(m_reportHeapMode > 0 && (m_reportHeapMode > 1 || functionName.length() > 0)){
+    if((m_reportHeapMode > 0 && (m_reportHeapMode > 1 || functionName.length() > 0)) && 0 == (rand() % m_heapReportFactor)){
+        JSC::JSFunction* functionObject = (JSC::JSFunction*) frame.callFrame()->callee();
 
-
-        JSC::JSObject* functionObject = frame.callFrame()->callee();
         std::stringstream ss;
         ss << std::string(JSC::JSObject::className(functionObject).ascii().data()) ;
         ss << "@";
@@ -255,19 +256,22 @@ void QWebExecutionListener::javascript_called_function(const JSC::DebuggerCallFr
         string fn = functionName.length() >0 ? "\""+functionName + "\"" : "null";
 
         string offset = QString::number(((JSC::JSFunction*) functionObject)->sourceCode()->startOffset()).toStdString();
-        string s = "{\"function-name\":"+fn+", \"object-name\": \""+ss.str()+"\", \"source\":\""+url.toStdString()+"\", \"line-number\":";
+        string s = "{\"function-name\":"+fn+", \"source\":\""+url.toStdString()+"\", \"line-number\":";
         QString dt = QDateTime::currentDateTime().toString(QString::fromStdString("dd-MM-yy-hh-mm-ss"));
+        QSet<QString>* visitedObjects = new QSet<QString>();
         QString hReport = QString::fromStdString(s)
                 .append(QString::number(codeBlock->lineNumberForBytecodeOffset(0)))
-                .append(QString::fromStdString(", \"char-offset\":"+offset+", "))
-                .append(QString::fromStdString("\"time\":\""))
+                .append(QString::fromStdString(", \"char-offset\":"+offset))
+                .append(QString::fromStdString(", \"time\":\""))
                 .append(dt)
-                .append(QString::fromStdString("\", \"state\":"));
-        frame.callFrame()->heap()->heapAsString(frame.callFrame(), &hReport);
+                .append(QString::fromStdString("\", \"object\":"))
+                .append(functionObject->getAsJSONString(frame.callFrame(), visitedObjects))
+                .append(QString::fromStdString(", \"state\":"));
+        frame.callFrame()->heap()->heapAsString(frame.callFrame(), &hReport, visitedObjects);
         hReport.append(QString::fromStdString("}"));
         m_heapReport.append(hReport);
 
-        if(m_heapReport.length() >=100){
+        if(m_heapReport.length() >=10){
             QString buffer;
             int i = 0 ;
             foreach(QString rap, m_heapReport){
@@ -340,7 +344,6 @@ void QWebExecutionListener::javascript_called_function(const JSC::DebuggerCallFr
 void QWebExecutionListener::javascript_returned_function(const JSC::DebuggerCallFrame& frame) {
 
     std::string functionName = std::string(frame.calculatedFunctionName().ascii().data());
-
     emit sigJavascriptFunctionReturned(QString::fromStdString(functionName));
 }
 

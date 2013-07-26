@@ -84,7 +84,6 @@ public slots:
     void slNAMFinished(QNetworkReply* reply);
     void slLoadFinished(bool ok);
     void slLoadProgress(int i);
-    void slTestingDone();
 
 
 };

@@ -35,6 +35,8 @@
 #include <wtf/StdLibExtras.h>
 
 #ifdef ARTEMIS
+#include <QString>
+#include <QSet>
 #include "symbolic/expression/expression.h"
 #include "symbolic/expression/integerexpression.h"
 #include "symbolic/expression/integercoercion.h"
@@ -60,6 +62,7 @@ namespace JSC {
     class PropertySlot;
     class PutPropertySlot;
     class UString;
+
 #if ENABLE(DFG_JIT)
     namespace DFG {
         class AssemblyHelpers;
@@ -231,6 +234,8 @@ namespace JSC {
         Symbolic::IntegerExpression* generateIntegerCoercionExpression(ExecState* exec);
         Symbolic::StringExpression* generateStringCoercionExpression(ExecState* exec);
         Symbolic::BooleanExpression* generateBooleanExpression(ExecState* exec);
+
+        QString getAsJSONString(ExecState* exec, QSet<QString>* visitedObjects);
 #endif
         
         // Extracting the value.

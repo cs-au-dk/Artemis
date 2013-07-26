@@ -85,7 +85,7 @@ public:
     void timerFire(int timerId);
     void clearTimers();
 
-    void enableHeapReport(bool namedOnly, int heapReportNumber);
+    void enableHeapReport(bool namedOnly, int heapReportNumber, int factor);
     QList<QString> getHeapReport(int &heapReportNumber);
 
     void beginSymbolicSession();
@@ -106,6 +106,7 @@ private:
     QList<QString> m_heapReport;
     int m_reportHeapMode;
     int m_heapReportNumber;
+    int m_heapReportFactor;
 signals:
     void addedEventListener(QWebElement*, QString);
     void removedEventListener(QWebElement*, QString);
