@@ -3,7 +3,7 @@
 SOLVER="./yices-1.0.27/bin/yices"
 SOLVERFLAGS=" -e"
 STPFLAGS="-a -c -d -p -w"
-STPBIN=$KALUZABIN/stp
+STPBIN=./stp
 
 if [ -z "${TMPDIR+xxx}" ]; 
 then 

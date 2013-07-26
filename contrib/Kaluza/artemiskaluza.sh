@@ -9,8 +9,8 @@
 INPUT=/tmp/kaluza
 OUTPUT=/tmp/kaluza-result
 
-if [ -z "${ARTEMISDIR+xxx}" ]; 
-then 
+if [ -z "${ARTEMISDIR+xxx}" ];
+then
     # Default
     echo "Please set ARTEMISDIR env variable to the directory containing the Artemis INSTALL file"
     exit 1
@@ -41,45 +41,45 @@ fi
 
 if ./ksolver < /tmp/kaluza ;then
     if ./solveselects.sh corecstrs.tmp > stdout 2>stderr ;then
-        
+
         if [ ! -e 'corecstrs.tmp.length.ys.out' ];then
             echo 'Error, No output length file generated! Dying...'
             exit 1
         fi
-        
+
         if [ ! -e 'corecstrs.tmp.final.stp.out' ];then
             echo 'Error, No final BV encoder solved output file generated! Dying...';
             exit 1
         fi
 
         if grep -q -i "Invalid." corecstrs.tmp.final.stp.out ; then
-            echo "UNSAT."
+            echo "UNSAT.."
             exit
         fi
-        
+
         if ! grep -q -i "^sat$" corecstrs.tmp.length.ys.out ; then
-            echo "UNSAT."
+            echo "UNSAT..."
             exit
         fi
-        
+
         cat corecstrs.tmp.length.ys.out | grep -vi 'COPY' | grep -vi "^sat$" | awk '{print $2, substr($3, 0, index($3, ")") - 1)}' > $OUTPUT # ignore lines containing COPY
-        
+
         #./convert.pl < corecstrs.tmp.final.stp.out | grep -vi COPY >> $OUTPUT
-        
+
         exit 
-    
+
     else 
-        
+
         echo "Error, Solverselects.sh failed"
         exit 1
-        
+
     fi 
-    
+
 else
 
     echo "Error parsing! Check stdout and stderr ..."
     exit 1
-    
+
 fi
 
 echo "Error, end-of-script should not be reached..."
