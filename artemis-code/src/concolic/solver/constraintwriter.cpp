@@ -28,8 +28,14 @@
 namespace artemis
 {
 
-bool ConstraintWriter::write(PathConditionPtr pathCondition,
-                                    std::string outputFile)
+ConstraintWriter::ConstraintWriter(std::string outputFile) :
+    mNextTemporaryIdentifier(0),
+    mError(false)
+{
+    mOutput.open(outputFile.data());
+}
+
+bool ConstraintWriter::write(PathConditionPtr pathCondition, std::string outputFile)
 {
 
     ConstraintWriter writer(outputFile);
@@ -49,13 +55,6 @@ bool ConstraintWriter::write(PathConditionPtr pathCondition,
 
     return writer.commit();
 
-}
-
-ConstraintWriter::ConstraintWriter(std::string outputFile) :
-    mNextTemporaryIdentifier(0),
-    mError(false)
-{
-    mOutput.open(outputFile.data());
 }
 
 bool ConstraintWriter::commit()
