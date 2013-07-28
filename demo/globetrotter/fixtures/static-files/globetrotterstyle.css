@@ -1,0 +1,146 @@
+@font-face{font-family:'AUPassataRegular';src:url('//cmsdesign.au.dk/design/2011/fonts/aupassata_rg-webfont.eot');src:url('//cmsdesign.au.dk/design/2011/fonts/aupassata_rg-webfont.eot?#iefix') format('embedded-opentype'),
+url('//cmsdesign.au.dk/design/2011/fonts/aupassata_rg-webfont.woff') format('woff'),
+url('//cmsdesign.au.dk/design/2011/fonts/aupassata_rg-webfont.ttf') format('truetype'),
+url('//cmsdesign.au.dk/design/2011/fonts/aupassata_rg-webfont.svg#AUPassataRegular') format('svg');font-weight:normal;font-style:normal;}
+body {
+  background-color: #666; 
+  color: #212121;
+  font: 70%/1.5em Verdana,Arial,Helvetica,sans-serif;
+}
+h1 {
+  font-family: AUPassataRegular, 'Trebuchet MS', 'Futura Light', Verdana, sans-serif;
+  font-size: 30px;
+  font-weight: normal;
+  height: 30px;
+  text-transform: uppercase;
+}
+h2 {
+  font-family: AUPassataRegular, 'Trebuchet MS', Arial, Helvetica, sans-serif;
+  font-size: 22px;
+  font-weight: normal;
+  border-bottom-color: rgb(7, 61, 120);
+  border-bottom-style: solid;
+  border-bottom-width: 3px;
+  border-top-color: rgb(7, 61, 120);
+  border-top-style: solid;
+  border-top-width: 1px;
+  padding-bottom: 10px;
+  padding-top: 10px;
+}
+div.page {
+  min-height: 300px; 
+  min-width: 800px;
+  background-color: #ffffff;
+  margin: 4px;
+  padding: 10px;
+  display:  inline-block;
+}
+div.page2 {
+  min-height: 300px; 
+  min-width: 800px;
+  background-color: #ffffff;
+  margin: 10px;
+  padding: 10px;
+}
+.middle {
+  vertical-align: middle;
+}
+div.area {
+  margin: 5px; 
+  padding: 5px; 
+}
+div.last {
+  margin: 5px; 
+  padding: 5px; 
+}
+div.last input {
+  font-size: 150%
+}
+div.footer {
+  color: #000000; 
+  font-size: 9px; 
+  clear: both;
+  padding: 1em 0;
+  margin-top: 20px;
+  margin-left: 15px;
+  border-top: 6px solid rgb(7, 61, 120);
+  text-transform: uppercase;
+}
+div.footer a {
+  text-decoration: none;
+  border-bottom-color: rgb(7, 61, 120);
+  border-bottom-style: dotted;
+  border-bottom-width: 1px;
+  color: rgb(7, 61, 120);
+}
+a:link,a:visited,a:hover,a:active {
+  color: #000000;
+}
+.readonly {
+  background-color: #f8f8f8;
+}
+.wide {
+  width: 98%;
+}
+.number {
+  text-align: right;
+}
+.highlight {
+  background-color: yellow;
+}
+.noscript {
+  color: #ee0000; 
+  border: 2px solid #ee0000; 
+  padding: 5px; 
+  margin: 5px;
+}
+.commentToCurrentArea, .bigArea, .smallArea, .approvalCheckbox {
+  display: none;
+}
+.checkbox {
+  vertical-align: -15px;
+}
+#thanks, #authorizationFailed, #departmentnotfound {
+  display: none;
+  background-color: #ffffff;
+  margin: 10px; 
+  padding: 10px; 
+}
+@media print {
+  body {
+    background-color: #ffffff;
+  }
+  div.caption {
+    display: none;
+  }
+  div.page {
+    background-color: #ffffff;
+    background-repeat: no-repeat;
+    background-image: none;
+  }
+  input, textarea, select {
+    background-color: #ffffff;
+    color: #000000;
+    resize: none;
+    border: 1 solid black;
+  }
+}
+.modal {
+  display:    none;
+  position:   fixed;
+  z-index:    1000;
+  top:        0;
+  left:       0;
+  height:     100%;
+  width:      100%;
+  background: rgba(255, 255, 255, .8) 
+              url('waiting.gif') 
+			  50% 50% 
+              no-repeat;
+}
+.loading {
+  overflow: hidden;   
+}
+.loading .modal {
+  display: block;
+}
