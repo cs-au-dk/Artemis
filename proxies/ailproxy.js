@@ -212,7 +212,7 @@ function serverCachedResponse(filename, response) {
 			'Cache-Control'	 : 'max-age=0, must-revalidate',
 			'Last-Modified'  : 'Thu, 22 Mar 2012 09:09:26 GMT',
 			'ETag'			 : "\"" + ETAG_PREFIX + filename + "\"",
-    		'Content-Type'   : 'text/html'});
+    		'Content-Type'   : filename.indexOf("css") >=0 ? "text/css" : "text/html"});
 
 		response.write(server_cache[filename], 'binary');
 		response.end();
@@ -225,7 +225,7 @@ function serverCachedResponse(filename, response) {
 			'Cache-Control'	 : 'max-age=0, must-revalidate',
 			'Last-Modified'  : 'Thu, 22 Mar 2012 09:09:26 GMT',
 			'ETag'			 : "\"" + ETAG_PREFIX + filename + "\"",
-    		'Content-Type'   : 'text/html'});
+    		'Content-Type'   : filename.indexOf("css") >=0 ? "text/css" : "text/html"});
 		response.end();		
 	}
 }
@@ -285,7 +285,7 @@ function requestHandler(request, response) {
 			
 			if (random_mode == false) {
 				
-				//console.log('AIL ', request.url);
+				console.log('AIL ', request.url);
 
 				response.writeHead(200, {
 			    'Content-Length' : ailResponse.length,
