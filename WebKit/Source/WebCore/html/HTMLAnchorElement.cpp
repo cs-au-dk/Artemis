@@ -24,6 +24,12 @@
 #include "config.h"
 #include "HTMLAnchorElement.h"
 
+#ifdef ARTEMIS
+#include<QDebug>
+#include<QString>
+#include "ScriptEventListener.h"
+#endif
+
 #include "Attribute.h"
 #include "EventNames.h"
 #include "Frame.h"
@@ -221,6 +227,12 @@ void HTMLAnchorElement::parseMappedAttribute(Attribute* attr)
                 clearIsLink();
                 attr->setValue(nullAtom);
             }
+#ifdef ARTEMIS
+            else if(protocolIsJavaScript(parsedURL)){
+                setAttributeEventListener(eventNames().clickEvent, createAttributeEventListener(this, attr));
+            }
+#endif
+
         }
         invalidateCachedVisitedLinkHash();
     } else if (attr->name() == nameAttr || attr->name() == titleAttr) {
