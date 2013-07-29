@@ -34,6 +34,11 @@ class DomInput: public BaseInput
 public:
     DomInput(const EventHandlerDescriptor* handler, QSharedPointer<const FormInput> formInput,
              const EventParameters* params, const TargetDescriptor* target);
+    ~DomInput(){
+        delete mEventHandler;
+        delete mEvtParams;
+        delete mTarget;
+    }
 
     void apply(ArtemisWebPagePtr page, QWebExecutionListener* webkitListener) const;
     QSharedPointer<const BaseInput> getPermutation(const QSharedPointer<const FormInputGenerator>& formInputGenerator,

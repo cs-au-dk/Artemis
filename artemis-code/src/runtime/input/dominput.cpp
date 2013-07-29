@@ -36,6 +36,7 @@ DomInput::DomInput(const EventHandlerDescriptor* handler,
     mTarget = target;
 }
 
+
 void DomInput::apply(ArtemisWebPagePtr page, QWebExecutionListener* webkitListener) const
 {
     QWebElement handler = mEventHandler->domElement()->getElement(page);

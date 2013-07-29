@@ -32,6 +32,7 @@ EventHandlerDescriptor::EventHandlerDescriptor(QObject* parent, const EventHandl
 
 EventHandlerDescriptor::~EventHandlerDescriptor()
 {
+    delete element;
 }
 
 QString EventHandlerDescriptor::name() const

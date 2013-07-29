@@ -134,7 +134,7 @@ signals:
     void statementExecuted(uint linenumber, QSource* source);
     void sigJavascriptFunctionCalled(QString functionName, size_t bytecodeSize, uint functionLine, uint sourceOffset, QSource* source);
     void sigJavascriptFunctionReturned(QString functionName);
-    void sigJavascriptBytecodeExecuted(const ByteCodeInfoStruct byteInfo, uint sourceOffset, QSource* source);
+    void sigJavascriptBytecodeExecuted(ByteCodeInfoStruct* byteInfo, uint sourceOffset, QSource* source);
     void sigJavascriptBranchExecuted(bool jump, Symbolic::Expression* condition, uint sourceOffset, QSource* source, const ByteCodeInfoStruct byteInfo);
 
 };

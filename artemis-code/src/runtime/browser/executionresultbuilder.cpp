@@ -195,6 +195,7 @@ void ExecutionResultBuilder::slEventListenerRemoved(QWebElement* elem, QString n
     }
 
     mElementPointers.removeAt(mElementPointers.indexOf(QPair<QWebElement*, QString>(elem, name)));
+    delete elem; //TODO look at these elements (QWebElements) and delete them when they are removed from the list
 }
 
 void ExecutionResultBuilder::slTimerAdded(int timerId, int timeout, bool singleShot)

@@ -74,7 +74,7 @@ public slots:
 
     void slJavascriptScriptParsed(QString sourceCode, QSource* source);
     void slJavascriptFunctionCalled(QString functionName, size_t bytecodeSize, uint functionStartLine, uint sourceOffset, QSource* source);
-    void slJavascriptBytecodeExecuted(const ByteCodeInfoStruct binfo, uint sourceOffset, QSource* source);
+    void slJavascriptBytecodeExecuted(ByteCodeInfoStruct* binfo, uint sourceOffset, QSource* source);
     void slJavascriptStatementExecuted(uint linenumber, QSource* source);
 
 };
