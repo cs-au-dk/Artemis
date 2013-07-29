@@ -25,8 +25,6 @@
 #include "HTMLAnchorElement.h"
 
 #ifdef ARTEMIS
-#include<QDebug>
-#include<QString>
 #include "ScriptEventListener.h"
 #endif
 
