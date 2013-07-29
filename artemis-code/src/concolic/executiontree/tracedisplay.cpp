@@ -26,6 +26,11 @@ namespace artemis
 
 QString TraceDisplay::indent = "  ";
 
+TraceDisplay::TraceDisplay()
+{
+    mExpressionPrinter = new ExpressionPrinter();
+}
+
 /**
  *  Returns a string representing a graphviz input file displaying the trace tree provided.
  */
@@ -51,7 +56,7 @@ QString TraceDisplay::makeGraph(TraceNodePtr tree)
     }
     result += indent + "}\n\n";
 
-    result += indent + "subgraph branches_sym {\n" + indent + indent + "node [label = \"Branch\\n(symbolic)\"];\n\n";
+    result += indent + "subgraph branches_sym {\n";
     foreach(QString node, mHeaderSymBranches){
         result += indent + indent + node + ";\n";
     }
@@ -176,8 +181,11 @@ void TraceDisplay::visit(TraceSymbolicBranch *node)
     QString name = QString("sym_%1").arg(mNodeCounter);
     mNodeCounter++;
 
+    node->getSymbolicCondition()->accept(mExpressionPrinter);
+    QString label = QString(" [label = \"Branch\\n%1\"]").arg(mExpressionPrinter->getResult().c_str());
+
     // TODO: can we add the symbolic condition to the node label?
-    mHeaderSymBranches.append(name);
+    mHeaderSymBranches.append(name + label);
 
     addInEdge(name);
 

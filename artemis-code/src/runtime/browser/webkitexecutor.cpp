@@ -45,7 +45,7 @@ WebKitExecutor::WebKitExecutor(QObject* parent,
                                AjaxRequestListener* ajaxListener,
                                bool enableConstantStringInstrumentation) :
     QObject(parent),
-    mKeepOpen(false),  mNextOpCanceled(false)
+    mNextOpCanceled(false), mKeepOpen(false)
 {
 
     mPresetFields = presetFields;
@@ -184,6 +184,9 @@ void WebKitExecutor::executeSequence(ExecutableConfigurationConstPtr conf, bool 
     mJavascriptStatistics->notifyStartingLoad();
     mPathTracer->notifyStartingLoad();
 
+    webkitListener->beginSymbolicSession();
+    mKeepOpen = keepOpen;
+
     mPage->mainFrame()->load(conf->getUrl());
 }
 
@@ -243,7 +246,6 @@ void WebKitExecutor::slLoadFinished(bool ok)
 
     qDebug() << "\n------------ EXECUTE SEQUENCE -----------" << endl;
 
-    webkitListener->beginSymbolicSession();
     mTraceBuilder->beginRecording();
 
     foreach(QSharedPointer<const BaseInput> input, currentConf->getInputSequence()->toList()) {
