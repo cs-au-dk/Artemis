@@ -68,7 +68,7 @@ QString TraceDisplay::makeGraph(TraceNodePtr tree)
     }
     result += indent + "}\n\n";
 
-    result += indent + "subgraph alerts {\n" + indent + indent + "node [shape = rectangle];\n\n";
+    result += indent + "subgraph alerts {\n" + indent + indent + "node [shape = rectangle, style = filled, fillcolor = red];\n\n";
     foreach(QString node, mHeaderAlerts){
         result += indent + indent + node + ";\n";
     }
