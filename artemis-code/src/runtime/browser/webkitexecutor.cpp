@@ -259,14 +259,14 @@ void WebKitExecutor::slLoadFinished(bool ok)
 
     if (!mKeepOpen) {
         webkitListener->endSymbolicSession();
-        mTraceBuilder->endRecording();
     }
 
     // DONE
 
-    if (!mKeepOpen) {
-        emit sigExecutedSequence(currentConf, mResultBuilder->getResult());
-    }
+    // TODO: This was previously enclosed by if(!mKeepOpen). This means no post-load analysis can be done in demo mode. What are tyhe implications of changing this? Which other parts will depend on this?
+    emit sigExecutedSequence(currentConf, mResultBuilder->getResult());
+    // TODO: This has the same issue but causes a different bug: when we are in manual mode there is already a (big!) trace running which the UI is not expecting.
+    mTraceBuilder->endRecording();
 
     mKeepOpen = false;
 }
