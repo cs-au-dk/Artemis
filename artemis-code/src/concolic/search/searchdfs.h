@@ -109,6 +109,7 @@ private:
     TraceNodePtr nextAfterLeaf();
 };
 
+typedef QSharedPointer<DepthFirstSearch> DepthFirstSearchPtr;
 
 
 

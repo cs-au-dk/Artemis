@@ -38,7 +38,7 @@ class TreeSearch : public TraceVisitor
 {
 public:
     virtual bool chooseNextTarget() = 0;     // Returns true iff a target was found.
-    virtual PathCondition getTragetPC() = 0; // Returns the target's PC after a call to chooseNextTarget() returns true.
+    virtual PathCondition getTargetPC() = 0; // Returns the target's PC after a call to chooseNextTarget() returns true.
 };
 
 
