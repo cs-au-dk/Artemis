@@ -38,8 +38,6 @@ bool TraceClassifier::classify(TraceNodePtr trace)
 
     trace->accept(this);
 
-    // TODO: add the end marker into the trace.
-
     return !mWasAlert;
 }
 
@@ -58,7 +56,14 @@ bool TraceClassifier::classify(TraceNodePtr trace)
 void TraceClassifier::visit(TraceAlert *node)
 {
     mWasAlert = true;
-    node->next->accept(this);
+
+    // In this simple classifier, we will classify this a a failure as soon as we reach an alert.
+    // So we add the "failure" marker immediately here.
+    // We can also stop the visitor here as well, as there is no need to continue.
+
+    QSharedPointer<TraceEndFailure> marker = QSharedPointer<TraceEndFailure>(new TraceEndFailure());
+    marker->next = node->next;
+    node->next = marker;
 }
 
 void TraceClassifier::visit(TraceDomModification *node)
@@ -108,6 +113,16 @@ void TraceClassifier::visit(TraceUnexplored *node)
 void TraceClassifier::visit(TraceEndUnknown *node)
 {
     // Reached the end of the trace, so stop.
+    // As we only fail on alerts, this means we have a successful trace.
+    // Add the marker just before the end.
+
+    //TraceEndSuccess* marker = new TraceEndSuccess();
+    //marker->next = QSharedPointer<TraceEndUnknown>(new TraceEndUnknown());
+
+    // Replace the current node (end) with the new marker and end.
+    //*node = *marker;
+
+    // TODO: I am not sure how this can be implemented cleranly and correctly.
 }
 
 void TraceClassifier::visit(TraceEnd *node)
