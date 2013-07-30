@@ -39,6 +39,9 @@ void ConcolicRuntime::run(const QUrl& url)
 
     mNextConfiguration = initialConfiguration;
 
+    mRunningToGetEntryPoints = true;
+    mRunningWithInitialValues = false;
+
     preConcreteExecution();
 }
 
@@ -50,24 +53,135 @@ void ConcolicRuntime::preConcreteExecution()
         return;
     }
 
-    Log::debug("\n============= New-Iteration =============");
+    if(mRunningToGetEntryPoints){
+        Log::debug("\n======== Entry-Point Finding Run ========");
+    }else{
+        Log::debug("\n============= New-Iteration =============");
+    }
     Log::debug("--------------- COVERAGE ----------------\n");
     Log::debug(mAppmodel->getCoverageListener()->toString().toStdString());
 
     mWebkitExecutor->executeSequence(mNextConfiguration); // calls the postConcreteExecution method as callback
 }
 
-void ConcolicRuntime::postConcreteExecution(ExecutableConfigurationConstPtr configuration, QSharedPointer<ExecutionResult> result)
+
+// TODO: This method is a mess! It needs refactoring/reorganising ASAP.
+void ConcolicRuntime::postConcreteExecution(ExecutableConfigurationConstPtr configuration, ExecutionResultPtr result)
 {
-    // Merge trace with tracegraph
-    mSymbolicExecutionGraph = TraceMerger::merge(mWebkitExecutor->getTraceBuilder()->trace(), mSymbolicExecutionGraph);
+    /*
+     * We can be in three possible states.
+     *  1. mRunningToGetEntryPoints: A simple page load in which case we need to check for the entry points and choose one.
+     *  2. mRunningWithInitialValues: The initial form submission. use this to seed the trace tree then choose a target.
+     *  3. Neither: A normal run, where we add to the tree and choose a new target.
+     */
 
-    // Generate new input
-    // TODO
-    mNextConfiguration.clear();
+    if(mRunningToGetEntryPoints){
 
-    // Execute next iteration
-    preConcreteExecution();
+        Log::debug("Analysing page entrypoints...");
+        EntryPointDetector detector(mWebkitExecutor->getPage());
+        EventHandlerDescriptor* entryPointEvent = detector.choose(result);
+        if(entryPointEvent){
+            // Save this entry point for use in all future runs.
+            // TODO
+
+            // The next run should be with "default values". We set up an execution sequence which submits the form and then ends.
+            // TODO
+
+            Log::info("TODO *************************************");
+            exit(1);
+
+            // Move to state 2 and run the first real trace.
+            mRunningToGetEntryPoints = false;
+            mRunningWithInitialValues = true;
+            preConcreteExecution();
+
+        }else{
+            Log::debug("\n========== No Entry Points ==========");
+            Log::debug("Could not find any suitable entry point for the analysis on this page. Ending.");
+
+            mWebkitExecutor->detach();
+            done();
+            return;
+        }
+
+    }else{
+        // We already have an entry point.
+
+        if(mRunningWithInitialValues){
+            // After the very first run we need to set up the tree & search procedure.
+            mSymbolicExecutionGraph = mWebkitExecutor->getTraceBuilder()->trace();
+            mSearchStrategy = DepthFirstSearchPtr(new DepthFirstSearch(mSymbolicExecutionGraph));
+        }else{
+            // A normal run.
+            // Merge trace with tracegraph
+            mSymbolicExecutionGraph = TraceMerger::merge(mWebkitExecutor->getTraceBuilder()->trace(), mSymbolicExecutionGraph);
+        }
+
+        // Print the trace tree.
+        // TODO: don't do this, it will be a mess on big trees!
+        Log::info("The trace tree: ");
+        TerminalTracePrinter termPrinter;
+        termPrinter.printTraceTree(mSymbolicExecutionGraph);
+
+        // TODO: I want this to instead create a sequence of grouped, numbered graphviz files which show how the tree
+        // is built up. It would also be great if the target node could be marked on the graph.
+
+        // Choose the next node to explore
+        if(mSearchStrategy->chooseNextTarget()){
+            PathCondition target = mSearchStrategy->getTargetPC();
+
+            Log::debug("Target is: ");
+            Log::debug(target.toStatisticsString());
+
+
+            Log::info("TODO *************************************");
+            exit(1);
+            // TODO: Find the list of input variables in the target and report this.
+            // They will be used to retrieve these values from the solver's solution.
+
+            // Try to solve this PC to get some concrete input.
+            SolutionPtr solution = Solver::solve(PathConditionPtr(&target));
+
+            if(!solution->isSolved()){
+                // TODO: Should try someting else/go concrete/...?
+                Log::debug("\n============= Finished DFS ==============");
+                Log::debug("Could not solve the constraint.");
+                Log::debug("This case is not yet implemented!");
+
+                mWebkitExecutor->detach();
+                done();
+                return;
+
+            }else{
+                Log::debug("Solved the target Pc:");
+                // TODO: can we print this solution?
+
+                // Translate the solution into a concrete input.
+                // TODO
+
+                // Set up a new configuration which tests this input.
+                // TODO
+
+                Log::info("TODO *************************************");
+                exit(1);
+
+                // TODO: not sure what this is. It was in the "blank" version of this method left by Casper, so I should look into it.
+                mNextConfiguration.clear();
+
+                // Execute next iteration
+                preConcreteExecution();
+            }
+
+        }else{
+            Log::debug("\n============= Finished DFS ==============");
+            Log::debug("Finished serach of the tree (first pass at this depth).");
+
+            mWebkitExecutor->detach();
+            done();
+            return;
+        }
+
+    }
 }
 
 

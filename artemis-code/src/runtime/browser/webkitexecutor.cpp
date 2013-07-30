@@ -261,12 +261,12 @@ void WebKitExecutor::slLoadFinished(bool ok)
         webkitListener->endSymbolicSession();
     }
 
-    // DONE
+    // End the trace recording in all cases. In concolic mode this is the trace we want, in manual mode we will be recording our own traces anyway.
+    mTraceBuilder->endRecording();
 
     // TODO: This was previously enclosed by if(!mKeepOpen). This means no post-load analysis can be done in demo mode. What are tyhe implications of changing this? Which other parts will depend on this?
     emit sigExecutedSequence(currentConf, mResultBuilder->getResult());
-    // TODO: This has the same issue but causes a different bug: when we are in manual mode there is already a (big!) trace running which the UI is not expecting.
-    mTraceBuilder->endRecording();
+
 
     mKeepOpen = false;
 }

@@ -40,6 +40,9 @@ public:
 
     QList<EventHandlerDescriptor*> detectAll(ExecutionResultPtr result);
 
+    // Chooses a single entry point on the page. Can return NULL if it does not find a suitable entry point.
+    EventHandlerDescriptor* choose(ExecutionResultPtr result);
+
 private:
     ArtemisWebPagePtr mPage;
     void printResultInfo(ExecutionResultPtr result);

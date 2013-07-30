@@ -20,6 +20,10 @@
 #include <QObject>
 
 #include "concolic/executiontree/tracenodes.h"
+#include "concolic/search/searchdfs.h"
+#include "concolic/solver/solver.h"
+#include "concolic/entrypoints.h"
+#include "concolic/executiontree/traceprinter.h"
 
 #include "runtime/runtime.h"
 
@@ -68,8 +72,12 @@ protected:
     QSharedPointer<ExecutableConfiguration> mNextConfiguration;
     TraceNodePtr mSymbolicExecutionGraph;
 
+    bool mRunningToGetEntryPoints;
+    bool mRunningWithInitialValues;
+    DepthFirstSearchPtr mSearchStrategy; // TODO: For now we are using DFS hard-coded...
+
 private slots:
-    void postConcreteExecution(ExecutableConfigurationConstPtr configuration, QSharedPointer<ExecutionResult> result);
+    void postConcreteExecution(ExecutableConfigurationConstPtr configuration, ExecutionResultPtr result);
 
 };
 

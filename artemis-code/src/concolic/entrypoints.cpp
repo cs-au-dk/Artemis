@@ -73,6 +73,21 @@ QList<EventHandlerDescriptor*> EntryPointDetector::detectAll(ExecutionResultPtr 
 
 
 
+EventHandlerDescriptor *EntryPointDetector::choose(ExecutionResultPtr result)
+{
+    // TODO: Trivial choice: select the first click on a button we find.
+    foreach(EventHandlerDescriptor* event , result->getEventHandlers()){
+        if(event->name().compare("click", Qt::CaseInsensitive) == 0 &&
+                event->domElement()->getTagName().compare("button", Qt::CaseInsensitive) == 0){
+            return event;
+        }
+    }
+    // If we found none, return null.
+    return NULL;
+}
+
+
+
 void EntryPointDetector::printResultInfo(ExecutionResultPtr result)
 {
     Log::info("CONCOLIC-INFO: Detecting entry points on page.");
