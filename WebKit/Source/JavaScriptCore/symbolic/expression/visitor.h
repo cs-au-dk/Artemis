@@ -64,6 +64,7 @@ public:
     virtual void visit(BooleanCoercion* booleancoercion) = 0;
     virtual void visit(BooleanBinaryOperation* booleanbinaryoperation) = 0;
 
+    virtual ~Visitor(){}
 };
 
 }
