@@ -44,6 +44,7 @@ public:
     // The function which is called to generate the output.
     QString makeGraph(TraceNodePtr tree);
     void writeGraphFile(TraceNodePtr tree, QString &pathToFile);
+    void writeGraphFile(TraceNodePtr tree, QString &pathToFile, bool autoName);
 
     // The visitor methods over traces.
     // TODO: we could clean up this interface by putting these into an inner class.

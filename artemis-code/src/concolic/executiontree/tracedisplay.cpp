@@ -131,9 +131,19 @@ QString TraceDisplay::makeGraph(TraceNodePtr tree)
 // Writes the result of makeGraph() to a file.
 void TraceDisplay::writeGraphFile(TraceNodePtr tree, QString& pathToFile)
 {
+    writeGraphFile(tree, pathToFile, true);
+}
+
+// Writes the result of makeGraph() to a file.
+void TraceDisplay::writeGraphFile(TraceNodePtr tree, QString& pathToFile, bool autoName)
+{
     QString data = makeGraph(tree);
 
-    pathToFile = QString("graph-%1.gv").arg(QDateTime::currentDateTime().toString("dd-MM-yy-hh-mm-ss"));
+    // If autoName is true, we generate a name and "return" it through pathToFile.
+    // Otherwise, we use the value given in pathToFile as the name.
+    if(autoName){
+        pathToFile = QString("graph-%1.gv").arg(QDateTime::currentDateTime().toString("dd-MM-yy-hh-mm-ss"));
+    }
     writeStringToFile(pathToFile, data);
 }
 

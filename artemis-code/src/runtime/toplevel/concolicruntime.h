@@ -24,6 +24,7 @@
 #include "concolic/solver/solver.h"
 #include "concolic/entrypoints.h"
 #include "concolic/executiontree/traceprinter.h"
+#include "concolic/executiontree/tracedisplay.h"
 
 #include "runtime/runtime.h"
 
@@ -76,8 +77,13 @@ protected:
     bool mRunningWithInitialValues;
     DepthFirstSearchPtr mSearchStrategy; // TODO: For now we are using DFS hard-coded...
 
+    void outputTreeGraph();
+    TraceDisplay mTraceDisplay;
+    QString mGraphOutputNameFormat;
+    int mGraphOutputIndex;
+
 private slots:
-    void postConcreteExecution(ExecutableConfigurationConstPtr configuration, ExecutionResultPtr result);
+    void postConcreteExecution(ExecutableConfigurationConstPtr configuration, QSharedPointer<ExecutionResult> result);
 
 };
 

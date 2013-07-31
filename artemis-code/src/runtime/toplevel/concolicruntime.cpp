@@ -42,6 +42,9 @@ void ConcolicRuntime::run(const QUrl& url)
     mRunningToGetEntryPoints = true;
     mRunningWithInitialValues = false;
 
+    mGraphOutputIndex = 1;
+    mGraphOutputNameFormat = QString("tree-%1-%2.gv").arg(QDateTime::currentDateTime().toString("dd-MM-yy-hh-mm-ss"));
+
     preConcreteExecution();
 }
 
@@ -65,8 +68,9 @@ void ConcolicRuntime::preConcreteExecution()
 }
 
 
+
 // TODO: This method is a mess! It needs refactoring/reorganising ASAP.
-void ConcolicRuntime::postConcreteExecution(ExecutableConfigurationConstPtr configuration, ExecutionResultPtr result)
+void ConcolicRuntime::postConcreteExecution(ExecutableConfigurationConstPtr configuration, QSharedPointer<ExecutionResult> result)
 {
     /*
      * We can be in three possible states.
@@ -123,8 +127,8 @@ void ConcolicRuntime::postConcreteExecution(ExecutableConfigurationConstPtr conf
         TerminalTracePrinter termPrinter;
         termPrinter.printTraceTree(mSymbolicExecutionGraph);
 
-        // TODO: I want this to instead create a sequence of grouped, numbered graphviz files which show how the tree
-        // is built up. It would also be great if the target node could be marked on the graph.
+        // Dump the current state of the tree to a file.
+        outputTreeGraph();
 
         // Choose the next node to explore
         if(mSearchStrategy->chooseNextTarget()){
@@ -185,6 +189,22 @@ void ConcolicRuntime::postConcreteExecution(ExecutableConfigurationConstPtr conf
 }
 
 
+
+
+
+
+// Utility method to output the tree graph at each step.
+void ConcolicRuntime::outputTreeGraph()
+{
+    // We want all the graphs from a certain run to have the same "base" name and an increasing index, so they can be easily grouped.
+    QString name = mGraphOutputNameFormat.arg(mGraphOutputIndex);
+    Log::debug(QString("CONCOLIC-INFO: Writing tree to file %1").arg(name).toStdString());
+    mGraphOutputIndex++;
+
+    mTraceDisplay.writeGraphFile(mSymbolicExecutionGraph, name, false);
+
+    // TODO: Is there any way to have extra information added to the graph? e.g. the current target node.
+}
 
 } // namespace artemis
 
