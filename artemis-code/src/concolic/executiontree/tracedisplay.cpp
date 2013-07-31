@@ -28,7 +28,7 @@ QString TraceDisplay::indent = "  ";
 
 TraceDisplay::TraceDisplay()
 {
-    mExpressionPrinter = QSharedPointer<ExpressionPrinter>(new ExpressionPrinter());
+    mExpressionPrinter = QSharedPointer<ExpressionPrinter>(new ExpressionValuePrinter());
 }
 
 /**
@@ -192,7 +192,9 @@ void TraceDisplay::visit(TraceSymbolicBranch *node)
     mNodeCounter++;
 
     node->getSymbolicCondition()->accept(mExpressionPrinter.data());
-    QString label = QString(" [label = \"Branch\\n%1\"]").arg(mExpressionPrinter->getResult().c_str());
+    QString symbolicExpression(mExpressionPrinter->getResult().c_str());
+    symbolicExpression.replace("\"", "\\\"");
+    QString label = QString(" [label = \"Branch\\n%1\"]").arg(symbolicExpression);
 
     // TODO: can we add the symbolic condition to the node label?
     mHeaderSymBranches.append(name + label);

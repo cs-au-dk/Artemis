@@ -16,7 +16,7 @@
 
 
 #include "concolic/executiontree/tracenodes.h"
-#include "concolic/solver/expressionprinter.h"
+#include "concolic/solver/expressionvalueprinter.h"
 
 #include <QString>
 #include <QList>

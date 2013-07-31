@@ -53,7 +53,7 @@ public:
         return m_result;
     }
 
-private:
+protected:
     std::string m_result;
 
 };
