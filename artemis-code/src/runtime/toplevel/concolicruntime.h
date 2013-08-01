@@ -26,6 +26,10 @@
 #include "concolic/executiontree/traceprinter.h"
 #include "concolic/executiontree/tracedisplay.h"
 
+#include "runtime/input/dominput.h"
+#include "runtime/input/events/mouseeventparameters.h"
+#include "strategies/inputgenerator/targets/legacytarget.h"
+
 #include "runtime/runtime.h"
 
 namespace artemis
@@ -70,8 +74,10 @@ public:
 protected:
     void preConcreteExecution();
 
+    QUrl mUrl;
     QSharedPointer<ExecutableConfiguration> mNextConfiguration;
     TraceNodePtr mSymbolicExecutionGraph;
+    EventHandlerDescriptor* mEntryPointEvent;
 
     bool mRunningToGetEntryPoints;
     bool mRunningWithInitialValues;

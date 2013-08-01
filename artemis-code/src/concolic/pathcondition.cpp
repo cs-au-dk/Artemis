@@ -19,6 +19,7 @@
 #include <QDebug>
 
 #include "concolic/solver/expressionprinter.h"
+#include "concolic/solver/expressionvalueprinter.h"
 
 #include "pathcondition.h"
 
@@ -116,6 +117,20 @@ std::string PathCondition::toStatisticsString()
 
     for (int i = 0; i < mConditions.size(); i++) {
         ExpressionPrinter printer;
+        mConditions.at(i).first->accept(&printer);
+
+        sstrm << "PC[" << i << "]: " << printer.getResult() << std::endl;
+    }
+
+    return sstrm.str();
+}
+
+std::string PathCondition::toStatisticsValuesString()
+{
+    std::stringstream sstrm;
+
+    for (int i = 0; i < mConditions.size(); i++) {
+        ExpressionValuePrinter printer;
         mConditions.at(i).first->accept(&printer);
 
         sstrm << "PC[" << i << "]: " << printer.getResult() << std::endl;

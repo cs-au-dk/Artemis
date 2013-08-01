@@ -43,6 +43,7 @@ public:
     uint size();
 
     std::string toStatisticsString();
+    std::string toStatisticsValuesString();
 
     void visit(TraceNode* node);
     void visit(TraceConcreteBranch* node);

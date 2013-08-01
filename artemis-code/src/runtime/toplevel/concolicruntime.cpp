@@ -34,16 +34,15 @@ ConcolicRuntime::ConcolicRuntime(QObject* parent, const Options& options, const 
 
 void ConcolicRuntime::run(const QUrl& url)
 {
-    QSharedPointer<ExecutableConfiguration> initialConfiguration =
-        QSharedPointer<ExecutableConfiguration>(new ExecutableConfiguration(QSharedPointer<InputSequence>(new InputSequence()), url));
+    mUrl = url;
 
-    mNextConfiguration = initialConfiguration;
+    mNextConfiguration = QSharedPointer<ExecutableConfiguration>(new ExecutableConfiguration(QSharedPointer<InputSequence>(new InputSequence()), url));
 
     mRunningToGetEntryPoints = true;
     mRunningWithInitialValues = false;
 
     mGraphOutputIndex = 1;
-    mGraphOutputNameFormat = QString("tree-%1-%2.gv").arg(QDateTime::currentDateTime().toString("dd-MM-yy-hh-mm-ss"));
+    mGraphOutputNameFormat = QString("tree-%1_%2.gv").arg(QDateTime::currentDateTime().toString("dd-MM-yy-hh-mm-ss"));
 
     preConcreteExecution();
 }
@@ -57,9 +56,13 @@ void ConcolicRuntime::preConcreteExecution()
     }
 
     if(mRunningToGetEntryPoints){
-        Log::debug("\n======== Entry-Point Finding Run ========");
+        Log::debug("\n===== Entry-Point-Finding-Iteration =====");
     }else{
-        Log::debug("\n============= New-Iteration =============");
+        if(mRunningWithInitialValues){
+            Log::debug("\n=========== Initial-Iteration ===========");
+        }else{
+            Log::debug("\n============= New-Iteration =============");
+        }
     }
     Log::debug("--------------- COVERAGE ----------------\n");
     Log::debug(mAppmodel->getCoverageListener()->toString().toStdString());
@@ -83,18 +86,37 @@ void ConcolicRuntime::postConcreteExecution(ExecutableConfigurationConstPtr conf
 
         Log::debug("Analysing page entrypoints...");
         EntryPointDetector detector(mWebkitExecutor->getPage());
-        EventHandlerDescriptor* entryPointEvent = detector.choose(result);
-        if(entryPointEvent){
-            // Save this entry point for use in all future runs.
-            // TODO
+        // Choose and save the entry point for use in future runs.
+        mEntryPointEvent = detector.choose(result);
+        if(mEntryPointEvent){
+            Log::debug(QString("Chose entry point %1").arg(mEntryPointEvent->toString()).toStdString());
 
-            // The next run should be with "default values". We set up an execution sequence which submits the form and then ends.
-            // TODO
+            // Create an "empty" form input which will inject noting into the page.
+            QSet<QPair<QSharedPointer<const FormField>, const FormFieldValue*> > inputs;
+            QSharedPointer<FormInput> formInput = QSharedPointer<FormInput>(new FormInput(inputs));
 
-            Log::info("TODO *************************************");
-            exit(1);
+            // Create a suitable EventParameters object for this submission. (As in StaticEventParameterGenerator.)
+            EventParameters* eventParameters = new MouseEventParameters(NULL, mEntryPointEvent->name(), true, true, 1, 0, 0, 0, 0, false, false, false, false, 0);
 
-            // Move to state 2 and run the first real trace.
+            // Create a suitable TargetDescriptor object for this submission.
+            TargetDescriptor* targetDescriptor = new LegacyTarget(NULL, mEntryPointEvent); // TODO: No support for JQuery unless we use a JQueryTarget, JQueryListener (and TargetGenerator?).
+
+            // Create a DomInput which will inject the empty FormInput and fire the entry point event.
+            QSharedPointer<const BaseInput> submitEvent = QSharedPointer<const BaseInput>(new DomInput(mEntryPointEvent, formInput, eventParameters, targetDescriptor));
+            // TODO:: Where should/are the eventParameters and targetDescriptor pointers cleaned up?
+
+            // Create an input sequence consisting of just this event.
+            QList<QSharedPointer<const BaseInput> > inputList;
+            inputList.append(submitEvent);
+            InputSequenceConstPtr inputSequence = InputSequenceConstPtr(new InputSequence(inputList));
+
+            // Create an executableConfiguration from this niput sequence.
+            mNextConfiguration = QSharedPointer<ExecutableConfiguration>(new ExecutableConfiguration(inputSequence, mUrl));
+
+            Log::debug("Next configuration is:");
+            Log::debug(mNextConfiguration->toString().toStdString());
+
+            // Move to state 2 and execute this initial configuration.
             mRunningToGetEntryPoints = false;
             mRunningWithInitialValues = true;
             preConcreteExecution();
@@ -115,6 +137,7 @@ void ConcolicRuntime::postConcreteExecution(ExecutableConfigurationConstPtr conf
             // After the very first run we need to set up the tree & search procedure.
             mSymbolicExecutionGraph = mWebkitExecutor->getTraceBuilder()->trace();
             mSearchStrategy = DepthFirstSearchPtr(new DepthFirstSearch(mSymbolicExecutionGraph));
+            Log::debug("Created trace tree from initial trace.");
         }else{
             // A normal run.
             // Merge trace with tracegraph
@@ -128,15 +151,14 @@ void ConcolicRuntime::postConcreteExecution(ExecutableConfigurationConstPtr conf
         termPrinter.printTraceTree(mSymbolicExecutionGraph);
 
         // Dump the current state of the tree to a file.
-        outputTreeGraph();
+        //outputTreeGraph(); // TODO: re-enable this once I am actually running some sensible iterations!
 
         // Choose the next node to explore
         if(mSearchStrategy->chooseNextTarget()){
             PathCondition target = mSearchStrategy->getTargetPC();
 
             Log::debug("Target is: ");
-            Log::debug(target.toStatisticsString());
-
+            Log::debug(target.toStatisticsValuesString());
 
             Log::info("TODO *************************************");
             exit(1);
@@ -144,7 +166,7 @@ void ConcolicRuntime::postConcreteExecution(ExecutableConfigurationConstPtr conf
             // They will be used to retrieve these values from the solver's solution.
 
             // Try to solve this PC to get some concrete input.
-            SolutionPtr solution = Solver::solve(PathConditionPtr(&target));
+            SolutionPtr solution = Solver::solve(PathConditionPtr(&target)); //TODO Creating a shared pointer here means target is probably destroyed after this call!
 
             if(!solution->isSolved()){
                 // TODO: Should try someting else/go concrete/...?
