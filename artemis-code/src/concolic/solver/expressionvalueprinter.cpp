@@ -39,6 +39,12 @@ void ExpressionValuePrinter::visit(Symbolic::ConstantBoolean* constantboolean)
     m_result += constantboolean->getValue() ? "true" : "false";
 }
 
+void ExpressionValuePrinter::visit(Symbolic::SymbolicString *symbolicstring)
+{
+    // These names begin with SYM_IN_, so we don't need to mark them at all... it is clear what they are.
+    m_result += symbolicstring->getSource().getIdentifier();
+}
+
 
 }
 

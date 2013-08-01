@@ -37,12 +37,11 @@ class ExpressionValuePrinter : public ExpressionPrinter
 
 public:
 
-    //void visit(Symbolic::SymbolicInteger* symbolicinteger); // TODO: Add variable name
     void visit(Symbolic::ConstantInteger* constantinteger);
-    //void visit(Symbolic::SymbolicString* symbolicstring); // TODO: Add variable name
     void visit(Symbolic::ConstantString* constantstring);
-    //void visit(Symbolic::SymbolicBoolean* symbolicboolean); // TODO: Add variable name
     void visit(Symbolic::ConstantBoolean* constantboolean);
+
+    void visit(Symbolic::SymbolicString* symbolicstring);
 
 };
 
