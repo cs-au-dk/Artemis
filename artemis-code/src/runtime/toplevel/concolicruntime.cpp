@@ -169,19 +169,32 @@ void ConcolicRuntime::postConcreteExecution(ExecutableConfigurationConstPtr conf
             // Try to solve this PC to get some concrete input.
             SolutionPtr solution = Solver::solve(target);
 
-            if(!solution->isSolved()){
-                // TODO: Should try someting else/go concrete/...?
-                Log::debug("\n============= Finished DFS ==============");
-                Log::debug("Could not solve the constraint.");
-                Log::debug("This case is not yet implemented!");
-
-                mWebkitExecutor->detach();
-                done();
-                return;
-
-            }else{
+            if(solution->isSolved()) {
                 Log::debug("Solved the target Pc:");
-                // TODO: can we print this solution?
+
+                // Print this solution
+                foreach(QString var, varList){
+                    Symbolvalue value = solution->findSymbol(var);
+                    if(value.found){
+                        switch (value.kind) {
+                        case Symbolic::INT:
+                            Log::debug(QString("%1 = %2").arg(var).arg(value.u.integer).toStdString());
+                            break;
+                        case Symbolic::BOOL:
+                            Log::debug(QString("%1 = %2").arg(var).arg(value.u.boolean ? "true" : "false").toStdString());
+                            break;
+                        case Symbolic::STRING: // TODO: strings not yet supported!
+                            Log::debug(QString("%1 = %2").arg(var).arg(value.string->c_str()).toStdString());
+                            break;
+                        default:
+                            Log::info(QString("Unimplemented value type encountered for variable %1 (%2)").arg(var).arg(value.kind).toStdString());
+                            exit(1);
+                        }
+                    }else{
+                        Log::info(QString("Error: Could not find value for %1 in the solver's solution.").arg(var).toStdString());
+                        exit(1);
+                    }
+                }
 
                 // Translate the solution into a concrete input.
                 // TODO
@@ -197,6 +210,17 @@ void ConcolicRuntime::postConcreteExecution(ExecutableConfigurationConstPtr conf
 
                 // Execute next iteration
                 preConcreteExecution();
+
+            }else{
+                // TODO: Should try someting else/go concrete/...?
+                Log::debug("\n============= Finished DFS ==============");
+                Log::debug("Could not solve the constraint.");
+                Log::debug("This case is not yet implemented!");
+
+                mWebkitExecutor->detach();
+                done();
+                return;
+
             }
 
         }else{
