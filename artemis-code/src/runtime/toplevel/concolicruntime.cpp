@@ -156,23 +156,18 @@ void ConcolicRuntime::postConcreteExecution(ExecutableConfigurationConstPtr conf
 
         // Choose the next node to explore
         if(mSearchStrategy->chooseNextTarget()){
-            PathCondition target = mSearchStrategy->getTargetPC();
+            PathConditionPtr target = mSearchStrategy->getTargetPC();
 
             Log::debug("Target is: ");
-            Log::debug(target.toStatisticsValuesString());
+            Log::debug(target->toStatisticsValuesString());
 
             // Get (and print) the list of free variables in the target PC.
-            QStringList varList(target.freeVariables().toList());
+            QStringList varList(target->freeVariables().toList());
             Log::debug(QString("Variables we need to solve (%1):").arg(varList.length()).toStdString());
             Log::debug(varList.join(", ").toStdString());
 
-            Log::info("TODO *************************************");
-            exit(1);
-            // TODO: Find the list of input variables in the target and report this.
-            // They will be used to retrieve these values from the solver's solution.
-
             // Try to solve this PC to get some concrete input.
-            SolutionPtr solution = Solver::solve(PathConditionPtr(&target)); //TODO Creating a shared pointer here means target is probably destroyed after this call!
+            SolutionPtr solution = Solver::solve(target);
 
             if(!solution->isSolved()){
                 // TODO: Should try someting else/go concrete/...?

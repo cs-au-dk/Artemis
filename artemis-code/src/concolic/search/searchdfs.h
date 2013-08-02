@@ -51,7 +51,7 @@ public:
     bool chooseNextTarget();
 
     // Retrieves the PC of any target node which was selected.
-    PathCondition getTargetPC();
+    PathConditionPtr getTargetPC();
 
     // The depth limit for our DFS.
     void setDepthLimit(unsigned int depth);
@@ -77,7 +77,7 @@ private:
     unsigned int mCurrentDepth;
 
     // The PC which is accumulated as we move down the tree.
-    PathCondition mCurrentPC;
+    PathConditionPtr mCurrentPC;
 
     // Stores whether or not the iteration is finished.
     bool mFoundTarget;

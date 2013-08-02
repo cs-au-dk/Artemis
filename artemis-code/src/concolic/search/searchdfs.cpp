@@ -29,6 +29,7 @@ DepthFirstSearch::DepthFirstSearch(TraceNodePtr tree, unsigned int depthLimit) :
     mCurrentDepth(0),
     mIsPreviousRun(false)
 {
+    mCurrentPC = PathConditionPtr(new PathCondition());
 }
 
 
@@ -95,7 +96,7 @@ bool DepthFirstSearch::chooseNextTarget()
  *  Returns the target node's PC.
  *  Only valid after a call to chooseNextTarget() which returned true.
  */
-PathCondition DepthFirstSearch::getTargetPC()
+PathConditionPtr DepthFirstSearch::getTargetPC()
 {
     return mCurrentPC;
 }
@@ -116,7 +117,7 @@ void DepthFirstSearch::restartSearch()
     mIsPreviousRun = false;
     mParentStack.clear();
     mCurrentDepth = 0;
-    mCurrentPC = PathCondition();
+    mCurrentPC = PathConditionPtr(new PathCondition());
 }
 
 
@@ -140,12 +141,10 @@ void DepthFirstSearch::visit(TraceConcreteBranch *node)
     // This allows us to stop the search once we find a node we would like to explore.
     // The depth limit is also enforced here.
     if(mCurrentDepth < mDepthLimit){
-        mParentStack.push(SavedPosition(node, mCurrentDepth, mCurrentPC));
+        mParentStack.push(SavedPosition(node, mCurrentDepth, *mCurrentPC));
         mCurrentDepth++;
         mPreviousParent = node;
         node->getFalseBranch()->accept(this);
-        // TODO: do we want to record in mCurrentPC that we went throug a brnach we could not analyse?
-        // e.g. add in some NONDET or CONST constraint or something. Would this be any use?
     }else{
         // If we have reached the depth limit, then treat this node as a leaf and skip to whatever we are supposed to search next.
         continueFromLeaf();
@@ -156,10 +155,10 @@ void DepthFirstSearch::visit(TraceSymbolicBranch *node)
 {
     // See TraceConcreteBranch above.
     if(mCurrentDepth < mDepthLimit){
-        mParentStack.push(SavedPosition(node, mCurrentDepth, mCurrentPC));
+        mParentStack.push(SavedPosition(node, mCurrentDepth, *mCurrentPC));
         mCurrentDepth++;
         mPreviousParent = node;
-        mCurrentPC.addCondition(node->getSymbolicCondition(), false); // We are always taking the false branch here.
+        mCurrentPC->addCondition(node->getSymbolicCondition(), false); // We are always taking the false branch here.
         node->getFalseBranch()->accept(this);
     }else{
         continueFromLeaf();
@@ -207,12 +206,12 @@ TraceNodePtr DepthFirstSearch::nextAfterLeaf()
 
     SavedPosition parent = mParentStack.pop();
     mCurrentDepth = parent.depth;
-    mCurrentPC = parent.condition;
+    *mCurrentPC = parent.condition;
 
     // If the branch is symbolic, we need to add its condition to the current PC.
     TraceSymbolicBranch* sym = dynamic_cast<TraceSymbolicBranch*>(parent.node);
     if(sym){
-        mCurrentPC.addCondition(sym->getSymbolicCondition(), true); // We are always taking the true branch here.
+        mCurrentPC->addCondition(sym->getSymbolicCondition(), true); // We are always taking the true branch here.
     }
 
     return parent.node->getTrueBranch();
