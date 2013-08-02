@@ -99,7 +99,8 @@ void ConcolicRuntime::postConcreteExecution(ExecutableConfigurationConstPtr conf
             EventParameters* eventParameters = new MouseEventParameters(NULL, mEntryPointEvent->name(), true, true, 1, 0, 0, 0, 0, false, false, false, false, 0);
 
             // Create a suitable TargetDescriptor object for this submission.
-            TargetDescriptor* targetDescriptor = new LegacyTarget(NULL, mEntryPointEvent); // TODO: No support for JQuery unless we use a JQueryTarget, JQueryListener (and TargetGenerator?).
+            // TODO: No support for JQuery unless we use a JQueryTarget, JQueryListener (and TargetGenerator?).
+            TargetDescriptor* targetDescriptor = new LegacyTarget(NULL, mEntryPointEvent);
 
             // Create a DomInput which will inject the empty FormInput and fire the entry point event.
             QSharedPointer<const BaseInput> submitEvent = QSharedPointer<const BaseInput>(new DomInput(mEntryPointEvent, formInput, eventParameters, targetDescriptor));
@@ -159,6 +160,11 @@ void ConcolicRuntime::postConcreteExecution(ExecutableConfigurationConstPtr conf
 
             Log::debug("Target is: ");
             Log::debug(target.toStatisticsValuesString());
+
+            // Get (and print) the list of free variables in the target PC.
+            QStringList varList(target.freeVariables().toList());
+            Log::debug(QString("Variables we need to solve (%1):").arg(varList.length()).toStdString());
+            Log::debug(varList.join(", ").toStdString());
 
             Log::info("TODO *************************************");
             exit(1);

@@ -20,6 +20,7 @@
 
 #include "concolic/solver/expressionprinter.h"
 #include "concolic/solver/expressionvalueprinter.h"
+#include "concolic/solver/expressionfreevariablelister.h"
 
 #include "pathcondition.h"
 
@@ -137,6 +138,20 @@ std::string PathCondition::toStatisticsValuesString()
     }
 
     return sstrm.str();
+}
+
+QSet<QString> PathCondition::freeVariables()
+{
+    ExpressionFreeVariableLister lister;
+    QSet<QString> vars;
+
+    for (int i = 0; i < mConditions.size(); i++) {
+        mConditions.at(i).first->accept(&lister);
+        vars.unite(lister.getResult());
+        lister.clear();
+    }
+
+    return vars;
 }
 
 }

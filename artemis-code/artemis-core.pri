@@ -107,7 +107,8 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/concolic/executiontree/tracedisplay.h \
     src/runtime/demomode/imageviewer/imageviewerwidget.h \
     src/runtime/demomode/imageviewer/imageviewerdialog.h \
-    src/concolic/solver/expressionvalueprinter.h
+    src/concolic/solver/expressionvalueprinter.h \
+    src/concolic/solver/expressionfreevariablelister.h
 
 SOURCES += src/runtime/input/ajaxinput.cpp \
     src/strategies/prioritizer/constantprioritizer.cpp \
@@ -194,6 +195,7 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/runtime/demomode/imageviewer/imageviewerwidget.cpp \
     src/runtime/demomode/imageviewer/imageviewerdialog.cpp \
     src/concolic/search/searchdfs.cpp \
-    src/concolic/solver/expressionvalueprinter.cpp
+    src/concolic/solver/expressionvalueprinter.cpp \
+    src/concolic/solver/expressionfreevariablelister.cpp
 
 QT += network

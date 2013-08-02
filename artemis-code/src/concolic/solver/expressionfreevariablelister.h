@@ -1,7 +1,7 @@
 /*
  * Copyright 2012 Aarhus University
  *
- * Licensed under the Apache License, Version 2.0 (the "License");
+ * Licensed under the Apache License, Version 2.0 (the "License") { }
  * you may not use this file except in compliance with the License.
  * You may obtain a copy of the License at
  *
@@ -14,24 +14,21 @@
  * limitations under the License.
  */
 
-#ifndef PRINTER_H
-#define PRINTER_H
+#ifndef EXPRESSIONFREEVARIABLELISTER_H
+#define EXPRESSIONFREEVARIABLELISTER_H
 
+#include <QSet>
 #include <string>
 
 #include "JavaScriptCore/symbolic/expr.h"
 #include "JavaScriptCore/symbolic/expression/visitor.h"
 
-
 namespace artemis
 {
 
-class ExpressionPrinter : public Symbolic::Visitor
+class ExpressionFreeVariableLister: public Symbolic::Visitor
 {
-
 public:
-    ExpressionPrinter();
-    ~ExpressionPrinter(){}
 
     void visit(Symbolic::SymbolicInteger* symbolicinteger);
     void visit(Symbolic::ConstantInteger* constantinteger);
@@ -48,15 +45,19 @@ public:
     void visit(Symbolic::BooleanCoercion* booleancoercion);
     void visit(Symbolic::BooleanBinaryOperation* booleanbinaryoperation);
 
-    inline std::string getResult() const {
-        return m_result;
+    inline QSet<QString> getResult() const {
+        return mResult;
+    }
+
+    inline void clear() {
+        mResult.clear();
     }
 
 protected:
-    std::string m_result;
-
+    QSet<QString> mResult;
 };
 
-}
 
-#endif // PRINTER_H
+} //namespace artemis
+
+#endif // EXPRESSIONFREEVARIABLELISTER_H
