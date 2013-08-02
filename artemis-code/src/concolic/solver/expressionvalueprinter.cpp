@@ -24,7 +24,9 @@ namespace artemis
 
 void ExpressionValuePrinter::visit(Symbolic::ConstantInteger* constantinteger)
 {
-    m_result += constantinteger->getValue();
+    std::ostringstream doubleStr;
+    doubleStr << constantinteger->getValue();
+    m_result += doubleStr.str();
 }
 
 void ExpressionValuePrinter::visit(Symbolic::ConstantString* constantstring)

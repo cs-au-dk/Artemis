@@ -18,6 +18,7 @@
 #define EXPRESSIONVALUEPRINTER_H
 
 #include <string>
+#include <sstream>
 
 #include "JavaScriptCore/symbolic/expr.h"
 #include "JavaScriptCore/symbolic/expression/visitor.h"
