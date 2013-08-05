@@ -139,14 +139,10 @@ void ConcolicRuntime::postConcreteExecution(ExecutableConfigurationConstPtr conf
             mSymbolicExecutionGraph = TraceMerger::merge(mWebkitExecutor->getTraceBuilder()->trace(), mSymbolicExecutionGraph);
         }
 
-        // Print the trace tree.
-        // TODO: don't do this, it will be a mess on big trees!
-        Log::info("The trace tree: ");
-        TerminalTracePrinter termPrinter;
-        termPrinter.printTraceTree(mSymbolicExecutionGraph);
-
         // Dump the current state of the tree to a file.
-        //outputTreeGraph(); // TODO: re-enable this once I am actually running some sensible iterations!
+        if(mOptions.concolicTreeOutput == TREE_ALL){
+            outputTreeGraph();
+        }
 
         // Choose the next node to explore
         if(mSearchStrategy->chooseNextTarget()){
@@ -292,6 +288,10 @@ void ConcolicRuntime::postConcreteExecution(ExecutableConfigurationConstPtr conf
         }else{
             Log::debug("\n============= Finished DFS ==============");
             Log::debug("Finished serach of the tree (first pass at this depth).");
+
+            if(mOptions.concolicTreeOutput == TREE_FINAL){
+                outputTreeGraph();
+            }
 
             mWebkitExecutor->detach();
             done();

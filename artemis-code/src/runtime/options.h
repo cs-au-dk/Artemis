@@ -44,6 +44,10 @@ enum PathTraceReport {
     ALL_TRACES, CLICK_TRACES, NO_TRACES, HTML_TRACES
 };
 
+enum ConcolicTreeOutput {
+    TREE_NONE, TREE_FINAL, TREE_ALL
+};
+
 
 typedef struct OptionsType {
 
@@ -57,7 +61,8 @@ typedef struct OptionsType {
         outputCoverage(NONE),
         majorMode(AUTOMATED),
         reportPathTrace(NO_TRACES),
-        reportPathTraceBytecode(false)
+        reportPathTraceBytecode(false),
+        concolicTreeOutput(TREE_FINAL)
     {}
 
     QMap<QString, QString> presetFormfields;
@@ -82,6 +87,8 @@ typedef struct OptionsType {
 
     PathTraceReport reportPathTrace;
     bool reportPathTraceBytecode;
+
+    ConcolicTreeOutput concolicTreeOutput;
 
 } Options;
 

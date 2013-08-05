@@ -343,6 +343,8 @@ void TraceDisplay::clearData()
     mPreviousNode = "start";
     mEdgeExtras = "";
     mNodeCounter = 0;
+
+    mExpressionPrinter->clear();
 }
 
 // Adds a new edge to mEdges.

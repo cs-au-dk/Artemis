@@ -87,6 +87,11 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             "\n"
             "           Show executed bytecodes in path trace reports. Default is false.\n"
             "\n"
+            "--concolic-tree-output <trees>:\n"
+            "           none - Do not output any graphs.\n"
+            "           final (default) - Generate a graph of the final tree after analysis.\n"
+            "           all - Generate a graph of the tree at every iteration.\n"
+            "\n"
             "--strategy-priority <strategy>:\n"
             "           Select priority strategy.\n"
             "\n"
@@ -108,6 +113,7 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
     {"major-mode", required_argument, NULL, 'm'},
     {"path-trace-report", required_argument, NULL, 'a'},
     {"path-trace-report-bytecode", required_argument, NULL, 'b'},
+    {"concolic-tree-output", required_argument, NULL, 'd'},
     {"help", no_argument, NULL, 'h'},
     {0, 0, 0, 0}
     };
@@ -298,6 +304,22 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
                 options.reportPathTraceBytecode = false;
             } else {
                 cerr << "ERROR: Invalid choice of path-trace-report-bytecode " << optarg << endl;
+                exit(1);
+            }
+
+            break;
+        }
+
+        case 'd': {
+
+            if (string(optarg).compare("none") == 0) {
+                options.concolicTreeOutput = artemis::TREE_NONE;
+            } else if (string(optarg).compare("final") == 0) {
+                options.concolicTreeOutput = artemis::TREE_FINAL;
+            } else if (string(optarg).compare("all") == 0) {
+                options.concolicTreeOutput = artemis::TREE_ALL;
+            } else {
+                cerr << "ERROR: Invalid choice of concolic-tree-output " << optarg << endl;
                 exit(1);
             }
 

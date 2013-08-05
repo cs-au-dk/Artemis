@@ -52,6 +52,10 @@ public:
         return m_result;
     }
 
+    void clear() {
+        m_result.clear();
+    }
+
 protected:
     std::string m_result;
 
