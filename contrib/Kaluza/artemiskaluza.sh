@@ -62,7 +62,7 @@ if ./ksolver < /tmp/kaluza ;then
             exit 1
         fi
         
-        cat corecstrs.tmp.length.ys.out | grep -vi 'COPY' | grep -vi "^sat$" | awk '{print $2, substr($3, 0, index($3, ")") - 1)}' > $OUTPUT # ignore lines containing COPY
+        cat corecstrs.tmp.length.ys.out | grep -vi 'COPY' | grep -vi "^sat$" | awk '{print $2, substr($3, 1, index($3, ")") - 1)}' > $OUTPUT # ignore lines containing COPY
         
         #./convert.pl < corecstrs.tmp.final.stp.out | grep -vi COPY >> $OUTPUT
         
