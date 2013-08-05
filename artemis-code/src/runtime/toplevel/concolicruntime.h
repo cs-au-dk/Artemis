@@ -83,10 +83,16 @@ protected:
     bool mRunningWithInitialValues;
     DepthFirstSearchPtr mSearchStrategy; // TODO: For now we are using DFS hard-coded...
 
+    // Method and variables for generating a graphviz graph of the execution tree.
     void outputTreeGraph();
     TraceDisplay mTraceDisplay;
     QString mGraphOutputNameFormat;
     int mGraphOutputIndex;
+
+    // Helper methods for postConcreteExecution.
+    void setupNextConfiguration(QSharedPointer<FormInput> formInput);
+
+    QSet<QSharedPointer<const FormField> > mFormFields;
 
 private slots:
     void postConcreteExecution(ExecutableConfigurationConstPtr configuration, QSharedPointer<ExecutionResult> result);

@@ -140,10 +140,10 @@ std::string PathCondition::toStatisticsValuesString()
     return sstrm.str();
 }
 
-QSet<QString> PathCondition::freeVariables()
+QMap<QString, Symbolic::SourceIdentifierMethod> PathCondition::freeVariables()
 {
     ExpressionFreeVariableLister lister;
-    QSet<QString> vars;
+    QMap<QString, Symbolic::SourceIdentifierMethod> vars;
 
     for (int i = 0; i < mConditions.size(); i++) {
         mConditions.at(i).first->accept(&lister);

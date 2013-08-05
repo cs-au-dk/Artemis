@@ -13,6 +13,7 @@
 
 			if (y != x) {
 				alert("Error!");
+				alert("Wrong value " + y);
 				return false;
 			}else{
 				return true;
@@ -27,7 +28,7 @@
 
 	<form method="GET" action="about:blank" >
 
-		<input type="text" name="testinput" id="testinput" />
+		<input type="text" id="testinput" />
 
 		<button type="submit" onclick="return validate();">Submit</button>
 

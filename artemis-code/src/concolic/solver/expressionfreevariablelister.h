@@ -17,11 +17,12 @@
 #ifndef EXPRESSIONFREEVARIABLELISTER_H
 #define EXPRESSIONFREEVARIABLELISTER_H
 
-#include <QSet>
-#include <string>
+#include <QMap>
+#include <QString>
 
 #include "JavaScriptCore/symbolic/expr.h"
 #include "JavaScriptCore/symbolic/expression/visitor.h"
+#include "JavaScriptCore/symbolic/expression/symbolicsource.h"
 
 namespace artemis
 {
@@ -45,7 +46,7 @@ public:
     void visit(Symbolic::BooleanCoercion* booleancoercion);
     void visit(Symbolic::BooleanBinaryOperation* booleanbinaryoperation);
 
-    inline QSet<QString> getResult() const {
+    inline QMap<QString, Symbolic::SourceIdentifierMethod> getResult() const {
         return mResult;
     }
 
@@ -54,7 +55,8 @@ public:
     }
 
 protected:
-    QSet<QString> mResult;
+    // The reason we do not have a SymbolicSource itself as a result is because it cannot be placed into Qt collections.
+    QMap<QString, Symbolic::SourceIdentifierMethod> mResult;
 };
 
 

@@ -44,7 +44,7 @@ public:
 
     std::string toStatisticsString();
     std::string toStatisticsValuesString();
-    QSet<QString> freeVariables();
+    QMap<QString, Symbolic::SourceIdentifierMethod> freeVariables();
 
     void visit(TraceNode* node);
     void visit(TraceConcreteBranch* node);

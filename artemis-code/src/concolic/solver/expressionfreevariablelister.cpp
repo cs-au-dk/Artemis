@@ -22,7 +22,7 @@ namespace artemis
 
 void ExpressionFreeVariableLister::visit(Symbolic::SymbolicInteger* symbolicinteger)
 {
-    mResult.insert(symbolicinteger->getSource().getIdentifier().c_str());
+    mResult.insert(QString(symbolicinteger->getSource().getIdentifier().c_str()), symbolicinteger->getSource().getIdentifierMethod());
 }
 
 void ExpressionFreeVariableLister::visit(Symbolic::ConstantInteger* constantinteger)
@@ -42,7 +42,7 @@ void ExpressionFreeVariableLister::visit(Symbolic::IntegerCoercion* integercoerc
 
 void ExpressionFreeVariableLister::visit(Symbolic::SymbolicString* symbolicstring)
 {
-    mResult.insert(symbolicstring->getSource().getIdentifier().c_str());
+    mResult.insert(QString(symbolicstring->getSource().getIdentifier().c_str()), symbolicstring->getSource().getIdentifierMethod());
 }
 
 void ExpressionFreeVariableLister::visit(Symbolic::ConstantString* constantstring)
@@ -72,7 +72,7 @@ void ExpressionFreeVariableLister::visit(Symbolic::StringCoercion* stringcoercio
 
 void ExpressionFreeVariableLister::visit(Symbolic::SymbolicBoolean* symbolicboolean)
 {
-    mResult.insert(symbolicboolean->getSource().getIdentifier().c_str());
+    mResult.insert(QString(symbolicboolean->getSource().getIdentifier().c_str()), symbolicboolean->getSource().getIdentifierMethod());
 }
 
 void ExpressionFreeVariableLister::visit(Symbolic::ConstantBoolean* constantboolean)
