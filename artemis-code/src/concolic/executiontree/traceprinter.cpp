@@ -17,6 +17,7 @@
 
 #include "traceprinter.h"
 #include "util/loggingutil.h"
+#include "concolic/solver/expressionvalueprinter.h"
 
 namespace artemis
 {
@@ -58,7 +59,7 @@ void TerminalTracePrinter::visit(TraceNode* node)
     exit(1);
 }
 
-void TerminalTracePrinter::visit(TraceBranch* node)
+void TerminalTracePrinter::visit(TraceConcreteBranch *node)
 {
     // First process the left tree.
     node->getFalseBranch()->accept(this);
@@ -72,6 +73,29 @@ void TerminalTracePrinter::visit(TraceBranch* node)
 
     // Now we have both trees, so join them.
     addBranch("Branch");
+}
+
+void TerminalTracePrinter::visit(TraceSymbolicBranch* node)
+{
+    // First process the left tree.
+    node->getFalseBranch()->accept(this);
+
+    // Now mCurrentTree represents the left subtree, so copy it into mCompletedLeftSubtrees.
+    mCompletedLeftTrees.push(mCurrentTree);
+
+    // Now clear the current tree and process the right subtree.
+    mCurrentTree.clear();
+    node->getTrueBranch()->accept(this);
+
+
+    QList<QString> branch;
+    branch.append("Branch");
+    ExpressionValuePrinter exprPrinter;
+    node->getSymbolicCondition()->accept(&exprPrinter);
+    branch.append(QString(exprPrinter.getResult().c_str()));
+
+    // Now we have both trees, so join them.
+    addBranch(branch);
 }
 
 void TerminalTracePrinter::visit(TraceUnexplored* node)
@@ -212,7 +236,7 @@ void TerminalTracePrinter::addBranch(QList<QString> nodeText)
 
     if(nodeTextLength > leftTree.width + rightTree.width + spacing.length()){
         // Then we will add some extra spacing between the trees when joining.
-        spacing += QString(nodeTextLength - leftTree.width - rightTree.width - spacing.length());
+        spacing += QString(nodeTextLength - leftTree.width - rightTree.width - spacing.length(), ' ');
         mCurrentTree.width = leftTree.width + spacing.length() + rightTree.width; // == nodeTextLength.
         mCurrentTree.connector = mCurrentTree.width / 2;
 

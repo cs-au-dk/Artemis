@@ -37,7 +37,8 @@ class TerminalTracePrinter : public TraceVisitor
 public:
 
     void visit(TraceNode* node); // Never called unless node types change.
-    void visit(TraceBranch* node);
+    void visit(TraceConcreteBranch* node);
+    void visit(TraceSymbolicBranch* node);
     void visit(TraceUnexplored* node);
     void visit(TraceAlert* node);
     void visit(TraceDomModification* node);
