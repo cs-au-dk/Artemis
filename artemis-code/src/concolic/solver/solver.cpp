@@ -39,7 +39,7 @@ SolutionPtr Solver::solve(PathConditionPtr pc)
 
     ConstraintWriterPtr cw = ConstraintWriterPtr(new Z3STRConstraintWriter());
 
-    if (!cw->write(pc, "/tmp/kaluza")) {
+    if (!cw->write(pc, "/tmp/z3input")) {
         statistics()->accumulate("Concolic::Solver::ConstraintsNotWritten", 1);
         return SolutionPtr(new Solution(false));
     }
@@ -47,6 +47,8 @@ SolutionPtr Solver::solve(PathConditionPtr pc)
     statistics()->accumulate("Concolic::Solver::ConstraintsWritten", 1);
 
     // 2. run the solver on the file
+
+    // TODO we could use the direct C++ solver interface and omit the system calls and file read/write
 
     char* artemisdir;
     artemisdir = std::getenv("ARTEMISDIR");
@@ -58,12 +60,13 @@ SolutionPtr Solver::solve(PathConditionPtr pc)
 
     QDir solverpath = QDir(QString(artemisdir));
 
-    if (!solverpath.cd("contrib") || !solverpath.cd("Kaluza") || !solverpath.exists("artemiskaluza.sh")) {
-        qDebug() << "Warning, could not find artemiskaluza.sh";
+    if (!solverpath.cd("contrib") || !solverpath.cd("Z3-str") || !solverpath.exists("Z3-str.py")) {
+        qDebug() << "Warning, could not find Z3-str.py";
         return SolutionPtr(new Solution(false));
     }
 
-    int result = std::system(solverpath.filePath("artemiskaluza.sh").toStdString().data());
+    std::string cmd = solverpath.filePath("Z3-str.py").toStdString() + " /tmp/z3input > /tmp/z3result";
+    int result = std::system(cmd.data());
 
     if (result != 0) {
         statistics()->accumulate("Concolic::Solver::ConstraintsNotSolved", 1);
@@ -80,30 +83,45 @@ SolutionPtr Solver::solve(PathConditionPtr pc)
     }
 
     std::string line;
-    std::ifstream fp("/tmp/kaluza-result");
+    std::ifstream fp("/tmp/z3result");
 
     if (fp.is_open()) {
+
+        std::getline(fp, line); // discard decoractive line
+        std::getline(fp, line); // load sat line
+
+        if (line.compare(">> SAT") != 0) {
+            // UNSAT
+            statistics()->accumulate("Concolic::Solver::ConstraintsSolvedAsUNSAT", 1);
+            return SolutionPtr(new Solution(false));
+        }
+
+        std::getline(fp, line); // discard decoractive line
+
         while (fp.good()) {
 
             // split each line
             std::getline(fp, line);
 
+            // check for end-of-solutions
+            if (line.compare("************************") == 0) {
+                break;
+            }
+
             std::string symbol;
+            std::string delim;
             std::string value;
 
             std::stringstream lines(line);
             std::getline(lines, symbol, ' ');
-            std::getline(lines, value, ' ');
-
-            if (symbol.compare("") == 0) {
-                continue; // ignore blank lines
-            }
+            std::getline(lines, delim, ' ');
+            std::getline(lines, value, '\n');
 
             // decode type of value
             Symbolvalue symbolvalue;
             symbolvalue.found = true;
 
-            if (value.compare("false") == 0) {
+            /*if (value.compare("false") == 0) {
                 symbolvalue.kind = Symbolic::BOOL;
                 symbolvalue.u.boolean = false;
 
@@ -114,12 +132,16 @@ SolutionPtr Solver::solve(PathConditionPtr pc)
             } else {
                 symbolvalue.kind = Symbolic::INT;
                 symbolvalue.u.integer = std::atoi(value.c_str());
-            }
+            }*/
 
-            // TODO add string support
+            // TODO, add support for the other types,
+            // right now not needed as we only have symbolic strings as input
+
+            symbolvalue.kind = Symbolic::STRING;
+            symbolvalue.string = value;
 
             // save result
-            solution->insertSymbol(symbol.c_str(), symbolvalue);
+            solution->insertSymbol(Z3STRConstraintWriter::decodeIdentifier(symbol).c_str(), symbolvalue);
         }
     }
 

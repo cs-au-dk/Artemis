@@ -33,6 +33,8 @@ public:
 
     virtual bool write(PathConditionPtr pathCondition, std::string outputFile) = 0;
 
+    virtual ~ConstraintWriter() {}
+
 };
 
 typedef QSharedPointer<ConstraintWriter> ConstraintWriterPtr;

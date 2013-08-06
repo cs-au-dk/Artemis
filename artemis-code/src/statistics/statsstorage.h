@@ -32,6 +32,7 @@ public:
     void set(QString key, int value);
     void set(QString key, bool value);
     void set(QString key, QString value);
+    void set(QString key, const std::string& value);
 
 private:
     QHash<QString, int> intStorage;
