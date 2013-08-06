@@ -22,6 +22,8 @@
 #include "concolic/solver/expressionvalueprinter.h"
 #include "concolic/solver/expressionfreevariablelister.h"
 
+#include "util/loggingutil.h"
+
 #include "pathcondition.h"
 
 namespace artemis
@@ -147,7 +149,10 @@ QMap<QString, Symbolic::SourceIdentifierMethod> PathCondition::freeVariables()
 
     for (int i = 0; i < mConditions.size(); i++) {
         mConditions.at(i).first->accept(&lister);
-        vars.unite(lister.getResult());
+        // N.B. QMap::unite does not remove duplicates, so we can't use that.
+        foreach(QString var, lister.getResult().keys()){
+            vars.insert(var, lister.getResult().value(var));
+        }
         lister.clear();
     }
 
