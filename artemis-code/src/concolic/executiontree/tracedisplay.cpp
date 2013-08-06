@@ -194,6 +194,7 @@ void TraceDisplay::visit(TraceSymbolicBranch *node)
     node->getSymbolicCondition()->accept(mExpressionPrinter.data());
     QString symbolicExpression(mExpressionPrinter->getResult().c_str());
     symbolicExpression.replace("\"", "\\\"");
+    symbolicExpression.replace(")(", ")\\n("); // TODO: Hack for splitting m,ultiple clauses onto diffent lines.
     QString label = QString(" [label = \"Branch\\n%1\"]").arg(symbolicExpression);
 
     // TODO: can we add the symbolic condition to the node label?
@@ -230,7 +231,10 @@ void TraceDisplay::visit(TraceAlert *node)
     QString name = QString("alt_%1").arg(mNodeCounter);
     mNodeCounter++;
 
-    QString nodeDecl = QString("%1 [label = \"Alert\\n\\\"%2\\\"\"]").arg(name).arg(node->message.left(15));
+    QString message = node->message;
+    message.replace('\"', "\\\"");
+    message.replace('\n', "\\n");
+    QString nodeDecl = QString("%1 [label = \"Alert\\n\\\"%2\\\"\"]").arg(name).arg(message);
     mHeaderAlerts.append(nodeDecl);
 
     addInEdge(name);
