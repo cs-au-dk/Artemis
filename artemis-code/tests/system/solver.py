@@ -6,42 +6,41 @@ WEBSERVER_URL = 'http://localhost:%s' % WEBSERVER_PORT
 
 TWO_VARIABLES_TEMPLATE_FILE = WEBSERVER_ROOT + '/%symbolic_test_two_variables.html'
 
-import unittest
+import sys
+import nose
 import re
+import subprocess
 
 from harness.environment import WebServer
 from harness.artemis import execute_artemis
 from os import listdir
 from os.path import isfile, join
 
-class TestSequence(unittest.TestCase):
-    pass
+def run_test(raw_filename):
+    test_filename = insert_test_into_template(WEBSERVER_ROOT, raw_filename)
+    
+    unsat = 'unsat' in raw_filename
+    name = raw_filename.replace('.', '_')
 
-def generate_test(raw_filename, name, unsat):
-    def test(self):
-        test_filename = insert_test_into_template(WEBSERVER_ROOT, raw_filename)
-
-        report = execute_artemis(name, "%s/%s" % (WEBSERVER_URL, test_filename), 
-            iterations=2,
-            fields=["#testinputx=1", "#testinputy=2", "#testinputNameId=1", "#testinputId=1", "#testinputfoo=foo", "#testinputbar=bar"])
+    report = execute_artemis(name, "%s/%s" % (WEBSERVER_URL, test_filename), 
+                             iterations=2,
+                             fields=["#testinputx=1", "#testinputy=2", "#testinputNameId=1", "#testinputId=1", "#testinputfoo=foo", "#testinputbar=bar"])
         
-        self.assertEquals(report.get('WebKit::alerts', 0), 1)        
+    assert report.get('WebKit::alerts', 0) == 1
+    
+    new_fields = []
 
-        new_fields = []
+    for field_name in ("testinputx", "testinputy", "testinputNameId", "testinputId", "testinputfoo", "testinputbar"):
+        new_fields.append("#%s=%s" % (field_name, str(report.get("Concolic::Solver::Constraint.SYM_IN_%s" % field_name, 0))))
+        
+    report = execute_artemis(name, "%s/%s" % (WEBSERVER_URL, test_filename),                                                                            
+                             iterations=2,              
+                             fields=new_fields)
 
-        for field_name in ("testinputx", "testinputy", "testinputNameId", "testinputId", "testinputfoo", "testinputbar"):
-            new_fields.append("#%s=%s" % (field_name, str(report.get("Concolic::Solver::Constraint.SYM_IN_%s" % field_name, 0))))
-
-        report = execute_artemis(name, "%s/%s" % (WEBSERVER_URL, test_filename),                                                                            
-            iterations=2,                                                                                                                                   
-            fields=new_fields)
-
-        if unsat:
-            self.assertEquals(report.get('Concolic::Solver::ConstraintsSolved', 0), 0)
-        else:
-            self.assertEquals(report.get('WebKit::alerts', 0), 1)
-
-    return test
+    if unsat:
+        assert report.get('Concolic::Solver::ConstraintsSolved', 0) == 0
+    else:
+        assert report.get('WebKit::alerts', 0) == 1
 
 
 def insert_test_into_template(path, filename):
@@ -70,20 +69,21 @@ def list_tests_in_folder(folder):
         if not isfile(p) or f[0:1] == "_" or f[0:1] == "%":
             continue
         
-        out.append({
-                'file_name': f, 
-                'name': f.replace('.', '_'),
-                'unsat': 'unsat' in f
-                })
+        out.append(f)
 
     return out
 
 
-if __name__ == '__main__':
+def test_generator():
     server = WebServer(WEBSERVER_ROOT, WEBSERVER_PORT)
     for t in list_tests_in_folder(WEBSERVER_ROOT):
-        test_name = 'test_%s' % t['name']
-        test = generate_test(t['file_name'], t['name'], t['unsat'])
-        setattr(TestSequence, test_name, test)
-    unittest.main()
+	yield run_test, t
     del server
+
+
+if __name__ == '__main__':
+    if len(sys.argv) < 2:
+        subprocess.call(['nosetests', 'solver.py'])
+    else:
+        run_test(sys.argv[1])
+

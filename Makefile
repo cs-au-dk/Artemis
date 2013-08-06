@@ -94,9 +94,9 @@ ifneq ($(ARCH),x86_64)
 	@exit 1
 endif
 
-DEPENDENCIES = g++ flex bison gperf ruby cmake lemon re2c libxext-dev libfontconfig-dev libxrender-dev libsqlite3-dev php5 libqt4-dev-bin qt4-qmake libqt4-core  autoconf dos2unix
+DEPENDENCIES = g++ flex bison gperf ruby cmake lemon re2c libxext-dev libfontconfig-dev libxrender-dev libsqlite3-dev php5 libqt4-dev-bin qt4-qmake libqt4-core  autoconf dos2unix python-nose
 
-YUM_DEPENDENCIES = gcc-c++ flex bison gperf ruby cmake lemon re2c fontconfig-devel libXext-devel patch sqlite-devel php perl-Tk perl-Digest-MD5 autoconf dos2unix
+YUM_DEPENDENCIES = gcc-c++ flex bison gperf ruby cmake lemon re2c fontconfig-devel libXext-devel patch sqlite-devel php perl-Tk perl-Digest-MD5 autoconf dos2unix python-nose
 
 fetch-apt:
 	sudo apt-get install ${DEPENDENCIES}
