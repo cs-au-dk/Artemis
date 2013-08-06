@@ -16,17 +16,22 @@ from harness.artemis import execute_artemis
 from os import listdir
 from os.path import isfile, join
 
-def run_test(raw_filename):
+def run_test(raw_filename, dryrun=False):
     test_filename = insert_test_into_template(WEBSERVER_ROOT, raw_filename)
     
     unsat = 'unsat' in raw_filename
     name = raw_filename.replace('.', '_')
-
+    
     report = execute_artemis(name, "%s/%s" % (WEBSERVER_URL, test_filename), 
                              iterations=2,
-                             fields=["#testinputx=1", "#testinputy=2", "#testinputNameId=1", "#testinputId=1", "#testinputfoo=foo", "#testinputbar=bar"])
+                             fields=["#testinputx=1", "#testinputy=2", "#testinputNameId=1", "#testinputId=1", "#testinputfoo=foo", "#testinputbar=bar"],
+                             dryrun=dryrun)
+
+    if dryrun:
+        # only print the command, exit
+        return
         
-    assert report.get('WebKit::alerts', 0) == 1
+    assert report.get('WebKit::alerts', 0) == 1, "Initial execution did not reach a print statement"
     
     new_fields = []
 
@@ -38,9 +43,9 @@ def run_test(raw_filename):
                              fields=new_fields)
 
     if unsat:
-        assert report.get('Concolic::Solver::ConstraintsSolved', 0) == 0
+        assert report.get('Concolic::Solver::ConstraintsSolved', 0) == 0, "Unexpected constraints solved in UNSAT test case"
     else:
-        assert report.get('WebKit::alerts', 0) == 1
+        assert report.get('WebKit::alerts', 0) == 1, "Execution using inputs from the solver did not reach a print statement"
 
 
 def insert_test_into_template(path, filename):
@@ -85,5 +90,6 @@ if __name__ == '__main__':
     if len(sys.argv) < 2:
         subprocess.call(['nosetests', 'solver.py'])
     else:
-        run_test(sys.argv[1])
+        dryrun = len(sys.argv) == 3 and sys.argv[2] == "dryrun"
+        run_test(sys.argv[1], dryrun=dryrun)
 
