@@ -95,7 +95,7 @@ def execute_artemis(execution_uuid, url, iterations=1,
 
                     report[key] = value
                 except:
-                    print 'Error parsing statistics result for line %s' % line
+                    print('Error parsing statistics result for line %s' % line)
 
         condOffset1 = stdout.find(PATHCOND_START) + len(PATHCOND_START)
         condOffset2 = stdout.find(PATHCOND_END)
