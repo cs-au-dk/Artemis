@@ -140,8 +140,8 @@ void Z3STRConstraintWriter::visit(Symbolic::IntegerBinaryOperation* integerbinar
 
 void Z3STRConstraintWriter::visit(Symbolic::IntegerCoercion* integercoercion)
 {
-    integercoercion->getExpression()->accept(this);
     assert(checkType(Symbolic::INT));
+    integercoercion->getExpression()->accept(this);
 }
 
 void Z3STRConstraintWriter::visit(Symbolic::SymbolicString* symbolicstring)
@@ -229,6 +229,7 @@ void Z3STRConstraintWriter::visit(Symbolic::StringReplace*)
 
 void Z3STRConstraintWriter::visit(Symbolic::StringCoercion* stringcoercion)
 {
+    assert(checkType(Symbolic::STRING));
     stringcoercion->getExpression()->accept(this);
 }
 
@@ -263,6 +264,7 @@ void Z3STRConstraintWriter::visit(Symbolic::ConstantBoolean* constantboolean)
 
 void Z3STRConstraintWriter::visit(Symbolic::BooleanCoercion* booleancoercion)
 {
+    assert(checkType(Symbolic::BOOL));
     booleancoercion->getExpression()->accept(this);
 }
 
