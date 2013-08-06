@@ -1,13 +1,20 @@
+<!DOCTYPE html>
 <html lang="en">
 <head>
 	<script type="text/javascript">
 		function doSomething() {
 			var y = document.getElementById("testinputy").value;
-			var x_1 = document.getElementById("testinputx").value;
+
+			var x_1 = document.getElementById("testinputx").value; // x alias
+			var x = document.getElementById("testinputx").value;
+
+			var foo = document.getElementById("testinputfoo").value;
+			var bar = document.getElementById("testinputbar").value;
 
 			var elmName = document.getElementsByName("testinputName")[0].value;
 			var elmId = document.getElementById("testinputId").value;
-            if (y != 1 && y != "1") {
+            UNSAT!
+if (y != 1 && y != "1") {
     alert(y);
 }
 
@@ -15,11 +22,15 @@
 	</script>
 </head>
 <body>
-	<input type="text" name="testinputy" id="testinputy" />
+	<input type="text" name="testinputy" id="testinputy" value="2" />
 	<input type="text" name="testinputx" id="testinputx" value="1" />
+
+	<input type="text" name="testinputfoo" id="testinputfoo" value="foo" />
+	<input type="text" name="testinputbar" id="testinputbar" value="bar" />
 	
 	<input type="text" name="testinputName" id="testinputNameId" value="1" />
 	<input type="text" id="testinputId" value="1" />
+
 	<button onclick="doSomething();">DO</button>
 </body>
 </html>

@@ -176,7 +176,7 @@ void Z3STRConstraintWriter::visit(Symbolic::ConstantString* constantstring)
 void Z3STRConstraintWriter::visit(Symbolic::StringBinaryOperation* stringbinaryoperation)
 {
     static const char* op[] = {
-        "+", "=", "!=", "<", "<=", ">", ">=", "=", "!="
+        "Concat", "=", "!=", "<", "<=", ">", ">=", "=", "!="
     };
 
     mExpressionType = Symbolic::STRING;

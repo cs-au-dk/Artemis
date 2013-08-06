@@ -17,60 +17,73 @@ from os.path import isfile, join
 class TestSequence(unittest.TestCase):
     pass
 
-def test_generator(filename, name, result):
+def generate_test(raw_filename, name, unsat):
     def test(self):
-        newFilename = setUpTempFileFromTemplate(WEBSERVER_ROOT, filename)
+        test_filename = insert_test_into_template(WEBSERVER_ROOT, raw_filename)
 
-        report = execute_artemis(name, "%s/%s" % (
-            WEBSERVER_URL, 
-            newFilename), 
+        report = execute_artemis(name, "%s/%s" % (WEBSERVER_URL, test_filename), 
             iterations=2,
-            fields=["#testinputx=1", "#testinputNameId=1", "#testinputId=1"])
+            fields=["#testinputx=1", "#testinputy=2", "#testinputNameId=1", "#testinputId=1", "#testinputfoo=foo", "#testinputbar=bar"])
+        
+        self.assertEquals(report.get('WebKit::alerts', 0), 1)        
 
-        for condition in result.split(';'):
-            subject, value = condition.split('=')
-            self.assertEqual(report.get(subject.strip(), 0), int(value))
+        new_fields = []
+
+        for field_name in ("testinputx", "testinputy", "testinputNameId", "testinputId", "testinputfoo", "testinputbar"):
+            new_fields.append("#%s=%s" % (field_name, str(report.get("Concolic::Solver::Constraint.SYM_IN_%s" % field_name, 0))))
+
+        report = execute_artemis(name, "%s/%s" % (WEBSERVER_URL, test_filename),                                                                            
+            iterations=2,                                                                                                                                   
+            fields=new_fields)
+
+        if unsat:
+            self.assertEquals(report.get('Concolic::Solver::ConstraintsSolved', 0), 0)
+        else:
+            self.assertEquals(report.get('WebKit::alerts', 0), 1)
 
     return test
 
 
-def setUpTempFileFromTemplate(path, filename):
+def insert_test_into_template(path, filename):
     tmpName = "_g_%s.html" % filename
     tmpPath = join(path, tmpName)
-    with open(tmpPath, 'w') as tf:
+    with open(tmpPath, 'w') as targetFile:
         with open(TWO_VARIABLES_TEMPLATE_FILE, 'r') as templateFile:
-            lines = templateFile.readlines()
-            for line in lines[1:]:
+            for line in templateFile.readlines():
                 i = line.find('$TESTSTATEMENT')
                 if i >= 0:
-                    tf.write(line[0:i])
+                    targetFile.write(line[0:i])
                     with open(join(path, filename), 'r') as testFile:
-                        tf.writelines(testFile.readlines()[1:])
-                    tf.write(line[i + 14:])
+                        targetFile.writelines(testFile.readlines())
+                    targetFile.write(line[i + 14:])
                 else:
-                    tf.write(line)
+                    targetFile.write(line)
     return tmpName
 
 
-def generate_tests_from_folder(folder):
+def list_tests_in_folder(folder):
     out = []
+
     for f in listdir(folder):
         p = join(folder, f)
-        if isfile(p) and f[0:1] != "_" and f[0:1] != "%":
-            with open(p, 'r') as fl:
-                first_line = fl.readline()
-                m = re.match("\s*RESULT:(.*)$", first_line)
-                if m:
-                    res = {'result': m.group(1), 'file_name': f, 'name': f.replace('.', '_')}
-                    out.append(res)
+
+        if not isfile(p) or f[0:1] == "_" or f[0:1] == "%":
+            continue
+        
+        out.append({
+                'file_name': f, 
+                'name': f.replace('.', '_'),
+                'unsat': 'unsat' in f
+                })
+
     return out
 
 
 if __name__ == '__main__':
     server = WebServer(WEBSERVER_ROOT, WEBSERVER_PORT)
-    for t in generate_tests_from_folder(WEBSERVER_ROOT):
+    for t in list_tests_in_folder(WEBSERVER_ROOT):
         test_name = 'test_%s' % t['name']
-        test = test_generator(t['file_name'], t['name'], t['result'])
+        test = generate_test(t['file_name'], t['name'], t['unsat'])
         setattr(TestSequence, test_name, test)
     unittest.main()
     del server
