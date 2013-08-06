@@ -1,2 +1,0 @@
-tmp0 := SYM_IN_1 == 1;
-tmp1 := tmp0 == false;
