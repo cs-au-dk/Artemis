@@ -84,206 +84,20 @@ void ConcolicRuntime::postConcreteExecution(ExecutableConfigurationConstPtr conf
 
     if(mRunningToGetEntryPoints){
 
-        Log::debug("Analysing page entrypoints...");
-        EntryPointDetector detector(mWebkitExecutor->getPage());
-        // Choose and save the entry point for use in future runs.
-        mEntryPointEvent = detector.choose(result);
-        if(mEntryPointEvent){
-            Log::debug(QString("Chose entry point %1").arg(mEntryPointEvent->toString()).toStdString());
-
-            // Create an "empty" form input which will inject noting into the page.
-            QSet<QPair<QSharedPointer<const FormField>, const FormFieldValue*> > inputs;
-            QSharedPointer<FormInput> formInput = QSharedPointer<FormInput>(new FormInput(inputs));
-
-            // Create the new event sequence and set mNextConfiguration.
-            setupNextConfiguration(formInput);
-
-            // Find the form fields on the page and save them.
-            // TODO: We do this in the initial run so everything is stable, but at the cost of not being able to be at all dynamic (e.g. any form field not detected here will not be used correclty).
-            mFormFields = result->getFormFields();
-
-            // Print them
-            Log::debug("Form fields found:");
-            foreach(QSharedPointer<const FormField> field, mFormFields){
-                Log::debug(field->getDomElement()->toString().toStdString());
-            }
-
-            // Move to state 2 and execute this initial configuration.
-            mRunningToGetEntryPoints = false;
-            mRunningWithInitialValues = true;
-            preConcreteExecution();
-
-        }else{
-            Log::debug("\n========== No Entry Points ==========");
-            Log::debug("Could not find any suitable entry point for the analysis on this page. Ending.");
-
-            mWebkitExecutor->detach();
-            done();
-            return;
-        }
+        postInitialConcreteExecution(result); // Runs the next iteration itself.
 
     }else{
         // We already have an entry point.
 
-        if(mRunningWithInitialValues){
-            // After the very first run we need to set up the tree & search procedure.
-            // We can't just begin with an empty tree and merge every trace in, as the search procedure needs a
-            // pointer to the tree, which will be replaced in that case.
-            // If this is a problem, we could just introduce a header node for trees.
-            mSymbolicExecutionGraph = mWebkitExecutor->getTraceBuilder()->trace();
-            mSearchStrategy = DepthFirstSearchPtr(new DepthFirstSearch(mSymbolicExecutionGraph));
-            mRunningWithInitialValues = false;
-        }else{
-            // A normal run.
-            // Merge trace with tracegraph
-            mSymbolicExecutionGraph = TraceMerger::merge(mWebkitExecutor->getTraceBuilder()->trace(), mSymbolicExecutionGraph);
-        }
-
-        // Dump the current state of the tree to a file.
-        if(mOptions.concolicTreeOutput == TREE_ALL){
-            outputTreeGraph();
-        }
+        // Merge the new trace into the tree.
+        // Sets up the search procedure and tree on the first run (when mRunningWithInitialValues is set).
+        mergeTraceIntoTree();
 
         // Choose the next node to explore
         if(mSearchStrategy->chooseNextTarget()){
-            PathConditionPtr target = mSearchStrategy->getTargetPC();
 
-            Log::debug("Target is: ");
-            Log::debug(target->toStatisticsValuesString());
-
-            // Get (and print) the list of free variables in the target PC.
-            QMap<QString, Symbolic::SourceIdentifierMethod> freeVariables = target->freeVariables();
-            QStringList varList = freeVariables.keys();
-
-            Log::debug(QString("Variables we need to solve (%1):").arg(varList.length()).toStdString());
-            Log::debug(varList.join(", ").toStdString());
-
-            // Try to solve this PC to get some concrete input.
-            SolutionPtr solution = Solver::solve(target);
-
-            if(solution->isSolved()) {
-                Log::debug("Solved the target Pc:");
-
-                // Print this solution
-                foreach(QString var, varList){
-                    Symbolvalue value = solution->findSymbol(var);
-                    if(value.found){
-                        switch (value.kind) {
-                        case Symbolic::INT:
-                            Log::debug(QString("%1 = %2").arg(var).arg(value.u.integer).toStdString());
-                            break;
-                        case Symbolic::BOOL:
-                            Log::debug(QString("%1 = %2").arg(var).arg(value.u.boolean ? "true" : "false").toStdString());
-                            break;
-                        case Symbolic::STRING:
-                            Log::debug(QString("%1 = %2").arg(var).arg(value.string->c_str()).toStdString());
-                            break;
-                        default:
-                            Log::info(QString("Unimplemented value type encountered for variable %1 (%2)").arg(var).arg(value.kind).toStdString());
-                            exit(1);
-                        }
-                    }else{
-                        Log::info(QString("Error: Could not find value for %1 in the solver's solution.").arg(var).toStdString());
-                        exit(1);
-                    }
-                }
-
-
-                // For each symbolic variable, attempt to match it with a FormField object from the initial run.
-                Log::debug("Next form value injections are:");
-                QSet<QPair<QSharedPointer<const FormField>, const FormFieldValue*> > inputs;
-
-                foreach(QString varName, varList){
-                    Symbolvalue value = solution->findSymbol(varName);
-                    if(!value.found){
-                        Log::info(QString("Error: Could not find value for %1 in the solver's solution.").arg(varName).toStdString());
-                        exit(1);
-                    }
-
-                    // Variable names are of the form SYM_IN_<name>, and we will need to use <name> directly when searching the ids and names of the form fields.
-                    QString varBaseName = varName;
-                    varBaseName.replace("SYM_IN_", "");
-
-                    Symbolic::SourceIdentifierMethod varSourceIdentifierMethod = freeVariables.value(varName);
-                    QSharedPointer<const FormField> varSourceField;
-
-                    // Find the corresponding FormField by searching on the relevant attribute.
-                    switch(varSourceIdentifierMethod){
-                    case Symbolic::INPUT_NAME:
-                        // Fetch the formField with this name
-                        // TODO: not sure how to retrieve this?
-                        Log::fatal("Identifying inputs by name is not yet supported in the concolic runtime.");
-                        exit(1);
-                        break;
-
-                    case Symbolic::ELEMENT_ID:
-                        // Fetch the form field with this id
-                        foreach(QSharedPointer<const FormField> field, mFormFields){
-                            if(field->getDomElement()->getId() == varBaseName){
-                                varSourceField = field;
-                                break;
-                            }
-                        }
-                        break;
-
-                    case Symbolic::LEGACY:
-                        // TODO: The form fields without names or ids are just numbered, so I have no idea what to do here!
-                        Log::fatal("Identifying inputs by legacy numbering is not yet supported in the concolic runtime.");
-                        exit(1);
-                        break;
-
-                    default:
-                        Log::fatal("Unexpected identification method for form fields encountered.");
-                        exit(1);
-                        break;
-                    }
-
-                    // Check that we found a FormField.
-                    if(varSourceField.isNull()){
-                        Log::fatal(QString("Could not identify a form field for %1.").arg(varName).toStdString());
-                        exit(1);
-                    }
-
-                    // Create the field/value pairing to be injected using the FormInput object.
-                    switch (value.kind) {
-                    case Symbolic::INT:
-                        inputs.insert(QPair<QSharedPointer<const FormField>, const FormFieldValue*>(varSourceField, new FormFieldValue(NULL, QString::number(value.u.integer))));
-                        Log::debug(QString("Injecting %1 into %2").arg(QString::number(value.u.integer)).arg(varName).toStdString());
-                        break;
-                    case Symbolic::BOOL:
-                        inputs.insert(QPair<QSharedPointer<const FormField>, const FormFieldValue*>(varSourceField, new FormFieldValue(NULL, QString(value.u.boolean ? "true" : "false")))); // TODO: How to represent booleans here?
-                        Log::debug(QString("Injecting %1 into %2").arg(value.u.boolean ? "true" : "false").arg(varName).toStdString());
-                        break;
-                    case Symbolic::STRING:
-                        inputs.insert(QPair<QSharedPointer<const FormField>, const FormFieldValue*>(varSourceField, new FormFieldValue(NULL, QString(value.string->c_str()))));
-                        Log::debug(QString("Injecting %1 into %2").arg(QString(value.string->c_str())).arg(varName).toStdString());
-                        break;
-                    default:
-                        Log::info(QString("Unimplemented value type encountered for variable %1 (%2)").arg(varName).arg(value.kind).toStdString());
-                        exit(1);
-                    }
-
-                }
-
-
-                // Set up a new configuration which tests this input.
-                QSharedPointer<FormInput> formInput = QSharedPointer<FormInput>(new FormInput(inputs));
-                setupNextConfiguration(formInput);
-
-                // Execute next iteration
-                preConcreteExecution();
-
-            }else{
-                // TODO: Should try someting else/go concrete/...?
-                Log::debug("\n============= Finished DFS ==============");
-                Log::debug("Could not solve the constraint.");
-                Log::debug("This case is not yet implemented!");
-
-                mWebkitExecutor->detach();
-                done();
-                return;
-
-            }
+            // Explore this target. Runs the next execution itself.
+            exploreNextTarget();
 
         }else{
             Log::debug("\n============= Finished DFS ==============");
@@ -347,6 +161,243 @@ void ConcolicRuntime::setupNextConfiguration(QSharedPointer<FormInput> formInput
 
     Log::debug("Next configuration is:");
     Log::debug(mNextConfiguration->toString().toStdString());
+}
+
+
+// Does the processing after the very first page load, to prepare for the testing.
+void ConcolicRuntime::postInitialConcreteExecution(QSharedPointer<ExecutionResult> result)
+{
+    Log::debug("Analysing page entrypoints...");
+
+    // Choose and save the entry point for use in future runs.
+    EntryPointDetector detector(mWebkitExecutor->getPage());
+    mEntryPointEvent = detector.choose(result);
+
+    if(mEntryPointEvent){
+        Log::debug(QString("Chose entry point %1").arg(mEntryPointEvent->toString()).toStdString());
+
+        // Create an "empty" form input which will inject noting into the page.
+        QSet<QPair<QSharedPointer<const FormField>, const FormFieldValue*> > inputs;
+        QSharedPointer<FormInput> formInput = QSharedPointer<FormInput>(new FormInput(inputs));
+
+        // Create the new event sequence and set mNextConfiguration.
+        setupNextConfiguration(formInput);
+
+        // Find the form fields on the page and save them.
+        // TODO: We do this in the initial run so everything is stable, but at the cost of not being able to be at all dynamic (e.g. any form field not detected here will not be used correclty).
+        mFormFields = result->getFormFields();
+
+        // Print them
+        Log::debug("Form fields found:");
+        foreach(QSharedPointer<const FormField> field, mFormFields){
+            Log::debug(field->getDomElement()->toString().toStdString());
+        }
+
+        // On the next iteration, we will be running with initial values.
+        mRunningToGetEntryPoints = false;
+        mRunningWithInitialValues = true;
+
+        // Execute this configuration.
+        preConcreteExecution();
+
+    }else{
+        Log::debug("\n========== No Entry Points ==========");
+        Log::debug("Could not find any suitable entry point for the analysis on this page. Exiting.");
+
+        mWebkitExecutor->detach();
+        done();
+        return;
+    }
+}
+
+
+// Creates the tree and sets up the search procedure and merges new traces into the tree.
+void ConcolicRuntime::mergeTraceIntoTree()
+{
+    if(mRunningWithInitialValues){
+        // After the very first run we need to set up the tree & search procedure.
+        // We can't just begin with an empty tree and merge every trace in, as the search procedure needs a
+        // pointer to the tree, which will be replaced in that case.
+        // If this is a problem, we could just introduce a header node for trees.
+        mSymbolicExecutionGraph = mWebkitExecutor->getTraceBuilder()->trace();
+        mSearchStrategy = DepthFirstSearchPtr(new DepthFirstSearch(mSymbolicExecutionGraph));
+        mRunningWithInitialValues = false;
+    }else{
+        // A normal run.
+        // Merge trace with tracegraph
+        mSymbolicExecutionGraph = TraceMerger::merge(mWebkitExecutor->getTraceBuilder()->trace(), mSymbolicExecutionGraph);
+    }
+
+    // Dump the current state of the tree to a file.
+    if(mOptions.concolicTreeOutput == TREE_ALL){
+        outputTreeGraph();
+    }
+}
+
+
+// Prints the solution from the solver.
+void ConcolicRuntime::printSolution(SolutionPtr solution, QStringList varList)
+{
+    foreach(QString var, varList){
+        Symbolvalue value = solution->findSymbol(var);
+        if(value.found){
+            switch (value.kind) {
+            case Symbolic::INT:
+                Log::debug(QString("%1 = %2").arg(var).arg(value.u.integer).toStdString());
+                break;
+            case Symbolic::BOOL:
+                Log::debug(QString("%1 = %2").arg(var).arg(value.u.boolean ? "true" : "false").toStdString());
+                break;
+            case Symbolic::STRING:
+                Log::debug(QString("%1 = %2").arg(var).arg(value.string->c_str()).toStdString());
+                break;
+            default:
+                Log::info(QString("Unimplemented value type encountered for variable %1 (%2)").arg(var).arg(value.kind).toStdString());
+                exit(1);
+            }
+        }else{
+            Log::info(QString("Error: Could not find value for %1 in the solver's solution.").arg(var).toStdString());
+            exit(1);
+        }
+    }
+}
+
+QSharedPointer<FormInput> ConcolicRuntime::createFormInput(QMap<QString, Symbolic::SourceIdentifierMethod> freeVariables, SolutionPtr solution)
+{
+    QStringList varList = freeVariables.keys();
+
+    // For each symbolic variable, attempt to match it with a FormField object from the initial run.
+    Log::debug("Next form value injections are:");
+    QSet<QPair<QSharedPointer<const FormField>, const FormFieldValue*> > inputs;
+
+    foreach(QString varName, varList){
+        Symbolvalue value = solution->findSymbol(varName);
+        if(!value.found){
+            Log::info(QString("Error: Could not find value for %1 in the solver's solution.").arg(varName).toStdString());
+            exit(1);
+        }
+
+        // Find the corresponding FormField by searching on the relevant attribute.
+        QSharedPointer<const FormField> varSourceField = findFormFieldForVariable(varName, freeVariables.value(varName));
+
+        // Create the field/value pairing to be injected using the FormInput object.
+        switch (value.kind) {
+        case Symbolic::INT:
+            inputs.insert(QPair<QSharedPointer<const FormField>, const FormFieldValue*>(varSourceField, new FormFieldValue(NULL, QString::number(value.u.integer))));
+            Log::debug(QString("Injecting %1 into %2").arg(QString::number(value.u.integer)).arg(varName).toStdString());
+            break;
+        case Symbolic::BOOL:
+            inputs.insert(QPair<QSharedPointer<const FormField>, const FormFieldValue*>(varSourceField, new FormFieldValue(NULL, QString(value.u.boolean ? "true" : "false")))); // TODO: How to represent booleans here?
+            Log::debug(QString("Injecting %1 into %2").arg(value.u.boolean ? "true" : "false").arg(varName).toStdString());
+            break;
+        case Symbolic::STRING:
+            inputs.insert(QPair<QSharedPointer<const FormField>, const FormFieldValue*>(varSourceField, new FormFieldValue(NULL, QString(value.string->c_str()))));
+            Log::debug(QString("Injecting %1 into %2").arg(QString(value.string->c_str())).arg(varName).toStdString());
+            break;
+        default:
+            Log::info(QString("Unimplemented value type encountered for variable %1 (%2)").arg(varName).arg(value.kind).toStdString());
+            exit(1);
+        }
+
+    }
+
+
+    // Set up a new configuration which tests this input.
+    return QSharedPointer<FormInput>(new FormInput(inputs));
+}
+
+
+// Given a symbolic variable, find the corresponding form field on the page.
+QSharedPointer<const FormField> ConcolicRuntime::findFormFieldForVariable(QString varName, Symbolic::SourceIdentifierMethod varSourceIdentifierMethod)
+{
+    QSharedPointer<const FormField> varSourceField;
+
+    // Variable names are of the form SYM_IN_<name>, and we will need to use <name> directly when searching the ids and names of the form fields.
+    QString varBaseName = varName;
+    varBaseName.replace("SYM_IN_", "");
+
+    switch(varSourceIdentifierMethod){
+    case Symbolic::INPUT_NAME:
+        // Fetch the formField with this name
+        // TODO: not sure how to retrieve this?
+        Log::fatal("Identifying inputs by name is not yet supported in the concolic runtime.");
+        exit(1);
+        break;
+
+    case Symbolic::ELEMENT_ID:
+        // Fetch the form field with this id
+        foreach(QSharedPointer<const FormField> field, mFormFields){
+            if(field->getDomElement()->getId() == varBaseName){
+                varSourceField = field;
+                break;
+            }
+        }
+        break;
+
+    case Symbolic::LEGACY:
+        // TODO: The form fields without names or ids are just numbered, so I have no idea what to do here!
+        Log::fatal("Identifying inputs by legacy numbering is not yet supported in the concolic runtime.");
+        exit(1);
+        break;
+
+    default:
+        Log::fatal("Unexpected identification method for form fields encountered.");
+        exit(1);
+        break;
+    }
+
+    // Check that we found a FormField.
+    if(varSourceField.isNull()){
+        Log::fatal(QString("Could not identify a form field for %1.").arg(varName).toStdString());
+        exit(1);
+    }
+
+    return varSourceField;
+}
+
+
+// Generates a new solution from the path condition and runs it.
+void ConcolicRuntime::exploreNextTarget()
+{
+    PathConditionPtr target = mSearchStrategy->getTargetPC();
+
+    Log::debug("Target is: ");
+    Log::debug(target->toStatisticsValuesString());
+
+    // Get (and print) the list of free variables in the target PC.
+    QMap<QString, Symbolic::SourceIdentifierMethod> freeVariables = target->freeVariables();
+    QStringList varList = freeVariables.keys();
+
+    Log::debug(QString("Variables we need to solve (%1):").arg(varList.length()).toStdString());
+    Log::debug(varList.join(", ").toStdString());
+
+    // Try to solve this PC to get some concrete input.
+    SolutionPtr solution = Solver::solve(target);
+
+    if(solution->isSolved()) {
+        Log::debug("Solved the target Pc:");
+
+        // Print this solution
+        printSolution(solution, varList);
+
+
+        QSharedPointer<FormInput> formInput = createFormInput(freeVariables, solution);
+        setupNextConfiguration(formInput);
+
+        // Execute next iteration
+        preConcreteExecution();
+
+    }else{
+        // TODO: Should try someting else/go concrete/...?
+        Log::debug("\n============= Finished DFS ==============");
+        Log::debug("Could not solve the constraint.");
+        Log::debug("This case is not yet implemented!");
+
+        mWebkitExecutor->detach();
+        done();
+        return;
+
+    }
 }
 
 

@@ -91,6 +91,12 @@ protected:
 
     // Helper methods for postConcreteExecution.
     void setupNextConfiguration(QSharedPointer<FormInput> formInput);
+    void postInitialConcreteExecution(QSharedPointer<ExecutionResult> result);
+    void mergeTraceIntoTree();
+    void printSolution(SolutionPtr solution, QStringList varList);
+    QSharedPointer<FormInput> createFormInput(QMap<QString, Symbolic::SourceIdentifierMethod> freeVariables, SolutionPtr solution);
+    QSharedPointer<const FormField> findFormFieldForVariable(QString varName, Symbolic::SourceIdentifierMethod varSourceIdentifierMethod);
+    void exploreNextTarget();
 
     QSet<QSharedPointer<const FormField> > mFormFields;
 
