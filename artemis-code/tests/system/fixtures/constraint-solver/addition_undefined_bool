@@ -1,0 +1,3 @@
+if (undefined + (foo=="foo")) {
+    alert(x);
+}

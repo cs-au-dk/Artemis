@@ -1,0 +1,3 @@
+if ("test" + (x*5)) {
+    alert(x);
+}
