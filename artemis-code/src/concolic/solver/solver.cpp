@@ -25,7 +25,7 @@
 
 #include "statistics/statsstorage.h"
 
-#include "concolic/solver/constraintwriter.h"
+#include "concolic/solver/constraintwriter/z3str.h"
 
 #include "solver.h"
 
@@ -37,7 +37,9 @@ SolutionPtr Solver::solve(PathConditionPtr pc)
 
     // 1. translate pc to something solvable using the translator
 
-    if (!ConstraintWriter::write(pc, "/tmp/kaluza")) {
+    ConstraintWriterPtr cw = ConstraintWriterPtr(new Z3STRConstraintWriter());
+
+    if (!cw->write(pc, "/tmp/kaluza")) {
         statistics()->accumulate("Concolic::Solver::ConstraintsNotWritten", 1);
         return SolutionPtr(new Solution(false));
     }

@@ -16,6 +16,8 @@ Author:
 Revision History:
 
 --*/
+#include <unistd.h>
+
 #include<cstdio>
 #include<iostream>
 #include"str_hashtable.h"
