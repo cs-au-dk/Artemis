@@ -69,11 +69,44 @@ bool Z3STRConstraintWriter::write(PathConditionPtr pathCondition, std::string ou
     return true;
 }
 
+/** Symbolic Integer/String/Boolean **/
+
+
 void Z3STRConstraintWriter::visit(Symbolic::SymbolicInteger* symbolicinteger)
 {
-    mExpressionBuffer = Z3STRConstraintWriter::encodeIdentifier(symbolicinteger->getSource().getIdentifier());
+    // Forces this symbolic value to be of type mExpressionType
     recordAndEmitType(symbolicinteger->getSource(), mExpressionType);
+
+    // Note, we skip the mExpressionType check since we automatically emit a symbolic
+    // value of exactly this type (and if not we have raised an error.
+
+    mExpressionBuffer = Z3STRConstraintWriter::encodeIdentifier(symbolicinteger->getSource().getIdentifier());
 }
+
+void Z3STRConstraintWriter::visit(Symbolic::SymbolicString* symbolicstring)
+{
+    // Forces this symbolic value to be of type mExpressionType
+    recordAndEmitType(symbolicstring->getSource(), mExpressionType);
+
+    // Note, we skip the mExpressionType check since we automatically emit a symbolic
+    // value of exactly this type (and if not we have raised an error.
+
+    mExpressionBuffer = Z3STRConstraintWriter::encodeIdentifier(symbolicstring->getSource().getIdentifier());
+}
+
+void Z3STRConstraintWriter::visit(Symbolic::SymbolicBoolean* symbolicboolean)
+{
+    // Forces this symbolic value to be of type mExpressionType
+    recordAndEmitType(symbolicboolean->getSource(), mExpressionType);
+
+    // Note, we skip the mExpressionType check since we automatically emit a symbolic
+    // value of exactly this type (and if not we have raised an error.
+
+    mExpressionBuffer = Z3STRConstraintWriter::encodeIdentifier(symbolicboolean->getSource().getIdentifier());
+}
+
+/** Constant Integer/String/Boolean **/
+
 
 void Z3STRConstraintWriter::visit(Symbolic::ConstantInteger* constantinteger)
 {
@@ -96,58 +129,6 @@ void Z3STRConstraintWriter::visit(Symbolic::ConstantInteger* constantinteger)
     }
 
     mExpressionBuffer = strs.str();
-}
-
-void Z3STRConstraintWriter::visit(Symbolic::IntegerBinaryOperation* integerbinaryoperation)
-{
-    static const char* op[] = {
-        "+", "-", "*", "/", "=", "!=", "<=", "<", ">=", ">", "%", "!=", "="
-    };
-
-    mExpressionType = Symbolic::INT;
-    integerbinaryoperation->getLhs()->accept(this);
-    std::string lhs = mExpressionBuffer;
-
-    mExpressionType = Symbolic::INT;
-    integerbinaryoperation->getRhs()->accept(this);
-    std::string rhs = mExpressionBuffer;
-
-    std::ostringstream strs;
-    strs << "(" << op[integerbinaryoperation->getOp()] << " " << lhs << " " << rhs << ")";
-
-    // coercion
-
-    switch (mExpressionType) {
-    case Symbolic::INT:
-        mExpressionBuffer = strs.str();
-        break; // no coercion
-
-    case Symbolic::BOOL:
-        mExpressionBuffer = "(> " + strs.str() + " 0)";
-        break;
-
-    case Symbolic::STRING:
-        mError = true;
-        mErrorReason = "Unsupported type coercion from integer to string";
-        break;
-
-    default:
-        mError = true;
-        mErrorReason = "Unsupported type coercion from integer to UNKNOWN";
-        break;
-    }
-}
-
-void Z3STRConstraintWriter::visit(Symbolic::IntegerCoercion* integercoercion)
-{
-    assert(checkType(Symbolic::INT));
-    integercoercion->getExpression()->accept(this);
-}
-
-void Z3STRConstraintWriter::visit(Symbolic::SymbolicString* symbolicstring)
-{
-    mExpressionBuffer = Z3STRConstraintWriter::encodeIdentifier(symbolicstring->getSource().getIdentifier());
-    recordAndEmitType(symbolicstring->getSource(), mExpressionType);
 }
 
 void Z3STRConstraintWriter::visit(Symbolic::ConstantString* constantstring)
@@ -173,72 +154,6 @@ void Z3STRConstraintWriter::visit(Symbolic::ConstantString* constantstring)
     mExpressionBuffer = strs.str();
 }
 
-void Z3STRConstraintWriter::visit(Symbolic::StringBinaryOperation* stringbinaryoperation)
-{
-    static const char* op[] = {
-        "Concat", "=", "!=", "<", "<=", ">", ">=", "=", "!="
-    };
-
-    mExpressionType = Symbolic::STRING;
-    stringbinaryoperation->getLhs()->accept(this);
-    std::string lhs = mExpressionBuffer;
-
-    mExpressionType = Symbolic::STRING;
-    stringbinaryoperation->getRhs()->accept(this);
-    std::string rhs = mExpressionBuffer;
-
-    std::ostringstream strs;
-    strs << "(" << op[stringbinaryoperation->getOp()] << " " << lhs << " " << rhs << ")";
-
-    // coercion
-
-    switch (mExpressionType) {
-    case Symbolic::INT:
-        mError = true;
-        mErrorReason = "Unsupported type coercion from string to integer";
-        break; // no coercion
-
-    case Symbolic::BOOL:
-        mExpressionBuffer = "(= " + strs.str() + " \"true\")";
-        break;
-
-    case Symbolic::STRING:
-        mExpressionBuffer = strs.str();
-        break;
-
-    default:
-        mError = true;
-        mErrorReason = "Unsupported type coercion from string to UNKNOWN";
-        break;
-    }
-}
-
-void Z3STRConstraintWriter::visit(Symbolic::StringRegexReplace*)
-{
-    mError = true;
-    mErrorReason = "Regex constraints not supported";
-    mExpressionBuffer = "ERROR";
-}
-
-void Z3STRConstraintWriter::visit(Symbolic::StringReplace*)
-{
-    mError = true;
-    mErrorReason = "String replace constraints not supported";
-    mExpressionBuffer = "ERROR";
-}
-
-void Z3STRConstraintWriter::visit(Symbolic::StringCoercion* stringcoercion)
-{
-    assert(checkType(Symbolic::STRING));
-    stringcoercion->getExpression()->accept(this);
-}
-
-void Z3STRConstraintWriter::visit(Symbolic::SymbolicBoolean* symbolicboolean)
-{
-    mExpressionBuffer = Z3STRConstraintWriter::encodeIdentifier(symbolicboolean->getSource().getIdentifier());
-    recordAndEmitType(symbolicboolean->getSource(), mExpressionType);
-}
-
 void Z3STRConstraintWriter::visit(Symbolic::ConstantBoolean* constantboolean)
 {
     std::ostringstream strs;
@@ -262,17 +177,92 @@ void Z3STRConstraintWriter::visit(Symbolic::ConstantBoolean* constantboolean)
     mExpressionBuffer = strs.str();
 }
 
+/** Coercion NOOP **/
+
+void Z3STRConstraintWriter::visit(Symbolic::IntegerCoercion* integercoercion)
+{
+    assert(checkType(Symbolic::INT));
+    integercoercion->getExpression()->accept(this);
+}
+
+void Z3STRConstraintWriter::visit(Symbolic::StringCoercion* stringcoercion)
+{
+    assert(checkType(Symbolic::STRING));
+    stringcoercion->getExpression()->accept(this);
+}
+
 void Z3STRConstraintWriter::visit(Symbolic::BooleanCoercion* booleancoercion)
 {
-    assert(checkType(Symbolic::BOOL));
+    assert(checkType(Symbolic::BOOL ));
     booleancoercion->getExpression()->accept(this);
+}
+
+
+/** Binary Operations **/
+
+void Z3STRConstraintWriter::visit(Symbolic::IntegerBinaryOperation* integerbinaryoperation)
+{
+    static const char* op[] = {
+        "(+ ", "(- ", "(* ", "(/ ", "(= ", "(= (= ", "(<= ", "(< ", "(>= ", "(> ", "(% ", "(= (= ", "(= "
+    };
+
+    static const char* opclose[] = {
+        ")", ")", ")", ")", ")", ") false)", ")", ")", ")", ")", ")", ") false)", ")"
+    };
+
+    Symbolic::Type expectedType = mExpressionType;
+
+    mExpressionType = Symbolic::INT;
+    integerbinaryoperation->getLhs()->accept(this);
+    std::string lhs = mExpressionBuffer;
+
+    mExpressionType = Symbolic::INT;
+    integerbinaryoperation->getRhs()->accept(this);
+    std::string rhs = mExpressionBuffer;
+
+    std::ostringstream strs;
+    strs << op[integerbinaryoperation->getOp()] << lhs << " " << rhs << opclose[integerbinaryoperation->getOp()];
+
+    coercetype(opGetType(integerbinaryoperation->getOp()), expectedType, strs.str());
+}
+
+void Z3STRConstraintWriter::visit(Symbolic::StringBinaryOperation* stringbinaryoperation)
+{
+    static const char* op[] = {
+        "(Concat ", "(= ", "(= (= ", "(< ", "(<= ", "(> ", "(>= ", "(= ", "(= (= "
+    };
+
+    static const char* opclose[] = {
+        ")", ")", ") false)", ")", ")", ")", ")", ")", ") false)"
+    };
+
+    Symbolic::Type expectedType = mExpressionType;
+
+    mExpressionType = Symbolic::STRING;
+    stringbinaryoperation->getLhs()->accept(this);
+    std::string lhs = mExpressionBuffer;
+
+    mExpressionType = Symbolic::STRING;
+    stringbinaryoperation->getRhs()->accept(this);
+    std::string rhs = mExpressionBuffer;
+
+    std::ostringstream strs;
+    strs << op[stringbinaryoperation->getOp()] << lhs << " " << rhs << opclose[stringbinaryoperation->getOp()];
+
+    coercetype(opGetType(stringbinaryoperation->getOp()), expectedType, strs.str());
 }
 
 void Z3STRConstraintWriter::visit(Symbolic::BooleanBinaryOperation* booleanbinaryoperation)
 {
     static const char* op[] = {
-        "=", "!=", "=", "!="
+        "(= ", "(= (= ", "(= ", "(! (= "
     };
+
+    static const char* opclose[] = {
+        ")", ") false)", ")", "))"
+    };
+
+    Symbolic::Type expectedType = mExpressionType;
 
     mExpressionType = Symbolic::BOOL;
     booleanbinaryoperation->getLhs()->accept(this);
@@ -283,31 +273,30 @@ void Z3STRConstraintWriter::visit(Symbolic::BooleanBinaryOperation* booleanbinar
     std::string rhs = mExpressionBuffer;
 
     std::ostringstream strs;
-    strs << "(" << op[booleanbinaryoperation->getOp()] << " " << lhs << " " << rhs << ")";
+    strs << op[booleanbinaryoperation->getOp()] << lhs << " " << rhs << opclose[booleanbinaryoperation->getOp()];
 
-    // coercion
-
-    switch (mExpressionType) {
-    case Symbolic::INT:
-        mError = true;
-        mErrorReason = "Unsupported type coercion from bool to integer";
-        break;
-
-    case Symbolic::BOOL:
-        mExpressionBuffer = strs.str();
-        break;
-
-    case Symbolic::STRING:
-        mError = true;
-        mErrorReason = "Unsupported type coercion from bool to string";
-        break;
-
-    default:
-        mError = true;
-        mErrorReason = "Unsupported type coercion from bool to UNKNOWN";
-        break;
-    }
+    coercetype(opGetType(booleanbinaryoperation->getOp()), expectedType, strs.str());
 }
+
+/** Other Operations **/
+
+void Z3STRConstraintWriter::visit(Symbolic::StringRegexReplace*)
+{
+    mError = true;
+    mErrorReason = "Regex constraints not supported";
+    mExpressionBuffer = "ERROR";
+}
+
+void Z3STRConstraintWriter::visit(Symbolic::StringReplace*)
+{
+    mError = true;
+    mErrorReason = "String replace constraints not supported";
+    mExpressionBuffer = "ERROR";
+}
+
+
+/** Utility **/
+
 
 void Z3STRConstraintWriter::recordAndEmitType(const Symbolic::SymbolicSource& source, Symbolic::Type type)
 {
@@ -365,6 +354,93 @@ std::string Z3STRConstraintWriter::decodeIdentifier(const std::string& identifie
     std::string REPLACE = "_";
 
     return Z3STRConstraintWriter::stringfindreplace(identifier, SEARCH, REPLACE);
+}
+
+void Z3STRConstraintWriter::coercetype(Symbolic::Type from,
+                                              Symbolic::Type to,
+                                              std::string expression)
+{
+
+    switch (from) {
+    case Symbolic::INT:
+
+        switch (to) {
+        case Symbolic::INT:
+            mExpressionBuffer = expression; // No coercion
+            break;
+
+        case Symbolic::STRING:
+            mError = true;
+            mErrorReason = "Unsupported type coercion from INT to STRING";
+            break;
+
+        case Symbolic::BOOL:
+            mExpressionBuffer = "(!= " + expression + " 0)";
+            break;
+
+        default:
+            mError = true;
+            mErrorReason = "Unsupported type coercion from INT to UNKNOWN";
+            break;
+        }
+
+        break;
+
+
+    case Symbolic::STRING:
+
+        switch (to) {
+        case Symbolic::INT:
+            mError = true;
+            mErrorReason = "Unsupported type coercion from STRING to INT";
+            break;
+
+        case Symbolic::STRING:
+            mExpressionBuffer = expression; // No coercion
+            break;
+
+        case Symbolic::BOOL:
+            mExpressionBuffer = "(!= " + expression + " \"\")";
+            break;
+
+        default:
+            mError = true;
+            mErrorReason = "Unsupported type coercion from STRING to UNKNOWN";
+            break;
+        }
+
+        break;
+
+
+    case Symbolic::BOOL:
+
+        switch (to) {
+        case Symbolic::INT:
+            mExpressionBuffer = "(if " + expression + " 1 0)";
+            break;
+
+        case Symbolic::STRING:
+            mExpressionBuffer = "(if " + expression + " \"true\" \"false\")";
+            break;
+
+        case Symbolic::BOOL:
+            mExpressionBuffer = expression; // No coercion
+            break;
+
+        default:
+            mError = true;
+            mErrorReason = "Unsupported type coercion from INT to UNKNOWN";
+            break;
+        }
+
+        break;
+
+    default:
+        mError = true;
+        mErrorReason = "Unsupported type coercion from UNKNOWN to UNKNOWN";
+        break;
+    }
+
 }
 
 

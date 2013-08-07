@@ -71,12 +71,13 @@ private:
      * 1. Check if its own type (documented below) matches mExpressionType, if not
      *    it should mark the translation as an error.
      * 2. Write the subexpression created by the call to mExpressionBuffer.
+     *    ! This subexpression should be of type mExpressionType
      *
      * Symbolic values are bound to the relevant type (according to mExpressionType)
-     * the first time they are accessed.
+     * the first time they are accessed (responsibility of the symbolic* visitors).
      *
      * Constant values are automatically converted to the relevant type (according to
-     * mExpressionType) when accessed.
+     * mExpressionType) when accessed (responsibility of the constant* visitors).
      *
      */
 
@@ -126,6 +127,8 @@ private:
      */
     void recordAndEmitType(const Symbolic::SymbolicSource&, Symbolic::Type type);
     inline bool checkType(Symbolic::Type expected);
+
+    void coercetype(Symbolic::Type from, Symbolic::Type to, std::string expression);
 
     static inline std::string stringfindreplace(const std::string& string, const std::string& search, const std::string& replace);
 

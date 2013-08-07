@@ -16,8 +16,8 @@ from harness.artemis import execute_artemis
 from os import listdir
 from os.path import isfile, join
 
-def run_test(raw_filename, dryrun=False):
-    test_filename = insert_test_into_template(WEBSERVER_ROOT, raw_filename)
+def _run_test(raw_filename, dryrun=False):
+    test_filename = _insert_test_into_template(WEBSERVER_ROOT, raw_filename)
     
     unsat = 'unsat' in raw_filename
     name = raw_filename.replace('.', '_')
@@ -32,7 +32,14 @@ def run_test(raw_filename, dryrun=False):
         return
         
     assert report.get('WebKit::alerts', 0) == 1, "Initial execution did not reach a print statement"
-    
+
+    if unsat:
+        assert report.get('Concolic::Solver::ConstraintsSolvedAsUNSAT', 0) == 1 or \
+               report.get('Concolic::Solver::ConstraintsSolved', 0) == 0, "Initial execution did not return as UNSAT"
+        return
+    else:
+        assert report.get('Concolic::Solver::ConstraintsSolvedAsUNSAT', 0) == 0, "Initial execution returned as UNSAT"
+
     new_fields = []
 
     for field_name in ("testinputx", "testinputy", "testinputNameId", "testinputId", "testinputfoo", "testinputbar"):
@@ -42,13 +49,10 @@ def run_test(raw_filename, dryrun=False):
                              iterations=2,              
                              fields=new_fields)
 
-    if unsat:
-        assert report.get('Concolic::Solver::ConstraintsSolved', 0) == 0, "Unexpected constraints solved in UNSAT test case"
-    else:
-        assert report.get('WebKit::alerts', 0) == 1, "Execution using inputs from the solver did not reach a print statement"
+    assert report.get('WebKit::alerts', 0) == 1, "Execution using inputs from the solver did not reach a print statement"
 
 
-def insert_test_into_template(path, filename):
+def _insert_test_into_template(path, filename):
     tmpName = "_g_%s.html" % filename
     tmpPath = join(path, tmpName)
     with open(tmpPath, 'w') as targetFile:
@@ -65,7 +69,7 @@ def insert_test_into_template(path, filename):
     return tmpName
 
 
-def list_tests_in_folder(folder):
+def _list_tests_in_folder(folder):
     out = []
 
     for f in listdir(folder):
@@ -81,8 +85,8 @@ def list_tests_in_folder(folder):
 
 def test_generator():
     server = WebServer(WEBSERVER_ROOT, WEBSERVER_PORT)
-    for t in list_tests_in_folder(WEBSERVER_ROOT):
-	yield run_test, t
+    for t in _list_tests_in_folder(WEBSERVER_ROOT):
+	yield _run_test, t
     del server
 
 
@@ -91,5 +95,5 @@ if __name__ == '__main__':
         subprocess.call(['nosetests', 'solver.py'])
     else:
         dryrun = len(sys.argv) == 3 and sys.argv[2] == "dryrun"
-        run_test(sys.argv[1], dryrun=dryrun)
+        _run_test(sys.argv[1], dryrun=dryrun)
 
