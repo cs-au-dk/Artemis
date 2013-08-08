@@ -1,0 +1,3 @@
+if ((foo=="foo") < new Object(132)) {
+    alert(x);
+}

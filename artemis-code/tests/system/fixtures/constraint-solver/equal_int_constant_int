@@ -1,4 +1,3 @@
-RESULT: Concolic::Solver::ConstraintsWritten=1; Concolic::Solver::Constraint.SYM_IN_testinputx=1
 if (parseInt(x_1) == 1) {
     alert(x_1);
 }

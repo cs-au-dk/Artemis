@@ -1,0 +1,5 @@
+if (y < (foo=="foo")) {
+
+} else {
+	alert(x);
+}

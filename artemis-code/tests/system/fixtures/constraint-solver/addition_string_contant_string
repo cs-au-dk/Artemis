@@ -1,0 +1,3 @@
+if (x + "test") {
+    alert(x);
+}

@@ -69,6 +69,9 @@ void Solution::toStatistics()
         case Symbolic::BOOL:
             statistics()->set(key, value.u.boolean);
             break;
+        case Symbolic::STRING:
+            statistics()->set(key, value.string);
+            break;
         default:
             std::cerr << "Unimplemented value type encountered" << std::endl;
             std::exit(1);

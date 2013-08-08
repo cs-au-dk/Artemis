@@ -78,7 +78,6 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/runtime/browser/artemiswebpage.h \
     src/concolic/search/search.h \
     src/concolic/solver/solver.h \
-    src/concolic/solver/constraintwriter.h \
     src/concolic/search/searchdfs.h \
     src/concolic/executiontree/nodes/trace.h \
     src/concolic/entrypoints.h \
@@ -109,6 +108,11 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/runtime/demomode/imageviewer/imageviewerdialog.h \
     src/concolic/solver/expressionvalueprinter.h \
     src/concolic/solver/expressionfreevariablelister.h
+    src/concolic/solver/constraintwriter/abstract.h \
+    src/concolic/solver/constraintwriter/kaluza.h \
+    src/concolic/solver/constraintwriter/z3str.h \
+    src/concolic/solver/z3solver.h \
+    src/concolic/solver/kaluzasolver.h
 
 SOURCES += src/runtime/input/ajaxinput.cpp \
     src/strategies/prioritizer/constantprioritizer.cpp \
@@ -168,7 +172,6 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/runtime/toplevel/artemisruntime.cpp \
     src/concolic/solver/expressionprinter.cpp \
     src/concolic/solver/solver.cpp \
-    src/concolic/solver/constraintwriter.cpp \
     src/concolic/entrypoints.cpp \
     src/runtime/toplevel/concolicruntime.cpp \
     src/concolic/executiontree/tracebuilder.cpp \
@@ -197,5 +200,10 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/concolic/search/searchdfs.cpp \
     src/concolic/solver/expressionvalueprinter.cpp \
     src/concolic/solver/expressionfreevariablelister.cpp
+    src/concolic/solver/constraintwriter/abstract.cpp \
+    src/concolic/solver/constraintwriter/kaluza.cpp \
+    src/concolic/solver/constraintwriter/z3str.cpp \
+    src/concolic/solver/z3solver.cpp \
+    src/concolic/solver/kaluzasolver.cpp
 
 QT += network

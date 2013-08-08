@@ -1,0 +1,3 @@
+if ((parseInt(x) / 1) == 1) {
+    alert(x_1);
+}

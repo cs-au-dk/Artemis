@@ -1,0 +1,3 @@
+if (foo != bar) {
+    alert(x_1);
+}
