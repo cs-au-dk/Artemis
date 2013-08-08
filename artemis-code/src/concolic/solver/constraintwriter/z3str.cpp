@@ -213,7 +213,7 @@ void Z3STRConstraintWriter::visit(Symbolic::BooleanCoercion* booleancoercion)
 void Z3STRConstraintWriter::visit(Symbolic::IntegerBinaryOperation* integerbinaryoperation)
 {
     static const char* op[] = {
-        "(+ ", "(- ", "(* ", "(/ ", "(= ", "(= (= ", "(<= ", "(< ", "(>= ", "(> ", "(% ", "(= (= ", "(= "
+        "(+ ", "(- ", "(* ", "(div ", "(= ", "(= (= ", "(<= ", "(< ", "(>= ", "(> ", "(mod ", "(= (= ", "(= "
     };
 
     static const char* opclose[] = {
