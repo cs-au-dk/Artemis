@@ -68,16 +68,19 @@ void TraceClassifier::visit(TraceAlert *node)
 
 void TraceClassifier::visit(TraceDomModification *node)
 {
+    mPreviousLink = &node->next;
     node->next->accept(this);
 }
 
 void TraceClassifier::visit(TracePageLoad *node)
 {
+    mPreviousLink = &node->next;
     node->next->accept(this);
 }
 
 void TraceClassifier::visit(TraceFunctionCall *node)
 {
+    mPreviousLink = &node->next;
     node->next->accept(this);
 }
 
@@ -94,9 +97,11 @@ void TraceClassifier::visit(TraceBranch *node)
 
     if(isImmediatelyUnexplored(node->getFalseBranch())){
         // Took 'true' branch.
+        mPreviousLink = &node->mBranchTrue;
         node->getTrueBranch()->accept(this);
     } else if(isImmediatelyUnexplored(node->getTrueBranch())){
         // Took 'false' branch.
+        mPreviousLink = &node->mBranchFalse;
         node->getFalseBranch()->accept(this);
     } else {
         // Invalid branch node
@@ -108,21 +113,20 @@ void TraceClassifier::visit(TraceBranch *node)
 void TraceClassifier::visit(TraceUnexplored *node)
 {
     // Reached the end of the trace, so stop.
+    // TODO: This should not actually be reached on any well-formed trace. The only unexplored nodes should be direct children of branches.
 }
 
 void TraceClassifier::visit(TraceEndUnknown *node)
 {
     // Reached the end of the trace, so stop.
     // As we only fail on alerts, this means we have a successful trace.
-    // Add the marker just before the end.
+    // Splice in the marker just before the end.
 
-    //TraceEndSuccess* marker = new TraceEndSuccess();
-    //marker->next = QSharedPointer<TraceEndUnknown>(new TraceEndUnknown());
-
-    // Replace the current node (end) with the new marker and end.
-    //*node = *marker;
-
-    // TODO: I am not sure how this can be implemented cleranly and correctly.
+    QSharedPointer<TraceEndSuccess> marker = QSharedPointer<TraceEndSuccess>(new TraceEndSuccess());
+    // Adds the pointer to this node as the successor to the new node.
+    marker->next = *mPreviousLink;
+    // Replaces the pointer to this node by the marker.
+    *mPreviousLink = qSharedPointerCast<TraceNode>(marker);
 }
 
 void TraceClassifier::visit(TraceEnd *node)

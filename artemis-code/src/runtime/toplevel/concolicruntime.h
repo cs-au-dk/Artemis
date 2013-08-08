@@ -25,6 +25,7 @@
 #include "concolic/entrypoints.h"
 #include "concolic/executiontree/traceprinter.h"
 #include "concolic/executiontree/tracedisplay.h"
+#include "concolic/traceclassifier.h"
 
 #include "runtime/input/dominput.h"
 #include "runtime/input/events/mouseeventparameters.h"
@@ -82,6 +83,8 @@ protected:
     bool mRunningToGetEntryPoints;
     bool mRunningWithInitialValues;
     DepthFirstSearchPtr mSearchStrategy; // TODO: For now we are using DFS hard-coded...
+
+    TraceClassifier mTraceClassifier;
 
     // Method and variables for generating a graphviz graph of the execution tree.
     void outputTreeGraph();

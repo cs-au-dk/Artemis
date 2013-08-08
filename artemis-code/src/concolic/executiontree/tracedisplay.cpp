@@ -26,6 +26,8 @@ namespace artemis
 
 QString TraceDisplay::indent = "  ";
 
+bool TraceDisplay::mPassThroughEndMarkers = false;
+
 TraceDisplay::TraceDisplay()
 {
     mExpressionPrinter = QSharedPointer<ExpressionPrinter>(new ExpressionValuePrinter());
@@ -56,7 +58,7 @@ QString TraceDisplay::makeGraph(TraceNodePtr tree)
     }
     result += indent + "}\n\n";
 
-    result += indent + "subgraph branches_sym {\n";
+    result += indent + "subgraph branches_sym {\n" + indent + indent + "node [style = filled, fillcolor = azure];\n\n";
     foreach(QString node, mHeaderSymBranches){
         result += indent + indent + node + ";\n";
     }
@@ -68,7 +70,7 @@ QString TraceDisplay::makeGraph(TraceNodePtr tree)
     }
     result += indent + "}\n\n";
 
-    result += indent + "subgraph alerts {\n" + indent + indent + "node [shape = rectangle, style = filled, fillcolor = red];\n\n";
+    result += indent + "subgraph alerts {\n" + indent + indent + "node [shape = rectangle, style = filled, fillcolor = beige];\n\n";
     foreach(QString node, mHeaderAlerts){
         result += indent + indent + node + ";\n";
     }
@@ -92,13 +94,13 @@ QString TraceDisplay::makeGraph(TraceNodePtr tree)
     }
     result += indent + "}\n\n";
 
-    result += indent + "subgraph end_succ {\n" + indent + indent + "node [label = \"End\", fillcolor = palegreen, style = filled, shape = circle];\n\n";
+    result += indent + "subgraph end_succ {\n" + indent + indent + "node [label = \"End\", fillcolor = green, style = filled, shape = circle];\n\n";
     foreach(QString node, mHeaderEndSucc){
         result += indent + indent + node + ";\n";
     }
     result += indent + "}\n\n";
 
-    result += indent + "subgraph end_fail {\n" + indent + indent + "node [label = \"End\", fillcolor = tomato, style = filled, shape = circle];\n\n";
+    result += indent + "subgraph end_fail {\n" + indent + indent + "node [label = \"End\", fillcolor = red, style = filled, shape = circle];\n\n";
     foreach(QString node, mHeaderEndFail){
         result += indent + indent + node + ";\n";
     }
@@ -302,6 +304,12 @@ void TraceDisplay::visit(TraceEndSuccess *node)
     mHeaderEndSucc.append(name);
 
     addInEdge(name);
+
+    if(mPassThroughEndMarkers){
+        mPreviousNode = name;
+        mEdgeExtras = "";
+        node->next->accept(this);
+    }
 }
 
 
@@ -313,6 +321,12 @@ void TraceDisplay::visit(TraceEndFailure *node)
     mHeaderEndFail.append(name);
 
     addInEdge(name);
+
+    if(mPassThroughEndMarkers){
+        mPreviousNode = name;
+        mEdgeExtras = "";
+        node->next->accept(this);
+    }
 }
 
 
