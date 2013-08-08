@@ -86,6 +86,11 @@ private:
 
     // Used to print any symbolic constraints.
     QSharedPointer<ExpressionPrinter> mExpressionPrinter;
+
+    // End success and failure markers do contain a next pointer which shows what part of the tree was "cut off" when inserting them.
+    // This parameter controls whether these ignored parts should be shown on the tree or not.
+    // For now the parameter is just a constant.
+    static bool mPassThroughEndMarkers;
 };
 
 

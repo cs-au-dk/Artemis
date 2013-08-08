@@ -214,18 +214,30 @@ void ConcolicRuntime::postInitialConcreteExecution(QSharedPointer<ExecutionResul
 // Creates the tree and sets up the search procedure and merges new traces into the tree.
 void ConcolicRuntime::mergeTraceIntoTree()
 {
+    // First, we classify the trace which just ran.
+    // This can  modify it to add the correct end marker to the trace.
+    TraceNodePtr trace = mWebkitExecutor->getTraceBuilder()->trace();
+
+    if(mTraceClassifier.classify(trace)){
+        Log::debug("Recoreded trace was classified as a SUCCESS.");
+    }else{
+        Log::debug("Recoreded trace was classified as a FAILURE.");
+    }
+
+
+    // Now we must merge this trace into the tree.
     if(mRunningWithInitialValues){
         // After the very first run we need to set up the tree & search procedure.
         // We can't just begin with an empty tree and merge every trace in, as the search procedure needs a
         // pointer to the tree, which will be replaced in that case.
         // If this is a problem, we could just introduce a header node for trees.
-        mSymbolicExecutionGraph = mWebkitExecutor->getTraceBuilder()->trace();
+        mSymbolicExecutionGraph = trace;
         mSearchStrategy = DepthFirstSearchPtr(new DepthFirstSearch(mSymbolicExecutionGraph));
         mRunningWithInitialValues = false;
     }else{
         // A normal run.
         // Merge trace with tracegraph
-        mSymbolicExecutionGraph = TraceMerger::merge(mWebkitExecutor->getTraceBuilder()->trace(), mSymbolicExecutionGraph);
+        mSymbolicExecutionGraph = TraceMerger::merge(trace, mSymbolicExecutionGraph);
     }
 
     // Dump the current state of the tree to a file.
