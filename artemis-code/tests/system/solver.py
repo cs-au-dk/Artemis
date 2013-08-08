@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 WEBSERVER_PORT = 8001
-WEBSERVER_ROOT = './fixtures/constraint-solver'
+WEBSERVER_ROOT = './fixtures/constraint-solver/'
 WEBSERVER_URL = 'http://localhost:%s' % WEBSERVER_PORT
 
 TWO_VARIABLES_TEMPLATE_FILE = WEBSERVER_ROOT + '/%symbolic_test_two_variables.html'
@@ -20,6 +20,7 @@ def _run_test(raw_filename, dryrun=False):
     test_filename = _insert_test_into_template(WEBSERVER_ROOT, raw_filename)
     
     unsat = 'unsat' in raw_filename
+    unsupported = 'unsupported' in raw_filename
     name = raw_filename.replace('.', '_')
     
     report = execute_artemis(name, "%s/%s" % (WEBSERVER_URL, test_filename), 
@@ -34,8 +35,10 @@ def _run_test(raw_filename, dryrun=False):
     assert report.get('WebKit::alerts', 0) == 1, "Initial execution did not reach a print statement"
 
     if unsat:
-        assert report.get('Concolic::Solver::ConstraintsSolvedAsUNSAT', 0) == 1 or \
-               report.get('Concolic::Solver::ConstraintsSolved', 0) == 0, "Initial execution did not return as UNSAT"
+        assert report.get('Concolic::Solver::ConstraintsSolvedAsUNSAT', 0) == 1, "Initial execution did not return as UNSAT"
+        return
+    elif unsupported:
+        assert report.get('Concolic::Solver::ConstraintsSolved', 0) == 0, "Initial execution did not return as unsupported"
         return
     else:
         assert report.get('Concolic::Solver::ConstraintsSolvedAsUNSAT', 0) == 0, "Initial execution returned as UNSAT"
@@ -94,6 +97,8 @@ if __name__ == '__main__':
     if len(sys.argv) < 2:
         subprocess.call(['nosetests', 'solver.py'])
     else:
+        server = WebServer(WEBSERVER_ROOT, WEBSERVER_PORT)
         dryrun = len(sys.argv) == 3 and sys.argv[2] == "dryrun"
         _run_test(sys.argv[1], dryrun=dryrun)
+        del server
 

@@ -129,6 +129,16 @@ void Z3STRConstraintWriter::visit(Symbolic::ConstantInteger* constantinteger)
     }
 
     mExpressionBuffer = strs.str();
+
+    // negative number fix, the correct syntax is (- 1) not -1
+    if (mExpressionBuffer.find_first_of("-") == 0) {
+        mExpressionBuffer = "(- " + mExpressionBuffer.substr(1) + ")";
+    }
+
+    if (mExpressionBuffer.find("nan") != -1) {
+        mError = true;
+        mErrorReason = "Unsupported constraint using NaN constant";
+    }
 }
 
 void Z3STRConstraintWriter::visit(Symbolic::ConstantString* constantstring)
@@ -229,12 +239,24 @@ void Z3STRConstraintWriter::visit(Symbolic::IntegerBinaryOperation* integerbinar
 void Z3STRConstraintWriter::visit(Symbolic::StringBinaryOperation* stringbinaryoperation)
 {
     static const char* op[] = {
-        "(Concat ", "(= ", "(= (= ", "(< ", "(<= ", "(> ", "(>= ", "(= ", "(= (= "
+        "(Concat ", "(= ", "(= (= ", "_", "_", "_", "_", "(= ", "(= (= "
     };
 
     static const char* opclose[] = {
-        ")", ")", ") false)", ")", ")", ")", ")", ")", ") false)"
+        ")", ")", ") false)", "_", "_", "_", "_", ")", ") false)"
     };
+
+    switch (stringbinaryoperation->getOp()) {
+    case Symbolic::STRING_GEQ:
+    case Symbolic::STRING_GT:
+    case Symbolic::STRING_LEQ:
+    case Symbolic::STRING_LT:
+        mError = true;
+        mErrorReason = "Unsupported operation on strings";
+        return;
+    default:
+        break;
+    }
 
     Symbolic::Type expectedType = mExpressionType;
 

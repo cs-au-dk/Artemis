@@ -1,0 +1,3 @@
+if ((parseInt(y) % 2) == 0 {
+    alert(x_1);
+}

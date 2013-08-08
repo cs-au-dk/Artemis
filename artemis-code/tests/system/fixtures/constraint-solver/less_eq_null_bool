@@ -1,0 +1,3 @@
+if (null <= (foo=="foo")) {
+    alert(x);
+}

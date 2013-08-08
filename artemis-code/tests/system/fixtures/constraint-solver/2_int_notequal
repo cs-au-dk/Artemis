@@ -1,0 +1,3 @@
+if (parseInt(x_1) != 2 && parseInt(y) != 1) {
+    alert(x_1);
+}
