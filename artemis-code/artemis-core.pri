@@ -107,7 +107,7 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/runtime/demomode/imageviewer/imageviewerwidget.h \
     src/runtime/demomode/imageviewer/imageviewerdialog.h \
     src/concolic/solver/expressionvalueprinter.h \
-    src/concolic/solver/expressionfreevariablelister.h
+    src/concolic/solver/expressionfreevariablelister.h \
     src/concolic/solver/constraintwriter/abstract.h \
     src/concolic/solver/constraintwriter/kaluza.h \
     src/concolic/solver/constraintwriter/z3str.h \
@@ -199,7 +199,7 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/runtime/demomode/imageviewer/imageviewerdialog.cpp \
     src/concolic/search/searchdfs.cpp \
     src/concolic/solver/expressionvalueprinter.cpp \
-    src/concolic/solver/expressionfreevariablelister.cpp
+    src/concolic/solver/expressionfreevariablelister.cpp \
     src/concolic/solver/constraintwriter/abstract.cpp \
     src/concolic/solver/constraintwriter/kaluza.cpp \
     src/concolic/solver/constraintwriter/z3str.cpp \
