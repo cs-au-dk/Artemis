@@ -78,7 +78,7 @@ def _list_tests_in_folder(folder):
     for f in listdir(folder):
         p = join(folder, f)
 
-        if not isfile(p) or f[0:1] == "_" or f[0:1] == "%":
+        if not isfile(p) or f[0:1] == "_" or f[0:1] == "%" or '~' in f or '#' in f:
             continue
         
         out.append(f)
