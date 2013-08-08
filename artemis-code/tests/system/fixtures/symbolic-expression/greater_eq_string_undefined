@@ -1,4 +1,4 @@
-TEST PC: (IntegerCoercion(SymbolicString) > ConstantInteger)
+TEST PC: (IntegerCoercion(SymbolicString) < ConstantInteger)
 if (x >= undefined) {
     alert(x);
 }
