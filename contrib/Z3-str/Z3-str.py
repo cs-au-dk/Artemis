@@ -37,7 +37,6 @@ def encodeConstStr(constStr):
   
   return constStr
 
-
 def convert(org_file):  
   absPath = os.path.dirname(os.path.abspath(org_file));
   convertDir = absPath + "/convert";
@@ -58,6 +57,7 @@ def convert(org_file):
   
   for line in linesInFile:    
     line = line.strip();
+
     if line == "":
       continue
     if line.startswith(';'):

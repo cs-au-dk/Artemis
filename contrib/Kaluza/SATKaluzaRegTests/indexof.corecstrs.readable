@@ -1,0 +1,30 @@
+T_SELECT_1 :=PCTEMP_LHS_1 != 0xffffffff;
+
+IF (T_SELECT_1) {
+PCTEMP_LHS_1 := I0_2 + 0x0;
+var_0xINPUT_2 := T0_2 . T1_2;
+I0_2 == Len(T4_2);
+0x0 == Len(T0_2);
+T1_2 := T2_2 . T3_2;
+T2_2 := T4_2 . T5_2;
+T5_2 == "=";
+T4_2 \notin CapturedBrack(/=/, 0);
+
+
+}
+ ELSE {
+PCTEMP_LHS_1 == 0xffffffff;
+var_0xINPUT_2 := T0_2 . T1_2;
+0x0 == Len(T0_2);
+T1_2 \notin CapturedBrack(/=/, 0);
+
+
+}
+
+T_2 :=PCTEMP_LHS_1 != 0x5;
+
+T_3 := ! T_2;
+
+ASSERT (T_3);
+
+type T5_2 : CSTR;

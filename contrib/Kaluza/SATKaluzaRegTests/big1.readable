@@ -1,0 +1,223 @@
+T_SELECT_1 :=PCTEMP_LHS_1 != 0xffffffff;
+
+IF (T_SELECT_1) {
+PCTEMP_LHS_1 := I0_2 + 0x0;
+var_0xINPUT_130 := T0_2 . T1_2;
+I0_2 == Len(T4_2);
+0x0 == Len(T0_2);
+T1_2 := T2_2 . T3_2;
+T2_2 := T4_2 . T5_2;
+T5_2 == "?";
+T4_2 \notin CapturedBrack(/\?/, 0);
+
+
+}
+ ELSE {
+PCTEMP_LHS_1 == 0xffffffff;
+var_0xINPUT_130 := T0_2 . T1_2;
+0x0 == Len(T0_2);
+T1_2 \notin CapturedBrack(/\?/, 0);
+
+
+}
+
+T_SELECT_2 :=PCTEMP_LHS_2 != 0xffffffff;
+
+IF (T_SELECT_2) {
+PCTEMP_LHS_2 := I0_4 + 0x0;
+var_0xINPUT_130 := T0_4 . T1_4;
+I0_4 == Len(T4_4);
+0x0 == Len(T0_4);
+T1_4 := T2_4 . T3_4;
+T2_4 := T4_4 . T5_4;
+T5_4 == "#";
+T4_4 \notin CapturedBrack(/#/, 0);
+
+
+}
+ ELSE {
+PCTEMP_LHS_2 == 0xffffffff;
+var_0xINPUT_130 := T0_4 . T1_4;
+0x0 == Len(T0_4);
+T1_4 \notin CapturedBrack(/#/, 0);
+
+
+}
+
+T_3 :=PCTEMP_LHS_2 == 0xffffffff;
+
+ASSERT (T_3);
+
+T_4 := PCTEMP_LHS_1 + 0x1;
+
+I0_8 := I2_8 - T_4;
+
+T_4 >= 0x0;
+
+I2_8 >= T_4;
+
+I2_8 <= I1_8;
+
+I2_8 == I1_8;
+
+I0_8 == Len(PCTEMP_LHS_3);
+
+var_0xINPUT_130 := T1_8 . T2_8;
+
+T2_8 := PCTEMP_LHS_3 . T3_8;
+
+T_4 == Len(T1_8);
+
+I1_8 == Len(var_0xINPUT_130);
+
+T2_10 == PCTEMP_LHS_4_idx_2;
+
+T0_10 == PCTEMP_LHS_3;
+
+M1_10 == "&";
+
+PCTEMP_LHS_4_idx_1 \notin CapturedBrack(/&/, 0);
+
+
+P1_10 := PCTEMP_LHS_4_idx_1 . M1_10;
+
+T1_10 := P1_10 . T2_10;
+
+M0_10 == "&";
+
+PCTEMP_LHS_4_idx_0 \notin CapturedBrack(/&/, 0);
+
+
+P0_10 := PCTEMP_LHS_4_idx_0 . M0_10;
+
+T0_10 := P0_10 . T1_10;
+
+ASSERT (PCTEMP_LHS_4);
+
+IF (PCTEMP_LHS_4) {
+T_7 == PCTEMP_LHS_4_idx_0;
+
+}
+ ELSE {
+
+}
+
+T_SELECT_3 :=PCTEMP_LHS_5 != 0xffffffff;
+
+IF (T_SELECT_3) {
+PCTEMP_LHS_5 := I0_13 + 0x0;
+T_7 := T0_13 . T1_13;
+I0_13 == Len(T4_13);
+0x0 == Len(T0_13);
+T1_13 := T2_13 . T3_13;
+T2_13 := T4_13 . T5_13;
+T5_13 == "=";
+T4_13 \notin CapturedBrack(/=/, 0);
+
+
+}
+ ELSE {
+PCTEMP_LHS_5 == 0xffffffff;
+T_7 := T0_13 . T1_13;
+0x0 == Len(T0_13);
+T1_13 \notin CapturedBrack(/=/, 0);
+
+
+}
+
+T_9 :=PCTEMP_LHS_5 == 0xffffffff;
+
+T_a := ! T_9;
+
+ASSERT (T_a);
+
+ASSERT (PCTEMP_LHS_4);
+
+IF (PCTEMP_LHS_4) {
+T_b == PCTEMP_LHS_4_idx_1;
+
+}
+ ELSE {
+
+}
+
+T_SELECT_4 :=PCTEMP_LHS_6 != 0xffffffff;
+
+IF (T_SELECT_4) {
+PCTEMP_LHS_6 := I0_18 + 0x0;
+T_b := T0_18 . T1_18;
+I0_18 == Len(T4_18);
+0x0 == Len(T0_18);
+T1_18 := T2_18 . T3_18;
+T2_18 := T4_18 . T5_18;
+T5_18 == "=";
+T4_18 \notin CapturedBrack(/=/, 0);
+
+
+}
+ ELSE {
+PCTEMP_LHS_6 == 0xffffffff;
+T_b := T0_18 . T1_18;
+0x0 == Len(T0_18);
+T1_18 \notin CapturedBrack(/=/, 0);
+
+
+}
+
+T_d :=PCTEMP_LHS_6 == 0xffffffff;
+
+T_e := ! T_d;
+
+ASSERT (T_e);
+
+ASSERT (PCTEMP_LHS_4);
+
+IF (PCTEMP_LHS_4) {
+T_f == PCTEMP_LHS_4_idx_2;
+
+}
+ ELSE {
+
+}
+
+T_SELECT_5 :=PCTEMP_LHS_7 != 0xffffffff;
+
+IF (T_SELECT_5) {
+PCTEMP_LHS_7 := I0_23 + 0x0;
+T_f := T0_23 . T1_23;
+I0_23 == Len(T4_23);
+0x0 == Len(T0_23);
+T1_23 := T2_23 . T3_23;
+T2_23 := T4_23 . T5_23;
+T5_23 == "=";
+T4_23 \notin CapturedBrack(/=/, 0);
+
+
+}
+ ELSE {
+PCTEMP_LHS_7 == 0xffffffff;
+T_f := T0_23 . T1_23;
+0x0 == Len(T0_23);
+T1_23 \notin CapturedBrack(/=/, 0);
+
+
+}
+
+T_11 :=PCTEMP_LHS_7 != 0x6;
+
+T_12 := ! T_11;
+
+ASSERT (T_12);
+
+type T5_2 : CSTR;
+type T5_4 : CSTR;
+type T2_10 : CSTR;
+type T0_10 : CSTR;
+type M1_10 : CSTR;
+type M0_10 : CSTR;
+type T_7 : CSTR;
+type T5_13 : CSTR;
+type T_b : CSTR;
+type T5_18 : CSTR;
+type T_f : CSTR;
+type T5_23 : CSTR;

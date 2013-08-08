@@ -1,0 +1,43 @@
+T2_2 == PCTEMP_LHS_1_idx_2;
+
+T0_2 == var_0xINPUT_2;
+
+M1_2 == "=";
+
+PCTEMP_LHS_1_idx_1 \notin CapturedBrack(/=/, 0);
+
+
+P1_2 := PCTEMP_LHS_1_idx_1 . M1_2;
+
+T1_2 := P1_2 . T2_2;
+
+M0_2 == "=";
+
+PCTEMP_LHS_1_idx_0 \notin CapturedBrack(/=/, 0);
+
+
+P0_2 := PCTEMP_LHS_1_idx_0 . M0_2;
+
+T0_2 := P0_2 . T1_2;
+
+ASSERT (PCTEMP_LHS_1);
+
+IF (PCTEMP_LHS_1) {
+T_2 == PCTEMP_LHS_1_idx_0;
+
+}
+ ELSE {
+
+}
+
+T_3 :=T_2 != "Hello";
+
+T_4 := ! T_3;
+
+ASSERT (T_4);
+
+type T2_2 : CSTR;
+type T0_2 : CSTR;
+type M1_2 : CSTR;
+type M0_2 : CSTR;
+type T_2 : CSTR;

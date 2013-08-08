@@ -47,11 +47,11 @@ class KaluzaConstraintWriter : public ConstraintWriter, public Symbolic::Visitor
 {
 public:
 
+    KaluzaConstraintWriter();
+
     bool write(PathConditionPtr pathCondition, std::string outputFile);
 
 private:
-
-    KaluzaConstraintWriter();
 
     void visit(Symbolic::SymbolicInteger* symbolicinteger);
     void visit(Symbolic::ConstantInteger* constantinteger);

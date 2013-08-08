@@ -108,7 +108,9 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/runtime/demomode/imageviewer/imageviewerdialog.h \
     src/concolic/solver/constraintwriter/abstract.h \
     src/concolic/solver/constraintwriter/kaluza.h \
-    src/concolic/solver/constraintwriter/z3str.h
+    src/concolic/solver/constraintwriter/z3str.h \
+    src/concolic/solver/z3solver.h \
+    src/concolic/solver/kaluzasolver.h
 
 SOURCES += src/runtime/input/ajaxinput.cpp \
     src/strategies/prioritizer/constantprioritizer.cpp \
@@ -196,6 +198,8 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/concolic/search/searchdfs.cpp \
     src/concolic/solver/constraintwriter/abstract.cpp \
     src/concolic/solver/constraintwriter/kaluza.cpp \
-    src/concolic/solver/constraintwriter/z3str.cpp
+    src/concolic/solver/constraintwriter/z3str.cpp \
+    src/concolic/solver/z3solver.cpp \
+    src/concolic/solver/kaluzasolver.cpp
 
 QT += network
