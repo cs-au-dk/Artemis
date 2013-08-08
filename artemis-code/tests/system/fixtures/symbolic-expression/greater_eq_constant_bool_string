@@ -1,4 +1,4 @@
-TEST PC: (ConstantInteger > IntegerCoercion(SymbolicString))
+TEST PC: (ConstantInteger < IntegerCoercion(SymbolicString))
 if (false >= x) {
     alert(x);
 }

@@ -1,4 +1,4 @@
-TEST PC: (IntegerCoercion((SymbolicString == ConstantString)) > ConstantInteger)
+TEST PC: (IntegerCoercion((SymbolicString == ConstantString)) < ConstantInteger)
 if ((y=="test") >= 2 ) {
     alert(x);
 }

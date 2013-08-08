@@ -1,4 +1,4 @@
-TEST PC: (ConstantInteger > IntegerCoercion(SymbolicString))
+TEST PC: (ConstantInteger < IntegerCoercion(SymbolicString))
 if (new Object(12390123)>=x ) {
     alert(x);
 }

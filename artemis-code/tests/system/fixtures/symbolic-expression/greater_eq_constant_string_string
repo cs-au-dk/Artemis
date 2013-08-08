@@ -1,4 +1,4 @@
-TEST PC: (ConstantString > SymbolicString)
+TEST PC: (ConstantString < SymbolicString)
 if ('test' >= x) {
     alert(x);
 }
