@@ -193,6 +193,7 @@ void TraceDisplay::visit(TraceSymbolicBranch *node)
 
     node->getSymbolicCondition()->accept(mExpressionPrinter.data());
     QString symbolicExpression(mExpressionPrinter->getResult().c_str());
+    mExpressionPrinter->clear();
     symbolicExpression.replace("\"", "\\\"");
     symbolicExpression.replace(")(", ")\\n("); // TODO: Hack for splitting m,ultiple clauses onto diffent lines.
     QString label = QString(" [label = \"Branch\\n%1\"]").arg(symbolicExpression);
