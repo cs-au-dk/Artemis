@@ -16,6 +16,7 @@
 
 #include "util/loggingutil.h"
 #include "concolic/executiontree/tracemerger.h"
+#include "concolic/solver/z3solver.h"
 
 #include "concolicruntime.h"
 
@@ -249,7 +250,7 @@ void ConcolicRuntime::printSolution(SolutionPtr solution, QStringList varList)
                 Log::debug(QString("%1 = %2").arg(var).arg(value.u.boolean ? "true" : "false").toStdString());
                 break;
             case Symbolic::STRING:
-                Log::debug(QString("%1 = %2").arg(var).arg(value.string->c_str()).toStdString());
+                Log::debug(QString("%1 = %2").arg(var).arg(value.string.c_str()).toStdString());
                 break;
             default:
                 Log::info(QString("Unimplemented value type encountered for variable %1 (%2)").arg(var).arg(value.kind).toStdString());
@@ -291,8 +292,8 @@ QSharedPointer<FormInput> ConcolicRuntime::createFormInput(QMap<QString, Symboli
             Log::debug(QString("Injecting %1 into %2").arg(value.u.boolean ? "true" : "false").arg(varName).toStdString());
             break;
         case Symbolic::STRING:
-            inputs.insert(QPair<QSharedPointer<const FormField>, const FormFieldValue*>(varSourceField, new FormFieldValue(NULL, QString(value.string->c_str()))));
-            Log::debug(QString("Injecting %1 into %2").arg(QString(value.string->c_str())).arg(varName).toStdString());
+            inputs.insert(QPair<QSharedPointer<const FormField>, const FormFieldValue*>(varSourceField, new FormFieldValue(NULL, QString(value.string.c_str()))));
+            Log::debug(QString("Injecting %1 into %2").arg(QString(value.string.c_str())).arg(varName).toStdString());
             break;
         default:
             Log::info(QString("Unimplemented value type encountered for variable %1 (%2)").arg(varName).arg(value.kind).toStdString());
@@ -372,7 +373,8 @@ void ConcolicRuntime::exploreNextTarget()
     Log::debug(varList.join(", ").toStdString());
 
     // Try to solve this PC to get some concrete input.
-    SolutionPtr solution = Solver::solve(target);
+    Z3Solver solver;
+    SolutionPtr solution = solver.solve(target);
 
     if(solution->isSolved()) {
         Log::debug("Solved the target Pc:");
