@@ -144,6 +144,7 @@ void DepthFirstSearch::visit(TraceConcreteBranch *node)
         mParentStack.push(SavedPosition(node, mCurrentDepth, *mCurrentPC));
         mCurrentDepth++;
         mPreviousParent = node;
+        mPreviousDirection = false; // We are always taking the false branch here.
         node->getFalseBranch()->accept(this);
     }else{
         // If we have reached the depth limit, then treat this node as a leaf and skip to whatever we are supposed to search next.
@@ -158,6 +159,7 @@ void DepthFirstSearch::visit(TraceSymbolicBranch *node)
         mParentStack.push(SavedPosition(node, mCurrentDepth, *mCurrentPC));
         mCurrentDepth++;
         mPreviousParent = node;
+        mPreviousDirection = false;
         mCurrentPC->addCondition(node->getSymbolicCondition(), false); // We are always taking the false branch here.
         node->getFalseBranch()->accept(this);
     }else{
@@ -213,6 +215,10 @@ TraceNodePtr DepthFirstSearch::nextAfterLeaf()
     if(sym){
         mCurrentPC->addCondition(sym->getSymbolicCondition(), true); // We are always taking the true branch here.
     }
+
+    // Keep the previous parent information up-to-date when branching from the stack.
+    mPreviousParent = parent.node;
+    mPreviousDirection = true;
 
     return parent.node->getTrueBranch();
 }
