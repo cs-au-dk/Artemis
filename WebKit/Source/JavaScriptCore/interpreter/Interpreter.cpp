@@ -4896,7 +4896,7 @@ skip_id_custom_self:
         JSValue _r = jsBoolean(!result);
 
         _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
-                                                    src1, Symbolic::GREATER_STRICT, src2,
+                                                    src1, Symbolic::LESS_STRICT, src2,
                                                     _r);
 
         Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC, bytecodeInfo,
