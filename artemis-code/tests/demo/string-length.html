@@ -6,12 +6,12 @@
 	<title>Ben Spencer</title>
 	<meta name="author" content="Ben Spencer">
 	<script type="text/javascript">
-		var x = "testme";
+		var x = 5;
 
 		function validate() {
 			var y = document.getElementById("testinput").value;
 
-			if (y != x) {
+			if (y.length != x) {
 				alert("Error!");
 				return false;
 			}else{
@@ -23,7 +23,7 @@
 </head>
 <body>
 
-	<p>Write <i>testme</i> in the field to do something.</p>
+	<p>Write a string of length 5 in the field to do something.</p>
 
 	<form method="GET" action="about:blank" >
 

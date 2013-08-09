@@ -6,12 +6,15 @@
 	<title>Ben Spencer</title>
 	<meta name="author" content="Ben Spencer">
 	<script type="text/javascript">
-		var x = "testme";
+		var x = "XXXtestmeYYY";
 
 		function validate() {
 			var y = document.getElementById("testinput").value;
 
-			if (y != x) {
+			var z = "XXX" + y;
+			z += "YYY";
+
+			if (z != x) {
 				alert("Error!");
 				return false;
 			}else{
