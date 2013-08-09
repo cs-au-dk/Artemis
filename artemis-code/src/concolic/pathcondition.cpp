@@ -159,4 +159,9 @@ QMap<QString, Symbolic::SourceIdentifierMethod> PathCondition::freeVariables()
     return vars;
 }
 
+void PathCondition::negateLastCondition()
+{
+    mConditions.last().second = !mConditions.last().second;
+}
+
 }

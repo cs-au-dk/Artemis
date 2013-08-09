@@ -56,6 +56,8 @@ public:
     // Used to incrementally create a PC in the search procedure.
     void addCondition(Symbolic::Expression* condition, bool outcome);
 
+    void negateLastCondition();
+
 private:
     QList<QPair<Symbolic::Expression*, bool> > mConditions;
 };

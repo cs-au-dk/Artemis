@@ -52,6 +52,8 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             "\n"
             "-s       : Enable DOM state checking\n"
             "\n"
+            "-e       : Negate the last solved PC printet to stdout (used for testing)\n"
+            "\n"
             "--major-mode <mode>:\n"
             "           The major-mode specifies the top-level test algorithm used by Artemis.\n"
             "\n"
@@ -123,7 +125,7 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
     artemis::Log::addLogLevel(artemis::INFO);
     artemis::Log::addLogLevel(artemis::FATAL);
 
-    while ((c = getopt_long(argc, argv, "hsrp:a:m:f:t:c:i:v:", long_options, &option_index)) != -1) {
+    while ((c = getopt_long(argc, argv, "ehsrp:a:m:f:t:c:i:v:", long_options, &option_index)) != -1) {
 
         switch (c) {
 
@@ -322,6 +324,12 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
                 cerr << "ERROR: Invalid choice of concolic-tree-output " << optarg << endl;
                 exit(1);
             }
+
+            break;
+        }
+
+        case 'e': {
+            options.concolicNegateLastConstraint = true;
 
             break;
         }

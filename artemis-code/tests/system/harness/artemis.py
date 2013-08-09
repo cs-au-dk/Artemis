@@ -24,6 +24,7 @@ def execute_artemis(execution_uuid, url, iterations=1,
                     exclude=None,
                     fields=None,
                     dryrun=False,
+                    reverse_constraint_solver=False,
                     **kwargs):
     output_dir = os.path.join(OUTPUT_DIR, execution_uuid)
 
@@ -61,6 +62,9 @@ def execute_artemis(execution_uuid, url, iterations=1,
     for field in fields:
         args.append('-f')
         args.append(field)
+
+    if reverse_constraint_solver:
+        args.append('-e')
 
     cmd = [ARTEMIS_EXEC] + [url] + args
 

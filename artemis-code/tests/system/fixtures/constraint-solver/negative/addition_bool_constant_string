@@ -1,0 +1,5 @@
+<!-- not possible because of string->int coercion -->
+if ((foo=="foo") +"test") {
+    alert(x);
+}
+

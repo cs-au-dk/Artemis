@@ -1,3 +1,0 @@
-if (undefined + x) {
-    alert(x);
-}

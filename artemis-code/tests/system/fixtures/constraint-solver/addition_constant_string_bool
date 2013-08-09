@@ -1,3 +1,0 @@
-if ("test" + (foo=="foo")) {
-    alert(x);
-}

@@ -42,6 +42,21 @@ def _run_test(raw_filename, dryrun=False):
         return
     else:
         assert report.get('Concolic::Solver::ConstraintsSolvedAsUNSAT', 0) == 0, "Initial execution returned as UNSAT"
+        assert report.get('Concolic::Solver::ConstraintsSolved', 0) == 1, "Initial execution did not solve a constraint"
+        
+    new_fields = []
+
+    for field_name in ("testinputx", "testinputy", "testinputNameId", "testinputId", "testinputfoo", "testinputbar"):
+        new_fields.append("#%s=%s" % (field_name, str(report.get("Concolic::Solver::Constraint.SYM_IN_%s" % field_name, 0))))
+        
+    report = execute_artemis(name, "%s/%s" % (WEBSERVER_URL, test_filename),                                                                            
+                             iterations=2,              
+                             fields=new_fields,
+                             reverse_constraint_solver=True)
+
+    assert report.get('WebKit::alerts', 0) == 1, "Execution using inputs from the solver did not reach a print statement"
+
+    # negative case
 
     new_fields = []
 
@@ -50,9 +65,12 @@ def _run_test(raw_filename, dryrun=False):
         
     report = execute_artemis(name, "%s/%s" % (WEBSERVER_URL, test_filename),                                                                            
                              iterations=2,              
-                             fields=new_fields)
+                             fields=new_fields,
+                             reverse_constraint_solver=True)
 
-    assert report.get('WebKit::alerts', 0) == 1, "Execution using inputs from the solver did not reach a print statement"
+    assert report.get('Concolic::Solver::ConstraintsSolvedAsUNSAT', 0) == 0, "NEGATED execution returned as UNSAT"
+    assert report.get('Concolic::Solver::ConstraintsSolved', 0) == 1, "NEGATED execution did not solve a constraint"
+    assert report.get('WebKit::alerts', 0) == 0, "NEGATED execution REACHED a print statement when it should not"
 
 
 def _insert_test_into_template(path, filename):

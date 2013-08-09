@@ -169,6 +169,10 @@ void Runtime::done()
     // solve the last PC - this is needed by some system tests
     PathConditionPtr pc = PathCondition::createFromTrace(mWebkitExecutor->getTraceBuilder()->trace());
 
+    if (mOptions.concolicNegateLastConstraint) {
+        pc->negateLastCondition();
+    }
+
     Z3Solver solver;
 
     SolutionPtr solution = solver.solve(pc);

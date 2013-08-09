@@ -1,3 +1,3 @@
-if (1 + (foo=="foo")) {
+if (0 + (foo=="foo")) {
     alert(x);
 }

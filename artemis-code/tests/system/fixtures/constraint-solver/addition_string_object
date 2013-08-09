@@ -1,3 +1,0 @@
-if (x + new Object(12390123)) {
-    alert(x);
-}
