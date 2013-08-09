@@ -47,7 +47,10 @@ def _run_test(raw_filename, dryrun=False):
     new_fields = []
 
     for field_name in ("testinputx", "testinputy", "testinputNameId", "testinputId", "testinputfoo", "testinputbar"):
-        new_fields.append("#%s=%s" % (field_name, str(report.get("Concolic::Solver::Constraint.SYM_IN_%s" % field_name, 0))))
+        value = str(report.get("Concolic::Solver::Constraint.SYM_IN_%s" % field_name, 0))
+        if value == 'False':
+            value = ''
+        new_fields.append("#%s=%s" % (field_name, value))
         
     report = execute_artemis(name, "%s/%s" % (WEBSERVER_URL, test_filename),                                                                            
                              iterations=2,              
@@ -61,7 +64,10 @@ def _run_test(raw_filename, dryrun=False):
     new_fields = []
 
     for field_name in ("testinputx", "testinputy", "testinputNameId", "testinputId", "testinputfoo", "testinputbar"):
-        new_fields.append("#%s=%s" % (field_name, str(report.get("Concolic::Solver::Constraint.SYM_IN_%s" % field_name, 0))))
+        value = str(report.get("Concolic::Solver::Constraint.SYM_IN_%s" % field_name, 0))
+        if value == 'False':
+            value = ''
+        new_fields.append("#%s=%s" % (field_name, value))
         
     report = execute_artemis(name, "%s/%s" % (WEBSERVER_URL, test_filename),                                                                            
                              iterations=2,              

@@ -397,7 +397,7 @@ void Z3STRConstraintWriter::coercetype(Symbolic::Type from,
             break;
 
         case Symbolic::BOOL:
-            mExpressionBuffer = "(!= " + expression + " 0)";
+            mExpressionBuffer = "(= (= " + expression + " 0) false)";
             break;
 
         default:
@@ -422,7 +422,7 @@ void Z3STRConstraintWriter::coercetype(Symbolic::Type from,
             break;
 
         case Symbolic::BOOL:
-            mExpressionBuffer = "(!= " + expression + " \"\")";
+            mExpressionBuffer = "(= (= " + expression + " \"\") false)";
             break;
 
         default:

@@ -292,6 +292,10 @@ Symbolic::BooleanExpression* JSValue::generateBooleanExpression(ExecState* exec)
     return this->isSymbolic()?(Symbolic::BooleanExpression*) this->asSymbolic():new Symbolic::ConstantBoolean(this->toPrimitive(exec).toBoolean(exec));
 }
 
+Symbolic::BooleanExpression* JSValue::generateBooleanCoercionExpression(ExecState* exec){
+    return this->isSymbolic() ? (Symbolic::BooleanExpression*)new Symbolic::BooleanCoercion(this->asSymbolic()) :
+                            (Symbolic::BooleanExpression*)new Symbolic::ConstantBoolean(this->toPrimitive(exec).toBoolean(exec));
+}
 
 #endif
 
