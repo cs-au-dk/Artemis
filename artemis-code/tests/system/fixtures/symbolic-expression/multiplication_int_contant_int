@@ -1,4 +1,4 @@
-TEST PC: (((IntegerCoercion(SymbolicString)*ConstantInteger)*ConstantInteger) == ConstantInteger)
+TEST PC: (BooleanCoercion(((IntegerCoercion(SymbolicString)*ConstantInteger)*ConstantInteger) )==ConstantBoolean)
 if ((x*6) * 1) {
     alert(x);
 }

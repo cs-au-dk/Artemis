@@ -1,4 +1,4 @@
-TEST PC: ((IntegerCoercion(SymbolicString) / ConstantInteger)==ConstantInteger)
+TEST PC: (BooleanCoercion((IntegerCoercion(SymbolicString) / ConstantInteger))==ConstantBoolean)
 if (x / new Object(12390123)) {
     alert(x);
 }

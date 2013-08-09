@@ -1,4 +1,4 @@
-TEST PC: ((ConstantInteger - (IntegerCoercion(SymbolicString)*ConstantInteger)) ==ConstantInteger)
+TEST PC: (BooleanCoercion((ConstantInteger - (IntegerCoercion(SymbolicString)*ConstantInteger)) )==ConstantBoolean)
 if (new Object(1322) - (x*2) ) {
     alert(x);
 }

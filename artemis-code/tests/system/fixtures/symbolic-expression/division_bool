@@ -1,4 +1,4 @@
-TEST PC: ((IntegerCoercion((SymbolicString == ConstantString)) / IntegerCoercion((SymbolicString == ConstantString))) == ConstantInteger)
+TEST PC: (BooleanCoercion((IntegerCoercion((SymbolicString == ConstantString)) / IntegerCoercion((SymbolicString == ConstantString))) )==ConstantBoolean)
 if ((x=="x") / (y=="y")) {
     alert(x);
 }

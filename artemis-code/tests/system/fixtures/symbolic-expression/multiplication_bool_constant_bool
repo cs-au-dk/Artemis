@@ -1,4 +1,4 @@
-TEST PC: ((IntegerCoercion((SymbolicString == ConstantString)) * ConstantInteger) == ConstantInteger)
+TEST PC: (BooleanCoercion((IntegerCoercion((SymbolicString == ConstantString)) * ConstantInteger) )==ConstantBoolean)
 if ((x=="x") * false) {
     alert(x);
 }
