@@ -14,7 +14,7 @@ LIB = $(Z3_path)/bin/external
 
 
 all: $(SOURCE)
-	g++ -O3 -fopenmp -static -I$(INCLUDE) -L$(LIB) $(SOURCE) -lz3 -o str -Wall
+	g++ -O3 -fopenmp -static -I$(INCLUDE) -L$(LIB) $(SOURCE) -lz3 -o str -Wall -lrt
 
 clean:
 	rm -f $(JUNK)
