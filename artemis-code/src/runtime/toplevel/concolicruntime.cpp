@@ -95,23 +95,7 @@ void ConcolicRuntime::postConcreteExecution(ExecutableConfigurationConstPtr conf
         mergeTraceIntoTree();
 
         // Choose the next node to explore
-        if(mSearchStrategy->chooseNextTarget()){
-
-            // Explore this target. Runs the next execution itself.
-            exploreNextTarget();
-
-        }else{
-            Log::debug("\n============= Finished DFS ==============");
-            Log::debug("Finished serach of the tree (first pass at this depth).");
-
-            if(mOptions.concolicTreeOutput == TREE_FINAL){
-                outputTreeGraph();
-            }
-
-            mWebkitExecutor->detach();
-            done();
-            return;
-        }
+        chooseNextTargetAndExplore();
 
     }
 }
@@ -403,14 +387,36 @@ void ConcolicRuntime::exploreNextTarget()
 
     }else{
         // TODO: Should try someting else/go concrete/...?
-        Log::debug("\n============= Finished DFS ==============");
         Log::debug("Could not solve the constraint.");
         Log::debug("This case is not yet implemented!");
+        Log::debug("Skipping this target!");
+
+        // Skip this node and move on to the next.
+        chooseNextTargetAndExplore();
+    }
+}
+
+
+// Uses the search strategy to choose a new tsarget and then explore it.
+void ConcolicRuntime::chooseNextTargetAndExplore()
+{
+    // Choose the next target.
+    if(mSearchStrategy->chooseNextTarget()){
+
+        // Explore this target. Runs the next execution itself.
+        exploreNextTarget();
+
+    }else{
+        Log::debug("\n============= Finished DFS ==============");
+        Log::debug("Finished serach of the tree (first pass at this depth).");
+
+        if(mOptions.concolicTreeOutput == TREE_FINAL){
+            outputTreeGraph();
+        }
 
         mWebkitExecutor->detach();
         done();
         return;
-
     }
 }
 

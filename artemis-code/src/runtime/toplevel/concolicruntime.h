@@ -100,6 +100,7 @@ protected:
     QSharedPointer<FormInput> createFormInput(QMap<QString, Symbolic::SourceIdentifierMethod> freeVariables, SolutionPtr solution);
     QSharedPointer<const FormField> findFormFieldForVariable(QString varName, Symbolic::SourceIdentifierMethod varSourceIdentifierMethod);
     void exploreNextTarget();
+    void chooseNextTargetAndExplore();
 
     QSet<QSharedPointer<const FormField> > mFormFields;
 
