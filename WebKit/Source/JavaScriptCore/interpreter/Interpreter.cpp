@@ -2511,7 +2511,7 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
 #ifdef ARTEMIS
         callFrame->uncheckedR(dst) = \
                 Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
-                                                       dividend, Symbolic::EQUAL, divisor,
+                                                       dividend, Symbolic::MODULO, divisor,
                                                        result);
 #endif
 
