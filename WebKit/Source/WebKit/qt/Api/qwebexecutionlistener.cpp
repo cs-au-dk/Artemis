@@ -117,8 +117,6 @@ void QWebExecutionListener::ajaxCallbackFire(int callbackId) {
 
 	xmlHttpRequest->fire();
 
-    m_ajax_callbacks.remove(callbackId);
-	delete xmlHttpRequest;
 }
 
 void QWebExecutionListener::clearAjaxCallbacks() {
