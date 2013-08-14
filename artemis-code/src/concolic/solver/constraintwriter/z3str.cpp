@@ -318,9 +318,15 @@ void Z3STRConstraintWriter::visit(Symbolic::StringReplace*)
 
 void Z3STRConstraintWriter::visit(Symbolic::StringLength* stringlength)
 {
-    mError = true;
-    mErrorReason = "String replace constraints not supported";
-    mExpressionBuffer = "ERROR";
+    Symbolic::Type expectedType = mExpressionType;
+
+    mExpressionType = Symbolic::STRING;
+    stringlength->getString()->accept(this);
+
+    std::ostringstream strs;
+    strs << "(Length " << mExpressionBuffer << ")";
+
+    coercetype(Symbolic::INT, expectedType, strs.str());
 }
 
 
