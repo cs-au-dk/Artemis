@@ -41,7 +41,7 @@ SolutionPtr KaluzaSolver::solve(PathConditionPtr pc)
 
     // 1. translate pc to something solvable using the translator
 
-    ConstraintWriterPtr constraintwriter = ConstraintWriterPtr(new KaluzaConstraintWriter());
+    KaluzaConstraintWriterPtr constraintwriter = KaluzaConstraintWriterPtr(new KaluzaConstraintWriter());
 
     if (!constraintwriter->write(pc, "/tmp/kaluza")) {
         statistics()->accumulate("Concolic::Solver::ConstraintsNotWritten", 1);

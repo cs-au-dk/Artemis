@@ -47,6 +47,7 @@ public:
     void visit(Symbolic::ConstantBoolean* constantboolean);
     void visit(Symbolic::BooleanCoercion* booleancoercion);
     void visit(Symbolic::BooleanBinaryOperation* booleanbinaryoperation);
+    void visit(Symbolic::StringLength* stringlength);
 
     inline std::string getResult() const {
         return m_result;

@@ -316,6 +316,13 @@ void Z3STRConstraintWriter::visit(Symbolic::StringReplace*)
     mExpressionBuffer = "ERROR";
 }
 
+void Z3STRConstraintWriter::visit(Symbolic::StringLength* stringlength)
+{
+    mError = true;
+    mErrorReason = "String replace constraints not supported";
+    mExpressionBuffer = "ERROR";
+}
+
 
 /** Utility **/
 

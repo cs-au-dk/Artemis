@@ -67,6 +67,7 @@ private:
     void visit(Symbolic::ConstantBoolean* constantboolean);
     void visit(Symbolic::BooleanCoercion* booleancoercion);
     void visit(Symbolic::BooleanBinaryOperation* booleanbinaryoperation);
+    void visit(Symbolic::StringLength* stringlength);
 
     /**
      * Kaluza does not support mixing constraints on strings,
@@ -88,6 +89,8 @@ private:
     bool mError; // indicates that an error occured when writing the file
     std::string mErrorReason;
 };
+
+typedef QSharedPointer<KaluzaConstraintWriter> KaluzaConstraintWriterPtr;
 
 }
 

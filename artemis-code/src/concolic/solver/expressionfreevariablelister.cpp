@@ -90,5 +90,10 @@ void ExpressionFreeVariableLister::visit(Symbolic::BooleanBinaryOperation* boole
     booleanbinaryoperation->getRhs()->accept(this);
 }
 
+void ExpressionFreeVariableLister::visit(Symbolic::StringLength* stringlength)
+{
+    stringlength->getString()->accept(this);
+}
+
 
 } // namespace artemis

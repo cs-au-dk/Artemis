@@ -86,6 +86,7 @@ private:
     void visit(Symbolic::ConstantInteger* constantinteger);
     void visit(Symbolic::IntegerBinaryOperation* integerbinaryoperation);
     void visit(Symbolic::IntegerCoercion* integercoercion);
+    void visit(Symbolic::StringLength* stringlength);
 
     // Returns string values to mExpressionBuffer
     void visit(Symbolic::SymbolicString* symbolicstring);
@@ -145,6 +146,8 @@ private:
     bool mError; // indicates that an error occured when writing the file
     std::string mErrorReason;
 };
+
+typedef QSharedPointer<Z3STRConstraintWriter> Z3STRConstraintWriterPtr;
 
 }
 

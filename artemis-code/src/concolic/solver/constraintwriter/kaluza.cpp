@@ -213,6 +213,13 @@ void KaluzaConstraintWriter::recordType(const std::string& identifier, Symbolic:
 
 }
 
+void KaluzaConstraintWriter::visit(Symbolic::StringLength* stringlength)
+{
+    mError = true;
+    mErrorReason = "String length constraints not supported";
+    mIdentifierStore = "ERROR";
+}
+
 
 }
 

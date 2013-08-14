@@ -131,6 +131,13 @@ void ExpressionPrinter::visit(Symbolic::BooleanBinaryOperation* booleanbinaryope
     m_result += ")";
 }
 
+void ExpressionPrinter::visit(Symbolic::StringLength* stringlength)
+{
+    m_result += "StringLength( ";
+    stringlength->getString()->accept(this);
+    m_result += " )";
+}
+
 }
 
 #endif

@@ -41,7 +41,7 @@ SolutionPtr Z3Solver::solve(PathConditionPtr pc)
 
     // 1. translate pc to something solvable using the translator
 
-    ConstraintWriterPtr cw = ConstraintWriterPtr(new Z3STRConstraintWriter());
+    Z3STRConstraintWriterPtr cw = Z3STRConstraintWriterPtr(new Z3STRConstraintWriter());
 
     if (!cw->write(pc, "/tmp/z3input")) {
         statistics()->accumulate("Concolic::Solver::ConstraintsNotWritten", 1);

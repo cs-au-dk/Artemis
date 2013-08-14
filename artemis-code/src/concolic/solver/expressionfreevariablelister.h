@@ -45,6 +45,7 @@ public:
     void visit(Symbolic::ConstantBoolean* constantboolean);
     void visit(Symbolic::BooleanCoercion* booleancoercion);
     void visit(Symbolic::BooleanBinaryOperation* booleanbinaryoperation);
+    void visit(Symbolic::StringLength* stringlength);
 
     inline QMap<QString, Symbolic::SourceIdentifierMethod> getResult() const {
         return mResult;
