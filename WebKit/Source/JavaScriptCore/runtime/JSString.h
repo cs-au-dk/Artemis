@@ -29,6 +29,8 @@
 #include "PropertySlot.h"
 #include "Structure.h"
 
+#include "symbolic/expr.h"
+
 namespace JSC {
 
     class JSString;
@@ -123,6 +125,9 @@ namespace JSC {
             Base::finishCreation(globalData);
             m_length = 0;
             m_is8Bit = true;
+#ifdef ARTEMIS
+            m_symbolic = NULL;
+#endif
         }
 
         void finishCreation(JSGlobalData& globalData, size_t length)
@@ -131,6 +136,9 @@ namespace JSC {
             Base::finishCreation(globalData);
             m_length = length;
             m_is8Bit = m_value.impl()->is8Bit();
+#ifdef ARTEMIS
+            m_symbolic = NULL;
+#endif
         }
 
         void finishCreation(JSGlobalData& globalData, size_t length, size_t cost)
@@ -140,6 +148,9 @@ namespace JSC {
             m_length = length;
             m_is8Bit = m_value.impl()->is8Bit();
             Heap::heap(this)->reportExtraMemoryCost(cost);
+#ifdef ARTEMIS
+            m_symbolic = NULL;
+#endif
         }
 
         void finishCreation(JSGlobalData& globalData, JSString* s1, JSString* s2)
@@ -149,6 +160,9 @@ namespace JSC {
             m_is8Bit = (s1->is8Bit() && s2->is8Bit());
             m_fibers[0].set(globalData, this, s1);
             m_fibers[1].set(globalData, this, s2);
+#ifdef ARTEMIS
+            m_symbolic = NULL;
+#endif
         }
 
         void finishCreation(JSGlobalData& globalData, JSString* s1, JSString* s2, JSString* s3)
@@ -159,6 +173,9 @@ namespace JSC {
             m_fibers[0].set(globalData, this, s1);
             m_fibers[1].set(globalData, this, s2);
             m_fibers[2].set(globalData, this, s3);
+#ifdef ARTEMIS
+            m_symbolic = NULL;
+#endif
         }
 
         static JSString* createNull(JSGlobalData& globalData)
@@ -240,6 +257,12 @@ namespace JSC {
 
         static void visitChildren(JSCell*, SlotVisitor&);
 
+#ifdef ARTEMIS
+        inline void makeSymbolic(Symbolic::StringExpression* symbolic) {
+            m_symbolic = symbolic;
+        }
+#endif
+
     private:
         void resolveRope(ExecState*) const;
         void resolveRopeSlowCase8(LChar*) const;
@@ -268,6 +291,10 @@ namespace JSC {
         friend JSValue jsString(ExecState*, Register*, unsigned count);
         friend JSValue jsStringFromArguments(ExecState*, JSValue thisValue);
         friend JSString* jsSubstring(ExecState*, JSString*, unsigned offset, unsigned length);
+
+#ifdef ARTEMIS
+        Symbolic::StringExpression* m_symbolic;
+#endif
     };
 
     JSString* asString(JSValue);
@@ -407,7 +434,17 @@ namespace JSC {
     ALWAYS_INLINE bool JSString::getStringPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
     {
         if (propertyName == exec->propertyNames().length) {
+#ifdef ARTEMIS
+            if (m_symbolic != NULL) {
+                JSValue v = jsNumber(m_length);
+                v.makeSymbolic(new Symbolic::StringLength(m_symbolic));
+                slot.setValue(v);
+            } else {
+                slot.setValue(jsNumber(m_length));
+            }
+#else
             slot.setValue(jsNumber(m_length));
+#endif
             return true;
         }
 

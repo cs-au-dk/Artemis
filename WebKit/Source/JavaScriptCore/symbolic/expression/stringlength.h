@@ -16,21 +16,35 @@
 
  // AUTO GENERATED - DO NOT MODIFY
 
+#ifndef SYMBOLIC_STRINGLENGTH_H
+#define SYMBOLIC_STRINGLENGTH_H
+
+#include <string>
+
+#include "visitor.h"
+#include "stringexpression.h"
+#include "integerexpression.h"
+
 #ifdef ARTEMIS
 
-#include "expression/symbolicinteger.h"
-#include "expression/constantinteger.h"
-#include "expression/integerbinaryoperation.h"
-#include "expression/integercoercion.h"
-#include "expression/symbolicstring.h"
-#include "expression/constantstring.h"
-#include "expression/stringbinaryoperation.h"
-#include "expression/stringcoercion.h"
-#include "expression/stringlength.h"
-#include "expression/stringreplace.h"
-#include "expression/stringregexreplace.h"
-#include "expression/symbolicboolean.h"
-#include "expression/constantboolean.h"
-#include "expression/booleancoercion.h"
-#include "expression/booleanbinaryoperation.h"
+namespace Symbolic
+{
+
+class StringLength : public IntegerExpression
+{
+public:
+    explicit StringLength(StringExpression* string);
+    void accept(Visitor* visitor);
+
+	inline StringExpression* getString() {
+		return m_string;
+	}
+
+private:
+	StringExpression* m_string;
+
+};
+}
+
 #endif
+#endif // SYMBOLIC_STRINGLENGTH_H

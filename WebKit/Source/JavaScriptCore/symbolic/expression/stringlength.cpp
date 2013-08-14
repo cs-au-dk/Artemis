@@ -18,19 +18,22 @@
 
 #ifdef ARTEMIS
 
-#include "expression/symbolicinteger.h"
-#include "expression/constantinteger.h"
-#include "expression/integerbinaryoperation.h"
-#include "expression/integercoercion.h"
-#include "expression/symbolicstring.h"
-#include "expression/constantstring.h"
-#include "expression/stringbinaryoperation.h"
-#include "expression/stringcoercion.h"
-#include "expression/stringlength.h"
-#include "expression/stringreplace.h"
-#include "expression/stringregexreplace.h"
-#include "expression/symbolicboolean.h"
-#include "expression/constantboolean.h"
-#include "expression/booleancoercion.h"
-#include "expression/booleanbinaryoperation.h"
+#include "stringlength.h"
+
+namespace Symbolic
+{
+
+StringLength::StringLength(StringExpression* string) :
+    IntegerExpression(),
+    m_string(string)
+{
+}
+
+void StringLength::accept(Visitor* visitor) 
+{
+	visitor->visit(this); 	
+}
+
+}
+
 #endif

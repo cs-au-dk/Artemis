@@ -113,6 +113,14 @@
 		]
 	},
 
+	{
+		"ID": "StringLength",
+		"type": "expression",
+		"parent": "IntegerExpression",
+		"fields": [
+		    ["StringExpression*", "string"]
+		]
+	},
 
 	{
 		"ID": "StringReplace",
