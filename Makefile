@@ -2,17 +2,19 @@ ARCH := $(shell uname -m)
 
 help:
 	@echo "Targets:"
-	@echo "    install			- install webkit and artemis"
-	@echo "    webkit-minimal[-debug] 	- build a minimal WebKit Qt port [with debug info]"
-	@echo "    webkit-clean             	- clean WebKit files"
+	@echo "    all				- Build webkit,  artemis, and the constraint solver"
+	@echo ""
+	@echo "    webkit-minimal[-debug] 	- Build a minimal WebKit Qt port [with debug info]"
+	@echo "    webkit-clean             	- Clean WebKit files"
 	@echo ""
 	@echo "    artemis                  	- Build Artemis"
 	@echo "    artemis-clean            	- Clean artemis"
-	@echo "    artemis-install		- install artemis"
-	@echo "    artemis-format-code		- formats artemis code"
+	@echo "    artemis-format-code		- Format artemis code"
 	@echo ""
-	@echo "    fetch-[apt|yum]		- fetching dependencies from [apt|yum]"
-	@echo "    fetch-qt			- fetches, configures and makes Qt"
+	@echo "    constraintsolver             - Build the constraint solver"
+	@echo ""
+	@echo "    fetch-[apt|yum]		- Fetch dependencies from [apt|yum]"
+	@echo "    fetch-qt			- Fetch, configure and makes Qt"
 
 CORES = `grep -c ^processor /proc/cpuinfo`
 WEBKIT_BUILD_SCRIPT = ./WebKit/Tools/Scripts/build-webkit --qt --qmakearg="DEFINES+=ARTEMIS=1" --makearg="-j$(CORES)" --qmakearg="CC=gcc-4.7" --qmakearg="CXX=g++-4.7" --no-webkit2 --inspector --javascript-debugger
@@ -23,9 +25,7 @@ CONTRIB_Z3_STR = ./contrib/Z3-str
 
 build: check webkit artemis
 
-install: webkit-install artemis-install
-
-webkit-install: webkit-minimal
+all: webkit-minimal constraintsolver artemis
 
 webkit-jscore-test:
 	${WEBKIT_TEST_SCRIPT}
@@ -53,16 +53,13 @@ artemis: check-env
 artemis-clean:
 	cd artemis-code && qmake && make clean
 
-artemis-install: artemis
-	cd artemis-code && make install
-
 artemis-format-code:
 	cd artemis-code && astyle --style=kr --indent=spaces --break-blocks --indent-labels --pad-header --unpad-paren --break-closing-brackets --add-one-line-brackets --min-conditional-indent=0 --pad-oper --align-pointer=type --recursive "./src/*.cpp" "./src/*.h"
 
 fetch-qt:
 	git clone git://gitorious.org/qt/qt.git && cd qt && echo -e 'o\nyes\n' | ./configure -prefix `pwd` -no-webkit && make
 
-constraint-solver:
+constraintsolver:
 	cd ${CONTRIB_Z3}; autoconf
 	cd ${CONTRIB_Z3}; ./configure
 	cd ${CONTRIB_Z3}; make
