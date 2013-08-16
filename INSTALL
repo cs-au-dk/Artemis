@@ -30,9 +30,9 @@ Artemis have been successfully installed on Ubuntu 12.10 and Fedora 18.
 
     On Ubuntu this is /usr/share/qt4
      
- 2. Build and install Artemis
+ 2. Build Artemis
    
-   	  make install
+   	  make all
 
  3. Add the instrumented WebKit library to your library path
 
