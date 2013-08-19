@@ -31,7 +31,7 @@ class ExpressionPrinter : public Symbolic::Visitor
 
 public:
     ExpressionPrinter();
-    ~ExpressionPrinter(){}
+    virtual ~ExpressionPrinter(){}
 
     void visit(Symbolic::SymbolicInteger* symbolicinteger);
     void visit(Symbolic::ConstantInteger* constantinteger);
