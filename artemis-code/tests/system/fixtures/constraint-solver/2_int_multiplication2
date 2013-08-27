@@ -1,0 +1,3 @@
+if ((parseInt(x) * 4) == parseInt(y) * 2) {
+    alert(x_1);
+}

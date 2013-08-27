@@ -234,6 +234,10 @@ void JSValue::makeSymbolic(Symbolic::Expression* symbolicValue) {
 
     if (isSymbolic()) {
         getImmediate()->symbolic = symbolicValue;
+
+        if (isString()) {
+           static_cast<JSString*>(asCell())->makeSymbolic(dynamic_cast<Symbolic::StringExpression*>(symbolicValue));
+        }
         return;
     }
 
@@ -252,6 +256,7 @@ void JSValue::makeSymbolic(Symbolic::Expression* symbolicValue) {
     } else if (isString()) {
         symbolicImmediate->u.asInt64 = u.asInt64;
         u.asInt64 = (TagTypeSymbolicObject | (int64_t)symbolicImmediate);
+        static_cast<JSString*>(asCell())->makeSymbolic(dynamic_cast<Symbolic::StringExpression*>(symbolicValue));
     } else if (isTrue()) {
         symbolicImmediate->u.asInt64 = u.asInt64;
         u.asInt64 = (TagTypeSymbolicTrue | (int64_t)symbolicImmediate);
@@ -292,6 +297,10 @@ Symbolic::BooleanExpression* JSValue::generateBooleanExpression(ExecState* exec)
     return this->isSymbolic()?(Symbolic::BooleanExpression*) this->asSymbolic():new Symbolic::ConstantBoolean(this->toPrimitive(exec).toBoolean(exec));
 }
 
+Symbolic::BooleanExpression* JSValue::generateBooleanCoercionExpression(ExecState* exec){
+    return this->isSymbolic() ? (Symbolic::BooleanExpression*)new Symbolic::BooleanCoercion(this->asSymbolic()) :
+                            (Symbolic::BooleanExpression*)new Symbolic::ConstantBoolean(this->toPrimitive(exec).toBoolean(exec));
+}
 
 #endif
 

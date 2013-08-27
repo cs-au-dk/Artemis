@@ -1,4 +1,4 @@
-TEST PC: ((IntegerCoercion((SymbolicString==ConstantString)) % (IntegerCoercion(SymbolicString) / ConstantInteger))==ConstantInteger)
+TEST PC: (BooleanCoercion((IntegerCoercion((SymbolicString==ConstantString)) % (IntegerCoercion(SymbolicString) / ConstantInteger)))==ConstantBoolean)
 if ((y=="test") % (x/2) ) {
     alert(x);
 }

@@ -1,0 +1,6 @@
+build
+ailreader/*.o
+ailreader/ailcheck
+ailreader/src/parser.c
+ailreader/src/scanner.c
+binding.gyp

@@ -45,6 +45,11 @@ void StatsStorage::set(QString key, QString value)
     this->stringStorage.insert(key, value);
 }
 
+void StatsStorage::set(QString key, const std::string& value)
+{
+    this->stringStorage.insert(key, value.c_str());
+}
+
 StatsStorage* statistics()
 {
     static StatsStorage instance;

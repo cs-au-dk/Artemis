@@ -1,4 +1,4 @@
-TEST PC: ((IntegerCoercion(SymbolicString)-(IntegerCoercion(SymbolicString)*ConstantInteger)) == ConstantInteger)
+TEST PC: (BooleanCoercion((IntegerCoercion(SymbolicString)-(IntegerCoercion(SymbolicString)*ConstantInteger)) )==ConstantBoolean)
 if (y - (x*2)) {
     alert(x);
 }

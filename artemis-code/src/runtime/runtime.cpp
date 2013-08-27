@@ -39,7 +39,7 @@
 #include "strategies/prioritizer/readwriteprioritizer.h"
 #include "strategies/prioritizer/collectedprioritizer.h"
 
-#include "concolic/solver/solver.h"
+#include "concolic/solver/z3solver.h"
 #include "concolic/pathcondition.h"
 
 #include "runtime.h"
@@ -173,7 +173,13 @@ void Runtime::done()
     // solve the last PC - this is needed by some system tests
     PathConditionPtr pc = PathCondition::createFromTrace(mWebkitExecutor->getTraceBuilder()->trace());
 
-    SolutionPtr solution = Solver::solve(pc);
+    if (mOptions.concolicNegateLastConstraint) {
+        pc->negateLastCondition();
+    }
+
+    Z3Solver solver;
+
+    SolutionPtr solution = solver.solve(pc);
     solution->toStatistics();
 
     // Print final output

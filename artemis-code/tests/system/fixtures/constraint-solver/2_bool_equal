@@ -1,0 +1,3 @@
+if ((foo == "foo") === true && ("bar" == bar)) {
+    alert(x_1);
+}

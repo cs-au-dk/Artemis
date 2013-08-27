@@ -1,4 +1,4 @@
-TEST PC: (IntegerCoercion((SymbolicString+StringCoercion((SymbolicString==ConstantString))))==ConstantInteger)
+TEST PC: (BooleanCoercion((SymbolicString+StringCoercion((SymbolicString==ConstantString))))==ConstantBoolean)
 if (y + (x=="x")) {
     alert(x);
 }

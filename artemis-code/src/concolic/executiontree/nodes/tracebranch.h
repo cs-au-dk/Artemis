@@ -31,6 +31,7 @@ public:
 
     // TODO remove and use the set* functions
     friend class TraceBranchDetector; // direct modification of mBranchTrue and mBranchFalse
+    friend class TraceClassifier; // Takes address of mBranchTrue and mBranchFalse and uses this to modify them directly. It seemed even more of a hack to add getTrueBranchPtr() to the interface.
 
     ~TraceBranch() {}
 

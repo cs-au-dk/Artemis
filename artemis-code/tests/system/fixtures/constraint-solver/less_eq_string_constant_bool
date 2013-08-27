@@ -1,0 +1,5 @@
+if (foo <= false) {
+
+} else {
+alert(foo);
+}

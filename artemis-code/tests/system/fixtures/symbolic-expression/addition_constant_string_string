@@ -1,4 +1,4 @@
-TEST PC: (IntegerCoercion((ConstantString + SymbolicString)) == ConstantInteger)
+TEST PC: (BooleanCoercion((ConstantString+SymbolicString))==ConstantBoolean)
 if ('test' + x) {
     alert(x);
 }

@@ -19,7 +19,7 @@
 		"type": "expression",
 		"parent": "IntegerExpression",
 		"fields": [
-			["std::string*", "identifier"]
+			["SymbolicSource", "source"]
 		]
 	},
 
@@ -72,7 +72,7 @@
 		"type": "expression",
 		"parent": "StringExpression",
 		"fields": [
-			["std::string*", "identifier"]
+			["SymbolicSource", "source"]
 		]
 	},
 
@@ -113,6 +113,14 @@
 		]
 	},
 
+	{
+		"ID": "StringLength",
+		"type": "expression",
+		"parent": "IntegerExpression",
+		"fields": [
+		    ["StringExpression*", "string"]
+		]
+	},
 
 	{
 		"ID": "StringReplace",
@@ -148,7 +156,7 @@
 		"type": "expression",
 		"parent": "BooleanExpression",
 		"fields": [
-			["std::string*", "identifier"]
+			["SymbolicSource", "source"]
 		]
 	},
 

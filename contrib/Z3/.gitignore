@@ -1,0 +1,11 @@
+Makefile
+autom4te.cache/
+bin/
+config.log
+config.status
+configure
+lib.srcs
+obj-test/
+obj/
+shell.srcs
+test.srcs

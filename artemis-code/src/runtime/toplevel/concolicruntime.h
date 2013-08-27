@@ -20,6 +20,16 @@
 #include <QObject>
 
 #include "concolic/executiontree/tracenodes.h"
+#include "concolic/search/searchdfs.h"
+#include "concolic/solver/solver.h"
+#include "concolic/entrypoints.h"
+#include "concolic/executiontree/traceprinter.h"
+#include "concolic/executiontree/tracedisplay.h"
+#include "concolic/traceclassifier.h"
+
+#include "runtime/input/dominput.h"
+#include "runtime/input/events/mouseeventparameters.h"
+#include "strategies/inputgenerator/targets/legacytarget.h"
 
 #include "runtime/runtime.h"
 
@@ -65,8 +75,34 @@ public:
 protected:
     void preConcreteExecution();
 
+    QUrl mUrl;
     QSharedPointer<ExecutableConfiguration> mNextConfiguration;
     TraceNodePtr mSymbolicExecutionGraph;
+    EventHandlerDescriptor* mEntryPointEvent;
+
+    bool mRunningToGetEntryPoints;
+    bool mRunningWithInitialValues;
+    DepthFirstSearchPtr mSearchStrategy; // TODO: For now we are using DFS hard-coded...
+
+    TraceClassifier mTraceClassifier;
+
+    // Method and variables for generating a graphviz graph of the execution tree.
+    void outputTreeGraph();
+    TraceDisplay mTraceDisplay;
+    QString mGraphOutputNameFormat;
+    int mGraphOutputIndex;
+
+    // Helper methods for postConcreteExecution.
+    void setupNextConfiguration(QSharedPointer<FormInput> formInput);
+    void postInitialConcreteExecution(QSharedPointer<ExecutionResult> result);
+    void mergeTraceIntoTree();
+    void printSolution(SolutionPtr solution, QStringList varList);
+    QSharedPointer<FormInput> createFormInput(QMap<QString, Symbolic::SourceIdentifierMethod> freeVariables, SolutionPtr solution);
+    QSharedPointer<const FormField> findFormFieldForVariable(QString varName, Symbolic::SourceIdentifierMethod varSourceIdentifierMethod);
+    void exploreNextTarget();
+    void chooseNextTargetAndExplore();
+
+    QSet<QSharedPointer<const FormField> > mFormFields;
 
 private slots:
     void postConcreteExecution(ExecutableConfigurationConstPtr configuration, QSharedPointer<ExecutionResult> result);

@@ -38,6 +38,7 @@ enum Type {
     class ConstantString;
     class StringBinaryOperation;
     class StringCoercion;
+    class StringLength;
     class StringReplace;
     class StringRegexReplace;
     class SymbolicBoolean;
@@ -57,6 +58,7 @@ public:
     virtual void visit(ConstantString* constantstring) = 0;
     virtual void visit(StringBinaryOperation* stringbinaryoperation) = 0;
     virtual void visit(StringCoercion* stringcoercion) = 0;
+    virtual void visit(StringLength* stringlength) = 0;
     virtual void visit(StringReplace* stringreplace) = 0;
     virtual void visit(StringRegexReplace* stringregexreplace) = 0;
     virtual void visit(SymbolicBoolean* symbolicboolean) = 0;

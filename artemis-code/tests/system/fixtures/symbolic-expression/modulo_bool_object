@@ -1,4 +1,4 @@
-TEST PC:((IntegerCoercion((SymbolicString == ConstantString))%ConstantInteger)== ConstantInteger)
+TEST PC: (BooleanCoercion((IntegerCoercion((SymbolicString == ConstantString))%ConstantInteger))==ConstantBoolean)
 if ((y=="test") % new Object(132)) {
     alert(x);
 }

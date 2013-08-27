@@ -1,76 +1,128 @@
 #!/usr/bin/env python
 
 WEBSERVER_PORT = 8001
-WEBSERVER_ROOT = './fixtures/constraint-solver'
+WEBSERVER_ROOT = './fixtures/constraint-solver/'
 WEBSERVER_URL = 'http://localhost:%s' % WEBSERVER_PORT
 
 TWO_VARIABLES_TEMPLATE_FILE = WEBSERVER_ROOT + '/%symbolic_test_two_variables.html'
 
-import unittest
+import sys
+import nose
 import re
+import subprocess
 
 from harness.environment import WebServer
 from harness.artemis import execute_artemis
 from os import listdir
 from os.path import isfile, join
 
-class TestSequence(unittest.TestCase):
-    pass
+def _run_test(raw_filename, dryrun=False):
+    test_filename = _insert_test_into_template(WEBSERVER_ROOT, raw_filename)
+    
+    unsat = 'unsat' in raw_filename
+    unsupported = 'unsupported' in raw_filename
+    name = raw_filename.replace('.', '_')
+    
+    report = execute_artemis(name, "%s/%s" % (WEBSERVER_URL, test_filename), 
+                             iterations=2,
+                             fields=["#testinputx=1", "#testinputy=2", "#testinputNameId=1", "#testinputId=1", "#testinputfoo=foo", "#testinputbar=bar"],
+                             dryrun=dryrun)
 
-def test_generator(filename, name, result):
-    def test(self):
-        newFilename = setUpTempFileFromTemplate(WEBSERVER_ROOT, filename)
+    if dryrun:
+        # only print the command, exit
+        return
+        
+    assert report.get('WebKit::alerts', 0) == 1, "Initial execution did not reach a print statement"
 
-        report = execute_artemis(name, "%s/%s" % (
-            WEBSERVER_URL, 
-            newFilename), 
-            iterations=2,
-            fields=["#testinput2=1"])
+    if unsat:
+        assert report.get('Concolic::Solver::ConstraintsSolvedAsUNSAT', 0) == 1, "Initial execution did not return as UNSAT"
+        return
+    elif unsupported:
+        assert report.get('Concolic::Solver::ConstraintsSolved', 0) == 0, "Initial execution did not return as unsupported"
+        return
+    else:
+        assert report.get('Concolic::Solver::ConstraintsSolvedAsUNSAT', 0) == 0, "Initial execution returned as UNSAT"
+        assert report.get('Concolic::Solver::ConstraintsSolved', 0) == 1, "Initial execution did not solve a constraint"
+        
+    new_fields = []
 
-        for condition in result.split(';'):
-            subject, value = condition.split('=')
-            self.assertEqual(report.get(subject.strip(), 0), int(value))
+    for field_name in ("testinputx", "testinputy", "testinputNameId", "testinputId", "testinputfoo", "testinputbar"):
+        value = str(report.get("Concolic::Solver::Constraint.SYM_IN_%s" % field_name, 0))
+        if value == 'False':
+            value = ''
+        new_fields.append("#%s=%s" % (field_name, value))
+        
+    report = execute_artemis(name, "%s/%s" % (WEBSERVER_URL, test_filename),                                                                            
+                             iterations=2,              
+                             fields=new_fields,
+                             reverse_constraint_solver=True)
 
-    return test
+    assert report.get('WebKit::alerts', 0) == 1, "Execution using inputs from the solver did not reach a print statement"
+
+    # negative case
+
+    new_fields = []
+
+    for field_name in ("testinputx", "testinputy", "testinputNameId", "testinputId", "testinputfoo", "testinputbar"):
+        value = str(report.get("Concolic::Solver::Constraint.SYM_IN_%s" % field_name, 0))
+        if value == 'False':
+            value = ''
+        new_fields.append("#%s=%s" % (field_name, value))
+        
+    report = execute_artemis(name, "%s/%s" % (WEBSERVER_URL, test_filename),                                                                            
+                             iterations=2,              
+                             fields=new_fields,
+                             reverse_constraint_solver=True)
+
+    assert report.get('Concolic::Solver::ConstraintsSolvedAsUNSAT', 0) == 0, "NEGATED execution returned as UNSAT"
+    assert report.get('Concolic::Solver::ConstraintsSolved', 0) == 1, "NEGATED execution did not solve a constraint"
+    assert report.get('WebKit::alerts', 0) == 0, "NEGATED execution REACHED a print statement when it should not"
 
 
-def setUpTempFileFromTemplate(path, filename):
+def _insert_test_into_template(path, filename):
     tmpName = "_g_%s.html" % filename
     tmpPath = join(path, tmpName)
-    with open(tmpPath, 'w') as tf:
+    with open(tmpPath, 'w') as targetFile:
         with open(TWO_VARIABLES_TEMPLATE_FILE, 'r') as templateFile:
-            lines = templateFile.readlines()
-            for line in lines[1:]:
+            for line in templateFile.readlines():
                 i = line.find('$TESTSTATEMENT')
                 if i >= 0:
-                    tf.write(line[0:i])
+                    targetFile.write(line[0:i])
                     with open(join(path, filename), 'r') as testFile:
-                        tf.writelines(testFile.readlines()[1:])
-                    tf.write(line[i + 14:])
+                        targetFile.writelines(testFile.readlines())
+                    targetFile.write(line[i + 14:])
                 else:
-                    tf.write(line)
+                    targetFile.write(line)
     return tmpName
 
 
-def generate_tests_from_folder(folder):
+def _list_tests_in_folder(folder):
     out = []
+
     for f in listdir(folder):
         p = join(folder, f)
-        if isfile(p) and f[0:1] != "_" and f[0:1] != "%":
-            with open(p, 'r') as fl:
-                first_line = fl.readline()
-                m = re.match("\s*RESULT:(.*)$", first_line)
-                if m:
-                    res = {'result': m.group(1), 'file_name': f, 'name': f.replace('.', '_')}
-                    out.append(res)
+
+        if not isfile(p) or f[0:1] == "_" or f[0:1] == "%" or '~' in f or '#' in f:
+            continue
+        
+        out.append(f)
+
     return out
 
 
-if __name__ == '__main__':
+def test_generator():
     server = WebServer(WEBSERVER_ROOT, WEBSERVER_PORT)
-    for t in generate_tests_from_folder(WEBSERVER_ROOT):
-        test_name = 'test_%s' % t['name']
-        test = test_generator(t['file_name'], t['name'], t['result'])
-        setattr(TestSequence, test_name, test)
-    unittest.main()
+    for t in _list_tests_in_folder(WEBSERVER_ROOT):
+	yield _run_test, t
     del server
+
+
+if __name__ == '__main__':
+    if len(sys.argv) < 2:
+        subprocess.call(['nosetests', 'solver.py'])
+    else:
+        server = WebServer(WEBSERVER_ROOT, WEBSERVER_PORT)
+        dryrun = len(sys.argv) == 3 and sys.argv[2] == "dryrun"
+        _run_test(sys.argv[1], dryrun=dryrun)
+        del server
+

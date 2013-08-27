@@ -2522,7 +2522,7 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
 #ifdef ARTEMIS
         callFrame->uncheckedR(dst) = \
                 Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
-                                                       dividend, Symbolic::EQUAL, divisor,
+                                                       dividend, Symbolic::MODULO, divisor,
                                                        result);
 #endif
 
@@ -4312,6 +4312,17 @@ skip_id_custom_self:
         JSValue _v = callFrame->r(cond).jsValue();
         JSValue _jst = jsBoolean(true);
 
+        if (!_v.isBoolean() && _v.isSymbolic()) {
+            // coerce _v into a bool
+            // this follows the toBoolean() step used below
+            // (and avoids an otherwise incorrect coercion to integer in the equal function)
+
+            JSValue _oldv = _v;
+
+            _v = jsBoolean(_oldv.toBoolean(callFrame));
+            _v.makeSymbolic(_oldv.generateBooleanCoercionExpression(callFrame));
+        }
+
         bool _jumped = _v.toBoolean(callFrame);
         JSValue _r = jsBoolean(_jumped);
 
@@ -4354,6 +4365,17 @@ skip_id_custom_self:
         JSValue _v = callFrame->r(cond).jsValue();
         JSValue _jsf = jsBoolean(false);
 
+        if (!_v.isBoolean() && _v.isSymbolic()) {
+            // coerce _v into a bool
+            // this follows the toBoolean() step used below
+            // (and avoids an otherwise incorrect coercion to integer in the equal function)
+
+            JSValue _oldv = _v;
+
+            _v = jsBoolean(_oldv.toBoolean(callFrame));
+            _v.makeSymbolic(_oldv.generateBooleanCoercionExpression(callFrame));
+        }
+
         bool _jumped = !_v.toBoolean(callFrame);
         JSValue _r = jsBoolean(_jumped);
 
@@ -4394,6 +4416,17 @@ skip_id_custom_self:
         JSValue _v = callFrame->r(cond).jsValue();
         JSValue _jst = jsBoolean(true);
 
+        if (!_v.isBoolean() && _v.isSymbolic()) {
+            // coerce _v into a bool
+            // this follows the toBoolean() step used below
+            // (and avoids an otherwise incorrect coercion to integer in the equal function)
+
+            JSValue _oldv = _v;
+
+            _v = jsBoolean(_oldv.toBoolean(callFrame));
+            _v.makeSymbolic(_oldv.generateBooleanCoercionExpression(callFrame));
+        }
+
         bool _jumped = _v.toBoolean(callFrame);
         JSValue _r = jsBoolean(_jumped);
 
@@ -4430,6 +4463,17 @@ skip_id_custom_self:
 #ifdef ARTEMIS
         JSValue _v = callFrame->r(cond).jsValue();
         JSValue _jsf = jsBoolean(false);
+
+        if (!_v.isBoolean() && _v.isSymbolic()) {
+            // coerce _v into a bool
+            // this follows the toBoolean() step used below
+            // (and avoids an otherwise incorrect coercion to integer in the equal function)
+
+            JSValue _oldv = _v;
+
+            _v = jsBoolean(_oldv.toBoolean(callFrame));
+            _v.makeSymbolic(_oldv.generateBooleanCoercionExpression(callFrame));
+        }
 
         bool _jumped = !_v.toBoolean(callFrame);
         JSValue _r = jsBoolean(_jumped);
@@ -4957,7 +5001,7 @@ skip_id_custom_self:
         JSValue _r = jsBoolean(!result);
 
         _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
-                                                    src1, Symbolic::GREATER_STRICT, src2,
+                                                    src1, Symbolic::LESS_STRICT, src2,
                                                     _r);
 
         Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC, bytecodeInfo,

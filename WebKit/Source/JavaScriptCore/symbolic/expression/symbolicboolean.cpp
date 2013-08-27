@@ -23,9 +23,9 @@
 namespace Symbolic
 {
 
-SymbolicBoolean::SymbolicBoolean(std::string* identifier) :
+SymbolicBoolean::SymbolicBoolean(SymbolicSource source) :
     BooleanExpression(),
-    m_identifier(identifier)
+    m_source(source)
 {
 }
 

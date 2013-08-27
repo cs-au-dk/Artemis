@@ -23,9 +23,9 @@
 namespace Symbolic
 {
 
-SymbolicString::SymbolicString(std::string* identifier) :
+SymbolicString::SymbolicString(SymbolicSource source) :
     StringExpression(),
-    m_identifier(identifier)
+    m_source(source)
 {
 }
 

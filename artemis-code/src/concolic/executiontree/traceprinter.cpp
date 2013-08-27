@@ -17,129 +17,12 @@
 
 #include "traceprinter.h"
 #include "util/loggingutil.h"
+#include "concolic/solver/expressionvalueprinter.h"
 
 namespace artemis
 {
 
 
-
-
-/* Boring Trace Printer ******************************************************/
-
-
-
-void VeryBoringTracePrintingVisitor::visit(TraceNode* node)
-{
-    Log::info("VBTP: At a NODE.");
-}
-
-
-
-/* Detailed Trace Printer ****************************************************/
-
-
-
-void CompleteTracePrintingVisitor::visit(TraceNode* node)
-{
-    Log::info("CTPV: At a NODE. THIS SHOULD NEVER BE REACHED!");
-}
-
-void CompleteTracePrintingVisitor::visit(TraceBranch* node)
-{
-    Log::info("CTPV: At a BRANCH.");
-}
-
-void CompleteTracePrintingVisitor::visit(TraceUnexplored* node)
-{
-    Log::info("CTPV: At an UNEXPLORED.");
-}
-
-void CompleteTracePrintingVisitor::visit(TraceAlert* node)
-{
-    Log::info("CTPV: At an ALERT.");
-}
-
-void CompleteTracePrintingVisitor::visit(TraceDomModification* node)
-{
-    Log::info("CTPV: At a DOM CHANGE.");
-}
-
-void CompleteTracePrintingVisitor::visit(TracePageLoad* node)
-{
-    Log::info("CTPV: At a PAGE LOAD.");
-}
-
-void CompleteTracePrintingVisitor::visit(TraceFunctionCall* node)
-{
-    Log::info("CTPV: At a FUNCTION CALL.");
-}
-
-void CompleteTracePrintingVisitor::visit(TraceEndSuccess* node)
-{
-    Log::info("CTPV: At an END SUCCESS.");
-}
-
-void CompleteTracePrintingVisitor::visit(TraceEndFailure* node)
-{
-    Log::info("CTPV: At an END FAIL.");
-}
-
-void CompleteTracePrintingVisitor::visit(TraceEndUnknown* node)
-{
-    Log::info("CTPV: At an END UNK.");
-}
-
-
-
-/* Search-Style Trace Printer ************************************************/
-
-
-
-
-
-void SearchStylePrintingVisitor::visit(TraceNode* node)
-{
-    Log::info("SSPV: At a NODE. SHOULD NOT BE REACHABLE.");
-}
-
-void SearchStylePrintingVisitor::visit(TraceBranch* node)
-{
-    Log::info("SSPV: At a BRANCH.");
-}
-
-void SearchStylePrintingVisitor::visit(TraceUnexplored* node)
-{
-    Log::info("SSPV: At an UNEXPLORED.");
-}
-
-void SearchStylePrintingVisitor::visit(TraceAnnotation* node)
-{
-    Log::info("SSPV: At an ANNOTATION (of some kind).");
-}
-
-void SearchStylePrintingVisitor::visit(TraceEndSuccess* node)
-{
-    Log::info("SSPV: At an END SUCCESS.");
-}
-
-void SearchStylePrintingVisitor::visit(TraceEndFailure* node)
-{
-    Log::info("SSPV: At an ENS FAILURE.");
-}
-
-void SearchStylePrintingVisitor::visit(TraceEndUnknown* node)
-{
-    Log::info("SSPV: At an END UNK.");
-}
-
-
-
-/* Termianl Trace Printer ****************************************************/
-
-
-TerminalTracePrinter::TerminalTracePrinter()
-{
-}
 
 void TerminalTracePrinter::printTraceTree(TraceNodePtr root)
 {
@@ -176,7 +59,7 @@ void TerminalTracePrinter::visit(TraceNode* node)
     exit(1);
 }
 
-void TerminalTracePrinter::visit(TraceBranch* node)
+void TerminalTracePrinter::visit(TraceConcreteBranch *node)
 {
     // First process the left tree.
     node->getFalseBranch()->accept(this);
@@ -190,6 +73,29 @@ void TerminalTracePrinter::visit(TraceBranch* node)
 
     // Now we have both trees, so join them.
     addBranch("Branch");
+}
+
+void TerminalTracePrinter::visit(TraceSymbolicBranch* node)
+{
+    // First process the left tree.
+    node->getFalseBranch()->accept(this);
+
+    // Now mCurrentTree represents the left subtree, so copy it into mCompletedLeftSubtrees.
+    mCompletedLeftTrees.push(mCurrentTree);
+
+    // Now clear the current tree and process the right subtree.
+    mCurrentTree.clear();
+    node->getTrueBranch()->accept(this);
+
+
+    QList<QString> branch;
+    branch.append("Branch");
+    ExpressionValuePrinter exprPrinter;
+    node->getSymbolicCondition()->accept(&exprPrinter);
+    branch.append(QString(exprPrinter.getResult().c_str()));
+
+    // Now we have both trees, so join them.
+    addBranch(branch);
 }
 
 void TerminalTracePrinter::visit(TraceUnexplored* node)
@@ -330,7 +236,7 @@ void TerminalTracePrinter::addBranch(QList<QString> nodeText)
 
     if(nodeTextLength > leftTree.width + rightTree.width + spacing.length()){
         // Then we will add some extra spacing between the trees when joining.
-        spacing += QString(nodeTextLength - leftTree.width - rightTree.width - spacing.length());
+        spacing += QString(nodeTextLength - leftTree.width - rightTree.width - spacing.length(), ' ');
         mCurrentTree.width = leftTree.width + spacing.length() + rightTree.width; // == nodeTextLength.
         mCurrentTree.connector = mCurrentTree.width / 2;
 
@@ -447,9 +353,6 @@ QList<QString> TerminalTracePrinter::processNodeTextLines(QList<QString> nodeTex
         line.append(" ]");
         it.setValue(line);
     }
-
-    //nodeText.prepend("+" + QString(maxLen+2, '-') + "+");
-    //nodeText.append("+" + QString(maxLen+2, '-') + "+");
 
     return nodeText;
 }

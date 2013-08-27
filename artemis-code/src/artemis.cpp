@@ -52,6 +52,8 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             "\n"
             "-s       : Enable DOM state checking\n"
             "\n"
+            "-e       : Negate the last solved PC printet to stdout (used for testing)\n"
+            "\n"
             "--major-mode <mode>:\n"
             "           The major-mode specifies the top-level test algorithm used by Artemis.\n"
             "\n"
@@ -87,6 +89,11 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             "\n"
             "           Show executed bytecodes in path trace reports. Default is false.\n"
             "\n"
+            "--concolic-tree-output <trees>:\n"
+            "           none - Do not output any graphs.\n"
+            "           final (default) - Generate a graph of the final tree after analysis.\n"
+            "           all - Generate a graph of the tree at every iteration.\n"
+            "\n"
             "--strategy-priority <strategy>:\n"
             "           Select priority strategy.\n"
             "\n"
@@ -108,6 +115,7 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
     {"major-mode", required_argument, NULL, 'm'},
     {"path-trace-report", required_argument, NULL, 'a'},
     {"path-trace-report-bytecode", required_argument, NULL, 'b'},
+    {"concolic-tree-output", required_argument, NULL, 'd'},
     {"help", no_argument, NULL, 'h'},
     {0, 0, 0, 0}
     };
@@ -117,7 +125,7 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
     artemis::Log::addLogLevel(artemis::INFO);
     artemis::Log::addLogLevel(artemis::FATAL);
 
-    while ((c = getopt_long(argc, argv, "hsrp:a:m:f:t:c:i:v:", long_options, &option_index)) != -1) {
+    while ((c = getopt_long(argc, argv, "ehsrp:a:m:f:t:c:i:v:", long_options, &option_index)) != -1) {
 
         switch (c) {
 
@@ -127,9 +135,13 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
         }
 
         case 'f': {
-            QStringList rawformfield = QString(optarg).split("=");
-            Q_ASSERT(rawformfield.size() == 2);
-            options.presetFormfields.insert(rawformfield.at(0), rawformfield.at(1));
+
+            QString input = QString(optarg);
+
+            int lastEqualsIndex = QString(optarg).lastIndexOf("=");
+            Q_ASSERT(lastEqualsIndex >= 0);
+
+            options.presetFormfields.insert(input.left(lastEqualsIndex), input.mid(lastEqualsIndex+1));
             break;
         }
 
@@ -296,6 +308,28 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
                 cerr << "ERROR: Invalid choice of path-trace-report-bytecode " << optarg << endl;
                 exit(1);
             }
+
+            break;
+        }
+
+        case 'd': {
+
+            if (string(optarg).compare("none") == 0) {
+                options.concolicTreeOutput = artemis::TREE_NONE;
+            } else if (string(optarg).compare("final") == 0) {
+                options.concolicTreeOutput = artemis::TREE_FINAL;
+            } else if (string(optarg).compare("all") == 0) {
+                options.concolicTreeOutput = artemis::TREE_ALL;
+            } else {
+                cerr << "ERROR: Invalid choice of concolic-tree-output " << optarg << endl;
+                exit(1);
+            }
+
+            break;
+        }
+
+        case 'e': {
+            options.concolicNegateLastConstraint = true;
 
             break;
         }

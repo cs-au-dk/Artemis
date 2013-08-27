@@ -1,0 +1,3 @@
+if ((parseInt(x_1) + 2) > parseInt(y)) {
+    alert(x_1);
+}

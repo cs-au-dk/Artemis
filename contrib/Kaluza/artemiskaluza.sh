@@ -4,7 +4,7 @@
 # Copyright 2010 See LICENSE.txt
 # See LICENSE.txt
 
-# Modified for Artemis!S
+# Modified for Artemis!
 
 INPUT=/tmp/kaluza
 OUTPUT=/tmp/kaluza-result
@@ -23,7 +23,7 @@ YICESPATH="$KALUZABIN/yices-1.0.27/bin/yices"
 if [ ! -e "$YICESPATH" ]; then
     echo "Yices 1.0.27 is not installed, and is required. You can simply download it from http://yices.csl.sri.com/download.shtml"
     echo "Please check that the yices binary exists at $YICESPATH, and then rerun."
-    exit;
+    exit 1;
 fi
 
 CWD="$PWD";
@@ -36,7 +36,7 @@ export HAMPIPATH="$KALUZABIN/hampi";
 if [ ! -e "$HAMPIPATH"/hampi.sh ];then
     echo "$HAMPIPATH/hampi.sh does not exist! dying ...";
     echo "Perhaps you need to run \"cd $HAMPIPATH ; ./configure ; make\"."
-    exit;
+    exit 1;
 fi
 
 if ./ksolver < /tmp/kaluza ;then
@@ -54,19 +54,19 @@ if ./ksolver < /tmp/kaluza ;then
 
         if grep -q -i "Invalid." corecstrs.tmp.final.stp.out ; then
             echo "UNSAT."
-            exit
+            exit 1
         fi
         
         if ! grep -q -i "^sat$" corecstrs.tmp.length.ys.out ; then
             echo "UNSAT."
-            exit
+            exit 1
         fi
         
-        cat corecstrs.tmp.length.ys.out | grep -vi 'COPY' | grep -vi "^sat$" | awk '{print $2, substr($3, 0, index($3, ")") - 1)}' > $OUTPUT # ignore lines containing COPY
+        cat corecstrs.tmp.length.ys.out | grep -vi 'COPY' | grep -vi "^sat$" | awk '{print $2, substr($3, 1, index($3, ")") - 1)}' > $OUTPUT # ignore lines containing COPY
         
         #./convert.pl < corecstrs.tmp.final.stp.out | grep -vi COPY >> $OUTPUT
         
-        exit 
+        exit 0
     
     else 
         

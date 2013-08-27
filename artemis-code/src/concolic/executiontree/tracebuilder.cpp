@@ -37,8 +37,13 @@ void TraceBuilder::addDetector(QSharedPointer<TraceEventDetector> detector)
 void TraceBuilder::beginRecording()
 {
     if(mRecording){
-        Log::fatal("TraceRecorder: Began recording during an existing recording.");
-        exit(1);
+        //Log::fatal("TraceRecorder: Began recording during an existing recording.");
+        //exit(1);
+        return;
+        // TODO: this is to fix issue #63, which seems to be introduced in 1e89249e8c49a94668d94e912a5a1fa17b76910e.
+        // It seems that commit has trace recording on every page load (see webkitexecutor in that commit),
+        // presumably to have a consistent start point for multiple runs of traces. I need to ask Casper about this
+        // before I know this fix is ok.
     }
 
     mRecording = true;
