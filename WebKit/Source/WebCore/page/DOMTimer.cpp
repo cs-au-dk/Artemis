@@ -33,6 +33,11 @@
 #include "UserGestureIndicator.h"
 #include <wtf/HashSet.h>
 #include <wtf/StdLibExtras.h>
+#include <iostream>
+
+#ifdef ARTEMIS
+#include "instrumentation/executionlistener.h"
+#endif
 
 using namespace std;
 
@@ -77,12 +82,21 @@ DOMTimer::DOMTimer(ScriptExecutionContext* context, PassOwnPtr<ScheduledAction> 
         startOneShot(intervalMilliseconds);
     else
         startRepeating(intervalMilliseconds);
+
+#ifdef ARTEMIS
+    inst::getListener()->timerAdded(scriptExecutionContext(), m_timeoutId, interval, singleShot);
+#endif
 }
 
 DOMTimer::~DOMTimer()
 {
-    if (scriptExecutionContext())
+    if (scriptExecutionContext()) {
         scriptExecutionContext()->removeTimeout(m_timeoutId);
+
+#ifdef ARTEMIS
+        inst::getListener()->timerRemoved(scriptExecutionContext(), m_timeoutId);
+#endif 
+    }
 }
 
 int DOMTimer::install(ScriptExecutionContext* context, PassOwnPtr<ScheduledAction> action, int timeout, bool singleShot)
@@ -161,6 +175,12 @@ void DOMTimer::contextDestroyed()
 
 void DOMTimer::stop()
 {
+#ifdef ARTEMIS
+    // We remove the timer, since stopping it effectively prevents
+    // us from calling this timer
+    inst::getListener()->timerRemoved(scriptExecutionContext(), m_timeoutId);
+#endif 
+
     SuspendableTimer::stop();
     // Need to release JS objects potentially protected by ScheduledAction
     // because they can form circular references back to the ScriptExecutionContext

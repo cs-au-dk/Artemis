@@ -460,7 +460,9 @@ LayoutRect RenderLayer::repaintRectIncludingDescendants() const
 
 void RenderLayer::computeRepaintRects(LayoutPoint* offsetFromRoot)
 {
+#ifndef ARTEMIS
     ASSERT(!m_visibleContentStatusDirty);
+#endif
 
     RenderBoxModelObject* repaintContainer = renderer()->containerForRepaint();
     m_repaintRect = renderer()->clippedOverflowRectForRepaint(repaintContainer);
@@ -470,7 +472,9 @@ void RenderLayer::computeRepaintRects(LayoutPoint* offsetFromRoot)
 void RenderLayer::clearRepaintRects()
 {
     ASSERT(!m_hasVisibleContent);
+#ifndef ARTEMIS
     ASSERT(!m_visibleContentStatusDirty);
+#endif
 
     m_repaintRect = IntRect();
     m_outlineBox = IntRect();

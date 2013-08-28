@@ -230,6 +230,27 @@ SOURCES += \
     tools/CodeProfile.cpp \
     tools/CodeProfiling.cpp \
     yarr/YarrJIT.cpp \
+    instrumentation/jscexecutionlistener.cpp \
+    symbolic/symbolicinterpreter.cpp \
+    symbolic/native/nativelookup.cpp \
+    symbolic/native/nativefunction.cpp \
+    symbolic/native/natives.cpp \
+    instrumentation/bytecodeinfo.cpp \
+    symbolic/expression/symbolicinteger.cpp \
+    symbolic/expression/constantinteger.cpp \
+    symbolic/expression/integerbinaryoperation.cpp \
+    symbolic/expression/booleanbinaryoperation.cpp \
+    symbolic/expression/integercoercion.cpp \
+    symbolic/expression/symbolicstring.cpp \
+    symbolic/expression/constantstring.cpp \
+    symbolic/expression/stringbinaryoperation.cpp \
+    symbolic/expression/stringcoercion.cpp \
+    symbolic/expression/symbolicboolean.cpp \
+    symbolic/expression/constantboolean.cpp \
+    symbolic/expression/booleancoercion.cpp \
+    symbolic/expression/booleanbinaryoperation.cpp \
+    symbolic/expression/stringreplace.cpp \
+    symbolic/expression/stringregexreplace.cpp
 
 *sh4* {
     QMAKE_CXXFLAGS += -mieee -w
@@ -254,3 +275,33 @@ lessThan(QT_GCC_MAJOR_VERSION, 5) {
         }
     }
 }
+
+HEADERS += \
+    instrumentation/jscexecutionlistener.h \
+    symbolic/symbolicinterpreter.h \
+    symbolic/native/nativelookup.h \
+    symbolic/native/nativefunction.h \
+    symbolic/native/natives.h \
+    symbolic/native/nativefunction.h \
+    instrumentation/bytecodeinfo.h \
+    symbolic/expression/expression.h \
+    symbolic/expression/integerexpression.h \
+    symbolic/expression/symbolicinteger.h \
+    symbolic/expression/constantinteger.h \
+    symbolic/expression/integerbinaryoperation.h \
+    symbolic/expression/booleanbinaryoperation.h \
+    symbolic/expression/integercoercion.h \
+    symbolic/expression/stringexpression.h \
+    symbolic/expression/symbolicstring.h \
+    symbolic/expression/constantstring.h \
+    symbolic/expression/stringbinaryoperation.h \
+    symbolic/expression/stringcoercion.h \
+    symbolic/expression/booleanexpression.h \
+    symbolic/expression/symbolicboolean.h \
+    symbolic/expression/constantboolean.h \
+    symbolic/expression/booleancoercion.h \
+    symbolic/expression/visitor.h \
+    symbolic/expr.h \
+    symbolic/expression/booleanbinaryoperation.h \
+    symbolic/expression/stringreplace.h \
+    symbolic/expression/stringregexreplace.h

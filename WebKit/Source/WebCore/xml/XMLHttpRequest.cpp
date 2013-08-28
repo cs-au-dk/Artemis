@@ -58,6 +58,11 @@
 #include <wtf/UnusedParam.h>
 #include <wtf/text/CString.h>
 
+#ifdef ARTEMIS
+#include "LazyXMLHttpRequest.h"
+#include <instrumentation/executionlistener.h>
+#endif
+
 #if USE(JSC)
 #include "JSDOMBinding.h"
 #include "JSDOMWindow.h"
@@ -585,6 +590,9 @@ void XMLHttpRequest::send(const String& body, ExceptionCode& ec)
         return;
 
     if (!body.isNull() && m_method != "GET" && m_method != "HEAD" && m_url.protocolIsInHTTPFamily()) {
+#ifdef ARTEMIS
+        inst::getListener()->webkit_ajax_send(this->url().string().utf8().data(), body.utf8().data());
+#endif
         String contentType = getRequestHeader("Content-Type");
         if (contentType.isEmpty()) {
 #if ENABLE(DASHBOARD_SUPPORT)
@@ -602,6 +610,11 @@ void XMLHttpRequest::send(const String& body, ExceptionCode& ec)
         if (m_upload)
             m_requestEntityBody->setAlwaysStream(true);
     }
+#ifdef ARTEMIS
+    else {
+        inst::getListener()->webkit_ajax_send(this->url().string().utf8().data(), 0);
+    }
+#endif
 
     createRequest(ec);
 }
@@ -721,11 +734,18 @@ void XMLHttpRequest::createRequest(ExceptionCode& ec)
         if (m_upload)
             request.setReportUploadProgress(true);
 
+#ifdef ARTEMIS
+        LazyXMLHttpRequest* lazyRequest = new LazyXMLHttpRequest(scriptExecutionContext(), request, this, options);
+        inst::getListener()->ajaxCallbackEventAdded(lazyRequest);
+        setPendingActivity(this);
+#else
         // ThreadableLoader::create can return null here, for example if we're no longer attached to a page.
         // This is true while running onunload handlers.
         // FIXME: Maybe we need to be able to send XMLHttpRequests from onunload, <http://bugs.webkit.org/show_bug.cgi?id=10904>.
         // FIXME: Maybe create() can return null for other reasons too?
         m_loader = ThreadableLoader::create(scriptExecutionContext(), this, request, options);
+#endif
+
         if (m_loader) {
             // Neither this object nor the JavaScript wrapper should be deleted while
             // a request is in progress because we need to keep the listeners alive,

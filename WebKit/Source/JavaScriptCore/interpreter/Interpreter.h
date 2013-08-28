@@ -38,6 +38,11 @@
 #include "Opcode.h"
 #include "RegisterFile.h"
 
+#ifdef ARTEMIS
+#include "symbolic/symbolicinterpreter.h"
+#include "runtime/SymbolTable.h"
+#endif
+
 #include <wtf/HashMap.h>
 
 namespace JSC {
@@ -228,6 +233,11 @@ namespace JSC {
         void dumpSampleData(ExecState* exec);
         void startSampling();
         void stopSampling();
+
+#ifdef ARTEMIS
+        static Symbolic::SymbolicInterpreter* m_symbolic;
+#endif
+
     private:
         enum ExecutionFlag { Normal, InitializeAndReturn };
 
@@ -235,6 +245,14 @@ namespace JSC {
         void endRepeatCall(CallFrameClosure&);
         JSValue execute(CallFrameClosure&);
 
+#ifdef ARTEMIS
+        ALWAYS_INLINE void checkForConstantString(CallFrame*, const JSValue&);
+        ALWAYS_INLINE void readProperty(CallFrame* callFrame, std::string propertyName);
+        ALWAYS_INLINE void readProperty(CallFrame* callFrame, const SymbolTable& symbolTable, int index);
+        ALWAYS_INLINE void writeProperty(CallFrame* callFrame, std::string propertyName);
+        ALWAYS_INLINE void writeProperty(CallFrame* callFrame, const SymbolTable& symbolTable, int index);
+#endif
+	
 #if ENABLE(CLASSIC_INTERPRETER)
         NEVER_INLINE bool resolve(CallFrame*, Instruction*, JSValue& exceptionValue);
         NEVER_INLINE bool resolveSkip(CallFrame*, Instruction*, JSValue& exceptionValue);

@@ -19,7 +19,7 @@
 
 #include <sstream>
 
-#include "JavaScriptCore/wtf/ExportMacros.h"
+#include "WTF/wtf/ExportMacros.h"
 #include "JavaScriptCore/runtime/CallData.h"
 #include "JavaScriptCore/instrumentation/bytecodeinfo.h"
 #include "instrumentation/jscexecutionlistener.h"
@@ -48,7 +48,7 @@ typedef enum {
 
 const char* opToString(OP op);
 
-WTF_EXPORT_PRIVATE class SymbolicInterpreter
+/*WTF_EXPORT_PRIVATE*/ class SymbolicInterpreter
 {
 
 public:

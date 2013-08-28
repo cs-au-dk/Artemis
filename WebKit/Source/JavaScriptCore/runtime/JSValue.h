@@ -33,6 +33,20 @@
 #include <wtf/MathExtras.h>
 #include <wtf/StdLibExtras.h>
 
+#ifdef ARTEMIS
+#include "symbolic/expression/expression.h"
+#include "symbolic/expression/integerexpression.h"
+#include "symbolic/expression/integercoercion.h"
+#include "symbolic/expression/booleanexpression.h"
+#include "symbolic/expression/booleancoercion.h"
+#include "symbolic/expression/stringexpression.h"
+#include "symbolic/expression/stringcoercion.h"
+#include "symbolic/expression/constantstring.h"
+#include "symbolic/expression/constantinteger.h"
+#include "symbolic/expression/constantboolean.h"
+
+#endif
+
 namespace JSC {
 
     class ExecState;
@@ -67,6 +81,31 @@ namespace JSC {
 
     enum PreferredPrimitiveType { NoPreference, PreferNumber, PreferString };
 
+#ifdef ARTEMIS
+
+    typedef struct {
+
+        union {
+            int64_t asInt64;
+            JSCell* ptr;
+
+            #if CPU(BIG_ENDIAN)
+                    struct {
+                        int32_t tag;
+                        int32_t payload;
+                    } asBits;
+            #else
+                    struct {
+                        int32_t payload;
+                        int32_t tag;
+                    } asBits;
+            #endif
+        } u;
+
+        Symbolic::Expression* symbolic;
+
+    } SymbolicImmediate;
+#endif
 
 #if USE(JSVALUE32_64)
     typedef int64_t EncodedJSValue;
@@ -184,6 +223,19 @@ namespace JSC {
         bool isGetterSetter() const;
         bool isObject() const;
         bool inherits(const ClassInfo*) const;
+
+#ifdef ARTEMIS
+        // Symbolic operations
+        bool isSymbolic() const;
+        void makeSymbolic(Symbolic::Expression* symbolic);
+
+        Symbolic::Expression* asSymbolic() const;
+        Symbolic::IntegerExpression* generateIntegerExpression(ExecState* exec);
+        Symbolic::StringExpression* generateStringExpression(ExecState* exec);
+        Symbolic::IntegerExpression* generateIntegerCoercionExpression(ExecState* exec);
+        Symbolic::StringExpression* generateStringCoercionExpression(ExecState* exec);
+        Symbolic::BooleanExpression* generateBooleanExpression(ExecState* exec);
+#endif
         
         // Extracting the value.
         bool getString(ExecState* exec, UString&) const;
@@ -345,9 +397,32 @@ namespace JSC {
         // This value is 2^48, used to encode doubles such that the encoded value will begin
         // with a 16-bit pattern within the range 0x0001..0xFFFE.
         #define DoubleEncodeOffset 0x1000000000000ll
+
+#ifdef ARTEMIS
+        #define TagTypeNumber 0xffff800000000000ll
+
+        #define TagTypeInteger 0xffffC00000000000ll
+
+        #define TagTypeSymbolicInteger 0xffffD00000000000ll
+        #define TagTypeSymbolicDouble 0xffff900000000000ll
+
+        #define TagTypeSymbolicObject 0xffff300000000000ll
+        #define TagTypeSymbolicNull 0xffff100000000000ll
+
+        #define TagTypeSymbolicTrue 0xffff500000000000ll
+        #define TagTypeSymbolicFalse 0xffff700000000000ll
+
+        #define SymbolicMask 0xfffff00000000000ll
+        #define TagTypeSymbolic 0xffff100000000000ll
+
+        SymbolicImmediate* getImmediate() const;
+        JSC::JSCell* getPtr() const;
+        int64_t getInt64() const;
+#else
         // If all bits in the mask are set, this indicates an integer number,
         // if any but not all are set this value is a double precision number.
         #define TagTypeNumber 0xffff000000000000ll
+#endif
 
         // All non-numeric (bool, null, undefined) immediates have bit 2 set.
         #define TagBitTypeOther 0x2ll

@@ -22,7 +22,7 @@
 
 #include "instrumentation/executionlistener.h"
 
-#include "../JavaScriptCore/wtf/ExportMacros.h"
+#include "../WTF/wtf/ExportMacros.h"
 #include "../JavaScriptCore/instrumentation/jscexecutionlistener.h"
 #include "../JavaScriptCore/instrumentation/bytecodeinfo.h"
 #include "../JavaScriptCore/symbolic/expr.h"

@@ -150,7 +150,9 @@ bool JSDOMWindowBase::supportsRichSourceInfo(const JSGlobalObject* object)
         return false;
 
     bool enabled = page->inspectorController()->enabled();
+#ifndef ARTEMIS
     ASSERT(enabled || !thisObject->debugger());
+#endif
     ASSERT(enabled || !supportsProfiling(thisObject));
     return enabled;
 #endif

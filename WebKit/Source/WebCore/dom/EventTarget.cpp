@@ -39,6 +39,10 @@
 #include <wtf/StdLibExtras.h>
 #include <wtf/Vector.h>
 
+#ifdef ARTEMIS
+#include <instrumentation/executionlistener.h>
+#endif
+
 using namespace WTF;
 
 namespace WebCore {
@@ -93,6 +97,9 @@ DOMWindow* EventTarget::toDOMWindow()
 
 bool EventTarget::addEventListener(const AtomicString& eventType, PassRefPtr<EventListener> listener, bool useCapture)
 {
+#ifdef ARTEMIS
+    inst::getListener()->eventAdded(this, eventType.string().ascii().data());
+#endif
     EventTargetData* d = ensureEventTargetData();
     return d->eventListenerMap.add(eventType, listener, useCapture);
 }
@@ -107,6 +114,10 @@ bool EventTarget::removeEventListener(const AtomicString& eventType, EventListen
 
     if (!d->eventListenerMap.remove(eventType, listener, useCapture, indexOfRemovedListener))
         return false;
+
+#ifdef ARTEMIS
+    inst::getListener()->eventCleared(this, eventType.string().ascii().data());
+#endif
 
     // Notify firing events planning to invoke the listener at 'index' that
     // they have one less listener to invoke.
@@ -203,6 +214,10 @@ bool EventTarget::fireEventListeners(Event* event)
 void EventTarget::fireEventListeners(Event* event, EventTargetData* d, EventListenerVector& entry)
 {
     RefPtr<EventTarget> protect = this;
+
+#ifdef ARTEMIS
+    inst::getListener()->eventTriggered(this, event->type().string().ascii().data());
+#endif
 
     // Fire all listeners registered for this event. Don't fire listeners removed
     // during event dispatch. Also, don't fire event listeners added during event

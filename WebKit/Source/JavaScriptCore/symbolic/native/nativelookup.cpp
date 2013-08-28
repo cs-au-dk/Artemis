@@ -19,7 +19,8 @@
 #include <utility>
 #include <iostream>
 
-#include "JavaScriptCore/wtf/ExportMacros.h"
+#include "WTF/wtf/ExportMacros.h"
+#include "config.h"
 #include "JavaScriptCore/bytecode/CodeBlock.h"
 #include "JavaScriptCore/interpreter/CallFrame.h"
 

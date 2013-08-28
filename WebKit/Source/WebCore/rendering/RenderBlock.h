@@ -564,10 +564,17 @@ private:
         bool isPlaced() const { return m_isPlaced; }
         void setIsPlaced(bool placed = true) { m_isPlaced = placed; }
 
+#ifdef ARTEMIS
+        LayoutUnit x() const { return m_frameRect.x(); }
+        LayoutUnit maxX() const { return m_frameRect.maxX(); }
+        LayoutUnit y() const { return m_frameRect.y(); }
+        LayoutUnit maxY() const { return m_frameRect.maxY(); }
+#else
         LayoutUnit x() const { ASSERT(isPlaced()); return m_frameRect.x(); }
         LayoutUnit maxX() const { ASSERT(isPlaced()); return m_frameRect.maxX(); }
         LayoutUnit y() const { ASSERT(isPlaced()); return m_frameRect.y(); }
         LayoutUnit maxY() const { ASSERT(isPlaced()); return m_frameRect.maxY(); }
+#endif
         LayoutUnit width() const { return m_frameRect.width(); }
         LayoutUnit height() const { return m_frameRect.height(); }
 

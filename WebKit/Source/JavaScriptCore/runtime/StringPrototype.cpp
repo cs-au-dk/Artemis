@@ -40,7 +40,9 @@
 #include <wtf/ASCIICType.h>
 #include <wtf/MathExtras.h>
 #include <wtf/unicode/Collator.h>
-
+#ifdef ARTEMIS
+#include "JavaScriptCore/symbolic/expr.h"
+#endif 
 using namespace WTF;
 
 namespace JSC {
@@ -675,9 +677,37 @@ EncodedJSValue JSC_HOST_CALL stringProtoFuncReplace(ExecState* exec)
     JSString* string = thisValue.toString(exec);
     JSValue searchValue = exec->argument(0);
 
+#ifdef ARTEMIS
+    JSValue replaceValue = exec->argument(1);
+    if (searchValue.inherits(&RegExpObject::s_info)) {
+        if (thisValue.isSymbolic()) {
+            JSValue value = JSValue::decode(replaceUsingRegExpSearch(exec, string, searchValue));
+            value.makeSymbolic(new Symbolic::StringRegexReplace((Symbolic::StringExpression*)thisValue.asSymbolic(),
+                                                                new std::string(searchValue.toUString(exec).ascii().data()),
+                                                                new std::string(replaceValue.toUString(exec).ascii().data())));
+            return JSValue::encode(value);
+        } else {
+            return replaceUsingRegExpSearch(exec, string, searchValue);
+        }
+    }
+#else
     if (searchValue.inherits(&RegExpObject::s_info))
         return replaceUsingRegExpSearch(exec, string, searchValue);
+#endif
+
+#ifdef ARTEMIS
+    if (thisValue.isSymbolic()) {
+        JSValue value = JSValue::decode(replaceUsingStringSearch(exec, string, searchValue));
+        value.makeSymbolic(new Symbolic::StringReplace((Symbolic::StringExpression*)thisValue.asSymbolic(),
+                                                       new std::string(searchValue.toUString(exec).ascii().data()),
+                                                       new std::string(replaceValue.toUString(exec).ascii().data())));
+        return JSValue::encode(value);
+    } else {
+        return replaceUsingStringSearch(exec, string, searchValue);
+    }
+#else
     return replaceUsingStringSearch(exec, string, searchValue);
+#endif
 }
 
 EncodedJSValue JSC_HOST_CALL stringProtoFuncToString(ExecState* exec)

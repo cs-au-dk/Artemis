@@ -365,12 +365,20 @@ namespace JSC {
 
     inline bool JSValue::operator==(const JSValue& other) const
     {
+#ifdef ARTEMIS
+        return getPtr() == other.getPtr();
+#else
         return u.ptr == other.u.ptr;
+#endif
     }
 
     inline bool JSValue::operator!=(const JSValue& other) const
     {
+#ifdef ARTEMIS
+        return getPtr() != other.getPtr();
+#else
         return u.ptr != other.u.ptr;
+#endif
     }
 
     inline bool JSValue::isEmpty() const
@@ -407,7 +415,12 @@ namespace JSC {
     inline int32_t JSValue::asInt32() const
     {
         ASSERT(isInt32());
+
+#ifdef ARTEMIS
+        return static_cast<int32_t>(getInt64());
+#else
         return static_cast<int32_t>(u.asInt64);
+#endif
     }
 
     inline bool JSValue::isDouble() const
@@ -437,23 +450,40 @@ namespace JSC {
 
     inline bool JSValue::isUndefinedOrNull() const
     {
+#ifdef ARTEMIS
+        // Undefined and null share the same value, bar the 'undefined' bit in the extended tag.
+        return (getInt64() & ~TagBitUndefined) == ValueNull;
+#else
         // Undefined and null share the same value, bar the 'undefined' bit in the extended tag.
         return (u.asInt64 & ~TagBitUndefined) == ValueNull;
+#endif
     }
 
     inline bool JSValue::isBoolean() const
     {
+#ifdef ARTEMIS
+        return (getInt64() & ~1) == ValueFalse;
+#else
         return (u.asInt64 & ~1) == ValueFalse;
+#endif
     }
 
     inline bool JSValue::isCell() const
-    {
+    {      
+#ifdef ARTEMIS
+        return !(getInt64() & TagMask);
+#else
         return !(u.asInt64 & TagMask);
+#endif
     }
 
     inline bool JSValue::isInt32() const
     {
-        return (u.asInt64 & TagTypeNumber) == TagTypeNumber;
+#ifdef ARTEMIS
+        return (getInt64() & TagTypeNumber) == TagTypeNumber;
+#else
+        return (u.asInt64 & TagTypeNumber == TagTypeNumber);
+#endif
     }
 
     inline intptr_t reinterpretDoubleToIntptr(double value)
@@ -478,21 +508,63 @@ namespace JSC {
     inline double JSValue::asDouble() const
     {
         ASSERT(isDouble());
+#ifdef ARTEMIS
+        return reinterpretIntptrToDouble(getInt64() - DoubleEncodeOffset);
+#else
         return reinterpretIntptrToDouble(u.asInt64 - DoubleEncodeOffset);
+#endif
+
+
     }
 
     inline bool JSValue::isNumber() const
     {
+#ifdef ARTEMIS
+        return getInt64() & TagTypeNumber;
+#else
         return u.asInt64 & TagTypeNumber;
+#endif
     }
 
     ALWAYS_INLINE JSCell* JSValue::asCell() const
     {
         ASSERT(isCell());
+#ifdef ARTEMIS
+        return getPtr();
+#else
         return u.ptr;
+#endif
+
     }
 
 #endif // USE(JSVALUE64)
+
+#ifdef ARTEMIS
+    inline bool JSValue::isSymbolic() const {
+        return (u.asInt64 & TagTypeSymbolic) == TagTypeSymbolic;
+    }
+
+    inline SymbolicImmediate* JSValue::getImmediate() const
+    {
+        return (SymbolicImmediate*)((u.asInt64 & ~SymbolicMask));
+    }
+
+    inline JSC::JSCell* JSValue::getPtr() const
+    {
+        if (isSymbolic()) {
+            SymbolicImmediate* immediate = getImmediate();
+            return immediate->u.ptr;
+        }
+
+        return u.ptr;
+    }
+
+    inline int64_t JSValue::getInt64() const
+    {
+        return (int64_t)getPtr();
+    }
+
+#endif
 
 } // namespace JSC
 

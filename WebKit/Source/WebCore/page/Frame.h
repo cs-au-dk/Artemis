@@ -40,6 +40,11 @@
 #include "ScriptController.h"
 #include "UserScriptTypes.h"
 
+#ifdef ARTEMIS
+#include "instrumentation/executionlistener.h"
+#endif
+
+
 #if PLATFORM(WIN)
 #include "FrameWin.h"
 #endif
@@ -186,6 +191,12 @@ namespace WebCore {
         String searchForLabelsAboveCell(RegularExpression*, HTMLTableCellElement*, size_t* resultDistanceFromStartOfCell);
         String searchForLabelsBeforeElement(const Vector<String>& labels, Element*, size_t* resultDistance, bool* resultIsInCellAbove);
         String matchLabelsAgainstElement(const Vector<String>& labels, Element*);
+
+#ifdef ARTEMIS
+        inst::ExecutionListener* getExecutionListener();
+        void setExecutionListener(inst::ExecutionListener*);
+        inst::ExecutionListener* executionListener;
+#endif
 
 #if PLATFORM(MAC)
         NSImage* selectionImage(bool forceBlackText = false) const;

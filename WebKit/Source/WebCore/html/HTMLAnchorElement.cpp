@@ -24,6 +24,10 @@
 #include "config.h"
 #include "HTMLAnchorElement.h"
 
+#ifdef ARTEMIS
+#include "ScriptEventListener.h"
+#endif
+
 #include "Attribute.h"
 #include "DNS.h"
 #include "EventNames.h"
@@ -229,6 +233,12 @@ void HTMLAnchorElement::parseAttribute(Attribute* attr)
                 if (Attribute* hrefAttribute = getAttributeItem(hrefAttr))
                     hrefAttribute->setValue(nullAtom);
             }
+#ifdef ARTEMIS
+            else if(protocolIsJavaScript(parsedURL)){
+                setAttributeEventListener(eventNames().clickEvent, createAttributeEventListener(this, attr));
+            }
+#endif
+
         }
         invalidateCachedVisitedLinkHash();
     } else if (attr->name() == nameAttr || attr->name() == titleAttr) {

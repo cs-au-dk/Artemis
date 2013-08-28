@@ -82,7 +82,9 @@ void PluginTest::indicateTestFailure()
 #if defined(XP_WIN)
     ::Sleep(100000);
 #else
+#ifndef ARTEMIS
     sleep(1000);
+#endif
 #endif
 }
 

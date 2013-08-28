@@ -58,6 +58,10 @@
 #include "SharedWorkerRepository.h"
 #include <runtime/JSFunction.h>
 
+#ifdef ARTEMIS
+#include <instrumentation/executionlistener.h>
+#endif
+
 #if ENABLE(WORKERS)
 #include "JSWorker.h"
 #endif
@@ -418,6 +422,10 @@ void JSDOMWindow::setLocation(ExecState* exec, JSValue value)
             }
         }
     }
+#endif
+
+#ifdef ARTEMIS
+    inst::getListener()->url_changed(value, exec);
 #endif
 
     UString locationString = value.toString(exec)->value(exec);

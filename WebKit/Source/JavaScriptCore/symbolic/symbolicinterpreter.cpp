@@ -16,8 +16,10 @@
 
 #include <tr1/unordered_set>
 #include <inttypes.h>
+#include <iostream>
 
-#include "JavaScriptCore/wtf/ExportMacros.h"
+#include "config.h"
+#include "WTF/wtf/ExportMacros.h"
 #include "JavaScriptCore/bytecode/CodeBlock.h"
 #include "JavaScriptCore/interpreter/CallFrame.h"
 #include "JavaScriptCore/instrumentation/bytecodeinfo.h"

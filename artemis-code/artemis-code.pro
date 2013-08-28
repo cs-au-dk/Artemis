@@ -6,6 +6,7 @@ INCLUDEPATH += \
     ../WebKit/WebKitBuild/Release/include/ \
     ../WebKit/WebKitBuild/Release/include/QtWebKit/ \
     ../WebKit/Source/WebCore/ \
+    ../WebKit/Source/WTF/ \
     ../WebKit/Source/ \
     src
 

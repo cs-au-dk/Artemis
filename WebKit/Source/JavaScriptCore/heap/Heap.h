@@ -122,6 +122,9 @@ namespace JSC {
         enum SweepToggle { DoNotSweep, DoSweep };
         bool shouldCollect();
         void collect(SweepToggle);
+#ifdef ARTEMIS
+        void notifyIsNotSafeToCollect() { m_isSafeToCollect = false; }
+#endif
 
         void reportExtraMemoryCost(size_t cost);
         JS_EXPORT_PRIVATE void reportAbandonedObjectGraph();

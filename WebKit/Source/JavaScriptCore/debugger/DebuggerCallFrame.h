@@ -57,6 +57,10 @@ namespace JSC {
         JS_EXPORT_PRIVATE JSValue evaluate(const UString&, JSValue& exception) const;
         JSValue exception() const { return m_exception; }
 
+#ifdef ARTEMIS
+        CallFrame * callFrame() const { return m_callFrame; }
+#endif
+
     private:
         CallFrame* m_callFrame;
         JSValue m_exception;

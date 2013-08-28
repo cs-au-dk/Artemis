@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#include <JavaScriptCore/wtf/ExportMacros.h>
-
+#include <WTF/wtf/ExportMacros.h>
+#include "config.h"
 #include "JavaScriptCore/debugger/DebuggerCallFrame.h"
 #include "JavaScriptCore/interpreter/Register.h"
 #include "JavaScriptCore/runtime/JSObject.h"

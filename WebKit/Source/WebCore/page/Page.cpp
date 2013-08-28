@@ -78,6 +78,10 @@
 #include <wtf/StdLibExtras.h>
 #include <wtf/text/StringHash.h>
 
+#ifdef ARTEMIS
+#include <instrumentation/listenerdebugger.h>
+#endif
+
 namespace WebCore {
 
 static HashSet<Page*>* allPages;
@@ -174,6 +178,10 @@ Page::Page(PageClients& pageClients)
 
     ASSERT(!allPages->contains(this));
     allPages->add(this);
+
+#ifdef ARTEMIS
+    setDebuggerForAllPages(inst::getDebugger());
+#endif
 
 #ifndef NDEBUG
     pageCounter.increment();

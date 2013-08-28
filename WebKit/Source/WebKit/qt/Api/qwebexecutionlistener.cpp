@@ -285,7 +285,7 @@ void QWebExecutionListener::url_changed(JSC::JSValue value, JSC::ExecState* e) {
     if (value.isString()) {
         url = std::string(value.getString(e).utf8().data());
     } else {
-        url = std::string(value.toString(e).utf8().data());
+        url = std::string(value.toUString(e).utf8().data());
     }
 
     QUrl qurl = QUrl(tr(url.c_str()));

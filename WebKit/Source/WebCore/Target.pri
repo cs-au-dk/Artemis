@@ -72,7 +72,8 @@ SOURCES += \
     accessibility/AccessibilityTableRow.cpp \
     accessibility/AXObjectCache.cpp \
     bindings/generic/ActiveDOMCallback.cpp \
-    bindings/generic/RuntimeEnabledFeatures.cpp
+    bindings/generic/RuntimeEnabledFeatures.cpp \
+    instrumentation/listenerdebugger.cpp
 
 v8 {
     include($$PWD/../JavaScriptCore/yarr/yarr.pri)
@@ -1352,6 +1353,7 @@ SOURCES += \
     xml/DOMParser.cpp \
     xml/NativeXPathNSResolver.cpp \
     xml/XMLHttpRequest.cpp \
+    xml/LazyXMLHttpRequest.cpp \
     xml/XMLHttpRequestException.cpp \
     xml/XMLHttpRequestProgressEventThrottle.cpp \
     xml/XMLHttpRequestUpload.cpp \
@@ -1402,7 +1404,9 @@ HEADERS += \
     accessibility/AXObjectCache.h \
     bindings/ScriptControllerBase.h \
     bindings/generic/ActiveDOMCallback.h \
-    bindings/generic/RuntimeEnabledFeatures.h
+    bindings/generic/RuntimeEnabledFeatures.h \
+    instrumentation/executionlistener.h \
+    instrumentation/listenerdebugger.h
 
 v8 {
     HEADERS += \
@@ -2816,6 +2820,7 @@ HEADERS += \
     xml/DOMParser.h \
     xml/NativeXPathNSResolver.h \
     xml/XMLHttpRequest.h \
+    xml/LazyXMLHttpRequest.h \
     xml/XMLHttpRequestUpload.h \
     xml/XMLErrors.h \
     xml/XMLSerializer.h \

@@ -55,6 +55,10 @@
 /* ENABLE() - turn on a specific feature of WebKit */
 #define ENABLE(WTF_FEATURE) (defined ENABLE_##WTF_FEATURE  && ENABLE_##WTF_FEATURE)
 
+#ifdef ARTEMIS
+#define ENABLE_JIT 0
+#define ENABLE_CLASSIC_INTERPRETER 1
+#endif
 
 /* ==== CPU() - the target CPU architecture ==== */
 

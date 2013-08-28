@@ -768,7 +768,11 @@ static bool setupScriptContext(WebCore::Element* element, v8::Handle<v8::Value>&
 /*!
     Executes \a scriptSource with this element as \c this object.
 */
+#ifdef ARTEMIS
+QVariant QWebElement::evaluateJavaScript(const QString &scriptSource, const QUrl& u)
+#else
 QVariant QWebElement::evaluateJavaScript(const QString& scriptSource)
+#endif
 {
     if (scriptSource.isEmpty())
         return QVariant();
@@ -788,7 +792,11 @@ QVariant QWebElement::evaluateJavaScript(const QString& scriptSource)
     JSC::UString script(reinterpret_cast_ptr<const UChar*>(scriptSource.data()), scriptSource.length());
 
     JSC::JSValue evaluationException;
+#ifdef ARTEMIS
+    JSC::JSValue evaluationResult = JSC::evaluate(state, scopeChain, JSC::makeSource(script, JSC::UString(u.toString().toStdString().c_str())), thisValue, &evaluationException);
+#else
     JSC::JSValue evaluationResult = JSC::evaluate(state, scopeChain, JSC::makeSource(script), thisValue, &evaluationException);
+#endif
     if (evaluationException)
         return QVariant();
 

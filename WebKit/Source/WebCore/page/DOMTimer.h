@@ -53,10 +53,15 @@ namespace WebCore {
         // This allows the minimum allowable interval time to be changed in response
         // to events like moving a tab to the background.
         void adjustMinimumTimerInterval(double oldMinimumTimerInterval);
-
+#ifdef ARTEMIS
+        virtual void fired();
+#endif
     private:
         DOMTimer(ScriptExecutionContext*, PassOwnPtr<ScheduledAction>, int interval, bool singleShot);
+        
+#ifndef ARTEMIS
         virtual void fired();
+#endif
 
         double intervalClampedToMinimum(int timeout, double minimumTimerInterval) const;
 

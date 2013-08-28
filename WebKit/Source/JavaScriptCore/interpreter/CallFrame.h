@@ -58,9 +58,11 @@ namespace JSC  {
         // Differs from lexicalGlobalObject because this will have DOM window shell rather than
         // the actual DOM window, which can't be "this" for security reasons.
         inline JSObject* globalThisValue() const;
-
+#ifdef ARTEMIS
+        JSGlobalData& globalData() const;
+#else
         inline JSGlobalData& globalData() const;
-
+#endif
         // Convenience functions for access to global data.
         // It takes a few memory references to get from a call frame to the global data
         // pointer, so these are inefficient, and should be used sparingly in new code.

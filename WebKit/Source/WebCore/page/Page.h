@@ -35,6 +35,10 @@
 #include <wtf/HashSet.h>
 #include <wtf/Noncopyable.h>
 
+#ifdef ARTEMIS
+#include <instrumentation/executionlistener.h>
+#endif
+
 #if OS(SOLARIS)
 #include <sys/time.h> // For time_t structure.
 #endif
@@ -434,6 +438,11 @@ namespace WebCore {
 #endif
         PlatformDisplayID m_displayID;
 
+#ifdef ARTEMIS
+        void setExecutionListener(inst::ExecutionListener*);
+        inst::ExecutionListener* getExecutionListener();
+        inst::ExecutionListener* executionListener;
+#endif
         HashSet<RenderObject*> m_relevantUnpaintedRenderObjects;
         Region m_relevantPaintedRegion;
         Region m_relevantUnpaintedRegion;

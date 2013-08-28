@@ -66,6 +66,13 @@
 #include <wtf/Threading.h>
 #include <wtf/text/StringBuilder.h>
 
+#ifdef ARTEMIS
+#include <QDebug>
+#include "symbolic/native/nativefunction.h"
+#include "instrumentation/jscexecutionlistener.h"
+#include "instrumentation/bytecodeinfo.h"
+#endif
+
 #if ENABLE(JIT)
 #include "JIT.h"
 #endif
@@ -75,6 +82,10 @@
 using namespace std;
 
 namespace JSC {
+
+#ifdef ARTEMIS
+Symbolic::SymbolicInterpreter* Interpreter::m_symbolic = new Symbolic::SymbolicInterpreter();
+#endif
 
 // Returns the depth of the scope chain within a given call frame.
 static int depth(CodeBlock* codeBlock, ScopeChainNode* sc)
@@ -102,6 +113,13 @@ NEVER_INLINE bool Interpreter::resolve(CallFrame* callFrame, Instruction* vPC, J
 
     CodeBlock* codeBlock = callFrame->codeBlock();
     Identifier& ident = codeBlock->identifier(property);
+
+#ifdef ARTEMIS
+    if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
+		readProperty(callFrame, ident.ascii().data());
+	}
+#endif
+
     do {
         JSObject* o = iter->get();
         PropertySlot slot(o);
@@ -141,6 +159,13 @@ NEVER_INLINE bool Interpreter::resolveSkip(CallFrame* callFrame, Instruction* vP
         ASSERT(iter != end);
     }
     Identifier& ident = codeBlock->identifier(property);
+
+#ifdef ARTEMIS
+    if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
+		readProperty(callFrame, ident.ascii().data());
+	}
+#endif
+
     do {
         JSObject* o = iter->get();
         PropertySlot slot(o);
@@ -167,6 +192,12 @@ NEVER_INLINE bool Interpreter::resolveGlobal(CallFrame* callFrame, Instruction* 
     int property = vPC[2].u.operand;
     Structure* structure = vPC[3].u.structure.get();
     int offset = vPC[4].u.operand;
+
+#ifdef ARTEMIS
+    if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
+		readProperty(callFrame, codeBlock->identifier(property).ascii().data());
+	}
+#endif
 
     if (structure == globalObject->structure()) {
         callFrame->uncheckedR(dst) = JSValue(globalObject->getDirectOffset(offset));
@@ -205,7 +236,13 @@ NEVER_INLINE bool Interpreter::resolveGlobalDynamic(CallFrame* callFrame, Instru
     Structure* structure = vPC[3].u.structure.get();
     int offset = vPC[4].u.operand;
     int skip = vPC[5].u.operand;
-    
+
+#ifdef ARTEMIS
+    if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
+		readProperty(callFrame, codeBlock->identifier(property).ascii().data());
+	}
+#endif
+
     ScopeChainNode* scopeChain = callFrame->scopeChain();
     ScopeChainIterator iter = scopeChain->begin();
     ScopeChainIterator end = scopeChain->end();
@@ -278,6 +315,13 @@ NEVER_INLINE void Interpreter::resolveBase(CallFrame* callFrame, Instruction* vP
     int property = vPC[2].u.operand;
     bool isStrictPut = vPC[3].u.operand;
     Identifier ident = callFrame->codeBlock()->identifier(property);
+
+#ifdef ARTEMIS
+    if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
+		readProperty(callFrame, ident.ascii().data());
+	}
+#endif
+
     JSValue result = JSC::resolveBase(callFrame, ident, callFrame->scopeChain(), isStrictPut);
     if (result) {
         callFrame->uncheckedR(dst) = result;
@@ -338,6 +382,13 @@ NEVER_INLINE bool Interpreter::resolveThisAndProperty(CallFrame* callFrame, Inst
 
     CodeBlock* codeBlock = callFrame->codeBlock();
     Identifier& ident = codeBlock->identifier(property);
+
+#ifdef ARTEMIS
+    if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
+		readProperty(callFrame, ident.ascii().data());
+	}
+#endif
+
     JSObject* base;
     do {
         base = iter->get();
@@ -395,6 +446,55 @@ ALWAYS_INLINE CallFrame* Interpreter::slideRegisterWindowForCall(CodeBlock* newC
     return newCallFrame;
 }
 
+#ifdef ARTEMIS
+ALWAYS_INLINE void Interpreter::checkForConstantString(CallFrame* callFrame, const JSValue& jsvalue)
+{
+    if (jsvalue.isString()) {
+        jscinst::get_jsc_listener()->javascriptConstantStringEncountered(jsvalue.asCell()->toUString(callFrame).ascii().mutableData());
+    }
+}
+
+ALWAYS_INLINE void Interpreter::readProperty(CallFrame* callFrame, std::string identifier)
+{
+    jscinst::get_jsc_listener()->javascript_property_read(identifier, callFrame);
+}
+
+ALWAYS_INLINE void Interpreter::readProperty(CallFrame* callFrame, const SymbolTable& symbolTable, int index)
+{
+    SymbolTable::const_iterator it = symbolTable.begin();
+    SymbolTable::const_iterator end = symbolTable.end();
+    for (; it != end; ++it) {
+        if (it->second.getIndex() == index) {
+            //printf("READ %s\n", UString(it->first).ascii().data());
+            jscinst::get_jsc_listener()->javascript_property_read(UString(it->first).ascii().data(), callFrame);
+            return;
+        }
+    }
+
+}
+
+ALWAYS_INLINE void Interpreter::writeProperty(CallFrame* callFrame, std::string identifier)
+{
+    //printf("WRITE %s\n", identifier.c_str());
+    jscinst::get_jsc_listener()->javascript_property_written(identifier, callFrame);
+}
+
+ALWAYS_INLINE void Interpreter::writeProperty(CallFrame* callFrame, const SymbolTable& symbolTable, int index)
+{
+    SymbolTable::const_iterator it = symbolTable.begin();
+    SymbolTable::const_iterator end = symbolTable.end();
+    for (; it != end; ++it) {
+        if (it->second.getIndex() == index) {
+            //printf("WRITE %s\n", UString(it->first).ascii().data());
+            jscinst::get_jsc_listener()->javascript_property_written(UString(it->first).ascii().data(), callFrame);
+            return;
+        }
+    }
+
+}
+
+#endif
+
 #if ENABLE(CLASSIC_INTERPRETER)
 static NEVER_INLINE bool isInvalidParamForIn(CallFrame* callFrame, JSValue value, JSValue& exceptionData)
 {
@@ -419,11 +519,19 @@ JSValue eval(CallFrame* callFrame)
         return jsUndefined();
 
     JSValue program = callFrame->argument(0);
-    if (!program.isString())
+    if (!program.isString()) {
+#ifdef ARTEMIS
+        jscinst::get_jsc_listener()->javascript_eval_call(program.toUString(callFrame).utf8().data());
+#endif
         return program;
+    }
+
     
     TopCallFrameSetter topCallFrame(callFrame->globalData(), callFrame);
     UString programSource = asString(program)->value(callFrame);
+#ifdef ARTEMIS
+    jscinst::get_jsc_listener()->javascript_eval_call(programSource.utf8().data());
+#endif
     if (callFrame->hadException())
         return JSValue();
     
@@ -547,6 +655,17 @@ Interpreter::Interpreter()
 #endif
     , m_classicEnabled(false)
 {
+#ifdef ARTEMIS
+#if ENABLE(JIT)
+    qFatal("WEBKIT: JIT enabled - instrumentation will not work!\n");
+#endif
+
+    if (Interpreter::m_symbolic == NULL) {
+        qFatal("WEBKIT m_symbolic not set!");
+    }
+
+#endif
+
 }
 
 Interpreter::~Interpreter()
@@ -1913,6 +2032,11 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
     ASSERT(m_initialized);
     ASSERT(m_classicEnabled);
     
+
+#ifdef ARTEMIS
+    BytecodeInfo bytecodeInfoPrestine, bytecodeInfo = BytecodeInfo();
+#endif
+
 #if ENABLE(JIT)
 #if ENABLE(CLASSIC_INTERPRETER)
     // Mixing Interpreter + JIT is not supported.
@@ -1952,6 +2076,12 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
     OpcodeStats::resetLastInstruction();
 #endif
 
+#ifdef ARTEMIS
+    m_symbolic->preExecution(callFrame);
+    CodeBlock* oldCodeBlock = codeBlock;
+    Instruction* oldPC = vPC;
+#endif
+
 #define CHECK_FOR_TIMEOUT() \
     if (!--tickCount) { \
         if (globalData->terminator.shouldTerminate() || globalData->timeoutChecker.didTimeOut(callFrame)) { \
@@ -1967,31 +2097,32 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
     #define SAMPLE(codeBlock, vPC)
 #endif
 
+#ifdef ARTEMIS
+#define ARTEMIS_BYTECODE_PRE oldCodeBlock = codeBlock; oldPC = vPC;
+#define ARTEMIS_BYTECODE_POST jscinst::get_jsc_listener()->javascript_bytecode_executed(this, oldCodeBlock, oldPC, bytecodeInfo); bytecodeInfo = bytecodeInfoPrestine;
+#else
+#define ARTEMIS_BYTECODE_PRE
+#define ARTEMIS_BYTECODE_LISTEN
+#endif
 #define UPDATE_BYTECODE_OFFSET() \
     do {\
         callFrame->setBytecodeOffsetForNonDFGCode(vPC - codeBlock->instructions().data() + 1);\
     } while (0)
 
 #if ENABLE(COMPUTED_GOTO_CLASSIC_INTERPRETER)
-    #define NEXT_INSTRUCTION() SAMPLE(codeBlock, vPC); goto *vPC->u.opcode
+    #define NEXT_INSTRUCTION() SAMPLE(codeBlock, vPC); ARTEMIS_BYTECODE_POST; goto *vPC->u.opcode
 #if ENABLE(OPCODE_STATS)
-    #define DEFINE_OPCODE(opcode) \
-        opcode:\
-            OpcodeStats::recordInstruction(opcode);\
-            UPDATE_BYTECODE_OFFSET();
+#define DEFINE_OPCODE(opcode) opcode: OpcodeStats::recordInstruction(opcode); ARTEMIS_BYTECODE_PRE;
 #else
-    #define DEFINE_OPCODE(opcode) opcode: UPDATE_BYTECODE_OFFSET();
+#define DEFINE_OPCODE(opcode) opcode: ARTEMIS_BYTECODE_PRE;
 #endif
     NEXT_INSTRUCTION();
 #else
-    #define NEXT_INSTRUCTION() SAMPLE(codeBlock, vPC); goto interpreterLoopStart
+    #define NEXT_INSTRUCTION() SAMPLE(codeBlock, vPC); ARTEMIS_BYTECODE_POST; goto interpreterLoopStart
 #if ENABLE(OPCODE_STATS)
-    #define DEFINE_OPCODE(opcode) \
-        case opcode:\
-            OpcodeStats::recordInstruction(opcode);\
-            UPDATE_BYTECODE_OFFSET();
+#define DEFINE_OPCODE(opcode) case opcode: OpcodeStats::recordInstruction(opcode); ARTEMIS_BYTECODE_PRE;
 #else
-    #define DEFINE_OPCODE(opcode) case opcode: UPDATE_BYTECODE_OFFSET();
+#define DEFINE_OPCODE(opcode) case opcode: ARTEMIS_BYTECODE_PRE;
 #endif
     while (1) { // iterator loop begins
     interpreterLoopStart:;
@@ -2090,6 +2221,18 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
             callFrame->uncheckedR(dst) = result;
         }
 
+#ifdef ARTEMIS
+        callFrame->uncheckedR(dst) = \
+                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
+                                                       src1, Symbolic::EQUAL, src2,
+                                                       callFrame->uncheckedR(dst).jsValue());
+
+        if (jscinst::get_jsc_listener()->isConstantStringInstrumentationEnabled()) {
+            checkForConstantString(callFrame, src1);
+            checkForConstantString(callFrame, src2);
+        }
+#endif
+
         vPC += OPCODE_LENGTH(op_eq);
         NEXT_INSTRUCTION();
     }
@@ -2109,6 +2252,15 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         }
         
         callFrame->uncheckedR(dst) = jsBoolean(src.isCell() && src.asCell()->structure()->typeInfo().masqueradesAsUndefined());
+
+#ifdef ARTEMIS
+        JSValue jsn = jsNull();
+        callFrame->uncheckedR(dst) = \
+                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
+                                                       src, Symbolic::EQUAL, jsn,
+                                                       callFrame->uncheckedR(dst).jsValue());
+#endif
+
         vPC += OPCODE_LENGTH(op_eq_null);
         NEXT_INSTRUCTION();
     }
@@ -2130,6 +2282,18 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
             callFrame->uncheckedR(dst) = result;
         }
 
+#ifdef ARTEMIS
+        callFrame->uncheckedR(dst) = \
+                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
+                                                       src1, Symbolic::NOT_EQUAL, src2,
+                                                       callFrame->uncheckedR(dst).jsValue());
+
+        if (jscinst::get_jsc_listener()->isConstantStringInstrumentationEnabled()) {
+            checkForConstantString(callFrame, src1);
+            checkForConstantString(callFrame, src2);
+        }
+#endif
+
         vPC += OPCODE_LENGTH(op_neq);
         NEXT_INSTRUCTION();
     }
@@ -2149,6 +2313,15 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         }
         
         callFrame->uncheckedR(dst) = jsBoolean(!src.isCell() || !src.asCell()->structure()->typeInfo().masqueradesAsUndefined());
+
+#ifdef ARTEMIS
+        JSValue jsn = jsNull();
+        callFrame->uncheckedR(dst) = \
+                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
+                                                       src, Symbolic::NOT_EQUAL, jsn,
+                                                       callFrame->uncheckedR(dst).jsValue());
+#endif
+
         vPC += OPCODE_LENGTH(op_neq_null);
         NEXT_INSTRUCTION();
     }
@@ -2165,6 +2338,18 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         bool result = JSValue::strictEqual(callFrame, src1, src2);
         CHECK_FOR_EXCEPTION();
         callFrame->uncheckedR(dst) = jsBoolean(result);
+
+#ifdef ARTEMIS
+        callFrame->uncheckedR(dst) = \
+                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
+                                                       src1, Symbolic::STRICT_EQUAL, src2,
+                                                       callFrame->uncheckedR(dst).jsValue());
+
+        if (jscinst::get_jsc_listener()->isConstantStringInstrumentationEnabled()) {
+            checkForConstantString(callFrame, src1);
+            checkForConstantString(callFrame, src2);
+        }
+#endif
 
         vPC += OPCODE_LENGTH(op_stricteq);
         NEXT_INSTRUCTION();
@@ -2183,6 +2368,18 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         CHECK_FOR_EXCEPTION();
         callFrame->uncheckedR(dst) = jsBoolean(result);
 
+#ifdef ARTEMIS
+        callFrame->uncheckedR(dst) = \
+                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
+                                                       src1, Symbolic::NOT_STRICT_EQUAL, src2,
+                                                       callFrame->uncheckedR(dst).jsValue());
+
+        if (jscinst::get_jsc_listener()->isConstantStringInstrumentationEnabled()) {
+            checkForConstantString(callFrame, src1);
+            checkForConstantString(callFrame, src2);
+        }
+#endif
+
         vPC += OPCODE_LENGTH(op_nstricteq);
         NEXT_INSTRUCTION();
     }
@@ -2199,6 +2396,13 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         JSValue result = jsBoolean(jsLess<true>(callFrame, src1, src2));
         CHECK_FOR_EXCEPTION();
         callFrame->uncheckedR(dst) = result;
+
+#ifdef ARTEMIS
+        callFrame->uncheckedR(dst) = \
+                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
+                                                       src1, Symbolic::LESS_STRICT, src2,
+                                                       callFrame->uncheckedR(dst).jsValue());
+#endif
 
         vPC += OPCODE_LENGTH(op_less);
         NEXT_INSTRUCTION();
@@ -2217,6 +2421,13 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         CHECK_FOR_EXCEPTION();
         callFrame->uncheckedR(dst) = result;
 
+#ifdef ARTEMIS
+        callFrame->uncheckedR(dst) = \
+                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
+                                                       src1, Symbolic::LESS_EQ, src2,
+                                                       callFrame->uncheckedR(dst).jsValue());
+#endif
+
         vPC += OPCODE_LENGTH(op_lesseq);
         NEXT_INSTRUCTION();
     }
@@ -2234,6 +2445,13 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         CHECK_FOR_EXCEPTION();
         callFrame->uncheckedR(dst) = result;
 
+#ifdef ARTEMIS
+        callFrame->uncheckedR(dst) = \
+                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
+                                                       src1, Symbolic::GREATER_STRICT, src2,
+                                                       callFrame->uncheckedR(dst).jsValue());
+#endif
+
         vPC += OPCODE_LENGTH(op_greater);
         NEXT_INSTRUCTION();
     }
@@ -2250,6 +2468,13 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         JSValue result = jsBoolean(jsLessEq<false>(callFrame, src2, src1));
         CHECK_FOR_EXCEPTION();
         callFrame->uncheckedR(dst) = result;
+
+#ifdef ARTEMIS
+        callFrame->uncheckedR(dst) = \
+                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
+                                                       src1, Symbolic::GREATER_EQ, src2,
+                                                       callFrame->uncheckedR(dst).jsValue());
+#endif
 
         vPC += OPCODE_LENGTH(op_greatereq);
         NEXT_INSTRUCTION();
@@ -2270,6 +2495,14 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
             callFrame->uncheckedR(srcDst) = result;
         }
 
+#ifdef ARTEMIS
+        JSValue jsn = jsNumber(1);
+        callFrame->uncheckedR(srcDst) = \
+                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
+                                                       v, Symbolic::ADD, jsn,
+                                                       callFrame->uncheckedR(srcDst).jsValue());
+#endif
+
         vPC += OPCODE_LENGTH(op_pre_inc);
         NEXT_INSTRUCTION();
     }
@@ -2288,6 +2521,14 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
             CHECK_FOR_EXCEPTION();
             callFrame->uncheckedR(srcDst) = result;
         }
+
+#ifdef ARTEMIS
+        JSValue jsn = jsNumber(1);
+        callFrame->uncheckedR(srcDst) = \
+                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
+                                                       v, Symbolic::SUBTRACT, jsn,
+                                                       callFrame->uncheckedR(srcDst).jsValue());
+#endif
 
         vPC += OPCODE_LENGTH(op_pre_dec);
         NEXT_INSTRUCTION();
@@ -2312,6 +2553,14 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
             callFrame->uncheckedR(dst) = jsNumber(number);
         }
 
+#ifdef ARTEMIS
+        JSValue jsn = jsNumber(1);
+        callFrame->uncheckedR(srcDst) = \
+                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
+                                                       v, Symbolic::ADD, jsn,
+                                                       callFrame->uncheckedR(srcDst).jsValue());
+#endif
+
         vPC += OPCODE_LENGTH(op_post_inc);
         NEXT_INSTRUCTION();
     }
@@ -2335,6 +2584,14 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
             callFrame->uncheckedR(dst) = jsNumber(number);
         }
 
+#ifdef ARTEMIS
+        JSValue jsn = jsNumber(1);
+        callFrame->uncheckedR(srcDst) = \
+                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
+                                                       v, Symbolic::SUBTRACT, jsn,
+                                                       callFrame->uncheckedR(srcDst).jsValue());
+#endif
+
         vPC += OPCODE_LENGTH(op_post_dec);
         NEXT_INSTRUCTION();
     }
@@ -2357,6 +2614,14 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
             callFrame->uncheckedR(dst) = jsNumber(number);
         }
 
+#ifdef ARTEMIS
+        JSValue jsn = jsNumber(1);
+        callFrame->uncheckedR(dst) = \
+                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
+                                                       srcVal, Symbolic::MULTIPLY, jsn,
+                                                       callFrame->uncheckedR(dst).jsValue());
+#endif
+
         vPC += OPCODE_LENGTH(op_to_jsnumber);
         NEXT_INSTRUCTION();
     }
@@ -2375,6 +2640,14 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
             CHECK_FOR_EXCEPTION();
             callFrame->uncheckedR(dst) = result;
         }
+
+#ifdef ARTEMIS
+        JSValue jsn = jsNumber(-1);
+        callFrame->uncheckedR(dst) = \
+                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
+                                                       src, Symbolic::MULTIPLY, jsn,
+                                                       callFrame->uncheckedR(dst).jsValue());
+#endif
 
         vPC += OPCODE_LENGTH(op_negate);
         NEXT_INSTRUCTION();
@@ -2396,6 +2669,14 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
             CHECK_FOR_EXCEPTION();
             callFrame->uncheckedR(dst) = result;
         }
+
+#ifdef ARTEMIS
+        callFrame->uncheckedR(dst) = \
+                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
+                                                       src1, Symbolic::ADD, src2,
+                                                       callFrame->uncheckedR(dst).jsValue());
+#endif
+
         vPC += OPCODE_LENGTH(op_add);
         NEXT_INSTRUCTION();
     }
@@ -2416,6 +2697,13 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
             callFrame->uncheckedR(dst) = result;
         }
 
+#ifdef ARTEMIS
+        callFrame->uncheckedR(dst) = \
+                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
+                                                       src1, Symbolic::MULTIPLY, src2,
+                                                       callFrame->uncheckedR(dst).jsValue());
+#endif
+
         vPC += OPCODE_LENGTH(op_mul);
         NEXT_INSTRUCTION();
     }
@@ -2433,6 +2721,13 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         JSValue result = jsNumber(dividend.toNumber(callFrame) / divisor.toNumber(callFrame));
         CHECK_FOR_EXCEPTION();
         callFrame->uncheckedR(dst) = result;
+
+#ifdef ARTEMIS
+        callFrame->uncheckedR(dst) = \
+                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
+                                                       dividend, Symbolic::DIVIDE, divisor,
+                                                       result);
+#endif
 
         vPC += OPCODE_LENGTH(op_div);
         NEXT_INSTRUCTION();
@@ -2452,6 +2747,14 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
             JSValue result = jsNumber(dividend.asInt32() % divisor.asInt32());
             ASSERT(result);
             callFrame->uncheckedR(dst) = result;
+
+#ifdef ARTEMIS
+        callFrame->uncheckedR(dst) = \
+                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
+                                                       dividend, Symbolic::EQUAL, divisor,
+                                                       result);
+#endif
+
             vPC += OPCODE_LENGTH(op_mod);
             NEXT_INSTRUCTION();
         }
@@ -2463,6 +2766,14 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         JSValue result = jsNumber(fmod(d1, d2));
         CHECK_FOR_EXCEPTION();
         callFrame->uncheckedR(dst) = result;
+
+#ifdef ARTEMIS
+        callFrame->uncheckedR(dst) = \
+                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
+                                                       dividend, Symbolic::MODULO, divisor,
+                                                       result);
+#endif
+
         vPC += OPCODE_LENGTH(op_mod);
         NEXT_INSTRUCTION();
     }
@@ -2483,6 +2794,14 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
             CHECK_FOR_EXCEPTION();
             callFrame->uncheckedR(dst) = result;
         }
+
+#ifdef ARTEMIS
+        callFrame->uncheckedR(dst) = \
+                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
+                                                       src1, Symbolic::SUBTRACT, src2,
+                                                       callFrame->uncheckedR(dst).jsValue());
+#endif
+
         vPC += OPCODE_LENGTH(op_sub);
         NEXT_INSTRUCTION();
     }
@@ -2876,6 +3195,12 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         ASSERT(scope->isGlobalObject());
         int index = vPC[2].u.operand;
 
+#ifdef ARTEMIS
+        if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
+		readProperty(callFrame, scope->symbolTable(), index);
+	}
+#endif
+
         callFrame->uncheckedR(dst) = scope->registerAt(index).get();
         vPC += OPCODE_LENGTH(op_get_global_var);
         NEXT_INSTRUCTION();
@@ -2889,7 +3214,13 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         ASSERT(scope->isGlobalObject());
         int index = vPC[1].u.operand;
         int value = vPC[2].u.operand;
-        
+
+#ifdef ARTEMIS
+        if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
+		readProperty(callFrame, scope->symbolTable(), index);
+	}
+#endif
+
         scope->registerAt(index).set(*globalData, scope, callFrame->r(value).jsValue());
         vPC += OPCODE_LENGTH(op_put_global_var);
         NEXT_INSTRUCTION();
@@ -2906,8 +3237,14 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
 
         ScopeChainNode* scopeChain = callFrame->scopeChain();
         ScopeChainIterator iter = scopeChain->begin();
+
         ScopeChainIterator end = scopeChain->end();
+
+
+#ifndef ARTEMIS
         ASSERT_UNUSED(end, iter != end);
+#endif
+
         ASSERT(codeBlock == callFrame->codeBlock());
         bool checkTopLevel = codeBlock->codeType() == FunctionCode && codeBlock->needsFullScopeChain();
         ASSERT(skip || !checkTopLevel);
@@ -2923,6 +3260,13 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         JSVariableObject* scope = jsCast<JSVariableObject*>(iter->get());
         callFrame->uncheckedR(dst) = scope->registerAt(index).get();
         ASSERT(callFrame->r(dst).jsValue());
+
+#ifdef ARTEMIS
+        if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
+		readProperty(callFrame, scope->symbolTable(), index);
+	}
+#endif
+
         vPC += OPCODE_LENGTH(op_get_scoped_var);
         NEXT_INSTRUCTION();
     }
@@ -2937,8 +3281,13 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         ScopeChainNode* scopeChain = callFrame->scopeChain();
         ScopeChainIterator iter = scopeChain->begin();
         ScopeChainIterator end = scopeChain->end();
+
+
+#ifndef ARTEMIS
         ASSERT(codeBlock == callFrame->codeBlock());
         ASSERT_UNUSED(end, iter != end);
+#endif
+
         bool checkTopLevel = codeBlock->codeType() == FunctionCode && codeBlock->needsFullScopeChain();
         ASSERT(skip || !checkTopLevel);
         if (checkTopLevel && skip--) {
@@ -2954,6 +3303,13 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         JSVariableObject* scope = jsCast<JSVariableObject*>(iter->get());
         ASSERT(callFrame->r(value).jsValue());
         scope->registerAt(index).set(*globalData, scope, callFrame->r(value).jsValue());
+
+#ifdef ARTEMIS
+        if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
+		readProperty(callFrame, scope->symbolTable(), index);
+	}
+#endif
+
         vPC += OPCODE_LENGTH(op_put_scoped_var);
         NEXT_INSTRUCTION();
     }
@@ -2980,7 +3336,13 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         int base = vPC[1].u.operand;
         int property = vPC[2].u.operand;
         Identifier& ident = codeBlock->identifier(property);
-        
+
+#ifdef ARTEMIS
+        if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
+		readProperty(callFrame, ident.ascii().data());
+	}
+#endif
+
         JSValue baseVal = callFrame->r(base).jsValue();
         JSObject* baseObject = asObject(baseVal);
         PropertySlot slot(baseVal);
@@ -3037,12 +3399,28 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         int property = vPC[3].u.operand;
 
         Identifier& ident = codeBlock->identifier(property);
+
+#ifdef ARTEMIS
+        if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
+		readProperty(callFrame, ident.ascii().data());
+	}
+#endif
+
         JSValue baseValue = callFrame->r(base).jsValue();
         PropertySlot slot(baseValue);
         JSValue result = baseValue.get(callFrame, ident, slot);
         CHECK_FOR_EXCEPTION();
 
+#ifndef ARTEMIS
+        // Disable op_get_by_id optimisation
         tryCacheGetByID(callFrame, codeBlock, vPC, baseValue, ident, slot);
+#endif
+
+#ifdef ARTEMIS
+        if (result.isSymbolic()) {
+            bytecodeInfo.setSymbolic();
+        }
+#endif
 
         callFrame->uncheckedR(dst) = result;
         vPC += OPCODE_LENGTH(op_get_by_id);
@@ -3055,8 +3433,20 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
            value base. If the cache misses, op_get_by_id_self reverts to
            op_get_by_id.
         */
+
+#ifdef ARTEMIS
+        ASSERT(false);
+#endif
+
         int base = vPC[2].u.operand;
         JSValue baseValue = callFrame->r(base).jsValue();
+
+#ifdef ARTEMIS
+        int property = vPC[3].u.operand;
+        if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
+		readProperty(callFrame, codeBlock->identifier(property).ascii().data());
+	}
+#endif
 
         if (LIKELY(baseValue.isCell())) {
             JSCell* baseCell = baseValue.asCell();
@@ -3086,8 +3476,20 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
            value base's prototype. If the cache misses, op_get_by_id_proto
            reverts to op_get_by_id.
         */
+
+#ifdef ARTEMIS
+        ASSERT(false);
+#endif
+
         int base = vPC[2].u.operand;
         JSValue baseValue = callFrame->r(base).jsValue();
+
+#ifdef ARTEMIS
+        int property = vPC[3].u.operand;
+        if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
+		readProperty(callFrame, codeBlock->identifier(property).ascii().data());
+	}
+#endif
 
         if (LIKELY(baseValue.isCell())) {
             JSCell* baseCell = baseValue.asCell();
@@ -3125,9 +3527,21 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
          value base's prototype. If the cache misses, op_get_by_id_getter_proto
          reverts to op_get_by_id.
          */
+
+#ifdef ARTEMIS
+        ASSERT(false);
+#endif
+
         int base = vPC[2].u.operand;
         JSValue baseValue = callFrame->r(base).jsValue();
-        
+
+#ifdef ARTEMIS
+        int property = vPC[3].u.operand;
+        if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
+		readProperty(callFrame, codeBlock->identifier(property).ascii().data());
+	}
+#endif
+
         if (LIKELY(baseValue.isCell())) {
             JSCell* baseCell = baseValue.asCell();
             Structure* structure = vPC[4].u.structure.get();
@@ -3170,9 +3584,21 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
          from the value base's prototype. If the cache misses, op_get_by_id_custom_proto
          reverts to op_get_by_id.
          */
+
+#ifdef ARTEMIS
+        ASSERT(false);
+#endif
+
         int base = vPC[2].u.operand;
         JSValue baseValue = callFrame->r(base).jsValue();
-        
+
+#ifdef ARTEMIS
+        int property = vPC[3].u.operand;
+        if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
+		readProperty(callFrame, codeBlock->identifier(property).ascii().data());
+	}
+#endif
+
         if (LIKELY(baseValue.isCell())) {
             JSCell* baseCell = baseValue.asCell();
             Structure* structure = vPC[4].u.structure.get();
@@ -3212,8 +3638,20 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
            value base's prototype chain. If the cache misses, op_get_by_id_chain
            reverts to op_get_by_id.
         */
+
+#ifdef ARTEMIS
+        ASSERT(false);
+#endif
+
         int base = vPC[2].u.operand;
         JSValue baseValue = callFrame->r(base).jsValue();
+
+#ifdef ARTEMIS
+        int property = vPC[3].u.operand;
+        if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
+		readProperty(callFrame, codeBlock->identifier(property).ascii().data());
+	}
+#endif
 
         if (LIKELY(baseValue.isCell())) {
             JSCell* baseCell = baseValue.asCell();
@@ -3262,9 +3700,21 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
          value base. If the cache misses, op_get_by_id_getter_self reverts to
          op_get_by_id.
          */
+
+#ifdef ARTEMIS
+        ASSERT(false);
+#endif
+
         int base = vPC[2].u.operand;
         JSValue baseValue = callFrame->r(base).jsValue();
-        
+
+#ifdef ARTEMIS
+        int property = vPC[3].u.operand;
+        if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
+		readProperty(callFrame, codeBlock->identifier(property).ascii().data());
+	}
+#endif
+
         if (LIKELY(baseValue.isCell())) {
             JSCell* baseCell = baseValue.asCell();
             Structure* structure = vPC[4].u.structure.get();
@@ -3305,9 +3755,21 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
          from the value base. If the cache misses, op_get_by_id_custom_self reverts to
          op_get_by_id.
          */
+
+#ifdef ARTEMIS
+        ASSERT(false);
+#endif
+
         int base = vPC[2].u.operand;
         JSValue baseValue = callFrame->r(base).jsValue();
-        
+
+#ifdef ARTEMIS
+        int property = vPC[3].u.operand;
+        if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
+		readProperty(callFrame, codeBlock->identifier(property).ascii().data());
+	}
+#endif
+
         if (LIKELY(baseValue.isCell())) {
             JSCell* baseCell = baseValue.asCell();
             Structure* structure = vPC[4].u.structure.get();
@@ -3338,11 +3800,23 @@ skip_id_custom_self:
            Generic property access: Gets the property named by identifier
            property from the value base, and puts the result in register dst.
         */
+
+#ifdef ARTEMIS
+        ASSERT(false);
+#endif
+
         int dst = vPC[1].u.operand;
         int base = vPC[2].u.operand;
         int property = vPC[3].u.operand;
 
         Identifier& ident = codeBlock->identifier(property);
+
+#ifdef ARTEMIS
+        if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
+		readProperty(callFrame, ident.ascii().data());
+	}
+#endif
+
         JSValue baseValue = callFrame->r(base).jsValue();
         PropertySlot slot(baseValue);
         JSValue result = baseValue.get(callFrame, ident, slot);
@@ -3362,9 +3836,21 @@ skip_id_custom_self:
          value base's prototype chain. If the cache misses, op_get_by_id_getter_chain
          reverts to op_get_by_id.
          */
+
+#ifdef ARTEMIS
+        ASSERT(false);
+#endif
+
         int base = vPC[2].u.operand;
         JSValue baseValue = callFrame->r(base).jsValue();
-        
+
+#ifdef ARTEMIS
+        int property = vPC[3].u.operand;
+        if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
+		readProperty(callFrame, codeBlock->identifier(property).ascii().data());
+	}
+#endif
+
         if (LIKELY(baseValue.isCell())) {
             JSCell* baseCell = baseValue.asCell();
             Structure* structure = vPC[4].u.structure.get();
@@ -3417,9 +3903,21 @@ skip_id_custom_self:
          value base's prototype chain. If the cache misses, op_get_by_id_custom_chain
          reverts to op_get_by_id.
          */
+
+#ifdef ARTEMIS
+        ASSERT(false);
+#endif
+
         int base = vPC[2].u.operand;
         JSValue baseValue = callFrame->r(base).jsValue();
-        
+
+#ifdef ARTEMIS
+        int property = vPC[3].u.operand;
+        if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
+		readProperty(callFrame, codeBlock->identifier(property).ascii().data());
+	}
+#endif
+
         if (LIKELY(baseValue.isCell())) {
             JSCell* baseCell = baseValue.asCell();
             Structure* structure = vPC[4].u.structure.get();
@@ -3528,6 +4026,13 @@ skip_id_custom_self:
 
         JSValue baseValue = callFrame->r(base).jsValue();
         Identifier& ident = codeBlock->identifier(property);
+
+#ifdef ARTEMIS
+        if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
+		readProperty(callFrame, ident.ascii().data());
+	}
+#endif
+
         PutPropertySlot slot(codeBlock->isStrictMode());
         if (direct) {
             ASSERT(baseValue.isObject());
@@ -3536,7 +4041,16 @@ skip_id_custom_self:
             baseValue.put(callFrame, ident, callFrame->r(value).jsValue(), slot);
         CHECK_FOR_EXCEPTION();
 
+#ifndef ARTEMIS
+        // Disable op_put_by_id optimisation
         tryCachePutByID(callFrame, codeBlock, vPC, baseValue, slot);
+#endif
+
+#ifdef ARTEMIS
+        if (callFrame->r(value).jsValue().isSymbolic()) {
+            bytecodeInfo.setSymbolic();
+        }
+#endif
 
         vPC += OPCODE_LENGTH(op_put_by_id);
         NEXT_INSTRUCTION();
@@ -3557,9 +4071,21 @@ skip_id_custom_self:
            Unlike many opcodes, this one does not write any output to
            the register file.
          */
+
+#ifdef ARTEMIS
+        ASSERT(false);
+#endif
+
         int base = vPC[1].u.operand;
         JSValue baseValue = callFrame->r(base).jsValue();
-        
+
+#ifdef ARTEMIS
+        int property = vPC[2].u.operand;
+        if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
+		readProperty(callFrame, codeBlock->identifier(property).ascii().data());
+	}
+#endif
+
         if (LIKELY(baseValue.isCell())) {
             JSCell* baseCell = baseValue.asCell();
             Structure* oldStructure = vPC[4].u.structure.get();
@@ -3609,8 +4135,20 @@ skip_id_custom_self:
            Unlike many opcodes, this one does not write any output to
            the register file.
         */
+
+#ifdef ARTEMIS
+        ASSERT(false);
+#endif
+
         int base = vPC[1].u.operand;
         JSValue baseValue = callFrame->r(base).jsValue();
+
+#ifdef ARTEMIS
+        int property = vPC[2].u.operand;
+        if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
+		readProperty(callFrame, codeBlock->identifier(property).ascii().data());
+	}
+#endif
 
         if (LIKELY(baseValue.isCell())) {
             JSCell* baseCell = baseValue.asCell();
@@ -3642,6 +4180,11 @@ skip_id_custom_self:
            Unlike many opcodes, this one does not write any output to
            the register file.
         */
+
+#ifdef ARTEMIS
+        ASSERT(false);
+#endif
+
         int base = vPC[1].u.operand;
         int property = vPC[2].u.operand;
         int value = vPC[3].u.operand;
@@ -3649,6 +4192,13 @@ skip_id_custom_self:
 
         JSValue baseValue = callFrame->r(base).jsValue();
         Identifier& ident = codeBlock->identifier(property);
+
+#ifdef ARTEMIS
+        if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
+		readProperty(callFrame, ident.ascii().data());
+	}
+#endif
+
         PutPropertySlot slot(codeBlock->isStrictMode());
         if (direct) {
             ASSERT(baseValue.isObject());
@@ -3674,6 +4224,13 @@ skip_id_custom_self:
 
         JSObject* baseObj = callFrame->r(base).jsValue().toObject(callFrame);
         Identifier& ident = codeBlock->identifier(property);
+
+#ifdef ARTEMIS
+        if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
+		readProperty(callFrame, ident.ascii().data());
+	}
+#endif
+
         bool result = baseObj->methodTable()->deleteProperty(baseObj, callFrame, ident);
         if (!result && codeBlock->isStrictMode()) {
             exceptionValue = createTypeError(callFrame, "Unable to delete property.");
@@ -3696,6 +4253,13 @@ skip_id_custom_self:
         JSPropertyNameIterator* it = callFrame->r(iter).propertyNameIterator();
         JSValue subscript = callFrame->r(property).jsValue();
         JSValue expectedSubscript = callFrame->r(expected).jsValue();
+
+#ifdef ARTEMIS
+        if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
+        readProperty(callFrame, subscript.toUString(callFrame).ascii().data());
+	}
+#endif
+
         int index = callFrame->r(i).i() - 1;
         JSValue result;
         int offset = 0;
@@ -3763,6 +4327,12 @@ skip_id_custom_self:
         JSValue baseValue = callFrame->r(base).jsValue();
         JSValue subscript = callFrame->r(property).jsValue();
 
+#ifdef ARTEMIS
+        if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
+        readProperty(callFrame, subscript.toUString(callFrame).ascii().data());
+	}
+#endif
+
         JSValue result;
 
         if (LIKELY(subscript.isUInt32())) {
@@ -3805,6 +4375,12 @@ skip_id_custom_self:
         JSValue baseValue = callFrame->r(base).jsValue();
         JSValue subscript = callFrame->r(property).jsValue();
 
+#ifdef ARTEMIS
+        if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
+        readProperty(callFrame, subscript.toUString(callFrame).ascii().data());
+	}
+#endif
+
         if (LIKELY(subscript.isUInt32())) {
             uint32_t i = subscript.asUInt32();
             if (isJSArray(baseValue)) {
@@ -3840,8 +4416,14 @@ skip_id_custom_self:
         int property = vPC[3].u.operand;
 
         JSObject* baseObj = callFrame->r(base).jsValue().toObject(callFrame); // may throw
-
         JSValue subscript = callFrame->r(property).jsValue();
+
+#ifdef ARTEMIS
+        if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
+        readProperty(callFrame, subscript.toUString(callFrame).ascii().data());
+	}
+#endif
+
         bool result;
         uint32_t i;
         if (subscript.getUInt32(i))
@@ -3931,12 +4513,34 @@ skip_id_custom_self:
          */
         int cond = vPC[1].u.operand;
         int target = vPC[2].u.operand;
+
+#ifdef ARTEMIS
+        JSValue _v = callFrame->r(cond).jsValue();
+        JSValue _jst = jsBoolean(true);
+
+        bool _jumped = _v.toBoolean(callFrame);
+        JSValue _r = jsBoolean(_jumped);
+
+        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
+                                                    _v, Symbolic::EQUAL, _jst,
+                                                    _r);
+
+        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC, bytecodeInfo,
+                                             _r, _jumped);
+
+        if (_jumped) {
+            vPC += target;
+            CHECK_FOR_TIMEOUT();
+            NEXT_INSTRUCTION();
+        }
+#else
         if (callFrame->r(cond).jsValue().toBoolean(callFrame)) {
             vPC += target;
             CHECK_FOR_TIMEOUT();
             NEXT_INSTRUCTION();
         }
-        
+#endif
+
         vPC += OPCODE_LENGTH(op_loop_if_true);
         NEXT_INSTRUCTION();
     }
@@ -3951,12 +4555,35 @@ skip_id_custom_self:
          */
         int cond = vPC[1].u.operand;
         int target = vPC[2].u.operand;
+
+#ifdef ARTEMIS
+        JSValue _v = callFrame->r(cond).jsValue();
+        JSValue _jsf = jsBoolean(false);
+
+        bool _jumped = !_v.toBoolean(callFrame);
+        JSValue _r = jsBoolean(_jumped);
+
+        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
+                                                    _v, Symbolic::EQUAL, _jsf,
+                                                    _r);
+
+        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC, bytecodeInfo,
+                                             _r, _jumped);
+
+
+        if (_jumped) {
+            vPC += target;
+            CHECK_FOR_TIMEOUT();
+            NEXT_INSTRUCTION();
+        }
+#else
         if (!callFrame->r(cond).jsValue().toBoolean(callFrame)) {
             vPC += target;
             CHECK_FOR_TIMEOUT();
             NEXT_INSTRUCTION();
         }
-        
+#endif
+
         vPC += OPCODE_LENGTH(op_loop_if_true);
         NEXT_INSTRUCTION();
     }
@@ -3968,10 +4595,31 @@ skip_id_custom_self:
         */
         int cond = vPC[1].u.operand;
         int target = vPC[2].u.operand;
+
+#ifdef ARTEMIS
+        JSValue _v = callFrame->r(cond).jsValue();
+        JSValue _jst = jsBoolean(true);
+
+        bool _jumped = _v.toBoolean(callFrame);
+        JSValue _r = jsBoolean(_jumped);
+
+        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
+                                                    _v, Symbolic::EQUAL, _jst,
+                                                    _r);
+
+        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC, bytecodeInfo,
+                                             _r, _jumped);
+
+        if (_jumped) {
+            vPC += target;
+            NEXT_INSTRUCTION();
+        }
+#else
         if (callFrame->r(cond).jsValue().toBoolean(callFrame)) {
             vPC += target;
             NEXT_INSTRUCTION();
         }
+#endif
 
         vPC += OPCODE_LENGTH(op_jtrue);
         NEXT_INSTRUCTION();
@@ -3984,13 +4632,35 @@ skip_id_custom_self:
         */
         int cond = vPC[1].u.operand;
         int target = vPC[2].u.operand;
+
+#ifdef ARTEMIS
+        JSValue _v = callFrame->r(cond).jsValue();
+        JSValue _jsf = jsBoolean(false);
+
+        bool _jumped = !_v.toBoolean(callFrame);
+        JSValue _r = jsBoolean(_jumped);
+
+        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
+                                                    _v, Symbolic::EQUAL, _jsf,
+                                                    _r);
+
+        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC, bytecodeInfo,
+                                             _r, _jumped);
+
+
+        if (_jumped) {
+            vPC += target;
+            NEXT_INSTRUCTION();
+        }
+#else
         if (!callFrame->r(cond).jsValue().toBoolean(callFrame)) {
             vPC += target;
             NEXT_INSTRUCTION();
         }
-
+#endif
         vPC += OPCODE_LENGTH(op_jfalse);
         NEXT_INSTRUCTION();
+
     }
     DEFINE_OPCODE(op_jeq_null) {
         /* jeq_null src(r) target(offset)
@@ -4002,10 +4672,29 @@ skip_id_custom_self:
         int target = vPC[2].u.operand;
         JSValue srcValue = callFrame->r(src).jsValue();
 
+#ifdef ARTEMIS
+        JSValue _jsn = jsNull();
+
+        bool _jumped = (srcValue.isUndefinedOrNull() || (srcValue.isCell() && srcValue.asCell()->structure()->typeInfo().masqueradesAsUndefined()));
+        JSValue _r = jsBoolean(_jumped);
+
+        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
+                                                    srcValue, Symbolic::EQUAL, _jsn,
+                                                    _r);
+
+        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC, bytecodeInfo,
+                                             _r, _jumped);
+
+        if (_jumped) {
+            vPC += target;
+            NEXT_INSTRUCTION();
+        }
+#else
         if (srcValue.isUndefinedOrNull() || (srcValue.isCell() && srcValue.asCell()->structure()->typeInfo().masqueradesAsUndefined())) {
             vPC += target;
             NEXT_INSTRUCTION();
         }
+#endif
 
         vPC += OPCODE_LENGTH(op_jeq_null);
         NEXT_INSTRUCTION();
@@ -4020,10 +4709,29 @@ skip_id_custom_self:
         int target = vPC[2].u.operand;
         JSValue srcValue = callFrame->r(src).jsValue();
 
+#ifdef ARTEMIS
+        JSValue _jsn = jsNull();
+
+        bool _jumped = (!srcValue.isUndefinedOrNull() && (!srcValue.isCell() || !srcValue.asCell()->structure()->typeInfo().masqueradesAsUndefined()));
+        JSValue _r = jsBoolean(_jumped);
+
+        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
+                                                    srcValue, Symbolic::NOT_EQUAL, _jsn,
+                                                    _r);
+
+        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC, bytecodeInfo,
+                                             _r, _jumped);
+
+        if (_jumped) {
+            vPC += target;
+            NEXT_INSTRUCTION();
+        }
+#else
         if (!srcValue.isUndefinedOrNull() && (!srcValue.isCell() || !srcValue.asCell()->structure()->typeInfo().masqueradesAsUndefined())) {
             vPC += target;
             NEXT_INSTRUCTION();
         }
+#endif
 
         vPC += OPCODE_LENGTH(op_jneq_null);
         NEXT_INSTRUCTION();
@@ -4062,7 +4770,18 @@ skip_id_custom_self:
         
         bool result = jsLess<true>(callFrame, src1, src2);
         CHECK_FOR_EXCEPTION();
-        
+
+#ifdef ARTEMIS
+        JSValue _r = jsBoolean(result);
+
+        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
+                                                    src1, Symbolic::LESS_STRICT, src2,
+                                                    _r);
+
+        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC, bytecodeInfo,
+                                             _r, result);
+#endif
+
         if (result) {
             vPC += target;
             CHECK_FOR_TIMEOUT();
@@ -4089,7 +4808,18 @@ skip_id_custom_self:
         
         bool result = jsLessEq<true>(callFrame, src1, src2);
         CHECK_FOR_EXCEPTION();
-        
+
+#ifdef ARTEMIS
+        JSValue _r = jsBoolean(result);
+
+        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
+                                                    src1, Symbolic::LESS_STRICT, src2,
+                                                    _r);
+
+        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC, bytecodeInfo,
+                                             _r, result);
+#endif
+
         if (result) {
             vPC += target;
             CHECK_FOR_TIMEOUT();
@@ -4116,7 +4846,18 @@ skip_id_custom_self:
         
         bool result = jsLess<false>(callFrame, src2, src1);
         CHECK_FOR_EXCEPTION();
-        
+
+#ifdef ARTEMIS
+        JSValue _r = jsBoolean(result);
+
+        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
+                                                    src1, Symbolic::GREATER_STRICT, src2,
+                                                    _r);
+
+        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC, bytecodeInfo,
+                                             _r, result);
+#endif
+
         if (result) {
             vPC += target;
             CHECK_FOR_TIMEOUT();
@@ -4143,7 +4884,18 @@ skip_id_custom_self:
         
         bool result = jsLessEq<false>(callFrame, src2, src1);
         CHECK_FOR_EXCEPTION();
-        
+
+#ifdef ARTEMIS
+        JSValue _r = jsBoolean(result);
+
+        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
+                                                    src1, Symbolic::GREATER_EQ, src2,
+                                                    _r);
+
+        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC, bytecodeInfo,
+                                             _r, result);
+#endif
+
         if (result) {
             vPC += target;
             CHECK_FOR_TIMEOUT();
@@ -4167,7 +4919,18 @@ skip_id_custom_self:
 
         bool result = jsLess<true>(callFrame, src1, src2);
         CHECK_FOR_EXCEPTION();
-        
+
+#ifdef ARTEMIS
+        JSValue _r = jsBoolean(result);
+
+        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
+                                                    src1, Symbolic::LESS_STRICT, src2,
+                                                    _r);
+
+        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC, bytecodeInfo,
+                                             _r, result);
+#endif
+
         if (result) {
             vPC += target;
             NEXT_INSTRUCTION();
@@ -4190,7 +4953,18 @@ skip_id_custom_self:
         
         bool result = jsLessEq<true>(callFrame, src1, src2);
         CHECK_FOR_EXCEPTION();
-        
+
+#ifdef ARTEMIS
+        JSValue _r = jsBoolean(result);
+
+        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
+                                                    src1, Symbolic::LESS_EQ, src2,
+                                                    _r);
+
+        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC, bytecodeInfo,
+                                             _r, result);
+#endif
+
         if (result) {
             vPC += target;
             NEXT_INSTRUCTION();
@@ -4213,7 +4987,18 @@ skip_id_custom_self:
 
         bool result = jsLess<false>(callFrame, src2, src1);
         CHECK_FOR_EXCEPTION();
-        
+
+#ifdef ARTEMIS
+        JSValue _r = jsBoolean(result);
+
+        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
+                                                    src1, Symbolic::GREATER_STRICT, src2,
+                                                    _r);
+
+        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC, bytecodeInfo,
+                                             _r, result);
+#endif
+
         if (result) {
             vPC += target;
             NEXT_INSTRUCTION();
@@ -4236,7 +5021,18 @@ skip_id_custom_self:
         
         bool result = jsLessEq<false>(callFrame, src2, src1);
         CHECK_FOR_EXCEPTION();
-        
+
+#ifdef ARTEMIS
+        JSValue _r = jsBoolean(result);
+
+        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
+                                                    src1, Symbolic::GREATER_EQ, src2,
+                                                    _r);
+
+        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC, bytecodeInfo,
+                                             _r, result);
+#endif
+
         if (result) {
             vPC += target;
             NEXT_INSTRUCTION();
@@ -4259,7 +5055,18 @@ skip_id_custom_self:
 
         bool result = jsLess<true>(callFrame, src1, src2);
         CHECK_FOR_EXCEPTION();
-        
+
+#ifdef ARTEMIS
+        JSValue _r = jsBoolean(!result);
+
+        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
+                                                    src1, Symbolic::GREATER_EQ, src2,
+                                                    _r);
+
+        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC, bytecodeInfo,
+                                             _r, !result);
+#endif
+
         if (!result) {
             vPC += target;
             NEXT_INSTRUCTION();
@@ -4282,7 +5089,18 @@ skip_id_custom_self:
 
         bool result = jsLessEq<true>(callFrame, src1, src2);
         CHECK_FOR_EXCEPTION();
-        
+
+#ifdef ARTEMIS
+        JSValue _r = jsBoolean(!result);
+
+        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
+                                                    src1, Symbolic::GREATER_STRICT, src2,
+                                                    _r);
+
+        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC, bytecodeInfo,
+                                             _r, !result);
+#endif
+
         if (!result) {
             vPC += target;
             NEXT_INSTRUCTION();
@@ -4305,7 +5123,18 @@ skip_id_custom_self:
 
         bool result = jsLess<false>(callFrame, src2, src1);
         CHECK_FOR_EXCEPTION();
-        
+
+#ifdef ARTEMIS
+        JSValue _r = jsBoolean(!result);
+
+        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
+                                                    src1, Symbolic::LESS_EQ, src2,
+                                                    _r);
+
+        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC, bytecodeInfo,
+                                             _r, !result);
+#endif
+
         if (!result) {
             vPC += target;
             NEXT_INSTRUCTION();
@@ -4328,7 +5157,18 @@ skip_id_custom_self:
 
         bool result = jsLessEq<false>(callFrame, src2, src1);
         CHECK_FOR_EXCEPTION();
-        
+
+#ifdef ARTEMIS
+        JSValue _r = jsBoolean(!result);
+
+        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
+                                                    src1, Symbolic::GREATER_STRICT, src2,
+                                                    _r);
+
+        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC, bytecodeInfo,
+                                             _r, !result);
+#endif
+
         if (!result) {
             vPC += target;
             NEXT_INSTRUCTION();
@@ -4505,6 +5345,11 @@ skip_id_custom_self:
         CallType callType = getCallData(v, callData);
 
         if (callType == CallTypeJS) {
+
+#ifdef ARTEMIS
+            Interpreter::m_symbolic->ail_call(callFrame, vPC, bytecodeInfo);
+#endif
+
             ScopeChainNode* callDataScopeChain = callData.js.scopeChain;
 
             JSObject* error = callData.js.functionExecutable->compileForCall(callFrame, callDataScopeChain);
@@ -4545,6 +5390,12 @@ skip_id_custom_self:
                 SamplingTool::HostCallRecord callRecord(m_sampler.get());
                 returnValue = JSValue::decode(callData.native.function(newCallFrame));
                 *topCallFrameSlot = callFrame;
+
+#ifdef ARTEMIS
+                Interpreter::m_symbolic->ail_call_native(callFrame, vPC, bytecodeInfo,
+                                                         (native_function_ID_t)callData.native.function);
+#endif
+
             }
             CHECK_FOR_EXCEPTION();
 
@@ -5143,8 +5994,13 @@ skip_id_custom_self:
         exceptionValue = callFrame->r(ex).jsValue();
 
         handler = throwException(callFrame, exceptionValue, vPC - codeBlock->instructions().begin());
-        if (!handler)
+        if (!handler) {
+#ifdef ARTEMIS
+            return exceptionValue;
+#else
             return throwError(callFrame, exceptionValue);
+#endif
+        }
 
         codeBlock = callFrame->codeBlock();
         vPC = codeBlock->instructions().begin() + handler->target;

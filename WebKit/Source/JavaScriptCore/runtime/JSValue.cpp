@@ -287,5 +287,71 @@ UString JSValue::toUStringSlowCase(ExecState* exec) const
 {
     return inlineJSValueNotStringtoUString(*this, exec);
 }
+#ifdef ARTEMIS
+
+void JSValue::makeSymbolic(Symbolic::Expression* symbolicValue) {
+
+    if (isSymbolic()) {
+        getImmediate()->symbolic = symbolicValue;
+        return;
+    }
+
+    SymbolicImmediate* symbolicImmediate = new SymbolicImmediate();
+    symbolicImmediate->symbolic = symbolicValue;
+
+    if (isInt32()) {
+        symbolicImmediate->u.asInt64 = u.asInt64;
+        u.asInt64 = (TagTypeSymbolicInteger | (int64_t)symbolicImmediate);
+    } else if (isDouble()) {
+        symbolicImmediate->u.asInt64 = u.asInt64;
+        u.asInt64 = (TagTypeSymbolicDouble | (int64_t)symbolicImmediate);
+    } else if (isObject()) {
+        symbolicImmediate->u.asInt64 = u.asInt64;
+        u.asInt64 = (TagTypeSymbolicObject | (int64_t)symbolicImmediate);
+    } else if (isString()) {
+        symbolicImmediate->u.asInt64 = u.asInt64;
+        u.asInt64 = (TagTypeSymbolicObject | (int64_t)symbolicImmediate);
+    } else if (isTrue()) {
+        symbolicImmediate->u.asInt64 = u.asInt64;
+        u.asInt64 = (TagTypeSymbolicTrue | (int64_t)symbolicImmediate);
+    } else if (isFalse()) {
+        symbolicImmediate->u.asInt64 = u.asInt64;
+        u.asInt64 = (TagTypeSymbolicFalse | (int64_t)symbolicImmediate);
+    } else {
+        ASSERT(false);
+    }
+
+}
+
+Symbolic::Expression* JSValue::asSymbolic() const
+{
+    ASSERT(isSymbolic());
+    SymbolicImmediate* immediate = getImmediate();
+    return immediate->symbolic;
+}
+
+Symbolic::IntegerExpression* JSValue::generateIntegerExpression(ExecState* exec){
+    return this->isSymbolic()?(Symbolic::IntegerExpression*)this->asSymbolic() : new Symbolic::ConstantInteger(this->toPrimitive(exec).asNumber());
+}
+
+Symbolic::StringExpression* JSValue::generateStringExpression(ExecState* exec){
+    return this->isSymbolic()?(Symbolic::StringExpression*) this->asSymbolic(): new Symbolic::ConstantString(new std::string(this->toPrimitive(exec).toUString(exec).ascii().data()));
+}
+
+Symbolic::IntegerExpression* JSValue::generateIntegerCoercionExpression(ExecState* exec){
+    return this->isSymbolic() ? (Symbolic::IntegerExpression*)new Symbolic::IntegerCoercion(this->asSymbolic()) : new Symbolic::ConstantInteger(this->toPrimitive(exec).toNumber(exec));
+}
+
+Symbolic::StringExpression* JSValue::generateStringCoercionExpression(ExecState* exec){
+    return this->isSymbolic() ? (Symbolic::StringExpression*)new Symbolic::StringCoercion(this->asSymbolic()) :
+                            (Symbolic::StringExpression*)new Symbolic::ConstantString(new std::string(this->toPrimitive(exec, PreferString).toUString(exec).ascii().data()));
+}
+
+Symbolic::BooleanExpression* JSValue::generateBooleanExpression(ExecState* exec){
+    return this->isSymbolic()?(Symbolic::BooleanExpression*) this->asSymbolic():new Symbolic::ConstantBoolean(this->toPrimitive(exec).toBoolean(exec));
+}
+
+
+#endif
 
 } // namespace JSC
