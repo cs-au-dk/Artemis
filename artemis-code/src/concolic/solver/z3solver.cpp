@@ -88,6 +88,7 @@ SolutionPtr Z3Solver::solve(PathConditionPtr pc)
 
     std::string line;
     std::ifstream fp("/tmp/z3result");
+    std::ofstream constraintLog("/tmp/z3constraintlog", std::ofstream::out | std::ofstream::app);
 
     if (fp.is_open()) {
 
@@ -97,10 +98,13 @@ SolutionPtr Z3Solver::solve(PathConditionPtr pc)
         if (line.compare(">> SAT") != 0) {
             // UNSAT
             statistics()->accumulate("Concolic::Solver::ConstraintsSolvedAsUNSAT", 1);
+            constraintLog << "Could not be solved\n\n";
             return SolutionPtr(new Solution(false));
         }
 
         std::getline(fp, line); // discard decoractive line
+
+        constraintLog << "Solved as:\n";
 
         while (fp.good()) {
 
@@ -151,9 +155,13 @@ SolutionPtr Z3Solver::solve(PathConditionPtr pc)
 
             // save result
             solution->insertSymbol(Z3STRConstraintWriter::decodeIdentifier(symbol).c_str(), symbolvalue);
+
+            constraintLog << symbol << " = " << symbolvalue.string << "\n";
         }
     }
 
+    constraintLog << "\n";
+    constraintLog.close();
     fp.close();
 
     return solution;
