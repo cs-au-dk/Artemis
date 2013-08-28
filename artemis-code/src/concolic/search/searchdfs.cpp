@@ -136,25 +136,37 @@ void DepthFirstSearch::visit(TraceNode *node)
 
 void DepthFirstSearch::visit(TraceConcreteBranch *node)
 {
-    // At a branch, we explore only the 'false' subtree.
-    // Once we reach a leaf, the parent stack is used to return to branches and explore their 'true' children (see continueFromLeaf()).
-    // This allows us to stop the search once we find a node we would like to explore.
-    // The depth limit is also enforced here.
-    if(mCurrentDepth < mDepthLimit){
-        mParentStack.push(SavedPosition(node, mCurrentDepth, *mCurrentPC));
-        mCurrentDepth++;
-        mPreviousParent = node;
-        mPreviousDirection = false; // We are always taking the false branch here.
+    // Concrete branches are basically ignored by this search.
+    // If there are unexplored nodes as children of a concrete branch, then we ignore them and only search through children of symbolic branches.
+
+    if(isImmediatelyUnexplored(node->getFalseBranch()) && isImmediatelyUnexplored(node->getTrueBranch())){
+        Log::fatal("Reached a branch where both branches are unexplored during search.");
+        exit(1);
+
+    }else if(isImmediatelyUnexplored(node->getFalseBranch())){
+        // Then we treat this node as a pass-through to the 'true' subtree
+        node->getTrueBranch()->accept(this);
+
+    }else if(isImmediatelyUnexplored(node->getTrueBranch())){
+        // Then we treat this node as a pass-through to the 'false' subtree
         node->getFalseBranch()->accept(this);
+
     }else{
-        // If we have reached the depth limit, then treat this node as a leaf and skip to whatever we are supposed to search next.
-        continueFromLeaf();
+        // Both branches are explored, so we must search each in turn.
+        mParentStack.push(SavedPosition(node, mCurrentDepth, *mCurrentPC));
+        //mCurrentDepth++; // Do not increase depth for concrete branches.
+        mPreviousParent = node;
+        mPreviousDirection = false; // We are always taking the false branch to begin with.
+        node->getFalseBranch()->accept(this);
     }
 }
 
 void DepthFirstSearch::visit(TraceSymbolicBranch *node)
 {
-    // See TraceConcreteBranch above.
+    // At a branch, we explore only the 'false' subtree.
+    // Once we reach a leaf, the parent stack is used to return to branches and explore their 'true' children (see continueFromLeaf()).
+    // This allows us to stop the search once we find a node we would like to explore.
+    // The depth limit is also enforced here.
     if(mCurrentDepth < mDepthLimit){
         mParentStack.push(SavedPosition(node, mCurrentDepth, *mCurrentPC));
         mCurrentDepth++;
