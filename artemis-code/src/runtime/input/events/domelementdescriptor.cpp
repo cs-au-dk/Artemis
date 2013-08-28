@@ -40,6 +40,7 @@ DOMElementDescriptor::DOMElementDescriptor(QObject* parent, QWebElement* elm) : 
     }
     else {
         this->id = elm->attribute("id");
+        this->name = elm->attribute("name");
         this->tagName = elm->tagName();
         this->classLine = QString(elm->classes().join(" "));
         //this->frameName = elm->webFrame()->frameName();
@@ -54,6 +55,7 @@ DOMElementDescriptor::DOMElementDescriptor(QObject* parent, const DOMElementDesc
     this->elementPath = QList<int>(other->elementPath);
     this->framePath = QList<int>(other->framePath);
     this->id = other->id;
+    this->name = other->name;
     this->tagName = other->tagName;
     this->classLine = other->classLine;
     //this->frameName = other.frameName;
@@ -80,6 +82,11 @@ QString DOMElementDescriptor::getTagName() const
 QString DOMElementDescriptor::getId() const
 {
     return this->id;
+}
+
+QString DOMElementDescriptor::getName() const
+{
+    return this->name;
 }
 
 QString DOMElementDescriptor::getClass() const

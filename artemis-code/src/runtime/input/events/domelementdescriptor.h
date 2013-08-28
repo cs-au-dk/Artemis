@@ -36,6 +36,7 @@ public:
 
     QWebElement getElement(ArtemisWebPagePtr page) const;
     QString getTagName() const;
+    QString getName() const;
     QString getId() const;
     QString getClass() const;
     bool isInvalid() const;
@@ -50,6 +51,7 @@ private:
     QString tagName;
     QString frameName;
     QString classLine;
+    QString name;
 
     // Path from the mainFrame to the frame containig the element
     QList<int> framePath;
