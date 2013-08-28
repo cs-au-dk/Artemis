@@ -1858,12 +1858,12 @@ sub GenerateImplementation
                         push(@implContent, "\n");
                         push(@implContent, "        Symbolic::SourceIdentifierMethod method;\n");
 
-                        push(@implContent, "        if (inputName.length() != 0) {\n");
-                        push(@implContent, "            strs << inputName.string().ascii().data();\n");
-                        push(@implContent, "            method = Symbolic::INPUT_NAME;\n");
-                        push(@implContent, "        } else if (inputId.length() != 0) {\n");
+                        push(@implContent, "        if (inputId.length() != 0) {\n");
                         push(@implContent, "            strs << inputId.string().ascii().data();\n");
                         push(@implContent, "            method = Symbolic::ELEMENT_ID;\n");
+                        push(@implContent, "        } else if (inputName.length() != 0) {\n");
+                        push(@implContent, "            strs << inputName.string().ascii().data();\n");
+                        push(@implContent, "            method = Symbolic::INPUT_NAME;\n");
                         push(@implContent, "        } else {\n");
                         push(@implContent, "            std::cout << \"Warning: Form input element without ID or name used - a sequential ID was used for the symbolic value. This will break concolic execution!\" << std::endl;\n");
                         push(@implContent, "            strs << Symbolic::NEXT_SYMBOLIC_ID++;\n");
