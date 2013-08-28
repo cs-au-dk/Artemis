@@ -23,8 +23,9 @@ def execute_artemis(execution_uuid, url, iterations=1,
                     coverage=None,
                     exclude=None,
                     fields=None,
-                    dryrun=False,
+                    major_mode=None,
                     reverse_constraint_solver=False,
+                    dryrun=False,
                     **kwargs):
     output_dir = os.path.join(OUTPUT_DIR, execution_uuid)
 
@@ -65,6 +66,10 @@ def execute_artemis(execution_uuid, url, iterations=1,
 
     if reverse_constraint_solver:
         args.append('-e')
+
+    if major_mode is not None:
+        args.append('--major-mode')
+        args.append(major_mode)
 
     cmd = [ARTEMIS_EXEC] + [url] + args
 

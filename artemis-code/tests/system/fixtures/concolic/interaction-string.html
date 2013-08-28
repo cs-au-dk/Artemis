@@ -1,0 +1,38 @@
+<!doctype html><html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+	<title>Ben Spencer</title>
+	<meta name="author" content="Ben Spencer">
+	<script type="text/javascript">
+
+		function validate() {
+			var x = document.getElementById("input_A").value;
+			var y = document.getElementById("input_B").value;
+
+			if (y != x) {
+				alert("Error!\n'" + x + "' does not match '" + y + "'");
+				return false;
+			}else{
+				return true;
+			}
+		}
+	</script>
+
+</head>
+<body>
+
+	<p>Write matching values in the fields.</p>
+
+	<form method="GET" action="about:blank" >
+
+		<input type="text" id="input_A" />
+		<input type="text" id="input_B" />
+
+		<button type="submit" onclick="return validate();">Submit</button>
+
+	</form>
+
+</body>
+</html>
