@@ -1,4 +1,4 @@
-TEST PC: (ConstantInteger>(IntegerCoercion(SymbolicString)*ConstantInteger))
+TEST PC: (ConstantInteger<(IntegerCoercion(SymbolicString)*ConstantInteger))
 if ("test" >= (x*5)) {
     alert(x);
 }

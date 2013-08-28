@@ -1,4 +1,4 @@
-TEST PC: (ConstantInteger > IntegerCoercion((SymbolicString == ConstantString)))
+TEST PC: (ConstantInteger < IntegerCoercion((SymbolicString == ConstantString)))
 if (undefined >= (x=="x")) {
     alert(x);
 }

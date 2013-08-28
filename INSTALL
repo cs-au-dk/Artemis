@@ -28,11 +28,12 @@ Artemis have been successfully installed on Ubuntu 12.10 and Fedora 18.
     mentioned in step 0, and where `<artemis_git_repository_path>` 
     is the directory with this INSTALL file in it.
 
-    On Ubuntu this is /usr/share/qt4
+    `<qt_path>` is /usr/share/qt4 on Ubuntu systems and
+    /usr/lib64/qt4/bin on Fedora.
      
- 2. Build and install Artemis
+ 2. Build Artemis
    
-   	  make install
+   	  make all
 
  3. Add the instrumented WebKit library to your library path
 

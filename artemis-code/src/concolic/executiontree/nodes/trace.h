@@ -135,8 +135,10 @@ class TraceEnd : public TraceNode
 
 class TraceEndSuccess : public TraceEnd
 {
-    // Empty placeholder.
+    // Empty marker.
 public:
+    TraceNodePtr next;
+
     void accept(TraceVisitor* visitor) {
         visitor->visit(this);
     }
@@ -152,8 +154,9 @@ public:
 
 class TraceEndFailure : public TraceEnd
 {
-    // Empty placeholder.
+    // Empty marker.
 public:
+    TraceNodePtr next;
 
     void accept(TraceVisitor* visitor) {
         visitor->visit(this);

@@ -28,6 +28,7 @@
 #include <QPair>
 #include <QDir>
 #include <QDesktopServices>
+#include <QProcess>
 
 #include "runtime/browser/artemiswebview.h"
 #include "runtime/browser/artemiswebpage.h"
@@ -36,12 +37,14 @@
 #include "initialanalysiswidget.h"
 #include "artemisglobals.h"
 #include "model/coverage/coveragetooutputstream.h"
+#include "imageviewer/imageviewerdialog.h"
 
 #include "concolic/entrypoints.h"
 #include "concolic/executiontree/tracenodes.h"
 #include "concolic/traceclassifier.h"
 #include "concolic/executiontree/traceprinter.h"
 #include "concolic/tracestatistics.h"
+#include "concolic/executiontree/tracedisplay.h"
 
 #include "traceviewerdialog.h"
 
@@ -92,6 +95,7 @@ private:
     QLabel* mTraceRecordingProgress;
     QLabel* mTraceClassificationResult;
     QPushButton* mViewTraceBtn;
+    QPushButton* mGenerateTraceGraphButton;
     QLabel* mTraceAnalysisText;
     QPushButton* mGenerateReportsBtn;
     QPushButton* mPathTraceReportBtn;
@@ -140,6 +144,7 @@ protected slots:
     void slSetProgress(int p);
     void slUrlChanged(const QUrl & url);
     void slViewTrace();
+    void slGenerateTraceGraph();
     void slAboutDialog();
     void slLinkHovered(const QString & link, const QString & title, const QString & textContent);
     void slJavascriptAlert(QWebFrame* frame, QString message);

@@ -23,6 +23,8 @@ def execute_artemis(execution_uuid, url, iterations=1,
                     coverage=None,
                     exclude=None,
                     fields=None,
+                    dryrun=False,
+                    reverse_constraint_solver=False,
                     **kwargs):
     output_dir = os.path.join(OUTPUT_DIR, execution_uuid)
 
@@ -61,7 +63,14 @@ def execute_artemis(execution_uuid, url, iterations=1,
         args.append('-f')
         args.append(field)
 
+    if reverse_constraint_solver:
+        args.append('-e')
+
     cmd = [ARTEMIS_EXEC] + [url] + args
+
+    if dryrun:
+        print ' '.join(cmd)
+        return
 
     try:
         stdout = (subprocess.check_output(cmd, cwd=output_dir, stderr=subprocess.STDOUT)).decode("utf-8")
@@ -95,7 +104,7 @@ def execute_artemis(execution_uuid, url, iterations=1,
 
                     report[key] = value
                 except:
-                    print 'Error parsing statistics result for line %s' % line
+                    print('Error parsing statistics result for line %s' % line)
 
         condOffset1 = stdout.find(PATHCOND_START) + len(PATHCOND_START)
         condOffset2 = stdout.find(PATHCOND_END)

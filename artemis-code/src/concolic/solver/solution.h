@@ -35,7 +35,7 @@ typedef struct {
        int integer;
     } u;
 
-    std::string* string; // we can't add the string inside the union :(
+    std::string string; // we can't add the string inside the union :(
 
 } Symbolvalue;
 

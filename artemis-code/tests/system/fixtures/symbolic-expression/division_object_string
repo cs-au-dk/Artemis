@@ -1,4 +1,4 @@
-TEST PC: ((ConstantInteger / IntegerCoercion(SymbolicString)) == ConstantInteger)
+TEST PC: (BooleanCoercion((ConstantInteger / IntegerCoercion(SymbolicString)) )==ConstantBoolean)
 if (new Object(12390123)/x ) {
     alert(x);
 }

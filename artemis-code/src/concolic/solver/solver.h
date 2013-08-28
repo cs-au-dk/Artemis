@@ -33,14 +33,12 @@ namespace artemis
 class Solver
 {
 public:
-    static SolutionPtr solve(PathConditionPtr pc);
 
-private:
     Solver();
+
+    virtual SolutionPtr solve(PathConditionPtr pc) = 0;
+
 };
-
-
-
 
 }
 

@@ -1,4 +1,4 @@
-TEST PC: (IntegerCoercion((StringCoercion((IntegerCoercion(SymbolicString)*ConstantInteger))+ConstantString)) == ConstantInteger)
+TEST PC: (BooleanCoercion((StringCoercion((IntegerCoercion(SymbolicString)*ConstantInteger))+ConstantString))==ConstantBoolean)
 if ((x*3) + "test") {
     alert(x);
 }

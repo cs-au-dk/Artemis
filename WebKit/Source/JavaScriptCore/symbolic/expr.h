@@ -26,6 +26,7 @@
 #include "expression/constantstring.h"
 #include "expression/stringbinaryoperation.h"
 #include "expression/stringcoercion.h"
+#include "expression/stringlength.h"
 #include "expression/stringreplace.h"
 #include "expression/stringregexreplace.h"
 #include "expression/symbolicboolean.h"

@@ -952,6 +952,19 @@ sub GenerateHeader
         push(@headerContent, "    static JSC::JSValue nameGetter(JSC::ExecState*, JSC::JSValue, const JSC::Identifier&);\n");
     }
 
+    # ARTEMIS BEGIN
+    if ($numAttributes > 0) {
+        push(@headerContent, "public:\n");
+        push(@headerContent, "    // Symbolic\n");
+        foreach my $attribute (@{$dataNode->attributes}) {
+            if ($attribute->signature->extendedAttributes->{"Symbolic"}) {
+                push(@headerContent, "    Symbolic::Expression* m_" . $attribute->signature->name . "Symbolic;\n");
+            }
+        }
+        push(@headerContent, "\n");
+    }
+    # ARTEMIS END
+
     push(@headerContent, "};\n\n");
 
     if ($dataNode->extendedAttributes->{"JSInlineGetOwnPropertySlot"} && !$dataNode->extendedAttributes->{"CustomGetOwnPropertySlot"}) {
@@ -1325,6 +1338,14 @@ sub GenerateImplementation
     $implIncludes{"<wtf/GetPtr.h>"} = 1;
     $implIncludes{"<runtime/PropertyNameArray.h>"} = 1 if $dataNode->extendedAttributes->{"IndexedGetter"} || $dataNode->extendedAttributes->{"NumericIndexedGetter"};
 
+    # ARTEMIS BEGIN
+    $implIncludes{"\"symbolic/symbolicinterpreter.h\""} = 1;
+    $implIncludes{"\"symbolic/expression/symbolicstring.h\""} = 1;
+    $implIncludes{"<iostream>"} = 1;
+    $implIncludes{"<ostream>"} = 1;
+    $implIncludes{"<sstream>"} = 1;
+    # ARTEMIS END
+
     AddIncludesForTypeInImpl($interfaceName);
 
     @implContent = ();
@@ -1572,6 +1593,13 @@ sub GenerateImplementation
             push(@implContent, "    : $parentClassName(structure, globalObject)\n");
             push(@implContent, "    , m_impl(impl.leakRef())\n");
         }
+        # ARTEMIS BEGIN
+        foreach my $attribute (@{$dataNode->attributes}) {
+            if ($attribute->signature->extendedAttributes->{"Symbolic"}) {
+                push(@implContent, "    , m_" . $attribute->signature->name . "Symbolic(NULL)\n");
+            }
+        }
+        # ARTEMIS END
         push(@implContent, "{\n");
         push(@implContent, "}\n\n");
 
@@ -1763,6 +1791,38 @@ sub GenerateImplementation
                     }
 
                     push(@implContent, "    castedThis->m_" . $attribute->signature->name . ".set(exec->globalData(), castedThis, result);\n") if ($attribute->signature->extendedAttributes->{"CachedAttribute"});
+                    
+                    if ($attribute->signature->extendedAttributes->{"Symbolic"}) {
+                        # ARTEMIS BEGIN
+                        push(@implContent, "    if (castedThis->m_" . $attribute->signature->name . "Symbolic == NULL) {\n");
+                        push(@implContent, "        std::ostringstream strs;\n");
+                        push(@implContent, "        strs << \"SYM_IN_\";\n");
+                        push(@implContent, "\n");
+                        push(@implContent, "        WTF::AtomicString inputName = impl->getAttribute(WebCore::HTMLNames::nameAttr);\n");
+                        push(@implContent, "        WTF::AtomicString inputId = impl->getAttribute(WebCore::HTMLNames::idAttr);\n");
+                        push(@implContent, "\n");
+                        push(@implContent, "        Symbolic::SourceIdentifierMethod method;\n");
+
+                        push(@implContent, "        if (inputName.length() != 0) {\n");
+                        push(@implContent, "            strs << inputName.string().ascii().data();\n");
+                        push(@implContent, "            method = Symbolic::INPUT_NAME;\n");
+                        push(@implContent, "        } else if (inputId.length() != 0) {\n");
+                        push(@implContent, "            strs << inputId.string().ascii().data();\n");
+                        push(@implContent, "            method = Symbolic::ELEMENT_ID;\n");
+                        push(@implContent, "        } else {\n");
+                        push(@implContent, "            std::cout << \"Warning: Form input element without ID or name used - a sequential ID was used for the symbolic value. This will break concolic execution!\" << std::endl;\n");
+                        push(@implContent, "            strs << Symbolic::NEXT_SYMBOLIC_ID++;\n");
+                        push(@implContent, "            method = Symbolic::LEGACY;\n");
+                        push(@implContent, "        }\n");
+                        push(@implContent, "\n");
+                        push(@implContent, "        result.makeSymbolic(new Symbolic::SymbolicString(Symbolic::SymbolicSource(Symbolic::INPUT, method, std::string(strs.str()))));");
+                        push(@implContent, "\n");
+                        push(@implContent, "    } else {\n");
+                        push(@implContent, "        result.makeSymbolic(castedThis->m_" . $attribute->signature->name . "Symbolic);\n");
+                        push(@implContent, "    }\n");
+                        # ARTEMIS END
+                    }
+
                     push(@implContent, "    return result;\n");
 
                 } else {
@@ -1978,6 +2038,15 @@ sub GenerateImplementation
                                 push(@arguments, "ec") if @{$attribute->setterExceptions};
                                 push(@implContent, "    ${functionName}(" . join(", ", @arguments) . ");\n");
                                 push(@implContent, "    setDOMException(exec, ec);\n") if @{$attribute->setterExceptions};
+                                # ARTEMIS BEGIN
+                                if ($attribute->signature->extendedAttributes->{"Symbolic"}) {
+                                    if ($attribute->signature->extendedAttributes->{"ImplementedBy"}) {
+                                        # TODO
+                                    } else {
+                                        push(@implContent, "    castedThis->m_" . $attribute->signature->name . "Symbolic = value.isSymbolic() ? value.asSymbolic() : NULL;\n");   
+                                    }
+                                }
+                                # ARTEMIS END
                             }
                         }
 

@@ -22,7 +22,6 @@
 #include "JavaScriptCore/symbolic/expr.h"
 #include "JavaScriptCore/symbolic/expression/visitor.h"
 
-#ifdef ARTEMIS
 
 namespace artemis
 {
@@ -32,6 +31,7 @@ class ExpressionPrinter : public Symbolic::Visitor
 
 public:
     ExpressionPrinter();
+    virtual ~ExpressionPrinter(){}
 
     void visit(Symbolic::SymbolicInteger* symbolicinteger);
     void visit(Symbolic::ConstantInteger* constantinteger);
@@ -47,17 +47,21 @@ public:
     void visit(Symbolic::ConstantBoolean* constantboolean);
     void visit(Symbolic::BooleanCoercion* booleancoercion);
     void visit(Symbolic::BooleanBinaryOperation* booleanbinaryoperation);
+    void visit(Symbolic::StringLength* stringlength);
 
     inline std::string getResult() const {
         return m_result;
     }
 
-private:
+    void clear() {
+        m_result.clear();
+    }
+
+protected:
     std::string m_result;
 
 };
 
 }
 
-#endif
 #endif // PRINTER_H

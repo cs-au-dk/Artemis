@@ -1,4 +1,4 @@
-TEST PC:(SymbolicString > SymbolicString)
+TEST PC:(SymbolicString < SymbolicString)
 if (x >= y) {
     alert(x);
 }

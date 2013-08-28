@@ -35,12 +35,16 @@ class PathCondition : public TraceVisitor
 {
 
 public:
+    PathCondition();
+
     static QSharedPointer<PathCondition> createFromTrace(TraceNodePtr endpoint);
 
     const QPair<Symbolic::Expression*, bool> get(int index);
     uint size();
 
     std::string toStatisticsString();
+    std::string toStatisticsValuesString();
+    QMap<QString, Symbolic::SourceIdentifierMethod> freeVariables();
 
     void visit(TraceNode* node);
     void visit(TraceConcreteBranch* node);
@@ -49,9 +53,12 @@ public:
     void visit(TraceAnnotation* node);
     void visit(TraceEnd* node);
 
-private:
-    PathCondition();
+    // Used to incrementally create a PC in the search procedure.
+    void addCondition(Symbolic::Expression* condition, bool outcome);
 
+    void negateLastCondition();
+
+private:
     QList<QPair<Symbolic::Expression*, bool> > mConditions;
 };
 

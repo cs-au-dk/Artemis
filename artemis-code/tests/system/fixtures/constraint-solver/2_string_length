@@ -1,0 +1,3 @@
+if (foo.length == 3) {
+    alert(x_1);
+}

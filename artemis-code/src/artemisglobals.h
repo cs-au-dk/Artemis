@@ -53,7 +53,7 @@ inline QUrl examplesIndexUrl()
         exit(1);
     }
 
-    return QUrl(QString("file://%1/artemis-code/tests/system/fixtures/forms/examples-index.html").arg(artemisdir));
+    return QUrl(QString("file://%1/artemis-code/tests/demo/examples-index.html").arg(artemisdir));
 }
 
 }

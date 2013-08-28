@@ -36,7 +36,7 @@
 namespace Symbolic
 {
 
-unsigned int NEXT_SYMBOLIC_ID = 0;
+unsigned int NEXT_SYMBOLIC_ID = 0; // backwards compatibility, used to generate sequential symbolic IDs
 
 const char* opToString(OP op) {
     static const char* OPStrings[] = {
@@ -328,9 +328,9 @@ JSC::JSValue SymbolicInterpreter::ail_op_binary(JSC::CallFrame* callFrame,
     case SUBTRACT:
         intOp = INT_SUBTRACT;
     case MULTIPLY:
-        intOp = intOp == INT_MODULO?INT_MULTIPLY:intOp;
+        intOp = intOp == INT_MODULO ? INT_MULTIPLY : intOp;
     case DIVIDE:
-        intOp = intOp == INT_MODULO?INT_DIVIDE:intOp;
+        intOp = intOp == INT_MODULO ? INT_DIVIDE : intOp;
     case MODULO: {
         Symbolic::IntegerExpression* sx = NULL;
         Symbolic::IntegerExpression* sy = NULL;

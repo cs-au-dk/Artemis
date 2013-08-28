@@ -27,7 +27,7 @@ DemoModeMainWindow::DemoModeMainWindow(AppModelPtr appModel, WebKitExecutor* web
     mWebkitExecutor(webkitExecutor),
     mEntryPointDetector(mWebkitExecutor->getPage())
 {
-    Log::info("DEMO: Constructing main window.");
+    Log::debug("DEMO: Constructing main window.");
 
     // Artemis' browser.
     mWebView = ArtemisWebViewPtr(new ArtemisWebView());
@@ -105,6 +105,12 @@ DemoModeMainWindow::DemoModeMainWindow(AppModelPtr appModel, WebKitExecutor* web
     QObject::connect(mViewTraceBtn, SIGNAL(released()),
                      this, SLOT(slViewTrace()));
     mViewTraceBtn->setEnabled(false);
+
+    mGenerateTraceGraphButton = new QPushButton("Generate Graph");
+    QObject::connect(mGenerateTraceGraphButton, SIGNAL(released()),
+                     this, SLOT(slGenerateTraceGraph()));
+    mGenerateTraceGraphButton->setEnabled(false);
+
     mTraceAnalysisText = new QLabel("No trace has been run yet.");
 
     // The Layout for the initial analysis panel.
@@ -147,6 +153,7 @@ DemoModeMainWindow::DemoModeMainWindow(AppModelPtr appModel, WebKitExecutor* web
     mAnalysisLayout->addWidget(mTraceClassificationResult);
 
     mAnalysisLayout->addWidget(mViewTraceBtn);
+    mAnalysisLayout->addWidget(mGenerateTraceGraphButton);
     mAnalysisLayout->addSpacing(10);
 
     // Execution reports section.
@@ -264,7 +271,7 @@ DemoModeMainWindow::DemoModeMainWindow(AppModelPtr appModel, WebKitExecutor* web
 
 DemoModeMainWindow::~DemoModeMainWindow()
 {
-    Log::info("DEMO: Destroying main window.");
+    Log::debug("DEMO: Destroying main window.");
     // Do not delete mWebkitExecutor, that is managed from elsewhere.
     // TODO: do we need to manually delete all the widget objects or are they handled automatically by their parents?
 }
@@ -273,7 +280,7 @@ DemoModeMainWindow::~DemoModeMainWindow()
 // Called when the window is closed.
 void DemoModeMainWindow::closeEvent(QCloseEvent *)
 {
-    Log::info("DEMO: Window closed.");
+    Log::debug("DEMO: Window closed.");
 
     emit sigClose();
 }
@@ -282,7 +289,7 @@ void DemoModeMainWindow::closeEvent(QCloseEvent *)
 // Called when we choose a new page via the loaction bar.
 void DemoModeMainWindow::slChangeLocation()
 {
-    Log::info(QString("DEMO: Changed loaction to %1").arg(mAddressBar->text()).toStdString());
+    Log::debug(QString("DEMO: Changed loaction to %1").arg(mAddressBar->text()).toStdString());
     QUrl url = QUrl(mAddressBar->text());
 
     // Validate the URL (as in artemis.cpp).
@@ -305,20 +312,20 @@ void DemoModeMainWindow::slChangeLocation()
 void DemoModeMainWindow::slAdjustLocation()
 {
     mAddressBar->setText(mWebView->url().toString());
-    Log::info(QString("DEMO: Adjusted loaction to %1").arg(mWebView->url().toString()).toStdString());
+    Log::debug(QString("DEMO: Adjusted loaction to %1").arg(mWebView->url().toString()).toStdString());
 }
 
 
 // Called when we begin loading a page.
 void DemoModeMainWindow::slLoadStarted()
 {
-    Log::info("DEMO: Begin page load.");
+    Log::debug("DEMO: Begin page load.");
 }
 
 // Called when we finish loading a page.
 void DemoModeMainWindow::slLoadFinished(bool ok)
 {
-    Log::info("DEMO: Finished page load.");
+    Log::debug("DEMO: Finished page load.");
     mWebPage->mAcceptNavigation = false; // Now that we are done loading, any further navigation must be via loadUrl().
     mWebView->setEnabled(true); // Re-allow interaction with the page once it is loaded completely.
 }
@@ -326,7 +333,7 @@ void DemoModeMainWindow::slLoadFinished(bool ok)
 // Called when the page loading progress needs to be updated.
 void DemoModeMainWindow::slSetProgress(int p)
 {
-    Log::info(QString("DEMO: Updating page load progress: %1%").arg(p).toStdString());
+    Log::debug(QString("DEMO: Updating page load progress: %1%").arg(p).toStdString());
     mProgressBar->setValue(p);
     if(p >= 100){
         mProgressBar->setFormat("Loaded.");
@@ -339,7 +346,7 @@ void DemoModeMainWindow::slSetProgress(int p)
 // Called whenever the URL of the page changes.
 void DemoModeMainWindow::slUrlChanged(const QUrl &url)
 {
-    Log::info(QString("DEMO: URL changed to %1").arg(url.toString()).toStdString());
+    Log::debug(QString("DEMO: URL changed to %1").arg(url.toString()).toStdString());
 }
 
 
@@ -347,7 +354,7 @@ void DemoModeMainWindow::slUrlChanged(const QUrl &url)
 // Called to start the analysis.
 void DemoModeMainWindow::run(const QUrl& url)
 {
-    Log::info("CONCOLIC-INFO: Beginning initial page load...");
+    Log::debug("CONCOLIC-INFO: Beginning initial page load...");
     loadUrl(url);
 }
 
@@ -358,7 +365,7 @@ void DemoModeMainWindow::run(const QUrl& url)
 void DemoModeMainWindow::slExecutedSequence(ExecutableConfigurationConstPtr configuration, QSharedPointer<ExecutionResult> result)
 {
     // The sequence we are currently running has finished.
-    Log::info("CONCOLIC-INFO: Finished execution sequence.");
+    Log::debug("CONCOLIC-INFO: Finished execution sequence.");
     preTraceExecution(result);
 }
 
@@ -367,7 +374,7 @@ void DemoModeMainWindow::slExecutedSequence(ExecutableConfigurationConstPtr conf
 // i.e. when we want to intercept the load and pass it to WebkitExecutor instead.
 void DemoModeMainWindow::slNavigationRequest(QWebFrame *frame, const QNetworkRequest &request, QWebPage::NavigationType type)
 {
-    Log::info(QString("DEMO: Navigation intercepted to %1").arg(request.url().toString()).toStdString());
+    Log::debug(QString("DEMO: Navigation intercepted to %1").arg(request.url().toString()).toStdString());
 
     loadUrl(request.url());
 }
@@ -378,7 +385,7 @@ void DemoModeMainWindow::slNavigationRequest(QWebFrame *frame, const QNetworkReq
 void DemoModeMainWindow::preTraceExecution(ExecutionResultPtr result)
 {
     // Simply run the entry-point detector and display its results.
-    Log::info("CONCOLIC-INFO: Analysing page entrypoints...");
+    Log::debug("CONCOLIC-INFO: Analysing page entrypoints...");
 
     QList<EventHandlerDescriptor*> allEntryPoints;
 
@@ -386,10 +393,10 @@ void DemoModeMainWindow::preTraceExecution(ExecutionResultPtr result)
     allEntryPoints = mEntryPointDetector.detectAll(result);
 
     // List them all
-    Log::info(QString("CONCOLIC-INFO: Found %1 potential entry points.").arg(allEntryPoints.length()).toStdString());
+    Log::debug(QString("CONCOLIC-INFO: Found %1 potential entry points.").arg(allEntryPoints.length()).toStdString());
     foreach(EventHandlerDescriptor* ep, allEntryPoints){
         // Log to termianl
-        Log::info(QString("CONCOLIC-INFO: Potential entry point :: %1").arg(ep->toString()).toStdString());
+        Log::debug(QString("CONCOLIC-INFO: Potential entry point :: %1").arg(ep->toString()).toStdString());
         // Log to GUI.
         addEntryPoint(ep->toString(), ep->domElement());
     }
@@ -402,7 +409,7 @@ void DemoModeMainWindow::preTraceExecution(ExecutionResultPtr result)
 // Called once the trace recording is over (signalled by the user).
 void DemoModeMainWindow::postTraceExecution()
 {
-    Log::info("CONCOLIC-INFO: Analysing trace...");
+    Log::debug("CONCOLIC-INFO: Analysing trace...");
     mWebkitExecutor->getTraceBuilder()->endRecording();
 
     mPreviousTrace = mWebkitExecutor->getTraceBuilder()->trace();
@@ -411,10 +418,10 @@ void DemoModeMainWindow::postTraceExecution()
 
     mTraceClassificationResult->setVisible(true);
     if(result){
-        Log::info("CONCOLIC-INFO: This trace was classified as a SUCCESS.");
+        Log::debug("CONCOLIC-INFO: This trace was classified as a SUCCESS.");
         mTraceClassificationResult->setText("Classification: <font color='green'>SUCCESS</font>");
     }else{
-        Log::info("CONCOLIC-INFO: This trace was classified as a FAILURE.");
+        Log::debug("CONCOLIC-INFO: This trace was classified as a FAILURE.");
         mTraceClassificationResult->setText("Classification: <font color='red'>FAILURE</font>");
     }
 
@@ -431,6 +438,7 @@ void DemoModeMainWindow::postTraceExecution()
 void DemoModeMainWindow::displayTraceInformation()
 {
     mViewTraceBtn->setEnabled(true);
+    mGenerateTraceGraphButton->setEnabled(true);
 
     TraceStatistics stats;
     stats.processTrace(mPreviousTrace);
@@ -458,7 +466,7 @@ void DemoModeMainWindow::loadUrl(QUrl url)
     mWebPage->mAcceptNavigation = true; // Allow navigation during load. This will be reset once the loading phase is finished.
     mWebView->setEnabled(false); // Disable interaction with the page during load.
 
-    Log::info(QString("CONCOLIC-INFO: Loading page %1").arg(url.toString()).toStdString());
+    Log::debug(QString("CONCOLIC-INFO: Loading page %1").arg(url.toString()).toStdString());
     ExecutableConfigurationPtr initial = ExecutableConfigurationPtr(new ExecutableConfiguration(InputSequencePtr(new InputSequence()), url));
     mWebkitExecutor->executeSequence(initial, true); // Calls slExecutedSequence method as callback.
 
@@ -496,7 +504,7 @@ void DemoModeMainWindow::addEntryPoint(QString name, const DOMElementDescriptor*
 // Called whenever the selection of elements in the entry point list changes.
 void DemoModeMainWindow::slEntryPointSelectionChanged()
 {
-    //Log::info("CONCOLIC-INFO: Entry point selection changed.");
+    //Log::debug("CONCOLIC-INFO: Entry point selection changed.");
 
     // Un-highlight any previously highlighted elements.
     foreach(EntryPointInfo entry, mKnownEntryPoints){
@@ -506,7 +514,7 @@ void DemoModeMainWindow::slEntryPointSelectionChanged()
     QList<QListWidgetItem*> items = mEntryPointList->selectedItems();
 
     foreach(QListWidgetItem* selected, items){
-        //Log::info(QString("CONCOLIC-INFO: Highlighting %1").arg(selected->text()).toStdString());
+        //Log::debug(QString("CONCOLIC-INFO: Highlighting %1").arg(selected->text()).toStdString());
         int index = selected->data(Qt::UserRole).value<int>();
         highlightDomElement(mKnownEntryPoints.at(index).second);
     }
@@ -530,7 +538,7 @@ void DemoModeMainWindow::unHighlightDomElement(const DOMElementDescriptor *eleme
 // Called when the button to start a trace recording is used.
 void DemoModeMainWindow::slStartTraceRecording()
 {
-    Log::info("CONCOLIC-INFO: Pressed 'Start Recording' button.");
+    Log::debug("CONCOLIC-INFO: Pressed 'Start Recording' button.");
     mStartTraceRecordingBtn->setEnabled(false);
     mEndTraceRecordingBtn->setEnabled(true);
 
@@ -545,7 +553,7 @@ void DemoModeMainWindow::slStartTraceRecording()
 // Called when the button to end a trace recording is used.
 void DemoModeMainWindow::slEndTraceRecording()
 {
-    Log::info("CONCOLIC-INFO: Pressed 'End Recording' button.");
+    Log::debug("CONCOLIC-INFO: Pressed 'End Recording' button.");
     mStartTraceRecordingBtn->setEnabled(true);
     mEndTraceRecordingBtn->setEnabled(false);
 
@@ -557,8 +565,6 @@ void DemoModeMainWindow::slEndTraceRecording()
 // Called when a new node is added by the trace builder.
 void DemoModeMainWindow::slAddedTraceNode()
 {
-    Log::info("CONCOLIC-INFO: Added new node to trace.");
-
     mTraceNodesRecorded++;
     mTraceRecordingProgress->setText(QString("Trace Nodes Recorded: %1").arg(mTraceNodesRecorded));
 }
@@ -567,12 +573,43 @@ void DemoModeMainWindow::slAddedTraceNode()
 // Called when the "View Trace" button is clicked.
 void DemoModeMainWindow::slViewTrace()
 {
-    Log::info("DEMO: Viewing trace.");
+    Log::debug("DEMO: Viewing trace.");
 
-    // TODO: create a new trace viewing dialog and show it here.
     QDialog* traceViewer = new TraceViewerDialog(mPreviousTrace, this);
-    //traceViewer->exec();
     traceViewer->show();
+}
+
+
+// Called when the "Generate Trace Graph" button is clicked.
+void DemoModeMainWindow::slGenerateTraceGraph()
+{
+    QString graphFile, pngFile;
+
+    Log::debug("DEMO: Generating trace graph.");
+    TraceDisplay display;
+    display.writeGraphFile(mPreviousTrace, graphFile);
+
+    if(graphFile.endsWith(".gv")){
+        pngFile = graphFile;
+        pngFile.chop(3);
+        pngFile += ".png";
+    }else{
+        pngFile = graphFile + ".png";
+    }
+
+    // Convert to PNG
+    QString command = QString("dot -Tpng %1 -o %2").arg(graphFile).arg(pngFile);
+    QProcess process;
+    process.start(command);
+
+    // Display the PNG.
+    process.waitForFinished(); // Blocks until the png is generated.
+
+    // TODO: what do we do if there was any problem?
+    ImageViewerDialog imageView(pngFile);
+    imageView.exec();
+
+
 }
 
 

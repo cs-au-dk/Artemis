@@ -8,6 +8,31 @@ This section documents various modifications made to WebKit as part of our instr
 
 Note, we require WebKit and specifically the JavaScript Core interpreter to be compiled in a non-JIT mode and in 64bit-mode (read: we do not support JIT compiling and the 32bit compatible version of WebKit).
 
+
+Tracking Values Symbolically
+----------------------------
+
+WebKit has been extended with *symbolic values and semantics* mirroring the concrete values and semantics respectively. Symbolic values are injected at predetermined sources (currently only the value property on input element DOM objects). 
+
+As an example, accessing the value property on DOM node D returns a concrete string, denoted C, marked as a symbolic value, denoted S, originating from D. Any concrete operation operation on C will be matched with a symbolic operation on S. Thus, if the length property is accessed on C it will return a concrete value C2 representing the concrete length of the string, and C2 will be marked with a symbolic value S2 representing the symbolic length of the symbolic string S.
+
+We say that there exist a number of mutators in WebKit taking a number of inputs I_0 ... I_n and outputting an output value O. Artemis instruments WebKit such that in all mutators, the output value O is marked with a proper symbolic value taking into account the concrete semantics of the mutator and the concrete and symbolic values of the inputs.
+
+The following diagram gives an overview of the different concrete values, mutators and symbolic values and how they relate in the implementation.
+
+  .. image:: ../diagrams/valuesandmutators.png
+
+Note, there exist three levels of concrete values in WebKit: JSValues, object interfaces and internal objects. The JSValues are used to represent both primitive values and pointers to objects in JavaScript. JSValue is the primary type being passed around in the JavaScript interpreter. If JSValue points to an object, then it has a pointer to an object interface. This interface acts as a proxy to internal objects, usually conducting type conversion while delegating business logic and storage of values to the internal objects. The object interfaces are automatically generated in order to allow different JavaScript interpreter implementations to interface with the same internal objects.
+
+We have identified two primary mutators, the JavaScript interpreter and native functions. In general, the JavaScript interpreter only manipulates the primitive values stored in JSValue, while the native functions operate on everything from JSValue to the internal objects.
+
+ * Symbolic values are attached to all primitive values stored in JSValue and the interpreter has been instrumented to maintain the symbolic values for all operations on JSValues. 
+ * A **subset** of native functions operating on JSValues have been instrumented.
+ * A **subset** of interface objects track symbolic values for their concrete properties (JSString and the value property on input elements).
+ * A **subset** of native functions operating on interface/internal objects have been instrumented (JSString and input elements).
+
+A note on strings: Symbolic strings are marked symbolic both in the JSValue pointing the the JSString object and in the JSString object itself. The JSValue will make sure to propagate its symbolic value to the JSString. The JSString is immutable so it will never change its own symbolic value, thus keeping the two consistent. The symbolic value needs to be represented in the JSString since the native functions operating on JSString never gets a reference to the enclosing JSValue (and these functions derive new symbolic values based on the current string, e.g. string length).
+
 Symbolically Enhanced JavaScript Values
 ---------------------------------------
 
@@ -43,7 +68,6 @@ into::
   Null      {  FFFF:1PPP:PPPP:PPPP
   Double    {  FFFF:9PPP:PPPP:PPPP
   Integer   {  FFFF:DPPP:PPPP:PPPP
-
   Integer   {  FFFF:C000:IIII:IIII
 
 Notice that 64bit pointers only take up 44bit, leaving the top 20bit unused.

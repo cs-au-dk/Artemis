@@ -19,6 +19,10 @@
 #include <QDebug>
 
 #include "concolic/solver/expressionprinter.h"
+#include "concolic/solver/expressionvalueprinter.h"
+#include "concolic/solver/expressionfreevariablelister.h"
+
+#include "util/loggingutil.h"
 
 #include "pathcondition.h"
 
@@ -82,11 +86,22 @@ void PathCondition::visit(TraceAnnotation* node)
 void PathCondition::visit(TraceConcreteBranch *node)
 {
     // Ignore the concrete branches
+
+    if (TraceVisitor::isImmediatelyUnexplored(node->getFalseBranch())) {
+        node->getTrueBranch()->accept(this);
+    } else {
+        node->getFalseBranch()->accept(this);
+    }
 }
 
 void PathCondition::visit(TraceEnd* node)
 {
     // Ignore the end node
+}
+
+void PathCondition::addCondition(Symbolic::Expression* condition, bool outcome)
+{
+    mConditions.append(qMakePair(condition, outcome));
 }
 
 const QPair<Symbolic::Expression*, bool> PathCondition::get(int index)
@@ -111,6 +126,42 @@ std::string PathCondition::toStatisticsString()
     }
 
     return sstrm.str();
+}
+
+std::string PathCondition::toStatisticsValuesString()
+{
+    std::stringstream sstrm;
+
+    for (int i = 0; i < mConditions.size(); i++) {
+        ExpressionValuePrinter printer;
+        mConditions.at(i).first->accept(&printer);
+
+        sstrm << "PC[" << i << "]: " << printer.getResult() << std::endl;
+    }
+
+    return sstrm.str();
+}
+
+QMap<QString, Symbolic::SourceIdentifierMethod> PathCondition::freeVariables()
+{
+    ExpressionFreeVariableLister lister;
+    QMap<QString, Symbolic::SourceIdentifierMethod> vars;
+
+    for (int i = 0; i < mConditions.size(); i++) {
+        mConditions.at(i).first->accept(&lister);
+        // N.B. QMap::unite does not remove duplicates, so we can't use that.
+        foreach(QString var, lister.getResult().keys()){
+            vars.insert(var, lister.getResult().value(var));
+        }
+        lister.clear();
+    }
+
+    return vars;
+}
+
+void PathCondition::negateLastCondition()
+{
+    mConditions.last().second = !mConditions.last().second;
 }
 
 }

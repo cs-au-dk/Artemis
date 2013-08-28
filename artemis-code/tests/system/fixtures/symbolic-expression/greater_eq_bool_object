@@ -1,4 +1,4 @@
-TEST PC:(IntegerCoercion((SymbolicString == ConstantString))>ConstantInteger)
+TEST PC:(IntegerCoercion((SymbolicString == ConstantString))<ConstantInteger)
 if ((y=="test") >= new Object(132)) {
     alert(x);
 }

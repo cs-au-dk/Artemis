@@ -28,7 +28,9 @@
 #include "PropertyDescriptor.h"
 #include "PropertySlot.h"
 #include "Structure.h"
-
+#ifdef ARTEMIS
+#include "symbolic/expr.h"
+#endif
 namespace JSC {
 
     class JSString;
@@ -91,6 +93,9 @@ namespace JSC {
             Base::finishCreation(globalData);
             m_length = length;
             m_is8Bit = m_value.impl()->is8Bit();
+#ifdef ARTEMIS
+            m_symbolic = NULL;
+#endif
         }
 
         void finishCreation(JSGlobalData& globalData, size_t length, size_t cost)
@@ -100,6 +105,9 @@ namespace JSC {
             m_length = length;
             m_is8Bit = m_value.impl()->is8Bit();
             Heap::heap(this)->reportExtraMemoryCost(cost);
+#ifdef ARTEMIS
+            m_symbolic = NULL;
+#endif
         }
 
     protected:
@@ -108,6 +116,9 @@ namespace JSC {
             Base::finishCreation(globalData);
             m_length = 0;
             m_is8Bit = true;
+#ifdef ARTEMIS
+            m_symbolic = NULL;
+#endif
         }
         
     public:
@@ -158,6 +169,11 @@ namespace JSC {
 
         static void visitChildren(JSCell*, SlotVisitor&);
 
+#ifdef ARTEMIS
+        inline void makeSymbolic(Symbolic::StringExpression* symbolic) {
+            m_symbolic = symbolic;
+        }
+#endif
     protected:
         bool isRope() const { return m_value.isNull(); }
         bool is8Bit() const { return m_is8Bit; }
@@ -235,6 +251,9 @@ namespace JSC {
             m_is8Bit = (s1->is8Bit() && s2->is8Bit());
             m_fibers[0].set(globalData, this, s1);
             m_fibers[1].set(globalData, this, s2);
+#ifdef ARTEMIS
+        Symbolic::StringExpression* m_symbolic;
+#endif
         }
         
         void finishCreation(JSGlobalData& globalData, JSString* s1, JSString* s2, JSString* s3)
@@ -245,6 +264,9 @@ namespace JSC {
             m_fibers[0].set(globalData, this, s1);
             m_fibers[1].set(globalData, this, s2);
             m_fibers[2].set(globalData, this, s3);
+#ifdef ARTEMIS
+        Symbolic::StringExpression* m_symbolic;
+#endif
         }
 
         void finishCreation(JSGlobalData& globalData)
@@ -442,7 +464,17 @@ namespace JSC {
     ALWAYS_INLINE bool JSString::getStringPropertySlot(ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
     {
         if (propertyName == exec->propertyNames().length) {
+#ifdef ARTEMIS
+            if (m_symbolic != NULL) {
+                JSValue v = jsNumber(m_length);
+                v.makeSymbolic(new Symbolic::StringLength(m_symbolic));
+                slot.setValue(v);
+            } else {
+                slot.setValue(jsNumber(m_length));
+            }
+#else
             slot.setValue(jsNumber(m_length));
+#endif
             return true;
         }
 

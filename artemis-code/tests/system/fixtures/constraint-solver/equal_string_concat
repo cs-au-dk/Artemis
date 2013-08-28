@@ -1,0 +1,3 @@
+if ((foo + bar) == "foobar") {
+   alert(foo);
+}

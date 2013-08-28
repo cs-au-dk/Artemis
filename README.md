@@ -34,6 +34,8 @@ This software includes components from:
 * WebKit (http://www.webkit.org/)
 * Google Test (https://code.google.com/p/googletest/)
 * Google Mock (https://code.google.com/p/googlemock/)
+* Z3 (http://z3.codeplex.com/)
+* Z3-str (http://www.cs.purdue.edu/homes/zheng16/str/)
 
 Installation 
 ------------

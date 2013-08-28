@@ -235,6 +235,7 @@ namespace JSC {
         Symbolic::IntegerExpression* generateIntegerCoercionExpression(ExecState* exec);
         Symbolic::StringExpression* generateStringCoercionExpression(ExecState* exec);
         Symbolic::BooleanExpression* generateBooleanExpression(ExecState* exec);
+        Symbolic::BooleanExpression* generateBooleanCoercionExpression(ExecState* exec);
 #endif
         
         // Extracting the value.

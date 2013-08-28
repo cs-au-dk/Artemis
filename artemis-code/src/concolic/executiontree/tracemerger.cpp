@@ -49,8 +49,17 @@ void TraceMerger::visit(TraceUnexplored* node)
 
 void TraceMerger::visit(TraceEnd* node)
 {
+    // case: unexplored branch in the tree
+    if (TraceVisitor::isImmediatelyUnexplored(mCurrentTree)) {
+
+        // Insert this trace directly into the tree and return
+        mCurrentTree = mCurrentTrace;
+        return;
+    }
+
+    // case: trace end
     if (!mCurrentTrace->isEqualShallow(mCurrentTree)) {
-        qWarning() << "Warning, divergance discovered while merging a trace!";
+        qWarning() << "Warning, divergance discovered while merging a trace! (TraceEnd)";
     }
 }
 
@@ -87,7 +96,7 @@ void TraceMerger::visit(TraceBranch* node)
         return;
     }
 
-    qWarning() << "Warning, divergance discovered while merging a trace!";
+    qWarning() << "Warning, divergance discovered while merging a trace! (TraceBranch)";
 }
 
 void TraceMerger::visit(TraceAnnotation* node)
@@ -114,7 +123,7 @@ void TraceMerger::visit(TraceAnnotation* node)
         return;
     }
 
-    qWarning() << "Warning, divergance discovered while merging a trace!";
+    qWarning() << "Warning, divergance discovered while merging a trace! (TraceAnnotation)";
 }
 
 void TraceMerger::visit(TraceNode* node)
