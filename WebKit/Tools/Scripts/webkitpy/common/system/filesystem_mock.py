@@ -33,7 +33,6 @@ import os
 import re
 
 from webkitpy.common.system import path
-from webkitpy.common.system import ospath
 
 
 class MockFileSystem(object):
@@ -72,12 +71,19 @@ class MockFileSystem(object):
         raise IOError(errno.ENOENT, path, os.strerror(errno.ENOENT))
 
     def _split(self, path):
-        return path.rsplit(self.sep, 1)
+        # This is not quite a full implementation of os.path.split
+        # http://docs.python.org/library/os.path.html#os.path.split
+        if self.sep in path:
+            return path.rsplit(self.sep, 1)
+        return ('', path)
 
     def abspath(self, path):
         if os.path.isabs(path):
             return self.normpath(path)
         return self.abspath(self.join(self.cwd, path))
+
+    def realpath(self, path):
+        return self.abspath(path)
 
     def basename(self, path):
         return self._split(path)[1]
@@ -107,6 +113,8 @@ class MockFileSystem(object):
             raise IOError(errno.EISDIR, source, os.strerror(errno.ISDIR))
         if self.isdir(destination):
             raise IOError(errno.EISDIR, destination, os.strerror(errno.ISDIR))
+        if not self.exists(self.dirname(destination)):
+            raise IOError(errno.ENOENT, destination, os.strerror(errno.ENOENT))
 
         self.files[destination] = self.files[source]
         self.written_files[destination] = self.files[source]
@@ -124,7 +132,7 @@ class MockFileSystem(object):
         file_filter = file_filter or filter_all
         files = []
         if self.isfile(path):
-            if file_filter(self, self.dirname(path), self.basename(path)):
+            if file_filter(self, self.dirname(path), self.basename(path)) and self.files[path] is not None:
                 files.append(path)
             return files
 
@@ -144,7 +152,7 @@ class MockFileSystem(object):
                 continue
 
             dirpath, basename = self._split(filename)
-            if file_filter(self, dirpath, basename):
+            if file_filter(self, dirpath, basename) and self.files[filename] is not None:
                 files.append(filename)
 
         return files
@@ -170,40 +178,45 @@ class MockFileSystem(object):
         return path in self.files and self.files[path] is not None
 
     def isdir(self, path):
-        if path in self.files:
-            return False
-        path = self.normpath(path)
-        if path in self.dirs:
-            return True
+        return self.normpath(path) in self.dirs
 
-        # We need to use a copy of the keys here in order to avoid switching
-        # to a different thread and potentially modifying the dict in
-        # mid-iteration.
-        files = self.files.keys()[:]
-        result = any(f.startswith(path) for f in files)
-        if result:
-            self.dirs.add(path)
-        return result
-
-    def join(self, *comps):
-        # FIXME: might want tests for this and/or a better comment about how
-        # it works.
+    def _slow_but_correct_join(self, *comps):
         return re.sub(re.escape(os.path.sep), self.sep, os.path.join(*comps))
 
+    def join(self, *comps):
+        # This function is called a lot, so we optimize it; there are
+        # unittests to check that we match _slow_but_correct_join(), above.
+        path = ''
+        sep = self.sep
+        for comp in comps:
+            if not comp:
+                continue
+            if comp[0] == sep:
+                path = comp
+                continue
+            if path:
+                path += sep
+            path += comp
+        if comps[-1] == '' and path:
+            path += '/'
+        path = path.replace(sep + sep, sep)
+        return path
+
     def listdir(self, path):
+        sep = self.sep
         if not self.isdir(path):
             raise OSError("%s is not a directory" % path)
 
-        if not path.endswith(self.sep):
-            path += self.sep
+        if not path.endswith(sep):
+            path += sep
 
         dirs = []
         files = []
         for f in self.files:
             if self.exists(f) and f.startswith(path):
                 remaining = f[len(path):]
-                if self.sep in remaining:
-                    dir = remaining[:remaining.index(self.sep)]
+                if sep in remaining:
+                    dir = remaining[:remaining.index(sep)]
                     if not dir in dirs:
                         dirs.append(dir)
                 else:
@@ -259,10 +272,26 @@ class MockFileSystem(object):
         self.files[source] = None
         self.written_files[source] = None
 
-    def normpath(self, path):
-        # Like join(), relies on os.path functionality but normalizes the
-        # path separator to the mock one.
+    def _slow_but_correct_normpath(self, path):
         return re.sub(re.escape(os.path.sep), self.sep, os.path.normpath(path))
+
+    def normpath(self, path):
+        # This function is called a lot, so we try to optimize the common cases
+        # instead of always calling _slow_but_correct_normpath(), above.
+        if '..' in path or '/./' in path:
+            # This doesn't happen very often; don't bother trying to optimize it.
+            return self._slow_but_correct_normpath(path)
+        if not path:
+            return '.'
+        if path == '/':
+            return path
+        if path == '/.':
+            return '/'
+        if path.endswith('/.'):
+            return path[:-2]
+        if path.endswith('/'):
+            return path[:-1]
+        return path
 
     def open_binary_tempfile(self, suffix=''):
         path = self._mktemp(suffix)
@@ -281,6 +310,7 @@ class MockFileSystem(object):
 
     def write_binary_file(self, path, contents):
         # FIXME: should this assert if dirname(path) doesn't exist?
+        self.maybe_make_directory(self.dirname(path))
         self.files[path] = contents
         self.written_files[path] = contents
 
@@ -303,7 +333,33 @@ class MockFileSystem(object):
         return hashlib.sha1(contents).hexdigest()
 
     def relpath(self, path, start='.'):
-        return ospath.relpath(path, start, self.abspath, self.sep)
+        # Since os.path.relpath() calls os.path.normpath()
+        # (see http://docs.python.org/library/os.path.html#os.path.abspath )
+        # it also removes trailing slashes and converts forward and backward
+        # slashes to the preferred slash os.sep.
+        start = self.abspath(start)
+        path = self.abspath(path)
+
+        if not path.lower().startswith(start.lower()):
+            # Then path is outside the directory given by start.
+            return None  # FIXME: os.relpath still returns a path here.
+
+        rel_path = path[len(start):]
+
+        if not rel_path:
+            # Then the paths are the same.
+            pass
+        elif rel_path[0] == self.sep:
+            # It is probably sufficient to remove just the first character
+            # since os.path.normpath() collapses separators, but we use
+            # lstrip() just to be sure.
+            rel_path = rel_path.lstrip(self.sep)
+        else:
+            # We are in the case typified by the following example:
+            # path = "/tmp/foobar", start = "/tmp/foo" -> rel_path = "bar"
+            return None
+
+        return rel_path
 
     def remove(self, path):
         if self.files[path] is None:
@@ -397,6 +453,12 @@ class ReadableTextFileObject(ReadableBinaryFileObject):
 
     def readline(self, length=None):
         return self.data.readline(length)
+
+    def __iter__(self):
+        return self.data.__iter__()
+
+    def next(self):
+        return self.data.next()
 
     def seek(self, offset, whence=os.SEEK_SET):
         self.data.seek(offset, whence)

@@ -21,17 +21,22 @@
 #ifndef QtWebPagePolicyClient_h
 #define QtWebPagePolicyClient_h
 
-#include <QtCore/QUrl>
+#include "qquickwebview_p.h"
+#include <QtGlobal>
 #include <WKPage.h>
 
-class QQuickWebView;
+QT_BEGIN_NAMESPACE
+class QUrl;
+QT_END_NAMESPACE
+
+namespace WebKit {
 
 class QtWebPagePolicyClient {
 public:
     QtWebPagePolicyClient(WKPageRef, QQuickWebView*);
 
 private:
-    void decidePolicyForNavigationAction(const QUrl&, const QUrl&, Qt::MouseButton, Qt::KeyboardModifiers, WKFramePolicyListenerRef);
+    void decidePolicyForNavigationAction(const QUrl&, Qt::MouseButton, Qt::KeyboardModifiers, QQuickWebView::NavigationType, WKFramePolicyListenerRef);
 
     // WKPagePolicyClient callbacks.
     static void decidePolicyForNavigationAction(WKPageRef, WKFrameRef, WKFrameNavigationType, WKEventModifiers, WKEventMouseButton, WKURLRequestRef, WKFramePolicyListenerRef, WKTypeRef userData, const void* clientInfo);
@@ -39,5 +44,7 @@ private:
 
     QQuickWebView* m_webView;
 };
+
+} // namespace WebKit
 
 #endif // QtWebPagePolicyClient_h

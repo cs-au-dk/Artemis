@@ -1,5 +1,5 @@
 /*
- * Copyright (c) 2006, 2007, 2008, 2009, Google Inc. All rights reserved.
+ * Copyright (c) 2006, 2007, 2008, 2009, 2012 Google Inc. All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -33,6 +33,7 @@
 
 #include "Font.h"
 #include "FontUtilsChromiumWin.h"
+#include "HWndDC.h"
 #include "PlatformContextSkia.h"
 #include "SkiaFontWin.h"
 #include "SkPoint.h"
@@ -216,7 +217,18 @@ void UniscribeHelper::justify(int additionalSpace)
 
     // The documentation for Scriptjustify is wrong, the parameter is the space
     // to add and not the width of the column you want.
-    const int minKashida = 1;  // How do we decide what this should be?
+    int minKashida;
+#if USE(SKIA_TEXT)
+    // Disable kashida justification based on 
+    // http://blogs.msdn.com/b/michkap/archive/2010/08/31/10056140.aspx.
+    for (int i = 0; i < totalGlyphs; ++i) {
+        if (visualAttributes[i].uJustification == SCRIPT_JUSTIFY_ARABIC_KASHIDA)
+            visualAttributes[i].uJustification = SCRIPT_JUSTIFY_NONE;   
+    }
+    minKashida = 0;
+#else
+    minKashida = 1; // How do we decide what this should be?
+#endif
     ScriptJustify(&visualAttributes[0], &advances[0], totalGlyphs,
                   additionalSpace, minKashida, &justify[0]);
 
@@ -540,7 +552,7 @@ void UniscribeHelper::fillRuns()
                                            0, // fNeutralOverride    :1;
                                            0, // fNumericOverride    :1;
                                            0, // fLegacyBidiClass    :1;
-                                           1, // fMergeNeutralItems  :1;
+                                           0, // fMergeNeutralItems  :1;
                                            0};// fReserved           :7;
     // Calling ScriptApplyDigitSubstitution( 0, &inputControl, &inputState)
     // here would be appropriate if we wanted to set the language ID, and get
@@ -574,6 +586,24 @@ void UniscribeHelper::fillRuns()
                                             &inputControl, &inputState,
                                             &m_runs[0], &m_scriptTags[0],
                                             &numberOfItems);
+
+            if (SUCCEEDED(hr)) { 
+                // Pack consecutive runs, the script tag of which are 
+                // SCRIPT_TAG_UNKNOWN, to reduce the number of runs. 
+                for (int i = 0; i < numberOfItems; ++i) { 
+                    if (m_scriptTags[i] == SCRIPT_TAG_UNKNOWN) { 
+                        int j = 1; 
+                        while (i + j < numberOfItems && m_scriptTags[i + j] == SCRIPT_TAG_UNKNOWN) 
+                            ++j; 
+                        if (--j) { 
+                            m_runs.remove(i + 1, j); 
+                            m_scriptTags.remove(i + 1, j); 
+                            numberOfItems -= j; 
+                        } 
+                    } 
+                } 
+                m_scriptTags.resize(numberOfItems); 
+            } 
         } else {
             hr = ScriptItemize(m_input, m_inputLength,
                                static_cast<int>(m_runs.size()) - 1,
@@ -786,13 +816,11 @@ void UniscribeHelper::EnsureCachedDCCreated()
     // Allocate a memory DC that is compatible with the Desktop DC since we don't have any window,
     // and we don't want to use the Desktop DC directly since it can have nasty side effects
     // as identified in Chrome Issue http://crbug.com/59315.
-    HDC screenDC = ::GetDC(0);
+    HWndDC screenDC(0);
     m_cachedDC = ::CreateCompatibleDC(screenDC);
     ASSERT(m_cachedDC);
-
-    int result = ::ReleaseDC(0, screenDC);
-    ASSERT(result == 1);
 }
+
 void UniscribeHelper::fillShapes()
 {
     m_shapes.resize(m_runs.size());
@@ -893,6 +921,8 @@ void UniscribeHelper::adjustSpaceAdvances()
             int glyphIndex = shaping.m_logs[i];
             int currentAdvance = shaping.m_advance[glyphIndex];
 
+            shaping.m_glyphs[glyphIndex] = shaping.m_spaceGlyph;
+
             if (treatAsSpace) {
                 // currentAdvance does not include additional letter-spacing,
                 // but m_spaceWidth does. Here we find out how off we are from
@@ -914,7 +944,6 @@ void UniscribeHelper::adjustSpaceAdvances()
             shaping.m_abc.abcB -= currentAdvance;
             shaping.m_offsets[glyphIndex].du = 0;
             shaping.m_offsets[glyphIndex].dv = 0;
-            shaping.m_glyphs[glyphIndex] = shaping.m_spaceGlyph;
         }
     }
 }

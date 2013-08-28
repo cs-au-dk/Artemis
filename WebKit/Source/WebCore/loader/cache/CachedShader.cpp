@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 Adobe Systems Incorporated. All Rights Reserved.
+ * Copyright (C) 2011 Adobe Systems Incorporated. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -62,11 +62,8 @@ const String& CachedShader::shaderString()
 
 void CachedShader::data(PassRefPtr<SharedBuffer> data, bool allDataReceived)
 {
-    if (allDataReceived) {
+    if (allDataReceived)
         m_data = data;
-        return;
-    }
-
     CachedResource::data(data, allDataReceived);
 }
 

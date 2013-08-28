@@ -47,6 +47,8 @@ bool fastSetInstalled(v8::Handle<v8::Object> array)
 
 void installFastSet(v8::Handle<v8::Object> array)
 {
+    v8::TryCatch tryCatch;
+    tryCatch.SetVerbose(true);
     v8::Handle<v8::Object> global = array->CreationContext()->Global();
     v8::Handle<v8::String> key = v8::String::New(fastSetFlagName);
     global->SetHiddenValue(key, v8::Boolean::New(true));
@@ -58,12 +60,18 @@ void installFastSet(v8::Handle<v8::Object> array)
 }
 
 
-void copyElements(v8::Handle<v8::Object> destArray, v8::Handle<v8::Object> srcArray)
+void copyElements(v8::Handle<v8::Object> destArray, v8::Handle<v8::Object> srcArray, uint32_t offset)
 {
     v8::Handle<v8::String> key = v8::String::New("set");
     v8::Handle<v8::Function> set = destArray->Get(key).As<v8::Function>();
-    v8::Handle<v8::Value> argument = srcArray;
-    set->Call(destArray, 1, &argument);
+    v8::Handle<v8::Value> arguments[2];
+    int numberOfArguments = 1;
+    arguments[0] = srcArray;
+    if (offset) {
+        arguments[1] = v8::Uint32::New(offset);
+        numberOfArguments = 2;
+    }
+    set->Call(destArray, numberOfArguments, arguments);
 }
 
 }

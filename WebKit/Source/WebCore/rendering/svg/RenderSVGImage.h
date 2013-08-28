@@ -41,8 +41,9 @@ public:
     RenderSVGImage(SVGImageElement*);
     virtual ~RenderSVGImage();
 
+    bool updateImageViewport();
+    virtual void setNeedsBoundariesUpdate() { m_needsBoundariesUpdate = true; }
     virtual void setNeedsTransformUpdate() { m_needsTransformUpdate = true; }
-    virtual void updateFromElement();
 
     RenderImageResource* imageResource() { return m_imageResource.get(); }
     const RenderImageResource* imageResource() const { return m_imageResource.get(); }
@@ -57,7 +58,7 @@ private:
     virtual FloatRect strokeBoundingBox() const { return m_objectBoundingBox; }
     virtual FloatRect repaintRectInLocalCoordinates() const { return m_repaintBoundingBox; }
 
-    virtual void addFocusRingRects(Vector<LayoutRect>&, const LayoutPoint&);
+    virtual void addFocusRingRects(Vector<IntRect>&, const LayoutPoint&);
 
     virtual void imageChanged(WrappedImagePtr, const IntRect* = 0);
 
@@ -67,8 +68,9 @@ private:
     virtual bool nodeAtFloatPoint(const HitTestRequest&, HitTestResult&, const FloatPoint& pointInParent, HitTestAction);
 
     virtual AffineTransform localTransform() const { return m_localTransform; }
+    void calculateImageViewport();
 
-    bool m_updateCachedRepaintRect : 1;
+    bool m_needsBoundariesUpdate : 1;
     bool m_needsTransformUpdate : 1;
     AffineTransform m_localTransform;
     FloatRect m_objectBoundingBox;

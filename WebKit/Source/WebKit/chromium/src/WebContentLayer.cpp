@@ -36,11 +36,6 @@ WebContentLayer WebContentLayer::create(WebContentLayerClient* contentClient)
     return WebContentLayer(WebContentLayerImpl::create(contentClient));
 }
 
-WebContentLayer WebContentLayer::create(WebLayerClient*, WebContentLayerClient* contentClient)
-{
-    return WebContentLayer::create(contentClient);
-}
-
 void WebContentLayer::setDrawsContent(bool drawsContent)
 {
     unwrap<WebContentLayerImpl>()->setDrawsContent(drawsContent);
@@ -49,16 +44,6 @@ void WebContentLayer::setDrawsContent(bool drawsContent)
 bool WebContentLayer::drawsContent() const
 {
     return constUnwrap<WebContentLayerImpl>()->drawsContent();
-}
-
-void WebContentLayer::invalidateRect(const WebFloatRect& dirtyRect)
-{
-    unwrap<WebContentLayerImpl>()->setNeedsDisplayRect(dirtyRect);
-}
-
-void WebContentLayer::invalidate()
-{
-    unwrap<WebContentLayerImpl>()->setNeedsDisplay();
 }
 
 WebContentLayer::WebContentLayer(const PassRefPtr<WebContentLayerImpl>& node)

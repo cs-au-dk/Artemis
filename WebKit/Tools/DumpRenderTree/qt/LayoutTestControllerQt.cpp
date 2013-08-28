@@ -41,6 +41,8 @@
 LayoutTestController::LayoutTestController(WebCore::DumpRenderTree* drt)
     : QObject()
     , m_drt(drt)
+    , m_shouldTimeout(true)
+    , m_timeout(30000)
 {
     reset();
     DumpRenderTreeSupportQt::dumpNotification(true);
@@ -146,7 +148,11 @@ void LayoutTestController::waitUntilDone()
 {
     //qDebug() << ">>>>waitForDone";
     m_waitForDone = true;
-    m_timeoutTimer.start(30000, this);
+
+    if (!m_shouldTimeout)
+        return;
+
+    m_timeoutTimer.start(m_timeout, this);
 }
 
 QString LayoutTestController::counterValueForElementById(const QString& id)
@@ -178,7 +184,7 @@ void LayoutTestController::notifyDone()
 {
     qDebug() << ">>>>notifyDone";
 
-    if (!m_timeoutTimer.isActive())
+    if (m_shouldTimeout && !m_timeoutTimer.isActive())
         return;
 
     m_timeoutTimer.stop();
@@ -556,15 +562,6 @@ bool LayoutTestController::pauseTransitionAtTimeOnElementWithId(const QString& p
     return DumpRenderTreeSupportQt::pauseTransitionOfProperty(frame, propertyName, time, elementId);
 }
 
-bool LayoutTestController::sampleSVGAnimationForElementAtTime(const QString& animationId,
-                                                              double time,
-                                                              const QString& elementId)
-{
-    QWebFrame* frame = m_drt->webPage()->mainFrame();
-    Q_ASSERT(frame);
-    return DumpRenderTreeSupportQt::pauseSVGAnimation(frame, animationId, time, elementId);
-}
-
 unsigned LayoutTestController::numberOfActiveAnimations() const
 {
     QWebFrame* frame = m_drt->webPage()->mainFrame();
@@ -695,10 +692,14 @@ void LayoutTestController::overridePreference(const QString& name, const QVarian
         settings->setAttribute(QWebSettings::PluginsEnabled, value.toBool());
     else if (name == "WebKitWebGLEnabled")
         settings->setAttribute(QWebSettings::WebGLEnabled, value.toBool());
+    else if (name == "WebKitCSSRegionsEnabled")
+        settings->setAttribute(QWebSettings::CSSRegionsEnabled, value.toBool());
     else if (name == "WebKitHyperlinkAuditingEnabled")
         settings->setAttribute(QWebSettings::HyperlinkAuditingEnabled, value.toBool());
     else if (name == "WebKitHixie76WebSocketProtocolEnabled")
         DumpRenderTreeSupportQt::setHixie76WebSocketProtocolEnabled(m_topLoadingFrame->page(), value.toBool());
+    else if (name == "WebKitAcceleratedCompositingEnabled")
+        settings->setAttribute(QWebSettings::AcceleratedCompositingEnabled, value.toBool());
     else
         printf("ERROR: LayoutTestController::overridePreference() does not support the '%s' preference\n",
             name.toLatin1().data());
@@ -897,10 +898,21 @@ void LayoutTestController::addMockSpeechInputResult(const QString& result, doubl
     // See https://bugs.webkit.org/show_bug.cgi?id=39485.
 }
 
+void LayoutTestController::setMockSpeechInputDumpRect(bool flag)
+{
+    // FIXME: Implement for speech input layout tests.
+    // See https://bugs.webkit.org/show_bug.cgi?id=39485.
+}
+
 void LayoutTestController::startSpeechInput(const QString& inputElement)
 {
     // FIXME: Implement for speech input layout tests.
     // See https://bugs.webkit.org/show_bug.cgi?id=39485.
+}
+
+void LayoutTestController::evaluateScriptInIsolatedWorldAndReturnValue(int worldID, const QString& script)
+{
+    // FIXME: Implement.
 }
 
 void LayoutTestController::evaluateScriptInIsolatedWorld(int worldID, const QString& script)
@@ -936,17 +948,6 @@ void LayoutTestController::removeAllVisitedLinks()
     DumpRenderTreeSupportQt::dumpVisitedLinksCallbacks(true);
 }
 
-bool LayoutTestController::hasSpellingMarker(int, int)
-{
-    // FIXME: Implement.
-    return false;
-}
-
-QVariantList LayoutTestController::nodesFromRect(const QWebElement& document, int x, int y, unsigned top, unsigned right, unsigned bottom, unsigned left, bool ignoreClipping)
-{
-    return DumpRenderTreeSupportQt::nodesFromRect(document, x, y, top, right, bottom, left, ignoreClipping);
-}
-
 void LayoutTestController::addURLToRedirect(const QString& origin, const QString& destination)
 {
     DumpRenderTreeSupportQt::addURLToRedirect(origin, destination);
@@ -980,6 +981,16 @@ void LayoutTestController::observeStorageTrackerNotifications(unsigned number)
 void LayoutTestController::syncLocalStorage()
 {
     // FIXME: Implement.
+}
+
+void LayoutTestController::resetPageVisibility()
+{
+    // FIXME: Implement this.
+}
+
+void LayoutTestController::setPageVisibility(const char*)
+{
+    // FIXME: Implement this.
 }
 
 QString LayoutTestController::layerTreeAsText()

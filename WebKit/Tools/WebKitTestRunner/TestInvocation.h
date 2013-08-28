@@ -39,7 +39,7 @@ public:
     ~TestInvocation();
 
     void setIsPixelTest(const std::string& expectedPixelHash);
-    
+
     void invoke();
     void didReceiveMessageFromInjectedBundle(WKStringRef messageName, WKTypeRef messageBody);
     WKRetainPtr<WKTypeRef> didReceiveSynchronousMessageFromInjectedBundle(WKStringRef messageName, WKTypeRef messageBody);

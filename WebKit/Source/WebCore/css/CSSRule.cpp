@@ -36,6 +36,13 @@
 
 namespace WebCore {
 
+struct SameSizeAsCSSRule : public RefCounted<SameSizeAsCSSRule> {
+    unsigned bitfields;
+    void* pointerUnion;
+};
+
+COMPILE_ASSERT(sizeof(CSSRule) == sizeof(SameSizeAsCSSRule), CSSRule_should_stay_small);
+
 void CSSRule::setCssText(const String& /*cssText*/, ExceptionCode& /*ec*/)
 {
     notImplemented();
@@ -47,8 +54,9 @@ String CSSRule::cssText() const
     case UNKNOWN_RULE:
         return String();
     case STYLE_RULE:
-    case PAGE_RULE:
         return static_cast<const CSSStyleRule*>(this)->cssText();
+    case PAGE_RULE:
+        return static_cast<const CSSPageRule*>(this)->cssText();
     case CHARSET_RULE:
         return static_cast<const CSSCharsetRule*>(this)->cssText();
     case IMPORT_RULE:

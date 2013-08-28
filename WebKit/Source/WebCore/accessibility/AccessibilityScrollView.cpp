@@ -163,7 +163,7 @@ AccessibilityObject* AccessibilityScrollView::webAreaObject() const
     return axObjectCache()->getOrCreate(doc->renderer());
 }
 
-AccessibilityObject* AccessibilityScrollView::accessibilityHitTest(const LayoutPoint& point) const
+AccessibilityObject* AccessibilityScrollView::accessibilityHitTest(const IntPoint& point) const
 {
     AccessibilityObject* webArea = webAreaObject();
     if (!webArea)
@@ -212,6 +212,16 @@ AccessibilityObject* AccessibilityScrollView::parentObjectIfExists() const
         return axObjectCache()->get(owner->renderer());
     
     return 0;
+}
+
+ScrollableArea* AccessibilityScrollView::getScrollableAreaIfScrollable() const
+{
+    return m_scrollView.get();
+}
+
+void AccessibilityScrollView::scrollTo(const IntPoint& point) const
+{
+    m_scrollView->setScrollPosition(point);
 }
 
 } // namespace WebCore    

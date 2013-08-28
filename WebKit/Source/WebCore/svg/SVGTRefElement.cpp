@@ -27,10 +27,12 @@
 #include "EventListener.h"
 #include "EventNames.h"
 #include "MutationEvent.h"
+#include "NodeRenderingContext.h"
 #include "RenderSVGInline.h"
 #include "RenderSVGInlineText.h"
 #include "RenderSVGResource.h"
 #include "ShadowRoot.h"
+#include "ShadowTree.h"
 #include "SVGDocument.h"
 #include "SVGElementInstance.h"
 #include "SVGNames.h"
@@ -56,19 +58,21 @@ inline SVGTRefElement::SVGTRefElement(const QualifiedName& tagName, Document* do
 
 PassRefPtr<SVGTRefElement> SVGTRefElement::create(const QualifiedName& tagName, Document* document)
 {
-    return adoptRef(new SVGTRefElement(tagName, document));
+    RefPtr<SVGTRefElement> element = adoptRef(new SVGTRefElement(tagName, document));
+    element->createShadowSubtree();
+    return element.release();
 }
 
-class SubtreeModificationEventListener : public EventListener {
+class TargetListener : public EventListener {
 public:
-    static PassRefPtr<SubtreeModificationEventListener> create(SVGTRefElement* trefElement, String targetId)
+    static PassRefPtr<TargetListener> create(SVGTRefElement* trefElement, String targetId)
     {
-        return adoptRef(new SubtreeModificationEventListener(trefElement, targetId));
+        return adoptRef(new TargetListener(trefElement, targetId));
     }
 
-    static const SubtreeModificationEventListener* cast(const EventListener* listener)
+    static const TargetListener* cast(const EventListener* listener)
     {
-        return listener->type() == CPPEventListenerType ? static_cast<const SubtreeModificationEventListener*>(listener) : 0;
+        return listener->type() == CPPEventListenerType ? static_cast<const TargetListener*>(listener) : 0;
     }
 
     virtual bool operator==(const EventListener&);
@@ -76,15 +80,17 @@ public:
     void clear()
     {
         Element* target = m_trefElement->treeScope()->getElementById(m_targetId);
-        if (target && target->parentNode())
-            target->parentNode()->removeEventListener(eventNames().DOMSubtreeModifiedEvent, this, false);
+        if (target) {
+            target->removeEventListener(eventNames().DOMSubtreeModifiedEvent, this, false);
+            target->removeEventListener(eventNames().DOMNodeRemovedFromDocumentEvent, this, false);
+        }
         
         m_trefElement = 0;
         m_targetId = String();
     }
 
 private:
-    SubtreeModificationEventListener(SVGTRefElement* trefElement, String targetId)
+    TargetListener(SVGTRefElement* trefElement, String targetId)
         : EventListener(CPPEventListenerType)
         , m_trefElement(trefElement)
         , m_targetId(targetId)
@@ -97,17 +103,20 @@ private:
     String m_targetId;
 };
 
-bool SubtreeModificationEventListener::operator==(const EventListener& listener)
+bool TargetListener::operator==(const EventListener& listener)
 {
-    if (const SubtreeModificationEventListener* subtreeModificationEventListener = SubtreeModificationEventListener::cast(&listener))
+    if (const TargetListener* subtreeModificationEventListener = TargetListener::cast(&listener))
         return m_trefElement == subtreeModificationEventListener->m_trefElement;
     return false;
 }
 
-void SubtreeModificationEventListener::handleEvent(ScriptExecutionContext*, Event* event)
+void TargetListener::handleEvent(ScriptExecutionContext*, Event* event)
 {
     if (m_trefElement && event->type() == eventNames().DOMSubtreeModifiedEvent && m_trefElement != event->target())
         m_trefElement->updateReferencedText();
+
+    if (m_trefElement && event->type() == eventNames().DOMNodeRemovedFromDocumentEvent)
+        m_trefElement->detachTarget();
 }
 
 class SVGShadowText : public Text {
@@ -144,18 +153,43 @@ SVGTRefElement::~SVGTRefElement()
     clearEventListener();
 }
 
+void SVGTRefElement::createShadowSubtree()
+{
+    ShadowRoot::create(this, ShadowRoot::CreatingUserAgentShadowRoot, ASSERT_NO_EXCEPTION);
+}
+
 void SVGTRefElement::updateReferencedText()
 {
-    Element* target = SVGURIReference::targetElementFromIRIString(href(), document());
-    ASSERT(target);
     String textContent;
-    if (target->parentNode())
+    if (Element* target = SVGURIReference::targetElementFromIRIString(href(), document()))
         textContent = target->textContent();
-    ExceptionCode ignore = 0;
-    if (!ensureShadowRoot()->firstChild())
-        shadowRoot()->appendChild(SVGShadowText::create(document(), textContent), ignore);
+
+    ASSERT(hasShadowRoot());
+    ShadowRoot* root = shadowTree()->oldestShadowRoot();
+    if (!root->firstChild())
+        root->appendChild(SVGShadowText::create(document(), textContent), ASSERT_NO_EXCEPTION);
     else
-        shadowRoot()->firstChild()->setTextContent(textContent, ignore);
+        root->firstChild()->setTextContent(textContent, ASSERT_NO_EXCEPTION);
+}
+
+void SVGTRefElement::detachTarget()
+{
+    // Remove active listeners and clear the text content.
+    clearEventListener();
+
+    String emptyContent;
+    ExceptionCode ignore = 0;
+
+    ASSERT(hasShadowRoot());
+    Node* container = shadowTree()->oldestShadowRoot()->firstChild();
+    if (container)
+        container->setTextContent(emptyContent, ignore);
+
+    // Mark the referenced ID as pending.
+    String id;
+    SVGURIReference::targetElementFromIRIString(href(), document(), &id);
+    if (!hasPendingResources() && !id.isEmpty())
+        document()->accessSVGExtensions()->addPendingResource(id, this);
 }
 
 bool SVGTRefElement::isSupportedAttribute(const QualifiedName& attrName)
@@ -166,14 +200,14 @@ bool SVGTRefElement::isSupportedAttribute(const QualifiedName& attrName)
     return supportedAttributes.contains<QualifiedName, SVGAttributeHashTranslator>(attrName);
 }
 
-void SVGTRefElement::parseMappedAttribute(Attribute* attr)
+void SVGTRefElement::parseAttribute(Attribute* attr)
 {
     if (!isSupportedAttribute(attr->name())) {
-        SVGTextPositioningElement::parseMappedAttribute(attr);
+        SVGTextPositioningElement::parseAttribute(attr);
         return;
     }
 
-    if (SVGURIReference::parseMappedAttribute(attr)) {
+    if (SVGURIReference::parseAttribute(attr)) {
         return;
     }
 
@@ -204,9 +238,9 @@ RenderObject* SVGTRefElement::createRenderer(RenderArena* arena, RenderStyle*)
     return new (arena) RenderSVGInline(this);
 }
 
-bool SVGTRefElement::childShouldCreateRenderer(Node* child) const
+bool SVGTRefElement::childShouldCreateRenderer(const NodeRenderingContext& childContext) const
 {
-    return child->isInShadowTree();
+    return childContext.node()->isInShadowTree();
 }
 
 bool SVGTRefElement::rendererIsNeeded(const NodeRenderingContext& context)
@@ -229,6 +263,10 @@ void SVGTRefElement::buildPendingResource()
     // Remove any existing event listener.
     clearEventListener();
 
+    // If we're not yet in a document, this function will be called again from insertedInto().
+    if (!inDocument())
+        return;
+
     String id;
     Element* target = SVGURIReference::targetElementFromIRIString(href(), document(), &id);
     if (!target) {
@@ -243,25 +281,30 @@ void SVGTRefElement::buildPendingResource()
 
     updateReferencedText();
 
-    // We should not add the event listener if we are not in document yet.
-    if (!inDocument())
-        return;
-
-    m_eventListener = SubtreeModificationEventListener::create(this, id);
-    ASSERT(target->parentNode());
-    target->parentNode()->addEventListener(eventNames().DOMSubtreeModifiedEvent, m_eventListener.get(), false);
+    // Don't set up event listeners if this is a shadow tree node.
+    // SVGUseElement::transferEventListenersToShadowTree() handles this task, and addEventListener()
+    // expects every element instance to have an associated shadow tree element - which is not the
+    // case when we land here from SVGUseElement::buildShadowTree().
+    if (!isInShadowTree()) {
+        m_eventListener = TargetListener::create(this, id);
+        target->addEventListener(eventNames().DOMSubtreeModifiedEvent, m_eventListener.get(), false);
+        target->addEventListener(eventNames().DOMNodeRemovedFromDocumentEvent, m_eventListener.get(), false);
+    }
 }
 
-void SVGTRefElement::insertedIntoDocument()
+Node::InsertionNotificationRequest SVGTRefElement::insertedInto(Node* rootParent)
 {
-    SVGStyledElement::insertedIntoDocument();
-    buildPendingResource();
+    SVGStyledElement::insertedInto(rootParent);
+    if (rootParent->inDocument())
+        buildPendingResource();
+    return InsertionDone;
 }
 
-void SVGTRefElement::removedFromDocument()
+void SVGTRefElement::removedFrom(Node* rootParent)
 {
-    SVGStyledElement::removedFromDocument();
-    clearEventListener();
+    SVGStyledElement::removedFrom(rootParent);
+    if (rootParent->inDocument())
+        clearEventListener();
 }
 
 void SVGTRefElement::clearEventListener()

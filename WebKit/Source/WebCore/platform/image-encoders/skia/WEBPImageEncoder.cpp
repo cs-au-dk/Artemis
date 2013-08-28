@@ -96,10 +96,10 @@ static bool encodePixels(IntSize imageSize, const unsigned char* pixels, bool pr
         return false;
 
     imageSize.clampNegativeToZero();
-    if (!imageSize.width() || imageSize.width() > WEBPImageEncoder::MaximumImageDimension)
+    if (!imageSize.width() || imageSize.width() > WEBP_MAX_DIMENSION)
         return false;
     picture.width = imageSize.width();
-    if (!imageSize.height() || imageSize.height() > WEBPImageEncoder::MaximumImageDimension)
+    if (!imageSize.height() || imageSize.height() > WEBP_MAX_DIMENSION)
         return false;
     picture.height = imageSize.height();
 
@@ -130,7 +130,7 @@ bool WEBPImageEncoder::encode(const SkBitmap& bitmap, int quality, Vector<unsign
 
 bool WEBPImageEncoder::encode(const ImageData& imageData, int quality, Vector<unsigned char>* output)
 {
-    return encodePixels(imageData.size(), imageData.data()->data()->data(), false, quality, output);
+    return encodePixels(imageData.size(), imageData.data()->data(), false, quality, output);
 }
 
 } // namespace WebCore

@@ -48,6 +48,7 @@ public:
     String displayName() const { return String(); }
     unsigned long long estimatedSize() const { return 0; }
     SecurityOrigin* securityOrigin() const { return 0; }
+    bool isSyncDatabase() const { return false; }
 };
 }
 #endif // !ENABLE(SQL_DATABASE)
@@ -122,10 +123,7 @@ void WebDatabase::resetSpaceAvailable(const WebString& originIdentifier)
 void WebDatabase::closeDatabaseImmediately(const WebString& originIdentifier, const WebString& databaseName)
 {
 #if ENABLE(SQL_DATABASE)
-    HashSet<RefPtr<AbstractDatabase> > databaseHandles;
-    DatabaseTracker::tracker().getOpenDatabases(originIdentifier, databaseName, &databaseHandles);
-    for (HashSet<RefPtr<AbstractDatabase> >::iterator it = databaseHandles.begin(); it != databaseHandles.end(); ++it)
-        it->get()->closeImmediately();
+    DatabaseTracker::tracker().closeDatabasesImmediately(originIdentifier, databaseName);
 #endif
 }
 

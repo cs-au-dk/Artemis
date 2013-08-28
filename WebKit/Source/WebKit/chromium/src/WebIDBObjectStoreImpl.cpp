@@ -57,7 +57,14 @@ WebString WebIDBObjectStoreImpl::name() const
     return m_objectStore->name();
 }
 
-WebString WebIDBObjectStoreImpl::keyPath() const
+WebIDBKeyPath WebIDBObjectStoreImpl::keyPath() const
+{
+    return WebIDBKeyPath(m_objectStore->keyPath());
+}
+
+// FIXME: Remove this method once callers are updated.
+// http://webkit.org/b/84207
+WebString WebIDBObjectStoreImpl::keyPathString() const
 {
     return m_objectStore->keyPath();
 }
@@ -67,9 +74,9 @@ WebDOMStringList WebIDBObjectStoreImpl::indexNames() const
     return m_objectStore->indexNames();
 }
 
-void WebIDBObjectStoreImpl::get(const WebIDBKey& key, WebIDBCallbacks* callbacks, const WebIDBTransaction& transaction, WebExceptionCode& ec)
+void WebIDBObjectStoreImpl::get(const WebIDBKeyRange& keyRange, WebIDBCallbacks* callbacks, const WebIDBTransaction& transaction, WebExceptionCode& ec)
 {
-    m_objectStore->get(key, IDBCallbacksProxy::create(adoptPtr(callbacks)), transaction.getIDBTransactionBackendInterface(), ec);
+    m_objectStore->get(keyRange, IDBCallbacksProxy::create(adoptPtr(callbacks)), transaction.getIDBTransactionBackendInterface(), ec);
 }
 
 void WebIDBObjectStoreImpl::put(const WebSerializedScriptValue& value, const WebIDBKey& key, PutMode putMode, WebIDBCallbacks* callbacks, const WebIDBTransaction& transaction, WebExceptionCode& ec)
@@ -80,6 +87,11 @@ void WebIDBObjectStoreImpl::put(const WebSerializedScriptValue& value, const Web
 void WebIDBObjectStoreImpl::deleteFunction(const WebIDBKey& key, WebIDBCallbacks* callbacks, const WebIDBTransaction& transaction, WebExceptionCode& ec)
 {
     m_objectStore->deleteFunction(key, IDBCallbacksProxy::create(adoptPtr(callbacks)), transaction.getIDBTransactionBackendInterface(), ec);
+}
+
+void WebIDBObjectStoreImpl::deleteFunction(const WebIDBKeyRange& keyRange, WebIDBCallbacks* callbacks, const WebIDBTransaction& transaction, WebExceptionCode& ec)
+{
+    m_objectStore->deleteFunction(keyRange, IDBCallbacksProxy::create(adoptPtr(callbacks)), transaction.getIDBTransactionBackendInterface(), ec);
 }
 
 void WebIDBObjectStoreImpl::clear(WebIDBCallbacks* callbacks, const WebIDBTransaction& transaction, WebExceptionCode& ec)

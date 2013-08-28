@@ -57,7 +57,7 @@ const float smallCapsFontSizeMultiplier = 0.7f;
 static bool fontHasVerticalGlyphs(CTFontRef ctFont)
 {
     // The check doesn't look neat but this is what AppKit does for vertical writing...
-    RetainPtr<CFArrayRef> tableTags(AdoptCF, CTFontCopyAvailableTables(ctFont, kCTFontTableOptionExcludeSynthetic));
+    RetainPtr<CFArrayRef> tableTags(AdoptCF, CTFontCopyAvailableTables(ctFont, kCTFontTableOptionNoOptions));
     CFIndex numTables = CFArrayGetCount(tableTags.get());
     for (CFIndex index = 0; index < numTables; ++index) {
         CTFontTableTag tag = (CTFontTableTag)(uintptr_t)CFArrayGetValueAtIndex(tableTags.get(), index);
@@ -71,7 +71,6 @@ static bool initFontData(SimpleFontData* fontData)
 {
     if (!fontData->platformData().cgFont())
         return false;
-
 
     return true;
 }
@@ -109,6 +108,37 @@ static NSString* pathFromFont(NSFont *font)
 }
 #endif // __LP64__
 #endif // !ERROR_DISABLED
+
+const SimpleFontData* SimpleFontData::getCompositeFontReferenceFontData(NSFont *key) const
+{
+    if (key && !CFEqual(RetainPtr<CFStringRef>(AdoptCF, CTFontCopyPostScriptName(CTFontRef(key))).get(), CFSTR("LastResort"))) {
+        if (!m_derivedFontData)
+            m_derivedFontData = DerivedFontData::create(isCustomFont());
+        if (!m_derivedFontData->compositeFontReferences)
+            m_derivedFontData->compositeFontReferences.adoptCF(CFDictionaryCreateMutable(kCFAllocatorDefault, 1, &kCFTypeDictionaryKeyCallBacks, NULL));
+        else {
+            const SimpleFontData* found = static_cast<const SimpleFontData*>(CFDictionaryGetValue(m_derivedFontData->compositeFontReferences.get(), static_cast<const void *>(key)));
+            if (found)
+                return found;
+        }
+        if (CFMutableDictionaryRef dictionary = m_derivedFontData->compositeFontReferences.get()) {
+            bool isUsingPrinterFont = platformData().isPrinterFont();
+            NSFont *substituteFont = isUsingPrinterFont ? [key printerFont] : [key screenFont];
+
+            CTFontSymbolicTraits traits = CTFontGetSymbolicTraits(toCTFontRef(substituteFont));
+            bool syntheticBold = platformData().syntheticBold() && !(traits & kCTFontBoldTrait);
+            bool syntheticOblique = platformData().syntheticOblique() && !(traits & kCTFontItalicTrait);
+
+            FontPlatformData substitutePlatform(substituteFont, platformData().size(), isUsingPrinterFont, syntheticBold, syntheticOblique, platformData().orientation(), platformData().textOrientation(), platformData().widthVariant());
+            SimpleFontData* value = new SimpleFontData(substitutePlatform, isCustomFont());
+            if (value) {
+                CFDictionaryAddValue(dictionary, key, value);
+                return value;
+            }
+        }
+    }
+    return 0;
+}
 
 void SimpleFontData::platformInit()
 {
@@ -307,7 +337,7 @@ PassOwnPtr<SimpleFontData> SimpleFontData::createScaledFontData(const FontDescri
 
     BEGIN_BLOCK_OBJC_EXCEPTIONS;
     float size = m_platformData.size() * scaleFactor;
-    FontPlatformData scaledFontData([[NSFontManager sharedFontManager] convertFont:m_platformData.font() toSize:size], size, false, false, m_platformData.orientation());
+    FontPlatformData scaledFontData([[NSFontManager sharedFontManager] convertFont:m_platformData.font() toSize:size], size, m_platformData.isPrinterFont(), false, false, m_platformData.orientation());
 
     // AppKit resets the type information (screen/printer) when you convert a font to a different size.
     // We have to fix up the font that we're handed back.
@@ -441,9 +471,9 @@ bool SimpleFontData::canRenderCombiningCharacterSequence(const UChar* characters
     if (!m_combiningCharacterSequenceSupport)
         m_combiningCharacterSequenceSupport = adoptPtr(new HashMap<String, bool>);
 
-    pair<WTF::HashMap<String, bool>::iterator, bool> addResult = m_combiningCharacterSequenceSupport->add(String(characters, length), false);
-    if (!addResult.second)
-        return addResult.first->second;
+    WTF::HashMap<String, bool>::AddResult addResult = m_combiningCharacterSequenceSupport->add(String(characters, length), false);
+    if (!addResult.isNewEntry)
+        return addResult.iterator->second;
 
     RetainPtr<CGFontRef> cgFont(AdoptCF, CTFontCopyGraphicsFont(platformData().ctFont(), 0));
 
@@ -463,36 +493,8 @@ bool SimpleFontData::canRenderCombiningCharacterSequence(const UChar* characters
             return false;
     }
 
-    addResult.first->second = true;
+    addResult.iterator->second = true;
     return true;
-}
-
-static inline void decomposeToUTF16(UChar* buffer, unsigned& length, const UChar32 character)
-{
-    if (U_IS_BMP(character)) {
-        buffer[length] = character;
-        ++length;
-        return;
-    }
-
-    buffer[length] = U16_LEAD(character);
-    buffer[length + 1] = U16_TRAIL(character);
-    length += 2;
-}
-
-void SimpleFontData::updateGlyphWithVariationSelector(UChar32 character, UChar32 selector, Glyph& glyph) const
-{
-    unsigned length = 0;
-    UChar buffer[4];
-
-    decomposeToUTF16(buffer, length, character);
-    decomposeToUTF16(buffer, length, selector);
-    ASSERT(length <= 4);
-
-    CGGlyph glyphs[4];
-    wkGetGlyphsForCharacters(platformData().cgFont(), buffer, glyphs, length);
-    if (glyphs[0])
-        glyph = glyphs[0];
 }
 
 } // namespace WebCore

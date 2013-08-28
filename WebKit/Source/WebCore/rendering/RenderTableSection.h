@@ -30,6 +30,30 @@
 
 namespace WebCore {
 
+enum CollapsedBorderSide {
+    CBSBefore,
+    CBSAfter,
+    CBSStart,
+    CBSEnd
+};
+
+// Helper class for paintObject.
+class CellSpan {
+public:
+    CellSpan(unsigned start, unsigned end)
+        : m_start(start)
+        , m_end(end)
+    {
+    }
+
+    unsigned start() const { return m_start; }
+    unsigned end() const { return m_end; }
+
+private:
+    unsigned m_start;
+    unsigned m_end;
+};
+
 class RenderTableCell;
 class RenderTableRow;
 
@@ -48,8 +72,8 @@ public:
     void addCell(RenderTableCell*, RenderTableRow* row);
 
     void setCellLogicalWidths();
-    LayoutUnit calcRowLogicalHeight();
-    LayoutUnit layoutRows(LayoutUnit logicalHeight);
+    int calcRowLogicalHeight();
+    void layoutRows();
 
     RenderTable* table() const { return toRenderTable(parent()); }
 
@@ -80,7 +104,7 @@ public:
     struct RowStruct {
         RowStruct()
             : rowRenderer(0)
-            , baseline(0)
+            , baseline()
         {
         }
 
@@ -101,16 +125,16 @@ public:
     void appendColumn(unsigned pos);
     void splitColumn(unsigned pos, unsigned first);
 
-    LayoutUnit calcOuterBorderBefore() const;
-    LayoutUnit calcOuterBorderAfter() const;
-    LayoutUnit calcOuterBorderStart() const;
-    LayoutUnit calcOuterBorderEnd() const;
+    int calcOuterBorderBefore() const;
+    int calcOuterBorderAfter() const;
+    int calcOuterBorderStart() const;
+    int calcOuterBorderEnd() const;
     void recalcOuterBorder();
 
-    LayoutUnit outerBorderBefore() const { return m_outerBorderBefore; }
-    LayoutUnit outerBorderAfter() const { return m_outerBorderAfter; }
-    LayoutUnit outerBorderStart() const { return m_outerBorderStart; }
-    LayoutUnit outerBorderEnd() const { return m_outerBorderEnd; }
+    int outerBorderBefore() const { return m_outerBorderBefore; }
+    int outerBorderAfter() const { return m_outerBorderAfter; }
+    int outerBorderStart() const { return m_outerBorderStart; }
+    int outerBorderEnd() const { return m_outerBorderEnd; }
 
     unsigned numRows() const { return m_grid.size(); }
     unsigned numColumns() const;
@@ -128,7 +152,19 @@ public:
 
     void rowLogicalHeightChanged(unsigned rowIndex);
 
-    unsigned rowIndexForRenderer(const RenderTableRow*) const;
+    void removeCachedCollapsedBorders(const RenderTableCell*);
+    void setCachedCollapsedBorder(const RenderTableCell*, CollapsedBorderSide, CollapsedBorderValue);
+    CollapsedBorderValue& cachedCollapsedBorder(const RenderTableCell*, CollapsedBorderSide);
+
+    // distributeExtraLogicalHeightToRows methods return the *consumed* extra logical height.
+    // FIXME: We may want to introduce a structure holding the in-flux layout information.
+    int distributeExtraLogicalHeightToRows(int extraLogicalHeight);
+
+    static RenderTableSection* createAnonymousWithParentRenderer(const RenderObject*);
+    virtual RenderBox* createAnonymousBoxWithSameTypeAs(const RenderObject* parent) const OVERRIDE
+    {
+        return createAnonymousWithParentRenderer(parent);
+    }
 
 protected:
     virtual void styleDidChange(StyleDifference, const RenderStyle* oldStyle);
@@ -157,21 +193,31 @@ private:
 
     void ensureRows(unsigned);
 
+    void distributeExtraLogicalHeightToPercentRows(int& extraLogicalHeight, int totalPercent);
+    void distributeExtraLogicalHeightToAutoRows(int& extraLogicalHeight, unsigned autoRowsCount);
+    void distributeRemainingExtraLogicalHeight(int& extraLogicalHeight);
+
     bool hasOverflowingCell() const { return m_overflowingCells.size() || m_forceSlowPaintPathWithOverflowingCell; }
+
+    CellSpan fullTableRowSpan() const { return CellSpan(0, m_grid.size()); }
+    CellSpan fullTableColumnSpan() const { return CellSpan(0, table()->columns().size()); }
+
+    CellSpan dirtiedRows(const LayoutRect& repaintRect) const;
+    CellSpan dirtiedColumns(const LayoutRect& repaintRect) const;
 
     RenderObjectChildList m_children;
 
     Vector<RowStruct> m_grid;
-    Vector<LayoutUnit> m_rowPos;
+    Vector<int> m_rowPos;
 
     // the current insertion position
     unsigned m_cCol;
     unsigned m_cRow;
 
-    LayoutUnit m_outerBorderStart;
-    LayoutUnit m_outerBorderEnd;
-    LayoutUnit m_outerBorderBefore;
-    LayoutUnit m_outerBorderAfter;
+    int m_outerBorderStart;
+    int m_outerBorderEnd;
+    int m_outerBorderBefore;
+    int m_outerBorderAfter;
 
     bool m_needsCellRecalc;
 
@@ -182,6 +228,10 @@ private:
     bool m_forceSlowPaintPathWithOverflowingCell;
 
     bool m_hasMultipleCellLevels;
+
+    // This map holds the collapsed border values for cells with collapsed borders.
+    // It is held at RenderTableSection level to spare memory consumption by table cells.
+    HashMap<pair<const RenderTableCell*, int>, CollapsedBorderValue > m_cellsCollapsedBorders;
 };
 
 inline RenderTableSection* toRenderTableSection(RenderObject* object)

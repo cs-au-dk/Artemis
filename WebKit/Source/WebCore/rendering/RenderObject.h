@@ -29,13 +29,16 @@
 #include "CachedImage.h"
 #include "Document.h"
 #include "Element.h"
+#include "FractionalLayoutUnit.h"
 #include "FloatQuad.h"
 #include "LayoutTypes.h"
 #include "PaintPhase.h"
 #include "RenderObjectChildList.h"
 #include "RenderStyle.h"
+#include "ScrollBehavior.h"
 #include "TextAffinity.h"
 #include "TransformationMatrix.h"
+#include <wtf/HashSet.h>
 #include <wtf/UnusedParam.h>
 
 #if USE(CG) || USE(CAIRO) || USE(SKIA) || PLATFORM(QT)
@@ -58,6 +61,7 @@ class RenderInline;
 class RenderBlock;
 class RenderFlowThread;
 class RenderLayer;
+class RenderTable;
 class RenderTheme;
 class TransformState;
 class VisiblePosition;
@@ -95,6 +99,11 @@ enum BoxSide {
     BSLeft
 };
 
+enum MarkingBehavior {
+    MarkOnlyThis,
+    MarkContainingBlockChain,
+};
+
 const int caretWidth = 1;
 
 #if ENABLE(DASHBOARD_SUPPORT)
@@ -114,6 +123,8 @@ struct DashboardRegionValue {
     int type;
 };
 #endif
+
+typedef WTF::HashSet<const RenderObject*> RenderObjectAncestorLineboxDirtySet;
 
 #ifndef NDEBUG
 const int showTreeCharacterOffset = 39;
@@ -193,6 +204,9 @@ public:
     void removeLayers(RenderLayer* parentLayer);
     void moveLayers(RenderLayer* oldParent, RenderLayer* newParent);
     RenderLayer* findNextLayer(RenderLayer* parentLayer, RenderObject* startPoint, bool checkParent = true);
+
+    // Scrolling is a RenderBox concept, however some code just cares about recursively scrolling our enclosing ScrollableArea(s).
+    bool scrollRectToVisible(const LayoutRect&, const ScrollAlignment& alignX = ScrollAlignment::alignCenterIfNeeded, const ScrollAlignment& alignY = ScrollAlignment::alignCenterIfNeeded);
 
     // Convenience function for getting to the nearest enclosing box of a RenderObject.
     RenderBox* enclosingBox() const;
@@ -283,8 +297,8 @@ public:
     virtual bool isBoxModelObject() const { return false; }
     virtual bool isCounter() const { return false; }
     virtual bool isQuote() const { return false; }
+
 #if ENABLE(DETAILS)
-    virtual bool isDetails() const { return false; }
     virtual bool isDetailsMarker() const { return false; }
 #endif
     virtual bool isEmbeddedObject() const { return false; }
@@ -322,9 +336,6 @@ public:
 
     virtual bool isSlider() const { return false; }
     virtual bool isSliderThumb() const { return false; }
-#if ENABLE(DETAILS)
-    virtual bool isSummary() const { return false; }
-#endif
     virtual bool isTable() const { return false; }
     virtual bool isTableCell() const { return false; }
     virtual bool isTableCol() const { return false; }
@@ -343,7 +354,7 @@ public:
 #endif
 
     virtual bool isRenderFlowThread() const { return false; }
-
+    virtual bool isRenderNamedFlowThread() const { return false; }
     bool canHaveRegionStyle() const { return isRenderBlock() && !isAnonymous() && !isRenderFlowThread(); }
 
     bool isRoot() const { return document()->documentElement() == m_node; }
@@ -353,22 +364,14 @@ public:
 
     bool isHTMLMarquee() const;
 
+    bool isTablePart() const { return isTableCell() || isTableCol() || isTableCaption() || isTableRow() || isTableSection(); }
+
     inline bool isBeforeContent() const;
     inline bool isAfterContent() const;
     inline bool isBeforeOrAfterContent() const;
     static inline bool isBeforeContent(const RenderObject* obj) { return obj && obj->isBeforeContent(); }
     static inline bool isAfterContent(const RenderObject* obj) { return obj && obj->isAfterContent(); }
     static inline bool isBeforeOrAfterContent(const RenderObject* obj) { return obj && obj->isBeforeOrAfterContent(); }
-
-    inline RenderObject* anonymousContainer(RenderObject* child)
-    {
-         RenderObject* container = child;
-         while (container->parent() != this)
-             container = container->parent();
-
-         ASSERT(container->isAnonymous());
-         return container;
-    }
 
     bool hasCounterNodeMap() const { return m_bitfields.hasCounterNodeMap(); }
     void setHasCounterNodeMap(bool hasCounterNodeMap) { m_bitfields.setHasCounterNodeMap(hasCounterNodeMap); }
@@ -378,6 +381,22 @@ public:
     void setChildrenInline(bool b) { m_bitfields.setChildrenInline(b); }
     bool hasColumns() const { return m_bitfields.hasColumns(); }
     void setHasColumns(bool b = true) { m_bitfields.setHasColumns(b); }
+
+    bool ancestorLineBoxDirty() const { return s_ancestorLineboxDirtySet && s_ancestorLineboxDirtySet->contains(this); }
+    void setAncestorLineBoxDirty(bool b = true)
+    {
+        if (b) {
+            if (!s_ancestorLineboxDirtySet)
+                s_ancestorLineboxDirtySet = new RenderObjectAncestorLineboxDirtySet;
+            s_ancestorLineboxDirtySet->add(this);
+        } else if (s_ancestorLineboxDirtySet) {
+            s_ancestorLineboxDirtySet->remove(this);
+            if (s_ancestorLineboxDirtySet->isEmpty()) {
+                delete s_ancestorLineboxDirtySet;
+                s_ancestorLineboxDirtySet = 0;
+            }
+        }
+    }
 
     bool inRenderFlowThread() const { return m_bitfields.inRenderFlowThread(); }
     void setInRenderFlowThread(bool b = true) { m_bitfields.setInRenderFlowThread(b); }
@@ -393,7 +412,8 @@ public:
     // to add SVG renderer methods to RenderObject with an ASSERT_NOT_REACHED() default implementation.
     virtual bool isSVGRoot() const { return false; }
     virtual bool isSVGContainer() const { return false; }
-    virtual bool isSVGViewportContainer() const { return false; } 
+    virtual bool isSVGTransformableContainer() const { return false; }
+    virtual bool isSVGViewportContainer() const { return false; }
     virtual bool isSVGGradientStop() const { return false; }
     virtual bool isSVGHiddenContainer() const { return false; }
     virtual bool isSVGPath() const { return false; }
@@ -408,7 +428,6 @@ public:
     virtual bool isSVGResourceContainer() const { return false; }
     virtual bool isSVGResourceFilter() const { return false; }
     virtual bool isSVGResourceFilterPrimitive() const { return false; }
-    virtual bool isSVGShadowTreeRootContainer() const { return false; }
 
     virtual RenderSVGResourceContainer* toRenderSVGResourceContainer();
 
@@ -511,6 +530,7 @@ public:
 
     bool hasTransform() const { return m_bitfields.hasTransform(); }
     bool hasMask() const { return style() && style()->hasMask(); }
+    bool hasHiddenBackface() const { return style() && style()->backfaceVisibility() == BackfaceVisibilityHidden; }
 
 #if ENABLE(CSS_FILTERS)
     bool hasFilter() const { return style() && style()->hasFilter(); }
@@ -565,11 +585,11 @@ public:
     RenderBoxModelObject* offsetParent() const;
 
     void markContainingBlocksForLayout(bool scheduleRelayout = true, RenderObject* newRoot = 0);
-    void setNeedsLayout(bool b, bool markParents = true);
-    void setChildNeedsLayout(bool b, bool markParents = true);
+    void setNeedsLayout(bool needsLayout, MarkingBehavior = MarkContainingBlockChain);
+    void setChildNeedsLayout(bool childNeedsLayout, MarkingBehavior = MarkContainingBlockChain);
     void setNeedsPositionedMovementLayout();
     void setNeedsSimplifiedNormalFlowLayout();
-    void setPreferredLogicalWidthsDirty(bool, bool markParents = true);
+    void setPreferredLogicalWidthsDirty(bool, MarkingBehavior = MarkContainingBlockChain);
     void invalidateContainerPreferredLogicalWidths();
     
     void setNeedsLayoutAndPrefWidthsRecalc()
@@ -614,6 +634,8 @@ public:
     void collectDashboardRegions(Vector<DashboardRegionValue>&);
 #endif
 
+    bool isComposited() const;
+
     bool hitTest(const HitTestRequest&, HitTestResult&, const LayoutPoint& pointInContainer, const LayoutPoint& accumulatedOffset, HitTestFilter = HitTestAll);
     virtual bool nodeAtPoint(const HitTestRequest&, HitTestResult&, const LayoutPoint& pointInContainer, const LayoutPoint& accumulatedOffset, HitTestAction);
     virtual void updateHitTestResult(HitTestResult&, const LayoutPoint&);
@@ -649,8 +671,10 @@ public:
     {
         return localToContainerQuad(quad, 0, fixed, wasFixed);
     }
+
     // Convert a local quad into the coordinate system of container, taking transforms into account.
     FloatQuad localToContainerQuad(const FloatQuad&, RenderBoxModelObject* repaintContainer, bool fixed = false, bool* wasFixed = 0) const;
+    FloatPoint localToContainerPoint(const FloatPoint&, RenderBoxModelObject* repaintContainer, bool fixed = false, bool* wasFixed = 0) const;
 
     // Return the offset from the container() renderer (excluding transforms). In multi-column layout,
     // different offsets apply at different points, so return the offset that applies to the given point.
@@ -658,11 +682,11 @@ public:
     // Return the offset from an object up the container() chain. Asserts that none of the intermediate objects have transforms.
     LayoutSize offsetFromAncestorContainer(RenderObject*) const;
     
-    virtual void absoluteRects(Vector<LayoutRect>&, const LayoutPoint&) const { }
+    virtual void absoluteRects(Vector<IntRect>&, const LayoutPoint&) const { }
 
     // FIXME: useTransforms should go away eventually
-    LayoutRect absoluteBoundingBoxRect(bool useTransform = true) const;
-    LayoutRect absoluteBoundingBoxRectIgnoringTransforms() const { return absoluteBoundingBoxRect(false); }
+    IntRect absoluteBoundingBoxRect(bool useTransform = true) const;
+    IntRect absoluteBoundingBoxRectIgnoringTransforms() const { return absoluteBoundingBoxRect(false); }
 
     // Build an array of quads in absolute coords for line boxes
     virtual void absoluteQuads(Vector<FloatQuad>&, bool* /*wasFixed*/ = 0) const { }
@@ -675,7 +699,7 @@ public:
     virtual LayoutUnit minPreferredLogicalWidth() const { return 0; }
     virtual LayoutUnit maxPreferredLogicalWidth() const { return 0; }
 
-    RenderStyle* style() const;
+    RenderStyle* style() const { return m_style.get(); }
     RenderStyle* firstLineStyle() const { return document()->usesFirstLineRules() ? firstLineStyleSlowCase() : style(); }
     RenderStyle* style(bool firstLine) const { return firstLine ? firstLineStyle() : style(); }
 
@@ -723,6 +747,7 @@ public:
     {
         return clippedOverflowRectForRepaint(0);
     }
+    IntRect pixelSnappedAbsoluteClippedOverflowRect() const;
     virtual LayoutRect clippedOverflowRectForRepaint(RenderBoxModelObject* repaintContainer) const;
     virtual LayoutRect rectWithOutlineForRepaint(RenderBoxModelObject* repaintContainer, LayoutUnit outlineWidth) const;
 
@@ -751,10 +776,7 @@ public:
     bool hasReflection() const { return m_bitfields.hasReflection(); }
 
     // Applied as a "slop" to dirty rect checks during the outline painting phase's dirty-rect checks.
-    LayoutUnit maximalOutlineSize(PaintPhase) const;
-
-    void setHasMarkupTruncation(bool b = true) { m_bitfields.setHasMarkupTruncation(b); }
-    bool hasMarkupTruncation() const { return m_bitfields.hasMarkupTruncation(); }
+    int maximalOutlineSize(PaintPhase) const;
 
     enum SelectionState {
         SelectionNone, // The object is not selected.
@@ -768,6 +790,8 @@ public:
     // descendants (as described above in the SelectionState enum declaration).
     SelectionState selectionState() const { return m_bitfields.selectionState(); }
     virtual void setSelectionState(SelectionState state) { m_bitfields.setSelectionState(state); }
+    inline void setSelectionStateIfNeeded(SelectionState);
+    bool canUpdateSelectionOnRootLineBoxes();
 
     // A single rectangle that encompasses all of the selected objects within this object.  Used to determine the tightest
     // possible bounding box for the selection.
@@ -802,6 +826,7 @@ public:
     // as a hook to detect the case of document destruction and don't waste time doing unnecessary work.
     bool documentBeingDestroyed() const;
 
+    void destroyAndCleanupAnonymousWrappers();
     virtual void destroy();
 
     // Virtual function helpers for the deprecated Flexible Box Layout (display: -webkit-box).
@@ -840,27 +865,35 @@ public:
 
     // Map points and quads through elements, potentially via 3d transforms. You should never need to call these directly; use
     // localToAbsolute/absoluteToLocal methods instead.
-    virtual void mapLocalToContainer(RenderBoxModelObject* repaintContainer, bool useTransforms, bool fixed, TransformState&, bool* wasFixed = 0) const;
+    enum ApplyContainerFlipOrNot { DoNotApplyContainerFlip, ApplyContainerFlip };
+    virtual void mapLocalToContainer(RenderBoxModelObject* repaintContainer, bool useTransforms, bool fixed, TransformState&, ApplyContainerFlipOrNot = ApplyContainerFlip, bool* wasFixed = 0) const;
     virtual void mapAbsoluteToLocalPoint(bool fixed, bool useTransforms, TransformState&) const;
 
     bool shouldUseTransformFromContainer(const RenderObject* container) const;
     void getTransformFromContainer(const RenderObject* container, const LayoutSize& offsetInContainer, TransformationMatrix&) const;
     
-    virtual void addFocusRingRects(Vector<LayoutRect>&, const LayoutPoint&) { };
+    virtual void addFocusRingRects(Vector<IntRect>&, const LayoutPoint&) { };
 
     LayoutRect absoluteOutlineBounds() const
     {
         return outlineBoundsForRepaint(0);
     }
 
+    // Return the renderer whose background style is used to paint the root background. Should only be called on the renderer for which isRoot() is true.
+    RenderObject* rendererForRootBackground();
+
+    RespectImageOrientationEnum shouldRespectImageOrientation() const;
+
 protected:
+    inline bool layerCreationAllowedForSubtree() const;
+
     // Overrides should call the superclass at the end
     virtual void styleWillChange(StyleDifference, const RenderStyle* newStyle);
     // Overrides should call the superclass at the start
     virtual void styleDidChange(StyleDifference, const RenderStyle* oldStyle);
     void propagateStyleToAnonymousChildren(bool blockChildrenOnly = false);
 
-    void drawLineForBoxSide(GraphicsContext*, LayoutUnit x1, LayoutUnit y1, LayoutUnit x2, LayoutUnit y2, BoxSide,
+    void drawLineForBoxSide(GraphicsContext*, int x1, int y1, int x2, int y2, BoxSide,
                             Color, EBorderStyle, int adjbw1, int adjbw2, bool antialias = false);
 
     void paintFocusRing(GraphicsContext*, const LayoutPoint&, RenderStyle*);
@@ -871,13 +904,13 @@ protected:
 
     void adjustRectForOutlineAndShadow(LayoutRect&) const;
 
+    void clearLayoutRootIfNeeded() const;
     virtual void willBeDestroyed();
     void arenaDelete(RenderArena*, void* objectBase);
 
     virtual LayoutRect outlineBoundsForRepaint(RenderBoxModelObject* /*repaintContainer*/, LayoutPoint* /*cachedOffsetToRepaintContainer*/ = 0) const { return LayoutRect(); }
 
 private:
-    RenderStyle* styleInRegion() const;
     RenderStyle* firstLineStyleSlowCase() const;
     StyleDifference adjustStyleDifference(StyleDifference, unsigned contextSensitiveProperties) const;
 
@@ -890,6 +923,8 @@ private:
     RenderObject* m_parent;
     RenderObject* m_previous;
     RenderObject* m_next;
+
+    static RenderObjectAncestorLineboxDirtySet* s_ancestorLineboxDirtySet;
 
 #ifndef NDEBUG
     bool m_hasAXObject             : 1;
@@ -933,7 +968,6 @@ private:
             , m_childrenInline(false)
             , m_marginBeforeQuirk(false) 
             , m_marginAfterQuirk(false)
-            , m_hasMarkupTruncation(false)
             , m_hasColumns(false)
             , m_selectionState(SelectionNone)
         {
@@ -977,7 +1011,6 @@ private:
         ADD_BOOLEAN_BITFIELD(childrenInline, ChildrenInline);
         ADD_BOOLEAN_BITFIELD(marginBeforeQuirk, MarginBeforeQuirk);
         ADD_BOOLEAN_BITFIELD(marginAfterQuirk, MarginAfterQuirk);
-        ADD_BOOLEAN_BITFIELD(hasMarkupTruncation, HasMarkupTruncation);
         ADD_BOOLEAN_BITFIELD(hasColumns, HasColumns);
 
     private:
@@ -1035,14 +1068,14 @@ inline bool RenderObject::isBeforeOrAfterContent() const
     return isBeforeContent() || isAfterContent();
 }
 
-inline void RenderObject::setNeedsLayout(bool b, bool markParents)
+inline void RenderObject::setNeedsLayout(bool needsLayout, MarkingBehavior markParents)
 {
     bool alreadyNeededLayout = m_bitfields.needsLayout();
-    m_bitfields.setNeedsLayout(b);
-    if (b) {
+    m_bitfields.setNeedsLayout(needsLayout);
+    if (needsLayout) {
         ASSERT(!isSetNeedsLayoutForbidden());
         if (!alreadyNeededLayout) {
-            if (markParents)
+            if (markParents == MarkContainingBlockChain)
                 markContainingBlocksForLayout();
             if (hasLayer())
                 setLayerNeedsFullRepaint();
@@ -1053,16 +1086,17 @@ inline void RenderObject::setNeedsLayout(bool b, bool markParents)
         setNeedsSimplifiedNormalFlowLayout(false);
         setNormalChildNeedsLayout(false);
         setNeedsPositionedMovementLayout(false);
+        setAncestorLineBoxDirty(false);
     }
 }
 
-inline void RenderObject::setChildNeedsLayout(bool b, bool markParents)
+inline void RenderObject::setChildNeedsLayout(bool childNeedsLayout, MarkingBehavior markParents)
 {
     bool alreadyNeededLayout = normalChildNeedsLayout();
-    setNormalChildNeedsLayout(b);
-    if (b) {
+    setNormalChildNeedsLayout(childNeedsLayout);
+    if (childNeedsLayout) {
         ASSERT(!isSetNeedsLayoutForbidden());
-        if (!alreadyNeededLayout && markParents)
+        if (!alreadyNeededLayout && markParents == MarkContainingBlockChain)
             markContainingBlocksForLayout();
     } else {
         setPosChildNeedsLayout(false);
@@ -1106,9 +1140,26 @@ inline bool RenderObject::preservesNewline() const
     return style()->preserveNewline();
 }
 
-inline RenderStyle* RenderObject::style() const
+inline bool RenderObject::layerCreationAllowedForSubtree() const
 {
-    return m_style.get();
+#if ENABLE(SVG)
+    RenderObject* parentRenderer = parent();
+    while (parentRenderer) {
+        if (parentRenderer->isSVGHiddenContainer())
+            return false;
+        parentRenderer = parentRenderer->parent();
+    }
+#endif
+
+    return true;
+}
+
+inline void RenderObject::setSelectionStateIfNeeded(SelectionState state)
+{
+    if (selectionState() == state)
+        return;
+
+    setSelectionState(state);
 }
 
 inline void makeMatrixRenderable(TransformationMatrix& matrix, bool has3DRendering)

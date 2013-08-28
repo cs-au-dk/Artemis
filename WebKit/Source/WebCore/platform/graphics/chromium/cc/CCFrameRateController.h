@@ -35,7 +35,7 @@ namespace WebCore {
 
 class CCFrameRateControllerClient {
 public:
-    virtual void beginFrame() = 0;
+    virtual void vsyncTick() = 0;
 
 protected:
     virtual ~CCFrameRateControllerClient() { }
@@ -50,9 +50,10 @@ public:
 
     void setClient(CCFrameRateControllerClient* client) { m_client = client; }
 
-    void setActive(bool active) { m_timeSource->setActive(active); }
+    void setActive(bool);
 
     void setMaxPendingFrames(int);
+
     // Use the following methods to adjust target frame rate.
     //
     // Multiple frames can be in-progress, but for every didBeginFrame, a

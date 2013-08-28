@@ -27,6 +27,7 @@
 
 #include "NonCompositedContentHost.h"
 
+#include "FloatPoint.h"
 #include "FloatRect.h"
 #include "GraphicsLayer.h"
 #include "LayerChromium.h"
@@ -37,6 +38,7 @@ namespace WebKit {
 
 NonCompositedContentHost::NonCompositedContentHost(PassOwnPtr<WebCore::LayerPainterChromium> contentPaint)
     : m_contentPaint(contentPaint)
+    , m_showDebugBorders(false)
 {
     m_graphicsLayer = WebCore::GraphicsLayer::create(this);
 #ifndef NDEBUG
@@ -45,6 +47,9 @@ NonCompositedContentHost::NonCompositedContentHost(PassOwnPtr<WebCore::LayerPain
     m_graphicsLayer->setDrawsContent(true);
     m_graphicsLayer->platformLayer()->setIsNonCompositedContent(true);
     m_graphicsLayer->platformLayer()->setOpaque(true);
+#if !OS(ANDROID)
+    m_graphicsLayer->platformLayer()->setDrawCheckerboardForMissingTiles(true);
+#endif
 }
 
 NonCompositedContentHost::~NonCompositedContentHost()
@@ -53,10 +58,7 @@ NonCompositedContentHost::~NonCompositedContentHost()
 
 void NonCompositedContentHost::setBackgroundColor(const WebCore::Color& color)
 {
-    if (color.isValid())
-        m_graphicsLayer->platformLayer()->setBackgroundColor(color);
-    else
-        m_graphicsLayer->platformLayer()->setBackgroundColor(WebCore::Color::white);
+    m_graphicsLayer->platformLayer()->setBackgroundColor(color);
 }
 
 void NonCompositedContentHost::setScrollLayer(WebCore::GraphicsLayer* layer)
@@ -76,7 +78,21 @@ void NonCompositedContentHost::setScrollLayer(WebCore::GraphicsLayer* layer)
     ASSERT(scrollLayer());
 }
 
-void NonCompositedContentHost::setViewport(const WebCore::IntSize& viewportSize, const WebCore::IntSize& contentsSize, const WebCore::IntPoint& scrollPosition, float pageScale)
+static void reserveScrollbarLayers(WebCore::LayerChromium* layer, WebCore::LayerChromium* clipLayer)
+{
+    // Scrollbars and corners are known to be attached outside the root clip
+    // rect, so skip the clipLayer subtree.
+    if (layer == clipLayer)
+        return;
+
+    for (size_t i = 0; i < layer->children().size(); ++i)
+        reserveScrollbarLayers(layer->children()[i].get(), clipLayer);
+
+    if (layer->drawsContent())
+        layer->setAlwaysReserveTextures(true);
+}
+
+void NonCompositedContentHost::setViewport(const WebCore::IntSize& viewportSize, const WebCore::IntSize& contentsSize, const WebCore::IntPoint& scrollPosition, float pageScale, int layerAdjustX)
 {
     if (!scrollLayer())
         return;
@@ -85,16 +101,32 @@ void NonCompositedContentHost::setViewport(const WebCore::IntSize& viewportSize,
 
     m_viewportSize = viewportSize;
     scrollLayer()->setScrollPosition(scrollPosition);
+    scrollLayer()->setPosition(-scrollPosition);
     // Due to the possibility of pinch zoom, the noncomposited layer is always
     // assumed to be scrollable.
     scrollLayer()->setScrollable(true);
     m_graphicsLayer->setSize(contentsSize);
 
-    if (visibleRectChanged)
+    m_layerAdjustX = layerAdjustX;
+    if (m_graphicsLayer->transform().m41() != m_layerAdjustX) {
+        WebCore::TransformationMatrix transform = m_graphicsLayer->transform();
+        transform.setM41(m_layerAdjustX);
+        m_graphicsLayer->setTransform(transform);
+
+        // If a tiled layer is shifted left or right, the content that goes into
+        // each tile will change. Invalidate the entire layer when this happens.
+        m_graphicsLayer->setNeedsDisplay();
+    } else if (visibleRectChanged)
         m_graphicsLayer->setNeedsDisplay();
 
     if (m_graphicsLayer->pageScaleFactor() != pageScale)
         m_graphicsLayer->deviceOrPageScaleFactorChanged();
+
+    WebCore::LayerChromium* clipLayer = scrollLayer()->parent();
+    WebCore::LayerChromium* rootLayer = clipLayer;
+    while (rootLayer->parent())
+        rootLayer = rootLayer->parent();
+    reserveScrollbarLayers(rootLayer, clipLayer);
 }
 
 WebCore::LayerChromium* NonCompositedContentHost::scrollLayer()
@@ -128,15 +160,24 @@ void NonCompositedContentHost::notifySyncRequired(const WebCore::GraphicsLayer*)
 
 void NonCompositedContentHost::paintContents(const WebCore::GraphicsLayer*, WebCore::GraphicsContext& context, WebCore::GraphicsLayerPaintingPhase, const WebCore::IntRect& clipRect)
 {
-    m_contentPaint->paint(context, clipRect);
+    context.translate(-m_layerAdjustX, 0);
+    WebCore::IntRect adjustedClipRect = clipRect;
+    adjustedClipRect.move(m_layerAdjustX, 0);
+    m_contentPaint->paint(context, adjustedClipRect);
 }
 
-bool NonCompositedContentHost::showDebugBorders() const
+void NonCompositedContentHost::setShowDebugBorders(bool showDebugBorders)
 {
-    return false;
+    m_showDebugBorders = showDebugBorders;
+    m_graphicsLayer->updateDebugIndicators();
 }
 
-bool NonCompositedContentHost::showRepaintCounter() const
+bool NonCompositedContentHost::showDebugBorders(const WebCore::GraphicsLayer*) const
+{
+    return m_showDebugBorders;
+}
+
+bool NonCompositedContentHost::showRepaintCounter(const WebCore::GraphicsLayer*) const
 {
     return false;
 }

@@ -34,22 +34,33 @@
 #if ENABLE(FILE_SYSTEM)
 
 #include "AsyncFileSystemCallbacks.h"
+#include "ExceptionCode.h"
 #include "FileSystem.h"
 #include "NotImplemented.h"
 
 namespace WebCore {
 
-#if !PLATFORM(CHROMIUM)
+const char AsyncFileSystem::persistentPathPrefix[] = "persistent";
+const size_t AsyncFileSystem::persistentPathPrefixLength = sizeof(AsyncFileSystem::persistentPathPrefix) - 1;
+const char AsyncFileSystem::temporaryPathPrefix[] = "temporary";
+const size_t AsyncFileSystem::temporaryPathPrefixLength = sizeof(AsyncFileSystem::temporaryPathPrefix) - 1;
+
+#if !PLATFORM(CHROMIUM) && !PLATFORM(GTK) && !PLATFORM(BLACKBERRY)
 bool AsyncFileSystem::isAvailable()
 {
     notImplemented();
     return false;
 }
 
-PassOwnPtr<AsyncFileSystem> AsyncFileSystem::create(Type, const String&)
+bool AsyncFileSystem::isValidType(Type type)
+{
+    return type == Temporary || type == Persistent;
+}
+
+PassOwnPtr<AsyncFileSystem> AsyncFileSystem::create(Type)
 {
     notImplemented();
-    return 0;
+    return nullptr;
 }
 
 void AsyncFileSystem::openFileSystem(const String& basePath, const String& storageIdentifier, Type type, bool, PassOwnPtr<AsyncFileSystemCallbacks> callbacks)

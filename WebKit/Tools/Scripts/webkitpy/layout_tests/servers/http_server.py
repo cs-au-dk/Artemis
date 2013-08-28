@@ -31,7 +31,6 @@
 
 import logging
 import os
-import sys
 import time
 
 from webkitpy.layout_tests.servers import http_server_base
@@ -43,7 +42,8 @@ _log = logging.getLogger(__name__)
 class Lighttpd(http_server_base.HttpServerBase):
 
     def __init__(self, port_obj, output_dir, background=False, port=None,
-                 root=None, run_background=None, layout_tests_dir=None):
+                 root=None, run_background=None, additional_dirs=None,
+                 layout_tests_dir=None):
         """Args:
           output_dir: the absolute path to the layout test result directory
         """
@@ -54,6 +54,7 @@ class Lighttpd(http_server_base.HttpServerBase):
         self._port = port
         self._root = root
         self._run_background = run_background
+        self._additional_dirs = additional_dirs
         self._layout_tests_dir = layout_tests_dir
 
         self._pid_file = self._filesystem.join(self._runtime_path, '%s.pid' % self._name)
@@ -124,6 +125,10 @@ class Lighttpd(http_server_base.HttpServerBase):
         f.write(('alias.url = ( "/js-test-resources" => "%s" )\n\n') %
                     (self._js_test_resource))
 
+        if self._additional_dirs:
+            for alias, path in self._additional_dirs.iteritems():
+                f.write(('alias.url += ( "%s" => "%s" )\n\n') % (alias, path))
+
         # Setup a link to where the media resources are stored.
         f.write(('alias.url += ( "/media-resources" => "%s" )\n\n') %
                     (self._media_resource))
@@ -171,13 +176,13 @@ class Lighttpd(http_server_base.HttpServerBase):
 
         # Copy liblightcomp.dylib to /tmp/lighttpd/lib to work around the
         # bug that mod_alias.so loads it from the hard coded path.
-        if sys.platform == 'darwin':
+        if self._port_obj.host.platform.is_mac():
             tmp_module_path = '/tmp/lighttpd/lib'
-            if not os.path.exists(tmp_module_path):
-                os.makedirs(tmp_module_path)
+            if not self._filesystem.exists(tmp_module_path):
+                self._filesystem.maybe_make_directory(tmp_module_path)
             lib_file = 'liblightcomp.dylib'
-            self._filesystem.copyfile(os.path.join(module_path, lib_file),
-                                      os.path.join(tmp_module_path, lib_file))
+            self._filesystem.copyfile(self._filesystem.join(module_path, lib_file),
+                                      self._filesystem.join(tmp_module_path, lib_file))
 
         self._start_cmd = start_cmd
         self._env = self._port_obj.setup_environ_for_server('lighttpd')
@@ -189,7 +194,7 @@ class Lighttpd(http_server_base.HttpServerBase):
             try:
                 self._remove_log_files(self._output_dir, log_prefix)
             except OSError, e:
-                _log.warning('Failed to remove old %s %s files' % self._name, log_prefix)
+                _log.warning('Failed to remove old %s %s files' % (self._name, log_prefix))
 
     def _spawn_process(self):
         _log.debug('Starting %s server, cmd="%s"' % (self._name, self._start_cmd))

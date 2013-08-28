@@ -28,32 +28,30 @@
 import logging
 import unittest
 
-from webkitpy.common.host_mock import MockHost
 from webkitpy.common.system.executive_mock import MockExecutive
 from webkitpy.common.system.filesystem_mock import MockFileSystem
 from webkitpy.common.system.outputcapture import OutputCapture
+from webkitpy.common.system.systemhost_mock import MockSystemHost
 from webkitpy.layout_tests.models.test_configuration import TestConfiguration
 from webkitpy.layout_tests.port import port_testcase
 from webkitpy.layout_tests.port.webkit import WebKitPort, WebKitDriver
+from webkitpy.layout_tests.port.config_mock import MockConfig
 from webkitpy.tool.mocktool import MockOptions
 
 
 class TestWebKitPort(WebKitPort):
     port_name = "testwebkitport"
 
-    def __init__(self, symbols_string=None, feature_list=None,
-                 expectations_file=None, skips_file=None, host=None,
+    def __init__(self, symbols_string=None,
+                 expectations_file=None, skips_file=None, host=None, config=None,
                  **kwargs):
         self.symbols_string = symbols_string  # Passing "" disables all staticly-detectable features.
-        self.feature_list = feature_list  # Passing [] disables all runtime-detectable features.
-        host = host or MockHost()
-        WebKitPort.__init__(self, host=host, **kwargs)
+        host = host or MockSystemHost()
+        config = config or MockConfig()
+        WebKitPort.__init__(self, host=host, config=config, **kwargs)
 
     def all_test_configurations(self):
         return [self.test_configuration()]
-
-    def _runtime_feature_list(self):
-        return self.feature_list
 
     def _webcore_symbols_string(self):
         return self.symbols_string
@@ -69,18 +67,19 @@ class WebKitPortUnitTests(unittest.TestCase):
     def test_default_options(self):
         # The WebKit ports override new-run-webkit-test default options.
         options = MockOptions(pixel_tests=None, time_out_ms=None)
-        port = WebKitPort(MockHost(), options=options)
+        port = WebKitPort(MockSystemHost(), options=options)
         self.assertEquals(port._options.pixel_tests, False)
         self.assertEquals(port._options.time_out_ms, 35000)
 
         # Note that we don't override options if specified by the user.
         options = MockOptions(pixel_tests=True, time_out_ms=6000)
-        port = WebKitPort(MockHost(), options=options)
+        port = WebKitPort(MockSystemHost(), options=options)
         self.assertEquals(port._options.pixel_tests, True)
         self.assertEquals(port._options.time_out_ms, 6000)
 
 
 class WebKitPortTest(port_testcase.PortTestCase):
+    port_name = 'webkit'
     port_maker = TestWebKitPort
 
     def test_check_build(self):
@@ -91,6 +90,13 @@ class WebKitPortTest(port_testcase.PortTestCase):
 
     def test_baseline_search_path(self):
         pass
+
+    def test_path_to_test_expectations_file(self):
+        port = TestWebKitPort()
+        port._options = MockOptions(webkit_test_runner=False)
+        self.assertEqual(port.path_to_test_expectations_file(), '/mock-checkout/LayoutTests/platform/testwebkitport/test_expectations.txt')
+        port._options = MockOptions(webkit_test_runner=True)
+        self.assertEqual(port.path_to_test_expectations_file(), '/mock-checkout/LayoutTests/platform/testwebkitport/test_expectations.txt')
 
     def test_skipped_directories_for_symbols(self):
         # This first test confirms that the commonly found symbols result in the expected skipped directories.
@@ -103,7 +109,7 @@ class WebKitPortTest(port_testcase.PortTestCase):
             "mhtml",  # Requires MHTMLArchive
         ])
 
-        result_directories = set(TestWebKitPort(symbols_string, None)._skipped_tests_for_unsupported_features())
+        result_directories = set(TestWebKitPort(symbols_string, None)._skipped_tests_for_unsupported_features(test_list=['mathml/foo.html']))
         self.assertEqual(result_directories, expected_directories)
 
         # Test that the nm string parsing actually works:
@@ -114,25 +120,31 @@ class WebKitPortTest(port_testcase.PortTestCase):
 """
         # Note 'compositing' is not in the list of skipped directories (hence the parsing of GraphicsLayer worked):
         expected_directories = set(['mathml', 'transforms/3d', 'compositing/webgl', 'fast/canvas/webgl', 'animations/3d', 'mhtml', 'http/tests/canvas/webgl'])
-        result_directories = set(TestWebKitPort(symbols_string, None)._skipped_tests_for_unsupported_features())
+        result_directories = set(TestWebKitPort(symbols_string, None)._skipped_tests_for_unsupported_features(test_list=['mathml/foo.html']))
         self.assertEqual(result_directories, expected_directories)
-
-    def test_runtime_feature_list(self):
-        port = WebKitPort(MockHost())
-        port._executive.run_command = lambda command, cwd=None, error_handler=None: "Nonsense"
-        # runtime_features_list returns None when its results are meaningless (it couldn't run DRT or parse the output, etc.)
-        self.assertEquals(port._runtime_feature_list(), None)
-        port._executive.run_command = lambda command, cwd=None, error_handler=None: "SupportedFeatures:foo bar"
-        self.assertEquals(port._runtime_feature_list(), ['foo', 'bar'])
 
     def test_skipped_directories_for_features(self):
         supported_features = ["Accelerated Compositing", "Foo Feature"]
         expected_directories = set(["animations/3d", "transforms/3d"])
-        result_directories = set(TestWebKitPort(None, supported_features)._skipped_tests_for_unsupported_features())
+        port = TestWebKitPort(None, supported_features)
+        port._runtime_feature_list = lambda: supported_features
+        result_directories = set(port._skipped_tests_for_unsupported_features(test_list=["animations/3d/foo.html"]))
+        self.assertEqual(result_directories, expected_directories)
+
+    def test_skipped_directories_for_features_no_matching_tests_in_test_list(self):
+        supported_features = ["Accelerated Compositing", "Foo Feature"]
+        expected_directories = set([])
+        result_directories = set(TestWebKitPort(None, supported_features)._skipped_tests_for_unsupported_features(test_list=['foo.html']))
+        self.assertEqual(result_directories, expected_directories)
+
+    def test_skipped_tests_for_unsupported_features_empty_test_list(self):
+        supported_features = ["Accelerated Compositing", "Foo Feature"]
+        expected_directories = set([])
+        result_directories = set(TestWebKitPort(None, supported_features)._skipped_tests_for_unsupported_features(test_list=None))
         self.assertEqual(result_directories, expected_directories)
 
     def test_skipped_layout_tests(self):
-        self.assertEqual(TestWebKitPort(None, None).skipped_layout_tests(), set(['media']))
+        self.assertEqual(TestWebKitPort(None, None).skipped_layout_tests(test_list=[]), set(['media']))
 
     def test_skipped_file_search_paths(self):
         port = TestWebKitPort()
@@ -141,6 +153,8 @@ class WebKitPortTest(port_testcase.PortTestCase):
         self.assertEqual(port._skipped_file_search_paths(), set(['testwebkitport', 'testwebkitport-version']))
         port._options = MockOptions(webkit_test_runner=True)
         self.assertEqual(port._skipped_file_search_paths(), set(['testwebkitport', 'testwebkitport-version', 'testwebkitport-wk2', 'wk2']))
+        port._options = MockOptions(additional_platform_directory=["internal-testwebkitport"])
+        self.assertEqual(port._skipped_file_search_paths(), set(['testwebkitport', 'testwebkitport-version', 'internal-testwebkitport']))
 
     def test_root_option(self):
         port = TestWebKitPort()
@@ -149,7 +163,7 @@ class WebKitPortTest(port_testcase.PortTestCase):
 
     def test_test_expectations(self):
         # Check that we read the expectations file
-        host = MockHost()
+        host = MockSystemHost()
         host.filesystem.write_text_file('/mock-checkout/LayoutTests/platform/testwebkitport/test_expectations.txt',
             'BUG_TESTEXPECTATIONS SKIP : fast/html/article-element.html = FAIL\n')
         port = TestWebKitPort(host=host)
@@ -228,8 +242,11 @@ class WebKitPortTest(port_testcase.PortTestCase):
 class MockServerProcess(object):
     def __init__(self, lines=None):
         self.timed_out = False
-        self.crashed = False
         self.lines = lines or []
+        self.crashed = False
+
+    def has_crashed(self):
+        return self.crashed
 
     def read_stdout_line(self, deadline):
         return self.lines.pop(0) + "\n"
@@ -276,3 +293,53 @@ class WebKitDriverTest(unittest.TestCase):
         self.assertEquals(content_block.content_hash, 'actual')
         self.assertEquals(content_block.content, '12345678')
         self.assertEquals(content_block.decoded_content, '12345678')
+
+    def test_no_timeout(self):
+        port = TestWebKitPort()
+        driver = WebKitDriver(port, 0, pixel_tests=True, no_timeout=True)
+        self.assertEquals(driver.cmd_line(True, []), ['/mock-build/DumpRenderTree', '--no-timeout', '--pixel-tests', '-'])
+
+    def test_check_for_driver_crash(self):
+        port = TestWebKitPort()
+        driver = WebKitDriver(port, 0, pixel_tests=True)
+
+        class FakeServerProcess(object):
+            def __init__(self, crashed):
+                self.crashed = crashed
+
+            def pid(self):
+                return 1234
+
+            def name(self):
+                return 'FakeServerProcess'
+
+            def has_crashed(self):
+                return self.crashed
+
+        def assert_crash(driver, error_line, crashed, name, pid):
+            self.assertEquals(driver._check_for_driver_crash(error_line), crashed)
+            self.assertEquals(driver._crashed_process_name, name)
+            self.assertEquals(driver._crashed_pid, pid)
+
+        driver._server_process = FakeServerProcess(False)
+        assert_crash(driver, '', False, None, None)
+
+        driver._crashed_process_name = None
+        driver._crashed_pid = None
+        driver._server_process = FakeServerProcess(False)
+        assert_crash(driver, '#CRASHED\n', True, 'FakeServerProcess', 1234)
+
+        driver._crashed_process_name = None
+        driver._crashed_pid = None
+        driver._server_process = FakeServerProcess(False)
+        assert_crash(driver, '#CRASHED - WebProcess\n', True, 'WebProcess', None)
+
+        driver._crashed_process_name = None
+        driver._crashed_pid = None
+        driver._server_process = FakeServerProcess(False)
+        assert_crash(driver, '#CRASHED - WebProcess (pid 8675)\n', True, 'WebProcess', 8675)
+
+        driver._crashed_process_name = None
+        driver._crashed_pid = None
+        driver._server_process = FakeServerProcess(True)
+        assert_crash(driver, '', True, 'FakeServerProcess', 1234)

@@ -18,9 +18,12 @@
  */
 
 #include "config.h"
+
+#if ENABLE(CONTEXT_MENUS)
+
 #include "ContextMenu.h"
 
-#include "GOwnPtr.h"
+#include <wtf/gobject/GOwnPtr.h>
 #include <gtk/gtk.h>
 
 namespace WebCore {
@@ -75,6 +78,14 @@ PlatformMenuDescription ContextMenu::releasePlatformDescription()
     return description;
 }
 
+unsigned ContextMenu::itemCount() const
+{
+    ASSERT(m_platformDescription);
+
+    GOwnPtr<GList> children(gtk_container_get_children(GTK_CONTAINER(m_platformDescription)));
+    return g_list_length(children.get());
+}
+
 Vector<ContextMenuItem> contextMenuItemVector(const PlatformMenuDescription menu)
 {
     Vector<ContextMenuItem> menuItemVector;
@@ -105,3 +116,5 @@ PlatformMenuDescription platformMenuDescription(Vector<ContextMenuItem>& subMenu
 }
 
 }
+
+#endif // ENABLE(CONTEXT_MENUS)

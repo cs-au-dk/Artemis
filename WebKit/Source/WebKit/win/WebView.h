@@ -704,7 +704,7 @@ public:
 
     virtual HRESULT STDMETHODCALLTYPE loadBackForwardListFromOtherView( 
         /* [in] */ IWebView *otherView);
-
+        
     virtual HRESULT STDMETHODCALLTYPE inspector(
         /* [retval][out] */ IWebInspector**);
 
@@ -994,12 +994,15 @@ private:
     virtual void notifyAnimationStarted(const WebCore::GraphicsLayer*, double time);
     virtual void notifySyncRequired(const WebCore::GraphicsLayer*);
     virtual void paintContents(const WebCore::GraphicsLayer*, WebCore::GraphicsContext&, WebCore::GraphicsLayerPaintingPhase, const WebCore::IntRect& inClip);
-    virtual bool showDebugBorders() const;
-    virtual bool showRepaintCounter() const;
+    virtual bool showDebugBorders(const WebCore::GraphicsLayer*) const;
+    virtual bool showRepaintCounter(const WebCore::GraphicsLayer*) const;
 
     // CACFLayerTreeHostClient
     virtual void flushPendingGraphicsLayerChanges();
 #endif
+
+    bool m_shouldInvertColors;
+    void setShouldInvertColors(bool);
 
 protected:
     static bool registerWebViewWindowClass();
@@ -1044,7 +1047,9 @@ protected:
     HWND m_viewWindow;
     WebFrame* m_mainFrame;
     WebCore::Page* m_page;
+#if ENABLE(INSPECTOR)
     WebInspectorClient* m_inspectorClient;
+#endif // ENABLE(INSPECTOR)
     
     RefPtr<RefCountedHBITMAP> m_backingStoreBitmap;
     SIZE m_backingStoreSize;
@@ -1061,7 +1066,9 @@ protected:
     COMPtr<IWebDownloadDelegate> m_downloadDelegate;
     COMPtr<IWebHistoryDelegate> m_historyDelegate;
     COMPtr<WebPreferences> m_preferences;
+#if ENABLE(INSPECTOR)
     COMPtr<WebInspector> m_webInspector;
+#endif // ENABLE(INSPECTOR)
     COMPtr<IWebGeolocationProvider> m_geolocationProvider;
 
     bool m_userAgentOverridden;

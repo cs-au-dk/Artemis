@@ -25,25 +25,6 @@
 
 namespace JSC {
 
-    EncodedJSValue JSC_HOST_CALL mathProtoFuncAbs(ExecState*);
-    EncodedJSValue JSC_HOST_CALL mathProtoFuncACos(ExecState*);
-    EncodedJSValue JSC_HOST_CALL mathProtoFuncASin(ExecState*);
-    EncodedJSValue JSC_HOST_CALL mathProtoFuncATan(ExecState*);
-    EncodedJSValue JSC_HOST_CALL mathProtoFuncATan2(ExecState*);
-    EncodedJSValue JSC_HOST_CALL mathProtoFuncCeil(ExecState*);
-    EncodedJSValue JSC_HOST_CALL mathProtoFuncCos(ExecState*);
-    EncodedJSValue JSC_HOST_CALL mathProtoFuncExp(ExecState*);
-    EncodedJSValue JSC_HOST_CALL mathProtoFuncFloor(ExecState*);
-    EncodedJSValue JSC_HOST_CALL mathProtoFuncLog(ExecState*);
-    EncodedJSValue JSC_HOST_CALL mathProtoFuncMax(ExecState*);
-    EncodedJSValue JSC_HOST_CALL mathProtoFuncMin(ExecState*);
-    EncodedJSValue JSC_HOST_CALL mathProtoFuncPow(ExecState*);
-    EncodedJSValue JSC_HOST_CALL mathProtoFuncRandom(ExecState*);
-    EncodedJSValue JSC_HOST_CALL mathProtoFuncRound(ExecState*);
-    EncodedJSValue JSC_HOST_CALL mathProtoFuncSin(ExecState*);
-    EncodedJSValue JSC_HOST_CALL mathProtoFuncSqrt(ExecState*);
-    EncodedJSValue JSC_HOST_CALL mathProtoFuncTan(ExecState*);
-
     class MathObject : public JSNonFinalObject {
     private:
         MathObject(JSGlobalObject*, Structure*);

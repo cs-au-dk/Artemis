@@ -133,7 +133,7 @@ WebInspector.ScriptsSearchResultsPane = function(searchConfig)
 {
     WebInspector.FileBasedSearchResultsPane.call(this, searchConfig)
 
-    this._linkifier = WebInspector.debuggerPresentationModel.createLinkifier(new WebInspector.ScriptsSearchResultsPane.LinkifierFormatter());
+    this._linkifier = new WebInspector.Linkifier(new WebInspector.ScriptsSearchResultsPane.LinkifierFormatter());
 }
 
 WebInspector.ScriptsSearchResultsPane.prototype = {
@@ -144,11 +144,9 @@ WebInspector.ScriptsSearchResultsPane.prototype = {
      */
     createAnchor: function(file, lineNumber, columnNumber)
     {
-        
-        var uiSourceCode = file;
-        var rawSourceCode = uiSourceCode.rawSourceCode;
-        var rawLocation = rawSourceCode.sourceMapping.uiLocationToRawLocation(uiSourceCode, lineNumber, columnNumber);
-        var anchor = this._linkifier.linkifyRawSourceCode(uiSourceCode.rawSourceCode, rawLocation.lineNumber, rawLocation.columnNumber);
+        var uiSourceCode = /** @type {WebInspector.UISourceCode} */ file;
+        var rawLocation = WebInspector.debuggerPresentationModel.uiLocationToRawLocation(uiSourceCode, lineNumber, columnNumber);
+        var anchor = this._linkifier.linkifyRawLocation(rawLocation);
         anchor.removeChildren();
         return anchor;
     },
@@ -168,7 +166,7 @@ WebInspector.ScriptsSearchResultsPane.prototype.__proto__ = WebInspector.FileBas
 
 /**
  * @constructor
- * @implements {WebInspector.DebuggerPresentationModel.LinkifierFormatter}
+ * @implements {WebInspector.LinkifierFormatter}
  */
 WebInspector.ScriptsSearchResultsPane.LinkifierFormatter = function()
 {
@@ -176,15 +174,15 @@ WebInspector.ScriptsSearchResultsPane.LinkifierFormatter = function()
 
 WebInspector.ScriptsSearchResultsPane.LinkifierFormatter.prototype = {
     /**
-     * @param {WebInspector.RawSourceCode} rawSourceCode
      * @param {Element} anchor
+     * @param {WebInspector.UILocation} uiLocation
      */
-    formatRawSourceCodeAnchor: function(rawSourceCode, anchor)
+    formatLiveAnchor: function(anchor, uiLocation)
     {
         // Empty because we don't want to ever update anchor contents after creation.
     }
 }
 
-WebInspector.ScriptsSearchResultsPane.LinkifierFormatter.prototype.__proto__ = WebInspector.DebuggerPresentationModel.LinkifierFormatter.prototype;
+WebInspector.ScriptsSearchResultsPane.LinkifierFormatter.prototype.__proto__ = WebInspector.LinkifierFormatter.prototype;
 
 WebInspector.settings.searchInContentScripts = WebInspector.settings.createSetting("searchInContentScripts", false);

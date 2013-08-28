@@ -43,11 +43,13 @@ private:
         
     virtual RenderObject* createRenderer(RenderArena*, RenderStyle*);
 
-    virtual void parseMappedAttribute(Attribute*);
+    virtual void parseAttribute(Attribute*) OVERRIDE;
+    virtual bool isPresentationAttribute(const QualifiedName&) const OVERRIDE;
     virtual void defaultEventHandler(Event*);
     virtual bool appendFormData(FormDataList&, bool);
 
     virtual bool isEnumeratable() const { return true; } 
+    virtual bool supportLabels() const OVERRIDE { return true; }
 
     virtual bool isSuccessfulSubmitButton() const;
     virtual bool isActivatedSubmit() const;

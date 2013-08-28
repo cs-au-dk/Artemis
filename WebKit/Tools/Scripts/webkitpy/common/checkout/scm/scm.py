@@ -60,10 +60,9 @@ class AuthenticationError(Exception):
 class SCM:
     def __init__(self, cwd, executive=None, filesystem=None):
         self.cwd = cwd
-        self.checkout_root = self.find_checkout_root(self.cwd)
-        self.dryrun = False
         self._executive = executive or Executive()
         self._filesystem = filesystem or FileSystem()
+        self.checkout_root = self.find_checkout_root(self.cwd)
 
     # A wrapper used by subclasses to create processes.
     def run(self, args, cwd=None, input=None, error_handler=None, return_exit_code=False, return_stderr=True, decode_output=True):
@@ -138,7 +137,6 @@ class SCM:
     def in_working_directory(path):
         SCM._subclass_must_implement()
 
-    @staticmethod
     def find_checkout_root(path):
         SCM._subclass_must_implement()
 
@@ -183,6 +181,9 @@ class SCM:
         self._subclass_must_implement()
 
     def head_svn_revision(self):
+        return self.svn_revision(self.checkout_root)
+
+    def svn_revision(self, path):
         self._subclass_must_implement()
 
     def create_patch(self, git_commit=None, changed_files=None):

@@ -27,6 +27,7 @@
 #define CCRenderPass_h
 
 #include "cc/CCDrawQuad.h"
+#include "cc/CCOcclusionTracker.h"
 #include <wtf/PassOwnPtr.h>
 #include <wtf/Vector.h>
 
@@ -35,16 +36,28 @@ namespace WebCore {
 class CCLayerImpl;
 class CCRenderSurface;
 class CCSharedQuadState;
+class Color;
 
-typedef Vector<OwnPtr<CCDrawQuad> > CCQuadList;
+// A list of CCDrawQuad objects, sorted internally in front-to-back order.
+class CCQuadList : public Vector<OwnPtr<CCDrawQuad> > {
+public:
+    typedef reverse_iterator backToFrontIterator;
+    typedef const_reverse_iterator constBackToFrontIterator;
+
+    inline backToFrontIterator backToFrontBegin() { return rbegin(); }
+    inline backToFrontIterator backToFrontEnd() { return rend(); }
+    inline constBackToFrontIterator backToFrontBegin() const { return rbegin(); }
+    inline constBackToFrontIterator backToFrontEnd() const { return rend(); }
+};
 
 class CCRenderPass {
     WTF_MAKE_NONCOPYABLE(CCRenderPass);
 public:
     static PassOwnPtr<CCRenderPass> create(CCRenderSurface*);
 
-    void appendQuadsForLayer(CCLayerImpl*);
-    void appendQuadsForRenderSurfaceLayer(CCLayerImpl*);
+    void appendQuadsForLayer(CCLayerImpl*, CCOcclusionTrackerImpl*, bool& hadMissingTiles);
+    void appendQuadsForRenderSurfaceLayer(CCLayerImpl*, CCOcclusionTrackerImpl*);
+    void appendQuadsToFillScreen(CCLayerImpl* rootLayer, const Color& screenBackgroundColor, const CCOcclusionTrackerImpl&);
 
     const CCQuadList& quadList() const { return m_quadList; }
     CCRenderSurface* targetSurface() const { return m_targetSurface; }
@@ -60,6 +73,8 @@ private:
     Vector<OwnPtr<CCSharedQuadState> > m_sharedQuadStateList;
     FloatRect m_surfaceDamageRect;
 };
+
+typedef Vector<OwnPtr<CCRenderPass> > CCRenderPassList;
 
 }
 

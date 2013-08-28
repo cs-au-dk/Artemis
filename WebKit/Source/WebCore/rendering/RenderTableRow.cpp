@@ -38,6 +38,7 @@ using namespace HTMLNames;
 
 RenderTableRow::RenderTableRow(Node* node)
     : RenderBox(node)
+    , m_rowIndex(unsetRowIndex)
 {
     // init RenderObject attributes
     setInline(false);   // our object is not Inline
@@ -72,7 +73,7 @@ void RenderTableRow::styleDidChange(StyleDifference diff, const RenderStyle* old
         updateBeforeAndAfterContent();
 
     if (section() && oldStyle && style()->logicalHeight() != oldStyle->logicalHeight())
-        section()->rowLogicalHeightChanged(section()->rowIndexForRenderer(this));
+        section()->rowLogicalHeightChanged(rowIndex());
 
     // If border was changed, notify table.
     if (parent()) {
@@ -113,19 +114,14 @@ void RenderTableRow::addChild(RenderObject* child, RenderObject* beforeChild)
             return;
         }
 
-        RenderTableCell* cell = new (renderArena()) RenderTableCell(document() /* anonymous object */);
-        RefPtr<RenderStyle> newStyle = RenderStyle::create();
-        newStyle->inheritFrom(style());
-        newStyle->setDisplay(TABLE_CELL);
-        cell->setStyle(newStyle.release());
+        RenderTableCell* cell = RenderTableCell::createAnonymousWithParentRenderer(this);
         addChild(cell, beforeChild);
         cell->addChild(child);
         return;
     } 
-    
-    // If the next renderer is actually wrapped in an anonymous table cell, we need to go up and find that.
-    while (beforeChild && beforeChild->parent() != this)
-        beforeChild = beforeChild->parent();
+
+    if (beforeChild && beforeChild->parent() != this)
+        beforeChild = splitAnonymousBoxesAroundChild(beforeChild);    
 
     RenderTableCell* cell = toRenderTableCell(child);
 
@@ -153,7 +149,7 @@ void RenderTableRow::layout()
         if (child->isTableCell()) {
             RenderTableCell* cell = toRenderTableCell(child);
             if (!cell->needsLayout() && paginated && view()->layoutState()->pageLogicalHeight() && view()->layoutState()->pageLogicalOffset(cell->logicalTop()) != cell->pageLogicalOffset())
-                cell->setChildNeedsLayout(true, false);
+                cell->setChildNeedsLayout(true, MarkOnlyThis);
 
             if (child->needsLayout()) {
                 cell->computeBlockDirectionMargins(table());
@@ -218,11 +214,18 @@ bool RenderTableRow::nodeAtPoint(const HitTestRequest& request, HitTestResult& r
     return false;
 }
 
+void RenderTableRow::paintOutlineForRowIfNeeded(PaintInfo& paintInfo, const LayoutPoint& paintOffset)
+{
+    PaintPhase paintPhase = paintInfo.phase;
+    if ((paintPhase == PaintPhaseOutline || paintPhase == PaintPhaseSelfOutline) && style()->visibility() == VISIBLE)
+        paintOutline(paintInfo.context, LayoutRect(paintOffset, size()));
+}
+
 void RenderTableRow::paint(PaintInfo& paintInfo, const LayoutPoint& paintOffset)
 {
     ASSERT(hasSelfPaintingLayer());
-    if (!layer())
-        return;
+
+    paintOutlineForRowIfNeeded(paintInfo, paintOffset);
     for (RenderObject* child = firstChild(); child; child = child->nextSibling()) {
         if (child->isTableCell()) {
             // Paint the row background behind the cell.
@@ -240,6 +243,16 @@ void RenderTableRow::imageChanged(WrappedImagePtr, const IntRect*)
 {
     // FIXME: Examine cells and repaint only the rect the image paints in.
     repaint();
+}
+
+RenderTableRow* RenderTableRow::createAnonymousWithParentRenderer(const RenderObject* parent)
+{
+    RefPtr<RenderStyle> newStyle = RenderStyle::createAnonymousStyle(parent->style());
+    newStyle->setDisplay(TABLE_ROW);
+
+    RenderTableRow* newRow = new (parent->renderArena()) RenderTableRow(parent->document() /* is anonymous */);
+    newRow->setStyle(newStyle.release());
+    return newRow;
 }
 
 } // namespace WebCore

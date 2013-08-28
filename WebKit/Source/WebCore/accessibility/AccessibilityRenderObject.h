@@ -73,6 +73,7 @@ public:
     virtual bool isNativeImage() const;
     virtual bool isPasswordField() const;
     virtual bool isNativeTextControl() const;
+    virtual bool isSearchField() const;
     virtual bool isWebArea() const;
     virtual bool isFileUploadButton() const;
     virtual bool isInputImage() const;
@@ -165,8 +166,7 @@ public:
     
     virtual LayoutRect boundingBoxRect() const;
     virtual LayoutRect elementRect() const;
-    virtual LayoutSize size() const;
-    virtual LayoutPoint clickPoint();
+    virtual IntPoint clickPoint();
     
     void setRenderer(RenderObject* renderer) { m_renderer = renderer; }
     virtual RenderObject* renderer() const { return m_renderer; }
@@ -228,7 +228,7 @@ public:
     
     virtual VisiblePositionRange visiblePositionRange() const;
     virtual VisiblePositionRange visiblePositionRangeForLine(unsigned) const;
-    virtual LayoutRect boundsForVisiblePositionRange(const VisiblePositionRange&) const;
+    virtual IntRect boundsForVisiblePositionRange(const VisiblePositionRange&) const;
     virtual void setSelectedVisiblePositionRange(const VisiblePositionRange&) const;
     virtual bool supportsARIAFlowTo() const;
     virtual void ariaFlowToElements(AccessibilityChildrenVector&) const;
@@ -239,7 +239,7 @@ public:
     virtual bool isARIAGrabbed();
     virtual void determineARIADropEffects(Vector<String>&);
     
-    virtual VisiblePosition visiblePositionForPoint(const LayoutPoint&) const;
+    virtual VisiblePosition visiblePositionForPoint(const IntPoint&) const;
     virtual VisiblePosition visiblePositionForIndex(unsigned indexValue, bool lastIndexOK) const;    
     virtual int index(const VisiblePosition&) const;
 
@@ -250,7 +250,7 @@ public:
     virtual PlainTextRange doAXRangeForIndex(unsigned) const;
     
     virtual String doAXStringForRange(const PlainTextRange&) const;
-    virtual LayoutRect doAXBoundsForRange(const PlainTextRange&) const;
+    virtual IntRect doAXBoundsForRange(const PlainTextRange&) const;
     
     virtual String stringValueForMSAA() const;
     virtual String stringRoleForMSAA() const;
@@ -266,6 +266,8 @@ protected:
     void setRenderObject(RenderObject* renderer) { m_renderer = renderer; }
     void ariaLabeledByElements(Vector<Element*>& elements) const;
     bool needsToUpdateChildren() const { return m_childrenDirty; }
+    ScrollableArea* getScrollableAreaIfScrollable() const;
+    void scrollTo(const IntPoint&) const;
     
     virtual bool isDetached() const { return !m_renderer; }
 
@@ -304,7 +306,10 @@ private:
     void addTextFieldChildren();
     void addImageMapChildren();
     void addAttachmentChildren();
-    
+#if PLATFORM(MAC)
+    void updateAttachmentViewParents();
+#endif
+
     void ariaSelectedRows(AccessibilityChildrenVector&);
     
     bool elementAttributeValue(const QualifiedName&) const;

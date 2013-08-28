@@ -39,13 +39,13 @@ class Queue(object):
     _all_queue_names = [
         "commit-queue",
         "style-queue",
-        "chromium-ews",
+        "chromium-ews",  # aka cr-linux-ews
         "qt-ews",
+        "qt-wk2-ews",
         "gtk-ews",
         "mac-ews",
         "win-ews",
         "efl-ews",
-        "cr-mac-ews",
     ]
 
     def __init__(self, name):

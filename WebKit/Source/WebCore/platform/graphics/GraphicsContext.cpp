@@ -27,6 +27,7 @@
 #include "GraphicsContext.h"
 
 #include "BidiResolver.h"
+#include "BitmapImage.h"
 #include "Font.h"
 #include "Generator.h"
 #include "ImageBuffer.h"
@@ -437,27 +438,27 @@ void GraphicsContext::drawHighlightForText(const Font& font, const TextRun& run,
     fillRect(font.selectionRectForText(run, point, h, from, to), backgroundColor, colorSpace);
 }
 
-void GraphicsContext::drawImage(Image* image, ColorSpace styleColorSpace, const IntPoint& p, CompositeOperator op)
+void GraphicsContext::drawImage(Image* image, ColorSpace styleColorSpace, const IntPoint& p, CompositeOperator op, RespectImageOrientationEnum shouldRespectImageOrientation)
 {
-    drawImage(image, styleColorSpace, p, IntRect(0, 0, -1, -1), op);
+    drawImage(image, styleColorSpace, p, IntRect(0, 0, -1, -1), op, shouldRespectImageOrientation);
 }
 
-void GraphicsContext::drawImage(Image* image, ColorSpace styleColorSpace, const IntRect& r, CompositeOperator op, bool useLowQualityScale)
+void GraphicsContext::drawImage(Image* image, ColorSpace styleColorSpace, const IntRect& r, CompositeOperator op, RespectImageOrientationEnum shouldRespectImageOrientation, bool useLowQualityScale)
 {
-    drawImage(image, styleColorSpace, r, IntRect(0, 0, -1, -1), op, useLowQualityScale);
+    drawImage(image, styleColorSpace, r, IntRect(0, 0, -1, -1), op, shouldRespectImageOrientation, useLowQualityScale);
 }
 
-void GraphicsContext::drawImage(Image* image, ColorSpace styleColorSpace, const IntPoint& dest, const IntRect& srcRect, CompositeOperator op)
+void GraphicsContext::drawImage(Image* image, ColorSpace styleColorSpace, const IntPoint& dest, const IntRect& srcRect, CompositeOperator op, RespectImageOrientationEnum shouldRespectImageOrientation)
 {
-    drawImage(image, styleColorSpace, IntRect(dest, srcRect.size()), srcRect, op);
+    drawImage(image, styleColorSpace, IntRect(dest, srcRect.size()), srcRect, op, shouldRespectImageOrientation);
 }
 
-void GraphicsContext::drawImage(Image* image, ColorSpace styleColorSpace, const IntRect& dest, const IntRect& srcRect, CompositeOperator op, bool useLowQualityScale)
+void GraphicsContext::drawImage(Image* image, ColorSpace styleColorSpace, const IntRect& dest, const IntRect& srcRect, CompositeOperator op, RespectImageOrientationEnum shouldRespectImageOrientation, bool useLowQualityScale)
 {
-    drawImage(image, styleColorSpace, FloatRect(dest), srcRect, op, useLowQualityScale);
+    drawImage(image, styleColorSpace, FloatRect(dest), srcRect, op, shouldRespectImageOrientation, useLowQualityScale);
 }
 
-void GraphicsContext::drawImage(Image* image, ColorSpace styleColorSpace, const FloatRect& dest, const FloatRect& src, CompositeOperator op, bool useLowQualityScale)
+void GraphicsContext::drawImage(Image* image, ColorSpace styleColorSpace, const FloatRect& dest, const FloatRect& src, CompositeOperator op, RespectImageOrientationEnum shouldRespectImageOrientation, bool useLowQualityScale)
 {
     if (paintingDisabled() || !image)
         return;
@@ -477,17 +478,24 @@ void GraphicsContext::drawImage(Image* image, ColorSpace styleColorSpace, const 
     if (th == -1)
         th = image->height();
 
+    InterpolationQuality previousInterpolationQuality = InterpolationDefault;
+
     if (useLowQualityScale) {
-        InterpolationQuality previousInterpolationQuality = imageInterpolationQuality();
-        // FIXME: Should be InterpolationLow
+        previousInterpolationQuality = imageInterpolationQuality();
+        // FIXME (49002): Should be InterpolationLow
         setImageInterpolationQuality(InterpolationNone);
+    }
+
+    if (image->isBitmapImage())
+        static_cast<BitmapImage*>(image)->draw(this, FloatRect(dest.location(), FloatSize(tw, th)), FloatRect(src.location(), FloatSize(tsw, tsh)), styleColorSpace, op, shouldRespectImageOrientation);
+    else
         image->draw(this, FloatRect(dest.location(), FloatSize(tw, th)), FloatRect(src.location(), FloatSize(tsw, tsh)), styleColorSpace, op);
+
+    if (useLowQualityScale)
         setImageInterpolationQuality(previousInterpolationQuality);
-    } else
-        image->draw(this, FloatRect(dest.location(), FloatSize(tw, th)), FloatRect(src.location(), FloatSize(tsw, tsh)), styleColorSpace, op);
 }
 
-void GraphicsContext::drawTiledImage(Image* image, ColorSpace styleColorSpace, const IntRect& rect, const IntPoint& srcPoint, const IntSize& tileSize, CompositeOperator op, bool useLowQualityScale)
+void GraphicsContext::drawTiledImage(Image* image, ColorSpace styleColorSpace, const IntRect& destRect, const IntPoint& srcPoint, const IntSize& tileSize, CompositeOperator op, bool useLowQualityScale)
 {
     if (paintingDisabled() || !image)
         return;
@@ -495,10 +503,10 @@ void GraphicsContext::drawTiledImage(Image* image, ColorSpace styleColorSpace, c
     if (useLowQualityScale) {
         InterpolationQuality previousInterpolationQuality = imageInterpolationQuality();
         setImageInterpolationQuality(InterpolationLow);
-        image->drawTiled(this, rect, srcPoint, tileSize, styleColorSpace, op);
+        image->drawTiled(this, destRect, srcPoint, tileSize, styleColorSpace, op);
         setImageInterpolationQuality(previousInterpolationQuality);
     } else
-        image->drawTiled(this, rect, srcPoint, tileSize, styleColorSpace, op);
+        image->drawTiled(this, destRect, srcPoint, tileSize, styleColorSpace, op);
 }
 
 void GraphicsContext::drawTiledImage(Image* image, ColorSpace styleColorSpace, const IntRect& dest, const IntRect& srcRect,
@@ -553,18 +561,18 @@ void GraphicsContext::drawImageBuffer(ImageBuffer* image, ColorSpace styleColorS
     float th = dest.height();
 
     if (tsw == -1)
-        tsw = image->width();
+        tsw = image->logicalSize().width();
     if (tsh == -1)
-        tsh = image->height();
+        tsh = image->logicalSize().height();
 
     if (tw == -1)
-        tw = image->width();
+        tw = image->logicalSize().width();
     if (th == -1)
-        th = image->height();
+        th = image->logicalSize().height();
 
     if (useLowQualityScale) {
         InterpolationQuality previousInterpolationQuality = imageInterpolationQuality();
-        // FIXME: Should be InterpolationLow
+        // FIXME (49002): Should be InterpolationLow
         setImageInterpolationQuality(InterpolationNone);
         image->draw(this, styleColorSpace, FloatRect(dest.location(), FloatSize(tw, th)), FloatRect(src.location(), FloatSize(tsw, tsh)), op, useLowQualityScale);
         setImageInterpolationQuality(previousInterpolationQuality);
@@ -754,7 +762,7 @@ PassOwnPtr<ImageBuffer> GraphicsContext::createCompatibleBuffer(const IntSize& s
     AffineTransform transform = getCTM();
     IntSize scaledSize(static_cast<int>(ceil(size.width() * transform.xScale())), static_cast<int>(ceil(size.height() * transform.yScale())));
 
-    OwnPtr<ImageBuffer> buffer = ImageBuffer::create(scaledSize);
+    OwnPtr<ImageBuffer> buffer = ImageBuffer::create(scaledSize, 1, ColorSpaceDeviceRGB, isAcceleratedContext() ? Accelerated : Unaccelerated);
     if (!buffer)
         return nullptr;
 
@@ -765,7 +773,7 @@ PassOwnPtr<ImageBuffer> GraphicsContext::createCompatibleBuffer(const IntSize& s
 }
 
 #if !USE(CG)
-void GraphicsContext::platformApplyDeviceScaleFactor()
+void GraphicsContext::platformApplyDeviceScaleFactor(float)
 {
 }
 #endif
@@ -773,7 +781,49 @@ void GraphicsContext::platformApplyDeviceScaleFactor()
 void GraphicsContext::applyDeviceScaleFactor(float deviceScaleFactor)
 {
     scale(FloatSize(deviceScaleFactor, deviceScaleFactor));
-    platformApplyDeviceScaleFactor();
+    platformApplyDeviceScaleFactor(deviceScaleFactor);
 }
+
+void GraphicsContext::fillEllipse(const FloatRect& ellipse)
+{
+    platformFillEllipse(ellipse);
+}
+
+void GraphicsContext::strokeEllipse(const FloatRect& ellipse)
+{
+    platformStrokeEllipse(ellipse);
+}
+
+void GraphicsContext::fillEllipseAsPath(const FloatRect& ellipse)
+{
+    Path path;
+    path.addEllipse(ellipse);
+    fillPath(path);
+}
+
+void GraphicsContext::strokeEllipseAsPath(const FloatRect& ellipse)
+{
+    Path path;
+    path.addEllipse(ellipse);
+    strokePath(path);
+}
+
+#if !USE(CG) && !USE(SKIA) // append && !USE(MYPLATFORM) here to optimize ellipses on your platform.
+void GraphicsContext::platformFillEllipse(const FloatRect& ellipse)
+{
+    if (paintingDisabled())
+        return;
+
+    fillEllipseAsPath(ellipse);
+}
+
+void GraphicsContext::platformStrokeEllipse(const FloatRect& ellipse)
+{
+    if (paintingDisabled())
+        return;
+
+    strokeEllipseAsPath(ellipse);
+}
+#endif
 
 }

@@ -27,7 +27,8 @@
 #define HTMLSelectElement_h
 
 #include "Event.h"
-#include "HTMLFormControlElement.h"
+#include "HTMLFormControlElementWithState.h"
+#include "HTMLOptionsCollection.h"
 #include <wtf/Vector.h>
 
 namespace WebCore {
@@ -38,8 +39,6 @@ class HTMLOptionsCollection;
 class HTMLSelectElement : public HTMLFormControlElementWithState {
 public:
     static PassRefPtr<HTMLSelectElement> create(const QualifiedName&, Document*, HTMLFormElement*);
-
-    virtual ~HTMLSelectElement();
 
     int selectedIndex() const;
     void setSelectedIndex(int);
@@ -63,7 +62,8 @@ public:
     String value() const;
     void setValue(const String&);
 
-    PassRefPtr<HTMLOptionsCollection> options();
+    HTMLOptionsCollection* options();
+    HTMLCollection* selectedOptions();
 
     void optionElementChildrenChanged();
 
@@ -118,12 +118,15 @@ private:
     virtual bool canStartSelection() const { return false; }
 
     virtual bool isEnumeratable() const { return true; }
+    virtual bool supportLabels() const OVERRIDE { return true; }
 
     virtual bool saveFormControlState(String& value) const;
     virtual void restoreFormControlState(const String&);
 
-    virtual void parseMappedAttribute(Attribute*);
+    virtual void parseAttribute(Attribute*) OVERRIDE;
+    virtual bool isPresentationAttribute(const QualifiedName&) const OVERRIDE;
 
+    virtual bool childShouldCreateRenderer(const NodeRenderingContext&) const OVERRIDE;
     virtual RenderObject* createRenderer(RenderArena*, RenderStyle *);
     virtual bool appendFormData(FormDataList&, bool);
 
@@ -139,7 +142,7 @@ private:
     void typeAheadFind(KeyboardEvent*);
     void saveLastSelection();
 
-    virtual void insertedIntoTree(bool);
+    virtual InsertionNotificationRequest insertedInto(Node*) OVERRIDE;
 
     virtual bool isOptionalFormControl() const { return !isRequiredFormControl(); }
     virtual bool isRequiredFormControl() const;
@@ -175,7 +178,8 @@ private:
 
     virtual void childrenChanged(bool changedByParser = false, Node* beforeChange = 0, Node* afterChange = 0, int childCountDelta = 0);
 
-    RefPtr<HTMLOptionsCollection> m_optionsCollection;
+    OwnPtr<HTMLOptionsCollection> m_optionsCollection;
+    OwnPtr<HTMLCollection> m_selectedOptionsCollection;
 
     // m_listItems contains HTMLOptionElement, HTMLOptGroupElement, and HTMLHRElement objects.
     mutable Vector<HTMLElement*> m_listItems;

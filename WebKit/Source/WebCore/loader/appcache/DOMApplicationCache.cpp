@@ -40,7 +40,7 @@
 namespace WebCore {
 
 DOMApplicationCache::DOMApplicationCache(Frame* frame)
-    : m_frame(frame)
+    : DOMWindowProperty(frame)
 {
     ApplicationCacheHost* cacheHost = applicationCacheHost();
     if (cacheHost)
@@ -52,7 +52,15 @@ void DOMApplicationCache::disconnectFrame()
     ApplicationCacheHost* cacheHost = applicationCacheHost();
     if (cacheHost)
         cacheHost->setDOMApplicationCache(0);
-    m_frame = 0;
+    DOMWindowProperty::disconnectFrame();
+}
+
+void DOMApplicationCache::reconnectFrame(Frame* frame)
+{
+    DOMWindowProperty::reconnectFrame(frame);
+    ApplicationCacheHost* cacheHost = applicationCacheHost();
+    if (cacheHost)
+        cacheHost->setDOMApplicationCache(this);
 }
 
 ApplicationCacheHost* DOMApplicationCache::applicationCacheHost() const
@@ -82,6 +90,13 @@ void DOMApplicationCache::swapCache(ExceptionCode& ec)
     ApplicationCacheHost* cacheHost = applicationCacheHost();
     if (!cacheHost || !cacheHost->swapCache())
         ec = INVALID_STATE_ERR;
+}
+
+void DOMApplicationCache::abort()
+{
+    ApplicationCacheHost* cacheHost = applicationCacheHost();
+    if (cacheHost)
+        cacheHost->abort();
 }
 
 const AtomicString& DOMApplicationCache::interfaceName() const

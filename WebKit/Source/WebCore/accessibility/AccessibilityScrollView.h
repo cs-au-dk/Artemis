@@ -39,6 +39,10 @@ public:
     static PassRefPtr<AccessibilityScrollView> create(ScrollView*);    
     virtual AccessibilityRole roleValue() const { return ScrollAreaRole; }
     ScrollView* scrollView() const { return m_scrollView.get(); }
+
+protected:
+    virtual ScrollableArea* getScrollableAreaIfScrollable() const;
+    virtual void scrollTo(const IntPoint&) const;
     
 private:
     AccessibilityScrollView(ScrollView*);
@@ -53,7 +57,7 @@ private:
     virtual AccessibilityObject* scrollBar(AccessibilityOrientation);
     virtual void addChildren();
     virtual void clearChildren();
-    virtual AccessibilityObject* accessibilityHitTest(const LayoutPoint&) const;
+    virtual AccessibilityObject* accessibilityHitTest(const IntPoint&) const;
     virtual void updateChildrenIfNecessary();
     virtual void setNeedsToUpdateChildren() { m_childrenDirty = true; }
     void updateScrollbars();
@@ -86,4 +90,3 @@ inline AccessibilityScrollView* toAccessibilityScrollView(AccessibilityObject* o
 } // namespace WebCore
 
 #endif // AccessibilityScrollView_h
-

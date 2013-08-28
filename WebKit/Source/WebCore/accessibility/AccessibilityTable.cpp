@@ -170,7 +170,7 @@ bool AccessibilityTable::isDataTable() const
             if (!row && isTHCell)
                 headersInFirstRowCount++;
 
-            // If the first column is comprised of all <tg> tags, assume it is a data table.
+            // If the first column is comprised of all <th> tags, assume it is a data table.
             if (!col && isTHCell)
                 headersInFirstColumnCount++;
             
@@ -501,7 +501,7 @@ AccessibilityTableCell* AccessibilityTable::cellForColumnAndRow(unsigned column,
                     cell = tableSection->primaryCellAt(testRow, column);
                     // cell overlapped. use this one
                     ASSERT(cell->rowSpan() >= 1);
-                    if (cell && ((cell->row() + (cell->rowSpan() - 1)) >= sectionSpecificRow))
+                    if (cell && ((cell->rowIndex() + (cell->rowSpan() - 1)) >= sectionSpecificRow))
                         break;
                     cell = 0;
                 }

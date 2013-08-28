@@ -29,8 +29,8 @@
 #include "RenderTreeAsText.h"
 #include "ShadowBlur.h"
 #include "TextStream.h"
-#include <wtf/ByteArray.h>
 #include <wtf/MathExtras.h>
+#include <wtf/Uint8ClampedArray.h>
 
 using namespace std;
 
@@ -103,12 +103,12 @@ void FEDropShadow::platformApplySoftware()
     ShadowBlur contextShadow(blurRadius, offset, m_shadowColor, ColorSpaceDeviceRGB);
 
     // TODO: Direct pixel access to ImageBuffer would avoid copying the ImageData.
-    IntRect shadowArea(IntPoint(), resultImage->size());
-    RefPtr<ByteArray> srcPixelArray = resultImage->getPremultipliedImageData(shadowArea);
+    IntRect shadowArea(IntPoint(), resultImage->internalSize());
+    RefPtr<Uint8ClampedArray> srcPixelArray = resultImage->getPremultipliedImageData(shadowArea);
 
     contextShadow.blurLayerImage(srcPixelArray->data(), shadowArea.size(), 4 * shadowArea.size().width());
 
-    resultImage->putPremultipliedImageData(srcPixelArray.get(), shadowArea.size(), shadowArea, IntPoint());
+    resultImage->putByteArray(Premultiplied, srcPixelArray.get(), shadowArea.size(), shadowArea, IntPoint());
 
     resultContext->setCompositeOperation(CompositeSourceIn);
     resultContext->fillRect(FloatRect(FloatPoint(), absolutePaintRect().size()), m_shadowColor, ColorSpaceDeviceRGB);

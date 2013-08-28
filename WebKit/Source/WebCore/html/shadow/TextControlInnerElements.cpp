@@ -37,8 +37,8 @@
 #include "HTMLTextAreaElement.h"
 #include "MouseEvent.h"
 #include "Page.h"
-#include "RenderLayer.h"
 #include "RenderTextControlSingleLine.h"
+#include "RenderView.h"
 #include "ScriptController.h"
 #include "ScrollbarTheme.h"
 #include "SpeechInput.h"
@@ -285,7 +285,7 @@ void SpinButtonElement::defaultEventHandler(Event* event)
     MouseEvent* mouseEvent = static_cast<MouseEvent*>(event);
     IntPoint local = roundedIntPoint(box->absoluteToLocal(mouseEvent->absoluteLocation(), false, true));
     if (mouseEvent->type() == eventNames().mousedownEvent && mouseEvent->button() == LeftButton) {
-        if (box->borderBoxRect().contains(local)) {
+        if (box->pixelSnappedBorderBoxRect().contains(local)) {
             // The following functions of HTMLInputElement may run JavaScript
             // code which detaches this shadow node. We need to take a reference
             // and check renderer() after such function calls.
@@ -293,17 +293,18 @@ void SpinButtonElement::defaultEventHandler(Event* event)
             input->focus();
             input->select();
             if (renderer()) {
-                ASSERT(m_upDownState != Indeterminate);
-                input->stepUpFromRenderer(m_upDownState == Up ? 1 : -1);
-                if (renderer())
-                    startRepeatingTimer();
+                if (m_upDownState != Indeterminate) {
+                    input->stepUpFromRenderer(m_upDownState == Up ? 1 : -1);
+                    if (renderer())
+                        startRepeatingTimer();
+                }
             }
             event->setDefaultHandled();
         }
     } else if (mouseEvent->type() == eventNames().mouseupEvent && mouseEvent->button() == LeftButton)
         stopRepeatingTimer();
     else if (event->type() == eventNames().mousemoveEvent) {
-        if (box->borderBoxRect().contains(local)) {
+        if (box->pixelSnappedBorderBoxRect().contains(local)) {
             if (!m_capturing) {
                 if (Frame* frame = document()->frame()) {
                     frame->eventHandler()->setCapturingMouseEventsNode(this);
@@ -364,7 +365,8 @@ void SpinButtonElement::step(int amount)
     
 void SpinButtonElement::repeatingTimerFired(Timer<SpinButtonElement>*)
 {
-    step(m_upDownState == Up ? 1 : -1);
+    if (m_upDownState != Indeterminate)
+        step(m_upDownState == Up ? 1 : -1);
 }
 
 void SpinButtonElement::setHovered(bool flag)
@@ -473,7 +475,7 @@ void InputFieldSpeechButtonElement::setState(SpeechInputState state)
 
 SpeechInput* InputFieldSpeechButtonElement::speechInput()
 {
-    return document()->page() ? document()->page()->speechInput() : 0;
+    return SpeechInput::from(document()->page());
 }
 
 void InputFieldSpeechButtonElement::didCompleteRecording(int)
@@ -498,8 +500,13 @@ void InputFieldSpeechButtonElement::setRecognitionResult(int, const SpeechInputR
         return;
 
     RefPtr<InputFieldSpeechButtonElement> holdRefButton(this);
-    if (document() && document()->domWindow())
+    if (document() && document()->domWindow()) {
+        // Call selectionChanged, causing the element to cache the selection,
+        // so that the text event inserts the text in this element even if
+        // focus has moved away from it.
+        input->selectionChanged(false);
         input->dispatchEvent(TextEvent::create(document()->domWindow(), results.isEmpty() ? "" : results[0]->utterance(), TextEventInputOther));
+    }
 
     // This event is sent after the text event so the website can perform actions using the input field content immediately.
     // It provides alternative recognition hypotheses and notifies that the results come from speech input.
@@ -514,7 +521,8 @@ void InputFieldSpeechButtonElement::setRecognitionResult(int, const SpeechInputR
 void InputFieldSpeechButtonElement::attach()
 {
     ASSERT(!m_listenerId);
-    m_listenerId = document()->page()->speechInput()->registerListener(this);
+    if (SpeechInput* input = SpeechInput::from(document()->page()))
+        m_listenerId = input->registerListener(this);
     HTMLDivElement::attach();
 }
 
@@ -544,7 +552,7 @@ void InputFieldSpeechButtonElement::startSpeechInput()
     AtomicString language = input->computeInheritedLanguage();
     String grammar = input->getAttribute(webkitgrammarAttr);
     // FIXME: this should probably respect transforms
-    IntRect rect = renderer()->absoluteBoundingBoxRectIgnoringTransforms();
+    IntRect rect = pixelSnappedIntRect(renderer()->view()->frameView()->contentsToWindow(renderer()->absoluteBoundingBoxRectIgnoringTransforms()));
     if (speechInput()->startRecognition(m_listenerId, rect, language, grammar, document()->securityOrigin()))
         setState(Recording);
 }

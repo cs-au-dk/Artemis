@@ -26,10 +26,11 @@
 
 #include "GraphicsContext.h"
 #include "LayoutRepainter.h"
+#include "RenderObject.h"
 #include "RenderSVGResource.h"
 #include "RenderView.h"
 #include "SVGForeignObjectElement.h"
-#include "SVGRenderSupport.h"
+#include "SVGRenderingContext.h"
 #include "SVGResourcesCache.h"
 #include "SVGSVGElement.h"
 #include "TransformState.h"
@@ -59,9 +60,12 @@ void RenderSVGForeignObject::paint(PaintInfo& paintInfo, const LayoutPoint&)
     if (SVGRenderSupport::isOverflowHidden(this))
         childPaintInfo.context->clip(m_viewport);
 
+    SVGRenderingContext renderingContext;
     bool continueRendering = true;
-    if (paintInfo.phase == PaintPhaseForeground)
-        continueRendering = SVGRenderSupport::prepareToRenderSVGContent(this, childPaintInfo);
+    if (paintInfo.phase == PaintPhaseForeground) {
+        renderingContext.prepareToRenderSVGContent(this, childPaintInfo);
+        continueRendering = renderingContext.isRenderingPrepared();
+    }
 
     if (continueRendering) {
         // Paint all phases of FO elements atomically, as though the FO element established its
@@ -81,9 +85,6 @@ void RenderSVGForeignObject::paint(PaintInfo& paintInfo, const LayoutPoint&)
             RenderBlock::paint(childPaintInfo, childPoint);
         }
     }
-
-    if (paintInfo.phase == PaintPhaseForeground)
-        SVGRenderSupport::finishRenderSVGContent(this, childPaintInfo, paintInfo.context);
 }
 
 LayoutRect RenderSVGForeignObject::clippedOverflowRectForRepaint(RenderBoxModelObject* repaintContainer) const
@@ -165,13 +166,20 @@ void RenderSVGForeignObject::layout()
 
 bool RenderSVGForeignObject::nodeAtFloatPoint(const HitTestRequest& request, HitTestResult& result, const FloatPoint& pointInParent, HitTestAction hitTestAction)
 {
+    // Embedded content is drawn in the foreground phase.
+    if (hitTestAction != HitTestForeground)
+        return false;
+
     FloatPoint localPoint = localTransform().inverse().mapPoint(pointInParent);
 
     // Early exit if local point is not contained in clipped viewport area
     if (SVGRenderSupport::isOverflowHidden(this) && !m_viewport.contains(localPoint))
         return false;
 
-    return RenderBlock::nodeAtPoint(request, result, roundedLayoutPoint(localPoint), LayoutPoint(), hitTestAction);
+    // FOs establish a stacking context, so we need to hit-test all layers.
+    return RenderBlock::nodeAtPoint(request, result, roundedLayoutPoint(localPoint), LayoutPoint(), HitTestForeground)
+        || RenderBlock::nodeAtPoint(request, result, roundedLayoutPoint(localPoint), LayoutPoint(), HitTestFloat)
+        || RenderBlock::nodeAtPoint(request, result, roundedLayoutPoint(localPoint), LayoutPoint(), HitTestChildBlockBackgrounds);
 }
 
 bool RenderSVGForeignObject::nodeAtPoint(const HitTestRequest&, HitTestResult&, const LayoutPoint&, const LayoutPoint&, HitTestAction)
@@ -180,7 +188,7 @@ bool RenderSVGForeignObject::nodeAtPoint(const HitTestRequest&, HitTestResult&, 
     return false;
 }
 
-void RenderSVGForeignObject::mapLocalToContainer(RenderBoxModelObject* repaintContainer, bool /* fixed */, bool /* useTransforms */, TransformState& transformState, bool* wasFixed) const
+void RenderSVGForeignObject::mapLocalToContainer(RenderBoxModelObject* repaintContainer, bool /* fixed */, bool /* useTransforms */, TransformState& transformState, ApplyContainerFlipOrNot, bool* wasFixed) const
 {
     SVGRenderSupport::mapLocalToContainer(this, repaintContainer, transformState, wasFixed);
 }

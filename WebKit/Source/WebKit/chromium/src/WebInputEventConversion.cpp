@@ -149,6 +149,24 @@ PlatformGestureEventBuilder::PlatformGestureEventBuilder(Widget* widget, const W
     case WebInputEvent::GestureTap:
         m_type = PlatformEvent::GestureTap;
         break;
+    case WebInputEvent::GestureTapDown:
+        m_type = PlatformEvent::GestureTapDown;
+        break;
+    case WebInputEvent::GestureDoubleTap:
+        m_type = PlatformEvent::GestureDoubleTap;
+        break;
+    case WebInputEvent::GestureLongPress:
+        m_type = PlatformEvent::GestureLongPress;
+        break;
+    case WebInputEvent::GesturePinchBegin:
+        m_type = PlatformEvent::GesturePinchBegin;
+        break;
+    case WebInputEvent::GesturePinchEnd:
+        m_type = PlatformEvent::GesturePinchEnd;
+        break;
+    case WebInputEvent::GesturePinchUpdate:
+        m_type = PlatformEvent::GesturePinchUpdate;
+        break;
     default:
         ASSERT_NOT_REACHED();
     }
@@ -156,6 +174,8 @@ PlatformGestureEventBuilder::PlatformGestureEventBuilder(Widget* widget, const W
     m_globalPosition = IntPoint(e.globalX, e.globalY);
     m_deltaX = e.deltaX;
     m_deltaY = e.deltaY;
+    m_gammaX = e.gammaX;
+    m_gammaY = e.gammaY;
     m_timestamp = e.timeStampSeconds;
 
     m_modifiers = 0;
@@ -378,6 +398,10 @@ WebMouseEventBuilder::WebMouseEventBuilder(const Widget* widget, const MouseEven
     windowY = p.y();
     x = event.absoluteLocation().x() - widget->location().x();
     y = event.absoluteLocation().y() - widget->location().y();
+#if ENABLE(POINTER_LOCK)
+    movementX = event.webkitMovementX();
+    movementY = event.webkitMovementY();
+#endif
     clickCount = event.detail();
 }
 

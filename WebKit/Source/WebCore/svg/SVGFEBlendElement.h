@@ -30,7 +30,7 @@ namespace WebCore {
 
 template<>
 struct SVGPropertyTraits<BlendModeType> {
-    static BlendModeType highestEnumValue() { return FEBLEND_MODE_LIGHTEN; }
+    static unsigned highestEnumValue() { return FEBLEND_MODE_LIGHTEN; }
 
     static String toString(BlendModeType type)
     {
@@ -77,7 +77,7 @@ private:
     SVGFEBlendElement(const QualifiedName&, Document*);
 
     bool isSupportedAttribute(const QualifiedName&);
-    virtual void parseMappedAttribute(Attribute*);
+    virtual void parseAttribute(Attribute*) OVERRIDE;
     virtual bool setFilterEffectAttribute(FilterEffect*, const QualifiedName& attrName);
     virtual void svgAttributeChanged(const QualifiedName&);
     virtual PassRefPtr<FilterEffect> build(SVGFilterBuilder*, Filter*);

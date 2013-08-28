@@ -452,7 +452,7 @@ void HTMLTreeBuilder::constructTreeFromToken(HTMLToken& rawToken)
     //
     // FIXME: Stop clearing the rawToken once we start running the parser off
     // the main thread or once we stop allowing synchronous JavaScript
-    // execution from parseMappedAttribute.
+    // execution from parseAttribute.
     if (rawToken.type() != HTMLTokenTypes::Character)
         rawToken.clear();
 
@@ -478,6 +478,9 @@ void HTMLTreeBuilder::constructTreeFromAtomicToken(AtomicHTMLToken& token)
 
     m_parser->tokenizer()->setForceNullCharacterReplacement(m_insertionMode == TextMode || inForeignContent);
     m_parser->tokenizer()->setShouldAllowCDATA(inForeignContent);
+
+    m_tree.executeQueuedTasks();
+    // We might be detached now.
 }
 
 void HTMLTreeBuilder::processToken(AtomicHTMLToken& token)
@@ -528,7 +531,7 @@ void HTMLTreeBuilder::processDoctypeToken(AtomicHTMLToken& token)
     parseError(token);
 }
 
-void HTMLTreeBuilder::processFakeStartTag(const QualifiedName& tagName, PassRefPtr<NamedNodeMap> attributes)
+void HTMLTreeBuilder::processFakeStartTag(const QualifiedName& tagName, const Vector<Attribute>& attributes)
 {
     // FIXME: We'll need a fancier conversion than just "localName" for SVG/MathML tags.
     AtomicHTMLToken fakeToken(HTMLTokenTypes::StartTag, tagName.localName(), attributes);
@@ -557,20 +560,17 @@ void HTMLTreeBuilder::processFakePEndTagIfPInButtonScope()
     processEndTag(endP);
 }
 
-PassRefPtr<NamedNodeMap> HTMLTreeBuilder::attributesForIsindexInput(AtomicHTMLToken& token)
+Vector<Attribute> HTMLTreeBuilder::attributesForIsindexInput(AtomicHTMLToken& token)
 {
-    RefPtr<NamedNodeMap> attributes = token.takeAttributes();
-    if (!attributes)
-        attributes = NamedNodeMap::create();
-    else {
-        attributes->removeAttribute(nameAttr);
-        attributes->removeAttribute(actionAttr);
-        attributes->removeAttribute(promptAttr);
+    Vector<Attribute> attributes = token.attributes();
+    for (int i = attributes.size() - 1; i >= 0; --i) {
+        const QualifiedName& name = attributes.at(i).name();
+        if (name.matches(nameAttr) || name.matches(actionAttr) || name.matches(promptAttr))
+            attributes.remove(i);
     }
 
-    RefPtr<Attribute> mappedAttribute = Attribute::createMapped(nameAttr, isindexTag.localName());
-    attributes->insertAttribute(mappedAttribute.release(), false);
-    return attributes.release();
+    attributes.append(Attribute(nameAttr, isindexTag.localName()));
+    return attributes;
 }
 
 void HTMLTreeBuilder::processIsindexStartTagForInBody(AtomicHTMLToken& token)
@@ -582,14 +582,12 @@ void HTMLTreeBuilder::processIsindexStartTagForInBody(AtomicHTMLToken& token)
         return;
     notImplemented(); // Acknowledge self-closing flag
     processFakeStartTag(formTag);
-    RefPtr<Attribute> actionAttribute = token.getAttributeItem(actionAttr);
-    if (actionAttribute) {
-        ASSERT(m_tree.currentElement()->hasTagName(formTag));
-        m_tree.currentElement()->setAttribute(actionAttr, actionAttribute->value());
-    }
+    Attribute* actionAttribute = token.getAttributeItem(actionAttr);
+    if (actionAttribute)
+        m_tree.form()->setAttribute(actionAttr, actionAttribute->value());
     processFakeStartTag(hrTag);
     processFakeStartTag(labelTag);
-    RefPtr<Attribute> promptAttribute = token.getAttributeItem(promptAttr);
+    Attribute* promptAttribute = token.getAttributeItem(promptAttr);
     if (promptAttribute)
         processFakeCharacters(promptAttribute->value());
     else
@@ -678,15 +676,11 @@ void adjustAttributes(AtomicHTMLToken& token)
         mapLoweredLocalNameToName(caseMap, attrs, length);
     }
 
-    NamedNodeMap* attributes = token.attributes();
-    if (!attributes)
-        return;
-
-    for (unsigned x = 0; x < attributes->length(); ++x) {
-        Attribute* attribute = attributes->attributeItem(x);
-        const QualifiedName& casedName = caseMap->get(attribute->localName());
+    for (unsigned i = 0; i < token.attributes().size(); ++i) {
+        Attribute& tokenAttribute = token.attributes().at(i);
+        const QualifiedName& casedName = caseMap->get(tokenAttribute.localName());
         if (!casedName.localName().isNull())
-            attribute->parserSetName(casedName);
+            tokenAttribute.parserSetName(casedName);
     }
 }
 
@@ -727,15 +721,11 @@ void adjustForeignAttributes(AtomicHTMLToken& token)
         map->add("xmlns:xlink", QualifiedName("xmlns", "xlink", XMLNSNames::xmlnsNamespaceURI));
     }
 
-    NamedNodeMap* attributes = token.attributes();
-    if (!attributes)
-        return;
-
-    for (unsigned x = 0; x < attributes->length(); ++x) {
-        Attribute* attribute = attributes->attributeItem(x);
-        const QualifiedName& name = map->get(attribute->localName());
+    for (unsigned i = 0; i < token.attributes().size(); ++i) {
+        Attribute& tokenAttribute = token.attributes().at(i);
+        const QualifiedName& name = map->get(tokenAttribute.localName());
         if (!name.localName().isNull())
-            attribute->parserSetName(name);
+            tokenAttribute.parserSetName(name);
     }
 }
 
@@ -929,7 +919,7 @@ void HTMLTreeBuilder::processStartTagForInBody(AtomicHTMLToken& token)
         return;
     }
     if (token.name() == inputTag) {
-        RefPtr<Attribute> typeAttribute = token.getAttributeItem(typeAttr);
+        Attribute* typeAttribute = token.getAttributeItem(typeAttr);
         m_tree.reconstructTheActiveFormattingElements();
         m_tree.insertSelfClosingHTMLElement(token);
         if (!typeAttribute || !equalIgnoringCase(typeAttribute->value(), "hidden"))
@@ -2203,7 +2193,7 @@ void HTMLTreeBuilder::processEndTag(AtomicHTMLToken& token)
     case InSelectMode:
         ASSERT(insertionMode() == InSelectMode || insertionMode() == InSelectInTableMode);
         if (token.name() == optgroupTag) {
-            if (m_tree.currentNode()->hasTagName(optionTag) && m_tree.oneBelowTop()->hasTagName(optgroupTag))
+            if (m_tree.currentNode()->hasTagName(optionTag) && m_tree.oneBelowTop() && m_tree.oneBelowTop()->hasTagName(optgroupTag))
                 processFakeEndTag(optionTag);
             if (m_tree.currentNode()->hasTagName(optgroupTag)) {
                 m_tree.openElements()->pop();
@@ -2528,7 +2518,7 @@ void HTMLTreeBuilder::processEndOfFile(AtomicHTMLToken& token)
 void HTMLTreeBuilder::defaultForInitial()
 {
     notImplemented();
-    if (!m_fragmentContext.fragment())
+    if (!m_fragmentContext.fragment() && !m_document->isSrcdocDocument())
         m_document->setCompatibilityMode(Document::QuirksMode);
     // FIXME: parse error
     setInsertionMode(BeforeHTMLMode);

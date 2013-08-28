@@ -32,6 +32,7 @@
 #ifndef InputType_h
 #define InputType_h
 
+#include "HTMLTextFormControlElement.h"
 #include <wtf/Forward.h>
 #include <wtf/FastAllocBase.h>
 #include <wtf/Noncopyable.h>
@@ -79,6 +80,8 @@ public:
     static PassOwnPtr<InputType> createText(HTMLInputElement*);
     virtual ~InputType();
 
+    static bool themeSupportsDataListUI(InputType*);
+
     virtual const AtomicString& formControlType() const = 0;
     virtual bool canChangeFromAnotherType() const;
 
@@ -91,7 +94,7 @@ public:
     // inflexible because it's harder to add new input types if there is
     // scattered code with special cases for various types.
 
-#if ENABLE(INPUT_COLOR)
+#if ENABLE(INPUT_TYPE_COLOR)
     virtual bool isColorControl() const;
 #endif
     virtual bool isCheckbox() const;
@@ -99,6 +102,7 @@ public:
     virtual bool isFileUpload() const;
     virtual bool isHiddenType() const;
     virtual bool isImageButton() const;
+    virtual bool supportLabels() const;
     virtual bool isNumberField() const;
     virtual bool isPasswordField() const;
     virtual bool isRadioButton() const;
@@ -114,7 +118,7 @@ public:
     // Form value functions
 
     virtual bool saveFormControlState(String&) const;
-    virtual void restoreFormControlState(const String&) const;
+    virtual void restoreFormControlState(const String&);
     virtual bool isFormDataAppendable() const;
     virtual bool appendFormData(FormDataList&, bool multipart) const;
 
@@ -126,7 +130,7 @@ public:
     virtual double valueAsDate() const;
     virtual void setValueAsDate(double, ExceptionCode&) const;
     virtual double valueAsNumber() const;
-    virtual void setValueAsNumber(double, bool sendChangeEvent, ExceptionCode&) const;
+    virtual void setValueAsNumber(double, TextFieldEventBehavior, ExceptionCode&) const;
 
     // Validation functions
 
@@ -183,6 +187,7 @@ public:
     virtual PassRefPtr<HTMLFormElement> formForSubmission() const;
     virtual bool isKeyboardFocusable() const;
     virtual bool shouldUseInputMethod() const;
+    virtual void handleFocusEvent();
     virtual void handleBlurEvent();
     virtual void accessKeyAction(bool sendMouseEvents);
     virtual bool canBeSuccessfulSubmitButton();
@@ -224,8 +229,7 @@ public:
     virtual bool shouldSendChangeEventAfterCheckedChanged();
     virtual bool canSetValue(const String&);
     virtual bool storesValueSeparateFromAttribute();
-    virtual void setValue(const String&, bool valueChanged, bool sendChangeEvent);
-    virtual void dispatchChangeEventInResponseToSetValue();
+    virtual void setValue(const String&, bool valueChanged, TextFieldEventBehavior);
     virtual bool shouldResetOnDocumentActivation();
     virtual bool shouldRespectListAttribute();
     virtual bool shouldRespectSpeechAttribute();
@@ -233,7 +237,14 @@ public:
     virtual bool isCheckable();
     virtual bool isSteppable() const;
     virtual bool shouldRespectHeightAndWidthAttributes();
+    // If supportsPlaceholder() && !usesFixedPlaceholder(), it means a type
+    // supports the 'placeholder' attribute.
+    // If supportsPlaceholder() && usesFixedPlaceholder(), it means a type
+    // doesn't support the 'placeholder' attribute, but shows
+    // fixedPlaceholder() string as a placeholder.
     virtual bool supportsPlaceholder() const;
+    virtual bool usesFixedPlaceholder() const;
+    virtual String fixedPlaceholder();
     virtual void updatePlaceholderText();
     virtual void multipleAttributeChanged();
     virtual void disabledAttributeChanged();
@@ -262,6 +273,8 @@ public:
     // string. This should not be called for types without valueAsNumber.
     virtual String serialize(double) const;
 
+    virtual bool supportsIndeterminateAppearance() const;
+
 protected:
     InputType(HTMLInputElement* element) : m_element(element) { }
     HTMLInputElement* element() const { return m_element; }
@@ -279,7 +292,7 @@ namespace InputTypeNames {
 
 const AtomicString& button();
 const AtomicString& checkbox();
-#if ENABLE(INPUT_COLOR)
+#if ENABLE(INPUT_TYPE_COLOR)
 const AtomicString& color();
 #endif
 const AtomicString& date();
@@ -289,7 +302,6 @@ const AtomicString& email();
 const AtomicString& file();
 const AtomicString& hidden();
 const AtomicString& image();
-const AtomicString& isindex();
 const AtomicString& month();
 const AtomicString& number();
 const AtomicString& password();

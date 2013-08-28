@@ -28,8 +28,6 @@
 
 #if ENABLE(CSS_FILTERS)
 
-#include "CachedResourceClient.h"
-#include "CachedResourceHandle.h"
 #include "Filter.h"
 #include "FilterEffect.h"
 #include "FilterOperations.h"
@@ -46,16 +44,44 @@
 namespace WebCore {
 
 typedef Vector<RefPtr<FilterEffect> > FilterEffectList;
-class Document;
-class FilterEffectObserver;
 class CachedShader;
+class CustomFilterProgram;
+class Document;
+class GraphicsContext;
+class RenderLayer;
 
-class FilterEffectRenderer : public Filter, public CachedResourceClient {
+class FilterEffectRendererHelper {
+public:
+    FilterEffectRendererHelper(bool haveFilterEffect)
+        : m_savedGraphicsContext(0)
+        , m_renderLayer(0)
+        , m_haveFilterEffect(haveFilterEffect)
+    {
+    }
+    
+    bool haveFilterEffect() const { return m_haveFilterEffect; }
+    bool hasStartedFilterEffect() const { return m_savedGraphicsContext; }
+
+    bool prepareFilterEffect(RenderLayer*, const LayoutRect& filterBoxRect, const LayoutRect& dirtyRect, const LayoutRect& layerRepaintRect);
+    GraphicsContext* beginFilterEffect(GraphicsContext* oldContext);
+    GraphicsContext* applyFilterEffect();
+
+    const LayoutRect& repaintRect() const { return m_repaintRect; }
+private:
+    GraphicsContext* m_savedGraphicsContext;
+    RenderLayer* m_renderLayer;
+    LayoutPoint m_paintOffset;
+    LayoutRect m_repaintRect;
+    bool m_haveFilterEffect;
+};
+
+class FilterEffectRenderer : public Filter
+{
     WTF_MAKE_FAST_ALLOCATED;
 public:
-    static PassRefPtr<FilterEffectRenderer> create(FilterEffectObserver* observer)
+    static PassRefPtr<FilterEffectRenderer> create()
     {
-        return adoptRef(new FilterEffectRenderer(observer));
+        return adoptRef(new FilterEffectRenderer());
     }
 
     virtual void setSourceImageRect(const FloatRect& sourceImageRect)
@@ -73,16 +99,21 @@ public:
     GraphicsContext* inputContext();
     ImageBuffer* output() const { return lastEffect()->asImageBuffer(); }
 
-    void build(Document*, const FilterOperations&);
-    void prepare();
+    bool build(Document*, const FilterOperations&);
+    bool updateBackingStoreRect(const FloatRect& filterRect);
+    void allocateBackingStoreIfNeeded();
+    void clearIntermediateResults();
     void apply();
     
     IntRect outputRect() const { return lastEffect()->hasResult() ? lastEffect()->requestedRegionOfInputImageData(IntRect(m_filterRegion)) : IntRect(); }
 
-    virtual void notifyFinished(CachedResource*);
-    
-private:
+    bool hasFilterThatMovesPixels() const { return m_hasFilterThatMovesPixels; }
+    LayoutRect computeSourceImageRectForDirtyRect(const LayoutRect& filterBoxRect, const LayoutRect& dirtyRect);
 
+#if ENABLE(CSS_SHADERS)
+    bool hasCustomShaderFilter() const { return m_hasCustomShaderFilter; }
+#endif
+private:
     void setMaxEffectRects(const FloatRect& effectRect)
     {
         for (size_t i = 0; i < m_effects.size(); ++i) {
@@ -97,7 +128,7 @@ private:
         return 0;
     }
 
-    FilterEffectRenderer(FilterEffectObserver*);
+    FilterEffectRenderer();
     virtual ~FilterEffectRenderer();
     
     FloatRect m_sourceDrawingRegion;
@@ -105,14 +136,17 @@ private:
     
     FilterEffectList m_effects;
     RefPtr<SourceGraphic> m_sourceGraphic;
-    FilterEffectObserver* m_observer; // No need for a strong references here. It owns us.
     
-#if ENABLE(CSS_SHADERS) && ENABLE(WEBGL)
-    typedef Vector<CachedResourceHandle<CachedShader> > CachedShaderList;
-    CachedShaderList m_cachedShaders;
-#endif
+    int m_topOutset;
+    int m_rightOutset;
+    int m_bottomOutset;
+    int m_leftOutset;
     
     bool m_graphicsBufferAttached;
+    bool m_hasFilterThatMovesPixels;
+#if ENABLE(CSS_SHADERS)
+    bool m_hasCustomShaderFilter;
+#endif
 };
 
 } // namespace WebCore

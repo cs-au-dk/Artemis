@@ -38,6 +38,7 @@
 #include "HTMLNames.h"
 #include "RenderTextControlMultiLine.h"
 #include "ShadowRoot.h"
+#include "ShadowTree.h"
 #include "Text.h"
 #include "TextControlInnerElements.h"
 #include "TextIterator.h"
@@ -84,8 +85,9 @@ PassRefPtr<HTMLTextAreaElement> HTMLTextAreaElement::create(const QualifiedName&
 
 void HTMLTextAreaElement::createShadowSubtree()
 {
-    ExceptionCode ec = 0;
-    ensureShadowRoot()->appendChild(TextControlInnerTextElement::create(document()), ec);
+    ASSERT(!hasShadowRoot());
+    RefPtr<ShadowRoot> root = ShadowRoot::create(this, ShadowRoot::CreatingUserAgentShadowRoot);
+    root->appendChild(TextControlInnerTextElement::create(document()), ASSERT_NO_EXCEPTION);
 }
 
 const AtomicString& HTMLTextAreaElement::formControlType() const
@@ -110,14 +112,41 @@ void HTMLTextAreaElement::restoreFormControlState(const String& state)
 
 void HTMLTextAreaElement::childrenChanged(bool changedByParser, Node* beforeChange, Node* afterChange, int childCountDelta)
 {
+    HTMLElement::childrenChanged(changedByParser, beforeChange, afterChange, childCountDelta);
     setLastChangeWasNotUserEdit();
     if (!m_isDirty)
         setNonDirtyValue(defaultValue());
     setInnerTextValue(value());
-    HTMLElement::childrenChanged(changedByParser, beforeChange, afterChange, childCountDelta);
 }
-    
-void HTMLTextAreaElement::parseMappedAttribute(Attribute* attr)
+
+bool HTMLTextAreaElement::isPresentationAttribute(const QualifiedName& name) const
+{
+    if (name == alignAttr) {
+        // Don't map 'align' attribute.  This matches what Firefox, Opera and IE do.
+        // See http://bugs.webkit.org/show_bug.cgi?id=7075
+        return false;
+    }
+
+    if (name == wrapAttr)
+        return true;
+    return HTMLTextFormControlElement::isPresentationAttribute(name);
+}
+
+void HTMLTextAreaElement::collectStyleForAttribute(Attribute* attr, StylePropertySet* style)
+{
+    if (attr->name() == wrapAttr) {
+        if (shouldWrapText()) {
+            addPropertyToAttributeStyle(style, CSSPropertyWhiteSpace, CSSValuePreWrap);
+            addPropertyToAttributeStyle(style, CSSPropertyWordWrap, CSSValueBreakWord);
+        } else {
+            addPropertyToAttributeStyle(style, CSSPropertyWhiteSpace, CSSValuePre);
+            addPropertyToAttributeStyle(style, CSSPropertyWordWrap, CSSValueNormal);
+        }
+    } else
+        HTMLTextFormControlElement::collectStyleForAttribute(attr, style);
+}
+
+void HTMLTextAreaElement::parseAttribute(Attribute* attr)
 {
     if (attr->name() == rowsAttr) {
         int rows = attr->value().toInt();
@@ -149,27 +178,15 @@ void HTMLTextAreaElement::parseMappedAttribute(Attribute* attr)
             wrap = SoftWrap;
         if (wrap != m_wrap) {
             m_wrap = wrap;
-
-            if (shouldWrapText()) {
-                addCSSProperty(attr, CSSPropertyWhiteSpace, CSSValuePreWrap);
-                addCSSProperty(attr, CSSPropertyWordWrap, CSSValueBreakWord);
-            } else {
-                addCSSProperty(attr, CSSPropertyWhiteSpace, CSSValuePre);
-                addCSSProperty(attr, CSSPropertyWordWrap, CSSValueNormal);
-            }
-
             if (renderer())
                 renderer()->setNeedsLayoutAndPrefWidthsRecalc();
         }
     } else if (attr->name() == accesskeyAttr) {
         // ignore for the moment
-    } else if (attr->name() == alignAttr) {
-        // Don't map 'align' attribute.  This matches what Firefox, Opera and IE do.
-        // See http://bugs.webkit.org/show_bug.cgi?id=7075
     } else if (attr->name() == maxlengthAttr)
         setNeedsValidityCheck();
     else
-        HTMLTextFormControlElement::parseMappedAttribute(attr);
+        HTMLTextFormControlElement::parseAttribute(attr);
 }
 
 RenderObject* HTMLTextAreaElement::createRenderer(RenderArena* arena, RenderStyle*)
@@ -277,7 +294,7 @@ String HTMLTextAreaElement::sanitizeUserInputValue(const String& proposedValue, 
 
 HTMLElement* HTMLTextAreaElement::innerTextElement() const
 {
-    Node* node = shadowRoot()->firstChild();
+    Node* node = shadowTree()->oldestShadowRoot()->firstChild();
     ASSERT(!node || node->hasTagName(divTag));
     return toHTMLElement(node);
 }
@@ -359,7 +376,7 @@ String HTMLTextAreaElement::defaultValue() const
     // Since there may be comments, ignore nodes other than text nodes.
     for (Node* n = firstChild(); n; n = n->nextSibling()) {
         if (n->isTextNode())
-            value += static_cast<Text*>(n)->data();
+            value += toText(n)->data();
     }
 
     return value;
@@ -367,8 +384,9 @@ String HTMLTextAreaElement::defaultValue() const
 
 void HTMLTextAreaElement::setDefaultValue(const String& defaultValue)
 {
-    // To preserve comments, remove only the text nodes, then add a single text node.
+    RefPtr<Node> protectFromMutationEvents(this);
 
+    // To preserve comments, remove only the text nodes, then add a single text node.
     Vector<RefPtr<Node> > textNodes;
     for (Node* n = firstChild(); n; n = n->nextSibling()) {
         if (n->isTextNode())
@@ -454,7 +472,7 @@ void HTMLTextAreaElement::updatePlaceholderText()
     String placeholderText = strippedPlaceholder();
     if (placeholderText.isEmpty()) {
         if (m_placeholder) {
-            shadowRoot()->removeChild(m_placeholder.get(), ec);
+            shadowTree()->oldestShadowRoot()->removeChild(m_placeholder.get(), ec);
             ASSERT(!ec);
             m_placeholder.clear();
         }
@@ -463,7 +481,7 @@ void HTMLTextAreaElement::updatePlaceholderText()
     if (!m_placeholder) {
         m_placeholder = HTMLDivElement::create(document());
         m_placeholder->setShadowPseudoId("-webkit-input-placeholder");
-        shadowRoot()->insertBefore(m_placeholder, shadowRoot()->firstChild()->nextSibling(), ec);
+        shadowTree()->oldestShadowRoot()->insertBefore(m_placeholder, shadowTree()->oldestShadowRoot()->firstChild()->nextSibling(), ec);
         ASSERT(!ec);
     }
     m_placeholder->setInnerText(placeholderText, ec);

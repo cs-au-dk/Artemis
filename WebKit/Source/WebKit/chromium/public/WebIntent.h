@@ -31,8 +31,14 @@
 #ifndef WebIntent_h
 #define WebIntent_h
 
+#include "WebMessagePortChannel.h"
 #include "platform/WebCommon.h"
+#include "platform/WebPrivatePtr.h"
 #include "platform/WebString.h"
+#include "platform/WebURL.h"
+#include "platform/WebVector.h"
+
+namespace WebCore { class Intent; }
 
 namespace WebKit {
 
@@ -41,29 +47,43 @@ namespace WebKit {
 // See spec at http://www.chromium.org/developers/design-documents/webintentsapi
 class WebIntent {
 public:
-    ~WebIntent() { }
+    WebIntent() { }
+    WebIntent(const WebIntent& other) { assign(other); }
+    ~WebIntent() { reset(); }
+
+    WebIntent& operator=(const WebIntent& other)
+    {
+       assign(other);
+       return *this;
+    }
+    WEBKIT_EXPORT void reset();
+    WEBKIT_EXPORT bool isNull() const;
+    WEBKIT_EXPORT bool equals(const WebIntent&) const;
+    WEBKIT_EXPORT void assign(const WebIntent&);
 
     WEBKIT_EXPORT WebString action() const;
-    WEBKIT_EXPORT void setAction(const WebString&);
-
     WEBKIT_EXPORT WebString type() const;
-    WEBKIT_EXPORT void setType(const WebString&);
-
     WEBKIT_EXPORT WebString data() const;
-    WEBKIT_EXPORT void setData(const WebString&);
+    WEBKIT_EXPORT WebURL service() const;
 
-    WEBKIT_EXPORT int identifier() const;
-    WEBKIT_EXPORT void setIdentifier(int);
+    // Retrieve a list of the names of extra metadata associated with the
+    // intent.
+    WEBKIT_EXPORT WebVector<WebString> extrasNames() const;
+
+    // Retrieve the value of an extra metadata element. The argument should
+    // be one of the names retrieved with |extrasNames|. Returns an empty
+    // string if the name is invalid.
+    WEBKIT_EXPORT WebString extrasValue(const WebString&) const;
+
+    // Caller takes ownership of the ports.
+    WEBKIT_EXPORT WebMessagePortChannelArray* messagePortChannelsRelease() const;
 
 #if WEBKIT_IMPLEMENTATION
-    WebIntent();
+    WebIntent(const WTF::PassRefPtr<WebCore::Intent>&);
 #endif
 
 private:
-    WebString m_action;
-    WebString m_type;
-    WebString m_data;
-    int m_identifier;
+    WebPrivatePtr<WebCore::Intent> m_private;
 };
 
 } // namespace WebKit

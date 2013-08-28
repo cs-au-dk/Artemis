@@ -21,33 +21,36 @@
 #ifndef qquickwebpage_p_p_h
 #define qquickwebpage_p_p_h
 
-#include "QtSGUpdateQueue.h"
 #include "qquickwebpage_p.h"
+#include <QTransform>
 
 namespace WebKit {
 class WebPageProxy;
 class QtViewportInteractionEngine;
-}
-
 class QtWebPageEventHandler;
+}
 
 class QQuickWebPagePrivate {
 public:
-    QQuickWebPagePrivate(QQuickWebPage* q);
+    QQuickWebPagePrivate(QQuickWebPage* q, QQuickWebView* viewportItem);
     ~QQuickWebPagePrivate();
 
     void initialize(WebKit::WebPageProxy*);
-    void setDrawingAreaSize(const QSize&);
 
-    void paintToCurrentGLContext();
+    void updateSize();
+
+    void paint(QPainter*);
     void resetPaintNode();
 
-    QScopedPointer<QtWebPageEventHandler> eventHandler;
+    QScopedPointer<WebKit::QtWebPageEventHandler> eventHandler;
     QQuickWebPage* const q;
+    QQuickWebView* const viewportItem;
     WebKit::WebPageProxy* webPageProxy;
-    WebKit::QtSGUpdateQueue sgUpdateQueue;
     bool paintingIsInitialized;
     QSGNode* m_paintNode;
+
+    QSizeF contentsSize;
+    qreal contentsScale;
 };
 
 #endif // qquickwebpage_p_p_h

@@ -30,15 +30,16 @@
 #define JSGlobalData_h
 
 #include "CachedTranscendentalFunction.h"
-#include "Intrinsic.h"
 #include "DateInstanceCache.h"
 #include "ExecutableAllocator.h"
 #include "Heap.h"
-#include "Strong.h"
+#include "Intrinsic.h"
 #include "JITStubs.h"
 #include "JSValue.h"
+#include "LLIntData.h"
 #include "NumericStrings.h"
 #include "SmallStrings.h"
+#include "Strong.h"
 #include "Terminator.h"
 #include "TimeoutChecker.h"
 #include "WeakRandom.h"
@@ -46,6 +47,7 @@
 #include <wtf/Forward.h>
 #include <wtf/HashMap.h>
 #include <wtf/RefCounted.h>
+#include <wtf/SimpleStats.h>
 #include <wtf/ThreadSpecific.h>
 #include <wtf/WTFThreadData.h>
 #if ENABLE(REGEXP_TRACING)
@@ -65,6 +67,7 @@ namespace JSC {
     class JSGlobalObject;
     class JSObject;
     class Keywords;
+    class LLIntOffsetsExtractor;
     class NativeExecutable;
     class ParserArena;
     class RegExpCache;
@@ -134,20 +137,22 @@ namespace JSC {
         enum GlobalDataType { Default, APIContextGroup, APIShared };
         
         struct ClientData {
-            virtual ~ClientData() = 0;
+            JS_EXPORT_PRIVATE virtual ~ClientData() = 0;
         };
 
         bool isSharedInstance() { return globalDataType == APIShared; }
         bool usingAPI() { return globalDataType != Default; }
         static bool sharedInstanceExists();
-        static JSGlobalData& sharedInstance();
+        JS_EXPORT_PRIVATE static JSGlobalData& sharedInstance();
 
-        static PassRefPtr<JSGlobalData> create(ThreadStackType, HeapSize = SmallHeap);
-        static PassRefPtr<JSGlobalData> createLeaked(ThreadStackType, HeapSize = SmallHeap);
+        JS_EXPORT_PRIVATE static PassRefPtr<JSGlobalData> create(ThreadStackType, HeapSize = SmallHeap);
+        JS_EXPORT_PRIVATE static PassRefPtr<JSGlobalData> createLeaked(ThreadStackType, HeapSize = SmallHeap);
         static PassRefPtr<JSGlobalData> createContextGroup(ThreadStackType, HeapSize = SmallHeap);
-        ~JSGlobalData();
+        JS_EXPORT_PRIVATE ~JSGlobalData();
 
         void makeUsableFromMultipleThreads() { heap.machineThreads().makeUsableFromMultipleThreads(); }
+
+        Heap heap; // The heap is our first data member to ensure that it's destructed after all the objects that reference it.
 
         GlobalDataType globalDataType;
         ClientData* clientData;
@@ -199,6 +204,7 @@ namespace JSC {
         SmallStrings smallStrings;
         NumericStrings numericStrings;
         DateInstanceCache dateInstanceCache;
+        WTF::SimpleStats machineCodeBytesPerBytecodeWordForBaselineJIT;
         Vector<CodeBlock*> codeBlocksBeingCompiled;
         void startedCompiling(CodeBlock* codeBlock)
         {
@@ -211,24 +217,35 @@ namespace JSC {
             codeBlocksBeingCompiled.removeLast();
         }
 
+        void setInDefineOwnProperty(bool inDefineOwnProperty)
+        {
+            m_inDefineOwnProperty = inDefineOwnProperty;
+        }
+
+        bool isInDefineOwnProperty()
+        {
+            return m_inDefineOwnProperty;
+        }
+
 #if ENABLE(ASSEMBLER)
         ExecutableAllocator executableAllocator;
 #endif
 
 #if !ENABLE(JIT)
         bool canUseJIT() { return false; } // interpreter only
-#elif !ENABLE(INTERPRETER)
+#elif !ENABLE(CLASSIC_INTERPRETER) && !ENABLE(LLINT)
         bool canUseJIT() { return true; } // jit only
 #else
-        bool canUseJIT() { return m_canUseJIT; }
+        bool canUseJIT() { return m_canUseAssembler; }
 #endif
 
-        const StackBounds& stack()
-        {
-            return (globalDataType == Default)
-                ? m_stack
-                : wtfThreadData().stack();
-        }
+#if !ENABLE(YARR_JIT)
+        bool canUseRegExpJIT() { return false; } // interpreter only
+#elif !ENABLE(CLASSIC_INTERPRETER) && !ENABLE(LLINT)
+        bool canUseRegExpJIT() { return true; } // jit only
+#else
+        bool canUseRegExpJIT() { return m_canUseAssembler; }
+#endif
 
         OwnPtr<ParserArena> parserArena;
         OwnPtr<Keywords> keywords;
@@ -245,12 +262,19 @@ namespace JSC {
 
         TimeoutChecker timeoutChecker;
         Terminator terminator;
-        Heap heap;
 
         JSValue exception;
-#if ENABLE(JIT)
+
+        const ClassInfo* const jsArrayClassInfo;
+        const ClassInfo* const jsFinalObjectClassInfo;
+
+        LLInt::Data llintData;
+
         ReturnAddressPtr exceptionLocation;
         JSValue hostCallReturnValue;
+        CallFrame* callFrameForThrow;
+        void* targetMachinePCForThrow;
+        Instruction* targetInterpreterPCForThrow;
 #if ENABLE(DFG_JIT)
         uint32_t osrExitIndex;
         void* osrExitJumpDestination;
@@ -274,7 +298,6 @@ namespace JSC {
             
             return scratchBuffers.last();
         }
-#endif
 #endif
 
         HashMap<OpaqueJSClass*, OwnPtr<OpaqueJSClassContextData> > opaqueJSClassData;
@@ -305,25 +328,23 @@ namespace JSC {
 
         CachedTranscendentalFunction<sin> cachedSin;
 
-        void resetDateCache();
+        JS_EXPORT_PRIVATE void resetDateCache();
 
-        void startSampling();
-        void stopSampling();
-        void dumpSampleData(ExecState* exec);
-        void recompileAllJSFunctions();
+        JS_EXPORT_PRIVATE void startSampling();
+        JS_EXPORT_PRIVATE void stopSampling();
+        JS_EXPORT_PRIVATE void dumpSampleData(ExecState* exec);
         RegExpCache* regExpCache() { return m_regExpCache; }
 #if ENABLE(REGEXP_TRACING)
         void addRegExpToTrace(PassRefPtr<RegExp> regExp);
 #endif
-        void dumpRegExpTrace();
-        void clearBuiltinStructures();
+        JS_EXPORT_PRIVATE void dumpRegExpTrace();
 
         bool isCollectorBusy() { return heap.isBusy(); }
-        void releaseExecutableMemory();
+        JS_EXPORT_PRIVATE void releaseExecutableMemory();
 
 #if ENABLE(GC_VALIDATION)
         bool isInitializingObject() const; 
-        void setInitializingObject(bool);
+        void setInitializingObjectClass(const ClassInfo*);
 #endif
 
 #if CPU(X86) && ENABLE(JIT)
@@ -336,12 +357,13 @@ namespace JSC {
             ASSERT(!m_##type##ArrayDescriptor.m_classInfo || m_##type##ArrayDescriptor.m_classInfo == descriptor.m_classInfo); \
             m_##type##ArrayDescriptor = descriptor; \
         } \
-        const TypedArrayDescriptor& type##ArrayDescriptor() const { return m_##type##ArrayDescriptor; }
+        const TypedArrayDescriptor& type##ArrayDescriptor() const { ASSERT(m_##type##ArrayDescriptor.m_classInfo); return m_##type##ArrayDescriptor; }
 
         registerTypedArrayFunction(int8, Int8);
         registerTypedArrayFunction(int16, Int16);
         registerTypedArrayFunction(int32, Int32);
         registerTypedArrayFunction(uint8, Uint8);
+        registerTypedArrayFunction(uint8Clamped, Uint8Clamped);
         registerTypedArrayFunction(uint16, Uint16);
         registerTypedArrayFunction(uint32, Uint32);
         registerTypedArrayFunction(float32, Float32);
@@ -349,20 +371,24 @@ namespace JSC {
 #undef registerTypedArrayFunction
 
     private:
+        friend class LLIntOffsetsExtractor;
+        
         JSGlobalData(GlobalDataType, ThreadStackType, HeapSize);
         static JSGlobalData*& sharedInstanceInternal();
         void createNativeThunk();
-#if ENABLE(JIT) && ENABLE(INTERPRETER)
-        bool m_canUseJIT;
+#if ENABLE(ASSEMBLER) && (ENABLE(CLASSIC_INTERPRETER) || ENABLE(LLINT))
+        bool m_canUseAssembler;
 #endif
-        StackBounds m_stack;
 #if ENABLE(GC_VALIDATION)
-        bool m_isInitializingObject;
+        const ClassInfo* m_initializingObjectClass;
 #endif
+        bool m_inDefineOwnProperty;
+
         TypedArrayDescriptor m_int8ArrayDescriptor;
         TypedArrayDescriptor m_int16ArrayDescriptor;
         TypedArrayDescriptor m_int32ArrayDescriptor;
         TypedArrayDescriptor m_uint8ArrayDescriptor;
+        TypedArrayDescriptor m_uint8ClampedArrayDescriptor;
         TypedArrayDescriptor m_uint16ArrayDescriptor;
         TypedArrayDescriptor m_uint32ArrayDescriptor;
         TypedArrayDescriptor m_float32ArrayDescriptor;
@@ -372,12 +398,12 @@ namespace JSC {
 #if ENABLE(GC_VALIDATION)
     inline bool JSGlobalData::isInitializingObject() const
     {
-        return m_isInitializingObject;
+        return !!m_initializingObjectClass;
     }
 
-    inline void JSGlobalData::setInitializingObject(bool initializingObject)
+    inline void JSGlobalData::setInitializingObjectClass(const ClassInfo* initializingObjectClass)
     {
-        m_isInitializingObject = initializingObject;
+        m_initializingObjectClass = initializingObjectClass;
     }
 #endif
 

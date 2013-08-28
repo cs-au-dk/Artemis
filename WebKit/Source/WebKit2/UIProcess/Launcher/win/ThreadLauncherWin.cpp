@@ -26,8 +26,8 @@
 #include "config.h"
 #include "ThreadLauncher.h"
 
-#include "RunLoop.h"
 #include "WebProcess.h"
+#include <WebCore/RunLoop.h>
 #include <runtime/InitializeThreading.h>
 #include <wtf/MainThread.h>
 #include <wtf/Threading.h>
@@ -36,7 +36,7 @@ using namespace WebCore;
 
 namespace WebKit {
 
-static void* webThreadBody(void* context)
+static void webThreadBody(void* context)
 {
     HANDLE clientIdentifier = reinterpret_cast<HANDLE>(context);
 
@@ -46,8 +46,6 @@ static void* webThreadBody(void* context)
 
     WebProcess::shared().initialize(clientIdentifier, RunLoop::current());
     RunLoop::run();
-
-    return 0;
 }
 
 CoreIPC::Connection::Identifier ThreadLauncher::createWebThread()

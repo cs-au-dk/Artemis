@@ -80,9 +80,9 @@ XMLTreeBuilder::XMLTreeBuilder(NewXMLDocumentParser* parser, DocumentFragment* f
 
     for (Element* element; !nodeStack.isEmpty(); nodeStack.removeLast()) {
         element = nodeStack.last();
-        if (NamedNodeMap* attrs = element->attributes()) {
-            for (size_t i = 0; i < attrs->length(); ++i) {
-                Attribute* attr = attrs->attributeItem(i);
+        if (element->hasAttributes()) {
+            for (size_t i = 0; i < element->attributeCount(); ++i) {
+                Attribute* attr = element->attributeItem(i);
                 if (attr->localName() == xmlnsAtom)
                     stackItem.setNamespaceURI(attr->value());
                 else if (attr->prefix() == xmlnsAtom)
@@ -298,33 +298,27 @@ void XMLTreeBuilder::processEntity(const AtomicXMLToken& token)
 
 void XMLTreeBuilder::processNamespaces(const AtomicXMLToken& token, NodeStackItem& stackItem)
 {
-    if (!token.attributes())
-        return;
-
-    for (size_t i = 0; i < token.attributes()->length(); ++i) {
-        Attribute* attribute = token.attributes()->attributeItem(i);
-        if (attribute->name().prefix() == xmlnsAtom)
-            stackItem.setNamespaceURI(attribute->name().localName(), attribute->value());
-        else if (attribute->name() == xmlnsAtom)
-            stackItem.setNamespaceURI(attribute->value());
+    for (unsigned i = 0; i < token.attributes().size(); ++i) {
+        const Attribute& tokenAttribute = token.attributes().at(i);
+        if (tokenAttribute.name().prefix() == xmlnsAtom)
+            stackItem.setNamespaceURI(tokenAttribute.name().localName(), tokenAttribute.value());
+        else if (tokenAttribute.name() == xmlnsAtom)
+            stackItem.setNamespaceURI(tokenAttribute.value());
     }
 }
 
 void XMLTreeBuilder::processAttributes(const AtomicXMLToken& token, NodeStackItem& stackItem, PassRefPtr<Element> newElement)
 {
-    if (!token.attributes())
-        return;
-
-    for (size_t i = 0; i < token.attributes()->length(); ++i) {
-        Attribute* attribute = token.attributes()->attributeItem(i);
+    for (unsigned i = 0; i < token.attributes().size(); ++i) {
+        const Attribute& tokenAttribute = token.attributes().at(i);
         ExceptionCode ec = 0;
-        if (attribute->name().prefix() == xmlnsAtom)
-            newElement->setAttributeNS(XMLNSNames::xmlnsNamespaceURI, "xmlns:" + attribute->name().localName(), attribute->value(), ec);
-        else if (attribute->name() == xmlnsAtom)
-            newElement->setAttributeNS(XMLNSNames::xmlnsNamespaceURI, xmlnsAtom, attribute->value(), ec);
+        if (tokenAttribute.name().prefix() == xmlnsAtom)
+            newElement->setAttributeNS(XMLNSNames::xmlnsNamespaceURI, "xmlns:" + tokenAttribute.name().localName(), tokenAttribute.value(), ec);
+        else if (tokenAttribute.name() == xmlnsAtom)
+            newElement->setAttributeNS(XMLNSNames::xmlnsNamespaceURI, xmlnsAtom, tokenAttribute.value(), ec);
         else {
-            QualifiedName qName(attribute->prefix(), attribute->localName(), stackItem.namespaceForPrefix(attribute->prefix(), nullAtom));
-            newElement->setAttribute(qName, attribute->value());
+            QualifiedName qName(tokenAttribute.prefix(), tokenAttribute.localName(), stackItem.namespaceForPrefix(tokenAttribute.prefix(), nullAtom));
+            newElement->setAttribute(qName, tokenAttribute.value());
         }
         if (ec) {
             m_parser->stopParsing();

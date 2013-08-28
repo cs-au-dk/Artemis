@@ -45,8 +45,9 @@ from webkitpy.common.system.path import cygpath
 from webkitpy.layout_tests.controllers.manager import Manager
 from webkitpy.layout_tests.models import test_expectations
 from webkitpy.layout_tests.models.test_configuration import TestConfiguration
-from webkitpy.layout_tests.port.base import Port
-from webkitpy.layout_tests.port.driver import Driver, DriverOutput
+from webkitpy.layout_tests.port.base import Port, VirtualTestSuite
+from webkitpy.layout_tests.port.driver import DriverOutput
+from webkitpy.layout_tests.port.webkit import WebKitDriver
 from webkitpy.layout_tests.port import builders
 from webkitpy.layout_tests.servers import http_server
 from webkitpy.layout_tests.servers import websocket_server
@@ -58,8 +59,6 @@ _log = logging.getLogger(__name__)
 class ChromiumPort(Port):
     """Abstract base class for Chromium implementations of the Port class."""
 
-    port_name = "chromium"
-
     ALL_SYSTEMS = (
         ('leopard', 'x86'),
         ('snowleopard', 'x86'),
@@ -68,31 +67,37 @@ class ChromiumPort(Port):
         ('vista', 'x86'),
         ('win7', 'x86'),
         ('lucid', 'x86'),
-        ('lucid', 'x86_64'))
-
-    ALL_GRAPHICS_TYPES = ('cpu', 'gpu')
-    CORE_GRAPHICS_VERSIONS = ('leopard', 'snowleopard', 'lion')
-    CORE_GRAPHICS_TYPES = ('cpu-cg', 'gpu-cg')
+        ('lucid', 'x86_64'),
+        # FIXME: Technically this should be 'arm', but adding a third architecture type breaks TestConfigurationConverter.
+        # If we need this to be 'arm' in the future, then we first have to fix TestConfigurationConverter.
+        ('icecreamsandwich', 'x86'))
 
     ALL_BASELINE_VARIANTS = [
         'chromium-mac-lion', 'chromium-mac-snowleopard', 'chromium-mac-leopard',
-        'chromium-cg-mac-lion', 'chromium-cg-mac-snowleopard', 'chromium-cg-mac-leopard',
         'chromium-win-win7', 'chromium-win-vista', 'chromium-win-xp',
         'chromium-linux-x86_64', 'chromium-linux-x86',
-        'chromium-gpu-mac-snowleopard', 'chromium-gpu-win-win7', 'chromium-gpu-linux-x86_64',
     ]
 
     CONFIGURATION_SPECIFIER_MACROS = {
         'mac': ['leopard', 'snowleopard', 'lion'],
         'win': ['xp', 'vista', 'win7'],
         'linux': ['lucid'],
+        'android': ['icecreamsandwich'],
     }
 
-    def __init__(self, host, **kwargs):
-        Port.__init__(self, host, **kwargs)
+    @classmethod
+    def _chromium_base_dir(cls, filesystem):
+        module_path = filesystem.path_to_module(cls.__module__)
+        offset = module_path.find('third_party')
+        if offset == -1:
+            return filesystem.join(module_path[0:module_path.find('Tools')], 'Source', 'WebKit', 'chromium')
+        else:
+            return module_path[0:offset]
+
+    def __init__(self, host, port_name, **kwargs):
+        Port.__init__(self, host, port_name, **kwargs)
         # All sub-classes override this, but we need an initial value for testing.
-        self._version = 'xp'
-        self._chromium_base_dir = None
+        self._chromium_base_dir_path = None
 
     def _check_file_exists(self, path_to_file, file_description,
                            override_step=None, logging=True):
@@ -223,14 +228,9 @@ class ChromiumPort(Port):
     def path_from_chromium_base(self, *comps):
         """Returns the full path to path made by joining the top of the
         Chromium source tree and the list of path components in |*comps|."""
-        if not self._chromium_base_dir:
-            chromium_module_path = self._filesystem.path_to_module(self.__module__)
-            offset = chromium_module_path.find('third_party')
-            if offset == -1:
-                self._chromium_base_dir = self._filesystem.join(chromium_module_path[0:chromium_module_path.find('Tools')], 'Source', 'WebKit', 'chromium')
-            else:
-                self._chromium_base_dir = chromium_module_path[0:offset]
-        return self._filesystem.join(self._chromium_base_dir, *comps)
+        if self._chromium_base_dir_path is None:
+            self._chromium_base_dir_path = self._chromium_base_dir(self._filesystem)
+        return self._filesystem.join(self._chromium_base_dir_path, *comps)
 
     def path_to_test_expectations_file(self):
         return self.path_from_webkit_base('LayoutTests', 'platform', 'chromium', 'test_expectations.txt')
@@ -266,9 +266,15 @@ class ChromiumPort(Port):
     def stop_helper(self):
         if self._helper:
             _log.debug("Stopping layout test helper")
-            self._helper.stdin.write("x\n")
-            self._helper.stdin.close()
-            self._helper.wait()
+            try:
+                self._helper.stdin.write("x\n")
+                self._helper.stdin.close()
+                self._helper.wait()
+            except IOError, e:
+                pass
+            finally:
+                self._helper = None
+
 
     def exit_code_from_summarized_results(self, unexpected_results):
         # Turn bots red for missing results.
@@ -295,11 +301,7 @@ class ChromiumPort(Port):
         test_configurations = []
         for version, architecture in self.ALL_SYSTEMS:
             for build_type in self.ALL_BUILD_TYPES:
-                for graphics_type in self.ALL_GRAPHICS_TYPES:
-                    test_configurations.append(TestConfiguration(version, architecture, build_type, graphics_type))
-                if version in self.CORE_GRAPHICS_VERSIONS:
-                    for graphics_type in self.CORE_GRAPHICS_TYPES:
-                        test_configurations.append(TestConfiguration(version, architecture, build_type, graphics_type))
+                test_configurations.append(TestConfiguration(version, architecture, build_type))
         return test_configurations
 
     try_builder_names = frozenset([
@@ -315,37 +317,45 @@ class ChromiumPort(Port):
         # FIXME: It seems bad that run_webkit_tests.py uses a hardcoded dummy
         # builder string instead of just using None.
         builder_name = self.get_option('builder_name', 'DUMMY_BUILDER_NAME')
+        base_overrides = super(ChromiumPort, self).test_expectations_overrides()
         if builder_name != 'DUMMY_BUILDER_NAME' and not '(deps)' in builder_name and not builder_name in self.try_builder_names:
-            return None
+            return base_overrides
 
         try:
             overrides_path = self.path_from_chromium_base('webkit', 'tools', 'layout_tests', 'test_expectations.txt')
-        except AssertionError:
-            return None
+        except AssertionError, e:
+            return base_overrides
         if not self._filesystem.exists(overrides_path):
-            return None
-        return self._filesystem.read_text_file(overrides_path)
+            return base_overrides
+        return self._filesystem.read_text_file(overrides_path) + (base_overrides or '')
 
-    def skipped_layout_tests(self, extra_test_files=None):
-        expectations_str = self.test_expectations()
-        overrides_str = self.test_expectations_overrides()
-        is_debug_mode = False
-
-        all_test_files = self.tests([])
-        if extra_test_files:
-            all_test_files.update(extra_test_files)
-
-        expectations = test_expectations.TestExpectations(
-            self, all_test_files, expectations_str, self.test_configuration(),
-            is_lint_mode=False, overrides=overrides_str)
-        return expectations.get_tests_with_result_type(test_expectations.SKIP)
-
-    def test_repository_paths(self):
-        # Note: for JSON file's backward-compatibility we use 'chrome' rather
-        # than 'chromium' here.
-        repos = super(ChromiumPort, self).test_repository_paths()
-        repos.append(('chrome', self.path_from_chromium_base()))
+    def repository_paths(self):
+        repos = super(ChromiumPort, self).repository_paths()
+        repos.append(('chromium', self.path_from_chromium_base('build')))
         return repos
+
+    def _get_crash_log(self, name, pid, stdout, stderr, newer_than):
+        new_stderr = stderr
+        if stderr and 'AddressSanitizer' in stderr:
+            asan_filter_path = self.path_from_chromium_base('third_party', 'asan', 'scripts', 'asan_symbolize.py')
+            if self._filesystem.exists(asan_filter_path):
+                output = self._executive.run_command([asan_filter_path], input=stderr)
+                new_stderr = self._executive.run_command(['c++filt'], input=output)
+
+        return super(ChromiumPort, self)._get_crash_log(name, pid, stdout, new_stderr, newer_than)
+
+    def virtual_test_suites(self):
+        return [
+            VirtualTestSuite('platform/chromium/virtual/gpu/fast/canvas',
+                             'fast/canvas',
+                             ['--enable-accelerated-2d-canvas']),
+            VirtualTestSuite('platform/chromium/virtual/gpu/canvas/philip',
+                             'canvas/philip',
+                             ['--enable-accelerated-2d-canvas']),
+            VirtualTestSuite('platform/chromium/virtual/threaded/compositing/visibility',
+                             'compositing/visibility',
+                             ['--enable-threaded-compositing']),
+        ]
 
     #
     # PROTECTED METHODS
@@ -394,23 +404,33 @@ class ChromiumPort(Port):
         return self._build_path(self.get_option('configuration'), binary_name)
 
 
-# FIXME: This should inherit from WebKitDriver now that Chromium has a DumpRenderTree process like the rest of WebKit.
-class ChromiumDriver(Driver):
-    def __init__(self, port, worker_number, pixel_tests):
-        Driver.__init__(self, port, worker_number, pixel_tests)
+class ChromiumDriver(WebKitDriver):
+    KILL_TIMEOUT_DEFAULT = 3.0
+
+    def __init__(self, port, worker_number, pixel_tests, no_timeout=False):
+        WebKitDriver.__init__(self, port, worker_number, pixel_tests, no_timeout)
         self._proc = None
         self._image_path = None
-        if self._pixel_tests:
-            self._image_path = self._port._filesystem.join(self._port.results_directory(), 'png_result%s.png' % self._worker_number)
 
-    def _wrapper_options(self):
+        # FIXME: Delete all of this driver code once we're satisfied that it's not needed any more.
+        self._test_shell = '--test-shell' in port.get_option('additional_drt_flag', [])
+
+    def _wrapper_options(self, pixel_tests):
         cmd = []
-        if self._pixel_tests:
-            # See note above in diff_image() for why we need _convert_path().
-            cmd.append("--pixel-tests=" + self._port._convert_path(self._image_path))
+        if pixel_tests:
+            if self._test_shell:
+                if not self._image_path:
+                    self._image_path = self._port._filesystem.join(self._port.results_directory(), 'png_result%s.png' % self._worker_number)
+                 # See note above in diff_image() for why we need _convert_path().
+                cmd.append("--pixel-tests=" + self._port._convert_path(self._image_path))
+            else:
+                cmd.append('--pixel-tests')
+
         # FIXME: This is not None shouldn't be necessary, unless --js-flags="''" changes behavior somehow?
         if self._port.get_option('js_flags') is not None:
             cmd.append('--js-flags="' + self._port.get_option('js_flags') + '"')
+        if self._no_timeout:
+            cmd.append("--no-timeout")
 
         # FIXME: We should be able to build this list using only an array of
         # option names, the options (optparse.Values) object, and the orignal
@@ -436,23 +456,31 @@ class ChromiumDriver(Driver):
         cmd.extend(self._port.get_option('additional_drt_flag', []))
         return cmd
 
-    def cmd_line(self):
+    def cmd_line(self, pixel_tests, per_test_args):
         cmd = self._command_wrapper(self._port.get_option('wrapper'))
         cmd.append(self._port._path_to_driver())
-        # FIXME: Why does --test-shell exist?  TestShell is dead, shouldn't this be removed?
-        # It seems it's still in use in Tools/DumpRenderTree/chromium/DumpRenderTree.cpp as of 8/10/11.
-        cmd.append('--test-shell')
-        cmd.extend(self._wrapper_options())
+        cmd.extend(self._wrapper_options(pixel_tests))
+        cmd.extend(per_test_args)
+
+        if not self._test_shell:
+            cmd.append('-')
+
         return cmd
 
-    def _start(self):
+    def _start(self, pixel_tests, per_test_args):
+        if not self._test_shell:
+            return super(ChromiumDriver, self)._start(pixel_tests, per_test_args)
+
         assert not self._proc
         # FIXME: This should use ServerProcess like WebKitDriver does.
         # FIXME: We should be reading stderr and stdout separately like how WebKitDriver does.
         close_fds = sys.platform != 'win32'
-        self._proc = subprocess.Popen(self.cmd_line(), stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=close_fds)
+        self._proc = subprocess.Popen(self.cmd_line(pixel_tests, per_test_args), stdin=subprocess.PIPE, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, close_fds=close_fds)
 
     def has_crashed(self):
+        if not self._test_shell:
+            return super(ChromiumDriver, self).has_crashed()
+
         if self._proc is None:
             return False
         return self._proc.poll() is not None
@@ -510,8 +538,11 @@ class ChromiumDriver(Driver):
             self._port._filesystem.remove(self._image_path)
 
     def run_test(self, driver_input):
+        if not self._test_shell:
+            return super(ChromiumDriver, self).run_test(driver_input)
+
         if not self._proc:
-            self._start()
+            self._start(driver_input.should_run_pixel_test, driver_input.args)
 
         output = []
         error = []
@@ -524,7 +555,7 @@ class ChromiumDriver(Driver):
         has_audio = False
         has_base64 = False
 
-        uri = self._port.test_to_uri(driver_input.test_name)
+        uri = self.test_to_uri(driver_input.test_name)
         cmd = self._test_shell_command(uri, driver_input.timeout, driver_input.image_hash)
         line, crash = self._write_command_and_read_line(input=cmd)
 
@@ -570,6 +601,8 @@ class ChromiumDriver(Driver):
 
             line, crash = self._write_command_and_read_line(input=None)
 
+        if crash and line is not None:
+            error.append(line)
         run_time = time.time() - start_time
         output_image = self._output_image_with_retry()
 
@@ -586,30 +619,44 @@ class ChromiumDriver(Driver):
                 text = None
 
         error = ''.join(error)
-        crashed_process_name = None
         # Currently the stacktrace is in the text output, not error, so append the two together so
         # that we can see stack in the output. See http://webkit.org/b/66806
         # FIXME: We really should properly handle the stderr output separately.
+        crash_log = ''
+        crashed_process_name = None
+        crashed_pid = None
         if crash:
-            error = error + str(text)
             crashed_process_name = self._port.driver_name()
+            if self._proc:
+                crashed_pid = self._proc.pid
+            crash_log = self._port._get_crash_log(crashed_process_name, crashed_pid, text, error, newer_than=start_time)
+            if text:
+                error = error + text
 
         return DriverOutput(text, output_image, actual_checksum, audio=audio_bytes,
-            crash=crash, crashed_process_name=crashed_process_name, test_time=run_time, timeout=timeout, error=error)
+            crash=crash, crashed_process_name=crashed_process_name, crashed_pid=crashed_pid, crash_log=crash_log,
+            test_time=run_time, timeout=timeout, error=error)
+
+    def start(self, pixel_tests, per_test_args):
+        if not self._proc:
+            self._start(pixel_tests, per_test_args)
 
     def stop(self):
+        if not self._test_shell:
+            return super(ChromiumDriver, self).stop()
+
         if not self._proc:
             return
-        # FIXME: If we used ServerProcess all this would happen for free with ServerProces.stop()
         self._proc.stdin.close()
         self._proc.stdout.close()
         if self._proc.stderr:
             self._proc.stderr.close()
         time_out_ms = self._port.get_option('time_out_ms')
-        if time_out_ms:
-            kill_timeout_seconds = 3.0 * int(time_out_ms) / Manager.DEFAULT_TEST_TIMEOUT_MS
+        if time_out_ms and not self._no_timeout:
+            timeout_ratio = float(time_out_ms) / self._port.default_test_timeout_ms()
+            kill_timeout_seconds = self.KILL_TIMEOUT_DEFAULT * timeout_ratio if timeout_ratio > 1.0 else self.KILL_TIMEOUT_DEFAULT
         else:
-            kill_timeout_seconds = 3.0
+            kill_timeout_seconds = self.KILL_TIMEOUT_DEFAULT
 
         # Closing stdin/stdout/stderr hangs sometimes on OS X,
         # (see __init__(), above), and anyway we don't want to hang

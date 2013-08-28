@@ -33,7 +33,6 @@ import re
 from webkitpy.common.config import irc as config_irc
 from webkitpy.common.config import urls
 from webkitpy.common.config.committers import CommitterList
-from webkitpy.common.checkout.changelog import parse_bug_id
 from webkitpy.common.system.executive import ScriptError
 from webkitpy.tool.bot.queueengine import TerminateQueue
 from webkitpy.tool.grammar import join_with_separators
@@ -41,7 +40,7 @@ from webkitpy.tool.grammar import join_with_separators
 
 def _post_error_and_check_for_bug_url(tool, nicks_string, exception):
     tool.irc().post("%s" % exception)
-    bug_id = parse_bug_id(exception.output)
+    bug_id = urls.parse_bug_id(exception.output)
     if bug_id:
         bug_url = tool.bugs.bug_url_for_bug_id(bug_id)
         tool.irc().post("%s: Ugg...  Might have created %s" % (nicks_string, bug_url))
@@ -51,12 +50,6 @@ def _post_error_and_check_for_bug_url(tool, nicks_string, exception):
 class IRCCommand(object):
     def execute(self, nick, args, tool, sheriff):
         raise NotImplementedError, "subclasses must implement"
-
-
-class LastGreenRevision(IRCCommand):
-    def execute(self, nick, args, tool, sheriff):
-        return "%s: %s" % (nick,
-            urls.view_revision_url(tool.buildbot.last_green_revision()))
 
 
 class Restart(IRCCommand):
@@ -128,7 +121,7 @@ class Rollout(IRCCommand):
             return "%s: Usage: rollout SVN_REVISION [SVN_REVISIONS] REASON" % nick
 
         revision_urls_string = join_with_separators([urls.view_revision_url(revision) for revision in svn_revision_list])
-        tool.irc().post("%s: Preparing rollout for %s..." % (nick, revision_urls_string))
+        tool.irc().post("%s: Preparing rollout for %s ..." % (nick, revision_urls_string))
 
         self._update_working_copy(tool)
 
@@ -254,7 +247,6 @@ class CreateBug(IRCCommand):
 visible_commands = {
     "help": Help,
     "hi": Hi,
-    "last-green-revision": LastGreenRevision,
     "restart": Restart,
     "rollout": Rollout,
     "whois": Whois,

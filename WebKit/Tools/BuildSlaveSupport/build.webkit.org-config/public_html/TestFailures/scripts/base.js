@@ -113,17 +113,6 @@ base.flattenArray = function(arrayOfArrays)
     });
 };
 
-base.values = function(dictionary)
-{
-    var result = [];
-
-    for (var key in dictionary) {
-        result.push(dictionary[key]);
-    }
-
-    return result;
-};
-
 base.filterDictionary = function(dictionary, predicate)
 {
     var result = {};
@@ -171,12 +160,26 @@ base.filterTree = function(tree, isLeaf, predicate)
     return filteredTree;
 };
 
+base.forEachDirectory = function(pathList, callback)
+{
+    var pathsByDirectory = {};
+    pathList.forEach(function(path) {
+        var directory = base.dirName(path);
+        pathsByDirectory[directory] = pathsByDirectory[directory] || [];
+        pathsByDirectory[directory].push(path);
+    });
+    Object.keys(pathsByDirectory).sort().forEach(function(directory) {
+        var paths = pathsByDirectory[directory];
+        callback(directory + ' (' + paths.length + ' tests)', paths);
+    });
+};
+
 base.parseJSONP = function(jsonp)
 {
     var startIndex = jsonp.indexOf('(') + 1;
     var endIndex = jsonp.lastIndexOf(')');
     return JSON.parse(jsonp.substr(startIndex, endIndex - startIndex));
-}
+};
 
 base.RequestTracker = function(requestsInFlight, callback, args)
 {
@@ -368,7 +371,9 @@ base.extends = function(base, prototype)
         var element = typeof base == 'string' ? document.createElement(base) : base.call(this);
         extended.prototype.__proto__ = element.__proto__;
         element.__proto__ = extended.prototype;
-        element.init && element.init.apply(element, arguments);
+        var singleton = element.init && element.init.apply(element, arguments);
+        if (singleton)
+            return singleton;
         return element;
     }
 

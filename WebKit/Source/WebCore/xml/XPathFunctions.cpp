@@ -29,7 +29,6 @@
 #include "XPathFunctions.h"
 
 #include "Element.h"
-#include "NamedNodeMap.h"
 #include "ProcessingInstruction.h"
 #include "TreeScope.h"
 #include "XMLNames.h"
@@ -351,7 +350,7 @@ Value FunId::evaluate() const
         // If there are several nodes with the same id, id() should return the first one.
         // In WebKit, getElementById behaves so, too, although its behavior in this case is formally undefined.
         Node* node = contextScope->getElementById(String(idList.characters() + startPos, endPos - startPos));
-        if (node && resultSet.add(node).second)
+        if (node && resultSet.add(node).isNewEntry)
             result.append(node);
         
         startPos = endPos;
@@ -591,9 +590,11 @@ Value FunLang::evaluate() const
     Attribute* languageAttribute = 0;
     Node* node = evaluationContext().node.get();
     while (node) {
-        NamedNodeMap* attrs = node->attributes();
-        if (attrs)
-            languageAttribute = attrs->getAttributeItem(XMLNames::langAttr);
+        if (node->isElementNode()) {
+            Element* element = toElement(node);
+            if (element->hasAttributes())
+                languageAttribute = element->getAttributeItem(XMLNames::langAttr);
+        }
         if (languageAttribute)
             break;
         node = node->parentNode();

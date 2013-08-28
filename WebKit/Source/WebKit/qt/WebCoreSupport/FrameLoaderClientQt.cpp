@@ -73,6 +73,7 @@
 #include "V8DOMWindow.h"
 #endif
 #include "ViewportArguments.h"
+#include "WebEventConversion.h"
 
 #include "qwebframe.h"
 #include "qwebframe_p.h"
@@ -396,7 +397,7 @@ void FrameLoaderClientQt::dispatchDidChangeLocationWithinPage()
 }
 
 #if USE(V8)
-void FrameLoaderClientQt::didCreateScriptContext(v8::Handle<v8::Context>, int)
+void FrameLoaderClientQt::didCreateScriptContext(v8::Handle<v8::Context>, int, int)
 {
 }
 void FrameLoaderClientQt::willReleaseScriptContext(v8::Handle<v8::Context>, int)
@@ -566,11 +567,6 @@ void FrameLoaderClientQt::dispatchWillSubmitForm(FramePolicyFunction function,
 }
 
 
-void FrameLoaderClientQt::dispatchDidLoadMainResource(DocumentLoader*)
-{
-}
-
-
 void FrameLoaderClientQt::revertToProvisionalState(DocumentLoader*)
 {
     m_hasRepresentation = true;
@@ -606,7 +602,7 @@ void FrameLoaderClientQt::postProgressFinishedNotification()
             QPoint localPos = view->mapFromGlobal(QCursor::pos());
             if (view->rect().contains(localPos)) {
                 QMouseEvent event(QEvent::MouseMove, localPos, Qt::NoButton, Qt::NoButton, Qt::NoModifier);
-                m_frame->eventHandler()->mouseMoved(PlatformMouseEvent(&event, 0));
+                m_frame->eventHandler()->mouseMoved(convertMouseEvent(&event, 0));
             }
         }
     }
@@ -1365,28 +1361,6 @@ PassRefPtr<Frame> FrameLoaderClientQt::createFrame(const KURL& url, const String
     return frameData.frame.release();
 }
 
-void FrameLoaderClientQt::didTransferChildFrameToNewDocument(Page*)
-{
-    ASSERT(m_frame->ownerElement());
-
-    if (!m_webFrame)
-        return;
-
-    Frame* parentFrame = m_webFrame->d->frame->tree()->parent();
-    ASSERT(parentFrame);
-
-    if (QWebFrame* parent = QWebFramePrivate::kit(parentFrame)) {
-        m_webFrame->d->setPage(parent->page());
-
-        if (m_webFrame->parent() != qobject_cast<QObject*>(parent))
-            m_webFrame->setParent(parent);
-    }
-}
-
-void FrameLoaderClientQt::transferLoadingResourceFromPage(ResourceLoader*, const ResourceRequest&, Page*)
-{
-}
-
 ObjectContentType FrameLoaderClientQt::objectContentType(const KURL& url, const String& mimeTypeIn, bool shouldPreferPlugInsForImages)
 {
     // qDebug()<<" ++++++++++++++++ url is "<<url.string()<<", mime = "<<mimeTypeIn;
@@ -1451,15 +1425,16 @@ public:
     virtual void invalidateRect(const IntRect& r)
     { 
         if (platformWidget())
-            platformWidget()->update(r);
+            static_cast<QWidget*>(platformWidget())->update(r);
     }
     virtual void frameRectsChanged()
     {
-        if (!platformWidget())
+        QWidget* widget = static_cast<QWidget*>(platformWidget());
+        if (!widget)
             return;
 
         IntRect windowRect = convertToContainingWindow(IntRect(0, 0, frameRect().width(), frameRect().height()));
-        platformWidget()->setGeometry(windowRect);
+        widget->setGeometry(windowRect);
 
         ScrollView* parentScrollView = parent();
         if (!parentScrollView)
@@ -1468,14 +1443,14 @@ public:
         ASSERT(parentScrollView->isFrameView());
         IntRect clipRect(static_cast<FrameView*>(parentScrollView)->windowClipRect());
         clipRect.move(-windowRect.x(), -windowRect.y());
-        clipRect.intersect(platformWidget()->rect());
+        clipRect.intersect(widget->rect());
 
         QRegion clipRegion = QRegion(clipRect);
-        platformWidget()->setMask(clipRegion);
+        widget->setMask(clipRegion);
 
         handleVisibility();
 
-        platformWidget()->update();
+        widget->update();
     }
 
     virtual void show()
@@ -1490,10 +1465,11 @@ private:
         if (!isVisible())
             return;
 
+        QWidget* widget = static_cast<QWidget*>(platformWidget());
         // If setMask is set with an empty QRegion, no clipping will
         // be performed, so in that case we hide the platformWidget.
-        QRegion mask = platformWidget()->mask();
-        platformWidget()->setVisible(!mask.isEmpty());
+        QRegion mask = widget->mask();
+        widget->setVisible(!mask.isEmpty());
     }
 };
 
@@ -1590,7 +1566,7 @@ PassRefPtr<Widget> FrameLoaderClientQt::createPlugin(const IntSize& pluginSize, 
 
                 styleSheet += QString::fromLatin1(getPropertyName(property));
                 styleSheet += QLatin1Char(':');
-                styleSheet += computedStyle(element)->getPropertyValue(property);
+                styleSheet += CSSComputedStyleDeclaration::create(element)->getPropertyValue(property);
                 styleSheet += QLatin1Char(';');
             }
 

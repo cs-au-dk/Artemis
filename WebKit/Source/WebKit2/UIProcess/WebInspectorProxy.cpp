@@ -29,13 +29,19 @@
 
 #if ENABLE(INSPECTOR)
 
+#include "WebFramePolicyListenerProxy.h"
+#include "WebFrameProxy.h"
 #include "WebInspectorMessages.h"
 #include "WebPageCreationParameters.h"
 #include "WebPageGroup.h"
 #include "WebPageProxy.h"
 #include "WebPreferences.h"
 #include "WebProcessProxy.h"
+#include "WebURLRequest.h"
 
+#if ENABLE(INSPECTOR_SERVER)
+#include "WebInspectorServer.h"
+#endif
 #if PLATFORM(WIN)
 #include "WebView.h"
 #endif
@@ -54,7 +60,7 @@ static PassRefPtr<WebPageGroup> createInspectorPageGroup()
 #endif
 
     pageGroup->preferences()->setApplicationChromeModeEnabled(true);
-    pageGroup->preferences()->setSuppressIncrementalRendering(true);
+    pageGroup->preferences()->setSuppressesIncrementalRendering(true);
 
     return pageGroup.release();
 }
@@ -78,6 +84,9 @@ WebInspectorProxy::WebInspectorProxy(WebPageProxy* page)
     , m_inspectorView(0)
     , m_inspectorWindow(0)
 #endif
+#if ENABLE(INSPECTOR_SERVER)
+    , m_remoteInspectionPageId(0)
+#endif
 {
 }
 
@@ -87,6 +96,11 @@ WebInspectorProxy::~WebInspectorProxy()
 
 void WebInspectorProxy::invalidate()
 {
+#if ENABLE(INSPECTOR_SERVER)
+    if (m_remoteInspectionPageId)
+        WebInspectorServer::shared().unregisterPage(m_remoteInspectionPageId);
+#endif
+
     m_page->close();
     didClose();
 
@@ -99,6 +113,14 @@ void WebInspectorProxy::invalidate()
 }
 
 // Public APIs
+bool WebInspectorProxy::isFront()
+{
+    if (!m_page)
+        return false;
+
+    return platformIsFront();
+}
+
 void WebInspectorProxy::show()
 {
     if (!m_page)
@@ -121,6 +143,22 @@ void WebInspectorProxy::showConsole()
         return;
 
     m_page->process()->send(Messages::WebInspector::ShowConsole(), m_page->pageID());
+}
+
+void WebInspectorProxy::showResources()
+{
+    if (!m_page)
+        return;
+
+    m_page->process()->send(Messages::WebInspector::ShowResources(), m_page->pageID());
+}
+
+void WebInspectorProxy::showMainResourceForFrame(WebFrameProxy* frame)
+{
+    if (!m_page)
+        return;
+    
+    m_page->process()->send(Messages::WebInspector::ShowMainResourceForFrame(frame->frameID()), m_page->pageID());
 }
 
 void WebInspectorProxy::attach()
@@ -148,6 +186,7 @@ void WebInspectorProxy::detach()
 
 void WebInspectorProxy::setAttachedWindowHeight(unsigned height)
 {
+    inspectorPageGroup()->preferences()->setInspectorAttachedHeight(height);
     platformSetAttachedWindowHeight(height);
 }
 
@@ -198,6 +237,59 @@ bool WebInspectorProxy::isInspectorPage(WebPageProxy* page)
     return page->pageGroup() == inspectorPageGroup();
 }
 
+static void decidePolicyForNavigationAction(WKPageRef, WKFrameRef frameRef, WKFrameNavigationType, WKEventModifiers, WKEventMouseButton, WKURLRequestRef requestRef, WKFramePolicyListenerRef listenerRef, WKTypeRef, const void* clientInfo)
+{
+    // Allow non-main frames to navigate anywhere.
+    if (!toImpl(frameRef)->isMainFrame()) {
+        toImpl(listenerRef)->use();
+        return;
+    }
+
+    const WebInspectorProxy* webInspectorProxy = static_cast<const WebInspectorProxy*>(clientInfo);
+    ASSERT(webInspectorProxy);
+
+    // Use KURL so we can compare just the fileSystemPaths.
+    KURL inspectorURL(KURL(), webInspectorProxy->inspectorPageURL());
+    KURL requestURL(KURL(), toImpl(requestRef)->url());
+
+    ASSERT(inspectorURL.isLocalFile());
+
+    // Allow loading of the main inspector file.
+    if (requestURL.isLocalFile() && requestURL.fileSystemPath() == inspectorURL.fileSystemPath()) {
+        toImpl(listenerRef)->use();
+        return;
+    }
+
+    // Prevent everything else from loading in the inspector's page.
+    toImpl(listenerRef)->ignore();
+
+    // And instead load it in the inspected page.
+    webInspectorProxy->page()->loadURLRequest(toImpl(requestRef));
+}
+
+#if ENABLE(INSPECTOR_SERVER)
+void WebInspectorProxy::enableRemoteInspection()
+{
+    if (!m_remoteInspectionPageId)
+        m_remoteInspectionPageId = WebInspectorServer::shared().registerPage(this);
+}
+
+void WebInspectorProxy::remoteFrontendConnected()
+{
+    m_page->process()->send(Messages::WebInspector::RemoteFrontendConnected(), m_page->pageID());
+}
+
+void WebInspectorProxy::remoteFrontendDisconnected()
+{
+    m_page->process()->send(Messages::WebInspector::RemoteFrontendDisconnected(), m_page->pageID());
+}
+
+void WebInspectorProxy::dispatchMessageFromRemoteFrontend(const String& message)
+{
+    m_page->process()->send(Messages::WebInspector::DispatchMessageFromRemoteFrontend(message), m_page->pageID());
+}
+#endif
+
 // Called by WebInspectorProxy messages
 void WebInspectorProxy::createInspectorPage(uint64_t& inspectorPageID, WebPageCreationParameters& inspectorPageParameters)
 {
@@ -205,6 +297,8 @@ void WebInspectorProxy::createInspectorPage(uint64_t& inspectorPageID, WebPageCr
 
     if (!m_page)
         return;
+
+    m_isAttached = shouldOpenAttached();
 
     WebPageProxy* inspectorPage = platformCreateInspectorPage();
     ASSERT(inspectorPage);
@@ -214,17 +308,29 @@ void WebInspectorProxy::createInspectorPage(uint64_t& inspectorPageID, WebPageCr
     inspectorPageID = inspectorPage->pageID();
     inspectorPageParameters = inspectorPage->creationParameters();
 
+    WKPagePolicyClient policyClient = {
+        kWKPagePolicyClientCurrentVersion,
+        this, /* clientInfo */
+        decidePolicyForNavigationAction,
+        0, /* decidePolicyForNewWindowAction */
+        0, /* decidePolicyForResponse */
+        0 /* unableToImplementPolicy */
+    };
+
+    inspectorPage->initializePolicyClient(&policyClient);
+
     String url = inspectorPageURL();
-    if (shouldOpenAttached())
+    if (m_isAttached)
         url += "?docked=true";
+
     m_page->process()->assumeReadAccessToBaseURL(inspectorBaseURL());
+
     inspectorPage->loadURL(url);
 }
 
 void WebInspectorProxy::didLoadInspectorPage()
 {
     m_isVisible = true;
-    m_isAttached = shouldOpenAttached();
 
     // platformOpen is responsible for rendering attached mode depending on m_isAttached.
     platformOpen();
@@ -258,14 +364,31 @@ void WebInspectorProxy::inspectedURLChanged(const String& urlString)
 
 bool WebInspectorProxy::canAttach()
 {
-    unsigned inspectedWindowHeight = platformInspectedWindowHeight();
-    return inspectedWindowHeight && minimumAttachedHeight <= (inspectedWindowHeight * 3 / 4);
+    // Keep this in sync with InspectorFrontendClientLocal::canAttachWindow. There are two implementations
+    // to make life easier in the multi-process world we have. WebInspectorProxy uses canAttach to decide if
+    // we can attach on open (on the UI process side). And InspectorFrontendClientLocal::canAttachWindow is
+    // used to decide if we can attach when the attach button is pressed (on the WebProcess side).
+
+    // Don't allow the attach if the window would be too small to accommodate the minimum inspector height.
+    // Also don't allow attaching to another inspector -- two inspectors in one window is too much!
+    bool isInspectorPage = m_page->pageGroup() == inspectorPageGroup();
+    unsigned inspectedPageHeight = platformInspectedWindowHeight();
+    unsigned maximumAttachedHeight = inspectedPageHeight * 3 / 4;
+    return minimumAttachedHeight <= maximumAttachedHeight && !isInspectorPage;
 }
 
 bool WebInspectorProxy::shouldOpenAttached()
 {
     return inspectorPageGroup()->preferences()->inspectorStartsAttached() && canAttach();
 }
+
+#if ENABLE(INSPECTOR_SERVER)
+void WebInspectorProxy::sendMessageToRemoteFrontend(const String& message)
+{
+    ASSERT(m_remoteInspectionPageId);
+    WebInspectorServer::shared().sendMessageOverConnection(m_remoteInspectionPageId, message);
+}
+#endif
 
 } // namespace WebKit
 

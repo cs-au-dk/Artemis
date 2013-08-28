@@ -35,9 +35,10 @@
 #import "WebNSObjectExtras.h"
 #import "WebNSURLExtras.h"
 #import <JavaScriptCore/InitializeThreading.h>
-#import <JavaScriptCore/PassRefPtr.h>
+#import <wtf/PassRefPtr.h>
 #import <WebCore/ArchiveResource.h>
 #import <WebCore/LegacyWebArchive.h>
+#import <WebCore/RunLoop.h>
 #import <WebCore/RuntimeApplicationChecks.h>
 #import <WebCore/TextEncoding.h>
 #import <WebCore/ThreadCheck.h>
@@ -67,6 +68,7 @@ static NSString * const WebResourceResponseKey =          @"WebResourceResponse"
 {
     JSC::initializeThreading();
     WTF::initializeMainThreadToProcessMainThread();
+    WebCore::RunLoop::initializeMainRunLoop();
     WebCoreObjCFinalizeOnMainThread(self);
 }
 

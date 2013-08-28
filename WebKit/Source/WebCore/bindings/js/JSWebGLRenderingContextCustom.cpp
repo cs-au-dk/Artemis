@@ -29,9 +29,11 @@
 
 #include "JSWebGLRenderingContext.h"
 
+#include "EXTTextureFilterAnisotropic.h"
 #include "ExceptionCode.h"
 #include "HTMLCanvasElement.h"
 #include "HTMLImageElement.h"
+#include "JSEXTTextureFilterAnisotropic.h"
 #include "JSFloat32Array.h"
 #include "JSHTMLCanvasElement.h"
 #include "JSHTMLImageElement.h"
@@ -40,8 +42,10 @@
 #include "JSOESStandardDerivatives.h"
 #include "JSOESTextureFloat.h"
 #include "JSOESVertexArrayObject.h"
+#include "JSUint32Array.h"
 #include "JSUint8Array.h"
 #include "JSWebGLBuffer.h"
+#include "JSWebGLCompressedTextureS3TC.h"
 #include "JSWebGLFramebuffer.h"
 #include "JSWebGLLoseContext.h"
 #include "JSWebGLProgram.h"
@@ -56,7 +60,7 @@
 #include "OESTextureFloat.h"
 #include "OESVertexArrayObject.h"
 #include "WebGLBuffer.h"
-#include "WebGLCompressedTextures.h"
+#include "WebGLCompressedTextureS3TC.h"
 #include "WebGLDebugRendererInfo.h"
 #include "WebGLDebugShaders.h"
 #include "WebGLExtension.h"
@@ -71,7 +75,7 @@
 #include <wtf/FastMalloc.h>
 #include <wtf/Float32Array.h>
 #include <wtf/Int32Array.h>
-#include <wtf/OwnFastMallocPtr.h>
+#include <wtf/Uint32Array.h>
 
 #if ENABLE(VIDEO)
 #include "HTMLVideoElement.h"
@@ -122,6 +126,8 @@ static JSValue toJS(ExecState* exec, JSDOMGlobalObject* globalObject, const WebG
         return toJS(exec, globalObject, info.getWebGLTexture());
     case WebGLGetInfo::kTypeWebGLUnsignedByteArray:
         return toJS(exec, globalObject, info.getWebGLUnsignedByteArray());
+    case WebGLGetInfo::kTypeWebGLUnsignedIntArray:
+        return toJS(exec, globalObject, info.getWebGLUnsignedIntArray());
     case WebGLGetInfo::kTypeWebGLVertexArrayObjectOES:
         return toJS(exec, globalObject, info.getWebGLVertexArrayObjectOES());
     default:
@@ -137,7 +143,7 @@ enum ObjectType {
 static JSValue getObjectParameter(JSWebGLRenderingContext* obj, ExecState* exec, ObjectType objectType)
 {
     if (exec->argumentCount() != 2)
-        return throwSyntaxError(exec);
+        return throwError(exec, createNotEnoughArgumentsError(exec));
 
     ExceptionCode ec = 0;
     WebGLRenderingContext* context = static_cast<WebGLRenderingContext*>(obj->impl());
@@ -184,6 +190,8 @@ static JSValue toJS(ExecState* exec, JSDOMGlobalObject* globalObject, WebGLExten
     switch (extension->getName()) {
     case WebGLExtension::WebKitWebGLLoseContextName:
         return toJS(exec, globalObject, static_cast<WebGLLoseContext*>(extension));
+    case WebGLExtension::EXTTextureFilterAnisotropicName:
+        return toJS(exec, globalObject, static_cast<EXTTextureFilterAnisotropic*>(extension));
     case WebGLExtension::OESStandardDerivativesName:
         return toJS(exec, globalObject, static_cast<OESStandardDerivatives*>(extension));
     case WebGLExtension::OESTextureFloatName:
@@ -194,8 +202,8 @@ static JSValue toJS(ExecState* exec, JSDOMGlobalObject* globalObject, WebGLExten
         return toJS(exec, globalObject, static_cast<WebGLDebugRendererInfo*>(extension));
     case WebGLExtension::WebGLDebugShadersName:
         return toJS(exec, globalObject, static_cast<WebGLDebugShaders*>(extension));
-    case WebGLExtension::WebKitWebGLCompressedTexturesName:
-        return toJS(exec, globalObject, static_cast<WebGLCompressedTextures*>(extension));
+    case WebGLExtension::WebKitWebGLCompressedTextureS3TCName:
+        return toJS(exec, globalObject, static_cast<WebGLCompressedTextureS3TC*>(extension));
     }
     ASSERT_NOT_REACHED();
     return jsNull();
@@ -214,7 +222,7 @@ void JSWebGLRenderingContext::visitChildren(JSCell* cell, SlotVisitor& visitor)
 JSValue JSWebGLRenderingContext::getAttachedShaders(ExecState* exec)
 {
     if (exec->argumentCount() < 1)
-        return throwSyntaxError(exec);
+        return throwError(exec, createNotEnoughArgumentsError(exec));
     ExceptionCode ec = 0;
     WebGLRenderingContext* context = static_cast<WebGLRenderingContext*>(impl());
     if (exec->argumentCount() > 0 && !exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(&JSWebGLProgram::s_info))
@@ -239,10 +247,10 @@ JSValue JSWebGLRenderingContext::getAttachedShaders(ExecState* exec)
 JSValue JSWebGLRenderingContext::getExtension(ExecState* exec)
 {
     if (exec->argumentCount() < 1)
-        return throwSyntaxError(exec);
+        return throwError(exec, createNotEnoughArgumentsError(exec));
 
     WebGLRenderingContext* context = static_cast<WebGLRenderingContext*>(impl());
-    const String& name = ustringToString(exec->argument(0).toString(exec));
+    const String& name = ustringToString(exec->argument(0).toString(exec)->value(exec));
     if (exec->hadException())
         return jsUndefined();
     WebGLExtension* extension = context->getExtension(name);
@@ -257,7 +265,7 @@ JSValue JSWebGLRenderingContext::getBufferParameter(ExecState* exec)
 JSValue JSWebGLRenderingContext::getFramebufferAttachmentParameter(ExecState* exec)
 {
     if (exec->argumentCount() != 3)
-        return throwSyntaxError(exec);
+        return throwError(exec, createNotEnoughArgumentsError(exec));
 
     ExceptionCode ec = 0;
     WebGLRenderingContext* context = static_cast<WebGLRenderingContext*>(impl());
@@ -281,7 +289,7 @@ JSValue JSWebGLRenderingContext::getFramebufferAttachmentParameter(ExecState* ex
 JSValue JSWebGLRenderingContext::getParameter(ExecState* exec)
 {
     if (exec->argumentCount() != 1)
-        return throwSyntaxError(exec);
+        return throwError(exec, createNotEnoughArgumentsError(exec));
 
     ExceptionCode ec = 0;
     WebGLRenderingContext* context = static_cast<WebGLRenderingContext*>(impl());
@@ -299,7 +307,7 @@ JSValue JSWebGLRenderingContext::getParameter(ExecState* exec)
 JSValue JSWebGLRenderingContext::getProgramParameter(ExecState* exec)
 {
     if (exec->argumentCount() != 2)
-        return throwSyntaxError(exec);
+        return throwError(exec, createNotEnoughArgumentsError(exec));
 
     ExceptionCode ec = 0;
     WebGLRenderingContext* context = static_cast<WebGLRenderingContext*>(impl());
@@ -325,7 +333,7 @@ JSValue JSWebGLRenderingContext::getRenderbufferParameter(ExecState* exec)
 JSValue JSWebGLRenderingContext::getShaderParameter(ExecState* exec)
 {
     if (exec->argumentCount() != 2)
-        return throwSyntaxError(exec);
+        return throwError(exec, createNotEnoughArgumentsError(exec));
 
     ExceptionCode ec = 0;
     WebGLRenderingContext* context = static_cast<WebGLRenderingContext*>(impl());
@@ -363,7 +371,7 @@ JSValue JSWebGLRenderingContext::getTexParameter(ExecState* exec)
 JSValue JSWebGLRenderingContext::getUniform(ExecState* exec)
 {
     if (exec->argumentCount() != 2)
-        return throwSyntaxError(exec);
+        return throwError(exec, createNotEnoughArgumentsError(exec));
 
     ExceptionCode ec = 0;
     WebGLRenderingContext* context = static_cast<WebGLRenderingContext*>(impl());
@@ -437,7 +445,7 @@ static bool functionForUniform(DataFunctionToCall f)
 static JSC::JSValue dataFunctionf(DataFunctionToCall f, JSC::ExecState* exec, WebGLRenderingContext* context)
 {
     if (exec->argumentCount() != 2)
-        return throwSyntaxError(exec);
+        return throwError(exec, createNotEnoughArgumentsError(exec));
     
     WebGLUniformLocation* location = 0;
     long index = -1;
@@ -527,7 +535,7 @@ static JSC::JSValue dataFunctionf(DataFunctionToCall f, JSC::ExecState* exec, We
 static JSC::JSValue dataFunctioni(DataFunctionToCall f, JSC::ExecState* exec, WebGLRenderingContext* context)
 {
     if (exec->argumentCount() != 2)
-        return throwSyntaxError(exec);
+        return throwError(exec, createNotEnoughArgumentsError(exec));
 
     if (exec->argumentCount() > 0 && !exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(&JSWebGLUniformLocation::s_info))
         return throwTypeError(exec);
@@ -592,7 +600,7 @@ static JSC::JSValue dataFunctioni(DataFunctionToCall f, JSC::ExecState* exec, We
 static JSC::JSValue dataFunctionMatrix(DataFunctionMatrixToCall f, JSC::ExecState* exec, WebGLRenderingContext* context)
 {
     if (exec->argumentCount() != 3)
-        return throwSyntaxError(exec);
+        return throwError(exec, createNotEnoughArgumentsError(exec));
 
     if (exec->argumentCount() > 0 && !exec->argument(0).isUndefinedOrNull() && !exec->argument(0).inherits(&JSWebGLUniformLocation::s_info))
         return throwTypeError(exec);

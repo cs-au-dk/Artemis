@@ -28,7 +28,7 @@
 
 #include "WebPageProxy.h"
 
-#if USE(ACCELERATED_COMPOSITING) && USE(TEXTURE_MAPPER)
+#if USE(UI_SIDE_COMPOSITING)
 #include "LayerTreeHostProxy.h"
 #include <CoreIPC/MessageID.h>
 #endif
@@ -58,7 +58,7 @@ void DrawingAreaProxy::setSize(const IntSize& size, const IntSize& scrollOffset)
     sizeDidChange();
 }
 
-#if USE(ACCELERATED_COMPOSITING) && USE(TEXTURE_MAPPER)
+#if USE(UI_SIDE_COMPOSITING)
 void DrawingAreaProxy::updateViewport()
 {
     m_webPageProxy->setViewNeedsDisplay(viewportVisibleRect());

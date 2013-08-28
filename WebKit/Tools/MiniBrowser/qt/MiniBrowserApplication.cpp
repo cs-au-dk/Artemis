@@ -29,12 +29,19 @@
 #include "MiniBrowserApplication.h"
 
 #include "BrowserWindow.h"
+#include "private/qquickwebview_p.h"
 #include "utils.h"
 #include <QRegExp>
 #include <QEvent>
 #include <QMouseEvent>
 #include <QTouchEvent>
-#include <QApplication>
+
+static inline QRectF touchRectForPosition(QPointF centerPoint)
+{
+    QRectF touchRect(0, 0, 40, 40);
+    touchRect.moveCenter(centerPoint);
+    return touchRect;
+}
 
 static inline bool isTouchEvent(const QEvent* event)
 {
@@ -62,13 +69,14 @@ static inline bool isMouseEvent(const QEvent* event)
 }
 
 MiniBrowserApplication::MiniBrowserApplication(int& argc, char** argv)
-    : QApplication(argc, argv)
-    , m_windowOptions(this)
+    : QGuiApplication(argc, argv)
     , m_realTouchEventReceived(false)
     , m_pendingFakeTouchEventCount(0)
     , m_isRobotized(false)
     , m_robotTimeoutSeconds(0)
     , m_robotExtraTimeSeconds(0)
+    , m_windowOptions(this)
+    , m_holdingControl(false)
 {
     setOrganizationName("Nokia");
     setApplicationName("QtMiniBrowser");
@@ -82,81 +90,134 @@ bool MiniBrowserApplication::notify(QObject* target, QEvent* event)
     // We try to be smart, if we received real touch event, we are probably on a device
     // with touch screen, and we should not have touch mocking.
 
-    if (!event->spontaneous() || m_realTouchEventReceived)
-        return QApplication::notify(target, event);
+    if (!event->spontaneous() || m_realTouchEventReceived || !m_windowOptions.touchMockingEnabled())
+        return QGuiApplication::notify(target, event);
 
     if (isTouchEvent(event) && static_cast<QTouchEvent*>(event)->deviceType() == QTouchEvent::TouchScreen) {
         if (m_pendingFakeTouchEventCount)
             --m_pendingFakeTouchEventCount;
         else
             m_realTouchEventReceived = true;
-        return QApplication::notify(target, event);
+        return QGuiApplication::notify(target, event);
     }
 
     BrowserWindow* browserWindow = qobject_cast<BrowserWindow*>(target);
     if (!browserWindow)
-        return QApplication::notify(target, event);
+        return QGuiApplication::notify(target, event);
+
+    // In QML events are propagated through parents. But since the WebView
+    // may consume key events, a shortcut might never reach the top QQuickItem.
+    // Therefore we are checking here for shortcuts.
+    if (event->type() == QEvent::KeyPress) {
+        QKeyEvent* keyEvent = static_cast<QKeyEvent*>(event);
+        if ((keyEvent->key() == Qt::Key_R && keyEvent->modifiers() == Qt::ControlModifier) || keyEvent->key() == Qt::Key_F5) {
+            browserWindow->reload();
+            return true;
+        }
+        if ((keyEvent->key() == Qt::Key_L && keyEvent->modifiers() == Qt::ControlModifier) || keyEvent->key() == Qt::Key_F6) {
+            browserWindow->focusAddressBar();
+            return true;
+        }
+    }
 
     if (event->type() == QEvent::KeyRelease && static_cast<QKeyEvent*>(event)->key() == Qt::Key_Control) {
         foreach (int id, m_heldTouchPoints)
             if (m_touchPoints.contains(id))
-                m_touchPoints[id].state = Qt::TouchPointReleased;
+                m_touchPoints[id].setState(Qt::TouchPointReleased);
         m_heldTouchPoints.clear();
-        sendTouchEvent(browserWindow);
+        sendTouchEvent(browserWindow, QEvent::TouchEnd, static_cast<QKeyEvent*>(event)->timestamp());
     }
 
     if (isMouseEvent(event)) {
         const QMouseEvent* const mouseEvent = static_cast<QMouseEvent*>(event);
+        m_holdingControl = mouseEvent->modifiers().testFlag(Qt::ControlModifier);
 
-        QWindowSystemInterface::TouchPoint touchPoint;
-        touchPoint.area = QRectF(mouseEvent->globalPos(), QSizeF(1, 1));
-        touchPoint.pressure = 1;
+        QTouchEvent::TouchPoint touchPoint;
+
+        touchPoint.setRect(touchRectForPosition(mouseEvent->localPos()));
+        touchPoint.setLastPos(m_lastPos);
+        m_lastPos = mouseEvent->localPos();
+
+        // Gesture recognition uses the screen position for the initial threshold
+        // but since the canvas translates touch events we actually need to pass
+        // the screen position as the scene position to deliver the appropriate
+        // coordinates to the target.
+        touchPoint.setSceneRect(touchRectForPosition(mouseEvent->screenPos()));
+        touchPoint.setLastScenePos(m_lastScreenPos);
+        m_lastScreenPos = mouseEvent->screenPos();
+        touchPoint.setPressure(1);
+
+        QEvent::Type touchType = QEvent::None;
 
         switch (mouseEvent->type()) {
         case QEvent::MouseButtonPress:
         case QEvent::MouseButtonDblClick:
-            touchPoint.id = mouseEvent->button();
-            if (m_touchPoints.contains(touchPoint.id))
-                touchPoint.state = Qt::TouchPointMoved;
-            else
-                touchPoint.state = Qt::TouchPointPressed;
+            touchPoint.setId(mouseEvent->button());
+            if (m_touchPoints.contains(touchPoint.id())) {
+                touchPoint.setState(Qt::TouchPointMoved);
+                touchType = QEvent::TouchUpdate;
+            } else {
+                touchPoint.setState(Qt::TouchPointPressed);
+                touchType = QEvent::TouchBegin;
+                m_startScreenPos = mouseEvent->screenPos();
+            }
             break;
         case QEvent::MouseMove:
-            if (!mouseEvent->buttons() || !m_touchPoints.contains(mouseEvent->buttons()))
-                return QApplication::notify(target, event);
-            touchPoint.id = mouseEvent->buttons();
-            touchPoint.state = Qt::TouchPointMoved;
+            if (!mouseEvent->buttons() || !m_touchPoints.contains(mouseEvent->buttons())) {
+                // We have to swallow the event instead of propagating it,
+                // since we avoid sending the mouse release events and if the
+                // Flickable is the mouse grabber it would receive the event
+                // and would move the content.
+                event->accept();
+                return true;
+            }
+            touchType = QEvent::TouchUpdate;
+            touchPoint.setId(mouseEvent->buttons());
+            touchPoint.setState(Qt::TouchPointMoved);
             break;
         case QEvent::MouseButtonRelease:
-            touchPoint.state = Qt::TouchPointReleased;
-            touchPoint.id = mouseEvent->button();
-            if (mouseEvent->modifiers().testFlag(Qt::ControlModifier)) {
-                m_heldTouchPoints.insert(touchPoint.id);
-                return QApplication::notify(target, event);
+            touchType = QEvent::TouchEnd;
+            touchPoint.setState(Qt::TouchPointReleased);
+            touchPoint.setId(mouseEvent->button());
+            if (m_holdingControl) {
+                m_heldTouchPoints.insert(touchPoint.id());
+
+                // We avoid sending the release event because the Flickable is
+                // listening to mouse events and would start a bounce-back
+                // animation if it received a mouse release.
+                event->accept();
+                return true;
             }
             break;
         default:
             Q_ASSERT_X(false, "multi-touch mocking", "unhandled event type");
         }
 
+        // Set the screen pos as the scene pos as canvas translates the touch events.
+        touchPoint.setStartScenePos(m_startScreenPos);
+
         // Update current touch-point
-        if (m_touchPoints.isEmpty())
-            touchPoint.flags |= QTouchEvent::TouchPoint::Primary;
-        m_touchPoints.insert(touchPoint.id, touchPoint);
+        m_touchPoints.insert(touchPoint.id(), touchPoint);
 
         // Update states for all other touch-points
-        for (QHash<int, QWindowSystemInterface::TouchPoint>::iterator it = m_touchPoints.begin(), end = m_touchPoints.end(); it != end; ++it) {
-            if (it.value().id != touchPoint.id)
-                it.value().state = Qt::TouchPointStationary;
+        for (QHash<int, QTouchEvent::TouchPoint>::iterator it = m_touchPoints.begin(), end = m_touchPoints.end(); it != end; ++it) {
+            if (it.value().id() != touchPoint.id())
+                it.value().setState(Qt::TouchPointStationary);
         }
 
-        sendTouchEvent(browserWindow);
+        Q_ASSERT(touchType != QEvent::None);
+
+        if (!sendTouchEvent(browserWindow, touchType, mouseEvent->timestamp()))
+            return QGuiApplication::notify(target, event);
+
+        event->accept();
+        return true;
     }
 
-    return QApplication::notify(target, event);
+    return QGuiApplication::notify(target, event);
 }
 
-void MiniBrowserApplication::sendTouchEvent(BrowserWindow* browserWindow)
+bool MiniBrowserApplication::sendTouchEvent(BrowserWindow* browserWindow, QEvent::Type type, ulong timestamp)
 {
     static QTouchDevice* device = 0;
     if (!device) {
@@ -166,16 +227,28 @@ void MiniBrowserApplication::sendTouchEvent(BrowserWindow* browserWindow)
     }
 
     m_pendingFakeTouchEventCount++;
-    QWindowSystemInterface::handleTouchEvent(browserWindow, QEvent::None, device, m_touchPoints.values());
 
-    if (!m_windowOptions.useTraditionalDesktopBehavior())
-        browserWindow->updateVisualMockTouchPoints(m_touchPoints.values());
+    const QList<QTouchEvent::TouchPoint>& currentTouchPoints = m_touchPoints.values();
+    Qt::TouchPointStates touchPointStates = 0;
+    foreach (const QTouchEvent::TouchPoint& touchPoint, currentTouchPoints)
+        touchPointStates |= touchPoint.state();
+
+    QTouchEvent event(type, device, Qt::NoModifier, touchPointStates, currentTouchPoints);
+    event.setTimestamp(timestamp);
+    event.setAccepted(false);
+
+    QGuiApplication::notify(browserWindow, &event);
+
+    if (QQuickWebViewExperimental::flickableViewportEnabled())
+        browserWindow->updateVisualMockTouchPoints(m_holdingControl ? currentTouchPoints : QList<QTouchEvent::TouchPoint>());
 
     // Get rid of touch-points that are no longer valid
-    foreach (const QWindowSystemInterface::TouchPoint& touchPoint, m_touchPoints) {
-    if (touchPoint.state ==  Qt::TouchPointReleased)
-        m_touchPoints.remove(touchPoint.id);
+    foreach (const QTouchEvent::TouchPoint& touchPoint, currentTouchPoints) {
+        if (touchPoint.state() ==  Qt::TouchPointReleased)
+            m_touchPoints.remove(touchPoint.id());
     }
+
+    return event.isAccepted();
 }
 
 static void printHelp(const QString& programName)
@@ -188,6 +261,7 @@ static void printHelp(const QString& programName)
          << "[--window-size (width)x(height)]"
          << "[--maximize]"
          << "[-f]                                    Full screen mode."
+         << "[--user-agent string]"
          << "[-v]"
          << "URL";
 }
@@ -206,12 +280,18 @@ void MiniBrowserApplication::handleUserOptions()
     }
 
     const bool useDesktopBehavior = takeOptionFlag(&args, "--desktop");
+    if (useDesktopBehavior)
+        windowOptions()->setTouchMockingEnabled(false);
+
+    QQuickWebViewExperimental::setFlickableViewportEnabled(!useDesktopBehavior);
     if (!useDesktopBehavior)
         qputenv("QT_WEBKIT_USE_MOBILE_THEME", QByteArray("1"));
-    m_windowOptions.setUseTraditionalDesktopBehavior(useDesktopBehavior);
     m_windowOptions.setPrintLoadedUrls(takeOptionFlag(&args, "-v"));
     m_windowOptions.setStartMaximized(takeOptionFlag(&args, "--maximize"));
     m_windowOptions.setStartFullScreen(takeOptionFlag(&args, "-f"));
+
+    if (args.contains("--user-agent"))
+        m_windowOptions.setUserAgent(takeOptionValue(&args, "--user-agent"));
 
     if (args.contains("--window-size")) {
         QString value = takeOptionValue(&args, "--window-size");
@@ -234,8 +314,9 @@ void MiniBrowserApplication::handleUserOptions()
         m_robotTimeoutSeconds = takeOptionValue(&args, "--robot-timeout").toInt();
         m_robotExtraTimeSeconds = takeOptionValue(&args, "--robot-extra-time").toInt();
     } else {
-        int urlArg = args.indexOf(QRegExp("^[^-].*"));
-        if (urlArg != -1)
+        int urlArg;
+
+        while ((urlArg = args.indexOf(QRegExp("^[^-].*"))) != -1)
             m_urls += args.takeAt(urlArg);
     }
 

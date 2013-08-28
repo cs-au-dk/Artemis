@@ -246,6 +246,11 @@ onwebkitanimationend
 onwebkitbeginfullscreen
 onwebkitendfullscreen
 onwebkitfullscreenchange
+onwebkitfullscreenerror
+onwebkitkeyadded
+onwebkitkeyerror
+onwebkitkeymessage
+onwebkitneedkey
 onwebkittransitionend
 open
 optimum
@@ -278,6 +283,8 @@ scoped
 scrollamount
 scrolldelay
 scrolling
+seamless
+select
 selected
 shape
 size
@@ -289,6 +296,7 @@ x-webkit-speech
 x-webkit-grammar
 spellcheck
 src
+srcdoc
 srclang
 standby
 start
@@ -302,6 +310,7 @@ text
 title
 top
 topmargin
+translate
 truespeed
 type
 usemap

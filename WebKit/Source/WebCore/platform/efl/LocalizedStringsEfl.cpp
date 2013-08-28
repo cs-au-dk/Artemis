@@ -113,6 +113,11 @@ String contextMenuItemTagCopyImageToClipboard()
     return String::fromUTF8("Copy Image");
 }
 
+String contextMenuItemTagCopyImageUrlToClipboard()
+{
+    return String::fromUTF8("Copy Image Address");
+}
+
 String contextMenuItemTagOpenVideoInNewWindow()
 {
     return String::fromUTF8("Open Video in New Window");
@@ -372,6 +377,11 @@ String AXDefinitionListTermText()
 String AXDefinitionListDefinitionText()
 {
     return String::fromUTF8("definition");
+}
+
+String AXFooterRoleDescriptionText()
+{
+    return String::fromUTF8("footer");
 }
 
 String AXButtonActionVerb()

@@ -28,6 +28,7 @@
 
 #include "ClipboardAccessPolicy.h"
 #include "Color.h"
+#include "DictationAlternative.h"
 #include "DocumentMarker.h"
 #include "EditAction.h"
 #include "EditingBehavior.h"
@@ -46,7 +47,6 @@ typedef int NSWritingDirection;
 
 namespace WebCore {
 
-class CSSStyleDeclaration;
 class Clipboard;
 class CompositeEditCommand;
 class DeleteButtonController;
@@ -62,7 +62,8 @@ class Pasteboard;
 class SimpleFontData;
 class SpellChecker;
 class SpellCheckRequest;
-class SpellingCorrectionController;
+class AlternativeTextController;
+class StylePropertySet;
 class Text;
 class TextCheckerClient;
 class TextEvent;
@@ -80,6 +81,7 @@ struct CompositionUnderline {
 };
 
 enum EditorCommandSource { CommandFromMenuOrKeyBinding, CommandFromDOM, CommandFromDOMWithUserInterface };
+enum EditorParagraphSeparator { EditorParagraphSeparatorIsDiv, EditorParagraphSeparatorIsP };
 
 class Editor {
 public:
@@ -130,15 +132,14 @@ public:
     bool shouldInsertText(const String&, Range*, EditorInsertAction) const;
     bool shouldShowDeleteInterface(HTMLElement*) const;
     bool shouldDeleteRange(Range*) const;
-    bool shouldApplyStyle(CSSStyleDeclaration*, Range*);
+    bool shouldApplyStyle(StylePropertySet*, Range*);
     
     void respondToChangedSelection(const VisibleSelection& oldSelection);
     void respondToChangedContents(const VisibleSelection& endingSelection);
 
-    bool selectionStartHasStyle(int propertyID, const String& value) const;
-    TriState selectionHasStyle(int propertyID, const String& value) const;
-    String selectionStartCSSPropertyValue(int propertyID);
-    WritingDirection textDirectionForSelection(bool&) const;
+    bool selectionStartHasStyle(CSSPropertyID, const String& value) const;
+    TriState selectionHasStyle(CSSPropertyID, const String& value) const;
+    String selectionStartCSSPropertyValue(CSSPropertyID);
     
     TriState selectionUnorderedListState() const;
     TriState selectionOrderedListState() const;
@@ -162,10 +163,10 @@ public:
     Node* removedAnchor() const { return m_removedAnchor.get(); }
     void setRemovedAnchor(PassRefPtr<Node> n) { m_removedAnchor = n; }
 
-    void applyStyle(CSSStyleDeclaration*, EditAction = EditActionUnspecified);
-    void applyParagraphStyle(CSSStyleDeclaration*, EditAction = EditActionUnspecified);
-    void applyStyleToSelection(CSSStyleDeclaration*, EditAction);
-    void applyParagraphStyleToSelection(CSSStyleDeclaration*, EditAction);
+    void applyStyle(StylePropertySet*, EditAction = EditActionUnspecified);
+    void applyParagraphStyle(StylePropertySet*, EditAction = EditActionUnspecified);
+    void applyStyleToSelection(StylePropertySet*, EditAction);
+    void applyParagraphStyleToSelection(StylePropertySet*, EditAction);
 
     void appliedEditing(PassRefPtr<CompositeEditCommand>);
     void unappliedEditing(PassRefPtr<EditCommandComposition>);
@@ -202,9 +203,14 @@ public:
 
     bool insertText(const String&, Event* triggeringEvent);
     bool insertTextForConfirmedComposition(const String& text);
+    bool insertDictatedText(const String&, const Vector<DictationAlternative>& dictationAlternatives, Event* triggeringEvent);
     bool insertTextWithoutSendingTextEvent(const String&, bool selectInsertedText, TextEvent* triggeringEvent);
     bool insertLineBreak();
     bool insertParagraphSeparator();
+
+#if PLATFORM(MAC)
+    bool insertParagraphSeparatorInQuotedContent();
+#endif
     
     bool isContinuousSpellCheckingEnabled();
     void toggleContinuousSpellChecking();
@@ -300,7 +306,7 @@ public:
 
     void setStartNewKillRingSequence(bool);
 
-    PassRefPtr<Range> rangeForPoint(const LayoutPoint& windowPoint);
+    PassRefPtr<Range> rangeForPoint(const IntPoint& windowPoint);
 
     void clear();
 
@@ -319,9 +325,9 @@ public:
 
     void addToKillRing(Range*, bool prepend);
 
-    void startCorrectionPanelTimer();
+    void startAlternativeTextUITimer();
     // If user confirmed a correction in the correction panel, correction has non-zero length, otherwise it means that user has dismissed the panel.
-    void handleCorrectionPanelResult(const String& correction);
+    void handleAlternativeTextUIResult(const String& correction);
     void dismissCorrectionPanelAsIgnored();
 
     void pasteAsFragment(PassRefPtr<DocumentFragment>, bool smartReplace, bool matchStyle);
@@ -346,7 +352,7 @@ public:
     const VisibleSelection& mark() const; // Mark, to be used as emacs uses it.
     void setMark(const VisibleSelection&);
 
-    void computeAndSetTypingStyle(CSSStyleDeclaration* , EditAction = EditActionUnspecified);
+    void computeAndSetTypingStyle(StylePropertySet* , EditAction = EditActionUnspecified);
     void applyEditingStyleToBodyElement() const;
     void applyEditingStyleToElement(Element*) const;
 
@@ -374,6 +380,8 @@ public:
     void takeFindStringFromSelection();
     void writeSelectionToPasteboard(const String& pasteboardName, const Vector<String>& pasteboardTypes);
     void readSelectionFromPasteboard(const String& pasteboardName);
+    String stringSelectionForPasteboard();
+    PassRefPtr<SharedBuffer> dataSelectionForPasteboard(const String& pasteboardName);
 #endif
 
     void replaceSelectionWithFragment(PassRefPtr<DocumentFragment>, bool selectReplacement, bool smartReplace, bool matchStyle);
@@ -381,8 +389,13 @@ public:
     bool selectionStartHasMarkerFor(DocumentMarker::MarkerType, int from, int length) const;
     void updateMarkersForWordsAffectedByEditing(bool onlyHandleWordsContainingSelection);
     void deletedAutocorrectionAtPosition(const Position&, const String& originalString);
+    
+    void simplifyMarkup(Node* startNode, Node* endNode);
 
     void deviceScaleFactorChanged();
+
+    EditorParagraphSeparator defaultParagraphSeparator() const { return m_defaultParagraphSeparator; }
+    void setDefaultParagraphSeparator(EditorParagraphSeparator separator) { m_defaultParagraphSeparator = separator; }
 
 private:
     Frame* m_frame;
@@ -398,16 +411,16 @@ private:
     bool m_shouldStyleWithCSS;
     OwnPtr<KillRing> m_killRing;
     OwnPtr<SpellChecker> m_spellChecker;
-    OwnPtr<SpellingCorrectionController> m_spellingCorrector;
+    OwnPtr<AlternativeTextController> m_alternativeTextController;
     VisibleSelection m_mark;
     bool m_areMarkedTextMatchesHighlighted;
+    EditorParagraphSeparator m_defaultParagraphSeparator;
 
     bool canDeleteRange(Range*) const;
     bool canSmartReplaceWithPasteboard(Pasteboard*);
     PassRefPtr<Clipboard> newGeneralClipboard(ClipboardAccessPolicy, Frame*);
     void pasteAsPlainTextWithPasteboard(Pasteboard*);
     void pasteWithPasteboard(Pasteboard*, bool allowPlainText);
-    void writeSelectionToPasteboard(Pasteboard*);
     void revealSelectionAfterEditingOperation();
     void markMisspellingsOrBadGrammar(const VisibleSelection&, bool checkSpelling, RefPtr<Range>& firstMisspellingRange);
     TextCheckingTypeMask resolveTextCheckingTypeMask(TextCheckingTypeMask);

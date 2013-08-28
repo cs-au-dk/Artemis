@@ -56,97 +56,101 @@ void CCLayerTilingData::setTileSize(const IntSize& size)
     m_tilingData.setMaxTextureSize(max(size.width(), size.height()));
 }
 
+void CCLayerTilingData::setBorderTexelOption(BorderTexelOption borderTexelOption)
+{
+    bool borderTexels = borderTexelOption == HasBorderTexels;
+    if (hasBorderTexels() == borderTexels)
+        return;
+
+    reset();
+    m_tilingData.setHasBorderTexels(borderTexels);
+}
+
 const CCLayerTilingData& CCLayerTilingData::operator=(const CCLayerTilingData& tiler)
 {
     m_tileSize = tiler.m_tileSize;
-    m_layerPosition = tiler.m_layerPosition;
     m_tilingData = tiler.m_tilingData;
 
     return *this;
 }
 
-void CCLayerTilingData::addTile(PassRefPtr<Tile> tile, int i, int j)
+void CCLayerTilingData::addTile(PassOwnPtr<Tile> tile, int i, int j)
 {
     ASSERT(!tileAt(i, j));
     tile->moveTo(i, j);
     m_tiles.add(make_pair(i, j), tile);
 }
 
-PassRefPtr<CCLayerTilingData::Tile> CCLayerTilingData::takeTile(int i, int j)
+PassOwnPtr<CCLayerTilingData::Tile> CCLayerTilingData::takeTile(int i, int j)
 {
     return m_tiles.take(make_pair(i, j));
 }
 
 CCLayerTilingData::Tile* CCLayerTilingData::tileAt(int i, int j) const
 {
-    Tile* tile = m_tiles.get(make_pair(i, j)).get();
-    ASSERT(!tile || tile->refCount() == 1);
-    return tile;
+    return m_tiles.get(make_pair(i, j));
 }
 
 void CCLayerTilingData::reset()
 {
     m_tiles.clear();
-    m_tilingData.setTotalSize(0, 0);
 }
 
-void CCLayerTilingData::contentRectToTileIndices(const IntRect& contentRect, int& left, int& top, int& right, int& bottom) const
+void CCLayerTilingData::layerRectToTileIndices(const IntRect& layerRect, int& left, int& top, int& right, int& bottom) const
 {
-    const IntRect layerRect = contentRectToLayerRect(contentRect);
-
     left = m_tilingData.tileXIndexFromSrcCoord(layerRect.x());
     top = m_tilingData.tileYIndexFromSrcCoord(layerRect.y());
     right = m_tilingData.tileXIndexFromSrcCoord(layerRect.maxX() - 1);
     bottom = m_tilingData.tileYIndexFromSrcCoord(layerRect.maxY() - 1);
 }
 
-IntRect CCLayerTilingData::contentRectToLayerRect(const IntRect& contentRect) const
+IntRect CCLayerTilingData::tileRect(const Tile* tile) const
 {
-    IntPoint pos(contentRect.x() - m_layerPosition.x(), contentRect.y() - m_layerPosition.y());
-    IntRect layerRect(pos, contentRect.size());
-
-    // Clip to the position.
-    if (pos.x() < 0 || pos.y() < 0)
-        layerRect = IntRect(IntPoint(0, 0), IntSize(contentRect.width() + pos.x(), contentRect.height() + pos.y()));
-    return layerRect;
+    IntRect tileRect = m_tilingData.tileBoundsWithBorder(tile->i(), tile->j());
+    tileRect.setSize(m_tileSize);
+    return tileRect;
 }
 
-IntRect CCLayerTilingData::layerRectToContentRect(const IntRect& layerRect) const
+Region CCLayerTilingData::opaqueRegionInLayerRect(const IntRect& layerRect) const
 {
-    IntRect contentRect = layerRect;
-    contentRect.move(m_layerPosition.x(), m_layerPosition.y());
-    return contentRect;
+    if (layerRect.isEmpty())
+        return Region();
+
+    Region opaqueRegion;
+    int left, top, right, bottom;
+    layerRectToTileIndices(layerRect, left, top, right, bottom);
+    for (int j = top; j <= bottom; ++j) {
+        for (int i = left; i <= right; ++i) {
+            Tile* tile = tileAt(i, j);
+            if (!tile)
+                continue;
+
+            IntRect tileOpaqueRect = intersection(layerRect, tile->opaqueRect());
+            opaqueRegion.unite(tileOpaqueRect);
+        }
+    }
+    return opaqueRegion;
 }
 
-IntRect CCLayerTilingData::tileContentRect(const Tile* tile) const
+void CCLayerTilingData::setBounds(const IntSize& size)
 {
-    IntRect contentRect = tileLayerRect(tile);
-    contentRect.move(m_layerPosition.x(), m_layerPosition.y());
-    return contentRect;
+    m_tilingData.setTotalSize(size.width(), size.height());
+
+    // Any tiles completely outside our new bounds are invalid and should be dropped.
+    int left, top, right, bottom;
+    layerRectToTileIndices(IntRect(IntPoint(), size), left, top, right, bottom);
+    Vector<TileMapKey> invalidTileKeys;
+    for (TileMap::const_iterator it = m_tiles.begin(); it != m_tiles.end(); ++it) {
+        if (it->first.first > right || it->first.second > bottom)
+            invalidTileKeys.append(it->first);
+    }
+    for (size_t i = 0; i < invalidTileKeys.size(); ++i)
+        m_tiles.remove(invalidTileKeys[i]);
 }
 
-IntRect CCLayerTilingData::tileLayerRect(const Tile* tile) const
+IntSize CCLayerTilingData::bounds() const
 {
-    const int index = m_tilingData.tileIndex(tile->i(), tile->j());
-    IntRect layerRect = m_tilingData.tileBoundsWithBorder(index);
-    layerRect.setSize(m_tileSize);
-    return layerRect;
-}
-
-void CCLayerTilingData::setLayerPosition(const IntPoint& layerPosition)
-{
-    m_layerPosition = layerPosition;
-}
-
-void CCLayerTilingData::growLayerToContain(const IntRect& contentRect)
-{
-    // Grow the tile array to contain this content rect.
-    IntRect layerRect = contentRectToLayerRect(contentRect);
-    IntSize rectSize = IntSize(layerRect.maxX(), layerRect.maxY());
-
-    IntSize oldLayerSize(m_tilingData.totalSizeX(), m_tilingData.totalSizeY());
-    IntSize newSize = rectSize.expandedTo(oldLayerSize);
-    m_tilingData.setTotalSize(newSize.width(), newSize.height());
+    return IntSize(m_tilingData.totalSizeX(), m_tilingData.totalSizeY());
 }
 
 } // namespace WebCore

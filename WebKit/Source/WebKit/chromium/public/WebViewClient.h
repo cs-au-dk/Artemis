@@ -42,11 +42,13 @@
 #include "WebTextDirection.h"
 #include "WebWidgetClient.h"
 #include "platform/WebColor.h"
+#include "platform/WebGraphicsContext3D.h"
 #include "platform/WebString.h"
 
 namespace WebKit {
 
 class WebAccessibilityObject;
+class WebBatteryStatusClient;
 class WebColorChooser;
 class WebColorChooserClient;
 class WebDeviceOrientationClient;
@@ -67,6 +69,7 @@ class WebNotificationPresenter;
 class WebRange;
 class WebSpeechInputController;
 class WebSpeechInputListener;
+class WebSpeechRecognizer;
 class WebStorageNamespace;
 class WebURL;
 class WebURLRequest;
@@ -92,10 +95,13 @@ public:
     // WebStorage specification.
     // The request parameter is only for the client to check if the request
     // could be fulfilled.  The client should not load the request.
+    // The policy parameter indicates how the new view will be displayed in
+    // WebWidgetClient::show.
     virtual WebView* createView(WebFrame* creator,
                                 const WebURLRequest& request,
                                 const WebWindowFeatures& features,
-                                const WebString& name) {
+                                const WebString& name,
+                                WebNavigationPolicy policy) {
         return 0;
     }
 
@@ -108,6 +114,10 @@ public:
 
     // Create a session storage namespace object associated with this WebView.
     virtual WebStorageNamespace* createSessionStorageNamespace(unsigned quota) { return 0; }
+
+    // Creates a graphics context that renders to the client's WebView.
+    virtual WebGraphicsContext3D* createGraphicsContext3D(const WebGraphicsContext3D::Attributes&) { return 0; }
+
 
     // Misc ----------------------------------------------------------------
 
@@ -256,6 +266,7 @@ public:
     virtual void focusedNodeChanged(const WebNode&) { }
 
     virtual void numberOfWheelEventHandlersChanged(unsigned) { }
+    virtual void numberOfTouchEventHandlersChanged(unsigned) { }
 
     // Indicates two things:
     //   1) This view may have a new layout now.
@@ -307,11 +318,18 @@ public:
     virtual WebSpeechInputController* speechInputController(
         WebSpeechInputListener*) { return 0; }
 
+    // Access the embedder API for speech recognition services.
+    virtual WebSpeechRecognizer* speechRecognizer() { return 0; }
+
     // Device Orientation --------------------------------------------------
 
     // Access the embedder API for device orientation services.
     virtual WebDeviceOrientationClient* deviceOrientationClient() { return 0; }
 
+    // Battery Status ------------------------------------------------------
+
+    // Access the embedder API for battery status services.
+    virtual WebBatteryStatusClient* batteryStatusClient() { return 0; }
 
     // Zoom ----------------------------------------------------------------
 

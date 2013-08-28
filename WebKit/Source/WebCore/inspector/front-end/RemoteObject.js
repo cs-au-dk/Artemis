@@ -219,7 +219,7 @@ WebInspector.RemoteObject.prototype = {
             return;
         }
 
-        RuntimeAgent.evaluate.invoke({expression:value, doNotPauseOnExceptions:true}, evaluatedCallback.bind(this));
+        RuntimeAgent.evaluate.invoke({expression:value, doNotPauseOnExceptionsAndMuteConsole:true}, evaluatedCallback.bind(this));
 
         /**
          * @param {?Protocol.Error} error
@@ -239,7 +239,7 @@ WebInspector.RemoteObject.prototype = {
             }
 
             delete result.description; // Optimize on traffic.
-            RuntimeAgent.callFunctionOn(this._objectId, setPropertyValue.toString(), [{ value:name }, result], undefined, propertySetCallback.bind(this));
+            RuntimeAgent.callFunctionOn(this._objectId, setPropertyValue.toString(), [{ value:name }, result], true, undefined, propertySetCallback.bind(this));
             if (result._objectId)
                 RuntimeAgent.releaseObject(result._objectId);
         }
@@ -260,7 +260,7 @@ WebInspector.RemoteObject.prototype = {
     },
 
     /**
-     * @param {function(DOMAgent.NodeId)} callback
+     * @param {function(?DOMAgent.NodeId)} callback
      */
     pushNodeToFrontend: function(callback)
     {
@@ -271,36 +271,62 @@ WebInspector.RemoteObject.prototype = {
     },
 
     /**
-     * @param {string} functionDeclaration
+     * @param {function(this:Object)} functionDeclaration
+     * @param {Array.<RuntimeAgent.CallArgument>|undefined} args
      * @param {function(?WebInspector.RemoteObject)} callback
      */
-    callFunction: function(functionDeclaration, callback)
+    callFunction: function(functionDeclaration, args, callback)
     {
+        /**
+         * @param {?Protocol.Error} error
+         * @param {RuntimeAgent.RemoteObject} result
+         * @param {boolean=} wasThrown
+         */
         function mycallback(error, result, wasThrown)
         {
             callback((error || wasThrown) ? null : WebInspector.RemoteObject.fromPayload(result));
         }
 
-        RuntimeAgent.callFunctionOn(this._objectId, functionDeclaration.toString(), undefined, undefined, mycallback);
+        RuntimeAgent.callFunctionOn(this._objectId, functionDeclaration.toString(), args, true, undefined, mycallback);
     },
 
     /**
-     * @param {string} functionDeclaration
+     * @param {function(this:Object)} functionDeclaration
+     * @param {Array.<RuntimeAgent.CallArgument>|undefined} args
      * @param {function(*)} callback
      */
-    callFunctionJSON: function(functionDeclaration, callback)
+    callFunctionJSON: function(functionDeclaration, args, callback)
     {
+        /**
+         * @param {?Protocol.Error} error
+         * @param {RuntimeAgent.RemoteObject} result
+         * @param {boolean=} wasThrown
+         */
         function mycallback(error, result, wasThrown)
         {
             callback((error || wasThrown) ? null : result.value);
         }
 
-        RuntimeAgent.callFunctionOn(this._objectId, functionDeclaration.toString(), undefined, true, mycallback);
+        RuntimeAgent.callFunctionOn(this._objectId, functionDeclaration.toString(), args, true, true, mycallback);
     },
 
     release: function()
     {
         RuntimeAgent.releaseObject(this._objectId);
+    },
+
+    /**
+     * @return {number}
+     */
+    arrayLength: function()
+    {
+        if (this.subtype !== "array")
+            return 0;
+
+        var matches = this._description.match(/\[([0-9]+)\]/);
+        if (!matches)
+            return 0;
+        return parseInt(matches[1], 10);
     }
 }
 
@@ -364,6 +390,9 @@ WebInspector.LocalJSONObject.prototype = {
                 }
                 this._cachedDescription = this._concatenate("[", "]", formatArrayItem);
                 break;
+            case "date":
+                this._cachedDescription = "" + this._value;
+                break;
             case "null":
                 this._cachedDescription = "null";
                 break;
@@ -424,6 +453,9 @@ WebInspector.LocalJSONObject.prototype = {
         if (this._value instanceof Array)
             return "array";
 
+        if (this._value instanceof Date)
+            return "date";
+
         return undefined;
     },
 
@@ -474,5 +506,13 @@ WebInspector.LocalJSONObject.prototype = {
     isError: function()
     {
         return false;
+    },
+
+    /**
+     * @return {number}
+     */
+    arrayLength: function()
+    {
+        return this._value instanceof Array ? this._value.length : 0;
     }
 }

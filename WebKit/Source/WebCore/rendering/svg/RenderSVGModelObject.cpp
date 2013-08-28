@@ -34,6 +34,7 @@
 #include "RenderSVGModelObject.h"
 
 #include "RenderSVGResource.h"
+#include "SVGNames.h"
 #include "SVGResourcesCache.h"
 #include "SVGStyledElement.h"
 
@@ -54,7 +55,7 @@ void RenderSVGModelObject::computeFloatRectForRepaint(RenderBoxModelObject* repa
     SVGRenderSupport::computeFloatRectForRepaint(this, repaintContainer, repaintRect, fixed);
 }
 
-void RenderSVGModelObject::mapLocalToContainer(RenderBoxModelObject* repaintContainer, bool /* fixed */, bool /* useTransforms */, TransformState& transformState, bool* wasFixed) const
+void RenderSVGModelObject::mapLocalToContainer(RenderBoxModelObject* repaintContainer, bool /* fixed */, bool /* useTransforms */, TransformState& transformState, ApplyContainerFlipOrNot, bool* wasFixed) const
 {
     SVGRenderSupport::mapLocalToContainer(this, repaintContainer, transformState, wasFixed);
 }
@@ -71,10 +72,10 @@ LayoutRect RenderSVGModelObject::outlineBoundsForRepaint(RenderBoxModelObject* r
     return containerRelativeQuad.enclosingBoundingBox();
 }
 
-void RenderSVGModelObject::absoluteRects(Vector<LayoutRect>& rects, const LayoutPoint& accumulatedOffset) const
+void RenderSVGModelObject::absoluteRects(Vector<IntRect>& rects, const LayoutPoint& accumulatedOffset) const
 {
-    LayoutRect rect = enclosingLayoutRect(strokeBoundingBox());
-    rect.moveBy(accumulatedOffset);
+    IntRect rect = enclosingIntRect(strokeBoundingBox());
+    rect.moveBy(roundedIntPoint(accumulatedOffset));
     rects.append(rect);
 }
 
@@ -125,12 +126,15 @@ static void getElementCTM(SVGElement* element, AffineTransform& transform)
     SVGElement* stopAtElement = SVGLocatable::nearestViewportElement(element);
     ASSERT(stopAtElement);
 
+    AffineTransform localTransform;
     Node* current = element;
+
     while (current && current->isSVGElement()) {
         SVGElement* currentElement = static_cast<SVGElement*>(current);
-        if (currentElement->isStyled())
-            transform = const_cast<AffineTransform&>(currentElement->renderer()->localToParentTransform()).multiply(transform);
-
+        if (currentElement->isStyled()) {
+            localTransform = currentElement->renderer()->localToParentTransform();
+            transform = localTransform.multiply(transform);
+        }
         // For getCTM() computation, stop at the nearest viewport element
         if (currentElement == stopAtElement)
             break;
@@ -158,7 +162,7 @@ static bool intersectsAllowingEmpty(const FloatRect& r, const FloatRect& other)
 // image, line, path, polygon, polyline, rect, text and use.
 static bool isGraphicsElement(RenderObject* renderer)
 {
-    return renderer->isSVGShape() || renderer->isSVGText() || renderer->isSVGImage() || renderer->isSVGShadowTreeRootContainer();
+    return renderer->isSVGShape() || renderer->isSVGText() || renderer->isSVGImage() || renderer->node()->hasTagName(SVGNames::useTag);
 }
 
 bool RenderSVGModelObject::checkIntersection(RenderObject* renderer, const FloatRect& rect)

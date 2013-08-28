@@ -155,7 +155,7 @@ void ImageDocumentParser::finish()
 
         // Report the natural image size in the page title, regardless of zoom
         // level.
-        LayoutSize size = cachedImage->imageSizeForRenderer(document()->imageElement()->renderer(), 1.0f);
+        IntSize size = cachedImage->imageSizeForRenderer(document()->imageElement()->renderer(), 1.0f);
         if (size.width()) {
             // Compute the title, we use the decoded filename of the resource, falling
             // back on the (decoded) hostname if there is no path.
@@ -253,8 +253,7 @@ void ImageDocument::resizeImageToFit()
     m_imageElement->setWidth(static_cast<int>(imageSize.width() * scale));
     m_imageElement->setHeight(static_cast<int>(imageSize.height() * scale));
     
-    ExceptionCode ec;
-    m_imageElement->style()->setProperty(CSSPropertyCursor, "-webkit-zoom-in", false, ec);
+    m_imageElement->setInlineStyleProperty(CSSPropertyCursor, "-webkit-zoom-in", false);
 }
 
 void ImageDocument::imageClicked(int x, int y)
@@ -307,11 +306,10 @@ void ImageDocument::restoreImageSize()
     m_imageElement->setWidth(imageSize.width());
     m_imageElement->setHeight(imageSize.height());
     
-    ExceptionCode ec;
     if (imageFitsInWindow())
-        m_imageElement->style()->removeProperty(CSSPropertyCursor, ec);
+        m_imageElement->removeInlineStyleProperty(CSSPropertyCursor);
     else
-        m_imageElement->style()->setProperty(CSSPropertyCursor, "-webkit-zoom-out", false, ec);
+        m_imageElement->setInlineStyleProperty(CSSPropertyCursor, "-webkit-zoom-out", false);
         
     m_didShrinkImage = false;
 }
@@ -341,12 +339,10 @@ void ImageDocument::windowSizeChanged()
     // If the image has been explicitly zoomed in, restore the cursor if the image fits
     // and set it to a zoom out cursor if the image doesn't fit
     if (!m_shouldShrinkImage) {
-        ExceptionCode ec;
-        
         if (fitsInWindow)
-            m_imageElement->style()->removeProperty(CSSPropertyCursor, ec);
+            m_imageElement->removeInlineStyleProperty(CSSPropertyCursor);
         else
-            m_imageElement->style()->setProperty(CSSPropertyCursor, "-webkit-zoom-out", false, ec);
+            m_imageElement->setInlineStyleProperty(CSSPropertyCursor, "-webkit-zoom-out", false);
         return;
     }
     

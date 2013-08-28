@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Apple Inc. All rights reserved.
+ * Copyright (C) 2011, 2012 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -26,13 +26,12 @@
 #include "config.h"
 #include "WebNotificationClient.h"
 
-#if ENABLE(NOTIFICATIONS)
+#if ENABLE(NOTIFICATIONS) || ENABLE(LEGACY_NOTIFICATIONS)
 
 #include "NotificationPermissionRequestManager.h"
 #include "WebNotificationManager.h"
 #include "WebPage.h"
 #include "WebProcess.h"
-#include <WebCore/NotImplemented.h>
 #include <WebCore/ScriptExecutionContext.h>
 
 using namespace WebCore;
@@ -50,50 +49,55 @@ WebNotificationClient::~WebNotificationClient()
 
 bool WebNotificationClient::show(Notification* notification)
 {
-#if ENABLE(NOTIFICATIONS)
     return WebProcess::shared().notificationManager().show(notification, m_page);
-#else
-    notImplemented();
-    return false;
-#endif
 }
 
 void WebNotificationClient::cancel(Notification* notification)
 {
-#if ENABLE(NOTIFICATIONS)
     WebProcess::shared().notificationManager().cancel(notification, m_page);
-#else
-    notImplemented();
-#endif
+}
+
+void WebNotificationClient::clearNotifications(ScriptExecutionContext* context)
+{
+    WebProcess::shared().notificationManager().clearNotifications(context, m_page);
 }
 
 void WebNotificationClient::notificationObjectDestroyed(Notification* notification)
 {
-#if ENABLE(NOTIFICATIONS)
     WebProcess::shared().notificationManager().didDestroyNotification(notification, m_page);
-#else
-    UNUSED_PARAM(notification);
-    notImplemented();
-#endif
 }
 
+void WebNotificationClient::notificationControllerDestroyed()
+{
+    delete this;
+}
+
+#if ENABLE(LEGACY_NOTIFICATIONS)
 void WebNotificationClient::requestPermission(ScriptExecutionContext* context, PassRefPtr<VoidCallback> callback)
 {
     m_page->notificationPermissionRequestManager()->startRequest(context->securityOrigin(), callback);
 }
+#endif
+
+#if ENABLE(NOTIFICATIONS)
+void WebNotificationClient::requestPermission(ScriptExecutionContext* context, PassRefPtr<NotificationPermissionCallback> callback)
+{
+    m_page->notificationPermissionRequestManager()->startRequest(context->securityOrigin(), callback);
+}
+#endif
 
 void WebNotificationClient::cancelRequestsForPermission(ScriptExecutionContext* context)
 {
     m_page->notificationPermissionRequestManager()->cancelRequest(context->securityOrigin());
 }
 
-NotificationPresenter::Permission WebNotificationClient::checkPermission(ScriptExecutionContext* context)
+NotificationClient::Permission WebNotificationClient::checkPermission(ScriptExecutionContext* context)
 {
     if (!context || !context->isDocument())
-        return NotificationPresenter::PermissionDenied;
+        return NotificationClient::PermissionDenied;
     return m_page->notificationPermissionRequestManager()->permissionLevel(context->securityOrigin());
 }
 
 } // namespace WebKit
 
-#endif // ENABLE(NOTIFICATIONS)
+#endif // ENABLE(NOTIFICATIONS) || ENABLE(LEGACY_NOTIFICATIONS)

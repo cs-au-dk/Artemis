@@ -27,28 +27,24 @@
 #ifndef ContextMenuItem_h
 #define ContextMenuItem_h
 
+#if ENABLE(CONTEXT_MENUS)
+
 #include "PlatformMenuDescription.h"
 #include "PlatformString.h"
 #include <wtf/OwnPtr.h>
 
 #if PLATFORM(MAC)
 #include <wtf/RetainPtr.h>
-
-#ifdef __OBJC__
-@class NSMenuItem;
-#else
-class NSMenuItem;
-#endif
+OBJC_CLASS NSMenuItem;
 #elif PLATFORM(WIN)
 typedef struct tagMENUITEMINFOW MENUITEMINFO;
 #elif PLATFORM(GTK)
 typedef struct _GtkMenuItem GtkMenuItem;
 typedef struct _GtkAction GtkAction;
-#elif PLATFORM(QT)
-#include <QAction>
 #elif PLATFORM(WX)
 class wxMenuItem;
 #endif
+#endif // ENABLE(CONTEXT_MENUS)
 
 namespace WebCore {
 
@@ -64,7 +60,7 @@ namespace WebCore {
         ContextMenuItemTagOpenImageInNewWindow,
         ContextMenuItemTagDownloadImageToDisk,
         ContextMenuItemTagCopyImageToClipboard,
-#if PLATFORM(QT) || PLATFORM(GTK)
+#if PLATFORM(QT) || PLATFORM(GTK) || PLATFORM(EFL)
         ContextMenuItemTagCopyImageUrlToClipboard,
 #endif
         ContextMenuItemTagOpenFrameInNewWindow,
@@ -84,6 +80,16 @@ namespace WebCore {
 #if PLATFORM(GTK)
         ContextMenuItemTagInputMethods,
         ContextMenuItemTagUnicode,
+        ContextMenuItemTagUnicodeInsertLRMMark,
+        ContextMenuItemTagUnicodeInsertRLMMark,
+        ContextMenuItemTagUnicodeInsertLREMark,
+        ContextMenuItemTagUnicodeInsertRLEMark,
+        ContextMenuItemTagUnicodeInsertLROMark,
+        ContextMenuItemTagUnicodeInsertRLOMark,
+        ContextMenuItemTagUnicodeInsertPDFMark,
+        ContextMenuItemTagUnicodeInsertZWSMark,
+        ContextMenuItemTagUnicodeInsertZWJMark,
+        ContextMenuItemTagUnicodeInsertZWNJMark,
 #endif
         ContextMenuItemTagSpellingGuess,
         ContextMenuItemTagNoGuessesFound,
@@ -170,6 +176,7 @@ namespace WebCore {
         SubmenuType
     };
 
+#if ENABLE(CONTEXT_MENUS)
 #if PLATFORM(MAC)
     typedef NSMenuItem* PlatformMenuItemDescription;
 #elif PLATFORM(QT)
@@ -298,6 +305,7 @@ namespace WebCore {
 #endif // USE(CROSS_PLATFORM_CONTEXT_MENUS)
     };
 
+#endif // ENABLE(CONTEXT_MENUS)
 }
 
 #endif // ContextMenuItem_h

@@ -28,13 +28,21 @@
 
 #if WEBKIT_VERSION_MAX_ALLOWED >= WEBKIT_VERSION_LATEST
 
+@class DOMDictionary;
+@class DOMDocument;
 @class DOMIDBKey;
-@class DOMOptionsObject;
+@class DOMSVGDocument;
+@class DOMSVGPoint;
 @class DOMTestObj;
 @class DOMTestObjectAConstructor;
 @class DOMTestObjectBConstructor;
 @class DOMTestObjectCConstructor;
-@class DOMlog;
+@class DOMa;
+@class DOMb;
+@class DOMbool;
+@class DOMc;
+@class DOMd;
+@class DOMe;
 @class NSString;
 @protocol DOMEventListener;
 
@@ -88,8 +96,6 @@ enum {
 - (void)setReflectedBooleanAttr:(BOOL)newReflectedBooleanAttr;
 - (NSString *)reflectedURLAttr;
 - (void)setReflectedURLAttr:(NSString *)newReflectedURLAttr;
-- (NSString *)reflectedNonEmptyURLAttr;
-- (void)setReflectedNonEmptyURLAttr:(NSString *)newReflectedNonEmptyURLAttr;
 - (NSString *)reflectedStringAttr;
 - (void)setReflectedStringAttr:(NSString *)newReflectedStringAttr;
 - (int)reflectedCustomIntegralAttr;
@@ -98,8 +104,6 @@ enum {
 - (void)setReflectedCustomBooleanAttr:(BOOL)newReflectedCustomBooleanAttr;
 - (NSString *)reflectedCustomURLAttr;
 - (void)setReflectedCustomURLAttr:(NSString *)newReflectedCustomURLAttr;
-- (NSString *)reflectedCustomNonEmptyURLAttr;
-- (void)setReflectedCustomNonEmptyURLAttr:(NSString *)newReflectedCustomNonEmptyURLAttr;
 - (int)attrWithGetterException;
 - (void)setAttrWithGetterException:(int)newAttrWithGetterException;
 - (int)attrWithSetterException;
@@ -110,7 +114,22 @@ enum {
 - (void)setStringAttrWithSetterException:(NSString *)newStringAttrWithSetterException;
 - (int)customAttr;
 - (void)setCustomAttr:(int)newCustomAttr;
-- (NSString *)scriptStringAttr;
+- (int)withScriptStateAttribute;
+- (void)setWithScriptStateAttribute:(int)newWithScriptStateAttribute;
+- (DOMTestObj *)withScriptExecutionContextAttribute;
+- (void)setWithScriptExecutionContextAttribute:(DOMTestObj *)newWithScriptExecutionContextAttribute;
+- (DOMTestObj *)withScriptStateAttributeRaises;
+- (void)setWithScriptStateAttributeRaises:(DOMTestObj *)newWithScriptStateAttributeRaises;
+- (DOMTestObj *)withScriptExecutionContextAttributeRaises;
+- (void)setWithScriptExecutionContextAttributeRaises:(DOMTestObj *)newWithScriptExecutionContextAttributeRaises;
+- (DOMTestObj *)withScriptExecutionContextAndScriptStateAttribute;
+- (void)setWithScriptExecutionContextAndScriptStateAttribute:(DOMTestObj *)newWithScriptExecutionContextAndScriptStateAttribute;
+- (DOMTestObj *)withScriptExecutionContextAndScriptStateAttributeRaises;
+- (void)setWithScriptExecutionContextAndScriptStateAttributeRaises:(DOMTestObj *)newWithScriptExecutionContextAndScriptStateAttributeRaises;
+- (DOMTestObj *)withScriptExecutionContextAndScriptStateWithSpacesAttribute;
+- (void)setWithScriptExecutionContextAndScriptStateWithSpacesAttribute:(DOMTestObj *)newWithScriptExecutionContextAndScriptStateWithSpacesAttribute;
+- (DOMTestObj *)withScriptArgumentsAndCallStackAttribute;
+- (void)setWithScriptArgumentsAndCallStackAttribute:(DOMTestObj *)newWithScriptArgumentsAndCallStackAttribute;
 #if ENABLE(Condition1)
 - (int)conditionalAttr1;
 - (void)setConditionalAttr1:(int)newConditionalAttr1;
@@ -135,6 +154,15 @@ enum {
 - (DOMTestObjectCConstructor *)conditionalAttr6;
 - (void)setConditionalAttr6:(DOMTestObjectCConstructor *)newConditionalAttr6;
 #endif
+- (DOMDocument *)contentDocument;
+- (DOMSVGPoint *)mutablePoint;
+- (void)setMutablePoint:(DOMSVGPoint *)newMutablePoint;
+- (DOMSVGPoint *)immutablePoint;
+- (void)setImmutablePoint:(DOMSVGPoint *)newImmutablePoint;
+- (int)strawberry;
+- (void)setStrawberry:(int)newStrawberry;
+- (float)strictFloat;
+- (void)setStrictFloat:(float)newStrictFloat;
 - (int)descriptionName;
 - (int)idName;
 - (void)setIdName:(int)newIdName;
@@ -148,33 +176,55 @@ enum {
 - (DOMTestObj *)methodThatRequiresAllArgsAndThrows:(NSString *)strArg objArg:(DOMTestObj *)objArg;
 - (void)serializedValue:(NSString *)serializedArg;
 - (void)idbKey:(DOMIDBKey *)key;
-- (void)optionsObject:(DOMOptionsObject *)oo ooo:(DOMOptionsObject *)ooo;
+- (void)optionsObject:(DOMDictionary *)oo ooo:(DOMDictionary *)ooo;
 - (void)methodWithException;
 - (void)customMethod;
 - (void)customMethodWithArgs:(int)intArg strArg:(NSString *)strArg objArg:(DOMTestObj *)objArg;
-- (void)customArgsAndException:(DOMlog *)intArg;
 - (void)addEventListener:(NSString *)type listener:(id <DOMEventListener>)listener useCapture:(BOOL)useCapture;
 - (void)removeEventListener:(NSString *)type listener:(id <DOMEventListener>)listener useCapture:(BOOL)useCapture;
-- (void)withDynamicFrame;
-- (void)withDynamicFrameAndArg:(int)intArg;
-- (void)withDynamicFrameAndOptionalArg:(int)intArg optionalArg:(int)optionalArg;
-- (void)withDynamicFrameAndUserGesture:(int)intArg;
-- (void)withDynamicFrameAndUserGestureASAD:(int)intArg optionalArg:(int)optionalArg;
 - (void)withScriptStateVoid;
 - (DOMTestObj *)withScriptStateObj;
 - (void)withScriptStateVoidException;
 - (DOMTestObj *)withScriptStateObjException;
 - (void)withScriptExecutionContext;
+- (void)withScriptExecutionContextAndScriptState;
+- (DOMTestObj *)withScriptExecutionContextAndScriptStateObjException;
+- (DOMTestObj *)withScriptExecutionContextAndScriptStateWithSpaces;
+- (void)withScriptArgumentsAndCallStack;
 - (void)methodWithOptionalArg:(int)opt;
 - (void)methodWithNonOptionalArgAndOptionalArg:(int)nonOpt opt:(int)opt;
 - (void)methodWithNonOptionalArgAndTwoOptionalArgs:(int)nonOpt opt1:(int)opt1 opt2:(int)opt2;
+- (void)methodWithOptionalString:(NSString *)str;
+- (void)methodWithOptionalStringIsUndefined:(NSString *)str;
+- (void)methodWithOptionalStringIsNullString:(NSString *)str;
+#if ENABLE(Condition1)
 - (NSString *)conditionalMethod1;
+#endif
+#if ENABLE(Condition1) && ENABLE(Condition2)
 - (void)conditionalMethod2;
+#endif
+#if ENABLE(Condition1) || ENABLE(Condition2)
 - (void)conditionalMethod3;
+#endif
 - (void)classMethod;
 - (int)classMethodWithOptional:(int)arg;
+- (void)classMethod2:(int)arg;
+#if ENABLE(Condition1)
 - (void)overloadedMethod1:(int)arg;
+#endif
+#if ENABLE(Condition1)
 - (void)overloadedMethod1:(NSString *)type;
+#endif
+- (DOMSVGDocument *)getSVGDocument;
+- (void)convert1:(DOMa *);
+- (void)convert2:(DOMb *);
+- (void)convert3:(DOMc *);
+- (void)convert4:(DOMd *);
+- (void)convert5:(DOMe *);
+- (DOMSVGPoint *)mutablePointFunction;
+- (DOMSVGPoint *)immutablePointFunction;
+- (void)orange;
+- (DOMbool *)strictFunction:(NSString *)str a:(float)a b:(int)b;
 @end
 
 #endif

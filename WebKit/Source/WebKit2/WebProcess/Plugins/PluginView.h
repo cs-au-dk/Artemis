@@ -29,13 +29,12 @@
 #include "NPRuntimeObjectMap.h"
 #include "Plugin.h"
 #include "PluginController.h"
-#include "RunLoop.h"
 #include "WebFrame.h"
-
 #include <WebCore/MediaCanStartListener.h>
+#include <WebCore/PluginViewBase.h>
 #include <WebCore/ResourceError.h>
 #include <WebCore/ResourceResponse.h>
-#include <WebCore/PluginViewBase.h>
+#include <WebCore/RunLoop.h>
 #include <wtf/Deque.h>
 
 // FIXME: Eventually this should move to WebCore.
@@ -66,10 +65,8 @@ public:
     void setDeviceScaleFactor(float);
     void windowAndViewFramesChanged(const WebCore::IntRect& windowFrameInScreenCoordinates, const WebCore::IntRect& viewFrameInWindowCoordinates);
     bool sendComplexTextInput(uint64_t pluginComplexTextInputIdentifier, const String& textInput);
-#endif
-
-#if USE(CG)
-    RetainPtr<CGPDFDocumentRef> pdfDocumentForPrinting() const { return m_plugin->pdfDocumentForPrinting(); }
+    void setLayerHostingMode(LayerHostingMode);
+    RetainPtr<PDFDocument> pdfDocumentForPrinting() const { return m_plugin->pdfDocumentForPrinting(); }
 #endif
 
     // FIXME: Remove this; nobody should have to know about the plug-in view's renderer except the plug-in view itself.
@@ -142,7 +139,6 @@ private:
     virtual NPObject* windowScriptNPObject();
     virtual NPObject* pluginElementNPObject();
     virtual bool evaluate(NPObject*, const String&scriptString, NPVariant* result, bool allowPopups);
-    virtual bool tryToShortCircuitInvoke(NPObject*, NPIdentifier methodName, const NPVariant* arguments, uint32_t argumentCount, bool& returnValue, NPVariant& result);
     virtual void setStatusbarText(const String&);
     virtual bool isAcceleratedCompositingEnabled();
     virtual void pluginProcessCrashed();
@@ -164,6 +160,10 @@ private:
     virtual bool isPrivateBrowsingEnabled();
     virtual void protectPluginFromDestruction();
     virtual void unprotectPluginFromDestruction();
+#if PLUGIN_ARCHITECTURE(X11)
+    virtual uint64_t createPluginContainer();
+    virtual void windowedPluginGeometryDidChange(const WebCore::IntRect& frameRect, const WebCore::IntRect& clipRect, uint64_t windowID);
+#endif
 
     // WebFrame::LoadListener
     virtual void didFinishLoad(WebFrame*);
@@ -180,7 +180,7 @@ private:
 
     // Pending URLRequests that the plug-in has made.
     Deque<RefPtr<URLRequest> > m_pendingURLRequests;
-    RunLoop::Timer<PluginView> m_pendingURLRequestsTimer;
+    WebCore::RunLoop::Timer<PluginView> m_pendingURLRequestsTimer;
 
     // Pending frame loads that the plug-in has made.
     typedef HashMap<RefPtr<WebFrame>, RefPtr<URLRequest> > FrameLoadMap;

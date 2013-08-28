@@ -1,7 +1,7 @@
 #ifndef ColorChooserClient_h
 #define ColorChooserClient_h
 
-#if ENABLE(INPUT_COLOR)
+#if ENABLE(INPUT_TYPE_COLOR)
 
 #include "ColorChooser.h"
 #include <wtf/OwnPtr.h>
@@ -13,12 +13,14 @@ class Color;
 
 class ColorChooserClient {
 public:
+    virtual ~ColorChooserClient() { }
+
     virtual void didChooseColor(const Color&) = 0;
     virtual void didEndChooser() = 0;
 };
 
 } // namespace WebCore
 
-#endif // ENABLE(INPUT_COLOR)
+#endif // ENABLE(INPUT_TYPE_COLOR)
 
 #endif // ColorChooserClient_h

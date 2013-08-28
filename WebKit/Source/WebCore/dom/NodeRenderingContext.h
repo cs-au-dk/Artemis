@@ -34,12 +34,12 @@ namespace WebCore {
 
 class ContainerNode;
 class Document;
+class InsertionPoint;
 class Node;
-class RenderFlowThread;
+class RenderNamedFlowThread;
 class RenderObject;
 class RenderStyle;
-class ShadowContentElement;
-class ShadowRoot;
+class ShadowTree;
 
 class NodeRenderingContext {
 public:
@@ -52,7 +52,7 @@ public:
     RenderObject* parentRenderer() const;
     RenderObject* nextRenderer() const;
     RenderObject* previousRenderer() const;
-    ShadowContentElement* includer() const;
+    InsertionPoint* insertionPoint() const;
 
     RenderStyle* style() const;
     void setStyle(PassRefPtr<RenderStyle>);
@@ -62,33 +62,31 @@ public:
 
     void hostChildrenChanged();
 
+    bool isOnUpperEncapsulationBoundary() const;
+    bool isOnEncapsulationBoundary() const;
     bool hasFlowThreadParent() const { return m_parentFlowRenderer; }
-    RenderFlowThread* parentFlowRenderer() const { return m_parentFlowRenderer; }
+    RenderNamedFlowThread* parentFlowRenderer() const { return m_parentFlowRenderer; }
     void moveToFlowThreadIfNeeded();
 
 private:
-
-    enum TreeLocation {
-        LocationUndetermined,
-        LocationNotInTree,
-        LocationLightChild,
-        LocationShadowChild,
+    enum AttachingPhase {
+        Calculating,
+        AttachingStraight,
+        AttachingNotInTree,
+        AttachingDistributed,
+        AttachingNotDistributed,
+        AttachingFallbacked,
+        AttachingNotFallbacked,
+        AttachingShadowChild,
     };
 
-    enum AttachPhase {
-        AttachStraight,
-        AttachContentLight,
-        AttachContentForwarded,
-    };
-
-    TreeLocation m_location;
-    AttachPhase m_phase;
+    AttachingPhase m_phase;
     Node* m_node;
     ContainerNode* m_parentNodeForRenderingAndStyle;
-    ShadowRoot* m_visualParentShadowRoot;
-    ShadowContentElement* m_includer;
+    ShadowTree* m_visualParentShadowTree;
+    InsertionPoint* m_insertionPoint;
     RefPtr<RenderStyle> m_style;
-    RenderFlowThread* m_parentFlowRenderer;
+    RenderNamedFlowThread* m_parentFlowRenderer;
     AtomicString m_flowThread;
 };
 
@@ -99,7 +97,7 @@ inline Node* NodeRenderingContext::node() const
 
 inline ContainerNode* NodeRenderingContext::parentNodeForRenderingAndStyle() const
 {
-    ASSERT(m_location != LocationUndetermined);
+    ASSERT(m_phase != Calculating);
     return m_parentNodeForRenderingAndStyle;
 }
 
@@ -108,9 +106,21 @@ inline RenderStyle* NodeRenderingContext::style() const
     return m_style.get();
 }
 
-inline ShadowContentElement* NodeRenderingContext::includer() const
+inline InsertionPoint* NodeRenderingContext::insertionPoint() const
 {
-    return m_includer;
+    return m_insertionPoint;
+}
+
+inline bool NodeRenderingContext::isOnEncapsulationBoundary() const
+{
+    return (m_phase == AttachingDistributed
+            || m_phase == AttachingShadowChild
+            || m_phase == AttachingFallbacked);
+}
+
+inline bool NodeRenderingContext::isOnUpperEncapsulationBoundary() const
+{
+    return m_phase == AttachingShadowChild;
 }
 
 class NodeRendererFactory {

@@ -59,10 +59,12 @@ protected:
 
 protected:
     virtual bool needsContainer() const;
+    virtual bool shouldHaveSpinButton() const;
     virtual void createShadowSubtree() OVERRIDE;
     virtual void destroyShadowSubtree() OVERRIDE;
     virtual void disabledAttributeChanged() OVERRIDE;
     virtual void readonlyAttributeChanged() OVERRIDE;
+    virtual void handleBlurEvent() OVERRIDE;
 
 private:
     virtual bool isTextField() const OVERRIDE;
@@ -72,8 +74,7 @@ private:
     virtual bool shouldSubmitImplicitly(Event*) OVERRIDE;
     virtual RenderObject* createRenderer(RenderArena*, RenderStyle*) const OVERRIDE;
     virtual bool shouldUseInputMethod() const OVERRIDE;
-    virtual void setValue(const String&, bool valueChanged, bool sendChangeEvent) OVERRIDE;
-    virtual void dispatchChangeEventInResponseToSetValue() OVERRIDE;
+    virtual void setValue(const String&, bool valueChanged, TextFieldEventBehavior) OVERRIDE;
     virtual String sanitizeValue(const String&) const OVERRIDE;
     virtual bool shouldRespectListAttribute() OVERRIDE;
     virtual HTMLElement* placeholderElement() const OVERRIDE;

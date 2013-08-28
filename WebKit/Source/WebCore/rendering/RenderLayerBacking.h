@@ -95,19 +95,25 @@ public:
     // for descendants, but its contents usually render into the window (in which case this returns true).
     // This returns false for other layers, and when the document layer actually needs to paint into its backing store
     // for some reason.
-    bool paintingGoesToWindow() const;
+    bool paintsIntoWindow() const;
+    
+    // Returns true for a composited layer that has no backing store of its own, so
+    // paints into some ancestor layer.
+    bool paintsIntoCompositedAncestor() const { return !m_requiresOwnBackingStore; }
+
+    void setRequiresOwnBackingStore(bool flag) { m_requiresOwnBackingStore = flag; }
 
     void setContentsNeedDisplay();
     // r is in the coordinate space of the layer's render object
-    void setContentsNeedDisplayInRect(const LayoutRect&);
+    void setContentsNeedDisplayInRect(const IntRect&);
 
     // Notification from the renderer that its content changed.
-    void contentChanged(RenderLayer::ContentChangeType);
+    void contentChanged(ContentChangeType);
 
     // Interface to start, finish, suspend and resume animations and transitions
-    bool startTransition(double timeOffset, int property, const RenderStyle* fromStyle, const RenderStyle* toStyle);
-    void transitionPaused(double timeOffset, int property);
-    void transitionFinished(int property);
+    bool startTransition(double, CSSPropertyID, const RenderStyle* fromStyle, const RenderStyle* toStyle);
+    void transitionPaused(double timeOffset, CSSPropertyID);
+    void transitionFinished(CSSPropertyID);
 
     bool startAnimation(double timeOffset, const Animation* anim, const KeyframeList& keyframes);
     void animationPaused(double timeOffset, const String& name);
@@ -116,8 +122,8 @@ public:
     void suspendAnimations(double time = 0);
     void resumeAnimations();
 
-    LayoutRect compositedBounds() const;
-    void setCompositedBounds(const LayoutRect&);
+    IntRect compositedBounds() const;
+    void setCompositedBounds(const IntRect&);
     void updateCompositedBounds();
     
     void updateAfterWidgetResize();
@@ -127,16 +133,20 @@ public:
     virtual void notifyAnimationStarted(const GraphicsLayer*, double startTime);
     virtual void notifySyncRequired(const GraphicsLayer*);
 
-    virtual void paintContents(const GraphicsLayer*, GraphicsContext&, GraphicsLayerPaintingPhase, const LayoutRect& clip);
+    virtual void paintContents(const GraphicsLayer*, GraphicsContext&, GraphicsLayerPaintingPhase, const IntRect& clip);
 
     virtual float deviceScaleFactor() const;
     virtual float pageScaleFactor() const;
     virtual void didCommitChangesForLayer(const GraphicsLayer*) const;
 
-    virtual bool showDebugBorders() const;
-    virtual bool showRepaintCounter() const;
+    virtual bool showDebugBorders(const GraphicsLayer*) const;
+    virtual bool showRepaintCounter(const GraphicsLayer*) const;
 
-    LayoutRect contentsBox() const;
+#ifndef NDEBUG
+    virtual void verifyNotPainting();
+#endif
+
+    IntRect contentsBox() const;
     
     // For informative purposes only.
     CompositingLayerType compositingLayerType() const;
@@ -148,6 +158,11 @@ public:
 #if ENABLE(CSS_FILTERS)
     bool canCompositeFilters() const { return m_canCompositeFilters; }
 #endif
+
+    // Return an estimate of the backing store area (in pixels) allocated by this object's GraphicsLayers.
+    double backingStoreArea() const;
+
+    String nameForLayer() const;
     
 private:
     void createPrimaryGraphicsLayer();
@@ -169,11 +184,11 @@ private:
 
     GraphicsLayerPaintingPhase paintingPhaseForPrimaryLayer() const;
     
-    LayoutSize contentOffsetInCompostingLayer() const;
+    IntSize contentOffsetInCompostingLayer() const;
     // Result is transform origin in pixels.
-    FloatPoint3D computeTransformOrigin(const LayoutRect& borderBox) const;
+    FloatPoint3D computeTransformOrigin(const IntRect& borderBox) const;
     // Result is perspective origin in pixels.
-    FloatPoint computePerspectiveOrigin(const LayoutRect& borderBox) const;
+    FloatPoint computePerspectiveOrigin(const IntRect& borderBox) const;
 
     void updateLayerOpacity(const RenderStyle*);
     void updateLayerTransform(const RenderStyle*);
@@ -186,6 +201,9 @@ private:
     
     bool isMainFrameRenderViewLayer() const;
     
+    bool paintsBoxDecorations() const;
+    bool paintsChildren() const;
+
     // Returns true if this compositing layer has no visible content.
     bool isSimpleContainerCompositingLayer() const;
     // Returns true if this layer has content that needs to be rendered by painting into the backing store.
@@ -194,20 +212,18 @@ private:
     bool isDirectlyCompositedImage() const;
     void updateImageContents();
 
-    bool rendererHasBackground() const;
     Color rendererBackgroundColor() const;
     void updateBackgroundColor();
 
-    bool hasVisibleNonCompositingDescendants() const;
-    
-    void paintIntoLayer(RenderLayer* rootLayer, GraphicsContext*, const LayoutRect& paintDirtyRect, PaintBehavior, GraphicsLayerPaintingPhase, RenderObject* paintingRoot);
+    bool containsNonEmptyRenderers() const;
+    bool hasVisibleNonCompositingDescendantLayers() const;
 
-    static int graphicsLayerToCSSProperty(AnimatedPropertyID);
-    static AnimatedPropertyID cssToGraphicsLayerProperty(int);
+    bool shouldClipCompositedBounds() const;
 
-#ifndef NDEBUG
-    String nameForLayer() const;
-#endif
+    void paintIntoLayer(RenderLayer* rootLayer, GraphicsContext*, const IntRect& paintDirtyRect, PaintBehavior, GraphicsLayerPaintingPhase, RenderObject* paintingRoot);
+
+    static CSSPropertyID graphicsLayerToCSSProperty(AnimatedPropertyID);
+    static AnimatedPropertyID cssToGraphicsLayerProperty(CSSPropertyID);
 
     RenderLayer* m_owningLayer;
 
@@ -221,11 +237,12 @@ private:
     OwnPtr<GraphicsLayer> m_layerForVerticalScrollbar;
     OwnPtr<GraphicsLayer> m_layerForScrollCorner;
 
-    LayoutRect m_compositedBounds;
+    IntRect m_compositedBounds;
 
     bool m_artificiallyInflatedBounds;      // bounds had to be made non-zero to make transform-origin work
     bool m_isMainFrameRenderViewLayer;
     bool m_usingTiledCacheLayer;
+    bool m_requiresOwnBackingStore;
 #if ENABLE(CSS_FILTERS)
     bool m_canCompositeFilters;
 #endif

@@ -34,10 +34,13 @@
 #endif
 
 #include <wtf/ExportMacros.h>
-#if USE(JSC)
+#include "PlatformExportMacros.h"
+
+#if PLATFORM(QT) && USE(V8)
+#include <JavaScriptCore/runtime/JSExportMacros.h>
+#else
 #include <runtime/JSExportMacros.h>
 #endif
-#include "PlatformExportMacros.h"
 
 #ifdef __APPLE__
 #define HAVE_FUNC_USLEEP 1
@@ -79,6 +82,8 @@
 #undef delete
 #include <wtf/FastMalloc.h>
 
+#include <ciso646>
+
 #endif
 
 // On MSW, wx headers need to be included before windows.h is.
@@ -92,7 +97,7 @@
 // are used from wx headers. On GTK+ for Mac many GTK+ files include <libintl.h>
 // or <glib/gi18n-lib.h>, which in turn include <xlocale/_ctype.h> which uses
 // isacii(). 
-#if !PLATFORM(QT) && !PLATFORM(WX) && !PLATFORM(CHROMIUM) && !(OS(DARWIN) && PLATFORM(GTK))
+#if !PLATFORM(QT) && !PLATFORM(WX) && !PLATFORM(CHROMIUM) && !(OS(DARWIN) && PLATFORM(GTK)) && !OS(QNX) && !defined(_LIBCPP_VERSION)
 #include <wtf/DisallowCType.h>
 #endif
 
@@ -121,10 +126,6 @@
 // New theme
 #define WTF_USE_NEW_THEME 1
 #endif // PLATFORM(MAC)
-
-#if OS(UNIX) || OS(WINDOWS)
-#define WTF_USE_OS_RANDOMNESS 1
-#endif
 
 #if PLATFORM(CHROMIUM)
 

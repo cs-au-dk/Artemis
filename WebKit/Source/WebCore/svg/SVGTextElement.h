@@ -47,13 +47,13 @@ private:
     virtual bool supportsFocus() const { return true; }
 
     bool isSupportedAttribute(const QualifiedName&);
-    virtual void parseMappedAttribute(Attribute*);
+    virtual void parseAttribute(Attribute*) OVERRIDE;
 
     virtual AffineTransform* supplementalTransform();
     virtual AffineTransform localCoordinateSpaceTransform(SVGLocatable::CTMScope mode) const { return SVGTransformable::localCoordinateSpaceTransform(mode); }
 
     virtual RenderObject* createRenderer(RenderArena*, RenderStyle*);
-    virtual bool childShouldCreateRenderer(Node*) const;
+    virtual bool childShouldCreateRenderer(const NodeRenderingContext&) const;
             
     virtual void svgAttributeChanged(const QualifiedName&);
 

@@ -24,7 +24,6 @@
 #include "GraphicsContext.h"
 #include "Frame.h"
 #include "FrameView.h"
-#include "RenderLayer.h"
 #include "RenderView.h"
 #include <wtf/text/WTFString.h>
 
@@ -249,8 +248,8 @@ int PrintContext::pageNumberForElement(Element* element, const FloatSize& pageSi
     scaledPageSize.scale(frame->view()->contentsSize().width() / pageRect.width());
     printContext.computePageRectsWithPageSize(scaledPageSize, false);
 
-    int top = box->offsetTop();
-    int left = box->offsetLeft();
+    int top = box->pixelSnappedOffsetTop();
+    int left = box->pixelSnappedOffsetLeft();
     size_t pageNumber = 0;
     for (; pageNumber < printContext.pageCount(); pageNumber++) {
         const IntRect& page = printContext.pageRect(pageNumber);

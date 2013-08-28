@@ -28,12 +28,14 @@
 #define FrameBufferSkPictureCanvasLayerTextureUpdater_h
 
 #if USE(ACCELERATED_COMPOSITING)
-#if USE(SKIA)
 
 #include "SkPictureCanvasLayerTextureUpdater.h"
 
 namespace WebCore {
 
+// This class records the contentRect into an SkPicture, then uses accelerated
+// drawing to update the texture. The accelerated drawing goes to an
+// intermediate framebuffer and then is copied to the destination texture once done.
 class FrameBufferSkPictureCanvasLayerTextureUpdater : public SkPictureCanvasLayerTextureUpdater {
 public:
     class Texture : public LayerTextureUpdater::Texture {
@@ -60,6 +62,5 @@ private:
     explicit FrameBufferSkPictureCanvasLayerTextureUpdater(PassOwnPtr<LayerPainterChromium>);
 };
 } // namespace WebCore
-#endif // USE(SKIA)
 #endif // USE(ACCELERATED_COMPOSITING)
 #endif // FrameBufferSkPictureCanvasLayerTextureUpdater_h

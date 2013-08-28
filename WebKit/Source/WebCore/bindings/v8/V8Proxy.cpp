@@ -31,7 +31,6 @@
 #include "config.h"
 #include "V8Proxy.h"
 
-#include "CSSMutableStyleDeclaration.h"
 #include "CachedMetadata.h"
 #include "DateExtension.h"
 #include "Document.h"
@@ -43,9 +42,12 @@
 #include "IDBFactoryBackendInterface.h"
 #include "InspectorInstrumentation.h"
 #include "PlatformSupport.h"
+#include "ScriptCallStack.h"
+#include "ScriptCallStackFactory.h"
 #include "ScriptSourceCode.h"
 #include "SecurityOrigin.h"
 #include "Settings.h"
+#include "StylePropertySet.h"
 #include "V8Binding.h"
 #include "V8BindingState.h"
 #include "V8Collection.h"
@@ -68,6 +70,10 @@
 #include <wtf/StringExtras.h>
 #include <wtf/UnusedParam.h>
 #include <wtf/text/WTFString.h>
+
+#if PLATFORM(CHROMIUM)
+#include "TraceEvent.h"
+#endif
 
 namespace WebCore {
 
@@ -137,10 +143,12 @@ void V8Proxy::reportUnsafeAccessTo(Frame* target)
     String str = "Unsafe JavaScript attempt to access frame with URL " + targetDocument->url().string() +
                  " from frame with URL " + sourceDocument->url().string() + ". Domains, protocols and ports must match.\n";
 
+    RefPtr<ScriptCallStack> stackTrace = createScriptCallStack(ScriptCallStack::maxCallStackSizeToCapture, true);
+
     // NOTE: Safari prints the message in the target page, but it seems like
     // it should be in the source page. Even for delayed messages, we put it in
     // the source page.
-    sourceDocument->addConsoleMessage(JSMessageSource, LogMessageType, ErrorMessageLevel, str);
+    sourceDocument->addConsoleMessage(JSMessageSource, LogMessageType, ErrorMessageLevel, str, stackTrace.release());
 }
 
 static void handleFatalErrorInV8()
@@ -209,7 +217,7 @@ bool V8Proxy::handleOutOfMemory()
     return true;
 }
 
-void V8Proxy::evaluateInIsolatedWorld(int worldID, const Vector<ScriptSourceCode>& sources, int extensionGroup)
+void V8Proxy::evaluateInIsolatedWorld(int worldID, const Vector<ScriptSourceCode>& sources, int extensionGroup, WTF::Vector<v8::Local<v8::Value> >* results)
 {
     // FIXME: This will need to get reorganized once we have a windowShell for the isolated world.
     if (!windowShell()->initContextIfNeeded())
@@ -231,15 +239,8 @@ void V8Proxy::evaluateInIsolatedWorld(int worldID, const Vector<ScriptSourceCode
 
             // FIXME: We should change this to using window shells to match JSC.
             m_isolatedWorlds.set(worldID, isolatedContext);
-
-            // Setup context id for JS debugger.
-            if (!setInjectedScriptContextDebugId(isolatedContext->context())) {
-                m_isolatedWorlds.take(worldID);
-                delete isolatedContext;
-                return;
-            }
         }
-        
+
         IsolatedWorldSecurityOriginMap::iterator securityOriginIter = m_isolatedWorldSecurityOrigins.find(worldID);
         if (securityOriginIter != m_isolatedWorldSecurityOrigins.end())
             isolatedContext->setSecurityOrigin(securityOriginIter->second);
@@ -253,11 +254,17 @@ void V8Proxy::evaluateInIsolatedWorld(int worldID, const Vector<ScriptSourceCode
 
     v8::Local<v8::Context> context = v8::Local<v8::Context>::New(isolatedContext->context());
     v8::Context::Scope context_scope(context);
-    for (size_t i = 0; i < sources.size(); ++i)
-      evaluate(sources[i], 0);
+
+    if (results) {
+        for (size_t i = 0; i < sources.size(); ++i)
+            results->append(evaluate(sources[i], 0));
+    } else {
+        for (size_t i = 0; i < sources.size(); ++i)
+            evaluate(sources[i], 0);
+    }
 
     if (worldID == 0)
-      isolatedContext->destroy();
+        isolatedContext->destroy();
 }
 
 void V8Proxy::setIsolatedWorldSecurityOrigin(int worldID, PassRefPtr<SecurityOrigin> prpSecurityOriginIn)
@@ -268,25 +275,6 @@ void V8Proxy::setIsolatedWorldSecurityOrigin(int worldID, PassRefPtr<SecurityOri
     IsolatedWorldMap::iterator iter = m_isolatedWorlds.find(worldID);
     if (iter != m_isolatedWorlds.end())
         iter->second->setSecurityOrigin(securityOrigin);
-}
-
-bool V8Proxy::setInjectedScriptContextDebugId(v8::Handle<v8::Context> targetContext)
-{
-    // Setup context id for JS debugger.
-    v8::Context::Scope contextScope(targetContext);
-    v8::Handle<v8::Context> context = windowShell()->context();
-    if (context.IsEmpty())
-        return false;
-    int debugId = contextDebugId(context);
-
-    char buffer[32];
-    if (debugId == -1)
-        snprintf(buffer, sizeof(buffer), "injected");
-    else
-        snprintf(buffer, sizeof(buffer), "injected,%d", debugId);
-    targetContext->SetData(v8::String::New(buffer));
-
-    return true;
 }
 
 PassOwnPtr<v8::ScriptData> V8Proxy::precompileScript(v8::Handle<v8::String> code, CachedScript* cachedScript)
@@ -331,7 +319,7 @@ v8::Local<v8::Value> V8Proxy::evaluate(const ScriptSourceCode& source, Node* nod
         // Compile the script.
         v8::Local<v8::String> code = v8ExternalString(source.source());
 #if PLATFORM(CHROMIUM)
-        PlatformSupport::traceEventBegin("v8.compile", node, "");
+        TRACE_EVENT_BEGIN0("v8", "v8.compile");
 #endif
         OwnPtr<v8::ScriptData> scriptData = precompileScript(code, source.cachedScript());
 
@@ -339,15 +327,11 @@ v8::Local<v8::Value> V8Proxy::evaluate(const ScriptSourceCode& source, Node* nod
         // 1, whereas v8 starts at 0.
         v8::Handle<v8::Script> script = compileScript(code, source.url(), source.startPosition(), scriptData.get());
 #if PLATFORM(CHROMIUM)
-        PlatformSupport::traceEventEnd("v8.compile", node, "");
-
-        PlatformSupport::traceEventBegin("v8.run", node, "");
+        TRACE_EVENT_END0("v8", "v8.compile");
+        TRACE_EVENT0("v8", "v8.run");
 #endif
         result = runScript(script);
     }
-#if PLATFORM(CHROMIUM)
-    PlatformSupport::traceEventEnd("v8.run", node, "");
-#endif
 
     InspectorInstrumentation::didEvaluateScript(cookie);
 
@@ -374,7 +358,7 @@ v8::Local<v8::Value> V8Proxy::runScript(v8::Handle<v8::Script> script)
     v8::TryCatch tryCatch;
     tryCatch.SetVerbose(true);
     {
-        V8RecursionScope recursionScope;
+        V8RecursionScope recursionScope(frame()->document());
         result = script->Run();
     }
 
@@ -400,18 +384,20 @@ v8::Local<v8::Value> V8Proxy::callFunction(v8::Handle<v8::Function> function, v8
 {
     // Keep Frame (and therefore ScriptController and V8Proxy) alive.
     RefPtr<Frame> protect(frame());
-    return V8Proxy::instrumentedCallFunction(m_frame->page(), function, receiver, argc, args);
+    return V8Proxy::instrumentedCallFunction(frame(), function, receiver, argc, args);
 }
 
-v8::Local<v8::Value> V8Proxy::instrumentedCallFunction(Page* page, v8::Handle<v8::Function> function, v8::Handle<v8::Object> receiver, int argc, v8::Handle<v8::Value> args[])
+v8::Local<v8::Value> V8Proxy::instrumentedCallFunction(Frame* frame, v8::Handle<v8::Function> function, v8::Handle<v8::Object> receiver, int argc, v8::Handle<v8::Value> args[])
 {
     V8GCController::checkMemoryUsage();
 
     if (V8RecursionScope::recursionLevel() >= kMaxRecursionDepth)
         return handleMaxRecursionDepthExceeded();
 
+    ScriptExecutionContext* context = frame ? frame->document() : 0;
+
     InspectorInstrumentationCookie cookie;
-    if (InspectorInstrumentation::hasFrontends()) {
+    if (InspectorInstrumentation::hasFrontends() && context) {
         String resourceName("undefined");
         int lineNumber = 1;
         v8::ScriptOrigin origin = function->GetScriptOrigin();
@@ -419,12 +405,15 @@ v8::Local<v8::Value> V8Proxy::instrumentedCallFunction(Page* page, v8::Handle<v8
             resourceName = toWebCoreString(origin.ResourceName());
             lineNumber = function->GetScriptLineNumber() + 1;
         }
-        cookie = InspectorInstrumentation::willCallFunction(page, resourceName, lineNumber);
+        cookie = InspectorInstrumentation::willCallFunction(context, resourceName, lineNumber);
     }
 
     v8::Local<v8::Value> result;
     {
-        V8RecursionScope recursionScope;
+#if PLATFORM(CHROMIUM)
+        TRACE_EVENT0("v8", "v8.callFunction");
+#endif
+        V8RecursionScope recursionScope(context);
         result = function->Call(receiver, argc, args);
     }
 
@@ -438,6 +427,10 @@ v8::Local<v8::Value> V8Proxy::instrumentedCallFunction(Page* page, v8::Handle<v8
 
 v8::Local<v8::Value> V8Proxy::newInstance(v8::Handle<v8::Function> constructor, int argc, v8::Handle<v8::Value> args[])
 {
+#if PLATFORM(CHROMIUM)
+    TRACE_EVENT0("v8", "v8.newInstance");
+#endif
+
     // No artificial limitations on the depth of recursion, see comment in
     // V8Proxy::callFunction.
     v8::Local<v8::Value> result;
@@ -488,6 +481,14 @@ Frame* V8Proxy::retrieveFrameForCurrentContext()
     return retrieveFrame(context);
 }
 
+DOMWindow* V8Proxy::retrieveWindowForCallingContext()
+{
+    v8::Handle<v8::Context> context = v8::Context::GetCalling();
+    if (context.IsEmpty())
+        return 0;
+    return retrieveWindow(context);
+}
+
 Frame* V8Proxy::retrieveFrameForCallingContext()
 {
     v8::Handle<v8::Context> context = v8::Context::GetCalling();
@@ -505,9 +506,7 @@ V8Proxy* V8Proxy::retrieve()
 
 V8Proxy* V8Proxy::retrieve(Frame* frame)
 {
-    if (!frame)
-        return 0;
-    return frame->script()->canExecuteScripts(NotAboutToExecuteScript) ? frame->script()->proxy() : 0;
+    return frame ? frame->script()->proxy() : 0;
 }
 
 V8Proxy* V8Proxy::retrieve(ScriptExecutionContext* context)
@@ -515,6 +514,14 @@ V8Proxy* V8Proxy::retrieve(ScriptExecutionContext* context)
     if (!context || !context->isDocument())
         return 0;
     return retrieve(static_cast<Document*>(context)->frame());
+}
+
+V8BindingPerContextData* V8Proxy::retrievePerContextData(Frame* frame)
+{
+    V8IsolatedContext* isolatedContext;
+    if (UNLIKELY(!!(isolatedContext = V8IsolatedContext::getEntered())))
+        return isolatedContext->perContextData();
+    return V8Proxy::retrieve(frame)->windowShell()->perContextData();
 }
 
 void V8Proxy::resetIsolatedWorlds()
@@ -541,10 +548,10 @@ void V8Proxy::clearForNavigation()
 
 #define TRY_TO_CREATE_EXCEPTION(interfaceName) \
     case interfaceName##Type: \
-        exception = toV8(interfaceName::create(description)); \
+        exception = toV8(interfaceName::create(description), isolate); \
         break;
 
-void V8Proxy::setDOMException(int ec)
+void V8Proxy::setDOMException(int ec, v8::Isolate* isolate)
 {
     if (ec <= 0)
         return;
@@ -562,19 +569,19 @@ void V8Proxy::setDOMException(int ec)
 
 #undef TRY_TO_CREATE_EXCEPTION
 
-v8::Handle<v8::Value> V8Proxy::throwError(ErrorType type, const char* message)
+v8::Handle<v8::Value> V8Proxy::throwError(ErrorType type, const char* message, v8::Isolate* isolate)
 {
     switch (type) {
     case RangeError:
-        return v8::ThrowException(v8::Exception::RangeError(v8String(message)));
+        return v8::ThrowException(v8::Exception::RangeError(v8String(message, isolate)));
     case ReferenceError:
-        return v8::ThrowException(v8::Exception::ReferenceError(v8String(message)));
+        return v8::ThrowException(v8::Exception::ReferenceError(v8String(message, isolate)));
     case SyntaxError:
-        return v8::ThrowException(v8::Exception::SyntaxError(v8String(message)));
+        return v8::ThrowException(v8::Exception::SyntaxError(v8String(message, isolate)));
     case TypeError:
-        return v8::ThrowException(v8::Exception::TypeError(v8String(message)));
+        return v8::ThrowException(v8::Exception::TypeError(v8String(message, isolate)));
     case GeneralError:
-        return v8::ThrowException(v8::Exception::Error(v8String(message)));
+        return v8::ThrowException(v8::Exception::Error(v8String(message, isolate)));
     default:
         ASSERT_NOT_REACHED();
         return notHandledByInterceptor();
@@ -586,9 +593,9 @@ v8::Handle<v8::Value> V8Proxy::throwTypeError()
     return throwError(TypeError, "Type error");
 }
 
-v8::Handle<v8::Value> V8Proxy::throwSyntaxError()
+v8::Handle<v8::Value> V8Proxy::throwNotEnoughArgumentsError()
 {
-    return throwError(SyntaxError, "Syntax error");
+    return throwError(TypeError, "Not enough arguments");
 }
 
 v8::Local<v8::Context> V8Proxy::context(Frame* frame)
@@ -621,6 +628,20 @@ v8::Local<v8::Context> V8Proxy::mainWorldContext()
 {
     windowShell()->initContextIfNeeded();
     return v8::Local<v8::Context>::New(windowShell()->context());
+}
+
+bool V8Proxy::matchesCurrentContext()
+{
+    v8::Handle<v8::Context> context;
+    if (V8IsolatedContext* isolatedContext = V8IsolatedContext::getEntered()) {
+        context = isolatedContext->sharedContext()->get();
+        if (m_frame != V8Proxy::retrieveFrame(context))
+            return false;
+    } else {
+        windowShell()->initContextIfNeeded();
+        context = windowShell()->context();
+    }
+    return context == context->GetCurrent();
 }
 
 v8::Local<v8::Context> V8Proxy::mainWorldContext(Frame* frame)

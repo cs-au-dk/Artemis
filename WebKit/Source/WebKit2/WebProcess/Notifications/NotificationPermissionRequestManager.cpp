@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Apple Inc. All rights reserved.
+ * Copyright (C) 2011, 2012 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -32,14 +32,16 @@
 #include "WebPageProxyMessages.h"
 #include "WebProcess.h"
 #include <WebCore/Notification.h>
+#include <WebCore/Page.h>
 #include <WebCore/ScriptExecutionContext.h>
 #include <WebCore/SecurityOrigin.h>
+#include <WebCore/Settings.h>
 
 using namespace WebCore;
 
 namespace WebKit {
 
-#if ENABLE(NOTIFICATIONS)
+#if ENABLE(NOTIFICATIONS) || ENABLE(LEGACY_NOTIFICATIONS)
 static uint64_t generateRequestID()
 {
     static uint64_t uniqueRequestID = 1;
@@ -57,59 +59,94 @@ NotificationPermissionRequestManager::NotificationPermissionRequestManager(WebPa
 {
 }
 
-void NotificationPermissionRequestManager::startRequest(SecurityOrigin* origin, PassRefPtr<VoidCallback> callback)
-{
 #if ENABLE(NOTIFICATIONS)
+void NotificationPermissionRequestManager::startRequest(SecurityOrigin* origin, PassRefPtr<NotificationPermissionCallback> callback)
+{
+    NotificationClient::Permission permission = permissionLevel(origin);
+    if (permission != NotificationClient::PermissionNotAllowed) {
+        callback->handleEvent(Notification::permissionString(permission));
+        return;
+    }
+
     uint64_t requestID = generateRequestID();
     m_originToIDMap.set(origin, requestID);
     m_idToOriginMap.set(requestID, origin);
     m_idToCallbackMap.set(requestID, callback);
-    m_page->send(Messages::WebPageProxy::RequestNotificationPermission(requestID, origin->databaseIdentifier()));
-#else
-    UNUSED_PARAM(origin);
-    UNUSED_PARAM(callback);
-#endif
+    m_page->send(Messages::WebPageProxy::RequestNotificationPermission(requestID, origin->toString()));
 }
+#endif
+
+#if ENABLE(LEGACY_NOTIFICATIONS)
+void NotificationPermissionRequestManager::startRequest(SecurityOrigin* origin, PassRefPtr<VoidCallback> callback)
+{
+    NotificationClient::Permission permission = permissionLevel(origin);
+    if (permission != NotificationClient::PermissionNotAllowed) {
+        callback->handleEvent();
+        return;
+    }
+    
+    uint64_t requestID = generateRequestID();
+    m_originToIDMap.set(origin, requestID);
+    m_idToOriginMap.set(requestID, origin);
+    m_idToVoidCallbackMap.set(requestID, callback);
+    m_page->send(Messages::WebPageProxy::RequestNotificationPermission(requestID, origin->toString()));
+}
+#endif
 
 void NotificationPermissionRequestManager::cancelRequest(SecurityOrigin* origin)
 {
-#if ENABLE(NOTIFICATIONS)
+#if ENABLE(NOTIFICATIONS) || ENABLE(LEGACY_NOTIFICATIONS)
     uint64_t id = m_originToIDMap.take(origin);
     if (!id)
         return;
     
     m_idToOriginMap.remove(id);
+#if ENABLE(NOTIFICATIONS)
     m_idToCallbackMap.remove(id);
+#endif
+#if ENABLE(LEGACY_NOTIFICATIONS)
+    m_idToVoidCallbackMap.remove(id);
+#endif
 #else
     UNUSED_PARAM(origin);
 #endif
 }
 
-NotificationPresenter::Permission NotificationPermissionRequestManager::permissionLevel(SecurityOrigin* securityOrigin)
+NotificationClient::Permission NotificationPermissionRequestManager::permissionLevel(SecurityOrigin* securityOrigin)
 {
-#if ENABLE(NOTIFICATIONS)
-    uint64_t permissionLevel;
-    WebProcess::shared().connection()->sendSync(Messages::WebNotificationManagerProxy::NotificationPermissionLevel(securityOrigin->databaseIdentifier()),
-                                                Messages::WebNotificationManagerProxy::NotificationPermissionLevel::Reply(permissionLevel),
-                                                0);
-    return static_cast<NotificationPresenter::Permission>(permissionLevel);
+#if ENABLE(NOTIFICATIONS) || ENABLE(LEGACY_NOTIFICATIONS)
+    if (!m_page->corePage()->settings()->notificationsEnabled())
+        return NotificationClient::PermissionDenied;
+    
+    return WebProcess::shared().notificationManager().policyForOrigin(securityOrigin);
 #else
     UNUSED_PARAM(securityOrigin);
-    return NotificationPresenter::PermissionDenied;
+    return NotificationClient::PermissionDenied;
 #endif
 }
 
 void NotificationPermissionRequestManager::didReceiveNotificationPermissionDecision(uint64_t requestID, bool allowed)
 {
-#if ENABLE(NOTIFICATIONS)
+#if ENABLE(NOTIFICATIONS) || ENABLE(LEGACY_NOTIFICATIONS)
     if (!isRequestIDValid(requestID))
         return;
 
-    RefPtr<VoidCallback> callback = m_idToCallbackMap.take(requestID);
+#if ENABLE(LEGACY_NOTIFICATIONS)
+    RefPtr<VoidCallback> voidCallback = m_idToVoidCallbackMap.take(requestID);
+    if (voidCallback) {
+        voidCallback->handleEvent();
+        return;
+    }
+#endif
+
+#if ENABLE(NOTIFICATIONS)
+    RefPtr<NotificationPermissionCallback> callback = m_idToCallbackMap.take(requestID);
     if (!callback)
         return;
     
-    callback->handleEvent();
+    callback->handleEvent(Notification::permissionString(allowed ? NotificationClient::PermissionAllowed : NotificationClient::PermissionDenied));
+#endif
+
 #else
     UNUSED_PARAM(requestID);
     UNUSED_PARAM(allowed);

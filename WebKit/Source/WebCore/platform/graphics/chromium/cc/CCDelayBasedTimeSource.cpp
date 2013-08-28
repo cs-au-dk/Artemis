@@ -33,17 +33,18 @@
 
 namespace WebCore {
 
-PassRefPtr<CCDelayBasedTimeSource> CCDelayBasedTimeSource::create(double intervalMs, CCThread* thread)
+PassRefPtr<CCDelayBasedTimeSource> CCDelayBasedTimeSource::create(double interval, CCThread* thread)
 {
-    return adoptRef(new CCDelayBasedTimeSource(intervalMs, thread));
+    return adoptRef(new CCDelayBasedTimeSource(interval, thread));
 }
 
-CCDelayBasedTimeSource::CCDelayBasedTimeSource(double intervalMs, CCThread* thread)
+CCDelayBasedTimeSource::CCDelayBasedTimeSource(double intervalSeconds, CCThread* thread)
     : m_client(0)
-    , m_intervalMs(intervalMs)
+    , m_hasTickTarget(false)
+    , m_intervalSeconds(intervalSeconds)
     , m_tickTarget(0)
     , m_state(STATE_INACTIVE)
-    , m_thread(thread)
+    , m_timer(thread, this)
 {
 }
 
@@ -51,34 +52,50 @@ void CCDelayBasedTimeSource::setActive(bool active)
 {
     if (!active) {
         m_state = STATE_INACTIVE;
+        m_timer.stop();
         return;
     }
 
-    // Becoming active is deferred: we post a 0-delay task. When it runs, we use
-    // that to establish the timebase, become truly active, and fire the first
-    // tick.
     if (m_state == STATE_STARTING || m_state == STATE_ACTIVE)
         return;
 
-    m_state = STATE_STARTING;
-    postTickTask(0);
+    if (!m_hasTickTarget) {
+        // Becoming active the first time is deferred: we post a 0-delay task. When
+        // it runs, we use that to establish the timebase, become truly active, and
+        // fire the first tick.
+        m_state = STATE_STARTING;
+        m_timer.startOneShot(0);
+        return;
+    }
+
+    m_state = STATE_ACTIVE;
+
+    double now = monotonicallyIncreasingTime();
+    postNextTickTask(now);
 }
 
-void CCDelayBasedTimeSource::postTickTask(long long delay)
+void CCDelayBasedTimeSource::onTimerFired()
 {
-    this->ref();
-    m_thread->postDelayedTask(createCCThreadTask(this, &CCDelayBasedTimeSource::onTick), delay);
+    ASSERT(m_state != STATE_INACTIVE);
+
+    double now = monotonicallyIncreasingTime();
+
+    if (m_state == STATE_STARTING) {
+        m_hasTickTarget = true;
+        m_tickTarget = now;
+        m_state = STATE_ACTIVE;
+    }
+
+    postNextTickTask(now);
+
+    // Fire the tick
+    if (m_client)
+        m_client->onTimerTick();
 }
 
-void CCDelayBasedTimeSource::onTick()
+double CCDelayBasedTimeSource::monotonicallyIncreasingTime() const
 {
-    updateState();
-    this->deref();
-}
-
-double CCDelayBasedTimeSource::monotonicallyIncreasingTimeMs() const
-{
-    return WTF::monotonicallyIncreasingTime() * 1000.0;
+    return WTF::monotonicallyIncreasingTime();
 }
 
 // This code tries to achieve an average tick rate as close to m_intervalMs as possible.
@@ -124,36 +141,24 @@ double CCDelayBasedTimeSource::monotonicallyIncreasingTimeMs() const
 //
 // For the really late delay, we we move to the next logical tick. The timebase is not reset.
 //      now=37   tickTarget=16.667  newTarget=50.000  --> tick(), postDelayedTask(floor(50.000-37)) --> postDelayedTask(13)
-void CCDelayBasedTimeSource::updateState()
+//
+// Note, that in the above discussion, times are expressed in milliseconds, but in the code, seconds are used.
+void CCDelayBasedTimeSource::postNextTickTask(double now)
 {
-    if (m_state == STATE_INACTIVE)
-        return;
+    int numIntervalsElapsed = static_cast<int>(floor((now - m_tickTarget) / m_intervalSeconds));
+    double lastEffectiveTick = m_tickTarget + m_intervalSeconds * numIntervalsElapsed;
+    double newTickTarget = lastEffectiveTick + m_intervalSeconds;
 
-    double now = monotonicallyIncreasingTimeMs();
-
-    if (m_state == STATE_STARTING) {
-        m_tickTarget = now;
-        m_state = STATE_ACTIVE;
-    }
-
-    int numIntervalsElapsed = static_cast<int>(floor((now - m_tickTarget) / m_intervalMs));
-    double lastEffectiveTick = m_tickTarget + m_intervalMs * numIntervalsElapsed;
-    double newTickTarget = lastEffectiveTick + m_intervalMs;
-
-    long long delay = static_cast<long long>(newTickTarget - now);
-    if (!delay) {
-        newTickTarget = newTickTarget + m_intervalMs;
-        delay = static_cast<long long>(newTickTarget - now);
+    long long delayMs = static_cast<long long>((newTickTarget - now) * 1000.0);
+    if (!delayMs) {
+        newTickTarget = newTickTarget + m_intervalSeconds;
+        delayMs = static_cast<long long>((newTickTarget - now) * 1000.0);
     }
 
     // Post another task *before* the tick and update state
     ASSERT(newTickTarget > now);
-    postTickTask(delay);
+    m_timer.startOneShot(delayMs / 1000.0);
     m_tickTarget = newTickTarget;
-
-    // Fire the tick
-    if (m_client)
-        m_client->onTimerTick();
 }
 
 }

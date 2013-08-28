@@ -30,7 +30,7 @@
 #import "PlatformWebView.h"
 #import "StringFunctions.h"
 #import "TestController.h"
-#import <JavaScriptCore/RetainPtr.h>
+#import <wtf/RetainPtr.h>
 #import <WebKit2/WKString.h>
 
 namespace WTR {
@@ -248,6 +248,10 @@ void EventSenderProxy::keyDown(WKStringRef key, WKEventModifiers modifiers, unsi
         const unichar ch = NSPrintScreenFunctionKey;
         eventCharacter = [NSString stringWithCharacters:&ch length:1];
         keyCode = 0x0; // There is no known virtual key code for PrintScreen.
+    } else if ([character isEqualToString:@"cyrillicSmallLetterA"]) {
+        const unichar ch = 0x0430;
+        eventCharacter = [NSString stringWithCharacters:&ch length:1];
+        keyCode = 0x3; // Shares key with "F" on Russian layout.
     }
 
     // Compare the input string with the function-key names defined by the DOM spec (i.e. "F1",...,"F24").

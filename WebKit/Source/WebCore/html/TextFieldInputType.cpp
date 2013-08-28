@@ -33,6 +33,8 @@
 #include "TextFieldInputType.h"
 
 #include "BeforeTextInsertedEvent.h"
+#include "Chrome.h"
+#include "ChromeClient.h"
 #include "FormDataList.h"
 #include "Frame.h"
 #include "HTMLInputElement.h"
@@ -43,6 +45,7 @@
 #include "RenderTextControlSingleLine.h"
 #include "RenderTheme.h"
 #include "ShadowRoot.h"
+#include "ShadowTree.h"
 #include "TextControlInnerElements.h"
 #include "TextEvent.h"
 #include "TextIterator.h"
@@ -69,7 +72,7 @@ bool TextFieldInputType::isTextField() const
 
 bool TextFieldInputType::valueMissing(const String& value) const
 {
-    return value.isEmpty();
+    return element()->required() && value.isEmpty();
 }
 
 bool TextFieldInputType::canSetSuggestedValue()
@@ -77,29 +80,51 @@ bool TextFieldInputType::canSetSuggestedValue()
     return true;
 }
 
-void TextFieldInputType::setValue(const String& sanitizedValue, bool valueChanged, bool sendChangeEvent)
+void TextFieldInputType::setValue(const String& sanitizedValue, bool valueChanged, TextFieldEventBehavior eventBehavior)
 {
-    InputType::setValue(sanitizedValue, valueChanged, sendChangeEvent);
+    // Grab this input element to keep reference even if JS event handler
+    // changes input type.
+    RefPtr<HTMLInputElement> input(element());
+
+    // We don't ask InputType::setValue to dispatch events because
+    // TextFieldInputType dispatches events different way from InputType.
+    InputType::setValue(sanitizedValue, valueChanged, DispatchNoEvent);
 
     if (valueChanged)
-        element()->updateInnerTextValue();
+        input->updateInnerTextValue();
 
     unsigned max = visibleValue().length();
-    if (element()->focused())
-        element()->setSelectionRange(max, max);
+    if (input->focused())
+        input->setSelectionRange(max, max);
     else
-        element()->cacheSelectionInResponseToSetValue(max);
-}
+        input->cacheSelectionInResponseToSetValue(max);
 
-void TextFieldInputType::dispatchChangeEventInResponseToSetValue()
-{
-    // If the user is still editing this field, dispatch an input event rather than a change event.
-    // The change event will be dispatched when editing finishes.
-    if (element()->focused()) {
-        element()->dispatchFormControlInputEvent();
+    if (!valueChanged)
         return;
+
+    switch (eventBehavior) {
+    case DispatchChangeEvent:
+        // If the user is still editing this field, dispatch an input event rather than a change event.
+        // The change event will be dispatched when editing finishes.
+        if (input->focused())
+            input->dispatchFormControlInputEvent();
+        else
+            input->dispatchFormControlChangeEvent();
+        break;
+
+    case DispatchInputAndChangeEvent: {
+        input->dispatchFormControlInputEvent();
+        input->dispatchFormControlChangeEvent();
+        break;
     }
-    InputType::dispatchChangeEventInResponseToSetValue();
+
+    case DispatchNoEvent:
+        break;
+    }
+
+    // FIXME: Why do we do this when eventBehavior == DispatchNoEvent
+    if (!input->focused() || eventBehavior == DispatchNoEvent)
+        input->setTextAsOfLastFormControlChangeEvent(sanitizedValue);
 }
 
 void TextFieldInputType::handleKeydownEvent(KeyboardEvent* event)
@@ -161,6 +186,13 @@ void TextFieldInputType::forwardEvent(Event* event)
     }
 }
 
+void TextFieldInputType::handleBlurEvent()
+{
+    InputType::handleBlurEvent();
+    if (Frame* frame = element()->document()->frame())
+        frame->editor()->textFieldDidEndEditing(element());
+}
+
 bool TextFieldInputType::shouldSubmitImplicitly(Event* event)
 {
     return (event->type() == eventNames().textInputEvent && event->hasInterface(eventNames().interfaceForTextEvent) && static_cast<TextEvent*>(event)->data() == "\n") || InputType::shouldSubmitImplicitly(event);
@@ -180,25 +212,35 @@ bool TextFieldInputType::needsContainer() const
 #endif
 }
 
+bool TextFieldInputType::shouldHaveSpinButton() const
+{
+    Document* document = element()->document();
+    RefPtr<RenderTheme> theme = document->page() ? document->page()->theme() : RenderTheme::defaultTheme();
+    return theme->shouldHaveSpinButton(element());
+}
+
 void TextFieldInputType::createShadowSubtree()
 {
+    ASSERT(element()->hasShadowRoot());
+
     ASSERT(!m_innerText);
     ASSERT(!m_innerBlock);
     ASSERT(!m_innerSpinButton);
 
     Document* document = element()->document();
-    RefPtr<RenderTheme> theme = document->page() ? document->page()->theme() : RenderTheme::defaultTheme();
-    bool shouldHaveSpinButton = theme->shouldHaveSpinButton(element());
-    bool createsContainer = shouldHaveSpinButton || needsContainer();
+    ChromeClient* chromeClient = document->page() ? document->page()->chrome()->client() : 0;
+    bool shouldAddDecorations = chromeClient && chromeClient->willAddTextFieldDecorationsTo(element());
+    bool shouldHaveSpinButton = this->shouldHaveSpinButton();
+    bool createsContainer = shouldHaveSpinButton || needsContainer() || shouldAddDecorations;
 
     ExceptionCode ec = 0;
     m_innerText = TextControlInnerTextElement::create(document);
     if (!createsContainer) {
-        element()->ensureShadowRoot()->appendChild(m_innerText, ec);
+        element()->shadowTree()->oldestShadowRoot()->appendChild(m_innerText, ec);
         return;
     }
 
-    ShadowRoot* shadowRoot = element()->ensureShadowRoot();
+    ShadowRoot* shadowRoot = element()->shadowTree()->oldestShadowRoot();
     m_container = HTMLDivElement::create(document);
     m_container->setShadowPseudoId("-webkit-textfield-decoration-container");
     shadowRoot->appendChild(m_container, ec);
@@ -219,6 +261,9 @@ void TextFieldInputType::createShadowSubtree()
         m_innerSpinButton = SpinButtonElement::create(document);
         m_container->appendChild(m_innerSpinButton, ec);
     }
+
+    if (shouldAddDecorations)
+        chromeClient->addTextFieldDecorationsTo(element());
 }
 
 HTMLElement* TextFieldInputType::containerElement() const
@@ -340,7 +385,7 @@ void TextFieldInputType::handleBeforeTextInsertedEvent(BeforeTextInsertedEvent* 
 
 bool TextFieldInputType::shouldRespectListAttribute()
 {
-    return true;
+    return InputType::themeSupportsDataListUI(this);
 }
 
 void TextFieldInputType::updatePlaceholderText()
@@ -348,7 +393,7 @@ void TextFieldInputType::updatePlaceholderText()
     if (!supportsPlaceholder())
         return;
     ExceptionCode ec = 0;
-    String placeholderText = element()->strippedPlaceholder();
+    String placeholderText = usesFixedPlaceholder() ? fixedPlaceholder() : element()->strippedPlaceholder();
     if (placeholderText.isEmpty()) {
         if (m_placeholder) {
             m_placeholder->parentNode()->removeChild(m_placeholder.get(), ec);
@@ -360,7 +405,7 @@ void TextFieldInputType::updatePlaceholderText()
     if (!m_placeholder) {
         m_placeholder = HTMLDivElement::create(element()->document());
         m_placeholder->setShadowPseudoId("-webkit-input-placeholder");
-        element()->shadowRoot()->insertBefore(m_placeholder, m_container ? m_container->nextSibling() : innerTextElement()->nextSibling(), ec);
+        element()->shadowTree()->oldestShadowRoot()->insertBefore(m_placeholder, m_container ? m_container->nextSibling() : innerTextElement()->nextSibling(), ec);
         ASSERT(!ec);
     }
     m_placeholder->setInnerText(placeholderText, ec);

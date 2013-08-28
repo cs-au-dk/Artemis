@@ -1,7 +1,7 @@
 import QtQuick 2.0
 import QtTest 1.0
 import QtWebKit 3.0
-import QtWebKit.experimental 3.0
+import QtWebKit.experimental 1.0
 
 WebView {
     id: webView
@@ -61,14 +61,14 @@ WebView {
 
         function test_downloadRequest() {
             compare(spy.count, 0)
-            webView.load(Qt.resolvedUrl("../common/download.zip"))
+            webView.url = Qt.resolvedUrl("../common/download.zip")
             spy.wait()
             compare(spy.count, 1)
         }
 
         function test_expectedLength() {
             compare(spy.count, 0)
-            webView.load(Qt.resolvedUrl("../common/download.zip"))
+            webView.url = Qt.resolvedUrl("../common/download.zip")
             spy.wait()
             compare(spy.count, 1)
             compare(expectedLength, 325)
@@ -76,7 +76,7 @@ WebView {
 
         function test_succeeded() {
             compare(spy.count, 0)
-            webView.load(Qt.resolvedUrl("../common/download.zip"))
+            webView.url = Qt.resolvedUrl("../common/download.zip")
             spy.wait()
             compare(spy.count, 1)
             downloadFinishedSpy.wait()

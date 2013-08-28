@@ -20,12 +20,18 @@
         },
         "ChromiumPublicApi": {
             "filename": r"Source/WebKit/chromium/public/"
+                        r"|Source/Platform/chromium/public/",
+        },
+        "AppleMacPublicApi": {
+            "filename": r"Source/WebCore/bindings/objc/PublicDOMInterfaces.h"
         },
         "Forms": {
-            "filename": r"Source/WebCore/html/HTML(FieldSet|Form|FormControl|Input|Label"
-                        r"|OptGroup|Option|Select|TextArea|TextFormControl)Element\."
+            "filename": r"Source/WebCore/html/HTML(DataList|FieldSet|Form|FormControl|Input|Keygen|Label"
+                        r"|Legend|OptGroup|Option|Output|Select|TextArea|TextFormControl)Element\."
+                        r"|Source/WebCore/html/FormAssociatedElement\."
                         r"|Source/WebCore/html/\w*InputType\."
-                        r"|Source/WebCore/rendering/Render(ListBox|MenuList|Slider|TextControl"
+                        r"|Source/WebCore/html/shadow/(SliderThumbElement|TextControlInnerElements)\."
+                        r"|Source/WebCore/rendering/Render(FileUploadControl|ListBox|MenuList|Slider|TextControl"
                         r"|TextControlMultiLine|TextControlSingleLine)\."
         },
         "GStreamerGraphics": {
@@ -75,11 +81,21 @@
         "Loader": {
             "filename": r"Source/WebCore/loader/",
         },
+        "Rendering": {
+            "filename": r"Source/WebCore/rendering/",
+        },
         "StyleChecker": {
             "filename": r"Tools/Scripts/webkitpy/style/",
         },
         "GtkWebKit2PublicAPI": {
             "filename": r"Source/WebKit2/UIProcess/API/gtk/",
+        },
+        "QtBuildSystem": {
+            # Project files for each target are intentionally left out, as those
+            # mostly list source and header files, which would just add noise.
+            "filename": r"Tools/qmake/"
+                        r"|WebKit.pro"
+                        r"|.*DerivedSources\.pri",
         },
         "QtWebKit2PublicAPI": {
             "filename": r"Source/WebKit2/UIProcess/API/qt/"
@@ -112,8 +128,10 @@
         "EFL": {
             "filename": r"Source/WebKit/efl/"
                         r"|Source/WebCore/platform/efl/"
+                        r"|Source/WTF/wtf/efl/"
                         r"|Tools/EWebLauncher"
-                        r"|Tools/DumpRenderTree/efl/",
+                        r"|Tools/DumpRenderTree/efl/"
+                        r"|LayoutTests/platform/efl/",
         },
         "CMake": {
             "filename": r".*CMakeLists\w*\.txt"
@@ -123,37 +141,58 @@
         "SoupNetwork": {
             "filename": r"Source/WebCore/platform/network/soup/",
         },
+        "ScrollingCoordinator": {
+            "filename": r"Source/WebCore/page/scrolling/",
+        },
+        "WebKitGTKTranslations": {
+            "filename": r"Source/WebKit/gtk/po/",
+        },
+        "Media": {
+            "filename": r"(Source|LayoutTests)/.*([Mm]edia|[Aa]udio|[Vv]ideo)",
+        }
     },
     "CC_RULES": {
         # Note: All email addresses listed must be registered with bugzilla.
         # Specifically, levin@chromium.org and levin+threading@chromium.org are
         # two different accounts as far as bugzilla is concerned.
+        "AppleMacPublicApi": [ "timothy@apple.com" ],
+        "CMake": [ "rakuco@webkit.org", ],
+        "CSS": [ "alexis.menard@openbossa.org", "macpherson@chromium.org", ],
         "ChromiumDumpRenderTree": [ "tkent@chromium.org", ],
         "ChromiumGraphics": [ "jamesr@chromium.org", "cc-bugs@google.com" ],
-        "ChromiumPublicApi": [ "fishd@chromium.org", ],
+        "ChromiumPublicApi": [ "abarth@webkit.org", "dglazkov@chromium.org", "fishd@chromium.org", "jamesr@chromium.org", "tkent+wkapi@chromium.org" ],
+        "EFL": [ "rakuco@webkit.org", ],
         "Forms": [ "tkent@chromium.org", ],
-        "GStreamerGraphics": [ "pnormand@igalia.com", "gns@gnome.org" ],
-        "WebIDL": [ "abarth@webkit.org", "ojan@chromium.org" ],
-        "StyleChecker": [ "levin@chromium.org", ],
-        "ThreadingFiles|ThreadingUsage": [ "levin+threading@chromium.org", ],
-        "WatchListScript": [ "levin+watchlist@chromium.org", ],
-        "V8Bindings|BindingsScripts": [ "abarth@webkit.org", "japhet@chromium.org" ],
         "FrameLoader": [ "abarth@webkit.org", "japhet@chromium.org" ],
+        "GStreamerGraphics": [ "alexis.menard@openbossa.org", "pnormand@igalia.com", "gns@gnome.org", "mrobinson@webkit.org" ],
+        "GtkWebKit2PublicAPI": [ "cgarcia@igalia.com", "gns@gnome.org", "mrobinson@webkit.org" ],
         "Loader": [ "japhet@chromium.org" ],
+        "Media": [ "feature-media-reviews@chromium.org", "eric.carlson@apple.com" ],
+        "QtBuildSystem" : [ "vestbo@webkit.org", ],
+        "QtWebKit2PlatformSpecific": [ "alexis.menard@openbossa.org", "zoltan@webkit.org", ],
+        "QtWebKit2PublicAPI": [ "alexis.menard@openbossa.org", "zoltan@webkit.org", ],
+        "Rendering": [ "eric@webkit.org" ],
+        "ScrollingCoordinator": [ "andersca@apple.com", "jamesr@chromium.org", "tonikitoo@webkit.org" ],
         "SecurityCritical": [ "abarth@webkit.org" ],
-        "webkitpy": [ "abarth@webkit.org", "ojan@chromium.org" ],
+        "SoupNetwork": [ "rakuco@webkit.org", "gns@gnome.org", "mrobinson@webkit.org", "danw@gnome.org" ],
+        "StyleChecker": [ "levin@chromium.org", ],
         "TestFailures": [ "abarth@webkit.org", "dglazkov@chromium.org" ],
-        "GtkWebKit2PublicAPI": [ "cgarcia@igalia.com", "gns@gnome.org" ],
-        "QtWebKit2PublicAPI": [ "zoltan@webkit.org", ],
-        "QtWebKit2PlatformSpecific": [ "zoltan@webkit.org", ],
-        "CSS": [ "macpherson@chromium.org", ],
-        "EFL": [ "kubo@profusion.mobi", ],
-        "CMake": [ "kubo@profusion.mobi", ],
-        "SoupNetwork": [ "kubo@profusion.mobi", ],
+        "ThreadingFiles|ThreadingUsage": [ "levin+threading@chromium.org", ],
+        "V8Bindings|BindingsScripts": [ "abarth@webkit.org", "japhet@chromium.org", "haraken@chromium.org" ],
+        "WatchListScript": [ "levin+watchlist@chromium.org", ],
+        "WebIDL": [ "abarth@webkit.org", "ojan@chromium.org" ],
+        "WebKitGTKTranslations": [ "gns@gnome.org", "mrobinson@webkit.org" ],
+        "webkitpy": [ "abarth@webkit.org", "ojan@chromium.org", "dpranke@chromium.org" ],
     },
     "MESSAGE_RULES": {
-        "ChromiumPublicApi": [ "Please wait for approval from fishd@chromium.org before submitting "
-                               "because this patch contains changes to the Chromium public API.", ],
+        "ChromiumPublicApi": [ "Please wait for approval from abarth@webkit.org, dglazkov@chromium.org, "
+                               "fishd@chromium.org, jamesr@chromium.org or tkent@chromium.org before "
+                               "submitting, as this patch contains changes to the Chromium public API. "
+                               "See also https://trac.webkit.org/wiki/ChromiumWebKitAPI." ],
+        "AppleMacPublicApi": [ "Please wait for approval from timothy@apple.com (or another member "
+                               "of the Apple Safari Team) before submitting "
+                               "because this patch contains changes to the Apple Mac "
+                               "WebKit.framework public API.", ],
         "GtkWebKit2PublicAPI": [ "Thanks for the patch. If this patch contains new public API "
                                  "please make sure it follows the guidelines for new WebKit2 GTK+ API. "
                                  "See http://trac.webkit.org/wiki/WebKitGTK/AddingNewWebKit2API", ],

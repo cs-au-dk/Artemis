@@ -31,7 +31,7 @@ namespace WebCore {
 
 template<>
 struct SVGPropertyTraits<ColorMatrixType> {
-    static ColorMatrixType highestEnumValue() { return FECOLORMATRIX_TYPE_LUMINANCETOALPHA; }
+    static unsigned highestEnumValue() { return FECOLORMATRIX_TYPE_LUMINANCETOALPHA; }
 
     static String toString(ColorMatrixType type)
     {
@@ -74,7 +74,7 @@ private:
     SVGFEColorMatrixElement(const QualifiedName&, Document*);
 
     bool isSupportedAttribute(const QualifiedName&);
-    virtual void parseMappedAttribute(Attribute*);
+    virtual void parseAttribute(Attribute*) OVERRIDE;
     virtual bool setFilterEffectAttribute(FilterEffect*, const QualifiedName&);
     virtual void svgAttributeChanged(const QualifiedName&);
     virtual PassRefPtr<FilterEffect> build(SVGFilterBuilder*, Filter*);

@@ -97,24 +97,28 @@ PassRefPtr<JSLazyEventListener> createAttributeEventListener(Frame* frame, Attri
 String eventListenerHandlerBody(Document* document, EventListener* eventListener)
 {
     const JSEventListener* jsListener = JSEventListener::cast(eventListener);
+    ASSERT(jsListener);
     if (!jsListener)
         return "";
     JSLock lock(SilenceAssertionsOnly);
     JSC::JSObject* jsFunction = jsListener->jsFunction(document);
     if (!jsFunction)
         return "";
-    return ustringToString(jsFunction->toString(scriptStateFromNode(jsListener->isolatedWorld(), document)));
+    ScriptState* scriptState = scriptStateFromNode(jsListener->isolatedWorld(), document);
+    return ustringToString(jsFunction->toString(scriptState)->value(scriptState));
 }
 
 bool eventListenerHandlerLocation(Document* document, EventListener* eventListener, String& sourceName, int& lineNumber)
 {
     const JSEventListener* jsListener = JSEventListener::cast(eventListener);
+    ASSERT(jsListener);
     if (!jsListener)
         return false;
+    JSLock lock(SilenceAssertionsOnly);
     JSC::JSObject* jsObject = jsListener->jsFunction(document);
     if (!jsObject)
         return false;
-    JSC::JSFunction* jsFunction = static_cast<JSFunction*>(jsObject);
+    JSC::JSFunction* jsFunction = jsDynamicCast<JSFunction*>(jsObject);
     if (!jsFunction || jsFunction->isHostFunction())
         return false;
     JSC::FunctionExecutable* funcExecutable = jsFunction->jsExecutable();

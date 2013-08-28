@@ -34,7 +34,7 @@
 #include "AbstractDatabase.h"
 #include "RuntimeEnabledFeatures.h"
 #include "WebMediaPlayerClientImpl.h"
-#include "websockets/WebSocket.h"
+#include "Modules/websockets/WebSocket.h"
 
 #include <wtf/UnusedParam.h>
 
@@ -116,14 +116,14 @@ bool WebRuntimeFeatures::isSocketsEnabled()
 
 void WebRuntimeFeatures::enableNotifications(bool enable)
 {
-#if ENABLE(NOTIFICATIONS)
+#if ENABLE(NOTIFICATIONS) || ENABLE(LEGACY_NOTIFICATIONS)
     RuntimeEnabledFeatures::setWebkitNotificationsEnabled(enable);
 #endif
 }
 
 bool WebRuntimeFeatures::isNotificationsEnabled()
 {
-#if ENABLE(NOTIFICATIONS)
+#if ENABLE(NOTIFICATIONS) || ENABLE(LEGACY_NOTIFICATIONS)
     return RuntimeEnabledFeatures::webkitNotificationsEnabled();
 #else
     return false;
@@ -260,6 +260,22 @@ bool WebRuntimeFeatures::isSpeechInputEnabled()
     return RuntimeEnabledFeatures::speechInputEnabled();
 }
 
+void WebRuntimeFeatures::enableScriptedSpeech(bool enable)
+{
+#if ENABLE(SCRIPTED_SPEECH)
+    RuntimeEnabledFeatures::setScriptedSpeechEnabled(enable);
+#endif
+}
+
+bool WebRuntimeFeatures::isScriptedSpeechEnabled()
+{
+#if ENABLE(SCRIPTED_SPEECH)
+    return RuntimeEnabledFeatures::scriptedSpeechEnabled();
+#else
+    return false;
+#endif
+}
+
 void WebRuntimeFeatures::enableXHRResponseBlob(bool enable)
 {
 #if ENABLE(XHR_RESPONSE_BLOB)
@@ -342,6 +358,24 @@ bool WebRuntimeFeatures::isMediaStreamEnabled()
 #endif
 }
 
+void WebRuntimeFeatures::enablePeerConnection(bool enable)
+{
+#if ENABLE(MEDIA_STREAM)
+    RuntimeEnabledFeatures::setPeerConnectionEnabled(enable);
+#else
+    UNUSED_PARAM(enable);
+#endif
+}
+
+bool WebRuntimeFeatures::isPeerConnectionEnabled()
+{
+#if ENABLE(MEDIA_STREAM)
+    return RuntimeEnabledFeatures::peerConnectionEnabled();
+#else
+    return false;
+#endif
+}
+
 void WebRuntimeFeatures::enableFullScreenAPI(bool enable)
 {
 #if ENABLE(FULLSCREEN_API)
@@ -381,7 +415,7 @@ bool WebRuntimeFeatures::isPointerLockEnabled()
 void WebRuntimeFeatures::enableMediaSource(bool enable)
 {
 #if ENABLE(MEDIA_SOURCE)
-    RuntimeEnabledFeatures::setWebkitMediaSourceEnabled(enable);
+    RuntimeEnabledFeatures::setMediaSourceEnabled(enable);
 #else
     UNUSED_PARAM(enable);
 #endif
@@ -390,7 +424,25 @@ void WebRuntimeFeatures::enableMediaSource(bool enable)
 bool WebRuntimeFeatures::isMediaSourceEnabled()
 {
 #if ENABLE(MEDIA_SOURCE)
-    return RuntimeEnabledFeatures::webkitMediaSourceEnabled();
+    return RuntimeEnabledFeatures::mediaSourceEnabled();
+#else
+    return false;
+#endif
+}
+
+void WebRuntimeFeatures::enableEncryptedMedia(bool enable)
+{
+#if ENABLE(ENCRYPTED_MEDIA)
+    RuntimeEnabledFeatures::setEncryptedMediaEnabled(enable);
+#else
+    UNUSED_PARAM(enable);
+#endif
+}
+
+bool WebRuntimeFeatures::isEncryptedMediaEnabled()
+{
+#if ENABLE(ENCRYPTED_MEDIA)
+    return RuntimeEnabledFeatures::encryptedMediaEnabled();
 #else
     return false;
 #endif
@@ -427,6 +479,60 @@ bool WebRuntimeFeatures::isGamepadEnabled()
 {
 #if ENABLE(GAMEPAD)
     return RuntimeEnabledFeatures::webkitGamepadsEnabled();
+#else
+    return false;
+#endif
+}
+
+void WebRuntimeFeatures::enableShadowDOM(bool enable)
+{
+#if ENABLE(SHADOW_DOM)
+    RuntimeEnabledFeatures::setShadowDOMEnabled(enable);
+#else
+    UNUSED_PARAM(enable);
+#endif
+}
+
+bool WebRuntimeFeatures::isShadowDOMEnabled()
+{
+#if ENABLE(SHADOW_DOM)
+    return RuntimeEnabledFeatures::shadowDOMEnabled();
+#else
+    return false;
+#endif
+}
+
+void WebRuntimeFeatures::enableStyleScoped(bool enable)
+{
+#if ENABLE(STYLE_SCOPED)
+    RuntimeEnabledFeatures::setStyleScopedEnabled(enable);
+#else
+    UNUSED_PARAM(enable);
+#endif
+}
+
+bool WebRuntimeFeatures::isStyleScopedEnabled()
+{
+#if ENABLE(STYLE_SCOPED)
+    return RuntimeEnabledFeatures::styleScopedEnabled();
+#else
+    return false;
+#endif
+}
+
+void WebRuntimeFeatures::enableInputTypeDate(bool enable)
+{
+#if ENABLE(INPUT_TYPE_DATE)
+    RuntimeEnabledFeatures::setInputTypeDateEnabled(enable);
+#else
+    UNUSED_PARAM(enable);
+#endif
+}
+
+bool WebRuntimeFeatures::isInputTypeDateEnabled()
+{
+#if ENABLE(INPUT_TYPE_DATE)
+    return RuntimeEnabledFeatures::inputTypeDateEnabled();
 #else
     return false;
 #endif

@@ -19,8 +19,11 @@
 #include "config.h"
 #include "ResourceRequest.h"
 
+#include "BlobRegistryImpl.h"
+#include "CookieManager.h"
 #include <BlackBerryPlatformClient.h>
 #include <network/NetworkRequest.h>
+#include <wtf/HashMap.h>
 #include <wtf/text/CString.h>
 
 using BlackBerry::Platform::NetworkRequest;
@@ -29,7 +32,7 @@ namespace WebCore {
 
 unsigned initializeMaximumHTTPConnectionCountPerHost()
 {
-    return 6;
+    return 10000;
 }
 
 static inline NetworkRequest::CachePolicy platformCachePolicyForRequest(const ResourceRequest& request)
@@ -44,7 +47,6 @@ static inline NetworkRequest::CachePolicy platformCachePolicyForRequest(const Re
     case WebCore::ReturnCacheDataDontLoad:
         return NetworkRequest::ReturnCacheDataDontLoad;
     default:
-        ASSERT_NOT_REACHED();
         return NetworkRequest::UseProtocolCachePolicy;
     }
 }
@@ -77,13 +79,70 @@ static inline NetworkRequest::TargetType platformTargetTypeForRequest(const Reso
         return NetworkRequest::TargetIsWorker;
     case ResourceRequest::TargetIsSharedWorker:
         return NetworkRequest::TargetIsSharedWorker;
+
+        // FIXME: this need to be updated to the right value, but
+        // we need to coordinate with AIR api change.
+    case ResourceRequest::TargetIsFavicon:
+        return NetworkRequest::TargetIsImage;
+    case ResourceRequest::TargetIsPrefetch:
+        return NetworkRequest::TargetIsSubresource;
+    case ResourceRequest::TargetIsPrerender:
+        return NetworkRequest::TargetIsSubresource;
+    case ResourceRequest::TargetIsXHR:
+        return NetworkRequest::TargetIsSubresource;
+    case ResourceRequest::TargetIsTextTrack:
+        return NetworkRequest::TargetIsSubresource;
+    case ResourceRequest::TargetIsUnspecified:
+        return NetworkRequest::TargetIsSubresource;
+
     default:
         ASSERT_NOT_REACHED();
         return NetworkRequest::TargetIsUnknown;
     }
 }
 
-void ResourceRequest::initializePlatformRequest(NetworkRequest& platformRequest, bool isInitial) const
+typedef HashMap<String, ResourceRequest::TargetType> MimeTypeResourceRequestTypeMap;
+
+static const MimeTypeResourceRequestTypeMap& mimeTypeRequestTypeMap()
+{
+    static MimeTypeResourceRequestTypeMap* map = 0;
+    if (!map) {
+        map = new MimeTypeResourceRequestTypeMap;
+
+        if (map) {
+            // The list here should match extensionMap[] in MIMETypeRegistryBlackBerry.cpp
+            map->add(String("text/css"), ResourceRequest::TargetIsStyleSheet);
+            map->add(String("application/x-javascript"), ResourceRequest::TargetIsScript);
+            map->add(String("image/bmp"), ResourceRequest::TargetIsImage);
+            map->add(String("image/gif"), ResourceRequest::TargetIsImage);
+            map->add(String("image/x-icon"), ResourceRequest::TargetIsImage);
+            map->add(String("image/jpeg"), ResourceRequest::TargetIsImage);
+            map->add(String("image/png"), ResourceRequest::TargetIsImage);
+            map->add(String("image/x-portable-bitmap"), ResourceRequest::TargetIsImage);
+            map->add(String("image/x-portable-graymap"), ResourceRequest::TargetIsImage);
+            map->add(String("image/x-portable-pixmap"), ResourceRequest::TargetIsImage);
+            map->add(String("image/svg+xml"), ResourceRequest::TargetIsImage);
+            map->add(String("image/tiff"), ResourceRequest::TargetIsImage);
+            map->add(String("image/x-xbitmap"), ResourceRequest::TargetIsImage);
+            map->add(String("image/x-xpm"), ResourceRequest::TargetIsImage);
+        }
+    }
+
+    return *map;
+}
+
+ResourceRequest::TargetType ResourceRequest::targetTypeFromMimeType(const String& mimeType)
+{
+    const MimeTypeResourceRequestTypeMap& map = mimeTypeRequestTypeMap();
+
+    MimeTypeResourceRequestTypeMap::const_iterator iter = map.find(mimeType);
+    if (iter == map.end())
+        return ResourceRequest::TargetIsUnspecified;
+
+    return iter->second;
+}
+
+void ResourceRequest::initializePlatformRequest(NetworkRequest& platformRequest, bool cookiesEnabled, bool isInitial, bool isRedirect) const
 {
     // If this is the initial load, skip the request body and headers.
     if (isInitial)
@@ -94,6 +153,8 @@ void ResourceRequest::initializePlatformRequest(NetworkRequest& platformRequest,
                 platformCachePolicyForRequest(*this),
                 platformTargetTypeForRequest(*this),
                 timeoutInterval());
+
+        platformRequest.setConditional(isConditional());
 
         if (httpBody() && !httpBody()->isEmpty()) {
             const Vector<FormDataElement>& elements = httpBody()->elements();
@@ -108,8 +169,20 @@ void ResourceRequest::initializePlatformRequest(NetworkRequest& platformRequest,
                     else if (element.m_type == FormDataElement::encodedFile)
                         platformRequest.addMultipartFilename(element.m_filename.characters(), element.m_filename.length());
 #if ENABLE(BLOB)
-                    else if (element.m_type == FormDataElement::encodedBlob)
-                        continue; // We don't support blob now!
+                    else if (element.m_type == FormDataElement::encodedBlob) {
+                        RefPtr<BlobStorageData> blobData = static_cast<BlobRegistryImpl&>(blobRegistry()).getBlobDataFromURL(KURL(ParsedURLString, element.m_blobURL));
+                        if (blobData) {
+                            for (size_t j = 0; j < blobData->items().size(); ++j) {
+                                const BlobDataItem& blobItem = blobData->items()[j];
+                                if (blobItem.type == BlobDataItem::Data)
+                                    platformRequest.addMultipartData(blobItem.data->data() + static_cast<int>(blobItem.offset), static_cast<int>(blobItem.length));
+                                else {
+                                    ASSERT(blobItem.type == BlobDataItem::File);
+                                    platformRequest.addMultipartFilename(blobItem.path.characters(), blobItem.path.length(), blobItem.offset, blobItem.length, blobItem.expectedModificationTime);
+                                }
+                            }
+                        }
+                    }
 #endif
                     else
                         ASSERT_NOT_REACHED(); // unknown type
@@ -117,22 +190,42 @@ void ResourceRequest::initializePlatformRequest(NetworkRequest& platformRequest,
             }
         }
 
+        // When ResourceRequest is reused by CacheResourceLoader, page refreshing or redirection, its cookies may be dirtied. We won't use these cookies any more.
+        bool cookieHeaderMayBeDirty = isRedirect || cachePolicy() == WebCore::ReloadIgnoringCacheData || cachePolicy() == WebCore::ReturnCacheDataElseLoad;
+
         for (HTTPHeaderMap::const_iterator it = httpHeaderFields().begin(); it != httpHeaderFields().end(); ++it) {
             String key = it->first;
             String value = it->second;
-            if (!key.isEmpty() && !value.isEmpty())
-                platformRequest.addHeader(key.latin1().data(), value.latin1().data());
+            if (!key.isEmpty()) {
+                // We need to check the encoding and encode the cookie's value using latin1 or utf8 to support unicode characters.
+                // We wo't use the old cookies of resourceRequest for new location because these cookies may be changed by redirection.
+                if (!equalIgnoringCase(key, "Cookie"))
+                    platformRequest.addHeader(key.latin1().data(), value.latin1().data());
+                else if (!cookieHeaderMayBeDirty)
+                    platformRequest.addHeader(key.latin1().data(), value.containsOnlyLatin1() ? value.latin1().data() : value.utf8().data());
+            }
         }
 
-        // Locale has the form "en-US". Construct accept language like "en-US, en;q=0.8".
-        std::string locale = BlackBerry::Platform::Client::get()->getLocale();
-        // POSIX locale has '_' instead of '-'.
-        // Replace to conform to HTTP spec.
-        size_t underscore = locale.find('_');
-        if (underscore != std::string::npos)
-            locale.replace(underscore, 1, "-");
-        std::string acceptLanguage = locale + ", " + locale.substr(0, 2) + ";q=0.8";
-        platformRequest.addHeader("Accept-Language", acceptLanguage.c_str());
+        // If request's cookies may be dirty, they must be set again.
+        // If there aren't cookies in the header list, we need trying to add cookies.
+        if (cookiesEnabled && (cookieHeaderMayBeDirty || !httpHeaderFields().contains("Cookie")) && !url().isNull()) {
+            // Prepare a cookie header if there are cookies related to this url.
+            String cookiePairs = cookieManager().getCookie(url(), WithHttpOnlyCookies);
+            if (!cookiePairs.isEmpty())
+                platformRequest.addHeader("Cookie", cookiePairs.containsOnlyLatin1() ? cookiePairs.latin1().data() : cookiePairs.utf8().data());
+        }
+
+        if (!httpHeaderFields().contains("Accept-Language")) {
+            // Locale has the form "en-US". Construct accept language like "en-US, en;q=0.8".
+            std::string locale = BlackBerry::Platform::Client::get()->getLocale();
+            // POSIX locale has '_' instead of '-'.
+            // Replace to conform to HTTP spec.
+            size_t underscore = locale.find('_');
+            if (underscore != std::string::npos)
+                locale.replace(underscore, 1, "-");
+            std::string acceptLanguage = locale + ", " + locale.substr(0, 2) + ";q=0.8";
+            platformRequest.addHeader("Accept-Language", acceptLanguage.c_str());
+        }
     }
 }
 
@@ -142,6 +235,7 @@ PassOwnPtr<CrossThreadResourceRequestData> ResourceRequest::doPlatformCopyData(P
     data->m_anchorText = m_anchorText;
     data->m_isXMLHTTPRequest = m_isXMLHTTPRequest;
     data->m_mustHandleInternally = m_mustHandleInternally;
+    data->m_isRequestedByPlugin = m_isRequestedByPlugin;
     return data;
 }
 
@@ -151,7 +245,28 @@ void ResourceRequest::doPlatformAdopt(PassOwnPtr<CrossThreadResourceRequestData>
     m_anchorText = data->m_anchorText;
     m_isXMLHTTPRequest = data->m_isXMLHTTPRequest;
     m_mustHandleInternally = data->m_mustHandleInternally;
+    m_isRequestedByPlugin = data->m_isRequestedByPlugin;
     m_forceDownload = data->m_forceDownload;
+}
+
+void ResourceRequest::clearHTTPContentLength()
+{
+    updateResourceRequest();
+
+    m_httpHeaderFields.remove("Content-Length");
+
+    if (url().protocolInHTTPFamily())
+        m_platformRequestUpdated = false;
+}
+
+void ResourceRequest::clearHTTPContentType()
+{
+    updateResourceRequest();
+
+    m_httpHeaderFields.remove("Content-Type");
+
+    if (url().protocolInHTTPFamily())
+        m_platformRequestUpdated = false;
 }
 
 } // namespace WebCore

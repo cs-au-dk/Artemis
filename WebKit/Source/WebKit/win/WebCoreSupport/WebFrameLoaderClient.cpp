@@ -460,10 +460,6 @@ void WebFrameLoaderClient::dispatchShow()
         ui->webViewShow(webView);
 }
 
-void WebFrameLoaderClient::dispatchDidLoadMainResource(DocumentLoader*)
-{
-}
-
 void WebFrameLoaderClient::setMainDocumentError(DocumentLoader*, const ResourceError& error)
 {
     if (!m_manualLoader)
@@ -762,33 +758,6 @@ PassRefPtr<Frame> WebFrameLoaderClient::createFrame(const KURL& url, const Strin
     return result.release();
 }
 
-void WebFrameLoaderClient::didTransferChildFrameToNewDocument(Page*)
-{
-    Frame* coreFrame = core(m_webFrame);
-    ASSERT(coreFrame);
-    WebView* webView = kit(coreFrame->page());
-    if (m_webFrame->webView() != webView)
-        m_webFrame->setWebView(webView);
-}
-
-void WebFrameLoaderClient::transferLoadingResourceFromPage(ResourceLoader* loader, const ResourceRequest& request, Page* oldPage)
-{
-    assignIdentifierToInitialRequest(loader->identifier(), loader->documentLoader(), request);
-
-    WebView* oldWebView = kit(oldPage);
-    if (!oldWebView)
-        return;
-
-    COMPtr<IWebResourceLoadDelegate> oldResourceLoadDelegate;
-    if (FAILED(oldWebView->resourceLoadDelegate(&oldResourceLoadDelegate)))
-        return;
-
-    COMPtr<IWebResourceLoadDelegatePrivate2> oldResourceLoadDelegatePrivate2(Query, oldResourceLoadDelegate);
-    if (!oldResourceLoadDelegatePrivate2)
-        return;
-    oldResourceLoadDelegatePrivate2->removeIdentifierForRequest(oldWebView, loader->identifier());
-}
-
 PassRefPtr<Frame> WebFrameLoaderClient::createFrame(const KURL& URL, const String& name, HTMLFrameOwnerElement* ownerElement, const String& referrer)
 {
     Frame* coreFrame = core(m_webFrame);
@@ -826,7 +795,7 @@ void WebFrameLoaderClient::dispatchDidFailToStartPlugin(const PluginView* plugin
 
     if (!pluginView->pluginsPage().isNull()) {
         KURL pluginPageURL = frame->document()->completeURL(stripLeadingAndTrailingHTMLSpaces(pluginView->pluginsPage()));
-        if (pluginPageURL.protocolInHTTPFamily()) {
+        if (pluginPageURL.protocolIsInHTTPFamily()) {
             static CFStringRef key = MarshallingHelpers::LPCOLESTRToCFStringRef(WebKitErrorPlugInPageURLStringKey);
             RetainPtr<CFStringRef> str(AdoptCF, pluginPageURL.string().createCFString());
             CFDictionarySetValue(userInfo.get(), key, str.get());

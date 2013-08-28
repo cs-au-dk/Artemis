@@ -2,13 +2,8 @@
 #include <QAction>
 #include <QColor>
 #include <QDebug>
-#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
-#include <QtQuick1/QDeclarativeItem>
-#include <QtQuick1/QDeclarativeView>
-#else
 #include <QDeclarativeItem>
 #include <QDeclarativeView>
-#endif
 #include <QDeclarativeComponent>
 #include <QDeclarativeEngine>
 #include <QDeclarativeProperty>
@@ -144,7 +139,7 @@ void tst_QDeclarativeWebView::basicProperties()
 
 void tst_QDeclarativeWebView::elementAreaAt()
 {
-    QSKIP("This test should be changed to test 'heuristicZoom' instead.", SkipAll);
+    W_QSKIP("This test should be changed to test 'heuristicZoom' instead.", SkipAll);
     QDeclarativeEngine engine;
     QDeclarativeComponent component(&engine, QUrl("qrc:///resources/elements.qml"));
     checkNoErrors(component);

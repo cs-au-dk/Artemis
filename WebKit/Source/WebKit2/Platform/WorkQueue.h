@@ -41,22 +41,20 @@
 #include <wtf/Threading.h>
 #include <wtf/Vector.h>
 
+#if (PLATFORM(QT) && !OS(DARWIN)) || PLATFORM(GTK) || PLATFORM(EFL)
+#include "PlatformProcessIdentifier.h"
+#endif
+
 #if PLATFORM(QT) && !OS(DARWIN)
 #include <QSocketNotifier>
-#include "PlatformProcessIdentifier.h"
 class QObject;
 class QThread;
 #elif PLATFORM(GTK)
-#include "PlatformProcessIdentifier.h"
-typedef struct _GMainContext GMainContext;
-typedef struct _GMainLoop GMainLoop;
+#include <wtf/gobject/GRefPtr.h>
 typedef gboolean (*GSourceFunc) (gpointer data);
+#elif PLATFORM(EFL)
+#include <Ecore.h>
 #endif
-
-namespace WTF {
-    template<typename> class Function;
-}
-using WTF::Function;
 
 class WorkQueue {
     WTF_MAKE_NONCOPYABLE(WorkQueue);
@@ -96,6 +94,9 @@ public:
     void registerEventSourceHandler(int, int, const Function<void()>&);
     void unregisterEventSourceHandler(int);
     void dispatchOnTermination(WebKit::PlatformProcessIdentifier, const Function<void()>&);
+#elif PLATFORM(EFL)
+    void registerSocketEventHandler(int, const Function<void()>&);
+    void unregisterSocketEventHandler(int);
 #endif
 
 private:
@@ -171,18 +172,38 @@ private:
     QThread* m_workThread;
     friend class WorkItemQt;
 #elif PLATFORM(GTK)
-    static void* startWorkQueueThread(WorkQueue*);
+    static void startWorkQueueThread(WorkQueue*);
     void workQueueThreadBody();
     void dispatchOnSource(GSource*, const Function<void()>&, GSourceFunc);
 
     ThreadIdentifier m_workQueueThread;
-    GMainContext* m_eventContext;
+    GRefPtr<GMainContext> m_eventContext;
     Mutex m_eventLoopLock;
-    GMainLoop* m_eventLoop;
+    GRefPtr<GMainLoop> m_eventLoop;
     Mutex m_eventSourcesLock;
     class EventSource;
     HashMap<int, Vector<EventSource*> > m_eventSources;
     typedef HashMap<int, Vector<EventSource*> >::iterator EventSourceIterator; 
+#elif PLATFORM(EFL)
+    fd_set m_fileDescriptorSet;
+    int m_maxFileDescriptor;
+    int m_readFromPipeDescriptor;
+    int m_writeToPipeDescriptor;
+    bool m_threadLoop;
+
+    Vector<Function<void()> > m_workItemQueue;
+    Mutex m_workItemQueueLock;
+
+    int m_socketDescriptor;
+    Function<void()> m_socketEventHandler;
+
+    HashMap<int, OwnPtr<Ecore_Timer> > m_timers;
+
+    void sendMessageToThread(const char*);
+    static void* workQueueThread(WorkQueue*);
+    void performWork();
+    void performFileDescriptorWork();
+    static bool timerFired(void*);
 #endif
 };
 

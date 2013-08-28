@@ -61,6 +61,10 @@ static ResourceLoadPriority defaultPriorityForResourceType(CachedResource::Type 
 #endif
             return ResourceLoadPriorityHigh;
         case CachedResource::Script:
+#if ENABLE(SVG)
+        case CachedResource::SVGDocumentResource:
+            return ResourceLoadPriorityLow;
+#endif
         case CachedResource::FontResource:
         case CachedResource::RawResource:
             return ResourceLoadPriorityMedium;
@@ -87,7 +91,7 @@ static ResourceLoadPriority defaultPriorityForResourceType(CachedResource::Type 
     return ResourceLoadPriorityLow;
 }
 
-#if PLATFORM(CHROMIUM)
+#if PLATFORM(CHROMIUM) || PLATFORM(BLACKBERRY)
 static ResourceRequest::TargetType cachedResourceTypeToTargetType(CachedResource::Type type)
 {
     switch (type) {
@@ -102,6 +106,9 @@ static ResourceRequest::TargetType cachedResourceTypeToTargetType(CachedResource
         return ResourceRequest::TargetIsFontResource;
     case CachedResource::ImageResource:
         return ResourceRequest::TargetIsImage;
+#if ENABLE(CSS_SHADERS)
+    case CachedResource::ShaderResource:
+#endif
     case CachedResource::RawResource:
         return ResourceRequest::TargetIsSubresource;    
 #if ENABLE(LINK_PREFETCH)
@@ -115,6 +122,10 @@ static ResourceRequest::TargetType cachedResourceTypeToTargetType(CachedResource
 #if ENABLE(VIDEO_TRACK)
     case CachedResource::TextTrackResource:
         return ResourceRequest::TargetIsTextTrack;
+#endif
+#if ENABLE(SVG)
+    case CachedResource::SVGDocumentResource:
+        return ResourceRequest::TargetIsImage;
 #endif
     }
     ASSERT_NOT_REACHED();
@@ -140,6 +151,7 @@ CachedResource::CachedResource(const ResourceRequest& request, Type type)
     , m_requestedFromNetworkingLayer(false)
     , m_inCache(false)
     , m_loading(false)
+    , m_switchingClientsToRevalidatedResource(false)
     , m_type(type)
     , m_status(Pending)
 #ifndef NDEBUG
@@ -182,7 +194,7 @@ void CachedResource::load(CachedResourceLoader* cachedResourceLoader, const Reso
     m_options = options;
     m_loading = true;
 
-#if PLATFORM(CHROMIUM)
+#if PLATFORM(CHROMIUM) || PLATFORM(BLACKBERRY)
     if (m_resourceRequest.targetType() == ResourceRequest::TargetIsUnspecified)
         m_resourceRequest.setTargetType(cachedResourceTypeToTargetType(type()));
 #endif
@@ -214,7 +226,7 @@ void CachedResource::load(CachedResourceLoader* cachedResourceLoader, const Reso
     m_resourceRequest.setPriority(loadPriority());
     
     m_loader = resourceLoadScheduler()->scheduleSubresourceLoad(cachedResourceLoader->document()->frame(), this, m_resourceRequest, m_resourceRequest.priority(), options);
-    if (!m_loader || m_loader->reachedTerminalState()) {
+    if (!m_loader) {
         // FIXME: What if resources in other frames were waiting for this revalidation?
         LOG(ResourceLoading, "Cannot start loading '%s'", url().string().latin1().data());
         if (m_resourceToRevalidate) 
@@ -224,7 +236,6 @@ void CachedResource::load(CachedResourceLoader* cachedResourceLoader, const Reso
     }
 
     m_status = Pending;
-    cachedResourceLoader->incrementRequestCount(this);
 }
 
 void CachedResource::checkNotify()
@@ -291,7 +302,7 @@ double CachedResource::currentAge() const
 double CachedResource::freshnessLifetime() const
 {
     // Cache non-http resources liberally
-    if (!m_response.url().protocolInHTTPFamily())
+    if (!m_response.url().protocolIsInHTTPFamily())
         return std::numeric_limits<double>::max();
 
     // RFC2616 13.2.4
@@ -366,17 +377,21 @@ void CachedResource::stopLoading()
 
 void CachedResource::addClient(CachedResourceClient* client)
 {
-    addClientToSet(client);
-    didAddClient(client);
+    if (addClientToSet(client))
+        didAddClient(client);
 }
 
 void CachedResource::didAddClient(CachedResourceClient* c)
 {
+    if (m_clientsAwaitingCallback.contains(c)) {
+        m_clients.add(c);
+        m_clientsAwaitingCallback.remove(c);
+    }
     if (!isLoading())
         c->notifyFinished(this);
 }
 
-void CachedResource::addClientToSet(CachedResourceClient* client)
+bool CachedResource::addClientToSet(CachedResourceClient* client)
 {
     ASSERT(!isPurgeable());
 
@@ -390,13 +405,32 @@ void CachedResource::addClientToSet(CachedResourceClient* client)
     }
     if (!hasClients() && inCache())
         memoryCache()->addToLiveResourcesSize(this);
+
+    if (m_type == RawResource && !m_response.isNull() && !m_proxyResource) {
+        // Certain resources (especially XHRs) do crazy things if an asynchronous load returns
+        // synchronously (e.g., scripts may not have set all the state they need to handle the load).
+        // Therefore, rather than immediately sending callbacks on a cache hit like other CachedResources,
+        // we schedule the callbacks and ensure we never finish synchronously.
+        ASSERT(!m_clientsAwaitingCallback.contains(client));
+        m_clientsAwaitingCallback.add(client, CachedResourceCallback::schedule(this, client));
+        return false;
+    }
+
     m_clients.add(client);
+    return true;
 }
 
 void CachedResource::removeClient(CachedResourceClient* client)
 {
-    ASSERT(m_clients.contains(client));
-    m_clients.remove(client);
+    OwnPtr<CachedResourceCallback> callback = m_clientsAwaitingCallback.take(client);
+    if (callback) {
+        ASSERT(!m_clients.contains(client));
+        callback->cancel();
+        callback.clear();
+    } else {
+        ASSERT(m_clients.contains(client));
+        m_clients.remove(client);
+    }
 
     if (canDelete() && !inCache())
         delete this;
@@ -521,6 +555,9 @@ void CachedResource::setResourceToRevalidate(CachedResource* resource)
 void CachedResource::clearResourceToRevalidate() 
 { 
     ASSERT(m_resourceToRevalidate);
+    if (m_switchingClientsToRevalidatedResource)
+        return;
+
     // A resource may start revalidation before this method has been called, so check that this resource is still the proxy resource before clearing it out.
     if (m_resourceToRevalidate->m_proxyResource == this) {
         m_resourceToRevalidate->m_proxyResource = 0;
@@ -539,6 +576,7 @@ void CachedResource::switchClientsToRevalidatedResource()
 
     LOG(ResourceLoading, "CachedResource %p switchClientsToRevalidatedResource %p", this, m_resourceToRevalidate);
 
+    m_switchingClientsToRevalidatedResource = true;
     HashSet<CachedResourceHandleBase*>::iterator end = m_handlesToRevalidate.end();
     for (HashSet<CachedResourceHandleBase*>::iterator it = m_handlesToRevalidate.begin(); it != end; ++it) {
         CachedResourceHandleBase* handle = *it;
@@ -566,10 +604,14 @@ void CachedResource::switchClientsToRevalidatedResource()
     for (unsigned n = 0; n < moveCount; ++n)
         m_resourceToRevalidate->addClientToSet(clientsToMove[n]);
     for (unsigned n = 0; n < moveCount; ++n) {
+        // Calling didAddClient may do anything, including trying to cancel revalidation.
+        // Assert that it didn't succeed.
+        ASSERT(m_resourceToRevalidate);
         // Calling didAddClient for a client may end up removing another client. In that case it won't be in the set anymore.
         if (m_resourceToRevalidate->m_clients.contains(clientsToMove[n]))
             m_resourceToRevalidate->didAddClient(clientsToMove[n]);
     }
+    m_switchingClientsToRevalidatedResource = false;
 }
     
 void CachedResource::updateResponseAfterRevalidation(const ResourceResponse& validatingResponse)
@@ -715,6 +757,26 @@ void CachedResource::setLoadPriority(ResourceLoadPriority loadPriority)
     if (loadPriority == ResourceLoadPriorityUnresolved)
         return;
     m_loadPriority = loadPriority;
+}
+
+
+CachedResource::CachedResourceCallback::CachedResourceCallback(CachedResource* resource, CachedResourceClient* client)
+    : m_resource(resource)
+    , m_client(client)
+    , m_callbackTimer(this, &CachedResourceCallback::timerFired)
+{
+    m_callbackTimer.startOneShot(0);
+}
+
+void CachedResource::CachedResourceCallback::cancel()
+{
+    if (m_callbackTimer.isActive())
+        m_callbackTimer.stop();
+}
+
+void CachedResource::CachedResourceCallback::timerFired(Timer<CachedResourceCallback>*)
+{
+    m_resource->didAddClient(m_client);
 }
 
 }

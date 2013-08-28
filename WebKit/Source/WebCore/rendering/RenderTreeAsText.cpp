@@ -26,8 +26,8 @@
 #include "config.h"
 #include "RenderTreeAsText.h"
 
-#include "CSSMutableStyleDeclaration.h"
 #include "Document.h"
+#include "FlowThreadController.h"
 #include "Frame.h"
 #include "FrameSelection.h"
 #include "FrameView.h"
@@ -38,16 +38,17 @@
 #include "RenderBR.h"
 #include "RenderDetailsMarker.h"
 #include "RenderFileUploadControl.h"
-#include "RenderFlowThread.h"
 #include "RenderInline.h"
 #include "RenderLayer.h"
 #include "RenderListItem.h"
 #include "RenderListMarker.h"
+#include "RenderNamedFlowThread.h"
 #include "RenderPart.h"
 #include "RenderRegion.h"
 #include "RenderTableCell.h"
 #include "RenderView.h"
 #include "RenderWidget.h"
+#include "StylePropertySet.h"
 #include <wtf/HexNumber.h>
 #include <wtf/UnusedParam.h>
 #include <wtf/Vector.h>
@@ -69,7 +70,7 @@
 #endif
 
 #if PLATFORM(QT)
-#include <QWidget>
+#include <QVariant>
 #endif
 
 namespace WebCore {
@@ -166,7 +167,7 @@ static String getTagName(Node* n)
 {
     if (n->isDocumentNode())
         return "";
-    if (n->isCommentNode())
+    if (n->nodeType() == Node::COMMENT_NODE)
         return "COMMENT";
     return n->nodeName();
 }
@@ -183,8 +184,8 @@ static bool isEmptyOrUnstyledAppleStyleSpan(const Node* node)
     if (!node->hasChildNodes())
         return true;
 
-    CSSMutableStyleDeclaration* inlineStyleDecl = elem->inlineStyleDecl();
-    return (!inlineStyleDecl || inlineStyleDecl->length() == 0);
+    const StylePropertySet* inlineStyleDecl = elem->inlineStyle();
+    return (!inlineStyleDecl || inlineStyleDecl->isEmpty());
 }
 
 String quoteAndEscapeNonPrintables(const String& s)
@@ -369,7 +370,7 @@ void RenderTreeAsText::writeRenderObject(TextStream& ts, const RenderObject& o, 
 
     if (o.isTableCell()) {
         const RenderTableCell& c = *toRenderTableCell(&o);
-        ts << " [r=" << c.row() << " c=" << c.col() << " rs=" << c.rowSpan() << " cs=" << c.colSpan() << "]";
+        ts << " [r=" << c.rowIndex() << " c=" << c.col() << " rs=" << c.rowSpan() << " cs=" << c.colSpan() << "]";
     }
 
 #if ENABLE(DETAILS)
@@ -475,14 +476,13 @@ void RenderTreeAsText::writeRenderObject(TextStream& ts, const RenderObject& o, 
     if (o.isRenderPart()) {
         const RenderPart* part = toRenderPart(const_cast<RenderObject*>(&o));
         if (part->widget() && part->widget()->platformWidget()) {
-            QWidget* wid = part->widget()->platformWidget();
+            QObject* wid = part->widget()->platformWidget();
 
             ts << " [QT: ";
-            ts << "geometry: {" << wid->geometry() << "} ";
-            ts << "isHidden: " << wid->isHidden() << " ";
+            ts << "geometry: {" << wid->property("geometry").toRect() << "} ";
+            ts << "isHidden: " << !wid->property("isVisible").toBool() << " ";
             ts << "isSelfVisible: " << part->widget()->isSelfVisible() << " ";
-            ts << "isParentVisible: " << part->widget()->isParentVisible() << " ";
-            ts << "mask: {" << wid->mask().boundingRect() << "} ] ";
+            ts << "isParentVisible: " << part->widget()->isParentVisible() << " ] ";
         }
     }
 #endif
@@ -501,9 +501,9 @@ static void writeTextRun(TextStream& ts, const RenderText& o, const InlineTextBo
         y -= toRenderTableCell(o.containingBlock())->intrinsicPaddingBefore();
         
     ts << "text run at (" << x << "," << y << ") width " << logicalWidth;
-    if (!run.isLeftToRightDirection() || run.m_dirOverride) {
+    if (!run.isLeftToRightDirection() || run.dirOverride()) {
         ts << (!run.isLeftToRightDirection() ? " RTL" : " LTR");
-        if (run.m_dirOverride)
+        if (run.dirOverride())
             ts << " override";
     }
     ts << ": "
@@ -617,9 +617,9 @@ static void write(TextStream& ts, RenderLayer& l,
             ts << " scrollX " << l.scrollXOffset();
         if (l.scrollYOffset())
             ts << " scrollY " << l.scrollYOffset();
-        if (l.renderBox() && l.renderBox()->clientWidth() != l.scrollWidth())
+        if (l.renderBox() && l.renderBox()->pixelSnappedClientWidth() != l.scrollWidth())
             ts << " scrollWidth " << l.scrollWidth();
-        if (l.renderBox() && l.renderBox()->clientHeight() != l.scrollHeight())
+        if (l.renderBox() && l.renderBox()->pixelSnappedClientHeight() != l.scrollHeight())
             ts << " scrollHeight " << l.scrollHeight();
     }
 
@@ -631,7 +631,7 @@ static void write(TextStream& ts, RenderLayer& l,
 #if USE(ACCELERATED_COMPOSITING)
     if (behavior & RenderAsTextShowCompositedLayers) {
         if (l.isComposited())
-            ts << " (composited, bounds " << l.backing()->compositedBounds() << ")";
+            ts << " (composited, bounds=" << l.backing()->compositedBounds() << ", drawsContent=" << l.backing()->graphicsLayer()->drawsContent() << ", paints into ancestor=" << l.backing()->paintsIntoCompositedAncestor() << ")";
     }
 #else
     UNUSED_PARAM(behavior);
@@ -643,21 +643,22 @@ static void write(TextStream& ts, RenderLayer& l,
         write(ts, *l.renderer(), indent + 1, behavior);
 }
 
-static void writeRenderFlowThreads(TextStream& ts, RenderView* renderView, const RenderLayer* rootLayer,
+static void writeRenderNamedFlowThreads(TextStream& ts, RenderView* renderView, const RenderLayer* rootLayer,
                         const IntRect& paintRect, int indent, RenderAsTextBehavior behavior)
 {
-    const RenderFlowThreadList* list = renderView->renderFlowThreadList();
-    if (!list || list->isEmpty())
+    if (!renderView->hasRenderNamedFlowThreads())
         return;
+
+    const RenderNamedFlowThreadList* list = renderView->flowThreadController()->renderNamedFlowThreadList();
 
     writeIndent(ts, indent);
     ts << "Flow Threads\n";
 
-    for (RenderFlowThreadList::const_iterator iter = list->begin(); iter != list->end(); ++iter) {
-        const RenderFlowThread* renderFlowThread = *iter;
+    for (RenderNamedFlowThreadList::const_iterator iter = list->begin(); iter != list->end(); ++iter) {
+        const RenderNamedFlowThread* renderFlowThread = *iter;
 
         writeIndent(ts, indent + 1);
-        ts << "Thread with flow-name '" << renderFlowThread->flowThread() << "'\n";
+        ts << "Thread with flow-name '" << renderFlowThread->flowThreadName() << "'\n";
 
         RenderLayer* layer = renderFlowThread->layer();
         writeLayers(ts, rootLayer, layer, paintRect, indent + 2, behavior);
@@ -666,7 +667,7 @@ static void writeRenderFlowThreads(TextStream& ts, RenderView* renderView, const
         const RenderRegionList& flowThreadRegionList = renderFlowThread->renderRegionList();
         if (!flowThreadRegionList.isEmpty()) {
             writeIndent(ts, indent + 1);
-            ts << "Regions for flow '"<< renderFlowThread->flowThread() << "'\n";
+            ts << "Regions for flow '"<< renderFlowThread->flowThreadName() << "'\n";
             for (RenderRegionList::const_iterator itRR = flowThreadRegionList.begin(); itRR != flowThreadRegionList.end(); ++itRR) {
                 RenderRegion* renderRegion = *itRR;
                 writeIndent(ts, indent + 2);
@@ -707,8 +708,7 @@ static void writeLayers(TextStream& ts, const RenderLayer* rootLayer, RenderLaye
     l->calculateRects(rootLayer, 0, paintDirtyRect, layerBounds, damageRect, clipRectToApply, outlineRect, true);
 
     // Ensure our lists are up-to-date.
-    l->updateZOrderLists();
-    l->updateNormalFlowList();
+    l->updateLayerListsIfNeeded();
 
     bool shouldPaint = (behavior & RenderAsTextShowAllLayers) ? true : l->intersectsDamageRect(layerBounds, damageRect.rect(), rootLayer);
     Vector<RenderLayer*>* negList = l->negZOrderList();
@@ -756,7 +756,7 @@ static void writeLayers(TextStream& ts, const RenderLayer* rootLayer, RenderLaye
     // so we have to treat it as a special case.
     if (l->renderer()->isRenderView()) {
         RenderView* renderView = toRenderView(l->renderer());
-        writeRenderFlowThreads(ts, renderView, rootLayer, paintDirtyRect, indent, behavior);
+        writeRenderNamedFlowThreads(ts, renderView, rootLayer, paintDirtyRect, indent, behavior);
     }
 }
 

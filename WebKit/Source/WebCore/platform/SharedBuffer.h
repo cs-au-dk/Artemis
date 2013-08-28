@@ -23,6 +23,7 @@
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
  */
+
 #ifndef SharedBuffer_h
 #define SharedBuffer_h
 
@@ -37,12 +38,7 @@
 #endif
 
 #if PLATFORM(MAC) || (PLATFORM(QT) && USE(QTKIT))
-#ifdef __OBJC__
-@class NSData;
-#else
-class NSData;
-#endif
-
+OBJC_CLASS NSData;
 #endif
 
 namespace WebCore {
@@ -52,6 +48,7 @@ class PurgeableBuffer;
 class SharedBuffer : public RefCounted<SharedBuffer> {
 public:
     static PassRefPtr<SharedBuffer> create() { return adoptRef(new SharedBuffer); }
+    static PassRefPtr<SharedBuffer> create(size_t size) { return adoptRef(new SharedBuffer(size)); }
     static PassRefPtr<SharedBuffer> create(const char* c, int i) { return adoptRef(new SharedBuffer(c, i)); }
     static PassRefPtr<SharedBuffer> create(const unsigned char* c, int i) { return adoptRef(new SharedBuffer(c, i)); }
 
@@ -119,6 +116,7 @@ public:
 
 private:
     SharedBuffer();
+    SharedBuffer(size_t);
     SharedBuffer(const char*, int);
     SharedBuffer(const unsigned char*, int);
     
@@ -140,6 +138,7 @@ private:
 #if HAVE(NETWORK_CFDATA_ARRAY_CALLBACK)
     mutable Vector<RetainPtr<CFDataRef> > m_dataArray;
     void copyDataArrayAndClear(char *destination, unsigned bytesToCopy) const;
+    unsigned copySomeDataFromDataArray(const char*& someData, unsigned position) const;
 #endif
 #if USE(CF)
     SharedBuffer(CFDataRef);

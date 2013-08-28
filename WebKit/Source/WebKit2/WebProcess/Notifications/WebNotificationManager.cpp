@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Apple Inc. All rights reserved.
+ * Copyright (C) 2011, 2012 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -29,20 +29,23 @@
 #include "WebPage.h"
 #include "WebProcess.h"
 
-#if ENABLE(NOTIFICATIONS)
+#if ENABLE(NOTIFICATIONS) || ENABLE(LEGACY_NOTIFICATIONS)
 #include "WebNotification.h"
 #include "WebNotificationManagerProxyMessages.h"
 #include "WebPageProxyMessages.h"
+#include <WebCore/Document.h>
 #include <WebCore/Notification.h>
+#include <WebCore/Page.h>
 #include <WebCore/ScriptExecutionContext.h>
 #include <WebCore/SecurityOrigin.h>
+#include <WebCore/Settings.h>
 #endif
 
 using namespace WebCore;
 
 namespace WebKit {
 
-#if ENABLE(NOTIFICATIONS)
+#if ENABLE(NOTIFICATIONS) || ENABLE(LEGACY_NOTIFICATIONS)
 static uint64_t generateNotificationID()
 {
     static uint64_t uniqueNotificationID = 1;
@@ -64,25 +67,72 @@ void WebNotificationManager::didReceiveMessage(CoreIPC::Connection* connection, 
     didReceiveWebNotificationManagerMessage(connection, messageID, arguments);
 }
 
+void WebNotificationManager::initialize(const HashMap<String, bool>& permissions)
+{
+#if ENABLE(NOTIFICATIONS) || ENABLE(LEGACY_NOTIFICATIONS)
+    m_permissionsMap = permissions;
+#endif
+}
+
+void WebNotificationManager::didUpdateNotificationDecision(const String& originString, bool allowed)
+{
+#if ENABLE(NOTIFICATIONS) || ENABLE(LEGACY_NOTIFICATIONS)
+    m_permissionsMap.set(originString, allowed);
+#endif
+}
+
+void WebNotificationManager::didRemoveNotificationDecisions(const Vector<String>& originStrings)
+{
+#if ENABLE(NOTIFICATIONS) || ENABLE(LEGACY_NOTIFICATIONS)
+    size_t count = originStrings.size();
+    for (size_t i = 0; i < count; ++i)
+        m_permissionsMap.remove(originStrings[i]);
+#endif
+}
+
+NotificationClient::Permission WebNotificationManager::policyForOrigin(WebCore::SecurityOrigin *origin) const
+{
+#if ENABLE(NOTIFICATIONS) || ENABLE(LEGACY_NOTIFICATIONS)
+    if (!origin)
+        return NotificationClient::PermissionNotAllowed;
+
+    ASSERT(!origin->isUnique());
+    HashMap<String, bool>::const_iterator it = m_permissionsMap.find(origin->toRawString());
+    if (it != m_permissionsMap.end())
+        return it->second ? NotificationClient::PermissionAllowed : NotificationClient::PermissionDenied;
+#endif
+    
+    return NotificationClient::PermissionNotAllowed;
+}
+
 bool WebNotificationManager::show(Notification* notification, WebPage* page)
 {
-#if ENABLE(NOTIFICATIONS)
-    if (!notification)
-        return true;
+#if ENABLE(NOTIFICATIONS) || ENABLE(LEGACY_NOTIFICATIONS)
+    if (!notification || !page->corePage()->settings()->notificationsEnabled())
+        return false;
     
     uint64_t notificationID = generateNotificationID();
     m_notificationMap.set(notification, notificationID);
     m_notificationIDMap.set(notificationID, notification);
     
-    m_process->connection()->send(Messages::WebPageProxy::ShowNotification(notification->contents().title, notification->contents().body, notification->scriptExecutionContext()->securityOrigin()->databaseIdentifier(), notificationID), page->pageID());
+    NotificationContextMap::iterator it = m_notificationContextMap.add(notification->scriptExecutionContext(), Vector<uint64_t>()).iterator;
+    it->second.append(notificationID);
+
+#if ENABLE(NOTIFICATIONS)
+    m_process->connection()->send(Messages::WebPageProxy::ShowNotification(notification->title(), notification->body(), notification->iconURL().string(), notification->tag(), notification->scriptExecutionContext()->securityOrigin()->toString(), notificationID), page->pageID());
+#else
+    m_process->connection()->send(Messages::WebPageProxy::ShowNotification(notification->title(), notification->body(), notification->iconURL().string(), notification->replaceId(), notification->scriptExecutionContext()->securityOrigin()->toString(), notificationID), page->pageID());
 #endif
     return true;
+#else
+    return false;
+#endif
 }
 
 void WebNotificationManager::cancel(Notification* notification, WebPage* page)
 {
-#if ENABLE(NOTIFICATIONS)
-    if (!notification)
+#if ENABLE(NOTIFICATIONS) || ENABLE(LEGACY_NOTIFICATIONS)
+    if (!notification || !page->corePage()->settings()->notificationsEnabled())
         return;
     
     uint64_t notificationID = m_notificationMap.get(notification);
@@ -93,21 +143,44 @@ void WebNotificationManager::cancel(Notification* notification, WebPage* page)
 #endif
 }
 
+void WebNotificationManager::clearNotifications(WebCore::ScriptExecutionContext* context, WebPage* page)
+{
+#if ENABLE(NOTIFICATIONS) || ENABLE(LEGACY_NOTIFICATIONS)
+    NotificationContextMap::iterator it = m_notificationContextMap.find(context);
+    if (it == m_notificationContextMap.end())
+        return;
+    
+    Vector<uint64_t>& notificationIDs = it->second;
+    m_process->connection()->send(Messages::WebNotificationManagerProxy::ClearNotifications(notificationIDs), page->pageID());
+    size_t count = notificationIDs.size();
+    for (size_t i = 0; i < count; ++i) {
+        RefPtr<Notification> notification = m_notificationIDMap.take(notificationIDs[i]);
+        if (!notification)
+            continue;
+        notification->finalize();
+        m_notificationMap.remove(notification);
+    }
+    
+    m_notificationContextMap.remove(it);
+#endif
+}
+
 void WebNotificationManager::didDestroyNotification(Notification* notification, WebPage* page)
 {
-#if ENABLE(NOTIFICATIONS)
+#if ENABLE(NOTIFICATIONS) || ENABLE(LEGACY_NOTIFICATIONS)
     uint64_t notificationID = m_notificationMap.take(notification);
     if (!notificationID)
         return;
 
-    m_notificationIDMap.take(notificationID);
+    m_notificationIDMap.remove(notificationID);
+    removeNotificationFromContextMap(notificationID, notification);
     m_process->connection()->send(Messages::WebNotificationManagerProxy::DidDestroyNotification(notificationID), page->pageID());
 #endif
 }
 
 void WebNotificationManager::didShowNotification(uint64_t notificationID)
 {
-#if ENABLE(NOTIFICATIONS)
+#if ENABLE(NOTIFICATIONS) || ENABLE(LEGACY_NOTIFICATIONS)
     if (!isNotificationIDValid(notificationID))
         return;
     
@@ -121,7 +194,7 @@ void WebNotificationManager::didShowNotification(uint64_t notificationID)
 
 void WebNotificationManager::didClickNotification(uint64_t notificationID)
 {
-#if ENABLE(NOTIFICATIONS)
+#if ENABLE(NOTIFICATIONS) || ENABLE(LEGACY_NOTIFICATIONS)
     if (!isNotificationIDValid(notificationID))
         return;
 
@@ -135,20 +208,37 @@ void WebNotificationManager::didClickNotification(uint64_t notificationID)
 
 void WebNotificationManager::didCloseNotifications(const Vector<uint64_t>& notificationIDs)
 {
-#if ENABLE(NOTIFICATIONS)
+#if ENABLE(NOTIFICATIONS) || ENABLE(LEGACY_NOTIFICATIONS)
     size_t count = notificationIDs.size();
     for (size_t i = 0; i < count; ++i) {
         uint64_t notificationID = notificationIDs[i];
         if (!isNotificationIDValid(notificationID))
             continue;
 
-        RefPtr<Notification> notification = m_notificationIDMap.get(notificationID);
+        RefPtr<Notification> notification = m_notificationIDMap.take(notificationID);
         if (!notification)
             continue;
+
+        m_notificationMap.remove(notification);
+        removeNotificationFromContextMap(notificationID, notification.get());
 
         notification->dispatchCloseEvent();
     }
 #endif
 }
+
+#if ENABLE(NOTIFICATIONS) || ENABLE(LEGACY_NOTIFICATIONS)
+void WebNotificationManager::removeNotificationFromContextMap(uint64_t notificationID, Notification* notification)
+{
+    // This is a helper function for managing the hash maps.
+    NotificationContextMap::iterator it = m_notificationContextMap.find(notification->scriptExecutionContext());
+    ASSERT(it != m_notificationContextMap.end());
+    size_t index = it->second.find(notificationID);
+    ASSERT(index != notFound);
+    it->second.remove(index);
+    if (it->second.isEmpty())
+        m_notificationContextMap.remove(it);
+}
+#endif
 
 } // namespace WebKit

@@ -46,14 +46,17 @@
 class QSocketNotifier;
 #endif
 
-#if PLATFORM(QT) || PLATFORM(GTK)
+#if PLATFORM(QT) || PLATFORM(GTK) || PLATFORM(EFL)
 #include "PlatformProcessIdentifier.h"
 #endif
 
+namespace WebCore {
 class RunLoop;
+}
 
 namespace CoreIPC {
 
+class BinarySemaphore;
 class MessageID;
     
 enum MessageSendFlags {
@@ -117,8 +120,8 @@ public:
     typedef int Identifier;
 #endif
 
-    static PassRefPtr<Connection> createServerConnection(Identifier, Client*, RunLoop* clientRunLoop);
-    static PassRefPtr<Connection> createClientConnection(Identifier, Client*, RunLoop* clientRunLoop);
+    static PassRefPtr<Connection> createServerConnection(Identifier, Client*, WebCore::RunLoop* clientRunLoop);
+    static PassRefPtr<Connection> createClientConnection(Identifier, Client*, WebCore::RunLoop* clientRunLoop);
     ~Connection();
 
 #if OS(DARWIN)
@@ -206,7 +209,7 @@ public:
     typedef Message<ArgumentEncoder> OutgoingMessage;
 
 private:
-    Connection(Identifier, bool isServer, Client*, RunLoop* clientRunLoop);
+    Connection(Identifier, bool isServer, Client*, WebCore::RunLoop* clientRunLoop);
     void platformInitialize(Identifier);
     void platformInvalidate();
     
@@ -252,7 +255,7 @@ private:
 
     bool m_isConnected;
     WorkQueue m_connectionQueue;
-    RunLoop* m_clientRunLoop;
+    WebCore::RunLoop* m_clientRunLoop;
 
     Vector<QueueClient*> m_connectionQueueClients;
 
@@ -334,6 +337,13 @@ private:
     // Called on the connection queue.
     void readEventHandler();
     void writeEventHandler();
+
+    // Called by Connection::SyncMessageState::waitWhileDispatchingSentWin32Messages.
+    // The absoluteTime is in seconds, starting on January 1, 1970. The time is assumed to use the
+    // same time zone as WTF::currentTime(). Dispatches sent (not posted) messages to the passed-in
+    // set of HWNDs until the semaphore is signaled or absoluteTime is reached. Returns true if the
+    // semaphore is signaled, false otherwise.
+    static bool dispatchSentMessagesUntil(const Vector<HWND>& windows, CoreIPC::BinarySemaphore& semaphore, double absoluteTime);
 
     Vector<uint8_t> m_readBuffer;
     OVERLAPPED m_readState;

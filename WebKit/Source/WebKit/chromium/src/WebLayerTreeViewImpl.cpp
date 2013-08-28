@@ -41,13 +41,13 @@ using namespace WebCore;
 
 namespace WebKit {
 
-PassRefPtr<WebLayerTreeViewImpl> WebLayerTreeViewImpl::create(WebLayerTreeViewClient* client, const WebLayer& root, const WebLayerTreeView::Settings& settings)
+PassOwnPtr<WebLayerTreeViewImpl> WebLayerTreeViewImpl::create(WebLayerTreeViewClient* client, const WebLayer& root, const WebLayerTreeView::Settings& settings)
 {
-    RefPtr<WebLayerTreeViewImpl> host = adoptRef(new WebLayerTreeViewImpl(client, settings));
+    OwnPtr<WebLayerTreeViewImpl> host = adoptPtr(new WebLayerTreeViewImpl(client, settings));
     if (!host->initialize())
-        return 0;
+        return nullptr;
     host->setRootLayer(root);
-    return host;
+    return host.release();
 }
 
 WebLayerTreeViewImpl::WebLayerTreeViewImpl(WebLayerTreeViewClient* client, const WebLayerTreeView::Settings& settings) 
@@ -60,63 +60,58 @@ WebLayerTreeViewImpl::~WebLayerTreeViewImpl()
 {
 }
 
-void WebLayerTreeViewImpl::animateAndLayout(double frameBeginTime)
+void WebLayerTreeViewImpl::willBeginFrame()
 {
-    if (m_client)
-        m_client->animateAndLayout(frameBeginTime);
+    m_client->willBeginFrame();
+}
+
+void WebLayerTreeViewImpl::updateAnimations(double monotonicFrameBeginTime)
+{
+    m_client->updateAnimations(monotonicFrameBeginTime);
+}
+
+void WebLayerTreeViewImpl::layout()
+{
+    m_client->layout();
 }
 
 void WebLayerTreeViewImpl::applyScrollAndScale(const WebCore::IntSize& scrollDelta, float pageScale)
 {
-    if (m_client)
-        m_client->applyScrollAndScale(WebSize(scrollDelta), pageScale);
+    m_client->applyScrollAndScale(WebSize(scrollDelta), pageScale);
 }
 
-PassRefPtr<GraphicsContext3D> WebLayerTreeViewImpl::createLayerTreeHostContext3D()
+PassRefPtr<GraphicsContext3D> WebLayerTreeViewImpl::createContext()
 {
-    if (!m_client)
-        return 0;
     OwnPtr<WebGraphicsContext3D> webContext = adoptPtr(m_client->createContext3D());
     if (!webContext)
         return 0;
 
-    WebGraphicsContext3D::Attributes webAttributes = webContext->getContextAttributes();
-    GraphicsContext3D::Attributes attributes;
-    attributes.alpha = webAttributes.alpha;
-    attributes.depth = webAttributes.depth;
-    attributes.stencil = webAttributes.stencil;
-    attributes.antialias = webAttributes.antialias;
-    attributes.premultipliedAlpha = webAttributes.premultipliedAlpha;
-    attributes.canRecoverFromContextLoss = webAttributes.canRecoverFromContextLoss;
-    attributes.noExtensions = webAttributes.noExtensions;
-    attributes.shareResources = webAttributes.shareResources;
-    attributes.preserveDrawingBuffer = false;
+    return GraphicsContext3DPrivate::createGraphicsContextFromWebContext(webContext.release(), GraphicsContext3D::RenderDirectlyToHostWindow, false /* preserveDrawingBuffer */ );
+}
 
-    GraphicsContext3D::RenderStyle style = GraphicsContext3D::RenderDirectlyToHostWindow;
-    GraphicsContext3DPrivate::ThreadUsage usage = CCProxy::hasImplThread() ? GraphicsContext3DPrivate::ForUseOnAnotherThread : GraphicsContext3DPrivate::ForUseOnThisThread;
-    return GraphicsContext3DPrivate::createGraphicsContextFromWebContext(webContext.release(), attributes, 0, style, usage);
+void WebLayerTreeViewImpl::didRecreateContext(bool success)
+{
+    m_client->didRebindGraphicsContext(success);
+}
+
+void WebLayerTreeViewImpl::didCommit()
+{
+    m_client->didCommit();
 }
 
 void WebLayerTreeViewImpl::didCommitAndDrawFrame()
 {
-    // FIXME: route this up to the WebLayerTreeView client
+    m_client->didCommitAndDrawFrame();
 }
 
 void WebLayerTreeViewImpl::didCompleteSwapBuffers()
 {
-    // FIXME: route this up to the WebLayerTreeView client
-}
-
-void WebLayerTreeViewImpl::didRecreateGraphicsContext(bool success)
-{
-    if (m_client)
-        m_client->didRebindGraphicsContext(success);
+    m_client->didCompleteSwapBuffers();
 }
 
 void WebLayerTreeViewImpl::scheduleComposite()
 {
-    if (m_client)
-        m_client->scheduleComposite();
+    m_client->scheduleComposite();
 }
 
 } // namespace WebKit

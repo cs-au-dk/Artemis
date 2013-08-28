@@ -49,6 +49,7 @@ BEGIN {
         &callSilently
         &canonicalizePath
         &changeLogEmailAddress
+        &changeLogFileName
         &changeLogName
         &chdirReturningRelativePath
         &decodeGitBinaryChunk
@@ -118,6 +119,9 @@ sub exitStatus($)
     my ($returnvalue) = @_;
     if ($^O eq "MSWin32") {
         return $returnvalue >> 8;
+    }
+    if (!WIFEXITED($returnvalue)) {
+        return 254;
     }
     return WEXITSTATUS($returnvalue);
 }
@@ -374,7 +378,10 @@ sub svnRevisionForDirectory($)
         my $gitLog = `cd $dir && LC_ALL=C git log --grep='git-svn-id: ' -n 1 | grep git-svn-id:`;
         ($revision) = ($gitLog =~ m/ +git-svn-id: .+@(\d+) /g);
     }
-    die "Unable to determine current SVN revision in $dir" unless (defined $revision);
+    if (!defined($revision)) {
+        $revision = "unknown";
+        warn "Unable to determine current SVN revision in $dir";
+    }
     return $revision;
 }
 
@@ -429,6 +436,16 @@ sub possiblyColored($$)
         return $string;
     }
 }
+
+sub adjustPathForRecentRenamings($) 
+{ 
+    my ($fullPath) = @_; 
+ 
+    $fullPath =~ s|WebCore/webaudio|WebCore/Modules/webaudio|g;
+    $fullPath =~ s|JavaScriptCore/wtf|WTF/wtf|g;
+
+    return $fullPath; 
+} 
 
 sub canonicalizePath($)
 {
@@ -620,7 +637,7 @@ sub parseGitDiffHeader($$)
         # The first and second paths can differ in the case of copies
         # and renames.  We use the second file path because it is the
         # destination path.
-        $indexPath = $4;
+        $indexPath = adjustPathForRecentRenamings($4);
         # Use $POSTMATCH to preserve the end-of-line character.
         $_ = "Index: $indexPath$POSTMATCH"; # Convert to SVN format.
     } else {
@@ -736,7 +753,7 @@ sub parseSvnDiffHeader($$)
 
     my $indexPath;
     if (/$svnDiffStartRegEx/) {
-        $indexPath = $1;
+        $indexPath = adjustPathForRecentRenamings($1);
     } else {
         die("First line of SVN diff does not begin with \"Index \": \"$_\"");
     }
@@ -1754,6 +1771,23 @@ sub gitConfig($)
     }
     chomp $result;
     return $result;
+}
+
+sub changeLogSuffix()
+{
+    my $rootPath = determineVCSRoot();
+    my $changeLogSuffixFile = File::Spec->catfile($rootPath, ".changeLogSuffix");
+    return "" if ! -e $changeLogSuffixFile;
+    open FILE, $changeLogSuffixFile or die "Could not open $changeLogSuffixFile: $!";
+    my $changeLogSuffix = <FILE>;
+    chomp $changeLogSuffix;
+    close FILE;
+    return $changeLogSuffix;
+}
+
+sub changeLogFileName()
+{
+    return "ChangeLog" . changeLogSuffix()
 }
 
 sub changeLogNameError($)

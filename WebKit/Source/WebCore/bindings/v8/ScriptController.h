@@ -59,6 +59,7 @@ class DOMWrapperWorld;
 class Event;
 class Frame;
 class HTMLPlugInElement;
+class PagePopupClient;
 class ScriptSourceCode;
 class Widget;
 
@@ -73,6 +74,7 @@ public:
 
     ScriptValue executeScript(const ScriptSourceCode&);
     ScriptValue executeScript(const String& script, bool forceUserGesture = false);
+    ScriptValue callFunctionEvenIfScriptDisabled(v8::Handle<v8::Function>, v8::Handle<v8::Object>, int argc, v8::Handle<v8::Value> argv[]);
 
     // Returns true if argument is a JavaScript URL.
     bool executeIfJavaScriptURL(const KURL&, ShouldReplaceDocumentIfJavaScriptURL shouldReplaceDocumentIfJavaScriptURL = ReplaceDocumentIfJavaScriptURL);
@@ -85,7 +87,7 @@ public:
     // as a string.
     ScriptValue evaluate(const ScriptSourceCode&);
 
-    void evaluateInIsolatedWorld(unsigned worldID, const Vector<ScriptSourceCode>&);
+    void evaluateInIsolatedWorld(unsigned worldID, const Vector<ScriptSourceCode>& sources, Vector<ScriptValue>* results);
 
     // Executes JavaScript in an isolated world. The script gets its own global scope,
     // its own prototypes for intrinsic JavaScript objects (String, Array, and so-on),
@@ -97,7 +99,7 @@ public:
     // If the worldID is 0, a new world is always created.
     //
     // FIXME: Get rid of extensionGroup here.
-    void evaluateInIsolatedWorld(unsigned worldID, const Vector<ScriptSourceCode>&, int extensionGroup);
+    void evaluateInIsolatedWorld(unsigned worldID, const Vector<ScriptSourceCode>& sources, int extensionGroup, Vector<ScriptValue>* results);
 
     // Associates an isolated world (see above for description) with a security
     // origin. XMLHttpRequest instances used in that world will be considered
@@ -119,6 +121,9 @@ public:
     void bindToWindowObject(Frame*, const String& key, NPObject*);
 
     PassScriptInstance createScriptInstanceForWidget(Widget*);
+#if ENABLE(PAGE_POPUP)
+    void installFunctionsForPagePopup(Frame*, PagePopupClient*);
+#endif
 
     // Check if the javascript engine has been initialized.
     bool haveInterpreter() const;
@@ -146,9 +151,6 @@ public:
     // Returns the frame for the current context. See comments in
     // V8Proxy::retrieveFrameForEnteredContext() for more information.
     static Frame* retrieveFrameForCurrentContext();
-
-    // Check whether it is safe to access a frame in another domain.
-    static bool isSafeScript(Frame*);
 
     // Pass command-line flags to the JS engine.
     static void setFlags(const char* string, int length);
@@ -184,13 +186,11 @@ public:
 
     // Dummy method to avoid a bunch of ifdef's in WebCore.
     void evaluateInWorld(const ScriptSourceCode&, DOMWrapperWorld*);
-    static void getAllWorlds(Vector<DOMWrapperWorld*>& worlds);
+    static void getAllWorlds(Vector<RefPtr<DOMWrapperWorld> >& worlds);
 
 private:
     Frame* m_frame;
     const String* m_sourceURL;
-
-    bool m_inExecuteScript;
 
     bool m_paused;
 

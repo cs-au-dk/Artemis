@@ -44,10 +44,10 @@ void EditorState::encode(CoreIPC::ArgumentEncoder* encoder) const
 #if PLATFORM(QT)
     encoder->encode(cursorPosition);
     encoder->encode(anchorPosition);
-    encoder->encode(microFocus);
+    encoder->encode(editorRect);
+    encoder->encode(cursorRect);
     encoder->encode(compositionRect);
-    encoder->encode(compositionStart);
-    encoder->encode(compositionLength);
+    encoder->encode(inputMethodHints);
     encoder->encode(selectedText);
     encoder->encode(surroundingText);
 #endif
@@ -83,16 +83,16 @@ bool EditorState::decode(CoreIPC::ArgumentDecoder* decoder, EditorState& result)
     if (!decoder->decode(result.anchorPosition))
         return false;
 
-    if (!decoder->decode(result.microFocus))
+    if (!decoder->decode(result.editorRect))
+        return false;
+
+    if (!decoder->decode(result.cursorRect))
         return false;
 
     if (!decoder->decode(result.compositionRect))
         return false;
 
-    if (!decoder->decode(result.compositionStart))
-        return false;
-
-    if (!decoder->decode(result.compositionLength))
+    if (!decoder->decode(result.inputMethodHints))
         return false;
 
     if (!decoder->decode(result.selectedText))

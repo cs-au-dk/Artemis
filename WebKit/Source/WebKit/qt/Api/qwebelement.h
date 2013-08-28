@@ -26,19 +26,11 @@
 #include <QtCore/qvariant.h>
 #include <QtCore/qshareddata.h>
 
-#ifdef ARTEMIS
-#include <QUrl>
-#endif
-
 #include "qwebkitglobal.h"
 namespace WebCore {
     class Element;
     class Node;
 }
-
-#ifdef ARTEMIS
-class QWebExecutionListener;
-#endif
 
 QT_BEGIN_NAMESPACE
 class QPainter;
@@ -138,16 +130,12 @@ public:
     void removeFromDocument();
     void removeAllChildren();
 
-#ifdef ARTEMIS
-    QVariant evaluateJavaScript(const QString& scriptSource, const QUrl& u = QUrl());
-#else
     QVariant evaluateJavaScript(const QString& scriptSource);
-#endif
 
     enum StyleResolveStrategy {
          InlineStyle,
          CascadedStyle,
-         ComputedStyle
+         ComputedStyle,
     };
     QString styleProperty(const QString& name, StyleResolveStrategy strategy) const;
     void setStyleProperty(const QString& name, const QString& value);
@@ -167,9 +155,6 @@ private:
     friend class QWebHitTestResult;
     friend class QWebHitTestResultPrivate;
     friend class QWebPage;
-#ifdef ARTEMIS
-    friend class QWebExecutionListener;
-#endif
     friend class QWebPagePrivate;
     friend class QtWebElementRuntime;
 

@@ -52,15 +52,15 @@ namespace WebCore {
 
 EncodedJSValue JSC_HOST_CALL JSWebSocketConstructor::constructJSWebSocket(ExecState* exec)
 {
-    JSWebSocketConstructor* jsConstructor = static_cast<JSWebSocketConstructor*>(exec->callee());
+    JSWebSocketConstructor* jsConstructor = jsCast<JSWebSocketConstructor*>(exec->callee());
     ScriptExecutionContext* context = jsConstructor->scriptExecutionContext();
     if (!context)
         return throwVMError(exec, createReferenceError(exec, "WebSocket constructor associated document is unavailable"));
 
     if (!exec->argumentCount())
-        return throwVMError(exec, createSyntaxError(exec, "Not enough arguments"));
+        return throwVMError(exec, createNotEnoughArgumentsError(exec));
 
-    String urlString = ustringToString(exec->argument(0).toString(exec));
+    String urlString = ustringToString(exec->argument(0).toString(exec)->value(exec));
     if (exec->hadException())
         return throwVMError(exec, createSyntaxError(exec, "wrong URL"));
     RefPtr<WebSocket> webSocket = WebSocket::create(context);
@@ -73,14 +73,14 @@ EncodedJSValue JSC_HOST_CALL JSWebSocketConstructor::constructJSWebSocket(ExecSt
             Vector<String> protocols;
             JSArray* protocolsArray = asArray(protocolsValue);
             for (unsigned i = 0; i < protocolsArray->length(); ++i) {
-                String protocol = ustringToString(protocolsArray->getIndex(i).toString(exec));
+                String protocol = ustringToString(protocolsArray->getIndex(i).toString(exec)->value(exec));
                 if (exec->hadException())
                     return JSValue::encode(JSValue());
                 protocols.append(protocol);
             }
             webSocket->connect(urlString, protocols, ec);
         } else {
-            String protocol = ustringToString(protocolsValue.toString(exec));
+            String protocol = ustringToString(protocolsValue.toString(exec)->value(exec));
             if (exec->hadException())
                 return JSValue::encode(JSValue());
             webSocket->connect(urlString, protocol, ec);
@@ -93,7 +93,7 @@ EncodedJSValue JSC_HOST_CALL JSWebSocketConstructor::constructJSWebSocket(ExecSt
 JSValue JSWebSocket::send(ExecState* exec)
 {
     if (!exec->argumentCount())
-        return throwError(exec, createSyntaxError(exec, "Not enough arguments"));
+        return throwError(exec, createNotEnoughArgumentsError(exec));
 
     JSValue message = exec->argument(0);
     ExceptionCode ec = 0;
@@ -103,7 +103,7 @@ JSValue JSWebSocket::send(ExecState* exec)
     else if (message.inherits(&JSBlob::s_info))
         result = impl()->send(toBlob(message), ec);
     else {
-        String stringMessage = ustringToString(message.toString(exec));
+        String stringMessage = ustringToString(message.toString(exec)->value(exec));
         if (exec->hadException())
             return jsUndefined();
         result = impl()->send(stringMessage, ec);
@@ -135,7 +135,7 @@ JSValue JSWebSocket::close(ExecState* exec)
             x = clampTo(x, minValue, maxValue);
         code = clampToInteger(x);
         if (argumentCount >= 2) {
-            reason = ustringToString(exec->argument(1).toString(exec));
+            reason = ustringToString(exec->argument(1).toString(exec)->value(exec));
             if (exec->hadException()) {
                 setDOMException(exec, SYNTAX_ERR);
                 return jsUndefined();

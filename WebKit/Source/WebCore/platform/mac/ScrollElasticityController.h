@@ -30,17 +30,30 @@
 
 #include "FloatPoint.h"
 #include "FloatSize.h"
+#include "ScrollTypes.h"
 #include <wtf/Noncopyable.h>
 
 namespace WebCore {
+
+class PlatformWheelEvent;
 
 class ScrollElasticityControllerClient {
 protected:
     virtual ~ScrollElasticityControllerClient() { } 
 
 public:
+    virtual bool allowsHorizontalStretching() = 0;
+    virtual bool allowsVerticalStretching() = 0;
     virtual IntSize stretchAmount() = 0;
     virtual bool pinnedInDirection(const FloatSize&) = 0;
+    virtual bool canScrollHorizontally() = 0;
+    virtual bool canScrollVertically() = 0;
+    virtual bool shouldRubberBandInDirection(ScrollDirection) = 0;
+
+    // Return the absolute scroll position, not relative to the scroll origin.
+    virtual WebCore::IntPoint absoluteScrollPosition() = 0;
+
+    virtual void immediateScrollBy(const FloatSize&) = 0;
     virtual void immediateScrollByWithoutContentEdgeConstraints(const FloatSize&) = 0;
     virtual void startSnapRubberbandTimer() = 0;
     virtual void stopSnapRubberbandTimer() = 0;
@@ -52,16 +65,19 @@ class ScrollElasticityController {
 public:
     explicit ScrollElasticityController(ScrollElasticityControllerClient*);
 
-    void beginScrollGesture();
+    bool handleWheelEvent(const PlatformWheelEvent&);
+    void snapRubberBandTimerFired();
+
+    bool isRubberBandInProgress() const;
 
 private:
+    void stopSnapRubberbandTimer();
+    void snapRubberBand();
+
+    bool shouldRubberBandInHorizontalDirection(const PlatformWheelEvent&);
+
     ScrollElasticityControllerClient* m_client;
 
-    void stopSnapRubberbandTimer();
-
-    // FIXME: These member variables should be private. They are currently public as a stop-gap measure, while
-    // the rubber-band related code from ScrollAnimatorMac is being moved over.
-public:
     bool m_inScrollGesture;
     bool m_momentumScrollInProgress;
     bool m_ignoreMomentumScrolls;

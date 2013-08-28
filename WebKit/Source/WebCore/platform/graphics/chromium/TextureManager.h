@@ -31,10 +31,13 @@
 
 #include <wtf/FastAllocBase.h>
 #include <wtf/HashMap.h>
+#include <wtf/HashSet.h>
 #include <wtf/ListHashSet.h>
+#include <wtf/Vector.h>
 
 namespace WebCore {
 
+class ManagedTexture;
 typedef int TextureToken;
 
 class TextureAllocator {
@@ -53,24 +56,29 @@ public:
     {
         return adoptPtr(new TextureManager(maxMemoryLimitBytes, preferredMemoryLimitBytes, maxTextureSize));
     }
+    ~TextureManager();
 
     // Absolute maximum limit for texture allocations for this instance.
     static size_t highLimitBytes(const IntSize& viewportSize);
     // Preferred texture size limit given the viewport size.
     static size_t reclaimLimitBytes(const IntSize& viewportSize);
-    // The maximum texture memory usage when asked to release textures.
-    static size_t lowLimitBytes(const IntSize& viewport);
 
     static size_t memoryUseBytes(const IntSize&, GC3Denum format);
 
+    void setMemoryAllocationLimitBytes(size_t);
     void setMaxMemoryLimitBytes(size_t);
+    size_t maxMemoryLimitBytes() { return m_maxMemoryLimitBytes; }
     void setPreferredMemoryLimitBytes(size_t);
+    size_t preferredMemoryLimitBytes() { return m_preferredMemoryLimitBytes; }
+
+    void registerTexture(ManagedTexture*);
+    void unregisterTexture(ManagedTexture*);
 
     TextureToken getToken();
     void releaseToken(TextureToken);
     bool hasTexture(TextureToken);
 
-    bool requestTexture(TextureToken, IntSize, GC3Denum textureFormat, unsigned& textureId);
+    bool requestTexture(TextureToken, IntSize, GC3Denum textureFormat);
 
     void protectTexture(TextureToken);
     void unprotectTexture(TextureToken);
@@ -100,7 +108,9 @@ private:
 
     void addTexture(TextureToken, TextureInfo);
     void removeTexture(TextureToken, TextureInfo);
-    unsigned replaceTexture(TextureToken, TextureInfo);
+    void evictTexture(TextureToken, TextureInfo);
+
+    HashSet<ManagedTexture*> m_registeredTextures;
 
     typedef HashMap<TextureToken, TextureInfo> TextureMap;
     TextureMap m_textures;

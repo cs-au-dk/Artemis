@@ -51,17 +51,17 @@ static Element* highestVisuallyEquivalentDivBelowRoot(Element* startBlock)
     // We don't want to return a root node (if it happens to be a div, e.g., in a document fragment) because there are no
     // siblings for us to append to.
     while (!curBlock->nextSibling() && curBlock->parentElement()->hasTagName(divTag) && curBlock->parentElement()->parentElement()) {
-        NamedNodeMap* attributes = curBlock->parentElement()->attributes(true);
-        if (attributes && !attributes->isEmpty())
+        if (curBlock->parentElement()->hasAttributes())
             break;
         curBlock = curBlock->parentElement();
     }
     return curBlock;
 }
 
-InsertParagraphSeparatorCommand::InsertParagraphSeparatorCommand(Document *document, bool mustUseDefaultParagraphElement) 
+InsertParagraphSeparatorCommand::InsertParagraphSeparatorCommand(Document *document, bool mustUseDefaultParagraphElement, bool pasteBlockqutoeIntoUnquotedArea) 
     : CompositeEditCommand(document)
     , m_mustUseDefaultParagraphElement(mustUseDefaultParagraphElement)
+    , m_pasteBlockqutoeIntoUnquotedArea(pasteBlockqutoeIntoUnquotedArea)
 {
 }
 
@@ -227,8 +227,10 @@ void InsertParagraphSeparatorCommand::doApply()
         } else {
             // We can get here if we pasted a copied portion of a blockquote with a newline at the end and are trying to paste it
             // into an unquoted area. We then don't want the newline within the blockquote or else it will also be quoted.
-            if (Node* highestBlockquote = highestEnclosingNodeOfType(canonicalPos, &isMailBlockquote))
-                startBlock = static_cast<Element*>(highestBlockquote);
+            if (m_pasteBlockqutoeIntoUnquotedArea) {
+                if (Node* highestBlockquote = highestEnclosingNodeOfType(canonicalPos, &isMailBlockquote))
+                    startBlock = static_cast<Element*>(highestBlockquote);
+            }
 
             // Most of the time we want to stay at the nesting level of the startBlock (e.g., when nesting within lists).  However,
             // for div nodes, this can result in nested div tags that are hard to break out of.
@@ -323,14 +325,14 @@ void InsertParagraphSeparatorCommand::doApply()
     // FIXME: leadingWhitespacePosition is returning the position before preserved newlines for positions
     // after the preserved newline, causing the newline to be turned into a nbsp.
     if (leadingWhitespace.isNotNull() && leadingWhitespace.deprecatedNode()->isTextNode()) {
-        Text* textNode = static_cast<Text*>(leadingWhitespace.deprecatedNode());
+        Text* textNode = toText(leadingWhitespace.deprecatedNode());
         ASSERT(!textNode->renderer() || textNode->renderer()->style()->collapseWhiteSpace());
         replaceTextInNodePreservingMarkers(textNode, leadingWhitespace.deprecatedEditingOffset(), 1, nonBreakingSpaceString());
     }
     
     // Split at pos if in the middle of a text node.
     if (insertionPosition.deprecatedNode()->isTextNode()) {
-        Text* textNode = static_cast<Text*>(insertionPosition.deprecatedNode());
+        Text* textNode = toText(insertionPosition.deprecatedNode());
         bool atEnd = (unsigned)insertionPosition.deprecatedEditingOffset() >= textNode->length();
         if (insertionPosition.deprecatedEditingOffset() > 0 && !atEnd) {
             splitTextNode(textNode, insertionPosition.deprecatedEditingOffset());
@@ -390,7 +392,7 @@ void InsertParagraphSeparatorCommand::doApply()
             ASSERT(!insertionPosition.deprecatedNode()->renderer() || insertionPosition.deprecatedNode()->renderer()->style()->collapseWhiteSpace());
             deleteInsignificantTextDownstream(insertionPosition);
             if (insertionPosition.deprecatedNode()->isTextNode())
-                insertTextIntoNode(static_cast<Text*>(insertionPosition.deprecatedNode()), 0, nonBreakingSpaceString());
+                insertTextIntoNode(toText(insertionPosition.deprecatedNode()), 0, nonBreakingSpaceString());
         }
     }
 

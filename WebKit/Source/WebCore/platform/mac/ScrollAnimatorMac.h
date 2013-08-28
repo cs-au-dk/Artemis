@@ -36,15 +36,9 @@
 #include "Timer.h"
 #include <wtf/RetainPtr.h>
 
-#ifdef __OBJC__
-@class WebScrollAnimationHelperDelegate;
-@class WebScrollbarPainterControllerDelegate;
-@class WebScrollbarPainterDelegate;
-#else
-class WebScrollAnimationHelperDelegate;
-class WebScrollbarPainterControllerDelegate;
-class WebScrollbarPainterDelegate;
-#endif
+OBJC_CLASS WebScrollAnimationHelperDelegate;
+OBJC_CLASS WebScrollbarPainterControllerDelegate;
+OBJC_CLASS WebScrollbarPainterDelegate;
 
 typedef id ScrollbarPainterController;
 
@@ -90,10 +84,9 @@ private:
 
 #if ENABLE(RUBBER_BANDING)
     virtual bool handleWheelEvent(const PlatformWheelEvent&) OVERRIDE;
-#if ENABLE(GESTURE_EVENTS)
-    virtual void handleGestureEvent(const PlatformGestureEvent&);
 #endif
-#endif
+
+    virtual void handleWheelEventPhase(PlatformWheelEventPhase) OVERRIDE;
 
     virtual void cancelAnimations();
     virtual void setIsActive();
@@ -112,43 +105,43 @@ private:
     virtual void contentAreaDidHide() const;
     void didBeginScrollGesture() const;
     void didEndScrollGesture() const;
+    void mayBeginScrollGesture() const;
 
     virtual void didAddVerticalScrollbar(Scrollbar*);
     virtual void willRemoveVerticalScrollbar(Scrollbar*);
     virtual void didAddHorizontalScrollbar(Scrollbar*);
     virtual void willRemoveHorizontalScrollbar(Scrollbar*);
 
-    float adjustScrollXPositionIfNecessary(float) const;
-    float adjustScrollYPositionIfNecessary(float) const;
+    virtual bool shouldScrollbarParticipateInHitTesting(Scrollbar*);
+
+    virtual void notifyContentAreaScrolled() OVERRIDE;
+
     FloatPoint adjustScrollPositionIfNecessary(const FloatPoint&) const;
 
     void immediateScrollTo(const FloatPoint&);
-    void immediateScrollBy(const FloatSize&);
+
+    virtual bool isRubberBandInProgress() const OVERRIDE;
 
 #if ENABLE(RUBBER_BANDING)
     /// ScrollElasticityControllerClient member functions.
     virtual IntSize stretchAmount() OVERRIDE;
+    virtual bool allowsHorizontalStretching() OVERRIDE;
+    virtual bool allowsVerticalStretching() OVERRIDE;
     virtual bool pinnedInDirection(const FloatSize&) OVERRIDE;
+    virtual bool canScrollHorizontally() OVERRIDE;
+    virtual bool canScrollVertically() OVERRIDE;
+    virtual bool shouldRubberBandInDirection(ScrollDirection) OVERRIDE;
+    virtual WebCore::IntPoint absoluteScrollPosition() OVERRIDE;
     virtual void immediateScrollByWithoutContentEdgeConstraints(const FloatSize&) OVERRIDE;
+    virtual void immediateScrollBy(const FloatSize&) OVERRIDE;
     virtual void startSnapRubberbandTimer() OVERRIDE;
     virtual void stopSnapRubberbandTimer() OVERRIDE;
 
-    bool allowsVerticalStretching() const;
-    bool allowsHorizontalStretching() const;
     bool pinnedInDirection(float deltaX, float deltaY);
-    void snapRubberBand();
     void snapRubberBandTimerFired(Timer<ScrollAnimatorMac>*);
-    void smoothScrollWithEvent(const PlatformWheelEvent&);
-    void beginScrollGesture();
-    void endScrollGesture();
 
     ScrollElasticityController m_scrollElasticityController;
     Timer<ScrollAnimatorMac> m_snapRubberBandTimer;
-
-    bool m_scrollerInitiallyPinnedOnLeft;
-    bool m_scrollerInitiallyPinnedOnRight;
-    int m_cumulativeHorizontalScroll;
-    bool m_didCumulativeHorizontalScrollEverSwitchToOppositeDirectionOfPin;
 #endif
 
     bool m_haveScrolledSincePageLoad;

@@ -52,6 +52,7 @@
 #include "Page.h"
 #include "StyleCachedImage.h"
 #include "StyleImage.h"
+#include "StyleRule.h"
 #include "Text.h"
 #include "TextEncoding.h"
 #include <wtf/text/CString.h>
@@ -69,11 +70,12 @@ static bool isCharsetSpecifyingNode(Node* node)
     if (!element->hasTagName(HTMLNames::metaTag))
         return false;
     HTMLMetaCharsetParser::AttributeList attributes;
-    const NamedNodeMap* attributesMap = element->attributes(true);
-    for (unsigned i = 0; i < attributesMap->length(); ++i) {
-        Attribute* item = attributesMap->attributeItem(i);
-        // FIXME: We should deal appropriately with the attribute if they have a namespace.
-        attributes.append(make_pair(item->name().toString(), item->value().string()));
+    if (element->hasAttributes()) {
+        for (unsigned i = 0; i < element->attributeCount(); ++i) {
+            Attribute* item = element->attributeItem(i);
+            // FIXME: We should deal appropriately with the attribute if they have a namespace.
+            attributes.append(make_pair(item->name().toString(), item->value().string()));
+        }
     }
     TextEncoding textEncoding = HTMLMetaCharsetParser::encodingFromMetaAttributes(attributes);
     return textEncoding.isValid();
@@ -157,8 +159,7 @@ void SerializerMarkupAccumulator::appendCustomAttributes(StringBuilder& out, Ele
 
     // We need to give a fake location to blank frames so they can be referenced by the serialized frame.
     url = m_serializer->urlForBlankFrame(frame);
-    RefPtr<Attribute> attribute = Attribute::create(frameOwnerURLAttributeName(*frameOwner), url.string());
-    appendAttribute(out, element, *attribute, namespaces);
+    appendAttribute(out, element, Attribute(frameOwnerURLAttributeName(*frameOwner), url.string()), namespaces);
 }
 
 void SerializerMarkupAccumulator::appendEndTag(Node* node)
@@ -225,7 +226,8 @@ void PageSerializer::serializeFrame(Frame* frame)
 
         Element* element = toElement(node);
         // We have to process in-line style as it might contain some resources (typically background images).
-        retrieveResourcesForCSSDeclaration(element->style());
+        if (element->isStyledElement())
+            retrieveResourcesForProperties(static_cast<StyledElement*>(element)->inlineStyle(), document);
 
         if (element->hasTagName(HTMLNames::imgTag)) {
             HTMLImageElement* imageElement = static_cast<HTMLImageElement*>(element);
@@ -261,10 +263,10 @@ void PageSerializer::serializeCSSStyleSheet(CSSStyleSheet* styleSheet, const KUR
             if (i < styleSheet->length() - 1)
                 cssText.append("\n\n");
         }
+        Document* document = styleSheet->ownerDocument();
         // Some rules have resources associated with them that we need to retrieve.
         if (rule->isImportRule()) {
-            CSSImportRule* importRule = static_cast<CSSImportRule*>(rule);
-            Document* document = styleSheet->findDocument();
+            CSSImportRule* importRule = static_cast<CSSImportRule*>(rule);            
             KURL importURL = document->completeURL(importRule->href());
             if (m_resourceURLs.contains(importURL))
                 continue;
@@ -273,12 +275,12 @@ void PageSerializer::serializeCSSStyleSheet(CSSStyleSheet* styleSheet, const KUR
             // FIXME: Add support for font face rule. It is not clear to me at this point if the actual otf/eot file can
             // be retrieved from the CSSFontFaceRule object.
         } else if (rule->isStyleRule())
-            retrieveResourcesForCSSRule(static_cast<CSSStyleRule*>(rule));
+            retrieveResourcesForRule(static_cast<CSSStyleRule*>(rule)->styleRule(), document);
     }
 
     if (url.isValid() && !m_resourceURLs.contains(url)) {
         // FIXME: We should check whether a charset has been specified and if none was found add one.
-        TextEncoding textEncoding(styleSheet->charset());
+        TextEncoding textEncoding(styleSheet->internal()->charset());
         ASSERT(textEncoding.isValid());
         String textString = cssText.toString();
         CString text = textEncoding.encode(textString.characters(), textString.length(), EntitiesForUnencodables);
@@ -300,28 +302,22 @@ void PageSerializer::addImageToResources(CachedImage* image, RenderObject* image
     m_resourceURLs.add(url);
 }
 
-void PageSerializer::retrieveResourcesForCSSRule(CSSStyleRule* rule)
+void PageSerializer::retrieveResourcesForRule(StyleRule* rule, Document* document)
 {
-    retrieveResourcesForCSSDeclaration(rule->style());
+    retrieveResourcesForProperties(rule->properties(), document);
 }
 
-void PageSerializer::retrieveResourcesForCSSDeclaration(CSSStyleDeclaration* styleDeclaration)
+void PageSerializer::retrieveResourcesForProperties(const StylePropertySet* styleDeclaration, Document* document)
 {
     if (!styleDeclaration)
         return;
 
-    CSSStyleSheet* cssStyleSheet = styleDeclaration->parentStyleSheet();
-    ASSERT(cssStyleSheet);
-
     // The background-image and list-style-image (for ul or ol) are the CSS properties
     // that make use of images. We iterate to make sure we include any other
     // image properties there might be.
-    for (unsigned i = 0; i < styleDeclaration->length(); ++i) {
-        // FIXME: It's kind of ridiculous to get the property name and then get
-        // the value out of the name. Ideally we would get the value out of the
-        // property ID, but CSSStyleDeclaration only gives access to property
-        // names, not IDs.
-        RefPtr<CSSValue> cssValue = styleDeclaration->getPropertyCSSValue(styleDeclaration->item(i));
+    unsigned propertyCount = styleDeclaration->propertyCount();
+    for (unsigned i = 0; i < propertyCount; ++i) {
+        RefPtr<CSSValue> cssValue = styleDeclaration->propertyAt(i).value();
         if (!cssValue->isImageValue())
             continue;
 
@@ -333,7 +329,6 @@ void PageSerializer::retrieveResourcesForCSSDeclaration(CSSStyleDeclaration* sty
 
         CachedImage* image = static_cast<StyleCachedImage*>(styleImage)->cachedImage();
 
-        Document* document = cssStyleSheet->findDocument();
         KURL url = document->completeURL(image->url());
         addImageToResources(image, 0, url);
     }

@@ -25,10 +25,11 @@
 #include "StyledElement.h"
 
 #include "Attribute.h"
-#include "CSSInlineStyleDeclaration.h"
-#include "CSSStyleSelector.h"
+#include "CSSImageValue.h"
+#include "CSSPropertyNames.h"
 #include "CSSStyleSheet.h"
 #include "CSSValueKeywords.h"
+#include "CSSValuePool.h"
 #include "Color.h"
 #include "ClassList.h"
 #include "ContentSecurityPolicy.h"
@@ -36,6 +37,8 @@
 #include "Document.h"
 #include "HTMLNames.h"
 #include "HTMLParserIdioms.h"
+#include "StylePropertySet.h"
+#include "StyleResolver.h"
 #include <wtf/HashFunctions.h>
 
 using namespace std;
@@ -44,171 +47,105 @@ namespace WebCore {
 
 using namespace HTMLNames;
 
-struct MappedAttributeKey {
-    uint16_t type;
-    StringImpl* name;
-    StringImpl* value;
-    MappedAttributeKey(MappedAttributeEntry t = eNone, StringImpl* n = 0, StringImpl* v = 0)
-        : type(t), name(n), value(v) { }
+struct PresentationAttributeCacheKey {
+    PresentationAttributeCacheKey() : tagName(0) { }
+    AtomicStringImpl* tagName;
+    // Only the values need refcounting.
+    Vector<pair<AtomicStringImpl*, AtomicString>, 3> attributesAndValues;
 };
 
-static inline bool operator==(const MappedAttributeKey& a, const MappedAttributeKey& b)
-    { return a.type == b.type && a.name == b.name && a.value == b.value; } 
-
-struct MappedAttributeKeyTraits : WTF::GenericHashTraits<MappedAttributeKey> {
-    static const bool emptyValueIsZero = true;
-    static const bool needsDestruction = false;
-    static void constructDeletedValue(MappedAttributeKey& slot) { slot.type = eLastEntry; }
-    static bool isDeletedValue(const MappedAttributeKey& value) { return value.type == eLastEntry; }
+struct PresentationAttributeCacheEntry {
+    PresentationAttributeCacheKey key;
+    RefPtr<StylePropertySet> value;
 };
 
-struct MappedAttributeHash {
-    static unsigned hash(const MappedAttributeKey&);
-    static bool equal(const MappedAttributeKey& a, const MappedAttributeKey& b) { return a == b; }
-    static const bool safeToCompareToEmptyOrDeleted = true;
+typedef HashMap<unsigned, OwnPtr<PresentationAttributeCacheEntry>, AlreadyHashed> PresentationAttributeCache;
+    
+static bool operator!=(const PresentationAttributeCacheKey& a, const PresentationAttributeCacheKey& b)
+{
+    if (a.tagName != b.tagName)
+        return true;
+    return a.attributesAndValues != b.attributesAndValues;
+}
+
+static PresentationAttributeCache& presentationAttributeCache()
+{
+    DEFINE_STATIC_LOCAL(PresentationAttributeCache, cache, ());
+    return cache;
+}
+
+class PresentationAttributeCacheCleaner {
+    WTF_MAKE_NONCOPYABLE(PresentationAttributeCacheCleaner);
+public:
+    PresentationAttributeCacheCleaner()
+        : m_cleanTimer(this, &PresentationAttributeCacheCleaner::cleanCache)
+    {
+    }
+
+    void didHitPresentationAttributeCache()
+    {
+        if (presentationAttributeCache().size() < minimumPresentationAttributeCacheSizeForCleaning)
+            return;
+
+        m_hitCount++;
+
+        if (!m_cleanTimer.isActive())
+            m_cleanTimer.startOneShot(presentationAttributeCacheCleanTimeInSeconds);
+     }
+
+private:
+    static const unsigned presentationAttributeCacheCleanTimeInSeconds = 60;
+    static const int minimumPresentationAttributeCacheSizeForCleaning = 100;
+    static const unsigned minimumPresentationAttributeCacheHitCountPerMinute = (100 * presentationAttributeCacheCleanTimeInSeconds) / 60;
+
+    void cleanCache(Timer<PresentationAttributeCacheCleaner>* timer)
+    {
+        ASSERT_UNUSED(timer, timer == &m_cleanTimer);
+        unsigned hitCount = m_hitCount;
+        m_hitCount = 0;
+        if (hitCount > minimumPresentationAttributeCacheHitCountPerMinute)
+            return;
+        presentationAttributeCache().clear();
+    }
+
+    unsigned m_hitCount;
+    Timer<PresentationAttributeCacheCleaner> m_cleanTimer;
 };
 
-typedef HashMap<MappedAttributeKey, CSSMappedAttributeDeclaration*, MappedAttributeHash, MappedAttributeKeyTraits> MappedAttributeDecls;
-
-static MappedAttributeDecls* mappedAttributeDecls = 0;
-
-CSSMappedAttributeDeclaration* StyledElement::getMappedAttributeDecl(MappedAttributeEntry entryType, Attribute* attr)
+static PresentationAttributeCacheCleaner& presentationAttributeCacheCleaner()
 {
-    if (!mappedAttributeDecls)
-        return 0;
-    return mappedAttributeDecls->get(MappedAttributeKey(entryType, attr->name().localName().impl(), attr->value().impl()));
-}
-
-CSSMappedAttributeDeclaration* StyledElement::getMappedAttributeDecl(MappedAttributeEntry type, const QualifiedName& name, const AtomicString& value)
-{
-    if (!mappedAttributeDecls)
-        return 0;
-    return mappedAttributeDecls->get(MappedAttributeKey(type, name.localName().impl(), value.impl()));
-}
-
-void StyledElement::setMappedAttributeDecl(MappedAttributeEntry entryType, Attribute* attr, CSSMappedAttributeDeclaration* decl)
-{
-    if (!mappedAttributeDecls)
-        mappedAttributeDecls = new MappedAttributeDecls;
-    mappedAttributeDecls->set(MappedAttributeKey(entryType, attr->name().localName().impl(), attr->value().impl()), decl);
-}
-
-void StyledElement::setMappedAttributeDecl(MappedAttributeEntry entryType, const QualifiedName& name, const AtomicString& value, CSSMappedAttributeDeclaration* decl)
-{
-    if (!mappedAttributeDecls)
-        mappedAttributeDecls = new MappedAttributeDecls;
-    mappedAttributeDecls->set(MappedAttributeKey(entryType, name.localName().impl(), value.impl()), decl);
-}
-
-void StyledElement::removeMappedAttributeDecl(MappedAttributeEntry entryType, const QualifiedName& attrName, const AtomicString& attrValue)
-{
-    if (!mappedAttributeDecls)
-        return;
-    mappedAttributeDecls->remove(MappedAttributeKey(entryType, attrName.localName().impl(), attrValue.impl()));
+    DEFINE_STATIC_LOCAL(PresentationAttributeCacheCleaner, cleaner, ());
+    return cleaner;
 }
 
 void StyledElement::updateStyleAttribute() const
 {
     ASSERT(!isStyleAttributeValid());
     setIsStyleAttributeValid();
-    setIsSynchronizingStyleAttribute();
-    if (m_inlineStyleDecl)
-        const_cast<StyledElement*>(this)->setAttribute(styleAttr, m_inlineStyleDecl->cssText());
-    clearIsSynchronizingStyleAttribute();
+    if (const StylePropertySet* inlineStyle = this->inlineStyle())
+        const_cast<StyledElement*>(this)->setAttribute(styleAttr, inlineStyle->asText(), InUpdateStyleAttribute);
 }
 
 StyledElement::~StyledElement()
 {
-    destroyInlineStyleDecl();
+    destroyInlineStyle();
 }
 
-PassRefPtr<Attribute> StyledElement::createAttribute(const QualifiedName& name, const AtomicString& value)
-{
-    return Attribute::createMapped(name, value);
+CSSStyleDeclaration* StyledElement::style() 
+{ 
+    return ensureAttributeData()->ensureMutableInlineStyle(this)->ensureInlineCSSStyleDeclaration(this); 
 }
 
-void StyledElement::createInlineStyleDecl()
+void StyledElement::attributeChanged(Attribute* attr)
 {
-    ASSERT(!m_inlineStyleDecl);
-    m_inlineStyleDecl = CSSInlineStyleDeclaration::create(this);
-    m_inlineStyleDecl->setStrictParsing(isHTMLElement() && !document()->inQuirksMode());
-}
+    parseAttribute(attr);
 
-void StyledElement::destroyInlineStyleDecl()
-{
-    if (!m_inlineStyleDecl)
-        return;
-    m_inlineStyleDecl->clearElement();
-    m_inlineStyleDecl = 0;
-}
-
-void StyledElement::attributeChanged(Attribute* attr, bool preserveDecls)
-{
-    if (attr->name() == HTMLNames::nameAttr)
-        setHasName(!attr->isNull());
-
-    if (!attr->isMappedAttribute()) {
-        Element::attributeChanged(attr, preserveDecls);
-        return;
-    }
- 
-    if (attr->decl() && !preserveDecls) {
-        attr->setDecl(0);
-        setNeedsStyleRecalc();
-        if (attributeMap())
-            attributeMap()->declRemoved();
+    if (isPresentationAttribute(attr->name())) {
+        setAttributeStyleDirty();
+        setNeedsStyleRecalc(InlineStyleChange);
     }
 
-    bool checkDecl = true;
-    MappedAttributeEntry entry;
-    bool needToParse = mapToEntry(attr->name(), entry);
-    if (preserveDecls) {
-        if (attr->decl()) {
-            setNeedsStyleRecalc();
-            if (attributeMap())
-                attributeMap()->declAdded();
-            checkDecl = false;
-        }
-    } else if (!attr->isNull() && entry != eNone) {
-        CSSMappedAttributeDeclaration* decl = getMappedAttributeDecl(entry, attr);
-        if (decl) {
-            attr->setDecl(decl);
-            setNeedsStyleRecalc();
-            if (attributeMap())
-                attributeMap()->declAdded();
-            checkDecl = false;
-        } else
-            needToParse = true;
-    }
-
-    // parseMappedAttribute() might create a CSSMappedAttributeDeclaration on the attribute.  
-    // Normally we would be concerned about reseting the parent of those declarations in StyledElement::didMoveToNewDocument().
-    // But currently we always clear its parent and node below when adding it to the decl table.  
-    // If that changes for some reason moving between documents will be buggy.
-    // webarchive/adopt-attribute-styled-node-webarchive.html should catch any resulting crashes.
-    if (needToParse)
-        parseMappedAttribute(attr);
-
-    if (entry == eNone)
-        recalcStyleIfNeededAfterAttributeChanged(attr);
-
-    if (checkDecl && attr->decl()) {
-        // Add the decl to the table in the appropriate spot.
-        setMappedAttributeDecl(entry, attr, attr->decl());
-        attr->decl()->setMappedState(entry, attr->name(), attr->value());
-        if (attributeMap())
-            attributeMap()->declAdded();
-    }
-
-    updateAfterAttributeChanged(attr);
-}
-
-bool StyledElement::mapToEntry(const QualifiedName& attrName, MappedAttributeEntry& result) const
-{
-    result = eNone;
-    if (attrName == styleAttr)
-        return !isSynchronizingStyleAttribute();
-    return true;
+    Element::attributeChanged(attr);
 }
 
 void StyledElement::classAttributeChanged(const AtomicString& newClassString)
@@ -221,239 +158,185 @@ void StyledElement::classAttributeChanged(const AtomicString& newClassString)
             break;
     }
     bool hasClass = i < length;
-    setHasClass(hasClass);
     if (hasClass) {
-        attributes()->setClass(newClassString);
+        const bool shouldFoldCase = document()->inQuirksMode();
+        ensureAttributeData()->setClass(newClassString, shouldFoldCase);
         if (DOMTokenList* classList = optionalClassList())
             static_cast<ClassList*>(classList)->reset(newClassString);
-    } else if (attributeMap())
-        attributeMap()->clearClass();
+    } else if (attributeData())
+        attributeData()->clearClass();
     setNeedsStyleRecalc();
-    dispatchSubtreeModifiedEvent();
 }
 
-void StyledElement::parseMappedAttribute(Attribute* attr)
+void StyledElement::parseAttribute(Attribute* attr)
 {
-    if (isIdAttributeName(attr->name()))
-        idAttributeChanged(attr);
-    else if (attr->name() == classAttr)
+    if (attr->name() == classAttr)
         classAttributeChanged(attr->value());
     else if (attr->name() == styleAttr) {
         if (attr->isNull())
-            destroyInlineStyleDecl();
+            destroyInlineStyle();
         else if (document()->contentSecurityPolicy()->allowInlineStyle())
-            ensureInlineStyleDecl()->parseDeclaration(attr->value());
+            ensureAttributeData()->updateInlineStyleAvoidingMutation(this, attr->value());
         setIsStyleAttributeValid();
         setNeedsStyleRecalc();
+        InspectorInstrumentation::didInvalidateStyleAttr(document(), this);
     }
 }
 
-CSSInlineStyleDeclaration* StyledElement::ensureInlineStyleDecl()
+void StyledElement::inlineStyleChanged()
 {
-    if (!m_inlineStyleDecl)
-        createInlineStyleDecl();
-    return m_inlineStyleDecl.get();
+    setNeedsStyleRecalc(InlineStyleChange);
+    setIsStyleAttributeValid(false);
+    InspectorInstrumentation::didInvalidateStyleAttr(document(), this);
 }
-
-CSSStyleDeclaration* StyledElement::style()
-{
-    return ensureInlineStyleDecl();
-}
-
-void StyledElement::removeCSSProperty(Attribute* attribute, int id)
-{
-    if (!attribute->decl())
-        createMappedDecl(attribute);
-    attribute->decl()->removeMappedProperty(this, id);
-}
-
-void StyledElement::addCSSProperty(Attribute* attribute, int id, const String &value)
-{
-    if (!attribute->decl())
-        createMappedDecl(attribute);
-    attribute->decl()->setMappedProperty(this, id, value);
-}
-
-void StyledElement::addCSSProperty(Attribute* attribute, int id, int value)
-{
-    if (!attribute->decl())
-        createMappedDecl(attribute);
-    attribute->decl()->setMappedProperty(this, id, value);
-}
-
-void StyledElement::addCSSImageProperty(Attribute* attribute, int id, const String& url)
-{
-    if (!attribute->decl())
-        createMappedDecl(attribute);
-    attribute->decl()->setMappedImageProperty(this, id, url);
-}
-
-void StyledElement::addCSSLength(Attribute* attribute, int id, const String &value)
-{
-    // FIXME: This function should not spin up the CSS parser, but should instead just figure out the correct
-    // length unit and make the appropriate parsed value.
-    if (!attribute->decl())
-        createMappedDecl(attribute);
-
-    // strip attribute garbage..
-    StringImpl* v = value.impl();
-    if (v) {
-        unsigned int l = 0;
-        
-        while (l < v->length() && (*v)[l] <= ' ')
-            l++;
-        
-        for (; l < v->length(); l++) {
-            UChar cc = (*v)[l];
-            if (cc > '9')
-                break;
-            if (cc < '0') {
-                if (cc == '%' || cc == '*')
-                    l++;
-                if (cc != '.')
-                    break;
-            }
-        }
-
-        if (l != v->length()) {
-            attribute->decl()->setMappedLengthProperty(this, id, v->substring(0, l));
-            return;
-        }
-    }
-
-    attribute->decl()->setMappedLengthProperty(this, id, value);
-}
-
-static String parseColorStringWithCrazyLegacyRules(const String& colorString)
-{
-    // Per spec, only look at the first 128 digits of the string.
-    const size_t maxColorLength = 128;
-    // We'll pad the buffer with two extra 0s later, so reserve two more than the max.
-    Vector<char, maxColorLength+2> digitBuffer;
     
-    size_t i = 0;
-    // Skip a leading #.
-    if (colorString[0] == '#')
-        i = 1;
-    
-    // Grab the first 128 characters, replacing non-hex characters with 0.
-    // Non-BMP characters are replaced with "00" due to them appearing as two "characters" in the String.
-    for (; i < colorString.length() && digitBuffer.size() < maxColorLength; i++) {
-        if (!isASCIIHexDigit(colorString[i]))
-            digitBuffer.append('0');
-        else
-            digitBuffer.append(colorString[i]);
-    }
-
-    if (!digitBuffer.size())
-        return "#000000";
-
-    // Pad the buffer out to at least the next multiple of three in size.
-    digitBuffer.append('0');
-    digitBuffer.append('0');
-
-    if (digitBuffer.size() < 6)
-        return String::format("#0%c0%c0%c", digitBuffer[0], digitBuffer[1], digitBuffer[2]);
-    
-    // Split the digits into three components, then search the last 8 digits of each component.
-    ASSERT(digitBuffer.size() >= 6);
-    size_t componentLength = digitBuffer.size() / 3;
-    size_t componentSearchWindowLength = min<size_t>(componentLength, 8);
-    size_t redIndex = componentLength - componentSearchWindowLength;
-    size_t greenIndex = componentLength * 2 - componentSearchWindowLength;
-    size_t blueIndex = componentLength * 3 - componentSearchWindowLength;
-    // Skip digits until one of them is non-zero, or we've only got two digits left in the component.
-    while (digitBuffer[redIndex] == '0' && digitBuffer[greenIndex] == '0' && digitBuffer[blueIndex] == '0' && (componentLength - redIndex) > 2) {
-        redIndex++;
-        greenIndex++;
-        blueIndex++;
-    }
-    ASSERT(redIndex + 1 < componentLength);
-    ASSERT(greenIndex >= componentLength);
-    ASSERT(greenIndex + 1 < componentLength * 2);
-    ASSERT(blueIndex >= componentLength * 2);
-    ASSERT(blueIndex + 1 < digitBuffer.size());
-    return String::format("#%c%c%c%c%c%c", digitBuffer[redIndex], digitBuffer[redIndex + 1], digitBuffer[greenIndex], digitBuffer[greenIndex + 1], digitBuffer[blueIndex], digitBuffer[blueIndex + 1]);   
+bool StyledElement::setInlineStyleProperty(CSSPropertyID propertyID, int identifier, bool important)
+{
+    ensureAttributeData()->ensureMutableInlineStyle(this)->setProperty(propertyID, cssValuePool().createIdentifierValue(identifier), important);
+    inlineStyleChanged();
+    return true;
 }
 
-// Color parsing that matches HTML's "rules for parsing a legacy color value"
-void StyledElement::addCSSColor(Attribute* attribute, int id, const String& attributeValue)
+bool StyledElement::setInlineStyleProperty(CSSPropertyID propertyID, double value, CSSPrimitiveValue::UnitTypes unit, bool important)
 {
-    // An empty string doesn't apply a color. (One containing only whitespace does, which is why this check occurs before stripping.)
-    if (attributeValue.isEmpty())
-        return;
-
-    String colorString = attributeValue.stripWhiteSpace();
-
-    // "transparent" doesn't apply a color either.
-    if (equalIgnoringCase(colorString, "transparent"))
-        return;
-
-    if (!attribute->decl())
-        createMappedDecl(attribute);
-
-    // If the string is a named CSS color or a 3/6-digit hex color, use that.
-    Color parsedColor(colorString);
-    if (parsedColor.isValid()) {
-        attribute->decl()->setMappedProperty(this, id, colorString);
-        return;
-    }
-
-    attribute->decl()->setMappedProperty(this, id, parseColorStringWithCrazyLegacyRules(colorString));
+    ensureAttributeData()->ensureMutableInlineStyle(this)->setProperty(propertyID, cssValuePool().createValue(value, unit), important);
+    inlineStyleChanged();
+    return true;
 }
 
-void StyledElement::createMappedDecl(Attribute* attr)
+bool StyledElement::setInlineStyleProperty(CSSPropertyID propertyID, const String& value, bool important)
 {
-    RefPtr<CSSMappedAttributeDeclaration> decl = CSSMappedAttributeDeclaration::create();
-    attr->setDecl(decl);
-    ASSERT(!decl->useStrictParsing());
+    bool changes = ensureAttributeData()->ensureMutableInlineStyle(this)->setProperty(propertyID, value, important, document()->elementSheet()->internal());
+    if (changes)
+        inlineStyleChanged();
+    return changes;
 }
 
-unsigned MappedAttributeHash::hash(const MappedAttributeKey& key)
+bool StyledElement::removeInlineStyleProperty(CSSPropertyID propertyID)
 {
-    COMPILE_ASSERT(sizeof(key.name) == 4 || sizeof(key.name) == 8, key_name_size);
-    COMPILE_ASSERT(sizeof(key.value) == 4 || sizeof(key.value) == 8, key_value_size);
-
-    StringHasher hasher;
-    const UChar* data;
-
-    data = reinterpret_cast<const UChar*>(&key.name);
-    hasher.addCharacters(data[0], data[1]);
-    if (sizeof(key.name) == 8)
-        hasher.addCharacters(data[2], data[3]);
-
-    data = reinterpret_cast<const UChar*>(&key.value);
-    hasher.addCharacters(data[0], data[1]);
-    if (sizeof(key.value) == 8)
-        hasher.addCharacters(data[2], data[3]);
-
-    return hasher.hash();
-}
-
-void StyledElement::copyNonAttributeProperties(const Element* sourceElement)
-{
-    ASSERT(sourceElement);
-    ASSERT(sourceElement->isStyledElement());
-
-    const StyledElement* source = static_cast<const StyledElement*>(sourceElement);
-    if (!source->inlineStyleDecl())
-        return;
-
-    CSSInlineStyleDeclaration* inlineStyle = ensureInlineStyleDecl();
-    inlineStyle->copyPropertiesFrom(*source->inlineStyleDecl());
-    inlineStyle->setStrictParsing(source->inlineStyleDecl()->useStrictParsing());
-
-    setIsStyleAttributeValid(source->isStyleAttributeValid());
-    setIsSynchronizingStyleAttribute(source->isSynchronizingStyleAttribute());
-    
-    Element::copyNonAttributeProperties(sourceElement);
+    StylePropertySet* inlineStyle = attributeData() ? attributeData()->inlineStyle() : 0;
+    if (!inlineStyle)
+        return false;
+    bool changes = inlineStyle->removeProperty(propertyID);
+    if (changes)
+        inlineStyleChanged();
+    return changes;
 }
 
 void StyledElement::addSubresourceAttributeURLs(ListHashSet<KURL>& urls) const
 {
-    if (!m_inlineStyleDecl)
+    if (StylePropertySet* inlineStyle = attributeData() ? attributeData()->inlineStyle() : 0)
+        inlineStyle->addSubresourceStyleURLs(urls, document()->elementSheet()->internal());
+}
+
+static inline bool attributeNameSort(const pair<AtomicStringImpl*, AtomicString>& p1, const pair<AtomicStringImpl*, AtomicString>& p2)
+{
+    // Sort based on the attribute name pointers. It doesn't matter what the order is as long as it is always the same. 
+    return p1.first < p2.first;
+}
+
+void StyledElement::makePresentationAttributeCacheKey(PresentationAttributeCacheKey& result) const
+{    
+    // FIXME: Enable for SVG.
+    if (namespaceURI() != xhtmlNamespaceURI)
         return;
-    m_inlineStyleDecl->addSubresourceStyleURLs(urls);
+    // Interpretation of the size attributes on <input> depends on the type attribute.
+    if (hasTagName(inputTag))
+        return;
+    unsigned size = attributeCount();
+    for (unsigned i = 0; i < size; ++i) {
+        Attribute* attribute = attributeItem(i);
+        if (!isPresentationAttribute(attribute->name()))
+            continue;
+        if (!attribute->namespaceURI().isNull())
+            return;
+        // FIXME: Background URL may depend on the base URL and can't be shared. Disallow caching.
+        if (attribute->name() == backgroundAttr)
+            return;
+        result.attributesAndValues.append(make_pair(attribute->localName().impl(), attribute->value()));
+    }
+    if (result.attributesAndValues.isEmpty())
+        return;
+    // Attribute order doesn't matter. Sort for easy equality comparison.
+    std::sort(result.attributesAndValues.begin(), result.attributesAndValues.end(), attributeNameSort);
+    // The cache key is non-null when the tagName is set.
+    result.tagName = localName().impl();
+}
+
+static unsigned computePresentationAttributeCacheHash(const PresentationAttributeCacheKey& key)
+{
+    if (!key.tagName)
+        return 0;
+    ASSERT(key.attributesAndValues.size());
+    unsigned attributeHash = StringHasher::hashMemory(key.attributesAndValues.data(), key.attributesAndValues.size() * sizeof(key.attributesAndValues[0]));
+    return WTF::intHash((static_cast<uint64_t>(key.tagName->existingHash()) << 32 | attributeHash));
+}
+
+void StyledElement::updateAttributeStyle()
+{
+    PresentationAttributeCacheKey cacheKey;
+    makePresentationAttributeCacheKey(cacheKey);
+
+    unsigned cacheHash = computePresentationAttributeCacheHash(cacheKey);
+
+    PresentationAttributeCache::iterator cacheIterator;
+    if (cacheHash) {
+        cacheIterator = presentationAttributeCache().add(cacheHash, nullptr).iterator;
+        if (cacheIterator->second && cacheIterator->second->key != cacheKey)
+            cacheHash = 0;
+    } else
+        cacheIterator = presentationAttributeCache().end();
+
+    RefPtr<StylePropertySet> style;
+    if (cacheHash && cacheIterator->second) {
+        style = cacheIterator->second->value;
+        presentationAttributeCacheCleaner().didHitPresentationAttributeCache();
+    } else {
+        style = StylePropertySet::create(isSVGElement() ? SVGAttributeMode : CSSQuirksMode);
+        unsigned size = attributeCount();
+        for (unsigned i = 0; i < size; ++i) {
+            Attribute* attribute = attributeItem(i);
+            collectStyleForAttribute(attribute, style.get());
+        }
+    }
+    clearAttributeStyleDirty();
+
+    if (style->isEmpty())
+        attributeData()->setAttributeStyle(0);
+    else {
+        style->shrinkToFit();
+        attributeData()->setAttributeStyle(style);
+    }
+
+    if (!cacheHash || cacheIterator->second)
+        return;
+
+    OwnPtr<PresentationAttributeCacheEntry> newEntry = adoptPtr(new PresentationAttributeCacheEntry);
+    newEntry->key = cacheKey;
+    newEntry->value = style.release();
+
+    static const int presentationAttributeCacheMaximumSize = 4096;
+    if (presentationAttributeCache().size() > presentationAttributeCacheMaximumSize) {
+        // Start building from scratch if the cache ever gets big.
+        presentationAttributeCache().clear();
+        presentationAttributeCache().set(cacheHash, newEntry.release());
+    } else
+        cacheIterator->second = newEntry.release();
+}
+
+void StyledElement::addPropertyToAttributeStyle(StylePropertySet* style, CSSPropertyID propertyID, int identifier)
+{
+    style->setProperty(propertyID, cssValuePool().createIdentifierValue(identifier));
+}
+
+void StyledElement::addPropertyToAttributeStyle(StylePropertySet* style, CSSPropertyID propertyID, double value, CSSPrimitiveValue::UnitTypes unit)
+{
+    style->setProperty(propertyID, cssValuePool().createValue(value, unit));
+}
+    
+void StyledElement::addPropertyToAttributeStyle(StylePropertySet* style, CSSPropertyID propertyID, const String& value)
+{
+    style->setProperty(propertyID, value, false, document()->elementSheet()->internal());
 }
 
 }

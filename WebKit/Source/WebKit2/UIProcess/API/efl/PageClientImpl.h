@@ -33,13 +33,13 @@ namespace WebKit {
 
 class PageClientImpl : public PageClient {
 public:
-    static PassOwnPtr<PageClientImpl> create(WebContext* context, WebPageGroup* pageGroup, Evas_Object* viewObject)
+    static PassOwnPtr<PageClientImpl> create(WebContext* context, WebPageGroup* pageGroup, Evas_Object* viewWidget)
     {
-        return adoptPtr(new PageClientImpl(context, pageGroup, viewObject));
+        return adoptPtr(new PageClientImpl(context, pageGroup, viewWidget));
     }
     ~PageClientImpl();
 
-    Evas_Object* viewObject() const { return m_viewObject; }
+    Evas_Object* viewWidget() const { return m_viewWidget; }
 
     WebPageProxy* page() const { return m_page.get(); }
 
@@ -65,7 +65,7 @@ private:
 
     virtual void setCursor(const WebCore::Cursor&);
     virtual void setCursorHiddenUntilMouseMoves(bool);
-    virtual void didChangeViewportProperties(const WebCore::ViewportArguments&);
+    virtual void didChangeViewportProperties(const WebCore::ViewportAttributes&);
 
     virtual void registerEditCommand(PassRefPtr<WebEditCommandProxy>, WebPageProxy::UndoOrRedo);
     virtual void clearAllEditCommands();
@@ -85,6 +85,7 @@ private:
 #if USE(ACCELERATED_COMPOSITING)
     virtual void enterAcceleratedCompositingMode(const LayerTreeContext&);
     virtual void exitAcceleratedCompositingMode();
+    virtual void updateAcceleratedCompositingMode(const LayerTreeContext&);
 #endif
 
     virtual void didChangeScrollbarsForMainFrame() const;
@@ -100,7 +101,7 @@ private:
 
 private:
     RefPtr<WebPageProxy> m_page;
-    Evas_Object* m_viewObject;
+    Evas_Object* m_viewWidget;
 };
 
 } // namespace WebKit

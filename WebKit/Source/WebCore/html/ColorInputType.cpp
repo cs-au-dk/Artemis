@@ -39,11 +39,12 @@
 #include "MouseEvent.h"
 #include "ScriptController.h"
 #include "ShadowRoot.h"
+#include "ShadowTree.h"
 
 #include <wtf/PassOwnPtr.h>
 #include <wtf/text/WTFString.h>
 
-#if ENABLE(INPUT_COLOR)
+#if ENABLE(INPUT_TYPE_COLOR)
 
 namespace WebCore {
 
@@ -106,6 +107,8 @@ Color ColorInputType::valueAsColor() const
 
 void ColorInputType::createShadowSubtree()
 {
+    ASSERT(element()->hasShadowRoot());
+
     Document* document = element()->document();
     RefPtr<HTMLDivElement> wrapperElement = HTMLDivElement::create(document);
     wrapperElement->setShadowPseudoId("-webkit-color-swatch-wrapper");
@@ -114,15 +117,15 @@ void ColorInputType::createShadowSubtree()
     ExceptionCode ec = 0;
     wrapperElement->appendChild(colorSwatch.release(), ec);
     ASSERT(!ec);
-    element()->ensureShadowRoot()->appendChild(wrapperElement.release(), ec);
+    element()->shadowTree()->oldestShadowRoot()->appendChild(wrapperElement.release(), ec);
     ASSERT(!ec);
     
     updateColorSwatch();
 }
 
-void ColorInputType::setValue(const String& value, bool valueChanged, bool sendChangeEvent)
+void ColorInputType::setValue(const String& value, bool valueChanged, TextFieldEventBehavior eventBehavior)
 {
-    InputType::setValue(value, valueChanged, sendChangeEvent);
+    InputType::setValue(value, valueChanged, eventBehavior);
 
     if (!valueChanged)
         return;
@@ -152,6 +155,11 @@ void ColorInputType::detach()
     endColorChooser();
 }
 
+bool ColorInputType::shouldRespectListAttribute()
+{
+    return InputType::themeSupportsDataListUI(this);
+}
+
 void ColorInputType::didChooseColor(const Color& color)
 {
     if (element()->disabled() || element()->readOnly() || color == valueAsColor())
@@ -178,15 +186,15 @@ void ColorInputType::updateColorSwatch()
     if (!colorSwatch)
         return;
 
-    colorSwatch->style()->setProperty(CSSPropertyBackgroundColor, element()->value(), false, ASSERT_NO_EXCEPTION);
+    colorSwatch->setInlineStyleProperty(CSSPropertyBackgroundColor, element()->value(), false);
 }
 
 HTMLElement* ColorInputType::shadowColorSwatch() const
 {
-    ShadowRoot* shadow = element()->shadowRoot();
+    ShadowRoot* shadow = element()->shadowTree()->oldestShadowRoot();
     return shadow ? toHTMLElement(shadow->firstChild()->firstChild()) : 0;
 }
 
 } // namespace WebCore
 
-#endif // ENABLE(INPUT_COLOR)
+#endif // ENABLE(INPUT_TYPE_COLOR)

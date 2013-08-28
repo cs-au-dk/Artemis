@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Google Inc. All rights reserved.
+ * Copyright (C) 2012 Google Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -31,6 +31,7 @@
 #include "config.h"
 
 #include "TestShell.h"
+#include "WebCompositor.h"
 #include "webkit/support/webkit_support.h"
 #include <v8/include/v8-testing.h>
 #include <v8/include/v8.h>
@@ -56,10 +57,9 @@ static const char optionHardwareAcceleratedGL[] = "--enable-hardware-gpu";
 static const char optionEnableThreadedCompositing[] = "--enable-threaded-compositing";
 static const char optionForceCompositingMode[] = "--force-compositing-mode";
 static const char optionEnableAccelerated2DCanvas[] = "--enable-accelerated-2d-canvas";
-static const char optionEnableLegacyAccelerated2DCanvas[] = "--enable-legacy-accelerated-2d-canvas";
+static const char optionEnableDeferred2DCanvas[] = "--enable-deferred-2d-canvas";
 static const char optionEnableAcceleratedPainting[] = "--enable-accelerated-painting";
 static const char optionEnableAcceleratedCompositingForVideo[] = "--enable-accelerated-video";
-static const char optionEnableCompositeToTexture[] = "--enable-composite-to-texture";
 static const char optionUseGraphicsContext3DImplementation[] = "--use-graphics-context-3d-implementation=";
 static const char optionEnablePerTilePainting[] = "--enable-per-tile-painting";
 
@@ -141,10 +141,9 @@ int main(int argc, char* argv[])
     bool startupDialog = false;
     bool acceleratedCompositingForVideoEnabled = false;
     bool threadedCompositingEnabled = false;
-    bool compositeToTexture = false;
     bool forceCompositingMode = false;
     bool accelerated2DCanvasEnabled = false;
-    bool legacyAccelerated2DCanvasEnabled = false;
+    bool deferred2DCanvasEnabled = false;
     bool acceleratedPaintingEnabled = false;
     bool perTilePaintingEnabled = false;
     bool stressOpt = false;
@@ -182,14 +181,12 @@ int main(int argc, char* argv[])
             acceleratedCompositingForVideoEnabled = true;
         else if (argument == optionEnableThreadedCompositing)
             threadedCompositingEnabled = true;
-        else if (argument == optionEnableCompositeToTexture)
-            compositeToTexture = true;
         else if (argument == optionForceCompositingMode)
             forceCompositingMode = true;
         else if (argument == optionEnableAccelerated2DCanvas)
             accelerated2DCanvasEnabled = true;
-        else if (argument == optionEnableLegacyAccelerated2DCanvas)
-            legacyAccelerated2DCanvasEnabled = true;
+        else if (argument == optionEnableDeferred2DCanvas)
+            deferred2DCanvasEnabled = true;
         else if (argument == optionEnableAcceleratedPainting)
             acceleratedPaintingEnabled = true;
         else if (!argument.find(optionUseGraphicsContext3DImplementation)) {
@@ -233,14 +230,14 @@ int main(int argc, char* argv[])
         openStartupDialog();
 
     { // Explicit scope for the TestShell instance.
-        TestShell shell(testShellMode);
+        TestShell shell;
+        shell.setTestShellMode(testShellMode);
         shell.setAllowExternalPages(allowExternalPages);
         shell.setAcceleratedCompositingForVideoEnabled(acceleratedCompositingForVideoEnabled);
         shell.setThreadedCompositingEnabled(threadedCompositingEnabled);
-        shell.setCompositeToTexture(compositeToTexture);
         shell.setForceCompositingMode(forceCompositingMode);
         shell.setAccelerated2dCanvasEnabled(accelerated2DCanvasEnabled);
-        shell.setLegacyAccelerated2dCanvasEnabled(legacyAccelerated2DCanvasEnabled);
+        shell.setDeferred2dCanvasEnabled(deferred2DCanvasEnabled);
         shell.setAcceleratedPaintingEnabled(acceleratedPaintingEnabled);
         shell.setPerTilePaintingEnabled(perTilePaintingEnabled);
         shell.setJavaScriptFlags(javaScriptFlags);
@@ -250,6 +247,7 @@ int main(int argc, char* argv[])
             // 0x20000000ms is big enough for the purpose to avoid timeout in debugging.
             shell.setLayoutTestTimeout(0x20000000);
         }
+        shell.initialize();
         if (serverMode && !tests.size()) {
 #if OS(ANDROID)
             // Send a signal to host to indicate DRT is ready to process commands.
@@ -285,6 +283,9 @@ int main(int argc, char* argv[])
         // here we help purify reports.
         shell.resetTestController();
     }
+
+    // Shutdown WebCompositor after TestShell is destructed properly.
+    WebKit::WebCompositor::shutdown();
 
     return EXIT_SUCCESS;
 }

@@ -49,36 +49,39 @@ PassRefPtr<HTMLLIElement> HTMLLIElement::create(const QualifiedName& tagName, Do
     return adoptRef(new HTMLLIElement(tagName, document));
 }
 
-bool HTMLLIElement::mapToEntry(const QualifiedName& attrName, MappedAttributeEntry& result) const
+bool HTMLLIElement::isPresentationAttribute(const QualifiedName& name) const
 {
-    if (attrName == typeAttr) {
-        result = eListItem; // Share with <ol> since all the values are the same
-        return false;
-    }
-    
-    return HTMLElement::mapToEntry(attrName, result);
+    if (name == typeAttr)
+        return true;
+    return HTMLElement::isPresentationAttribute(name);
 }
 
-void HTMLLIElement::parseMappedAttribute(Attribute* attr)
+void HTMLLIElement::collectStyleForAttribute(Attribute* attr, StylePropertySet* style)
+{
+    if (attr->name() == typeAttr) {
+        if (attr->value() == "a")
+            addPropertyToAttributeStyle(style, CSSPropertyListStyleType, CSSValueLowerAlpha);
+        else if (attr->value() == "A")
+            addPropertyToAttributeStyle(style, CSSPropertyListStyleType, CSSValueUpperAlpha);
+        else if (attr->value() == "i")
+            addPropertyToAttributeStyle(style, CSSPropertyListStyleType, CSSValueLowerRoman);
+        else if (attr->value() == "I")
+            addPropertyToAttributeStyle(style, CSSPropertyListStyleType, CSSValueUpperRoman);
+        else if (attr->value() == "1")
+            addPropertyToAttributeStyle(style, CSSPropertyListStyleType, CSSValueDecimal);
+        else
+            addPropertyToAttributeStyle(style, CSSPropertyListStyleType, attr->value());
+    } else
+        HTMLElement::collectStyleForAttribute(attr, style);
+}
+
+void HTMLLIElement::parseAttribute(Attribute* attr)
 {
     if (attr->name() == valueAttr) {
         if (renderer() && renderer()->isListItem())
             parseValue(attr->value());
-    } else if (attr->name() == typeAttr) {
-        if (attr->value() == "a")
-            addCSSProperty(attr, CSSPropertyListStyleType, CSSValueLowerAlpha);
-        else if (attr->value() == "A")
-            addCSSProperty(attr, CSSPropertyListStyleType, CSSValueUpperAlpha);
-        else if (attr->value() == "i")
-            addCSSProperty(attr, CSSPropertyListStyleType, CSSValueLowerRoman);
-        else if (attr->value() == "I")
-            addCSSProperty(attr, CSSPropertyListStyleType, CSSValueUpperRoman);
-        else if (attr->value() == "1")
-            addCSSProperty(attr, CSSPropertyListStyleType, CSSValueDecimal);
-        else
-            addCSSProperty(attr, CSSPropertyListStyleType, attr->value());
     } else
-        HTMLElement::parseMappedAttribute(attr);
+        HTMLElement::parseAttribute(attr);
 }
 
 void HTMLLIElement::attach()

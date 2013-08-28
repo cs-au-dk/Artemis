@@ -35,18 +35,13 @@ config.kBuilders = {
     'Webkit Win (dbg)(2)': {version: 'xp', debug: true},
     'Webkit Linux': {version: 'lucid', is64bit: true},
     'Webkit Linux 32': {version: 'lucid'},
-    'Webkit Linux (dbg)(1)': {version: 'lucid', is64bit: true, debug: true},
-    'Webkit Linux (dbg)(2)': {version: 'lucid', is64bit: true, debug: true},
+    'Webkit Linux (dbg)': {version: 'lucid', is64bit: true, debug: true},
     'Webkit Mac10.5': {version: 'leopard'},
     'Webkit Mac10.5 (dbg)(1)': {version: 'leopard', debug: true},
     'Webkit Mac10.5 (dbg)(2)': {version: 'leopard', debug: true},
     'Webkit Mac10.6': {version: 'snowleopard'},
     'Webkit Mac10.6 (dbg)': {version: 'snowleopard', debug: true},
-    'Webkit Mac10.5 (CG)': {version: 'leopard', isCG: true},
-    'Webkit Mac10.5 (CG)(dbg)(1)': {version: 'leopard', isCG: true, debug: true},
-    'Webkit Mac10.5 (CG)(dbg)(2)': {version: 'leopard', isCG: true, debug: true},
-    'Webkit Mac10.6 (CG)': {version: 'snowleopard', isCG: true},
-    'Webkit Mac10.6 (CG)(dbg)': {version: 'snowleopard', isCG: true, debug: true},
+    'Webkit Mac10.7': {version: 'lion'},
 };
 
 config.kBuildersThatOnlyCompile = [
@@ -56,7 +51,6 @@ config.kBuildersThatOnlyCompile = [
     'Webkit Mac Builder',
     'Webkit Mac Builder (dbg)',
     'Win Builder',
-    'Mac Clang Builder (dbg)',
 ];
 
 config.kTracURL = 'http://trac.webkit.org';
@@ -74,6 +68,6 @@ var kTenMinutesInMilliseconds = 10 * 60 * 1000;
 config.kUpdateFrequency = kTenMinutesInMilliseconds;
 config.kRelativeTimeUpdateFrequency = 1000 * 60;
 
-
+config.kExperimentalFeatures = window.location.search.search('enableExperiments=1') != -1;
 
 })();

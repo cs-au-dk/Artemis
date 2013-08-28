@@ -35,6 +35,8 @@
 #include "WebPluginContainer.h"
 #include "Widget.h"
 
+#include <public/WebExternalTextureLayer.h>
+#include <public/WebIOSurfaceLayer.h>
 #include <wtf/OwnPtr.h>
 #include <wtf/PassRefPtr.h>
 #include <wtf/Vector.h>
@@ -48,7 +50,6 @@ class IntRect;
 class KeyboardEvent;
 class LayerChromium;
 class MouseEvent;
-class PluginLayerChromium;
 class ResourceError;
 class ResourceResponse;
 class WheelEvent;
@@ -104,6 +105,8 @@ public:
     virtual WebString executeScriptURL(const WebURL&, bool popupsAllowed);
     virtual void loadFrameRequest(const WebURLRequest&, const WebString& target, bool notifyNeeded, void* notifyData);
     virtual void zoomLevelChanged(double zoomLevel);    
+    virtual void setOpaque(bool);
+    virtual bool isRectTopmost(const WebRect&);
 
     // This cannot be null.
     WebPlugin* plugin() { return m_webPlugin; }
@@ -150,10 +153,6 @@ public:
 
     bool paintCustomOverhangArea(WebCore::GraphicsContext*, const WebCore::IntRect&, const WebCore::IntRect&, const WebCore::IntRect&);
 
-#if ENABLE(GESTURE_EVENTS)
-    bool handleGestureEvent(const WebCore::PlatformGestureEvent&);
-#endif
-
 private:
     WebPluginContainerImpl(WebCore::HTMLPlugInElement* element, WebPlugin* webPlugin);
     ~WebPluginContainerImpl();
@@ -175,7 +174,13 @@ private:
     Vector<WebPluginLoadObserver*> m_pluginLoadObservers;
 
 #if USE(ACCELERATED_COMPOSITING)
-    RefPtr<WebCore::PluginLayerChromium> m_platformLayer;
+    // A composited plugin will either have no composited layer, a texture layer, or an IOSurface layer.
+    // It will never have both a texture and IOSurface output.
+    unsigned m_textureId;
+    WebExternalTextureLayer m_textureLayer;
+
+    unsigned m_ioSurfaceId;
+    WebIOSurfaceLayer m_ioSurfaceLayer;
 #endif
 
     // The associated scrollbar group object, created lazily. Used for Pepper

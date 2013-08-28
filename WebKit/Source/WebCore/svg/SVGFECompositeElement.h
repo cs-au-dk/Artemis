@@ -31,7 +31,7 @@ namespace WebCore {
 
 template<>
 struct SVGPropertyTraits<CompositeOperationType> {
-    static CompositeOperationType highestEnumValue() { return FECOMPOSITE_OPERATOR_ARITHMETIC; }
+    static unsigned highestEnumValue() { return FECOMPOSITE_OPERATOR_ARITHMETIC; }
 
     static String toString(CompositeOperationType type)
     {
@@ -82,7 +82,7 @@ private:
     SVGFECompositeElement(const QualifiedName&, Document*);
 
     bool isSupportedAttribute(const QualifiedName&);
-    virtual void parseMappedAttribute(Attribute*);
+    virtual void parseAttribute(Attribute*) OVERRIDE;
     virtual bool setFilterEffectAttribute(FilterEffect*, const QualifiedName&);
     virtual void svgAttributeChanged(const QualifiedName&);
     virtual PassRefPtr<FilterEffect> build(SVGFilterBuilder*, Filter*);

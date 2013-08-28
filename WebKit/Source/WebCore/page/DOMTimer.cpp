@@ -33,11 +33,6 @@
 #include "UserGestureIndicator.h"
 #include <wtf/HashSet.h>
 #include <wtf/StdLibExtras.h>
-#include <iostream>
-
-#ifdef ARTEMIS
-#include "instrumentation/executionlistener.h"
-#endif
 
 using namespace std;
 
@@ -82,21 +77,12 @@ DOMTimer::DOMTimer(ScriptExecutionContext* context, PassOwnPtr<ScheduledAction> 
         startOneShot(intervalMilliseconds);
     else
         startRepeating(intervalMilliseconds);
-
-#ifdef ARTEMIS
-    inst::getListener()->timerAdded(scriptExecutionContext(), m_timeoutId, interval, singleShot);
-#endif
 }
 
 DOMTimer::~DOMTimer()
 {
-    if (scriptExecutionContext()) {
+    if (scriptExecutionContext())
         scriptExecutionContext()->removeTimeout(m_timeoutId);
-
-#ifdef ARTEMIS
-        inst::getListener()->timerRemoved(scriptExecutionContext(), m_timeoutId);
-#endif 
-    }
 }
 
 int DOMTimer::install(ScriptExecutionContext* context, PassOwnPtr<ScheduledAction> action, int timeout, bool singleShot)
@@ -106,6 +92,7 @@ int DOMTimer::install(ScriptExecutionContext* context, PassOwnPtr<ScheduledActio
     // or if it is a one-time timer and it has fired (DOMTimer::fired).
     DOMTimer* timer = new DOMTimer(context, action, timeout, singleShot);
 
+    timer->suspendIfNeeded();
     InspectorInstrumentation::didInstallTimer(context, timer->m_timeoutId, timeout, singleShot);
 
     return timer->m_timeoutId;
@@ -128,7 +115,7 @@ void DOMTimer::fired()
 {
     ScriptExecutionContext* context = scriptExecutionContext();
     timerNestingLevel = m_nestingLevel;
-    
+    ASSERT(!context->activeDOMObjectsAreSuspended());
     UserGestureIndicator gestureIndicator(m_shouldForwardUserGesture ? DefinitelyProcessingUserGesture : PossiblyProcessingUserGesture);
     
     // Only the first execution of a multi-shot timer should get an affirmative user gesture indicator.
@@ -174,12 +161,6 @@ void DOMTimer::contextDestroyed()
 
 void DOMTimer::stop()
 {
-#ifdef ARTEMIS
-    // We remove the timer, since stopping it effectively prevents
-    // us from calling this timer
-    inst::getListener()->timerRemoved(scriptExecutionContext(), m_timeoutId);
-#endif 
-
     SuspendableTimer::stop();
     // Need to release JS objects potentially protected by ScheduledAction
     // because they can form circular references back to the ScriptExecutionContext

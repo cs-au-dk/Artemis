@@ -37,12 +37,13 @@ using namespace HTMLNames;
 
 HTMLFormCollection::HTMLFormCollection(HTMLFormElement* form)
     : HTMLCollection(form, OtherCollection)
+    , currentPos(0)
 {
 }
 
-PassRefPtr<HTMLFormCollection> HTMLFormCollection::create(HTMLFormElement* form)
+PassOwnPtr<HTMLFormCollection> HTMLFormCollection::create(HTMLFormElement* form)
 {
-    return adoptRef(new HTMLFormCollection(form));
+    return adoptPtr(new HTMLFormCollection(form));
 }
 
 HTMLFormCollection::~HTMLFormCollection()
@@ -51,15 +52,11 @@ HTMLFormCollection::~HTMLFormCollection()
 
 unsigned HTMLFormCollection::calcLength() const
 {
-    ASSERT(base());
     return static_cast<HTMLFormElement*>(base())->length();
 }
 
 Node* HTMLFormCollection::item(unsigned index) const
 {
-    if (!base())
-        return 0;
-
     invalidateCacheIfNeeded();
 
     if (m_cache.current && m_cache.position == index)
@@ -96,9 +93,6 @@ Node* HTMLFormCollection::item(unsigned index) const
 
 Element* HTMLFormCollection::getNamedItem(const QualifiedName& attrName, const AtomicString& name) const
 {
-    if (!base())
-        return 0;
-
     m_cache.position = 0;
     return getNamedFormItem(attrName, name, 0);
 }
@@ -143,9 +137,6 @@ Node* HTMLFormCollection::nextItem() const
 
 Node* HTMLFormCollection::namedItem(const AtomicString& name) const
 {
-    if (!base())
-        return 0;
-
     // http://msdn.microsoft.com/workshop/author/dhtml/reference/methods/nameditem.asp
     // This method first searches for an object with a matching id
     // attribute. If a match is not found, the method then searches for an
@@ -161,9 +152,6 @@ Node* HTMLFormCollection::namedItem(const AtomicString& name) const
 
 void HTMLFormCollection::updateNameCache() const
 {
-    if (!base())
-        return;
-
     if (m_cache.hasNameCache)
         return;
 
@@ -176,7 +164,7 @@ void HTMLFormCollection::updateNameCache() const
         if (associatedElement->isEnumeratable()) {
             HTMLElement* element = toHTMLElement(associatedElement);
             const AtomicString& idAttrVal = element->getIdAttribute();
-            const AtomicString& nameAttrVal = element->getAttribute(nameAttr);
+            const AtomicString& nameAttrVal = element->getNameAttribute();
             if (!idAttrVal.isEmpty()) {
                 append(m_cache.idCache, idAttrVal, element);
                 foundInputElements.add(idAttrVal.impl());
@@ -191,7 +179,7 @@ void HTMLFormCollection::updateNameCache() const
     for (unsigned i = 0; i < f->m_imageElements.size(); ++i) {
         HTMLImageElement* element = f->m_imageElements[i];
         const AtomicString& idAttrVal = element->getIdAttribute();
-        const AtomicString& nameAttrVal = element->getAttribute(nameAttr);
+        const AtomicString& nameAttrVal = element->getNameAttribute();
         if (!idAttrVal.isEmpty() && !foundInputElements.contains(idAttrVal.impl()))
             append(m_cache.idCache, idAttrVal, element);
         if (!nameAttrVal.isEmpty() && idAttrVal != nameAttrVal && !foundInputElements.contains(nameAttrVal.impl()))

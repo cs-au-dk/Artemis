@@ -28,16 +28,6 @@
 
 #include <WebCore/DragClient.h>
 
-#if PLATFORM(MAC)
-#ifdef __OBJC__
-@class WKPasteboardFilePromiseOwner;
-@class WKPasteboardOwner;
-#else
-class WKPasteboardFilePromiseOwner;
-class WKPasteboardOwner;
-#endif
-#endif
-
 namespace WebKit {
 
 class WebPage;
@@ -58,19 +48,12 @@ private:
     virtual void startDrag(WebCore::DragImageRef, const WebCore::IntPoint& dragImageOrigin, const WebCore::IntPoint& eventPos, WebCore::Clipboard*, WebCore::Frame*, bool linkDrag = false) OVERRIDE;
 
 #if PLATFORM(MAC)
-    virtual void declareAndWriteDragImage(NSPasteboard*, DOMElement*, NSURL*, NSString*, WebCore::Frame*) OVERRIDE;
+    virtual void declareAndWriteDragImage(const String& pasteboardName, DOMElement*, NSURL*, NSString*, WebCore::Frame*) OVERRIDE;
 #endif
-
-    virtual void dragEnded() OVERRIDE;
 
     virtual void dragControllerDestroyed() OVERRIDE;
 
     WebPage* m_page;
-    
-#if PLATFORM(MAC)
-    RetainPtr<WKPasteboardFilePromiseOwner> m_filePromiseOwner;
-    RetainPtr<WKPasteboardOwner> m_pasteboardOwner;
-#endif
 };
 
 } // namespace WebKit

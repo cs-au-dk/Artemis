@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Copyright (C) 2011 Google Inc. All rights reserved.
+# Copyright (c) 2012 Google Inc. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -39,9 +39,17 @@ MockDRT to crash).
 
 import base64
 import logging
+import os
 import sys
 
+# Since we execute this script directly as part of the unit tests, we need to ensure
+# that Tools/Scripts is in sys.path for the next imports to work correctly.
+script_dir = os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))))
+if script_dir not in sys.path:
+    sys.path.append(script_dir)
+
 from webkitpy.common.system.systemhost import SystemHost
+from webkitpy.layout_tests.port.driver import DriverInput, DriverOutput, DriverProxy
 from webkitpy.layout_tests.port.factory import PortFactory
 from webkitpy.tool.mocktool import MockOptions
 
@@ -49,18 +57,14 @@ _log = logging.getLogger(__name__)
 
 
 class MockDRTPort(object):
-    """MockPort implementation of the Port interface."""
+    port_name = 'mock'
 
-    def __init__(self, host, **kwargs):
-        prefix = 'mock-'
-        if 'port_name' in kwargs:
-            kwargs['port_name'] = kwargs['port_name'][len(prefix):]
-        self._host = host
-        self.__delegate = PortFactory(host).get(**kwargs)
-        self.__real_name = prefix + self.__delegate.name()
+    @classmethod
+    def determine_full_port_name(cls, host, options, port_name):
+        return port_name
 
-    def real_name(self):
-        return self.__real_name
+    def __init__(self, host, port_name, **kwargs):
+        self.__delegate = PortFactory(host).get(port_name.replace('mock-', ''), **kwargs)
 
     def __getattr__(self, name):
         return getattr(self.__delegate, name)
@@ -71,31 +75,31 @@ class MockDRTPort(object):
     def check_sys_deps(self, needs_http):
         return True
 
-    def driver_cmd_line(self):
-        driver = self.create_driver(0)
-        return driver.cmd_line()
+    def create_driver(self, worker_number, no_timeout=False):
+        # The magic of the MockDRTPort is that we create a driver that has a
+        # cmd_line() method monkey-patched to invoke this script instead of DRT.
+        return DriverProxy(self, worker_number, self._mocked_driver_maker, pixel_tests=self.get_option('pixel_tests'), no_timeout=no_timeout)
 
-    def _path_to_driver(self):
-        return self._host.filesystem.abspath(__file__)
+    @staticmethod
+    def _mocked_driver_maker(port, worker_number, pixel_tests, no_timeout=False):
+        path_to_this_file = port.host.filesystem.abspath(__file__.replace('.pyc', '.py'))
+        driver = port.__delegate._driver_class()(port, worker_number, pixel_tests, no_timeout)
+        driver.cmd_line = port._overriding_cmd_line(driver.cmd_line,
+                                                    port.__delegate._path_to_driver(),
+                                                    sys.executable,
+                                                    path_to_this_file,
+                                                    port.__delegate.name())
+        return driver
 
-    def create_driver(self, worker_number):
-        # We need to create a driver object as the delegate would, but
-        # overwrite the path to the driver binary in its command line. We do
-        # this by actually overwriting its cmd_line() method with a proxy
-        # method that splices in the mock_drt path and command line arguments
-        # in place of the actual path to the driver binary.
+    @staticmethod
+    def _overriding_cmd_line(original_cmd_line, driver_path, python_exe, this_file, port_name):
+        def new_cmd_line(pixel_tests, per_test_args):
+            cmd_line = original_cmd_line(pixel_tests, per_test_args)
+            index = cmd_line.index(driver_path)
+            cmd_line[index:index + 1] = [python_exe, this_file, '--platform', port_name]
+            return cmd_line
 
-        def overriding_cmd_line():
-            cmd = self.__original_driver_cmd_line()
-            index = cmd.index(self.__delegate._path_to_driver())
-            # FIXME: Why does this need to use sys.executable (instead of something mockable)?
-            cmd[index:index + 1] = [sys.executable, self._path_to_driver(), '--platform', self.name()]
-            return cmd
-
-        delegated_driver = self.__delegate.create_driver(worker_number)
-        self.__original_driver_cmd_line = delegated_driver.cmd_line
-        delegated_driver.cmd_line = overriding_cmd_line
-        return delegated_driver
+        return new_cmd_line
 
     def start_helper(self):
         pass
@@ -157,20 +161,7 @@ def parse_options(argv):
     else:
         pixel_tests = '--pixel-tests' in argv
     options = MockOptions(chromium=chromium, platform=platform, pixel_tests=pixel_tests, pixel_path=pixel_path)
-    return (options, [])
-
-
-# FIXME: Should probably change this to use DriverInput after
-# https://bugs.webkit.org/show_bug.cgi?id=53004 lands (it's landed as of 2/3/11).
-class _DRTInput(object):
-    def __init__(self, line):
-        vals = line.strip().split("'")
-        if len(vals) == 1:
-            self.uri = vals[0]
-            self.checksum = None
-        else:
-            self.uri = vals[0]
-            self.checksum = vals[1]
+    return (options, argv)
 
 
 class MockDRT(object):
@@ -186,96 +177,116 @@ class MockDRT(object):
         if options.platform:
             port_name = options.platform
         self._port = PortFactory(host).get(port_name=port_name, options=options)
+        self._driver = self._port.create_driver(0)
 
     def run(self):
         while True:
             line = self._stdin.readline()
             if not line:
-                break
-            self.run_one_test(self.parse_input(line))
-        return 0
+                return 0
+            driver_input = self.input_from_line(line)
+            dirname, basename = self._port.split_test(driver_input.test_name)
+            is_reftest = (self._port.reference_files(driver_input.test_name) or
+                          self._port.is_reference_html_file(self._port._filesystem, dirname, basename))
+            output = self.output_for_test(driver_input, is_reftest)
+            self.write_test_output(driver_input, output, is_reftest)
 
-    def parse_input(self, line):
-        return _DRTInput(line)
-
-    def run_one_test(self, test_input):
-        port = self._port
-        if test_input.uri.startswith('http'):
-            test_name = port.uri_to_test_name(test_input.uri)
+    def input_from_line(self, line):
+        vals = line.strip().split("'")
+        if len(vals) == 1:
+            uri = vals[0]
+            checksum = None
         else:
-            test_name = port.relative_test_filename(test_input.uri)
+            uri = vals[0]
+            checksum = vals[1]
+        if uri.startswith('http://') or uri.startswith('https://'):
+            test_name = self._driver.uri_to_test(uri)
+        else:
+            test_name = self._port.relative_test_filename(uri)
 
-        actual_text = port.expected_text(test_name)
-        actual_audio = port.expected_audio(test_name)
-        if self._options.pixel_tests and test_input.checksum:
-            actual_checksum = port.expected_checksum(test_name)
-            actual_image = port.expected_image(test_name)
+        return DriverInput(test_name, 0, checksum, self._options.pixel_tests)
 
-        if actual_audio:
+    def output_for_test(self, test_input, is_reftest):
+        port = self._port
+        actual_text = port.expected_text(test_input.test_name)
+        actual_audio = port.expected_audio(test_input.test_name)
+        actual_image = None
+        actual_checksum = None
+        if is_reftest:
+            # Make up some output for reftests.
+            actual_text = 'reference text\n'
+            actual_checksum = 'mock-checksum'
+            actual_image = 'blank'
+            if test_input.test_name.endswith('-mismatch.html'):
+                actual_text = 'not reference text\n'
+                actual_checksum = 'not-mock-checksum'
+                actual_image = 'not blank'
+        elif self._options.pixel_tests and test_input.image_hash:
+            actual_checksum = port.expected_checksum(test_input.test_name)
+            actual_image = port.expected_image(test_input.test_name)
+
+        return DriverOutput(actual_text, actual_image, actual_checksum, actual_audio)
+
+    def write_test_output(self, test_input, output, is_reftest):
+        if output.audio:
             self._stdout.write('Content-Type: audio/wav\n')
             self._stdout.write('Content-Transfer-Encoding: base64\n')
-            output = base64.b64encode(actual_audio)
-            self._stdout.write(output)
+            self._stdout.write(base64.b64encode(output.audio))
         else:
             self._stdout.write('Content-Type: text/plain\n')
             # FIXME: Note that we don't ensure there is a trailing newline!
             # This mirrors actual (Mac) DRT behavior but is a bug.
-            self._stdout.write(actual_text)
+            if output.text:
+                self._stdout.write(output.text)
 
         self._stdout.write('#EOF\n')
 
-        if self._options.pixel_tests and test_input.checksum:
+        if self._options.pixel_tests and output.image_hash:
             self._stdout.write('\n')
-            self._stdout.write('ActualHash: %s\n' % actual_checksum)
-            self._stdout.write('ExpectedHash: %s\n' % test_input.checksum)
-            if actual_checksum != test_input.checksum:
+            self._stdout.write('ActualHash: %s\n' % output.image_hash)
+            self._stdout.write('ExpectedHash: %s\n' % test_input.image_hash)
+            if output.image_hash != test_input.image_hash:
                 self._stdout.write('Content-Type: image/png\n')
-                self._stdout.write('Content-Length: %s\n' % len(actual_image))
-                self._stdout.write(actual_image)
+                self._stdout.write('Content-Length: %s\n' % len(output.image))
+                self._stdout.write(output.image)
         self._stdout.write('#EOF\n')
         self._stdout.flush()
+        self._stderr.write('#EOF\n')
         self._stderr.flush()
 
 
-# FIXME: Should probably change this to use DriverInput after
-# https://bugs.webkit.org/show_bug.cgi?id=53004 lands.
-class _ChromiumDRTInput(_DRTInput):
-    def __init__(self, line):
+class MockChromiumDRT(MockDRT):
+    def input_from_line(self, line):
         vals = line.strip().split()
         if len(vals) == 3:
-            self.uri, self.timeout, self.checksum = vals
+            uri, timeout, checksum = vals
         else:
-            self.uri = vals[0]
-            self.timeout = vals[1]
-            self.checksum = None
+            uri, timeout = vals
+            checksum = None
 
+        test_name = self._driver.uri_to_test(uri)
+        return DriverInput(test_name, timeout, checksum, self._options.pixel_tests)
 
-class MockChromiumDRT(MockDRT):
-    def parse_input(self, line):
-        return _ChromiumDRTInput(line)
+    def output_for_test(self, test_input, is_reftest):
+        # FIXME: This is a hack to make virtual tests work. Need something more general.
+        original_test_name = test_input.test_name
+        if '--enable-accelerated-2d-canvas' in self._args and 'canvas' in test_input.test_name:
+            test_input.test_name = 'platform/chromium/virtual/gpu/' + test_input.test_name
+        output = super(MockChromiumDRT, self).output_for_test(test_input, is_reftest)
+        test_input.test_name = original_test_name
+        return output
 
-    def run_one_test(self, test_input):
-        port = self._port
-        test_name = self._port.uri_to_test_name(test_input.uri)
+    def write_test_output(self, test_input, output, is_reftest):
+        self._stdout.write("#URL:%s\n" % self._driver.test_to_uri(test_input.test_name))
+        if self._options.pixel_tests and output.image_hash:
+            self._stdout.write("#MD5:%s\n" % output.image_hash)
+            if output.image:
+                self._host.filesystem.maybe_make_directory(self._host.filesystem.dirname(self._options.pixel_path))
+                self._host.filesystem.write_binary_file(self._options.pixel_path, output.image)
+        if output.text:
+            self._stdout.write(output.text)
 
-        actual_text = port.expected_text(test_name)
-        actual_image = ''
-        actual_checksum = ''
-        if self._options.pixel_tests and test_input.checksum:
-            actual_checksum = port.expected_checksum(test_name)
-            if actual_checksum != test_input.checksum:
-                actual_image = port.expected_image(test_name)
-
-        self._stdout.write("#URL:%s\n" % test_input.uri)
-        if self._options.pixel_tests and test_input.checksum:
-            self._stdout.write("#MD5:%s\n" % actual_checksum)
-            self._host.filesystem.write_binary_file(self._options.pixel_path,
-                                               actual_image)
-        self._stdout.write(actual_text)
-
-        # FIXME: (See above FIXME as well). Chromium DRT appears to always
-        # ensure the text output has a trailing newline. Mac DRT does not.
-        if not actual_text.endswith('\n'):
+        if output.text and not output.text.endswith('\n'):
             self._stdout.write('\n')
         self._stdout.write('#EOF\n')
         self._stdout.flush()

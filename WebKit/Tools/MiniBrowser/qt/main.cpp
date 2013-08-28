@@ -31,7 +31,7 @@
 #include "MiniBrowserApplication.h"
 #include "UrlLoader.h"
 
-#include <qdeclarative.h>
+#include <qqml.h>
 
 #include <QDir>
 #include <QLatin1String>
@@ -39,13 +39,10 @@
 
 int main(int argc, char** argv)
 {
-    // FIXME: We must add support for the threaded rendering as it is the default.
-    qputenv("QML_NO_THREADED_RENDERER", QByteArray("1"));
-
     MiniBrowserApplication app(argc, argv);
 
     if (app.isRobotized()) {
-        BrowserWindow* window = new BrowserWindow(&app.m_windowOptions);
+        BrowserWindow* window = new BrowserWindow(app.windowOptions());
         UrlLoader loader(window, app.urls().at(0), app.robotTimeout(), app.robotExtraTime());
         loader.loadNext();
         window->show();
@@ -62,7 +59,7 @@ int main(int argc, char** argv)
             urls.append("http://www.google.com");
     }
 
-    BrowserWindow* window = new BrowserWindow(&app.m_windowOptions);
+    BrowserWindow* window = new BrowserWindow(app.windowOptions());
     window->load(urls.at(0));
 
     for (int i = 1; i < urls.size(); ++i)

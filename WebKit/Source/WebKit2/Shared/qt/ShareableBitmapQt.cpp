@@ -28,6 +28,7 @@
 
 #include <QImage>
 #include <QPainter>
+#include <QtGlobal>
 #include <WebCore/BitmapImage.h>
 #include <WebCore/GraphicsContext.h>
 #include <WebCore/NotImplemented.h>
@@ -38,8 +39,15 @@ namespace WebKit {
 
 QImage ShareableBitmap::createQImage()
 {
+    ref(); // Balanced by deref in releaseSharedMemoryData
     return QImage(reinterpret_cast<uchar*>(data()), m_size.width(), m_size.height(), m_size.width() * 4,
-                  m_flags & SupportsAlpha ? QImage::Format_ARGB32_Premultiplied : QImage::Format_RGB32);
+                  m_flags & SupportsAlpha ? QImage::Format_ARGB32_Premultiplied : QImage::Format_RGB32,
+                  releaseSharedMemoryData, this);
+}
+
+void ShareableBitmap::releaseSharedMemoryData(void* typelessBitmap)
+{
+    static_cast<ShareableBitmap*>(typelessBitmap)->deref(); // Balanced by ref in createQImage.
 }
 
 PassRefPtr<Image> ShareableBitmap::createImage()
@@ -64,10 +72,16 @@ void ShareableBitmap::paint(GraphicsContext& context, const IntPoint& dstPoint, 
     painter->drawImage(dstPoint, image, QRect(srcRect));
 }
 
-void ShareableBitmap::paint(GraphicsContext& /*context*/, float /*scaleFactor*/, const IntPoint& /*dstPoint*/, const IntRect& /*srcRect*/)
+void ShareableBitmap::paint(GraphicsContext& context, float scaleFactor, const IntPoint& dstPoint, const IntRect& srcRect)
 {
+    if (qFuzzyCompare(scaleFactor, 1)) {
+        paint(context, dstPoint, srcRect);
+        return;
+    }
+
     // See <https://bugs.webkit.org/show_bug.cgi?id=64663>.
     notImplemented();
 }
 
-} // namespace WebKit
+}
+// namespace WebKit

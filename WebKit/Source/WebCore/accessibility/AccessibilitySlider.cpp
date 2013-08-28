@@ -65,6 +65,7 @@ AccessibilityOrientation AccessibilitySlider::orientation() const
     case SliderThumbHorizontalPart:
     case SliderHorizontalPart:
     case MediaSliderPart:
+    case MediaFullScreenVolumeSliderPart:
         return AccessibilityOrientationHorizontal;
     
     case SliderThumbVerticalPart: 
@@ -175,11 +176,6 @@ LayoutRect AccessibilitySliderThumb::elementRect() const
     if (!sliderRenderer || !sliderRenderer->isSlider())
         return LayoutRect();
     return sliderThumbElementOf(sliderRenderer->node())->getRect();
-}
-
-LayoutSize AccessibilitySliderThumb::size() const
-{
-    return elementRect().size();
 }
 
 bool AccessibilitySliderThumb::accessibilityIsIgnored() const

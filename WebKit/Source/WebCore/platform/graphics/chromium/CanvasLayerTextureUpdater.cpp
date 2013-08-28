@@ -32,6 +32,7 @@
 
 #include "GraphicsContext.h"
 #include "LayerPainterChromium.h"
+#include "PlatformContextSkia.h"
 #include "TraceEvent.h"
 
 namespace WebCore {
@@ -45,7 +46,7 @@ CanvasLayerTextureUpdater::~CanvasLayerTextureUpdater()
 {
 }
 
-void CanvasLayerTextureUpdater::paintContents(GraphicsContext& context, const IntRect& contentRect, float contentsScale)
+void CanvasLayerTextureUpdater::paintContents(GraphicsContext& context, PlatformContextSkia& platformContext, const IntRect& contentRect, float contentsScale, IntRect& resultingOpaqueRect)
 {
     context.translate(-contentRect.x(), -contentRect.y());
     {
@@ -62,7 +63,17 @@ void CanvasLayerTextureUpdater::paintContents(GraphicsContext& context, const In
             scaledContentRect = enclosingIntRect(rect);
         }
 
+        // Record transform prior to painting, as all opaque tracking will be
+        // relative to this current value.
+        AffineTransform canvasToContentTransform = context.getCTM().inverse();
+
         m_painter->paint(context, scaledContentRect);
+
+        // Transform tracked opaque paints back to our layer's content space.
+        ASSERT(canvasToContentTransform.isInvertible());
+        ASSERT(canvasToContentTransform.preservesAxisAlignment());
+        FloatRect opaqueCanvasRect = platformContext.opaqueRegion().asRect();
+        resultingOpaqueRect = enclosedIntRect(canvasToContentTransform.mapRect(opaqueCanvasRect));
 
         if (contentsScale != 1.0)
             context.restore();

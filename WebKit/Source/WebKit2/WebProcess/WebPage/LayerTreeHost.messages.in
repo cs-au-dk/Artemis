@@ -20,9 +20,7 @@
 
 #if USE(TILED_BACKING_STORE)
 messages -> LayerTreeHost {
-    SetVisibleContentRectForLayer(int layerID, WebCore::IntRect visibleContentRect)
-    SetVisibleContentRectTrajectoryVector(WebCore::FloatPoint trajectoryVectory)
-    SetVisibleContentRectAndScale(WebCore::IntRect contentRect, float scale)
+    SetVisibleContentsRect(WebCore::IntRect visibleContentsRect, float scale, WebCore::FloatPoint trajectoryVectory)
     RenderNextFrame()
     PurgeBackingStores()
 }

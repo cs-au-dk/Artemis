@@ -186,6 +186,12 @@ extern NSString *WebPreferencesChangedInternalNotification;
 - (BOOL)acceleratedCompositingEnabled;
 - (void)setAcceleratedCompositingEnabled:(BOOL)enabled;
 
+- (BOOL)cssCustomFilterEnabled;
+- (void)setCSSCustomFilterEnabled:(BOOL)enabled;
+
+- (BOOL)cssRegionsEnabled;
+- (void)setCSSRegionsEnabled:(BOOL)enabled;
+
 - (BOOL)showDebugBorders;
 - (void)setShowDebugBorders:(BOOL)show;
 
@@ -268,11 +274,14 @@ extern NSString *WebPreferencesChangedInternalNotification;
 - (void)setHixie76WebSocketProtocolEnabled:(BOOL)flag;
 - (BOOL)isHixie76WebSocketProtocolEnabled;
 
-- (void)setSuppressIncrementalRendering:(BOOL)flag;
-- (BOOL)suppressIncrementalRendering;
+- (void)setRegionBasedColumnsEnabled:(BOOL)flag;
+- (BOOL)regionBasedColumnsEnabled;
 
 - (void)setBackspaceKeyNavigationEnabled:(BOOL)flag;
 - (BOOL)backspaceKeyNavigationEnabled;
+
+- (void)setWantsBalancedSetDefersLoadingBehavior:(BOOL)flag;
+- (BOOL)wantsBalancedSetDefersLoadingBehavior;
 
 - (void)setShouldDisplaySubtitles:(BOOL)flag;
 - (BOOL)shouldDisplaySubtitles;
@@ -282,5 +291,14 @@ extern NSString *WebPreferencesChangedInternalNotification;
 
 - (void)setShouldDisplayTextDescriptions:(BOOL)flag;
 - (BOOL)shouldDisplayTextDescriptions;
+
+- (void)setNotificationsEnabled:(BOOL)flag;
+- (BOOL)notificationsEnabled;
+
+- (void)setShouldRespectImageOrientation:(BOOL)flag;
+- (BOOL)shouldRespectImageOrientation;
+
+- (void)setIncrementalRenderingSuppressionTimeoutInSeconds:(NSTimeInterval)timeout;
+- (NSTimeInterval)incrementalRenderingSuppressionTimeoutInSeconds;
 
 @end

@@ -55,6 +55,7 @@
 #import <WebCore/ProtectionSpace.h>
 #import <WebCore/RenderView.h>
 #import <WebCore/RenderWidget.h>
+#import <WebCore/RunLoop.h>
 #import <WebCore/SecurityOrigin.h>
 #import <WebCore/WebCoreObjCExtras.h>
 #import <WebKit/DOMPrivate.h>
@@ -76,6 +77,7 @@ using namespace WebCore;
 {
     JSC::initializeThreading();
     WTF::initializeMainThreadToProcessMainThread();
+    WebCore::RunLoop::initializeMainRunLoop();
     WebCoreObjCFinalizeOnMainThread(self);
     WKSendUserChangeNotifications();
 }
@@ -476,7 +478,12 @@ using namespace WebCore;
 
 - (void)cacheSnapshot
 {
-    NSImage *snapshot = [[NSImage alloc] initWithSize: [self bounds].size];
+    NSSize boundsSize = [self bounds].size;
+    if (!boundsSize.height || !boundsSize.width)
+        return;
+
+    NSImage *snapshot = [[NSImage alloc] initWithSize:boundsSize];
+        
     _snapshotting = YES;
     [snapshot lockFocus];
     [self drawRect:[self bounds]];
@@ -868,7 +875,7 @@ using namespace WebCore;
     if (!frameView)
         return NSZeroRect;
 
-    IntRect widgetRect = renderer->absoluteClippedOverflowRect();
+    IntRect widgetRect = renderer->pixelSnappedAbsoluteClippedOverflowRect();
     widgetRect = frameView->contentsToWindow(widgetRect);
     return intersection(toRenderWidget(renderer)->windowClipRect(), widgetRect);
 }

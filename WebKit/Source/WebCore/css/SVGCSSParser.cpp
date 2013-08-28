@@ -37,7 +37,7 @@ using namespace std;
 
 namespace WebCore {
 
-bool CSSParser::parseSVGValue(int propId, bool important)
+bool CSSParser::parseSVGValue(CSSPropertyID propId, bool important)
 {
     CSSParserValue* value = m_valueList->current();
     if (!value)
@@ -66,7 +66,7 @@ bool CSSParser::parseSVGValue(int propId, bool important)
            id >= CSSValueSuper)
             valid_primitive = true;
         else
-            valid_primitive = validUnit(value, FLength|FPercent, false);
+            valid_primitive = validUnit(value, FLength | FPercent, SVGAttributeMode);
         break;
 
     case CSSPropertyDominantBaseline:
@@ -105,7 +105,7 @@ bool CSSParser::parseSVGValue(int propId, bool important)
         break;
 
     case CSSPropertyStrokeMiterlimit:   // <miterlimit> | inherit
-        valid_primitive = validUnit(value, FNumber|FNonNeg, false);
+        valid_primitive = validUnit(value, FNumber | FNonNeg, SVGAttributeMode);
         break;
 
     case CSSPropertyStrokeLinejoin:   // miter | round | bevel | inherit
@@ -122,7 +122,7 @@ bool CSSParser::parseSVGValue(int propId, bool important)
     case CSSPropertyFillOpacity:
     case CSSPropertyStopOpacity:
     case CSSPropertyFloodOpacity:
-        valid_primitive = (!id && validUnit(value, FNumber|FPercent, false));
+        valid_primitive = (!id && validUnit(value, FNumber | FPercent, SVGAttributeMode));
         break;
 
     case CSSPropertyShapeRendering:
@@ -201,17 +201,6 @@ bool CSSParser::parseSVGValue(int propId, bool important)
         }
         break;
 
-    case CSSPropertyColor:                // <color> | inherit
-        if ((id >= CSSValueAqua && id <= CSSValueWindowtext) ||
-           (id >= CSSValueAliceblue && id <= CSSValueYellowgreen))
-            parsedValue = SVGColor::createFromString(value->string);
-        else
-            parsedValue = parseSVGColor();
-
-        if (parsedValue)
-            m_valueList->next();
-        break;
-
     case CSSPropertyStopColor: // TODO : icccolor
     case CSSPropertyFloodColor:
     case CSSPropertyLightingColor:
@@ -241,7 +230,7 @@ bool CSSParser::parseSVGValue(int propId, bool important)
 
     case CSSPropertyStrokeWidth:         // <length> | inherit
     case CSSPropertyStrokeDashoffset:
-        valid_primitive = validUnit(value, FLength | FPercent, false);
+        valid_primitive = validUnit(value, FLength | FPercent, SVGAttributeMode);
         break;
     case CSSPropertyStrokeDasharray:     // none | <dasharray> | inherit
         if (id == CSSValueNone)
@@ -255,7 +244,7 @@ bool CSSParser::parseSVGValue(int propId, bool important)
         if (id == CSSValueAuto || id == CSSValueNormal)
             valid_primitive = true;
         else
-            valid_primitive = validUnit(value, FLength, false);
+            valid_primitive = validUnit(value, FLength, SVGAttributeMode);
         break;
 
     case CSSPropertyClipPath:    // <uri> | none | inherit
@@ -292,7 +281,7 @@ bool CSSParser::parseSVGValue(int propId, bool important)
             rollbackLastProperties(1);
             return false;
         }
-        CSSValue* value = m_parsedProperties[m_numParsedProperties - 1]->value();
+        CSSValue* value = m_parsedProperties.last().value();
         addProperty(CSSPropertyMarkerMid, value, important);
         addProperty(CSSPropertyMarkerEnd, value, important);
         m_implicitShorthand = false;
@@ -314,6 +303,12 @@ bool CSSParser::parseSVGValue(int propId, bool important)
             parsedValue = CSSPrimitiveValue::create(value->fValue, (CSSPrimitiveValue::UnitTypes) value->unit);
         else if (value->unit >= CSSParserValue::Q_EMS)
             parsedValue = CSSPrimitiveValue::createAllowingMarginQuirk(value->fValue, CSSPrimitiveValue::CSS_EMS);
+        if (isCalculation(value)) {
+            // FIXME calc() http://webkit.org/b/16662 : actually create a CSSPrimitiveValue here, ie
+            // parsedValue = CSSPrimitiveValue::create(m_parsedCalculation.release());
+            m_parsedCalculation.release();
+            parsedValue = 0;
+        }
         m_valueList->next();
     }
     if (!parsedValue || (m_valueList->current() && !inShorthand()))
@@ -329,7 +324,7 @@ PassRefPtr<CSSValue> CSSParser::parseSVGStrokeDasharray()
     CSSParserValue* value = m_valueList->current();
     bool valid_primitive = true;
     while (value) {
-        valid_primitive = validUnit(value, FLength | FPercent |FNonNeg, false);
+        valid_primitive = validUnit(value, FLength | FPercent | FNonNeg, SVGAttributeMode);
         if (!valid_primitive)
             break;
         if (value->id != 0)

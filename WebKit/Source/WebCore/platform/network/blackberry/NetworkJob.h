@@ -56,19 +56,18 @@ public:
                     int deferLoadingCount,
                     int redirectCount);
     PassRefPtr<ResourceHandle> handle() const { return m_handle; }
+#ifndef NDEBUG
     bool isRunning() const { return m_isRunning; }
+#endif
     bool isCancelled() const { return m_cancelled; }
-    bool clientIsOk() const { return !m_cancelled && m_handle && m_handle->client(); }
     void loadDataURL() { m_loadDataTimer.startOneShot(0); }
-    bool loadAboutURL();
+    void loadAboutURL();
     int cancelJob();
     bool isDeferringLoading() const { return m_deferLoadingCount > 0; }
     void updateDeferLoadingCount(int delta);
     virtual void notifyStatusReceived(int status, const char* message);
     void handleNotifyStatusReceived(int status, const String& message);
-    virtual void notifyWMLOverride();
-    void handleNotifyWMLOverride() { m_response.setIsWML(true); }
-    virtual void notifyHeaderReceived(const char* key, const char* value);
+    virtual void notifyHeadersReceived(BlackBerry::Platform::NetworkRequest::HeaderList& headers);
     virtual void notifyMultipartHeaderReceived(const char* key, const char* value);
     // Exists only to resolve ambiguity between char* and String parameters
     void notifyStringHeaderReceived(const String& key, const String& value);
@@ -81,12 +80,15 @@ public:
     void handleNotifyDataSent(unsigned long long bytesSent, unsigned long long totalBytesToBeSent);
     virtual void notifyClose(int status);
     void handleNotifyClose(int status);
+
+private:
+    bool isClientAvailable() const { return !m_cancelled && m_handle && m_handle->client(); }
+
     virtual void notifyDataReceived(BlackBerry::Platform::NetworkBuffer* buffer)
     {
         notifyDataReceivedPlain(BlackBerry::Platform::networkBufferData(buffer), BlackBerry::Platform::networkBufferDataLength(buffer));
     }
 
-private:
     virtual void setWasDiskCached(bool value)
     {
        m_response.setWasCached(value);
@@ -129,7 +131,7 @@ private:
 
     // The server needs authentication credentials. Search in the
     // CredentialStorage or prompt the user via dialog.
-    bool handleAuthHeader(const String& header);
+    bool handleAuthHeader(const ProtectionSpaceServerType, const String& header);
 
     bool handleFTPHeader(const String& header);
 
@@ -141,7 +143,7 @@ private:
 
     bool isError(int statusCode)
     {
-        return statusCode < 0 || (!m_isXHR && (400 <= statusCode && statusCode < 600));
+        return statusCode < 0 || (400 <= statusCode && statusCode < 600);
     }
 
 private:
@@ -154,6 +156,7 @@ private:
     OwnPtr<ResourceResponse> m_multipartResponse;
     Timer<NetworkJob> m_deleteJobTimer;
     String m_contentType;
+    String m_sniffedMimeType;
     String m_contentDisposition;
     BlackBerry::Platform::NetworkStreamFactory* m_streamFactory;
     bool m_isFile;
@@ -161,14 +164,16 @@ private:
     bool m_isAbout;
     bool m_isFTP;
     bool m_isFTPDir;
+#ifndef NDEBUG
     bool m_isRunning;
+#endif
     bool m_cancelled;
     bool m_statusReceived;
     bool m_dataReceived;
     bool m_responseSent;
     bool m_callingClient;
-    bool m_isXHR; // FIXME - After 7.0, remove this. Only the Qt port reports HTTP error statuses as didFails, so we probably shouldn't.
     bool m_needsRetryAsFTPDirectory;
+    bool m_isOverrideContentType;
 
     // If an HTTP status code is received, m_extendedStatusCode and m_response.httpStatusCode will both be set to it.
     // If a platform error code is received, m_extendedStatusCode will be set to it and m_response.httpStatusCode will be set to 404.

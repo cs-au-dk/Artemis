@@ -23,19 +23,15 @@
 #ifndef webkitwebviewprivate_h
 #define webkitwebviewprivate_h
 
+#include "AcceleratedCompositingContext.h"
 #include "FullscreenVideoController.h"
 #include "GtkClickCounter.h"
 #include "GtkDragAndDropHelper.h"
-#include "GOwnPtr.h"
 #include "Page.h"
 #include "ResourceHandle.h"
 #include "WidgetBackingStore.h"
 #include <webkit/webkitwebview.h>
-
-#if USE(ACCELERATED_COMPOSITING) && USE(CLUTTER)
-#include <clutter-gtk/clutter-gtk.h>
-#include <clutter/clutter.h>
-#endif
+#include <wtf/gobject/GOwnPtr.h>
 
 namespace WebKit {
 WebCore::Page* core(WebKitWebView*);
@@ -48,6 +44,7 @@ extern "C" {
 typedef struct _WebKitWebViewPrivate WebKitWebViewPrivate;
 struct _WebKitWebViewPrivate {
     WebCore::Page* corePage;
+    bool hasNativeWindow;
     OwnPtr<WebCore::WidgetBackingStore> backingStore;
     GRefPtr<WebKitWebSettings> webSettings;
     GRefPtr<WebKitWebInspector> webInspector;
@@ -65,6 +62,7 @@ struct _WebKitWebViewPrivate {
     GRefPtr<GtkIMContext> imContext;
 
     gboolean transparent;
+    bool needsResizeOnMap;
 
 #ifndef GTK_API_VERSION_2
     // GtkScrollablePolicy needs to be checked when
@@ -82,7 +80,7 @@ struct _WebKitWebViewPrivate {
 
     gboolean disposing;
 
-#if ENABLE(VIDEO)
+#if ENABLE(VIDEO) && !defined(GST_API_VERSION_1)
     FullscreenVideoController* fullscreenVideoController;
 #endif
 
@@ -97,9 +95,13 @@ struct _WebKitWebViewPrivate {
     WebCore::GtkClickCounter clickCounter;
     WebCore::GtkDragAndDropHelper dragAndDropHelper;
     bool selfScrolling;
-#if USE(ACCELERATED_COMPOSITING) && USE(CLUTTER)
-    WebCore::GraphicsLayer* rootGraphicsLayer;
-    GtkWidget* rootLayerEmbedder;
+
+#if USE(ACCELERATED_COMPOSITING)
+    OwnPtr<WebKit::AcceleratedCompositingContext> acceleratedCompositingContext;
+#endif
+
+#if ENABLE(ICONDATABASE)
+    gulong iconLoadedHandler;
 #endif
 };
 
@@ -121,10 +123,9 @@ GtkMenu* webkit_web_view_get_context_menu(WebKitWebView*);
 void webViewEnterFullscreen(WebKitWebView* webView, WebCore::Node*);
 void webViewExitFullscreen(WebKitWebView* webView);
 
-#if USE(ACCELERATED_COMPOSITING)
-void webViewSetRootGraphicsLayer(WebKitWebView*, WebCore::GraphicsLayer*);
-void webViewDetachRootGraphicsLayer(WebKitWebView*);
-void webViewMarkForSync(WebKitWebView*, gboolean);
+#if ENABLE(ICONDATABASE)
+void webkitWebViewRegisterForIconNotification(WebKitWebView*, bool shouldRegister);
+void webkitWebViewIconLoaded(WebKitFaviconDatabase*, const char* frameURI, WebKitWebView*);
 #endif
 }
 

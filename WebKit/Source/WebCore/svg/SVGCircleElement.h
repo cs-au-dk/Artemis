@@ -45,10 +45,12 @@ private:
     virtual bool supportsFocus() const { return true; }
 
     bool isSupportedAttribute(const QualifiedName&);
-    virtual void parseMappedAttribute(Attribute*);
+    virtual void parseAttribute(Attribute*) OVERRIDE;
     virtual void svgAttributeChanged(const QualifiedName&);
 
     virtual bool selfHasRelativeLengths() const;
+
+    RenderObject* createRenderer(RenderArena*, RenderStyle*);
 
     BEGIN_DECLARE_ANIMATED_PROPERTIES(SVGCircleElement)
         DECLARE_ANIMATED_LENGTH(Cx, cx)

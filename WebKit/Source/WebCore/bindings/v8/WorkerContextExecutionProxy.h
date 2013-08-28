@@ -44,7 +44,9 @@ namespace WebCore {
 
     class Event;
     class EventTarget;
+    class V8BindingPerContextData;
     class WorkerContext;
+    struct WrapperTypeInfo;
 
     struct WorkerContextExecutionState {
         WorkerContextExecutionState() : hadException(false), lineNumber(0) { }
@@ -72,6 +74,8 @@ namespace WebCore {
         // Returns a local handle of the context.
         v8::Local<v8::Context> context() { return v8::Local<v8::Context>::New(m_context); }
 
+        V8BindingPerContextData* perContextData() { return m_perContextData.get(); }
+
     private:
         void initIsolate();
         bool initContextIfNeeded();
@@ -86,9 +90,10 @@ namespace WebCore {
 
         WorkerContext* m_workerContext;
         v8::Persistent<v8::Context> m_context;
-        int m_recursion;
 
         Vector<Event*> m_events;
+
+        OwnPtr<V8BindingPerContextData> m_perContextData;
     };
 
 } // namespace WebCore

@@ -22,14 +22,9 @@ HEADERS += \
 TARGET = MiniBrowser
 DESTDIR = $${ROOT_BUILD_DIR}/bin
 
-CONFIG += qtwebkit qtwebkit-private
-
-QT += network declarative widgets
+QT += network declarative quick quick-private webkit webkit-private
 macx: QT += xml
 
 RESOURCES += MiniBrowser.qrc
 
-OTHER_FILES += \
-    qml/BrowserWindow.qml \
-    qml/ItemSelector.qml \
-    qml/ViewportInfoItem.qml
+OTHER_FILES += qml/*

@@ -31,27 +31,32 @@
 
 namespace WebKit {
 
-template <typename ClientInterface> struct APIClientTraits
-{
+template <typename ClientInterface> struct APIClientTraits {
     static const size_t interfaceSizesByVersion[1];
 };
 template <typename ClientInterface> const size_t APIClientTraits<ClientInterface>::interfaceSizesByVersion[] = { sizeof(ClientInterface) };
 
-template<> struct APIClientTraits<WKBundlePageLoaderClient>
-{
+template<> struct APIClientTraits<WKBundlePageLoaderClient> {
+    static const size_t interfaceSizesByVersion[2];
+};
+
+template<> struct APIClientTraits<WKBundlePageResourceLoadClient> {
+    static const size_t interfaceSizesByVersion[2];
+};
+
+template<> struct APIClientTraits<WKBundlePageFullScreenClient> {
     static const size_t interfaceSizesByVersion[2];
 };
 
 template<> struct APIClientTraits<WKPageContextMenuClient> {
-    static const size_t interfaceSizesByVersion[2];
+    static const size_t interfaceSizesByVersion[3];
 };
 
 template<> struct APIClientTraits<WKPageLoaderClient> {
     static const size_t interfaceSizesByVersion[2];
 };
 
-template<> struct APIClientTraits<WKPageUIClient>
-{
+template<> struct APIClientTraits<WKPageUIClient> {
     static const size_t interfaceSizesByVersion[2];
 };
 

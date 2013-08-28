@@ -91,6 +91,9 @@ public:
     WEBKIT_EXPORT static void enableSpeechInput(bool);
     WEBKIT_EXPORT static bool isSpeechInputEnabled();
 
+    WEBKIT_EXPORT static void enableScriptedSpeech(bool);
+    WEBKIT_EXPORT static bool isScriptedSpeechEnabled();
+
     WEBKIT_EXPORT static void enableXHRResponseBlob(bool);
     WEBKIT_EXPORT static bool isXHRResponseBlobEnabled();
 
@@ -106,6 +109,9 @@ public:
     WEBKIT_EXPORT static void enableMediaStream(bool);
     WEBKIT_EXPORT static bool isMediaStreamEnabled();
 
+    WEBKIT_EXPORT static void enablePeerConnection(bool);
+    WEBKIT_EXPORT static bool isPeerConnectionEnabled();
+
     WEBKIT_EXPORT static void enableFullScreenAPI(bool);
     WEBKIT_EXPORT static bool isFullScreenAPIEnabled();
 
@@ -115,11 +121,23 @@ public:
     WEBKIT_EXPORT static void enableMediaSource(bool);
     WEBKIT_EXPORT static bool isMediaSourceEnabled();
 
+    WEBKIT_EXPORT static void enableEncryptedMedia(bool);
+    WEBKIT_EXPORT static bool isEncryptedMediaEnabled();
+
     WEBKIT_EXPORT static void enableVideoTrack(bool);
     WEBKIT_EXPORT static bool isVideoTrackEnabled();
 
     WEBKIT_EXPORT static void enableGamepad(bool);
     WEBKIT_EXPORT static bool isGamepadEnabled();
+
+    WEBKIT_EXPORT static void enableShadowDOM(bool);
+    WEBKIT_EXPORT static bool isShadowDOMEnabled();
+
+    WEBKIT_EXPORT static void enableStyleScoped(bool);
+    WEBKIT_EXPORT static bool isStyleScopedEnabled();
+
+    WEBKIT_EXPORT static void enableInputTypeDate(bool);
+    WEBKIT_EXPORT static bool isInputTypeDateEnabled();
 
 private:
     WebRuntimeFeatures();

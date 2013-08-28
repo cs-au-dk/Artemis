@@ -147,8 +147,6 @@ sub ProcessDocument
         print "Generating $useGenerator bindings code for IDL interface \"" . $class->name . "\"...\n" if $verbose;
         $codeGenerator->GenerateInterface($class, $defines);
     }
-
-    $codeGenerator->finish();
 }
 
 sub FileNamePrefix
@@ -161,6 +159,17 @@ sub FileNamePrefix
     # Dynamically load external code generation perl module
     $codeGenerator = $ifaceName->new($object, $useOutputDir, $useOutputHeadersDir, $useLayerOnTop, $preprocessor, $writeDependencies, $verbose);
     return $codeGenerator->FileNamePrefix();
+}
+
+sub UpdateFile
+{
+    my $object = shift;
+    my $fileName = shift;
+    my $contents = shift;
+
+    open FH, "> $fileName" or die "Couldn't open $fileName: $!\n";
+    print FH $contents;
+    close FH;
 }
 
 sub ForAllParents
@@ -331,10 +340,14 @@ sub ParseInterface
 
 # Helpers for all CodeGenerator***.pm modules
 
-sub AvoidInclusionOfType
+sub SkipIncludeHeader
 {
     my $object = shift;
     my $type = shift;
+
+    return 1 if $primitiveTypeHash{$type};
+    return 1 if $numericTypeHash{$type};
+    return 1 if $type eq "String";
 
     # Special case: SVGPoint.h / SVGNumber.h do not exist.
     return 1 if $type eq "SVGPoint" or $type eq "SVGNumber";
@@ -436,6 +449,15 @@ sub IsSVGAnimatedType
     return 0;
 }
 
+sub GetArrayType
+{
+    my $object = shift;
+    my $type = shift;
+
+    return $1 if $type =~ /^sequence<([\w\d_\s]+)>.*/;
+    return "";
+}
+
 # Uppercase the first letter while respecting WebKit style guidelines.
 # E.g., xmlEncoding becomes XMLEncoding, but xmlllang becomes Xmllang.
 sub WK_ucfirst
@@ -496,6 +518,9 @@ sub AttributeNameForGetterAndSetter
     my ($generator, $attribute) = @_;
 
     my $attributeName = $attribute->signature->name;
+    if ($attribute->signature->extendedAttributes->{"ImplementedAs"}) {
+        $attributeName = $attribute->signature->extendedAttributes->{"ImplementedAs"};
+    }
     my $attributeType = $generator->StripModule($attribute->signature->type);
 
     # Avoid clash with C++ keyword.
@@ -519,7 +544,7 @@ sub ContentAttributeName
     my $contentAttributeName = $attribute->signature->extendedAttributes->{"Reflect"};
     return undef if !$contentAttributeName;
 
-    $contentAttributeName = lc $generator->AttributeNameForGetterAndSetter($attribute) if $contentAttributeName eq "1";
+    $contentAttributeName = lc $generator->AttributeNameForGetterAndSetter($attribute) if $contentAttributeName eq "VALUE_IS_MISSING";
 
     my $namespace = $generator->NamespaceForAttributeName($interfaceName, $contentAttributeName);
 
@@ -539,11 +564,7 @@ sub GetterExpression
 
     my $functionName;
     if ($attribute->signature->extendedAttributes->{"URL"}) {
-        if ($attribute->signature->extendedAttributes->{"NonEmpty"}) {
-            $functionName = "getNonEmptyURLAttribute";
-        } else {
-            $functionName = "getURLAttribute";
-        }
+        $functionName = "getURLAttribute";
     } elsif ($attribute->signature->type eq "boolean") {
         $functionName = "hasAttribute";
     } elsif ($attribute->signature->type eq "long") {
@@ -584,7 +605,20 @@ sub SetterExpression
 sub ShouldCheckEnums
 {
     my $dataNode = shift;
-    return not $dataNode->extendedAttributes->{"DontCheckEnums"};
+    return not $dataNode->extendedAttributes->{"DoNotCheckConstants"};
+}
+
+sub GenerateConditionalString
+{
+    my $generator = shift;
+    my $node = shift;
+
+    my $conditional = $node->extendedAttributes->{"Conditional"};
+    if ($conditional) {
+        return $generator->GenerateConditionalStringFromAttributeValue($conditional);
+    } else {
+        return "";
+    }
 }
 
 sub GenerateConditionalStringFromAttributeValue
@@ -622,7 +656,11 @@ sub GenerateCompileTimeCheckForEnumsIfNeeded
                 push(@checks, "#if ${conditionalString}\n");
             }
 
-            push(@checks, "COMPILE_ASSERT($value == ${interfaceName}::$name, ${interfaceName}Enum${name}IsWrongUseDontCheckEnums);\n");
+            if ($constant->extendedAttributes->{"ImplementedBy"}) {
+                push(@checks, "COMPILE_ASSERT($value == " . $constant->extendedAttributes->{"ImplementedBy"} . "::$name, ${interfaceName}Enum${name}IsWrongUseDoNotCheckConstants);\n");
+            } else {
+                push(@checks, "COMPILE_ASSERT($value == ${interfaceName}::$name, ${interfaceName}Enum${name}IsWrongUseDoNotCheckConstants);\n");
+            }
 
             if ($conditional) {
                 push(@checks, "#endif\n");
@@ -631,6 +669,27 @@ sub GenerateCompileTimeCheckForEnumsIfNeeded
         push(@checks, "\n");
     }
     return @checks;
+}
+
+sub ExtendedAttributeContains
+{
+    my $object = shift;
+    my $callWith = shift;
+    return 0 unless $callWith;
+    my $keyword = shift;
+
+    my @callWithKeywords = split /\s*\|\s*/, $callWith;
+    return grep { $_ eq $keyword } @callWithKeywords;
+}
+
+# FIXME: This is backwards. We currently name the interface and the IDL files with the implementation name. We
+# should use the real interface name in the IDL files and then use ImplementedAs to map this to the implementation name.
+sub GetVisibleInterfaceName
+{
+    my $object = shift;
+    my $dataNode = shift;
+    my $interfaceName = $dataNode->extendedAttributes->{"InterfaceName"};
+    return $interfaceName ? $interfaceName : $dataNode->name;
 }
 
 1;

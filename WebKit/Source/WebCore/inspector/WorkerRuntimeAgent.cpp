@@ -30,9 +30,9 @@
 
 #include "config.h"
 
-#include "WorkerRuntimeAgent.h"
-
 #if ENABLE(INSPECTOR) && ENABLE(WORKERS)
+
+#include "WorkerRuntimeAgent.h"
 
 #include "ScriptState.h"
 
@@ -56,6 +56,16 @@ ScriptState* WorkerRuntimeAgent::scriptStateForFrameId(const String&)
 ScriptState* WorkerRuntimeAgent::getDefaultInspectedState()
 {
     return scriptStateFromWorkerContext(m_workerContext);
+}
+
+void WorkerRuntimeAgent::muteConsole()
+{
+    // We don't need to mute console for workers.
+}
+
+void WorkerRuntimeAgent::unmuteConsole()
+{
+    // We don't need to mute console for workers.
 }
 
 } // namespace WebCore

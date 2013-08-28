@@ -38,8 +38,8 @@
 namespace WebCore {
 
 class EditorClientWx : public EditorClient, public TextCheckerClient {
-friend class ::wxWebView;
-friend class ::wxWebFrame;
+friend class WebKit::WebView;
+friend class WebKit::WebFrame;
 
 public:
     virtual ~EditorClientWx();
@@ -64,7 +64,7 @@ public:
                                   EditorInsertAction);
     virtual bool shouldInsertText(const String&, Range*,
                                   EditorInsertAction);
-    virtual bool shouldApplyStyle(CSSStyleDeclaration*,
+    virtual bool shouldApplyStyle(StylePropertySet*,
                                   Range*);
     virtual bool shouldMoveRangeAfterDelete(Range*, Range*);
     virtual bool shouldChangeSelectedRange(Range* fromRange, Range* toRange, 
@@ -77,8 +77,8 @@ public:
     virtual void didWriteSelectionToPasteboard();
     virtual void didSetSelectionTypesForPasteboard();
 
-    virtual void registerUndoStep(PassRefPtr<EditCommand>);
-    virtual void registerRedoStep(PassRefPtr<EditCommand>);
+    virtual void registerUndoStep(PassRefPtr<UndoStep>);
+    virtual void registerRedoStep(PassRefPtr<UndoStep>);
     virtual void clearUndoRedoOperations();
 
     virtual bool canCopyCut(Frame*, bool defaultValue) const;
@@ -114,7 +114,7 @@ public:
 
     virtual void willSetInputMethodState();
     virtual void setInputMethodState(bool enabled);
-    virtual void requestCheckingOfString(WebCore::SpellChecker*, int, WebCore::TextCheckingTypeMask, const WTF::String&) {}
+    virtual void requestCheckingOfString(WebCore::SpellChecker*, const WebCore::TextCheckingRequest&) { }
     virtual TextCheckerClient* textChecker() { return this; }
 
 private:

@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 Adobe Systems Incorporated. All Rights Reserved.
+ * Copyright (C) 2011 Adobe Systems Incorporated. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -37,11 +37,11 @@ namespace WebCore {
 class RenderBox;
 class RenderBoxRegionInfo;
 class RenderFlowThread;
+class RenderNamedFlowThread;
 
 class RenderRegion : public RenderReplaced {
 public:
     explicit RenderRegion(Node*, RenderFlowThread*);
-    virtual ~RenderRegion();
 
     virtual bool isRenderRegion() const { return true; }
 
@@ -57,7 +57,8 @@ public:
     void attachRegion();
     void detachRegion();
 
-    RenderFlowThread* parentFlowThread() const { return m_parentFlowThread; }
+    RenderNamedFlowThread* parentNamedFlowThread() const { return m_parentNamedFlowThread; }
+    RenderFlowThread* flowThread() const { return m_flowThread; }
 
     // Valid regions do not create circular dependencies with other flows.
     bool isValid() const { return m_isValid; }
@@ -71,7 +72,7 @@ public:
     RenderBoxRegionInfo* renderBoxRegionInfo(const RenderBox*) const;
     RenderBoxRegionInfo* setRenderBoxRegionInfo(const RenderBox*, LayoutUnit logicalLeftInset, LayoutUnit logicalRightInset,
         bool containingBlockChainIsInset);
-    RenderBoxRegionInfo* takeRenderBoxRegionInfo(const RenderBox*);
+    PassOwnPtr<RenderBoxRegionInfo> takeRenderBoxRegionInfo(const RenderBox*);
     void removeRenderBoxRegionInfo(const RenderBox*);
 
     void deleteAllRenderBoxRegionInfo();
@@ -81,33 +82,49 @@ public:
     bool isFirstRegion() const;
     bool isLastRegion() const;
 
-    RenderStyle* renderObjectRegionStyle(const RenderObject*) const;
-    void computeStyleInRegion(const RenderObject*);
-    void clearObjectStyleInRegion(const RenderObject*);
+    void clearBoxStyleInRegion(const RenderBox*);
+
+    enum RegionState {
+        RegionUndefined,
+        RegionEmpty,
+        RegionFit,
+        RegionOverflow
+    };
+
+    RegionState regionState() const { return isValid() ? m_regionState : RegionUndefined; }
+    void setRegionState(RegionState regionState) { m_regionState = regionState; }
+    void setDispatchRegionLayoutUpdateEvent(bool value) { m_dispatchRegionLayoutUpdateEvent = value; }
+    bool shouldDispatchRegionLayoutUpdateEvent() { return m_dispatchRegionLayoutUpdateEvent; }
 private:
     virtual const char* renderName() const { return "RenderRegion"; }
 
+    PassRefPtr<RenderStyle> renderBoxRegionStyle(const RenderBox*);
+    PassRefPtr<RenderStyle> computeStyleInRegion(const RenderBox*);
+    void setRegionBoxesRegionStyle();
+    void restoreRegionBoxesOriginalStyle();
+
     RenderFlowThread* m_flowThread;
 
-    // If this RenderRegion is displayed as part of another flow,
+    // If this RenderRegion is displayed as part of another named flow,
     // we need to create a dependency tree, so that layout of the
     // regions is always done before the regions themselves.
-    RenderFlowThread* m_parentFlowThread;
+    RenderNamedFlowThread* m_parentNamedFlowThread;
     LayoutRect m_regionRect;
 
     // This map holds unique information about a block that is split across regions.
     // A RenderBoxRegionInfo* tells us about any layout information for a RenderBox that
     // is unique to the region. For now it just holds logical width information for RenderBlocks, but eventually
     // it will also hold a custom style for any box (for region styling).
-    HashMap<const RenderBox*, RenderBoxRegionInfo*> m_renderBoxRegionInfo;
+    typedef HashMap<const RenderBox*, OwnPtr<RenderBoxRegionInfo> > RenderBoxRegionInfoMap;
+    RenderBoxRegionInfoMap m_renderBoxRegionInfo;
 
-    // This map holds information about the region style associated with the render objects that
-    // are displayed into this region.
-    typedef HashMap<const RenderObject*, RefPtr<RenderStyle> > RenderObjectRegionStyleMap;
-    RenderObjectRegionStyleMap m_renderObjectRegionStyle;
+    typedef HashMap<const RenderBox*, RefPtr<RenderStyle> > RenderBoxRegionStyleMap;
+    RenderBoxRegionStyleMap m_renderBoxRegionStyle;
 
     bool m_isValid;
     bool m_hasCustomRegionStyle;
+    RegionState m_regionState;
+    bool m_dispatchRegionLayoutUpdateEvent;
 };
 
 inline RenderRegion* toRenderRegion(RenderObject* object)

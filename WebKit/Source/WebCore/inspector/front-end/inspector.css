@@ -39,6 +39,10 @@ input[type="search"]:focus, input[type="text"]:focus {
     bottom: 0;
 }
 
+.hidden {
+    display: none;
+}
+
 #toolbar {
     position: absolute;
     top: 0;
@@ -257,7 +261,7 @@ body.detached.platform-mac-snowleopard #toolbar-dropdown {
 
 .toolbar-search-item {
     display: -webkit-box;
-    -webkit-box-orient: vertical;
+    -webkit-box-orient: horizontal;
     -webkit-box-align: center;
     -webkit-box-pack: end;
 }
@@ -265,6 +269,39 @@ body.detached.platform-mac-snowleopard #toolbar-dropdown {
 #search {
     width: 205px;
     font-size: 16px;
+}
+
+#toolbar-search-navigation-control {
+    width: 40px;
+}
+
+.toolbar-search-navigation-label {
+    border: 1px solid transparent;
+    border-radius: 2px;
+    padding: 3px;
+    margin-left: 2px;
+    width: 18px;
+    height: 18px;
+    float: right;
+}
+
+.toolbar-search-navigation-label:hover {
+    border: 1px solid rgba(120, 120, 120, 0.6);    
+}
+
+.toolbar-search-navigation-icon-prev , .toolbar-search-navigation-icon-next {
+    width: 9px;
+    margin-top: 2px;
+    height: 100%;
+    background-repeat: no-repeat;
+}
+
+.toolbar-search-navigation-icon-prev {
+    background-image: url(Images/searchPrev.png);
+}
+
+.toolbar-search-navigation-icon-next {
+    background-image: url(Images/searchNext.png);
 }
 
 body.compact #search {
@@ -522,7 +559,6 @@ select.status-bar-item:active {
     -webkit-mask-image: url(Images/statusbarButtonGlyphs.png);
 }
 
-
 button.dock-status-bar-item.status-bar-item .glyph {
     -webkit-mask-position: 0 -48px;
 }
@@ -540,7 +576,6 @@ button.settings-status-bar-item {
 .settings-status-bar-item .glyph {
     -webkit-mask-position: -160px -24px;
 }
-
 
 body.port-qt #dock-status-bar-item {
     display: none
@@ -895,14 +930,14 @@ body.platform-linux .monospace, body.platform-linux .source-code {
     display: none;
 }
 
-.console-formatted-object, .console-formatted-node {
+.console-formatted-object, .console-formatted-node, .console-formatted-array {
     position: relative;
     display: inline-block;
     vertical-align: top;
     color: black;
 }
 
-.console-formatted-object .section, .console-formatted-node .section {
+.console-formatted-object .section, .console-formatted-node .section, .console-formatted-array .section {
     position: static;
 }
 
@@ -925,6 +960,10 @@ body.platform-linux .monospace, body.platform-linux .source-code {
 
 .error-message {
     color: red;
+}
+
+.error-input {
+    background-color: rgb(220, 130, 130);
 }
 
 .auto-complete-text, .editing .auto-complete-text {
@@ -1073,6 +1112,10 @@ iframe.panel.extension {
 
 .outline-disclosure li .webkit-html-tag.close {
     margin-left: -12px;
+}
+
+.webkit-html-tag.shadow, .webkit-html-fragment.shadow {
+    opacity: 0.6;
 }
 
 .outline-disclosure li.parent::before {
@@ -1375,7 +1418,7 @@ li.editing .swatch, li.editing .enabled-button,  li.editing-sub-part .delete-but
     padding-top: 2px;
 }
 
-.watch-expressions > li.editing-sub-part .name {
+.watch-expressions > li.editing-sub-part .text-prompt {
     display: block;
     width: 100%;
 }
@@ -1437,14 +1480,20 @@ li.editing .swatch, li.editing .enabled-button,  li.editing-sub-part .delete-but
 }
 
 .swatch {
-    display: inline-block;
-    vertical-align: baseline;
     margin-left: 1px;
     margin-right: 2px;
     margin-bottom: -1px;
     width: 1em;
     height: 1em;
     border: 1px solid rgba(128, 128, 128, 0.6);
+    background-image: url(Images/checker.png);
+    display: inline-block;
+}
+
+.swatch-inner {
+    width: 100%;
+    height: 100%;
+    display: block;
 }
 
 .swatch:hover {
@@ -1796,6 +1845,8 @@ button.edit-source-status-bar-item.toggled-on .glyph {
     height: 36px;
     padding: 0 5px 0 5px;
     white-space: nowrap;
+    overflow-x: hidden;
+    overflow-y: hidden;
     margin-top: 1px;
     line-height: 34px;
     border-top: 1px solid transparent;
@@ -2329,9 +2380,10 @@ body.platform-mac .soft-context-menu-item-mouse-over {
     right: 0;
     padding-top: 2px;
     padding-left: 10px;
+    padding-right: 10px;
     background-color: #EBEBEB;
     border-bottom: 1px solid #BBB;
-
+    overflow: hidden;
     font-size: 11px;
 }
 
@@ -2356,6 +2408,11 @@ body:not(.platform-mac) .search-view .search-panel input[type="checkbox"].search
 
 body.platform-mac .search-view .search-panel input[type="checkbox"].search-config-checkbox {
     margin-bottom: 4px;
+}
+
+.search-view .search-panel button.search-close-button {
+    font-size: 11px;
+    float: right;
 }
 
 #drawer-status-bar .search-status-bar-item {

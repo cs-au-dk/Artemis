@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2005, 2006, 2007, 2008, 2009 Apple Inc. All rights reserved.
+ * Copyright (C) 2005-2012 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -39,8 +39,10 @@
 @class WebDeviceOrientation;
 @class WebGeolocationPosition;
 @class WebInspector;
+@class WebNotification;
 @class WebPreferences;
 @class WebScriptWorld;
+@class WebSecurityOrigin;
 @class WebTextIterator;
 
 @protocol WebDeviceOrientationProvider;
@@ -104,6 +106,13 @@ typedef enum {
     WebPaginationModeVertical,
 } WebPaginationMode;
 
+// This needs to be in sync with WebCore::NotificationClient::Permission
+typedef enum {
+    WebNotificationPermissionAllowed,
+    WebNotificationPermissionNotAllowed,
+    WebNotificationPermissionDenied
+} WebNotificationPermission;
+
 @interface WebController : NSTreeController {
     IBOutlet WebView *webView;
 }
@@ -131,12 +140,6 @@ typedef enum {
 - (BOOL)tabKeyCyclesThroughElements;
 
 - (void)scrollDOMRangeToVisible:(DOMRange *)range;
-
-// setHoverFeedbackSuspended: can be called by clients that want to temporarily prevent the webView
-// from displaying feedback about mouse position. Each WebDocumentView class that displays feedback
-// about mouse position should honor this setting.
-- (void)setHoverFeedbackSuspended:(BOOL)newValue;
-- (BOOL)isHoverFeedbackSuspended;
 
 /*!
 @method setScriptDebugDelegate:
@@ -563,6 +566,12 @@ Could be worth adding to the API.
 
 - (void)_setPaginationMode:(WebPaginationMode)paginationMode;
 - (WebPaginationMode)_paginationMode;
+
+// Whether the column-break-{before,after} properties are respected instead of the
+// page-break-{before,after} properties.
+- (void)_setPaginationBehavesLikeColumns:(BOOL)behavesLikeColumns;
+- (BOOL)_paginationBehavesLikeColumns;
+
 // Set to 0 to have the page length equal the view length.
 - (void)_setPageLength:(CGFloat)pageLength;
 - (CGFloat)_pageLength;
@@ -688,6 +697,8 @@ Could be worth adding to the API.
 - (void)_replaceSelectionWithNode:(DOMNode *)node matchStyle:(BOOL)matchStyle;
 - (BOOL)_selectionIsCaret;
 - (BOOL)_selectionIsAll;
+- (void)_simplifyMarkup:(DOMNode *)startNode endNode:(DOMNode *)endNode;
+
 @end
 
 @interface WebView (WebViewDeviceOrientation)
@@ -701,6 +712,21 @@ Could be worth adding to the API.
 - (WebGeolocationPosition *)lastPosition;
 @end
 
+@protocol WebNotificationProvider
+- (void)registerWebView:(WebView *)webView;
+- (void)unregisterWebView:(WebView *)webView;
+
+- (void)showNotification:(WebNotification *)notification fromWebView:(WebView *)webView;
+- (void)cancelNotification:(WebNotification *)notification;
+- (void)notificationDestroyed:(WebNotification *)notification;
+- (void)clearNotifications:(NSArray *)notificationIDs;
+- (WebNotificationPermission)policyForOrigin:(WebSecurityOrigin *)origin;
+
+- (void)webView:(WebView *)webView didShowNotification:(uint64_t)notificationID;
+- (void)webView:(WebView *)webView didClickNotification:(uint64_t)notificationID;
+- (void)webView:(WebView *)webView didCloseNotifications:(NSArray *)notificationIDs;
+@end
+
 @interface WebView (WebViewGeolocation)
 - (void)_setGeolocationProvider:(id<WebGeolocationProvider>)locationProvider;
 - (id<WebGeolocationProvider>)_geolocationProvider;
@@ -709,12 +735,18 @@ Could be worth adding to the API.
 - (void)_geolocationDidFailWithError:(NSError *)error;
 @end
 
-@interface WebView (WebViewPrivateStyleInfo)
-- (JSValueRef)_computedStyleIncludingVisitedInfo:(JSContextRef)context forElement:(JSValueRef)value;
+@interface WebView (WebViewNotification)
+- (void)_setNotificationProvider:(id<WebNotificationProvider>)notificationProvider;
+- (id<WebNotificationProvider>)_notificationProvider;
+- (void)_notificationControllerDestroyed;
+
+- (void)_notificationDidShow:(uint64_t)notificationID;
+- (void)_notificationDidClick:(uint64_t)notificationID;
+- (void)_notificationsDidClose:(NSArray *)notificationIDs;
 @end
 
-@interface WebView (WebViewPrivateNodesFromRect)
-- (JSValueRef)_nodesFromRect:(JSContextRef)context forDocument:(JSValueRef)value x:(int)x  y:(int)y top:(unsigned)top right:(unsigned)right bottom:(unsigned)bottom left:(unsigned)left ignoreClipping:(BOOL)ignoreClipping;
+@interface WebView (WebViewPrivateStyleInfo)
+- (JSValueRef)_computedStyleIncludingVisitedInfo:(JSContextRef)context forElement:(JSValueRef)value;
 @end
 
 @interface NSObject (WebViewFrameLoadDelegatePrivate)

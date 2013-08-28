@@ -30,6 +30,9 @@
 #include "cc/CCTiledLayerImpl.h"
 
 #include "LayerRendererChromium.h"
+#include "cc/CCCheckerboardDrawQuad.h"
+#include "cc/CCDebugBorderDrawQuad.h"
+#include "cc/CCQuadCuller.h"
 #include "cc/CCSolidColorDrawQuad.h"
 #include "cc/CCTileDrawQuad.h"
 #include <wtf/text/WTFString.h>
@@ -38,16 +41,28 @@ using namespace std;
 
 namespace WebCore {
 
+static const int debugTileBorderWidth = 1;
+static const int debugTileBorderAlpha = 100;
+static const int debugTileBorderColorRed = 80;
+static const int debugTileBorderColorGreen = 200;
+static const int debugTileBorderColorBlue = 200;
+static const int debugTileBorderMissingTileColorRed = 255;
+static const int debugTileBorderMissingTileColorGreen = 0;
+static const int debugTileBorderMissingTileColorBlue = 0;
+
 class ManagedTexture;
 
 class DrawableTile : public CCLayerTilingData::Tile {
     WTF_MAKE_NONCOPYABLE(DrawableTile);
 public:
-    DrawableTile() : m_textureId(0) { }
+    static PassOwnPtr<DrawableTile> create() { return adoptPtr(new DrawableTile()); }
 
     Platform3DObject textureId() const { return m_textureId; }
     void setTextureId(Platform3DObject textureId) { m_textureId = textureId; }
+
 private:
+    DrawableTile() : m_textureId(0) { }
+
     Platform3DObject m_textureId;
 };
 
@@ -66,7 +81,8 @@ void CCTiledLayerImpl::bindContentsTexture(LayerRendererChromium* layerRenderer)
 {
     // This function is only valid for single texture layers, e.g. masks.
     ASSERT(m_tiler);
-    ASSERT(m_tiler->numTiles() == 1);
+    ASSERT(m_tiler->numTilesX() == 1);
+    ASSERT(m_tiler->numTilesY() == 1);
 
     DrawableTile* tile = tileAt(0, 0);
     Platform3DObject textureId = tile ? tile->textureId() : 0;
@@ -87,6 +103,11 @@ bool CCTiledLayerImpl::hasTileAt(int i, int j) const
     return m_tiler->tileAt(i, j);
 }
 
+bool CCTiledLayerImpl::hasTextureIdForTileAt(int i, int j) const
+{
+    return hasTileAt(i, j) && tileAt(i, j)->textureId();
+}
+
 DrawableTile* CCTiledLayerImpl::tileAt(int i, int j) const
 {
     return static_cast<DrawableTile*>(m_tiler->tileAt(i, j));
@@ -94,9 +115,10 @@ DrawableTile* CCTiledLayerImpl::tileAt(int i, int j) const
 
 DrawableTile* CCTiledLayerImpl::createTile(int i, int j)
 {
-    RefPtr<DrawableTile> tile = adoptRef(new DrawableTile());
-    m_tiler->addTile(tile, i, j);
-    return tile.get();
+    OwnPtr<DrawableTile> tile(DrawableTile::create());
+    DrawableTile* addedTile = tile.get();
+    m_tiler->addTile(tile.release(), i, j);
+    return addedTile;
 }
 
 TransformationMatrix CCTiledLayerImpl::quadTransform() const
@@ -114,16 +136,35 @@ TransformationMatrix CCTiledLayerImpl::quadTransform() const
     return transform;
 }
 
-void CCTiledLayerImpl::appendQuads(CCQuadList& quadList, const CCSharedQuadState* sharedQuadState)
+void CCTiledLayerImpl::appendQuads(CCQuadCuller& quadList, const CCSharedQuadState* sharedQuadState, bool& hadMissingTiles)
 {
-    const IntRect& contentRect = visibleLayerRect();
+    const IntRect& layerRect = visibleLayerRect();
 
-    if (m_skipsDraw || !m_tiler || m_tiler->isEmpty() || contentRect.isEmpty())
+    if (!m_tiler || m_tiler->hasEmptyBounds() || layerRect.isEmpty())
         return;
 
     int left, top, right, bottom;
-    m_tiler->contentRectToTileIndices(contentRect, left, top, right, bottom);
-    IntRect layerRect = m_tiler->contentRectToLayerRect(contentRect);
+    m_tiler->layerRectToTileIndices(layerRect, left, top, right, bottom);
+
+    if (hasDebugBorders()) {
+        for (int j = top; j <= bottom; ++j) {
+            for (int i = left; i <= right; ++i) {
+                DrawableTile* tile = tileAt(i, j);
+                IntRect tileRect = m_tiler->tileBounds(i, j);
+                Color borderColor;
+
+                if (m_skipsDraw || !tile || !tile->textureId())
+                    borderColor = Color(debugTileBorderMissingTileColorRed, debugTileBorderMissingTileColorGreen, debugTileBorderMissingTileColorBlue, debugTileBorderAlpha);
+                else
+                    borderColor = Color(debugTileBorderColorRed, debugTileBorderColorGreen, debugTileBorderColorBlue, debugTileBorderAlpha);
+                quadList.append(CCDebugBorderDrawQuad::create(sharedQuadState, tileRect, borderColor, debugTileBorderWidth));
+            }
+        }
+    }
+
+    if (m_skipsDraw)
+        return;
+
     for (int j = top; j <= bottom; ++j) {
         for (int i = left; i <= right; ++i) {
             DrawableTile* tile = tileAt(i, j);
@@ -136,9 +177,15 @@ void CCTiledLayerImpl::appendQuads(CCQuadList& quadList, const CCSharedQuadState
                 continue;
 
             if (!tile || !tile->textureId()) {
-                quadList.append(CCSolidColorDrawQuad::create(sharedQuadState, tileRect, backgroundColor()));
+                if (drawCheckerboardForMissingTiles())
+                    hadMissingTiles |= quadList.append(CCCheckerboardDrawQuad::create(sharedQuadState, tileRect));
+                else
+                    hadMissingTiles |= quadList.append(CCSolidColorDrawQuad::create(sharedQuadState, tileRect, backgroundColor()));
                 continue;
             }
+
+            IntRect tileOpaqueRect = tile->opaqueRect();
+            tileOpaqueRect.intersect(layerRect);
 
             // Keep track of how the top left has moved, so the texture can be
             // offset the same amount.
@@ -156,7 +203,7 @@ void CCTiledLayerImpl::appendQuads(CCQuadList& quadList, const CCSharedQuadState
             bool bottomEdgeAA = j == m_tiler->numTilesY() - 1 && useAA;
 
             const GC3Dint textureFilter = m_tiler->hasBorderTexels() ? GraphicsContext3D::LINEAR : GraphicsContext3D::NEAREST;
-            quadList.append(CCTileDrawQuad::create(sharedQuadState, tileRect, tile->textureId(), textureOffset, textureSize, textureFilter, contentsSwizzled(), leftEdgeAA, topEdgeAA, rightEdgeAA, bottomEdgeAA));
+            quadList.append(CCTileDrawQuad::create(sharedQuadState, tileRect, tileOpaqueRect, tile->textureId(), textureOffset, textureSize, textureFilter, contentsSwizzled(), leftEdgeAA, topEdgeAA, rightEdgeAA, bottomEdgeAA));
         }
     }
 }
@@ -170,14 +217,29 @@ void CCTiledLayerImpl::setTilingData(const CCLayerTilingData& tiler)
     *m_tiler = tiler;
 }
 
-void CCTiledLayerImpl::syncTextureId(int i, int j, Platform3DObject textureId)
+void CCTiledLayerImpl::pushTileProperties(int i, int j, Platform3DObject textureId, const IntRect& opaqueRect)
 {
     DrawableTile* tile = tileAt(i, j);
     if (!tile)
         tile = createTile(i, j);
     tile->setTextureId(textureId);
+    tile->setOpaqueRect(opaqueRect);
 }
 
+Region CCTiledLayerImpl::visibleContentOpaqueRegion() const
+{
+    if (m_skipsDraw)
+        return Region();
+    if (opaque())
+        return visibleLayerRect();
+    return m_tiler->opaqueRegionInLayerRect(visibleLayerRect());
 }
+
+void CCTiledLayerImpl::didLoseContext()
+{
+    m_tiler->reset();
+}
+
+} // namespace WebCore
 
 #endif // USE(ACCELERATED_COMPOSITING)

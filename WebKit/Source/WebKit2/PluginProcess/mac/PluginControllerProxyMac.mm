@@ -28,9 +28,10 @@
 
 #if ENABLE(PLUGIN_PROCESS)
 
+#import "LayerHostingContext.h"
+#import "PluginCreationParameters.h"
 #import "PluginProcess.h"
 #import "PluginProxyMessages.h"
-#import "WebKitSystemInterface.h"
 #import "WebProcessConnection.h"
 #import <QuartzCore/QuartzCore.h>
 
@@ -53,40 +54,32 @@ mach_port_t PluginControllerProxy::compositingRenderServerPort()
     return PluginProcess::shared().compositingRenderServerPort();
 }
 
-void PluginControllerProxy::platformInitialize()
+void PluginControllerProxy::platformInitialize(const PluginCreationParameters& creationParameters)
 {
-    CALayer * platformLayer = m_plugin->pluginLayer();
-    if (!platformLayer)
-        return;
-
-    ASSERT(!m_remoteLayerClient);
-
-    m_remoteLayerClient = WKCARemoteLayerClientMakeWithServerPort(PluginProcess::shared().compositingRenderServerPort());
-    ASSERT(m_remoteLayerClient);
-
-    WKCARemoteLayerClientSetLayer(m_remoteLayerClient.get(), platformLayer);
+    ASSERT(!m_layerHostingContext);
+    updateLayerHostingContext(creationParameters.parameters.layerHostingMode);
 }
 
 void PluginControllerProxy::platformDestroy()
 {
-    if (!m_remoteLayerClient)
+    if (!m_layerHostingContext)
         return;
 
-    WKCARemoteLayerClientInvalidate(m_remoteLayerClient.get());
-    m_remoteLayerClient = nullptr;
+    m_layerHostingContext->invalidate();
+    m_layerHostingContext = nullptr;
 }
 
 uint32_t PluginControllerProxy::remoteLayerClientID() const
 {
-    if (!m_remoteLayerClient)
+    if (!m_layerHostingContext)
         return 0;
 
-    return WKCARemoteLayerClientGetClientId(m_remoteLayerClient.get());
+    return m_layerHostingContext->contextID();
 }
 
 void PluginControllerProxy::platformGeometryDidChange()
 {
-    CALayer * pluginLayer = m_plugin->pluginLayer();
+    CALayer *pluginLayer = m_plugin->pluginLayer();
 
     // We don't want to animate to the new size so we disable actions for this transaction.
     [CATransaction begin];
@@ -113,6 +106,44 @@ void PluginControllerProxy::windowVisibilityChanged(bool isVisible)
 void PluginControllerProxy::sendComplexTextInput(const String& textInput)
 {
     m_plugin->sendComplexTextInput(textInput);
+}
+
+void PluginControllerProxy::setLayerHostingMode(uint32_t opaqueLayerHostingMode)
+{
+    LayerHostingMode layerHostingMode = static_cast<LayerHostingMode>(opaqueLayerHostingMode);
+
+    m_plugin->setLayerHostingMode(layerHostingMode);
+    updateLayerHostingContext(layerHostingMode);
+
+    if (m_layerHostingContext)
+        m_connection->connection()->send(Messages::PluginProxy::SetLayerHostingContextID(m_layerHostingContext->contextID()), m_pluginInstanceID);
+}
+
+void PluginControllerProxy::updateLayerHostingContext(LayerHostingMode layerHostingMode)
+{
+    CALayer *platformLayer = m_plugin->pluginLayer();
+    if (!platformLayer)
+        return;
+
+    if (m_layerHostingContext) {
+        if (m_layerHostingContext->layerHostingMode() == layerHostingMode)
+            return;
+
+        m_layerHostingContext->invalidate();
+    }
+
+    switch (layerHostingMode) {
+        case LayerHostingModeDefault:
+            m_layerHostingContext = LayerHostingContext::createForPort(PluginProcess::shared().compositingRenderServerPort());
+            break;
+#if HAVE(LAYER_HOSTING_IN_WINDOW_SERVER)
+        case LayerHostingModeInWindowServer:
+            m_layerHostingContext = LayerHostingContext::createForWindowServer();
+            break;
+#endif
+    }
+
+    m_layerHostingContext->setRootLayer(platformLayer);
 }
 
 } // namespace WebKit

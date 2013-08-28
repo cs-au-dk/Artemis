@@ -49,7 +49,7 @@ class ResourceResponse;
 
 typedef String ErrorString;
 
-class InspectorApplicationCacheAgent : public InspectorBaseAgent<InspectorApplicationCacheAgent> {
+class InspectorApplicationCacheAgent : public InspectorBaseAgent<InspectorApplicationCacheAgent>, public InspectorBackendDispatcher::ApplicationCacheCommandHandler {
     WTF_MAKE_NONCOPYABLE(InspectorApplicationCacheAgent); WTF_MAKE_FAST_ALLOCATED;
 public:
     static PassOwnPtr<InspectorApplicationCacheAgent> create(InstrumentingAgents* instrumentingAgents, InspectorState* state, InspectorPageAgent* pageAgent)
@@ -68,16 +68,16 @@ public:
     void networkStateChanged();
 
     // ApplicationCache API for InspectorFrontend
-    void enable(ErrorString*);
-    void getFramesWithManifests(ErrorString*, RefPtr<InspectorArray>& result);
-    void getManifestForFrame(ErrorString*, const String& frameId, String* manifestURL);
-    void getApplicationCacheForFrame(ErrorString*, const String& frameId, RefPtr<InspectorObject>& applicationCache);
+    virtual void enable(ErrorString*);
+    virtual void getFramesWithManifests(ErrorString*, RefPtr<TypeBuilder::Array<TypeBuilder::ApplicationCache::FrameWithManifest> >& result);
+    virtual void getManifestForFrame(ErrorString*, const String& frameId, String* manifestURL);
+    virtual void getApplicationCacheForFrame(ErrorString*, const String& frameId, RefPtr<TypeBuilder::ApplicationCache::ApplicationCache>&);
 
 private:
     InspectorApplicationCacheAgent(InstrumentingAgents*, InspectorState*, InspectorPageAgent*);
-    PassRefPtr<InspectorObject> buildObjectForApplicationCache(const ApplicationCacheHost::ResourceInfoList&, const ApplicationCacheHost::CacheInfo&);
-    PassRefPtr<InspectorArray> buildArrayForApplicationCacheResources(const ApplicationCacheHost::ResourceInfoList&);
-    PassRefPtr<InspectorObject> buildObjectForApplicationCacheResource(const ApplicationCacheHost::ResourceInfo&);
+    PassRefPtr<TypeBuilder::ApplicationCache::ApplicationCache> buildObjectForApplicationCache(const ApplicationCacheHost::ResourceInfoList&, const ApplicationCacheHost::CacheInfo&);
+    PassRefPtr<TypeBuilder::Array<TypeBuilder::ApplicationCache::ApplicationCacheResource> > buildArrayForApplicationCacheResources(const ApplicationCacheHost::ResourceInfoList&);
+    PassRefPtr<TypeBuilder::ApplicationCache::ApplicationCacheResource> buildObjectForApplicationCacheResource(const ApplicationCacheHost::ResourceInfo&);
 
     DocumentLoader* assertFrameWithDocumentLoader(ErrorString*, String frameId);
 

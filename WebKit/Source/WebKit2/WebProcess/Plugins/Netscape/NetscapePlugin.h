@@ -28,10 +28,10 @@
 
 #include "NetscapePluginModule.h"
 #include "Plugin.h"
-#include "RunLoop.h"
 #include <WebCore/AffineTransform.h>
 #include <WebCore/GraphicsLayer.h>
 #include <WebCore/IntRect.h>
+#include <WebCore/RunLoop.h>
 #include <wtf/HashMap.h>
 #include <wtf/text/CString.h>
 #include <wtf/text/StringHash.h>
@@ -100,8 +100,6 @@ public:
     // These return retained objects.
     NPObject* windowScriptNPObject();
     NPObject* pluginElementNPObject();
-
-    bool tryToShortCircuitInvoke(NPObject*, NPIdentifier methodName, const NPVariant* arguments, uint32_t argumentCount, bool& returnValue, NPVariant& result);
 
     void cancelStreamLoad(NetscapePluginStream*);
     void removePluginStream(NetscapePluginStream*);
@@ -207,9 +205,12 @@ private:
 
     virtual uint64_t pluginComplexTextInputIdentifier() const;
     virtual void sendComplexTextInput(const String& textInput);
+    virtual void setLayerHostingMode(LayerHostingMode) OVERRIDE;
 
     void pluginFocusOrWindowFocusChanged();
     void setComplexTextInputEnabled(bool);
+
+    void updatePluginLayer();
 #endif
 
     virtual void contentsScaleFactorChanged(float);
@@ -231,6 +232,11 @@ private:
 #if PLUGIN_ARCHITECTURE(WIN)
     static BOOL WINAPI hookedTrackPopupMenu(HMENU, UINT uFlags, int x, int y, int nReserved, HWND, const RECT*);
     void scheduleWindowedGeometryUpdate();
+#endif
+
+#if PLUGIN_ARCHITECTURE(X11)
+    bool platformPostInitializeWindowed(bool needsXEmbed, uint64_t windowID);
+    bool platformPostInitializeWindowless();
 #endif
 
     uint64_t m_nextRequestID;
@@ -262,7 +268,7 @@ private:
     bool m_isWindowed;
     bool m_isTransparent;
     bool m_inNPPNew;
-    bool m_loadManually;
+    bool m_shouldUseManualLoader;
     RefPtr<NetscapePluginStream> m_manualStream;
     Vector<bool, 8> m_popupEnabledStates;
 
@@ -291,7 +297,7 @@ private:
         bool m_repeat;
         TimerFunc m_timerFunc;
 
-        RunLoop::Timer<Timer> m_timer;
+        WebCore::RunLoop::Timer<Timer> m_timer;
     };
     typedef HashMap<unsigned, Timer*> TimerMap;
     TimerMap m_timers;
@@ -303,6 +309,7 @@ private:
 
     RetainPtr<PlatformLayer> m_pluginLayer;
     bool m_pluginReturnsNonretainedLayer;
+    LayerHostingMode m_layerHostingMode;
 
     NPCocoaEvent* m_currentMouseEvent;
 
@@ -332,7 +339,7 @@ private:
 
     // FIXME: It's a bit wasteful to have one null event timer per plug-in.
     // We should investigate having one per window.
-    RunLoop::Timer<NetscapePlugin> m_nullEventTimer;
+    WebCore::RunLoop::Timer<NetscapePlugin> m_nullEventTimer;
     NP_CGContext m_npCGContext;
 #endif
 #elif PLUGIN_ARCHITECTURE(WIN)
@@ -341,6 +348,9 @@ private:
 #elif PLUGIN_ARCHITECTURE(X11)
     Pixmap m_drawable;
     Display* m_pluginDisplay;
+#if PLATFORM(GTK)
+    GtkWidget* m_platformPluginWidget;
+#endif
 
 public: // Need to call it in the NPN_GetValue browser callback.
     static Display* x11HostDisplay();

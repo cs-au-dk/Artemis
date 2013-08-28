@@ -21,6 +21,7 @@
 #include "SVGImageCache.h"
 
 #if ENABLE(SVG)
+#include "FrameView.h"
 #include "GraphicsContext.h"
 #include "ImageBuffer.h"
 #include "RenderSVGRoot.h"
@@ -81,13 +82,17 @@ void SVGImageCache::imageContentChanged()
     for (ImageDataMap::iterator it = m_imageDataMap.begin(); it != end; ++it)
         it->second.imageNeedsUpdate = true;
 
-    // Start redrawing dirty images with a timer, as imageContentChanged() may be called
-    // by the FrameView of the SVGImage which is currently in FrameView::layout().
-    if (!m_redrawTimer.isActive())
-        m_redrawTimer.startOneShot(0);
+    // If we're in the middle of layout, start redrawing dirty
+    // images on a timer; otherwise it's safe to draw immediately.
+    FrameView* frameView = m_svgImage->frameView();
+    if (frameView && (frameView->needsLayout() || frameView->isInLayout())) {
+        if (!m_redrawTimer.isActive())
+            m_redrawTimer.startOneShot(0);
+    } else
+       redraw();
 }
 
-void SVGImageCache::redrawTimerFired(Timer<SVGImageCache>*)
+void SVGImageCache::redraw()
 {
     ImageDataMap::iterator end = m_imageDataMap.end();
     for (ImageDataMap::iterator it = m_imageDataMap.begin(); it != end; ++it) {
@@ -103,6 +108,18 @@ void SVGImageCache::redrawTimerFired(Timer<SVGImageCache>*)
     }
     ASSERT(m_svgImage->imageObserver());
     m_svgImage->imageObserver()->animationAdvanced(m_svgImage);
+}
+
+void SVGImageCache::redrawTimerFired(Timer<SVGImageCache>*)
+{
+    // We have no guarantee that the frame does not require layout when the timer fired.
+    // So be sure to check again in case it is still not safe to run redraw.
+    FrameView* frameView = m_svgImage->frameView();
+    if (frameView && (frameView->needsLayout() || frameView->isInLayout())) {
+        if (!m_redrawTimer.isActive())
+            m_redrawTimer.startOneShot(0);
+    } else
+       redraw();
 }
 
 Image* SVGImageCache::lookupOrCreateBitmapImageForRenderer(const RenderObject* renderer)
@@ -133,7 +150,7 @@ Image* SVGImageCache::lookupOrCreateBitmapImageForRenderer(const RenderObject* r
     }
 
     // Create and cache new image and image buffer at requested size.
-    OwnPtr<ImageBuffer> newBuffer = ImageBuffer::create(size);
+    OwnPtr<ImageBuffer> newBuffer = ImageBuffer::create(size, 1);
     if (!newBuffer)
         return Image::nullImage();
 

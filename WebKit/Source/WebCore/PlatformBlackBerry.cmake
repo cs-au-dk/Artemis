@@ -34,7 +34,7 @@ LIST(APPEND WebCore_SOURCES
     platform/graphics/skia/PlatformContextSkia.cpp
     platform/graphics/skia/SkiaUtils.cpp
     platform/graphics/skia/TransformationMatrixSkia.cpp
-    platform/graphics/skia/VDMXParser.cpp
+    platform/graphics/chromium/VDMXParser.cpp
     platform/image-decoders/skia/ImageDecoderSkia.cpp
     platform/image-encoders/skia/PNGImageEncoder.cpp
 )
@@ -45,10 +45,11 @@ LIST(APPEND WebCore_SOURCES
     platform/graphics/harfbuzz/ComplexTextControllerHarfBuzz.cpp
     platform/graphics/harfbuzz/FontHarfBuzz.cpp
     platform/graphics/harfbuzz/FontPlatformDataHarfBuzz.cpp
+    platform/graphics/harfbuzz/HarfBuzzShaper.cpp
     platform/graphics/harfbuzz/HarfBuzzSkia.cpp
-    platform/graphics/harfbuzz/SimpleFontDataHarfBuzz.cpp
     platform/graphics/skia/FontCacheSkia.cpp
     platform/graphics/skia/GlyphPageTreeNodeSkia.cpp
+    platform/graphics/skia/SimpleFontDataSkia.cpp
 )
 
 # Other sources
@@ -76,6 +77,7 @@ LIST(APPEND WebCore_SOURCES
     platform/image-decoders/png/PNGImageDecoder.cpp
     platform/image-decoders/webp/WEBPImageDecoder.cpp
     platform/image-encoders/JPEGImageEncoder.cpp
+    platform/image-encoders/skia/JPEGImageEncoder.cpp
     platform/posix/FileSystemPOSIX.cpp
     platform/posix/SharedBufferPOSIX.cpp
     platform/text/TextBreakIteratorICU.cpp
@@ -86,6 +88,7 @@ LIST(APPEND WebCore_SOURCES
 
 # Networking sources
 LIST(APPEND WebCore_SOURCES
+    platform/network/MIMESniffing.cpp
     platform/network/ProxyServer.cpp
     platform/network/blackberry/DeferredData.cpp
     platform/network/blackberry/NetworkJob.cpp
@@ -131,7 +134,7 @@ LIST(APPEND WebCore_SOURCES
     page/blackberry/AccessibilityObjectBlackBerry.cpp
     page/blackberry/DragControllerBlackBerry.cpp
     page/blackberry/EventHandlerBlackBerry.cpp
-    page/blackberry/FrameBlackBerry.cpp
+    page/blackberry/SettingsBlackBerry.cpp
     platform/blackberry/ClipboardBlackBerry.cpp
     platform/blackberry/ContextMenuBlackBerry.cpp
     platform/blackberry/ContextMenuItemBlackBerry.cpp
@@ -152,6 +155,7 @@ LIST(APPEND WebCore_SOURCES
     platform/blackberry/PlatformTouchPointBlackBerry.cpp
     platform/blackberry/PopupMenuBlackBerry.cpp
     platform/blackberry/RenderThemeBlackBerry.cpp
+    platform/blackberry/RunLoopBlackBerry.cpp
     platform/blackberry/SSLKeyGeneratorBlackBerry.cpp
     platform/blackberry/ScrollbarThemeBlackBerry.cpp
     platform/blackberry/SearchPopupMenuBlackBerry.cpp
@@ -164,12 +168,11 @@ LIST(APPEND WebCore_SOURCES
     platform/graphics/blackberry/FloatRectBlackBerry.cpp
     platform/graphics/blackberry/FloatSizeBlackBerry.cpp
     platform/graphics/blackberry/IconBlackBerry.cpp
+    platform/graphics/blackberry/ImageBlackBerry.cpp
     platform/graphics/blackberry/IntPointBlackBerry.cpp
     platform/graphics/blackberry/IntRectBlackBerry.cpp
     platform/graphics/blackberry/IntSizeBlackBerry.cpp
-    platform/graphics/blackberry/MMrenderer.cpp
-    platform/graphics/blackberry/MediaPlayerPrivateMMrenderer.cpp
-    platform/graphics/blackberry/ResourceBlackBerry.cpp
+    platform/graphics/blackberry/MediaPlayerPrivateBlackBerry.cpp
     platform/text/blackberry/StringBlackBerry.cpp
 )
 
@@ -179,6 +182,13 @@ LIST(APPEND WebCore_SOURCES
     platform/network/blackberry/CredentialStorageBlackBerry.cpp
 )
 
+# File System support
+IF (ENABLE_FILE_SYSTEM)
+    LIST(APPEND WebCore_SOURCES
+        platform/blackberry/AsyncFileSystemBlackBerry.cpp
+    )
+ENDIF ()
+
 # Touch sources
 LIST(APPEND WebCore_SOURCES
     dom/Touch.cpp
@@ -186,12 +196,25 @@ LIST(APPEND WebCore_SOURCES
     dom/TouchList.cpp
 )
 
+IF (ENABLE_SMOOTH_SCROLLING)
+    LIST(APPEND WebCore_SOURCES
+        platform/blackberry/ScrollAnimatorBlackBerry.cpp
+    )
+ENDIF ()
+
 LIST(APPEND WEBDOM_IDL_HEADERS
     bindings/cpp/WebDOMCString.h
     bindings/cpp/WebDOMEventTarget.h
     bindings/cpp/WebDOMObject.h
     bindings/cpp/WebDOMString.h
 )
+
+if (ENABLE_REQUEST_ANIMATION_FRAME)
+    LIST(APPEND WebCore_SOURCES
+        platform/graphics/blackberry/DisplayRefreshMonitorBlackBerry.cpp
+        platform/graphics/DisplayRefreshMonitor.cpp
+    )
+ENDIF ()
 
 if (ENABLE_WEBGL)
     LIST(APPEND WebCore_INCLUDE_DIRECTORIES
@@ -237,6 +260,7 @@ IF (WTF_USE_ACCELERATED_COMPOSITING)
         ${WEBCORE_DIR}/platform/graphics/blackberry/LayerAnimation.cpp
         ${WEBCORE_DIR}/platform/graphics/blackberry/LayerCompositingThread.cpp
         ${WEBCORE_DIR}/platform/graphics/blackberry/LayerRenderer.cpp
+        ${WEBCORE_DIR}/platform/graphics/blackberry/LayerRendererSurface.cpp
         ${WEBCORE_DIR}/platform/graphics/blackberry/LayerTile.cpp
         ${WEBCORE_DIR}/platform/graphics/blackberry/LayerTiler.cpp
         ${WEBCORE_DIR}/platform/graphics/blackberry/LayerWebKitThread.cpp
@@ -293,17 +317,27 @@ ENDFOREACH ()
 
 SET(WebCore_CPP_IDL_FILES
     dom/EventListener.idl
-    html/canvas/CanvasPixelArray.idl
     "${WebCore_CPP_IDL_FILES}"
 )
+
+FOREACH (_idl ${WebCore_CPP_IDL_FILES})
+    SET(IDL_FILES_LIST "${IDL_FILES_LIST}${WEBCORE_DIR}/${_idl}\n")
+ENDFOREACH ()
+FILE(WRITE ${IDL_FILES_TMP} ${IDL_FILES_LIST})
+
+ADD_CUSTOM_COMMAND(
+    OUTPUT ${SUPPLEMENTAL_DEPENDENCY_FILE}
+    DEPENDS ${WEBCORE_DIR}/bindings/scripts/preprocess-idls.pl ${SCRIPTS_RESOLVE_SUPPLEMENTAL} ${WebCore_CPP_IDL_FILES} ${IDL_ATTRIBUTES_FILE}
+    COMMAND ${PERL_EXECUTABLE} -I${WEBCORE_DIR}/bindings/scripts ${WEBCORE_DIR}/bindings/scripts/preprocess-idls.pl --defines "${FEATURE_DEFINES_JAVASCRIPT}" --idlFilesList ${IDL_FILES_TMP} --preprocessor "${CODE_GENERATOR_PREPROCESSOR}" --supplementalDependencyFile ${SUPPLEMENTAL_DEPENDENCY_FILE} --idlAttributesFile ${IDL_ATTRIBUTES_FILE}
+    VERBATIM)
 
 FOREACH (_file ${WebCore_CPP_IDL_FILES})
     GET_FILENAME_COMPONENT (_name ${_file} NAME_WE)
     ADD_CUSTOM_COMMAND(
         OUTPUT  ${DERIVED_SOURCES_WEBCORE_DIR}/WebDOM${_name}.cpp ${DERIVED_SOURCES_WEBCORE_DIR}/WebDOM${_name}.h
         MAIN_DEPENDENCY ${_file}
-        DEPENDS ${WEBCORE_DIR}/bindings/scripts/generate-bindings.pl ${SCRIPTS_BINDINGS} ${WEBCORE_DIR}/bindings/scripts/CodeGeneratorCPP.pm ${_file}
-        COMMAND ${PERL_EXECUTABLE} -I${WEBCORE_DIR}/bindings/scripts ${WEBCORE_DIR}/bindings/scripts/generate-bindings.pl --defines "${FEATURE_DEFINES_WEBCORE}" --generator CPP ${IDL_INCLUDES} --outputDir "${DERIVED_SOURCES_WEBCORE_DIR}" --preprocessor "${CODE_GENERATOR_PREPROCESSOR}" ${WEBCORE_DIR}/${_file}
+        DEPENDS ${WEBCORE_DIR}/bindings/scripts/generate-bindings.pl ${SCRIPTS_BINDINGS} ${WEBCORE_DIR}/bindings/scripts/CodeGeneratorCPP.pm ${SUPPLEMENTAL_DEPENDENCY_FILE} ${_file}
+        COMMAND ${PERL_EXECUTABLE} -I${WEBCORE_DIR}/bindings/scripts ${WEBCORE_DIR}/bindings/scripts/generate-bindings.pl --defines "${FEATURE_DEFINES_WEBCORE}" --generator CPP ${IDL_INCLUDES} --outputDir "${DERIVED_SOURCES_WEBCORE_DIR}" --preprocessor "${CODE_GENERATOR_PREPROCESSOR}" --supplementalDependencyFile ${SUPPLEMENTAL_DEPENDENCY_FILE} ${WEBCORE_DIR}/${_file}
         VERBATIM)
     LIST(APPEND WebCore_SOURCES ${DERIVED_SOURCES_WEBCORE_DIR}/WebDOM${_name}.cpp)
 ENDFOREACH ()

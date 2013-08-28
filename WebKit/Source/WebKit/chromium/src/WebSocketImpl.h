@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2011 Google Inc.  All rights reserved.
+ * Copyright (C) 2011, 2012 Google Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -42,7 +42,6 @@ namespace WebCore { class WebSocketChannel; }
 
 namespace WebKit {
 
-class WebData;
 class WebDocument;
 class WebString;
 class WebURL;
@@ -54,27 +53,31 @@ public:
 
     bool isNull() const { return !m_private; }
 
-    virtual void connect(const WebURL&, const WebString& protocol);
-    virtual WebString subprotocol();
-    virtual bool sendText(const WebString& message);
-    virtual bool sendBinary(const WebData& binaryData);
-    virtual unsigned long bufferedAmount() const;
-    virtual void close(int code, const WebString& reason);
-    virtual void fail(const WebString& reason);
-    virtual void disconnect();
+    virtual BinaryType binaryType() const OVERRIDE;
+    virtual bool setBinaryType(BinaryType) OVERRIDE;
+    virtual void connect(const WebURL&, const WebString& protocol) OVERRIDE;
+    virtual WebString subprotocol() OVERRIDE;
+    virtual WebString extensions() OVERRIDE;
+    virtual bool sendText(const WebString&) OVERRIDE;
+    virtual bool sendArrayBuffer(const WebArrayBuffer&) OVERRIDE;
+    virtual unsigned long bufferedAmount() const OVERRIDE;
+    virtual void close(int code, const WebString& reason) OVERRIDE;
+    virtual void fail(const WebString& reason) OVERRIDE;
+    virtual void disconnect() OVERRIDE;
 
     // WebSocketChannelClient
-    virtual void didConnect();
-    virtual void didReceiveMessage(const String& message);
-    virtual void didReceiveBinaryData(PassOwnPtr<Vector<char> > binaryData);
-    virtual void didReceiveMessageError();
-    virtual void didUpdateBufferedAmount(unsigned long bufferedAmount);
-    virtual void didStartClosingHandshake();
-    virtual void didClose(unsigned long bufferedAmount, ClosingHandshakeCompletionStatus, unsigned short code, const String& reason);
+    virtual void didConnect() OVERRIDE;
+    virtual void didReceiveMessage(const String& message) OVERRIDE;
+    virtual void didReceiveBinaryData(PassOwnPtr<Vector<char> > binaryData) OVERRIDE;
+    virtual void didReceiveMessageError() OVERRIDE;
+    virtual void didUpdateBufferedAmount(unsigned long bufferedAmount) OVERRIDE;
+    virtual void didStartClosingHandshake() OVERRIDE;
+    virtual void didClose(unsigned long bufferedAmount, ClosingHandshakeCompletionStatus, unsigned short code, const String& reason) OVERRIDE;
 
 private:
     RefPtr<WebCore::WebSocketChannel> m_private;
     WebSocketClient* m_client;
+    BinaryType m_binaryType;
 };
 
 } // namespace WebKit

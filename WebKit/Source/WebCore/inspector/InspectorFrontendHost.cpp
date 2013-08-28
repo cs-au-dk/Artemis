@@ -28,9 +28,10 @@
  */
 
 #include "config.h"
-#include "InspectorFrontendHost.h"
 
 #if ENABLE(INSPECTOR)
+
+#include "InspectorFrontendHost.h"
 
 #include "ContextMenu.h"
 #include "ContextMenuItem.h"
@@ -181,6 +182,11 @@ void InspectorFrontendHost::bringToFront()
         m_client->bringToFront();
 }
 
+void InspectorFrontendHost::setZoomFactor(float zoom)
+{
+    m_frontendPage->mainFrame()->setPageAndTextZoomFactors(zoom, 1);
+}
+
 void InspectorFrontendHost::inspectedURLChanged(const String& newURL)
 {
     if (m_client)
@@ -220,17 +226,29 @@ void InspectorFrontendHost::copyText(const String& text)
     Pasteboard::generalPasteboard()->writePlainText(text);
 }
 
-bool InspectorFrontendHost::canSaveAs()
+void InspectorFrontendHost::openInNewTab(const String& url)
 {
     if (m_client)
-        return m_client->canSaveAs();
+        m_client->openInNewTab(url);
+}
+
+bool InspectorFrontendHost::canSave()
+{
+    if (m_client)
+        return m_client->canSave();
     return false;
 }
 
-void InspectorFrontendHost::saveAs(const String& fileName, const String& content)
+void InspectorFrontendHost::save(const String& url, const String& content, bool forceSaveAs)
 {
     if (m_client)
-        m_client->saveAs(fileName, content);
+        m_client->save(url, content, forceSaveAs);
+}
+
+void InspectorFrontendHost::append(const String& url, const String& content)
+{
+    if (m_client)
+        m_client->append(url, content);
 }
 
 void InspectorFrontendHost::sendMessageToBackend(const String& message)

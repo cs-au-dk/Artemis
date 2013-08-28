@@ -26,9 +26,8 @@
 
 #include "config.h"
 #include "WebEventFactoryQt.h"
-#include <qgraphicssceneevent.h>
-#include <QApplication>
 #include <QKeyEvent>
+#include <QTransform>
 #include <WebCore/IntPoint.h>
 #include <WebCore/FloatPoint.h>
 #include <WebCore/PlatformKeyboardEvent.h>
@@ -85,6 +84,8 @@ static WebEvent::Type webEventTypeForEvent(const QEvent* event)
         return WebEvent::TouchMove;
     case QEvent::TouchEnd:
         return WebEvent::TouchEnd;
+    case QEvent::TouchCancel:
+        return WebEvent::TouchCancel;
 #endif
     default:
         // assert
@@ -106,7 +107,7 @@ static inline WebEvent::Modifiers modifiersForEvent(Qt::KeyboardModifiers modifi
     return (WebEvent::Modifiers)result;
 }
 
-WebMouseEvent WebEventFactory::createWebMouseEvent(QMouseEvent* event, int eventClickCount)
+WebMouseEvent WebEventFactory::createWebMouseEvent(QMouseEvent* event, const QTransform& fromItemTransform, int eventClickCount)
 {
     static FloatPoint lastPos = FloatPoint(0, 0);
 
@@ -119,10 +120,10 @@ WebMouseEvent WebEventFactory::createWebMouseEvent(QMouseEvent* event, int event
     double timestamp                = currentTimeForEvent(event);
     lastPos.set(event->localPos().x(), event->localPos().y());
 
-    return WebMouseEvent(type, button, event->localPos().toPoint(), event->screenPos().toPoint(), deltaX, deltaY, 0.0f, clickCount, modifiers, timestamp);
+    return WebMouseEvent(type, button, fromItemTransform.map(event->localPos()).toPoint(), event->screenPos().toPoint(), deltaX, deltaY, 0.0f, clickCount, modifiers, timestamp);
 }
 
-WebWheelEvent WebEventFactory::createWebWheelEvent(QWheelEvent* e)
+WebWheelEvent WebEventFactory::createWebWheelEvent(QWheelEvent* e, const QTransform& fromItemTransform)
 {
     float deltaX                            = 0;
     float deltaY                            = 0;
@@ -132,26 +133,23 @@ WebWheelEvent WebEventFactory::createWebWheelEvent(QWheelEvent* e)
     WebEvent::Modifiers modifiers           = modifiersForEvent(e->modifiers());
     double timestamp                        = currentTimeForEvent(e);
 
-    // A delta that is not mod 120 indicates a device that is sending
-    // fine-resolution scroll events, so use the delta as number of wheel ticks
-    // and number of pixels to scroll.See also webkit.org/b/29601
-    bool fullTick = !(e->delta() % 120);
-
     if (e->orientation() == Qt::Horizontal) {
-        deltaX = (fullTick) ? e->delta() / 120.0f : e->delta();
-        wheelTicksX = deltaX;
+        deltaX = e->delta();
+        wheelTicksX = deltaX / 120.0f;
     } else {
-        deltaY = (fullTick) ? e->delta() / 120.0f : e->delta();
-        wheelTicksY = deltaY;
+        deltaY = e->delta();
+        wheelTicksY = deltaY / 120.0f;
     }
 
-    // Use the same single scroll step as QTextEdit
-    // (in QTextEditPrivate::init [h,v]bar->setSingleStep)
+    // Since we report the scroll by the pixel, convert the delta to pixel distance using standard scroll step.
+    // Use the same single scroll step as QTextEdit (in QTextEditPrivate::init [h,v]bar->setSingleStep)
     static const float cDefaultQtScrollStep = 20.f;
-    deltaX *= (fullTick) ? QApplication::wheelScrollLines() * cDefaultQtScrollStep : 1;
-    deltaY *= (fullTick) ? QApplication::wheelScrollLines() * cDefaultQtScrollStep : 1;
+    // ### FIXME: Default from QtGui. Should use Qt platform theme API once configurable.
+    const int wheelScrollLines = 3;
+    deltaX = wheelTicksX * wheelScrollLines * cDefaultQtScrollStep;
+    deltaY = wheelTicksY * wheelScrollLines * cDefaultQtScrollStep;
 
-    return WebWheelEvent(WebEvent::Wheel, e->posF().toPoint(), e->globalPosF().toPoint(), FloatSize(deltaX, deltaY), FloatSize(wheelTicksX, wheelTicksY), granularity, modifiers, timestamp);
+    return WebWheelEvent(WebEvent::Wheel, fromItemTransform.map(e->posF()).toPoint(), e->globalPosF().toPoint(), FloatSize(deltaX, deltaY), FloatSize(wheelTicksX, wheelTicksY), granularity, modifiers, timestamp);
 }
 
 WebKeyboardEvent WebEventFactory::createWebKeyboardEvent(QKeyEvent* event)
@@ -174,7 +172,7 @@ WebKeyboardEvent WebEventFactory::createWebKeyboardEvent(QKeyEvent* event)
 }
 
 #if ENABLE(TOUCH_EVENTS)
-WebTouchEvent WebEventFactory::createWebTouchEvent(const QTouchEvent* event)
+WebTouchEvent WebEventFactory::createWebTouchEvent(const QTouchEvent* event, const QTransform& fromItemTransform)
 {
     WebEvent::Type type  = webEventTypeForEvent(event);
     WebPlatformTouchPoint::TouchPointState state = static_cast<WebPlatformTouchPoint::TouchPointState>(0);
@@ -184,10 +182,11 @@ WebTouchEvent WebEventFactory::createWebTouchEvent(const QTouchEvent* event)
 
     const QList<QTouchEvent::TouchPoint>& points = event->touchPoints();
     
-    Vector<WebPlatformTouchPoint> m_touchPoints;
+    Vector<WebPlatformTouchPoint, 6> m_touchPoints;
     for (int i = 0; i < points.count(); ++i) {
-        id = static_cast<unsigned>(points.at(i).id());
-        switch (points.at(i).state()) {
+        const QTouchEvent::TouchPoint& touchPoint = points.at(i);
+        id = static_cast<unsigned>(touchPoint.id());
+        switch (touchPoint.state()) {
         case Qt::TouchPointReleased: 
             state = WebPlatformTouchPoint::TouchReleased; 
             break;
@@ -205,7 +204,13 @@ WebTouchEvent WebEventFactory::createWebTouchEvent(const QTouchEvent* event)
             break;
         }
 
-        m_touchPoints.append(WebPlatformTouchPoint(id, state, points.at(i).screenPos().toPoint(), points.at(i).pos().toPoint()));
+        // Qt does not have a Qt::TouchPointCancelled point state, so if we receive a touch cancel event,
+        // simply cancel all touch points here.
+        if (type == WebEvent::TouchCancel)
+            state = WebPlatformTouchPoint::TouchCancelled;
+
+        IntSize radius(touchPoint.rect().width()/ 2, touchPoint.rect().height() / 2);
+        m_touchPoints.append(WebPlatformTouchPoint(id, state, touchPoint.screenPos().toPoint(), fromItemTransform.map(touchPoint.pos()).toPoint(), radius, 0.0, touchPoint.pressure()));
     }
 
     return WebTouchEvent(type, m_touchPoints, modifiers, timestamp);

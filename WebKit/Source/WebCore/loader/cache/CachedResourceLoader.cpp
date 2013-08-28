@@ -28,6 +28,7 @@
 #include "CachedResourceLoader.h"
 
 #include "CachedCSSStyleSheet.h"
+#include "CachedSVGDocument.h"
 #include "CachedFont.h"
 #include "CachedImage.h"
 #include "CachedRawResource.h"
@@ -72,6 +73,10 @@ static CachedResource* createResource(CachedResource::Type type, ResourceRequest
         return new CachedCSSStyleSheet(request, charset);
     case CachedResource::Script:
         return new CachedScript(request, charset);
+#if ENABLE(SVG)
+    case CachedResource::SVGDocumentResource:
+        return new CachedSVGDocument(request);
+#endif
     case CachedResource::FontResource:
         return new CachedFont(request);
     case CachedResource::RawResource:
@@ -112,7 +117,6 @@ CachedResourceLoader::CachedResourceLoader(Document* document)
     , m_requestCount(0)
     , m_garbageCollectDocumentResourcesTimer(this, &CachedResourceLoader::garbageCollectDocumentResourcesTimerFired)
     , m_autoLoadImages(true)
-    , m_loadFinishing(false)
     , m_allowStaleResources(false)
 {
 }
@@ -225,6 +229,13 @@ CachedXSLStyleSheet* CachedResourceLoader::requestXSLStyleSheet(ResourceRequest&
 }
 #endif
 
+#if ENABLE(SVG)
+CachedSVGDocument* CachedResourceLoader::requestSVGDocument(ResourceRequest& request)
+{
+    return static_cast<CachedSVGDocument*>(requestResource(CachedResource::SVGDocumentResource, request, request.url(), defaultCachedResourceOptions()));
+}
+#endif
+
 #if ENABLE(LINK_PREFETCH)
 CachedResource* CachedResourceLoader::requestLinkResource(CachedResource::Type type, ResourceRequest& request, ResourceLoadPriority priority)
 {
@@ -245,6 +256,9 @@ bool CachedResourceLoader::checkInsecureContent(CachedResource::Type type, const
     case CachedResource::Script:
 #if ENABLE(XSLT)
     case CachedResource::XSLStyleSheet:
+#endif
+#if ENABLE(SVG)
+    case CachedResource::SVGDocumentResource:
 #endif
     case CachedResource::CSSStyleSheet:
         // These resource can inject script into the current document (Script,
@@ -313,14 +327,17 @@ bool CachedResourceLoader::canRequest(CachedResource::Type type, const KURL& url
         // These types of resources can be loaded from any origin.
         // FIXME: Are we sure about CachedResource::FontResource?
         break;
+#if ENABLE(SVG)
+    case CachedResource::SVGDocumentResource:
+#endif
 #if ENABLE(XSLT)
     case CachedResource::XSLStyleSheet:
         if (!m_document->securityOrigin()->canRequest(url)) {
             printAccessDeniedMessage(url);
             return false;
         }
-        break;
 #endif
+        break;
     }
 
     switch (type) {
@@ -347,6 +364,9 @@ bool CachedResourceLoader::canRequest(CachedResource::Type type, const KURL& url
         if (!m_document->contentSecurityPolicy()->allowStyleFromSource(url))
             return false;
         break;
+#if ENABLE(SVG)
+    case CachedResource::SVGDocumentResource:
+#endif
     case CachedResource::ImageResource:
         if (!m_document->contentSecurityPolicy()->allowImageFromSource(url))
             return false;
@@ -487,7 +507,11 @@ CachedResource* CachedResourceLoader::loadResource(CachedResource::Type type, Re
         resource->setInCache(true);
     
     resource->setLoadPriority(priority);
+    
+    bool wasPruneEnabled = memoryCache()->pruneEnabled();
+    memoryCache()->setPruneEnabled(false);
     resource->load(this, options);
+    memoryCache()->setPruneEnabled(wasPruneEnabled);
     
     if (!inCache) {
         resource->setOwningCachedResourceLoader(this);
@@ -523,8 +547,13 @@ CachedResourceLoader::RevalidationPolicy CachedResourceLoader::determineRevalida
         return Reload;
     }
 
-    // FIXME: Currently, all CachedRawResources are always reloaded. Some of them should be cacheable.
-    if (existingResource->type() == CachedResource::RawResource)
+    if (existingResource->type() == CachedResource::RawResource && !static_cast<CachedRawResource*>(existingResource)->canReuse(request))
+         return Reload;
+
+    // Certain requests (e.g., XHRs) might have manually set headers that require revalidation.
+    // FIXME: In theory, this should be a Revalidate case. In practice, the MemoryCache revalidation path assumes a whole bunch
+    // of things about how revalidation works that manual headers violate, so punt to Reload instead.
+    if (request.isConditional())
         return Reload;
     
     // Don't reload resources while pasting.
@@ -608,8 +637,8 @@ void CachedResourceLoader::printAccessDeniedMessage(const KURL& url) const
     else
         message = "Unsafe attempt to load URL " + url.string() + " from frame with URL " + m_document->url().string() + ". Domains, protocols and ports must match.\n";
 
-    // FIXME: provide a real line number and source URL.
-    frame()->domWindow()->console()->addMessage(OtherMessageSource, LogMessageType, ErrorMessageLevel, message, 1, String());
+    // FIXME: provide line number and source URL.
+    frame()->domWindow()->console()->addMessage(OtherMessageSource, LogMessageType, ErrorMessageLevel, message);
 }
 
 void CachedResourceLoader::setAutoLoadImages(bool enable)
@@ -651,8 +680,6 @@ void CachedResourceLoader::removeCachedResource(CachedResource* resource) const
 
 void CachedResourceLoader::loadDone()
 {
-    m_loadFinishing = false;
-
     RefPtr<Document> protect(m_document);
     if (frame())
         frame()->loader()->loadDone();
@@ -716,13 +743,6 @@ void CachedResourceLoader::decrementRequestCount(const CachedResource* res)
 
     --m_requestCount;
     ASSERT(m_requestCount > -1);
-}
-
-int CachedResourceLoader::requestCount()
-{
-    if (m_loadFinishing)
-         return m_requestCount + 1;
-    return m_requestCount;
 }
     
 void CachedResourceLoader::preload(CachedResource::Type type, ResourceRequest& request, const String& charset, bool referencedFromBody)

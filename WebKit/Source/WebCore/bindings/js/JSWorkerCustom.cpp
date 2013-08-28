@@ -26,7 +26,8 @@
 
 #include "config.h"
 
-#if ENABLE(WORKERS) //| ARTEMIS
+#if ENABLE(WORKERS)
+
 #include "JSWorker.h"
 
 #include "JSDOMGlobalObject.h"
@@ -51,12 +52,12 @@ JSC::JSValue JSWorker::webkitPostMessage(JSC::ExecState* exec)
 
 EncodedJSValue JSC_HOST_CALL JSWorkerConstructor::constructJSWorker(ExecState* exec)
 {
-    JSWorkerConstructor* jsConstructor = static_cast<JSWorkerConstructor*>(exec->callee());
+    JSWorkerConstructor* jsConstructor = jsCast<JSWorkerConstructor*>(exec->callee());
 
     if (!exec->argumentCount())
-        return throwVMError(exec, createTypeError(exec, "Not enough arguments"));
+        return throwVMError(exec, createNotEnoughArgumentsError(exec));
 
-    UString scriptURL = exec->argument(0).toString(exec);
+    UString scriptURL = exec->argument(0).toString(exec)->value(exec);
     if (exec->hadException())
         return JSValue::encode(JSValue());
 

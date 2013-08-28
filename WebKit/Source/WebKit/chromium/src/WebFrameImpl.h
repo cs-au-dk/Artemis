@@ -62,6 +62,8 @@ class WebPluginContainerImpl;
 class WebView;
 class WebViewImpl;
 
+template <typename T> class WebVector;
+
 // Implementation of WebFrame, note that this is a reference counted object.
 class WebFrameImpl : public WebFrame, public RefCounted<WebFrameImpl> {
 public:
@@ -110,6 +112,14 @@ public:
 #if WEBKIT_USING_V8
     virtual v8::Handle<v8::Value> executeScriptAndReturnValue(
         const WebScriptSource&);
+    virtual void executeScriptInIsolatedWorld(
+        int worldID, const WebScriptSource* sourcesIn, unsigned numSources,
+        int extensionGroup, WebVector<v8::Local<v8::Value> >* results);
+    virtual v8::Handle<v8::Value> callFunctionEvenIfScriptDisabled(
+        v8::Handle<v8::Function>,
+        v8::Handle<v8::Object>,
+        int argc,
+        v8::Handle<v8::Value> argv[]);
     virtual v8::Local<v8::Context> mainWorldScriptContext() const;
     virtual v8::Handle<v8::Value> createFileSystem(WebFileSystem::Type,
                                                    const WebString& name,
@@ -158,12 +168,14 @@ public:
     virtual bool isCommandEnabled(const WebString&) const;
     virtual void enableContinuousSpellChecking(bool);
     virtual bool isContinuousSpellCheckingEnabled() const;
+    virtual void requestTextChecking(const WebElement&);
     virtual bool hasSelection() const;
     virtual WebRange selectionRange() const;
     virtual WebString selectionAsText() const;
     virtual WebString selectionAsMarkup() const;
     virtual bool selectWordAroundCaret();
     virtual void selectRange(const WebPoint& start, const WebPoint& end);
+    virtual void selectRange(const WebRange&);
     virtual int printBegin(const WebSize& pageSize,
                            const WebNode& constrainToNode,
                            int printerDPI,
@@ -213,9 +225,6 @@ public:
     virtual WebRect selectionBoundsRect() const;
 
     virtual bool selectionStartHasSpellingMarkerFor(int from, int length) const;
-    virtual bool pauseSVGAnimation(const WebString& animationId,
-                                   double time,
-                                   const WebString& elementId);
     virtual WebString layerTreeAsText(bool showDebugInfo = false) const;
 
     static PassRefPtr<WebFrameImpl> create(WebFrameClient* client);
@@ -227,9 +236,6 @@ public:
     PassRefPtr<WebCore::Frame> createChildFrame(
         const WebCore::FrameLoadRequest&, WebCore::HTMLFrameOwnerElement*);
 
-    void layout();
-    void paint(WebCanvas*, const WebRect&);
-    void paintWithContext(WebCore::GraphicsContext&, const WebRect&);
     void createFrameView();
 
     static WebFrameImpl* fromFrame(WebCore::Frame* frame);

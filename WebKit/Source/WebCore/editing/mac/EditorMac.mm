@@ -30,17 +30,25 @@
 #import "ClipboardMac.h"
 #import "CachedResourceLoader.h"
 #import "DocumentFragment.h"
+#import "DOMRangeInternal.h"
 #import "EditingText.h"
 #import "Editor.h"
 #import "EditorClient.h"
 #import "Frame.h"
 #import "FrameView.h"
+#import "HTMLConverter.h"
 #import "HTMLNames.h"
+#import "LegacyWebArchive.h"
 #import "Pasteboard.h"
+#import "PasteboardStrategy.h"
+#import "PlatformStrategies.h"
+#import "Range.h"
 #import "RenderBlock.h"
 #import "RuntimeApplicationChecks.h"
 #import "Sound.h"
+#import "TypingCommand.h"
 #import "htmlediting.h"
+#import "WebNSAttributedStringExtras.h"
 
 namespace WebCore {
 
@@ -49,7 +57,7 @@ using namespace HTMLNames;
 PassRefPtr<Clipboard> Editor::newGeneralClipboard(ClipboardAccessPolicy policy, Frame* frame)
 {
     return ClipboardMac::create(Clipboard::CopyAndPaste,
-        policy == ClipboardWritable ? [NSPasteboard pasteboardWithUniqueName] : [NSPasteboard generalPasteboard], policy, frame);
+        policy == ClipboardWritable ? platformStrategies()->pasteboardStrategy()->uniqueName() : String(NSGeneralPboard), policy, ClipboardMac::CopyAndPasteGeneric, frame);
 }
 
 void Editor::showFontPanel()
@@ -72,7 +80,7 @@ void Editor::pasteWithPasteboard(Pasteboard* pasteboard, bool allowPlainText)
     RefPtr<Range> range = selectedRange();
     bool choosePlainText;
     
-    m_frame->editor()->client()->setInsertionPasteboard([NSPasteboard generalPasteboard]);
+    m_frame->editor()->client()->setInsertionPasteboard(NSGeneralPboard);
 #if !defined(BUILDING_ON_LEOPARD) && !defined(BUILDING_ON_SNOW_LEOPARD)
     RefPtr<DocumentFragment> fragment = pasteboard->documentFragment(m_frame, range, allowPlainText, choosePlainText);
     if (fragment && shouldInsertFragment(fragment, range, EditorInsertActionPasted))
@@ -92,7 +100,15 @@ void Editor::pasteWithPasteboard(Pasteboard* pasteboard, bool allowPlainText)
             pasteAsFragment(fragment, canSmartReplaceWithPasteboard(pasteboard), false);
     }
 #endif
-    m_frame->editor()->client()->setInsertionPasteboard(nil);
+    m_frame->editor()->client()->setInsertionPasteboard(String());
+}
+
+bool Editor::insertParagraphSeparatorInQuotedContent()
+{
+    // FIXME: Why is this missing calls to canEdit, canEditRichly, etc...
+    TypingCommand::insertParagraphSeparatorInQuotedContent(m_frame->document());
+    revealSelectionAfterEditingOperation();
+    return true;
 }
 
 static RenderStyle* styleForSelectionStart(Frame* frame, Node *&nodeToRemove)
@@ -112,7 +128,7 @@ static RenderStyle* styleForSelectionStart(Frame* frame, Node *&nodeToRemove)
 
     RefPtr<Element> styleElement = frame->document()->createElement(spanTag, false);
 
-    String styleText = typingStyle->style()->cssText() + " display: inline";
+    String styleText = typingStyle->style()->asText() + " display: inline";
     styleElement->setAttribute(styleAttr, styleText.impl());
 
     styleElement->appendChild(frame->document()->createEditingTextNode(""), ASSERT_NO_EXCEPTION);
@@ -280,28 +296,35 @@ void Editor::takeFindStringFromSelection()
         return;
     }
 
-    NSString *nsSelectedText = m_frame->displayStringModifiedByEncoding(selectedText());
-
-    NSPasteboard *findPasteboard = [NSPasteboard pasteboardWithName:NSFindPboard];
-    [findPasteboard declareTypes:[NSArray arrayWithObject:NSStringPboardType] owner:nil];
-    [findPasteboard setString:nsSelectedText forType:NSStringPboardType];
+    Vector<String> types;
+    types.append(String(NSStringPboardType));
+    platformStrategies()->pasteboardStrategy()->setTypes(types, NSFindPboard);
+    platformStrategies()->pasteboardStrategy()->setStringForType(m_frame->displayStringModifiedByEncoding(selectedText()), NSStringPboardType, NSFindPboard);
 }
 
 void Editor::writeSelectionToPasteboard(const String& pasteboardName, const Vector<String>& pasteboardTypes)
 {
-    RetainPtr<NSMutableArray> types(AdoptNS, [[NSMutableArray alloc] init]);    
-    for (size_t i = 0; i < pasteboardTypes.size(); ++i)
-        [types.get() addObject:pasteboardTypes[i]];
-    Pasteboard::writeSelection([NSPasteboard pasteboardWithName:pasteboardName], types.get(), selectedRange().get(), true, m_frame);
+    Pasteboard pasteboard(pasteboardName);
+    pasteboard.writeSelectionForTypes(pasteboardTypes, true, m_frame);
 }
     
 void Editor::readSelectionFromPasteboard(const String& pasteboardName)
 {
-    Pasteboard pasteboard([NSPasteboard pasteboardWithName:pasteboardName]);
+    Pasteboard pasteboard(pasteboardName);
     if (m_frame->selection()->isContentRichlyEditable())
         pasteWithPasteboard(&pasteboard, true);
     else
         pasteAsPlainTextWithPasteboard(&pasteboard);   
+}
+
+String Editor::stringSelectionForPasteboard()
+{
+    return Pasteboard::getStringSelection(m_frame);
+}
+
+PassRefPtr<SharedBuffer> Editor::dataSelectionForPasteboard(const String& pasteboardType)
+{
+    return Pasteboard::getDataSelection(m_frame, pasteboardType);
 }
 
 } // namespace WebCore

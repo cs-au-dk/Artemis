@@ -34,11 +34,13 @@ import unittest
 from webkitpy.common.system import logtesting
 from webkitpy.common.system.executive_mock import MockExecutive, MockExecutive2
 from webkitpy.common.system.filesystem_mock import MockFileSystem
-from webkitpy.common.host_mock import MockHost
+from webkitpy.common.system.systemhost_mock import MockSystemHost
+from webkitpy.layout_tests.port.config_mock import MockConfig
 from webkitpy.thirdparty.mock import Mock
 from webkitpy.tool.mocktool import MockOptions
 
 import chromium
+import chromium_android
 import chromium_linux
 import chromium_mac
 import chromium_win
@@ -50,8 +52,11 @@ from webkitpy.layout_tests.port.driver import DriverInput
 
 class ChromiumDriverTest(unittest.TestCase):
     def setUp(self):
-        mock_port = Mock()  # FIXME: This should use a tighter mock.
-        self.driver = chromium.ChromiumDriver(mock_port, worker_number=0, pixel_tests=True)
+        host = MockSystemHost()
+        options = MockOptions(configuration='Release', additional_drt_flag=['--test-shell'])
+        config = MockConfig(filesystem=host.filesystem, default_configuration='Release')
+        self.port = chromium_mac.ChromiumMacPort(host, 'chromium-mac-snowleopard', options=options, config=config)
+        self.driver = chromium.ChromiumDriver(self.port, worker_number=0, pixel_tests=True)
 
     def test_test_shell_command(self):
         expected_command = "test.html 2 checksum\n"
@@ -90,17 +95,23 @@ class ChromiumDriverTest(unittest.TestCase):
         self.driver._proc.stdout.readline = mock_readline
         self._assert_write_command_and_read_line(expected_crash=True)
 
-    def test_crashed_process_name(self):
+    def test_crash_log(self):
         self.driver._proc = Mock()
 
         # Simulate a crash by having stdout close unexpectedly.
         def mock_readline():
             raise IOError
         self.driver._proc.stdout.readline = mock_readline
+        self.driver._proc.pid = 1234
 
-        self.driver._port.test_to_uri = lambda test: 'mocktesturi'
-        driver_output = self.driver.run_test(DriverInput(test_name='some/test.html', timeout=1, image_hash=None, is_reftest=False))
-        self.assertEqual(self.driver._port.driver_name(), driver_output.crashed_process_name)
+        self.driver.test_to_uri = lambda test: 'mocktesturi'
+        self.driver._port.driver_name = lambda: 'mockdriver'
+        self.driver._port._get_crash_log = lambda name, pid, out, err, newer_than: 'mockcrashlog'
+        driver_output = self.driver.run_test(DriverInput(test_name='some/test.html', timeout=1, image_hash=None, should_run_pixel_test=False))
+        self.assertTrue(driver_output.crash)
+        self.assertEqual(driver_output.crashed_process_name, 'mockdriver')
+        self.assertEqual(driver_output.crashed_pid, 1234)
+        self.assertEqual(driver_output.crash_log, 'mockcrashlog')
 
     def test_stop(self):
         self.pid = None
@@ -124,28 +135,25 @@ class ChromiumDriverTest(unittest.TestCase):
                 self.driver._proc.poll = lambda: 2
 
         self.driver._port._executive = FakeExecutive()
-        # Override the kill timeout (ms) so the test runs faster.
-        self.driver._port.get_option = lambda name: 1
+        self.driver.KILL_TIMEOUT_DEFAULT = 0.01
         self.driver.stop()
         self.assertTrue(self.wait_called)
         self.assertEquals(self.pid, 1)
 
     def test_two_drivers(self):
-        mock_port = Mock()
 
         class MockDriver(chromium.ChromiumDriver):
-            def __init__(self):
-                chromium.ChromiumDriver.__init__(self, mock_port, worker_number=0, pixel_tests=False)
+            def __init__(self, port):
+                chromium.ChromiumDriver.__init__(self, port, worker_number=0, pixel_tests=False)
 
-            def cmd_line(self):
+            def cmd_line(self, pixel_test, per_test_args):
                 return 'python'
 
         # get_option is used to get the timeout (ms) for a process before we kill it.
-        mock_port.get_option = lambda name: 60 * 1000
-        driver1 = MockDriver()
-        driver1._start()
-        driver2 = MockDriver()
-        driver2._start()
+        driver1 = MockDriver(self.port)
+        driver1._start(False, [])
+        driver2 = MockDriver(self.port)
+        driver2._start(False, [])
         # It's possible for driver1 to timeout when stopping if it's sharing stdin with driver2.
         start_time = time.time()
         driver1.stop()
@@ -154,56 +162,31 @@ class ChromiumDriverTest(unittest.TestCase):
 
 
 class ChromiumPortTest(port_testcase.PortTestCase):
+    port_name = 'chromium-mac'
     port_maker = chromium.ChromiumPort
 
     def test_all_test_configurations(self):
         """Validate the complete set of configurations this port knows about."""
-        port = chromium.ChromiumPort(MockHost())
+        port = self.make_port()
         self.assertEquals(set(port.all_test_configurations()), set([
-            TestConfiguration('leopard', 'x86', 'debug', 'cpu'),
-            TestConfiguration('leopard', 'x86', 'debug', 'gpu'),
-            TestConfiguration('leopard', 'x86', 'debug', 'cpu-cg'),
-            TestConfiguration('leopard', 'x86', 'debug', 'gpu-cg'),
-            TestConfiguration('leopard', 'x86', 'release', 'cpu'),
-            TestConfiguration('leopard', 'x86', 'release', 'gpu'),
-            TestConfiguration('leopard', 'x86', 'release', 'cpu-cg'),
-            TestConfiguration('leopard', 'x86', 'release', 'gpu-cg'),
-            TestConfiguration('snowleopard', 'x86', 'debug', 'cpu'),
-            TestConfiguration('snowleopard', 'x86', 'debug', 'gpu'),
-            TestConfiguration('snowleopard', 'x86', 'debug', 'cpu-cg'),
-            TestConfiguration('snowleopard', 'x86', 'debug', 'gpu-cg'),
-            TestConfiguration('snowleopard', 'x86', 'release', 'cpu'),
-            TestConfiguration('snowleopard', 'x86', 'release', 'gpu'),
-            TestConfiguration('snowleopard', 'x86', 'release', 'cpu-cg'),
-            TestConfiguration('snowleopard', 'x86', 'release', 'gpu-cg'),
-            TestConfiguration('lion', 'x86', 'debug', 'cpu'),
-            TestConfiguration('lion', 'x86', 'debug', 'gpu'),
-            TestConfiguration('lion', 'x86', 'debug', 'cpu-cg'),
-            TestConfiguration('lion', 'x86', 'debug', 'gpu-cg'),
-            TestConfiguration('lion', 'x86', 'release', 'cpu'),
-            TestConfiguration('lion', 'x86', 'release', 'gpu'),
-            TestConfiguration('lion', 'x86', 'release', 'cpu-cg'),
-            TestConfiguration('lion', 'x86', 'release', 'gpu-cg'),
-            TestConfiguration('xp', 'x86', 'debug', 'cpu'),
-            TestConfiguration('xp', 'x86', 'debug', 'gpu'),
-            TestConfiguration('xp', 'x86', 'release', 'cpu'),
-            TestConfiguration('xp', 'x86', 'release', 'gpu'),
-            TestConfiguration('vista', 'x86', 'debug', 'cpu'),
-            TestConfiguration('vista', 'x86', 'debug', 'gpu'),
-            TestConfiguration('vista', 'x86', 'release', 'cpu'),
-            TestConfiguration('vista', 'x86', 'release', 'gpu'),
-            TestConfiguration('win7', 'x86', 'debug', 'cpu'),
-            TestConfiguration('win7', 'x86', 'debug', 'gpu'),
-            TestConfiguration('win7', 'x86', 'release', 'cpu'),
-            TestConfiguration('win7', 'x86', 'release', 'gpu'),
-            TestConfiguration('lucid', 'x86', 'debug', 'cpu'),
-            TestConfiguration('lucid', 'x86', 'debug', 'gpu'),
-            TestConfiguration('lucid', 'x86', 'release', 'cpu'),
-            TestConfiguration('lucid', 'x86', 'release', 'gpu'),
-            TestConfiguration('lucid', 'x86_64', 'debug', 'cpu'),
-            TestConfiguration('lucid', 'x86_64', 'debug', 'gpu'),
-            TestConfiguration('lucid', 'x86_64', 'release', 'cpu'),
-            TestConfiguration('lucid', 'x86_64', 'release', 'gpu'),
+            TestConfiguration('icecreamsandwich', 'x86', 'debug'),
+            TestConfiguration('icecreamsandwich', 'x86', 'release'),
+            TestConfiguration('leopard', 'x86', 'debug'),
+            TestConfiguration('leopard', 'x86', 'release'),
+            TestConfiguration('snowleopard', 'x86', 'debug'),
+            TestConfiguration('snowleopard', 'x86', 'release'),
+            TestConfiguration('lion', 'x86', 'debug'),
+            TestConfiguration('lion', 'x86', 'release'),
+            TestConfiguration('xp', 'x86', 'debug'),
+            TestConfiguration('xp', 'x86', 'release'),
+            TestConfiguration('vista', 'x86', 'debug'),
+            TestConfiguration('vista', 'x86', 'release'),
+            TestConfiguration('win7', 'x86', 'debug'),
+            TestConfiguration('win7', 'x86', 'release'),
+            TestConfiguration('lucid', 'x86', 'debug'),
+            TestConfiguration('lucid', 'x86', 'release'),
+            TestConfiguration('lucid', 'x86_64', 'debug'),
+            TestConfiguration('lucid', 'x86_64', 'release'),
         ]))
 
     def test_driver_cmd_line(self):
@@ -221,7 +204,16 @@ class ChromiumPortTest(port_testcase.PortTestCase):
     class TestMacPort(chromium_mac.ChromiumMacPort):
         def __init__(self, options=None):
             options = options or MockOptions()
-            chromium_mac.ChromiumMacPort.__init__(self, MockHost(), options=options)
+            chromium_mac.ChromiumMacPort.__init__(self, MockSystemHost(os_name='mac', os_version='leopard'), 'chromium-mac-leopard', options=options)
+
+        def default_configuration(self):
+            self.default_configuration_called = True
+            return 'default'
+
+    class TestAndroidPort(chromium_android.ChromiumAndroidPort):
+        def __init__(self, options=None):
+            options = options or MockOptions()
+            chromium_win.ChromiumAndroidPort.__init__(self, MockSystemHost(os_name='android', os_version='icecreamsandwich'), 'chromium-android', options=options)
 
         def default_configuration(self):
             self.default_configuration_called = True
@@ -230,7 +222,7 @@ class ChromiumPortTest(port_testcase.PortTestCase):
     class TestLinuxPort(chromium_linux.ChromiumLinuxPort):
         def __init__(self, options=None):
             options = options or MockOptions()
-            chromium_linux.ChromiumLinuxPort.__init__(self, MockHost(), options=options)
+            chromium_linux.ChromiumLinuxPort.__init__(self, MockSystemHost(os_name='linux', os_version='lucid'), 'chromium-linux-x86', options=options)
 
         def default_configuration(self):
             self.default_configuration_called = True
@@ -239,7 +231,7 @@ class ChromiumPortTest(port_testcase.PortTestCase):
     class TestWinPort(chromium_win.ChromiumWinPort):
         def __init__(self, options=None):
             options = options or MockOptions()
-            chromium_win.ChromiumWinPort.__init__(self, MockHost(), options=options)
+            chromium_win.ChromiumWinPort.__init__(self, MockSystemHost(os_name='win', os_version='xp'), 'chromium-win-xp', options=options)
 
         def default_configuration(self):
             self.default_configuration_called = True
@@ -250,22 +242,6 @@ class ChromiumPortTest(port_testcase.PortTestCase):
         self.assertTrue(ChromiumPortTest.TestLinuxPort()._path_to_image_diff().endswith('/out/default/ImageDiff'))
         self.assertTrue(ChromiumPortTest.TestMacPort()._path_to_image_diff().endswith('/xcodebuild/default/ImageDiff'))
         self.assertTrue(ChromiumPortTest.TestWinPort()._path_to_image_diff().endswith('/default/ImageDiff.exe'))
-
-    def test_skipped_layout_tests(self):
-        mock_options = MockOptions()
-        mock_options.configuration = 'release'
-        port = ChromiumPortTest.TestLinuxPort(options=mock_options)
-
-        fake_test = 'fast/js/not-good.js'
-
-        port.test_expectations = lambda: """BUG_TEST SKIP : fast/js/not-good.js = TEXT
-LINUX WIN : fast/js/very-good.js = TIMEOUT PASS"""
-        port.test_expectations_overrides = lambda: ''
-        port.tests = lambda paths: set()
-        port.test_exists = lambda test: True
-
-        skipped_tests = port.skipped_layout_tests(extra_test_files=[fake_test, ])
-        self.assertTrue("fast/js/not-good.js" in skipped_tests)
 
     def test_default_configuration(self):
         mock_options = MockOptions()

@@ -20,7 +20,6 @@
 #include "NetworkManager.h"
 
 #include "Chrome.h"
-#include "CookieManager.h"
 #include "CredentialStorage.h"
 #include "Frame.h"
 #include "FrameLoaderClientBlackBerry.h"
@@ -29,6 +28,10 @@
 #include "ResourceHandleInternal.h"
 #include "ResourceRequest.h"
 
+#include <BlackBerryPlatformClient.h>
+#include <BlackBerryPlatformLog.h>
+#include <BuildInformation.h>
+#include <network/FilterStream.h>
 #include <network/NetworkRequest.h>
 
 namespace WebCore {
@@ -73,7 +76,7 @@ bool NetworkManager::startJob(int playerId, const String& pageGroupName, PassRef
         m_initialURL = KURL();
 
     BlackBerry::Platform::NetworkRequest platformRequest;
-    request.initializePlatformRequest(platformRequest, isInitial);
+    request.initializePlatformRequest(platformRequest, frame.loader() && frame.loader()->client() && static_cast<FrameLoaderClientBlackBerry*>(frame.loader()->client())->cookiesEnabled(), isInitial, redirectCount);
 
     // Attach any applicable auth credentials to the NetworkRequest.
     AuthenticationChallenge& challenge = guardJob->getInternal()->m_currentWebChallenge;
@@ -104,26 +107,17 @@ bool NetworkManager::startJob(int playerId, const String& pageGroupName, PassRef
             }
         } else if (type == ProtectionSpaceServerFTP)
             authType = BlackBerry::Platform::NetworkRequest::AuthFTP;
+        else if (type == ProtectionSpaceProxyHTTP)
+            authType = BlackBerry::Platform::NetworkRequest::AuthProxy;
 
         if (authType != BlackBerry::Platform::NetworkRequest::AuthNone)
             platformRequest.setCredentials(username.utf8().data(), password.utf8().data(), authType);
-    } else if (url.protocolInHTTPFamily()) {
+    } else if (url.protocolIsInHTTPFamily()) {
         // For URLs that match the paths of those previously challenged for HTTP Basic authentication,
         // try and reuse the credential preemptively, as allowed by RFC 2617.
         Credential credential = CredentialStorage::get(url);
         if (!credential.isEmpty())
             platformRequest.setCredentials(credential.user().utf8().data(), credential.password().utf8().data(), BlackBerry::Platform::NetworkRequest::AuthHTTPBasic);
-    }
-
-    if ((&frame) && (&frame)->loader() && (&frame)->loader()->client()
-        && static_cast<FrameLoaderClientBlackBerry*>((&frame)->loader()->client())->cookiesEnabled()) {
-        // Prepare a cookie header if there are cookies related to this url.
-        String cookiePairs = cookieManager().getCookie(url, WithHttpOnlyCookies);
-        if (!cookiePairs.isEmpty()) {
-            // We encode the cookie header data using utf8 to support unicode characters.
-            // For more information, look at RFC5987 - 4.1 (http://tools.ietf.org/html/rfc5987#ref-ISO-8859-1).
-            platformRequest.setCookieData(cookiePairs.utf8().data());
-        }
     }
 
     if (!request.overrideContentType().isEmpty())
@@ -148,9 +142,9 @@ bool NetworkManager::startJob(int playerId, const String& pageGroupName, PassRef
     }
 
     if (url.protocolIs("about")) {
-        // Try to handle the url internally; if it isn't recognized, continue and pass it to the client.
-        if (networkJob->loadAboutURL())
-            return true;
+        // If the protocol matches "about", loadAboutURL should recognize and handle it.
+        networkJob->loadAboutURL();
+        return true;
     }
 
     int result = networkJob->streamOpen();

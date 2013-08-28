@@ -20,11 +20,12 @@
  * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
  * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
 #include "config.h"
 #include "SchemeRegistry.h"
+#include <wtf/MainThread.h>
 
 namespace WebCore {
 
@@ -99,16 +100,14 @@ static URLSchemesMap& canDisplayOnlyIfCanRequestSchemes()
 {
     DEFINE_STATIC_LOCAL(URLSchemesMap, canDisplayOnlyIfCanRequestSchemes, ());
 
-#if ENABLE(BLOB) || ENABLE(FILE_SYSTEM)
-    if (canDisplayOnlyIfCanRequestSchemes.isEmpty()) {
 #if ENABLE(BLOB)
+    if (canDisplayOnlyIfCanRequestSchemes.isEmpty()) {
         canDisplayOnlyIfCanRequestSchemes.add("blob");
-#endif
 #if ENABLE(FILE_SYSTEM)
         canDisplayOnlyIfCanRequestSchemes.add("filesystem");
 #endif
     }
-#endif // ENABLE(BLOB) || ENABLE(FILE_SYSTEM)
+#endif // ENABLE(BLOB)
 
     return canDisplayOnlyIfCanRequestSchemes;
 }
@@ -150,6 +149,19 @@ static URLSchemesMap& schemesAllowingDatabaseAccessInPrivateBrowsing()
 {
     DEFINE_STATIC_LOCAL(URLSchemesMap, schemesAllowingDatabaseAccessInPrivateBrowsing, ());
     return schemesAllowingDatabaseAccessInPrivateBrowsing;
+}
+
+static URLSchemesMap& CORSEnabledSchemes()
+{
+    // FIXME: http://bugs.webkit.org/show_bug.cgi?id=77160
+    DEFINE_STATIC_LOCAL(URLSchemesMap, CORSEnabledSchemes, ());
+
+    if (CORSEnabledSchemes.isEmpty()) {
+        CORSEnabledSchemes.add("http");
+        CORSEnabledSchemes.add("https");
+    }
+
+    return CORSEnabledSchemes;
 }
 
 bool SchemeRegistry::shouldTreatURLSchemeAsLocal(const String& scheme)
@@ -237,7 +249,7 @@ void SchemeRegistry::registerAsCanDisplayOnlyIfCanRequest(const String& scheme)
     canDisplayOnlyIfCanRequestSchemes().add(scheme);
 }
 
-void SchemeRegistry::registerURLSchemeAsNotAllowingJavascriptURLs(const String& scheme) 
+void SchemeRegistry::registerURLSchemeAsNotAllowingJavascriptURLs(const String& scheme)
 {
     notAllowingJavascriptURLsSchemes().add(scheme);
 }
@@ -271,6 +283,18 @@ bool SchemeRegistry::allowsDatabaseAccessInPrivateBrowsing(const String& scheme)
     if (scheme.isEmpty())
         return false;
     return schemesAllowingDatabaseAccessInPrivateBrowsing().contains(scheme);
+}
+
+void SchemeRegistry::registerURLSchemeAsCORSEnabled(const String& scheme)
+{
+    CORSEnabledSchemes().add(scheme);
+}
+
+bool SchemeRegistry::shouldTreatURLSchemeAsCORSEnabled(const String& scheme)
+{
+    if (scheme.isEmpty())
+        return false;
+    return CORSEnabledSchemes().contains(scheme);
 }
 
 } // namespace WebCore

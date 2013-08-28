@@ -37,6 +37,9 @@ public:
 
     using StyleElement::sheet;
 
+    bool disabled() const;
+    void setDisabled(bool);
+                          
     virtual const AtomicString& type() const;
     void setType(const AtomicString&, ExceptionCode&);
 
@@ -50,9 +53,9 @@ private:
     SVGStyleElement(const QualifiedName&, Document*, bool createdByParser);
 
     bool isSupportedAttribute(const QualifiedName&);
-    virtual void parseMappedAttribute(Attribute*);
-    virtual void insertedIntoDocument();
-    virtual void removedFromDocument();
+    virtual void parseAttribute(Attribute*) OVERRIDE;
+    virtual InsertionNotificationRequest insertedInto(Node*) OVERRIDE;
+    virtual void removedFrom(Node*) OVERRIDE;
     virtual void childrenChanged(bool changedByParser = false, Node* beforeChange = 0, Node* afterChange = 0, int childCountDelta = 0);
 
     virtual void finishParsingChildren();

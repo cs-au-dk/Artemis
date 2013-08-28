@@ -29,13 +29,20 @@
 #include "LayerChromium.h"
 #include "LayerPainterChromium.h"
 #include "LayerRendererChromium.h"
+#include "Region.h"
 #include "TraceEvent.h"
 #include "TreeSynchronizer.h"
+#include "cc/CCFontAtlas.h"
+#include "cc/CCLayerAnimationController.h"
+#include "cc/CCLayerIterator.h"
 #include "cc/CCLayerTreeHostCommon.h"
 #include "cc/CCLayerTreeHostImpl.h"
+#include "cc/CCOcclusionTracker.h"
 #include "cc/CCSingleThreadProxy.h"
 #include "cc/CCThread.h"
 #include "cc/CCThreadProxy.h"
+
+using namespace std;
 
 namespace {
 static int numLayerTreeInstances;
@@ -43,31 +50,39 @@ static int numLayerTreeInstances;
 
 namespace WebCore {
 
+bool CCLayerTreeHost::s_needsFilterContext = false;
+
 bool CCLayerTreeHost::anyLayerTreeHostInstanceExists()
 {
     return numLayerTreeInstances > 0;
 }
 
-PassRefPtr<CCLayerTreeHost> CCLayerTreeHost::create(CCLayerTreeHostClient* client, const CCSettings& settings)
+PassOwnPtr<CCLayerTreeHost> CCLayerTreeHost::create(CCLayerTreeHostClient* client, const CCSettings& settings)
 {
-    RefPtr<CCLayerTreeHost> layerTreeHost = adoptRef(new CCLayerTreeHost(client, settings));
+    OwnPtr<CCLayerTreeHost> layerTreeHost = adoptPtr(new CCLayerTreeHost(client, settings));
     if (!layerTreeHost->initialize())
-        return 0;
-    return layerTreeHost;
+        return nullptr;
+    return layerTreeHost.release();
 }
 
 CCLayerTreeHost::CCLayerTreeHost(CCLayerTreeHostClient* client, const CCSettings& settings)
     : m_compositorIdentifier(-1)
     , m_animating(false)
+    , m_needsAnimateLayers(false)
     , m_client(client)
     , m_frameNumber(0)
+    , m_layerRendererInitialized(false)
+    , m_contextLost(false)
+    , m_numTimesRecreateShouldFail(0)
+    , m_numFailedRecreateAttempts(0)
     , m_settings(settings)
     , m_visible(true)
-    , m_haveWheelEventHandlers(false)
-    , m_pageScale(1)
-    , m_minPageScale(1)
-    , m_maxPageScale(1)
+    , m_pageScaleFactor(1)
+    , m_minPageScaleFactor(1)
+    , m_maxPageScaleFactor(1)
     , m_triggerIdlePaints(true)
+    , m_backgroundColor(Color::white)
+    , m_partialTextureUpdateRequests(0)
 {
     ASSERT(CCProxy::isMainThread());
     numLayerTreeInstances++;
@@ -76,27 +91,25 @@ CCLayerTreeHost::CCLayerTreeHost(CCLayerTreeHostClient* client, const CCSettings
 bool CCLayerTreeHost::initialize()
 {
     TRACE_EVENT("CCLayerTreeHost::initialize", this, 0);
-    if (CCProxy::hasImplThread()) {
-        // The HUD does not work in threaded mode. Turn it off.
-        m_settings.showFPSCounter = false;
-        m_settings.showPlatformLayerTree = false;
 
+    if (CCProxy::hasImplThread())
         m_proxy = CCThreadProxy::create(this);
-    } else
+    else
         m_proxy = CCSingleThreadProxy::create(this);
     m_proxy->start();
 
-    if (!m_proxy->initializeLayerRenderer())
+    if (!m_proxy->initializeContext())
         return false;
 
+    // Only allocate the font atlas if we have reason to use the heads-up display.
+    if (m_settings.showFPSCounter || m_settings.showPlatformLayerTree) {
+        TRACE_EVENT0("cc", "CCLayerTreeHost::initialize::initializeFontAtlas");
+        OwnPtr<CCFontAtlas> fontAtlas(CCFontAtlas::create());
+        fontAtlas->initialize();
+        m_proxy->setFontAtlas(fontAtlas.release());
+    }
+
     m_compositorIdentifier = m_proxy->compositorIdentifier();
-
-    // Update m_settings based on capabilities that we got back from the renderer.
-    m_settings.acceleratePainting = m_proxy->layerRendererCapabilities().usingAcceleratedPainting;
-
-    m_contentsTextureManager = TextureManager::create(TextureManager::highLimitBytes(viewportSize()),
-                                                      TextureManager::reclaimLimitBytes(viewportSize()),
-                                                      m_proxy->layerRendererCapabilities().maxTextureSize);
     return true;
 }
 
@@ -107,22 +120,95 @@ CCLayerTreeHost::~CCLayerTreeHost()
     ASSERT(m_proxy);
     m_proxy->stop();
     m_proxy.clear();
-    clearPendingUpdate();
     numLayerTreeInstances--;
+}
+
+void CCLayerTreeHost::setSurfaceReady()
+{
+    m_proxy->setSurfaceReady();
+}
+
+void CCLayerTreeHost::initializeLayerRenderer()
+{
+    TRACE_EVENT("CCLayerTreeHost::initializeLayerRenderer", this, 0);
+    if (!m_proxy->initializeLayerRenderer()) {
+        // Uh oh, better tell the client that we can't do anything with this context.
+        m_client->didRecreateContext(false);
+        return;
+    }
+
+    // Update m_settings based on capabilities that we got back from the renderer.
+    m_settings.acceleratePainting = m_proxy->layerRendererCapabilities().usingAcceleratedPainting;
+
+    // Update m_settings based on partial update capability.
+    m_settings.maxPartialTextureUpdates = min(m_settings.maxPartialTextureUpdates, m_proxy->maxPartialTextureUpdates());
+
+    m_contentsTextureManager = TextureManager::create(TextureManager::highLimitBytes(viewportSize()),
+                                                      TextureManager::reclaimLimitBytes(viewportSize()),
+                                                      m_proxy->layerRendererCapabilities().maxTextureSize);
+
+    m_layerRendererInitialized = true;
+}
+
+CCLayerTreeHost::RecreateResult CCLayerTreeHost::recreateContext()
+{
+    TRACE_EVENT0("cc", "CCLayerTreeHost::recreateContext");
+    ASSERT(m_contextLost);
+
+    bool recreated = false;
+    if (!m_numTimesRecreateShouldFail)
+        recreated = m_proxy->recreateContext();
+    else
+        m_numTimesRecreateShouldFail--;
+
+    if (recreated) {
+        m_client->didRecreateContext(true);
+        m_contextLost = false;
+        return RecreateSucceeded;
+    }
+
+    // Tolerate a certain number of recreation failures to work around races
+    // in the context-lost machinery.
+    m_numFailedRecreateAttempts++;
+    if (m_numFailedRecreateAttempts < 5) {
+        // FIXME: The single thread does not self-schedule context
+        // recreation. So force another recreation attempt to happen by requesting
+        // another commit.
+        if (!CCProxy::hasImplThread())
+            setNeedsCommit();
+        return RecreateFailedButTryAgain;
+    }
+
+    // We have tried too many times to recreate the context. Tell the host to fall
+    // back to software rendering.
+    m_client->didRecreateContext(false);
+    return RecreateFailedAndGaveUp;
 }
 
 void CCLayerTreeHost::deleteContentsTexturesOnImplThread(TextureAllocator* allocator)
 {
     ASSERT(CCProxy::isImplThread());
-    if (m_contentsTextureManager)
+    if (m_layerRendererInitialized)
         m_contentsTextureManager->evictAndDeleteAllTextures(allocator);
 }
 
-void CCLayerTreeHost::animateAndLayout(double frameBeginTime)
+void CCLayerTreeHost::acquireLayerTextures()
+{
+    ASSERT(CCProxy::isMainThread());
+    m_proxy->acquireLayerTextures();
+}
+
+void CCLayerTreeHost::updateAnimations(double monotonicFrameBeginTime)
 {
     m_animating = true;
-    m_client->animateAndLayout(frameBeginTime);
+    m_client->updateAnimations(monotonicFrameBeginTime);
+    animateLayers(monotonicFrameBeginTime);
     m_animating = false;
+}
+
+void CCLayerTreeHost::layout()
+{
+    m_client->layout();
 }
 
 void CCLayerTreeHost::beginCommitOnImplThread(CCLayerTreeHostImpl* hostImpl)
@@ -130,8 +216,8 @@ void CCLayerTreeHost::beginCommitOnImplThread(CCLayerTreeHostImpl* hostImpl)
     ASSERT(CCProxy::isImplThread());
     TRACE_EVENT("CCLayerTreeHost::commitTo", this, 0);
 
-    contentsTextureManager()->reduceMemoryToLimit(TextureManager::reclaimLimitBytes(viewportSize()));
-    contentsTextureManager()->deleteEvictedTextures(hostImpl->contentsTextureAllocator());
+    m_contentsTextureManager->reduceMemoryToLimit(m_contentsTextureManager->preferredMemoryLimitBytes());
+    m_contentsTextureManager->deleteEvictedTextures(hostImpl->contentsTextureAllocator());
 }
 
 // This function commits the CCLayerTreeHost to an impl tree. When modifying
@@ -143,30 +229,33 @@ void CCLayerTreeHost::finishCommitOnImplThread(CCLayerTreeHostImpl* hostImpl)
 {
     ASSERT(CCProxy::isImplThread());
 
-    // Synchronize trees, if one exists at all...
-    if (rootLayer())
-        hostImpl->setRootLayer(TreeSynchronizer::synchronizeTrees(rootLayer(), hostImpl->rootLayer()));
-    else
-        hostImpl->setRootLayer(0);
+    hostImpl->setRootLayer(TreeSynchronizer::synchronizeTrees(rootLayer(), hostImpl->releaseRootLayer()));
+
+    // We may have added an animation during the tree sync. This will cause both layer tree hosts
+    // to visit their controllers.
+    if (rootLayer()) {
+        hostImpl->setNeedsAnimateLayers();
+        m_needsAnimateLayers = true;
+    }
 
     hostImpl->setSourceFrameNumber(frameNumber());
-    hostImpl->setHaveWheelEventHandlers(m_haveWheelEventHandlers);
-    hostImpl->setZoomAnimatorTransform(m_zoomAnimatorTransform);
-    hostImpl->setViewport(viewportSize());
-    hostImpl->setPageScaleFactorAndLimits(pageScale(), m_minPageScale, m_maxPageScale);
+    hostImpl->setViewportSize(viewportSize());
+    hostImpl->setPageScaleFactorAndLimits(m_pageScaleFactor, m_minPageScaleFactor, m_maxPageScaleFactor);
+    hostImpl->setBackgroundColor(m_backgroundColor);
 
     m_frameNumber++;
 }
 
 void CCLayerTreeHost::commitComplete()
 {
-    clearPendingUpdate();
+    m_deleteTextureAfterCommitList.clear();
     m_contentsTextureManager->unprotectAllTextures();
+    m_client->didCommit();
 }
 
-PassRefPtr<GraphicsContext3D> CCLayerTreeHost::createLayerTreeHostContext3D()
+PassRefPtr<GraphicsContext3D> CCLayerTreeHost::createContext()
 {
-    return m_client->createLayerTreeHostContext3D();
+    return m_client->createContext();
 }
 
 PassOwnPtr<CCLayerTreeHostImpl> CCLayerTreeHost::createLayerTreeHostImpl(CCLayerTreeHostImplClient* client)
@@ -174,24 +263,32 @@ PassOwnPtr<CCLayerTreeHostImpl> CCLayerTreeHost::createLayerTreeHostImpl(CCLayer
     return CCLayerTreeHostImpl::create(m_settings, client);
 }
 
-void CCLayerTreeHost::didRecreateGraphicsContext(bool success)
+void CCLayerTreeHost::didLoseContext()
 {
-    if (m_rootLayer) {
-        m_rootLayer->setLayerTreeHost(0);
-        m_rootLayer->setLayerTreeHost(this);
-    }
-    m_client->didRecreateGraphicsContext(success);
+    TRACE_EVENT("CCLayerTreeHost::didLoseContext", 0, this);
+    ASSERT(CCProxy::isMainThread());
+    m_contextLost = true;
+    m_numFailedRecreateAttempts = 0;
+    setNeedsCommit();
 }
 
 // Temporary hack until WebViewImpl context creation gets simplified
 GraphicsContext3D* CCLayerTreeHost::context()
 {
-    ASSERT(!CCProxy::hasImplThread());
     return m_proxy->context();
 }
 
 bool CCLayerTreeHost::compositeAndReadback(void *pixels, const IntRect& rect)
 {
+    if (!m_layerRendererInitialized) {
+        initializeLayerRenderer();
+        if (!m_layerRendererInitialized)
+            return false;
+    }
+    if (m_contextLost) {
+        if (recreateContext() != RecreateSucceeded)
+            return false;
+    }
     m_triggerIdlePaints = false;
     bool ret = m_proxy->compositeAndReadback(pixels, rect);
     m_triggerIdlePaints = true;
@@ -200,22 +297,14 @@ bool CCLayerTreeHost::compositeAndReadback(void *pixels, const IntRect& rect)
 
 void CCLayerTreeHost::finishAllRendering()
 {
+    if (!m_layerRendererInitialized)
+        return;
     m_proxy->finishAllRendering();
 }
 
 const LayerRendererCapabilities& CCLayerTreeHost::layerRendererCapabilities() const
 {
     return m_proxy->layerRendererCapabilities();
-}
-
-void CCLayerTreeHost::setZoomAnimatorTransform(const TransformationMatrix& zoom)
-{
-    bool zoomChanged = m_zoomAnimatorTransform != zoom;
-
-    m_zoomAnimatorTransform = zoom;
-
-    if (zoomChanged)
-        setNeedsCommit();
 }
 
 void CCLayerTreeHost::setNeedsAnimate()
@@ -234,10 +323,20 @@ void CCLayerTreeHost::setNeedsCommit()
 
 void CCLayerTreeHost::setNeedsRedraw()
 {
-    if (CCThreadProxy::implThread())
-        m_proxy->setNeedsRedraw();
-    else
+    m_proxy->setNeedsRedraw();
+    if (!CCThreadProxy::implThread())
         m_client->scheduleComposite();
+}
+
+bool CCLayerTreeHost::commitRequested() const
+{
+    return m_proxy->commitRequested();
+}
+
+void CCLayerTreeHost::setAnimationEvents(PassOwnPtr<CCAnimationEventsVector> events, double wallClockTime)
+{
+    ASSERT(CCThreadProxy::isMainThread());
+    setAnimationEventsRecursive(*events, m_rootLayer.get(), wallClockTime);
 }
 
 void CCLayerTreeHost::setRootLayer(PassRefPtr<LayerChromium> rootLayer)
@@ -253,30 +352,23 @@ void CCLayerTreeHost::setRootLayer(PassRefPtr<LayerChromium> rootLayer)
     setNeedsCommit();
 }
 
-void CCLayerTreeHost::setViewport(const IntSize& viewportSize)
+void CCLayerTreeHost::setViewportSize(const IntSize& viewportSize)
 {
-    contentsTextureManager()->setMaxMemoryLimitBytes(TextureManager::highLimitBytes(viewportSize));
-    contentsTextureManager()->setPreferredMemoryLimitBytes(TextureManager::reclaimLimitBytes(viewportSize));
+    if (viewportSize == m_viewportSize)
+        return;
+
     m_viewportSize = viewportSize;
     setNeedsCommit();
 }
 
-void CCLayerTreeHost::setPageScale(float pageScale)
+void CCLayerTreeHost::setPageScaleFactorAndLimits(float pageScaleFactor, float minPageScaleFactor, float maxPageScaleFactor)
 {
-    if (pageScale == m_pageScale)
+    if (pageScaleFactor == m_pageScaleFactor && minPageScaleFactor == m_minPageScaleFactor && maxPageScaleFactor == m_maxPageScaleFactor)
         return;
 
-    m_pageScale = pageScale;
-    setNeedsCommit();
-}
-
-void CCLayerTreeHost::setPageScaleFactorLimits(float minScale, float maxScale)
-{
-    if (minScale == m_minPageScale && maxScale == m_maxPageScale)
-        return;
-
-    m_minPageScale = minScale;
-    m_maxPageScale = maxScale;
+    m_pageScaleFactor = pageScaleFactor;
+    m_minPageScaleFactor = minPageScaleFactor;
+    m_maxPageScaleFactor = maxPageScaleFactor;
     setNeedsCommit();
 }
 
@@ -286,10 +378,6 @@ void CCLayerTreeHost::setVisible(bool visible)
         return;
 
     m_visible = visible;
-    if (!visible) {
-        m_contentsTextureManager->reduceMemoryToLimit(TextureManager::lowLimitBytes(viewportSize()));
-        m_contentsTextureManager->unprotectAllTextures();
-    }
 
     // Tells the proxy that visibility state has changed. This will in turn call
     // CCLayerTreeHost::didBecomeInvisibleOnImplThread on the appropriate thread, for
@@ -300,38 +388,51 @@ void CCLayerTreeHost::setVisible(bool visible)
 void CCLayerTreeHost::didBecomeInvisibleOnImplThread(CCLayerTreeHostImpl* hostImpl)
 {
     ASSERT(CCProxy::isImplThread());
-    if (m_proxy->layerRendererCapabilities().contextHasCachedFrontBuffer)
-        contentsTextureManager()->evictAndDeleteAllTextures(hostImpl->contentsTextureAllocator());
-    else {
-        contentsTextureManager()->reduceMemoryToLimit(TextureManager::reclaimLimitBytes(viewportSize()));
-        contentsTextureManager()->deleteEvictedTextures(hostImpl->contentsTextureAllocator());
-    }
+    if (!m_layerRendererInitialized)
+        return;
 
-    // Ensure that the dropped tiles are propagated to the impl tree.
-    // If the frontbuffer is cached, then clobber the impl tree. Otherwise,
-    // push over the tree changes.
     if (m_proxy->layerRendererCapabilities().contextHasCachedFrontBuffer) {
-        hostImpl->setRootLayer(0);
-        return;
+        // Unprotect and delete all textures.
+        m_contentsTextureManager->unprotectAllTextures();
+        m_contentsTextureManager->reduceMemoryToLimit(0);
+    } else {
+        // Delete all unprotected textures, and only save textures that fit in the preferred memory limit.
+        m_contentsTextureManager->reduceMemoryToLimit(0);
+        m_contentsTextureManager->unprotectAllTextures();
+        m_contentsTextureManager->reduceMemoryToLimit(m_contentsTextureManager->preferredMemoryLimitBytes());
     }
-    if (rootLayer())
-        hostImpl->setRootLayer(TreeSynchronizer::synchronizeTrees(rootLayer(), hostImpl->rootLayer()));
-    else
-        hostImpl->setRootLayer(0);
+    m_contentsTextureManager->deleteEvictedTextures(hostImpl->contentsTextureAllocator());
+
+    hostImpl->setRootLayer(TreeSynchronizer::synchronizeTrees(rootLayer(), hostImpl->releaseRootLayer()));
+
+    // We may have added an animation during the tree sync. This will cause both layer tree hosts
+    // to visit their controllers.
+    if (rootLayer()) {
+        hostImpl->setNeedsAnimateLayers();
+        m_needsAnimateLayers = true;
+    }
 }
 
-void CCLayerTreeHost::setHaveWheelEventHandlers(bool haveWheelEventHandlers)
+void CCLayerTreeHost::setContentsMemoryAllocationLimitBytes(size_t bytes)
 {
-    if (m_haveWheelEventHandlers == haveWheelEventHandlers)
+    ASSERT(CCProxy::isMainThread());
+    if (!m_layerRendererInitialized)
         return;
-    m_haveWheelEventHandlers = haveWheelEventHandlers;
-    m_proxy->setNeedsCommit();
+
+    m_contentsTextureManager->setMemoryAllocationLimitBytes(bytes);
 }
 
 
-void CCLayerTreeHost::loseCompositorContext(int numTimes)
+void CCLayerTreeHost::startPageScaleAnimation(const IntSize& targetPosition, bool useAnchor, float scale, double durationSec)
 {
-    m_proxy->loseCompositorContext(numTimes);
+    m_proxy->startPageScaleAnimation(targetPosition, useAnchor, scale, durationSec);
+}
+
+void CCLayerTreeHost::loseContext(int numTimes)
+{
+    TRACE_EVENT1("cc", "CCLayerTreeHost::loseCompositorContext", "numTimes", numTimes);
+    m_numTimesRecreateShouldFail = numTimes - 1;
+    m_proxy->loseContext();
 }
 
 TextureManager* CCLayerTreeHost::contentsTextureManager() const
@@ -345,18 +446,30 @@ void CCLayerTreeHost::composite()
     static_cast<CCSingleThreadProxy*>(m_proxy.get())->compositeImmediately();
 }
 
-void CCLayerTreeHost::updateLayers()
+bool CCLayerTreeHost::updateLayers(CCTextureUpdater& updater)
 {
+    if (!m_layerRendererInitialized) {
+        initializeLayerRenderer();
+        // If we couldn't initialize, then bail since we're returning to software mode.
+        if (!m_layerRendererInitialized)
+            return false;
+    }
+    if (m_contextLost) {
+        if (recreateContext() != RecreateSucceeded)
+            return false;
+    }
+
     if (!rootLayer())
-        return;
+        return true;
 
     if (viewportSize().isEmpty())
-        return;
+        return true;
 
-    updateLayers(rootLayer());
+    updateLayers(rootLayer(), updater);
+    return true;
 }
 
-void CCLayerTreeHost::updateLayers(LayerChromium* rootLayer)
+void CCLayerTreeHost::updateLayers(LayerChromium* rootLayer, CCTextureUpdater& updater)
 {
     TRACE_EVENT("CCLayerTreeHost::updateLayers", this, 0);
 
@@ -367,10 +480,8 @@ void CCLayerTreeHost::updateLayers(LayerChromium* rootLayer)
     IntRect rootClipRect(IntPoint(), viewportSize());
     rootLayer->setClipRect(rootClipRect);
 
-    // This assert fires if updateCompositorResources wasn't called after
-    // updateLayers. Only one update can be pending at any given time.
-    ASSERT(!m_updateList.size());
-    m_updateList.append(rootLayer);
+    LayerList updateList;
+    updateList.append(rootLayer);
 
     RenderSurfaceChromium* rootRenderSurface = rootLayer->renderSurface();
     rootRenderSurface->clearLayerList();
@@ -378,150 +489,163 @@ void CCLayerTreeHost::updateLayers(LayerChromium* rootLayer)
     TransformationMatrix identityMatrix;
     {
         TRACE_EVENT("CCLayerTreeHost::updateLayers::calcDrawEtc", this, 0);
-        CCLayerTreeHostCommon::calculateDrawTransformsAndVisibility(rootLayer, rootLayer, identityMatrix, identityMatrix, m_updateList, rootRenderSurface->layerList(), layerRendererCapabilities().maxTextureSize);
+        CCLayerTreeHostCommon::calculateDrawTransformsAndVisibility(rootLayer, rootLayer, identityMatrix, identityMatrix, updateList, rootRenderSurface->layerList(), layerRendererCapabilities().maxTextureSize);
     }
 
-    paintLayerContents(m_updateList, PaintVisible);
+    // Reset partial texture update requests.
+    m_partialTextureUpdateRequests = 0;
+
+    reserveTextures(updateList);
+
+    paintLayerContents(updateList, PaintVisible, updater);
     if (!m_triggerIdlePaints)
         return;
 
-    size_t preferredLimitBytes = TextureManager::reclaimLimitBytes(m_viewportSize);
-    size_t maxLimitBytes = TextureManager::highLimitBytes(m_viewportSize);
-    contentsTextureManager()->reduceMemoryToLimit(preferredLimitBytes);
-    if (contentsTextureManager()->currentMemoryUseBytes() >= preferredLimitBytes)
+    size_t preferredLimitBytes = m_contentsTextureManager->preferredMemoryLimitBytes();
+    size_t maxLimitBytes = m_contentsTextureManager->maxMemoryLimitBytes();
+    m_contentsTextureManager->reduceMemoryToLimit(preferredLimitBytes);
+    if (m_contentsTextureManager->currentMemoryUseBytes() >= preferredLimitBytes)
         return;
 
     // Idle painting should fail when we hit the preferred memory limit,
     // otherwise it will always push us towards the maximum limit.
     m_contentsTextureManager->setMaxMemoryLimitBytes(preferredLimitBytes);
     // The second (idle) paint will be a no-op in layers where painting already occured above.
-    paintLayerContents(m_updateList, PaintIdle);
+    paintLayerContents(updateList, PaintIdle, updater);
     m_contentsTextureManager->setMaxMemoryLimitBytes(maxLimitBytes);
+
+    for (size_t i = 0; i < updateList.size(); ++i)
+        updateList[i]->clearRenderSurface();
+}
+
+void CCLayerTreeHost::reserveTextures(const LayerList& updateList)
+{
+    // Use BackToFront since it's cheap and this isn't order-dependent.
+    typedef CCLayerIterator<LayerChromium, Vector<RefPtr<LayerChromium> >, RenderSurfaceChromium, CCLayerIteratorActions::BackToFront> CCLayerIteratorType;
+
+    CCLayerIteratorType end = CCLayerIteratorType::end(&updateList);
+    for (CCLayerIteratorType it = CCLayerIteratorType::begin(&updateList); it != end; ++it) {
+        if (!it.representsItself() || !it->alwaysReserveTextures())
+            continue;
+        it->reserveTextures();
+    }
 }
 
 // static
-void CCLayerTreeHost::paintContentsIfDirty(LayerChromium* layer, PaintType paintType)
+void CCLayerTreeHost::update(LayerChromium* layer, PaintType paintType, CCTextureUpdater& updater, const CCOcclusionTracker* occlusion)
 {
     ASSERT(layer);
     ASSERT(PaintVisible == paintType || PaintIdle == paintType);
     if (PaintVisible == paintType)
-        layer->paintContentsIfDirty();
+        layer->update(updater, occlusion);
     else
-        layer->idlePaintContentsIfDirty();
+        layer->idleUpdate(updater, occlusion);
 }
 
-void CCLayerTreeHost::paintMaskAndReplicaForRenderSurface(LayerChromium* renderSurfaceLayer, PaintType paintType)
+void CCLayerTreeHost::paintMasksForRenderSurface(LayerChromium* renderSurfaceLayer, PaintType paintType, CCTextureUpdater& updater)
 {
     // Note: Masks and replicas only exist for layers that own render surfaces. If we reach this point
     // in code, we already know that at least something will be drawn into this render surface, so the
     // mask and replica should be painted.
 
-    if (renderSurfaceLayer->maskLayer()) {
-        renderSurfaceLayer->maskLayer()->setVisibleLayerRect(IntRect(IntPoint(), renderSurfaceLayer->contentBounds()));
-        paintContentsIfDirty(renderSurfaceLayer->maskLayer(), paintType);
+    LayerChromium* maskLayer = renderSurfaceLayer->maskLayer();
+    if (maskLayer) {
+        maskLayer->setVisibleLayerRect(IntRect(IntPoint(), renderSurfaceLayer->contentBounds()));
+        update(maskLayer, paintType, updater, 0);
     }
 
-    LayerChromium* replicaLayer = renderSurfaceLayer->replicaLayer();
-    if (replicaLayer) {
-        paintContentsIfDirty(replicaLayer, paintType);
-
-        if (replicaLayer->maskLayer()) {
-            replicaLayer->maskLayer()->setVisibleLayerRect(IntRect(IntPoint(), replicaLayer->maskLayer()->contentBounds()));
-            paintContentsIfDirty(replicaLayer->maskLayer(), paintType);
-        }
+    LayerChromium* replicaMaskLayer = renderSurfaceLayer->replicaLayer() ? renderSurfaceLayer->replicaLayer()->maskLayer() : 0;
+    if (replicaMaskLayer) {
+        replicaMaskLayer->setVisibleLayerRect(IntRect(IntPoint(), renderSurfaceLayer->contentBounds()));
+        update(replicaMaskLayer, paintType, updater, 0);
     }
 }
 
-void CCLayerTreeHost::paintLayerContents(const LayerList& renderSurfaceLayerList, PaintType paintType)
+void CCLayerTreeHost::paintLayerContents(const LayerList& renderSurfaceLayerList, PaintType paintType, CCTextureUpdater& updater)
 {
-    for (int surfaceIndex = renderSurfaceLayerList.size() - 1; surfaceIndex >= 0 ; --surfaceIndex) {
-        LayerChromium* renderSurfaceLayer = renderSurfaceLayerList[surfaceIndex].get();
-        RenderSurfaceChromium* renderSurface = renderSurfaceLayer->renderSurface();
-        ASSERT(renderSurface);
-        ASSERT(renderSurface->drawOpacity());
+    // Use FrontToBack to allow for testing occlusion and performing culling during the tree walk.
+    typedef CCLayerIterator<LayerChromium, Vector<RefPtr<LayerChromium> >, RenderSurfaceChromium, CCLayerIteratorActions::FrontToBack> CCLayerIteratorType;
 
-        paintMaskAndReplicaForRenderSurface(renderSurfaceLayer, paintType);
+    bool recordMetricsForFrame = true; // FIXME: In the future, disable this when about:tracing is off.
+    CCOcclusionTracker occlusionTracker(IntRect(IntPoint(), viewportSize()), recordMetricsForFrame);
+    occlusionTracker.setMinimumTrackingSize(CCOcclusionTracker::preferredMinimumTrackingSize());
 
-        const LayerList& layerList = renderSurface->layerList();
-        for (unsigned layerIndex = 0; layerIndex < layerList.size(); ++layerIndex) {
-            LayerChromium* layer = layerList[layerIndex].get();
+    CCLayerIteratorType end = CCLayerIteratorType::end(&renderSurfaceLayerList);
+    for (CCLayerIteratorType it = CCLayerIteratorType::begin(&renderSurfaceLayerList); it != end; ++it) {
+        occlusionTracker.enterLayer(it);
 
-            // Layers that start a new render surface will be painted when the render
-            // surface's list is processed.
-            if (CCLayerTreeHostCommon::renderSurfaceContributesToTarget<LayerChromium>(layer, renderSurfaceLayer->id()))
-                continue;
-
-            ASSERT(!layer->bounds().isEmpty());
-
-            paintContentsIfDirty(layer, paintType);
+        if (it.representsTargetRenderSurface()) {
+            ASSERT(it->renderSurface()->drawOpacity() || it->renderSurface()->drawOpacityIsAnimating());
+            paintMasksForRenderSurface(*it, paintType, updater);
+        } else if (it.representsItself()) {
+            ASSERT(!it->bounds().isEmpty());
+            update(*it, paintType, updater, &occlusionTracker);
         }
+
+        occlusionTracker.leaveLayer(it);
     }
+
+    occlusionTracker.overdrawMetrics().recordMetrics(this);
 }
 
-void CCLayerTreeHost::updateCompositorResources(GraphicsContext3D* context, CCTextureUpdater& updater)
+static LayerChromium* findFirstScrollableLayer(LayerChromium* layer)
 {
-    for (int surfaceIndex = m_updateList.size() - 1; surfaceIndex >= 0 ; --surfaceIndex) {
-        LayerChromium* renderSurfaceLayer = m_updateList[surfaceIndex].get();
-        RenderSurfaceChromium* renderSurface = renderSurfaceLayer->renderSurface();
-        ASSERT(renderSurface);
-        ASSERT(renderSurface->drawOpacity());
+    if (!layer)
+        return 0;
 
-        if (renderSurfaceLayer->maskLayer())
-            renderSurfaceLayer->maskLayer()->updateCompositorResources(context, updater);
+    if (layer->scrollable())
+        return layer;
 
-        if (renderSurfaceLayer->replicaLayer()) {
-            renderSurfaceLayer->replicaLayer()->updateCompositorResources(context, updater);
-            
-            if (renderSurfaceLayer->replicaLayer()->maskLayer())
-                renderSurfaceLayer->replicaLayer()->maskLayer()->updateCompositorResources(context, updater);
-        }
-        
-        const LayerList& layerList = renderSurface->layerList();
-        for (unsigned layerIndex = 0; layerIndex < layerList.size(); ++layerIndex) {
-            LayerChromium* layer = layerList[layerIndex].get();
-
-            if (CCLayerTreeHostCommon::renderSurfaceContributesToTarget<LayerChromium>(layer, renderSurfaceLayer->id()))
-                continue;
-
-            layer->updateCompositorResources(context, updater);
-        }
+    for (size_t i = 0; i < layer->children().size(); ++i) {
+        LayerChromium* found = findFirstScrollableLayer(layer->children()[i].get());
+        if (found)
+            return found;
     }
-}
 
-void CCLayerTreeHost::clearPendingUpdate()
-{
-    for (size_t surfaceIndex = 0; surfaceIndex < m_updateList.size(); ++surfaceIndex) {
-        LayerChromium* layer = m_updateList[surfaceIndex].get();
-        ASSERT(layer->renderSurface());
-        layer->clearRenderSurface();
-    }
-    m_updateList.clear();
+    return 0;
 }
 
 void CCLayerTreeHost::applyScrollAndScale(const CCScrollAndScaleSet& info)
 {
-    // FIXME: pushing scroll offsets to non-root layers not implemented
-    if (!info.scrolls.size())
+    if (!m_rootLayer)
         return;
 
-    ASSERT(info.scrolls.size() == 1);
-    IntSize scrollDelta = info.scrolls[0].scrollDelta;
-    m_client->applyScrollAndScale(scrollDelta, info.pageScaleDelta);
+    LayerChromium* rootScrollLayer = findFirstScrollableLayer(m_rootLayer.get());
+    IntSize rootScrollDelta;
+
+    for (size_t i = 0; i < info.scrolls.size(); ++i) {
+        LayerChromium* layer = CCLayerTreeHostCommon::findLayerInSubtree(m_rootLayer.get(), info.scrolls[i].layerId);
+        if (!layer)
+            continue;
+        if (layer == rootScrollLayer)
+            rootScrollDelta += info.scrolls[i].scrollDelta;
+        else
+            layer->scrollBy(info.scrolls[i].scrollDelta);
+    }
+    if (!rootScrollDelta.isZero() || info.pageScaleDelta != 1)
+        m_client->applyScrollAndScale(rootScrollDelta, info.pageScaleDelta);
 }
 
 void CCLayerTreeHost::startRateLimiter(GraphicsContext3D* context)
 {
-    if (animating())
+    if (m_animating)
         return;
     ASSERT(context);
     RateLimiterMap::iterator it = m_rateLimiters.find(context);
     if (it != m_rateLimiters.end())
         it->second->start();
     else {
-        RefPtr<RateLimiter> rateLimiter = RateLimiter::create(context);
+        RefPtr<RateLimiter> rateLimiter = RateLimiter::create(context, this);
         m_rateLimiters.set(context, rateLimiter);
         rateLimiter->start();
     }
+}
+
+void CCLayerTreeHost::rateLimit()
+{
+    // Force a no-op command on the compositor context, so that any ratelimiting commands will wait for the compositing
+    // context, and therefore for the SwapBuffers.
+    m_proxy->forceSerializeOnSwapBuffers();
 }
 
 void CCLayerTreeHost::stopRateLimiter(GraphicsContext3D* context)
@@ -533,4 +657,71 @@ void CCLayerTreeHost::stopRateLimiter(GraphicsContext3D* context)
     }
 }
 
+bool CCLayerTreeHost::bufferedUpdates()
+{
+    return m_settings.maxPartialTextureUpdates != numeric_limits<size_t>::max();
 }
+
+bool CCLayerTreeHost::requestPartialTextureUpdate()
+{
+    if (m_partialTextureUpdateRequests >= m_settings.maxPartialTextureUpdates)
+        return false;
+
+    m_partialTextureUpdateRequests++;
+    return true;
+}
+
+void CCLayerTreeHost::deleteTextureAfterCommit(PassOwnPtr<ManagedTexture> texture)
+{
+    m_deleteTextureAfterCommitList.append(texture);
+}
+
+void CCLayerTreeHost::animateLayers(double monotonicTime)
+{
+    if (!m_settings.threadedAnimationEnabled || !m_needsAnimateLayers)
+        return;
+
+    TRACE_EVENT("CCLayerTreeHostImpl::animateLayers", this, 0);
+    m_needsAnimateLayers = animateLayersRecursive(m_rootLayer.get(), monotonicTime);
+}
+
+bool CCLayerTreeHost::animateLayersRecursive(LayerChromium* current, double monotonicTime)
+{
+    if (!current)
+        return false;
+
+    bool subtreeNeedsAnimateLayers = false;
+    CCLayerAnimationController* currentController = current->layerAnimationController();
+    currentController->animate(monotonicTime, 0);
+
+    // If the current controller still has an active animation, we must continue animating layers.
+    if (currentController->hasActiveAnimation())
+         subtreeNeedsAnimateLayers = true;
+
+    for (size_t i = 0; i < current->children().size(); ++i) {
+        if (animateLayersRecursive(current->children()[i].get(), monotonicTime))
+            subtreeNeedsAnimateLayers = true;
+    }
+
+    return subtreeNeedsAnimateLayers;
+}
+
+void CCLayerTreeHost::setAnimationEventsRecursive(const CCAnimationEventsVector& events, LayerChromium* layer, double wallClockTime)
+{
+    if (!layer)
+        return;
+
+    for (size_t eventIndex = 0; eventIndex < events.size(); ++eventIndex) {
+        if (layer->id() == events[eventIndex].layerId) {
+            if (events[eventIndex].type == CCAnimationEvent::Started)
+                layer->notifyAnimationStarted(events[eventIndex], wallClockTime);
+            else
+                layer->notifyAnimationFinished(wallClockTime);
+        }
+    }
+
+    for (size_t childIndex = 0; childIndex < layer->children().size(); ++childIndex)
+        setAnimationEventsRecursive(events, layer->children()[childIndex].get(), wallClockTime);
+}
+
+} // namespace WebCore

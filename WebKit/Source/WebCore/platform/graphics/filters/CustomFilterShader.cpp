@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 Adobe Systems Incorporated. All Rights Reserved.
+ * Copyright (C) 2011 Adobe Systems Incorporated. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -59,10 +59,10 @@ String CustomFilterShader::defaultFragmentShaderString()
     DEFINE_STATIC_LOCAL(String, fragmentShaderString, SHADER(
         precision mediump float;
         varying vec2 v_texCoord;
-        uniform sampler2D s_texture;
+        uniform sampler2D u_texture;
         void main()
         {
-            gl_FragColor = texture2D(s_texture, v_texCoord);
+            gl_FragColor = texture2D(u_texture, v_texCoord);
         }
     ));
     return fragmentShaderString;
@@ -156,9 +156,16 @@ void CustomFilterShader::initializeParameterLocations()
     m_tileSizeLocation = m_context->getUniformLocation(m_program, "u_tileSize");
     m_meshSizeLocation = m_context->getUniformLocation(m_program, "u_meshSize");
     m_projectionMatrixLocation = m_context->getUniformLocation(m_program, "u_projectionMatrix");
-    m_samplerLocation = m_context->getUniformLocation(m_program, "s_texture");
-    m_samplerSizeLocation = m_context->getUniformLocation(m_program, "s_textureSize");
-    m_contentSamplerLocation = m_context->getUniformLocation(m_program, "s_contentTexture");
+    m_samplerLocation = m_context->getUniformLocation(m_program, "u_texture");
+    m_samplerSizeLocation = m_context->getUniformLocation(m_program, "u_textureSize");
+    m_contentSamplerLocation = m_context->getUniformLocation(m_program, "u_contentTexture");
+}
+
+int CustomFilterShader::uniformLocationByName(const String& name)
+{
+    ASSERT(m_isInitialized);
+    // FIXME: Improve this by caching the uniform locations.
+    return m_context->getUniformLocation(m_program, name);
 }
     
 CustomFilterShader::~CustomFilterShader()

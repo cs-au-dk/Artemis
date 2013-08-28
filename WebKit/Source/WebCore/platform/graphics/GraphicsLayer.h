@@ -44,11 +44,7 @@
 #include <wtf/PassOwnPtr.h>
 
 #if PLATFORM(MAC)
-#ifdef __OBJC__
-@class CALayer;
-#else
-class CALayer;
-#endif
+OBJC_CLASS CALayer;
 typedef CALayer PlatformLayer;
 #elif PLATFORM(WIN)
 typedef struct _CACFLayer PlatformLayer;
@@ -99,6 +95,7 @@ class FloatPoint3D;
 class GraphicsContext;
 class Image;
 class TextStream;
+class TiledBacking;
 class TimingFunction;
 
 // Base class for animation values (also used for transitions). Here to
@@ -156,6 +153,25 @@ public:
 private:
     TransformOperations m_value;
 };
+
+#if ENABLE(CSS_FILTERS)
+// Used to store one filter value in a keyframe list.
+class FilterAnimationValue : public AnimationValue {
+public:
+    FilterAnimationValue(float keyTime, const FilterOperations* value = 0, PassRefPtr<TimingFunction> timingFunction = 0)
+        : AnimationValue(keyTime, timingFunction)
+    {
+        if (value)
+            m_value = *value;
+    }
+    virtual AnimationValue* clone() const { return new FilterAnimationValue(*this); }
+
+    const FilterOperations* value() const { return &m_value; }
+
+private:
+    FilterOperations m_value;
+};
+#endif
 
 // Used to store a series of values in a keyframe list. Values will all be of the same type,
 // which can be inferred from the property.
@@ -258,7 +274,7 @@ public:
 
     // Offset is origin of the renderer minus origin of the graphics layer (so either zero or negative).
     IntSize offsetFromRenderer() const { return m_offsetFromRenderer; }
-    void setOffsetFromRenderer(const IntSize& offset) { m_offsetFromRenderer = offset; }
+    void setOffsetFromRenderer(const IntSize&);
 
     // The position of the layer (the location of its top-left corner in its parent)
     const FloatPoint& position() const { return m_position; }
@@ -328,7 +344,7 @@ public:
     virtual void setNeedsDisplay() = 0;
     // mark the given rect (in layer coords) as needing dispay. Never goes deep.
     virtual void setNeedsDisplayInRect(const FloatRect&) = 0;
-    
+
     virtual void setContentsNeedsDisplay() { };
 
     // Set that the position/size of the contents (image or video).
@@ -374,8 +390,8 @@ public:
     virtual void setContentsOrientation(CompositingCoordinatesOrientation orientation) { m_contentsOrientation = orientation; }
     CompositingCoordinatesOrientation contentsOrientation() const { return m_contentsOrientation; }
 
-    bool showDebugBorders() const { return m_client ? m_client->showDebugBorders() : false; }
-    bool showRepaintCounter() const { return m_client ? m_client->showRepaintCounter() : false; }
+    bool showDebugBorders() const { return m_client ? m_client->showDebugBorders(this) : false; }
+    bool showRepaintCounter() const { return m_client ? m_client->showRepaintCounter(this) : false; }
     
     void updateDebugIndicators();
     
@@ -410,7 +426,12 @@ public:
     // pointers for the layers and timing data will be included in the returned string.
     String layerTreeAsText(LayerTreeAsTextBehavior = LayerTreeAsTextBehaviorNormal) const;
 
+    // Return an estimate of the backing store area (in pixels). May be incorrect for tiled layers.
+    virtual double backingStoreArea() const;
+
     bool usingTiledLayer() const { return m_usingTiledLayer; }
+
+    virtual TiledBacking* tiledBacking() { return 0; }
 
 #if PLATFORM(QT) || PLATFORM(GTK)
     // This allows several alternative GraphicsLayer implementations in the same port,
@@ -420,11 +441,25 @@ public:
 #endif
 
 protected:
+    // Should be called from derived class destructors. Should call willBeDestroyed() on super.
+    virtual void willBeDestroyed();
 
-    typedef Vector<TransformOperation::OperationType> TransformOperationList;
-    // Given a list of TransformAnimationValues, return an array of transform operations.
-    // On return, if hasBigRotation is true, functions contain rotations of >= 180 degrees
-    static void fetchTransformOperationList(const KeyframeValueList&, TransformOperationList&, bool& isValid, bool& hasBigRotation);
+#if ENABLE(CSS_FILTERS)
+    // This method is used by platform GraphicsLayer classes to clear the filters
+    // when compositing is not done in hardware. It is not virtual, so the caller
+    // needs to notifiy the change to the platform layer as needed.
+    void clearFilters() { m_filters.clear(); }
+
+    // Given a KeyframeValueList containing filterOperations, return true if the operations are valid.
+    static int validateFilterOperations(const KeyframeValueList&);
+#endif
+
+    // Given a list of TransformAnimationValues, see if all the operations for each keyframe match. If so
+    // return the index of the KeyframeValueList entry that has that list of operations (it may not be
+    // the first entry because some keyframes might have an empty transform and those match any list).
+    // If the lists don't match return -1. On return, if hasBigRotation is true, functions contain 
+    // rotations of >= 180 degrees
+    static int validateTransformOperations(const KeyframeValueList&, bool& hasBigRotation);
 
     virtual void setOpacityInternal(float) { }
 

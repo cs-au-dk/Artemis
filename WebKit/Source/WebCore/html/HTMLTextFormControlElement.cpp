@@ -37,6 +37,7 @@
 #include "HTMLFormElement.h"
 #include "HTMLInputElement.h"
 #include "HTMLNames.h"
+#include "NodeRenderingContext.h"
 #include "Page.h"
 #include "RenderBox.h"
 #include "RenderTextControl.h"
@@ -64,11 +65,19 @@ HTMLTextFormControlElement::~HTMLTextFormControlElement()
 {
 }
 
-void HTMLTextFormControlElement::insertedIntoDocument()
+bool HTMLTextFormControlElement::childShouldCreateRenderer(const NodeRenderingContext& childContext) const
 {
-    HTMLFormControlElement::insertedIntoDocument();
+    return childContext.isOnEncapsulationBoundary() && HTMLFormControlElementWithState::childShouldCreateRenderer(childContext);
+}
+
+Node::InsertionNotificationRequest HTMLTextFormControlElement::insertedInto(Node* insertionPoint)
+{
+    HTMLFormControlElement::insertedInto(insertionPoint);
+    if (!insertionPoint->inDocument())
+        return InsertionDone;
     String initialValue = value();
     setTextAsOfLastFormControlChangeEvent(initialValue.isNull() ? emptyString() : initialValue);
+    return InsertionDone;
 }
 
 void HTMLTextFormControlElement::dispatchFocusEvent(PassRefPtr<Node> oldFocusedNode)
@@ -153,7 +162,7 @@ void HTMLTextFormControlElement::updatePlaceholderVisibility(bool placeholderVal
     if (!placeholder)
         return;
     ExceptionCode ec = 0;
-    placeholder->ensureInlineStyleDecl()->setProperty(CSSPropertyVisibility, placeholderShouldBeVisible() ? "visible" : "hidden", ec);
+    placeholder->setInlineStyleProperty(CSSPropertyVisibility, placeholderShouldBeVisible() ? "visible" : "hidden", ec);
     ASSERT(!ec);
 }
 
@@ -421,7 +430,7 @@ void HTMLTextFormControlElement::selectionChanged(bool userTriggered)
     }
 }
 
-void HTMLTextFormControlElement::parseMappedAttribute(Attribute* attr)
+void HTMLTextFormControlElement::parseAttribute(Attribute* attr)
 {
     if (attr->name() == placeholderAttr)
         updatePlaceholderVisibility(true);
@@ -430,7 +439,7 @@ void HTMLTextFormControlElement::parseMappedAttribute(Attribute* attr)
     else if (attr->name() == onchangeAttr)
         setAttributeEventListener(eventNames().changeEvent, createAttributeEventListener(this, attr));
     else
-        HTMLFormControlElementWithState::parseMappedAttribute(attr);
+        HTMLFormControlElementWithState::parseAttribute(attr);
 }
 
 void HTMLTextFormControlElement::notifyFormStateChanged()
@@ -464,7 +473,7 @@ void HTMLTextFormControlElement::setInnerTextValue(const String& value)
         innerTextElement()->setInnerText(value, ec);
         ASSERT(!ec);
 
-        if (value.endsWith("\n") || value.endsWith("\r")) {
+        if (value.endsWith('\n') || value.endsWith('\r')) {
             innerTextElement()->appendChild(HTMLBRElement::create(document()), ec);
             ASSERT(!ec);
         }
@@ -493,7 +502,7 @@ String HTMLTextFormControlElement::innerTextValue() const
         if (node->hasTagName(brTag))
             result.append(newlineCharacter);
         else if (node->isTextNode())
-            result.append(static_cast<Text*>(node)->data());
+            result.append(toText(node)->data());
     }
     return finishText(result);
 }
@@ -540,7 +549,7 @@ String HTMLTextFormControlElement::valueWithHardLineBreaks() const
         if (node->hasTagName(brTag))
             result.append(newlineCharacter);
         else if (node->isTextNode()) {
-            String data = static_cast<Text*>(node)->data();
+            String data = toText(node)->data();
             unsigned length = data.length();
             unsigned position = 0;
             while (breakNode == node && breakOffset <= length) {

@@ -35,8 +35,11 @@ namespace WebCore {
 
 class GraphicsContext3D;
 class LayerPainterChromium;
+class PlatformContextSkia;
 
-// A LayerTextureUpdater with an internal canvas.
+// Base class for BitmapCanvasLayerTextureUpdater and
+// SkPictureCanvasLayerTextureUpdater that reduces code duplication between
+// their respective paintContents implementations.
 class CanvasLayerTextureUpdater : public LayerTextureUpdater {
 public:
     virtual ~CanvasLayerTextureUpdater();
@@ -44,7 +47,7 @@ public:
 protected:
     explicit CanvasLayerTextureUpdater(PassOwnPtr<LayerPainterChromium>);
 
-    void paintContents(GraphicsContext&, const IntRect& contentRect, float contentsScale);
+    void paintContents(GraphicsContext&, PlatformContextSkia&, const IntRect& contentRect, float contentsScale, IntRect& resultingOpaqueRect);
     const IntRect& contentRect() const { return m_contentRect; }
 
 private:

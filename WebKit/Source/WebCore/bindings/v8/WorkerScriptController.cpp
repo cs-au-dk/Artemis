@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009 Google Inc. All rights reserved.
+ * Copyright (C) 2009, 2012 Google Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -53,6 +53,7 @@ WorkerScriptController::WorkerScriptController(WorkerContext* workerContext)
     : m_workerContext(workerContext)
     , m_isolate(v8::Isolate::New())
     , m_executionForbidden(false)
+    , m_executionScheduledToTerminate(false)
 {
     V8BindingPerIsolateData* data = V8BindingPerIsolateData::create(m_isolate);
     data->allStores().append(&m_DOMDataStore);
@@ -64,37 +65,55 @@ WorkerScriptController::WorkerScriptController(WorkerContext* workerContext)
 WorkerScriptController::~WorkerScriptController()
 {
     removeAllDOMObjects();
+#if PLATFORM(CHROMIUM)
+    // The corresponding call to didStartWorkerRunLoop is in
+    // WorkerThread::workerThread().
+    // See http://webkit.org/b/83104#c14 for why this is here.
+    PlatformSupport::didStopWorkerRunLoop(&m_workerContext->thread()->runLoop());
+#endif
     m_proxy.clear();
     m_isolate->Exit();
     V8BindingPerIsolateData::dispose(m_isolate);
     m_isolate->Dispose();
 }
 
-ScriptValue WorkerScriptController::evaluate(const ScriptSourceCode& sourceCode)
+void WorkerScriptController::evaluate(const ScriptSourceCode& sourceCode)
 {
-    return evaluate(sourceCode, 0);
+    evaluate(sourceCode, 0);
 }
 
-ScriptValue WorkerScriptController::evaluate(const ScriptSourceCode& sourceCode, ScriptValue* exception)
+void WorkerScriptController::evaluate(const ScriptSourceCode& sourceCode, ScriptValue* exception)
 {
     if (isExecutionForbidden())
-        return ScriptValue();
+        return;
 
     WorkerContextExecutionState state;
-    ScriptValue result = m_proxy->evaluate(sourceCode.source(), sourceCode.url().string(), sourceCode.startPosition(), &state);
+    m_proxy->evaluate(sourceCode.source(), sourceCode.url().string(), sourceCode.startPosition(), &state);
     if (state.hadException) {
         if (exception)
             *exception = state.exception;
         else
             m_workerContext->reportException(state.errorMessage, state.lineNumber, state.sourceURL, 0);
     }
-
-    return result;
 }
 
 void WorkerScriptController::scheduleExecutionTermination()
 {
+    // The mutex provides a memory barrier to ensure that once
+    // termination is scheduled, isExecutionTerminating will
+    // accurately reflect that state when called from another thread.
+    {
+        MutexLocker locker(m_scheduledTerminationMutex);
+        m_executionScheduledToTerminate = true;
+    }
     v8::V8::TerminateExecution(m_isolate);
+}
+
+bool WorkerScriptController::isExecutionTerminating() const
+{
+    // See comments in scheduleExecutionTermination regarding mutex usage.
+    MutexLocker locker(m_scheduledTerminationMutex);
+    return m_executionScheduledToTerminate;
 }
 
 void WorkerScriptController::forbidExecution()

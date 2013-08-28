@@ -30,7 +30,7 @@
 #include "DrawingArea.h"
 #include "InjectedBundleNavigationAction.h"
 #include "InjectedBundleUserMessageCoders.h"
-#include "WebContextMenu.h"
+#include "LayerTreeHost.h"
 #include "WebCoreArgumentCoders.h"
 #include "WebFrame.h"
 #include "WebFrameLoaderClient.h"
@@ -439,10 +439,14 @@ void WebChromeClient::contentsSizeChanged(Frame* frame, const IntSize& size) con
         return;
 
 #if PLATFORM(QT)
-    m_page->send(Messages::WebPageProxy::DidChangeContentsSize(size));
-
-    if (m_page->useFixedLayout())
+    if (m_page->useFixedLayout()) {
+        // The below method updates the size().
         m_page->resizeToContentsIfNeeded();
+        m_page->drawingArea()->layerTreeHost()->sizeDidChange(m_page->size());
+    }
+
+    m_page->send(Messages::WebPageProxy::DidChangeContentsSize(m_page->size()));
+
 #endif
 
     FrameView* frameView = frame->view();
@@ -492,15 +496,8 @@ void WebChromeClient::mouseDidMoveOverElement(const HitTestResult& hitTestResult
     // Notify the bundle client.
     m_page->injectedBundleUIClient().mouseDidMoveOverElement(m_page, hitTestResult, static_cast<WebEvent::Modifiers>(modifierFlags), userData);
 
-    WebHitTestResult::Data webHitTestResultData;
-    webHitTestResultData.absoluteImageURL = hitTestResult.absoluteImageURL().string();
-    webHitTestResultData.absolutePDFURL = hitTestResult.absolutePDFURL().string();
-    webHitTestResultData.absoluteLinkURL = hitTestResult.absoluteLinkURL().string();
-    webHitTestResultData.absoluteMediaURL = hitTestResult.absoluteMediaURL().string();
-    webHitTestResultData.linkLabel = hitTestResult.textContent();
-    webHitTestResultData.linkTitle = hitTestResult.titleDisplayString();
-
     // Notify the UIProcess.
+    WebHitTestResult::Data webHitTestResultData(hitTestResult);
     m_page->send(Messages::WebPageProxy::MouseDidMoveOverElement(webHitTestResultData, modifierFlags, InjectedBundleUserMessageEncoder(userData.get())));
 }
 
@@ -593,16 +590,6 @@ bool WebChromeClient::paintCustomOverhangArea(GraphicsContext* context, const In
     return true;
 }
 
-void WebChromeClient::requestGeolocationPermissionForFrame(Frame*, Geolocation*)
-{
-    notImplemented();
-}
-
-void WebChromeClient::cancelGeolocationPermissionRequestForFrame(Frame*, Geolocation*)
-{
-    notImplemented();
-}
-
 void WebChromeClient::runOpenPanel(Frame* frame, PassRefPtr<FileChooser> prpFileChooser)
 {
     if (m_page->activeOpenPanelResultListener())
@@ -670,13 +657,6 @@ PassRefPtr<WebCore::SearchPopupMenu> WebChromeClient::createSearchPopupMenu(WebC
     return WebSearchPopupMenu::create(m_page, client);
 }
 
-#if ENABLE(CONTEXT_MENUS)
-void WebChromeClient::showContextMenu()
-{
-    m_page->contextMenu()->show();
-}
-#endif
-
 #if USE(ACCELERATED_COMPOSITING)
 void WebChromeClient::attachRootGraphicsLayer(Frame*, GraphicsLayer* layer)
 {
@@ -727,34 +707,18 @@ void WebChromeClient::exitFullScreenForElement(WebCore::Element* element)
 {
     m_page->fullScreenManager()->exitFullScreenForElement(element);
 }
-    
-void WebChromeClient::setRootFullScreenLayer(GraphicsLayer* layer)
-{
-    m_page->fullScreenManager()->setRootFullScreenLayer(layer);
-}
-
 #endif
 
-void WebChromeClient::dispatchViewportPropertiesDidChange(const ViewportArguments& args) const
+void WebChromeClient::dispatchViewportPropertiesDidChange(const ViewportArguments&) const
 {
-    m_page->send(Messages::WebPageProxy::DidChangeViewportProperties(args));
-
 #if USE(TILED_BACKING_STORE)
-    // When viewport properties change, recalculate and set the new recommended layout size in case of fixed layout rendering.
-    // Viewport properties have no impact on zero sized fixed viewports.
-    if (m_page->useFixedLayout() && !m_page->viewportSize().isEmpty()) {
-        Settings* settings = m_page->corePage()->settings();
+    if (!m_page->useFixedLayout())
+        return;
 
-        int minimumLayoutFallbackWidth = std::max(settings->layoutFallbackWidth(), m_page->viewportSize().width());
-
-        IntSize targetLayoutSize = computeViewportAttributes(m_page->corePage()->viewportArguments(),
-            minimumLayoutFallbackWidth, settings->deviceWidth(), settings->deviceHeight(),
-            settings->deviceDPI(), m_page->viewportSize()).layoutSize;
-        m_page->setResizesToContentsUsingLayoutSize(targetLayoutSize);
-    }
+    m_page->sendViewportAttributesChanged();
 #endif
 }
-    
+
 void WebChromeClient::notifyScrollerThumbIsVisibleInRect(const IntRect& scrollerThumb)
 {
     m_page->send(Messages::WebPageProxy::NotifyScrollerThumbIsVisibleInRect(scrollerThumb));
@@ -780,7 +744,7 @@ bool WebChromeClient::shouldRubberBandInDirection(WebCore::ScrollDirection direc
 
 void WebChromeClient::numWheelEventHandlersChanged(unsigned count)
 {
-    m_page->send(Messages::WebPageProxy::NumWheelEventHandlersChanged(count));
+    m_page->numWheelEventHandlersChanged(count);
 }
 
 } // namespace WebKit

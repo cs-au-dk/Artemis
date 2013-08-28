@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 Adobe Systems Incorporated. All Rights Reserved.
+ * Copyright (C) 2011 Adobe Systems Incorporated. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -30,9 +30,14 @@
 #include "config.h"
 #include "WebKitNamedFlow.h"
 
+#include "RenderNamedFlowThread.h"
+#include "RenderRegion.h"
+#include "StaticNodeList.h"
+
 namespace WebCore {
 
-WebKitNamedFlow::WebKitNamedFlow()
+WebKitNamedFlow::WebKitNamedFlow(RenderNamedFlowThread* parentFlowThread)
+: m_parentFlowThread(parentFlowThread)
 {
 }
 
@@ -40,4 +45,48 @@ WebKitNamedFlow::~WebKitNamedFlow()
 {
 }
 
+bool WebKitNamedFlow::overflow() const
+{
+    m_parentFlowThread->document()->updateLayoutIgnorePendingStylesheets();
+    return m_parentFlowThread->overflow();
+}
+
+PassRefPtr<NodeList> WebKitNamedFlow::getRegionsByContentNode(Node* contentNode)
+{
+    if (!contentNode)
+        return 0;
+
+    m_parentFlowThread->document()->updateLayoutIgnorePendingStylesheets();
+
+    Vector<RefPtr<Node> > regionNodes;
+    if (contentNode->renderer()
+        && contentNode->renderer()->inRenderFlowThread()
+        && m_parentFlowThread == contentNode->renderer()->enclosingRenderFlowThread()) {
+        const RenderRegionList& regionList = m_parentFlowThread->renderRegionList();
+        for (RenderRegionList::const_iterator iter = regionList.begin(); iter != regionList.end(); ++iter) {
+            const RenderRegion* renderRegion = *iter;
+            if (!renderRegion->isValid())
+                continue;
+            if (m_parentFlowThread->objectInFlowRegion(contentNode->renderer(), renderRegion))
+                regionNodes.append(renderRegion->node());
+        }
+    }
+    return StaticNodeList::adopt(regionNodes);
+}
+
+PassRefPtr<NodeList> WebKitNamedFlow::contentNodes() const
+{
+    m_parentFlowThread->document()->updateLayoutIgnorePendingStylesheets();
+
+    Vector<RefPtr<Node> > contentNodes;
+    for (NamedFlowContentNodes::const_iterator it = m_parentFlowThread->contentNodes().begin(); it != m_parentFlowThread->contentNodes().end(); ++it) {
+        Node* node = const_cast<Node*>(*it);
+        ASSERT(node->computedStyle()->flowThread() == m_parentFlowThread->flowThreadName());
+        contentNodes.append(node);
+    }
+
+    return StaticNodeList::adopt(contentNodes);
+}
+
 } // namespace WebCore
+

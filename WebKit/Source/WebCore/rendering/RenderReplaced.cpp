@@ -2,6 +2,7 @@
  * Copyright (C) 1999 Lars Knoll (knoll@kde.org)
  * Copyright (C) 2000 Dirk Mueller (mueller@kde.org)
  * Copyright (C) 2004, 2006, 2007 Apple Inc. All rights reserved.
+ * Copyright (C) Research In Motion Limited 2011-2012. All rights reserved.
  *
  * This library is free software; you can redistribute it and/or
  * modify it under the terms of the GNU Library General Public
@@ -23,8 +24,10 @@
 #include "config.h"
 #include "RenderReplaced.h"
 
+#include "Frame.h"
 #include "GraphicsContext.h"
 #include "LayoutRepainter.h"
+#include "Page.h"
 #include "RenderBlock.h"
 #include "RenderLayer.h"
 #include "RenderTheme.h"
@@ -41,7 +44,6 @@ const int cDefaultHeight = 150;
 RenderReplaced::RenderReplaced(Node* node)
     : RenderBox(node)
     , m_intrinsicSize(cDefaultWidth, cDefaultHeight)
-    , m_hasIntrinsicSize(false)
 {
     setReplaced(true);
 }
@@ -49,7 +51,6 @@ RenderReplaced::RenderReplaced(Node* node)
 RenderReplaced::RenderReplaced(Node* node, const IntSize& intrinsicSize)
     : RenderBox(node)
     , m_intrinsicSize(intrinsicSize)
-    , m_hasIntrinsicSize(true)
 {
     setReplaced(true);
 }
@@ -122,7 +123,7 @@ void RenderReplaced::paint(PaintInfo& paintInfo, const LayoutPoint& paintOffset)
     if ((paintInfo.phase == PaintPhaseOutline || paintInfo.phase == PaintPhaseSelfOutline) && style()->outlineWidth())
         paintOutline(paintInfo.context, paintRect);
     
-    if (paintInfo.phase != PaintPhaseForeground && paintInfo.phase != PaintPhaseSelection)
+    if (paintInfo.phase != PaintPhaseForeground && paintInfo.phase != PaintPhaseSelection && !canHaveChildren())
         return;
     
     if (!paintInfo.shouldPaintWithinRoot(this))
@@ -144,7 +145,7 @@ void RenderReplaced::paint(PaintInfo& paintInfo, const LayoutPoint& paintOffset)
         else {
             // Push a clip if we have a border radius, since we want to round the foreground content that gets painted.
             paintInfo.context->save();
-            paintInfo.context->addRoundedRectClip(style()->getRoundedBorderFor(paintRect));
+            paintInfo.context->addRoundedRectClip(style()->getRoundedBorderFor(paintRect, view()));
         }
     }
 
@@ -160,7 +161,7 @@ void RenderReplaced::paint(PaintInfo& paintInfo, const LayoutPoint& paintOffset)
     if (drawSelectionTint) {
         LayoutRect selectionPaintingRect = localSelectionRect();
         selectionPaintingRect.moveBy(adjustedPaintOffset);
-        paintInfo.context->fillRect(selectionPaintingRect, selectionBackgroundColor(), style()->colorSpace());
+        paintInfo.context->fillRect(pixelSnappedIntRect(selectionPaintingRect), selectionBackgroundColor(), style()->colorSpace());
     }
 }
 
@@ -189,31 +190,127 @@ bool RenderReplaced::shouldPaint(PaintInfo& paintInfo, const LayoutPoint& paintO
         bottom = max(selBottom, bottom);
     }
     
-    LayoutUnit os = 2 * maximalOutlineSize(paintInfo.phase);
-    if (adjustedPaintOffset.x() + minXVisualOverflow() >= paintInfo.rect.maxX() + os || adjustedPaintOffset.x() + maxXVisualOverflow() <= paintInfo.rect.x() - os)
+    LayoutRect localRepaintRect = paintInfo.rect;
+    localRepaintRect.inflate(maximalOutlineSize(paintInfo.phase));
+    if (adjustedPaintOffset.x() + minXVisualOverflow() >= localRepaintRect.maxX() || adjustedPaintOffset.x() + maxXVisualOverflow() <= localRepaintRect.x())
         return false;
-    if (top >= paintInfo.rect.maxY() + os || bottom <= paintInfo.rect.y() - os)
+
+    if (top >= localRepaintRect.maxY() || bottom <= localRepaintRect.y())
         return false;
 
     return true;
 }
 
-int RenderReplaced::computeIntrinsicLogicalWidth(RenderBox* contentRenderer, bool includeMaxWidth) const
+static inline RenderBlock* firstContainingBlockWithLogicalWidth(const RenderReplaced* replaced)
 {
-    if (m_hasIntrinsicSize)
-        return computeReplacedLogicalWidthRespectingMinMaxWidth(calcAspectRatioLogicalWidth(), includeMaxWidth);
-    ASSERT(contentRenderer);
-    ASSERT(contentRenderer->style());
-    return contentRenderer->computeReplacedLogicalWidthRespectingMinMaxWidth(contentRenderer->computeReplacedLogicalWidthUsing(contentRenderer->style()->logicalWidth()), includeMaxWidth);
+    // We have to lookup the containing block, which has an explicit width, which must not be equal to our direct containing block.
+    // If the embedded document appears _after_ we performed the initial layout, our intrinsic size is 300x150. If our containing
+    // block doesn't provide an explicit width, it's set to the 300 default, coming from the initial layout run.
+    RenderBlock* containingBlock = replaced->containingBlock();
+    if (!containingBlock)
+        return 0;
+
+    for (; !containingBlock->isRenderView() && !containingBlock->isBody(); containingBlock = containingBlock->containingBlock()) {
+        if (containingBlock->style()->logicalWidth().isSpecified())
+            return containingBlock;
+    }
+
+    return 0;
 }
 
-int RenderReplaced::computeIntrinsicLogicalHeight(RenderBox* contentRenderer) const
+bool RenderReplaced::hasReplacedLogicalWidth() const
 {
-    if (m_hasIntrinsicSize)
-        return computeReplacedLogicalHeightRespectingMinMaxHeight(calcAspectRatioLogicalHeight());
-    ASSERT(contentRenderer);
-    ASSERT(contentRenderer->style());
-    return contentRenderer->computeReplacedLogicalHeightRespectingMinMaxHeight(contentRenderer->computeReplacedLogicalHeightUsing(contentRenderer->style()->logicalHeight()));
+    if (style()->logicalWidth().isSpecified())
+        return true;
+
+    if (style()->logicalWidth().isAuto())
+        return false;
+
+    return firstContainingBlockWithLogicalWidth(this);
+}
+
+static inline bool hasAutoHeightOrContainingBlockWithAutoHeight(const RenderReplaced* replaced)
+{
+    Length logicalHeightLength = replaced->style()->logicalHeight();
+    if (logicalHeightLength.isAuto())
+        return true;
+
+    // For percentage heights: The percentage is calculated with respect to the height of the generated box's
+    // containing block. If the height of the containing block is not specified explicitly (i.e., it depends
+    // on content height), and this element is not absolutely positioned, the value computes to 'auto'.
+    if (!logicalHeightLength.isPercent() || replaced->isPositioned() || replaced->document()->inQuirksMode())
+        return false;
+
+    for (RenderBlock* cb = replaced->containingBlock(); !cb->isRenderView(); cb = cb->containingBlock()) {
+        if (cb->isTableCell() || (!cb->style()->logicalHeight().isAuto() || (!cb->style()->top().isAuto() && !cb->style()->bottom().isAuto())))
+            return false;
+    }
+
+    return true;
+}
+
+bool RenderReplaced::hasReplacedLogicalHeight() const
+{
+    if (style()->logicalHeight().isAuto())
+        return false;
+
+    if (style()->logicalHeight().isSpecified()) {
+        if (hasAutoHeightOrContainingBlockWithAutoHeight(this))
+            return false;
+        return true;
+    }
+
+    return false;
+}
+
+static inline bool rendererHasAspectRatio(const RenderObject* renderer)
+{
+    ASSERT(renderer);
+    return renderer->isImage() || renderer->isCanvas() || renderer->isVideo();
+}
+
+void RenderReplaced::computeIntrinsicRatioInformationForRenderBox(RenderBox* contentRenderer, FloatSize& intrinsicSize, double& intrinsicRatio, bool& isPercentageIntrinsicSize) const
+{
+    if (contentRenderer) {
+        contentRenderer->computeIntrinsicRatioInformation(intrinsicSize, intrinsicRatio, isPercentageIntrinsicSize);
+        if (intrinsicRatio)
+            ASSERT(!isPercentageIntrinsicSize);
+
+        // Handle zoom & vertical writing modes here, as the embedded document doesn't know about them.
+        if (!isPercentageIntrinsicSize)
+            intrinsicSize.scale(style()->effectiveZoom());
+
+        if (intrinsicRatio && !isHorizontalWritingMode())
+            intrinsicRatio = 1 / intrinsicRatio;
+
+        if (rendererHasAspectRatio(this) && isPercentageIntrinsicSize)
+            intrinsicRatio = 1;
+        return;
+    }
+
+    // This code path can't yield percentage intrinsic sizes, assert that.
+    computeIntrinsicRatioInformation(intrinsicSize, intrinsicRatio, isPercentageIntrinsicSize);
+    ASSERT(!isPercentageIntrinsicSize);
+}
+
+void RenderReplaced::computeIntrinsicRatioInformation(FloatSize& intrinsicSize, double& intrinsicRatio, bool& isPercentageIntrinsicSize) const
+{
+    // If there's an embeddedContentBox() of a remote, referenced document available, this code-path should never be used.
+    ASSERT(!embeddedContentBox());
+    isPercentageIntrinsicSize = false;
+    intrinsicSize = FloatSize(intrinsicLogicalWidth(), intrinsicLogicalHeight());
+
+    // Figure out if we need to compute an intrinsic ratio.
+    if (intrinsicSize.isEmpty() || !rendererHasAspectRatio(this))
+        return;
+
+    intrinsicRatio = intrinsicSize.width() / intrinsicSize.height();
+    if (style()->logicalWidth().isAuto() && style()->logicalHeight().isAuto()) {
+        // We can't multiply or divide by 'intrinsicRatio' here, it breaks tests, like fast/images/zoomed-img-size.html, which
+        // can only be fixed once subpixel precision is available for things like intrinsicWidth/Height - which include zoom!
+        intrinsicSize.setWidth(RenderBox::computeReplacedLogicalHeight() * intrinsicLogicalWidth() / intrinsicLogicalHeight());
+        intrinsicSize.setHeight(RenderBox::computeReplacedLogicalWidth() * intrinsicLogicalHeight() / intrinsicLogicalWidth());
+    }
 }
 
 LayoutUnit RenderReplaced::computeReplacedLogicalWidth(bool includeMaxWidth) const
@@ -222,169 +319,102 @@ LayoutUnit RenderReplaced::computeReplacedLogicalWidth(bool includeMaxWidth) con
         return computeReplacedLogicalWidthRespectingMinMaxWidth(computeReplacedLogicalWidthUsing(style()->logicalWidth()), includeMaxWidth);
 
     RenderBox* contentRenderer = embeddedContentBox();
-    RenderStyle* contentRenderStyle = 0;
 
     // 10.3.2 Inline, replaced elements: http://www.w3.org/TR/CSS21/visudet.html#inline-replaced-width
     bool isPercentageIntrinsicSize = false;
-    FloatSize intrinsicRatio;
-    if (contentRenderer) {
-        contentRenderer->computeIntrinsicRatioInformation(intrinsicRatio, isPercentageIntrinsicSize);
-        contentRenderStyle = contentRenderer->style();
-        ASSERT(contentRenderStyle);
-    } else
-        computeIntrinsicRatioInformation(intrinsicRatio, isPercentageIntrinsicSize);
+    double intrinsicRatio = 0;
+    FloatSize intrinsicSize;
+    computeIntrinsicRatioInformationForRenderBox(contentRenderer, intrinsicSize, intrinsicRatio, isPercentageIntrinsicSize);
 
+    // FIXME: Remove unnecessary round/roundToInt calls from this method when layout is off ints: webkit.org/b/63656
     if (style()->logicalWidth().isAuto()) {
         bool heightIsAuto = style()->logicalHeight().isAuto();
-        bool hasIntrinsicWidth = m_hasIntrinsicSize || (contentRenderer && contentRenderStyle->logicalWidth().isFixed());
+        bool hasIntrinsicWidth = !isPercentageIntrinsicSize && intrinsicSize.width() > 0;
 
         // If 'height' and 'width' both have computed values of 'auto' and the element also has an intrinsic width, then that intrinsic width is the used value of 'width'.
         if (heightIsAuto && hasIntrinsicWidth)
-            return computeIntrinsicLogicalWidth(contentRenderer, includeMaxWidth);
-    
-        bool hasIntrinsicHeight = m_hasIntrinsicSize || (contentRenderer && contentRenderStyle->logicalHeight().isFixed());
-        if (!intrinsicRatio.isEmpty()) {
+            return computeReplacedLogicalWidthRespectingMinMaxWidth(roundToInt(intrinsicSize.width()), includeMaxWidth);
+
+        bool hasIntrinsicHeight = !isPercentageIntrinsicSize && intrinsicSize.height() > 0;
+        if (intrinsicRatio || isPercentageIntrinsicSize) {
             // If 'height' and 'width' both have computed values of 'auto' and the element has no intrinsic width, but does have an intrinsic height and intrinsic ratio;
             // or if 'width' has a computed value of 'auto', 'height' has some other computed value, and the element does have an intrinsic ratio; then the used value
             // of 'width' is: (used height) * (intrinsic ratio)
-            if ((heightIsAuto && !hasIntrinsicWidth && hasIntrinsicHeight) || !heightIsAuto) {
-                if (heightIsAuto) {
-                    if (contentRenderer) {
-                        LayoutUnit logicalHeight = contentRenderer->computeReplacedLogicalHeightUsing(contentRenderStyle->logicalHeight());
-                        // FIXME: Remove unnecessary rounding when layout is off ints: webkit.org/b/63656
-                        return contentRenderer->computeReplacedLogicalWidthRespectingMinMaxWidth(static_cast<int>(ceilf(logicalHeight * intrinsicRatio.width() / intrinsicRatio.height())));
-                    }
-                } else { 
-                    LayoutUnit logicalHeight = computeReplacedLogicalHeightUsing(style()->logicalHeight());
-                    // FIXME: Remove unnecessary rounding when layout is off ints: webkit.org/b/63656
-                    return computeReplacedLogicalWidthRespectingMinMaxWidth(static_cast<int>(ceilf(logicalHeight * intrinsicRatio.width() / intrinsicRatio.height())));
-                }
+            if (intrinsicRatio && ((heightIsAuto && !hasIntrinsicWidth && hasIntrinsicHeight) || !heightIsAuto)) {
+                LayoutUnit logicalHeight = computeReplacedLogicalHeightUsing(style()->logicalHeight());
+                return computeReplacedLogicalWidthRespectingMinMaxWidth(roundToInt(round(logicalHeight * intrinsicRatio)));
             }
 
             // If 'height' and 'width' both have computed values of 'auto' and the element has an intrinsic ratio but no intrinsic height or width, then the used value of
             // 'width' is undefined in CSS 2.1. However, it is suggested that, if the containing block's width does not itself depend on the replaced element's width, then
             // the used value of 'width' is calculated from the constraint equation used for block-level, non-replaced elements in normal flow.
-            RenderBlock* containingBlock = this->containingBlock();
-            if (heightIsAuto && !hasIntrinsicWidth && !hasIntrinsicHeight && contentRenderer && containingBlock) {
+            if (heightIsAuto && !hasIntrinsicWidth && !hasIntrinsicHeight && contentRenderer) {
                 // The aforementioned 'constraint equation' used for block-level, non-replaced elements in normal flow:
                 // 'margin-left' + 'border-left-width' + 'padding-left' + 'width' + 'padding-right' + 'border-right-width' + 'margin-right' = width of containing block
+                LayoutUnit logicalWidth;
+                if (RenderBlock* blockWithWidth = firstContainingBlockWithLogicalWidth(this))
+                    logicalWidth = blockWithWidth->computeReplacedLogicalWidthRespectingMinMaxWidth(blockWithWidth->computeReplacedLogicalWidthUsing(blockWithWidth->style()->logicalWidth()), false);
+                else
+                    logicalWidth = containingBlock()->availableLogicalWidth();
 
-                // We have to lookup the containing block, which has an explicit width, which must not be equal to our direct containing block.
-                // If the embedded document appears _after_ we performed the initial layout, our intrinsic size is 300x150. If our containing
-                // block doesn't provide an explicit width, it's set to the 300 default, coming from the initial layout run.
-                bool foundExplicitWidth = false;
-                for (; !containingBlock->isRenderView() && !containingBlock->isBody(); containingBlock = containingBlock->containingBlock()) {
-                    if (containingBlock->style()->logicalWidth().isSpecified()) {
-                        foundExplicitWidth = true;
-                        break;
-                    }
-                }
-                
                 // This solves above equation for 'width' (== logicalWidth).
-                LayoutUnit logicalWidth = foundExplicitWidth ? computeIntrinsicLogicalWidth(containingBlock, false) : containingBlock->availableLogicalWidth();
-                LayoutUnit marginStart = style()->marginStart().calcMinValue(logicalWidth);
-                LayoutUnit marginEnd = style()->marginEnd().calcMinValue(logicalWidth);
-                logicalWidth = max(0, logicalWidth - (marginStart + marginEnd + (width() - clientWidth())));
+                LayoutUnit marginStart = minimumValueForLength(style()->marginStart(), logicalWidth);
+                LayoutUnit marginEnd = minimumValueForLength(style()->marginEnd(), logicalWidth);
+                logicalWidth = max(ZERO_LAYOUT_UNIT, logicalWidth - (marginStart + marginEnd + (width() - clientWidth())));
                 if (isPercentageIntrinsicSize)
-                    // FIXME: Remove unnecessary rounding when layout is off ints: webkit.org/b/63656
-                    logicalWidth = static_cast<int>(ceilf(logicalWidth * intrinsicRatio.width() / 100));
-                return computeReplacedLogicalWidthRespectingMinMaxWidth(logicalWidth);
+                    logicalWidth = roundToInt(logicalWidth * intrinsicSize.width() / 100);
+                return computeReplacedLogicalWidthRespectingMinMaxWidth(logicalWidth, includeMaxWidth);
             }
         }
 
         // Otherwise, if 'width' has a computed value of 'auto', and the element has an intrinsic width, then that intrinsic width is the used value of 'width'.
         if (hasIntrinsicWidth)
-            return computeIntrinsicLogicalWidth(contentRenderer, includeMaxWidth);
+            return computeReplacedLogicalWidthRespectingMinMaxWidth(roundToInt(intrinsicSize.width()), includeMaxWidth);
 
         // Otherwise, if 'width' has a computed value of 'auto', but none of the conditions above are met, then the used value of 'width' becomes 300px. If 300px is too
         // wide to fit the device, UAs should use the width of the largest rectangle that has a 2:1 ratio and fits the device instead.
-        return computeReplacedLogicalWidthRespectingMinMaxWidth(cDefaultWidth, includeMaxWidth);
+        // Note: We fall through and instead return intrinsicLogicalWidth() here - to preserve existing WebKit behavior, which might or might not be correct, or desired.
+        // Changing this to return cDefaultWidth, will affect lots of test results. Eg. some tests assume that a blank <img> tag (which implies width/height=auto)
+        // has no intrinsic size, which is wrong per CSS 2.1, but matches our behavior since a long time.
     }
 
     return computeReplacedLogicalWidthRespectingMinMaxWidth(intrinsicLogicalWidth(), includeMaxWidth);
 }
 
-bool RenderReplaced::logicalHeightIsAuto() const
-{
-    Length logicalHeightLength = style()->logicalHeight();
-    if (logicalHeightLength.isAuto())
-        return true;
-    
-    // For percentage heights: The percentage is calculated with respect to the height of the generated box's
-    // containing block. If the height of the containing block is not specified explicitly (i.e., it depends
-    // on content height), and this element is not absolutely positioned, the value computes to 'auto'.
-    if (!logicalHeightLength.isPercent() || isPositioned() || document()->inQuirksMode())
-        return false;
-
-    for (RenderBlock* cb = containingBlock(); !cb->isRenderView(); cb = cb->containingBlock()) {
-        if (cb->isTableCell() || (!cb->style()->logicalHeight().isAuto() || (!cb->style()->top().isAuto() && !cb->style()->bottom().isAuto())))
-            return false;
-    }
-
-    return true;
-}
-
 LayoutUnit RenderReplaced::computeReplacedLogicalHeight() const
 {
     // 10.5 Content height: the 'height' property: http://www.w3.org/TR/CSS21/visudet.html#propdef-height
-    bool heightIsAuto = logicalHeightIsAuto();
-    if (style()->logicalHeight().isSpecified() && !heightIsAuto)
+    if (hasReplacedLogicalHeight())
         return computeReplacedLogicalHeightRespectingMinMaxHeight(computeReplacedLogicalHeightUsing(style()->logicalHeight()));
 
     RenderBox* contentRenderer = embeddedContentBox();
-    RenderStyle* contentRenderStyle = 0;
 
     // 10.6.2 Inline, replaced elements: http://www.w3.org/TR/CSS21/visudet.html#inline-replaced-height
     bool isPercentageIntrinsicSize = false;
-    FloatSize intrinsicRatio;
-    if (contentRenderer) {
-        contentRenderer->computeIntrinsicRatioInformation(intrinsicRatio, isPercentageIntrinsicSize);
-        contentRenderStyle = contentRenderer->style();
-        ASSERT(contentRenderStyle);
-    }
+    double intrinsicRatio = 0;
+    FloatSize intrinsicSize;
+    computeIntrinsicRatioInformationForRenderBox(contentRenderer, intrinsicSize, intrinsicRatio, isPercentageIntrinsicSize);
 
-    if (heightIsAuto) {
-        bool widthIsAuto = style()->logicalWidth().isAuto();
-        bool hasIntrinsicHeight = m_hasIntrinsicSize || (contentRenderer && contentRenderStyle->logicalHeight().isFixed());
+    // FIXME: Remove unnecessary round/roundToInt calls from this method when layout is off ints: webkit.org/b/63656
+    bool widthIsAuto = style()->logicalWidth().isAuto();
+    bool hasIntrinsicHeight = !isPercentageIntrinsicSize && intrinsicSize.height() > 0;
 
-        // If 'height' and 'width' both have computed values of 'auto' and the element also has an intrinsic height, then that intrinsic height is the used value of 'height'.
-        if (widthIsAuto && hasIntrinsicHeight)
-            return computeIntrinsicLogicalHeight(contentRenderer);
-    
-        // Otherwise, if 'height' has a computed value of 'auto', and the element has an intrinsic ratio then the used value of 'height' is:
-        // (used width) / (intrinsic ratio)
-        if (!intrinsicRatio.isEmpty() && !isPercentageIntrinsicSize)
-            // FIXME: Remove unnecessary rounding when layout is off ints: webkit.org/b/63656
-            return computeReplacedLogicalHeightRespectingMinMaxHeight(static_cast<int>(ceilf(availableLogicalWidth() * intrinsicRatio.height() / intrinsicRatio.width())));
+    // If 'height' and 'width' both have computed values of 'auto' and the element also has an intrinsic height, then that intrinsic height is the used value of 'height'.
+    if (widthIsAuto && hasIntrinsicHeight)
+        return computeReplacedLogicalHeightRespectingMinMaxHeight(roundToInt(intrinsicSize.height()));
 
-        // Otherwise, if 'height' has a computed value of 'auto', and the element has an intrinsic height, then that intrinsic height is the used value of 'height'.
-        if (hasIntrinsicHeight)
-            return computeIntrinsicLogicalHeight(contentRenderer);
+    // Otherwise, if 'height' has a computed value of 'auto', and the element has an intrinsic ratio then the used value of 'height' is:
+    // (used width) / (intrinsic ratio)
+    if (intrinsicRatio)
+        return computeReplacedLogicalHeightRespectingMinMaxHeight(roundToInt(round(availableLogicalWidth() / intrinsicRatio)));
 
-        // Otherwise, if 'height' has a computed value of 'auto', but none of the conditions above are met, then the used value of 'height' must be set to the height
-        // of the largest rectangle that has a 2:1 ratio, has a height not greater than 150px, and has a width not greater than the device width.
-        return computeReplacedLogicalHeightRespectingMinMaxHeight(cDefaultHeight);
-    }
+    // Otherwise, if 'height' has a computed value of 'auto', and the element has an intrinsic height, then that intrinsic height is the used value of 'height'.
+    if (hasIntrinsicHeight)
+        return computeReplacedLogicalHeightRespectingMinMaxHeight(roundToInt(intrinsicSize.height()));
 
+    // Otherwise, if 'height' has a computed value of 'auto', but none of the conditions above are met, then the used value of 'height' must be set to the height
+    // of the largest rectangle that has a 2:1 ratio, has a height not greater than 150px, and has a width not greater than the device width.
     return computeReplacedLogicalHeightRespectingMinMaxHeight(intrinsicLogicalHeight());
-}
-
-int RenderReplaced::calcAspectRatioLogicalWidth() const
-{
-    int intrinsicWidth = intrinsicLogicalWidth();
-    int intrinsicHeight = intrinsicLogicalHeight();
-    if (!intrinsicHeight)
-        return 0;
-    return RenderBox::computeReplacedLogicalHeight() * intrinsicWidth / intrinsicHeight;
-}
-
-int RenderReplaced::calcAspectRatioLogicalHeight() const
-{
-    int intrinsicWidth = intrinsicLogicalWidth();
-    int intrinsicHeight = intrinsicLogicalHeight();
-    if (!intrinsicWidth)
-        return 0;
-    return RenderBox::computeReplacedLogicalWidth() * intrinsicHeight / intrinsicWidth;
 }
 
 void RenderReplaced::computePreferredLogicalWidths()
@@ -395,11 +425,9 @@ void RenderReplaced::computePreferredLogicalWidths()
     m_maxPreferredLogicalWidth = computeReplacedLogicalWidth(false) + borderAndPadding;
 
     if (style()->maxWidth().isFixed())
-        m_maxPreferredLogicalWidth = min(m_maxPreferredLogicalWidth, style()->maxWidth().value() + (style()->boxSizing() == CONTENT_BOX ? borderAndPadding : 0));
+        m_maxPreferredLogicalWidth = min<LayoutUnit>(m_maxPreferredLogicalWidth, style()->maxWidth().value() + (style()->boxSizing() == CONTENT_BOX ? borderAndPadding : ZERO_LAYOUT_UNIT));
 
-    if (style()->width().isPercent() || style()->height().isPercent()
-        || style()->maxWidth().isPercent() || style()->maxHeight().isPercent()
-        || style()->minWidth().isPercent() || style()->minHeight().isPercent())
+    if (hasRelativeDimensions())
         m_minPreferredLogicalWidth = 0;
     else
         m_minPreferredLogicalWidth = m_maxPreferredLogicalWidth;
@@ -450,30 +478,30 @@ LayoutRect RenderReplaced::selectionRectForRepaint(RenderBoxModelObject* repaint
     return rect;
 }
 
-IntRect RenderReplaced::localSelectionRect(bool checkWhetherSelected) const
+LayoutRect RenderReplaced::localSelectionRect(bool checkWhetherSelected) const
 {
     if (checkWhetherSelected && !isSelected())
-        return IntRect();
+        return LayoutRect();
 
     if (!m_inlineBoxWrapper)
         // We're a block-level replaced element.  Just return our own dimensions.
-        return IntRect(0, 0, width(), height());
+        return LayoutRect(LayoutPoint(), size());
     
     RootInlineBox* root = m_inlineBoxWrapper->root();
-    int newLogicalTop = root->block()->style()->isFlippedBlocksWritingMode() ? m_inlineBoxWrapper->logicalBottom() - root->selectionBottom() : root->selectionTop() - m_inlineBoxWrapper->logicalTop();
+    LayoutUnit newLogicalTop = root->block()->style()->isFlippedBlocksWritingMode() ? m_inlineBoxWrapper->logicalBottom() - root->selectionBottom() : root->selectionTop() - m_inlineBoxWrapper->logicalTop();
     if (root->block()->style()->isHorizontalWritingMode())
-        return IntRect(0, newLogicalTop, width(), root->selectionHeight());
-    return IntRect(newLogicalTop, 0, root->selectionHeight(), height());
+        return LayoutRect(0, newLogicalTop, width(), root->selectionHeight());
+    return LayoutRect(newLogicalTop, 0, root->selectionHeight(), height());
 }
 
-void RenderReplaced::setSelectionState(SelectionState s)
+void RenderReplaced::setSelectionState(SelectionState state)
 {
-    RenderBox::setSelectionState(s); // The selection state for our containing block hierarchy is updated by the base class call.
-    if (m_inlineBoxWrapper) {
-        RootInlineBox* line = m_inlineBoxWrapper->root();
-        if (line)
-            line->setHasSelectedChildren(isSelected());
-    }
+    // The selection state for our containing block hierarchy is updated by the base class call.
+    RenderBox::setSelectionState(state);
+
+    if (m_inlineBoxWrapper && canUpdateSelectionOnRootLineBoxes())
+        if (RootInlineBox* root = m_inlineBoxWrapper->root())
+            root->setHasSelectedChildren(isSelected());
 }
 
 bool RenderReplaced::isSelected() const
@@ -497,17 +525,6 @@ bool RenderReplaced::isSelected() const
         
     ASSERT(0);
     return false;
-}
-
-IntSize RenderReplaced::intrinsicSize() const
-{
-    return m_intrinsicSize;
-}
-
-void RenderReplaced::setIntrinsicSize(const IntSize& size)
-{
-    ASSERT(m_hasIntrinsicSize);
-    m_intrinsicSize = size;
 }
 
 LayoutRect RenderReplaced::clippedOverflowRectForRepaint(RenderBoxModelObject* repaintContainer) const

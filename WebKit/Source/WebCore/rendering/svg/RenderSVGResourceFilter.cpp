@@ -43,8 +43,8 @@
 #include "SVGFilter.h"
 #include "SVGFilterElement.h"
 #include "SVGFilterPrimitiveStandardAttributes.h"
-#include "SVGImageBufferTools.h"
 #include "SVGNames.h"
+#include "SVGRenderingContext.h"
 #include "SVGStyledElement.h"
 #include "SVGUnitTypes.h"
 
@@ -165,7 +165,7 @@ bool RenderSVGResourceFilter::applyResource(RenderObject* object, RenderStyle*, 
 
     // Determine absolute transformation matrix for filter. 
     AffineTransform absoluteTransform;
-    SVGImageBufferTools::calculateTransformationToOutermostSVGCoordinateSystem(object, absoluteTransform);
+    SVGRenderingContext::calculateTransformationToOutermostSVGCoordinateSystem(object, absoluteTransform);
     if (!absoluteTransform.isInvertible())
         return false;
 
@@ -228,11 +228,14 @@ bool RenderSVGResourceFilter::applyResource(RenderObject* object, RenderStyle*, 
         return false;
     }
 
-    absoluteDrawingRegion.scale(scale.width(), scale.height());
+    // Change the coordinate transformation applied to the filtered element to reflect the resolution of the filter.
+    AffineTransform effectiveTransform;
+    effectiveTransform.scale(scale.width(), scale.height());
+    effectiveTransform.multiply(filterData->shearFreeAbsoluteTransform);
 
     OwnPtr<ImageBuffer> sourceGraphic;
     RenderingMode renderingMode = object->document()->page()->settings()->acceleratedFiltersEnabled() ? Accelerated : Unaccelerated;
-    if (!SVGImageBufferTools::createImageBuffer(absoluteDrawingRegion, absoluteDrawingRegion, sourceGraphic, ColorSpaceLinearRGB, renderingMode)) {
+    if (!SVGRenderingContext::createImageBuffer(drawingRegion, effectiveTransform, sourceGraphic, ColorSpaceLinearRGB, renderingMode)) {
         ASSERT(!m_filter.contains(object));
         filterData->savedContext = context;
         m_filter.set(object, filterData.leakPtr());
@@ -245,12 +248,6 @@ bool RenderSVGResourceFilter::applyResource(RenderObject* object, RenderStyle*, 
     GraphicsContext* sourceGraphicContext = sourceGraphic->context();
     ASSERT(sourceGraphicContext);
   
-    sourceGraphicContext->translate(-absoluteDrawingRegion.x(), -absoluteDrawingRegion.y());
-    if (scale.width() != 1 || scale.height() != 1)
-        sourceGraphicContext->scale(scale);
-
-    sourceGraphicContext->concatCTM(filterData->shearFreeAbsoluteTransform);
-    sourceGraphicContext->clearRect(FloatRect(FloatPoint(), absoluteDrawingRegion.size()));
     filterData->sourceGraphicBuffer = sourceGraphic.release();
     filterData->savedContext = context;
 
@@ -303,6 +300,7 @@ void RenderSVGResourceFilter::postApplyResource(RenderObject* object, GraphicsCo
         // Always true if filterData is just built (filterData->builded is false).
         if (!lastEffect->hasResult()) {
             lastEffect->apply();
+            lastEffect->correctFilterResultIfNeeded();
 #if !USE(CG)
             ImageBuffer* resultImage = lastEffect->asImageBuffer();
             if (resultImage)

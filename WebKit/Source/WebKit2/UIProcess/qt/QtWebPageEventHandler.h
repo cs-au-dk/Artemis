@@ -24,35 +24,69 @@
 #include "QtPanGestureRecognizer.h"
 #include "QtPinchGestureRecognizer.h"
 #include "QtTapGestureRecognizer.h"
-#include "QtViewportInteractionEngine.h"
-#include "WebPageProxy.h"
 #include <QBasicTimer>
-#include <QKeyEvent>
-#include <QInputMethodEvent>
 #include <QTouchEvent>
 #include <WKPage.h>
+#include <wtf/PassRefPtr.h>
+
+QT_BEGIN_NAMESPACE
+class QInputMethodEvent;
+class QKeyEvent;
+QT_END_NAMESPACE
 
 class QQuickWebPage;
+class QQuickWebView;
 
-using namespace WebKit;
+namespace WebCore {
+class DragData;
+class IntPoint;
+class IntRect;
+}
+
+namespace WebKit {
+
+class NativeWebTouchEvent;
+class QtViewportInteractionEngine;
+class ShareableBitmap;
+class WebGestureEvent;
+class WebPageProxy;
 
 class QtWebPageEventHandler : public QObject {
     Q_OBJECT
 
 public:
-    QtWebPageEventHandler(WKPageRef, QQuickWebPage*);
+    QtWebPageEventHandler(WKPageRef, QQuickWebPage*, QQuickWebView*);
     ~QtWebPageEventHandler();
 
-    bool handleEvent(QEvent*);
+    void handleKeyPressEvent(QKeyEvent*);
+    void handleKeyReleaseEvent(QKeyEvent*);
+    void handleFocusInEvent(QFocusEvent*);
+    void handleFocusOutEvent(QFocusEvent*);
+    void handleMouseMoveEvent(QMouseEvent*);
+    void handleMousePressEvent(QMouseEvent*);
+    void handleMouseReleaseEvent(QMouseEvent*);
+    void handleWheelEvent(QWheelEvent*);
+    void handleHoverLeaveEvent(QHoverEvent*);
+    void handleHoverMoveEvent(QHoverEvent*);
+    void handleDragEnterEvent(QDragEnterEvent*);
+    void handleDragLeaveEvent(QDragLeaveEvent*);
+    void handleDragMoveEvent(QDragMoveEvent*);
+    void handleDropEvent(QDropEvent*);
+    void handleInputMethodEvent(QInputMethodEvent*);
+    void handleTouchEvent(QTouchEvent*);
 
     void setViewportInteractionEngine(QtViewportInteractionEngine*);
 
+    void handlePotentialSingleTapEvent(const QTouchEvent::TouchPoint&);
     void handleSingleTapEvent(const QTouchEvent::TouchPoint&);
     void handleDoubleTapEvent(const QTouchEvent::TouchPoint&);
 
     void didFindZoomableArea(const WebCore::IntPoint& target, const WebCore::IntRect& area);
-    void focusEditableArea(const WebCore::IntRect& caret, const WebCore::IntRect& area);
+    void updateTextInputState();
+    void doneWithGestureEvent(const WebGestureEvent& event, bool wasEventHandled);
+#if ENABLE(TOUCH_EVENTS)
     void doneWithTouchEvent(const NativeWebTouchEvent&, bool wasEventHandled);
+#endif
     void resetGestureRecognizers();
 
     QtViewportInteractionEngine* interactionEngine() { return m_interactionEngine; }
@@ -66,32 +100,21 @@ protected:
     QtPinchGestureRecognizer m_pinchGestureRecognizer;
     QtTapGestureRecognizer m_tapGestureRecognizer;
     QQuickWebPage* m_webPage;
+    QQuickWebView* m_webView;
+
+private slots:
+    void inputPanelVisibleChanged();
 
 private:
-    bool handleKeyPressEvent(QKeyEvent*);
-    bool handleKeyReleaseEvent(QKeyEvent*);
-    bool handleFocusInEvent(QFocusEvent*);
-    bool handleFocusOutEvent(QFocusEvent*);
-    bool handleMouseMoveEvent(QMouseEvent*);
-    bool handleMousePressEvent(QMouseEvent*);
-    bool handleMouseReleaseEvent(QMouseEvent*);
-    bool handleWheelEvent(QWheelEvent*);
-    bool handleHoverLeaveEvent(QHoverEvent*);
-    bool handleHoverMoveEvent(QHoverEvent*);
-    bool handleDragEnterEvent(QDragEnterEvent*);
-    bool handleDragLeaveEvent(QDragLeaveEvent*);
-    bool handleDragMoveEvent(QDragMoveEvent*);
-    bool handleDropEvent(QDropEvent*);
-
     void timerEvent(QTimerEvent*);
 
-    void touchEvent(QTouchEvent*);
-    void inputMethodEvent(QInputMethodEvent*);
-
-    QPoint m_lastClick;
+    QPointF m_lastClick;
     QBasicTimer m_clickTimer;
     Qt::MouseButton m_previousClickButton;
     int m_clickCount;
+    bool m_postponeTextInputStateChanged;
 };
+
+} // namespace WebKit
 
 #endif /* QtWebPageEventHandler_h */

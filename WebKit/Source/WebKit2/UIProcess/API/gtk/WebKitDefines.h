@@ -30,13 +30,11 @@
 #ifndef WebKitDefines_h
 #define WebKitDefines_h
 
-typedef struct _WebKitWebView WebKitWebView;
-typedef struct _WebKitWebViewClass WebKitWebViewClass;
-
-typedef struct _WebKitWebLoaderClient        WebKitWebLoaderClient;
-typedef struct _WebKitWebLoaderClientClass   WebKitWebLoaderClientClass;
-
 #include <glib.h>
+
+typedef struct _WebKitPrintOperation WebKitPrintOperation;
+typedef struct _WebKitFindController WebKitFindController;
+typedef struct _WebKitWebView        WebKitWebView;
 
 #ifdef G_OS_WIN32
 #    ifdef BUILDING_WEBKIT

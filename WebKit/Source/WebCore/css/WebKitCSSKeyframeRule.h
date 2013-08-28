@@ -27,49 +27,63 @@
 #define WebKitCSSKeyframeRule_h
 
 #include "CSSRule.h"
+#include "ExceptionCode.h"
+#include "StylePropertySet.h"
 #include <wtf/PassRefPtr.h>
 #include <wtf/RefPtr.h>
 
 namespace WebCore {
 
-class CSSMutableStyleDeclaration;
+class StyleRuleCSSStyleDeclaration;
+class WebKitCSSKeyframesRule;
 
-typedef int ExceptionCode;
+class StyleKeyframe : public RefCounted<StyleKeyframe> {
+public:
+    static PassRefPtr<StyleKeyframe> create()
+    {
+        return adoptRef(new StyleKeyframe());
+    }
+
+    String keyText() const { return m_key; }
+    void setKeyText(const String& s) { m_key = s; }
+
+    void getKeys(Vector<float>& keys) const   { parseKeyString(m_key, keys); }
+    
+    StylePropertySet* properties() const { return m_properties.get(); }
+    void setProperties(PassRefPtr<StylePropertySet>);
+    
+    String cssText() const;
+
+private:    
+    StyleKeyframe() { }
+    
+    static void parseKeyString(const String&, Vector<float>& keys);
+    
+    RefPtr<StylePropertySet> m_properties;
+    // FIXME: This should be a parsed vector of floats.
+    // comma separated list of keys
+    String m_key;
+};
 
 class WebKitCSSKeyframeRule : public CSSRule {
 public:
-    static PassRefPtr<WebKitCSSKeyframeRule> create()
-    {
-        return adoptRef(new WebKitCSSKeyframeRule(0));
-    }
-    static PassRefPtr<WebKitCSSKeyframeRule> create(CSSStyleSheet* parent)
-    {
-        return adoptRef(new WebKitCSSKeyframeRule(parent));
-    }
-
     ~WebKitCSSKeyframeRule();
 
-    String keyText() const              { return m_key; }
-    void setKeyText(const String& s)    { m_key = s; }
+    String keyText() const { return m_keyframe->keyText(); }
+    void setKeyText(const String& s) { m_keyframe->setKeyText(s); }
 
-    void getKeys(Vector<float>& keys) const   { parseKeyString(m_key, keys); }
+    CSSStyleDeclaration* style() const;
 
-    CSSMutableStyleDeclaration* style() const { return m_style.get(); }
-
-    String cssText() const;
-
-    void setDeclaration(PassRefPtr<CSSMutableStyleDeclaration>);
-
-    CSSMutableStyleDeclaration*         declaration()       { return m_style.get(); }
-    const CSSMutableStyleDeclaration*   declaration() const { return m_style.get(); }
+    String cssText() const { return m_keyframe->cssText(); }
 
 private:
-    static void parseKeyString(const String& s, Vector<float>& keys);
+    WebKitCSSKeyframeRule(StyleKeyframe*, WebKitCSSKeyframesRule* parent);
 
-    WebKitCSSKeyframeRule(CSSStyleSheet* parent);
-
-    RefPtr<CSSMutableStyleDeclaration> m_style;
-    String m_key;        // comma separated list of keys
+    RefPtr<StyleKeyframe> m_keyframe;
+    
+    mutable RefPtr<StyleRuleCSSStyleDeclaration> m_propertiesCSSOMWrapper;
+    
+    friend class WebKitCSSKeyframesRule;
 };
 
 } // namespace WebCore

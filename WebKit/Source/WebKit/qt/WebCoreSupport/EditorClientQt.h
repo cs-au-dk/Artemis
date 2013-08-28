@@ -31,9 +31,9 @@
 #define EditorClientQt_h
 
 #include "EditorClient.h"
-#include "RefCounted.h"
 #include "TextCheckerClientQt.h"
 #include <wtf/Forward.h>
+#include <wtf/RefCounted.h>
 
 class QWebPage;
 
@@ -63,7 +63,7 @@ public:
     virtual bool shouldInsertText(const String&, Range*, EditorInsertAction);
     virtual bool shouldChangeSelectedRange(Range* fromRange, Range* toRange, EAffinity, bool stillSelecting);
 
-    virtual bool shouldApplyStyle(CSSStyleDeclaration*, Range*);
+    virtual bool shouldApplyStyle(StylePropertySet*, Range*);
 
     virtual bool shouldMoveRangeAfterDelete(Range*, Range*);
 

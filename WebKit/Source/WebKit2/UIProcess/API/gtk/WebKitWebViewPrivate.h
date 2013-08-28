@@ -31,6 +31,8 @@
 #include <WebKit2/WebKit2.h>
 #include <wtf/text/CString.h>
 
+void webkitWebViewLoadChanged(WebKitWebView*, WebKitLoadEvent);
+void webkitWebViewLoadFailed(WebKitWebView*, WebKitLoadEvent, const char* failingURI, GError*);
 void webkitWebViewSetEstimatedLoadProgress(WebKitWebView*, double estimatedLoadProgress);
 void webkitWebViewSetTitle(WebKitWebView*, const CString&);
 void webkitWebViewUpdateURI(WebKitWebView*);
@@ -40,5 +42,15 @@ void webkitWebViewClosePage(WebKitWebView*);
 void webkitWebViewRunJavaScriptAlert(WebKitWebView*, const CString& message);
 bool webkitWebViewRunJavaScriptConfirm(WebKitWebView*, const CString& message);
 WKStringRef webkitWebViewRunJavaScriptPrompt(WebKitWebView*, const CString& message, const CString& defaultText);
+void webkitWebViewMakePolicyDecision(WebKitWebView*, WebKitPolicyDecisionType, WebKitPolicyDecision*);
+void webkitWebViewMouseTargetChanged(WebKitWebView*, WKHitTestResultRef, unsigned modifiers);
+void webkitWebViewPrintFrame(WebKitWebView*, WKFrameRef);
+void webkitWebViewResourceLoadStarted(WebKitWebView*, WKFrameRef, uint64_t resourceIdentifier, WebKitURIRequest*, bool isMainResource);
+void webkitWebViewRunFileChooserRequest(WebKitWebView*, WebKitFileChooserRequest*);
+WebKitWebResource* webkitWebViewGetLoadingWebResource(WebKitWebView*, uint64_t resourceIdentifier);
+void webkitWebViewRemoveLoadingWebResource(WebKitWebView*, uint64_t resourceIdentifier);
+WebKitWebResource* webkitWebViewResourceLoadFinished(WebKitWebView*, uint64_t resourceIdentifier);
+bool webkitWebViewEnterFullScreen(WebKitWebView*);
+bool webkitWebViewLeaveFullScreen(WebKitWebView*);
 
 #endif // WebKitWebViewPrivate_h

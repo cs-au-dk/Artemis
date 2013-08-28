@@ -34,6 +34,7 @@
 #if ENABLE(FILE_SYSTEM) && ENABLE(WORKERS)
 
 #include "AsyncFileSystemCallbacks.h"
+#include "BlobURL.h"
 #include "FileMetadata.h"
 #include "FileSystem.h"
 #include "NotImplemented.h"
@@ -57,14 +58,11 @@ namespace WebCore {
 static const char fileSystemOperationsMode[] = "fileSystemOperationsMode";
 
 WorkerAsyncFileSystemChromium::WorkerAsyncFileSystemChromium(ScriptExecutionContext* context, AsyncFileSystem::Type type, const WebKit::WebURL& rootURL, bool synchronous)
-    : AsyncFileSystem(type)
+    : AsyncFileSystemChromium(type, rootURL)
     , m_scriptExecutionContext(context)
-    , m_webFileSystem(webKitPlatformSupport()->fileSystem())
     , m_workerContext(static_cast<WorkerContext*>(context))
     , m_synchronous(synchronous)
-    , m_filesystemRootURL(rootURL)
 {
-    ASSERT(m_webFileSystem);
     ASSERT(m_scriptExecutionContext->isWorkerContext());
 
     WorkerLoaderProxy* workerLoaderProxy = &m_workerContext->thread()->workerLoaderProxy();
@@ -211,6 +209,14 @@ void WorkerAsyncFileSystemChromium::createWriter(AsyncFileWriterClient* client, 
     createWorkerFileSystemCallbacksBridge(WorkerFileWriterHelperCallbacks::create(client, pathAsURL, m_webFileSystem, callbacks, m_workerContext))->postReadMetadataToMainThread(m_webFileSystem, pathAsURL, m_modeForCurrentOperation);
 }
 
+void WorkerAsyncFileSystemChromium::createSnapshotFileAndReadMetadata(const String& path, PassOwnPtr<AsyncFileSystemCallbacks> callbacks)
+{
+    KURL pathAsURL = virtualPathToFileSystemURL(path);
+    KURL internalBlobURL = BlobURL::createInternalURL();
+
+    createWorkerFileSystemCallbacksBridge(createSnapshotFileCallback(internalBlobURL, callbacks))->postCreateSnapshotFileToMainThread(m_webFileSystem, internalBlobURL, pathAsURL, m_modeForCurrentOperation);
+}
+
 PassRefPtr<WorkerFileSystemCallbacksBridge> WorkerAsyncFileSystemChromium::createWorkerFileSystemCallbacksBridge(PassOwnPtr<AsyncFileSystemCallbacks> callbacks)
 {
     ASSERT(!m_synchronous || !m_bridgeForCurrentOperation);
@@ -220,15 +226,6 @@ PassRefPtr<WorkerFileSystemCallbacksBridge> WorkerAsyncFileSystemChromium::creat
 
     m_bridgeForCurrentOperation = WorkerFileSystemCallbacksBridge::create(m_worker, m_scriptExecutionContext, new WebKit::WebFileSystemCallbacksImpl(callbacks));
     return m_bridgeForCurrentOperation;
-}
-
-KURL WorkerAsyncFileSystemChromium::virtualPathToFileSystemURL(const String& virtualPath) const
-{
-    ASSERT(!m_filesystemRootURL.isEmpty());
-    KURL url = m_filesystemRootURL;
-    // Remove the extra leading slash.
-    url.setPath(url.path() + encodeWithURLEscapeSequences(virtualPath.substring(1)));
-    return url;
 }
 
 } // namespace WebCore

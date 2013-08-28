@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010 Google Inc. All rights reserved.
+ * Copyright (C) 2012 Google Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -37,6 +37,7 @@
 #include "WebAccessibilityNotification.h"
 #include "WebCursorInfo.h"
 #include "WebFrameClient.h"
+#include "WebIntentRequest.h"
 #include "WebSpellCheckClient.h"
 #include "WebViewClient.h"
 #include <wtf/HashMap.h>
@@ -45,6 +46,7 @@
 #include <wtf/text/WTFString.h>
 
 class LayoutTestController;
+class MockWebSpeechInputController;
 class SkCanvas;
 class TestShell;
 
@@ -57,12 +59,17 @@ class WebGeolocationClientMock;
 class WebGeolocationServiceMock;
 class WebSharedWorkerClient;
 class WebSpeechInputController;
-class WebSpeechInputControllerMock;
 class WebSpeechInputListener;
 class WebURL;
+class WebUserMediaClientMock;
 struct WebRect;
 struct WebURLError;
 struct WebWindowFeatures;
+}
+
+namespace webkit_support {
+class MediaStreamUtil;
+class TestMediaStreamClient;
 }
 
 class WebViewHost : public WebKit::WebSpellCheckClient, public WebKit::WebViewClient, public WebKit::WebFrameClient, public NavigationHost {
@@ -102,7 +109,13 @@ class WebViewHost : public WebKit::WebSpellCheckClient, public WebKit::WebViewCl
     WebKit::WebContextMenuData* lastContextMenuData() const;
     void clearContextMenuData();
 
-    WebKit::WebSpeechInputControllerMock* speechInputControllerMock() { return m_speechInputControllerMock.get(); }
+    MockWebSpeechInputController* speechInputControllerMock() { return m_speechInputControllerMock.get(); }
+
+#if ENABLE(POINTER_LOCK)
+    void didLosePointerLock();
+    void setPointerLockWillFailAsynchronously() { m_pointerLockPlannedResult = PointerLockWillFailAsync; }
+    void setPointerLockWillFailSynchronously() { m_pointerLockPlannedResult = PointerLockWillFailSync; }
+#endif
 
     // NavigationHost
     virtual bool navigate(const TestNavigationEntry&, bool reload);
@@ -113,10 +126,11 @@ class WebViewHost : public WebKit::WebSpellCheckClient, public WebKit::WebViewCl
     virtual WebKit::WebString autoCorrectWord(const WebKit::WebString&);
 
     // WebKit::WebViewClient
-    virtual WebKit::WebView* createView(WebKit::WebFrame*, const WebKit::WebURLRequest&, const WebKit::WebWindowFeatures&, const WebKit::WebString&);
+    virtual WebKit::WebView* createView(WebKit::WebFrame*, const WebKit::WebURLRequest&, const WebKit::WebWindowFeatures&, const WebKit::WebString&, WebKit::WebNavigationPolicy);
     virtual WebKit::WebWidget* createPopupMenu(WebKit::WebPopupType);
     virtual WebKit::WebWidget* createPopupMenu(const WebKit::WebPopupMenuInfo&);
     virtual WebKit::WebStorageNamespace* createSessionStorageNamespace(unsigned quota);
+    virtual WebKit::WebGraphicsContext3D* createGraphicsContext3D(const WebKit::WebGraphicsContext3D::Attributes&);
     virtual void didAddMessageToConsole(const WebKit::WebConsoleMessage&, const WebKit::WebString& sourceName, unsigned sourceLine);
     virtual void didStartLoading();
     virtual void didStopLoading();
@@ -150,12 +164,18 @@ class WebViewHost : public WebKit::WebSpellCheckClient, public WebKit::WebViewCl
     virtual WebKit::WebGeolocationClient* geolocationClient();
     virtual WebKit::WebSpeechInputController* speechInputController(WebKit::WebSpeechInputListener*);
     virtual WebKit::WebDeviceOrientationClient* deviceOrientationClient();
+#if ENABLE(MEDIA_STREAM)
+    virtual WebKit::WebUserMediaClient* userMediaClient();
+#endif
+    virtual void printPage(WebKit::WebFrame*);
 
     // WebKit::WebWidgetClient
     virtual void didInvalidateRect(const WebKit::WebRect&);
     virtual void didScrollRect(int dx, int dy, const WebKit::WebRect&);
+    virtual void didAutoResize(const WebKit::WebSize& newSize);
     virtual void scheduleComposite();
 #if ENABLE(REQUEST_ANIMATION_FRAME)
+    virtual void serviceAnimation();
     virtual void scheduleAnimation();
 #endif
     virtual void didFocus();
@@ -171,10 +191,14 @@ class WebViewHost : public WebKit::WebSpellCheckClient, public WebKit::WebViewCl
     virtual WebKit::WebRect rootWindowRect();
     virtual WebKit::WebRect windowResizerRect();
     virtual WebKit::WebScreenInfo screenInfo();
+#if ENABLE(POINTER_LOCK)
+    virtual bool requestPointerLock();
+    virtual void requestPointerUnlock();
+    virtual bool isPointerLocked();
+#endif
 
     // WebKit::WebFrameClient
     virtual WebKit::WebPlugin* createPlugin(WebKit::WebFrame*, const WebKit::WebPluginParams&);
-    virtual WebKit::WebWorker* createWorker(WebKit::WebFrame*, WebKit::WebSharedWorkerClient*);
     virtual WebKit::WebMediaPlayer* createMediaPlayer(WebKit::WebFrame*, WebKit::WebMediaPlayerClient*);
     virtual WebKit::WebApplicationCacheHost* createApplicationCacheHost(WebKit::WebFrame*, WebKit::WebApplicationCacheHostClient*);
     virtual void loadURLExternally(WebKit::WebFrame*, const WebKit::WebURLRequest&, WebKit::WebNavigationPolicy);
@@ -214,6 +238,8 @@ class WebViewHost : public WebKit::WebSpellCheckClient, public WebKit::WebViewCl
     virtual void didRunInsecureContent(WebKit::WebFrame*, const WebKit::WebSecurityOrigin&, const WebKit::WebURL&);
     virtual void didDetectXSS(WebKit::WebFrame*, const WebKit::WebURL&, bool didBlockEntirePage);
     virtual void openFileSystem(WebKit::WebFrame*, WebKit::WebFileSystem::Type, long long size, bool create, WebKit::WebFileSystemCallbacks*);
+    virtual bool willCheckAndDispatchMessageEvent(WebKit::WebFrame* source, WebKit::WebSecurityOrigin target, WebKit::WebDOMMessageEvent);
+    virtual void dispatchIntent(WebKit::WebFrame* source, const WebKit::WebIntentRequest&);
 
     WebKit::WebDeviceOrientationClientMock* deviceOrientationClientMock();
     
@@ -226,6 +252,9 @@ class WebViewHost : public WebKit::WebSpellCheckClient, public WebKit::WebViewCl
 
     // Pending task list, Note taht the method is referred from MethodTask class.
     TaskList* taskList() { return &m_taskList; }
+
+    // The current web intents request.
+    WebKit::WebIntentRequest* currentIntentRequest() { return &m_currentRequest; }
 
 private:
 
@@ -278,6 +307,17 @@ private:
     bool hasWindow() const { return m_hasWindow; }
     void resetScrollRect();
     void discardBackingStore();
+
+#if ENABLE(POINTER_LOCK)
+    void didAcquirePointerLock();
+    void didNotAcquirePointerLock();
+#endif
+
+#if ENABLE(MEDIA_STREAM)
+    WebKit::WebUserMediaClientMock* userMediaClientMock();
+    webkit_support::MediaStreamUtil* mediaStreamUtil();
+    webkit_support::TestMediaStreamClient* testMediaStreamClient();
+#endif
 
     // Causes navigation actions just printout the intended navigation instead
     // of taking you to the page. This is used for cases like mailto, where you
@@ -353,7 +393,12 @@ private:
     OwnPtr<WebKit::WebGeolocationClientMock> m_geolocationClientMock;
 
     OwnPtr<WebKit::WebDeviceOrientationClientMock> m_deviceOrientationClientMock;
-    OwnPtr<WebKit::WebSpeechInputControllerMock> m_speechInputControllerMock;
+    OwnPtr<MockWebSpeechInputController> m_speechInputControllerMock;
+
+#if ENABLE(MEDIA_STREAM)
+    OwnPtr<WebKit::WebUserMediaClientMock> m_userMediaClientMock;
+    OwnPtr<webkit_support::TestMediaStreamClient> m_testMediaStreamClient;
+#endif
 
     OwnPtr<TestNavigationController> m_navigationController;
 
@@ -362,6 +407,18 @@ private:
 
     TaskList m_taskList;
     Vector<WebKit::WebWidget*> m_popupmenus;
+
+#if ENABLE(POINTER_LOCK)
+    bool m_pointerLocked;
+    enum {
+        PointerLockWillSucceed,
+        PointerLockWillFailAsync,
+        PointerLockWillFailSync
+    } m_pointerLockPlannedResult;
+#endif
+
+    // For web intents: holds the current request, if any.
+    WebKit::WebIntentRequest m_currentRequest;
 };
 
 #endif // WebViewHost_h

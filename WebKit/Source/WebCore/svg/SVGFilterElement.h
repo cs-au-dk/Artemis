@@ -43,7 +43,7 @@ class SVGFilterElement : public SVGStyledElement,
 public:
     static PassRefPtr<SVGFilterElement> create(const QualifiedName&, Document*);
 
-    void setFilterRes(unsigned long filterResX, unsigned long filterResY);
+    void setFilterRes(unsigned filterResX, unsigned filterResY);
 
 private:
     SVGFilterElement(const QualifiedName&, Document*);
@@ -51,7 +51,7 @@ private:
     virtual bool needsPendingResourceHandling() const { return false; }
 
     bool isSupportedAttribute(const QualifiedName&);
-    virtual void parseMappedAttribute(Attribute*);
+    virtual void parseAttribute(Attribute*) OVERRIDE;
     virtual void svgAttributeChanged(const QualifiedName&);
     virtual void childrenChanged(bool changedByParser = false, Node* beforeChange = 0, Node* afterChange = 0, int childCountDelta = 0);
 

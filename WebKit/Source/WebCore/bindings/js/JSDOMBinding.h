@@ -22,8 +22,8 @@
 #ifndef JSDOMBinding_h
 #define JSDOMBinding_h
 
-#include "CSSElementStyleDeclaration.h"
 #include "CSSImportRule.h"
+#include "CSSStyleDeclaration.h"
 #include "CSSStyleSheet.h"
 #include "JSDOMGlobalObject.h"
 #include "JSDOMWrapper.h"
@@ -31,22 +31,25 @@
 #include "Document.h"
 #include "Element.h"
 #include "MediaList.h"
+#include "StylePropertySet.h"
 #include "StyledElement.h"
 #include <heap/Weak.h>
 #include <runtime/FunctionPrototype.h>
+#include <runtime/JSArray.h>
 #include <runtime/Lookup.h>
 #include <runtime/ObjectPrototype.h>
 #include <wtf/Forward.h>
 #include <wtf/Noncopyable.h>
+#include <wtf/Vector.h>
 
 namespace WebCore {
 
-enum ParameterMissingPolicy {
-    MissingIsUndefined,
-    MissingIsEmpty
+enum ParameterDefaultPolicy {
+    DefaultIsUndefined,
+    DefaultIsNullString
 };
 
-#define MAYBE_MISSING_PARAMETER(exec, index, policy) (((policy) == MissingIsEmpty && (index) >= (exec)->argumentCount()) ? (JSValue()) : ((exec)->argument(index)))
+#define MAYBE_MISSING_PARAMETER(exec, index, policy) (((policy) == DefaultIsNullString && (index) >= (exec)->argumentCount()) ? (JSValue()) : ((exec)->argument(index)))
 
     class Frame;
     class KURL;
@@ -101,7 +104,7 @@ enum ParameterMissingPolicy {
         // FIXME: Callers to this function should be using the global object
         // from which the object is being created, instead of assuming the lexical one.
         // e.g. subframe.document.body should use the subframe's global object, not the lexical one.
-        return static_cast<JSDOMGlobalObject*>(exec->lexicalGlobalObject());
+        return JSC::jsCast<JSDOMGlobalObject*>(exec->lexicalGlobalObject());
     }
 
     template<class WrapperClass> inline JSC::Structure* getDOMStructure(JSC::ExecState* exec, JSDOMGlobalObject* globalObject)
@@ -119,7 +122,7 @@ enum ParameterMissingPolicy {
 
     template<class WrapperClass> inline JSC::JSObject* getDOMPrototype(JSC::ExecState* exec, JSC::JSGlobalObject* globalObject)
     {
-        return static_cast<JSC::JSObject*>(asObject(getDOMStructure<WrapperClass>(exec, static_cast<JSDOMGlobalObject*>(globalObject))->storedPrototype()));
+        return JSC::jsCast<JSC::JSObject*>(asObject(getDOMStructure<WrapperClass>(exec, JSC::jsCast<JSDOMGlobalObject*>(globalObject))->storedPrototype()));
     }
 
     // Overload these functions to provide a fast path for wrapper access.
@@ -131,22 +134,23 @@ enum ParameterMissingPolicy {
     {
         if (JSDOMWrapper* wrapper = getInlineCachedWrapper(world, domObject))
             return wrapper;
-        return world->m_wrappers.get(domObject).get();
+        return world->m_wrappers.get(domObject);
     }
 
     template <typename DOMClass> inline void cacheWrapper(DOMWrapperWorld* world, DOMClass* domObject, JSDOMWrapper* wrapper)
     {
         if (setInlineCachedWrapper(world, domObject, wrapper))
             return;
-        ASSERT(!world->m_wrappers.contains(domObject));
-        world->m_wrappers.set(domObject, JSC::Weak<JSDOMWrapper>(*world->globalData(), wrapper, wrapperOwner(world, domObject), wrapperContext(world, domObject)));
+        JSC::PassWeak<JSDOMWrapper> passWeak(wrapper, wrapperOwner(world, domObject), wrapperContext(world, domObject));
+        DOMObjectWrapperMap::AddResult result = world->m_wrappers.add(domObject, passWeak);
+        ASSERT_UNUSED(result, result.isNewEntry);
     }
 
     template <typename DOMClass> inline void uncacheWrapper(DOMWrapperWorld* world, DOMClass* domObject, JSDOMWrapper* wrapper)
     {
         if (clearInlineCachedWrapper(world, domObject, wrapper))
             return;
-        ASSERT(world->m_wrappers.find(domObject)->second.get() == wrapper);
+        ASSERT(world->m_wrappers.find(domObject)->second.was(wrapper));
         world->m_wrappers.remove(domObject);
     }
     
@@ -207,13 +211,13 @@ enum ParameterMissingPolicy {
             return root(parentRule);
         if (CSSStyleSheet* styleSheet = style->parentStyleSheet())
             return root(styleSheet);
-        // A style declaration with an associated element should've returned a style sheet above.
-        ASSERT(!style->isElementStyleDeclaration() || !static_cast<CSSElementStyleDeclaration*>(style)->element());
         return style;
     }
 
     inline void* root(MediaList* mediaList)
     {
+        if (CSSRule* parentRule = mediaList->parentRule())
+            return root(parentRule);
         if (CSSStyleSheet* parentStyleSheet = mediaList->parentStyleSheet())
             return root(parentStyleSheet);
         return mediaList;
@@ -277,24 +281,63 @@ enum ParameterMissingPolicy {
         return toJS(exec, globalObject, ptr.get());
     }
 
+    template <typename T>
+    JSC::JSValue jsArray(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, const Vector<T>& iterator)
+    {
+        JSC::MarkedArgumentBuffer list;
+        typename Vector<T>::const_iterator end = iterator.end();
+
+        for (typename Vector<T>::const_iterator iter = iterator.begin(); iter != end; ++iter)
+            list.append(toJS(exec, globalObject, WTF::getPtr(*iter)));
+
+        return JSC::constructArray(exec, globalObject, list);
+    }
+
+    template<>
+    inline JSC::JSValue jsArray(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, const Vector<String>& iterator)
+    {
+        JSC::MarkedArgumentBuffer array;
+        Vector<String>::const_iterator end = iterator.end();
+
+        for (Vector<String>::const_iterator it = iterator.begin(); it != end; ++it)
+            array.append(jsString(exec, stringToUString(*it)));
+
+        return JSC::constructArray(exec, globalObject, array);
+    }
+
+    template <class T>
+    Vector<T> toNativeArray(JSC::ExecState* exec, JSC::JSValue value)
+    {
+        if (!isJSArray(value))
+            return Vector<T>();
+
+        Vector<T> result;
+        JSC::JSArray* array = asArray(value);
+
+        for (unsigned i = 0; i < array->length(); ++i) {
+            String indexedValue = ustringToString(array->getIndex(i).toString(exec)->value(exec));
+            result.append(indexedValue);
+        }
+        return result;
+    }
+
     // Validates that the passed object is a sequence type per section 4.1.13 of the WebIDL spec.
     JSC::JSObject* toJSSequence(JSC::ExecState*, JSC::JSValue, unsigned&);
 
-    bool checkNodeSecurity(JSC::ExecState*, Node*);
+    // FIXME: Implement allowAccessToContext(JSC::ExecState*, ScriptExecutionContext*);
+    bool shouldAllowAccessToNode(JSC::ExecState*, Node*);
+    bool shouldAllowAccessToFrame(JSC::ExecState*, Frame*);
+    bool shouldAllowAccessToFrame(JSC::ExecState*, Frame*, String& message);
+    // FIXME: Implement allowAccessToDOMWindow(JSC::ExecState*, DOMWindow*);
 
-    // Helpers for Window, History, and Location classes to implement cross-domain policy.
-    // Besides the cross-domain check, they need non-caching versions of staticFunctionGetter for
-    // because we do not want current property values involved at all.
-    // FIXME: These functions should be named frameAllowsAccessFrom, because the access is *to* the frame.
-    bool allowsAccessFromFrame(JSC::ExecState*, Frame*);
-    bool allowsAccessFromFrame(JSC::ExecState*, Frame*, String& message);
+    // FIXME: Remove these functions in favor of activeContext and
+    // firstContext, which return ScriptExecutionContext*. We prefer to use
+    // ScriptExecutionContext* as the context object in the bindings.
     DOMWindow* activeDOMWindow(JSC::ExecState*);
     DOMWindow* firstDOMWindow(JSC::ExecState*);
 
     void printErrorMessageForFrame(Frame*, const String& message);
     JSC::JSValue objectToStringFunctionGetter(JSC::ExecState*, JSC::JSValue, const JSC::Identifier& propertyName);
-
-    Frame* toDynamicFrame(JSC::ExecState*);
 
     inline JSC::JSValue jsString(JSC::ExecState* exec, const String& s)
     {
@@ -343,6 +386,23 @@ enum ParameterMissingPolicy {
         return AtomicString(identifier.impl());
     }
 
+    inline Vector<unsigned long> jsUnsignedLongArrayToVector(JSC::ExecState* exec, JSC::JSValue value)
+    {
+        unsigned length;
+        JSC::JSObject* object = toJSSequence(exec, value, length);
+        if (exec->hadException())
+            return Vector<unsigned long>();
+
+        Vector<unsigned long> result;
+        for (unsigned i = 0; i < length; i++) {
+            JSC::JSValue indexedValue;
+            indexedValue = object->get(exec, i);
+            if (exec->hadException() || indexedValue.isUndefinedOrNull() || !indexedValue.isNumber())
+                return Vector<unsigned long>();
+            result.append(indexedValue.toUInt32(exec));
+        }
+        return result;
+    }
 } // namespace WebCore
 
 #endif // JSDOMBinding_h

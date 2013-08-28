@@ -28,10 +28,12 @@
 
 #include "CanvasRenderingContext.h"
 #include "Document.h"
+#include "Frame.h"
 #include "FrameView.h"
 #include "GraphicsContext.h"
 #include "HTMLCanvasElement.h"
 #include "HTMLNames.h"
+#include "Page.h"
 #include "PaintInfo.h"
 #include "RenderView.h"
 
@@ -58,6 +60,14 @@ void RenderHTMLCanvas::paintReplaced(PaintInfo& paintInfo, const LayoutPoint& pa
 {
     LayoutRect rect = contentBoxRect();
     rect.moveBy(paintOffset);
+
+    if (Frame* frame = this->frame()) {
+        if (Page* page = frame->page()) {
+            if (paintInfo.phase == PaintPhaseForeground)
+                page->addRelevantRepaintedObject(this, rect);
+        }
+    }
+
     bool useLowQualityScale = style()->imageRendering() == ImageRenderingOptimizeContrast;
     static_cast<HTMLCanvasElement*>(node())->paint(paintInfo.context, rect, useLowQualityScale);
 }
@@ -78,7 +88,7 @@ void RenderHTMLCanvas::canvasSizeChanged()
     if (!preferredLogicalWidthsDirty())
         setPreferredLogicalWidthsDirty(true);
 
-    IntSize oldSize = size();
+    LayoutSize oldSize = size();
     computeLogicalWidth();
     computeLogicalHeight();
     if (oldSize == size())

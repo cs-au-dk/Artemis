@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010 Google Inc. All rights reserved.
+ * Copyright (C) 2012 Google Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -52,7 +52,6 @@
 #include "WebScriptController.h"
 #include "WebSettings.h"
 #include "platform/WebSize.h"
-#include "WebSpeechInputControllerMock.h"
 #include "platform/WebString.h"
 #include "platform/WebURLRequest.h"
 #include "platform/WebURLResponse.h"
@@ -99,24 +98,24 @@ static void makeCanvasOpaque(SkCanvas* canvas)
     }
 }
 
-TestShell::TestShell(bool testShellMode)
+TestShell::TestShell()
     : m_testIsPending(false)
     , m_testIsPreparing(false)
     , m_focusedWidget(0)
-    , m_testShellMode(testShellMode)
+    , m_testShellMode(false)
     , m_devTools(0)
     , m_allowExternalPages(false)
     , m_acceleratedCompositingForVideoEnabled(false)
     , m_threadedCompositingEnabled(false)
-    , m_compositeToTexture(false)
     , m_forceCompositingMode(false)
     , m_accelerated2dCanvasEnabled(false)
-    , m_legacyAccelerated2dCanvasEnabled(false)
+    , m_deferred2dCanvasEnabled(false)
     , m_acceleratedPaintingEnabled(false)
     , m_perTilePaintingEnabled(false)
     , m_stressOpt(false)
     , m_stressDeopt(false)
     , m_dumpWhenFinished(true)
+    , m_isDisplayingModalDialog(false)
 {
     WebRuntimeFeatures::enableDataTransferItems(true);
     WebRuntimeFeatures::enableGeolocation(true);
@@ -124,19 +123,33 @@ TestShell::TestShell(bool testShellMode)
     WebRuntimeFeatures::enableIndexedDatabase(true);
     WebRuntimeFeatures::enableFileSystem(true);
     WebRuntimeFeatures::enableJavaScriptI18NAPI(true);
+    WebRuntimeFeatures::enableMediaSource(true);
+    WebRuntimeFeatures::enableEncryptedMedia(true);
     WebRuntimeFeatures::enableMediaStream(true);
-    WebRuntimeFeatures::enableWebAudio(true); 
+    WebRuntimeFeatures::enablePeerConnection(true);
+    WebRuntimeFeatures::enableWebAudio(true);
     WebRuntimeFeatures::enableVideoTrack(true);
     WebRuntimeFeatures::enableGamepad(true);
+    WebRuntimeFeatures::enableShadowDOM(true);
+    WebRuntimeFeatures::enableStyleScoped(true);
+    WebRuntimeFeatures::enableScriptedSpeech(true);
 
+    // 30 second is the same as the value in Mac DRT.
+    // If we use a value smaller than the timeout value of
+    // (new-)run-webkit-tests, (new-)run-webkit-tests misunderstands that a
+    // timed-out DRT process was crashed.
+    m_timeout = 30 * 1000;
+}
+
+void TestShell::initialize()
+{
     m_webPermissions = adoptPtr(new WebPermissions(this));
     m_accessibilityController = adoptPtr(new AccessibilityController(this));
     m_gamepadController = adoptPtr(new GamepadController(this));
     m_layoutTestController = adoptPtr(new LayoutTestController(this));
     m_eventSender = adoptPtr(new EventSender(this));
-    m_plainTextController = adoptPtr(new PlainTextController());
     m_textInputController = adoptPtr(new TextInputController(this));
-#if ENABLE(NOTIFICATIONS)
+#if ENABLE(NOTIFICATIONS) || ENABLE(LEGACY_NOTIFICATIONS)
     m_notificationPresenter = adoptPtr(new NotificationPresenter(this));
 #endif
     m_printer = m_testShellMode ? TestEventPrinter::createTestShellPrinter() : TestEventPrinter::createDRTPrinter();
@@ -148,13 +161,6 @@ TestShell::TestShell(bool testShellMode)
         WebCompositor::initialize(m_webCompositorThread.get());
     } else
         WebCompositor::initialize(0);
-
-
-    // 30 second is the same as the value in Mac DRT.
-    // If we use a value smaller than the timeout value of
-    // (new-)run-webkit-tests, (new-)run-webkit-tests misunderstands that a
-    // timed-out DRT process was crashed.
-    m_timeout = 30 * 1000;
 
     createMainWindow();
 }
@@ -174,8 +180,6 @@ TestShell::~TestShell()
 
     // Destroy the WebView before its WebViewHost.
     m_drtDevToolsAgent->setWebView(0);
-
-    WebCompositor::shutdown();
 }
 
 void TestShell::createDRTDevToolsClient(DRTDevToolsAgent* agent)
@@ -216,10 +220,9 @@ void TestShell::resetWebSettings(WebView& webView)
     m_prefs.reset();
     m_prefs.acceleratedCompositingEnabled = true;
     m_prefs.acceleratedCompositingForVideoEnabled = m_acceleratedCompositingForVideoEnabled;
-    m_prefs.compositeToTexture = m_compositeToTexture;
     m_prefs.forceCompositingMode = m_forceCompositingMode;
     m_prefs.accelerated2dCanvasEnabled = m_accelerated2dCanvasEnabled;
-    m_prefs.legacyAccelerated2dCanvasEnabled = m_legacyAccelerated2dCanvasEnabled;
+    m_prefs.deferred2dCanvasEnabled = m_deferred2dCanvasEnabled;
     m_prefs.acceleratedPaintingEnabled = m_acceleratedPaintingEnabled;
     m_prefs.perTilePaintingEnabled = m_perTilePaintingEnabled;
     m_prefs.applyTo(&webView);
@@ -239,6 +242,8 @@ void TestShell::runFileTest(const TestParams& params)
     if (testUrl.find("compositing/") != string::npos || testUrl.find("compositing\\") != string::npos) {
         m_prefs.acceleratedCompositingForVideoEnabled = true;
         m_prefs.accelerated2dCanvasEnabled = true;
+        m_prefs.deferred2dCanvasEnabled = true;
+        m_prefs.mockScrollbarsEnabled = true;
         m_prefs.applyTo(m_webView);
     }
 
@@ -290,7 +295,7 @@ void TestShell::resetTestController()
     m_layoutTestController->reset();
     m_eventSender->reset();
     m_webViewHost->reset();
-#if ENABLE(NOTIFICATIONS)
+#if ENABLE(NOTIFICATIONS) || ENABLE(LEGACY_NOTIFICATIONS)
     m_notificationPresenter->reset();
 #endif
     m_drtDevToolsAgent->reset();
@@ -551,8 +556,7 @@ void TestShell::dump()
 
         if (fwrite(webArrayBufferView.baseAddress(), 1, webArrayBufferView.byteLength(), stdout) != webArrayBufferView.byteLength())
             FATAL("Short write to stdout, disk full?\n");
-        printf("\n");
-
+        m_printer->handleAudioFooter();
         m_printer->handleTestFooter(true);
 
         fflush(stdout);
@@ -637,7 +641,6 @@ void TestShell::dump()
 
         dumpImage(m_webViewHost->canvas());
     }
-    m_printer->handleImageFooter();
     m_printer->handleTestFooter(dumpedAnything);
     fflush(stdout);
     fflush(stderr);
@@ -693,7 +696,6 @@ void TestShell::bindJSObjectsToWindow(WebFrame* frame)
     m_gamepadController->bindToJavascript(frame, WebString::fromUTF8("gamepadController"));
     m_layoutTestController->bindToJavascript(frame, WebString::fromUTF8("layoutTestController"));
     m_eventSender->bindToJavascript(frame, WebString::fromUTF8("eventSender"));
-    m_plainTextController->bindToJavascript(frame, WebString::fromUTF8("plainText"));
     m_textInputController->bindToJavascript(frame, WebString::fromUTF8("textInputController"));
 }
 

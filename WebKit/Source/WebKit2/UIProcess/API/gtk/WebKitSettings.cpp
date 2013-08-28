@@ -33,9 +33,6 @@
 
 #include "WebKitPrivate.h"
 #include "WebKitSettingsPrivate.h"
-#include <WebKit2/WKAPICast.h>
-#include <WebKit2/WKString.h>
-#include <WebKit2/WKRetainPtr.h>
 #include <glib/gi18n-lib.h>
 #include <wtf/text/CString.h>
 
@@ -49,6 +46,7 @@ struct _WebKitSettingsPrivate {
     CString fantasyFontFamily;
     CString pictographFontFamily;
     CString defaultCharset;
+    bool zoomTextOnly;
 };
 
 /**
@@ -103,7 +101,12 @@ enum {
     PROP_ENABLE_TABS_TO_LINKS,
     PROP_ENABLE_DNS_PREFETCHING,
     PROP_ENABLE_CARET_BROWSING,
-    PROP_ENABLE_FULLSCREEN
+    PROP_ENABLE_FULLSCREEN,
+    PROP_PRINT_BACKGROUNDS,
+    PROP_ENABLE_WEBAUDIO,
+    PROP_ENABLE_WEBGL,
+    PROP_ZOOM_TEXT_ONLY,
+    PROP_JAVASCRIPT_CAN_ACCESS_CLIPBOARD
 };
 
 static void webKitSettingsSetProperty(GObject* object, guint propId, const GValue* value, GParamSpec* paramSpec)
@@ -200,6 +203,21 @@ static void webKitSettingsSetProperty(GObject* object, guint propId, const GValu
         break;
     case PROP_ENABLE_FULLSCREEN:
         webkit_settings_set_enable_fullscreen(settings, g_value_get_boolean(value));
+        break;
+    case PROP_PRINT_BACKGROUNDS:
+        webkit_settings_set_print_backgrounds(settings, g_value_get_boolean(value));
+        break;
+    case PROP_ENABLE_WEBAUDIO:
+        webkit_settings_set_enable_webaudio(settings, g_value_get_boolean(value));
+        break;
+    case PROP_ENABLE_WEBGL:
+        webkit_settings_set_enable_webgl(settings, g_value_get_boolean(value));
+        break;
+    case PROP_ZOOM_TEXT_ONLY:
+        webkit_settings_set_zoom_text_only(settings, g_value_get_boolean(value));
+        break;
+    case PROP_JAVASCRIPT_CAN_ACCESS_CLIPBOARD:
+        webkit_settings_set_javascript_can_access_clipboard(settings, g_value_get_boolean(value));
         break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, propId, paramSpec);
@@ -301,6 +319,21 @@ static void webKitSettingsGetProperty(GObject* object, guint propId, GValue* val
         break;
     case PROP_ENABLE_FULLSCREEN:
         g_value_set_boolean(value, webkit_settings_get_enable_fullscreen(settings));
+        break;
+    case PROP_PRINT_BACKGROUNDS:
+        g_value_set_boolean(value, webkit_settings_get_print_backgrounds(settings));
+        break;
+    case PROP_ENABLE_WEBAUDIO:
+        g_value_set_boolean(value, webkit_settings_get_enable_webaudio(settings));
+        break;
+    case PROP_ENABLE_WEBGL:
+        g_value_set_boolean(value, webkit_settings_get_enable_webgl(settings));
+        break;
+    case PROP_ZOOM_TEXT_ONLY:
+        g_value_set_boolean(value, webkit_settings_get_zoom_text_only(settings));
+        break;
+    case PROP_JAVASCRIPT_CAN_ACCESS_CLIPBOARD:
+        g_value_set_boolean(value, webkit_settings_get_javascript_can_access_clipboard(settings));
         break;
     default:
         G_OBJECT_WARN_INVALID_PROPERTY_ID(object, propId, paramSpec);
@@ -748,6 +781,84 @@ static void webkit_settings_class_init(WebKitSettingsClass* klass)
                                     g_param_spec_boolean("enable-fullscreen",
                                                          _("Enable Fullscreen"),
                                                          _("Whether to enable the Javascriipt Fullscreen API"),
+                                                         FALSE,
+                                                         readWriteConstructParamFlags));
+
+    /**
+     * WebKitSettings:print-backgrounds:
+     *
+     * Whether background images should be drawn during printing.
+     */
+    g_object_class_install_property(gObjectClass,
+                                    PROP_PRINT_BACKGROUNDS,
+                                    g_param_spec_boolean("print-backgrounds",
+                                                         _("Print Backgrounds"),
+                                                         _("Whether background images should be drawn during printing"),
+                                                         TRUE,
+                                                         readWriteConstructParamFlags));
+
+    /**
+     * WebKitSettings:enable-webaudio:
+     *
+     *
+     * Enable or disable support for WebAudio on pages. WebAudio is an
+     * experimental proposal for allowing web pages to generate Audio
+     * WAVE data from JavaScript. The standard is currently a
+     * work-in-progress by the W3C Audio Working Group.
+     *
+     * See also https://dvcs.w3.org/hg/audio/raw-file/tip/webaudio/specification.html
+     */
+    g_object_class_install_property(gObjectClass,
+                                    PROP_ENABLE_WEBAUDIO,
+                                    g_param_spec_boolean("enable-webaudio",
+                                                         _("Enable WebAudio"),
+                                                         _("Whether WebAudio content should be handled"),
+                                                         FALSE,
+                                                         readWriteConstructParamFlags));
+
+    /**
+    * WebKitSettings:enable-webgl:
+    *
+    * Enable or disable support for WebGL on pages. WebGL is an experimental
+    * proposal for allowing web pages to use OpenGL ES-like calls directly. The
+    * standard is currently a work-in-progress by the Khronos Group.
+    */
+    g_object_class_install_property(gObjectClass,
+                                    PROP_ENABLE_WEBGL,
+                                    g_param_spec_boolean("enable-webgl",
+                                                         _("Enable WebGL"),
+                                                         _("Whether WebGL content should be rendered"),
+                                                         FALSE,
+                                                         readWriteConstructParamFlags));
+
+    /**
+     * WebKitSettings:zoom-text-only:
+     *
+     * Whether #WebKitWebView:zoom-level affects only the
+     * text of the page or all the contents. Other contents containing text
+     * like form controls will be also affected by zoom factor when
+     * this property is enabled.
+     */
+    g_object_class_install_property(gObjectClass,
+                                    PROP_ZOOM_TEXT_ONLY,
+                                    g_param_spec_boolean("zoom-text-only",
+                                                         _("Zoom Text Only"),
+                                                         _("Whether zoom level of web view changes only the text size"),
+                                                         FALSE,
+                                                         readWriteConstructParamFlags));
+
+    /**
+     * WebKitSettings:javascript-can-access-clipboard:
+     *
+     * Whether JavaScript can access the clipboard. The default value is %FALSE. If
+     * set to %TRUE, document.execCommand() allows cut, copy and paste commands.
+     *
+     */
+    g_object_class_install_property(gObjectClass,
+                                    PROP_JAVASCRIPT_CAN_ACCESS_CLIPBOARD,
+                                    g_param_spec_boolean("javascript-can-access-clipboard",
+                                                         _("JavaScript can access clipboard"),
+                                                         _("Whether JavaScript can access Clipboard"),
                                                          FALSE,
                                                          readWriteConstructParamFlags));
 
@@ -1885,7 +1996,7 @@ gboolean webkit_settings_get_enable_fullscreen(WebKitSettings* settings)
 }
 
 /**
- * webkit_settings_set_enable_fullscreen
+ * webkit_settings_set_enable_fullscreen:
  * @settings: a #WebKitSettings
  * @enabled: Value to be set
  *
@@ -1902,4 +2013,183 @@ void webkit_settings_set_enable_fullscreen(WebKitSettings* settings, gboolean en
 
     WKPreferencesSetFullScreenEnabled(priv->preferences.get(), enabled);
     g_object_notify(G_OBJECT(settings), "enable-fullscreen");
+}
+
+/**
+ * webkit_settings_get_print_backgrounds:
+ * @settings: a #WebKitSettings
+ *
+ * Get the #WebKitSettings:print-backgrounds property.
+ *
+ * Returns: %TRUE If background images should be printed or %FALSE otherwise.
+ */
+gboolean webkit_settings_get_print_backgrounds(WebKitSettings* settings)
+{
+    g_return_val_if_fail(WEBKIT_IS_SETTINGS(settings), FALSE);
+
+    return WKPreferencesGetShouldPrintBackgrounds(settings->priv->preferences.get());
+}
+
+/**
+ * webkit_settings_set_print_backgrounds:
+ * @settings: a #WebKitSettings
+ * @print_backgrounds: Value to be set
+ *
+ * Set the #WebKitSettings:print-backgrounds property.
+ */
+void webkit_settings_set_print_backgrounds(WebKitSettings* settings, gboolean printBackgrounds)
+{
+    g_return_if_fail(WEBKIT_IS_SETTINGS(settings));
+
+    WebKitSettingsPrivate* priv = settings->priv;
+    bool currentValue = WKPreferencesGetShouldPrintBackgrounds(priv->preferences.get());
+    if (currentValue == printBackgrounds)
+        return;
+
+    WKPreferencesSetShouldPrintBackgrounds(priv->preferences.get(), printBackgrounds);
+    g_object_notify(G_OBJECT(settings), "print-backgrounds");
+}
+
+/**
+ * webkit_settings_get_enable_webaudio:
+ * @settings: a #WebKitSettings
+ *
+ * Get the #WebKitSettings:enable-webaudio property.
+ *
+ * Returns: %TRUE If webaudio support is enabled or %FALSE otherwise.
+ */
+gboolean webkit_settings_get_enable_webaudio(WebKitSettings* settings)
+{
+    g_return_val_if_fail(WEBKIT_IS_SETTINGS(settings), FALSE);
+
+    return WKPreferencesGetWebAudioEnabled(settings->priv->preferences.get());
+}
+
+/**
+ * webkit_settings_set_enable_webaudio:
+ * @settings: a #WebKitSettings
+ * @enabled: Value to be set
+ *
+ * Set the #WebKitSettings:enable-webaudio property.
+ */
+void webkit_settings_set_enable_webaudio(WebKitSettings* settings, gboolean enabled)
+{
+    g_return_if_fail(WEBKIT_IS_SETTINGS(settings));
+
+    WebKitSettingsPrivate* priv = settings->priv;
+    bool currentValue = WKPreferencesGetWebAudioEnabled(priv->preferences.get());
+    if (currentValue == enabled)
+        return;
+
+    WKPreferencesSetWebAudioEnabled(priv->preferences.get(), enabled);
+    g_object_notify(G_OBJECT(settings), "enable-webaudio");
+}
+
+/**
+ * webkit_settings_get_enable_webgl:
+ * @settings: a #WebKitSettings
+ *
+ * Get the #WebKitSettings:enable-webgl property.
+ *
+ * Returns: %TRUE If webgl support is enabled or %FALSE otherwise.
+ */
+gboolean webkit_settings_get_enable_webgl(WebKitSettings* settings)
+{
+    g_return_val_if_fail(WEBKIT_IS_SETTINGS(settings), FALSE);
+
+    return WKPreferencesGetWebGLEnabled(settings->priv->preferences.get());
+}
+
+/**
+ * webkit_settings_set_enable_webgl:
+ * @settings: a #WebKitSettings
+ * @enabled: Value to be set
+ *
+ * Set the #WebKitSettings:enable-webgl property.
+ */
+void webkit_settings_set_enable_webgl(WebKitSettings* settings, gboolean enabled)
+{
+    g_return_if_fail(WEBKIT_IS_SETTINGS(settings));
+
+    WebKitSettingsPrivate* priv = settings->priv;
+    bool currentValue = WKPreferencesGetWebGLEnabled(priv->preferences.get());
+    if (currentValue == enabled)
+        return;
+
+    WKPreferencesSetWebGLEnabled(priv->preferences.get(), enabled);
+    g_object_notify(G_OBJECT(settings), "enable-webgl");
+}
+
+/**
+ * webkit_settings_set_zoom_text_only:
+ * @settings: a #WebKitSettings
+ * @zoom_text_only: Value to be set
+ *
+ * Set the #WebKitSettings:zoom-text-only property.
+ */
+void webkit_settings_set_zoom_text_only(WebKitSettings* settings, gboolean zoomTextOnly)
+{
+    g_return_if_fail(WEBKIT_IS_SETTINGS(settings));
+
+    WebKitSettingsPrivate* priv = settings->priv;
+    if (priv->zoomTextOnly == zoomTextOnly)
+        return;
+
+    priv->zoomTextOnly = zoomTextOnly;
+    g_object_notify(G_OBJECT(settings), "zoom-text-only");
+}
+
+/**
+ * webkit_settings_get_zoom_text_only:
+ * @settings: a #WebKitSettings
+ *
+ * Get the #WebKitSettings:zoom-text-only property.
+ *
+ * Returns: %TRUE If zoom level of the view should only affect the text
+ *    or %FALSE if all view contents should be scaled.
+ */
+gboolean webkit_settings_get_zoom_text_only(WebKitSettings* settings)
+{
+    g_return_val_if_fail(WEBKIT_IS_SETTINGS(settings), FALSE);
+
+    return settings->priv->zoomTextOnly;
+}
+
+/**
+ * webkit_settings_get_javascript_can_access_clipboard:
+ * @settings: a #WebKitSettings
+ *
+ * Get the #WebKitSettings:javascript-can-access-clipboard property.
+ *
+ * Returns: %TRUE If javascript-can-access-clipboard is enabled or %FALSE otherwise.
+ */
+gboolean webkit_settings_get_javascript_can_access_clipboard(WebKitSettings* settings)
+{
+    g_return_val_if_fail(WEBKIT_IS_SETTINGS(settings), FALSE);
+
+    return WKPreferencesGetJavaScriptCanAccessClipboard(settings->priv->preferences.get())
+            && WKPreferencesGetDOMPasteAllowed(settings->priv->preferences.get());
+}
+
+/**
+ * webkit_settings_set_javascript_can_access_clipboard:
+ * @settings: a #WebKitSettings
+ * @enabled: Value to be set
+ *
+ * Set the #WebKitSettings:javascript-can-access-clipboard property.
+ */
+void webkit_settings_set_javascript_can_access_clipboard(WebKitSettings* settings, gboolean enabled)
+{
+    g_return_if_fail(WEBKIT_IS_SETTINGS(settings));
+
+    WebKitSettingsPrivate* priv = settings->priv;
+    bool currentValue = WKPreferencesGetJavaScriptCanAccessClipboard(priv->preferences.get())
+            && WKPreferencesGetDOMPasteAllowed(priv->preferences.get());
+    if (currentValue == enabled)
+        return;
+
+    WKPreferencesSetJavaScriptCanAccessClipboard(priv->preferences.get(), enabled);
+    WKPreferencesSetDOMPasteAllowed(priv->preferences.get(), enabled);
+
+    g_object_notify(G_OBJECT(settings), "javascript-can-access-clipboard");
 }

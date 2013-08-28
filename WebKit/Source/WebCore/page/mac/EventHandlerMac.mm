@@ -41,7 +41,8 @@
 #include "MouseEventWithHitTestResults.h"
 #include "NotImplemented.h"
 #include "Page.h"
-#include "PlatformEventFactory.h"
+#include "Pasteboard.h"
+#include "PlatformEventFactoryMac.h"
 #include "RenderWidget.h"
 #include "RuntimeApplicationChecks.h"
 #include "Scrollbar.h"
@@ -593,6 +594,19 @@ void EventHandler::mouseMoved(NSEvent *event)
     END_BLOCK_OBJC_EXCEPTIONS;
 }
 
+void EventHandler::passMouseMovedEventToScrollbars(NSEvent *event)
+{
+    // Reject a mouse moved if the button is down - screws up tracking during autoscroll
+    // These happen because WebKit sometimes has to fake up moved events.
+    if (!m_frame->view() || m_mousePressed || m_sendingEventToSubview)
+        return;
+
+    BEGIN_BLOCK_OBJC_EXCEPTIONS;
+    CurrentEventScope scope(event);
+    passMouseMovedEventToScrollbars(currentPlatformMouseEvent());
+    END_BLOCK_OBJC_EXCEPTIONS;
+}
+
 static bool frameHasPlatformWidget(Frame* frame)
 {
     if (FrameView* frameView = frame->view()) {
@@ -655,11 +669,11 @@ bool EventHandler::eventActivatedView(const PlatformMouseEvent& event) const
 
 PassRefPtr<Clipboard> EventHandler::createDraggingClipboard() const
 {
-    NSPasteboard *pasteboard = [NSPasteboard pasteboardWithName:NSDragPboard];
     // Must be done before ondragstart adds types and data to the pboard,
     // also done for security, as it erases data from the last drag
-    [pasteboard declareTypes:[NSArray array] owner:nil];
-    return ClipboardMac::create(Clipboard::DragAndDrop, pasteboard, ClipboardWritable, m_frame);
+    Pasteboard pasteboard(NSDragPboard);
+    pasteboard.clear();
+    return ClipboardMac::create(Clipboard::DragAndDrop, String(NSDragPboard), ClipboardWritable, ClipboardMac::DragAndDropData, m_frame);
 }
 
 #endif

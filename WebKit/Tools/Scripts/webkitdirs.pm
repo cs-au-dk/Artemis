@@ -1,4 +1,4 @@
-# Copyright (C) 2005, 2006, 2007, 2010 Apple Inc. All rights reserved.
+# Copyright (C) 2005, 2006, 2007, 2010, 2011, 2012 Apple Inc. All rights reserved.
 # Copyright (C) 2009 Google Inc. All rights reserved.
 # Copyright (C) 2011 Research In Motion Limited. All rights reserved.
 #
@@ -56,6 +56,7 @@ BEGIN {
        &cmakeBasedPortName
        &currentSVNRevision
        &debugSafari
+       &nmPath
        &passedConfiguration
        &printHelpAndExitForRunAndDebugWebKitAppIfNeeded
        &productDir
@@ -81,6 +82,7 @@ my $configurationForVisualStudio;
 my $configurationProductDir;
 my $sourceDir;
 my $currentSVNRevision;
+my $nmPath;
 my $osXVersion;
 my $generateDsym;
 my $isQt;
@@ -95,9 +97,11 @@ my $isBlackBerry;
 my $isChromium;
 my $isChromiumAndroid;
 my $isChromiumMacMake;
+my $isChromiumNinja;
 my $forceChromiumUpdate;
 my $isInspectorFrontend;
 my $isWK2;
+my $shouldTargetWebProcess;
 my $xcodeVersion;
 
 # Variables for Win32 support
@@ -324,7 +328,9 @@ sub determineArchitecture
 sub determineNumberOfCPUs
 {
     return if defined $numberOfCPUs;
-    if (isLinux()) {
+    if (defined($ENV{NUMBER_OF_PROCESSORS})) {
+        $numberOfCPUs = $ENV{NUMBER_OF_PROCESSORS};
+    } elsif (isLinux()) {
         # First try the nproc utility, if it exists. If we get no
         # results fall back to just interpretting /proc directly.
         chomp($numberOfCPUs = `nproc 2> /dev/null`);
@@ -332,12 +338,8 @@ sub determineNumberOfCPUs
             $numberOfCPUs = (grep /processor/, `cat /proc/cpuinfo`);
         }
     } elsif (isWindows() || isCygwin()) {
-        if (defined($ENV{NUMBER_OF_PROCESSORS})) {
-            $numberOfCPUs = $ENV{NUMBER_OF_PROCESSORS};
-        } else {
-            # Assumes cygwin
-            $numberOfCPUs = `ls /proc/registry/HKEY_LOCAL_MACHINE/HARDWARE/DESCRIPTION/System/CentralProcessor | wc -w`;
-        }
+        # Assumes cygwin
+        $numberOfCPUs = `ls /proc/registry/HKEY_LOCAL_MACHINE/HARDWARE/DESCRIPTION/System/CentralProcessor | wc -w`;
     } elsif (isDarwin()) {
         chomp($numberOfCPUs = `sysctl -n hw.ncpu`);
     }
@@ -415,7 +417,9 @@ sub setConfigurationProductDir($)
 
 sub determineCurrentSVNRevision
 {
-    return if defined $currentSVNRevision;
+    # We always update the current SVN revision here, and leave the caching
+    # to currentSVNRevision(), so that changes to the SVN revision while the
+    # script is running can be picked up by calling this function again.
     determineSourceDir();
     $currentSVNRevision = svnRevisionForDirectory($sourceDir);
     return $currentSVNRevision;
@@ -449,8 +453,8 @@ sub productDir
 sub jscProductDir
 {
     my $productDir = productDir();
-    $productDir .= "/bin" if isQt();
-    $productDir .= "/Programs" if (isGtk() || isEfl());
+    $productDir .= "/bin" if (isQt() || isEfl());
+    $productDir .= "/Programs" if isGtk();
 
     return $productDir;
 }
@@ -469,7 +473,7 @@ sub configurationForVisualStudio()
 
 sub currentSVNRevision
 {
-    determineCurrentSVNRevision();
+    determineCurrentSVNRevision() if not defined $currentSVNRevision;
     return $currentSVNRevision;
 }
 
@@ -726,7 +730,7 @@ sub builtDylibPathForName
         return "NotFound";
     }
     if (isEfl()) {
-        return "$configurationProductDir/Source/WebKit/libewebkit.so";
+        return "$configurationProductDir/lib/libewebkit.so";
     }
     if (isWinCE()) {
         return "$configurationProductDir/$libraryName";
@@ -875,12 +879,12 @@ sub determineIsQt()
         return;
     }
 
-    # The presence of QTDIR only means Qt if --gtk or --wx or --efl or --blackberry are not on the command-line
-    if (isGtk() || isWx() || isEfl() || isBlackBerry()) {
+    # The presence of QTDIR only means Qt if --gtk or --wx or --efl or --blackberry or --chromium or --wincairo are not on the command-line
+    if (isGtk() || isWx() || isEfl() || isBlackBerry() || isChromium() || isWinCairo()) {
         $isQt = 0;
         return;
     }
-    
+
     $isQt = defined($ENV{'QTDIR'});
 }
 
@@ -928,6 +932,7 @@ sub blackberryCMakeArguments()
     if ($cpu eq "a9") {
         $cpu = $arch . "v7le";
         push @cmakeExtraOptions, '-DTARGETING_PLAYBOOK=1';
+        push @cmakeExtraOptions, '-DENABLE_GLES2=1';
     }
 
     my $stageDir = $ENV{"STAGE_DIR"};
@@ -954,6 +959,7 @@ sub blackberryCMakeArguments()
 
     push @cmakeExtraOptions, "-DCMAKE_SKIP_RPATH='ON'" if isDarwin();
     push @cmakeExtraOptions, "-DENABLE_DRT=1" if $ENV{"ENABLE_DRT"};
+    push @cmakeExtraOptions, "-DENABLE_GLES2=1" if $ENV{"ENABLE_GLES2"};
 
     my @includeSystemDirectories;
     push @includeSystemDirectories, File::Spec->catdir($stageInc, "grskia", "skia");
@@ -963,6 +969,7 @@ sub blackberryCMakeArguments()
     push @includeSystemDirectories, $stageInc;
     push @includeSystemDirectories, File::Spec->catdir($stageInc, "browser", "platform");
     push @includeSystemDirectories, File::Spec->catdir($stageInc, "browser", "qsk");
+    push @includeSystemDirectories, File::Spec->catdir($stageInc, "ots");
 
     my @cxxFlags;
     push @cxxFlags, "-Wl,-rpath-link,$stageLib";
@@ -977,7 +984,6 @@ sub blackberryCMakeArguments()
     }
 
     my @cmakeArgs;
-    push @cmakeArgs, "-DPUBLIC_BUILD=0";
     push @cmakeArgs, '-DCMAKE_SYSTEM_NAME="QNX"';
     push @cmakeArgs, "-DCMAKE_SYSTEM_PROCESSOR=\"$cpuDir\"";
     push @cmakeArgs, '-DCMAKE_SYSTEM_VERSION="1"';
@@ -1136,6 +1142,37 @@ sub determineIsChromiumMacMake()
     $isChromiumMacMake = isDarwin() && $hasUpToDateMakefile;
 }
 
+sub isChromiumNinja()
+{
+    determineIsChromiumNinja();
+    return $isChromiumNinja;
+}
+
+sub determineIsChromiumNinja()
+{
+    return if defined($isChromiumNinja);
+
+    my $config = configuration();
+
+    my $hasUpToDateNinjabuild = 0;
+    if (-e "out/$config/build.ninja") {
+        my $statNinja = stat("out/$config/build.ninja")->mtime;
+
+        my $statXcode = 0;
+        if (-e 'Source/WebKit/chromium/WebKit.xcodeproj') {
+          $statXcode = stat('Source/WebKit/chromium/WebKit.xcodeproj')->mtime;
+        }
+
+        my $statMake = 0;
+        if (-e 'Makefile.chromium') {
+          $statMake = stat('Makefile.chromium')->mtime;
+        }
+
+        $hasUpToDateNinjabuild = $statNinja > $statXcode && $statNinja > $statMake;
+    }
+    $isChromiumNinja = $hasUpToDateNinjabuild;
+}
+
 sub forceChromiumUpdate()
 {
     determineIsChromium();
@@ -1229,6 +1266,20 @@ sub isARM()
     return $Config{archname} =~ /^arm-/;
 }
 
+sub isCrossCompilation()
+{
+  my $compiler = "";
+  $compiler = $ENV{'CC'} if (defined($ENV{'CC'}));
+  if ($compiler =~ /gcc/) {
+      my $compiler_options = `$compiler -v 2>&1`;
+      my @host = $compiler_options =~ m/--host=(.*?)\s/;
+      my @target = $compiler_options =~ m/--target=(.*?)\s/;
+
+      return ($host[0] ne "" && $target[0] ne "" && $host[0] ne $target[0]);
+  }
+  return 0;
+}
+
 sub isAppleWebKit()
 {
     return !(isQt() or isGtk() or isWx() or isChromium() or isEfl() or isWinCE() or isBlackBerry());
@@ -1259,6 +1310,23 @@ sub isPerianInstalled()
     }
 
     return 0;
+}
+
+sub determineNmPath()
+{
+    return if $nmPath;
+
+    if (isAppleMacWebKit()) {
+        $nmPath = `xcrun -find nm`;
+        chomp $nmPath;
+    }
+    $nmPath = "nm" if !$nmPath;
+}
+
+sub nmPath()
+{
+    determineNmPath();
+    return $nmPath;
 }
 
 sub determineOSXVersion()
@@ -1304,6 +1372,18 @@ sub isLion()
 sub isWindowsNT()
 {
     return $ENV{'OS'} eq 'Windows_NT';
+}
+
+sub shouldTargetWebProcess
+{
+    determineShouldTargetWebProcess();
+    return $shouldTargetWebProcess;
+}
+
+sub determineShouldTargetWebProcess
+{
+    return if defined($shouldTargetWebProcess);
+    $shouldTargetWebProcess = checkForArgumentAndRemoveFromARGV("--target-web-process");
 }
 
 sub relativeScriptsDir()
@@ -1733,14 +1813,6 @@ sub runAutogenForAutotoolsProjectIfNecessary($@)
     print "Calling autogen.sh in " . $dir . "\n\n";
     print "Installation prefix directory: $prefix\n" if(defined($prefix));
 
-    # Save md5sum for jhbuild-related files.
-    foreach my $file (qw(jhbuildrc jhbuild.modules)) {
-        my $path = join('/', $sourceDir, 'Tools', 'gtk', $file);
-        open(SUM, ">$file.md5sum");
-        print SUM getMD5HashForFile($path);
-        close(SUM);
-    }
-
     # Only for WebKit, write the autogen.sh arguments to a file so that we can detect
     # when they change and automatically re-run it.
     if ($project eq 'WebKit') {
@@ -1757,7 +1829,7 @@ sub runAutogenForAutotoolsProjectIfNecessary($@)
     # between 32-bit and 64-bit architectures. The options are also
     # used on Chromium build.
     determineArchitecture();
-    if ($architecture ne "x86_64") {
+    if ($architecture ne "x86_64" && !isARM()) {
         $ENV{'CXXFLAGS'} = "-march=pentium4 -msse2 -mfpmath=sse";
     }
 
@@ -1766,6 +1838,35 @@ sub runAutogenForAutotoolsProjectIfNecessary($@)
     unshift(@buildArgs, "$sourceDir/Tools/gtk/run-with-jhbuild");
     if (system(@buildArgs) ne 0) {
         die "Calling autogen.sh failed!\n";
+    }
+}
+
+sub getJhbuildPath()
+{
+    return join('/', baseProductDir(), "Dependencies");
+}
+
+sub jhbuildConfigurationChanged()
+{
+    foreach my $file (qw(jhbuildrc.md5sum jhbuild.modules.md5sum)) {
+        my $path = join('/', getJhbuildPath(), $file);
+        if (! -e $path) {
+            return 1;
+        }
+
+        # Get the md5 sum of the file we're testing.
+        $file =~ m/(.+)\.md5sum/;
+        my $actualFile = join('/', $sourceDir, 'Tools', 'gtk', $1);
+        my $currentSum = getMD5HashForFile($actualFile);
+
+        # Get our previous record.
+        open(PREVIOUS_MD5, $path);
+        chomp(my $previousSum = <PREVIOUS_MD5>);
+        close(PREVIOUS_MD5);
+
+        if ($previousSum ne $currentSum) {
+            return 1;
+        }
     }
 }
 
@@ -1792,27 +1893,6 @@ sub mustReRunAutogen($@)
         return 1;
     }
 
-    # Now check jhbuild configuration for changes.
-    foreach my $file (qw(jhbuildrc.md5sum jhbuild.modules.md5sum)) {
-        if (! -e $file) {
-            return 1;
-        }
-
-        # Get the md5 sum of the file we're testing.
-        $file =~ m/(.+)\.md5sum/;
-        my $actualFile = join('/', $sourceDir, 'Tools', 'gtk', $1);
-        my $currentSum = getMD5HashForFile($actualFile);
-
-        # Get our previous record.
-        open(PREVIOUS_MD5, $file);
-        chomp(my $previousSum = <PREVIOUS_MD5>);
-        close(PREVIOUS_MD5);
-
-        if ($previousSum ne $currentSum) {
-            return 1;
-        }
-    }
-
     return 0;
 }
 
@@ -1824,6 +1904,20 @@ sub buildAutotoolsProject($@)
     my $dir = productDir();
     my $config = passedConfiguration() || configuration();
     my $prefix;
+
+    # Use rm to clean the build directory since distclean may miss files
+    if ($clean && -d $dir) {
+        system "rm", "-rf", "$dir";
+    }
+
+    if (! -d $dir) {
+        File::Path::mkpath($dir) or die "Failed to create build directory " . $dir
+    }
+    chdir $dir or die "Failed to cd into " . $dir . "\n";
+
+    if ($clean) {
+        return 0;
+    }
 
     my @buildArgs = ();
     my $makeArgs = $ENV{"WebKitMakeArguments"} || "";
@@ -1847,6 +1941,8 @@ sub buildAutotoolsProject($@)
     # WebKit is the default target, so we don't need to specify anything.
     if ($project eq "JavaScriptCore") {
         $makeArgs .= " jsc";
+    } elsif ($project eq "WTF") {
+        $makeArgs .= " libWTF.la";
     }
 
     $prefix = $ENV{"WebKitInstallationPrefix"} if !defined($prefix);
@@ -1860,18 +1956,42 @@ sub buildAutotoolsProject($@)
         push @buildArgs, "--disable-debug";
     }
 
-    # Use rm to clean the build directory since distclean may miss files
-    if ($clean && -d $dir) {
-        system "rm", "-rf", "$dir";
+    # We might need to update jhbuild dependencies.
+    my $needUpdate = 0;
+    if (jhbuildConfigurationChanged()) {
+        # If the configuration changed, dependencies may have been removed.
+        # Since we lack a granular way of uninstalling those we wipe out the
+        # jhbuild root and start from scratch.
+        my $jhbuildPath = getJhbuildPath();
+        if (system("rm -rf $jhbuildPath/Root") ne 0) {
+            die "Cleaning jhbuild root failed!";
+        }
+
+        if (system("perl $sourceDir/Tools/jhbuild/jhbuild-wrapper --gtk clean") ne 0) {
+            die "Cleaning jhbuild modules failed!";
+        }
+
+        $needUpdate = 1;
     }
 
-    if (! -d $dir) {
-        File::Path::mkpath($dir) or die "Failed to create build directory " . $dir
+    if (checkForArgumentAndRemoveFromArrayRef("--update-gtk", \@buildArgs)) {
+        $needUpdate = 1;
     }
-    chdir $dir or die "Failed to cd into " . $dir . "\n";
 
-    if ($clean) {
-        return 0;
+    if ($needUpdate) {
+        # Force autogen to run, to catch the possibly updated libraries.
+        system("rm -f previous-autogen-arguments.txt");
+
+        system("perl", "$sourceDir/Tools/Scripts/update-webkitgtk-libs") == 0 or die $!;
+    }
+
+    # Save md5sum for jhbuild-related files.
+    foreach my $file (qw(jhbuildrc jhbuild.modules)) {
+        my $source = join('/', $sourceDir, "Tools", "gtk", $file);
+        my $destination = join('/', getJhbuildPath(), $file);
+        open(SUM, ">$destination" . ".md5sum");
+        print SUM getMD5HashForFile($source);
+        close(SUM);
     }
 
     # If GNUmakefile exists, don't run autogen.sh unless its arguments
@@ -1887,11 +2007,9 @@ sub buildAutotoolsProject($@)
 
     chdir ".." or die;
 
-    if ($project eq 'WebKit') {
+    if ($project eq 'WebKit' && !isCrossCompilation()) {
         my @docGenerationOptions = ($runWithJhbuild, "$gtkScriptsPath/generate-gtkdoc", "--skip-html");
-        if ($debug) {
-            push(@docGenerationOptions, "--debug");
-        }
+        push(@docGenerationOptions, productDir());
 
         if (system(@docGenerationOptions)) {
             die "\n gtkdoc did not build without warnings\n";
@@ -1899,6 +2017,14 @@ sub buildAutotoolsProject($@)
     }
 
     return 0;
+}
+
+sub jhbuildWrapperPrefixIfNeeded()
+{
+    if (isEfl()) {
+        return File::Spec->catfile(sourceDir(), "Tools", "efl", "run-with-jhbuild");
+    }
+    return "";
 }
 
 sub generateBuildSystemFromCMakeProject
@@ -1913,6 +2039,7 @@ sub generateBuildSystemFromCMakeProject
     my @args;
     push @args, "-DPORT=\"$port\"";
     push @args, "-DCMAKE_INSTALL_PREFIX=\"$prefixPath\"" if $prefixPath;
+    push @args, "-DSHARED_CORE=ON" if isEfl() && $ENV{"ENABLE_DRT"};
     if ($config =~ /release/i) {
         push @args, "-DCMAKE_BUILD_TYPE=Release";
     } elsif ($config =~ /debug/i) {
@@ -1925,7 +2052,8 @@ sub generateBuildSystemFromCMakeProject
 
     # We call system("cmake @args") instead of system("cmake", @args) so that @args is
     # parsed for shell metacharacters.
-    my $returnCode = system("cmake @args");
+    my $wrapper = jhbuildWrapperPrefixIfNeeded() . " ";
+    my $returnCode = system($wrapper . "cmake @args");
 
     chdir($originalWorkingDirectory);
     return $returnCode;
@@ -1944,7 +2072,8 @@ sub buildCMakeGeneratedProject($)
 
     # We call system("cmake @args") instead of system("cmake", @args) so that @args is
     # parsed for shell metacharacters. In particular, $makeArgs may contain such metacharacters.
-    return system("cmake @args");
+    my $wrapper = jhbuildWrapperPrefixIfNeeded() . " ";
+    return system($wrapper . "cmake @args");
 }
 
 sub cleanCMakeGeneratedProject()
@@ -1968,6 +2097,7 @@ sub buildCMakeProjectOrExit($$$$@)
     exit($returnCode) if $returnCode;
     $returnCode = exitStatus(buildCMakeGeneratedProject($makeArgs));
     exit($returnCode) if $returnCode;
+    return 0;
 }
 
 sub cmakeBasedPortArguments()
@@ -1994,12 +2124,13 @@ sub promptUser
     return $input ? $input : $default;
 }
 
-sub buildQMakeProject($@)
+sub buildQMakeProjects
 {
-    my ($project, $clean, @buildParams) = @_;
+    my ($projects, $clean, @buildParams) = @_;
 
     my @buildArgs = ();
 
+    my $make = qtMakeCommand($qmakebin);
     my $makeargs = "";
     my $installHeaders;
     my $installLibs;
@@ -2020,6 +2151,11 @@ sub buildQMakeProject($@)
         }
     }
 
+    # Automatically determine the number of CPUs for make only if this make argument haven't already been specified.
+    if ($make eq "make" && $makeargs !~ /-j\s*\d+/i && (!defined $ENV{"MAKEFLAGS"} || ($ENV{"MAKEFLAGS"} !~ /-j\s*\d+/i ))) {
+        $makeargs .= " -j" . numberOfCPUs();
+    }
+
     my $qmakepath = File::Spec->catfile(sourceDir(), "Tools", "qmake");
     my $qmakecommand;
     if (isWindows()) {
@@ -2028,7 +2164,6 @@ sub buildQMakeProject($@)
         $qmakecommand = "QMAKEPATH=$qmakepath $qmakebin";
     }
 
-    my $make = qtMakeCommand($qmakebin);
     my $config = configuration();
     push @buildArgs, "INSTALL_HEADERS=" . $installHeaders if defined($installHeaders);
     push @buildArgs, "INSTALL_LIBS=" . $installLibs if defined($installLibs);
@@ -2050,7 +2185,9 @@ sub buildQMakeProject($@)
 
     my %defines = qtFeatureDefaults(\@buildArgs);
 
-    my $needsCleanBuild = 0;
+    my $svnRevision = currentSVNRevision();
+
+    my $buildHint = "";
 
     my $pathToDefinesCache = File::Spec->catfile($dir, ".webkit.config");
     my $pathToOldDefinesFile = File::Spec->catfile($dir, "defaults.txt");
@@ -2058,39 +2195,55 @@ sub buildQMakeProject($@)
     # Ease transition to new build layout
     if (-e $pathToOldDefinesFile) {
         print "Old build layout detected";
-        $needsCleanBuild = 1;
+        $buildHint = "clean";
     } elsif (-e $pathToDefinesCache && open(DEFAULTS, $pathToDefinesCache)) {
         my %previousDefines;
         while (<DEFAULTS>) {
-            if ($_ =~ m/(\S+?)=(\S+?)/gi) {
+            if ($_ =~ m/(\S+)=(\S+)/gi) {
                 $previousDefines{$1} = $2;
             }
         }
         close (DEFAULTS);
 
+        $previousDefines{"SVN_REVISION"} = "unknown" if not exists $previousDefines{"SVN_REVISION"};
+
+        if ($svnRevision ne $previousDefines{"SVN_REVISION"}) {
+            print "Last built revision was " . $previousDefines{"SVN_REVISION"} .
+                ", now at revision $svnRevision. Full incremental build needed.\n";
+
+            $buildHint = "incremental";
+        }
+
+        # Don't confuse the should-we-clean heuristics below
+        delete($previousDefines{"SVN_REVISION"});
+
         my @uniqueDefineNames = keys %{ +{ map { $_, 1 } (keys %defines, keys %previousDefines) } };
         foreach my $define (@uniqueDefineNames) {
             if (! exists $previousDefines{$define}) {
                 print "Feature $define added";
-                $needsCleanBuild = 1;
+                $buildHint = "clean";
                 last;
             }
 
             if (! exists $defines{$define}) {
                 print "Feature $define removed";
-                $needsCleanBuild = 1;
+                $buildHint = "clean";
                 last;
             }
 
             if ($defines{$define} != $previousDefines{$define}) {
                 print "Feature $define changed ($previousDefines{$define} -> $defines{$define})";
-                $needsCleanBuild = 1;
+                $buildHint = "clean";
                 last;
             }
         }
+    } else {
+        # Missing build cache suggests we had a broken build after a clean,
+        # so we assume we have to do an incremental build just in case.
+        $buildHint = "incremental";
     }
 
-    if ($needsCleanBuild) {
+    if ($buildHint eq "clean") {
         print ", clean build needed!\n";
         # FIXME: This STDIN/STDOUT check does not work on the bots. Disable until it does.
         # if (! -t STDIN || ( &promptUser("Would you like to clean the build directory?", "yes") eq "yes")) {
@@ -2098,9 +2251,18 @@ sub buildQMakeProject($@)
             File::Path::rmtree($dir);
             File::Path::mkpath($dir);
             chdir $dir or die "Failed to cd into " . $dir . "\n";
+
+            # After removing WebKitBuild directory, we have to call qtFeatureDefaults()
+            # to run config tests and generate the removed Tools/qmake/.qmake.cache again.
+            qtFeatureDefaults(\@buildArgs);
         #}
+
+        # Still trigger an incremental build
+        $buildHint = "incremental";
     }
 
+    # Save config up-front so we can detect changes to the build config even
+    # when the user re-configures after aborting the build.
     open(DEFAULTS, ">$pathToDefinesCache");
     print DEFAULTS "# These defines were set when building WebKit last time\n";
     foreach my $key (sort keys %defines) {
@@ -2112,9 +2274,7 @@ sub buildQMakeProject($@)
 
     my $makefile = File::Spec->catfile($dir, "Makefile");
     if (! -e $makefile) {
-        if ($project) {
-            push @buildArgs, "-after OVERRIDE_SUBDIRS=" . $project;
-        }
+        push @buildArgs, "-after OVERRIDE_SUBDIRS=\"@{$projects}\"" if @{$projects};
 
         push @buildArgs, File::Spec->catfile(sourceDir(), "WebKit.pro");
         my $command = "$qmakecommand @buildArgs";
@@ -2126,10 +2286,6 @@ sub buildQMakeProject($@)
         if ($result ne 0) {
            die "Failed to setup build environment using $qmakebin!\n";
         }
-    } elsif ($project) {
-        $dir = File::Spec->catfile($dir, "Source", $project);
-        chdir $dir or die "Failed to cd into " . $dir . "\n";
-        $make = "$make -f Makefile.$project";
     }
 
     my $command = "$make $makeargs";
@@ -2137,7 +2293,7 @@ sub buildQMakeProject($@)
 
     if ($clean) {
         $command = "$command distclean";
-    } else {
+    } elsif ($buildHint eq "incremental") {
         $command = "$command incremental";
     }
 
@@ -2145,22 +2301,46 @@ sub buildQMakeProject($@)
     $result = system $command;
 
     chdir ".." or die;
+
+    if ($result eq 0) {
+        # Now that the build completed successfully we can save the SVN revision
+        open(DEFAULTS, ">>$pathToDefinesCache");
+        print DEFAULTS "SVN_REVISION=$svnRevision\n";
+        close(DEFAULTS);
+    } elsif ($buildHint eq "" && exitStatus($result)) {
+        my $exitCode = exitStatus($result);
+        my $failMessage = <<EOF;
+
+===== BUILD FAILED ======
+
+The build failed with exit code $exitCode. This may have been because you
+
+  - added an #include to a source/header
+  - added a Q_OBJECT macro to a class
+  - added a new resource to a qrc file
+
+as dependencies are not automatically re-computed for local developer builds.
+You may try computing dependencies manually by running 'make qmake' in:
+
+  $dir
+
+or passing --makeargs="qmake" to build-webkit.
+
+=========================
+
+EOF
+        print "$failMessage";
+    }
+
     return $result;
-}
-
-sub buildQMakeQtProject($$@)
-{
-    my ($project, $clean, @buildArgs) = @_;
-
-    return buildQMakeProject("", $clean, @buildArgs);
 }
 
 sub buildGtkProject
 {
     my ($project, $clean, @buildArgs) = @_;
 
-    if ($project ne "WebKit" and $project ne "JavaScriptCore") {
-        die "Unsupported project: $project. Supported projects: WebKit, JavaScriptCore\n";
+    if ($project ne "WebKit" and $project ne "JavaScriptCore" and $project ne "WTF") {
+        die "Unsupported project: $project. Supported projects: WebKit, JavaScriptCore, WTF\n";
     }
 
     return buildAutotoolsProject($project, $clean, @buildArgs);
@@ -2179,19 +2359,24 @@ sub buildChromiumMakefile($$@)
         $makeArgs = $1 if /^--makeargs=(.*)/i;
     }
     $makeArgs = "-j$numCpus" if not $makeArgs;
+    my $command .= "make -fMakefile.chromium $makeArgs BUILDTYPE=$config $target";
+
+    print "$command\n";
+    return system $command;
+}
+
+sub buildChromiumNinja($$@)
+{
+    # rm -rf out requires rerunning gyp, so don't support --clean for now.
+    my ($target, @options) = @_;
+    my $config = configuration();
+    my $makeArgs = "";
+    for (@options) {
+        $makeArgs = $1 if /^--makeargs=(.*)/i;
+    }
     my $command = "";
 
-    # Building the WebKit Chromium port for Android requires us to cross-
-    # compile, which will be set up by Chromium's envsetup.sh. The script itself
-    # will verify that the installed NDK is indeed available.
-    if (isChromiumAndroid()) {
-        $command .= "bash -c \"source " . sourceDir() . "/Source/WebKit/chromium/build/android/envsetup.sh && ";
-        $ENV{ANDROID_NDK_ROOT} = sourceDir() . "/Source/WebKit/chromium/android-ndk-r7";
-        $ENV{WEBKIT_ANDROID_BUILD} = 1;
-    }
-
-    $command .= "make -fMakefile.chromium $makeArgs BUILDTYPE=$config $target";
-    $command .= "\"" if isChromiumAndroid();
+    $command .= "ninja -C out/$config $target $makeArgs";
 
     print "$command\n";
     return system $command;
@@ -2247,13 +2432,15 @@ sub buildChromium($@)
     }
 
     my $result = 1;
-    if (isDarwin() && !isChromiumAndroid() && !isChromiumMacMake()) {
+    if (isDarwin() && !isChromiumAndroid() && !isChromiumMacMake() && !isChromiumNinja()) {
         # Mac build - builds the root xcode project.
-        $result = buildXCodeProject("Source/WebKit/chromium/WebKit", $clean, "-configuration", configuration(), @options);
+        $result = buildXCodeProject("Source/WebKit/chromium/All", $clean, "-configuration", configuration(), @options);
     } elsif (isCygwin() || isWindows()) {
         # Windows build - builds the root visual studio solution.
-        $result = buildChromiumVisualStudioProject("Source/WebKit/chromium/WebKit.sln", $clean);
-    } elsif (isLinux() || isChromiumAndroid() || isChromiumMacMake) {
+        $result = buildChromiumVisualStudioProject("Source/WebKit/chromium/All.sln", $clean);
+    } elsif (isChromiumNinja()) {
+        $result = buildChromiumNinja("all", $clean, @options);
+    } elsif (isLinux() || isChromiumAndroid() || isChromiumMacMake()) {
         # Linux build - build using make.
         $result = buildChromiumMakefile("all", $clean, @options);
     } else {
@@ -2301,7 +2488,7 @@ EOF
 sub argumentsForRunAndDebugMacWebKitApp()
 {
     my @args = @ARGV;
-    push @args, ("-ApplePersistenceIgnoreState", "YES") if isLion() && checkForArgumentAndRemoveFromArrayRef("--no-saved-state", \@args);
+    push @args, ("-ApplePersistenceIgnoreState", "YES") if !isLeopard() && !isSnowLeopard() && checkForArgumentAndRemoveFromArrayRef("--no-saved-state", \@args);
     return @args;
 }
 
@@ -2329,11 +2516,21 @@ sub execMacWebKitAppForDebugging($)
     die "Can't find gdb executable. Is gdb installed?\n" unless -x $gdbPath;
 
     my $productDir = productDir();
-    print "Starting @{[basename($appPath)]} under gdb with DYLD_FRAMEWORK_PATH set to point to built WebKit in $productDir.\n";
     $ENV{DYLD_FRAMEWORK_PATH} = $productDir;
     $ENV{WEBKIT_UNSET_DYLD_FRAMEWORK_PATH} = "YES";
     my @architectureFlags = ("-arch", architecture());
-    exec { $gdbPath } $gdbPath, @architectureFlags, "--args", $appPath, argumentsForRunAndDebugMacWebKitApp() or die;
+    if (!shouldTargetWebProcess()) {
+        print "Starting @{[basename($appPath)]} under gdb with DYLD_FRAMEWORK_PATH set to point to built WebKit in $productDir.\n";
+        exec { $gdbPath } $gdbPath, @architectureFlags, "--args", $appPath, argumentsForRunAndDebugMacWebKitApp() or die;
+    } else {
+        my $webProcessShimPath = File::Spec->catfile($productDir, "WebProcessShim.dylib");
+        my $webProcessPath = File::Spec->catdir($productDir, "WebProcess.app");
+        my $webKit2ExecutablePath = File::Spec->catfile($productDir, "WebKit2.framework", "WebKit2");
+        $ENV{DYLD_INSERT_LIBRARIES} = $webProcessShimPath;
+
+        print "Starting WebProcess under gdb with DYLD_FRAMEWORK_PATH set to point to built WebKit in $productDir.\n";
+        exec { $gdbPath } $gdbPath, @architectureFlags, "--args", $webProcessPath, $webKit2ExecutablePath, "-type", "webprocess", "-client-executable", $appPath or die;
+    }
 }
 
 sub debugSafari

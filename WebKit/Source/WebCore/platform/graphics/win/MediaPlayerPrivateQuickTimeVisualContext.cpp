@@ -107,6 +107,8 @@ private:
     virtual bool platformCALayerContentsOpaque() const { return false; }
     virtual bool platformCALayerDrawsContent() const { return false; }
     virtual void platformCALayerLayerDidDisplay(PlatformLayer*) { }
+    virtual void platformCALayerDidCreateTiles(const Vector<FloatRect>&) { }
+    virtual float platformCALayerDeviceScaleFactor() { return 1; }
 
     MediaPlayerPrivateQuickTimeVisualContext* m_parent;
 };
@@ -302,7 +304,8 @@ void MediaPlayerPrivateQuickTimeVisualContext::setUpCookiesForQuickTime(const St
         } else
             cookieURL = movieURL;
 
-        InternetSetCookieExW(cookieURL.charactersWithNullTermination(), 0, cookieBuilder.toString().charactersWithNullTermination(), 0, 0);
+        String string = cookieBuilder.toString();
+        InternetSetCookieExW(cookieURL.charactersWithNullTermination(), 0, string.charactersWithNullTermination(), 0, 0);
     }
 }
 

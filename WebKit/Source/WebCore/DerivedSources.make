@@ -1,4 +1,4 @@
-# Copyright (C) 2006, 2007, 2008 Apple Inc. All rights reserved.
+# Copyright (C) 2006, 2007, 2008, 2012 Apple Inc. All rights reserved.
 # Copyright (C) 2006 Samuel Weinig <sam.weinig@gmail.com> 
 # Copyright (C) 2009 Cameron McCormack <cam@mcc.id.au>
 #
@@ -28,6 +28,13 @@
 
 VPATH = \
     $(WebCore) \
+    $(WebCore)/Modules/filesystem \
+    $(WebCore)/Modules/geolocation \
+    $(WebCore)/Modules/indexeddb \
+    $(WebCore)/Modules/webaudio \
+    $(WebCore)/Modules/webdatabase \
+    $(WebCore)/Modules/websockets \
+    $(WebCore)/Resources \
     $(WebCore)/bindings/generic \
     $(WebCore)/bindings/js \
     $(WebCore)/bindings/objc \
@@ -36,6 +43,7 @@ VPATH = \
     $(WebCore)/fileapi \
     $(WebCore)/html \
     $(WebCore)/html/canvas \
+    $(WebCore)/html/shadow \
     $(WebCore)/html/track \
     $(WebCore)/inspector \
     $(WebCore)/loader/appcache \
@@ -44,7 +52,6 @@ VPATH = \
     $(WebCore)/plugins \
     $(WebCore)/storage \
     $(WebCore)/xml \
-    $(WebCore)/webaudio \
     $(WebCore)/workers \
     $(WebCore)/svg \
     $(WebCore)/testing \
@@ -52,6 +59,98 @@ VPATH = \
 #
 
 BINDING_IDLS = \
+    $(WebCore)/Modules/filesystem/DOMFileSystem.idl \
+    $(WebCore)/Modules/filesystem/DOMFileSystemSync.idl \
+    $(WebCore)/Modules/filesystem/DOMWindowFileSystem.idl \
+    $(WebCore)/Modules/filesystem/DirectoryEntry.idl \
+    $(WebCore)/Modules/filesystem/DirectoryEntrySync.idl \
+    $(WebCore)/Modules/filesystem/DirectoryReader.idl \
+    $(WebCore)/Modules/filesystem/DirectoryReaderSync.idl \
+    $(WebCore)/Modules/filesystem/EntriesCallback.idl \
+    $(WebCore)/Modules/filesystem/Entry.idl \
+    $(WebCore)/Modules/filesystem/EntryArray.idl \
+    $(WebCore)/Modules/filesystem/EntryArraySync.idl \
+    $(WebCore)/Modules/filesystem/EntryCallback.idl \
+    $(WebCore)/Modules/filesystem/EntrySync.idl \
+    $(WebCore)/Modules/filesystem/ErrorCallback.idl \
+    $(WebCore)/Modules/filesystem/FileCallback.idl \
+    $(WebCore)/Modules/filesystem/FileEntry.idl \
+    $(WebCore)/Modules/filesystem/FileEntrySync.idl \
+    $(WebCore)/Modules/filesystem/FileSystemCallback.idl \
+    $(WebCore)/Modules/filesystem/FileWriter.idl \
+    $(WebCore)/Modules/filesystem/FileWriterCallback.idl \
+    $(WebCore)/Modules/filesystem/FileWriterSync.idl \
+    $(WebCore)/Modules/filesystem/Metadata.idl \
+    $(WebCore)/Modules/filesystem/MetadataCallback.idl \
+    $(WebCore)/Modules/filesystem/WorkerContextFileSystem.idl \
+    $(WebCore)/Modules/geolocation/Geolocation.idl \
+    $(WebCore)/Modules/geolocation/Geoposition.idl \
+    $(WebCore)/Modules/geolocation/NavigatorGeolocation.idl \
+    $(WebCore)/Modules/geolocation/PositionCallback.idl \
+    $(WebCore)/Modules/geolocation/PositionError.idl \
+    $(WebCore)/Modules/geolocation/PositionErrorCallback.idl \
+    $(WebCore)/Modules/indexeddb/DOMWindowIndexedDatabase.idl \
+    $(WebCore)/Modules/indexeddb/IDBAny.idl \
+    $(WebCore)/Modules/indexeddb/IDBCursor.idl \
+    $(WebCore)/Modules/indexeddb/IDBDatabase.idl \
+    $(WebCore)/Modules/indexeddb/IDBDatabaseException.idl \
+    $(WebCore)/Modules/indexeddb/IDBFactory.idl \
+    $(WebCore)/Modules/indexeddb/IDBIndex.idl \
+    $(WebCore)/Modules/indexeddb/IDBKey.idl \
+    $(WebCore)/Modules/indexeddb/IDBKeyRange.idl \
+    $(WebCore)/Modules/indexeddb/IDBObjectStore.idl \
+    $(WebCore)/Modules/indexeddb/IDBRequest.idl \
+    $(WebCore)/Modules/indexeddb/IDBTransaction.idl \
+    $(WebCore)/Modules/indexeddb/IDBVersionChangeEvent.idl \
+    $(WebCore)/Modules/indexeddb/IDBVersionChangeRequest.idl \
+    $(WebCore)/Modules/indexeddb/WorkerContextIndexedDatabase.idl \
+    $(WebCore)/Modules/webaudio/AudioBuffer.idl \
+    $(WebCore)/Modules/webaudio/AudioBufferCallback.idl \
+    $(WebCore)/Modules/webaudio/AudioBufferSourceNode.idl \
+    $(WebCore)/Modules/webaudio/AudioChannelMerger.idl \
+    $(WebCore)/Modules/webaudio/AudioChannelSplitter.idl \
+    $(WebCore)/Modules/webaudio/AudioContext.idl \
+    $(WebCore)/Modules/webaudio/AudioDestinationNode.idl \
+    $(WebCore)/Modules/webaudio/AudioGain.idl \
+    $(WebCore)/Modules/webaudio/AudioGainNode.idl \
+    $(WebCore)/Modules/webaudio/AudioListener.idl \
+    $(WebCore)/Modules/webaudio/AudioNode.idl \
+    $(WebCore)/Modules/webaudio/AudioPannerNode.idl \
+    $(WebCore)/Modules/webaudio/AudioParam.idl \
+    $(WebCore)/Modules/webaudio/AudioProcessingEvent.idl \
+    $(WebCore)/Modules/webaudio/AudioSourceNode.idl \
+    $(WebCore)/Modules/webaudio/BiquadFilterNode.idl \
+    $(WebCore)/Modules/webaudio/ConvolverNode.idl \
+    $(WebCore)/Modules/webaudio/DOMWindowWebAudio.idl \
+    $(WebCore)/Modules/webaudio/DelayNode.idl \
+    $(WebCore)/Modules/webaudio/DynamicsCompressorNode.idl \
+    $(WebCore)/Modules/webaudio/JavaScriptAudioNode.idl \
+    $(WebCore)/Modules/webaudio/MediaElementAudioSourceNode.idl \
+    $(WebCore)/Modules/webaudio/Oscillator.idl \
+    $(WebCore)/Modules/webaudio/OfflineAudioCompletionEvent.idl \
+    $(WebCore)/Modules/webaudio/RealtimeAnalyserNode.idl \
+    $(WebCore)/Modules/webaudio/WaveShaperNode.idl \
+    $(WebCore)/Modules/webaudio/WaveTable.idl \
+    $(WebCore)/Modules/webdatabase/DOMWindowWebDatabase.idl \
+    $(WebCore)/Modules/webdatabase/Database.idl \
+    $(WebCore)/Modules/webdatabase/DatabaseCallback.idl \
+    $(WebCore)/Modules/webdatabase/DatabaseSync.idl \
+    $(WebCore)/Modules/webdatabase/SQLError.idl \
+    $(WebCore)/Modules/webdatabase/SQLException.idl \
+    $(WebCore)/Modules/webdatabase/SQLResultSet.idl \
+    $(WebCore)/Modules/webdatabase/SQLResultSetRowList.idl \
+    $(WebCore)/Modules/webdatabase/SQLStatementCallback.idl \
+    $(WebCore)/Modules/webdatabase/SQLStatementErrorCallback.idl \
+    $(WebCore)/Modules/webdatabase/SQLTransaction.idl \
+    $(WebCore)/Modules/webdatabase/SQLTransactionCallback.idl \
+    $(WebCore)/Modules/webdatabase/SQLTransactionErrorCallback.idl \
+    $(WebCore)/Modules/webdatabase/SQLTransactionSync.idl \
+    $(WebCore)/Modules/webdatabase/SQLTransactionSyncCallback.idl \
+    $(WebCore)/Modules/webdatabase/WorkerContextWebDatabase.idl \
+    $(WebCore)/Modules/websockets/CloseEvent.idl \
+    $(WebCore)/Modules/websockets/DOMWindowWebSocket.idl \
+    $(WebCore)/Modules/websockets/WebSocket.idl \
+    $(WebCore)/Modules/websockets/WorkerContextWebSocket.idl \
     $(WebCore)/css/CSSCharsetRule.idl \
     $(WebCore)/css/CSSFontFaceRule.idl \
     $(WebCore)/css/CSSImportRule.idl \
@@ -79,6 +178,7 @@ BINDING_IDLS = \
     $(WebCore)/css/WebKitCSSKeyframeRule.idl \
     $(WebCore)/css/WebKitCSSKeyframesRule.idl \
     $(WebCore)/css/WebKitCSSMatrix.idl \
+    $(WebCore)/css/WebKitCSSRegionRule.idl \
     $(WebCore)/css/WebKitCSSTransformValue.idl \
     $(WebCore)/dom/Attr.idl \
     $(WebCore)/dom/BeforeLoadEvent.idl \
@@ -132,6 +232,7 @@ BINDING_IDLS = \
     $(WebCore)/dom/Range.idl \
     $(WebCore)/dom/RangeException.idl \
     $(WebCore)/dom/RequestAnimationFrameCallback.idl \
+    $(WebCore)/dom/ShadowRoot.idl \
     $(WebCore)/dom/StringCallback.idl \
     $(WebCore)/dom/Text.idl \
     $(WebCore)/dom/TextEvent.idl \
@@ -146,37 +247,14 @@ BINDING_IDLS = \
     $(WebCore)/dom/WebKitTransitionEvent.idl \
     $(WebCore)/dom/WheelEvent.idl \
     $(WebCore)/fileapi/Blob.idl \
-    $(WebCore)/fileapi/DOMFileSystem.idl \
-    $(WebCore)/fileapi/DOMFileSystemSync.idl \
-    $(WebCore)/fileapi/DirectoryEntry.idl \
-    $(WebCore)/fileapi/DirectoryEntrySync.idl \
-    $(WebCore)/fileapi/DirectoryReader.idl \
-    $(WebCore)/fileapi/DirectoryReaderSync.idl \
-    $(WebCore)/fileapi/EntriesCallback.idl \
-    $(WebCore)/fileapi/Entry.idl \
-    $(WebCore)/fileapi/EntryArray.idl \
-    $(WebCore)/fileapi/EntryArraySync.idl \
-    $(WebCore)/fileapi/EntryCallback.idl \
-    $(WebCore)/fileapi/EntrySync.idl \
-    $(WebCore)/fileapi/ErrorCallback.idl \
     $(WebCore)/fileapi/File.idl \
-    $(WebCore)/fileapi/FileCallback.idl \
-    $(WebCore)/fileapi/FileEntry.idl \
-    $(WebCore)/fileapi/FileEntrySync.idl \
     $(WebCore)/fileapi/FileError.idl \
     $(WebCore)/fileapi/FileException.idl \
     $(WebCore)/fileapi/FileList.idl \
     $(WebCore)/fileapi/FileReader.idl \
     $(WebCore)/fileapi/FileReaderSync.idl \
-    $(WebCore)/fileapi/FileSystemCallback.idl \
-    $(WebCore)/fileapi/FileWriter.idl \
-    $(WebCore)/fileapi/FileWriterCallback.idl \
-    $(WebCore)/fileapi/FileWriterSync.idl \
-    $(WebCore)/fileapi/Metadata.idl \
-    $(WebCore)/fileapi/MetadataCallback.idl \
     $(WebCore)/fileapi/OperationNotAllowedException.idl \
     $(WebCore)/fileapi/WebKitBlobBuilder.idl \
-    $(WebCore)/fileapi/WebKitFlags.idl \
     $(WebCore)/html/DOMFormData.idl \
     $(WebCore)/html/DOMSettableTokenList.idl \
     $(WebCore)/html/DOMTokenList.idl \
@@ -213,7 +291,6 @@ BINDING_IDLS = \
     $(WebCore)/html/HTMLIFrameElement.idl \
     $(WebCore)/html/HTMLImageElement.idl \
     $(WebCore)/html/HTMLInputElement.idl \
-    $(WebCore)/html/HTMLIsIndexElement.idl \
     $(WebCore)/html/HTMLKeygenElement.idl \
     $(WebCore)/html/HTMLLIElement.idl \
     $(WebCore)/html/HTMLLabelElement.idl \
@@ -259,9 +336,6 @@ BINDING_IDLS = \
     $(WebCore)/html/MediaController.idl \
     $(WebCore)/html/MediaError.idl \
     $(WebCore)/html/TextMetrics.idl \
-    $(WebCore)/html/TextTrack.idl \
-    $(WebCore)/html/TextTrackCue.idl \
-    $(WebCore)/html/TextTrackCueList.idl \
     $(WebCore)/html/TimeRanges.idl \
     $(WebCore)/html/ValidityState.idl \
     $(WebCore)/html/canvas/ArrayBuffer.idl \
@@ -271,6 +345,7 @@ BINDING_IDLS = \
     $(WebCore)/html/canvas/CanvasRenderingContext.idl \
     $(WebCore)/html/canvas/CanvasRenderingContext2D.idl \
     $(WebCore)/html/canvas/DataView.idl \
+    $(WebCore)/html/canvas/EXTTextureFilterAnisotropic.idl \
     $(WebCore)/html/canvas/Float32Array.idl \
     $(WebCore)/html/canvas/Float64Array.idl \
     $(WebCore)/html/canvas/Int16Array.idl \
@@ -282,9 +357,10 @@ BINDING_IDLS = \
     $(WebCore)/html/canvas/Uint16Array.idl \
     $(WebCore)/html/canvas/Uint32Array.idl \
     $(WebCore)/html/canvas/Uint8Array.idl \
+    $(WebCore)/html/canvas/Uint8ClampedArray.idl \
     $(WebCore)/html/canvas/WebGLActiveInfo.idl \
     $(WebCore)/html/canvas/WebGLBuffer.idl \
-    $(WebCore)/html/canvas/WebGLCompressedTextures.idl \
+    $(WebCore)/html/canvas/WebGLCompressedTextureS3TC.idl \
     $(WebCore)/html/canvas/WebGLContextAttributes.idl \
     $(WebCore)/html/canvas/WebGLContextEvent.idl \
     $(WebCore)/html/canvas/WebGLFramebuffer.idl \
@@ -293,9 +369,15 @@ BINDING_IDLS = \
     $(WebCore)/html/canvas/WebGLRenderbuffer.idl \
     $(WebCore)/html/canvas/WebGLRenderingContext.idl \
     $(WebCore)/html/canvas/WebGLShader.idl \
+    $(WebCore)/html/canvas/WebGLShaderPrecisionFormat.idl \
     $(WebCore)/html/canvas/WebGLTexture.idl \
     $(WebCore)/html/canvas/WebGLUniformLocation.idl \
     $(WebCore)/html/canvas/WebGLVertexArrayObjectOES.idl \
+    $(WebCore)/html/shadow/HTMLContentElement.idl \
+    $(WebCore)/html/shadow/HTMLShadowElement.idl \
+    $(WebCore)/html/track/TextTrack.idl \
+    $(WebCore)/html/track/TextTrackCue.idl \
+    $(WebCore)/html/track/TextTrackCueList.idl \
     $(WebCore)/html/track/TextTrackList.idl \
     $(WebCore)/html/track/TrackEvent.idl \
     $(WebCore)/inspector/InjectedScriptHost.idl \
@@ -303,8 +385,11 @@ BINDING_IDLS = \
     $(WebCore)/inspector/ScriptProfile.idl \
     $(WebCore)/inspector/ScriptProfileNode.idl \
     $(WebCore)/loader/appcache/DOMApplicationCache.idl \
+    $(WebCore)/notifications/DOMWindowNotifications.idl \
     $(WebCore)/notifications/Notification.idl \
     $(WebCore)/notifications/NotificationCenter.idl \
+    $(WebCore)/notifications/NotificationPermissionCallback.idl \
+    $(WebCore)/notifications/WorkerContextNotifications.idl \
     $(WebCore)/page/AbstractView.idl \
     $(WebCore)/page/BarInfo.idl \
     $(WebCore)/page/Console.idl \
@@ -313,8 +398,6 @@ BINDING_IDLS = \
     $(WebCore)/page/DOMSelection.idl \
     $(WebCore)/page/DOMWindow.idl \
     $(WebCore)/page/EventSource.idl \
-    $(WebCore)/page/Geolocation.idl \
-    $(WebCore)/page/Geoposition.idl \
     $(WebCore)/page/History.idl \
     $(WebCore)/page/Location.idl \
     $(WebCore)/page/MemoryInfo.idl \
@@ -322,9 +405,6 @@ BINDING_IDLS = \
     $(WebCore)/page/Performance.idl \
     $(WebCore)/page/PerformanceNavigation.idl \
     $(WebCore)/page/PerformanceTiming.idl \
-    $(WebCore)/page/PositionCallback.idl \
-    $(WebCore)/page/PositionError.idl \
-    $(WebCore)/page/PositionErrorCallback.idl \
     $(WebCore)/page/Screen.idl \
     $(WebCore)/page/SpeechInputEvent.idl \
     $(WebCore)/page/SpeechInputResult.idl \
@@ -337,32 +417,6 @@ BINDING_IDLS = \
     $(WebCore)/plugins/DOMMimeTypeArray.idl \
     $(WebCore)/plugins/DOMPlugin.idl \
     $(WebCore)/plugins/DOMPluginArray.idl \
-    $(WebCore)/storage/Database.idl \
-    $(WebCore)/storage/DatabaseCallback.idl \
-    $(WebCore)/storage/DatabaseSync.idl \
-    $(WebCore)/storage/IDBAny.idl \
-    $(WebCore)/storage/IDBCursor.idl \
-    $(WebCore)/storage/IDBDatabase.idl \
-    $(WebCore)/storage/IDBDatabaseError.idl \
-    $(WebCore)/storage/IDBDatabaseException.idl \
-    $(WebCore)/storage/IDBFactory.idl \
-    $(WebCore)/storage/IDBIndex.idl \
-    $(WebCore)/storage/IDBKey.idl \
-    $(WebCore)/storage/IDBKeyRange.idl \
-    $(WebCore)/storage/IDBObjectStore.idl \
-    $(WebCore)/storage/IDBRequest.idl \
-    $(WebCore)/storage/IDBTransaction.idl \
-    $(WebCore)/storage/SQLError.idl \
-    $(WebCore)/storage/SQLException.idl \
-    $(WebCore)/storage/SQLResultSet.idl \
-    $(WebCore)/storage/SQLResultSetRowList.idl \
-    $(WebCore)/storage/SQLStatementCallback.idl \
-    $(WebCore)/storage/SQLStatementErrorCallback.idl \
-    $(WebCore)/storage/SQLTransaction.idl \
-    $(WebCore)/storage/SQLTransactionCallback.idl \
-    $(WebCore)/storage/SQLTransactionErrorCallback.idl \
-    $(WebCore)/storage/SQLTransactionSync.idl \
-    $(WebCore)/storage/SQLTransactionSyncCallback.idl \
     $(WebCore)/storage/Storage.idl \
     $(WebCore)/storage/StorageEvent.idl \
     $(WebCore)/storage/StorageInfo.idl \
@@ -522,36 +576,7 @@ BINDING_IDLS = \
     $(WebCore)/svg/SVGZoomAndPan.idl \
     $(WebCore)/svg/SVGZoomEvent.idl \
     $(WebCore)/testing/Internals.idl \
-    $(WebCore)/webaudio/AudioBuffer.idl \
-    $(WebCore)/webaudio/AudioBufferCallback.idl \
-    $(WebCore)/webaudio/AudioBufferSourceNode.idl \
-    $(WebCore)/webaudio/AudioChannelMerger.idl \
-    $(WebCore)/webaudio/AudioChannelSplitter.idl \
-    $(WebCore)/webaudio/AudioContext.idl \
-    $(WebCore)/webaudio/AudioDestinationNode.idl \
-    $(WebCore)/webaudio/AudioGain.idl \
-    $(WebCore)/webaudio/AudioGainNode.idl \
-    $(WebCore)/webaudio/AudioListener.idl \
-    $(WebCore)/webaudio/AudioNode.idl \
-    $(WebCore)/webaudio/AudioPannerNode.idl \
-    $(WebCore)/webaudio/AudioParam.idl \
-    $(WebCore)/webaudio/AudioProcessingEvent.idl \
-    $(WebCore)/webaudio/AudioSourceNode.idl \
-    $(WebCore)/webaudio/BiquadFilterNode.idl \
-    $(WebCore)/webaudio/ConvolverNode.idl \
-    $(WebCore)/webaudio/DOMWindowWebAudio.idl \
-    $(WebCore)/webaudio/DelayNode.idl \
-    $(WebCore)/webaudio/DynamicsCompressorNode.idl \
-    $(WebCore)/webaudio/HighPass2FilterNode.idl \
-    $(WebCore)/webaudio/JavaScriptAudioNode.idl \
-    $(WebCore)/webaudio/LowPass2FilterNode.idl \
-    $(WebCore)/webaudio/MediaElementAudioSourceNode.idl \
-    $(WebCore)/webaudio/OfflineAudioCompletionEvent.idl \
-    $(WebCore)/webaudio/RealtimeAnalyserNode.idl \
-    $(WebCore)/webaudio/WaveShaperNode.idl \
-    $(WebCore)/websockets/CloseEvent.idl \
-    $(WebCore)/websockets/DOMWindowWebSocket.idl \
-    $(WebCore)/websockets/WebSocket.idl \
+    $(WebCore)/testing/InternalSettings.idl \
     $(WebCore)/workers/AbstractWorker.idl \
     $(WebCore)/workers/DedicatedWorkerContext.idl \
     $(WebCore)/workers/SharedWorker.idl \
@@ -612,7 +637,6 @@ all : \
     MathMLElementFactory.cpp \
     MathMLNames.cpp \
     XPathGrammar.cpp \
-    tokenizer.cpp \
 #
 
 # --------
@@ -622,18 +646,31 @@ ADDITIONAL_IDL_DEFINES :=
 ifeq ($(OS),MACOS)
 
 FRAMEWORK_FLAGS = $(shell echo $(BUILT_PRODUCTS_DIR) $(FRAMEWORK_SEARCH_PATHS) | perl -e 'print "-F " . join(" -F ", split(" ", <>));')
+HEADER_FLAGS = $(shell echo $(BUILT_PRODUCTS_DIR) $(HEADER_SEARCH_PATHS) | perl -e 'print "-I" . join(" -I", split(" ", <>));')
 
-ifeq ($(shell gcc -E -P -dM $(FRAMEWORK_FLAGS) WebCore/ForwardingHeaders/wtf/Platform.h | grep ENABLE_DASHBOARD_SUPPORT | cut -d' ' -f3), 1)
+ifeq ($(TARGET_GCC_VERSION),LLVM_COMPILER)
+	TEXT_PREPROCESSOR_FLAGS=-E -P -x c -traditional
+else
+	TEXT_PREPROCESSOR_FLAGS=-E -P -x c -std=c89
+endif
+
+ifeq ($(shell $(CC) -x c++ -E -P -dM $(FRAMEWORK_FLAGS) $(HEADER_FLAGS) -include "wtf/Platform.h" /dev/null | grep ENABLE_DASHBOARD_SUPPORT | cut -d' ' -f3), 1)
     ENABLE_DASHBOARD_SUPPORT = 1
 else
     ENABLE_DASHBOARD_SUPPORT = 0
 endif
 
-ifeq ($(shell gcc -E -P -dM $(FRAMEWORK_FLAGS) WebCore/ForwardingHeaders/wtf/Platform.h | grep ENABLE_ORIENTATION_EVENTS | cut -d' ' -f3), 1)
+ifeq ($(shell $(CC) -x c++ -E -P -dM $(FRAMEWORK_FLAGS) $(HEADER_FLAGS) -include "wtf/Platform.h" /dev/null | grep ENABLE_ORIENTATION_EVENTS | cut -d' ' -f3), 1)
     ENABLE_ORIENTATION_EVENTS = 1
 else
     ENABLE_ORIENTATION_EVENTS = 0
 endif
+
+all: DefaultFonts.plist
+
+DefaultFonts.plist : DefaultFonts.plist.in
+	@echo Pre-processing DefaultFonts.plist...
+	$(CC) $(TEXT_PREPROCESSOR_FLAGS) $(FRAMEWORK_FLAGS) $(HEADER_FLAGS) -include "wtf/Platform.h" $< > $@
 
 else
 
@@ -661,10 +698,6 @@ WEBCORE_CSS_VALUE_KEYWORDS := $(WebCore)/css/CSSValueKeywords.in
 ifeq ($(findstring ENABLE_SVG,$(FEATURE_DEFINES)), ENABLE_SVG)
     WEBCORE_CSS_PROPERTY_NAMES := $(WEBCORE_CSS_PROPERTY_NAMES) $(WebCore)/css/SVGCSSPropertyNames.in
     WEBCORE_CSS_VALUE_KEYWORDS := $(WEBCORE_CSS_VALUE_KEYWORDS) $(WebCore)/css/SVGCSSValueKeywords.in
-endif
-
-ifeq ($(ENABLE_DASHBOARD_SUPPORT), 1)
-    WEBCORE_CSS_PROPERTY_NAMES := $(WEBCORE_CSS_PROPERTY_NAMES) $(WebCore)/css/DashboardSupportCSSPropertyNames.in
 endif
 
 CSSPropertyNames.h : $(WEBCORE_CSS_PROPERTY_NAMES) css/makeprop.pl
@@ -709,10 +742,13 @@ ColorData.cpp : platform/ColorData.gperf $(WebCore)/make-hash-tools.pl
 
 # --------
 
-# CSS tokenizer
+# Path to bison
 
-tokenizer.cpp : css/tokenizer.flex css/maketokenizer
-	flex -t $< | perl $(WebCore)/css/maketokenizer > $@
+ifeq ($(OS),MACOS)
+BISON=$(shell xcrun -find bison)
+else
+BISON=bison
+endif
 
 # --------
 
@@ -720,7 +756,7 @@ tokenizer.cpp : css/tokenizer.flex css/maketokenizer
 # NOTE: Older versions of bison do not inject an inclusion guard, so we add one.
 
 CSSGrammar.cpp : css/CSSGrammar.y
-	bison -d -p cssyy $< -o $@
+	$(BISON) -d -p cssyy $< -o $@
 	touch CSSGrammar.cpp.h
 	touch CSSGrammar.hpp
 	echo '#ifndef CSSGrammar_h' > CSSGrammar.h
@@ -735,7 +771,7 @@ CSSGrammar.cpp : css/CSSGrammar.y
 # NOTE: Older versions of bison do not inject an inclusion guard, so we add one.
 
 XPathGrammar.cpp : xml/XPathGrammar.y $(PROJECT_FILE)
-	bison -d -p xpathyy $< -o $@
+	$(BISON) -d -p xpathyy $< -o $@
 	touch XPathGrammar.cpp.h
 	touch XPathGrammar.hpp
 	echo '#ifndef XPathGrammar_h' > XPathGrammar.h
@@ -805,6 +841,10 @@ ifeq ($(findstring ENABLE_VIDEO_TRACK,$(FEATURE_DEFINES)), ENABLE_VIDEO_TRACK)
     HTML_FLAGS := $(HTML_FLAGS) ENABLE_VIDEO_TRACK=0
 endif
 
+ifeq ($(findstring ENABLE_SHADOW_DOM,$(FEATURE_DEFINES)), ENABLE_SHADOW_DOM)
+    HTML_FLAGS := $(HTML_FLAGS) ENABLE_SHADOW_DOM=1
+endif
+
 ifdef HTML_FLAGS
 
 HTMLElementFactory.cpp HTMLNames.cpp : dom/make_names.pl html/HTMLTagNames.in html/HTMLAttributeNames.in
@@ -859,8 +899,8 @@ XLinkNames.cpp : dom/make_names.pl svg/xlinkattrs.in
  
 # Register event constructors and targets
 
-EventFactory.cpp EventHeaders.h EventInterfaces.h : dom/make_event_factory.pl dom/EventFactory.in
-	perl -I $(WebCore)/bindings/scripts $< --input $(WebCore)/dom/EventFactory.in
+EventFactory.cpp EventHeaders.h EventInterfaces.h : dom/make_event_factory.pl dom/EventNames.in
+	perl -I $(WebCore)/bindings/scripts $< --input $(WebCore)/dom/EventNames.in
 
 EventTargetHeaders.h EventTargetInterfaces.h : dom/make_event_factory.pl dom/EventTargetFactory.in
 	perl -I $(WebCore)/bindings/scripts $< --input $(WebCore)/dom/EventTargetFactory.in
@@ -886,13 +926,13 @@ GENERATE_SCRIPTS = \
     bindings/scripts/generate-bindings.pl \
     bindings/scripts/preprocessor.pm
 
-RESOLVE_SUPPLEMENTAL_SCRIPTS = \
+PREPROCESS_IDLS_SCRIPTS = \
     bindings/scripts/IDLParser.pm \
-    bindings/scripts/resolve-supplemental.pl
+    bindings/scripts/preprocess-idls.pl
 
 generator_script = perl $(addprefix -I $(WebCore)/, $(sort $(dir $(1)))) $(WebCore)/bindings/scripts/generate-bindings.pl
 
-resolve_supplemental_script = perl $(addprefix -I $(WebCore)/, $(sort $(dir $(1)))) $(WebCore)/bindings/scripts/resolve-supplemental.pl
+preprocess_idls_script = perl $(addprefix -I $(WebCore)/, $(sort $(dir $(1)))) $(WebCore)/bindings/scripts/preprocess-idls.pl
 
 # JS bindings generator
 
@@ -913,11 +953,16 @@ JS_BINDINGS_SCRIPTS = $(GENERATE_SCRIPTS) bindings/scripts/CodeGeneratorJS.pm
 SUPPLEMENTAL_DEPENDENCY_FILE = ./supplemental_dependency.tmp
 IDL_FILES_TMP = ./idl_files.tmp
 ADDITIONAL_IDLS = $(WebCore)/inspector/JavaScriptCallFrame.idl
+IDL_ATTRIBUTES_FILE = $(WebCore)/bindings/scripts/IDLAttributes.txt
 
-$(SUPPLEMENTAL_DEPENDENCY_FILE) : $(RESOLVE_SUPPLEMENTAL_SCRIPTS) $(BINDING_IDLS) $(ADDITIONAL_IDLS)
-	echo -n > $(IDL_FILES_TMP)
-	($(foreach idl, $(BINDING_IDLS) $(ADDITIONAL_IDLS), echo $(idl) &&) echo -n) >> $(IDL_FILES_TMP)
-	$(call resolve_supplemental_script, $(RESOLVE_SUPPLEMENTAL_SCRIPTS)) --defines "$(FEATURE_DEFINES) $(ADDITIONAL_IDL_DEFINES) LANGUAGE_JAVASCRIPT" --idlFilesList $(IDL_FILES_TMP) --supplementalDependencyFile $@
+# The following two lines get a space character stored in a variable.
+# See <http://blog.jgc.org/2007/06/escaping-comma-and-space-in-gnu-make.html>.
+space :=
+space +=
+
+$(SUPPLEMENTAL_DEPENDENCY_FILE) : $(PREPROCESS_IDLS_SCRIPTS) $(BINDING_IDLS) $(ADDITIONAL_IDLS) $(IDL_ATTRIBUTES_FILE)
+	printf "$(subst $(space),,$(patsubst %,%\n,$(BINDING_IDLS) $(ADDITIONAL_IDLS)))" > $(IDL_FILES_TMP)
+	$(call preprocess_idls_script, $(PREPROCESS_IDLS_SCRIPTS)) --defines "$(FEATURE_DEFINES) $(ADDITIONAL_IDL_DEFINES) LANGUAGE_JAVASCRIPT" --idlFilesList $(IDL_FILES_TMP) --supplementalDependencyFile $@ --idlAttributesFile $(IDL_ATTRIBUTES_FILE)
 	rm -f $(IDL_FILES_TMP)
 
 JS%.h : %.idl $(JS_BINDINGS_SCRIPTS) $(SUPPLEMENTAL_DEPENDENCY_FILE)
@@ -936,7 +981,7 @@ all : InspectorFrontend.h
 INSPECTOR_GENERATOR_SCRIPTS = inspector/CodeGeneratorInspector.py
 
 InspectorFrontend.h : Inspector.json $(INSPECTOR_GENERATOR_SCRIPTS)
-	python $(WebCore)/inspector/CodeGeneratorInspector.py $(WebCore)/inspector/Inspector.json --output_h_dir . --output_cpp_dir . --defines "$(FEATURE_DEFINES) LANGUAGE_JAVASCRIPT"
+	python $(WebCore)/inspector/CodeGeneratorInspector.py $(WebCore)/inspector/Inspector.json --output_h_dir . --output_cpp_dir .
 
 all : InjectedScriptSource.h
 

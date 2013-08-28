@@ -34,20 +34,18 @@
 
 #include "CanvasLayerChromium.h"
 
-#include "cc/CCLayerImpl.h"
-#include "GraphicsContext3D.h"
-#include "LayerRendererChromium.h"
+#include "cc/CCTextureLayerImpl.h"
 
 namespace WebCore {
 
-CanvasLayerChromium::CanvasLayerChromium(CCLayerDelegate* delegate)
-    : LayerChromium(delegate)
+CanvasLayerChromium::CanvasLayerChromium()
+    : LayerChromium()
 {
 }
 
-PassRefPtr<CCLayerImpl> CanvasLayerChromium::createCCLayerImpl()
+PassOwnPtr<CCLayerImpl> CanvasLayerChromium::createCCLayerImpl()
 {
-    return CCCanvasLayerImpl::create(m_layerId);
+    return CCTextureLayerImpl::create(m_layerId);
 }
 
 }

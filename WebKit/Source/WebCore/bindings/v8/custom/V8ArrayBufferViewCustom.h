@@ -31,7 +31,7 @@
 #ifndef V8ArrayBufferViewCustom_h
 #define V8ArrayBufferViewCustom_h
 
-#include "ArrayBuffer.h"
+#include <wtf/ArrayBuffer.h>
 #include "ExceptionCode.h"
 
 #include "V8ArrayBuffer.h"
@@ -51,7 +51,7 @@ void installFastSet(v8::Handle<v8::Object> array);
 
 // Copy the elements from the source array to the typed destination array by
 // invoking the 'set' method of the destination array in JS.
-void copyElements(v8::Handle<v8::Object> destArray, v8::Handle<v8::Object> srcArray);
+void copyElements(v8::Handle<v8::Object> destArray, v8::Handle<v8::Object> srcArray, uint32_t offset);
 
 
 // Template function used by the ArrayBufferView*Constructor callbacks.
@@ -81,14 +81,17 @@ v8::Handle<v8::Value> constructWebGLArrayWithArrayBufferArgument(const v8::Argum
     }
     RefPtr<ArrayClass> array = ArrayClass::create(buf, offset, length);
     if (!array) {
-        V8Proxy::setDOMException(INDEX_SIZE_ERR);
+        V8Proxy::setDOMException(INDEX_SIZE_ERR, args.GetIsolate());
         return notHandledByInterceptor();
     }
     // Transform the holder into a wrapper object for the array.
     V8DOMWrapper::setDOMWrapper(args.Holder(), type, array.get());
     if (hasIndexer)
         args.Holder()->SetIndexedPropertiesToExternalArrayData(array.get()->baseAddress(), arrayType, array.get()->length());
-    return toV8(array.release(), args.Holder(), MarkIndependent);
+    v8::Persistent<v8::Object> wrapper = v8::Persistent<v8::Object>::New(args.Holder());
+    wrapper.MarkIndependent();
+    V8DOMWrapper::setJSWrapperForDOMObject(array.release(), wrapper);
+    return args.Holder();
 }
 
 // Template function used by the ArrayBufferView*Constructor callbacks.
@@ -117,7 +120,10 @@ v8::Handle<v8::Value> constructWebGLArray(const v8::Arguments& args, WrapperType
         // Do not call SetIndexedPropertiesToExternalArrayData on this
         // object. Not only is there no point from a performance
         // perspective, but doing so causes errors in the subset() case.
-        return toV8(array.release(), args.Holder(), MarkIndependent);
+        v8::Persistent<v8::Object> wrapper = v8::Persistent<v8::Object>::New(args.Holder());
+        wrapper.MarkIndependent();
+        V8DOMWrapper::setJSWrapperForDOMObject(array.release(), wrapper);
+        return args.Holder();
     }
 
     // Supported constructors:
@@ -171,16 +177,19 @@ v8::Handle<v8::Value> constructWebGLArray(const v8::Arguments& args, WrapperType
     args.Holder()->SetIndexedPropertiesToExternalArrayData(array.get()->baseAddress(), arrayType, array.get()->length());
 
     if (!srcArray.IsEmpty())
-        copyElements(args.Holder(), srcArray);
+        copyElements(args.Holder(), srcArray, 0);
 
-    return toV8(array.release(), args.Holder(), MarkIndependent);
+    v8::Persistent<v8::Object> wrapper = v8::Persistent<v8::Object>::New(args.Holder());
+    wrapper.MarkIndependent();
+    V8DOMWrapper::setJSWrapperForDOMObject(array.release(), wrapper);
+    return args.Holder();
 }
 
 template <class CPlusPlusArrayType, class JavaScriptWrapperArrayType>
 v8::Handle<v8::Value> setWebGLArrayHelper(const v8::Arguments& args)
 {
     if (args.Length() < 1) {
-        V8Proxy::setDOMException(SYNTAX_ERR);
+        V8Proxy::setDOMException(SYNTAX_ERR, args.GetIsolate());
         return notHandledByInterceptor();
     }
 
@@ -193,7 +202,7 @@ v8::Handle<v8::Value> setWebGLArrayHelper(const v8::Arguments& args)
         if (args.Length() == 2)
             offset = toUInt32(args[1]);
         if (!impl->set(src, offset))
-            V8Proxy::setDOMException(INDEX_SIZE_ERR);
+            V8Proxy::setDOMException(INDEX_SIZE_ERR, args.GetIsolate());
         return v8::Undefined();
     }
 
@@ -208,11 +217,11 @@ v8::Handle<v8::Value> setWebGLArrayHelper(const v8::Arguments& args)
             || offset + length > impl->length()
             || offset + length < offset)
             // Out of range offset or overflow
-            V8Proxy::setDOMException(INDEX_SIZE_ERR);
+            V8Proxy::setDOMException(INDEX_SIZE_ERR, args.GetIsolate());
         else {
             if (!fastSetInstalled(args.Holder())) {
                 installFastSet(args.Holder());
-                copyElements(args.Holder(), array);
+                copyElements(args.Holder(), array, offset);
             } else {
                 for (uint32_t i = 0; i < length; i++)
                     impl->set(offset + i, array->Get(i)->NumberValue());
@@ -221,7 +230,7 @@ v8::Handle<v8::Value> setWebGLArrayHelper(const v8::Arguments& args)
         return v8::Undefined();
     }
 
-    V8Proxy::setDOMException(SYNTAX_ERR);
+    V8Proxy::setDOMException(SYNTAX_ERR, args.GetIsolate());
     return notHandledByInterceptor();
 }
 

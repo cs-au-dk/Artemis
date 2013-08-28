@@ -31,12 +31,11 @@ module threads {
         Conditional=WORKERS,
         ActiveDOMObject,
         JSCustomConstructor,
-        ConstructorParameters=1,
         Constructor(in DOMString scriptUrl),
         CallWith=ScriptExecutionContext,
         ConstructorRaisesException,
-        GenerateNativeConverter,
-        GenerateToJS
+        JSGenerateToNativeObject,
+        JSGenerateToJSObject
     ] Worker : AbstractWorker {
 
         attribute EventListener onmessage;

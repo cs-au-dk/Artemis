@@ -33,13 +33,12 @@
 #include "DocumentLoader.h"
 #include "DocumentLoaderGtk.h"
 #include "ErrorsGtk.h"
+#include "FileSystem.h"
 #include "FormState.h"
 #include "FrameLoader.h"
 #include "FrameNetworkingContextGtk.h"
 #include "FrameTree.h"
 #include "FrameView.h"
-#include "GOwnPtr.h"
-#include "GRefPtr.h"
 #include "GtkPluginWidget.h"
 #include "HTMLAppletElement.h"
 #include "HTMLFormElement.h"
@@ -64,13 +63,15 @@
 #include "ScriptController.h"
 #include "Settings.h"
 #include "webkiterror.h"
+#include "webkitfavicondatabase.h"
+#include "webkitfavicondatabaseprivate.h"
 #include "webkitglobals.h"
 #include "webkitglobalsprivate.h"
-#include "webkiticondatabase.h"
 #include "webkitnetworkrequest.h"
 #include "webkitnetworkrequestprivate.h"
 #include "webkitnetworkresponse.h"
 #include "webkitnetworkresponseprivate.h"
+#include "webkitsecurityoriginprivate.h"
 #include "webkitviewportattributes.h"
 #include "webkitviewportattributesprivate.h"
 #include "webkitwebdatasourceprivate.h"
@@ -90,6 +91,8 @@
 #include <glib.h>
 #include <glib/gi18n-lib.h>
 #include <stdio.h>
+#include <wtf/gobject/GOwnPtr.h>
+#include <wtf/gobject/GRefPtr.h>
 #include <wtf/text/CString.h>
 #include <wtf/text/StringConcatenate.h>
 
@@ -233,8 +236,9 @@ void FrameLoaderClient::dispatchWillSendRequest(WebCore::DocumentLoader* loader,
         g_free(webResource->priv->uri);
         webResource->priv->uri = g_strdup(request.url().string().utf8().data());
     }
-    
+
     g_signal_emit_by_name(webView, "resource-request-starting", m_frame, webResource, networkRequest.get(), networkResponse.get());
+    g_signal_emit_by_name(m_frame, "resource-request-starting", webResource, networkRequest.get(), networkResponse.get());
 
     // Feed any changes back into the ResourceRequest object.
     SoupMessage* message = webkit_network_request_get_message(networkRequest.get());
@@ -298,13 +302,22 @@ void FrameLoaderClient::frameLoaderDestroyed()
     delete this;
 }
 
-void FrameLoaderClient::dispatchDidReceiveResponse(WebCore::DocumentLoader* loader, unsigned long, const ResourceResponse& response)
+void FrameLoaderClient::dispatchDidReceiveResponse(WebCore::DocumentLoader* loader, unsigned long identifier, const ResourceResponse& response)
 {
     // Update our knowledge of request soup flags - some are only set
     // after the request is done.
     loader->request().setSoupMessageFlags(response.soupMessageFlags());
 
     m_response = response;
+
+    WebKitWebView* webView = getViewFromFrame(m_frame);
+    GOwnPtr<gchar> identifierString(toString(identifier));
+    WebKitWebResource* webResource = webkit_web_view_get_resource(webView, identifierString.get());
+    GRefPtr<WebKitNetworkResponse> networkResponse(adoptGRef(kitNew(response)));
+
+    g_signal_emit_by_name(webResource, "response-received", networkResponse.get());
+    g_signal_emit_by_name(m_frame, "resource-response-received", webResource, networkResponse.get());
+    g_signal_emit_by_name(webView, "resource-response-received", m_frame, webResource, networkResponse.get());
 }
 
 void FrameLoaderClient::dispatchDecidePolicyForResponse(FramePolicyFunction policyFunction, const ResourceResponse& response, const ResourceRequest& resourceRequest)
@@ -472,8 +485,10 @@ PassRefPtr<Widget> FrameLoaderClient::createPlugin(const IntSize& pluginSize, HT
     GtkWidget* gtkWidget = 0;
     g_signal_emit_by_name(getViewFromFrame(m_frame), "create-plugin-widget",
                           mimeTypeString.data(), urlString.data(), hash.get(), &gtkWidget);
-    if (gtkWidget)
+    if (gtkWidget) {
+        gtk_container_add(GTK_CONTAINER(getViewFromFrame(m_frame)), gtkWidget);
         return adoptRef(new GtkPluginWidget(gtkWidget));
+    }
 
     RefPtr<PluginView> pluginView = PluginView::create(core(m_frame), pluginSize, element, url, paramNames, paramValues, mimeType, loadManually);
 
@@ -516,35 +531,6 @@ PassRefPtr<Frame> FrameLoaderClient::createFrame(const KURL& url, const String& 
         return 0;
 
     return childFrame.release();
-}
-
-void FrameLoaderClient::didTransferChildFrameToNewDocument(WebCore::Page*)
-{
-    ASSERT(m_frame);
-
-    // Update the frame's webview to the new parent's webview.
-    Frame* coreFrame = core(m_frame);
-    WebKitWebView* webView = getViewFromFrame(m_frame);
-
-    Frame* parentCoreFrame = coreFrame->tree()->parent();
-    WebKitWebFrame* parentKitFrame = kit(parentCoreFrame);
-    WebKitWebView* parentWebView = getViewFromFrame(parentKitFrame);
-    if (webView != parentWebView)
-        m_frame->priv->webView = parentWebView;
-
-    ASSERT(core(getViewFromFrame(m_frame)) == coreFrame->page());
-}
-
-void FrameLoaderClient::transferLoadingResourceFromPage(WebCore::ResourceLoader* loader, const WebCore::ResourceRequest& request, WebCore::Page* oldPage)
-{
-    ASSERT(oldPage != core(m_frame)->page());
-
-    GOwnPtr<gchar> identifierString(toString(loader->identifier()));
-    ASSERT(!webkit_web_view_get_resource(getViewFromFrame(m_frame), identifierString.get()));
-
-    assignIdentifierToInitialRequest(loader->identifier(), loader->documentLoader(), request);
-
-    webkit_web_view_remove_resource(kit(oldPage), identifierString.get());
 }
 
 void FrameLoaderClient::redirectDataToPlugin(Widget* pluginWidget)
@@ -612,7 +598,7 @@ void FrameLoaderClient::didPerformFirstNavigation() const
 
 void FrameLoaderClient::registerForIconNotification(bool shouldRegister)
 {
-    notImplemented();
+    webkitWebViewRegisterForIconNotification(getViewFromFrame(m_frame), shouldRegister);
 }
 
 void FrameLoaderClient::setMainFrameDocumentReady(bool ready)
@@ -669,9 +655,9 @@ void FrameLoaderClient::didDisplayInsecureContent()
     notImplemented();
 }
 
-void FrameLoaderClient::didRunInsecureContent(SecurityOrigin*, const KURL&)
+void FrameLoaderClient::didRunInsecureContent(SecurityOrigin* coreOrigin, const KURL& url)
 {
-    notImplemented();
+    g_signal_emit_by_name(m_frame, "insecure-content-run", kit(coreOrigin), url.string().utf8().data());
 }
 
 void FrameLoaderClient::didDetectXSS(const KURL&, bool)
@@ -789,18 +775,14 @@ void FrameLoaderClient::dispatchDidReceiveIcon()
     if (m_loadingErrorPage)
         return;
 
-    const gchar* frameURI = webkit_web_frame_get_uri(m_frame);
-    WebKitIconDatabase* database = webkit_get_icon_database();
-    g_signal_emit_by_name(database, "icon-loaded", m_frame, frameURI);
-
+    // IconController loads icons only for the main frame.
     WebKitWebView* webView = getViewFromFrame(m_frame);
+    ASSERT(m_frame == webkit_web_view_get_main_frame(webView));
 
-    // Avoid reporting favicons for non-main frames.
-    if (m_frame != webkit_web_view_get_main_frame(webView))
-        return;
-
-    g_object_notify(G_OBJECT(webView), "icon-uri");
-    g_signal_emit_by_name(webView, "icon-loaded", webkit_web_view_get_icon_uri(webView));
+    const char* frameURI = webkit_web_frame_get_uri(m_frame);
+    WebKitFaviconDatabase* database = webkit_get_favicon_database();
+    webkitFaviconDatabaseDispatchDidReceiveIcon(database, frameURI);
+    webkitWebViewIconLoaded(database, frameURI, webView);
 }
 
 void FrameLoaderClient::dispatchDidStartProvisionalLoad()
@@ -901,11 +883,6 @@ void FrameLoaderClient::cancelPolicyCheck()
         webkit_web_policy_decision_cancel(m_policyDecision);
 }
 
-void FrameLoaderClient::dispatchDidLoadMainResource(WebCore::DocumentLoader*)
-{
-    notImplemented();
-}
-
 void FrameLoaderClient::revertToProvisionalState(WebCore::DocumentLoader*)
 {
     m_hasRepresentation = true;
@@ -992,7 +969,13 @@ void FrameLoaderClient::setTitle(const StringWithDirection& title, const KURL& u
 
 void FrameLoaderClient::dispatchDidReceiveContentLength(WebCore::DocumentLoader*, unsigned long identifier, int dataLength)
 {
-    notImplemented();
+    WebKitWebView* webView = getViewFromFrame(m_frame);
+    GOwnPtr<gchar> identifierString(toString(identifier));
+    WebKitWebResource* webResource = webkit_web_view_get_resource(webView, identifierString.get());
+
+    g_signal_emit_by_name(webResource, "content-length-received", dataLength);
+    g_signal_emit_by_name(m_frame, "resource-content-length-received", webResource, dataLength);
+    g_signal_emit_by_name(webView, "resource-content-length-received", m_frame, webResource, dataLength);
 }
 
 void FrameLoaderClient::dispatchDidFinishLoading(WebCore::DocumentLoader* loader, unsigned long identifier)
@@ -1021,20 +1004,31 @@ void FrameLoaderClient::dispatchDidFinishLoading(WebCore::DocumentLoader* loader
 
     webkit_web_resource_init_with_core_resource(webResource, coreResource.get());
 
-    // FIXME: This function should notify the application that the resource
-    // finished loading, maybe using a load-status property in the
-    // WebKitWebResource object, similar to what we do for WebKitWebFrame'
-    // signal.
-    notImplemented();
+    g_signal_emit_by_name(webResource, "load-finished");
+    g_signal_emit_by_name(m_frame, "resource-load-finished", webResource);
+    g_signal_emit_by_name(webView, "resource-load-finished", m_frame, webResource);
 }
 
 void FrameLoaderClient::dispatchDidFailLoading(WebCore::DocumentLoader* loader, unsigned long identifier, const ResourceError& error)
 {
     static_cast<WebKit::DocumentLoader*>(loader)->decreaseLoadCount(identifier);
 
-    // FIXME: This function should notify the application that the resource failed
-    // loading, maybe a 'load-error' signal in the WebKitWebResource object.
-    notImplemented();
+    WebKitWebView* webView = getViewFromFrame(m_frame);
+    GOwnPtr<gchar> identifierString(toString(identifier));
+    WebKitWebResource* webResource = webkit_web_view_get_resource(webView, identifierString.get());
+
+    // A NULL WebResource means the load has been interrupted, and
+    // replaced by another one while this resource was being loaded.
+    if (!webResource)
+        return;
+
+    GOwnPtr<GError> webError(g_error_new_literal(g_quark_from_string(error.domain().utf8().data()),
+                                                 error.errorCode(),
+                                                 error.localizedDescription().utf8().data()));
+
+    g_signal_emit_by_name(webResource, "load-failed", webError.get());
+    g_signal_emit_by_name(m_frame, "resource-load-failed", webResource, webError.get());
+    g_signal_emit_by_name(webView, "resource-load-failed", m_frame, webResource, webError.get());
 }
 
 bool FrameLoaderClient::dispatchDidLoadResourceFromMemoryCache(WebCore::DocumentLoader*, const ResourceRequest&, const ResourceResponse&, int length)
@@ -1076,7 +1070,9 @@ void FrameLoaderClient::dispatchDidFailLoad(const ResourceError& error)
 
     String content;
     gchar* fileContent = 0;
-    gchar* errorURI = g_filename_to_uri(DATA_DIR"/webkit-1.0/resources/error.html", NULL, NULL);
+    GOwnPtr<gchar> errorPath(g_build_filename(sharedResourcesPath().data(), "resources", "error.html", NULL));
+    gchar* errorURI = g_filename_to_uri(errorPath.get(), 0, 0);
+
     GFile* errorFile = g_file_new_for_uri(errorURI);
     g_free(errorURI);
 

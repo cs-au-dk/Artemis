@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010 Google Inc. All rights reserved.
+ * Copyright (C) 2012 Google Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -82,6 +82,7 @@ struct WebPreferences {
     WebKit::WebString defaultTextEncodingName;
     bool developerExtrasEnabled;
     bool experimentalWebGLEnabled;
+    bool experimentalCSSRegionsEnabled;
     bool javaEnabled;
     bool javaScriptCanAccessClipboard;
     bool javaScriptCanOpenWindowsAutomatically;
@@ -103,13 +104,14 @@ struct WebPreferences {
     bool caretBrowsingEnabled;
     bool acceleratedCompositingForVideoEnabled;
     bool acceleratedCompositingEnabled;
-    bool compositeToTexture;
     bool forceCompositingMode;
     bool accelerated2dCanvasEnabled;
-    bool legacyAccelerated2dCanvasEnabled;
+    bool deferred2dCanvasEnabled;
     bool acceleratedPaintingEnabled;
     bool hixie76WebSocketProtocolEnabled;
     bool perTilePaintingEnabled;
+    bool mockScrollbarsEnabled;
+    bool cssCustomFilterEnabled;
 
     WebPreferences() { reset(); }
     void reset();

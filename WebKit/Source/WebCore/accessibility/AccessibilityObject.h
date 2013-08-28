@@ -47,37 +47,26 @@
 #include "AccessibilityObjectWrapper.h"
 #endif
 
+#if PLATFORM(MAC)
+
 typedef struct _NSRange NSRange;
 
-#ifdef __OBJC__
-@class NSArray;
-@class NSAttributedString;
-@class NSData;
-@class NSMutableAttributedString;
-@class NSString;
-@class NSValue;
-@class NSView;
-@class WebAccessibilityObjectWrapper;
-#else
-class NSArray;
-class NSAttributedString;
-class NSData;
-class NSMutableAttributedString;
-class NSString;
-class NSValue;
-class NSView;
-#if PLATFORM(GTK)
+OBJC_CLASS NSArray;
+OBJC_CLASS NSAttributedString;
+OBJC_CLASS NSData;
+OBJC_CLASS NSMutableAttributedString;
+OBJC_CLASS NSString;
+OBJC_CLASS NSValue;
+OBJC_CLASS NSView;
+OBJC_CLASS WebAccessibilityObjectWrapper;
+
+typedef WebAccessibilityObjectWrapper AccessibilityObjectWrapper;
+
+#elif PLATFORM(GTK)
 typedef struct _AtkObject AtkObject;
 typedef struct _AtkObject AccessibilityObjectWrapper;
-#elif PLATFORM(MAC)
-class WebAccessibilityObjectWrapper;
 #else
 class AccessibilityObjectWrapper;
-#endif
-#endif
-
-#if PLATFORM(MAC)
-typedef WebAccessibilityObjectWrapper AccessibilityObjectWrapper;
 #endif
 
 namespace WebCore {
@@ -95,6 +84,7 @@ class Node;
 class Page;
 class RenderObject;
 class RenderListItem;
+class ScrollableArea;
 class VisibleSelection;
 class Widget;
 
@@ -131,6 +121,7 @@ enum AccessibilityRole {
     DocumentRegionRole,            
     DrawerRole,
     EditableTextRole,
+    FooterRole,
     FormRole,
     GridRole,
     GroupRole,
@@ -254,6 +245,7 @@ enum AccessibilitySearchKey {
     HeadingLevel6SearchKey,
     HeadingSameLevelSearchKey,
     HeadingSearchKey,
+    HighlightedSearchKey,
     ItalicFontSearchKey,
     LandmarkSearchKey,
     LinkSearchKey,
@@ -339,6 +331,7 @@ public:
     virtual bool isImageButton() const { return false; }
     virtual bool isPasswordField() const { return false; }
     virtual bool isNativeTextControl() const { return false; }
+    virtual bool isSearchField() const { return false; }
     virtual bool isWebArea() const { return false; }
     virtual bool isCheckbox() const { return roleValue() == CheckBoxRole; }
     virtual bool isRadioButton() const { return roleValue() == RadioButtonRole; }
@@ -419,6 +412,7 @@ public:
     virtual bool hasSameStyle(RenderObject*) const { return false; }
     bool hasStaticText() const { return roleValue() == StaticTextRole; }
     virtual bool hasUnderline() const { return false; }
+    bool hasHighlighting() const;
 
     virtual bool canSetFocusAttribute() const { return false; }
     virtual bool canSetTextRangeAttributes() const { return false; }
@@ -468,9 +462,9 @@ public:
     virtual void determineARIADropEffects(Vector<String>&) { }
     
     // Called on the root AX object to return the deepest available element.
-    virtual AccessibilityObject* accessibilityHitTest(const LayoutPoint&) const { return 0; }
+    virtual AccessibilityObject* accessibilityHitTest(const IntPoint&) const { return 0; }
     // Called on the AX object after the render tree determines which is the right AccessibilityRenderObject.
-    virtual AccessibilityObject* elementAccessibilityHitTest(const LayoutPoint&) const;
+    virtual AccessibilityObject* elementAccessibilityHitTest(const IntPoint&) const;
 
     virtual AccessibilityObject* focusedUIElement() const;
 
@@ -510,10 +504,13 @@ public:
     virtual Element* anchorElement() const { return 0; }
     virtual Element* actionElement() const { return 0; }
     virtual LayoutRect boundingBoxRect() const { return LayoutRect(); }
+    IntRect pixelSnappedBoundingBoxRect() const { return pixelSnappedIntRect(boundingBoxRect()); }
     virtual LayoutRect elementRect() const = 0;
-    virtual LayoutSize size() const { return elementRect().size(); }
-    virtual LayoutPoint clickPoint();
-    static LayoutRect boundingBoxForQuads(RenderObject*, const Vector<FloatQuad>&);
+    IntRect pixelSnappedElementRect() const { return pixelSnappedIntRect(elementRect()); }
+    LayoutSize size() const { return elementRect().size(); }
+    IntSize pixelSnappedSize() const { return elementRect().pixelSnappedSize(); }
+    virtual IntPoint clickPoint();
+    static IntRect boundingBoxForQuads(RenderObject*, const Vector<FloatQuad>&);
     
     virtual PlainTextRange selectedTextRange() const { return PlainTextRange(); }
     unsigned selectionStart() const { return selectedTextRange().start; }
@@ -565,7 +562,11 @@ public:
     virtual void updateChildrenIfNecessary();
     virtual void setNeedsToUpdateChildren() { }
     virtual void clearChildren();
+#if PLATFORM(MAC)
+    virtual void detachFromParent();
+#else
     virtual void detachFromParent() { }
+#endif
 
     virtual void selectedChildren(AccessibilityChildrenVector&) { }
     virtual void visibleChildren(AccessibilityChildrenVector&) { }
@@ -574,6 +575,8 @@ public:
     virtual AccessibilityObject* activeDescendant() const { return 0; }    
     virtual void handleActiveDescendantChanged() { }
     virtual void handleAriaExpandedChanged() { }
+    bool isDescendantOfObject(const AccessibilityObject*) const;
+    bool isAncestorOfObject(const AccessibilityObject*) const;
     
     static AccessibilityRole ariaRoleToWebCoreRole(const String&);
     const AtomicString& getAttribute(const QualifiedName&) const;
@@ -592,7 +595,7 @@ public:
     VisiblePositionRange visiblePositionRangeForRange(const PlainTextRange&) const;
 
     String stringForVisiblePositionRange(const VisiblePositionRange&) const;
-    virtual LayoutRect boundsForVisiblePositionRange(const VisiblePositionRange&) const { return LayoutRect(); }
+    virtual IntRect boundsForVisiblePositionRange(const VisiblePositionRange&) const { return IntRect(); }
     int lengthForVisiblePositionRange(const VisiblePositionRange&) const;
     virtual void setSelectedVisiblePositionRange(const VisiblePositionRange&) const { }
 
@@ -623,7 +626,7 @@ public:
     PlainTextRange doAXStyleRangeForIndex(unsigned) const;
 
     virtual String doAXStringForRange(const PlainTextRange&) const { return String(); }
-    virtual LayoutRect doAXBoundsForRange(const PlainTextRange&) const { return LayoutRect(); }
+    virtual IntRect doAXBoundsForRange(const PlainTextRange&) const { return IntRect(); }
     String listMarkerTextForNodeAndPosition(Node*, const VisiblePosition&) const;
 
     unsigned doAXLineForIndex(unsigned);
@@ -653,7 +656,14 @@ public:
     
     // CSS3 Speech properties.
     virtual ESpeak speakProperty() const { return SpeakNormal; }
-    
+
+    // Make this object visible by scrolling as many nested scrollable views as needed.
+    virtual void scrollToMakeVisible() const;
+    // Same, but if the whole object can't be made visible, try for this subrect, in local coordinates.
+    virtual void scrollToMakeVisibleWithSubFocus(const IntRect&) const;
+    // Scroll this object to a given point in global coordinates of the top-level window.
+    virtual void scrollToGlobalPoint(const IntPoint&) const;
+
 #if HAVE(ACCESSIBILITY)
 #if PLATFORM(GTK)
     AccessibilityObjectWrapper* wrapper() const;
@@ -666,7 +676,13 @@ public:
     }
 #endif
 #endif
-
+    
+#if PLATFORM(MAC)
+    void overrideAttachmentParent(AccessibilityObject* parent);
+#else
+    void overrideAttachmentParent(AccessibilityObject*) { }
+#endif
+    
 #if HAVE(ACCESSIBILITY)
     // a platform-specific method for determining if an attachment is ignored
     bool accessibilityIgnoreAttachment() const;
@@ -687,6 +703,10 @@ protected:
     mutable bool m_haveChildren;
     AccessibilityRole m_role;
     
+    // If this object itself scrolls, return its ScrollableArea.
+    virtual ScrollableArea* getScrollableAreaIfScrollable() const { return 0; }
+    virtual void scrollTo(const IntPoint&) const { }
+
     virtual bool isDetached() const { return true; }
     static bool isAccessibilityObjectSearchMatch(AccessibilityObject*, AccessibilitySearchCriteria*);
     static bool isAccessibilityTextSearchMatch(AccessibilityObject*, AccessibilitySearchCriteria*);

@@ -25,6 +25,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#include "LauncherInspectorWindow.h"
 #include <errno.h>
 #include <gtk/gtk.h>
 #include <stdlib.h>
@@ -40,6 +41,7 @@ static void activateUriEntryCb(GtkWidget* entry, gpointer data)
     WebKitWebView *webView = g_object_get_data(G_OBJECT(entry), "web-view");
     const gchar* uri = gtk_entry_get_text(GTK_ENTRY(entry));
     g_assert(uri);
+    gtk_entry_set_icon_from_pixbuf(GTK_ENTRY(entry), GTK_ENTRY_ICON_PRIMARY, 0);
     webkit_web_view_load_uri(webView, uri);
 }
 
@@ -123,20 +125,117 @@ static gboolean closeWebViewCb(WebKitWebView* webView, GtkWidget* window)
     return TRUE;
 }
 
-static GtkWidget* createBrowser(GtkWidget* window, GtkWidget* uriEntry, GtkWidget* statusbar, WebKitWebView* webView)
+static gboolean webViewFullscreenMessageWindowClose(GtkWidget *dialog)
 {
+    if (GTK_IS_WIDGET(dialog))
+        gtk_widget_destroy(dialog);
+    return FALSE;
+}
+
+static gboolean webViewWindowStateEvent(GtkWidget *widget, GdkEventWindowState *event, WebKitWebView *webView)
+{
+    if (event->new_window_state & GDK_WINDOW_STATE_FULLSCREEN) {
+        WebKitWebFrame *frame = webkit_web_view_get_main_frame(webView);
+        const gchar *uri = webkit_web_frame_get_uri(frame);
+        GtkWidget *window = gtk_widget_get_toplevel(GTK_WIDGET(webView));
+        if (!gtk_widget_is_toplevel(window) || !GTK_IS_WINDOW(window) || GTK_IS_OFFSCREEN_WINDOW(window))
+            window = 0;
+
+        GtkWidget *dialog = gtk_message_dialog_new(window ? GTK_WINDOW(window) : 0,
+                                                    GTK_DIALOG_MODAL,
+                                                    GTK_MESSAGE_INFO,
+                                                    GTK_BUTTONS_CLOSE,
+                                                    "%s is now full screen. Press ESC or f to exit.", uri);
+        g_signal_connect_swapped(dialog, "response", G_CALLBACK(gtk_widget_destroy), dialog);
+        g_timeout_add(1500, (GSourceFunc) webViewFullscreenMessageWindowClose, dialog);
+        gtk_dialog_run(GTK_DIALOG(dialog));
+    }
+    return TRUE;
+}
+
+static void hideWidget(GtkWidget* widget, gpointer data)
+{
+    if (!GTK_IS_SCROLLED_WINDOW(widget))
+        gtk_widget_hide(widget);
+}
+
+static void showWidget(GtkWidget* widget, gpointer data)
+{
+    if (!GTK_IS_SCROLLED_WINDOW(widget))
+        gtk_widget_show(widget);
+}
+
+static gboolean webViewEnteringFullScreen(WebKitWebView *webView, GObject *element, GtkWidget* vbox)
+{
+    WebKitWebFrame *frame = webkit_web_view_get_main_frame(webView);
+    const gchar *uri = webkit_web_frame_get_uri(frame);
+    GtkWidget *window = gtk_widget_get_toplevel(GTK_WIDGET(webView));
+    if (!gtk_widget_is_toplevel(window) || !GTK_IS_WINDOW(window) || GTK_IS_OFFSCREEN_WINDOW(window))
+        window = 0;
+
+    GtkWidget *dialog = gtk_message_dialog_new(window ? GTK_WINDOW(window) : 0,
+                                               GTK_DIALOG_MODAL,
+                                               GTK_MESSAGE_INFO,
+                                               GTK_BUTTONS_YES_NO,
+                                               "Allow full screen display of %s ?", uri);
+    gint result = gtk_dialog_run(GTK_DIALOG(dialog));
+    if (result == GTK_RESPONSE_YES) {
+        gtk_container_foreach(GTK_CONTAINER(vbox), (GtkCallback) hideWidget, NULL);
+        gtk_widget_destroy(GTK_WIDGET(dialog));
+        return FALSE;
+    }
+    gtk_widget_destroy(GTK_WIDGET(dialog));
+    return TRUE;
+}
+
+static gboolean webViewLeavingFullScreen(WebKitWebView *webView, GObject *element, GtkWidget* vbox)
+{
+    GtkWidget *window = gtk_widget_get_toplevel(GTK_WIDGET(webView));
+    if (gtk_widget_is_toplevel(window) && GTK_IS_WINDOW(window) && !GTK_IS_OFFSCREEN_WINDOW(window))
+        g_signal_handlers_disconnect_by_func(window, G_CALLBACK(webViewWindowStateEvent), webView);
+    gtk_container_foreach(GTK_CONTAINER(vbox), (GtkCallback) showWidget, NULL);
+    return FALSE;
+}
+
+static void iconLoadedCb(WebKitWebView* webView, const char* iconURI, GtkWidget* uriEntry)
+{
+    GdkPixbuf *icon = webkit_web_view_try_get_favicon_pixbuf(webView, 16, 16);
+    if (!icon)
+        return;
+
+    gtk_entry_set_icon_from_pixbuf(GTK_ENTRY(uriEntry), GTK_ENTRY_ICON_PRIMARY, icon);
+    g_object_unref(icon);
+}
+
+static GtkWidget *inspectorInspectWebViewCb(WebKitWebInspector *inspector, WebKitWebView *webView, GtkWindow* window)
+{
+    GtkWidget *inspectorWindow = launcherInspectorWindowNew(inspector, window);
+    return GTK_WIDGET(launcherInspectorWindowGetWebView(LAUNCHER_INSPECTOR_WINDOW(inspectorWindow)));
+}
+
+static GtkWidget* createBrowser(GtkWidget* window, GtkWidget* uriEntry, GtkWidget* statusbar, WebKitWebView* webView, GtkWidget* vbox)
+{
+    char *iconDatabasePath;
     GtkWidget *scrolledWindow = gtk_scrolled_window_new(NULL, NULL);
     gtk_scrolled_window_set_policy(GTK_SCROLLED_WINDOW(scrolledWindow), GTK_POLICY_AUTOMATIC, GTK_POLICY_AUTOMATIC);
 
     gtk_container_add(GTK_CONTAINER(scrolledWindow), GTK_WIDGET(webView));
 
+    iconDatabasePath = g_build_filename(g_get_user_data_dir(), "webkit", "icondatabase", NULL);
+    webkit_favicon_database_set_path(webkit_get_favicon_database(), iconDatabasePath);
+    g_free(iconDatabasePath);
+
     g_signal_connect(webView, "notify::title", G_CALLBACK(notifyTitleCb), window);
     g_signal_connect(webView, "notify::load-status", G_CALLBACK(notifyLoadStatusCb), uriEntry);
     g_signal_connect(webView, "notify::progress", G_CALLBACK(notifyProgressCb), window);
+    g_signal_connect(webView, "icon-loaded", G_CALLBACK(iconLoadedCb), uriEntry);
     g_signal_connect(webView, "hovering-over-link", G_CALLBACK(linkHoverCb), statusbar);
     g_signal_connect(webView, "create-web-view", G_CALLBACK(createWebViewCb), window);
     g_signal_connect(webView, "web-view-ready", G_CALLBACK(webViewReadyCb), window);
     g_signal_connect(webView, "close-web-view", G_CALLBACK(closeWebViewCb), window);
+    g_signal_connect(webView, "entering-fullscreen", G_CALLBACK(webViewEnteringFullScreen), vbox);
+    g_signal_connect(webView, "leaving-fullscreen", G_CALLBACK(webViewLeavingFullScreen), vbox);
+    g_signal_connect(webkit_web_view_get_inspector(webView), "inspect-web-view", G_CALLBACK(inspectorInspectWebViewCb), window);
 
     return scrolledWindow;
 }
@@ -214,7 +313,7 @@ static GtkWidget* createWindow(WebKitWebView** outWebView)
 #endif
     statusbar = createStatusbar(webView);
     gtk_box_pack_start(GTK_BOX(vbox), createToolbar(uriEntry, webView), FALSE, FALSE, 0);
-    gtk_box_pack_start(GTK_BOX(vbox), createBrowser(window, uriEntry, statusbar, webView), TRUE, TRUE, 0);
+    gtk_box_pack_start(GTK_BOX(vbox), createBrowser(window, uriEntry, statusbar, webView, vbox), TRUE, TRUE, 0);
     gtk_box_pack_start(GTK_BOX(vbox), statusbar, FALSE, FALSE, 0);
 
     gtk_container_add(GTK_CONTAINER(window), vbox);
@@ -230,7 +329,7 @@ static GtkWidget* createWindow(WebKitWebView** outWebView)
 static gchar* filenameToURL(const char* filename)
 {
     if (!g_file_test(filename, G_FILE_TEST_EXISTS))
-        return 0;
+        return NULL;
 
     GFile *gfile = g_file_new_for_path(filename);
     gchar *fileURL = g_file_get_uri(gfile);
@@ -306,6 +405,12 @@ static gboolean parseOptionEntryCallback(const gchar *optionNameFull, const gcha
     return TRUE;
 }
 
+static gboolean isValidParameterType(GType gParamType)
+{
+    return (gParamType == G_TYPE_BOOLEAN || gParamType == G_TYPE_STRING || gParamType == G_TYPE_INT
+            || gParamType == G_TYPE_FLOAT);
+}
+
 static GOptionEntry* getOptionEntriesFromWebKitWebSettings(WebKitWebSettings *webSettings)
 {
     GParamSpec **propertySpecs;
@@ -314,33 +419,33 @@ static GOptionEntry* getOptionEntriesFromWebKitWebSettings(WebKitWebSettings *we
 
     propertySpecs = g_object_class_list_properties(G_OBJECT_GET_CLASS(webSettings), &numProperties);
     if (!propertySpecs)
-        return 0;
+        return NULL;
 
     optionEntries = g_new0(GOptionEntry, numProperties + 1);
     numEntries = 0;
     for (i = 0; i < numProperties; i++) {
         GParamSpec *param = propertySpecs[i];
 
-        /* Fill in structures only for writable properties. */
-        if (!param || !(param->flags & G_PARAM_WRITABLE))
+        /* Fill in structures only for writable and not construct-only properties. */
+        if (!param || !(param->flags & G_PARAM_WRITABLE) || (param->flags & G_PARAM_CONSTRUCT_ONLY))
             continue;
 
         GType gParamType = G_PARAM_SPEC_VALUE_TYPE(param);
-        if (gParamType == G_TYPE_BOOLEAN || gParamType == G_TYPE_STRING || gParamType == G_TYPE_INT
-            || gParamType == G_TYPE_FLOAT) {
-            GOptionEntry *optionEntry = &optionEntries[numEntries++];
-            optionEntry->long_name = g_param_spec_get_name(param);
+        if (!isValidParameterType(gParamType))
+            continue;
 
-            /* There is no easy way to figure our short name for generated option entries.
-               optionEntry.short_name=*/
-            /* For bool arguments "enable" type make option argument not required. */
-            if (gParamType == G_TYPE_BOOLEAN && (strstr(optionEntry->long_name, "enable")))
-                optionEntry->flags = G_OPTION_FLAG_OPTIONAL_ARG;
-            optionEntry->arg = G_OPTION_ARG_CALLBACK;
-            optionEntry->arg_data = parseOptionEntryCallback;
-            optionEntry->description = g_param_spec_get_blurb(param);
-            optionEntry->arg_description = g_type_name(gParamType);
-        }
+        GOptionEntry *optionEntry = &optionEntries[numEntries++];
+        optionEntry->long_name = g_param_spec_get_name(param);
+
+        /* There is no easy way to figure our short name for generated option entries.
+           optionEntry.short_name=*/
+        /* For bool arguments "enable" type make option argument not required. */
+        if (gParamType == G_TYPE_BOOLEAN && (strstr(optionEntry->long_name, "enable")))
+            optionEntry->flags = G_OPTION_FLAG_OPTIONAL_ARG;
+        optionEntry->arg = G_OPTION_ARG_CALLBACK;
+        optionEntry->arg_data = parseOptionEntryCallback;
+        optionEntry->description = g_param_spec_get_blurb(param);
+        optionEntry->arg_description = g_type_name(gParamType);
     }
     g_free(propertySpecs);
 

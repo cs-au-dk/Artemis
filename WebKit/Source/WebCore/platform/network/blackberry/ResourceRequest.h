@@ -31,12 +31,33 @@ namespace WebCore {
 
 class ResourceRequest : public ResourceRequestBase {
 public:
+    // The type of this ResourceRequest, based on how the resource will be used.
+    enum TargetType {
+        TargetIsMainFrame,
+        TargetIsSubframe,
+        TargetIsSubresource, // Resource is a generic subresource. (Generally a specific type should be specified)
+        TargetIsStyleSheet,
+        TargetIsScript,
+        TargetIsFontResource,
+        TargetIsImage,
+        TargetIsObject,
+        TargetIsMedia,
+        TargetIsWorker,
+        TargetIsSharedWorker,
+        TargetIsPrefetch,
+        TargetIsPrerender,
+        TargetIsFavicon,
+        TargetIsXHR,
+        TargetIsTextTrack,
+        TargetIsUnspecified,
+    };
     ResourceRequest(const String& url)
         : ResourceRequestBase(KURL(ParsedURLString, url), UseProtocolCachePolicy)
         , m_isXMLHTTPRequest(false)
         , m_mustHandleInternally(false)
         , m_isRequestedByPlugin(false)
         , m_forceDownload(false)
+        , m_targetType(TargetIsUnspecified)
     {
     }
 
@@ -46,6 +67,7 @@ public:
         , m_mustHandleInternally(false)
         , m_isRequestedByPlugin(false)
         , m_forceDownload(false)
+        , m_targetType(TargetIsUnspecified)
     {
     }
 
@@ -55,6 +77,7 @@ public:
         , m_mustHandleInternally(false)
         , m_isRequestedByPlugin(false)
         , m_forceDownload(false)
+        , m_targetType(TargetIsUnspecified)
     {
         setHTTPReferrer(referrer);
     }
@@ -65,6 +88,7 @@ public:
         , m_mustHandleInternally(false)
         , m_isRequestedByPlugin(false)
         , m_forceDownload(false)
+        , m_targetType(TargetIsUnspecified)
     {
     }
 
@@ -90,9 +114,18 @@ public:
     void setMustHandleInternally(bool mustHandleInternally) { m_mustHandleInternally = mustHandleInternally; }
     bool mustHandleInternally() const { return m_mustHandleInternally; }
 
-    void initializePlatformRequest(BlackBerry::Platform::NetworkRequest&, bool isInitial = false) const;
+    void initializePlatformRequest(BlackBerry::Platform::NetworkRequest&, bool cookiesEnabled, bool isInitial = false, bool isRedirect = false) const;
     void setForceDownload(bool forceDownload) { m_forceDownload = true; }
     bool forceDownload() const { return m_forceDownload; }
+
+    // What this request is for.
+    TargetType targetType() const { return m_targetType; }
+    void setTargetType(TargetType type) { m_targetType = type; }
+
+    static TargetType targetTypeFromMimeType(const String& mimeType);
+
+    void clearHTTPContentLength();
+    void clearHTTPContentType();
 
 private:
     friend class ResourceRequestBase;
@@ -104,6 +137,7 @@ private:
     bool m_mustHandleInternally;
     bool m_isRequestedByPlugin;
     bool m_forceDownload;
+    TargetType m_targetType;
 
     void doUpdatePlatformRequest() { }
     void doUpdateResourceRequest() { }

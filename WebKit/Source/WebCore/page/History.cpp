@@ -41,18 +41,9 @@
 namespace WebCore {
 
 History::History(Frame* frame)
-    : m_frame(frame)
+    : DOMWindowProperty(frame)
+    , m_lastStateObjectRequested(0)
 {
-}
-
-Frame* History::frame() const
-{
-    return m_frame;
-}
-
-void History::disconnectFrame()
-{
-    m_frame = 0;
 }
 
 unsigned History::length() const
@@ -62,6 +53,33 @@ unsigned History::length() const
     if (!m_frame->page())
         return 0;
     return m_frame->page()->backForward()->count();
+}
+
+SerializedScriptValue* History::state()
+{
+    m_lastStateObjectRequested = stateInternal();
+    return m_lastStateObjectRequested;
+}
+
+SerializedScriptValue* History::stateInternal() const
+{
+    if (!m_frame)
+        return 0;
+
+    if (HistoryItem* historyItem = m_frame->loader()->history()->currentItem())
+        return historyItem->stateObject();
+
+    return 0;
+}
+
+bool History::stateChanged() const
+{
+    return m_lastStateObjectRequested != stateInternal();
+}
+
+bool History::isSameAsCurrentState(SerializedScriptValue* state) const
+{
+    return state == stateInternal();
 }
 
 void History::back()
@@ -98,11 +116,11 @@ void History::go(ScriptExecutionContext* context, int distance)
         return;
 
     ASSERT(isMainThread());
-    Frame* activeFrame = static_cast<Document*>(context)->frame();
-    if (!activeFrame)
+    Document* activeDocument = static_cast<Document*>(context);
+    if (!activeDocument)
         return;
 
-    if (!activeFrame->loader()->shouldAllowNavigation(m_frame))
+    if (!activeDocument->canNavigate(m_frame))
         return;
 
     m_frame->navigationScheduler()->scheduleHistoryNavigation(distance);

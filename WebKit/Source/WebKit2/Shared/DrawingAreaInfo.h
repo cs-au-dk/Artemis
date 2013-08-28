@@ -30,10 +30,7 @@ namespace WebKit {
 
 enum DrawingAreaType {
     DrawingAreaTypeImpl,
-#if USE(TILED_BACKING_STORE)
-    DrawingAreaTypeTiled,
-#endif
-#if PLATFORM(MAC)
+#if PLATFORM(MAC) && ENABLE(THREADED_SCROLLING)
     DrawingAreaTypeTiledCoreAnimation,
 #endif
 };

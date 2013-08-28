@@ -27,6 +27,10 @@
 
 #include "BrowserWindow.h"
 
+#include "BrowserDownloadsBar.h"
+#include "BrowserSettingsDialog.h"
+#include <string.h>
+
 enum {
     PROP_0,
 
@@ -41,9 +45,12 @@ struct _BrowserWindow {
     GtkWidget *uriEntry;
     GtkWidget *backItem;
     GtkWidget *forwardItem;
+    GtkWidget *zoomInItem;
+    GtkWidget *zoomOutItem;
     GtkWidget *statusLabel;
+    GtkWidget *settingsDialog;
     WebKitWebView *webView;
-
+    GtkWidget *downloadsBar;
 };
 
 struct _BrowserWindowClass {
@@ -51,6 +58,9 @@ struct _BrowserWindowClass {
 };
 
 static const char *defaultWindowTitle = "WebKitGTK+ MiniBrwoser";
+static const gdouble minimumZoomLevel = 0.5;
+static const gdouble maximumZoomLevel = 3;
+static const gdouble zoomStep = 1.2;
 static gint windowCount = 0;
 
 G_DEFINE_TYPE(BrowserWindow, browser_window, GTK_TYPE_WINDOW)
@@ -70,7 +80,12 @@ static void resetStatusText(GtkWidget *widget, BrowserWindow *window)
 
 static void activateUriEntryCallback(BrowserWindow *window)
 {
-    webkit_web_view_load_uri(window->webView, gtk_entry_get_text(GTK_ENTRY(window->uriEntry)));
+    browser_window_load_uri(window, gtk_entry_get_text(GTK_ENTRY(window->uriEntry)));
+}
+
+static void reloadCallback(BrowserWindow *window)
+{
+    webkit_web_view_reload(window->webView);
 }
 
 static void goBackCallback(BrowserWindow *window)
@@ -81,6 +96,19 @@ static void goBackCallback(BrowserWindow *window)
 static void goForwardCallback(BrowserWindow *window)
 {
     webkit_web_view_go_forward(window->webView);
+}
+
+static void settingsCallback(BrowserWindow *window)
+{
+    if (window->settingsDialog) {
+        gtk_window_present(GTK_WINDOW(window->settingsDialog));
+        return;
+    }
+
+    window->settingsDialog = browser_settings_dialog_new(webkit_web_view_get_settings(window->webView));
+    gtk_window_set_transient_for(GTK_WINDOW(window->settingsDialog), GTK_WINDOW(window));
+    g_object_add_weak_pointer(G_OBJECT(window->settingsDialog), (gpointer *)&window->settingsDialog);
+    gtk_widget_show(window->settingsDialog);
 }
 
 static void webViewURIChanged(WebKitWebView *webView, GParamSpec *pspec, BrowserWindow *window)
@@ -106,6 +134,18 @@ static void webViewLoadProgressChanged(WebKitWebView *webView, GParamSpec *pspec
     gtk_entry_set_progress_fraction(GTK_ENTRY(window->uriEntry), progress);
     if (progress == 1.0)
         g_timeout_add(500, (GSourceFunc)resetEntryProgress, window->uriEntry);
+}
+
+static void downloadStarted(WebKitWebContext *webContext, WebKitDownload *download, BrowserWindow *window)
+{
+    if (!window->downloadsBar) {
+        window->downloadsBar = browser_downloads_bar_new();
+        gtk_box_pack_start(GTK_BOX(window->mainBox), window->downloadsBar, FALSE, FALSE, 0);
+        gtk_box_reorder_child(GTK_BOX(window->mainBox), window->downloadsBar, 0);
+        g_object_add_weak_pointer(G_OBJECT(window->downloadsBar), (gpointer *)&(window->downloadsBar));
+        gtk_widget_show(window->downloadsBar);
+    }
+    browser_downloads_bar_add_download(BROWSER_DOWNLOADS_BAR(window->downloadsBar), download);
 }
 
 static void browserWindowHistoryItemSelected(BrowserWindow *window, GtkMenuItem *item)
@@ -147,9 +187,6 @@ static GtkWidget *browserWindowCreateBackForwardMenu(BrowserWindow *window, GLis
         gtk_widget_show(menuItem);
     }
 
-    /* FIXME: This shoulnd't be necessary when didMouseMoveOverElement
-     * is implemented in WebKit2 GTK+ API.
-     */
     g_signal_connect(menu, "hide", G_CALLBACK(resetStatusText), window);
 
     return menu;
@@ -212,6 +249,76 @@ static GtkWidget *webViewCreate(WebKitWebView *webView, BrowserWindow *window)
     g_signal_connect(newWebView, "ready-to-show", G_CALLBACK(webViewReadyToShow), newWindow);
     g_signal_connect(newWebView, "close", G_CALLBACK(webViewClose), newWindow);
     return GTK_WIDGET(newWebView);
+}
+
+static gboolean webViewLoadFailed(WebKitWebView *webView, WebKitLoadEvent loadEvent, const char *failingURI, GError *error, BrowserWindow *window)
+{
+    gtk_entry_set_progress_fraction(GTK_ENTRY(window->uriEntry), 0.);
+    return FALSE;
+}
+
+static gboolean webViewDecidePolicy(WebKitWebView *webView, WebKitPolicyDecision *decision, WebKitPolicyDecisionType decisionType, BrowserWindow *window)
+{
+    if (decisionType != WEBKIT_POLICY_DECISION_TYPE_NAVIGATION_ACTION)
+        return FALSE;
+
+    WebKitNavigationPolicyDecision *navigationDecision = WEBKIT_NAVIGATION_POLICY_DECISION(decision);
+    if (webkit_navigation_policy_decision_get_navigation_type(navigationDecision) != WEBKIT_NAVIGATION_TYPE_LINK_CLICKED
+        || webkit_navigation_policy_decision_get_mouse_button(navigationDecision) != 2)
+        return FALSE;
+
+    WebKitWebView *newWebView = WEBKIT_WEB_VIEW(webkit_web_view_new_with_context(webkit_web_view_get_context(webView)));
+    webkit_web_view_set_settings(newWebView, webkit_web_view_get_settings(webView));
+    GtkWidget *newWindow = browser_window_new(newWebView);
+    webkit_web_view_load_request(newWebView, webkit_navigation_policy_decision_get_request(navigationDecision));
+    gtk_widget_show(newWindow);
+
+    webkit_policy_decision_ignore(decision);
+    return TRUE;
+}
+
+static void webViewMouseTargetChanged(WebKitWebView *webView, WebKitHitTestResult *hitTestResult, guint mouseModifiers, BrowserWindow *window)
+{
+    if (!webkit_hit_test_result_context_is_link(hitTestResult)) {
+        browserWindowSetStatusText(window, NULL);
+        return;
+    }
+    browserWindowSetStatusText(window, webkit_hit_test_result_get_link_uri(hitTestResult));
+}
+
+static gboolean browserWindowCanZoomIn(BrowserWindow *window)
+{
+    gdouble zoomLevel = webkit_web_view_get_zoom_level(window->webView) * zoomStep;
+    return zoomLevel < maximumZoomLevel;
+}
+
+static gboolean browserWindowCanZoomOut(BrowserWindow *window)
+{
+    gdouble zoomLevel = webkit_web_view_get_zoom_level(window->webView) / zoomStep;
+    return zoomLevel > minimumZoomLevel;
+}
+
+static void browserWindowUpdateZoomActions(BrowserWindow *window)
+{
+    gtk_widget_set_sensitive(window->zoomInItem, browserWindowCanZoomIn(window));
+    gtk_widget_set_sensitive(window->zoomOutItem, browserWindowCanZoomOut(window));
+}
+
+static void webViewZoomLevelChanged(GObject *object, GParamSpec *paramSpec, BrowserWindow *window)
+{
+    browserWindowUpdateZoomActions(window);
+}
+
+static void zoomInCallback(BrowserWindow *window)
+{
+    gdouble zoomLevel = webkit_web_view_get_zoom_level(window->webView) * zoomStep;
+    webkit_web_view_set_zoom_level(window->webView, zoomLevel);
+}
+
+static void zoomOutCallback(BrowserWindow *window)
+{
+    gdouble zoomLevel = webkit_web_view_get_zoom_level(window->webView) / zoomStep;
+    webkit_web_view_set_zoom_level(window->webView, zoomLevel);
 }
 
 static void browserWindowFinalize(GObject *gObject)
@@ -277,6 +384,23 @@ static void browser_window_init(BrowserWindow *window)
     gtk_toolbar_insert(GTK_TOOLBAR(toolbar), item, -1);
     gtk_widget_show(GTK_WIDGET(item));
 
+    item = gtk_tool_button_new_from_stock(GTK_STOCK_PREFERENCES);
+    g_signal_connect_swapped(G_OBJECT(item), "clicked", G_CALLBACK(settingsCallback), window);
+    gtk_toolbar_insert(GTK_TOOLBAR(toolbar), item, -1);
+    gtk_widget_show(GTK_WIDGET(item));
+
+    item = gtk_tool_button_new_from_stock(GTK_STOCK_ZOOM_OUT);
+    window->zoomOutItem = GTK_WIDGET(item);
+    g_signal_connect_swapped(item, "clicked", G_CALLBACK(zoomOutCallback), window);
+    gtk_toolbar_insert(GTK_TOOLBAR(toolbar), item, -1);
+    gtk_widget_show(GTK_WIDGET(item));
+
+    item = gtk_tool_button_new_from_stock(GTK_STOCK_ZOOM_IN);
+    window->zoomInItem = GTK_WIDGET(item);
+    g_signal_connect_swapped(item, "clicked", G_CALLBACK(zoomInCallback), window);
+    gtk_toolbar_insert(GTK_TOOLBAR(toolbar), item, -1);
+    gtk_widget_show(GTK_WIDGET(item));
+
     item = gtk_tool_item_new();
     gtk_tool_item_set_expand(item, TRUE);
     gtk_container_add(GTK_CONTAINER(item), window->uriEntry);
@@ -285,7 +409,7 @@ static void browser_window_init(BrowserWindow *window)
     gtk_widget_show(GTK_WIDGET(item));
 
     item = gtk_tool_button_new_from_stock(GTK_STOCK_OK);
-    g_signal_connect_swapped(item, "clicked", G_CALLBACK(activateUriEntryCallback), (gpointer)window);
+    g_signal_connect_swapped(item, "clicked", G_CALLBACK(reloadCallback), window);
     gtk_toolbar_insert(GTK_TOOLBAR(toolbar), item, -1);
     gtk_widget_show(GTK_WIDGET(item));
 
@@ -302,10 +426,18 @@ static void browserWindowConstructed(GObject *gObject)
 {
     BrowserWindow *window = BROWSER_WINDOW(gObject);
 
+    browserWindowUpdateZoomActions(window);
+
     g_signal_connect(window->webView, "notify::uri", G_CALLBACK(webViewURIChanged), window);
     g_signal_connect(window->webView, "notify::estimated-load-progress", G_CALLBACK(webViewLoadProgressChanged), window);
     g_signal_connect(window->webView, "notify::title", G_CALLBACK(webViewTitleChanged), window);
     g_signal_connect(window->webView, "create", G_CALLBACK(webViewCreate), window);
+    g_signal_connect(window->webView, "load-failed", G_CALLBACK(webViewLoadFailed), window);
+    g_signal_connect(window->webView, "decide-policy", G_CALLBACK(webViewDecidePolicy), window);
+    g_signal_connect(window->webView, "mouse-target-changed", G_CALLBACK(webViewMouseTargetChanged), window);
+    g_signal_connect(window->webView, "notify::zoom-level", G_CALLBACK(webViewZoomLevelChanged), window);
+
+    g_signal_connect(webkit_web_view_get_context(window->webView), "download-started", G_CALLBACK(downloadStarted), window);
 
     WebKitBackForwardList *backForwadlist = webkit_web_view_get_back_forward_list(window->webView);
     g_signal_connect(backForwadlist, "changed", G_CALLBACK(backForwadlistChanged), window);
@@ -364,4 +496,17 @@ WebKitWebView *browser_window_get_view(BrowserWindow *window)
     g_return_val_if_fail(BROWSER_IS_WINDOW(window), 0);
 
     return window->webView;
+}
+
+void browser_window_load_uri(BrowserWindow *window, const char *uri)
+{
+    g_return_if_fail(BROWSER_IS_WINDOW(window));
+    g_return_if_fail(uri);
+
+    if (!g_str_has_prefix(uri, "javascript:")) {
+        webkit_web_view_load_uri(window->webView, uri);
+        return;
+    }
+
+    webkit_web_view_run_javascript(window->webView, strstr(uri, "javascript:"), NULL, NULL);
 }

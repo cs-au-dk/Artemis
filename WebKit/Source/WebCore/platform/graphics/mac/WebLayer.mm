@@ -32,9 +32,11 @@
 #import "GraphicsContext.h"
 #import "GraphicsLayerCA.h"
 #import "PlatformCALayer.h"
+#import "ThemeMac.h"
 #import <objc/objc-runtime.h>
 #import <QuartzCore/QuartzCore.h>
 #import <wtf/UnusedParam.h>
+#import "WebCoreSystemInterface.h"
 
 @interface CALayer(WebCoreCALayerPrivate)
 - (void)reloadValueForKeyPath:(NSString *)keyPath;
@@ -76,16 +78,37 @@ void drawLayerContents(CGContextRef context, CALayer *layer, WebCore::PlatformCA
     
     // It's important to get the clip from the context, because it may be significantly
     // smaller than the layer bounds (e.g. tiled layers)
-    CGRect clipBounds = CGContextGetClipBoundingBox(context);
+    FloatRect clipBounds = CGContextGetClipBoundingBox(context);
+
+    // The focus ring machinery needs to know the exact clip rect in a flipped, non-transformed coordinate system.
+    ThemeMac::setFocusRingClipRect(FloatRect(clipBounds.x(), layerBounds.size.height - clipBounds.maxY(), clipBounds.width(), clipBounds.height()));
+
+#if !defined(BUILDING_ON_SNOW_LEOPARD)
+    __block GraphicsContext* ctx = &graphicsContext;
+
+    wkCALayerEnumerateRectsBeingDrawnWithBlock(layer, context, ^(CGRect rect){
+        FloatRect rectBeingDrawn(rect);
+        rectBeingDrawn.intersect(clipBounds);
+        
+        GraphicsContextStateSaver stateSaver(*ctx);
+        ctx->clip(rectBeingDrawn);
+        
+        layerContents->platformCALayerPaintContents(*ctx, enclosingIntRect(rectBeingDrawn));
+    });
+
+#else
     IntRect clip(enclosingIntRect(clipBounds));
     layerContents->platformCALayerPaintContents(graphicsContext, clip);
+#endif
+
+    ThemeMac::setFocusRingClipRect(FloatRect());
 
     [NSGraphicsContext restoreGraphicsState];
 
     // Re-fetch the layer owner, since <rdar://problem/9125151> indicates that it might have been destroyed during painting.
     layerContents = platformLayer->owner();
     ASSERT(layerContents);
-    if (layerContents && layerContents->platformCALayerShowRepaintCounter()) {
+    if (platformLayer->layerType() != PlatformCALayer::LayerTypeTileCacheLayer && layerContents && layerContents->platformCALayerShowRepaintCounter()) {
         bool isTiledLayer = [layer isKindOfClass:[CATiledLayer class]];
 
         char text[16]; // that's a lot of repaints
@@ -194,14 +217,14 @@ void drawLayerContents(CGContextRef context, CALayer *layer, WebCore::PlatformCA
     CGRect aBounds = [self bounds];
     CGPoint aPos = [self position];
 
-    NSString* selfString = [NSString stringWithFormat:@"%@<%@ 0x%08x> \"%@\" bounds(%.1f, %.1f, %.1f, %.1f) pos(%.1f, %.1f), sublayers=%d masking=%d",
+    NSString* selfString = [NSString stringWithFormat:@"%@<%@ 0x%p> \"%@\" bounds(%.1f, %.1f, %.1f, %.1f) pos(%.1f, %.1f), sublayers=%lu masking=%d",
             inPrefix,
             [self class],
             self,
             [self name],
             aBounds.origin.x, aBounds.origin.y, aBounds.size.width, aBounds.size.height, 
             aPos.x, aPos.y,
-            [[self sublayers] count],
+            static_cast<unsigned long>([[self sublayers] count]),
             [self masksToBounds]];
     
     NSMutableString* curDesc = [NSMutableString stringWithString:selfString];

@@ -493,7 +493,7 @@ WebRect WebAccessibilityObject::boundingBoxRect() const
         return WebRect();
 
     m_private->updateBackingStore();
-    return m_private->boundingBoxRect();
+    return m_private->pixelSnappedBoundingBoxRect();
 }
 
 double WebAccessibilityObject::estimatedLoadingProgress() const
@@ -868,6 +868,24 @@ unsigned WebAccessibilityObject::cellRowSpan() const
     pair<int, int> rowRange;
     static_cast<WebCore::AccessibilityTableCell*>(m_private.get())->rowIndexRange(rowRange);
     return rowRange.second;
+}
+
+void WebAccessibilityObject::scrollToMakeVisible() const
+{
+    m_private->updateBackingStore();
+    m_private->scrollToMakeVisible();
+}
+
+void WebAccessibilityObject::scrollToMakeVisibleWithSubFocus(const WebRect& subfocus) const
+{
+    m_private->updateBackingStore();
+    m_private->scrollToMakeVisibleWithSubFocus(subfocus);
+}
+
+void WebAccessibilityObject::scrollToGlobalPoint(const WebPoint& point) const
+{
+    m_private->updateBackingStore();
+    m_private->scrollToGlobalPoint(point);
 }
 
 WebAccessibilityObject::WebAccessibilityObject(const WTF::PassRefPtr<WebCore::AccessibilityObject>& object)

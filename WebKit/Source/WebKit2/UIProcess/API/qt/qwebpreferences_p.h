@@ -40,6 +40,8 @@ public:
     Q_PROPERTY(bool privateBrowsingEnabled READ privateBrowsingEnabled WRITE setPrivateBrowsingEnabled NOTIFY privateBrowsingEnabledChanged FINAL)
     Q_PROPERTY(bool dnsPrefetchEnabled READ dnsPrefetchEnabled WRITE setDnsPrefetchEnabled NOTIFY dnsPrefetchEnabledChanged FINAL)
     Q_PROPERTY(bool navigatorQtObjectEnabled READ navigatorQtObjectEnabled WRITE setNavigatorQtObjectEnabled NOTIFY navigatorQtObjectEnabledChanged FINAL)
+    Q_PROPERTY(bool frameFlatteningEnabled READ frameFlatteningEnabled WRITE setFrameFlatteningEnabled NOTIFY frameFlatteningEnabledChanged FINAL)
+    Q_PROPERTY(bool developerExtrasEnabled READ developerExtrasEnabled WRITE setDeveloperExtrasEnabled NOTIFY developerExtrasEnabledChanged FINAL)
 
     Q_PROPERTY(QString standardFontFamily READ standardFontFamily WRITE setStandardFontFamily NOTIFY standardFontFamilyChanged FINAL)
     Q_PROPERTY(QString fixedFontFamily READ fixedFontFamily WRITE setFixedFontFamily NOTIFY fixedFontFamilyChanged FINAL)
@@ -79,6 +81,12 @@ public:
     bool navigatorQtObjectEnabled() const;
     void setNavigatorQtObjectEnabled(bool);
 
+    bool frameFlatteningEnabled() const;
+    void setFrameFlatteningEnabled(bool enable);
+
+    bool developerExtrasEnabled() const;
+    void setDeveloperExtrasEnabled(bool enable);
+
     QString standardFontFamily() const;
     void setStandardFontFamily(const QString& family);
 
@@ -116,6 +124,8 @@ Q_SIGNALS:
     void privateBrowsingEnabledChanged();
     void dnsPrefetchEnabledChanged();
     void navigatorQtObjectEnabledChanged();
+    void frameFlatteningEnabledChanged();
+    void developerExtrasEnabledChanged();
 
     void standardFontFamilyChanged();
     void fixedFontFamilyChanged();

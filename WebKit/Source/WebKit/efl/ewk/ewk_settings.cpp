@@ -24,6 +24,7 @@
 #include "ApplicationCacheStorage.h"
 #include "CrossOriginPreflightResultCache.h"
 #include "DatabaseTracker.h"
+#include "StorageTracker.h"
 #include "FontCache.h"
 #include "FrameView.h"
 #include "IconDatabase.h"
@@ -57,6 +58,7 @@ static const char* s_offlineAppCachePath = 0;
 static const char* _ewk_icon_database_path = 0;
 
 static const char* s_webDatabasePath = 0;
+static const char* s_localStoragePath = 0;
 static uint64_t s_webDatabaseQuota = 1 * 1024 * 1024; // 1MB.
 
 static WTF::String _ewk_settings_webkit_platform_get()
@@ -109,6 +111,30 @@ void ewk_settings_web_database_clear()
 #if ENABLE(SQL_DATABASE)
     WebCore::DatabaseTracker::tracker().deleteAllDatabases();
 #endif
+}
+
+void ewk_settings_local_storage_path_set(const char* path)
+{
+    WebCore::StorageTracker::tracker().setDatabaseDirectoryPath(WTF::String::fromUTF8(path));
+    eina_stringshare_replace(&s_localStoragePath, path);
+}
+
+const char* ewk_settings_local_storage_path_get(void)
+{
+    return s_localStoragePath;
+}
+
+void ewk_settings_local_storage_database_clear()
+{
+    WebCore::StorageTracker::tracker().deleteAllOrigins();
+}
+
+void ewk_settings_local_storage_database_origin_clear(const char* url)
+{
+    EINA_SAFETY_ON_NULL_RETURN(url);
+
+    const WebCore::KURL kurl(WebCore::KURL(), WTF::String::fromUTF8(url));
+    WebCore::StorageTracker::tracker().deleteOrigin(WebCore::SecurityOrigin::create(kurl).get());
 }
 
 void ewk_settings_web_database_path_set(const char* path)
@@ -199,25 +225,25 @@ cairo_surface_t* ewk_settings_icon_database_icon_surface_get(const char* url)
         return 0;
     }
 
-    return icon->nativeImageForCurrentFrame();
+    WebCore::NativeImageCairo* nativeImage = icon->nativeImageForCurrentFrame();
+    return nativeImage ? nativeImage->surface() : 0;
 }
 
-Evas_Object* ewk_settings_icon_database_icon_object_add(const char* url, Evas* canvas)
+Evas_Object* ewk_settings_icon_database_icon_object_get(const char* url, Evas* canvas)
 {
     EINA_SAFETY_ON_NULL_RETURN_VAL(url, 0);
     EINA_SAFETY_ON_NULL_RETURN_VAL(canvas, 0);
 
     WebCore::KURL kurl(WebCore::KURL(), WTF::String::fromUTF8(url));
     WebCore::Image* icon = WebCore::iconDatabase().synchronousIconForPageURL(kurl.string(), WebCore::IntSize(16, 16));
-    cairo_surface_t* surface;
 
     if (!icon) {
         ERR("no icon for url %s", url);
         return 0;
     }
 
-    surface = icon->nativeImageForCurrentFrame();
-    return ewk_util_image_from_cairo_surface_add(canvas, surface);
+    WebCore::NativeImageCairo* nativeImage = icon->nativeImageForCurrentFrame();
+    return nativeImage ? ewk_util_image_from_cairo_surface_add(canvas, nativeImage->surface()) : 0;
 }
 
 void ewk_settings_object_cache_capacity_set(unsigned minDeadCapacity, unsigned maxDeadCapacity, unsigned totalCapacity)

@@ -68,6 +68,53 @@ EAPI void             ewk_settings_web_database_clear(void);
 EAPI void             ewk_settings_web_database_path_set(const char *path);
 
 /**
+ * Sets the current path to the directory where WebKit will write the
+ * HTML5 local storage indexing database (the one keeping track of
+ * individual views' local storage databases).
+ *
+ * By default, the value is @c ~/.webkit
+ *
+ * @param path the new local storage database directory path
+ *
+ * @note You may want to call
+ * ewk_view_setting_local_storage_database_path_set() on the same @p
+ * path, here, for your views.
+ */
+EAPI void ewk_settings_local_storage_path_set(const char* path);
+
+/**
+ * Returns directory's path where the HTML5 local storage indexing
+ * database is stored.
+ *
+ * This is guaranteed to be eina-stringshared, so whenever possible
+ * save yourself some cpu cycles and use eina_stringshare_ref()
+ * instead of eina_stringshare_add() or strdup().
+ *
+ * @return database path or @c NULL, on errors.
+ *
+ * @see ewk_settings_local_storage_path_set()
+ */
+EAPI const char* ewk_settings_local_storage_path_get(void);
+
+/**
+ * Removes @b all HTML 5 local storage databases.
+ */
+EAPI void ewk_settings_local_storage_database_clear();
+
+/**
+ * Clears the HTML 5 local storage database for the given URL
+ * (origin).
+ *
+ * @param url which URL to clear local storage to.
+ *
+ * After this call, the file holding the local storage database for
+ * that origin will be deleted, along with its entry on the local
+ * storage files database (a file stored under the path returned by
+ * ewk_settings_local_storage_path_get()).
+ */
+EAPI void ewk_settings_local_storage_database_origin_clear(const char *url);
+
+/**
  * Returns directory path where web database is stored.
  *
  * By default, the value is @c ~/.webkit
@@ -128,7 +175,7 @@ EAPI Eina_Bool        ewk_settings_icon_database_clear(void);
 EAPI cairo_surface_t *ewk_settings_icon_database_icon_surface_get(const char *url);
 
 /**
- * Creates Evas_Object of type image representing the given URL.
+ * Gets image representing the given URL.
  *
  * This is an utility function that creates an Evas_Object of type
  * image set to have fill always match object size
@@ -137,13 +184,16 @@ EAPI cairo_surface_t *ewk_settings_icon_database_icon_surface_get(const char *ur
  * @note In order to have this working, one must open icon database
  *       with ewk_settings_icon_database_path_set().
  *
+ * @note The "load,finished" signal doesn't guarantee that icons are completely loaded and
+ *        saved to database. Icon can be taken after the "icon,received" signal.
+ *
  * @param url which url to query icon
  * @param canvas evas instance where to add resulting object
  *
  * @return newly allocated Evas_Object instance or @c 0 on
  *         errors. Delete the object with evas_object_del().
  */
-EAPI Evas_Object     *ewk_settings_icon_database_icon_object_add(const char *url, Evas *canvas);
+EAPI Evas_Object     *ewk_settings_icon_database_icon_object_get(const char *url, Evas *canvas);
 
 /**
  * Sets the path where the application cache will be stored.

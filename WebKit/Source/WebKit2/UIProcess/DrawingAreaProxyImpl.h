@@ -29,7 +29,7 @@
 #include "BackingStore.h"
 #include "DrawingAreaProxy.h"
 #include "LayerTreeContext.h"
-#include "RunLoop.h"
+#include <WebCore/RunLoop.h>
 #include <wtf/OwnPtr.h>
 #include <wtf/PassOwnPtr.h>
 
@@ -54,6 +54,8 @@ private:
     // DrawingAreaProxy
     virtual void sizeDidChange();
     virtual void deviceScaleFactorDidChange();
+    virtual void layerHostingModeDidChange() OVERRIDE;
+
     virtual void visibilityDidChange();
     virtual void setBackingStoreIsDiscardable(bool);
     virtual void waitForBackingStoreUpdateOnNextPaint();
@@ -77,10 +79,8 @@ private:
 
     bool isInAcceleratedCompositingMode() const { return !m_layerTreeContext.isEmpty(); }
 
-#if USE(TILED_BACKING_STORE)
-    virtual void setVisibleContentsRectAndScale(const WebCore::IntRect& visibleContentsRect, float scale);
-    virtual void setVisibleContentRectTrajectoryVector(const WebCore::FloatPoint&);
-    virtual void paintToCurrentGLContext(const WebCore::TransformationMatrix&, float opacity);
+#if USE(UI_SIDE_COMPOSITING)
+    virtual void setVisibleContentsRect(const WebCore::IntRect& visibleContentsRect, float scale, const WebCore::FloatPoint& trajectory, const WebCore::FloatPoint& accurateVisibleContentsPosition = WebCore::FloatPoint());
     void didReceiveLayerTreeHostProxyMessage(CoreIPC::Connection*, CoreIPC::MessageID, CoreIPC::ArgumentDecoder*);
 #endif
 #else
@@ -116,7 +116,7 @@ private:
     bool m_isBackingStoreDiscardable;
     OwnPtr<BackingStore> m_backingStore;
 
-    RunLoop::Timer<DrawingAreaProxyImpl> m_discardBackingStoreTimer;
+    WebCore::RunLoop::Timer<DrawingAreaProxyImpl> m_discardBackingStoreTimer;
 };
 
 } // namespace WebKit

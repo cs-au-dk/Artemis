@@ -31,8 +31,6 @@
 """Support for automatically downloading Python packages from an URL."""
 
 
-from __future__ import with_statement
-
 import codecs
 import logging
 import new
@@ -263,6 +261,7 @@ class AutoInstaller(object):
 
     # This is a replacement for ZipFile.extractall(), which is
     # available in Python 2.6 but not in earlier versions.
+    # NOTE: The version in 2.6.1 (which shipped on Snow Leopard) is broken!
     def _extract_all(self, zip_file, target_dir):
         self._log_transfer("Extracting zip file...", zip_file, target_dir)
 

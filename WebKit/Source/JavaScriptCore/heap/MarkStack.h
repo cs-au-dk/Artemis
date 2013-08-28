@@ -26,6 +26,7 @@
 #ifndef MarkStack_h
 #define MarkStack_h
 
+#include "CopiedSpace.h"
 #include "HandleTypes.h"
 #include "Options.h"
 #include "JSValue.h"
@@ -111,7 +112,7 @@ namespace JSC {
     private:
         MarkStackSegment* m_topSegment;
         
-        void expand();
+        JS_EXPORT_PRIVATE void expand();
         
         MarkStackSegmentAllocator& m_allocator;
 
@@ -177,10 +178,11 @@ namespace JSC {
 
 #if ENABLE(PARALLEL_GC)
         void markingThreadMain();
-        static void* markingThreadStartFunc(void* heap);
+        static void markingThreadStartFunc(void* heap);
 #endif
 
         JSGlobalData* m_globalData;
+        CopiedSpace* m_copiedSpace;
         
         MarkStackSegmentAllocator m_segmentAllocator;
         
@@ -241,7 +243,7 @@ namespace JSC {
         }
 
     protected:
-        static void validate(JSCell*);
+        JS_EXPORT_PRIVATE static void validate(JSCell*);
 
         void append(JSValue*);
         void append(JSValue*, size_t count);
@@ -250,7 +252,7 @@ namespace JSC {
         void internalAppend(JSCell*);
         void internalAppend(JSValue);
         
-        void mergeOpaqueRoots();
+        JS_EXPORT_PRIVATE void mergeOpaqueRoots();
         
         void mergeOpaqueRootsIfNecessary()
         {

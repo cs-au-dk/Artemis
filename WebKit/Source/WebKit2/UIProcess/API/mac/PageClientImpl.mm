@@ -33,15 +33,19 @@
 #import "WKAPICast.h"
 #import "WKStringCF.h"
 #import "WKViewInternal.h"
+#import "StringUtilities.h"
 #import "WebContextMenuProxyMac.h"
 #import "WebEditCommandProxy.h"
 #import "WebPopupMenuProxyMac.h"
+#import <WebCore/BitmapImage.h>
 #import <WebCore/Cursor.h>
 #import <WebCore/FloatRect.h>
 #import <WebCore/FoundationExtras.h>
 #import <WebCore/GraphicsContext.h>
+#import <WebCore/Image.h>
 #import <WebCore/KeyboardEvent.h>
 #import <WebCore/NotImplemented.h>
+#import <WebCore/SharedBuffer.h>
 #import <wtf/PassOwnPtr.h>
 #import <wtf/text/CString.h>
 #import <wtf/text/WTFString.h>
@@ -50,6 +54,12 @@
 @interface NSApplication (WebNSApplicationDetails)
 - (NSCursor *)_cursorRectCursor;
 @end
+
+#if HAVE(LAYER_HOSTING_IN_WINDOW_SERVER)
+@interface NSWindow (WebNSWindowDetails)
+- (BOOL)_hostsLayersInWindowServer;
+@end
+#endif
 
 using namespace WebCore;
 using namespace WebKit;
@@ -103,11 +113,6 @@ using namespace WebKit;
 @end
 
 namespace WebKit {
-
-NSString* nsStringFromWebCoreString(const String& string)
-{
-    return string.impl() ? HardAutorelease(WKStringCopyCFString(0, toAPI(string.impl()))) : @"";
-}
 
 PassOwnPtr<PageClientImpl> PageClientImpl::create(WKView* wkView)
 {
@@ -188,6 +193,18 @@ bool PageClientImpl::isViewInWindow()
     return [m_wkView window];
 }
 
+LayerHostingMode PageClientImpl::viewLayerHostingMode()
+{
+#if HAVE(LAYER_HOSTING_IN_WINDOW_SERVER)
+    if (![m_wkView window])
+        return LayerHostingModeDefault;
+
+    return [[m_wkView window] _hostsLayersInWindowServer] ? LayerHostingModeInWindowServer : LayerHostingModeDefault;
+#else
+    return LayerHostingModeDefault;
+#endif
+}
+
 void PageClientImpl::processDidCrash()
 {
     [m_wkView _processDidCrash];
@@ -219,7 +236,7 @@ void PageClientImpl::setCursorHiddenUntilMouseMoves(bool hiddenUntilMouseMoves)
     [NSCursor setHiddenUntilMouseMoves:hiddenUntilMouseMoves];
 }
 
-void PageClientImpl::didChangeViewportProperties(const WebCore::ViewportArguments&)
+void PageClientImpl::didChangeViewportProperties(const WebCore::ViewportAttributes&)
 {
 }
 
@@ -264,6 +281,13 @@ void PageClientImpl::setDragImage(const IntPoint& clientPosition, PassRefPtr<Sha
     [m_wkView _setDragImage:dragNSImage.get() at:clientPosition linkDrag:isLinkDrag];
 }
 
+void PageClientImpl::setPromisedData(const String& pasteboardName, PassRefPtr<SharedBuffer> imageBuffer, const String& filename, const String& extension, const String& title, const String& url, const String& visibleUrl, PassRefPtr<SharedBuffer> archiveBuffer)
+{
+    RefPtr<Image> image = BitmapImage::create();
+    image->setData(imageBuffer.get(), true);
+    [m_wkView _setPromisedData:image.get() withFileName:filename withExtension:extension withTitle:title withURL:url withVisibleURL:visibleUrl withArchive:archiveBuffer.get() forPasteboard:pasteboardName];
+}
+
 void PageClientImpl::updateTextInputState(bool updateSecureInputState)
 {
     [m_wkView _updateTextInputStateIncludingSecureInputState:updateSecureInputState];
@@ -297,6 +321,13 @@ IntRect PageClientImpl::windowToScreen(const IntRect& rect)
     tempRect.origin = [[m_wkView window] convertBaseToScreen:tempRect.origin];
     return enclosingIntRect(tempRect);
 }
+
+#if ENABLE(GESTURE_EVENTS)
+void PageClientImpl::doneWithGestureEvent(const WebGestureEvent&, bool wasEventHandled)
+{
+    notImplemented();
+}
+#endif
 
 void PageClientImpl::doneWithKeyEvent(const NativeWebKeyboardEvent& event, bool eventWasHandled)
 {
@@ -333,6 +364,11 @@ void PageClientImpl::enterAcceleratedCompositingMode(const LayerTreeContext& lay
 void PageClientImpl::exitAcceleratedCompositingMode()
 {
     [m_wkView _exitAcceleratedCompositingMode];
+}
+
+void PageClientImpl::updateAcceleratedCompositingMode(const LayerTreeContext& layerTreeContext)
+{
+    [m_wkView _updateAcceleratedCompositingMode:layerTreeContext];
 }
 #endif // USE(ACCELERATED_COMPOSITING)
 
@@ -427,7 +463,7 @@ void PageClientImpl::dismissDictionaryLookupPanel()
 #endif
 }
 
-void PageClientImpl::showCorrectionPanel(CorrectionPanelInfo::PanelType type, const FloatRect& boundingBoxOfReplacedString, const String& replacedString, const String& replacementString, const Vector<String>& alternativeReplacementStrings)
+void PageClientImpl::showCorrectionPanel(AlternativeTextType type, const FloatRect& boundingBoxOfReplacedString, const String& replacedString, const String& replacementString, const Vector<String>& alternativeReplacementStrings)
 {
 #if !defined(BUILDING_ON_SNOW_LEOPARD)
     if (!isViewVisible() || !isViewInWindow())
@@ -436,14 +472,14 @@ void PageClientImpl::showCorrectionPanel(CorrectionPanelInfo::PanelType type, co
 #endif
 }
 
-void PageClientImpl::dismissCorrectionPanel(ReasonForDismissingCorrectionPanel reason)
+void PageClientImpl::dismissCorrectionPanel(ReasonForDismissingAlternativeText reason)
 {
 #if !defined(BUILDING_ON_SNOW_LEOPARD)
     m_correctionPanel.dismiss(reason);
 #endif
 }
 
-String PageClientImpl::dismissCorrectionPanelSoon(WebCore::ReasonForDismissingCorrectionPanel reason)
+String PageClientImpl::dismissCorrectionPanelSoon(WebCore::ReasonForDismissingAlternativeText reason)
 {
 #if !defined(BUILDING_ON_SNOW_LEOPARD)
     return m_correctionPanel.dismiss(reason);
@@ -452,10 +488,10 @@ String PageClientImpl::dismissCorrectionPanelSoon(WebCore::ReasonForDismissingCo
 #endif
 }
 
-void PageClientImpl::recordAutocorrectionResponse(EditorClient::AutocorrectionResponseType responseType, const String& replacedString, const String& replacementString)
+void PageClientImpl::recordAutocorrectionResponse(AutocorrectionResponseType responseType, const String& replacedString, const String& replacementString)
 {
 #if !defined(BUILDING_ON_SNOW_LEOPARD)
-    NSCorrectionResponse response = responseType == EditorClient::AutocorrectionReverted ? NSCorrectionResponseReverted : NSCorrectionResponseEdited;
+    NSCorrectionResponse response = responseType == AutocorrectionReverted ? NSCorrectionResponseReverted : NSCorrectionResponseEdited;
     CorrectionPanel::recordAutocorrectionResponse(m_wkView, response, replacedString, replacementString);
 #endif
 }

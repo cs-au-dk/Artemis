@@ -40,11 +40,6 @@
 #include "ScriptController.h"
 #include "UserScriptTypes.h"
 
-#ifdef ARTEMIS
-#include "instrumentation/executionlistener.h"
-#endif
-
-
 #if PLATFORM(WIN)
 #include "FrameWin.h"
 #endif
@@ -68,6 +63,7 @@ typedef struct HBITMAP__* HBITMAP;
 namespace WebCore {
 
     class Document;
+    class FrameDestructionObserver;
     class FrameView;
     class HTMLTableCellElement;
     class RegularExpression;
@@ -78,12 +74,7 @@ namespace WebCore {
     class TiledBackingStoreClient { };
 #endif
 
-    class FrameDestructionObserver {
-    public:
-        virtual ~FrameDestructionObserver() { }
-
-        virtual void frameDestroyed() = 0;
-    };
+    class TreeScope;
 
     class Frame : public RefCounted<Frame>, public TiledBackingStoreClient {
     public:
@@ -95,13 +86,13 @@ namespace WebCore {
             ScrollbarMode = ScrollbarAuto, bool horizontalLock = false,
             ScrollbarMode = ScrollbarAuto, bool verticalLock = false);
 
-        virtual ~Frame();
+        ~Frame();
 
         void addDestructionObserver(FrameDestructionObserver*);
         void removeDestructionObserver(FrameDestructionObserver*);
 
+        void willDetachPage();
         void detachFromPage();
-        void pageDestroyed();
         void disconnectOwnerElement();
 
         Page* page() const;
@@ -122,8 +113,6 @@ namespace WebCore {
         RenderView* contentRenderer() const; // Root of the render tree for the document contained in this frame.
         RenderPart* ownerRenderer() const; // Renderer for the element that contains this frame.
 
-        void transferChildFrameToNewDocument();
-
 #if ENABLE(PAGE_VISIBILITY_API)
         void dispatchVisibilityStateChangeEvent();
 #endif
@@ -134,6 +123,7 @@ namespace WebCore {
         void setIsDisconnected(bool);
         bool excludeFromTextSearch() const;
         void setExcludeFromTextSearch(bool);
+        bool inScope(TreeScope*) const;
 
         void injectUserScripts(UserScriptInjectionTime);
         
@@ -144,7 +134,6 @@ namespace WebCore {
         DOMWindow* domWindow() const;
         DOMWindow* existingDOMWindow() { return m_domWindow.get(); }
         void setDOMWindow(DOMWindow*);
-        void clearFormerDOMWindow(DOMWindow*);
         void clearDOMWindow();
 
         static Frame* frameForWidget(const Widget*);
@@ -190,19 +179,13 @@ namespace WebCore {
         DragImageRef nodeImage(Node*);
         DragImageRef dragImageForSelection();
 
-        VisiblePosition visiblePositionForPoint(const LayoutPoint& framePoint);
+        VisiblePosition visiblePositionForPoint(const IntPoint& framePoint);
         Document* documentAtPoint(const IntPoint& windowPoint);
-        PassRefPtr<Range> rangeForPoint(const LayoutPoint& framePoint);
+        PassRefPtr<Range> rangeForPoint(const IntPoint& framePoint);
 
         String searchForLabelsAboveCell(RegularExpression*, HTMLTableCellElement*, size_t* resultDistanceFromStartOfCell);
         String searchForLabelsBeforeElement(const Vector<String>& labels, Element*, size_t* resultDistance, bool* resultIsInCellAbove);
         String matchLabelsAgainstElement(const Vector<String>& labels, Element*);
-
-#ifdef ARTEMIS
-        inst::ExecutionListener* getExecutionListener();
-        void setExecutionListener(inst::ExecutionListener*);
-        inst::ExecutionListener* executionListener;
-#endif
 
 #if PLATFORM(MAC)
         NSImage* selectionImage(bool forceBlackText = false) const;
@@ -210,9 +193,13 @@ namespace WebCore {
         NSImage* snapshotDragImage(Node*, NSRect* imageRect, NSRect* elementRect) const;
         NSImage* imageFromRect(NSRect) const;
 #endif
+        void suspendActiveDOMObjectsAndAnimations();
+        void resumeActiveDOMObjectsAndAnimations();
+        bool activeDOMObjectsAndAnimationsSuspended() const { return m_activeDOMObjectsAndAnimationsSuspendedCount > 0; }
 
         // Should only be called on the main frame of a page.
         void notifyChromeClientWheelEventHandlerCountChanged() const;
+        void notifyChromeClientTouchEventHandlerCountChanged() const;
 
     // ========
 
@@ -229,7 +216,6 @@ namespace WebCore {
         mutable NavigationScheduler m_navigationScheduler;
 
         mutable RefPtr<DOMWindow> m_domWindow;
-        HashSet<DOMWindow*> m_liveFormerWindows;
 
         HTMLFrameOwnerElement* m_ownerElement;
         RefPtr<FrameView> m_view;
@@ -272,6 +258,7 @@ namespace WebCore {
         OwnPtr<TiledBackingStore> m_tiledBackingStore;
 #endif
 
+        int m_activeDOMObjectsAndAnimationsSuspendedCount;
     };
 
     inline void Frame::init()

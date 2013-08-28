@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009 Google Inc. All rights reserved.
+ * Copyright (C) 2009, 2012 Google Inc. All rights reserved.
  * Copyright (C) 2011 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
@@ -62,7 +62,7 @@ public:
     virtual void documentElementAvailable();
 
 #if USE(V8)
-    virtual void didCreateScriptContext(v8::Handle<v8::Context>, int worldId);
+    virtual void didCreateScriptContext(v8::Handle<v8::Context>, int extensionGroup, int worldId);
     virtual void willReleaseScriptContext(v8::Handle<v8::Context>, int worldId);
 #endif
 
@@ -116,9 +116,8 @@ public:
     virtual void dispatchDecidePolicyForNavigationAction(WebCore::FramePolicyFunction function, const WebCore::NavigationAction& action, const WebCore::ResourceRequest& request, PassRefPtr<WebCore::FormState> form_state);
     virtual void cancelPolicyCheck();
     virtual void dispatchUnableToImplementPolicy(const WebCore::ResourceError&);
-    virtual void dispatchWillSendSubmitEvent(WebCore::HTMLFormElement*);
+    virtual void dispatchWillSendSubmitEvent(PassRefPtr<WebCore::FormState>);
     virtual void dispatchWillSubmitForm(WebCore::FramePolicyFunction, PassRefPtr<WebCore::FormState>);
-    virtual void dispatchDidLoadMainResource(WebCore::DocumentLoader*);
     virtual void revertToProvisionalState(WebCore::DocumentLoader*);
     virtual void setMainDocumentError(WebCore::DocumentLoader*, const WebCore::ResourceError&);
     virtual void willChangeEstimatedProgress() { }
@@ -177,8 +176,6 @@ public:
         WebCore::HTMLFrameOwnerElement* ownerElement,
         const WTF::String& referrer, bool allowsScrolling,
         int marginWidth, int marginHeight);
-    virtual void didTransferChildFrameToNewDocument(WebCore::Page*);
-    virtual void transferLoadingResourceFromPage(WebCore::ResourceLoader*, const WebCore::ResourceRequest&, WebCore::Page*);
     virtual PassRefPtr<WebCore::Widget> createPlugin(
         const WebCore::IntSize&, WebCore::HTMLPlugInElement*, const WebCore::KURL&,
         const Vector<WTF::String>&, const Vector<WTF::String>&,
@@ -206,6 +203,13 @@ public:
     virtual void didNotAllowPlugins();
 
     virtual PassRefPtr<WebCore::FrameNetworkingContext> createNetworkingContext();
+    virtual bool willCheckAndDispatchMessageEvent(WebCore::SecurityOrigin* target, WebCore::MessageEvent*) const;
+
+#if ENABLE(WEB_INTENTS)
+    virtual void dispatchIntent(PassRefPtr<WebCore::IntentRequest>) OVERRIDE;
+#endif
+
+    virtual void dispatchWillOpenSocketStream(WebCore::SocketStreamHandle*) OVERRIDE;
 
 private:
     void makeDocumentView();

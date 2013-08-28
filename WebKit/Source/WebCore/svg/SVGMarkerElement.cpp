@@ -53,7 +53,7 @@ DEFINE_ANIMATED_LENGTH(SVGMarkerElement, SVGNames::refYAttr, RefY, refY)
 DEFINE_ANIMATED_LENGTH(SVGMarkerElement, SVGNames::markerWidthAttr, MarkerWidth, markerWidth)
 DEFINE_ANIMATED_LENGTH(SVGMarkerElement, SVGNames::markerHeightAttr, MarkerHeight, markerHeight)
 DEFINE_ANIMATED_ENUMERATION(SVGMarkerElement, SVGNames::markerUnitsAttr, MarkerUnits, markerUnits, SVGMarkerUnitsType)
-DEFINE_ANIMATED_ANGLE_MULTIPLE_WRAPPERS(SVGMarkerElement, SVGNames::orientAttr, orientAngleIdentifier(), OrientAngle, orientAngle)
+DEFINE_ANIMATED_ANGLE_AND_ENUMERATION(SVGMarkerElement, SVGNames::orientAttr, orientAngleIdentifier(), OrientAngle, orientAngle)
 DEFINE_ANIMATED_BOOLEAN(SVGMarkerElement, SVGNames::externalResourcesRequiredAttr, ExternalResourcesRequired, externalResourcesRequired)
 DEFINE_ANIMATED_RECT(SVGMarkerElement, SVGNames::viewBoxAttr, ViewBox, viewBox)
 DEFINE_ANIMATED_PRESERVEASPECTRATIO(SVGMarkerElement, SVGNames::preserveAspectRatioAttr, PreserveAspectRatio, preserveAspectRatio)
@@ -125,13 +125,13 @@ bool SVGMarkerElement::isSupportedAttribute(const QualifiedName& attrName)
     return supportedAttributes.contains<QualifiedName, SVGAttributeHashTranslator>(attrName);
 }
 
-void SVGMarkerElement::parseMappedAttribute(Attribute* attr)
+void SVGMarkerElement::parseAttribute(Attribute* attr)
 {
     SVGParsingError parseError = NoError;
     const AtomicString& value = attr->value();
 
     if (!isSupportedAttribute(attr->name()))
-        SVGStyledElement::parseMappedAttribute(attr);
+        SVGStyledElement::parseAttribute(attr);
     else if (attr->name() == SVGNames::markerUnitsAttr) {
         SVGMarkerUnitsType propertyValue = SVGPropertyTraits<SVGMarkerUnitsType>::fromString(value);
         if (propertyValue > 0)
@@ -151,9 +151,9 @@ void SVGMarkerElement::parseMappedAttribute(Attribute* attr)
             setOrientTypeBaseValue(orientType);
         if (orientType == SVGMarkerOrientAngle)
             setOrientAngleBaseValue(angle);
-    } else if (SVGLangSpace::parseMappedAttribute(attr)
-             || SVGExternalResourcesRequired::parseMappedAttribute(attr)
-             || SVGFitToViewBox::parseMappedAttribute(document(), attr)) {
+    } else if (SVGLangSpace::parseAttribute(attr)
+             || SVGExternalResourcesRequired::parseAttribute(attr)
+             || SVGFitToViewBox::parseAttribute(document(), attr)) {
     } else
         ASSERT_NOT_REACHED();
 

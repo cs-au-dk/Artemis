@@ -37,8 +37,6 @@ class SVGGElement : public SVGStyledTransformableElement,
 public:
     static PassRefPtr<SVGGElement> create(const QualifiedName&, Document*);
 
-    virtual bool isShadowTreeContainerElement() const { return false; }
-
 protected:
     SVGGElement(const QualifiedName&, Document*, ConstructionType = CreateSVGElement);
 
@@ -49,7 +47,7 @@ private:
     virtual bool supportsFocus() const { return true; }
 
     bool isSupportedAttribute(const QualifiedName&);
-    virtual void parseMappedAttribute(Attribute*);
+    virtual void parseAttribute(Attribute*) OVERRIDE;
     virtual void svgAttributeChanged(const QualifiedName&);
 
     virtual bool rendererIsNeeded(const NodeRenderingContext&);

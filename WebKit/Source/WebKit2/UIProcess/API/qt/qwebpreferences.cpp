@@ -32,6 +32,7 @@ QWebPreferences* QWebPreferencesPrivate::createPreferences(QQuickWebViewPrivate*
 {
     QWebPreferences* prefs = new QWebPreferences;
     prefs->d->webViewPrivate = webViewPrivate;
+    prefs->d->initializeDefaultFontSettings();
     return prefs;
 }
 
@@ -54,6 +55,10 @@ bool QWebPreferencesPrivate::testAttribute(QWebPreferencesPrivate::WebAttribute 
         return WKPreferencesGetPrivateBrowsingEnabled(preferencesRef());
     case DnsPrefetchEnabled:
         return WKPreferencesGetDNSPrefetchingEnabled(preferencesRef());
+    case FrameFlatteningEnabled:
+        return WKPreferencesGetFrameFlatteningEnabled(preferencesRef());
+    case DeveloperExtrasEnabled:
+        return WKPreferencesGetDeveloperExtrasEnabled(preferencesRef());
     default:
         ASSERT_NOT_REACHED();
         return false;
@@ -87,9 +92,38 @@ void QWebPreferencesPrivate::setAttribute(QWebPreferencesPrivate::WebAttribute a
     case DnsPrefetchEnabled:
         WKPreferencesSetDNSPrefetchingEnabled(preferencesRef(), enable);
         break;
+    case FrameFlatteningEnabled:
+        WKPreferencesSetFrameFlatteningEnabled(preferencesRef(), enable);
+    case DeveloperExtrasEnabled:
+        WKPreferencesSetDeveloperExtrasEnabled(preferencesRef(), enable);
+        break;
     default:
         ASSERT_NOT_REACHED();
     }
+}
+
+void QWebPreferencesPrivate::initializeDefaultFontSettings()
+{
+    setFontSize(MinimumFontSize, 0);
+    setFontSize(DefaultFontSize, 16);
+    setFontSize(DefaultFixedFontSize, 13);
+
+    QFont defaultFont;
+    defaultFont.setStyleHint(QFont::Serif);
+    setFontFamily(StandardFont, defaultFont.defaultFamily());
+    setFontFamily(SerifFont, defaultFont.defaultFamily());
+
+    defaultFont.setStyleHint(QFont::Fantasy);
+    setFontFamily(FantasyFont, defaultFont.defaultFamily());
+
+    defaultFont.setStyleHint(QFont::Cursive);
+    setFontFamily(CursiveFont, defaultFont.defaultFamily());
+
+    defaultFont.setStyleHint(QFont::SansSerif);
+    setFontFamily(SansSerifFont, defaultFont.defaultFamily());
+
+    defaultFont.setStyleHint(QFont::Monospace);
+    setFontFamily(FixedFont, defaultFont.defaultFamily());
 }
 
 void QWebPreferencesPrivate::setFontFamily(QWebPreferencesPrivate::FontFamily which, const QString& family)
@@ -280,6 +314,17 @@ void QWebPreferences::setDnsPrefetchEnabled(bool enable)
     emit dnsPrefetchEnabledChanged();
 }
 
+bool QWebPreferences::developerExtrasEnabled() const
+{
+    return d->testAttribute(QWebPreferencesPrivate::DeveloperExtrasEnabled);
+}
+
+void QWebPreferences::setDeveloperExtrasEnabled(bool enable)
+{
+    d->setAttribute(QWebPreferencesPrivate::DeveloperExtrasEnabled, enable);
+    emit developerExtrasEnabledChanged();
+}
+
 bool QWebPreferences::navigatorQtObjectEnabled() const
 {
     return d->webViewPrivate->navigatorQtObjectEnabled();
@@ -291,6 +336,17 @@ void QWebPreferences::setNavigatorQtObjectEnabled(bool enable)
         return;
     d->webViewPrivate->setNavigatorQtObjectEnabled(enable);
     emit navigatorQtObjectEnabledChanged();
+}
+
+bool QWebPreferences::frameFlatteningEnabled() const
+{
+    return d->testAttribute(QWebPreferencesPrivate::FrameFlatteningEnabled);
+}
+
+void QWebPreferences::setFrameFlatteningEnabled(bool enable)
+{
+    d->setAttribute(QWebPreferencesPrivate::FrameFlatteningEnabled, enable);
+    emit frameFlatteningEnabledChanged();
 }
 
 QString QWebPreferences::standardFontFamily() const

@@ -36,7 +36,12 @@
 #include <wtf/unicode/CharacterNames.h>
 
 #if PLATFORM(QT)
+#if HAVE(QRAWFONT)
+#include <QRawFont>
+class QTextLayout;
+#else
 #include <QFont>
+#endif
 #endif
 
 namespace WebCore {
@@ -116,7 +121,31 @@ public:
     TypesettingFeatures typesettingFeatures() const
     {
         TextRenderingMode textRenderingMode = m_fontDescription.textRenderingMode();
-        return textRenderingMode == OptimizeLegibility || textRenderingMode == GeometricPrecision ? Kerning | Ligatures : 0;
+        TypesettingFeatures features = textRenderingMode == OptimizeLegibility || textRenderingMode == GeometricPrecision ? Kerning | Ligatures : 0;
+
+        switch (m_fontDescription.kerning()) {
+        case FontDescription::NoneKerning:
+            features &= ~Kerning;
+            break;
+        case FontDescription::NormalKerning:
+            features |= Kerning;
+            break;
+        case FontDescription::AutoKerning:
+            break;
+        }
+
+        switch (m_fontDescription.commonLigaturesState()) {
+        case FontDescription::DisabledLigaturesState:
+            features &= ~Ligatures;
+            break;
+        case FontDescription::EnabledLigaturesState:
+            features |= Ligatures;
+            break;
+        case FontDescription::NormalLigaturesState:
+            break;
+        }
+
+        return features;
     }
 
     FontFamily& firstFamily() { return m_fontDescription.firstFamily(); }
@@ -151,14 +180,21 @@ public:
     static unsigned expansionOpportunityCount(const UChar*, size_t length, TextDirection, bool& isAfterExpansion);
 
 #if PLATFORM(QT)
+#if HAVE(QRAWFONT)
+    QRawFont rawFont() const;
+#else
     QFont font() const;
+#endif
+    QFont syntheticFont() const;
 #endif
 
     static void setShouldUseSmoothing(bool);
     static bool shouldUseSmoothing();
 
     enum CodePath { Auto, Simple, Complex, SimpleWithGlyphOverflow };
-
+    CodePath codePath(const TextRun&) const;
+    static CodePath characterRangeCodePath(const UChar*, unsigned len);
+    
 private:
     enum ForTextEmphasisOrNot { NotForTextEmphasis, ForTextEmphasis };
 
@@ -177,8 +213,6 @@ private:
 
     static bool canReturnFallbackFontsForComplexText();
     static bool canExpandAroundIdeographsInComplexText();
-
-    CodePath codePath(const TextRun&) const;
 
     // Returns the initial in-stream advance.
     float getGlyphsAndAdvancesForComplexText(const TextRun&, int from, int to, GlyphBuffer&, ForTextEmphasisOrNot = NotForTextEmphasis) const;
@@ -206,7 +240,7 @@ public:
     FontSelector* fontSelector() const;
     static bool treatAsSpace(UChar c) { return c == ' ' || c == '\t' || c == '\n' || c == noBreakSpace; }
     static bool treatAsZeroWidthSpace(UChar c) { return treatAsZeroWidthSpaceInComplexScript(c) || c == 0x200c || c == 0x200d; }
-    static bool treatAsZeroWidthSpaceInComplexScript(UChar c) { return c < 0x20 || (c >= 0x7F && c < 0xA0) || c == softHyphen || (c >= 0x200e && c <= 0x200f) || (c >= 0x202a && c <= 0x202e) || c == zeroWidthNoBreakSpace || c == objectReplacementCharacter; }
+    static bool treatAsZeroWidthSpaceInComplexScript(UChar c) { return c < 0x20 || (c >= 0x7F && c < 0xA0) || c == softHyphen || c == zeroWidthSpace || (c >= 0x200e && c <= 0x200f) || (c >= 0x202a && c <= 0x202e) || c == zeroWidthNoBreakSpace || c == objectReplacementCharacter; }
     static bool canReceiveTextEmphasis(UChar32 c);
 
     static inline UChar normalizeSpaces(UChar character)
@@ -230,6 +264,9 @@ private:
     {
         return m_fontList && m_fontList->loadingCustomFonts();
     }
+#if PLATFORM(QT) && HAVE(QRAWFONT)
+    void initFormatForTextLayout(QTextLayout*) const;
+#endif
 
     FontDescription m_fontDescription;
     mutable RefPtr<FontFallbackList> m_fontList;

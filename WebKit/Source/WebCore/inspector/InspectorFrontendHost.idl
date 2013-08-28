@@ -37,6 +37,7 @@ module core {
         void loaded();
         void closeWindow();
         void bringToFront();
+        void setZoomFactor(in float zoom);
         void inspectedURLChanged(in DOMString newURL);
 
         void requestAttachWindow();
@@ -50,8 +51,10 @@ module core {
         DOMString hiddenPanels();
 
         void copyText(in DOMString text);
-        boolean canSaveAs();
-        void saveAs(in DOMString fileName, in DOMString content);
+        void openInNewTab(in DOMString url);
+        boolean canSave();
+        void save(in DOMString url, in DOMString content, in boolean forceSaveAs);
+        void append(in DOMString url, in DOMString content);
 
         [Custom] DOMString platform();
         [Custom] DOMString port();

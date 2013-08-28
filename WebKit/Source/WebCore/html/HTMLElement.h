@@ -35,12 +35,18 @@ class HTMLFormElement;
 class MicroDataItemValue;
 #endif
 
+enum TranslateAttributeMode {
+    TranslateAttributeYes,
+    TranslateAttributeNo,
+    TranslateAttributeInherit
+};
+
 class HTMLElement : public StyledElement {
 public:
     static PassRefPtr<HTMLElement> create(const QualifiedName& tagName, Document*);
 
-    PassRefPtr<HTMLCollection> children();
-    
+    HTMLCollection* children();
+
     virtual String title() const;
 
     virtual short tabIndex() const;
@@ -68,6 +74,9 @@ public:
     bool spellcheck() const;
     void setSpellcheck(bool);
 
+    bool translate() const;
+    void setTranslate(bool);
+
     void click();
 
     virtual void accessKeyAction(bool sendMouseEvents);
@@ -79,10 +88,9 @@ public:
 
     HTMLFormElement* form() const { return virtualForm(); }
 
-    static void addHTMLAlignmentToStyledElement(StyledElement*, Attribute*);
-
     HTMLFormElement* findFormAncestor() const;
 
+    bool hasDirectionAuto() const;
     TextDirection directionalityIfhasDirAutoAttribute(bool& isAuto) const;
 
 #if ENABLE(MICRODATA)
@@ -90,14 +98,25 @@ public:
     PassRefPtr<MicroDataItemValue> itemValue() const;
 #endif
 
+#ifndef NDEBUG
+    virtual bool isHTMLUnknownElement() const { return false; }
+#endif
+
+    virtual bool isInsertionPoint() const { return false; }
+    virtual bool isLabelable() const { return false; }
+
 protected:
     HTMLElement(const QualifiedName& tagName, Document*);
 
-    void addHTMLAlignment(Attribute*);
+    void addHTMLLengthToStyle(StylePropertySet*, CSSPropertyID, const String& value);
+    void addHTMLColorToStyle(StylePropertySet*, CSSPropertyID, const String& color);
 
-    virtual bool mapToEntry(const QualifiedName& attrName, MappedAttributeEntry& result) const;
-    virtual void parseMappedAttribute(Attribute*);
-    void applyBorderAttribute(Attribute*);
+    void applyAlignmentAttributeToStyle(Attribute*, StylePropertySet*);
+    void applyBorderAttributeToStyle(Attribute*, StylePropertySet*);
+
+    virtual void parseAttribute(Attribute*) OVERRIDE;
+    virtual bool isPresentationAttribute(const QualifiedName&) const OVERRIDE;
+    virtual void collectStyleForAttribute(Attribute*, StylePropertySet*) OVERRIDE;
 
     virtual void childrenChanged(bool changedByParser = false, Node* beforeChange = 0, Node* afterChange = 0, int childCountDelta = 0);
     void calculateAndAdjustDirectionality();
@@ -107,9 +126,7 @@ protected:
 private:
     virtual String nodeName() const;
 
-    void mapLanguageAttributeToLocale(Attribute*);
-
-    void setContentEditable(Attribute*);
+    void mapLanguageAttributeToLocale(Attribute*, StylePropertySet*);
 
     virtual HTMLFormElement* virtualForm() const;
 
@@ -120,6 +137,8 @@ private:
     void adjustDirectionalityIfNeededAfterChildAttributeChanged(Element* child);
     void adjustDirectionalityIfNeededAfterChildrenChanged(Node* beforeChange, int childCountDelta);
     TextDirection directionality(Node** strongDirectionalityTextNode= 0) const;
+
+    TranslateAttributeMode translateAttributeMode() const;
 
 #if ENABLE(MICRODATA)
     virtual String itemValueText() const;

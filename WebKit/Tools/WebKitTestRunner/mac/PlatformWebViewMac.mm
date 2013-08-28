@@ -32,6 +32,8 @@
 
 @interface WebKitTestRunnerWindow : NSWindow {
     WTR::PlatformWebView* _platformWebView;
+    NSPoint _fakeOrigin;
+    bool _shouldUseFakeOrigin;
 }
 @property (nonatomic, assign) WTR::PlatformWebView* platformWebView;
 @end
@@ -42,6 +44,42 @@
 - (BOOL)isKeyWindow
 {
     return _platformWebView ? _platformWebView->windowIsKey() : YES;
+}
+
+- (void)setFrameOrigin:(NSPoint)point
+{
+    _fakeOrigin = point;
+    _shouldUseFakeOrigin = YES;
+}
+
+- (void)setFrame:(NSRect)windowFrame display:(BOOL)displayViews animate:(BOOL)performAnimation
+{
+    NSRect currentFrame = [super frame];
+
+    _fakeOrigin = windowFrame.origin;
+    _shouldUseFakeOrigin = YES;
+
+    [super setFrame:NSMakeRect(currentFrame.origin.x, currentFrame.origin.y, windowFrame.size.width, windowFrame.size.height) display:displayViews animate:performAnimation];
+}
+
+- (void)setFrame:(NSRect)windowFrame display:(BOOL)displayViews
+{
+    NSRect currentFrame = [super frame];
+
+    _fakeOrigin = windowFrame.origin;
+    _shouldUseFakeOrigin = YES;
+
+    [super setFrame:NSMakeRect(currentFrame.origin.x, currentFrame.origin.y, windowFrame.size.width, windowFrame.size.height) display:displayViews];
+}
+
+- (NSRect)frame
+{
+    NSRect currentFrame = [super frame];
+
+    if (_shouldUseFakeOrigin)
+        return NSMakeRect(_fakeOrigin.x, _fakeOrigin.y, currentFrame.size.width, currentFrame.size.height);
+
+    return currentFrame;
 }
 @end
 
@@ -56,7 +94,7 @@ PlatformWebView::PlatformWebView(WKContextRef contextRef, WKPageGroupRef pageGro
     NSRect windowRect = NSOffsetRect(rect, -10000, [(NSScreen *)[[NSScreen screens] objectAtIndex:0] frame].size.height - rect.size.height + 10000);
     m_window = [[WebKitTestRunnerWindow alloc] initWithContentRect:windowRect styleMask:NSBorderlessWindowMask backing:NSBackingStoreBuffered defer:YES];
     m_window.platformWebView = this;
-    [m_window setColorSpace:[NSColorSpace genericRGBColorSpace]];
+    [m_window setColorSpace:[[NSScreen mainScreen] colorSpace]];
     [[m_window contentView] addSubview:m_view];
     [m_window orderBack:nil];
     [m_window setReleasedWhenClosed:NO];
@@ -132,6 +170,8 @@ WKRetainPtr<WKImageRef> PlatformWebView::windowSnapshotImage()
 {
     [m_view display];
     RetainPtr<CGImageRef> windowSnapshotImage(AdoptCF, CGWindowListCreateImage(CGRectNull, kCGWindowListOptionIncludingWindow, [m_window windowNumber], kCGWindowImageBoundsIgnoreFraming | kCGWindowImageShouldBeOpaque));
+
+    // windowSnapshotImage will be in GenericRGB, as we've set the main display's color space to GenericRGB.
     return adoptWK(WKImageCreateFromCGImage(windowSnapshotImage.get(), 0));
 }
 

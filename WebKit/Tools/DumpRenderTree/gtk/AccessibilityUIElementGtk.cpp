@@ -27,13 +27,13 @@
 #include "config.h"
 #include "AccessibilityUIElement.h"
 
-#include "GOwnPtr.h"
-#include "GRefPtr.h"
 #include "WebCoreSupport/DumpRenderTreeSupportGtk.h"
 #include <JavaScriptCore/JSStringRef.h>
 #include <atk/atk.h>
 #include <gtk/gtk.h>
 #include <wtf/Assertions.h>
+#include <wtf/gobject/GOwnPtr.h>
+#include <wtf/gobject/GRefPtr.h>
 
 AccessibilityUIElement::AccessibilityUIElement(PlatformUIElement element)
     : m_element(element)
@@ -259,7 +259,14 @@ JSStringRef AccessibilityUIElement::language()
 
 JSStringRef AccessibilityUIElement::helpText() const
 {
-    return 0;
+    if (!m_element)
+        return JSStringCreateWithCharacters(0, 0);
+
+    ASSERT(ATK_IS_OBJECT(m_element));
+
+    CString helpText = DumpRenderTreeSupportGtk::accessibilityHelpText(ATK_OBJECT(m_element));
+    GOwnPtr<gchar> axHelpText(g_strdup_printf("AXHelp: %s", helpText.data()));
+    return JSStringCreateWithUTF8CString(axHelpText.get());
 }
 
 double AccessibilityUIElement::x()
@@ -694,6 +701,11 @@ AccessibilityUIElement AccessibilityUIElement::selectedRowAtIndex(unsigned index
     return 0;
 }
 
+AccessibilityUIElement AccessibilityUIElement::rowAtIndex(unsigned index)
+{
+    return 0;
+}
+
 AccessibilityUIElement AccessibilityUIElement::disclosedByRow()
 {
     return 0;
@@ -815,6 +827,21 @@ void AccessibilityUIElement::addSelection()
 }
 
 void AccessibilityUIElement::removeSelection()
+{
+    // FIXME: implement
+}
+
+void AccessibilityUIElement::scrollToMakeVisible()
+{
+    // FIXME: implement
+}
+
+void AccessibilityUIElement::scrollToMakeVisibleWithSubFocus(int x, int y, int width, int height)
+{
+    // FIXME: implement
+}
+
+void AccessibilityUIElement::scrollToGlobalPoint(int x, int y)
 {
     // FIXME: implement
 }

@@ -33,11 +33,11 @@
 
 #include "BindingSecurity.h"
 #include "DOMDataStore.h"
-#include "MathExtras.h"
 #include "PlatformString.h"
 #include "V8DOMWrapper.h"
 #include "V8GCController.h"
 #include "V8HiddenPropertyName.h"
+#include <wtf/MathExtras.h>
 #include <wtf/Noncopyable.h>
 #include <wtf/text/AtomicString.h>
 
@@ -46,6 +46,7 @@
 namespace WebCore {
 
     class DOMStringList;
+    class DOMWrapperVisitor;
     class EventListener;
     class EventTarget;
 
@@ -104,9 +105,9 @@ namespace WebCore {
             return static_cast<V8BindingPerIsolateData*>(isolate->GetData()); 
         }
 
-        static V8BindingPerIsolateData* current()
+        static V8BindingPerIsolateData* current(v8::Isolate* isolate = 0)
         {
-            return get(v8::Isolate::GetCurrent());
+            return isolate ? static_cast<V8BindingPerIsolateData*>(isolate->GetData()) : get(v8::Isolate::GetCurrent());
         }
         static void dispose(v8::Isolate*);
 
@@ -123,10 +124,13 @@ namespace WebCore {
         }
 
         StringCache* stringCache() { return &m_stringCache; }
-
+#if ENABLE(INSPECTOR)
+        void visitJSExternalStrings(DOMWrapperVisitor*);
+#endif
         DOMDataList& allStores() { return m_domDataList; }
 
         V8HiddenPropertyName* hiddenPropertyName() { return &m_hiddenPropertyName; }
+        v8::Persistent<v8::Context>& auxiliaryContext() { return m_auxiliaryContext; }
 
         void registerDOMDataStore(DOMDataStore* domDataStore) 
         {
@@ -150,6 +154,10 @@ namespace WebCore {
 
 #ifndef NDEBUG
         GlobalHandleMap& globalHandleMap() { return m_globalHandleMap; }
+
+        int internalScriptRecursionLevel() const { return m_internalScriptRecursionLevel; }
+        int incrementInternalScriptRecursionLevel() { return ++m_internalScriptRecursionLevel; }
+        int decrementInternalScriptRecursionLevel() { return --m_internalScriptRecursionLevel; }
 #endif
 
     private:
@@ -167,6 +175,7 @@ namespace WebCore {
         DOMDataStore* m_domDataStore;
 
         V8HiddenPropertyName m_hiddenPropertyName;
+        v8::Persistent<v8::Context> m_auxiliaryContext;
 
         bool m_constructorMode;
         friend class ConstructorMode;
@@ -175,6 +184,7 @@ namespace WebCore {
 
 #ifndef NDEBUG
         GlobalHandleMap m_globalHandleMap;
+        int m_internalScriptRecursionLevel;
 #endif
     };
 
@@ -203,38 +213,6 @@ namespace WebCore {
     private:
         bool m_previous;
     };
-
-    class SafeAllocation {
-    public:
-        static inline v8::Local<v8::Object> newInstance(v8::Handle<v8::Function>);
-        static inline v8::Local<v8::Object> newInstance(v8::Handle<v8::ObjectTemplate>);
-        static inline v8::Local<v8::Object> newInstance(v8::Handle<v8::Function>, int argc, v8::Handle<v8::Value> argv[]);
-    };
-
-    v8::Local<v8::Object> SafeAllocation::newInstance(v8::Handle<v8::Function> function)
-    {
-        if (function.IsEmpty())
-            return v8::Local<v8::Object>();
-        ConstructorMode constructorMode;
-        return function->NewInstance();
-    }
-
-    v8::Local<v8::Object> SafeAllocation::newInstance(v8::Handle<v8::ObjectTemplate> objectTemplate)
-    {
-        if (objectTemplate.IsEmpty())
-            return v8::Local<v8::Object>();
-        ConstructorMode constructorMode;
-        return objectTemplate->NewInstance();
-    }
-
-    v8::Local<v8::Object> SafeAllocation::newInstance(v8::Handle<v8::Function> function, int argc, v8::Handle<v8::Value> argv[])
-    {
-        if (function.IsEmpty())
-            return v8::Local<v8::Object>();
-        ConstructorMode constructorMode;
-        return function->NewInstance(argc, argv);
-    }
-
 
 
     enum ExternalMode {
@@ -266,20 +244,59 @@ namespace WebCore {
     // Return a V8 external string that shares the underlying buffer with the given
     // WebCore string. The reference counting mechanism is used to keep the
     // underlying buffer alive while the string is still live in the V8 engine.
-    inline v8::Local<v8::String> v8ExternalString(const String& string)
+    inline v8::Local<v8::String> v8ExternalString(const String& string, v8::Isolate* isolate = 0)
     {
         StringImpl* stringImpl = string.impl();
         if (!stringImpl)
             return v8::String::Empty();
 
-        V8BindingPerIsolateData* data = V8BindingPerIsolateData::current();
+        V8BindingPerIsolateData* data = V8BindingPerIsolateData::current(isolate);
         return data->stringCache()->v8ExternalString(stringImpl);
     }
 
     // Convert a string to a V8 string.
-    inline v8::Handle<v8::String> v8String(const String& string)
+    inline v8::Handle<v8::String> v8String(const String& string, v8::Isolate* isolate = 0)
     {
-        return v8ExternalString(string);
+        return v8ExternalString(string, isolate);
+    }
+
+    template<typename T>
+    v8::Handle<v8::Value> v8Array(const Vector<T>& iterator, v8::Isolate* isolate)
+    {
+        v8::Local<v8::Array> result = v8::Array::New(iterator.size());
+        int index = 0;
+        typename Vector<T>::const_iterator end = iterator.end();
+        for (typename Vector<T>::const_iterator iter = iterator.begin(); iter != end; ++iter)
+            result->Set(v8::Integer::New(index++), toV8(WTF::getPtr(*iter), isolate));
+        return result;
+    }
+
+    template<>
+    inline v8::Handle<v8::Value> v8Array(const Vector<String>& iterator, v8::Isolate* isolate)
+    {
+        v8::Local<v8::Array> array = v8::Array::New(iterator.size());
+        Vector<String>::const_iterator end = iterator.end();
+        int index = 0;
+        for (Vector<String>::const_iterator iter = iterator.begin(); iter != end; ++iter)
+            array->Set(v8::Integer::New(index++), v8String(*iter, isolate));
+        return array;
+    }
+
+    template <class T>
+    Vector<T> toNativeArray(v8::Handle<v8::Value> value)
+    {
+        if (!value->IsArray())
+            return Vector<T>();
+
+        Vector<T> result;
+        v8::Local<v8::Value> v8Value(v8::Local<v8::Value>::New(value));
+        v8::Local<v8::Array> array = v8::Local<v8::Array>::Cast(v8Value);
+        size_t length = array->Length();
+
+        for (size_t i = 0; i < length; ++i) {
+            result.append(v8ValueToWebCoreString(array->Get(i)));
+        }
+        return result;
     }
 
     // Enables caching v8 wrappers created for WTF::StringImpl.  Currently this cache requires
@@ -325,7 +342,10 @@ namespace WebCore {
         return v8ValueToWebCoreString(object);
     }
 
-    String toWebCoreString(const v8::Arguments&, int index);
+    inline String toWebCoreString(const v8::Arguments& args, int index)
+    {
+        return v8ValueToWebCoreString(args[index]);
+    }
 
     // The string returned by this function is still owned by the argument
     // and will be deallocated when the argument is deallocated.
@@ -334,27 +354,61 @@ namespace WebCore {
         return reinterpret_cast<const uint16_t*>(str.characters());
     }
 
-    bool isUndefinedOrNull(v8::Handle<v8::Value> value);
+    inline bool isUndefinedOrNull(v8::Handle<v8::Value> value)
+    {
+        return value->IsNull() || value->IsUndefined();
+    }
 
     // Returns true if the provided object is to be considered a 'host object', as used in the
     // HTML5 structured clone algorithm.
-    bool isHostObject(v8::Handle<v8::Object>);
+    inline bool isHostObject(v8::Handle<v8::Object> object)
+    {
+        // If the object has any internal fields, then we won't be able to serialize or deserialize
+        // them; conveniently, this is also a quick way to detect DOM wrapper objects, because
+        // the mechanism for these relies on data stored in these fields. We should
+        // catch external array data as a special case.
+        return object->InternalFieldCount() || object->HasIndexedPropertiesInExternalArrayData();
+    }
 
-    v8::Handle<v8::Boolean> v8Boolean(bool value);
+    inline v8::Handle<v8::Boolean> v8Boolean(bool value)
+    {
+        return value ? v8::True() : v8::False();
+    }
 
-    String toWebCoreStringWithNullCheck(v8::Handle<v8::Value> value);
+    inline String toWebCoreStringWithNullCheck(v8::Handle<v8::Value> value)
+    {
+        return value->IsNull() ? String() : v8ValueToWebCoreString(value);
+    }
 
-    AtomicString toAtomicWebCoreStringWithNullCheck(v8::Handle<v8::Value> value);
+    inline AtomicString toAtomicWebCoreStringWithNullCheck(v8::Handle<v8::Value> value)
+    {
+        return value->IsNull() ? AtomicString() : v8ValueToAtomicWebCoreString(value);
+    }
 
-    String toWebCoreStringWithNullOrUndefinedCheck(v8::Handle<v8::Value> value);
+    inline String toWebCoreStringWithNullOrUndefinedCheck(v8::Handle<v8::Value> value)
+    {
+        return (value->IsNull() || value->IsUndefined()) ? String() : toWebCoreString(value);
+    }
 
-    v8::Handle<v8::String> v8UndetectableString(const String& str);
+    inline v8::Handle<v8::String> v8UndetectableString(const String& str)
+    {
+        return v8::String::NewUndetectable(fromWebCoreString(str), str.length());
+    }
 
-    v8::Handle<v8::Value> v8StringOrNull(const String& str);
+    inline v8::Handle<v8::Value> v8StringOrNull(const String& str, v8::Isolate* isolate = 0)
+    {
+        return str.isNull() ? v8::Handle<v8::Value>(v8::Null()) : v8::Handle<v8::Value>(v8String(str, isolate));
+    }
 
-    v8::Handle<v8::Value> v8StringOrUndefined(const String& str);
+    inline v8::Handle<v8::Value> v8StringOrUndefined(const String& str, v8::Isolate* isolate = 0)
+    {
+        return str.isNull() ? v8::Handle<v8::Value>(v8::Undefined()) : v8::Handle<v8::Value>(v8String(str, isolate));
+    }
 
-    v8::Handle<v8::Value> v8StringOrFalse(const String& str);
+    inline v8::Handle<v8::Value> v8StringOrFalse(const String& str, v8::Isolate* isolate = 0)
+    {
+        return str.isNull() ? v8::Handle<v8::Value>(v8::False()) : v8::Handle<v8::Value>(v8String(str, isolate));
+    }
 
     template <class T> v8::Handle<v8::Value> v8NumberArray(const Vector<T>& values)
     {
@@ -365,9 +419,15 @@ namespace WebCore {
         return result;
     }
 
-    double toWebCoreDate(v8::Handle<v8::Value> object);
+    inline double toWebCoreDate(v8::Handle<v8::Value> object)
+    {
+        return (object->IsDate() || object->IsNumber()) ? object->NumberValue() : std::numeric_limits<double>::quiet_NaN();
+    }
 
-    v8::Handle<v8::Value> v8DateOrNull(double value);
+    inline v8::Handle<v8::Value> v8DateOrNull(double value)
+    {
+        return isfinite(value) ? v8::Date::New(value) : v8::Handle<v8::Value>(v8::Null());
+    }
 
     v8::Persistent<v8::FunctionTemplate> createRawTemplate();
 
@@ -509,9 +569,9 @@ namespace WebCore {
         return V8ParameterBase::prepareBase();
     }
 
-    enum ParameterMissingPolicy {
-        MissingIsUndefined,
-        MissingIsEmpty
+    enum ParameterDefaultPolicy {
+        DefaultIsUndefined,
+        DefaultIsNullString
     };
 
 } // namespace WebCore

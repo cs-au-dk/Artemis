@@ -31,22 +31,33 @@ from webkitpy.layout_tests.port import port_testcase
 from webkitpy.common.system.filesystem_mock import MockFileSystem
 from webkitpy.common.system.outputcapture import OutputCapture
 from webkitpy.tool.mocktool import MockOptions
-from webkitpy.common.system.executive_mock import MockExecutive
-from webkitpy.common.host_mock import MockHost
+from webkitpy.common.system.executive_mock import MockExecutive, MockExecutive2, MockProcess, ScriptError
+from webkitpy.common.system.systemhost_mock import MockSystemHost
 
 
 class MacTest(port_testcase.PortTestCase):
+    os_name = 'mac'
+    os_version = 'leopard'
+    port_name = 'mac-leopard'
     port_maker = MacPort
 
-    def assert_skipped_file_search_paths(self, port_name, expected_paths):
-        port = self.make_port(port_name=port_name)
+    def assert_skipped_file_search_paths(self, port_name, expected_paths, use_webkit2=False):
+        port = self.make_port(port_name=port_name, options=MockOptions(webkit_test_runner=use_webkit2))
         self.assertEqual(port._skipped_file_search_paths(), expected_paths)
 
     def test_skipped_file_search_paths(self):
         self.assert_skipped_file_search_paths('mac-snowleopard', set(['mac-snowleopard', 'mac']))
         self.assert_skipped_file_search_paths('mac-leopard', set(['mac-leopard', 'mac']))
-        # We cannot test just "mac" here as the MacPort constructor automatically fills in the version from the running OS.
-        # self.assert_skipped_file_search_paths('mac', ['mac'])
+        self.assert_skipped_file_search_paths('mac-lion', set(['mac-lion', 'mac']))
+
+        # Note that there is no platform/mac-future/Skipped.
+        self.assert_skipped_file_search_paths('mac-future', set(['mac']))
+
+        self.assert_skipped_file_search_paths('mac-snowleopard', set(['mac-snowleopard', 'mac', 'mac-wk2', 'wk2']), use_webkit2=True)
+        self.assert_skipped_file_search_paths('mac-leopard', set(['mac-leopard', 'mac', 'mac-wk2', 'wk2']), use_webkit2=True)
+        self.assert_skipped_file_search_paths('mac-lion', set(['mac-lion', 'mac', 'mac-wk2', 'wk2']), use_webkit2=True)
+        self.assert_skipped_file_search_paths('mac-future', set(['mac', 'mac-wk2', 'wk2']), use_webkit2=True)
+
 
 
     example_skipped_file = u"""
@@ -74,12 +85,13 @@ java/
         self.assertEqual(port._tests_from_skipped_file_contents(self.example_skipped_file), self.example_skipped_tests)
 
     def assert_name(self, port_name, os_version_string, expected):
-        port = self.make_port(port_name=port_name, os_version_string=os_version_string)
+        host = MockSystemHost(os_name='mac', os_version=os_version_string)
+        port = self.make_port(host=host, port_name=port_name)
         self.assertEquals(expected, port.name())
 
     def test_tests_for_other_platforms(self):
         platforms = ['mac', 'chromium-linux', 'mac-snowleopard']
-        port = MacPort(MockHost(), port_name='mac-snowleopard')
+        port = self.make_port(port_name='mac-snowleopard')
         platform_dir_paths = map(port._webkit_baseline_path, platforms)
         # Replace our empty mock file system with one which has our expected platform directories.
         port._filesystem = MockFileSystem(dirs=platform_dir_paths)
@@ -90,75 +102,154 @@ java/
         self.assertFalse('platform/mac-snowleopard' in dirs_to_skip)
 
     def test_version(self):
-        port = MacPort(MockHost())
+        port = self.make_port()
         self.assertTrue(port.version())
 
     def test_versions(self):
-        self.assert_name(None, '10.5.3', 'mac-leopard')
-        self.assert_name('mac', '10.5.3', 'mac-leopard')
-        self.assert_name('mac-leopard', '10.4.8', 'mac-leopard')
-        self.assert_name('mac-leopard', '10.5.3', 'mac-leopard')
-        self.assert_name('mac-leopard', '10.6.3', 'mac-leopard')
+        self.assert_name('mac', 'leopard', 'mac-leopard')
+        self.assert_name('mac-leopard', 'tiger', 'mac-leopard')
+        self.assert_name('mac-leopard', 'leopard', 'mac-leopard')
+        self.assert_name('mac-leopard', 'snowleopard', 'mac-leopard')
 
-        self.assert_name(None, '10.6.3', 'mac-snowleopard')
-        self.assert_name('mac', '10.6.3', 'mac-snowleopard')
-        self.assert_name('mac-snowleopard', '10.4.3', 'mac-snowleopard')
-        self.assert_name('mac-snowleopard', '10.5.3', 'mac-snowleopard')
-        self.assert_name('mac-snowleopard', '10.6.3', 'mac-snowleopard')
+        self.assert_name('mac', 'snowleopard', 'mac-snowleopard')
+        self.assert_name('mac-snowleopard', 'tiger', 'mac-snowleopard')
+        self.assert_name('mac-snowleopard', 'leopard', 'mac-snowleopard')
+        self.assert_name('mac-snowleopard', 'snowleopard', 'mac-snowleopard')
 
-        self.assert_name(None, '10.7', 'mac-lion')
-        self.assert_name(None, '10.7.3', 'mac-lion')
-        self.assert_name('mac', '10.7.3', 'mac-lion')
+        self.assert_name('mac', 'lion', 'mac-lion')
+        self.assert_name('mac-lion', 'lion', 'mac-lion')
 
-        self.assert_name(None, '10.9', 'mac-future')
-        self.assert_name('mac', '10.9', 'mac-future')
-        self.assert_name('mac-future', '10.9', 'mac-future')
+        self.assert_name('mac', 'future', 'mac-future')
+        self.assert_name('mac-future', 'future', 'mac-future')
 
-        self.assertRaises(AssertionError, self.assert_name, None, '10.3.1', 'should-raise-assertion-so-this-value-does-not-matter')
+        self.assertRaises(AssertionError, self.assert_name, 'mac-tiger', 'leopard', 'mac-leopard')
+
 
     def test_is_version_methods(self):
-        leopard_port = self.make_port(port_name='mac-leopard', os_version_string='10.5.3')
+        leopard_port = self.make_port(port_name='mac-leopard')
         self.assertTrue(leopard_port.is_leopard())
         self.assertFalse(leopard_port.is_snowleopard())
         self.assertFalse(leopard_port.is_lion())
 
-        snowleopard_port = self.make_port(port_name='mac-snowleopard', os_version_string='10.6.3')
+        snowleopard_port = self.make_port(port_name='mac-snowleopard')
         self.assertFalse(snowleopard_port.is_leopard())
         self.assertTrue(snowleopard_port.is_snowleopard())
         self.assertFalse(snowleopard_port.is_lion())
 
-        lion_port = self.make_port(port_name='mac-lion', os_version_string='10.7.2')
+        lion_port = self.make_port(port_name='mac-lion')
         self.assertFalse(lion_port.is_leopard())
         self.assertFalse(lion_port.is_snowleopard())
         self.assertTrue(lion_port.is_lion())
 
     def test_setup_environ_for_server(self):
-        port = MacPort(MockHost(), options=MockOptions(leaks=True, guard_malloc=True))
+        port = self.make_port(options=MockOptions(leaks=True, guard_malloc=True))
         env = port.setup_environ_for_server(port.driver_name())
         self.assertEquals(env['MallocStackLogging'], '1')
         self.assertEquals(env['DYLD_INSERT_LIBRARIES'], '/usr/lib/libgmalloc.dylib')
 
-    def _assert_search_path(self, search_paths, version, use_webkit2=False):
-        # FIXME: Port constructors should not "parse" the port name, but
-        # rather be passed components (directly or via setters).  Once
-        # we fix that, this method will need a re-write.
-        port = MacPort(MockHost(), port_name='mac-%s' % version, options=MockOptions(webkit_test_runner=use_webkit2))
+    def _assert_search_path(self, port_name, baseline_path, search_paths, use_webkit2=False):
+        port = self.make_port(port_name=port_name, options=MockOptions(webkit_test_runner=use_webkit2))
         absolute_search_paths = map(port._webkit_baseline_path, search_paths)
+        self.assertEquals(port.baseline_path(), port._webkit_baseline_path(baseline_path))
         self.assertEquals(port.baseline_search_path(), absolute_search_paths)
 
     def test_baseline_search_path(self):
-        # FIXME: Is this really right?  Should mac-leopard fallback to mac-snowleopard?
-        self._assert_search_path(['mac-leopard', 'mac-snowleopard', 'mac-lion', 'mac'], 'leopard')
-        self._assert_search_path(['mac-snowleopard', 'mac-lion', 'mac'], 'snowleopard')
-        self._assert_search_path(['mac-lion', 'mac'], 'lion')
+        self._assert_search_path('mac-leopard', 'mac-leopard', ['mac-leopard', 'mac-snowleopard', 'mac-lion', 'mac'])
+        self._assert_search_path('mac-snowleopard', 'mac-snowleopard', ['mac-snowleopard', 'mac-lion', 'mac'])
 
-        self._assert_search_path(['mac-wk2', 'mac-leopard', 'mac-snowleopard', 'mac-lion', 'mac'], 'leopard', use_webkit2=True)
-        self._assert_search_path(['mac-wk2', 'mac-snowleopard', 'mac-lion', 'mac'], 'snowleopard', use_webkit2=True)
-        self._assert_search_path(['mac-wk2', 'mac-lion', 'mac'], 'lion', use_webkit2=True)
+        # Note that mac-lion writes baselines into mac, not mac-lion! (but it will read from mac-lion)
+        self._assert_search_path('mac-lion', 'mac', ['mac-lion', 'mac'])
+
+        # Note that there is no 'mac-future'; it uses the 'mac' directory as well.
+        self._assert_search_path('mac-future', 'mac', ['mac'])
+
+        self._assert_search_path('mac-leopard', 'mac-wk2', ['mac-wk2', 'mac-leopard', 'mac-snowleopard', 'mac-lion', 'mac'], use_webkit2=True)
+        self._assert_search_path('mac-snowleopard', 'mac-wk2', ['mac-wk2', 'mac-snowleopard', 'mac-lion', 'mac'], use_webkit2=True)
+        self._assert_search_path('mac-lion', 'mac-wk2', ['mac-wk2', 'mac-lion', 'mac'], use_webkit2=True)
+        self._assert_search_path('mac-future', 'mac-wk2', ['mac-wk2', 'mac'], use_webkit2=True)
 
     def test_show_results_html_file(self):
-        port = MacPort(MockHost())
+        port = self.make_port()
         # Delay setting a should_log executive to avoid logging from MacPort.__init__.
         port._executive = MockExecutive(should_log=True)
-        expected_stderr = "MOCK run_command: ['Tools/Scripts/run-safari', '--release', '-NSOpen', 'test.html'], cwd=/mock-checkout\n"
+        expected_stderr = "MOCK popen: ['Tools/Scripts/run-safari', '--release', '--no-saved-state', '-NSOpen', 'test.html'], cwd=/mock-checkout\n"
         OutputCapture().assert_outputs(self, port.show_results_html_file, ["test.html"], expected_stderr=expected_stderr)
+
+    def test_operating_system(self):
+        self.assertEqual('mac', self.make_port().operating_system())
+
+    def test_default_child_processes(self):
+        port = self.make_port(port_name='mac-lion')
+        # MockPlatformInfo only has 2 mock cores.  The important part is that 2 > 1.
+        self.assertEqual(port.default_child_processes(), 2)
+
+        # SnowLeopard has a CFNetwork bug which causes crashes if we execute more than one copy of DRT at once.
+        port = self.make_port(port_name='mac-snowleopard')
+        expected_logs = "Cannot run tests in parallel on Snow Leopard due to rdar://problem/10621525.\n"
+        child_processes = OutputCapture().assert_outputs(self, port.default_child_processes, (), expected_logs=expected_logs)
+        self.assertEqual(child_processes, 1)
+
+    def test_get_crash_log(self):
+        # Mac crash logs are tested elsewhere, so here we just make sure we don't crash.
+        def fake_time_cb():
+            times = [0, 20, 40]
+            return lambda: times.pop(0)
+        port = self.make_port(port_name='mac-snowleopard')
+        port._get_crash_log('DumpRenderTree', 1234, '', '', 0,
+            time_fn=fake_time_cb(), sleep_fn=lambda delay: None)
+
+    def test_helper_starts(self):
+        host = MockSystemHost(MockExecutive())
+        port = self.make_port(host)
+        oc = OutputCapture()
+        oc.capture_output()
+        host.executive._proc = MockProcess('ready\n')
+        port.start_helper()
+        port.stop_helper()
+        oc.restore_output()
+
+        # make sure trying to stop the helper twice is safe.
+        port.stop_helper()
+
+    def test_helper_fails_to_start(self):
+        host = MockSystemHost(MockExecutive())
+        port = self.make_port(host)
+        oc = OutputCapture()
+        oc.capture_output()
+        port.start_helper()
+        port.stop_helper()
+        oc.restore_output()
+
+    def test_helper_fails_to_stop(self):
+        host = MockSystemHost(MockExecutive())
+        host.executive._proc = MockProcess()
+
+        def bad_waiter():
+            raise IOError('failed to wait')
+        host.executive._proc.wait = bad_waiter
+
+        port = self.make_port(host)
+        oc = OutputCapture()
+        oc.capture_output()
+        port.start_helper()
+        port.stop_helper()
+        oc.restore_output()
+
+    def test_sample_process(self):
+
+        def logging_run_command(args):
+            print args
+
+        port = self.make_port()
+        port._executive = MockExecutive2(run_command_fn=logging_run_command)
+        expected_stdout = "['/usr/bin/sample', 42, 10, 10, '-file', '/mock-build/layout-test-results/test-42.sample.txt']\n"
+        OutputCapture().assert_outputs(self, port.sample_process, args=['test', 42], expected_stdout=expected_stdout)
+
+    def test_sample_process_throws_exception(self):
+
+        def throwing_run_command(args):
+            raise ScriptError("MOCK script error")
+
+        port = self.make_port()
+        port._executive = MockExecutive2(run_command_fn=throwing_run_command)
+        OutputCapture().assert_outputs(self, port.sample_process, args=['test', 42])

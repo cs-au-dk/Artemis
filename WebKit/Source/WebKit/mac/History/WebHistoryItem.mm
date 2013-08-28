@@ -48,6 +48,7 @@
 #import <WebCore/KURL.h>
 #import <WebCore/PageCache.h>
 #import <WebCore/PlatformString.h>
+#import <WebCore/RunLoop.h>
 #import <WebCore/ThreadCheck.h>
 #import <WebCore/WebCoreObjCExtras.h>
 #import <runtime/InitializeThreading.h>
@@ -97,6 +98,7 @@ void WKNotifyHistoryItemChanged(HistoryItem*)
 {
     JSC::initializeThreading();
     WTF::initializeMainThreadToProcessMainThread();
+    WebCore::RunLoop::initializeMainRunLoop();
     WebCoreObjCFinalizeOnMainThread(self);
 }
 
@@ -141,11 +143,9 @@ void WKNotifyHistoryItemChanged(HistoryItem*)
 - (id)copyWithZone:(NSZone *)zone
 {
     WebCoreThreadViolationCheckRoundOne();
-    WebHistoryItem *copy = (WebHistoryItem *)NSCopyObject(self, 0, zone);
-    RefPtr<HistoryItem> item = core(_private)->copy();
-    copy->_private = kitPrivate(item.get());
-    historyItemWrappers().set(item.release().leakRef(), copy);
-    
+    WebHistoryItem *copy = [[[self class] alloc] initWithWebCoreHistoryItem:core(_private)->copy()];
+    historyItemWrappers().set(core(copy->_private), copy);
+
     return copy;
 }
 

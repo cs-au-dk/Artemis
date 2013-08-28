@@ -27,6 +27,7 @@
 
 #include "AdjustViewSizeOrNot.h"
 #include "Color.h"
+#include "Frame.h"
 #include "LayoutTypes.h"
 #include "PaintPhase.h"
 #include "ScrollView.h"
@@ -69,11 +70,14 @@ public:
     virtual void setFrameRect(const IntRect&);
 
 #if ENABLE(REQUEST_ANIMATION_FRAME)
-    void scheduleAnimation();
+    virtual bool scheduleAnimation();
 #endif
 
     Frame* frame() const { return m_frame.get(); }
     void clearFrame();
+
+    int mapFromLayoutToCSSUnits(LayoutUnit);
+    LayoutUnit mapFromCSSToLayoutUnits(int);
 
     LayoutUnit marginWidth() const { return m_margins.width(); } // -1 means default
     LayoutUnit marginHeight() const { return m_margins.height(); } // -1 means default
@@ -86,8 +90,6 @@ public:
     virtual PassRefPtr<Scrollbar> createScrollbar(ScrollbarOrientation);
 
     virtual bool avoidScrollbarCreation() const;
-    virtual void didAddHorizontalScrollbar(Scrollbar*);
-    virtual void willRemoveHorizontalScrollbar(Scrollbar*);
 
     virtual void setContentsSize(const IntSize&);
 
@@ -101,6 +103,7 @@ public:
     bool isInLayout() const { return m_inLayout; }
 
     RenderObject* layoutRoot(bool onlyDuringLayout = false) const;
+    void clearLayoutRoot() { m_layoutRoot = 0; }
     int layoutCount() const { return m_layoutCount; }
 
     bool needsLayout() const;
@@ -109,11 +112,12 @@ public:
     bool needsFullRepaint() const { return m_doFullRepaint; }
 
 #if ENABLE(REQUEST_ANIMATION_FRAME)
-    void serviceScriptedAnimations(DOMTimeStamp);
+    void serviceScriptedAnimations(double monotonicAnimationStartTime);
 #endif
 
 #if USE(ACCELERATED_COMPOSITING)
-    void updateCompositingLayers();
+    void updateCompositingLayersAfterStyleChange();
+    void updateCompositingLayersAfterLayout();
     bool syncCompositingStateForThisFrame(Frame* rootFrameForSync);
 
     void clearBackingStores();
@@ -122,6 +126,8 @@ public:
     // Called when changes to the GraphicsLayer hierarchy have to be synchronized with
     // content rendered via the normal painting path.
     void setNeedsOneShotDrawingSynchronization();
+
+    virtual TiledBacking* tiledBacking() OVERRIDE;
 #endif
 
     bool hasCompositedContent() const;
@@ -170,9 +176,9 @@ public:
     void setScrollPosition(const IntPoint&);
     void scrollPositionChangedViaPlatformWidget();
     virtual void repaintFixedElementsAfterScrolling();
+    virtual void updateFixedElementsAfterScrolling();
     virtual bool shouldRubberBandInDirection(ScrollDirection) const;
-
-    virtual void zoomAnimatorTransformChanged(float, float, float, ZoomAnimationState);
+    virtual bool requestScrollPositionUpdate(const IntPoint&) OVERRIDE;
 
     String mediaType() const;
     void setMediaType(const String&);
@@ -186,9 +192,11 @@ public:
 
     void addSlowRepaintObject();
     void removeSlowRepaintObject();
+    bool hasSlowRepaintObjects() const { return m_slowRepaintObjectCount; }
 
     void addFixedObject();
     void removeFixedObject();
+    bool hasFixedObjects() const { return m_fixedObjectCount > 0; }
 
     // Functions for querying the current scrolled position, negating the effects of overhang
     // and adjusting for page scale.
@@ -196,13 +204,17 @@ public:
     int scrollYForFixedPosition() const;
     IntSize scrollOffsetForFixedPosition() const;
 
-    bool shouldLayoutFixedElementsRelativeToFrame() const { return m_shouldLayoutFixedElementsRelativeToFrame; }
-    void setShouldLayoutFixedElementsRelativeToFrame(bool);
+    bool fixedElementsLayoutRelativeToFrame() const;
 
     void beginDeferredRepaints();
     void endDeferredRepaints();
     void checkStopDelayingDeferredRepaints();
+    void startDeferredRepaintTimer(double delay);
     void resetDeferredRepaintDelay();
+
+    void beginDisableRepaints();
+    void endDisableRepaints();
+    bool repaintsDisabled() { return m_disableRepaints > 0; }
 
 #if ENABLE(DASHBOARD_SUPPORT)
     void updateDashboardRegions();
@@ -219,6 +231,9 @@ public:
     bool wasScrolledByUser() const;
     void setWasScrolledByUser(bool);
 
+    bool safeToPropagateScrollToParent() const { return m_safeToPropagateScrollToParent; }
+    void setSafeToPropagateScrollToParent(bool isSafe) { m_safeToPropagateScrollToParent = isSafe; }
+
     void addWidgetToUpdate(RenderEmbeddedObject*);
     void removeWidgetToUpdate(RenderEmbeddedObject*);
 
@@ -231,6 +246,7 @@ public:
 
     virtual void paintOverhangAreas(GraphicsContext*, const IntRect& horizontalOverhangArea, const IntRect& verticalOverhangArea, const IntRect& dirtyRect);
     virtual void paintScrollCorner(GraphicsContext*, const IntRect& cornerRect);
+    virtual void paintScrollbar(GraphicsContext*, Scrollbar*, const IntRect&) OVERRIDE;
 
     Color documentBackgroundColor() const;
 
@@ -279,7 +295,8 @@ public:
 
     bool isFrameViewScrollCorner(RenderScrollbarPart* scrollCorner) const { return m_scrollCorner == scrollCorner; }
 
-    void calculateScrollbarModesForLayout(ScrollbarMode& hMode, ScrollbarMode& vMode);
+    enum ScrollbarModesCalculationStrategy { RulesFromWebContentOnly, AnyRule };
+    void calculateScrollbarModesForLayout(ScrollbarMode& hMode, ScrollbarMode& vMode, ScrollbarModesCalculationStrategy = AnyRule);
 
     // Normal delay
     static void setRepaintThrottlingDeferredRepaintDelay(double p);
@@ -309,6 +326,19 @@ public:
     void resetTrackedRepaints() { m_trackedRepaintRects.clear(); }
     const Vector<IntRect>& trackedRepaintRects() const { return m_trackedRepaintRects; }
 
+    typedef HashSet<ScrollableArea*> ScrollableAreaSet;
+    void addScrollableArea(ScrollableArea*);
+    void removeScrollableArea(ScrollableArea*);
+    bool containsScrollableArea(ScrollableArea*) const;
+    const ScrollableAreaSet* scrollableAreas() const { return m_scrollableAreas.get(); }
+
+    virtual void removeChild(Widget*) OVERRIDE;
+
+    // This function exists for ports that need to handle wheel events manually.
+    // On Mac WebKit1 the underlying NSScrollView just does the scrolling, but on most other platforms
+    // we need this function in order to do the scroll ourselves.
+    bool wheelEvent(const PlatformWheelEvent&);
+
 protected:
     virtual bool scrollContentsFastPath(const IntSize& scrollDelta, const IntRect& rectToScroll, const IntRect& clipRect);
     virtual void scrollContentsSlowPath(const IntRect& updateRect);
@@ -330,8 +360,6 @@ private:
     void updateCanBlitOnScrollRecursively();
     bool contentsInCompositedLayer() const;
 
-    bool hasFixedObjects() const { return m_fixedObjectCount > 0; }
-
     void applyOverflowToViewport(RenderObject*, ScrollbarMode& hMode, ScrollbarMode& vMode);
 
     void updateOverflowStatus(bool horizontalOverflow, bool verticalOverflow);
@@ -345,6 +373,8 @@ private:
     virtual void repaintContentRectangle(const IntRect&, bool immediate);
     virtual void contentsResized() OVERRIDE;
     virtual void visibleContentsResized();
+
+    virtual void delegatesScrollingDidChange();
 
     // Override ScrollView methods to do point conversion via renderers, in order to
     // take transforms into account.
@@ -361,18 +391,20 @@ private:
     virtual void setVisibleScrollerThumbRect(const IntRect&);
     virtual bool isOnActivePage() const;
     virtual ScrollableArea* enclosingScrollableArea() const;
+    virtual IntRect scrollableAreaBoundingBox() const OVERRIDE;
+
+    void updateScrollableAreaSet();
 
 #if USE(ACCELERATED_COMPOSITING)
-    virtual GraphicsLayer* layerForHorizontalScrollbar() const;
-    virtual GraphicsLayer* layerForVerticalScrollbar() const;
-    virtual GraphicsLayer* layerForScrollCorner() const;
-#if PLATFORM(CHROMIUM) && ENABLE(RUBBER_BANDING)
-    virtual GraphicsLayer* layerForOverhangAreas() const;
+    virtual GraphicsLayer* layerForHorizontalScrollbar() const OVERRIDE;
+    virtual GraphicsLayer* layerForVerticalScrollbar() const OVERRIDE;
+    virtual GraphicsLayer* layerForScrollCorner() const OVERRIDE;
+#if ENABLE(RUBBER_BANDING)
+    virtual GraphicsLayer* layerForOverhangAreas() const OVERRIDE;
 #endif
 #endif
 
     virtual void notifyPageThatContentAreaWillPaint() const;
-    virtual void disconnectFromPage() { m_page = 0; }
 
     virtual bool scrollAnimatorEnabled() const;
 
@@ -392,6 +424,9 @@ private:
 
     FrameView* parentFrameView() const;
 
+    bool isInChildFrameWithFrameFlattening();
+    bool doLayoutWithFrameFlattening(bool allowSubtree);
+
     virtual AXObjectCache* axObjectCache() const;
     void notifyWidgetsInAllFrames(WidgetNotification);
     
@@ -410,7 +445,6 @@ private:
     bool m_cannotBlitToWindow;
     bool m_isOverlapped;
     bool m_contentIsOpaque;
-    bool m_shouldLayoutFixedElementsRelativeToFrame;
     unsigned m_slowRepaintObjectCount;
     unsigned m_fixedObjectCount;
     int m_borderX;
@@ -422,10 +456,6 @@ private:
     
     bool m_layoutSchedulingEnabled;
     bool m_inLayout;
-#if ENABLE(SVG)
-    bool m_inLayoutParentView;
-#endif
-    bool m_hasPendingPostLayoutTasks;
     bool m_inSynchronousPostLayout;
     int m_layoutCount;
     unsigned m_nestedLayoutCount;
@@ -435,7 +465,7 @@ private:
     bool m_firstLayout;
     bool m_isTransparent;
     Color m_baseBackgroundColor;
-    LayoutSize m_lastLayoutSize;
+    IntSize m_lastViewportSize;
     float m_lastZoomFactor;
 
     String m_mediaType;
@@ -450,14 +480,17 @@ private:
 
     bool m_wasScrolledByUser;
     bool m_inProgrammaticScroll;
-    
+    bool m_safeToPropagateScrollToParent;
+
     unsigned m_deferringRepaints;
     unsigned m_repaintCount;
     Vector<LayoutRect> m_repaintRects;
     Timer<FrameView> m_deferredRepaintTimer;
     double m_deferredRepaintDelay;
     double m_lastPaintTime;
-    
+
+    unsigned m_disableRepaints;
+
     bool m_isTrackingRepaints; // Used for testing.
     Vector<IntRect> m_trackedRepaintRects;
 
@@ -480,15 +513,17 @@ private:
     // Renderer to hold our custom scroll corner.
     RenderScrollbarPart* m_scrollCorner;
 
-    Page* m_page;
-
     // If true, automatically resize the frame view around its content.
     bool m_shouldAutoSize;
     bool m_inAutoSize;
+    // True if autosize has been run since m_shouldAutoSize was set.
+    bool m_didRunAutosize;
     // The lower bound on the size when autosizing.
     IntSize m_minAutoSize;
     // The upper bound on the size when autosizing.
     IntSize m_maxAutoSize;
+
+    OwnPtr<ScrollableAreaSet> m_scrollableAreas;
 
     static double s_deferredRepaintDelay;
     static double s_initialDeferredRepaintDelayDuringLoading;
@@ -517,6 +552,16 @@ inline void FrameView::incrementVisuallyNonEmptyPixelCount(const IntSize& size)
     static const unsigned visualPixelThreshold = 32 * 32;
     if (m_visuallyNonEmptyPixelCount > visualPixelThreshold)
         setIsVisuallyNonEmpty();
+}
+
+inline int FrameView::mapFromLayoutToCSSUnits(LayoutUnit value)
+{
+    return value / (m_frame->pageZoomFactor() * m_frame->frameScaleFactor());
+}
+
+inline LayoutUnit FrameView::mapFromCSSToLayoutUnits(int value)
+{
+    return value * m_frame->pageZoomFactor() * m_frame->frameScaleFactor();
 }
 
 } // namespace WebCore

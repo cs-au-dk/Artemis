@@ -60,23 +60,6 @@ bool Font::canExpandAroundIdeographsInComplexText()
     return false;
 }
 
-static bool isCanvasMultiLayered(SkCanvas* canvas)
-{
-    SkCanvas::LayerIter layerIterator(canvas, false);
-    layerIterator.next();
-    return !layerIterator.done();
-}
-
-static void adjustTextRenderMode(SkPaint* paint, PlatformContextSkia* skiaContext)
-{
-    // Our layers only have a single alpha channel. This means that subpixel
-    // rendered text cannot be compositied correctly when the layer is
-    // collapsed. Therefore, subpixel text is disabled when we are drawing
-    // onto a layer or when the compositor is being used.
-    if (isCanvasMultiLayered(skiaContext->canvas()) || skiaContext->isDrawingToImageBuffer())
-        paint->setLCDRenderText(false);
-}
-
 void Font::drawGlyphs(GraphicsContext* gc, const SimpleFontData* font,
                       const GlyphBuffer& glyphBuffer,  int from, int numGlyphs,
                       const FloatPoint& point) const {
@@ -118,7 +101,7 @@ void Font::drawGlyphs(GraphicsContext* gc, const SimpleFontData* font,
         SkPaint paint;
         gc->platformContext()->setupPaintForFilling(&paint);
         font->platformData().setupPaint(&paint);
-        adjustTextRenderMode(&paint, gc->platformContext());
+        gc->platformContext()->adjustTextRenderMode(&paint);
         paint.setTextEncoding(SkPaint::kGlyphID_TextEncoding);
 
         if (isVertical) {
@@ -140,7 +123,7 @@ void Font::drawGlyphs(GraphicsContext* gc, const SimpleFontData* font,
         SkPaint paint;
         gc->platformContext()->setupPaintForStroking(&paint, 0, 0);
         font->platformData().setupPaint(&paint);
-        adjustTextRenderMode(&paint, gc->platformContext());
+        gc->platformContext()->adjustTextRenderMode(&paint);
         paint.setTextEncoding(SkPaint::kGlyphID_TextEncoding);
 
         if (textMode & TextModeFill) {
@@ -195,8 +178,7 @@ void Font::drawComplexText(GraphicsContext* gc, const TextRun& run,
         setupForTextPainting(&strokePaint, gc->strokeColor().rgb());
     }
 
-    ComplexTextController controller(run, point.x(), point.y(), wordSpacing(), letterSpacing(), run.expansion(), this);
-
+    ComplexTextController controller(this, run, point.x(), point.y());
     if (run.rtl())
         controller.setupForRTL();
 
@@ -209,13 +191,13 @@ void Font::drawComplexText(GraphicsContext* gc, const TextRun& run,
 
         if (fill) {
             controller.fontPlatformDataForScriptRun()->setupPaint(&fillPaint);
-            adjustTextRenderMode(&fillPaint, gc->platformContext());
+            gc->platformContext()->adjustTextRenderMode(&fillPaint);
             canvas->drawPosText(controller.glyphs() + fromGlyph, glyphLength << 1, controller.positions() + fromGlyph, fillPaint);
         }
 
         if (stroke) {
             controller.fontPlatformDataForScriptRun()->setupPaint(&strokePaint);
-            adjustTextRenderMode(&strokePaint, gc->platformContext());
+            gc->platformContext()->adjustTextRenderMode(&strokePaint);
             canvas->drawPosText(controller.glyphs() + fromGlyph, glyphLength << 1, controller.positions() + fromGlyph, strokePaint);
         }
     }
@@ -228,7 +210,7 @@ void Font::drawEmphasisMarksForComplexText(GraphicsContext* /* context */, const
 
 float Font::floatWidthForComplexText(const TextRun& run, HashSet<const SimpleFontData*>* /* fallbackFonts */, GlyphOverflow* /* glyphOverflow */) const
 {
-    ComplexTextController controller(run, 0, 0, wordSpacing(), letterSpacing(), run.expansion(), this);
+    ComplexTextController controller(this, run, 0, 0);
     return controller.widthOfFullRun();
 }
 
@@ -242,7 +224,7 @@ int Font::offsetForPositionForComplexText(const TextRun& run, float xFloat,
 
     // (Mac code ignores includePartialGlyphs, and they don't know what it's
     // supposed to do, so we just ignore it as well.)
-    ComplexTextController controller(run, 0, 0, wordSpacing(), letterSpacing(), run.expansion(), this);
+    ComplexTextController controller(this, run, 0, 0);
     if (run.rtl())
         controller.setupForRTL();
     return controller.offsetForPosition(targetX);
@@ -253,7 +235,7 @@ FloatRect Font::selectionRectForComplexText(const TextRun& run,
                                             const FloatPoint& point, int height,
                                             int from, int to) const
 {
-    ComplexTextController controller(run, 0, 0, wordSpacing(), letterSpacing(), run.expansion(), this);
+    ComplexTextController controller(this, run, 0, 0);
     if (run.rtl())
         controller.setupForRTL();
     return controller.selectionRect(point, height, from, to);

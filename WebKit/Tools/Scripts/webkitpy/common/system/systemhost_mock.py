@@ -35,11 +35,15 @@ from webkitpy.common.system.workspace_mock import MockWorkspace
 
 
 class MockSystemHost(object):
-    def __init__(self, log_executive=False, executive_throws_when_run=None):
-        self.executive = MockExecutive(should_log=log_executive, should_throw_when_run=executive_throws_when_run)
-        self.filesystem = MockFileSystem()
+    def __init__(self, log_executive=False, executive_throws_when_run=None, os_name=None, os_version=None, executive=None, filesystem=None):
+        self.executive = executive or MockExecutive(should_log=log_executive, should_throw_when_run=executive_throws_when_run)
+        self.filesystem = filesystem or MockFileSystem()
         self.user = MockUser()
         self.platform = MockPlatformInfo()
+        if os_name:
+            self.platform.os_name = os_name
+        if os_version:
+            self.platform.os_version = os_version
 
         # FIXME: Should this take pointers to the filesystem and the executive?
         self.workspace = MockWorkspace()

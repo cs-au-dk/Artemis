@@ -320,10 +320,11 @@ void WebSharedWorkerImpl::postTaskToLoader(PassOwnPtr<ScriptExecutionContext::Ta
     m_loadingDocument->postTask(task);
 }
 
-void WebSharedWorkerImpl::postTaskForModeToWorkerContext(
+bool WebSharedWorkerImpl::postTaskForModeToWorkerContext(
     PassOwnPtr<ScriptExecutionContext::Task> task, const String& mode)
 {
     m_workerThread->runLoop().postTaskForMode(task, mode);
+    return true;
 }
 
 
@@ -361,11 +362,13 @@ void WebSharedWorkerImpl::connectTask(ScriptExecutionContext* context, PassOwnPt
     workerContext->dispatchEvent(createConnectEvent(port));
 }
 
-void WebSharedWorkerImpl::startWorkerContext(const WebURL& url, const WebString& name, const WebString& userAgent, const WebString& sourceCode, long long)
+void WebSharedWorkerImpl::startWorkerContext(const WebURL& url, const WebString& name, const WebString& userAgent, const WebString& sourceCode, const WebString& contentSecurityPolicy, WebContentSecurityPolicyType policyType, long long)
 {
     initializeLoader(url);
     WorkerThreadStartMode startMode = m_pauseWorkerContextOnStart ? PauseWorkerContextOnStart : DontPauseWorkerContextOnStart;
-    setWorkerThread(SharedWorkerThread::create(name, url, userAgent, sourceCode, *this, *this, startMode));
+    setWorkerThread(SharedWorkerThread::create(name, url, userAgent, sourceCode, *this, *this, startMode, contentSecurityPolicy,
+                                               static_cast<WebCore::ContentSecurityPolicy::HeaderType>(policyType)));
+
     workerThread()->start();
 }
 
@@ -441,6 +444,7 @@ static void dispatchOnInspectorBackendTask(ScriptExecutionContext* context, cons
 void WebSharedWorkerImpl::dispatchDevToolsMessage(const WebString& message)
 {
     workerThread()->runLoop().postTaskForMode(createCallbackTask(dispatchOnInspectorBackendTask, String(message)), WorkerDebuggerAgent::debuggerTaskMode);
+    WorkerDebuggerAgent::interruptAndDispatchInspectorCommands(workerThread());
 }
 
 WebSharedWorker* WebSharedWorker::create(WebSharedWorkerClient* client)

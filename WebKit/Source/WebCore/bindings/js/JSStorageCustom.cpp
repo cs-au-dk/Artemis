@@ -41,7 +41,12 @@ bool JSStorage::canGetItemsForName(ExecState*, Storage* impl, const Identifier& 
 
 JSValue JSStorage::nameGetter(ExecState* exec, JSValue slotBase, const Identifier& propertyName)
 {
-    JSStorage* thisObj = static_cast<JSStorage*>(asObject(slotBase));
+    JSStorage* thisObj = jsCast<JSStorage*>(asObject(slotBase));
+        
+    JSValue prototype = asObject(slotBase)->prototype();
+    if (prototype.isObject() && asObject(prototype)->hasProperty(exec, propertyName))
+        return asObject(prototype)->get(exec, propertyName);
+ 
     return jsStringOrNull(exec, thisObj->impl()->getItem(identifierToString(propertyName)));
 }
 
@@ -86,7 +91,7 @@ bool JSStorage::putDelegate(ExecState* exec, const Identifier& propertyName, JSV
     if (prototype.isObject() && asObject(prototype)->hasProperty(exec, propertyName))
         return false;
     
-    String stringValue = ustringToString(value.toString(exec));
+    String stringValue = ustringToString(value.toString(exec)->value(exec));
     if (exec->hadException())
         return true;
     

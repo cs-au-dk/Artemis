@@ -64,6 +64,7 @@ DocumentEventQueue::DocumentEventQueue(ScriptExecutionContext* context)
     : m_pendingEventTimer(adoptPtr(new DocumentEventQueueTimer(this, context)))
     , m_isClosed(false)
 {
+    m_pendingEventTimer->suspendIfNeeded();
 }
 
 DocumentEventQueue::~DocumentEventQueue()
@@ -76,7 +77,7 @@ bool DocumentEventQueue::enqueueEvent(PassRefPtr<Event> event)
         return false;
 
     ASSERT(event->target());
-    bool wasAdded = m_queuedEvents.add(event).second;
+    bool wasAdded = m_queuedEvents.add(event).isNewEntry;
     ASSERT_UNUSED(wasAdded, wasAdded); // It should not have already been in the list.
     
     if (!m_pendingEventTimer->isActive())
@@ -99,7 +100,7 @@ void DocumentEventQueue::enqueueOrDispatchScrollEvent(PassRefPtr<Node> target, S
         return;
     }
 
-    if (!m_nodesWithQueuedScrollEvents.add(target.get()).second)
+    if (!m_nodesWithQueuedScrollEvents.add(target.get()).isNewEntry)
         return;
 
     scrollEvent->setTarget(target);
@@ -131,7 +132,7 @@ void DocumentEventQueue::pendingEventTimerFired()
 
     // Insert a marker for where we should stop.
     ASSERT(!m_queuedEvents.contains(0));
-    bool wasAdded = m_queuedEvents.add(0).second;
+    bool wasAdded = m_queuedEvents.add(0).isNewEntry;
     ASSERT_UNUSED(wasAdded, wasAdded); // It should not have already been in the list.
 
     RefPtr<DocumentEventQueue> protector(this);

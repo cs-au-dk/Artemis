@@ -40,20 +40,24 @@ class RenderProgress;
 class RenderStyle;
 class HTMLMediaElement;
 class StylePainter;
+class ScrollbarTheme;
+
+typedef PassRefPtr<RenderTheme> (*QtThemeFactoryFunction)(Page* page);
 
 class RenderThemeQt : public RenderTheme {
 
 public:
     RenderThemeQt(Page*);
 
-    static bool useMobileTheme();
+    static void setCustomTheme(QtThemeFactoryFunction, ScrollbarTheme* customScrollbarTheme);
+    static ScrollbarTheme* customScrollbarTheme();
 
     String extraDefaultStyleSheet();
 
     virtual bool supportsHover(const RenderStyle*) const;
     virtual bool supportsFocusRing(const RenderStyle*) const;
 
-    virtual int baselinePosition(const RenderObject*) const;
+    virtual LayoutUnit baselinePosition(const RenderObject*) const;
 
     // A method asking if the control changes its tint when the window has focus or not.
     virtual bool controlSupportsTints(const RenderObject*) const;
@@ -95,39 +99,39 @@ protected:
 
     virtual void setButtonSize(RenderStyle*) const;
 
-    virtual void adjustTextFieldStyle(CSSStyleSelector*, RenderStyle*, Element*) const;
+    virtual void adjustTextFieldStyle(StyleResolver*, RenderStyle*, Element*) const;
 
     virtual bool paintTextArea(RenderObject*, const PaintInfo&, const IntRect&);
-    virtual void adjustTextAreaStyle(CSSStyleSelector*, RenderStyle*, Element*) const;
+    virtual void adjustTextAreaStyle(StyleResolver*, RenderStyle*, Element*) const;
 
-    virtual void adjustMenuListStyle(CSSStyleSelector*, RenderStyle*, Element*) const;
+    virtual void adjustMenuListStyle(StyleResolver*, RenderStyle*, Element*) const;
 
-    virtual void adjustMenuListButtonStyle(CSSStyleSelector*, RenderStyle*, Element*) const;
+    virtual void adjustMenuListButtonStyle(StyleResolver*, RenderStyle*, Element*) const;
 
 #if ENABLE(PROGRESS_TAG)
-    virtual void adjustProgressBarStyle(CSSStyleSelector*, RenderStyle*, Element*) const;
+    virtual void adjustProgressBarStyle(StyleResolver*, RenderStyle*, Element*) const;
     // Returns the repeat interval of the animation for the progress bar.
     virtual double animationRepeatIntervalForProgressBar(RenderProgress*) const;
 #endif
 
-    virtual void adjustSliderTrackStyle(CSSStyleSelector*, RenderStyle*, Element*) const;
+    virtual void adjustSliderTrackStyle(StyleResolver*, RenderStyle*, Element*) const;
 
-    virtual void adjustSliderThumbStyle(CSSStyleSelector*, RenderStyle*, Element*) const;
+    virtual void adjustSliderThumbStyle(StyleResolver*, RenderStyle*, Element*) const;
 
     virtual bool paintSearchField(RenderObject*, const PaintInfo&, const IntRect&);
-    virtual void adjustSearchFieldStyle(CSSStyleSelector*, RenderStyle*, Element*) const;
+    virtual void adjustSearchFieldStyle(StyleResolver*, RenderStyle*, Element*) const;
 
-    virtual void adjustSearchFieldCancelButtonStyle(CSSStyleSelector*, RenderStyle*, Element*) const;
+    virtual void adjustSearchFieldCancelButtonStyle(StyleResolver*, RenderStyle*, Element*) const;
     virtual bool paintSearchFieldCancelButton(RenderObject*, const PaintInfo&, const IntRect&);
 
-    virtual void adjustSearchFieldDecorationStyle(CSSStyleSelector*, RenderStyle*, Element*) const;
+    virtual void adjustSearchFieldDecorationStyle(StyleResolver*, RenderStyle*, Element*) const;
     virtual bool paintSearchFieldDecoration(RenderObject*, const PaintInfo&, const IntRect&);
 
-    virtual void adjustSearchFieldResultsDecorationStyle(CSSStyleSelector*, RenderStyle*, Element*) const;
+    virtual void adjustSearchFieldResultsDecorationStyle(StyleResolver*, RenderStyle*, Element*) const;
     virtual bool paintSearchFieldResultsDecoration(RenderObject*, const PaintInfo&, const IntRect&);
 
 #ifndef QT_NO_SPINBOX
-    virtual void adjustInnerSpinButtonStyle(CSSStyleSelector*, RenderStyle*, Element*) const;
+    virtual void adjustInnerSpinButtonStyle(StyleResolver*, RenderStyle*, Element*) const;
 #endif
 
 #if ENABLE(VIDEO)
@@ -151,7 +155,7 @@ protected:
 #endif
     virtual void computeSizeBasedOnStyle(RenderStyle*) const = 0;
 
-    virtual String fileListNameForWidth(const Vector<String>& filenames, const Font&, int width);
+    virtual String fileListNameForWidth(const FileList*, const Font&, int width, bool multipleFilesAllowed) const OVERRIDE;
 
     virtual QRect inflateButtonRect(const QRect& originalRect) const;
 

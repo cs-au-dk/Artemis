@@ -26,6 +26,8 @@
 #ifndef AnimationUtilities_h
 #define AnimationUtilities_h
 
+#include "FractionalLayoutUnit.h"
+#include "IntPoint.h"
 #include <wtf/MathExtras.h>
 
 namespace WebCore {
@@ -33,6 +35,11 @@ namespace WebCore {
 inline int blend(int from, int to, double progress)
 {  
     return static_cast<int>(lround(static_cast<double>(from) + static_cast<double>(to - from) * progress));
+}
+
+inline unsigned blend(unsigned from, unsigned to, double progress)
+{
+    return static_cast<unsigned>(lround(to > from ? static_cast<double>(from) + static_cast<double>(to - from) * progress : static_cast<double>(from) - static_cast<double>(from - to) * progress));
 }
 
 inline double blend(double from, double to, double progress)
@@ -43,6 +50,17 @@ inline double blend(double from, double to, double progress)
 inline float blend(float from, float to, double progress)
 {  
     return static_cast<float>(from + (to - from) * progress);
+}
+
+inline FractionalLayoutUnit blend(FractionalLayoutUnit from, FractionalLayoutUnit to, double progress)
+{  
+    return from + (to - from) * progress;
+}
+
+inline IntPoint blend(const IntPoint& from, const IntPoint& to, double progress)
+{
+    return IntPoint(blend(from.x(), to.x(), progress),
+                    blend(from.y(), to.y(), progress));
 }
 
 } // namespace WebCore

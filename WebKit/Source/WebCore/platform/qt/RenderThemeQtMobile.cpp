@@ -23,7 +23,6 @@
 #include "config.h"
 #include "RenderThemeQtMobile.h"
 
-#include "CSSStyleSelector.h"
 #include "CSSValueKeywords.h"
 #include "Color.h"
 #include "Document.h"
@@ -35,19 +34,17 @@
 #include "NotImplemented.h"
 #include "Page.h"
 #include "PaintInfo.h"
-#include "PassRefPtr.h"
 #include "QWebPageClient.h"
 #include "RenderBox.h"
 #if ENABLE(PROGRESS_TAG)
 #include "RenderProgress.h"
 #endif
-#if HAVE(QSTYLE)
-#include "RenderThemeQStyle.h"
-#endif
+#include "StyleResolver.h"
+
+#include <wtf/PassRefPtr.h>
 
 #include <QColor>
 #include <QFile>
-#include <QFontMetrics>
 #include <QPainter>
 #include <QPixmapCache>
 
@@ -60,9 +57,10 @@ static const int arrowBoxWidth = 26;
 static const int frameWidth = 2;
 static const int checkBoxWidth = 21;
 static const int radioWidth = 21;
-static const int sliderSize = 19;
+static const int sliderSize = 20;
 static const int buttonHeightRatio = 1.5;
 
+static const float multipleComboDotsOffsetFactor = 1.8;
 static const float buttonPaddingLeft = 18;
 static const float buttonPaddingRight = 18;
 static const float buttonPaddingTop = 2;
@@ -79,6 +77,18 @@ static const QColor darkColor(40, 40, 40);
 static const QColor highlightColor(16, 128, 221);
 static const QColor buttonGradientBottom(245, 245, 245);
 static const QColor shadowColor(80, 80, 80, 160);
+
+static QHash<KeyIdentifier, CacheKey> cacheKeys;
+
+uint qHash(const KeyIdentifier& id)
+{
+    const quint32 value = id.trait1 + (id.trait2 << 1) + (uint(id.type) << 2) + (id.height << 5) + (id.width << 14) + (id.trait3 << 25);
+    const unsigned char* p = reinterpret_cast<const unsigned char*>(&value);
+    uint hash = 0;
+    for (int i = 0; i < 4; ++i)
+        hash ^= (hash << 5) + (hash >> 2) + p[i];
+    return hash;
+}
 
 static void drawControlBackground(QPainter* painter, const QPen& pen, const QRect& rect, const QBrush& brush)
 {
@@ -150,6 +160,28 @@ StylePainterMobile::~StylePainterMobile()
     painter->setRenderHints(QPainter::SmoothPixmapTransform, m_previousSmoothPixmapTransform);
 }
 
+bool StylePainterMobile::findCachedControl(const KeyIdentifier& keyId, QPixmap* result)
+{
+    static CacheKey emptyKey;
+    CacheKey key = cacheKeys.value(keyId, emptyKey);
+    if (key == emptyKey)
+        return false;
+    const bool ret = QPixmapCache::find(key, result);
+    if (!ret)
+        cacheKeys.remove(keyId);
+    return ret;
+}
+
+void StylePainterMobile::insertIntoCache(const KeyIdentifier& keyId, const QPixmap& pixmap)
+{
+    ASSERT(keyId.type);
+    const int sizeInKiloBytes = pixmap.width() * pixmap.height() * pixmap.depth() / (8 * 1024);
+    // Don't cache pixmaps over 512 KB;
+    if (sizeInKiloBytes > 512)
+        return;
+    cacheKeys.insert(keyId, QPixmapCache::insert(pixmap));
+}
+
 void StylePainterMobile::drawCheckableBackground(QPainter* painter, const QRect& rect, bool checked, bool enabled) const
 {
     QBrush brush;
@@ -196,10 +228,12 @@ QPixmap StylePainterMobile::findCheckBox(const QSize& size, bool checked, bool e
 {
     ASSERT(size.width() == size.height());
     QPixmap result;
-    static const QString prefix = QLatin1String("$qt-webkit-mobile-theme-checkbox-");
-    QString key = prefix + QString::number(size.width()) + QLatin1String("-") + (enabled ? QLatin1String("on") : QLatin1String("off"))
-                  + (checked ? QLatin1String("-checked") : QString());
-    if (!QPixmapCache::find(key, result)) {
+    KeyIdentifier id;
+    id.type = KeyIdentifier::CheckBox;
+    id.height = size.height();
+    id.trait1 = enabled;
+    id.trait2 = checked;
+    if (!findCachedControl(id, &result)) {
         result = QPixmap(size);
         result.fill(Qt::transparent);
         QPainter cachePainter(&result);
@@ -207,14 +241,13 @@ QPixmap StylePainterMobile::findCheckBox(const QSize& size, bool checked, bool e
         drawCheckableBackground(&cachePainter, rect, checked, enabled);
         if (checked || !enabled)
             drawChecker(&cachePainter, rect, enabled ? Qt::white : Qt::gray);
-        QPixmapCache::insert(key, result);
+        insertIntoCache(id, result);
     }
     return result;
 }
 
 void StylePainterMobile::drawRadio(QPainter* painter, const QSize& size, bool checked, bool enabled) const
 {
-    ASSERT(size.width() == size.height());
     QRect rect(QPoint(0, 0), size);
 
     drawCheckableBackground(painter, rect, checked, enabled);
@@ -225,21 +258,24 @@ void StylePainterMobile::drawRadio(QPainter* painter, const QSize& size, bool ch
 
 QPixmap StylePainterMobile::findRadio(const QSize& size, bool checked, bool enabled) const
 {
+    ASSERT(size.width() == size.height());
     QPixmap result;
-    static const QString prefix = QLatin1String("$qt-webkit-mobile-theme-radio-");
-    QString key = prefix + QString::number(size.width()) + QLatin1String("-") + (enabled ? QLatin1String("on") : QLatin1String("off"))
-                  + (checked ? QLatin1String("-checked") : QString());
-    if (!QPixmapCache::find(key, result)) {
+    KeyIdentifier id;
+    id.type = KeyIdentifier::Radio;
+    id.height = size.height();
+    id.trait1 = enabled;
+    id.trait2 = checked;
+    if (!findCachedControl(id, &result)) {
         result = QPixmap(size);
         result.fill(Qt::transparent);
         QPainter cachePainter(&result);
         drawRadio(&cachePainter, size, checked, enabled);
-        QPixmapCache::insert(key, result);
+        insertIntoCache(id, result);
     }
     return result;
 }
 
-void StylePainterMobile::drawMultipleComboButton(QPainter* painter, const QSize& size, const QColor& color) const
+void StylePainterMobile::drawMultipleComboButton(QPainter* painter, const QSizeF& size, const QColor& color) const
 {
     const qreal dotDiameter = size.height();
     const qreal dotRadii = dotDiameter / 2;
@@ -248,59 +284,66 @@ void StylePainterMobile::drawMultipleComboButton(QPainter* painter, const QSize&
     painter->setPen(color);
     painter->setBrush(color);
 
-    const qreal offsetFactor = 1.8;
     for (int i = 0; i < 3; ++i) {
-        QPointF center(offsetFactor * dotRadii + i * offsetFactor * dotDiameter, dotRadii);
+        QPointF center(dotRadii + i * multipleComboDotsOffsetFactor * dotDiameter, dotRadii);
         painter->drawEllipse(center, dotRadii, dotRadii);
     }
 }
 
-void StylePainterMobile::drawSimpleComboButton(QPainter* painter, const QSize& size, const QColor& color) const
+void StylePainterMobile::drawSimpleComboButton(QPainter* painter, const QSizeF& size, const QColor& color) const
 {
-    const int gap = (size.height() - 1) / 5;
-    const int arrowHeight = 2 * gap;
-    const int right = arrowHeight * 2;
-    const int bottomBaseline = arrowHeight + gap + 1;
-    QPolygon upArrow, downArrow;
-    upArrow << QPoint(0, arrowHeight) << QPoint(arrowHeight, 0) << QPoint(right, arrowHeight);
-    downArrow << QPoint(0, bottomBaseline) << QPoint(arrowHeight, bottomBaseline + arrowHeight)
-              << QPoint(right, bottomBaseline);
+    const qreal gap = size.height() / 5.0;
+    const qreal arrowHeight = (size.height() - gap) / 2.0;
+    const qreal right = arrowHeight * 2;
+    const qreal bottomBaseline = size.height() - arrowHeight;
+    QPolygonF upArrow, downArrow;
+    upArrow << QPointF(0, arrowHeight) << QPointF(arrowHeight, 0) << QPointF(right, arrowHeight);
+    downArrow << QPointF(0, bottomBaseline) << QPointF(arrowHeight, bottomBaseline + arrowHeight)
+              << QPointF(right, bottomBaseline);
 
-    painter->setPen(color);
+    painter->setPen(Qt::NoPen);
     painter->setBrush(color);
     painter->drawPolygon(upArrow);
     painter->drawPolygon(downArrow);
 }
 
-QSize StylePainterMobile::getButtonImageSize(int buttonHeight, bool multiple) const
+QSizeF StylePainterMobile::getButtonImageSize(int buttonHeight, bool multiple) const
 {
     if (multiple)
-        return QSize(buttonHeight / 2, buttonHeight / 10);
+        return QSizeF(qreal(2 + buttonHeight * 3 * multipleComboDotsOffsetFactor/ 10.0)
+                      , qreal(2 + buttonHeight / 10.0));
 
-    const int height = buttonHeight / 2.5;
-    const int width = 4 * height / 5;
-    return QSize(width, height);
+    const qreal height = buttonHeight / 2.5;
+    const qreal width = 4 * height / 5.0;
+    return QSizeF(2 + width, 2 + height);
 }
 
 QPixmap StylePainterMobile::findComboButton(const QSize& size, bool multiple, bool enabled) const
 {
     if (size.isNull())
         return QPixmap();
-    static const QString prefix = QLatin1String("$qt-webkit-mobile-theme-combo-");
     QPixmap result;
-    QString key = prefix + (multiple ? QLatin1String("multiple-") : QLatin1String("simple-"))
-        + QString::number(size.width()) + QLatin1String("-") + QString::number(size.height())
-        + QLatin1String("-") + (enabled ? QLatin1String("on") : QLatin1String("off"));
+    KeyIdentifier id;
+    id.type = KeyIdentifier::ComboButton;
+    id.width = size.width();
+    id.height = size.height();
+    id.trait1 = multiple;
+    id.trait2 = enabled;
 
-    if (!QPixmapCache::find(key, result)) {
+    if (!findCachedControl(id, &result)) {
         result = QPixmap(size);
+        const qreal border = painterScale(painter);
+        const QSizeF padding(2 * border, 2 * border);
+        const QSizeF innerSize = size - padding;
+        ASSERT(innerSize.isValid());
         result.fill(Qt::transparent);
         QPainter cachePainter(&result);
+        cachePainter.translate(border, border);
         if (multiple)
-            drawMultipleComboButton(&cachePainter, size, enabled ? darkColor : Qt::lightGray);
+            drawMultipleComboButton(&cachePainter, innerSize, enabled ? darkColor : Qt::lightGray);
         else
-            drawSimpleComboButton(&cachePainter, size, enabled ? darkColor : Qt::lightGray);
-        QPixmapCache::insert(key, result);
+            drawSimpleComboButton(&cachePainter, innerSize, enabled ? darkColor : Qt::lightGray);
+        insertIntoCache(id, result);
     }
     return result;
 }
@@ -317,10 +360,13 @@ void StylePainterMobile::drawLineEdit(const QRect& rect, bool focused, bool enab
 QPixmap StylePainterMobile::findLineEdit(const QSize & size, bool focused) const
 {
     QPixmap result;
-    static const QString prefix = QLatin1String("$qt-webkit-mobile-theme-lineEdit-");
-    QString key = prefix + QString::number(size.width()) + QLatin1String("x") + QString::number(size.height())
-                      + (focused ? QLatin1String("-focused") : QString());
-    if (!QPixmapCache::find(key, result)) {
+    KeyIdentifier id;
+    id.type = KeyIdentifier::LineEdit;
+    id.width = size.width();
+    id.height = size.height();
+    id.trait1 = focused;
+
+    if (!findCachedControl(id, &result)) {
         const int focusFrame = painterScale(painter);
         result = QPixmap(size + QSize(2 * focusFrame, 2 * focusFrame));
         result.fill(Qt::transparent);
@@ -332,7 +378,7 @@ QPixmap StylePainterMobile::findLineEdit(const QSize & size, bool focused) const
             QPen focusPen(highlightColor, focusFrame, Qt::SolidLine, Qt::RoundCap, Qt::RoundJoin);
             drawControlBackground(&cachePainter, focusPen, rect, Qt::NoBrush);
         }
-        QPixmapCache::insert(key, result);
+        insertIntoCache(id, result);
     }
     return result;
 }
@@ -366,10 +412,13 @@ void StylePainterMobile::drawPushButton(const QRect& rect, bool sunken, bool ena
 QPixmap StylePainterMobile::findPushButton(const QSize& size, bool sunken, bool enabled) const
 {
     QPixmap result;
-    static const QString prefix = QLatin1String("$qt-webkit-mobile-theme-pushButton-");
-    QString key = prefix + QString::number(size.width()) + QLatin1String("x") + QString::number(size.height())
-                      + (sunken ? QLatin1String("-sunken") : QString()) + (enabled ? QLatin1String("-on") : QString());
-    if (!QPixmapCache::find(key, result)) {
+    KeyIdentifier id;
+    id.type = KeyIdentifier::PushButton;
+    id.width = size.width();
+    id.height = size.height();
+    id.trait1 = sunken;
+    id.trait2 = enabled;
+    if (!findCachedControl(id, &result)) {
         const qreal dropShadowSize = painterScale(painter);
         result = QPixmap(size);
         result.fill(Qt::transparent);
@@ -396,7 +445,7 @@ QPixmap StylePainterMobile::findPushButton(const QSize& size, bool sunken, bool 
             brush = linearGradient;
         }
         drawControlBackground(&cachePainter, borderPen(painter), rect, brush);
-        QPixmapCache::insert(key, result);
+        insertIntoCache(id, result);
     }
     return result;
 }
@@ -407,28 +456,34 @@ void StylePainterMobile::drawComboBox(const QRect& rect, bool multiple, bool ena
     if (pushButton.isNull())
         return;
     painter->drawPixmap(rect, pushButton);
-    QRect targetRect(QPoint(0, 0), getButtonImageSize(rect.height() - 1, multiple));
-    const QPoint buttonCenter(rect.right() - arrowBoxWidth / 2, rect.height() / 2 - 1);
+    QRectF targetRect(QPointF(0, 0), getButtonImageSize(rect.height() - 1, multiple));
+    const QPointF buttonCenter(rect.right() - arrowBoxWidth / 2, rect.top() + (rect.height() - 1) / 2);
     targetRect.moveCenter(buttonCenter);
-    QPixmap pic = findComboButton(sizeForPainterScale(targetRect), multiple, enabled);
+    QPixmap pic = findComboButton(sizeForPainterScale(targetRect.toRect()), multiple, enabled);
     if (pic.isNull())
         return;
 
-    painter->drawPixmap(targetRect, pic);
+    painter->drawPixmap(targetRect.toRect(), pic);
 }
 
-void StylePainterMobile::drawProgress(const QRect& rect, double progress, bool leftToRight, bool animated) const
+void StylePainterMobile::drawProgress(const QRect& rect, double progress, bool leftToRight, bool animated, bool vertical) const
 {
-    static const QString prefix = QLatin1String("$qt-webkit-mobile-theme-progress-");
-    const int border = rect.height() / 4;
-    const QRect targetRect = rect.adjusted(0, border, 0, -border);
+    const int horizontalBorder = (vertical ? rect.width() / 4 : 0);
+    const int verticalBorder = (vertical ? 0 : rect.height() / 4);
+    const QRect targetRect = rect.adjusted(horizontalBorder, verticalBorder, -horizontalBorder, -verticalBorder);
 
     QPixmap result;
-    const QSize imageSize = sizeForPainterScale(targetRect);
-    QString key = prefix + QString::number(imageSize.width()) + QLatin1String("-") + QString::number(imageSize.height())
-            + QLatin1String("-") + QString::number(progress, 'f', 3) + (animated? QLatin1String("-anim") : QString())
-                         + ((!animated && !leftToRight) ? QLatin1String("-rtl") : QString());
-    if (!QPixmapCache::find(key, result)) {
+    QSize imageSize = sizeForPainterScale(targetRect);
+    if (vertical)
+        qSwap(imageSize.rheight(), imageSize.rwidth());
+    KeyIdentifier id;
+    id.type = KeyIdentifier::Progress;
+    id.width = imageSize.width();
+    id.height = imageSize.height();
+    id.trait1 = animated;
+    id.trait2 = (!animated && !leftToRight);
+    id.trait3 = progress * 100;
+    if (!findCachedControl(id, &result)) {
         if (imageSize.isNull())
             return;
         result = QPixmap(imageSize);
@@ -463,25 +518,30 @@ void StylePainterMobile::drawProgress(const QRect& rect, double progress, bool l
             radius = radiusFactor * progressRect.height();
             painter.drawRoundedRect(progressRect, radius, radius);
         }
-        QPixmapCache::insert(key, result);
+        insertIntoCache(id, result);
     }
-    painter->drawPixmap(targetRect, result);
+    QTransform transform;
+    transform.rotate(-90);
+    painter->drawPixmap(targetRect, vertical ? result.transformed(transform) : result);
 }
 
 void StylePainterMobile::drawSliderThumb(const QRect & rect, bool pressed) const
 {
-    static const QString prefix = QLatin1String("$qt-webkit-mobile-theme-slider-thumb-");
     QPixmap result;
     const QSize size = sizeForPainterScale(rect);
-    const QString key = prefix + QString::number(size.width());
-    if (!QPixmapCache::find(key, &result)) {
+    KeyIdentifier id;
+    id.type = KeyIdentifier::SliderThumb;
+    id.width = size.width();
+    id.height = size.height();
+    id.trait1 = pressed;
+    if (!findCachedControl(id, &result)) {
         if (size.isNull())
             return;
         result = QPixmap(size);
         result.fill(Qt::transparent);
         QPainter cachePainter(&result);
         drawControlBackground(&cachePainter, borderPen(painter), QRect(QPoint(0, 0), size), pressed? Qt::lightGray : buttonGradientBottom);
-        QPixmapCache::insert(key, result);
+        insertIntoCache(id, result);
     }
     painter->drawPixmap(rect, result);
 }
@@ -490,23 +550,6 @@ void StylePainterMobile::drawSliderThumb(const QRect & rect, bool pressed) const
 PassRefPtr<RenderTheme> RenderThemeQtMobile::create(Page* page)
 {
     return adoptRef(new RenderThemeQtMobile(page));
-}
-
-static PassRefPtr<RenderTheme> createTheme(Page* page)
-{
-#if HAVE(QSTYLE)
-    if (!RenderThemeQt::useMobileTheme())
-        return RenderThemeQStyle::create(page);
-#endif
-    return RenderThemeQtMobile::create(page);
-}
-
-PassRefPtr<RenderTheme> RenderTheme::themeForPage(Page* page)
-{
-    if (page)
-        return createTheme(page);
-    static RenderTheme* fallback = createTheme(0).leakRef();
-    return fallback;
 }
 
 RenderThemeQtMobile::RenderThemeQtMobile(Page* page)
@@ -537,7 +580,6 @@ int RenderThemeQtMobile::popupInternalPaddingBottom(RenderStyle* style) const
 void RenderThemeQtMobile::computeSizeBasedOnStyle(RenderStyle* renderStyle) const
 {
     QSize size(0, 0);
-    const QFontMetrics fm(renderStyle->font().font());
 
     switch (renderStyle->appearance()) {
     case TextAreaPart:
@@ -570,11 +612,10 @@ void RenderThemeQtMobile::computeSizeBasedOnStyle(RenderStyle* renderStyle) cons
     }
     case PushButtonPart:
     case SquareButtonPart:
-    case ListButtonPart:
     case DefaultButtonPart:
     case ButtonPart:
     case MenulistPart: {
-        const int height = fm.height() * buttonHeightRatio * renderStyle->effectiveZoom();
+        const int height = renderStyle->fontMetrics().height() * buttonHeightRatio * renderStyle->effectiveZoom();
         size = QSize(renderStyle->width().value(), height);
         break;
     }
@@ -589,7 +630,7 @@ void RenderThemeQtMobile::computeSizeBasedOnStyle(RenderStyle* renderStyle) cons
         renderStyle->setMinHeight(Length(size.height(), Fixed));
 }
 
-void RenderThemeQtMobile::adjustButtonStyle(CSSStyleSelector* selector, RenderStyle* style, Element*) const
+void RenderThemeQtMobile::adjustButtonStyle(StyleResolver*, RenderStyle* style, Element*) const
 {
     // Ditch the border.
     style->resetBorder();
@@ -632,7 +673,7 @@ bool RenderThemeQtMobile::paintButton(RenderObject* o, const PaintInfo& i, const
     return false;
 }
 
-void RenderThemeQtMobile::adjustTextFieldStyle(CSSStyleSelector*, RenderStyle* style, Element*) const
+void RenderThemeQtMobile::adjustTextFieldStyle(StyleResolver*, RenderStyle* style, Element*) const
 {
     // Resetting the style like this leads to differences like:
     // - RenderTextControl {INPUT} at (2,2) size 168x25 [bgcolor=#FFFFFF] border: (2px inset #000000)]
@@ -661,6 +702,8 @@ bool RenderThemeQtMobile::paintTextField(RenderObject* o, const PaintInfo& i, co
 
     // Now paint the text field.
     if (appearance == TextAreaPart) {
+        const bool previousAntialiasing = p.painter->testRenderHint(QPainter::Antialiasing);
+        p.painter->setRenderHint(QPainter::Antialiasing);
         p.painter->setPen(borderPen());
         p.painter->setBrush(Qt::white);
         const int radius = checkBoxWidth * radiusFactor;
@@ -672,15 +715,15 @@ bool RenderThemeQtMobile::paintTextField(RenderObject* o, const PaintInfo& i, co
             p.painter->setBrush(Qt::NoBrush);
             p.painter->drawRoundedRect(r, radius, radius);
         }
-
+        p.painter->setRenderHint(QPainter::Antialiasing, previousAntialiasing);
     } else
         p.drawLineEdit(r, isFocused(o), isEnabled(o));
     return false;
 }
 
-void RenderThemeQtMobile::adjustMenuListStyle(CSSStyleSelector* selector, RenderStyle* style, Element* e) const
+void RenderThemeQtMobile::adjustMenuListStyle(StyleResolver* styleResolver, RenderStyle* style, Element* e) const
 {
-    RenderThemeQt::adjustMenuListStyle(selector, style, e);
+    RenderThemeQt::adjustMenuListStyle(styleResolver, style, e);
     style->setPaddingLeft(Length(menuListPadding, Fixed));
 }
 
@@ -702,12 +745,7 @@ bool RenderThemeQtMobile::paintMenuList(RenderObject* o, const PaintInfo& i, con
     if (!p.isValid())
         return true;
 
-    const QPoint topLeft = r.location();
-    p.painter->translate(topLeft);
-    const QRect rect(QPoint(0, 0), r.size());
-
-    p.drawComboBox(rect, checkMultiple(o), isEnabled(o));
-    p.painter->translate(-topLeft);
+    p.drawComboBox(r, checkMultiple(o), isEnabled(o));
     return false;
 }
 
@@ -767,10 +805,14 @@ bool RenderThemeQtMobile::paintSliderTrack(RenderObject* o, const PaintInfo& pi,
     const double max = slider->maximum();
     const double progress = (max - min > 0) ? (slider->valueAsNumber() - min) / (max - min) : 0;
 
-    // Render the spin buttons for LTR or RTL accordingly.
-    const int groovePadding = r.height() * sliderGrooveBorderRatio;
-    const QRect rect(r);
-    p.drawProgress(rect.adjusted(0, groovePadding, 0, -groovePadding), progress, o->style()->isLeftToRightDirection());
+    QRect rect(r);
+    const bool vertical = (o->style()->appearance() == SliderVerticalPart);
+    const int groovePadding = vertical ? r.width() * sliderGrooveBorderRatio : r.height() * sliderGrooveBorderRatio;
+    if (vertical)
+        rect.adjust(groovePadding, 0, -groovePadding, 0);
+    else
+        rect.adjust(0, groovePadding, 0, -groovePadding);
+    p.drawProgress(rect, progress, o->style()->isLeftToRightDirection(), /*animated = */ false, vertical);
 
     return false;
 }

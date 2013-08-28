@@ -52,9 +52,6 @@
 
 namespace WebKit {
 class WebGeolocationClientMock;
-class WebSpeechInputController;
-class WebSpeechInputControllerMock;
-class WebSpeechInputListener;
 }
 
 namespace webkit_support {
@@ -243,10 +240,11 @@ public:
     void pauseAnimationAtTimeOnElementWithId(const CppArgumentList&, CppVariant*);
     void pauseTransitionAtTimeOnElementWithId(const CppArgumentList&, CppVariant*);
     void elementDoesAutoCompleteForElementWithId(const CppArgumentList&, CppVariant*);
+    void enableAutoResizeMode(const CppArgumentList&, CppVariant*);
+    void disableAutoResizeMode(const CppArgumentList&, CppVariant*);
     void numberOfActiveAnimations(const CppArgumentList&, CppVariant*);
     void suspendAnimations(const CppArgumentList&, CppVariant*);
     void resumeAnimations(const CppArgumentList&, CppVariant*);
-    void sampleSVGAnimationForElementAtTime(const CppArgumentList&, CppVariant*);
     void disableImageLoading(const CppArgumentList&, CppVariant*);
     void setIconDatabaseEnabled(const CppArgumentList&, CppVariant*);
     void dumpSelectionRect(const CppArgumentList&, CppVariant*);
@@ -291,6 +289,7 @@ public:
     void setAllowFileAccessFromFileURLs(const CppArgumentList&, CppVariant*);
     void setAllowRunningOfInsecureContent(const CppArgumentList&, CppVariant*);
 
+    void evaluateScriptInIsolatedWorldAndReturnValue(const CppArgumentList&, CppVariant*);
     void evaluateScriptInIsolatedWorld(const CppArgumentList&, CppVariant*);
     void setIsolatedWorldSecurityOrigin(const CppArgumentList&, CppVariant*);
 
@@ -379,6 +378,7 @@ public:
 
     // Speech input related functions.
     void addMockSpeechInputResult(const CppArgumentList&, CppVariant*);
+    void setMockSpeechInputDumpRect(const CppArgumentList&, CppVariant*);
     void startSpeechInput(const CppArgumentList&, CppVariant*);
 
     void layerTreeAsText(const CppArgumentList& args, CppVariant* result);
@@ -386,7 +386,6 @@ public:
     void loseCompositorContext(const CppArgumentList& args, CppVariant* result);
 
     void markerTextForListItem(const CppArgumentList&, CppVariant*);
-    void hasSpellingMarker(const CppArgumentList&, CppVariant*);
     void findString(const CppArgumentList&, CppVariant*);
 
     void setMinimumTimerInterval(const CppArgumentList&, CppVariant*);
@@ -429,11 +428,24 @@ public:
     void enableFixedLayoutMode(const CppArgumentList&, CppVariant*);
     void setFixedLayoutSize(const CppArgumentList&, CppVariant*);
 
+    void selectionAsMarkup(const CppArgumentList&, CppVariant*);
+
+#if ENABLE(POINTER_LOCK)
+    void didLosePointerLock(const CppArgumentList&, CppVariant*);
+    void setPointerLockWillFailSynchronously(const CppArgumentList&, CppVariant*);
+    void setPointerLockWillFailAsynchronously(const CppArgumentList&, CppVariant*);
+#endif
+
+    void workerThreadCount(CppVariant*);
+
+    // Expects one string argument for sending successful result, zero
+    // for sending a failure result.
+    void sendWebIntentResponse(const CppArgumentList&, CppVariant*);
+
 public:
     // The following methods are not exposed to JavaScript.
     void setWorkQueueFrozen(bool frozen) { m_workQueue.setFrozen(frozen); }
 
-    WebKit::WebSpeechInputController* speechInputController(WebKit::WebSpeechInputListener*);
     bool shouldDumpAsAudio() const { return m_dumpAsAudio; } 
     void setShouldDumpAsAudio(bool dumpAsAudio) { m_dumpAsAudio = dumpAsAudio; } 
     bool shouldDumpAsText() { return m_dumpAsText; }
@@ -469,11 +481,19 @@ public:
         m_titleTextDirection.set(dir == WebKit::WebTextDirectionLeftToRight ? "ltr" : "rtl");
     }
 
+    bool shouldInterceptPostMessage()
+    {
+        return m_interceptPostMessage.isBool() && m_interceptPostMessage.toBoolean();
+    }
+
     void setIsPrinting(bool value) { m_isPrinting = value; }
     bool isPrinting() { return m_isPrinting; }
 
     bool testRepaint() const { return m_testRepaint; }
     bool sweepHorizontally() const { return m_sweepHorizontally; }
+
+    void setHasCustomFullScreenBehavior(const CppArgumentList&, CppVariant*);
+    bool hasCustomFullScreenBehavior() const { return m_hasCustomFullScreenBehavior; }
 
     // Called by the webview delegate when the toplevel frame load is done.
     void locationChangeDone();
@@ -680,14 +700,19 @@ private:
     // Bound variable to return the name of this platform (chromium).
     CppVariant m_platformName;
 
-    WebKit::WebURL m_userStyleSheetLocation;
+    // Bound variable to set whether postMessages should be intercepted or not
+    CppVariant m_interceptPostMessage;
 
-    OwnPtr<WebKit::WebSpeechInputControllerMock> m_speechInputControllerMock;
+    WebKit::WebURL m_userStyleSheetLocation;
 
     // WAV audio data is stored here.
     WebKit::WebArrayBufferView m_audioData;
 
     bool m_shouldStayOnPageAfterHandlingBeforeUnload;
+
+    // If true, calls to WebViewHost::enter/exitFullScreenNow will not result in 
+    // calls to Document::will/did/Enter/ExitFullScreen.
+    bool m_hasCustomFullScreenBehavior;
 };
 
 #endif // LayoutTestController_h

@@ -38,6 +38,7 @@ class ContentSecurityPolicy;
 class KURL;
 
 enum SandboxFlag {
+    // See http://www.whatwg.org/specs/web-apps/current-work/#attr-iframe-sandbox for a list of the sandbox flags.
     SandboxNone = 0,
     SandboxNavigation = 1,
     SandboxPlugins = 1 << 1,
@@ -45,7 +46,9 @@ enum SandboxFlag {
     SandboxForms = 1 << 3,
     SandboxScripts = 1 << 4,
     SandboxTopNavigation = 1 << 5,
-    SandboxPopups = 1 << 6,
+    SandboxPopups = 1 << 6, // See https://www.w3.org/Bugs/Public/show_bug.cgi?id=12393
+    SandboxAutomaticFeatures = 1 << 7,
+    SandboxSeamlessIframes = 1 << 8,
     SandboxAll = -1 // Mask with all bits set to 1.
 };
 
@@ -64,6 +67,8 @@ public:
 
     static SandboxFlags parseSandboxPolicy(const String& policy);
 
+    bool mayDisplaySeamlessWithParent() const { return m_mayDisplaySeamlessWithParent; }
+
 protected:
     SecurityContext();
     ~SecurityContext();
@@ -76,6 +81,10 @@ protected:
 
     void didFailToInitializeSecurityOrigin() { m_haveInitializedSecurityOrigin = false; }
     bool haveInitializedSecurityOrigin() const { return m_haveInitializedSecurityOrigin; }
+
+    // Set in Document::initSecurityContext() at Document creation, per:
+    // http://www.whatwg.org/specs/web-apps/current-work/#attr-iframe-seamless
+    bool m_mayDisplaySeamlessWithParent;
 
 private:
     bool m_haveInitializedSecurityOrigin;

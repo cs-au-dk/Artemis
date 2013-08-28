@@ -113,25 +113,27 @@ RenderObject* RenderFullScreen::wrapRenderer(RenderObject* object, Document* doc
         if (RenderObject* parent = object->parent()) {
             parent->addChild(fullscreenRenderer, object);
             object->remove();
+            parent->setNeedsLayoutAndPrefWidthsRecalc();
         }
         fullscreenRenderer->addChild(object);
+        fullscreenRenderer->setNeedsLayoutAndPrefWidthsRecalc();
     }
     document->setFullScreenRenderer(fullscreenRenderer);
-    if (fullscreenRenderer->placeholder())
-        return fullscreenRenderer->placeholder();
     return fullscreenRenderer;
 }
 
 void RenderFullScreen::unwrapRenderer()
 {
-    RenderObject* holder = placeholder() ? placeholder() : this;
-    if (holder->parent()) {
+    if (parent()) {
         RenderObject* child;
         while ((child = firstChild())) {
             child->remove();
-            holder->parent()->addChild(child, holder);
+            parent()->addChild(child, this);
+            parent()->setNeedsLayoutAndPrefWidthsRecalc();
         }
     }
+    if (placeholder())
+        placeholder()->remove();
     remove();
     document()->setFullScreenRenderer(0);
 }
@@ -141,7 +143,7 @@ void RenderFullScreen::setPlaceholder(RenderBlock* placeholder)
     m_placeholder = placeholder;
 }
 
-void RenderFullScreen::createPlaceholder(PassRefPtr<RenderStyle> style, const IntRect& frameRect)
+void RenderFullScreen::createPlaceholder(PassRefPtr<RenderStyle> style, const LayoutRect& frameRect)
 {
     if (style->width().isAuto())
         style->setWidth(Length(frameRect.width(), Fixed));
@@ -153,9 +155,8 @@ void RenderFullScreen::createPlaceholder(PassRefPtr<RenderStyle> style, const In
         m_placeholder->setStyle(style);
         if (parent()) {
             parent()->addChild(m_placeholder, this);
-            remove();
+            parent()->setNeedsLayoutAndPrefWidthsRecalc();
         }
-        m_placeholder->addChild(this);
     } else
         m_placeholder->setStyle(style);
 }

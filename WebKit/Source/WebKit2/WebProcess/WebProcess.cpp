@@ -31,7 +31,6 @@
 #include "InjectedBundle.h"
 #include "InjectedBundleMessageKinds.h"
 #include "InjectedBundleUserMessageCoders.h"
-#include "RunLoop.h"
 #include "SandboxExtension.h"
 #include "StatisticsData.h"
 #include "WebApplicationCacheManager.h"
@@ -72,6 +71,7 @@
 #include <WebCore/PageCache.h>
 #include <WebCore/PageGroup.h>
 #include <WebCore/ResourceHandle.h>
+#include <WebCore/RunLoop.h>
 #include <WebCore/SchemeRegistry.h>
 #include <WebCore/SecurityOrigin.h>
 #include <WebCore/Settings.h>
@@ -100,7 +100,8 @@ static void sleep(unsigned seconds)
 }
 #endif
 
-static void* randomCrashThread(void*)
+static void randomCrashThread(void*) NO_RETURN_DUE_TO_CRASH;
+void randomCrashThread(void*)
 {
     // This delay was chosen semi-arbitrarily. We want the crash to happen somewhat quickly to
     // enable useful stress testing, but not so quickly that the web process will always crash soon
@@ -109,7 +110,6 @@ static void* randomCrashThread(void*)
 
     sleep(randomNumber() * maximumRandomCrashDelay);
     CRASH();
-    return 0;
 }
 
 static void startRandomCrashThreadIfRequested()
@@ -135,18 +135,24 @@ WebProcess::WebProcess()
 #if USE(ACCELERATED_COMPOSITING) && PLATFORM(MAC)
     , m_compositingRenderServerPort(MACH_PORT_NULL)
 #endif
+#if PLATFORM(MAC)
+    , m_clearResourceCachesDispatchGroup(0)
+#endif
     , m_fullKeyboardAccessEnabled(false)
 #if PLATFORM(QT)
     , m_networkAccessManager(0)
 #endif
     , m_textCheckerState()
     , m_geolocationManager(this)
-#if ENABLE(NOTIFICATIONS)
+#if ENABLE(NOTIFICATIONS) || ENABLE(LEGACY_NOTIFICATIONS)
     , m_notificationManager(this)
 #endif
     , m_iconDatabaseProxy(this)
 #if ENABLE(PLUGIN_PROCESS)
     , m_disablePluginProcessMessageTimeout(false)
+#endif
+#if USE(SOUP)
+    , m_soupRequestManager(this)
 #endif
 {
 #if USE(PLATFORM_STRATEGIES)
@@ -213,8 +219,8 @@ void WebProcess::initializeWebProcess(const WebProcessCreationParameters& parame
     setShouldTrackVisitedLinks(parameters.shouldTrackVisitedLinks);
     setCacheModel(static_cast<uint32_t>(parameters.cacheModel));
 
-    if (!parameters.languageCode.isEmpty())
-        overrideDefaultLanguage(parameters.languageCode);
+    if (!parameters.languages.isEmpty())
+        overrideUserPreferredLanguages(parameters.languages);
 
     m_textCheckerState = parameters.textCheckerState;
 
@@ -288,9 +294,9 @@ void WebProcess::setShouldUseFontSmoothing(bool useFontSmoothing)
     WebCore::Font::setShouldUseSmoothing(useFontSmoothing);
 }
 
-void WebProcess::languageChanged(const String& language) const
+void WebProcess::userPreferredLanguagesChanged(const Vector<String>& languages) const
 {
-    overrideDefaultLanguage(language);
+    overrideUserPreferredLanguages(languages);
 }
 
 void WebProcess::fullKeyboardAccessModeChanged(bool fullKeyboardAccessEnabled)
@@ -503,7 +509,7 @@ WebPage* WebProcess::focusedWebPage() const
     HashMap<uint64_t, RefPtr<WebPage> >::const_iterator end = m_pageMap.end();
     for (HashMap<uint64_t, RefPtr<WebPage> >::const_iterator it = m_pageMap.begin(); it != end; ++it) {
         WebPage* page = (*it).second.get();
-        if (page->windowIsFocused())
+        if (page->windowAndWebPageAreFocused())
             return page;
     }
     return 0;
@@ -518,16 +524,16 @@ void WebProcess::createWebPage(uint64_t pageID, const WebPageCreationParameters&
 {
     // It is necessary to check for page existence here since during a window.open() (or targeted
     // link) the WebPage gets created both in the synchronous handler and through the normal way. 
-    std::pair<HashMap<uint64_t, RefPtr<WebPage> >::iterator, bool> result = m_pageMap.add(pageID, 0);
-    if (result.second) {
-        ASSERT(!result.first->second);
-        result.first->second = WebPage::create(pageID, parameters);
+    HashMap<uint64_t, RefPtr<WebPage> >::AddResult result = m_pageMap.add(pageID, 0);
+    if (result.isNewEntry) {
+        ASSERT(!result.iterator->second);
+        result.iterator->second = WebPage::create(pageID, parameters);
 
         // Balanced by an enableTermination in removeWebPage.
         disableTermination();
     }
 
-    ASSERT(result.first->second);
+    ASSERT(result.iterator->second);
 }
 
 void WebProcess::removeWebPage(uint64_t pageID)
@@ -638,7 +644,7 @@ void WebProcess::didReceiveMessage(CoreIPC::Connection* connection, CoreIPC::Mes
         return;
     }
 
-#if ENABLE(NOTIFICATIONS)
+#if ENABLE(NOTIFICATIONS) || ENABLE(LEGACY_NOTIFICATIONS)
     if (messageID.is<CoreIPC::MessageClassWebNotificationManager>()) {
         m_notificationManager.didReceiveMessage(connection, messageID, arguments);
         return;
@@ -649,6 +655,13 @@ void WebProcess::didReceiveMessage(CoreIPC::Connection* connection, CoreIPC::Mes
         WebResourceCacheManager::shared().didReceiveMessage(connection, messageID, arguments);
         return;
     }
+
+#if USE(SOUP)
+    if (messageID.is<CoreIPC::MessageClassWebSoupRequestManager>()) {
+        m_soupRequestManager.didReceiveMessage(connection, messageID, arguments);
+        return;
+    }
+#endif
 
     if (messageID.is<CoreIPC::MessageClassInjectedBundle>()) {
         if (!m_injectedBundle)
@@ -683,7 +696,7 @@ void WebProcess::didClose(CoreIPC::Connection*)
         pages[i]->close();
     pages.clear();
 
-    gcController().garbageCollectNow();
+    gcController().garbageCollectSoon();
     memoryCache()->setDisabled(true);
 #endif    
 
@@ -739,13 +752,13 @@ WebPageGroupProxy* WebProcess::webPageGroup(uint64_t pageGroupID)
 
 WebPageGroupProxy* WebProcess::webPageGroup(const WebPageGroupData& pageGroupData)
 {
-    std::pair<HashMap<uint64_t, RefPtr<WebPageGroupProxy> >::iterator, bool> result = m_pageGroupMap.add(pageGroupData.pageGroupID, 0);
-    if (result.second) {
-        ASSERT(!result.first->second);
-        result.first->second = WebPageGroupProxy::create(pageGroupData);
+    HashMap<uint64_t, RefPtr<WebPageGroupProxy> >::AddResult result = m_pageGroupMap.add(pageGroupData.pageGroupID, 0);
+    if (result.isNewEntry) {
+        ASSERT(!result.iterator->second);
+        result.iterator->second = WebPageGroupProxy::create(pageGroupData);
     }
 
-    return result.first->second.get();
+    return result.iterator->second.get();
 }
 
 static bool canPluginHandleResponse(const ResourceResponse& response)
@@ -949,7 +962,7 @@ void WebProcess::garbageCollectJavaScriptObjects()
 }
 
 #if ENABLE(PLUGIN_PROCESS)
-void WebProcess::pluginProcessCrashed(const String& pluginPath)
+void WebProcess::pluginProcessCrashed(CoreIPC::Connection*, const String& pluginPath)
 {
     m_pluginProcessConnectionManager.pluginProcessCrashed(pluginPath);
 }

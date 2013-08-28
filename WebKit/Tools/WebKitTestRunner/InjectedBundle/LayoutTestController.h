@@ -83,8 +83,10 @@ public:
     void setAllowUniversalAccessFromFileURLs(bool);
     void setAllowFileAccessFromFileURLs(bool);
     void setFrameFlatteningEnabled(bool);
+    void setGeolocationPermission(bool);
     void setJavaScriptCanAccessClipboard(bool);
     void setPrivateBrowsingEnabled(bool);
+    void setPopupBlockingEnabled(bool);
     void setAuthorAndUserStylesEnabled(bool);
     void setCustomPolicyDelegate(bool enabled, bool permissive = false);
     void addOriginAccessWhitelistEntry(JSStringRef sourceOrigin, JSStringRef destinationProtocol, JSStringRef destinationHost, bool allowDestinationSubdomains);
@@ -135,6 +137,8 @@ public:
     int pageNumberForElementById(JSStringRef, double pageWidthInPixels, double pageHeightInPixels);
     JSRetainPtr<JSStringRef> pageSizeAndMarginsInPixels(int pageIndex, int width, int height, int marginTop, int marginRight, int marginBottom, int marginLeft);
     bool isPageBoxVisible(int pageIndex);
+
+    void setValueForUser(JSContextRef, JSValueRef element, JSStringRef value);
 
     enum WhatToDump { RenderTree, MainFrameText, AllFramesText };
     WhatToDump whatToDump() const { return m_whatToDump; }
@@ -190,8 +194,17 @@ public:
     void callFocusWebViewCallback();
     void callSetBackingScaleFactorCallback();
 
+    void overridePreference(JSStringRef preference, bool value);
+
+    // Custom full screen behavior.
+    void setHasCustomFullScreenBehavior(bool value) { m_customFullScreenBehavior = value; }
+    bool hasCustomFullScreenBehavior() const { return m_customFullScreenBehavior; }
+
     JSRetainPtr<JSStringRef> platformName();
-    
+
+    void setPageVisibility(JSStringRef state);
+    void resetPageVisibility();
+
 private:
     static const double waitToDumpWatchdogTimerInterval;
 
@@ -222,6 +235,7 @@ private:
     bool m_policyDelegatePermissive;
     
     bool m_globalFlag;
+    bool m_customFullScreenBehavior;
 
     PlatformTimerRef m_waitToDumpWatchdogTimer;
 };

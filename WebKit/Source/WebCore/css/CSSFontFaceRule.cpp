@@ -22,34 +22,37 @@
 #include "config.h"
 #include "CSSFontFaceRule.h"
 
-#include "CSSMutableStyleDeclaration.h"
+#include "StylePropertySet.h"
+#include "StyleRule.h"
 
 namespace WebCore {
 
-CSSFontFaceRule::CSSFontFaceRule(CSSStyleSheet* parent)
+CSSFontFaceRule::CSSFontFaceRule(StyleRuleFontFace* fontFaceRule, CSSStyleSheet* parent)
     : CSSRule(parent, CSSRule::FONT_FACE_RULE)
+    , m_fontFaceRule(fontFaceRule)
 {
 }
 
 CSSFontFaceRule::~CSSFontFaceRule()
 {
-    if (m_style)
-        m_style->clearParentRule();
+    if (m_propertiesCSSOMWrapper)
+        m_propertiesCSSOMWrapper->clearParentRule();
+}
+
+CSSStyleDeclaration* CSSFontFaceRule::style() const
+{
+    if (!m_propertiesCSSOMWrapper)
+        m_propertiesCSSOMWrapper = StyleRuleCSSStyleDeclaration::create(m_fontFaceRule->properties(), const_cast<CSSFontFaceRule*>(this));
+    return m_propertiesCSSOMWrapper.get();
 }
 
 String CSSFontFaceRule::cssText() const
 {
     String result("@font-face");
     result += " { ";
-    result += m_style->cssText();
+    result += m_fontFaceRule->properties()->asText();
     result += "}";
     return result;
-}
-
-void CSSFontFaceRule::addSubresourceStyleURLs(ListHashSet<KURL>& urls)
-{
-    if (m_style)
-        m_style->addSubresourceStyleURLs(urls);
 }
 
 } // namespace WebCore

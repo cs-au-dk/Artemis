@@ -38,6 +38,7 @@
 #include "WebViewClient.h"
 #include "WebViewImpl.h"
 #include "platform/WebMediaStreamSource.h"
+#include <wtf/RefPtr.h>
 
 using namespace WebCore;
 
@@ -52,10 +53,13 @@ void UserMediaClientImpl::pageDestroyed()
 {
 }
 
-void UserMediaClientImpl::requestUserMedia(PassRefPtr<UserMediaRequest> request, const MediaStreamSourceVector& sources)
+void UserMediaClientImpl::requestUserMedia(PassRefPtr<UserMediaRequest> prpRequest, const MediaStreamSourceVector& audioSources, const MediaStreamSourceVector& videoSources)
 {
-    if (m_client)
-        m_client->requestUserMedia(request, sources);
+    if (m_client) {
+        RefPtr<UserMediaRequest> request = prpRequest;
+
+        m_client->requestUserMedia(request.release(), audioSources, videoSources);
+    }
 }
 
 void UserMediaClientImpl::cancelUserMediaRequest(UserMediaRequest* request)

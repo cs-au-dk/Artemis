@@ -27,6 +27,9 @@
 #include "WebPageProxy.h"
 
 #include "PageClient.h"
+#include "QtNetworkReplyData.h"
+#include "QtPageClient.h"
+#include "qquicknetworkreply_p.h"
 #include "WebPageMessages.h"
 #include "WebProcessProxy.h"
 #include <WebCore/Editor.h>
@@ -76,5 +79,39 @@ void WebPageProxy::cancelComposition()
 
     process()->send(Messages::WebPage::CancelComposition(), m_pageID);
 }
+
+void WebPageProxy::registerApplicationScheme(const String& scheme)
+{
+    process()->send(Messages::WebPage::RegisterApplicationScheme(scheme), m_pageID);
+}
+
+void WebPageProxy::resolveApplicationSchemeRequest(QtNetworkRequestData request)
+{
+    RefPtr<QtRefCountedNetworkRequestData> requestData = adoptRef(new QtRefCountedNetworkRequestData(request));
+    m_applicationSchemeRequests.add(requestData);
+    static_cast<QtPageClient*>(m_pageClient)->handleApplicationSchemeRequest(requestData);
+}
+
+void WebPageProxy::sendApplicationSchemeReply(const QQuickNetworkReply* reply)
+{
+    RefPtr<QtRefCountedNetworkRequestData> requestData = reply->networkRequestData();
+    if (m_applicationSchemeRequests.contains(requestData)) {
+        RefPtr<QtRefCountedNetworkReplyData> replyData = reply->networkReplyData();
+        process()->send(Messages::WebPage::ApplicationSchemeReply(replyData->data()), pageID());
+        m_applicationSchemeRequests.remove(requestData);
+    }
+}
+
+#if PLUGIN_ARCHITECTURE(X11)
+void WebPageProxy::createPluginContainer(uint64_t& windowID)
+{
+    notImplemented();
+}
+
+void WebPageProxy::windowedPluginGeometryDidChange(const WebCore::IntRect& frameRect, const WebCore::IntRect& clipRect, uint64_t windowID)
+{
+    notImplemented();
+}
+#endif
 
 } // namespace WebKit

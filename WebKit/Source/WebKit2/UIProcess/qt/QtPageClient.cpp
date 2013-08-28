@@ -21,21 +21,26 @@
 #include "config.h"
 #include "QtPageClient.h"
 
+#include "DrawingAreaProxy.h"
+#include "LayerTreeContext.h"
 #include "QtWebPageEventHandler.h"
 #include "QtWebUndoController.h"
+#include "ShareableBitmap.h"
 #include "WebContextMenuProxyQt.h"
 #include "WebEditCommandProxy.h"
 #include "WebPopupMenuProxyQt.h"
 #include "qquickwebview_p.h"
 #include "qquickwebview_p_p.h"
 #include <QGuiApplication>
+#include <QQuickCanvas>
 #include <WebCore/Cursor.h>
 #include <WebCore/DragData.h>
 #include <WebCore/FloatRect.h>
 #include <WebCore/NotImplemented.h>
 
-using namespace WebKit;
 using namespace WebCore;
+
+namespace WebKit {
 
 QtPageClient::QtPageClient()
     : m_webView(0)
@@ -62,7 +67,7 @@ PassOwnPtr<DrawingAreaProxy> QtPageClient::createDrawingAreaProxy()
 
 void QtPageClient::setViewNeedsDisplay(const WebCore::IntRect& rect)
 {
-    m_webView->page()->update();
+    QQuickWebViewPrivate::get(m_webView)->setNeedsDisplay();
 }
 
 void QtPageClient::pageDidRequestScroll(const IntPoint& pos)
@@ -85,9 +90,9 @@ void QtPageClient::didChangeContentsSize(const IntSize& newSize)
     QQuickWebViewPrivate::get(m_webView)->didChangeContentsSize(newSize);
 }
 
-void QtPageClient::didChangeViewportProperties(const WebCore::ViewportArguments& args)
+void QtPageClient::didChangeViewportProperties(const WebCore::ViewportAttributes& attr)
 {
-    QQuickWebViewPrivate::get(m_webView)->didChangeViewportProperties(args);
+    QQuickWebViewPrivate::get(m_webView)->didChangeViewportProperties(attr);
 }
 
 void QtPageClient::startDrag(const WebCore::DragData& dragData, PassRefPtr<ShareableBitmap> dragImage)
@@ -98,6 +103,40 @@ void QtPageClient::startDrag(const WebCore::DragData& dragData, PassRefPtr<Share
 void QtPageClient::handleDownloadRequest(DownloadProxy* download)
 {
     QQuickWebViewPrivate::get(m_webView)->handleDownloadRequest(download);
+}
+
+void QtPageClient::handleApplicationSchemeRequest(PassRefPtr<QtRefCountedNetworkRequestData> requestData)
+{
+    if (!m_webView || !m_webView->experimental())
+        return;
+    m_webView->experimental()->invokeApplicationSchemeHandler(requestData);
+}
+
+void QtPageClient::handleAuthenticationRequiredRequest(const String& hostname, const String& realm, const String& prefilledUsername, String& username, String& password)
+{
+    QString qUsername;
+    QString qPassword;
+
+    QQuickWebViewPrivate::get(m_webView)->handleAuthenticationRequiredRequest(hostname, realm, prefilledUsername, qUsername, qPassword);
+
+    username = qUsername;
+    password = qPassword;
+}
+
+void QtPageClient::handleCertificateVerificationRequest(const String& hostname, bool& ignoreErrors)
+{
+    ignoreErrors = QQuickWebViewPrivate::get(m_webView)->handleCertificateVerificationRequest(hostname);
+}
+
+void QtPageClient::handleProxyAuthenticationRequiredRequest(const String& hostname, uint16_t port, const String& prefilledUsername, String& username, String& password)
+{
+    QString qUsername;
+    QString qPassword;
+
+    QQuickWebViewPrivate::get(m_webView)->handleProxyAuthenticationRequiredRequest(hostname, port, prefilledUsername, qUsername, qPassword);
+
+    username = qUsername;
+    password = qPassword;
 }
 
 void QtPageClient::setCursor(const WebCore::Cursor& cursor)
@@ -177,16 +216,24 @@ void QtPageClient::didFindZoomableArea(const IntPoint& target, const IntRect& ar
     m_eventHandler->didFindZoomableArea(target, area);
 }
 
-void QtPageClient::focusEditableArea(const IntRect& caret, const IntRect& area)
-{
-    ASSERT(m_eventHandler);
-    m_eventHandler->focusEditableArea(caret, area);
-}
-
 void QtPageClient::didReceiveMessageFromNavigatorQtObject(const String& message)
 {
     QQuickWebViewPrivate::get(m_webView)->didReceiveMessageFromNavigatorQtObject(message);
 }
+
+void QtPageClient::updateTextInputState()
+{
+    ASSERT(m_eventHandler);
+    m_eventHandler->updateTextInputState();
+}
+
+#if ENABLE(GESTURE_EVENTS)
+void QtPageClient::doneWithGestureEvent(const WebGestureEvent& event, bool wasEventHandled)
+{
+    ASSERT(m_eventHandler);
+    m_eventHandler->doneWithGestureEvent(event, wasEventHandled);
+}
+#endif
 
 #if ENABLE(TOUCH_EVENTS)
 void QtPageClient::doneWithTouchEvent(const NativeWebTouchEvent& event, bool wasEventHandled)
@@ -228,6 +275,11 @@ bool QtPageClient::isViewVisible()
 {
     if (!m_webView)
         return false;
+
+    // FIXME: this is a workaround while QWindow::isExposed() is not ready.
+    if (m_webView->canvas() && m_webView->canvas()->windowState() == Qt::WindowMinimized)
+        return false;
+
     return m_webView->isVisible() && m_webView->page()->isVisible();
 }
 
@@ -247,3 +299,9 @@ void QtPageClient::exitAcceleratedCompositingMode()
     // FIXME: Implement.
 }
 
+void QtPageClient::updateAcceleratedCompositingMode(const LayerTreeContext&)
+{
+    // FIXME: Implement.
+}
+
+} // namespace WebKit

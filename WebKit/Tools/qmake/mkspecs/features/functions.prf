@@ -24,6 +24,11 @@ defineReplace(toEvaluatablePath) {
     return($$replace(1, \\\\, \\\\\\\\))
 }
 
+defineReplace(activeBuildConfig) {
+    CONFIG(debug, debug|release): return(debug)
+    else: return(release)
+}
+
 defineReplace(computeSubdirVariables) {
     unset(subdir)
     subdir = $$1
@@ -199,6 +204,14 @@ defineTest(haveQt) {
     return(true)
 }
 
+defineTest(haveQtModule) {
+    unset(module)
+    module = $$1
+    haveQt(4):contains(QT_CONFIG, $$module): return(true)
+    haveQt(5):!isEmpty(QT.$$module.name): return(true)
+    return(false)
+}
+
 defineTest(prependEach) {
     unset(variable)
     unset(prefix)
@@ -218,44 +231,52 @@ defineTest(prependEach) {
     return(true)
 }
 
-defineTest(needToLinkLibrary) {
-    unset(name)
+defineReplace(resolveFinalLibraryName) {
+    !debug_and_release: return($$1)
 
-    name = $$1
+    original_template = $$TEMPLATE
+    original_framework_name = $$QMAKE_FRAMEWORK_BUNDLE_NAME
 
-    config_step {
-        return(true)
-    } else:force_static_libs_as_shared {
-        contains(DEFINES, BUILDING_$$name): return(false)
-        return(true)
-    }
-    return(false)
+    TEMPLATE = lib # So that qtLibraryTarget works
+    target = $$qtLibraryTarget($$1)
+
+    TEMPLATE = $$original_template
+    QMAKE_FRAMEWORK_BUNDLE_NAME = $$original_framework_name
+    export(QMAKE_FRAMEWORK_BUNDLE_NAME)
+
+    return($$target)
 }
 
-defineTest(linkLibrary) {
-    unset(path)
+defineTest(linkAgainstLibrary) {
     unset(target)
+    target = $$1
 
-    path = $$1
-    target = $$2
+    unset(source_dir)
+    source_dir = $$2
+
+    library = $$lower($$target)
+
+    target = $$resolveFinalLibraryName($$target)
+
+    path = $$replace(source_dir, $${ROOT_WEBKIT_DIR}, $${ROOT_BUILD_DIR})/$$activeBuildConfig()
 
     force_static_libs_as_shared {
-            LIBS = -L$${ROOT_BUILD_DIR}/lib -l$$target $$LIBS
+            LIBS += -L$${ROOT_BUILD_DIR}/lib -l$$target
     } else {
 
         mac {
-            LIBS = -Wl,-force_load,$${path}$${QMAKE_DIR_SEP}lib$${target}.a $$LIBS
+            LIBS += -Wl,-force_load,$${path}$${QMAKE_DIR_SEP}lib$${target}.a
         } else:win32-msvc*|wince*|win32-icc {
-            LIBS = /OPT:REF -l$$target $$LIBS
+            LIBS += /OPT:REF -l$$target
         } else {
-            LIBS = -Wl,-whole-archive -l$$target -Wl,-no-whole-archive $$LIBS
+            LIBS += -Wl,-whole-archive -l$$target -Wl,-no-whole-archive
         }
 
         win32-msvc*|wince*|win32-icc {
-            LIBS = -L$$path $$LIBS
+            LIBS += -L$$path
             POST_TARGETDEPS += $${path}$${QMAKE_DIR_SEP}$${target}.lib
         } else {
-            QMAKE_LIBDIR = $$path $$QMAKE_LIBDIR
+            QMAKE_LIBDIR += $$path
             POST_TARGETDEPS += $${path}$${QMAKE_DIR_SEP}lib$${target}.a
         }
 
@@ -264,7 +285,6 @@ defineTest(linkLibrary) {
         # statically in applications (which isn't used often because, among other things, of licensing obstacles).
         CONFIG -= explicitlib
         CONFIG -= staticlib
-
     }
 
     export(LIBS)

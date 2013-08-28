@@ -457,7 +457,14 @@ static int16_t handleEventCarbon(NPP instance, PluginObject* obj, EventRecord* e
             break;
         case mouseDown:
             if (obj->eventLogging) {
+#if __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#endif
                 GlobalToLocal(&pt);
+#if __clang__
+#pragma clang diagnostic pop
+#endif
                 pluginLog(instance, "mouseDown at (%d, %d)", pt.h, pt.v);
             }
             if (obj->evaluateScriptOnMouseDownOrKeyDown && obj->mouseDownForEvaluateScript)
@@ -465,7 +472,14 @@ static int16_t handleEventCarbon(NPP instance, PluginObject* obj, EventRecord* e
             break;
         case mouseUp:
             if (obj->eventLogging) {
+#if __clang__
+#pragma clang diagnostic push
+#pragma clang diagnostic ignored "-Wdeprecated-declarations"
+#endif
                 GlobalToLocal(&pt);
+#if __clang__
+#pragma clang diagnostic pop
+#endif
                 pluginLog(instance, "mouseUp at (%d, %d)", pt.h, pt.v);
             }
             break;
@@ -773,7 +787,7 @@ NPError NPP_GetValue(NPP instance, NPPVariable variable, void *value)
         return NPERR_NO_ERROR;
     }
     if (variable == NPPVpluginDescriptionString) {
-        *((char **)value) = const_cast<char*>("Simple Netscape plug-in that handles test content for WebKit");
+        *((char **)value) = const_cast<char*>("Simple Netscape® plug-in that handles test content for WebKit");
         return NPERR_NO_ERROR;
     }
     if (variable == NPPVpluginNeedsXEmbed) {

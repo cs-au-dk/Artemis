@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2008 Gustavo Noronha Silva
+ * Copyright (C) 2008, 2012 Gustavo Noronha Silva
  * Copyright (C) 2010 Collabora Ltd.
  *
  *  This library is free software; you can redistribute it and/or
@@ -20,6 +20,7 @@
 #include "config.h"
 #include "InspectorClientGtk.h"
 
+#include "FileSystem.h"
 #include "Frame.h"
 #include "InspectorController.h"
 #include "NotImplemented.h"
@@ -48,55 +49,16 @@ public:
     virtual ~InspectorFrontendSettingsGtk() { }
 
 private:
-#ifdef HAVE_GSETTINGS
-    static bool shouldIgnoreSetting(const String& key)
-    {
-        // GSettings considers trying to fetch or set a setting that is
-        // not backed by a schema as programmer error, and aborts the
-        // program's execution. We check here to avoid having an unhandled
-        // setting as a fatal error.
-        LOG_VERBOSE(NotYetImplemented, "Unknown key ignored: %s", key.ascii().data());
-        return true;
-    }
-
     virtual String getProperty(const String& name)
-    {
-        if (shouldIgnoreSetting(name))
-            return String();
-
-        GSettings* settings = inspectorGSettings();
-        if (!settings)
-            return String();
-
-        GRefPtr<GVariant> variant = adoptGRef(g_settings_get_value(settings, name.utf8().data()));
-        return String(g_variant_get_string(variant.get(), 0));
-    }
-
-    virtual void setProperty(const String& name, const String& value)
-    {
-        // Avoid setting unknown keys to avoid aborting the execution.
-        if (shouldIgnoreSetting(name))
-            return;
-
-        GSettings* settings = inspectorGSettings();
-        if (!settings)
-            return;
-
-        GRefPtr<GVariant> variant = adoptGRef(g_variant_new_string(value.utf8().data()));
-        g_settings_set_value(settings, name.utf8().data(), variant.get());
-    }
-#else
-    virtual String getProperty(const String&)
     {
         notImplemented();
         return String();
     }
 
-    virtual void setProperty(const String&, const String&)
+    virtual void setProperty(const String& name, const String& value)
     {
         notImplemented();
     }
-#endif // HAVE_GSETTINGS
 };
 
 } // namespace
@@ -171,6 +133,7 @@ void InspectorClient::bringFrontendToFront()
 void InspectorClient::releaseFrontendPage()
 {
     m_frontendPage = 0;
+    m_frontendClient = 0;
 }
 
 void InspectorClient::highlight()
@@ -201,7 +164,7 @@ const char* InspectorClient::inspectorFilesPath()
     if (environmentPath && g_file_test(environmentPath, G_FILE_TEST_IS_DIR))
         m_inspectorFilesPath.set(g_strdup(environmentPath));
     else
-        m_inspectorFilesPath.set(g_build_filename(DATA_DIR, "webkitgtk-"WEBKITGTK_API_VERSION_STRING, "webinspector", NULL));
+        m_inspectorFilesPath.set(g_build_filename(sharedResourcesPath().data(), "webinspector", NULL));
 
     return m_inspectorFilesPath.get();
 }
@@ -220,9 +183,10 @@ InspectorFrontendClient::InspectorFrontendClient(WebKitWebView* inspectedWebView
 InspectorFrontendClient::~InspectorFrontendClient()
 {
     if (m_inspectorClient) {
-        m_inspectorClient->disconnectFrontendClient();
+        m_inspectorClient->releaseFrontendPage();
         m_inspectorClient = 0;
     }
+
     ASSERT(!m_webInspector);
 }
 
@@ -230,11 +194,13 @@ void InspectorFrontendClient::destroyInspectorWindow(bool notifyInspectorControl
 {
     if (!m_webInspector)
         return;
-    WebKitWebInspector* webInspector = m_webInspector;
-    m_webInspector = 0;
 
-    g_signal_handlers_disconnect_by_func(m_inspectorWebView, (gpointer)notifyWebViewDestroyed, (gpointer)this);
-    m_inspectorWebView = 0;
+    GRefPtr<WebKitWebInspector> webInspector = adoptGRef(m_webInspector.leakRef());
+
+    if (m_inspectorWebView) {
+        g_signal_handlers_disconnect_by_func(m_inspectorWebView, reinterpret_cast<gpointer>(notifyWebViewDestroyed), this);
+        m_inspectorWebView = 0;
+    }
 
     if (notifyInspectorController)
         core(m_inspectedWebView)->inspectorController()->disconnectFrontend();
@@ -243,14 +209,11 @@ void InspectorFrontendClient::destroyInspectorWindow(bool notifyInspectorControl
         m_inspectorClient->releaseFrontendPage();
 
     gboolean handled = FALSE;
-    g_signal_emit_by_name(webInspector, "close-window", &handled);
+    g_signal_emit_by_name(webInspector.get(), "close-window", &handled);
     ASSERT(handled);
 
     // Please do not use member variables here because InspectorFrontendClient object pointed by 'this'
     // has been implicitly deleted by "close-window" function.
-
-    /* we should now dispose our own reference */
-    g_object_unref(webInspector);
 }
 
 String InspectorFrontendClient::localizedStringsURL()
@@ -274,7 +237,7 @@ void InspectorFrontendClient::bringToFront()
         return;
 
     gboolean handled = FALSE;
-    g_signal_emit_by_name(m_webInspector, "show-window", &handled);
+    g_signal_emit_by_name(m_webInspector.get(), "show-window", &handled);
 }
 
 void InspectorFrontendClient::closeWindow()
@@ -288,7 +251,7 @@ void InspectorFrontendClient::attachWindow()
         return;
 
     gboolean handled = FALSE;
-    g_signal_emit_by_name(m_webInspector, "attach-window", &handled);
+    g_signal_emit_by_name(m_webInspector.get(), "attach-window", &handled);
 }
 
 void InspectorFrontendClient::detachWindow()
@@ -297,7 +260,7 @@ void InspectorFrontendClient::detachWindow()
         return;
 
     gboolean handled = FALSE;
-    g_signal_emit_by_name(m_webInspector, "detach-window", &handled);
+    g_signal_emit_by_name(m_webInspector.get(), "detach-window", &handled);
 }
 
 void InspectorFrontendClient::setAttachedWindowHeight(unsigned height)
@@ -310,7 +273,7 @@ void InspectorFrontendClient::inspectedURLChanged(const String& newURL)
     if (!m_inspectorWebView)
         return;
 
-    webkit_web_inspector_set_inspected_uri(m_webInspector, newURL.utf8().data());
+    webkit_web_inspector_set_inspected_uri(m_webInspector.get(), newURL.utf8().data());
 }
 
 }

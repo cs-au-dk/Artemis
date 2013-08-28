@@ -129,6 +129,9 @@ AccessibilityObject* AXObjectCache::focusedImageMapUIElement(HTMLAreaElement* ar
     
 AccessibilityObject* AXObjectCache::focusedUIElementForPage(const Page* page)
 {
+    if (!gAccessibilityEnabled)
+        return 0;
+
     // get the focused node in the page
     Document* focusedDocument = page->focusController()->focusedOrMainFrame()->document();
     Node* focusedNode = focusedDocument->focusedNode();
@@ -178,7 +181,7 @@ AccessibilityObject* AXObjectCache::get(RenderObject* renderer)
     ASSERT(!HashTraits<AXID>::isDeletedValue(axID));
     if (!axID)
         return 0;
-    
+
     return m_objects.get(axID).get();    
 }
 
@@ -288,11 +291,17 @@ AccessibilityObject* AXObjectCache::getOrCreate(RenderObject* renderer)
     
 AccessibilityObject* AXObjectCache::rootObject()
 {
+    if (!gAccessibilityEnabled)
+        return 0;
+    
     return getOrCreate(m_document->view());
 }
 
 AccessibilityObject* AXObjectCache::rootObjectForFrame(Frame* frame)
 {
+    if (!gAccessibilityEnabled)
+        return 0;
+
     if (!frame)
         return 0;
     return getOrCreate(frame->view());
@@ -662,5 +671,27 @@ void AXObjectCache::textMarkerDataForVisiblePosition(TextMarkerData& textMarkerD
     
     cache->setNodeInUse(domNode);
 }
-    
+
+const Element* AXObjectCache::rootAXEditableElement(const Node* node)
+{
+    const Element* result = node->rootEditableElement();
+    const Element* element = node->isElementNode() ? toElement(node) : node->parentElement();
+
+    for (; element; element = element->parentElement()) {
+        if (nodeIsTextControl(element))
+            result = element;
+    }
+
+    return result;
+}
+
+bool AXObjectCache::nodeIsTextControl(const Node* node)
+{
+    if (!node)
+        return false;
+
+    const AccessibilityObject* axObject = getOrCreate(node->renderer());
+    return axObject && axObject->isTextControl();
+}
+
 } // namespace WebCore

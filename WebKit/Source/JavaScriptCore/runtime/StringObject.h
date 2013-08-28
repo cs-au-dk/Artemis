@@ -53,6 +53,7 @@ namespace JSC {
 
         static bool deleteProperty(JSCell*, ExecState*, const Identifier& propertyName);
         static void getOwnPropertyNames(JSObject*, ExecState*, PropertyNameArray&, EnumerationMode);
+        static bool defineOwnProperty(JSObject*, ExecState*, const Identifier& propertyName, PropertyDescriptor&, bool shouldThrow);
 
         static const JS_EXPORTDATA ClassInfo s_info;
 
@@ -64,9 +65,9 @@ namespace JSC {
         }
 
     protected:
-        void finishCreation(JSGlobalData&, JSString*);
+        JS_EXPORT_PRIVATE void finishCreation(JSGlobalData&, JSString*);
         static const unsigned StructureFlags = OverridesGetOwnPropertySlot | OverridesGetPropertyNames | JSWrapperObject::StructureFlags;
-        StringObject(JSGlobalData&, Structure*);
+        JS_EXPORT_PRIVATE StringObject(JSGlobalData&, Structure*);
     };
 
     StringObject* asStringObject(JSValue);

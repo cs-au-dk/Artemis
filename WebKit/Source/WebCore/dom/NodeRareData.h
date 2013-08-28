@@ -51,7 +51,7 @@ struct NodeListsNodeData {
     WTF_MAKE_NONCOPYABLE(NodeListsNodeData); WTF_MAKE_FAST_ALLOCATED;
 public:
     typedef HashSet<DynamicSubtreeNodeList*> NodeListSet;
-    NodeListSet m_listsWithCaches;
+    NodeListSet m_listsInvalidatedAtDocument;
 
     typedef HashMap<String, ClassNodeList*> ClassNodeListCache;
     ClassNodeListCache m_classNodeListCache;
@@ -71,18 +71,14 @@ public:
 #endif
 
     LabelsNodeList* m_labelsNodeListCache;
- 
+
     static PassOwnPtr<NodeListsNodeData> create()
     {
         return adoptPtr(new NodeListsNodeData);
     }
-    
+
     void invalidateCaches();
     void invalidateCachesThatDependOnAttributes();
-
-#if ENABLE(MICRODATA)
-    void invalidateMicrodataItemListCaches();
-#endif
 
     bool isEmpty() const;
 
@@ -95,10 +91,14 @@ class NodeRareData {
 public:    
     NodeRareData()
         : m_treeScope(0)
+        , m_childNodeList(0)
         , m_tabIndex(0)
         , m_tabIndexWasSetExplicitly(false)
         , m_isFocused(false)
         , m_needsFocusAppearanceUpdateSoonAfterAttach(false)
+#if ENABLE(STYLE_SCOPED)
+        , m_numberOfScopedHTMLStyleChildren(0)
+#endif
     {
     }
 
@@ -132,12 +132,9 @@ public:
         return m_nodeLists.get();
     }
     void clearChildNodeListCache();
-    DynamicNodeList::Caches* ensureChildNodeListCache()
-    {
-        if (!m_childNodeListCache)
-            m_childNodeListCache = DynamicNodeList::Caches::create();
-        return m_childNodeListCache.get();
-    }
+
+    ChildNodeList* childNodeList() const { return m_childNodeList; }
+    void setChildNodeList(ChildNodeList* list) { m_childNodeList = list; }
 
     short tabIndex() const { return m_tabIndex; }
     void setTabIndexExplicitly(short index) { m_tabIndex = index; m_tabIndexWasSetExplicitly = true; }
@@ -228,6 +225,30 @@ public:
     }
 #endif
 
+#if ENABLE(STYLE_SCOPED)
+    void registerScopedHTMLStyleChild()
+    {
+        ++m_numberOfScopedHTMLStyleChildren;
+    }
+
+    void unregisterScopedHTMLStyleChild()
+    {
+        ASSERT(m_numberOfScopedHTMLStyleChildren > 0);
+        if (m_numberOfScopedHTMLStyleChildren > 0)
+            --m_numberOfScopedHTMLStyleChildren;
+    }
+
+    bool hasScopedHTMLStyleChild() const
+    {
+        return m_numberOfScopedHTMLStyleChildren;
+    }
+
+    size_t numberOfScopedHTMLStyleChildren() const
+    {
+        return m_numberOfScopedHTMLStyleChildren;
+    }
+#endif
+
     bool isFocused() const { return m_isFocused; }
     void setFocused(bool focused) { m_isFocused = focused; }
 
@@ -241,7 +262,7 @@ private:
 
     TreeScope* m_treeScope;
     OwnPtr<NodeListsNodeData> m_nodeLists;
-    RefPtr<DynamicNodeList::Caches> m_childNodeListCache;
+    ChildNodeList* m_childNodeList;
     OwnPtr<EventTargetData> m_eventTargetData;
     short m_tabIndex;
     bool m_tabIndexWasSetExplicitly : 1;
@@ -257,7 +278,11 @@ private:
     mutable RefPtr<DOMSettableTokenList> m_itemProp;
     mutable RefPtr<DOMSettableTokenList> m_itemRef;
     mutable RefPtr<DOMSettableTokenList> m_itemType;
-    mutable RefPtr<HTMLPropertiesCollection> m_properties;
+    mutable OwnPtr<HTMLPropertiesCollection> m_properties;
+#endif
+
+#if ENABLE(STYLE_SCOPED)
+    size_t m_numberOfScopedHTMLStyleChildren;
 #endif
 };
 

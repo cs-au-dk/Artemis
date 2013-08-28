@@ -26,6 +26,8 @@
 #import "config.h"
 #import "TiledCoreAnimationDrawingAreaProxy.h"
 
+#if ENABLE(THREADED_SCROLLING)
+
 #import "DrawingAreaMessages.h"
 #import "DrawingAreaProxyMessages.h"
 #import "LayerTreeContext.h"
@@ -53,7 +55,12 @@ TiledCoreAnimationDrawingAreaProxy::~TiledCoreAnimationDrawingAreaProxy()
 
 void TiledCoreAnimationDrawingAreaProxy::deviceScaleFactorDidChange()
 {
-    // FIXME: Implement.
+    m_webPageProxy->process()->send(Messages::DrawingArea::SetDeviceScaleFactor(m_webPageProxy->deviceScaleFactor()), m_webPageProxy->pageID());
+}
+
+void TiledCoreAnimationDrawingAreaProxy::layerHostingModeDidChange()
+{
+    m_webPageProxy->process()->send(Messages::DrawingArea::SetLayerHostingMode(m_webPageProxy->layerHostingMode()), m_webPageProxy->pageID());
 }
 
 void TiledCoreAnimationDrawingAreaProxy::sizeDidChange()
@@ -67,6 +74,12 @@ void TiledCoreAnimationDrawingAreaProxy::sizeDidChange()
         return;
 
     sendUpdateGeometry();
+}
+
+void TiledCoreAnimationDrawingAreaProxy::waitForPossibleGeometryUpdate()
+{
+    if (!m_isWaitingForDidUpdateGeometry)
+        return;
 
     if (m_webPageProxy->process()->isLaunching())
         return;
@@ -85,6 +98,11 @@ void TiledCoreAnimationDrawingAreaProxy::exitAcceleratedCompositingMode(uint64_t
 {
     // This should never be called.
     ASSERT_NOT_REACHED();
+}
+
+void TiledCoreAnimationDrawingAreaProxy::updateAcceleratedCompositingMode(uint64_t backingStoreStateID, const LayerTreeContext& layerTreeContext)
+{
+    m_webPageProxy->updateAcceleratedCompositingMode(layerTreeContext);
 }
 
 void TiledCoreAnimationDrawingAreaProxy::didUpdateGeometry()
@@ -109,3 +127,5 @@ void TiledCoreAnimationDrawingAreaProxy::sendUpdateGeometry()
 }
 
 } // namespace WebKit
+
+#endif // ENABLE(THREADED_SCROLLING)

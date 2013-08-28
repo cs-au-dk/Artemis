@@ -61,6 +61,8 @@ typedef uint32_t WKPaginationMode;
 
 WK_EXPORT void WKPageSetPaginationMode(WKPageRef page, WKPaginationMode paginationMode);
 WK_EXPORT WKPaginationMode WKPageGetPaginationMode(WKPageRef page);
+WK_EXPORT void WKPageSetPaginationBehavesLikeColumns(WKPageRef page, bool behavesLikeColumns);
+WK_EXPORT bool WKPageGetPaginationBehavesLikeColumns(WKPageRef page);
 WK_EXPORT void WKPageSetPageLength(WKPageRef page, double pagesPerView);
 WK_EXPORT double WKPageGetPageLength(WKPageRef page);
 WK_EXPORT void WKPageSetGapBetweenPages(WKPageRef page, double gap);
@@ -81,11 +83,14 @@ WK_EXPORT void WKPageComputePagesForPrinting(WKPageRef page, WKFrameRef frame, W
 typedef void (*WKPageDrawToPDFFunction)(WKDataRef data, WKErrorRef error, void* functionContext);
 WK_EXPORT void WKPageBeginPrinting(WKPageRef page, WKFrameRef frame, WKPrintInfo printInfo);
 WK_EXPORT void WKPageDrawPagesToPDF(WKPageRef page, WKFrameRef frame, WKPrintInfo printInfo, uint32_t first, uint32_t count, WKPageDrawToPDFFunction callback, void* context);
+WK_EXPORT void WKPageEndPrinting(WKPageRef page);
 
 // FIXME https://bugs.webkit.org/show_bug.cgi?id=66979: Remove this sync call.
 WK_EXPORT WKImageRef WKPageCreateSnapshotOfVisibleContent(WKPageRef page);
 
 WK_EXPORT void WKPageSetShouldSendEventsSynchronously(WKPageRef page, bool sync);
+
+WK_EXPORT void WKPageSetMediaVolume(WKPageRef page, float volume);
 
 #ifdef __cplusplus
 }

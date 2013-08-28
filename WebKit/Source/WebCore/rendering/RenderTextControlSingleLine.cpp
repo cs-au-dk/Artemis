@@ -25,7 +25,7 @@
 #include "RenderTextControlSingleLine.h"
 
 #include "CSSFontSelector.h"
-#include "CSSStyleSelector.h"
+#include "CSSValueKeywords.h"
 #include "Chrome.h"
 #include "Frame.h"
 #include "FrameSelection.h"
@@ -42,6 +42,7 @@
 #include "SearchPopupMenu.h"
 #include "Settings.h"
 #include "SimpleFontData.h"
+#include "StyleResolver.h"
 #include "TextControlInnerElements.h"
 
 using namespace std;
@@ -59,7 +60,7 @@ VisiblePosition RenderTextControlInnerBlock::positionForPoint(const LayoutPoint&
     if (m_multiLine) {
         RenderTextControl* renderer = toRenderTextControl(node()->shadowAncestorNode()->renderer());
         if (renderer->hasOverflowClip())
-            contentsPoint += renderer->layer()->scrolledContentOffset();
+            contentsPoint += renderer->scrolledContentOffset();
     }
 
     return RenderBlock::positionForPoint(contentsPoint);
@@ -174,7 +175,7 @@ void RenderTextControlSingleLine::showPopup()
         m_searchPopup->saveRecentSearches(name, m_recentSearches);
     }
 
-    m_searchPopup->popupMenu()->show(absoluteBoundingBoxRect(), document()->view(), -1);
+    m_searchPopup->popupMenu()->show(pixelSnappedIntRect(absoluteBoundingBoxRect()), document()->view(), -1);
 }
 
 void RenderTextControlSingleLine::hidePopup()
@@ -195,7 +196,7 @@ void RenderTextControlSingleLine::paint(PaintInfo& paintInfo, const LayoutPoint&
 
         // Convert the rect into the coords used for painting the content
         contentsRect.moveBy(paintOffset + location());
-        theme()->paintCapsLockIndicator(this, paintInfo, contentsRect);
+        theme()->paintCapsLockIndicator(this, paintInfo, pixelSnappedIntRect(contentsRect));
     }
 }
 
@@ -212,13 +213,7 @@ void RenderTextControlSingleLine::layout()
     // and type=search if the text height is taller than the contentHeight()
     // because of compability.
 
-    LayoutUnit oldHeight = height();
-    computeLogicalHeight();
-
-    LayoutUnit oldWidth = width();
-    computeLogicalWidth();
-
-    bool relayoutChildren = oldHeight != height() || oldWidth != width();
+    RenderBlock::layoutBlock(false);
 
     RenderBox* innerTextRenderer = innerTextElement()->renderBox();
     ASSERT(innerTextRenderer);
@@ -233,7 +228,8 @@ void RenderTextControlSingleLine::layout()
     LayoutUnit heightLimit = (inputElement()->isSearchField() || !container) ? height() : contentHeight();
     if (currentHeight > heightLimit) {
         if (desiredHeight != currentHeight)
-            relayoutChildren = true;
+            setNeedsLayout(true, MarkOnlyThis);
+
         innerTextRenderer->style()->setHeight(Length(desiredHeight, Fixed));
         m_desiredInnerTextHeight = desiredHeight;
         if (innerBlockRenderer)
@@ -245,14 +241,17 @@ void RenderTextControlSingleLine::layout()
         LayoutUnit containerHeight = containerRenderer->height();
         if (containerHeight > heightLimit) {
             containerRenderer->style()->setHeight(Length(heightLimit, Fixed));
-            relayoutChildren = true;
+            setNeedsLayout(true, MarkOnlyThis);
         } else if (containerRenderer->height() < contentHeight()) {
             containerRenderer->style()->setHeight(Length(contentHeight(), Fixed));
-            relayoutChildren = true;
-        }
+            setNeedsLayout(true, MarkOnlyThis);
+        } else
+            containerRenderer->style()->setHeight(Length(containerHeight, Fixed));
     }
 
-    RenderBlock::layoutBlock(relayoutChildren);
+    // If we need another layout pass, we have changed one of children's height so we need to relayout them.
+    if (needsLayout())
+        RenderBlock::layoutBlock(true);
 
     // Center the child block vertically
     currentHeight = innerTextRenderer->height();
@@ -280,6 +279,7 @@ void RenderTextControlSingleLine::layout()
     if (RenderBox* placeholderBox = placeholderElement ? placeholderElement->renderBox() : 0) {
         placeholderBox->style()->setWidth(Length(innerTextRenderer->width() - placeholderBox->borderAndPaddingWidth(), Fixed));
         placeholderBox->style()->setHeight(Length(innerTextRenderer->height() - placeholderBox->borderAndPaddingHeight(), Fixed));
+        bool placeholderBoxHadLayout = placeholderBox->everHadLayout();
         placeholderBox->layoutIfNeeded();
         LayoutPoint textOffset = innerTextRenderer->location();
         if (innerBlockElement() && innerBlockElement()->renderBox())
@@ -287,6 +287,12 @@ void RenderTextControlSingleLine::layout()
         if (containerRenderer)
             textOffset += toLayoutSize(containerRenderer->location());
         placeholderBox->setLocation(textOffset);
+
+        if (!placeholderBoxHadLayout && placeholderBox->checkForRepaintDuringLayout()) {
+            // This assumes a shadow tree without floats. If floats are added, the
+            // logic should be shared with RenderBlock::layoutBlockChild.
+            placeholderBox->repaint();
+        }
     }
 }
 
@@ -330,6 +336,8 @@ void RenderTextControlSingleLine::styleDidChange(StyleDifference diff, const Ren
         containerRenderer->style()->setHeight(Length());
         containerRenderer->style()->setWidth(Length());
     }
+    if (HTMLElement* placeholder = inputElement()->placeholderElement())
+        placeholder->setInlineStyleProperty(CSSPropertyTextOverflow, textShouldBeTruncated() ? CSSValueEllipsis : CSSValueClip);
     setHasOverflowClip(false);
 }
 
@@ -357,13 +365,6 @@ void RenderTextControlSingleLine::capsLockStateMayHaveChanged()
     }
 }
 
-#if ENABLE(INPUT_SPEECH)
-HTMLElement* RenderTextControlSingleLine::speechButtonElement() const
-{
-    return inputElement()->speechButtonElement();
-}
-#endif
-
 bool RenderTextControlSingleLine::hasControlClip() const
 {
     // Apply control clip for text fields with decorations.
@@ -373,7 +374,7 @@ bool RenderTextControlSingleLine::hasControlClip() const
 LayoutRect RenderTextControlSingleLine::controlClipRect(const LayoutPoint& additionalOffset) const
 {
     ASSERT(hasControlClip());
-    LayoutRect clipRect = LayoutRect(containerElement()->renderBox()->frameRect());
+    LayoutRect clipRect = unionRect(contentBoxRect(), containerElement()->renderBox()->frameRect());
     clipRect.moveBy(additionalOffset);
     return clipRect;
 }
@@ -414,16 +415,6 @@ LayoutUnit RenderTextControlSingleLine::preferredContentWidth(float charWidth) c
     if (maxCharWidth > 0.f)
         result += maxCharWidth - charWidth;
 
-    HTMLElement* resultsButton = resultsButtonElement();
-    if (RenderBox* resultsRenderer = resultsButton ? resultsButton->renderBox() : 0)
-        result += resultsRenderer->borderLeft() + resultsRenderer->borderRight() +
-                  resultsRenderer->paddingLeft() + resultsRenderer->paddingRight();
-
-    HTMLElement* cancelButton = cancelButtonElement();
-    if (RenderBox* cancelRenderer = cancelButton ? cancelButton->renderBox() : 0)
-        result += cancelRenderer->borderLeft() + cancelRenderer->borderRight() +
-                  cancelRenderer->paddingLeft() + cancelRenderer->paddingRight();
-
     if (includesDecoration) {
         HTMLElement* spinButton = innerSpinButtonElement();
         if (RenderBox* spinRenderer = spinButton ? spinButton->renderBox() : 0) {
@@ -435,38 +426,25 @@ LayoutUnit RenderTextControlSingleLine::preferredContentWidth(float charWidth) c
         }
     }
 
-#if ENABLE(INPUT_SPEECH)
-    HTMLElement* speechButton = speechButtonElement();
-    if (RenderBox* speechRenderer = speechButton ? speechButton->renderBox() : 0) {
-        result += speechRenderer->borderLeft() + speechRenderer->borderRight() +
-                  speechRenderer->paddingLeft() + speechRenderer->paddingRight();
-    }
-#endif
     return result;
 }
 
-void RenderTextControlSingleLine::adjustControlHeightBasedOnLineHeight(LayoutUnit lineHeight)
+LayoutUnit RenderTextControlSingleLine::computeControlHeight(LayoutUnit lineHeight, LayoutUnit nonContentHeight) const
 {
     HTMLElement* resultsButton = resultsButtonElement();
     if (RenderBox* resultsRenderer = resultsButton ? resultsButton->renderBox() : 0) {
         resultsRenderer->computeLogicalHeight();
-        setHeight(max(height(),
-                  resultsRenderer->borderTop() + resultsRenderer->borderBottom() +
-                  resultsRenderer->paddingTop() + resultsRenderer->paddingBottom() +
-                  resultsRenderer->marginTop() + resultsRenderer->marginBottom()));
+        nonContentHeight = max(nonContentHeight, resultsRenderer->borderAndPaddingHeight() + resultsRenderer->marginHeight());
         lineHeight = max(lineHeight, resultsRenderer->height());
     }
     HTMLElement* cancelButton = cancelButtonElement();
     if (RenderBox* cancelRenderer = cancelButton ? cancelButton->renderBox() : 0) {
         cancelRenderer->computeLogicalHeight();
-        setHeight(max(height(),
-                  cancelRenderer->borderTop() + cancelRenderer->borderBottom() +
-                  cancelRenderer->paddingTop() + cancelRenderer->paddingBottom() +
-                  cancelRenderer->marginTop() + cancelRenderer->marginBottom()));
+        nonContentHeight = max(nonContentHeight, cancelRenderer->borderAndPaddingHeight() + cancelRenderer->marginHeight());
         lineHeight = max(lineHeight, cancelRenderer->height());
     }
 
-    setHeight(height() + lineHeight);
+    return lineHeight + nonContentHeight;
 }
 
 void RenderTextControlSingleLine::updateFromElement()
@@ -490,6 +468,7 @@ PassRefPtr<RenderStyle> RenderTextControlSingleLine::createInnerTextStyle(const 
     textBlockStyle->setWordWrap(NormalWordWrap);
     textBlockStyle->setOverflowX(OHIDDEN);
     textBlockStyle->setOverflowY(OHIDDEN);
+    textBlockStyle->setTextOverflow(textShouldBeTruncated() ? TextOverflowEllipsis : TextOverflowClip);
 
     if (m_desiredInnerTextHeight >= 0)
         textBlockStyle->setHeight(Length(m_desiredInnerTextHeight, Fixed));
@@ -540,6 +519,12 @@ void RenderTextControlSingleLine::updateCancelButtonVisibility() const
 EVisibility RenderTextControlSingleLine::visibilityForCancelButton() const
 {
     return (style()->visibility() == HIDDEN || inputElement()->value().isEmpty()) ? HIDDEN : VISIBLE;
+}
+
+bool RenderTextControlSingleLine::textShouldBeTruncated() const
+{
+    return document()->focusedNode() != node()
+        && style()->textOverflow() == TextOverflowEllipsis;
 }
 
 const AtomicString& RenderTextControlSingleLine::autosaveName() const
@@ -610,7 +595,8 @@ PopupMenuStyle RenderTextControlSingleLine::itemStyle(unsigned) const
 
 PopupMenuStyle RenderTextControlSingleLine::menuStyle() const
 {
-    return PopupMenuStyle(style()->visitedDependentColor(CSSPropertyColor), style()->visitedDependentColor(CSSPropertyBackgroundColor), style()->font(), style()->visibility() == VISIBLE, style()->display() == NONE, style()->textIndent(), style()->direction(), style()->unicodeBidi() == Override);
+    return PopupMenuStyle(style()->visitedDependentColor(CSSPropertyColor), style()->visitedDependentColor(CSSPropertyBackgroundColor), style()->font(), style()->visibility() == VISIBLE,
+        style()->display() == NONE, style()->textIndent(), style()->direction(), isOverride(style()->unicodeBidi()));
 }
 
 int RenderTextControlSingleLine::clientInsetLeft() const
@@ -628,25 +614,21 @@ int RenderTextControlSingleLine::clientInsetRight() const
     return height() / 2;
 }
 
-int RenderTextControlSingleLine::clientPaddingLeft() const
+LayoutUnit RenderTextControlSingleLine::clientPaddingLeft() const
 {
-    int padding = paddingLeft();
-
-    HTMLElement* resultsButton = resultsButtonElement();
-    if (RenderBox* resultsRenderer = resultsButton ? resultsButton->renderBox() : 0)
-        padding += resultsRenderer->width() + resultsRenderer->marginLeft() + resultsRenderer->paddingLeft() + resultsRenderer->marginRight() + resultsRenderer->paddingRight();
-
+    LayoutUnit padding = paddingLeft();
+    if (RenderBox* box = innerBlockElement() ? innerBlockElement()->renderBox() : 0)
+        padding += box->x();
     return padding;
 }
 
-int RenderTextControlSingleLine::clientPaddingRight() const
+LayoutUnit RenderTextControlSingleLine::clientPaddingRight() const
 {
-    int padding = paddingRight();
-
-    HTMLElement* cancelButton = cancelButtonElement();
-    if (RenderBox* cancelRenderer = cancelButton ? cancelButton->renderBox() : 0)
-        padding += cancelRenderer->width() + cancelRenderer->marginLeft() + cancelRenderer->paddingLeft() + cancelRenderer->marginRight() + cancelRenderer->paddingRight();
-
+    LayoutUnit padding = paddingRight();
+    if (RenderBox* containerBox = containerElement() ? containerElement()->renderBox() : 0) {
+        if (RenderBox* innerBlockBox = innerBlockElement() ? innerBlockElement()->renderBox() : 0)
+            padding += containerBox->width() - (innerBlockBox->x() + innerBlockBox->width());
+    }
     return padding;
 }
 
@@ -692,7 +674,7 @@ void RenderTextControlSingleLine::setTextFromItem(unsigned listIndex)
 
 FontSelector* RenderTextControlSingleLine::fontSelector() const
 {
-    return document()->styleSelector()->fontSelector();
+    return document()->styleResolver()->fontSelector();
 }
 
 HostWindow* RenderTextControlSingleLine::hostWindow() const

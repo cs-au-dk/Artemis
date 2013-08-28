@@ -47,7 +47,7 @@ public:
     static PassRefPtr<HTMLFormElement> create(const QualifiedName&, Document*);
     virtual ~HTMLFormElement();
 
-    PassRefPtr<HTMLCollection> elements();
+    HTMLCollection* elements();
     void getNamedElements(const AtomicString&, Vector<RefPtr<Node> >&);
 
     unsigned length() const;
@@ -110,17 +110,20 @@ public:
     CheckedRadioButtons& checkedRadioButtons() { return m_checkedRadioButtons; }
 
     const Vector<FormAssociatedElement*>& associatedElements() const { return m_associatedElements; }
+    
+    void getTextFieldValues(StringPairVector& fieldNamesAndValues) const;
 
 private:
     HTMLFormElement(const QualifiedName&, Document*);
 
     virtual bool rendererIsNeeded(const NodeRenderingContext&);
-    virtual void insertedIntoDocument();
-    virtual void removedFromDocument();
+    virtual InsertionNotificationRequest insertedInto(Node*) OVERRIDE;
+    virtual void didNotifyDescendantInseretions(Node*) OVERRIDE;
+    virtual void removedFrom(Node*) OVERRIDE;
 
     virtual void handleLocalEvents(Event*);
 
-    virtual void parseMappedAttribute(Attribute*);
+    virtual void parseAttribute(Attribute*) OVERRIDE;
 
     virtual bool isURLAttribute(Attribute*) const;
 
@@ -149,7 +152,7 @@ private:
 
     FormSubmission::Attributes m_attributes;
     OwnPtr<AliasMap> m_elementAliases;
-    RefPtr<HTMLFormCollection> m_elementsCollection;
+    OwnPtr<HTMLFormCollection> m_elementsCollection;
 
     CheckedRadioButtons m_checkedRadioButtons;
 

@@ -26,19 +26,23 @@
 
 #include "config.h"
 
-#if USE(ACCELERATED_COMPOSITING)
-
 #include "LayerTreeHostQt.h"
 
 #include "DrawingAreaImpl.h"
 #include "GraphicsContext.h"
 #include "LayerTreeHostProxyMessages.h"
 #include "MessageID.h"
+#include "SurfaceUpdateInfo.h"
+#include "WebCoreArgumentCoders.h"
 #include "WebGraphicsLayer.h"
 #include "WebPage.h"
 #include <WebCore/Frame.h>
 #include <WebCore/FrameView.h>
 #include <WebCore/Page.h>
+#include <WebCore/RenderLayer.h>
+#include <WebCore/RenderLayerBacking.h>
+#include <WebCore/RenderLayerCompositor.h>
+#include <WebCore/RenderView.h>
 #include <WebCore/Settings.h>
 
 using namespace WebCore;
@@ -52,21 +56,27 @@ PassRefPtr<LayerTreeHostQt> LayerTreeHostQt::create(WebPage* webPage)
 
 LayerTreeHostQt::~LayerTreeHostQt()
 {
+    // Prevent setWebGraphicsLayerClient(0) -> detachLayer() from modifying the set while we iterate it.
+    HashSet<WebCore::WebGraphicsLayer*> registeredLayers;
+    registeredLayers.swap(m_registeredLayers);
+
+    HashSet<WebCore::WebGraphicsLayer*>::iterator end = registeredLayers.end();
+    for (HashSet<WebCore::WebGraphicsLayer*>::iterator it = registeredLayers.begin(); it != end; ++it)
+        (*it)->setWebGraphicsLayerClient(0);
 }
 
 LayerTreeHostQt::LayerTreeHostQt(WebPage* webPage)
     : LayerTreeHost(webPage)
     , m_notifyAfterScheduledLayerFlush(false)
     , m_isValid(true)
-#if USE(TILED_BACKING_STORE)
     , m_waitingForUIProcess(false)
     , m_isSuspended(false)
-#endif
+    , m_contentsScale(1)
+    , m_shouldSendScrollPositionUpdate(true)
     , m_shouldSyncFrame(false)
     , m_shouldSyncRootLayer(true)
     , m_layerFlushTimer(this, &LayerTreeHostQt::layerFlushTimerFired)
     , m_layerFlushSchedulingEnabled(true)
-    , m_shouldRecreateBackingStore(false)
 {
     // Create a root layer.
     m_rootLayer = GraphicsLayer::create(this);
@@ -80,14 +90,11 @@ LayerTreeHostQt::LayerTreeHostQt(WebPage* webPage)
     m_layerTreeContext.webLayerID = toWebGraphicsLayer(webRootLayer)->id();
 
     m_nonCompositedContentLayer = GraphicsLayer::create(this);
-#if USE(TILED_BACKING_STORE)
-    toWebGraphicsLayer(m_rootLayer.get())->setLayerTreeTileClient(this);
-#endif
+    toWebGraphicsLayer(m_rootLayer.get())->setWebGraphicsLayerClient(this);
 #ifndef NDEBUG
     m_nonCompositedContentLayer->setName("LayerTreeHostQt non-composited content");
 #endif
     m_nonCompositedContentLayer->setDrawsContent(true);
-    m_nonCompositedContentLayer->setContentsOpaque(m_webPage->drawsBackground() && !m_webPage->drawsTransparentBackground());
     m_nonCompositedContentLayer->setSize(m_webPage->size());
 
     m_rootLayer->addChild(m_nonCompositedContentLayer.get());
@@ -135,6 +142,7 @@ void LayerTreeHostQt::setShouldNotifyAfterNextScheduledLayerFlush(bool notifyAft
 void LayerTreeHostQt::setRootCompositingLayer(WebCore::GraphicsLayer* graphicsLayer)
 {
     m_nonCompositedContentLayer->removeAllChildren();
+    m_nonCompositedContentLayer->setContentsOpaque(m_webPage->drawsBackground() && !m_webPage->drawsTransparentBackground());
 
     // Add the accelerated layer tree hierarchy.
     if (graphicsLayer)
@@ -171,6 +179,9 @@ void LayerTreeHostQt::forceRepaint()
 
 void LayerTreeHostQt::sizeDidChange(const WebCore::IntSize& newSize)
 {
+    if (m_rootLayer->size() == newSize)
+        return;
+
     m_rootLayer->setSize(newSize);
 
     // If the newSize exposes new areas of the non-composited content a setNeedsDisplay is needed
@@ -211,10 +222,15 @@ void LayerTreeHostQt::setPageOverlayNeedsDisplay(const WebCore::IntRect& rect)
     scheduleLayerFlush();
 }
 
+void LayerTreeHostQt::setPageOverlayOpacity(float value)
+{
+    ASSERT(m_pageOverlayLayer);
+    m_pageOverlayLayer->setOpacity(value);
+    scheduleLayerFlush();
+}
+
 bool LayerTreeHostQt::flushPendingLayerChanges()
 {
-    recreateBackingStoreIfNeeded();
-
     bool didSync = m_webPage->corePage()->mainFrame()->view()->syncCompositingStateIncludingSubframes();
     m_nonCompositedContentLayer->syncCompositingStateForThisLayerOnly();
     if (m_pageOverlayLayer)
@@ -224,29 +240,103 @@ bool LayerTreeHostQt::flushPendingLayerChanges()
     return didSync;
 }
 
-void LayerTreeHostQt::didSyncCompositingStateForLayer(const WebLayerInfo& info)
+void LayerTreeHostQt::syncLayerState(WebLayerID id, const WebLayerInfo& info)
 {
+    if (m_shouldSendScrollPositionUpdate) {
+        m_webPage->send(Messages::LayerTreeHostProxy::DidChangeScrollPosition(m_visibleContentsRect.location()));
+        m_shouldSendScrollPositionUpdate = false;
+    }
     m_shouldSyncFrame = true;
-    m_webPage->send(Messages::LayerTreeHostProxy::SyncCompositingLayerState(info));
+    m_webPage->send(Messages::LayerTreeHostProxy::SetCompositingLayerState(id, info));
 }
 
-void LayerTreeHostQt::didDeleteLayer(WebLayerID id)
+void LayerTreeHostQt::syncLayerChildren(WebLayerID id, const Vector<WebLayerID>& children)
 {
     m_shouldSyncFrame = true;
-    m_webPage->send(Messages::LayerTreeHostProxy::DeleteCompositingLayer(id));
+    m_webPage->send(Messages::LayerTreeHostProxy::SetCompositingLayerChildren(id, children));
+}
+
+#if ENABLE(CSS_FILTERS)
+void LayerTreeHostQt::syncLayerFilters(WebLayerID id, const FilterOperations& filters)
+{
+    m_shouldSyncFrame = true;
+    m_webPage->send(Messages::LayerTreeHostProxy::SetCompositingLayerFilters(id, filters));
+}
+#endif
+
+void LayerTreeHostQt::attachLayer(WebGraphicsLayer* layer)
+{
+    ASSERT(!m_registeredLayers.contains(layer));
+    m_registeredLayers.add(layer);
+
+    layer->setContentsScale(m_contentsScale);
+    layer->adjustVisibleRect();
+}
+
+void LayerTreeHostQt::detachLayer(WebGraphicsLayer* layer)
+{
+    m_registeredLayers.remove(layer);
+    m_shouldSyncFrame = true;
+    m_webPage->send(Messages::LayerTreeHostProxy::DeleteCompositingLayer(layer->id()));
+}
+
+static void updateOffsetFromViewportForSelf(RenderLayer* renderLayer)
+{
+    // These conditions must match the conditions in RenderLayerCompositor::requiresCompositingForPosition.
+    RenderLayerBacking* backing = renderLayer->backing();
+    if (!backing)
+        return;
+
+    RenderStyle* style = renderLayer->renderer()->style();
+    if (!style)
+        return;
+
+    if (!renderLayer->renderer()->isPositioned() || renderLayer->renderer()->style()->position() != FixedPosition)
+        return;
+
+    if (!renderLayer->renderer()->container()->isRenderView())
+        return;
+
+    if (!renderLayer->isStackingContext())
+        return;
+
+    WebGraphicsLayer* graphicsLayer = toWebGraphicsLayer(backing->graphicsLayer());
+    graphicsLayer->setFixedToViewport(true);
+}
+
+static void updateOffsetFromViewportForLayer(RenderLayer* renderLayer)
+{
+    updateOffsetFromViewportForSelf(renderLayer);
+
+    if (renderLayer->firstChild())
+        updateOffsetFromViewportForLayer(renderLayer->firstChild());
+    if (renderLayer->nextSibling())
+        updateOffsetFromViewportForLayer(renderLayer->nextSibling());
+}
+
+void LayerTreeHostQt::syncFixedLayers()
+{
+    if (!m_webPage->corePage()->settings() || !m_webPage->corePage()->settings()->acceleratedCompositingForFixedPositionEnabled())
+        return;
+
+    if (!m_webPage->mainFrame()->view()->hasFixedObjects())
+        return;
+
+    RenderLayer* rootRenderLayer = m_webPage->mainFrame()->contentRenderer()->compositor()->rootRenderLayer();
+    ASSERT(rootRenderLayer);
+    if (rootRenderLayer->firstChild())
+        updateOffsetFromViewportForLayer(rootRenderLayer->firstChild());
 }
 
 void LayerTreeHostQt::performScheduledLayerFlush()
 {
+    if (m_isSuspended || m_waitingForUIProcess)
+        return;
+
     m_webPage->layoutIfNeeded();
 
     if (!m_isValid)
         return;
-
-#if USE(TILED_BACKING_STORE)
-    if (m_isSuspended || m_waitingForUIProcess)
-        return;
-#endif
 
     m_shouldSyncFrame = false;
     flushPendingLayerChanges();
@@ -259,6 +349,7 @@ void LayerTreeHostQt::performScheduledLayerFlush()
     }
 
     m_webPage->send(Messages::LayerTreeHostProxy::DidRenderFrame());
+    m_waitingForUIProcess = true;
 
     if (!m_notifyAfterScheduledLayerFlush)
         return;
@@ -312,7 +403,7 @@ int64_t LayerTreeHostQt::adoptImageBackingStore(Image* image)
         return key;
     }
 
-    RefPtr<ShareableBitmap> bitmap = ShareableBitmap::createShareable(image->size(), image->currentFrameHasAlpha() ? ShareableBitmap::SupportsAlpha : 0);
+    RefPtr<ShareableBitmap> bitmap = ShareableBitmap::createShareable(image->size(), (image->currentFrameHasAlpha() ? ShareableBitmap::SupportsAlpha : 0));
     {
         OwnPtr<WebCore::GraphicsContext> graphicsContext = bitmap->createGraphicsContext();
         graphicsContext->drawImage(image, ColorSpaceDeviceRGB, IntPoint::zero());
@@ -366,12 +457,12 @@ void LayerTreeHostQt::paintContents(const WebCore::GraphicsLayer* graphicsLayer,
     }
 }
 
-bool LayerTreeHostQt::showDebugBorders() const
+bool LayerTreeHostQt::showDebugBorders(const WebCore::GraphicsLayer*) const
 {
     return m_webPage->corePage()->settings()->showDebugBorders();
 }
 
-bool LayerTreeHostQt::showRepaintCounter() const
+bool LayerTreeHostQt::showRepaintCounter(const WebCore::GraphicsLayer*) const
 {
     return m_webPage->corePage()->settings()->showRepaintCounter();
 }
@@ -381,48 +472,63 @@ bool LayerTreeHost::supportsAcceleratedCompositing()
     return true;
 }
 
-#if USE(TILED_BACKING_STORE)
-void LayerTreeHostQt::createTile(WebLayerID layerID, int tileID, const UpdateInfo& updateInfo)
+void LayerTreeHostQt::createTile(WebLayerID layerID, int tileID, const SurfaceUpdateInfo& updateInfo, const WebCore::IntRect& targetRect)
 {
-    m_webPage->send(Messages::LayerTreeHostProxy::CreateTileForLayer(layerID, tileID, updateInfo));
+    m_shouldSyncFrame = true;
+    m_webPage->send(Messages::LayerTreeHostProxy::CreateTileForLayer(layerID, tileID, targetRect, updateInfo));
 }
 
-void LayerTreeHostQt::updateTile(WebLayerID layerID, int tileID, const UpdateInfo& updateInfo)
+void LayerTreeHostQt::updateTile(WebLayerID layerID, int tileID, const SurfaceUpdateInfo& updateInfo, const WebCore::IntRect& targetRect)
 {
-    m_webPage->send(Messages::LayerTreeHostProxy::UpdateTileForLayer(layerID, tileID, updateInfo));
+    m_shouldSyncFrame = true;
+    m_webPage->send(Messages::LayerTreeHostProxy::UpdateTileForLayer(layerID, tileID, targetRect, updateInfo));
 }
+
 void LayerTreeHostQt::removeTile(WebLayerID layerID, int tileID)
 {
+    m_shouldSyncFrame = true;
     m_webPage->send(Messages::LayerTreeHostProxy::RemoveTileForLayer(layerID, tileID));
 }
 
-void LayerTreeHostQt::setVisibleContentRectForLayer(int layerID, const WebCore::IntRect& rect)
+WebCore::IntRect LayerTreeHostQt::visibleContentsRect() const
 {
-    WebGraphicsLayer* layer = WebGraphicsLayer::layerByID(layerID);
-    if (!layer)
-        return;
-    FloatRect visibleRect(rect);
-    layer->setVisibleContentRect(rect);
+    return m_visibleContentsRect;
 }
 
-void LayerTreeHostQt::setVisibleContentRectAndScale(const IntRect& rect, float scale)
+void LayerTreeHostQt::setVisibleContentsRect(const IntRect& rect, float scale, const FloatPoint& trajectoryVector)
 {
-    WebGraphicsLayer* layer = toWebGraphicsLayer(m_rootLayer.get());
-    if (!layer)
-        return;
-    layer->setContentsScale(scale);
-    toWebGraphicsLayer(m_nonCompositedContentLayer.get())->setVisibleContentRect(rect);
-}
+    bool contentsRectDidChange = rect != m_visibleContentsRect;
+    bool contentsScaleDidChange = scale != m_contentsScale;
 
-void LayerTreeHostQt::setVisibleContentRectTrajectoryVector(const FloatPoint& trajectoryVector)
-{
-    toWebGraphicsLayer(m_nonCompositedContentLayer.get())->setVisibleContentRectTrajectoryVector(trajectoryVector);
+    if (trajectoryVector != FloatPoint::zero())
+        toWebGraphicsLayer(m_nonCompositedContentLayer.get())->setVisibleContentRectTrajectoryVector(trajectoryVector);
+
+    if (contentsRectDidChange || contentsScaleDidChange) {
+        m_visibleContentsRect = rect;
+        m_contentsScale = scale;
+
+        HashSet<WebCore::WebGraphicsLayer*>::iterator end = m_registeredLayers.end();
+        for (HashSet<WebCore::WebGraphicsLayer*>::iterator it = m_registeredLayers.begin(); it != end; ++it) {
+            if (contentsScaleDidChange)
+                (*it)->setContentsScale(scale);
+            if (contentsRectDidChange)
+                (*it)->adjustVisibleRect();
+        }
+    }
+
+    scheduleLayerFlush();
+    if (m_webPage->useFixedLayout())
+        m_webPage->setFixedVisibleContentRect(rect);
+    if (contentsRectDidChange)
+        m_shouldSendScrollPositionUpdate = true;
 }
 
 void LayerTreeHostQt::renderNextFrame()
 {
     m_waitingForUIProcess = false;
     scheduleLayerFlush();
+    for (int i = 0; i < m_updateAtlases.size(); ++i)
+        m_updateAtlases[i].didSwapBuffers();
 }
 
 bool LayerTreeHostQt::layerTreeTileUpdatesAllowed() const
@@ -432,36 +538,37 @@ bool LayerTreeHostQt::layerTreeTileUpdatesAllowed() const
 
 void LayerTreeHostQt::purgeBackingStores()
 {
-    m_shouldRecreateBackingStore = true;
-    WebGraphicsLayer* webRootLayer = toWebGraphicsLayer(m_rootLayer.get());
-    webRootLayer->purgeBackingStores();
+    HashSet<WebCore::WebGraphicsLayer*>::iterator end = m_registeredLayers.end();
+    for (HashSet<WebCore::WebGraphicsLayer*>::iterator it = m_registeredLayers.begin(); it != end; ++it)
+        (*it)->purgeBackingStores();
 
     ASSERT(!m_directlyCompositedImageRefCounts.size());
+    m_updateAtlases.clear();
 }
 
-void LayerTreeHostQt::recreateBackingStoreIfNeeded()
+UpdateAtlas& LayerTreeHostQt::getAtlas(ShareableBitmap::Flags flags)
 {
-    if (!m_shouldRecreateBackingStore)
-        return;
-
-    m_shouldRecreateBackingStore = false;
-    WebGraphicsLayer* webRootLayer = toWebGraphicsLayer(m_rootLayer.get());
-    webRootLayer->recreateBackingStoreIfNeeded();
+    for (int i = 0; i < m_updateAtlases.size(); ++i) {
+        if (m_updateAtlases[i].flags() == flags)
+            return m_updateAtlases[i];
+    }
+    static const int ScratchBufferDimension = 2000;
+    m_updateAtlases.append(UpdateAtlas(ScratchBufferDimension, flags));
+    return m_updateAtlases.last();
 }
-#endif
+
+PassOwnPtr<WebCore::GraphicsContext> LayerTreeHostQt::beginContentUpdate(const WebCore::IntSize& size, ShareableBitmap::Flags flags, ShareableSurface::Handle& handle, WebCore::IntPoint& offset)
+{
+    UpdateAtlas& atlas = getAtlas(flags);
+    if (!atlas.surface()->createHandle(handle))
+        return PassOwnPtr<WebCore::GraphicsContext>();
+
+    // This will return null if there is no available buffer.
+    OwnPtr<WebCore::GraphicsContext> graphicsContext = atlas.beginPaintingOnAvailableBuffer(size, offset);
+    if (!graphicsContext)
+        return PassOwnPtr<WebCore::GraphicsContext>();
+
+    return graphicsContext.release();
+}
 
 } // namespace WebKit
-#else
-#include "LayerTreeHost.h"
-
-using namespace WebCore;
-
-namespace WebKit {
-
-bool LayerTreeHost::supportsAcceleratedCompositing()
-{
-    return false;
-}
-
-} // namespace WebKit
-#endif

@@ -40,6 +40,9 @@ class SVGAElement : public SVGStyledTransformableElement,
 public:
     static PassRefPtr<SVGAElement> create(const QualifiedName&, Document*);
 
+protected:
+    virtual void childrenChanged(bool changedByParser = false, Node* beforeChange = 0, Node* afterChange = 0, int childCountDelta = 0) OVERRIDE;
+
 private:
     SVGAElement(const QualifiedName&, Document*);
 
@@ -49,7 +52,7 @@ private:
     virtual String target() const { return svgTarget(); }
 
     bool isSupportedAttribute(const QualifiedName&);
-    virtual void parseMappedAttribute(Attribute*);
+    virtual void parseAttribute(Attribute*) OVERRIDE;
     virtual void svgAttributeChanged(const QualifiedName&);
 
     virtual RenderObject* createRenderer(RenderArena*, RenderStyle*);
@@ -61,7 +64,7 @@ private:
     virtual bool isKeyboardFocusable(KeyboardEvent*) const;
     virtual bool isFocusable() const;
 
-    virtual bool childShouldCreateRenderer(Node*) const;
+    virtual bool childShouldCreateRenderer(const NodeRenderingContext&) const;
 
     BEGIN_DECLARE_ANIMATED_PROPERTIES(SVGAElement)
         // This declaration used to define a non-virtual "String& target() const" method, that clashes with "virtual String Element::target() const".

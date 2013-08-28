@@ -23,12 +23,10 @@
 #include "APICast.h"
 #include "BooleanObject.h"
 #include "DateInstance.h"
-#include "DateMath.h"
 #include "DatePrototype.h"
 #include "FunctionPrototype.h"
 #include "Interpreter.h"
 #include "JSArray.h"
-#include "JSByteArray.h"
 #include "JSDocument.h"
 #include "JSDOMBinding.h"
 #include "JSDOMWindow.h"
@@ -38,6 +36,7 @@
 #include "JSLock.h"
 #include "JSObject.h"
 #include "JSRetainPtr.h"
+#include "JSUint8ClampedArray.h"
 #include "ObjectPrototype.h"
 #include "PropertyNameArray.h"
 #include "RegExpConstructor.h"
@@ -51,6 +50,9 @@
 #include "qt_instance.h"
 #include "qt_pixmapruntime.h"
 #include "qvarlengtharray.h"
+
+#include <wtf/DateMath.h>
+
 #include <limits.h>
 #include <runtime/Error.h>
 #include <runtime_array.h>
@@ -104,7 +106,7 @@ typedef enum {
     Object,
     Null,
     RTArray,
-    JSByteArray
+    JSUint8ClampedArray
 } JSRealType;
 
 #if defined(QTWK_RUNTIME_CONVERSION_DEBUG) || defined(QTWK_RUNTIME_MATCH_DEBUG)
@@ -135,6 +137,11 @@ void registerCustomType(int qtMetaTypeId, ConvertToVariantFunction toVariantFunc
     customRuntimeConversions()->insert(qtMetaTypeId, conversion);
 }
 
+static bool isJSUint8ClampedArray(JSValue val)
+{
+    return val.isCell() && val.inherits(&JSUint8ClampedArray::s_info);
+}
+
 static JSRealType valueRealType(ExecState* exec, JSValue val)
 {
     if (val.isNumber())
@@ -145,8 +152,8 @@ static JSRealType valueRealType(ExecState* exec, JSValue val)
         return Boolean;
     else if (val.isNull())
         return Null;
-    else if (isJSByteArray(val))
-        return JSByteArray;
+    else if (isJSUint8ClampedArray(val))
+        return JSUint8ClampedArray;
     else if (val.isObject()) {
         JSObject *object = val.toObject(exec);
         if (object->inherits(&RuntimeArray::s_info))  // RuntimeArray 'inherits' from Array, but not in C++
@@ -253,7 +260,7 @@ QVariant convertValueToQVariant(ExecState* exec, JSValue value, QMetaType::Type 
             case QObj:
                 hint = QMetaType::QObjectStar;
                 break;
-            case JSByteArray:
+            case JSUint8ClampedArray:
                 hint = QMetaType::QByteArray;
                 break;
             case Array:
@@ -343,7 +350,7 @@ QVariant convertValueToQVariant(ExecState* exec, JSValue value, QMetaType::Type 
                 else
                     dist = 6;
             } else {
-                UString str = value.toString(exec);
+                UString str = value.toString(exec)->value(exec);
                 ret = QVariant(QChar(str.length() ? *(const ushort*)str.impl()->characters() : 0));
                 if (type == String)
                     dist = 3;
@@ -358,7 +365,7 @@ QVariant convertValueToQVariant(ExecState* exec, JSValue value, QMetaType::Type 
                     *distance = 1;
                 return QString();
             } else {
-                UString ustring = value.toString(exec);
+                UString ustring = value.toString(exec)->value(exec);
                 ret = QVariant(QString((const QChar*)ustring.impl()->characters(), ustring.length()));
                 if (type == String)
                     dist = 0;
@@ -439,7 +446,7 @@ QVariant convertValueToQVariant(ExecState* exec, JSValue value, QMetaType::Type 
                 int len = rtarray->getLength();
                 for (int i = 0; i < len; ++i) {
                     JSValue val = rtarray->getConcreteArray()->valueAt(exec, i);
-                    UString ustring = val.toString(exec);
+                    UString ustring = val.toString(exec)->value(exec);
                     QString qstring = QString((const QChar*)ustring.impl()->characters(), ustring.length());
 
                     result.append(qstring);
@@ -453,7 +460,7 @@ QVariant convertValueToQVariant(ExecState* exec, JSValue value, QMetaType::Type 
                 int len = array->length();
                 for (int i = 0; i < len; ++i) {
                     JSValue val = array->get(exec, i);
-                    UString ustring = val.toString(exec);
+                    UString ustring = val.toString(exec)->value(exec);
                     QString qstring = QString((const QChar*)ustring.impl()->characters(), ustring.length());
 
                     result.append(qstring);
@@ -462,7 +469,7 @@ QVariant convertValueToQVariant(ExecState* exec, JSValue value, QMetaType::Type 
                 ret = QVariant(result);
             } else {
                 // Make a single length array
-                UString ustring = value.toString(exec);
+                UString ustring = value.toString(exec)->value(exec);
                 QString qstring = QString((const QChar*)ustring.impl()->characters(), ustring.length());
                 QStringList result;
                 result.append(qstring);
@@ -473,12 +480,12 @@ QVariant convertValueToQVariant(ExecState* exec, JSValue value, QMetaType::Type 
         }
 
         case QMetaType::QByteArray: {
-            if (type == JSByteArray) {
-                WTF::ByteArray* arr = asByteArray(value)->storage();
+            if (type == JSUint8ClampedArray) {
+                WTF::Uint8ClampedArray* arr = toUint8ClampedArray(value);
                 ret = QVariant(QByteArray(reinterpret_cast<const char*>(arr->data()), arr->length()));
                 dist = 0;
             } else {
-                UString ustring = value.toString(exec);
+                UString ustring = value.toString(exec)->value(exec);
                 ret = QVariant(QString((const QChar*)ustring.impl()->characters(), ustring.length()).toLatin1());
                 if (type == String)
                     dist = 5;
@@ -521,7 +528,7 @@ QVariant convertValueToQVariant(ExecState* exec, JSValue value, QMetaType::Type 
                 }
 #ifndef QT_NO_DATESTRING
             } else if (type == String) {
-                UString ustring = value.toString(exec);
+                UString ustring = value.toString(exec)->value(exec);
                 QString qstring = QString((const QChar*)ustring.impl()->characters(), ustring.length());
 
                 if (hint == QMetaType::QDateTime) {
@@ -571,7 +578,7 @@ QVariant convertValueToQVariant(ExecState* exec, JSValue value, QMetaType::Type 
                 RegExpObject *re = static_cast<RegExpObject*>(object);
 */
                 // Attempt to convert.. a bit risky
-                UString ustring = value.toString(exec);
+                UString ustring = value.toString(exec)->value(exec);
                 QString qstring = QString((const QChar*)ustring.impl()->characters(), ustring.length());
 
                 // this is of the form '/xxxxxx/i'
@@ -591,7 +598,7 @@ QVariant convertValueToQVariant(ExecState* exec, JSValue value, QMetaType::Type 
                     qConvDebug() << "couldn't parse a JS regexp";
                 }
             } else if (type == String) {
-                UString ustring = value.toString(exec);
+                UString ustring = value.toString(exec)->value(exec);
                 QString qstring = QString((const QChar*)ustring.impl()->characters(), ustring.length());
 
                 QRegExp re(qstring);
@@ -880,9 +887,9 @@ JSValue convertQVariantToValue(ExecState* exec, PassRefPtr<RootObject> root, con
 
     if (type == QMetaType::QByteArray) {
         QByteArray qtByteArray = variant.value<QByteArray>();
-        WTF::RefPtr<WTF::ByteArray> wtfByteArray = WTF::ByteArray::create(qtByteArray.length());
+        WTF::RefPtr<WTF::Uint8ClampedArray> wtfByteArray = WTF::Uint8ClampedArray::createUninitialized(qtByteArray.length());
         memcpy(wtfByteArray->data(), qtByteArray.constData(), qtByteArray.length());
-        return JSC::JSByteArray::create(exec, JSC::JSByteArray::createStructure(exec->globalData(), exec->lexicalGlobalObject(), jsNull()), wtfByteArray.get());
+        return toJS(exec, static_cast<JSDOMGlobalObject*>(exec->lexicalGlobalObject()), wtfByteArray.get());
     }
 
     if (type == QMetaType::QObjectStar || type == QMetaType::QWidgetStar) {
@@ -972,7 +979,7 @@ void QtRuntimeMethod::finishCreation(ExecState* exec, const Identifier& identifi
     Base::finishCreation(exec->globalData(), identifier);
     QW_D(QtRuntimeMethod);
     d->m_instance = instance;
-    d->m_finalizer.set(exec->globalData(), this, d);
+    d->m_finalizer = PassWeak<QtRuntimeMethod>(this, d);
 }
 
 QtRuntimeMethod::~QtRuntimeMethod()
@@ -1599,7 +1606,7 @@ EncodedJSValue QtRuntimeConnectionMethod::call(ExecState* exec)
                         funcObject = asObj;
                     } else {
                         // Convert it to a string
-                        UString funcName = exec->argument(1).toString(exec);
+                        UString funcName = exec->argument(1).toString(exec)->value(exec);
                         Identifier funcIdent(exec, funcName);
 
                         // ### DropAllLocks

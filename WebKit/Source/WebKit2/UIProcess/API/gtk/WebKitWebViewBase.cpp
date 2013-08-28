@@ -35,6 +35,9 @@
 #include "PageClientImpl.h"
 #include "WebContext.h"
 #include "WebEventFactory.h"
+#include "WebFullScreenClientGtk.h"
+#include "WebKitPrivate.h"
+#include "WebKitWebViewBaseAccessible.h"
 #include "WebKitWebViewBasePrivate.h"
 #include "WebPageProxy.h"
 #include <WebCore/ClipboardGtk.h>
@@ -50,15 +53,24 @@
 #include <WebCore/PasteboardHelper.h>
 #include <WebCore/RefPtrCairo.h>
 #include <WebCore/Region.h>
-#include <WebKit2/WKContext.h>
+#include <gdk/gdk.h>
+#include <gdk/gdkkeysyms.h>
+#include <wtf/HashMap.h>
 #include <wtf/gobject/GOwnPtr.h>
 #include <wtf/gobject/GRefPtr.h>
 #include <wtf/text/CString.h>
 
+#if ENABLE(FULLSCREEN_API)
+#include "WebFullScreenManagerProxy.h"
+#endif
+
 using namespace WebKit;
 using namespace WebCore;
 
+typedef HashMap<GtkWidget*, IntRect> WebKitWebViewChildrenMap;
+
 struct _WebKitWebViewBasePrivate {
+    WebKitWebViewChildrenMap children;
     OwnPtr<PageClientImpl> pageClient;
     RefPtr<WebPageProxy> pageProxy;
     bool isPageActive;
@@ -68,9 +80,42 @@ struct _WebKitWebViewBasePrivate {
     CString tooltipText;
     GtkDragAndDropHelper dragAndDropHelper;
     DragIcon dragIcon;
+    IntSize resizerSize;
+    GRefPtr<AtkObject> accessible;
+    bool needsResizeOnMap;
+#if ENABLE(FULLSCREEN_API)
+    bool fullScreenModeActive;
+    WebFullScreenClientGtk fullScreenClient;
+#endif
 };
 
 G_DEFINE_TYPE(WebKitWebViewBase, webkit_web_view_base, GTK_TYPE_CONTAINER)
+
+static void webkitWebViewBaseNotifyResizerSizeForWindow(WebKitWebViewBase* webViewBase, GtkWindow* window)
+{
+    gboolean resizerVisible;
+    g_object_get(G_OBJECT(window), "resize-grip-visible", &resizerVisible, NULL);
+
+    IntSize resizerSize;
+    if (resizerVisible) {
+        GdkRectangle resizerRect;
+        gtk_window_get_resize_grip_area(window, &resizerRect);
+        GdkRectangle allocation;
+        gtk_widget_get_allocation(GTK_WIDGET(webViewBase), &allocation);
+        if (gdk_rectangle_intersect(&resizerRect, &allocation, 0))
+            resizerSize = IntSize(resizerRect.width, resizerRect.height);
+    }
+
+    if (resizerSize != webViewBase->priv->resizerSize) {
+        webViewBase->priv->resizerSize = resizerSize;
+        webViewBase->priv->pageProxy->setWindowResizerSize(resizerSize);
+    }
+}
+
+static void toplevelWindowResizeGripVisibilityChanged(GObject* object, GParamSpec*, WebKitWebViewBase* webViewBase)
+{
+    webkitWebViewBaseNotifyResizerSizeForWindow(webViewBase, GTK_WINDOW(object));
+}
 
 static void webkitWebViewBaseRealize(GtkWidget* widget)
 {
@@ -91,6 +136,7 @@ static void webkitWebViewBaseRealize(GtkWidget* widget)
         | GDK_EXPOSURE_MASK
         | GDK_BUTTON_PRESS_MASK
         | GDK_BUTTON_RELEASE_MASK
+        | GDK_SCROLL_MASK
         | GDK_POINTER_MOTION_MASK
         | GDK_KEY_PRESS_MASK
         | GDK_KEY_RELEASE_MASK
@@ -110,11 +156,62 @@ static void webkitWebViewBaseRealize(GtkWidget* widget)
     WebKitWebViewBase* webView = WEBKIT_WEB_VIEW_BASE(widget);
     WebKitWebViewBasePrivate* priv = webView->priv;
     gtk_im_context_set_client_window(priv->imContext.get(), window);
+
+    GtkWidget* toplevel = gtk_widget_get_toplevel(widget);
+    if (widgetIsOnscreenToplevelWindow(toplevel)) {
+        webkitWebViewBaseNotifyResizerSizeForWindow(webView, GTK_WINDOW(toplevel));
+        g_signal_connect(toplevel, "notify::resize-grip-visible",
+                         G_CALLBACK(toplevelWindowResizeGripVisibilityChanged), webView);
+    }
 }
 
 static void webkitWebViewBaseContainerAdd(GtkContainer* container, GtkWidget* widget)
 {
+    WebKitWebViewBase* webView = WEBKIT_WEB_VIEW_BASE(container);
+    WebKitWebViewBasePrivate* priv = webView->priv;
+
+    GtkAllocation childAllocation;
+    gtk_widget_get_allocation(widget, &childAllocation);
+    priv->children.set(widget, childAllocation);
+
     gtk_widget_set_parent(widget, GTK_WIDGET(container));
+}
+
+static void webkitWebViewBaseContainerRemove(GtkContainer* container, GtkWidget* widget)
+{
+    WebKitWebViewBase* webView = WEBKIT_WEB_VIEW_BASE(container);
+    WebKitWebViewBasePrivate* priv = webView->priv;
+    GtkWidget* widgetContainer = GTK_WIDGET(container);
+
+    ASSERT(priv->children.contains(widget));
+    gboolean wasVisible = gtk_widget_get_visible(widget);
+    gtk_widget_unparent(widget);
+
+    priv->children.remove(widget);
+    if (wasVisible && gtk_widget_get_visible(widgetContainer))
+        gtk_widget_queue_resize(widgetContainer);
+}
+
+static void webkitWebViewBaseContainerForall(GtkContainer* container, gboolean includeInternals, GtkCallback callback, gpointer callbackData)
+{
+    WebKitWebViewBase* webView = WEBKIT_WEB_VIEW_BASE(container);
+    WebKitWebViewBasePrivate* priv = webView->priv;
+
+    WebKitWebViewChildrenMap children = priv->children;
+    WebKitWebViewChildrenMap::const_iterator end = children.end();
+    for (WebKitWebViewChildrenMap::const_iterator current = children.begin(); current != end; ++current)
+        (*callback)(current->first, callbackData);
+}
+
+void webkitWebViewBaseChildMoveResize(WebKitWebViewBase* webView, GtkWidget* child, const IntRect& childRect)
+{
+    const IntRect& geometry = webView->priv->children.get(child);
+
+    if (geometry == childRect)
+        return;
+
+    webView->priv->children.set(child, childRect);
+    gtk_widget_queue_resize_no_redraw(GTK_WIDGET(webView));
 }
 
 static void webkitWebViewBaseFinalize(GObject* gobject)
@@ -165,16 +262,59 @@ static gboolean webkitWebViewBaseDraw(GtkWidget* widget, cairo_t* cr)
     return FALSE;
 }
 
-static void webkitWebViewBaseSizeAllocate(GtkWidget* widget, GtkAllocation* allocation)
+static void webkitWebViewBaseChildAllocate(GtkWidget* child, gpointer userData)
 {
-    WebKitWebViewBase* webViewBase = WEBKIT_WEB_VIEW_BASE(widget);
-    WebKitWebViewBasePrivate* priv = webViewBase->priv;
-
-    if (!priv->pageProxy->drawingArea())
+    if (!gtk_widget_get_visible(child))
         return;
 
+    WebKitWebViewBase* webViewBase = WEBKIT_WEB_VIEW_BASE(userData);
+    WebKitWebViewBasePrivate* priv = webViewBase->priv;
+    const IntRect& geometry = priv->children.get(child);
+    if (geometry.isEmpty())
+        return;
+
+    GtkAllocation childAllocation = geometry;
+    gtk_widget_size_allocate(child, &childAllocation);
+    priv->children.set(child, IntRect());
+}
+
+static void resizeWebKitWebViewBaseFromAllocation(WebKitWebViewBase* webViewBase, GtkAllocation* allocation)
+{
+    gtk_container_foreach(GTK_CONTAINER(webViewBase), webkitWebViewBaseChildAllocate, webViewBase);
+
+    WebKitWebViewBasePrivate* priv = webViewBase->priv;
+    if (priv->pageProxy->drawingArea())
+        priv->pageProxy->drawingArea()->setSize(IntSize(allocation->width, allocation->height), IntSize());
+
+    GtkWidget* toplevel = gtk_widget_get_toplevel(GTK_WIDGET(webViewBase));
+    if (widgetIsOnscreenToplevelWindow(toplevel))
+        webkitWebViewBaseNotifyResizerSizeForWindow(webViewBase, GTK_WINDOW(toplevel));
+}
+
+static void webkitWebViewBaseSizeAllocate(GtkWidget* widget, GtkAllocation* allocation)
+{
     GTK_WIDGET_CLASS(webkit_web_view_base_parent_class)->size_allocate(widget, allocation);
-    priv->pageProxy->drawingArea()->setSize(IntSize(allocation->width, allocation->height), IntSize());
+
+    WebKitWebViewBase* webViewBase = WEBKIT_WEB_VIEW_BASE(widget);
+    if (!gtk_widget_get_mapped(GTK_WIDGET(webViewBase)) && !webViewBase->priv->pageProxy->drawingArea()->size().isEmpty()) {
+        webViewBase->priv->needsResizeOnMap = true;
+        return;
+    }
+    resizeWebKitWebViewBaseFromAllocation(webViewBase, allocation);
+}
+
+static void webkitWebViewBaseMap(GtkWidget* widget)
+{
+    GTK_WIDGET_CLASS(webkit_web_view_base_parent_class)->map(widget);
+
+    WebKitWebViewBase* webViewBase = WEBKIT_WEB_VIEW_BASE(widget);
+    if (!webViewBase->priv->needsResizeOnMap)
+        return;
+
+    GtkAllocation allocation;
+    gtk_widget_get_allocation(widget, &allocation);
+    resizeWebKitWebViewBaseFromAllocation(webViewBase, &allocation);
+    webViewBase->priv->needsResizeOnMap = false;
 }
 
 static gboolean webkitWebViewBaseFocusInEvent(GtkWidget* widget, GdkEventFocus* event)
@@ -183,7 +323,7 @@ static gboolean webkitWebViewBaseFocusInEvent(GtkWidget* widget, GdkEventFocus* 
     WebKitWebViewBasePrivate* priv = webViewBase->priv;
 
     GtkWidget* toplevel = gtk_widget_get_toplevel(widget);
-    if (gtk_widget_is_toplevel(toplevel) && gtk_window_has_toplevel_focus(GTK_WINDOW(toplevel))) {
+    if (widgetIsOnscreenToplevelWindow(toplevel) && gtk_window_has_toplevel_focus(GTK_WINDOW(toplevel))) {
         gtk_im_context_focus_in(priv->imContext.get());
         if (!priv->isPageActive) {
             priv->isPageActive = TRUE;
@@ -211,6 +351,20 @@ static gboolean webkitWebViewBaseKeyPressEvent(GtkWidget* widget, GdkEventKey* e
 {
     WebKitWebViewBase* webViewBase = WEBKIT_WEB_VIEW_BASE(widget);
     WebKitWebViewBasePrivate* priv = webViewBase->priv;
+
+#if ENABLE(FULLSCREEN_API)
+    if (priv->fullScreenModeActive) {
+        switch (event->keyval) {
+        case GDK_KEY_Escape:
+        case GDK_KEY_f:
+        case GDK_KEY_F:
+            webkitWebViewBaseExitFullScreen(webViewBase);
+            return TRUE;
+        default:
+            break;
+        }
+    }
+#endif
 
     // Since WebProcess key event handling is not synchronous, handle the event in two passes.
     // When WebProcess processes the input event, it will call PageClientImpl::doneWithKeyEvent
@@ -336,6 +490,34 @@ static void webkitWebViewBaseDragDataReceived(GtkWidget* widget, GdkDragContext*
     gdk_drag_status(context, dragOperationToSingleGdkDragAction(operation), time);
 }
 
+static AtkObject* webkitWebViewBaseGetAccessible(GtkWidget* widget)
+{
+    // If the socket has already been created and embedded a plug ID, return it.
+    WebKitWebViewBasePrivate* priv = WEBKIT_WEB_VIEW_BASE(widget)->priv;
+    if (priv->accessible && atk_socket_is_occupied(ATK_SOCKET(priv->accessible.get())))
+        return priv->accessible.get();
+
+    // Create the accessible object and associate it to the widget.
+    if (!priv->accessible) {
+        priv->accessible = adoptGRef(ATK_OBJECT(webkitWebViewBaseAccessibleNew(widget)));
+
+        // Set the parent not to break bottom-up navigation.
+        GtkWidget* parentWidget = gtk_widget_get_parent(widget);
+        AtkObject* axParent = parentWidget ? gtk_widget_get_accessible(parentWidget) : 0;
+        if (axParent)
+            atk_object_set_parent(priv->accessible.get(), axParent);
+    }
+
+    // Try to embed the plug in the socket, if posssible.
+    String plugID = priv->pageProxy->accessibilityPlugID();
+    if (plugID.isNull())
+        return priv->accessible.get();
+
+    atk_socket_embed(ATK_SOCKET(priv->accessible.get()), const_cast<gchar*>(plugID.utf8().data()));
+
+    return priv->accessible.get();
+}
+
 static gboolean webkitWebViewBaseDragMotion(GtkWidget* widget, GdkDragContext* context, gint x, gint y, guint time)
 {
     WebKitWebViewBase* webViewBase = WEBKIT_WEB_VIEW_BASE(widget);
@@ -374,7 +556,8 @@ static gboolean webkitWebViewBaseDragDrop(GtkWidget* widget, GdkDragContext* con
         return FALSE;
 
     SandboxExtension::Handle handle;
-    webViewBase->priv->pageProxy->performDrag(dragData.get(), String(), handle);
+    SandboxExtension::HandleArray sandboxExtensionForUpload;
+    webViewBase->priv->pageProxy->performDrag(dragData.get(), String(), handle, sandboxExtensionForUpload);
     gtk_drag_finish(context, TRUE, FALSE, time);
     return TRUE;
 }
@@ -385,6 +568,7 @@ static void webkit_web_view_base_class_init(WebKitWebViewBaseClass* webkitWebVie
     widgetClass->realize = webkitWebViewBaseRealize;
     widgetClass->draw = webkitWebViewBaseDraw;
     widgetClass->size_allocate = webkitWebViewBaseSizeAllocate;
+    widgetClass->map = webkitWebViewBaseMap;
     widgetClass->focus_in_event = webkitWebViewBaseFocusInEvent;
     widgetClass->focus_out_event = webkitWebViewBaseFocusOutEvent;
     widgetClass->key_press_event = webkitWebViewBaseKeyPressEvent;
@@ -400,12 +584,15 @@ static void webkit_web_view_base_class_init(WebKitWebViewBaseClass* webkitWebVie
     widgetClass->drag_leave = webkitWebViewBaseDragLeave;
     widgetClass->drag_drop = webkitWebViewBaseDragDrop;
     widgetClass->drag_data_received = webkitWebViewBaseDragDataReceived;
+    widgetClass->get_accessible = webkitWebViewBaseGetAccessible;
 
     GObjectClass* gobjectClass = G_OBJECT_CLASS(webkitWebViewBaseClass);
     gobjectClass->finalize = webkitWebViewBaseFinalize;
 
     GtkContainerClass* containerClass = GTK_CONTAINER_CLASS(webkitWebViewBaseClass);
     containerClass->add = webkitWebViewBaseContainerAdd;
+    containerClass->remove = webkitWebViewBaseContainerRemove;
+    containerClass->forall = webkitWebViewBaseContainerForall;
 
     g_type_class_add_private(webkitWebViewBaseClass, sizeof(WebKitWebViewBasePrivate));
 }
@@ -433,6 +620,10 @@ void webkitWebViewBaseCreateWebPage(WebKitWebViewBase* webkitWebViewBase, WKCont
 
     priv->pageProxy = toImpl(context)->createWebPage(priv->pageClient.get(), toImpl(pageGroup));
     priv->pageProxy->initializeWebPage();
+
+#if ENABLE(FULLSCREEN_API)
+    priv->pageProxy->fullScreenManager()->setWebView(webkitWebViewBase);
+#endif
 }
 
 void webkitWebViewBaseSetTooltipText(WebKitWebViewBase* webViewBase, const char* tooltip)
@@ -479,4 +670,51 @@ void webkitWebViewBaseStartDrag(WebKitWebViewBase* webViewBase, const DragData& 
 void webkitWebViewBaseForwardNextKeyEvent(WebKitWebViewBase* webkitWebViewBase)
 {
     webkitWebViewBase->priv->shouldForwardNextKeyEvent = TRUE;
+}
+
+void webkitWebViewBaseEnterFullScreen(WebKitWebViewBase* webkitWebViewBase)
+{
+#if ENABLE(FULLSCREEN_API)
+    WebKitWebViewBasePrivate* priv = webkitWebViewBase->priv;
+    if (priv->fullScreenModeActive)
+        return;
+
+    if (!priv->fullScreenClient.willEnterFullScreen())
+        return;
+
+    WebFullScreenManagerProxy* fullScreenManagerProxy = priv->pageProxy->fullScreenManager();
+    fullScreenManagerProxy->willEnterFullScreen();
+
+    GtkWidget* topLevelWindow = gtk_widget_get_toplevel(GTK_WIDGET(webkitWebViewBase));
+    if (gtk_widget_is_toplevel(topLevelWindow))
+        gtk_window_fullscreen(GTK_WINDOW(topLevelWindow));
+    fullScreenManagerProxy->didEnterFullScreen();
+    priv->fullScreenModeActive = true;
+#endif
+}
+
+void webkitWebViewBaseExitFullScreen(WebKitWebViewBase* webkitWebViewBase)
+{
+#if ENABLE(FULLSCREEN_API)
+    WebKitWebViewBasePrivate* priv = webkitWebViewBase->priv;
+    if (!priv->fullScreenModeActive)
+        return;
+
+    if (!priv->fullScreenClient.willExitFullScreen())
+        return;
+
+    WebFullScreenManagerProxy* fullScreenManagerProxy = priv->pageProxy->fullScreenManager();
+    fullScreenManagerProxy->willExitFullScreen();
+
+    GtkWidget* topLevelWindow = gtk_widget_get_toplevel(GTK_WIDGET(webkitWebViewBase));
+    if (gtk_widget_is_toplevel(topLevelWindow))
+        gtk_window_unfullscreen(GTK_WINDOW(topLevelWindow));
+    fullScreenManagerProxy->didExitFullScreen();
+    priv->fullScreenModeActive = false;
+#endif
+}
+
+void webkitWebViewBaseInitializeFullScreenClient(WebKitWebViewBase* webkitWebViewBase, const WKFullScreenClientGtk* wkClient)
+{
+    webkitWebViewBase->priv->fullScreenClient.initialize(wkClient);
 }

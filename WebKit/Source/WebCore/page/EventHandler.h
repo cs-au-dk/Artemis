@@ -31,6 +31,7 @@
 #include "FocusDirection.h"
 #include "HitTestRequest.h"
 #include "PlatformMouseEvent.h"
+#include "PlatformWheelEvent.h"
 #include "ScrollTypes.h"
 #include "TextEventInputType.h"
 #include "TextGranularity.h"
@@ -127,7 +128,8 @@ public:
 #if ENABLE(DRAG_SUPPORT)
     bool updateDragAndDrop(const PlatformMouseEvent&, Clipboard*);
     void cancelDragAndDrop(const PlatformMouseEvent&, Clipboard*);
-    void performDragAndDrop(const PlatformMouseEvent&, Clipboard*);
+    bool performDragAndDrop(const PlatformMouseEvent&, Clipboard*);
+    void updateDragStateAfterEditDragIfNeeded(Element* rootEditableElement);
 #endif
 
     void scheduleHoverStateUpdate();
@@ -148,7 +150,8 @@ public:
     bool tabsToLinks(KeyboardEvent*) const;
     bool tabsToAllFormControls(KeyboardEvent*) const;
 
-    bool mouseMoved(const PlatformMouseEvent&, bool onlyUpdateScrollbars = false);
+    bool mouseMoved(const PlatformMouseEvent&);
+    bool passMouseMovedEventToScrollbars(const PlatformMouseEvent&);
 
     void lostMouseCapture();
 
@@ -160,6 +163,13 @@ public:
 
 #if ENABLE(GESTURE_EVENTS)
     bool handleGestureEvent(const PlatformGestureEvent&);
+    bool handleGestureTap(const PlatformGestureEvent&, Node* preTargetedNode = 0);
+    bool handleGestureScrollUpdate(const PlatformGestureEvent&);
+#endif
+
+#if ENABLE(TOUCH_ADJUSTMENT)
+    bool bestClickableNodeForTouchPoint(const IntPoint& touchCenter, const IntSize& touchRadius, IntPoint& targetPoint, Node*& targetNode);
+    bool bestZoomableAreaForTouchPoint(const IntPoint& touchCenter, const IntSize& touchRadius, IntRect& targetArea, Node*& targetNode);
 #endif
 
 #if ENABLE(CONTEXT_MENUS)
@@ -199,6 +209,8 @@ public:
     void mouseMoved(NSEvent *);
     bool keyEvent(NSEvent *);
     bool wheelEvent(NSEvent *);
+
+    void passMouseMovedEventToScrollbars(NSEvent *);
 
     void sendFakeEventsAfterWidgetTracking(NSEvent *initiatingEvent);
 
@@ -259,6 +271,10 @@ private:
 
     void fakeMouseMoveEventTimerFired(Timer<EventHandler>*);
     void cancelFakeMouseMoveEvent();
+
+#if ENABLE(TOUCH_EVENTS)
+    bool dispatchSyntheticTouchEventIfEnabled(const PlatformMouseEvent&);
+#endif
 
     void invalidateClick();
 
@@ -335,6 +351,11 @@ private:
 
 #if ENABLE(FULLSCREEN_API)
     bool isKeyEventAllowedInFullScreen(const PlatformKeyboardEvent&) const;
+#endif
+
+#if ENABLE(GESTURE_EVENTS)
+    bool handleGestureScrollCore(const PlatformGestureEvent&, PlatformWheelEventGranularity, bool latchedWheel);
+    bool handleGestureTapDown();
 #endif
 
     Frame* m_frame;
@@ -421,6 +442,8 @@ private:
     TouchTargetMap m_originatingTouchPointTargets;
     bool m_touchPressed;
 #endif
+    double m_maxMouseMovedDuration;
+    PlatformEvent::Type m_baseEventType;
 };
 
 } // namespace WebCore

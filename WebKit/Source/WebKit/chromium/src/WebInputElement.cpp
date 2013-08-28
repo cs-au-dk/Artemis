@@ -31,11 +31,11 @@
 #include "config.h"
 #include "WebInputElement.h"
 
+#include "HTMLDataListElement.h"
 #include "HTMLInputElement.h"
 #include "HTMLNames.h"
-#include "RenderObject.h"
-#include "RenderTextControlSingleLine.h"
 #include "TextControlInnerElements.h"
+#include "WebNodeCollection.h"
 #include "platform/WebString.h"
 #include <wtf/PassRefPtr.h>
 
@@ -90,7 +90,7 @@ int WebInputElement::size() const
 
 void WebInputElement::setValue(const WebString& value, bool sendChangeEvent)
 {
-    unwrap<HTMLInputElement>()->setValue(value, sendChangeEvent);
+    unwrap<HTMLInputElement>()->setValue(value, sendChangeEvent ? DispatchChangeEvent : DispatchNoEvent);
 }
 
 WebString WebInputElement::value() const
@@ -153,6 +153,16 @@ bool WebInputElement::isChecked() const
     return constUnwrap<HTMLInputElement>()->checked();
 }
 
+WebNodeCollection WebInputElement::dataListOptions() const
+{
+#if ENABLE(DATALIST)
+    HTMLDataListElement* dataList = static_cast<HTMLDataListElement*>(constUnwrap<HTMLInputElement>()->list());
+    if (dataList)
+        return WebNodeCollection(dataList->options());
+#endif
+    return WebNodeCollection();
+}
+
 bool WebInputElement::isSpeechInputEnabled() const
 {
 #if ENABLE(INPUT_SPEECH)
@@ -165,12 +175,7 @@ bool WebInputElement::isSpeechInputEnabled() const
 WebInputElement::SpeechInputState WebInputElement::getSpeechInputState() const
 {
 #if ENABLE(INPUT_SPEECH)
-    RenderObject* renderer = constUnwrap<HTMLInputElement>()->renderer();
-    if (!renderer)
-        return Idle;
-
-    RenderTextControlSingleLine* control = toRenderTextControlSingleLine(renderer);
-    InputFieldSpeechButtonElement* speechButton = toInputFieldSpeechButtonElement(control->speechButtonElement());
+    InputFieldSpeechButtonElement* speechButton = toInputFieldSpeechButtonElement(constUnwrap<HTMLInputElement>()->speechButtonElement());
     if (speechButton)
         return static_cast<WebInputElement::SpeechInputState>(speechButton->state());
 #endif
@@ -181,12 +186,7 @@ WebInputElement::SpeechInputState WebInputElement::getSpeechInputState() const
 void WebInputElement::startSpeechInput()
 {
 #if ENABLE(INPUT_SPEECH)
-    RenderObject* renderer = constUnwrap<HTMLInputElement>()->renderer();
-    if (!renderer)
-        return;
-
-    RenderTextControlSingleLine* control = toRenderTextControlSingleLine(renderer);
-    InputFieldSpeechButtonElement* speechButton = toInputFieldSpeechButtonElement(control->speechButtonElement());
+    InputFieldSpeechButtonElement* speechButton = toInputFieldSpeechButtonElement(constUnwrap<HTMLInputElement>()->speechButtonElement());
     if (speechButton)
         speechButton->startSpeechInput();
 #endif
@@ -195,12 +195,7 @@ void WebInputElement::startSpeechInput()
 void WebInputElement::stopSpeechInput()
 {
 #if ENABLE(INPUT_SPEECH)
-    RenderObject* renderer = constUnwrap<HTMLInputElement>()->renderer();
-    if (!renderer)
-        return;
-
-    RenderTextControlSingleLine* control = toRenderTextControlSingleLine(renderer);
-    InputFieldSpeechButtonElement* speechButton = toInputFieldSpeechButtonElement(control->speechButtonElement());
+    InputFieldSpeechButtonElement* speechButton = toInputFieldSpeechButtonElement(constUnwrap<HTMLInputElement>()->speechButtonElement());
     if (speechButton)
         speechButton->stopSpeechInput();
 #endif
@@ -235,5 +230,4 @@ WebInputElement* toWebInputElement(WebElement* webElement)
 
     return static_cast<WebInputElement*>(webElement);
 }
-
 } // namespace WebKit

@@ -2031,8 +2031,11 @@ void tst_QWebFrame::enumerate_data()
         << "p1" << "p2" << "p4" << "p6"
         // dynamic properties
         << "dp1" << "dp2" << "dp3"
-        // inherited slots
+        // inherited signals and slots
         << "destroyed(QObject*)" << "destroyed()"
+#if QT_VERSION >= QT_VERSION_CHECK(5, 0, 0)
+        << "objectNameChanged(QString)"
+#endif
         << "deleteLater()"
         // not included because it's private:
         // << "_q_reregisterTimers(void*)"
@@ -2552,7 +2555,7 @@ void tst_QWebFrame::setHtmlWithBaseURL()
     // As we are using a local file as baseUrl, its security origin should be able to load local resources.
 
     if (!QDir(TESTS_SOURCE_DIR).exists())
-        QSKIP(QString("This test requires access to resources found in '%1'").arg(TESTS_SOURCE_DIR).toLatin1().constData(), SkipAll);
+        W_QSKIP(QString("This test requires access to resources found in '%1'").arg(TESTS_SOURCE_DIR).toLatin1().constData(), SkipAll);
 
     QDir::setCurrent(TESTS_SOURCE_DIR);
 

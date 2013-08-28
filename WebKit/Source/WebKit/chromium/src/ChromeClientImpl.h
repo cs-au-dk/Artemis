@@ -35,10 +35,11 @@
 #include "ChromeClientChromium.h"
 #include "PopupMenu.h"
 #include "SearchPopupMenu.h"
+#include "WebNavigationPolicy.h"
 
 namespace WebCore {
 class AccessibilityObject;
-#if ENABLE(INPUT_COLOR)
+#if ENABLE(INPUT_TYPE_COLOR)
 class ColorChooser;
 class ColorChooserClient;
 #endif
@@ -136,9 +137,7 @@ public:
     virtual void reachedMaxAppCacheSize(int64_t spaceNeeded);
     virtual void reachedApplicationCacheOriginQuota(WebCore::SecurityOrigin*, int64_t totalSpaceNeeded);
     virtual bool paintCustomOverhangArea(WebCore::GraphicsContext*, const WebCore::IntRect&, const WebCore::IntRect&, const WebCore::IntRect&);
-    virtual void requestGeolocationPermissionForFrame(WebCore::Frame*, WebCore::Geolocation*);
-    virtual void cancelGeolocationPermissionRequestForFrame(WebCore::Frame*, WebCore::Geolocation*);
-#if ENABLE(INPUT_COLOR)
+#if ENABLE(INPUT_TYPE_COLOR)
     virtual PassOwnPtr<WebCore::ColorChooser> createColorChooser(WebCore::ColorChooserClient*, const WebCore::Color&) OVERRIDE;
 #endif
     virtual void runOpenPanel(WebCore::Frame*, PassRefPtr<WebCore::FileChooser>);
@@ -189,23 +188,34 @@ public:
 
     // ChromeClientImpl:
     void setCursorForPlugin(const WebCursorInfo&);
+    void setNewWindowNavigationPolicy(WebNavigationPolicy);
 
     virtual bool selectItemWritingDirectionIsNatural();
     virtual bool selectItemAlignmentFollowsMenuWritingDirection();
     virtual bool hasOpenedPopup() const OVERRIDE;
     virtual PassRefPtr<WebCore::PopupMenu> createPopupMenu(WebCore::PopupMenuClient*) const;
     virtual PassRefPtr<WebCore::SearchPopupMenu> createSearchPopupMenu(WebCore::PopupMenuClient*) const;
-
-#if ENABLE(CONTEXT_MENUS)
-    virtual void showContextMenu() { }
+#if ENABLE(PAGE_POPUP)
+    virtual WebCore::PagePopup* openPagePopup(WebCore::PagePopupClient*, const WebCore::IntRect&) OVERRIDE;
+    virtual void closePagePopup(WebCore::PagePopup*) OVERRIDE;
 #endif
+    virtual bool willAddTextFieldDecorationsTo(WebCore::HTMLInputElement*) OVERRIDE;
+    virtual void addTextFieldDecorationsTo(WebCore::HTMLInputElement*) OVERRIDE;
 
     virtual bool shouldRunModalDialogDuringPageDismissal(const DialogType&, const String& dialogMessage, WebCore::FrameLoader::PageDismissalType) const;
 
     virtual bool shouldRubberBandInDirection(WebCore::ScrollDirection) const;
     virtual void numWheelEventHandlersChanged(unsigned);
+    virtual void numTouchEventHandlersChanged(unsigned);
+
+#if ENABLE(POINTER_LOCK)
+    virtual bool requestPointerLock();
+    virtual void requestPointerUnlock();
+    virtual bool isPointerLocked();
+#endif
 
 private:
+    WebNavigationPolicy getNavigationPolicy();
     void getPopupMenuInfo(WebCore::PopupContainer*, WebPopupMenuInfo*);
     void setCursor(const WebCursorInfo&);
 
@@ -215,6 +225,9 @@ private:
     bool m_scrollbarsVisible;
     bool m_menubarVisible;
     bool m_resizable;
+
+    // The policy for how the next webview to be created will be shown.
+    WebNavigationPolicy m_nextNewWindowNavigationPolicy;
 };
 
 } // namespace WebKit

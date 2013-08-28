@@ -21,34 +21,36 @@
 #ifndef qquickwebview_p_p_h
 #define qquickwebview_p_p_h
 
-#include "DrawingAreaProxy.h"
 #include "QtPageClient.h"
-#include "QtViewportInteractionEngine.h"
-#include "QtWebPageLoadClient.h"
-#include "QtWebPagePolicyClient.h"
 #include "QtWebPageUIClient.h"
 #include "QtWebUndoController.h"
-#include "WebPageProxy.h"
 
 #include "qquickwebview_p.h"
 #include "qquickwebpage_p.h"
 
+#include <QtCore/QElapsedTimer>
 #include <QtCore/QObject>
 #include <QtCore/QScopedPointer>
+#include <WebCore/ViewportArguments.h>
 #include <wtf/OwnPtr.h>
 #include <wtf/RefPtr.h>
 
 namespace WebKit {
 class DownloadProxy;
+class DrawingAreaProxy;
+class QtDialogRunner;
+class QtViewportInteractionEngine;
 class QtWebContext;
+class QtWebPageLoadClient;
+class QtWebPagePolicyClient;
 class WebPageProxy;
 }
+
 class QWebNavigationHistory;
 class QWebViewportInfo;
 
 QT_BEGIN_NAMESPACE
 class QDeclarativeComponent;
-class QFileDialog;
 QT_END_NAMESPACE
 
 class QQuickWebViewPrivate {
@@ -61,108 +63,181 @@ class QQuickWebViewPrivate {
 public:
     static QQuickWebViewPrivate* get(QQuickWebView* q) { return q->d_ptr.data(); }
 
-    QQuickWebViewPrivate(QQuickWebView* viewport);
     virtual ~QQuickWebViewPrivate();
 
-    void initialize(WKContextRef contextRef = 0, WKPageGroupRef pageGroupRef = 0);
+    virtual void initialize(WKContextRef contextRef = 0, WKPageGroupRef pageGroupRef = 0);
 
-    void initializeTouch(QQuickWebView* viewport);
-    void initializeDesktop(QQuickWebView* viewport);
-    void enableMouseEvents();
-    void disableMouseEvents();
+    virtual void enableMouseEvents() { }
+    virtual void disableMouseEvents() { }
 
-    void loadDidCommit();
+    virtual QPointF pageItemPos();
+    virtual void updateContentsSize(const QSizeF&) { }
 
-    void didFinishFirstNonEmptyLayout();
-    void didChangeViewportProperties(const WebCore::ViewportArguments& args);
+    virtual void loadDidSucceed();
+    virtual void onComponentComplete();
+    virtual void loadDidCommit() { }
+    virtual void didFinishFirstNonEmptyLayout() { }
+    virtual void didChangeViewportProperties(const WebCore::ViewportAttributes& attr) { }
     void didChangeBackForwardList();
 
-    void updateViewportSize();
-    QtViewportInteractionEngine::Constraints computeViewportConstraints();
+    void setNeedsDisplay();
 
-    void updateVisibleContentRectAndScale();
+    virtual WebKit::QtViewportInteractionEngine* viewportInteractionEngine() { return 0; }
+    virtual void updateViewportSize() { }
+    void updateTouchViewportSize();
 
-    void _q_suspend();
-    void _q_resume();
-    void _q_viewportTrajectoryVectorChanged(const QPointF&);
-    void _q_onOpenPanelFilesSelected();
-    void _q_onOpenPanelFinished(int result);
+    virtual void _q_suspend() { }
+    virtual void _q_resume() { }
+    virtual void _q_contentViewportChanged(const QPointF& trajectory) { };
+
+    virtual qreal zoomFactor() const { return 1; }
+    virtual void setZoomFactor(qreal) { }
+
     void _q_onVisibleChanged();
+    void _q_onUrlChanged();
     void _q_onReceivedResponseFromDownload(QWebDownloadItem*);
     void _q_onIconChangedForPageURL(const QUrl& pageURL, const QUrl& iconURLString);
 
-    void chooseFiles(WKOpenPanelResultListenerRef, const QStringList& selectedFileNames, QtWebPageUIClient::FileChooserType);
+    void chooseFiles(WKOpenPanelResultListenerRef, const QStringList& selectedFileNames, WebKit::QtWebPageUIClient::FileChooserType);
+    quint64 exceededDatabaseQuota(const QString& databaseName, const QString& displayName, WKSecurityOriginRef securityOrigin, quint64 currentQuota, quint64 currentOriginUsage, quint64 currentDatabaseUsage, quint64 expectedUsage);
     void runJavaScriptAlert(const QString&);
     bool runJavaScriptConfirm(const QString&);
     QString runJavaScriptPrompt(const QString&, const QString& defaultValue, bool& ok);
 
-    void setUseTraditionalDesktopBehaviour(bool enable);
+    void handleAuthenticationRequiredRequest(const QString& hostname, const QString& realm, const QString& prefilledUsername, QString& username, QString& password);
+    bool handleCertificateVerificationRequest(const QString& hostname);
+    void handleProxyAuthenticationRequiredRequest(const QString& hostname, uint16_t port, const QString& prefilledUsername, QString& username, QString& password);
+
+    void execDialogRunner(WebKit::QtDialogRunner&);
+
+    void setRenderToOffscreenBuffer(bool enable) { m_renderToOffscreenBuffer = enable; }
+    void setTransparentBackground(bool);
     void setViewInAttachedProperties(QObject*);
     void setIcon(const QUrl&);
 
     bool navigatorQtObjectEnabled() const;
+    bool renderToOffscreenBuffer() const { return m_renderToOffscreenBuffer; }
+    bool transparentBackground() const;
     void setNavigatorQtObjectEnabled(bool);
+
+    QPointF contentPos() const;
+    void setContentPos(const QPointF&);
+
+    QRect visibleContentsRect() const;
+
+    void setDialogActive(bool active) { m_dialogActive = active; }
 
     // PageClient.
     WebCore::IntSize viewSize() const;
     void didReceiveMessageFromNavigatorQtObject(const String& message);
-    void pageDidRequestScroll(const QPoint& pos);
-    void didChangeContentsSize(const QSize& newSize);
+    virtual void pageDidRequestScroll(const QPoint& pos) { }
+    virtual void didChangeContentsSize(const QSize& newSize) { }
     void processDidCrash();
     void didRelaunchProcess();
-    PassOwnPtr<DrawingAreaProxy> createDrawingAreaProxy();
-    void handleDownloadRequest(DownloadProxy*);
+    PassOwnPtr<WebKit::DrawingAreaProxy> createDrawingAreaProxy();
+    void handleDownloadRequest(WebKit::DownloadProxy*);
 
-private:
-    // This class is responsible for collecting and applying all properties
-    // on the viewport item, when transitioning from page A to page B is finished.
-    // See more at https://trac.webkit.org/wiki/QtWebKitLayoutInteraction
-    class PostTransitionState {
+protected:
+    class FlickableAxisLocker {
+        QQuickFlickable::FlickableDirection m_allowedDirection;
+
+        QElapsedTimer m_time;
+        QPointF m_initialScreenPosition;
+        QPointF m_lockReferencePosition;
+        int m_sampleCount;
+
+        QVector2D touchVelocity(const QTouchEvent* event);
+
     public:
-        PostTransitionState(QQuickWebViewPrivate* parent)
-            : p(parent)
-        { }
+        FlickableAxisLocker();
 
-        void apply();
-
-        QQuickWebViewPrivate* p;
-        QSize contentsSize;
-        QPoint position;
+        void update(const QTouchEvent* event);
+        void setReferencePosition(const QPointF&);
+        void reset();
+        QPointF adjust(const QPointF&);
     };
 
-    RefPtr<QtWebContext> context;
+    QQuickWebViewPrivate(QQuickWebView* viewport);
+    RefPtr<WebKit::QtWebContext> context;
     RefPtr<WebKit::WebPageProxy> webPageProxy;
 
-    QtPageClient pageClient;
-    QtWebUndoController undoController;
+    WebKit::QtPageClient pageClient;
+    WebKit::QtWebUndoController undoController;
     OwnPtr<QWebNavigationHistory> navigationHistory;
     OwnPtr<QWebPreferences> preferences;
 
-    QScopedPointer<QtWebPageLoadClient> pageLoadClient;
-    QScopedPointer<QtWebPagePolicyClient> pagePolicyClient;
-    QScopedPointer<QtWebPageUIClient> pageUIClient;
+    QScopedPointer<WebKit::QtWebPageLoadClient> pageLoadClient;
+    QScopedPointer<WebKit::QtWebPagePolicyClient> pagePolicyClient;
+    QScopedPointer<WebKit::QtWebPageUIClient> pageUIClient;
 
     QScopedPointer<QQuickWebPage> pageView;
-    QScopedPointer<QtViewportInteractionEngine> interactionEngine;
-
     QQuickWebView* q_ptr;
+
+    FlickableAxisLocker axisLocker;
 
     QDeclarativeComponent* alertDialog;
     QDeclarativeComponent* confirmDialog;
     QDeclarativeComponent* promptDialog;
+    QDeclarativeComponent* authenticationDialog;
+    QDeclarativeComponent* certificateVerificationDialog;
     QDeclarativeComponent* itemSelector;
+    QDeclarativeComponent* proxyAuthenticationDialog;
+    QDeclarativeComponent* filePicker;
+    QDeclarativeComponent* databaseQuotaDialog;
 
-    WebCore::ViewportArguments viewportArguments;
-    OwnPtr<PostTransitionState> postTransitionState;
-    QFileDialog* fileDialog;
-    WKOpenPanelResultListenerRef openPanelResultListener;
+    WebCore::ViewportAttributes attributes;
 
-    bool isTransitioningToNewPage;
-    bool pageIsSuspended;
-
-    bool useTraditionalDesktopBehaviour;
+    bool m_useDefaultContentItemSize;
     bool m_navigatorQtObjectEnabled;
+    bool m_renderToOffscreenBuffer;
+    bool m_dialogActive;
     QUrl m_iconURL;
+    QUrl m_deferedUrlToLoad;
+};
+
+class QQuickWebViewLegacyPrivate : public QQuickWebViewPrivate {
+    Q_DECLARE_PUBLIC(QQuickWebView)
+public:
+    QQuickWebViewLegacyPrivate(QQuickWebView* viewport);
+    virtual void initialize(WKContextRef contextRef = 0, WKPageGroupRef pageGroupRef = 0);
+
+    virtual void updateViewportSize();
+    virtual void enableMouseEvents();
+    virtual void disableMouseEvents();
+
+    qreal zoomFactor() const;
+    void setZoomFactor(qreal);
+};
+
+class QQuickWebViewFlickablePrivate : public QQuickWebViewPrivate {
+    Q_DECLARE_PUBLIC(QQuickWebView)
+public:
+    QQuickWebViewFlickablePrivate(QQuickWebView* viewport);
+    virtual ~QQuickWebViewFlickablePrivate();
+    virtual void initialize(WKContextRef contextRef = 0, WKPageGroupRef pageGroupRef = 0);
+
+    virtual QPointF pageItemPos();
+    virtual void updateContentsSize(const QSizeF&);
+
+    virtual void loadDidSucceed();
+    virtual void onComponentComplete();
+    virtual void loadDidCommit();
+    virtual void didFinishFirstNonEmptyLayout();
+    virtual void didChangeViewportProperties(const WebCore::ViewportAttributes&);
+    virtual WebKit::QtViewportInteractionEngine* viewportInteractionEngine() { return interactionEngine.data(); }
+    virtual void updateViewportSize();
+
+    virtual void _q_suspend();
+    virtual void _q_resume();
+    virtual void _q_contentViewportChanged(const QPointF& trajectory);
+
+    virtual void pageDidRequestScroll(const QPoint& pos);
+    virtual void didChangeContentsSize(const QSize& newSize);
+
+private:
+    QScopedPointer<WebKit::QtViewportInteractionEngine> interactionEngine;
+    bool pageIsSuspended;
+    bool loadSuccessDispatchIsPending;
 };
 
 #endif // qquickwebview_p_p_h

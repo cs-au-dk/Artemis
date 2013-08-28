@@ -79,8 +79,7 @@ bool PluginPackage::fetchInfo()
     // We are fetching the info. Technically we have not loaded the plugin. PluginView::Init will load the plugin so decrement the counter
     m_loadCount--;
 
-    typedef char *(*NPP_GetMIMEDescriptionProcPtr)();
-    NPP_GetMIMEDescriptionProcPtr getDescription = (NPP_GetMIMEDescriptionProcPtr) dlsym(m_module, "NP_GetMIMEDescription");
+    NP_GetMIMEDescriptionFuncPtr getDescription = (NP_GetMIMEDescriptionFuncPtr) dlsym(m_module, "NP_GetMIMEDescription");
     NPP_GetValueProcPtr getValue = (NPP_GetValueProcPtr) dlsym(m_module, "NP_GetValue");
 
     if (!getDescription || !getValue)
@@ -193,7 +192,8 @@ unsigned PluginPackage::hash() const
     const unsigned hashCodes[] = {
         m_name.impl()->hash(),
         m_description.impl()->hash(),
-        m_mimeToExtensions.size()
+        m_mimeToExtensions.size(),
+        m_path.impl()->hash()
     };
 
     return StringHasher::computeHash(reinterpret_cast<const UChar*>(hashCodes), sizeof(hashCodes) / sizeof(UChar));

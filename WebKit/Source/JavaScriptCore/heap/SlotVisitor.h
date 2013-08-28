@@ -26,6 +26,7 @@
 #ifndef SlotVisitor_h
 #define SlotVisitor_h
 
+#include "CopiedSpace.h"
 #include "MarkStack.h"
 
 namespace JSC {
@@ -59,8 +60,14 @@ public:
 
     void harvestWeakReferences();
     void finalizeUnconditionalFinalizers();
+
+    void startCopying();
+    void copyAndAppend(void**, size_t, JSValue*, unsigned);
+    void doneCopying(); 
         
 private:
+    void* allocateNewSpace(void*, size_t);
+
     void donateSlow();
     
     void donateKnownParallel()
@@ -69,10 +76,13 @@ private:
             return;
         donateSlow();
     }
+    
+    CopiedBlock* m_copyBlock;
 };
 
 inline SlotVisitor::SlotVisitor(MarkStackThreadSharedData& shared)
     : MarkStack(shared)
+    , m_copyBlock(0)
 {
 }
 

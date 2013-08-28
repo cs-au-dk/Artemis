@@ -61,11 +61,11 @@ class HttpServerBase(object):
         # randomly-generated directory under /var/folders and no one would ever
         # look there.
         tmpdir = tempfile.gettempdir()
-        if sys.platform == 'darwin':
+        if port_obj.host.platform.is_mac():
             tmpdir = '/tmp'
 
         self._runtime_path = self._filesystem.join(tmpdir, "WebKit")
-        port_obj.maybe_make_directory(self._runtime_path)
+        self._filesystem.maybe_make_directory(self._runtime_path)
 
     def start(self):
         """Starts the server. It is an error to start an already started server.

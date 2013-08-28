@@ -49,7 +49,9 @@
 }
 
 .data-grid th.corner {
-    width: 15px;
+    width: 14px;
+    padding-right: 0px;
+    padding-left: 0px;
     border-right: 0 none transparent;
 }
 
@@ -188,6 +190,10 @@ body.inactive .data-grid th.sort-ascending, body.inactive .data-grid th.sort-des
 
 .data-grid:focus tr.selected {
     background-color: rgb(56, 121, 217);
+    color: white;
+}
+
+.data-grid:focus tr.selected a {
     color: white;
 }
 

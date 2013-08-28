@@ -27,9 +27,6 @@
 #include "FloatRect.h"
 #include "FontCache.h"
 #include "FontTranscoder.h"
-#if PLATFORM(QT) && HAVE(QRAWFONT)
-#include "GraphicsContext.h"
-#endif
 #include "IntPoint.h"
 #include "GlyphBuffer.h"
 #include "TextRun.h"
@@ -120,11 +117,12 @@ bool Font::operator==(const Font& other) const
     
     FontSelector* first = m_fontList ? m_fontList->fontSelector() : 0;
     FontSelector* second = other.m_fontList ? other.m_fontList->fontSelector() : 0;
-    
+
     return first == second
            && m_fontDescription == other.m_fontDescription
            && m_letterSpacing == other.m_letterSpacing
            && m_wordSpacing == other.m_wordSpacing
+           && (m_fontList ? m_fontList->fontSelectorVersion() : 0) == (other.m_fontList ? other.m_fontList->fontSelectorVersion() : 0)
            && (m_fontList ? m_fontList->generation() : 0) == (other.m_fontList ? other.m_fontList->generation() : 0);
 }
 
@@ -149,11 +147,6 @@ void Font::drawText(GraphicsContext* context, const TextRun& run, const FloatPoi
     to = (to == -1 ? run.length() : to);
 
     CodePath codePathToUse = codePath(run);
-
-#if PLATFORM(QT) && HAVE(QRAWFONT)
-    if (context->textDrawingMode() & TextModeStroke)
-        codePathToUse = Complex;
-#endif
 
     if (codePathToUse != Complex)
         return drawSimpleText(context, run, point, from, to);
@@ -273,17 +266,27 @@ Font::CodePath Font::codePath(const TextRun& run) const
 
     if (m_fontDescription.featureSettings() && m_fontDescription.featureSettings()->size() > 0)
         return Complex;
+    
+    if (run.length() > 1 && typesettingFeatures())
+        return Complex;
 
-    CodePath result = Simple;
+    if (!run.characterScanForCodePath())
+        return Simple;
 
-    // Start from 0 since drawing and highlighting also measure the characters before run->from
+    // Start from 0 since drawing and highlighting also measure the characters before run->from.
+    return characterRangeCodePath(run.characters(), run.length());
+}
+
+Font::CodePath Font::characterRangeCodePath(const UChar* characters, unsigned len)
+{
     // FIXME: Should use a UnicodeSet in ports where ICU is used. Note that we 
     // can't simply use UnicodeCharacter Property/class because some characters
     // are not 'combining', but still need to go to the complex path.
     // Alternatively, we may as well consider binary search over a sorted
     // list of ranges.
-    for (int i = 0; i < run.length(); i++) {
-        const UChar c = run[i];
+    CodePath result = Simple;
+    for (unsigned i = 0; i < len; i++) {
+        const UChar c = characters[i];
         if (c < 0x2E5) // U+02E5 through U+02E9 (Modifier Letters : Tone letters)  
             continue;
         if (c <= 0x2E9) 
@@ -390,10 +393,10 @@ Font::CodePath Font::codePath(const TextRun& run) const
         if (c <= 0xDBFF) {
             // High surrogate
 
-            if (i == run.length() - 1)
+            if (i == len - 1)
                 continue;
 
-            UChar next = run[++i];
+            UChar next = characters[++i];
             if (!U16_IS_TRAIL(next))
                 continue;
 
@@ -404,21 +407,27 @@ Font::CodePath Font::codePath(const TextRun& run) const
             if (supplementaryCharacter <= 0x1F1FF)
                 return Complex;
 
+            if (supplementaryCharacter < 0xE0100) // U+E0100 through U+E01EF Unicode variation selectors.
+                continue;
+            if (supplementaryCharacter <= 0xE01EF)
+                return Complex;
+
             // FIXME: Check for Brahmi (U+11000 block), Kaithi (U+11080 block) and other complex scripts
             // in plane 1 or higher.
 
             continue;
         }
 
+        if (c < 0xFE00) // U+FE00 through U+FE0F Unicode variation selectors
+            continue;
+        if (c <= 0xFE0F)
+            return Complex;
+
         if (c < 0xFE20) // U+FE20 through U+FE2F Combining half marks
             continue;
         if (c <= 0xFE2F)
             return Complex;
     }
-
-    if (run.length() > 1 && typesettingFeatures())
-        return Complex;
-
     return result;
 }
 

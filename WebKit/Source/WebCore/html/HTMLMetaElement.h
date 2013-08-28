@@ -38,8 +38,8 @@ public:
 private:
     HTMLMetaElement(const QualifiedName&, Document*);
 
-    virtual void parseMappedAttribute(Attribute*);
-    virtual void insertedIntoDocument();
+    virtual void parseAttribute(Attribute*) OVERRIDE;
+    virtual InsertionNotificationRequest insertedInto(Node*) OVERRIDE;
 
     void process();
 

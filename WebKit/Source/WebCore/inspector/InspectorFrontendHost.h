@@ -63,6 +63,7 @@ public:
     void requestSetDockSide(const String&);
     void closeWindow();
     void bringToFront();
+    void setZoomFactor(float);
     void inspectedURLChanged(const String&);
 
     void setAttachedWindowHeight(unsigned height);
@@ -73,8 +74,10 @@ public:
     String hiddenPanels();
 
     void copyText(const String& text);
-    bool canSaveAs();
-    void saveAs(const String& fileName, const String& content);
+    void openInNewTab(const String& url);
+    bool canSave();
+    void save(const String& url, const String& content, bool forceSaveAs);
+    void append(const String& url, const String& content);
 
     // Called from [Custom] implementations.
     void showContextMenu(Event*, const Vector<ContextMenuItem*>& items);

@@ -27,7 +27,6 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-#import "CorrectionPanel.h"
 #import <WebCore/EditorClient.h>
 #import <WebCore/TextCheckerClient.h>
 #import <wtf/Forward.h>
@@ -61,7 +60,7 @@ public:
     virtual bool shouldInsertText(const WTF::String&, WebCore::Range*, WebCore::EditorInsertAction) OVERRIDE;
     virtual bool shouldChangeSelectedRange(WebCore::Range* fromRange, WebCore::Range* toRange, WebCore::EAffinity, bool stillSelecting) OVERRIDE;
 
-    virtual bool shouldApplyStyle(WebCore::CSSStyleDeclaration*, WebCore::Range*) OVERRIDE;
+    virtual bool shouldApplyStyle(WebCore::StylePropertySet*, WebCore::Range*) OVERRIDE;
     
     virtual bool shouldMoveRangeAfterDelete(WebCore::Range*, WebCore::Range* rangeToBeReplaced) OVERRIDE;
 
@@ -72,7 +71,7 @@ public:
 
     virtual NSString* userVisibleString(NSURL *) OVERRIDE;
     virtual WebCore::DocumentFragment* documentFragmentFromAttributedString(NSAttributedString *, Vector< RefPtr<WebCore::ArchiveResource> >&) OVERRIDE;
-    virtual void setInsertionPasteboard(NSPasteboard *) OVERRIDE;
+    virtual void setInsertionPasteboard(const String&) OVERRIDE;
     virtual NSURL* canonicalizeURL(NSURL*) OVERRIDE;
     virtual NSURL* canonicalizeURLString(NSString*) OVERRIDE;
     
@@ -135,13 +134,7 @@ public:
     virtual void getGuessesForWord(const WTF::String& word, const WTF::String& context, WTF::Vector<WTF::String>& guesses) OVERRIDE;
     virtual void willSetInputMethodState() OVERRIDE;
     virtual void setInputMethodState(bool enabled) OVERRIDE;
-    virtual void requestCheckingOfString(WebCore::SpellChecker*, int, WebCore::TextCheckingTypeMask, const WTF::String&) OVERRIDE;
-#if !defined(BUILDING_ON_LEOPARD) && !defined(BUILDING_ON_SNOW_LEOPARD)
-    virtual void showCorrectionPanel(WebCore::CorrectionPanelInfo::PanelType, const WebCore::FloatRect& boundingBoxOfReplacedString, const String& replacedString, const String& replacementString, const Vector<String>& alternativeReplacementStrings) OVERRIDE;
-    virtual void dismissCorrectionPanel(WebCore::ReasonForDismissingCorrectionPanel) OVERRIDE;
-    virtual String dismissCorrectionPanelSoon(WebCore::ReasonForDismissingCorrectionPanel) OVERRIDE;
-    virtual void recordAutocorrectionResponse(AutocorrectionResponseType, const String& replacedString, const String& replacementString) OVERRIDE;
-#endif
+    virtual void requestCheckingOfString(WebCore::SpellChecker*, const WebCore::TextCheckingRequest&) OVERRIDE;
 private:
     void registerUndoOrRedoStep(PassRefPtr<WebCore::UndoStep>, bool isRedo);
     WebEditorClient();
@@ -149,8 +142,4 @@ private:
     WebView *m_webView;
     RetainPtr<WebEditorUndoTarget> m_undoTarget;
     bool m_haveUndoRedoOperations;
-
-#if !defined(BUILDING_ON_LEOPARD) && !defined(BUILDING_ON_SNOW_LEOPARD)
-    CorrectionPanel m_correctionPanel;
-#endif
 };

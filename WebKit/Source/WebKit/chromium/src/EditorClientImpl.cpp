@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2006, 2007 Apple, Inc.  All rights reserved.
- * Copyright (C) 2010 Google, Inc.  All rights reserved.
+ * Copyright (C) 2012 Google, Inc.  All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -57,6 +57,7 @@
 #include "WebSpellCheckClient.h"
 #include "WebTextAffinity.h"
 #include "WebTextCheckingCompletionImpl.h"
+#include "WebTextCheckingResult.h"
 #include "WebViewClient.h"
 #include "WebViewImpl.h"
 
@@ -237,13 +238,11 @@ bool EditorClientImpl::shouldChangeSelectedRange(Range* fromRange,
     return true;
 }
 
-bool EditorClientImpl::shouldApplyStyle(CSSStyleDeclaration* style,
-                                        Range* range)
+bool EditorClientImpl::shouldApplyStyle(StylePropertySet* style, Range* range)
 {
     if (m_webView->client()) {
         // FIXME: Pass a reference to the CSSStyleDeclaration somehow.
-        return m_webView->client()->shouldApplyStyle(WebString(),
-                                                     WebRange(range));
+        return m_webView->client()->shouldApplyStyle(WebString(), WebRange(range));
     }
     return true;
 }
@@ -730,10 +729,10 @@ void EditorClientImpl::checkSpellingOfString(const UChar* text, int length,
         *misspellingLength = spellLength;
 }
 
-void EditorClientImpl::requestCheckingOfString(SpellChecker* sender, int identifier, TextCheckingTypeMask, const String& text)
+void EditorClientImpl::requestCheckingOfString(SpellChecker* sender, const WebCore::TextCheckingRequest& request)
 {
     if (m_webView->spellCheckClient())
-        m_webView->spellCheckClient()->requestCheckingOfText(text, new WebTextCheckingCompletionImpl(identifier, sender));
+        m_webView->spellCheckClient()->requestCheckingOfText(request.text(), new WebTextCheckingCompletionImpl(request.sequence(), sender));
 }
 
 String EditorClientImpl::getAutoCorrectSuggestionForMisspelledWord(const String& misspelledWord)
@@ -763,6 +762,22 @@ void EditorClientImpl::checkGrammarOfString(const UChar*, int length,
         *badGrammarLocation = 0;
     if (badGrammarLength)
         *badGrammarLength = 0;
+}
+
+void EditorClientImpl::checkTextOfParagraph(const UChar* text, int length,
+                                            TextCheckingTypeMask mask,
+                                            WTF::Vector<TextCheckingResult>& results)
+{
+    if (!m_webView->spellCheckClient())
+        return;
+
+    WebTextCheckingTypeMask webMask = static_cast<WebTextCheckingTypeMask>(mask);
+    WebVector<WebTextCheckingResult> webResults;
+    m_webView->spellCheckClient()->checkTextOfParagraph(WebString(text, length), webMask, &webResults);
+
+    results.resize(webResults.size());
+    for (size_t i = 0; i < webResults.size(); ++i)
+        results[i] = webResults[i];
 }
 
 void EditorClientImpl::updateSpellingUIWithGrammarString(const String&,

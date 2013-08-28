@@ -69,9 +69,7 @@ public:
     void takeAllChildrenFrom(ContainerNode*);
 
     void cloneChildNodes(ContainerNode* clone);
-    
-    bool dispatchBeforeLoadEvent(const String& sourceURL);
-    
+
     virtual void attach() OVERRIDE;
     virtual void detach() OVERRIDE;
     virtual void willRemove() OVERRIDE;
@@ -79,12 +77,22 @@ public:
     virtual void setFocus(bool = true) OVERRIDE;
     virtual void setActive(bool active = true, bool pause = false) OVERRIDE;
     virtual void setHovered(bool = true) OVERRIDE;
-    virtual void insertedIntoDocument() OVERRIDE;
-    virtual void removedFromDocument() OVERRIDE;
-    virtual void insertedIntoTree(bool deep) OVERRIDE;
-    virtual void removedFromTree(bool deep) OVERRIDE;
-    virtual void childrenChanged(bool createdByParser = false, Node* beforeChange = 0, Node* afterChange = 0, int childCountDelta = 0) OVERRIDE;
     virtual void scheduleSetNeedsStyleRecalc(StyleChangeType = FullStyleChange) OVERRIDE;
+
+    // -----------------------------------------------------------------------------
+    // Notification of document structure changes (see Node.h for more notification methods)
+
+    // Notifies the node that it's list of children have changed (either by adding or removing child nodes), or a child
+    // node that is of the type CDATA_SECTION_NODE, TEXT_NODE or COMMENT_NODE has changed its value.
+    virtual void childrenChanged(bool createdByParser = false, Node* beforeChange = 0, Node* afterChange = 0, int childCountDelta = 0);
+
+    void attachAsNode();
+    void attachChildren();
+    void attachChildrenIfNeeded();
+    void attachChildrenLazily();
+    void detachAsNode();
+    void detachChildren();
+    void detachChildrenIfNeeded();
 
 protected:
     ContainerNode(Document*, ConstructionType = CreateContainer);
@@ -138,6 +146,51 @@ inline ContainerNode::ContainerNode(Document* document, ConstructionType type)
 {
 }
 
+inline void ContainerNode::attachAsNode()
+{
+    Node::attach();
+}
+
+inline void ContainerNode::attachChildren()
+{
+    for (Node* child = firstChild(); child; child = child->nextSibling())
+        child->attach();
+}
+
+inline void ContainerNode::attachChildrenIfNeeded()
+{
+    for (Node* child = firstChild(); child; child = child->nextSibling()) {
+        if (!child->attached())
+            child->attach();
+    }
+}
+
+inline void ContainerNode::attachChildrenLazily()
+{
+    for (Node* child = firstChild(); child; child = child->nextSibling())
+        if (!child->attached())
+            child->lazyAttach();
+}
+
+inline void ContainerNode::detachAsNode()
+{
+    Node::detach();
+}
+
+inline void ContainerNode::detachChildrenIfNeeded()
+{
+    for (Node* child = firstChild(); child; child = child->nextSibling()) {
+        if (child->attached())
+            child->detach();
+    }
+}
+
+inline void ContainerNode::detachChildren()
+{
+    for (Node* child = firstChild(); child; child = child->nextSibling())
+        child->detach();
+}
+
 inline unsigned Node::childNodeCount() const
 {
     if (!isContainerNode())
@@ -164,6 +217,24 @@ inline Node* Node::lastChild() const
     if (!isContainerNode())
         return 0;
     return toContainerNode(this)->lastChild();
+}
+
+inline Node* Node::highestAncestor() const
+{
+    Node* node = const_cast<Node*>(this);
+    Node* highest = node;
+    for (; node; node = node->parentNode())
+        highest = node;
+    return highest;
+}
+
+typedef Vector<RefPtr<Node>, 11> NodeVector;
+
+inline void getChildNodes(Node* node, NodeVector& nodes)
+{
+    ASSERT(!nodes.size());
+    for (Node* child = node->firstChild(); child; child = child->nextSibling())
+        nodes.append(child);
 }
 
 } // namespace WebCore

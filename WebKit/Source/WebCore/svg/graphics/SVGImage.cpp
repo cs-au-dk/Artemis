@@ -75,7 +75,8 @@ private:
 
     virtual void invalidateContentsAndRootView(const IntRect& r, bool)
     {
-        if (m_image && m_image->imageObserver())
+        // If m_image->m_page is null, we're being destructed, don't fire changedInRect() in that case.
+        if (m_image && m_image->imageObserver() && m_image->m_page)
             m_image->imageObserver()->changedInRect(m_image, r);
     }
 
@@ -90,12 +91,9 @@ SVGImage::SVGImage(ImageObserver* observer)
 SVGImage::~SVGImage()
 {
     if (m_page) {
-        m_page->mainFrame()->loader()->frameDetached(); // Break both the loader and view references to the frame
-
-        // Clear explicitly because we want to delete the page before the ChromeClient.
-        // FIXME: I believe that's already guaranteed by C++ object destruction rules,
-        // so this may matter only for the assertion below.
-        m_page.clear();
+        // Store m_page in a local variable, clearing m_page, so that SVGImageChromeClient knows we're destructed.
+        OwnPtr<Page> currentPage = m_page.release();
+        currentPage->mainFrame()->loader()->frameDetached(); // Break both the loader and view references to the frame
     }
 
     // Verify that page teardown destroyed the Chrome
@@ -104,20 +102,8 @@ SVGImage::~SVGImage()
 
 void SVGImage::setContainerSize(const IntSize&)
 {
+    // SVGImageCache already intercepted this call, as it stores & caches the desired container sizes & zoom levels.
     ASSERT_NOT_REACHED();
-}
-
-bool SVGImage::usesContainerSize() const
-{
-    if (!m_page)
-        return false;
-    Frame* frame = m_page->mainFrame();
-    SVGSVGElement* rootElement = static_cast<SVGDocument*>(frame->document())->rootElement();
-    if (!rootElement)
-        return false;
-    if (RenderSVGRoot* renderer = toRenderSVGRoot(rootElement->renderer()))
-        return !renderer->containerSize().isEmpty();
-    return false;
 }
 
 IntSize SVGImage::size() const
@@ -140,9 +126,15 @@ IntSize SVGImage::size() const
 
     // Assure that a container size is always given for a non-identity zoom level.
     ASSERT(renderer->style()->effectiveZoom() == 1);
-    IntSize size = enclosingIntRect(rootElement->currentViewBoxRect(SVGSVGElement::CalculateViewBoxInHostDocument)).size();
-    if (!size.isEmpty())
-        return size;
+
+    FloatSize currentSize;
+    if (rootElement->intrinsicWidth().isFixed() && rootElement->intrinsicHeight().isFixed())
+        currentSize = rootElement->currentViewportSize();
+    else
+        currentSize = rootElement->currentViewBoxRect().size();
+
+    if (!currentSize.isEmpty())
+        return IntSize(static_cast<int>(ceilf(currentSize.width())), static_cast<int>(ceilf(currentSize.height())));
 
     // As last resort, use CSS default intrinsic size.
     return IntSize(300, 150);
@@ -173,10 +165,15 @@ void SVGImage::drawSVGToImageBuffer(ImageBuffer* buffer, const IntSize& size, fl
     ImageObserver* observer = imageObserver();
     ASSERT(observer);
 
-    // Temporarily reset image observer, we don't want to receive any changeInRect() calls due this relayout.
+    // Temporarily reset image observer, we don't want to receive any changeInRect() calls due to this relayout.
     setImageObserver(0);
+
+    // Disable repainting; we don't want deferred repaints to schedule any timers due to this relayout.
+    frame->view()->beginDisableRepaints();
+
     renderer->setContainerSize(size);
     frame->view()->resize(this->size());
+
     if (zoom != 1)
         frame->setPageZoomFactor(zoom);
 
@@ -198,7 +195,9 @@ void SVGImage::drawSVGToImageBuffer(ImageBuffer* buffer, const IntSize& size, fl
     if (frame->view()->needsLayout())
         frame->view()->layout();
 
-    setImageObserver(observer); 
+    setImageObserver(observer);
+
+    frame->view()->endDisableRepaints();
 }
 
 void SVGImage::draw(GraphicsContext* context, const FloatRect& dstRect, const FloatRect& srcRect, ColorSpace, CompositeOperator compositeOp)
@@ -206,7 +205,7 @@ void SVGImage::draw(GraphicsContext* context, const FloatRect& dstRect, const Fl
     if (!m_page)
         return;
 
-    FrameView* view = m_page->mainFrame()->view();
+    FrameView* view = frameView();
 
     GraphicsContextStateSaver stateSaver(*context);
     context->setCompositeOperation(compositeOp);
@@ -251,6 +250,36 @@ RenderBox* SVGImage::embeddedContentBox() const
     return toRenderBox(rootElement->renderer());
 }
 
+FrameView* SVGImage::frameView() const
+{
+    if (!m_page)
+        return 0;
+
+    return m_page->mainFrame()->view();
+}
+
+bool SVGImage::hasRelativeWidth() const
+{
+    if (!m_page)
+        return false;
+    Frame* frame = m_page->mainFrame();
+    SVGSVGElement* rootElement = static_cast<SVGDocument*>(frame->document())->rootElement();
+    if (!rootElement)
+        return false;
+    return rootElement->intrinsicWidth().isPercent();
+}
+
+bool SVGImage::hasRelativeHeight() const
+{
+    if (!m_page)
+        return false;
+    Frame* frame = m_page->mainFrame();
+    SVGSVGElement* rootElement = static_cast<SVGDocument*>(frame->document())->rootElement();
+    if (!rootElement)
+        return false;
+    return rootElement->intrinsicHeight().isPercent();
+}
+
 void SVGImage::computeIntrinsicDimensions(Length& intrinsicWidth, Length& intrinsicHeight, FloatSize& intrinsicRatio)
 {
     if (!m_page)
@@ -259,14 +288,15 @@ void SVGImage::computeIntrinsicDimensions(Length& intrinsicWidth, Length& intrin
     SVGSVGElement* rootElement = static_cast<SVGDocument*>(frame->document())->rootElement();
     if (!rootElement)
         return;
-    RenderBox* renderer = toRenderBox(rootElement->renderer());
-    if (!renderer)
+
+    intrinsicWidth = rootElement->intrinsicWidth();
+    intrinsicHeight = rootElement->intrinsicHeight();
+    if (rootElement->preserveAspectRatio().align() == SVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_NONE)
         return;
 
-    intrinsicWidth = renderer->style()->width();
-    intrinsicHeight = renderer->style()->height();
-    if (rootElement->preserveAspectRatio().align() != SVGPreserveAspectRatio::SVG_PRESERVEASPECTRATIO_NONE)
-        intrinsicRatio = rootElement->currentViewBoxRect().size();
+    intrinsicRatio = rootElement->viewBox().size();
+    if (intrinsicRatio.isEmpty() && intrinsicWidth.isFixed() && intrinsicHeight.isFixed())
+        intrinsicRatio = FloatSize(floatValueForLength(intrinsicWidth, 0), floatValueForLength(intrinsicHeight, 0));
 }
 
 NativeImagePtr SVGImage::nativeImageForCurrentFrame()
@@ -277,7 +307,7 @@ NativeImagePtr SVGImage::nativeImageForCurrentFrame()
     if (!m_frameCache) {
         if (!m_page)
             return 0;
-        OwnPtr<ImageBuffer> buffer = ImageBuffer::create(size());
+        OwnPtr<ImageBuffer> buffer = ImageBuffer::create(size(), 1);
         if (!buffer) // failed to allocate image
             return 0;
         draw(buffer->context(), rect(), rect(), ColorSpaceDeviceRGB, CompositeSourceOver);
@@ -296,26 +326,9 @@ bool SVGImage::dataChanged(bool allDataReceived)
         static FrameLoaderClient* dummyFrameLoaderClient =  new EmptyFrameLoaderClient;
 
         Page::PageClients pageClients;
+        fillWithEmptyClients(pageClients);
         m_chromeClient = adoptPtr(new SVGImageChromeClient(this));
         pageClients.chromeClient = m_chromeClient.get();
-#if ENABLE(CONTEXT_MENUS)
-        static ContextMenuClient* dummyContextMenuClient = new EmptyContextMenuClient;
-        pageClients.contextMenuClient = dummyContextMenuClient;
-#endif
-        static EditorClient* dummyEditorClient = new EmptyEditorClient;
-        pageClients.editorClient = dummyEditorClient;
-#if ENABLE(DRAG_SUPPORT)
-        static DragClient* dummyDragClient = new EmptyDragClient;
-        pageClients.dragClient = dummyDragClient;
-#endif
-        static InspectorClient* dummyInspectorClient = new EmptyInspectorClient;
-        pageClients.inspectorClient = dummyInspectorClient;
-#if ENABLE(DEVICE_ORIENTATION)
-        static DeviceMotionClient* dummyDeviceMotionClient = new EmptyDeviceMotionClient;
-        pageClients.deviceMotionClient = dummyDeviceMotionClient;
-        static DeviceOrientationClient* dummyDeviceOrientationClient = new EmptyDeviceOrientationClient;
-        pageClients.deviceOrientationClient = dummyDeviceOrientationClient;
-#endif
 
         // FIXME: If this SVG ends up loading itself, we might leak the world.
         // The Cache code does not know about CachedImages holding Frames and

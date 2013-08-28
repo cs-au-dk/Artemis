@@ -41,7 +41,8 @@ class WebUserMediaClient {
 public:
     virtual ~WebUserMediaClient() { }
 
-    virtual void requestUserMedia(const WebUserMediaRequest&, const WebVector<WebMediaStreamSource>&) = 0;
+    virtual void requestUserMedia(const WebUserMediaRequest&, const WebVector<WebMediaStreamSource>& audioSources, const WebVector<WebMediaStreamSource>& videoSources) { }
+
     virtual void cancelUserMediaRequest(const WebUserMediaRequest&) = 0;
 };
 

@@ -199,7 +199,7 @@ test('FailingTestsSummary', 12, function() {
             '</ul>' +
         '</div>');
 
-    testFailures.addFailureAnalysis({testName: 'foo', resultNodesByBuilder: {'Webkit Linux (dbg)(1)': { actual: 'TEXT'}}});
+    testFailures.addFailureAnalysis({testName: 'foo', resultNodesByBuilder: {'Webkit Linux (dbg)': { actual: 'TEXT'}}});
     equal(testFailures.innerHTML,
         '<div class="how">' +
             '<time class="relative">10 minutes ago</time>' +
@@ -209,7 +209,7 @@ test('FailingTestsSummary', 12, function() {
                     '<tr class="TEXT">' +
                         '<td><span>TEXT</span></td>' +
                         '<td></td>' +
-                        '<td><a class="failing-builder" target="_blank" href="http://build.chromium.org/p/chromium.webkit/waterfall?builder=Webkit+Linux+(dbg)(1)"><span class="version">lucid</span><span class="architecture">64-bit</span></a></td>' +
+                        '<td><a class="failing-builder" target="_blank" href="http://build.chromium.org/p/chromium.webkit/waterfall?builder=Webkit+Linux+(dbg)"><span class="version">lucid</span><span class="architecture">64-bit</span></a></td>' +
                     '</tr>' +
                     '<tr class="BUILDING" style="display: none; "><td><span>BUILDING</span></td><td></td><td></td></tr>' +
                 '</tbody>' +
@@ -218,8 +218,8 @@ test('FailingTestsSummary', 12, function() {
         '<div class="what">' +
             '<div class="problem">' +
                 '<ul class="effects">' +
-                    '<li><a target="_blank" href="http://test-results.appspot.com/dashboards/flakiness_dashboard.html#tests=test">test</a></li>' +
                     '<li><a target="_blank" href="http://test-results.appspot.com/dashboards/flakiness_dashboard.html#tests=foo">foo</a></li>' +
+                    '<li><a target="_blank" href="http://test-results.appspot.com/dashboards/flakiness_dashboard.html#tests=test">test</a></li>' +
                 '</ul>' +
                 '<ul class="actions">' +
                     '<li><button class="action default" title="Examine these failures in detail.">Examine</button></li>' +
@@ -240,7 +240,7 @@ test('FailingTestsSummary', 12, function() {
             '</ul>' +
         '</div>');
 
-    testFailures.updateBuilderResults({'Webkit Mac10.5 (CG)': { actual: 'BUILDING'}});
+    testFailures.updateBuilderResults({'Webkit Mac10.5': { actual: 'BUILDING'}});
     equal(testFailures.innerHTML,
         '<div class="how">' +
             '<time class="relative">10 minutes ago</time>' +
@@ -250,11 +250,11 @@ test('FailingTestsSummary', 12, function() {
                     '<tr class="TEXT">' +
                         '<td><span>TEXT</span></td>' +
                         '<td></td>' +
-                        '<td><a class="failing-builder" target="_blank" href="http://build.chromium.org/p/chromium.webkit/waterfall?builder=Webkit+Linux+(dbg)(1)"><span class="version">lucid</span><span class="architecture">64-bit</span></a></td>' +
+                        '<td><a class="failing-builder" target="_blank" href="http://build.chromium.org/p/chromium.webkit/waterfall?builder=Webkit+Linux+(dbg)"><span class="version">lucid</span><span class="architecture">64-bit</span></a></td>' +
                     '</tr>' +
                     '<tr class="BUILDING" style="">' +
                         '<td><span>BUILDING</span></td>' +
-                        '<td><a class="failing-builder" target="_blank" href="http://build.chromium.org/p/chromium.webkit/waterfall?builder=Webkit+Mac10.5+(CG)"><span class="version">leopard</span><span class="graphics">CG</span></a></td>' +
+                        '<td><a class="failing-builder" target="_blank" href="http://build.chromium.org/p/chromium.webkit/waterfall?builder=Webkit+Mac10.5"><span class="version">leopard</span></a></td>' +
                         '<td></td>' +
                     '</tr>' +
                 '</tbody>' +
@@ -263,8 +263,8 @@ test('FailingTestsSummary', 12, function() {
         '<div class="what">' +
             '<div class="problem">' +
                 '<ul class="effects">' +
-                    '<li><a target="_blank" href="http://test-results.appspot.com/dashboards/flakiness_dashboard.html#tests=test">test</a></li>' +
                     '<li><a target="_blank" href="http://test-results.appspot.com/dashboards/flakiness_dashboard.html#tests=foo">foo</a></li>' +
+                    '<li><a target="_blank" href="http://test-results.appspot.com/dashboards/flakiness_dashboard.html#tests=test">test</a></li>' +
                 '</ul>' +
                 '<ul class="actions">' +
                     '<li><button class="action default" title="Examine these failures in detail.">Examine</button></li>' +

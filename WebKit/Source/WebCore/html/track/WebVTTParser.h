@@ -50,6 +50,7 @@ public:
     virtual ~WebVTTParserClient() { }
     
     virtual void newCuesParsed() = 0;
+    virtual void fileFailedToParse() = 0;
 };
 
 class WebVTTParser {
@@ -63,9 +64,6 @@ public:
         return adoptPtr(new WebVTTParser(client, context));
     }
     
-    static unsigned fileIdentifierMaximumLength();
-    static bool hasRequiredFileIdentifier(const char* data, unsigned length);
-
     static inline bool isRecognizedTag(const AtomicString& tagName)
     {
         return tagName == iTag
@@ -80,14 +78,22 @@ public:
         // WebVTT space characters are U+0020 SPACE, U+0009 CHARACTER TABULATION (tab), U+000A LINE FEED (LF), U+000C FORM FEED (FF), and U+000D CARRIAGE RETURN    (CR).
         return c == ' ' || c == '\t' || c == '\n' || c == '\f' || c == '\r';
     }
+    static inline bool isValidSettingDelimiter(char c)
+    {
+        // ... a WebVTT cue consists of zero or more of the following components, in any order, separated from each other by one or more 
+        // U+0020 SPACE characters or U+0009 CHARACTER TABULATION (tab) characters.
+        return c == ' ' || c == '\t';
+    }
     static String collectDigits(const String&, unsigned*);
     static String collectWord(const String&, unsigned*);
 
     // Input data to the parser to parse.
-    virtual void parseBytes(const char* data, unsigned length);
+    void parseBytes(const char* data, unsigned length);
 
     // Transfers ownership of last parsed cues to caller.
-    virtual void getNewCues(Vector<RefPtr<TextTrackCue> >&);
+    void getNewCues(Vector<RefPtr<TextTrackCue> >&);
+
+    PassRefPtr<DocumentFragment> createDocumentFragmentFromCueText(const String&);
 
 protected:
     WebVTTParser(WebVTTParserClient*, ScriptExecutionContext*);
@@ -96,12 +102,13 @@ protected:
     ParseState m_state;
 
 private:
+    bool hasRequiredFileIdentifier();
     ParseState collectCueId(const String&);
     ParseState collectTimingsAndSettings(const String&);
     ParseState collectCueText(const String&, unsigned length, unsigned);
     ParseState ignoreBadCue(const String&);
 
-    void processCueText();
+    void createNewCue();
     void resetCueValues();
     double collectTimeStamp(const String&, unsigned*);
     void skipWhiteSpace(const String&, unsigned*);
@@ -110,6 +117,7 @@ private:
     
     void constructTreeFromToken(Document*);
 
+    Vector<char> m_identifierData;
     String m_currentId;
     double m_currentStartTime;
     double m_currentEndTime;
@@ -119,7 +127,6 @@ private:
     WebVTTToken m_token;
     OwnPtr<WebVTTTokenizer> m_tokenizer;
 
-    RefPtr<DocumentFragment> m_attachmentRoot;
     RefPtr<ContainerNode> m_currentNode;
 
     WebVTTParserClient* m_client;

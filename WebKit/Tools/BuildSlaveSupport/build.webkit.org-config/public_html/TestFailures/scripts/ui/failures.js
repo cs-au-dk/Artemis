@@ -36,8 +36,6 @@ ui.failures.Builder = base.extends('a', {
         var configuration = config.kBuilders[builderName];
         if (configuration.version)
             this._addSpan('version', configuration.version);
-        if (configuration.isCG)
-            this._addSpan('graphics', 'CG');
         if (configuration.is64bit)
             this._addSpan('architecture', '64-bit');
         this._configuration = configuration;
@@ -53,7 +51,7 @@ ui.failures.Builder = base.extends('a', {
     },
     equals: function(configuration)
     {
-        return this._configuration.is64bit == configuration.is64bit && this._configuration.isCG == configuration.isCG && this._configuration.version == configuration.version; 
+        return this._configuration.is64bit == configuration.is64bit && this._configuration.version == configuration.version; 
     }
 });
 
@@ -126,6 +124,26 @@ ui.failures.FailureGrid = base.extends('table', {
         // Add the BUILDING row eagerly so that it appears last.
         this._rowByResult(kBuildingResult);
         $(this._resultRows[kBuildingResult]).hide();
+    }
+});
+
+ui.failures.ListItem = base.extends('li', {
+    init: function(groupName, failingTestsList)
+    {
+        this._failingTestsList = failingTestsList;
+        this.appendChild(new ui.actions.List([
+            new ui.actions.Examine().makeDefault(),
+        ]));
+        var label = this.appendChild(document.createElement('label'))
+        label.textContent = failingTestsList.length == 1 ? failingTestsList[0] : groupName;
+    },
+});
+
+ui.failures.List = base.extends('ul', {
+    init: function()
+    {
+        this.className = 'failures';
+        this.textContent = 'Loading...';
     }
 });
 

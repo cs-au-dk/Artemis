@@ -29,11 +29,7 @@
 // Subclasses
 #include "DrawingAreaImpl.h"
 
-#if USE(TILED_BACKING_STORE)
-#include "TiledDrawingArea.h"
-#endif
-
-#if PLATFORM(MAC)
+#if PLATFORM(MAC) && ENABLE(THREADED_SCROLLING)
 #include "TiledCoreAnimationDrawingArea.h"
 #endif
 
@@ -46,11 +42,7 @@ PassOwnPtr<DrawingArea> DrawingArea::create(WebPage* webPage, const WebPageCreat
     switch (parameters.drawingAreaType) {
     case DrawingAreaTypeImpl:
         return DrawingAreaImpl::create(webPage, parameters);
-#if USE(TILED_BACKING_STORE)
-    case DrawingAreaTypeTiled:
-        return adoptPtr(new TiledDrawingArea(webPage));
-#endif
-#if PLATFORM(MAC)
+#if PLATFORM(MAC) && ENABLE(THREADED_SCROLLING)
     case DrawingAreaTypeTiledCoreAnimation:
         return TiledCoreAnimationDrawingArea::create(webPage, parameters);
 #endif
@@ -67,6 +59,12 @@ DrawingArea::DrawingArea(DrawingAreaType type, WebPage* webPage)
 
 DrawingArea::~DrawingArea()
 {
+}
+
+void DrawingArea::dispatchAfterEnsuringUpdatedScrollPosition(const Function<void ()>& function)
+{
+    // Scroll position updates are synchronous by default so we can just call the function right away here.
+    function();
 }
 
 } // namespace WebKit

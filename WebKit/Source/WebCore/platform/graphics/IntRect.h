@@ -53,6 +53,12 @@ typedef struct _GdkRectangle GdkRectangle;
 #endif
 #elif PLATFORM(EFL)
 typedef struct _Eina_Rectangle Eina_Rectangle;
+#elif PLATFORM(BLACKBERRY)
+namespace BlackBerry {
+namespace Platform {
+class IntRect;
+}
+}
 #endif
 
 #if USE(CAIRO)
@@ -71,6 +77,7 @@ struct SkIRect;
 namespace WebCore {
 
 class FloatRect;
+class FractionalLayoutRect;
 
 class IntRect {
 public:
@@ -80,7 +87,8 @@ public:
     IntRect(int x, int y, int width, int height)
         : m_location(IntPoint(x, y)), m_size(IntSize(width, height)) { }
 
-    explicit IntRect(const FloatRect& rect); // don't do this implicitly since it's lossy
+    explicit IntRect(const FloatRect&); // don't do this implicitly since it's lossy
+    explicit IntRect(const FractionalLayoutRect&); // don't do this implicitly since it's lossy
         
     IntPoint location() const { return m_location; }
     IntSize size() const { return m_size; }
@@ -94,6 +102,17 @@ public:
     int maxY() const { return y() + height(); }
     int width() const { return m_size.width(); }
     int height() const { return m_size.height(); }
+
+    // FIXME: These methods are here only to ease the transition to sub-pixel layout. They should
+    // be removed when we close http://webkit.org/b/60318
+    int pixelSnappedX() const { return m_location.x(); }
+    int pixelSnappedY() const { return m_location.y(); }
+    int pixelSnappedMaxX() const { return x() + width(); }
+    int pixelSnappedMaxY() const { return y() + height(); }
+    int pixelSnappedWidth() const { return m_size.width(); }
+    int pixelSnappedHeight() const { return m_size.height(); }
+    IntPoint pixelSnappedLocation() const { return location(); }
+    IntSize pixelSnappedSize() const { return size(); }
 
     void setX(int x) { m_location.setX(x); }
     void setY(int y) { m_location.setY(y); }
@@ -169,6 +188,11 @@ public:
     void inflate(int d) { inflateX(d); inflateY(d); }
     void scale(float s);
 
+    IntSize differenceToPoint(const IntPoint&) const;
+    IntSize differenceFromCenterLineToPoint(const IntPoint&) const;
+    int distanceSquaredToPoint(const IntPoint& p) const { return differenceToPoint(p).diagonalLengthSquared(); }
+    int distanceSquaredFromCenterLineToPoint(const IntPoint& p) const { return differenceFromCenterLineToPoint(p).diagonalLengthSquared(); }
+
     IntRect transposedRect() const { return IntRect(m_location.transposedPoint(), m_size.transposedSize()); }
 
 #if PLATFORM(WX)
@@ -212,6 +236,11 @@ public:
     operator NSRect() const;
 #endif
 
+#if PLATFORM(BLACKBERRY)
+    IntRect(const BlackBerry::Platform::IntRect&);
+    operator BlackBerry::Platform::IntRect() const;
+#endif
+
 private:
     IntPoint m_location;
     IntSize m_size;
@@ -241,6 +270,13 @@ inline bool operator==(const IntRect& a, const IntRect& b)
 inline bool operator!=(const IntRect& a, const IntRect& b)
 {
     return a.location() != b.location() || a.size() != b.size();
+}
+
+// FIXME: This method is here only to ease the transition to sub-pixel layout. It should
+// be removed when we close http://webkit.org/b/60318
+inline IntRect enclosingIntRect(const IntRect& rect)
+{
+    return rect;
 }
 
 #if USE(CG) || USE(SKIA_ON_MAC_CHROMIUM)

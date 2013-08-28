@@ -33,13 +33,16 @@
 #include "FrameTestHelpers.h"
 #include "ResourceError.h"
 #include "WebDocument.h"
+#include "WebFindOptions.h"
 #include "WebFormElement.h"
 #include "WebFrame.h"
 #include "WebFrameClient.h"
+#include "WebRange.h"
 #include "WebScriptSource.h"
 #include "WebSearchableFormData.h"
 #include "WebSecurityPolicy.h"
 #include "WebSettings.h"
+#include "WebViewClient.h"
 #include "WebViewImpl.h"
 #include "v8.h"
 #include <gtest/gtest.h>
@@ -149,6 +152,112 @@ TEST_F(WebFrameTest, ChromePageNoJavascript)
     EXPECT_EQ(std::string::npos, content.find("Clobbered"));
 }
 
+#if ENABLE(VIEWPORT)
+
+class FixedLayoutTestWebViewClient : public WebViewClient {
+ public:
+    virtual WebRect windowRect() OVERRIDE { return m_windowRect; }
+    virtual WebScreenInfo screenInfo() OVERRIDE { return m_screenInfo; }
+
+    WebRect m_windowRect;
+    WebScreenInfo m_screenInfo;
+};
+
+TEST_F(WebFrameTest, DeviceScaleFactorUsesDefaultWithoutViewportTag)
+{
+    registerMockedHttpURLLoad("no_viewport_tag.html");
+
+    int viewportWidth = 640;
+    int viewportHeight = 480;
+
+    FixedLayoutTestWebViewClient client;
+    client.m_screenInfo.horizontalDPI = 160;
+    client.m_windowRect = WebRect(0, 0, viewportWidth, viewportHeight);
+
+    WebView* webView = static_cast<WebView*>(FrameTestHelpers::createWebViewAndLoad(m_baseURL + "no_viewport_tag.html", true, 0, &client));
+
+    webView->resize(WebSize(viewportWidth, viewportHeight));
+    webView->settings()->setViewportEnabled(true);
+    webView->settings()->setDefaultDeviceScaleFactor(2);
+    webView->enableFixedLayoutMode(true);
+    webView->layout();
+
+    EXPECT_EQ(2, webView->deviceScaleFactor());
+}
+#endif
+
+#if ENABLE(GESTURE_EVENTS)
+TEST_F(WebFrameTest, FAILS_DivAutoZoomParamsTest)
+{
+    registerMockedHttpURLLoad("get_scale_for_auto_zoom_into_div_test.html");
+
+    WebViewImpl* webViewImpl = static_cast<WebViewImpl*>(FrameTestHelpers::createWebViewAndLoad(m_baseURL + "get_scale_for_auto_zoom_into_div_test.html", true));
+    int pageWidth = 640;
+    int pageHeight = 480;
+    int divPosX = 200;
+    int divPosY = 200;
+    int divWidth = 200;
+    int divHeight = 150;
+    WebRect doubleTapPoint(250, 250, 0, 0);
+    webViewImpl->resize(WebSize(pageWidth, pageHeight));
+    float scale;
+    WebPoint scroll;
+
+    // Test for Doubletap scaling
+
+    // Tests for zooming in and out without clamping.
+    // Set device scale and scale limits so we dont get clamped.
+    webViewImpl->setDeviceScaleFactor(4);
+    webViewImpl->setPageScaleFactorLimits(0, 4 / webViewImpl->deviceScaleFactor());
+
+    // Test zooming into div.
+    webViewImpl->computeScaleAndScrollForHitRect(doubleTapPoint, WebViewImpl::DoubleTap, scale, scroll);
+    float scaledDivWidth = divWidth * scale;
+    float scaledDivHeight = divHeight * scale;
+    int hScroll = ((divPosX * scale) - ((pageWidth - scaledDivWidth) / 2)) / scale;
+    int vScroll = ((divPosY * scale) - ((pageHeight - scaledDivHeight) / 2)) / scale;
+    EXPECT_NEAR(pageWidth / divWidth, scale, 0.1);
+    EXPECT_EQ(hScroll, scroll.x);
+    EXPECT_EQ(vScroll, scroll.y);
+
+    // Test zoom out to overview scale.
+    webViewImpl->applyScrollAndScale(WebSize(scroll.x, scroll.y), scale / webViewImpl->pageScaleFactor());
+    webViewImpl->computeScaleAndScrollForHitRect(doubleTapPoint, WebViewImpl::DoubleTap, scale, scroll);
+    EXPECT_FLOAT_EQ(1, scale);
+    EXPECT_EQ(WebPoint(0, 0), scroll);
+
+    // Tests for clamped scaling.
+    // Test clamp to device scale:
+    webViewImpl->applyScrollAndScale(WebSize(scroll.x, scroll.y), scale / webViewImpl->pageScaleFactor());
+    webViewImpl->setDeviceScaleFactor(2.5);
+    webViewImpl->computeScaleAndScrollForHitRect(doubleTapPoint, WebViewImpl::DoubleTap, scale, scroll);
+    EXPECT_FLOAT_EQ(2.5, scale);
+
+    // Test clamp to minimum scale:
+    webViewImpl->applyScrollAndScale(WebSize(scroll.x, scroll.y), scale / webViewImpl->pageScaleFactor());
+    webViewImpl->setPageScaleFactorLimits(1.5 / webViewImpl->deviceScaleFactor(), 4 / webViewImpl->deviceScaleFactor());
+    webViewImpl->computeScaleAndScrollForHitRect(doubleTapPoint, WebViewImpl::DoubleTap, scale, scroll);
+    EXPECT_FLOAT_EQ(1.5, scale);
+    EXPECT_EQ(WebPoint(0, 0), scroll);
+
+    // Test clamp to maximum scale:
+    webViewImpl->applyScrollAndScale(WebSize(scroll.x, scroll.y), scale / webViewImpl->pageScaleFactor());
+    webViewImpl->setDeviceScaleFactor(4);
+    webViewImpl->setPageScaleFactorLimits(0, 3 / webViewImpl->deviceScaleFactor());
+    webViewImpl->computeScaleAndScrollForHitRect(doubleTapPoint, WebViewImpl::DoubleTap, scale, scroll);
+    EXPECT_FLOAT_EQ(3, scale);
+
+
+    // Test for Non-doubletap scaling
+    webViewImpl->setPageScaleFactor(1, WebPoint(0, 0));
+    webViewImpl->setDeviceScaleFactor(4);
+    webViewImpl->setPageScaleFactorLimits(0, 4 / webViewImpl->deviceScaleFactor());
+    // Test zooming into div.
+    webViewImpl->computeScaleAndScrollForHitRect(WebRect(250, 250, 10, 10), WebViewImpl::FindInPage, scale, scroll);
+    EXPECT_NEAR(pageWidth / divWidth, scale, 0.1);
+}
+#endif
+
 class TestReloadDoesntRedirectWebFrameClient : public WebFrameClient {
 public:
     virtual WebNavigationPolicy decidePolicyForNavigation(
@@ -164,7 +273,12 @@ public:
     {
         // Return a dummy error so the DocumentLoader doesn't assert when
         // the reload cancels it.
-        return WebURLError(WebCore::ResourceError("", 1, "", "cancelled"));
+        WebURLError webURLError;
+        webURLError.domain = "";
+        webURLError.reason = 1;
+        webURLError.isCancellation = true;
+        webURLError.unreachableURL = WebURL();
+        return webURLError;
     }
 };
 
@@ -248,12 +362,12 @@ public:
     std::vector<Notification*> releaseNotifications;
 
  private:
-    virtual void didCreateScriptContext(WebFrame* frame, v8::Handle<v8::Context> context, int worldId)
+    virtual void didCreateScriptContext(WebFrame* frame, v8::Handle<v8::Context> context, int extensionGroup, int worldId) OVERRIDE
     {
         createNotifications.push_back(new Notification(frame, context, worldId));
     }
 
-    virtual void willReleaseScriptContext(WebFrame* frame, v8::Handle<v8::Context> context, int worldId)
+    virtual void willReleaseScriptContext(WebFrame* frame, v8::Handle<v8::Context> context, int worldId) OVERRIDE
     {
         releaseNotifications.push_back(new Notification(frame, context, worldId));
     }
@@ -377,6 +491,56 @@ TEST_F(WebFrameTest, ContextNotificationsIsolatedWorlds)
         ++matchCount;
     }
     EXPECT_EQ(1, matchCount);
+}
+
+TEST_F(WebFrameTest, FindInPage)
+{
+    registerMockedHttpURLLoad("find.html");
+    WebView* webView = FrameTestHelpers::createWebViewAndLoad(m_baseURL + "find.html");
+    WebFrame* frame = webView->mainFrame();
+    const int findIdentifier = 12345;
+    WebFindOptions options;
+
+    // Find in a <div> element.
+    EXPECT_TRUE(frame->find(findIdentifier, WebString::fromUTF8("bar1"), options, false, 0));
+    frame->stopFinding(false);
+    WebRange range = frame->selectionRange();
+    EXPECT_EQ(5, range.startOffset());
+    EXPECT_EQ(9, range.endOffset());
+    EXPECT_TRUE(frame->document().focusedNode().isNull());
+
+    // Find in an <input> value.
+    EXPECT_TRUE(frame->find(findIdentifier, WebString::fromUTF8("bar2"), options, false, 0));
+    // Confirm stopFinding(false) sets the selection on the found text.
+    frame->stopFinding(false);
+    range = frame->selectionRange();
+    ASSERT_FALSE(range.isNull());
+    EXPECT_EQ(5, range.startOffset());
+    EXPECT_EQ(9, range.endOffset());
+    EXPECT_EQ(WebString::fromUTF8("INPUT"), frame->document().focusedNode().nodeName());
+
+    // Find in a <textarea> content.
+    EXPECT_TRUE(frame->find(findIdentifier, WebString::fromUTF8("bar3"), options, false, 0));
+    // Confirm stopFinding(false) sets the selection on the found text.
+    frame->stopFinding(false);
+    range = frame->selectionRange();
+    ASSERT_FALSE(range.isNull());
+    EXPECT_EQ(5, range.startOffset());
+    EXPECT_EQ(9, range.endOffset());
+    EXPECT_EQ(WebString::fromUTF8("TEXTAREA"), frame->document().focusedNode().nodeName());
+
+    // Find in a contentEditable element.
+    EXPECT_TRUE(frame->find(findIdentifier, WebString::fromUTF8("bar4"), options, false, 0));
+    // Confirm stopFinding(false) sets the selection on the found text.
+    frame->stopFinding(false);
+    range = frame->selectionRange();
+    ASSERT_FALSE(range.isNull());
+    EXPECT_EQ(0, range.startOffset());
+    EXPECT_EQ(4, range.endOffset());
+    // "bar4" is surrounded by <span>, but the focusable node should be the parent <div>.
+    EXPECT_EQ(WebString::fromUTF8("DIV"), frame->document().focusedNode().nodeName());
+
+    webView->close();
 }
 
 } // namespace

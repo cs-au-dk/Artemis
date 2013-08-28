@@ -48,6 +48,8 @@ namespace JSC {
     class JSCell;
     class Structure;
     class StructureChain;
+    struct LLIntCallLinkInfo;
+    struct ValueProfile;
 
 #if ENABLE(JIT)
     typedef MacroAssemblerCodeRef PolymorphicAccessStructureListStubRoutineType;
@@ -99,6 +101,10 @@ namespace JSC {
             }
         } list[POLYMORPHIC_LIST_CACHE_SIZE];
         
+        PolymorphicAccessStructureList()
+        {
+        }
+        
         PolymorphicAccessStructureList(JSGlobalData& globalData, JSCell* owner, PolymorphicAccessStructureListStubRoutineType stubRoutine, Structure* firstBase, bool isDirect)
         {
             list[0].set(globalData, owner, stubRoutine, firstBase, isDirect);
@@ -141,9 +147,14 @@ namespace JSC {
 #endif
 
     struct Instruction {
+        Instruction()
+        {
+            u.jsCell.clear();
+        }
+        
         Instruction(Opcode opcode)
         {
-#if !ENABLE(COMPUTED_GOTO_INTERPRETER)
+#if !ENABLE(COMPUTED_GOTO_CLASSIC_INTERPRETER)
             // We have to initialize one of the pointer members to ensure that
             // the entire struct is initialized, when opcode is not a pointer.
             u.jsCell.clear();
@@ -176,6 +187,10 @@ namespace JSC {
         }
 
         Instruction(PropertySlot::GetValueFunc getterFunc) { u.getterFunc = getterFunc; }
+        
+        Instruction(LLIntCallLinkInfo* callLinkInfo) { u.callLinkInfo = callLinkInfo; }
+        
+        Instruction(ValueProfile* profile) { u.profile = profile; }
 
         union {
             Opcode opcode;
@@ -184,6 +199,9 @@ namespace JSC {
             WriteBarrierBase<StructureChain> structureChain;
             WriteBarrierBase<JSCell> jsCell;
             PropertySlot::GetValueFunc getterFunc;
+            LLIntCallLinkInfo* callLinkInfo;
+            ValueProfile* profile;
+            void* pointer;
         } u;
         
     private:

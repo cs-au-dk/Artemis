@@ -119,10 +119,9 @@ class FrameLoaderClientEfl : public FrameLoaderClient {
 
     virtual void dispatchUnableToImplementPolicy(const ResourceError&);
 
-    virtual void dispatchWillSendSubmitEvent(HTMLFormElement*) { }
+    virtual void dispatchWillSendSubmitEvent(WTF::PassRefPtr<FormState>) { }
     virtual void dispatchWillSubmitForm(FramePolicyFunction, WTF::PassRefPtr<FormState>);
 
-    virtual void dispatchDidLoadMainResource(DocumentLoader*);
     virtual void revertToProvisionalState(DocumentLoader*);
     virtual void setMainDocumentError(DocumentLoader*, const ResourceError&);
 
@@ -132,8 +131,6 @@ class FrameLoaderClientEfl : public FrameLoaderClient {
 
     virtual PassRefPtr<Frame> createFrame(const KURL&, const String& name, HTMLFrameOwnerElement*,
                                const String& referrer, bool allowsScrolling, int marginWidth, int marginHeight);
-    virtual void didTransferChildFrameToNewDocument(Page*);
-    virtual void transferLoadingResourceFromPage(WebCore::ResourceLoader*, const ResourceRequest&, WebCore::Page*);
 
     virtual PassRefPtr<Widget> createPlugin(const IntSize&, HTMLPlugInElement*, const KURL&, const WTF::Vector<String>&, const WTF::Vector<String>&, const String&, bool);
     virtual void redirectDataToPlugin(Widget* pluginWidget);

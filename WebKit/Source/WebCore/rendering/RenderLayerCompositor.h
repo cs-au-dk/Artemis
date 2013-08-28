@@ -32,20 +32,17 @@
 
 namespace WebCore {
 
-#define PROFILE_LAYER_REBUILD 0
-
 class GraphicsLayer;
 class RenderEmbeddedObject;
 class RenderPart;
+class ScrollingCoordinator;
 #if ENABLE(VIDEO)
 class RenderVideo;
 #endif
-#if ENABLE(THREADED_SCROLLING)
-class ScrollingCoordinator;
-#endif
 
 enum CompositingUpdateType {
-    CompositingUpdateAfterLayoutOrStyleChange,
+    CompositingUpdateAfterStyleChange,
+    CompositingUpdateAfterLayout,
     CompositingUpdateOnHitTest,
     CompositingUpdateOnScroll
 };
@@ -68,7 +65,9 @@ public:
     // This will make a compositing layer at the root automatically, and hook up to
     // the native view/window system.
     void enableCompositingMode(bool enable = true);
-    
+
+    bool inForcedCompositingMode() const { return m_forceCompositingMode; }
+
     // Returns true if the accelerated compositing is enabled
     bool hasAcceleratedCompositing() const { return m_hasAcceleratedCompositing; }
 
@@ -100,7 +99,7 @@ public:
     void didFlushChangesForLayer(RenderLayer*);
     
     // Rebuild the tree of compositing layers
-    void updateCompositingLayers(CompositingUpdateType = CompositingUpdateAfterLayoutOrStyleChange, RenderLayer* updateRoot = 0);
+    void updateCompositingLayers(CompositingUpdateType, RenderLayer* updateRoot = 0);
     // This is only used when state changes and we do not exepect a style update or layout to happen soon (e.g. when
     // we discover that an iframe is overlapped during painting).
     void scheduleCompositingLayerUpdate();
@@ -121,7 +120,7 @@ public:
     bool needsContentsCompositingLayer(const RenderLayer*) const;
     // Return the bounding box required for compositing layer and its childern, relative to ancestorLayer.
     // If layerBoundingBox is not 0, on return it contains the bounding box of this layer only.
-    LayoutRect calculateCompositedBounds(const RenderLayer*, const RenderLayer* ancestorLayer);
+    IntRect calculateCompositedBounds(const RenderLayer*, const RenderLayer* ancestorLayer);
 
     // Repaint the appropriate layers when the given RenderLayer starts or stops being composited.
     void repaintOnCompositingChange(RenderLayer*);
@@ -134,7 +133,10 @@ public:
     RenderLayer* enclosingNonStackingClippingLayer(const RenderLayer* layer) const;
 
     // Repaint parts of all composited layers that intersect the given absolute rectangle.
-    void repaintCompositedLayersAbsoluteRect(const LayoutRect&);
+    void repaintCompositedLayersAbsoluteRect(const IntRect&);
+
+    // Returns true if the given layer needs it own backing store.
+    bool requiresOwnBackingStore(const RenderLayer*, const RenderLayer* compositingAncestorLayer) const;
 
     RenderLayer* rootRenderLayer() const;
     GraphicsLayer* rootGraphicsLayer() const;
@@ -162,8 +164,6 @@ public:
         --m_compositedLayerCount;
     }
     
-    void didStartAcceleratedAnimation(CSSPropertyID);
-    
 #if ENABLE(VIDEO)
     // Use by RenderVideo to ask if it should try to use accelerated compositing.
     bool canAccelerateVideoRendering(RenderVideo*) const;
@@ -178,16 +178,14 @@ public:
     static bool allowsIndependentlyCompositedFrames(const FrameView*);
     bool shouldPropagateCompositingToEnclosingFrame() const;
 
-    HTMLFrameOwnerElement* enclosingFrameElement() const;
-
     static RenderLayerCompositor* frameContentsCompositor(RenderPart*);
     // Return true if the layers changed.
     static bool parentFrameContentLayers(RenderPart*);
 
     // Update the geometry of the layers used for clipping and scrolling in frames.
-    void frameViewDidChangeLocation(const LayoutPoint& contentsOffset);
+    void frameViewDidChangeLocation(const IntPoint& contentsOffset);
     void frameViewDidChangeSize();
-    void frameViewDidScroll(const LayoutPoint& = LayoutPoint());
+    void frameViewDidScroll();
 
     String layerTreeAsText(bool showDebugInfo = false);
 
@@ -201,26 +199,29 @@ public:
     virtual void didCommitChangesForLayer(const GraphicsLayer*) const;
     
     bool keepLayersPixelAligned() const;
+    bool acceleratedDrawingEnabled() const { return m_acceleratedDrawingEnabled; }
 
     void deviceOrPageScaleFactorChanged();
 
     GraphicsLayer* layerForHorizontalScrollbar() const { return m_layerForHorizontalScrollbar.get(); }
     GraphicsLayer* layerForVerticalScrollbar() const { return m_layerForVerticalScrollbar.get(); }
     GraphicsLayer* layerForScrollCorner() const { return m_layerForScrollCorner.get(); }
-#if PLATFORM(CHROMIUM) && ENABLE(RUBBER_BANDING)
+#if ENABLE(RUBBER_BANDING)
     GraphicsLayer* layerForOverhangAreas() const { return m_layerForOverhangAreas.get(); }
 #endif
 
+    void documentBackgroundColorDidChange();
+
 private:
+    class OverlapMap;
+
     // GraphicsLayerClient Implementation
     virtual void notifyAnimationStarted(const GraphicsLayer*, double) { }
     virtual void notifySyncRequired(const GraphicsLayer*) { scheduleLayerFlush(); }
-    virtual void paintContents(const GraphicsLayer*, GraphicsContext&, GraphicsLayerPaintingPhase, const LayoutRect&);
+    virtual void paintContents(const GraphicsLayer*, GraphicsContext&, GraphicsLayerPaintingPhase, const IntRect&);
 
-    // These calls return false always. They are saying that the layers associated with this client
-    // (the clipLayer and scrollLayer) should never show debugging info.
-    virtual bool showDebugBorders() const { return false; }
-    virtual bool showRepaintCounter() const { return false; }
+    virtual bool showDebugBorders(const GraphicsLayer*) const;
+    virtual bool showRepaintCounter(const GraphicsLayer*) const;
     
     // Whether the given RL needs a compositing layer.
     bool needsToBeComposited(const RenderLayer*) const;
@@ -235,12 +236,10 @@ private:
     void clearBackingForLayerIncludingDescendants(RenderLayer*);
 
     // Repaint the given rect (which is layer's coords), and regions of child layers that intersect that rect.
-    void recursiveRepaintLayerRect(RenderLayer*, const LayoutRect&);
+    void recursiveRepaintLayerRect(RenderLayer*, const IntRect&);
 
-    typedef HashMap<RenderLayer*, LayoutRect> OverlapMap;
-    void addToOverlapMap(OverlapMap&, RenderLayer*, LayoutRect& layerBounds, bool& boundsComputed);
+    void addToOverlapMap(OverlapMap&, RenderLayer*, IntRect& layerBounds, bool& boundsComputed);
     void addToOverlapMapRecursive(OverlapMap&, RenderLayer*);
-    static bool overlapsCompositedLayers(OverlapMap&, const LayoutRect& layerBounds);
 
     void updateCompositingLayersTimerFired(Timer<RenderLayerCompositor>*);
 
@@ -248,18 +247,19 @@ private:
     void computeCompositingRequirements(RenderLayer*, OverlapMap*, struct CompositingState&, bool& layersChanged);
     
     // Recurses down the tree, parenting descendant compositing layers and collecting an array of child layers for the current compositing layer.
-    void rebuildCompositingLayerTree(RenderLayer*, Vector<GraphicsLayer*>& childGraphicsLayersOfEnclosingLayer);
+    void rebuildCompositingLayerTree(RenderLayer*, Vector<GraphicsLayer*>& childGraphicsLayersOfEnclosingLayer, int depth);
 
     // Recurses down the tree, updating layer geometry only.
-    void updateLayerTreeGeometry(RenderLayer*);
+    void updateLayerTreeGeometry(RenderLayer*, int depth);
     
     // Hook compositing layers together
     void setCompositingParent(RenderLayer* childLayer, RenderLayer* parentLayer);
     void removeCompositedChildren(RenderLayer*);
 
     bool layerHas3DContent(const RenderLayer*) const;
-    bool hasNonIdentity3DTransform(RenderObject*) const;
-    
+    bool hasNonAffineTransform(RenderObject*) const;
+    bool isRunningAcceleratedTransformAnimation(RenderObject*) const;
+
     bool hasAnyAdditionalCompositedLayers(const RenderLayer* rootLayer) const;
 
     void ensureRootLayer();
@@ -276,6 +276,8 @@ private:
 
     bool isFlushingLayers() const { return m_flushingLayers; }
 
+    ScrollingCoordinator* scrollingCoordinator() const;
+
     // Whether a running transition or animation enforces the need for a compositing layer.
     bool requiresCompositingForAnimation(RenderObject*) const;
     bool requiresCompositingForTransform(RenderObject*) const;
@@ -284,7 +286,7 @@ private:
     bool requiresCompositingForPlugin(RenderObject*) const;
     bool requiresCompositingForFrame(RenderObject*) const;
     bool requiresCompositingWhenDescendantsAreCompositing(RenderObject*) const;
-    bool requiresCompositingForFullScreen(RenderObject*) const;
+    bool requiresCompositingForFilters(RenderObject*) const;
     bool requiresCompositingForScrollableFrame() const;
     bool requiresCompositingForPosition(RenderObject*, const RenderLayer*) const;
 
@@ -292,12 +294,14 @@ private:
     bool requiresHorizontalScrollbarLayer() const;
     bool requiresVerticalScrollbarLayer() const;
     bool requiresScrollCornerLayer() const;
-#if PLATFORM(CHROMIUM) && ENABLE(RUBBER_BANDING)
+#if ENABLE(RUBBER_BANDING)
     bool requiresOverhangAreasLayer() const;
+    bool requiresContentShadowLayer() const;
 #endif
 
-#if ENABLE(THREADED_SCROLLING)
-    ScrollingCoordinator* scrollingCoordinator() const;
+#if !LOG_DISABLED
+    const char* reasonForCompositing(const RenderLayer*);
+    void logLayerInfo(const RenderLayer*, int depth);
 #endif
 
 private:
@@ -311,14 +315,12 @@ private:
     int m_compositedLayerCount;
     bool m_showDebugBorders;
     bool m_showRepaintCounter;
+    bool m_acceleratedDrawingEnabled;
     bool m_compositingConsultsOverlap;
 
     // When true, we have to wait until layout has happened before we can decide whether to enter compositing mode,
     // because only then do we know the final size of plugins and iframes.
-    // FIXME: once set, this is never cleared.
-    mutable bool m_compositingDependsOnGeometry;
-
-    mutable bool m_compositingNeedsUpdate;
+    mutable bool m_reevaluateCompositingAfterLayout;
 
     bool m_compositing;
     bool m_compositingLayersNeedRebuild;
@@ -338,11 +340,17 @@ private:
     OwnPtr<GraphicsLayer> m_layerForHorizontalScrollbar;
     OwnPtr<GraphicsLayer> m_layerForVerticalScrollbar;
     OwnPtr<GraphicsLayer> m_layerForScrollCorner;
-#if PLATFORM(CHROMIUM) && ENABLE(RUBBER_BANDING)
+#if ENABLE(RUBBER_BANDING)
     OwnPtr<GraphicsLayer> m_layerForOverhangAreas;
+    OwnPtr<GraphicsLayer> m_contentShadowLayer;
 #endif
-#if PROFILE_LAYER_REBUILD
+
+#if !LOG_DISABLED
     int m_rootLayerUpdateCount;
+    int m_obligateCompositedLayerCount; // count of layer that have to be composited.
+    int m_secondaryCompositedLayerCount; // count of layers that have to be composited because of stacking or overlap.
+    double m_obligatoryBackingAreaMegaPixels;
+    double m_secondaryBackingAreaMegaPixels;
 #endif
 };
 

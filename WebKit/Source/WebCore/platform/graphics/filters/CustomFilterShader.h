@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 Adobe Systems Incorporated. All Rights Reserved.
+ * Copyright (C) 2011 Adobe Systems Incorporated. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -63,6 +63,8 @@ public:
     int samplerLocation() const { return m_samplerLocation; }
     int contentSamplerLocation() const { return m_contentSamplerLocation; }
     int samplerSizeLocation() const { return m_samplerSizeLocation; }
+
+    int uniformLocationByName(const String&);
     
     bool isInitialized() const { return m_isInitialized; }
     

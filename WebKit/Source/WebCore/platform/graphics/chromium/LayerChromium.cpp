@@ -33,14 +33,15 @@
 #if USE(ACCELERATED_COMPOSITING)
 #include "LayerChromium.h"
 
-#include "cc/CCLayerImpl.h"
-#include "cc/CCLayerTreeHost.h"
-#if USE(SKIA)
 #include "NativeImageSkia.h"
 #include "PlatformContextSkia.h"
-#endif
 #include "RenderLayerBacking.h"
 #include "TextStream.h"
+#include "cc/CCAnimationEvents.h"
+#include "cc/CCLayerAnimationController.h"
+#include "cc/CCLayerAnimationDelegate.h"
+#include "cc/CCLayerImpl.h"
+#include "cc/CCLayerTreeHost.h"
 #include "skia/ext/platform_canvas.h"
 
 namespace WebCore {
@@ -49,33 +50,43 @@ using namespace std;
 
 static int s_nextLayerId = 1;
 
-PassRefPtr<LayerChromium> LayerChromium::create(CCLayerDelegate* delegate)
+PassRefPtr<LayerChromium> LayerChromium::create()
 {
-    return adoptRef(new LayerChromium(delegate));
+    return adoptRef(new LayerChromium());
 }
 
-LayerChromium::LayerChromium(CCLayerDelegate* delegate)
-    : m_delegate(delegate)
-    , m_needsDisplay(false)
+LayerChromium::LayerChromium()
+    : m_needsDisplay(false)
     , m_layerId(s_nextLayerId++)
     , m_parent(0)
+    , m_layerTreeHost(0)
+    , m_layerAnimationController(CCLayerAnimationController::create(this))
     , m_scrollable(false)
+    , m_shouldScrollOnMainThread(false)
+    , m_haveWheelEventHandlers(false)
+    , m_nonFastScrollableRegionChanged(false)
     , m_anchorPoint(0.5, 0.5)
     , m_backgroundColor(0, 0, 0, 0)
     , m_debugBorderWidth(0)
     , m_opacity(1.0)
     , m_anchorPointZ(0)
+    , m_isDrawable(false)
     , m_masksToBounds(false)
     , m_opaque(false)
     , m_doubleSided(true)
     , m_usesLayerClipping(false)
     , m_isNonCompositedContent(false)
     , m_preserves3D(false)
+    , m_alwaysReserveTextures(false)
+    , m_drawCheckerboardForMissingTiles(false)
     , m_replicaLayer(0)
     , m_drawOpacity(0)
+    , m_drawOpacityIsAnimating(false)
     , m_targetRenderSurface(0)
+    , m_drawTransformIsAnimating(false)
+    , m_screenSpaceTransformIsAnimating(false)
     , m_contentsScale(1.0)
-    , m_pageScaleDirty(false)
+    , m_layerAnimationDelegate(0)
 {
 }
 
@@ -89,32 +100,15 @@ LayerChromium::~LayerChromium()
     removeAllChildren();
 }
 
-void LayerChromium::cleanupResources()
+void LayerChromium::setIsNonCompositedContent(bool isNonCompositedContent)
 {
-}
-
-void LayerChromium::cleanupResourcesRecursive()
-{
-    for (size_t i = 0; i < children().size(); ++i)
-        children()[i]->cleanupResourcesRecursive();
-
-    if (maskLayer())
-        maskLayer()->cleanupResourcesRecursive();
-    if (replicaLayer())
-        replicaLayer()->cleanupResourcesRecursive();
-
-    cleanupResources();
+    m_isNonCompositedContent = isNonCompositedContent;
 }
 
 void LayerChromium::setLayerTreeHost(CCLayerTreeHost* host)
 {
     if (m_layerTreeHost == host)
         return;
-
-    // If we're changing hosts then we need to free up any resources
-    // allocated by the old host.
-    if (m_layerTreeHost)
-        cleanupResources();
 
     m_layerTreeHost = host;
 
@@ -220,12 +214,10 @@ void LayerChromium::setBounds(const IntSize& size)
 
     m_bounds = size;
 
-    if (firstResize || m_pageScaleDirty)
+    if (firstResize)
         setNeedsDisplay();
     else
         setNeedsCommit();
-
-    m_pageScaleDirty = false;
 }
 
 const LayerChromium* LayerChromium::rootLayer() const
@@ -294,8 +286,10 @@ void LayerChromium::setMaskLayer(LayerChromium* maskLayer)
     if (m_maskLayer)
         m_maskLayer->setLayerTreeHost(0);
     m_maskLayer = maskLayer;
-    if (m_maskLayer)
-        m_maskLayer->setLayerTreeHost(m_layerTreeHost.get());
+    if (m_maskLayer) {
+        m_maskLayer->setLayerTreeHost(m_layerTreeHost);
+        m_maskLayer->setIsMask(true);
+    }
     setNeedsCommit();
 }
 
@@ -307,7 +301,25 @@ void LayerChromium::setReplicaLayer(LayerChromium* layer)
         m_replicaLayer->setLayerTreeHost(0);
     m_replicaLayer = layer;
     if (m_replicaLayer)
-        m_replicaLayer->setLayerTreeHost(m_layerTreeHost.get());
+        m_replicaLayer->setLayerTreeHost(m_layerTreeHost);
+    setNeedsCommit();
+}
+
+void LayerChromium::setFilters(const FilterOperations& filters)
+{
+    if (m_filters == filters)
+        return;
+    m_filters = filters;
+    setNeedsCommit();
+    if (!filters.isEmpty())
+        CCLayerTreeHost::setNeedsFilterContext(true);
+}
+
+void LayerChromium::setBackgroundFilters(const FilterOperations& backgroundFilters)
+{
+    if (m_backgroundFilters == backgroundFilters)
+        return;
+    m_backgroundFilters = backgroundFilters;
     setNeedsCommit();
 }
 
@@ -319,12 +331,17 @@ void LayerChromium::setOpacity(float opacity)
     setNeedsCommit();
 }
 
+bool LayerChromium::opacityIsAnimating() const
+{
+    return m_layerAnimationController->isAnimatingProperty(CCActiveAnimation::Opacity);
+}
+
 void LayerChromium::setOpaque(bool opaque)
 {
     if (m_opaque == opaque)
         return;
     m_opaque = opaque;
-    setNeedsCommit();
+    setNeedsDisplay();
 }
 
 void LayerChromium::setPosition(const FloatPoint& position)
@@ -351,11 +368,24 @@ void LayerChromium::setTransform(const TransformationMatrix& transform)
     setNeedsCommit();
 }
 
+bool LayerChromium::transformIsAnimating() const
+{
+    return m_layerAnimationController->isAnimatingProperty(CCActiveAnimation::Transform);
+}
+
 void LayerChromium::setScrollPosition(const IntPoint& scrollPosition)
 {
     if (m_scrollPosition == scrollPosition)
         return;
     m_scrollPosition = scrollPosition;
+    setNeedsCommit();
+}
+
+void LayerChromium::setMaxScrollPosition(const IntSize& maxScrollPosition)
+{
+    if (m_maxScrollPosition == maxScrollPosition)
+        return;
+    m_maxScrollPosition = maxScrollPosition;
     setNeedsCommit();
 }
 
@@ -367,6 +397,39 @@ void LayerChromium::setScrollable(bool scrollable)
     setNeedsCommit();
 }
 
+void LayerChromium::setShouldScrollOnMainThread(bool shouldScrollOnMainThread)
+{
+    if (m_shouldScrollOnMainThread == shouldScrollOnMainThread)
+        return;
+    m_shouldScrollOnMainThread = shouldScrollOnMainThread;
+    setNeedsCommit();
+}
+
+void LayerChromium::setHaveWheelEventHandlers(bool haveWheelEventHandlers)
+{
+    if (m_haveWheelEventHandlers == haveWheelEventHandlers)
+        return;
+    m_haveWheelEventHandlers = haveWheelEventHandlers;
+    setNeedsCommit();
+}
+
+void LayerChromium::setNonFastScrollableRegion(const Region& region)
+{
+    if (m_nonFastScrollableRegion == region)
+        return;
+    m_nonFastScrollableRegion = region;
+    m_nonFastScrollableRegionChanged = true;
+    setNeedsCommit();
+}
+
+void LayerChromium::setDrawCheckerboardForMissingTiles(bool checkerboard)
+{
+    if (m_drawCheckerboardForMissingTiles == checkerboard)
+        return;
+    m_drawCheckerboardForMissingTiles = checkerboard;
+    setNeedsCommit();
+}
+
 void LayerChromium::setDoubleSided(bool doubleSided)
 {
     if (m_doubleSided == doubleSided)
@@ -375,18 +438,24 @@ void LayerChromium::setDoubleSided(bool doubleSided)
     setNeedsCommit();
 }
 
+void LayerChromium::setIsDrawable(bool isDrawable)
+{
+    if (m_isDrawable == isDrawable)
+        return;
+
+    m_isDrawable = isDrawable;
+    setNeedsCommit();
+}
+
 LayerChromium* LayerChromium::parent() const
 {
     return m_parent;
 }
 
-void LayerChromium::setName(const String& name)
-{
-    m_name = name;
-}
-
 void LayerChromium::setNeedsDisplayRect(const FloatRect& dirtyRect)
 {
+    m_updateRect.unite(dirtyRect);
+
     // Simply mark the contents as dirty. For non-root layers, the call to
     // setNeedsCommit will schedule a fresh compositing pass.
     // For the root layer, setNeedsCommit has no effect.
@@ -405,19 +474,50 @@ void LayerChromium::pushPropertiesTo(CCLayerImpl* layer)
     layer->setContentBounds(contentBounds());
     layer->setDebugBorderColor(m_debugBorderColor);
     layer->setDebugBorderWidth(m_debugBorderWidth);
+    layer->setDebugName(m_debugName.isolatedCopy()); // We have to use isolatedCopy() here to safely pass ownership to another thread.
     layer->setDoubleSided(m_doubleSided);
+    layer->setDrawCheckerboardForMissingTiles(m_drawCheckerboardForMissingTiles);
     layer->setDrawsContent(drawsContent());
+    if (CCProxy::hasImplThread()) {
+        // Since FilterOperations contains a vector of RefPtrs, we must deep copy the filters.
+        FilterOperations filtersCopy;
+        for (unsigned i = 0; i < m_filters.size(); ++i) {
+            RefPtr<FilterOperation> clone = m_filters.at(i)->clone();
+            if (clone)
+                filtersCopy.operations().append(clone);
+        }
+        layer->setFilters(filtersCopy);
+    } else
+        layer->setFilters(filters());
+
+    layer->setFilters(filters());
+    layer->setBackgroundFilters(backgroundFilters());
     layer->setIsNonCompositedContent(m_isNonCompositedContent);
     layer->setMasksToBounds(m_masksToBounds);
     layer->setScrollable(m_scrollable);
-    layer->setName(m_name);
+    layer->setShouldScrollOnMainThread(m_shouldScrollOnMainThread);
+    layer->setHaveWheelEventHandlers(m_haveWheelEventHandlers);
+    // Copying a Region is more expensive than most layer properties, since it involves copying two Vectors that may be
+    // arbitrarily large depending on page content, so we only push the property if it's changed.
+    if (m_nonFastScrollableRegionChanged) {
+        layer->setNonFastScrollableRegion(m_nonFastScrollableRegion);
+        m_nonFastScrollableRegionChanged = false;
+    }
     layer->setOpaque(m_opaque);
-    layer->setOpacity(m_opacity);
+    if (!opacityIsAnimating())
+        layer->setOpacity(m_opacity);
     layer->setPosition(m_position);
     layer->setPreserves3D(preserves3D());
     layer->setScrollPosition(m_scrollPosition);
+    layer->setMaxScrollPosition(m_maxScrollPosition);
     layer->setSublayerTransform(m_sublayerTransform);
-    layer->setTransform(m_transform);
+    if (!transformIsAnimating())
+        layer->setTransform(m_transform);
+
+    // If the main thread commits multiple times before the impl thread actually draws, then damage tracking
+    // will become incorrect if we simply clobber the updateRect here. The CCLayerImpl's updateRect needs to
+    // accumulate (i.e. union) any update changes that have occurred on the main thread.
+    m_updateRect.uniteIfNonZero(layer->updateRect());
     layer->setUpdateRect(m_updateRect);
 
     layer->setScrollDelta(layer->scrollDelta() - layer->sentScrollDelta());
@@ -428,11 +528,13 @@ void LayerChromium::pushPropertiesTo(CCLayerImpl* layer)
     if (replicaLayer())
         replicaLayer()->pushPropertiesTo(layer->replicaLayer());
 
+    m_layerAnimationController->pushAnimationUpdatesTo(layer->layerAnimationController());
+
     // Reset any state that should be cleared for the next update.
     m_updateRect = FloatRect();
 }
 
-PassRefPtr<CCLayerImpl> LayerChromium::createCCLayerImpl()
+PassOwnPtr<CCLayerImpl> LayerChromium::createCCLayerImpl()
 {
     return CCLayerImpl::create(m_layerId);
 }
@@ -449,6 +551,13 @@ void LayerChromium::setDebugBorderWidth(float width)
     setNeedsCommit();
 }
 
+void LayerChromium::setDebugName(const String& debugName)
+{
+    m_debugName = debugName;
+    setNeedsCommit();
+}
+
+
 void LayerChromium::setContentsScale(float contentsScale)
 {
     if (!needsContentsScale() || m_contentsScale == contentsScale)
@@ -461,6 +570,7 @@ void LayerChromium::createRenderSurface()
 {
     ASSERT(!m_renderSurface);
     m_renderSurface = adoptPtr(new RenderSurfaceChromium(this));
+    setTargetRenderSurface(m_renderSurface.get());
 }
 
 bool LayerChromium::descendantDrawsContent()
@@ -470,6 +580,86 @@ bool LayerChromium::descendantDrawsContent()
             return true;
     }
     return false;
+}
+
+void LayerChromium::setOpacityFromAnimation(float opacity)
+{
+    // This is called due to an ongoing accelerated animation. Since this animation is
+    // also being run on the impl thread, there is no need to request a commit to push
+    // this value over, so set the value directly rather than calling setOpacity.
+    m_opacity = opacity;
+}
+
+void LayerChromium::setTransformFromAnimation(const TransformationMatrix& transform)
+{
+    // This is called due to an ongoing accelerated animation. Since this animation is
+    // also being run on the impl thread, there is no need to request a commit to push
+    // this value over, so set this value directly rather than calling setTransform.
+    m_transform = transform;
+}
+
+bool LayerChromium::addAnimation(const KeyframeValueList& values, const IntSize& boxSize, const Animation* animation, int animationId, int groupId, double timeOffset)
+{
+    if (!m_layerTreeHost || !m_layerTreeHost->settings().threadedAnimationEnabled)
+        return false;
+
+    bool addedAnimation = m_layerAnimationController->addAnimation(values, boxSize, animation, animationId, groupId, timeOffset);
+    if (addedAnimation)
+        setNeedsCommit();
+    return addedAnimation;
+}
+
+void LayerChromium::pauseAnimation(int animationId, double timeOffset)
+{
+    m_layerAnimationController->pauseAnimation(animationId, timeOffset);
+    setNeedsCommit();
+}
+
+void LayerChromium::removeAnimation(int animationId)
+{
+    m_layerAnimationController->removeAnimation(animationId);
+    setNeedsCommit();
+}
+
+void LayerChromium::suspendAnimations(double monotonicTime)
+{
+    m_layerAnimationController->suspendAnimations(monotonicTime);
+    setNeedsCommit();
+}
+
+void LayerChromium::resumeAnimations(double monotonicTime)
+{
+    m_layerAnimationController->resumeAnimations(monotonicTime);
+    setNeedsCommit();
+}
+
+void LayerChromium::setLayerAnimationController(PassOwnPtr<CCLayerAnimationController> layerAnimationController)
+{
+    m_layerAnimationController = layerAnimationController;
+    setNeedsCommit();
+}
+
+bool LayerChromium::hasActiveAnimation() const
+{
+    return m_layerAnimationController->hasActiveAnimation();
+}
+
+void LayerChromium::notifyAnimationStarted(const CCAnimationEvent& event, double wallClockTime)
+{
+    m_layerAnimationController->notifyAnimationStarted(event);
+    m_layerAnimationDelegate->notifyAnimationStarted(wallClockTime);
+}
+
+void LayerChromium::notifyAnimationFinished(double wallClockTime)
+{
+    m_layerAnimationDelegate->notifyAnimationFinished(wallClockTime);
+}
+
+Region LayerChromium::visibleContentOpaqueRegion() const
+{
+    if (opaque())
+        return visibleLayerRect();
+    return Region();
 }
 
 void sortLayers(Vector<RefPtr<LayerChromium> >::iterator, Vector<RefPtr<LayerChromium> >::iterator, void*)

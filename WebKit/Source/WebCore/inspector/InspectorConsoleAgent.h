@@ -25,6 +25,8 @@
 #ifndef InspectorConsoleAgent_h
 #define InspectorConsoleAgent_h
 
+#if ENABLE(INSPECTOR)
+
 #include "ConsoleTypes.h"
 #include "InspectorBaseAgent.h"
 #include "InspectorFrontend.h"
@@ -35,8 +37,6 @@
 #include <wtf/Vector.h>
 
 namespace WebCore {
-
-#if ENABLE(INSPECTOR)
 
 class ConsoleMessage;
 class DOMWindow;
@@ -52,14 +52,14 @@ class ScriptProfile;
 
 typedef String ErrorString;
 
-class InspectorConsoleAgent : public InspectorBaseAgent<InspectorConsoleAgent> {
+class InspectorConsoleAgent : public InspectorBaseAgent<InspectorConsoleAgent>, public InspectorBackendDispatcher::ConsoleCommandHandler {
     WTF_MAKE_NONCOPYABLE(InspectorConsoleAgent);
 public:
     InspectorConsoleAgent(InstrumentingAgents*, InspectorState*, InjectedScriptManager*);
     virtual ~InspectorConsoleAgent();
 
-    void enable(ErrorString*);
-    void disable(ErrorString*);
+    virtual void enable(ErrorString*);
+    virtual void disable(ErrorString*);
     virtual void clearMessages(ErrorString*);
     void reset();
 
@@ -68,7 +68,8 @@ public:
     virtual void restore();
 
     void addMessageToConsole(MessageSource, MessageType, MessageLevel, const String& message, PassRefPtr<ScriptArguments>, PassRefPtr<ScriptCallStack>);
-    void addMessageToConsole(MessageSource, MessageType, MessageLevel, const String& message, unsigned lineNumber, const String& scriptId);
+    void addMessageToConsole(MessageSource, MessageType, MessageLevel, const String& message, const String& scriptId, unsigned lineNumber);
+    Vector<unsigned> consoleMessageArgumentCounts();
 
     void startTiming(const String& title);
     void stopTiming(const String& title, PassRefPtr<ScriptCallStack>);
@@ -83,8 +84,9 @@ public:
     void addProfileFinishedMessageToConsole(PassRefPtr<ScriptProfile>, unsigned lineNumber, const String& sourceURL);
     void addStartProfilingMessageToConsole(const String& title, unsigned lineNumber, const String& sourceURL);
 #endif
-    void setMonitoringXHREnabled(ErrorString* error, bool enabled);
+    virtual void setMonitoringXHREnabled(ErrorString*, bool enabled);
     virtual void addInspectedNode(ErrorString*, int nodeId) = 0;
+    virtual void addInspectedHeapObject(ErrorString*, int inspectedHeapObjectId);
 
 protected:
     void addConsoleMessage(PassOwnPtr<ConsoleMessage>);
@@ -100,8 +102,8 @@ protected:
     HashMap<String, double> m_times;
 };
 
-#endif
-
 } // namespace WebCore
+
+#endif // ENABLE(INSPECTOR)
 
 #endif // !defined(InspectorConsoleAgent_h)

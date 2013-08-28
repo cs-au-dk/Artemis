@@ -20,7 +20,7 @@
 #include "config.h"
 #include "NotificationPresenterClientEfl.h"
 
-#if ENABLE(NOTIFICATIONS)
+#if ENABLE(NOTIFICATIONS) || ENABLE(LEGACY_NOTIFICATIONS)
 #include "NotImplemented.h"
 
 namespace WebCore {
@@ -45,6 +45,11 @@ void NotificationPresenterClientEfl::cancel(Notification* notification)
 }
 
 void NotificationPresenterClientEfl::notificationObjectDestroyed(Notification* notification)
+{
+    notImplemented();
+}
+
+void NotificationPresenterClientEfl::notificationControllerDestroyed()
 {
     notImplemented();
 }

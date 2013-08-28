@@ -62,16 +62,16 @@ bool SVGStopElement::isSupportedAttribute(const QualifiedName& attrName)
     return supportedAttributes.contains<QualifiedName, SVGAttributeHashTranslator>(attrName);
 }
 
-void SVGStopElement::parseMappedAttribute(Attribute* attr)
+void SVGStopElement::parseAttribute(Attribute* attr)
 {
     if (!isSupportedAttribute(attr->name())) {
-        SVGStyledElement::parseMappedAttribute(attr);
+        SVGStyledElement::parseAttribute(attr);
         return;
     }
 
     if (attr->name() == SVGNames::offsetAttr) {
         const String& value = attr->value();
-        if (value.endsWith("%"))
+        if (value.endsWith('%'))
             setOffsetBaseValue(value.left(value.length() - 1).toFloat() / 100.0f);
         else
             setOffsetBaseValue(value.toFloat());

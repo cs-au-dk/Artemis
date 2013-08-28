@@ -22,7 +22,6 @@
 #include "RenderSlider.h"
 
 #include "CSSPropertyNames.h"
-#include "CSSStyleSelector.h"
 #include "Document.h"
 #include "Event.h"
 #include "EventHandler.h"
@@ -40,6 +39,7 @@
 #include "ShadowRoot.h"
 #include "SliderThumbElement.h"
 #include "StepRange.h"
+#include "StyleResolver.h"
 #include <wtf/MathExtras.h>
 
 using std::min;
@@ -59,7 +59,7 @@ RenderSlider::~RenderSlider()
 {
 }
 
-int RenderSlider::baselinePosition(FontBaseline, bool /*firstLine*/, LineDirectionMode, LinePositionMode) const
+LayoutUnit RenderSlider::baselinePosition(FontBaseline, bool /*firstLine*/, LineDirectionMode, LinePositionMode) const
 {
     // FIXME: Patch this function for writing-mode.
     return height() + marginTop();

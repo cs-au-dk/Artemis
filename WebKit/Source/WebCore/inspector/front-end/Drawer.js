@@ -123,7 +123,7 @@ WebInspector.Drawer.prototype = {
         
         function animationFinished()
         {
-            WebInspector.inspectorView.currentPanel().statusBarResized();
+            WebInspector.inspectorView.currentPanel().doResize();
             if (this._view && this._view.afterShow)
                 this._view.afterShow();
             delete this._currentAnimation;
@@ -144,8 +144,7 @@ WebInspector.Drawer.prototype = {
 
         this._savedHeight = this.element.offsetHeight;
 
-        if (this.element === WebInspector.currentFocusElement() || this.element.isAncestor(WebInspector.currentFocusElement()))
-            WebInspector.setCurrentFocusElement(WebInspector.previousFocusElement());
+        WebInspector.restoreFocusFromElement(this.element);
 
         var anchoredItems = document.getElementById("anchored-status-bar-items");
 
@@ -252,7 +251,7 @@ WebInspector.Drawer.prototype = {
 
         this._statusBarDragOffset = event.pageY - this.element.totalOffsetTop();
 
-        event.stopPropagation();
+        event.consume();
     },
 
     _statusBarDragging: function(event)
@@ -266,8 +265,7 @@ WebInspector.Drawer.prototype = {
             WebInspector.inspectorView.currentPanel().doResize();
         this._view.doResize();
 
-        event.preventDefault();
-        event.stopPropagation();
+        event.consume(true);
     },
 
     _endStatusBarDragging: function(event)
@@ -277,7 +275,7 @@ WebInspector.Drawer.prototype = {
         this._savedHeight = this.element.offsetHeight;
         delete this._statusBarDragOffset;
 
-        event.stopPropagation();
+        event.consume();
     }
 }
 

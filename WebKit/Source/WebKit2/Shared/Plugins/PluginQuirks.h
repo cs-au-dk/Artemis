@@ -33,7 +33,7 @@ public:
     enum PluginQuirk {
         // Mac specific quirks:
 #if PLUGIN_ARCHITECTURE(MAC)
-        // The plug-in wants the call to getprogame() to return "WebKitPluginHost".
+        // The plug-in wants the call to getprogname() to return "WebKitPluginHost".
         // Adobe Flash Will not handle key down events otherwise.
         PrognameShouldBeWebKitPluginHost,
 
@@ -47,12 +47,6 @@ public:
         // FIXME: We could get more fancy here and check for specific values that we know are
         // transparent.
         MakeTransparentIfBackgroundAttributeExists,
-
-        // Whether we can short circuit some NPRuntime calls during plug-in initialization.
-        // The Flash plug-in uses NPRuntime to figure out the URL of the frame it is in, as well
-        // as the URL of the main frame. Since we know the exact NPRuntime calls the plug-in makes,
-        // we can return the right values without having to do sync IPC back into the web process.
-        CanShortCircuitSomeNPRuntimeCallsDuringInitialization,
 
         // Whether calling NPP_GetValue with NPPVpluginCoreAnimationLayer returns a retained Core Animation
         // layer or not. According to the NPAPI specifications, plug-in shouldn't return a retained layer but

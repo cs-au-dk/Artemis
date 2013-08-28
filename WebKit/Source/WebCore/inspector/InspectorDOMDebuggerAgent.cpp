@@ -30,14 +30,16 @@
 
 #include "config.h"
 
-#include "InspectorDOMDebuggerAgent.h"
-
 #if ENABLE(INSPECTOR) && ENABLE(JAVASCRIPT_DEBUGGER)
+
+#include "InspectorDOMDebuggerAgent.h"
 
 #include "HTMLElement.h"
 #include "InspectorAgent.h"
 #include "InspectorDOMAgent.h"
 #include "InspectorDebuggerAgent.h"
+#include "InspectorFrontend.h"
+#include "InspectorInstrumentation.h"
 #include "InspectorState.h"
 #include "InspectorValues.h"
 #include "InstrumentingAgents.h"
@@ -52,9 +54,8 @@ enum DOMBreakpointType {
     DOMBreakpointTypesCount
 };
 
-static const char* const domNativeBreakpointType = "DOM";
-static const char* const eventListenerNativeBreakpointType = "EventListener";
-static const char* const xhrNativeBreakpointType = "XHR";
+static const char* const listenerEventCategoryType = "listener:";
+static const char* const instrumentationEventCategoryType = "instrumentation:";
 
 const uint32_t inheritableDOMBreakpointTypesMask = (1 << SubtreeModified);
 const int domBreakpointDerivedTypeShift = 16;
@@ -124,6 +125,16 @@ void InspectorDOMDebuggerAgent::discardBindings()
 
 void InspectorDOMDebuggerAgent::setEventListenerBreakpoint(ErrorString* error, const String& eventName)
 {
+    setBreakpoint(error, String(listenerEventCategoryType) + eventName);
+}
+
+void InspectorDOMDebuggerAgent::setInstrumentationBreakpoint(ErrorString* error, const String& eventName)
+{
+    setBreakpoint(error, String(instrumentationEventCategoryType) + eventName);
+}
+
+void InspectorDOMDebuggerAgent::setBreakpoint(ErrorString* error, const String& eventName)
+{
     if (eventName.isEmpty()) {
         *error = "Event name is empty";
         return;
@@ -135,6 +146,16 @@ void InspectorDOMDebuggerAgent::setEventListenerBreakpoint(ErrorString* error, c
 }
 
 void InspectorDOMDebuggerAgent::removeEventListenerBreakpoint(ErrorString* error, const String& eventName)
+{
+    removeBreakpoint(error, String(listenerEventCategoryType) + eventName);
+}
+
+void InspectorDOMDebuggerAgent::removeInstrumentationBreakpoint(ErrorString* error, const String& eventName)
+{
+    removeBreakpoint(error, String(instrumentationEventCategoryType) + eventName);
+}
+
+void InspectorDOMDebuggerAgent::removeBreakpoint(ErrorString* error, const String& eventName)
 {
     if (eventName.isEmpty()) {
         *error = "Event name is empty";
@@ -151,7 +172,7 @@ void InspectorDOMDebuggerAgent::didInvalidateStyleAttr(Node* node)
     if (hasBreakpoint(node, AttributeModified)) {
         RefPtr<InspectorObject> eventData = InspectorObject::create();
         descriptionForDOMEvent(node, AttributeModified, false, eventData.get());
-        m_debuggerAgent->breakProgram(domNativeBreakpointType, eventData.release());
+        m_debuggerAgent->breakProgram(InspectorFrontend::Debugger::Reason::DOM, eventData.release());
     }
 }
 
@@ -246,12 +267,12 @@ void InspectorDOMDebuggerAgent::removeDOMBreakpoint(ErrorString* errorString, in
     }
 }
 
-void InspectorDOMDebuggerAgent::willInsertDOMNode(Node*, Node* parent)
+void InspectorDOMDebuggerAgent::willInsertDOMNode(Node* parent)
 {
     if (hasBreakpoint(parent, SubtreeModified)) {
         RefPtr<InspectorObject> eventData = InspectorObject::create();
         descriptionForDOMEvent(parent, SubtreeModified, true, eventData.get());
-        m_debuggerAgent->breakProgram(domNativeBreakpointType, eventData.release());
+        m_debuggerAgent->breakProgram(InspectorFrontend::Debugger::Reason::DOM, eventData.release());
     }
 }
 
@@ -261,11 +282,11 @@ void InspectorDOMDebuggerAgent::willRemoveDOMNode(Node* node)
     if (hasBreakpoint(node, NodeRemoved)) {
         RefPtr<InspectorObject> eventData = InspectorObject::create();
         descriptionForDOMEvent(node, NodeRemoved, false, eventData.get());
-        m_debuggerAgent->breakProgram(domNativeBreakpointType, eventData.release());
+        m_debuggerAgent->breakProgram(InspectorFrontend::Debugger::Reason::DOM, eventData.release());
     } else if (parentNode && hasBreakpoint(parentNode, SubtreeModified)) {
         RefPtr<InspectorObject> eventData = InspectorObject::create();
         descriptionForDOMEvent(node, SubtreeModified, false, eventData.get());
-        m_debuggerAgent->breakProgram(domNativeBreakpointType, eventData.release());
+        m_debuggerAgent->breakProgram(InspectorFrontend::Debugger::Reason::DOM, eventData.release());
     }
 }
 
@@ -274,7 +295,7 @@ void InspectorDOMDebuggerAgent::willModifyDOMAttr(Element* element)
     if (hasBreakpoint(element, AttributeModified)) {
         RefPtr<InspectorObject> eventData = InspectorObject::create();
         descriptionForDOMEvent(element, AttributeModified, false, eventData.get());
-        m_debuggerAgent->breakProgram(domNativeBreakpointType, eventData.release());
+        m_debuggerAgent->breakProgram(InspectorFrontend::Debugger::Reason::DOM, eventData.release());
     }
 }
 
@@ -286,16 +307,18 @@ void InspectorDOMDebuggerAgent::descriptionForDOMEvent(Node* target, int breakpo
     if ((1 << breakpointType) & inheritableDOMBreakpointTypesMask) {
         // For inheritable breakpoint types, target node isn't always the same as the node that owns a breakpoint.
         // Target node may be unknown to frontend, so we need to push it first.
-        RefPtr<InspectorObject> targetNodeObject = m_domAgent->resolveNode(target, InspectorDebuggerAgent::backtraceObjectGroup);
-        description->setObject("targetNode", targetNodeObject);
+        RefPtr<TypeBuilder::Runtime::RemoteObject> targetNodeObject = m_domAgent->resolveNode(target, InspectorDebuggerAgent::backtraceObjectGroup);
+        description->setValue("targetNode", targetNodeObject);
 
         // Find breakpoint owner node.
         if (!insertion)
             breakpointOwner = InspectorDOMAgent::innerParentNode(target);
         ASSERT(breakpointOwner);
         while (!(m_domBreakpoints.get(breakpointOwner) & (1 << breakpointType))) {
-            breakpointOwner = InspectorDOMAgent::innerParentNode(breakpointOwner);
-            ASSERT(breakpointOwner);
+            Node* parentNode = InspectorDOMAgent::innerParentNode(breakpointOwner);
+            if (!parentNode)
+                break;
+            breakpointOwner = parentNode;
         }
 
         if (breakpointType == SubtreeModified)
@@ -333,9 +356,9 @@ void InspectorDOMDebuggerAgent::updateSubtreeBreakpoints(Node* node, uint32_t ro
         updateSubtreeBreakpoints(child, newRootMask, set);
 }
 
-void InspectorDOMDebuggerAgent::pauseOnNativeEventIfNeeded(const String& categoryType, const String& eventName, bool synchronous)
+void InspectorDOMDebuggerAgent::pauseOnNativeEventIfNeeded(bool isDOMEvent, const String& eventName, bool synchronous)
 {
-    String fullEventName = categoryType + ':' + eventName;
+    String fullEventName = (isDOMEvent ? listenerEventCategoryType : instrumentationEventCategoryType) + eventName;
     RefPtr<InspectorObject> eventListenerBreakpoints = m_state->getObject(DOMDebuggerAgentState::eventListenerBreakpoints);
     if (eventListenerBreakpoints->find(fullEventName) == eventListenerBreakpoints->end())
         return;
@@ -343,9 +366,9 @@ void InspectorDOMDebuggerAgent::pauseOnNativeEventIfNeeded(const String& categor
     RefPtr<InspectorObject> eventData = InspectorObject::create();
     eventData->setString("eventName", fullEventName);
     if (synchronous)
-        m_debuggerAgent->breakProgram(eventListenerNativeBreakpointType, eventData.release());
+        m_debuggerAgent->breakProgram(InspectorFrontend::Debugger::Reason::EventListener, eventData.release());
     else
-        m_debuggerAgent->schedulePauseOnNextStatement(eventListenerNativeBreakpointType, eventData.release());
+        m_debuggerAgent->schedulePauseOnNextStatement(InspectorFrontend::Debugger::Reason::EventListener, eventData.release());
 }
 
 void InspectorDOMDebuggerAgent::setXHRBreakpoint(ErrorString*, const String& url)
@@ -393,7 +416,7 @@ void InspectorDOMDebuggerAgent::willSendXMLHttpRequest(const String& url)
     RefPtr<InspectorObject> eventData = InspectorObject::create();
     eventData->setString("breakpointURL", breakpointURL);
     eventData->setString("url", url);
-    m_debuggerAgent->breakProgram(xhrNativeBreakpointType, eventData.release());
+    m_debuggerAgent->breakProgram(InspectorFrontend::Debugger::Reason::XHR, eventData.release());
 }
 
 void InspectorDOMDebuggerAgent::clear()

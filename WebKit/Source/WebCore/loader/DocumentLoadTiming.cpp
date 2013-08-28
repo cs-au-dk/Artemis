@@ -72,6 +72,12 @@ void DocumentLoadTiming::markNavigationStart(Frame* frame)
     }
 }
 
+void DocumentLoadTiming::setNavigationStart(double navigationStart)
+{
+    ASSERT(m_referenceMonotonicTime && m_referenceWallTime);
+    m_navigationStart = navigationStart;
+}
+
 void DocumentLoadTiming::addRedirect(const KURL& redirectingUrl, const KURL& redirectedUrl)
 {
     m_redirectCount++;
@@ -88,6 +94,13 @@ double DocumentLoadTiming::convertMonotonicTimeToDocumentTime(double monotonicTi
     if (!monotonicTime)
         return 0.0;
     return m_referenceWallTime + monotonicTime - m_referenceMonotonicTime;
+}
+
+double DocumentLoadTiming::convertMonotonicTimeToZeroBasedDocumentTime(double monotonicTime) const
+{
+    if (!monotonicTime)
+        return 0.0;
+    return monotonicTime - m_referenceMonotonicTime;
 }
 
 } // namespace WebCore

@@ -84,6 +84,7 @@ private:
     virtual void subtreeHasChanged();
 
     virtual bool isEnumeratable() const { return true; }
+    virtual bool supportLabels() const OVERRIDE { return true; }
 
     virtual const AtomicString& formControlType() const;
 
@@ -93,7 +94,9 @@ private:
     virtual bool isTextFormControl() const { return true; }
 
     virtual void childrenChanged(bool changedByParser = false, Node* beforeChange = 0, Node* afterChange = 0, int childCountDelta = 0);
-    virtual void parseMappedAttribute(Attribute*);
+    virtual void parseAttribute(Attribute*) OVERRIDE;
+    virtual bool isPresentationAttribute(const QualifiedName&) const OVERRIDE;
+    virtual void collectStyleForAttribute(Attribute*, StylePropertySet*) OVERRIDE;
     virtual RenderObject* createRenderer(RenderArena*, RenderStyle*);
     virtual bool appendFormData(FormDataList&, bool);
     virtual void reset();

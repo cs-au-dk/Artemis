@@ -148,25 +148,30 @@ public:
     virtual void attachRootGraphicsLayer(WebCore::Frame*, WebCore::GraphicsLayer*) OVERRIDE;
     virtual void setNeedsOneShotDrawingSynchronization() OVERRIDE;
     virtual void scheduleCompositingLayerSync() OVERRIDE;
+
+    virtual CompositingTriggerFlags allowedCompositingTriggers() const
+    {
+        return static_cast<CompositingTriggerFlags>(
+            ThreeDTransformTrigger |
+            VideoTrigger |
+            PluginTrigger| 
+            CanvasTrigger |
+            AnimationTrigger);
+    }
 #endif
 
 #if ENABLE(VIDEO)
     virtual bool supportsFullscreenForNode(const WebCore::Node*) OVERRIDE;
     virtual void enterFullscreenForNode(WebCore::Node*) OVERRIDE;
     virtual void exitFullscreenForNode(WebCore::Node*) OVERRIDE;
-    virtual void fullScreenRendererChanged(WebCore::RenderBox*) OVERRIDE;
 #endif
     
 #if ENABLE(FULLSCREEN_API)
     virtual bool supportsFullScreenForElement(const WebCore::Element*, bool withKeyboard) OVERRIDE;
     virtual void enterFullScreenForElement(WebCore::Element*) OVERRIDE;
     virtual void exitFullScreenForElement(WebCore::Element*) OVERRIDE;
+    virtual void fullScreenRendererChanged(WebCore::RenderBox*) OVERRIDE;
 #endif
-
-    // FIXME: Remove once all ports are using client-based geolocation. https://bugs.webkit.org/show_bug.cgi?id=40373
-    // For client-based geolocation, these two methods have moved to WebGeolocationClient. https://bugs.webkit.org/show_bug.cgi?id=50061
-    virtual void requestGeolocationPermissionForFrame(WebCore::Frame*, WebCore::Geolocation*) OVERRIDE { }
-    virtual void cancelGeolocationPermissionRequestForFrame(WebCore::Frame*, WebCore::Geolocation*) OVERRIDE { }
 
     virtual bool selectItemWritingDirectionIsNatural() OVERRIDE;
     virtual bool selectItemAlignmentFollowsMenuWritingDirection() OVERRIDE;
@@ -174,11 +179,8 @@ public:
     virtual PassRefPtr<WebCore::PopupMenu> createPopupMenu(WebCore::PopupMenuClient*) const OVERRIDE;
     virtual PassRefPtr<WebCore::SearchPopupMenu> createSearchPopupMenu(WebCore::PopupMenuClient*) const OVERRIDE;
 
-#if ENABLE(CONTEXT_MENUS)
-    virtual void showContextMenu() OVERRIDE;
-#endif
-    
     virtual void numWheelEventHandlersChanged(unsigned) OVERRIDE { }
+    virtual void numTouchEventHandlersChanged(unsigned) OVERRIDE { }
     virtual bool shouldRubberBandInDirection(WebCore::ScrollDirection) const OVERRIDE { return false; }
 private:
     WebView *m_webView;

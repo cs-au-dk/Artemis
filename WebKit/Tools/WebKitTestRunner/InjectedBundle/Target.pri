@@ -7,9 +7,8 @@
 TEMPLATE = lib
 TARGET = WTRInjectedBundle
 
-mac:debug_and_release:TARGET = $$qtLibraryTarget($$TARGET)
-
 SOURCES += \
+    $${ROOT_WEBKIT_DIR}/Tools/DumpRenderTree/qt/QtInitializeTestFonts.cpp \
     AccessibilityController.cpp \
     AccessibilityTextMarker.cpp \
     AccessibilityTextMarkerRange.cpp \
@@ -36,6 +35,7 @@ SOURCES += \
 include(DerivedSources.pri)
 
 HEADERS += \
+    $${ROOT_WEBKIT_DIR}/Tools/DumpRenderTree/qt/QtInitializeTestFonts.h \
     AccessibilityController.h \
     AccessibilityTextMarker.h \
     AccessibilityTextMarkerRange.h \
@@ -50,29 +50,25 @@ HEADERS += \
 
 DESTDIR = $${ROOT_BUILD_DIR}/lib
 
-QT += declarative widgets
+QT += declarative widgets webkit
 
 load(features)
-load(wtf)
-load(javascriptcore)
-load(webcore)
 
-CONFIG += plugin qtwebkit
+WEBKIT += wtf javascriptcore webcore
 
-contains(config_test_fontconfig, yes) {
-    PKGCONFIG += fontconfig
-}
+CONFIG += plugin rpath
+
+contains(DEFINES, HAVE_FONTCONFIG=1): PKGCONFIG += fontconfig
 
 INCLUDEPATH += \
     $$PWD/.. \
     $$PWD/Bindings \
     $${ROOT_WEBKIT_DIR}/Source/WebCore/testing/js \
-    $${ROOT_WEBKIT_DIR}/Source/WebKit/qt/WebCoreSupport
+    $${ROOT_WEBKIT_DIR}/Source/WebKit/qt/WebCoreSupport \
+    $${ROOT_WEBKIT_DIR}/Tools/DumpRenderTree/qt
 
 PREFIX_HEADER = $$PWD/../WebKitTestRunnerPrefix.h
 *-g++*:QMAKE_CXXFLAGS += "-include $$PREFIX_HEADER"
-
-!embedded: PKGCONFIG += fontconfig
 
 linux-* {
     QMAKE_LFLAGS += -Wl,--no-undefined

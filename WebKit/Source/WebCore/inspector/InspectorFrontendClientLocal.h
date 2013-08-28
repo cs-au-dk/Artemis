@@ -67,8 +67,10 @@ public:
     virtual void requestDetachWindow();
     virtual void requestSetDockSide(const String&) { }
     virtual void changeAttachedWindowHeight(unsigned);
-    virtual bool canSaveAs() { return false; }
-    virtual void saveAs(const String&, const String&) { }
+    virtual void openInNewTab(const String& url);
+    virtual bool canSave() { return false; }
+    virtual void save(const String&, const String&, bool) { }
+    virtual void append(const String&, const String&) { }
 
     virtual void attachWindow() = 0;
     virtual void detachWindow() = 0;
@@ -76,6 +78,7 @@ public:
     virtual void sendMessageToBackend(const String& message);
 
     bool canAttachWindow();
+    void setDockingUnavailable(bool);
 
     static unsigned constrainedAttachedWindowHeight(unsigned preferredHeight, unsigned totalWindowHeight);
 
@@ -91,6 +94,10 @@ public:
     void stopProfilingJavaScript();
 
     void showConsole();
+
+    void showMainResourceForFrame(Frame*);
+    
+    void showResources();
 
 protected:
     virtual void setAttachedWindowHeight(unsigned) = 0;

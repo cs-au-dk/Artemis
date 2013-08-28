@@ -106,11 +106,7 @@ PassRefPtr<MediaControlRootElementChromium> MediaControlRootElementChromium::cre
     if (ec)
         return 0;
 
-    RefPtr<MediaControlPanelMuteButtonElement> panelMuteButton = MediaControlPanelMuteButtonElement::create(document, controls.get());
-    controls->m_panelMuteButton = panelMuteButton.get();
-    panel->appendChild(panelMuteButton.release(), ec, true);
-    if (ec)
-        return 0;
+    RefPtr<HTMLDivElement> panelVolumeControlContainer = HTMLDivElement::create(document);
 
     RefPtr<MediaControlVolumeSliderContainerElement> volumeSliderContainer = MediaControlVolumeSliderContainerElement::create(document);
 
@@ -121,7 +117,17 @@ PassRefPtr<MediaControlRootElementChromium> MediaControlRootElementChromium::cre
         return 0;
 
     controls->m_volumeSliderContainer = volumeSliderContainer.get();
-    panel->appendChild(volumeSliderContainer.release(), ec, true);
+    panelVolumeControlContainer->appendChild(volumeSliderContainer.release(), ec, true);
+    if (ec)
+        return 0;
+
+    RefPtr<MediaControlPanelMuteButtonElement> panelMuteButton = MediaControlPanelMuteButtonElement::create(document, controls.get());
+    controls->m_panelMuteButton = panelMuteButton.get();
+    panelVolumeControlContainer->appendChild(panelMuteButton.release(), ec, true);
+    if (ec)
+        return 0;
+
+    panel->appendChild(panelVolumeControlContainer, ec, true);
     if (ec)
         return 0;
 
@@ -158,19 +164,19 @@ void MediaControlRootElementChromium::setMediaController(MediaControllerInterfac
 #if ENABLE(VIDEO_TRACK)
     if (m_textDisplayContainer)
         m_textDisplayContainer->setMediaController(controller);
-    if (m_textTrackDisplay)
-        m_textTrackDisplay->setMediaController(controller);
 #endif
     reset();
 }
 
 void MediaControlRootElementChromium::show()
 {
+    m_panel->setIsDisplayed(true);
     m_panel->show();
 }
 
 void MediaControlRootElementChromium::hide()
 {
+    m_panel->setIsDisplayed(false);
     m_panel->hide();
 }
 
@@ -335,16 +341,8 @@ void MediaControlRootElementChromium::createTextTrackDisplay()
     RefPtr<MediaControlTextTrackContainerElement> textDisplayContainer = MediaControlTextTrackContainerElement::create(document());
     m_textDisplayContainer = textDisplayContainer.get();
 
-    RefPtr<MediaControlTextTrackDisplayElement> textDisplay = MediaControlTextTrackDisplayElement::create(document());
-    m_textDisplayContainer->hide();
-    m_textTrackDisplay = textDisplay.get();
-
-    ExceptionCode ec;
-    textDisplayContainer->appendChild(textDisplay.release(), ec, true);
-    if (ec)
-        return;
-
     // Insert it before the first controller element so it always displays behind the controls.
+    ExceptionCode ec;
     insertBefore(textDisplayContainer.release(), m_panel, ec, true);
 }
 
@@ -367,35 +365,22 @@ void MediaControlRootElementChromium::updateTextTrackDisplay()
     if (!m_textDisplayContainer)
         createTextTrackDisplay();
 
-    CueList activeCues = toParentMediaElement(m_textDisplayContainer)->currentlyActiveCues();
-    m_textTrackDisplay->removeChildren();
-    bool nothingToDisplay = true;
-    for (size_t i = 0; i < activeCues.size(); ++i) {
-        TextTrackCue* cue = activeCues[i].data();
-        ASSERT(cue->isActive());
-        if (!cue->track() || cue->track()->mode() != TextTrack::SHOWING)
-            continue;
-
-        String cueText = cue->getCueAsSource();
-        if (!cueText.isEmpty()) {
-            if (!nothingToDisplay)
-                m_textTrackDisplay->appendChild(document()->createElement(HTMLNames::brTag, false), ASSERT_NO_EXCEPTION);
-            m_textTrackDisplay->appendChild(document()->createTextNode(cueText), ASSERT_NO_EXCEPTION);
-            nothingToDisplay = false;
-        }
-    }
-
-    if (!nothingToDisplay)
-        m_textDisplayContainer->show();
-    else
-        m_textDisplayContainer->hide();
+    m_textDisplayContainer->updateDisplay();
 }
 #endif
-    
+
 const AtomicString& MediaControlRootElementChromium::shadowPseudoId() const
 {
     DEFINE_STATIC_LOCAL(AtomicString, id, ("-webkit-media-controls"));
     return id;
+}
+
+void MediaControlRootElementChromium::bufferingProgressed()
+{
+    // We only need to update buffering progress when paused, during normal
+    // playback playbackProgressed() will take care of it.
+    if (m_mediaController->paused())
+        m_timeline->setPosition(m_mediaController->currentTime());
 }
 
 }

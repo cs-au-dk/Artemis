@@ -53,7 +53,7 @@ body.inactive .heap-snapshot-sidebar-tree-item.wait.selected .icon {
     content: url(Images/profileSmallIcon.png);
 }
 
-.detailed-heapshot-view {
+.heap-snapshot-view {
     display: none;
     overflow: hidden;
     position: absolute;
@@ -63,81 +63,104 @@ body.inactive .heap-snapshot-sidebar-tree-item.wait.selected .icon {
     bottom: 0;
 }
 
-.detailed-heapshot-view.visible {
+.heap-snapshot-view.visible {
     display: block;
 }
 
-.detailed-heapshot-view .view {
+.heap-snapshot-view .view {
     display: none;
 }
 
-.detailed-heapshot-view .view.visible {
+.heap-snapshot-view .view.visible {
     display: block;
 }
 
-.detailed-heapshot-view .data-grid {
+.heap-snapshot-view .data-grid tr:empty {
+    height: 16px;
+    visibility: hidden;
+}
+
+.heap-snapshot-view .data-grid {
     border: none;
 }
 
-.detailed-heapshot-view .data-grid td.count-column {
+.heap-snapshot-view .data-grid td.count-column {
     text-align: right;
 }
 
-.detailed-heapshot-view .data-grid td.addedCount-column {
+.heap-snapshot-view .data-grid td.addedCount-column {
     text-align: right;
 }
 
-.detailed-heapshot-view .data-grid td.removedCount-column {
+.heap-snapshot-view .data-grid td.removedCount-column {
     text-align: right;
 }
 
-.detailed-heapshot-view .data-grid td.countDelta-column {
+.heap-snapshot-view .data-grid td.countDelta-column {
     text-align: right;
 }
 
-.detailed-heapshot-view .data-grid td.addedSize-column {
+.heap-snapshot-view .data-grid td.addedSize-column {
     text-align: right;
 }
 
-.detailed-heapshot-view .data-grid td.removedSize-column {
+.heap-snapshot-view .data-grid td.removedSize-column {
     text-align: right;
 }
 
-.detailed-heapshot-view .data-grid td.sizeDelta-column {
+.heap-snapshot-view .data-grid td.sizeDelta-column {
     text-align: right;
 }
 
-.detailed-heapshot-view .data-grid td.shallowSize-column {
+.heap-snapshot-view .data-grid td.shallowSize-column {
     text-align: right;
 }
 
-.detailed-heapshot-view .data-grid td.retainedSize-column {
+.heap-snapshot-view .data-grid td.retainedSize-column {
     text-align: right;
 }
 
-.detailed-heapshot-view .console-formatted-object, .console-formatted-node {
+.heap-snapshot-view .data-grid td.distanceToWindow-column {
+    text-align: right;
+}
+
+.heap-snapshot-view .data-grid span.percent-column {
+    color: grey;
+    width: 32px;
+    float: right;
+}
+
+.heap-snapshot-view .console-formatted-object, .console-formatted-node {
     display: inline;
     position: static;
 }
 
-.detailed-heapshot-view .console-formatted-string {
+.detached-dom-tree-node {
+    background-color: #FF9999;
+}
+
+.heap-snapshot-view .console-formatted-string {
     white-space: nowrap;
 }
 
-.detailed-heapshot-view .data-grid tr.selected * {
+.heap-snapshot-view .console-formatted-id {
+    color: grey;
+}
+
+.heap-snapshot-view .data-grid tr.selected * {
     color: inherit;
 }
 
-.detailed-heapshot-view .data-grid:focus tr.selected * {
+.heap-snapshot-view .data-grid:focus tr.selected * {
     color: white;
 }
 
-.detailed-heapshot-view .delimiter {
+.heap-snapshot-view .delimiter {
     height: 24px;
     background-color: #d6dde5;
 }
 
-.detailed-heapshot-view .data-grid {
+.heap-snapshot-view .data-grid {
     position: absolute;
     top: 0;
     left: 0;
@@ -145,7 +168,7 @@ body.inactive .heap-snapshot-sidebar-tree-item.wait.selected .icon {
     bottom: 0;
 }
 
-.detailed-heapshot-view .views-container {
+.heap-snapshot-view .views-container {
     position: absolute;
     top: 0;
     left: 0;
@@ -153,7 +176,7 @@ body.inactive .heap-snapshot-sidebar-tree-item.wait.selected .icon {
     bottom: 173px;
 }
 
-.detailed-heapshot-view .views-container .view {
+.heap-snapshot-view .views-container .view {
     position: absolute;
     top: 0;
     left: 0;
@@ -161,7 +184,7 @@ body.inactive .heap-snapshot-sidebar-tree-item.wait.selected .icon {
     bottom: 0;
 }
 
-.detailed-heapshot-view .retaining-paths-view {
+.heap-snapshot-view .retaining-paths-view {
     height: 150px;
     position: absolute;
     bottom: 0;
@@ -169,7 +192,31 @@ body.inactive .heap-snapshot-sidebar-tree-item.wait.selected .icon {
     right: 0;
 }
 
-.detailed-heapshot-view .retainers-view-header {
+.heap-snapshot-view .class-view-grid {
+    top: 22px;
+}
+
+.heap-snapshot-view .class-view-toolbar {
+    height: 22px;
+    background-color: #DDD;
+    display: block;
+    position: absolute;
+    left: 0;
+    right: 0;
+    top: 0;
+}
+
+.heap-snapshot-view .class-view-toolbar input.class-name-filter {
+    width: 200px;
+    height: 18px;
+    font-size: 11px;
+    padding: 2px;
+    margin: 2px 10px;
+    background-color: white;
+    border: solid 1px #BBB;
+}
+
+.heap-snapshot-view .retainers-view-header {
     background-image: url(Images/statusbarResizerVertical.png), url(Images/statusbarBackground.png);
     background-repeat: no-repeat, repeat-x;
     background-position: right center, center;
@@ -186,7 +233,7 @@ body.inactive .heap-snapshot-sidebar-tree-item.wait.selected .icon {
     bottom: 150px;
 }
 
-.detailed-heapshot-view .retainers-view-header .title > span {
+.heap-snapshot-view .retainers-view-header .title > span {
     display: inline-block;
     padding-top: 3px;
     vertical-align: middle;
@@ -194,19 +241,23 @@ body.inactive .heap-snapshot-sidebar-tree-item.wait.selected .icon {
     margin-right: 8px;
 }
 
-.detailed-heapshot-view tr:not(.selected) td.object-column span.highlight {
+.heap-snapshot-view tr:not(.selected) td.object-column span.highlight {
     background-color: rgb(255, 255, 200);
 }
 
-.heapshot-help-status-bar-item .glyph {
+.heap-snapshot-view td.object-column span.grayed {
+    color: gray;
+}
+
+.heap-snapshot-help-status-bar-item .glyph {
     -webkit-mask-position: -160px 0;
 }
 
-table.heapshot-help {
+table.heap-snapshot-help {
     border-spacing: 12px 2px;
 }
 
-div.retaining-paths-view td.path-column div:hover {
-    text-decoration: underline;
-    color: blue;
+.cycled-ancessor-node {
+    opacity: 0.6;
 }
+

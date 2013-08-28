@@ -35,7 +35,7 @@
 namespace WebCore {
 
 WebKitCSSFilterValue::WebKitCSSFilterValue(FilterOperationType operationType)
-    : CSSValueList(WebKitCSSFilterClass, typeUsesSpaceSeparator(operationType))
+    : CSSValueList(WebKitCSSFilterClass, typeUsesSpaceSeparator(operationType) ? SpaceSeparator : CommaSeparator)
     , m_type(operationType)
 {
 }
@@ -45,6 +45,7 @@ bool WebKitCSSFilterValue::typeUsesSpaceSeparator(FilterOperationType operationT
 #if ENABLE(CSS_SHADERS)
     return operationType != CustomFilterOperation;
 #else
+    UNUSED_PARAM(operationType);
     return true;
 #endif
 }
@@ -96,6 +97,17 @@ String WebKitCSSFilterValue::customCssText() const
     }
 
     return result + CSSValueList::customCssText() + ")";
+}
+
+WebKitCSSFilterValue::WebKitCSSFilterValue(const WebKitCSSFilterValue& cloneFrom)
+    : CSSValueList(cloneFrom)
+    , m_type(cloneFrom.m_type)
+{
+}
+
+PassRefPtr<WebKitCSSFilterValue> WebKitCSSFilterValue::cloneForCSSOM() const
+{
+    return adoptRef(new WebKitCSSFilterValue(*this));
 }
 
 }

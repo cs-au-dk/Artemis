@@ -63,38 +63,6 @@ String VertexShaderPosTex::getShaderString() const
     );
 }
 
-VertexShaderPosTexStretch::VertexShaderPosTexStretch()
-    : m_matrixLocation(-1)
-    , m_offsetLocation(-1)
-    , m_scaleLocation(-1)
-{
-}
-
-void VertexShaderPosTexStretch::init(GraphicsContext3D* context, unsigned program)
-{
-    m_matrixLocation = context->getUniformLocation(program, "matrix");
-    m_offsetLocation = context->getUniformLocation(program, "offset");
-    m_scaleLocation = context->getUniformLocation(program, "scale");
-    ASSERT(m_matrixLocation != -1 && m_offsetLocation != -1 && m_scaleLocation != -1);
-}
-
-String VertexShaderPosTexStretch::getShaderString() const
-{
-    return SHADER(
-        attribute vec4 a_position;
-        attribute vec2 a_texCoord;
-        uniform mat4 matrix;
-        uniform vec2 offset;
-        uniform vec2 scale;
-        varying vec2 v_texCoord;
-        void main()
-        {
-            gl_Position = matrix * a_position;
-            v_texCoord = scale * a_texCoord + offset;
-        }
-    );
-}
-
 VertexShaderPosTexYUVStretch::VertexShaderPosTexYUVStretch()
     : m_matrixLocation(-1)
     , m_yWidthScaleFactorLocation(-1)
@@ -188,6 +156,19 @@ VertexShaderQuad::VertexShaderQuad()
 {
 }
 
+String VertexShaderPosTexIdentity::getShaderString() const
+{
+    return SHADER(
+        attribute vec4 a_position;
+        varying vec2 v_texCoord;
+        void main()
+        {
+            gl_Position = a_position;
+            v_texCoord = (a_position.xy + vec2(1.0)) * 0.5;
+        }
+    );
+}
+
 void VertexShaderQuad::init(GraphicsContext3D* context, unsigned program)
 {
     m_matrixLocation = context->getUniformLocation(program, "matrix");
@@ -255,6 +236,39 @@ String VertexShaderTile::getShaderString() const
     );
 }
 
+VertexShaderVideoTransform::VertexShaderVideoTransform()
+    : m_matrixLocation(-1)
+    , m_texTransformLocation(-1)
+    , m_texMatrixLocation(-1)
+{
+}
+
+bool VertexShaderVideoTransform::init(GraphicsContext3D* context, unsigned program)
+{
+    m_matrixLocation = context->getUniformLocation(program, "matrix");
+    m_texTransformLocation = context->getUniformLocation(program, "texTransform");
+    m_texMatrixLocation = context->getUniformLocation(program, "texMatrix");
+    return m_matrixLocation != -1 && m_texTransformLocation != -1 && m_texMatrixLocation != -1;
+}
+
+String VertexShaderVideoTransform::getShaderString() const
+{
+    return SHADER(
+        attribute vec4 a_position;
+        attribute vec2 a_texCoord;
+        uniform mat4 matrix;
+        uniform vec4 texTransform;
+        uniform mat4 texMatrix;
+        varying vec2 v_texCoord;
+        void main()
+        {
+            gl_Position = matrix * a_position;
+            vec2 texCoord = vec2(texMatrix * vec4(a_texCoord.x, 1.0 - a_texCoord.y, 0.0, 1.0));
+            v_texCoord = texCoord * texTransform.zw + texTransform.xy;
+        }
+    );
+}
+
 FragmentTexAlphaBinding::FragmentTexAlphaBinding()
     : m_samplerLocation(-1)
     , m_alphaLocation(-1)
@@ -294,6 +308,27 @@ String FragmentShaderRGBATexFlipAlpha::getShaderString() const
             gl_FragColor = vec4(texColor.x, texColor.y, texColor.z, texColor.w) * alpha;
         }
     );
+}
+
+bool FragmentShaderOESImageExternal::init(GraphicsContext3D* context, unsigned program)
+{
+    m_samplerLocation = context->getUniformLocation(program, "s_texture");
+
+    return m_samplerLocation != -1;
+}
+
+String FragmentShaderOESImageExternal::getShaderString() const
+{
+    // Cannot use the SHADER() macro because of the '#' char
+    return "#extension GL_OES_EGL_image_external : require \n"
+           "precision mediump float;\n"
+           "varying vec2 v_texCoord;\n"
+           "uniform samplerExternalOES s_texture;\n"
+           "void main()\n"
+           "{\n"
+           "    vec4 texColor = texture2D(s_texture, v_texCoord);\n"
+           "    gl_FragColor = vec4(texColor.x, texColor.y, texColor.z, texColor.w);\n"
+           "}\n";
 }
 
 String FragmentShaderRGBATexAlpha::getShaderString() const
@@ -352,6 +387,19 @@ String FragmentShaderRGBATexOpaque::getShaderString() const
         {
             vec4 texColor = texture2D(s_texture, v_texCoord);
             gl_FragColor = vec4(texColor.rgb, 1.0);
+        }
+    );
+}
+
+String FragmentShaderRGBATex::getShaderString() const
+{
+    return SHADER(
+        precision mediump float;
+        varying vec2 v_texCoord;
+        uniform sampler2D s_texture;
+        void main()
+        {
+            gl_FragColor = texture2D(s_texture, v_texCoord);
         }
     );
 }
@@ -640,7 +688,45 @@ String FragmentShaderColor::getShaderString() const
         uniform vec4 color;
         void main()
         {
-            gl_FragColor = vec4(color.xyz * color.w, color.w);
+            gl_FragColor = color;
+        }
+    );
+}
+
+FragmentShaderCheckerboard::FragmentShaderCheckerboard()
+    : m_alphaLocation(-1)
+    , m_texTransformLocation(-1)
+    , m_frequencyLocation(-1)
+{
+}
+
+void FragmentShaderCheckerboard::init(GraphicsContext3D* context, unsigned program)
+{
+    m_alphaLocation = context->getUniformLocation(program, "alpha");
+    m_texTransformLocation = context->getUniformLocation(program, "texTransform");
+    m_frequencyLocation = context->getUniformLocation(program, "frequency");
+    ASSERT(m_alphaLocation != -1 && m_texTransformLocation != -1 && m_frequencyLocation != -1);
+}
+
+String FragmentShaderCheckerboard::getShaderString() const
+{
+    // Shader based on Example 13-17 of "OpenGL ES 2.0 Programming Guide"
+    // by Munshi, Ginsburg, Shreiner.
+    return SHADER(
+        precision mediump float;
+        precision mediump int;
+        varying vec2 v_texCoord;
+        uniform float alpha;
+        uniform float frequency;
+        uniform vec4 texTransform;
+        void main()
+        {
+            vec4 color1 = vec4(1.0, 1.0, 1.0, 1.0);
+            vec4 color2 = vec4(0.945, 0.945, 0.945, 1.0);
+            vec2 texCoord = clamp(v_texCoord, 0.0, 1.0) * texTransform.zw + texTransform.xy;
+            vec2 coord = mod(floor(texCoord * frequency * 2.0), 2.0);
+            float picker = abs(coord.x - coord.y);
+            gl_FragColor = mix(color1, color2, picker) * alpha;
         }
     );
 }

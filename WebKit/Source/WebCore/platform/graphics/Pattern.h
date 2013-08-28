@@ -95,6 +95,9 @@ private:
     bool m_repeatY;
     AffineTransform m_patternSpaceTransformation;
     PlatformPatternPtr m_pattern;
+#if USE(SKIA)
+    int m_externalMemoryAllocated;
+#endif
 };
 
 } //namespace

@@ -68,6 +68,7 @@
 #import <WebKit/WebDatabaseManagerPrivate.h>
 #import <WebKit/WebDocumentPrivate.h>
 #import <WebKit/WebDeviceOrientationProviderMock.h>
+#import <WebKit/WebDynamicScrollBarsView.h>
 #import <WebKit/WebEditingDelegate.h>
 #import <WebKit/WebFrameView.h>
 #import <WebKit/WebHistory.h>
@@ -128,7 +129,7 @@ WebFrame *topLoadingFrame = nil;     // !nil iff a load is in progress
 
 
 CFMutableSetRef disallowedURLs = 0;
-CFRunLoopTimerRef waitToDumpWatchdog = 0;
+static CFRunLoopTimerRef waitToDumpWatchdog = 0;
 
 // Delegates
 static FrameLoadDelegate *frameLoadDelegate;
@@ -142,6 +143,7 @@ StorageTrackerDelegate *storageDelegate;
 static int dumpPixels;
 static int threaded;
 static int dumpTree = YES;
+static int useTimeoutWatchdog = YES;
 static int forceComplexText;
 static int gcBetweenTests;
 static BOOL printSeparators;
@@ -284,6 +286,7 @@ static NSSet *allowedFontFamilySet()
         @"Hiragino Kaku Gothic ProN",
         @"Hiragino Kaku Gothic Std",
         @"Hiragino Kaku Gothic StdN",
+        @"Hiragino Maru Gothic Monospaced",
         @"Hiragino Maru Gothic Pro",
         @"Hiragino Maru Gothic ProN",
         @"Hiragino Mincho Pro",
@@ -415,6 +418,9 @@ static void activateTestingFonts()
         "WebKitWeightWatcher700.ttf",
         "WebKitWeightWatcher800.ttf",
         "WebKitWeightWatcher900.ttf",
+#if !defined(BUILDING_ON_LEOPARD) && !defined(BUILDING_ON_SNOW_LEOPARD) && !defined(BUILDING_ON_LION)
+        "SampleFont.sfont",
+#endif
         0
     };
 
@@ -437,6 +443,68 @@ static void adjustFonts()
 {
     swizzleNSFontManagerMethods();
     activateTestingFonts();
+}
+
+@interface DRTMockScroller : NSScroller
+@end
+
+@implementation DRTMockScroller
+
+- (NSRect)rectForPart:(NSScrollerPart)partCode
+{
+    switch (partCode) {
+    case NSScrollerKnob: {
+        NSRect frameRect = [self frame];
+        NSRect bounds = [self bounds];
+        BOOL isHorizontal = frameRect.size.width > frameRect.size.height;
+        CGFloat trackLength = isHorizontal ? bounds.size.width : bounds.size.height;
+        CGFloat minKnobSize = isHorizontal ? bounds.size.height : bounds.size.width;
+        CGFloat knobLength = max(minKnobSize, static_cast<CGFloat>(round(trackLength * [self knobProportion])));
+        CGFloat knobPosition = static_cast<CGFloat>((round([self doubleValue] * (trackLength - knobLength))));
+        
+        if (isHorizontal)
+            return NSMakeRect(bounds.origin.x + knobPosition, bounds.origin.y, knobLength, bounds.size.height);
+
+        return NSMakeRect(bounds.origin.x, bounds.origin.y +  + knobPosition, bounds.size.width, knobLength);
+    }
+    }
+    
+    return [super rectForPart:partCode];
+}
+
+- (void)drawKnob
+{
+    if (![self isEnabled])
+        return;
+
+    NSRect knobRect = [self rectForPart:NSScrollerKnob];
+    
+    static NSColor *knobColor = [[NSColor colorWithDeviceRed:0x80 / 255.0 green:0x80 / 255.0 blue:0x80 / 255.0 alpha:1] retain];
+    [knobColor set];
+
+    NSRectFill(knobRect);
+}
+
+- (void)drawRect:(NSRect)dirtyRect
+{
+    static NSColor *trackColor = [[NSColor colorWithDeviceRed:0xC0 / 255.0 green:0xC0 / 255.0 blue:0xC0 / 255.0 alpha:1] retain];
+    static NSColor *disabledTrackColor = [[NSColor colorWithDeviceRed:0xE0 / 255.0 green:0xE0 / 255.0 blue:0xE0 / 255.0 alpha:1] retain];
+
+    if ([self isEnabled])
+        [trackColor set];
+    else
+        [disabledTrackColor set];
+
+    NSRectFill(dirtyRect);
+    
+    [self drawKnob];
+}
+
+@end
+
+static void registerMockScrollbars()
+{
+    [WebDynamicScrollBarsView setCustomScrollerClass:[DRTMockScroller class]];
 }
 
 WebView *createWebViewAndOffscreenWindow()
@@ -508,6 +576,7 @@ static void resetDefaultsToConsistentValues()
     [defaults setObject:[NSArray arrayWithObject:@"en"] forKey:@"AppleLanguages"];
     [defaults setBool:YES forKey:WebKitEnableFullDocumentTeardownPreferenceKey];
     [defaults setBool:YES forKey:WebKitFullScreenEnabledPreferenceKey];
+    [defaults setBool:YES forKey:@"UseWebKitWebInspector"];
 
     // Scrollbars are drawn either using AppKit (which uses NSUserDefaults) or using HIToolbox (which uses CFPreferences / kCFPreferencesAnyApplication / kCFPreferencesCurrentUser / kCFPreferencesAnyHost)
     [defaults setObject:@"DoubleMax" forKey:@"AppleScrollBarVariant"];
@@ -519,7 +588,13 @@ static void resetDefaultsToConsistentValues()
     GetThemeScrollBarArrowStyle(&style); // Force HIToolbox to read from CFPreferences
 #endif
 
+
+#if !defined(BUILDING_ON_SNOW_LEOPARD) && !defined(BUILDING_ON_LION)
+    [defaults setBool:NO forKey:@"NSScrollAnimationEnabled"];
+#else
     [defaults setBool:NO forKey:@"AppleScrollAnimationEnabled"];
+#endif
+
     [defaults setBool:NO forKey:@"NSOverlayScrollersEnabled"];
     [defaults setObject:@"Always" forKey:@"AppleShowScrollBars"];
 
@@ -545,6 +620,7 @@ static void resetDefaultsToConsistentValues()
     [preferences setDefaultFontSize:16];
     [preferences setDefaultFixedFontSize:13];
     [preferences setMinimumFontSize:0];
+    [preferences setDefaultTextEncodingName:@"ISO-8859-1"];
     [preferences setJavaEnabled:NO];
     [preferences setJavaScriptEnabled:YES];
     [preferences setEditableLinkBehavior:WebKitEditableLinkOnlyLiveWithShiftKey];
@@ -555,6 +631,7 @@ static void resetDefaultsToConsistentValues()
     [preferences setXSSAuditorEnabled:NO];
     [preferences setExperimentalNotificationsEnabled:NO];
     [preferences setPlugInsEnabled:YES];
+    [preferences setTextAreasAreResizable:YES];
 
     [preferences setPrivateBrowsingEnabled:NO];
     [preferences setAuthorAndUserStylesEnabled:YES];
@@ -582,9 +659,11 @@ static void resetDefaultsToConsistentValues()
     [preferences setAcceleratedDrawingEnabled:NO];
 #endif
     [preferences setWebGLEnabled:NO];
+    [preferences setCSSRegionsEnabled:YES];
     [preferences setUsePreHTML5ParserQuirks:NO];
     [preferences setAsynchronousSpellCheckingEnabled:NO];
-    [preferences setHixie76WebSocketProtocolEnabled:YES];
+    [preferences setHixie76WebSocketProtocolEnabled:NO];
+    [preferences setMockScrollbarsEnabled:YES];
 
 #if ENABLE(WEB_AUDIO)
     [preferences setWebAudioEnabled:YES];
@@ -613,13 +692,18 @@ static void setDefaultsToConsistentValuesForTesting()
     [WebPreferences _switchNetworkLoaderToNewTestingSession];
 }
 
-static void* runThread(void* arg)
+static void runThread(void* arg)
 {
     static ThreadIdentifier previousId = 0;
     ThreadIdentifier currentId = currentThread();
     // Verify 2 successive threads do not get the same Id.
     ASSERT(previousId != currentId);
     previousId = currentId;
+}
+
+static void* runPthread(void* arg)
+{
+    runThread(arg);
     return 0;
 }
 
@@ -627,10 +711,10 @@ static void testThreadIdentifierMap()
 {
     // Imitate 'foreign' threads that are not created by WTF.
     pthread_t pthread;
-    pthread_create(&pthread, 0, &runThread, 0);
+    pthread_create(&pthread, 0, &runPthread, 0);
     pthread_join(pthread, 0);
 
-    pthread_create(&pthread, 0, &runThread, 0);
+    pthread_create(&pthread, 0, &runPthread, 0);
     pthread_join(pthread, 0);
 
     // Now create another thread using WTF. On OSX, it will have the same pthread handle
@@ -643,7 +727,6 @@ static void crashHandler(int sig)
     char *signalName = strsignal(sig);
     write(STDERR_FILENO, signalName, strlen(signalName));
     write(STDERR_FILENO, "\n", 1);
-    restoreMainDisplayColorProfile(0);
     exit(128 + sig);
 }
 
@@ -701,6 +784,7 @@ static void initializeGlobalsFromCommandLineOptions(int argc, const char *argv[]
         {"threaded", no_argument, &threaded, YES},
         {"complex-text", no_argument, &forceComplexText, YES},
         {"gc-between-tests", no_argument, &gcBetweenTests, YES},
+        {"no-timeout", no_argument, &useTimeoutWatchdog, NO},
         {NULL, 0, NULL, 0}
     };
     
@@ -752,9 +836,8 @@ static void prepareConsistentTestingEnvironment()
 
     setDefaultsToConsistentValuesForTesting();
     adjustFonts();
+    registerMockScrollbars();
     
-    if (dumpPixels)
-        setupMainDisplayColorProfile();
     allocateGlobalControllers();
     
     makeLargeMallocFailSilently();
@@ -822,9 +905,6 @@ void dumpRenderTree(int argc, const char *argv[])
         CFRelease(disallowedURLs);
         disallowedURLs = 0;
     }
-
-    if (dumpPixels)
-        restoreMainDisplayColorProfile(0);
 }
 
 int main(int argc, const char *argv[])
@@ -1041,6 +1121,19 @@ static void invalidateAnyPreviousWaitToDumpWatchdog()
     }
 }
 
+void setWaitToDumpWatchdog(CFRunLoopTimerRef timer)
+{
+    ASSERT(timer);
+    ASSERT(shouldSetWaitToDumpWatchdog());
+    waitToDumpWatchdog = timer;
+    CFRunLoopAddTimer(CFRunLoopGetCurrent(), waitToDumpWatchdog, kCFRunLoopCommonModes);
+}
+
+bool shouldSetWaitToDumpWatchdog()
+{
+    return !waitToDumpWatchdog && useTimeoutWatchdog;
+}
+
 void dump()
 {
     invalidateAnyPreviousWaitToDumpWatchdog();
@@ -1070,10 +1163,8 @@ void dump()
             WebArchive *webArchive = [[mainFrame dataSource] webArchive];
             resultString = HardAutorelease(createXMLStringFromWebArchiveData((CFDataRef)[webArchive data]));
             resultMimeType = @"application/x-webarchive";
-        } else {
-            sizeWebViewForCurrentTest();
+        } else
             resultString = [mainFrame renderTreeAsExternalRepresentationForPrinting:gLayoutTestController->isPrinting()];
-        }
 
         if (resultString && !resultData)
             resultData = [resultString dataUsingEncoding:NSUTF8StringEncoding];
@@ -1208,7 +1299,7 @@ static void runTest(const string& testPathOrURL)
     }
 
     NSURL *url;
-    if ([pathOrURLString hasPrefix:@"http://"] || [pathOrURLString hasPrefix:@"https://"])
+    if ([pathOrURLString hasPrefix:@"http://"] || [pathOrURLString hasPrefix:@"https://"] || [pathOrURLString hasPrefix:@"file://"])
         url = [NSURL URLWithString:pathOrURLString];
     else
         url = [NSURL fileURLWithPath:pathOrURLString];
@@ -1227,6 +1318,7 @@ static void runTest(const string& testPathOrURL)
     releaseAndZero(&draggingInfo);
     done = NO;
 
+    sizeWebViewForCurrentTest();
     gLayoutTestController->setIconDatabaseEnabled(false);
 
     if (disallowedURLs)

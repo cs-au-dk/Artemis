@@ -21,8 +21,10 @@
 
 #include "IntSize.h"
 #include "NotImplemented.h"
+#include "PlatformString.h"
 #include <BlackBerryPlatformClient.h>
 #include <LocalizeResource.h>
+#include <wtf/Vector.h>
 
 namespace WebCore {
 
@@ -55,11 +57,10 @@ String submitButtonDefaultLabel()
 
 String inputElementAltText()
 {
-    notImplemented();
-    return String();
+    return String::fromUTF8(s_resource.getString(BlackBerry::Platform::SUBMIT_BUTTON_LABEL));
 }
 
-String platformDefaultLanguage()
+static String platformLanguage()
 {
     String lang = BlackBerry::Platform::Client::get()->getLocale().c_str();
     // getLocale() returns a POSIX locale which uses '_' to separate language and country.
@@ -69,6 +70,13 @@ String platformDefaultLanguage()
     if (underscorePosition != notFound)
         return lang.replace(underscorePosition, replaceWith.length(), replaceWith);
     return lang;
+}
+
+Vector<String> platformUserPreferredLanguages()
+{
+    Vector<String> userPreferredLanguages;
+    userPreferredLanguages.append(platformLanguage());
+    return userPreferredLanguages;
 }
 
 #if ENABLE(CONTEXT_MENUS)
@@ -361,10 +369,9 @@ String searchMenuClearRecentSearchesText()
     return String();
 }
 
-String imageTitle(String const&, IntSize const&)
+String imageTitle(String const& filename, IntSize const& size)
 {
-    notImplemented();
-    return String();
+    return filename + " (" + String::number(size.width()) + "x" + String::number(size.height()) + ")";
 }
 
 String AXButtonActionVerb()
@@ -386,6 +393,12 @@ String AXDefinitionListDefinitionText()
 }
 
 String AXDefinitionListTermText()
+{
+    notImplemented();
+    return String();
+}
+
+String AXFooterRoleDescriptionText()
 {
     notImplemented();
     return String();
@@ -567,6 +580,11 @@ String multipleFileUploadText(unsigned)
 String defaultDetailsSummaryText()
 {
     return String::fromUTF8(s_resource.getString(BlackBerry::Platform::DETAILS_SUMMARY));
+}
+
+String fileButtonNoFilesSelectedLabel()
+{
+    return String::fromUTF8(s_resource.getString(BlackBerry::Platform::FILE_BUTTON_NO_FILE_SELECTED_LABEL));
 }
 
 } // namespace WebCore

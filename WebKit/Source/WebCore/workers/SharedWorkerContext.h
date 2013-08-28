@@ -33,6 +33,7 @@
 
 #if ENABLE(SHARED_WORKERS)
 
+#include "ContentSecurityPolicy.h"
 #include "WorkerContext.h"
 
 namespace WebCore {
@@ -43,9 +44,9 @@ namespace WebCore {
     class SharedWorkerContext : public WorkerContext {
     public:
         typedef WorkerContext Base;
-        static PassRefPtr<SharedWorkerContext> create(const String& name, const KURL& url, const String& userAgent, SharedWorkerThread* thread)
+        static PassRefPtr<SharedWorkerContext> create(const String& name, const KURL& url, const String& userAgent, SharedWorkerThread* thread, const String& contentSecurityPolicy, ContentSecurityPolicy::HeaderType contentSecurityPolicyType)
         {
-            return adoptRef(new SharedWorkerContext(name, url, userAgent, thread));
+            return adoptRef(new SharedWorkerContext(name, url, userAgent, thread, contentSecurityPolicy, contentSecurityPolicyType));
         }
         virtual ~SharedWorkerContext();
 
@@ -60,9 +61,9 @@ namespace WebCore {
 
         SharedWorkerThread* thread();
     private:
-        SharedWorkerContext(const String& name, const KURL&, const String&, SharedWorkerThread*);
+        SharedWorkerContext(const String& name, const KURL&, const String&, SharedWorkerThread*, const String& contentSecurityPolicy, ContentSecurityPolicy::HeaderType);
 
-        virtual void logExceptionToConsole(const String& errorMessage, int lineNumber, const String& sourceURL, PassRefPtr<ScriptCallStack>);
+        virtual void logExceptionToConsole(const String& errorMessage, const String& sourceURL, int lineNumber, PassRefPtr<ScriptCallStack>);
 
         String m_name;
     };

@@ -24,27 +24,27 @@
 #ifndef HTMLOptGroupElement_h
 #define HTMLOptGroupElement_h
 
-#include "HTMLFormControlElement.h"
+#include "HTMLElement.h"
 
 namespace WebCore {
     
 class HTMLSelectElement;
 
-class HTMLOptGroupElement : public HTMLFormControlElement {
+class HTMLOptGroupElement : public HTMLElement {
 public:
-    static PassRefPtr<HTMLOptGroupElement> create(const QualifiedName&, Document*, HTMLFormElement*);
+    static PassRefPtr<HTMLOptGroupElement> create(const QualifiedName&, Document*);
 
     HTMLSelectElement* ownerSelectElement() const;
     
     String groupLabelText() const;
 
 private:
-    HTMLOptGroupElement(const QualifiedName&, Document*, HTMLFormElement*);
+    HTMLOptGroupElement(const QualifiedName&, Document*);
 
     virtual const AtomicString& formControlType() const;
     virtual bool supportsFocus() const;
     virtual bool isFocusable() const;
-    virtual void parseMappedAttribute(Attribute*);
+    virtual void parseAttribute(Attribute*) OVERRIDE;
     virtual bool rendererIsNeeded(const NodeRenderingContext&) { return false; }
     virtual void attach();
     virtual void detach();

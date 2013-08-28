@@ -77,7 +77,6 @@ public:
         : m_globalData(globalData)
         , m_sourceCode(sourceCode)
         , m_scope(globalData)
-        , m_evalCount(0)
     {
     }
     
@@ -119,7 +118,6 @@ public:
 
     ParserArenaData<DeclarationStacks::VarStack>* varDeclarations() { return m_scope.m_varDeclarations; }
     ParserArenaData<DeclarationStacks::FunctionStack>* funcDeclarations() { return m_scope.m_funcDeclarations; }
-    int features() const { return m_scope.m_features; }
     int numConstants() const { return m_scope.m_numConstants; }
 
     void appendToComma(CommaNode* commaNode, ExpressionNode* expr) { commaNode->append(expr); }
@@ -152,17 +150,8 @@ public:
         incConstants();
         return new (m_globalData) VoidNode(lineNumber, expr);
     }
-    ExpressionNode* thisExpr(int lineNumber)
-    {
-        usesThis();
-        return new (m_globalData) ThisNode(lineNumber);
-    }
-    ExpressionNode* createResolve(int lineNumber, const Identifier* ident, int start)
-    {
-        if (m_globalData->propertyNames->arguments == *ident)
-            usesArguments();
-        return new (m_globalData) ResolveNode(lineNumber, *ident, start);
-    }
+    ExpressionNode* thisExpr(int lineNumber) { return new (m_globalData) ThisNode(lineNumber); }
+    ExpressionNode* createResolve(int lineNumber, const Identifier* ident, int start) { return new (m_globalData) ResolveNode(lineNumber, *ident, start); }
     ExpressionNode* createObjectLiteral(int lineNumber) { return new (m_globalData) ObjectLiteralNode(lineNumber); }
     ExpressionNode* createObjectLiteral(int lineNumber, PropertyListNode* properties) { return new (m_globalData) ObjectLiteralNode(lineNumber, properties); }
 
@@ -249,6 +238,8 @@ public:
 
     ExpressionNode* createAssignResolve(int lineNumber, const Identifier& ident, ExpressionNode* rhs, bool rhsHasAssignment, int start, int divot, int end)
     {
+        if (rhs->isFuncExprNode())
+            static_cast<FuncExprNode*>(rhs)->body()->setInferredName(ident);
         AssignResolveNode* node = new (m_globalData) AssignResolveNode(lineNumber, ident, rhs, rhsHasAssignment);
         setExceptionLocation(node, start, divot, end);
         return node;
@@ -261,26 +252,36 @@ public:
         return result;
     }
 
-    FunctionBodyNode* createFunctionBody(int lineNumber, bool inStrictContext)
+    FunctionBodyNode* createFunctionBody(int lineNumber, ScopeFlags scopeFlags)
     {
-        usesClosures();
-        return FunctionBodyNode::create(m_globalData, lineNumber, inStrictContext);
+        return FunctionBodyNode::create(m_globalData, lineNumber, scopeFlags);
     }
     
     template <bool> PropertyNode* createGetterOrSetterProperty(int lineNumber, PropertyNode::Type type, const Identifier* name, ParameterNode* params, FunctionBodyNode* body, int openBracePos, int closeBracePos, int bodyStartLine, int bodyEndLine)
     {
         ASSERT(name);
         body->setLoc(bodyStartLine, bodyEndLine);
+        body->setInferredName(*name);
         return new (m_globalData) PropertyNode(m_globalData, *name, new (m_globalData) FuncExprNode(lineNumber, m_globalData->propertyNames->nullIdentifier, body, m_sourceCode->subExpression(openBracePos, closeBracePos, bodyStartLine), params), type);
     }
     
+    template <bool> PropertyNode* createGetterOrSetterProperty(JSGlobalData*, int lineNumber, PropertyNode::Type type, double name, ParameterNode* params, FunctionBodyNode* body, int openBracePos, int closeBracePos, int bodyStartLine, int bodyEndLine)
+    {
+        body->setLoc(bodyStartLine, bodyEndLine);
+        return new (m_globalData) PropertyNode(m_globalData, name, new (m_globalData) FuncExprNode(lineNumber, m_globalData->propertyNames->nullIdentifier, body, m_sourceCode->subExpression(openBracePos, closeBracePos, bodyStartLine), params), type);
+    }
 
     ArgumentsNode* createArguments() { return new (m_globalData) ArgumentsNode(); }
     ArgumentsNode* createArguments(ArgumentListNode* args) { return new (m_globalData) ArgumentsNode(args); }
     ArgumentListNode* createArgumentsList(int lineNumber, ExpressionNode* arg) { return new (m_globalData) ArgumentListNode(lineNumber, arg); }
     ArgumentListNode* createArgumentsList(int lineNumber, ArgumentListNode* args, ExpressionNode* arg) { return new (m_globalData) ArgumentListNode(lineNumber, args, arg); }
 
-    template <bool> PropertyNode* createProperty(const Identifier* propertyName, ExpressionNode* node, PropertyNode::Type type) { return new (m_globalData) PropertyNode(m_globalData, *propertyName, node, type); }
+    template <bool> PropertyNode* createProperty(const Identifier* propertyName, ExpressionNode* node, PropertyNode::Type type)
+    {
+        if (node->isFuncExprNode())
+            static_cast<FuncExprNode*>(node)->body()->setInferredName(*propertyName);
+        return new (m_globalData) PropertyNode(m_globalData, *propertyName, node, type);
+    }
     template <bool> PropertyNode* createProperty(JSGlobalData*, double propertyName, ExpressionNode* node, PropertyNode::Type type) { return new (m_globalData) PropertyNode(m_globalData, propertyName, node, type); }
     PropertyListNode* createPropertyList(int lineNumber, PropertyNode* property) { return new (m_globalData) PropertyListNode(lineNumber, property); }
     PropertyListNode* createPropertyList(int lineNumber, PropertyNode* property, PropertyListNode* tail) { return new (m_globalData) PropertyListNode(lineNumber, property, tail); }
@@ -300,8 +301,6 @@ public:
     StatementNode* createFuncDeclStatement(int lineNumber, const Identifier* name, FunctionBodyNode* body, ParameterNode* parameters, int openBracePos, int closeBracePos, int bodyStartLine, int bodyEndLine)
     {
         FuncDeclNode* decl = new (m_globalData) FuncDeclNode(lineNumber, *name, body, m_sourceCode->subExpression(openBracePos, closeBracePos, bodyStartLine), parameters);
-        if (*name == m_globalData->propertyNames->arguments)
-            usesArguments();
         m_scope.m_funcDeclarations->data.append(decl->body());
         body->setLoc(bodyStartLine, bodyEndLine);
         return decl;
@@ -411,11 +410,9 @@ public:
         return result;
     }
 
-    StatementNode* createTryStatement(int lineNumber, StatementNode* tryBlock, const Identifier* ident, bool catchHasEval, StatementNode* catchBlock, StatementNode* finallyBlock, int startLine, int endLine)
+    StatementNode* createTryStatement(int lineNumber, StatementNode* tryBlock, const Identifier* ident, StatementNode* catchBlock, StatementNode* finallyBlock, int startLine, int endLine)
     {
-        TryNode* result = new (m_globalData) TryNode(lineNumber, tryBlock, *ident, catchHasEval, catchBlock, finallyBlock);
-        if (catchBlock)
-            usesCatch();
+        TryNode* result = new (m_globalData) TryNode(lineNumber, tryBlock, *ident, catchBlock, finallyBlock);
         result->setLoc(startLine, endLine);
         return result;
     }
@@ -451,7 +448,6 @@ public:
 
     StatementNode* createWithStatement(int lineNumber, ExpressionNode* expr, StatementNode* statement, int start, int end, int startLine, int endLine)
     {
-        usesWith();
         WithNode* result = new (m_globalData) WithNode(lineNumber, expr, statement, end, end - start);
         result->setLoc(startLine, endLine);
         return result;
@@ -494,8 +490,6 @@ public:
 
     void addVar(const Identifier* ident, int attrs)
     {
-        if (m_globalData->propertyNames->arguments == *ident)
-            usesArguments();
         m_scope.m_varDeclarations->data.append(std::make_pair(ident, attrs));
     }
 
@@ -509,8 +503,6 @@ public:
         }
         return new (m_globalData) CommaNode(lineNumber, list, init);
     }
-
-    int evalCount() const { return m_evalCount; }
 
     void appendBinaryExpressionInfo(int& operandStackDepth, ExpressionNode* current, int exprStart, int lhs, int rhs, bool hasAssignments)
     {
@@ -598,13 +590,11 @@ private:
         Scope(JSGlobalData* globalData)
             : m_varDeclarations(new (globalData) ParserArenaData<DeclarationStacks::VarStack>)
             , m_funcDeclarations(new (globalData) ParserArenaData<DeclarationStacks::FunctionStack>)
-            , m_features(0)
             , m_numConstants(0)
         {
         }
         ParserArenaData<DeclarationStacks::VarStack>* m_varDeclarations;
         ParserArenaData<DeclarationStacks::FunctionStack>* m_funcDeclarations;
-        int m_features;
         int m_numConstants;
     };
 
@@ -614,17 +604,6 @@ private:
     }
 
     void incConstants() { m_scope.m_numConstants++; }
-    void usesThis() { m_scope.m_features |= ThisFeature; }
-    void usesCatch() { m_scope.m_features |= CatchFeature; }
-    void usesClosures() { m_scope.m_features |= ClosureFeature; }
-    void usesArguments() { m_scope.m_features |= ArgumentsFeature; }
-    void usesAssignment() { m_scope.m_features |= AssignFeature; }
-    void usesWith() { m_scope.m_features |= WithFeature; }
-    void usesEval() 
-    {
-        m_evalCount++;
-        m_scope.m_features |= EvalFeature;
-    }
     ExpressionNode* createNumber(int lineNumber, double d)
     {
         return new (m_globalData) NumberNode(lineNumber, d);
@@ -637,7 +616,6 @@ private:
     Vector<AssignmentInfo, 10> m_assignmentInfoStack;
     Vector<pair<int, int>, 10> m_binaryOperatorStack;
     Vector<pair<int, int>, 10> m_unaryTokenStack;
-    int m_evalCount;
 };
 
 ExpressionNode* ASTBuilder::makeTypeOfNode(int lineNumber, ExpressionNode* expr)
@@ -787,10 +765,8 @@ ExpressionNode* ASTBuilder::makeFunctionCallNode(int lineNumber, ExpressionNode*
     if (func->isResolveNode()) {
         ResolveNode* resolve = static_cast<ResolveNode*>(func);
         const Identifier& identifier = resolve->identifier();
-        if (identifier == m_globalData->propertyNames->eval) {
-            usesEval();
+        if (identifier == m_globalData->propertyNames->eval)
             return new (m_globalData) EvalFunctionCallNode(lineNumber, args, divot, divot - start, end - divot);
-        }
         return new (m_globalData) FunctionCallResolveNode(lineNumber, identifier, args, divot, divot - start, end - divot);
     }
     if (func->isBracketAccessorNode()) {
@@ -896,13 +872,14 @@ ExpressionNode* ASTBuilder::makeBinaryNode(int lineNumber, int token, pair<Expre
 
 ExpressionNode* ASTBuilder::makeAssignNode(int lineNumber, ExpressionNode* loc, Operator op, ExpressionNode* expr, bool locHasAssignments, bool exprHasAssignments, int start, int divot, int end)
 {
-    usesAssignment();
     if (!loc->isLocation())
         return new (m_globalData) AssignErrorNode(lineNumber, loc, op, expr, divot, divot - start, end - divot);
 
     if (loc->isResolveNode()) {
         ResolveNode* resolve = static_cast<ResolveNode*>(loc);
         if (op == OpEqual) {
+            if (expr->isFuncExprNode())
+                static_cast<FuncExprNode*>(expr)->body()->setInferredName(resolve->identifier());
             AssignResolveNode* node = new (m_globalData) AssignResolveNode(lineNumber, resolve->identifier(), expr, exprHasAssignments);
             setExceptionLocation(node, start, divot, end);
             return node;
@@ -919,8 +896,11 @@ ExpressionNode* ASTBuilder::makeAssignNode(int lineNumber, ExpressionNode* loc, 
     }
     ASSERT(loc->isDotAccessorNode());
     DotAccessorNode* dot = static_cast<DotAccessorNode*>(loc);
-    if (op == OpEqual)
+    if (op == OpEqual) {
+        if (expr->isFuncExprNode())
+            static_cast<FuncExprNode*>(expr)->body()->setInferredName(dot->identifier());
         return new (m_globalData) AssignDotNode(lineNumber, dot->base(), dot->identifier(), expr, exprHasAssignments, dot->divot(), dot->divot() - start, end - dot->divot());
+    }
 
     ReadModifyDotNode* node = new (m_globalData) ReadModifyDotNode(lineNumber, dot->base(), dot->identifier(), op, expr, exprHasAssignments, divot, divot - start, end - divot);
     node->setSubexpressionInfo(dot->divot(), dot->endOffset());
@@ -929,7 +909,6 @@ ExpressionNode* ASTBuilder::makeAssignNode(int lineNumber, ExpressionNode* loc, 
 
 ExpressionNode* ASTBuilder::makePrefixNode(int lineNumber, ExpressionNode* expr, Operator op, int start, int divot, int end)
 {
-    usesAssignment();
     if (!expr->isLocation())
         return new (m_globalData) PrefixErrorNode(lineNumber, expr, op, divot, divot - start, end - divot);
 
@@ -952,7 +931,6 @@ ExpressionNode* ASTBuilder::makePrefixNode(int lineNumber, ExpressionNode* expr,
 
 ExpressionNode* ASTBuilder::makePostfixNode(int lineNumber, ExpressionNode* expr, Operator op, int start, int divot, int end)
 {
-    usesAssignment();
     if (!expr->isLocation())
         return new (m_globalData) PostfixErrorNode(lineNumber, expr, op, divot, divot - start, end - divot);
 

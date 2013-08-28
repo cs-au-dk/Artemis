@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010 Apple Inc. All rights reserved.
+ * Copyright (C) 2010, 2011, 2012 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -26,6 +26,7 @@
 #include "config.h"
 #include "InjectedBundlePageLoaderClient.h"
 
+#include "InjectedBundleDOMWindowExtension.h"
 #include "InjectedBundleScriptWorld.h"
 #include "WKAPICast.h"
 #include "WKBundleAPICast.h"
@@ -35,6 +36,18 @@
 using namespace WebCore;
 
 namespace WebKit {
+
+bool InjectedBundlePageLoaderClient::shouldGoToBackForwardListItem(WebPage* page, InjectedBundleBackForwardListItem* item, RefPtr<APIObject>& userData)
+{
+    if (!m_client.shouldGoToBackForwardListItem)
+        return true;
+
+    WKTypeRef userDataToPass = 0;
+    bool result = m_client.shouldGoToBackForwardListItem(toAPI(page), toAPI(item), &userDataToPass, m_client.clientInfo);
+    userData = adoptRef(toImpl(userDataToPass));
+    
+    return result;
+}
 
 void InjectedBundlePageLoaderClient::didStartProvisionalLoadForFrame(WebPage* page, WebFrame* frame, RefPtr<APIObject>& userData)
 {
@@ -158,7 +171,7 @@ void InjectedBundlePageLoaderClient::didRunInsecureContentForFrame(WebPage* page
 
 void InjectedBundlePageLoaderClient::didDetectXSSForFrame(WebPage* page, WebFrame* frame, RefPtr<APIObject>& userData)
 {
-    if (!m_client.didRunInsecureContentForFrame)
+    if (!m_client.didDetectXSSForFrame)
         return;
 
     WKTypeRef userDataToPass = 0;
@@ -186,7 +199,6 @@ void InjectedBundlePageLoaderClient::didFirstVisuallyNonEmptyLayoutForFrame(WebP
     userData = adoptRef(toImpl(userDataToPass));
 }
 
-
 void InjectedBundlePageLoaderClient::didLayoutForFrame(WebPage* page, WebFrame* frame)
 {
     if (!m_client.didLayoutForFrame)
@@ -194,6 +206,16 @@ void InjectedBundlePageLoaderClient::didLayoutForFrame(WebPage* page, WebFrame* 
 
     m_client.didLayoutForFrame(toAPI(page), toAPI(frame), m_client.clientInfo);
 }
+
+void InjectedBundlePageLoaderClient::didNewFirstVisuallyNonEmptyLayout(WebPage* page, RefPtr<APIObject>& userData)
+{
+    if (!m_client.didNewFirstVisuallyNonEmptyLayout)
+        return;
+    
+    WKTypeRef userDataToPass = 0;
+    m_client.didNewFirstVisuallyNonEmptyLayout(toAPI(page), &userDataToPass, m_client.clientInfo);
+    userData = adoptRef(toImpl(userDataToPass));
+}    
 
 void InjectedBundlePageLoaderClient::didClearWindowObjectForFrame(WebPage* page, WebFrame* frame, DOMWrapperWorld* world)
 {
@@ -225,6 +247,45 @@ void InjectedBundlePageLoaderClient::didHandleOnloadEventsForFrame(WebPage* page
         return;
 
     m_client.didHandleOnloadEventsForFrame(toAPI(page), toAPI(frame), m_client.clientInfo);
+}
+
+void InjectedBundlePageLoaderClient::globalObjectIsAvailableForFrame(WebPage* page, WebFrame* frame, WebCore::DOMWrapperWorld* world)
+{
+    if (!m_client.globalObjectIsAvailableForFrame)
+        return;
+    
+    RefPtr<InjectedBundleScriptWorld> injectedWorld = InjectedBundleScriptWorld::getOrCreate(world);
+    m_client.globalObjectIsAvailableForFrame(toAPI(page), toAPI(frame), toAPI(injectedWorld.get()), m_client.clientInfo);
+}
+
+void InjectedBundlePageLoaderClient::willDisconnectDOMWindowExtensionFromGlobalObject(WebPage* page, WebCore::DOMWindowExtension* coreExtension)
+{
+    if (!m_client.willDisconnectDOMWindowExtensionFromGlobalObject)
+        return;
+
+    RefPtr<InjectedBundleDOMWindowExtension> extension = InjectedBundleDOMWindowExtension::get(coreExtension);
+    ASSERT(extension);
+    m_client.willDisconnectDOMWindowExtensionFromGlobalObject(toAPI(page), toAPI(extension.get()), m_client.clientInfo);
+}
+
+void InjectedBundlePageLoaderClient::didReconnectDOMWindowExtensionToGlobalObject(WebPage* page, WebCore::DOMWindowExtension* coreExtension)
+{
+    if (!m_client.didReconnectDOMWindowExtensionToGlobalObject)
+        return;
+
+    RefPtr<InjectedBundleDOMWindowExtension> extension = InjectedBundleDOMWindowExtension::get(coreExtension);
+    ASSERT(extension);
+    m_client.didReconnectDOMWindowExtensionToGlobalObject(toAPI(page), toAPI(extension.get()), m_client.clientInfo);
+}
+
+void InjectedBundlePageLoaderClient::willDestroyGlobalObjectForDOMWindowExtension(WebPage* page, WebCore::DOMWindowExtension* coreExtension)
+{
+    if (!m_client.willDestroyGlobalObjectForDOMWindowExtension)
+        return;
+
+    RefPtr<InjectedBundleDOMWindowExtension> extension = InjectedBundleDOMWindowExtension::get(coreExtension);
+    ASSERT(extension);
+    m_client.willDestroyGlobalObjectForDOMWindowExtension(toAPI(page), toAPI(extension.get()), m_client.clientInfo);
 }
 
 } // namespace WebKit

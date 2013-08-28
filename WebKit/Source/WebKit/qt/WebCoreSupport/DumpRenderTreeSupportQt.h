@@ -112,7 +112,6 @@ public:
 
     static bool pauseAnimation(QWebFrame*, const QString& name, double time, const QString& elementId);
     static bool pauseTransitionOfProperty(QWebFrame*, const QString& name, double time, const QString& elementId);
-    static bool pauseSVGAnimation(QWebFrame*, const QString& animationId, double time, const QString& elementId);
     static void suspendActiveDOMObjects(QWebFrame* frame);
     static void resumeActiveDOMObjects(QWebFrame* frame);
 
@@ -168,7 +167,6 @@ public:
 
     static QString markerTextForListItem(const QWebElement& listItem);
     static QVariantMap computedStyleIncludingVisitedInfo(const QWebElement& element);
-    static QString plainText(const QVariant& rng);
 
     static void dumpFrameLoader(bool b);
     static void dumpProgressFinishedCallback(bool);
@@ -208,7 +206,6 @@ public:
 
     static void scalePageBy(QWebFrame*, float scale, const QPoint& origin);
 
-    static QVariantList nodesFromRect(const QWebElement& document, int x, int y, unsigned top, unsigned right, unsigned bottom, unsigned left, bool ignoreClipping);
     static QString responseMimeType(QWebFrame*);
     static void clearOpener(QWebFrame*);
     static void addURLToRedirect(const QString& origin, const QString& destination);
@@ -237,6 +234,8 @@ public:
 
     static bool defaultHixie76WebSocketProtocolEnabled();
     static void setHixie76WebSocketProtocolEnabled(QWebPage*, bool);
+
+    static QImage paintPagesWithBoundaries(QWebFrame*);
 };
 
 #endif

@@ -26,6 +26,7 @@
 
 #include "cc/CCFrameRateController.h"
 
+#include "TraceEvent.h"
 #include "cc/CCThread.h"
 #include "cc/CCThreadTask.h"
 
@@ -39,7 +40,7 @@ public:
     }
     virtual ~CCFrameRateControllerTimeSourceAdapter() { }
 
-    virtual void onTimerTick() { m_frameRateController->onTimerTick(); }
+    virtual void onTimerTick() OVERRIDE { m_frameRateController->onTimerTick(); }
 private:
     explicit CCFrameRateControllerTimeSourceAdapter(CCFrameRateController* frameRateController)
             : m_frameRateController(frameRateController) { }
@@ -62,6 +63,14 @@ CCFrameRateController::~CCFrameRateController()
     m_timeSource->setActive(false);
 }
 
+void CCFrameRateController::setActive(bool active)
+{
+    if (m_timeSource->active() == active)
+        return;
+    TRACE_EVENT("CCFrameRateController::setActive", 0, (active ? "active" : "inactive"));
+    m_timeSource->setActive(active);
+}
+
 void CCFrameRateController::setMaxFramesPending(int maxFramesPending)
 {
     m_maxFramesPending = maxFramesPending;
@@ -69,12 +78,16 @@ void CCFrameRateController::setMaxFramesPending(int maxFramesPending)
 
 void CCFrameRateController::onTimerTick()
 {
+    ASSERT(m_timeSource->active());
+
     // Don't forward the tick if we have too many frames in flight.
-    if (m_maxFramesPending && m_numFramesPending >= m_maxFramesPending)
+    if (m_maxFramesPending && m_numFramesPending >= m_maxFramesPending) {
+        TRACE_EVENT("CCFrameRateController::onTimerTickButMaxFramesPending", 0, 0);
         return;
+    }
 
     if (m_client)
-        m_client->beginFrame();
+        m_client->vsyncTick();
 }
 
 void CCFrameRateController::didBeginFrame()

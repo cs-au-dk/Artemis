@@ -41,7 +41,7 @@ enum SVGTextPathSpacingType {
 
 template<>
 struct SVGPropertyTraits<SVGTextPathMethodType> {
-    static SVGTextPathMethodType highestEnumValue() { return SVGTextPathMethodStretch; }
+    static unsigned highestEnumValue() { return SVGTextPathMethodStretch; }
 
     static String toString(SVGTextPathMethodType type)
     {
@@ -70,7 +70,7 @@ struct SVGPropertyTraits<SVGTextPathMethodType> {
 
 template<>
 struct SVGPropertyTraits<SVGTextPathSpacingType> {
-    static SVGTextPathSpacingType highestEnumValue() { return SVGTextPathSpacingExact; }
+    static unsigned highestEnumValue() { return SVGTextPathSpacingExact; }
 
     static String toString(SVGTextPathSpacingType type)
     {
@@ -115,14 +115,14 @@ public:
 private:
     SVGTextPathElement(const QualifiedName&, Document*);
 
-    virtual void insertedIntoDocument();
+    virtual InsertionNotificationRequest insertedInto(Node*) OVERRIDE;
 
     bool isSupportedAttribute(const QualifiedName&);
-    virtual void parseMappedAttribute(Attribute*);
+    virtual void parseAttribute(Attribute*) OVERRIDE;
     virtual void svgAttributeChanged(const QualifiedName&);
 
     virtual RenderObject* createRenderer(RenderArena*, RenderStyle*);
-    virtual bool childShouldCreateRenderer(Node*) const;
+    virtual bool childShouldCreateRenderer(const NodeRenderingContext&) const;
     virtual bool rendererIsNeeded(const NodeRenderingContext&);
 
     virtual bool selfHasRelativeLengths() const;

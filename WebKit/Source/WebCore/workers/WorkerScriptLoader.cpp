@@ -48,6 +48,7 @@ namespace WebCore {
 
 WorkerScriptLoader::WorkerScriptLoader()
     : m_client(0)
+    , m_script("")
     , m_failed(false)
     , m_identifier(0)
     , m_finishing(false)
@@ -109,7 +110,7 @@ PassOwnPtr<ResourceRequest> WorkerScriptLoader::createResourceRequest()
 {
     OwnPtr<ResourceRequest> request = adoptPtr(new ResourceRequest(m_url));
     request->setHTTPMethod("GET");
-#if PLATFORM(CHROMIUM)
+#if PLATFORM(CHROMIUM) || PLATFORM(BLACKBERRY)
     request->setTargetType(m_targetType);
 #endif
     return request.release();

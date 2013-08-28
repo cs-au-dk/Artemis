@@ -53,17 +53,10 @@ public:
     void begin(const KURL&, bool dispatchWindowObjectAvailable = true, Document* ownerDocument = 0);
     void addData(const char* bytes, size_t length);
     void end();
-    void endIfNotLoadingMainResource();
     
     void setFrame(Frame* frame) { m_frame = frame; }
 
     void setEncoding(const String& encoding, bool userChosen);
-
-#if PLATFORM(MAC) || PLATFORM(WIN)
-    // This code exists only to service a quirk in the Apple Mac and Windows ports.
-    // FIXME: We should remove this code once CFNetwork implements RFC 6266.
-    String deprecatedFrameEncoding() const;
-#endif
 
     const String& mimeType() const { return m_mimeType; }
     void setMIMEType(const String& type) { m_mimeType = type; }
@@ -87,6 +80,13 @@ private:
     String m_encoding;
     RefPtr<TextResourceDecoder> m_decoder;
     RefPtr<DocumentParser> m_parser;
+
+    enum WriterState {
+        NotStartedWritingState,
+        StartedWritingState,
+        FinishedWritingState,
+    };
+    WriterState m_state;
 };
 
 } // namespace WebCore

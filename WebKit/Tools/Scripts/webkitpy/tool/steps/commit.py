@@ -26,6 +26,8 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
+import sys
+
 from webkitpy.common.checkout.scm import AuthenticationError, AmbiguousCommitError
 from webkitpy.common.config import urls
 from webkitpy.common.system.deprecated_logging import log
@@ -42,6 +44,7 @@ class Commit(AbstractStep):
     def options(cls):
         return AbstractStep.options() + [
             Options.check_builders,
+            Options.non_interactive,
         ]
 
     def _commit_warning(self, error):
@@ -50,10 +53,31 @@ class Commit(AbstractStep):
                 'To avoid this prompt, set "git config webkit-patch.commit-should-always-squash true".' % (
                 error.num_local_commits, working_directory_message))
 
+    def _check_test_expectations(self, changed_files):
+        test_expectations_files = []
+        for filename in changed_files:
+            if filename.endswith('test_expectations.txt'):
+                test_expectations_files.append(filename)
+
+        if not test_expectations_files:
+            return
+
+        args = ["--diff-files"]
+        args.extend(test_expectations_files)
+        try:
+            self._tool.executive.run_and_throw_if_fail(self._tool.port().check_webkit_style_command() + args, cwd=self._tool.scm().checkout_root)
+        except ScriptError, e:
+            if self._options.non_interactive:
+                raise
+            if not self._tool.user.confirm("Are you sure you want to continue?", default="n"):
+                self._exit(1)
+
     def run(self, state):
         self._commit_message = self._tool.checkout().commit_message_for_this_commit(self._options.git_commit).message()
         if len(self._commit_message) < 10:
             raise Exception("Attempted to commit with a commit message shorter than 10 characters.  Either your patch is missing a ChangeLog or webkit-patch may have a bug.")
+
+        self._check_test_expectations(self._changed_files(state))
 
         self._state = state
 
@@ -73,12 +97,14 @@ class Commit(AbstractStep):
                 self._state["commit_text"] = commit_text
                 break;
             except AmbiguousCommitError, e:
-                if self._tool.user.confirm(self._commit_warning(e)):
+                if self._options.non_interactive or self._tool.user.confirm(self._commit_warning(e)):
                     force_squash = True
                 else:
                     # This will correctly interrupt the rest of the commit process.
                     raise ScriptError(message="Did not commit")
             except AuthenticationError, e:
+                if self._options.non_interactive:
+                    raise ScriptError(message="Authentication required")
                 username = self._tool.user.prompt("%s login: " % e.server_host, repeat=5)
                 if not username:
                     raise ScriptError("You need to specify the username on %s to perform the commit as." % e.server_host)

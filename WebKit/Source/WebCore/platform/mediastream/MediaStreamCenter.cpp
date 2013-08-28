@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2011 Ericsson AB. All rights reserved.
+ * Copyright (C) 2012 Google Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -34,16 +35,16 @@
 
 #include "MediaStreamCenter.h"
 
-#include "MainThread.h"
 #include "MediaStreamDescriptor.h"
 
 namespace WebCore {
 
-MediaStreamCenter& MediaStreamCenter::instance()
+MediaStreamCenter::MediaStreamCenter()
 {
-    ASSERT(isMainThread());
-    DEFINE_STATIC_LOCAL(MediaStreamCenter, center, ());
-    return center;
+}
+
+MediaStreamCenter::~MediaStreamCenter()
+{
 }
 
 void MediaStreamCenter::endLocalMediaStream(MediaStreamDescriptor* streamDescriptor)
@@ -53,30 +54,6 @@ void MediaStreamCenter::endLocalMediaStream(MediaStreamDescriptor* streamDescrip
         owner->streamEnded();
     else
         streamDescriptor->setEnded();
-}
-
-// FIXME: remove when real implementations are available
-// Empty implementations for ports that build with MEDIA_STREAM enabled by default.
-MediaStreamCenter::MediaStreamCenter()
-{
-}
-
-MediaStreamCenter::~MediaStreamCenter()
-{
-}
-
-void MediaStreamCenter::queryMediaStreamSources(PassRefPtr<MediaStreamSourcesQueryClient> client)
-{
-    MediaStreamSourceVector sources;
-    client->mediaStreamSourcesQueryCompleted(sources);
-}
-
-void MediaStreamCenter::didSetMediaStreamTrackEnabled(MediaStreamDescriptor*, unsigned)
-{
-}
-
-void MediaStreamCenter::didStopLocalMediaStream(MediaStreamDescriptor*)
-{
 }
 
 } // namespace WebCore

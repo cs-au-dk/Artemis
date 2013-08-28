@@ -21,13 +21,11 @@
 #ifndef RenderDetailsMarker_h
 #define RenderDetailsMarker_h
 
-#if ENABLE(DETAILS)
+#if ENABLE(DETAILS) || ENABLE(CALENDAR_PICKER)
 
 #include "RenderBlock.h"
 
 namespace WebCore {
-
-class RenderDetails;
 
 class RenderDetailsMarker : public RenderBlock {
 public:
@@ -44,8 +42,7 @@ private:
 
     bool isOpen() const;
     Path getCanonicalPath() const;
-    Path getPath(const IntPoint& origin) const;
-    RenderDetails* details() const;
+    Path getPath(const LayoutPoint& origin) const;
 };
 
 inline RenderDetailsMarker* toRenderDetailsMarker(RenderObject* object)

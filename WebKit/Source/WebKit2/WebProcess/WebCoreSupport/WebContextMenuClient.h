@@ -26,6 +26,8 @@
 #ifndef WebContextMenuClient_h
 #define WebContextMenuClient_h
 
+#if ENABLE(CONTEXT_MENUS)
+
 #include <WebCore/ContextMenuClient.h>
 
 namespace WebKit {
@@ -59,10 +61,15 @@ private:
 #if PLATFORM(MAC)
     virtual void searchWithSpotlight() OVERRIDE;
 #endif
-    
+
+#if USE(ACCESSIBILITY_CONTEXT_MENUS)
+    void showContextMenu() OVERRIDE;
+#endif
+
     WebPage* m_page;
 };
 
 } // namespace WebKit
 
+#endif // ENABLE(CONTEXT_MENUS)
 #endif // WebContextMenuClient_h

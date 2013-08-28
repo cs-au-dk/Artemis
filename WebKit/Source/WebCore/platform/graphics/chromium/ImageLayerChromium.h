@@ -37,10 +37,6 @@
 #include "ContentLayerChromium.h"
 #include "PlatformImage.h"
 
-#if USE(CG)
-#include <wtf/RetainPtr.h>
-#endif
-
 namespace WebCore {
 
 class Image;
@@ -49,24 +45,23 @@ class ImageLayerTextureUpdater;
 // A Layer that contains only an Image element.
 class ImageLayerChromium : public TiledLayerChromium {
 public:
-    static PassRefPtr<ImageLayerChromium> create(CCLayerDelegate*);
+    static PassRefPtr<ImageLayerChromium> create();
     virtual ~ImageLayerChromium();
 
-    virtual bool drawsContent() const;
-    virtual void paintContentsIfDirty();
-    virtual bool needsContentsScale() const;
+    virtual bool drawsContent() const OVERRIDE;
+    virtual void update(CCTextureUpdater&, const CCOcclusionTracker*) OVERRIDE;
+    virtual bool needsContentsScale() const OVERRIDE;
 
     void setContents(Image* image);
 
 private:
-    explicit ImageLayerChromium(CCLayerDelegate*);
+    ImageLayerChromium();
 
-    virtual void cleanupResources();
-    virtual void createTextureUpdater(const CCLayerTreeHost*);
     void setTilingOption(TilingOption);
 
-    virtual LayerTextureUpdater* textureUpdater() const;
-    virtual IntSize contentBounds() const;
+    virtual LayerTextureUpdater* textureUpdater() const OVERRIDE;
+    virtual void createTextureUpdaterIfNeeded() OVERRIDE;
+    virtual IntSize contentBounds() const OVERRIDE;
 
     NativeImagePtr m_imageForCurrentFrame;
     RefPtr<Image> m_contents;

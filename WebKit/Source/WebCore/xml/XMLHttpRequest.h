@@ -106,7 +106,7 @@ public:
     Document* responseXML(ExceptionCode&);
     Document* optionalResponseXML() const { return m_responseDocument.get(); }
 #if ENABLE(XHR_RESPONSE_BLOB)
-    Blob* responseBlob(ExceptionCode&) const;
+    Blob* responseBlob(ExceptionCode&);
     Blob* optionalResponseBlob() const { return m_responseBlob.get(); }
 #endif
 
@@ -139,7 +139,7 @@ public:
 
     using RefCounted<XMLHttpRequest>::ref;
     using RefCounted<XMLHttpRequest>::deref;
-    void changeState(State newState);
+
 private:
     XMLHttpRequest(ScriptExecutionContext*, PassRefPtr<SecurityOrigin>);
 
@@ -170,6 +170,7 @@ private:
     String getRequestHeader(const AtomicString& name) const;
     void setRequestHeaderInternal(const AtomicString& name, const String& value);
 
+    void changeState(State newState);
     void callReadyStateChangeListener();
     void dropProtection();
     void internalAbort();

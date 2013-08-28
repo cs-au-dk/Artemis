@@ -204,9 +204,14 @@ static bool advanceByCombiningCharacterSequence(const UChar*& iterator, const UC
     }
 
     // Consume marks.
-    while (iterator < end && ((U_GET_GC_MASK(*iterator) & U_GC_M_MASK) || *iterator == zeroWidthJoiner || *iterator == zeroWidthNonJoiner)) {
-        iterator++;
-        markCount++;
+    while (iterator < end) {
+        UChar32 nextCharacter;
+        int markLength = 0;
+        U16_NEXT(iterator, markLength, end - iterator, nextCharacter);
+        if (!(U_GET_GC_MASK(nextCharacter) & U_GC_M_MASK) && nextCharacter != zeroWidthJoiner && nextCharacter != zeroWidthNonJoiner)
+            break;
+        markCount += markLength;
+        iterator += markLength;
     }
 
     return true;
@@ -514,7 +519,7 @@ void ComplexTextController::adjustGlyphsAndAdvances()
             if (ch == '\t' && m_run.allowTabs()) {
                 float tabWidth = m_font.tabWidth(*fontData);
                 advance.width = tabWidth - fmodf(m_run.xPos() + m_totalWidth + widthSinceLastCommit, tabWidth);
-            } else if (ch == zeroWidthSpace || (Font::treatAsZeroWidthSpace(ch) && !treatAsSpace)) {
+            } else if (Font::treatAsZeroWidthSpace(ch) && !treatAsSpace) {
                 advance.width = 0;
                 glyph = fontData->spaceGlyph();
             }

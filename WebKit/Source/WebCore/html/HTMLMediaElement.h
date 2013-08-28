@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2007, 2008, 2009, 2010, 2011 Apple Inc. All rights reserved.
+ * Copyright (C) 2007, 2008, 2009, 2010, 2011, 2012 Apple Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -30,6 +30,7 @@
 
 #include "HTMLElement.h"
 #include "ActiveDOMObject.h"
+#include "GenericEventQueue.h"
 #include "MediaCanStartListener.h"
 #include "MediaControllerInterface.h"
 #include "MediaPlayer.h"
@@ -127,7 +128,7 @@ public:
 
     PassRefPtr<TimeRanges> buffered() const;
     void load(ExceptionCode&);
-    String canPlayType(const String& mimeType) const;
+    String canPlayType(const String& mimeType, const String& keySystem = String()) const;
 
 // ready state
     ReadyState readyState() const;
@@ -171,6 +172,8 @@ public:
 #if ENABLE(MEDIA_SOURCE)
 //  Media Source.
     const KURL& webkitMediaSourceURL() const { return m_mediaSourceURL; }
+    void webkitSourceAddId(const String&, const String&, ExceptionCode&);
+    void webkitSourceRemoveId(const String&, ExceptionCode&);
     void webkitSourceAppend(PassRefPtr<Uint8Array> data, ExceptionCode&);
     enum EndOfStreamStatus { EOS_NO_ERROR, EOS_NETWORK_ERR, EOS_DECODE_ERR };
     void webkitSourceEndOfStream(unsigned short, ExceptionCode&);
@@ -178,6 +181,19 @@ public:
     SourceState webkitSourceState() const;
     void setSourceState(SourceState);
 #endif 
+
+#if ENABLE(ENCRYPTED_MEDIA)
+    void webkitGenerateKeyRequest(const String& keySystem, PassRefPtr<Uint8Array> initData, ExceptionCode&);
+    void webkitGenerateKeyRequest(const String& keySystem, ExceptionCode&);
+    void webkitAddKey(const String& keySystem, PassRefPtr<Uint8Array> key, PassRefPtr<Uint8Array> initData, const String& sessionId, ExceptionCode&);
+    void webkitAddKey(const String& keySystem, PassRefPtr<Uint8Array> key, ExceptionCode&);
+    void webkitCancelKeyRequest(const String& keySystem, const String& sessionId, ExceptionCode&);
+
+    DEFINE_ATTRIBUTE_EVENT_LISTENER(webkitkeyadded);
+    DEFINE_ATTRIBUTE_EVENT_LISTENER(webkitkeyerror);
+    DEFINE_ATTRIBUTE_EVENT_LISTENER(webkitkeymessage);
+    DEFINE_ATTRIBUTE_EVENT_LISTENER(webkitneedkey);
+#endif
 
 // controls
     bool controls() const;
@@ -196,18 +212,39 @@ public:
     float percentLoaded() const;
 
 #if ENABLE(VIDEO_TRACK)
-    PassRefPtr<TextTrack> addTrack(const String& kind, const String& label, const String& language, ExceptionCode&);
-    PassRefPtr<TextTrack> addTrack(const String& kind, const String& label, ExceptionCode& ec) { return addTrack(kind, label, emptyString(), ec); }
-    PassRefPtr<TextTrack> addTrack(const String& kind, ExceptionCode& ec) { return addTrack(kind, emptyString(), emptyString(), ec); }
+    PassRefPtr<TextTrack> addTextTrack(const String& kind, const String& label, const String& language, ExceptionCode&);
+    PassRefPtr<TextTrack> addTextTrack(const String& kind, const String& label, ExceptionCode& ec) { return addTextTrack(kind, label, emptyString(), ec); }
+    PassRefPtr<TextTrack> addTextTrack(const String& kind, ExceptionCode& ec) { return addTextTrack(kind, emptyString(), emptyString(), ec); }
 
     TextTrackList* textTracks();
     CueList currentlyActiveCues() const { return m_currentlyActiveCues; }
 
-    virtual void trackWasAdded(HTMLTrackElement*);
-    virtual void trackWillBeRemoved(HTMLTrackElement*);
-    
-    void configureTextTrack(HTMLTrackElement*);
-    void configureTextTracks();
+    virtual void didAddTrack(HTMLTrackElement*);
+    virtual void willRemoveTrack(HTMLTrackElement*);
+
+    struct TrackGroup {
+        enum GroupKind { CaptionsAndSubtitles, Description, Chapter, Metadata, Other };
+
+        TrackGroup(GroupKind kind)
+            : visibleTrack(0)
+            , defaultTrack(0)
+            , kind(kind)
+            , hasSrcLang(false)
+        {
+        }
+
+        Vector<HTMLTrackElement*> tracks;
+        HTMLTrackElement* visibleTrack;
+        HTMLTrackElement* defaultTrack;
+        GroupKind kind;
+        bool hasSrcLang;
+    };
+
+    void configureTextTrackGroupForLanguage(const TrackGroup&) const;
+    void configureNewTextTracks();
+    void configureTextTrackGroup(const TrackGroup&) const;
+
+    bool userIsInterestedInThisTrackKind(String) const;
     bool textTracksAreReady() const;
     void configureTextTrackDisplay();
 
@@ -230,6 +267,13 @@ public:
     void createMediaPlayerProxy();
     void updateWidget(PluginCreationOption);
 #endif
+
+    // EventTarget function.
+    // Both Node (via HTMLElement) and ActiveDOMObject define this method, which
+    // causes an ambiguity error at compile time. This class's constructor
+    // ensures that both implementations return document, so return the result
+    // of one of them here.
+    virtual ScriptExecutionContext* scriptExecutionContext() const OVERRIDE { return HTMLElement::scriptExecutionContext(); }
 
     bool hasSingleSecurityOrigin() const { return !m_player || m_player->hasSingleSecurityOrigin(); }
     
@@ -273,11 +317,13 @@ public:
     MediaController* controller() const;
     void setController(PassRefPtr<MediaController>);
 
+    virtual bool dispatchEvent(PassRefPtr<Event>);
+
 protected:
     HTMLMediaElement(const QualifiedName&, Document*, bool);
     virtual ~HTMLMediaElement();
 
-    virtual void parseMappedAttribute(Attribute*);
+    virtual void parseAttribute(Attribute*) OVERRIDE;
     virtual void finishParsingChildren();
     virtual bool isURLAttribute(Attribute*) const;
     virtual void attach();
@@ -312,11 +358,12 @@ private:
     void createMediaPlayer();
 
     virtual bool supportsFocus() const;
-    virtual void attributeChanged(Attribute*, bool preserveDecls);
+    virtual bool isMouseFocusable() const;
     virtual bool rendererIsNeeded(const NodeRenderingContext&);
     virtual RenderObject* createRenderer(RenderArena*, RenderStyle*);
-    virtual void insertedIntoDocument();
-    virtual void removedFromDocument();
+    virtual bool childShouldCreateRenderer(const NodeRenderingContext&) const OVERRIDE;
+    virtual InsertionNotificationRequest insertedInto(Node*) OVERRIDE;
+    virtual void removedFrom(Node*) OVERRIDE;
     virtual void didRecalcStyle(StyleChange);
     
     virtual void defaultEventHandler(Event*);
@@ -347,6 +394,7 @@ private:
     virtual void mediaPlayerRateChanged(MediaPlayer*);
     virtual void mediaPlayerPlaybackStateChanged(MediaPlayer*);
     virtual void mediaPlayerSawUnsupportedTracks(MediaPlayer*);
+    virtual void mediaPlayerResourceNotSupported(MediaPlayer*);
     virtual void mediaPlayerRepaint(MediaPlayer*);
     virtual void mediaPlayerSizeChanged(MediaPlayer*);
 #if USE(ACCELERATED_COMPOSITING)
@@ -361,10 +409,20 @@ private:
 #if ENABLE(MEDIA_SOURCE)
     virtual void mediaPlayerSourceOpened();
     virtual String mediaPlayerSourceURL() const;
+    bool isValidSourceId(const String&, ExceptionCode&) const;
 #endif
 
+#if ENABLE(ENCRYPTED_MEDIA)
+    virtual void mediaPlayerKeyAdded(MediaPlayer*, const String& keySystem, const String& sessionId) OVERRIDE;
+    virtual void mediaPlayerKeyError(MediaPlayer*, const String& keySystem, const String& sessionId, MediaPlayerClient::MediaKeyErrorCode, unsigned short systemCode) OVERRIDE;
+    virtual void mediaPlayerKeyMessage(MediaPlayer*, const String& keySystem, const String& sessionId, const unsigned char* message, unsigned messageLength) OVERRIDE;
+    virtual void mediaPlayerKeyNeeded(MediaPlayer*, const String& keySystem, const String& sessionId, const unsigned char* initData, unsigned initDataLength) OVERRIDE;
+#endif
+
+    virtual String mediaPlayerReferrer() const OVERRIDE;
+    virtual String mediaPlayerUserAgent() const OVERRIDE;
+
     void loadTimerFired(Timer<HTMLMediaElement>*);
-    void asyncEventTimerFired(Timer<HTMLMediaElement>*);
     void progressEventTimerFired(Timer<HTMLMediaElement>*);
     void playbackProgressTimerFired(Timer<HTMLMediaElement>*);
     void startPlaybackProgressTimer();
@@ -381,7 +439,7 @@ private:
     
     // loading
     void selectMediaResource();
-    void loadResource(const KURL&, ContentType&);
+    void loadResource(const KURL&, ContentType&, const String& keySystem);
     void scheduleNextSourceChild();
     void loadNextSourceChild();
     void userCancelledLoad();
@@ -392,14 +450,18 @@ private:
     void waitForSourceChange();
     void prepareToPlay();
 
-    KURL selectNextSourceChild(ContentType*, InvalidURLAction);
+    KURL selectNextSourceChild(ContentType*, String* keySystem, InvalidURLAction);
+
     void mediaLoadingFailed(MediaPlayer::NetworkState);
 
 #if ENABLE(VIDEO_TRACK)
     void updateActiveTextTrackCues(float);
     bool userIsInterestedInThisLanguage(const String&) const;
-    bool userIsInterestedInThisTrack(HTMLTrackElement*) const;
     HTMLTrackElement* showingTrackWithSameKind(HTMLTrackElement*) const;
+
+    bool ignoreTrackDisplayUpdateRequests() const { return m_ignoreTrackDisplayUpdate > 0; }
+    void beginIgnoringTrackDisplayUpdateRequests() { ++m_ignoreTrackDisplayUpdate; }
+    void endIgnoringTrackDisplayUpdateRequests() { ASSERT(m_ignoreTrackDisplayUpdate); --m_ignoreTrackDisplayUpdate; }
 #endif
 
     // These "internal" functions do not check user gesture restrictions.
@@ -440,7 +502,14 @@ private:
     bool createMediaControls();
     void configureMediaControls();
 
+    void prepareMediaFragmentURI();
+    void applyMediaFragmentURI();
+
     virtual void* preDispatchEventHandler(Event*);
+
+    void changeNetworkStateFromLoadingToIdle();
+
+    void removeBehaviorsRestrictionsAfterFirstUserGesture();
 
 #if ENABLE(MICRODATA)
     virtual String itemValueText() const;
@@ -454,12 +523,16 @@ private:
     bool isLiveStream() const { return movieLoadType() == MediaPlayer::LiveStream; }
     bool isAutoplaying() const { return m_autoplaying; }
 
+#if PLATFORM(MAC)
+    void updateDisableSleep();
+    bool shouldDisableSleep() const;
+#endif
+
     Timer<HTMLMediaElement> m_loadTimer;
-    Timer<HTMLMediaElement> m_asyncEventTimer;
     Timer<HTMLMediaElement> m_progressEventTimer;
     Timer<HTMLMediaElement> m_playbackProgressTimer;
-    Vector<RefPtr<Event> > m_pendingEvents;
     RefPtr<TimeRanges> m_playedTimeRanges;
+    OwnPtr<GenericEventQueue> m_asyncEventQueue;
 
     float m_playbackRate;
     float m_defaultPlaybackRate;
@@ -486,9 +559,8 @@ private:
     // Loading state.
     enum LoadState { WaitingForSource, LoadingFromSrcAttr, LoadingFromSourceElement };
     LoadState m_loadState;
-    HTMLSourceElement* m_currentSourceNode;
-    Node* m_nextChildNodeToConsider;
-    Node* sourceChildEndOfListValue() { return static_cast<Node*>(this); }
+    RefPtr<HTMLSourceElement> m_currentSourceNode;
+    RefPtr<Node> m_nextChildNodeToConsider;
 
     OwnPtr<MediaPlayer> m_player;
 #if ENABLE(PLUGIN_PROXY_FOR_VIDEO)
@@ -508,12 +580,16 @@ private:
 #if ENABLE(MEDIA_SOURCE)
     KURL m_mediaSourceURL;
     SourceState m_sourceState;
+    HashSet<String> m_sourceIDs;
 #endif
 
     mutable float m_cachedTime;
     mutable double m_cachedTimeWallClockUpdateTime;
     mutable double m_minimumWallClockTimeToCacheMediaTime;
-    
+
+    double m_fragmentStartTime;
+    double m_fragmentEndTime;
+
     typedef unsigned PendingLoadFlags;
     PendingLoadFlags m_pendingLoadFlags;
 
@@ -555,11 +631,15 @@ private:
 #if ENABLE(VIDEO_TRACK)
     bool m_tracksAreReady : 1;
     bool m_haveVisibleTextTrack : 1;
+    float m_lastTextTrackUpdateTime;
 
     RefPtr<TextTrackList> m_textTracks;
     Vector<RefPtr<TextTrack> > m_textTracksWhenResourceSelectionBegan;
+
     CueIntervalTree m_cueTree;
+
     CueList m_currentlyActiveCues;
+    int m_ignoreTrackDisplayUpdate;
 #endif
 
 #if ENABLE(WEB_AUDIO)
@@ -593,7 +673,7 @@ template <>
 struct ValueToString<TextTrackCue*> {
     static String string(TextTrackCue* const& cue)
     {
-        return String::format("%p id=%s interval=%f-->%f cue=%s)", cue, cue->id().utf8().data(), cue->startTime(), cue->endTime(), cue->getCueAsSource().utf8().data());
+        return String::format("%p id=%s interval=%f-->%f cue=%s)", cue, cue->id().utf8().data(), cue->startTime(), cue->endTime(), cue->text().utf8().data());
     }
 };
 #endif

@@ -27,13 +27,14 @@
  */
 
 #include "config.h"
+
+#if ENABLE(INSPECTOR)
+
 #include "NetworkResourcesData.h"
 
 #include "DOMImplementation.h"
 #include "SharedBuffer.h"
 #include "TextResourceDecoder.h"
-
-#if ENABLE(INSPECTOR)
 
 namespace {
 // 10MB
@@ -62,7 +63,7 @@ void NetworkResourcesData::ResourceData::setContent(const String& content)
     m_content = content;
 }
 
-unsigned NetworkResourcesData::ResourceData::purgeContent()
+unsigned NetworkResourcesData::ResourceData::removeContent()
 {
     unsigned result = 0;
     if (hasData()) {
@@ -76,22 +77,13 @@ unsigned NetworkResourcesData::ResourceData::purgeContent()
         result = 2 * m_content.length();
         m_content = String();
     }
-    m_isContentPurged = true;
     return result;
 }
 
-void NetworkResourcesData::ResourceData::createDecoder(const String& mimeType, const String& textEncodingName)
+unsigned NetworkResourcesData::ResourceData::purgeContent()
 {
-    if (!textEncodingName.isEmpty())
-        m_decoder = TextResourceDecoder::create("text/plain", textEncodingName);
-    else if (mimeType == "text/plain")
-        m_decoder = TextResourceDecoder::create("text/plain", "ISO-8859-1");
-    else if (mimeType == "text/html")
-        m_decoder = TextResourceDecoder::create("text/html", "UTF-8");
-    else if (DOMImplementation::isXMLMIMEType(mimeType)) {
-        m_decoder = TextResourceDecoder::create("application/xml");
-        m_decoder->useLenientXMLDecoding();
-    }
+    m_isContentPurged = true;
+    return removeContent();
 }
 
 int NetworkResourcesData::ResourceData::dataLength() const
@@ -113,6 +105,7 @@ int NetworkResourcesData::ResourceData::decodeDataToContent()
     ASSERT(!hasContent());
     int dataLength = m_dataBuffer->size();
     m_content = m_decoder->decode(m_dataBuffer->data(), m_dataBuffer->size());
+    m_content += m_decoder->flush();
     m_dataBuffer = nullptr;
     return 2 * m_content.length() - dataLength;
 }
@@ -136,6 +129,21 @@ void NetworkResourcesData::resourceCreated(const String& requestId, const String
     m_requestIdToResourceDataMap.set(requestId, new ResourceData(requestId, loaderId));
 }
 
+static PassRefPtr<TextResourceDecoder> createOtherResourceTextDecoder(const String& mimeType, const String& textEncodingName)
+{
+    RefPtr<TextResourceDecoder> decoder;
+    if (!textEncodingName.isEmpty())
+        decoder = TextResourceDecoder::create("text/plain", textEncodingName);
+    else if (DOMImplementation::isXMLMIMEType(mimeType.lower())) {
+        decoder = TextResourceDecoder::create("application/xml");
+        decoder->useLenientXMLDecoding();
+    } else if (equalIgnoringCase(mimeType, "text/html"))
+        decoder = TextResourceDecoder::create("text/html", "UTF-8");
+    else if (mimeType == "text/plain")
+        decoder = TextResourceDecoder::create("text/plain", "ISO-8859-1");
+    return decoder;
+}
+
 void NetworkResourcesData::responseReceived(const String& requestId, const String& frameId, const ResourceResponse& response)
 {
     ResourceData* resourceData = m_requestIdToResourceDataMap.get(requestId);
@@ -143,7 +151,8 @@ void NetworkResourcesData::responseReceived(const String& requestId, const Strin
         return;
     resourceData->setFrameId(frameId);
     resourceData->setUrl(response.url());
-    resourceData->createDecoder(response.mimeType(), response.textEncodingName());
+    resourceData->setDecoder(createOtherResourceTextDecoder(response.mimeType(), response.textEncodingName()));
+    resourceData->setHTTPStatusCode(response.httpStatusCode());
 }
 
 void NetworkResourcesData::setResourceType(const String& requestId, InspectorPageAgent::ResourceType type)
@@ -173,6 +182,9 @@ void NetworkResourcesData::setResourceContent(const String& requestId, const Str
     if (resourceData->isContentPurged())
         return;
     if (ensureFreeSpace(dataLength) && !resourceData->isContentPurged()) {
+        // We can not be sure that we didn't try to save this request data while it was loading, so remove it, if any.
+        if (resourceData->hasContent())
+            m_contentSize -= resourceData->removeContent();
         m_requestIdsDeque.append(requestId);
         resourceData->setContent(content);
         m_contentSize += dataLength;

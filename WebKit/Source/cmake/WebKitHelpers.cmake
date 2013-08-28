@@ -7,15 +7,27 @@ MACRO(WEBKIT_SET_EXTRA_COMPILER_FLAGS _target)
         SET(OLD_COMPILE_FLAGS "")
     ENDIF ()
 
+    INCLUDE(TestCXXAcceptsFlag)
+    CHECK_CXX_ACCEPTS_FLAG("-dumpversion" CMAKE_CXX_ACCEPTS_DUMPVERSION)
+    IF (CMAKE_CXX_ACCEPTS_DUMPVERSION)
+        EXEC_PROGRAM(${CMAKE_CXX_COMPILER} ARGS -dumpversion OUTPUT_VARIABLE COMPILER_VERSION)
+    ELSE ()
+        EXEC_PROGRAM("${CMAKE_CXX_COMPILER} -E -Wp,-dM - < /dev/null | grep '#define __VERSION__' | grep -E -o '[0-9]+\\.[0-9]+\\.?[0-9]+?'" OUTPUT_VARIABLE COMPILER_VERSION)
+    ENDIF ()
+
     # Disable some optimizations on buggy compiler versions
     # GCC 4.5.1 does not implement -ftree-sra correctly
-    EXEC_PROGRAM(${CMAKE_CXX_COMPILER} ARGS -dumpversion OUTPUT_VARIABLE COMPILER_VERSION)
     IF (${COMPILER_VERSION} STREQUAL "4.5.1")
         SET(OLD_COMPILE_FLAGS "${OLD_COMPILE_FLAGS} -fno-tree-sra")
     ENDIF ()
 
     IF (NOT SHARED_CORE)
-        SET(OLD_COMPILE_FLAGS "-fPIC -fvisibility=hidden ${OLD_COMPILE_FLAGS}")
+        SET(OLD_COMPILE_FLAGS "-fvisibility=hidden ${OLD_COMPILE_FLAGS}")
+    ENDIF ()
+
+    GET_TARGET_PROPERTY(TARGET_TYPE ${_target} TYPE)
+    IF (${TARGET_TYPE} STREQUAL "STATIC_LIBRARY") # -fPIC is automatically added to shared libraries
+        SET(OLD_COMPILE_FLAGS "-fPIC ${OLD_COMPILE_FLAGS}")
     ENDIF ()
 
     SET(OLD_COMPILE_FLAGS "-fno-exceptions -fno-strict-aliasing ${OLD_COMPILE_FLAGS}")

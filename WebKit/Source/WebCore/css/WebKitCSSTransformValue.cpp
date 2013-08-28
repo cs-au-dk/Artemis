@@ -33,7 +33,7 @@
 namespace WebCore {
 
 WebKitCSSTransformValue::WebKitCSSTransformValue(TransformOperationType op)
-    : CSSValueList(WebKitCSSTransformClass, false)
+    : CSSValueList(WebKitCSSTransformClass, CommaSeparator)
     , m_type(op)
 {
 }
@@ -113,6 +113,17 @@ String WebKitCSSTransformValue::customCssText() const
 
     result += ")";
     return result;
+}
+
+WebKitCSSTransformValue::WebKitCSSTransformValue(const WebKitCSSTransformValue& cloneFrom)
+    : CSSValueList(cloneFrom)
+    , m_type(cloneFrom.m_type)
+{
+}
+
+PassRefPtr<WebKitCSSTransformValue> WebKitCSSTransformValue::cloneForCSSOM() const
+{
+    return adoptRef(new WebKitCSSTransformValue(*this));
 }
 
 }

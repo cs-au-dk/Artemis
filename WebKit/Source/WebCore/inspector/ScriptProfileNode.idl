@@ -28,7 +28,8 @@ module core {
 
     interface [
         Conditional=JAVASCRIPT_DEBUGGER,
-        OmitConstructor
+        OmitConstructor,
+        V8CustomToJSObject
     ] ScriptProfileNode {
         readonly attribute DOMString functionName;
         readonly attribute DOMString url;
@@ -36,7 +37,7 @@ module core {
         readonly attribute double totalTime;
         readonly attribute double selfTime;
         readonly attribute unsigned long numberOfCalls;
-        readonly attribute [CustomGetter] Array children;
+        readonly attribute sequence<ScriptProfileNode> children;
         readonly attribute boolean visible;
         readonly attribute [CustomGetter] unsigned long callUID;
     };

@@ -37,7 +37,7 @@
 #include "GCControllerQt.h"
 #include "LayoutTestControllerQt.h"
 #include "TextInputControllerQt.h"
-#include "PlainTextControllerQt.h"
+#include "QtInitializeTestFonts.h"
 #include "testplugin.h"
 #include "WorkQueue.h"
 
@@ -49,6 +49,7 @@
 #include <QFileInfo>
 #include <QFocusEvent>
 #include <QFontDatabase>
+#include <QLabel>
 #include <QLocale>
 #include <QNetworkAccessManager>
 #include <QNetworkReply>
@@ -58,19 +59,12 @@
 #ifndef QT_NO_PRINTER
 #include <QPrinter>
 #endif
+#include <QProgressBar>
 #include <QUndoStack>
 #include <QUrl>
 
 #include <qwebsettings.h>
 #include <qwebsecurityorigin.h>
-
-#ifndef QT_NO_UITOOLS
-#include <QtUiTools/QUiLoader>
-#endif
-
-#if HAVE(FONTCONFIG)
-#include <fontconfig/fontconfig.h>
-#endif
 
 #include <limits.h>
 #include <locale.h>
@@ -305,7 +299,10 @@ void WebPage::javaScriptConsoleMessage(const QString& message, int lineNumber, c
         }
     }
 
-    fprintf (stdout, "CONSOLE MESSAGE: line %d: %s\n", lineNumber, newMessage.toUtf8().constData());
+    fprintf(stdout, "CONSOLE MESSAGE: ");
+    if (lineNumber)
+        fprintf(stdout, "line %d: ", lineNumber);
+    fprintf(stdout, "%s\n", newMessage.toUtf8().constData());
 }
 
 bool WebPage::javaScriptConfirm(QWebFrame*, const QString& msg)
@@ -363,13 +360,13 @@ QObject* WebPage::createPlugin(const QString& classId, const QUrl& url, const QS
     Q_UNUSED(url);
     Q_UNUSED(paramNames);
     Q_UNUSED(paramValues);
-#ifndef QT_NO_UITOOLS
-    QUiLoader loader;
-    return loader.createWidget(classId, view());
-#else
-    Q_UNUSED(classId);
+
+    if (classId == QLatin1String("QProgressBar"))
+        return new QProgressBar(view());
+    if (classId == QLatin1String("QLabel"))
+        return new QLabel(view());
+
     return 0;
-#endif
 }
 
 void WebPage::setViewGeometry(const QRect& rect)
@@ -442,7 +439,6 @@ DumpRenderTree::DumpRenderTree()
     connect(m_controller, SIGNAL(done()), this, SLOT(dump()));
     m_eventSender = new EventSender(m_page);
     m_textInputController = new TextInputController(m_page);
-    m_plainTextController = new PlainTextController(m_page);
     m_gcController = new GCController(m_page);
 
     // now connect our different signals
@@ -628,7 +624,7 @@ void DumpRenderTree::open(const QUrl& url)
 #if !(QT_VERSION <= QT_VERSION_CHECK(4, 6, 2))
     QFontDatabase::removeAllApplicationFonts();
 #endif
-    initializeFonts();
+    WebKit::initializeTestFonts();
 
     DumpRenderTreeSupportQt::dumpFrameLoader(url.toString().contains("loading/"));
     setTextOutputEnabled(true);
@@ -753,7 +749,6 @@ void DumpRenderTree::initJSObjects()
     frame->addToJavaScriptWindowObject(QLatin1String("eventSender"), m_eventSender);
     frame->addToJavaScriptWindowObject(QLatin1String("textInputController"), m_textInputController);
     frame->addToJavaScriptWindowObject(QLatin1String("GCController"), m_gcController);
-    frame->addToJavaScriptWindowObject(QLatin1String("plainText"), m_plainTextController);
     DumpRenderTreeSupportQt::injectInternalsObject(frame);
 }
 
@@ -953,13 +948,16 @@ void DumpRenderTree::dump()
     fputs("#EOF\n", stdout);
     fputs("#EOF\n", stderr);
 
-    // FIXME: All other ports don't dump pixels, if generatePixelResults is false.
-    if (m_dumpPixels) {
-        QImage image(m_page->viewportSize(), QImage::Format_ARGB32);
-        image.fill(Qt::white);
-        QPainter painter(&image);
-        mainFrame->render(&painter);
-        painter.end();
+    if (m_dumpPixels && !m_controller->shouldDumpAsText()) {
+        QImage image;
+        if (!m_controller->isPrinting()) {
+            image = QImage(m_page->viewportSize(), QImage::Format_ARGB32);
+            image.fill(Qt::white);
+            QPainter painter(&image);
+            mainFrame->render(&painter);
+            painter.end();
+        } else
+            image = DumpRenderTreeSupportQt::paintPagesWithBoundaries(mainFrame);
 
         QCryptographicHash hash(QCryptographicHash::Md5);
         for (int row = 0; row < image.height(); ++row)
@@ -1140,46 +1138,14 @@ QList<WebPage*> DumpRenderTree::getAllPages() const
     return pages;
 }
 
-void DumpRenderTree::initializeFonts()
+void DumpRenderTree::setTimeout(int timeout)
 {
-#if HAVE(FONTCONFIG)
-    static int numFonts = -1;
+    m_controller->setTimeout(timeout);
+}
 
-    FcInit();
-
-    // Some test cases may add or remove application fonts (via @font-face).
-    // Make sure to re-initialize the font set if necessary.
-    FcFontSet* appFontSet = FcConfigGetFonts(0, FcSetApplication);
-    if (appFontSet && numFonts >= 0 && appFontSet->nfont == numFonts)
-        return;
-
-    QByteArray fontDir = getenv("WEBKIT_TESTFONTS");
-    if (fontDir.isEmpty() || !QDir(fontDir).exists()) {
-        fprintf(stderr,
-                "\n\n"
-                "----------------------------------------------------------------------\n"
-                "WEBKIT_TESTFONTS environment variable is not set correctly.\n"
-                "This variable has to point to the directory containing the fonts\n"
-                "you can clone from git://gitorious.org/qtwebkit/testfonts.git\n"
-                "----------------------------------------------------------------------\n"
-               );
-        exit(1);
-    }
-    char currentPath[PATH_MAX+1];
-    if (!getcwd(currentPath, PATH_MAX))
-        qFatal("Couldn't get current working directory");
-    QByteArray configFile = currentPath;
-    FcConfig *config = FcConfigCreate();
-    configFile += "/Tools/DumpRenderTree/qt/fonts.conf";
-    if (!FcConfigParseAndLoad (config, (FcChar8*) configFile.data(), true))
-        qFatal("Couldn't load font configuration file");
-    if (!FcConfigAppFontAddDir (config, (FcChar8*) fontDir.data()))
-        qFatal("Couldn't add font dir!");
-    FcConfigSetCurrent(config);
-
-    appFontSet = FcConfigGetFonts(config, FcSetApplication);
-    numFonts = appFontSet->nfont;
-#endif
+void DumpRenderTree::setShouldTimeout(bool flag)
+{
+    m_controller->setShouldTimeout(flag);
 }
 
 }

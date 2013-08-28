@@ -53,7 +53,6 @@ inline bool isNumberedHeaderElement(ContainerNode* node)
 inline bool isRootNode(ContainerNode* node)
 {
     return node->nodeType() == Node::DOCUMENT_FRAGMENT_NODE
-        || node->nodeType() == Node::SHADOW_ROOT_NODE
         || node->hasTagName(htmlTag);
 }
 
@@ -310,7 +309,7 @@ void HTMLElementStack::popUntilForeignContentScopeMarker()
     
 void HTMLElementStack::pushRootNode(PassRefPtr<ContainerNode> rootNode)
 {
-    ASSERT(rootNode->nodeType() == Node::DOCUMENT_FRAGMENT_NODE || rootNode->nodeType() == Node::SHADOW_ROOT_NODE);
+    ASSERT(rootNode->nodeType() == Node::DOCUMENT_FRAGMENT_NODE);
     pushRootNodeCommon(rootNode);
 }
 
@@ -387,10 +386,12 @@ HTMLElementStack::ElementRecord* HTMLElementStack::topRecord() const
 
 Element* HTMLElementStack::oneBelowTop() const
 {
-    // We should never be calling this if it could be 0.
+    // We should never call this if there are fewer than 2 elements on the stack.
     ASSERT(m_top);
     ASSERT(m_top->next());
-    return m_top->next()->element();
+    if (m_top->next()->node()->isElementNode())
+        return m_top->next()->element();
+    return 0;
 }
 
 Element* HTMLElementStack::bottom() const
@@ -585,7 +586,6 @@ void HTMLElementStack::pushCommon(PassRefPtr<ContainerNode> node)
 
     m_stackDepth++;
     m_top = adoptPtr(new ElementRecord(node, m_top.release()));
-    topNode()->beginParsingChildren();
 }
 
 void HTMLElementStack::popCommon()

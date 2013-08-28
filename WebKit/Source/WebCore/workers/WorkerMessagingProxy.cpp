@@ -21,7 +21,7 @@
  * PROFITS; OR BUSINESS INTERRUPTION) HOWEVER CAUSED AND ON ANY THEORY
  * OF LIABILITY, WHETHER IN CONTRACT, STRICT LIABILITY, OR TORT
  * (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
- * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE. 
+ * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  *
  */
 
@@ -31,6 +31,7 @@
 
 #include "WorkerMessagingProxy.h"
 
+#include "ContentSecurityPolicy.h"
 #include "CrossThreadTask.h"
 #include "DedicatedWorkerContext.h"
 #include "DedicatedWorkerThread.h"
@@ -270,9 +271,12 @@ WorkerMessagingProxy::~WorkerMessagingProxy()
 
 void WorkerMessagingProxy::startWorkerContext(const KURL& scriptURL, const String& userAgent, const String& sourceCode, WorkerThreadStartMode startMode)
 {
-    RefPtr<DedicatedWorkerThread> thread = DedicatedWorkerThread::create(scriptURL, userAgent, sourceCode, *this, *this, startMode);
+    RefPtr<DedicatedWorkerThread> thread = DedicatedWorkerThread::create(scriptURL, userAgent, sourceCode, *this, *this, startMode,
+                                                                         m_scriptExecutionContext->contentSecurityPolicy()->policy(),
+                                                                         m_scriptExecutionContext->contentSecurityPolicy()->headerType());
     workerThreadCreated(thread);
     thread->start();
+    InspectorInstrumentation::didStartWorkerContext(m_scriptExecutionContext.get(), this, scriptURL);
 }
 
 void WorkerMessagingProxy::postMessageToWorkerObject(PassRefPtr<SerializedScriptValue> message, PassOwnPtr<MessagePortChannelArray> channels)
@@ -292,13 +296,14 @@ void WorkerMessagingProxy::postMessageToWorkerContext(PassRefPtr<SerializedScrip
         m_queuedEarlyTasks.append(MessageWorkerContextTask::create(message, channels));
 }
 
-void WorkerMessagingProxy::postTaskForModeToWorkerContext(PassOwnPtr<ScriptExecutionContext::Task> task, const String& mode)
+bool WorkerMessagingProxy::postTaskForModeToWorkerContext(PassOwnPtr<ScriptExecutionContext::Task> task, const String& mode)
 {
     if (m_askedToTerminate)
-        return;
+        return false;
 
     ASSERT(m_workerThread);
     m_workerThread->runLoop().postTaskForMode(task, mode);
+    return true;
 }
 
 void WorkerMessagingProxy::postTaskToLoader(PassOwnPtr<ScriptExecutionContext::Task> task)
@@ -312,12 +317,12 @@ void WorkerMessagingProxy::postExceptionToWorkerObject(const String& errorMessag
 {
     m_scriptExecutionContext->postTask(WorkerExceptionTask::create(errorMessage, lineNumber, sourceURL, this));
 }
-    
+
 static void postConsoleMessageTask(ScriptExecutionContext* context, WorkerMessagingProxy* messagingProxy, MessageSource source, MessageType type, MessageLevel level, const String& message, unsigned lineNumber, const String& sourceURL)
 {
     if (messagingProxy->askedToTerminate())
         return;
-    context->addMessage(source, type, level, message, lineNumber, sourceURL, 0);
+    context->addConsoleMessage(source, type, level, message, sourceURL, lineNumber);
 }
 
 void WorkerMessagingProxy::postConsoleMessageToWorkerObject(MessageSource source, MessageType type, MessageLevel level, const String& message, int lineNumber, const String& sourceURL)
@@ -407,6 +412,7 @@ void WorkerMessagingProxy::sendMessageToInspector(const String& message)
         return;
 #if ENABLE(JAVASCRIPT_DEBUGGER)
     m_workerThread->runLoop().postTaskForMode(createCallbackTask(dispatchOnInspectorBackendTask, String(message)), WorkerDebuggerAgent::debuggerTaskMode);
+    WorkerDebuggerAgent::interruptAndDispatchInspectorCommands(m_workerThread.get());
 #endif
 }
 #endif

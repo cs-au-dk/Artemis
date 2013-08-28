@@ -35,6 +35,7 @@
 #include "HTMLEmbedElement.h"
 #include "HTMLHtmlElement.h"
 #include "HTMLNames.h"
+#include "HTMLSourceElement.h"
 #include "HTMLVideoElement.h"
 #include "KeyboardEvent.h"
 #include "MainResourceLoader.h"
@@ -73,26 +74,31 @@ void MediaDocumentParser::createDocumentStructure()
     ExceptionCode ec;
     RefPtr<Element> rootElement = document()->createElement(htmlTag, false);
     document()->appendChild(rootElement, ec);
+    document()->setCSSTarget(rootElement.get());
     static_cast<HTMLHtmlElement*>(rootElement.get())->insertedByParser();
 
     if (document()->frame())
         document()->frame()->loader()->dispatchDocumentElementAvailable();
         
     RefPtr<Element> body = document()->createElement(bodyTag, false);
-    body->setAttribute(styleAttr, "background-color: rgb(38,38,38);");
-
     rootElement->appendChild(body, ec);
-        
+
     RefPtr<Element> mediaElement = document()->createElement(videoTag, false);
-        
+
     m_mediaElement = static_cast<HTMLVideoElement*>(mediaElement.get());
     m_mediaElement->setAttribute(controlsAttr, "");
     m_mediaElement->setAttribute(autoplayAttr, "");
-    m_mediaElement->setAttribute(styleAttr, "margin: auto; position: absolute; top: 0; right: 0; bottom: 0; left: 0;");
 
     m_mediaElement->setAttribute(nameAttr, "media");
-    m_mediaElement->setSrc(document()->url());
-    
+
+    RefPtr<Element> sourceElement = document()->createElement(sourceTag, false);
+    HTMLSourceElement* source = static_cast<HTMLSourceElement*>(sourceElement.get());
+    source->setSrc(document()->url());
+
+    if (DocumentLoader* loader = document()->loader())
+        source->setType(loader->responseMIMEType());
+
+    m_mediaElement->appendChild(sourceElement, ec);
     body->appendChild(mediaElement, ec);
 
     Frame* frame = document()->frame();

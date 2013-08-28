@@ -32,12 +32,12 @@
 #if ENABLE(METER_TAG)
 #include "MeterShadowElement.h"
 
-#include "CSSMutableStyleDeclaration.h"
 #include "CSSPropertyNames.h"
 #include "HTMLMeterElement.h"
 #include "HTMLNames.h"
 #include "RenderMeter.h"
 #include "RenderTheme.h"
+#include "StylePropertySet.h"
 
 namespace WebCore {
 
@@ -93,7 +93,7 @@ const AtomicString& MeterValueElement::shadowPseudoId() const
 
 void MeterValueElement::setWidthPercentage(double width)
 {
-    ensureInlineStyleDecl()->setProperty(CSSPropertyWidth, width, CSSPrimitiveValue::CSS_PERCENTAGE);
+    setInlineStyleProperty(CSSPropertyWidth, width, CSSPrimitiveValue::CSS_PERCENTAGE);
 }
 
 

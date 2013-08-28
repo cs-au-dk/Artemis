@@ -27,13 +27,12 @@
 #include "config.h"
 
 #if USE(ACCELERATED_COMPOSITING)
-#if USE(SKIA)
 
 #include "BitmapSkPictureCanvasLayerTextureUpdater.h"
 
 #include "LayerPainterChromium.h"
 #include "SkCanvas.h"
-#include "skia/ext/platform_canvas.h"
+#include "SkDevice.h"
 
 namespace WebCore {
 
@@ -45,18 +44,22 @@ BitmapSkPictureCanvasLayerTextureUpdater::Texture::Texture(BitmapSkPictureCanvas
 
 void BitmapSkPictureCanvasLayerTextureUpdater::Texture::prepareRect(const IntRect& sourceRect)
 {
-    size_t bufferSize = TextureManager::memoryUseBytes(sourceRect.size(), texture()->format());
-    m_pixelData = adoptArrayPtr(new uint8_t[bufferSize]);
-    OwnPtr<SkCanvas> canvas = adoptPtr(new skia::PlatformCanvas(sourceRect.width(), sourceRect.height(), false, m_pixelData.get()));
-    textureUpdater()->paintContentsRect(canvas.get(), sourceRect);
+    m_bitmap.setConfig(SkBitmap::kARGB_8888_Config, sourceRect.width(), sourceRect.height());
+    m_bitmap.allocPixels();
+    m_bitmap.setIsOpaque(m_textureUpdater->layerIsOpaque());
+    SkDevice device(m_bitmap);
+    SkCanvas canvas(&device);
+    textureUpdater()->paintContentsRect(&canvas, sourceRect);
 }
 
 void BitmapSkPictureCanvasLayerTextureUpdater::Texture::updateRect(GraphicsContext3D* context, TextureAllocator* allocator, const IntRect& sourceRect, const IntRect& destRect)
 {
     texture()->bindTexture(context, allocator);
-    ASSERT(m_pixelData.get());
-    textureUpdater()->updateTextureRect(context, texture()->format(), destRect, m_pixelData.get());
-    m_pixelData.clear();
+
+    m_bitmap.lockPixels();
+    textureUpdater()->updateTextureRect(context, texture()->format(), destRect, static_cast<uint8_t*>(m_bitmap.getPixels()));
+    m_bitmap.unlockPixels();
+    m_bitmap.reset();
 }
 
 PassRefPtr<BitmapSkPictureCanvasLayerTextureUpdater> BitmapSkPictureCanvasLayerTextureUpdater::create(PassOwnPtr<LayerPainterChromium> painter, bool useMapTexSubImage)
@@ -86,10 +89,10 @@ LayerTextureUpdater::SampledTexelFormat BitmapSkPictureCanvasLayerTextureUpdater
             LayerTextureUpdater::SampledTexelFormatRGBA : LayerTextureUpdater::SampledTexelFormatBGRA;
 }
 
-void BitmapSkPictureCanvasLayerTextureUpdater::prepareToUpdate(const IntRect& contentRect, const IntSize& tileSize, int borderTexels, float contentsScale)
+void BitmapSkPictureCanvasLayerTextureUpdater::prepareToUpdate(const IntRect& contentRect, const IntSize& tileSize, int borderTexels, float contentsScale, IntRect& resultingOpaqueRect)
 {
     m_texSubImage.setSubImageSize(tileSize);
-    SkPictureCanvasLayerTextureUpdater::prepareToUpdate(contentRect, tileSize, borderTexels, contentsScale);
+    SkPictureCanvasLayerTextureUpdater::prepareToUpdate(contentRect, tileSize, borderTexels, contentsScale, resultingOpaqueRect);
 }
 
 void BitmapSkPictureCanvasLayerTextureUpdater::paintContentsRect(SkCanvas* canvas, const IntRect& sourceRect)
@@ -106,5 +109,4 @@ void BitmapSkPictureCanvasLayerTextureUpdater::updateTextureRect(GraphicsContext
 }
 
 } // namespace WebCore
-#endif // USE(SKIA)
 #endif // USE(ACCELERATED_COMPOSITING)

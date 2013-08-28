@@ -52,7 +52,7 @@ RenderTextFragment::~RenderTextFragment()
 PassRefPtr<StringImpl> RenderTextFragment::originalText() const
 {
     Node* e = node();
-    RefPtr<StringImpl> result = ((e && e->isTextNode()) ? static_cast<Text*>(e)->dataImpl() : contentString());
+    RefPtr<StringImpl> result = ((e && e->isTextNode()) ? toText(e)->dataImpl() : contentString());
     if (!result)
         return 0;
     return result->substring(start(), end());
@@ -75,15 +75,16 @@ void RenderTextFragment::willBeDestroyed()
     RenderText::willBeDestroyed();
 }
 
-void RenderTextFragment::setTextInternal(PassRefPtr<StringImpl> text)
+void RenderTextFragment::setText(PassRefPtr<StringImpl> text, bool force)
 {
-    RenderText::setTextInternal(text);
+    RenderText::setText(text, force);
+
+    m_start = 0;
+    m_end = textLength();
     if (m_firstLetter) {
         ASSERT(!m_contentString);
         m_firstLetter->destroy();
         m_firstLetter = 0;
-        m_start = 0;
-        m_end = textLength();
         if (Node* t = node()) {
             ASSERT(!t->renderer());
             t->setRenderer(this);
@@ -91,11 +92,18 @@ void RenderTextFragment::setTextInternal(PassRefPtr<StringImpl> text)
     }
 }
 
+void RenderTextFragment::transformText()
+{
+    // Don't reset first-letter here because we are only transforming the truncated fragment.
+    if (RefPtr<StringImpl> textToTransform = originalText())
+        RenderText::setText(textToTransform.release(), true);
+}
+
 UChar RenderTextFragment::previousCharacter() const
 {
     if (start()) {
         Node* e = node();
-        StringImpl*  original = ((e && e->isTextNode()) ? static_cast<Text*>(e)->dataImpl() : contentString());
+        StringImpl* original = ((e && e->isTextNode()) ? toText(e)->dataImpl() : contentString());
         if (original && start() <= original->length())
             return (*original)[start() - 1];
     }

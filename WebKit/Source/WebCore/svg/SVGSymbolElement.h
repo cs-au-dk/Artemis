@@ -45,9 +45,9 @@ private:
     virtual bool supportsFocus() const { return true; }
 
     bool isSupportedAttribute(const QualifiedName&);
-    virtual void parseMappedAttribute(Attribute*);
+    virtual void parseAttribute(Attribute*) OVERRIDE;
     virtual void svgAttributeChanged(const QualifiedName&);
-    virtual bool rendererIsNeeded(const NodeRenderingContext&) { return false; }
+    virtual RenderObject* createRenderer(RenderArena*, RenderStyle*);
 
     virtual bool selfHasRelativeLengths() const;
 

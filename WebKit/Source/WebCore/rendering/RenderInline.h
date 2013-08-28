@@ -46,12 +46,12 @@ public:
     virtual LayoutUnit marginStart() const;
     virtual LayoutUnit marginEnd() const;
 
-    virtual void absoluteRects(Vector<LayoutRect>&, const LayoutPoint& accumulatedOffset) const;
+    virtual void absoluteRects(Vector<IntRect>&, const LayoutPoint& accumulatedOffset) const;
     virtual void absoluteQuads(Vector<FloatQuad>&, bool* wasFixed) const;
 
     virtual LayoutSize offsetFromContainer(RenderObject*, const LayoutPoint&) const;
 
-    LayoutRect linesBoundingBox() const;
+    IntRect linesBoundingBox() const;
     LayoutRect linesVisualOverflowBoundingBox() const;
 
     InlineFlowBox* createAndAppendInlineFlowBox();
@@ -73,7 +73,7 @@ public:
     
     LayoutSize relativePositionedInlineOffset(const RenderBox* child) const;
 
-    virtual void addFocusRingRects(Vector<LayoutRect>&, const LayoutPoint&);
+    virtual void addFocusRingRects(Vector<IntRect>&, const LayoutPoint&);
     void paintOutline(GraphicsContext*, const LayoutPoint&);
 
     using RenderBoxModelObject::continuation;
@@ -102,7 +102,7 @@ private:
     LayoutRect culledInlineVisualOverflowBoundingBox() const;
     InlineBox* culledInlineFirstLineBox() const;
     InlineBox* culledInlineLastLineBox() const;
-    void culledInlineAbsoluteRects(const RenderInline* container, Vector<LayoutRect>&, const LayoutSize&) const;
+    void culledInlineAbsoluteRects(const RenderInline* container, Vector<IntRect>&, const LayoutSize&) const;
     void culledInlineAbsoluteQuads(const RenderInline* container, Vector<FloatQuad>&) const;
 
     void addChildToContinuation(RenderObject* newChild, RenderObject* beforeChild);
@@ -130,14 +130,14 @@ private:
     virtual LayoutRect rectWithOutlineForRepaint(RenderBoxModelObject* repaintContainer, LayoutUnit outlineWidth) const;
     virtual void computeRectForRepaint(RenderBoxModelObject* repaintContainer, LayoutRect&, bool fixed) const;
 
-    virtual void mapLocalToContainer(RenderBoxModelObject* repaintContainer, bool fixed, bool useTransforms, TransformState&, bool* wasFixed = 0) const;
+    virtual void mapLocalToContainer(RenderBoxModelObject* repaintContainer, bool fixed, bool useTransforms, TransformState&, ApplyContainerFlipOrNot = ApplyContainerFlip, bool* wasFixed = 0) const;
 
     virtual VisiblePosition positionForPoint(const LayoutPoint&);
 
-    virtual LayoutRect borderBoundingBox() const
+    virtual IntRect borderBoundingBox() const
     {
-        LayoutRect boundingBox = linesBoundingBox();
-        return LayoutRect(0, 0, boundingBox.width(), boundingBox.height());
+        IntRect boundingBox = linesBoundingBox();
+        return IntRect(0, 0, boundingBox.width(), boundingBox.height());
     }
 
     virtual InlineFlowBox* createInlineFlowBox(); // Subclassed by SVG and Ruby
@@ -168,7 +168,6 @@ private:
     RenderObjectChildList m_children;
     RenderLineBoxList m_lineBoxes;   // All of the line boxes created for this inline flow.  For example, <i>Hello<br>world.</i> will have two <i> line boxes.
 
-    mutable LayoutUnit m_lineHeight;
     bool m_alwaysCreateLineBoxes : 1;
 };
 

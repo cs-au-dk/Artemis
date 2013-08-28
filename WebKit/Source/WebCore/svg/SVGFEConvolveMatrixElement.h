@@ -33,7 +33,7 @@ namespace WebCore {
 
 template<>
 struct SVGPropertyTraits<EdgeModeType> {
-    static EdgeModeType highestEnumValue() { return EDGEMODE_NONE; }
+    static unsigned highestEnumValue() { return EDGEMODE_NONE; }
 
     static String toString(EdgeModeType type)
     {
@@ -75,7 +75,7 @@ private:
     SVGFEConvolveMatrixElement(const QualifiedName&, Document*);
 
     bool isSupportedAttribute(const QualifiedName&);
-    virtual void parseMappedAttribute(Attribute*);
+    virtual void parseAttribute(Attribute*) OVERRIDE;
     virtual bool setFilterEffectAttribute(FilterEffect*, const QualifiedName&);
     virtual void svgAttributeChanged(const QualifiedName&);
     virtual PassRefPtr<FilterEffect> build(SVGFilterBuilder*, Filter*);

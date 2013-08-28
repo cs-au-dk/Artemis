@@ -34,65 +34,105 @@
 
 #include "Canvas2DLayerChromium.h"
 
-#include "cc/CCCanvasLayerImpl.h"
-#include "cc/CCLayerTreeHost.h"
-#include "cc/CCTextureUpdater.h"
 #include "Extensions3DChromium.h"
 #include "GraphicsContext3D.h"
 #include "LayerRendererChromium.h" // For the GLC() macro
+#include "TextureCopier.h"
+#include "cc/CCLayerTreeHost.h"
+#include "cc/CCTextureLayerImpl.h"
+#include "cc/CCTextureUpdater.h"
 
-#if USE(SKIA)
-#include "GrContext.h"
-#endif
+#include "SkCanvas.h"
 
 namespace WebCore {
 
-PassRefPtr<Canvas2DLayerChromium> Canvas2DLayerChromium::create(GraphicsContext3D* context, const IntSize& size)
+PassRefPtr<Canvas2DLayerChromium> Canvas2DLayerChromium::create(PassRefPtr<GraphicsContext3D> context, const IntSize& size, DeferralMode deferralMode)
 {
-    return adoptRef(new Canvas2DLayerChromium(context, size));
+    return adoptRef(new Canvas2DLayerChromium(context, size, deferralMode));
 }
 
-Canvas2DLayerChromium::Canvas2DLayerChromium(GraphicsContext3D* context, const IntSize& size)
-    : CanvasLayerChromium(0)
+Canvas2DLayerChromium::Canvas2DLayerChromium(PassRefPtr<GraphicsContext3D> context, const IntSize& size, DeferralMode deferralMode)
+    : CanvasLayerChromium()
     , m_context(context)
+    , m_contextLost(false)
     , m_size(size)
     , m_backTextureId(0)
-    , m_fbo(0)
+    , m_canvas(0)
+    , m_deferralMode(deferralMode)
 {
-    GLC(m_context, m_fbo = m_context->createFramebuffer());
+    // FIXME: We currently turn off double buffering when canvas rendering is
+    // deferred. What we should be doing is to use a smarter heuristic based
+    // on GPU resource monitoring and other factors to chose between single
+    // and double buffering.
+    m_useDoubleBuffering = CCProxy::hasImplThread() && deferralMode == NonDeferred;
+
+    // The threaded compositor is self rate-limiting when rendering
+    // to a single buffered canvas layer.
+    m_useRateLimiter = !CCProxy::hasImplThread() || m_useDoubleBuffering;
 }
 
 Canvas2DLayerChromium::~Canvas2DLayerChromium()
 {
-    GLC(m_context, m_context->deleteFramebuffer(m_fbo));
+    setTextureId(0);
+    if (m_context && m_useRateLimiter && layerTreeHost())
+        layerTreeHost()->stopRateLimiter(m_context.get());
+}
+
+bool Canvas2DLayerChromium::drawingIntoImplThreadTexture() const
+{
+    return !m_useDoubleBuffering && CCProxy::hasImplThread() && layerTreeHost();
 }
 
 void Canvas2DLayerChromium::setTextureId(unsigned textureId)
 {
+    if (m_backTextureId == textureId)
+        return;
+
+    if (m_backTextureId && drawingIntoImplThreadTexture()) {
+        // The impl tree may be referencing the old m_backTexture, which may
+        // soon be deleted. We must make sure the layer tree on the impl thread
+        // is not drawn until the next commit, which will re-synchronize the
+        // layer trees.
+        layerTreeHost()->acquireLayerTextures();
+    }
     m_backTextureId = textureId;
     setNeedsCommit();
 }
 
-void Canvas2DLayerChromium::contentChanged()
+void Canvas2DLayerChromium::setNeedsDisplayRect(const FloatRect& dirtyRect)
 {
-    if (layerTreeHost())
-        layerTreeHost()->startRateLimiter(m_context);
+    LayerChromium::setNeedsDisplayRect(dirtyRect);
 
-    setNeedsDisplay();
+    if (m_useRateLimiter && layerTreeHost())
+        layerTreeHost()->startRateLimiter(m_context.get());
 }
 
 bool Canvas2DLayerChromium::drawsContent() const
 {
-    return m_backTextureId && !m_size.isEmpty()
-        && m_context && (m_context->getExtensions()->getGraphicsResetStatusARB() == GraphicsContext3D::NO_ERROR);
+    return LayerChromium::drawsContent() && m_backTextureId && !m_size.isEmpty()
+        && !m_contextLost;
 }
 
-void Canvas2DLayerChromium::paintContentsIfDirty()
+void Canvas2DLayerChromium::setCanvas(SkCanvas* canvas)
 {
+    m_canvas = canvas;
+}
+
+void Canvas2DLayerChromium::update(CCTextureUpdater& updater, const CCOcclusionTracker*)
+{
+    TRACE_EVENT0("cc", "Canvas2DLayerChromium::update");
     if (!drawsContent())
         return;
 
-    m_frontTexture->reserve(m_size, GraphicsContext3D::RGBA);
+    if (m_useDoubleBuffering && layerTreeHost()) {
+        TextureManager* textureManager = layerTreeHost()->contentsTextureManager();
+        if (m_frontTexture)
+            m_frontTexture->setTextureManager(textureManager);
+        else
+            m_frontTexture = ManagedTexture::create(textureManager);
+        if (m_frontTexture->reserve(m_size, GraphicsContext3D::RGBA))
+            updater.appendManagedCopy(m_backTextureId, m_frontTexture.get(), m_size);
+    }
 
     if (!needsDisplay())
         return;
@@ -102,61 +142,40 @@ void Canvas2DLayerChromium::paintContentsIfDirty()
     bool success = m_context->makeContextCurrent();
     ASSERT_UNUSED(success, success);
 
-#if USE(SKIA)
-    GrContext* grContext = m_context->grContext();
-    if (grContext)
-        grContext->flush();
-#endif
+    m_contextLost = m_context->getExtensions()->getGraphicsResetStatusARB() != GraphicsContext3D::NO_ERROR;
+    if (m_contextLost)
+        return;
 
+    if (m_canvas) {
+        TRACE_EVENT0("cc", "SkCanvas::flush");
+        m_canvas->flush();
+    }
+
+    TRACE_EVENT0("cc", "GraphicsContext3D::flush");
     m_context->flush();
 }
 
-void Canvas2DLayerChromium::setLayerTreeHost(CCLayerTreeHost* host)
+void Canvas2DLayerChromium::layerWillDraw(WillDrawCondition condition) const
 {
-    if (layerTreeHost() != host)
-        setTextureManager(host ? host->contentsTextureManager() : 0);
-
-    CanvasLayerChromium::setLayerTreeHost(host);
+    if (drawingIntoImplThreadTexture()) {
+        if (condition == WillDrawUnconditionally || m_deferralMode == NonDeferred)
+            layerTreeHost()->acquireLayerTextures();
+    }
 }
 
-void Canvas2DLayerChromium::setTextureManager(TextureManager* textureManager)
-{
-    if (textureManager)
-        m_frontTexture = ManagedTexture::create(textureManager);
-    else
-        m_frontTexture.clear();
-}
-
-void Canvas2DLayerChromium::updateCompositorResources(GraphicsContext3D* context, CCTextureUpdater& updater)
-{
-    if (!m_backTextureId || !m_frontTexture->isValid(m_size, GraphicsContext3D::RGBA))
-        return;
-
-    m_frontTexture->bindTexture(context, updater.allocator());
-
-    GLC(context, context->bindFramebuffer(GraphicsContext3D::FRAMEBUFFER, m_fbo));
-    GLC(context, context->framebufferTexture2D(GraphicsContext3D::FRAMEBUFFER, GraphicsContext3D::COLOR_ATTACHMENT0, GraphicsContext3D::TEXTURE_2D, m_backTextureId, 0));
-    GLC(context, context->copyTexImage2D(GraphicsContext3D::TEXTURE_2D, 0, GraphicsContext3D::RGBA, 0, 0, m_size.width(), m_size.height(), 0));
-    GLC(context, context->bindFramebuffer(GraphicsContext3D::FRAMEBUFFER, 0));
-    GLC(context, context->flush());
-}
 
 void Canvas2DLayerChromium::pushPropertiesTo(CCLayerImpl* layer)
 {
     CanvasLayerChromium::pushPropertiesTo(layer);
 
-    CCCanvasLayerImpl* canvasLayer = static_cast<CCCanvasLayerImpl*>(layer);
-    canvasLayer->setTextureId(m_frontTexture->textureId());
-}
-
-void Canvas2DLayerChromium::unreserveContentsTexture()
-{
-    m_frontTexture->unreserve();
-}
-
-void Canvas2DLayerChromium::cleanupResources()
-{
-    m_frontTexture.clear();
+    CCTextureLayerImpl* textureLayer = static_cast<CCTextureLayerImpl*>(layer);
+    if (m_useDoubleBuffering) {
+        if (m_frontTexture && m_frontTexture->isValid(m_size, GraphicsContext3D::RGBA))
+            textureLayer->setTextureId(m_frontTexture->textureId());
+        else
+            textureLayer->setTextureId(0);
+    } else
+        textureLayer->setTextureId(m_backTextureId);
 }
 
 }

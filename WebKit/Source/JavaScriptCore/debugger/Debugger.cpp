@@ -58,10 +58,8 @@ inline Recompiler::~Recompiler()
     // Call sourceParsed() after reparsing all functions because it will execute
     // JavaScript in the inspector.
     SourceProviderMap::const_iterator end = m_sourceProviders.end();
-    for (SourceProviderMap::const_iterator iter = m_sourceProviders.begin(); iter != end; ++iter) {
-        std::cout << "CALL TO SOURCE PARSED!!!!" << std::endl;
+    for (SourceProviderMap::const_iterator iter = m_sourceProviders.begin(); iter != end; ++iter)
         m_debugger->sourceParsed(iter->second, iter->first, -1, UString());
-    }
 }
 
 inline void Recompiler::operator()(JSCell* cell)
@@ -69,7 +67,7 @@ inline void Recompiler::operator()(JSCell* cell)
     if (!cell->inherits(&JSFunction::s_info))
         return;
 
-    JSFunction* function = asFunction(cell);
+    JSFunction* function = jsCast<JSFunction*>(cell);
     if (function->executable()->isHostFunction())
         return;
 
@@ -77,7 +75,7 @@ inline void Recompiler::operator()(JSCell* cell)
 
     // Check if the function is already in the set - if so,
     // we've already retranslated it, nothing to do here.
-    if (!m_functionExecutables.add(executable).second)
+    if (!m_functionExecutables.add(executable).isNewEntry)
         return;
 
     ExecState* exec = function->scope()->globalObject->JSGlobalObject::globalExec();

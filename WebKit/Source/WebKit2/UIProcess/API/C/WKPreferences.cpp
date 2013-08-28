@@ -52,6 +52,12 @@ WKPreferencesRef WKPreferencesCreateWithIdentifier(WKStringRef identifierRef)
     return toAPI(preferences.release().leakRef());
 }
 
+WKPreferencesRef WKPreferencesCreateCopy(WKPreferencesRef preferencesRef)
+{
+    RefPtr<WebPreferences> preferences = WebPreferences::create(*toImpl(preferencesRef));
+    return toAPI(preferences.release().leakRef());
+}
+
 void WKPreferencesSetJavaScriptEnabled(WKPreferencesRef preferencesRef, bool javaScriptEnabled)
 {
     toImpl(preferencesRef)->setJavaScriptEnabled(javaScriptEnabled);
@@ -150,6 +156,16 @@ void WKPreferencesSetJavaEnabled(WKPreferencesRef preferencesRef, bool javaEnabl
 bool WKPreferencesGetJavaEnabled(WKPreferencesRef preferencesRef)
 {
     return toImpl(preferencesRef)->javaEnabled();
+}
+
+void WKPreferencesSetJavaEnabledForLocalFiles(WKPreferencesRef preferencesRef, bool javaEnabledForLocalFiles)
+{
+    toImpl(preferencesRef)->setJavaEnabledForLocalFiles(javaEnabledForLocalFiles);
+}
+
+bool WKPreferencesGetJavaEnabledForLocalFiles(WKPreferencesRef preferencesRef)
+{
+    return toImpl(preferencesRef)->javaEnabledForLocalFiles();
 }
 
 void WKPreferencesSetJavaScriptCanOpenWindowsAutomatically(WKPreferencesRef preferencesRef, bool javaScriptCanOpenWindowsAutomatically)
@@ -382,6 +398,16 @@ bool WKPreferencesGetCompositingRepaintCountersVisible(WKPreferencesRef preferen
     return toImpl(preferencesRef)->compositingRepaintCountersVisible();
 }
 
+void WKPreferencesSetCSSCustomFilterEnabled(WKPreferencesRef preferencesRef, bool flag)
+{
+    toImpl(preferencesRef)->setCSSCustomFilterEnabled(flag);
+}
+
+bool WKPreferencesGetCSSCustomFilterEnabled(WKPreferencesRef preferencesRef)
+{
+    return toImpl(preferencesRef)->cssCustomFilterEnabled();
+}
+
 void WKPreferencesSetWebGLEnabled(WKPreferencesRef preferencesRef, bool flag)
 {
     toImpl(preferencesRef)->setWebGLEnabled(flag);
@@ -390,6 +416,26 @@ void WKPreferencesSetWebGLEnabled(WKPreferencesRef preferencesRef, bool flag)
 bool WKPreferencesGetWebGLEnabled(WKPreferencesRef preferencesRef)
 {
     return toImpl(preferencesRef)->webGLEnabled();
+}
+
+void WKPreferencesSetCSSRegionsEnabled(WKPreferencesRef preferencesRef, bool flag)
+{
+    toImpl(preferencesRef)->setCSSRegionsEnabled(flag);
+}
+
+bool WKPreferencesGetCSSRegionsEnabled(WKPreferencesRef preferencesRef)
+{
+    return toImpl(preferencesRef)->cssRegionsEnabled();
+}
+
+void WKPreferencesSetRegionBasedColumnsEnabled(WKPreferencesRef preferencesRef, bool flag)
+{
+    toImpl(preferencesRef)->setRegionBasedColumnsEnabled(flag);
+}
+
+bool WKPreferencesGetRegionBasedColumnsEnabled(WKPreferencesRef preferencesRef)
+{
+    return toImpl(preferencesRef)->regionBasedColumnsEnabled();
 }
 
 void WKPreferencesSetNeedsSiteSpecificQuirks(WKPreferencesRef preferencesRef, bool flag)
@@ -652,14 +698,24 @@ bool WKPreferencesGetApplicationChromeModeEnabled(WKPreferencesRef preferencesRe
     return toImpl(preferencesRef)->applicationChromeMode();
 }
 
-void WKPreferencesSetSuppressIncrementalRendering(WKPreferencesRef preferencesRef, bool enabled)
+void WKPreferencesSetInspectorUsesWebKitUserInterface(WKPreferencesRef preferencesRef, bool enabled)
 {
-    toImpl(preferencesRef)->setSuppressIncrementalRendering(enabled);
+    toImpl(preferencesRef)->setInspectorUsesWebKitUserInterface(enabled);
 }
 
-bool WKPreferencesGetSuppressIncrementalRendering(WKPreferencesRef preferencesRef)
+bool WKPreferencesGetInspectorUsesWebKitUserInterface(WKPreferencesRef preferencesRef)
 {
-    return toImpl(preferencesRef)->suppressIncrementalRendering();
+    return toImpl(preferencesRef)->inspectorUsesWebKitUserInterface();
+}
+
+void WKPreferencesSetSuppressesIncrementalRendering(WKPreferencesRef preferencesRef, bool enabled)
+{
+    toImpl(preferencesRef)->setSuppressesIncrementalRendering(enabled);
+}
+
+bool WKPreferencesGetSuppressesIncrementalRendering(WKPreferencesRef preferencesRef)
+{
+    return toImpl(preferencesRef)->suppressesIncrementalRendering();
 }
 
 void WKPreferencesSetBackspaceKeyNavigationEnabled(WKPreferencesRef preferencesRef, bool enabled)
@@ -710,4 +766,31 @@ void WKPreferencesSetShouldDisplayTextDescriptions(WKPreferencesRef preferencesR
 bool WKPreferencesGetShouldDisplayTextDescriptions(WKPreferencesRef preferencesRef)
 {
     return toImpl(preferencesRef)->shouldDisplayTextDescriptions();
+}
+
+void WKPreferencesSetNotificationsEnabled(WKPreferencesRef preferencesRef, bool enabled)
+{
+    toImpl(preferencesRef)->setNotificationsEnabled(enabled);
+}
+
+bool WKPreferencesGetNotificationsEnabled(WKPreferencesRef preferencesRef)
+{
+    return toImpl(preferencesRef)->notificationsEnabled();
+}
+
+void WKPreferencesSetShouldRespectImageOrientation(WKPreferencesRef preferencesRef, bool enabled)
+{
+    toImpl(preferencesRef)->setShouldRespectImageOrientation(enabled);
+}
+
+bool WKPreferencesGetShouldRespectImageOrientation(WKPreferencesRef preferencesRef)
+{
+    return toImpl(preferencesRef)->shouldRespectImageOrientation();
+}
+
+void WKPreferencesResetTestRunnerOverrides(WKPreferencesRef preferencesRef)
+{
+    // Currently we reset the overrides on the web process when preferencesDidChange() is called. Since WTR preferences
+    // are usually always the same (in the UI process), they are not sent to web process, not triggering the reset.
+    toImpl(preferencesRef)->forceUpdate();
 }

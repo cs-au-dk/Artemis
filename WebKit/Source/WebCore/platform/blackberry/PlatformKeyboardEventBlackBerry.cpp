@@ -24,6 +24,7 @@
 
 #include <BlackBerryPlatformKeyboardEvent.h>
 #include <BlackBerryPlatformLog.h>
+#include <wtf/CurrentTime.h>
 #include <wtf/text/CString.h>
 
 namespace WebCore {
@@ -73,10 +74,10 @@ static String keyIdentifierForBlackBerryCharacter(unsigned short character)
         return "Insert";
     case KEYCODE_PG_UP:
     case KEYCODE_KP_PG_UP:
-        return "PageDown";
+        return "PageUp";
     case KEYCODE_PG_DOWN:
     case KEYCODE_KP_PG_DOWN:
-        return "PageUp";
+        return "PageDown";
     case KEYCODE_END:
     case KEYCODE_KP_END:
         return "End";
@@ -299,10 +300,10 @@ static int windowsKeyCodeForBlackBerryCharacter(unsigned short character)
         return VK_INSERT;
     case KEYCODE_PG_UP:
     case KEYCODE_KP_PG_UP:
-        return VK_NEXT;
+        return VK_PRIOR;
     case KEYCODE_PG_DOWN:
     case KEYCODE_KP_PG_DOWN:
-        return VK_PRIOR;
+        return VK_NEXT;
     case KEYCODE_END:
     case KEYCODE_KP_END:
         return VK_END;
@@ -436,17 +437,20 @@ static inline PlatformKeyboardEvent::Type toWebCorePlatformKeyboardEventType(con
     }
 }
 
-PlatformKeyboardEvent::PlatformKeyboardEvent(BlackBerry::Platform::KeyboardEvent event)
-    : PlatformEvent(toWebCorePlatformKeyboardEventType(event.type()), event.shiftActive() || (event.character() == KEYCODE_BACK_TAB), event.ctrlActive(), event.altActive(), false)
+PlatformKeyboardEvent::PlatformKeyboardEvent(const BlackBerry::Platform::KeyboardEvent& event)
+    : PlatformEvent(toWebCorePlatformKeyboardEventType(event.type()), event.shiftActive() || (event.character() == KEYCODE_BACK_TAB), event.ctrlActive(), event.altActive(), false, currentTime())
     , m_keyIdentifier(keyIdentifierForBlackBerryCharacter(event.character()))
-    , m_autoRepeat(false)
     , m_windowsVirtualKeyCode(windowsKeyCodeForBlackBerryCharacter(event.character()))
+    , m_autoRepeat(false)
     , m_isKeypad(false)
     , m_unmodifiedCharacter(event.character())
 {
     unsigned short character = adjustCharacterFromOS(event.character());
     m_text = String(&character, 1);
     m_unmodifiedText = m_text;
+
+    if (event.character() == KEYCODE_BACK_TAB)
+        m_modifiers |= ShiftKey; // BackTab should be treated as Shift + Tab.
 
     BlackBerry::Platform::log(BlackBerry::Platform::LogLevelInfo, "Keyboard event received text=%lc, keyIdentifier=%s, windowsVirtualKeyCode=%d", event.character(), m_keyIdentifier.latin1().data(), m_windowsVirtualKeyCode);
 }

@@ -89,8 +89,10 @@ public:
         virtual ~Task() { }
         virtual void run() = 0;
     };
-    static void interruptAndRun(PassOwnPtr<Task>);
+    static void interruptAndRun(PassOwnPtr<Task>, v8::Isolate* = 0);
     void runPendingTasks();
+
+    bool isPaused();
 
 protected:
     ScriptDebugServer();
@@ -111,8 +113,8 @@ protected:
     void dispatchDidParseSource(ScriptDebugListener* listener, v8::Handle<v8::Object> sourceObject);
 
     void ensureDebuggerScriptCompiled();
-    
-    bool isPaused();
+
+    v8::Local<v8::Value> callDebuggerMethod(const char* functionName, int argc, v8::Handle<v8::Value> argv[]);
 
     PauseOnExceptionsState m_pauseOnExceptionsState;
     OwnHandle<v8::Object> m_debuggerScript;

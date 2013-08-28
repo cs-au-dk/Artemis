@@ -49,10 +49,12 @@ public:
         MEDIA_RULE,
         FONT_FACE_RULE,
         PAGE_RULE,
-        // 7 used to be VARIABLES_RULE
-        WEBKIT_KEYFRAMES_RULE = 8,
+        // 7 was VARIABLES_RULE; we now match other browsers with 7 as
+        // KEYFRAMES_RULE:
+        // <https://bugs.webkit.org/show_bug.cgi?id=71293>.
+        WEBKIT_KEYFRAMES_RULE,
         WEBKIT_KEYFRAME_RULE,
-        WEBKIT_REGION_RULE
+        WEBKIT_REGION_RULE = 10
     };
 
     Type type() const { return static_cast<Type>(m_type); }
@@ -66,15 +68,6 @@ public:
     bool isStyleRule() const { return type() == STYLE_RULE; }
     bool isRegionRule() const { return type() == WEBKIT_REGION_RULE; }
     bool isImportRule() const { return type() == IMPORT_RULE; }
-
-    bool useStrictParsing() const
-    {
-        if (parentRule())
-            return parentRule()->useStrictParsing();
-        if (parentStyleSheet())
-            return parentStyleSheet()->useStrictParsing();
-        return true;
-    }
 
     void setParentStyleSheet(CSSStyleSheet* styleSheet)
     {
@@ -100,17 +93,9 @@ public:
     String cssText() const;
     void setCssText(const String&, ExceptionCode&);
 
-    KURL baseURL() const
-    {
-        if (CSSStyleSheet* parentSheet = parentStyleSheet())
-            return parentSheet->baseURL();
-        return KURL();
-    }
-
 protected:
     CSSRule(CSSStyleSheet* parent, Type type)
-        : m_sourceLine(0)
-        , m_hasCachedSelectorText(false)
+        : m_hasCachedSelectorText(false)
         , m_parentIsRule(false)
         , m_type(type)
         , m_parentStyleSheet(parent)
@@ -122,12 +107,18 @@ protected:
 
     ~CSSRule() { }
 
-    // Only used by CSSStyleRule but kept here to maximize struct packing.
-    signed m_sourceLine : 26;
-    mutable bool m_hasCachedSelectorText : 1;
+    bool hasCachedSelectorText() const { return m_hasCachedSelectorText; }
+    void setHasCachedSelectorText(bool hasCachedSelectorText) const { m_hasCachedSelectorText = hasCachedSelectorText; }
+
+    const CSSParserContext& parserContext() const 
+    {
+        CSSStyleSheet* styleSheet = parentStyleSheet();
+        return styleSheet ? styleSheet->internal()->parserContext() : strictCSSParserContext();
+    }
 
 private:
-    bool m_parentIsRule : 1;
+    mutable unsigned m_hasCachedSelectorText : 1;
+    unsigned m_parentIsRule : 1;
     unsigned m_type : 4;
     union {
         CSSRule* m_parentRule;

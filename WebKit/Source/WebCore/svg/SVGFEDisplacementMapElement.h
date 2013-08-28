@@ -30,7 +30,7 @@ namespace WebCore {
  
 template<>
 struct SVGPropertyTraits<ChannelSelectorType> {
-    static ChannelSelectorType highestEnumValue() { return CHANNEL_A; }
+    static unsigned highestEnumValue() { return CHANNEL_A; }
 
     static String toString(ChannelSelectorType type)
     {
@@ -75,7 +75,7 @@ private:
     SVGFEDisplacementMapElement(const QualifiedName& tagName, Document*);
     
     bool isSupportedAttribute(const QualifiedName&);
-    virtual void parseMappedAttribute(Attribute*);
+    virtual void parseAttribute(Attribute*) OVERRIDE;
     virtual bool setFilterEffectAttribute(FilterEffect*, const QualifiedName& attrName);
     virtual void svgAttributeChanged(const QualifiedName&);
     virtual PassRefPtr<FilterEffect> build(SVGFilterBuilder*, Filter*);

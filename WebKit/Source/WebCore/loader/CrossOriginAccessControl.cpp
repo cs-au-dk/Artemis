@@ -30,7 +30,6 @@
 #include "HTTPParsers.h"
 #include "ResourceResponse.h"
 #include "SecurityOrigin.h"
-#include <wtf/HashSet.h>
 #include <wtf/Threading.h>
 #include <wtf/text/AtomicString.h>
 #include <wtf/text/StringBuilder.h>
@@ -76,7 +75,6 @@ bool isSimpleCrossOriginAccessRequest(const String& method, const HTTPHeaderMap&
     return true;
 }
 
-typedef HashSet<String, CaseFoldingHash> HTTPHeaderSet;
 static PassOwnPtr<HTTPHeaderSet> createAllowedCrossOriginResponseHeadersSet()
 {
     OwnPtr<HTTPHeaderSet> headerSet = adoptPtr(new HashSet<String, CaseFoldingHash>);
@@ -105,10 +103,10 @@ void updateRequestForAccessControl(ResourceRequest& request, SecurityOrigin* sec
     request.setHTTPOrigin(securityOrigin->toString());
 }
 
-ResourceRequest createAccessControlPreflightRequest(const ResourceRequest& request, SecurityOrigin* securityOrigin, StoredCredentials allowCredentials)
+ResourceRequest createAccessControlPreflightRequest(const ResourceRequest& request, SecurityOrigin* securityOrigin)
 {
     ResourceRequest preflightRequest(request.url());
-    updateRequestForAccessControl(preflightRequest, securityOrigin, allowCredentials);
+    updateRequestForAccessControl(preflightRequest, securityOrigin, DoNotAllowStoredCredentials);
     preflightRequest.setHTTPMethod("OPTIONS");
     preflightRequest.setHTTPHeaderField("Access-Control-Request-Method", request.httpMethod());
     preflightRequest.setPriority(request.priority());
@@ -128,7 +126,7 @@ ResourceRequest createAccessControlPreflightRequest(const ResourceRequest& reque
             headerBuffer.append(it->first);
         }
 
-        preflightRequest.setHTTPHeaderField("Access-Control-Request-Headers", headerBuffer.toString());
+        preflightRequest.setHTTPHeaderField("Access-Control-Request-Headers", headerBuffer.toString().lower());
     }
 
     return preflightRequest;
@@ -169,6 +167,17 @@ bool passesAccessControlCheck(const ResourceResponse& response, StoredCredential
     }
 
     return true;
+}
+
+void parseAccessControlExposeHeadersAllowList(const String& headerValue, HTTPHeaderSet& headerSet)
+{
+    Vector<String> headers;
+    headerValue.split(',', false, headers);
+    for (unsigned headerCount = 0; headerCount < headers.size(); headerCount++) {
+        String strippedHeader = headers[headerCount].stripWhiteSpace();
+        if (!strippedHeader.isEmpty())
+            headerSet.add(strippedHeader);
+    }
 }
 
 } // namespace WebCore

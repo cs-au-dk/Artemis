@@ -33,6 +33,7 @@
 #include "HTMLOptionElement.h"
 #include "SSLKeyGenerator.h"
 #include "ShadowRoot.h"
+#include "ShadowTree.h"
 #include "Text.h"
 #include <wtf/StdLibExtras.h>
 
@@ -80,12 +81,14 @@ inline HTMLKeygenElement::HTMLKeygenElement(const QualifiedName& tagName, Docume
     RefPtr<HTMLSelectElement> select = KeygenSelectElement::create(document);
     ExceptionCode ec = 0;
     for (size_t i = 0; i < keys.size(); ++i) {
-        RefPtr<HTMLOptionElement> option = HTMLOptionElement::create(document, this->form());
+        RefPtr<HTMLOptionElement> option = HTMLOptionElement::create(document);
         select->appendChild(option, ec);
         option->appendChild(Text::create(document, keys[i]), ec);
     }
 
-    ensureShadowRoot()->appendChild(select, ec);
+    ASSERT(!hasShadowRoot());
+    RefPtr<ShadowRoot> root = ShadowRoot::create(this, ShadowRoot::CreatingUserAgentShadowRoot);
+    root->appendChild(select, ec);
 }
 
 PassRefPtr<HTMLKeygenElement> HTMLKeygenElement::create(const QualifiedName& tagName, Document* document, HTMLFormElement* form)
@@ -93,13 +96,13 @@ PassRefPtr<HTMLKeygenElement> HTMLKeygenElement::create(const QualifiedName& tag
     return adoptRef(new HTMLKeygenElement(tagName, document, form));
 }
 
-void HTMLKeygenElement::parseMappedAttribute(Attribute* attr)
+void HTMLKeygenElement::parseAttribute(Attribute* attr)
 {
     // Reflect disabled attribute on the shadow select element
     if (attr->name() == disabledAttr)
         shadowSelect()->setAttribute(attr->name(), attr->value());
 
-    HTMLFormControlElement::parseMappedAttribute(attr);
+    HTMLFormControlElement::parseAttribute(attr);
 }
 
 bool HTMLKeygenElement::appendFormData(FormDataList& encoded_values, bool)
@@ -128,8 +131,8 @@ void HTMLKeygenElement::reset()
 
 HTMLSelectElement* HTMLKeygenElement::shadowSelect() const
 {
-    ShadowRoot* shadow = shadowRoot();
-    ASSERT(shadow);
+    ASSERT(hasShadowRoot());
+    ShadowRoot* shadow = shadowTree()->oldestShadowRoot();
     return shadow ? toHTMLSelectElement(shadow->firstChild()) : 0;
 }
 

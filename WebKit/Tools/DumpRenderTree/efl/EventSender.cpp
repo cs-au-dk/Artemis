@@ -4,7 +4,7 @@
  * Copyright (C) 2009 Holger Hans Peter Freyther
  * Copyright (C) 2010 Igalia S.L.
  * Copyright (C) 2011 ProFUSION Embedded Systems
- * Copyright (C) 2011 Samsung Electronics
+ * Copyright (C) 2011, 2012 Samsung Electronics
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -98,6 +98,22 @@ enum EvasMouseEvent {
     EvasMouseEventClick       = EvasMouseEventMove | EvasMouseEventDown | EvasMouseEventUp,
 };
 
+enum ZoomEvent {
+    ZoomIn,
+    ZoomOut
+};
+
+struct KeyEventInfo {
+    KeyEventInfo(const CString& keyName, EvasKeyModifier modifiers)
+        : keyName(keyName)
+        , modifiers(modifiers)
+    {
+    }
+
+    const CString keyName;
+    EvasKeyModifier modifiers;
+};
+
 static void setEvasModifiers(Evas* evas, EvasKeyModifier modifiers)
 {
     static const char* modifierNames[] = { "Control", "Shift", "Alt", "Super" };
@@ -125,7 +141,7 @@ static EvasMouseButton translateMouseButtonNumber(int eventSenderButtonNumber)
     return EvasMouseButtonLeft;
 }
 
-static bool sendMouseEvent(Evas* evas, EvasMouseEvent event, int buttonNumber, EvasKeyModifier modifiers)
+static void sendMouseEvent(Evas* evas, EvasMouseEvent event, int buttonNumber, EvasKeyModifier modifiers)
 {
     unsigned timeStamp = 0;
 
@@ -134,8 +150,15 @@ static bool sendMouseEvent(Evas* evas, EvasMouseEvent event, int buttonNumber, E
     setEvasModifiers(evas, modifiers);
     if (event & EvasMouseEventMove)
         evas_event_feed_mouse_move(evas, gLastMousePositionX, gLastMousePositionY, timeStamp++, 0);
-    if (event & EvasMouseEventDown)
-        evas_event_feed_mouse_down(evas, buttonNumber, EVAS_BUTTON_NONE, timeStamp++, 0);
+    if (event & EvasMouseEventDown) {
+        unsigned flags = 0;
+        if (gClickCount == 2)
+            flags |= EVAS_BUTTON_DOUBLE_CLICK;
+        else if (gClickCount == 3)
+            flags |= EVAS_BUTTON_TRIPLE_CLICK;
+
+        evas_event_feed_mouse_down(evas, buttonNumber, static_cast<Evas_Button_Flags>(flags), timeStamp++, 0);
+    }
     if (event & EvasMouseEventUp)
         evas_event_feed_mouse_up(evas, buttonNumber, EVAS_BUTTON_NONE, timeStamp++, 0);
 
@@ -150,13 +173,12 @@ static bool sendMouseEvent(Evas* evas, EvasMouseEvent event, int buttonNumber, E
         evas_event_feed_mouse_wheel(evas, 1, (event & EvasMouseEventScrollLeft) ? 10 : -10, timeStamp, 0);
 
     setEvasModifiers(evas, EvasKeyModifierNone);
-
-    return true;
 }
 
 static Eina_Bool sendClick(void*)
 {
-    return !!sendMouseEvent(evas_object_evas_get(browser->mainFrame()), EvasMouseEventClick, EvasMouseButtonLeft, EvasKeyModifierNone);
+    sendMouseEvent(evas_object_evas_get(browser->mainFrame()), EvasMouseEventClick, EvasMouseButtonLeft, EvasKeyModifierNone);
+    return ECORE_CALLBACK_CANCEL;
 }
 
 static JSValueRef scheduleAsynchronousClickCallback(JSContextRef context, JSObjectRef function, JSObjectRef thisObject, size_t argumentCount, const JSValueRef arguments[], JSValueRef* exception)
@@ -227,8 +249,7 @@ static JSValueRef mouseDownCallback(JSContextRef context, JSObjectRef function, 
     updateClickCount(button);
 
     EvasKeyModifier modifiers = argumentCount >= 2 ? modifiersFromJSValue(context, arguments[1]) : EvasKeyModifierNone;
-    if (!sendMouseEvent(evas_object_evas_get(browser->mainFrame()), EvasMouseEventDown, button, modifiers))
-        return JSValueMakeUndefined(context);
+    sendMouseEvent(evas_object_evas_get(browser->mainFrame()), EvasMouseEventDown, button, modifiers);
 
     gButtonCurrentlyDown = button;
     return JSValueMakeUndefined(context);
@@ -308,7 +329,7 @@ static JSValueRef continuousMouseScrollByCallback(JSContextRef context, JSObject
     return JSValueMakeUndefined(context);
 }
 
-static const char* keyPadNameFromJSValue(JSStringRef character)
+static const CString keyPadNameFromJSValue(JSStringRef character)
 {
     if (equals(character, "leftArrow"))
         return "KP_Left";
@@ -331,10 +352,10 @@ static const char* keyPadNameFromJSValue(JSStringRef character)
     if (equals(character, "delete"))
         return "KP_Delete";
 
-    return 0;
+    return character->ustring().utf8();
 }
 
-static const char* keyNameFromJSValue(JSStringRef character)
+static const CString keyNameFromJSValue(JSStringRef character)
 {
     if (equals(character, "leftArrow"))
         return "Left";
@@ -392,18 +413,19 @@ static const char* keyNameFromJSValue(JSStringRef character)
         return "Tab";
     if (charCode == '\x8')
         return "BackSpace";
+    if (charCode == ' ')
+        return "space";
 
-    return 0;
+    return character->ustring().utf8();
 }
 
-static JSValueRef keyDownCallback(JSContextRef context, JSObjectRef function, JSObjectRef thisObject, size_t argumentCount, const JSValueRef arguments[], JSValueRef* exception)
+static KeyEventInfo* createKeyEventInfo(JSContextRef context, size_t argumentCount, const JSValueRef arguments[], JSValueRef* exception)
 {
-    Evas_Object* view = ewk_frame_view_get(browser->mainFrame());
-    if (!view)
-        return JSValueMakeUndefined(context);
+    if (!ewk_frame_view_get(browser->mainFrame()))
+        return 0;
 
     if (argumentCount < 1)
-        return JSValueMakeUndefined(context);
+        return 0;
 
     // handle location argument.
     int location = DomKeyLocationStandard;
@@ -412,24 +434,39 @@ static JSValueRef keyDownCallback(JSContextRef context, JSObjectRef function, JS
 
     JSRetainPtr<JSStringRef> character(Adopt, JSValueToStringCopy(context, arguments[0], exception));
     if (exception && *exception)
-        return JSValueMakeUndefined(context);
+        return 0;
 
-    // send the event
-    Evas* evas = evas_object_evas_get(view);
+    EvasKeyModifier modifiers = EvasKeyModifierNone;
     if (argumentCount >= 2)
-        setEvasModifiers(evas, modifiersFromJSValue(context, arguments[1]));
+        modifiers = modifiersFromJSValue(context, arguments[1]);
 
-    const CString cCharacter = character.get()->ustring().utf8();
-    const char* keyName = (location == DomKeyLocationNumpad) ? keyPadNameFromJSValue(character.get()) : keyNameFromJSValue(character.get());
+    const CString keyName = (location == DomKeyLocationNumpad) ? keyPadNameFromJSValue(character.get()) : keyNameFromJSValue(character.get());
+    return new KeyEventInfo(keyName, modifiers);
+}
 
-    if (!keyName)
-        keyName = cCharacter.data();
+static void sendKeyDown(Evas* evas, KeyEventInfo* keyEventInfo)
+{
+    if (!keyEventInfo)
+        return;
+
+    const char* keyName = keyEventInfo->keyName.data();
+    EvasKeyModifier modifiers = keyEventInfo->modifiers;
 
     DumpRenderTreeSupportEfl::layoutFrame(browser->mainFrame());
+
+    ASSERT(evas);
+    setEvasModifiers(evas, modifiers);
     evas_event_feed_key_down(evas, keyName, keyName, keyName, 0, 0, 0);
     evas_event_feed_key_up(evas, keyName, keyName, keyName, 0, 1, 0);
-
     setEvasModifiers(evas, EvasKeyModifierNone);
+
+    DumpRenderTreeSupportEfl::deliverAllMutationsIfNecessary();
+}
+
+static JSValueRef keyDownCallback(JSContextRef context, JSObjectRef function, JSObjectRef thisObject, size_t argumentCount, const JSValueRef arguments[], JSValueRef* exception)
+{
+    OwnPtr<KeyEventInfo> keyEventInfo = adoptPtr(createKeyEventInfo(context, argumentCount, arguments, exception));
+    sendKeyDown(evas_object_evas_get(browser->mainFrame()), keyEventInfo.get());
 
     return JSValueMakeUndefined(context);
 }
@@ -451,6 +488,74 @@ static JSValueRef scalePageByCallback(JSContextRef context, JSObjectRef function
     return JSValueMakeUndefined(context);
 }
 
+static void textZoom(ZoomEvent zoomEvent)
+{
+    Evas_Object* view = ewk_frame_view_get(browser->mainFrame());
+    if (!view)
+        return;
+
+    float zoomFactor = ewk_view_text_zoom_get(view);
+    if (zoomEvent == ZoomIn)
+        zoomFactor *= zoomMultiplierRatio;
+    else
+        zoomFactor /= zoomMultiplierRatio;
+
+    ewk_view_text_zoom_set(view, zoomFactor);
+}
+
+static void pageZoom(ZoomEvent zoomEvent)
+{
+    Evas_Object* view = ewk_frame_view_get(browser->mainFrame());
+    if (!view)
+        return;
+
+    float zoomFactor = ewk_view_page_zoom_get(view);
+    if (zoomEvent == ZoomIn)
+        zoomFactor *= zoomMultiplierRatio;
+    else
+        zoomFactor /= zoomMultiplierRatio;
+
+    ewk_view_page_zoom_set(view, zoomFactor);
+}
+
+static JSValueRef textZoomInCallback(JSContextRef context, JSObjectRef function, JSObjectRef thisObject, size_t argumentCount, const JSValueRef arguments[], JSValueRef* exception)
+{
+    textZoom(ZoomIn);
+    return JSValueMakeUndefined(context);
+}
+
+static JSValueRef textZoomOutCallback(JSContextRef context, JSObjectRef function, JSObjectRef thisObject, size_t argumentCount, const JSValueRef arguments[], JSValueRef* exception)
+{
+    textZoom(ZoomOut);
+    return JSValueMakeUndefined(context);
+}
+
+static JSValueRef zoomPageInCallback(JSContextRef context, JSObjectRef function, JSObjectRef thisObject, size_t argumentCount, const JSValueRef arguments[], JSValueRef* exception)
+{
+    pageZoom(ZoomIn);
+    return JSValueMakeUndefined(context);
+}
+
+static JSValueRef zoomPageOutCallback(JSContextRef context, JSObjectRef function, JSObjectRef thisObject, size_t argumentCount, const JSValueRef arguments[], JSValueRef* exception)
+{
+    pageZoom(ZoomOut);
+    return JSValueMakeUndefined(context);
+}
+
+static Eina_Bool sendAsynchronousKeyDown(void* userData)
+{
+    OwnPtr<KeyEventInfo> keyEventInfo = adoptPtr(static_cast<KeyEventInfo*>(userData));
+    sendKeyDown(evas_object_evas_get(browser->mainFrame()), keyEventInfo.get());
+    return ECORE_CALLBACK_CANCEL;
+}
+
+static JSValueRef scheduleAsynchronousKeyDownCallback(JSContextRef context, JSObjectRef function, JSObjectRef thisObject, size_t argumentCount, const JSValueRef arguments[], JSValueRef* exception)
+{
+    KeyEventInfo* keyEventInfo = createKeyEventInfo(context, argumentCount, arguments, exception);
+    ecore_idler_add(sendAsynchronousKeyDown, static_cast<void*>(keyEventInfo));
+    return JSValueMakeUndefined(context);
+}
+
 static JSStaticFunction staticFunctions[] = {
     { "mouseScrollBy", mouseScrollByCallback, kJSPropertyAttributeReadOnly | kJSPropertyAttributeDontDelete },
     { "continuousMouseScrollBy", continuousMouseScrollByCallback, kJSPropertyAttributeReadOnly | kJSPropertyAttributeDontDelete },
@@ -459,7 +564,12 @@ static JSStaticFunction staticFunctions[] = {
     { "mouseMoveTo", mouseMoveToCallback, kJSPropertyAttributeReadOnly | kJSPropertyAttributeDontDelete },
     { "keyDown", keyDownCallback, kJSPropertyAttributeReadOnly | kJSPropertyAttributeDontDelete },
     { "scheduleAsynchronousClick", scheduleAsynchronousClickCallback, kJSPropertyAttributeReadOnly | kJSPropertyAttributeDontDelete },
+    { "scheduleAsynchronousKeyDown", scheduleAsynchronousKeyDownCallback, kJSPropertyAttributeReadOnly | kJSPropertyAttributeDontDelete },
     { "scalePageBy", scalePageByCallback, kJSPropertyAttributeReadOnly | kJSPropertyAttributeDontDelete },
+    { "textZoomIn", textZoomInCallback, kJSPropertyAttributeReadOnly | kJSPropertyAttributeDontDelete },
+    { "textZoomOut", textZoomOutCallback, kJSPropertyAttributeReadOnly | kJSPropertyAttributeDontDelete },
+    { "zoomPageIn", zoomPageInCallback, kJSPropertyAttributeReadOnly | kJSPropertyAttributeDontDelete },
+    { "zoomPageOut", zoomPageOutCallback, kJSPropertyAttributeReadOnly | kJSPropertyAttributeDontDelete },
     { 0, 0, 0 }
 };
 

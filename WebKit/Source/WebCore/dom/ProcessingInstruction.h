@@ -24,14 +24,14 @@
 
 #include "CachedResourceHandle.h"
 #include "CachedStyleSheetClient.h"
-#include "ContainerNode.h"
+#include "Node.h"
 
 namespace WebCore {
 
 class StyleSheet;
 class CSSStyleSheet;
 
-class ProcessingInstruction : public ContainerNode, private CachedStyleSheetClient {
+class ProcessingInstruction : public Node, private CachedStyleSheetClient {
 public:
     static PassRefPtr<ProcessingInstruction> create(Document*, const String& target, const String& data);
     virtual ~ProcessingInstruction();
@@ -61,12 +61,11 @@ private:
     virtual String nodeValue() const;
     virtual void setNodeValue(const String&, ExceptionCode&);
     virtual PassRefPtr<Node> cloneNode(bool deep);
-    virtual bool childTypeAllowed(NodeType) const;
     virtual bool offsetInCharacters() const;
     virtual int maxCharacterOffset() const;
 
-    virtual void insertedIntoDocument();
-    virtual void removedFromDocument();
+    virtual InsertionNotificationRequest insertedInto(Node*) OVERRIDE;
+    virtual void removedFrom(Node*) OVERRIDE;
 
     void checkStyleSheet();
     virtual void setCSSStyleSheet(const String& href, const KURL& baseURL, const String& charset, const CachedCSSStyleSheet*);

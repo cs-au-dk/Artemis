@@ -29,11 +29,13 @@
 #include "WKBase.h"
 #include <Ecore.h>
 #include <WebCore/ResourceHandle.h>
-#include <WebKit2/RunLoop.h>
+#include <WebCore/RunLoop.h>
 #include <WebKit2/WebProcess.h>
 #include <runtime/InitializeThreading.h>
 #include <unistd.h>
 #include <wtf/MainThread.h>
+
+using namespace WebCore;
 
 namespace WebKit {
 
@@ -54,6 +56,9 @@ WK_EXPORT int WebProcessMainEfl(int argc, char* argv[])
 
 #if ENABLE(GLIB_SUPPORT)
     g_type_init();
+
+    if (!ecore_main_loop_glib_integrate())
+        return 1;
 #endif
 
     JSC::initializeThreading();
@@ -61,7 +66,6 @@ WK_EXPORT int WebProcessMainEfl(int argc, char* argv[])
 
     RunLoop::initializeMainRunLoop();
 
-#if USE(SOUP)
     SoupSession* session = WebCore::ResourceHandle::defaultSession();
     const char* httpProxy = g_getenv("http_proxy");
     if (httpProxy) {
@@ -72,7 +76,6 @@ WK_EXPORT int WebProcessMainEfl(int argc, char* argv[])
 
     soup_session_add_feature_by_type(session, SOUP_TYPE_CONTENT_SNIFFER);
     soup_session_add_feature_by_type(session, SOUP_TYPE_CONTENT_DECODER);
-#endif
 
     int socket = atoi(argv[1]);
     WebProcess::shared().initialize(socket, RunLoop::main());

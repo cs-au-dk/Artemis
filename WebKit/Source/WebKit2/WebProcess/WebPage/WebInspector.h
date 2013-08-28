@@ -30,8 +30,8 @@
 
 #include "APIObject.h"
 #include "Connection.h"
-#include <wtf/Forward.h>
 #include <wtf/Noncopyable.h>
+#include <wtf/text/WTFString.h>
 
 namespace WebKit {
 
@@ -61,8 +61,16 @@ public:
     void startPageProfiling();
     void stopPageProfiling();
 
+#if ENABLE(INSPECTOR_SERVER)
+    bool hasRemoteFrontendConnected() const { return m_remoteFrontendConnected; }
+    void sendMessageToRemoteFrontend(const String& message);
+    void dispatchMessageFromRemoteFrontend(const String& message);
+    void remoteFrontendConnected();
+    void remoteFrontendDisconnected();
+#endif
+
 #if PLATFORM(MAC)
-    static void setLocalizedStringsPath(const String&);
+    void setInspectorUsesWebKitUserInterface(bool);
 #endif
 
 private:
@@ -75,6 +83,7 @@ private:
 
     // Called from WebInspectorClient
     WebPage* createInspectorPage();
+    void destroyInspectorPage();
 
     // Called from WebInspectorFrontendClient
     void didLoadInspectorPage();
@@ -92,15 +101,27 @@ private:
 
     void showConsole();
 
+    void showResources();
+
+    void showMainResourceForFrame(uint64_t frameID);
+
     void startJavaScriptDebugging();
     void stopJavaScriptDebugging();
 
     void startJavaScriptProfiling();
     void stopJavaScriptProfiling();
 
+    void updateDockingAvailability();
+
     WebPage* m_page;
     WebPage* m_inspectorPage;
     WebInspectorFrontendClient* m_frontendClient;
+#if PLATFORM(MAC)
+    String m_localizedStringsURL;
+#endif
+#if ENABLE(INSPECTOR_SERVER)
+    bool m_remoteFrontendConnected;
+#endif
 };
 
 } // namespace WebKit

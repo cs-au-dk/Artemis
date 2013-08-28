@@ -25,9 +25,11 @@
 #ifndef CCSingleThreadProxy_h
 #define CCSingleThreadProxy_h
 
+#include "cc/CCAnimationEvents.h"
 #include "cc/CCCompletionEvent.h"
 #include "cc/CCLayerTreeHostImpl.h"
 #include "cc/CCProxy.h"
+#include <limits>
 #include <wtf/OwnPtr.h>
 
 namespace WebCore {
@@ -40,47 +42,63 @@ public:
     virtual ~CCSingleThreadProxy();
 
     // CCProxy implementation
-    virtual bool compositeAndReadback(void *pixels, const IntRect&);
-    virtual GraphicsContext3D* context();
-    virtual void finishAllRendering();
-    virtual bool isStarted() const;
-    virtual bool initializeLayerRenderer();
-    virtual int compositorIdentifier() const { return m_compositorIdentifier; }
-    virtual const LayerRendererCapabilities& layerRendererCapabilities() const;
-    virtual void loseCompositorContext(int numTimes);
-    virtual void setNeedsAnimate();
-    virtual void setNeedsCommit();
-    virtual void setNeedsRedraw();
-    virtual void setVisible(bool);
-    virtual void start();
-    virtual void stop();
+    virtual bool compositeAndReadback(void *pixels, const IntRect&) OVERRIDE;
+    virtual void startPageScaleAnimation(const IntSize& targetPosition, bool useAnchor, float scale, double duration) OVERRIDE;
+    virtual GraphicsContext3D* context() OVERRIDE;
+    virtual void finishAllRendering() OVERRIDE;
+    virtual bool isStarted() const OVERRIDE;
+    virtual bool initializeContext() OVERRIDE;
+    virtual void setSurfaceReady() OVERRIDE;
+    virtual bool initializeLayerRenderer() OVERRIDE;
+    virtual bool recreateContext() OVERRIDE;
+    virtual int compositorIdentifier() const OVERRIDE { return m_compositorIdentifier; }
+    virtual const LayerRendererCapabilities& layerRendererCapabilities() const OVERRIDE;
+    virtual void loseContext() OVERRIDE;
+    virtual void setNeedsAnimate() OVERRIDE;
+    virtual void setNeedsCommit() OVERRIDE;
+    virtual void setNeedsRedraw() OVERRIDE;
+    virtual bool commitRequested() const OVERRIDE;
+    virtual void setVisible(bool) OVERRIDE;
+    virtual void start() OVERRIDE;
+    virtual void stop() OVERRIDE;
+    virtual size_t maxPartialTextureUpdates() const OVERRIDE { return std::numeric_limits<size_t>::max(); }
+    virtual void acquireLayerTextures() OVERRIDE { }
+    virtual void setFontAtlas(PassOwnPtr<CCFontAtlas>) OVERRIDE;
+    virtual void forceSerializeOnSwapBuffers() OVERRIDE;
 
     // CCLayerTreeHostImplClient implementation
-    virtual void onSwapBuffersCompleteOnImplThread() { ASSERT_NOT_REACHED(); }
-    virtual void setNeedsRedrawOnImplThread() { m_layerTreeHost->setNeedsCommit(); }
-    virtual void setNeedsCommitOnImplThread() { m_layerTreeHost->setNeedsCommit(); }
+    virtual void didLoseContextOnImplThread() OVERRIDE { }
+    virtual void onSwapBuffersCompleteOnImplThread() OVERRIDE { ASSERT_NOT_REACHED(); }
+    virtual void setNeedsRedrawOnImplThread() OVERRIDE { m_layerTreeHost->setNeedsCommit(); }
+    virtual void setNeedsCommitOnImplThread() OVERRIDE { m_layerTreeHost->setNeedsCommit(); }
+    virtual void postAnimationEventsToMainThreadOnImplThread(PassOwnPtr<CCAnimationEventsVector>, double wallClockTime) OVERRIDE;
+    virtual void postSetContentsMemoryAllocationLimitBytesToMainThreadOnImplThread(size_t) OVERRIDE;
 
     // Called by the legacy path where RenderWidget does the scheduling.
     void compositeImmediately();
 
 private:
     explicit CCSingleThreadProxy(CCLayerTreeHost*);
-    bool recreateContextIfNeeded();
-    void commitIfNeeded();
-    void doCommit();
+
+    bool commitAndComposite();
+    void doCommit(CCTextureUpdater&);
     bool doComposite();
+    void didSwapFrame();
 
     // Accessed on main thread only.
     CCLayerTreeHost* m_layerTreeHost;
+    bool m_contextLost;
     int m_compositorIdentifier;
+
+    // Holds on to the context between initializeContext() and initializeLayerRenderer() calls. Shouldn't
+    // be used for anything else.
+    RefPtr<GraphicsContext3D> m_contextBeforeInitialization;
 
     // Used on the CCThread, but checked on main thread during initialization/shutdown.
     OwnPtr<CCLayerTreeHostImpl> m_layerTreeHostImpl;
+    bool m_layerRendererInitialized;
     LayerRendererCapabilities m_layerRendererCapabilitiesForMainThread;
 
-    int m_numFailedRecreateAttempts;
-    bool m_graphicsContextLost;
-    int m_timesRecreateShouldFail; // Used during testing.
     bool m_nextFrameIsNewlyCommittedFrame;
 };
 
@@ -98,6 +116,24 @@ public:
     {
 #if !ASSERT_DISABLED
         CCProxy::setCurrentThreadIsImplThread(false);
+#endif
+    }
+};
+
+// For use in the single-threaded case. In debug builds, it pretends that the
+// code is running on the main thread to satisfy assertion checks.
+class DebugScopedSetMainThread {
+public:
+    DebugScopedSetMainThread()
+    {
+#if !ASSERT_DISABLED
+        CCProxy::setCurrentThreadIsImplThread(false);
+#endif
+    }
+    ~DebugScopedSetMainThread()
+    {
+#if !ASSERT_DISABLED
+        CCProxy::setCurrentThreadIsImplThread(true);
 #endif
     }
 };

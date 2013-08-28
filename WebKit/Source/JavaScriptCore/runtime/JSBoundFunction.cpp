@@ -26,6 +26,7 @@
 #include "config.h"
 #include "JSBoundFunction.h"
 
+#include "GetterSetter.h"
 #include "JSGlobalObject.h"
 
 namespace JSC {
@@ -37,7 +38,7 @@ const ClassInfo JSBoundFunction::s_info = { "Function", &Base::s_info, 0, 0, CRE
 
 EncodedJSValue JSC_HOST_CALL boundFunctionCall(ExecState* exec)
 {
-    JSBoundFunction* boundFunction = static_cast<JSBoundFunction*>(exec->callee());
+    JSBoundFunction* boundFunction = jsCast<JSBoundFunction*>(exec->callee());
 
     ASSERT(isJSArray(boundFunction->boundArgs())); // Currently this is true!
     JSArray* boundArgs = asArray(boundFunction->boundArgs());
@@ -57,7 +58,7 @@ EncodedJSValue JSC_HOST_CALL boundFunctionCall(ExecState* exec)
 
 EncodedJSValue JSC_HOST_CALL boundFunctionConstruct(ExecState* exec)
 {
-    JSBoundFunction* boundFunction = static_cast<JSBoundFunction*>(exec->callee());
+    JSBoundFunction* boundFunction = jsCast<JSBoundFunction*>(exec->callee());
 
     ASSERT(isJSArray(boundFunction->boundArgs())); // Currently this is true!
     JSArray* boundArgs = asArray(boundFunction->boundArgs());
@@ -111,8 +112,8 @@ void JSBoundFunction::finishCreation(ExecState* exec, NativeExecutable* executab
     Base::finishCreation(exec, executable, length, name);
     ASSERT(inherits(&s_info));
 
-    initializeGetterSetterProperty(exec, exec->propertyNames().arguments, globalObject()->throwTypeErrorGetterSetter(exec), DontDelete | DontEnum | Getter | Setter);
-    initializeGetterSetterProperty(exec, exec->propertyNames().caller, globalObject()->throwTypeErrorGetterSetter(exec), DontDelete | DontEnum | Getter | Setter);
+    putDirectAccessor(exec->globalData(), exec->propertyNames().arguments, globalObject()->throwTypeErrorGetterSetter(exec), DontDelete | DontEnum | Accessor);
+    putDirectAccessor(exec->globalData(), exec->propertyNames().caller, globalObject()->throwTypeErrorGetterSetter(exec), DontDelete | DontEnum | Accessor);
 }
 
 void JSBoundFunction::visitChildren(JSCell* cell, SlotVisitor& visitor)

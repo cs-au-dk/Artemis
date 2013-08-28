@@ -31,7 +31,6 @@
 #include "Document.h"
 #include "Frame.h"
 #include "GroupSettings.h"
-#include "IDBFactoryBackendInterface.h"
 #include "Page.h"
 #include "PageCache.h"
 #include "SecurityOrigin.h"
@@ -91,15 +90,15 @@ PageGroup* PageGroup::pageGroup(const String& groupName)
     if (!pageGroups)
         pageGroups = new PageGroupMap;
 
-    pair<PageGroupMap::iterator, bool> result = pageGroups->add(groupName, 0);
+    PageGroupMap::AddResult result = pageGroups->add(groupName, 0);
 
-    if (result.second) {
-        ASSERT(!result.first->second);
-        result.first->second = new PageGroup(groupName);
+    if (result.isNewEntry) {
+        ASSERT(!result.iterator->second);
+        result.iterator->second = new PageGroup(groupName);
     }
 
-    ASSERT(result.first->second);
-    return result.first->second;
+    ASSERT(result.iterator->second);
+    return result.iterator->second;
 }
 
 void PageGroup::closeLocalStorage()
@@ -198,7 +197,7 @@ inline void PageGroup::addVisitedLink(LinkHash hash)
 {
     ASSERT(shouldTrackVisitedLinks);
 #if !PLATFORM(CHROMIUM)
-    if (!m_visitedLinkHashes.add(hash).second)
+    if (!m_visitedLinkHashes.add(hash).isNewEntry)
         return;
 #endif
     Page::visitedStateChanged(this, hash);
@@ -261,17 +260,6 @@ StorageNamespace* PageGroup::localStorage()
     return m_localStorage.get();
 }
 
-#if ENABLE(INDEXED_DATABASE)
-IDBFactoryBackendInterface* PageGroup::idbFactory()
-{
-    // Do not add page setting based access control here since this object is shared by all pages in
-    // the group and having per-page controls is misleading.
-    if (!m_factoryBackend)
-        m_factoryBackend = IDBFactoryBackendInterface::create();
-    return m_factoryBackend.get();
-}
-#endif
-
 void PageGroup::addUserScriptToWorld(DOMWrapperWorld* world, const String& source, const KURL& url,
                                      PassOwnPtr<Vector<String> > whitelist, PassOwnPtr<Vector<String> > blacklist,
                                      UserScriptInjectionTime injectionTime, UserContentInjectedFrames injectedFrames)
@@ -281,7 +269,7 @@ void PageGroup::addUserScriptToWorld(DOMWrapperWorld* world, const String& sourc
     OwnPtr<UserScript> userScript = adoptPtr(new UserScript(source, url, whitelist, blacklist, injectionTime, injectedFrames));
     if (!m_userScripts)
         m_userScripts = adoptPtr(new UserScriptMap);
-    OwnPtr<UserScriptVector>& scriptsInWorld = m_userScripts->add(world, nullptr).first->second;
+    OwnPtr<UserScriptVector>& scriptsInWorld = m_userScripts->add(world, nullptr).iterator->second;
     if (!scriptsInWorld)
         scriptsInWorld = adoptPtr(new UserScriptVector);
     scriptsInWorld->append(userScript.release());
@@ -298,7 +286,7 @@ void PageGroup::addUserStyleSheetToWorld(DOMWrapperWorld* world, const String& s
     OwnPtr<UserStyleSheet> userStyleSheet = adoptPtr(new UserStyleSheet(source, url, whitelist, blacklist, injectedFrames, level));
     if (!m_userStyleSheets)
         m_userStyleSheets = adoptPtr(new UserStyleSheetMap);
-    OwnPtr<UserStyleSheetVector>& styleSheetsInWorld = m_userStyleSheets->add(world, nullptr).first->second;
+    OwnPtr<UserStyleSheetVector>& styleSheetsInWorld = m_userStyleSheets->add(world, nullptr).iterator->second;
     if (!styleSheetsInWorld)
         styleSheetsInWorld = adoptPtr(new UserStyleSheetVector);
     styleSheetsInWorld->append(userStyleSheet.release());

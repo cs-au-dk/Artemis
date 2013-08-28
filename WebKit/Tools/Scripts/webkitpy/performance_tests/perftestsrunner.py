@@ -1,5 +1,5 @@
 #!/usr/bin/env python
-# Copyright (C) 2011 Google Inc. All rights reserved.
+# Copyright (C) 2012 Google Inc. All rights reserved.
 #
 # Redistribution and use in source and binary forms, with or without
 # modification, are permitted provided that the following conditions are
@@ -29,140 +29,220 @@
 
 """Run Inspector's perf tests in perf mode."""
 
+import json
 import logging
 import optparse
 import re
 import sys
+import time
 
 from webkitpy.common import find_files
 from webkitpy.common.host import Host
-from webkitpy.layout_tests.port.driver import DriverInput
+from webkitpy.common.net.file_uploader import FileUploader
 from webkitpy.layout_tests.views import printing
+from webkitpy.performance_tests.perftest import PerfTestFactory
+
 
 _log = logging.getLogger(__name__)
 
 
 class PerfTestsRunner(object):
-    _perf_tests_base_dir = 'PerformanceTests'
-    _result_regex = re.compile('^RESULT .*$')
+    _default_branch = 'webkit-trunk'
+    _EXIT_CODE_BAD_BUILD = -1
+    _EXIT_CODE_BAD_JSON = -2
+    _EXIT_CODE_FAILED_UPLOADING = -3
 
-    def __init__(self, perf_tests_dir, regular_output=sys.stderr, buildbot_output=sys.stdout, args=None):
-        self._perf_tests_dir = perf_tests_dir
-        self._buildbot_output = buildbot_output
-        self._options, self._args = self._parse_args(args)
-        self._host = Host()
+    def __init__(self, args=None, port=None):
+        self._options, self._args = PerfTestsRunner._parse_args(args)
+        if port:
+            self._port = port
+            self._host = self._port.host
+        else:
+            self._host = Host()
+            self._port = self._host.port_factory.get(self._options.platform, self._options)
         self._host._initialize_scm()
-        self._port = self._host.port_factory.get(self._options.platform, self._options)
-        self._printer = printing.Printer(self._port, self._options, regular_output, buildbot_output, configure_logging=False)
         self._webkit_base_dir_len = len(self._port.webkit_base())
+        self._base_path = self._port.perf_tests_dir()
+        self._results = {}
+        self._timestamp = time.time()
 
-    def _parse_args(self, args=None):
-        print_options = printing.print_options()
-
+    @staticmethod
+    def _parse_args(args=None):
         perf_option_list = [
             optparse.make_option('--debug', action='store_const', const='Debug', dest="configuration",
-                                 help='Set the configuration to Debug'),
+                help='Set the configuration to Debug'),
             optparse.make_option('--release', action='store_const', const='Release', dest="configuration",
-                                 help='Set the configuration to Release'),
+                help='Set the configuration to Release'),
             optparse.make_option("--platform",
-                                 help="Specify port/platform being tested (i.e. chromium-mac)"),
+                help="Specify port/platform being tested (i.e. chromium-mac)"),
+            optparse.make_option("--chromium",
+                action="store_const", const='chromium', dest='platform', help='Alias for --platform=chromium'),
+            optparse.make_option("--builder-name",
+                help=("The name of the builder shown on the waterfall running this script e.g. google-mac-2.")),
+            optparse.make_option("--build-number",
+                help=("The build number of the builder running this script.")),
+            optparse.make_option("--build", dest="build", action="store_true", default=True,
+                help="Check to ensure the DumpRenderTree build is up-to-date (default)."),
             optparse.make_option("--build-directory",
-                                 help="Path to the directory under which build files are kept (should not include configuration)"),
-            optparse.make_option("--time-out-ms", default=30000,
-                                 help="Set the timeout for each test"),
+                help="Path to the directory under which build files are kept (should not include configuration)"),
+            optparse.make_option("--time-out-ms", default=600 * 1000,
+                help="Set the timeout for each test"),
+            optparse.make_option("--pause-before-testing", dest="pause_before_testing", action="store_true", default=False,
+                help="Pause before running the tests to let user attach a performance monitor."),
+            optparse.make_option("--output-json-path",
+                help="Filename of the JSON file that summaries the results"),
+            optparse.make_option("--source-json-path",
+                help="Path to a JSON file to be merged into the JSON file when --output-json-path is present"),
+            optparse.make_option("--test-results-server",
+                help="Upload the generated JSON file to the specified server when --output-json-path is present"),
+            optparse.make_option("--webkit-test-runner", "-2", action="store_true",
+                help="Use WebKitTestRunner rather than DumpRenderTree."),
             ]
+        return optparse.OptionParser(option_list=(perf_option_list)).parse_args(args)
 
-        option_list = (perf_option_list + print_options)
-        return optparse.OptionParser(option_list=option_list).parse_args(args)
-
-    def _collect_tests(self, webkit_base, filesystem=None):
+    def _collect_tests(self):
         """Return the list of tests found."""
 
         def _is_test_file(filesystem, dirname, filename):
-            return filename.endswith('.html')
+            return filesystem.splitext(filename)[1] in ['.html', '.svg']
 
-        filesystem = filesystem or self._host.filesystem
-        base_dir = filesystem.join(webkit_base, self._perf_tests_base_dir, self._perf_tests_dir)
-        return find_files.find(filesystem, base_dir, paths=self._args, file_filter=_is_test_file)
+        filesystem = self._host.filesystem
+
+        paths = []
+        for arg in self._args:
+            paths.append(arg)
+            relpath = filesystem.relpath(arg, self._base_path)
+            if relpath:
+                paths.append(relpath)
+
+        skipped_directories = set(['.svn', 'resources'])
+        test_files = find_files.find(filesystem, self._base_path, paths, skipped_directories, _is_test_file)
+        tests = []
+        for path in test_files:
+            relative_path = self._port.relative_perf_test_filename(path).replace('\\', '/')
+            if self._port.skips_perf_test(relative_path):
+                continue
+            tests.append(PerfTestFactory.create_perf_test(relative_path, path))
+
+        return tests
 
     def run(self):
-        if self._options.help_printing:
-            self._printer.help_printing()
-            self._printer.cleanup()
-            return 0
-
         if not self._port.check_build(needs_http=False):
             _log.error("Build not up to date for %s" % self._port._path_to_driver())
-            return -1
+            return self._EXIT_CODE_BAD_BUILD
 
         # We wrap any parts of the run that are slow or likely to raise exceptions
         # in a try/finally to ensure that we clean up the logging configuration.
         unexpected = -1
-        try:
-            tests = self._collect_tests(self._port.webkit_base())
-            unexpected = self._run_tests_set(tests, self._port)
-        finally:
-            self._printer.cleanup()
+        tests = self._collect_tests()
+        unexpected = self._run_tests_set(sorted(list(tests), key=lambda test: test.test_name()), self._port)
+
+        options = self._options
+        if self._options.output_json_path:
+            # FIXME: Add --branch or auto-detect the branch we're in
+            test_results_server = options.test_results_server
+            branch = self._default_branch if test_results_server else None
+            build_number = int(options.build_number) if options.build_number else None
+            if not self._generate_json(self._timestamp, options.output_json_path, options.source_json_path,
+                branch, options.platform, options.builder_name, build_number) and not unexpected:
+                return self._EXIT_CODE_BAD_JSON
+            if test_results_server and not self._upload_json(test_results_server, options.output_json_path):
+                return self._EXIT_CODE_FAILED_UPLOADING
 
         return unexpected
+
+    def _generate_json(self, timestamp, output_json_path, source_json_path, branch, platform, builder_name, build_number):
+        contents = {'timestamp': int(timestamp), 'results': self._results}
+        for (name, path) in self._port.repository_paths():
+            contents[name + '-revision'] = self._host.scm().svn_revision(path)
+
+        for key, value in {'branch': branch, 'platform': platform, 'builder-name': builder_name, 'build-number': build_number}.items():
+            if value:
+                contents[key] = value
+
+        filesystem = self._host.filesystem
+        succeeded = False
+        if source_json_path:
+            try:
+                source_json_file = filesystem.open_text_file_for_reading(source_json_path)
+                source_json = json.load(source_json_file)
+                contents = dict(source_json.items() + contents.items())
+                succeeded = True
+            except IOError, error:
+                _log.error("Failed to read %s: %s" % (source_json_path, error))
+            except ValueError, error:
+                _log.error("Failed to parse %s: %s" % (source_json_path, error))
+            except TypeError, error:
+                _log.error("Failed to merge JSON files: %s" % error)
+            if not succeeded:
+                return False
+
+        filesystem.write_text_file(output_json_path, json.dumps(contents))
+        return True
+
+    def _upload_json(self, test_results_server, json_path, file_uploader=FileUploader):
+        uploader = file_uploader("https://%s/api/test/report" % test_results_server, 120)
+        try:
+            response = uploader.upload_single_text_file(self._host.filesystem, 'application/json', json_path)
+        except Exception, error:
+            _log.error("Failed to upload JSON file in 120s: %s" % error)
+            return False
+
+        response_body = [line.strip('\n') for line in response]
+        if response_body != ['OK']:
+            _log.error("Uploaded JSON but got a bad response:")
+            for line in response_body:
+                _log.error(line)
+            return False
+
+        _log.info("JSON file uploaded.")
+        return True
+
+    def _print_status(self, tests, expected, unexpected):
+        if len(tests) == expected + unexpected:
+            status = "Ran %d tests" % len(tests)
+        else:
+            status = "Running %d of %d tests" % (expected + unexpected + 1, len(tests))
+        if unexpected:
+            status += " (%d didn't run)" % unexpected
+        _log.info(status)
 
     def _run_tests_set(self, tests, port):
         result_count = len(tests)
         expected = 0
         unexpected = 0
-        self._printer.print_one_line_summary(result_count, 0, 0)
-        driver_need_restart = False
         driver = None
 
         for test in tests:
-            if driver_need_restart:
-                _log.debug("%s killing driver" % test)
-                driver.stop()
-                driver = None
-            if not driver:
-                driver = port.create_driver(worker_number=1)
+            driver = port.create_driver(worker_number=1, no_timeout=True)
 
-            test_failed, driver_need_restart = self._run_single_test(test, driver)
-            if test_failed:
-                unexpected = unexpected + 1
-            else:
+            if self._options.pause_before_testing:
+                driver.start()
+                if not self._host.user.confirm("Ready to run test?"):
+                    driver.stop()
+                    return unexpected
+
+            _log.info('Running %s (%d of %d)' % (test.test_name(), expected + unexpected + 1, len(tests)))
+            if self._run_single_test(test, driver):
                 expected = expected + 1
+            else:
+                unexpected = unexpected + 1
 
-            self._printer.print_one_line_summary(result_count, expected, unexpected)
+            _log.info('')
 
-        if driver:
             driver.stop()
 
         return unexpected
 
     def _run_single_test(self, test, driver):
-        test_failed = False
-        driver_need_restart = False
-        output = driver.run_test(DriverInput(test, self._options.time_out_ms, None, False))
+        start_time = time.time()
 
-        if output.text == None:
-            test_failed = True
-        elif output.timeout:
-            self._printer.write('timeout: %s' % test[self._webkit_base_dir_len + 1:])
-            test_failed = True
-            driver_need_restart = True
-        elif output.crash:
-            self._printer.write('crash: %s' % test[self._webkit_base_dir_len + 1:])
-            driver_need_restart = True
-            test_failed = True
+        new_results = test.run(driver, self._options.time_out_ms)
+        if new_results:
+            self._results.update(new_results)
         else:
-            got_a_result = False
-            for line in re.split('\n', output.text):
-                if self._result_regex.match(line):
-                    self._buildbot_output.write("%s\n" % line)
-                    got_a_result = True
-                elif not len(line) == 0:
-                    test_failed = True
-                    self._printer.write("%s" % line)
-            test_failed = test_failed or not got_a_result
+            _log.error('FAILED')
 
-        if len(output.error):
-            self._printer.write('error:\n%s' % output.error)
-            test_failed = True
+        _log.debug("Finished: %f s" % (time.time() - start_time))
 
-        return test_failed, driver_need_restart
+        return new_results != None

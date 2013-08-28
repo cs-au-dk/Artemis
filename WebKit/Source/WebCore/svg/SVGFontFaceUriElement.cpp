@@ -61,13 +61,13 @@ PassRefPtr<CSSFontFaceSrcValue> SVGFontFaceUriElement::srcValue() const
     return src.release();
 }
 
-void SVGFontFaceUriElement::parseMappedAttribute(Attribute* attr)
+void SVGFontFaceUriElement::parseAttribute(Attribute* attr)
 {
     const QualifiedName& attrName = attr->name();
     if (attrName == XLinkNames::hrefAttr)
         loadFont();
     else
-        SVGElement::parseMappedAttribute(attr);
+        SVGElement::parseAttribute(attr);
 }
 
 void SVGFontFaceUriElement::childrenChanged(bool changedByParser, Node* beforeChange, Node* afterChange, int childCountDelta)
@@ -82,10 +82,10 @@ void SVGFontFaceUriElement::childrenChanged(bool changedByParser, Node* beforeCh
         static_cast<SVGFontFaceElement*>(grandparent)->rebuildFontFace();
 }
 
-void SVGFontFaceUriElement::insertedIntoDocument()
+Node::InsertionNotificationRequest SVGFontFaceUriElement::insertedInto(Node* rootParent)
 {
     loadFont();
-    SVGElement::insertedIntoDocument();
+    return SVGElement::insertedInto(rootParent);
 }
 
 void SVGFontFaceUriElement::loadFont()

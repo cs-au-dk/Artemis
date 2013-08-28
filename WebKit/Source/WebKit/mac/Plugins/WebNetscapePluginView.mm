@@ -67,6 +67,7 @@
 #import <WebCore/Page.h> 
 #import <WebCore/PluginMainThreadScheduler.h>
 #import <WebCore/ProxyServer.h>
+#import <WebCore/RunLoop.h>
 #import <WebCore/ScriptController.h>
 #import <WebCore/SecurityOrigin.h>
 #import <WebCore/SoftLinking.h> 
@@ -194,6 +195,7 @@ typedef struct {
 {
     JSC::initializeThreading();
     WTF::initializeMainThreadToProcessMainThread();
+    WebCore::RunLoop::initializeMainRunLoop();
     WebCoreObjCFinalizeOnMainThread(self);
     WKSendUserChangeNotifications();
 }
@@ -1996,7 +1998,7 @@ static inline void getNPRect(const NSRect& nr, NPRect& npr)
 
 - (NPError)getVariable:(NPNVariable)variable value:(void *)value
 {
-    switch (variable) {
+    switch (static_cast<unsigned>(variable)) {
         case NPNVWindowNPObject:
         {
             Frame* frame = core([self webFrame]);

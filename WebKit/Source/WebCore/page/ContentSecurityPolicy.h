@@ -52,6 +52,8 @@ public:
     };
 
     void didReceiveHeader(const String&, HeaderType);
+    String policy() { return m_header; }
+    HeaderType headerType() { return m_reportOnly ? ReportOnly : EnforcePolicy; }
 
     bool allowJavaScriptURLs() const;
     bool allowInlineEventHandlers() const;
@@ -67,6 +69,8 @@ public:
     bool allowFontFromSource(const KURL&) const;
     bool allowMediaFromSource(const KURL&) const;
     bool allowConnectFromSource(const KURL&) const;
+
+    void setOverrideAllowInlineStyle(bool);
 
 private:
     explicit ContentSecurityPolicy(ScriptExecutionContext*);
@@ -105,6 +109,7 @@ private:
     OwnPtr<CSPDirective> m_mediaSrc;
     OwnPtr<CSPDirective> m_connectSrc;
     bool m_haveSandboxPolicy;
+    bool m_overrideInlineStyleAllowed;
     Vector<KURL> m_reportURLs;
 };
 

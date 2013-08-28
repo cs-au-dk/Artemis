@@ -40,17 +40,31 @@
 #include "MutationObserverRegistration.h"
 #include "MutationRecord.h"
 #include "Node.h"
-#include <wtf/ListHashSet.h>
+#include <algorithm>
+#include <wtf/HashSet.h>
+#include <wtf/MainThread.h>
+#include <wtf/Vector.h>
 
 namespace WebCore {
 
+static unsigned s_observerPriority = 0;
+
+struct WebKitMutationObserver::ObserverLessThan {
+    bool operator()(const RefPtr<WebKitMutationObserver>& lhs, const RefPtr<WebKitMutationObserver>& rhs)
+    {
+        return lhs->m_priority < rhs->m_priority;
+    }
+};
+
 PassRefPtr<WebKitMutationObserver> WebKitMutationObserver::create(PassRefPtr<MutationCallback> callback)
 {
+    ASSERT(isMainThread());
     return adoptRef(new WebKitMutationObserver(callback));
 }
 
 WebKitMutationObserver::WebKitMutationObserver(PassRefPtr<MutationCallback> callback)
     : m_callback(callback)
+    , m_priority(s_observerPriority++)
 {
 }
 
@@ -86,8 +100,16 @@ void WebKitMutationObserver::observe(Node* node, MutationObserverOptions options
     node->document()->addMutationObserverTypes(registration->mutationTypes());
 }
 
+Vector<RefPtr<MutationRecord> > WebKitMutationObserver::takeRecords()
+{
+    Vector<RefPtr<MutationRecord> > records;
+    records.swap(m_records);
+    return records;
+}
+
 void WebKitMutationObserver::disconnect()
 {
+    m_records.clear();
     HashSet<MutationObserverRegistration*> registrations(m_registrations);
     for (HashSet<MutationObserverRegistration*>::iterator iter = registrations.begin(); iter != registrations.end(); ++iter)
         (*iter)->unregister();
@@ -105,7 +127,7 @@ void WebKitMutationObserver::observationEnded(MutationObserverRegistration* regi
     m_registrations.remove(registration);
 }
 
-typedef ListHashSet<RefPtr<WebKitMutationObserver> > MutationObserverSet;
+typedef HashSet<RefPtr<WebKitMutationObserver> > MutationObserverSet;
 
 static MutationObserverSet& activeMutationObservers()
 {
@@ -115,33 +137,53 @@ static MutationObserverSet& activeMutationObservers()
 
 void WebKitMutationObserver::enqueueMutationRecord(PassRefPtr<MutationRecord> mutation)
 {
+    ASSERT(isMainThread());
     m_records.append(mutation);
+    activeMutationObservers().add(this);
+}
+
+void WebKitMutationObserver::setHasTransientRegistration()
+{
+    ASSERT(isMainThread());
     activeMutationObservers().add(this);
 }
 
 void WebKitMutationObserver::deliver()
 {
-    MutationRecordArray records;
-    records.swap(m_records);
+    // Calling clearTransientRegistrations() can modify m_registrations, so it's necessary
+    // to make a copy of the transient registrations before operating on them.
+    Vector<MutationObserverRegistration*, 1> transientRegistrations;
+    for (HashSet<MutationObserverRegistration*>::iterator iter = m_registrations.begin(); iter != m_registrations.end(); ++iter) {
+        if ((*iter)->hasTransientRegistrations())
+            transientRegistrations.append(*iter);
+    }
+    for (size_t i = 0; i < transientRegistrations.size(); ++i)
+        transientRegistrations[i]->clearTransientRegistrations();
 
-    for (HashSet<MutationObserverRegistration*>::iterator iter = m_registrations.begin(); iter != m_registrations.end(); ++iter)
-        (*iter)->clearTransientRegistrations();
+    if (m_records.isEmpty())
+        return;
+
+    Vector<RefPtr<MutationRecord> > records;
+    records.swap(m_records);
 
     m_callback->handleEvent(&records, this);
 }
 
 void WebKitMutationObserver::deliverAllMutations()
 {
+    ASSERT(isMainThread());
     static bool deliveryInProgress = false;
     if (deliveryInProgress)
         return;
     deliveryInProgress = true;
 
     while (!activeMutationObservers().isEmpty()) {
-        MutationObserverSet::iterator iter = activeMutationObservers().begin();
-        RefPtr<WebKitMutationObserver> observer = *iter;
-        activeMutationObservers().remove(iter);
-        observer->deliver();
+        Vector<RefPtr<WebKitMutationObserver> > observers;
+        copyToVector(activeMutationObservers(), observers);
+        activeMutationObservers().clear();
+        std::sort(observers.begin(), observers.end(), ObserverLessThan());
+        for (size_t i = 0; i < observers.size(); ++i)
+            observers[i]->deliver();
     }
 
     deliveryInProgress = false;

@@ -52,16 +52,11 @@ typedef LPVOID HINTERNET;
 #endif
 
 #if PLATFORM(MAC)
-#ifdef __OBJC__
-@class NSData;
-@class NSError;
-@class NSURLConnection;
-@class WebCoreResourceHandleAsDelegate;
-#else
-class NSData;
-class NSError;
-class NSURLConnection;
-class WebCoreResourceHandleAsDelegate;
+OBJC_CLASS NSData;
+OBJC_CLASS NSError;
+OBJC_CLASS NSURLConnection;
+OBJC_CLASS WebCoreResourceHandleAsDelegate;
+#ifndef __OBJC__
 typedef struct objc_object *id;
 #endif
 #endif
@@ -109,12 +104,8 @@ public:
     static PassRefPtr<ResourceHandle> create(NetworkingContext*, const ResourceRequest&, ResourceHandleClient*, bool defersLoading, bool shouldContentSniff);
     static void loadResourceSynchronously(NetworkingContext*, const ResourceRequest&, StoredCredentials, ResourceError&, ResourceResponse&, Vector<char>& data);
 
-    static void prepareForURL(const KURL&);
     static bool willLoadFromCache(ResourceRequest&, Frame*);
     static void cacheMetadata(const ResourceResponse&, const Vector<char>&);
-#if PLATFORM(MAC)
-    static bool didSendBodyDataDelegateExists();
-#endif
 
     virtual ~ResourceHandle();
 
@@ -221,6 +212,9 @@ public:
 #if HAVE(NETWORK_CFDATA_ARRAY_CALLBACK)
     void handleDataArray(CFArrayRef dataArray);
 #endif
+
+    typedef PassRefPtr<ResourceHandle> (*BuiltinConstructor)(const ResourceRequest& request, ResourceHandleClient* client);
+    static void registerBuiltinConstructor(const AtomicString& protocol, BuiltinConstructor);
 
 protected:
     ResourceHandle(const ResourceRequest&, ResourceHandleClient*, bool defersLoading, bool shouldContentSniff);

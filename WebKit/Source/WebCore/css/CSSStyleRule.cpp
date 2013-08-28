@@ -22,34 +22,16 @@
 #include "config.h"
 #include "CSSStyleRule.h"
 
-#include "CSSMutableStyleDeclaration.h"
-#include "CSSPageRule.h"
 #include "CSSParser.h"
 #include "CSSSelector.h"
 #include "CSSStyleSheet.h"
 #include "Document.h"
-#include "StyledElement.h"
-#include "StyleSheet.h"
-
+#include "PropertySetCSSStyleDeclaration.h"
+#include "StylePropertySet.h"
+#include "StyleRule.h"
 #include <wtf/text/StringBuilder.h>
 
 namespace WebCore {
-
-CSSStyleRule::CSSStyleRule(CSSStyleSheet* parent, int sourceLine, CSSRule::Type type)
-    : CSSRule(parent, type)
-{
-    m_sourceLine = sourceLine;
-
-    // m_sourceLine is a bitfield, so let's catch any overflow early in debug mode.
-    ASSERT(m_sourceLine == sourceLine);
-}
-
-CSSStyleRule::~CSSStyleRule()
-{
-    if (m_style)
-        m_style->clearParentRule();
-    cleanup();
-}
 
 typedef HashMap<const CSSStyleRule*, String> SelectorTextCache;
 static SelectorTextCache& selectorTextCache()
@@ -58,32 +40,44 @@ static SelectorTextCache& selectorTextCache()
     return cache;
 }
 
-inline void CSSStyleRule::cleanup()
+CSSStyleRule::CSSStyleRule(StyleRule* styleRule, CSSStyleSheet* parent)
+    : CSSRule(parent, CSSRule::STYLE_RULE)
+    , m_styleRule(styleRule)
 {
-    if (m_hasCachedSelectorText) {
+}
+
+CSSStyleRule::~CSSStyleRule()
+{
+    if (m_propertiesCSSOMWrapper)
+        m_propertiesCSSOMWrapper->clearParentRule();
+
+    if (hasCachedSelectorText()) {
         selectorTextCache().remove(this);
-        m_hasCachedSelectorText = false;
+        setHasCachedSelectorText(false);
     }
+}
+
+CSSStyleDeclaration* CSSStyleRule::style() const
+{
+    if (!m_propertiesCSSOMWrapper)
+        m_propertiesCSSOMWrapper = StyleRuleCSSStyleDeclaration::create(m_styleRule->properties(), const_cast<CSSStyleRule*>(this));
+    return m_propertiesCSSOMWrapper.get();
 }
 
 String CSSStyleRule::generateSelectorText() const
 {
-    if (isPageRule())
-        return static_cast<const CSSPageRule*>(this)->pageSelectorText();
-    else {
-        StringBuilder builder;
-        for (CSSSelector* s = selectorList().first(); s; s = CSSSelectorList::next(s)) {
-            if (s != selectorList().first())
-                builder.append(", ");
-            builder.append(s->selectorText());
-        }
-        return builder.toString();
+    StringBuilder builder;
+    for (CSSSelector* s = m_styleRule->selectorList().first(); s; s = CSSSelectorList::next(s)) {
+        if (s != m_styleRule->selectorList().first())
+            builder.append(", ");
+        builder.append(s->selectorText());
     }
+    return builder.toString();
 }
 
 String CSSStyleRule::selectorText() const
 {
-    if (m_hasCachedSelectorText) {
+    if (hasCachedSelectorText()) {
         ASSERT(selectorTextCache().contains(this));
         return selectorTextCache().get(this);
     }
@@ -91,43 +85,33 @@ String CSSStyleRule::selectorText() const
     ASSERT(!selectorTextCache().contains(this));
     String text = generateSelectorText();
     selectorTextCache().set(this, text);
-    m_hasCachedSelectorText = true;
+    setHasCachedSelectorText(true);
     return text;
 }
 
 void CSSStyleRule::setSelectorText(const String& selectorText)
 {
     Document* doc = 0;
-
-    if (CSSStyleSheet* styleSheet = m_style->parentStyleSheet())
-        doc = styleSheet->findDocument();
-
-    if (!doc && m_style->isElementStyleDeclaration()) {
-        if (StyledElement* element = static_cast<CSSElementStyleDeclaration*>(m_style.get())->element())
-            doc = element->document();
-    }
-
+    if (CSSStyleSheet* styleSheet = parentStyleSheet())
+        doc = styleSheet->ownerDocument();
     if (!doc)
         return;
 
-    CSSParser p;
+    CSSParser p(parserContext());
     CSSSelectorList selectorList;
-    p.parseSelector(selectorText, doc, selectorList);
+    p.parseSelector(selectorText, selectorList);
     if (!selectorList.first())
         return;
 
     String oldSelectorText = this->selectorText();
-    m_selectorList.adopt(selectorList);
+    m_styleRule->wrapperAdoptSelectorList(selectorList);
 
-    if (m_hasCachedSelectorText) {
+    if (hasCachedSelectorText()) {
         ASSERT(selectorTextCache().contains(this));
         selectorTextCache().set(this, generateSelectorText());
     }
 
-    if (this->selectorText() == oldSelectorText)
-        return;
-
-    doc->styleSelectorChanged(DeferRecalcStyle);
+    doc->styleResolverChanged(DeferRecalcStyle);
 }
 
 String CSSStyleRule::cssText() const
@@ -135,16 +119,10 @@ String CSSStyleRule::cssText() const
     String result = selectorText();
 
     result += " { ";
-    result += m_style->cssText();
+    result += m_styleRule->properties()->asText();
     result += "}";
 
     return result;
-}
-
-void CSSStyleRule::addSubresourceStyleURLs(ListHashSet<KURL>& urls)
-{
-    if (m_style)
-        m_style->addSubresourceStyleURLs(urls);
 }
 
 } // namespace WebCore

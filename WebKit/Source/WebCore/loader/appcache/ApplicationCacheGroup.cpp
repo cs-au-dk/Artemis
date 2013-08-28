@@ -138,7 +138,7 @@ void ApplicationCacheGroup::selectCache(Frame* frame, const KURL& passedManifest
 {
     ASSERT(frame && frame->page());
     
-    if (!frame->settings()->offlineWebApplicationCacheEnabled())
+    if (!frame->settings() || !frame->settings()->offlineWebApplicationCacheEnabled())
         return;
     
     DocumentLoader* documentLoader = frame->loader()->documentLoader();
@@ -193,7 +193,7 @@ void ApplicationCacheGroup::selectCache(Frame* frame, const KURL& passedManifest
         return;
 
     // Don't change anything on disk if private browsing is enabled.
-    if (!frame->settings() || frame->settings()->privateBrowsingEnabled()) {
+    if (frame->settings()->privateBrowsingEnabled()) {
         postListenerTask(ApplicationCacheHost::CHECKING_EVENT, documentLoader);
         postListenerTask(ApplicationCacheHost::ERROR_EVENT, documentLoader);
         return;
@@ -211,7 +211,7 @@ void ApplicationCacheGroup::selectCache(Frame* frame, const KURL& passedManifest
 
 void ApplicationCacheGroup::selectCacheWithoutManifestURL(Frame* frame)
 {
-    if (!frame->settings()->offlineWebApplicationCacheEnabled())
+    if (!frame->settings() || !frame->settings()->offlineWebApplicationCacheEnabled())
         return;
 
     DocumentLoader* documentLoader = frame->loader()->documentLoader();
@@ -460,6 +460,19 @@ void ApplicationCacheGroup::update(Frame* frame, ApplicationCacheUpdateOption up
     m_manifestHandle = createResourceHandle(m_manifestURL, m_newestCache ? m_newestCache->manifestResource() : 0);
 }
 
+void ApplicationCacheGroup::abort(Frame* frame)
+{
+    if (m_updateStatus == Idle)
+        return;
+    ASSERT(m_updateStatus == Checking || (m_updateStatus == Downloading && m_cacheBeingUpdated));
+
+    if (m_completionType != None)
+        return;
+
+    frame->domWindow()->console()->addMessage(OtherMessageSource, LogMessageType, TipMessageLevel, "Application Cache download process was aborted.");
+    cacheUpdateFailed();
+}
+
 PassRefPtr<ResourceHandle> ApplicationCacheGroup::createResourceHandle(const KURL& url, ApplicationCacheResource* newestCachedResource)
 {
     ResourceRequest request(url);
@@ -476,6 +489,22 @@ PassRefPtr<ResourceHandle> ApplicationCacheGroup::createResourceHandle(const KUR
                 request.setHTTPHeaderField("If-None-Match", eTag);
         }
     }
+
+#if PLATFORM(BLACKBERRY)
+    ResourceRequest::TargetType target = ResourceRequest::TargetIsUnspecified;
+    if (newestCachedResource) {
+        const String& mimeType = newestCachedResource->response().mimeType();
+        if (!mimeType.isEmpty())
+            target = ResourceRequest::targetTypeFromMimeType(mimeType);
+    }
+    if (target == ResourceRequest::TargetIsUnspecified) {
+        String mimeType = mimeTypeFromDataURL(url);
+        if (!mimeType.isEmpty())
+            target = ResourceRequest::targetTypeFromMimeType(mimeType);
+    }
+
+    request.setTargetType(target);
+#endif
 
     RefPtr<ResourceHandle> handle = ResourceHandle::create(m_frame->loader()->networkingContext(), request, this, false, true);
 #if ENABLE(INSPECTOR)
@@ -533,7 +562,7 @@ void ApplicationCacheGroup::didReceiveResponse(ResourceHandle* handle, const Res
     if (response.httpStatusCode() / 100 != 2 || response.url() != m_currentHandle->firstRequest().url()) {
         if ((type & ApplicationCacheResource::Explicit) || (type & ApplicationCacheResource::Fallback)) {
             m_frame->domWindow()->console()->addMessage(OtherMessageSource, LogMessageType, ErrorMessageLevel, "Application Cache update failed, because " + m_currentHandle->firstRequest().url().string() + 
-                ((response.httpStatusCode() / 100 != 2) ? " could not be fetched." : " was redirected."), 0, String());
+                ((response.httpStatusCode() / 100 != 2) ? " could not be fetched." : " was redirected."));
             // Note that cacheUpdateFailed() can cause the cache group to be deleted.
             cacheUpdateFailed();
         } else if (response.httpStatusCode() == 404 || response.httpStatusCode() == 410) {
@@ -609,7 +638,7 @@ void ApplicationCacheGroup::didFinishLoading(ResourceHandle* handle, double fini
     // FIXME: Should we break earlier and prevent redownloading on later page loads?
     if (m_originQuotaExceededPreviously && m_availableSpaceInQuota < m_cacheBeingUpdated->estimatedSizeInStorage()) {
         m_currentResource = 0;
-        m_frame->domWindow()->console()->addMessage(OtherMessageSource, LogMessageType, ErrorMessageLevel, "Application Cache update failed, because size quota was exceeded.", 0, String());
+        m_frame->domWindow()->console()->addMessage(OtherMessageSource, LogMessageType, ErrorMessageLevel, "Application Cache update failed, because size quota was exceeded.");
         cacheUpdateFailed();
         return;
     }
@@ -642,7 +671,7 @@ void ApplicationCacheGroup::didFail(ResourceHandle* handle, const ResourceError&
     m_pendingEntries.remove(url);
 
     if ((type & ApplicationCacheResource::Explicit) || (type & ApplicationCacheResource::Fallback)) {
-        m_frame->domWindow()->console()->addMessage(OtherMessageSource, LogMessageType, ErrorMessageLevel, "Application Cache update failed, because " + url.string() + " could not be fetched.", 0, String());
+        m_frame->domWindow()->console()->addMessage(OtherMessageSource, LogMessageType, ErrorMessageLevel, "Application Cache update failed, because " + url.string() + " could not be fetched.");
         // Note that cacheUpdateFailed() can cause the cache group to be deleted.
         cacheUpdateFailed();
     } else {
@@ -671,13 +700,13 @@ void ApplicationCacheGroup::didReceiveManifestResponse(const ResourceResponse& r
         return;
 
     if (response.httpStatusCode() / 100 != 2) {
-        m_frame->domWindow()->console()->addMessage(OtherMessageSource, LogMessageType, ErrorMessageLevel, "Application Cache manifest could not be fetched.", 0, String());
+        m_frame->domWindow()->console()->addMessage(OtherMessageSource, LogMessageType, ErrorMessageLevel, "Application Cache manifest could not be fetched.");
         cacheUpdateFailed();
         return;
     }
 
     if (response.url() != m_manifestHandle->firstRequest().url()) {
-        m_frame->domWindow()->console()->addMessage(OtherMessageSource, LogMessageType, ErrorMessageLevel, "Application Cache manifest could not be fetched, because a redirection was attempted.", 0, String());
+        m_frame->domWindow()->console()->addMessage(OtherMessageSource, LogMessageType, ErrorMessageLevel, "Application Cache manifest could not be fetched, because a redirection was attempted.");
         cacheUpdateFailed();
         return;
     }
@@ -697,7 +726,7 @@ void ApplicationCacheGroup::didFinishLoadingManifest()
 
     if (!isUpgradeAttempt && !m_manifestResource) {
         // The server returned 304 Not Modified even though we didn't send a conditional request.
-        m_frame->domWindow()->console()->addMessage(OtherMessageSource, LogMessageType, ErrorMessageLevel, "Application Cache manifest could not be fetched because of an unexpected 304 Not Modified server response.", 0, String());
+        m_frame->domWindow()->console()->addMessage(OtherMessageSource, LogMessageType, ErrorMessageLevel, "Application Cache manifest could not be fetched because of an unexpected 304 Not Modified server response.");
         cacheUpdateFailed();
         return;
     }
@@ -723,7 +752,7 @@ void ApplicationCacheGroup::didFinishLoadingManifest()
     Manifest manifest;
     if (!parseManifest(m_manifestURL, m_manifestResource->data()->data(), m_manifestResource->data()->size(), manifest)) {
         // At the time of this writing, lack of "CACHE MANIFEST" signature is the only reason for parseManifest to fail.
-        m_frame->domWindow()->console()->addMessage(OtherMessageSource, LogMessageType, ErrorMessageLevel, "Application Cache manifest could not be parsed. Does it start with CACHE MANIFEST?", 0, String());
+        m_frame->domWindow()->console()->addMessage(OtherMessageSource, LogMessageType, ErrorMessageLevel, "Application Cache manifest could not be parsed. Does it start with CACHE MANIFEST?");
         cacheUpdateFailed();
         return;
     }
@@ -912,7 +941,7 @@ void ApplicationCacheGroup::checkIfLoadIsComplete()
                 // We ran out of space for this origin. Fall down to the normal error handling
                 // after recording this state.
                 m_originQuotaExceededPreviously = true;
-                m_frame->domWindow()->console()->addMessage(OtherMessageSource, LogMessageType, ErrorMessageLevel, "Application Cache update failed, because size quota was exceeded.", 0, String());
+                m_frame->domWindow()->console()->addMessage(OtherMessageSource, LogMessageType, ErrorMessageLevel, "Application Cache update failed, because size quota was exceeded.");
             }
 
             if (failureReason == ApplicationCacheStorage::TotalQuotaReached && !m_calledReachedMaxAppCacheSize) {
@@ -1033,10 +1062,10 @@ void ApplicationCacheGroup::addEntry(const String& url, unsigned type)
         return;
     }
     
-    pair<EntryMap::iterator, bool> result = m_pendingEntries.add(url, type);
+    EntryMap::AddResult result = m_pendingEntries.add(url, type);
     
-    if (!result.second)
-        result.first->second |= type;
+    if (!result.isNewEntry)
+        result.iterator->second |= type;
 }
 
 void ApplicationCacheGroup::associateDocumentLoaderWithCache(DocumentLoader* loader, ApplicationCache* cache)

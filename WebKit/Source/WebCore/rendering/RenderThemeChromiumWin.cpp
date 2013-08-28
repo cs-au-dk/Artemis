@@ -30,12 +30,12 @@
 #include <vssym32.h>
 
 #include "CSSValueKeywords.h"
-#include "CurrentTime.h"
 #include "FontSelector.h"
 #include "FontUtilsChromiumWin.h"
 #include "GraphicsContext.h"
 #include "HTMLMediaElement.h"
 #include "HTMLNames.h"
+#include "HWndDC.h"
 #include "MediaControlElements.h"
 #include "PaintInfo.h"
 #include "PlatformSupport.h"
@@ -45,6 +45,8 @@
 #include "ScrollbarTheme.h"
 #include "SystemInfo.h"
 #include "TransparencyWin.h"
+#include <wtf/CurrentTime.h>
+
 
 // FIXME: This dependency should eventually be removed.
 #include <skia/ext/skia_utils_win.h>
@@ -100,18 +102,11 @@ public:
 
 private:
 
-    static bool canvasHasMultipleLayers(const SkCanvas* canvas)
-    {
-        SkCanvas::LayerIter iter(const_cast<SkCanvas*>(canvas), false);
-        iter.next(); // There is always at least one layer.
-        return !iter.done(); // There is > 1 layer if the the iterator can stil advance.
-    }
-
     static TransparencyWin::LayerMode getLayerMode(GraphicsContext* context, TransparencyWin::TransformMode transformMode)
     {
         if (context->platformContext()->isDrawingToImageBuffer()) // Might have transparent background.
             return TransparencyWin::WhiteLayer;
-        if (canvasHasMultipleLayers(context->platformContext()->canvas())) // Needs antialiasing help.
+        if (context->platformContext()->canvas()->isDrawingToLayer()) // Needs antialiasing help.
             return TransparencyWin::OpaqueCompositeLayer;
         // Nothing interesting.
         return transformMode == TransparencyWin::KeepTransform ? TransparencyWin::NoLayer : TransparencyWin::OpaqueCompositeLayer;
@@ -142,7 +137,7 @@ bool ThemePainter::s_hasInstance = false;
 static void getNonClientMetrics(NONCLIENTMETRICS* metrics)
 {
     static UINT size = (windowsVersion() >= WindowsVista) ?
-        (sizeof NONCLIENTMETRICS) : NONCLIENTMETRICS_SIZE_PRE_VISTA;
+        sizeof(NONCLIENTMETRICS) : NONCLIENTMETRICS_SIZE_PRE_VISTA;
     metrics->cbSize = size;
     bool success = !!SystemParametersInfo(SPI_GETNONCLIENTMETRICS, size, metrics, 0);
     ASSERT(success);
@@ -178,13 +173,12 @@ static float systemFontSize(const LOGFONT& font)
     if (size < 0) {
         HFONT hFont = CreateFontIndirect(&font);
         if (hFont) {
-            HDC hdc = GetDC(0); // What about printing?  Is this the right DC?
+            HWndDC hdc(0); // What about printing? Is this the right DC?
             if (hdc) {
                 HGDIOBJ hObject = SelectObject(hdc, hFont);
                 TEXTMETRIC tm;
                 GetTextMetrics(hdc, &tm);
                 SelectObject(hdc, hObject);
-                ReleaseDC(0, hdc);
                 size = tm.tmAscent;
             }
             DeleteObject(hFont);
@@ -209,13 +203,11 @@ static float pointsToPixels(float points)
 {
     static float pixelsPerInch = 0.0f;
     if (!pixelsPerInch) {
-        HDC hdc = GetDC(0); // What about printing?  Is this the right DC?
-        if (hdc) { // Can this ever actually be NULL?
+        HWndDC hdc(0); // What about printing? Is this the right DC?
+        if (hdc) // Can this ever actually be NULL?
             pixelsPerInch = GetDeviceCaps(hdc, LOGPIXELSY);
-            ReleaseDC(0, hdc);
-        } else {
+        else
             pixelsPerInch = 96.0f;
-        }
     }
 
     static const float pointsPerInch = 72.0f;
@@ -714,7 +706,7 @@ bool RenderThemeChromiumWin::paintTextFieldInternal(RenderObject* o,
     return false;
 }
 
-void RenderThemeChromiumWin::adjustInnerSpinButtonStyle(CSSStyleSelector*, RenderStyle* style, Element*) const
+void RenderThemeChromiumWin::adjustInnerSpinButtonStyle(StyleResolver*, RenderStyle* style, Element*) const
 {
     int width = ScrollbarTheme::theme()->scrollbarThickness();
     style->setWidth(Length(width, Fixed));
@@ -768,7 +760,7 @@ double RenderThemeChromiumWin::animationDurationForProgressBar(RenderProgress* r
     return progressAnimationFrameRate;
 }
 
-void RenderThemeChromiumWin::adjustProgressBarStyle(CSSStyleSelector*, RenderStyle*, Element*) const
+void RenderThemeChromiumWin::adjustProgressBarStyle(StyleResolver*, RenderStyle*, Element*) const
 {
 }
 

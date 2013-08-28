@@ -92,9 +92,12 @@
 #include <WebCore/FrameView.h>
 #include <WebCore/FrameWin.h>
 #include <WebCore/GDIObjectCounter.h>
+#include <WebCore/GeolocationController.h>
+#include <WebCore/GeolocationError.h>
 #include <WebCore/GraphicsContext.h>
 #include <WebCore/HTMLMediaElement.h>
 #include <WebCore/HTMLNames.h>
+#include <WebCore/HWndDC.h>
 #include <WebCore/HistoryItem.h>
 #include <WebCore/HitTestRequest.h>
 #include <WebCore/HitTestResult.h>
@@ -133,15 +136,9 @@
 #include <WebCore/Settings.h>
 #include <WebCore/SimpleFontData.h>
 #include <WebCore/SystemInfo.h>
-#include <WebCore/TypingCommand.h>
 #include <WebCore/WindowMessageBroadcaster.h>
 #include <WebCore/WindowsTouch.h>
 #include <wtf/MainThread.h>
-
-#if ENABLE(CLIENT_BASED_GEOLOCATION)
-#include <WebCore/GeolocationController.h>
-#include <WebCore/GeolocationError.h>
-#endif
 
 #if USE(CG)
 #include <CoreGraphics/CGContext.h>
@@ -331,6 +328,7 @@ bool WebView::s_allowSiteSpecificHacks = false;
 
 WebView::WebView()
     : m_refCount(0)
+    , m_shouldInvertColors(false)
 #if !ASSERT_DISABLED
     , m_deletionHasBegun(false)
 #endif
@@ -338,7 +336,9 @@ WebView::WebView()
     , m_viewWindow(0)
     , m_mainFrame(0)
     , m_page(0)
+#if ENABLE(INSPECTOR)
     , m_inspectorClient(0)
+#endif // ENABLE(INSPECTOR)
     , m_hasCustomDropTarget(false)
     , m_useBackForwardList(true)
     , m_userAgentOverridden(false)
@@ -711,9 +711,11 @@ HRESULT STDMETHODCALLTYPE WebView::close()
     setUIDelegate(0);
     setFormDelegate(0);
 
+#if ENABLE(INSPECTOR)
     m_inspectorClient = 0;
     if (m_webInspector)
         m_webInspector->webViewClosed();
+#endif // ENABLE(INSPECTOR)
 
     delete m_page;
     m_page = 0;
@@ -862,7 +864,7 @@ void WebView::scrollBackingStore(FrameView* frameView, int dx, int dy, const Int
     HRGN updateRegion = ::CreateRectRgn(0, 0, 0, 0);
 
     // Collect our device context info and select the bitmap to scroll.
-    HDC windowDC = ::GetDC(m_viewWindow);
+    HWndDC windowDC(m_viewWindow);
     HDC bitmapDC = ::CreateCompatibleDC(windowDC);
     HGDIOBJ oldBitmap = ::SelectObject(bitmapDC, m_backingStoreBitmap->handle());
     
@@ -888,7 +890,6 @@ void WebView::scrollBackingStore(FrameView* frameView, int dx, int dy, const Int
     // Clean up.
     ::SelectObject(bitmapDC, oldBitmap);
     ::DeleteDC(bitmapDC);
-    ::ReleaseDC(m_viewWindow, windowDC);
 }
 
 void WebView::sizeChanged(const IntSize& newSize)
@@ -958,11 +959,10 @@ void WebView::updateBackingStore(FrameView* frameView, HDC dc, bool backingStore
 
     LOCAL_GDI_COUNTER(0, __FUNCTION__);
 
-    HDC windowDC = 0;
     HDC bitmapDC = dc;
     HGDIOBJ oldBitmap = 0;
     if (!dc) {
-        windowDC = ::GetDC(m_viewWindow);
+        HWndDC windowDC(m_viewWindow);
         bitmapDC = ::CreateCompatibleDC(windowDC);
         oldBitmap = ::SelectObject(bitmapDC, m_backingStoreBitmap->handle());
     }
@@ -996,7 +996,6 @@ void WebView::updateBackingStore(FrameView* frameView, HDC dc, bool backingStore
     if (!dc) {
         ::SelectObject(bitmapDC, oldBitmap);
         ::DeleteDC(bitmapDC);
-        ::ReleaseDC(m_viewWindow, windowDC);
     }
 
     GdiFlush();
@@ -1008,7 +1007,7 @@ void WebView::performLayeredWindowUpdate()
     if (!m_backingStoreBitmap)
         return;
 
-    HDC hdcScreen = ::GetDC(m_viewWindow);
+    HWndDC hdcScreen(m_viewWindow);
     OwnPtr<HDC> hdcMem = adoptPtr(::CreateCompatibleDC(hdcScreen));
     HBITMAP hbmOld = static_cast<HBITMAP>(::SelectObject(hdcMem.get(), m_backingStoreBitmap->handle()));
 
@@ -1026,7 +1025,6 @@ void WebView::performLayeredWindowUpdate()
     ::UpdateLayeredWindow(m_viewWindow, hdcScreen, 0, &windowSize, hdcMem.get(), &layerPos, 0, &blendFunction, ULW_ALPHA);
 
     ::SelectObject(hdcMem.get(), hbmOld);
-    ::ReleaseDC(0, hdcScreen);
 }
 
 void WebView::paint(HDC dc, LPARAM options)
@@ -1132,13 +1130,14 @@ void WebView::paintIntoBackingStore(FrameView* frameView, HDC bitmapDC, const In
     RECT rect = dirtyRect;
 
 #if FLASH_BACKING_STORE_REDRAW
-    HDC dc = ::GetDC(m_viewWindow);
-    OwnPtr<HBRUSH> yellowBrush(CreateSolidBrush(RGB(255, 255, 0)));
-    FillRect(dc, &rect, yellowBrush.get());
-    GdiFlush();
-    Sleep(50);
-    paintIntoWindow(bitmapDC, dc, dirtyRect);
-    ::ReleaseDC(m_viewWindow, dc);
+    {
+        HWndDC dc(m_viewWindow);
+        OwnPtr<HBRUSH> yellowBrush(CreateSolidBrush(RGB(255, 255, 0)));
+        FillRect(dc, &rect, yellowBrush.get());
+        GdiFlush();
+        Sleep(50);
+        paintIntoWindow(bitmapDC, dc, dirtyRect);
+    }
 #endif
 
     GraphicsContext gc(bitmapDC, m_transparent);
@@ -1156,6 +1155,8 @@ void WebView::paintIntoBackingStore(FrameView* frameView, HDC bitmapDC, const In
     if (frameView && frameView->frame() && frameView->frame()->contentRenderer()) {
         gc.clip(dirtyRect);
         frameView->paint(&gc, dirtyRect);
+        if (m_shouldInvertColors)
+            gc.fillRect(dirtyRect, Color::white, ColorSpaceDeviceRGB, CompositeDifference);
     }
     gc.restore();
 }
@@ -1348,7 +1349,7 @@ bool WebView::handleContextMenuEvent(WPARAM wParam, LPARAM lParam)
     if (!view)
         return false;
 
-    POINT point(view->contentsToWindow(contextMenuController->hitTestResult().point()));
+    POINT point(view->contentsToWindow(contextMenuController->hitTestResult().roundedPoint()));
 
     // Translate the point to screen coordinates
     if (!::ClientToScreen(m_viewWindow, &point))
@@ -2071,6 +2072,23 @@ void WebView::setIsBeingDestroyed()
     ::SetWindowLongPtrW(m_viewWindow, 0, 0);
 }
 
+void WebView::setShouldInvertColors(bool shouldInvertColors)
+{
+    if (m_shouldInvertColors == shouldInvertColors)
+        return;
+
+    m_shouldInvertColors = shouldInvertColors;
+
+#if USE(ACCELERATED_COMPOSITING)
+    if (m_layerTreeHost)
+        m_layerTreeHost->setShouldInvertColors(shouldInvertColors);
+#endif
+
+    RECT windowRect = {0};
+    frameRect(&windowRect);
+    repaint(windowRect, true, true);
+}
+
 bool WebView::registerWebViewWindowClass()
 {
     static bool haveRegisteredWindowClass = false;
@@ -2643,18 +2661,21 @@ HRESULT STDMETHODCALLTYPE WebView::initWithFrame(
     if (SUCCEEDED(m_preferences->shouldUseHighResolutionTimers(&useHighResolutionTimer)))
         Settings::setShouldUseHighResolutionTimers(useHighResolutionTimer);
 
+#if ENABLE(INSPECTOR)
     m_inspectorClient = new WebInspectorClient(this);
+#endif // ENABLE(INSPECTOR)
 
     Page::PageClients pageClients;
     pageClients.chromeClient = new WebChromeClient(this);
     pageClients.contextMenuClient = new WebContextMenuClient(this);
     pageClients.editorClient = new WebEditorClient(this);
     pageClients.dragClient = new WebDragClient(this);
+#if ENABLE(INSPECTOR)
     pageClients.inspectorClient = m_inspectorClient;
-#if ENABLE(CLIENT_BASED_GEOLOCATION)
-    pageClients.geolocationClient = new WebGeolocationClient(this);
-#endif
+#endif // ENABLE(INSPECTOR)
+
     m_page = new Page(pageClients);
+    provideGeolocationTo(m_page, new WebGeolocationClient(this));
 
     BSTR localStoragePath;
     if (SUCCEEDED(m_preferences->localStorageDatabasePath(&localStoragePath))) {
@@ -4921,6 +4942,11 @@ HRESULT WebView::notifyPreferencesChanged(IWebNotification* notification)
         return hr;
     settings->setMediaPlaybackAllowsInline(enabled);
 
+    hr = prefsPrivate->shouldInvertColors(&enabled);
+    if (FAILED(hr))
+        return hr;
+    setShouldInvertColors(enabled);
+
     return S_OK;
 }
 
@@ -5753,11 +5779,16 @@ bool WebView::onIMESetContext(WPARAM wparam, LPARAM)
 
 HRESULT STDMETHODCALLTYPE WebView::inspector(IWebInspector** inspector)
 {
+#if ENABLE(INSPECTOR)
     if (!m_webInspector)
         m_webInspector.adoptRef(WebInspector::createInstance(this, m_inspectorClient));
 
     return m_webInspector.copyRefTo(inspector);
+#else // !ENABLE(INSPECTOR)
+    return S_OK;
+#endif // ENABLE(INSPECTOR)
 }
+
 
 HRESULT STDMETHODCALLTYPE WebView::windowAncestryDidChange()
 {
@@ -6462,6 +6493,8 @@ void WebView::setAcceleratedCompositing(bool accelerated)
         if (m_layerTreeHost) {
             m_isAcceleratedCompositing = true;
 
+            m_layerTreeHost->setShouldInvertColors(m_shouldInvertColors);
+
             m_layerTreeHost->setClient(this);
             ASSERT(m_viewWindow);
             m_layerTreeHost->setWindow(m_viewWindow);
@@ -6544,19 +6577,14 @@ HRESULT WebView::geolocationProvider(IWebGeolocationProvider** locationProvider)
 
 HRESULT WebView::geolocationDidChangePosition(IWebGeolocationPosition* position)
 {
-#if ENABLE(CLIENT_BASED_GEOLOCATION)
     if (!m_page)
         return E_FAIL;
-    m_page->geolocationController()->positionChanged(core(position));
+    GeolocationController::from(m_page)->positionChanged(core(position));
     return S_OK;
-#else
-    return E_NOTIMPL;
-#endif
 }
 
 HRESULT WebView::geolocationDidFailWithError(IWebError* error)
 {
-#if ENABLE(CLIENT_BASED_GEOLOCATION)
     if (!m_page)
         return E_FAIL;
     if (!error)
@@ -6569,11 +6597,8 @@ HRESULT WebView::geolocationDidFailWithError(IWebError* error)
     SysFreeString(descriptionBSTR);
 
     RefPtr<GeolocationError> geolocationError = GeolocationError::create(GeolocationError::PositionUnavailable, descriptionString);
-    m_page->geolocationController()->errorOccurred(geolocationError.get());
+    GeolocationController::from(m_page)->errorOccurred(geolocationError.get());
     return S_OK;
-#else
-    return E_NOTIMPL;
-#endif
 }
 
 HRESULT WebView::setDomainRelaxationForbiddenForURLScheme(BOOL forbidden, BSTR scheme)
@@ -6630,12 +6655,12 @@ void WebView::paintContents(const GraphicsLayer*, GraphicsContext& context, Grap
     context.restore();
 }
 
-bool WebView::showDebugBorders() const
+bool WebView::showDebugBorders(const GraphicsLayer*) const
 {
     return m_page->settings()->showDebugBorders();
 }
 
-bool WebView::showRepaintCounter() const
+bool WebView::showRepaintCounter(const GraphicsLayer*) const
 {
     return m_page->settings()->showRepaintCounter();
 }

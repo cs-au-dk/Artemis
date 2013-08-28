@@ -1,5 +1,5 @@
 /*
- * Copyright 2011 Adobe Systems Incorporated. All Rights Reserved.
+ * Copyright (C) 2011 Adobe Systems Incorporated. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -13,7 +13,7 @@
  *    disclaimer in the documentation and/or other materials
  *    provided with the distribution.
  *
- * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER “AS IS” AND ANY
+ * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDER "AS IS" AND ANY
  * EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
  * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR
  * PURPOSE ARE DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER BE
@@ -30,36 +30,38 @@
 #ifndef WebKitCSSRegionRule_h
 #define WebKitCSSRegionRule_h
 
-#include "CSSSelectorList.h"
-#include "CSSStyleRule.h"
-
+#include "CSSRule.h"
 #include <wtf/PassRefPtr.h>
 #include <wtf/RefPtr.h>
 #include <wtf/Vector.h>
 
 namespace WebCore {
 
-class CSSParserSelector;
 class CSSRuleList;
+class StyleRuleRegion;
 
-class WebKitCSSRegionRule: public CSSRule {
+class WebKitCSSRegionRule : public CSSRule {
 public:
-    static PassRefPtr<WebKitCSSRegionRule> create(CSSStyleSheet* parent, Vector<OwnPtr<CSSParserSelector> >* selectors, PassRefPtr<CSSRuleList> rules)
-    {
-        return adoptRef(new WebKitCSSRegionRule(parent, selectors, rules));
-    }
+    static PassRefPtr<WebKitCSSRegionRule> create(StyleRuleRegion* rule, CSSStyleSheet* sheet) { return adoptRef(new WebKitCSSRegionRule(rule, sheet)); }
 
     ~WebKitCSSRegionRule();
 
     String cssText() const;
-    const CSSSelectorList& selectorList() const { return m_selectorList; }
-    CSSRuleList* cssRules() const { return m_ruleList.get(); }
+    CSSRuleList* cssRules() const;
+    
+    // For CSSRuleList
+    unsigned length() const;
+    CSSRule* item(unsigned index) const;
 
 private:
-    WebKitCSSRegionRule(CSSStyleSheet* parent, Vector<OwnPtr<CSSParserSelector> >* selectors, PassRefPtr<CSSRuleList> rules);
+    WebKitCSSRegionRule(StyleRuleRegion*, CSSStyleSheet* parent);
 
-    CSSSelectorList m_selectorList;
-    RefPtr<CSSRuleList> m_ruleList;
+    RefPtr<StyleRuleRegion> m_regionRule;
+    
+    mutable Vector<RefPtr<CSSRule> > m_childRuleCSSOMWrappers;
+    mutable OwnPtr<CSSRuleList> m_ruleListCSSOMWrapper;
+    
+    friend class StyleRuleBlock;
 };
 
 }

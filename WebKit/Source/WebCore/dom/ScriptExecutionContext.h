@@ -1,5 +1,6 @@
 /*
  * Copyright (C) 2008 Apple Inc. All Rights Reserved.
+ * Copyright (C) 2012 Google Inc. All Rights Reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -30,7 +31,9 @@
 #include "ActiveDOMObject.h"
 #include "ConsoleTypes.h"
 #include "KURL.h"
+#include "ScriptCallStack.h"
 #include "SecurityContext.h"
+#include "Supplementable.h"
 #include <wtf/Forward.h>
 #include <wtf/HashMap.h>
 #include <wtf/HashSet.h>
@@ -51,19 +54,16 @@ class EventListener;
 class EventQueue;
 class EventTarget;
 class MessagePort;
-class ScriptCallStack;
 
-#if ENABLE(SQL_DATABASE)
-class Database;
-class DatabaseTaskSynchronizer;
-class DatabaseThread;
+#if ENABLE(BLOB)
+class PublicURLManager;
 #endif
 
-#if ENABLE(BLOB) || ENABLE(FILE_SYSTEM)
+#if ENABLE(BLOB)
 class FileThread;
 #endif
 
-class ScriptExecutionContext : public SecurityContext {
+class ScriptExecutionContext : public SecurityContext, public Supplementable<ScriptExecutionContext> {
 public:
     ScriptExecutionContext();
     virtual ~ScriptExecutionContext();
@@ -71,16 +71,7 @@ public:
     virtual bool isDocument() const { return false; }
     virtual bool isWorkerContext() const { return false; }
 
-#if ENABLE(SQL_DATABASE)
-    virtual bool allowDatabaseAccess() const = 0;
-    virtual void databaseExceededQuota(const String& name) = 0;
-    DatabaseThread* databaseThread();
-    void setHasOpenDatabases() { m_hasOpenDatabases = true; }
-    bool hasOpenDatabases() const { return m_hasOpenDatabases; }
-    // When the database cleanup is done, cleanupSync will be signalled.
-    void stopDatabases(DatabaseTaskSynchronizer*);
-#endif
-    virtual bool isContextThread() const = 0;
+    virtual bool isContextThread() const { return true; }
     virtual bool isJSExecutionForbidden() const = 0;
 
     const KURL& url() const { return virtualURL(); }
@@ -92,9 +83,12 @@ public:
 
     bool sanitizeScriptError(String& errorMessage, int& lineNumber, String& sourceURL);
     void reportException(const String& errorMessage, int lineNumber, const String& sourceURL, PassRefPtr<ScriptCallStack>);
-    virtual void addMessage(MessageSource, MessageType, MessageLevel, const String& message, unsigned lineNumber, const String& sourceURL, PassRefPtr<ScriptCallStack>) = 0;
-    void addConsoleMessage(MessageSource, MessageType, MessageLevel, const String& message);
+    void addConsoleMessage(MessageSource, MessageType, MessageLevel, const String& message, const String& sourceURL = String(), unsigned lineNumber = 0, PassRefPtr<ScriptCallStack> = 0);
+    void addConsoleMessage(MessageSource, MessageType, MessageLevel, const String& message, PassRefPtr<ScriptCallStack>);
 
+#if ENABLE(BLOB)
+    PublicURLManager& publicURLManager();
+#endif
     // Active objects are not garbage collected even if inaccessible, e.g. because their activity may result in callbacks being invoked.
     bool canSuspendActiveDOMObjects();
     // Active objects can be asked to suspend even if canSuspendActiveDOMObjects() returns 'false' -
@@ -103,8 +97,15 @@ public:
     virtual void resumeActiveDOMObjects();
     virtual void stopActiveDOMObjects();
 
+    bool activeDOMObjectsAreSuspended() const { return m_activeDOMObjectsAreSuspended; }
+    bool activeDOMObjectsAreStopped() const { return m_activeDOMObjectsAreStopped; }
+
+    // Called from the constructor and destructors of ActiveDOMObject.
     void didCreateActiveDOMObject(ActiveDOMObject*, void* upcastPointer);
     void willDestroyActiveDOMObject(ActiveDOMObject*);
+
+    // Called after the construction of an ActiveDOMObject to synchronize suspend state.
+    void suspendActiveDOMObjectIfNeeded(ActiveDOMObject*);
 
     typedef const HashMap<ActiveDOMObject*, void*> ActiveDOMObjectsMap;
     ActiveDOMObjectsMap& activeDOMObjects() const { return m_activeDOMObjects; }
@@ -146,7 +147,7 @@ public:
     JSC::JSGlobalData* globalData();
 #endif
 
-#if ENABLE(BLOB) || ENABLE(FILE_SYSTEM)
+#if ENABLE(BLOB)
     FileThread* fileThread();
     void stopFileThread();
 #endif
@@ -183,8 +184,9 @@ private:
     virtual const KURL& virtualURL() const = 0;
     virtual KURL virtualCompleteURL(const String&) const = 0;
 
+    virtual void addMessage(MessageSource, MessageType, MessageLevel, const String& message, const String& sourceURL, unsigned lineNumber, PassRefPtr<ScriptCallStack>) = 0;
     virtual EventTarget* errorEventTarget() = 0;
-    virtual void logExceptionToConsole(const String& errorMessage, int lineNumber, const String& sourceURL, PassRefPtr<ScriptCallStack>) = 0;
+    virtual void logExceptionToConsole(const String& errorMessage, const String& sourceURL, int lineNumber, PassRefPtr<ScriptCallStack>) = 0;
     bool dispatchErrorEvent(const String& errorMessage, int lineNumber, const String& sourceURL);
 
     void closeMessagePorts();
@@ -204,13 +206,15 @@ private:
     bool m_inDispatchErrorEvent;
     class PendingException;
     OwnPtr<Vector<OwnPtr<PendingException> > > m_pendingExceptions;
-
-#if ENABLE(SQL_DATABASE)
-    RefPtr<DatabaseThread> m_databaseThread;
-    bool m_hasOpenDatabases; // This never changes back to false, even after the database thread is closed.
+#if ENABLE(BLOB)
+    OwnPtr<PublicURLManager> m_publicURLManager;
 #endif
 
-#if ENABLE(BLOB) || ENABLE(FILE_SYSTEM)
+    bool m_activeDOMObjectsAreSuspended;
+    ActiveDOMObject::ReasonForSuspension m_reasonForSuspendingActiveDOMObjects;
+    bool m_activeDOMObjectsAreStopped;
+
+#if ENABLE(BLOB)
     RefPtr<FileThread> m_fileThread;
 #endif
 };

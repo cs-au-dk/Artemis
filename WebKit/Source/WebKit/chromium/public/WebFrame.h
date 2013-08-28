@@ -33,10 +33,10 @@
 
 #include "WebIconURL.h"
 #include "WebNode.h"
-#include "WebReferrerPolicy.h"
 #include "WebURLLoaderOptions.h"
 #include "platform/WebCanvas.h"
 #include "platform/WebFileSystem.h"
+#include "platform/WebReferrerPolicy.h"
 #include "platform/WebURL.h"
 
 struct NPObject;
@@ -44,6 +44,8 @@ struct NPObject;
 #if WEBKIT_USING_V8
 namespace v8 {
 class Context;
+class Function;
+class Object;
 class Value;
 template <class T> class Handle;
 template <class T> class Local;
@@ -274,6 +276,18 @@ public:
     virtual v8::Handle<v8::Value> executeScriptAndReturnValue(
         const WebScriptSource&) = 0;
 
+    virtual void executeScriptInIsolatedWorld(
+        int worldID, const WebScriptSource* sourcesIn, unsigned numSources,
+        int extensionGroup, WebVector<v8::Local<v8::Value> >* results) = 0;
+
+    // Call the function with the given receiver and arguments, bypassing
+    // canExecute().
+    virtual v8::Handle<v8::Value> callFunctionEvenIfScriptDisabled(
+        v8::Handle<v8::Function>,
+        v8::Handle<v8::Object>,
+        int argc,
+        v8::Handle<v8::Value> argv[]) = 0;
+
     // Returns the V8 context for this frame, or an empty handle if there
     // is none.
     virtual v8::Local<v8::Context> mainWorldScriptContext() const = 0;
@@ -418,7 +432,7 @@ public:
     // Spell-checking support.
     virtual void enableContinuousSpellChecking(bool) = 0;
     virtual bool isContinuousSpellCheckingEnabled() const = 0;
-
+    virtual void requestTextChecking(const WebElement&) = 0;
 
     // Selection -----------------------------------------------------------
 
@@ -435,6 +449,8 @@ public:
     virtual bool selectWordAroundCaret() = 0;
 
     virtual void selectRange(const WebPoint& start, const WebPoint& end) = 0;
+
+    virtual void selectRange(const WebRange&) = 0;
 
 
     // Printing ------------------------------------------------------------
@@ -623,12 +639,6 @@ public:
     // Only for testing purpose: 
     // Returns true if selection.anchorNode has a marker on range from |from| with |length|.
     virtual bool selectionStartHasSpellingMarkerFor(int from, int length) const = 0;
-
-    // Pauses and samples an SVG animation.  Returns false if there's no svg
-    // animation to pause.  This is only for testing.
-    virtual bool pauseSVGAnimation(const WebString& animationId,
-                                   double time,
-                                   const WebString& elementId) = 0;
 
     // Dumps the layer tree, used by the accelerated compositor, in
     // text form. This is used only by layout tests.

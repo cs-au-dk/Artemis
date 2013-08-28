@@ -43,6 +43,7 @@ class CSSSegmentedFontFace;
 class CachedFont;
 class Document;
 class FontDescription;
+class StyleRuleFontFace;
 
 class CSSFontSelector : public FontSelector {
 public:
@@ -51,12 +52,14 @@ public:
         return adoptRef(new CSSFontSelector(document));
     }
     virtual ~CSSFontSelector();
+    
+    virtual unsigned version() const OVERRIDE { return m_version; }
 
     virtual FontData* getFontData(const FontDescription& fontDescription, const AtomicString& familyName);
 
     void clearDocument();
 
-    void addFontFaceRule(const CSSFontFaceRule*);
+    void addFontFaceRule(const StyleRuleFontFace*);
 
     void fontLoaded();
     virtual void fontCacheInvalidated();
@@ -85,6 +88,8 @@ private:
 
     Vector<CachedResourceHandle<CachedFont> > m_fontsToBeginLoading;
     Timer<CSSFontSelector> m_beginLoadingTimer;
+    
+    unsigned m_version;
 };
 
 } // namespace WebCore

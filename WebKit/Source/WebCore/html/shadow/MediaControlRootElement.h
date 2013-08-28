@@ -112,6 +112,8 @@ public:
 
     virtual bool shouldHideControls();
 
+    void bufferingProgressed();
+
 private:
     MediaControlRootElement(Document*);
 
@@ -152,6 +154,7 @@ private:
 #endif
     Timer<MediaControlRootElement> m_hideFullscreenControlsTimer;
     bool m_isMouseOverControls;
+    bool m_isFullscreen;
 };
 
 }

@@ -36,14 +36,13 @@
 
 namespace WebCore {
 
-PassRefPtr<VideoLayerChromium> VideoLayerChromium::create(CCLayerDelegate* delegate,
-                                                          VideoFrameProvider* provider)
+PassRefPtr<VideoLayerChromium> VideoLayerChromium::create(WebKit::WebVideoFrameProvider* provider)
 {
-    return adoptRef(new VideoLayerChromium(delegate, provider));
+    return adoptRef(new VideoLayerChromium(provider));
 }
 
-VideoLayerChromium::VideoLayerChromium(CCLayerDelegate* delegate, VideoFrameProvider* provider)
-    : LayerChromium(delegate)
+VideoLayerChromium::VideoLayerChromium(WebKit::WebVideoFrameProvider* provider)
+    : LayerChromium()
     , m_provider(provider)
 {
     ASSERT(m_provider);
@@ -53,7 +52,7 @@ VideoLayerChromium::~VideoLayerChromium()
 {
 }
 
-PassRefPtr<CCLayerImpl> VideoLayerChromium::createCCLayerImpl()
+PassOwnPtr<CCLayerImpl> VideoLayerChromium::createCCLayerImpl()
 {
     return CCVideoLayerImpl::create(m_layerId, m_provider);
 }

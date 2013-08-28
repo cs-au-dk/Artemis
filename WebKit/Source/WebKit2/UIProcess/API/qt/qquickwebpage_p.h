@@ -27,42 +27,30 @@
 #include <QtQuick/QQuickItem>
 
 class QQuickWebPagePrivate;
+class QQuickWebView;
 class QWebPreferences;
 
 namespace WebKit {
-class QtSGUpdateQueue;
+class QtWebPageEventHandler;
 }
 
 class QWEBKIT_EXPORT QQuickWebPage : public QQuickItem {
     Q_OBJECT
 public:
-    QQuickWebPage(QQuickItem* parent = 0);
+    QQuickWebPage(QQuickWebView* view = 0);
     virtual ~QQuickWebPage();
 
-    // Internal. To be removed soon.
-    WebKit::QtSGUpdateQueue* sceneGraphUpdateQueue() const;
+    void setContentsSize(const QSizeF& size);
+    const QSizeF& contentsSize() const;
+    void setContentsScale(qreal);
+    qreal contentsScale() const;
+
+    QTransform transformFromItem() const;
+    QTransform transformToItem() const;
+
+    WebKit::QtWebPageEventHandler* eventHandler() const;
 
 protected:
-    virtual void keyPressEvent(QKeyEvent*);
-    virtual void keyReleaseEvent(QKeyEvent*);
-    virtual void inputMethodEvent(QInputMethodEvent*);
-    virtual void focusInEvent(QFocusEvent*);
-    virtual void focusOutEvent(QFocusEvent*);
-    virtual void mousePressEvent(QMouseEvent*);
-    virtual void mouseMoveEvent(QMouseEvent*);
-    virtual void mouseReleaseEvent(QMouseEvent *);
-    virtual void mouseDoubleClickEvent(QMouseEvent*);
-    virtual void wheelEvent(QWheelEvent*);
-    virtual void hoverEnterEvent(QHoverEvent*);
-    virtual void hoverMoveEvent(QHoverEvent*);
-    virtual void hoverLeaveEvent(QHoverEvent*);
-    virtual void dragMoveEvent(QDragMoveEvent*);
-    virtual void dragEnterEvent(QDragEnterEvent*);
-    virtual void dragLeaveEvent(QDragLeaveEvent*);
-    virtual void dropEvent(QDropEvent*);
-    virtual void touchEvent(QTouchEvent*);
-    virtual bool event(QEvent*);
-    virtual void geometryChanged(const QRectF&, const QRectF&);
     virtual QSGNode* updatePaintNode(QSGNode*, UpdatePaintNodeData*);
 
 private:

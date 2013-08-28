@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2010 Google Inc. All rights reserved.
+ * Copyright (C) 2012 Google Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -36,7 +36,6 @@
 #include "GamepadController.h"
 #include "LayoutTestController.h"
 #include "NotificationPresenter.h"
-#include "PlainTextController.h"
 #include "TestEventPrinter.h"
 #include "TextInputController.h"
 #include "WebPreferences.h"
@@ -83,8 +82,10 @@ struct TestParams {
 
 class TestShell {
 public:
-    TestShell(bool testShellMode);
+    TestShell();
     ~TestShell();
+
+    void initialize();
 
     // The main WebView.
     WebKit::WebView* webView() const { return m_webView; }
@@ -131,12 +132,12 @@ public:
     bool allowExternalPages() const { return m_allowExternalPages; }
     void setAllowExternalPages(bool allowExternalPages) { m_allowExternalPages = allowExternalPages; }
 
+    void setTestShellMode(bool testShellMode) { m_testShellMode = testShellMode; }
     void setAcceleratedCompositingForVideoEnabled(bool enabled) { m_acceleratedCompositingForVideoEnabled = enabled; }
     void setThreadedCompositingEnabled(bool enabled) { m_threadedCompositingEnabled = enabled; }
-    void setCompositeToTexture(bool enabled) { m_compositeToTexture = enabled; }
     void setForceCompositingMode(bool enabled) { m_forceCompositingMode = enabled; }
     void setAccelerated2dCanvasEnabled(bool enabled) { m_accelerated2dCanvasEnabled = enabled; }
-    void setLegacyAccelerated2dCanvasEnabled(bool enabled) { m_legacyAccelerated2dCanvasEnabled = enabled; }
+    void setDeferred2dCanvasEnabled(bool enabled) { m_deferred2dCanvasEnabled = enabled; }
     void setAcceleratedPaintingEnabled(bool enabled) { m_acceleratedPaintingEnabled = enabled; }
     void setPerTilePaintingEnabled(bool enabled) { m_perTilePaintingEnabled = enabled; }
 #if defined(OS_WIN)
@@ -162,6 +163,9 @@ public:
     // Set whether to dump when the loaded page has finished processing. This is used with multiple load
     // testing where we only want to have the output from the last load.
     void setDumpWhenFinished(bool dumpWhenFinished) { m_dumpWhenFinished = dumpWhenFinished; }
+
+    void setIsDisplayingModalDialog(bool isDisplayingModalDialog) { m_isDisplayingModalDialog = isDisplayingModalDialog; }
+    bool isDisplayingModalDialog() const { return m_isDisplayingModalDialog; }
 
     WebViewHost* createNewWindow(const WebKit::WebURL&);
     void closeWindow(WebViewHost*);
@@ -212,7 +216,6 @@ private:
     OwnPtr<GamepadController> m_gamepadController;
     OwnPtr<EventSender> m_eventSender;
     OwnPtr<LayoutTestController> m_layoutTestController;
-    OwnPtr<PlainTextController> m_plainTextController;
     OwnPtr<TextInputController> m_textInputController;
     OwnPtr<NotificationPresenter> m_notificationPresenter;
     OwnPtr<WebViewHost> m_webViewHost;
@@ -223,10 +226,9 @@ private:
     bool m_allowExternalPages;
     bool m_acceleratedCompositingForVideoEnabled;
     bool m_threadedCompositingEnabled;
-    bool m_compositeToTexture;
     bool m_forceCompositingMode;
     bool m_accelerated2dCanvasEnabled;
-    bool m_legacyAccelerated2dCanvasEnabled;
+    bool m_deferred2dCanvasEnabled;
     bool m_acceleratedPaintingEnabled;
     bool m_perTilePaintingEnabled;
     WebPreferences m_prefs;
@@ -234,6 +236,7 @@ private:
     bool m_stressDeopt;
     std::string m_javaScriptFlags;
     bool m_dumpWhenFinished;
+    bool m_isDisplayingModalDialog;
 
 
     // List of all windows in this process.

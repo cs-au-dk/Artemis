@@ -83,6 +83,8 @@ class WebPageProxy;
 class WebPluginSiteDataManager;
 class WebPreferences;
 class WebProtectionSpace;
+class WebRenderLayer;
+class WebRenderObject;
 class WebTextChecker;
 
 WK_ADD_API_MAPPING(WKApplicationCacheManagerRef, WebApplicationCacheManagerProxy)
@@ -119,6 +121,8 @@ WK_ADD_API_MAPPING(WKPageRef, WebPageProxy)
 WK_ADD_API_MAPPING(WKPluginSiteDataManagerRef, WebPluginSiteDataManager)
 WK_ADD_API_MAPPING(WKPreferencesRef, WebPreferences)
 WK_ADD_API_MAPPING(WKProtectionSpaceRef, WebProtectionSpace)
+WK_ADD_API_MAPPING(WKRenderLayerRef, WebRenderLayer)
+WK_ADD_API_MAPPING(WKRenderObjectRef, WebRenderObject)
 WK_ADD_API_MAPPING(WKTextCheckerRef, WebTextChecker)
 
 #if ENABLE(INSPECTOR)
@@ -355,4 +359,9 @@ inline ProxyingRefPtr<WebGrammarDetail> toAPI(const WebCore::GrammarDetail& gram
 #if defined(BUILDING_GTK__)
 #include "WKAPICastGtk.h"
 #endif
+
+#if USE(SOUP)
+#include "WKAPICastSoup.h"
+#endif
+
 #endif // WKAPICast_h

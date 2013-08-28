@@ -72,54 +72,49 @@ PassRefPtr<HTMLTrackElement> HTMLTrackElement::create(const QualifiedName& tagNa
     return adoptRef(new HTMLTrackElement(tagName, document));
 }
 
-void HTMLTrackElement::insertedIntoTree(bool deep)
+Node::InsertionNotificationRequest HTMLTrackElement::insertedInto(Node* insertionPoint)
 {
-    HTMLElement::insertedIntoTree(deep);
+    HTMLElement::insertedInto(insertionPoint);
+    if (insertionPoint->inDocument()) {
+        if (HTMLMediaElement* parent = mediaElement())
+            parent->didAddTrack(this);
+    }
 
-    if (HTMLMediaElement* parent = mediaElement())
-        parent->trackWasAdded(this);
+    return InsertionDone;
 }
 
 void HTMLTrackElement::willRemove()
 {
     if (HTMLMediaElement* parent = mediaElement())
-        parent->trackWillBeRemoved(this);
+        parent->willRemoveTrack(this);
 
     HTMLElement::willRemove();
 }
 
-void HTMLTrackElement::parseMappedAttribute(Attribute* attribute)
+void HTMLTrackElement::parseAttribute(Attribute* attribute)
 {
     const QualifiedName& attrName = attribute->name();
+
+    if (RuntimeEnabledFeatures::webkitVideoTrackEnabled()) {
+        if (attrName == srcAttr) {
+            if (!attribute->isEmpty() && mediaElement())
+                scheduleLoad();
+            // 4.8.10.12.3 Sourcing out-of-band text tracks
+            // As the kind, label, and srclang attributes are set, changed, or removed, the text track must update accordingly...
+        } else if (attrName == kindAttr)
+            track()->setKind(attribute->value());
+        else if (attrName == labelAttr)
+            track()->setLabel(attribute->value());
+        else if (attrName == srclangAttr)
+            track()->setLanguage(attribute->value());
+    }
 
     if (attrName == onloadAttr)
         setAttributeEventListener(eventNames().loadEvent, createAttributeEventListener(this, attribute));
     else if (attrName == onerrorAttr)
         setAttributeEventListener(eventNames().errorEvent, createAttributeEventListener(this, attribute));
     else
-        HTMLElement::parseMappedAttribute(attribute);
-}
-
-void HTMLTrackElement::attributeChanged(Attribute* attr, bool preserveDecls)
-{
-    HTMLElement::attributeChanged(attr, preserveDecls);
-
-    if (!RuntimeEnabledFeatures::webkitVideoTrackEnabled())
-        return;
-
-    const QualifiedName& attrName = attr->name();
-    if (attrName == srcAttr) {
-        if (!getAttribute(srcAttr).isEmpty() && mediaElement())
-            scheduleLoad();
-
-    // 4.8.10.12.3 Sourcing out-of-band text tracks
-    // As the kind, label, and srclang attributes are set, changed, or removed, the text track must update accordingly...
-    } else if (attrName == kindAttr)
-        track()->setKind(attr->value());
-    else if (attrName == labelAttr)
-        track()->setLabel(attr->value());
-    else if (attrName == srclangAttr)
-        track()->setLanguage(attr->value());
+        HTMLElement::parseAttribute(attribute);
 }
 
 KURL HTMLTrackElement::src() const
@@ -323,7 +318,7 @@ void HTMLTrackElement::textTrackAddCues(TextTrack* track, const TextTrackCueList
 void HTMLTrackElement::textTrackRemoveCues(TextTrack* track, const TextTrackCueList* cues)
 {
     if (HTMLMediaElement* parent = mediaElement())
-        return parent->textTrackAddCues(track, cues);
+        return parent->textTrackRemoveCues(track, cues);
 }
     
 void HTMLTrackElement::textTrackAddCue(TextTrack* track, PassRefPtr<TextTrackCue> cue)
@@ -353,9 +348,9 @@ String HTMLTrackElement::itemValueText() const
     return getURLAttribute(srcAttr);
 }
 
-void HTMLTrackElement::setItemValueText(const String& value, ExceptionCode& ec)
+void HTMLTrackElement::setItemValueText(const String& value, ExceptionCode&)
 {
-    setAttribute(srcAttr, value, ec);
+    setAttribute(srcAttr, value);
 }
 #endif
 

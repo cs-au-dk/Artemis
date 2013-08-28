@@ -61,11 +61,11 @@ ScrollbarThemeChromiumMac::~ScrollbarThemeChromiumMac()
 {
 }
 
-static PlatformSupport::ThemePaintState scrollbarStateToThemeState(Scrollbar* scrollbar)
+static PlatformSupport::ThemePaintState scrollbarStateToThemeState(ScrollbarThemeClient* scrollbar)
 {
     if (!scrollbar->enabled())
         return PlatformSupport::StateDisabled;
-    if (!scrollbar->scrollableArea()->isActive())
+    if (!scrollbar->isScrollableAreaActive())
         return PlatformSupport::StateInactive;
     if (scrollbar->pressedPart() == ThumbPart)
         return PlatformSupport::StatePressed;
@@ -94,11 +94,11 @@ static void scrollbarPainterPaintTrack(ScrollbarPainter scrollbarPainter, bool e
 //     - drawing using PlatformSupport functions
 //     - drawing tickmarks
 //     - Skia specific changes
-bool ScrollbarThemeChromiumMac::paint(Scrollbar* scrollbar, GraphicsContext* context, const IntRect& damageRect)
+bool ScrollbarThemeChromiumMac::paint(ScrollbarThemeClient* scrollbar, GraphicsContext* context, const IntRect& damageRect)
 {
     // Get the tickmarks for the frameview.
     Vector<IntRect> tickmarks;
-    scrollbar->scrollableArea()->getTickmarks(tickmarks);
+    scrollbar->getTickmarks(tickmarks);
 
     if (isScrollbarOverlayAPIAvailable()) {
         float value = 0;
@@ -129,6 +129,7 @@ bool ScrollbarThemeChromiumMac::paint(Scrollbar* scrollbar, GraphicsContext* con
 
         CGFloat oldKnobAlpha = 0;
         CGFloat oldTrackAlpha = 0;
+        BOOL oldIsExpanded = NO;
         bool hasTickmarks = tickmarks.size() > 0 && scrollbar->orientation() == VerticalScrollbar;
         ScrollbarPainter scrollbarPainter = painterForScrollbar(scrollbar);
         if (hasTickmarks) {
@@ -136,6 +137,10 @@ bool ScrollbarThemeChromiumMac::paint(Scrollbar* scrollbar, GraphicsContext* con
             [scrollbarPainter setKnobAlpha:1.0];
             oldTrackAlpha = [scrollbarPainter trackAlpha];
             [scrollbarPainter setTrackAlpha:1.0];
+            if ([scrollbarPainter respondsToSelector:@selector(setExpanded:)]) {
+              oldIsExpanded = [scrollbarPainter isExpanded];
+              [scrollbarPainter setExpanded:YES];
+            }
         }
 
         GraphicsContextStateSaver stateSaver(*context);
@@ -168,6 +173,8 @@ bool ScrollbarThemeChromiumMac::paint(Scrollbar* scrollbar, GraphicsContext* con
         if (hasTickmarks) {
             [scrollbarPainter setKnobAlpha:oldKnobAlpha];
             [scrollbarPainter setTrackAlpha:oldTrackAlpha];
+            if ([scrollbarPainter respondsToSelector:@selector(setExpanded:)])
+              [scrollbarPainter setExpanded:oldIsExpanded];
         }
 
         return true;
@@ -188,7 +195,7 @@ bool ScrollbarThemeChromiumMac::paint(Scrollbar* scrollbar, GraphicsContext* con
     if (!scrollbar->enabled())
         trackInfo.enableState = kThemeTrackDisabled;
     else
-        trackInfo.enableState = scrollbar->scrollableArea()->isActive() ? kThemeTrackActive : kThemeTrackInactive;
+        trackInfo.enableState = scrollbar->isScrollableAreaActive() ? kThemeTrackActive : kThemeTrackInactive;
 
     if (!hasButtons(scrollbar))
         trackInfo.enableState = kThemeTrackNothingToScroll;
@@ -243,7 +250,7 @@ bool ScrollbarThemeChromiumMac::paint(Scrollbar* scrollbar, GraphicsContext* con
     if (hasThumb(scrollbar)) {
         PlatformSupport::ThemePaintScrollbarInfo scrollbarInfo;
         scrollbarInfo.orientation = scrollbar->orientation() == HorizontalScrollbar ? PlatformSupport::ScrollbarOrientationHorizontal : PlatformSupport::ScrollbarOrientationVertical;
-        scrollbarInfo.parent = scrollbar->parent() && scrollbar->parent()->isFrameView() && static_cast<FrameView*>(scrollbar->parent())->isScrollViewScrollbar(scrollbar) ? PlatformSupport::ScrollbarParentScrollView : PlatformSupport::ScrollbarParentRenderLayer;
+        scrollbarInfo.parent = scrollbar->isScrollViewScrollbar() ? PlatformSupport::ScrollbarParentScrollView : PlatformSupport::ScrollbarParentRenderLayer;
         scrollbarInfo.maxValue = scrollbar->maximum();
         scrollbarInfo.currentValue = scrollbar->currentPos();
         scrollbarInfo.visibleSize = scrollbar->visibleSize();
@@ -263,7 +270,7 @@ bool ScrollbarThemeChromiumMac::paint(Scrollbar* scrollbar, GraphicsContext* con
     return true;
 }
 
-void ScrollbarThemeChromiumMac::paintGivenTickmarks(GraphicsContext* context, Scrollbar* scrollbar, const IntRect& rect, const Vector<IntRect>& tickmarks)
+void ScrollbarThemeChromiumMac::paintGivenTickmarks(GraphicsContext* context, ScrollbarThemeClient* scrollbar, const IntRect& rect, const Vector<IntRect>& tickmarks)
 {
     if (scrollbar->orientation() != VerticalScrollbar)
         return;

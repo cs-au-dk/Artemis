@@ -26,16 +26,14 @@
 #include "HTMLFormControlElement.h"
 
 #include "Attribute.h"
-#include "Document.h"
-#include "ElementRareData.h"
 #include "Event.h"
 #include "EventHandler.h"
 #include "EventNames.h"
 #include "Frame.h"
+#include "HTMLFieldSetElement.h"
 #include "HTMLFormElement.h"
 #include "HTMLInputElement.h"
-#include "HTMLNames.h"
-#include "LabelsNodeList.h"
+#include "HTMLLegendElement.h"
 #include "RenderBox.h"
 #include "RenderTheme.h"
 #include "ScriptEventListener.h"
@@ -49,8 +47,10 @@ using namespace HTMLNames;
 using namespace std;
 
 HTMLFormControlElement::HTMLFormControlElement(const QualifiedName& tagName, Document* document, HTMLFormElement* form)
-    : HTMLElement(tagName, document)
-    , FormAssociatedElement(form)
+    : LabelableElement(tagName, document)
+    , m_fieldSetAncestor(0)
+    , m_legendAncestor(0)
+    , m_ancestorsValid(false)
     , m_disabled(false)
     , m_readOnly(false)
     , m_required(false)
@@ -60,19 +60,14 @@ HTMLFormControlElement::HTMLFormControlElement(const QualifiedName& tagName, Doc
     , m_isValid(true)
     , m_wasChangedSinceLastFormControlChangeEvent(false)
     , m_hasAutofocused(false)
+    , m_hasDataListAncestor(false)
 {
-    if (!this->form())
-        setForm(findFormAncestor());
-    if (this->form())
-        this->form()->registerFormElement(this);
-
+    setForm(form ? form : findFormAncestor());
     setHasCustomWillOrDidRecalcStyle();
 }
 
 HTMLFormControlElement::~HTMLFormControlElement()
 {
-    if (form())
-        form()->removeFormElement(this);
 }
 
 void HTMLFormControlElement::detach()
@@ -106,20 +101,33 @@ bool HTMLFormControlElement::formNoValidate() const
     return fastHasAttribute(formnovalidateAttr);
 }
 
-void HTMLFormControlElement::parseMappedAttribute(Attribute* attr)
+void HTMLFormControlElement::updateAncestors() const
 {
-    if (attr->name() == formAttr) {
+    m_fieldSetAncestor = 0;
+    m_legendAncestor = 0;
+    m_hasDataListAncestor = false;
+    for (ContainerNode* ancestor = parentNode(); ancestor; ancestor = ancestor->parentNode()) {
+        if (!m_legendAncestor && ancestor->hasTagName(legendTag))
+            m_legendAncestor = static_cast<HTMLLegendElement*>(ancestor);
+        if (!m_fieldSetAncestor && ancestor->hasTagName(fieldsetTag))
+            m_fieldSetAncestor = static_cast<HTMLFieldSetElement*>(ancestor);
+        if (!m_hasDataListAncestor && ancestor->hasTagName(datalistTag))
+            m_hasDataListAncestor = true;
+        if (m_hasDataListAncestor && m_fieldSetAncestor)
+            break;
+    }
+    m_ancestorsValid = true;
+}
+
+void HTMLFormControlElement::parseAttribute(Attribute* attr)
+{
+    if (attr->name() == formAttr)
         formAttributeChanged();
-        if (!form())
-            document()->checkedRadioButtons().addButton(this);
-    } else if (attr->name() == disabledAttr) {
+    else if (attr->name() == disabledAttr) {
         bool oldDisabled = m_disabled;
         m_disabled = !attr->isNull();
-        if (oldDisabled != m_disabled) {
-            setNeedsStyleRecalc();
-            if (renderer() && renderer()->style()->hasAppearance())
-                renderer()->theme()->stateChanged(renderer(), EnabledState);
-        }
+        if (oldDisabled != m_disabled)
+            disabledAttributeChanged();
     } else if (attr->name() == readonlyAttr) {
         bool oldReadOnly = m_readOnly;
         m_readOnly = !attr->isNull();
@@ -131,13 +139,26 @@ void HTMLFormControlElement::parseMappedAttribute(Attribute* attr)
     } else if (attr->name() == requiredAttr) {
         bool oldRequired = m_required;
         m_required = !attr->isNull();
-        if (oldRequired != m_required) {
-            setNeedsValidityCheck();
-            setNeedsStyleRecalc(); // Updates for :required :optional classes.
-        }
+        if (oldRequired != m_required)
+            requiredAttributeChanged();
     } else
-        HTMLElement::parseMappedAttribute(attr);
+        HTMLElement::parseAttribute(attr);
     setNeedsWillValidateCheck();
+}
+
+void HTMLFormControlElement::disabledAttributeChanged()
+{
+    setNeedsStyleRecalc();
+    if (renderer() && renderer()->style()->hasAppearance())
+        renderer()->theme()->stateChanged(renderer(), EnabledState);
+}
+
+void HTMLFormControlElement::requiredAttributeChanged()
+{
+    setNeedsValidityCheck();
+    // Style recalculation is needed because style selectors may include
+    // :required and :optional pseudo-classes.
+    setNeedsStyleRecalc();
 }
 
 static bool shouldAutofocus(HTMLFormControlElement* element)
@@ -147,6 +168,8 @@ static bool shouldAutofocus(HTMLFormControlElement* element)
     if (!element->renderer())
         return false;
     if (element->document()->ignoreAutofocus())
+        return false;
+    if (element->document()->isSandboxed(SandboxAutomaticFeatures))
         return false;
     if (element->hasAutofocused())
         return false;
@@ -202,36 +225,25 @@ void HTMLFormControlElement::didMoveToNewDocument(Document* oldDocument)
     HTMLElement::didMoveToNewDocument(oldDocument);
 }
 
-void HTMLFormControlElement::insertedIntoTree(bool deep)
+Node::InsertionNotificationRequest HTMLFormControlElement::insertedInto(Node* insertionPoint)
 {
-    FormAssociatedElement::insertedIntoTree();
-    if (!form())
-        document()->checkedRadioButtons().addButton(this);
-
-    HTMLElement::insertedIntoTree(deep);
+    HTMLElement::insertedInto(insertionPoint);
+    FormAssociatedElement::insertedInto(insertionPoint);
+    m_ancestorsValid = false;
+    setNeedsWillValidateCheck();
+    return InsertionDone;
 }
 
-void HTMLFormControlElement::removedFromTree(bool deep)
+void HTMLFormControlElement::removedFrom(Node* insertionPoint)
 {
-    FormAssociatedElement::removedFromTree();
-    HTMLElement::removedFromTree(deep);
-}
-
-void HTMLFormControlElement::insertedIntoDocument()
-{
-    HTMLElement::insertedIntoDocument();
-    FormAssociatedElement::insertedIntoDocument();
-}
-
-void HTMLFormControlElement::removedFromDocument()
-{
-    HTMLElement::removedFromDocument();
-    FormAssociatedElement::removedFromDocument();
+    HTMLElement::removedFrom(insertionPoint);
+    FormAssociatedElement::removedFrom(insertionPoint);
+    m_ancestorsValid = false;
 }
 
 const AtomicString& HTMLFormControlElement::formControlName() const
 {
-    const AtomicString& name = fastGetAttribute(nameAttr);
+    const AtomicString& name = getNameAttribute();
     return name.isNull() ? emptyAtom : name;
 }
 
@@ -260,6 +272,20 @@ void HTMLFormControlElement::dispatchFormControlInputEvent()
 {
     setChangedSinceLastFormControlChangeEvent(true);
     HTMLElement::dispatchInputEvent();
+}
+
+bool HTMLFormControlElement::disabled() const
+{
+    if (m_disabled)
+        return true;
+
+    if (!m_ancestorsValid)
+        updateAncestors();
+
+    // Form controls in the first legend element inside a fieldset are not affected by fieldset.disabled.
+    if (m_fieldSetAncestor && m_fieldSetAncestor->disabled())
+        return !(m_legendAncestor && m_legendAncestor == m_fieldSetAncestor->legend());
+    return false;
 }
 
 void HTMLFormControlElement::setDisabled(bool b)
@@ -333,14 +359,15 @@ short HTMLFormControlElement::tabIndex() const
 
 bool HTMLFormControlElement::recalcWillValidate() const
 {
-    // FIXME: Should return false if this element has a datalist element as an
-    // ancestor. See HTML5 4.10.10 'The datalist element.'
-    return !m_disabled && !m_readOnly;
+    return !m_hasDataListAncestor && !m_disabled && !m_readOnly;
 }
 
 bool HTMLFormControlElement::willValidate() const
 {
-    if (!m_willValidateInitialized) {
+    if (!m_willValidateInitialized || !m_ancestorsValid) {
+        if (!m_ancestorsValid)
+            updateAncestors();
+
         m_willValidateInitialized = true;
         m_willValidate = recalcWillValidate();
     } else {
@@ -354,6 +381,9 @@ bool HTMLFormControlElement::willValidate() const
 
 void HTMLFormControlElement::setNeedsWillValidateCheck()
 {
+    if (!m_ancestorsValid)
+        updateAncestors();
+
     // We need to recalculate willValidate immediately because willValidate change can causes style change.
     bool newWillValidate = recalcWillValidate();
     if (m_willValidateInitialized && m_willValidate == newWillValidate)
@@ -471,83 +501,13 @@ bool HTMLFormControlElement::isDefaultButtonForForm() const
     return isSuccessfulSubmitButton() && form() && form()->defaultButton() == this;
 }
 
-bool HTMLFormControlElement::isLabelable() const
+HTMLFormControlElement* HTMLFormControlElement::enclosingFormControlElement(Node* node)
 {
-    // FIXME: Add meterTag and outputTag to the list once we support them.
-    return hasTagName(buttonTag) || hasTagName(inputTag) || hasTagName(keygenTag)
-#if ENABLE(METER_TAG)
-        || hasTagName(meterTag)
-#endif
-#if ENABLE(PROGRESS_TAG)
-        || hasTagName(progressTag)
-#endif
-        || hasTagName(selectTag) || hasTagName(textareaTag);
-}
-
-PassRefPtr<NodeList> HTMLFormControlElement::labels()
-{
-    if (!isLabelable())
-        return 0;
-    if (!document())
-        return 0;
-
-    NodeListsNodeData* nodeLists = Node::ensureRareData()->ensureNodeLists(this);
-    if (nodeLists->m_labelsNodeListCache)
-        return nodeLists->m_labelsNodeListCache;
-
-    RefPtr<LabelsNodeList> list = LabelsNodeList::create(this);
-    nodeLists->m_labelsNodeListCache = list.get();
-    return list.release();
-}
-
-HTMLFormControlElementWithState::HTMLFormControlElementWithState(const QualifiedName& tagName, Document* doc, HTMLFormElement* f)
-    : HTMLFormControlElement(tagName, doc, f)
-{
-    document()->registerFormElementWithState(this);
-}
-
-HTMLFormControlElementWithState::~HTMLFormControlElementWithState()
-{
-    document()->unregisterFormElementWithState(this);
-}
-
-void HTMLFormControlElementWithState::didMoveToNewDocument(Document* oldDocument)
-{
-    if (oldDocument)
-        oldDocument->unregisterFormElementWithState(this);
-    document()->registerFormElementWithState(this);
-    HTMLFormControlElement::didMoveToNewDocument(oldDocument);
-}
-
-bool HTMLFormControlElementWithState::shouldAutocomplete() const
-{
-    if (!form())
-        return true;
-    return form()->shouldAutocomplete();
-}
-
-bool HTMLFormControlElementWithState::shouldSaveAndRestoreFormControlState() const
-{
-    // We don't save/restore control state in a form with autocomplete=off.
-    return attached() && shouldAutocomplete();
-}
-
-void HTMLFormControlElementWithState::finishParsingChildren()
-{
-    HTMLFormControlElement::finishParsingChildren();
-
-    // We don't save state of a control with shouldSaveAndRestoreFormControlState()=false.
-    // But we need to skip restoring process too because a control in another
-    // form might have the same pair of name and type and saved its state.
-    if (!shouldSaveAndRestoreFormControlState())
-        return;
-
-    Document* doc = document();
-    if (doc->hasStateForNewFormElements()) {
-        String state;
-        if (doc->takeStateForFormElement(name().impl(), type().impl(), state))
-            restoreFormControlState(state);
+    for (; node; node = node->parentNode()) {
+        if (node->isElementNode() && toElement(node)->isFormControlElement())
+            return static_cast<HTMLFormControlElement*>(node);
     }
+    return 0;
 }
 
 } // namespace Webcore

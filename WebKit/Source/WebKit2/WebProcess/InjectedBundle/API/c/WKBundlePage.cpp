@@ -34,6 +34,8 @@
 #include "WebFullScreenManager.h"
 #include "WebImage.h"
 #include "WebPage.h"
+#include "WebRenderLayer.h"
+#include "WebRenderObject.h"
 #include "WebURL.h"
 #include "WebURLRequest.h"
 
@@ -52,7 +54,9 @@ WKTypeID WKBundlePageGetTypeID()
 
 void WKBundlePageSetContextMenuClient(WKBundlePageRef pageRef, WKBundlePageContextMenuClient* wkClient)
 {
+#if ENABLE(CONTEXT_MENUS)
     toImpl(pageRef)->initializeInjectedBundleContextMenuClient(wkClient);
+#endif
 }
 
 void WKBundlePageSetEditorClient(WKBundlePageRef pageRef, WKBundlePageEditorClient* wkClient)
@@ -326,6 +330,21 @@ void WKBundlePageSimulateMouseMotion(WKBundlePageRef page, WKPoint position, dou
 uint64_t WKBundlePageGetRenderTreeSize(WKBundlePageRef pageRef)
 {
     return toImpl(pageRef)->renderTreeSize();
+}
+
+WKRenderObjectRef WKBundlePageCopyRenderTree(WKBundlePageRef pageRef)
+{
+    return toAPI(WebRenderObject::create(toImpl(pageRef)).leakRef());
+}
+
+WKRenderLayerRef WKBundlePageCopyRenderLayerTree(WKBundlePageRef pageRef)
+{
+    return toAPI(WebRenderLayer::create(toImpl(pageRef)).leakRef());
+}
+
+void WKBundlePageSetPaintedObjectsCounterThreshold(WKBundlePageRef page, uint64_t threshold)
+{
+    toImpl(page)->setPaintedObjectsCounterThreshold(threshold);
 }
 
 void WKBundlePageSetTracksRepaints(WKBundlePageRef pageRef, bool trackRepaints)

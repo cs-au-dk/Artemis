@@ -13,7 +13,6 @@ body {
     font-family: Lucida Grande, sans-serif;
     font-size: 10px;
     margin: 0;
-    -webkit-text-size-adjust: none;
     -webkit-user-select: none;
 }
 
@@ -79,10 +78,6 @@ iframe.view {
     pointer-events: none;
 }
 
-.timeline .resources-event-dividers {
-    height: 19px;
-}
-
 .resources-dividers-label-bar {
     position: absolute;
     top: 0;
@@ -93,6 +88,7 @@ iframe.view {
     border-bottom: 1px solid rgba(0, 0, 0, 0.3);
     height: 20px;
     z-index: 200;
+    pointer-events: none;
 }
 
 .resources-divider {

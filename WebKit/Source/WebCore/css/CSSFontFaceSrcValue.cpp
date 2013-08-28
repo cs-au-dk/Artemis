@@ -26,6 +26,9 @@
 #include "config.h"
 #include "CSSFontFaceSrcValue.h"
 #include "CSSStyleSheet.h"
+#include "CachedFont.h"
+#include "CachedResourceLoader.h"
+#include "Document.h"
 #include "FontCustomPlatformData.h"
 #include "Node.h"
 
@@ -70,10 +73,19 @@ String CSSFontFaceSrcValue::customCssText() const
     return result;
 }
 
-void CSSFontFaceSrcValue::addSubresourceStyleURLs(ListHashSet<KURL>& urls, const CSSStyleSheet* styleSheet)
+void CSSFontFaceSrcValue::addSubresourceStyleURLs(ListHashSet<KURL>& urls, const StyleSheetInternal* styleSheet)
 {
     if (!isLocal())
         addSubresourceURL(urls, styleSheet->completeURL(m_resource));
+}
+
+CachedFont* CSSFontFaceSrcValue::cachedFont(Document* document)
+{
+    if (!m_cachedFont) {
+        ResourceRequest request(document->completeURL(m_resource));
+        m_cachedFont = document->cachedResourceLoader()->requestFont(request);
+    }
+    return m_cachedFont.get();
 }
 
 }

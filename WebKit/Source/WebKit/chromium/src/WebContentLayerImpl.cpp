@@ -46,24 +46,18 @@ PassRefPtr<WebContentLayerImpl> WebContentLayerImpl::create(WebContentLayerClien
 WebContentLayerImpl::WebContentLayerImpl(WebContentLayerClient* contentClient)
     : ContentLayerChromium(this)
     , m_contentClient(contentClient)
-    , m_drawsContent(true)
 {
+    setIsDrawable(true);
 }
 
 WebContentLayerImpl::~WebContentLayerImpl()
 {
-    setDelegate(0);
+    clearDelegate();
 }
 
 void WebContentLayerImpl::setDrawsContent(bool drawsContent)
 {
-    m_drawsContent = drawsContent;
-    setNeedsCommit();
-}
-
-bool WebContentLayerImpl::drawsContent() const
-{
-    return m_drawsContent;
+    setIsDrawable(drawsContent);
 }
 
 void WebContentLayerImpl::paintContents(GraphicsContext& gc, const IntRect& clip)
@@ -76,6 +70,10 @@ void WebContentLayerImpl::paintContents(GraphicsContext& gc, const IntRect& clip
     WebCanvas* canvas = gc.platformContext();
 #endif
     m_contentClient->paintContents(canvas, WebRect(clip));
+}
+
+void WebContentLayerImpl::didScroll(const WebCore::IntSize&)
+{
 }
 
 } // namespace WebKit

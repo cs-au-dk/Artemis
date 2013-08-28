@@ -43,7 +43,7 @@ _log = logging.getLogger(__name__)
 
 class LayoutTestApacheHttpd(http_server_base.HttpServerBase):
 
-    def __init__(self, port_obj, output_dir):
+    def __init__(self, port_obj, output_dir, additional_dirs=None):
         """Args:
           port_obj: handle to the platform-specific routines
           output_dir: the absolute path to the layout test result directory
@@ -57,7 +57,7 @@ class LayoutTestApacheHttpd(http_server_base.HttpServerBase):
                           {'port': 8081},
                           {'port': 8443, 'sslcert': True}]
         self._output_dir = output_dir
-        port_obj.maybe_make_directory(output_dir)
+        self._filesystem.maybe_make_directory(output_dir)
 
         self._pid_file = self._filesystem.join(self._runtime_path, '%s.pid' % self._name)
 
@@ -86,6 +86,14 @@ class LayoutTestApacheHttpd(http_server_base.HttpServerBase):
             '-C', "\'User \"%s\"\'" % os.environ.get("USERNAME", os.environ.get("USER", "")),
             '-c', "\'PidFile %s'" % self._pid_file,
             '-k', "start"]
+
+        if additional_dirs:
+            for alias, path in additional_dirs.iteritems():
+                start_cmd += ['-c', "\'Alias %s \"%s\"\'" % (alias, path),
+                        # Disable CGI handler for additional dirs.
+                        '-c', "\'<Location %s>\'" % alias,
+                        '-c', "\'RemoveHandler .cgi .pl\'",
+                        '-c', "\'</Location>\'"]
 
         stop_cmd = [executable,
             '-f', "\"%s\"" % self._get_apache_config_file_path(test_dir, output_dir),
@@ -129,6 +137,12 @@ class LayoutTestApacheHttpd(http_server_base.HttpServerBase):
         return int(self._filesystem.read_text_file(self._pid_file))
 
     def _stop_running_server(self):
+        # If apache was forcefully killed, the pid file will not have been deleted, so check
+        # that the process specified by the pid_file no longer exists before deleting the file.
+        if self._pid and not self._executive.check_running_pid(self._pid):
+            self._filesystem.remove(self._pid_file)
+            return
+
         retval, err = self._run(self._stop_cmd)
         if retval or len(err):
             raise http_server_base.ServerError('Failed to stop %s: %s' % (self._name, err))

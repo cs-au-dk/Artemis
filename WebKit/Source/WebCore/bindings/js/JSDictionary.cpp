@@ -34,13 +34,15 @@
 #include "JSTrackCustom.h"
 #include "SerializedScriptValue.h"
 #include "ScriptValue.h"
+#include <wtf/HashMap.h>
 #include <wtf/MathExtras.h>
+#include <wtf/text/AtomicString.h>
 
 using namespace JSC;
 
 namespace WebCore {
 
-JSDictionary::GetPropertyResult JSDictionary::tryGetProperty(const char* propertyName, JSValue& finalResult)
+JSDictionary::GetPropertyResult JSDictionary::tryGetProperty(const char* propertyName, JSValue& finalResult) const
 {
     Identifier identifier(m_exec, propertyName);
     PropertySlot slot(m_initializerObject);
@@ -91,7 +93,7 @@ void JSDictionary::convertValue(ExecState* exec, JSValue value, double& result)
 
 void JSDictionary::convertValue(ExecState* exec, JSValue value, String& result)
 {
-    result = ustringToString(value.toString(exec));
+    result = ustringToString(value.toString(exec)->value(exec));
 }
 
 void JSDictionary::convertValue(ExecState* exec, JSValue value, ScriptValue& result)
@@ -101,7 +103,7 @@ void JSDictionary::convertValue(ExecState* exec, JSValue value, ScriptValue& res
 
 void JSDictionary::convertValue(ExecState* exec, JSValue value, RefPtr<SerializedScriptValue>& result)
 {
-    result = SerializedScriptValue::create(exec, value, 0);
+    result = SerializedScriptValue::create(exec, value, 0, 0);
 }
 
 void JSDictionary::convertValue(ExecState*, JSValue value, RefPtr<DOMWindow>& result)
@@ -126,13 +128,36 @@ void JSDictionary::convertValue(ExecState*, JSValue value, RefPtr<Storage>& resu
 
 void JSDictionary::convertValue(ExecState* exec, JSValue value, MessagePortArray& result)
 {
-    fillMessagePortArray(exec, value, result);
+    ArrayBufferArray arrayBuffers;
+    fillMessagePortArray(exec, value, result, arrayBuffers);
 }
 
 #if ENABLE(VIDEO_TRACK)
 void JSDictionary::convertValue(ExecState*, JSValue value, RefPtr<TrackBase>& result)
 {
     result = toTrack(value);
+}
+#endif
+
+#if ENABLE(MUTATION_OBSERVERS)
+void JSDictionary::convertValue(ExecState* exec, JSValue value, HashSet<AtomicString>& result)
+{
+    result.clear();
+
+    if (value.isUndefinedOrNull())
+        return;
+
+    unsigned length;
+    JSObject* object = toJSSequence(exec, value, length);
+    if (exec->hadException())
+        return;
+
+    for (unsigned i = 0 ; i < length; ++i) {
+        JSValue itemValue = object->get(exec, i);
+        if (exec->hadException())
+            return;
+        result.add(ustringToAtomicString(itemValue.toString(exec)->value(exec)));
+    }
 }
 #endif
 

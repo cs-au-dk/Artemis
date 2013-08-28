@@ -38,6 +38,7 @@
 
 #include "FloatRect.h"
 #include "IntRect.h"
+#include <wtf/UnusedParam.h>
 
 namespace WebCore {
 
@@ -46,14 +47,60 @@ typedef IntPoint LayoutPoint;
 typedef IntSize LayoutSize;
 typedef IntRect LayoutRect;
 
+#define MAX_LAYOUT_UNIT INT_MAX
+#define MIN_LAYOUT_UNIT INT_MIN
+#define ZERO_LAYOUT_UNIT 0
+
 inline LayoutRect enclosingLayoutRect(const FloatRect& rect)
 {
     return enclosingIntRect(rect);
 }
 
+inline IntRect pixelSnappedIntRect(const LayoutRect& rect)
+{
+    return rect;
+}
+
+inline IntRect pixelSnappedIntRect(LayoutUnit left, LayoutUnit top, LayoutUnit width, LayoutUnit height)
+{
+    return IntRect(left, top, width, height);
+}
+
+inline IntRect pixelSnappedIntRect(const LayoutPoint& location, const LayoutSize& size)
+{
+    return IntRect(location, size);
+}
+
+inline IntRect pixelSnappedIntRectFromEdges(LayoutUnit left, LayoutUnit top, LayoutUnit right, LayoutUnit bottom)
+{
+    return IntRect(left, top, right - left, bottom - top);
+}
+
+inline int snapSizeToPixel(LayoutUnit size, LayoutUnit location) 
+{
+    UNUSED_PARAM(location);
+    return size;
+}
+
+inline IntSize pixelSnappedIntSize(LayoutSize size, LayoutPoint location)
+{
+    UNUSED_PARAM(location);
+    return size;
+}
+
+inline IntSize roundedIntSize(const LayoutSize& s)
+{
+    return s;
+}
+
 inline LayoutSize roundedLayoutSize(const FloatSize& s)
 {
     return roundedIntSize(s);
+}
+
+inline IntPoint roundedIntPoint(const LayoutPoint& p)
+{
+    return p;
 }
 
 inline LayoutPoint roundedLayoutPoint(const FloatPoint& p)
@@ -76,6 +123,16 @@ inline LayoutSize flooredLayoutSize(const FloatPoint& p)
     return LayoutSize(static_cast<int>(p.x()), static_cast<int>(p.y()));
 }
 
+inline int roundToInt(LayoutUnit value)
+{
+    return value;
+}
+
+inline int floorToInt(LayoutUnit value)
+{
+    return value;
+}
+
 inline LayoutUnit roundedLayoutUnit(float value)
 {
     return lroundf(value);
@@ -84,6 +141,11 @@ inline LayoutUnit roundedLayoutUnit(float value)
 inline LayoutUnit ceiledLayoutUnit(float value)
 {
     return ceilf(value);
+}
+
+inline LayoutUnit absoluteValue(const LayoutUnit& value)
+{
+    return abs(value);
 }
 
 inline LayoutSize toLayoutSize(const LayoutPoint& p)
@@ -99,6 +161,21 @@ inline LayoutPoint toLayoutPoint(const LayoutSize& p)
 inline LayoutUnit layoutMod(const LayoutUnit& numerator, const LayoutUnit& denominator)
 {
     return numerator % denominator;
+}
+
+inline LayoutUnit clampToLayoutUnit(double value)
+{
+    return clampToInteger(value);
+}
+
+inline bool isIntegerValue(const LayoutUnit)
+{
+    return true;
+}
+
+inline LayoutUnit boundedMultiply(const LayoutUnit& a, const LayoutUnit& b)
+{
+    return a * b;
 }
 
 } // namespace WebCore

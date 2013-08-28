@@ -200,9 +200,10 @@ void HistoryController::restoreDocumentState()
     
     if (!itemToRestore)
         return;
-
-    LOG(Loading, "WebCoreLoading %s: restoring form state from %p", m_frame->tree()->uniqueName().string().utf8().data(), itemToRestore);
-    doc->setStateForNewFormElements(itemToRestore->documentState());
+    if (m_frame->loader()->requestedHistoryItem() == m_currentItem.get() && !m_frame->loader()->documentLoader()->isClientRedirect()) {
+        LOG(Loading, "WebCoreLoading %s: restoring form state from %p", m_frame->tree()->uniqueName().string().utf8().data(), itemToRestore);
+        doc->setStateForNewFormElements(itemToRestore->documentState());
+    }
 }
 
 void HistoryController::invalidateCurrentItemCachedPage()
@@ -684,7 +685,6 @@ PassRefPtr<HistoryItem> HistoryController::createItemTree(Frame* targetFrame, bo
 void HistoryController::recursiveSetProvisionalItem(HistoryItem* item, HistoryItem* fromItem, FrameLoadType type)
 {
     ASSERT(item);
-    ASSERT(fromItem);
 
     if (itemsAreClones(item, fromItem)) {
         // Set provisional item, which will be committed in recursiveUpdateForCommit.
@@ -710,7 +710,6 @@ void HistoryController::recursiveSetProvisionalItem(HistoryItem* item, HistoryIt
 void HistoryController::recursiveGoToItem(HistoryItem* item, HistoryItem* fromItem, FrameLoadType type)
 {
     ASSERT(item);
-    ASSERT(fromItem);
 
     if (itemsAreClones(item, fromItem)) {
         // Just iterate over the rest, looking for frames to navigate.
@@ -739,7 +738,9 @@ bool HistoryController::itemsAreClones(HistoryItem* item1, HistoryItem* item2) c
     // a reload.  Thus, if item1 and item2 are the same, we need to create a
     // new document and should not consider them clones.
     // (See http://webkit.org/b/35532 for details.)
-    return item1 != item2
+    return item1
+        && item2
+        && item1 != item2
         && item1->itemSequenceNumber() == item2->itemSequenceNumber()
         && currentFramesMatchItem(item1)
         && item2->hasSameFrames(item1);
@@ -851,6 +852,8 @@ void HistoryController::replaceState(PassRefPtr<SerializedScriptValue> stateObje
         m_currentItem->setURLString(urlString);
     m_currentItem->setTitle(title);
     m_currentItem->setStateObject(stateObject);
+    m_currentItem->setFormData(0);
+    m_currentItem->setFormContentType(String());
 
     Settings* settings = m_frame->settings();
     if (!settings || settings->privateBrowsingEnabled())

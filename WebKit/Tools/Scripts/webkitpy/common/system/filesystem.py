@@ -28,8 +28,6 @@
 
 """Wrapper object for the file system / source tree."""
 
-from __future__ import with_statement
-
 import codecs
 import errno
 import exceptions
@@ -40,8 +38,6 @@ import shutil
 import sys
 import tempfile
 import time
-
-from webkitpy.common.system import ospath
 
 class FileSystem(object):
     """FileSystem interface for webkitpy.
@@ -58,6 +54,9 @@ class FileSystem(object):
 
     def abspath(self, path):
         return os.path.abspath(path)
+
+    def realpath(self, path):
+        return os.path.realpath(path)
 
     def path_to_module(self, module_name):
         """A wrapper for all calls to __file__ to allow easy unit testing."""
@@ -205,6 +204,8 @@ class FileSystem(object):
             f.write(contents)
 
     def open_text_file_for_reading(self, path):
+        # Note: There appears to be an issue with the returned file objects
+        # not being seekable. See http://stackoverflow.com/questions/1510188/can-seek-and-tell-work-with-utf-8-encoded-documents-in-python .
         return codecs.open(path, 'r', 'utf8')
 
     def open_text_file_for_writing(self, path):
@@ -229,7 +230,7 @@ class FileSystem(object):
         return hashlib.sha1(contents).hexdigest()
 
     def relpath(self, path, start='.'):
-        return ospath.relpath(path, start)
+        return os.path.relpath(path, start)
 
     class _WindowsError(exceptions.OSError):
         """Fake exception for Linux and Mac."""

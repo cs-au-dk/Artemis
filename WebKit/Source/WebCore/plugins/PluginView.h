@@ -61,7 +61,6 @@ typedef PlatformWidget PlatformPluginWidget;
 #include "TextureMapperPlatformLayer.h"
 #endif
 
-#include <QGraphicsItem>
 #include <QImage>
 QT_BEGIN_NAMESPACE
 class QPainter;
@@ -303,7 +302,6 @@ namespace WebCore {
         Element* m_element;
         bool m_isStarted;
         KURL m_url;
-        KURL m_baseURL;
         PluginStatus m_status;
         Vector<IntRect> m_invalidRects;
 

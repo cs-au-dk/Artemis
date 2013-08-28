@@ -1,6 +1,6 @@
 /*
  * Copyright (C) 2003, 2006 Apple Computer, Inc.  All rights reserved.
- * Copyright (C) 2009 Google Inc. All rights reserved.
+ * Copyright (C) 2009, 2012 Google Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -57,7 +57,6 @@ PassOwnPtr<ResourceRequest> ResourceRequestBase::adopt(PassOwnPtr<CrossThreadRes
     request->updateResourceRequest();
     request->m_httpHeaderFields.adopt(data->m_httpHeaders.release());
 
-#if PLATFORM(MAC) || PLATFORM(WIN)
     size_t encodingCount = data->m_responseContentDispositionEncodingFallbackArray.size();
     if (encodingCount > 0) {
         String encoding1 = data->m_responseContentDispositionEncodingFallbackArray[0];
@@ -71,7 +70,6 @@ PassOwnPtr<ResourceRequest> ResourceRequestBase::adopt(PassOwnPtr<CrossThreadRes
         ASSERT(encodingCount <= 3);
         request->setResponseContentDispositionEncodingFallbackArray(encoding1, encoding2, encoding3);
     }
-#endif
     request->setHTTPBody(data->m_httpBody);
     request->setAllowCookies(data->m_allowCookies);
     request->doPlatformAdopt(data);
@@ -89,13 +87,11 @@ PassOwnPtr<CrossThreadResourceRequestData> ResourceRequestBase::copyData() const
     data->m_httpHeaders = httpHeaderFields().copyData();
     data->m_priority = priority();
 
-#if PLATFORM(MAC) || PLATFORM(WIN)
     data->m_responseContentDispositionEncodingFallbackArray.reserveInitialCapacity(m_responseContentDispositionEncodingFallbackArray.size());
     size_t encodingArraySize = m_responseContentDispositionEncodingFallbackArray.size();
     for (size_t index = 0; index < encodingArraySize; ++index) {
         data->m_responseContentDispositionEncodingFallbackArray.append(m_responseContentDispositionEncodingFallbackArray[index].isolatedCopy());
     }
-#endif
     if (m_httpBody)
         data->m_httpBody = m_httpBody->deepCopy();
     data->m_allowCookies = m_allowCookies;
@@ -155,7 +151,7 @@ void ResourceRequestBase::setCachePolicy(ResourceRequestCachePolicy cachePolicy)
     
     m_cachePolicy = cachePolicy;
     
-    if (url().protocolInHTTPFamily())
+    if (url().protocolIsInHTTPFamily())
         m_platformRequestUpdated = false;
 }
 
@@ -172,7 +168,7 @@ void ResourceRequestBase::setTimeoutInterval(double timeoutInterval)
     
     m_timeoutInterval = timeoutInterval; 
     
-    if (url().protocolInHTTPFamily())
+    if (url().protocolIsInHTTPFamily())
         m_platformRequestUpdated = false;
 }
 
@@ -205,7 +201,7 @@ void ResourceRequestBase::setHTTPMethod(const String& httpMethod)
 
     m_httpMethod = httpMethod;
     
-    if (url().protocolInHTTPFamily())
+    if (url().protocolIsInHTTPFamily())
         m_platformRequestUpdated = false;
 }
 
@@ -236,7 +232,7 @@ void ResourceRequestBase::setHTTPHeaderField(const AtomicString& name, const Str
     
     m_httpHeaderFields.set(name, value); 
     
-    if (url().protocolInHTTPFamily())
+    if (url().protocolIsInHTTPFamily())
         m_platformRequestUpdated = false;
 }
 
@@ -251,7 +247,17 @@ void ResourceRequestBase::clearHTTPAuthorization()
 
     m_httpHeaderFields.remove("Authorization");
 
-    if (url().protocolInHTTPFamily())
+    if (url().protocolIsInHTTPFamily())
+        m_platformRequestUpdated = false;
+}
+
+void ResourceRequestBase::clearHTTPContentType()
+{
+    updateResourceRequest(); 
+
+    m_httpHeaderFields.remove("Content-Type");
+
+    if (url().protocolIsInHTTPFamily())
         m_platformRequestUpdated = false;
 }
 
@@ -261,7 +267,7 @@ void ResourceRequestBase::clearHTTPReferrer()
 
     m_httpHeaderFields.remove("Referer");
 
-    if (url().protocolInHTTPFamily())
+    if (url().protocolIsInHTTPFamily())
         m_platformRequestUpdated = false;
 }
 
@@ -271,11 +277,30 @@ void ResourceRequestBase::clearHTTPOrigin()
 
     m_httpHeaderFields.remove("Origin");
 
-    if (url().protocolInHTTPFamily())
+    if (url().protocolIsInHTTPFamily())
         m_platformRequestUpdated = false;
 }
 
-#if PLATFORM(MAC) || PLATFORM(WIN)
+void ResourceRequestBase::clearHTTPUserAgent()
+{
+    updateResourceRequest(); 
+
+    m_httpHeaderFields.remove("User-Agent");
+
+    if (url().protocolIsInHTTPFamily())
+        m_platformRequestUpdated = false;
+}
+
+void ResourceRequestBase::clearHTTPAccept()
+{
+    updateResourceRequest(); 
+
+    m_httpHeaderFields.remove("Accept");
+
+    if (url().protocolIsInHTTPFamily())
+        m_platformRequestUpdated = false;
+}
+
 void ResourceRequestBase::setResponseContentDispositionEncodingFallbackArray(const String& encoding1, const String& encoding2, const String& encoding3)
 {
     updateResourceRequest(); 
@@ -288,10 +313,9 @@ void ResourceRequestBase::setResponseContentDispositionEncodingFallbackArray(con
     if (!encoding3.isNull())
         m_responseContentDispositionEncodingFallbackArray.append(encoding3);
     
-    if (url().protocolInHTTPFamily())
+    if (url().protocolIsInHTTPFamily())
         m_platformRequestUpdated = false;
 }
-#endif
 
 FormData* ResourceRequestBase::httpBody() const 
 { 
@@ -306,7 +330,7 @@ void ResourceRequestBase::setHTTPBody(PassRefPtr<FormData> httpBody)
     
     m_httpBody = httpBody; 
     
-    if (url().protocolInHTTPFamily())
+    if (url().protocolIsInHTTPFamily())
         m_platformRequestUpdated = false;
 } 
 
@@ -323,7 +347,7 @@ void ResourceRequestBase::setAllowCookies(bool allowCookies)
     
     m_allowCookies = allowCookies;
     
-    if (url().protocolInHTTPFamily())
+    if (url().protocolIsInHTTPFamily())
         m_platformRequestUpdated = false;
 }
 
@@ -340,18 +364,18 @@ void ResourceRequestBase::setPriority(ResourceLoadPriority priority)
 
     m_priority = priority;
 
-    if (url().protocolInHTTPFamily())
+    if (url().protocolIsInHTTPFamily())
         m_platformRequestUpdated = false;
 }
 
 void ResourceRequestBase::addHTTPHeaderField(const AtomicString& name, const String& value) 
 {
     updateResourceRequest();
-    pair<HTTPHeaderMap::iterator, bool> result = m_httpHeaderFields.add(name, value); 
-    if (!result.second)
-        result.first->second += "," + value;
+    HTTPHeaderMap::AddResult result = m_httpHeaderFields.add(name, value);
+    if (!result.isNewEntry)
+        result.iterator->second += "," + value;
 
-    if (url().protocolInHTTPFamily())
+    if (url().protocolIsInHTTPFamily())
         m_platformRequestUpdated = false;
 }
 

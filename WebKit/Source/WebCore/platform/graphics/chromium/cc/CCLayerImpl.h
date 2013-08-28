@@ -27,12 +27,16 @@
 #define CCLayerImpl_h
 
 #include "Color.h"
+#include "FilterOperations.h"
 #include "FloatRect.h"
 #include "IntRect.h"
+#include "Region.h"
 #include "TextStream.h"
 #include "TransformationMatrix.h"
-#include "cc/CCRenderPass.h"
+#include "cc/CCInputHandler.h"
+#include "cc/CCLayerAnimationController.h"
 #include "cc/CCRenderSurface.h"
+#include "cc/CCSharedQuadState.h"
 #include <wtf/OwnPtr.h>
 #include <wtf/PassRefPtr.h>
 #include <wtf/RefCounted.h>
@@ -41,42 +45,50 @@
 namespace WebCore {
 
 class CCLayerSorter;
+class CCQuadCuller;
 class LayerChromium;
 class LayerRendererChromium;
 
-class CCLayerImpl : public RefCounted<CCLayerImpl> {
+class CCLayerImpl : public CCLayerAnimationControllerClient {
 public:
-    static PassRefPtr<CCLayerImpl> create(int id)
+    static PassOwnPtr<CCLayerImpl> create(int id)
     {
-        return adoptRef(new CCLayerImpl(id));
+        return adoptPtr(new CCLayerImpl(id));
     }
+
     virtual ~CCLayerImpl();
+
+    // CCLayerAnimationControllerClient implementation.
+    virtual int id() const OVERRIDE { return m_layerId; }
+    virtual void setOpacityFromAnimation(float) OVERRIDE;
+    virtual float opacity() const OVERRIDE { return m_opacity; }
+    virtual void setTransformFromAnimation(const TransformationMatrix&) OVERRIDE;
+    virtual const TransformationMatrix& transform() const OVERRIDE { return m_transform; }
+    virtual const IntSize& bounds() const OVERRIDE { return m_bounds; }
 
     // Tree structure.
     CCLayerImpl* parent() const { return m_parent; }
-    const Vector<RefPtr<CCLayerImpl> >& children() const { return m_children; }
-    void addChild(PassRefPtr<CCLayerImpl>);
+    const Vector<OwnPtr<CCLayerImpl> >& children() const { return m_children; }
+    void addChild(PassOwnPtr<CCLayerImpl>);
     void removeFromParent();
     void removeAllChildren();
 
-    void setMaskLayer(PassRefPtr<CCLayerImpl>);
+    void setMaskLayer(PassOwnPtr<CCLayerImpl>);
     CCLayerImpl* maskLayer() const { return m_maskLayer.get(); }
 
-    void setReplicaLayer(PassRefPtr<CCLayerImpl>);
+    void setReplicaLayer(PassOwnPtr<CCLayerImpl>);
     CCLayerImpl* replicaLayer() const { return m_replicaLayer.get(); }
 
-    int id() const { return m_layerId; }
-
-#ifndef NDEBUG
-    int debugID() const { return m_debugID; }
-#endif
-
     PassOwnPtr<CCSharedQuadState> createSharedQuadState() const;
-    virtual void appendQuads(CCQuadList&, const CCSharedQuadState*);
-    void appendDebugBorderQuad(CCQuadList&, const CCSharedQuadState*) const;
+    // willDraw must be called before appendQuads. If willDraw is called,
+    // didDraw is guaranteed to be called before another willDraw or before
+    // the layer is destroyed. To enforce this, any class that overrides
+    // willDraw/didDraw must call the base class version.
+    virtual void willDraw(LayerRendererChromium*);
+    virtual void appendQuads(CCQuadCuller&, const CCSharedQuadState*, bool& hadMissingTiles) { }
+    virtual void didDraw();
+    void appendDebugBorderQuad(CCQuadCuller&, const CCSharedQuadState*) const;
 
-    virtual void draw(LayerRendererChromium*);
-    void unreserveContentsTexture();
     virtual void bindContentsTexture(LayerRendererChromium*);
 
     // Returns true if this layer has content to draw.
@@ -85,8 +97,6 @@ public:
 
     // Returns true if any of the layer's descendants has content to draw.
     bool descendantDrawsContent();
-
-    void cleanupResources();
 
     void setAnchorPoint(const FloatPoint&);
     const FloatPoint& anchorPoint() const { return m_anchorPoint; }
@@ -97,6 +107,12 @@ public:
     void setBackgroundColor(const Color&);
     Color backgroundColor() const { return m_backgroundColor; }
 
+    void setFilters(const FilterOperations&);
+    const FilterOperations& filters() const { return m_filters; }
+
+    void setBackgroundFilters(const FilterOperations&);
+    const FilterOperations& backgroundFilters() const { return m_backgroundFilters; }
+
     void setMasksToBounds(bool);
     bool masksToBounds() const { return m_masksToBounds; }
 
@@ -104,7 +120,7 @@ public:
     bool opaque() const { return m_opaque; }
 
     void setOpacity(float);
-    float opacity() const { return m_opacity; }
+    bool opacityIsAnimating() const;
 
     void setPosition(const FloatPoint&);
     const FloatPoint& position() const { return m_position; }
@@ -121,20 +137,16 @@ public:
     void setSublayerTransform(const TransformationMatrix&);
     const TransformationMatrix& sublayerTransform() const { return m_sublayerTransform; }
 
-    void setTransform(const TransformationMatrix&);
-    const TransformationMatrix& transform() const { return m_transform; }
-
-    void setZoomAnimatorTransform(const TransformationMatrix&);
-    const TransformationMatrix& zoomAnimatorTransform() const { return m_zoomAnimatorTransform; }
-
-    void setName(const String& name) { m_name = name; }
-    const String& name() const { return m_name; }
-
     // Debug layer border - visual effect only, do not change geometry/clipping/etc.
     void setDebugBorderColor(Color);
     Color debugBorderColor() const { return m_debugBorderColor; }
     void setDebugBorderWidth(float);
     float debugBorderWidth() const { return m_debugBorderWidth; }
+    bool hasDebugBorders() const;
+
+    // Debug layer name.
+    void setDebugName(const String& debugName) { m_debugName = debugName; }
+    String debugName() const { return m_debugName; }
 
     CCRenderSurface* renderSurface() const { return m_renderSurface.get(); }
     void createRenderSurface();
@@ -143,12 +155,15 @@ public:
     float drawOpacity() const { return m_drawOpacity; }
     void setDrawOpacity(float opacity) { m_drawOpacity = opacity; }
 
+    bool drawOpacityIsAnimating() const { return m_drawOpacityIsAnimating; }
+    void setDrawOpacityIsAnimating(bool drawOpacityIsAnimating) { m_drawOpacityIsAnimating = drawOpacityIsAnimating; }
+
+    // Usage: if this->usesLayerClipping() is false, then this clipRect should not be used.
     const IntRect& clipRect() const { return m_clipRect; }
     void setClipRect(const IntRect& rect) { m_clipRect = rect; }
     CCRenderSurface* targetRenderSurface() const { return m_targetRenderSurface; }
     void setTargetRenderSurface(CCRenderSurface* surface) { m_targetRenderSurface = surface; }
 
-    const IntSize& bounds() const { return m_bounds; }
     void setBounds(const IntSize&);
 
     const IntSize& contentBounds() const { return m_contentBounds; }
@@ -160,8 +175,8 @@ public:
     const IntSize& maxScrollPosition() const {return m_maxScrollPosition; }
     void setMaxScrollPosition(const IntSize& maxScrollPosition) { m_maxScrollPosition = maxScrollPosition; }
 
-    const IntSize& scrollDelta() const { return m_scrollDelta; }
-    void setScrollDelta(const IntSize&);
+    const FloatSize& scrollDelta() const { return m_scrollDelta; }
+    void setScrollDelta(const FloatSize&);
 
     float pageScaleDelta() const { return m_pageScaleDelta; }
     void setPageScaleDelta(float);
@@ -169,10 +184,24 @@ public:
     const IntSize& sentScrollDelta() const { return m_sentScrollDelta; }
     void setSentScrollDelta(const IntSize& sentScrollDelta) { m_sentScrollDelta = sentScrollDelta; }
 
-    void scrollBy(const IntSize& scroll);
+    void scrollBy(const FloatSize& scroll);
 
     bool scrollable() const { return m_scrollable; }
     void setScrollable(bool scrollable) { m_scrollable = scrollable; }
+
+    bool shouldScrollOnMainThread() const { return m_shouldScrollOnMainThread; }
+    void setShouldScrollOnMainThread(bool shouldScrollOnMainThread) { m_shouldScrollOnMainThread = shouldScrollOnMainThread; }
+
+    bool haveWheelEventHandlers() const { return m_haveWheelEventHandlers; }
+    void setHaveWheelEventHandlers(bool haveWheelEventHandlers) { m_haveWheelEventHandlers = haveWheelEventHandlers; }
+
+    const Region& nonFastScrollableRegion() const { return m_nonFastScrollableRegion; }
+    void setNonFastScrollableRegion(const Region& region) { m_nonFastScrollableRegion = region; }
+
+    void setDrawCheckerboardForMissingTiles(bool checkerboard) { m_drawCheckerboardForMissingTiles = checkerboard; }
+    bool drawCheckerboardForMissingTiles() const { return m_drawCheckerboardForMissingTiles; }
+
+    CCInputHandlerClient::ScrollStatus tryScroll(const IntPoint& viewportPoint, CCInputHandlerClient::ScrollInputType) const;
 
     const IntRect& visibleLayerRect() const { return m_visibleLayerRect; }
     void setVisibleLayerRect(const IntRect& visibleLayerRect) { m_visibleLayerRect = visibleLayerRect; }
@@ -183,10 +212,19 @@ public:
     // Returns the rect containtaining this layer in the current view's coordinate system.
     const IntRect getDrawRect() const;
 
+    void setTransform(const TransformationMatrix&);
+    bool transformIsAnimating() const;
+
     const TransformationMatrix& drawTransform() const { return m_drawTransform; }
     void setDrawTransform(const TransformationMatrix& matrix) { m_drawTransform = matrix; }
     const TransformationMatrix& screenSpaceTransform() const { return m_screenSpaceTransform; }
     void setScreenSpaceTransform(const TransformationMatrix& matrix) { m_screenSpaceTransform = matrix; }
+
+    bool drawTransformIsAnimating() const { return m_drawTransformIsAnimating; }
+    void setDrawTransformIsAnimating(bool animating) { m_drawTransformIsAnimating = animating; }
+    bool screenSpaceTransformIsAnimating() const { return m_screenSpaceTransformIsAnimating; }
+    void setScreenSpaceTransformIsAnimating(bool animating) { m_screenSpaceTransformIsAnimating = animating; }
+
     const IntRect& drawableContentRect() const { return m_drawableContentRect; }
     void setDrawableContentRect(const IntRect& rect) { m_drawableContentRect = rect; }
     const FloatRect& updateRect() const { return m_updateRect; }
@@ -196,6 +234,15 @@ public:
 
     bool layerPropertyChanged() const { return m_layerPropertyChanged; }
     void resetAllChangeTrackingForSubtree();
+
+    CCLayerAnimationController* layerAnimationController() { return m_layerAnimationController.get(); }
+
+    virtual Region visibleContentOpaqueRegion() const;
+
+    // Indicates that the context previously used to render this layer
+    // was lost and that a new one has been created. Won't be called
+    // until the new context has been created successfully.
+    virtual void didLoseContext();
 
 protected:
     explicit CCLayerImpl(int);
@@ -222,9 +269,12 @@ private:
 
     // Properties internal to CCLayerImpl
     CCLayerImpl* m_parent;
-    Vector<RefPtr<CCLayerImpl> > m_children;
-    RefPtr<CCLayerImpl> m_maskLayer;
-    RefPtr<CCLayerImpl> m_replicaLayer;
+    Vector<OwnPtr<CCLayerImpl> > m_children;
+    // m_maskLayer can be temporarily stolen during tree sync, we need this ID to confirm newly assigned layer is still the previous one
+    int m_maskLayerId;
+    OwnPtr<CCLayerImpl> m_maskLayer;
+    int m_replicaLayerId; // ditto
+    OwnPtr<CCLayerImpl> m_replicaLayer;
     int m_layerId;
 
     // Properties synchronized from the associated LayerChromium.
@@ -234,6 +284,9 @@ private:
     IntSize m_contentBounds;
     IntPoint m_scrollPosition;
     bool m_scrollable;
+    bool m_shouldScrollOnMainThread;
+    bool m_haveWheelEventHandlers;
+    Region m_nonFastScrollableRegion;
     Color m_backgroundColor;
 
     // Whether the "back" of this layer should draw.
@@ -248,7 +301,7 @@ private:
     float m_opacity;
     FloatPoint m_position;
     bool m_preserves3D;
-    TransformationMatrix m_zoomAnimatorTransform;
+    bool m_drawCheckerboardForMissingTiles;
     TransformationMatrix m_sublayerTransform;
     TransformationMatrix m_transform;
     bool m_usesLayerClipping;
@@ -256,18 +309,10 @@ private:
 
     bool m_drawsContent;
 
-    IntSize m_scrollDelta;
+    FloatSize m_scrollDelta;
     IntSize m_sentScrollDelta;
     IntSize m_maxScrollPosition;
     float m_pageScaleDelta;
-
-    // Properties owned exclusively by this CCLayerImpl.
-    // Debugging.
-#ifndef NDEBUG
-    int m_debugID;
-#endif
-
-    String m_name;
 
     // Render surface this layer draws into. This is a surface that can belong
     // either to this layer (if m_targetRenderSurface == m_renderSurface) or
@@ -279,13 +324,26 @@ private:
     // to sort layers from back to front.
     float m_drawDepth;
     float m_drawOpacity;
+    bool m_drawOpacityIsAnimating;
 
     // Debug borders.
     Color m_debugBorderColor;
     float m_debugBorderWidth;
 
+    // Debug layer name.
+    String m_debugName;
+
+    FilterOperations m_filters;
+    FilterOperations m_backgroundFilters;
+
     TransformationMatrix m_drawTransform;
     TransformationMatrix m_screenSpaceTransform;
+    bool m_drawTransformIsAnimating;
+    bool m_screenSpaceTransformIsAnimating;
+
+#ifndef NDEBUG
+    bool m_betweenWillDrawAndDidDraw;
+#endif
 
     // The rect that contributes to the scissor when this layer is drawn.
     // Inherited by the parent layer and further restricted if this layer masks
@@ -302,9 +360,12 @@ private:
     // Rect indicating what was repainted/updated during update.
     // Note that plugin layers bypass this and leave it empty.
     FloatRect m_updateRect;
+
+    // Manages animations for this layer.
+    OwnPtr<CCLayerAnimationController> m_layerAnimationController;
 };
 
-void sortLayers(Vector<RefPtr<CCLayerImpl> >::iterator first, Vector<RefPtr<CCLayerImpl> >::iterator end, CCLayerSorter*);
+void sortLayers(Vector<CCLayerImpl*>::iterator first, Vector<CCLayerImpl*>::iterator end, CCLayerSorter*);
 
 }
 

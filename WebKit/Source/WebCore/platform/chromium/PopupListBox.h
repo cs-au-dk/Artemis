@@ -79,6 +79,8 @@ struct PopupContainerSettings {
     // Whether we should restrict the width of the PopupListBox or not.
     // Autocomplete popups are restricted, combo-boxes (select tags) aren't.
     bool restrictWidthOfListBox;
+
+    int defaultDeviceScaleFactor;
 };
 
 // A container for the data for each menu item (e.g. represented by <option>
@@ -123,7 +125,7 @@ public:
 #if ENABLE(TOUCH_EVENTS)
     virtual bool handleTouchEvent(const PlatformTouchEvent&);
 #endif
-#if ENABLE(GESTURE_RECOGNIZER)
+#if ENABLE(GESTURE_EVENTS)
     virtual bool handleGestureEvent(const PlatformGestureEvent&);
 #endif
 

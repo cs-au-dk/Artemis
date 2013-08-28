@@ -36,15 +36,16 @@
 
 #if PLATFORM(MAC)
 #include <wtf/RetainPtr.h>
+#include <wtf/text/WTFString.h>
+
 #ifdef __OBJC__ 
 #import <Foundation/Foundation.h>
 #import <AppKit/NSDragging.h>
 typedef id <NSDraggingInfo> DragDataRef;
-@class NSPasteboard;
 #else
 typedef void* DragDataRef;
-class NSPasteboard;
 #endif
+
 #elif PLATFORM(QT)
 QT_BEGIN_NAMESPACE
 class QMimeData;
@@ -62,7 +63,7 @@ class DataObjectGtk;
 typedef WebCore::DataObjectGtk* DragDataRef;
 #elif PLATFORM(CHROMIUM)
 #include "DragDataRef.h"
-#elif PLATFORM(EFL)
+#elif PLATFORM(EFL) || PLATFORM(BLACKBERRY)
 typedef void* DragDataRef;
 #endif
 
@@ -118,7 +119,7 @@ public:
     bool containsFiles() const;
     unsigned numberOfFiles() const;
 #if PLATFORM(MAC)
-    NSPasteboard *pasteboard() { return m_pasteboard.get(); }
+    const String& pasteboardName() { return m_pasteboardName; }
 #endif
 
 #if PLATFORM(QT) || PLATFORM(GTK)
@@ -144,7 +145,7 @@ private:
     DragOperation m_draggingSourceOperationMask;
     DragApplicationFlags m_applicationFlags;
 #if PLATFORM(MAC)
-    RetainPtr<NSPasteboard> m_pasteboard;
+    String m_pasteboardName;
 #endif
 #if PLATFORM(WIN)
     DragDataMap m_dragDataMap;

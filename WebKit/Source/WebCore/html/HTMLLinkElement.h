@@ -37,7 +37,11 @@
 
 namespace WebCore {
 
+class HTMLLinkElement;
 class KURL;
+
+template<typename T> class EventSender;
+typedef EventSender<HTMLLinkElement> LinkEventSender;
 
 class HTMLLinkElement : public HTMLElement, public CachedStyleSheetClient, public LinkLoaderClient {
 public:
@@ -60,19 +64,24 @@ public:
     void setSizes(const String&);
     DOMSettableTokenList* sizes() const;
 
+    void dispatchPendingEvent(LinkEventSender*);
+    static void dispatchPendingLoadEvents();
+
 private:
-    virtual void parseMappedAttribute(Attribute*);
+    virtual void parseAttribute(Attribute*) OVERRIDE;
 
     virtual bool shouldLoadLink();
     void process();
     static void processCallback(Node*);
+    void clearSheet();
 
-    virtual void insertedIntoDocument();
-    virtual void removedFromDocument();
+    virtual InsertionNotificationRequest insertedInto(Node*) OVERRIDE;
+    virtual void removedFrom(Node*) OVERRIDE;
 
     // from CachedResourceClient
     virtual void setCSSStyleSheet(const String& href, const KURL& baseURL, const String& charset, const CachedCSSStyleSheet* sheet);
     virtual bool sheetLoaded();
+    virtual void notifyLoadedSheetAndAllCriticalSubresources(bool errorOccurred);
     virtual void startLoadingDynamicSheet();
 
     virtual void linkLoaded();
@@ -119,7 +128,9 @@ private:
     bool m_loading;
     bool m_createdByParser;
     bool m_isInShadowTree;
-    
+    bool m_firedLoad;
+    bool m_loadedSheet;
+
     PendingSheetType m_pendingSheetType;
 };
 

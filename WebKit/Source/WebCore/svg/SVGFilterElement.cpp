@@ -93,7 +93,7 @@ const AtomicString& SVGFilterElement::filterResYIdentifier()
     return s_identifier;
 }
 
-void SVGFilterElement::setFilterRes(unsigned long filterResX, unsigned long filterResY)
+void SVGFilterElement::setFilterRes(unsigned filterResX, unsigned filterResY)
 {
     setFilterResXBaseValue(filterResX);
     setFilterResYBaseValue(filterResY);
@@ -120,13 +120,13 @@ bool SVGFilterElement::isSupportedAttribute(const QualifiedName& attrName)
     return supportedAttributes.contains<QualifiedName, SVGAttributeHashTranslator>(attrName);
 }
 
-void SVGFilterElement::parseMappedAttribute(Attribute* attr)
+void SVGFilterElement::parseAttribute(Attribute* attr)
 {
     SVGParsingError parseError = NoError;
     const AtomicString& value = attr->value();
 
     if (!isSupportedAttribute(attr->name()))
-        SVGStyledElement::parseMappedAttribute(attr);
+        SVGStyledElement::parseAttribute(attr);
     else if (attr->name() == SVGNames::filterUnitsAttr) {
         SVGUnitTypes::SVGUnitType propertyValue = SVGPropertyTraits<SVGUnitTypes::SVGUnitType>::fromString(value);
         if (propertyValue > 0)
@@ -149,9 +149,9 @@ void SVGFilterElement::parseMappedAttribute(Attribute* attr)
             setFilterResXBaseValue(x);
             setFilterResYBaseValue(y);
         }
-    } else if (SVGURIReference::parseMappedAttribute(attr)
-             || SVGLangSpace::parseMappedAttribute(attr)
-             || SVGExternalResourcesRequired::parseMappedAttribute(attr)) {
+    } else if (SVGURIReference::parseAttribute(attr)
+             || SVGLangSpace::parseAttribute(attr)
+             || SVGExternalResourcesRequired::parseAttribute(attr)) {
     } else
         ASSERT_NOT_REACHED();
 

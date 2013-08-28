@@ -429,6 +429,7 @@ on_key_down(void *data, Evas *e, Evas_Object *obj, void *event_info)
         NULL
     };
     static int currentEncoding = -1;
+    Eina_Bool ctrlPressed = evas_key_modifier_is_set(evas_key_modifier_get(e), "Control");
 
     if (!strcmp(ev->key, "Escape")) {
         closeWindow(app->ee);
@@ -525,9 +526,9 @@ on_key_down(void *data, Evas *e, Evas_Object *obj, void *event_info)
         info("Create new window (F9) was pressed.\n");
         Eina_Rectangle geometry = {0, 0, 0, 0};
         browserCreate("http://www.google.com",
-                       app->theme, app->userAgent, geometry, app-> backingStore,
-                       NULL, app->isFlattening, 0, NULL);
-    } else if (!strcmp(ev->key, "F10")) {
+                       app->theme, app->userAgent, geometry, NULL,
+                       app->backingStore, app->isFlattening, 0, NULL);
+    } else if (!strcmp(ev->key, "g") && ctrlPressed ) {
         Evas_Coord x, y, w, h;
         Evas_Object *frame = ewk_view_frame_main_get(obj);
         float zoom = zoomLevels[currentZoomLevel] / 100.0;
@@ -539,13 +540,16 @@ on_key_down(void *data, Evas *e, Evas_Object *obj, void *event_info)
         h *= 4;
         info("Pre-render %d,%d + %dx%d\n", x, y, w, h);
         ewk_view_pre_render_region(obj, x, y, w, h, zoom);
-    } else if (!strcmp(ev->key, "F11")) {
+    } else if (!strcmp(ev->key, "r") && ctrlPressed) {
         info("Pre-render 1 extra column/row with current zoom");
         ewk_view_pre_render_relative_radius(obj, 1);
-    } else if (!strcmp(ev->key, "d")) {
+    } else if (!strcmp(ev->key, "p") && ctrlPressed) {
+        info("Pre-rendering start");
+        ewk_view_pre_render_start(obj);
+    } else if (!strcmp(ev->key, "d") && ctrlPressed) {
         info("Render suspended");
         ewk_view_disable_render(obj);
-    } else if (!strcmp(ev->key, "e")) {
+    } else if (!strcmp(ev->key, "e") && ctrlPressed) {
         info("Render resumed");
         ewk_view_enable_render(obj);
     }

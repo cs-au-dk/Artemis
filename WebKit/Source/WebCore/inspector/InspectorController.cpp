@@ -29,9 +29,10 @@
  */
 
 #include "config.h"
-#include "InspectorController.h"
 
 #if ENABLE(INSPECTOR)
+
+#include "InspectorController.h"
 
 #include "Frame.h"
 #include "GraphicsContext.h"
@@ -52,6 +53,7 @@
 #include "InspectorFileSystemAgent.h"
 #include "InspectorFrontend.h"
 #include "InspectorFrontendClient.h"
+#include "InspectorIndexedDBAgent.h"
 #include "InspectorInstrumentation.h"
 #include "InspectorMemoryAgent.h"
 #include "InspectorPageAgent.h"
@@ -82,8 +84,9 @@ InspectorController::InspectorController(Page* page, InspectorClient* inspectorC
     m_inspectorAgent = inspectorAgentPtr.get();
     m_agents.append(inspectorAgentPtr.release());
 
-    OwnPtr<InspectorPageAgent> pageAgentPtr(InspectorPageAgent::create(m_instrumentingAgents.get(), page, m_state.get(), m_injectedScriptManager.get()));
+    OwnPtr<InspectorPageAgent> pageAgentPtr(InspectorPageAgent::create(m_instrumentingAgents.get(), page, m_state.get(), m_injectedScriptManager.get(), inspectorClient));
     InspectorPageAgent* pageAgent = pageAgentPtr.get();
+    m_pageAgent = pageAgentPtr.get();
     m_agents.append(pageAgentPtr.release());
 
     OwnPtr<InspectorDOMAgent> domAgentPtr(InspectorDOMAgent::create(m_instrumentingAgents.get(), pageAgent, inspectorClient, m_state.get(), m_injectedScriptManager.get()));
@@ -98,14 +101,18 @@ InspectorController::InspectorController(Page* page, InspectorClient* inspectorC
     m_agents.append(databaseAgentPtr.release());
 #endif
 
+#if ENABLE(INDEXED_DATABASE)
+    m_agents.append(InspectorIndexedDBAgent::create(m_instrumentingAgents.get(), m_state.get(), m_injectedScriptManager.get(), pageAgent));
+#endif
+
 #if ENABLE(FILE_SYSTEM)
     m_agents.append(InspectorFileSystemAgent::create(m_instrumentingAgents.get(), m_state.get()));
 #endif
     OwnPtr<InspectorDOMStorageAgent> domStorageAgentPtr(InspectorDOMStorageAgent::create(m_instrumentingAgents.get(), m_state.get()));
     InspectorDOMStorageAgent* domStorageAgent = domStorageAgentPtr.get();
     m_agents.append(domStorageAgentPtr.release());
-
-    m_agents.append(InspectorTimelineAgent::create(m_instrumentingAgents.get(), m_state.get()));
+    m_agents.append(InspectorMemoryAgent::create(m_instrumentingAgents.get(), m_state.get(), m_page, m_domAgent));
+    m_agents.append(InspectorTimelineAgent::create(m_instrumentingAgents.get(), m_state.get(), InspectorTimelineAgent::PageInspector));
     m_agents.append(InspectorApplicationCacheAgent::create(m_instrumentingAgents.get(), m_state.get(), pageAgent));
 
     OwnPtr<InspectorResourceAgent> resourceAgentPtr(InspectorResourceAgent::create(m_instrumentingAgents.get(), pageAgent, inspectorClient, m_state.get()));
@@ -136,8 +143,6 @@ InspectorController::InspectorController(Page* page, InspectorClient* inspectorC
     m_agents.append(InspectorWorkerAgent::create(m_instrumentingAgents.get(), m_state.get()));
 #endif
 
-    m_agents.append(InspectorMemoryAgent::create(m_instrumentingAgents.get(), m_state.get(), m_page, m_domAgent));
-
     ASSERT_ARG(inspectorClient, inspectorClient);
     m_injectedScriptManager->injectedScriptHost()->init(m_inspectorAgent
         , consoleAgent
@@ -145,6 +150,7 @@ InspectorController::InspectorController(Page* page, InspectorClient* inspectorC
         , databaseAgent
 #endif
         , domStorageAgent
+        , m_domAgent
     );
 
 #if ENABLE(JAVASCRIPT_DEBUGGER)
@@ -210,7 +216,7 @@ void InspectorController::connectFrontend()
     InspectorInstrumentation::frontendCreated();
 
     ASSERT(m_inspectorClient);
-    m_inspectorBackendDispatcher = adoptRef(new InspectorBackendDispatcher(m_inspectorClient));
+    m_inspectorBackendDispatcher = InspectorBackendDispatcher::create(m_inspectorClient);
 
     InspectorBackendDispatcher* dispatcher = m_inspectorBackendDispatcher.get();
     for (Agents::iterator it = m_agents.begin(); it != m_agents.end(); ++it)
@@ -285,6 +291,11 @@ void InspectorController::drawHighlight(GraphicsContext& context) const
     m_domAgent->drawHighlight(context);
 }
 
+void InspectorController::getHighlight(Highlight* highlight) const
+{
+    m_domAgent->getHighlight(highlight);
+}
+
 void InspectorController::inspect(Node* node)
 {
     if (!enabled())
@@ -352,7 +363,6 @@ void InspectorController::resume()
         m_debuggerAgent->resume(&error);
     }
 }
-
 #endif
 
 void InspectorController::setResourcesDataSizeLimitsFromInternals(int maximumResourcesContentSize, int maximumSingleResourceContentSize)

@@ -28,8 +28,8 @@
 
 #include "DrawingArea.h"
 #include "LayerTreeHost.h"
-#include "RunLoop.h"
 #include <WebCore/Region.h>
+#include <WebCore/RunLoop.h>
 
 namespace WebCore {
     class GraphicsContext;
@@ -55,11 +55,14 @@ private:
     virtual void scroll(const WebCore::IntRect& scrollRect, const WebCore::IntSize& scrollOffset);
     virtual void setLayerTreeStateIsFrozen(bool);
     virtual bool layerTreeStateIsFrozen() const { return m_layerTreeStateIsFrozen; }
+    virtual LayerTreeHost* layerTreeHost() const { return m_layerTreeHost.get(); }
     virtual void forceRepaint();
 
     virtual void didInstallPageOverlay();
     virtual void didUninstallPageOverlay();
     virtual void setPageOverlayNeedsDisplay(const WebCore::IntRect&);
+    virtual void setPageOverlayOpacity(float);
+    virtual bool pageOverlayShouldApplyFadeWhenPainting() const;
 
     virtual void setPaintingEnabled(bool);
 
@@ -70,7 +73,11 @@ private:
     virtual void scheduleChildWindowGeometryUpdate(const WindowGeometry&);
 #endif
 
-#if USE(ACCELERATED_COMPOSITING) && USE(TEXTURE_MAPPER)
+#if PLATFORM(MAC)
+    virtual void setLayerHostingMode(uint32_t) OVERRIDE;
+#endif
+
+#if USE(UI_SIDE_COMPOSITING)
     virtual void didReceiveLayerTreeHostMessage(CoreIPC::Connection*, CoreIPC::MessageID, CoreIPC::ArgumentDecoder*);
 #endif
 
@@ -131,8 +138,8 @@ private:
     bool m_isPaintingSuspended;
     bool m_alwaysUseCompositing;
 
-    RunLoop::Timer<DrawingAreaImpl> m_displayTimer;
-    RunLoop::Timer<DrawingAreaImpl> m_exitCompositingTimer;
+    WebCore::RunLoop::Timer<DrawingAreaImpl> m_displayTimer;
+    WebCore::RunLoop::Timer<DrawingAreaImpl> m_exitCompositingTimer;
 
     // The layer tree host that handles accelerated compositing.
     RefPtr<LayerTreeHost> m_layerTreeHost;

@@ -1,14 +1,17 @@
 //
-// Copyright (c) 2002-2010 The ANGLE Project Authors. All rights reserved.
+// Copyright (c) 2002-2012 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
 
+#include "compiler/BuiltInFunctionEmulator.h"
+#include "compiler/DetectRecursion.h"
+#include "compiler/ForLoopUnroll.h"
 #include "compiler/Initialize.h"
+#include "compiler/MapLongVariableNames.h"
 #include "compiler/ParseHelper.h"
 #include "compiler/ShHandle.h"
 #include "compiler/ValidateLimitations.h"
-#include "compiler/MapLongVariableNames.h"
 
 namespace {
 bool InitializeSymbolTable(
@@ -18,6 +21,7 @@ bool InitializeSymbolTable(
 {
     TIntermediate intermediate(infoSink);
     TExtensionBehavior extBehavior;
+    InitExtensionBehavior(resources, extBehavior);
     // The builtins deliberately don't specify precisions for the function
     // arguments and return types. For that reason we don't try to check them.
     TParseContext parseContext(symbolTable, extBehavior, intermediate, type, spec, 0, false, NULL, infoSink);
@@ -84,12 +88,16 @@ TShHandleBase::~TShHandleBase() {
 
 TCompiler::TCompiler(ShShaderType type, ShShaderSpec spec)
     : shaderType(type),
-      shaderSpec(spec) 
+      shaderSpec(spec),
+      builtInFunctionEmulator(type)
 {
+    longNameMap = LongNameMap::GetInstance();
 }
 
 TCompiler::~TCompiler()
 {
+    ASSERT(longNameMap);
+    longNameMap->Release();
 }
 
 bool TCompiler::Init(const ShBuiltInResources& resources)
@@ -147,13 +155,24 @@ bool TCompiler::compile(const char* const shaderStrings[],
         TIntermNode* root = parseContext.treeRoot;
         success = intermediate.postProcess(root);
 
+        if (success)
+            success = detectRecursion(root);
+
         if (success && (compileOptions & SH_VALIDATE_LOOP_INDEXING))
             success = validateLimitations(root);
+
+        // Unroll for-loop markup needs to happen after validateLimitations pass.
+        if (success && (compileOptions & SH_UNROLL_FOR_LOOP_WITH_INTEGER_INDEX))
+            ForLoopUnroll::MarkForLoopsWithIntegerIndicesForUnrolling(root);
+
+        // Built-in function emulation needs to happen after validateLimitations pass.
+        if (success && (compileOptions & SH_EMULATE_BUILT_IN_FUNCTIONS))
+            builtInFunctionEmulator.MarkBuiltInFunctionsForEmulation(root);
 
         // Call mapLongVariableNames() before collectAttribsUniforms() so in
         // collectAttribsUniforms() we already have the mapped symbol names and
         // we could composite mapped and original variable names.
-        if (compileOptions & SH_MAP_LONG_VARIABLE_NAMES)
+        if (success && (compileOptions & SH_MAP_LONG_VARIABLE_NAMES))
             mapLongVariableNames(root);
 
         if (success && (compileOptions & SH_ATTRIBUTES_UNIFORMS))
@@ -193,6 +212,27 @@ void TCompiler::clearResults()
 
     attribs.clear();
     uniforms.clear();
+
+    builtInFunctionEmulator.Cleanup();
+}
+
+bool TCompiler::detectRecursion(TIntermNode* root)
+{
+    DetectRecursion detect;
+    root->traverse(&detect);
+    switch (detect.detectRecursion()) {
+        case DetectRecursion::kErrorNone:
+            return true;
+        case DetectRecursion::kErrorMissingMain:
+            infoSink.info.message(EPrefixError, "Missing main()");
+            return false;
+        case DetectRecursion::kErrorRecursion:
+            infoSink.info.message(EPrefixError, "Function recursion detected");
+            return false;
+        default:
+            UNREACHABLE();
+            return false;
+    }
 }
 
 bool TCompiler::validateLimitations(TIntermNode* root) {
@@ -209,16 +249,22 @@ void TCompiler::collectAttribsUniforms(TIntermNode* root)
 
 void TCompiler::mapLongVariableNames(TIntermNode* root)
 {
-    MapLongVariableNames map(varyingLongNameMap);
+    ASSERT(longNameMap);
+    MapLongVariableNames map(longNameMap);
     root->traverse(&map);
 }
 
 int TCompiler::getMappedNameMaxLength() const
 {
-    return MAX_IDENTIFIER_NAME_SIZE + 1;
+    return MAX_SHORTENED_IDENTIFIER_SIZE + 1;
 }
 
 const TExtensionBehavior& TCompiler::getExtensionBehavior() const
 {
     return extensionBehavior;
+}
+
+const BuiltInFunctionEmulator& TCompiler::getBuiltInFunctionEmulator() const
+{
+    return builtInFunctionEmulator;
 }

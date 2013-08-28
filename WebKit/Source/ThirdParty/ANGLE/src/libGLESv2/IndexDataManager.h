@@ -1,5 +1,5 @@
 //
-// Copyright (c) 2002-2010 The ANGLE Project Authors. All rights reserved.
+// Copyright (c) 2002-2012 The ANGLE Project Authors. All rights reserved.
 // Use of this source code is governed by a BSD-style license that can be
 // found in the LICENSE file.
 //
@@ -18,6 +18,11 @@
 
 #include "libGLESv2/Context.h"
 
+namespace
+{
+    enum { INITIAL_INDEX_BUFFER_SIZE = 4096 * sizeof(GLuint) };
+}
+
 namespace gl
 {
 
@@ -28,6 +33,7 @@ struct TranslatedIndexData
     UINT startIndex;
 
     IDirect3DIndexBuffer9 *indexBuffer;
+    unsigned int serial;
 };
 
 class IndexBuffer
@@ -42,12 +48,17 @@ class IndexBuffer
     virtual void reserveSpace(UINT requiredSpace, GLenum type) = 0;
 
     IDirect3DIndexBuffer9 *getBuffer() const;
+    unsigned int getSerial() const;
 
   protected:
     IDirect3DDevice9 *const mDevice;
 
     IDirect3DIndexBuffer9 *mIndexBuffer;
     UINT mBufferSize;
+
+    unsigned int mSerial;
+    static unsigned int issueSerial();
+    static unsigned int mCurrentSerial;
 
   private:
     DISALLOW_COPY_AND_ASSIGN(IndexBuffer);
@@ -87,12 +98,28 @@ class StaticIndexBuffer : public IndexBuffer
         intptr_t offset;
         GLsizei count;
 
+        bool operator<(const IndexRange& rhs) const
+        {
+            if (offset != rhs.offset)
+            {
+                return offset < rhs.offset;
+            }
+            if (count != rhs.count)
+            {
+                return count < rhs.count;
+            }
+            return false;
+        }
+    };
+
+    struct IndexResult
+    {
         UINT minIndex;
         UINT maxIndex;
         UINT streamOffset;
     };
 
-    std::vector<IndexRange> mCache;
+    std::map<IndexRange, IndexResult> mCache;
 };
 
 class IndexDataManager
@@ -101,7 +128,8 @@ class IndexDataManager
     IndexDataManager(Context *context, IDirect3DDevice9 *evice);
     virtual ~IndexDataManager();
 
-    GLenum prepareIndexData(GLenum type, GLsizei count, Buffer *arrayElementBuffer, const void *indices, TranslatedIndexData *translated);
+    GLenum prepareIndexData(GLenum type, GLsizei count, Buffer *arrayElementBuffer, const GLvoid *indices, TranslatedIndexData *translated);
+    StaticIndexBuffer *getCountingIndices(GLsizei count);
 
   private:
     DISALLOW_COPY_AND_ASSIGN(IndexDataManager);
@@ -113,6 +141,7 @@ class IndexDataManager
 
     StreamingIndexBuffer *mStreamingBufferShort;
     StreamingIndexBuffer *mStreamingBufferInt;
+    StaticIndexBuffer *mCountingBuffer;
 };
 
 }

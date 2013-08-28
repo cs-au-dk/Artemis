@@ -80,6 +80,9 @@ public:
     static const unsigned int maxViewWidth;
     static const unsigned int maxViewHeight;
 
+    void setTimeout(int timeout) { m_timeout = timeout; }
+    void setShouldTimeout(bool flag) { m_shouldTimeout = flag; }
+
 protected:
     void timerEvent(QTimerEvent*);
 
@@ -181,7 +184,6 @@ public slots:
 
     bool pauseAnimationAtTimeOnElementWithId(const QString& animationName, double time, const QString& elementId);
     bool pauseTransitionAtTimeOnElementWithId(const QString& propertyName, double time, const QString& elementId);
-    bool sampleSVGAnimationForElementAtTime(const QString& animationId, double time, const QString& elementId);
     bool elementDoesAutoCompleteForElementWithId(const QString& elementId);
 
     unsigned numberOfActiveAnimations() const;
@@ -234,13 +236,14 @@ public slots:
     bool geolocationPermission() const { return m_geolocationPermission; }
 
     void addMockSpeechInputResult(const QString& result, double confidence, const QString& language);
+    void setMockSpeechInputDumpRect(bool flag);
     void startSpeechInput(const QString& inputElement);
+
+    void setPageVisibility(const char*);
+    void resetPageVisibility();
 
     // Empty stub method to keep parity with object model exposed by global LayoutTestController.
     void abortModal() {}
-    bool hasSpellingMarker(int from, int length);
-
-    QVariantList nodesFromRect(const QWebElement& document, int x, int y, unsigned top, unsigned right, unsigned bottom, unsigned left, bool ignoreClipping);
 
     void addURLToRedirect(const QString& origin, const QString& destination);
 
@@ -258,6 +261,7 @@ public slots:
 
     void setEditingBehavior(const QString& editingBehavior);
 
+    void evaluateScriptInIsolatedWorldAndReturnValue(int worldID, const QString& script);
     void evaluateScriptInIsolatedWorld(int worldID, const QString& script);
     bool isPageBoxVisible(int pageIndex);
     QString pageSizeAndMarginsInPixels(int pageIndex, int width, int height, int marginTop, int marginRight, int marginBottom, int marginLeft);
@@ -316,6 +320,9 @@ private:
     QWebHistory* m_webHistory;
     QStringList m_desktopNotificationAllowedOrigins;
     bool m_ignoreDesktopNotification;
+
+    bool m_shouldTimeout;
+    int m_timeout;
 };
 
 #endif // LayoutTestControllerQt_h

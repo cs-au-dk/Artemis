@@ -259,7 +259,8 @@ NSMutableDictionary *MediaPlayerPrivateQTKit::commonMovieAttributes()
 
 void MediaPlayerPrivateQTKit::createQTMovie(const String& url)
 {
-    NSURL *cocoaURL = KURL(ParsedURLString, url);
+    KURL kURL(ParsedURLString, url);
+    NSURL *cocoaURL = kURL;
     NSMutableDictionary *movieAttributes = commonMovieAttributes();    
     [movieAttributes setValue:cocoaURL forKey:QTMovieURLAttribute];
 
@@ -282,9 +283,9 @@ void MediaPlayerPrivateQTKit::createQTMovie(const String& url)
             willUseProxy = NO;
     }
 
-    if (!willUseProxy) {
+    if (!willUseProxy && !kURL.protocolIsData()) {
         // Only pass the QTMovieOpenForPlaybackAttribute flag if there are no proxy servers, due
-        // to rdar://problem/7531776.
+        // to rdar://problem/7531776, or if not loading a data:// url due to rdar://problem/8103801.
         [movieAttributes setObject:[NSNumber numberWithBool:YES] forKey:@"QTMovieOpenForPlaybackAttribute"];
     }
     
@@ -1460,6 +1461,11 @@ MediaPlayer::SupportsType MediaPlayerPrivateQTKit::supportsType(const String& ty
 {
     // Only return "IsSupported" if there is no codecs parameter for now as there is no way to ask QT if it supports an
     // extended MIME type yet.
+
+    // Due to <rdar://problem/10777059>, avoid calling the mime types cache functions if at
+    // all possible:
+    if (!type.startsWith("video/") && !type.startsWith("audio/"))
+        return MediaPlayer::IsNotSupported;
 
     // We check the "modern" type cache first, as it doesn't require QTKitServer to start.
     if (mimeModernTypesCache().contains(type) || mimeCommonTypesCache().contains(type))

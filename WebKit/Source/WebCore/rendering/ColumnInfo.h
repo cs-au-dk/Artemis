@@ -44,6 +44,7 @@ public:
         , m_forcedBreaks(0)
         , m_maximumDistanceBetweenForcedBreaks(0)
         , m_forcedBreakOffset(0)
+        , m_paginationUnit(Column)
     {
     }
 
@@ -74,24 +75,28 @@ public:
     LayoutUnit minimumColumnHeight() const { return m_minimumColumnHeight; }
 
     int forcedBreaks() const { return m_forcedBreaks; }
-    int forcedBreakOffset() const { return m_forcedBreakOffset; }
-    int maximumDistanceBetweenForcedBreaks() const { return m_maximumDistanceBetweenForcedBreaks; }
+    LayoutUnit forcedBreakOffset() const { return m_forcedBreakOffset; }
+    LayoutUnit maximumDistanceBetweenForcedBreaks() const { return m_maximumDistanceBetweenForcedBreaks; }
     void clearForcedBreaks()
     { 
         m_forcedBreaks = 0;
         m_maximumDistanceBetweenForcedBreaks = 0;
         m_forcedBreakOffset = 0;
     }
-    void addForcedBreak(int offsetFromFirstPage)
+    void addForcedBreak(LayoutUnit offsetFromFirstPage)
     { 
         ASSERT(!m_columnHeight);
-        int distanceFromLastBreak = offsetFromFirstPage - m_forcedBreakOffset;
+        LayoutUnit distanceFromLastBreak = offsetFromFirstPage - m_forcedBreakOffset;
         if (!distanceFromLastBreak)
             return;
         m_forcedBreaks++;
         m_maximumDistanceBetweenForcedBreaks = std::max(m_maximumDistanceBetweenForcedBreaks, distanceFromLastBreak);
         m_forcedBreakOffset = offsetFromFirstPage;
     }
+
+    enum PaginationUnit { Column, Page };
+    PaginationUnit paginationUnit() const { return m_paginationUnit; }
+    void setPaginationUnit(PaginationUnit paginationUnit) { m_paginationUnit = paginationUnit; }
 
 private:
     LayoutUnit m_desiredColumnWidth;
@@ -102,8 +107,9 @@ private:
     LayoutUnit m_columnHeight;
     LayoutUnit m_minimumColumnHeight;
     int m_forcedBreaks; // FIXME: We will ultimately need to cache more information to balance around forced breaks properly.
-    int m_maximumDistanceBetweenForcedBreaks;
-    int m_forcedBreakOffset;
+    LayoutUnit m_maximumDistanceBetweenForcedBreaks;
+    LayoutUnit m_forcedBreakOffset;
+    PaginationUnit m_paginationUnit;
 };
 
 }

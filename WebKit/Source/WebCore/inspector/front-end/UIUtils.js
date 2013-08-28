@@ -183,7 +183,18 @@ WebInspector.animateStyle = function(animations, duration, callback)
 
 WebInspector.isBeingEdited = function(element)
 {
-    return element.__editing;
+    if (element.hasStyleClass("text-prompt") || element.nodeName === "INPUT")
+        return true;
+
+    if (!WebInspector.__editingCount)
+        return false;
+
+    while (element) {
+        if (element.__editing)
+            return true;
+        element = element.parentElement;
+    }
+    return false;
 }
 
 WebInspector.markBeingEdited = function(element, value)
@@ -200,11 +211,6 @@ WebInspector.markBeingEdited = function(element, value)
         --WebInspector.__editingCount;
     }
     return true;
-}
-
-WebInspector.isEditingAnyField = function()
-{
-    return !!WebInspector.__editingCount;
 }
 
 /**
@@ -262,7 +268,7 @@ WebInspector.EditingConfig.prototype = {
 WebInspector.startEditing = function(element, config)
 {
     if (!WebInspector.markBeingEdited(element, true))
-        return;
+        return null;
 
     config = config || new WebInspector.EditingConfig(function() {}, function() {});
     var committedCallback = config.commitHandler;
@@ -274,8 +280,8 @@ WebInspector.startEditing = function(element, config)
 
     element.addStyleClass("editing");
 
-    var oldTabIndex = element.tabIndex;
-    if (element.tabIndex < 0)
+    var oldTabIndex = element.getAttribute("tabIndex");
+    if (typeof oldTabIndex !== "number" || oldTabIndex < 0)
         element.tabIndex = 0;
 
     function blurEventListener() {
@@ -295,7 +301,11 @@ WebInspector.startEditing = function(element, config)
         WebInspector.markBeingEdited(element, false);
 
         this.removeStyleClass("editing");
-        this.tabIndex = oldTabIndex;
+        
+        if (typeof oldTabIndex !== "number")
+            element.removeAttribute("tabIndex");
+        else
+            this.tabIndex = oldTabIndex;
         this.scrollTop = 0;
         this.scrollLeft = 0;
 
@@ -304,8 +314,7 @@ WebInspector.startEditing = function(element, config)
         if (pasteCallback)
             element.removeEventListener("paste", pasteEventListener, true);
 
-        if (element === WebInspector.currentFocusElement() || element.isAncestor(WebInspector.currentFocusElement()))
-            WebInspector.setCurrentFocusElement(WebInspector.previousFocusElement());
+        WebInspector.restoreFocusFromElement(element);
     }
 
     /** @this {Element} */
@@ -346,13 +355,11 @@ WebInspector.startEditing = function(element, config)
     {
         if (result === "commit") {
             editingCommitted.call(element);
-            event.preventDefault();
-            event.stopPropagation();
+            event.consume(true);
         } else if (result === "cancel") {
             editingCancelled.call(element);
-            event.preventDefault();
-            event.stopPropagation();
-        } else if (result && result.indexOf("move-") === 0) {
+            event.consume(true);
+        } else if (result && result.startsWith("move-")) {
             moveDirection = result.substring(5);
             if (event.keyIdentifier !== "U+0009")
                 blurEventListener();
@@ -435,6 +442,15 @@ Number.bytesToString = function(bytes, higherResolution)
         return WebInspector.UIString("%.2fMB", megabytes);
     else
         return WebInspector.UIString("%.0fMB", megabytes);
+}
+
+Number.withThousandsSeparator = function(num)
+{
+    var str = num + "";
+    var re = /(\d+)(\d{3})/;
+    while (str.match(re))
+        str = str.replace(re, "$1\u2009$2"); // \u2009 is a thin space.
+    return str;
 }
 
 WebInspector._missingLocalizedStrings = {};
@@ -587,6 +603,18 @@ WebInspector._focusChanged = function(event)
     WebInspector.setCurrentFocusElement(event.target);
 }
 
+WebInspector._textInputTypes = ["text", "search", "tel", "url", "email", "password"].keySet(); 
+WebInspector._isTextEditingElement = function(element)
+{
+    if (element instanceof HTMLInputElement)
+        return element.type in WebInspector._textInputTypes;
+
+    if (element instanceof HTMLTextAreaElement)
+        return true;
+
+    return false;
+}
+
 WebInspector.setCurrentFocusElement = function(x)
 {
     if (WebInspector._currentFocusElement !== x)
@@ -596,10 +624,11 @@ WebInspector.setCurrentFocusElement = function(x)
     if (WebInspector._currentFocusElement) {
         WebInspector._currentFocusElement.focus();
 
-        // Make a caret selection inside the new element if there isn't a range selection and
-        // there isn't already a caret selection inside.
+        // Make a caret selection inside the new element if there isn't a range selection and there isn't already a caret selection inside.
+        // This is needed (at least) to remove caret from console when focus is moved to some element in the panel.
+        // The code below should not be applied to text fields and text areas, hence _isTextEditingElement check.
         var selection = window.getSelection();
-        if (selection.isCollapsed && !WebInspector._currentFocusElement.isInsertionCaretInside()) {
+        if (!WebInspector._isTextEditingElement(WebInspector._currentFocusElement) && selection.isCollapsed && !WebInspector._currentFocusElement.isInsertionCaretInside()) {
             var selectionRange = WebInspector._currentFocusElement.ownerDocument.createRange();
             selectionRange.setStart(WebInspector._currentFocusElement, 0);
             selectionRange.setEnd(WebInspector._currentFocusElement, 0);
@@ -609,6 +638,12 @@ WebInspector.setCurrentFocusElement = function(x)
         }
     } else if (WebInspector._previousFocusElement)
         WebInspector._previousFocusElement.blur();
+}
+
+WebInspector.restoreFocusFromElement = function(element)
+{
+    if (element && element.isSelfOrAncestor(WebInspector.currentFocusElement()))
+        WebInspector.setCurrentFocusElement(WebInspector.previousFocusElement());
 }
 
 WebInspector.setToolbarColors = function(backgroundColor, color)
@@ -633,6 +668,144 @@ WebInspector.resetToolbarColors = function()
 {
     if (WebInspector._themeStyleElement)
         WebInspector._themeStyleElement.textContent = "";
+}
+
+/**
+ * @param {Element} element
+ * @param {number} offset
+ * @param {number} length
+ * @param {Array.<Object>=} domChanges
+ */
+WebInspector.highlightSearchResult = function(element, offset, length, domChanges)
+{
+    var result = WebInspector.highlightSearchResults(element, [{offset: offset, length: length }], domChanges);
+    return result.length ? result[0] : null;
+}
+
+/**
+ * @param {Element} element
+ * @param {Array.<Object>} resultRanges
+ * @param {Array.<Object>=} changes
+ */
+WebInspector.highlightSearchResults = function(element, resultRanges, changes)
+{
+    return WebInspector.highlightRangesWithStyleClass(element, resultRanges, "webkit-search-result", changes);
+}
+
+/**
+ * @param {Element} element
+ * @param {Array.<Object>} resultRanges
+ * @param {string} styleClass
+ * @param {Array.<Object>=} changes
+ */
+WebInspector.highlightRangesWithStyleClass = function(element, resultRanges, styleClass, changes)
+{
+    changes = changes || [];
+    var highlightNodes = [];
+    var lineText = element.textContent;
+    var ownerDocument = element.ownerDocument;
+    var textNodeSnapshot = ownerDocument.evaluate(".//text()", element, null, XPathResult.ORDERED_NODE_SNAPSHOT_TYPE, null);
+
+    var snapshotLength = textNodeSnapshot.snapshotLength;
+    if (snapshotLength === 0)
+        return highlightNodes;
+
+    var nodeRanges = [];
+    var rangeEndOffset = 0;
+    for (var i = 0; i < snapshotLength; ++i) {
+        var range = {};
+        range.offset = rangeEndOffset;
+        range.length = textNodeSnapshot.snapshotItem(i).textContent.length;
+        rangeEndOffset = range.offset + range.length;
+        nodeRanges.push(range);
+    }
+
+    var startIndex = 0;
+    for (var i = 0; i < resultRanges.length; ++i) {
+        var startOffset = resultRanges[i].offset;
+        var endOffset = startOffset + resultRanges[i].length;
+
+        while (startIndex < snapshotLength && nodeRanges[startIndex].offset + nodeRanges[startIndex].length <= startOffset)
+            startIndex++;
+        var endIndex = startIndex;
+        while (endIndex < snapshotLength && nodeRanges[endIndex].offset + nodeRanges[endIndex].length < endOffset)
+            endIndex++;
+        if (endIndex === snapshotLength)
+            break;
+
+        var highlightNode = ownerDocument.createElement("span");
+        highlightNode.className = styleClass;
+        highlightNode.textContent = lineText.substring(startOffset, endOffset);
+
+        var lastTextNode = textNodeSnapshot.snapshotItem(endIndex);
+        var lastText = lastTextNode.textContent;
+        lastTextNode.textContent = lastText.substring(endOffset - nodeRanges[endIndex].offset);
+        changes.push({ node: lastTextNode, type: "changed", oldText: lastText, newText: lastTextNode.textContent });
+
+        if (startIndex === endIndex) {
+            lastTextNode.parentElement.insertBefore(highlightNode, lastTextNode);
+            changes.push({ node: highlightNode, type: "added", nextSibling: lastTextNode, parent: lastTextNode.parentElement });
+            highlightNodes.push(highlightNode);
+
+            var prefixNode = ownerDocument.createTextNode(lastText.substring(0, startOffset - nodeRanges[startIndex].offset));
+            lastTextNode.parentElement.insertBefore(prefixNode, highlightNode);
+            changes.push({ node: prefixNode, type: "added", nextSibling: highlightNode, parent: lastTextNode.parentElement });
+        } else {
+            var firstTextNode = textNodeSnapshot.snapshotItem(startIndex);
+            var firstText = firstTextNode.textContent;
+            var anchorElement = firstTextNode.nextSibling;
+
+            firstTextNode.parentElement.insertBefore(highlightNode, anchorElement);
+            changes.push({ node: highlightNode, type: "added", nextSibling: anchorElement, parent: firstTextNode.parentElement });
+            highlightNodes.push(highlightNode);
+
+            firstTextNode.textContent = firstText.substring(0, startOffset - nodeRanges[startIndex].offset);
+            changes.push({ node: firstTextNode, type: "changed", oldText: firstText, newText: firstTextNode.textContent });
+
+            for (var j = startIndex + 1; j < endIndex; j++) {
+                var textNode = textNodeSnapshot.snapshotItem(j);
+                var text = textNode.textContent;
+                textNode.textContent = "";
+                changes.push({ node: textNode, type: "changed", oldText: text, newText: textNode.textContent });
+            }
+        }
+        startIndex = endIndex;
+        nodeRanges[startIndex].offset = endOffset;
+        nodeRanges[startIndex].length = lastTextNode.textContent.length;
+
+    }
+    return highlightNodes;
+}
+
+WebInspector.applyDomChanges = function(domChanges)
+{
+    for (var i = 0, size = domChanges.length; i < size; ++i) {
+        var entry = domChanges[i];
+        switch (entry.type) {
+        case "added":
+            entry.parent.insertBefore(entry.node, entry.nextSibling);
+            break;
+        case "changed":
+            entry.node.textContent = entry.newText;
+            break;
+        }
+    }
+}
+
+WebInspector.revertDomChanges = function(domChanges)
+{
+    for (var i = domChanges.length - 1; i >= 0; --i) {
+        var entry = domChanges[i];
+        switch (entry.type) {
+        case "added":
+            if (entry.node.parentElement)
+                entry.node.parentElement.removeChild(entry.node);
+            break;
+        case "changed":
+            entry.node.textContent = entry.oldText;
+            break;
+        }
+    }
 }
 
 /**

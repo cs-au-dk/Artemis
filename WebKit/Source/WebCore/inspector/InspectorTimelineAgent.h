@@ -53,12 +53,13 @@ class ResourceResponse;
 
 typedef String ErrorString;
 
-class InspectorTimelineAgent : public InspectorBaseAgent<InspectorTimelineAgent>, ScriptGCEventListener {
+class InspectorTimelineAgent : public InspectorBaseAgent<InspectorTimelineAgent>, ScriptGCEventListener, public InspectorBackendDispatcher::TimelineCommandHandler {
     WTF_MAKE_NONCOPYABLE(InspectorTimelineAgent);
 public:
-    static PassOwnPtr<InspectorTimelineAgent> create(InstrumentingAgents* instrumentingAgents, InspectorState* state)
+    enum InspectorType { PageInspector, WorkerInspector };
+    static PassOwnPtr<InspectorTimelineAgent> create(InstrumentingAgents* instrumentingAgents, InspectorState* state, InspectorType type)
     {
-        return adoptPtr(new InspectorTimelineAgent(instrumentingAgents, state));
+        return adoptPtr(new InspectorTimelineAgent(instrumentingAgents, state, type));
     }
 
     ~InspectorTimelineAgent();
@@ -67,8 +68,9 @@ public:
     virtual void clearFrontend();
     virtual void restore();
 
-    void start(ErrorString*, int* maxCallStackDepth);
-    void stop(ErrorString*);
+    virtual void start(ErrorString*, const int* maxCallStackDepth);
+    virtual void stop(ErrorString*);
+    virtual void setIncludeMemoryDetails(ErrorString*, bool);
 
     int id() const { return m_id; }
 
@@ -80,6 +82,9 @@ public:
 
     void willDispatchEvent(const Event&);
     void didDispatchEvent();
+
+    void didBeginFrame();
+    void didCancelFrame();
 
     void willLayout();
     void didLayout();
@@ -120,39 +125,47 @@ public:
     void willReceiveResourceData(unsigned long identifier);
     void didReceiveResourceData();
 
-    void didRegisterAnimationFrameCallback(int callbackId);
-    void didCancelAnimationFrameCallback(int callbackId);
-    void willFireAnimationFrameEvent(int callbackId);
-    void didFireAnimationFrameEvent();
+    void didRequestAnimationFrame(int callbackId);
+    void didCancelAnimationFrame(int callbackId);
+    void willFireAnimationFrame(int callbackId);
+    void didFireAnimationFrame();
 
     virtual void didGC(double, double, size_t);
 
 private:
     struct TimelineRecordEntry {
-        TimelineRecordEntry(PassRefPtr<InspectorObject> record, PassRefPtr<InspectorObject> data, PassRefPtr<InspectorArray> children, const String& type)
-            : record(record), data(data), children(children), type(type)
+        TimelineRecordEntry(PassRefPtr<InspectorObject> record, PassRefPtr<InspectorObject> data, PassRefPtr<InspectorArray> children, const String& type, bool cancelable = false)
+            : record(record), data(data), children(children), type(type), cancelable(cancelable)
         {
         }
         RefPtr<InspectorObject> record;
         RefPtr<InspectorObject> data;
         RefPtr<InspectorArray> children;
         String type;
+        bool cancelable;
     };
         
-    InspectorTimelineAgent(InstrumentingAgents*, InspectorState*);
+    InspectorTimelineAgent(InstrumentingAgents*, InspectorState*, InspectorType);
 
     void pushCurrentRecord(PassRefPtr<InspectorObject>, const String& type, bool captureCallStack);
     void setHeapSizeStatistic(InspectorObject* record);
         
     void didCompleteCurrentRecord(const String& type);
     void appendRecord(PassRefPtr<InspectorObject> data, const String& type, bool captureCallStack);
-
+    void pushCancelableRecord(PassRefPtr<InspectorObject>, const String& type);
+    void commitCancelableRecords();
+    void cancelRecord(const String& type);
     void addRecordToTimeline(PassRefPtr<InspectorObject>, const String& type);
+    void innerAddRecordToTimeline(PassRefPtr<InspectorObject>, const String& type);
 
     void pushGCEventRecords();
     void clearRecordStack();
 
+    double timestamp();
+    double timestampFromMicroseconds(double microseconds);
+
     InspectorFrontend::Timeline* m_frontend;
+    double m_timestampOffset;
 
     Vector<TimelineRecordEntry> m_recordStack;
 
@@ -169,6 +182,7 @@ private:
     typedef Vector<GCEvent> GCEvents;
     GCEvents m_gcEvents;
     int m_maxCallStackDepth;
+    InspectorType m_inspectorType;
 };
 
 } // namespace WebCore

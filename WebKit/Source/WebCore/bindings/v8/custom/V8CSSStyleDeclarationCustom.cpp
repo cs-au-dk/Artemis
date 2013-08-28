@@ -85,7 +85,7 @@ static bool hasCSSPropertyNamePrefix(const String& propertyName, const char* pre
 
 class CSSPropertyInfo {
 public:
-    int propID;
+    CSSPropertyID propID;
     bool hadPixelOrPosPrefix;
 };
 
@@ -126,8 +126,11 @@ static CSSPropertyInfo* cssPropertyInfo(v8::Handle<v8::String>v8PropertyName)
             i += 3;
             hadPixelOrPosPrefix = true;
         } else if (hasCSSPropertyNamePrefix(propertyName, "webkit")
+#if ENABLE(LEGACY_CSS_VENDOR_PREFIXES)
                 || hasCSSPropertyNamePrefix(propertyName, "khtml")
-                || hasCSSPropertyNamePrefix(propertyName, "apple"))
+                || hasCSSPropertyNamePrefix(propertyName, "apple")
+#endif
+                  )
             builder.append('-');
         else if (isASCIIUpper(propertyName[0]))
             return 0;
@@ -143,7 +146,7 @@ static CSSPropertyInfo* cssPropertyInfo(v8::Handle<v8::String>v8PropertyName)
         }
 
         String propName = builder.toString();
-        int propertyID = cssPropertyID(propName);
+        CSSPropertyID propertyID = cssPropertyID(propName);
         if (propertyID) {
             propInfo = new CSSPropertyInfo();
             propInfo->hadPixelOrPosPrefix = hadPixelOrPosPrefix;
@@ -202,7 +205,7 @@ v8::Handle<v8::Value> V8CSSStyleDeclaration::namedPropertyGetter(v8::Local<v8::S
         return notHandledByInterceptor();
 
     CSSStyleDeclaration* imp = V8CSSStyleDeclaration::toNative(info.Holder());
-    RefPtr<CSSValue> cssValue = imp->getPropertyCSSValue(propInfo->propID);
+    RefPtr<CSSValue> cssValue = imp->getPropertyCSSValueInternal(static_cast<CSSPropertyID>(propInfo->propID));
     if (cssValue) {
         if (propInfo->hadPixelOrPosPrefix &&
             cssValue->isPrimitiveValue()) {
@@ -212,7 +215,7 @@ v8::Handle<v8::Value> V8CSSStyleDeclaration::namedPropertyGetter(v8::Local<v8::S
         return v8StringOrNull(cssValue->cssText());
     }
 
-    String result = imp->getPropertyValue(propInfo->propID);
+    String result = imp->getPropertyValueInternal(static_cast<CSSPropertyID>(propInfo->propID));
     if (result.isNull())
         result = "";  // convert null to empty string.
 
@@ -232,7 +235,7 @@ v8::Handle<v8::Value> V8CSSStyleDeclaration::namedPropertySetter(v8::Local<v8::S
         propertyValue.append("px");
 
     ExceptionCode ec = 0;
-    imp->setProperty(propInfo->propID, propertyValue, false, ec);
+    imp->setPropertyInternal(static_cast<CSSPropertyID>(propInfo->propID), propertyValue, false, ec);
 
     if (ec)
         throwError(ec);

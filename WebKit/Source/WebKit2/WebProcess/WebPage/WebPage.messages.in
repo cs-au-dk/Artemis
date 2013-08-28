@@ -40,32 +40,43 @@ messages -> WebPage {
 #if ENABLE(TOUCH_EVENTS)
     TouchEvent(WebKit::WebTouchEvent event)
     TouchEventSyncForTesting(WebKit::WebTouchEvent event) -> (bool handled)
+#if ENABLE(TOUCH_EVENTS) && PLATFORM(QT)
+    HighlightPotentialActivation(WebCore::IntPoint point, WebCore::IntSize area)
 #endif
 
+#if ENABLE(CONTEXT_MENUS)
     ContextMenuHidden()
+#endif
 
     ScrollBy(uint32_t scrollDirection, uint32_t scrollGranularity)
     CenterSelectionInVisibleArea()
 
-    GoBack(uint64_t backForwardItemID, WebKit::SandboxExtension::Handle sandboxExtensionHandle)
-    GoForward(uint64_t backForwardItemID, WebKit::SandboxExtension::Handle sandboxExtensionHandle)
-    GoToBackForwardItem(uint64_t backForwardItemID, WebKit::SandboxExtension::Handle sandboxExtensionHandle)
+    GoBack(uint64_t backForwardItemID)
+    GoForward(uint64_t backForwardItemID)
+    GoToBackForwardItem(uint64_t backForwardItemID)
     TryRestoreScrollPosition()
     LoadHTMLString(WTF::String htmlString, WTF::String baseURL)
     LoadAlternateHTMLString(WTF::String htmlString, WTF::String baseURL, WTF::String unreachableURL); 
     LoadPlainTextString(WTF::String string)
+    LoadWebArchiveData(CoreIPC::DataReference webArchiveData)
     LoadURL(WTF::String url, WebKit::SandboxExtension::Handle sandboxExtensionHandle)
     LoadURLRequest(WebCore::ResourceRequest request, WebKit::SandboxExtension::Handle sandboxExtensionHandle)
     LinkClicked(WTF::String url, WebKit::WebMouseEvent event)
-    Reload(bool reloadFromOrigin)
+    Reload(bool reloadFromOrigin, WebKit::SandboxExtension::Handle sandboxExtensionHandle)
     StopLoading()
+
+#if PLATFORM(QT)
+    ApplicationSchemeReply(WebKit::QtNetworkReplyData reply)
+    RegisterApplicationScheme(WTF::String scheme)
+#endif
 
     StopLoadingFrame(uint64_t frameID)
     
     RestoreSession(WebKit::SessionState state)
-    RestoreSessionAndNavigateToCurrentItem(WebKit::SessionState state, WebKit::SandboxExtension::Handle sandboxExtensionHandle)
+    RestoreSessionAndNavigateToCurrentItem(WebKit::SessionState state)
 
     DidRemoveBackForwardItem(uint64_t backForwardItemID)
+    SetWillGoToBackForwardItemCallbackEnabled(bool willGoToBackForwardItemEnabled)
 
     DidReceivePolicyDecision(uint64_t frameID, uint64_t listenerID, uint32_t policyAction, uint64_t downloadID)
 
@@ -92,8 +103,10 @@ messages -> WebPage {
     SetUserAgent(WTF::String userAgent)
     SetCustomTextEncodingName(WTF::String encodingName)
 
+    SuspendActiveDOMObjectsAndAnimations()
+    ResumeActiveDOMObjectsAndAnimations()
+
 #if USE(TILED_BACKING_STORE)
-    SetFixedVisibleContentRect(WebCore::IntRect rect)
     SetViewportSize(WebCore::IntSize size)
 #endif
 
@@ -118,6 +131,7 @@ messages -> WebPage {
     SetFixedLayoutSize(WebCore::IntSize size)
 
     SetPaginationMode(uint32_t mode);
+    SetPaginationBehavesLikeColumns(bool behavesLikeColumns);
     SetPageLength(double pageLength);
     SetGapBetweenPages(double gap);
 
@@ -134,7 +148,7 @@ messages -> WebPage {
     PerformDragControllerAction(uint64_t action, WebCore::DragData dragData)
 #endif
 #if !PLATFORM(WIN) && !PLATFORM(QT) && !PLATFORM(GTK)
-    PerformDragControllerAction(uint64_t action, WebCore::IntPoint clientPosition, WebCore::IntPoint globalPosition, uint64_t draggingSourceOperationMask, WTF::String dragStorageName, uint32_t flags, WebKit::SandboxExtension::Handle sandboxExtensionHandle)
+    PerformDragControllerAction(uint64_t action, WebCore::IntPoint clientPosition, WebCore::IntPoint globalPosition, uint64_t draggingSourceOperationMask, WTF::String dragStorageName, uint32_t flags, WebKit::SandboxExtension::Handle sandboxExtensionHandle, WebKit::SandboxExtension::HandleArray sandboxExtensionsForUpload)
 #endif
     DragEnded(WebCore::IntPoint clientPosition, WebCore::IntPoint globalPosition, uint64_t operation)
 
@@ -145,8 +159,10 @@ messages -> WebPage {
     FailedToShowPopupMenu();
 #endif    
     
+#if ENABLE(CONTEXT_MENUS)
     # Context menu.
     DidSelectItemFromActiveContextMenu(WebKit::WebContextMenuItemData menuItem);
+#endif
 
     # Open panel.
     DidChooseFilesForOpenPanel(Vector<WTF::String> fileURLs)
@@ -166,9 +182,11 @@ messages -> WebPage {
     SetSmartInsertDeleteEnabled(bool isSmartInsertDeleteEnabled);
 #endif
 
+#if ENABLE(GEOLOCATION)
     # Geolocation
     DidReceiveGeolocationPermissionDecision(uint64_t geolocationID, bool allowed)
-    
+#endif
+
     # Notification
     DidReceiveNotificationPermissionDecision(uint64_t notificationID, bool allowed)
 
@@ -182,6 +200,12 @@ messages -> WebPage {
     DrawRectToPDF(uint64_t frameID, WebKit::PrintInfo printInfo, WebCore::IntRect rect, uint64_t callbackID)
     DrawPagesToPDF(uint64_t frameID, WebKit::PrintInfo printInfo, uint32_t first, uint32_t count, uint64_t callbackID)
 #endif
+#if PLATFORM(GTK)
+    DrawPagesForPrinting(uint64_t frameID, WebKit::PrintInfo printInfo, uint64_t callbackID)
+#endif
+
+    # Media
+    SetMediaVolume(float volume)
 
     SetMemoryCacheMessagesEnabled(bool memoryCacheMessagesEnabled)
 
@@ -205,7 +229,8 @@ messages -> WebPage {
     SetWindowIsVisible(bool windowIsVisible)
     WindowAndViewFramesChanged(WebCore::IntRect windowFrameInScreenCoordinates, WebCore::IntRect viewFrameInWindowCoordinates, WebCore::IntPoint accessibilityViewCoordinates)
     RegisterUIProcessAccessibilityTokens(CoreIPC::DataReference elemenToken, CoreIPC::DataReference windowToken)
-    WriteSelectionToPasteboard(WTF::String pasteboardName, WTF::Vector<WTF::String> pasteboardTypes) -> (bool result)
+    GetStringSelectionForPasteboard() -> (WTF::String stringValue)
+    GetDataSelectionForPasteboard(WTF::String pasteboardType) -> (WebKit::SharedMemory::Handle handle, uint64_t size)
     ReadSelectionFromPasteboard(WTF::String pasteboardName) -> (bool result)
 
     # Text input.
@@ -234,10 +259,14 @@ messages -> WebPage {
     GestureDidEnd()
 #endif
 #if PLATFORM(QT)
-    FindZoomableAreaForPoint(WebCore::IntPoint point)
+    FindZoomableAreaForPoint(WebCore::IntPoint point, WebCore::IntSize area)
 #endif
 
 #if PLATFORM(MAC) && !defined(BUILDING_ON_SNOW_LEOPARD)
-    HandleCorrectionPanelResult(String result)
+    HandleAlternativeTextUIResult(String result)
+#endif
+
+#if ENABLE(PAGE_VISIBILITY_API)
+    SetVisibilityState(int visibilityState, bool isInitialState);
 #endif
 }

@@ -36,6 +36,7 @@ if (!window.InspectorFrontendHost) {
 WebInspector.InspectorFrontendHostStub = function()
 {
     this._attachedWindowHeight = 0;
+    this.isStub = true;
 }
 
 WebInspector.InspectorFrontendHostStub.prototype = {
@@ -77,10 +78,6 @@ WebInspector.InspectorFrontendHostStub.prototype = {
     {
     },
 
-    search: function(sourceRow, query)
-    {
-    },
-
     setAttachedWindowHeight: function(height)
     {
     },
@@ -116,12 +113,17 @@ WebInspector.InspectorFrontendHostStub.prototype = {
     {
     },
 
-    canSaveAs: function(fileName, content)
+    openInNewTab: function(url)
+    {
+        window.open(url, "_blank");
+    },
+
+    canSave: function()
     {
         return true;
     },
 
-    saveAs: function(fileName, content)
+    save: function(url, content, forceSaveAs)
     {
         var builder = new WebKitBlobBuilder();
         builder.append(content);
@@ -133,11 +135,6 @@ WebInspector.InspectorFrontendHostStub.prototype = {
             window.location = this.result;
         }
         fr.readAsDataURL(blob);
-    },
-
-    canAttachWindow: function()
-    {
-        return false;
     },
 
     sendMessageToBackend: function(message)
@@ -159,6 +156,10 @@ WebInspector.InspectorFrontendHostStub.prototype = {
     loadResourceSynchronously: function(url)
     {
         return "";
+    },
+
+    setZoomFactor: function(zoom)
+    {
     }
 }
 

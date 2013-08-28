@@ -32,8 +32,6 @@ using namespace JSC;
 namespace WebCore {
 
 ASSERT_CLASS_FITS_IN_CELL(JSTestNamedConstructor);
-ASSERT_HAS_TRIVIAL_DESTRUCTOR(JSTestNamedConstructor);
-
 /* Hash table for constructor */
 
 static const HashTableValue JSTestNamedConstructorTableValues[] =
@@ -51,8 +49,6 @@ static const HashTableValue JSTestNamedConstructorConstructorTableValues[] =
 };
 
 static const HashTable JSTestNamedConstructorConstructorTable = { 1, 0, JSTestNamedConstructorConstructorTableValues, 0 };
-ASSERT_HAS_TRIVIAL_DESTRUCTOR(JSTestNamedConstructorConstructor);
-
 const ClassInfo JSTestNamedConstructorConstructor::s_info = { "TestNamedConstructorConstructor", &Base::s_info, &JSTestNamedConstructorConstructorTable, 0, CREATE_METHOD_TABLE(JSTestNamedConstructorConstructor) };
 
 JSTestNamedConstructorConstructor::JSTestNamedConstructorConstructor(Structure* structure, JSDOMGlobalObject* globalObject)
@@ -69,12 +65,12 @@ void JSTestNamedConstructorConstructor::finishCreation(ExecState* exec, JSDOMGlo
 
 bool JSTestNamedConstructorConstructor::getOwnPropertySlot(JSCell* cell, ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    return getStaticValueSlot<JSTestNamedConstructorConstructor, JSDOMWrapper>(exec, &JSTestNamedConstructorConstructorTable, static_cast<JSTestNamedConstructorConstructor*>(cell), propertyName, slot);
+    return getStaticValueSlot<JSTestNamedConstructorConstructor, JSDOMWrapper>(exec, &JSTestNamedConstructorConstructorTable, jsCast<JSTestNamedConstructorConstructor*>(cell), propertyName, slot);
 }
 
 bool JSTestNamedConstructorConstructor::getOwnPropertyDescriptor(JSObject* object, ExecState* exec, const Identifier& propertyName, PropertyDescriptor& descriptor)
 {
-    return getStaticValueDescriptor<JSTestNamedConstructorConstructor, JSDOMWrapper>(exec, &JSTestNamedConstructorConstructorTable, static_cast<JSTestNamedConstructorConstructor*>(object), propertyName, descriptor);
+    return getStaticValueDescriptor<JSTestNamedConstructorConstructor, JSDOMWrapper>(exec, &JSTestNamedConstructorConstructorTable, jsCast<JSTestNamedConstructorConstructor*>(object), propertyName, descriptor);
 }
 
 const ClassInfo JSTestNamedConstructorNamedConstructor::s_info = { "AudioConstructor", &Base::s_info, 0, 0, CREATE_METHOD_TABLE(JSTestNamedConstructorNamedConstructor) };
@@ -93,25 +89,25 @@ void JSTestNamedConstructorNamedConstructor::finishCreation(ExecState* exec, JSD
 
 EncodedJSValue JSC_HOST_CALL JSTestNamedConstructorNamedConstructor::constructJSTestNamedConstructor(ExecState* exec)
 {
-    JSTestNamedConstructorNamedConstructor* jsConstructor = static_cast<JSTestNamedConstructorNamedConstructor*>(exec->callee());
+    JSTestNamedConstructorNamedConstructor* castedThis = jsCast<JSTestNamedConstructorNamedConstructor*>(exec->callee());
     if (exec->argumentCount() < 1)
-        return throwVMError(exec, createTypeError(exec, "Not enough arguments"));
+        return throwVMError(exec, createNotEnoughArgumentsError(exec));
     ExceptionCode ec = 0;
-    const String& str1(ustringToString(MAYBE_MISSING_PARAMETER(exec, 0, MissingIsUndefined).isEmpty() ? UString() : MAYBE_MISSING_PARAMETER(exec, 0, MissingIsUndefined).toString(exec)));
+    const String& str1(ustringToString(MAYBE_MISSING_PARAMETER(exec, 0, DefaultIsUndefined).isEmpty() ? UString() : MAYBE_MISSING_PARAMETER(exec, 0, DefaultIsUndefined).toString(exec)->value(exec)));
     if (exec->hadException())
         return JSValue::encode(jsUndefined());
-    const String& str2(ustringToString(MAYBE_MISSING_PARAMETER(exec, 1, MissingIsUndefined).isEmpty() ? UString() : MAYBE_MISSING_PARAMETER(exec, 1, MissingIsUndefined).toString(exec)));
+    const String& str2(ustringToString(MAYBE_MISSING_PARAMETER(exec, 1, DefaultIsUndefined).isEmpty() ? UString() : MAYBE_MISSING_PARAMETER(exec, 1, DefaultIsUndefined).toString(exec)->value(exec)));
     if (exec->hadException())
         return JSValue::encode(jsUndefined());
-    const String& str3(ustringToString(MAYBE_MISSING_PARAMETER(exec, 2, MissingIsEmpty).isEmpty() ? UString() : MAYBE_MISSING_PARAMETER(exec, 2, MissingIsEmpty).toString(exec)));
+    const String& str3(ustringToString(MAYBE_MISSING_PARAMETER(exec, 2, DefaultIsNullString).isEmpty() ? UString() : MAYBE_MISSING_PARAMETER(exec, 2, DefaultIsNullString).toString(exec)->value(exec)));
     if (exec->hadException())
         return JSValue::encode(jsUndefined());
-    RefPtr<TestNamedConstructor> object = TestNamedConstructor::createForJSConstructor(jsConstructor->document(), str1, str2, str3, ec);
+    RefPtr<TestNamedConstructor> object = TestNamedConstructor::createForJSConstructor(castedThis->document(), str1, str2, str3, ec);
     if (ec) {
         setDOMException(exec, ec);
         return JSValue::encode(JSValue());
     }
-    return JSValue::encode(asObject(toJS(exec, jsConstructor->globalObject(), object.get())));
+    return JSValue::encode(asObject(toJS(exec, castedThis->globalObject(), object.get())));
 }
 
 ConstructType JSTestNamedConstructorNamedConstructor::getConstructData(JSCell*, ConstructData& constructData)
@@ -154,6 +150,17 @@ JSObject* JSTestNamedConstructor::createPrototype(ExecState* exec, JSGlobalObjec
     return JSTestNamedConstructorPrototype::create(exec->globalData(), globalObject, JSTestNamedConstructorPrototype::createStructure(globalObject->globalData(), globalObject, globalObject->objectPrototype()));
 }
 
+void JSTestNamedConstructor::destroy(JSC::JSCell* cell)
+{
+    JSTestNamedConstructor* thisObject = jsCast<JSTestNamedConstructor*>(cell);
+    thisObject->JSTestNamedConstructor::~JSTestNamedConstructor();
+}
+
+JSTestNamedConstructor::~JSTestNamedConstructor()
+{
+    releaseImplIfNotNull();
+}
+
 bool JSTestNamedConstructor::getOwnPropertySlot(JSCell* cell, ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
     JSTestNamedConstructor* thisObject = jsCast<JSTestNamedConstructor*>(cell);
@@ -170,13 +177,13 @@ bool JSTestNamedConstructor::getOwnPropertyDescriptor(JSObject* object, ExecStat
 
 JSValue jsTestNamedConstructorConstructor(ExecState* exec, JSValue slotBase, const Identifier&)
 {
-    JSTestNamedConstructor* domObject = static_cast<JSTestNamedConstructor*>(asObject(slotBase));
+    JSTestNamedConstructor* domObject = jsCast<JSTestNamedConstructor*>(asObject(slotBase));
     return JSTestNamedConstructor::getConstructor(exec, domObject->globalObject());
 }
 
 JSValue JSTestNamedConstructor::getConstructor(ExecState* exec, JSGlobalObject* globalObject)
 {
-    return getDOMConstructor<JSTestNamedConstructorConstructor>(exec, static_cast<JSDOMGlobalObject*>(globalObject));
+    return getDOMConstructor<JSTestNamedConstructorConstructor>(exec, jsCast<JSDOMGlobalObject*>(globalObject));
 }
 
 static inline bool isObservable(JSTestNamedConstructor* jsTestNamedConstructor)
@@ -188,7 +195,7 @@ static inline bool isObservable(JSTestNamedConstructor* jsTestNamedConstructor)
 
 bool JSTestNamedConstructorOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Unknown> handle, void*, SlotVisitor& visitor)
 {
-    JSTestNamedConstructor* jsTestNamedConstructor = static_cast<JSTestNamedConstructor*>(handle.get().asCell());
+    JSTestNamedConstructor* jsTestNamedConstructor = jsCast<JSTestNamedConstructor*>(handle.get().asCell());
     if (jsTestNamedConstructor->impl()->hasPendingActivity())
         return true;
     if (!isObservable(jsTestNamedConstructor))
@@ -199,7 +206,7 @@ bool JSTestNamedConstructorOwner::isReachableFromOpaqueRoots(JSC::Handle<JSC::Un
 
 void JSTestNamedConstructorOwner::finalize(JSC::Handle<JSC::Unknown> handle, void* context)
 {
-    JSTestNamedConstructor* jsTestNamedConstructor = static_cast<JSTestNamedConstructor*>(handle.get().asCell());
+    JSTestNamedConstructor* jsTestNamedConstructor = jsCast<JSTestNamedConstructor*>(handle.get().asCell());
     DOMWrapperWorld* world = static_cast<DOMWrapperWorld*>(context);
     uncacheWrapper(world, jsTestNamedConstructor->impl(), jsTestNamedConstructor);
     jsTestNamedConstructor->releaseImpl();
@@ -212,7 +219,7 @@ JSC::JSValue toJS(JSC::ExecState* exec, JSDOMGlobalObject* globalObject, TestNam
 
 TestNamedConstructor* toTestNamedConstructor(JSC::JSValue value)
 {
-    return value.inherits(&JSTestNamedConstructor::s_info) ? static_cast<JSTestNamedConstructor*>(asObject(value))->impl() : 0;
+    return value.inherits(&JSTestNamedConstructor::s_info) ? jsCast<JSTestNamedConstructor*>(asObject(value))->impl() : 0;
 }
 
 }

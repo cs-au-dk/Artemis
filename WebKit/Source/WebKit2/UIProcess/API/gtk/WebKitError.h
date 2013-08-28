@@ -29,9 +29,12 @@
 
 G_BEGIN_DECLS
 
-#define WEBKIT_NETWORK_ERROR webkit_network_error_quark ()
-#define WEBKIT_POLICY_ERROR  webkit_policy_error_quark ()
-#define WEBKIT_PLUGIN_ERROR  webkit_plugin_error_quark ()
+#define WEBKIT_NETWORK_ERROR    webkit_network_error_quark ()
+#define WEBKIT_POLICY_ERROR     webkit_policy_error_quark ()
+#define WEBKIT_PLUGIN_ERROR     webkit_plugin_error_quark ()
+#define WEBKIT_DOWNLOAD_ERROR   webkit_download_error_quark ()
+#define WEBKIT_PRINT_ERROR      webkit_print_error_quark ()
+#define WEBKIT_JAVASCRIPT_ERROR webkit_print_error_quark ()
 
 /**
  * WebKitNetworkError:
@@ -89,14 +92,61 @@ typedef enum {
     WEBKIT_PLUGIN_ERROR_WILL_HANDLE_LOAD = 204,
 } WebKitPluginError;
 
-WEBKIT_API GQuark
-webkit_network_error_quark (void);
+/**
+ * WebKitDownloadError:
+ * @WEBKIT_DOWNLOAD_ERROR_NETWORK: Download failure due to network error
+ * @WEBKIT_DOWNLOAD_ERROR_CANCELLED_BY_USER: Download was cancelled by user
+ * @WEBKIT_DOWNLOAD_ERROR_DESTINATION: Download failure due to destination error
+ *
+ * Enum values used to denote the various download errors.
+ */
+typedef enum {
+    WEBKIT_DOWNLOAD_ERROR_NETWORK = 499,
+    WEBKIT_DOWNLOAD_ERROR_CANCELLED_BY_USER = 400,
+    WEBKIT_DOWNLOAD_ERROR_DESTINATION = 401
+} WebKitDownloadError;
+
+/**
+ * WebKitPrintError:
+ * @WEBKIT_PRINT_ERROR_GENERAL: Unspecified error during a print operation
+ * @WEBKIT_PRINT_ERROR_PRINTER_NOT_FOUND: Selected printer cannot be found
+ * @WEBKIT_PRINT_ERROR_INVALID_PAGE_RANGE: Invalid page range
+ *
+ * Enum values used to denote the various print errors.
+ */
+typedef enum {
+    WEBKIT_PRINT_ERROR_GENERAL = 599,
+    WEBKIT_PRINT_ERROR_PRINTER_NOT_FOUND = 500,
+    WEBKIT_PRINT_ERROR_INVALID_PAGE_RANGE = 501
+} WebKitPrintError;
+
+/**
+ * WebKitJavascriptError:
+ * @WEBKIT_JAVASCRIPT_ERROR_SCRIPT_FAILED: An exception was raised in Javascript execution
+ *
+ * Enum values used to denote errors happending when executing Javascript
+ */
+typedef enum {
+    WEBKIT_JAVASCRIPT_ERROR_SCRIPT_FAILED = 699
+} WebKitJavascriptError;
 
 WEBKIT_API GQuark
-webkit_policy_error_quark  (void);
+webkit_network_error_quark    (void);
 
 WEBKIT_API GQuark
-webkit_plugin_error_quark  (void);
+webkit_policy_error_quark     (void);
+
+WEBKIT_API GQuark
+webkit_plugin_error_quark     (void);
+
+WEBKIT_API GQuark
+webkit_download_error_quark   (void);
+
+WEBKIT_API GQuark
+webkit_print_error_quark      (void);
+
+WEBKIT_API GQuark
+webkit_javascript_error_quark (void);
 
 G_END_DECLS
 

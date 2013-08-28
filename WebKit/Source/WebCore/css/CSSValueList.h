@@ -33,11 +33,15 @@ class CSSValueList : public CSSValue {
 public:
     static PassRefPtr<CSSValueList> createCommaSeparated()
     {
-        return adoptRef(new CSSValueList(false));
+        return adoptRef(new CSSValueList(CommaSeparator));
     }
     static PassRefPtr<CSSValueList> createSpaceSeparated()
     {
-        return adoptRef(new CSSValueList(true));
+        return adoptRef(new CSSValueList(SpaceSeparator));
+    }
+    static PassRefPtr<CSSValueList> createSlashSeparated()
+    {
+        return adoptRef(new CSSValueList(SlashSeparator));
     }
     static PassRefPtr<CSSValueList> createFromParserValueList(CSSParserValueList* list)
     {
@@ -56,16 +60,17 @@ public:
 
     String customCssText() const;
 
-    void addSubresourceStyleURLs(ListHashSet<KURL>&, const CSSStyleSheet*);
+    void addSubresourceStyleURLs(ListHashSet<KURL>&, const StyleSheetInternal*);
+    
+    PassRefPtr<CSSValueList> cloneForCSSOM() const;
 
 protected:
-    CSSValueList(ClassType, bool isSpaceSeparated);
+    CSSValueList(ClassType, ValueListSeparator);
+    CSSValueList(const CSSValueList& cloneFrom);
 
 private:
-    explicit CSSValueList(bool isSpaceSeparated);
+    explicit CSSValueList(ValueListSeparator);
     explicit CSSValueList(CSSParserValueList*);
-
-    bool isSpaceSeparated() const { return m_isSpaceSeparatedValueList; }
 
     Vector<RefPtr<CSSValue> > m_values;
 };

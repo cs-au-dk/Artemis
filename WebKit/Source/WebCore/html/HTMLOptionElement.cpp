@@ -28,7 +28,6 @@
 #include "HTMLOptionElement.h"
 
 #include "Attribute.h"
-#include "CSSStyleSelector.h"
 #include "Document.h"
 #include "ExceptionCode.h"
 #include "HTMLNames.h"
@@ -37,7 +36,9 @@
 #include "NodeRenderStyle.h"
 #include "NodeRenderingContext.h"
 #include "RenderMenuList.h"
+#include "RenderTheme.h"
 #include "ScriptElement.h"
+#include "StyleResolver.h"
 #include "Text.h"
 #include <wtf/StdLibExtras.h>
 #include <wtf/Vector.h>
@@ -47,21 +48,22 @@ namespace WebCore {
 
 using namespace HTMLNames;
 
-HTMLOptionElement::HTMLOptionElement(const QualifiedName& tagName, Document* document, HTMLFormElement* form)
-    : HTMLFormControlElement(tagName, document, form)
+HTMLOptionElement::HTMLOptionElement(const QualifiedName& tagName, Document* document)
+    : HTMLElement(tagName, document)
+    , m_disabled(false)
     , m_isSelected(false)
 {
     ASSERT(hasTagName(optionTag));
 }
 
-PassRefPtr<HTMLOptionElement> HTMLOptionElement::create(Document* document, HTMLFormElement* form)
+PassRefPtr<HTMLOptionElement> HTMLOptionElement::create(Document* document)
 {
-    return adoptRef(new HTMLOptionElement(optionTag, document, form));
+    return adoptRef(new HTMLOptionElement(optionTag, document));
 }
 
-PassRefPtr<HTMLOptionElement> HTMLOptionElement::create(const QualifiedName& tagName, Document* document, HTMLFormElement* form)
+PassRefPtr<HTMLOptionElement> HTMLOptionElement::create(const QualifiedName& tagName, Document* document)
 {
-    return adoptRef(new HTMLOptionElement(tagName, document, form));
+    return adoptRef(new HTMLOptionElement(tagName, document));
 }
 
 PassRefPtr<HTMLOptionElement> HTMLOptionElement::createForJSConstructor(Document* document, const String& data, const String& value,
@@ -89,13 +91,13 @@ void HTMLOptionElement::attach()
 {
     if (parentNode()->renderStyle())
         setRenderStyle(styleForRenderer());
-    HTMLFormControlElement::attach();
+    HTMLElement::attach();
 }
 
 void HTMLOptionElement::detach()
 {
     m_style.clear();
-    HTMLFormControlElement::detach();
+    HTMLElement::detach();
 }
 
 bool HTMLOptionElement::supportsFocus() const
@@ -107,12 +109,6 @@ bool HTMLOptionElement::isFocusable() const
 {
     // Option elements do not have a renderer so we check the renderStyle instead.
     return supportsFocus() && renderStyle() && renderStyle()->display() != NONE;
-}
-
-const AtomicString& HTMLOptionElement::formControlType() const
-{
-    DEFINE_STATIC_LOCAL(const AtomicString, option, ("option"));
-    return option;
 }
 
 String HTMLOptionElement::text() const
@@ -137,17 +133,19 @@ String HTMLOptionElement::text() const
 
 void HTMLOptionElement::setText(const String &text, ExceptionCode& ec)
 {
+    RefPtr<Node> protectFromMutationEvents(this);
+
     // Changing the text causes a recalc of a select's items, which will reset the selected
     // index to the first item if the select is single selection with a menu list. We attempt to
     // preserve the selected item.
-    HTMLSelectElement* select = ownerSelectElement();
+    RefPtr<HTMLSelectElement> select = ownerSelectElement();
     bool selectIsMenuList = select && select->usesMenuList();
     int oldSelectedIndex = selectIsMenuList ? select->selectedIndex() : -1;
 
     // Handle the common special case where there's exactly 1 child node, and it's a text node.
     Node* child = firstChild();
     if (child && child->isTextNode() && !child->nextSibling())
-        static_cast<Text *>(child)->setData(text, ec);
+        toText(child)->setData(text, ec);
     else {
         removeChildren();
         appendChild(Text::create(document(), text), ec);
@@ -187,9 +185,17 @@ int HTMLOptionElement::index() const
     return 0;
 }
 
-void HTMLOptionElement::parseMappedAttribute(Attribute* attr)
+void HTMLOptionElement::parseAttribute(Attribute* attr)
 {
-    if (attr->name() == selectedAttr) {
+    if (attr->name() == disabledAttr) {
+        bool oldDisabled = m_disabled;
+        m_disabled = !attr->isNull();
+        if (oldDisabled != m_disabled) {
+            setNeedsStyleRecalc();
+            if (renderer() && renderer()->style()->hasAppearance())
+                renderer()->theme()->stateChanged(renderer(), EnabledState);
+        }
+    } else if (attr->name() == selectedAttr) {
         // FIXME: This doesn't match what the HTML specification says.
         // The specification implies that removing the selected attribute or
         // changing the value of a selected attribute that is already present
@@ -198,7 +204,7 @@ void HTMLOptionElement::parseMappedAttribute(Attribute* attr)
         // case; we'd need to do the other work from the setSelected function.
         m_isSelected = !attr->isNull();
     } else
-        HTMLFormControlElement::parseMappedAttribute(attr);
+        HTMLElement::parseAttribute(attr);
 }
 
 String HTMLOptionElement::value() const
@@ -245,7 +251,7 @@ void HTMLOptionElement::childrenChanged(bool changedByParser, Node* beforeChange
 {
     if (HTMLSelectElement* select = ownerSelectElement())
         select->optionElementChildrenChanged();
-    HTMLFormControlElement::childrenChanged(changedByParser, beforeChange, afterChange, childCountDelta);
+    HTMLElement::childrenChanged(changedByParser, beforeChange, afterChange, childCountDelta);
 }
 
 HTMLSelectElement* HTMLOptionElement::ownerSelectElement() const
@@ -297,10 +303,10 @@ String HTMLOptionElement::textIndentedToRespectGroupLabel() const
 
 bool HTMLOptionElement::disabled() const
 {
-    return ownElementDisabled() || (parentNode() && static_cast<HTMLFormControlElement*>(parentNode())->disabled());
+    return ownElementDisabled() || (parentNode() && parentNode()->isHTMLElement() && static_cast<HTMLElement*>(parentNode())->disabled());
 }
 
-void HTMLOptionElement::insertedIntoTree(bool deep)
+Node::InsertionNotificationRequest HTMLOptionElement::insertedInto(Node* insertionPoint)
 {
     if (HTMLSelectElement* select = ownerSelectElement()) {
         select->setRecalcListItems();
@@ -313,7 +319,7 @@ void HTMLOptionElement::insertedIntoTree(bool deep)
         select->scrollToSelection();
     }
 
-    HTMLFormControlElement::insertedIntoTree(deep);
+    return HTMLElement::insertedInto(insertionPoint);
 }
 
 String HTMLOptionElement::collectOptionInnerText() const

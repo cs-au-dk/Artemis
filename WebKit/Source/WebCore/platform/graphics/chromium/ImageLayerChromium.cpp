@@ -83,7 +83,7 @@ public:
                 LayerTextureUpdater::SampledTexelFormatRGBA : LayerTextureUpdater::SampledTexelFormatBGRA;
     }
 
-    virtual void prepareToUpdate(const IntRect& contentRect, const IntSize& tileSize, int /* borderTexels */, float /* contentsScale */)
+    virtual void updateLayerRect(const IntRect& contentRect, const IntSize& tileSize, int /* borderTexels */, float /* contentsScale */, IntRect* /* resultingOpaqueRect */)
     {
         m_texSubImage.setSubImageSize(tileSize);
     }
@@ -129,25 +129,19 @@ private:
     LayerTextureSubImage m_texSubImage;
 };
 
-PassRefPtr<ImageLayerChromium> ImageLayerChromium::create(CCLayerDelegate* delegate)
+PassRefPtr<ImageLayerChromium> ImageLayerChromium::create()
 {
-    return adoptRef(new ImageLayerChromium(delegate));
+    return adoptRef(new ImageLayerChromium());
 }
 
-ImageLayerChromium::ImageLayerChromium(CCLayerDelegate* delegate)
-    : TiledLayerChromium(delegate)
+ImageLayerChromium::ImageLayerChromium()
+    : TiledLayerChromium()
     , m_imageForCurrentFrame(0)
 {
 }
 
 ImageLayerChromium::~ImageLayerChromium()
 {
-}
-
-void ImageLayerChromium::cleanupResources()
-{
-    m_textureUpdater.clear();
-    TiledLayerChromium::cleanupResources();
 }
 
 void ImageLayerChromium::setContents(Image* contents)
@@ -164,8 +158,9 @@ void ImageLayerChromium::setContents(Image* contents)
     setNeedsDisplay();
 }
 
-void ImageLayerChromium::paintContentsIfDirty()
+void ImageLayerChromium::update(CCTextureUpdater& updater, const CCOcclusionTracker* occlusion)
 {
+    createTextureUpdaterIfNeeded();
     if (m_needsDisplay) {
         m_textureUpdater->updateFromImage(m_contents->nativeImageForCurrentFrame());
         updateTileSizeAndTilingOption();
@@ -173,7 +168,18 @@ void ImageLayerChromium::paintContentsIfDirty()
         m_needsDisplay = false;
     }
 
-    prepareToUpdate(visibleLayerRect());
+    updateLayerRect(updater, visibleLayerRect(), occlusion);
+}
+
+void ImageLayerChromium::createTextureUpdaterIfNeeded()
+{
+    if (m_textureUpdater)
+        return;
+
+    m_textureUpdater = ImageLayerTextureUpdater::create(layerTreeHost()->layerRendererCapabilities().usingMapSub);
+    GC3Denum textureFormat = layerTreeHost()->layerRendererCapabilities().bestTextureFormat;
+    setTextureFormat(textureFormat);
+    setSampledTexelFormat(textureUpdater()->sampledTexelFormat(textureFormat));
 }
 
 LayerTextureUpdater* ImageLayerChromium::textureUpdater() const
@@ -191,11 +197,6 @@ IntSize ImageLayerChromium::contentBounds() const
 bool ImageLayerChromium::drawsContent() const
 {
     return m_contents && TiledLayerChromium::drawsContent();
-}
-
-void ImageLayerChromium::createTextureUpdater(const CCLayerTreeHost* host)
-{
-    m_textureUpdater = ImageLayerTextureUpdater::create(host->layerRendererCapabilities().usingMapSub);
 }
 
 bool ImageLayerChromium::needsContentsScale() const

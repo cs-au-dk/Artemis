@@ -64,9 +64,7 @@ class GardeningExpectationsUpdater(BugManager):
         return "BUG_NEW"
 
     def update_expectations(self, failure_info_list):
-        expectation_lines = TestExpectationParser.tokenize_list(self._tool.filesystem.read_text_file(self._path_to_test_expectations_file))
-        for expectation_line in expectation_lines:
-            self._parser.parse(expectation_line)
+        expectation_lines = self._parser.parse(self._tool.filesystem.read_text_file(self._path_to_test_expectations_file))
         editor = TestExpectationsEditor(expectation_lines, self)
         updated_expectation_lines = []
         # FIXME: Group failures by testName+failureTypeList.
@@ -139,12 +137,13 @@ class GardeningHTTPRequestHandler(ReflectionHandler):
 
     def rebaseline(self):
         builder = self.query['builder'][0]
-        test = self.query['test'][0]
-        self._run_webkit_patch([
+        command = [
             'rebaseline-test',
             builder,
-            test,
-        ])
+            self.query['test'][0],
+        ]
+        command.extend(builders.fallback_port_names_for_new_port(builder))
+        self._run_webkit_patch(command)
         self._serve_text('success')
 
     def optimizebaselines(self):

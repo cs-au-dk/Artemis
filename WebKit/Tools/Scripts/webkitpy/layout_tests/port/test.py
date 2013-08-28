@@ -27,15 +27,15 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""Dummy Port implementation used for testing."""
-from __future__ import with_statement
-
 import base64
+import sys
 import time
 
 from webkitpy.layout_tests.port import Port, Driver, DriverOutput
+from webkitpy.layout_tests.port.base import VirtualTestSuite
 from webkitpy.layout_tests.models.test_configuration import TestConfiguration
 from webkitpy.common.system.filesystem_mock import MockFileSystem
+from webkitpy.common.system.crashlogs import CrashLogs
 
 
 # This sets basic expectations for a test. Each individual expectation
@@ -43,7 +43,7 @@ from webkitpy.common.system.filesystem_mock import MockFileSystem
 class TestInstance(object):
     def __init__(self, name):
         self.name = name
-        self.base = name[(name.rfind("/") + 1):name.rfind(".html")]
+        self.base = name[(name.rfind("/") + 1):name.rfind(".")]
         self.crash = False
         self.web_process_crash = False
         self.exception = False
@@ -102,8 +102,6 @@ class TestList(object):
 
 def unit_test_list():
     tests = TestList()
-    tests.add('failures/expected/checksum.html',
-              actual_checksum='checksum_fail-checksum')
     tests.add('failures/expected/crash.html', crash=True)
     tests.add('failures/expected/exception.html', exception=True)
     tests.add('failures/expected/timeout.html', timeout=True)
@@ -137,6 +135,7 @@ def unit_test_list():
     tests.add('failures/expected/newlines_with_excess_CR.html',
               expected_text="foo\r\r\r\n", actual_text="foo\n")
     tests.add('failures/expected/text.html', actual_text='text_fail-png')
+    tests.add('failures/expected/skip_text.html', actual_text='text diff')
     tests.add('failures/unexpected/missing_text.html', expected_text=None)
     tests.add('failures/unexpected/missing_image.html', expected_image=None)
     tests.add('failures/unexpected/missing_render_tree_dump.html', actual_text="""layer at (0,0) size 800x600
@@ -157,10 +156,12 @@ layer at (0,0) size 800x34
               actual_checksum='text-image-checksum_fail-checksum')
     tests.add('failures/unexpected/checksum-with-matching-image.html',
               actual_checksum='text-image-checksum_fail-checksum')
+    tests.add('failures/unexpected/skip_pass.html')
     tests.add('failures/unexpected/timeout.html', timeout=True)
     tests.add('http/tests/passes/text.html')
     tests.add('http/tests/passes/image.html')
     tests.add('http/tests/ssl/text.html')
+    tests.add('passes/args.html')
     tests.add('passes/error.html', error='stuff going to stderr')
     tests.add('passes/image.html')
     tests.add('passes/audio.html',
@@ -173,6 +174,10 @@ layer at (0,0) size 800x34
               expected_checksum=None,
               expected_image='tEXtchecksum\x00checksum_in_image-checksum')
 
+    # Note that here the checksums don't match but the images do, so this test passes "unexpectedly".
+    # See https://bugs.webkit.org/show_bug.cgi?id=69444 .
+    tests.add('failures/unexpected/checksum.html', actual_checksum='checksum_fail-checksum')
+
     # Text output files contain "\r\n" on Windows.  This may be
     # helpfully filtered to "\r\r\n" by our Python/Cygwin tooling.
     tests.add('passes/text.html',
@@ -181,6 +186,9 @@ layer at (0,0) size 800x34
     # For reftests.
     tests.add_reftest('passes/reftest.html', 'passes/reftest-expected.html', same_image=True)
     tests.add_reftest('passes/mismatch.html', 'passes/mismatch-expected-mismatch.html', same_image=False)
+    tests.add_reftest('passes/svgreftest.svg', 'passes/svgreftest-expected.svg', same_image=True)
+    tests.add_reftest('passes/xhtreftest.xht', 'passes/xhtreftest-expected.html', same_image=True)
+    tests.add_reftest('passes/phpreftest.php', 'passes/phpreftest-expected-mismatch.svg', same_image=False)
     tests.add_reftest('failures/expected/reftest.html', 'failures/expected/reftest-expected.html', same_image=False)
     tests.add_reftest('failures/expected/mismatch.html', 'failures/expected/mismatch-expected-mismatch.html', same_image=True)
     tests.add_reftest('failures/unexpected/reftest.html', 'failures/unexpected/reftest-expected.html', same_image=False)
@@ -220,7 +228,12 @@ layer at (0,0) size 800x34
 # this works. The path contains a '.' in the name because we've seen bugs
 # related to this before.
 
-LAYOUT_TEST_DIR = '/test.checkout/LayoutTests'
+if sys.platform == 'win32':
+    LAYOUT_TEST_DIR = 'c:/test.checkout/LayoutTests'
+    PERF_TEST_DIR = 'c:/test.checkout/PerformanceTests'
+else:
+    LAYOUT_TEST_DIR = '/test.checkout/LayoutTests'
+    PERF_TEST_DIR = '/test.checkout/PerformanceTests'
 
 
 # Here we synthesize an in-memory filesystem from the test list
@@ -231,7 +244,6 @@ def add_unit_tests_to_mock_filesystem(filesystem):
     filesystem.maybe_make_directory(LAYOUT_TEST_DIR + '/platform/test')
     if not filesystem.exists(LAYOUT_TEST_DIR + '/platform/test/test_expectations.txt'):
         filesystem.write_text_file(LAYOUT_TEST_DIR + '/platform/test/test_expectations.txt', """
-WONTFIX : failures/expected/checksum.html = IMAGE
 WONTFIX : failures/expected/crash.html = CRASH
 WONTFIX : failures/expected/image.html = IMAGE
 WONTFIX : failures/expected/audio.html = AUDIO
@@ -286,7 +298,7 @@ WONTFIX SKIP : failures/expected/exception.html = CRASH
     # Add each test and the expected output, if any.
     test_list = unit_test_list()
     for test in test_list.tests.values():
-        add_file(test, '.html', '')
+        add_file(test, test.name[test.name.rfind('.'):], '')
         if test.is_reftest:
             continue
         if test.actual_audio:
@@ -295,11 +307,14 @@ WONTFIX SKIP : failures/expected/exception.html = CRASH
         add_file(test, '-expected.txt', test.expected_text)
         add_file(test, '-expected.png', test.expected_image)
 
+    filesystem.write_text_file(filesystem.join(LAYOUT_TEST_DIR, 'virtual', 'passes', 'args-expected.txt'), 'args-txt --virtual-arg')
     # Clear the list of written files so that we can watch what happens during testing.
     filesystem.clear_written_files()
 
 
 class TestPort(Port):
+    port_name = 'test'
+
     """Test implementation of the Port interface."""
     ALL_BASELINE_VARIANTS = (
         'test-mac-snowleopard', 'test-mac-leopard',
@@ -307,15 +322,20 @@ class TestPort(Port):
         'test-linux-x86_64',
     )
 
-    def __init__(self, host, port_name=None, **kwargs):
-        if not port_name or port_name == 'test':
-            port_name = 'test-mac-leopard'
+    @classmethod
+    def determine_full_port_name(cls, host, options, port_name):
+        if port_name == 'test':
+            return 'test-mac-leopard'
+        return port_name
 
+    def __init__(self, host, port_name=None, **kwargs):
+        # FIXME: Consider updating all of the callers to pass in a port_name so it can be a
+        # required parameter like all of the other Port objects.
+        port_name = port_name or 'test-mac-leopard'
+        Port.__init__(self, host, port_name, **kwargs)
         self._tests = unit_test_list()
         self._expectations_path = LAYOUT_TEST_DIR + '/platform/test/test_expectations.txt'
         self._results_directory = None
-
-        Port.__init__(self, host, port_name=port_name, **kwargs)
 
         self._operating_system = 'mac'
         if port_name.startswith('test-win'):
@@ -333,11 +353,10 @@ class TestPort(Port):
         }
         self._version = version_map[port_name]
 
-
     def _path_to_driver(self):
         # This routine shouldn't normally be called, but it is called by
         # the mock_drt Driver. We return something, but make sure it's useless.
-        return 'junk'
+        return 'MOCK _path_to_driver'
 
     def baseline_search_path(self):
         search_paths = {
@@ -353,8 +372,8 @@ class TestPort(Port):
     def default_child_processes(self):
         return 1
 
-    def default_worker_model(self):
-        return 'inline'
+    def worker_startup_delay_secs(self):
+        return 0
 
     def check_build(self, needs_http):
         return True
@@ -374,8 +393,24 @@ class TestPort(Port):
     def layout_tests_dir(self):
         return LAYOUT_TEST_DIR
 
+    def perf_tests_dir(self):
+        return PERF_TEST_DIR
+
+    def webkit_base(self):
+        return '/test.checkout'
+
+    def skipped_layout_tests(self, test_list):
+        # This allows us to test the handling Skipped files, both with a test
+        # that actually passes, and a test that does fail.
+        return set(['failures/expected/skip_text.html',
+                    'failures/unexpected/skip_pass.html',
+                    'virtual/skipped'])
+
     def name(self):
         return self._name
+
+    def operating_system(self):
+        return self._operating_system
 
     def _path_to_wdiff(self):
         return None
@@ -407,6 +442,15 @@ class TestPort(Port):
     def release_http_lock(self):
         pass
 
+    def _path_to_lighttpd(self):
+        return "/usr/sbin/lighttpd"
+
+    def _path_to_lighttpd_modules(self):
+        return "/usr/lib/lighttpd"
+
+    def _path_to_lighttpd_php(self):
+        return "/usr/bin/php-cgi"
+
     def path_to_test_expectations_file(self):
         return self._expectations_path
 
@@ -417,12 +461,10 @@ class TestPort(Port):
         test_configurations = []
         for version, architecture in self._all_systems():
             for build_type in self._all_build_types():
-                for graphics_type in self._all_graphics_types():
-                    test_configurations.append(TestConfiguration(
-                        version=version,
-                        architecture=architecture,
-                        build_type=build_type,
-                        graphics_type=graphics_type))
+                test_configurations.append(TestConfiguration(
+                    version=version,
+                    architecture=architecture,
+                    build_type=build_type))
         return test_configurations
 
     def _all_systems(self):
@@ -437,9 +479,6 @@ class TestPort(Port):
     def _all_build_types(self):
         return ('debug', 'release')
 
-    def _all_graphics_types(self):
-        return ('cpu', 'gpu')
-
     def configuration_specifier_macros(self):
         """To avoid surprises when introducing new macros, these are intentionally fixed in time."""
         return {'mac': ['leopard', 'snowleopard'], 'win': ['xp', 'vista', 'win7'], 'linux': ['lucid']}
@@ -447,77 +486,23 @@ class TestPort(Port):
     def all_baseline_variants(self):
         return self.ALL_BASELINE_VARIANTS
 
-    # FIXME: These next two routines are copied from base.py with
-    # the calls to path.abspath_to_uri() removed. We shouldn't have
-    # to do this.
-    def test_to_uri(self, test_name):
-        """Convert a test file (which is an absolute path) to a URI."""
-        LAYOUTTEST_HTTP_DIR = "http/tests/"
-        LAYOUTTEST_WEBSOCKET_DIR = "http/tests/websocket/tests/"
-
-        port = None
-        use_ssl = False
-
-        relative_path = test_name
-        if (relative_path.startswith(LAYOUTTEST_WEBSOCKET_DIR)
-            or relative_path.startswith(LAYOUTTEST_HTTP_DIR)):
-            relative_path = relative_path[len(LAYOUTTEST_HTTP_DIR):]
-            port = 8000
-
-        # Make http/tests/local run as local files. This is to mimic the
-        # logic in run-webkit-tests.
-        #
-        # TODO(dpranke): remove the media reference and the SSL reference?
-        if (port and not relative_path.startswith("local/") and
-            not relative_path.startswith("media/")):
-            if relative_path.startswith("ssl/"):
-                port += 443
-                protocol = "https"
-            else:
-                protocol = "http"
-            return "%s://127.0.0.1:%u/%s" % (protocol, port, relative_path)
-
-        return "file://" + self.abspath_for_test(test_name)
-
-    def abspath_for_test(self, test_name):
-        return self.layout_tests_dir() + self.TEST_PATH_SEPARATOR + test_name
-
-    def uri_to_test_name(self, uri):
-        """Return the base layout test name for a given URI.
-
-        This returns the test name for a given URI, e.g., if you passed in
-        "file:///src/LayoutTests/fast/html/keygen.html" it would return
-        "fast/html/keygen.html".
-
-        """
-        test = uri
-        if uri.startswith("file:///"):
-            prefix = "file://" + self.layout_tests_dir() + "/"
-            return test[len(prefix):]
-
-        if uri.startswith("http://127.0.0.1:8880/"):
-            # websocket tests
-            return test.replace('http://127.0.0.1:8880/', '')
-
-        if uri.startswith("http://"):
-            # regular HTTP test
-            return test.replace('http://127.0.0.1:8000/', 'http/tests/')
-
-        if uri.startswith("https://"):
-            return test.replace('https://127.0.0.1:8443/', 'http/tests/')
-
-        raise NotImplementedError('unknown url type: %s' % uri)
-
+    def virtual_test_suites(self):
+        return [
+            VirtualTestSuite('virtual/passes', 'passes', ['--virtual-arg']),
+            VirtualTestSuite('virtual/skipped', 'failures/expected', ['--virtual-arg2']),
+        ]
 
 class TestDriver(Driver):
     """Test/Dummy implementation of the DumpRenderTree interface."""
 
-    def cmd_line(self):
-        return [self._port._path_to_driver()] + self._port.get_option('additional_drt_flag', [])
+    def cmd_line(self, pixel_tests, per_test_args):
+        pixel_tests_flag = '-p' if pixel_tests else ''
+        return [self._port._path_to_driver()] + [pixel_tests_flag] + self._port.get_option('additional_drt_flag', []) + per_test_args
 
     def run_test(self, test_input):
         start_time = time.time()
         test_name = test_input.test_name
+        test_args = test_input.args or []
         test = self._port._tests[test_name]
         if test.keyboard:
             raise KeyboardInterrupt
@@ -527,17 +512,33 @@ class TestDriver(Driver):
             time.sleep((float(test_input.timeout) * 4) / 1000.0)
 
         audio = None
+        actual_text = test.actual_text
+        if actual_text and test_args and test_name == 'passes/args.html':
+            actual_text = actual_text + ' ' + ' '.join(test_args)
+
         if test.actual_audio:
             audio = base64.b64decode(test.actual_audio)
         crashed_process_name = None
+        crashed_pid = None
         if test.crash:
             crashed_process_name = self._port.driver_name()
+            crashed_pid = 1
         elif test.web_process_crash:
             crashed_process_name = 'WebProcess'
-        return DriverOutput(test.actual_text, test.actual_image,
-            test.actual_checksum, audio, crash=test.crash or test.web_process_crash,
-            crashed_process_name=crashed_process_name,
+            crashed_pid = 2
+
+        crash_log = ''
+        if crashed_process_name:
+            crash_logs = CrashLogs(self._port.host)
+            crash_log = crash_logs.find_newest_log(crashed_process_name, None) or ''
+
+        return DriverOutput(actual_text, test.actual_image, test.actual_checksum, audio,
+            crash=test.crash or test.web_process_crash, crashed_process_name=crashed_process_name,
+            crashed_pid=crashed_pid, crash_log=crash_log,
             test_time=time.time() - start_time, timeout=test.timeout, error=test.error)
+
+    def start(self, pixel_tests, per_test_args):
+        pass
 
     def stop(self):
         pass

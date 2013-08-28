@@ -32,28 +32,30 @@
 #include "JSObject.h"
 #include "Register.h"
 #include "SymbolTable.h"
-#include "UnusedParam.h"
+#include <wtf/UnusedParam.h>
 #include <wtf/OwnArrayPtr.h>
 #include <wtf/UnusedParam.h>
 
 namespace JSC {
 
+    class LLIntOffsetsExtractor;
     class Register;
 
     class JSVariableObject : public JSNonFinalObject {
         friend class JIT;
+        friend class LLIntOffsetsExtractor;
 
     public:
         typedef JSNonFinalObject Base;
 
         SymbolTable& symbolTable() const { return *m_symbolTable; }
 
-        static void destroy(JSCell*);
+        JS_EXPORT_PRIVATE static void destroy(JSCell*);
 
-        static NO_RETURN_DUE_TO_ASSERT void putWithAttributes(JSObject*, ExecState*, const Identifier&, JSValue, unsigned attributes);
+        static NO_RETURN_DUE_TO_ASSERT void putDirectVirtual(JSObject*, ExecState*, const Identifier&, JSValue, unsigned attributes);
 
-        static bool deleteProperty(JSCell*, ExecState*, const Identifier&);
-        static void getOwnPropertyNames(JSObject*, ExecState*, PropertyNameArray&, EnumerationMode);
+        JS_EXPORT_PRIVATE static bool deleteProperty(JSCell*, ExecState*, const Identifier&);
+        JS_EXPORT_PRIVATE static void getOwnPropertyNames(JSObject*, ExecState*, PropertyNameArray&, EnumerationMode);
         
         bool isDynamicScope(bool& requiresDynamicChecks) const;
 
@@ -88,7 +90,7 @@ namespace JSC {
         void setRegisters(WriteBarrier<Unknown>* registers, PassOwnArrayPtr<WriteBarrier<Unknown> > registerArray);
 
         bool symbolTableGet(const Identifier&, PropertySlot&);
-        bool symbolTableGet(const Identifier&, PropertyDescriptor&);
+        JS_EXPORT_PRIVATE bool symbolTableGet(const Identifier&, PropertyDescriptor&);
         bool symbolTableGet(const Identifier&, PropertySlot&, bool& slotIsWriteable);
         bool symbolTablePut(ExecState*, const Identifier&, JSValue, bool shouldThrow);
         bool symbolTablePutWithAttributes(JSGlobalData&, const Identifier&, JSValue, unsigned attributes);

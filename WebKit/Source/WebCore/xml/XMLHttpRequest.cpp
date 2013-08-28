@@ -21,9 +21,9 @@
 
 #include "config.h"
 #include "XMLHttpRequest.h"
-#include <iostream>
 
 #include "Blob.h"
+#include "BlobData.h"
 #include "ContentSecurityPolicy.h"
 #include "CrossOriginAccessControl.h"
 #include "DOMFormData.h"
@@ -51,17 +51,12 @@
 #include "XMLHttpRequestException.h"
 #include "XMLHttpRequestProgressEvent.h"
 #include "XMLHttpRequestUpload.h"
-#include "LazyXMLHttpRequest.h"
 #include "markup.h"
 #include <wtf/ArrayBuffer.h>
 #include <wtf/RefCountedLeakCounter.h>
 #include <wtf/StdLibExtras.h>
 #include <wtf/UnusedParam.h>
 #include <wtf/text/CString.h>
-
-#ifdef ARTEMIS
-#include <instrumentation/executionlistener.h>
-#endif
 
 #if USE(JSC)
 #include "JSDOMBinding.h"
@@ -160,7 +155,10 @@ static void logConsoleError(ScriptExecutionContext* context, const String& messa
 
 PassRefPtr<XMLHttpRequest> XMLHttpRequest::create(ScriptExecutionContext* context, PassRefPtr<SecurityOrigin> securityOrigin)
 {
-    return adoptRef(new XMLHttpRequest(context, securityOrigin));
+    RefPtr<XMLHttpRequest> xmlHttpRequest(adoptRef(new XMLHttpRequest(context, securityOrigin)));
+    xmlHttpRequest->suspendIfNeeded();
+
+    return xmlHttpRequest.release();
 }
 
 XMLHttpRequest::XMLHttpRequest(ScriptExecutionContext* context, PassRefPtr<SecurityOrigin> securityOrigin)
@@ -265,12 +263,37 @@ Document* XMLHttpRequest::responseXML(ExceptionCode& ec)
 }
 
 #if ENABLE(XHR_RESPONSE_BLOB)
-Blob* XMLHttpRequest::responseBlob(ExceptionCode& ec) const
+Blob* XMLHttpRequest::responseBlob(ExceptionCode& ec)
 {
     if (m_responseTypeCode != ResponseTypeBlob) {
         ec = INVALID_STATE_ERR;
         return 0;
     }
+    // We always return null before DONE.
+    if (m_state != DONE)
+        return 0;
+
+    if (!m_responseBlob.get()) {
+        // FIXME: This causes two (or more) unnecessary copies of the data.
+        // Chromium stores blob data in the browser process, so we're pulling the data
+        // from the network only to copy it into the renderer to copy it back to the browser.
+        // Ideally we'd get the blob/file-handle from the ResourceResponse directly
+        // instead of copying the bytes. Embedders who store blob data in the
+        // same process as WebCore would at least to teach BlobData to take
+        // a SharedBuffer, even if they don't get the Blob from the network layer directly.
+        OwnPtr<BlobData> blobData = BlobData::create();
+        // If we errored out or got no data, we still return a blob, just an empty one.
+        if (m_binaryResponseBuilder.get()) {
+            RefPtr<RawData> rawData = RawData::create();
+            size_t size = m_binaryResponseBuilder->size();
+            rawData->mutableData()->append(m_binaryResponseBuilder->data(), size);
+            blobData->appendData(rawData, 0, BlobDataItem::toEndOfFile);
+            blobData->setContentType(responseMIMEType()); // responseMIMEType defaults to text/xml which may be incorrect.
+            m_binaryResponseBuilder.clear();
+        }
+        m_responseBlob = Blob::create(blobData.release(), m_binaryResponseBuilder.get() ? m_binaryResponseBuilder->size() : 0);
+    }
+
     return m_responseBlob.get();
 }
 #endif
@@ -290,10 +313,7 @@ ArrayBuffer* XMLHttpRequest::responseArrayBuffer(ExceptionCode& ec)
         m_binaryResponseBuilder.clear();
     }
 
-    if (m_responseArrayBuffer.get())
-        return m_responseArrayBuffer.get();
-
-    return 0;
+    return m_responseArrayBuffer.get();
 }
 
 void XMLHttpRequest::setResponseType(const String& responseType, ExceptionCode& ec)
@@ -369,7 +389,7 @@ void XMLHttpRequest::callReadyStateChangeListener()
     InspectorInstrumentationCookie cookie = InspectorInstrumentation::willChangeXHRReadyState(scriptExecutionContext(), this);
 
     if (m_async || (m_state <= OPENED || m_state == DONE))
-        m_progressEventThrottle.dispatchEvent(XMLHttpRequestProgressEvent::create(eventNames().readystatechangeEvent), m_state == DONE ? FlushProgressEvent : DoNotFlushProgressEvent);
+        m_progressEventThrottle.dispatchReadyStateChangeEvent(XMLHttpRequestProgressEvent::create(eventNames().readystatechangeEvent), m_state == DONE ? FlushProgressEvent : DoNotFlushProgressEvent);
 
     InspectorInstrumentation::didChangeXHRReadyState(cookie);
 
@@ -488,7 +508,6 @@ void XMLHttpRequest::open(const String& method, const KURL& url, bool async, Exc
         changeState(OPENED);
     else
         m_state = OPENED;
-
 }
 
 void XMLHttpRequest::open(const String& method, const KURL& url, bool async, const String& user, ExceptionCode& ec)
@@ -534,7 +553,7 @@ void XMLHttpRequest::send(Document* document, ExceptionCode& ec)
     if (!initSend(ec))
         return;
 
-    if (m_method != "GET" && m_method != "HEAD" && m_url.protocolInHTTPFamily()) {
+    if (m_method != "GET" && m_method != "HEAD" && m_url.protocolIsInHTTPFamily()) {
         String contentType = getRequestHeader("Content-Type");
         if (contentType.isEmpty()) {
 #if ENABLE(DASHBOARD_SUPPORT)
@@ -565,10 +584,7 @@ void XMLHttpRequest::send(const String& body, ExceptionCode& ec)
     if (!initSend(ec))
         return;
 
-    if (!body.isNull() && m_method != "GET" && m_method != "HEAD" && m_url.protocolInHTTPFamily()) {
-#ifdef ARTEMIS
-        inst::getListener()->webkit_ajax_send(this->url().deprecatedString().utf8().data(), body.utf8().data());
-#endif
+    if (!body.isNull() && m_method != "GET" && m_method != "HEAD" && m_url.protocolIsInHTTPFamily()) {
         String contentType = getRequestHeader("Content-Type");
         if (contentType.isEmpty()) {
 #if ENABLE(DASHBOARD_SUPPORT)
@@ -586,11 +602,6 @@ void XMLHttpRequest::send(const String& body, ExceptionCode& ec)
         if (m_upload)
             m_requestEntityBody->setAlwaysStream(true);
     }
-#ifdef ARTEMIS
-    else {
-        inst::getListener()->webkit_ajax_send(this->url().deprecatedString().utf8().data(), 0);
-    }
-#endif
 
     createRequest(ec);
 }
@@ -600,7 +611,7 @@ void XMLHttpRequest::send(Blob* body, ExceptionCode& ec)
     if (!initSend(ec))
         return;
 
-    if (m_method != "GET" && m_method != "HEAD" && m_url.protocolInHTTPFamily()) {
+    if (m_method != "GET" && m_method != "HEAD" && m_url.protocolIsInHTTPFamily()) {
         // FIXME: Should we set a Content-Type if one is not set.
         // FIXME: add support for uploading bundles.
         m_requestEntityBody = FormData::create();
@@ -620,7 +631,7 @@ void XMLHttpRequest::send(DOMFormData* body, ExceptionCode& ec)
     if (!initSend(ec))
         return;
 
-    if (m_method != "GET" && m_method != "HEAD" && m_url.protocolInHTTPFamily()) {
+    if (m_method != "GET" && m_method != "HEAD" && m_url.protocolIsInHTTPFamily()) {
         m_requestEntityBody = FormData::createMultiPart(*(static_cast<FormDataList*>(body)), body->encoding(), document());
 
         // We need to ask the client to provide the generated file names if needed. When FormData fills the element
@@ -643,7 +654,7 @@ void XMLHttpRequest::send(ArrayBuffer* body, ExceptionCode& ec)
     if (!initSend(ec))
         return;
 
-    if (m_method != "GET" && m_method != "HEAD" && m_url.protocolInHTTPFamily()) {
+    if (m_method != "GET" && m_method != "HEAD" && m_url.protocolIsInHTTPFamily()) {
         m_requestEntityBody = FormData::create(body->data(), body->byteLength());
         if (m_upload)
             m_requestEntityBody->setAlwaysStream(true);
@@ -654,7 +665,6 @@ void XMLHttpRequest::send(ArrayBuffer* body, ExceptionCode& ec)
 
 void XMLHttpRequest::createRequest(ExceptionCode& ec)
 {
-
 #if ENABLE(BLOB)
     // Only GET request is supported for blob URL.
     if (m_url.protocolIs("blob") && m_method != "GET") {
@@ -683,7 +693,7 @@ void XMLHttpRequest::createRequest(ExceptionCode& ec)
 
     ResourceRequest request(m_url);
     request.setHTTPMethod(m_method);
-#if PLATFORM(CHROMIUM)
+#if PLATFORM(CHROMIUM) || PLATFORM(BLACKBERRY)
     request.setTargetType(ResourceRequest::TargetIsXHR);
 #endif
 
@@ -708,22 +718,14 @@ void XMLHttpRequest::createRequest(ExceptionCode& ec)
     m_error = false;
 
     if (m_async) {
-
         if (m_upload)
             request.setReportUploadProgress(true);
 
-#ifdef ARTEMIS
-        LazyXMLHttpRequest* lazyRequest = new LazyXMLHttpRequest(scriptExecutionContext(), request, this, options);
-        inst::getListener()->ajaxCallbackEventAdded(lazyRequest);
-        setPendingActivity(this);
-#else
         // ThreadableLoader::create can return null here, for example if we're no longer attached to a page.
         // This is true while running onunload handlers.
         // FIXME: Maybe we need to be able to send XMLHttpRequests from onunload, <http://bugs.webkit.org/show_bug.cgi?id=10904>.
         // FIXME: Maybe create() can return null for other reasons too?
         m_loader = ThreadableLoader::create(scriptExecutionContext(), this, request, options);
-#endif
-
         if (m_loader) {
             // Neither this object nor the JavaScript wrapper should be deleted while
             // a request is in progress because we need to keep the listeners alive,
@@ -897,9 +899,9 @@ void XMLHttpRequest::setRequestHeader(const AtomicString& name, const String& va
 
 void XMLHttpRequest::setRequestHeaderInternal(const AtomicString& name, const String& value)
 {
-    pair<HTTPHeaderMap::iterator, bool> result = m_requestHeaders.add(name, value);
-    if (!result.second)
-        result.first->second += ", " + value;
+    HTTPHeaderMap::AddResult result = m_requestHeaders.add(name, value);
+    if (!result.isNewEntry)
+        result.iterator->second += ", " + value;
 }
 
 String XMLHttpRequest::getRequestHeader(const AtomicString& name) const
@@ -916,6 +918,8 @@ String XMLHttpRequest::getAllResponseHeaders(ExceptionCode& ec) const
 
     StringBuilder stringBuilder;
 
+    HTTPHeaderSet accessControlExposeHeaderSet;
+    parseAccessControlExposeHeadersAllowList(m_response.httpHeaderField("Access-Control-Expose-Headers"), accessControlExposeHeaderSet);
     HTTPHeaderMap::const_iterator end = m_response.httpHeaderFields().end();
     for (HTTPHeaderMap::const_iterator it = m_response.httpHeaderFields().begin(); it!= end; ++it) {
         // Hide Set-Cookie header fields from the XMLHttpRequest client for these reasons:
@@ -927,7 +931,7 @@ String XMLHttpRequest::getAllResponseHeaders(ExceptionCode& ec) const
         if (isSetCookieHeader(it->first) && !securityOrigin()->canLoadLocalResources())
             continue;
 
-        if (!m_sameOriginRequest && !isOnAccessControlResponseHeaderWhitelist(it->first))
+        if (!m_sameOriginRequest && !isOnAccessControlResponseHeaderWhitelist(it->first) && !accessControlExposeHeaderSet.contains(it->first))
             continue;
 
         stringBuilder.append(it->first);
@@ -953,8 +957,11 @@ String XMLHttpRequest::getResponseHeader(const AtomicString& name, ExceptionCode
         logConsoleError(scriptExecutionContext(), "Refused to get unsafe header \"" + name + "\"");
         return String();
     }
+    
+    HTTPHeaderSet accessControlExposeHeaderSet;
+    parseAccessControlExposeHeadersAllowList(m_response.httpHeaderField("Access-Control-Expose-Headers"), accessControlExposeHeaderSet);
 
-    if (!m_sameOriginRequest && !isOnAccessControlResponseHeaderWhitelist(name)) {
+    if (!m_sameOriginRequest && !isOnAccessControlResponseHeaderWhitelist(name) && !accessControlExposeHeaderSet.contains(name)) {
         logConsoleError(scriptExecutionContext(), "Refused to get unsafe header \"" + name + "\"");
         return String();
     }
@@ -1049,10 +1056,6 @@ void XMLHttpRequest::didFinishLoading(unsigned long identifier, double)
 
     m_responseBuilder.shrinkToFit();
 
-#if ENABLE(XHR_RESPONSE_BLOB)
-    // FIXME: Set m_responseBlob to something here in the ResponseTypeBlob case.
-#endif
-
     InspectorInstrumentation::resourceRetrievedByXMLHttpRequest(scriptExecutionContext(), identifier, m_responseBuilder.toStringPreserveCapacity(), m_url, m_lastSendURL, m_lastSendLineNumber);
 
     bool hadLoader = m_loader;
@@ -1122,7 +1125,11 @@ void XMLHttpRequest::didReceiveData(const char* data, int len)
 
     if (useDecoder)
         m_responseBuilder.append(m_decoder->decode(data, len));
-    else if (m_responseTypeCode == ResponseTypeArrayBuffer) {
+    else if (m_responseTypeCode == ResponseTypeArrayBuffer
+#if ENABLE(XHR_RESPONSE_BLOB)
+             || m_responseTypeCode == ResponseTypeBlob
+#endif
+             ) {
         // Buffer binary data.
         if (!m_binaryResponseBuilder)
             m_binaryResponseBuilder = SharedBuffer::create();

@@ -92,7 +92,8 @@ public:
 
 private:
     AllowDatabaseMainThreadBridge(WebCore::WorkerLoaderProxy* workerLoaderProxy, const String& mode, WebCommonWorkerClient* commonClient, WebFrame* frame, const String& name, const String& displayName, unsigned long estimatedSize)
-        : m_workerLoaderProxy(workerLoaderProxy)
+        : m_result(false)
+        , m_workerLoaderProxy(workerLoaderProxy)
     {
         WebWorkerBase::dispatchTaskToMainThread(
             createCallbackTask(&allowDatabaseTask, mode, WebCore::AllowCrossThreadAccess(commonClient),
@@ -165,7 +166,10 @@ bool DatabaseObserver::canEstablishDatabase(ScriptExecutionContext* scriptExecut
         WorkerContext* workerContext = static_cast<WorkerContext*>(scriptExecutionContext);
         WorkerLoaderProxy* workerLoaderProxy = &workerContext->thread()->workerLoaderProxy();
         WebWorkerBase* webWorker = static_cast<WebWorkerBase*>(workerLoaderProxy);
-        return allowDatabaseForWorker(webWorker->commonClient(), webWorker->view()->mainFrame(), name, displayName, estimatedSize);
+        WebView* view = webWorker->view();
+        if (!view)
+            return false;
+        return allowDatabaseForWorker(webWorker->commonClient(), view->mainFrame(), name, displayName, estimatedSize);
 #else
         ASSERT_NOT_REACHED();
 #endif

@@ -102,16 +102,18 @@ JSValue JSMessageEvent::ports(ExecState* exec) const
 
 static JSC::JSValue handleInitMessageEvent(JSMessageEvent* jsEvent, JSC::ExecState* exec)
 {
-    const UString& typeArg = exec->argument(0).toString(exec);
+    const UString& typeArg = exec->argument(0).toString(exec)->value(exec);
     bool canBubbleArg = exec->argument(1).toBoolean(exec);
     bool cancelableArg = exec->argument(2).toBoolean(exec);
-    const UString& originArg = exec->argument(4).toString(exec);
-    const UString& lastEventIdArg = exec->argument(5).toString(exec);
+    const UString& originArg = exec->argument(4).toString(exec)->value(exec);
+    const UString& lastEventIdArg = exec->argument(5).toString(exec)->value(exec);
     DOMWindow* sourceArg = toDOMWindow(exec->argument(6));
     OwnPtr<MessagePortArray> messagePorts;
+    OwnPtr<ArrayBufferArray> arrayBuffers;
     if (!exec->argument(7).isUndefinedOrNull()) {
         messagePorts = adoptPtr(new MessagePortArray);
-        fillMessagePortArray(exec, exec->argument(7), *messagePorts);
+        arrayBuffers = adoptPtr(new ArrayBufferArray);
+        fillMessagePortArray(exec, exec->argument(7), *messagePorts, *arrayBuffers);
         if (exec->hadException())
             return jsUndefined();
     }

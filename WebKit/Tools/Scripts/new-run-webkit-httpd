@@ -42,6 +42,8 @@ import os
 import sys
 import tempfile
 
+import webkitpy.common.version_check
+
 from webkitpy.common.host import Host
 from webkitpy.layout_tests.servers import http_server
 
@@ -58,7 +60,8 @@ def run(options):
             # meaningful.
             raise 'Specifying port requires also a root.'
         host = Host()
-        port_obj = host.port_factory.get(options=options)
+        # FIXME: Make this work with other ports as well.
+        port_obj = host.port_factory.get(port_name='chromium', options=options)
         httpd = http_server.Lighttpd(port_obj,
                                      tempfile.gettempdir(),
                                      port=options.port,
@@ -88,9 +91,6 @@ def main():
         dest="layout_tests_dir",
         help='Absolute path to LayoutTests root')
     options, args = option_parser.parse_args()
-
-    # FIXME: Make this work with other ports as well.
-    options.chromium = True
 
     run(options)
 

@@ -76,28 +76,8 @@ public:
     // is owned by the object implementing WebCommonWorkerClient.
     virtual WebNotificationPresenter* notificationPresenter() = 0;
 
-    // This can be called on any thread to create a nested WebWorker.
-    // WebSharedWorkers are not instantiated via this API - instead
-    // they are created via the WebSharedWorkerRepository.
-    virtual WebWorker* createWorker(WebSharedWorkerClient*) = 0;
-
     // Called on the main webkit thread in the worker process during initialization.
     virtual WebApplicationCacheHost* createApplicationCacheHost(WebApplicationCacheHostClient*) = 0;
-
-    // Called on the main webkit thread before opening a web database.
-    virtual bool allowDatabase(WebFrame*, const WebString& name, const WebString& displayName, unsigned long estimatedSize) = 0;
-
-    // Called on the main webkit thread before opening a file system.
-    virtual bool allowFileSystem()
-    {
-        return true;
-    }
-
-    // Called on the main webkit thread before opening a file system.
-    virtual void openFileSystem(WebFileSystem::Type, long long size, bool create, WebFileSystemCallbacks*)
-    {
-        WEBKIT_ASSERT_NOT_REACHED();
-    }
 
     virtual void dispatchDevToolsMessage(const WebString&) { }
     virtual void saveDevToolsAgentState(const WebString&) { }

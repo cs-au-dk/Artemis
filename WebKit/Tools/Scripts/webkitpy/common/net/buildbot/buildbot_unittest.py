@@ -219,113 +219,6 @@ class BuildBotTest(unittest.TestCase):
             for key, expected_value in expected_parsing.items():
                 self.assertEquals(builder[key], expected_value, ("Builder %d parse failure for key: %s: Actual='%s' Expected='%s'" % (x, key, builder[key], expected_value)))
 
-    def test_core_builder_methods(self):
-        buildbot = BuildBot()
-
-        # Override builder_statuses function to not touch the network.
-        def example_builder_statuses(): # We could use instancemethod() to bind 'self' but we don't need to.
-            return BuildBotTest._expected_example_one_box_parsings
-        buildbot.builder_statuses = example_builder_statuses
-
-        buildbot.core_builder_names_regexps = [ 'Leopard', "Windows.*Build" ]
-        self.assertEquals(buildbot.red_core_builders_names(), [])
-        self.assertTrue(buildbot.core_builders_are_green())
-
-        buildbot.core_builder_names_regexps = [ 'SnowLeopard', 'Qt' ]
-        self.assertEquals(buildbot.red_core_builders_names(), [ u'SnowLeopard Intel Release', u'Qt Linux Release' ])
-        self.assertFalse(buildbot.core_builders_are_green())
-
-    def test_builder_name_regexps(self):
-        buildbot = BuildBot()
-
-        # For complete testing, this list should match the list of builders at build.webkit.org:
-        example_builders = [
-            {'name': u'Leopard Intel Release (Build)', },
-            {'name': u'Leopard Intel Release (Tests)', },
-            {'name': u'Leopard Intel Debug (Build)', },
-            {'name': u'Leopard Intel Debug (Tests)', },
-            {'name': u'SnowLeopard Intel Release (Build)', },
-            {'name': u'SnowLeopard Intel Release (Tests)', },
-            {'name': u'SnowLeopard Intel Release (WebKit2 Tests)', },
-            {'name': u'SnowLeopard Intel Leaks', },
-            {'name': u'Windows Release (Build)', },
-            {'name': u'Windows 7 Release (Tests)', },
-            {'name': u'Windows Debug (Build)', },
-            {'name': u'Windows XP Debug (Tests)', },
-            {'name': u'Windows 7 Release (WebKit2 Tests)', },
-            {'name': u'GTK Linux 32-bit Release', },
-            {'name': u'GTK Linux 64-bit Release', },
-            {'name': u'GTK Linux 64-bit Debug', },
-            {'name': u'Qt Linux Release', },
-            {'name': u'Qt Linux Release minimal', },
-            {'name': u'Qt Linux ARMv7 Release', },
-            {'name': u'Qt Windows 32-bit Release', },
-            {'name': u'Qt Windows 32-bit Debug', },
-            {'name': u'Chromium Android Release', },
-            {'name': u'Chromium Win Release', },
-            {'name': u'Chromium Win Release (Tests)', },
-            {'name': u'Chromium Mac Release', },
-            {'name': u'Chromium Mac Release (Tests)', },
-            {'name': u'Chromium Linux Release', },
-            {'name': u'Chromium Linux Release (Tests)', },
-            {'name': u'Leopard Intel Release (NRWT)', },
-            {'name': u'SnowLeopard Intel Release (NRWT)', },
-            {'name': u'New run-webkit-tests', },
-            {'name': u'WinCairo Debug (Build)', },
-            {'name': u'WinCE Release (Build)', },
-            {'name': u'EFL Linux Release (Build)', },
-        ]
-        name_regexps = [
-            "SnowLeopard.*Build",
-            "SnowLeopard.*\(Test",
-            "SnowLeopard.*\(WebKit2 Test",
-            "Leopard.*\((?:Build|Test)",
-            "Windows.*Build",
-            "Windows.*\(Test",
-            "WinCE",
-            "EFL",
-            "GTK.*32",
-            "GTK.*64",
-            "Qt",
-            "Chromium.*(Mac|Linux|Win).*Release$",
-            "Chromium.*(Mac|Linux|Win).*Release.*\(Tests",
-        ]
-        expected_builders = [
-            {'name': u'Leopard Intel Release (Build)', },
-            {'name': u'Leopard Intel Release (Tests)', },
-            {'name': u'Leopard Intel Debug (Build)', },
-            {'name': u'Leopard Intel Debug (Tests)', },
-            {'name': u'SnowLeopard Intel Release (Build)', },
-            {'name': u'SnowLeopard Intel Release (Tests)', },
-            {'name': u'SnowLeopard Intel Release (WebKit2 Tests)', },
-            {'name': u'Windows Release (Build)', },
-            {'name': u'Windows 7 Release (Tests)', },
-            {'name': u'Windows Debug (Build)', },
-            {'name': u'Windows XP Debug (Tests)', },
-            {'name': u'GTK Linux 32-bit Release', },
-            {'name': u'GTK Linux 64-bit Release', },
-            {'name': u'GTK Linux 64-bit Debug', },
-            {'name': u'Qt Linux Release', },
-            {'name': u'Qt Linux Release minimal', },
-            {'name': u'Qt Linux ARMv7 Release', },
-            {'name': u'Qt Windows 32-bit Release', },
-            {'name': u'Qt Windows 32-bit Debug', },
-            {'name': u'Chromium Win Release', },
-            {'name': u'Chromium Win Release (Tests)', },
-            {'name': u'Chromium Mac Release', },
-            {'name': u'Chromium Mac Release (Tests)', },
-            {'name': u'Chromium Linux Release', },
-            {'name': u'Chromium Linux Release (Tests)', },
-            {'name': u'WinCE Release (Build)', },
-            {'name': u'EFL Linux Release (Build)', },
-        ]
-
-        # This test should probably be updated if the default regexp list changes
-        self.assertEquals(buildbot.core_builder_names_regexps, name_regexps)
-
-        builders = buildbot._builder_statuses_with_names_matching_regexps(example_builders, name_regexps)
-        self.assertEquals(builders, expected_builders)
-
     def test_builder_with_name(self):
         buildbot = BuildBot()
 
@@ -406,44 +299,140 @@ class BuildBotTest(unittest.TestCase):
         files = buildbot._parse_twisted_directory_listing(self._example_directory_listing)
         self.assertEqual(self._expected_files, files)
 
-    # Revision, is_green
-    # Ordered from newest (highest number) to oldest.
-    fake_builder1 = [
-        [2, False],
-        [1, True],
-    ]
-    fake_builder2 = [
-        [2, False],
-        [1, True],
-    ]
-    fake_builders = [
-        fake_builder1,
-        fake_builder2,
-    ]
-    def _build_from_fake(self, fake_builder, index):
-        if index >= len(fake_builder):
-            return None
-        fake_build = fake_builder[index]
-        build = Build(
-            builder=fake_builder,
-            build_number=index,
-            revision=fake_build[0],
-            is_green=fake_build[1],
-        )
-        def mock_previous_build():
-            return self._build_from_fake(fake_builder, index + 1)
-        build.previous_build = mock_previous_build
-        return build
+    _fake_builder_page = '''
+    <body>
+    <div class="content">
+    <h1>Some Builder</h1>
+    <p>(<a href="../waterfall?show=Some Builder">view in waterfall</a>)</p>
+    <div class="column">
+    <h2>Recent Builds:</h2>
+    <table class="info">
+      <tr>
+        <th>Time</th>
+        <th>Revision</th>
+        <th>Result</th>    <th>Build #</th>
+        <th>Info</th>
+      </tr>
+      <tr class="alt">
+        <td>Jan 10 15:49</td>
+        <td><span class="revision" title="Revision 104643"><a href="http://trac.webkit.org/changeset/104643">104643</a></span></td>
+        <td class="success">failure</td>    <td><a href=".../37604">#37604</a></td>
+        <td class="left">Build successful</td>
+      </tr>
+      <tr class="">
+        <td>Jan 10 15:32</td>
+        <td><span class="revision" title="Revision 104636"><a href="http://trac.webkit.org/changeset/104636">104636</a></span></td>
+        <td class="success">failure</td>    <td><a href=".../37603">#37603</a></td>
+        <td class="left">Build successful</td>
+      </tr>
+      <tr class="alt">
+        <td>Jan 10 15:18</td>
+        <td><span class="revision" title="Revision 104635"><a href="http://trac.webkit.org/changeset/104635">104635</a></span></td>
+        <td class="success">success</td>    <td><a href=".../37602">#37602</a></td>
+        <td class="left">Build successful</td>
+      </tr>
+      <tr class="">
+        <td>Jan 10 14:51</td>
+        <td><span class="revision" title="Revision 104633"><a href="http://trac.webkit.org/changeset/104633">104633</a></span></td>
+        <td class="failure">failure</td>    <td><a href=".../37601">#37601</a></td>
+        <td class="left">Failed compile-webkit</td>
+      </tr>
+    </table>
+    </body>'''
+    _fake_builder_page_without_success = '''
+    <body>
+    <table>
+      <tr class="alt">
+        <td>Jan 10 15:49</td>
+        <td><span class="revision" title="Revision 104643"><a href="http://trac.webkit.org/changeset/104643">104643</a></span></td>
+        <td class="success">failure</td>
+      </tr>
+      <tr class="">
+        <td>Jan 10 15:32</td>
+        <td><span class="revision" title="Revision 104636"><a href="http://trac.webkit.org/changeset/104636">104636</a></span></td>
+        <td class="success">failure</td>
+      </tr>
+      <tr class="alt">
+        <td>Jan 10 15:18</td>
+        <td><span class="revision" title="Revision 104635"><a href="http://trac.webkit.org/changeset/104635">104635</a></span></td>
+        <td class="success">failure</td>
+      </tr>
+      <tr class="">
+          <td>Jan 10 11:58</td>
+          <td><span class="revision" title="Revision ??"><a href="http://trac.webkit.org/changeset/%3F%3F">??</a></span></td>
+          <td class="retry">retry</td>
+        </tr>
+      <tr class="">
+        <td>Jan 10 14:51</td>
+        <td><span class="revision" title="Revision 104633"><a href="http://trac.webkit.org/changeset/104633">104633</a></span></td>
+        <td class="failure">failure</td>
+      </tr>
+    </table>
+    </body>'''
 
-    def _fake_builds_at_index(self, index):
-        return [self._build_from_fake(builder, index) for builder in self.fake_builders]
-
-    def test_last_green_revision(self):
+    def test_revisions_for_builder(self):
         buildbot = BuildBot()
-        def mock_builds_from_builders(only_core_builders):
-            return self._fake_builds_at_index(0)
-        buildbot._latest_builds_from_builders = mock_builds_from_builders
-        self.assertEqual(buildbot.last_green_revision(), 1)
+        buildbot._fetch_builder_page = lambda builder: builder.page
+        builder_with_success = Builder('Some builder', None)
+        builder_with_success.page = self._fake_builder_page
+        self.assertEqual(buildbot._revisions_for_builder(builder_with_success), [(104643, False), (104636, False), (104635, True), (104633, False)])
+
+        builder_without_success = Builder('Some builder', None)
+        builder_without_success.page = self._fake_builder_page_without_success
+        self.assertEqual(buildbot._revisions_for_builder(builder_without_success), [(104643, False), (104636, False), (104635, False), (104633, False)])
+
+    def test_find_green_revision(self):
+        buildbot = BuildBot()
+        self.assertEqual(buildbot._find_green_revision({
+            'Builder 1': [(1, True), (3, True)],
+            'Builder 2': [(1, True), (3, False)],
+            'Builder 3': [(1, True), (3, True)],
+        }), 1)
+        self.assertEqual(buildbot._find_green_revision({
+            'Builder 1': [(1, False), (3, True)],
+            'Builder 2': [(1, True), (3, True)],
+            'Builder 3': [(1, True), (3, True)],
+        }), 3)
+        self.assertEqual(buildbot._find_green_revision({
+            'Builder 1': [(1, True), (2, True)],
+            'Builder 2': [(1, False), (2, True), (3, True)],
+            'Builder 3': [(1, True), (3, True)],
+        }), None)
+        self.assertEqual(buildbot._find_green_revision({
+            'Builder 1': [(1, True), (2, True)],
+            'Builder 2': [(1, True), (2, True), (3, True)],
+            'Builder 3': [(1, True), (3, True)],
+        }), 2)
+        self.assertEqual(buildbot._find_green_revision({
+            'Builder 1': [(1, False), (2, True)],
+            'Builder 2': [(1, True), (3, True)],
+            'Builder 3': [(1, True), (3, True)],
+        }), None)
+        self.assertEqual(buildbot._find_green_revision({
+            'Builder 1': [(1, True), (3, True)],
+            'Builder 2': [(1, False), (2, True), (3, True), (4, True)],
+            'Builder 3': [(2, True), (4, True)],
+        }), 3)
+        self.assertEqual(buildbot._find_green_revision({
+            'Builder 1': [(1, True), (3, True)],
+            'Builder 2': [(1, False), (2, True), (3, True), (4, False)],
+            'Builder 3': [(2, True), (4, True)],
+        }), None)
+        self.assertEqual(buildbot._find_green_revision({
+            'Builder 1': [(1, True), (3, True)],
+            'Builder 2': [(1, False), (2, True), (3, True), (4, False)],
+            'Builder 3': [(2, True), (3, True), (4, True)],
+        }), 3)
+        self.assertEqual(buildbot._find_green_revision({
+            'Builder 1': [(1, True), (2, True)],
+            'Builder 2': [],
+            'Builder 3': [(1, True), (2, True)],
+        }), None)
+        self.assertEqual(buildbot._find_green_revision({
+            'Builder 1': [(1, True), (3, False), (5, True), (10, True), (12, False)],
+            'Builder 2': [(1, True), (3, False), (7, True), (9, True), (12, False)],
+            'Builder 3': [(1, True), (3, True), (7, True), (11, False), (12, True)],
+        }), 7)
 
     def _fetch_build(self, build_number):
         if build_number == 5:

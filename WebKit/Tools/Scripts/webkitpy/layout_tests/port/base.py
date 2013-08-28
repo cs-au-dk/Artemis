@@ -27,10 +27,8 @@
 # (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
-"""Abstract base class of Port-specific entrypoints for the layout tests
+"""Abstract base class of Port-specific entry points for the layout tests
 test infrastructure (the Port and Driver classes)."""
-
-from __future__ import with_statement
 
 import cgi
 import difflib
@@ -39,17 +37,9 @@ import os
 import re
 
 from webkitpy.common.memoized import memoized
-
-
-# Handle Python < 2.6 where multiprocessing isn't available.
-try:
-    import multiprocessing
-except ImportError:
-    multiprocessing = None
-
+from webkitpy.common.system import path
 from webkitpy.common import find_files
 from webkitpy.common.system import logutils
-from webkitpy.common.system import path
 from webkitpy.common.system.executive import ScriptError
 from webkitpy.common.system.systemhost import SystemHost
 from webkitpy.layout_tests import read_checksum_from_png
@@ -81,21 +71,35 @@ class DummyOptions(object):
 class Port(object):
     """Abstract class for Port-specific hooks for the layout_test package."""
 
-    port_name = None  # Subclasses override this
+    # Subclasses override this. This should indicate the basic implementation
+    # part of the port name, e.g., 'chromium-mac', 'win', 'gtk'; there is probably (?)
+    # one unique value per class.
+
+    # FIXME: We should probably rename this to something like 'implementation_name'.
+    port_name = None
 
     # Test names resemble unix relative paths, and use '/' as a directory separator.
     TEST_PATH_SEPARATOR = '/'
 
     ALL_BUILD_TYPES = ('debug', 'release')
 
+    @classmethod
+    def determine_full_port_name(cls, host, options, port_name):
+        """Return a fully-specified port name that can be used to construct objects."""
+        # Subclasses will usually override this.
+        return cls.port_name
+
     def __init__(self, host, port_name=None, options=None, config=None, **kwargs):
 
+        # This value may be different from cls.port_name by having version modifiers
+        # and other fields appended to it (for example, 'qt-arm' or 'mac-wk2').
+
+        # FIXME: port_name should be a required parameter. It isn't yet because lots of tests need to be updatd.
+        self._name = port_name or self.port_name
+
         # These are default values that should be overridden in a subclasses.
-        self._name = port_name or self.port_name  # Subclasses may append a -VERSION (like mac-leopard) or other qualifiers.
-        self._operating_system = 'mac'
         self._version = ''
         self._architecture = 'x86'
-        self._graphics_type = 'cpu'
 
         # FIXME: Ideally we'd have a package-wide way to get a
         # well-formed options object that had all of the necessary
@@ -131,11 +135,14 @@ class Port(object):
         self._pretty_patch_path = self.path_from_webkit_base("Websites", "bugs.webkit.org", "PrettyPatch", "prettify.rb")
         self._pretty_patch_available = None
 
-        self.set_option_default('configuration', self.default_configuration())
+        if not hasattr(options, 'configuration') or not options.configuration:
+            self.set_option_default('configuration', self.default_configuration())
         self._test_configuration = None
         self._reftest_list = {}
-        self._multiprocessing_is_available = (multiprocessing is not None)
         self._results_directory = None
+
+    def default_test_timeout_ms(self):
+        return 6 * 1000
 
     def wdiff_available(self):
         if self._wdiff_available is None:
@@ -146,6 +153,9 @@ class Port(object):
         if self._pretty_patch_available is None:
             self._pretty_patch_available = self.check_pretty_patch(logging=False)
         return self._pretty_patch_available
+
+    def should_retry_crashes(self):
+        return False
 
     def default_child_processes(self):
         """Return the number of DumpRenderTree instances to use for this port."""
@@ -161,10 +171,12 @@ class Port(object):
             return min(supportable_instances, cpu_count)
         return cpu_count
 
-    def default_worker_model(self):
-        if self._multiprocessing_is_available:
-            return 'processes'
-        return 'inline'
+    def worker_startup_delay_secs(self):
+        # FIXME: If we start workers up too quickly, DumpRenderTree appears
+        # to thrash on something and time out its first few tests. Until
+        # we can figure out what's going on, sleep a bit in between
+        # workers. See https://bugs.webkit.org/show_bug.cgi?id=79147 .
+        return 0.1
 
     def baseline_path(self):
         """Return the absolute path to the directory to store new baselines in for this port."""
@@ -237,22 +249,18 @@ class Port(object):
         try:
             server_name = self._filesystem.basename(httpd_path)
             env = self.setup_environ_for_server(server_name)
-            return self._executive.run_command([httpd_path, "-v"], env=env, return_exit_code=True) == 0
+            if self._executive.run_command([httpd_path, "-v"], env=env, return_exit_code=True) != 0:
+                _log.error("httpd seems broken. Cannot run http tests.")
+                return False
+            return True
         except OSError:
             _log.error("No httpd found. Cannot run http tests.")
             return False
 
-    def compare_text(self, expected_text, actual_text):
-        """Return whether or not the two strings are *not* equal. This
-        routine is used to diff text output.
-
-        While this is a generic routine, we include it in the Port
-        interface so that it can be overriden for testing purposes."""
+    def do_text_results_differ(self, expected_text, actual_text):
         return expected_text != actual_text
 
-    def compare_audio(self, expected_audio, actual_audio):
-        # FIXME: If we give this method a better name it won't need this docstring (e.g. are_audio_results_equal()).
-        """Return whether the two audio files are *not* equal."""
+    def do_audio_results_differ(self, expected_audio, actual_audio):
         return expected_audio != actual_audio
 
     def diff_image(self, expected_contents, actual_contents, tolerance=None):
@@ -263,14 +271,9 @@ class Port(object):
         """
         raise NotImplementedError('Port.diff_image')
 
-
-    def diff_text(self, expected_text, actual_text,
-                  expected_filename, actual_filename):
+    def diff_text(self, expected_text, actual_text, expected_filename, actual_filename):
         """Returns a string containing the diff of the two text strings
-        in 'unified diff' format.
-
-        While this is a generic routine, we include it in the Port
-        interface so that it can be overriden for testing purposes."""
+        in 'unified diff' format."""
 
         # The filenames show up in the diff output, make sure they're
         # raw bytes and not unicode, so that they don't trigger join()
@@ -287,9 +290,6 @@ class Port(object):
                                     actual_filename)
         return ''.join(diff)
 
-    def is_crash_reporter(self, process_name):
-        return False
-
     def check_for_leaks(self, process_name, process_pid):
         # Subclasses should check for leaks in the running process
         # and print any necessary warnings if leaks are found.
@@ -303,11 +303,29 @@ class Port(object):
         pass
 
     def driver_name(self):
-        """Returns the name of the actual binary that is performing the test,
-        so that it can be referred to in log messages. In most cases this
-        will be DumpRenderTree, but if a port uses a binary with a different
-        name, it can be overridden here."""
+        # FIXME: Seems we should get this from the Port's Driver class.
         return "DumpRenderTree"
+
+    def expected_baselines_by_extension(self, test_name):
+        """Returns a dict mapping baseline suffix to relative path for each baseline in
+        a test. For reftests, it returns ".==" or ".!=" instead of the suffix."""
+        # FIXME: The name similarity between this and expected_baselines() below, is unfortunate.
+        # We should probably rename them both.
+        baseline_dict = {}
+        reference_files = self.reference_files(test_name)
+        if reference_files:
+            # FIXME: How should this handle more than one type of reftest?
+            baseline_dict['.' + reference_files[0][0]] = self.relative_test_filename(reference_files[0][1])
+
+        for extension in self.baseline_extensions():
+            path = self.expected_filename(test_name, extension, return_default=False)
+            baseline_dict[extension] = self.relative_test_filename(path) if path else path
+
+        return baseline_dict
+
+    def baseline_extensions(self):
+        """Returns a tuple of all of the non-reftest baseline extensions we use. The extensions include the leading '.'."""
+        return ('.wav', '.webarchive', '.txt', '.png')
 
     def expected_baselines(self, test_name, suffix, all_baselines=False):
         """Given a test name, finds where the baseline results are located.
@@ -358,7 +376,7 @@ class Port(object):
 
         return [(None, baseline_filename)]
 
-    def expected_filename(self, test_name, suffix):
+    def expected_filename(self, test_name, suffix, return_default=True):
         """Given a test name, returns an absolute path to its expected results.
 
         If no expected results are found in any of the searched directories,
@@ -373,6 +391,8 @@ class Port(object):
         platform: the most-specific directory name to use to build the
             search list of directories, e.g., 'chromium-win', or
             'chromium-cg-mac-leopard' (we follow the WebKit format)
+        return_default: if True, returns the path to the generic expectation if nothing
+            else is found; if False, returns None.
 
         This routine is generic but is implemented here to live alongside
         the other baseline and filename manipulation routines.
@@ -381,7 +401,14 @@ class Port(object):
         platform_dir, baseline_filename = self.expected_baselines(test_name, suffix)[0]
         if platform_dir:
             return self._filesystem.join(platform_dir, baseline_filename)
-        return self._filesystem.join(self.layout_tests_dir(), baseline_filename)
+
+        actual_test_name = self.lookup_virtual_test_base(test_name)
+        if actual_test_name:
+            return self.expected_filename(actual_test_name, suffix)
+
+        if return_default:
+            return self._filesystem.join(self.layout_tests_dir(), baseline_filename)
+        return None
 
     def expected_checksum(self, test_name):
         """Returns the checksum of the image we expect the test to produce, or None if it is a text-only test."""
@@ -449,48 +476,21 @@ class Port(object):
 
         reftest_list = self._get_reftest_list(test_name)
         if not reftest_list:
-            expected_filenames = [('==', self.expected_filename(test_name, '.html')), ('!=', self.expected_filename(test_name, '-mismatch.html'))]
-            return [(expectation, filename) for expectation, filename in expected_filenames if self._filesystem.exists(filename)]
+            reftest_list = []
+            for expectation, prefix in (('==', ''), ('!=', '-mismatch')):
+                for extention in Port._supported_file_extensions:
+                    path = self.expected_filename(test_name, prefix + extention)
+                    if self._filesystem.exists(path):
+                        reftest_list.append((expectation, path))
+            return reftest_list
 
         return reftest_list.get(self._filesystem.join(self.layout_tests_dir(), test_name), [])
 
-    def is_reftest(self, test_name):
-        reftest_list = self._get_reftest_list(test_name)
-        if not reftest_list:
-            has_expected = self._filesystem.exists(self.expected_filename(test_name, '.html'))
-            return has_expected or self._filesystem.exists(self.expected_filename(test_name, '-mismatch.html'))
-        filename = self._filesystem.join(self.layout_tests_dir(), test_name)
-        return filename in reftest_list
-
-    def test_to_uri(self, test_name):
-        """Convert a test name to a URI."""
-        LAYOUTTEST_HTTP_DIR = "http/tests/"
-        LAYOUTTEST_WEBSOCKET_DIR = "http/tests/websocket/tests/"
-
-        port = None
-
-        relative_path = test_name
-        if (relative_path.startswith(LAYOUTTEST_WEBSOCKET_DIR)
-            or relative_path.startswith(LAYOUTTEST_HTTP_DIR)):
-            relative_path = relative_path[len(LAYOUTTEST_HTTP_DIR):]
-            port = 8000
-
-        # Make http/tests/local run as local files. This is to mimic the
-        # logic in run-webkit-tests.
-        #
-        # TODO(dpranke): remove the SSL reference?
-        if (port and not relative_path.startswith("local/")):
-            if relative_path.startswith("ssl/"):
-                port += 443
-                protocol = "https"
-            else:
-                protocol = "http"
-            return "%s://127.0.0.1:%u/%s" % (protocol, port, relative_path)
-
-        return path.abspath_to_uri(self.abspath_for_test(test_name))
-
     def tests(self, paths):
         """Return the list of tests found."""
+        return self._real_tests(paths).union(self._virtual_tests(paths, self.populated_virtual_test_suites()))
+
+    def _real_tests(self, paths):
         # When collecting test cases, skip these directories
         skipped_directories = set(['.svn', '_svn', 'resources', 'script-tests', 'reference', 'reftest'])
         files = find_files.find(self._filesystem, self.layout_tests_dir(), paths, skipped_directories, Port._is_test_file)
@@ -526,18 +526,30 @@ class Port(object):
         return filter(lambda x: self._filesystem.isdir(self._filesystem.join(layout_tests_dir, x)),
                       self._filesystem.listdir(layout_tests_dir))
 
+    @memoized
+    def test_isfile(self, test_name):
+        """Return True if the test name refers to a directory of tests."""
+        # Used by test_expectations.py to apply rules to whole directories.
+        if self._filesystem.isfile(self.abspath_for_test(test_name)):
+            return True
+        base = self.lookup_virtual_test_base(test_name)
+        return base and self._filesystem.isfile(self.abspath_for_test(base))
+
+    @memoized
     def test_isdir(self, test_name):
         """Return True if the test name refers to a directory of tests."""
         # Used by test_expectations.py to apply rules to whole directories.
-        test_path = self.abspath_for_test(test_name)
-        return self._filesystem.isdir(test_path)
+        if self._filesystem.isdir(self.abspath_for_test(test_name)):
+            return True
+        base = self.lookup_virtual_test_base(test_name)
+        return base and self._filesystem.isdir(self.abspath_for_test(base))
 
+    @memoized
     def test_exists(self, test_name):
         """Return True if the test name refers to an existing test or baseline."""
         # Used by test_expectations.py to determine if an entry refers to a
         # valid test and by printing.py to determine if baselines exist.
-        test_path = self.abspath_for_test(test_name)
-        return self._filesystem.exists(test_path)
+        return self.test_isfile(test_name) or self.test_isdir(test_name)
 
     def split_test(self, test_name):
         """Splits a test name into the 'directory' part and the 'basename' part."""
@@ -548,14 +560,16 @@ class Port(object):
 
     def normalize_test_name(self, test_name):
         """Returns a normalized version of the test name or test directory."""
-        if self.test_isdir(test_name) and not test_name.endswith('/'):
+        if test_name.endswith('/'):
+            return test_name
+        if self.test_isdir(test_name):
             return test_name + '/'
         return test_name
 
     def driver_cmd_line(self):
         """Prints the DRT command line that will be used."""
         driver = self.create_driver(0)
-        return driver.cmd_line()
+        return driver.cmd_line(self.get_option('pixel_tests'), [])
 
     def update_baseline(self, baseline_path, data):
         """Updates the baseline for a test.
@@ -568,74 +582,66 @@ class Port(object):
         """
         self._filesystem.write_binary_file(baseline_path, data)
 
-    def uri_to_test_name(self, uri):
-        """Return the base layout test name for a given URI.
-
-        This returns the test name for a given URI, e.g., if you passed in
-        "file:///src/LayoutTests/fast/html/keygen.html" it would return
-        "fast/html/keygen.html".
-
-        """
-        test = uri
-        if uri.startswith("file:///"):
-            prefix = path.abspath_to_uri(self.layout_tests_dir()) + "/"
-            return test[len(prefix):]
-
-        if uri.startswith("http://127.0.0.1:8880/"):
-            # websocket tests
-            return test.replace('http://127.0.0.1:8880/', '')
-
-        if uri.startswith("http://"):
-            # regular HTTP test
-            return test.replace('http://127.0.0.1:8000/', 'http/tests/')
-
-        if uri.startswith("https://"):
-            return test.replace('https://127.0.0.1:8443/', 'http/tests/')
-
-        raise NotImplementedError('unknown url type: %s' % uri)
-
+    @memoized
     def layout_tests_dir(self):
         """Return the absolute path to the top of the LayoutTests directory."""
-        return self.path_from_webkit_base('LayoutTests')
+        return self._filesystem.normpath(self.path_from_webkit_base('LayoutTests'))
+
+    def perf_tests_dir(self):
+        """Return the absolute path to the top of the PerformanceTests directory."""
+        return self.path_from_webkit_base('PerformanceTests')
 
     def webkit_base(self):
         return self._filesystem.abspath(self.path_from_webkit_base('.'))
 
-    def skipped_layout_tests(self):
-        return []
+    def skipped_layout_tests(self, test_list):
+        """Returns the set of tests found in Skipped files. Does *not* include tests marked as SKIP in expectations files."""
+        return set([])
 
-    def skipped_tests(self):
-        return []
+    def _tests_from_skipped_file_contents(self, skipped_file_contents):
+        tests_to_skip = []
+        for line in skipped_file_contents.split('\n'):
+            line = line.strip()
+            line = line.rstrip('/')  # Best to normalize directory names to not include the trailing slash.
+            if line.startswith('#') or not len(line):
+                continue
+            tests_to_skip.append(line)
+        return tests_to_skip
 
-    def skips_layout_test(self, test_name):
-        """Figures out if the givent test is being skipped or not.
+    def _expectations_from_skipped_files(self, skipped_file_paths):
+        tests_to_skip = []
+        for search_path in skipped_file_paths:
+            filename = self._filesystem.join(self._webkit_baseline_path(search_path), "Skipped")
+            if not self._filesystem.exists(filename):
+                _log.debug("Skipped does not exist: %s" % filename)
+                continue
+            _log.debug("Using Skipped file: %s" % filename)
+            skipped_file_contents = self._filesystem.read_text_file(filename)
+            tests_to_skip.extend(self._tests_from_skipped_file_contents(skipped_file_contents))
+        return tests_to_skip
 
-        Test categories are handled as well."""
-        for test_or_category in self.skipped_layout_tests():
+    @memoized
+    def skipped_perf_tests(self):
+        return self._expectations_from_skipped_files([self.perf_tests_dir()])
+
+    def skips_perf_test(self, test_name):
+        for test_or_category in self.skipped_perf_tests():
             if test_or_category == test_name:
                 return True
-            category = self._filesystem.join(self.layout_tests_dir(), test_or_category)
+            category = self._filesystem.join(self.perf_tests_dir(), test_or_category)
             if self._filesystem.isdir(category) and test_name.startswith(test_or_category):
                 return True
         return False
 
-    def maybe_make_directory(self, *comps):
-        """Creates the specified directory if it doesn't already exist."""
-        self._filesystem.maybe_make_directory(*comps)
-
     def name(self):
         """Returns a name that uniquely identifies this particular type of port
-        (e.g., "mac-snowleopard" or "chromium-gpu-linux-x86_x64" and can be passed
+        (e.g., "mac-snowleopard" or "chromium-linux-x86_x64" and can be passed
         to factory.get() to instantiate the port."""
         return self._name
 
-    def real_name(self):
-        # FIXME: Seems this is only used for MockDRT and should be removed.
-        """Returns the name of the port as passed to the --platform command line argument."""
-        return self.name()
-
     def operating_system(self):
-        return self._operating_system
+        # Subclasses should override this default implementation.
+        return 'mac'
 
     def version(self):
         """Returns a string indicating the version of a given platform, e.g.
@@ -644,10 +650,6 @@ class Port(object):
         This is used to help identify the exact port when parsing test
         expectations, determining search paths, and logging information."""
         return self._version
-
-    def graphics_type(self):
-        """Returns whether the port uses accelerated graphics ('gpu') or not ('cpu')."""
-        return self._graphics_type
 
     def architecture(self):
         return self._architecture
@@ -687,10 +689,15 @@ class Port(object):
         assert filename.startswith(self.layout_tests_dir()), "%s did not start with %s" % (filename, self.layout_tests_dir())
         return filename[len(self.layout_tests_dir()) + 1:]
 
+    def relative_perf_test_filename(self, filename):
+        assert filename.startswith(self.perf_tests_dir()), "%s did not start with %s" % (filename, self.perf_tests_dir())
+        return filename[len(self.perf_tests_dir()) + 1:]
+
+    @memoized
     def abspath_for_test(self, test_name):
         """Returns the full path to the file for a given test name. This is the
         inverse of relative_test_filename()."""
-        return self._filesystem.normpath(self._filesystem.join(self.layout_tests_dir(), test_name))
+        return self._filesystem.join(self.layout_tests_dir(), test_name)
 
     def results_directory(self):
         """Absolute path to the place to store the test results (uses --results-directory)."""
@@ -705,6 +712,10 @@ class Port(object):
 
     def setup_test_run(self):
         """Perform port-specific work at the beginning of a test run."""
+        pass
+
+    def clean_up_test_run(self):
+        """Perform port-specific work at the end of a test run."""
         pass
 
     # FIXME: os.environ access should be moved to onto a common/system class to be more easily mockable.
@@ -751,11 +762,11 @@ class Port(object):
     def show_results_html_file(self, results_filename):
         """This routine should display the HTML file pointed at by
         results_filename in a users' browser."""
-        return self.host.user.open_url(results_filename)
+        return self.host.user.open_url(path.abspath_to_uri(results_filename))
 
-    def create_driver(self, worker_number):
+    def create_driver(self, worker_number, no_timeout=False):
         """Return a newly created Driver subclass for starting/stopping the test driver."""
-        return driver.DriverProxy(self, worker_number, self._driver_class(), pixel_tests=self.get_option('pixel_tests'))
+        return driver.DriverProxy(self, worker_number, self._driver_class(), pixel_tests=self.get_option('pixel_tests'), no_timeout=no_timeout)
 
     def start_helper(self):
         """If a port needs to reconfigure graphics settings or do other
@@ -763,16 +774,16 @@ class Port(object):
         method."""
         pass
 
-    def start_http_server(self):
+    def start_http_server(self, additional_dirs=None):
         """Start a web server. Raise an error if it can't start or is already running.
 
         Ports can stub this out if they don't need a web server to be running."""
         assert not self._http_server, 'Already running an http server.'
 
         if self._uses_apache():
-            server = apache_http_server.LayoutTestApacheHttpd(self, self.results_directory())
+            server = apache_http_server.LayoutTestApacheHttpd(self, self.results_directory(), additional_dirs=additional_dirs)
         else:
-            server = http_server.Lighttpd(self, self.results_directory())
+            server = http_server.Lighttpd(self, self.results_directory(), additional_dirs=additional_dirs)
 
         server.start()
         self._http_server = server
@@ -827,7 +838,7 @@ class Port(object):
     def test_configuration(self):
         """Returns the current TestConfiguration for the port."""
         if not self._test_configuration:
-            self._test_configuration = TestConfiguration(self._version, self._architecture, self._options.configuration.lower(), self._graphics_type)
+            self._test_configuration = TestConfiguration(self._version, self._architecture, self._options.configuration.lower())
         return self._test_configuration
 
     # FIXME: Belongs on a Platform object.
@@ -876,13 +887,20 @@ class Port(object):
         it is possible that you might need "downstream" expectations that
         temporarily override the "upstream" expectations until the port can
         sync up the two repos."""
-        return None
+        overrides = ''
+        for path in self.get_option('additional_expectations', []):
+            if self._filesystem.exists(self._filesystem.expanduser(path)):
+                overrides += self._filesystem.read_text_file(self._filesystem.expanduser(path))
+            else:
+                _log.warning("overrides path '%s' does not exist" % path)
+        return overrides or None
 
-    def test_repository_paths(self):
-        """Returns a list of (repository_name, repository_path) tuples
-        of its depending code base.  By default it returns a list that only
-        contains a ('webkit', <webkitRepossitoryPath>) tuple.
-        """
+    def repository_paths(self):
+        """Returns a list of (repository_name, repository_path) tuples of its depending code base.
+        By default it returns a list that only contains a ('webkit', <webkitRepossitoryPath>) tuple."""
+
+        # We use LayoutTest directory here because webkit_base isn't a part webkit repository in Chromium port
+        # where turnk isn't checked out as a whole.
         return [('webkit', self.layout_tests_dir())]
 
 
@@ -1053,3 +1071,68 @@ class Port(object):
     def _driver_class(self):
         """Returns the port's driver implementation."""
         raise NotImplementedError('Port._driver_class')
+
+    def _get_crash_log(self, name, pid, stdout, stderr, newer_than):
+        name_str = name or '<unknown process name>'
+        pid_str = str(pid or '<unknown>')
+        stdout_lines = (stdout or '<empty>').decode('utf8', 'replace').splitlines()
+        stderr_lines = (stderr or '<empty>').decode('utf8', 'replace').splitlines()
+        return 'crash log for %s (pid %s):\n%s\n%s\n' % (name_str, pid_str,
+            '\n'.join(('STDOUT: ' + l) for l in stdout_lines),
+            '\n'.join(('STDERR: ' + l) for l in stderr_lines))
+
+    def sample_process(self, name, pid):
+        pass
+
+    def virtual_test_suites(self):
+        return []
+
+    @memoized
+    def populated_virtual_test_suites(self):
+        suites = self.virtual_test_suites()
+
+        # Sanity-check the suites to make sure they don't point to other suites.
+        suite_dirs = [suite.name for suite in suites]
+        for suite in suites:
+            assert suite.base not in suite_dirs
+
+        for suite in suites:
+            base_tests = self._real_tests([suite.base])
+            suite.tests = {}
+            for test in base_tests:
+                suite.tests[test.replace(suite.base, suite.name)] = test
+        return suites
+
+    def _virtual_tests(self, paths, suites):
+        virtual_tests = set()
+        for suite in suites:
+            if paths:
+                for test in suite.tests:
+                    if any(test.startswith(p) for p in paths):
+                        virtual_tests.add(test)
+            else:
+                virtual_tests.update(set(suite.tests.keys()))
+        return virtual_tests
+
+    def lookup_virtual_test_base(self, test_name):
+        for suite in self.populated_virtual_test_suites():
+            if test_name.startswith(suite.name):
+                return test_name.replace(suite.name, suite.base)
+        return None
+
+    def lookup_virtual_test_args(self, test_name):
+        for suite in self.populated_virtual_test_suites():
+            if test_name.startswith(suite.name):
+                return suite.args
+        return []
+
+
+class VirtualTestSuite(object):
+    def __init__(self, name, base, args, tests=None):
+        self.name = name
+        self.base = base
+        self.args = args
+        self.tests = tests or set()
+
+    def __repr__(self):
+        return "VirtualTestSuite('%s', '%s', %s)" % (self.name, self.base, self.args)

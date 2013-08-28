@@ -25,7 +25,9 @@
 #define WebKitWebContext_h
 
 #include <glib-object.h>
+#include <webkit2/WebKitCookieManager.h>
 #include <webkit2/WebKitDefines.h>
+#include <webkit2/WebKitDownload.h>
 
 G_BEGIN_DECLS
 
@@ -78,16 +80,23 @@ struct _WebKitWebContextClass {
 };
 
 WEBKIT_API GType
-webkit_web_context_get_type        (void);
+webkit_web_context_get_type           (void);
 
 WEBKIT_API WebKitWebContext *
-webkit_web_context_get_default     (void);
+webkit_web_context_get_default        (void);
 
 WEBKIT_API void
-webkit_web_context_set_cache_model (WebKitWebContext *context,
-                                    WebKitCacheModel  cache_model);
+webkit_web_context_set_cache_model    (WebKitWebContext *context,
+                                       WebKitCacheModel  cache_model);
 WEBKIT_API WebKitCacheModel
-webkit_web_context_get_cache_model (WebKitWebContext *context);
+webkit_web_context_get_cache_model    (WebKitWebContext *context);
+
+WEBKIT_API WebKitDownload *
+webkit_web_context_download_uri       (WebKitWebContext *context,
+                                       const gchar      *uri);
+
+WEBKIT_API WebKitCookieManager *
+webkit_web_context_get_cookie_manager (WebKitWebContext *context);
 
 G_END_DECLS
 

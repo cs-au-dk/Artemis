@@ -23,8 +23,8 @@
 #ifndef webkitwebsettingsprivate_h
 #define webkitwebsettingsprivate_h
 
-#include "CString.h"
 #include "webkitwebsettings.h"
+#include <wtf/text/CString.h>
 
 extern "C" {
 
@@ -79,6 +79,8 @@ struct _WebKitWebSettingsPrivate {
     gboolean enableDNSPrefetching;
     gboolean enableWebgl;
     gboolean enableWebAudio;
+    gboolean enableAcceleratedCompositing;
+    gboolean enableSmoothScrolling;
 };
 
 WEBKIT_API void webkit_web_settings_add_extra_plugin_directory(WebKitWebView*, const gchar* directory);

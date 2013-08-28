@@ -29,6 +29,7 @@
 #include "TextureManager.h"
 
 #include "LayerRendererChromium.h"
+#include "ManagedTexture.h"
 
 using namespace std;
 
@@ -38,6 +39,8 @@ namespace WebCore {
 namespace {
 size_t memoryLimitBytes(size_t viewportMultiplier, const IntSize& viewportSize, size_t minMegabytes, size_t maxMegabytes)
 {
+    if (!viewportMultiplier)
+        return maxMegabytes * 1024 * 1024;
     if (viewportSize.isEmpty())
         return minMegabytes * 1024 * 1024;
     return max(minMegabytes * 1024 * 1024, min(maxMegabytes * 1024 * 1024, viewportMultiplier * TextureManager::memoryUseBytes(viewportSize, GraphicsContext3D::RGBA)));
@@ -47,12 +50,13 @@ size_t memoryLimitBytes(size_t viewportMultiplier, const IntSize& viewportSize, 
 size_t TextureManager::highLimitBytes(const IntSize& viewportSize)
 {
     size_t viewportMultiplier, minMegabytes, maxMegabytes;
-    viewportMultiplier = 12;
 #if OS(ANDROID)
-    minMegabytes = 24;
-    maxMegabytes = 40;
+    viewportMultiplier = 16;
+    minMegabytes = 32;
+    maxMegabytes = 64;
 #else
-    minMegabytes = 64;
+    viewportMultiplier = 0;
+    minMegabytes = 0;
     maxMegabytes = 128;
 #endif
     return memoryLimitBytes(viewportMultiplier, viewportSize, minMegabytes, maxMegabytes);
@@ -61,23 +65,15 @@ size_t TextureManager::highLimitBytes(const IntSize& viewportSize)
 size_t TextureManager::reclaimLimitBytes(const IntSize& viewportSize)
 {
     size_t viewportMultiplier, minMegabytes, maxMegabytes;
-    viewportMultiplier = 6;
 #if OS(ANDROID)
-    minMegabytes = 9;
+    viewportMultiplier = 8;
+    minMegabytes = 16;
     maxMegabytes = 32;
 #else
-    minMegabytes = 32;
+    viewportMultiplier = 0;
+    minMegabytes = 0;
     maxMegabytes = 64;
 #endif
-    return memoryLimitBytes(viewportMultiplier, viewportSize, minMegabytes, maxMegabytes);
-}
-
-size_t TextureManager::lowLimitBytes(const IntSize& viewportSize)
-{
-    size_t viewportMultiplier, minMegabytes, maxMegabytes;
-    viewportMultiplier = 1;
-    minMegabytes = 2;
-    maxMegabytes = 3;
     return memoryLimitBytes(viewportMultiplier, viewportSize, minMegabytes, maxMegabytes);
 }
 
@@ -103,6 +99,26 @@ TextureManager::TextureManager(size_t maxMemoryLimitBytes, size_t preferredMemor
 {
 }
 
+TextureManager::~TextureManager()
+{
+    for (HashSet<ManagedTexture*>::iterator it = m_registeredTextures.begin(); it != m_registeredTextures.end(); ++it)
+        (*it)->clearManager();
+}
+
+void TextureManager::setMemoryAllocationLimitBytes(size_t memoryLimitBytes)
+{
+    setMaxMemoryLimitBytes(memoryLimitBytes);
+#if defined(OS_ANDROID)
+    // On android, we are setting the preferred memory limit to half of our
+    // maximum allocation, because we would like to stay significantly below
+    // the absolute memory limit whenever we can. Specifically, by limitting
+    // prepainting only to the halfway memory mark.
+    setPreferredMemoryLimitBytes(memoryLimitBytes / 2);
+#else
+    setPreferredMemoryLimitBytes(memoryLimitBytes);
+#endif
+}
+
 void TextureManager::setMaxMemoryLimitBytes(size_t memoryLimitBytes)
 {
     reduceMemoryToLimit(memoryLimitBytes);
@@ -112,8 +128,23 @@ void TextureManager::setMaxMemoryLimitBytes(size_t memoryLimitBytes)
 
 void TextureManager::setPreferredMemoryLimitBytes(size_t memoryLimitBytes)
 {
-    reduceMemoryToLimit(memoryLimitBytes);
     m_preferredMemoryLimitBytes = memoryLimitBytes;
+}
+
+void TextureManager::registerTexture(ManagedTexture* texture)
+{
+    ASSERT(texture);
+    ASSERT(!m_registeredTextures.contains(texture));
+
+    m_registeredTextures.add(texture);
+}
+
+void TextureManager::unregisterTexture(ManagedTexture* texture)
+{
+    ASSERT(texture);
+    ASSERT(m_registeredTextures.contains(texture));
+
+    m_registeredTextures.remove(texture);
 }
 
 TextureToken TextureManager::getToken()
@@ -162,6 +193,12 @@ void TextureManager::unprotectAllTextures()
         it->second.isProtected = false;
 }
 
+void TextureManager::evictTexture(TextureToken token, TextureInfo info)
+{
+    TRACE_EVENT("TextureManager::evictTexture", this, 0);
+    removeTexture(token, info);
+}
+
 void TextureManager::reduceMemoryToLimit(size_t limit)
 {
     while (m_memoryUseBytes > limit) {
@@ -172,37 +209,13 @@ void TextureManager::reduceMemoryToLimit(size_t limit)
             TextureInfo info = m_textures.get(token);
             if (info.isProtected)
                 continue;
-            removeTexture(token, info);
+            evictTexture(token, info);
             foundCandidate = true;
             break;
         }
         if (!foundCandidate)
             return;
     }
-}
-
-unsigned TextureManager::replaceTexture(TextureToken newToken, TextureInfo newInfo)
-{
-    for (ListHashSet<TextureToken>::iterator lruIt = m_textureLRUSet.begin(); lruIt != m_textureLRUSet.end(); ++lruIt) {
-        TextureToken token = *lruIt;
-        TextureInfo info = m_textures.get(token);
-        if (info.isProtected)
-            continue;
-        if (!info.textureId)
-            continue;
-        if (newInfo.size != info.size || newInfo.format != info.format)
-            continue;
-        newInfo.textureId = info.textureId;
-#ifndef NDEBUG
-        newInfo.allocator = info.allocator;
-#endif
-        m_textures.remove(token);
-        m_textureLRUSet.remove(token);
-        m_textures.set(newToken, newInfo);
-        m_textureLRUSet.add(newToken);
-        return info.textureId;
-    }
-    return 0;
 }
 
 void TextureManager::addTexture(TextureToken token, TextureInfo info)
@@ -269,10 +282,8 @@ unsigned TextureManager::allocateTexture(TextureAllocator* allocator, TextureTok
     return textureId;
 }
 
-bool TextureManager::requestTexture(TextureToken token, IntSize size, unsigned format, unsigned& textureId)
+bool TextureManager::requestTexture(TextureToken token, IntSize size, unsigned format)
 {
-    textureId = 0;
-
     if (size.width() > m_maxTextureSize || size.height() > m_maxTextureSize)
         return false;
 
@@ -298,13 +309,6 @@ bool TextureManager::requestTexture(TextureToken token, IntSize size, unsigned f
 #ifndef NDEBUG
     info.allocator = 0;
 #endif
-    // Avoid churning by reusing the texture if it is about to be reclaimed and
-    // it has the same size and format as the requesting texture.
-    if (m_memoryUseBytes + memoryRequiredBytes > m_preferredMemoryLimitBytes) {
-        textureId = replaceTexture(token, info);
-        if (textureId)
-            return true;
-    }
     addTexture(token, info);
     return true;
 }

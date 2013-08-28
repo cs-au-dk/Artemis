@@ -35,18 +35,28 @@
 #include "Database.h"
 #include "InjectedScript.h"
 #include "InjectedScriptHost.h"
+#include "InspectorDOMAgent.h"
 #include "InspectorValues.h"
 #include "ScriptValue.h"
 #include "V8Binding.h"
 #include "V8BindingState.h"
 #include "V8Database.h"
+#include "V8Float32Array.h"
+#include "V8Float64Array.h"
 #include "V8HTMLAllCollection.h"
 #include "V8HTMLCollection.h"
 #include "V8HiddenPropertyName.h"
+#include "V8Int16Array.h"
+#include "V8Int32Array.h"
+#include "V8Int8Array.h"
 #include "V8NodeList.h"
 #include "V8Node.h"
 #include "V8Proxy.h"
 #include "V8Storage.h"
+#include "V8Uint16Array.h"
+#include "V8Uint32Array.h"
+#include "V8Uint8Array.h"
+#include "V8Uint8ClampedArray.h"
 
 namespace WebCore {
 
@@ -66,35 +76,20 @@ ScriptValue InjectedScriptHost::nodeAsScriptValue(ScriptState* state, Node* node
     return ScriptValue(toV8(node));
 }
 
-v8::Handle<v8::Value> V8InjectedScriptHost::evaluateCallback(const v8::Arguments& args)
+v8::Handle<v8::Value> V8InjectedScriptHost::inspectedObjectCallback(const v8::Arguments& args)
 {
-    INC_STATS("InjectedScriptHost.evaluate()");
-    if (args.Length() < 1)
-        return v8::ThrowException(v8::Exception::Error(v8::String::New("One argument expected.")));
-
-    v8::Handle<v8::String> expression = args[0]->ToString();
-    if (expression.IsEmpty())
-        return v8::ThrowException(v8::Exception::Error(v8::String::New("The argument must be a string.")));
-
-    v8::Handle<v8::Script> script = v8::Script::Compile(expression);
-    if (script.IsEmpty()) // Return immediately in case of exception to let the caller handle it.
-        return v8::Handle<v8::Value>();
-    return script->Run();
-}
-
-v8::Handle<v8::Value> V8InjectedScriptHost::inspectedNodeCallback(const v8::Arguments& args)
-{
-    INC_STATS("InjectedScriptHost.inspectedNode()");
+    INC_STATS("InjectedScriptHost.inspectedObject()");
     if (args.Length() < 1)
         return v8::Undefined();
+
+    if (!args[0]->IsInt32()) {
+        throwError("argument has to be an integer");
+        return v8::Undefined();
+    }
 
     InjectedScriptHost* host = V8InjectedScriptHost::toNative(args.Holder());
-
-    Node* node = host->inspectedNode(args[0]->ToInt32()->Value());
-    if (!node)
-        return v8::Undefined();
-
-    return toV8(node);
+    InjectedScriptHost::InspectableObject* object = host->inspectedObject(args[0]->ToInt32()->Value());
+    return object->get(ScriptState::current()).v8Value();
 }
 
 v8::Handle<v8::Value> V8InjectedScriptHost::internalConstructorNameCallback(const v8::Arguments& args)
@@ -147,12 +142,20 @@ v8::Handle<v8::Value> V8InjectedScriptHost::typeCallback(const v8::Arguments& ar
         return v8::String::New("array");
     if (V8HTMLCollection::HasInstance(value))
         return v8::String::New("array");
+    if (V8Int8Array::HasInstance(value) || V8Int16Array::HasInstance(value) || V8Int32Array::HasInstance(value))
+        return v8::String::New("array");
+    if (V8Uint8Array::HasInstance(value) || V8Uint16Array::HasInstance(value) || V8Uint32Array::HasInstance(value))
+        return v8::String::New("array");
+    if (V8Float32Array::HasInstance(value) || V8Float64Array::HasInstance(value))
+        return v8::String::New("array");
+    if (V8Uint8ClampedArray::HasInstance(value))
+        return v8::String::New("array");
     return v8::Undefined();
 }
 
-v8::Handle<v8::Value> V8InjectedScriptHost::functionLocationCallback(const v8::Arguments& args)
+v8::Handle<v8::Value> V8InjectedScriptHost::functionDetailsCallback(const v8::Arguments& args)
 {
-    INC_STATS("InjectedScriptHost.typeCallback()");
+    INC_STATS("InjectedScriptHost.functionDetailsCallback()");
     if (args.Length() < 1)
         return v8::Undefined();
 
@@ -164,10 +167,81 @@ v8::Handle<v8::Value> V8InjectedScriptHost::functionLocationCallback(const v8::A
     v8::Handle<v8::Function> function = v8::Handle<v8::Function>::Cast(value);
     int lineNumber = function->GetScriptLineNumber();
     int columnNumber = function->GetScriptColumnNumber();
+
+    v8::Local<v8::Object> location = v8::Object::New();
+    location->Set(v8::String::New("lineNumber"), v8::Integer::New(lineNumber));
+    location->Set(v8::String::New("columnNumber"), v8::Integer::New(columnNumber));
+    location->Set(v8::String::New("scriptId"), function->GetScriptId()->ToString());
+
     v8::Local<v8::Object> result = v8::Object::New();
-    result->Set(v8::String::New("lineNumber"), v8::Integer::New(lineNumber));
-    result->Set(v8::String::New("columnNumber"), v8::Integer::New(columnNumber));
-    result->Set(v8::String::New("scriptId"), function->GetScriptId()->ToString());
+    result->Set(v8::String::New("location"), location);
+
+    v8::Handle<v8::Value> name = function->GetName();
+    if (name->IsString() && v8::Handle<v8::String>::Cast(name)->Length())
+        result->Set(v8::String::New("name"), name);
+
+    v8::Handle<v8::Value> inferredName = function->GetInferredName();
+    if (inferredName->IsString() && v8::Handle<v8::String>::Cast(inferredName)->Length())
+        result->Set(v8::String::New("inferredName"), inferredName);
+    return result;
+}
+
+static v8::Handle<v8::Array> getJSListenerFunctions(Document* document, const EventListenerInfo& listenerInfo)
+{
+    v8::Local<v8::Array> result = v8::Array::New();
+    size_t handlersCount = listenerInfo.eventListenerVector.size();
+    for (size_t i = 0, outputIndex = 0; i < handlersCount; ++i) {
+        RefPtr<EventListener> listener = listenerInfo.eventListenerVector[i].listener;
+        if (listener->type() != EventListener::JSEventListenerType) {
+            ASSERT_NOT_REACHED();
+            continue;
+        }
+        V8AbstractEventListener* v8Listener = static_cast<V8AbstractEventListener*>(listener.get());
+        v8::Local<v8::Context> context = toV8Context(document, v8Listener->worldContext());
+        // Hide listeners from other contexts.
+        if (context != V8Proxy::currentContext())
+            continue;
+        v8::Local<v8::Object> function = v8Listener->getListenerObject(document);
+        v8::Local<v8::Object> listenerEntry = v8::Object::New();
+        listenerEntry->Set(v8::String::New("listener"), function);
+        listenerEntry->Set(v8::String::New("useCapture"), v8::Boolean::New(listenerInfo.eventListenerVector[i].useCapture));
+        result->Set(v8::Number::New(outputIndex++), listenerEntry);
+    }
+    return result;
+}
+
+v8::Handle<v8::Value> V8InjectedScriptHost::getEventListenersCallback(const v8::Arguments& args)
+{
+    INC_STATS("InjectedScriptHost.queryEventListenerCallback()");
+    if (args.Length() < 1)
+        return v8::Undefined();
+
+    v8::HandleScope handleScope;
+
+    v8::Local<v8::Value> value = args[0];
+    if (!V8Node::HasInstance(value))
+        return v8::Undefined();
+    Node* node = V8Node::toNative(value->ToObject());
+    if (!node)
+        return v8::Undefined();
+    // This can only happen for orphan DocumentType nodes.
+    Document* document = node->document();
+    if (!node->document())
+        return v8::Undefined();
+
+    InjectedScriptHost* host = V8InjectedScriptHost::toNative(args.Holder());
+    Vector<EventListenerInfo> listenersArray;
+    host->getEventListenersImpl(node, listenersArray);
+
+    v8::Local<v8::Object> result = v8::Object::New();
+    for (size_t i = 0; i < listenersArray.size(); ++i) {
+        v8::Handle<v8::Array> listeners = getJSListenerFunctions(document, listenersArray[i]);
+        if (!listeners->Length())
+            continue;
+        AtomicString eventType = listenersArray[i].eventType;
+        result->Set(v8::String::New(fromWebCoreString(eventType), eventType.length()), listeners);
+    }
+
     return result;
 }
 
@@ -194,7 +268,7 @@ v8::Handle<v8::Value> V8InjectedScriptHost::databaseIdCallback(const v8::Argumen
     InjectedScriptHost* host = V8InjectedScriptHost::toNative(args.Holder());
     Database* database = V8Database::toNative(v8::Handle<v8::Object>::Cast(args[0]));
     if (database)
-        return v8::Number::New(host->databaseIdImpl(database));
+        return v8StringOrUndefined(host->databaseIdImpl(database));
 #endif
     return v8::Undefined();
 }
@@ -207,7 +281,7 @@ v8::Handle<v8::Value> V8InjectedScriptHost::storageIdCallback(const v8::Argument
     InjectedScriptHost* host = V8InjectedScriptHost::toNative(args.Holder());
     Storage* storage = V8Storage::toNative(v8::Handle<v8::Object>::Cast(args[0]));
     if (storage)
-        return v8::Number::New(host->storageIdImpl(storage));
+        return v8StringOrUndefined(host->storageIdImpl(storage));
     return v8::Undefined();
 }
 

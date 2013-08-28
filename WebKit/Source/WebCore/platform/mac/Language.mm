@@ -30,11 +30,12 @@
 #import "WebCoreSystemInterface.h"
 #import <wtf/Assertions.h>
 #import <wtf/MainThread.h>
+#import <wtf/RetainPtr.h>
 #import <wtf/text/WTFString.h>
 
 using namespace WebCore;
 
-static NSString *preferredLanguageCode;
+static BOOL useCachedPreferredLanguages;
 
 @interface WebLanguageChangeObserver : NSObject {
 }
@@ -46,8 +47,7 @@ static NSString *preferredLanguageCode;
 {
     ASSERT(isMainThread());
 
-    [preferredLanguageCode release];
-    preferredLanguageCode = nil;
+    useCachedPreferredLanguages = NO;
 
     languageDidChange();
 }
@@ -56,51 +56,50 @@ static NSString *preferredLanguageCode;
 
 namespace WebCore {
 
-static NSString *createHTTPStyleLanguageCode(NSString *languageCode)
+static String httpStyleLanguageCode(NSString *languageCode)
 {
     ASSERT(isMainThread());
 
     // Look up the language code using CFBundle.
-    CFStringRef preferredLanguageCode = wkCopyCFLocalizationPreferredName((CFStringRef)languageCode);
+    RetainPtr<CFStringRef> preferredLanguageCode(AdoptCF, wkCopyCFLocalizationPreferredName((CFStringRef)languageCode));
 
     if (preferredLanguageCode)
-        languageCode = (NSString *)preferredLanguageCode;
-    
+        languageCode = (NSString *)preferredLanguageCode.get();
+
     // Make the string lowercase.
     NSString *lowercaseLanguageCode = [languageCode lowercaseString];
-    
-    NSString *httpStyleLanguageCode;
-    
+
     // Turn a '_' into a '-' if it appears after a 2-letter language code.
     if ([lowercaseLanguageCode length] >= 3 && [lowercaseLanguageCode characterAtIndex:2] == '_') {
-        NSMutableString *mutableLanguageCode = [lowercaseLanguageCode mutableCopy];
-        [mutableLanguageCode replaceCharactersInRange:NSMakeRange(2, 1) withString:@"-"];
-        httpStyleLanguageCode = mutableLanguageCode;
-    } else
-        httpStyleLanguageCode = [lowercaseLanguageCode retain];
-    
-    if (preferredLanguageCode)
-        CFRelease(preferredLanguageCode);
+        RetainPtr<NSMutableString> mutableLanguageCode(AdoptNS, [lowercaseLanguageCode mutableCopy]);
+        [mutableLanguageCode.get() replaceCharactersInRange:NSMakeRange(2, 1) withString:@"-"];
+        return mutableLanguageCode.get();
+    }
 
-    return httpStyleLanguageCode;
+    return lowercaseLanguageCode;
 }
 
-String platformDefaultLanguage()
+Vector<String> platformUserPreferredLanguages()
 {
+    DEFINE_STATIC_LOCAL(Vector<String>, userPreferredLanguages, ());
+
     ASSERT(isMainThread());
 
     BEGIN_BLOCK_OBJC_EXCEPTIONS;
 
-    if (!preferredLanguageCode) {
-        [[NSUserDefaults standardUserDefaults] synchronize];
-        NSArray *languages = [[NSUserDefaults standardUserDefaults] stringArrayForKey:@"AppleLanguages"];
-        if (![languages count])
-            preferredLanguageCode = @"en";
-        else
-            preferredLanguageCode = createHTTPStyleLanguageCode([languages objectAtIndex:0]);
-    }
+    if (!useCachedPreferredLanguages) {
+        useCachedPreferredLanguages = YES;
+        userPreferredLanguages.clear();
 
-    NSString *code = [[preferredLanguageCode retain] autorelease];
+        RetainPtr<CFArrayRef> languages(AdoptCF, CFLocaleCopyPreferredLanguages());
+        CFIndex languageCount = CFArrayGetCount(languages.get());
+        if (!languageCount)
+            userPreferredLanguages.append("en");
+        else {
+            for (CFIndex i = 0; i < languageCount; i++)
+                userPreferredLanguages.append(httpStyleLanguageCode((NSString *)CFArrayGetValueAtIndex(languages.get(), i)));
+        }
+    }
 
 #if !PLATFORM(IOS)
     static bool languageChangeObserverAdded;
@@ -112,11 +111,12 @@ String platformDefaultLanguage()
         languageChangeObserverAdded = true;
     }
 #endif // !PLATFORM(IOS)
-
-    return code;
+    
+    return userPreferredLanguages;
 
     END_BLOCK_OBJC_EXCEPTIONS;
-    return String();
+
+    return Vector<String>();
 }
 
 }

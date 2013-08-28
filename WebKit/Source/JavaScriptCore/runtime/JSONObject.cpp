@@ -142,7 +142,7 @@ static inline JSValue unwrapBoxedPrimitive(ExecState* exec, JSValue value)
     if (object->inherits(&NumberObject::s_info))
         return jsNumber(object->toNumber(exec));
     if (object->inherits(&StringObject::s_info))
-        return jsString(exec, object->toString(exec));
+        return object->toString(exec);
     if (object->inherits(&BooleanObject::s_info))
         return object->toPrimitive(exec);
     return value;
@@ -223,25 +223,12 @@ Stringifier::Stringifier(ExecState* exec, const Local<Unknown>& replacer, const 
             if (exec->hadException())
                 break;
 
-            UString propertyName;
-            if (name.getString(exec, propertyName)) {
-                m_arrayReplacerPropertyNames.add(Identifier(exec, propertyName));
-                continue;
-            }
-
-            if (name.isNumber()) {
-                m_arrayReplacerPropertyNames.add(Identifier::from(exec, name.asNumber()));
-                continue;
-            }
-
             if (name.isObject()) {
                 if (!asObject(name)->inherits(&NumberObject::s_info) && !asObject(name)->inherits(&StringObject::s_info))
                     continue;
-                propertyName = name.toString(exec);
-                if (exec->hadException())
-                    break;
-                m_arrayReplacerPropertyNames.add(Identifier(exec, propertyName));
             }
+
+            m_arrayReplacerPropertyNames.add(Identifier(exec, name.toString(exec)->value(exec)));
         }
         return;
     }
@@ -717,12 +704,8 @@ NEVER_INLINE JSValue Walker::walk(JSValue unfiltered)
                 JSValue filteredValue = callReviver(array, jsString(m_exec, UString::number(indexStack.last())), outValue);
                 if (filteredValue.isUndefined())
                     array->methodTable()->deletePropertyByIndex(array, m_exec, indexStack.last());
-                else {
-                    if (isJSArray(array) && array->canSetIndex(indexStack.last()))
-                        array->setIndex(m_exec->globalData(), indexStack.last(), filteredValue);
-                    else
-                        array->methodTable()->putByIndex(array, m_exec, indexStack.last(), filteredValue);
-                }
+                else
+                    array->putDirectIndex(m_exec, indexStack.last(), filteredValue, false);
                 if (m_exec->hadException())
                     return jsNull();
                 indexStack.last()++;
@@ -825,8 +808,7 @@ EncodedJSValue JSC_HOST_CALL JSONProtoFuncParse(ExecState* exec)
 {
     if (!exec->argumentCount())
         return throwVMError(exec, createError(exec, "JSON.parse requires at least one parameter"));
-    JSValue value = exec->argument(0);
-    UString source = value.toString(exec);
+    UString source = exec->argument(0).toString(exec)->value(exec);
     if (exec->hadException())
         return JSValue::encode(jsNull());
 

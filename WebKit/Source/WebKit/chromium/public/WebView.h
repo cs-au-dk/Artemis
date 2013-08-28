@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009 Google Inc. All rights reserved.
+ * Copyright (C) 2009, 2010, 2011, 2012 Google Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -41,6 +41,7 @@ namespace WebKit {
 
 class WebAccessibilityObject;
 class WebAutofillClient;
+class WebBatteryStatus;
 class WebDevToolsAgent;
 class WebDevToolsAgentClient;
 class WebDragData;
@@ -50,11 +51,16 @@ class WebGraphicsContext3D;
 class WebNode;
 class WebPageOverlay;
 class WebPermissionClient;
+class WebPrerendererClient;
+class WebRange;
 class WebSettings;
 class WebSpellCheckClient;
 class WebString;
+class WebTextFieldDecoratorClient;
 class WebViewClient;
+struct WebActiveWheelFlingParameters;
 struct WebMediaPlayerAction;
+struct WebPluginAction;
 struct WebPoint;
 
 class WebView : public WebWidget {
@@ -101,7 +107,11 @@ public:
     virtual void setAutofillClient(WebAutofillClient*) = 0;
     virtual void setDevToolsAgentClient(WebDevToolsAgentClient*) = 0;
     virtual void setPermissionClient(WebPermissionClient*) = 0;
+    // FIXME: After the Prerendering API lands in chrome, remove this staging thunk
+    // for setPrerendererClient().
+    virtual void setPrerendererClient(WebPrerendererClient*) { }
     virtual void setSpellCheckClient(WebSpellCheckClient*) = 0;
+    virtual void addTextFieldDecoratorClient(WebTextFieldDecoratorClient*) = 0;
 
 
     // Options -------------------------------------------------------------
@@ -214,7 +224,7 @@ public:
     // is scaled up, < 1.0 is scaled down.
     virtual float pageScaleFactor() const = 0;
 
-    // Indicates wehther the page scale factor has been set since navigating
+    // Indicates whether the page scale factor has been set since navigating
     // to a new page.
     virtual bool isPageScaleFactorSet() const = 0;
 
@@ -259,16 +269,21 @@ public:
     // In auto-resize mode, the view is automatically adjusted to fit the html
     // content within the given bounds.
     virtual void enableAutoResizeMode(
-        bool enable,
         const WebSize& minSize,
         const WebSize& maxSize) = 0;
 
+    // Turn off auto-resize.
+    virtual void disableAutoResizeMode() = 0;
 
     // Media ---------------------------------------------------------------
 
-    // Performs the specified action on the node at the given location.
+    // Performs the specified media player action on the node at the given location.
     virtual void performMediaPlayerAction(
         const WebMediaPlayerAction&, const WebPoint& location) = 0;
+
+    // Performs the specified plugin action on the node at the given location.
+    virtual void performPluginAction(
+        const WebPluginAction&, const WebPoint& location) = 0;
 
 
     // Data exchange -------------------------------------------------------
@@ -340,19 +355,16 @@ public:
     // Autofill  -----------------------------------------------------------
 
     // Notifies the WebView that Autofill suggestions are available for a node.
-    // |uniqueIDs| is a vector of IDs that represent the unique ID of each
-    // Autofill profile in the suggestions popup. If a unique ID is 0, then the
-    // corresponding suggestion comes from Autocomplete rather than Autofill.
-    // If a unique ID is negative, then the corresponding "suggestion" is
-    // actually a user-facing warning, e.g. explaining why Autofill is
-    // unavailable for the current form.
+    // |itemIDs| is a vector of IDs for the menu items. A positive itemID is a
+    // unique ID for the Autofill entries. Other MenuItemIDs are defined in
+    // WebAutofillClient.h
     virtual void applyAutofillSuggestions(
         const WebNode&,
         const WebVector<WebString>& names,
         const WebVector<WebString>& labels,
         const WebVector<WebString>& icons,
-        const WebVector<int>& uniqueIDs,
-        int separatorIndex) = 0;
+        const WebVector<int>& itemIDs,
+        int separatorIndex = -1) = 0;
 
     // Hides any popup (suggestions, selects...) that might be showing.
     virtual void hidePopups() = 0;
@@ -418,6 +430,14 @@ public:
     // APIs.
     virtual WebGraphicsContext3D* graphicsContext3D() = 0;
 
+    // Context that's in the compositor's share group, but is not the compositor context itself.
+    // Can be used for allocating resources that the compositor will later access.
+    virtual WebGraphicsContext3D* sharedGraphicsContext3D() = 0;
+
+    // Called to inform the WebView that a wheel fling animation was started externally (for instance
+    // by the compositor) but must be completed by the WebView.
+    virtual void transferActiveWheelFlingAnimation(const WebActiveWheelFlingParameters&) = 0;
+
     // Visibility -----------------------------------------------------------
 
     // Sets the visibility of the WebView.
@@ -437,11 +457,17 @@ public:
     virtual void addPageOverlay(WebPageOverlay*, int /*z-order*/) = 0;
     virtual void removePageOverlay(WebPageOverlay*) = 0;
 
+    // Battery status API support -------------------------------------------
+
+    // Updates the battery status in the BatteryClient. This also triggers the
+    // appropriate JS events (e.g. sends a 'levelchange' event to JS if the
+    // level is changed in this update from the previous update).
+    virtual void updateBatteryStatus(const WebBatteryStatus&) { }
+
     // Testing functionality for LayoutTestController -----------------------
 
     // Simulates a compositor lost context.
     virtual void loseCompositorContext(int numTimes) = 0;
-
 
 protected:
     ~WebView() {}

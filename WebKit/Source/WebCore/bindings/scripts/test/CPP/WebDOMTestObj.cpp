@@ -21,17 +21,33 @@
 #include "config.h"
 #include "WebDOMTestObj.h"
 
+#include "Dictionary.h"
+#include "Document.h"
 #include "HTMLNames.h"
 #include "IDBKey.h"
 #include "KURL.h"
-#include "OptionsObject.h"
+#include "SVGPoint.h"
 #include "SerializedScriptValue.h"
 #include "TestObj.h"
+#include "WebDOMDictionary.h"
+#include "WebDOMDocument.h"
 #include "WebDOMIDBKey.h"
-#include "WebDOMOptionsObject.h"
+#include "WebDOMSVGPoint.h"
 #include "WebDOMString.h"
+#include "WebDOMa.h"
+#include "WebDOMb.h"
+#include "WebDOMbool.h"
+#include "WebDOMc.h"
+#include "WebDOMd.h"
+#include "WebDOMe.h"
 #include "WebExceptionHandler.h"
 #include "WebNativeEventListener.h"
+#include "a.h"
+#include "b.h"
+#include "bool.h"
+#include "c.h"
+#include "d.h"
+#include "e.h"
 #include "wtf/text/AtomicString.h"
 #include <wtf/GetPtr.h>
 #include <wtf/RefPtr.h>
@@ -72,7 +88,7 @@ WebDOMTestObj& WebDOMTestObj::operator=(const WebDOMTestObj& copy)
 
 WebCore::TestObj* WebDOMTestObj::impl() const
 {
-    return m_impl ? m_impl->impl.get() : 0;
+    return m_impl ? WTF::getPtr(m_impl->impl) : 0;
 }
 
 WebDOMTestObj::~WebDOMTestObj()
@@ -329,22 +345,6 @@ void WebDOMTestObj::setReflectedURLAttr(const WebDOMString& newReflectedURLAttr)
     impl()->setAttribute(WebCore::HTMLNames::reflectedurlattrAttr, newReflectedURLAttr);
 }
 
-WebDOMString WebDOMTestObj::reflectedNonEmptyURLAttr() const
-{
-    if (!impl())
-        return WebDOMString();
-
-    return static_cast<const WTF::String&>(impl()->getNonEmptyURLAttribute(WebCore::HTMLNames::reflectednonemptyurlattrAttr));
-}
-
-void WebDOMTestObj::setReflectedNonEmptyURLAttr(const WebDOMString& newReflectedNonEmptyURLAttr)
-{
-    if (!impl())
-        return;
-
-    impl()->setAttribute(WebCore::HTMLNames::reflectednonemptyurlattrAttr, newReflectedNonEmptyURLAttr);
-}
-
 WebDOMString WebDOMTestObj::reflectedStringAttr() const
 {
     if (!impl())
@@ -407,22 +407,6 @@ void WebDOMTestObj::setReflectedCustomURLAttr(const WebDOMString& newReflectedCu
         return;
 
     impl()->setAttribute(WebCore::HTMLNames::customContentURLAttrAttr, newReflectedCustomURLAttr);
-}
-
-WebDOMString WebDOMTestObj::reflectedCustomNonEmptyURLAttr() const
-{
-    if (!impl())
-        return WebDOMString();
-
-    return static_cast<const WTF::String&>(impl()->getNonEmptyURLAttribute(WebCore::HTMLNames::customContentNonEmptyURLAttrAttr));
-}
-
-void WebDOMTestObj::setReflectedCustomNonEmptyURLAttr(const WebDOMString& newReflectedCustomNonEmptyURLAttr)
-{
-    if (!impl())
-        return;
-
-    impl()->setAttribute(WebCore::HTMLNames::customContentNonEmptyURLAttrAttr, newReflectedCustomNonEmptyURLAttr);
 }
 
 int WebDOMTestObj::attrWithGetterException() const
@@ -503,14 +487,6 @@ void WebDOMTestObj::setStringAttrWithSetterException(const WebDOMString& newStri
     webDOMRaiseError(static_cast<WebDOMExceptionCode>(ec));
 }
 
-WebDOMString WebDOMTestObj::scriptStringAttr() const
-{
-    if (!impl())
-        return WebDOMString();
-
-    return static_cast<const WTF::String&>(impl()->scriptStringAttr());
-}
-
 #if ENABLE(Condition1)
 int WebDOMTestObj::conditionalAttr1() const
 {
@@ -565,60 +541,78 @@ void WebDOMTestObj::setConditionalAttr3(int newConditionalAttr3)
 }
 
 #endif
-#if ENABLE(Condition1)
-WebDOMTestObjectAConstructor WebDOMTestObj::conditionalAttr4() const
+WebDOMDocument WebDOMTestObj::contentDocument() const
 {
     if (!impl())
-        return WebDOMTestObjectAConstructor();
+        return WebDOMDocument();
 
-    return toWebKit(WTF::getPtr(impl()->conditionalAttr4()));
+    return toWebKit(WTF::getPtr(impl()->contentDocument()));
 }
 
-void WebDOMTestObj::setConditionalAttr4(const WebDOMTestObjectAConstructor& newConditionalAttr4)
+WebDOMSVGPoint WebDOMTestObj::mutablePoint() const
 {
     if (!impl())
-        return;
+        return WebDOMSVGPoint();
 
-    impl()->setConditionalAttr4(toWebCore(newConditionalAttr4));
+    return toWebKit(WTF::getPtr(impl()->mutablePoint()));
 }
 
-#endif
-#if ENABLE(Condition1) && ENABLE(Condition2)
-WebDOMTestObjectBConstructor WebDOMTestObj::conditionalAttr5() const
-{
-    if (!impl())
-        return WebDOMTestObjectBConstructor();
-
-    return toWebKit(WTF::getPtr(impl()->conditionalAttr5()));
-}
-
-void WebDOMTestObj::setConditionalAttr5(const WebDOMTestObjectBConstructor& newConditionalAttr5)
+void WebDOMTestObj::setMutablePoint(const WebDOMSVGPoint& newMutablePoint)
 {
     if (!impl())
         return;
 
-    impl()->setConditionalAttr5(toWebCore(newConditionalAttr5));
+    impl()->setMutablePoint(toWebCore(newMutablePoint));
 }
 
-#endif
-#if ENABLE(Condition1) || ENABLE(Condition2)
-WebDOMTestObjectCConstructor WebDOMTestObj::conditionalAttr6() const
+WebDOMSVGPoint WebDOMTestObj::immutablePoint() const
 {
     if (!impl())
-        return WebDOMTestObjectCConstructor();
+        return WebDOMSVGPoint();
 
-    return toWebKit(WTF::getPtr(impl()->conditionalAttr6()));
+    return toWebKit(WTF::getPtr(impl()->immutablePoint()));
 }
 
-void WebDOMTestObj::setConditionalAttr6(const WebDOMTestObjectCConstructor& newConditionalAttr6)
+void WebDOMTestObj::setImmutablePoint(const WebDOMSVGPoint& newImmutablePoint)
 {
     if (!impl())
         return;
 
-    impl()->setConditionalAttr6(toWebCore(newConditionalAttr6));
+    impl()->setImmutablePoint(toWebCore(newImmutablePoint));
 }
 
-#endif
+int WebDOMTestObj::strawberry() const
+{
+    if (!impl())
+        return 0;
+
+    return impl()->blueberry();
+}
+
+void WebDOMTestObj::setStrawberry(int newStrawberry)
+{
+    if (!impl())
+        return;
+
+    impl()->setBlueberry(newStrawberry);
+}
+
+float WebDOMTestObj::strictFloat() const
+{
+    if (!impl())
+        return 0;
+
+    return impl()->strictFloat();
+}
+
+void WebDOMTestObj::setStrictFloat(float newStrictFloat)
+{
+    if (!impl())
+        return;
+
+    impl()->setStrictFloat(newStrictFloat);
+}
+
 int WebDOMTestObj::description() const
 {
     if (!impl())
@@ -726,7 +720,7 @@ void WebDOMTestObj::idbKey(const WebDOMIDBKey& key)
     impl()->idbKey(toWebCore(key));
 }
 
-void WebDOMTestObj::optionsObject(const WebDOMOptionsObject& oo, const WebDOMOptionsObject& ooo)
+void WebDOMTestObj::optionsObject(const WebDOMDictionary& oo, const WebDOMDictionary& ooo)
 {
     if (!impl())
         return;
@@ -760,75 +754,6 @@ void WebDOMTestObj::removeEventListener(const WebDOMString& type, const WebDOMEv
     impl()->removeEventListener(type, toWebCore(listener), useCapture);
 }
 
-void WebDOMTestObj::withDynamicFrame()
-{
-    if (!impl())
-        return;
-
-    impl()->withDynamicFrame();
-}
-
-void WebDOMTestObj::withDynamicFrameAndArg(int intArg)
-{
-    if (!impl())
-        return;
-
-    impl()->withDynamicFrameAndArg(intArg);
-}
-
-void WebDOMTestObj::withDynamicFrameAndOptionalArg(int intArg, int optionalArg)
-{
-    if (!impl())
-        return;
-
-    impl()->withDynamicFrameAndOptionalArg(intArg, optionalArg);
-}
-
-void WebDOMTestObj::withScriptStateVoid()
-{
-    if (!impl())
-        return;
-
-    impl()->withScriptStateVoid();
-}
-
-WebDOMTestObj WebDOMTestObj::withScriptStateObj()
-{
-    if (!impl())
-        return WebDOMTestObj();
-
-    return toWebKit(WTF::getPtr(impl()->withScriptStateObj()));
-}
-
-void WebDOMTestObj::withScriptStateVoidException()
-{
-    if (!impl())
-        return;
-
-    WebCore::ExceptionCode ec = 0;
-    impl()->withScriptStateVoidException(ec);
-    webDOMRaiseError(static_cast<WebDOMExceptionCode>(ec));
-}
-
-WebDOMTestObj WebDOMTestObj::withScriptStateObjException()
-{
-    if (!impl())
-        return WebDOMTestObj();
-
-    WebCore::ExceptionCode ec = 0;
-    WebDOMTestObj result = toWebKit(WTF::getPtr(impl()->withScriptStateObjException(ec)));
-    webDOMRaiseError(static_cast<WebDOMExceptionCode>(ec));
-    return result;
-}
-
-void WebDOMTestObj::withScriptExecutionContext()
-{
-    if (!impl())
-        return;
-
-    impl()->withScriptExecutionContext();
-}
-
 void WebDOMTestObj::methodWithOptionalArg(int opt)
 {
     if (!impl())
@@ -851,6 +776,30 @@ void WebDOMTestObj::methodWithNonOptionalArgAndTwoOptionalArgs(int nonOpt, int o
         return;
 
     impl()->methodWithNonOptionalArgAndTwoOptionalArgs(nonOpt, opt1, opt2);
+}
+
+void WebDOMTestObj::methodWithOptionalString(const WebDOMString& str)
+{
+    if (!impl())
+        return;
+
+    impl()->methodWithOptionalString(str);
+}
+
+void WebDOMTestObj::methodWithOptionalStringIsUndefined(const WebDOMString& str)
+{
+    if (!impl())
+        return;
+
+    impl()->methodWithOptionalStringIsUndefined(str);
+}
+
+void WebDOMTestObj::methodWithOptionalStringIsNullString(const WebDOMString& str)
+{
+    if (!impl())
+        return;
+
+    impl()->methodWithOptionalStringIsNullString(str);
 }
 
 
@@ -928,6 +877,81 @@ void WebDOMTestObj::overloadedMethod1(const WebDOMString& type)
 }
 
 #endif
+
+void WebDOMTestObj::convert1(const WebDOMa& )
+{
+    if (!impl())
+        return;
+
+    impl()->convert1(toWebCore());
+}
+
+void WebDOMTestObj::convert2(const WebDOMb& )
+{
+    if (!impl())
+        return;
+
+    impl()->convert2(toWebCore());
+}
+
+void WebDOMTestObj::convert3(const WebDOMc& )
+{
+    if (!impl())
+        return;
+
+    impl()->convert3(toWebCore());
+}
+
+void WebDOMTestObj::convert4(const WebDOMd& )
+{
+    if (!impl())
+        return;
+
+    impl()->convert4(toWebCore());
+}
+
+void WebDOMTestObj::convert5(const WebDOMe& )
+{
+    if (!impl())
+        return;
+
+    impl()->convert5(toWebCore());
+}
+
+WebDOMSVGPoint WebDOMTestObj::mutablePointFunction()
+{
+    if (!impl())
+        return WebDOMSVGPoint();
+
+    return toWebKit(WTF::getPtr(impl()->mutablePointFunction()));
+}
+
+WebDOMSVGPoint WebDOMTestObj::immutablePointFunction()
+{
+    if (!impl())
+        return WebDOMSVGPoint();
+
+    return toWebKit(WTF::getPtr(impl()->immutablePointFunction()));
+}
+
+void WebDOMTestObj::orange()
+{
+    if (!impl())
+        return;
+
+    impl()->orange();
+}
+
+WebDOMbool WebDOMTestObj::strictFunction(const WebDOMString& str, float a, int b)
+{
+    if (!impl())
+        return WebDOMbool();
+
+    WebCore::ExceptionCode ec = 0;
+    WebDOMbool result = toWebKit(WTF::getPtr(impl()->strictFunction(str, a, b, ec)));
+    webDOMRaiseError(static_cast<WebDOMExceptionCode>(ec));
+    return result;
+}
 
 WebCore::TestObj* toWebCore(const WebDOMTestObj& wrapper)
 {

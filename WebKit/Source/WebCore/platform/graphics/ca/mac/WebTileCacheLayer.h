@@ -27,7 +27,9 @@
 #import <wtf/OwnPtr.h>
 
 namespace WebCore {
+    class IntRect;
     class TileCache;
+    class TiledBacking;
 }
 
 @interface WebTileCacheLayer : CALayer {
@@ -35,4 +37,7 @@ namespace WebCore {
 }
 
 - (CALayer *)tileContainerLayer;
+- (WebCore::TiledBacking*)tiledBacking;
+- (void)invalidate;
+
 @end

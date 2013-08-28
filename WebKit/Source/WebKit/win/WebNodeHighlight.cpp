@@ -33,11 +33,12 @@
 #include <WebCore/BitmapInfo.h>
 #include <WebCore/Color.h>
 #include <WebCore/GraphicsContext.h>
+#include <WebCore/HWndDC.h>
 #include <WebCore/InspectorController.h>
 #include <WebCore/Page.h>
 #include <WebCore/WindowMessageBroadcaster.h>
-#include <wtf/OwnPtr.h>
 #include <wtf/HashSet.h>
+#include <wtf/OwnPtr.h>
 
 using namespace WebCore;
 
@@ -46,12 +47,17 @@ static ATOM registerOverlayClass();
 static LPCTSTR kWebNodeHighlightPointerProp = TEXT("WebNodeHighlightPointer");
 
 WebNodeHighlight::WebNodeHighlight(WebView* webView)
-    : m_inspectedWebView(webView)
-    , m_overlay(0)
+    : 
+#if ENABLE(INSPECTOR)    
+      m_inspectedWebView(webView),
+#endif // ENABLE(INSPECTOR)
+      m_overlay(0)
     , m_observedWindow(0)
     , m_showsWhileWebViewIsVisible(false)
 {
+#if ENABLE(INSPECTOR)
     m_inspectedWebView->viewWindow(reinterpret_cast<OLE_HANDLE*>(&m_inspectedWebViewWindow));
+#endif // ENABLE(INSPECTOR)
 }
 
 WebNodeHighlight::~WebNodeHighlight()
@@ -134,7 +140,7 @@ void WebNodeHighlight::update()
 {
     ASSERT(m_overlay);
 
-    HDC hdc = ::CreateCompatibleDC(::GetDC(m_overlay));
+    HDC hdc = ::CreateCompatibleDC(HWndDC(m_overlay));
     if (!hdc)
         return;
 
@@ -157,8 +163,9 @@ void WebNodeHighlight::update()
     ::SelectObject(hdc, hbmp.get());
 
     GraphicsContext context(hdc);
-
+#if ENABLE(INSPECTOR)
     m_inspectedWebView->page()->inspectorController()->drawHighlight(context);
+#endif // ENABLE(INSPECTOR)
 
     BLENDFUNCTION bf;
     bf.BlendOp = AC_SRC_OVER;
@@ -174,8 +181,7 @@ void WebNodeHighlight::update()
     dstPoint.x = webViewRect.left;
     dstPoint.y = webViewRect.top;
 
-    ::UpdateLayeredWindow(m_overlay, ::GetDC(0), &dstPoint, &size, hdc, &srcPoint, 0, &bf, ULW_ALPHA);
-
+    ::UpdateLayeredWindow(m_overlay, HWndDC(0), &dstPoint, &size, hdc, &srcPoint, 0, &bf, ULW_ALPHA);
     ::DeleteDC(hdc);
 }
 

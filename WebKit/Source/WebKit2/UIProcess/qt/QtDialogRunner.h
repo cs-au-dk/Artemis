@@ -21,12 +21,18 @@
 #ifndef QtDialogRunner_h
 #define QtDialogRunner_h
 
+#include "WKSecurityOrigin.h"
 #include <QtCore/QEventLoop>
+#include <QtCore/QStringList>
 #include <wtf/OwnPtr.h>
 
+QT_BEGIN_NAMESPACE
 class QDeclarativeComponent;
 class QDeclarativeContext;
 class QQuickItem;
+QT_END_NAMESPACE
+
+namespace WebKit {
 
 class QtDialogRunner : public QEventLoop {
     Q_OBJECT
@@ -38,17 +44,47 @@ public:
     bool initForAlert(QDeclarativeComponent*, QQuickItem* dialogParent, const QString& message);
     bool initForConfirm(QDeclarativeComponent*, QQuickItem* dialogParent, const QString& message);
     bool initForPrompt(QDeclarativeComponent*, QQuickItem* dialogParent, const QString& message, const QString& defaultValue);
+    bool initForAuthentication(QDeclarativeComponent*, QQuickItem* dialogParent, const QString& hostname, const QString& realm, const QString& prefilledUsername);
+    bool initForCertificateVerification(QDeclarativeComponent*, QQuickItem*, const QString& hostname);
+    bool initForProxyAuthentication(QDeclarativeComponent*, QQuickItem*, const QString& hostname, uint16_t port, const QString& prefilledUsername);
+    bool initForFilePicker(QDeclarativeComponent*, QQuickItem*, const QStringList& selectedFiles, bool allowMultiple);
+    bool initForDatabaseQuotaDialog(QDeclarativeComponent*, QQuickItem*, const QString& databaseName, const QString& displayName, WKSecurityOriginRef, quint64 currentQuota, quint64 currentOriginUsage, quint64 currentDatabaseUsage, quint64 expectedUsage);
 
     QQuickItem* dialog() const { return m_dialog.get(); }
 
     bool wasAccepted() const { return m_wasAccepted; }
     QString result() const { return m_result; }
 
+    QString username() const { return m_username; }
+    QString password() const { return m_password; }
+
+    quint64 databaseQuota() const { return m_databaseQuota; }
+
+    QStringList filePaths() const { return m_filepaths; }
+
 public slots:
     void onAccepted(const QString& result = QString())
     {
         m_wasAccepted = true;
         m_result = result;
+    }
+
+    void onAuthenticationAccepted(const QString& username, const QString& password)
+    {
+        m_username = username;
+        m_password = password;
+    }
+
+    void onFileSelected(const QStringList& filePaths)
+    {
+        m_wasAccepted = true;
+        m_filepaths = filePaths;
+    }
+
+    void onDatabaseQuotaAccepted(quint64 quota)
+    {
+        m_wasAccepted = true;
+        m_databaseQuota = quota;
     }
 
 private:
@@ -58,6 +94,13 @@ private:
     OwnPtr<QQuickItem> m_dialog;
     QString m_result;
     bool m_wasAccepted;
+
+    QString m_username;
+    QString m_password;
+    QStringList m_filepaths;
+    quint64 m_databaseQuota;
 };
+
+} // namespace WebKit
 
 #endif // QtDialogRunner_h

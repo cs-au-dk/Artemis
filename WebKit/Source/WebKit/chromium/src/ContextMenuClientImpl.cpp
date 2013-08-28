@@ -1,5 +1,5 @@
 /*
- * Copyright (C) 2009 Google Inc. All rights reserved.
+ * Copyright (C) 2009, 2012 Google Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions are
@@ -37,6 +37,7 @@
 #include "ContextMenuController.h"
 #include "Document.h"
 #include "DocumentLoader.h"
+#include "DocumentMarkerController.h"
 #include "Editor.h"
 #include "EventHandler.h"
 #include "FrameLoader.h"
@@ -54,6 +55,7 @@
 #include "Page.h"
 #include "PlatformString.h"
 #include "RenderWidget.h"
+#include "Settings.h"
 #include "TextBreakIterator.h"
 #include "Widget.h"
 
@@ -158,7 +160,7 @@ PlatformMenuDescription ContextMenuClientImpl::getCustomMenuFromDefaultItems(
     Frame* selectedFrame = r.innerNonSharedNode()->document()->frame();
 
     WebContextMenuData data;
-    data.mousePosition = selectedFrame->view()->contentsToWindow(r.point());
+    data.mousePosition = selectedFrame->view()->contentsToWindow(r.roundedPoint());
 
     // Compute edit flags.
     data.editFlags = WebContextMenuData::CanDoNone;
@@ -234,6 +236,10 @@ PlatformMenuDescription ContextMenuClientImpl::getCustomMenuFromDefaultItems(
                 HTMLPlugInImageElement* pluginElement = static_cast<HTMLPlugInImageElement*>(r.innerNonSharedNode());
                 data.srcURL = pluginElement->document()->completeURL(pluginElement->url());
                 data.mediaFlags |= WebContextMenuData::MediaCanSave;
+
+                // Add context menu commands that are supported by the plugin.
+                if (plugin->plugin()->canRotateView())
+                    data.mediaFlags |= WebContextMenuData::MediaCanRotate;
             }
         }
     }
@@ -255,8 +261,10 @@ PlatformMenuDescription ContextMenuClientImpl::getCustomMenuFromDefaultItems(
             data.frameHistoryItem = WebHistoryItem(historyItem);
     }
 
-    if (r.isSelected())
-        data.selectedText = selectedFrame->editor()->selectedText().stripWhiteSpace();
+    if (r.isSelected()) {
+        if (!r.innerNonSharedNode()->hasTagName(HTMLNames::inputTag) || !static_cast<HTMLInputElement*>(r.innerNonSharedNode())->isPasswordField())
+            data.selectedText = selectedFrame->editor()->selectedText().stripWhiteSpace();
+    }
 
     if (r.isContentEditable()) {
         data.isEditable = true;
@@ -266,7 +274,25 @@ PlatformMenuDescription ContextMenuClientImpl::getCustomMenuFromDefaultItems(
                 static_cast<HTMLInputElement*>(r.innerNonSharedNode())->isSpeechEnabled();
         }  
 #endif
-        if (m_webView->focusedWebCoreFrame()->editor()->isContinuousSpellCheckingEnabled()) {
+        // When Chrome enables asynchronous spellchecking, its spellchecker adds spelling markers to misspelled
+        // words and attaches suggestions to these markers in the background. Therefore, when a user right-clicks
+        // a mouse on a word, Chrome just needs to find a spelling marker on the word instread of spellchecking it.
+        if (selectedFrame->settings() && selectedFrame->settings()->asynchronousSpellCheckingEnabled()) {
+            RefPtr<Range> range = selectedFrame->selection()->toNormalizedRange();
+            Vector<DocumentMarker*> markers = selectedFrame->document()->markers()->markersInRange(range.get(), DocumentMarker::Spelling);
+            if (!markers.isEmpty()) {
+                Vector<String> suggestions;
+                for (size_t i = 0; i < markers.size(); ++i) {
+                    if (!markers[i]->description().isEmpty()) {
+                        Vector<String> descriptions;
+                        markers[i]->description().split('\n', descriptions);
+                        suggestions.append(descriptions);
+                    }
+                }
+                data.dictionarySuggestions = suggestions;
+                data.misspelledWord = selectMisspelledWord(defaultMenu, selectedFrame);
+            }
+        } else if (m_webView->focusedWebCoreFrame()->editor()->isContinuousSpellCheckingEnabled()) {
             data.isSpellCheckingEnabled = true;
             // Spellchecking might be enabled for the field, but could be disabled on the node.
             if (m_webView->focusedWebCoreFrame()->editor()->isSpellCheckingEnabledInFocusedNode()) {

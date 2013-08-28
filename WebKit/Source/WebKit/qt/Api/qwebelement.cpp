@@ -22,17 +22,17 @@
 
 #include "qwebelement_p.h"
 #include "CSSComputedStyleDeclaration.h"
-#include "CSSMutableStyleDeclaration.h"
 #include "CSSParser.h"
 #include "CSSRule.h"
 #include "CSSRuleList.h"
 #include "CSSStyleRule.h"
-#include "CSSStyleSelector.h"
 #include "Document.h"
 #include "DocumentFragment.h"
 #include "FrameView.h"
 #include "GraphicsContext.h"
 #include "HTMLElement.h"
+#include "StylePropertySet.h"
+#include "StyleRule.h"
 #if USE(JSC)
 #include "Completion.h"
 #include "JSGlobalObject.h"
@@ -50,6 +50,7 @@
 #include "RenderImage.h"
 #include "ScriptState.h"
 #include "StaticNodeList.h"
+#include "StyleResolver.h"
 #include "qwebframe.h"
 #include "qwebframe_p.h"
 #if USE(JSC)
@@ -503,12 +504,11 @@ QStringList QWebElement::attributeNames(const QString& namespaceUri) const
         return QStringList();
 
     QStringList attributeNameList;
-    const NamedNodeMap* const attrs = m_element->attributes(/* read only = */ true);
-    if (attrs) {
+    if (m_element->hasAttributes()) {
         const String namespaceUriString(namespaceUri); // convert QString -> String once
-        const unsigned attrsCount = attrs->length();
+        const unsigned attrsCount = m_element->attributeCount();
         for (unsigned i = 0; i < attrsCount; ++i) {
-            const Attribute* const attribute = attrs->attributeItem(i);
+            const Attribute* const attribute = m_element->attributeItem(i);
             if (namespaceUriString == attribute->namespaceURI())
                 attributeNameList.append(attribute->localName());
         }
@@ -552,7 +552,7 @@ QRect QWebElement::geometry() const
 {
     if (!m_element)
         return QRect();
-    return m_element->getRect();
+    return m_element->getPixelSnappedRect();
 }
 
 /*!
@@ -768,11 +768,7 @@ static bool setupScriptContext(WebCore::Element* element, v8::Handle<v8::Value>&
 /*!
     Executes \a scriptSource with this element as \c this object.
 */
-#ifdef ARTEMIS
-QVariant QWebElement::evaluateJavaScript(const QString &scriptSource, const QUrl& u)
-#else
 QVariant QWebElement::evaluateJavaScript(const QString& scriptSource)
-#endif
 {
     if (scriptSource.isEmpty())
         return QVariant();
@@ -792,11 +788,7 @@ QVariant QWebElement::evaluateJavaScript(const QString& scriptSource)
     JSC::UString script(reinterpret_cast_ptr<const UChar*>(scriptSource.data()), scriptSource.length());
 
     JSC::JSValue evaluationException;
-#ifdef ARTEMIS
-    JSC::JSValue evaluationResult = JSC::evaluate(state, scopeChain, JSC::makeSource(script, JSC::UString(u.toString().toStdString().c_str())), thisValue, &evaluationException);
-#else
     JSC::JSValue evaluationResult = JSC::evaluate(state, scopeChain, JSC::makeSource(script), thisValue, &evaluationException);
-#endif
     if (evaluationException)
         return QVariant();
 
@@ -847,18 +839,18 @@ QString QWebElement::styleProperty(const QString &name, StyleResolveStrategy str
     if (!m_element || !m_element->isStyledElement())
         return QString();
 
-    int propID = cssPropertyID(name);
+    CSSPropertyID propID = cssPropertyID(name);
 
     if (!propID)
         return QString();
 
-    CSSStyleDeclaration* style = static_cast<StyledElement*>(m_element)->style();
+    const StylePropertySet* style = static_cast<StyledElement*>(m_element)->ensureInlineStyle();
 
     if (strategy == InlineStyle)
         return style->getPropertyValue(propID);
 
     if (strategy == CascadedStyle) {
-        if (style->getPropertyPriority(propID))
+        if (style->propertyIsImportant(propID))
             return style->getPropertyValue(propID);
 
         // We are going to resolve the style property by walking through the
@@ -870,15 +862,15 @@ QString QWebElement::styleProperty(const QString &name, StyleResolveStrategy str
         // declarations, as well as embedded and inline style declarations.
 
         Document* doc = m_element->document();
-        if (RefPtr<CSSRuleList> rules = doc->styleSelector()->styleRulesForElement(m_element, /*authorOnly*/ true)) {
+        if (RefPtr<CSSRuleList> rules = doc->styleResolver()->styleRulesForElement(m_element, /*authorOnly*/ true)) {
             for (int i = rules->length(); i > 0; --i) {
                 CSSStyleRule* rule = static_cast<CSSStyleRule*>(rules->item(i - 1));
 
-                if (rule->style()->getPropertyPriority(propID))
-                    return rule->style()->getPropertyValue(propID);
+                if (rule->styleRule()->properties()->propertyIsImportant(propID))
+                    return rule->styleRule()->properties()->getPropertyValue(propID);
 
                 if (style->getPropertyValue(propID).isEmpty())
-                    style = rule->style();
+                    style = rule->styleRule()->properties();
             }
         }
 
@@ -889,9 +881,7 @@ QString QWebElement::styleProperty(const QString &name, StyleResolveStrategy str
         if (!m_element || !m_element->isStyledElement())
             return QString();
 
-        int propID = cssPropertyID(name);
-
-        RefPtr<CSSComputedStyleDeclaration> style = computedStyle(m_element, true);
+        RefPtr<CSSComputedStyleDeclaration> style = CSSComputedStyleDeclaration::create(m_element, true);
         if (!propID || !style)
             return QString();
 
@@ -916,13 +906,8 @@ void QWebElement::setStyleProperty(const QString &name, const QString &value)
     if (!m_element || !m_element->isStyledElement())
         return;
 
-    int propID = cssPropertyID(name);
-    CSSStyleDeclaration* style = static_cast<StyledElement*>(m_element)->style();
-    if (!propID || !style)
-        return;
-
-    ExceptionCode exception = 0;
-    style->setProperty(name, value,emptyString(), exception);
+    CSSPropertyID propID = cssPropertyID(name);
+    static_cast<StyledElement*>(m_element)->setInlineStyleProperty(propID, value);
 }
 
 /*!
@@ -1508,7 +1493,7 @@ void QWebElement::render(QPainter* painter, const QRect& clip)
 
     view->updateLayoutAndStyleIfNeededRecursive();
 
-    IntRect rect = e->getRect();
+    IntRect rect = e->getPixelSnappedRect();
 
     if (rect.size().isEmpty())
         return;

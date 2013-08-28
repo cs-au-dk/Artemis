@@ -43,6 +43,7 @@
 #include "TextBreakIterator.h"
 #include "VisiblePosition.h"
 #include "visible_units.h"
+#include <wtf/text/CString.h>
 #include <wtf/unicode/CharacterNames.h>
 
 #if USE(ICU_UNICODE) && !UCONFIG_NO_COLLATION
@@ -261,6 +262,8 @@ TextIterator::TextIterator()
     , m_handledFirstLetter(false)
     , m_ignoresStyleVisibility(false)
     , m_emitsObjectReplacementCharacters(false)
+    , m_stopsOnFormControls(false)
+    , m_shouldStop(false)
 {
 }
 
@@ -282,6 +285,8 @@ TextIterator::TextIterator(const Range* r, TextIteratorBehavior behavior)
     , m_handledFirstLetter(false)
     , m_ignoresStyleVisibility(behavior & TextIteratorIgnoresStyleVisibility)
     , m_emitsObjectReplacementCharacters(behavior & TextIteratorEmitsObjectReplacementCharacters)
+    , m_stopsOnFormControls(behavior & TextIteratorStopsOnFormControls)
+    , m_shouldStop(false)
 {
     if (!r)
         return;
@@ -341,6 +346,9 @@ TextIterator::~TextIterator()
 
 void TextIterator::advance()
 {
+    if (m_shouldStop)
+        return;
+
     // reset the run information
     m_positionNode = 0;
     m_textLength = 0;
@@ -373,6 +381,9 @@ void TextIterator::advance()
     }
 
     while (m_node && m_node != m_pastEndNode) {
+        if (!m_shouldStop && m_stopsOnFormControls && HTMLFormControlElement::enclosingFormControlElement(m_node))
+            m_shouldStop = true;
+
         // if the range ends at offset 0 of an element, represent the
         // position, but not the content, of that element e.g. if the
         // node is a blockflow element, emit a newline that
@@ -394,7 +405,10 @@ void TextIterator::advance()
                     m_handledNode = handleTextNode();
                 else if (renderer && (renderer->isImage() || renderer->isWidget() ||
                          (renderer->node() && renderer->node()->isElementNode() &&
-                          static_cast<Element*>(renderer->node())->isFormControlElement())))
+                          (static_cast<Element*>(renderer->node())->isFormControlElement()
+                          || static_cast<Element*>(renderer->node())->hasTagName(legendTag)
+                          || static_cast<Element*>(renderer->node())->hasTagName(meterTag)
+                          || static_cast<Element*>(renderer->node())->hasTagName(progressTag)))))
                     m_handledNode = handleReplacedElement();
                 else
                     m_handledNode = handleNonTextNode();
@@ -487,24 +501,19 @@ bool TextIterator::handleTextNode()
         return true;
     }
 
-    if (!renderer->firstTextBox() && str.length() > 0) {
-        if (!m_handledFirstLetter && renderer->isTextFragment()) {
-            handleTextNodeFirstLetter(static_cast<RenderTextFragment*>(renderer));
-            if (m_firstLetterText) {
-                handleTextBox();
-                return false;
-            }
-        }
+    if (renderer->firstTextBox())
+        m_textBox = renderer->firstTextBox();
+
+    bool shouldHandleFirstLetter = !m_handledFirstLetter && renderer->isTextFragment() && !m_offset;
+    if (shouldHandleFirstLetter)
+        handleTextNodeFirstLetter(static_cast<RenderTextFragment*>(renderer));
+
+    if (!renderer->firstTextBox() && str.length() > 0 && !shouldHandleFirstLetter) {
         if (renderer->style()->visibility() != VISIBLE && !m_ignoresStyleVisibility)
             return false;
         m_lastTextNodeEndedWithCollapsedSpace = true; // entire block is collapsed space
         return true;
     }
-
-    
-    m_textBox = renderer->firstTextBox();
-    if (!m_handledFirstLetter && renderer->isTextFragment() && !m_offset)
-        handleTextNodeFirstLetter(static_cast<RenderTextFragment*>(renderer));
 
     if (m_firstLetterText)
         renderer = m_firstLetterText;
@@ -562,6 +571,7 @@ void TextIterator::handleTextBox()
                 nextTextBox = m_sortedTextBoxes[m_sortedTextBoxesPosition + 1];
         } else 
             nextTextBox = m_textBox->nextTextBox();
+        ASSERT(!nextTextBox || nextTextBox->renderer() == renderer);
 
         if (runStart < runEnd) {
             // Handle either a single newline character (which becomes a space),
@@ -630,6 +640,7 @@ void TextIterator::handleTextNodeFirstLetter(RenderTextFragment* renderer)
             m_handledFirstLetter = true;
             m_remainingTextBox = m_textBox;
             m_textBox = firstLetter->firstTextBox();
+            m_sortedTextBoxes.clear();
             m_firstLetterText = firstLetter;
         }
     }
@@ -1073,6 +1084,8 @@ SimplifiedBackwardsTextIterator::SimplifiedBackwardsTextIterator()
     , m_singleCharacterBuffer(0)
     , m_havePassedStartNode(false)
     , m_shouldHandleFirstLetter(false)
+    , m_stopsOnFormControls(false)
+    , m_shouldStop(false)
 {
 }
 
@@ -1096,8 +1109,10 @@ SimplifiedBackwardsTextIterator::SimplifiedBackwardsTextIterator(const Range* r,
     , m_singleCharacterBuffer(0)
     , m_havePassedStartNode(false)
     , m_shouldHandleFirstLetter(false)
+    , m_stopsOnFormControls(behavior & TextIteratorStopsOnFormControls)
+    , m_shouldStop(false)
 {
-    ASSERT(m_behavior == TextIteratorDefaultBehavior);
+    ASSERT(m_behavior == TextIteratorDefaultBehavior || m_behavior == TextIteratorStopsOnFormControls);
 
     if (!r)
         return;
@@ -1149,6 +1164,14 @@ SimplifiedBackwardsTextIterator::SimplifiedBackwardsTextIterator(const Range* r,
 void SimplifiedBackwardsTextIterator::advance()
 {
     ASSERT(m_positionNode);
+
+    if (m_shouldStop)
+        return;
+
+    if (m_stopsOnFormControls && HTMLFormControlElement::enclosingFormControlElement(m_node)) {
+        m_shouldStop = true;
+        return;
+    }
 
     m_positionNode = 0;
     m_textLength = 0;
@@ -2513,9 +2536,8 @@ UChar* plainTextToMallocAllocatedBuffer(const Range* r, unsigned& bufferLength, 
 {
     UChar* result = 0;
 
-    // Do this in pieces to avoid massive reallocations if there is a large amount of text.
-    // Use system malloc for buffers since they can consume lots of memory and current TCMalloc is unable return it back to OS.
-    static const unsigned cMaxSegmentSize = 1 << 16;
+    // The initial buffer size can be critical for performance: https://bugs.webkit.org/show_bug.cgi?id=81192
+    static const unsigned cMaxSegmentSize = 1 << 15;
     bufferLength = 0;
     typedef pair<UChar*, unsigned> TextSegment;
     OwnPtr<Vector<TextSegment> > textSegments;

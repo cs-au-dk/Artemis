@@ -44,11 +44,19 @@
 #include <wtf/HashMap.h>
 #include <wtf/HashSet.h>
 
+#if USE(SOUP)
+#include "WebSoupRequestManager.h"
+#endif
+
 #if PLATFORM(QT)
 class QNetworkAccessManager;
 #endif
 
-#if ENABLE(NOTIFICATIONS)
+#if PLATFORM(MAC)
+#include <dispatch/dispatch.h>
+#endif
+
+#if ENABLE(NOTIFICATIONS) || ENABLE(LEGACY_NOTIFICATIONS)
 #include "WebNotificationManager.h"
 #endif
 
@@ -73,14 +81,19 @@ struct WebPageGroupData;
 struct WebPreferencesStore;
 struct WebProcessCreationParameters;
 
+#if PLATFORM(MAC)
+class SecItemResponseData;
+class SecKeychainItemResponseData;
+#endif
+
 class WebProcess : public ChildProcess, private CoreIPC::Connection::QueueClient {
 public:
     static WebProcess& shared();
 
-    void initialize(CoreIPC::Connection::Identifier, RunLoop*);
+    void initialize(CoreIPC::Connection::Identifier, WebCore::RunLoop*);
 
     CoreIPC::Connection* connection() const { return m_connection->connection(); }
-    RunLoop* runLoop() const { return m_runLoop; }
+    WebCore::RunLoop* runLoop() const { return m_runLoop; }
 
     WebConnectionToUIProcess* webConnectionToUIProcess() const { return m_connection.get(); }
 
@@ -128,7 +141,7 @@ public:
     // Geolocation
     WebGeolocationManager& geolocationManager() { return m_geolocationManager; }
     
-#if ENABLE(NOTIFICATIONS)
+#if ENABLE(NOTIFICATIONS) || ENABLE(LEGACY_NOTIFICATIONS)
     WebNotificationManager& notificationManager() { return m_notificationManager; }
 #endif
 
@@ -143,6 +156,10 @@ public:
 
     EventDispatcher& eventDispatcher() { return m_eventDispatcher; }
 
+#if USE(SOUP)
+    WebSoupRequestManager& soupRequestManager() { return m_soupRequestManager; }
+#endif
+
 private:
     WebProcess();
 
@@ -156,7 +173,7 @@ private:
     void setDefaultRequestTimeoutInterval(double);
     void setAlwaysUsesComplexTextCodePath(bool);
     void setShouldUseFontSmoothing(bool);
-    void languageChanged(const String&) const;
+    void userPreferredLanguagesChanged(const Vector<String>&) const;
     void fullKeyboardAccessModeChanged(bool fullKeyboardAccessEnabled);
 #if PLATFORM(WIN)
     void setShouldPaintNativeControls(bool);
@@ -182,7 +199,7 @@ private:
 #endif
     
 #if ENABLE(PLUGIN_PROCESS)
-    void pluginProcessCrashed(const String& pluginPath);
+    void pluginProcessCrashed(CoreIPC::Connection*, const String& pluginPath);
 #endif
 
     void startMemorySampler(const SandboxExtension::Handle&, const String&, const double);
@@ -198,6 +215,11 @@ private:
     
     void getWebCoreStatistics(uint64_t callbackID);
     void garbageCollectJavaScriptObjects();
+
+#if PLATFORM(MAC)
+    void secItemResponse(CoreIPC::Connection*, uint64_t requestID, const SecItemResponseData&);
+    void secKeychainItemResponse(CoreIPC::Connection*, uint64_t requestID, const SecKeychainItemResponseData&);
+#endif
 
     // ChildProcess
     virtual bool shouldTerminate();
@@ -231,7 +253,7 @@ private:
 
     bool m_inDidClose;
 
-    RunLoop* m_runLoop;
+    WebCore::RunLoop* m_runLoop;
 
     // FIXME: The visited link table should not be per process.
     VisitedLinkTable m_visitedLinkTable;
@@ -244,6 +266,7 @@ private:
 #endif
 #if PLATFORM(MAC)
     pid_t m_presenterApplicationPid;
+    dispatch_group_t m_clearResourceCachesDispatchGroup;
 #endif
 
     bool m_fullKeyboardAccessEnabled;
@@ -258,7 +281,7 @@ private:
 
     TextCheckerState m_textCheckerState;
     WebGeolocationManager m_geolocationManager;
-#if ENABLE(NOTIFICATIONS)
+#if ENABLE(NOTIFICATIONS) || ENABLE(LEGACY_NOTIFICATIONS)
     WebNotificationManager m_notificationManager;
 #endif
     WebIconDatabaseProxy m_iconDatabaseProxy;
@@ -270,6 +293,10 @@ private:
 #if ENABLE(PLUGIN_PROCESS)
     PluginProcessConnectionManager m_pluginProcessConnectionManager;
     bool m_disablePluginProcessMessageTimeout;
+#endif
+
+#if USE(SOUP)
+    WebSoupRequestManager m_soupRequestManager;
 #endif
 
 };

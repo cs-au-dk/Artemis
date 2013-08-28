@@ -28,10 +28,11 @@
 
 #include "BinarySemaphore.h"
 #include "CoreIPCMessageKinds.h"
-#include "RunLoop.h"
+#include <WebCore/RunLoop.h>
 #include <wtf/CurrentTime.h>
 
 using namespace std;
+using namespace WebCore;
 
 namespace CoreIPC {
 
@@ -53,7 +54,7 @@ public:
 #if PLATFORM(WIN)
     bool waitWhileDispatchingSentWin32Messages(double absoluteTime, const Vector<HWND>& windowsToReceiveMessages)
     {
-        return RunLoop::dispatchSentMessagesUntil(windowsToReceiveMessages, m_waitForSyncReplySemaphore, absoluteTime);
+        return Connection::dispatchSentMessagesUntil(windowsToReceiveMessages, m_waitForSyncReplySemaphore, absoluteTime);
     }
 #endif
 
@@ -99,15 +100,15 @@ private:
 PassRefPtr<Connection::SyncMessageState> Connection::SyncMessageState::getOrCreate(RunLoop* runLoop)
 {
     MutexLocker locker(syncMessageStateMapMutex());
-    pair<SyncMessageStateMap::iterator, bool> result = syncMessageStateMap().add(runLoop, 0);
+    SyncMessageStateMap::AddResult result = syncMessageStateMap().add(runLoop, 0);
 
-    if (!result.second) {
-        ASSERT(result.first->second);
-        return result.first->second;
+    if (!result.isNewEntry) {
+        ASSERT(result.iterator->second);
+        return result.iterator->second;
     }
 
     RefPtr<SyncMessageState> syncMessageState = adoptRef(new SyncMessageState(runLoop));
-    result.first->second = syncMessageState.get();
+    result.iterator->second = syncMessageState.get();
 
     return syncMessageState.release();
 }

@@ -20,7 +20,7 @@
 #ifndef NotificationPresenterClientEfl_h
 #define NotificationPresenterClientEfl_h
 
-#if ENABLE(NOTIFICATIONS)
+#if ENABLE(NOTIFICATIONS) || ENABLE(LEGACY_NOTIFICATIONS)
 #include "Notification.h"
 #include "NotificationPresenter.h"
 
@@ -35,6 +35,7 @@ public:
     virtual bool show(Notification*);
     virtual void cancel(Notification*);
     virtual void notificationObjectDestroyed(Notification*);
+    virtual void notificationControllerDestroyed();
     virtual void requestPermission(ScriptExecutionContext*, PassRefPtr<VoidCallback>);
     virtual NotificationPresenter::Permission checkPermission(ScriptExecutionContext*);
     virtual void cancelRequestsForPermission(ScriptExecutionContext*);

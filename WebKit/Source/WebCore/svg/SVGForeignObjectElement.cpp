@@ -25,6 +25,7 @@
 
 #include "Attribute.h"
 #include "CSSPropertyNames.h"
+#include "NodeRenderingContext.h"
 #include "RenderSVGForeignObject.h"
 #include "RenderSVGResource.h"
 #include "SVGElementInstance.h"
@@ -84,13 +85,13 @@ bool SVGForeignObjectElement::isSupportedAttribute(const QualifiedName& attrName
     return supportedAttributes.contains<QualifiedName, SVGAttributeHashTranslator>(attrName);
 }
 
-void SVGForeignObjectElement::parseMappedAttribute(Attribute* attr)
+void SVGForeignObjectElement::parseAttribute(Attribute* attr)
 {
     SVGParsingError parseError = NoError;
     const AtomicString& value = attr->value();
 
     if (!isSupportedAttribute(attr->name()))
-        SVGStyledTransformableElement::parseMappedAttribute(attr);
+        SVGStyledTransformableElement::parseAttribute(attr);
     else if (attr->name() == SVGNames::xAttr)
         setXBaseValue(SVGLength::construct(LengthModeWidth, value, parseError));
     else if (attr->name() == SVGNames::yAttr)
@@ -99,9 +100,9 @@ void SVGForeignObjectElement::parseMappedAttribute(Attribute* attr)
         setWidthBaseValue(SVGLength::construct(LengthModeWidth, value, parseError));
     else if (attr->name() == SVGNames::heightAttr)
         setHeightBaseValue(SVGLength::construct(LengthModeHeight, value, parseError));
-    else if (SVGTests::parseMappedAttribute(attr)
-               || SVGLangSpace::parseMappedAttribute(attr)
-               || SVGExternalResourcesRequired::parseMappedAttribute(attr)) {
+    else if (SVGTests::parseAttribute(attr)
+               || SVGLangSpace::parseAttribute(attr)
+               || SVGExternalResourcesRequired::parseAttribute(attr)) {
     } else
         ASSERT_NOT_REACHED();
 
@@ -137,14 +138,14 @@ RenderObject* SVGForeignObjectElement::createRenderer(RenderArena* arena, Render
     return new (arena) RenderSVGForeignObject(this);
 }
 
-bool SVGForeignObjectElement::childShouldCreateRenderer(Node* child) const
+bool SVGForeignObjectElement::childShouldCreateRenderer(const NodeRenderingContext& childContext) const
 {
     // Disallow arbitary SVG content. Only allow proper <svg xmlns="svgNS"> subdocuments.
-    if (child->isSVGElement())
-        return child->hasTagName(SVGNames::svgTag);
+    if (childContext.node()->isSVGElement())
+        return childContext.node()->hasTagName(SVGNames::svgTag);
 
     // Skip over SVG rules which disallow non-SVG kids
-    return StyledElement::childShouldCreateRenderer(child);
+    return StyledElement::childShouldCreateRenderer(childContext);
 }
 
 bool SVGForeignObjectElement::selfHasRelativeLengths() const

@@ -31,13 +31,8 @@
 
 #include "WorkerContext.h"
 
-#include "AbstractDatabase.h"
 #include "ActiveDOMObject.h"
 #include "ContentSecurityPolicy.h"
-#include "Database.h"
-#include "DatabaseCallback.h"
-#include "DatabaseSync.h"
-#include "DatabaseTracker.h"
 #include "DOMTimer.h"
 #include "DOMURL.h"
 #include "DOMWindow.h"
@@ -64,29 +59,11 @@
 #include <wtf/RefPtr.h>
 #include <wtf/UnusedParam.h>
 
-#if ENABLE(NOTIFICATIONS)
+#if ENABLE(NOTIFICATIONS) || ENABLE(LEGACY_NOTIFICATIONS)
 #include "NotificationCenter.h"
 #endif
 
-#if ENABLE(FILE_SYSTEM)
-#include "AsyncFileSystem.h"
-#include "DirectoryEntrySync.h"
-#include "DOMFileSystem.h"
-#include "DOMFileSystemBase.h"
-#include "DOMFileSystemSync.h"
-#include "ErrorCallback.h"
-#include "FileEntrySync.h"
-#include "FileError.h"
-#include "FileException.h"
-#include "FileSystemCallback.h"
-#include "FileSystemCallbacks.h"
-#include "LocalFileSystem.h"
-#include "SyncCallbackHelper.h"
-#else
 #include "ExceptionCode.h"
-#endif
-
-#include "IDBFactory.h"
 
 namespace WebCore {
 
@@ -108,7 +85,7 @@ public:
     virtual bool isCleanupTask() const { return true; }
 };
 
-WorkerContext::WorkerContext(const KURL& url, const String& userAgent, WorkerThread* thread)
+WorkerContext::WorkerContext(const KURL& url, const String& userAgent, WorkerThread* thread, const String& policy, ContentSecurityPolicy::HeaderType contentSecurityPolicyType)
     : m_url(url)
     , m_userAgent(userAgent)
     , m_script(adoptPtr(new WorkerScriptController(this)))
@@ -120,18 +97,13 @@ WorkerContext::WorkerContext(const KURL& url, const String& userAgent, WorkerThr
     , m_eventQueue(WorkerEventQueue::create(this))
 {
     setSecurityOrigin(SecurityOrigin::create(url));
-    
-    // FIXME: This should probably adopt the ContentSecurityPolicy of the document
-    // that created this worker or use the header that came with the worker script.
     setContentSecurityPolicy(ContentSecurityPolicy::create(this));
+    contentSecurityPolicy()->didReceiveHeader(policy, contentSecurityPolicyType);
 }
 
 WorkerContext::~WorkerContext()
 {
     ASSERT(currentThread() == thread()->threadID());
-#if ENABLE(NOTIFICATIONS)
-    m_notifications.clear();
-#endif
 
     // Make sure we have no observers.
     notifyObserversOfStop();
@@ -268,7 +240,7 @@ void WorkerContext::importScripts(const Vector<String>& urls, ExceptionCode& ec)
 
     for (Vector<KURL>::const_iterator it = completedURLs.begin(); it != end; ++it) {
         RefPtr<WorkerScriptLoader> scriptLoader(WorkerScriptLoader::create());
-#if PLATFORM(CHROMIUM)
+#if PLATFORM(CHROMIUM) || PLATFORM(BLACKBERRY)
         scriptLoader->setTargetType(ResourceRequest::TargetIsScript);
 #endif
         scriptLoader->loadSynchronously(scriptExecutionContext(), *it, AllowCrossOriginRequests);
@@ -295,69 +267,29 @@ EventTarget* WorkerContext::errorEventTarget()
     return this;
 }
 
-void WorkerContext::logExceptionToConsole(const String& errorMessage, int lineNumber, const String& sourceURL, PassRefPtr<ScriptCallStack>)
+void WorkerContext::logExceptionToConsole(const String& errorMessage, const String& sourceURL, int lineNumber, PassRefPtr<ScriptCallStack>)
 {
     thread()->workerReportingProxy().postExceptionToWorkerObject(errorMessage, lineNumber, sourceURL);
 }
 
-void WorkerContext::addMessage(MessageSource source, MessageType type, MessageLevel level, const String& message, unsigned lineNumber, const String& sourceURL, PassRefPtr<ScriptCallStack> callStack)
+void WorkerContext::addMessage(MessageSource source, MessageType type, MessageLevel level, const String& message, const String& sourceURL, unsigned lineNumber, PassRefPtr<ScriptCallStack> callStack)
 {
     if (!isContextThread()) {
         postTask(AddConsoleMessageTask::create(source, type, level, message));
         return;
     }
     thread()->workerReportingProxy().postConsoleMessageToWorkerObject(source, type, level, message, lineNumber, sourceURL);
-    addMessageToWorkerConsole(source, type, level, message, lineNumber, sourceURL, callStack);
+    addMessageToWorkerConsole(source, type, level, message, sourceURL, lineNumber, callStack);
 }
 
-void WorkerContext::addMessageToWorkerConsole(MessageSource source, MessageType type, MessageLevel level, const String& message, unsigned lineNumber, const String& sourceURL, PassRefPtr<ScriptCallStack> callStack)
+void WorkerContext::addMessageToWorkerConsole(MessageSource source, MessageType type, MessageLevel level, const String& message, const String& sourceURL, unsigned lineNumber, PassRefPtr<ScriptCallStack> callStack)
 {
     ASSERT(isContextThread());
     if (callStack)
         InspectorInstrumentation::addMessageToConsole(this, source, type, level, message, 0, callStack);
     else
-        InspectorInstrumentation::addMessageToConsole(this, source, type, level, message, lineNumber, sourceURL);
+        InspectorInstrumentation::addMessageToConsole(this, source, type, level, message, sourceURL, lineNumber);
 }
-
-#if ENABLE(NOTIFICATIONS)
-NotificationCenter* WorkerContext::webkitNotifications() const
-{
-    if (!m_notifications)
-        m_notifications = NotificationCenter::create(scriptExecutionContext(), m_thread->getNotificationPresenter());
-    return m_notifications.get();
-}
-#endif
-
-#if ENABLE(SQL_DATABASE)
-PassRefPtr<Database> WorkerContext::openDatabase(const String& name, const String& version, const String& displayName, unsigned long estimatedSize, PassRefPtr<DatabaseCallback> creationCallback, ExceptionCode& ec)
-{
-    if (!securityOrigin()->canAccessDatabase() || !AbstractDatabase::isAvailable()) {
-        ec = SECURITY_ERR;
-        return 0;
-    }
-
-    return Database::openDatabase(this, name, version, displayName, estimatedSize, creationCallback, ec);
-}
-
-void WorkerContext::databaseExceededQuota(const String&)
-{
-#if !PLATFORM(CHROMIUM)
-    // FIXME: This needs a real implementation; this is a temporary solution for testing.
-    const unsigned long long defaultQuota = 5 * 1024 * 1024;
-    DatabaseTracker::tracker().setQuota(securityOrigin(), defaultQuota);
-#endif
-}
-
-PassRefPtr<DatabaseSync> WorkerContext::openDatabaseSync(const String& name, const String& version, const String& displayName, unsigned long estimatedSize, PassRefPtr<DatabaseCallback> creationCallback, ExceptionCode& ec)
-{
-    if (!securityOrigin()->canAccessDatabase() || !AbstractDatabase::isAvailable()) {
-        ec = SECURITY_ERR;
-        return 0;
-    }
-
-    return DatabaseSync::openDatabaseSync(this, name, version, displayName, estimatedSize, creationCallback, ec);
-}
-#endif
 
 bool WorkerContext::isContextThread() const
 {
@@ -378,103 +310,6 @@ EventTargetData* WorkerContext::ensureEventTargetData()
 {
     return &m_eventTargetData;
 }
-
-#if ENABLE(BLOB)
-DOMURL* WorkerContext::webkitURL() const
-{
-    if (!m_domURL)
-        m_domURL = DOMURL::create(this->scriptExecutionContext());
-    return m_domURL.get();
-}
-#endif
-
-#if ENABLE(FILE_SYSTEM)
-void WorkerContext::webkitRequestFileSystem(int type, long long size, PassRefPtr<FileSystemCallback> successCallback, PassRefPtr<ErrorCallback> errorCallback)
-{
-    if (!AsyncFileSystem::isAvailable() || !securityOrigin()->canAccessFileSystem()) {
-        DOMFileSystem::scheduleCallback(this, errorCallback, FileError::create(FileError::SECURITY_ERR));
-        return;
-    }
-
-    AsyncFileSystem::Type fileSystemType = static_cast<AsyncFileSystem::Type>(type);
-    if (fileSystemType != AsyncFileSystem::Temporary && fileSystemType != AsyncFileSystem::Persistent && fileSystemType != AsyncFileSystem::External) {
-        DOMFileSystem::scheduleCallback(this, errorCallback, FileError::create(FileError::INVALID_MODIFICATION_ERR));
-        return;
-    }
-
-    LocalFileSystem::localFileSystem().requestFileSystem(this, fileSystemType, size, FileSystemCallbacks::create(successCallback, errorCallback, this), false);
-}
-
-PassRefPtr<DOMFileSystemSync> WorkerContext::webkitRequestFileSystemSync(int type, long long size, ExceptionCode& ec)
-{
-    ec = 0;
-    if (!AsyncFileSystem::isAvailable() || !securityOrigin()->canAccessFileSystem()) {
-        ec = FileException::SECURITY_ERR;
-        return 0;
-    }
-
-    AsyncFileSystem::Type fileSystemType = static_cast<AsyncFileSystem::Type>(type);
-    if (fileSystemType != AsyncFileSystem::Temporary && fileSystemType != AsyncFileSystem::Persistent && fileSystemType != AsyncFileSystem::External) {
-        ec = FileException::INVALID_MODIFICATION_ERR;
-        return 0;
-    }
-
-    FileSystemSyncCallbackHelper helper;
-    LocalFileSystem::localFileSystem().requestFileSystem(this, fileSystemType, size, FileSystemCallbacks::create(helper.successCallback(), helper.errorCallback(), this), true);
-    return helper.getResult(ec);
-}
-
-void WorkerContext::webkitResolveLocalFileSystemURL(const String& url, PassRefPtr<EntryCallback> successCallback, PassRefPtr<ErrorCallback> errorCallback)
-{
-    KURL completedURL = completeURL(url);
-    if (!AsyncFileSystem::isAvailable() || !securityOrigin()->canAccessFileSystem() || !securityOrigin()->canRequest(completedURL)) {
-        DOMFileSystem::scheduleCallback(this, errorCallback, FileError::create(FileError::SECURITY_ERR));
-        return;
-    }
-
-    AsyncFileSystem::Type type;
-    String filePath;
-    if (!completedURL.isValid() || !DOMFileSystemBase::crackFileSystemURL(completedURL, type, filePath)) {
-        DOMFileSystem::scheduleCallback(this, errorCallback, FileError::create(FileError::ENCODING_ERR));
-        return;
-    }
-
-    LocalFileSystem::localFileSystem().readFileSystem(this, type, ResolveURICallbacks::create(successCallback, errorCallback, this, filePath));
-}
-
-PassRefPtr<EntrySync> WorkerContext::webkitResolveLocalFileSystemSyncURL(const String& url, ExceptionCode& ec)
-{
-    ec = 0;
-    KURL completedURL = completeURL(url);
-    if (!AsyncFileSystem::isAvailable() || !securityOrigin()->canAccessFileSystem() || !securityOrigin()->canRequest(completedURL)) {
-        ec = FileException::SECURITY_ERR;
-        return 0;
-    }
-
-    AsyncFileSystem::Type type;
-    String filePath;
-    if (!completedURL.isValid() || !DOMFileSystemBase::crackFileSystemURL(completedURL, type, filePath)) {
-        ec = FileException::ENCODING_ERR;
-        return 0;
-    }
-
-    FileSystemSyncCallbackHelper readFileSystemHelper;
-    LocalFileSystem::localFileSystem().readFileSystem(this, type, FileSystemCallbacks::create(readFileSystemHelper.successCallback(), readFileSystemHelper.errorCallback(), this), true);
-    RefPtr<DOMFileSystemSync> fileSystem = readFileSystemHelper.getResult(ec);
-    if (!fileSystem)
-        return 0;
-
-    RefPtr<EntrySync> entry = fileSystem->root()->getDirectory(filePath, 0, ec);
-    if (ec == FileException::TYPE_MISMATCH_ERR)
-        return fileSystem->root()->getFile(filePath, 0, ec);
-
-    return entry.release();
-}
-
-COMPILE_ASSERT(static_cast<int>(WorkerContext::TEMPORARY) == static_cast<int>(AsyncFileSystem::Temporary), enum_mismatch);
-COMPILE_ASSERT(static_cast<int>(WorkerContext::PERSISTENT) == static_cast<int>(AsyncFileSystem::Persistent), enum_mismatch);
-COMPILE_ASSERT(static_cast<int>(WorkerContext::EXTERNAL) == static_cast<int>(AsyncFileSystem::External), enum_mismatch);
-#endif
 
 WorkerContext::Observer::Observer(WorkerContext* context)
     : m_context(context)
@@ -522,19 +357,6 @@ void WorkerContext::notifyObserversOfStop()
         iter = m_workerObservers.begin();
     }
 }
-
-#if ENABLE(INDEXED_DATABASE)
-IDBFactory* WorkerContext::webkitIndexedDB() const
-{
-    if (!securityOrigin()->canAccessDatabase())
-        return 0;
-    if (!m_idbFactoryBackendInterface)
-        m_idbFactoryBackendInterface = IDBFactoryBackendInterface::create();
-    if (!m_idbFactory)
-        m_idbFactory = IDBFactory::create(m_idbFactoryBackendInterface.get());
-    return m_idbFactory.get();
-}
-#endif
 
 WorkerEventQueue* WorkerContext::eventQueue() const
 {

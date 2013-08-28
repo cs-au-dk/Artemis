@@ -32,7 +32,9 @@
 #include "GeolocationPermissionRequestManager.h"
 #include "ImageOptions.h"
 #include "ImmutableArray.h"
+#if ENABLE(CONTEXT_MENUS)
 #include "InjectedBundlePageContextMenuClient.h"
+#endif
 #include "InjectedBundlePageEditorClient.h"
 #include "InjectedBundlePageFormClient.h"
 #include "InjectedBundlePageFullScreenClient.h"
@@ -41,6 +43,7 @@
 #include "InjectedBundlePageResourceLoadClient.h"
 #include "InjectedBundlePageUIClient.h"
 #include "MessageSender.h"
+#include "TapHighlightController.h"
 #include "Plugin.h"
 #include "SandboxExtension.h"
 #include "ShareableBitmap.h"
@@ -60,10 +63,18 @@
 
 #if PLATFORM(QT)
 #include "ArgumentCodersQt.h"
+#include "QtNetworkAccessManager.h"
+#include "QtNetworkReply.h"
+#include "QtNetworkReplyData.h"
+#include "QtNetworkRequestData.h"
+#include <QNetworkReply>
+#include <QNetworkRequest>
 #endif
 
 #if PLATFORM(GTK)
 #include "ArgumentCodersGtk.h"
+#include "WebPageAccessibilityObject.h"
+#include "WebPrintOperationGtk.h"
 #endif
 
 #if ENABLE(TOUCH_EVENTS)
@@ -72,6 +83,7 @@
 
 #if PLATFORM(MAC)
 #include "DictionaryPopupInfo.h"
+#include "LayerHostingContext.h"
 #include <wtf/RetainPtr.h>
 OBJC_CLASS NSDictionary;
 OBJC_CLASS NSObject;
@@ -206,7 +218,9 @@ public:
     void didReceiveSyncMessage(CoreIPC::Connection*, CoreIPC::MessageID, CoreIPC::ArgumentDecoder*, OwnPtr<CoreIPC::ArgumentEncoder>&);
 
     // -- InjectedBundle methods
+#if ENABLE(CONTEXT_MENUS)
     void initializeInjectedBundleContextMenuClient(WKBundlePageContextMenuClient*);
+#endif
     void initializeInjectedBundleEditorClient(WKBundlePageEditorClient*);
     void initializeInjectedBundleFormClient(WKBundlePageFormClient*);
     void initializeInjectedBundleLoaderClient(WKBundlePageLoaderClient*);
@@ -217,7 +231,9 @@ public:
     void initializeInjectedBundleFullScreenClient(WKBundlePageFullScreenClient*);
 #endif
 
+#if ENABLE(CONTEXT_MENUS)
     InjectedBundlePageContextMenuClient& injectedBundleContextMenuClient() { return m_contextMenuClient; }
+#endif
     InjectedBundlePageEditorClient& injectedBundleEditorClient() { return m_editorClient; }
     InjectedBundlePageFormClient& injectedBundleFormClient() { return m_formClient; }
     InjectedBundlePageLoaderClient& injectedBundleLoaderClient() { return m_loaderClient; }
@@ -243,6 +259,7 @@ public:
 
     String renderTreeExternalRepresentation() const;
     uint64_t renderTreeSize() const;
+    void setPaintedObjectsCounterThreshold(uint64_t);
 
     void setTracksRepaints(bool);
     bool isTrackingRepaints() const;
@@ -269,6 +286,7 @@ public:
     void setFixedLayoutSize(const WebCore::IntSize&);
 
     void setPaginationMode(uint32_t /* WebCore::Page::Pagination::Mode */);
+    void setPaginationBehavesLikeColumns(bool);
     void setPageLength(double);
     void setGapBetweenPages(double);
 
@@ -288,7 +306,11 @@ public:
     void addPluginView(PluginView*);
     void removePluginView(PluginView*);
 
+    LayerHostingMode layerHostingMode() const { return m_layerHostingMode; }
+    void setLayerHostingMode(LayerHostingMode);
+
     bool windowIsVisible() const { return m_windowIsVisible; }
+    void updatePluginsActiveAndFocusedState();
     const WebCore::IntRect& windowFrameInScreenCoordinates() const { return m_windowFrameInScreenCoordinates; }
     const WebCore::IntRect& viewFrameInWindowCoordinates() const { return m_viewFrameInWindowCoordinates; }
 #elif PLATFORM(WIN)
@@ -296,6 +318,7 @@ public:
 #endif
 
     bool windowIsFocused() const;
+    bool windowAndWebPageAreFocused() const;
     void installPageOverlay(PassRefPtr<PageOverlay>);
     void uninstallPageOverlay(PageOverlay*, bool fadeOut);
     bool hasPageOverlay() const { return m_pageOverlay; }
@@ -309,7 +332,14 @@ public:
     static const WebEvent* currentEvent();
 
     FindController& findController() { return m_findController; }
+#if ENABLE(TOUCH_EVENTS) && PLATFORM(QT)
+    TapHighlightController& tapHighlightController() { return m_tapHighlightController; }
+#endif
+
+#if ENABLE(GEOLOCATION)
     GeolocationPermissionRequestManager& geolocationPermissionRequestManager() { return m_geolocationPermissionRequestManager; }
+#endif
+
     NotificationPermissionRequestManager* notificationPermissionRequestManager();
 
     void pageDidScroll();
@@ -318,11 +348,14 @@ public:
     void setFixedVisibleContentRect(const WebCore::IntRect&);
     void setResizesToContentsUsingLayoutSize(const WebCore::IntSize&);
     void resizeToContentsIfNeeded();
+    void sendViewportAttributesChanged();
     void setViewportSize(const WebCore::IntSize&);
     WebCore::IntSize viewportSize() const { return m_viewportSize; }
 #endif
 
+#if ENABLE(CONTEXT_MENUS)
     WebContextMenu* contextMenu();
+#endif
     
     bool hasLocalDataForURL(const WebCore::KURL&);
     String cachedResponseMIMETypeForURL(const WebCore::KURL&);
@@ -376,8 +409,9 @@ public:
     void characterIndexForPoint(const WebCore::IntPoint point, uint64_t& result);
     void firstRectForCharacterRange(uint64_t location, uint64_t length, WebCore::IntRect& resultRect);
     void executeKeypressCommands(const Vector<WebCore::KeypressCommand>&, bool& handled, EditorState& newState);
-    void writeSelectionToPasteboard(const WTF::String& pasteboardName, const WTF::Vector<WTF::String>& pasteboardTypes, bool& result);
     void readSelectionFromPasteboard(const WTF::String& pasteboardName, bool& result);
+    void getStringSelectionForPasteboard(WTF::String& stringValue);
+    void getDataSelectionForPasteboard(const WTF::String pasteboardType, SharedMemory::Handle& handle, uint64_t& size);
     void shouldDelayWindowOrderingEvent(const WebKit::WebMouseEvent&, bool& result);
     void acceptsFirstMouse(int eventNumber, const WebKit::WebMouseEvent&, bool& result);
     bool performNonEditingBehaviorForSelector(const String&);
@@ -391,6 +425,9 @@ public:
     void gestureWillBegin(const WebCore::IntPoint&, bool& canBeginPanning);
     void gestureDidScroll(const WebCore::IntSize&);
     void gestureDidEnd();
+
+#elif PLATFORM(GTK)
+    void updateAccessibilityTree();
 #endif
 
     void setCompositionForTesting(const String& compositionString, uint64_t from, uint64_t length);
@@ -418,11 +455,12 @@ public:
 #elif PLATFORM(QT) || PLATFORM(GTK)
     void performDragControllerAction(uint64_t action, WebCore::DragData);
 #else
-    void performDragControllerAction(uint64_t action, WebCore::IntPoint clientPosition, WebCore::IntPoint globalPosition, uint64_t draggingSourceOperationMask, const WTF::String& dragStorageName, uint32_t flags, const SandboxExtension::Handle&);
+    void performDragControllerAction(uint64_t action, WebCore::IntPoint clientPosition, WebCore::IntPoint globalPosition, uint64_t draggingSourceOperationMask, const WTF::String& dragStorageName, uint32_t flags, const SandboxExtension::Handle&, const SandboxExtension::HandleArray&);
 #endif
     void dragEnded(WebCore::IntPoint clientPosition, WebCore::IntPoint globalPosition, uint64_t operation);
 
     void willPerformLoadDragDestinationAction();
+    void mayPerformUploadDragDestinationAction();
 
     void beginPrinting(uint64_t frameID, const PrintInfo&);
     void endPrinting();
@@ -430,7 +468,11 @@ public:
 #if PLATFORM(MAC) || PLATFORM(WIN)
     void drawRectToPDF(uint64_t frameID, const PrintInfo&, const WebCore::IntRect&, uint64_t callbackID);
     void drawPagesToPDF(uint64_t frameID, const PrintInfo&, uint32_t first, uint32_t count, uint64_t callbackID);
+#elif PLATFORM(GTK)
+    void drawPagesForPrinting(uint64_t frameID, const PrintInfo&, uint64_t callbackID);
 #endif
+
+    void setMediaVolume(float);
 
     bool mainFrameHasCustomRepresentation() const;
 
@@ -457,7 +499,7 @@ public:
     void unmarkAllBadGrammar();
 
 #if PLATFORM(MAC) && !defined(BUILDING_ON_SNOW_LEOPARD)
-    void handleCorrectionPanelResult(const String&);
+    void handleAlternativeTextUIResult(const String&);
 #endif
 
     // For testing purpose.
@@ -466,11 +508,27 @@ public:
     void simulateMouseMotion(WebCore::IntPoint, double time);
     String viewportConfigurationAsText(int deviceDPI, int deviceWidth, int deviceHeight, int availableWidth, int availableHeight);
 
+#if ENABLE(CONTEXT_MENUS)
     void contextMenuShowing() { m_isShowingContextMenu = true; }
+#endif
 
+#if PLATFORM(QT)
+    void registerApplicationScheme(const String& scheme);
+    void applicationSchemeReply(const QtNetworkReplyData&);
+    void receivedApplicationSchemeRequest(const QNetworkRequest&, QtNetworkReply*);
+#endif
     void wheelEvent(const WebWheelEvent&);
 #if ENABLE(GESTURE_EVENTS)
     void gestureEvent(const WebGestureEvent&);
+#endif
+
+    void numWheelEventHandlersChanged(unsigned);
+    void recomputeShortCircuitHorizontalWheelEventsState();
+
+    bool willGoToBackForwardItemCallbackEnabled() const { return m_willGoToBackForwardItemCallbackEnabled; }
+
+#if ENABLE(PAGE_VISIBILITY_API)
+    void setVisibilityState(int visibilityState, bool isInitialState);
 #endif
 
 private:
@@ -505,11 +563,12 @@ private:
     void loadHTMLString(const String& htmlString, const String& baseURL);
     void loadAlternateHTMLString(const String& htmlString, const String& baseURL, const String& unreachableURL);
     void loadPlainTextString(const String&);
+    void loadWebArchiveData(const CoreIPC::DataReference&);
     void linkClicked(const String& url, const WebMouseEvent&);
-    void reload(bool reloadFromOrigin);
-    void goForward(uint64_t, const SandboxExtension::Handle&);
-    void goBack(uint64_t, const SandboxExtension::Handle&);
-    void goToBackForwardItem(uint64_t, const SandboxExtension::Handle&);
+    void reload(bool reloadFromOrigin, const SandboxExtension::Handle&);
+    void goForward(uint64_t);
+    void goBack(uint64_t);
+    void goToBackForwardItem(uint64_t);
     void tryRestoreScrollPosition();
     void setActive(bool);
     void setFocused(bool);
@@ -527,17 +586,24 @@ private:
 #if ENABLE(TOUCH_EVENTS)
     void touchEvent(const WebTouchEvent&);
     void touchEventSyncForTesting(const WebTouchEvent&, bool& handled);
+#if PLATFORM(QT)
+    void highlightPotentialActivation(const WebCore::IntPoint&, const WebCore::IntSize& area);
 #endif
+#endif
+#if ENABLE(CONTEXT_MENUS)
     void contextMenuHidden() { m_isShowingContextMenu = false; }
+#endif
 
     static void scroll(WebCore::Page*, WebCore::ScrollDirection, WebCore::ScrollGranularity);
     static void logicalScroll(WebCore::Page*, WebCore::ScrollLogicalDirection, WebCore::ScrollGranularity);
 
     uint64_t restoreSession(const SessionState&);
-    void restoreSessionAndNavigateToCurrentItem(const SessionState&, const SandboxExtension::Handle&);
+    void restoreSessionAndNavigateToCurrentItem(const SessionState&);
 
     void didRemoveBackForwardItem(uint64_t);
 
+    void setWillGoToBackForwardItemCallbackEnabled(bool enabled) { m_willGoToBackForwardItemCallbackEnabled = enabled; }
+    
     void setDrawsBackground(bool);
     void setDrawsTransparentBackground(bool);
 
@@ -561,6 +627,8 @@ private:
     void didReceivePolicyDecision(uint64_t frameID, uint64_t listenerID, uint32_t policyAction, uint64_t downloadID);
     void setUserAgent(const String&);
     void setCustomTextEncodingName(const String&);
+    void suspendActiveDOMObjectsAndAnimations();
+    void resumeActiveDOMObjectsAndAnimations();
 
 #if PLATFORM(MAC)
     void performDictionaryLookupAtLocation(const WebCore::FloatPoint&);
@@ -568,6 +636,11 @@ private:
 
     void setWindowIsVisible(bool windowIsVisible);
     void windowAndViewFramesChanged(const WebCore::IntRect& windowFrameInScreenCoordinates, const WebCore::IntRect& viewFrameInWindowCoordinates, const WebCore::IntPoint& accessibilityViewCoordinates);
+
+    RetainPtr<PDFDocument> pdfDocumentForPrintingFrame(WebCore::Frame*);
+    void computePagesForPrintingPDFDocument(uint64_t frameID, const PrintInfo&, Vector<WebCore::IntRect>& resultPageRects);
+    void drawRectToPDFFromPDFDocument(CGContextRef, PDFDocument *, const PrintInfo&, const WebCore::IntRect&);
+    void drawPagesToPDFFromPDFDocument(CGContextRef, PDFDocument *, const PrintInfo&, uint32_t first, uint32_t count);
 #endif
 
     void unapplyEditCommand(uint64_t commandID);
@@ -579,15 +652,15 @@ private:
     void countStringMatches(const String&, uint32_t findOptions, uint32_t maxMatchCount);
 
 #if PLATFORM(QT)
-    void findZoomableAreaForPoint(const WebCore::IntPoint&);
+    void findZoomableAreaForPoint(const WebCore::IntPoint&, const WebCore::IntSize& area);
 #endif
 
     void didChangeSelectedIndexForActivePopupMenu(int32_t newIndex);
     void setTextForActivePopupMenu(int32_t index);
 
-#if PLATFORM(GTK)    
+#if PLATFORM(GTK)
     void failedToShowPopupMenu();
-#endif    
+#endif
 
     void didChooseFilesForOpenPanel(const Vector<String>&);
     void didCancelForOpenPanel();
@@ -596,6 +669,7 @@ private:
 #endif
 
     void didReceiveGeolocationPermissionDecision(uint64_t geolocationID, bool allowed);
+
     void didReceiveNotificationPermissionDecision(uint64_t notificationID, bool allowed);
 
     void advanceToNextMisspelling(bool startBeforeSelection);
@@ -655,6 +729,9 @@ private:
     // All plug-in views on this web page.
     HashSet<PluginView*> m_pluginViews;
 
+    // The layer hosting mode.
+    LayerHostingMode m_layerHostingMode;
+
     RetainPtr<WKAccessibilityWebPageObject> m_mockAccessibilityElement;
 
     WebCore::KeyboardEvent* m_keyboardEventBeingInterpreted;
@@ -664,15 +741,19 @@ private:
     HWND m_nativeWindow;
 
     RefPtr<WebCore::Node> m_gestureTargetNode;
+#elif PLATFORM(GTK)
+    WebPageAccessibilityObject* m_accessibilityObject;
 #endif
     
-    RunLoop::Timer<WebPage> m_setCanStartMediaTimer;
+    WebCore::RunLoop::Timer<WebPage> m_setCanStartMediaTimer;
 
     HashMap<uint64_t, RefPtr<WebUndoStep> > m_undoStepMap;
 
     WebCore::IntSize m_windowResizerSize;
 
+#if ENABLE(CONTEXT_MENUS)
     InjectedBundlePageContextMenuClient m_contextMenuClient;
+#endif
     InjectedBundlePageEditorClient m_editorClient;
     InjectedBundlePageFormClient m_formClient;
     InjectedBundlePageLoaderClient m_loaderClient;
@@ -684,11 +765,13 @@ private:
 #endif
 
 #if USE(TILED_BACKING_STORE)
-    WebCore::IntSize m_resizesToContentsLayoutSize;
     WebCore::IntSize m_viewportSize;
 #endif
 
     FindController m_findController;
+#if ENABLE(TOUCH_EVENTS) && PLATFORM(QT)
+    TapHighlightController m_tapHighlightController;
+#endif
     RefPtr<PageOverlay> m_pageOverlay;
 
     RefPtr<WebPage> m_underlayPage;
@@ -700,17 +783,26 @@ private:
     RefPtr<WebFullScreenManager> m_fullScreenManager;
 #endif
     RefPtr<WebPopupMenu> m_activePopupMenu;
+#if ENABLE(CONTEXT_MENUS)
     RefPtr<WebContextMenu> m_contextMenu;
+#endif
     RefPtr<WebOpenPanelResultListener> m_activeOpenPanelResultListener;
-    GeolocationPermissionRequestManager m_geolocationPermissionRequestManager;
     RefPtr<NotificationPermissionRequestManager> m_notificationPermissionRequestManager;
 
+#if ENABLE(GEOLOCATION)
+    GeolocationPermissionRequestManager m_geolocationPermissionRequestManager;
+#endif
+
     OwnPtr<WebCore::PrintContext> m_printContext;
+#if PLATFORM(GTK)
+    RefPtr<WebPrintOperationGtk> m_printOperation;
+#endif
 
     SandboxExtensionTracker m_sandboxExtensionTracker;
     uint64_t m_pageID;
 
     RefPtr<SandboxExtension> m_pendingDropSandboxExtension;
+    Vector<RefPtr<SandboxExtension> > m_pendingDropExtensionsForFileUpload;
 
     bool m_canRunBeforeUnloadConfirmPanel;
 
@@ -719,13 +811,22 @@ private:
 
     bool m_cachedMainFrameIsPinnedToLeftSide;
     bool m_cachedMainFrameIsPinnedToRightSide;
+    bool m_canShortCircuitHorizontalWheelEvents;
+    unsigned m_numWheelEventHandlers;
 
     unsigned m_cachedPageCount;
 
+#if ENABLE(CONTEXT_MENUS)
     bool m_isShowingContextMenu;
+#endif
+    
+    bool m_willGoToBackForwardItemCallbackEnabled;
 
 #if PLATFORM(WIN)
     bool m_gestureReachedScrollingLimit;
+#endif
+#if PLATFORM(QT)
+    HashMap<String, QtNetworkReply*> m_applicationSchemeReplies;
 #endif
 };
 

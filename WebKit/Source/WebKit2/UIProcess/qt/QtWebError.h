@@ -22,7 +22,6 @@
 #define QtWebError_h
 
 #include "qwebdownloaditem_p.h"
-#include "qwebkitglobal.h"
 #include <QtNetwork/QNetworkReply>
 #include <WKError.h>
 #include <WKRetainPtr.h>
@@ -31,9 +30,12 @@ QT_BEGIN_NAMESPACE
 class QUrl;
 QT_END_NAMESPACE
 
+namespace WebKit {
+
 class QtWebError {
 public:
     enum Type {
+        NoError,
         InternalError,
         NetworkError,
         HttpError,
@@ -56,5 +58,7 @@ public:
 private:
     WKRetainPtr<WKErrorRef> error;
 };
+
+} // namespace WebKit
 
 #endif /* QtWebError_h */

@@ -241,13 +241,10 @@ Ewk_History_Item* ewk_history_item_new_from_core(WebCore::HistoryItem* core)
         return 0;
     }
 
-    item = (Ewk_History_Item*)calloc(1, sizeof(Ewk_History_Item));
-    if (!item) {
-        CRITICAL("Could not allocate item memory.");
-        return 0;
-    }
-
     core->ref();
+
+    item = new Ewk_History_Item;
+    memset(item, 0, sizeof(*item));
     item->core = core;
 
     return item;
@@ -255,9 +252,9 @@ Ewk_History_Item* ewk_history_item_new_from_core(WebCore::HistoryItem* core)
 
 Ewk_History_Item* ewk_history_item_new(const char* uri, const char* title)
 {
-    WTF::String u = WTF::String::fromUTF8(uri);
-    WTF::String t = WTF::String::fromUTF8(title);
-    WTF::RefPtr<WebCore::HistoryItem> core = WebCore::HistoryItem::create(u, t, 0);
+    WTF::String historyUri = WTF::String::fromUTF8(uri);
+    WTF::String historyTitle = WTF::String::fromUTF8(title);
+    WTF::RefPtr<WebCore::HistoryItem> core = WebCore::HistoryItem::create(historyUri, historyTitle, 0);
     Ewk_History_Item* item = ewk_history_item_new_from_core(core.release().leakRef());
     return item;
 }
@@ -265,7 +262,7 @@ Ewk_History_Item* ewk_history_item_new(const char* uri, const char* title)
 static inline void _ewk_history_item_free(Ewk_History_Item* item, WebCore::HistoryItem* core)
 {
     core->deref();
-    free(item);
+    delete item;
 }
 
 void ewk_history_item_free(Ewk_History_Item* item)
@@ -287,19 +284,19 @@ const char* ewk_history_item_title_get(const Ewk_History_Item* item)
 {
     EWK_HISTORY_ITEM_CORE_GET_OR_RETURN(item, core, 0);
     // hide the following optimzation from outside
-    Ewk_History_Item* item1 = const_cast<Ewk_History_Item*>(item);
-    eina_stringshare_replace(&item1->title, core->title().utf8().data());
-    return item1->title;
+    Ewk_History_Item* historyItem = const_cast<Ewk_History_Item*>(item);
+    eina_stringshare_replace(&historyItem->title, core->title().utf8().data());
+    return historyItem->title;
 }
 
 const char* ewk_history_item_title_alternate_get(const Ewk_History_Item* item)
 {
     EWK_HISTORY_ITEM_CORE_GET_OR_RETURN(item, core, 0);
     // hide the following optimzation from outside
-    Ewk_History_Item* item1 = const_cast<Ewk_History_Item*>(item);
-    eina_stringshare_replace(&item1->alternateTitle,
+    Ewk_History_Item* historyItem = const_cast<Ewk_History_Item*>(item);
+    eina_stringshare_replace(&historyItem->alternateTitle,
                              core->alternateTitle().utf8().data());
-    return item1->alternateTitle;
+    return historyItem->alternateTitle;
 }
 
 void ewk_history_item_title_alternate_set(Ewk_History_Item* item, const char* title)
@@ -314,19 +311,19 @@ const char* ewk_history_item_uri_get(const Ewk_History_Item* item)
 {
     EWK_HISTORY_ITEM_CORE_GET_OR_RETURN(item, core, 0);
     // hide the following optimzation from outside
-    Ewk_History_Item* i = const_cast<Ewk_History_Item*>((item));
-    eina_stringshare_replace(&i->uri, core->urlString().utf8().data());
-    return i->uri;
+    Ewk_History_Item* historyItem = const_cast<Ewk_History_Item*>((item));
+    eina_stringshare_replace(&historyItem->uri, core->urlString().utf8().data());
+    return historyItem->uri;
 }
 
 const char* ewk_history_item_uri_original_get(const Ewk_History_Item* item)
 {
     EWK_HISTORY_ITEM_CORE_GET_OR_RETURN(item, core, 0);
     // hide the following optimzation from outside
-    Ewk_History_Item* i = const_cast<Ewk_History_Item*>(item);
-    eina_stringshare_replace(&i->originalUri,
+    Ewk_History_Item* historyItem = const_cast<Ewk_History_Item*>(item);
+    eina_stringshare_replace(&historyItem->originalUri,
                              core->originalURLString().utf8().data());
-    return i->originalUri;
+    return historyItem->originalUri;
 }
 
 double ewk_history_item_time_last_visited_get(const Ewk_History_Item* item)
@@ -344,7 +341,9 @@ cairo_surface_t* ewk_history_item_icon_surface_get(const Ewk_History_Item* item)
         ERR("icon is NULL.");
         return 0;
     }
-    return icon->nativeImageForCurrentFrame();
+
+    WebCore::NativeImageCairo* nativeImage = icon->nativeImageForCurrentFrame();
+    return nativeImage ? nativeImage->surface() : 0;
 }
 
 Evas_Object* ewk_history_item_icon_object_add(const Ewk_History_Item* item, Evas* canvas)
@@ -352,15 +351,14 @@ Evas_Object* ewk_history_item_icon_object_add(const Ewk_History_Item* item, Evas
     EWK_HISTORY_ITEM_CORE_GET_OR_RETURN(item, core, 0);
     EINA_SAFETY_ON_NULL_RETURN_VAL(canvas, 0);
     WebCore::Image* icon = WebCore::iconDatabase().synchronousIconForPageURL(core->url(), WebCore::IntSize(16, 16));
-    cairo_surface_t* surface;
 
     if (!icon) {
         ERR("icon is NULL.");
         return 0;
     }
 
-    surface = icon->nativeImageForCurrentFrame();
-    return ewk_util_image_from_cairo_surface_add(canvas, surface);
+    WebCore::NativeImageCairo* nativeImage = icon->nativeImageForCurrentFrame();
+    return nativeImage ? ewk_util_image_from_cairo_surface_add(canvas, nativeImage->surface()) : 0;
 }
 
 Eina_Bool ewk_history_item_page_cache_exists(const Ewk_History_Item* item)
@@ -399,14 +397,9 @@ Ewk_History* ewk_history_new(WebCore::BackForwardListImpl* core)
     EINA_SAFETY_ON_NULL_RETURN_VAL(core, 0);
     DBG("core=%p", core);
 
-    history = static_cast<Ewk_History*>(malloc(sizeof(Ewk_History)));
-    if (!history) {
-        CRITICAL("Could not allocate history memory.");
-        return 0;
-    }
-
-    core->ref();
+    history = new Ewk_History;
     history->core = core;
+    core->ref();
 
     return history;
 }
@@ -423,7 +416,7 @@ void ewk_history_free(Ewk_History* history)
 {
     DBG("history=%p", history);
     history->core->deref();
-    free(history);
+    delete history;
 }
 
 namespace EWKPrivate {

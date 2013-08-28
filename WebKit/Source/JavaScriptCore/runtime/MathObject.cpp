@@ -34,6 +34,25 @@ namespace JSC {
 
 ASSERT_CLASS_FITS_IN_CELL(MathObject);
 
+static EncodedJSValue JSC_HOST_CALL mathProtoFuncAbs(ExecState*);
+static EncodedJSValue JSC_HOST_CALL mathProtoFuncACos(ExecState*);
+static EncodedJSValue JSC_HOST_CALL mathProtoFuncASin(ExecState*);
+static EncodedJSValue JSC_HOST_CALL mathProtoFuncATan(ExecState*);
+static EncodedJSValue JSC_HOST_CALL mathProtoFuncATan2(ExecState*);
+static EncodedJSValue JSC_HOST_CALL mathProtoFuncCeil(ExecState*);
+static EncodedJSValue JSC_HOST_CALL mathProtoFuncCos(ExecState*);
+static EncodedJSValue JSC_HOST_CALL mathProtoFuncExp(ExecState*);
+static EncodedJSValue JSC_HOST_CALL mathProtoFuncFloor(ExecState*);
+static EncodedJSValue JSC_HOST_CALL mathProtoFuncLog(ExecState*);
+static EncodedJSValue JSC_HOST_CALL mathProtoFuncMax(ExecState*);
+static EncodedJSValue JSC_HOST_CALL mathProtoFuncMin(ExecState*);
+static EncodedJSValue JSC_HOST_CALL mathProtoFuncPow(ExecState*);
+static EncodedJSValue JSC_HOST_CALL mathProtoFuncRandom(ExecState*);
+static EncodedJSValue JSC_HOST_CALL mathProtoFuncRound(ExecState*);
+static EncodedJSValue JSC_HOST_CALL mathProtoFuncSin(ExecState*);
+static EncodedJSValue JSC_HOST_CALL mathProtoFuncSqrt(ExecState*);
+static EncodedJSValue JSC_HOST_CALL mathProtoFuncTan(ExecState*);
+
 }
 
 #include "MathObject.lut.h"

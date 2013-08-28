@@ -248,6 +248,7 @@ static void paintSkBitmap(PlatformContextSkia* platformContext, const NativeImag
         // we don't send extra pixels.
         canvas->drawBitmapRect(bitmap.bitmap(), &srcRect, destRect, &paint);
     }
+    platformContext->didDrawRect(destRect, paint, &bitmap.bitmap());
 }
 
 // Transforms the given dimensions with the given matrix. Used to see how big
@@ -478,7 +479,8 @@ PassRefPtr<BitmapImageSingleFrameSkia> BitmapImageSingleFrameSkia::create(const 
 {
     if (copyPixels) {
         SkBitmap temp;
-        bitmap.copyTo(&temp, bitmap.config());
+        if (!bitmap.deepCopyTo(&temp, bitmap.config()))
+            bitmap.copyTo(&temp, bitmap.config());
         return adoptRef(new BitmapImageSingleFrameSkia(temp));
     }
     return adoptRef(new BitmapImageSingleFrameSkia(bitmap));

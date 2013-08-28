@@ -32,7 +32,7 @@
 #include <QtCore/QUrl>
 #include <QtGui/QImage>
 
-using namespace WebKit;
+namespace WebKit {
 
 static inline QtWebIconDatabaseClient* toQtWebIconDatabaseClient(const void* clientInfo)
 {
@@ -53,11 +53,12 @@ QtWebIconDatabaseClient::QtWebIconDatabaseClient(QtWebContext *qtWebContext)
     iconDatabaseClient.version = kWKIconDatabaseClientCurrentVersion;
     iconDatabaseClient.clientInfo = this;
     iconDatabaseClient.didChangeIconForPageURL = didChangeIconForPageURL;
-    WKIconDatabaseSetIconDatabaseClient(toAPI(m_iconDatabase), &iconDatabaseClient);
+    WKIconDatabaseSetIconDatabaseClient(toAPI(m_iconDatabase.get()), &iconDatabaseClient);
 }
 
 QtWebIconDatabaseClient::~QtWebIconDatabaseClient()
 {
+    WKIconDatabaseSetIconDatabaseClient(toAPI(m_iconDatabase.get()), 0);
 }
 
 void QtWebIconDatabaseClient::didChangeIconForPageURL(WKIconDatabaseRef iconDatabase, WKURLRef pageURL, const void* clientInfo)
@@ -119,4 +120,7 @@ void QtWebIconDatabaseClient::releaseIconForPageURL(const String& pageURL)
     m_iconDatabase->releaseIconForPageURL(pageURL);
 }
 
+} // namespace WebKit
+
 #include "moc_QtWebIconDatabaseClient.cpp"
+

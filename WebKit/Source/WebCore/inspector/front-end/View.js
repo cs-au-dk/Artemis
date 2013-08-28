@@ -278,13 +278,20 @@ WebInspector.View.prototype = {
             return;
         }
 
-        var xhr = new XMLHttpRequest();
-        xhr.open("GET", cssFile, false);
-        xhr.send(null);
+        if (window.debugCSS) { /* debugging support */
+            styleElement = document.createElement("link");
+            styleElement.rel = "stylesheet";
+            styleElement.type = "text/css";
+            styleElement.href = cssFile;
+        } else {
+            var xhr = new XMLHttpRequest();
+            xhr.open("GET", cssFile, false);
+            xhr.send(null);
 
-        styleElement = document.createElement("style");
-        styleElement.type = "text/css";
-        styleElement.textContent = xhr.responseText;
+            styleElement = document.createElement("style");
+            styleElement.type = "text/css";
+            styleElement.textContent = xhr.responseText;
+        }
         document.head.insertBefore(styleElement, document.head.firstChild);
 
         WebInspector.View._cssFileToStyleElement[cssFile] = styleElement;
@@ -326,6 +333,31 @@ WebInspector.View.prototype = {
 
         if (this._children.length)
             lines.push(prefix + "}");
+    },
+
+    /**
+     * @return {Element}
+     */
+    defaultFocusedElement: function()
+    {
+        return this._defaultFocusedElement || this.element;
+    },
+
+    /**
+     * @param {Element} element
+     */
+    setDefaultFocusedElement: function(element)
+    {
+        this._defaultFocusedElement = element;
+    },
+
+    focus: function()
+    {
+        var element = this.defaultFocusedElement();
+        if (!element || element.isAncestor(document.activeElement))
+            return;
+
+        WebInspector.setCurrentFocusElement(element);
     }
 }
 

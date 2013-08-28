@@ -32,6 +32,8 @@
 #define BindingSecurity_h
 
 #include "BindingSecurityBase.h"
+#include "DOMWindow.h"
+#include "Document.h"
 #include "Element.h"
 #include "Frame.h"
 #include "GenericBinding.h"
@@ -55,13 +57,11 @@ public:
 
     // Check if it is safe to access the given node from the
     // current security context.
-    static bool checkNodeSecurity(State<Binding>*, Node* target);
+    static bool shouldAllowAccessToNode(State<Binding>*, Node* target);
 
     static bool allowPopUp(State<Binding>*);
     static bool allowSettingFrameSrcToJavascriptUrl(State<Binding>*, HTMLFrameElementBase*, const String& value);
     static bool allowSettingSrcToJavascriptURL(State<Binding>*, Element*, const String& name, const String& value);
-
-    static bool shouldAllowNavigation(State<Binding>*, Frame*);
 
 private:
     explicit BindingSecurity() {}
@@ -101,7 +101,7 @@ bool BindingSecurity<Binding>::canAccessFrame(State<Binding>* state,
 }
 
 template <class Binding>
-bool BindingSecurity<Binding>::checkNodeSecurity(State<Binding>* state, Node* node)
+bool BindingSecurity<Binding>::shouldAllowAccessToNode(State<Binding>* state, Node* node)
 {
     if (!node)
         return false;
@@ -131,7 +131,7 @@ bool BindingSecurity<Binding>::allowSettingFrameSrcToJavascriptUrl(State<Binding
 {
     if (protocolIsJavaScript(stripLeadingAndTrailingHTMLSpaces(value))) {
         Node* contentDoc = frame->contentDocument();
-        if (contentDoc && !checkNodeSecurity(state, contentDoc))
+        if (contentDoc && !shouldAllowAccessToNode(state, contentDoc))
             return false;
     }
     return true;
@@ -143,13 +143,6 @@ bool BindingSecurity<Binding>::allowSettingSrcToJavascriptURL(State<Binding>* st
     if ((element->hasTagName(HTMLNames::iframeTag) || element->hasTagName(HTMLNames::frameTag)) && equalIgnoringCase(name, "src"))
         return allowSettingFrameSrcToJavascriptUrl(state, static_cast<HTMLFrameElementBase*>(element), value);
     return true;
-}
-
-template <class Binding>
-bool BindingSecurity<Binding>::shouldAllowNavigation(State<Binding>* state, Frame* frame)
-{
-    Frame* activeFrame = state->activeFrame();
-    return activeFrame && activeFrame->loader()->shouldAllowNavigation(frame);
 }
 
 }

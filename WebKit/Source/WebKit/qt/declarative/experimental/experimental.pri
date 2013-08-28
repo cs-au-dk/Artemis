@@ -20,14 +20,11 @@ copy2build.name = COPY ${QMAKE_FILE_IN}
 copy2build.CONFIG += no_link
 QMAKE_EXTRA_COMPILERS += copy2build
 
-TARGET = $$qtLibraryTarget($$TARGET)
 contains(QT_CONFIG, reduce_exports):CONFIG += hide_symbols
 
 wince*:LIBS += $$QMAKE_LIBS_GUI
 
-CONFIG += qtwebkit qtwebkit-private
-
-QT += declarative widgets network
+QT += declarative widgets network quick quick-private webkit webkit-private
 
 DESTDIR = $${ROOT_BUILD_DIR}/imports/$${TARGET.module_name}
 
@@ -37,7 +34,8 @@ RPATHDIR_RELATIVE_TO_DESTDIR = ../../lib
 SOURCES += plugin.cpp
 
 DEFINES += HAVE_WEBKIT2
-INCLUDEPATH += ../../../../WebKit2/UIProcess/API/qt
+
+WEBKIT += wtf javascriptcore webkit2
 
 target.path = $$[QT_INSTALL_IMPORTS]/$${TARGET.module_name}
 

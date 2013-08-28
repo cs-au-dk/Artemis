@@ -30,11 +30,8 @@
 #include "JSValue.h"
 #include "MacroAssembler.h"
 #include "VirtualRegister.h"
-#include <wtf/Platform.h>
-
-#ifndef NDEBUG
 #include <stdio.h>
-#endif
+#include <wtf/Platform.h>
 
 namespace JSC {
 
@@ -195,6 +192,8 @@ public:
     
     ValueRecoveryTechnique technique() const { return m_technique; }
     
+    bool isConstant() const { return m_technique == Constant; }
+    
     bool isInRegisters() const
     {
         switch (m_technique) {
@@ -205,6 +204,20 @@ public:
         case InPair:
 #endif
         case InFPR:
+            return true;
+        default:
+            return false;
+        }
+    }
+    
+    bool isAlreadyInRegisterFile() const
+    {
+        switch (technique()) {
+        case AlreadyInRegisterFile:
+        case AlreadyInRegisterFileAsUnboxedInt32:
+        case AlreadyInRegisterFileAsUnboxedCell:
+        case AlreadyInRegisterFileAsUnboxedBoolean:
+        case AlreadyInRegisterFileAsUnboxedDouble:
             return true;
         default:
             return false;
@@ -249,7 +262,6 @@ public:
         return JSValue::decode(m_source.constant);
     }
     
-#ifndef NDEBUG
     void dump(FILE* out) const
     {
         switch (technique()) {
@@ -314,7 +326,6 @@ public:
             break;
         }
     }
-#endif
     
 private:
     ValueRecoveryTechnique m_technique;

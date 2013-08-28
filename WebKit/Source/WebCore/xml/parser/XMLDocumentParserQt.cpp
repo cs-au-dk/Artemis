@@ -138,7 +138,7 @@ XMLDocumentParser::XMLDocumentParser(DocumentFragment* fragment, Element* parent
 
     QXmlStreamNamespaceDeclarations namespaces;
     for (Element* element = elemStack.last(); !elemStack.isEmpty(); elemStack.removeLast()) {
-        if (NamedNodeMap* attrs = element->attributes()) {
+        if (ElementAttributeData* attrs = element->updatedAttributeData()) {
             for (unsigned i = 0; i < attrs->length(); i++) {
                 Attribute* attr = attrs->attributeItem(i);
                 if (attr->localName() == "xmlns")
@@ -202,7 +202,7 @@ void XMLDocumentParser::doEnd()
     if (m_sawXSLTransform) {
         document()->setTransformSource(adoptPtr(new TransformSource(m_originalSourceForTransform)));
         document()->setParsing(false); // Make the doc think it's done, so it will apply xsl sheets.
-        document()->styleSelectorChanged(RecalcStyleImmediately);
+        document()->styleResolverChanged(RecalcStyleImmediately);
         document()->setParsing(true);
         DocumentParser::stopParsing();
     }
@@ -422,6 +422,7 @@ void XMLDocumentParser::startDocument()
         QStringRef encoding = m_stream.documentEncoding();
         if (!encoding.isEmpty())
             document()->setXMLEncoding(encoding);
+        document()->setHasXMLDeclaration(!version.isEmpty());
     }
 }
 

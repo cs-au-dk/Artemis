@@ -23,6 +23,10 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+/**
+ * @constructor
+ * @extends {WebInspector.DataGridNode}
+ */
 WebInspector.ProfileDataGridNode = function(profileView, profileNode, owningTree, hasChildren)
 {
     this.profileView = profileView;
@@ -59,17 +63,17 @@ WebInspector.ProfileDataGridNode.prototype = {
         data["calls"] = this.numberOfCalls;
 
         if (this.profileView.showSelfTimeAsPercent.get())
-            data["self"] = WebInspector.UIString("%.2f%%", this.selfPercent);
+            data["self"] = WebInspector.UIString("%.2f%", this.selfPercent);
         else
             data["self"] = formatMilliseconds(this.selfTime);
 
         if (this.profileView.showTotalTimeAsPercent.get())
-            data["total"] = WebInspector.UIString("%.2f%%", this.totalPercent);
+            data["total"] = WebInspector.UIString("%.2f%", this.totalPercent);
         else
             data["total"] = formatMilliseconds(this.totalTime);
 
         if (this.profileView.showAverageTimeAsPercent.get())
-            data["average"] = WebInspector.UIString("%.2f%%", this.averagePercent);
+            data["average"] = WebInspector.UIString("%.2f%", this.averagePercent);
         else
             data["average"] = formatMilliseconds(this.averageTime);
 
@@ -207,7 +211,7 @@ WebInspector.ProfileDataGridNode.prototype = {
         return this.parent !== this.dataGrid ? this.parent : this.tree;
     },
 
-    _populate: function(event)
+    _populate: function()
     {
         this._sharedPopulate();
 
@@ -295,6 +299,9 @@ WebInspector.ProfileDataGridNode.prototype = {
 
 WebInspector.ProfileDataGridNode.prototype.__proto__ = WebInspector.DataGridNode.prototype;
 
+/**
+ * @constructor
+ */
 WebInspector.ProfileDataGridTree = function(profileView, profileNode)
 {
     this.tree = this;
@@ -365,7 +372,7 @@ WebInspector.ProfileDataGridTree.propertyComparators = [{}, {}];
 
 WebInspector.ProfileDataGridTree.propertyComparator = function(/*String*/ property, /*Boolean*/ isAscending)
 {
-    var comparator = this.propertyComparators[(isAscending ? 1 : 0)][property];
+    var comparator = WebInspector.ProfileDataGridTree.propertyComparators[(isAscending ? 1 : 0)][property];
 
     if (!comparator) {
         if (isAscending) {
@@ -392,7 +399,7 @@ WebInspector.ProfileDataGridTree.propertyComparator = function(/*String*/ proper
             }
         }
 
-        this.propertyComparators[(isAscending ? 1 : 0)][property] = comparator;
+        WebInspector.ProfileDataGridTree.propertyComparators[(isAscending ? 1 : 0)][property] = comparator;
     }
 
     return comparator;

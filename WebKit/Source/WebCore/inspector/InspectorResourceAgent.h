@@ -67,13 +67,14 @@ class ResourceResponse;
 class SharedBuffer;
 
 #if ENABLE(WEB_SOCKETS)
+struct WebSocketFrame;
 class WebSocketHandshakeRequest;
 class WebSocketHandshakeResponse;
 #endif
 
 typedef String ErrorString;
 
-class InspectorResourceAgent : public InspectorBaseAgent<InspectorResourceAgent> {
+class InspectorResourceAgent : public InspectorBaseAgent<InspectorResourceAgent>, public InspectorBackendDispatcher::NetworkCommandHandler {
 public:
     static PassOwnPtr<InspectorResourceAgent> create(InstrumentingAgents* instrumentingAgents, InspectorPageAgent* pageAgent, InspectorClient* client, InspectorState* state)
     {
@@ -110,31 +111,35 @@ public:
     void didRecalculateStyle();
     void didScheduleStyleRecalculation(Document*);
 
-    PassRefPtr<InspectorObject> buildInitiatorObject(Document*);
+    PassRefPtr<TypeBuilder::Network::Initiator> buildInitiatorObject(Document*);
 
 #if ENABLE(WEB_SOCKETS)
     void didCreateWebSocket(unsigned long identifier, const KURL& requestURL);
     void willSendWebSocketHandshakeRequest(unsigned long identifier, const WebSocketHandshakeRequest&);
     void didReceiveWebSocketHandshakeResponse(unsigned long identifier, const WebSocketHandshakeResponse&);
     void didCloseWebSocket(unsigned long identifier);
+    void didReceiveWebSocketFrame(unsigned long identifier, const WebSocketFrame&);
+    void didSendWebSocketFrame(unsigned long identifier, const WebSocketFrame&);
+    void didReceiveWebSocketFrameError(unsigned long identifier, const String&);
 #endif
 
     // called from Internals for layout test purposes.
     void setResourcesDataSizeLimitsFromInternals(int maximumResourcesContentSize, int maximumSingleResourceContentSize);
 
     // Called from frontend
-    void enable(ErrorString*);
-    void disable(ErrorString*);
-    void setUserAgentOverride(ErrorString*, const String& userAgent);
-    void setExtraHTTPHeaders(ErrorString*, PassRefPtr<InspectorObject>);
-    void getResponseBody(ErrorString*, const String& requestId, String* content, bool* base64Encoded);
+    virtual void enable(ErrorString*);
+    virtual void disable(ErrorString*);
+    virtual void setUserAgentOverride(ErrorString*, const String& userAgent);
+    virtual void setExtraHTTPHeaders(ErrorString*, const RefPtr<InspectorObject>&);
+    virtual void getResponseBody(ErrorString*, const String& requestId, String* content, bool* base64Encoded);
+    // FIXME: this seems to be unsued.
     void clearCache(ErrorString*, const String* const optionalPreservedLoaderId);
 
-    void canClearBrowserCache(ErrorString*, bool*);
-    void clearBrowserCache(ErrorString*);
-    void canClearBrowserCookies(ErrorString*, bool*);
-    void clearBrowserCookies(ErrorString*);
-    void setCacheDisabled(ErrorString*, bool cacheDisabled);
+    virtual void canClearBrowserCache(ErrorString*, bool*);
+    virtual void clearBrowserCache(ErrorString*);
+    virtual void canClearBrowserCookies(ErrorString*, bool*);
+    virtual void clearBrowserCookies(ErrorString*);
+    virtual void setCacheDisabled(ErrorString*, bool cacheDisabled);
 
 private:
     InspectorResourceAgent(InstrumentingAgents*, InspectorPageAgent*, InspectorClient*, InspectorState*);
@@ -149,7 +154,7 @@ private:
     bool m_loadingXHRSynchronously;
 
     // FIXME: InspectorResourceAgent should now be aware of style recalculation.
-    RefPtr<InspectorObject> m_styleRecalculationInitiator;
+    RefPtr<TypeBuilder::Network::Initiator> m_styleRecalculationInitiator;
     bool m_isRecalculatingStyle;
 };
 

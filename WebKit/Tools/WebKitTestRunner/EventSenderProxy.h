@@ -61,11 +61,14 @@ public:
     void addTouchPoint(int x, int y);
     void updateTouchPoint(int index, int x, int y);
     void setTouchModifier(WKEventModifiers, bool enable);
+    void setTouchPointRadius(int radiusX, int radiusY);
     void touchStart();
     void touchMove();
     void touchEnd();
+    void touchCancel();
     void clearTouchPoints();
     void releaseTouchPoint(int index);
+    void cancelTouchPoint(int index);
 #endif
 
 private:
@@ -106,6 +109,7 @@ private:
 #if ENABLE(TOUCH_EVENTS)
     QList<QTouchEvent::TouchPoint> m_touchPoints;
     Qt::KeyboardModifiers m_touchModifiers;
+    QPoint m_touchPointRadius;
     bool m_touchActive;
 #endif
 #endif

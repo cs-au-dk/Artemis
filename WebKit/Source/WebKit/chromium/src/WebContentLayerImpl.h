@@ -32,17 +32,19 @@
 namespace WebKit {
 class WebContentLayerClient;
 
-class WebContentLayerImpl : public WebCore::ContentLayerChromium, public WebCore::CCLayerDelegate {
+class WebContentLayerImpl : public WebCore::ContentLayerChromium, public WebCore::ContentLayerDelegate {
 public:
     static PassRefPtr<WebContentLayerImpl> create(WebContentLayerClient* contentClient);
 
     void setDrawsContent(bool);
-    virtual bool drawsContent() const;
 
 protected:
     explicit WebContentLayerImpl(WebContentLayerClient* contentClient);
     virtual ~WebContentLayerImpl();
+
+    // ContentLayerDelegate implementation.
     virtual void paintContents(WebCore::GraphicsContext&, const WebCore::IntRect& clip);
+    virtual void didScroll(const WebCore::IntSize&);
 
     WebContentLayerClient* m_contentClient;
     bool m_drawsContent;

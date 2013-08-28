@@ -23,7 +23,6 @@
 #ifndef JSValue_h
 #define JSValue_h
 
-#include <string>
 #include <math.h>
 #include <stddef.h> // for size_t
 #include <stdint.h>
@@ -33,20 +32,6 @@
 #include <wtf/HashTraits.h>
 #include <wtf/MathExtras.h>
 #include <wtf/StdLibExtras.h>
-
-#ifdef ARTEMIS
-#include "symbolic/expression/expression.h"
-#include "symbolic/expression/integerexpression.h"
-#include "symbolic/expression/integercoercion.h"
-#include "symbolic/expression/booleanexpression.h"
-#include "symbolic/expression/booleancoercion.h"
-#include "symbolic/expression/stringexpression.h"
-#include "symbolic/expression/stringcoercion.h"
-#include "symbolic/expression/constantstring.h"
-#include "symbolic/expression/constantinteger.h"
-#include "symbolic/expression/constantboolean.h"
-
-#endif
 
 namespace JSC {
 
@@ -70,6 +55,9 @@ namespace JSC {
         class SpeculativeJIT;
     }
 #endif
+    namespace LLInt {
+        class Data;
+    }
 
     struct ClassInfo;
     struct Instruction;
@@ -79,31 +67,6 @@ namespace JSC {
 
     enum PreferredPrimitiveType { NoPreference, PreferNumber, PreferString };
 
-#ifdef ARTEMIS
-
-    typedef struct {
-
-        union {
-            int64_t asInt64;
-            JSCell* ptr;
-
-            #if CPU(BIG_ENDIAN)
-                    struct {
-                        int32_t tag;
-                        int32_t payload;
-                    } asBits;
-            #else
-                    struct {
-                        int32_t payload;
-                        int32_t tag;
-                    } asBits;
-            #endif
-        } u;
-
-        Symbolic::Expression* symbolic;
-
-    } SymbolicImmediate;
-#endif
 
 #if USE(JSVALUE32_64)
     typedef int64_t EncodedJSValue;
@@ -133,7 +96,7 @@ namespace JSC {
     };
 
     // This implements ToInt32, defined in ECMA-262 9.5.
-    int32_t toInt32(double);
+    JS_EXPORT_PRIVATE int32_t toInt32(double);
 
     // This implements ToUInt32, defined in ECMA-262 9.6.
     inline uint32_t toUInt32(double number)
@@ -158,6 +121,7 @@ namespace JSC {
         friend class DFG::OSRExitCompiler;
         friend class DFG::SpeculativeJIT;
 #endif
+        friend class LLInt::Data;
 
     public:
         static EncodedJSValue encode(JSValue);
@@ -209,6 +173,7 @@ namespace JSC {
 
         // Querying the type.
         bool isEmpty() const;
+        bool isFunction() const;
         bool isUndefined() const;
         bool isNull() const;
         bool isUndefinedOrNull() const;
@@ -219,19 +184,6 @@ namespace JSC {
         bool isGetterSetter() const;
         bool isObject() const;
         bool inherits(const ClassInfo*) const;
-
-#ifdef ARTEMIS
-        // Symbolic operations
-        bool isSymbolic() const;
-        void makeSymbolic(Symbolic::Expression* symbolic);
-
-        Symbolic::Expression* asSymbolic() const;
-        Symbolic::IntegerExpression* generateIntegerExpression(ExecState* exec);
-        Symbolic::StringExpression* generateStringExpression(ExecState* exec);
-        Symbolic::IntegerExpression* generateIntegerCoercionExpression(ExecState* exec);
-        Symbolic::StringExpression* generateStringCoercionExpression(ExecState* exec);
-        Symbolic::BooleanExpression* generateBooleanExpression(ExecState* exec);
-#endif
         
         // Extracting the value.
         bool getString(ExecState* exec, UString&) const;
@@ -250,13 +202,14 @@ namespace JSC {
         // toNumber conversion is expected to be side effect free if an exception has
         // been set in the ExecState already.
         double toNumber(ExecState*) const;
-        UString toString(ExecState*) const;
-        JSString* toPrimitiveString(ExecState*) const;
+        JSString* toString(ExecState*) const;
+        UString toUString(ExecState*) const;
+        UString toUStringInline(ExecState*) const;
         JSObject* toObject(ExecState*) const;
         JSObject* toObject(ExecState*, JSGlobalObject*) const;
 
         // Integer conversions.
-        double toInteger(ExecState*) const;
+        JS_EXPORT_PRIVATE double toInteger(ExecState*) const;
         double toIntegerPreserveNaN(ExecState*) const;
         int32_t toInt32(ExecState*) const;
         uint32_t toUInt32(ExecState*) const;
@@ -271,8 +224,8 @@ namespace JSC {
         JSValue get(ExecState*, unsigned propertyName) const;
         JSValue get(ExecState*, unsigned propertyName, PropertySlot&) const;
         void put(ExecState*, const Identifier& propertyName, JSValue, PutPropertySlot&);
-        void putDirect(ExecState*, const Identifier& propertyName, JSValue, PutPropertySlot&);
-        void put(ExecState*, unsigned propertyName, JSValue);
+        void putToPrimitive(ExecState*, const Identifier& propertyName, JSValue, PutPropertySlot&);
+        void putByIndex(ExecState*, unsigned propertyName, JSValue, bool shouldThrow);
 
         JSObject* toThisObject(ExecState*) const;
 
@@ -285,11 +238,11 @@ namespace JSC {
 
         bool isCell() const;
         JSCell* asCell() const;
-        bool isValidCallee();
+        JS_EXPORT_PRIVATE bool isValidCallee();
 
-#ifndef NDEBUG
         char* description();
-#endif
+
+        JS_EXPORT_PRIVATE JSObject* synthesizePrototype(ExecState*) const;
 
     private:
         template <class T> JSValue(WriteBarrierBase<T>);
@@ -298,12 +251,11 @@ namespace JSC {
         JSValue(HashTableDeletedValueTag);
 
         inline const JSValue asValue() const { return *this; }
-        double toNumberSlowCase(ExecState*) const;
-        JSObject* toObjectSlowCase(ExecState*, JSGlobalObject*) const;
-        JSObject* toThisObjectSlowCase(ExecState*) const;
-
-        JSObject* synthesizePrototype(ExecState*) const;
-        JSObject* synthesizeObject(ExecState*) const;
+        JS_EXPORT_PRIVATE double toNumberSlowCase(ExecState*) const;
+        JS_EXPORT_PRIVATE JSString* toStringSlowCase(ExecState*) const;
+        JS_EXPORT_PRIVATE UString toUStringSlowCase(ExecState*) const;
+        JS_EXPORT_PRIVATE JSObject* toObjectSlowCase(ExecState*, JSGlobalObject*) const;
+        JS_EXPORT_PRIVATE JSObject* toThisObjectSlowCase(ExecState*) const;
 
 #if USE(JSVALUE32_64)
         /*
@@ -393,32 +345,9 @@ namespace JSC {
         // This value is 2^48, used to encode doubles such that the encoded value will begin
         // with a 16-bit pattern within the range 0x0001..0xFFFE.
         #define DoubleEncodeOffset 0x1000000000000ll
-
-#ifdef ARTEMIS
-        #define TagTypeNumber 0xffff800000000000ll
-
-        #define TagTypeInteger 0xffffC00000000000ll
-
-        #define TagTypeSymbolicInteger 0xffffD00000000000ll
-        #define TagTypeSymbolicDouble 0xffff900000000000ll
-
-        #define TagTypeSymbolicObject 0xffff300000000000ll
-        #define TagTypeSymbolicNull 0xffff100000000000ll
-
-        #define TagTypeSymbolicTrue 0xffff500000000000ll
-        #define TagTypeSymbolicFalse 0xffff700000000000ll
-
-        #define SymbolicMask 0xfffff00000000000ll
-        #define TagTypeSymbolic 0xffff100000000000ll
-
-        SymbolicImmediate* getImmediate() const;
-        JSC::JSCell* getPtr() const;
-        int64_t getInt64() const;
-#else
         // If all bits in the mask are set, this indicates an integer number,
         // if any but not all are set this value is a double precision number.
         #define TagTypeNumber 0xffff000000000000ll
-#endif
 
         // All non-numeric (bool, null, undefined) immediates have bit 2 set.
         #define TagBitTypeOther 0x2ll

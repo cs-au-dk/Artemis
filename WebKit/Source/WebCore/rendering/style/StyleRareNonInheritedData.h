@@ -39,7 +39,6 @@
 namespace WebCore {
 
 class AnimationList;
-class CSSStyleSelector;
 class ShadowData;
 class StyleDeprecatedFlexibleBoxData;
 #if ENABLE(CSS_FILTERS)
@@ -48,10 +47,12 @@ class StyleFilterData;
 class StyleFlexibleBoxData;
 #if ENABLE(CSS_GRID_LAYOUT)
 class StyleGridData;
+class StyleGridItemData;
 #endif
 class StyleMarqueeData;
 class StyleMultiColData;
 class StyleReflection;
+class StyleResolver;
 class StyleTransformData;
 
 class ContentData;
@@ -119,6 +120,7 @@ public:
 
 #if ENABLE(CSS_GRID_LAYOUT)
     DataRef<StyleGridData> m_grid;
+    DataRef<StyleGridItemData> m_gridItem;
 #endif
 
     OwnPtr<ContentData> m_content;

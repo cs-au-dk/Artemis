@@ -51,7 +51,7 @@ class ScriptValue;
 class ConsoleMessage {
     WTF_MAKE_NONCOPYABLE(ConsoleMessage); WTF_MAKE_FAST_ALLOCATED;
 public:
-    ConsoleMessage(MessageSource, MessageType, MessageLevel, const String& m, unsigned li, const String& u, const String& requestId = String());
+    ConsoleMessage(MessageSource, MessageType, MessageLevel, const String& m, const String& u, unsigned li, const String& requestId = String());
     ConsoleMessage(MessageSource, MessageType, MessageLevel, const String& m, PassRefPtr<ScriptArguments>, PassRefPtr<ScriptCallStack>);
     ConsoleMessage(MessageSource, MessageType, MessageLevel, const String& m, const String& responseUrl, const String& requestId);
     ~ConsoleMessage();
@@ -67,6 +67,8 @@ public:
 
     void windowCleared(DOMWindow*);
 
+    unsigned argumentCount();
+
 private:
     MessageSource m_source;
     MessageType m_type;
@@ -74,8 +76,8 @@ private:
     String m_message;
     RefPtr<ScriptArguments> m_arguments;
     RefPtr<ScriptCallStack> m_callStack;
-    unsigned m_line;
     String m_url;
+    unsigned m_line;
     unsigned m_repeatCount;
     String m_requestId;
 };

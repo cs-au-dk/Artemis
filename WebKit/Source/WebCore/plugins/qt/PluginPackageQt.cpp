@@ -41,9 +41,8 @@ bool PluginPackage::fetchInfo()
         return false;
 
     NPP_GetValueProcPtr gv = (NPP_GetValueProcPtr)m_module->resolve("NP_GetValue");
-    typedef char *(*NPP_GetMIMEDescriptionProcPtr)();
-    NPP_GetMIMEDescriptionProcPtr gm =
-        (NPP_GetMIMEDescriptionProcPtr)m_module->resolve("NP_GetMIMEDescription");
+    NP_GetMIMEDescriptionFuncPtr gm =
+        (NP_GetMIMEDescriptionFuncPtr)m_module->resolve("NP_GetMIMEDescription");
     if (!gm || !gv)
         return false;
 
@@ -52,16 +51,15 @@ bool PluginPackage::fetchInfo()
     if (err != NPERR_NO_ERROR)
         return false;
 
-    m_name = buf;
+    m_name = String::fromUTF8(buf);
     err = gv(0, NPPVpluginDescriptionString, (void*) &buf);
     if (err != NPERR_NO_ERROR)
         return false;
 
-    m_description = buf;
+    m_description = String::fromUTF8(buf);
     determineModuleVersionFromDescription();
 
-    String mimeDescription = gm();
-    setMIMEDescription(mimeDescription);
+    setMIMEDescription(String::fromUTF8(gm()));
     m_infoIsFromCache = false;
 
     return true;

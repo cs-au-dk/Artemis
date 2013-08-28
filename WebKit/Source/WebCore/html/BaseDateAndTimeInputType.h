@@ -41,6 +41,7 @@ namespace WebCore {
 class BaseDateAndTimeInputType : public TextFieldInputType {
 protected:
     BaseDateAndTimeInputType(HTMLInputElement* element) : TextFieldInputType(element) { }
+    virtual void handleKeydownEvent(KeyboardEvent*) OVERRIDE;
     virtual double parseToDouble(const String&, double) const OVERRIDE;
     virtual bool parseToDateComponents(const String&, DateComponents*) const OVERRIDE;
     String serializeWithComponents(const DateComponents&) const;
@@ -52,7 +53,7 @@ private:
     virtual double valueAsDate() const OVERRIDE;
     virtual void setValueAsDate(double, ExceptionCode&) const OVERRIDE;
     virtual double valueAsNumber() const OVERRIDE;
-    virtual void setValueAsNumber(double, bool sendChangeEvent, ExceptionCode&) const OVERRIDE;
+    virtual void setValueAsNumber(double, TextFieldEventBehavior, ExceptionCode&) const OVERRIDE;
     virtual bool typeMismatchFor(const String&) const OVERRIDE;
     virtual bool typeMismatch() const OVERRIDE;
     virtual bool rangeUnderflow(const String&) const OVERRIDE;
@@ -62,12 +63,12 @@ private:
     virtual bool isSteppable() const OVERRIDE;
     virtual bool stepMismatch(const String&, double) const OVERRIDE;
     virtual double stepBase() const OVERRIDE;
-    virtual void handleKeydownEvent(KeyboardEvent*) OVERRIDE;
     virtual void handleWheelEvent(WheelEvent*) OVERRIDE;
     virtual String serialize(double) const OVERRIDE;
     virtual String serializeWithMilliseconds(double) const;
     virtual String visibleValue() const OVERRIDE;
     virtual String convertFromVisibleValue(const String&) const OVERRIDE;
+    virtual String sanitizeValue(const String&) const OVERRIDE;
 };
 
 } // namespace WebCore

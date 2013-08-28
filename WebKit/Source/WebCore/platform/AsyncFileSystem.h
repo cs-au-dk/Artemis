@@ -54,13 +54,25 @@ public:
     enum Type {
         Temporary,
         Persistent,
-        External,
     };
+
+    // Path prefixes that are used in the filesystem URLs (that can be obtained by toURL()).
+    // http://www.w3.org/TR/file-system-api/#widl-Entry-toURL
+    static const char persistentPathPrefix[];
+    static const size_t persistentPathPrefixLength;
+    static const char temporaryPathPrefix[];
+    static const size_t temporaryPathPrefixLength;
 
     virtual void stop() { }
     virtual bool hasPendingActivity() { return false; }
 
     static bool isAvailable();
+
+    static bool isValidType(Type);
+
+    static bool crackFileSystemURL(const KURL&, Type&, String& filePath);
+
+    virtual String toURL(const String& originString, const String& fullPath) = 0;
 
     // Subclass must implement this if it supports synchronous operations.
     // This should return false if there are no pending operations.
@@ -127,6 +139,13 @@ public:
     // AsyncFileSystemCallbacks::didCreateFileWriter() is called when an AsyncFileWriter is created successfully.
     // AsyncFileSystemCallbacks::didFail() is called otherwise.
     virtual void createWriter(AsyncFileWriterClient* client, const String& path, PassOwnPtr<AsyncFileSystemCallbacks>) = 0;
+
+    // Creates a snapshot file and read its metadata for a new File object.
+    // In local filesystem cases the backend may simply return the metadata of the file itself (as well as readMetadata does),
+    // while in remote filesystem case the backend may download the file into a temporary snapshot file and return the metadata of the temporary file.
+    // AsyncFileSystemCallbacks::didReadMetadata() is called when the metadata for the snapshot file is successfully returned.
+    // AsyncFileSystemCallbacks::didFail() is called otherwise.
+    virtual void createSnapshotFileAndReadMetadata(const String& path, PassOwnPtr<AsyncFileSystemCallbacks>) = 0;
 
     Type type() const { return m_type; }
 

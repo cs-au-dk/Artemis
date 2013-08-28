@@ -57,9 +57,11 @@ public:
     void invalidateRect(const WebCore::IntRect&);
     void setBackgroundColor(const WebCore::Color&);
     void setScrollLayer(WebCore::GraphicsLayer*);
-    void setViewport(const WebCore::IntSize& viewportSize, const WebCore::IntSize& contentsSize, const WebCore::IntPoint& scrollPosition, float pageScale);
+    void setViewport(const WebCore::IntSize& viewportSize, const WebCore::IntSize& contentsSize, const WebCore::IntPoint& scrollPosition, float pageScale, int layerAdjustX);
     void protectVisibleTileTextures();
     WebCore::GraphicsLayer* topLevelRootLayer() const { return m_graphicsLayer.get(); }
+
+    void setShowDebugBorders(bool);
 
 protected:
     explicit NonCompositedContentHost(PassOwnPtr<WebCore::LayerPainterChromium> contentPaint);
@@ -69,14 +71,16 @@ private:
     virtual void notifyAnimationStarted(const WebCore::GraphicsLayer*, double time);
     virtual void notifySyncRequired(const WebCore::GraphicsLayer*);
     virtual void paintContents(const WebCore::GraphicsLayer*, WebCore::GraphicsContext&, WebCore::GraphicsLayerPaintingPhase, const WebCore::IntRect& clipRect);
-    virtual bool showDebugBorders() const;
-    virtual bool showRepaintCounter() const;
+    virtual bool showDebugBorders(const WebCore::GraphicsLayer*) const;
+    virtual bool showRepaintCounter(const WebCore::GraphicsLayer*) const;
 
     WebCore::LayerChromium* scrollLayer();
 
     OwnPtr<WebCore::GraphicsLayer> m_graphicsLayer;
     OwnPtr<WebCore::LayerPainterChromium> m_contentPaint;
     WebCore::IntSize m_viewportSize;
+    int m_layerAdjustX;
+    bool m_showDebugBorders;
 };
 
 } // namespace WebKit

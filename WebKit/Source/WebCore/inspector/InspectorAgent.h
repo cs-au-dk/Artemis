@@ -52,7 +52,7 @@ class Page;
 
 typedef String ErrorString;
 
-class InspectorAgent : public InspectorBaseAgent<InspectorAgent> {
+class InspectorAgent : public InspectorBaseAgent<InspectorAgent>, public InspectorBackendDispatcher::InspectorCommandHandler {
     WTF_MAKE_NONCOPYABLE(InspectorAgent);
 public:
     static PassOwnPtr<InspectorAgent> create(Page* page, InjectedScriptManager* injectedScriptManager, InstrumentingAgents* instrumentingAgents, InspectorState* state)
@@ -83,9 +83,6 @@ public:
     void emitCommitLoadIfNeeded();
 
 #if ENABLE(WORKERS)
-    enum WorkerAction { WorkerCreated, WorkerDestroyed };
-
-    void postWorkerNotificationToFrontend(const InspectorWorkerResource&, WorkerAction);
     void didCreateWorker(intptr_t, const String& url, bool isSharedWorker);
     void didDestroyWorker(intptr_t);
 #endif
@@ -97,7 +94,7 @@ public:
 
     void setInjectedScriptForOrigin(const String& origin, const String& source);
 
-    void inspect(PassRefPtr<InspectorObject> objectToInspect, PassRefPtr<InspectorObject> hints);
+    void inspect(PassRefPtr<TypeBuilder::Runtime::RemoteObject> objectToInspect, PassRefPtr<InspectorObject> hints);
 
 private:
     InspectorAgent(Page*, InjectedScriptManager*, InstrumentingAgents*, InspectorState*);
@@ -115,7 +112,7 @@ private:
     InjectedScriptManager* m_injectedScriptManager;
 
     Vector<pair<long, String> > m_pendingEvaluateTestCommands;
-    pair<RefPtr<InspectorObject>, RefPtr<InspectorObject> > m_pendingInspectData;
+    pair<RefPtr<TypeBuilder::Runtime::RemoteObject>, RefPtr<InspectorObject> > m_pendingInspectData;
     typedef HashMap<String, String> InjectedScriptForOriginMap;
     InjectedScriptForOriginMap m_injectedScriptForOrigin;
 #if ENABLE(WORKERS)

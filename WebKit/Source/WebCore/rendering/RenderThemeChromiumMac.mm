@@ -19,10 +19,14 @@
  */
 
 #import "config.h"
+
+#import "CalendarPickerMac.h"
+#import "LocalCurrentGraphicsContext.h"
 #import "RenderThemeChromiumMac.h"
 #import "PaintInfo.h"
 #import "PlatformSupport.h"
 #import "RenderMediaControlsChromium.h"
+#import "WebCoreSystemInterface.h"
 #import "UserAgentStyleSheets.h"
 #import <Carbon/Carbon.h>
 #import <Cocoa/Cocoa.h>
@@ -67,6 +71,11 @@ PassRefPtr<RenderTheme> RenderTheme::themeForPage(Page*)
 PassRefPtr<RenderTheme> RenderThemeChromiumMac::create()
 {
     return adoptRef(new RenderThemeChromiumMac);
+}
+
+bool RenderThemeChromiumMac::supportsDataListUI(const AtomicString& type) const
+{
+    return RenderThemeChromiumCommon::supportsDataListUI(type);
 }
 
 bool RenderThemeChromiumMac::usesTestModeFocusRingColor() const
@@ -125,6 +134,23 @@ bool RenderThemeChromiumMac::shouldShowPlaceholderWhenFocused() const
     return true;
 }
 
+bool RenderThemeChromiumMac::paintTextField(RenderObject* o, const PaintInfo& paintInfo, const IntRect& r)
+{
+    // Using the Cocoa code to paint the text field as RenderThemeMac does runs
+    // into a bug when building against the 10.5 SDK, so we are forced here to
+    // use the SPI. This override of paintTextField should be able to be removed
+    // when 10.6 is the minimum required system and Chromium is built against
+    // the 10.6 SDK.
+    //
+    // https://bugs.webkit.org/show_bug.cgi?id=75860
+    // http://code.google.com/p/chromium/issues/detail?id=109567
+
+    LocalCurrentGraphicsContext localContext(paintInfo.context);
+    wkDrawBezeledTextFieldCell(r, isEnabled(o) && !isReadOnlyControl(o));
+
+    return false;
+}
+
 #if ENABLE(VIDEO)
 
 void RenderThemeChromiumMac::adjustMediaSliderThumbSize(RenderStyle* style) const
@@ -171,6 +197,12 @@ String RenderThemeChromiumMac::extraDefaultStyleSheet()
            String(themeChromiumUserAgentStyleSheet, sizeof(themeChromiumUserAgentStyleSheet));
 }
 
+#if ENABLE(CALENDAR_PICKER)
+CString RenderThemeChromiumMac::extraCalendarPickerStyleSheet()
+{
+    return CString(calendarPickerMacCss, WTF_ARRAY_LENGTH(calendarPickerMacCss));
+}
+#endif
 
 bool RenderThemeChromiumMac::paintMediaVolumeSliderContainer(RenderObject* object, const PaintInfo& paintInfo, const IntRect& rect)
 {

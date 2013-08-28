@@ -67,7 +67,7 @@ public:
     virtual bool shouldDeleteRange(WebCore::Range*);
     virtual bool shouldChangeSelectedRange(WebCore::Range* fromRange, WebCore::Range* toRange,
         WebCore::EAffinity, bool stillSelecting);
-    virtual bool shouldApplyStyle(WebCore::CSSStyleDeclaration*, WebCore::Range*);
+    virtual bool shouldApplyStyle(WebCore::StylePropertySet*, WebCore::Range*);
     virtual bool shouldMoveRangeAfterDelete(WebCore::Range*, WebCore::Range*);
     virtual void didBeginEditing();
     virtual void respondToChangedContents();
@@ -99,6 +99,8 @@ public:
     virtual void checkSpellingOfString(const UChar*, int length, int* misspellingLocation, int* misspellingLength);
     virtual void checkGrammarOfString(const UChar*, int length, WTF::Vector<WebCore::GrammarDetail>&,
         int* badGrammarLocation, int* badGrammarLength);
+    virtual void checkTextOfParagraph(const UChar*, int length, WebCore::TextCheckingTypeMask checkingTypes,
+        WTF::Vector<WebCore::TextCheckingResult>& results);
     virtual WTF::String getAutoCorrectSuggestionForMisspelledWord(const WTF::String&);
     virtual void updateSpellingUIWithGrammarString(const WTF::String&, const WebCore::GrammarDetail&);
     virtual void updateSpellingUIWithMisspelledWord(const WTF::String&);
@@ -107,7 +109,7 @@ public:
     virtual void getGuessesForWord(const WTF::String& word, const WTF::String& context, WTF::Vector<WTF::String>& guesses);
     virtual void willSetInputMethodState();
     virtual void setInputMethodState(bool enabled);
-    virtual void requestCheckingOfString(WebCore::SpellChecker*, int, WebCore::TextCheckingTypeMask, const WTF::String&);
+    virtual void requestCheckingOfString(WebCore::SpellChecker*, const WebCore::TextCheckingRequest&);
 
     virtual WebCore::TextCheckerClient* textChecker() { return this; }
 

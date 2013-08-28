@@ -27,19 +27,37 @@
 # OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 
 import os
+import StringIO
 
 from webkitpy.common.system.deprecated_logging import log
 from webkitpy.common.system.executive import ScriptError
 
 
+class MockProcess(object):
+    def __init__(self, stdout='MOCK STDOUT\n'):
+        self.pid = 42
+        self.stdout = StringIO.StringIO(stdout)
+        self.stdin = StringIO.StringIO()
+
+    def wait(self):
+        return
+
 # FIXME: This should be unified with MockExecutive2
 class MockExecutive(object):
+    PIPE = "MOCK PIPE"
+    STDOUT = "MOCK STDOUT"
+
+    @staticmethod
+    def ignore_error(error):
+        pass
+
     def __init__(self, should_log=False, should_throw=False, should_throw_when_run=None):
         self._should_log = should_log
         self._should_throw = should_throw
         self._should_throw_when_run = should_throw_when_run or set()
         # FIXME: Once executive wraps os.getpid() we can just use a static pid for "this" process.
         self._running_pids = [os.getpid()]
+        self._proc = None
 
     def check_running_pid(self, pid):
         return pid in self._running_pids
@@ -51,7 +69,7 @@ class MockExecutive(object):
                 env_string = ", env=%s" % env
             log("MOCK run_and_throw_if_fail: %s, cwd=%s%s" % (args, cwd, env_string))
         if self._should_throw_when_run.intersection(args):
-            raise ScriptError("Exception for %s" % args)
+            raise ScriptError("Exception for %s" % args, output="MOCK command output")
         return "MOCK output of child process"
 
     def run_command(self,
@@ -77,8 +95,25 @@ class MockExecutive(object):
     def cpu_count(self):
         return 2
 
+    def popen(self, args, cwd=None, env=None, **kwargs):
+        if self._should_log:
+            cwd_string = ""
+            if cwd:
+                cwd_string = ", cwd=%s" % cwd
+            env_string = ""
+            if env:
+                env_string = ", env=%s" % env
+            log("MOCK popen: %s%s%s" % (args, cwd_string, env_string))
+        if not self._proc:
+            self._proc = MockProcess()
+        return self._proc
+
 
 class MockExecutive2(object):
+    @staticmethod
+    def ignore_error(error):
+        pass
+
     def __init__(self, output='', exit_code=0, exception=None,
                  run_command_fn=None, stderr=''):
         self._output = output

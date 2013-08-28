@@ -418,10 +418,12 @@ void DeleteSelectionCommand::handleGeneralDelete()
     if (startNode == m_startBlock && startOffset == 0 && canHaveChildrenForEditing(startNode) && !startNode->hasTagName(tableTag)) {
         startOffset = 0;
         startNode = startNode->traverseNextNode();
+        if (!startNode)
+            return;
     }
 
     if (startOffset >= caretMaxOffset(startNode) && startNode->isTextNode()) {
-        Text *text = static_cast<Text *>(startNode);
+        Text* text = toText(startNode);
         if (text->length() > (unsigned)caretMaxOffset(startNode))
             deleteTextFromNode(text, caretMaxOffset(startNode), text->length() - caretMaxOffset(startNode));
     }
@@ -439,7 +441,7 @@ void DeleteSelectionCommand::handleGeneralDelete()
         if (m_downstreamEnd.deprecatedEditingOffset() - startOffset > 0) {
             if (startNode->isTextNode()) {
                 // in a text node that needs to be trimmed
-                Text* text = static_cast<Text*>(startNode);
+                Text* text = toText(startNode);
                 deleteTextFromNode(text, startOffset, m_downstreamEnd.deprecatedEditingOffset() - startOffset);
             } else {
                 removeChildrenInRange(startNode, startOffset, m_downstreamEnd.deprecatedEditingOffset());
@@ -459,14 +461,14 @@ void DeleteSelectionCommand::handleGeneralDelete()
         if (startOffset > 0) {
             if (startNode->isTextNode()) {
                 // in a text node that needs to be trimmed
-                Text *text = static_cast<Text *>(node.get());
+                Text* text = toText(node.get());
                 deleteTextFromNode(text, startOffset, text->length() - startOffset);
                 node = node->traverseNextNode();
             } else {
                 node = startNode->childNode(startOffset);
             }
         } else if (startNode == m_upstreamEnd.deprecatedNode() && startNode->isTextNode()) {
-            Text* text = static_cast<Text*>(m_upstreamEnd.deprecatedNode());
+            Text* text = toText(m_upstreamEnd.deprecatedNode());
             deleteTextFromNode(text, 0, m_upstreamEnd.deprecatedEditingOffset());
         }
         
@@ -499,7 +501,7 @@ void DeleteSelectionCommand::handleGeneralDelete()
             } else {
                 if (m_downstreamEnd.deprecatedNode()->isTextNode()) {
                     // in a text node that needs to be trimmed
-                    Text* text = static_cast<Text*>(m_downstreamEnd.deprecatedNode());
+                    Text* text = toText(m_downstreamEnd.deprecatedNode());
                     if (m_downstreamEnd.deprecatedEditingOffset() > 0) {
                         deleteTextFromNode(text, 0, m_downstreamEnd.deprecatedEditingOffset());
                     }
@@ -531,12 +533,12 @@ void DeleteSelectionCommand::fixupWhitespace()
     document()->updateLayoutIgnorePendingStylesheets();
     // FIXME: isRenderedCharacter should be removed, and we should use VisiblePosition::characterAfter and VisiblePosition::characterBefore
     if (m_leadingWhitespace.isNotNull() && !m_leadingWhitespace.isRenderedCharacter() && m_leadingWhitespace.deprecatedNode()->isTextNode()) {
-        Text* textNode = static_cast<Text*>(m_leadingWhitespace.deprecatedNode());
+        Text* textNode = toText(m_leadingWhitespace.deprecatedNode());
         ASSERT(!textNode->renderer() || textNode->renderer()->style()->collapseWhiteSpace());
         replaceTextInNodePreservingMarkers(textNode, m_leadingWhitespace.deprecatedEditingOffset(), 1, nonBreakingSpaceString());
     }
     if (m_trailingWhitespace.isNotNull() && !m_trailingWhitespace.isRenderedCharacter() && m_trailingWhitespace.deprecatedNode()->isTextNode()) {
-        Text* textNode = static_cast<Text*>(m_trailingWhitespace.deprecatedNode());
+        Text* textNode = toText(m_trailingWhitespace.deprecatedNode());
         ASSERT(!textNode->renderer() ||textNode->renderer()->style()->collapseWhiteSpace());
         replaceTextInNodePreservingMarkers(textNode, m_trailingWhitespace.deprecatedEditingOffset(), 1, nonBreakingSpaceString());
     }
@@ -686,23 +688,6 @@ void DeleteSelectionCommand::calculateTypingStyleAfterDelete()
     m_typingStyle->prepareToApplyAt(m_endingPosition);
     if (m_typingStyle->isEmpty())
         m_typingStyle = 0;
-    VisiblePosition visibleEnd(m_endingPosition);
-    if (m_typingStyle && 
-        isStartOfParagraph(visibleEnd) &&
-        isEndOfParagraph(visibleEnd) &&
-        lineBreakExistsAtVisiblePosition(visibleEnd)) {
-        // Apply style to the placeholder that is now holding open the empty paragraph. 
-        // This makes sure that the paragraph has the right height, and that the paragraph 
-        // takes on the right style and retains it even if you move the selection away and
-        // then move it back (which will clear typing style).
-
-        setEndingSelection(visibleEnd);
-        applyStyle(m_typingStyle.get(), EditActionUnspecified);
-        // applyStyle can destroy the placeholder that was at m_endingPosition if it needs to 
-        // move it, but it will set an endingSelection() at [movedPlaceholder, 0] if it does so.
-        m_endingPosition = endingSelection().start();
-        m_typingStyle = 0;
-    }
     // This is where we've deleted all traces of a style but not a whole paragraph (that's handled above).
     // In this case if we start typing, the new characters should have the same style as the just deleted ones,
     // but, if we change the selection, come back and start typing that style should be lost.  Also see 

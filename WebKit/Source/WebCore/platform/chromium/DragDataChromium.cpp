@@ -50,19 +50,16 @@ static bool containsHTML(const ChromiumDataObject* dropData)
 
 bool DragData::containsURL(Frame*, FilenameConversionPolicy filenamePolicy) const
 {
-    return m_platformDragData->types().contains(mimeTypeURL)
+    return m_platformDragData->types().contains(mimeTypeTextURIList)
         || (filenamePolicy == ConvertFilenames && m_platformDragData->containsFilenames());
 }
 
 String DragData::asURL(Frame*, FilenameConversionPolicy filenamePolicy, String* title) const
 {
     String url;
-    if (m_platformDragData->types().contains(mimeTypeURL)) {
-        bool ignoredSuccess;
-        url = m_platformDragData->getData(mimeTypeURL, ignoredSuccess);
-        if (title)
-            *title = m_platformDragData->urlTitle();
-    } else if (filenamePolicy == ConvertFilenames && containsFiles()) {
+    if (m_platformDragData->types().contains(mimeTypeTextURIList))
+        m_platformDragData->urlAndTitle(url, title);
+    else if (filenamePolicy == ConvertFilenames && containsFiles()) {
         url = PlatformSupport::filePathToURL(PlatformSupport::getAbsolutePath(m_platformDragData->filenames()[0]));
     }
     return url;
@@ -92,8 +89,7 @@ bool DragData::containsPlainText() const
 
 String DragData::asPlainText(Frame*) const
 {
-    bool ignoredSuccess;
-    return m_platformDragData->getData(mimeTypeTextPlain, ignoredSuccess);
+    return m_platformDragData->getData(mimeTypeTextPlain);
 }
 
 bool DragData::containsColor() const
@@ -109,7 +105,7 @@ bool DragData::canSmartReplace() const
     // ClipboardWin::writeRange is called).  For example, dragging a link
     // should not result in a space being added.
     return m_platformDragData->types().contains(mimeTypeTextPlain)
-        && !m_platformDragData->types().contains(mimeTypeURL);
+        && !m_platformDragData->types().contains(mimeTypeTextURIList);
 }
 
 bool DragData::containsCompatibleContent() const
@@ -142,9 +138,10 @@ PassRefPtr<DocumentFragment> DragData::asFragment(Frame* frame, PassRefPtr<Range
     }
 
     if (m_platformDragData->types().contains(mimeTypeTextHTML)) {
-        bool ignoredSuccess;
-        RefPtr<DocumentFragment> fragment = createFragmentFromMarkup(frame->document(),
-            m_platformDragData->getData(mimeTypeTextHTML, ignoredSuccess), m_platformDragData->htmlBaseUrl(), FragmentScriptingNotAllowed);
+        String html;
+        KURL baseURL;
+        m_platformDragData->htmlAndBaseURL(html, baseURL);
+        RefPtr<DocumentFragment> fragment = createFragmentFromMarkup(frame->document(), html, baseURL, FragmentScriptingNotAllowed);
         return fragment.release();
     }
 

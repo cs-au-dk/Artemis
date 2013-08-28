@@ -33,44 +33,47 @@
  */
 WebInspector.NetworkLog = function()
 {
-    this._resources = [];
-    this._mainResourceStartTime = null;
-    WebInspector.networkManager.addEventListener(WebInspector.NetworkManager.EventTypes.ResourceStarted, this._onResourceStarted, this);
-    WebInspector.resourceTreeModel.addEventListener(WebInspector.ResourceTreeModel.EventTypes.MainFrameNavigated, this._mainFrameNavigated, this);
+    this._requests = [];
+    WebInspector.networkManager.addEventListener(WebInspector.NetworkManager.EventTypes.RequestStarted, this._onRequestStarted, this);
+    WebInspector.resourceTreeModel.addEventListener(WebInspector.ResourceTreeModel.EventTypes.MainFrameNavigated, this._onMainFrameNavigated, this);
+    WebInspector.resourceTreeModel.addEventListener(WebInspector.ResourceTreeModel.EventTypes.OnLoad, this._onLoad, this);
+    WebInspector.resourceTreeModel.addEventListener(WebInspector.ResourceTreeModel.EventTypes.DOMContentLoaded, this._onDOMContentLoaded, this);
 }
 
 WebInspector.NetworkLog.prototype = {
     /**
-     * @return {Array.<WebInspector.Resource>}
+     * @return {Array.<WebInspector.NetworkRequest>}
      */
-    get resources()
+    get requests()
     {
-        return this._resources;
+        return this._requests;
     },
 
     /**
-     * @return {?Date}
+     * @param {WebInspector.NetworkRequest} request
+     * @return {WebInspector.PageLoad}
      */
-    get mainResourceStartTime()
+    pageLoadForRequest: function(request)
     {
-        return this._mainResourceStartTime;
+        return request.__page;
     },
 
     /**
      * @param {WebInspector.Event} event
      */
-    _mainFrameNavigated: function(event)
+    _onMainFrameNavigated: function(event)
     {
         var mainFrame = /** type {WebInspector.ResourceTreeFrame} */ event.data;
-        this._mainResourceStartTime = null;
-        // Preserve resources from the new session.
-        var oldResources = this._resources.splice(0, this._resources.length);
-        for (var i = 0; i < oldResources.length; ++i) {
-            var resource = oldResources[i];
-            if (resource.loaderId === mainFrame.loaderId) {
-                if (!this._mainResourceStartTime && mainFrame.url === resource.url)
-                    this._mainResourceStartTime = resource.startTime;
-                this._resources.push(resource);
+        // Preserve requests from the new session.
+        this._currentPageLoad = null;
+        var oldRequests = this._requests.splice(0, this._requests.length);
+        for (var i = 0; i < oldRequests.length; ++i) {
+            var request = oldRequests[i];
+            if (request.loaderId === mainFrame.loaderId) {
+                if (!this._currentPageLoad)
+                    this._currentPageLoad = new WebInspector.PageLoad(request);
+                this._requests.push(request);
+                request.__page = this._currentPageLoad;
             }
         }
     },
@@ -78,10 +81,29 @@ WebInspector.NetworkLog.prototype = {
     /**
      * @param {WebInspector.Event} event
      */
-    _onResourceStarted: function(event)
+    _onRequestStarted: function(event)
     {
-        var resource = /** @type {WebInspector.Resource} */ event.data;
-        this._resources.push(resource);
+        var request = /** @type {WebInspector.NetworkRequest} */ event.data;
+        this._requests.push(request);
+        request.__page = this._currentPageLoad;
+    },
+
+    /**
+     * @param {WebInspector.Event} event
+     */
+    _onDOMContentLoaded: function(event)
+    {
+        if (this._currentPageLoad)
+            this._currentPageLoad.contentLoadTime = event.data;
+    },
+
+    /**
+     * @param {WebInspector.Event} event
+     */
+    _onLoad: function(event)
+    {
+        if (this._currentPageLoad)
+            this._currentPageLoad.loadTime = event.data;
     }
 }
 
@@ -89,3 +111,16 @@ WebInspector.NetworkLog.prototype = {
  * @type {WebInspector.NetworkLog}
  */
 WebInspector.networkLog = null;
+
+/**
+ * @constructor
+ * @param {WebInspector.NetworkRequest} mainRequest
+ */
+WebInspector.PageLoad = function(mainRequest)
+{
+    this.id = ++WebInspector.PageLoad._lastIdentifier;
+    this.url = mainRequest.url;
+    this.startTime = mainRequest.startTime;
+}
+
+WebInspector.PageLoad._lastIdentifier = 0;

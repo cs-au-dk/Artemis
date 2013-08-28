@@ -22,13 +22,8 @@
 
 """Checks WebKit style for JSON files."""
 
+import json
 import re
-
-try:
-    import json
-except ImportError:
-    # python 2.5 compatibility
-    import webkitpy.thirdparty.simplejson as json
 
 
 class JSONChecker(object):
@@ -44,11 +39,11 @@ class JSONChecker(object):
         try:
             json.loads('\n'.join(lines) + '\n')
         except ValueError, e:
-            self._handle_style_error(self.line_number_from_json_exception(e), 'json/syntax', 5, e.message)
+            self._handle_style_error(self.line_number_from_json_exception(e), 'json/syntax', 5, str(e))
 
     @staticmethod
     def line_number_from_json_exception(error):
-        match = re.search(r': line (?P<line>\d+) column \d+', error.message)
+        match = re.search(r': line (?P<line>\d+) column \d+', str(error))
         if not match:
             return 0
         return int(match.group('line'))

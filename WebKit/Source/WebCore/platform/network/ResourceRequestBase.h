@@ -1,7 +1,7 @@
 /*
  * Copyright (C) 2003, 2006 Apple Computer, Inc.  All rights reserved.
  * Copyright (C) 2006 Samuel Weinig <sam.weinig@gmail.com>
- * Copyright (C) 2009 Google Inc. All rights reserved.
+ * Copyright (C) 2009, 2012 Google Inc. All rights reserved.
  *
  * Redistribution and use in source and binary forms, with or without
  * modification, are permitted provided that the following conditions
@@ -88,7 +88,8 @@ namespace WebCore {
 
         String httpContentType() const { return httpHeaderField("Content-Type");  }
         void setHTTPContentType(const String& httpContentType) { setHTTPHeaderField("Content-Type", httpContentType); }
-        
+        void clearHTTPContentType();
+
         String httpReferrer() const { return httpHeaderField("Referer"); }
         void setHTTPReferrer(const String& httpReferrer) { setHTTPHeaderField("Referer", httpReferrer); }
         void clearHTTPReferrer();
@@ -99,15 +100,13 @@ namespace WebCore {
 
         String httpUserAgent() const { return httpHeaderField("User-Agent"); }
         void setHTTPUserAgent(const String& httpUserAgent) { setHTTPHeaderField("User-Agent", httpUserAgent); }
+        void clearHTTPUserAgent();
 
         String httpAccept() const { return httpHeaderField("Accept"); }
         void setHTTPAccept(const String& httpAccept) { setHTTPHeaderField("Accept", httpAccept); }
+        void clearHTTPAccept();
 
-#if PLATFORM(MAC) || PLATFORM(WIN)
-        // FIXME: This state should either be moved to a CFNetwork-specific
-        // ResourceRequest or should be removed.
         void setResponseContentDispositionEncodingFallbackArray(const String& encoding1, const String& encoding2 = String(), const String& encoding3 = String());
-#endif
 
         FormData* httpBody() const;
         void setHTTPBody(PassRefPtr<FormData> httpBody);
@@ -178,11 +177,7 @@ namespace WebCore {
         KURL m_firstPartyForCookies;
         String m_httpMethod;
         HTTPHeaderMap m_httpHeaderFields;
-#if PLATFORM(MAC) || PLATFORM(WIN)
-        // FIXME: This state should either be moved to a CFNetwork-specific
-        // ResourceRequest or should be removed.
         Vector<String> m_responseContentDispositionEncodingFallbackArray;
-#endif
         RefPtr<FormData> m_httpBody;
         bool m_allowCookies : 1;
         mutable bool m_resourceRequestUpdated : 1;
@@ -215,9 +210,7 @@ namespace WebCore {
 
         String m_httpMethod;
         OwnPtr<CrossThreadHTTPHeaderMapData> m_httpHeaders;
-#if PLATFORM(MAC) || PLATFORM(WIN)
         Vector<String> m_responseContentDispositionEncodingFallbackArray;
-#endif
         RefPtr<FormData> m_httpBody;
         bool m_allowCookies;
         ResourceLoadPriority m_priority;

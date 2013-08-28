@@ -29,6 +29,8 @@
 #include "ExceptionCode.h"
 #include "Frame.h"
 #include "RenderPart.h"
+#include "RenderSVGRoot.h"
+#include "RenderSVGViewportContainer.h"
 #include "RenderView.h"
 #include "SVGNames.h"
 #include "SVGSVGElement.h"
@@ -201,14 +203,31 @@ float SVGLengthContext::convertValueFromPercentageToUserUnits(float value, SVGLe
     return 0;
 }
 
+static inline RenderStyle* renderStyleForLengthResolving(const SVGElement* context)
+{
+    if (!context)
+        return 0;
+
+    const ContainerNode* currentContext = context;
+    while (currentContext) {
+        if (currentContext->renderer())
+            return currentContext->renderer()->style();
+        currentContext = currentContext->parentNode();
+    }
+
+    // There must be at least a RenderSVGRoot renderer, carrying a style.
+    ASSERT_NOT_REACHED();
+    return 0;
+}
+
 float SVGLengthContext::convertValueFromUserUnitsToEMS(float value, ExceptionCode& ec) const
 {
-    if (!m_context || !m_context->renderer() || !m_context->renderer()->style()) {
+    RenderStyle* style = renderStyleForLengthResolving(m_context);
+    if (!style) {
         ec = NOT_SUPPORTED_ERR;
         return 0;
     }
 
-    RenderStyle* style = m_context->renderer()->style();
     float fontSize = style->fontSize();
     if (!fontSize) {
         ec = NOT_SUPPORTED_ERR;
@@ -220,23 +239,22 @@ float SVGLengthContext::convertValueFromUserUnitsToEMS(float value, ExceptionCod
 
 float SVGLengthContext::convertValueFromEMSToUserUnits(float value, ExceptionCode& ec) const
 {
-    if (!m_context || !m_context->renderer() || !m_context->renderer()->style()) {
+    RenderStyle* style = renderStyleForLengthResolving(m_context);
+    if (!style) {
         ec = NOT_SUPPORTED_ERR;
         return 0;
     }
 
-    RenderStyle* style = m_context->renderer()->style();
     return value * style->fontSize();
 }
 
 float SVGLengthContext::convertValueFromUserUnitsToEXS(float value, ExceptionCode& ec) const
 {
-    if (!m_context || !m_context->renderer() || !m_context->renderer()->style()) {
+    RenderStyle* style = renderStyleForLengthResolving(m_context);
+    if (!style) {
         ec = NOT_SUPPORTED_ERR;
         return 0;
     }
-
-    RenderStyle* style = m_context->renderer()->style();
 
     // Use of ceil allows a pixel match to the W3Cs expected output of coords-units-03-b.svg
     // if this causes problems in real world cases maybe it would be best to remove this
@@ -251,12 +269,12 @@ float SVGLengthContext::convertValueFromUserUnitsToEXS(float value, ExceptionCod
 
 float SVGLengthContext::convertValueFromEXSToUserUnits(float value, ExceptionCode& ec) const
 {
-    if (!m_context || !m_context->renderer() || !m_context->renderer()->style()) {
+    RenderStyle* style = renderStyleForLengthResolving(m_context);
+    if (!style) {
         ec = NOT_SUPPORTED_ERR;
         return 0;
     }
 
-    RenderStyle* style = m_context->renderer()->style();
     // Use of ceil allows a pixel match to the W3Cs expected output of coords-units-03-b.svg
     // if this causes problems in real world cases maybe it would be best to remove this
     return value * ceilf(style->fontMetrics().xHeight());
@@ -274,65 +292,22 @@ bool SVGLengthContext::determineViewport(float& width, float& height) const
         return true;
     }
 
-    // Take size from outermost <svg> element.
-    Document* document = m_context->document();
-    if (document->documentElement() == m_context) {
-        if (m_context->isSVG()) {
-            Frame* frame = m_context->document() ? m_context->document()->frame() : 0;
-            if (!frame)
-                return false;
+    // SVGLengthContext should NEVER be used to resolve width/height values for <svg> elements,
+    // as they require special treatment, due the relationship with the CSS width/height properties.
+    ASSERT(m_context->document()->documentElement() != m_context);
 
-            // SVGs embedded through <object> resolve percentage values against the owner renderer in the host document.
-            if (RenderPart* ownerRenderer = frame->ownerRenderer()) {
-                width = ownerRenderer->width();
-                height = ownerRenderer->height();
-                return true;
-            }
-        }
-
-        RenderView* view = toRenderView(document->renderer());
-        if (!view)
-            return false;
-
-        // Always resolve percentages against the unscaled viewport, as agreed across browsers.
-        float zoom = view->style()->effectiveZoom();
-        width = view->viewWidth();
-        height = view->viewHeight();
-        if (zoom != 1) {
-            width /= zoom;
-            height /= zoom;
-        }
-        return true;
-    }
-
-    // Take size from nearest viewport element (common case: inner <svg> elements)
+    // Take size from nearest viewport element.
     SVGElement* viewportElement = m_context->viewportElement();
-    if (viewportElement && viewportElement->isSVG()) {
-        const SVGSVGElement* svg = static_cast<const SVGSVGElement*>(viewportElement);
-        FloatRect viewBox = svg->currentViewBoxRect();
-        if (viewBox.isEmpty()) {
-            SVGLengthContext viewportContext(svg);
-            width = svg->width().value(viewportContext);
-            height = svg->height().value(viewportContext);
-        } else {
-            width = viewBox.width();
-            height = viewBox.height();
-        }
-
-        return true;
-    }
+    if (!viewportElement || !viewportElement->isSVG())
+        return false;
     
-    // Take size from enclosing non-SVG RenderBox (common case: inline SVG)
-    if (!m_context->parentNode() || m_context->parentNode()->isSVGElement())
-        return false;
+    const SVGSVGElement* svg = static_cast<const SVGSVGElement*>(viewportElement);
+    FloatSize viewportSize = svg->currentViewBoxRect().size();
+    if (viewportSize.isEmpty())
+        viewportSize = svg->currentViewportSize();
 
-    RenderObject* renderer = m_context->renderer();
-    if (!renderer || !renderer->isBox())
-        return false;
-
-    RenderBox* box = toRenderBox(renderer);
-    width = box->width();
-    height = box->height();
+    width = viewportSize.width();
+    height = viewportSize.height();
     return true;
 }
 

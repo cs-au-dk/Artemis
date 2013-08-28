@@ -140,12 +140,20 @@ RenderWidget::~RenderWidget()
     clearWidget();
 }
 
-bool RenderWidget::setWidgetGeometry(const IntRect& frame)
+// Widgets are always placed on integer boundaries, so rounding the size is actually
+// the desired behavior. This function is here because it's otherwise seldom what we
+// want to do with a LayoutRect.
+static inline IntRect roundedIntRect(const LayoutRect& rect)
+{
+    return IntRect(roundedIntPoint(rect.location()), roundedIntSize(rect.size()));
+}
+
+bool RenderWidget::setWidgetGeometry(const LayoutRect& frame)
 {
     if (!node())
         return false;
 
-    IntRect clipRect = enclosingLayer()->childrenClipRect();
+    IntRect clipRect = roundedIntRect(enclosingLayer()->childrenClipRect());
     bool clipChanged = m_clipRect != clipRect;
     bool boundsChanged = m_widget->frameRect() != frame;
 
@@ -156,7 +164,7 @@ bool RenderWidget::setWidgetGeometry(const IntRect& frame)
 
     RenderWidgetProtector protector(this);
     RefPtr<Node> protectedNode(node());
-    m_widget->setFrameRect(frame);
+    m_widget->setFrameRect(roundedIntRect(frame));
     
 #if USE(ACCELERATED_COMPOSITING)
     if (hasLayer() && layer()->isComposited())
@@ -168,11 +176,11 @@ bool RenderWidget::setWidgetGeometry(const IntRect& frame)
 
 bool RenderWidget::updateWidgetGeometry()
 {
-    IntRect contentBox = contentBoxRect();
+    IntRect contentBox = pixelSnappedIntRect(contentBoxRect());
     if (!m_widget->transformsAffectFrameRect())
         return setWidgetGeometry(absoluteContentBox());
 
-    IntRect absoluteContentBox = IntRect(localToAbsoluteQuad(FloatQuad(contentBox)).boundingBox());
+    IntRect absoluteContentBox(localToAbsoluteQuad(FloatQuad(contentBox)).boundingBox());
     if (m_widget->isFrameView()) {
         contentBox.setLocation(absoluteContentBox.location());
         return setWidgetGeometry(contentBox);
@@ -270,17 +278,18 @@ void RenderWidget::paint(PaintInfo& paintInfo, const LayoutPoint& paintOffset)
 
         // Push a clip if we have a border radius, since we want to round the foreground content that gets painted.
         paintInfo.context->save();
-        paintInfo.context->addRoundedRectClip(style()->getRoundedBorderFor(borderRect));
+        paintInfo.context->addRoundedRectClip(style()->getRoundedBorderFor(borderRect, view()));
     }
 
     if (m_widget) {
         // Tell the widget to paint now.  This is the only time the widget is allowed
         // to paint itself.  That way it will composite properly with z-indexed layers.
-        LayoutPoint widgetLocation = m_widget->frameRect().location();
-        LayoutPoint paintLocation(adjustedPaintOffset.x() + borderLeft() + paddingLeft(), adjustedPaintOffset.y() + borderTop() + paddingTop());
-        LayoutRect paintRect = paintInfo.rect;
+        IntPoint widgetLocation = m_widget->frameRect().location();
+        IntPoint paintLocation(roundToInt(adjustedPaintOffset.x() + borderLeft() + paddingLeft()),
+            roundToInt(adjustedPaintOffset.y() + borderTop() + paddingTop()));
+        IntRect paintRect = paintInfo.rect;
 
-        LayoutSize widgetPaintOffset = paintLocation - widgetLocation;
+        IntSize widgetPaintOffset = paintLocation - widgetLocation;
         // When painting widgets into compositing layers, tx and ty are relative to the enclosing compositing layer,
         // not the root. In this case, shift the CTM and adjust the paintRect to be root-relative to fix plug-in drawing.
         if (!widgetPaintOffset.isZero()) {
@@ -308,7 +317,7 @@ void RenderWidget::paint(PaintInfo& paintInfo, const LayoutPoint& paintOffset)
     // Paint a partially transparent wash over selected widgets.
     if (isSelected() && !document()->printing()) {
         // FIXME: selectionRect() is in absolute, not painting coordinates.
-        paintInfo.context->fillRect(selectionRect(), selectionBackgroundColor(), style()->colorSpace());
+        paintInfo.context->fillRect(pixelSnappedIntRect(selectionRect()), selectionBackgroundColor(), style()->colorSpace());
     }
 }
 
@@ -359,11 +368,11 @@ IntRect RenderWidget::windowClipRect() const
 
 void RenderWidget::setSelectionState(SelectionState state)
 {
-    if (selectionState() != state) {
-        RenderReplaced::setSelectionState(state);
-        if (m_widget)
-            m_widget->setIsSelected(isSelected());
-    }
+    // The selection state for our containing block hierarchy is updated by the base class call.
+    RenderReplaced::setSelectionState(state);
+
+    if (m_widget)
+        m_widget->setIsSelected(isSelected());
 }
 
 void RenderWidget::clearWidget()

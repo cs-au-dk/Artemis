@@ -120,6 +120,8 @@ private:
 
     WebKit::WebRect m_rect;
     WebKit::WebGraphicsContext3D* m_context;
+    unsigned m_colorTexture;
+    unsigned m_framebuffer;
     Scene m_scene;
 };
 

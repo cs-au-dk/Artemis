@@ -29,10 +29,7 @@
 #if USE(ACCELERATED_COMPOSITING)
 
 #include "PlatformString.h"
-
-#if USE(SKIA)
 #include "SkColorPriv.h"
-#endif
 
 namespace WebCore {
 
@@ -49,23 +46,6 @@ public:
 
 private:
     int m_matrixLocation;
-};
-
-class VertexShaderPosTexStretch {
-public:
-    VertexShaderPosTexStretch();
-
-    void init(GraphicsContext3D*, unsigned program);
-    String getShaderString() const;
-
-    int matrixLocation() const { return m_matrixLocation; }
-    int offsetLocation() const { return m_offsetLocation; }
-    int scaleLocation() const { return m_scaleLocation; }
-
-private:
-    int m_matrixLocation;
-    int m_offsetLocation;
-    int m_scaleLocation;
 };
 
 class VertexShaderPosTexYUVStretch {
@@ -96,6 +76,12 @@ public:
 
 private:
     int m_matrixLocation;
+};
+
+class VertexShaderPosTexIdentity {
+public:
+    void init(GraphicsContext3D*, unsigned program) { }
+    String getShaderString() const;
 };
 
 class VertexShaderPosTexTransform {
@@ -143,6 +129,23 @@ private:
     int m_matrixLocation;
     int m_pointLocation;
     int m_vertexTexTransformLocation;
+};
+
+class VertexShaderVideoTransform {
+public:
+    VertexShaderVideoTransform();
+
+    bool init(GraphicsContext3D*, unsigned program);
+    String getShaderString() const;
+
+    int matrixLocation() const { return m_matrixLocation; }
+    int texTransformLocation() const { return m_texTransformLocation; }
+    int texMatrixLocation() const { return m_texMatrixLocation; }
+
+private:
+    int m_matrixLocation;
+    int m_texTransformLocation;
+    int m_texMatrixLocation;
 };
 
 class FragmentTexAlphaBinding {
@@ -199,6 +202,11 @@ public:
     String getShaderString() const;
 };
 
+class FragmentShaderRGBATex : public FragmentTexOpaqueBinding {
+public:
+    String getShaderString() const;
+};
+
 // Swizzles the red and blue component of sampled texel with alpha.
 class FragmentShaderRGBATexSwizzleAlpha : public FragmentTexAlphaBinding {
 public:
@@ -209,6 +217,15 @@ public:
 class FragmentShaderRGBATexSwizzleOpaque : public FragmentTexOpaqueBinding {
 public:
     String getShaderString() const;
+};
+
+// Fragment shader for external textures.
+class FragmentShaderOESImageExternal : public FragmentTexAlphaBinding {
+public:
+    String getShaderString() const;
+    bool init(GraphicsContext3D*, unsigned program);
+private:
+    int m_samplerLocation;
 };
 
 class FragmentShaderRGBATexAlphaAA {
@@ -323,6 +340,21 @@ public:
 
 private:
     int m_colorLocation;
+};
+
+class FragmentShaderCheckerboard {
+public:
+    FragmentShaderCheckerboard();
+    String getShaderString() const;
+
+    void init(GraphicsContext3D*, unsigned program);
+    int alphaLocation() const { return m_alphaLocation; }
+    int texTransformLocation() const { return m_texTransformLocation; }
+    int frequencyLocation() const { return m_frequencyLocation; }
+private:
+    int m_alphaLocation;
+    int m_texTransformLocation;
+    int m_frequencyLocation;
 };
 
 } // namespace WebCore

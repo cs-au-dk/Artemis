@@ -28,6 +28,7 @@
 
 #import "IntRect.h"
 #import "TileCache.h"
+#import <wtf/MainThread.h>
 
 using namespace WebCore;
 
@@ -45,6 +46,29 @@ using namespace WebCore;
     return self;
 }
 
+- (void)dealloc
+{
+    ASSERT(!_tileCache);
+
+    [super dealloc];
+}
+
+- (id)initWithLayer:(id)layer
+{
+    UNUSED_PARAM(layer);
+
+    ASSERT_NOT_REACHED();
+    return nil;
+}
+
+- (id<CAAction>)actionForKey:(NSString *)key
+{
+    UNUSED_PARAM(key);
+    
+    // Disable all animations.
+    return nil;
+}
+
 - (void)setBounds:(CGRect)bounds
 {
     [super setBounds:bounds];
@@ -52,14 +76,56 @@ using namespace WebCore;
     _tileCache->tileCacheLayerBoundsChanged();
 }
 
+- (void)setNeedsDisplay
+{
+    _tileCache->setNeedsDisplay();
+}
+
 - (void)setNeedsDisplayInRect:(CGRect)rect
 {
     _tileCache->setNeedsDisplayInRect(enclosingIntRect(rect));
 }
 
+- (void)setAcceleratesDrawing:(BOOL)acceleratesDrawing
+{
+    _tileCache->setAcceleratesDrawing(acceleratesDrawing);
+}
+
+- (BOOL)acceleratesDrawing
+{
+    return _tileCache->acceleratesDrawing();
+}
+
+- (void)setContentsScale:(CGFloat)contentsScale
+{
+    _tileCache->setScale(contentsScale);
+}
+
 - (CALayer *)tileContainerLayer
 {
     return _tileCache->tileContainerLayer();
+}
+
+- (WebCore::TiledBacking*)tiledBacking
+{
+    return _tileCache.get();
+}
+
+- (void)invalidate
+{
+    ASSERT(isMainThread());
+    ASSERT(_tileCache);
+    _tileCache = nullptr;
+}
+
+- (void)setBorderColor:(CGColorRef)borderColor
+{
+    _tileCache->setTileDebugBorderColor(borderColor);
+}
+
+- (void)setBorderWidth:(CGFloat)borderWidth
+{
+    _tileCache->setTileDebugBorderWidth(borderWidth);
 }
 
 @end

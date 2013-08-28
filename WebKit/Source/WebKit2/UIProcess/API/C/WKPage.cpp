@@ -82,6 +82,11 @@ void WKPageLoadPlainTextString(WKPageRef pageRef, WKStringRef plainTextStringRef
     toImpl(pageRef)->loadPlainTextString(toWTFString(plainTextStringRef));    
 }
 
+void WKPageLoadWebArchiveData(WKPageRef pageRef, WKDataRef webArchiveDataRef)
+{
+    toImpl(pageRef)->loadWebArchiveData(toImpl(webArchiveDataRef));
+}
+
 void WKPageStopLoading(WKPageRef pageRef)
 {
     toImpl(pageRef)->stopLoading();
@@ -379,6 +384,16 @@ WKPaginationMode WKPageGetPaginationMode(WKPageRef pageRef)
     return kWKPaginationModeUnpaginated;
 }
 
+void WKPageSetPaginationBehavesLikeColumns(WKPageRef pageRef, bool behavesLikeColumns)
+{
+    toImpl(pageRef)->setPaginationBehavesLikeColumns(behavesLikeColumns);
+}
+
+bool WKPageGetPaginationBehavesLikeColumns(WKPageRef pageRef)
+{
+    return toImpl(pageRef)->paginationBehavesLikeColumns();
+}
+
 void WKPageSetPageLength(WKPageRef pageRef, double pageLength)
 {
     toImpl(pageRef)->setPageLength(pageLength);
@@ -446,7 +461,9 @@ void WKPageCountStringMatches(WKPageRef pageRef, WKStringRef string, WKFindOptio
 
 void WKPageSetPageContextMenuClient(WKPageRef pageRef, const WKPageContextMenuClient* wkClient)
 {
+#if ENABLE(CONTEXT_MENUS)
     toImpl(pageRef)->initializeContextMenuClient(wkClient);
+#endif
 }
 
 void WKPageSetPageFindClient(WKPageRef pageRef, const WKPageFindClient* wkClient)
@@ -650,6 +667,11 @@ void WKPageDrawPagesToPDF(WKPageRef page, WKFrameRef frame, WKPrintInfo printInf
 {
     toImpl(page)->drawPagesToPDF(toImpl(frame), printInfoFromWKPrintInfo(printInfo), first, count, DataCallback::create(context, callback));
 }
+
+void WKPageEndPrinting(WKPageRef page)
+{
+    toImpl(page)->endPrinting();
+}
 #endif
 
 WKImageRef WKPageCreateSnapshotOfVisibleContent(WKPageRef)
@@ -660,4 +682,9 @@ WKImageRef WKPageCreateSnapshotOfVisibleContent(WKPageRef)
 void WKPageSetShouldSendEventsSynchronously(WKPageRef page, bool sync)
 {
     toImpl(page)->setShouldSendEventsSynchronously(sync);
+}
+
+void WKPageSetMediaVolume(WKPageRef page, float volume)
+{
+    toImpl(page)->setMediaVolume(volume);    
 }

@@ -174,6 +174,35 @@ KURLGooglePrivate::KURLGooglePrivate(WTF::HashTableDeletedValueType)
 {
 }
  
+KURLGooglePrivate::KURLGooglePrivate(const KURLGooglePrivate& o)
+    : m_isValid(o.m_isValid)
+    , m_protocolIsInHTTPFamily(o.m_protocolIsInHTTPFamily)
+    , m_parsed(o.m_parsed)
+    , m_utf8(o.m_utf8)
+    , m_utf8IsASCII(o.m_utf8IsASCII)
+    , m_stringIsValid(o.m_stringIsValid)
+    , m_string(o.m_string)
+{
+    if (o.m_innerURL.get())
+        m_innerURL = adoptPtr(new KURL(o.m_innerURL->copy()));
+}
+
+KURLGooglePrivate& KURLGooglePrivate::operator=(const KURLGooglePrivate& o)
+{
+    m_isValid = o.m_isValid;
+    m_protocolIsInHTTPFamily = o.m_protocolIsInHTTPFamily;
+    m_parsed = o.m_parsed;
+    m_utf8 = o.m_utf8;
+    m_utf8IsASCII = o.m_utf8IsASCII;
+    m_stringIsValid = o.m_stringIsValid;
+    m_string = o.m_string;
+    if (o.m_innerURL.get())
+        m_innerURL = adoptPtr(new KURL(o.m_innerURL->copy()));
+    else
+        m_innerURL.clear();
+    return *this;
+}
+
 // Setters for the data. Using the ASCII version when you know the
 // data is ASCII will be slightly more efficient. The UTF-8 version
 // will always be correct if the caller is unsure.
@@ -197,6 +226,7 @@ void KURLGooglePrivate::setUtf8(const CString& str)
     m_utf8 = str;
     m_stringIsValid = false;
     initProtocolIsInHTTPFamily();
+    initInnerURL();
 }
 
 void KURLGooglePrivate::setAscii(const CString& str)
@@ -205,6 +235,7 @@ void KURLGooglePrivate::setAscii(const CString& str)
     m_utf8IsASCII = true;
     m_stringIsValid = false;
     initProtocolIsInHTTPFamily();
+    initInnerURL();
 }
 
 void KURLGooglePrivate::init(const KURL& base,
@@ -258,6 +289,21 @@ void KURLGooglePrivate::init(const KURL& base, const CHAR* rel, int relLength,
     }
 }
 
+void KURLGooglePrivate::initInnerURL()
+{
+    if (!m_isValid) {
+        m_innerURL.clear();
+        return;
+    }
+    url_parse::Parsed* innerParsed = m_parsed.inner_parsed();
+    if (innerParsed)
+        m_innerURL = adoptPtr(new KURL(
+            ParsedURLString,
+            String(m_utf8.data() + innerParsed->scheme.begin, innerParsed->Length() - innerParsed->scheme.begin)));
+    else
+        m_innerURL.clear();
+}
+
 void KURLGooglePrivate::initProtocolIsInHTTPFamily()
 {
     if (!m_isValid) {
@@ -285,6 +331,10 @@ void KURLGooglePrivate::copyTo(KURLGooglePrivate* dest) const
     dest->m_utf8IsASCII = m_utf8IsASCII;
     dest->m_stringIsValid = false;
     dest->m_string = String(); // Clear the invalid string to avoid cross thread ref counting.
+    if (m_innerURL)
+        dest->m_innerURL = adoptPtr(new KURL(m_innerURL->copy()));
+    else
+        dest->m_innerURL.clear();
 }
 
 String KURLGooglePrivate::componentString(const url_parse::Component& comp) const
@@ -528,34 +578,6 @@ bool KURL::hasFragmentIdentifier() const
     return m_url.m_parsed.ref.len >= 0;
 }
 
-void KURL::copyParsedQueryTo(ParsedURLParameters& parameters) const
-{
-    String query = m_url.componentString(m_url.m_parsed.query);
-    const UChar* pos = query.characters();
-    const UChar* end = query.characters() + query.length();
-    while (pos < end) {
-        const UChar* parameterStart = pos;
-        while (pos < end && *pos != '&')
-            ++pos;
-        const UChar* parameterEnd = pos;
-        if (pos < end) {
-            ASSERT(*pos == '&');
-            ++pos;
-        }
-        if (parameterStart == parameterEnd)
-            continue;
-        const UChar* nameStart = parameterStart;
-        const UChar* equalSign = parameterStart;
-        while (equalSign < parameterEnd && *equalSign != '=')
-            ++equalSign;
-        if (equalSign == nameStart)
-            continue;
-        String name(nameStart, equalSign - nameStart);
-        String value = equalSign == parameterEnd ? String() : String(equalSign + 1, parameterEnd - equalSign - 1);
-        parameters.set(name, value);
-    }
-}
-
 String KURL::baseAsString() const
 {
     // FIXME: There is probably a more efficient way to do this?
@@ -749,16 +771,6 @@ void KURL::setPath(const String& path)
     m_url.replaceComponents(replacements);
 }
 
-// On Mac, this just seems to return the same URL, but with "/foo/bar" for
-// file: URLs instead of file:///foo/bar. We don't bother with any of this,
-// at least for now.
-String KURL::deprecatedString() const
-{
-    if (!m_url.m_isValid)
-        return String();
-    return m_url.string();
-}
-
 String decodeURLEscapeSequences(const String& str)
 {
     return decodeURLEscapeSequences(str, UTF8Encoding());
@@ -827,7 +839,10 @@ String encodeWithURLEscapeSequences(const String& notEncodedString)
         buffer.Resize(inputLength * 3);
 
     url_util::EncodeURIComponent(input, inputLength, &buffer);
-    return String(buffer.data(), buffer.length());
+    String escaped(buffer.data(), buffer.length());
+    // Unescape '/'; it's safe and much prettier.
+    escaped.replace("%2F", "/");
+    return escaped;
 }
 
 bool KURL::isHierarchical() const

@@ -29,6 +29,8 @@
 #ifndef Location_h
 #define Location_h
 
+#include "DOMStringList.h"
+#include "DOMWindowProperty.h"
 #include <wtf/PassRefPtr.h>
 #include <wtf/RefCounted.h>
 #include <wtf/text/WTFString.h>
@@ -41,12 +43,9 @@ class KURL;
 
 typedef int ExceptionCode;
 
-class Location : public RefCounted<Location> {
+class Location : public RefCounted<Location>, public DOMWindowProperty {
 public:
     static PassRefPtr<Location> create(Frame* frame) { return adoptRef(new Location(frame)); }
-
-    Frame* frame() const { return m_frame; }
-    void disconnectFrame();
 
     void setHref(const String&, DOMWindow* activeWindow, DOMWindow* firstWindow);
     String href() const;
@@ -73,12 +72,14 @@ public:
 
     String toString() const { return href(); }
 
+    PassRefPtr<DOMStringList> ancestorOrigins() const;
+
 private:
-    Location(Frame*);
+    explicit Location(Frame*);
+
+    void setLocation(const String&, DOMWindow* activeWindow, DOMWindow* firstWindow);
 
     const KURL& url() const;
-
-    Frame* m_frame;
 };
 
 } // namespace WebCore

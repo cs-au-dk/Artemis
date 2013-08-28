@@ -34,12 +34,11 @@ public:
 private:
     HTMLEmbedElement(const QualifiedName&, Document*, bool createdByParser);
 
-    virtual bool mapToEntry(const QualifiedName& attrName, MappedAttributeEntry& result) const;
-    virtual void parseMappedAttribute(Attribute*);
+    virtual void parseAttribute(Attribute*) OVERRIDE;
+    virtual bool isPresentationAttribute(const QualifiedName&) const OVERRIDE;
+    virtual void collectStyleForAttribute(Attribute*, StylePropertySet*) OVERRIDE;
 
     virtual bool rendererIsNeeded(const NodeRenderingContext&);
-    virtual void insertedIntoDocument();
-    virtual void attributeChanged(Attribute*, bool preserveDecls = false);
 
     virtual bool isURLAttribute(Attribute*) const;
     virtual const QualifiedName& imageSourceAttributeName() const;

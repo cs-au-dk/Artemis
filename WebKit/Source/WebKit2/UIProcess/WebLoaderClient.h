@@ -64,6 +64,10 @@ public:
     void didDisplayInsecureContentForFrame(WebPageProxy*, WebFrameProxy*, APIObject*);
     void didRunInsecureContentForFrame(WebPageProxy*, WebFrameProxy*, APIObject*);
     void didDetectXSSForFrame(WebPageProxy*, WebFrameProxy*, APIObject*);
+
+    // FIXME: didFirstVisuallyNonEmptyLayoutForFrame and didNewFirstVisuallyNonEmptyLayout should be merged.
+    // The only reason for both to exist is to experiment with different heuristics for the time being.
+    void didNewFirstVisuallyNonEmptyLayout(WebPageProxy*, APIObject*);
     
     bool canAuthenticateAgainstProtectionSpaceInFrame(WebPageProxy*, WebFrameProxy*, WebProtectionSpace*);
     void didReceiveAuthenticationChallengeInFrame(WebPageProxy*, WebFrameProxy*, AuthenticationChallengeProxy*);
@@ -74,11 +78,13 @@ public:
 
     // FIXME: These three functions should not be part of this client.
     void processDidBecomeUnresponsive(WebPageProxy*);
+    void interactionOccurredWhileProcessUnresponsive(WebPageProxy*);
     void processDidBecomeResponsive(WebPageProxy*);
     void processDidCrash(WebPageProxy*);
 
     void didChangeBackForwardList(WebPageProxy*, WebBackForwardListItem* addedItem, Vector<RefPtr<APIObject> >* removedItems);
     bool shouldGoToBackForwardListItem(WebPageProxy*, WebBackForwardListItem*);
+    void willGoToBackForwardListItem(WebPageProxy*, WebBackForwardListItem*, APIObject*);
 
     void didFailToInitializePlugin(WebPageProxy*, const String& mimeType);
 };

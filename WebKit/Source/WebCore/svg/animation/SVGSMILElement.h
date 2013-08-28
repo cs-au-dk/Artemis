@@ -44,17 +44,19 @@ public:
 
     static bool isSMILElement(Node*);
 
-    virtual void parseMappedAttribute(Attribute*);
-    virtual void attributeChanged(Attribute*, bool preserveDecls);
-    virtual void insertedIntoDocument();
-    virtual void removedFromDocument();
+    bool isSupportedAttribute(const QualifiedName&);
+    virtual void parseAttribute(Attribute*) OVERRIDE;
+    virtual void svgAttributeChanged(const QualifiedName&) OVERRIDE;
+    virtual InsertionNotificationRequest insertedInto(Node*) OVERRIDE;
+    virtual void removedFrom(Node*) OVERRIDE;
     
     virtual bool hasValidAttributeType() = 0;
+    virtual void animationAttributeChanged() = 0;
 
     SMILTimeContainer* timeContainer() const { return m_timeContainer.get(); }
 
     SVGElement* targetElement();
-    void resetTargetElement() { m_targetElement = 0; }
+    void resetTargetElement();
     const QualifiedName& attributeName() const { return m_attributeName; }
 
     void beginByLinkActivation();
@@ -74,8 +76,6 @@ public:
 
     FillMode fill() const;
 
-    String xlinkHref() const;
-
     SMILTime dur() const;
     SMILTime repeatDur() const;
     SMILTime repeatCount() const;
@@ -89,8 +89,11 @@ public:
     SMILTime previousIntervalBegin() const { return m_previousIntervalBegin; }
     SMILTime simpleDuration() const;
 
-    void progress(SMILTime elapsed, SVGSMILElement* resultsElement);
+    void seekToIntervalCorrespondingToTime(SMILTime elapsed);
+    void progress(SMILTime elapsed, SVGSMILElement* resultsElement, bool seekToTime);
     SMILTime nextProgressTime() const;
+
+    void reset();
 
     static SMILTime parseClockValue(const String&);
     static SMILTime parseOffsetValue(const String&);
@@ -103,19 +106,22 @@ public:
     void setDocumentOrderIndex(unsigned index) { m_documentOrderIndex = index; }
 
     virtual bool isAdditive() const = 0;
-    virtual void resetToBaseValue(const String&) = 0;
+    virtual void resetToBaseValue() = 0;
     virtual void applyResultsToTarget() = 0;
 
 protected:
-    void addBeginTime(SMILTime eventTime, SMILTime endTime);
-    void addEndTime(SMILTime eventTime, SMILTime endTime);
+    void addBeginTime(SMILTime eventTime, SMILTime endTime, SMILTimeWithOrigin::Origin = SMILTimeWithOrigin::ParserOrigin);
+    void addEndTime(SMILTime eventTime, SMILTime endTime, SMILTimeWithOrigin::Origin = SMILTimeWithOrigin::ParserOrigin);
 
     void setInactive() { m_activeState = Inactive; }
+
+    // Sub-classes may need to take action when the target is changed.
+    virtual void targetElementWillChange(SVGElement* currentTarget, SVGElement* newTarget);
+    virtual void endedActiveInterval();
 
 private:
     virtual void startedActiveInterval() = 0;
     virtual void updateAnimation(float percent, unsigned repeat, SVGSMILElement* resultElement) = 0;
-    virtual void endedActiveInterval() = 0;
 
     enum BeginOrEnd {
         Begin,
@@ -124,7 +130,7 @@ private:
     
     SMILTime findInstanceTime(BeginOrEnd, SMILTime minimumTime, bool equalsMinimumOK) const;
     void resolveFirstInterval();
-    void resolveNextInterval();
+    void resolveNextInterval(bool notifyDependents);
     void resolveInterval(bool first, SMILTime& beginResult, SMILTime& endResult) const;
     SMILTime resolveActiveEnd(SMILTime resolvedBegin, SMILTime resolvedEnd) const;
     SMILTime repeatingDuration() const;
@@ -197,8 +203,8 @@ private:
     TimeDependentSet m_timeDependents;
 
     // Instance time lists
-    Vector<SMILTime> m_beginTimes;
-    Vector<SMILTime> m_endTimes;
+    Vector<SMILTimeWithOrigin> m_beginTimes;
+    Vector<SMILTimeWithOrigin> m_endTimes;
 
     // This is the upcoming or current interval
     SMILTime m_intervalBegin;
@@ -228,4 +234,3 @@ private:
 
 #endif // ENABLE(SVG)
 #endif // SVGSMILElement_h
-

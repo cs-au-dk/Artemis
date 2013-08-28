@@ -366,8 +366,7 @@ void PluginView::stop()
     }
 
 #ifdef XP_UNIX
-    if (m_isWindowed && m_npWindow.ws_info)
-           delete (NPSetWindowCallbackStruct *)m_npWindow.ws_info;
+    delete static_cast<NPSetWindowCallbackStruct*>(m_npWindow.ws_info);
     m_npWindow.ws_info = 0;
 #endif
 
@@ -562,7 +561,7 @@ NPError PluginView::getURLNotify(const char* url, const char* target, void* noti
 
     frameLoadRequest.setFrameName(target);
     frameLoadRequest.resourceRequest().setHTTPMethod("GET");
-    frameLoadRequest.resourceRequest().setURL(makeURL(m_baseURL, url));
+    frameLoadRequest.resourceRequest().setURL(makeURL(m_parentFrame->document()->baseURL(), url));
 
     return load(frameLoadRequest, true, notifyData);
 }
@@ -573,7 +572,7 @@ NPError PluginView::getURL(const char* url, const char* target)
 
     frameLoadRequest.setFrameName(target);
     frameLoadRequest.resourceRequest().setHTTPMethod("GET");
-    frameLoadRequest.resourceRequest().setURL(makeURL(m_baseURL, url));
+    frameLoadRequest.resourceRequest().setURL(makeURL(m_parentFrame->document()->baseURL(), url));
 
     return load(frameLoadRequest, false, 0);
 }
@@ -819,7 +818,6 @@ PluginView::PluginView(Frame* parentFrame, const IntSize& size, PluginPackage* p
     , m_element(element)
     , m_isStarted(false)
     , m_url(url)
-    , m_baseURL(m_parentFrame->document()->baseURL()) // FIXME: No need for this member variable!
     , m_status(PluginStatusLoadedSuccessfully)
     , m_requestTimer(this, &PluginView::requestTimerFired)
     , m_invalidateTimer(this, &PluginView::invalidateTimerFired)
@@ -1200,7 +1198,7 @@ NPError PluginView::handlePost(const char* url, const char* target, uint32_t len
     }
 
     frameLoadRequest.resourceRequest().setHTTPMethod("POST");
-    frameLoadRequest.resourceRequest().setURL(makeURL(m_baseURL, url));
+    frameLoadRequest.resourceRequest().setURL(makeURL(m_parentFrame->document()->baseURL(), url));
     frameLoadRequest.resourceRequest().addHTTPHeaderFields(headerFields);
     frameLoadRequest.resourceRequest().setHTTPBody(FormData::create(postData, postDataLength));
     frameLoadRequest.setFrameName(target);
@@ -1395,7 +1393,7 @@ NPError PluginView::getValueForURL(NPNURLVariable variable, const char* url, cha
 
     switch (variable) {
     case NPNURLVCookie: {
-        KURL u(m_baseURL, url);
+        KURL u(m_parentFrame->document()->baseURL(), url);
         if (u.isValid()) {
             Frame* frame = getFrame(parentFrame(), m_element);
             if (frame) {
@@ -1417,7 +1415,7 @@ NPError PluginView::getValueForURL(NPNURLVariable variable, const char* url, cha
         break;
     }
     case NPNURLVProxy: {
-        KURL u(m_baseURL, url);
+        KURL u(m_parentFrame->document()->baseURL(), url);
         if (u.isValid()) {
             Frame* frame = getFrame(parentFrame(), m_element);
             const FrameLoader* frameLoader = frame ? frame->loader() : 0;
@@ -1456,7 +1454,7 @@ NPError PluginView::setValueForURL(NPNURLVariable variable, const char* url, con
 
     switch (variable) {
     case NPNURLVCookie: {
-        KURL u(m_baseURL, url);
+        KURL u(m_parentFrame->document()->baseURL(), url);
         if (u.isValid()) {
             const String cookieStr = String::fromUTF8(value, len);
             Frame* frame = getFrame(parentFrame(), m_element);

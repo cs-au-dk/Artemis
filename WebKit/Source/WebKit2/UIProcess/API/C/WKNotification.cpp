@@ -47,6 +47,16 @@ WKStringRef WKNotificationCopyBody(WKNotificationRef notification)
     return toCopiedAPI(toImpl(notification)->body());
 }
 
+WKStringRef WKNotificationCopyIconURL(WKNotificationRef notification)
+{
+    return toCopiedAPI(toImpl(notification)->iconURL());
+}
+
+WKStringRef WKNotificationCopyTag(WKNotificationRef notification)
+{
+    return toCopiedAPI(toImpl(notification)->tag());
+}
+
 WKSecurityOriginRef WKNotificationGetSecurityOrigin(WKNotificationRef notification)
 {
     return toAPI(toImpl(notification)->origin());

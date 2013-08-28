@@ -49,7 +49,7 @@ enum SVGMarkerOrientType {
 
 template<>
 struct SVGPropertyTraits<SVGMarkerUnitsType> {
-    static SVGMarkerUnitsType highestEnumValue() { return SVGMarkerUnitsStrokeWidth; }
+    static unsigned highestEnumValue() { return SVGMarkerUnitsStrokeWidth; }
 
     static String toString(SVGMarkerUnitsType type)
     {
@@ -78,7 +78,7 @@ struct SVGPropertyTraits<SVGMarkerUnitsType> {
 
 template<>
 struct SVGPropertyTraits<SVGMarkerOrientType> {
-    static SVGMarkerOrientType highestEnumValue() { return SVGMarkerOrientAngle; }
+    static unsigned highestEnumValue() { return SVGMarkerOrientAngle; }
 
     // toString is not needed, synchronizeOrientType() handles this on its own.
 
@@ -128,7 +128,7 @@ private:
     virtual bool needsPendingResourceHandling() const { return false; }
 
     bool isSupportedAttribute(const QualifiedName&);
-    virtual void parseMappedAttribute(Attribute*);
+    virtual void parseAttribute(Attribute*) OVERRIDE;
     virtual void svgAttributeChanged(const QualifiedName&);
     virtual void childrenChanged(bool changedByParser = false, Node* beforeChange = 0, Node* afterChange = 0, int childCountDelta = 0);
 

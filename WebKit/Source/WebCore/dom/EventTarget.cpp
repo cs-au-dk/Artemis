@@ -31,17 +31,13 @@
 
 #include "config.h"
 #include "EventTarget.h"
-#include <iostream>
 
 #include "Event.h"
 #include "EventException.h"
+#include "InspectorInstrumentation.h"
 #include <wtf/MainThread.h>
 #include <wtf/StdLibExtras.h>
 #include <wtf/Vector.h>
-
-#ifdef ARTEMIS
-#include <instrumentation/executionlistener.h>
-#endif
 
 using namespace WTF;
 
@@ -97,9 +93,6 @@ DOMWindow* EventTarget::toDOMWindow()
 
 bool EventTarget::addEventListener(const AtomicString& eventType, PassRefPtr<EventListener> listener, bool useCapture)
 {
-#ifdef ARTEMIS
-    inst::getListener()->eventAdded(this, eventType.string().ascii().data());
-#endif
     EventTargetData* d = ensureEventTargetData();
     return d->eventListenerMap.add(eventType, listener, useCapture);
 }
@@ -114,10 +107,6 @@ bool EventTarget::removeEventListener(const AtomicString& eventType, EventListen
 
     if (!d->eventListenerMap.remove(eventType, listener, useCapture, indexOfRemovedListener))
         return false;
-
-#ifdef ARTEMIS
-    inst::getListener()->eventCleared(this, eventType.string().ascii().data());
-#endif
 
     // Notify firing events planning to invoke the listener at 'index' that
     // they have one less listener to invoke.
@@ -215,10 +204,6 @@ void EventTarget::fireEventListeners(Event* event, EventTargetData* d, EventList
 {
     RefPtr<EventTarget> protect = this;
 
-#ifdef ARTEMIS
-    inst::getListener()->eventTriggered(this, event->type().string().ascii().data());
-#endif
-
     // Fire all listeners registered for this event. Don't fire listeners removed
     // during event dispatch. Also, don't fire event listeners added during event
     // dispatch. Conveniently, all new event listeners will be added after 'end',
@@ -239,9 +224,12 @@ void EventTarget::fireEventListeners(Event* event, EventTargetData* d, EventList
         if (event->immediatePropagationStopped())
             break;
 
+        ScriptExecutionContext* context = scriptExecutionContext();
+        InspectorInstrumentationCookie cookie = InspectorInstrumentation::willHandleEvent(context, event);
         // To match Mozilla, the AT_TARGET phase fires both capturing and bubbling
         // event listeners, even though that violates some versions of the DOM spec.
-        registeredListener.listener->handleEvent(scriptExecutionContext(), event);
+        registeredListener.listener->handleEvent(context, event);
+        InspectorInstrumentation::didHandleEvent(cookie);
     }
     d->firingEventIterators.removeLast();
 }

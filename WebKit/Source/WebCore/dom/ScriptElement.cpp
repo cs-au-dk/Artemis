@@ -27,6 +27,7 @@
 #include "CachedScript.h"
 #include "CachedResourceLoader.h"
 #include "ContentSecurityPolicy.h"
+#include "CrossOriginAccessControl.h"
 #include "Document.h"
 #include "DocumentParser.h"
 #include "Frame.h"
@@ -40,6 +41,7 @@
 #include "ScriptRunner.h"
 #include "ScriptSourceCode.h"
 #include "ScriptValue.h"
+#include "SecurityOrigin.h"
 #include "Settings.h"
 #include "Text.h"
 #include <wtf/StdLibExtras.h>
@@ -65,6 +67,7 @@ ScriptElement::ScriptElement(Element* element, bool parserInserted, bool already
     , m_willExecuteWhenDocumentFinishedParsing(false)
     , m_forceAsync(!parserInserted)
     , m_willExecuteInOrder(false)
+    , m_requestUsesAccessControl(false)
 {
     ASSERT(m_element);
 }
@@ -74,16 +77,10 @@ ScriptElement::~ScriptElement()
     stopLoadRequest();
 }
 
-void ScriptElement::insertedIntoDocument()
+void ScriptElement::insertedInto(Node* insertionPoint)
 {
-    if (!m_parserInserted)
+    if (insertionPoint->inDocument() && !m_parserInserted)
         prepareScript(); // FIXME: Provide a real starting line number here.
-}
-
-void ScriptElement::removedFromDocument()
-{
-    // Eventually stop loading any not-yet-finished content
-    stopLoadRequest();
 }
 
 void ScriptElement::childrenChanged()
@@ -205,15 +202,6 @@ bool ScriptElement::prepareScript(const TextPosition& scriptStartPosition, Legac
     if (!document->frame()->script()->canExecuteScripts(AboutToExecuteScript))
         return false;
 
-    Node* ancestor = m_element->parentNode();
-    while (ancestor) {
-        if (ancestor->isSVGShadowRoot()) {
-            fprintf(stderr, "aborted script: shadow root\n");
-            return false;
-        }
-        ancestor = ancestor->parentNode();
-    }
-
     if (!isScriptForEventSupported())
         return false;
 
@@ -238,9 +226,10 @@ bool ScriptElement::prepareScript(const TextPosition& scriptStartPosition, Legac
         m_willExecuteInOrder = true;
         document->scriptRunner()->queueScriptForExecution(this, m_cachedScript, ScriptRunner::IN_ORDER_EXECUTION);
         m_cachedScript->addClient(this);
-    } else if (hasSourceAttribute())
+    } else if (hasSourceAttribute()) {
+        m_element->document()->scriptRunner()->queueScriptForExecution(this, m_cachedScript, ScriptRunner::ASYNC_EXECUTION);
         m_cachedScript->addClient(this);
-    else {
+    } else {
         // Reset line numbering for nested writes.
         TextPosition position = document->isInDocumentWrite() ? TextPosition() : scriptStartPosition;
         executeScript(ScriptSourceCode(scriptContent(), document->url(), position));
@@ -259,7 +248,15 @@ bool ScriptElement::requestScript(const String& sourceUrl)
 
     ASSERT(!m_cachedScript);
     if (!stripLeadingAndTrailingHTMLSpaces(sourceUrl).isEmpty()) {
-        ResourceRequest request(m_element->document()->completeURL(sourceUrl));
+        ResourceRequest request = ResourceRequest(m_element->document()->completeURL(sourceUrl));
+
+        String crossOriginMode = m_element->fastGetAttribute(HTMLNames::crossoriginAttr);
+        if (!crossOriginMode.isNull()) {
+            m_requestUsesAccessControl = true;
+            StoredCredentials allowCredentials = equalIgnoringCase(crossOriginMode, "use-credentials") ? AllowStoredCredentials : DoNotAllowStoredCredentials;
+            updateRequestForAccessControl(request, m_element->document()->securityOrigin(), allowCredentials);
+        }
+
         m_cachedScript = m_element->document()->cachedResourceLoader()->requestScript(request, scriptCharset());
         m_isExternalScript = true;
     }
@@ -292,8 +289,6 @@ void ScriptElement::executeScript(const ScriptSourceCode& sourceCode)
             // Note: This is where the script is compiled and actually executed.
             frame->script()->evaluate(sourceCode);
         }
-
-        Document::updateStyleForAllDocuments();
     }
 }
 
@@ -319,14 +314,25 @@ void ScriptElement::execute(CachedScript* cachedScript)
     cachedScript->removeClient(this);
 }
 
-void ScriptElement::notifyFinished(CachedResource* o)
+void ScriptElement::notifyFinished(CachedResource* resource)
 {
     ASSERT(!m_willBeParserExecuted);
-    ASSERT_UNUSED(o, o == m_cachedScript);
+    ASSERT_UNUSED(resource, resource == m_cachedScript);
+
+    if (m_requestUsesAccessControl
+        && !m_element->document()->securityOrigin()->canRequest(m_cachedScript->response().url())
+        && !m_cachedScript->passesAccessControlCheck(m_element->document()->securityOrigin())) {
+
+        dispatchErrorEvent();
+        DEFINE_STATIC_LOCAL(String, consoleMessage, ("Cross-origin script load denied by Cross-Origin Resource Sharing policy."));
+        m_element->document()->addConsoleMessage(JSMessageSource, LogMessageType, ErrorMessageLevel, consoleMessage);
+        return;
+    }
+
     if (m_willExecuteInOrder)
-        m_element->document()->scriptRunner()->notifyInOrderScriptReady();
+        m_element->document()->scriptRunner()->notifyScriptReady(this, ScriptRunner::IN_ORDER_EXECUTION);
     else
-        m_element->document()->scriptRunner()->queueScriptForExecution(this, m_cachedScript, ScriptRunner::ASYNC_EXECUTION);
+        m_element->document()->scriptRunner()->notifyScriptReady(this, ScriptRunner::ASYNC_EXECUTION);
 
     m_cachedScript = 0;
 }
@@ -362,7 +368,7 @@ String ScriptElement::scriptContent() const
         if (!n->isTextNode())
             continue;
 
-        Text* t = static_cast<Text*>(n);
+        Text* t = toText(n);
         if (foundMultipleTextNodes)
             content.append(t->data());
         else if (firstTextNode) {

@@ -117,6 +117,7 @@ void WebProcessProxy::connect()
 void WebProcessProxy::disconnect()
 {
     if (m_connection) {
+        m_connection->connection()->removeQueueClient(this);
         m_connection->invalidate();
         m_connection = nullptr;
     }
@@ -244,7 +245,17 @@ bool WebProcessProxy::checkURLReceivedFromWebProcess(const KURL& url)
             return true;
     }
 
+    // Items in back/forward list have been already checked.
+    // One case where we don't have sandbox extensions for file URLs in b/f list is if the list has been reinstated after a crash or a browser restart.
+    for (WebBackForwardListItemMap::iterator iter = m_backForwardListItemMap.begin(), end = m_backForwardListItemMap.end(); iter != end; ++iter) {
+        if (KURL(KURL(), iter->second->url()).fileSystemPath() == path)
+            return true;
+        if (KURL(KURL(), iter->second->originalURL()).fileSystemPath() == path)
+            return true;
+    }
+
     // A Web process that was never asked to load a file URL should not ever ask us to do anything with a file URL.
+    WTFLogAlways("Received an unexpected URL from the web process: '%s'\n", url.string().utf8().data());
     return false;
 }
 
@@ -260,18 +271,17 @@ void WebProcessProxy::addBackForwardItem(uint64_t itemID, const String& original
     MESSAGE_CHECK_URL(originalURL);
     MESSAGE_CHECK_URL(url);
 
-    std::pair<WebBackForwardListItemMap::iterator, bool> result = m_backForwardListItemMap.add(itemID, 0);
-    if (result.second) {
-        // New item.
-        result.first->second = WebBackForwardListItem::create(originalURL, url, title, backForwardData.data(), backForwardData.size(), itemID);
+    WebBackForwardListItemMap::AddResult result = m_backForwardListItemMap.add(itemID, 0);
+    if (result.isNewEntry) {
+        result.iterator->second = WebBackForwardListItem::create(originalURL, url, title, backForwardData.data(), backForwardData.size(), itemID);
         return;
     }
 
     // Update existing item.
-    result.first->second->setOriginalURL(originalURL);
-    result.first->second->setURL(url);
-    result.first->second->setTitle(title);
-    result.first->second->setBackForwardData(backForwardData.data(), backForwardData.size());
+    result.iterator->second->setOriginalURL(originalURL);
+    result.iterator->second->setURL(url);
+    result.iterator->second->setTitle(title);
+    result.iterator->second->setBackForwardData(backForwardData.data(), backForwardData.size());
 }
 
 #if ENABLE(PLUGIN_PROCESS)
@@ -304,6 +314,9 @@ void WebProcessProxy::didReceiveMessage(CoreIPC::Connection* connection, CoreIPC
         || messageID.is<CoreIPC::MessageClassWebKeyValueStorageManagerProxy>()
         || messageID.is<CoreIPC::MessageClassWebMediaCacheManagerProxy>()
         || messageID.is<CoreIPC::MessageClassWebNotificationManagerProxy>()
+#if USE(SOUP)
+        || messageID.is<CoreIPC::MessageClassWebSoupRequestManagerProxy>()
+#endif
         || messageID.is<CoreIPC::MessageClassWebResourceCacheManagerProxy>()) {
         m_context->didReceiveMessage(connection, messageID, arguments);
         return;
@@ -333,11 +346,6 @@ void WebProcessProxy::didReceiveSyncMessage(CoreIPC::Connection* connection, Cor
         return;
     }
 
-    if (messageID.is<CoreIPC::MessageClassWebNotificationManagerProxy>()) {
-        m_context->notificationManagerProxy()->didReceiveSyncMessage(connection, messageID, arguments, reply);
-        return;
-    }
-
     uint64_t pageID = arguments->destinationID();
     if (!pageID)
         return;
@@ -347,6 +355,12 @@ void WebProcessProxy::didReceiveSyncMessage(CoreIPC::Connection* connection, Cor
         return;
     
     pageProxy->didReceiveSyncMessage(connection, messageID, arguments, reply);
+}
+
+void WebProcessProxy::didReceiveMessageOnConnectionWorkQueue(CoreIPC::Connection* connection, CoreIPC::MessageID messageID, CoreIPC::ArgumentDecoder* arguments, bool& didHandleMessage)
+{
+    if (messageID.is<CoreIPC::MessageClassWebProcessProxy>())
+        didReceiveWebProcessProxyMessageOnConnectionWorkQueue(connection, messageID, arguments, didHandleMessage);
 }
 
 void WebProcessProxy::didClose(CoreIPC::Connection*)
@@ -366,9 +380,7 @@ void WebProcessProxy::didClose(CoreIPC::Connection*)
 
 void WebProcessProxy::didReceiveInvalidMessage(CoreIPC::Connection*, CoreIPC::MessageID messageID)
 {
-    // This fprintf is intentionally left because this function should 
-    // only be hit in the case of a misbehaving web process.
-    fprintf(stderr, "Receive an invalid message from the web process with message ID %x\n", messageID.toInt());
+    WTFLogAlways("Received an invalid message from the web process with message ID %x\n", messageID.toInt());
 
     // Terminate the WebProcesses.
     terminate();
@@ -384,6 +396,14 @@ void WebProcessProxy::didBecomeUnresponsive(ResponsivenessTimer*)
     copyValuesToVector(m_pageMap, pages);
     for (size_t i = 0, size = pages.size(); i < size; ++i)
         pages[i]->processDidBecomeUnresponsive();
+}
+
+void WebProcessProxy::interactionOccurredWhileUnresponsive(ResponsivenessTimer*)
+{
+    Vector<RefPtr<WebPageProxy> > pages;
+    copyValuesToVector(m_pageMap, pages);
+    for (size_t i = 0, size = pages.size(); i < size; ++i)
+        pages[i]->interactionOccurredWhileProcessUnresponsive();
 }
 
 void WebProcessProxy::didBecomeResponsive(ResponsivenessTimer*)
@@ -409,7 +429,9 @@ void WebProcessProxy::didFinishLaunching(CoreIPC::Connection::Identifier connect
     ASSERT(!m_connection);
     
     m_connection = WebConnectionToWebProcess::create(this, connectionIdentifier, RunLoop::main());
-    
+    m_connection->connection()->addQueueClient(this);
+    m_connection->connection()->open();
+
     for (size_t i = 0; i < m_pendingMessages.size(); ++i) {
         CoreIPC::Connection::OutgoingMessage& outgoingMessage = m_pendingMessages[i].first;
         unsigned messageSendFlags = m_pendingMessages[i].second;

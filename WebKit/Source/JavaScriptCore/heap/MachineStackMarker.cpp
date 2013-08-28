@@ -96,6 +96,7 @@ typedef HANDLE PlatformThread;
 typedef pthread_t PlatformThread;
 static const int SigThreadSuspendResume = SIGUSR2;
 
+#if defined(SA_RESTART)
 static void pthreadSignalHandlerSuspendResume(int signo)
 {
     sigset_t signalSet;
@@ -103,6 +104,7 @@ static void pthreadSignalHandlerSuspendResume(int signo)
     sigaddset(&signalSet, SigThreadSuspendResume);
     sigsuspend(&signalSet);
 }
+#endif
 #endif
 
 class MachineThreads::Thread {
@@ -193,7 +195,7 @@ void MachineThreads::addCurrentThread()
         return;
 
     pthread_setspecific(m_threadSpecific, this);
-    Thread* thread = new Thread(getCurrentPlatformThread(), m_heap->globalData()->stack().origin());
+    Thread* thread = new Thread(getCurrentPlatformThread(), wtfThreadData().stack().origin());
 
     MutexLocker lock(m_registeredThreadsMutex);
 
@@ -257,7 +259,7 @@ void MachineThreads::gatherFromCurrentThread(ConservativeRoots& conservativeRoot
     conservativeRoots.add(registersBegin, registersEnd);
 
     void* stackBegin = stackCurrent;
-    void* stackEnd = m_heap->globalData()->stack().origin();
+    void* stackEnd = wtfThreadData().stack().origin();
     swapIfBackwards(stackBegin, stackEnd);
     conservativeRoots.add(stackBegin, stackEnd);
 }

@@ -40,7 +40,7 @@ public:
     void calcHorizontalPrefWidths();
     void calcVerticalPrefWidths();
 
-    virtual void layoutBlock(bool relayoutChildren, LayoutUnit pageHeight = 0, BlockLayoutPass = NormalLayoutPass);
+    virtual void layoutBlock(bool relayoutChildren, LayoutUnit pageHeight = 0);
     void layoutHorizontalBox(bool relayoutChildren);
     void layoutVerticalBox(bool relayoutChildren);
 
@@ -49,6 +49,7 @@ public:
     virtual bool isDeprecatedFlexibleBox() const { return true; }
     virtual bool isFlexingChildren() const { return m_flexingChildren; }
     virtual bool isStretchingChildren() const { return m_stretchingChildren; }
+    virtual bool canHaveGeneratedChildren() const { return true; }
 
     void placeChild(RenderBox* child, const LayoutPoint& location);
 

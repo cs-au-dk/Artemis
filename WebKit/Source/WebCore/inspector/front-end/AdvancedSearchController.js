@@ -83,7 +83,13 @@ WebInspector.AdvancedSearchController.prototype = {
         else
             WebInspector.showViewInDrawer(this._searchView);
     },
-    
+
+    close: function()
+    {
+        this.stopSearch();
+        WebInspector.closeDrawerView();
+    },
+
     /**
      * @param {number} searchId
      * @param {Object} searchResult
@@ -193,6 +199,11 @@ WebInspector.SearchView = function(controller)
     this._regexCheckbox.addStyleClass("search-config-checkbox");
     this._regexLabel.appendChild(document.createTextNode(WebInspector.UIString("Regular expression")));
     
+    this._searchDoneButton = this._searchPanelElement.createChild("button");
+    this._searchDoneButton.textContent = WebInspector.UIString("Close");
+    this._searchDoneButton.addStyleClass("search-close-button");
+    this._searchDoneButton.addEventListener("click", this._closeButtonPressed.bind(this));
+    
     this._searchStatusBarElement = document.createElement("div");
     this._searchStatusBarElement.className = "search-status-bar-item";
     this._searchMessageElement = this._searchStatusBarElement.createChild("div");
@@ -217,7 +228,7 @@ WebInspector.SearchView.maxQueriesCount = 20;
 
 WebInspector.SearchView.prototype = {
     /**
-     * @type {Array.<Element>}
+     * @return {Array.<Element>}
      */
     get statusBarItems()
     {
@@ -225,7 +236,7 @@ WebInspector.SearchView.prototype = {
     },
 
     /**
-     * @type {Element}
+     * @return {Element}
      */
     get counterElement()
     {
@@ -233,15 +244,11 @@ WebInspector.SearchView.prototype = {
     },
 
     /**
-     * @type {WebInspector.SearchConfig}
+     * @return {WebInspector.SearchConfig}
      */
     get searchConfig()
     {
-        var searchConfig = {};
-        searchConfig.query = this._search.value;
-        searchConfig.ignoreCase = this._ignoreCaseCheckbox.checked;
-        searchConfig.isRegex = this._regexCheckbox.checked;
-        return searchConfig;
+        return new WebInspector.SearchConfig(this._search.value, this._ignoreCaseCheckbox.checked, this._regexCheckbox.checked);
     },
     
     /**
@@ -359,8 +366,15 @@ WebInspector.SearchView.prototype = {
      */
     _onKeyDown: function(event)
     {
-        if (event.keyCode === WebInspector.KeyboardShortcut.Keys.Enter.code)
+        switch (event.keyCode) {
+        case WebInspector.KeyboardShortcut.Keys.Enter.code:
             this._onAction();
+            break;
+        case WebInspector.KeyboardShortcut.Keys.Esc.code:
+            this._controller.close();
+            event.consume(true);
+            break;
+        }        
     },
     
     _save: function()
@@ -376,7 +390,12 @@ WebInspector.SearchView.prototype = {
         this._ignoreCaseCheckbox.checked = searchConfig.ignoreCase;
         this._regexCheckbox.checked = searchConfig.isRegex;
     },
-    
+
+    _closeButtonPressed: function()
+    {
+        this._controller.close();
+    },
+
     _searchStopButtonPressed: function()
     {
         this._controller.stopSearch();
@@ -427,7 +446,7 @@ WebInspector.SearchScope.prototype = {
     
     /**
      * @param {WebInspector.SearchConfig} searchConfig
-     * @return WebInspector.SearchResultsPane}
+     * @return {WebInspector.SearchResultsPane}
      */
     createSearchResultsPane: function(searchConfig) { }
 }
@@ -444,7 +463,7 @@ WebInspector.SearchResultsPane = function(searchConfig)
 
 WebInspector.SearchResultsPane.prototype = {
     /**
-     * @type {WebInspector.SearchConfig}
+     * @return {WebInspector.SearchConfig}
      */
     get searchConfig()
     {
@@ -658,7 +677,7 @@ WebInspector.FileBasedSearchResultsPane.prototype = {
         var contentSpan = document.createElement("span");
         contentSpan.className = "search-match-content";
         contentSpan.textContent = lineContent;
-        highlightRangesWithStyleClass(contentSpan, matchRanges, "highlighted-match");
+        WebInspector.highlightRangesWithStyleClass(contentSpan, matchRanges, "highlighted-match");
         return contentSpan;
     }
 }

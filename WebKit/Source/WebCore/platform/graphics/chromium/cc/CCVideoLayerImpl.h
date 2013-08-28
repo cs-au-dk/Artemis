@@ -27,65 +27,74 @@
 #define CCVideoLayerImpl_h
 
 #include "ManagedTexture.h"
-#include "ShaderChromium.h"
-#include "VideoFrameChromium.h"
-#include "VideoFrameProvider.h"
-#include "VideoLayerChromium.h"
 #include "cc/CCLayerImpl.h"
+#include <public/WebVideoFrameProvider.h>
+
+namespace WebKit {
+class WebVideoFrame;
+}
 
 namespace WebCore {
 
-template<class VertexShader, class FragmentShader> class ProgramBinding;
+class CCLayerTreeHostImpl;
+class CCVideoLayerImpl;
 
 class CCVideoLayerImpl : public CCLayerImpl
-                       , public VideoFrameProvider::Client {
+                       , public WebKit::WebVideoFrameProvider::Client {
 public:
-    static PassRefPtr<CCVideoLayerImpl> create(int id, VideoFrameProvider* provider)
+    static PassOwnPtr<CCVideoLayerImpl> create(int id, WebKit::WebVideoFrameProvider* provider)
     {
-        return adoptRef(new CCVideoLayerImpl(id, provider));
+        return adoptPtr(new CCVideoLayerImpl(id, provider));
     }
     virtual ~CCVideoLayerImpl();
 
-    typedef ProgramBinding<VertexShaderPosTexTransform, FragmentShaderRGBATexFlipAlpha> RGBAProgram;
-    typedef ProgramBinding<VertexShaderPosTexYUVStretch, FragmentShaderYUVVideo> YUVProgram;
-    typedef ProgramBinding<VertexShaderPosTexTransform, FragmentShaderRGBATexFlipAlpha> NativeTextureProgram;
+    virtual void willDraw(LayerRendererChromium*) OVERRIDE;
+    virtual void appendQuads(CCQuadCuller&, const CCSharedQuadState*, bool& hadMissingTiles) OVERRIDE;
+    virtual void didDraw() OVERRIDE;
 
-    virtual void draw(LayerRendererChromium*);
+    virtual void dumpLayerProperties(TextStream&, int indent) const OVERRIDE;
 
-    virtual void dumpLayerProperties(TextStream&, int indent) const;
+    Mutex& providerMutex() { return m_providerMutex; }
 
-    // VideoFrameProvider::Client implementation (callable on any thread).
-    virtual void stopUsingProvider();
+    // WebKit::WebVideoFrameProvider::Client implementation.
+    virtual void stopUsingProvider(); // Callable on any thread.
+    virtual void didReceiveFrame(); // Callable on impl thread.
+    virtual void didUpdateMatrix(const float*); // Callable on impl thread.
 
-private:
-    explicit CCVideoLayerImpl(int, VideoFrameProvider*);
+    virtual void didLoseContext() OVERRIDE;
 
-    virtual const char* layerTypeAsString() const { return "VideoLayer"; }
-
-    bool copyFrameToTextures(const VideoFrameChromium*, GC3Denum format, LayerRendererChromium*);
-    void copyPlaneToTexture(LayerRendererChromium*, const void* plane, int index);
-    bool reserveTextures(const VideoFrameChromium*, GC3Denum format, LayerRendererChromium*);
-    void drawYUV(LayerRendererChromium*) const;
-    void drawRGBA(LayerRendererChromium*) const;
-    void drawNativeTexture(LayerRendererChromium*) const;
-    template<class Program> void drawCommon(LayerRendererChromium*, Program*, float widthScaleFactor, Platform3DObject textureId) const;
-
-    Mutex m_providerMutex; // Guards m_provider below.
-    VideoFrameProvider* m_provider;
+    void setNeedsRedraw();
 
     static const float yuv2RGB[9];
     static const float yuvAdjust[3];
+    static const float flipTransform[16];
 
     struct Texture {
         OwnPtr<ManagedTexture> m_texture;
         IntSize m_visibleSize;
     };
     enum { MaxPlanes = 3 };
-    Texture m_textures[MaxPlanes];
-    int m_planes;
 
-    Platform3DObject m_nativeTextureId;
-    IntSize m_nativeTextureSize;
+private:
+    CCVideoLayerImpl(int, WebKit::WebVideoFrameProvider*);
+
+    static IntSize computeVisibleSize(const WebKit::WebVideoFrame&, unsigned plane);
+    virtual const char* layerTypeAsString() const OVERRIDE { return "VideoLayer"; }
+
+    void willDrawInternal(LayerRendererChromium*);
+    bool reserveTextures(const WebKit::WebVideoFrame&, GC3Denum format, LayerRendererChromium*);
+
+    // Guards the destruction of m_provider and the frame that it provides
+    Mutex m_providerMutex;
+    WebKit::WebVideoFrameProvider* m_provider;
+
+    Texture m_textures[MaxPlanes];
+
+    float m_streamTextureMatrix[16];
+    CCLayerTreeHostImpl* m_layerTreeHostImpl;
+
+    WebKit::WebVideoFrame* m_frame;
+    GC3Denum m_format;
 };
 
 }

@@ -25,12 +25,15 @@
 #include "RenderThemeQt.h"
 
 #include <QBrush>
+#include <QHash>
+#include <QPixmapCache>
 
 QT_BEGIN_NAMESPACE
 class QColor;
-class QPixmap;
 class QSize;
 QT_END_NAMESPACE
+
+typedef QPixmapCache::Key CacheKey;
 
 namespace WebCore {
 
@@ -50,16 +53,19 @@ public:
 
     virtual bool delegatesMenuListRendering() const { return true; }
 
+    // drawFocusRing() will return early if the color is invalid.
+    virtual Color platformFocusRingColor() const { return Color(); }
+
 protected:
 
-    virtual void adjustButtonStyle(CSSStyleSelector*, RenderStyle*, Element*) const;
+    virtual void adjustButtonStyle(StyleResolver*, RenderStyle*, Element*) const;
     virtual bool paintButton(RenderObject*, const PaintInfo&, const IntRect&);
 
     virtual bool paintTextField(RenderObject*, const PaintInfo&, const IntRect&);
-    virtual void adjustTextFieldStyle(CSSStyleSelector*, RenderStyle*, Element*) const;
+    virtual void adjustTextFieldStyle(StyleResolver*, RenderStyle*, Element*) const;
 
     virtual bool paintMenuList(RenderObject*, const PaintInfo&, const IntRect&);
-    virtual void adjustMenuListStyle(CSSStyleSelector*, RenderStyle*, Element*) const;
+    virtual void adjustMenuListStyle(StyleResolver*, RenderStyle*, Element*) const;
 
     virtual bool paintMenuListButton(RenderObject*, const PaintInfo&, const IntRect&);
 
@@ -83,6 +89,44 @@ private:
     void setPaletteFromPageClientIfExists(QPalette&) const;
 };
 
+struct KeyIdentifier {
+
+    KeyIdentifier()
+        : type(Undefined)
+        , width(0)
+        , height(0)
+        , trait1(0)
+        , trait2(0)
+        , trait3(0)
+    {
+    }
+
+    enum ControlType {
+        Undefined,
+        CheckBox,
+        Radio,
+        ComboButton,
+        LineEdit,
+        PushButton,
+        Progress,
+        SliderThumb
+    };
+
+    ControlType type : 3;
+    uint width : 11;
+    uint height : 9;
+    uint trait1 : 1;
+    uint trait2 : 1;
+    uint trait3 : 7;
+
+    inline bool operator==(const KeyIdentifier& other) const
+    {
+        return (type == other.type && width == other.width
+                && height == other.height && trait1 == other.trait1
+                && trait2 == other.trait2 && trait3 == other.trait3);
+    }
+};
+
 class StylePainterMobile : public StylePainter {
 
 public:
@@ -94,7 +138,7 @@ public:
     void drawRadioButton(const QRect&, bool checked, bool enabled = true);
     void drawPushButton(const QRect&, bool sunken, bool enabled = true);
     void drawComboBox(const QRect&, bool multiple, bool enabled = true);
-    void drawProgress(const QRect&, double progress, bool leftToRight = true, bool animated = false) const;
+    void drawProgress(const QRect&, double progress, bool leftToRight = true, bool animated = false, bool vertical = false) const;
     void drawSliderThumb(const QRect&, bool pressed) const;
 
 private:
@@ -105,9 +149,9 @@ private:
     void drawRadio(QPainter*, const QSize&, bool checked, bool enabled) const;
     QPixmap findRadio(const QSize&, bool checked, bool enabled) const;
 
-    QSize getButtonImageSize(int , bool multiple) const;
-    void drawSimpleComboButton(QPainter*, const QSize&, const QColor&) const;
-    void drawMultipleComboButton(QPainter*, const QSize&, const QColor&) const;
+    QSizeF getButtonImageSize(int , bool multiple) const;
+    void drawSimpleComboButton(QPainter*, const QSizeF&, const QColor&) const;
+    void drawMultipleComboButton(QPainter*, const QSizeF&, const QColor&) const;
     QPixmap findComboButton(const QSize&, bool multiple, bool enabled) const;
 
     QPixmap findLineEdit(const QSize&, bool focused) const;
@@ -115,9 +159,12 @@ private:
 
     QSize sizeForPainterScale(const QRect&) const;
 
+    static bool findCachedControl(const KeyIdentifier&, QPixmap*);
+    static void insertIntoCache(const KeyIdentifier&, const QPixmap&);
+
     bool m_previousSmoothPixmapTransform;
 
-    Q_DISABLE_COPY(StylePainterMobile);
+    Q_DISABLE_COPY(StylePainterMobile)
 };
 
 }

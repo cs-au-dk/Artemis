@@ -28,17 +28,23 @@
 
 import QtQuick 2.0
 import QtWebKit 3.0
-import QtWebKit.experimental 3.0
+import QtWebKit.experimental 1.0
 
 Rectangle {
     // Do not define anchors or an initial size here! This would mess up with QSGView::SizeRootObjectToView.
 
     property alias webview: webView
+    color: "#333"
 
     signal pageTitleChanged(string title)
+    signal newWindow(string url)
 
     function load(address) {
-        webView.load(address)
+        webView.url = address
+    }
+
+    function reload() {
+        webView.reload()
     }
 
     function focusAddressBar() {
@@ -151,11 +157,9 @@ Rectangle {
                     onReleased: { parent.color = "#efefef" }
                     onClicked: {
                         if (webView.loading) {
-                            console.log("stop loading")
                             webView.stop()
                         } else {
-                            console.log("reloading")
-                            webView.reload()
+                            reload()
                         }
                     }
                 }
@@ -177,6 +181,53 @@ Rectangle {
                     anchors.fill: parent
                     onClicked: {
                        viewportInfoItem.visible = !viewportInfoItem.visible
+                    }
+                }
+            }
+
+            Rectangle {
+                id: touchEventsButton
+                height: parent.height
+                width: height
+                color: "#efefef"
+                radius: 6
+
+                Image {
+                    anchors.centerIn: parent
+                    opacity: options.touchMockingEnabled ? 0.6 : 0.1
+                    source: "../icons/touch.png"
+                }
+
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: {
+                        if (options.touchMockingEnabled) {
+                            console.log("Touch Mocking Disabled")
+                        } else {
+                            console.log("Touch Mocking Enabled")
+                        }
+
+                        options.touchMockingEnabled = !options.touchMockingEnabled
+                    }
+                }
+            }
+
+            Rectangle {
+                id: newBrowserWindowButton
+                height: parent.height
+                width: height
+                color: "#efefef"
+                radius: 6
+
+                Image {
+                    anchors.centerIn: parent
+                    source: "../icons/plus.png"
+                }
+
+                MouseArea {
+                    anchors.fill: parent
+                    onClicked: {
+                        newWindow("about:blank")
                     }
                 }
             }
@@ -233,14 +284,7 @@ Rectangle {
 
                 Keys.onReturnPressed:{
                     console.log("going to: ", addressLine.text)
-                    webView.load(utils.urlFromUserInput(addressLine.text))
-                }
-
-                Keys.onPressed: {
-                    if (((event.modifiers & Qt.ControlModifier) && event.key == Qt.Key_L) || event.key == Qt.key_F6) {
-                        focusAddressBar()
-                        event.accepted = true
-                    }
+                    webView.url = utils.urlFromUserInput(addressLine.text)
                 }
             }
         }
@@ -259,11 +303,35 @@ Rectangle {
         onUrlChanged: {
             addressLine.text = url
             if (options.printLoadedUrls)
-                console.log("Loaded:", webView.url);
+                console.log("Loaded:", webView.url.toString());
             forceActiveFocus();
         }
 
+        experimental.devicePixelRatio: 1.5
+        experimental.preferredMinimumContentsWidth: 980
         experimental.itemSelector: ItemSelector { }
+        experimental.alertDialog: AlertDialog { }
+        experimental.confirmDialog: ConfirmDialog { }
+        experimental.promptDialog: PromptDialog { }
+        experimental.authenticationDialog: AuthenticationDialog { }
+        experimental.proxyAuthenticationDialog: ProxyAuthenticationDialog { }
+        experimental.filePicker: FilePicker { }
+        experimental.preferences.developerExtrasEnabled: true
+        experimental.databaseQuotaDialog: Item {
+            Timer {
+                interval: 1
+                running: true
+                onTriggered: {
+                    var size = model.expectedUsage / 1024 / 1024
+                    console.log("Creating database '" + model.displayName + "' of size " + size.toFixed(2) + " MB for " + model.origin.scheme + "://" + model.origin.host + ":" + model.origin.port)
+                    model.accept(model.expectedUsage)
+                }
+            }
+        }
+    }
+
+    ScrollIndicator {
+        flickableItem: webView
     }
 
     ViewportInfoItem {
@@ -276,12 +344,5 @@ Rectangle {
         }
         visible: false
         viewportInfo : webView.experimental.viewportInfo
-    }
-
-    Keys.onPressed: {
-        if (((event.modifiers & Qt.ControlModifier) && event.key == Qt.Key_L) || event.key == Qt.key_F6) {
-            focusAddressBar()
-            event.accepted = true
-        }
     }
 }

@@ -21,6 +21,7 @@
 #ifndef CSSValue_h
 #define CSSValue_h
 
+#include "ExceptionCode.h"
 #include "KURLHash.h"
 #include <wtf/ListHashSet.h>
 #include <wtf/RefCounted.h>
@@ -28,10 +29,13 @@
 
 namespace WebCore {
 
-class CSSStyleSheet;
+class StyleSheetInternal;
+    
+// FIXME: The current CSSValue and subclasses should be turned into internal types (StyleValue).
+// The few subtypes that are actually exposed in CSSOM can be seen in the cloneForCSSOM() function.
+// They should be handled by separate wrapper classes.
 
-typedef int ExceptionCode;
-
+// Please don't expose more CSSValue types to the web.
 class CSSValue : public RefCounted<CSSValue> {
 public:
     enum Type {
@@ -56,27 +60,30 @@ public:
     String cssText() const;
     void setCssText(const String&, ExceptionCode&) { } // FIXME: Not implemented.
 
-    bool isPrimitiveValue() const { return m_classType <= PrimitiveClass; }
+    bool isPrimitiveValue() const { return m_classType == PrimitiveClass; }
     bool isValueList() const { return m_classType >= ValueListClass; }
 
     bool isAspectRatioValue() const { return m_classType == AspectRatioClass; }
-    bool isBorderImageValue() const { return m_classType == BorderImageClass; }
     bool isBorderImageSliceValue() const { return m_classType == BorderImageSliceClass; }
     bool isCursorImageValue() const { return m_classType == CursorImageClass; }
-    bool isFontFamilyValue() const { return m_classType == FontFamilyClass; }
     bool isFontFeatureValue() const { return m_classType == FontFeatureClass; }
     bool isFontValue() const { return m_classType == FontClass; }
     bool isImageGeneratorValue() const { return m_classType >= CanvasClass && m_classType <= RadialGradientClass; }
+#if ENABLE(CSS_IMAGE_SET)
+    bool isImageSetValue() const { return m_classType == ImageSetClass; }
+#endif
     bool isImageValue() const { return m_classType == ImageClass || m_classType == CursorImageClass; }
-    bool isImplicitInitialValue() const { return m_classType == InitialClass && m_isImplicitInitialValue; }
+    bool isImplicitInitialValue() const;
     bool isInheritedValue() const { return m_classType == InheritedClass; }
     bool isInitialValue() const { return m_classType == InitialClass; }
     bool isReflectValue() const { return m_classType == ReflectClass; }
     bool isShadowValue() const { return m_classType == ShadowClass; }
-    bool isTimingFunctionValue() const { return m_classType >= CubicBezierTimingFunctionClass && m_classType <= StepsTimingFunctionClass; }
+    bool isCubicBezierTimingFunctionValue() const { return m_classType == CubicBezierTimingFunctionClass; }
+    bool isLinearTimingFunctionValue() const { return m_classType == LinearTimingFunctionClass; }
+    bool isStepsTimingFunctionValue() const { return m_classType == StepsTimingFunctionClass; }
     bool isWebKitCSSTransformValue() const { return m_classType == WebKitCSSTransformClass; }
     bool isCSSLineBoxContainValue() const { return m_classType == LineBoxContainClass; }
-    bool isFlexValue() const { return m_classType == FlexClass; }
+    bool isCalculationValue() const {return m_classType == CalculationClass; }
 #if ENABLE(CSS_FILTERS)
     bool isWebKitCSSFilterValue() const { return m_classType == WebKitCSSFilterClass; }
 #if ENABLE(CSS_SHADERS)
@@ -87,18 +94,30 @@ public:
     bool isSVGColor() const { return m_classType == SVGColorClass || m_classType == SVGPaintClass; }
     bool isSVGPaint() const { return m_classType == SVGPaintClass; }
 #endif
+    
+    bool isCSSOMSafe() const { return m_isCSSOMSafe; }
+    bool isSubtypeExposedToCSSOM() const
+    { 
+        return isPrimitiveValue() 
+#if ENABLE(SVG)
+            || isSVGColor()
+#endif
+            || isValueList();
+    }
 
-    void addSubresourceStyleURLs(ListHashSet<KURL>&, const CSSStyleSheet*);
+    PassRefPtr<CSSValue> cloneForCSSOM() const;
+
+    void addSubresourceStyleURLs(ListHashSet<KURL>&, const StyleSheetInternal*);
 
 protected:
 
     static const size_t ClassTypeBits = 5;
     enum ClassType {
-        // Primitive class types must appear before PrimitiveClass.
+        PrimitiveClass,
+
+        // Image classes.
         ImageClass,
         CursorImageClass,
-        FontFamilyClass,
-        PrimitiveClass,
 
         // Image generator classes.
         CanvasClass,
@@ -113,7 +132,6 @@ protected:
 
         // Other class types.
         AspectRatioClass,
-        BorderImageClass,
         BorderImageSliceClass,
         FontFeatureClass,
         FontClass,
@@ -127,7 +145,7 @@ protected:
         ShadowClass,
         UnicodeRangeClass,
         LineBoxContainClass,
-        FlexClass,
+        CalculationClass,
 #if ENABLE(CSS_FILTERS) && ENABLE(CSS_SHADERS)
         WebKitCSSShaderClass,
 #endif
@@ -138,6 +156,9 @@ protected:
 
         // List class types must appear after ValueListClass.
         ValueListClass,
+#if ENABLE(CSS_IMAGE_SET)
+        ImageSetClass,
+#endif
 #if ENABLE(CSS_FILTERS)
         WebKitCSSFilterClass,
 #endif
@@ -145,14 +166,22 @@ protected:
         // Do not append non-list class types here.
     };
 
+    static const size_t ValueListSeparatorBits = 2;
+    enum ValueListSeparator {
+        SpaceSeparator,
+        CommaSeparator,
+        SlashSeparator
+    };
+
     ClassType classType() const { return static_cast<ClassType>(m_classType); }
 
-    explicit CSSValue(ClassType classType)
-        : m_primitiveUnitType(0)
+    explicit CSSValue(ClassType classType, bool isCSSOMSafe = false)
+        : m_isCSSOMSafe(isCSSOMSafe)
+        , m_isTextClone(false)
+        , m_primitiveUnitType(0)
         , m_hasCachedCSSText(false)
         , m_isQuirkValue(false)
-        , m_isImplicitInitialValue(false)
-        , m_isSpaceSeparatedValueList(false)
+        , m_valueListSeparator(SpaceSeparator)
         , m_classType(classType)
     {
     }
@@ -166,22 +195,20 @@ private:
     void destroy();
 
 protected:
+    unsigned m_isCSSOMSafe : 1;
+    unsigned m_isTextClone : 1;
     // The bits in this section are only used by specific subclasses but kept here
     // to maximize struct packing.
 
     // CSSPrimitiveValue bits:
-    unsigned char m_primitiveUnitType : 7; // CSSPrimitiveValue::UnitTypes
-    mutable bool m_hasCachedCSSText : 1;
-    bool m_isQuirkValue : 1;
+    unsigned m_primitiveUnitType : 7; // CSSPrimitiveValue::UnitTypes
+    mutable unsigned m_hasCachedCSSText : 1;
+    unsigned m_isQuirkValue : 1;
 
-    // CSSInitialValue bits:
-    bool m_isImplicitInitialValue : 1;
-
-    // CSSValueList bits:
-    bool m_isSpaceSeparatedValueList : 1;
+    unsigned m_valueListSeparator : ValueListSeparatorBits;
 
 private:
-    unsigned char m_classType : ClassTypeBits; // ClassType
+    unsigned m_classType : ClassTypeBits; // ClassType
 };
 
 } // namespace WebCore

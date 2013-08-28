@@ -36,6 +36,9 @@
 #include <emmintrin.h>
 #endif
 
+#include <algorithm>
+#include <math.h>
+
 namespace WebCore {
 
 namespace VectorMath {
@@ -72,7 +75,94 @@ void vmul(const float* source1P, int sourceStride1, const float* source2P, int s
 #endif
 }
 
+void zvmul(const float* real1P, const float* imag1P, const float* real2P, const float* imag2P, float* realDestP, float* imagDestP, size_t framesToProcess)
+{
+    DSPSplitComplex sc1;
+    DSPSplitComplex sc2;
+    DSPSplitComplex dest;
+    sc1.realp = const_cast<float*>(real1P);
+    sc1.imagp = const_cast<float*>(imag1P);
+    sc2.realp = const_cast<float*>(real2P);
+    sc2.imagp = const_cast<float*>(imag2P);
+    dest.realp = realDestP;
+    dest.imagp = imagDestP;
+#if defined(__ppc__) || defined(__i386__)
+    ::zvmul(&sc1, 1, &sc2, 1, &dest, 1, framesToProcess, 1);
 #else
+    vDSP_zvmul(&sc1, 1, &sc2, 1, &dest, 1, framesToProcess, 1);
+#endif
+}
+
+void vsma(const float* sourceP, int sourceStride, const float* scale, float* destP, int destStride, size_t framesToProcess)
+{
+    vDSP_vsma(sourceP, sourceStride, scale, destP, destStride, destP, destStride, framesToProcess);
+}
+
+void vmaxmgv(const float* sourceP, int sourceStride, float* maxP, size_t framesToProcess)
+{
+    vDSP_maxmgv(sourceP, sourceStride, maxP, framesToProcess);
+}
+
+void vsvesq(const float* sourceP, int sourceStride, float* sumP, size_t framesToProcess)
+{
+    vDSP_svesq(const_cast<float*>(sourceP), sourceStride, sumP, framesToProcess);
+}
+#else
+
+void vsma(const float* sourceP, int sourceStride, const float* scale, float* destP, int destStride, size_t framesToProcess)
+{
+    int n = framesToProcess;
+
+#ifdef __SSE2__
+    if ((sourceStride == 1) && (destStride == 1)) {
+        float k = *scale;
+
+        // If the sourceP address is not 16-byte aligned, the first several frames (at most three) should be processed separately.
+        while ((reinterpret_cast<uintptr_t>(sourceP) & 0x0F) && n) {
+            *destP += k * *sourceP;
+            sourceP++;
+            destP++;
+            n--;
+        }
+
+        // Now the sourceP is aligned, use SSE.
+        int tailFrames = n % 4;
+        const float* endP = destP + n - tailFrames;
+
+        __m128 pSource;
+        __m128 dest;
+        __m128 temp;
+        __m128 mScale = _mm_set_ps1(k);
+
+        bool destAligned = !(reinterpret_cast<uintptr_t>(destP) & 0x0F);
+
+#define SSE2_MULT_ADD(loadInstr, storeInstr)        \
+            while (destP < endP)                    \
+            {                                       \
+                pSource = _mm_load_ps(sourceP);     \
+                temp = _mm_mul_ps(pSource, mScale); \
+                dest = _mm_##loadInstr##_ps(destP); \
+                dest = _mm_add_ps(dest, temp);      \
+                _mm_##storeInstr##_ps(destP, dest); \
+                sourceP += 4;                       \
+                destP += 4;                         \
+            }
+
+        if (destAligned) 
+            SSE2_MULT_ADD(load, store)
+        else 
+            SSE2_MULT_ADD(loadu, storeu)
+
+        n = tailFrames;
+    }
+#endif
+    while (n) {
+        *destP += *sourceP * *scale;
+        sourceP += sourceStride;
+        destP += destStride;
+        n--;
+    }
+}
 
 void vsmul(const float* sourceP, int sourceStride, const float* scale, float* destP, int destStride, size_t framesToProcess)
 {
@@ -82,7 +172,7 @@ void vsmul(const float* sourceP, int sourceStride, const float* scale, float* de
         int n = framesToProcess;
         float k = *scale;
 
-        // If the sourceP address is not 16-byte aligned, the first several frames (at most three) should be processed seperately.
+        // If the sourceP address is not 16-byte aligned, the first several frames (at most three) should be processed separately.
         while ((reinterpret_cast<size_t>(sourceP) & 0x0F) && n) {
             *destP = k * *sourceP;
             sourceP++;
@@ -147,7 +237,7 @@ void vadd(const float* source1P, int sourceStride1, const float* source2P, int s
 
         int n = framesToProcess;
 
-        // If the sourceP address is not 16-byte aligned, the first several frames (at most three) should be processed seperately.
+        // If the sourceP address is not 16-byte aligned, the first several frames (at most three) should be processed separately.
         while ((reinterpret_cast<size_t>(source1P) & 0x0F) && n) {
             *destP = *source1P + *source2P;
             source1P++;
@@ -245,8 +335,7 @@ void vmul(const float* source1P, int sourceStride1, const float* source2P, int s
 
 #ifdef __SSE2__
     if ((sourceStride1 == 1) && (sourceStride2 == 1) && (destStride == 1)) {
-
-        // If the source1P address is not 16-byte aligned, the first several frames (at most three) should be processed seperately.
+        // If the source1P address is not 16-byte aligned, the first several frames (at most three) should be processed separately.
         while ((reinterpret_cast<uintptr_t>(source1P) & 0x0F) && n) {
             *destP = *source1P * *source2P;
             source1P++;
@@ -257,7 +346,7 @@ void vmul(const float* source1P, int sourceStride1, const float* source2P, int s
 
         // Now the source1P address aligned and start to apply SSE.
         int tailFrames = n % 4;
-        float* endP = destP + n - tailFrames;
+        const float* endP = destP + n - tailFrames;
         __m128 pSource1;
         __m128 pSource2;
         __m128 dest;
@@ -298,6 +387,141 @@ void vmul(const float* source1P, int sourceStride1, const float* source2P, int s
     }
 }
 
+void zvmul(const float* real1P, const float* imag1P, const float* real2P, const float* imag2P, float* realDestP, float* imagDestP, size_t framesToProcess)
+{
+    unsigned i = 0;
+#ifdef __SSE2__
+    // Only use the SSE optimization in the very common case that all addresses are 16-byte aligned. 
+    // Otherwise, fall through to the scalar code below.
+    if (!(reinterpret_cast<uintptr_t>(real1P) & 0x0F)
+        && !(reinterpret_cast<uintptr_t>(imag1P) & 0x0F)
+        && !(reinterpret_cast<uintptr_t>(real2P) & 0x0F)
+        && !(reinterpret_cast<uintptr_t>(imag2P) & 0x0F)
+        && !(reinterpret_cast<uintptr_t>(realDestP) & 0x0F)
+        && !(reinterpret_cast<uintptr_t>(imagDestP) & 0x0F)) {
+        
+        unsigned endSize = framesToProcess - framesToProcess % 4;
+        while (i < endSize) {
+            __m128 real1 = _mm_load_ps(real1P + i);
+            __m128 real2 = _mm_load_ps(real2P + i);
+            __m128 imag1 = _mm_load_ps(imag1P + i);
+            __m128 imag2 = _mm_load_ps(imag2P + i);
+            __m128 real = _mm_mul_ps(real1, real2);
+            real = _mm_sub_ps(real, _mm_mul_ps(imag1, imag2));
+            __m128 imag = _mm_mul_ps(real1, imag2);
+            imag = _mm_add_ps(imag, _mm_mul_ps(imag1, real2));
+            _mm_store_ps(realDestP + i, real);
+            _mm_store_ps(imagDestP + i, imag);
+            i += 4;
+        }
+    }
+#endif
+    for (; i < framesToProcess; ++i) {
+        // Read and compute result before storing them, in case the
+        // destination is the same as one of the sources.
+        float realResult = real1P[i] * real2P[i] - imag1P[i] * imag2P[i];
+        float imagResult = real1P[i] * imag2P[i] + imag1P[i] * real2P[i];
+
+        realDestP[i] = realResult;
+        imagDestP[i] = imagResult;
+    }
+}
+
+void vsvesq(const float* sourceP, int sourceStride, float* sumP, size_t framesToProcess)
+{
+    int n = framesToProcess;
+    float sum = 0;
+
+#ifdef __SSE2__ 
+    if (sourceStride == 1) { 
+        // If the sourceP address is not 16-byte aligned, the first several frames (at most three) should be processed separately. 
+        while ((reinterpret_cast<uintptr_t>(sourceP) & 0x0F) && n) { 
+            float sample = *sourceP; 
+            sum += sample * sample; 
+            sourceP++; 
+            n--; 
+        } 
+ 
+        // Now the sourceP is aligned, use SSE.
+        int tailFrames = n % 4; 
+        const float* endP = sourceP + n - tailFrames; 
+        __m128 source; 
+        __m128 mSum = _mm_setzero_ps(); 
+ 
+        while (sourceP < endP) { 
+            source = _mm_load_ps(sourceP); 
+            source = _mm_mul_ps(source, source); 
+            mSum = _mm_add_ps(mSum, source); 
+            sourceP += 4; 
+        } 
+ 
+        // Summarize the SSE results. 
+        const float* groupSumP = reinterpret_cast<float*>(&mSum); 
+        sum += groupSumP[0] + groupSumP[1] + groupSumP[2] + groupSumP[3]; 
+ 
+        n = tailFrames; 
+    } 
+#endif
+
+    while (n--) {
+        float sample = *sourceP;
+        sum += sample * sample;
+        sourceP += sourceStride;
+    }
+
+    ASSERT(sumP);
+    *sumP = sum;
+}
+
+void vmaxmgv(const float* sourceP, int sourceStride, float* maxP, size_t framesToProcess)
+{
+    int n = framesToProcess;
+    float max = 0;
+
+#ifdef __SSE2__
+    if (sourceStride == 1) {
+        // If the sourceP address is not 16-byte aligned, the first several frames (at most three) should be processed separately.
+        while ((reinterpret_cast<uintptr_t>(sourceP) & 0x0F) && n) {
+            max = std::max(max, fabsf(*sourceP));
+            sourceP++;
+            n--;
+        }
+
+        // Now the sourceP is aligned, use SSE.
+        int tailFrames = n % 4;
+        const float* endP = sourceP + n - tailFrames;
+        __m128 source;
+        __m128 mMax = _mm_setzero_ps();
+        int mask = 0x7FFFFFFF;
+        __m128 mMask = _mm_set1_ps(*reinterpret_cast<float*>(&mask));
+
+        while (sourceP < endP) {
+            source = _mm_load_ps(sourceP);
+            // Calculate the absolute value by anding source with mask, the sign bit is set to 0.
+            source = _mm_and_ps(source, mMask);
+            mMax = _mm_max_ps(mMax, source);
+            sourceP += 4;
+        }
+
+        // Get max from the SSE results.
+        const float* groupMaxP = reinterpret_cast<float*>(&mMax);
+        max = std::max(max, groupMaxP[0]);
+        max = std::max(max, groupMaxP[1]);
+        max = std::max(max, groupMaxP[2]);
+        max = std::max(max, groupMaxP[3]);
+
+        n = tailFrames;
+    }
+#endif
+
+    while (n--) {
+        max = std::max(max, fabsf(*sourceP));
+        sourceP += sourceStride;
+    }
+
+    ASSERT(maxP);
+    *maxP = max;
+}
 #endif // OS(DARWIN)
 
 } // namespace VectorMath

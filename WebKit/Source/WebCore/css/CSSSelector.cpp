@@ -43,7 +43,7 @@ void CSSSelector::createRareData()
     if (m_hasRareData)
         return;
     // Move the value to the rare data stucture.
-    m_data.m_rareData = new RareData(adoptRef(m_data.m_value));
+    m_data.m_rareData = RareData::create(adoptRef(m_data.m_value)).leakRef();
     m_hasRareData = true;
 }
 
@@ -150,11 +150,6 @@ PseudoId CSSSelector::pseudoId(PseudoType type)
     case PseudoAnimatingFullScreenTransition:
         return ANIMATING_FULL_SCREEN_TRANSITION;
 #endif
-
-    case PseudoInputListButton:
-#if ENABLE(DATALIST)
-        return INPUT_LIST_BUTTON;
-#endif
     case PseudoUnknown:
     case PseudoEmpty:
     case PseudoFirstChild:
@@ -188,6 +183,7 @@ PseudoId CSSSelector::pseudoId(PseudoType type)
     case PseudoValid:
     case PseudoInvalid:
     case PseudoIndeterminate:
+    case PseudoScope:
     case PseudoTarget:
     case PseudoLang:
     case PseudoNot:
@@ -251,9 +247,6 @@ static HashMap<AtomicStringImpl*, CSSSelector::PseudoType>* nameToPseudoTypeMap(
     DEFINE_STATIC_LOCAL(AtomicString, focus, ("focus"));
     DEFINE_STATIC_LOCAL(AtomicString, hover, ("hover"));
     DEFINE_STATIC_LOCAL(AtomicString, indeterminate, ("indeterminate"));
-#if ENABLE(DATALIST)
-    DEFINE_STATIC_LOCAL(AtomicString, inputListButton, ("-webkit-input-list-button"));
-#endif
     DEFINE_STATIC_LOCAL(AtomicString, lastChild, ("last-child"));
     DEFINE_STATIC_LOCAL(AtomicString, lastOfType, ("last-of-type"));
     DEFINE_STATIC_LOCAL(AtomicString, link, ("link"));
@@ -272,6 +265,7 @@ static HashMap<AtomicStringImpl*, CSSSelector::PseudoType>* nameToPseudoTypeMap(
     DEFINE_STATIC_LOCAL(AtomicString, scrollbarTrack, ("-webkit-scrollbar-track"));
     DEFINE_STATIC_LOCAL(AtomicString, scrollbarTrackPiece, ("-webkit-scrollbar-track-piece"));
     DEFINE_STATIC_LOCAL(AtomicString, selection, ("selection"));
+    DEFINE_STATIC_LOCAL(AtomicString, scope, ("scope"));
     DEFINE_STATIC_LOCAL(AtomicString, target, ("target"));
     DEFINE_STATIC_LOCAL(AtomicString, visited, ("visited"));
     DEFINE_STATIC_LOCAL(AtomicString, windowInactive, ("window-inactive"));
@@ -320,9 +314,6 @@ static HashMap<AtomicStringImpl*, CSSSelector::PseudoType>* nameToPseudoTypeMap(
         nameToPseudoType->set(empty.impl(), CSSSelector::PseudoEmpty);
         nameToPseudoType->set(firstChild.impl(), CSSSelector::PseudoFirstChild);
         nameToPseudoType->set(fullPageMedia.impl(), CSSSelector::PseudoFullPageMedia);
-#if ENABLE(DATALIST)
-        nameToPseudoType->set(inputListButton.impl(), CSSSelector::PseudoInputListButton);
-#endif
         nameToPseudoType->set(lastChild.impl(), CSSSelector::PseudoLastChild);
         nameToPseudoType->set(lastOfType.impl(), CSSSelector::PseudoLastOfType);
         nameToPseudoType->set(onlyChild.impl(), CSSSelector::PseudoOnlyChild);
@@ -362,6 +353,7 @@ static HashMap<AtomicStringImpl*, CSSSelector::PseudoType>* nameToPseudoTypeMap(
         nameToPseudoType->set(scrollbarTrackPiece.impl(), CSSSelector::PseudoScrollbarTrackPiece);
         nameToPseudoType->set(cornerPresent.impl(), CSSSelector::PseudoCornerPresent);
         nameToPseudoType->set(selection.impl(), CSSSelector::PseudoSelection);
+        nameToPseudoType->set(scope.impl(), CSSSelector::PseudoScope);
         nameToPseudoType->set(target.impl(), CSSSelector::PseudoTarget);
         nameToPseudoType->set(visited.impl(), CSSSelector::PseudoVisited);
         nameToPseudoType->set(firstPage.impl(), CSSSelector::PseudoFirstPage);
@@ -410,7 +402,6 @@ void CSSSelector::extractPseudoType() const
     case PseudoFirstLetter:
     case PseudoFirstLine:
         compat = true;
-    case PseudoInputListButton:
     case PseudoResizer:
     case PseudoScrollbar:
     case PseudoScrollbarCorner:
@@ -454,6 +445,7 @@ void CSSSelector::extractPseudoType() const
     case PseudoValid:
     case PseudoInvalid:
     case PseudoIndeterminate:
+    case PseudoScope:
     case PseudoTarget:
     case PseudoLang:
     case PseudoNot:

@@ -142,8 +142,11 @@ PassRefPtr<FormSubmission> FormSubmission::create(HTMLFormElement* form, const A
     ASSERT(form);
 
     HTMLFormControlElement* submitButton = 0;
-    if (event && event->target() && event->target()->toNode())
-        submitButton = static_cast<HTMLFormControlElement*>(event->target()->toNode());
+    if (event && event->target()) {
+        Node* node = event->target()->toNode();
+        if (node && node->isElementNode() && toElement(node)->isFormControlElement())
+            submitButton = static_cast<HTMLFormControlElement*>(node);
+    }
 
     FormSubmission::Attributes copiedAttributes;
     copiedAttributes.copyFrom(attributes);
@@ -177,6 +180,7 @@ PassRefPtr<FormSubmission> FormSubmission::create(HTMLFormElement* form, const A
     RefPtr<DOMFormData> domFormData = DOMFormData::create(dataEncoding.encodingForFormSubmission());
     Vector<pair<String, String> > formValues;
 
+    bool containsPasswordData = false;
     for (unsigned i = 0; i < form->associatedElements().size(); ++i) {
         FormAssociatedElement* control = form->associatedElements()[i];
         HTMLElement* element = toHTMLElement(control);
@@ -189,6 +193,8 @@ PassRefPtr<FormSubmission> FormSubmission::create(HTMLFormElement* form, const A
                 if (input->isSearchField())
                     input->addSearchResult();
             }
+            if (input->isPasswordField() && !input->value().isEmpty())
+                containsPasswordData = true;
         }
     }
 
@@ -208,8 +214,9 @@ PassRefPtr<FormSubmission> FormSubmission::create(HTMLFormElement* form, const A
     }
 
     formData->setIdentifier(generateFormDataIdentifier());
+    formData->setContainsPasswordData(containsPasswordData);
     String targetOrBaseTarget = copiedAttributes.target().isEmpty() ? document->baseTarget() : copiedAttributes.target();
-    RefPtr<FormState> formState = FormState::create(form, formValues, document->frame(), trigger);
+    RefPtr<FormState> formState = FormState::create(form, formValues, document, trigger);
     return adoptRef(new FormSubmission(copiedAttributes.method(), actionURL, targetOrBaseTarget, encodingType, formState.release(), formData.release(), boundary, lockHistory, event));
 }
 

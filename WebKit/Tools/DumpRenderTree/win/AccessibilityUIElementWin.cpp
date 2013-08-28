@@ -574,6 +574,11 @@ AccessibilityUIElement AccessibilityUIElement::selectedRowAtIndex(unsigned index
     return 0;
 }
 
+AccessibilityUIElement AccessibilityUIElement::rowAtIndex(unsigned index)
+{
+    return 0;
+}
+
 AccessibilityUIElement AccessibilityUIElement::disclosedByRow()
 {
     return 0;
@@ -695,4 +700,19 @@ void AccessibilityUIElement::addSelection()
 void AccessibilityUIElement::removeSelection()
 {
     m_element->accSelect(SELFLAG_REMOVESELECTION, self());
+}
+
+void AccessibilityUIElement::scrollToMakeVisible()
+{
+    // FIXME: implement
+}
+
+void AccessibilityUIElement::scrollToMakeVisibleWithSubFocus(int x, int y, int width, int height)
+{
+    // FIXME: implement
+}
+
+void AccessibilityUIElement::scrollToGlobalPoint(int x, int y)
+{
+    // FIXME: implement
 }

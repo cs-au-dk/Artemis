@@ -41,6 +41,7 @@ HTMLCollection::HTMLCollection(Node* base, CollectionType type)
     , m_type(type)
     , m_base(base)
 {
+    ASSERT(m_base);
     m_cache.clear();
 }
 
@@ -60,6 +61,7 @@ bool HTMLCollection::shouldIncludeChildren(CollectionType type)
     case MapAreas:
     case OtherCollection:
     case SelectOptions:
+    case SelectedOptions:
     case DataListOptions:
     case WindowNamedItems:
 #if ENABLE(MICRODATA)
@@ -76,24 +78,17 @@ bool HTMLCollection::shouldIncludeChildren(CollectionType type)
     return false;
 }
 
-PassRefPtr<HTMLCollection> HTMLCollection::create(Node* base, CollectionType type)
+PassOwnPtr<HTMLCollection> HTMLCollection::create(Node* base, CollectionType type)
 {
-    return adoptRef(new HTMLCollection(base, type));
+    return adoptPtr(new HTMLCollection(base, type));
 }
 
 HTMLCollection::~HTMLCollection()
 {
 }
 
-void HTMLCollection::detachFromNode()
-{
-    m_base = 0;
-}
-
 void HTMLCollection::invalidateCacheIfNeeded() const
 {
-    ASSERT(m_base);
-
     uint64_t docversion = static_cast<HTMLDocument*>(m_base->document())->domTreeVersion();
 
     if (m_cache.version == docversion)
@@ -105,6 +100,9 @@ void HTMLCollection::invalidateCacheIfNeeded() const
 
 inline bool HTMLCollection::isAcceptableElement(Element* element) const
 {
+    if (!element->isHTMLElement() && !(m_type == DocAll || m_type == NodeChildren))
+        return false;
+
     switch (m_type) {
     case DocImages:
         return element->hasLocalName(imgTag);
@@ -120,6 +118,13 @@ inline bool HTMLCollection::isAcceptableElement(Element* element) const
         return element->hasLocalName(trTag);
     case SelectOptions:
         return element->hasLocalName(optionTag);
+    case SelectedOptions:
+        if (element->hasLocalName(optionTag)) {
+            HTMLOptionElement* option = static_cast<HTMLOptionElement*>(element);
+            if (option->selected())
+                return true;
+        }
+        return false;
     case DataListOptions:
         if (element->hasLocalName(optionTag)) {
             HTMLOptionElement* option = static_cast<HTMLOptionElement*>(element);
@@ -144,7 +149,7 @@ inline bool HTMLCollection::isAcceptableElement(Element* element) const
         return true;
 #if ENABLE(MICRODATA)
     case ItemProperties:
-        return element->isHTMLElement() && element->fastHasAttribute(itempropAttr);
+        return element->fastHasAttribute(itempropAttr);
 #endif
     case DocumentNamedItems:
     case OtherCollection:
@@ -161,8 +166,6 @@ static Node* nextNodeOrSibling(Node* base, Node* node, bool includeChildren)
 
 Element* HTMLCollection::itemAfter(Element* previous) const
 {
-    ASSERT(m_base);
-
     Node* current;
     if (!previous)
         current = m_base->firstChild();
@@ -182,8 +185,6 @@ Element* HTMLCollection::itemAfter(Element* previous) const
 
 unsigned HTMLCollection::calcLength() const
 {
-    ASSERT(m_base);
-
     unsigned len = 0;
     for (Element* current = itemAfter(0); current; current = itemAfter(current))
         ++len;
@@ -194,9 +195,6 @@ unsigned HTMLCollection::calcLength() const
 // calculation every time if anything has changed
 unsigned HTMLCollection::length() const
 {
-    if (!m_base)
-        return 0;
-
     invalidateCacheIfNeeded();
     if (!m_cache.hasLength) {
         m_cache.length = calcLength();
@@ -207,9 +205,6 @@ unsigned HTMLCollection::length() const
 
 Node* HTMLCollection::item(unsigned index) const
 {
-    if (!m_base)
-        return 0;
-
      invalidateCacheIfNeeded();
      if (m_cache.current && m_cache.position == index)
          return m_cache.current;
@@ -236,7 +231,6 @@ Node* HTMLCollection::firstItem() const
 
 Node* HTMLCollection::nextItem() const
 {
-     ASSERT(m_base);
      invalidateCacheIfNeeded();
 
      // Look for the 'second' item. The first one is currentItem, already given back.
@@ -271,14 +265,11 @@ bool HTMLCollection::checkForNameMatch(Element* element, bool checkName, const A
     if (m_type == DocAll && !nameShouldBeVisibleInDocumentAll(e))
         return false;
 
-    return e->getAttribute(nameAttr) == name && e->getIdAttribute() != name;
+    return e->getNameAttribute() == name && e->getIdAttribute() != name;
 }
 
 Node* HTMLCollection::namedItem(const AtomicString& name) const
 {
-    if (!m_base)
-        return 0;
-
     // http://msdn.microsoft.com/workshop/author/dhtml/reference/methods/nameditem.asp
     // This method first searches for an object with a matching id
     // attribute. If a match is not found, the method then searches for an
@@ -306,8 +297,6 @@ Node* HTMLCollection::namedItem(const AtomicString& name) const
 
 void HTMLCollection::updateNameCache() const
 {
-    ASSERT(m_base);
-
     if (m_cache.hasNameCache)
         return;
 
@@ -316,7 +305,7 @@ void HTMLCollection::updateNameCache() const
             continue;
         HTMLElement* e = toHTMLElement(element);
         const AtomicString& idAttrVal = e->getIdAttribute();
-        const AtomicString& nameAttrVal = e->getAttribute(nameAttr);
+        const AtomicString& nameAttrVal = e->getNameAttribute();
         if (!idAttrVal.isEmpty())
             append(m_cache.idCache, idAttrVal, e);
         if (!nameAttrVal.isEmpty() && idAttrVal != nameAttrVal && (m_type != DocAll || nameShouldBeVisibleInDocumentAll(e)))
@@ -328,9 +317,6 @@ void HTMLCollection::updateNameCache() const
 
 bool HTMLCollection::hasNamedItem(const AtomicString& name) const
 {
-    if (!m_base)
-        return false;
-
     if (name.isEmpty())
         return false;
 
@@ -352,9 +338,6 @@ bool HTMLCollection::hasNamedItem(const AtomicString& name) const
 
 void HTMLCollection::namedItems(const AtomicString& name, Vector<RefPtr<Node> >& result) const
 {
-    if (!m_base)
-        return;
-
     ASSERT(result.isEmpty());
     if (name.isEmpty())
         return;
@@ -374,15 +357,12 @@ void HTMLCollection::namedItems(const AtomicString& name, Vector<RefPtr<Node> >&
 
 PassRefPtr<NodeList> HTMLCollection::tags(const String& name)
 {
-    if (!m_base)
-        return 0;
-
     return m_base->getElementsByTagName(name);
 }
 
 void HTMLCollection::append(NodeCacheMap& map, const AtomicString& key, Element* element)
 {
-    OwnPtr<Vector<Element*> >& vector = map.add(key.impl(), nullptr).first->second;
+    OwnPtr<Vector<Element*> >& vector = map.add(key.impl(), nullptr).iterator->second;
     if (!vector)
         vector = adoptPtr(new Vector<Element*>);
     vector->append(element);

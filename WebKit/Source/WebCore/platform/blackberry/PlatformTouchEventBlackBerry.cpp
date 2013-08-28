@@ -24,6 +24,8 @@
 
 #include <BlackBerryPlatformTouchEvent.h>
 
+#include <wtf/CurrentTime.h>
+
 #if ENABLE(TOUCH_EVENTS)
 
 namespace WebCore {
@@ -40,16 +42,20 @@ static PlatformEvent::Type touchEventType(BlackBerry::Platform::TouchEvent* even
     case BlackBerry::Platform::TouchEvent::TouchCancel:
         return PlatformEvent::TouchCancel;
     }
+
+    ASSERT_NOT_REACHED();
+    // Returning TouchCancel just to satisfy the compiler's wish to return a valid type in a non-void function.
+    // This code should not be reached.
+    return PlatformEvent::TouchCancel;
 }
 
 PlatformTouchEvent::PlatformTouchEvent(BlackBerry::Platform::TouchEvent* event)
-    : PlatformEvent(touchEventType(event), false, event->m_altKey, event->m_shiftKey, false)
+    : PlatformEvent(touchEventType(event), false, event->m_altKey, event->m_shiftKey, false, currentTime())
     , m_rotation(0)
     , m_scale(1)
     , m_doubleTap(false)
     , m_touchHold(false)
 {
-
     for (unsigned i = 0; i < event->m_points.size(); ++i)
         m_touchPoints.append(PlatformTouchPoint(event->m_points[i]));
 

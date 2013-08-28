@@ -39,9 +39,7 @@
 
 namespace JSC { namespace DFG {
 
-#ifndef NDEBUG
 typedef void (*V_DFGDebugOperation_EP)(ExecState*, void*);
-#endif
 
 class AssemblyHelpers : public MacroAssembler {
 public:
@@ -152,7 +150,23 @@ public:
         return branch8(Below, Address(structureReg, Structure::typeInfoTypeOffset()), TrustedImm32(ObjectType));
     }
 
-#ifndef NDEBUG
+    static GPRReg selectScratchGPR(GPRReg preserve1 = InvalidGPRReg, GPRReg preserve2 = InvalidGPRReg, GPRReg preserve3 = InvalidGPRReg, GPRReg preserve4 = InvalidGPRReg)
+    {
+        if (preserve1 != GPRInfo::regT0 && preserve2 != GPRInfo::regT0 && preserve3 != GPRInfo::regT0 && preserve4 != GPRInfo::regT0)
+            return GPRInfo::regT0;
+
+        if (preserve1 != GPRInfo::regT1 && preserve2 != GPRInfo::regT1 && preserve3 != GPRInfo::regT1 && preserve4 != GPRInfo::regT1)
+            return GPRInfo::regT1;
+
+        if (preserve1 != GPRInfo::regT2 && preserve2 != GPRInfo::regT2 && preserve3 != GPRInfo::regT2 && preserve4 != GPRInfo::regT2)
+            return GPRInfo::regT2;
+
+        if (preserve1 != GPRInfo::regT3 && preserve2 != GPRInfo::regT3 && preserve3 != GPRInfo::regT3 && preserve4 != GPRInfo::regT3)
+            return GPRInfo::regT3;
+
+        return GPRInfo::regT4;
+    }
+
     // Add a debug call. This call has no effect on JIT code execution state.
     void debugCall(V_DFGDebugOperation_EP function, void* argument)
     {
@@ -167,14 +181,16 @@ public:
 #if CPU(X86_64) || CPU(ARM_THUMB2)
         move(TrustedImmPtr(argument), GPRInfo::argumentGPR1);
         move(GPRInfo::callFrameRegister, GPRInfo::argumentGPR0);
+        GPRReg scratch = selectScratchGPR(GPRInfo::argumentGPR0, GPRInfo::argumentGPR1);
 #elif CPU(X86)
         poke(GPRInfo::callFrameRegister, 0);
         poke(TrustedImmPtr(argument), 1);
+        GPRReg scratch = GPRInfo::regT0;
 #else
 #error "DFG JIT not supported on this platform."
 #endif
-        move(TrustedImmPtr(reinterpret_cast<void*>(function)), GPRInfo::regT0);
-        call(GPRInfo::regT0);
+        move(TrustedImmPtr(reinterpret_cast<void*>(function)), scratch);
+        call(scratch);
         for (unsigned i = 0; i < FPRInfo::numberOfRegisters; ++i) {
             move(TrustedImmPtr(buffer + GPRInfo::numberOfRegisters + i), GPRInfo::regT0);
             loadDouble(GPRInfo::regT0, FPRInfo::toRegister(i));
@@ -182,7 +198,6 @@ public:
         for (unsigned i = 0; i < GPRInfo::numberOfRegisters; ++i)
             loadPtr(buffer + i, GPRInfo::toRegister(i));
     }
-#endif
 
     // These methods JIT generate dynamic, debug-only checks - akin to ASSERTs.
 #if DFG_ENABLE(JIT_ASSERT)
@@ -191,12 +206,14 @@ public:
     void jitAssertIsJSNumber(GPRReg);
     void jitAssertIsJSDouble(GPRReg);
     void jitAssertIsCell(GPRReg);
+    void jitAssertHasValidCallFrame();
 #else
     void jitAssertIsInt32(GPRReg) { }
     void jitAssertIsJSInt32(GPRReg) { }
     void jitAssertIsJSNumber(GPRReg) { }
     void jitAssertIsJSDouble(GPRReg) { }
     void jitAssertIsCell(GPRReg) { }
+    void jitAssertHasValidCallFrame() { }
 #endif
 
     // These methods convert between doubles, and doubles boxed and JSValues.
@@ -246,6 +263,16 @@ public:
         m_assembler.vmov(fpr, payloadGPR, tagGPR);
     }
 #endif
+    
+    enum ExceptionCheckKind { NormalExceptionCheck, InvertedExceptionCheck };
+    Jump emitExceptionCheck(ExceptionCheckKind kind = NormalExceptionCheck)
+    {
+#if USE(JSVALUE64)
+        return branchTestPtr(kind == NormalExceptionCheck ? NonZero : Zero, AbsoluteAddress(&globalData()->exception));
+#elif USE(JSVALUE32_64)
+        return branch32(kind == NormalExceptionCheck ? NotEqual : Equal, AbsoluteAddress(reinterpret_cast<char*>(&globalData()->exception) + OBJECT_OFFSETOF(JSValue, u.asBits.tag)), TrustedImm32(JSValue::EmptyValueTag));
+#endif
+    }
 
 #if ENABLE(SAMPLING_COUNTERS)
     static void emitCount(MacroAssembler& jit, AbstractSamplingCounter& counter, int32_t increment = 1)
@@ -279,16 +306,6 @@ public:
         if (!codeOrigin.inlineCallFrame)
             return codeBlock()->isStrictMode();
         return codeOrigin.inlineCallFrame->callee->jsExecutable()->isStrictMode();
-    }
-    
-    static CodeBlock* baselineCodeBlockForOriginAndBaselineCodeBlock(const CodeOrigin& codeOrigin, CodeBlock* baselineCodeBlock)
-    {
-        if (codeOrigin.inlineCallFrame) {
-            ExecutableBase* executable = codeOrigin.inlineCallFrame->executable.get();
-            ASSERT(executable->structure()->classInfo() == &FunctionExecutable::s_info);
-            return static_cast<FunctionExecutable*>(executable)->baselineCodeBlockFor(codeOrigin.inlineCallFrame->isCall ? CodeForCall : CodeForConstruct);
-        }
-        return baselineCodeBlock;
     }
     
     CodeBlock* baselineCodeBlockFor(const CodeOrigin& codeOrigin)

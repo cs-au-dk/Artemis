@@ -30,8 +30,8 @@
 
 #include "GraphicsContext.h"
 #include "ImageBuffer.h"
+#include "SurfaceUpdateInfo.h"
 #include "TiledBackingStoreClient.h"
-#include "UpdateInfo.h"
 
 using namespace WebCore;
 
@@ -72,33 +72,25 @@ Vector<IntRect> TiledBackingStoreRemoteTile::updateBackBuffer()
     if (!isDirty())
         return Vector<IntRect>();
 
-    // FIXME: Only use a local buffer when we know the tile is animated (after the first invalidate)
-    // and destroy it after a few seconds of inactivity. We can render directly to shared
-    // memory in other cases.
-    if (!m_localBuffer || m_localBuffer->size() != m_rect.size()) {
-        m_localBuffer = ImageBuffer::create(m_rect.size());
-        m_localBuffer->context()->translate(-m_rect.x(), -m_rect.y());
-        m_localBuffer->context()->scale(FloatSize(m_tiledBackingStore->contentsScale(), m_tiledBackingStore->contentsScale()));
-    }
-    // This assumes that the GraphicsContext on the ImageBuffer acts synchronously
-    // for us to be able to draw this buffer on the ShareableBitmap right after.
-    m_tiledBackingStore->client()->tiledBackingStorePaint(m_localBuffer->context(), m_tiledBackingStore->mapToContents(m_dirtyRect));
+    SurfaceUpdateInfo updateInfo;
+    OwnPtr<GraphicsContext> graphicsContext = m_client->beginContentUpdate(m_dirtyRect.size(), updateInfo.surfaceHandle, updateInfo.surfaceOffset);
+    if (!graphicsContext)
+        return Vector<IntRect>();
+    graphicsContext->translate(-m_dirtyRect.x(), -m_dirtyRect.y());
+    graphicsContext->scale(FloatSize(m_tiledBackingStore->contentsScale(), m_tiledBackingStore->contentsScale()));
+    m_tiledBackingStore->client()->tiledBackingStorePaint(graphicsContext.get(), m_tiledBackingStore->mapToContents(m_dirtyRect));
 
-    RefPtr<ShareableBitmap> bitmap = ShareableBitmap::createShareable(m_rect.size(), ShareableBitmap::SupportsAlpha);
-    OwnPtr<GraphicsContext> graphicsContext(bitmap->createGraphicsContext());
-    graphicsContext->drawImageBuffer(m_localBuffer.get(), ColorSpaceDeviceRGB, IntPoint(0, 0));
-
-    UpdateInfo updateInfo;
-    updateInfo.updateRectBounds = m_rect;
-    updateInfo.updateScaleFactor = m_tiledBackingStore->contentsScale();
-    bitmap->createHandle(updateInfo.bitmapHandle);
+    updateInfo.updateRect = m_dirtyRect;
+    updateInfo.updateRect.move(-m_rect.x(), -m_rect.y());
+    updateInfo.scaleFactor = m_tiledBackingStore->contentsScale();
+    graphicsContext.release();
 
     static int id = 0;
     if (!m_ID) {
         m_ID = ++id;
-        m_client->createTile(m_ID, updateInfo);
+        m_client->createTile(m_ID, updateInfo, m_rect);
     } else
-        m_client->updateTile(m_ID, updateInfo);
+        m_client->updateTile(m_ID, updateInfo, m_rect);
 
     m_dirtyRect = IntRect();
     return Vector<IntRect>();

@@ -37,6 +37,7 @@
 namespace WebCore {
 
 class CachedResource;
+class CachedResourceLoader;
 class Document;
 class ResourceRequest;
 
@@ -71,20 +72,29 @@ private:
 #endif
     virtual void releaseResources();
 
+    bool errorLoadingResource();
     void sendDataToResource(const char*, int);
 
     enum SubresourceLoaderState {
         Uninitialized,
         Initialized,
-        Revalidating,
-        Finishing,
-        Releasing
+        Finishing
+    };
+
+    class RequestCountTracker {
+    public:
+        RequestCountTracker(CachedResourceLoader*, CachedResource*);
+        ~RequestCountTracker();
+    private:
+        CachedResourceLoader* m_cachedResourceLoader;
+        CachedResource* m_resource;
     };
 
     CachedResource* m_resource;
     RefPtr<Document> m_document;
     bool m_loadingMultipartContent;
     SubresourceLoaderState m_state;
+    OwnPtr<RequestCountTracker> m_requestCountTracker;
 };
 
 }

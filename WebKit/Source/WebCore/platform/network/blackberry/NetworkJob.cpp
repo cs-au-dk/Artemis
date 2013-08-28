@@ -21,14 +21,18 @@
 
 #include "AboutData.h"
 #include "Base64.h"
+#include "Chrome.h"
+#include "ChromeClient.h"
 #include "CookieManager.h"
 #include "CredentialStorage.h"
 #include "Frame.h"
 #include "FrameLoaderClientBlackBerry.h"
 #include "HTTPParsers.h"
 #include "KURL.h"
+#include "MIMESniffing.h"
 #include "MIMETypeRegistry.h"
 #include "NetworkManager.h"
+#include "Page.h"
 #include "ResourceHandleClient.h"
 #include "ResourceHandleInternal.h"
 #include "ResourceRequest.h"
@@ -97,18 +101,21 @@ NetworkJob::NetworkJob()
     , m_isAbout(false)
     , m_isFTP(false)
     , m_isFTPDir(true)
+#ifndef NDEBUG
     , m_isRunning(true) // Always started immediately after creation.
+#endif
     , m_cancelled(false)
     , m_statusReceived(false)
     , m_dataReceived(false)
     , m_responseSent(false)
     , m_callingClient(false)
-    , m_isXHR(false)
     , m_needsRetryAsFTPDirectory(false)
+    , m_isOverrideContentType(false)
     , m_extendedStatusCode(0)
     , m_redirectCount(0)
     , m_deferredData(*this)
     , m_deferLoadingCount(0)
+    , m_frame(0)
 {
 }
 
@@ -135,13 +142,23 @@ bool NetworkJob::initialize(int playerId,
 
     m_streamFactory = streamFactory;
     m_frame = &frame;
+
+    if (m_frame && m_frame->loader()->pageDismissalEventBeingDispatched() != FrameLoader::NoDismissal) {
+        // In the case the frame will be detached soon, we still need to ping the server, but it is
+        // no longer safe to reference the Frame object.
+        // See http://trac.webkit.org/changeset/65910 and https://bugs.webkit.org/show_bug.cgi?id=30457.
+        m_frame = 0;
+    }
+
     m_redirectCount = redirectCount;
     m_deferLoadingCount = deferLoadingCount;
 
     // We don't need to explicitly call notifyHeaderReceived, as the Content-Type
     // will ultimately get parsed when sendResponseIfNeeded gets called.
-    if (!request.getOverrideContentType().empty())
+    if (!request.getOverrideContentType().empty()) {
         m_contentType = String(request.getOverrideContentType().c_str());
+        m_isOverrideContentType = true;
+    }
 
     // No need to create the streams for data and about.
     if (m_isData || m_isAbout)
@@ -152,35 +169,12 @@ bool NetworkJob::initialize(int playerId,
         return false;
     setWrappedStream(wrappedStream);
 
-    m_isXHR = request.getTargetType() == BlackBerry::Platform::NetworkRequest::TargetIsXMLHTTPRequest;
-
     return true;
 }
 
-bool NetworkJob::loadAboutURL()
+void NetworkJob::loadAboutURL()
 {
-    // First 6 chars are "about:".
-    String aboutWhat(m_response.url().string().substring(6));
-
-    if (!aboutWhat.isEmpty()
-            && !equalIgnoringCase(aboutWhat, "blank")
-            && !equalIgnoringCase(aboutWhat, "credits")
-#if !defined(PUBLIC_BUILD) || !PUBLIC_BUILD
-            && !aboutWhat.startsWith("cache?query=", false)
-            && !equalIgnoringCase(aboutWhat, "cache")
-            && !equalIgnoringCase(aboutWhat, "cache/enable")
-            && !equalIgnoringCase(aboutWhat, "cache/disable")
-            && !equalIgnoringCase(aboutWhat, "version")
-            && (!BlackBerry::Platform::debugSetting()
-                || (!equalIgnoringCase(aboutWhat, "config")
-                    && !equalIgnoringCase(aboutWhat, "build")
-                    && !equalIgnoringCase(aboutWhat, "memory")))
-#endif
-            )
-        return false;
-
     m_loadAboutTimer.startOneShot(0);
-    return true;
 }
 
 int NetworkJob::cancelJob()
@@ -246,37 +240,32 @@ void NetworkJob::handleNotifyStatusReceived(int status, const String& message)
     m_response.setHTTPStatusText(message);
 }
 
-void NetworkJob::notifyWMLOverride()
+void NetworkJob::notifyHeadersReceived(BlackBerry::Platform::NetworkRequest::HeaderList& headers)
 {
-    if (shouldDeferLoading())
-        m_deferredData.deferWMLOverride();
-    else
-        handleNotifyWMLOverride();
-}
+    BlackBerry::Platform::NetworkRequest::HeaderList::const_iterator endIt = headers.end();
+    for (BlackBerry::Platform::NetworkRequest::HeaderList::const_iterator it = headers.begin(); it != endIt; ++it) {
+        if (shouldDeferLoading())
+            m_deferredData.deferHeaderReceived(it->first.c_str(), it->second.c_str());
+        else {
+            String keyString(it->first.c_str());
+            String valueString;
+            if (equalIgnoringCase(keyString, "Location")) {
+                // Location, like all headers, is supposed to be Latin-1. But some sites (wikipedia) send it in UTF-8.
+                // All byte strings that are valid UTF-8 are also valid Latin-1 (although outside ASCII, the meaning will
+                // differ), but the reverse isn't true. So try UTF-8 first and fall back to Latin-1 if it's invalid.
+                // (High Latin-1 should be url-encoded anyway.)
+                //
+                // FIXME: maybe we should do this with other headers?
+                // Skip it for now - we don't want to rewrite random bytes unless we're sure. (Definitely don't want to
+                // rewrite cookies, for instance.) Needs more investigation.
+                valueString = String::fromUTF8(it->second.c_str());
+                if (valueString.isNull())
+                    valueString = it->second.c_str();
+            } else
+                valueString = it->second.c_str();
 
-void NetworkJob::notifyHeaderReceived(const char* key, const char* value)
-{
-    if (shouldDeferLoading())
-        m_deferredData.deferHeaderReceived(key, value);
-    else {
-        String keyString(key);
-        String valueString;
-        if (equalIgnoringCase(keyString, "Location")) {
-            // Location, like all headers, is supposed to be Latin-1. But some sites (wikipedia) send it in UTF-8.
-            // All byte strings that are valid UTF-8 are also valid Latin-1 (although outside ASCII, the meaning will
-            // differ), but the reverse isn't true. So try UTF-8 first and fall back to Latin-1 if it's invalid.
-            // (High Latin-1 should be url-encoded anyway.)
-            //
-            // FIXME: maybe we should do this with other headers?
-            // Skip it for now - we don't want to rewrite random bytes unless we're sure. (Definitely don't want to
-            // rewrite cookies, for instance.) Needs more investigation.
-            valueString = String::fromUTF8(value);
-            if (valueString.isNull())
-                valueString = value;
-        } else
-            valueString = value;
-
-        handleNotifyHeaderReceived(keyString, valueString);
+            handleNotifyHeaderReceived(keyString, valueString);
+        }
     }
 }
 
@@ -305,20 +294,26 @@ void NetworkJob::handleNotifyHeaderReceived(const String& key, const String& val
     String lowerKey = key.lower();
     if (lowerKey == "content-type")
         m_contentType = value.lower();
-
-    if (lowerKey == "content-disposition")
+    else if (lowerKey == "content-disposition")
         m_contentDisposition = value;
-
-    if (lowerKey == "set-cookie") {
-        if (m_frame && m_frame->loader() && m_frame->loader()->client()
+    else if (lowerKey == "set-cookie") {
+        // FIXME: If a tab is closed, sometimes network data will come in after the frame has been detached from its page but before it is deleted.
+        // If this happens, m_frame->page() will return 0, and m_frame->loader()->client() will be in a bad state and calling into it will crash.
+        // For now we check for this explicitly by checking m_frame->page(). But we should find out why the network job hasn't been cancelled when the frame was detached.
+        // See RIM PR 134207
+        if (m_frame && m_frame->page() && m_frame->loader() && m_frame->loader()->client()
             && static_cast<FrameLoaderClientBlackBerry*>(m_frame->loader()->client())->cookiesEnabled())
             handleSetCookieHeader(value);
-    }
 
-    if (lowerKey == "www-authenticate")
-        handleAuthHeader(value);
-
-    if (equalIgnoringCase(key, BlackBerry::Platform::NetworkRequest::HEADER_BLACKBERRY_FTP))
+        if (m_response.httpHeaderFields().contains("Set-Cookie")) {
+            m_response.setHTTPHeaderField(key, m_response.httpHeaderField(key) + "\r\n" + value);
+            return;
+        }
+    } else if (lowerKey == "www-authenticate")
+        handleAuthHeader(ProtectionSpaceServerHTTP, value);
+    else if (lowerKey == "proxy-authenticate" && !BlackBerry::Platform::Client::get()->getProxyAddress().empty())
+        handleAuthHeader(ProtectionSpaceProxyHTTP, value);
+    else if (equalIgnoringCase(key, BlackBerry::Platform::NetworkRequest::HEADER_BLACKBERRY_FTP))
         handleFTPHeader(value);
 
     m_response.setHTTPHeaderField(key, value);
@@ -390,6 +385,32 @@ void NetworkJob::handleNotifyDataReceived(const char* buf, size_t len)
     if (!buf || !len)
         return;
 
+    // The loadFile API sets the override content type,
+    // this will always be used as the content type and should not be overridden.
+    if (!m_dataReceived && !m_isOverrideContentType) {
+        bool shouldSniff = true;
+
+        // Don't bother sniffing the content type of a file that
+        // is on a file system if it has a MIME mappable file extension.
+        // The file extension is likely to be correct.
+        if (m_isFile) {
+            String urlFilename = m_response.url().lastPathComponent();
+            size_t pos = urlFilename.reverseFind('.');
+            if (pos != notFound) {
+                String extension = urlFilename.substring(pos + 1);
+                String mimeType = MIMETypeRegistry::getMIMETypeForExtension(extension);
+                if (!mimeType.isEmpty())
+                    shouldSniff = false;
+            }
+        }
+
+        if (shouldSniff) {
+            MIMESniffer sniffer = MIMESniffer(m_contentType.latin1().data(), MIMETypeRegistry::isSupportedImageResourceMIMEType(m_contentType));
+            if (const char* type = sniffer.sniff(buf, std::min(len, sniffer.dataSize())))
+                m_sniffedMimeType = String(type);
+        }
+    }
+
     m_dataReceived = true;
 
     // Protect against reentrancy.
@@ -398,7 +419,7 @@ void NetworkJob::handleNotifyDataReceived(const char* buf, size_t len)
     if (shouldSendClientData()) {
         sendResponseIfNeeded();
         sendMultipartResponseIfNeeded();
-        if (clientIsOk()) {
+        if (isClientAvailable()) {
             RecursionGuard guard(m_callingClient);
             m_handle->client()->didReceiveData(m_handle.get(), buf, len, len);
         }
@@ -423,7 +444,7 @@ void NetworkJob::handleNotifyDataSent(unsigned long long bytesSent, unsigned lon
     // Protect against reentrancy.
     updateDeferLoadingCount(1);
 
-    if (clientIsOk()) {
+    if (isClientAvailable()) {
         RecursionGuard guard(m_callingClient);
         m_handle->client()->didSendData(m_handle.get(), bytesSent, totalBytesToBeSent);
     }
@@ -441,8 +462,9 @@ void NetworkJob::notifyClose(int status)
 
 void NetworkJob::handleNotifyClose(int status)
 {
+#ifndef NDEBUG
     m_isRunning = false;
-
+#endif
     if (!m_cancelled) {
         if (!m_statusReceived) {
             // Connection failed before sending notifyStatusReceived: use generic NetworkError.
@@ -462,10 +484,10 @@ void NetworkJob::handleNotifyClose(int status)
                 m_extendedStatusCode = BlackBerry::Platform::FilterStream::StatusTooManyRedirects;
 
             sendResponseIfNeeded();
-            if (clientIsOk()) {
+            if (isClientAvailable()) {
 
                 RecursionGuard guard(m_callingClient);
-                if (isError(m_extendedStatusCode) && !m_dataReceived) {
+                if (isError(m_extendedStatusCode) && !m_dataReceived && m_handle->firstRequest().httpMethod() != "HEAD") {
                     String domain = m_extendedStatusCode < 0 ? ResourceError::platformErrorDomain : ResourceError::httpErrorDomain;
                     ResourceError error(domain, m_extendedStatusCode, m_response.url().string(), m_response.httpStatusText());
                     m_handle->client()->didFail(m_handle.get(), error);
@@ -517,12 +539,13 @@ bool NetworkJob::retryAsFTPDirectory()
 
 bool NetworkJob::startNewJobWithRequest(ResourceRequest& newRequest, bool increasRedirectCount)
 {
-    if (clientIsOk()) {
+    if (isClientAvailable()) {
         RecursionGuard guard(m_callingClient);
         m_handle->client()->willSendRequest(m_handle.get(), newRequest, m_response);
 
         // m_cancelled can become true if the url fails the policy check.
-        if (m_cancelled)
+        // newRequest can be cleared when the redirect is rejected.
+        if (m_cancelled || newRequest.isEmpty())
             return false;
     }
 
@@ -561,11 +584,11 @@ bool NetworkJob::handleRedirect()
     newRequest.setMustHandleInternally(true);
 
     String method = newRequest.httpMethod().upper();
-    if ((method != "GET") && (method != "HEAD")) {
+    if (method != "GET" && method != "HEAD") {
         newRequest.setHTTPMethod("GET");
         newRequest.setHTTPBody(0);
-        newRequest.setHTTPHeaderField("Content-Length", String());
-        newRequest.setHTTPHeaderField("Content-Type", String());
+        newRequest.clearHTTPContentLength();
+        newRequest.clearHTTPContentType();
     }
 
     // Do not send existing credentials with the new request.
@@ -589,11 +612,9 @@ void NetworkJob::sendResponseIfNeeded()
     // Get the MIME type that was set by the content sniffer
     // if there's no custom sniffer header, try to set it from the Content-Type header
     // if this fails, guess it from extension.
-    String mimeType;
+    String mimeType = m_sniffedMimeType;
     if (m_isFTP && m_isFTPDir)
         mimeType = "application/x-ftp-directory";
-    else
-        mimeType = m_response.httpHeaderField(BlackBerry::Platform::NetworkRequest::HEADER_RIM_SNIFFED_MIME_TYPE);
     if (mimeType.isNull())
         mimeType = extractMIMETypeFromMediaType(m_contentType);
     if (mimeType.isNull())
@@ -608,20 +629,34 @@ void NetworkJob::sendResponseIfNeeded()
     if (!contentLength.isNull())
         m_response.setExpectedContentLength(contentLength.toInt64());
 
-    // Set suggested filename for downloads from the Content-Disposition header; if this fails, fill it in from the url
-    // skip this for data url's, because they have no Content-Disposition header and the format is wrong to be a filename.
+    // Set suggested filename for downloads from the Content-Disposition header; if this fails,
+    // fill it in from the url and sniffed mime type;Skip this for data and about URLs,
+    // because they have no Content-Disposition header and the format is wrong to be a filename.
     if (!m_isData && !m_isAbout) {
         String suggestedFilename = filenameFromHTTPContentDisposition(m_contentDisposition);
-        if (suggestedFilename.isNull())
-            suggestedFilename = urlFilename;
+        if (suggestedFilename.isEmpty()) {
+            // Check and see if an extension already exists.
+            String mimeExtension = MIMETypeRegistry::getPreferredExtensionForMIMEType(mimeType);
+            if (urlFilename.isEmpty()) {
+                if (mimeExtension.isEmpty()) // No extension found for the mimeType.
+                    suggestedFilename = String("Untitled");
+                else
+                    suggestedFilename = String("Untitled") + "." + mimeExtension;
+            } else {
+                if (urlFilename.reverseFind('.') == notFound && !mimeExtension.isEmpty())
+                   suggestedFilename = urlFilename + '.' + mimeExtension;
+                else
+                   suggestedFilename = urlFilename;
+            }
+        }
         m_response.setSuggestedFilename(suggestedFilename);
     }
 
-    // Make sure local files aren't cached, since this just duplicates them.
-    if (m_isFile || m_isData || m_isAbout)
+    // Don't cache resources for "about:"
+    if (m_isAbout)
         m_response.setHTTPHeaderField("Cache-Control", "no-cache");
 
-    if (clientIsOk()) {
+    if (isClientAvailable()) {
         RecursionGuard guard(m_callingClient);
         m_handle->client()->didReceiveResponse(m_handle.get(), m_response);
     }
@@ -629,7 +664,7 @@ void NetworkJob::sendResponseIfNeeded()
 
 void NetworkJob::sendMultipartResponseIfNeeded()
 {
-    if (m_multipartResponse && clientIsOk()) {
+    if (m_multipartResponse && isClientAvailable()) {
         m_handle->client()->didReceiveResponse(m_handle.get(), *m_multipartResponse);
         m_multipartResponse = nullptr;
     }
@@ -701,7 +736,7 @@ void NetworkJob::parseData()
     notifyClose(BlackBerry::Platform::FilterStream::StatusSuccess);
 }
 
-bool NetworkJob::handleAuthHeader(const String& header)
+bool NetworkJob::handleAuthHeader(const ProtectionSpaceServerType space, const String& header)
 {
     if (!m_handle)
         return false;
@@ -713,12 +748,12 @@ bool NetworkJob::handleAuthHeader(const String& header)
         return false;
 
     if (equalIgnoringCase(header, "ntlm"))
-        sendRequestWithCredentials(ProtectionSpaceServerHTTP, ProtectionSpaceAuthenticationSchemeNTLM, "NTLM");
+        sendRequestWithCredentials(space, ProtectionSpaceAuthenticationSchemeNTLM, "NTLM");
 
     // Extract the auth scheme and realm from the header.
     size_t spacePos = header.find(' ');
     if (spacePos == notFound) {
-        LOG(Network, "WWW-Authenticate field '%s' badly formatted: missing scheme.", header.utf8().data());
+        LOG(Network, "%s-Authenticate field '%s' badly formatted: missing scheme.", space == ProtectionSpaceServerHTTP ? "WWW" : "Proxy", header.utf8().data());
         return false;
     }
 
@@ -736,7 +771,7 @@ bool NetworkJob::handleAuthHeader(const String& header)
 
     size_t realmPos = header.findIgnoringCase("realm=", spacePos);
     if (realmPos == notFound) {
-        LOG(Network, "WWW-Authenticate field '%s' badly formatted: missing realm.", header.utf8().data());
+        LOG(Network, "%s-Authenticate field '%s' badly formatted: missing realm.", space == ProtectionSpaceServerHTTP ? "WWW" : "Proxy", header.utf8().data());
         return false;
     }
     size_t beginPos = realmPos + 6;
@@ -745,14 +780,14 @@ bool NetworkJob::handleAuthHeader(const String& header)
         beginPos += 1;
         size_t endPos = header.find("\"", beginPos);
         if (endPos == notFound) {
-            LOG(Network, "WWW-Authenticate field '%s' badly formatted: invalid realm.", header.utf8().data());
+            LOG(Network, "%s-Authenticate field '%s' badly formatted: invalid realm.", space == ProtectionSpaceServerHTTP ? "WWW" : "Proxy", header.utf8().data());
             return false;
         }
         realm = header.substring(beginPos, endPos - beginPos);
     }
 
     // Get the user's credentials and resend the request.
-    sendRequestWithCredentials(ProtectionSpaceServerHTTP, protectionSpaceScheme, realm);
+    sendRequestWithCredentials(space, protectionSpaceScheme, realm);
 
     return true;
 }
@@ -796,7 +831,15 @@ bool NetworkJob::sendRequestWithCredentials(ProtectionSpaceServerType type, Prot
     if (!newURL.isValid())
         return false;
 
-    ProtectionSpace protectionSpace(m_response.url().host(), m_response.url().port(), type, realm, scheme);
+    int port = 0;
+    if (type == ProtectionSpaceProxyHTTP) {
+        std::stringstream toPort(BlackBerry::Platform::Client::get()->getProxyPort());
+        toPort >> port;
+    } else
+        port = m_response.url().port();
+
+    ProtectionSpace protectionSpace((type == ProtectionSpaceProxyHTTP) ? BlackBerry::Platform::Client::get()->getProxyAddress().c_str() : m_response.url().host()
+            , port, type, realm, scheme);
 
     // We've got the scheme and realm. Now we need a username and password.
     // First search the CredentialStorage.
@@ -811,7 +854,28 @@ bool NetworkJob::sendRequestWithCredentials(ProtectionSpaceServerType type, Prot
 
         if (!m_frame || !m_frame->loader() || !m_frame->loader()->client())
             return false;
-        m_frame->loader()->client()->authenticationChallenge(realm, username, password);
+
+        if (type == ProtectionSpaceProxyHTTP) {
+            username = BlackBerry::Platform::Client::get()->getProxyUsername().c_str();
+            password = BlackBerry::Platform::Client::get()->getProxyPassword().c_str();
+        }
+
+        if (username.isEmpty() || password.isEmpty()) {
+            // Before asking the user for credentials, we check if the URL contains that.
+            if (!m_handle->getInternal()->m_user.isEmpty() && !m_handle->getInternal()->m_pass.isEmpty()) {
+                username = m_handle->getInternal()->m_user.utf8().data();
+                password = m_handle->getInternal()->m_pass.utf8().data();
+
+                // Prevent them from been used again if they are wrong.
+                // If they are correct, they will the put into CredentialStorage.
+                m_handle->getInternal()->m_user = "";
+                m_handle->getInternal()->m_pass = "";
+            } else {
+                Credential inputCredential = m_frame->page()->chrome()->client()->platformPageClient()->authenticationChallenge(newURL, protectionSpace);
+                username = inputCredential.user();
+                password = inputCredential.password();
+            }
+        }
 
         if (username.isEmpty() && password.isEmpty())
             return false;
@@ -877,14 +941,13 @@ void NetworkJob::handleAbout()
     String result;
 
     bool handled = false;
-    if (aboutWhat.isEmpty() || equalIgnoringCase(aboutWhat, "blank")) {
+    if (equalIgnoringCase(aboutWhat, "blank")) {
         handled = true;
     } else if (equalIgnoringCase(aboutWhat, "credits")) {
         result.append(String("<html><head><title>Open Source Credits</title> <style> .about {padding:14px;} </style> <meta name=\"viewport\" content=\"width=device-width, user-scalable=no\"></head><body>"));
         result.append(String(BlackBerry::Platform::WEBKITCREDITS));
         result.append(String("</body></html>"));
         handled = true;
-#if !defined(PUBLIC_BUILD) || !PUBLIC_BUILD
     } else if (aboutWhat.startsWith("cache?query=", false)) {
         BlackBerry::Platform::Client* client = BlackBerry::Platform::Client::get();
         ASSERT(client);
@@ -902,6 +965,7 @@ void NetworkJob::handleAbout()
         result.append(String(client->generateHtmlFragmentForCacheKeys().data()));
         result.append(String("</body></html>"));
         handled = true;
+#if !defined(PUBLIC_BUILD) || !PUBLIC_BUILD
     } else if (equalIgnoringCase(aboutWhat, "cache/disable")) {
         BlackBerry::Platform::Client* client = BlackBerry::Platform::Client::get();
         ASSERT(client);
@@ -913,6 +977,11 @@ void NetworkJob::handleAbout()
         ASSERT(client);
         client->setDiskCacheEnabled(true);
         result.append(String("<html><head><title>BlackBerry Browser Disk Cache</title></head><body>Http disk cache is enabled.</body></html>"));
+        handled = true;
+    } else if (equalIgnoringCase(aboutWhat, "cookie")) {
+        result.append(String("<html><head><title>BlackBerry Browser cookie information</title></head><body>"));
+        result.append(cookieManager().generateHtmlFragmentForCookies());
+        result.append(String("</body></html>"));
         handled = true;
     } else if (equalIgnoringCase(aboutWhat, "version")) {
         result.append(String("<html><meta name=\"viewport\" content=\"width=device-width, user-scalable=no\"></head><body>"));
@@ -943,14 +1012,18 @@ void NetworkJob::handleAbout()
         handled = true;
 #endif
     }
-
-    CString resultString = result.utf8();
-
-    notifyStatusReceived(handled ? 404 : 200, 0);
-    notifyStringHeaderReceived("Content-Length", String::number(resultString.length()));
-    notifyStringHeaderReceived("Content-Type", "text/html");
-    notifyDataReceivedPlain(resultString.data(), resultString.length());
-    notifyClose(BlackBerry::Platform::FilterStream::StatusSuccess);
+    if (handled) {
+        CString resultString = result.utf8();
+        notifyStatusReceived(BlackBerry::Platform::FilterStream::StatusSuccess, 0);
+        notifyStringHeaderReceived("Content-Length", String::number(resultString.length()));
+        notifyStringHeaderReceived("Content-Type", "text/html");
+        notifyDataReceivedPlain(resultString.data(), resultString.length());
+        notifyClose(BlackBerry::Platform::FilterStream::StatusSuccess);
+    } else {
+        // If we can not handle it, we take it as an error of invalid URL.
+        notifyStatusReceived(BlackBerry::Platform::FilterStream::StatusErrorInvalidUrl, 0);
+        notifyClose(BlackBerry::Platform::FilterStream::StatusErrorInvalidUrl);
+    }
 }
 
 } // namespace WebCore

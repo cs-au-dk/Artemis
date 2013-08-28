@@ -31,6 +31,7 @@
 #include "TextCheckerState.h"
 #include <wtf/RetainPtr.h>
 #include <wtf/Vector.h>
+#include <wtf/text/StringHash.h>
 #include <wtf/text/WTFString.h>
 
 #if PLATFORM(MAC)
@@ -56,7 +57,6 @@ struct WebProcessCreationParameters {
     String applicationCacheDirectory;    
     String databaseDirectory;
     String localStorageDirectory;
-    String webInspectorLocalizedStringsPath;
 
     Vector<String> urlSchemesRegistererdAsEmptyDocument;
     Vector<String> urlSchemesRegisteredAsSecure;
@@ -77,7 +77,7 @@ struct WebProcessCreationParameters {
     bool disablePluginProcessMessageTimeout;
 #endif
 
-    String languageCode;
+    Vector<String> languages;
 
     TextCheckerState textCheckerState;
 
@@ -85,7 +85,7 @@ struct WebProcessCreationParameters {
 
     double defaultRequestTimeoutInterval;
 
-#if USE(CFURLSTORAGESESSIONS)
+#if PLATFORM(MAC) || USE(CFURLSTORAGESESSIONS)
     String uiProcessBundleIdentifier;
 #endif
 
@@ -120,6 +120,10 @@ struct WebProcessCreationParameters {
 #endif // PLATFORM(WIN)
 #if PLATFORM(QT)
     String cookieStorageDirectory;
+#endif
+
+#if ENABLE(NOTIFICATIONS) || ENABLE(LEGACY_NOTIFICATIONS)
+    HashMap<String, bool> notificationPermissions;
 #endif
 };
 

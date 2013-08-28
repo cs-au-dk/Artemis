@@ -44,8 +44,7 @@
 #include "GetterSetter.h"
 #include "JSActivation.h"
 #include "JSArray.h"
-#include "JSByteArray.h"
-#include "JSFunction.h"
+#include "JSBoundFunction.h"
 #include "JSNotAnObject.h"
 #include "JSPropertyNameIterator.h"
 #include "LiteralParser.h"
@@ -60,30 +59,22 @@
 #include "Register.h"
 #include "SamplingTool.h"
 #include "StrictEvalActivation.h"
+#include "StrongInlines.h"
 #include "UStringConcatenate.h"
 #include <limits.h>
 #include <stdio.h>
 #include <wtf/Threading.h>
-#include <QDebug>
-#ifdef ARTEMIS
-#include "symbolic/native/nativefunction.h"
-#include "instrumentation/jscexecutionlistener.h"
-#include "instrumentation/bytecodeinfo.h"
-#endif
+#include <wtf/text/StringBuilder.h>
 
 #if ENABLE(JIT)
 #include "JIT.h"
 #endif
 
-#define WTF_USE_GCC_COMPUTED_GOTO_WORKAROUND (ENABLE(COMPUTED_GOTO_INTERPRETER) && !defined(__llvm__))
+#define WTF_USE_GCC_COMPUTED_GOTO_WORKAROUND ((ENABLE(COMPUTED_GOTO_CLASSIC_INTERPRETER) || ENABLE(LLINT)) && !defined(__llvm__))
 
 using namespace std;
 
 namespace JSC {
-
-#ifdef ARTEMIS
-Symbolic::SymbolicInterpreter* Interpreter::m_symbolic = new Symbolic::SymbolicInterpreter();
-#endif
 
 // Returns the depth of the scope chain within a given call frame.
 static int depth(CodeBlock* codeBlock, ScopeChainNode* sc)
@@ -93,7 +84,7 @@ static int depth(CodeBlock* codeBlock, ScopeChainNode* sc)
     return sc->localDepth();
 }
 
-#if ENABLE(INTERPRETER)
+#if ENABLE(CLASSIC_INTERPRETER) 
 static NEVER_INLINE JSValue concatenateStrings(ExecState* exec, Register* strings, unsigned count)
 {
     return jsString(exec, strings, count);
@@ -111,13 +102,6 @@ NEVER_INLINE bool Interpreter::resolve(CallFrame* callFrame, Instruction* vPC, J
 
     CodeBlock* codeBlock = callFrame->codeBlock();
     Identifier& ident = codeBlock->identifier(property);
-
-#ifdef ARTEMIS
-    if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
-		readProperty(callFrame, ident.ascii().data());
-	}
-#endif
-
     do {
         JSObject* o = iter->get();
         PropertySlot slot(o);
@@ -157,13 +141,6 @@ NEVER_INLINE bool Interpreter::resolveSkip(CallFrame* callFrame, Instruction* vP
         ASSERT(iter != end);
     }
     Identifier& ident = codeBlock->identifier(property);
-
-#ifdef ARTEMIS
-    if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
-		readProperty(callFrame, ident.ascii().data());
-	}
-#endif
-
     do {
         JSObject* o = iter->get();
         PropertySlot slot(o);
@@ -190,12 +167,6 @@ NEVER_INLINE bool Interpreter::resolveGlobal(CallFrame* callFrame, Instruction* 
     int property = vPC[2].u.operand;
     Structure* structure = vPC[3].u.structure.get();
     int offset = vPC[4].u.operand;
-
-#ifdef ARTEMIS
-    if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
-		readProperty(callFrame, codeBlock->identifier(property).ascii().data());
-	}
-#endif
 
     if (structure == globalObject->structure()) {
         callFrame->uncheckedR(dst) = JSValue(globalObject->getDirectOffset(offset));
@@ -234,13 +205,7 @@ NEVER_INLINE bool Interpreter::resolveGlobalDynamic(CallFrame* callFrame, Instru
     Structure* structure = vPC[3].u.structure.get();
     int offset = vPC[4].u.operand;
     int skip = vPC[5].u.operand;
-
-#ifdef ARTEMIS
-    if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
-		readProperty(callFrame, codeBlock->identifier(property).ascii().data());
-	}
-#endif
-
+    
     ScopeChainNode* scopeChain = callFrame->scopeChain();
     ScopeChainIterator iter = scopeChain->begin();
     ScopeChainIterator end = scopeChain->end();
@@ -276,7 +241,7 @@ NEVER_INLINE bool Interpreter::resolveGlobalDynamic(CallFrame* callFrame, Instru
         }
         ++iter;
     }
-
+    
     if (structure == globalObject->structure()) {
         callFrame->uncheckedR(dst) = JSValue(globalObject->getDirectOffset(offset));
         ASSERT(callFrame->uncheckedR(dst).jsValue());
@@ -294,7 +259,7 @@ NEVER_INLINE bool Interpreter::resolveGlobalDynamic(CallFrame* callFrame, Instru
             callFrame->uncheckedR(dst) = JSValue(result);
             return true;
         }
-
+        
         exceptionValue = callFrame->globalData().exception;
         if (exceptionValue)
             return false;
@@ -302,7 +267,7 @@ NEVER_INLINE bool Interpreter::resolveGlobalDynamic(CallFrame* callFrame, Instru
         callFrame->uncheckedR(dst) = JSValue(result);
         return true;
     }
-
+    
     exceptionValue = createUndefinedVariableError(callFrame, ident);
     return false;
 }
@@ -313,13 +278,6 @@ NEVER_INLINE void Interpreter::resolveBase(CallFrame* callFrame, Instruction* vP
     int property = vPC[2].u.operand;
     bool isStrictPut = vPC[3].u.operand;
     Identifier ident = callFrame->codeBlock()->identifier(property);
-
-#ifdef ARTEMIS
-    if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
-		readProperty(callFrame, ident.ascii().data());
-	}
-#endif
-
     JSValue result = JSC::resolveBase(callFrame, ident, callFrame->scopeChain(), isStrictPut);
     if (result) {
         callFrame->uncheckedR(dst) = result;
@@ -380,13 +338,6 @@ NEVER_INLINE bool Interpreter::resolveThisAndProperty(CallFrame* callFrame, Inst
 
     CodeBlock* codeBlock = callFrame->codeBlock();
     Identifier& ident = codeBlock->identifier(property);
-
-#ifdef ARTEMIS
-    if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
-		readProperty(callFrame, ident.ascii().data());
-	}
-#endif
-
     JSObject* base;
     do {
         base = iter->get();
@@ -415,21 +366,21 @@ NEVER_INLINE bool Interpreter::resolveThisAndProperty(CallFrame* callFrame, Inst
     return false;
 }
 
-#endif // ENABLE(INTERPRETER)
+#endif // ENABLE(CLASSIC_INTERPRETER)
 
 ALWAYS_INLINE CallFrame* Interpreter::slideRegisterWindowForCall(CodeBlock* newCodeBlock, RegisterFile* registerFile, CallFrame* callFrame, size_t registerOffset, int argumentCountIncludingThis)
 {
     // This ensures enough space for the worst case scenario of zero arguments passed by the caller.
-    if (!registerFile->grow(callFrame->registers() + registerOffset + newCodeBlock->m_numParameters + newCodeBlock->m_numCalleeRegisters))
+    if (!registerFile->grow(callFrame->registers() + registerOffset + newCodeBlock->numParameters() + newCodeBlock->m_numCalleeRegisters))
         return 0;
 
-    if (argumentCountIncludingThis >= newCodeBlock->m_numParameters) {
+    if (argumentCountIncludingThis >= newCodeBlock->numParameters()) {
         Register* newCallFrame = callFrame->registers() + registerOffset;
         return CallFrame::create(newCallFrame);
     }
 
     // Too few arguments -- copy arguments, then fill in missing arguments with undefined.
-    size_t delta = newCodeBlock->m_numParameters - argumentCountIncludingThis;
+    size_t delta = newCodeBlock->numParameters() - argumentCountIncludingThis;
     CallFrame* newCallFrame = CallFrame::create(callFrame->registers() + registerOffset + delta);
 
     Register* dst = &newCallFrame->uncheckedR(CallFrame::thisArgumentOffset());
@@ -444,56 +395,7 @@ ALWAYS_INLINE CallFrame* Interpreter::slideRegisterWindowForCall(CodeBlock* newC
     return newCallFrame;
 }
 
-#ifdef ARTEMIS
-ALWAYS_INLINE void Interpreter::checkForConstantString(CallFrame* callFrame, const JSValue& jsvalue)
-{
-    if (jsvalue.isString()) {
-        jscinst::get_jsc_listener()->javascriptConstantStringEncountered(jsvalue.asCell()->toString(callFrame).ascii().mutableData());
-    }
-}
-
-ALWAYS_INLINE void Interpreter::readProperty(CallFrame* callFrame, std::string identifier)
-{
-    jscinst::get_jsc_listener()->javascript_property_read(identifier, callFrame);
-}
-
-ALWAYS_INLINE void Interpreter::readProperty(CallFrame* callFrame, const SymbolTable& symbolTable, int index)
-{
-    SymbolTable::const_iterator it = symbolTable.begin();
-    SymbolTable::const_iterator end = symbolTable.end();
-    for (; it != end; ++it) {
-        if (it->second.getIndex() == index) {
-            //printf("READ %s\n", UString(it->first).ascii().data());
-            jscinst::get_jsc_listener()->javascript_property_read(UString(it->first).ascii().data(), callFrame);
-            return;
-        }
-    }
-
-}
-
-ALWAYS_INLINE void Interpreter::writeProperty(CallFrame* callFrame, std::string identifier)
-{
-    //printf("WRITE %s\n", identifier.c_str());
-    jscinst::get_jsc_listener()->javascript_property_written(identifier, callFrame);
-}
-
-ALWAYS_INLINE void Interpreter::writeProperty(CallFrame* callFrame, const SymbolTable& symbolTable, int index)
-{
-    SymbolTable::const_iterator it = symbolTable.begin();
-    SymbolTable::const_iterator end = symbolTable.end();
-    for (; it != end; ++it) {
-        if (it->second.getIndex() == index) {
-            //printf("WRITE %s\n", UString(it->first).ascii().data());
-            jscinst::get_jsc_listener()->javascript_property_written(UString(it->first).ascii().data(), callFrame);
-            return;
-        }
-    }
-
-}
-
-#endif
-
-#if ENABLE(INTERPRETER)
+#if ENABLE(CLASSIC_INTERPRETER)
 static NEVER_INLINE bool isInvalidParamForIn(CallFrame* callFrame, JSValue value, JSValue& exceptionData)
 {
     if (value.isObject())
@@ -517,20 +419,14 @@ JSValue eval(CallFrame* callFrame)
         return jsUndefined();
 
     JSValue program = callFrame->argument(0);
-    if (!program.isString()) {
-#ifdef ARTEMIS
-        jscinst::get_jsc_listener()->javascript_eval_call(program.toString(callFrame).utf8().data());
-#endif
+    if (!program.isString())
         return program;
-    }
-
+    
+    TopCallFrameSetter topCallFrame(callFrame->globalData(), callFrame);
     UString programSource = asString(program)->value(callFrame);
-#ifdef ARTEMIS
-    jscinst::get_jsc_listener()->javascript_eval_call(programSource.utf8().data());
-#endif
     if (callFrame->hadException())
         return JSValue();
-
+    
     CallFrame* callerFrame = callFrame->callerFrame();
     CodeBlock* callerCodeBlock = callerFrame->codeBlock();
     ScopeChainNode* callerScopeChain = callerFrame->scopeChain();
@@ -547,13 +443,13 @@ JSValue eval(CallFrame* callFrame)
             } else {
                 LiteralParser<UChar> preparser(callFrame, programSource.characters16(), programSource.length(), NonStrictJSON);
                 if (JSValue parsedObject = preparser.tryLiteralParse())
-                    return parsedObject;
+                    return parsedObject;                
             }
         }
 
         JSValue exceptionValue;
         eval = callerCodeBlock->evalCodeCache().getSlow(callFrame, callerCodeBlock->ownerExecutable(), callerCodeBlock->isStrictMode(), programSource, callerScopeChain, exceptionValue);
-
+        
         ASSERT(!eval == exceptionValue);
         if (UNLIKELY(!eval))
             return throwError(callFrame, exceptionValue);
@@ -649,53 +545,57 @@ Interpreter::Interpreter()
 #if !ASSERT_DISABLED
     , m_initialized(false)
 #endif
-    , m_enabled(false)
+    , m_classicEnabled(false)
 {
+}
 
-#ifdef ARTEMIS
-#if ENABLE(JIT)
-    qFatal()<<"WEBKIT: JIT enabled - instrumentation will not work!\n";
-#endif
-
-    if (Interpreter::m_symbolic == NULL) {
-        qFatal("WEBKIT m_symbolic not set!");
-    }
-
-#endif
-
-#if ENABLE(COMPUTED_GOTO_INTERPRETER)
-    privateExecute(InitializeAndReturn, 0, 0);
+Interpreter::~Interpreter()
+{
+#if ENABLE(LLINT)
+    if (m_classicEnabled)
+        delete[] m_opcodeTable;
 #endif
 }
 
-
-void Interpreter::initialize(bool canUseJIT)
+void Interpreter::initialize(LLInt::Data* llintData, bool canUseJIT)
 {
-#if ENABLE(COMPUTED_GOTO_INTERPRETER)
+    UNUSED_PARAM(llintData);
+    UNUSED_PARAM(canUseJIT);
+
+    // If we have LLInt, then we shouldn't be building any kind of classic interpreter.
+#if ENABLE(LLINT) && ENABLE(CLASSIC_INTERPRETER)
+#error "Building both LLInt and the Classic Interpreter is not supported because it doesn't make sense."
+#endif
+
+#if ENABLE(LLINT)
+    m_opcodeTable = llintData->opcodeMap();
+    for (int i = 0; i < numOpcodeIDs; ++i)
+        m_opcodeIDTable.add(m_opcodeTable[i], static_cast<OpcodeID>(i));
+    m_classicEnabled = false;
+#elif ENABLE(COMPUTED_GOTO_CLASSIC_INTERPRETER)
     if (canUseJIT) {
         // If the JIT is present, don't use jump destinations for opcodes.
-
+        
         for (int i = 0; i < numOpcodeIDs; ++i) {
             Opcode opcode = bitwise_cast<void*>(static_cast<uintptr_t>(i));
             m_opcodeTable[i] = opcode;
-            m_opcodeIDTable.add(opcode, static_cast<OpcodeID>(i));
         }
+        m_classicEnabled = false;
     } else {
         privateExecute(InitializeAndReturn, 0, 0);
-
+        
         for (int i = 0; i < numOpcodeIDs; ++i)
             m_opcodeIDTable.add(m_opcodeTable[i], static_cast<OpcodeID>(i));
-
-        m_enabled = true;
+        
+        m_classicEnabled = true;
     }
 #else
-    UNUSED_PARAM(canUseJIT);
-#if ENABLE(INTERPRETER)
-    m_enabled = true;
+#if ENABLE(CLASSIC_INTERPRETER)
+    m_classicEnabled = true;
 #else
-    m_enabled = false;
+    m_classicEnabled = false;
 #endif
-#endif // ENABLE(COMPUTED_GOTO_INTERPRETER)
+#endif // ENABLE(COMPUTED_GOTO_CLASSIC_INTERPRETER)
 #if !ASSERT_DISABLED
     m_initialized = true;
 #endif
@@ -715,43 +615,43 @@ void Interpreter::dumpCallFrame(CallFrame* callFrame)
 
 void Interpreter::dumpRegisters(CallFrame* callFrame)
 {
-    printf("Register frame: \n\n");
-    printf("-----------------------------------------------------------------------------\n");
-    printf("            use            |   address  |                value               \n");
-    printf("-----------------------------------------------------------------------------\n");
+    dataLog("Register frame: \n\n");
+    dataLog("-----------------------------------------------------------------------------\n");
+    dataLog("            use            |   address  |                value               \n");
+    dataLog("-----------------------------------------------------------------------------\n");
 
     CodeBlock* codeBlock = callFrame->codeBlock();
     const Register* it;
     const Register* end;
     JSValue v;
 
-    it = callFrame->registers() - RegisterFile::CallFrameHeaderSize - codeBlock->m_numParameters;
+    it = callFrame->registers() - RegisterFile::CallFrameHeaderSize - codeBlock->numParameters();
     v = (*it).jsValue();
 #if USE(JSVALUE32_64)
-    printf("[this]                     | %10p | %-16s 0x%llx \n", it, v.description(), JSValue::encode(v)); ++it;
+    dataLog("[this]                     | %10p | %-16s 0x%llx \n", it, v.description(), JSValue::encode(v)); ++it;
 #else
-    printf("[this]                     | %10p | %-16s %p \n", it, v.description(), JSValue::encode(v)); ++it;
+    dataLog("[this]                     | %10p | %-16s %p \n", it, v.description(), JSValue::encode(v)); ++it;
 #endif
-    end = it + max(codeBlock->m_numParameters - 1, 0); // - 1 to skip "this"
+    end = it + max(codeBlock->numParameters() - 1, 0); // - 1 to skip "this"
     if (it != end) {
         do {
             v = (*it).jsValue();
 #if USE(JSVALUE32_64)
-            printf("[param]                    | %10p | %-16s 0x%llx \n", it, v.description(), JSValue::encode(v));
+            dataLog("[param]                    | %10p | %-16s 0x%llx \n", it, v.description(), JSValue::encode(v));
 #else
-            printf("[param]                    | %10p | %-16s %p \n", it, v.description(), JSValue::encode(v));
+            dataLog("[param]                    | %10p | %-16s %p \n", it, v.description(), JSValue::encode(v));
 #endif
             ++it;
         } while (it != end);
     }
-    printf("-----------------------------------------------------------------------------\n");
-    printf("[CodeBlock]                | %10p | %p \n", it, (*it).codeBlock()); ++it;
-    printf("[ScopeChain]               | %10p | %p \n", it, (*it).scopeChain()); ++it;
-    printf("[CallerRegisters]          | %10p | %d \n", it, (*it).i()); ++it;
-    printf("[ReturnPC]                 | %10p | %p \n", it, (*it).vPC()); ++it;
-    printf("[ArgumentCount]            | %10p | %d \n", it, (*it).i()); ++it;
-    printf("[Callee]                   | %10p | %p \n", it, (*it).function()); ++it;
-    printf("-----------------------------------------------------------------------------\n");
+    dataLog("-----------------------------------------------------------------------------\n");
+    dataLog("[CodeBlock]                | %10p | %p \n", it, (*it).codeBlock()); ++it;
+    dataLog("[ScopeChain]               | %10p | %p \n", it, (*it).scopeChain()); ++it;
+    dataLog("[CallerRegisters]          | %10p | %d \n", it, (*it).i()); ++it;
+    dataLog("[ReturnPC]                 | %10p | %p \n", it, (*it).vPC()); ++it;
+    dataLog("[ArgumentCount]            | %10p | %d \n", it, (*it).i()); ++it;
+    dataLog("[Callee]                   | %10p | %p \n", it, (*it).function()); ++it;
+    dataLog("-----------------------------------------------------------------------------\n");
 
     int registerCount = 0;
 
@@ -760,37 +660,41 @@ void Interpreter::dumpRegisters(CallFrame* callFrame)
         do {
             v = (*it).jsValue();
 #if USE(JSVALUE32_64)
-            printf("[r%2d]                      | %10p | %-16s 0x%llx \n", registerCount, it, v.description(), JSValue::encode(v));
+            dataLog("[r%2d]                      | %10p | %-16s 0x%llx \n", registerCount, it, v.description(), JSValue::encode(v));
 #else
-            printf("[r%2d]                      | %10p | %-16s %p \n", registerCount, it, v.description(), JSValue::encode(v));
+            dataLog("[r%2d]                      | %10p | %-16s %p \n", registerCount, it, v.description(), JSValue::encode(v));
 #endif
             ++it;
             ++registerCount;
         } while (it != end);
     }
-    printf("-----------------------------------------------------------------------------\n");
+    dataLog("-----------------------------------------------------------------------------\n");
 
     end = it + codeBlock->m_numCalleeRegisters - codeBlock->m_numVars;
     if (it != end) {
         do {
             v = (*it).jsValue();
 #if USE(JSVALUE32_64)
-            printf("[r%2d]                      | %10p | %-16s 0x%llx \n", registerCount, it, v.description(), JSValue::encode(v));
+            dataLog("[r%2d]                      | %10p | %-16s 0x%llx \n", registerCount, it, v.description(), JSValue::encode(v));
 #else
-            printf("[r%2d]                      | %10p | %-16s %p \n", registerCount, it, v.description(), JSValue::encode(v));
+            dataLog("[r%2d]                      | %10p | %-16s %p \n", registerCount, it, v.description(), JSValue::encode(v));
 #endif
             ++it;
             ++registerCount;
         } while (it != end);
     }
-    printf("-----------------------------------------------------------------------------\n");
+    dataLog("-----------------------------------------------------------------------------\n");
 }
 
 #endif
 
 bool Interpreter::isOpcode(Opcode opcode)
 {
-#if ENABLE(COMPUTED_GOTO_INTERPRETER)
+#if ENABLE(COMPUTED_GOTO_CLASSIC_INTERPRETER) || ENABLE(LLINT)
+#if !ENABLE(LLINT)
+    if (!m_classicEnabled)
+        return opcode >= 0 && static_cast<OpcodeID>(bitwise_cast<uintptr_t>(opcode)) <= op_end;
+#endif
     return opcode != HashTraits<Opcode>::emptyValue()
         && !HashTraits<Opcode>::isDeletedValue(opcode)
         && m_opcodeIDTable.contains(opcode);
@@ -837,7 +741,7 @@ NEVER_INLINE bool Interpreter::unwindCallFrame(CallFrame*& callFrame, JSValue ex
         return false;
 
     codeBlock = callerFrame->codeBlock();
-
+    
     // Because of how the JIT records call site->bytecode offset
     // information the JIT reports the bytecodeOffset for the returnPC
     // to be at the beginning of the opcode that has caused the call.
@@ -845,13 +749,13 @@ NEVER_INLINE bool Interpreter::unwindCallFrame(CallFrame*& callFrame, JSValue ex
     // the beginning of next instruction to execute. To get an offset
     // inside the call instruction that triggered the exception we
     // have to subtract 1.
-#if ENABLE(JIT) && ENABLE(INTERPRETER)
+#if ENABLE(JIT) && ENABLE(CLASSIC_INTERPRETER)
     if (callerFrame->globalData().canUseJIT())
-        bytecodeOffset = codeBlock->bytecodeOffset(callFrame->returnPC());
+        bytecodeOffset = codeBlock->bytecodeOffset(callerFrame, callFrame->returnPC());
     else
         bytecodeOffset = codeBlock->bytecodeOffset(callFrame->returnVPC()) - 1;
 #elif ENABLE(JIT)
-    bytecodeOffset = codeBlock->bytecodeOffset(callFrame->returnPC());
+    bytecodeOffset = codeBlock->bytecodeOffset(callerFrame, callFrame->returnPC());
 #else
     bytecodeOffset = codeBlock->bytecodeOffset(callFrame->returnVPC()) - 1;
 #endif
@@ -911,10 +815,206 @@ static void appendSourceToError(CallFrame* callFrame, ErrorInstance* exception, 
     exception->putDirect(*globalData, globalData->propertyNames->message, jsString(globalData, message));
 }
 
+static int getLineNumberForCallFrame(JSGlobalData* globalData, CallFrame* callFrame)
+{
+    UNUSED_PARAM(globalData);
+    callFrame = callFrame->removeHostCallFrameFlag();
+    CodeBlock* codeBlock = callFrame->codeBlock();
+    if (!codeBlock)
+        return -1;
+#if ENABLE(CLASSIC_INTERPRETER)
+    if (!globalData->canUseJIT())
+        return codeBlock->lineNumberForBytecodeOffset(callFrame->bytecodeOffsetForNonDFGCode() - 1);
+#endif
+#if ENABLE(JIT)
+#if ENABLE(DFG_JIT)
+    if (codeBlock->getJITType() == JITCode::DFGJIT)
+        return codeBlock->lineNumberForBytecodeOffset(codeBlock->codeOrigin(callFrame->codeOriginIndexForDFG()).bytecodeIndex);
+#endif
+    return codeBlock->lineNumberForBytecodeOffset(callFrame->bytecodeOffsetForNonDFGCode());
+#else
+    return -1;
+#endif
+}
+
+static CallFrame* getCallerInfo(JSGlobalData* globalData, CallFrame* callFrame, int& lineNumber)
+{
+    UNUSED_PARAM(globalData);
+    unsigned bytecodeOffset = 0;
+    lineNumber = -1;
+    ASSERT(!callFrame->hasHostCallFrameFlag());
+    CallFrame* callerFrame = callFrame->codeBlock() ? callFrame->trueCallerFrame() : callFrame->callerFrame()->removeHostCallFrameFlag();
+    bool callframeIsHost = callerFrame->addHostCallFrameFlag() == callFrame->callerFrame();
+    ASSERT(!callerFrame->hasHostCallFrameFlag());
+
+    if (callerFrame == CallFrame::noCaller() || !callerFrame || !callerFrame->codeBlock())
+        return callerFrame;
+    
+    CodeBlock* callerCodeBlock = callerFrame->codeBlock();
+    
+#if ENABLE(JIT)
+    if (!callFrame->hasReturnPC())
+        callframeIsHost = true;
+#endif
+#if ENABLE(DFG_JIT)
+    if (callFrame->isInlineCallFrame())
+        callframeIsHost = false;
+#endif
+
+    if (callframeIsHost) {
+        // Don't need to deal with inline callframes here as by definition we haven't
+        // inlined a call with an intervening native call frame.
+#if ENABLE(CLASSIC_INTERPRETER)
+        if (!globalData->canUseJIT()) {
+            bytecodeOffset = callerFrame->bytecodeOffsetForNonDFGCode();
+            lineNumber = callerCodeBlock->lineNumberForBytecodeOffset(bytecodeOffset - 1);
+            return callerFrame;
+        }
+#endif
+#if ENABLE(JIT)
+#if ENABLE(DFG_JIT)
+        if (callerCodeBlock && callerCodeBlock->getJITType() == JITCode::DFGJIT) {
+            unsigned codeOriginIndex = callerFrame->codeOriginIndexForDFG();
+            bytecodeOffset = callerCodeBlock->codeOrigin(codeOriginIndex).bytecodeIndex;
+        } else
+#endif
+            bytecodeOffset = callerFrame->bytecodeOffsetForNonDFGCode();
+#endif
+    } else {
+#if ENABLE(CLASSIC_INTERPRETER)
+        if (!globalData->canUseJIT()) {
+            bytecodeOffset = callerCodeBlock->bytecodeOffset(callFrame->returnVPC());
+            lineNumber = callerCodeBlock->lineNumberForBytecodeOffset(bytecodeOffset - 1);
+            return callerFrame;
+        }
+#endif
+#if ENABLE(JIT)
+    #if ENABLE(DFG_JIT)
+        if (callFrame->isInlineCallFrame()) {
+            InlineCallFrame* icf = callFrame->inlineCallFrame();
+            bytecodeOffset = icf->caller.bytecodeIndex;
+            if (InlineCallFrame* parentCallFrame = icf->caller.inlineCallFrame) {
+                FunctionExecutable* executable = static_cast<FunctionExecutable*>(parentCallFrame->executable.get());
+                CodeBlock* newCodeBlock = executable->baselineCodeBlockFor(parentCallFrame->isCall ? CodeForCall : CodeForConstruct);
+                ASSERT(newCodeBlock);
+                ASSERT(newCodeBlock->instructionCount() > bytecodeOffset);
+                callerCodeBlock = newCodeBlock;
+            }
+        } else if (callerCodeBlock && callerCodeBlock->getJITType() == JITCode::DFGJIT) {
+            CodeOrigin origin;
+            if (!callerCodeBlock->codeOriginForReturn(callFrame->returnPC(), origin))
+                ASSERT_NOT_REACHED();
+            bytecodeOffset = origin.bytecodeIndex;
+            if (InlineCallFrame* icf = origin.inlineCallFrame) {
+                FunctionExecutable* executable = static_cast<FunctionExecutable*>(icf->executable.get());
+                CodeBlock* newCodeBlock = executable->baselineCodeBlockFor(icf->isCall ? CodeForCall : CodeForConstruct);
+                ASSERT(newCodeBlock);
+                ASSERT(newCodeBlock->instructionCount() > bytecodeOffset);
+                callerCodeBlock = newCodeBlock;
+            }
+        } else
+    #endif
+            bytecodeOffset = callerCodeBlock->bytecodeOffset(callerFrame, callFrame->returnPC());
+#endif
+    }
+
+    lineNumber = callerCodeBlock->lineNumberForBytecodeOffset(bytecodeOffset);
+    return callerFrame;
+}
+
+static ALWAYS_INLINE const UString getSourceURLFromCallFrame(CallFrame* callFrame) 
+{
+    ASSERT(!callFrame->hasHostCallFrameFlag());
+#if ENABLE(CLASSIC_INTERPRETER)
+#if ENABLE(JIT)
+    if (callFrame->globalData().canUseJIT())
+        return callFrame->codeBlock()->ownerExecutable()->sourceURL();
+#endif
+    return callFrame->codeBlock()->source()->url();
+
+#else
+    return callFrame->codeBlock()->ownerExecutable()->sourceURL();
+#endif
+}
+
+static StackFrameCodeType getStackFrameCodeType(CallFrame* callFrame)
+{
+    ASSERT(!callFrame->hasHostCallFrameFlag());
+
+    switch (callFrame->codeBlock()->codeType()) {
+    case EvalCode:
+        return StackFrameEvalCode;
+    case FunctionCode:
+        return StackFrameFunctionCode;
+    case GlobalCode:
+        return StackFrameGlobalCode;
+    }
+    ASSERT_NOT_REACHED();
+    return StackFrameGlobalCode;
+}
+
+void Interpreter::getStackTrace(JSGlobalData* globalData, Vector<StackFrame>& results)
+{
+    CallFrame* callFrame = globalData->topCallFrame->removeHostCallFrameFlag();
+    if (!callFrame || callFrame == CallFrame::noCaller()) 
+        return;
+    int line = getLineNumberForCallFrame(globalData, callFrame);
+
+    callFrame = callFrame->trueCallFrameFromVMCode();
+
+    while (callFrame && callFrame != CallFrame::noCaller()) {
+        UString sourceURL;
+        if (callFrame->codeBlock()) {
+            sourceURL = getSourceURLFromCallFrame(callFrame);
+            StackFrame s = { Strong<JSObject>(*globalData, callFrame->callee()), getStackFrameCodeType(callFrame), Strong<ExecutableBase>(*globalData, callFrame->codeBlock()->ownerExecutable()), line, sourceURL};
+            results.append(s);
+        } else {
+            StackFrame s = { Strong<JSObject>(*globalData, callFrame->callee()), StackFrameNativeCode, Strong<ExecutableBase>(), -1, UString()};
+            results.append(s);
+        }
+        callFrame = getCallerInfo(globalData, callFrame, line);
+    }
+}
+
+void Interpreter::addStackTraceIfNecessary(CallFrame* callFrame, JSObject* error)
+{
+    JSGlobalData* globalData = &callFrame->globalData();
+    ASSERT(callFrame == globalData->topCallFrame || callFrame == callFrame->lexicalGlobalObject()->globalExec() || callFrame == callFrame->dynamicGlobalObject()->globalExec());
+    if (error->hasProperty(callFrame, globalData->propertyNames->stack))
+        return;
+
+    Vector<StackFrame> stackTrace;
+    getStackTrace(&callFrame->globalData(), stackTrace);
+    
+    if (stackTrace.isEmpty())
+        return;
+    
+    JSGlobalObject* globalObject = 0;
+    if (isTerminatedExecutionException(error) || isInterruptedExecutionException(error))
+        globalObject = globalData->dynamicGlobalObject;
+    else
+        globalObject = error->globalObject();
+    StringBuilder builder;
+    for (unsigned i = 0; i < stackTrace.size(); i++) {
+        builder.append(String(stackTrace[i].toString(globalObject->globalExec()).impl()));
+        if (i != stackTrace.size() - 1)
+            builder.append('\n');
+    }
+    
+    error->putDirect(*globalData, globalData->propertyNames->stack, jsString(globalData, UString(builder.toString().impl())), ReadOnly | DontDelete);
+}
+
 NEVER_INLINE HandlerInfo* Interpreter::throwException(CallFrame*& callFrame, JSValue& exceptionValue, unsigned bytecodeOffset)
 {
     CodeBlock* codeBlock = callFrame->codeBlock();
     bool isInterrupt = false;
+
+    ASSERT(!exceptionValue.isEmpty());
+    ASSERT(!exceptionValue.isCell() || exceptionValue.asCell());
+    // This shouldn't be possible (hence the assertions), but we're already in the slowest of
+    // slow cases, so let's harden against it anyway to be safe.
+    if (exceptionValue.isEmpty() || (exceptionValue.isCell() && !exceptionValue.asCell()))
+        exceptionValue = jsNull();
 
     // Set up the exception object
     if (exceptionValue.isObject()) {
@@ -926,7 +1026,6 @@ NEVER_INLINE HandlerInfo* Interpreter::throwException(CallFrame*& callFrame, JSV
         // Using hasExpressionInfo to imply we are interested in rich exception info.
         if (codeBlock->hasExpressionInfo() && !hasErrorInfo(callFrame, exception)) {
             ASSERT(codeBlock->hasLineInfo());
-
             // FIXME: should only really be adding these properties to VM generated exceptions,
             // but the inspector currently requires these for all thrown objects.
             addErrorInfo(callFrame, exception, codeBlock->lineNumberForBytecodeOffset(bytecodeOffset), codeBlock->ownerExecutable()->source());
@@ -947,9 +1046,11 @@ NEVER_INLINE HandlerInfo* Interpreter::throwException(CallFrame*& callFrame, JSV
         if (!unwindCallFrame(callFrame, exceptionValue, bytecodeOffset, codeBlock)) {
             if (Profiler* profiler = *Profiler::enabledProfilerReference())
                 profiler->exceptionUnwind(callFrame);
+            callFrame->globalData().topCallFrame = callFrame;
             return 0;
         }
     }
+    callFrame->globalData().topCallFrame = callFrame;
 
     if (Profiler* profiler = *Profiler::enabledProfilerReference())
         profiler->exceptionUnwind(callFrame);
@@ -968,7 +1069,7 @@ NEVER_INLINE HandlerInfo* Interpreter::throwException(CallFrame*& callFrame, JSV
     // Unwind the scope chain within the exception handler's call frame.
     ScopeChainNode* scopeChain = callFrame->scopeChain();
     int scopeDelta = 0;
-    if (!codeBlock->needsFullScopeChain() || codeBlock->codeType() != FunctionCode
+    if (!codeBlock->needsFullScopeChain() || codeBlock->codeType() != FunctionCode 
         || callFrame->uncheckedR(codeBlock->activationRegister()).jsValue())
         scopeDelta = depth(codeBlock, scopeChain) - handler->scopeDepth;
     ASSERT(scopeDelta >= 0);
@@ -1006,6 +1107,8 @@ JSValue Interpreter::execute(ProgramExecutable* program, CallFrame* callFrame, S
     Vector<JSONPData> JSONPData;
     bool parseResult;
     const UString programSource = program->source().toString();
+    if (programSource.isNull())
+        return jsUndefined();
     if (programSource.is8Bit()) {
         LiteralParser<LChar> literalParser(callFrame, programSource.characters8(), programSource.length(), JSONP);
         parseResult = literalParser.tryJSONPParse(JSONPData, scopeChain->globalObject->globalObjectMethodTable()->supportsRichSourceInfo(scopeChain->globalObject.get()));
@@ -1026,7 +1129,7 @@ JSValue Interpreter::execute(ProgramExecutable* program, CallFrame* callFrame, S
                     PutPropertySlot slot;
                     globalObject->methodTable()->put(globalObject, callFrame, JSONPPath[0].m_pathEntryName, JSONPValue, slot);
                 } else
-                    globalObject->methodTable()->putWithAttributes(globalObject, callFrame, JSONPPath[0].m_pathEntryName, JSONPValue, DontEnum | DontDelete);
+                    globalObject->methodTable()->putDirectVirtual(globalObject, callFrame, JSONPPath[0].m_pathEntryName, JSONPValue, DontEnum | DontDelete);
                 // var declarations return undefined
                 result = jsUndefined();
                 continue;
@@ -1086,7 +1189,7 @@ JSValue Interpreter::execute(ProgramExecutable* program, CallFrame* callFrame, S
                 break;
             }
             case JSONPPathEntryTypeLookup: {
-                baseObject.put(callFrame, JSONPPath.last().m_pathIndex, JSONPValue);
+                baseObject.putByIndex(callFrame, JSONPPath.last().m_pathIndex, JSONPValue, slot.isStrictMode());
                 if (callFrame->hadException())
                     return jsUndefined();
                 break;
@@ -1106,13 +1209,13 @@ failedJSONP:
     CodeBlock* codeBlock = &program->generatedBytecode();
 
     Register* oldEnd = m_registerFile.end();
-    Register* newEnd = oldEnd + codeBlock->m_numParameters + RegisterFile::CallFrameHeaderSize + codeBlock->m_numCalleeRegisters;
+    Register* newEnd = oldEnd + codeBlock->numParameters() + RegisterFile::CallFrameHeaderSize + codeBlock->m_numCalleeRegisters;
     if (!m_registerFile.grow(newEnd))
         return checkedReturn(throwStackOverflowError(callFrame));
 
-    CallFrame* newCallFrame = CallFrame::create(oldEnd + codeBlock->m_numParameters + RegisterFile::CallFrameHeaderSize);
-    ASSERT(codeBlock->m_numParameters == 1); // 1 parameter for 'this'.
-    newCallFrame->init(codeBlock, 0, scopeChain, CallFrame::noCaller(), codeBlock->m_numParameters, 0);
+    CallFrame* newCallFrame = CallFrame::create(oldEnd + codeBlock->numParameters() + RegisterFile::CallFrameHeaderSize);
+    ASSERT(codeBlock->numParameters() == 1); // 1 parameter for 'this'.
+    newCallFrame->init(codeBlock, 0, scopeChain, CallFrame::noCaller(), codeBlock->numParameters(), 0);
     newCallFrame->setThisValue(thisObj);
     TopCallFrameSetter topCallFrame(callFrame->globalData(), newCallFrame);
 
@@ -1124,9 +1227,9 @@ failedJSONP:
     {
         SamplingTool::CallRecord callRecord(m_sampler.get());
 
-        m_reentryDepth++;
+        m_reentryDepth++;  
 #if ENABLE(JIT)
-        if (callFrame->globalData().canUseJIT())
+        if (!classicEnabled())
             result = program->generatedJITCode().execute(&m_registerFile, newCallFrame, scopeChain->globalData);
         else
 #endif
@@ -1155,6 +1258,7 @@ JSValue Interpreter::executeCall(CallFrame* callFrame, JSObject* function, CallT
         return checkedReturn(throwStackOverflowError(callFrame));
 
     Register* oldEnd = m_registerFile.end();
+    ASSERT(callFrame->frameExtent() <= oldEnd || callFrame == callFrame->scopeChain()->globalObject->globalExec());
     int argCount = 1 + args.size(); // implicit "this" parameter
     size_t registerOffset = argCount + RegisterFile::CallFrameHeaderSize;
 
@@ -1196,9 +1300,9 @@ JSValue Interpreter::executeCall(CallFrame* callFrame, JSObject* function, CallT
         {
             SamplingTool::CallRecord callRecord(m_sampler.get());
 
-            m_reentryDepth++;
+            m_reentryDepth++;  
 #if ENABLE(JIT)
-            if (callFrame->globalData().canUseJIT())
+            if (!classicEnabled())
                 result = callData.js.functionExecutable->generatedJITCodeForCall().execute(&m_registerFile, newCallFrame, callDataScopeChain->globalData);
             else
 #endif
@@ -1292,9 +1396,9 @@ JSObject* Interpreter::executeConstruct(CallFrame* callFrame, JSObject* construc
         {
             SamplingTool::CallRecord callRecord(m_sampler.get());
 
-            m_reentryDepth++;
+            m_reentryDepth++;  
 #if ENABLE(JIT)
-            if (callFrame->globalData().canUseJIT())
+            if (!classicEnabled())
                 result = constructData.js.functionExecutable->generatedJITCodeForConstruct().execute(&m_registerFile, newCallFrame, constructDataScopeChain->globalData);
             else
 #endif
@@ -1343,7 +1447,7 @@ JSObject* Interpreter::executeConstruct(CallFrame* callFrame, JSObject* construc
 CallFrameClosure Interpreter::prepareForRepeatCall(FunctionExecutable* functionExecutable, CallFrame* callFrame, JSFunction* function, int argumentCountIncludingThis, ScopeChainNode* scopeChain)
 {
     ASSERT(!scopeChain->globalData->exception);
-
+    
     if (callFrame->globalData().isCollectorBusy())
         return CallFrameClosure();
 
@@ -1375,13 +1479,13 @@ CallFrameClosure Interpreter::prepareForRepeatCall(FunctionExecutable* functionE
         m_registerFile.shrink(oldEnd);
         return CallFrameClosure();
     }
-    newCallFrame->init(codeBlock, 0, scopeChain, callFrame->addHostCallFrameFlag(), argumentCountIncludingThis, function);
+    newCallFrame->init(codeBlock, 0, scopeChain, callFrame->addHostCallFrameFlag(), argumentCountIncludingThis, function);  
     scopeChain->globalData->topCallFrame = newCallFrame;
-    CallFrameClosure result = { callFrame, newCallFrame, function, functionExecutable, scopeChain->globalData, oldEnd, scopeChain, codeBlock->m_numParameters, argumentCountIncludingThis };
+    CallFrameClosure result = { callFrame, newCallFrame, function, functionExecutable, scopeChain->globalData, oldEnd, scopeChain, codeBlock->numParameters(), argumentCountIncludingThis };
     return result;
 }
 
-JSValue Interpreter::execute(CallFrameClosure& closure)
+JSValue Interpreter::execute(CallFrameClosure& closure) 
 {
     ASSERT(!closure.oldCallFrame->globalData().isCollectorBusy());
     if (closure.oldCallFrame->globalData().isCollectorBusy())
@@ -1396,18 +1500,18 @@ JSValue Interpreter::execute(CallFrameClosure& closure)
     JSValue result;
     {
         SamplingTool::CallRecord callRecord(m_sampler.get());
-
-        m_reentryDepth++;
+        
+        m_reentryDepth++;  
 #if ENABLE(JIT)
-#if ENABLE(INTERPRETER)
+#if ENABLE(CLASSIC_INTERPRETER)
         if (closure.newCallFrame->globalData().canUseJIT())
 #endif
             result = closure.functionExecutable->generatedJITCodeForCall().execute(&m_registerFile, closure.newCallFrame, closure.globalData);
-#if ENABLE(INTERPRETER)
+#if ENABLE(CLASSIC_INTERPRETER)
         else
 #endif
 #endif
-#if ENABLE(INTERPRETER)
+#if ENABLE(CLASSIC_INTERPRETER)
             result = privateExecute(Normal, &m_registerFile, closure.newCallFrame);
 #endif
         m_reentryDepth--;
@@ -1445,8 +1549,8 @@ JSValue Interpreter::execute(EvalExecutable* eval, CallFrame* callFrame, JSValue
     JSObject* variableObject;
     for (ScopeChainNode* node = scopeChain; ; node = node->next.get()) {
         ASSERT(node);
-        if (node->object->isVariableObject()) {
-            variableObject = static_cast<JSVariableObject*>(node->object.get());
+        if (node->object->isVariableObject() && !node->object->isStaticScopeObject()) {
+            variableObject = jsCast<JSVariableObject*>(node->object.get());
             break;
         }
     }
@@ -1488,8 +1592,8 @@ JSValue Interpreter::execute(EvalExecutable* eval, CallFrame* callFrame, JSValue
 
     CallFrame* newCallFrame = CallFrame::create(m_registerFile.begin() + globalRegisterOffset);
 
-    ASSERT(codeBlock->m_numParameters == 1); // 1 parameter for 'this'.
-    newCallFrame->init(codeBlock, 0, scopeChain, callFrame->addHostCallFrameFlag(), codeBlock->m_numParameters, 0);
+    ASSERT(codeBlock->numParameters() == 1); // 1 parameter for 'this'.
+    newCallFrame->init(codeBlock, 0, scopeChain, callFrame->addHostCallFrameFlag(), codeBlock->numParameters(), 0);
     newCallFrame->setThisValue(thisValue);
 
     TopCallFrameSetter topCallFrame(callFrame->globalData(), newCallFrame);
@@ -1503,17 +1607,17 @@ JSValue Interpreter::execute(EvalExecutable* eval, CallFrame* callFrame, JSValue
         SamplingTool::CallRecord callRecord(m_sampler.get());
 
         m_reentryDepth++;
-
+        
 #if ENABLE(JIT)
-#if ENABLE(INTERPRETER)
+#if ENABLE(CLASSIC_INTERPRETER)
         if (callFrame->globalData().canUseJIT())
 #endif
             result = eval->generatedJITCode().execute(&m_registerFile, newCallFrame, scopeChain->globalData);
-#if ENABLE(INTERPRETER)
+#if ENABLE(CLASSIC_INTERPRETER)
         else
 #endif
 #endif
-#if ENABLE(INTERPRETER)
+#if ENABLE(CLASSIC_INTERPRETER)
             result = privateExecute(Normal, &m_registerFile, newCallFrame);
 #endif
         m_reentryDepth--;
@@ -1555,8 +1659,8 @@ NEVER_INLINE void Interpreter::debug(CallFrame* callFrame, DebugHookID debugHook
             return;
     }
 }
-
-#if ENABLE(INTERPRETER)
+    
+#if ENABLE(CLASSIC_INTERPRETER)
 NEVER_INLINE ScopeChainNode* Interpreter::createExceptionScope(CallFrame* callFrame, const Instruction* vPC)
 {
     int dst = vPC[1].u.operand;
@@ -1583,7 +1687,7 @@ NEVER_INLINE void Interpreter::tryCachePutByID(CallFrame* callFrame, CodeBlock* 
         vPC[0] = getOpcode(op_put_by_id_generic);
         return;
     }
-
+    
     JSCell* baseCell = baseValue.asCell();
     Structure* structure = baseCell->structure();
 
@@ -1625,8 +1729,8 @@ NEVER_INLINE void Interpreter::tryCachePutByID(CallFrame* callFrame, CodeBlock* 
         normalizePrototypeChain(callFrame, baseCell);
         JSCell* owner = codeBlock->ownerExecutable();
         JSGlobalData& globalData = callFrame->globalData();
-        // Get the prototype here because the call to prototypeChain could cause a
-        // GC allocation, which we don't want to happen while we're in the middle of
+        // Get the prototype here because the call to prototypeChain could cause a 
+        // GC allocation, which we don't want to happen while we're in the middle of 
         // initializing the union.
         StructureChain* prototypeChain = structure->prototypeChain(callFrame);
         vPC[0] = getOpcode(op_put_by_id_transition);
@@ -1736,7 +1840,7 @@ NEVER_INLINE void Interpreter::tryCacheGetByID(CallFrame* callFrame, CodeBlock* 
         }
 
         ASSERT(!baseObject->structure()->isUncacheableDictionary());
-
+        
         switch (slot.cachedPropertyType()) {
         case PropertySlot::Getter:
             vPC[0] = getOpcode(op_get_by_id_getter_proto);
@@ -1762,7 +1866,8 @@ NEVER_INLINE void Interpreter::tryCacheGetByID(CallFrame* callFrame, CodeBlock* 
         return;
     }
 
-
+    
+    StructureChain* prototypeChain = structure->prototypeChain(callFrame);
     switch (slot.cachedPropertyType()) {
     case PropertySlot::Getter:
         vPC[0] = getOpcode(op_get_by_id_getter_chain);
@@ -1778,7 +1883,7 @@ NEVER_INLINE void Interpreter::tryCacheGetByID(CallFrame* callFrame, CodeBlock* 
         break;
     }
     vPC[4].u.structure.set(callFrame->globalData(), codeBlock->ownerExecutable(), structure);
-    vPC[5].u.structureChain.set(callFrame->globalData(), codeBlock->ownerExecutable(), structure->prototypeChain(callFrame));
+    vPC[5].u.structureChain.set(callFrame->globalData(), codeBlock->ownerExecutable(), prototypeChain);
     vPC[6] = count;
 }
 
@@ -1788,39 +1893,35 @@ NEVER_INLINE void Interpreter::uncacheGetByID(CodeBlock*, Instruction* vPC)
     vPC[4] = 0;
 }
 
-#endif // ENABLE(INTERPRETER)
+#endif // ENABLE(CLASSIC_INTERPRETER)
 
 JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFile, CallFrame* callFrame)
 {
     // One-time initialization of our address tables. We have to put this code
     // here because our labels are only in scope inside this function.
     if (UNLIKELY(flag == InitializeAndReturn)) {
-        #if ENABLE(COMPUTED_GOTO_INTERPRETER)
+        #if ENABLE(COMPUTED_GOTO_CLASSIC_INTERPRETER)
             #define LIST_OPCODE_LABEL(id, length) &&id,
                 static Opcode labels[] = { FOR_EACH_OPCODE_ID(LIST_OPCODE_LABEL) };
                 for (size_t i = 0; i < WTF_ARRAY_LENGTH(labels); ++i)
                     m_opcodeTable[i] = labels[i];
             #undef LIST_OPCODE_LABEL
-        #endif // ENABLE(COMPUTED_GOTO_INTERPRETER)
+        #endif // ENABLE(COMPUTED_GOTO_CLASSIC_INTERPRETER)
         return JSValue();
     }
-
+    
     ASSERT(m_initialized);
-    ASSERT(m_enabled);
-
-#ifdef ARTEMIS
-    BytecodeInfo bytecodeInfoPrestine, bytecodeInfo = BytecodeInfo();
-#endif
-
+    ASSERT(m_classicEnabled);
+    
 #if ENABLE(JIT)
-#if ENABLE(INTERPRETER)
+#if ENABLE(CLASSIC_INTERPRETER)
     // Mixing Interpreter + JIT is not supported.
     if (callFrame->globalData().canUseJIT())
 #endif
         ASSERT_NOT_REACHED();
 #endif
 
-#if !ENABLE(INTERPRETER)
+#if !ENABLE(CLASSIC_INTERPRETER)
     UNUSED_PARAM(registerFile);
     UNUSED_PARAM(callFrame);
     return JSValue();
@@ -1851,12 +1952,6 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
     OpcodeStats::resetLastInstruction();
 #endif
 
-#ifdef ARTEMIS
-    m_symbolic->preExecution(callFrame);
-    CodeBlock* oldCodeBlock = codeBlock;
-    Instruction* oldPC = vPC;
-#endif
-
 #define CHECK_FOR_TIMEOUT() \
     if (!--tickCount) { \
         if (globalData->terminator.shouldTerminate() || globalData->timeoutChecker.didTimeOut(callFrame)) { \
@@ -1865,35 +1960,38 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         } \
         tickCount = globalData->timeoutChecker.ticksUntilNextCheck(); \
     }
-
+    
 #if ENABLE(OPCODE_SAMPLING)
     #define SAMPLE(codeBlock, vPC) m_sampler->sample(codeBlock, vPC)
 #else
     #define SAMPLE(codeBlock, vPC)
 #endif
 
-#ifdef ARTEMIS
-#define ARTEMIS_BYTECODE_PRE oldCodeBlock = codeBlock; oldPC = vPC;
-#define ARTEMIS_BYTECODE_POST jscinst::get_jsc_listener()->javascript_bytecode_executed(this, oldCodeBlock, oldPC, bytecodeInfo); bytecodeInfo = bytecodeInfoPrestine;
-#else
-#define ARTEMIS_BYTECODE_PRE
-#define ARTEMIS_BYTECODE_LISTEN
-#endif
+#define UPDATE_BYTECODE_OFFSET() \
+    do {\
+        callFrame->setBytecodeOffsetForNonDFGCode(vPC - codeBlock->instructions().data() + 1);\
+    } while (0)
 
-#if ENABLE(COMPUTED_GOTO_INTERPRETER)
-    #define NEXT_INSTRUCTION() SAMPLE(codeBlock, vPC); ARTEMIS_BYTECODE_POST; goto *vPC->u.opcode
+#if ENABLE(COMPUTED_GOTO_CLASSIC_INTERPRETER)
+    #define NEXT_INSTRUCTION() SAMPLE(codeBlock, vPC); goto *vPC->u.opcode
 #if ENABLE(OPCODE_STATS)
-#define DEFINE_OPCODE(opcode) opcode: OpcodeStats::recordInstruction(opcode); ARTEMIS_BYTECODE_PRE;
+    #define DEFINE_OPCODE(opcode) \
+        opcode:\
+            OpcodeStats::recordInstruction(opcode);\
+            UPDATE_BYTECODE_OFFSET();
 #else
-#define DEFINE_OPCODE(opcode) opcode: ARTEMIS_BYTECODE_PRE;
+    #define DEFINE_OPCODE(opcode) opcode: UPDATE_BYTECODE_OFFSET();
 #endif
     NEXT_INSTRUCTION();
 #else
-    #define NEXT_INSTRUCTION() SAMPLE(codeBlock, vPC); ARTEMIS_BYTECODE_POST; goto interpreterLoopStart
+    #define NEXT_INSTRUCTION() SAMPLE(codeBlock, vPC); goto interpreterLoopStart
 #if ENABLE(OPCODE_STATS)
-#define DEFINE_OPCODE(opcode) case opcode: OpcodeStats::recordInstruction(opcode); ARTEMIS_BYTECODE_PRE;
+    #define DEFINE_OPCODE(opcode) \
+        case opcode:\
+            OpcodeStats::recordInstruction(opcode);\
+            UPDATE_BYTECODE_OFFSET();
 #else
-#define DEFINE_OPCODE(opcode) case opcode: ARTEMIS_BYTECODE_PRE;
+    #define DEFINE_OPCODE(opcode) case opcode: UPDATE_BYTECODE_OFFSET();
 #endif
     while (1) { // iterator loop begins
     interpreterLoopStart:;
@@ -1930,7 +2028,7 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
     }
     DEFINE_OPCODE(op_new_array_buffer) {
         /* new_array_buffer dst(r) index(n) argCount(n)
-
+         
          Constructs a new Array instance using the original
          constructor, and puts the result in register dst.
          The array be initialized with the values from constantBuffer[index]
@@ -1939,7 +2037,7 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         int firstArg = vPC[2].u.operand;
         int argCount = vPC[3].u.operand;
         callFrame->uncheckedR(dst) = JSValue(constructArray(callFrame, codeBlock->constantBuffer(firstArg), argCount));
-
+        
         vPC += OPCODE_LENGTH(op_new_array);
         NEXT_INSTRUCTION();
     }
@@ -1968,7 +2066,7 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         */
         int dst = vPC[1].u.operand;
         int src = vPC[2].u.operand;
-
+        
         callFrame->uncheckedR(dst) = callFrame->r(src);
 
         vPC += OPCODE_LENGTH(op_mov);
@@ -1992,18 +2090,6 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
             callFrame->uncheckedR(dst) = result;
         }
 
-#ifdef ARTEMIS
-        callFrame->uncheckedR(dst) = \
-                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
-                                                       src1, Symbolic::EQUAL, src2,
-                                                       callFrame->uncheckedR(dst).jsValue());
-
-        if (jscinst::get_jsc_listener()->isConstantStringInstrumentationEnabled()) {
-            checkForConstantString(callFrame, src1);
-            checkForConstantString(callFrame, src2);
-        }
-#endif
-
         vPC += OPCODE_LENGTH(op_eq);
         NEXT_INSTRUCTION();
     }
@@ -2021,17 +2107,8 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
             vPC += OPCODE_LENGTH(op_eq_null);
             NEXT_INSTRUCTION();
         }
-
+        
         callFrame->uncheckedR(dst) = jsBoolean(src.isCell() && src.asCell()->structure()->typeInfo().masqueradesAsUndefined());
-
-#ifdef ARTEMIS
-        JSValue jsn = jsNull();
-        callFrame->uncheckedR(dst) = \
-                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
-                                                       src, Symbolic::EQUAL, jsn,
-                                                       callFrame->uncheckedR(dst).jsValue());
-#endif
-
         vPC += OPCODE_LENGTH(op_eq_null);
         NEXT_INSTRUCTION();
     }
@@ -2053,18 +2130,6 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
             callFrame->uncheckedR(dst) = result;
         }
 
-#ifdef ARTEMIS
-        callFrame->uncheckedR(dst) = \
-                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
-                                                       src1, Symbolic::NOT_EQUAL, src2,
-                                                       callFrame->uncheckedR(dst).jsValue());
-
-        if (jscinst::get_jsc_listener()->isConstantStringInstrumentationEnabled()) {
-            checkForConstantString(callFrame, src1);
-            checkForConstantString(callFrame, src2);
-        }
-#endif
-
         vPC += OPCODE_LENGTH(op_neq);
         NEXT_INSTRUCTION();
     }
@@ -2082,17 +2147,8 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
             vPC += OPCODE_LENGTH(op_neq_null);
             NEXT_INSTRUCTION();
         }
-
+        
         callFrame->uncheckedR(dst) = jsBoolean(!src.isCell() || !src.asCell()->structure()->typeInfo().masqueradesAsUndefined());
-
-#ifdef ARTEMIS
-        JSValue jsn = jsNull();
-        callFrame->uncheckedR(dst) = \
-                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
-                                                       src, Symbolic::NOT_EQUAL, jsn,
-                                                       callFrame->uncheckedR(dst).jsValue());
-#endif
-
         vPC += OPCODE_LENGTH(op_neq_null);
         NEXT_INSTRUCTION();
     }
@@ -2109,18 +2165,6 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         bool result = JSValue::strictEqual(callFrame, src1, src2);
         CHECK_FOR_EXCEPTION();
         callFrame->uncheckedR(dst) = jsBoolean(result);
-
-#ifdef ARTEMIS
-        callFrame->uncheckedR(dst) = \
-                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
-                                                       src1, Symbolic::STRICT_EQUAL, src2,
-                                                       callFrame->uncheckedR(dst).jsValue());
-
-        if (jscinst::get_jsc_listener()->isConstantStringInstrumentationEnabled()) {
-            checkForConstantString(callFrame, src1);
-            checkForConstantString(callFrame, src2);
-        }
-#endif
 
         vPC += OPCODE_LENGTH(op_stricteq);
         NEXT_INSTRUCTION();
@@ -2139,18 +2183,6 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         CHECK_FOR_EXCEPTION();
         callFrame->uncheckedR(dst) = jsBoolean(result);
 
-#ifdef ARTEMIS
-        callFrame->uncheckedR(dst) = \
-                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
-                                                       src1, Symbolic::NOT_STRICT_EQUAL, src2,
-                                                       callFrame->uncheckedR(dst).jsValue());
-
-        if (jscinst::get_jsc_listener()->isConstantStringInstrumentationEnabled()) {
-            checkForConstantString(callFrame, src1);
-            checkForConstantString(callFrame, src2);
-        }
-#endif
-
         vPC += OPCODE_LENGTH(op_nstricteq);
         NEXT_INSTRUCTION();
     }
@@ -2167,13 +2199,6 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         JSValue result = jsBoolean(jsLess<true>(callFrame, src1, src2));
         CHECK_FOR_EXCEPTION();
         callFrame->uncheckedR(dst) = result;
-
-#ifdef ARTEMIS
-        callFrame->uncheckedR(dst) = \
-                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
-                                                       src1, Symbolic::LESS_STRICT, src2,
-                                                       callFrame->uncheckedR(dst).jsValue());
-#endif
 
         vPC += OPCODE_LENGTH(op_less);
         NEXT_INSTRUCTION();
@@ -2192,13 +2217,6 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         CHECK_FOR_EXCEPTION();
         callFrame->uncheckedR(dst) = result;
 
-#ifdef ARTEMIS
-        callFrame->uncheckedR(dst) = \
-                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
-                                                       src1, Symbolic::LESS_EQ, src2,
-                                                       callFrame->uncheckedR(dst).jsValue());
-#endif
-
         vPC += OPCODE_LENGTH(op_lesseq);
         NEXT_INSTRUCTION();
     }
@@ -2216,13 +2234,6 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         CHECK_FOR_EXCEPTION();
         callFrame->uncheckedR(dst) = result;
 
-#ifdef ARTEMIS
-        callFrame->uncheckedR(dst) = \
-                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
-                                                       src1, Symbolic::GREATER_STRICT, src2,
-                                                       callFrame->uncheckedR(dst).jsValue());
-#endif
-
         vPC += OPCODE_LENGTH(op_greater);
         NEXT_INSTRUCTION();
     }
@@ -2239,13 +2250,6 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         JSValue result = jsBoolean(jsLessEq<false>(callFrame, src2, src1));
         CHECK_FOR_EXCEPTION();
         callFrame->uncheckedR(dst) = result;
-
-#ifdef ARTEMIS
-        callFrame->uncheckedR(dst) = \
-                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
-                                                       src1, Symbolic::GREATER_EQ, src2,
-                                                       callFrame->uncheckedR(dst).jsValue());
-#endif
 
         vPC += OPCODE_LENGTH(op_greatereq);
         NEXT_INSTRUCTION();
@@ -2266,14 +2270,6 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
             callFrame->uncheckedR(srcDst) = result;
         }
 
-#ifdef ARTEMIS
-        JSValue jsn = jsNumber(1);
-        callFrame->uncheckedR(srcDst) = \
-                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
-                                                       v, Symbolic::ADD, jsn,
-                                                       callFrame->uncheckedR(srcDst).jsValue());
-#endif
-
         vPC += OPCODE_LENGTH(op_pre_inc);
         NEXT_INSTRUCTION();
     }
@@ -2292,14 +2288,6 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
             CHECK_FOR_EXCEPTION();
             callFrame->uncheckedR(srcDst) = result;
         }
-
-#ifdef ARTEMIS
-        JSValue jsn = jsNumber(1);
-        callFrame->uncheckedR(srcDst) = \
-                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
-                                                       v, Symbolic::SUBTRACT, jsn,
-                                                       callFrame->uncheckedR(srcDst).jsValue());
-#endif
 
         vPC += OPCODE_LENGTH(op_pre_dec);
         NEXT_INSTRUCTION();
@@ -2324,14 +2312,6 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
             callFrame->uncheckedR(dst) = jsNumber(number);
         }
 
-#ifdef ARTEMIS
-        JSValue jsn = jsNumber(1);
-        callFrame->uncheckedR(srcDst) = \
-                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
-                                                       v, Symbolic::ADD, jsn,
-                                                       callFrame->uncheckedR(srcDst).jsValue());
-#endif
-
         vPC += OPCODE_LENGTH(op_post_inc);
         NEXT_INSTRUCTION();
     }
@@ -2355,14 +2335,6 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
             callFrame->uncheckedR(dst) = jsNumber(number);
         }
 
-#ifdef ARTEMIS
-        JSValue jsn = jsNumber(1);
-        callFrame->uncheckedR(srcDst) = \
-                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
-                                                       v, Symbolic::SUBTRACT, jsn,
-                                                       callFrame->uncheckedR(srcDst).jsValue());
-#endif
-
         vPC += OPCODE_LENGTH(op_post_dec);
         NEXT_INSTRUCTION();
     }
@@ -2385,14 +2357,6 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
             callFrame->uncheckedR(dst) = jsNumber(number);
         }
 
-#ifdef ARTEMIS
-        JSValue jsn = jsNumber(1);
-        callFrame->uncheckedR(dst) = \
-                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
-                                                       srcVal, Symbolic::MULTIPLY, jsn,
-                                                       callFrame->uncheckedR(dst).jsValue());
-#endif
-
         vPC += OPCODE_LENGTH(op_to_jsnumber);
         NEXT_INSTRUCTION();
     }
@@ -2412,14 +2376,6 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
             callFrame->uncheckedR(dst) = result;
         }
 
-#ifdef ARTEMIS
-        JSValue jsn = jsNumber(-1);
-        callFrame->uncheckedR(dst) = \
-                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
-                                                       src, Symbolic::MULTIPLY, jsn,
-                                                       callFrame->uncheckedR(dst).jsValue());
-#endif
-
         vPC += OPCODE_LENGTH(op_negate);
         NEXT_INSTRUCTION();
     }
@@ -2433,21 +2389,13 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         int dst = vPC[1].u.operand;
         JSValue src1 = callFrame->r(vPC[2].u.operand).jsValue();
         JSValue src2 = callFrame->r(vPC[3].u.operand).jsValue();
-        if (src1.isInt32() && src2.isInt32() && !(src1.asInt32() | (src2.asInt32() & 0xc0000000))) // no overflow
+        if (src1.isInt32() && src2.isInt32() && !((src1.asInt32() | src2.asInt32()) & 0xc0000000)) // no overflow
             callFrame->uncheckedR(dst) = jsNumber(src1.asInt32() + src2.asInt32());
         else {
             JSValue result = jsAdd(callFrame, src1, src2);
             CHECK_FOR_EXCEPTION();
             callFrame->uncheckedR(dst) = result;
         }
-
-#ifdef ARTEMIS
-        callFrame->uncheckedR(dst) = \
-                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
-                                                       src1, Symbolic::ADD, src2,
-                                                       callFrame->uncheckedR(dst).jsValue());
-#endif
-
         vPC += OPCODE_LENGTH(op_add);
         NEXT_INSTRUCTION();
     }
@@ -2460,20 +2408,13 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         int dst = vPC[1].u.operand;
         JSValue src1 = callFrame->r(vPC[2].u.operand).jsValue();
         JSValue src2 = callFrame->r(vPC[3].u.operand).jsValue();
-        if (src1.isInt32() && src2.isInt32() && !(src1.asInt32() | src2.asInt32() >> 15)) // no overflow
+        if (src1.isInt32() && src2.isInt32() && !(src1.asInt32() | src2.asInt32()) >> 15) // no overflow
                 callFrame->uncheckedR(dst) = jsNumber(src1.asInt32() * src2.asInt32());
         else {
             JSValue result = jsNumber(src1.toNumber(callFrame) * src2.toNumber(callFrame));
             CHECK_FOR_EXCEPTION();
             callFrame->uncheckedR(dst) = result;
         }
-
-#ifdef ARTEMIS
-        callFrame->uncheckedR(dst) = \
-                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
-                                                       src1, Symbolic::MULTIPLY, src2,
-                                                       callFrame->uncheckedR(dst).jsValue());
-#endif
 
         vPC += OPCODE_LENGTH(op_mul);
         NEXT_INSTRUCTION();
@@ -2493,13 +2434,6 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         CHECK_FOR_EXCEPTION();
         callFrame->uncheckedR(dst) = result;
 
-#ifdef ARTEMIS
-        callFrame->uncheckedR(dst) = \
-                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
-                                                       dividend, Symbolic::DIVIDE, divisor,
-                                                       result);
-#endif
-
         vPC += OPCODE_LENGTH(op_div);
         NEXT_INSTRUCTION();
     }
@@ -2518,14 +2452,6 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
             JSValue result = jsNumber(dividend.asInt32() % divisor.asInt32());
             ASSERT(result);
             callFrame->uncheckedR(dst) = result;
-
-#ifdef ARTEMIS
-        callFrame->uncheckedR(dst) = \
-                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
-                                                       dividend, Symbolic::EQUAL, divisor,
-                                                       result);
-#endif
-
             vPC += OPCODE_LENGTH(op_mod);
             NEXT_INSTRUCTION();
         }
@@ -2537,14 +2463,6 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         JSValue result = jsNumber(fmod(d1, d2));
         CHECK_FOR_EXCEPTION();
         callFrame->uncheckedR(dst) = result;
-
-#ifdef ARTEMIS
-        callFrame->uncheckedR(dst) = \
-                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
-                                                       dividend, Symbolic::MODULO, divisor,
-                                                       result);
-#endif
-
         vPC += OPCODE_LENGTH(op_mod);
         NEXT_INSTRUCTION();
     }
@@ -2558,21 +2476,13 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         int dst = vPC[1].u.operand;
         JSValue src1 = callFrame->r(vPC[2].u.operand).jsValue();
         JSValue src2 = callFrame->r(vPC[3].u.operand).jsValue();
-        if (src1.isInt32() && src2.isInt32() && !(src1.asInt32() | (src2.asInt32() & 0xc0000000))) // no overflow
+        if (src1.isInt32() && src2.isInt32() && !((src1.asInt32() | src2.asInt32()) & 0xc0000000)) // no overflow
             callFrame->uncheckedR(dst) = jsNumber(src1.asInt32() - src2.asInt32());
         else {
             JSValue result = jsNumber(src1.toNumber(callFrame) - src2.toNumber(callFrame));
             CHECK_FOR_EXCEPTION();
             callFrame->uncheckedR(dst) = result;
         }
-
-#ifdef ARTEMIS
-        callFrame->uncheckedR(dst) = \
-                Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
-                                                       src1, Symbolic::SUBTRACT, src2,
-                                                       callFrame->uncheckedR(dst).jsValue());
-#endif
-
         vPC += OPCODE_LENGTH(op_sub);
         NEXT_INSTRUCTION();
     }
@@ -2702,24 +2612,6 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         }
 
         vPC += OPCODE_LENGTH(op_bitor);
-        NEXT_INSTRUCTION();
-    }
-    DEFINE_OPCODE(op_bitnot) {
-        /* bitnot dst(r) src(r)
-
-           Computes bitwise NOT of register src1 (converted to int32),
-           and puts the result in register dst.
-        */
-        int dst = vPC[1].u.operand;
-        JSValue src = callFrame->r(vPC[2].u.operand).jsValue();
-        if (src.isInt32())
-            callFrame->uncheckedR(dst) = jsNumber(~src.asInt32());
-        else {
-            JSValue result = jsNumber(~src.toInt32(callFrame));
-            CHECK_FOR_EXCEPTION();
-            callFrame->uncheckedR(dst) = result;
-        }
-        vPC += OPCODE_LENGTH(op_bitnot);
         NEXT_INSTRUCTION();
     }
     DEFINE_OPCODE(op_not) {
@@ -2906,7 +2798,7 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         if (propName.getUInt32(i))
             callFrame->uncheckedR(dst) = jsBoolean(baseObj->hasProperty(callFrame, i));
         else {
-            Identifier property(callFrame, propName.toString(callFrame));
+            Identifier property(callFrame, propName.toString(callFrame)->value(callFrame));
             CHECK_FOR_EXCEPTION();
             callFrame->uncheckedR(dst) = jsBoolean(baseObj->hasProperty(callFrame, property));
         }
@@ -2943,7 +2835,7 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
     }
     DEFINE_OPCODE(op_resolve_global) {
         /* resolve_skip dst(r) globalObject(c) property(id) structure(sID) offset(n)
-
+         
            Performs a dynamic property lookup for the given property, on the provided
            global object.  If structure matches the Structure of the global then perform
            a fast lookup using the case offset, otherwise fall back to a full resolve and
@@ -2951,27 +2843,27 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
          */
         if (UNLIKELY(!resolveGlobal(callFrame, vPC, exceptionValue)))
             goto vm_throw;
-
+        
         vPC += OPCODE_LENGTH(op_resolve_global);
-
+        
         NEXT_INSTRUCTION();
     }
     DEFINE_OPCODE(op_resolve_global_dynamic) {
         /* resolve_skip dst(r) globalObject(c) property(id) structure(sID) offset(n), depth(n)
-
+         
          Performs a dynamic property lookup for the given property, on the provided
          global object.  If structure matches the Structure of the global then perform
          a fast lookup using the case offset, otherwise fall back to a full resolve and
          cache the new structure and offset.
-
+         
          This walks through n levels of the scope chain to verify that none of those levels
          in the scope chain include dynamically added properties.
          */
         if (UNLIKELY(!resolveGlobalDynamic(callFrame, vPC, exceptionValue)))
             goto vm_throw;
-
+        
         vPC += OPCODE_LENGTH(op_resolve_global_dynamic);
-
+        
         NEXT_INSTRUCTION();
     }
     DEFINE_OPCODE(op_get_global_var) {
@@ -2984,32 +2876,20 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         ASSERT(scope->isGlobalObject());
         int index = vPC[2].u.operand;
 
-#ifdef ARTEMIS
-        if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
-		readProperty(callFrame, scope->symbolTable(), index);
-	}
-#endif
-
         callFrame->uncheckedR(dst) = scope->registerAt(index).get();
         vPC += OPCODE_LENGTH(op_get_global_var);
         NEXT_INSTRUCTION();
     }
     DEFINE_OPCODE(op_put_global_var) {
         /* put_global_var globalObject(c) index(n) value(r)
-
+         
            Puts value into global slot index.
          */
         JSGlobalObject* scope = codeBlock->globalObject();
         ASSERT(scope->isGlobalObject());
         int index = vPC[1].u.operand;
         int value = vPC[2].u.operand;
-
-#ifdef ARTEMIS
-        if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
-		readProperty(callFrame, scope->symbolTable(), index);
-	}
-#endif
-
+        
         scope->registerAt(index).set(*globalData, scope, callFrame->r(value).jsValue());
         vPC += OPCODE_LENGTH(op_put_global_var);
         NEXT_INSTRUCTION();
@@ -3026,14 +2906,8 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
 
         ScopeChainNode* scopeChain = callFrame->scopeChain();
         ScopeChainIterator iter = scopeChain->begin();
-
         ScopeChainIterator end = scopeChain->end();
-
-
-#ifndef ARTEMIS
         ASSERT_UNUSED(end, iter != end);
-#endif
-
         ASSERT(codeBlock == callFrame->codeBlock());
         bool checkTopLevel = codeBlock->codeType() == FunctionCode && codeBlock->needsFullScopeChain();
         ASSERT(skip || !checkTopLevel);
@@ -3046,16 +2920,9 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
             ASSERT_UNUSED(end, iter != end);
         }
         ASSERT((*iter)->isVariableObject());
-        JSVariableObject* scope = static_cast<JSVariableObject*>(iter->get());
+        JSVariableObject* scope = jsCast<JSVariableObject*>(iter->get());
         callFrame->uncheckedR(dst) = scope->registerAt(index).get();
         ASSERT(callFrame->r(dst).jsValue());
-
-#ifdef ARTEMIS
-        if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
-		readProperty(callFrame, scope->symbolTable(), index);
-	}
-#endif
-
         vPC += OPCODE_LENGTH(op_get_scoped_var);
         NEXT_INSTRUCTION();
     }
@@ -3070,13 +2937,8 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         ScopeChainNode* scopeChain = callFrame->scopeChain();
         ScopeChainIterator iter = scopeChain->begin();
         ScopeChainIterator end = scopeChain->end();
-
-
-#ifndef ARTEMIS
         ASSERT(codeBlock == callFrame->codeBlock());
         ASSERT_UNUSED(end, iter != end);
-#endif
-
         bool checkTopLevel = codeBlock->codeType() == FunctionCode && codeBlock->needsFullScopeChain();
         ASSERT(skip || !checkTopLevel);
         if (checkTopLevel && skip--) {
@@ -3089,16 +2951,9 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         }
 
         ASSERT((*iter)->isVariableObject());
-        JSVariableObject* scope = static_cast<JSVariableObject*>(iter->get());
+        JSVariableObject* scope = jsCast<JSVariableObject*>(iter->get());
         ASSERT(callFrame->r(value).jsValue());
         scope->registerAt(index).set(*globalData, scope, callFrame->r(value).jsValue());
-
-#ifdef ARTEMIS
-        if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
-		readProperty(callFrame, scope->symbolTable(), index);
-	}
-#endif
-
         vPC += OPCODE_LENGTH(op_put_scoped_var);
         NEXT_INSTRUCTION();
     }
@@ -3125,13 +2980,7 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         int base = vPC[1].u.operand;
         int property = vPC[2].u.operand;
         Identifier& ident = codeBlock->identifier(property);
-
-#ifdef ARTEMIS
-        if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
-		readProperty(callFrame, ident.ascii().data());
-	}
-#endif
-
+        
         JSValue baseVal = callFrame->r(base).jsValue();
         JSObject* baseObject = asObject(baseVal);
         PropertySlot slot(baseVal);
@@ -3188,28 +3037,12 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
         int property = vPC[3].u.operand;
 
         Identifier& ident = codeBlock->identifier(property);
-
-#ifdef ARTEMIS
-        if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
-		readProperty(callFrame, ident.ascii().data());
-	}
-#endif
-
         JSValue baseValue = callFrame->r(base).jsValue();
         PropertySlot slot(baseValue);
         JSValue result = baseValue.get(callFrame, ident, slot);
         CHECK_FOR_EXCEPTION();
 
-#ifndef ARTEMIS
-        // Disable op_get_by_id optimisation
         tryCacheGetByID(callFrame, codeBlock, vPC, baseValue, ident, slot);
-#endif
-
-#ifdef ARTEMIS
-        if (result.isSymbolic()) {
-            bytecodeInfo.setSymbolic();
-        }
-#endif
 
         callFrame->uncheckedR(dst) = result;
         vPC += OPCODE_LENGTH(op_get_by_id);
@@ -3222,20 +3055,8 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
            value base. If the cache misses, op_get_by_id_self reverts to
            op_get_by_id.
         */
-
-#ifdef ARTEMIS
-        ASSERT(false);
-#endif
-
         int base = vPC[2].u.operand;
         JSValue baseValue = callFrame->r(base).jsValue();
-
-#ifdef ARTEMIS
-        int property = vPC[3].u.operand;
-        if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
-		readProperty(callFrame, codeBlock->identifier(property).ascii().data());
-	}
-#endif
 
         if (LIKELY(baseValue.isCell())) {
             JSCell* baseCell = baseValue.asCell();
@@ -3265,20 +3086,8 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
            value base's prototype. If the cache misses, op_get_by_id_proto
            reverts to op_get_by_id.
         */
-
-#ifdef ARTEMIS
-        ASSERT(false);
-#endif
-
         int base = vPC[2].u.operand;
         JSValue baseValue = callFrame->r(base).jsValue();
-
-#ifdef ARTEMIS
-        int property = vPC[3].u.operand;
-        if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
-		readProperty(callFrame, codeBlock->identifier(property).ascii().data());
-	}
-#endif
 
         if (LIKELY(baseValue.isCell())) {
             JSCell* baseCell = baseValue.asCell();
@@ -3311,35 +3120,23 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
 #endif
     DEFINE_OPCODE(op_get_by_id_getter_proto) {
         /* op_get_by_id_getter_proto dst(r) base(r) property(id) structure(sID) prototypeStructure(sID) offset(n) nop(n)
-
+         
          Cached property access: Attempts to get a cached getter property from the
          value base's prototype. If the cache misses, op_get_by_id_getter_proto
          reverts to op_get_by_id.
          */
-
-#ifdef ARTEMIS
-        ASSERT(false);
-#endif
-
         int base = vPC[2].u.operand;
         JSValue baseValue = callFrame->r(base).jsValue();
-
-#ifdef ARTEMIS
-        int property = vPC[3].u.operand;
-        if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
-		readProperty(callFrame, codeBlock->identifier(property).ascii().data());
-	}
-#endif
-
+        
         if (LIKELY(baseValue.isCell())) {
             JSCell* baseCell = baseValue.asCell();
             Structure* structure = vPC[4].u.structure.get();
-
+            
             if (LIKELY(baseCell->structure() == structure)) {
                 ASSERT(structure->prototypeForLookup(callFrame).isObject());
                 JSObject* protoObject = asObject(structure->prototypeForLookup(callFrame));
                 Structure* prototypeStructure = vPC[5].u.structure.get();
-
+                
                 if (LIKELY(protoObject->structure() == prototypeStructure)) {
                     int dst = vPC[1].u.operand;
                     int offset = vPC[6].u.operand;
@@ -3368,40 +3165,28 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
 #endif
     DEFINE_OPCODE(op_get_by_id_custom_proto) {
         /* op_get_by_id_custom_proto dst(r) base(r) property(id) structure(sID) prototypeStructure(sID) offset(n) nop(n)
-
+         
          Cached property access: Attempts to use a cached named property getter
          from the value base's prototype. If the cache misses, op_get_by_id_custom_proto
          reverts to op_get_by_id.
          */
-
-#ifdef ARTEMIS
-        ASSERT(false);
-#endif
-
         int base = vPC[2].u.operand;
         JSValue baseValue = callFrame->r(base).jsValue();
-
-#ifdef ARTEMIS
-        int property = vPC[3].u.operand;
-        if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
-		readProperty(callFrame, codeBlock->identifier(property).ascii().data());
-	}
-#endif
-
+        
         if (LIKELY(baseValue.isCell())) {
             JSCell* baseCell = baseValue.asCell();
             Structure* structure = vPC[4].u.structure.get();
-
+            
             if (LIKELY(baseCell->structure() == structure)) {
                 ASSERT(structure->prototypeForLookup(callFrame).isObject());
                 JSObject* protoObject = asObject(structure->prototypeForLookup(callFrame));
                 Structure* prototypeStructure = vPC[5].u.structure.get();
-
+                
                 if (LIKELY(protoObject->structure() == prototypeStructure)) {
                     int dst = vPC[1].u.operand;
                     int property = vPC[3].u.operand;
                     Identifier& ident = codeBlock->identifier(property);
-
+                    
                     PropertySlot::GetValueFunc getter = vPC[6].u.getterFunc;
                     JSValue result = getter(callFrame, protoObject, ident);
                     CHECK_FOR_EXCEPTION();
@@ -3427,20 +3212,8 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
            value base's prototype chain. If the cache misses, op_get_by_id_chain
            reverts to op_get_by_id.
         */
-
-#ifdef ARTEMIS
-        ASSERT(false);
-#endif
-
         int base = vPC[2].u.operand;
         JSValue baseValue = callFrame->r(base).jsValue();
-
-#ifdef ARTEMIS
-        int property = vPC[3].u.operand;
-        if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
-		readProperty(callFrame, codeBlock->identifier(property).ascii().data());
-	}
-#endif
 
         if (LIKELY(baseValue.isCell())) {
             JSCell* baseCell = baseValue.asCell();
@@ -3484,30 +3257,18 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
 #endif
     DEFINE_OPCODE(op_get_by_id_getter_self) {
         /* op_get_by_id_self dst(r) base(r) property(id) structure(sID) offset(n) nop(n) nop(n)
-
+         
          Cached property access: Attempts to get a cached property from the
          value base. If the cache misses, op_get_by_id_getter_self reverts to
          op_get_by_id.
          */
-
-#ifdef ARTEMIS
-        ASSERT(false);
-#endif
-
         int base = vPC[2].u.operand;
         JSValue baseValue = callFrame->r(base).jsValue();
-
-#ifdef ARTEMIS
-        int property = vPC[3].u.operand;
-        if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
-		readProperty(callFrame, codeBlock->identifier(property).ascii().data());
-	}
-#endif
-
+        
         if (LIKELY(baseValue.isCell())) {
             JSCell* baseCell = baseValue.asCell();
             Structure* structure = vPC[4].u.structure.get();
-
+            
             if (LIKELY(baseCell->structure() == structure)) {
                 ASSERT(baseCell->isObject());
                 JSObject* baseObject = asObject(baseCell);
@@ -3539,30 +3300,18 @@ JSValue Interpreter::privateExecute(ExecutionFlag flag, RegisterFile* registerFi
 #endif
     DEFINE_OPCODE(op_get_by_id_custom_self) {
         /* op_get_by_id_custom_self dst(r) base(r) property(id) structure(sID) offset(n) nop(n) nop(n)
-
+         
          Cached property access: Attempts to use a cached named property getter
          from the value base. If the cache misses, op_get_by_id_custom_self reverts to
          op_get_by_id.
          */
-
-#ifdef ARTEMIS
-        ASSERT(false);
-#endif
-
         int base = vPC[2].u.operand;
         JSValue baseValue = callFrame->r(base).jsValue();
-
-#ifdef ARTEMIS
-        int property = vPC[3].u.operand;
-        if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
-		readProperty(callFrame, codeBlock->identifier(property).ascii().data());
-	}
-#endif
-
+        
         if (LIKELY(baseValue.isCell())) {
             JSCell* baseCell = baseValue.asCell();
             Structure* structure = vPC[4].u.structure.get();
-
+            
             if (LIKELY(baseCell->structure() == structure)) {
                 ASSERT(baseCell->isObject());
                 int dst = vPC[1].u.operand;
@@ -3589,23 +3338,11 @@ skip_id_custom_self:
            Generic property access: Gets the property named by identifier
            property from the value base, and puts the result in register dst.
         */
-
-#ifdef ARTEMIS
-        ASSERT(false);
-#endif
-
         int dst = vPC[1].u.operand;
         int base = vPC[2].u.operand;
         int property = vPC[3].u.operand;
 
         Identifier& ident = codeBlock->identifier(property);
-
-#ifdef ARTEMIS
-        if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
-		readProperty(callFrame, ident.ascii().data());
-	}
-#endif
-
         JSValue baseValue = callFrame->r(base).jsValue();
         PropertySlot slot(baseValue);
         JSValue result = baseValue.get(callFrame, ident, slot);
@@ -3620,41 +3357,29 @@ skip_id_custom_self:
 #endif
     DEFINE_OPCODE(op_get_by_id_getter_chain) {
         /* op_get_by_id_getter_chain dst(r) base(r) property(id) structure(sID) structureChain(chain) count(n) offset(n)
-
+         
          Cached property access: Attempts to get a cached property from the
          value base's prototype chain. If the cache misses, op_get_by_id_getter_chain
          reverts to op_get_by_id.
          */
-
-#ifdef ARTEMIS
-        ASSERT(false);
-#endif
-
         int base = vPC[2].u.operand;
         JSValue baseValue = callFrame->r(base).jsValue();
-
-#ifdef ARTEMIS
-        int property = vPC[3].u.operand;
-        if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
-		readProperty(callFrame, codeBlock->identifier(property).ascii().data());
-	}
-#endif
-
+        
         if (LIKELY(baseValue.isCell())) {
             JSCell* baseCell = baseValue.asCell();
             Structure* structure = vPC[4].u.structure.get();
-
+            
             if (LIKELY(baseCell->structure() == structure)) {
                 WriteBarrier<Structure>* it = vPC[5].u.structureChain->head();
                 size_t count = vPC[6].u.operand;
                 WriteBarrier<Structure>* end = it + count;
-
+                
                 while (true) {
                     JSObject* baseObject = asObject(baseCell->structure()->prototypeForLookup(callFrame));
-
+                    
                     if (UNLIKELY(baseObject->structure() != (*it).get()))
                         break;
-
+                    
                     if (++it == end) {
                         int dst = vPC[1].u.operand;
                         int offset = vPC[7].u.operand;
@@ -3670,7 +3395,7 @@ skip_id_custom_self:
                         vPC += OPCODE_LENGTH(op_get_by_id_getter_chain);
                         NEXT_INSTRUCTION();
                     }
-
+                    
                     // Update baseCell, so that next time around the loop we'll pick up the prototype's prototype.
                     baseCell = baseObject;
                 }
@@ -3687,46 +3412,34 @@ skip_id_custom_self:
 #endif
     DEFINE_OPCODE(op_get_by_id_custom_chain) {
         /* op_get_by_id_custom_chain dst(r) base(r) property(id) structure(sID) structureChain(chain) count(n) offset(n)
-
+         
          Cached property access: Attempts to use a cached named property getter on the
          value base's prototype chain. If the cache misses, op_get_by_id_custom_chain
          reverts to op_get_by_id.
          */
-
-#ifdef ARTEMIS
-        ASSERT(false);
-#endif
-
         int base = vPC[2].u.operand;
         JSValue baseValue = callFrame->r(base).jsValue();
-
-#ifdef ARTEMIS
-        int property = vPC[3].u.operand;
-        if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
-		readProperty(callFrame, codeBlock->identifier(property).ascii().data());
-	}
-#endif
-
+        
         if (LIKELY(baseValue.isCell())) {
             JSCell* baseCell = baseValue.asCell();
             Structure* structure = vPC[4].u.structure.get();
-
+            
             if (LIKELY(baseCell->structure() == structure)) {
                 WriteBarrier<Structure>* it = vPC[5].u.structureChain->head();
                 size_t count = vPC[6].u.operand;
                 WriteBarrier<Structure>* end = it + count;
-
+                
                 while (true) {
                     JSObject* baseObject = asObject(baseCell->structure()->prototypeForLookup(callFrame));
-
+                    
                     if (UNLIKELY(baseObject->structure() != (*it).get()))
                         break;
-
+                    
                     if (++it == end) {
                         int dst = vPC[1].u.operand;
                         int property = vPC[3].u.operand;
                         Identifier& ident = codeBlock->identifier(property);
-
+                        
                         PropertySlot::GetValueFunc getter = vPC[7].u.getterFunc;
                         JSValue result = getter(callFrame, baseObject, ident);
                         CHECK_FOR_EXCEPTION();
@@ -3734,7 +3447,7 @@ skip_id_custom_self:
                         vPC += OPCODE_LENGTH(op_get_by_id_custom_chain);
                         NEXT_INSTRUCTION();
                     }
-
+                    
                     // Update baseCell, so that next time around the loop we'll pick up the prototype's prototype.
                     baseCell = baseObject;
                 }
@@ -3815,30 +3528,15 @@ skip_id_custom_self:
 
         JSValue baseValue = callFrame->r(base).jsValue();
         Identifier& ident = codeBlock->identifier(property);
-
-#ifdef ARTEMIS
-        if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
-		readProperty(callFrame, ident.ascii().data());
-	}
-#endif
-
         PutPropertySlot slot(codeBlock->isStrictMode());
-        if (direct)
-            baseValue.putDirect(callFrame, ident, callFrame->r(value).jsValue(), slot);
-        else
+        if (direct) {
+            ASSERT(baseValue.isObject());
+            asObject(baseValue)->putDirect(*globalData, ident, callFrame->r(value).jsValue(), slot);
+        } else
             baseValue.put(callFrame, ident, callFrame->r(value).jsValue(), slot);
         CHECK_FOR_EXCEPTION();
 
-#ifndef ARTEMIS
-        // Disable op_put_by_id optimisation
         tryCachePutByID(callFrame, codeBlock, vPC, baseValue, slot);
-#endif
-
-#ifdef ARTEMIS
-        if (callFrame->r(value).jsValue().isSymbolic()) {
-            bytecodeInfo.setSymbolic();
-        }
-#endif
 
         vPC += OPCODE_LENGTH(op_put_by_id);
         NEXT_INSTRUCTION();
@@ -3846,42 +3544,32 @@ skip_id_custom_self:
 #if USE(GCC_COMPUTED_GOTO_WORKAROUND)
       skip_put_by_id:
 #endif
+    DEFINE_OPCODE(op_put_by_id_transition_direct)
+    DEFINE_OPCODE(op_put_by_id_transition_normal)
     DEFINE_OPCODE(op_put_by_id_transition) {
         /* op_put_by_id_transition base(r) property(id) value(r) oldStructure(sID) newStructure(sID) structureChain(chain) offset(n) direct(b)
-
+         
            Cached property access: Attempts to set a new property with a cached transition
            property named by identifier property, belonging to register base,
            to register value. If the cache misses, op_put_by_id_transition
            reverts to op_put_by_id_generic.
-
+         
            Unlike many opcodes, this one does not write any output to
            the register file.
          */
-
-#ifdef ARTEMIS
-        ASSERT(false);
-#endif
-
         int base = vPC[1].u.operand;
         JSValue baseValue = callFrame->r(base).jsValue();
-
-#ifdef ARTEMIS
-        int property = vPC[2].u.operand;
-        if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
-		readProperty(callFrame, codeBlock->identifier(property).ascii().data());
-	}
-#endif
-
+        
         if (LIKELY(baseValue.isCell())) {
             JSCell* baseCell = baseValue.asCell();
             Structure* oldStructure = vPC[4].u.structure.get();
             Structure* newStructure = vPC[5].u.structure.get();
-
+            
             if (LIKELY(baseCell->structure() == oldStructure)) {
                 ASSERT(baseCell->isObject());
                 JSObject* baseObject = asObject(baseCell);
                 int direct = vPC[8].u.operand;
-
+                
                 if (!direct) {
                     WriteBarrier<Structure>* it = vPC[6].u.structureChain->head();
 
@@ -3906,7 +3594,7 @@ skip_id_custom_self:
                 NEXT_INSTRUCTION();
             }
         }
-
+        
         uncachePutByID(codeBlock, vPC);
         NEXT_INSTRUCTION();
     }
@@ -3921,20 +3609,8 @@ skip_id_custom_self:
            Unlike many opcodes, this one does not write any output to
            the register file.
         */
-
-#ifdef ARTEMIS
-        ASSERT(false);
-#endif
-
         int base = vPC[1].u.operand;
         JSValue baseValue = callFrame->r(base).jsValue();
-
-#ifdef ARTEMIS
-        int property = vPC[2].u.operand;
-        if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
-		readProperty(callFrame, codeBlock->identifier(property).ascii().data());
-	}
-#endif
 
         if (LIKELY(baseValue.isCell())) {
             JSCell* baseCell = baseValue.asCell();
@@ -3945,7 +3621,7 @@ skip_id_custom_self:
                 JSObject* baseObject = asObject(baseCell);
                 int value = vPC[3].u.operand;
                 unsigned offset = vPC[5].u.operand;
-
+                
                 ASSERT(baseObject->offsetForLocation(baseObject->getDirectLocation(*globalData, codeBlock->identifier(vPC[2].u.operand))) == offset);
                 baseObject->putDirectOffset(callFrame->globalData(), offset, callFrame->r(value).jsValue());
 
@@ -3966,11 +3642,6 @@ skip_id_custom_self:
            Unlike many opcodes, this one does not write any output to
            the register file.
         */
-
-#ifdef ARTEMIS
-        ASSERT(false);
-#endif
-
         int base = vPC[1].u.operand;
         int property = vPC[2].u.operand;
         int value = vPC[3].u.operand;
@@ -3978,17 +3649,11 @@ skip_id_custom_self:
 
         JSValue baseValue = callFrame->r(base).jsValue();
         Identifier& ident = codeBlock->identifier(property);
-
-#ifdef ARTEMIS
-        if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
-		readProperty(callFrame, ident.ascii().data());
-	}
-#endif
-
         PutPropertySlot slot(codeBlock->isStrictMode());
-        if (direct)
-            baseValue.putDirect(callFrame, ident, callFrame->r(value).jsValue(), slot);
-        else
+        if (direct) {
+            ASSERT(baseValue.isObject());
+            asObject(baseValue)->putDirect(*globalData, ident, callFrame->r(value).jsValue(), slot);
+        } else
             baseValue.put(callFrame, ident, callFrame->r(value).jsValue(), slot);
         CHECK_FOR_EXCEPTION();
 
@@ -4009,13 +3674,6 @@ skip_id_custom_self:
 
         JSObject* baseObj = callFrame->r(base).jsValue().toObject(callFrame);
         Identifier& ident = codeBlock->identifier(property);
-
-#ifdef ARTEMIS
-        if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
-		readProperty(callFrame, ident.ascii().data());
-	}
-#endif
-
         bool result = baseObj->methodTable()->deleteProperty(baseObj, callFrame, ident);
         if (!result && codeBlock->isStrictMode()) {
             exceptionValue = createTypeError(callFrame, "Unable to delete property.");
@@ -4038,13 +3696,6 @@ skip_id_custom_self:
         JSPropertyNameIterator* it = callFrame->r(iter).propertyNameIterator();
         JSValue subscript = callFrame->r(property).jsValue();
         JSValue expectedSubscript = callFrame->r(expected).jsValue();
-
-#ifdef ARTEMIS
-        if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
-		readProperty(callFrame, subscript.toString(callFrame).ascii().data());
-	}
-#endif
-
         int index = callFrame->r(i).i() - 1;
         JSValue result;
         int offset = 0;
@@ -4054,7 +3705,7 @@ skip_id_custom_self:
             NEXT_INSTRUCTION();
         }
         {
-            Identifier propertyName(callFrame, subscript.toString(callFrame));
+            Identifier propertyName(callFrame, subscript.toString(callFrame)->value(callFrame));
             result = baseValue.get(callFrame, propertyName);
         }
         CHECK_FOR_EXCEPTION();
@@ -4108,15 +3759,9 @@ skip_id_custom_self:
         int dst = vPC[1].u.operand;
         int base = vPC[2].u.operand;
         int property = vPC[3].u.operand;
-
+        
         JSValue baseValue = callFrame->r(base).jsValue();
         JSValue subscript = callFrame->r(property).jsValue();
-
-#ifdef ARTEMIS
-        if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
-		readProperty(callFrame, subscript.toString(callFrame).ascii().data());
-	}
-#endif
 
         JSValue result;
 
@@ -4130,12 +3775,10 @@ skip_id_custom_self:
                     result = jsArray->JSArray::get(callFrame, i);
             } else if (isJSString(baseValue) && asString(baseValue)->canGetIndex(i))
                 result = asString(baseValue)->getIndex(callFrame, i);
-            else if (isJSByteArray(baseValue) && asByteArray(baseValue)->canAccessIndex(i))
-                result = asByteArray(baseValue)->getIndex(callFrame, i);
             else
                 result = baseValue.get(callFrame, i);
         } else {
-            Identifier property(callFrame, subscript.toString(callFrame));
+            Identifier property(callFrame, subscript.toString(callFrame)->value(callFrame));
             result = baseValue.get(callFrame, property);
         }
 
@@ -4162,12 +3805,6 @@ skip_id_custom_self:
         JSValue baseValue = callFrame->r(base).jsValue();
         JSValue subscript = callFrame->r(property).jsValue();
 
-#ifdef ARTEMIS
-        if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
-		readProperty(callFrame, subscript.toString(callFrame).ascii().data());
-	}
-#endif
-
         if (LIKELY(subscript.isUInt32())) {
             uint32_t i = subscript.asUInt32();
             if (isJSArray(baseValue)) {
@@ -4175,20 +3812,11 @@ skip_id_custom_self:
                 if (jsArray->canSetIndex(i))
                     jsArray->setIndex(*globalData, i, callFrame->r(value).jsValue());
                 else
-                    jsArray->JSArray::putByIndex(jsArray, callFrame, i, callFrame->r(value).jsValue());
-            } else if (isJSByteArray(baseValue) && asByteArray(baseValue)->canAccessIndex(i)) {
-                JSByteArray* jsByteArray = asByteArray(baseValue);
-                JSValue jsValue = callFrame->r(value).jsValue();
-                if (jsValue.isInt32())
-                    jsByteArray->setIndex(i, jsValue.asInt32());
-                else if (jsValue.isDouble())
-                    jsByteArray->setIndex(i, jsValue.asDouble());
-                else
-                    baseValue.put(callFrame, i, jsValue);
+                    jsArray->JSArray::putByIndex(jsArray, callFrame, i, callFrame->r(value).jsValue(), codeBlock->isStrictMode());
             } else
-                baseValue.put(callFrame, i, callFrame->r(value).jsValue());
+                baseValue.putByIndex(callFrame, i, callFrame->r(value).jsValue(), codeBlock->isStrictMode());
         } else {
-            Identifier property(callFrame, subscript.toString(callFrame));
+            Identifier property(callFrame, subscript.toString(callFrame)->value(callFrame));
             if (!globalData->exception) { // Don't put to an object if toString threw an exception.
                 PutPropertySlot slot(codeBlock->isStrictMode());
                 baseValue.put(callFrame, property, callFrame->r(value).jsValue(), slot);
@@ -4212,21 +3840,15 @@ skip_id_custom_self:
         int property = vPC[3].u.operand;
 
         JSObject* baseObj = callFrame->r(base).jsValue().toObject(callFrame); // may throw
+
         JSValue subscript = callFrame->r(property).jsValue();
-
-#ifdef ARTEMIS
-        if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
-		readProperty(callFrame, subscript.toString(callFrame).ascii().data());
-	}
-#endif
-
         bool result;
         uint32_t i;
         if (subscript.getUInt32(i))
             result = baseObj->methodTable()->deletePropertyByIndex(baseObj, callFrame, i);
         else {
             CHECK_FOR_EXCEPTION();
-            Identifier property(callFrame, subscript.toString(callFrame));
+            Identifier property(callFrame, subscript.toString(callFrame)->value(callFrame));
             CHECK_FOR_EXCEPTION();
             result = baseObj->methodTable()->deleteProperty(baseObj, callFrame, property);
         }
@@ -4255,14 +3877,16 @@ skip_id_custom_self:
         unsigned property = vPC[2].u.operand;
         int value = vPC[3].u.operand;
 
-        callFrame->r(base).jsValue().put(callFrame, property, callFrame->r(value).jsValue());
+        JSValue arrayValue = callFrame->r(base).jsValue();
+        ASSERT(isJSArray(arrayValue));
+        asArray(arrayValue)->putDirectIndex(callFrame, property, callFrame->r(value).jsValue(), false);
 
         vPC += OPCODE_LENGTH(op_put_by_index);
         NEXT_INSTRUCTION();
     }
     DEFINE_OPCODE(op_loop) {
         /* loop target(offset)
-
+         
            Jumps unconditionally to offset target from the current
            instruction.
 
@@ -4298,7 +3922,7 @@ skip_id_custom_self:
     }
     DEFINE_OPCODE(op_loop_if_true) {
         /* loop_if_true cond(r) target(offset)
-
+         
            Jumps to offset target from the current instruction, if and
            only if register cond converts to boolean as true.
 
@@ -4307,40 +3931,18 @@ skip_id_custom_self:
          */
         int cond = vPC[1].u.operand;
         int target = vPC[2].u.operand;
-
-#ifdef ARTEMIS
-        JSValue _v = callFrame->r(cond).jsValue();
-        JSValue _jst = jsBoolean(true);
-
-        bool _jumped = _v.toBoolean(callFrame);
-        JSValue _r = jsBoolean(_jumped);
-
-        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
-                                                    _v, Symbolic::EQUAL, _jst,
-                                                    _r);
-
-        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC, bytecodeInfo,
-                                             _r, _jumped);
-
-        if (_jumped) {
-            vPC += target;
-            CHECK_FOR_TIMEOUT();
-            NEXT_INSTRUCTION();
-        }
-#else
         if (callFrame->r(cond).jsValue().toBoolean(callFrame)) {
             vPC += target;
             CHECK_FOR_TIMEOUT();
             NEXT_INSTRUCTION();
         }
-#endif
-
+        
         vPC += OPCODE_LENGTH(op_loop_if_true);
         NEXT_INSTRUCTION();
     }
     DEFINE_OPCODE(op_loop_if_false) {
         /* loop_if_true cond(r) target(offset)
-
+         
            Jumps to offset target from the current instruction, if and
            only if register cond converts to boolean as false.
 
@@ -4349,35 +3951,12 @@ skip_id_custom_self:
          */
         int cond = vPC[1].u.operand;
         int target = vPC[2].u.operand;
-
-#ifdef ARTEMIS
-        JSValue _v = callFrame->r(cond).jsValue();
-        JSValue _jsf = jsBoolean(false);
-
-        bool _jumped = !_v.toBoolean(callFrame);
-        JSValue _r = jsBoolean(_jumped);
-
-        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
-                                                    _v, Symbolic::EQUAL, _jsf,
-                                                    _r);
-
-        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC, bytecodeInfo,
-                                             _r, _jumped);
-
-
-        if (_jumped) {
-            vPC += target;
-            CHECK_FOR_TIMEOUT();
-            NEXT_INSTRUCTION();
-        }
-#else
         if (!callFrame->r(cond).jsValue().toBoolean(callFrame)) {
             vPC += target;
             CHECK_FOR_TIMEOUT();
             NEXT_INSTRUCTION();
         }
-#endif
-
+        
         vPC += OPCODE_LENGTH(op_loop_if_true);
         NEXT_INSTRUCTION();
     }
@@ -4389,31 +3968,10 @@ skip_id_custom_self:
         */
         int cond = vPC[1].u.operand;
         int target = vPC[2].u.operand;
-
-#ifdef ARTEMIS
-        JSValue _v = callFrame->r(cond).jsValue();
-        JSValue _jst = jsBoolean(true);
-
-        bool _jumped = _v.toBoolean(callFrame);
-        JSValue _r = jsBoolean(_jumped);
-
-        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
-                                                    _v, Symbolic::EQUAL, _jst,
-                                                    _r);
-
-        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC, bytecodeInfo,
-                                             _r, _jumped);
-
-        if (_jumped) {
-            vPC += target;
-            NEXT_INSTRUCTION();
-        }
-#else
         if (callFrame->r(cond).jsValue().toBoolean(callFrame)) {
             vPC += target;
             NEXT_INSTRUCTION();
         }
-#endif
 
         vPC += OPCODE_LENGTH(op_jtrue);
         NEXT_INSTRUCTION();
@@ -4426,35 +3984,13 @@ skip_id_custom_self:
         */
         int cond = vPC[1].u.operand;
         int target = vPC[2].u.operand;
-
-#ifdef ARTEMIS
-        JSValue _v = callFrame->r(cond).jsValue();
-        JSValue _jsf = jsBoolean(false);
-
-        bool _jumped = !_v.toBoolean(callFrame);
-        JSValue _r = jsBoolean(_jumped);
-
-        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
-                                                    _v, Symbolic::EQUAL, _jsf,
-                                                    _r);
-
-        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC, bytecodeInfo,
-                                             _r, _jumped);
-
-
-        if (_jumped) {
-            vPC += target;
-            NEXT_INSTRUCTION();
-        }
-#else
         if (!callFrame->r(cond).jsValue().toBoolean(callFrame)) {
             vPC += target;
             NEXT_INSTRUCTION();
         }
-#endif
+
         vPC += OPCODE_LENGTH(op_jfalse);
         NEXT_INSTRUCTION();
-
     }
     DEFINE_OPCODE(op_jeq_null) {
         /* jeq_null src(r) target(offset)
@@ -4466,29 +4002,10 @@ skip_id_custom_self:
         int target = vPC[2].u.operand;
         JSValue srcValue = callFrame->r(src).jsValue();
 
-#ifdef ARTEMIS
-        JSValue _jsn = jsNull();
-
-        bool _jumped = (srcValue.isUndefinedOrNull() || (srcValue.isCell() && srcValue.asCell()->structure()->typeInfo().masqueradesAsUndefined()));
-        JSValue _r = jsBoolean(_jumped);
-
-        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
-                                                    srcValue, Symbolic::EQUAL, _jsn,
-                                                    _r);
-
-        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC, bytecodeInfo,
-                                             _r, _jumped);
-
-        if (_jumped) {
-            vPC += target;
-            NEXT_INSTRUCTION();
-        }
-#else
         if (srcValue.isUndefinedOrNull() || (srcValue.isCell() && srcValue.asCell()->structure()->typeInfo().masqueradesAsUndefined())) {
             vPC += target;
             NEXT_INSTRUCTION();
         }
-#endif
 
         vPC += OPCODE_LENGTH(op_jeq_null);
         NEXT_INSTRUCTION();
@@ -4503,43 +4020,23 @@ skip_id_custom_self:
         int target = vPC[2].u.operand;
         JSValue srcValue = callFrame->r(src).jsValue();
 
-#ifdef ARTEMIS
-        JSValue _jsn = jsNull();
-
-        bool _jumped = (!srcValue.isUndefinedOrNull() && (!srcValue.isCell() || !srcValue.asCell()->structure()->typeInfo().masqueradesAsUndefined()));
-        JSValue _r = jsBoolean(_jumped);
-
-        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
-                                                    srcValue, Symbolic::NOT_EQUAL, _jsn,
-                                                    _r);
-
-        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC, bytecodeInfo,
-                                             _r, _jumped);
-
-        if (_jumped) {
-            vPC += target;
-            NEXT_INSTRUCTION();
-        }
-#else
         if (!srcValue.isUndefinedOrNull() && (!srcValue.isCell() || !srcValue.asCell()->structure()->typeInfo().masqueradesAsUndefined())) {
             vPC += target;
             NEXT_INSTRUCTION();
         }
-#endif
 
         vPC += OPCODE_LENGTH(op_jneq_null);
         NEXT_INSTRUCTION();
     }
     DEFINE_OPCODE(op_jneq_ptr) {
         /* jneq_ptr src(r) ptr(jsCell) target(offset)
-
+         
            Jumps to offset target from the current instruction, if the value r is equal
            to ptr, using pointer equality.
          */
         int src = vPC[1].u.operand;
         int target = vPC[3].u.operand;
         JSValue srcValue = callFrame->r(src).jsValue();
-
         if (srcValue != vPC[2].u.jsCell.get()) {
             vPC += target;
             NEXT_INSTRUCTION();
@@ -4553,7 +4050,7 @@ skip_id_custom_self:
 
            Checks whether register src1 is less than register src2, as
            with the ECMAScript '<' operator, and then jumps to offset
-           target from the current instruction, if and only if the
+           target from the current instruction, if and only if the 
            result of the comparison is true.
 
            Additionally this loop instruction may terminate JS execution is
@@ -4562,27 +4059,16 @@ skip_id_custom_self:
         JSValue src1 = callFrame->r(vPC[1].u.operand).jsValue();
         JSValue src2 = callFrame->r(vPC[2].u.operand).jsValue();
         int target = vPC[3].u.operand;
-
+        
         bool result = jsLess<true>(callFrame, src1, src2);
         CHECK_FOR_EXCEPTION();
-
-#ifdef ARTEMIS
-        JSValue _r = jsBoolean(result);
-
-        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
-                                                    src1, Symbolic::LESS_STRICT, src2,
-                                                    _r);
-
-        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC, bytecodeInfo,
-                                             _r, result);
-#endif
-
+        
         if (result) {
             vPC += target;
             CHECK_FOR_TIMEOUT();
             NEXT_INSTRUCTION();
         }
-
+        
         vPC += OPCODE_LENGTH(op_loop_if_less);
         NEXT_INSTRUCTION();
     }
@@ -4591,7 +4077,7 @@ skip_id_custom_self:
 
            Checks whether register src1 is less than or equal to register
            src2, as with the ECMAScript '<=' operator, and then jumps to
-           offset target from the current instruction, if and only if the
+           offset target from the current instruction, if and only if the 
            result of the comparison is true.
 
            Additionally this loop instruction may terminate JS execution is
@@ -4600,27 +4086,16 @@ skip_id_custom_self:
         JSValue src1 = callFrame->r(vPC[1].u.operand).jsValue();
         JSValue src2 = callFrame->r(vPC[2].u.operand).jsValue();
         int target = vPC[3].u.operand;
-
+        
         bool result = jsLessEq<true>(callFrame, src1, src2);
         CHECK_FOR_EXCEPTION();
-
-#ifdef ARTEMIS
-        JSValue _r = jsBoolean(result);
-
-        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
-                                                    src1, Symbolic::LESS_STRICT, src2,
-                                                    _r);
-
-        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC, bytecodeInfo,
-                                             _r, result);
-#endif
-
+        
         if (result) {
             vPC += target;
             CHECK_FOR_TIMEOUT();
             NEXT_INSTRUCTION();
         }
-
+        
         vPC += OPCODE_LENGTH(op_loop_if_lesseq);
         NEXT_INSTRUCTION();
     }
@@ -4629,7 +4104,7 @@ skip_id_custom_self:
 
            Checks whether register src1 is greater than register src2, as
            with the ECMAScript '>' operator, and then jumps to offset
-           target from the current instruction, if and only if the
+           target from the current instruction, if and only if the 
            result of the comparison is true.
 
            Additionally this loop instruction may terminate JS execution is
@@ -4638,27 +4113,16 @@ skip_id_custom_self:
         JSValue src1 = callFrame->r(vPC[1].u.operand).jsValue();
         JSValue src2 = callFrame->r(vPC[2].u.operand).jsValue();
         int target = vPC[3].u.operand;
-
+        
         bool result = jsLess<false>(callFrame, src2, src1);
         CHECK_FOR_EXCEPTION();
-
-#ifdef ARTEMIS
-        JSValue _r = jsBoolean(result);
-
-        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
-                                                    src1, Symbolic::GREATER_STRICT, src2,
-                                                    _r);
-
-        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC, bytecodeInfo,
-                                             _r, result);
-#endif
-
+        
         if (result) {
             vPC += target;
             CHECK_FOR_TIMEOUT();
             NEXT_INSTRUCTION();
         }
-
+        
         vPC += OPCODE_LENGTH(op_loop_if_greater);
         NEXT_INSTRUCTION();
     }
@@ -4667,7 +4131,7 @@ skip_id_custom_self:
 
            Checks whether register src1 is greater than or equal to register
            src2, as with the ECMAScript '>=' operator, and then jumps to
-           offset target from the current instruction, if and only if the
+           offset target from the current instruction, if and only if the 
            result of the comparison is true.
 
            Additionally this loop instruction may terminate JS execution is
@@ -4676,27 +4140,16 @@ skip_id_custom_self:
         JSValue src1 = callFrame->r(vPC[1].u.operand).jsValue();
         JSValue src2 = callFrame->r(vPC[2].u.operand).jsValue();
         int target = vPC[3].u.operand;
-
+        
         bool result = jsLessEq<false>(callFrame, src2, src1);
         CHECK_FOR_EXCEPTION();
-
-#ifdef ARTEMIS
-        JSValue _r = jsBoolean(result);
-
-        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
-                                                    src1, Symbolic::GREATER_EQ, src2,
-                                                    _r);
-
-        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC, bytecodeInfo,
-                                             _r, result);
-#endif
-
+        
         if (result) {
             vPC += target;
             CHECK_FOR_TIMEOUT();
             NEXT_INSTRUCTION();
         }
-
+        
         vPC += OPCODE_LENGTH(op_loop_if_greatereq);
         NEXT_INSTRUCTION();
     }
@@ -4705,7 +4158,7 @@ skip_id_custom_self:
 
            Checks whether register src1 is less than register src2, as
            with the ECMAScript '<' operator, and then jumps to offset
-           target from the current instruction, if and only if the
+           target from the current instruction, if and only if the 
            result of the comparison is true.
         */
         JSValue src1 = callFrame->r(vPC[1].u.operand).jsValue();
@@ -4714,18 +4167,7 @@ skip_id_custom_self:
 
         bool result = jsLess<true>(callFrame, src1, src2);
         CHECK_FOR_EXCEPTION();
-
-#ifdef ARTEMIS
-        JSValue _r = jsBoolean(result);
-
-        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
-                                                    src1, Symbolic::LESS_STRICT, src2,
-                                                    _r);
-
-        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC, bytecodeInfo,
-                                             _r, result);
-#endif
-
+        
         if (result) {
             vPC += target;
             NEXT_INSTRUCTION();
@@ -4736,7 +4178,7 @@ skip_id_custom_self:
     }
     DEFINE_OPCODE(op_jlesseq) {
         /* jlesseq src1(r) src2(r) target(offset)
-
+         
          Checks whether register src1 is less than or equal to
          register src2, as with the ECMAScript '<=' operator,
          and then jumps to offset target from the current instruction,
@@ -4745,26 +4187,15 @@ skip_id_custom_self:
         JSValue src1 = callFrame->r(vPC[1].u.operand).jsValue();
         JSValue src2 = callFrame->r(vPC[2].u.operand).jsValue();
         int target = vPC[3].u.operand;
-
+        
         bool result = jsLessEq<true>(callFrame, src1, src2);
         CHECK_FOR_EXCEPTION();
-
-#ifdef ARTEMIS
-        JSValue _r = jsBoolean(result);
-
-        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
-                                                    src1, Symbolic::LESS_EQ, src2,
-                                                    _r);
-
-        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC, bytecodeInfo,
-                                             _r, result);
-#endif
-
+        
         if (result) {
             vPC += target;
             NEXT_INSTRUCTION();
         }
-
+        
         vPC += OPCODE_LENGTH(op_jlesseq);
         NEXT_INSTRUCTION();
     }
@@ -4773,7 +4204,7 @@ skip_id_custom_self:
 
            Checks whether register src1 is greater than register src2, as
            with the ECMAScript '>' operator, and then jumps to offset
-           target from the current instruction, if and only if the
+           target from the current instruction, if and only if the 
            result of the comparison is true.
         */
         JSValue src1 = callFrame->r(vPC[1].u.operand).jsValue();
@@ -4782,18 +4213,7 @@ skip_id_custom_self:
 
         bool result = jsLess<false>(callFrame, src2, src1);
         CHECK_FOR_EXCEPTION();
-
-#ifdef ARTEMIS
-        JSValue _r = jsBoolean(result);
-
-        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
-                                                    src1, Symbolic::GREATER_STRICT, src2,
-                                                    _r);
-
-        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC, bytecodeInfo,
-                                             _r, result);
-#endif
-
+        
         if (result) {
             vPC += target;
             NEXT_INSTRUCTION();
@@ -4804,7 +4224,7 @@ skip_id_custom_self:
     }
     DEFINE_OPCODE(op_jgreatereq) {
         /* jgreatereq src1(r) src2(r) target(offset)
-
+         
          Checks whether register src1 is greater than or equal to
          register src2, as with the ECMAScript '>=' operator,
          and then jumps to offset target from the current instruction,
@@ -4813,26 +4233,15 @@ skip_id_custom_self:
         JSValue src1 = callFrame->r(vPC[1].u.operand).jsValue();
         JSValue src2 = callFrame->r(vPC[2].u.operand).jsValue();
         int target = vPC[3].u.operand;
-
+        
         bool result = jsLessEq<false>(callFrame, src2, src1);
         CHECK_FOR_EXCEPTION();
-
-#ifdef ARTEMIS
-        JSValue _r = jsBoolean(result);
-
-        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
-                                                    src1, Symbolic::GREATER_EQ, src2,
-                                                    _r);
-
-        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC, bytecodeInfo,
-                                             _r, result);
-#endif
-
+        
         if (result) {
             vPC += target;
             NEXT_INSTRUCTION();
         }
-
+        
         vPC += OPCODE_LENGTH(op_jgreatereq);
         NEXT_INSTRUCTION();
     }
@@ -4841,7 +4250,7 @@ skip_id_custom_self:
 
            Checks whether register src1 is less than register src2, as
            with the ECMAScript '<' operator, and then jumps to offset
-           target from the current instruction, if and only if the
+           target from the current instruction, if and only if the 
            result of the comparison is false.
         */
         JSValue src1 = callFrame->r(vPC[1].u.operand).jsValue();
@@ -4850,18 +4259,7 @@ skip_id_custom_self:
 
         bool result = jsLess<true>(callFrame, src1, src2);
         CHECK_FOR_EXCEPTION();
-
-#ifdef ARTEMIS
-        JSValue _r = jsBoolean(!result);
-
-        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
-                                                    src1, Symbolic::GREATER_EQ, src2,
-                                                    _r);
-
-        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC, bytecodeInfo,
-                                             _r, !result);
-#endif
-
+        
         if (!result) {
             vPC += target;
             NEXT_INSTRUCTION();
@@ -4884,18 +4282,7 @@ skip_id_custom_self:
 
         bool result = jsLessEq<true>(callFrame, src1, src2);
         CHECK_FOR_EXCEPTION();
-
-#ifdef ARTEMIS
-        JSValue _r = jsBoolean(!result);
-
-        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
-                                                    src1, Symbolic::GREATER_STRICT, src2,
-                                                    _r);
-
-        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC, bytecodeInfo,
-                                             _r, !result);
-#endif
-
+        
         if (!result) {
             vPC += target;
             NEXT_INSTRUCTION();
@@ -4909,7 +4296,7 @@ skip_id_custom_self:
 
            Checks whether register src1 is greater than register src2, as
            with the ECMAScript '>' operator, and then jumps to offset
-           target from the current instruction, if and only if the
+           target from the current instruction, if and only if the 
            result of the comparison is false.
         */
         JSValue src1 = callFrame->r(vPC[1].u.operand).jsValue();
@@ -4918,18 +4305,7 @@ skip_id_custom_self:
 
         bool result = jsLess<false>(callFrame, src2, src1);
         CHECK_FOR_EXCEPTION();
-
-#ifdef ARTEMIS
-        JSValue _r = jsBoolean(!result);
-
-        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
-                                                    src1, Symbolic::LESS_EQ, src2,
-                                                    _r);
-
-        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC, bytecodeInfo,
-                                             _r, !result);
-#endif
-
+        
         if (!result) {
             vPC += target;
             NEXT_INSTRUCTION();
@@ -4952,18 +4328,7 @@ skip_id_custom_self:
 
         bool result = jsLessEq<false>(callFrame, src2, src1);
         CHECK_FOR_EXCEPTION();
-
-#ifdef ARTEMIS
-        JSValue _r = jsBoolean(!result);
-
-        _r = Interpreter::m_symbolic->ail_op_binary(callFrame, vPC, bytecodeInfo,
-                                                    src1, Symbolic::GREATER_STRICT, src2,
-                                                    _r);
-
-        Interpreter::m_symbolic->ail_jmp_iff(callFrame, vPC, bytecodeInfo,
-                                             _r, !result);
-#endif
-
+        
         if (!result) {
             vPC += target;
             NEXT_INSTRUCTION();
@@ -5019,9 +4384,9 @@ skip_id_custom_self:
         /* switch_string tableIndex(n) defaultOffset(offset) scrutinee(r)
 
            Performs a sparse hashmap based switch on the value in the scrutinee
-           register, using the tableIndex-th string switch jump table.  If the
-           scrutinee value is a string that exists as a key in the referenced
-           jump table, then the value associated with the string is used as the
+           register, using the tableIndex-th string switch jump table.  If the 
+           scrutinee value is a string that exists as a key in the referenced 
+           jump table, then the value associated with the string is used as the 
            jump offset, otherwise defaultOffset is used.
          */
         int tableIndex = vPC[1].u.operand;
@@ -5029,7 +4394,7 @@ skip_id_custom_self:
         JSValue scrutinee = callFrame->r(vPC[3].u.operand).jsValue();
         if (!scrutinee.isString())
             vPC += defaultOffset;
-        else
+        else 
             vPC += codeBlock->stringSwitchJumpTable(tableIndex).offsetForValue(asString(scrutinee)->value(callFrame).impl(), defaultOffset);
         NEXT_INSTRUCTION();
     }
@@ -5061,12 +4426,12 @@ skip_id_custom_self:
         */
         int dst = vPC[1].u.operand;
         int funcIndex = vPC[2].u.operand;
-
+        
         ASSERT(codeBlock->codeType() != FunctionCode || !codeBlock->needsFullScopeChain() || callFrame->r(codeBlock->activationRegister()).jsValue());
         FunctionExecutable* function = codeBlock->functionExpr(funcIndex);
         JSFunction* func = function->make(callFrame, callFrame->scopeChain());
 
-        /*
+        /* 
             The Identifier in a FunctionExpression can be referenced from inside
             the FunctionExpression's FunctionBody to allow the function to call
             itself recursively. However, unlike in a FunctionDeclaration, the
@@ -5098,13 +4463,13 @@ skip_id_custom_self:
         int func = vPC[1].u.operand;
         int argCount = vPC[2].u.operand;
         int registerOffset = vPC[3].u.operand;
-
+        
         ASSERT(codeBlock->codeType() != FunctionCode || !codeBlock->needsFullScopeChain() || callFrame->r(codeBlock->activationRegister()).jsValue());
         JSValue funcVal = callFrame->r(func).jsValue();
 
         if (isHostFunction(funcVal, globalFuncEval)) {
             CallFrame* newCallFrame = CallFrame::create(callFrame->registers() + registerOffset);
-            newCallFrame->init(0, vPC + OPCODE_LENGTH(op_call_eval), callFrame->scopeChain(), callFrame, argCount, asFunction(funcVal));
+            newCallFrame->init(0, vPC + OPCODE_LENGTH(op_call_eval), callFrame->scopeChain(), callFrame, argCount, jsCast<JSFunction*>(funcVal));
 
             JSValue result = eval(newCallFrame);
             if ((exceptionValue = globalData->exception))
@@ -5123,10 +4488,10 @@ skip_id_custom_self:
         /* call func(r) argCount(n) registerOffset(n)
 
            Perform a function call.
-
+           
            registerOffset is the distance the callFrame pointer should move
            before the VM initializes the new call frame's header.
-
+           
            dst is where op_ret should store its result.
          */
 
@@ -5140,11 +4505,6 @@ skip_id_custom_self:
         CallType callType = getCallData(v, callData);
 
         if (callType == CallTypeJS) {
-
-#ifdef ARTEMIS
-            Interpreter::m_symbolic->ail_call(callFrame, vPC, bytecodeInfo);
-#endif
-
             ScopeChainNode* callDataScopeChain = callData.js.scopeChain;
 
             JSObject* error = callData.js.functionExecutable->compileForCall(callFrame, callDataScopeChain);
@@ -5162,7 +4522,7 @@ skip_id_custom_self:
                 goto vm_throw;
             }
 
-            callFrame->init(newCodeBlock, vPC + OPCODE_LENGTH(op_call), callDataScopeChain, previousCallFrame, argCount, asFunction(v));
+            callFrame->init(newCodeBlock, vPC + OPCODE_LENGTH(op_call), callDataScopeChain, previousCallFrame, argCount, jsCast<JSFunction*>(v));
             codeBlock = newCodeBlock;
             ASSERT(codeBlock == callFrame->codeBlock());
             *topCallFrameSlot = callFrame;
@@ -5176,7 +4536,6 @@ skip_id_custom_self:
         }
 
         if (callType == CallTypeHost) {
-
             ScopeChainNode* scopeChain = callFrame->scopeChain();
             CallFrame* newCallFrame = CallFrame::create(callFrame->registers() + registerOffset);
             newCallFrame->init(0, vPC + OPCODE_LENGTH(op_call), scopeChain, callFrame, argCount, asObject(v));
@@ -5186,12 +4545,6 @@ skip_id_custom_self:
                 SamplingTool::HostCallRecord callRecord(m_sampler.get());
                 returnValue = JSValue::decode(callData.native.function(newCallFrame));
                 *topCallFrameSlot = callFrame;
-
-#ifdef ARTEMIS
-                Interpreter::m_symbolic->ail_call_native(callFrame, vPC, bytecodeInfo,
-                                                         (native_function_ID_t)callData.native.function);
-#endif
-
             }
             CHECK_FOR_EXCEPTION();
 
@@ -5208,16 +4561,16 @@ skip_id_custom_self:
     }
     DEFINE_OPCODE(op_call_varargs) {
         /* call_varargs callee(r) thisValue(r) arguments(r) firstFreeRegister(n)
-
+         
          Perform a function call with a dynamic set of arguments.
-
+         
          registerOffset is the distance the callFrame pointer should move
          before the VM initializes the new call frame's header, excluding
          space for arguments.
-
+         
          dst is where op_ret should store its result.
          */
-
+        
         JSValue v = callFrame->r(vPC[1].u.operand).jsValue();
         JSValue thisValue = callFrame->r(vPC[2].u.operand).jsValue();
         JSValue arguments = callFrame->r(vPC[3].u.operand).jsValue();
@@ -5230,7 +4583,7 @@ skip_id_custom_self:
 
         CallData callData;
         CallType callType = getCallData(v, callData);
-
+        
         if (callType == CallTypeJS) {
             ScopeChainNode* callDataScopeChain = callData.js.scopeChain;
 
@@ -5247,7 +4600,7 @@ skip_id_custom_self:
                 goto vm_throw;
             }
 
-            newCallFrame->init(newCodeBlock, vPC + OPCODE_LENGTH(op_call_varargs), callDataScopeChain, callFrame, argCount, asFunction(v));
+            newCallFrame->init(newCodeBlock, vPC + OPCODE_LENGTH(op_call_varargs), callDataScopeChain, callFrame, argCount, jsCast<JSFunction*>(v));
             codeBlock = newCodeBlock;
             callFrame = newCallFrame;
             ASSERT(codeBlock == callFrame->codeBlock());
@@ -5257,14 +4610,14 @@ skip_id_custom_self:
 #if ENABLE(OPCODE_STATS)
             OpcodeStats::resetLastInstruction();
 #endif
-
+            
             NEXT_INSTRUCTION();
         }
-
+        
         if (callType == CallTypeHost) {
             ScopeChainNode* scopeChain = callFrame->scopeChain();
             newCallFrame->init(0, vPC + OPCODE_LENGTH(op_call_varargs), scopeChain, callFrame, argCount, asObject(v));
-
+            
             JSValue returnValue;
             {
                 *topCallFrameSlot = newCallFrame;
@@ -5273,15 +4626,15 @@ skip_id_custom_self:
                 *topCallFrameSlot = callFrame;
             }
             CHECK_FOR_EXCEPTION();
-
+            
             functionReturnValue = returnValue;
-
+            
             vPC += OPCODE_LENGTH(op_call_varargs);
             NEXT_INSTRUCTION();
         }
-
+        
         ASSERT(callType == CallTypeNone);
-
+        
         exceptionValue = createNotAFunctionError(callFrame, v);
         goto vm_throw;
     }
@@ -5336,7 +4689,7 @@ skip_id_custom_self:
     }
     DEFINE_OPCODE(op_ret) {
         /* ret result(r)
-
+           
            Return register result as the return value of the current
            function call, writing it into functionReturnValue.
            In addition, unwind one call frame and restore the scope
@@ -5363,7 +4716,7 @@ skip_id_custom_self:
     }
     DEFINE_OPCODE(op_call_put_result) {
         /* op_call_put_result result(r)
-
+           
            Move call result from functionReturnValue to caller's
            expected return value register.
         */
@@ -5375,7 +4728,7 @@ skip_id_custom_self:
     }
     DEFINE_OPCODE(op_ret_object_or_this) {
         /* ret result(r)
-
+           
            Return register result as the return value of the current
            function call, writing it into the caller's expected return
            value register. In addition, unwind one call frame and
@@ -5458,7 +4811,7 @@ skip_id_custom_self:
         int thisRegister = vPC[1].u.operand;
         int protoRegister = vPC[2].u.operand;
 
-        JSFunction* constructor = asFunction(callFrame->callee());
+        JSFunction* constructor = jsCast<JSFunction*>(callFrame->callee());
 #if !ASSERT_DISABLED
         ConstructData constructData;
         ASSERT(constructor->methodTable()->getConstructData(constructor, constructData) == ConstructTypeJS);
@@ -5515,7 +4868,7 @@ skip_id_custom_self:
            'arguments' call frame slot and the local 'arguments'
            register, if it has not already been initialised.
          */
-
+        
         int dst = vPC[1].u.operand;
 
         if (!callFrame->r(dst).jsValue()) {
@@ -5568,7 +4921,7 @@ skip_id_custom_self:
                 goto vm_throw;
             }
 
-            callFrame->init(newCodeBlock, vPC + OPCODE_LENGTH(op_construct), callDataScopeChain, previousCallFrame, argCount, asFunction(v));
+            callFrame->init(newCodeBlock, vPC + OPCODE_LENGTH(op_construct), callDataScopeChain, previousCallFrame, argCount, jsCast<JSFunction*>(v));
             codeBlock = newCodeBlock;
             *topCallFrameSlot = callFrame;
             vPC = newCodeBlock->instructions().begin();
@@ -5740,13 +5093,13 @@ skip_id_custom_self:
         vPC += target;
         NEXT_INSTRUCTION();
     }
-#if ENABLE(COMPUTED_GOTO_INTERPRETER)
+#if ENABLE(COMPUTED_GOTO_CLASSIC_INTERPRETER)
     // Appease GCC
     goto *(&&skip_new_scope);
 #endif
     DEFINE_OPCODE(op_push_new_scope) {
         /* new_scope dst(r) property(id) value(r)
-
+         
            Constructs a new StaticScopeObject with property set to value.  That scope
            object is then pushed onto the ScopeChain.  The scope object is then stored
            in dst for GC.
@@ -5756,7 +5109,7 @@ skip_id_custom_self:
         vPC += OPCODE_LENGTH(op_push_new_scope);
         NEXT_INSTRUCTION();
     }
-#if ENABLE(COMPUTED_GOTO_INTERPRETER)
+#if ENABLE(COMPUTED_GOTO_CLASSIC_INTERPRETER)
     skip_new_scope:
 #endif
     DEFINE_OPCODE(op_catch) {
@@ -5790,13 +5143,8 @@ skip_id_custom_self:
         exceptionValue = callFrame->r(ex).jsValue();
 
         handler = throwException(callFrame, exceptionValue, vPC - codeBlock->instructions().begin());
-        if (!handler) {
-#ifdef ARTEMIS
-            return exceptionValue;
-#else
+        if (!handler)
             return throwError(callFrame, exceptionValue);
-#endif
-        }
 
         codeBlock = callFrame->codeBlock();
         vPC = codeBlock->instructions().begin() + handler->target;
@@ -5809,13 +5157,13 @@ skip_id_custom_self:
            original constructor, using constant message as the
            message string. The result is thrown.
         */
-        UString message = callFrame->r(vPC[1].u.operand).jsValue().toString(callFrame);
+        UString message = callFrame->r(vPC[1].u.operand).jsValue().toString(callFrame)->value(callFrame);
         exceptionValue = JSValue(createReferenceError(callFrame, message));
         goto vm_throw;
     }
     DEFINE_OPCODE(op_end) {
         /* end result(r)
-
+           
            Return register result as the value of a global or eval
            program. Return control to the calling native code.
         */
@@ -5823,80 +5171,45 @@ skip_id_custom_self:
         int result = vPC[1].u.operand;
         return callFrame->r(result).jsValue();
     }
-    DEFINE_OPCODE(op_put_getter) {
-        /* put_getter base(r) property(id) function(r)
+    DEFINE_OPCODE(op_put_getter_setter) {
+        /* put_getter_setter base(r) property(id) getter(r) setter(r)
 
-           Sets register function on register base as the getter named
-           by identifier property. Base and function are assumed to be
-           objects as this op should only be used for getters defined
-           in object literal form.
-
-           Unlike many opcodes, this one does not write any output to
-           the register file.
-        */
-        int base = vPC[1].u.operand;
-        int property = vPC[2].u.operand;
-        int function = vPC[3].u.operand;
-
-        ASSERT(callFrame->r(base).jsValue().isObject());
-        JSObject* baseObj = asObject(callFrame->r(base).jsValue());
-        Identifier& ident = codeBlock->identifier(property);
-        ASSERT(callFrame->r(function).jsValue().isObject());
-        baseObj->methodTable()->defineGetter(baseObj, callFrame, ident, asObject(callFrame->r(function).jsValue()), 0);
-
-        vPC += OPCODE_LENGTH(op_put_getter);
-        NEXT_INSTRUCTION();
-    }
-    DEFINE_OPCODE(op_put_setter) {
-        /* put_setter base(r) property(id) function(r)
-
-           Sets register function on register base as the setter named
-           by identifier property. Base and function are assumed to be
-           objects as this op should only be used for setters defined
-           in object literal form.
+           Puts accessor descriptor to register base as the named
+           identifier property. Base and function may be objects
+           or undefined, this op should only be used for accessors
+           defined in object literal form.
 
            Unlike many opcodes, this one does not write any output to
            the register file.
         */
         int base = vPC[1].u.operand;
         int property = vPC[2].u.operand;
-        int function = vPC[3].u.operand;
+        int getterReg = vPC[3].u.operand;
+        int setterReg = vPC[4].u.operand;
 
         ASSERT(callFrame->r(base).jsValue().isObject());
         JSObject* baseObj = asObject(callFrame->r(base).jsValue());
         Identifier& ident = codeBlock->identifier(property);
-        ASSERT(callFrame->r(function).jsValue().isObject());
-        baseObj->methodTable()->defineSetter(baseObj, callFrame, ident, asObject(callFrame->r(function).jsValue()), 0);
 
-        vPC += OPCODE_LENGTH(op_put_setter);
+        GetterSetter* accessor = GetterSetter::create(callFrame);
+
+        JSValue getter = callFrame->r(getterReg).jsValue();
+        JSValue setter = callFrame->r(setterReg).jsValue();
+        ASSERT(getter.isObject() || getter.isUndefined());
+        ASSERT(setter.isObject() || setter.isUndefined());
+        ASSERT(getter.isObject() || setter.isObject());
+
+        if (!getter.isUndefined())
+            accessor->setGetter(callFrame->globalData(), asObject(getter));
+        if (!setter.isUndefined())
+            accessor->setSetter(callFrame->globalData(), asObject(setter));
+        baseObj->putDirectAccessor(callFrame->globalData(), ident, accessor, Accessor);
+
+        vPC += OPCODE_LENGTH(op_put_getter_setter);
         NEXT_INSTRUCTION();
     }
     DEFINE_OPCODE(op_method_check) {
         vPC++;
-        NEXT_INSTRUCTION();
-    }
-    DEFINE_OPCODE(op_jsr) {
-        /* jsr retAddrDst(r) target(offset)
-
-           Places the address of the next instruction into the retAddrDst
-           register and jumps to offset target from the current instruction.
-        */
-        int retAddrDst = vPC[1].u.operand;
-        int target = vPC[2].u.operand;
-        callFrame->r(retAddrDst) = vPC + OPCODE_LENGTH(op_jsr);
-
-        vPC += target;
-        NEXT_INSTRUCTION();
-    }
-    DEFINE_OPCODE(op_sret) {
-        /* sret retAddrSrc(r)
-
-         Jumps to the address stored in the retAddrSrc register. This
-         differs from op_jmp because the target address is stored in a
-         register, not as an immediate.
-        */
-        int retAddrSrc = vPC[1].u.operand;
-        vPC = callFrame->r(retAddrSrc).vPC();
         NEXT_INSTRUCTION();
     }
     DEFINE_OPCODE(op_debug) {
@@ -5945,7 +5258,7 @@ skip_id_custom_self:
     vm_throw: {
         globalData->exception = JSValue();
         if (!tickCount) {
-            // The exceptionValue is a lie! (GCC produces bad code for reasons I
+            // The exceptionValue is a lie! (GCC produces bad code for reasons I 
             // cannot fathom if we don't assign to the exceptionValue before branching)
             exceptionValue = createInterruptedExecutionException(globalData);
         }
@@ -5962,19 +5275,19 @@ skip_id_custom_self:
         NEXT_INSTRUCTION();
     }
     }
-#if !ENABLE(COMPUTED_GOTO_INTERPRETER)
+#if !ENABLE(COMPUTED_GOTO_CLASSIC_INTERPRETER)
     } // iterator loop ends
 #endif
     #undef NEXT_INSTRUCTION
     #undef DEFINE_OPCODE
     #undef CHECK_FOR_EXCEPTION
     #undef CHECK_FOR_TIMEOUT
-#endif // ENABLE(INTERPRETER)
+#endif // ENABLE(CLASSIC_INTERPRETER)
 }
 
-JSValue Interpreter::retrieveArguments(CallFrame* callFrame, JSFunction* function) const
+JSValue Interpreter::retrieveArgumentsFromVMCode(CallFrame* callFrame, JSFunction* function) const
 {
-    CallFrame* functionCallFrame = findFunctionCallFrame(callFrame, function);
+    CallFrame* functionCallFrame = findFunctionCallFrameFromVMCode(callFrame, function);
     if (!functionCallFrame)
         return jsNull();
 
@@ -5996,19 +5309,31 @@ JSValue Interpreter::retrieveArguments(CallFrame* callFrame, JSFunction* functio
     return JSValue(arguments);
 }
 
-JSValue Interpreter::retrieveCaller(CallFrame* callFrame, JSFunction* function) const
+JSValue Interpreter::retrieveCallerFromVMCode(CallFrame* callFrame, JSFunction* function) const
 {
-    CallFrame* functionCallFrame = findFunctionCallFrame(callFrame, function);
+    CallFrame* functionCallFrame = findFunctionCallFrameFromVMCode(callFrame, function);
+
     if (!functionCallFrame)
         return jsNull();
-
-    CallFrame* callerFrame = functionCallFrame->callerFrame();
-    if (callerFrame->hasHostCallFrameFlag())
+    
+    int lineNumber;
+    CallFrame* callerFrame = getCallerInfo(&callFrame->globalData(), functionCallFrame, lineNumber);
+    if (!callerFrame)
         return jsNull();
-
     JSValue caller = callerFrame->callee();
     if (!caller)
         return jsNull();
+
+    // Skip over function bindings.
+    ASSERT(caller.isObject());
+    while (asObject(caller)->inherits(&JSBoundFunction::s_info)) {
+        callerFrame = getCallerInfo(&callFrame->globalData(), callerFrame, lineNumber);
+        if (!callerFrame)
+            return jsNull();
+        caller = callerFrame->callee();
+        if (!caller)
+            return jsNull();
+    }
 
     return caller;
 }
@@ -6027,15 +5352,15 @@ void Interpreter::retrieveLastCaller(CallFrame* callFrame, int& lineNumber, intp
     if (!callerCodeBlock)
         return;
     unsigned bytecodeOffset = 0;
-#if ENABLE(INTERPRETER)
+#if ENABLE(CLASSIC_INTERPRETER)
     if (!callerFrame->globalData().canUseJIT())
         bytecodeOffset = callerCodeBlock->bytecodeOffset(callFrame->returnVPC());
 #if ENABLE(JIT)
     else
-        bytecodeOffset = callerCodeBlock->bytecodeOffset(callFrame->returnPC());
+        bytecodeOffset = callerCodeBlock->bytecodeOffset(callerFrame, callFrame->returnPC());
 #endif
 #else
-    bytecodeOffset = callerCodeBlock->bytecodeOffset(callFrame->returnPC());
+    bytecodeOffset = callerCodeBlock->bytecodeOffset(callerFrame, callFrame->returnPC());
 #endif
     lineNumber = callerCodeBlock->lineNumberForBytecodeOffset(bytecodeOffset - 1);
     sourceID = callerCodeBlock->ownerExecutable()->sourceID();
@@ -6043,9 +5368,9 @@ void Interpreter::retrieveLastCaller(CallFrame* callFrame, int& lineNumber, intp
     function = callerFrame->callee();
 }
 
-CallFrame* Interpreter::findFunctionCallFrame(CallFrame* callFrame, JSFunction* function)
+CallFrame* Interpreter::findFunctionCallFrameFromVMCode(CallFrame* callFrame, JSFunction* function)
 {
-    for (CallFrame* candidate = callFrame; candidate; candidate = candidate->trueCallerFrame()) {
+    for (CallFrame* candidate = callFrame->trueCallFrameFromVMCode(); candidate; candidate = candidate->trueCallerFrame()) {
         if (candidate->callee() == function)
             return candidate;
     }

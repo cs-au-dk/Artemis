@@ -27,10 +27,7 @@
 #include "SMILTimeContainer.h"
 
 #if ENABLE(SVG)
-#include "CSSComputedStyleDeclaration.h"
-#include "CSSParser.h"
 #include "Document.h"
-#include "SVGAnimationElement.h"
 #include "SVGNames.h"
 #include "SVGSMILElement.h"
 #include "SVGSVGElement.h"
@@ -46,6 +43,7 @@ SMILTimeContainer::SMILTimeContainer(SVGSVGElement* owner)
     : m_beginTime(0)
     , m_pauseTime(0)
     , m_accumulatedPauseTime(0)
+    , m_presetStartTime(0)
     , m_documentOrderIndexesDirty(false)
     , m_timer(this, &SMILTimeContainer::timerFired)
     , m_ownerSVGElement(owner)
@@ -89,17 +87,27 @@ bool SMILTimeContainer::isPaused() const
 void SMILTimeContainer::begin()
 {
     ASSERT(!m_beginTime);
-    m_beginTime = currentTime();
-    updateAnimations(0);
+    double now = currentTime();
+
+    // If 'm_presetStartTime' is set, the timeline was modified via setElapsed() before the document began.
+    // In this case pass on 'seekToTime=true' to updateAnimations().
+    m_beginTime = now - m_presetStartTime;
+    updateAnimations(SMILTime(m_presetStartTime), m_presetStartTime ? true : false);
+    m_presetStartTime = 0;
+
+    if (m_pauseTime) {
+        m_pauseTime = now;
+        m_timer.stop();
+    }
 }
 
 void SMILTimeContainer::pause()
 {
-    if (!m_beginTime)
-        return;
     ASSERT(!isPaused());
     m_pauseTime = currentTime();
-    m_timer.stop();
+
+    if (m_beginTime)
+        m_timer.stop();
 }
 
 void SMILTimeContainer::resume()
@@ -110,6 +118,28 @@ void SMILTimeContainer::resume()
     m_accumulatedPauseTime += currentTime() - m_pauseTime;
     m_pauseTime = 0;
     startTimer(0);
+}
+
+void SMILTimeContainer::setElapsed(SMILTime time)
+{
+    // If the documment didn't begin yet, record a new start time, we'll seek to once its possible.
+    if (!m_beginTime) {
+        m_presetStartTime = time.value();
+        return;
+    }
+
+    if (m_beginTime)
+        m_timer.stop();
+
+    m_beginTime = currentTime() - time.value();
+    m_accumulatedPauseTime = 0;
+
+    Vector<SVGSMILElement*> toReset;
+    copyToVector(m_scheduledAnimations, toReset);
+    for (unsigned n = 0; n < toReset.size(); ++n)
+        toReset[n]->reset();
+
+    updateAnimations(time, true);
 }
 
 void SMILTimeContainer::startTimer(SMILTime fireTime, SMILTime minimumDelay)
@@ -123,15 +153,14 @@ void SMILTimeContainer::startTimer(SMILTime fireTime, SMILTime minimumDelay)
     SMILTime delay = max(fireTime - elapsed(), minimumDelay);
     m_timer.startOneShot(delay.value());
 }
-    
+
 void SMILTimeContainer::timerFired(Timer<SMILTimeContainer>*)
 {
     ASSERT(m_beginTime);
     ASSERT(!m_pauseTime);
-    SMILTime elapsed = this->elapsed();
-    updateAnimations(elapsed);
+    updateAnimations(elapsed());
 }
- 
+
 void SMILTimeContainer::updateDocumentOrderIndexes()
 {
     unsigned timingElementCount = 0;
@@ -178,62 +207,12 @@ static void sortByApplyOrder(Vector<SVGSMILElement*>& smilElements)
     std::sort(smilElements.begin(), smilElements.end(), applyOrderSortFunction);
 }
 
-String SMILTimeContainer::baseValueFor(ElementAttributePair key)
-{
-    // FIXME: We wouldn't need to do this if we were keeping base values around properly in DOM.
-    // Currently animation overwrites them so we need to save them somewhere.
-    BaseValueMap::iterator it = m_savedBaseValues.find(key);
-    if (it != m_savedBaseValues.end())
-        return it->second;
-    
-    SVGElement* targetElement = key.first;
-    QualifiedName attributeName = key.second;
-    ASSERT(targetElement);
-    ASSERT(attributeName != anyQName());
-    String baseValue;
-    if (SVGAnimationElement::isTargetAttributeCSSProperty(targetElement, attributeName))
-        baseValue = computedStyle(targetElement)->getPropertyValue(cssPropertyID(attributeName.localName()));
-    else
-        baseValue = targetElement->getAttribute(attributeName);
-    m_savedBaseValues.add(key, baseValue);
-    return baseValue;
-}
-
-void SMILTimeContainer::sampleAnimationAtTime(const String& elementId, double newTime)
-{
-    ASSERT(m_beginTime);
-    ASSERT(!isPaused());
-
-    // Fast-forward to the time DRT wants to sample
-    m_timer.stop();
-
-    updateAnimations(elapsed(), newTime, elementId);
-}
-
-void SMILTimeContainer::updateAnimations(SMILTime elapsed, double nextManualSampleTime, const String& nextSamplingTarget)
+void SMILTimeContainer::updateAnimations(SMILTime elapsed, bool seekToTime)
 {
     SMILTime earliersFireTime = SMILTime::unresolved();
 
     Vector<SVGSMILElement*> toAnimate;
     copyToVector(m_scheduledAnimations, toAnimate);
-
-    if (nextManualSampleTime) {
-        SMILTime samplingDiff;
-        for (unsigned n = 0; n < toAnimate.size(); ++n) {
-            SVGSMILElement* animation = toAnimate[n];
-            ASSERT(animation->timeContainer() == this);
-
-            SVGElement* targetElement = animation->targetElement();
-            // FIXME: This should probably be using getIdAttribute instead of idForStyleResolution.
-            if (!targetElement || !targetElement->hasID() || targetElement->idForStyleResolution() != nextSamplingTarget)
-                continue;
-
-            samplingDiff = animation->intervalBegin();
-            break;
-        }
-
-        elapsed = SMILTime(nextManualSampleTime) + samplingDiff;
-    }
 
     // Sort according to priority. Elements with later begin time have higher priority.
     // In case of a tie, document order decides. 
@@ -242,6 +221,7 @@ void SMILTimeContainer::updateAnimations(SMILTime elapsed, double nextManualSamp
     sortByPriority(toAnimate, elapsed);
     
     // Calculate animation contributions.
+    typedef pair<SVGElement*, QualifiedName> ElementAttributePair;
     typedef HashMap<ElementAttributePair, RefPtr<SVGSMILElement> > ResultElementMap;
     ResultElementMap resultsElements;
     for (unsigned n = 0; n < toAnimate.size(); ++n) {
@@ -267,21 +247,16 @@ void SMILTimeContainer::updateAnimations(SMILTime elapsed, double nextManualSamp
             if (!animation->hasValidAttributeType())
                 continue;
             resultElement = animation;
-            resultElement->resetToBaseValue(baseValueFor(key));
+            resultElement->resetToBaseValue();
             resultsElements.add(key, resultElement);
         }
 
         // This will calculate the contribution from the animation and add it to the resultsElement.
-        animation->progress(elapsed, resultElement);
+        animation->progress(elapsed, resultElement, seekToTime);
 
         SMILTime nextFireTime = animation->nextProgressTime();
         if (nextFireTime.isFinite())
             earliersFireTime = min(nextFireTime, earliersFireTime);
-        else if (!animation->isContributing(elapsed)) {
-            m_scheduledAnimations.remove(animation);
-            if (m_scheduledAnimations.isEmpty())
-                m_savedBaseValues.clear();
-        }
     }
     
     Vector<SVGSMILElement*> animationsToApply;

@@ -35,8 +35,6 @@ objects to the Manager. The Manager then aggregates the TestFailures to
 create a final report.
 """
 
-from __future__ import with_statement
-
 import errno
 import logging
 import math
@@ -90,6 +88,7 @@ def interpret_test_failures(port, test_name, failures):
         elif isinstance(failure, test_failures.FailureReftestMismatch):
             test_dict['is_reftest'] = True
             test_dict['ref_file'] = port.relative_test_filename(failure.reference_filename)
+            test_dict['image_diff_percent'] = failure.diff_percent
         elif isinstance(failure, test_failures.FailureReftestMismatchDidNotOccur):
             test_dict['is_mismatch_reftest'] = True
             test_dict['ref_file'] = port.relative_test_filename(failure.reference_filename)
@@ -101,6 +100,11 @@ def interpret_test_failures(port, test_name, failures):
         test_dict['is_missing_image'] = True
     return test_dict
 
+
+def use_trac_links_in_results_html(port_obj):
+    # We only use trac links on the buildbots.
+    # Use existence of builder_name as a proxy for knowing we're on a bot.
+    return port_obj.get_option("builder_name")
 
 # FIXME: This should be on the Manager class (since that's the only caller)
 # or split off from Manager onto another helper class, but should not be a free function.
@@ -167,6 +171,9 @@ def summarize_results(port_obj, expectations, result_summary, retry_summary, tes
         if result.has_stderr:
             test_dict['has_stderr'] = True
 
+        if expectations.has_modifier(test_name, test_expectations.WONTFIX):
+            test_dict['wontfix'] = True
+
         if result_type == test_expectations.PASS:
             num_passes += 1
             # FIXME: include passing tests that have stderr output.
@@ -228,7 +235,10 @@ def summarize_results(port_obj, expectations, result_summary, retry_summary, tes
     results['has_wdiff'] = port_obj.wdiff_available()
     results['has_pretty_patch'] = port_obj.pretty_patch_available()
     try:
-        results['revision'] = port_obj.host.scm().head_svn_revision()
+        # We only use the svn revision for using trac links in the results.html file,
+        # Don't do this by default since it takes >100ms.
+        if use_trac_links_in_results_html(port_obj):
+            results['revision'] = port_obj.host.scm().head_svn_revision()
     except Exception, e:
         _log.warn("Failed to determine svn revision for checkout (cwd: %s, webkit_base: %s), leaving 'revision' key blank in full_results.json.\n%s" % (port_obj._filesystem.getcwd(), port_obj.path_from_webkit_base(), e))
         # Handle cases where we're running outside of version control.
@@ -274,12 +284,6 @@ class TestShard(object):
 class Manager(object):
     """A class for managing running a series of tests on a series of layout
     test files."""
-
-
-    # The per-test timeout in milliseconds, if no --time-out-ms option was
-    # given to run_webkit_tests. This should correspond to the default timeout
-    # in DumpRenderTree.
-    DEFAULT_TEST_TIMEOUT_MS = 6 * 1000
 
     def __init__(self, port, options, printer):
         """Initialize test runner data structures.
@@ -347,32 +351,6 @@ class Manager(object):
             return path[len(self.LAYOUT_TESTS_DIRECTORY + self._filesystem.sep):]
         return path
 
-    def lint(self):
-        lint_failed = False
-        for test_configuration in self._port.all_test_configurations():
-            try:
-                self.lint_expectations(test_configuration)
-            except test_expectations.ParseError:
-                lint_failed = True
-                self._printer.write("")
-
-        if lint_failed:
-            _log.error("Lint failed.")
-            return -1
-
-        _log.info("Lint succeeded.")
-        return 0
-
-    def lint_expectations(self, config):
-        port = self._port
-        test_expectations.TestExpectations(
-            port,
-            None,
-            port.test_expectations(),
-            config,
-            self._options.lint_test_files,
-            port.test_expectations_overrides())
-
     def _is_http_test(self, test):
         return self.HTTP_SUBDIR in test or self.WEBSOCKET_SUBDIR in test
 
@@ -384,13 +362,15 @@ class Manager(object):
         structure holding them. Throws an error if the test_list files have
         invalid syntax."""
         port = self._port
+        tests_to_ignore = set(self._options.ignore_tests)
         self._expectations = test_expectations.TestExpectations(
             port,
             self._test_files,
             port.test_expectations(),
             port.test_configuration(),
             self._options.lint_test_files,
-            port.test_expectations_overrides())
+            port.test_expectations_overrides(),
+            port.skipped_layout_tests(self._test_files).union(tests_to_ignore))
 
     def _split_into_chunks_if_necessary(self, skipped):
         if not self._options.run_chunk and not self._options.run_part:
@@ -521,7 +501,10 @@ class Manager(object):
         if self._options.iterations:
             self._test_files_list = self._test_files_list * self._options.iterations
 
-        result_summary = ResultSummary(self._expectations, self._test_files | skipped)
+        iterations =  \
+            (self._options.repeat_each if self._options.repeat_each else 1) * \
+            (self._options.iterations if self._options.iterations else 1)
+        result_summary = ResultSummary(self._expectations, self._test_files | skipped, iterations)
         self._print_expected_results_of_type(result_summary, test_expectations.PASS, "passes")
         self._print_expected_results_of_type(result_summary, test_expectations.FAIL, "failures")
         self._print_expected_results_of_type(result_summary, test_expectations.FLAKY, "flaky")
@@ -536,7 +519,11 @@ class Manager(object):
             for test in skipped:
                 result = test_results.TestResult(test)
                 result.type = test_expectations.SKIP
-                result_summary.add(result, expected=True)
+                iterations =  \
+                    (self._options.repeat_each if self._options.repeat_each else 1) * \
+                    (self._options.iterations if self._options.iterations else 1)
+                for iteration in range(iterations):
+                    result_summary.add(result, expected=True)
         self._printer.print_expected('')
 
         # Check to make sure we didn't filter out all of the tests.
@@ -668,11 +655,17 @@ class Manager(object):
         # Put a ceiling on the number of locked shards, so that we
         # don't hammer the servers too badly.
 
-        # FIXME: For now, limit to one shard. After testing to make sure we
+        # FIXME: For now, limit to one shard or set it
+        # with the --max-locked-shards. After testing to make sure we
         # can handle multiple shards, we should probably do something like
         # limit this to no more than a quarter of all workers, e.g.:
         # return max(math.ceil(num_workers / 4.0), 1)
-        return 1
+        if self._options.max_locked_shards:
+            num_of_locked_shards = self._options.max_locked_shards
+        else:
+            num_of_locked_shards = 1
+
+        return num_of_locked_shards
 
     def _resize_shards(self, old_shards, max_new_shards, shard_name_prefix):
         """Takes a list of shards and redistributes the tests into no more
@@ -715,7 +708,7 @@ class Manager(object):
             self._printer.print_config("Running %d %ss in parallel over %d shards (%d locked)" %
                 (num_workers, driver_name, num_shards, num_locked_shards))
 
-    def _run_tests(self, file_list, result_summary):
+    def _run_tests(self, file_list, result_summary, num_workers):
         """Runs the tests in the file_list.
 
         Return: A tuple (interrupted, keyboard_interrupted, thread_timings,
@@ -741,7 +734,7 @@ class Manager(object):
         thread_timings = []
 
         self._printer.print_update('Sharding tests ...')
-        locked_shards, unlocked_shards = self._shard_tests(file_list, int(self._options.child_processes), self._options.experimental_fully_parallel)
+        locked_shards, unlocked_shards = self._shard_tests(file_list, int(self._options.child_processes), self._options.fully_parallel)
 
         # FIXME: We don't have a good way to coordinate the workers so that
         # they don't try to run the shards that need a lock if we don't actually
@@ -756,25 +749,32 @@ class Manager(object):
         if locked_shards:
             self.start_servers_with_lock()
 
-        num_workers = min(int(self._options.child_processes), len(all_shards))
+        num_workers = min(num_workers, len(all_shards))
         self._log_num_workers(num_workers, len(all_shards), len(locked_shards))
 
-        manager_connection = manager_worker_broker.get(self._port, self._options, self, worker.Worker)
+        manager_connection = manager_worker_broker.get(num_workers, self, worker.Worker)
 
         if self._options.dry_run:
             return (keyboard_interrupted, interrupted, thread_timings, self._group_stats, self._all_results)
 
         self._printer.print_update('Starting %s ...' % grammar.pluralize('worker', num_workers))
         for worker_number in xrange(num_workers):
-            worker_connection = manager_connection.start_worker(worker_number, self.results_directory())
-            worker_state = _WorkerState(worker_number, worker_connection)
-            self._worker_states[worker_connection.name] = worker_state
+            worker_arguments = worker.WorkerArguments(worker_number, self.results_directory(), self._options)
+            worker_connection = manager_connection.start_worker(worker_arguments)
+            if num_workers == 1:
+                # FIXME: We need to be able to share a port with the work so
+                # that some of the tests can query state on the port; ideally
+                # we'd rewrite the tests so that this wasn't necessary.
+                #
+                # Note that this only works because in the inline case
+                # the worker hasn't really started yet and won't start
+                # running until we call run_message_loop(), below.
+                worker_connection.set_inline_arguments(self._port)
 
-            # FIXME: If we start workers up too quickly, DumpRenderTree appears
-            # to thrash on something and time out its first few tests. Until
-            # we can figure out what's going on, sleep a bit in between
-            # workers. This needs a bug filed.
-            time.sleep(0.1)
+            worker_state = _WorkerState(worker_number, worker_connection)
+            self._worker_states[worker_connection.name()] = worker_state
+
+            time.sleep(self._port.worker_startup_delay_secs())
 
         self._printer.print_update("Starting testing ...")
         for shard in all_shards:
@@ -817,6 +817,7 @@ class Manager(object):
             self.cancel_workers()
             raise
         finally:
+            manager_connection.cleanup()
             self.stop_servers_with_lock()
 
         thread_timings = [worker_state.stats for worker_state in self._worker_states.values()]
@@ -834,24 +835,10 @@ class Manager(object):
     def update(self):
         self.update_summary(self._current_result_summary)
 
-    def _collect_timing_info(self, threads):
-        test_timings = {}
-        individual_test_timings = []
-        thread_timings = []
-
-        for thread in threads:
-            thread_timings.append({'name': thread.getName(),
-                                   'num_tests': thread.get_num_tests(),
-                                   'total_time': thread.get_total_time()})
-            test_timings.update(thread.get_test_group_timing_stats())
-            individual_test_timings.extend(thread.get_test_results())
-
-        return (thread_timings, test_timings, individual_test_timings)
-
     def needs_servers(self):
         return any(self._test_requires_lock(test_name) for test_name in self._test_files) and self._options.http
 
-    def set_up_run(self):
+    def _set_up_run(self):
         """Configures the system to be ready to run tests.
 
         Returns a ResultSummary object if we should continue to run tests,
@@ -860,8 +847,9 @@ class Manager(object):
         """
         # This must be started before we check the system dependencies,
         # since the helper may do things to make the setup correct.
-        self._printer.print_update("Starting helper ...")
-        self._port.start_helper()
+        if self._options.pixel_tests:
+            self._printer.print_update("Starting pixel test helper ...")
+            self._port.start_helper()
 
         # Check that the system dependencies (themes, fonts, ...) are correct.
         if not self._options.nocheck_sys_deps:
@@ -874,7 +862,7 @@ class Manager(object):
             self._clobber_old_results()
 
         # Create the output directory if it doesn't already exist.
-        self._port.maybe_make_directory(self._results_directory)
+        self._port.host.filesystem.maybe_make_directory(self._results_directory)
 
         self._port.setup_test_run()
 
@@ -885,7 +873,7 @@ class Manager(object):
 
         return result_summary
 
-    def run(self, result_summary):
+    def run(self):
         """Run all our tests on all our test files.
 
         For each test file, we run each test type. If there are any failures,
@@ -900,15 +888,20 @@ class Manager(object):
         # collect_tests() must have been called first to initialize us.
         # If we didn't find any files to test, we've errored out already in
         # prepare_lists_and_print_output().
+
+        result_summary = self._set_up_run()
+        if not result_summary:
+            return -1
+
         assert(len(self._test_files))
 
         start_time = time.time()
 
-        interrupted, keyboard_interrupted, thread_timings, test_timings, individual_test_timings = self._run_tests(self._test_files_list, result_summary)
+        interrupted, keyboard_interrupted, thread_timings, test_timings, individual_test_timings = self._run_tests(self._test_files_list, result_summary, int(self._options.child_processes))
 
         # We exclude the crashes from the list of results to retry, because
         # we want to treat even a potentially flaky crash as an error.
-        failures = self._get_failures(result_summary, include_crashes=False, include_missing=False)
+        failures = self._get_failures(result_summary, include_crashes=self._port.should_retry_crashes(), include_missing=False)
         retry_summary = result_summary
         while (len(failures) and self._options.retry_failures and not self._retrying and not interrupted and not keyboard_interrupted):
             _log.info('')
@@ -917,16 +910,15 @@ class Manager(object):
             self._retrying = True
             retry_summary = ResultSummary(self._expectations, failures.keys())
             # Note that we intentionally ignore the return value here.
-            self._run_tests(failures.keys(), retry_summary)
+            self._run_tests(failures.keys(), retry_summary, num_workers=1)
             failures = self._get_failures(retry_summary, include_crashes=True, include_missing=True)
 
         end_time = time.time()
 
+        self._clean_up_run()
+
         self._print_timing_statistics(end_time - start_time, thread_timings, test_timings, individual_test_timings, result_summary)
         self._print_result_summary(result_summary)
-
-        sys.stdout.flush()
-        sys.stderr.flush()
 
         self._printer.print_one_line_summary(result_summary.total, result_summary.expected, result_summary.unexpected)
 
@@ -973,15 +965,16 @@ class Manager(object):
             self._port.release_http_lock()
             self._has_http_lock = False
 
-    def clean_up_run(self):
+    def _clean_up_run(self):
         """Restores the system after we're done running tests."""
-
         _log.debug("flushing stdout")
         sys.stdout.flush()
         _log.debug("flushing stderr")
         sys.stderr.flush()
         _log.debug("stopping helper")
         self._port.stop_helper()
+        _log.debug("cleaning up port")
+        self._port.clean_up_test_run()
 
     def update_summary(self, result_summary):
         """Update the summary and print results with any completed tests."""
@@ -994,12 +987,22 @@ class Manager(object):
 
             self._update_summary_with_result(result_summary, result)
 
+    def _mark_interrupted_tests_as_skipped(self, result_summary):
+        for test_name in self._test_files:
+            if test_name not in result_summary.results:
+                result = test_results.TestResult(test_name, [test_failures.FailureEarlyExit()])
+                # FIXME: We probably need to loop here if there are multiple iterations.
+                # FIXME: Also, these results are really neither expected nor unexpected. We probably
+                # need a third type of result.
+                result_summary.add(result, expected=False)
+
     def _interrupt_if_at_failure_limits(self, result_summary):
         # Note: The messages in this method are constructed to match old-run-webkit-tests
         # so that existing buildbot grep rules work.
         def interrupt_if_at_failure_limit(limit, failure_count, result_summary, message):
             if limit and failure_count >= limit:
                 message += " %d tests run." % (result_summary.expected + result_summary.unexpected)
+                self._mark_interrupted_tests_as_skipped(result_summary)
                 raise TestRunInterruptedException(message)
 
         interrupt_if_at_failure_limit(
@@ -1018,7 +1021,7 @@ class Manager(object):
         if result.type == test_expectations.SKIP:
             result_summary.add(result, expected=True)
         else:
-            expected = self._expectations.matches_an_expected_result(result.test_name, result.type, self._options.pixel_tests)
+            expected = self._expectations.matches_an_expected_result(result.test_name, result.type, self._options.pixel_tests or test_failures.is_reftest_failure(result.failures))
             result_summary.add(result, expected)
             exp_str = self._expectations.get_expectations_string(result.test_name)
             got_str = self._expectations.expectation_to_string(result.type)
@@ -1136,7 +1139,6 @@ class Manager(object):
 
         p.print_config('Command line: ' +
                        ' '.join(self._port.driver_cmd_line()))
-        p.print_config("Worker model: %s" % self._options.worker_model)
         p.print_config("")
 
     def _print_expected_results_of_type(self, result_summary,
@@ -1332,9 +1334,8 @@ class Manager(object):
         Args:
           result_summary: information to log
         """
-        failed = len(result_summary.failures)
-        skipped = len(
-            result_summary.tests_by_expectation[test_expectations.SKIP])
+        failed = result_summary.total_failures
+        skipped = result_summary.total_tests_by_expectation[test_expectations.SKIP]
         total = result_summary.total
         passed = total - failed - skipped
         pct_passed = 0.0
@@ -1527,7 +1528,7 @@ class _WorkerState(object):
         self.current_test_name = None
         self.next_timeout = None
         self.stats = {}
-        self.stats['name'] = worker_connection.name
+        self.stats['name'] = worker_connection.name()
         self.stats['num_tests'] = 0
         self.stats['total_time'] = 0
 

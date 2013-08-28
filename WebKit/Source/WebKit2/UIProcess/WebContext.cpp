@@ -31,7 +31,6 @@
 #include "InjectedBundleMessageKinds.h"
 #include "Logging.h"
 #include "MutableDictionary.h"
-#include "RunLoop.h"
 #include "SandboxExtension.h"
 #include "StatisticsData.h"
 #include "TextChecker.h"
@@ -58,12 +57,17 @@
 #include <WebCore/LinkHash.h>
 #include <WebCore/Logging.h>
 #include <WebCore/ResourceRequest.h>
+#include <WebCore/RunLoop.h>
 #include <runtime/InitializeThreading.h>
 #include <wtf/CurrentTime.h>
 #include <wtf/MainThread.h>
 
 #if PLATFORM(MAC)
 #include "BuiltInPDFView.h"
+#endif
+
+#if USE(SOUP)
+#include "WebSoupRequestManagerProxy.h"
 #endif
 
 #ifndef NDEBUG
@@ -135,6 +139,9 @@ WebContext::WebContext(ProcessModel processModel, const String& injectedBundlePa
     , m_notificationManagerProxy(WebNotificationManagerProxy::create(this))
     , m_pluginSiteDataManager(WebPluginSiteDataManager::create(this))
     , m_resourceCacheManagerProxy(WebResourceCacheManagerProxy::create(this))
+#if USE(SOUP)
+    , m_soupRequestManagerProxy(WebSoupRequestManagerProxy::create(this))
+#endif
 #if PLATFORM(WIN)
     , m_shouldPaintNativeControls(true)
     , m_initialHTTPCookieAcceptPolicy(HTTPCookieAcceptPolicyAlways)
@@ -192,7 +199,12 @@ WebContext::~WebContext()
 
     m_resourceCacheManagerProxy->invalidate();
     m_resourceCacheManagerProxy->clearContext();
-    
+
+#if USE(SOUP)
+    m_soupRequestManagerProxy->invalidate();
+    m_soupRequestManagerProxy->clearContext();
+#endif
+
     invalidateCallbackMap(m_dictionaryCallbacks);
 
     platformInvalidateContext();
@@ -231,7 +243,7 @@ void WebContext::languageChanged(void* context)
 
 void WebContext::languageChanged()
 {
-    sendToAllProcesses(Messages::WebProcess::LanguageChanged(defaultLanguage()));
+    sendToAllProcesses(Messages::WebProcess::UserPreferredLanguagesChanged(userPreferredLanguages()));
 }
 
 void WebContext::fullKeyboardAccessModeChanged(bool fullKeyboardAccessEnabled)
@@ -255,14 +267,12 @@ void WebContext::ensureWebProcess()
 
     parameters.shouldTrackVisitedLinks = m_historyClient.shouldTrackVisitedLinks();
     parameters.cacheModel = m_cacheModel;
-    parameters.languageCode = defaultLanguage();
+    parameters.languages = userPreferredLanguages();
     parameters.applicationCacheDirectory = applicationCacheDirectory();
     parameters.databaseDirectory = databaseDirectory();
     parameters.localStorageDirectory = localStorageDirectory();
-    parameters.webInspectorLocalizedStringsPath = m_overrideWebInspectorLocalizedStringsPath;
 
 #if PLATFORM(MAC)
-    parameters.webInspectorBaseDirectory = m_overrideWebInspectorBaseDirectory;
     parameters.presenterApplicationPid = getpid();
 #endif
 
@@ -280,6 +290,10 @@ void WebContext::ensureWebProcess()
     parameters.fullKeyboardAccessEnabled = WebProcessProxy::fullKeyboardAccessEnabled();
 
     parameters.defaultRequestTimeoutInterval = WebURLRequest::defaultTimeoutInterval();
+
+#if ENABLE(NOTIFICATIONS) || ENABLE(LEGACY_NOTIFICATIONS)
+    m_notificationManagerProxy->populateCopyOfNotificationPermissions(parameters.notificationPermissions);
+#endif
 
     // Add any platform specific parameters
     platformInitializeWebProcess(parameters);
@@ -378,6 +392,9 @@ void WebContext::disconnectProcess(WebProcessProxy* process)
     m_mediaCacheManagerProxy->invalidate();
     m_notificationManagerProxy->invalidate();
     m_resourceCacheManagerProxy->invalidate();
+#if USE(SOUP)
+    m_soupRequestManagerProxy->invalidate();
+#endif
 
     // When out of process plug-ins are enabled, we don't want to invalidate the plug-in site data
     // manager just because the web process crashes since it's not involved.
@@ -713,6 +730,13 @@ void WebContext::didReceiveMessage(CoreIPC::Connection* connection, CoreIPC::Mes
         m_resourceCacheManagerProxy->didReceiveWebResourceCacheManagerProxyMessage(connection, messageID, arguments);
         return;
     }
+
+#if USE(SOUP)
+    if (messageID.is<CoreIPC::MessageClassWebSoupRequestManagerProxy>()) {
+        m_soupRequestManagerProxy->didReceiveMessage(connection, messageID, arguments);
+        return;
+    }
+#endif
 
     switch (messageID.get<WebContextLegacyMessage::Kind>()) {
         case WebContextLegacyMessage::PostMessage: {

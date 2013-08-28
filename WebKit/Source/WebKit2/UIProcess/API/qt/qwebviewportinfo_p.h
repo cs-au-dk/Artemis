@@ -18,7 +18,7 @@
  *
  */
 
-#ifndef qwebviewportinfp_p_h
+#ifndef qwebviewportinfo_p_h
 #define qwebviewportinfo_p_h
 
 #include "qwebkitglobal.h"
@@ -29,9 +29,6 @@
 #include <QtCore/QVariant>
 #include <QtDeclarative/QtDeclarative>
 
-namespace WebCore {
-class ViewportAttributes;
-}
 class QQuickWebViewPrivate;
 
 class QWEBKIT_EXPORT QWebViewportInfo : public QObject {

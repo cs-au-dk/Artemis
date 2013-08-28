@@ -30,23 +30,18 @@
 
 import errno
 import socket
-
 import sys
 import time
 import unittest
 
-# Handle Python < 2.6 where multiprocessing isn't available.
-try:
-    import multiprocessing
-except ImportError:
-    multiprocessing = None
-
-from webkitpy.layout_tests.servers import http_server_base
-
 from webkitpy.common.system.filesystem_mock import MockFileSystem
-from webkitpy.tool.mocktool import MockOptions
 from webkitpy.common.system.executive_mock import MockExecutive
-from webkitpy.common.host_mock import MockHost
+from webkitpy.common.system.systemhost_mock import MockSystemHost
+from webkitpy.layout_tests.servers import http_server_base
+from webkitpy.layout_tests.servers import http_server_base
+from webkitpy.layout_tests.port import factory
+from webkitpy.layout_tests.port.config_mock import MockConfig
+from webkitpy.tool.mocktool import MockOptions
 
 
 class PortTestCase(unittest.TestCase):
@@ -55,19 +50,17 @@ class PortTestCase(unittest.TestCase):
     WEBSOCKET_PORTS = (8880,)
 
     # Subclasses override this to point to their Port subclass.
+    os_name = None
+    os_version = None
     port_maker = None
 
-    def make_port(self, host=None, options=None, **kwargs):
-        host = host or MockHost()
+    def make_port(self, host=None, port_name=None, options=None, os_name=None, os_version=None, config=None, **kwargs):
+        host = host or MockSystemHost(os_name=(os_name or self.os_name), os_version=(os_version or self.os_version))
         options = options or MockOptions(configuration='Release')
-        return self.port_maker(host, options=options, **kwargs)
-
-    def test_default_worker_model(self):
-        port = self.make_port()
-        if multiprocessing:
-            self.assertEqual(port.default_worker_model(), 'processes')
-        else:
-            self.assertEqual(port.default_worker_model(), 'inline')
+        config = config or MockConfig(filesystem=host.filesystem, default_configuration='Release')
+        port_name = port_name or self.port_name
+        port_name = self.port_maker.determine_full_port_name(host, options, port_name)
+        return self.port_maker(host, port_name, options=options, config=config, **kwargs)
 
     def test_driver_cmd_line(self):
         port = self.make_port()
@@ -315,6 +308,30 @@ class PortTestCase(unittest.TestCase):
                 time.sleep(0.1)
 
             i += 1
+
+    def test_get_crash_log(self):
+        port = self.make_port()
+        self.assertEquals(port._get_crash_log(None, None, None, None, newer_than=None),
+           ('crash log for <unknown process name> (pid <unknown>):\n'
+            'STDOUT: <empty>\n'
+            'STDERR: <empty>\n'))
+
+        self.assertEquals(port._get_crash_log('foo', 1234, 'out bar\nout baz', 'err bar\nerr baz\n', newer_than=None),
+            ('crash log for foo (pid 1234):\n'
+             'STDOUT: out bar\n'
+             'STDOUT: out baz\n'
+             'STDERR: err bar\n'
+             'STDERR: err baz\n'))
+
+        self.assertEquals(port._get_crash_log('foo', 1234, 'foo\xa6bar', 'foo\xa6bar', newer_than=None),
+            (u'crash log for foo (pid 1234):\n'
+             u'STDOUT: foo\ufffdbar\n'
+             u'STDERR: foo\ufffdbar\n'))
+
+        self.assertEquals(port._get_crash_log('foo', 1234, 'foo\xa6bar', 'foo\xa6bar', newer_than=1.0),
+            (u'crash log for foo (pid 1234):\n'
+             u'STDOUT: foo\ufffdbar\n'
+             u'STDERR: foo\ufffdbar\n'))
 
 # FIXME: This class and main() should be merged into test-webkitpy.
 class EnhancedTestLoader(unittest.TestLoader):

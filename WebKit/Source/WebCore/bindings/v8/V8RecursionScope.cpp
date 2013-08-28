@@ -48,7 +48,8 @@ void V8RecursionScope::didLeaveScriptContext()
 #endif
 
 #if ENABLE(MUTATION_OBSERVERS)
-    WebKitMutationObserver::deliverAllMutations();
+    if (m_isDocumentContext)
+        WebKitMutationObserver::deliverAllMutations();
 #endif
 }
 

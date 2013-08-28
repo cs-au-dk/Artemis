@@ -28,14 +28,15 @@
 #define BitmapSkPictureCanvasLayerTextureUpdater_h
 
 #if USE(ACCELERATED_COMPOSITING)
-#if USE(SKIA)
-
 #include "LayerTextureSubImage.h"
 #include "PlatformColor.h"
+#include "SkBitmap.h"
 #include "SkPictureCanvasLayerTextureUpdater.h"
 
 namespace WebCore {
 
+// This class records the contentRect into an SkPicture, then software rasterizes
+// the SkPicture into bitmaps for each tile. This implements CCSettings::perTilePainting.
 class BitmapSkPictureCanvasLayerTextureUpdater : public SkPictureCanvasLayerTextureUpdater {
 public:
     class Texture : public CanvasLayerTextureUpdater::Texture {
@@ -48,7 +49,7 @@ public:
     private:
         BitmapSkPictureCanvasLayerTextureUpdater* textureUpdater() { return m_textureUpdater; }
 
-        OwnArrayPtr<uint8_t> m_pixelData;
+        SkBitmap m_bitmap;
         BitmapSkPictureCanvasLayerTextureUpdater* m_textureUpdater;
     };
 
@@ -57,7 +58,7 @@ public:
 
     virtual PassOwnPtr<LayerTextureUpdater::Texture> createTexture(TextureManager*);
     virtual SampledTexelFormat sampledTexelFormat(GC3Denum textureFormat);
-    virtual void prepareToUpdate(const IntRect& contentRect, const IntSize& tileSize, int borderTexels, float contentsScale);
+    virtual void prepareToUpdate(const IntRect& contentRect, const IntSize& tileSize, int borderTexels, float contentsScale, IntRect& resultingOpaqueRect);
     void paintContentsRect(SkCanvas*, const IntRect& sourceRect);
     void updateTextureRect(GraphicsContext3D*, GC3Denum format, const IntRect& destRect, const uint8_t* pixels);
 
@@ -67,6 +68,5 @@ private:
     LayerTextureSubImage m_texSubImage;
 };
 } // namespace WebCore
-#endif // USE(SKIA)
 #endif // USE(ACCELERATED_COMPOSITING)
 #endif // BitmapSkPictureCanvasLayerTextureUpdater_h

@@ -32,16 +32,18 @@
 #include "V8Binding.h"
 
 #include "DOMStringList.h"
+#include "DOMWrapperVisitor.h"
 #include "Element.h"
-#include "MathExtras.h"
 #include "PlatformString.h"
 #include "QualifiedName.h"
-#include "StdLibExtras.h"
-#include "Threading.h"
 #include "V8DOMStringList.h"
 #include "V8Element.h"
 #include "V8Proxy.h"
+
+#include <wtf/MathExtras.h>
 #include <wtf/MainThread.h>
+#include <wtf/StdLibExtras.h>
+#include <wtf/Threading.h>
 #include <wtf/text/AtomicString.h>
 #include <wtf/text/CString.h>
 #include <wtf/text/StringBuffer.h>
@@ -54,6 +56,9 @@ V8BindingPerIsolateData::V8BindingPerIsolateData(v8::Isolate* isolate)
     : m_domDataStore(0)
     , m_constructorMode(ConstructorMode::CreateNewObject)
     , m_recursionLevel(0)
+#ifndef NDEBUG
+    , m_internalScriptRecursionLevel(0)
+#endif
 {
 }
 
@@ -145,6 +150,13 @@ public:
         return m_atomicString;
     }
 
+    void visitStrings(DOMWrapperVisitor* visitor)
+    {
+        visitor->visitJSExternalString(m_plainString.impl());
+        if (m_plainString.impl() != m_atomicString.impl() && !m_atomicString.isNull())
+            visitor->visitJSExternalString(m_atomicString.impl());
+    }
+
     static WebCoreStringResource* toStringResource(v8::Handle<v8::String> v8String)
     {
         return static_cast<WebCoreStringResource*>(v8String->GetExternalStringResource());
@@ -165,6 +177,27 @@ private:
 #endif
 };
 
+#if ENABLE(INSPECTOR)
+void V8BindingPerIsolateData::visitJSExternalStrings(DOMWrapperVisitor* visitor)
+{
+    v8::HandleScope handleScope;
+    class VisitorImpl : public v8::ExternalResourceVisitor {
+    public:
+        VisitorImpl(DOMWrapperVisitor* visitor) : m_visitor(visitor) { }
+        virtual ~VisitorImpl() { }
+        virtual void VisitExternalString(v8::Handle<v8::String> string)
+        {
+            WebCoreStringResource* resource = static_cast<WebCoreStringResource*>(string->GetExternalStringResource());
+            if (resource)
+                resource->visitStrings(m_visitor);
+        }
+    private:
+        DOMWrapperVisitor* m_visitor;
+    } v8Visitor(visitor);
+    v8::V8::VisitExternalResources(&v8Visitor);
+}
+#endif
+
 String v8ValueToWebCoreString(v8::Handle<v8::Value> value)
 {
     if (value->IsString())
@@ -183,7 +216,7 @@ int toInt32(v8::Handle<v8::Value> value, bool& ok)
 {
     ok = true;
     
-    // Fast case.  The value is already a 32-bit integer.
+    // Fast case. The value is already a 32-bit integer.
     if (value->IsInt32())
         return value->Int32Value();
     
@@ -216,11 +249,10 @@ uint32_t toUInt32(v8::Handle<v8::Value> value, bool& ok)
 {
     ok = true;
 
-    // FIXME: there is currently no Value::IsUint32(). This code does
-    // some contortions to avoid silently converting out-of-range
-    // values to uint32_t.
+    // Fast case. The value is already a 32-bit unsigned integer.
+    if (value->IsUint32())
+        return value->Uint32Value();
 
-    // Fast case.  The value is already a 32-bit positive integer.
     if (value->IsInt32()) {
         int32_t result = value->Int32Value();
         if (result >= 0)
@@ -248,93 +280,7 @@ uint32_t toUInt32(v8::Handle<v8::Value> value, bool& ok)
         return 0;
     }
 
-    // FIXME: v8::Uint32::Value is not defined!
-    // http://code.google.com/p/v8/issues/detail?id=624
-    v8::Local<v8::Int32> intValue = value->ToInt32();
-    if (intValue.IsEmpty()) {
-        ok = false;
-        return 0;
-    }
-
-    return static_cast<uint32_t>(intValue->Value());
-}
-
-String toWebCoreString(const v8::Arguments& args, int index) {
-    return v8ValueToWebCoreString(args[index]);
-}
-
-    
-String toWebCoreStringWithNullCheck(v8::Handle<v8::Value> value)
-{
-    if (value->IsNull()) 
-        return String();
-    return v8ValueToWebCoreString(value);
-}
-
-AtomicString toAtomicWebCoreStringWithNullCheck(v8::Handle<v8::Value> value)
-{
-    if (value->IsNull())
-        return AtomicString();
-    return v8ValueToAtomicWebCoreString(value);
-}
-
-String toWebCoreStringWithNullOrUndefinedCheck(v8::Handle<v8::Value> value)
-{
-    if (value->IsNull() || value->IsUndefined())
-        return String();
-    return toWebCoreString(value);
-}
-
-bool isUndefinedOrNull(v8::Handle<v8::Value> value)
-{
-    return value->IsNull() || value->IsUndefined();
-}
-
-bool isHostObject(v8::Handle<v8::Object> object)
-{
-    // If the object has any internal fields, then we won't be able to serialize or deserialize
-    // them; conveniently, this is also a quick way to detect DOM wrapper objects, because
-    // the mechanism for these relies on data stored in these fields. We should
-    // catch external array data and external pixel data as a special case (noting that CanvasPixelArrays
-    // can't be serialized without being wrapped by ImageData according to the standard).
-    return object->InternalFieldCount() || object->HasIndexedPropertiesInPixelData() || object->HasIndexedPropertiesInExternalArrayData();
-}
-
-v8::Handle<v8::Boolean> v8Boolean(bool value)
-{
-    return value ? v8::True() : v8::False();
-}
-
-v8::Handle<v8::String> v8UndetectableString(const String& str)
-{
-    return v8::String::NewUndetectable(fromWebCoreString(str), str.length());
-}
-
-v8::Handle<v8::Value> v8StringOrNull(const String& str)
-{
-    return str.isNull() ? v8::Handle<v8::Value>(v8::Null()) : v8::Handle<v8::Value>(v8String(str));
-}
-
-v8::Handle<v8::Value> v8StringOrUndefined(const String& str)
-{
-    return str.isNull() ? v8::Handle<v8::Value>(v8::Undefined()) : v8::Handle<v8::Value>(v8String(str));
-}
-
-v8::Handle<v8::Value> v8StringOrFalse(const String& str)
-{
-    return str.isNull() ? v8::Handle<v8::Value>(v8::False()) : v8::Handle<v8::Value>(v8String(str));
-}
-
-double toWebCoreDate(v8::Handle<v8::Value> object)
-{
-    return (object->IsDate() || object->IsNumber()) ? object->NumberValue() : std::numeric_limits<double>::quiet_NaN();
-}
-
-v8::Handle<v8::Value> v8DateOrNull(double value)
-{
-    if (isfinite(value))
-        return v8::Date::New(value);
-    return v8::Null();
+    return uintValue->Value();
 }
 
 template <class S> struct StringTraits
@@ -502,7 +448,6 @@ void StringCache::remove(StringImpl* stringImpl)
     m_stringCache.remove(stringImpl);
 }
 
-
 v8::Local<v8::String> StringCache::v8ExternalStringSlow(StringImpl* stringImpl)
 {
     if (!stringImpl->length())
@@ -606,7 +551,7 @@ v8::Handle<v8::Value> getElementStringAttr(const v8::AccessorInfo& info,
                                            const QualifiedName& name) 
 {
     Element* imp = V8Element::toNative(info.Holder());
-    return v8ExternalString(imp->getAttribute(name));
+    return v8ExternalString(imp->getAttribute(name), info.GetIsolate());
 }
 
 void setElementStringAttr(const v8::AccessorInfo& info,

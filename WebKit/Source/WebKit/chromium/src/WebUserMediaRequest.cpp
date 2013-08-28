@@ -70,34 +70,29 @@ bool WebUserMediaRequest::video() const
     return m_private->video();
 }
 
-bool WebUserMediaRequest::cameraPreferenceUser() const
-{
-    return m_private->cameraPreferenceUser();
-}
-
-bool WebUserMediaRequest::cameraPreferenceEnvironment() const
-{
-    return m_private->cameraPreferenceEnvironment();
-}
-
 WebSecurityOrigin WebUserMediaRequest::securityOrigin() const
 {
     ASSERT(m_private->scriptExecutionContext());
     return WebSecurityOrigin(m_private->scriptExecutionContext()->securityOrigin());
 }
 
-void WebUserMediaRequest::requestSucceeded(const WebVector<WebMediaStreamSource>& sources)
+void WebUserMediaRequest::requestSucceeded(const WebVector<WebMediaStreamSource>& audioSources, const WebVector<WebMediaStreamSource>& videoSources)
 {
     if (m_private.isNull())
         return;
 
-    MediaStreamSourceVector s;
-    for (size_t i = 0; i < sources.size(); ++i) {
-        MediaStreamSource* curr = sources[i];
-        s.append(curr);
+    MediaStreamSourceVector audio;
+    for (size_t i = 0; i < audioSources.size(); ++i) {
+        MediaStreamSource* curr = audioSources[i];
+        audio.append(curr);
+    }
+    MediaStreamSourceVector video;
+    for (size_t i = 0; i < videoSources.size(); ++i) {
+        MediaStreamSource* curr = videoSources[i];
+        video.append(curr);
     }
 
-    m_private->succeed(s);
+    m_private->succeed(audio, video);
 }
 
 void WebUserMediaRequest::requestFailed()

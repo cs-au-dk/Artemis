@@ -30,7 +30,7 @@ namespace WebCore {
 
 template<>
 struct SVGPropertyTraits<MorphologyOperatorType> {
-    static MorphologyOperatorType highestEnumValue() { return FEMORPHOLOGY_OPERATOR_DILATE; }
+    static unsigned highestEnumValue() { return FEMORPHOLOGY_OPERATOR_DILATE; }
 
     static String toString(MorphologyOperatorType type)
     {
@@ -67,7 +67,7 @@ private:
     SVGFEMorphologyElement(const QualifiedName&, Document*);
 
     bool isSupportedAttribute(const QualifiedName&);
-    virtual void parseMappedAttribute(Attribute*);
+    virtual void parseAttribute(Attribute*) OVERRIDE;
     virtual bool setFilterEffectAttribute(FilterEffect*, const QualifiedName&);
     virtual void svgAttributeChanged(const QualifiedName&);
     virtual PassRefPtr<FilterEffect> build(SVGFilterBuilder*, Filter*);

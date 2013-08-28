@@ -31,15 +31,13 @@
 
 namespace WebKit {
 
-class WebLayerImpl : public WebCore::LayerChromium, public WebCore::CCLayerDelegate {
+class WebLayerImpl : public WebCore::LayerChromium {
 public:
     static PassRefPtr<WebLayerImpl> create();
 
 protected:
     WebLayerImpl();
     virtual ~WebLayerImpl();
-    virtual bool drawsContent() const;
-    virtual void paintContents(WebCore::GraphicsContext&, const WebCore::IntRect& clip);
 };
 
 } // namespace WebKit

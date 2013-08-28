@@ -48,6 +48,8 @@ public:
         TypeGraphicsContext,
         TypeImage,
         TypeProtectionSpace,
+        TypeRenderLayer,
+        TypeRenderObject,
         TypeSecurityOrigin,
         TypeSerializedScriptValue,
         TypeString,
@@ -104,6 +106,7 @@ public:
         TypeBundle,
         TypeBundleBackForwardList,
         TypeBundleBackForwardListItem,
+        TypeBundleDOMWindowExtension,
         TypeBundleFrame,
         TypeBundleHitTestResult,
         TypeBundleInspector,
@@ -117,7 +120,10 @@ public:
 
         // Platform specific
         TypeEditCommandProxy,
-        TypeView
+        TypeView,
+#if USE(SOUP)
+        TypeSoupRequestManager,
+#endif
     };
 
     virtual ~APIObject()

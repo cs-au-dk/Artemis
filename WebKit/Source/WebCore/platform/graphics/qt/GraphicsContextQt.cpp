@@ -301,7 +301,7 @@ void GraphicsContext::restorePlatformState()
 {
     if (!m_data->layers.isEmpty() && !m_data->layers.top()->alphaMask.isNull())
         if (!--m_data->layers.top()->saveCounter)
-            endTransparencyLayer();
+            endPlatformTransparencyLayer();
 
     m_data->p()->restore();
 
@@ -975,7 +975,7 @@ static void drawErrorUnderline(QPainter *painter, qreal x, qreal y, qreal width,
 }
 
 
-void GraphicsContext::drawLineForTextChecking(const FloatPoint& origin, float width, TextCheckingLineStyle style)
+void GraphicsContext::drawLineForDocumentMarker(const FloatPoint& origin, float width, DocumentMarkerLineStyle style)
 {
     if (paintingDisabled())
         return;
@@ -984,10 +984,10 @@ void GraphicsContext::drawLineForTextChecking(const FloatPoint& origin, float wi
     const QPen originalPen = painter->pen();
 
     switch (style) {
-    case TextCheckingSpellingLineStyle:
+    case DocumentMarkerSpellingLineStyle:
         painter->setPen(Qt::red);
         break;
-    case TextCheckingGrammarLineStyle:
+    case DocumentMarkerGrammarLineStyle:
         painter->setPen(Qt::green);
         break;
     default:
@@ -1068,12 +1068,14 @@ void GraphicsContext::beginPlatformTransparencyLayer(float opacity)
     w = device->width();
     h = device->height();
 
-    QRectF clip = m_data->clipBoundingRect();
-    QRectF deviceClip = p->transform().mapRect(clip);
-    x = int(qBound(qreal(0), deviceClip.x(), (qreal)w));
-    y = int(qBound(qreal(0), deviceClip.y(), (qreal)h));
-    w = int(qBound(qreal(0), deviceClip.width(), (qreal)w) + 2);
-    h = int(qBound(qreal(0), deviceClip.height(), (qreal)h) + 2);
+    if (p->hasClipping()) {
+        QRectF clip = m_data->clipBoundingRect();
+        QRectF deviceClip = p->transform().mapRect(clip);
+        x = int(qBound(qreal(0), deviceClip.x(), (qreal)w));
+        y = int(qBound(qreal(0), deviceClip.y(), (qreal)h));
+        w = int(qBound(qreal(0), deviceClip.width(), (qreal)w) + 2);
+        h = int(qBound(qreal(0), deviceClip.height(), (qreal)h) + 2);
+    }
 
     QPixmap emptyAlphaMask;
     m_data->layers.push(new TransparencyLayer(p, QRect(x, y, w, h), opacity, emptyAlphaMask));
@@ -1334,6 +1336,32 @@ void GraphicsContext::setCTM(const AffineTransform& transform)
 
     m_data->p()->setWorldTransform(transform);
 }
+
+#if ENABLE(3D_RENDERING) && USE(TEXTURE_MAPPER)
+TransformationMatrix GraphicsContext::get3DTransform() const
+{
+    if (paintingDisabled())
+        return TransformationMatrix();
+
+    return platformContext()->combinedTransform();
+}
+
+void GraphicsContext::concat3DTransform(const TransformationMatrix& transform)
+{
+    if (paintingDisabled())
+        return;
+
+    m_data->p()->setWorldTransform(transform, true);
+}
+
+void GraphicsContext::set3DTransform(const TransformationMatrix& transform)
+{
+    if (paintingDisabled())
+        return;
+
+    m_data->p()->setWorldTransform(transform, false);
+}
+#endif
 
 void GraphicsContext::setURLForRect(const KURL&, const IntRect&)
 {

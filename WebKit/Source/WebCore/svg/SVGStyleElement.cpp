@@ -51,6 +51,20 @@ PassRefPtr<SVGStyleElement> SVGStyleElement::create(const QualifiedName& tagName
     return adoptRef(new SVGStyleElement(tagName, document, createdByParser));
 }
 
+bool SVGStyleElement::disabled() const
+{
+    if (!m_sheet)
+        return false;
+    
+    return m_sheet->disabled();
+}
+
+void SVGStyleElement::setDisabled(bool setDisabled)
+{
+    if (CSSStyleSheet* styleSheet = sheet())
+        styleSheet->setDisabled(setDisabled);
+}
+
 const AtomicString& SVGStyleElement::type() const
 {
     DEFINE_STATIC_LOCAL(const AtomicString, defaultValue, ("text/css"));
@@ -95,10 +109,10 @@ bool SVGStyleElement::isSupportedAttribute(const QualifiedName& attrName)
     return supportedAttributes.contains<QualifiedName, SVGAttributeHashTranslator>(attrName);
 }
 
-void SVGStyleElement::parseMappedAttribute(Attribute* attr)
+void SVGStyleElement::parseAttribute(Attribute* attr)
 {
     if (!isSupportedAttribute(attr->name())) {
-        SVGElement::parseMappedAttribute(attr);
+        SVGElement::parseAttribute(attr);
         return;
     }
 
@@ -108,7 +122,7 @@ void SVGStyleElement::parseMappedAttribute(Attribute* attr)
         return;
     }
 
-    if (SVGLangSpace::parseMappedAttribute(attr))
+    if (SVGLangSpace::parseAttribute(attr))
         return;
 
     ASSERT_NOT_REACHED();
@@ -120,22 +134,25 @@ void SVGStyleElement::finishParsingChildren()
     SVGElement::finishParsingChildren();
 }
 
-void SVGStyleElement::insertedIntoDocument()
+Node::InsertionNotificationRequest SVGStyleElement::insertedInto(Node* rootParent)
 {
-    SVGElement::insertedIntoDocument();
-    StyleElement::insertedIntoDocument(document(), this);
+    SVGElement::insertedInto(rootParent);
+    if (rootParent->inDocument())
+        StyleElement::insertedIntoDocument(document(), this);
+    return InsertionDone;
 }
 
-void SVGStyleElement::removedFromDocument()
+void SVGStyleElement::removedFrom(Node* rootParent)
 {
-    SVGElement::removedFromDocument();
-    StyleElement::removedFromDocument(document(), this);
+    SVGElement::removedFrom(rootParent);
+    if (rootParent->inDocument())
+        StyleElement::removedFromDocument(document(), this);
 }
 
 void SVGStyleElement::childrenChanged(bool changedByParser, Node* beforeChange, Node* afterChange, int childCountDelta)
 {
-    StyleElement::childrenChanged(this);
     SVGElement::childrenChanged(changedByParser, beforeChange, afterChange, childCountDelta);
+    StyleElement::childrenChanged(this);
 }
 
 }

@@ -29,10 +29,12 @@
 
 #import "PlatformCALayer.h"
 
+#import "AnimationUtilities.h"
 #import "BlockExceptions.h"
 #import "FloatConversion.h"
 #import "GraphicsContext.h"
 #import "GraphicsLayerCA.h"
+#import "LengthFunctions.h"
 #import "WebLayer.h"
 #import "WebTiledLayer.h"
 #import "WebTileCacheLayer.h"
@@ -43,6 +45,9 @@
 #import <wtf/UnusedParam.h>
 
 #define HAVE_MODERN_QUARTZCORE (!defined(BUILDING_ON_LEOPARD))
+
+using std::min;
+using std::max;
 
 using namespace WebCore;
 
@@ -234,7 +239,10 @@ PlatformCALayer::~PlatformCALayer()
     setOwner(0);
     
     // Remove the owner pointer from the delegate in case there is a pending animationStarted event.
-    [static_cast<WebAnimationDelegate*>(m_delegate.get()) setOwner:nil];        
+    [static_cast<WebAnimationDelegate*>(m_delegate.get()) setOwner:nil];
+
+    if (m_layerType == LayerTypeTileCacheLayer)
+        [static_cast<WebTileCacheLayer *>(m_layer.get()) invalidate];
 }
 
 PlatformCALayer* PlatformCALayer::platformCALayer(void* platformLayer)
@@ -704,7 +712,13 @@ void PlatformCALayer::setOpacity(float value)
 void PlatformCALayer::setFilters(const FilterOperations& filters)
 {
     if (!filters.size()) {
-        [m_layer.get() setFilters:0];
+        BEGIN_BLOCK_OBJC_EXCEPTIONS
+        [m_layer.get() setFilters:nil];
+        [m_layer.get() setShadowOffset:CGSizeZero];
+        [m_layer.get() setShadowColor:nil];
+        [m_layer.get() setShadowRadius:0];
+        [m_layer.get() setShadowOpacity:0];
+        END_BLOCK_OBJC_EXCEPTIONS
         return;
     }
     
@@ -716,6 +730,8 @@ void PlatformCALayer::setFilters(const FilterOperations& filters)
     RetainPtr<NSMutableArray> array(AdoptNS, [[NSMutableArray alloc] init]);
     
     for (unsigned i = 0; i < filters.size(); ++i) {
+        String filterName = String::format("filter_%d", i);
+        
         const FilterOperation* filterOperation = filters.at(i);
         switch(filterOperation->getOperationType()) {
         case FilterOperation::DROP_SHADOW: {
@@ -740,16 +756,25 @@ void PlatformCALayer::setFilters(const FilterOperations& filters)
             [caFilter setDefaults];
             [caFilter setValue:[NSNumber numberWithFloat:op->amount()] forKey:@"inputIntensity"];
             [caFilter setValue:[CIColor colorWithRed:1 green:1 blue:1] forKey:@"inputColor"];
-            [caFilter setName:@"grayscaleFilter"];
+            [caFilter setName:filterName];
             [array.get() addObject:caFilter];
             break;
         }
         case FilterOperation::SEPIA: {
             const BasicColorMatrixFilterOperation* op = static_cast<const BasicColorMatrixFilterOperation*>(filterOperation);
-            CIFilter* caFilter = [CIFilter filterWithName:@"CISepiaTone"];
+            CIFilter* caFilter = [CIFilter filterWithName:@"CIColorMatrix"];
             [caFilter setDefaults];
-            [caFilter setValue:[NSNumber numberWithFloat:op->amount()] forKey:@"inputIntensity"];
-            [caFilter setName:@"sepiaFilter"];
+            
+            double t = op->amount();
+            t = min(max(0.0, t), 1.0);
+
+            // FIXME: Should put these values into constants (https://bugs.webkit.org/show_bug.cgi?id=76008)
+            [caFilter setValue:[CIVector vectorWithX:WebCore::blend(1.0, 0.393, t) Y:WebCore::blend(0.0, 0.769, t) Z:WebCore::blend(0.0, 0.189, t) W:0] forKey:@"inputRVector"];
+            [caFilter setValue:[CIVector vectorWithX:WebCore::blend(0.0, 0.349, t) Y:WebCore::blend(1.0, 0.686, t) Z:WebCore::blend(0.0, 0.168, t) W:0] forKey:@"inputGVector"];
+            [caFilter setValue:[CIVector vectorWithX:WebCore::blend(0.0, 0.272, t) Y:WebCore::blend(0.0, 0.534, t) Z:WebCore::blend(1.0, 0.131, t) W:0] forKey:@"inputBVector"];
+            [caFilter setValue:[CIVector vectorWithX:0 Y:0 Z:0 W:1] forKey:@"inputAVector"];
+            [caFilter setValue:[CIVector vectorWithX:0 Y:0 Z:0 W:0] forKey:@"inputBiasVector"];
+            [caFilter setName:filterName];
             [array.get() addObject:caFilter];
             break;
         }
@@ -758,7 +783,7 @@ void PlatformCALayer::setFilters(const FilterOperations& filters)
             CIFilter* caFilter = [CIFilter filterWithName:@"CIColorControls"];
             [caFilter setDefaults];
             [caFilter setValue:[NSNumber numberWithFloat:op->amount()] forKey:@"inputSaturation"];
-            [caFilter setName:@"saturateFilter"];
+            [caFilter setName:filterName];
             [array.get() addObject:caFilter];
             break;
         }
@@ -769,7 +794,7 @@ void PlatformCALayer::setFilters(const FilterOperations& filters)
             
             // The CIHueAdjust value is in radians
             [caFilter setValue:[NSNumber numberWithFloat:op->amount() * M_PI * 2 / 360] forKey:@"inputAngle"];
-            [caFilter setName:@"hueRotateFilter"];
+            [caFilter setName:filterName];
             [array.get() addObject:caFilter];
             break;
         }
@@ -785,7 +810,7 @@ void PlatformCALayer::setFilters(const FilterOperations& filters)
             [caFilter setValue:[CIVector vectorWithX:0 Y:0 Z:multiplier W:0] forKey:@"inputBVector"];
             [caFilter setValue:[CIVector vectorWithX:0 Y:0 Z:0 W:1] forKey:@"inputAVector"];
             [caFilter setValue:[CIVector vectorWithX:op->amount() Y:op->amount() Z:op->amount() W:0] forKey:@"inputBiasVector"];
-            [caFilter setName:@"invertFilter"];
+            [caFilter setName:filterName];
             [array.get() addObject:caFilter];
             break;
         }
@@ -799,7 +824,7 @@ void PlatformCALayer::setFilters(const FilterOperations& filters)
             [caFilter setValue:[CIVector vectorWithX:0 Y:0 Z:1 W:0] forKey:@"inputBVector"];
             [caFilter setValue:[CIVector vectorWithX:0 Y:0 Z:0 W:op->amount()] forKey:@"inputAVector"];
             [caFilter setValue:[CIVector vectorWithX:0 Y:0 Z:0 W:0] forKey:@"inputBiasVector"];
-            [caFilter setName:@"opacityFilter"];
+            [caFilter setName:filterName];
             [array.get() addObject:caFilter];
             break;
         }
@@ -808,8 +833,26 @@ void PlatformCALayer::setFilters(const FilterOperations& filters)
             const BlurFilterOperation* op = static_cast<const BlurFilterOperation*>(filterOperation);
             CIFilter* caFilter = [CIFilter filterWithName:@"CIGaussianBlur"];
             [caFilter setDefaults];
-            [caFilter setValue:[NSNumber numberWithFloat:op->stdDeviation().calcFloatValue(0)] forKey:@"inputRadius"];
-            [caFilter setName:@"blurFilter"];
+            [caFilter setValue:[NSNumber numberWithFloat:floatValueForLength(op->stdDeviation(), 0)] forKey:@"inputRadius"];
+            [caFilter setName:filterName];
+            [array.get() addObject:caFilter];
+            break;
+        }
+        case FilterOperation::CONTRAST: {
+            const BasicComponentTransferFilterOperation* op = static_cast<const BasicComponentTransferFilterOperation*>(filterOperation);
+            CIFilter* caFilter = [CIFilter filterWithName:@"CIColorControls"];
+            [caFilter setDefaults];
+            [caFilter setValue:[NSNumber numberWithFloat:op->amount()] forKey:@"inputContrast"];
+            [caFilter setName:filterName];
+            [array.get() addObject:caFilter];
+            break;
+        }
+        case FilterOperation::BRIGHTNESS: {
+            const BasicComponentTransferFilterOperation* op = static_cast<const BasicComponentTransferFilterOperation*>(filterOperation);
+            CIFilter* caFilter = [CIFilter filterWithName:@"CIColorControls"];
+            [caFilter setDefaults];
+            [caFilter setValue:[NSNumber numberWithFloat:op->amount()] forKey:@"inputBrightness"];
+            [caFilter setName:filterName];
             [array.get() addObject:caFilter];
             break;
         }
@@ -921,6 +964,15 @@ void PlatformCALayer::setContentsScale(float value)
 #else
     UNUSED_PARAM(value);
 #endif
+}
+
+TiledBacking* PlatformCALayer::tiledBacking()
+{
+    if (m_layerType != LayerTypeTileCacheLayer)
+        return 0;
+
+    WebTileCacheLayer *tileCacheLayer = static_cast<WebTileCacheLayer *>(m_layer.get());
+    return [tileCacheLayer tiledBacking];
 }
 
 #if !defined(BUILDING_ON_LEOPARD) && !defined(BUILDING_ON_SNOW_LEOPARD)

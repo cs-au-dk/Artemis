@@ -41,7 +41,7 @@ messages -> WebProcess {
     SetDefaultRequestTimeoutInterval(double timeoutInterval)
     SetAlwaysUsesComplexTextCodePath(bool alwaysUseComplexText)
     SetShouldUseFontSmoothing(bool useFontSmoothing)
-    LanguageChanged(WTF::String language)
+    UserPreferredLanguagesChanged(Vector<WTF::String> languages)
     FullKeyboardAccessModeChanged(bool fullKeyboardAccessEnabled)
 #if PLATFORM(WIN)
     SetShouldPaintNativeControls(bool shouldPaintNativeControls)
@@ -75,4 +75,9 @@ messages -> WebProcess {
 
     GetWebCoreStatistics(uint64_t callbackID)
     GarbageCollectJavaScriptObjects()
+
+#if PLATFORM(MAC)
+    SecItemResponse(uint64_t requestID, WebKit::SecItemResponseData response) DispatchOnConnectionQueue
+    SecKeychainItemResponse(uint64_t requestID, WebKit::SecKeychainItemResponseData response) DispatchOnConnectionQueue
+#endif
 }
