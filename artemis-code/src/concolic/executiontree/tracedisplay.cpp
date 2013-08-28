@@ -348,6 +348,7 @@ void TraceDisplay::visit(TraceEndUnknown *node)
 void TraceDisplay::clearData()
 {
     mHeaderBranches.clear();
+    mHeaderSymBranches.clear();
     mHeaderUnexplored.clear();
     mHeaderAlerts.clear();
     mHeaderDomMods.clear();
