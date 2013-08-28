@@ -62,6 +62,14 @@ QList<EventHandlerDescriptor*> EntryPointDetector::detectAll(ExecutionResultPtr 
             if(element.tagName().compare("form", Qt::CaseInsensitive) == 0){
                 entryEvents.append(event);
             }
+
+        }else if(event->name().compare("click", Qt::CaseInsensitive) == 0 &&
+                 event->domElement()->getTagName().compare("input", Qt::CaseInsensitive) == 0 &&
+                 event->domElement()->getElement(mPage).attribute("type").compare("button", Qt::CaseInsensitive) == 0){
+
+            // Accept a click on an input element of type button.
+            entryEvents.append(event);
+
         }
 
     }
@@ -75,15 +83,36 @@ QList<EventHandlerDescriptor*> EntryPointDetector::detectAll(ExecutionResultPtr 
 
 EventHandlerDescriptor *EntryPointDetector::choose(ExecutionResultPtr result)
 {
-    // TODO: Trivial choice: select the first click on a button we find.
-    foreach(EventHandlerDescriptor* event , result->getEventHandlers()){
-        if(event->name().compare("click", Qt::CaseInsensitive) == 0 &&
-                event->domElement()->getTagName().compare("button", Qt::CaseInsensitive) == 0){
-            return event;
-        }
-    }
+
+    // Detect all entry points on the page, according to the heuristics in detectAll().
+    QList<EventHandlerDescriptor*> allEntryPoints = detectAll(result);
+
     // If we found none, return null.
-    return NULL;
+    if(allEntryPoints.empty()){
+        return NULL;
+    }
+
+    // TODO: Temporary special case for airtran.com, choose the correct entry point (3rd one).
+    QUrl url = mPage->currentFrame()->url();
+    if(url.toString() == "http://www.airtran.com/Home.aspx" && allEntryPoints.length() == 5){
+        return allEntryPoints.at(2);
+    }
+    // TODO: Temporary special case for flykingfisher.com
+    if(url.toString() == "http://www.flykingfisher.com/" && allEntryPoints.length() == 5){
+        return allEntryPoints.at(1);
+    }
+    // TODO: Temporary special case for jetstar.com
+    if(url.toString() == "http://www.jetstar.com/au/en/home"){
+        return allEntryPoints.at(5);
+    }
+    // TODO: Temporary special case for monarch.co.uk
+    if(url.toString() == "http://www.monarch.co.uk/"){
+        return allEntryPoints.at(7);
+    }
+
+    // TODO: Trivial Choice: Choose the first entrypoint.
+    return allEntryPoints.at(0);
+
 }
 
 
