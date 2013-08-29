@@ -94,11 +94,11 @@ EventHandlerDescriptor *EntryPointDetector::choose(ExecutionResultPtr result)
 
     // TODO: Temporary special case for airtran.com, choose the correct entry point (3rd one).
     QUrl url = mPage->currentFrame()->url();
-    if(url.toString() == "http://www.airtran.com/Home.aspx" && allEntryPoints.length() == 5){
+    if(url.toString() == "http://www.airtran.com/Home.aspx"){
         return allEntryPoints.at(2);
     }
     // TODO: Temporary special case for flykingfisher.com
-    if(url.toString() == "http://www.flykingfisher.com/" && allEntryPoints.length() == 5){
+    if(url.toString() == "http://www.flykingfisher.com/"){
         return allEntryPoints.at(1);
     }
     // TODO: Temporary special case for jetstar.com
@@ -108,6 +108,10 @@ EventHandlerDescriptor *EntryPointDetector::choose(ExecutionResultPtr result)
     // TODO: Temporary special case for monarch.co.uk
     if(url.toString() == "http://www.monarch.co.uk/"){
         return allEntryPoints.at(7);
+    }
+    // TODO: Temporary special case for usairways.com
+    if(url.toString() == "http://www.usairways.com/default.aspx"){
+        return allEntryPoints.at(13);
     }
 
     // TODO: Trivial Choice: Choose the first entrypoint.
