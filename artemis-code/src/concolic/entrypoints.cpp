@@ -65,9 +65,11 @@ QList<EventHandlerDescriptor*> EntryPointDetector::detectAll(ExecutionResultPtr 
 
         }else if(event->name().compare("click", Qt::CaseInsensitive) == 0 &&
                  event->domElement()->getTagName().compare("input", Qt::CaseInsensitive) == 0 &&
-                 event->domElement()->getElement(mPage).attribute("type").compare("button", Qt::CaseInsensitive) == 0){
+                 (event->domElement()->getElement(mPage).attribute("type").compare("button", Qt::CaseInsensitive) == 0 ||
+                  event->domElement()->getElement(mPage).attribute("type").compare("submit", Qt::CaseInsensitive) == 0 ||
+                  event->domElement()->getElement(mPage).attribute("type").compare("image", Qt::CaseInsensitive) == 0)){
 
-            // Accept a click on an input element of type button.
+            // Accept a click on an input element of type button, submit, or image.
             entryEvents.append(event);
 
         }
@@ -112,6 +114,18 @@ EventHandlerDescriptor *EntryPointDetector::choose(ExecutionResultPtr result)
     // TODO: Temporary special case for usairways.com
     if(url.toString() == "http://www.usairways.com/default.aspx"){
         return allEntryPoints.at(13);
+    }
+    // TODO: Temporary special case for southwest.com
+    if(url.toString() == "http://www.southwest.com/"){
+        return allEntryPoints.at(9);
+    }
+    // TODO: Temporary special case for travelocity.co.uk
+    if(url.toString() == "http://www.travelocity.co.uk/?WAPageName=HPGEOREDIRECT.UNITEDKINGDOM"){
+        return allEntryPoints.at(3);
+    }
+    // TODO: Temporary special case for virginaustralia.com
+    if(url.toString() == "http://www.virginaustralia.com/au/en/"){
+        return allEntryPoints.at(4);
     }
 
     // TODO: Trivial Choice: Choose the first entrypoint.
