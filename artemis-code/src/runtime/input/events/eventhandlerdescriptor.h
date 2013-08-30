@@ -18,6 +18,7 @@
 
 #include <QObject>
 #include <QString>
+#include <QDebug>
 
 #include "runtime/input/events/eventypes.h"
 #include "domelementdescriptor.h"
@@ -36,7 +37,11 @@ public:
     ~EventHandlerDescriptor();
 
     QString name() const;
-    const DOMElementDescriptor* domElement() const;
+
+    inline DOMElementDescriptorConstPtr domElement() const {
+        return element;
+    }
+
     bool isInvalid() const;
     EventType getEventType() const;
 
@@ -47,7 +52,7 @@ public:
 
 
 private:
-    DOMElementDescriptor* element;
+    DOMElementDescriptorConstPtr element;
     QString eventName;
 
 };

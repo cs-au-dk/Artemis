@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+#include <QDebug>
+
 #include "forminput.h"
 
 #include "artemisglobals.h"
@@ -45,8 +47,7 @@ QSet<QPair<QSharedPointer<const FormField>, const FormFieldValue*> > FormInput::
 void FormInput::writeToPage(ArtemisWebPagePtr page) const
 {
     foreach(input_t input, mInputs) {
-        const DOMElementDescriptor* elmDesc = input.first->getDomElement();
-        QWebElement element = elmDesc->getElement(page);
+        QWebElement element = input.first->getDomElement()->getElement(page);;
 
         if (!element.isNull()) {
             element.setAttribute("value", input.second->stringRepresentation());

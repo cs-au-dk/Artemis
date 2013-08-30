@@ -129,7 +129,7 @@ namespace WTF {
     private:
         pair<iterator, bool> inlineAdd(const KeyType&, MappedPassInReferenceType);
 
-        class HashMapKeysProxy : private HashMap {
+        class HashMapKeysProxy : private HashMap<KeyArg, MappedArg> {
         public:
             typedef typename HashMap::iterator::Keys iterator;
             typedef typename HashMap::const_iterator::Keys const_iterator;
@@ -164,7 +164,7 @@ namespace WTF {
             ~HashMapKeysProxy();
         };
 
-        class HashMapValuesProxy : private HashMap {
+        class HashMapValuesProxy : private HashMap<KeyArg, MappedArg> {
         public:
             typedef typename HashMap::iterator::Values iterator;
             typedef typename HashMap::const_iterator::Values const_iterator;

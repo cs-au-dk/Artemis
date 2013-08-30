@@ -106,14 +106,14 @@ void ExecutionResultBuilder::registerFromFieldsIntoResult()
             if (fType == NO_INPUT)
                 { continue; }
 
-            QSharedPointer<FormField> formf = QSharedPointer<FormField>(new FormField(fType, new DOMElementDescriptor(0, &i)));
+            FormFieldPtr formf = FormFieldPtr(new FormField(fType, DOMElementDescriptorConstPtr(new DOMElementDescriptor(&i))));
             mResult->mFormFields.insert(formf);
         }
 
         //Gather <textarea> elements
         QWebElementCollection textareas = f->findAllElements("textarea");
         foreach(QWebElement ta, textareas) {
-            QSharedPointer<FormField> taf = QSharedPointer<FormField>(new FormField(TEXT, new DOMElementDescriptor(0, &ta)));
+            FormFieldPtr taf = FormFieldPtr(new FormField(TEXT, DOMElementDescriptorConstPtr(new DOMElementDescriptor(&ta))));
             mResult->mFormFields.insert(taf);
         }
 
@@ -121,7 +121,7 @@ void ExecutionResultBuilder::registerFromFieldsIntoResult()
         QWebElementCollection selects = f->findAllElements("select");
         foreach(QWebElement ss, selects) {
             QSet<QString> options = getSelectOptions(ss);
-            QSharedPointer<FormField> ssf = QSharedPointer<FormField>(new FormField(FIXED_INPUT, new DOMElementDescriptor(0, &ss), options));
+            FormFieldPtr ssf = FormFieldPtr(new FormField(FIXED_INPUT, DOMElementDescriptorConstPtr(new DOMElementDescriptor(&ss)), options));
             mResult->mFormFields.insert(ssf);
         }
     }

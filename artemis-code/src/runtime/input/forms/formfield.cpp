@@ -15,6 +15,7 @@
  */
 
 #include <assert.h>
+#include <QDebug>
 
 #include "artemisglobals.h"
 
@@ -23,21 +24,18 @@
 namespace artemis
 {
 
-FormField::FormField(FormFieldTypes type, const DOMElementDescriptor* element, QSet<QString> inputOptions) :
-    mElementDescriptor(element), mFieldType(type)
+FormField::FormField(FormFieldTypes type, DOMElementDescriptorConstPtr element, QSet<QString> inputOptions) :
+    mElementDescriptor(element),
+    mFieldType(type)
 {
     this->mDefaultInputs = inputOptions;
 }
 
-FormField::FormField(FormFieldTypes type, const DOMElementDescriptor* element) :
-    mElementDescriptor(element), mFieldType(type)
+FormField::FormField(FormFieldTypes type, DOMElementDescriptorConstPtr element) :
+    mElementDescriptor(element),
+    mFieldType(type)
 {
 
-}
-
-const DOMElementDescriptor* FormField::getDomElement() const
-{
-    return mElementDescriptor;
 }
 
 FormFieldTypes FormField::getType() const
@@ -52,7 +50,7 @@ QSet<QString> FormField::getInputOptions() const
 
 QDebug operator<<(QDebug dbg, const FormField& f)
 {
-    dbg.nospace() << "{" << *f.mElementDescriptor << "," << formFieldTypeTostring(f.mFieldType) << "," << f.mDefaultInputs << "}";
+    dbg.nospace() << "{" << f.mElementDescriptor->toString() << "," << formFieldTypeTostring(f.mFieldType) << "," << f.mDefaultInputs << "}";
     return dbg.space();
 }
 

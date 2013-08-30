@@ -103,6 +103,12 @@
 #define GCC_VERSION_AT_LEAST(major, minor, patch) 0
 #endif
 
+#if COMPILER(GCC) && !COMPILER(CLANG)
+#if GCC_VERSION_AT_LEAST(4, 8, 0)
+#pragma GCC diagnostic ignored "-Wunused-local-typedefs"
+#endif
+#endif
+
 /* COMPILER(MINGW) - MinGW GCC */
 /* COMPILER(MINGW64) - mingw-w64 GCC - only used as additional check to exclude mingw.org specific functions */
 #if defined(__MINGW32__)

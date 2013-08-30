@@ -327,9 +327,13 @@ QSharedPointer<const FormField> ConcolicRuntime::findFormFieldForVariable(QStrin
     switch(varSourceIdentifierMethod){
     case Symbolic::INPUT_NAME:
         // Fetch the formField with this name
-        // TODO: not sure how to retrieve this?
-        Log::fatal("Identifying inputs by name is not yet supported in the concolic runtime.");
-        exit(1);
+        // Fetch the form field with this id
+        foreach(QSharedPointer<const FormField> field, mFormFields){
+            if(field->getDomElement()->getName() == varBaseName){
+                varSourceField = field;
+                break;
+            }
+        }
         break;
 
     case Symbolic::ELEMENT_ID:

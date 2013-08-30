@@ -483,7 +483,7 @@ void DemoModeMainWindow::resetPageAnlaysis()
 
 
 // Called to add a new potential entry point to the entry point list.
-void DemoModeMainWindow::addEntryPoint(QString name, const DOMElementDescriptor* element)
+void DemoModeMainWindow::addEntryPoint(QString name, DOMElementDescriptorConstPtr element)
 {
     // First we add this entry point to the list.
     int index = mKnownEntryPoints.size();
@@ -522,12 +522,12 @@ void DemoModeMainWindow::slEntryPointSelectionChanged()
 
 
 // Called to highlight a particular DOM element in the artemis web view.
-void DemoModeMainWindow::highlightDomElement(const DOMElementDescriptor *element)
+void DemoModeMainWindow::highlightDomElement(DOMElementDescriptorConstPtr element)
 {
     element->getElement(mWebkitExecutor->getPage()).setStyleProperty("outline", "10px solid green");
 }
 
-void DemoModeMainWindow::unHighlightDomElement(const DOMElementDescriptor *element)
+void DemoModeMainWindow::unHighlightDomElement(DOMElementDescriptorConstPtr element)
 {
     element->getElement(mWebkitExecutor->getPage()).setStyleProperty("outline", "none");
     // TODO: what if it had an outline to begin with?
