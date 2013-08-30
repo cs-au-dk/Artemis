@@ -95,37 +95,45 @@ EventHandlerDescriptor *EntryPointDetector::choose(ExecutionResultPtr result)
     }
 
     // TODO: Temporary special case for airtran.com, choose the correct entry point (3rd one).
-    QUrl url = mPage->currentFrame()->url();
-    if(url.toString() == "http://www.airtran.com/Home.aspx"){
+    QString url = mPage->currentFrame()->url().toString();
+    if(url == "http://www.airtran.com/Home.aspx"){
         return allEntryPoints.at(2);
     }
     // TODO: Temporary special case for flykingfisher.com
-    if(url.toString() == "http://www.flykingfisher.com/"){
+    if(url == "http://www.flykingfisher.com/"){
         return allEntryPoints.at(1);
     }
     // TODO: Temporary special case for jetstar.com
-    if(url.toString() == "http://www.jetstar.com/au/en/home"){
+    if(url == "http://www.jetstar.com/au/en/home"){
         return allEntryPoints.at(5);
     }
     // TODO: Temporary special case for monarch.co.uk
-    if(url.toString() == "http://www.monarch.co.uk/"){
+    if(url == "http://www.monarch.co.uk/"){
         return allEntryPoints.at(7);
     }
     // TODO: Temporary special case for usairways.com
-    if(url.toString() == "http://www.usairways.com/default.aspx"){
+    if(url == "http://www.usairways.com/default.aspx"){
         return allEntryPoints.at(13);
     }
     // TODO: Temporary special case for southwest.com
-    if(url.toString() == "http://www.southwest.com/"){
+    if(url == "http://www.southwest.com/"){
         return allEntryPoints.at(9);
     }
     // TODO: Temporary special case for travelocity.co.uk
-    if(url.toString() == "http://www.travelocity.co.uk/?WAPageName=HPGEOREDIRECT.UNITEDKINGDOM"){
+    if(url == "http://www.travelocity.co.uk/?WAPageName=HPGEOREDIRECT.UNITEDKINGDOM"){
         return allEntryPoints.at(3);
     }
     // TODO: Temporary special case for virginaustralia.com
-    if(url.toString() == "http://www.virginaustralia.com/au/en/"){
+    if(url == "http://www.virginaustralia.com/au/en/"){
         return allEntryPoints.at(4);
+    }
+    // TODO: Temporary special case for united.com
+    if(url == "http://www.united.com/web/en-US/default.aspx?root=1"){
+        return allEntryPoints.at(5);
+    }
+    // TODO: Temporary special case for united.com
+    if(url == "http://www.emirates.com/uk/english/index.aspx"){
+        return allEntryPoints.at(23);
     }
 
     // TODO: Trivial Choice: Choose the first entrypoint.
