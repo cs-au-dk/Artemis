@@ -25,8 +25,6 @@ using namespace std;
 namespace artemis
 {
 
-const QWebElement NULL_WEB_ELEMENT;
-
 inline QString quoteString(const QString s)
 {
     return "\"" + s + "\"";

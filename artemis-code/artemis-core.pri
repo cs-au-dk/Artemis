@@ -23,10 +23,6 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/runtime/input/events/eventhandlerdescriptor.h \
     src/runtime/input/events/eventparameters.h \
     src/runtime/input/events/eventypes.h \
-    src/runtime/input/forms/formfield.h \
-    src/runtime/input/forms/formfieldtypes.h \
-    src/runtime/input/forms/formfieldvalue.h \
-    src/runtime/input/forms/forminput.h \
     src/runtime/input/events/keyboardeventparameters.h \
     src/runtime/input/events/mouseeventparameters.h \
     src/runtime/executableconfiguration.h \
@@ -113,7 +109,9 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/concolic/solver/constraintwriter/z3str.h \
     src/concolic/solver/z3solver.h \
     src/concolic/solver/kaluzasolver.h \
-    src/runtime/toplevel/artformruntime.h
+    src/runtime/toplevel/artformruntime.h \
+    src/runtime/input/forms/formfielddescriptor.h \
+    src/runtime/input/forms/forminputcollection.h
 
 SOURCES += src/runtime/input/ajaxinput.cpp \
     src/strategies/prioritizer/constantprioritizer.cpp \
@@ -126,9 +124,6 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/runtime/input/events/domelementdescriptor.cpp \
     src/runtime/input/events/eventhandlerdescriptor.cpp \
     src/runtime/input/events/eventtypes.cpp \
-    src/runtime/input/forms/formfield.cpp \
-    src/runtime/input/forms/formfieldvalue.cpp \
-    src/runtime/input/forms/forminput.cpp \
     src/runtime/input/events/keyboardeventparameters.cpp \
     src/runtime/input/events/mouseeventparameters.cpp \
     src/runtime/browser/artemiswebview.cpp \
@@ -206,6 +201,8 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/concolic/solver/constraintwriter/z3str.cpp \
     src/concolic/solver/z3solver.cpp \
     src/concolic/solver/kaluzasolver.cpp \
-    src/runtime/toplevel/artformruntime.cpp
+    src/runtime/toplevel/artformruntime.cpp \
+    src/runtime/input/forms/formfielddescriptor.cpp \
+    src/runtime/input/forms/forminputcollection.cpp
 
 QT += network

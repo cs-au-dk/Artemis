@@ -18,7 +18,7 @@
 #include <typeinfo>
 
 #include "runtime/input/events/eventypes.h"
-#include "runtime/input/forms/forminput.h"
+#include "runtime/input/forms/forminputcollection.h"
 #include "runtime/input/baseinput.h"
 #include "runtime/input/dominput.h"
 #include "runtime/input/timerinput.h"
@@ -105,7 +105,7 @@ QList<QSharedPointer<ExecutableConfiguration> > RandomInputGenerator::insertExte
         EventParameters* newParams = mEventParameterGenerator->generateEventParameters(NULL, ee);
         if(dynamic_cast<UnknownEventParameters*>(newParams) == 0){
             TargetDescriptor* target = mTargetGenerator->generateTarget(NULL, ee);
-            QSharedPointer<FormInput> newForm = mFormInputGenerator->generateFormFields(NULL, result->getFormFields(), result);
+            QSharedPointer<FormInputCollection> newForm = mFormInputGenerator->generateFormFields(result->getFormFields(), result);
             QSharedPointer<const DomInput> domInput = QSharedPointer<const DomInput>(new DomInput(ee, newForm, newParams, target));
 
             QSharedPointer<const InputSequence> newInputSequence = oldConfiguration->getInputSequence()->extend(domInput);

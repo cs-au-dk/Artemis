@@ -24,7 +24,7 @@
 
 #include "artemisglobals.h"
 #include "runtime/input/events/eventhandlerdescriptor.h"
-#include "runtime/input/forms/formfield.h"
+#include "runtime/input/forms/formfielddescriptor.h"
 #include "runtime/browser/timer.h"
 #include "runtime/browser/ajax/ajaxrequest.h"
 
@@ -38,7 +38,7 @@ public:
     ExecutionResult();
 
     QList<EventHandlerDescriptor*> getEventHandlers() const;
-    QSet<QSharedPointer<const FormField> > getFormFields() const;
+    QSet<QSharedPointer<const FormFieldDescriptor> > getFormFields() const;
 
     bool isDomModified() const;
     long getPageStateHash() const;
@@ -59,7 +59,7 @@ public:
 
 private:
     QList<EventHandlerDescriptor*> mEventHandlers;
-    QSet<QSharedPointer<const FormField> > mFormFields;
+    QSet<QSharedPointer<const FormFieldDescriptor> > mFormFields;
 
     bool mModifiedDom;
     long mStateHash;
@@ -76,7 +76,7 @@ private:
 };
 
 typedef QSharedPointer<ExecutionResult> ExecutionResultPtr;
-
+typedef QSharedPointer<const ExecutionResult> ExecutionResultConstPtr;
 }
 
 #endif // EXECUTIONRESULT_H
