@@ -177,7 +177,7 @@ namespace JSC {
         
         if (!length)
             return StringImpl::empty();
-        CharBuffer<T> buf = {s, length}; 
+        CharBuffer<T> buf = {s, (unsigned int)length}; 
         HashSet<StringImpl*>::AddResult addResult = globalData->identifierTable->add<CharBuffer<T>, IdentifierCharBufferTranslator<T> >(buf);
         
         // If the string is newly-translated, then we need to adopt it.

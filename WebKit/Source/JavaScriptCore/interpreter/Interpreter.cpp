@@ -27,6 +27,11 @@
  * THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
+#ifdef ARTEMIS
+#pragma GCC diagnostic ignored "-Wextra"
+#pragma GCC diagnostic ignored "-Warray-bounds"
+#endif
+
 #include "config.h"
 #include "Interpreter.h"
 

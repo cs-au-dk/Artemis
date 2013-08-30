@@ -475,7 +475,7 @@ Expression* Parser::parseStatement(const String& statement, PassRefPtr<XPathNSRe
     
     Parser* oldParser = currentParser;
     currentParser = this;
-    int parseError = xpathyyparse(this);
+    int parseError = xpathyyparse();
     currentParser = oldParser;
 
     if (parseError) {
