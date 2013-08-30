@@ -15,44 +15,33 @@
  */
 
 #include <assert.h>
+#include <QDebug>
 
 #include "artemisglobals.h"
 
-#include "formfield.h"
+#include "formfielddescriptor.h"
 
 namespace artemis
 {
 
-FormField::FormField(FormFieldTypes type, const DOMElementDescriptor* element, QSet<QString> inputOptions) :
-    mElementDescriptor(element), mFieldType(type)
-{
-    this->mDefaultInputs = inputOptions;
-}
-
-FormField::FormField(FormFieldTypes type, const DOMElementDescriptor* element) :
-    mElementDescriptor(element), mFieldType(type)
+FormFieldDescriptor::FormFieldDescriptor(FormFieldTypes type, DOMElementDescriptorConstPtr element, QSet<QString> inputOptions) :
+    mFieldType(type),
+    mDomElementDescriptor(element),
+    mInputOptions(inputOptions)
 {
 
 }
 
-const DOMElementDescriptor* FormField::getDomElement() const
+FormFieldDescriptor::FormFieldDescriptor(FormFieldTypes type, DOMElementDescriptorConstPtr element) :
+    mFieldType(type),
+    mDomElementDescriptor(element)
 {
-    return mElementDescriptor;
+
 }
 
-FormFieldTypes FormField::getType() const
+QDebug operator<<(QDebug dbg, const FormFieldDescriptor& f)
 {
-    return mFieldType;
-}
-
-QSet<QString> FormField::getInputOptions() const
-{
-    return mDefaultInputs;
-}
-
-QDebug operator<<(QDebug dbg, const FormField& f)
-{
-    dbg.nospace() << "{" << *f.mElementDescriptor << "," << formFieldTypeTostring(f.mFieldType) << "," << f.mDefaultInputs << "}";
+    dbg.nospace() << "{" << f.mDomElementDescriptor->toString() << "," << f.formFieldTypeTostring(f.mFieldType) << "," << f.mInputOptions << "}";
     return dbg.space();
 }
 

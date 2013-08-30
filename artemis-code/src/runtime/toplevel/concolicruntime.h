@@ -93,16 +93,16 @@ protected:
     int mGraphOutputIndex;
 
     // Helper methods for postConcreteExecution.
-    void setupNextConfiguration(QSharedPointer<FormInput> formInput);
+    void setupNextConfiguration(QSharedPointer<FormInputCollection> formInput);
     void postInitialConcreteExecution(QSharedPointer<ExecutionResult> result);
     void mergeTraceIntoTree();
     void printSolution(SolutionPtr solution, QStringList varList);
-    QSharedPointer<FormInput> createFormInput(QMap<QString, Symbolic::SourceIdentifierMethod> freeVariables, SolutionPtr solution);
-    QSharedPointer<const FormField> findFormFieldForVariable(QString varName, Symbolic::SourceIdentifierMethod varSourceIdentifierMethod);
+    QSharedPointer<FormInputCollection> createFormInput(QMap<QString, Symbolic::SourceIdentifierMethod> freeVariables, SolutionPtr solution);
+    QSharedPointer<const FormFieldDescriptor> findFormFieldForVariable(QString varName, Symbolic::SourceIdentifierMethod varSourceIdentifierMethod);
     void exploreNextTarget();
     void chooseNextTargetAndExplore();
 
-    QSet<QSharedPointer<const FormField> > mFormFields;
+    QSet<QSharedPointer<const FormFieldDescriptor> > mFormFields;
 
 private slots:
     void postConcreteExecution(ExecutableConfigurationConstPtr configuration, QSharedPointer<ExecutionResult> result);

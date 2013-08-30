@@ -107,9 +107,9 @@ private:
     // The artemis browser widget.
     ArtemisBrowserWidget* mArtemisBrowser;
 
-    void addEntryPoint(QString name, const DOMElementDescriptor* element);
-    void highlightDomElement(const DOMElementDescriptor* element);
-    void unHighlightDomElement(const DOMElementDescriptor* element);
+    void addEntryPoint(QString name, DOMElementDescriptorConstPtr element);
+    void highlightDomElement(DOMElementDescriptorConstPtr element);
+    void unHighlightDomElement(DOMElementDescriptorConstPtr element);
 
     // The analysis logic itself.
     EntryPointDetector mEntryPointDetector;
@@ -120,7 +120,7 @@ private:
     void postTraceExecution();
 
     // The analysis/GUI interaction
-    typedef QPair<QString, const DOMElementDescriptor*> EntryPointInfo;
+    typedef QPair<QString, DOMElementDescriptorConstPtr> EntryPointInfo;
     QList<EntryPointInfo > mKnownEntryPoints;
     int mTraceNodesRecorded;
 

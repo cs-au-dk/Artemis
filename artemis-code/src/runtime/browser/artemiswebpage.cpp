@@ -64,11 +64,14 @@ bool ArtemisWebPage::acceptNavigationRequest(QWebFrame *frame, const QNetworkReq
 
     //qDebug() << "NAVIGATION: " << request.url().toString() << " Type: " << type;
 
-    if(mAcceptNavigation){
+    if (mAcceptNavigation || type == NavigationTypeOther) {
+        // Allow NavigationTypeOther requests to pass through. It seems that these are really non-navigational XMLHttpRequests
         return true;
-    }else{
+
+    } else {
         emit sigNavigationRequest(frame, request, type);
         return false;
+
         // NOTE: I thought there may be a problem here because this function cannot return until the signal has been
         // dealt with (which may result in a new page load itself).
         // However, it actually seems to be working correctly, so it looks like QWebView is able to handle these

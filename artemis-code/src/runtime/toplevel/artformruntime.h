@@ -13,33 +13,40 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef FORMFIELDTYPES_H
-#define FORMFIELDTYPES_H
 
-#include <QString>
+#ifndef ARTFORMRUNTIME_H
+#define ARTFORMRUNTIME_H
+
+#include <QObject>
+
+#include "runtime/runtime.h"
 
 namespace artemis
 {
-enum FormFieldTypes {TEXT, FIXED_INPUT, BOOLEAN, NO_INPUT};
 
-inline QString formFieldTypeTostring(FormFieldTypes f)
+class ArtFormRuntime : public Runtime
 {
-    switch (f) {
-    case TEXT:
-        return "TEXT";
-    case FIXED_INPUT:
-        return "FIXED_INPUT";
-    case BOOLEAN:
-        return "BOOLEAN";
-    case NO_INPUT:
-        return "NO_INPUT";
-    }
+    Q_OBJECT
 
-    return "ERROR1";
+public:
+    ArtFormRuntime(QObject* parent, const Options& options, const QUrl& url);
+
+    //void run(const QUrl& url);
+
+protected:
+    void preConcreteExecution();
+
+    WorkListPtr mWorklist;
+    //EntryPointDetector mEntryPointDetector;
+
+private:
+    int mIterations;
+
+private slots:
+    //void postConcreteExecution(ExecutableConfigurationConstPtr configuration, QSharedPointer<ExecutionResult> result);
+
+};
+
 }
 
-FormFieldTypes getTypeFromAttr(QString typeAttr);
-
-}
-
-#endif // FORMFIELDTYPES_H
+#endif // ARTFORMRUNTIME_H

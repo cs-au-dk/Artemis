@@ -50,6 +50,12 @@ bool TraceVisitor::isImmediatelyUnexplored(QSharedPointer<TraceNode> trace)
     return !trace.dynamicCast<TraceUnexplored>().isNull(); // Is there a more elegant way to do this?
 }
 
+// Checks whether a given sub-trace begins with a concrete branch.
+bool TraceVisitor::isImmediatelyConcreteBranch(QSharedPointer<TraceNode> trace)
+{
+    return !trace.dynamicCast<TraceConcreteBranch>().isNull();
+}
+
 
 
 } // namespace artemis
