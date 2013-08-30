@@ -82,6 +82,7 @@ public:
 
     // Helper methods for concrete visitors.
     static bool isImmediatelyUnexplored(QSharedPointer<TraceNode> trace);
+    static bool isImmediatelyConcreteBranch(QSharedPointer<TraceNode> trace);
 
     virtual ~TraceVisitor(){}
 };

@@ -39,7 +39,7 @@ namespace artemis
 class TraceDisplay : public TraceVisitor
 {
 public:
-    TraceDisplay();
+    TraceDisplay(bool simplified = true);
 
     // The function which is called to generate the output.
     QString makeGraph(TraceNodePtr tree);
@@ -64,7 +64,7 @@ private:
     // These lists contain the declarations of nodes which are to be put at the beginning of the file.
     // They include the node labels and any node-specific formatting.
     // Each type (e.g. branches) becomes a subgraph in the result which are styled separately.
-    QList<QString> mHeaderBranches, mHeaderSymBranches, mHeaderUnexplored, mHeaderAlerts, mHeaderDomMods, mHeaderLoads, mHeaderFunctions, mHeaderEndUnk, mHeaderEndSucc, mHeaderEndFail;
+    QList<QString> mHeaderBranches, mHeaderSymBranches, mHeaderUnexplored, mHeaderAlerts, mHeaderDomMods, mHeaderLoads, mHeaderFunctions, mHeaderEndUnk, mHeaderEndSucc, mHeaderEndFail, mHeaderAggregates;
 
     // The edges to be added to the graph.
     QList<QString> mEdges;
@@ -91,6 +91,21 @@ private:
     // This parameter controls whether these ignored parts should be shown on the tree or not.
     // For now the parameter is just a constant.
     static bool mPassThroughEndMarkers;
+
+    // There is the option to generate a simplified version of the graph.
+    // This will aggregate many "irrelevant" nodes together to make the displayed output much smaller.
+    bool mSimplified;
+
+    // The aggregated data which is omitted from the simplified view.
+    int mAggregatedConcreteBranches;
+    int mAggregatedFunctionCalls;
+    int mAggregatedDomModifications;
+
+    // Whether or not we are currently in a "concrete execution phase".
+    bool mCurrentlyAggregating;
+
+    // Used to add the aggregated node to the trace.
+    void flushAggregation();
 };
 
 
