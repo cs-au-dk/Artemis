@@ -196,6 +196,10 @@ namespace JSC {
 
         friend JSValue jsString(ExecState*, JSString*, JSString*);
         friend JSString* jsSubstring(ExecState*, JSString*, unsigned offset, unsigned length);
+#ifdef ARTEMIS
+        Symbolic::StringExpression* m_symbolic;
+#endif
+
     };
 
     class JSRopeString : public JSString {
@@ -251,9 +255,6 @@ namespace JSC {
             m_is8Bit = (s1->is8Bit() && s2->is8Bit());
             m_fibers[0].set(globalData, this, s1);
             m_fibers[1].set(globalData, this, s2);
-#ifdef ARTEMIS
-        Symbolic::StringExpression* m_symbolic;
-#endif
         }
         
         void finishCreation(JSGlobalData& globalData, JSString* s1, JSString* s2, JSString* s3)
@@ -264,9 +265,7 @@ namespace JSC {
             m_fibers[0].set(globalData, this, s1);
             m_fibers[1].set(globalData, this, s2);
             m_fibers[2].set(globalData, this, s3);
-#ifdef ARTEMIS
-        Symbolic::StringExpression* m_symbolic;
-#endif
+
         }
 
         void finishCreation(JSGlobalData& globalData)

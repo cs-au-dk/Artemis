@@ -1822,7 +1822,6 @@ sub GenerateImplementation
                         push(@implContent, "    }\n");
                         # ARTEMIS END
                     }
-
                     push(@implContent, "    return result;\n");
 
                 } else {

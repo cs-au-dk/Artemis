@@ -113,3 +113,4 @@ V8DoNotCheckSignature
 V8EnabledAtRuntime=*
 V8ReadOnly
 V8Unforgeable
+Symbolic
