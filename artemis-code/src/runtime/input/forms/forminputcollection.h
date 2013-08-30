@@ -16,33 +16,43 @@
 #ifndef FORMINPUT_H
 #define FORMINPUT_H
 
-#include <QSet>
+#include <QList>
 #include <QPair>
+#include <QString>
+#include <QSharedPointer>
 
-#include "formfield.h"
-#include "formfieldvalue.h"
+#include "formfielddescriptor.h"
 
 namespace artemis
 {
 
-typedef QPair<QSharedPointer<const FormField>, const FormFieldValue*> input_t; // workaround for foreach comma bug
+typedef QPair<FormFieldDescriptorConstPtr, QString> FormInputPair;
 
-class FormInput
+/**
+ * A collection of <form input, value> pairs used to inject concrete values into a web page
+ */
+class FormInputCollection
 {
 
 public:
-    FormInput(QSet<QPair<QSharedPointer<const FormField>, const FormFieldValue*> >& inputs);
+    FormInputCollection(const QList<FormInputPair>& inputs);
 
-    QSet<QSharedPointer<const FormField> > getFields() const;
-    QSet<QPair<QSharedPointer<const FormField>, const FormFieldValue*> > getInputs() const;
+    QSet<FormFieldDescriptorConstPtr> getFields() const;
+
+    inline QList<FormInputPair> getInputs() const {
+        return mInputs;
+    }
+
     void writeToPage(ArtemisWebPagePtr) const;
 
-    QDebug friend operator<<(QDebug dbg, FormInput* f);
+    QDebug friend operator<<(QDebug dbg, FormInputCollection* f);
 
 private:
-    QSet<QPair<QSharedPointer<const FormField>, const FormFieldValue*> > mInputs;
+    QList<FormInputPair> mInputs;
 
 };
+
+typedef QSharedPointer<FormInputCollection> FormInputCollectionPtr;
 
 }
 

@@ -23,7 +23,7 @@ namespace artemis
 {
 
 DomInput::DomInput(const EventHandlerDescriptor* handler,
-                   QSharedPointer<const FormInput> formInput,
+                   QSharedPointer<const FormInputCollection> formInput,
                    const EventParameters* params,
                    const TargetDescriptor* target)
 {
@@ -71,7 +71,7 @@ QSharedPointer<const BaseInput> DomInput::getPermutation(const QSharedPointer<co
                                                          QSharedPointer<const ExecutionResult> result) const
 {
     EventParameters* newParams = eventParameterGenerator->generateEventParameters(NULL, mEventHandler);
-    QSharedPointer<FormInput> newForm = formInputGenerator->generateFormFields(NULL, mFormInput->getFields(), result);
+    QSharedPointer<FormInputCollection> newForm = formInputGenerator->generateFormFields(mFormInput->getFields(), result);
     TargetDescriptor* target = targetGenerator->generateTarget(NULL, mEventHandler);
     EventHandlerDescriptor* newEventHandlerDescriptor = new EventHandlerDescriptor(NULL, mEventHandler);
 

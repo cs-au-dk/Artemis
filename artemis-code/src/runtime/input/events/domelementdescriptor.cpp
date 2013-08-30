@@ -24,6 +24,8 @@
 namespace artemis
 {
 
+const QWebElement NULL_WEB_ELEMENT;
+
 DOMElementDescriptor::DOMElementDescriptor(QWebElement* elm) :
     mIsDocument(false),
     mIsBody(false),

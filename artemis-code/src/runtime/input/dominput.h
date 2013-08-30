@@ -18,7 +18,7 @@
 
 #include "strategies/inputgenerator/targets/targetdescriptor.h"
 
-#include "forms/forminput.h"
+#include "forms/forminputcollection.h"
 #include "events/eventhandlerdescriptor.h"
 #include "events/domelementdescriptor.h"
 #include "events/eventparameters.h"
@@ -32,7 +32,7 @@ class DomInput: public BaseInput
 {
 
 public:
-    DomInput(const EventHandlerDescriptor* handler, QSharedPointer<const FormInput> formInput,
+    DomInput(const EventHandlerDescriptor* handler, QSharedPointer<const FormInputCollection> formInput,
              const EventParameters* params, const TargetDescriptor* target);
 
     void apply(ArtemisWebPagePtr page, QWebExecutionListener* webkitListener) const;
@@ -46,7 +46,7 @@ public:
 
 private:
     const EventHandlerDescriptor* mEventHandler;
-    QSharedPointer<const FormInput> mFormInput;
+    QSharedPointer<const FormInputCollection> mFormInput;
     const EventParameters* mEvtParams;
     const TargetDescriptor* mTarget;
 };

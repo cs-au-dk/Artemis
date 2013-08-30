@@ -20,8 +20,7 @@
 #include <QSet>
 #include <QList>
 
-#include "runtime/input/forms/formfieldtypes.h"
-#include "runtime/input/forms/forminput.h"
+#include "runtime/input/forms/forminputcollection.h"
 
 #include "constantstringforminputgenerator.h"
 
@@ -39,13 +38,12 @@ ConstantStringFormInputGenerator::ConstantStringFormInputGenerator(QList<QString
  *
  * All other field types are handled using the random strategy.
  */
-QSharedPointer<FormInput> ConstantStringFormInputGenerator::generateFormFields(QObject* parent,
-                                                                        QSet<QSharedPointer<const FormField> > fields,
-                                                                        QSharedPointer<const ExecutionResult> executionResult) const
+FormInputCollectionPtr ConstantStringFormInputGenerator::generateFormFields(QSet<FormFieldDescriptorConstPtr> fields,
+                                                                            ExecutionResultConstPtr executionResult) const
 {
-    QSet<QPair<QSharedPointer<const FormField>, const FormFieldValue*> > inputs;
+    QList<FormInputPair> inputs;
 
-    foreach(QSharedPointer<const FormField> field, fields) {
+    foreach(QSharedPointer<const FormFieldDescriptor> field, fields) {
 
         if (mExcludedFormFields.contains(field->getDomElement()->getId())) {
             continue;
@@ -54,27 +52,26 @@ QSharedPointer<FormInput> ConstantStringFormInputGenerator::generateFormFields(Q
         switch (field->getType()) {
         case TEXT:
             if (executionResult->getJavascriptConstantsObservedForLastEvent().size() == 0) {
-                inputs.insert(QPair<QSharedPointer<const FormField>, const FormFieldValue*>(field, new FormFieldValue(parent, generateRandomString(10))));
+                inputs.append(FormInputPair(field, generateRandomString(10)));
             } else {
-                inputs.insert(QPair<QSharedPointer<const FormField>, const FormFieldValue*>(field,
-                    new FormFieldValue(parent, pickRand(executionResult->getJavascriptConstantsObservedForLastEvent()))));
+                inputs.append(FormInputPair(field, pickRand(executionResult->getJavascriptConstantsObservedForLastEvent())));
             }
             break;
 
         case BOOLEAN:
-            inputs.insert(QPair<QSharedPointer<const FormField>, const FormFieldValue*>(field, new FormFieldValue(parent, randomBool())));
+            inputs.append(FormInputPair(field, randomBool() ? "true" : "false"));
             break;
 
         case FIXED_INPUT:
-            inputs.insert(QPair<QSharedPointer<const FormField>, const FormFieldValue*>(field, new FormFieldValue(parent, pickRand(field->getInputOptions()))));
+            inputs.append(FormInputPair(field, pickRand(field->getInputOptions())));
             break;
 
         default:
-            inputs.insert(QPair<QSharedPointer<const FormField>, const FormFieldValue*>(field, new FormFieldValue(parent)));
+            inputs.append(FormInputPair(field, ""));
         }
     }
 
-    return QSharedPointer<FormInput>(new FormInput(inputs));
+    return QSharedPointer<FormInputCollection>(new FormInputCollection(inputs));
 }
 
 }

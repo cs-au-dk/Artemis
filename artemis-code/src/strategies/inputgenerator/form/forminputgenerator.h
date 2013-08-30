@@ -22,8 +22,8 @@
 #include <QList>
 #include <QString>
 
-#include "runtime/input/forms/formfield.h"
-#include "runtime/input/forms/forminput.h"
+#include "runtime/input/forms/formfielddescriptor.h"
+#include "runtime/input/forms/forminputcollection.h"
 #include "runtime/browser/executionresult.h"
 
 namespace artemis
@@ -37,9 +37,8 @@ public:
 
     virtual ~FormInputGenerator() {}
 
-    virtual QSharedPointer<FormInput> generateFormFields(QObject* parent,
-                                                         QSet<QSharedPointer<const FormField> > fi,
-                                                         QSharedPointer<const ExecutionResult> executionResult) const = 0;
+    virtual FormInputCollectionPtr generateFormFields(QSet<FormFieldDescriptorConstPtr> fields,
+                                                      ExecutionResultConstPtr executionResult) const = 0;
 
 protected:
     QList<QString> mExcludedFormFields;

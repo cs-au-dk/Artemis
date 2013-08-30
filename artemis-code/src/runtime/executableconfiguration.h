@@ -20,7 +20,7 @@
 #include <QSharedPointer>
 
 #include "input/inputsequence.h"
-#include "runtime/input/forms/forminput.h"
+#include "runtime/input/forms/forminputcollection.h"
 
 namespace artemis
 {

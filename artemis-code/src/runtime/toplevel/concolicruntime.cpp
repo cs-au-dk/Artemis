@@ -123,7 +123,7 @@ void ConcolicRuntime::outputTreeGraph()
 
 // Given a FormInput, create an event sequence which will use that input and fire the entry point handler.
 // Sets mNextConfiguration.
-void ConcolicRuntime::setupNextConfiguration(QSharedPointer<FormInput> formInput)
+void ConcolicRuntime::setupNextConfiguration(QSharedPointer<FormInputCollection> formInput)
 {
     // Create a suitable EventParameters object for this submission. (As in StaticEventParameterGenerator.)
     EventParameters* eventParameters = new MouseEventParameters(NULL, mEntryPointEvent->name(), true, true, 1, 0, 0, 0, 0, false, false, false, false, 0);
@@ -162,8 +162,8 @@ void ConcolicRuntime::postInitialConcreteExecution(QSharedPointer<ExecutionResul
         Log::debug(QString("Chose entry point %1").arg(mEntryPointEvent->toString()).toStdString());
 
         // Create an "empty" form input which will inject noting into the page.
-        QSet<QPair<QSharedPointer<const FormField>, const FormFieldValue*> > inputs;
-        QSharedPointer<FormInput> formInput = QSharedPointer<FormInput>(new FormInput(inputs));
+        QList<FormInputPair > inputs;
+        FormInputCollectionPtr formInput = FormInputCollectionPtr(new FormInputCollection(inputs));
 
         // Create the new event sequence and set mNextConfiguration.
         setupNextConfiguration(formInput);
@@ -174,7 +174,7 @@ void ConcolicRuntime::postInitialConcreteExecution(QSharedPointer<ExecutionResul
 
         // Print them
         Log::debug("Form fields found:");
-        foreach(QSharedPointer<const FormField> field, mFormFields){
+        foreach(QSharedPointer<const FormFieldDescriptor> field, mFormFields){
             Log::debug(field->getDomElement()->toString().toStdString());
         }
 
@@ -259,13 +259,13 @@ void ConcolicRuntime::printSolution(SolutionPtr solution, QStringList varList)
     }
 }
 
-QSharedPointer<FormInput> ConcolicRuntime::createFormInput(QMap<QString, Symbolic::SourceIdentifierMethod> freeVariables, SolutionPtr solution)
+QSharedPointer<FormInputCollection> ConcolicRuntime::createFormInput(QMap<QString, Symbolic::SourceIdentifierMethod> freeVariables, SolutionPtr solution)
 {
     QStringList varList = freeVariables.keys();
 
     // For each symbolic variable, attempt to match it with a FormField object from the initial run.
     Log::debug("Next form value injections are:");
-    QSet<QPair<QSharedPointer<const FormField>, const FormFieldValue*> > inputs;
+    QList<FormInputPair> inputs;
 
     foreach(QString varName, varList){
         Symbolvalue value = solution->findSymbol(varName);
@@ -275,20 +275,20 @@ QSharedPointer<FormInput> ConcolicRuntime::createFormInput(QMap<QString, Symboli
         }
 
         // Find the corresponding FormField by searching on the relevant attribute.
-        QSharedPointer<const FormField> varSourceField = findFormFieldForVariable(varName, freeVariables.value(varName));
+        QSharedPointer<const FormFieldDescriptor> varSourceField = findFormFieldForVariable(varName, freeVariables.value(varName));
 
         // Create the field/value pairing to be injected using the FormInput object.
         switch (value.kind) {
         case Symbolic::INT:
-            inputs.insert(QPair<QSharedPointer<const FormField>, const FormFieldValue*>(varSourceField, new FormFieldValue(NULL, QString::number(value.u.integer))));
+            inputs.append(FormInputPair(varSourceField, QString::number(value.u.integer)));
             Log::debug(QString("Injecting %1 into %2").arg(QString::number(value.u.integer)).arg(varName).toStdString());
             break;
         case Symbolic::BOOL:
-            inputs.insert(QPair<QSharedPointer<const FormField>, const FormFieldValue*>(varSourceField, new FormFieldValue(NULL, QString(value.u.boolean ? "true" : "false")))); // TODO: How to represent booleans here?
+            inputs.append(FormInputPair(varSourceField, QString(value.u.boolean ? "true" : "false"))); // TODO: How to represent booleans here?
             Log::debug(QString("Injecting %1 into %2").arg(value.u.boolean ? "true" : "false").arg(varName).toStdString());
             break;
         case Symbolic::STRING:
-            inputs.insert(QPair<QSharedPointer<const FormField>, const FormFieldValue*>(varSourceField, new FormFieldValue(NULL, QString(value.string.c_str()))));
+            inputs.append(FormInputPair(varSourceField, QString(value.string.c_str())));
             Log::debug(QString("Injecting %1 into %2").arg(QString(value.string.c_str())).arg(varName).toStdString());
             break;
         default:
@@ -300,14 +300,14 @@ QSharedPointer<FormInput> ConcolicRuntime::createFormInput(QMap<QString, Symboli
 
 
     // Set up a new configuration which tests this input.
-    return QSharedPointer<FormInput>(new FormInput(inputs));
+    return QSharedPointer<FormInputCollection>(new FormInputCollection(inputs));
 }
 
 
 // Given a symbolic variable, find the corresponding form field on the page.
-QSharedPointer<const FormField> ConcolicRuntime::findFormFieldForVariable(QString varName, Symbolic::SourceIdentifierMethod varSourceIdentifierMethod)
+QSharedPointer<const FormFieldDescriptor> ConcolicRuntime::findFormFieldForVariable(QString varName, Symbolic::SourceIdentifierMethod varSourceIdentifierMethod)
 {
-    QSharedPointer<const FormField> varSourceField;
+    QSharedPointer<const FormFieldDescriptor> varSourceField;
 
     // Variable names are of the form SYM_IN_<name>, and we will need to use <name> directly when searching the ids and names of the form fields.
     QString varBaseName = varName;
@@ -317,7 +317,7 @@ QSharedPointer<const FormField> ConcolicRuntime::findFormFieldForVariable(QStrin
     case Symbolic::INPUT_NAME:
         // Fetch the formField with this name
         // Fetch the form field with this id
-        foreach(QSharedPointer<const FormField> field, mFormFields){
+        foreach(QSharedPointer<const FormFieldDescriptor> field, mFormFields){
             if(field->getDomElement()->getName() == varBaseName){
                 varSourceField = field;
                 break;
@@ -327,7 +327,7 @@ QSharedPointer<const FormField> ConcolicRuntime::findFormFieldForVariable(QStrin
 
     case Symbolic::ELEMENT_ID:
         // Fetch the form field with this id
-        foreach(QSharedPointer<const FormField> field, mFormFields){
+        foreach(QSharedPointer<const FormFieldDescriptor> field, mFormFields){
             if(field->getDomElement()->getId() == varBaseName){
                 varSourceField = field;
                 break;
@@ -383,7 +383,7 @@ void ConcolicRuntime::exploreNextTarget()
         printSolution(solution, varList);
 
 
-        QSharedPointer<FormInput> formInput = createFormInput(freeVariables, solution);
+        QSharedPointer<FormInputCollection> formInput = createFormInput(freeVariables, solution);
         setupNextConfiguration(formInput);
 
         // Execute next iteration

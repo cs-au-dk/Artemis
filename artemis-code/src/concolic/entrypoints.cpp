@@ -100,7 +100,7 @@ void EntryPointDetector::printResultInfo(ExecutionResultPtr result)
     Log::info(QString("CONCOLIC-INFO: Event Handlers (%1): %2").arg(result->getEventHandlers().length()).arg(eventNames).toStdString());
 
     QString formNames;
-    foreach(QSharedPointer<const FormField> field, result->getFormFields()){
+    foreach(QSharedPointer<const FormFieldDescriptor> field, result->getFormFields()){
         formNames.append(field->getDomElement()->getTagName());
         formNames.append(", ");
     }
