@@ -16,65 +16,81 @@
 #ifndef DOMELEMENTDESCRIPTOR_H
 #define DOMELEMENTDESCRIPTOR_H
 
-#include <QObject>
-#include <QDebug>
+#include <QSharedPointer>
 
 #include "runtime/browser/artemiswebpage.h"
-
-// TODO convert to new memory model
 
 namespace artemis
 {
 
-class DOMElementDescriptor : public QObject
+/**
+ * This class represents a DOM element in a web page across executions.
+ *
+ * Use this to save the location of DOM element A in execution AE, and
+ * to find the corresponding DOM element B in execution BE.
+ */
+class DOMElementDescriptor
 {
-    Q_OBJECT
 
 public:
-    DOMElementDescriptor(QObject* parent, QWebElement* elm);
-    DOMElementDescriptor(QObject* parent, const DOMElementDescriptor* other);
+    DOMElementDescriptor(QWebElement* elm);
 
     QWebElement getElement(ArtemisWebPagePtr page) const;
-    QString getTagName() const;
-    QString getName() const;
-    QString getId() const;
-    QString getClass() const;
-    bool isInvalid() const;
+
+    inline bool isInvalid() const {
+        return mInvalid;
+    }
+
+    inline QString getTagName() const {
+        return mTagName;
+    }
+
+    inline QString getName() const {
+        return mName;
+    }
+
+    inline QString getId() const {
+        return mId;
+    }
+
+    inline QString getClass() const {
+        return mClassLine;
+    }
 
     uint hashCode() const;
     QString toString() const;
 
-    QDebug friend operator<<(QDebug dbg, const DOMElementDescriptor& e);
-
 private:
-    QString id;
-    QString tagName;
-    QString frameName;
-    QString classLine;
-    QString name;
+    // Stored attributes
+    QString mId;
+    QString mTagName;
+    QString mName;
+    QString mClassLine;
 
     // Path from the mainFrame to the frame containig the element
-    QList<int> framePath;
+    QList<int> mFramePath;
 
     // Path from the frame containing the element to the actual element
-    QList<int> elementPath;
+    QList<int> mElementPath;
 
     // Special cases
-    bool isDocument;// = false;
-    bool isBody;// = false;
-    bool isMainframe;// = false;
+    bool mIsDocument;
+    bool mIsBody;
+    bool mIsMainframe;
     bool mInvalid;
 
-    void setFramePath(QWebElement* elm);
+    // NOTE, the frame path is not used since it caused some stability issues - and none of our examples require the frame path
+    // See the constructor for the disabled call to this function
+    //void setFramePath(QWebElement* elm);
     void setElementPath(QWebElement* elm);
 
-    QWebFrame* getFrame(ArtemisWebPagePtr page) const;
-    QWebElement getElementFrame(QWebFrame* frame) const;
-    QWebElement nthChild(QWebElement elm, int n) const;
+    QWebFrame* selectFrame(ArtemisWebPagePtr page) const;
+    QWebElement selectElement(QWebFrame* frame) const;
+    QWebElement selectNthChild(QWebElement elm, int n) const;
 };
 
-
-
+typedef QSharedPointer<DOMElementDescriptor> DOMElementDescriptorPtr;
+typedef QSharedPointer<const DOMElementDescriptor> DOMElementDescriptorConstPtr;
 
 }
 

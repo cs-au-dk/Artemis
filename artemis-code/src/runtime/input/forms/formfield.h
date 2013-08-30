@@ -30,17 +30,20 @@ class FormField
 {
 
 public:
-    FormField(FormFieldTypes fieldType, const DOMElementDescriptor* domElement, QSet<QString> inputOptions);
-    FormField(FormFieldTypes fieldType, const DOMElementDescriptor* domElement);
+    FormField(FormFieldTypes fieldType, DOMElementDescriptorConstPtr domElement, QSet<QString> inputOptions);
+    FormField(FormFieldTypes fieldType, DOMElementDescriptorConstPtr domElement);
 
-    const DOMElementDescriptor* getDomElement() const;
+    inline const DOMElementDescriptorConstPtr getDomElement() const {
+        return mElementDescriptor;
+    }
+
     FormFieldTypes getType() const;
     QSet<QString> getInputOptions() const;
 
     QDebug friend operator<<(QDebug dbg, const FormField& f);
 
 private:
-    const DOMElementDescriptor* mElementDescriptor;
+    DOMElementDescriptorConstPtr mElementDescriptor;
     const FormFieldTypes mFieldType;
     QSet<QString> mDefaultInputs;
 
