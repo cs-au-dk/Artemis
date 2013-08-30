@@ -15,7 +15,8 @@ Artemis have been successfully installed on Ubuntu 12.10 and Fedora 18.
     This will place a version of Qt 4.8 in the `qt/` folder.
 
     You can check your Qt version using the command ``qmake --version``
-    (if qmake is missing then Qt is not installed).
+    (if qmake is missing then Qt is not installed). Note, you need to 
+    set the QTDIR and PATH variables described in step 1.
     
  1. Configure your environment variables by running
     
