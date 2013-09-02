@@ -43,6 +43,10 @@
 namespace artemis
 {
 
+/**
+ * Responsible for all direct interaction with WebKit and controlling the
+ * low-level execution of the selected configurations.
+ */
 class WebKitExecutor : public QObject
 {
     Q_OBJECT
