@@ -387,18 +387,18 @@ void DemoModeMainWindow::preTraceExecution(ExecutionResultPtr result)
     // Simply run the entry-point detector and display its results.
     Log::debug("CONCOLIC-INFO: Analysing page entrypoints...");
 
-    QList<EventHandlerDescriptor*> allEntryPoints;
+    QList<EventHandlerDescriptorConstPtr> allEntryPoints;
 
     // Detect all potential entry points on the page.
     allEntryPoints = mEntryPointDetector.detectAll(result);
 
     // List them all
     Log::debug(QString("CONCOLIC-INFO: Found %1 potential entry points.").arg(allEntryPoints.length()).toStdString());
-    foreach(EventHandlerDescriptor* ep, allEntryPoints){
+    foreach (EventHandlerDescriptorConstPtr ep, allEntryPoints){
         // Log to termianl
         Log::debug(QString("CONCOLIC-INFO: Potential entry point :: %1").arg(ep->toString()).toStdString());
         // Log to GUI.
-        addEntryPoint(ep->toString(), ep->domElement());
+        addEntryPoint(ep->toString(), ep->getDomElement());
     }
 
     // Display the page for the user to interact with.

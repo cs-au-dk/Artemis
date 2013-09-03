@@ -16,8 +16,8 @@
 #ifndef TARGET_DESCRIPTOR_H
 #define TARGET_DESCRIPTOR_H
 
-#include <QObject>
 #include <QWebElement>
+#include <QSharedPointer>
 
 #include "runtime/input/events/eventhandlerdescriptor.h"
 
@@ -26,18 +26,20 @@
 namespace artemis
 {
 
-class TargetDescriptor : public QObject
+class TargetDescriptor
 {
-    Q_OBJECT
 
 public:
-    TargetDescriptor(QObject* parent, const EventHandlerDescriptor* eventHandler);
+    TargetDescriptor(EventHandlerDescriptorConstPtr eventHandler);
+    virtual ~TargetDescriptor() {}
 
     virtual QWebElement get(ArtemisWebPagePtr page) const = 0;
 
 protected:
-    EventHandlerDescriptor* mEventHandler;
+    EventHandlerDescriptorConstPtr mEventHandler;
 };
+
+typedef QSharedPointer<const TargetDescriptor> TargetDescriptorConstPtr;
 
 }
 

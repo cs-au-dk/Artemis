@@ -53,6 +53,7 @@ private:
 };
 
 typedef QSharedPointer<FormInputCollection> FormInputCollectionPtr;
+typedef QSharedPointer<const FormInputCollection> FormInputCollectionConstPtr;
 
 }
 

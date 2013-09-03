@@ -44,6 +44,8 @@ protected:
     QList<QString> mExcludedFormFields;
 };
 
+typedef QSharedPointer<FormInputGenerator> FormInputGeneratorConstPtr;
+
 }
 
 #endif // FORMINPUTGENERATOR_H

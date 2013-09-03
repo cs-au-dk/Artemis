@@ -17,7 +17,7 @@
 #ifndef TARGETGENERATOR_H_
 #define TARGETGENERATOR_H_
 
-#include <QObject>
+#include <QSharedPointer>
 
 #include "runtime/input/events/eventhandlerdescriptor.h"
 #include "strategies/inputgenerator/targets/jquerylistener.h"
@@ -27,18 +27,20 @@
 namespace artemis
 {
 
-class TargetGenerator : public QObject
+class TargetGenerator
 {
 
 public:
-    TargetGenerator(QObject* parent, JQueryListener* jqueryListener);
-    virtual ~TargetGenerator();
+    TargetGenerator(JQueryListener* jqueryListener);
+    virtual ~TargetGenerator() {}
 
-    TargetDescriptor* generateTarget(QObject* parent, const EventHandlerDescriptor* eventHandler);
+    TargetDescriptorConstPtr generateTarget(EventHandlerDescriptorConstPtr eventHandler) const;
 
 private:
     JQueryListener* mJQueryListener;
 };
+
+typedef QSharedPointer<const TargetGenerator> TargetGeneratorConstPtr;
 
 } // END NAMESPACE
 

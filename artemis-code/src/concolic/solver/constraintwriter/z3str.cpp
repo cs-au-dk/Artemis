@@ -23,6 +23,8 @@
 
 #include <QDebug>
 
+#include "util/loggingutil.h"
+
 #include "z3str.h"
 
 namespace artemis
@@ -54,14 +56,13 @@ bool Z3STRConstraintWriter::write(PathConditionPtr pathCondition, std::string ou
     mOutput.close();
 
     if (mError) {
-        std::string error = std::string("Artemis is unable generate constraints - ") + mErrorReason + ".";
-        qDebug(error.c_str());
+        Log::warning("Artemis is unable generate constraints - " + mErrorReason + ".");
         return false;
     }
 
     for (std::map<std::string, Symbolic::Type>::iterator iter = mTypemap.begin(); iter != mTypemap.end(); iter++) {
         if (iter->second == Symbolic::TYPEERROR) {
-            qDebug("Artemis is unable generate constraints - a type-error was found.");
+            Log::warning("Artemis is unable generate constraints - a type-error was found.");
             return false;
         }
     }
@@ -135,7 +136,7 @@ void Z3STRConstraintWriter::visit(Symbolic::ConstantInteger* constantinteger)
         mExpressionBuffer = "(- " + mExpressionBuffer.substr(1) + ")";
     }
 
-    if (mExpressionBuffer.find("nan") != -1) {
+    if (mExpressionBuffer.find("nan") != std::string::npos) {
         mError = true;
         mErrorReason = "Unsupported constraint using NaN constant";
     }

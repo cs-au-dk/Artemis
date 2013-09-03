@@ -16,7 +16,6 @@
 #ifndef BASEEVENTPARAMETERS_H
 #define BASEEVENTPARAMETERS_H
 
-#include "artemisglobals.h"
 #include "eventparameters.h"
 
 namespace artemis
@@ -25,10 +24,10 @@ namespace artemis
 class BaseEventParameters : public EventParameters
 {
 public:
-    BaseEventParameters(QObject* parent, QString type, bool bubbles, bool cancelable);
+    BaseEventParameters(QString type, bool bubbles, bool cancelable);
 
-    QString jsString() const ;
-    EventType type() const;
+    QString getJsString() const;
+    EventType getType() const;
 
 private:
     QString name;

@@ -108,7 +108,7 @@ Runtime::Runtime(QObject* parent, const Options& options, const QUrl& url) : QOb
     mInputgenerator = new RandomInputGenerator(this,
                                                formInputGenerator,
                                                QSharedPointer<StaticEventParameterGenerator>(new StaticEventParameterGenerator()),
-                                               new TargetGenerator(this, jqueryListener),
+                                               TargetGeneratorConstPtr(new TargetGenerator(jqueryListener)),
                                                options.numberSameLength);
     mTerminationStrategy = new NumberOfIterationsTermination(this, options.iterationLimit);
 
@@ -125,7 +125,7 @@ Runtime::Runtime(QObject* parent, const Options& options, const QUrl& url) : QOb
     case READWRITE:
         mPrioritizerStrategy = PrioritizerStrategyPtr(new ReadWritePrioritizer());
         break;
-    case  ALL_STRATEGIES:{
+    case ALL_STRATEGIES:{
         CollectedPrioritizer* strategy = new CollectedPrioritizer();
         strategy->addPrioritizer(new ConstantPrioritizer());
         strategy->addPrioritizer(new CoveragePrioritizer());

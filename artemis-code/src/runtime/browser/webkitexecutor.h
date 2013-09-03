@@ -64,13 +64,13 @@ public:
     void executeSequence(ExecutableConfigurationConstPtr conf, bool keepOpen);
     void detach();
 
-    QWebExecutionListener* webkitListener; // TODO should not be public
-
     ArtemisWebPagePtr getPage();
 
     TraceBuilder* getTraceBuilder();
 
 private:
+    QWebExecutionListener* mWebkitListener;
+
     ArtemisWebPagePtr mPage;
     ExecutionResultBuilderPtr mResultBuilder;
     ExecutableConfigurationConstPtr currentConf;

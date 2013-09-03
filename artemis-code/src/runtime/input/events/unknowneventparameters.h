@@ -8,8 +8,8 @@ class UnknownEventParameters : public EventParameters
 public:
     UnknownEventParameters();
 
-    QString jsString() const ;
-    EventType type() const;
+    QString getJsString() const ;
+    EventType getType() const;
 
 };
 }

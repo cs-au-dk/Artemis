@@ -19,6 +19,7 @@
 #include <QObject>
 #include <QString>
 #include <QDebug>
+#include <QSharedPointer>
 
 #include "runtime/input/events/eventypes.h"
 #include "domelementdescriptor.h"
@@ -26,24 +27,27 @@
 namespace artemis
 {
 
-class EventHandlerDescriptor : public QObject
+class EventHandlerDescriptor
 {
-    Q_OBJECT
 
 public:
-    EventHandlerDescriptor(QObject* parent, QWebElement* elem = 0, QString name = QString());
-    EventHandlerDescriptor(QObject* parent, const EventHandlerDescriptor* other);
+    EventHandlerDescriptor(QWebElement* element, QString name);
 
-    ~EventHandlerDescriptor();
-
-    QString name() const;
-
-    inline DOMElementDescriptorConstPtr domElement() const {
-        return element;
+    inline QString getName() const {
+        return mEventName;
     }
 
-    bool isInvalid() const;
-    EventType getEventType() const;
+    inline DOMElementDescriptorConstPtr getDomElement() const {
+        return mElement;
+    }
+
+    inline bool isInvalid() const {
+        return mElement->isInvalid();
+    }
+
+    inline EventType getEventType() const {
+        return getType(mEventName);
+    }
 
     int hashCode() const;
     QString toString() const;
@@ -52,10 +56,14 @@ public:
 
 
 private:
-    DOMElementDescriptorConstPtr element;
-    QString eventName;
+    DOMElementDescriptorConstPtr mElement;
+    QString mEventName;
 
 };
+
+typedef QSharedPointer<EventHandlerDescriptor> EventHandlerDescriptorPtr;
+typedef QSharedPointer<const EventHandlerDescriptor> EventHandlerDescriptorConstPtr;
+
 }
 
 #endif // EVENTDESCRIPTOR_H

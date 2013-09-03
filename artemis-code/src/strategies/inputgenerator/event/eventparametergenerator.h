@@ -16,7 +16,7 @@
 #ifndef EVENTPARAMETERGENERATOR_H
 #define EVENTPARAMETERGENERATOR_H
 
-#include <QObject>
+#include <QSharedPointer>
 #include <QSet>
 
 #include "runtime/input/events/eventparameters.h"
@@ -32,8 +32,10 @@ public:
     EventParameterGenerator() {}
     virtual ~EventParameterGenerator() {}
 
-    virtual EventParameters* generateEventParameters(QObject* parent, const EventHandlerDescriptor* eventHandler) const = 0;
+    virtual EventParametersConstPtr generateEventParameters(EventHandlerDescriptorConstPtr eventHandler) const = 0;
 };
+
+typedef QSharedPointer<const EventParameterGenerator> EventParameterGeneratorConstPtr;
 
 }
 

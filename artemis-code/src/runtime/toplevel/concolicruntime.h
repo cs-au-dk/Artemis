@@ -78,7 +78,7 @@ protected:
     QUrl mUrl;
     QSharedPointer<ExecutableConfiguration> mNextConfiguration;
     TraceNodePtr mSymbolicExecutionGraph;
-    EventHandlerDescriptor* mEntryPointEvent;
+    EventHandlerDescriptorConstPtr mEntryPointEvent;
 
     bool mRunningToGetEntryPoints;
     bool mRunningWithInitialValues;

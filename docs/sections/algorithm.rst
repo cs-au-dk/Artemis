@@ -27,7 +27,7 @@ The algorithm below shows the major steps involved in the Artemis testing proced
            
            # Step 3: Input sequence execution
            for input in configuration.inputs:
-               browser.fill_forms(input.forms)    
+               browser.fill_and_mark_forms(input.forms)    
                browser.trigger_event(input.event)
 
            # Step 4: Post-input processing
@@ -48,10 +48,13 @@ Step 1: Page load
 Step 2: Post-load processing
 ----------------------------
 
+ * Form inputs provided on the command line are written to the page.
+
 Step 3: Input sequence execution
 --------------------------------
 
-
+ * Non-blank form inputs (represented by FormInput) are written to the page.
+ * Form inputs (represented by FormInput) are marked as dynamic form inputs such that the symbolic infrastructure can associate the form inputs back to Artemis.
 
 Step 4: Postprocessing
 ----------------------

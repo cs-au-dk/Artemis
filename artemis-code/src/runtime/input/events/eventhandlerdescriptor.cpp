@@ -18,50 +18,25 @@
 namespace artemis
 {
 
-EventHandlerDescriptor::EventHandlerDescriptor(QObject* parent, QWebElement* elem, QString name) : QObject(parent)
+EventHandlerDescriptor::EventHandlerDescriptor(QWebElement* element, QString name) :
+    mEventName(name)
 {
-    this->eventName = name;
-    this->element = DOMElementDescriptorConstPtr(new DOMElementDescriptor(elem));
-}
-
-EventHandlerDescriptor::EventHandlerDescriptor(QObject* parent, const EventHandlerDescriptor* other) : QObject(parent)
-{
-    this->eventName = other->eventName;
-    this->element = other->element;
-}
-
-EventHandlerDescriptor::~EventHandlerDescriptor()
-{
-}
-
-QString EventHandlerDescriptor::name() const
-{
-    return this->eventName;
-}
-
-EventType EventHandlerDescriptor::getEventType() const
-{
-    return getType(eventName);
-}
-
-bool EventHandlerDescriptor::isInvalid() const
-{
-    return this->element->isInvalid();
+    mElement = DOMElementDescriptorConstPtr(new DOMElementDescriptor(element));
 }
 
 int EventHandlerDescriptor::hashCode() const
 {
-    return qHash(this->eventName) + 7 * this->element->hashCode();
+    return qHash(this->mEventName) + 7 * this->mElement->hashCode();
 }
 
 QString EventHandlerDescriptor::toString() const
 {
-    return QString(eventName + "@") + element->toString();
+    return QString(mEventName + "@") + mElement->toString();
 }
 
 QDebug operator<<(QDebug dbg, const EventHandlerDescriptor& e)
 {
-    dbg.nospace() << "(" + e.eventName << "," << e.element->toString() << ")";
+    dbg.nospace() << "(" + e.mEventName << "," << e.mElement->toString() << ")";
     return dbg.space();
 }
 

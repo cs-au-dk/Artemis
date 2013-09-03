@@ -29,29 +29,29 @@
 
 namespace artemis
 {
-
+// TODO remove QOBJECT
 class RandomInputGenerator : public InputGeneratorStrategy
 {
     Q_OBJECT
 
 public:
     RandomInputGenerator(QObject* parent,
-                         QSharedPointer<const FormInputGenerator> formInputGenerator,
-                         QSharedPointer<const EventParameterGenerator> eventParameterInputGenerator,
-                         TargetGenerator* targetGenerator,
+                         FormInputGeneratorConstPtr formInputGenerator,
+                         EventParameterGeneratorConstPtr eventParameterInputGenerator,
+                         TargetGeneratorConstPtr targetGenerator,
                          int numberSameLength);
 
     QList<QSharedPointer<ExecutableConfiguration> > addNewConfigurations(QSharedPointer<const ExecutableConfiguration>, QSharedPointer<const ExecutionResult>);
 
 private:
-    QSharedPointer<const FormInputGenerator> mFormInputGenerator;
-    QSharedPointer<const EventParameterGenerator> mEventParameterGenerator;
+    FormInputGeneratorConstPtr mFormInputGenerator;
+    EventParameterGeneratorConstPtr mEventParameterGenerator;
 
     int nextRandom();
-    QList<QSharedPointer<ExecutableConfiguration> > insertSameLength(QSharedPointer<const ExecutableConfiguration> e, QSharedPointer<const ExecutionResult> result);
-    QList<QSharedPointer<ExecutableConfiguration> > insertExtended(QSharedPointer<const ExecutableConfiguration> e, QSharedPointer<const ExecutionResult> result);
+    QList<ExecutableConfigurationPtr> insertSameLength(ExecutableConfigurationConstPtr e, ExecutionResultConstPtr result);
+    QList<ExecutableConfigurationPtr> insertExtended(ExecutableConfigurationConstPtr e, ExecutionResultConstPtr result);
 
-    TargetGenerator* mTargetGenerator;
+    TargetGeneratorConstPtr mTargetGenerator;
 
     int mNumberSameLength;
 

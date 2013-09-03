@@ -21,25 +21,14 @@
 namespace artemis
 {
 
-TargetGenerator::TargetGenerator(QObject* parent,
-                                 JQueryListener* jqueryListener) :
-    QObject(parent)
+TargetGenerator::TargetGenerator(JQueryListener* jqueryListener) :
+    mJQueryListener(jqueryListener)
 {
-
-    mJQueryListener = jqueryListener;
 }
 
-TargetGenerator::~TargetGenerator()
+TargetDescriptorConstPtr TargetGenerator::generateTarget(EventHandlerDescriptorConstPtr eventHandler) const
 {
-    // TODO Auto-generated destructor stub
+    return TargetDescriptorConstPtr(new JQueryTarget(eventHandler, mJQueryListener));
 }
-
-TargetDescriptor* TargetGenerator::generateTarget(QObject* parent, const EventHandlerDescriptor* eventHandler)
-{
-
-    return new JQueryTarget(parent, eventHandler, mJQueryListener);
-
-}
-
 
 } // END NAMESPACE

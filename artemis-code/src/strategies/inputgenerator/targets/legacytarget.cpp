@@ -19,13 +19,14 @@
 namespace artemis
 {
 
-LegacyTarget::LegacyTarget(QObject* parent, const EventHandlerDescriptor* eventHandler) : TargetDescriptor(parent, eventHandler)
+LegacyTarget::LegacyTarget(EventHandlerDescriptorConstPtr eventHandler) :
+    TargetDescriptor(eventHandler)
 {
 }
 
 QWebElement LegacyTarget::get(ArtemisWebPagePtr page) const
 {
-    return mEventHandler->domElement()->getElement(page);
+    return mEventHandler->getDomElement()->getElement(page);
 }
 
 }

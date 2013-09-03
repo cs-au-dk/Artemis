@@ -26,13 +26,10 @@
 namespace artemis
 {
 
-JQueryTarget::JQueryTarget(QObject* parent,
-                           const EventHandlerDescriptor* eventHandler,
-                           JQueryListener* jqueryListener) :
-    TargetDescriptor(parent, eventHandler)
+JQueryTarget::JQueryTarget(EventHandlerDescriptorConstPtr eventHandler, JQueryListener* jqueryListener) :
+    TargetDescriptor(eventHandler),
+    mJQueryListener(jqueryListener)
 {
-    mJQueryListener = jqueryListener;
-    mJQueryListener->setParent(this);
 }
 
 QString JQueryTarget::getSignature(QWebElement element) const
@@ -57,14 +54,14 @@ QString JQueryTarget::getSignature(QWebElement element) const
 
 QWebElement JQueryTarget::get(ArtemisWebPagePtr page) const
 {
-    QWebElement element = mEventHandler->domElement()->getElement(page);
+    QWebElement element = mEventHandler->getDomElement()->getElement(page);
 
     if (element.isNull()) {
         return QWebElement();
     }
 
     QString signature = getSignature(element);
-    QString event = mEventHandler->name();
+    QString event = mEventHandler->getName();
 
     qDebug() << "TARGET::Info, looking for selectors for signature " << signature << " and event " << event << endl;
 

@@ -143,7 +143,7 @@ SolutionPtr Z3Solver::solve(PathConditionPtr pc)
 
             symbolvalue.kind = Symbolic::STRING;
 
-            if (value.find("(- ") == -1) { // not a negative value, this is a bit of a hack
+            if (value.find("(- ") == std::string::npos) { // not a negative value
                 symbolvalue.string = value;
             } else {
                 symbolvalue.string = "-" + value.substr(3, value.length() - 4);

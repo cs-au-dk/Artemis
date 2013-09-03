@@ -33,14 +33,16 @@ public:
     virtual ~BaseInput() {}
 
     virtual void apply(ArtemisWebPagePtr page, QWebExecutionListener* webkitListener) const = 0;
-    virtual QSharedPointer<const BaseInput> getPermutation(const QSharedPointer<const FormInputGenerator>& formInputGenerator,
-                                                           const QSharedPointer<const EventParameterGenerator>& eventParameterGenerator,
-                                                           TargetGenerator* targetGenerator,
-                                                           QSharedPointer<const ExecutionResult> result) const = 0;
+    virtual QSharedPointer<const BaseInput> getPermutation(const FormInputGeneratorConstPtr& formInputGenerator,
+                                                           const EventParameterGeneratorConstPtr& eventParameterGenerator,
+                                                           const TargetGeneratorConstPtr& targetGenerator,
+                                                           const ExecutionResultConstPtr& result) const = 0;
 
     virtual int hashCode() const = 0;
     virtual QString toString() const = 0;
 };
+
+typedef QSharedPointer<const BaseInput> BaseInputConstPtr;
 
 }
 

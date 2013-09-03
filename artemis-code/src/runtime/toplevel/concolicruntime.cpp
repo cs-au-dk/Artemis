@@ -126,14 +126,14 @@ void ConcolicRuntime::outputTreeGraph()
 void ConcolicRuntime::setupNextConfiguration(QSharedPointer<FormInputCollection> formInput)
 {
     // Create a suitable EventParameters object for this submission. (As in StaticEventParameterGenerator.)
-    EventParameters* eventParameters = new MouseEventParameters(NULL, mEntryPointEvent->name(), true, true, 1, 0, 0, 0, 0, false, false, false, false, 0);
+    EventParametersConstPtr eventParameters = EventParametersConstPtr(new MouseEventParameters(mEntryPointEvent->getName(), true, true, 1, 0, 0, 0, 0, false, false, false, false, 0));
 
     // Create a suitable TargetDescriptor object for this submission.
     // TODO: No support for JQuery unless we use a JQueryTarget, JQueryListener (and TargetGenerator?).
-    TargetDescriptor* targetDescriptor = new LegacyTarget(NULL, mEntryPointEvent);
+    TargetDescriptorConstPtr targetDescriptor = TargetDescriptorConstPtr(new LegacyTarget(mEntryPointEvent));
 
     // Create a DomInput which will inject the empty FormInput and fire the entry point event.
-    QSharedPointer<const BaseInput> submitEvent = QSharedPointer<const BaseInput>(new DomInput(mEntryPointEvent, formInput, eventParameters, targetDescriptor));
+    BaseInputConstPtr submitEvent = BaseInputConstPtr(new DomInput(mEntryPointEvent, formInput, eventParameters, targetDescriptor));
     // TODO:: Where should/are the eventParameters and targetDescriptor pointers cleaned up?
 
     // Create an input sequence consisting of just this event.

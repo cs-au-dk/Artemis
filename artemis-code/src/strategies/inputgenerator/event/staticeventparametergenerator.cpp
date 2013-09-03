@@ -33,20 +33,19 @@ namespace artemis
 
 StaticEventParameterGenerator::StaticEventParameterGenerator() : EventParameterGenerator()
 {
-
 }
 
-EventParameters* StaticEventParameterGenerator::generateEventParameters(QObject* parent, const EventHandlerDescriptor* eventHandler) const
+EventParametersConstPtr StaticEventParameterGenerator::generateEventParameters(EventHandlerDescriptorConstPtr eventHandler) const
 {
 
     switch (eventHandler->getEventType()) {
 
     case BASE_EVENT:
-        return new BaseEventParameters(parent, eventHandler->name(), true, true);
+        return EventParametersConstPtr(new BaseEventParameters(eventHandler->getName(), true, true));
         break;
 
     case MOUSE_EVENT:
-        return new MouseEventParameters(parent, eventHandler->name(),
+        return EventParametersConstPtr(new MouseEventParameters(eventHandler->getName(),
                                         true,
                                         true,
                                         1,
@@ -58,11 +57,11 @@ EventParameters* StaticEventParameterGenerator::generateEventParameters(QObject*
                                         false,
                                         false,
                                         false,
-                                        0);
+                                        0));
         break;
 
     case KEY_EVENT:
-        return new KeyboardEventParameters(parent, eventHandler->name(),
+        return EventParametersConstPtr(new KeyboardEventParameters(eventHandler->getName(),
                                            true,
                                            true,
                                            QString("a"),
@@ -71,13 +70,14 @@ EventParameters* StaticEventParameterGenerator::generateEventParameters(QObject*
                                            false,
                                            false,
                                            false,
-                                           false);
+                                           false));
         break;
     case TOUCH_EVENT:
-        return new TouchEventParameters();
+        return EventParametersConstPtr(new TouchEventParameters());
+
     default:
         qDebug() << "Unknown event type!";
-        return new UnknownEventParameters();
+        return EventParametersConstPtr(new UnknownEventParameters());
     }
 }
 

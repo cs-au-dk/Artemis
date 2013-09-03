@@ -47,8 +47,9 @@ QDebug operator<<(QDebug dbg, const FormFieldDescriptor& f)
 
 FormFieldTypes getTypeFromAttr(QString typeAttr)
 {
-    if (typeAttr.isEmpty())
-        { return TEXT; } //de facto standard;
+    if (typeAttr.isEmpty()) {
+        return TEXT;
+    } //de facto standard;
 
     typeAttr = typeAttr.toLower();
     /** Types :

@@ -69,64 +69,64 @@ WebKitExecutor::WebKitExecutor(QObject* parent,
     mPathTracer = appmodel->getPathTracer();
 
     QWebExecutionListener::attachListeners();
-    webkitListener = QWebExecutionListener::getListener();
+    mWebkitListener = QWebExecutionListener::getListener();
 
     // TODO cleanup in ajax stuff, we are handling ajax through AjaxRequestListener, the ajaxRequest signal and addAjaxCallHandler
 
     if (enableConstantStringInstrumentation) {
-        webkitListener->enableConstantStringInstrumentation();
+        mWebkitListener->enableConstantStringInstrumentation();
     }
 
-    QObject::connect(webkitListener, SIGNAL(jqueryEventAdded(QString, QString, QString)),
+    QObject::connect(mWebkitListener, SIGNAL(jqueryEventAdded(QString, QString, QString)),
                      mJquery, SLOT(slEventAdded(QString, QString, QString)));
 
-    QObject::connect(webkitListener, SIGNAL(loadedJavaScript(QString, QSource*)),
+    QObject::connect(mWebkitListener, SIGNAL(loadedJavaScript(QString, QSource*)),
                      mCoverageListener.data(), SLOT(slJavascriptScriptParsed(QString, QSource*)));
-    QObject::connect(webkitListener, SIGNAL(statementExecuted(uint, QSource*)),
+    QObject::connect(mWebkitListener, SIGNAL(statementExecuted(uint, QSource*)),
                      mCoverageListener.data(), SLOT(slJavascriptStatementExecuted(uint, QSource*)));
-    QObject::connect(webkitListener, SIGNAL(sigJavascriptBytecodeExecuted(QString, uint, QSource*, const ByteCodeInfoStruct)),
+    QObject::connect(mWebkitListener, SIGNAL(sigJavascriptBytecodeExecuted(QString, uint, QSource*, const ByteCodeInfoStruct)),
                      mCoverageListener.data(), SLOT(slJavascriptBytecodeExecuted(QString, uint, QSource*, const ByteCodeInfoStruct)));
-    QObject::connect(webkitListener, SIGNAL(sigJavascriptFunctionCalled(QString, size_t, uint, uint, QSource*)),
+    QObject::connect(mWebkitListener, SIGNAL(sigJavascriptFunctionCalled(QString, size_t, uint, uint, QSource*)),
                      mCoverageListener.data(), SLOT(slJavascriptFunctionCalled(QString, size_t, uint, uint, QSource*)));
 
-    QObject::connect(webkitListener, SIGNAL(sigJavascriptBytecodeExecuted(QString,  uint, QSource*, const ByteCodeInfoStruct)),
+    QObject::connect(mWebkitListener, SIGNAL(sigJavascriptBytecodeExecuted(QString,  uint, QSource*, const ByteCodeInfoStruct)),
                      mPathTracer.data(), SLOT(slJavascriptBytecodeExecuted(QString, uint, QSource*, const ByteCodeInfoStruct)));
-    QObject::connect(webkitListener, SIGNAL(sigJavascriptFunctionCalled(QString, size_t, uint, uint, QSource*)),
+    QObject::connect(mWebkitListener, SIGNAL(sigJavascriptFunctionCalled(QString, size_t, uint, uint, QSource*)),
                      mPathTracer.data(), SLOT(slJavascriptFunctionCalled(QString, size_t, uint, uint, QSource*)));
-    QObject::connect(webkitListener, SIGNAL(sigJavascriptFunctionReturned(QString)),
+    QObject::connect(mWebkitListener, SIGNAL(sigJavascriptFunctionReturned(QString)),
                      mPathTracer.data(), SLOT(slJavascriptFunctionReturned(QString)));
     QObject::connect(mPage.data(), SIGNAL(sigJavascriptAlert(QWebFrame*, QString)),
                      mPathTracer.data(), SLOT(slJavascriptAlert(QWebFrame*, QString)));
 
-    QObject::connect(webkitListener, SIGNAL(sigJavascriptPropertyRead(QString,intptr_t,intptr_t, QSource*)),
+    QObject::connect(mWebkitListener, SIGNAL(sigJavascriptPropertyRead(QString,intptr_t,intptr_t, QSource*)),
                      mJavascriptStatistics.data(), SLOT(slJavascriptPropertyRead(QString,intptr_t,intptr_t, QSource*)));
-    QObject::connect(webkitListener, SIGNAL(sigJavascriptPropertyWritten(QString,intptr_t,intptr_t, QSource*)),
+    QObject::connect(mWebkitListener, SIGNAL(sigJavascriptPropertyWritten(QString,intptr_t,intptr_t, QSource*)),
                      mJavascriptStatistics.data(), SLOT(slJavascriptPropertyWritten(QString,intptr_t,intptr_t, QSource*)));
 
-    QObject::connect(webkitListener, SIGNAL(addedEventListener(QWebElement*, QString)),
+    QObject::connect(mWebkitListener, SIGNAL(addedEventListener(QWebElement*, QString)),
                      mResultBuilder.data(), SLOT(slEventListenerAdded(QWebElement*, QString)));
-    QObject::connect(webkitListener, SIGNAL(removedEventListener(QWebElement*, QString)),
+    QObject::connect(mWebkitListener, SIGNAL(removedEventListener(QWebElement*, QString)),
                      mResultBuilder.data(), SLOT(slEventListenerRemoved(QWebElement*, QString)));
 
-    QObject::connect(webkitListener, SIGNAL(triggeredEventListener(QWebElement*, QString)),
+    QObject::connect(mWebkitListener, SIGNAL(triggeredEventListener(QWebElement*, QString)),
                      mPathTracer.data(), SLOT(slEventListenerTriggered(QWebElement*, QString)));
 
-    QObject::connect(webkitListener, SIGNAL(addedTimer(int, int, bool)),
+    QObject::connect(mWebkitListener, SIGNAL(addedTimer(int, int, bool)),
                      mResultBuilder.data(), SLOT(slTimerAdded(int, int, bool)));
-    QObject::connect(webkitListener, SIGNAL(removedTimer(int)),
+    QObject::connect(mWebkitListener, SIGNAL(removedTimer(int)),
                      mResultBuilder.data(), SLOT(slTimerRemoved(int)));
 
-    QObject::connect(webkitListener, SIGNAL(script_crash(QString, intptr_t, int)),
+    QObject::connect(mWebkitListener, SIGNAL(script_crash(QString, intptr_t, int)),
                      mResultBuilder.data(), SLOT(slScriptCrashed(QString, intptr_t, int)));
-    QObject::connect(webkitListener, SIGNAL(eval_call(QString)),
+    QObject::connect(mWebkitListener, SIGNAL(eval_call(QString)),
                      mResultBuilder.data(), SLOT(slStringEvaled(QString)));
 
-    QObject::connect(webkitListener, SIGNAL(addedAjaxCallbackHandler(int)),
+    QObject::connect(mWebkitListener, SIGNAL(addedAjaxCallbackHandler(int)),
                      mResultBuilder.data(), SLOT(slAjaxCallbackHandlerAdded(int)));
-    QObject::connect(webkitListener, SIGNAL(ajax_request(QUrl, QString)),
+    QObject::connect(mWebkitListener, SIGNAL(ajax_request(QUrl, QString)),
                      mResultBuilder.data(), SLOT(slAjaxRequestInitiated(QUrl, QString)));
 
-    QObject::connect(webkitListener, SIGNAL(sigJavascriptConstantStringEncountered(QString)),
+    QObject::connect(mWebkitListener, SIGNAL(sigJavascriptConstantStringEncountered(QString)),
                      mResultBuilder.data(), SLOT(slJavascriptConstantStringEncountered(QString)));
 
 
@@ -135,7 +135,7 @@ WebKitExecutor::WebKitExecutor(QObject* parent,
 
     // The branch detector.
     QSharedPointer<TraceBranchDetector> branchDetector(new TraceBranchDetector());
-    QObject::connect(webkitListener, SIGNAL(sigJavascriptBranchExecuted(bool, Symbolic::Expression*, uint, QSource*, const ByteCodeInfoStruct)),
+    QObject::connect(mWebkitListener, SIGNAL(sigJavascriptBranchExecuted(bool, Symbolic::Expression*, uint, QSource*, const ByteCodeInfoStruct)),
             branchDetector.data(), SLOT(slBranch(bool, Symbolic::Expression*, uint, QSource*, const ByteCodeInfoStruct)));
     mTraceBuilder->addDetector(branchDetector);
 
@@ -147,7 +147,7 @@ WebKitExecutor::WebKitExecutor(QObject* parent,
 
     // The function call detector.
     QSharedPointer<TraceFunctionCallDetector> functionCallDetector(new TraceFunctionCallDetector());
-    QObject::connect(webkitListener, SIGNAL(sigJavascriptFunctionCalled(QString, size_t, uint, uint, QSource*)),
+    QObject::connect(mWebkitListener, SIGNAL(sigJavascriptFunctionCalled(QString, size_t, uint, uint, QSource*)),
                      functionCallDetector.data(), SLOT(slJavascriptFunctionCalled(QString, size_t, uint, uint, QSource*)));
     mTraceBuilder->addDetector(functionCallDetector);
 
@@ -158,11 +158,11 @@ WebKitExecutor::~WebKitExecutor()
 }
 
 void WebKitExecutor::detach() {
-    webkitListener->endSymbolicSession();
+    mWebkitListener->endSymbolicSession();
     mTraceBuilder->endRecording();
 
     // ignore events emitted from webkit on deallocation
-    webkitListener->disconnect(mResultBuilder.data());
+    mWebkitListener->disconnect(mResultBuilder.data());
 }
 
 void WebKitExecutor::executeSequence(ExecutableConfigurationConstPtr conf)
@@ -184,7 +184,7 @@ void WebKitExecutor::executeSequence(ExecutableConfigurationConstPtr conf, bool 
     mJavascriptStatistics->notifyStartingLoad();
     mPathTracer->notifyStartingLoad();
 
-    webkitListener->beginSymbolicSession();
+    mWebkitListener->beginSymbolicSession();
     mKeepOpen = keepOpen;
 
     mPage->mainFrame()->load(conf->getUrl());
@@ -249,22 +249,26 @@ void WebKitExecutor::slLoadFinished(bool ok)
     mTraceBuilder->beginRecording();
 
     foreach(QSharedPointer<const BaseInput> input, currentConf->getInputSequence()->toList()) {
+
         mResultBuilder->notifyStartingEvent();
         mCoverageListener->notifyStartingEvent(input);
         mJavascriptStatistics->notifyStartingEvent(input);
         mPathTracer->notifyStartingEvent(input);
 
-        input->apply(this->mPage, this->webkitListener);
+        input->apply(this->mPage, this->mWebkitListener);
+
     }
 
     if (!mKeepOpen) {
-        webkitListener->endSymbolicSession();
+        mWebkitListener->endSymbolicSession();
     }
 
     // End the trace recording in all cases. In concolic mode this is the trace we want, in manual mode we will be recording our own traces anyway.
+
     mTraceBuilder->endRecording();
 
     // TODO: This was previously enclosed by if(!mKeepOpen). This means no post-load analysis can be done in demo mode. What are tyhe implications of changing this? Which other parts will depend on this?
+
     emit sigExecutedSequence(currentConf, mResultBuilder->getResult());
 
 

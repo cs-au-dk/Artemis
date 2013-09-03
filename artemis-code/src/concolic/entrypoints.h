@@ -38,10 +38,10 @@ class EntryPointDetector
 public:
     EntryPointDetector(ArtemisWebPagePtr page);
 
-    QList<EventHandlerDescriptor*> detectAll(ExecutionResultPtr result);
+    QList<EventHandlerDescriptorConstPtr> detectAll(ExecutionResultPtr result);
 
     // Chooses a single entry point on the page. Can return NULL if it does not find a suitable entry point.
-    EventHandlerDescriptor* choose(ExecutionResultPtr result);
+    EventHandlerDescriptorConstPtr choose(ExecutionResultPtr result);
 
 private:
     ArtemisWebPagePtr mPage;

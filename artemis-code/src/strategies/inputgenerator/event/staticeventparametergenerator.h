@@ -28,7 +28,7 @@ public:
 
     StaticEventParameterGenerator();
 
-    EventParameters* generateEventParameters(QObject* parent, const EventHandlerDescriptor* eventHandler) const;
+    EventParametersConstPtr generateEventParameters(EventHandlerDescriptorConstPtr eventHandler) const;
 
 };
 

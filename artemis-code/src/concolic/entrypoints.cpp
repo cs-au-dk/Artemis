@@ -30,7 +30,7 @@ EntryPointDetector::EntryPointDetector(ArtemisWebPagePtr page) :
 }
 
 
-QList<EventHandlerDescriptor*> EntryPointDetector::detectAll(ExecutionResultPtr result)
+QList<EventHandlerDescriptorConstPtr> EntryPointDetector::detectAll(ExecutionResultPtr result)
 {
     // TEMP: for development...
     printResultInfo(result);
@@ -40,26 +40,26 @@ QList<EventHandlerDescriptor*> EntryPointDetector::detectAll(ExecutionResultPtr 
     // For now we have a simple implementation which checks for 'click' events on 'button' or 'a' elements.
     // TODO: at least also 'submit' on 'form' and maybe check where these buttons are...
 
-    QList<EventHandlerDescriptor*> entryEvents;
+    QList<EventHandlerDescriptorConstPtr> entryEvents;
 
-    foreach(EventHandlerDescriptor* event , result->getEventHandlers()){
-        if(event->name().compare("click", Qt::CaseInsensitive) == 0 &&
-                event->domElement()->getTagName().compare("button", Qt::CaseInsensitive) == 0){
+    foreach (EventHandlerDescriptorConstPtr event , result->getEventHandlers()){
+        if (event->getName().compare("click", Qt::CaseInsensitive) == 0 &&
+                event->getDomElement()->getTagName().compare("button", Qt::CaseInsensitive) == 0){
             // Accept any click on a button
             entryEvents.append(event);
 
-        }else if(event->name().compare("click", Qt::CaseInsensitive) == 0 &&
-                 event->domElement()->getTagName().compare("a", Qt::CaseInsensitive) == 0){
+        } else if (event->getName().compare("click", Qt::CaseInsensitive) == 0 &&
+                 event->getDomElement()->getTagName().compare("a", Qt::CaseInsensitive) == 0){
 
             // Accept a click on a link only if it is inside a form.
-            QWebElement element = event->domElement()->getElement(mPage);
+            QWebElement element = event->getDomElement()->getElement(mPage);
             // Search upwards until we find a form or reach the top of the hierarchy.
-            while(element.tagName().compare("form", Qt::CaseInsensitive) != 0 &&
+            while (element.tagName().compare("form", Qt::CaseInsensitive) != 0 &&
                   !element.isNull()){
                 element = element.parent();
             }
             // If we did find a form element then we know the original event was on an element we consider interesting.
-            if(element.tagName().compare("form", Qt::CaseInsensitive) == 0){
+            if (element.tagName().compare("form", Qt::CaseInsensitive) == 0){
                 entryEvents.append(event);
             }
         }
@@ -73,17 +73,18 @@ QList<EventHandlerDescriptor*> EntryPointDetector::detectAll(ExecutionResultPtr 
 
 
 
-EventHandlerDescriptor *EntryPointDetector::choose(ExecutionResultPtr result)
+EventHandlerDescriptorConstPtr EntryPointDetector::choose(ExecutionResultPtr result)
 {
     // TODO: Trivial choice: select the first click on a button we find.
-    foreach(EventHandlerDescriptor* event , result->getEventHandlers()){
-        if(event->name().compare("click", Qt::CaseInsensitive) == 0 &&
-                event->domElement()->getTagName().compare("button", Qt::CaseInsensitive) == 0){
+    foreach (EventHandlerDescriptorConstPtr event , result->getEventHandlers()){
+        if(event->getName().compare("click", Qt::CaseInsensitive) == 0 &&
+                event->getDomElement()->getTagName().compare("button", Qt::CaseInsensitive) == 0){
             return event;
         }
     }
     // If we found none, return null.
-    return NULL;
+    // TODO, we should really not do this... could we throw an exception?
+    return EventHandlerDescriptorConstPtr();
 }
 
 
@@ -94,13 +95,13 @@ void EntryPointDetector::printResultInfo(ExecutionResultPtr result)
 
     // Begin by just listing some relevant information from the execution result...
     QString eventNames;
-    foreach(EventHandlerDescriptor* event , result->getEventHandlers()){
-        eventNames.append(QString("%1 on %2, ").arg(event->name()).arg(event->domElement()->getTagName()));
+    foreach (EventHandlerDescriptorConstPtr event , result->getEventHandlers()){
+        eventNames.append(QString("%1 on %2, ").arg(event->getName()).arg(event->getDomElement()->getTagName()));
     }
     Log::info(QString("CONCOLIC-INFO: Event Handlers (%1): %2").arg(result->getEventHandlers().length()).arg(eventNames).toStdString());
 
     QString formNames;
-    foreach(QSharedPointer<const FormFieldDescriptor> field, result->getFormFields()){
+    foreach (QSharedPointer<const FormFieldDescriptor> field, result->getFormFields()){
         formNames.append(field->getDomElement()->getTagName());
         formNames.append(", ");
     }

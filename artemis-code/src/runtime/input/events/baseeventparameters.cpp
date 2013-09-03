@@ -13,23 +13,27 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#include "baseeventparameters.h"
+
 #include "eventypes.h"
 #include "util/randomutil.h"
+#include "artemisglobals.h"
+
+#include "baseeventparameters.h"
 
 namespace artemis
 {
 
-BaseEventParameters::BaseEventParameters(QObject* parent, QString name, bool bubbles, bool cancelable)
-    : EventParameters(parent)
+BaseEventParameters::BaseEventParameters(QString name, bool bubbles, bool cancelable) :
+    EventParameters(),
+    name(name),
+    cancelable(cancelable),
+    bubbles(bubbles)
+
 {
     Q_ASSERT(!name.isEmpty());
-    this->name = name;
-    this->bubbles = bubbles;
-    this->cancelable = cancelable;
 }
 
-QString BaseEventParameters::jsString() const
+QString BaseEventParameters::getJsString() const
 {
     if (!cachedJsString.isEmpty()) {
         return cachedJsString;
@@ -48,7 +52,7 @@ QString BaseEventParameters::jsString() const
     return res;
 }
 
-EventType BaseEventParameters::type() const
+EventType BaseEventParameters::getType() const
 {
     return BASE_EVENT;
 }

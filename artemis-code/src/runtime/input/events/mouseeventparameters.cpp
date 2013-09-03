@@ -21,11 +21,10 @@
 namespace artemis
 {
 
-MouseEventParameters::MouseEventParameters(QObject* parent, QString type, bool canBubble, bool cancelable,
+MouseEventParameters::MouseEventParameters(QString type, bool canBubble, bool cancelable,
         int detail, int screenX, int screenY, int clientX, int clientY,
-        bool ctrlKey, bool altKey, bool  shiftKey, bool  metaKey,
-        int button)
-    : EventParameters(parent)
+        bool ctrlKey, bool altKey, bool  shiftKey, bool  metaKey, int button)
+    : EventParameters()
 {
     Q_ASSERT(!type.isEmpty());
     this->altKey = altKey;
@@ -76,7 +75,7 @@ the Event's mouse event.button.
 relatedTarget
 the Event's related EventTarget. Only used with some event types (e.g. mouseover and mouseout). In other cases, pass null.
   */
-QString MouseEventParameters::jsString() const
+QString MouseEventParameters::getJsString() const
 {
     if (!cachedJsString.isEmpty()) {
         return cachedJsString;
@@ -107,7 +106,7 @@ QString MouseEventParameters::jsString() const
     return res;
 }
 
-EventType MouseEventParameters::type() const
+EventType MouseEventParameters::getType() const
 {
     return MOUSE_EVENT;
 }
