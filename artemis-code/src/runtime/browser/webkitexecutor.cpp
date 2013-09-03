@@ -255,8 +255,9 @@ void WebKitExecutor::slLoadFinished(bool ok)
         mJavascriptStatistics->notifyStartingEvent(input);
         mPathTracer->notifyStartingEvent(input);
 
-        input->apply(this->mPage, this->mWebkitListener);
+        mPage->updateFormIdentifiers();
 
+        input->apply(this->mPage, this->mWebkitListener);
     }
 
     if (!mKeepOpen) {

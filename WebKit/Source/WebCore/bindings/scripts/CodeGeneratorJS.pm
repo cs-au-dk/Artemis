@@ -1855,6 +1855,7 @@ sub GenerateImplementation
                         push(@implContent, "\n");
                         push(@implContent, "        WTF::AtomicString inputName = impl->getAttribute(WebCore::HTMLNames::nameAttr);\n");
                         push(@implContent, "        WTF::AtomicString inputId = impl->getAttribute(WebCore::HTMLNames::idAttr);\n");
+                        push(@implContent, "        WTF::AtomicString inputArtemisId = impl->getAttribute(\"__ARTEMIS__FORM__IDENTIFIER__\");\n");
                         push(@implContent, "\n");
                         push(@implContent, "        Symbolic::SourceIdentifierMethod method;\n");
 
@@ -1864,8 +1865,11 @@ sub GenerateImplementation
                         push(@implContent, "        } else if (inputId.length() != 0) {\n");
                         push(@implContent, "            strs << inputId.string().ascii().data();\n");
                         push(@implContent, "            method = Symbolic::ELEMENT_ID;\n");
+                        push(@implContent, "        } else if (inputArtemisId.length() != 0) {\n");
+                        push(@implContent, "            strs << inputArtemisId.string().ascii().data();\n");
+                        push(@implContent, "            method = Symbolic::ARTEMIS_ID;\n");
                         push(@implContent, "        } else {\n");
-                        push(@implContent, "            std::cout << \"Warning: Form input element without ID or name used - a sequential ID was used for the symbolic value. This will break concolic execution!\" << std::endl;\n");
+                        push(@implContent, "            std::cout << \"Warning: Form input element without ID, name or Artemis ID used - a sequential ID was used for the symbolic value. This will break concolic execution!\" << std::endl;\n");
                         push(@implContent, "            strs << Symbolic::NEXT_SYMBOLIC_ID++;\n");
                         push(@implContent, "            method = Symbolic::LEGACY;\n");
                         push(@implContent, "        }\n");

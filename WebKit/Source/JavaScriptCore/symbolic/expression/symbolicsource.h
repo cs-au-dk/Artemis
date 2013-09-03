@@ -4,7 +4,7 @@
 namespace Symbolic {
 
 enum SourceIdentifierMethod {
-    INPUT_NAME, ELEMENT_ID, LEGACY
+    INPUT_NAME, ELEMENT_ID, ARTEMIS_ID, LEGACY
 };
 
 enum SourceType {

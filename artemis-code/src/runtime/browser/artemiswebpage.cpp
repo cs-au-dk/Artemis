@@ -14,6 +14,7 @@
  * limitations under the License.
  */
 #include <QDebug>
+#include <QWebFrame>
 
 #include "artemisglobals.h"
 #include "statistics/statsstorage.h"
@@ -27,6 +28,12 @@ ArtemisWebPage::ArtemisWebPage() :
     QWebPage(NULL),
     mAcceptNavigation(true) // Unless we are in manual mode and choose otherwise, we accept all navigation.
 {
+}
+
+void ArtemisWebPage::updateFormIdentifiers()
+{
+    QString js = "for (var i = 0; i < document.forms.length; i++) { var form = document.forms[i]; for (var j = 0; j < form.elements.length; j++) { form.elements[j].__ARTEMIS__FORM__IDENTIFIER__ = i + \"-\" + j; }}";
+    currentFrame()->evaluateJavaScript(js);
 }
 
 void ArtemisWebPage::javaScriptAlert(QWebFrame* frame, const QString& msg)
