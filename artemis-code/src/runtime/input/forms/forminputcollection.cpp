@@ -14,47 +14,43 @@
  * limitations under the License.
  */
 
-#include "forminput.h"
+#include <QDebug>
 
 #include "artemisglobals.h"
+
+#include "forminputcollection.h"
 
 namespace artemis
 {
 
-FormInput::FormInput(QSet<QPair<QSharedPointer<const FormField>, const FormFieldValue*> >& inputs) :
+FormInputCollection::FormInputCollection(const QList<FormInputPair>& inputs) :
     mInputs(inputs)
 {
 }
 
-QSet<QSharedPointer<const FormField> > FormInput::getFields() const
+QSet<FormFieldDescriptorConstPtr> FormInputCollection::getFields() const
 {
-    QSet<QSharedPointer<const FormField> > fields;
+    QSet<FormFieldDescriptorConstPtr> fields;
 
-    foreach(input_t input, mInputs) {
+    foreach(FormInputPair input, mInputs) {
         fields.insert(input.first);
     }
 
     return fields;
 }
 
-QSet<QPair<QSharedPointer<const FormField>, const FormFieldValue*> > FormInput::getInputs() const
+void FormInputCollection::writeToPage(ArtemisWebPagePtr page) const
 {
-    return mInputs;
-}
-
-void FormInput::writeToPage(ArtemisWebPagePtr page) const
-{
-    foreach(input_t input, mInputs) {
-        const DOMElementDescriptor* elmDesc = input.first->getDomElement();
-        QWebElement element = elmDesc->getElement(page);
+    foreach(FormInputPair input, mInputs) {
+        QWebElement element = input.first->getDomElement()->getElement(page);;
 
         if (!element.isNull()) {
-            element.setAttribute("value", input.second->stringRepresentation());
+            element.setAttribute("value", input.second);
         }
     }
 }
 
-QDebug operator<<(QDebug dbg, FormInput* f)
+QDebug operator<<(QDebug dbg, FormInputCollection* f)
 {
     dbg.nospace() << f->mInputs;
     return dbg.space();

@@ -240,7 +240,7 @@ PassRefPtr<StringImpl> AtomicString::add(const UChar* s)
     if (!s)
         return 0;
 
-    int length = 0;
+    unsigned int length = 0;
     while (s[length] != UChar(0))
         length++;
 

@@ -13,38 +13,15 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef FORMFIELDVALUE_H
-#define FORMFIELDVALUE_H
 
-#include <QObject>
-#include <QString>
+#include "artformruntime.h"
 
 namespace artemis
 {
 
-class FormFieldValue : public QObject
+ArtFormRuntime::ArtFormRuntime(QObject* parent, const Options& options, const QUrl& url) :
+    Runtime(parent, options,url)
 {
-    Q_OBJECT
-
-public:
-    FormFieldValue(QObject* parent, QString value);
-    FormFieldValue(QObject* parent, bool value);
-    FormFieldValue(QObject* parent);
-
-    bool getBool() const;
-    QString getStr() const;
-    bool isNoValue() const;
-    QString stringRepresentation() const;
-
-    QDebug friend operator<<(QDebug dbg, const FormFieldValue& f);
-
-private:
-    QString strVal;
-    bool boolVal;
-    bool isBool;
-    bool isNoVal;
-};
-
 }
 
-#endif // FORMFIELDVALUE_H
+}

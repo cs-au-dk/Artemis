@@ -2010,10 +2010,10 @@ void BytecodeGenerator::pushFinallyContext(StatementNode* finallyBlock)
     scope.isFinallyBlock = true;
     FinallyContext context = {
         finallyBlock,
-        m_scopeContextStack.size(),
-        m_switchContextStack.size(),
-        m_forInContextStack.size(),
-        m_labelScopes.size(),
+        (unsigned int)m_scopeContextStack.size(),
+        (unsigned int)m_switchContextStack.size(),
+        (unsigned int)m_forInContextStack.size(),
+        (unsigned int)m_labelScopes.size(),
         m_finallyDepth,
         m_dynamicScopeDepth
     };
@@ -2260,10 +2260,10 @@ RegisterID* BytecodeGenerator::emitCatch(RegisterID* targetRegister, Label* star
 #if ENABLE(LLINT)
     HandlerInfo info = { start->bind(0, 0), end->bind(0, 0), instructions().size(), m_dynamicScopeDepth + m_baseScopeDepth, CodeLocationLabel(MacroAssemblerCodePtr::createFromExecutableAddress(bitwise_cast<void*>(&llint_op_catch))) };
 #else
-    HandlerInfo info = { start->bind(0, 0), end->bind(0, 0), instructions().size(), m_dynamicScopeDepth + m_baseScopeDepth, CodeLocationLabel() };
+    HandlerInfo info = { (unsigned int)start->bind(0, 0), (unsigned int)end->bind(0, 0), (unsigned int)instructions().size(), (unsigned int)(m_dynamicScopeDepth + m_baseScopeDepth), CodeLocationLabel() };
 #endif
 #else
-    HandlerInfo info = { start->bind(0, 0), end->bind(0, 0), instructions().size(), m_dynamicScopeDepth + m_baseScopeDepth };
+    HandlerInfo info = { (unsigned int)start->bind(0, 0), (unsigned int)end->bind(0, 0), (unsigned int)instructions().size(), (unsigned int)(m_dynamicScopeDepth + m_baseScopeDepth) };
 #endif
 
     m_codeBlock->addExceptionHandler(info);
@@ -2293,7 +2293,7 @@ void BytecodeGenerator::emitPushNewScope(RegisterID* dst, const Identifier& prop
 
 void BytecodeGenerator::beginSwitch(RegisterID* scrutineeRegister, SwitchInfo::SwitchType type)
 {
-    SwitchInfo info = { instructions().size(), type };
+    SwitchInfo info = { (unsigned int)instructions().size(), type };
     switch (type) {
         case SwitchInfo::SwitchImmediate:
             emitOpcode(op_switch_imm);

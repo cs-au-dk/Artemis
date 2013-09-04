@@ -661,7 +661,7 @@ static inline EncodedJSValue replaceUsingStringSearch(ExecState* exec, JSString*
     UString leftPart(StringImpl::create(stringImpl, 0, matchStart));
 
     size_t matchEnd = matchStart + searchString.impl()->length();
-    int ovector[2] = { matchStart,  matchEnd};
+    int ovector[2] = { (int)matchStart,  (int)matchEnd};
     UString middlePart = substituteBackreferences(replaceString, string, ovector, 0);
 
     size_t leftLength = stringImpl->length() - matchEnd;

@@ -24,7 +24,7 @@
 #include <QDebug>
 #include <QWebExecutionListener>
 
-#include "runtime/input/forms/formfield.h"
+#include "runtime/input/forms/formfielddescriptor.h"
 #include "runtime/input/events/domelementdescriptor.h"
 #include "runtime/input/baseinput.h"
 #include "strategies/inputgenerator/targets/jquerylistener.h"

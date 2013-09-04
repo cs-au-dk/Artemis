@@ -15,101 +15,77 @@
  */
 
 #include <QtWebKit>
-#include <QtGlobal>
 #include <artemisglobals.h>
 #include <QHash>
+#include <QDebug>
 
 #include "domelementdescriptor.h"
 
 namespace artemis
 {
 
-DOMElementDescriptor::DOMElementDescriptor(QObject* parent, QWebElement* elm) : QObject(parent)
+const QWebElement NULL_WEB_ELEMENT;
+
+DOMElementDescriptor::DOMElementDescriptor(QWebElement* elm) :
+    mIsDocument(false),
+    mIsBody(false),
+    mIsMainframe(false),
+    mInvalid(false)
 {
     Q_CHECK_PTR(elm);
 
-    this->mInvalid = false;
-
-    //Q_ASSERT((*elm) != NULL_WEB_ELEMENT);
     if (elm->isNull()) {
-        //Asume document
-        this->isDocument = true;
-        this->isMainframe = true;
-        this->tagName = "<document>";
-        this->frameName = "<mainframe>";
-    }
-    else {
-        this->id = elm->attribute("id");
-        this->tagName = elm->tagName();
-        this->classLine = QString(elm->classes().join(" "));
-        //this->frameName = elm->webFrame()->frameName();
-        isBody = isDocument = isMainframe = false;
+        // Asume document
+
+        mIsDocument = true;
+        mIsMainframe = true;
+
+        mTagName = "<document>";
+
+    } else {
+        mId = elm->attribute("id");
+        mName = elm->attribute("name");
+        mTagName = elm->tagName();
+        mClassLine = QString(elm->classes().join(" "));
+
         //setFramePath(elm);
         setElementPath(elm);
     }
 }
 
-DOMElementDescriptor::DOMElementDescriptor(QObject* parent, const DOMElementDescriptor* other) : QObject(parent)
-{
-    this->elementPath = QList<int>(other->elementPath);
-    this->framePath = QList<int>(other->framePath);
-    this->id = other->id;
-    this->tagName = other->tagName;
-    this->classLine = other->classLine;
-    //this->frameName = other.frameName;
-    this->isBody = other->isBody;
-    this->isDocument = other->isDocument;
-    this->isMainframe = other->isMainframe;
-    this->mInvalid = other->mInvalid;
-}
-
 QWebElement DOMElementDescriptor::getElement(ArtemisWebPagePtr page) const
 {
-    Q_CHECK_PTR(page);
-    QWebFrame* frame = getFrame(page);
-    QWebElement elm = getElementFrame(frame);
+    QWebFrame* frame = selectFrame(page);
+    QWebElement elm = selectElement(frame);
+
     Q_ASSERT(elm != NULL_WEB_ELEMENT);
     return elm;
 }
 
-QString DOMElementDescriptor::getTagName() const
+QWebFrame* DOMElementDescriptor::selectFrame(ArtemisWebPagePtr page) const
 {
-    return this->tagName;
-}
-
-QString DOMElementDescriptor::getId() const
-{
-    return this->id;
-}
-
-QString DOMElementDescriptor::getClass() const
-{
-    return this->classLine;
-}
-
-QWebFrame* DOMElementDescriptor::getFrame(ArtemisWebPagePtr page) const
-{
-    Q_CHECK_PTR(page);
-
-    if (isMainframe)
-        { return page->mainFrame(); }
+    if (mIsMainframe) {
+        return page->mainFrame();
+    }
 
     QWebFrame* current = page->mainFrame();
-    foreach(int id, framePath) {
+    foreach(int id, mFramePath) {
         current = current->childFrames().at(id);
     }
+
     Q_CHECK_PTR(current);
     return current;
 }
 
-QWebElement DOMElementDescriptor::getElementFrame(QWebFrame* frame) const
+QWebElement DOMElementDescriptor::selectElement(QWebFrame* frame) const
 {
     Q_CHECK_PTR(frame);
 
-    if (isDocument)
-        { return frame->documentElement(); }
+    if (mIsDocument) {
+        return frame->documentElement();
+    }
 
-    if (isBody) {
+    if (mIsBody) {
         QWebElement body = frame->findFirstElement("body");
         Q_ASSERT(body != NULL_WEB_ELEMENT);
         return body;
@@ -117,33 +93,33 @@ QWebElement DOMElementDescriptor::getElementFrame(QWebFrame* frame) const
 
     QWebElement current = frame->findFirstElement("body");
     Q_ASSERT(current != NULL_WEB_ELEMENT);
-    // qDebug() << "Trying to get element: " << elementPath << *this;
-    foreach(int id, elementPath) {
-        current = nthChild(current, id);
+
+    foreach(int id, mElementPath) {
+        current = selectNthChild(current, id);
 
         if (current == NULL_WEB_ELEMENT) {
-            qDebug() << "Invalid frame path: " << *this;
+            qDebug() << "ERROR: Invalid DOM element descriptor applied to web page";
             return QWebElement();
         }
     }
+
     return current;
 }
 
-QWebElement DOMElementDescriptor::nthChild(QWebElement elm, int n) const
+QWebElement DOMElementDescriptor::selectNthChild(QWebElement elm, int n) const
 {
     QWebElement currentChild = elm.firstChild();
-    //qDebug() << "1" << currentChild.tagName();
-    int i = 1;
 
+    int i = 1;
     while (i < n) {
         currentChild = currentChild.nextSibling();
-        //qDebug() << "2" << currentChild.tagName();
         i++;
     }
 
     return currentChild;
 }
 
+/*
 void DOMElementDescriptor::setFramePath(QWebElement* elm)
 {
     QWebFrame* elementFrame = elm->webFrame();
@@ -151,7 +127,7 @@ void DOMElementDescriptor::setFramePath(QWebElement* elm)
     QWebFrame* mainFrame = page->mainFrame();
 
     if (elementFrame == mainFrame) {
-        isMainframe = true;
+        mIsMainframe = true;
         return;
     }
 
@@ -170,15 +146,18 @@ void DOMElementDescriptor::setFramePath(QWebElement* elm)
         }
     }
 }
+*/
 
 void DOMElementDescriptor::setElementPath(QWebElement* elm)
 {
     if (elm->tagName() == "body") {
-        isBody = true;
+        mIsBody = true;
         return;
+
     }
-    else if (elm->tagName() == "document" || elm->tagName().toLower() == "html") {
-        isDocument = true;
+
+    if (elm->tagName() == "document" || elm->tagName().toLower() == "html") {
+        mIsDocument = true;
         return;
     }
 
@@ -186,12 +165,10 @@ void DOMElementDescriptor::setElementPath(QWebElement* elm)
     QWebElement parent = elm->parent();
     QWebElement current = *elm;
 
-    //qDebug() << "Starting setElementPath for \n" << elm->toOuterXml()  <<"\nEND\n";
     while (parent != document) {
         int index = 0;
         QWebElement c = parent.firstChild();
 
-        //  qDebug() << "!><! \n" << parent.toOuterXml() << "\nEND\n";
         if (c == NULL_WEB_ELEMENT) {
             this->mInvalid = true;
             break;
@@ -207,11 +184,10 @@ void DOMElementDescriptor::setElementPath(QWebElement* elm)
             }
         }
 
-        elementPath.prepend(index + 1);
+        mElementPath.prepend(index + 1);
         current = parent;
         parent = parent.parent();
 
-        //qDebug() << "Is null: " << parent.isNull();
         if (parent == NULL_WEB_ELEMENT) {
             this->mInvalid = true;
             break;
@@ -219,31 +195,26 @@ void DOMElementDescriptor::setElementPath(QWebElement* elm)
     }
 }
 
-bool DOMElementDescriptor::isInvalid() const
-{
-    return this->mInvalid;
-}
-
 uint DOMElementDescriptor::hashCode() const {
 
     uint frame_hash = 0;
 
-    if (isMainframe) {
+    if (mIsMainframe) {
         frame_hash = 7;
     } else {
-        foreach (int fpath, framePath) {
+        foreach (int fpath, mFramePath) {
             frame_hash = fpath + 17 * frame_hash;
         }
     }
 
     uint element_hash = 0;
 
-    if (isDocument) {
+    if (mIsDocument) {
         element_hash = 23;
-    } else if (isBody) {
+    } else if (mIsBody) {
         element_hash = 7;
     } else {
-        foreach (int element, elementPath) {
+        foreach (int element, mElementPath) {
             element_hash = element + 23 * element_hash;
         }
     }
@@ -255,39 +226,20 @@ QString DOMElementDescriptor::toString() const
 {
     QString elmName = "";
 
-    if (!id.isEmpty()) {
-        elmName = id;
+    if (!mId.isEmpty()) {
+        elmName = mId;
     }
-    else if (isBody) {
+    else if (mIsBody) {
         elmName = "body";
     }
-    else if (isDocument) {
+    else if (mIsDocument) {
         elmName = "document";
     }
     else {
-        elmName = tagName;
+        elmName = mTagName;
     }
 
     return elmName;
-}
-
-QDebug operator<<(QDebug dbg, const DOMElementDescriptor& e)
-{
-    QString elmName = "";
-
-    if (!e.id.isEmpty()) {
-        elmName = e.id;
-    }
-    else if (e.isBody)
-        { elmName = "body"; }
-    else if (e.isDocument)
-        { elmName = "document"; }
-    else
-        { elmName = e.tagName; }
-
-    //Include frame info?
-    dbg.nospace() << elmName;
-    return dbg.space();
 }
 
 }

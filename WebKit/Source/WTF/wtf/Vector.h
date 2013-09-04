@@ -629,7 +629,7 @@ namespace WTF {
         template<typename U> U* expandCapacity(size_t newMinCapacity, U*); 
         template<typename U> void appendSlowCase(const U&);
 
-        class VectorReverseProxy : private Vector {
+        class VectorReverseProxy : private Vector<T> {
         public:
             typedef typename Vector::reverse_iterator iterator;
             typedef typename Vector::const_reverse_iterator const_iterator;

@@ -340,17 +340,17 @@ void TextureMapperGL::drawTexture(uint32_t texture, Flags flags, const IntSize& 
             targetRect.x(), targetRect.y(), 0, 1));
 
     const GLfloat m4[] = {
-        matrix.m11(), matrix.m12(), matrix.m13(), matrix.m14(),
-        matrix.m21(), matrix.m22(), matrix.m23(), matrix.m24(),
-        matrix.m31(), matrix.m32(), matrix.m33(), matrix.m34(),
-        matrix.m41(), matrix.m42(), matrix.m43(), matrix.m44()
+        (const GLfloat)matrix.m11(), (const GLfloat)matrix.m12(), (const GLfloat)matrix.m13(), (const GLfloat)matrix.m14(),
+        (const GLfloat)matrix.m21(), (const GLfloat)matrix.m22(), (const GLfloat)matrix.m23(), (const GLfloat)matrix.m24(),
+        (const GLfloat)matrix.m31(), (const GLfloat)matrix.m32(), (const GLfloat)matrix.m33(), (const GLfloat)matrix.m34(),
+        (const GLfloat)matrix.m41(), (const GLfloat)matrix.m42(), (const GLfloat)matrix.m43(), (const GLfloat)matrix.m44()
     };
 
     const GLfloat m4src[] = {
         1, 0, 0, 0,
-        0, (flags & ShouldFlipTexture) ? -1 : 1, 0, 0,
+        0, (const GLfloat)((flags & ShouldFlipTexture) ? -1 : 1), 0, 0,
         0, 0, 1, 0,
-        0, (flags & ShouldFlipTexture) ? 1 : 0, 0, 1};
+        0, (const GLfloat)((flags & ShouldFlipTexture) ? 1 : 0), 0, 1};
 
     GL_CMD(glUniformMatrix4fv(shaderInfo->matrixVariable(), 1, GL_FALSE, m4));
     GL_CMD(glUniformMatrix4fv(shaderInfo->sourceMatrixVariable(), 1, GL_FALSE, m4src));
@@ -701,10 +701,10 @@ void TextureMapperGL::beginClip(const TransformationMatrix& modelViewMatrix, con
                 targetRect.x(), targetRect.y(), 0, 1));
 
     const GLfloat m4[] = {
-        matrix.m11(), matrix.m12(), matrix.m13(), matrix.m14(),
-        matrix.m21(), matrix.m22(), matrix.m23(), matrix.m24(),
-        matrix.m31(), matrix.m32(), matrix.m33(), matrix.m34(),
-        matrix.m41(), matrix.m42(), matrix.m43(), matrix.m44()
+        (const GLfloat)matrix.m11(), (const GLfloat)matrix.m12(), (const GLfloat)matrix.m13(), (const GLfloat)matrix.m14(),
+        (const GLfloat)matrix.m21(), (const GLfloat)matrix.m22(), (const GLfloat)matrix.m23(), (const GLfloat)matrix.m24(),
+        (const GLfloat)matrix.m31(), (const GLfloat)matrix.m32(), (const GLfloat)matrix.m33(), (const GLfloat)matrix.m34(),
+        (const GLfloat)matrix.m41(), (const GLfloat)matrix.m42(), (const GLfloat)matrix.m43(), (const GLfloat)matrix.m44()
     };
 
     const GLfloat m4all[] = {

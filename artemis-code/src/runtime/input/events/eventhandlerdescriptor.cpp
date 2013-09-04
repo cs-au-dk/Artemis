@@ -21,13 +21,13 @@ namespace artemis
 EventHandlerDescriptor::EventHandlerDescriptor(QObject* parent, QWebElement* elem, QString name) : QObject(parent)
 {
     this->eventName = name;
-    this->element = new DOMElementDescriptor(parent, elem);
+    this->element = DOMElementDescriptorConstPtr(new DOMElementDescriptor(elem));
 }
 
 EventHandlerDescriptor::EventHandlerDescriptor(QObject* parent, const EventHandlerDescriptor* other) : QObject(parent)
 {
     this->eventName = other->eventName;
-    this->element = new DOMElementDescriptor(parent, other->element);
+    this->element = other->element;
 }
 
 EventHandlerDescriptor::~EventHandlerDescriptor()
@@ -38,11 +38,6 @@ EventHandlerDescriptor::~EventHandlerDescriptor()
 QString EventHandlerDescriptor::name() const
 {
     return this->eventName;
-}
-
-const DOMElementDescriptor* EventHandlerDescriptor::domElement() const
-{
-    return element;
 }
 
 EventType EventHandlerDescriptor::getEventType() const
@@ -67,7 +62,7 @@ QString EventHandlerDescriptor::toString() const
 
 QDebug operator<<(QDebug dbg, const EventHandlerDescriptor& e)
 {
-    dbg.nospace() << "(" + e.eventName << "," << e.element << ")";
+    dbg.nospace() << "(" + e.eventName << "," << e.element->toString() << ")";
     return dbg.space();
 }
 

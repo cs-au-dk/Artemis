@@ -29,10 +29,8 @@ public:
 
     StaticFormInputGenerator(QList<QString> excludedFormFields);
 
-    QSharedPointer<FormInput> generateFormFields(QObject* parent,
-                                                 QSet<QSharedPointer<const FormField> > fi,
-                                                 QSharedPointer<const ExecutionResult> executionResult) const;
-
+    FormInputCollectionPtr generateFormFields(QSet<FormFieldDescriptorConstPtr> fields,
+                                              ExecutionResultConstPtr) const;
 };
 
 typedef QSharedPointer<StaticFormInputGenerator> StaticFormInputGeneratorPtr;
