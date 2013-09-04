@@ -221,6 +221,9 @@ bool domNodeSignature(JSC::CallFrame * cframe, JSC::JSObject * domElement, QStri
 **/
 void QWebExecutionListener::javascript_called_function(const JSC::DebuggerCallFrame& frame) {
 
+    if (!JSC::Interpreter::m_enableInstrumentations)
+        return;
+
     std::string functionName = std::string(frame.calculatedFunctionName().ascii().data());
 
     JSC::CodeBlock* codeBlock = frame.callFrame()->codeBlock();
@@ -270,6 +273,9 @@ void QWebExecutionListener::javascript_called_function(const JSC::DebuggerCallFr
 
 void QWebExecutionListener::javascript_returned_function(const JSC::DebuggerCallFrame& frame) {
 
+    if (!JSC::Interpreter::m_enableInstrumentations)
+        return;
+
     std::string functionName = std::string(frame.calculatedFunctionName().ascii().data());
 
     emit sigJavascriptFunctionReturned(QString::fromStdString(functionName));
@@ -296,10 +302,17 @@ void QWebExecutionListener::url_changed(JSC::JSValue value, JSC::ExecState* e) {
 
 void QWebExecutionListener::javascriptConstantStringEncountered(std::string constant)
 {
+    if (!JSC::Interpreter::m_enableInstrumentations)
+        return;
+
     emit sigJavascriptConstantStringEncountered(QString::fromStdString(constant));
 }
 
 void QWebExecutionListener::javascript_eval_call(const char * eval_string) {
+
+    if (!JSC::Interpreter::m_enableInstrumentations)
+        return;
+
     Q_CHECK_PTR(eval_string);
     emit this->eval_call(QString(tr(eval_string)));
 }
@@ -309,12 +322,19 @@ void QWebExecutionListener::javascript_code_loaded(JSC::SourceProvider* sp, JSC:
     // tested with artemis - e.g. if you are tracking an error and reach this point, then you
     // have come to the right place.
 
+    if (!JSC::Interpreter::m_enableInstrumentations)
+        return;
+
     std::string source(sp->getRange(0, sp->length()).utf8().data());
 
     emit loadedJavaScript(QString(tr(source.c_str())), m_sourceRegistry.get(sp));
 }
 
 void QWebExecutionListener::javascript_executed_statement(const JSC::DebuggerCallFrame& callFrame, uint linenumber) {
+
+    if (!JSC::Interpreter::m_enableInstrumentations)
+        return;
+
     JSC::SourceProvider* sourceProvider = callFrame.callFrame()->codeBlock()->source();
 
     emit statementExecuted(linenumber,
@@ -322,6 +342,9 @@ void QWebExecutionListener::javascript_executed_statement(const JSC::DebuggerCal
 }
 
 void QWebExecutionListener::javascript_bytecode_executed(JSC::Interpreter* interpreter, JSC::CodeBlock* codeBlock, JSC::Instruction* instruction, const JSC::BytecodeInfo& info) {
+
+    if (!JSC::Interpreter::m_enableInstrumentations)
+        return;
 
     uint bytecodeOffset = instruction - codeBlock->instructions().begin();
 
@@ -339,6 +362,10 @@ void QWebExecutionListener::javascript_bytecode_executed(JSC::Interpreter* inter
 
 void QWebExecutionListener::javascript_property_read(std::string propertyName, JSC::CallFrame* callFrame)
 {
+
+    if (!JSC::Interpreter::m_enableInstrumentations)
+        return;
+
     emit sigJavascriptPropertyRead(QString::fromStdString(propertyName),
                                    (intptr_t)callFrame->codeBlock(),
                                    callFrame->codeBlock()->source()->asID(),
@@ -347,6 +374,10 @@ void QWebExecutionListener::javascript_property_read(std::string propertyName, J
 
 void QWebExecutionListener::javascript_property_written(std::string propertyName, JSC::CallFrame* callFrame)
 {
+
+    if (!JSC::Interpreter::m_enableInstrumentations)
+        return;
+
     emit sigJavascriptPropertyWritten(QString::fromStdString(propertyName),
                                       (intptr_t)callFrame->codeBlock(),
                                       callFrame->codeBlock()->source()->asID(),
@@ -355,6 +386,9 @@ void QWebExecutionListener::javascript_property_written(std::string propertyName
 
 void QWebExecutionListener::javascript_branch_executed(bool jump, Symbolic::Expression* condition, JSC::ExecState* callFrame, const JSC::Instruction* instruction, const JSC::BytecodeInfo& info)
 {
+    if (!JSC::Interpreter::m_enableInstrumentations)
+        return;
+
     uint bytecodeOffset = instruction - callFrame->codeBlock()->instructions().begin();
 
     ByteCodeInfoStruct binfo;

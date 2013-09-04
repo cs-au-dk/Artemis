@@ -18,6 +18,7 @@
 
 #include "artemisglobals.h"
 #include "statistics/statsstorage.h"
+#include "model/coverage/coveragelistener.h"
 
 #include "artemiswebpage.h"
 
@@ -33,7 +34,7 @@ ArtemisWebPage::ArtemisWebPage() :
 void ArtemisWebPage::updateFormIdentifiers()
 {
     QString js = "for (var i = 0; i < document.forms.length; i++) { var form = document.forms[i]; for (var j = 0; j < form.elements.length; j++) { form.elements[j].__ARTEMIS__FORM__IDENTIFIER__ = i + \"-\" + j; }}";
-    currentFrame()->evaluateJavaScript(js);
+    currentFrame()->documentElement().evaluateJavaScript(js, DONT_MEASURE_COVERAGE, true);
 }
 
 void ArtemisWebPage::javaScriptAlert(QWebFrame* frame, const QString& msg)

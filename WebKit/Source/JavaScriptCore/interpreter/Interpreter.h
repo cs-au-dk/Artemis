@@ -154,6 +154,7 @@ namespace JSC {
 
 #ifdef ARTEMIS
         static Symbolic::SymbolicInterpreter* m_symbolic;
+        static bool m_enableInstrumentations;
 #endif
 
     private:

@@ -59,6 +59,10 @@
 #include <wtf/Vector.h>
 #include <wtf/text/CString.h>
 
+#ifdef ARTEMIS
+#include "interpreter/Interpreter.h"
+#endif
+
 #include <QPainter>
 
 using namespace WebCore;
@@ -769,7 +773,7 @@ static bool setupScriptContext(WebCore::Element* element, v8::Handle<v8::Value>&
     Executes \a scriptSource with this element as \c this object.
 */
 #ifdef ARTEMIS
-QVariant QWebElement::evaluateJavaScript(const QString &scriptSource, const QUrl& u)
+QVariant QWebElement::evaluateJavaScript(const QString &scriptSource, const QUrl& u, bool hideFromArtemis)
 #else
 QVariant QWebElement::evaluateJavaScript(const QString& scriptSource)
 #endif
@@ -793,7 +797,9 @@ QVariant QWebElement::evaluateJavaScript(const QString& scriptSource)
 
     JSC::JSValue evaluationException;
 #ifdef ARTEMIS
+    JSC::Interpreter::m_enableInstrumentations = !hideFromArtemis;
     JSC::JSValue evaluationResult = JSC::evaluate(state, scopeChain, JSC::makeSource(script, JSC::UString(u.toString().toStdString().c_str())), thisValue, &evaluationException);
+    JSC::Interpreter::m_enableInstrumentations = true;
 #else
     JSC::JSValue evaluationResult = JSC::evaluate(state, scopeChain, JSC::makeSource(script), thisValue, &evaluationException);
 #endif

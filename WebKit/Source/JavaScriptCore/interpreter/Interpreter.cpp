@@ -83,6 +83,7 @@ namespace JSC {
 
 #ifdef ARTEMIS
 Symbolic::SymbolicInterpreter* Interpreter::m_symbolic = new Symbolic::SymbolicInterpreter();
+bool Interpreter::m_enableInstrumentations = true;
 #endif
 
 // Returns the depth of the scope chain within a given call frame.
