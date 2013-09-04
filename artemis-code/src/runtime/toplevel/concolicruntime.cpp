@@ -234,6 +234,11 @@ void ConcolicRuntime::mergeTraceIntoTree()
         // A normal run.
         // Merge trace with tracegraph
         mSymbolicExecutionGraph = TraceMerger::merge(trace, mSymbolicExecutionGraph);
+
+        // Check if we actually explored the intended target.
+        if(mSearchStrategy->overUnexploredNode()){
+            mSearchStrategy->markNodeMissed();
+        }
     }
 
     // Dump the current state of the tree to a file.
@@ -404,6 +409,11 @@ void ConcolicRuntime::exploreNextTarget()
         // TODO: Should try someting else...?
         Log::debug("Could not solve the constraint.");
         Log::debug("Skipping this target!");
+
+        // Mark the current node as unsolvable.
+        // TODO: Add a method Solution.isUnsat() to check if the unsolved result was proved unsatisfiable or not.
+        //          Then use this to call mSearchStrategy->markNodeUnsat instead in that case.
+        mSearchStrategy->markNodeUnsolvable();
 
         // Skip this node and move on to the next.
         chooseNextTargetAndExplore();

@@ -113,7 +113,10 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/concolic/solver/constraintwriter/z3str.h \
     src/concolic/solver/z3solver.h \
     src/concolic/solver/kaluzasolver.h \
-    src/runtime/toplevel/artformruntime.h
+    src/runtime/toplevel/artformruntime.h \
+    src/concolic/executiontree/nodes/traceunexploredunsat.h \
+    src/concolic/executiontree/nodes/traceunexploredmissed.h \
+    src/concolic/executiontree/nodes/traceunexploredunsolvable.h
 
 SOURCES += src/runtime/input/ajaxinput.cpp \
     src/strategies/prioritizer/constantprioritizer.cpp \
@@ -206,6 +209,9 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/concolic/solver/constraintwriter/z3str.cpp \
     src/concolic/solver/z3solver.cpp \
     src/concolic/solver/kaluzasolver.cpp \
-    src/runtime/toplevel/artformruntime.cpp
+    src/runtime/toplevel/artformruntime.cpp \
+    src/concolic/executiontree/nodes/traceunexploredunsat.cpp \
+    src/concolic/executiontree/nodes/traceunexploredmissed.cpp \
+    src/concolic/executiontree/nodes/traceunexploredunsolvable.cpp
 
 QT += network

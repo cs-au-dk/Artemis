@@ -71,6 +71,24 @@ QString TraceDisplay::makeGraph(TraceNodePtr tree)
     }
     result += indent + "}\n\n";
 
+    result += indent + "subgraph unexplored_unsat {\n" + indent + indent + "node [label = \"UNSAT\", shape = circle, style = filled, fillcolor = lightgray];\n\n";
+    foreach(QString node, mHeaderUnexploredUnsat){
+        result += indent + indent + node + ";\n";
+    }
+    result += indent + "}\n\n";
+
+    result += indent + "subgraph unexplored_unsolvable {\n" + indent + indent + "node [label = \"Could not solve\", shape = circle, style = filled, fillcolor = lightgray];\n\n";
+    foreach(QString node, mHeaderUnexploredUnsolvable){
+        result += indent + indent + node + ";\n";
+    }
+    result += indent + "}\n\n";
+
+    result += indent + "subgraph unexplored_missed {\n" + indent + indent + "node [label = \"Missed\", shape = circle, style = filled, fillcolor = lightgray];\n\n";
+    foreach(QString node, mHeaderUnexploredMissed){
+        result += indent + indent + node + ";\n";
+    }
+    result += indent + "}\n\n";
+
     result += indent + "subgraph alerts {\n" + indent + indent + "node [shape = rectangle, style = filled, fillcolor = beige];\n\n";
     foreach(QString node, mHeaderAlerts){
         result += indent + indent + node + ";\n";
@@ -282,6 +300,42 @@ void TraceDisplay::visit(TraceUnexplored *node)
     addInEdge(name);
 }
 
+void TraceDisplay::visit(TraceUnexploredUnsat *node)
+{
+    flushAggregation();
+
+    QString name = QString("unexp_unsat_%1").arg(mNodeCounter);
+    mNodeCounter++;
+
+    mHeaderUnexploredUnsat.append(name);
+
+    addInEdge(name);
+}
+
+void TraceDisplay::visit(TraceUnexploredUnsolvable *node)
+{
+    flushAggregation();
+
+    QString name = QString("unexp_unsolvable_%1").arg(mNodeCounter);
+    mNodeCounter++;
+
+    mHeaderUnexploredUnsolvable.append(name);
+
+    addInEdge(name);
+}
+
+void TraceDisplay::visit(TraceUnexploredMissed *node)
+{
+    flushAggregation();
+
+    QString name = QString("unexp_missed_%1").arg(mNodeCounter);
+    mNodeCounter++;
+
+    mHeaderUnexploredMissed.append(name);
+
+    addInEdge(name);
+}
+
 
 void TraceDisplay::visit(TraceAlert *node)
 {
@@ -425,6 +479,9 @@ void TraceDisplay::clearData()
     mHeaderBranches.clear();
     mHeaderSymBranches.clear();
     mHeaderUnexplored.clear();
+    mHeaderUnexploredUnsat.clear();
+    mHeaderUnexploredUnsolvable.clear();
+    mHeaderUnexploredMissed.clear();
     mHeaderAlerts.clear();
     mHeaderDomMods.clear();
     mHeaderLoads.clear();

@@ -52,6 +52,9 @@ public:
     void visit(TraceConcreteBranch *node);
     void visit(TraceSymbolicBranch *node);
     void visit(TraceUnexplored* node);
+    void visit(TraceUnexploredUnsat* node);
+    void visit(TraceUnexploredUnsolvable* node);
+    void visit(TraceUnexploredMissed* node);
     void visit(TraceAlert* node);
     void visit(TraceDomModification* node);
     void visit(TracePageLoad* node);
@@ -64,7 +67,7 @@ private:
     // These lists contain the declarations of nodes which are to be put at the beginning of the file.
     // They include the node labels and any node-specific formatting.
     // Each type (e.g. branches) becomes a subgraph in the result which are styled separately.
-    QList<QString> mHeaderBranches, mHeaderSymBranches, mHeaderUnexplored, mHeaderAlerts, mHeaderDomMods, mHeaderLoads, mHeaderFunctions, mHeaderEndUnk, mHeaderEndSucc, mHeaderEndFail, mHeaderAggregates;
+    QList<QString> mHeaderBranches, mHeaderSymBranches, mHeaderUnexplored, mHeaderUnexploredUnsat, mHeaderUnexploredUnsolvable, mHeaderUnexploredMissed, mHeaderAlerts, mHeaderDomMods, mHeaderLoads, mHeaderFunctions, mHeaderEndUnk, mHeaderEndSucc, mHeaderEndFail, mHeaderAggregates;
 
     // The edges to be added to the graph.
     QList<QString> mEdges;

@@ -245,4 +245,81 @@ TraceNodePtr DepthFirstSearch::nextAfterLeaf()
 
 
 
+/*
+ *  The functions which deal with marking certain nodes as Unsat, Unsolvable, or Missed.
+ *  We do this by replacing the current TraceUnexplored with the relevant marker class.
+ */
+
+
+bool DepthFirstSearch::overUnexploredNode()
+{
+    // This method can only be called once we have started a search.
+    assert(mIsPreviousRun);
+
+    // Use mPreviousParent and mPreviousDirection to find the "current" node again, as in chooseNextTarget().
+    TraceNodePtr current;
+    if(mPreviousDirection){
+        current = mPreviousParent->getTrueBranch();
+    }else{
+        current = mPreviousParent->getFalseBranch();
+    }
+
+    return isImmediatelyUnexplored(current);
+}
+
+void DepthFirstSearch::markNodeUnsat()
+{
+    // This method can only be called once we have started a search.
+    assert(mIsPreviousRun);
+
+    // Replace the current node with TraceNodeUnsat.
+    if(mPreviousDirection){
+        // Replace the true branch of mPreviousParent.
+        assert(isImmediatelyUnexplored(mPreviousParent->getTrueBranch()));
+        mPreviousParent->setTrueBranch(TraceUnexploredUnsat::getInstance());
+    }else{
+        // Replace the false branch of mPreviousParent.
+        assert(isImmediatelyUnexplored(mPreviousParent->getFalseBranch()));
+        mPreviousParent->setFalseBranch(TraceUnexploredUnsat::getInstance());
+    }
+}
+
+void DepthFirstSearch::markNodeUnsolvable()
+{
+    // This method can only be called once we have started a search.
+    assert(mIsPreviousRun);
+
+    // Replace the current node with TraceUnexploredUnsolvable.
+    if(mPreviousDirection){
+        // Replace the true branch of mPreviousParent.
+        assert(isImmediatelyUnexplored(mPreviousParent->getTrueBranch()));
+        mPreviousParent->setTrueBranch(TraceUnexploredUnsolvable::getInstance());
+    }else{
+        // Replace the false branch of mPreviousParent.
+        assert(isImmediatelyUnexplored(mPreviousParent->getFalseBranch()));
+        mPreviousParent->setFalseBranch(TraceUnexploredUnsolvable::getInstance());
+    }
+}
+
+void DepthFirstSearch::markNodeMissed()
+{
+    // This method can only be called once we have started a search.
+    assert(mIsPreviousRun);
+
+    // Replace the current node with TraceUnexploredMissed.
+    if(mPreviousDirection){
+        // Replace the true branch of mPreviousParent.
+        assert(isImmediatelyUnexplored(mPreviousParent->getTrueBranch()));
+        mPreviousParent->setTrueBranch(TraceUnexploredMissed::getInstance());
+    }else{
+        // Replace the false branch of mPreviousParent.
+        assert(isImmediatelyUnexplored(mPreviousParent->getFalseBranch()));
+        mPreviousParent->setFalseBranch(TraceUnexploredMissed::getInstance());
+    }
+}
+
+
+
+
+
 } // namespace artemis
