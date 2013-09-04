@@ -401,9 +401,8 @@ void ConcolicRuntime::exploreNextTarget()
         preConcreteExecution();
 
     }else{
-        // TODO: Should try someting else/go concrete/...?
+        // TODO: Should try someting else...?
         Log::debug("Could not solve the constraint.");
-        Log::debug("This case is not yet implemented!");
         Log::debug("Skipping this target!");
 
         // Skip this node and move on to the next.

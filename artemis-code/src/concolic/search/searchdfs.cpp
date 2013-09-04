@@ -72,7 +72,13 @@ bool DepthFirstSearch::chooseNextTarget()
         if(isImmediatelyUnexplored(current)){
             // Then the previous run did not reach the intended target.
             // Use the same method as continueFromLeaf() to jump to the next node to be searched.
-            current = nextAfterLeaf();
+            // If the parent stack is empty here, then we have reached the end of the search.
+            if(mParentStack.empty()){
+                mFoundTarget = false;
+                return false;
+            }else{
+                current = nextAfterLeaf();
+            }
         }
 
     }else{
