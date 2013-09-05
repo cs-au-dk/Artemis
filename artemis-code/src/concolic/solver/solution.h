@@ -44,9 +44,10 @@ class Solution
 {
 
 public:
-    Solution(bool success);
+    Solution(bool success, bool unsat);
 
     bool isSolved() const;
+    bool isUnsat() const;
     void insertSymbol(QString symbol, Symbolvalue value);
     Symbolvalue findSymbol(QString symbol);
 
@@ -54,6 +55,7 @@ public:
 
 private:
     bool mSuccess;
+    bool mUnsat;
     QHash<QString, Symbolvalue> mSymbols;
 };
 

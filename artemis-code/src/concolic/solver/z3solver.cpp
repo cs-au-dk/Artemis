@@ -45,7 +45,7 @@ SolutionPtr Z3Solver::solve(PathConditionPtr pc)
 
     if (!cw->write(pc, "/tmp/z3input")) {
         statistics()->accumulate("Concolic::Solver::ConstraintsNotWritten", 1);
-        return SolutionPtr(new Solution(false));
+        return SolutionPtr(new Solution(false, false));
     }
 
     statistics()->accumulate("Concolic::Solver::ConstraintsWritten", 1);
@@ -59,14 +59,14 @@ SolutionPtr Z3Solver::solve(PathConditionPtr pc)
 
     if (artemisdir == NULL) {
         qDebug() << "Warning, ARTEMISDIR environment variable not set!";
-        return SolutionPtr(new Solution(false));
+        return SolutionPtr(new Solution(false, false));
     }
 
     QDir solverpath = QDir(QString(artemisdir));
 
     if (!solverpath.cd("contrib") || !solverpath.cd("Z3-str") || !solverpath.exists("Z3-str.py")) {
         qDebug() << "Warning, could not find Z3-str.py";
-        return SolutionPtr(new Solution(false));
+        return SolutionPtr(new Solution(false, false));
     }
 
     std::string cmd = solverpath.filePath("Z3-str.py").toStdString() + " /tmp/z3input > /tmp/z3result";
@@ -74,14 +74,14 @@ SolutionPtr Z3Solver::solve(PathConditionPtr pc)
 
     if (result != 0) {
         statistics()->accumulate("Concolic::Solver::ConstraintsNotSolved", 1);
-        return SolutionPtr(new Solution(false));
+        return SolutionPtr(new Solution(false, false));
     }
 
     statistics()->accumulate("Concolic::Solver::ConstraintsSolved", 1);
 
     // 3. interpret the result
 
-    SolutionPtr solution = SolutionPtr(new Solution(true));
+    SolutionPtr solution = SolutionPtr(new Solution(true, false));
     if (solution->isSolved()) {
 
     }
@@ -99,7 +99,7 @@ SolutionPtr Z3Solver::solve(PathConditionPtr pc)
             // UNSAT
             statistics()->accumulate("Concolic::Solver::ConstraintsSolvedAsUNSAT", 1);
             constraintLog << "Could not be solved\n\n";
-            return SolutionPtr(new Solution(false));
+            return SolutionPtr(new Solution(false, true));
         }
 
         std::getline(fp, line); // discard decoractive line

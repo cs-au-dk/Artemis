@@ -410,10 +410,13 @@ void ConcolicRuntime::exploreNextTarget()
         Log::debug("Could not solve the constraint.");
         Log::debug("Skipping this target!");
 
-        // Node the current node as unsolvable.
-        // TODO: Add a method Solution.isUnsat() to check if the unsolved result was proved unsatisfiable or not.
-        //          Then use this to call mSearchStrategy->markNodeUnsat instead in that case.
-        mSearchStrategy->markNodeUnsolvable();
+        // Mark the current node as unsolvable.
+        // If it was solved but unsatisfiable, then mark it as UNSAT instead.
+        if(solution->isUnsat()){
+            mSearchStrategy->markNodeUnsat();
+        }else{
+            mSearchStrategy->markNodeUnsolvable();
+        }
 
         // Dump the current state of the tree to a file.
         if(mOptions.concolicTreeOutput == TREE_ALL){

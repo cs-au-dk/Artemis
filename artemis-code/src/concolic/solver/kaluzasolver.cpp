@@ -45,7 +45,7 @@ SolutionPtr KaluzaSolver::solve(PathConditionPtr pc)
 
     if (!constraintwriter->write(pc, "/tmp/kaluza")) {
         statistics()->accumulate("Concolic::Solver::ConstraintsNotWritten", 1);
-        return SolutionPtr(new Solution(false));
+        return SolutionPtr(new Solution(false, false));
     }
 
     statistics()->accumulate("Concolic::Solver::ConstraintsWritten", 1);
@@ -57,28 +57,28 @@ SolutionPtr KaluzaSolver::solve(PathConditionPtr pc)
 
     if (artemisdir == NULL) {
         qDebug() << "Warning, ARTEMISDIR environment variable not set!";
-        return SolutionPtr(new Solution(false));
+        return SolutionPtr(new Solution(false, false));
     }
 
     QDir solverpath = QDir(QString(artemisdir));
 
     if (!solverpath.cd("contrib") || !solverpath.cd("Kaluza") || !solverpath.exists("artemiskaluza.sh")) {
         qDebug() << "Warning, could not find artemiskaluza.sh";
-        return SolutionPtr(new Solution(false));
+        return SolutionPtr(new Solution(false, false));
     }
 
     int result = std::system(solverpath.filePath("artemiskaluza.sh").toStdString().data());
 
     if (result != 0) {
         statistics()->accumulate("Concolic::Solver::ConstraintsNotSolved", 1);
-        return SolutionPtr(new Solution(false));
+        return SolutionPtr(new Solution(false, false));
     }
 
     statistics()->accumulate("Concolic::Solver::ConstraintsSolved", 1);
 
     // 3. interpret the result
 
-    SolutionPtr solution = SolutionPtr(new Solution(true));
+    SolutionPtr solution = SolutionPtr(new Solution(true, false));
     if (solution->isSolved()) {
 
     }

@@ -71,13 +71,13 @@ QString TraceDisplay::makeGraph(TraceNodePtr tree)
     }
     result += indent + "}\n\n";
 
-    result += indent + "subgraph unexplored_unsat {\n" + indent + indent + "node [label = \"UNSAT\", shape = circle, style = filled, fillcolor = lightgray];\n\n";
+    result += indent + "subgraph unexplored_unsat {\n" + indent + indent + "node [label = \"UNSAT\", shape = ellipse, style = filled, fillcolor = lightgray];\n\n";
     foreach(QString node, mHeaderUnexploredUnsat){
         result += indent + indent + node + ";\n";
     }
     result += indent + "}\n\n";
 
-    result += indent + "subgraph unexplored_unsolvable {\n" + indent + indent + "node [label = \"Could not solve\", shape = circle, style = filled, fillcolor = lightgray];\n\n";
+    result += indent + "subgraph unexplored_unsolvable {\n" + indent + indent + "node [label = \"Could not solve\", shape = ellipse, style = filled, fillcolor = lightgray];\n\n";
     foreach(QString node, mHeaderUnexploredUnsolvable){
         result += indent + indent + node + ";\n";
     }
