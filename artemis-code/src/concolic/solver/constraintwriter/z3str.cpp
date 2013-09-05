@@ -22,6 +22,7 @@
 #include <cstdlib>
 
 #include <QDebug>
+#include <QDateTime>
 
 #include "z3str.h"
 
@@ -39,6 +40,11 @@ bool Z3STRConstraintWriter::write(PathConditionPtr pathCondition, std::string ou
     mError = false;
 
     mOutput.open(outputFile.data());
+    mConstriantLog.open("/tmp/z3constraintlog", std::ofstream::out | std::ofstream::app);
+
+    mConstriantLog << "********************************************************************************\n";
+    mConstriantLog << "Wrote Constraint at " << QDateTime::currentDateTime().toString("dd-MM-yy-hh-mm-ss").toStdString() << "\n";
+    mConstriantLog << "\n";
 
     for (uint i = 0; i < pathCondition->size(); i++) {
 
@@ -49,9 +55,16 @@ bool Z3STRConstraintWriter::write(PathConditionPtr pathCondition, std::string ou
         mOutput << (pathCondition->get(i).second ? " true" : " false");
         mOutput << "))\n";
 
+        mConstriantLog << "(assert (= " << mExpressionBuffer;
+        mConstriantLog << (pathCondition->get(i).second ? " true" : " false");
+        mConstriantLog << "))\n";
+
     }
 
+    mConstriantLog << "\n";
+
     mOutput.close();
+    mConstriantLog.close();
 
     if (mError) {
         std::string error = std::string("Artemis is unable generate constraints - ") + mErrorReason + ".";
@@ -349,6 +362,7 @@ void Z3STRConstraintWriter::recordAndEmitType(const Symbolic::SymbolicSource& so
         mTypemap.insert(std::pair<std::string, Symbolic::Type>(source.getIdentifier(), type));
 
         mOutput << "(declare-const " << Z3STRConstraintWriter::encodeIdentifier(source.getIdentifier()) << " " << typeStrings[type] << ")\n";
+        mConstriantLog << "(declare-const " << Z3STRConstraintWriter::encodeIdentifier(source.getIdentifier()) << " " << typeStrings[type] << ")\n";
     }
 
 }

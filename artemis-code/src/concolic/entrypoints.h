@@ -16,6 +16,7 @@
 
 #include <QString>
 #include <QList>
+#include <QWebFrame>
 
 #include "runtime/browser/executionresult.h"
 
