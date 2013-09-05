@@ -131,7 +131,7 @@ EventHandlerDescriptor *EntryPointDetector::choose(ExecutionResultPtr result)
     if(url == "http://www.united.com/web/en-US/default.aspx?root=1"){
         return allEntryPoints.at(5);
     }
-    // TODO: Temporary special case for united.com
+    // TODO: Temporary special case for emirates.com
     if(url == "http://www.emirates.com/uk/english/index.aspx"){
         return allEntryPoints.at(23);
     }
