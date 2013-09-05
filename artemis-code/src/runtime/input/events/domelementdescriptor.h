@@ -53,10 +53,6 @@ public:
         return mId;
     }
 
-    inline QString getArtemisFormIdentifier() const {
-        return mArtemisFormIdentifier;
-    }
-
     inline QString getClass() const {
         return mClassLine;
     }
@@ -70,8 +66,6 @@ private:
     QString mTagName;
     QString mName;
     QString mClassLine;
-
-    QString mArtemisFormIdentifier; // only used for form fields
 
     // Path from the mainFrame to the frame containig the element
     QList<int> mFramePath;

@@ -34,9 +34,11 @@ public:
     /**
      * Updates all form elements accessible through document.forms with a form identifier.
      *
-     * The identifier is the form and element indexes written to the __ARTEMIS__FORM__IDENTIFIER__
-     * property on the element. This is an alternative identification to the name and id
-     * properties if they are not present.
+     * The identifier is the form and element indexes written to the id property. This is only
+     * done if both the id and name properties are empty.
+     *
+     * The identifier consist of the relative indexes of the element and the element's parent
+     * form.
      *
      * This is used primarily by the symbolic infrastructure to associate form inputs accross
      * exectutions. However, note that this approach is not robust if additional form elements

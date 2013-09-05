@@ -48,9 +48,6 @@ DOMElementDescriptor::DOMElementDescriptor(QWebElement* elm) :
         mTagName = elm->tagName();
         mClassLine = QString(elm->classes().join(" "));
 
-        // See ArtemisWebPage for an explanation
-        mArtemisFormIdentifier = elm->attribute("__ARTEMIS__FORM__IDENTIFIER__");
-
         //setFramePath(elm);
         setElementPath(elm);
     }

@@ -316,7 +316,6 @@ QSharedPointer<const FormFieldDescriptor> ConcolicRuntime::findFormFieldForVaria
     switch(varSourceIdentifierMethod){
     case Symbolic::INPUT_NAME:
         // Fetch the formField with this name
-        // Fetch the form field with this id
         foreach(QSharedPointer<const FormFieldDescriptor> field, mFormFields){
             if(field->getDomElement()->getName() == varBaseName){
                 varSourceField = field;
@@ -326,28 +325,13 @@ QSharedPointer<const FormFieldDescriptor> ConcolicRuntime::findFormFieldForVaria
         break;
 
     case Symbolic::ELEMENT_ID:
-        // Fetch the form field with this id
+        // Fetch the form field with this id (or Artemis ID)
         foreach(QSharedPointer<const FormFieldDescriptor> field, mFormFields){
             if(field->getDomElement()->getId() == varBaseName){
                 varSourceField = field;
                 break;
             }
         }
-        break;
-
-    case Symbolic::ARTEMIS_ID:
-        foreach(QSharedPointer<const FormFieldDescriptor> field, mFormFields){
-            if(field->getDomElement()->getArtemisFormIdentifier() == varBaseName){
-                varSourceField = field;
-                break;
-            }
-        }
-        break;
-
-    case Symbolic::LEGACY:
-        // TODO: The form fields without names or ids are just numbered, so I have no idea what to do here!
-        Log::fatal("Identifying inputs by legacy numbering is not yet supported in the concolic runtime.");
-        exit(1);
         break;
 
     default:
