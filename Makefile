@@ -97,7 +97,19 @@ YUM_DEPENDENCIES = gcc-c++ flex bison gperf ruby cmake lemon re2c fontconfig-dev
 
 fetch-apt:
 	sudo apt-get install ${DEPENDENCIES}
+	@echo "Installing libqt4-dev-bin if available"
+	-sudo apt-get install libqt4-dev-bin >/dev/null 2>/dev/null
+	@echo ""
+	@echo "----------------------------------"
+	@echo "Fetch completed successfully"
+	@echo "----------------------------------"
+	@echo ""
 
 fetch-yum:
 	sudo yum install ${YUM_DEPENDENCIES}
+	@echo ""
+	@echo "----------------------------------"
+	@echo "Fetch completed successfully"
+	@echo "----------------------------------"
+	@echo ""
 

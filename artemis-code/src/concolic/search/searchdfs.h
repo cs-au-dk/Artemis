@@ -82,7 +82,7 @@ private:
     // Stores whether or not the iteration is finished.
     bool mFoundTarget;
 
-    // We store the position which we left off the search on the previos call to chooseNextTarget.
+    // We store the position which we left off the search on the previous call to chooseNextTarget.
     // We store the parent branch of the unexplored node and the "direction" (i.e. true or false branch)
     // of that node which was unexplored.
     // This allows us to easily re-start the search and/or check whether an attept worked correctly.

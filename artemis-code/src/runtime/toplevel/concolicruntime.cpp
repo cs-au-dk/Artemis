@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+#include <fstream>
+
 #include "util/loggingutil.h"
 #include "concolic/executiontree/tracemerger.h"
 #include "concolic/solver/z3solver.h"
@@ -44,6 +46,15 @@ void ConcolicRuntime::run(const QUrl& url)
 
     mGraphOutputIndex = 1;
     mGraphOutputNameFormat = QString("tree-%1_%2.gv").arg(QDateTime::currentDateTime().toString("dd-MM-yy-hh-mm-ss"));
+
+    std::ofstream constraintLog;
+    constraintLog.open("/tmp/z3constraintlog", std::ofstream::out | std::ofstream::app);
+
+    constraintLog << "================================================================================\n";
+    constraintLog << "Begin concolic analysis of " << url.toString().toStdString() << " at " << QDateTime::currentDateTime().toString("dd-MM-yy-hh-mm-ss").toStdString() << "\n";
+    constraintLog << "\n";
+
+    constraintLog.close();
 
     preConcreteExecution();
 }
@@ -390,9 +401,8 @@ void ConcolicRuntime::exploreNextTarget()
         preConcreteExecution();
 
     }else{
-        // TODO: Should try someting else/go concrete/...?
+        // TODO: Should try someting else...?
         Log::debug("Could not solve the constraint.");
-        Log::debug("This case is not yet implemented!");
         Log::debug("Skipping this target!");
 
         // Skip this node and move on to the next.
