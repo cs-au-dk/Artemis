@@ -89,6 +89,7 @@ private:
     QProgressBar* mProgressBar;
     QPushButton* mExamplesButton;
     QStatusBar* mStatusBar;
+    QLabel* mEntryPointLabel;
     QListWidget* mEntryPointList;
     QPushButton* mStartTraceRecordingBtn;
     QPushButton* mEndTraceRecordingBtn;

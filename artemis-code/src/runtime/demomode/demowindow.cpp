@@ -126,11 +126,10 @@ DemoModeMainWindow::DemoModeMainWindow(AppModelPtr appModel, WebKitExecutor* web
     QFont sectionFont;
     sectionFont.setBold(true);
 
-    QLabel* entryPointLabel = new QLabel("Potential Entry Points:");
-    entryPointLabel->setFont(sectionFont);
-    mAnalysisLayout->addWidget(entryPointLabel);
+    mEntryPointLabel = new QLabel("Potential Entry Points:");
+    mEntryPointLabel->setFont(sectionFont);
+    mAnalysisLayout->addWidget(mEntryPointLabel);
     mAnalysisLayout->addWidget(mEntryPointList);
-    mAnalysisLayout->addWidget(new QLabel("Currently we only detect 'click' events on\n'button' elements and 'a' elements within\nforms.\n\nSelect an entry above to highlight it on the page."));
     mAnalysisLayout->addSpacing(10);
 
     QLabel* curTraceLabel = new QLabel("Trace Recording:");
@@ -400,6 +399,7 @@ void DemoModeMainWindow::preTraceExecution(ExecutionResultPtr result)
         // Log to GUI.
         addEntryPoint(ep->toString(), ep->domElement());
     }
+    mEntryPointLabel->setText(QString("Potential Entry Points: %1").arg(allEntryPoints.length()));
 
     // Display the page for the user to interact with.
     mWebView->setEnabled(true);
@@ -478,6 +478,7 @@ void DemoModeMainWindow::resetPageAnlaysis()
 {
     mKnownEntryPoints.clear();
     mEntryPointList->clear();
+    mEntryPointLabel->setText("Potential Entry Points:");
 }
 
 
