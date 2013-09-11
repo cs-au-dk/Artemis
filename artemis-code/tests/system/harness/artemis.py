@@ -59,7 +59,7 @@ def execute_artemis(execution_uuid, url, iterations=1,
 
     if fields is None:
         fields = []
-        
+
     for field in fields:
         args.append('-f')
         args.append(field)
@@ -95,15 +95,15 @@ def execute_artemis(execution_uuid, url, iterations=1,
             if match is not None:
                 try:
                     key = match.group(1).strip()
-                    
+
                     value = match.group(2).strip()
-                    
+
                     if value.isdigit():
                         value = int(value)
-                        
+
                     elif value == 'true':
                         value = True
-                    
+
                     elif value == 'false':
                         value = False
 
@@ -118,8 +118,8 @@ def execute_artemis(execution_uuid, url, iterations=1,
         for line in pathCond.splitlines():
             m = RE_PATHCOND_LINE.match(line)
             if m is not None:
-                    value = m.group(2).strip()
-                    pc.append(value)
+                value = m.group(2).strip()
+                pc.append(value)
         report['pathCondition'] = pc
         return report
 

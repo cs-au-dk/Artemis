@@ -455,7 +455,7 @@ ALWAYS_INLINE CallFrame* Interpreter::slideRegisterWindowForCall(CodeBlock* newC
 ALWAYS_INLINE void Interpreter::checkForConstantString(CallFrame* callFrame, const JSValue& jsvalue)
 {
     if (jsvalue.isString()) {
-        jscinst::get_jsc_listener()->javascriptConstantStringEncountered(jsvalue.toUString(callFrame).ascii().mutableData());
+        jscinst::get_jsc_listener()->javascriptConstantStringEncountered(jsvalue.asCell()->getString(callFrame).ascii().mutableData());
     }
 }
 

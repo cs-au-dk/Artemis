@@ -98,10 +98,7 @@ namespace JSC {
         bool getPrimitiveNumber(ExecState*, double& number, JSValue&) const;
         bool toBoolean(ExecState*) const;
         JS_EXPORT_PRIVATE double toNumber(ExecState*) const;
-#ifdef ARTEMIS
-        JSString* toString(ExecState*) const;
-        UString toUString(ExecState*) const;
-#endif
+
         JS_EXPORT_PRIVATE JSObject* toObject(ExecState*, JSGlobalObject*) const;
 
         static void visitChildren(JSCell*, SlotVisitor&);

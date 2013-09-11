@@ -1,13 +1,14 @@
 #!/usr/bin/env python
 
 WEBSERVER_PORT = 8001
-WEBSERVER_ROOT = './fixtures/'
+WEBSERVER_ROOT = './fixtures/legacy-benchmarks/'
 WEBSERVER_URL = 'http://localhost:%s' % WEBSERVER_PORT
 
 import unittest
 
 from harness.environment import WebServer
 from harness.artemis import execute_artemis
+
 
 def events_configuration_report(uuid, url, exclude):
     report = execute_artemis(uuid, url,
@@ -45,244 +46,253 @@ def all_configuration_report(uuid, url, exclude):
     return report
 
 
-def assert_coverage_is_circa_expected(testCase, report, expected, linesOfCode, margin=0.1):
+def assert_coverage_is_circa_expected(testCase, report, expected, linesOfCode, paperLinesOfCode, minMargin=0.1):
     covered = float(report.get("WebKit::coverage::covered-unique", -1)) / linesOfCode
-    testCase.assertAlmostEqual(expected, covered, delta=margin * expected)
-
+    testCase.assertAlmostEqual(expected, covered, delta=min(max(1 - paperLinesOfCode / linesOfCode, minMargin), 20))
 
 
 class HtmlEditTest(unittest.TestCase):
-    url = '%s/legacy-benchmarks/htmledit/demo_full.html' % WEBSERVER_URL
+    url = '%s/htmledit/demo_full.html' % WEBSERVER_URL
     uuid = 'htmledit'
-    loc = 568
-    filesToExclude = ["%s/legacy-benchmarks/htmledit/htmlbox.min.js" % WEBSERVER_URL,
-                      "%s/legacy-benchmarks/htmledit/htmlbox.undoredomanager.js" % WEBSERVER_URL,
-                      "%s/legacy-benchmarks/htmledit/jquery-1.3.2.min.js" % WEBSERVER_URL]
+    loc = 734
+    paperLoc = 568
+    filesToExclude = ["%s/htmledit/htmlbox.min.js" % WEBSERVER_URL,
+                      "%s/htmledit/htmlbox.undoredomanager.js" % WEBSERVER_URL,
+                      "%s/htmledit/jquery-1.3.2.min.js" % WEBSERVER_URL]
 
     def test_events_configuration(self):
         report = events_configuration_report(self.uuid, self.url, self.filesToExclude)
-        assert_coverage_is_circa_expected(self, report, 0.44, self.loc)
+        assert_coverage_is_circa_expected(self, report, 0.44, self.loc, self.paperLoc)
 
     def test_const_configuration(self):
         report = const_configuration_report(self.uuid, self.url, self.filesToExclude)
-        assert_coverage_is_circa_expected(self, report, 0.44, self.loc)
+        assert_coverage_is_circa_expected(self, report, 0.44, self.loc, self.paperLoc)
 
     def test_cov_configuration(self):
         report = cov_configuration_report(self.uuid, self.url, self.filesToExclude)
-        assert_coverage_is_circa_expected(self, report, 0.44, self.loc)
+        assert_coverage_is_circa_expected(self, report, 0.44, self.loc, self.paperLoc)
 
     def test_all_configuration(self):
         report = all_configuration_report(self.uuid, self.url, self.filesToExclude)
-        assert_coverage_is_circa_expected(self, report, 0.44, self.loc)
+        assert_coverage_is_circa_expected(self, report, 0.44, self.loc, self.paperLoc)
 
 
 class T3dModelTest(unittest.TestCase):
-    url = '%s/legacy-benchmarks/3dmodel/index.html' % WEBSERVER_URL
+    url = '%s/3dmodel/index.html' % WEBSERVER_URL
     uuid = '3dmodel'
-    loc = 393
+    loc = 492
+    paperLoc = 393
     filesToExclude = []
 
     def test_events_configuration(self):
         report = events_configuration_report(self.uuid, self.url, self.filesToExclude)
-        assert_coverage_is_circa_expected(self, report, 0.74, self.loc)
+        assert_coverage_is_circa_expected(self, report, 0.74, self.loc, self.paperLoc)
 
     def test_const_configuration(self):
         report = const_configuration_report(self.uuid, self.url, self.filesToExclude)
-        assert_coverage_is_circa_expected(self, report, 0.74, self.loc)
+        assert_coverage_is_circa_expected(self, report, 0.74, self.loc, self.paperLoc)
 
     def test_cov_configuration(self):
         report = cov_configuration_report(self.uuid, self.url, self.filesToExclude)
-        assert_coverage_is_circa_expected(self, report, 0.74, self.loc)
+        assert_coverage_is_circa_expected(self, report, 0.74, self.loc, self.paperLoc)
 
     def test_all_configuration(self):
         report = all_configuration_report(self.uuid, self.url, self.filesToExclude)
-        assert_coverage_is_circa_expected(self, report, 0.74, self.loc)
+        assert_coverage_is_circa_expected(self, report, 0.74, self.loc, self.paperLoc)
 
 
 class AjaxPollerTest(unittest.TestCase):
-    url = '%s/legacy-benchmarks/ajax-poller/ajax-poller.php' % WEBSERVER_URL
+    url = '%s/ajax-poller/ajax-poller.php' % WEBSERVER_URL
     uuid = 'ajaxPoller'
     filesToExclude = []
-    loc = 250
+    loc = 349
+    paperLoc = 250
 
     def test_events_configuration(self):
         report = events_configuration_report(self.uuid, self.url, self.filesToExclude)
-        assert_coverage_is_circa_expected(self, report, 0.78, self.loc)
+        assert_coverage_is_circa_expected(self, report, 0.78, self.loc, self.paperLoc)
 
     def test_const_configuration(self):
         report = const_configuration_report(self.uuid, self.url, self.filesToExclude)
-        assert_coverage_is_circa_expected(self, report, 0.78, self.loc)
+        assert_coverage_is_circa_expected(self, report, 0.78, self.loc, self.paperLoc)
 
     def test_cov_configuration(self):
         report = cov_configuration_report(self.uuid, self.url, self.filesToExclude)
-        assert_coverage_is_circa_expected(self, report, 0.78, self.loc)
+        assert_coverage_is_circa_expected(self, report, 0.78, self.loc, self.paperLoc)
 
     def test_all_configuration(self):
         report = all_configuration_report(self.uuid, self.url, self.filesToExclude)
-        assert_coverage_is_circa_expected(self, report, 0.78, self.loc)
+        assert_coverage_is_circa_expected(self, report, 0.78, self.loc, self.paperLoc)
 
 
-""" This tests fails on document load and should therefor be enabled once this bug has been fixed
 class AjaxTabsTest(unittest.TestCase):
-    url = '%s/legacy-benchmarks/ajaxtabs/demo.htm' % WEBSERVER_URL
+    url = '%s/ajaxtabs/demo.htm' % WEBSERVER_URL
     uuid = 'ajaxTabs'
-    loc = 156
+    loc = 208
+    paperLoc = 156
     filesToExclude = []
 
     def test_events_configuration(self):
         report = events_configuration_report(self.uuid, self.url, self.filesToExclude)
-        assert_coverage_is_circa_expected(self, report, 0.88, self.loc)
+        assert_coverage_is_circa_expected(self, report, 0.88, self.loc, self.paperLoc)
 
     def test_const_configuration(self):
         report = const_configuration_report(self.uuid, self.url, self.filesToExclude)
-        assert_coverage_is_circa_expected(self, report, 0.88, self.loc)
+        assert_coverage_is_circa_expected(self, report, 0.88, self.loc, self.paperLoc)
 
     def test_cov_configuration(self):
         report = cov_configuration_report(self.uuid, self.url, self.filesToExclude)
-        assert_coverage_is_circa_expected(self, report, 0.89, self.loc)
+        assert_coverage_is_circa_expected(self, report, 0.89, self.loc, self.paperLoc)
 
     def test_all_configuration(self):
         report = all_configuration_report(self.uuid, self.url, self.filesToExclude)
-        assert_coverage_is_circa_expected(self, report, 0.89, self.loc)
-"""
+        assert_coverage_is_circa_expected(self, report, 0.89, self.loc, self.paperLoc)
+
 
 class BallPoolTest(unittest.TestCase):
-    url = '%s/legacy-benchmarks/ball_pool/index.html' % WEBSERVER_URL
+    url = '%s/ball_pool/index.html' % WEBSERVER_URL
     uuid = 'ballpool'
-    loc = 256
-    filesToExclude = ["%s/legacy-benchmarks/ball_pool/js/box2d.js" % WEBSERVER_URL,
-                      "%s/legacy-benchmarks/ball_pool/js/protoclass.js" % WEBSERVER_URL]
+    loc = 327
+    paperLoc = 256
+    filesToExclude = ["%s/ball_pool/js/box2d.js" % WEBSERVER_URL,
+                      "%s/ball_pool/js/protoclass.js" % WEBSERVER_URL]
 
     def test_events_configuration(self):
         report = events_configuration_report(self.uuid, self.url, self.filesToExclude)
-        assert_coverage_is_circa_expected(self, report, 0.89, self.loc)
+        assert_coverage_is_circa_expected(self, report, 0.89, self.loc, self.paperLoc)
 
     def test_const_configuration(self):
         report = const_configuration_report(self.uuid, self.url, self.filesToExclude)
-        assert_coverage_is_circa_expected(self, report, 0.89, self.loc)
+        assert_coverage_is_circa_expected(self, report, 0.89, self.loc, self.paperLoc)
 
     def test_cov_configuration(self):
         report = cov_configuration_report(self.uuid, self.url, self.filesToExclude)
-        assert_coverage_is_circa_expected(self, report, 0.90, self.loc)
+        assert_coverage_is_circa_expected(self, report, 0.90, self.loc, self.paperLoc)
 
     def test_all_configuration(self):
         report = all_configuration_report(self.uuid, self.url, self.filesToExclude)
-        assert_coverage_is_circa_expected(self, report, 0.90, self.loc)
+        assert_coverage_is_circa_expected(self, report, 0.90, self.loc, self.paperLoc)
+
 
 class DragableBoxesTest(unittest.TestCase):
-    url = '%s/legacy-benchmarks/dragable-boxes/dragable-boxes.html' % WEBSERVER_URL
+    url = '%s/dragable-boxes/dragable-boxes.html' % WEBSERVER_URL
     uuid = 'dragableBoxes'
-    loc = 697
+    loc = 961
+    paperLoc = 697
     filesToExclude = []
 
     def test_events_configuration(self):
         report = events_configuration_report(self.uuid, self.url, self.filesToExclude)
-        assert_coverage_is_circa_expected(self, report, 0.61, self.loc)
+        assert_coverage_is_circa_expected(self, report, 0.61, self.loc, self.paperLoc)
 
     def test_const_configuration(self):
         report = const_configuration_report(self.uuid, self.url, self.filesToExclude)
-        assert_coverage_is_circa_expected(self, report, 0.61, self.loc)
+        assert_coverage_is_circa_expected(self, report, 0.61, self.loc, self.paperLoc)
 
     def test_cov_configuration(self):
         report = cov_configuration_report(self.uuid, self.url, self.filesToExclude)
-        assert_coverage_is_circa_expected(self, report, 0.62, self.loc)
+        assert_coverage_is_circa_expected(self, report, 0.62, self.loc, self.paperLoc)
 
     def test_all_configuration(self):
         report = all_configuration_report(self.uuid, self.url, self.filesToExclude)
-        assert_coverage_is_circa_expected(self, report, 0.62, self.loc)
+        assert_coverage_is_circa_expected(self, report, 0.62, self.loc, self.paperLoc)
 
 
 class DynamicArticlesTest(unittest.TestCase):
-    url = '%s/legacy-benchmarks/dynamicArticles/index.html' % WEBSERVER_URL
+    url = '%s/dynamicArticles/index.html' % WEBSERVER_URL
     uuid = 'dynamicArticles'
-    loc = 156
+    loc = 171
+    paperLoc = 156
     filesToExclude = []
 
     def test_events_configuration(self):
         report = events_configuration_report(self.uuid, self.url, self.filesToExclude)
-        assert_coverage_is_circa_expected(self, report, 0.82, self.loc)
+        assert_coverage_is_circa_expected(self, report, 0.82, self.loc, self.paperLoc)
 
     def test_const_configuration(self):
         report = const_configuration_report(self.uuid, self.url, self.filesToExclude)
-        assert_coverage_is_circa_expected(self, report, 0.82, self.loc)
+        assert_coverage_is_circa_expected(self, report, 0.82, self.loc, self.paperLoc)
 
     def test_cov_configuration(self):
         report = cov_configuration_report(self.uuid, self.url, self.filesToExclude)
-        assert_coverage_is_circa_expected(self, report, 0.75, self.loc)
+        assert_coverage_is_circa_expected(self, report, 0.75, self.loc, self.paperLoc)
 
     def test_all_configuration(self):
         report = all_configuration_report(self.uuid, self.url, self.filesToExclude)
-        assert_coverage_is_circa_expected(self, report, 0.82, self.loc)
+        assert_coverage_is_circa_expected(self, report, 0.82, self.loc, self.paperLoc)
 
 
 class FractalViewerTest(unittest.TestCase):
-    url = '%s/legacy-benchmarks/fractal_viewer/index.php' % WEBSERVER_URL
+    url = '%s/fractal_viewer/index.php' % WEBSERVER_URL
     uuid = 'fractalViewer'
-    loc = 750
-    filesToExclude = ['%s/legacy-benchmarks/fractal_viewer/js/lib/jquery-1.3.js' % WEBSERVER_URL]
+    loc = 1298
+    paperLoc = 750
+    filesToExclude = ['%s/fractal_viewer/js/lib/jquery-1.3.js' % WEBSERVER_URL]
 
     def test_events_configuration(self):
         report = events_configuration_report(self.uuid, self.url, self.filesToExclude)
-        assert_coverage_is_circa_expected(self, report, 0.62, self.loc)
+        assert_coverage_is_circa_expected(self, report, 0.62, self.loc, self.paperLoc)
 
     def test_const_configuration(self):
         report = const_configuration_report(self.uuid, self.url, self.filesToExclude)
-        assert_coverage_is_circa_expected(self, report, 0.63, self.loc)
+        assert_coverage_is_circa_expected(self, report, 0.63, self.loc, self.paperLoc)
 
     def test_cov_configuration(self):
         report = cov_configuration_report(self.uuid, self.url, self.filesToExclude)
-        assert_coverage_is_circa_expected(self, report, 0.75, self.loc)
+        assert_coverage_is_circa_expected(self, report, 0.75, self.loc, self.paperLoc)
 
     def test_all_configuration(self):
         report = all_configuration_report(self.uuid, self.url, self.filesToExclude)
-        assert_coverage_is_circa_expected(self, report, 0.75, self.loc)
+        assert_coverage_is_circa_expected(self, report, 0.75, self.loc, self.paperLoc)
+
 
 class HomeostasisTest(unittest.TestCase):
-    url = '%s/legacy-benchmarks/homeostasis/index.html' % WEBSERVER_URL
+    url = '%s/homeostasis/index.html' % WEBSERVER_URL
     uuid = 'homeostasis'
-    loc = 2037
+    loc = 3303
+    paperLoc = 2037
     filesToExclude = []
 
     def test_events_configuration(self):
         report = events_configuration_report(self.uuid, self.url, self.filesToExclude)
-        assert_coverage_is_circa_expected(self, report, 0.62, self.loc)
+        assert_coverage_is_circa_expected(self, report, 0.62, self.loc, self.paperLoc)
 
     def test_const_configuration(self):
         report = const_configuration_report(self.uuid, self.url, self.filesToExclude)
-        assert_coverage_is_circa_expected(self, report, 0.62, self.loc)
+        assert_coverage_is_circa_expected(self, report, 0.62, self.loc, self.paperLoc)
 
     def test_cov_configuration(self):
         report = cov_configuration_report(self.uuid, self.url, self.filesToExclude)
-        assert_coverage_is_circa_expected(self, report, 0.62, self.loc)
+        assert_coverage_is_circa_expected(self, report, 0.62, self.loc, self.paperLoc)
 
     def test_all_configuration(self):
         report = all_configuration_report(self.uuid, self.url, self.filesToExclude)
-        assert_coverage_is_circa_expected(self, report, 0.63, self.loc)
+        assert_coverage_is_circa_expected(self, report, 0.63, self.loc, self.paperLoc)
+
 
 class PacmanTest(unittest.TestCase):
-    url = '%s/legacy-benchmarks/pacman/index.html' % WEBSERVER_URL
+    url = '%s/pacman/index.html' % WEBSERVER_URL
     uuid = 'pacman'
-    loc = 1857
-    filesToExclude = ["%s/legacy-benchmarks/pacman/src/js/pacman10-hp.2.js" % WEBSERVER_URL,
-                      "%s/legacy-benchmarks/pacman/src/js/pacman10-hp.js" % WEBSERVER_URL]
+    loc = 3471
+    paperLoc = 1857
+    filesToExclude = ["%s/pacman/src/js/pacman10-hp.2.js" % WEBSERVER_URL,
+                      "%s/pacman/src/js/pacman10-hp.js" % WEBSERVER_URL]
 
     def test_events_configuration(self):
         report = events_configuration_report(self.uuid, self.url, self.filesToExclude)
-        assert_coverage_is_circa_expected(self, report, 0.44, self.loc)
+        assert_coverage_is_circa_expected(self, report, 0.44, self.loc, self.paperLoc)
 
     def test_const_configuration(self):
         report = const_configuration_report(self.uuid, self.url, self.filesToExclude)
-        assert_coverage_is_circa_expected(self, report, 0.44, self.loc)
+        assert_coverage_is_circa_expected(self, report, 0.44, self.loc, self.paperLoc)
 
     def test_cov_configuration(self):
         report = cov_configuration_report(self.uuid, self.url, self.filesToExclude)
-        assert_coverage_is_circa_expected(self, report, 0.44, self.loc)
+        assert_coverage_is_circa_expected(self, report, 0.44, self.loc, self.paperLoc)
 
     def test_all_configuration(self):
         report = all_configuration_report(self.uuid, self.url, self.filesToExclude)
-        assert_coverage_is_circa_expected(self, report, 0.44, self.loc)
-
-
+        assert_coverage_is_circa_expected(self, report, 0.44, self.loc, self.paperLoc)
 
 
 if __name__ == '__main__':
