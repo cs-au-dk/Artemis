@@ -119,6 +119,10 @@ void QWebExecutionListener::ajaxCallbackFire(int callbackId) {
 }
 
 void QWebExecutionListener::clearAjaxCallbacks() {
+    foreach(WebCore::LazyXMLHttpRequest* item, m_ajax_callbacks.values()) {
+        delete item;
+    }
+
     m_ajax_callbacks.clear();
     m_ajax_callback_next_id = 0;
 }
