@@ -132,7 +132,7 @@ class AjaxTests(unittest.TestCase):
 		
 		self.assertEqual(2, report.get('InputGenerator::added-configurations', 0));
 		self.assertEqual(1, report.get("ajax::fired", 0));
-		self.assertEqual(1, report.get('WebKit::alerts', 0));
+		self.assertEqual(2, report.get('WebKit::alerts', 0));
 
 if __name__ == '__main__':
 	server = WebServer(WEBSERVER_ROOT, WEBSERVER_PORT)

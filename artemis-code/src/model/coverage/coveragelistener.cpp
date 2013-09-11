@@ -152,7 +152,7 @@ void CoverageListener::slJavascriptFunctionCalled(QString functionName, size_t b
 
 }
 
-void CoverageListener::slJavascriptBytecodeExecuted(ByteCodeInfoStruct* binfo, uint sourceOffset, QSource* source)
+void CoverageListener::slJavascriptBytecodeExecuted(const ByteCodeInfoStruct& binfo, uint sourceOffset, QSource* source)
 {
     if (mIgnoredUrls.contains(source->getUrl())) {
         return;
@@ -162,22 +162,21 @@ void CoverageListener::slJavascriptBytecodeExecuted(ByteCodeInfoStruct* binfo, u
     QSharedPointer<CodeBlockInfo> codeBlockInfo = mCodeBlocks.value(codeBlockID, QSharedPointer<CodeBlockInfo>(NULL));
 
     if (!codeBlockInfo.isNull()) {
-        codeBlockInfo->setBytecodeCovered(binfo->bytecodeOffset);
+        codeBlockInfo->setBytecodeCovered(binfo.bytecodeOffset);
     }
 
     sourceid_t sourceID = SourceInfo::getId(source->getUrl(), source->getStartLine());
     SourceInfoPtr sourceInfo = mSources.value(sourceID, SourceInfoPtr(NULL));
 
     if (!sourceInfo.isNull()) {
-        if(binfo->isSymbolic){
-            sourceInfo->setRangeSymbolicCovered(binfo->divot,binfo->startOffset,binfo->endOffset);
-            sourceInfo->setLineSymbolicCovered(binfo->linenumber);
+        if(binfo.isSymbolic){
+            sourceInfo->setRangeSymbolicCovered(binfo.divot,binfo.startOffset,binfo.endOffset);
+            sourceInfo->setLineSymbolicCovered(binfo.linenumber);
         } else {
-            sourceInfo->setRangeCovered(binfo->divot,binfo->startOffset,binfo->endOffset);
-            sourceInfo->setLineCovered(binfo->linenumber);
+            sourceInfo->setRangeCovered(binfo.divot,binfo.startOffset,binfo.endOffset);
+            sourceInfo->setLineCovered(binfo.linenumber);
         }
     }
-    delete binfo;
 
 }
 

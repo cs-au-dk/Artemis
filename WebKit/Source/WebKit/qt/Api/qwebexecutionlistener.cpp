@@ -105,8 +105,7 @@ void QWebExecutionListener::eventTriggered(WebCore::EventTarget * target, const 
 // AJAX SUPPORT
 
 void QWebExecutionListener::ajaxCallbackEventAdded(WebCore::LazyXMLHttpRequest* xmlHttpRequest) {
-    int callbackId = m_ajax_callback_next_id;
-    m_ajax_callback_next_id++;
+    int callbackId = m_ajax_callback_next_id++;
 
     m_ajax_callbacks.insert(callbackId, xmlHttpRequest);
     emit addedAjaxCallbackHandler(callbackId);
@@ -120,6 +119,10 @@ void QWebExecutionListener::ajaxCallbackFire(int callbackId) {
 }
 
 void QWebExecutionListener::clearAjaxCallbacks() {
+    foreach(WebCore::LazyXMLHttpRequest* item, m_ajax_callbacks.values()) {
+        delete item;
+    }
+
     m_ajax_callbacks.clear();
     m_ajax_callback_next_id = 0;
 }
@@ -327,13 +330,13 @@ void QWebExecutionListener::javascript_bytecode_executed(JSC::Interpreter* inter
                                                          const JSC::BytecodeInfo& info) {
     uint bytecodeOffset = instruction - codeBlock->instructions().begin();
 
-    ByteCodeInfoStruct* binfo = new ByteCodeInfoStruct();
-    binfo->opcodeId = interpreter->getOpcodeID(instruction->u.opcode);
-    binfo->linenumber = codeBlock->lineNumberForBytecodeOffset(bytecodeOffset);
-    binfo->isSymbolic = info.isSymbolic();
-    binfo->bytecodeOffset = bytecodeOffset;
+    ByteCodeInfoStruct binfo;
+    binfo.opcodeId = interpreter->getOpcodeID(instruction->u.opcode);
+    binfo.linenumber = codeBlock->lineNumberForBytecodeOffset(bytecodeOffset);
+    binfo.isSymbolic = info.isSymbolic();
+    binfo.bytecodeOffset = bytecodeOffset;
 
-    codeBlock->expressionRangeForBytecodeOffset(bytecodeOffset, binfo->divot, binfo->startOffset, binfo->endOffset);
+    codeBlock->expressionRangeForBytecodeOffset(bytecodeOffset, binfo.divot, binfo.startOffset, binfo.endOffset);
     emit sigJavascriptBytecodeExecuted(binfo,
                                        codeBlock->sourceOffset(),
                                        m_sourceRegistry.get(codeBlock->source()));
