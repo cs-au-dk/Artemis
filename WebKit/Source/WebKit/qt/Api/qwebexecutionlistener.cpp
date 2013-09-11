@@ -327,13 +327,13 @@ void QWebExecutionListener::javascript_bytecode_executed(JSC::Interpreter* inter
                                                          const JSC::BytecodeInfo& info) {
     uint bytecodeOffset = instruction - codeBlock->instructions().begin();
 
-    ByteCodeInfoStruct* binfo = new ByteCodeInfoStruct();
-    binfo->opcodeId = interpreter->getOpcodeID(instruction->u.opcode);
-    binfo->linenumber = codeBlock->lineNumberForBytecodeOffset(bytecodeOffset);
-    binfo->isSymbolic = info.isSymbolic();
-    binfo->bytecodeOffset = bytecodeOffset;
+    ByteCodeInfoStruct binfo;
+    binfo.opcodeId = interpreter->getOpcodeID(instruction->u.opcode);
+    binfo.linenumber = codeBlock->lineNumberForBytecodeOffset(bytecodeOffset);
+    binfo.isSymbolic = info.isSymbolic();
+    binfo.bytecodeOffset = bytecodeOffset;
 
-    codeBlock->expressionRangeForBytecodeOffset(bytecodeOffset, binfo->divot, binfo->startOffset, binfo->endOffset);
+    codeBlock->expressionRangeForBytecodeOffset(bytecodeOffset, binfo.divot, binfo.startOffset, binfo.endOffset);
     emit sigJavascriptBytecodeExecuted(binfo,
                                        codeBlock->sourceOffset(),
                                        m_sourceRegistry.get(codeBlock->source()));
