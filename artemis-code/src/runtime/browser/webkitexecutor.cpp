@@ -190,6 +190,8 @@ void WebKitExecutor::executeSequence(ExecutableConfigurationConstPtr conf, bool 
     mPathTracer->notifyStartingLoad();
 
     webkitListener->beginSymbolicSession();
+    webkitListener->clearAjaxCallbacks(); // reset the ajax callback ids
+
     mKeepOpen = keepOpen;
 
     mPage->mainFrame()->load(conf->getUrl());

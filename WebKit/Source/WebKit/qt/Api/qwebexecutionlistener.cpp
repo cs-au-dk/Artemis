@@ -105,8 +105,7 @@ void QWebExecutionListener::eventTriggered(WebCore::EventTarget * target, const 
 // AJAX SUPPORT
 
 void QWebExecutionListener::ajaxCallbackEventAdded(WebCore::LazyXMLHttpRequest* xmlHttpRequest) {
-    int callbackId = m_ajax_callback_next_id;
-    m_ajax_callback_next_id++;
+    int callbackId = m_ajax_callback_next_id++;
 
     m_ajax_callbacks.insert(callbackId, xmlHttpRequest);
     emit addedAjaxCallbackHandler(callbackId);

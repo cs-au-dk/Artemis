@@ -730,6 +730,9 @@ void XMLHttpRequest::createRequest(ExceptionCode& ec)
     m_exceptionCode = 0;
     m_error = false;
 
+    // ARTEMIS
+    // if false, synchronous request, bypass all detailed event Ajax event handling in Artemis
+    // if true, asynchronous request, defer the actual request handling until Artemis requests it
     if (m_async) {
         if (m_upload)
             request.setReportUploadProgress(true);
@@ -744,7 +747,6 @@ void XMLHttpRequest::createRequest(ExceptionCode& ec)
         // FIXME: Maybe we need to be able to send XMLHttpRequests from onunload, <http://bugs.webkit.org/show_bug.cgi?id=10904>.
         // FIXME: Maybe create() can return null for other reasons too?
         m_loader = ThreadableLoader::create(scriptExecutionContext(), this, request, options);
-#endif
 
         if (m_loader) {
             // Neither this object nor the JavaScript wrapper should be deleted while
@@ -752,6 +754,7 @@ void XMLHttpRequest::createRequest(ExceptionCode& ec)
             // and they are referenced by the JavaScript wrapper.
             setPendingActivity(this);
         }
+#endif
     } else {
         InspectorInstrumentation::willLoadXHRSynchronously(scriptExecutionContext());
         ThreadableLoader::loadResourceSynchronously(scriptExecutionContext(), request, *this, options);
