@@ -30,6 +30,10 @@ PathTracer::PathTracer(PathTraceReport reportLevel) :
 
 void PathTracer::notifyStartingLoad()
 {
+    if(mReportLevel == NO_TRACES){
+        return;
+    }
+
     newPathTrace("Starting Page Load", LOAD);
 }
 
@@ -37,6 +41,10 @@ void PathTracer::notifyStartingLoad()
 // TODO: Maybe obsolete since we have slEventListenerTriggered below?
 void PathTracer::notifyStartingEvent(QSharedPointer<const BaseInput> inputEvent)
 {
+    if(mReportLevel == NO_TRACES){
+        return;
+    }
+
     QString eventStr = inputEvent->toString();
     // TODO: is there a better way to check for inputEvent being a click without adding a special method to BaseInput?
     TraceType type = eventStr.startsWith("DomInput(click") ? CLICK : OTHER;
@@ -46,6 +54,10 @@ void PathTracer::notifyStartingEvent(QSharedPointer<const BaseInput> inputEvent)
 // An event which WebKit is executing.
 void PathTracer::slEventListenerTriggered(QWebElement* elem, QString eventName)
 {
+    if(mReportLevel == NO_TRACES){
+        return;
+    }
+
     TraceType type;
     if(eventName == "click"){
         type = CLICK;
@@ -61,6 +73,10 @@ void PathTracer::slEventListenerTriggered(QWebElement* elem, QString eventName)
 
 void PathTracer::slJavascriptFunctionCalled(QString functionName, size_t bytecodeSize, uint functionStartLine, uint sourceOffset, QSource* source)
 {
+    if(mReportLevel == NO_TRACES){
+        return;
+    }
+
     TraceItem item;
     item.type = FUNCALL;
     item.name = displayedFunctionName(functionName);
@@ -75,11 +91,19 @@ void PathTracer::slJavascriptFunctionCalled(QString functionName, size_t bytecod
 
 void PathTracer::slJavascriptFunctionReturned(QString functionName)
 {
+    if(mReportLevel == NO_TRACES){
+        return;
+    }
+
     appendItem(FUNRET, displayedFunctionName(functionName), "");
 }
 
 void PathTracer::slJavascriptAlert(QWebFrame* frame, QString msg)
 {
+    if(mReportLevel == NO_TRACES){
+        return;
+    }
+
     msg = msg.replace("\n", "\\n");
     appendItem(ALERT, "alert()",  "Message: " + msg);
 }
@@ -167,6 +191,10 @@ void PathTracer::write()
 }
 
 void PathTracer::writePathTraceHTML(bool linkWithCoverage, QString coveragePath, QString& pathToFile){
+    if(mReportLevel == NO_TRACES){
+        return;
+    }
+
     TraceItem item;
     PathTrace trace;
     QString itemStr;
