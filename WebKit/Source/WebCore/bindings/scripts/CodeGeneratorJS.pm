@@ -1849,6 +1849,13 @@ sub GenerateImplementation
                     
                     if ($attribute->signature->extendedAttributes->{"Symbolic"}) {
                         # ARTEMIS BEGIN
+                        push(@implContent, "\n");
+                        push(@implContent, "    // Do not make hidden inputs symbolic.\n");
+                        push(@implContent, "    WTF::AtomicString type = impl->getAttribute(WebCore::HTMLNames::typeAttr);\n");
+                        push(@implContent, "    if(strncmp(type.string().lower().ascii().data(), \"hidden\", 6) == 0){\n");
+                        push(@implContent, "        return result;\n");
+                        push(@implContent, "    }\n");
+                        push(@implContent, "\n");
                         push(@implContent, "    if (castedThis->m_" . $attribute->signature->name . "Symbolic == NULL) {\n");
                         push(@implContent, "        std::ostringstream strs;\n");
                         push(@implContent, "        strs << \"SYM_IN_\";\n");
