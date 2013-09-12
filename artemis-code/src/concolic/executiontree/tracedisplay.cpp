@@ -83,7 +83,7 @@ QString TraceDisplay::makeGraph(TraceNodePtr tree)
     }
     result += indent + "}\n\n";
 
-    result += indent + "subgraph unexplored_missed {\n" + indent + indent + "node [label = \"Missed\", shape = circle, style = filled, fillcolor = lightgray];\n\n";
+    result += indent + "subgraph unexplored_missed {\n" + indent + indent + "node [label = \"Missed\", shape = ellipse, style = filled, fillcolor = lightgray];\n\n";
     foreach(QString node, mHeaderUnexploredMissed){
         result += indent + indent + node + ";\n";
     }
