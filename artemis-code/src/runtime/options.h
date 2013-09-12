@@ -62,7 +62,6 @@ typedef struct OptionsType {
         outputCoverage(NONE),
         majorMode(AUTOMATED),
         reportPathTrace(NO_TRACES),
-        reportPathTraceBytecode(false),
         concolicTreeOutput(TREE_FINAL)
     {}
 
@@ -88,7 +87,6 @@ typedef struct OptionsType {
     MajorMode majorMode;
 
     PathTraceReport reportPathTrace;
-    bool reportPathTraceBytecode;
 
     ConcolicTreeOutput concolicTreeOutput;
 

@@ -23,7 +23,7 @@ AppModel::AppModel(Options options)
 {
     mCoverageListener = CoverageListenerPtr(new CoverageListener(options.coverageIgnoreUrls ));
     mJavascriptStatistics = JavascriptStatisticsPtr(new JavascriptStatistics());
-    mPathTracer = PathTracerPtr(new PathTracer(options.reportPathTrace, options.reportPathTraceBytecode));
+    mPathTracer = PathTracerPtr(new PathTracer(options.reportPathTrace));
 }
 
 CoverageListenerPtr AppModel::getCoverageListener() const
