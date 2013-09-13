@@ -40,9 +40,6 @@ Z3Solver::Z3Solver(): Solver() {
 SolutionPtr Z3Solver::solve(PathConditionPtr pc)
 {
     std::ofstream constraintLog("/tmp/z3constraintlog", std::ofstream::out | std::ofstream::app);
-    if (constraintLog.is_open()) {
-        qDebug() << "Warning, could not open the constraint log.";
-    }
 
     // 1. translate pc to something solvable using the translator
 
@@ -50,7 +47,7 @@ SolutionPtr Z3Solver::solve(PathConditionPtr pc)
 
     if (!cw->write(pc, "/tmp/z3input")) {
         statistics()->accumulate("Concolic::Solver::ConstraintsNotWritten", 1);
-        constraintLog << "Could not write input file." << std::endl << std::endl;
+        constraintLog << "Could not translate the PC into solver input." << std::endl << std::endl;
         return SolutionPtr(new Solution(false, false));
     }
 

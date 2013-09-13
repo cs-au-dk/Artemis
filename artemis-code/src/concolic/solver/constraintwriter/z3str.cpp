@@ -64,20 +64,23 @@ bool Z3STRConstraintWriter::write(PathConditionPtr pathCondition, std::string ou
     mConstriantLog << "\n";
 
     mOutput.close();
-    mConstriantLog.close();
 
     if (mError) {
         std::string error = std::string("Artemis is unable generate constraints - ") + mErrorReason + ".";
-        qDebug(error.c_str());
+        qDebug() << error.c_str();
+        mConstriantLog << error << std::endl;
         return false;
     }
 
     for (std::map<std::string, Symbolic::Type>::iterator iter = mTypemap.begin(); iter != mTypemap.end(); iter++) {
         if (iter->second == Symbolic::TYPEERROR) {
             qDebug("Artemis is unable generate constraints - a type-error was found.");
+            mConstriantLog << "Artemis is unable generate constraints - a type-error was found." << std::endl;
             return false;
         }
     }
+
+    mConstriantLog.close();
 
     return true;
 }
@@ -148,7 +151,7 @@ void Z3STRConstraintWriter::visit(Symbolic::ConstantInteger* constantinteger)
         mExpressionBuffer = "(- " + mExpressionBuffer.substr(1) + ")";
     }
 
-    if (mExpressionBuffer.find("nan") != -1) {
+    if (mExpressionBuffer.find("nan") != std::string::npos) {
         mError = true;
         mErrorReason = "Unsupported constraint using NaN constant";
     }
