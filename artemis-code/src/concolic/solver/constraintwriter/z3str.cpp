@@ -20,6 +20,7 @@
 #include <ostream>
 #include <sstream>
 #include <cstdlib>
+#include <math.h>
 
 #include <QDebug>
 
@@ -111,14 +112,26 @@ void Z3STRConstraintWriter::visit(Symbolic::SymbolicBoolean* symbolicboolean)
 
 void Z3STRConstraintWriter::visit(Symbolic::ConstantInteger* constantinteger)
 {
+    /**
+     * Note! We convert the double into an integer in some cases since we do not support
+     * writing constraints on real values right now.
+     */
+
+    std::ostringstream doubleToInt;
+    if (isnan(constantinteger->getValue())) {
+        doubleToInt << "nan";
+    } else {
+        doubleToInt << (int)constantinteger->getValue();
+    }
+
     std::ostringstream strs;
 
     switch (mExpressionType) {
     case Symbolic::INT:
-        strs << constantinteger->getValue();
+        strs << doubleToInt.str();
         break;
     case Symbolic::STRING:
-        strs << "\"" << constantinteger->getValue() << "\"";
+        strs << "\"" << doubleToInt.str() << "\"";
         break;
     case Symbolic::BOOL:
         strs << (constantinteger->getValue() == 0 ? "false" : "true");
