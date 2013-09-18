@@ -43,17 +43,17 @@ var
 ;
 
 
-function justInit()
+window.onload = function justInit()
 {
     $("#my_container").fadeIn(500);
     
     canvas = document.getElementById("my_canvas");
     container = document.getElementById("my_container");
     
-    canvas.onmousedown = onMouseDown//$(canvas).bind("mousedown", onMouseDown);
-    document.onmouseup = onMouseUp//$(document).bind("mouseup", onMouseUp);
-    document.onmousemove = onMouseMove//$(document).bind("mousemove", onMouseMove);
-    document.onkeydown = onKeyDown//$(document).bind("keydown", onKeyDown);
+    $(canvas).bind("mousedown", onMouseDown);
+    $(document).bind("mouseup", onMouseUp);
+    $(document).bind("mousemove", onMouseMove);
+    $(document).bind("keydown", onKeyDown);
     
     g = new Brush(canvas);
     g.setFrameRate(30);
@@ -76,7 +76,6 @@ function justInit()
     else
         toggle("about", true);
 };
-window.onload = justInit;
 
 function initRoot()
 {
@@ -271,9 +270,7 @@ function onMouseUp(e)
 
 function onKeyDown(e)
 {
-	var c = e.charCode
-    alert(">>>275 " + c);
-	switch(c) {
+    switch(String.fromCharCode(e.keyCode).toLowerCase()) {
         case ' ':
         case 'p':
             toggle('play');

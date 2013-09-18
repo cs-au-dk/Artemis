@@ -9,8 +9,7 @@ function Brush(canvas)
 
 function buildBrush(canvas)
 {
-    g = {};
-    console.log(">>>Brish set!")
+    var g = {};
     var gfx = canvas.getContext("2d");
     
     g.canvas = canvas;

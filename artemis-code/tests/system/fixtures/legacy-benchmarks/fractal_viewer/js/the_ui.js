@@ -30,13 +30,13 @@ function toggle(which, state)
                 aboutOn = !aboutOn;
                 state = aboutOn;
             }
-            var about = $("#about");1
+            var about = $("#about");
             if(aboutOn) {
                 about.css({
                     left: window.innerWidth / 2 - (about.width()+28) / 2,
                     top: window.innerHeight / 2 - (about.height()+28) / 2
                 });
-                $("<div id=\"aboutclear\"></div>").insertBefore(about).one("mousedownw", function(){
+                $("<div id=\"aboutclear\"></div>").insertBefore(about).one("mousedown", function(){
                     toggle("about", false);
                     play();
                 });
