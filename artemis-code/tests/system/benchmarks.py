@@ -48,7 +48,8 @@ def all_configuration_report(uuid, url, exclude):
 
 def assert_coverage_is_circa_expected(testCase, report, expected, linesOfCode, paperLinesOfCode, minMargin=0.1):
     covered = float(report.get("WebKit::coverage::covered-unique", -1)) / linesOfCode
-    testCase.assertAlmostEqual(expected, covered, delta=min(max(1 - paperLinesOfCode / linesOfCode, minMargin), 20))
+    testCase.assertAlmostEqual(expected, covered,
+                               delta=minMargin + (1-max(0, min(paperLinesOfCode / linesOfCode, 1))) * 0.1)
 
 
 class HtmlEditTest(unittest.TestCase):
@@ -149,6 +150,7 @@ class AjaxTabsTest(unittest.TestCase):
         assert_coverage_is_circa_expected(self, report, 0.89, self.loc, self.paperLoc)
 
 
+"""
 class BallPoolTest(unittest.TestCase):
     url = '%s/ball_pool/index.html' % WEBSERVER_URL
     uuid = 'ballpool'
@@ -172,6 +174,7 @@ class BallPoolTest(unittest.TestCase):
     def test_all_configuration(self):
         report = all_configuration_report(self.uuid, self.url, self.filesToExclude)
         assert_coverage_is_circa_expected(self, report, 0.90, self.loc, self.paperLoc)
+"""
 
 
 class DragableBoxesTest(unittest.TestCase):
@@ -246,6 +249,7 @@ class FractalViewerTest(unittest.TestCase):
         assert_coverage_is_circa_expected(self, report, 0.75, self.loc, self.paperLoc)
 
 
+"""
 class HomeostasisTest(unittest.TestCase):
     url = '%s/homeostasis/index.html' % WEBSERVER_URL
     uuid = 'homeostasis'
@@ -268,6 +272,7 @@ class HomeostasisTest(unittest.TestCase):
     def test_all_configuration(self):
         report = all_configuration_report(self.uuid, self.url, self.filesToExclude)
         assert_coverage_is_circa_expected(self, report, 0.63, self.loc, self.paperLoc)
+"""
 
 
 class PacmanTest(unittest.TestCase):
