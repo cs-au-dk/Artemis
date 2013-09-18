@@ -75,6 +75,62 @@ static inline void getClassPropertyNames(ExecState* exec, const ClassInfo* class
     }
 }
 
+#ifdef ARTEMIS
+
+QString JSObject::classNameString(){
+    std::stringstream ss;
+    ss << std::string(JSObject::className(this).utf8().data());
+    ss << "@";
+    ss << (const void *) static_cast<const void*>(this);
+    return QString::fromStdString(ss.str());
+}
+
+
+QString JSObject::getAsJSONString(ExecState* exec, QSet<QString>* visitedObjects){
+    QString string;
+    JSGlobalData* jsGlobalData = &exec->globalData();
+    PropertyNameArray propertyNames(jsGlobalData);
+    JSObject::getPropertyNames(this,exec,propertyNames,ExcludeDontEnumProperties);
+    PropertyNameArrayData::PropertyNameVector::const_iterator iter = propertyNames.data()->propertyNameVector().begin();
+    PropertyNameArrayData::PropertyNameVector::const_iterator end = propertyNames.data()->propertyNameVector().end();
+    QString cnString = classNameString();
+    qDebug() << cnString;
+    QString s = QString::fromStdString("\"#OBJECT_NAME#\":\"").append(cnString).append(QString::fromStdString("\""));
+    string.append(QString::fromStdString("{"));
+    string.append(s);
+
+
+    if(visitedObjects->contains(cnString)){
+        string.append(QString::fromStdString("}"));
+        return string;
+    }
+
+    visitedObjects->insert(cnString);
+    JSFunction* f = (JSFunction*) getJSFunction(this);
+    if(f ){
+        string += QString::fromStdString(", \"#SCOPE#\":") +f->scopeUnchecked()->scopeChainAsJSON(f, exec, visitedObjects);
+    }
+
+
+    for(; iter != end; ++iter){
+        string.append(QString::fromStdString(", \""+std::string(iter->ustring().utf8().data())+"\""));
+        JSValue propertyValue;
+        Identifier i = Identifier(exec,iter->impl());
+        if((propertyValue = get(exec, i))){
+            string.append(QString::fromStdString(":"));
+            string.append(propertyValue.getAsJSONString(exec, visitedObjects));
+        } else {
+            string.append(QString::fromStdString(": \"#EMPTY#\""));
+        }
+
+    }
+    string.append(QString::fromStdString("}"));
+    return string;
+}
+
+#endif
+
+
 void JSObject::visitChildren(JSCell* cell, SlotVisitor& visitor)
 {
     JSObject* thisObject = jsCast<JSObject*>(cell);

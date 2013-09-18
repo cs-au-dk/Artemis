@@ -48,6 +48,10 @@ enum ConcolicTreeOutput {
     TREE_NONE, TREE_FINAL, TREE_ALL
 };
 
+enum HeapReport{
+    ALL_CALLS, NAMED_CALLS, NO_CALLS
+};
+
 
 typedef struct OptionsType {
 
@@ -63,7 +67,9 @@ typedef struct OptionsType {
         majorMode(AUTOMATED),
         reportPathTrace(NO_TRACES),
         reportPathTraceBytecode(false),
-        concolicTreeOutput(TREE_FINAL)
+        concolicTreeOutput(TREE_FINAL),
+        reportHeap(NO_CALLS),
+        heapReportFactor(1)
     {}
 
     QMap<QString, QString> presetFormfields;
@@ -91,6 +97,10 @@ typedef struct OptionsType {
     bool reportPathTraceBytecode;
 
     ConcolicTreeOutput concolicTreeOutput;
+    HeapReport reportHeap;
+
+    int heapReportFactor;
+
 
 } Options;
 

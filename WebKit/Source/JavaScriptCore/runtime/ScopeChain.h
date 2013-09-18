@@ -33,6 +33,9 @@ namespace JSC {
     class LLIntOffsetsExtractor;
     class ScopeChainIterator;
     class SlotVisitor;
+#ifdef ARTEMIS
+    class JSFunction;
+#endif
     
     class ScopeChainNode : public JSCell {
     private:
@@ -83,10 +86,14 @@ namespace JSC {
 
         int localDepth();
 
-#ifndef NDEBUG        
+#ifndef NDEBUG
         void print();
 #endif
-        
+
+#ifdef ARTEMIS
+        QString scopeChainAsJSON(JSFunction* function, ExecState* execState, QSet<QString>* visitedObjects);
+#endif
+
         static Structure* createStructure(JSGlobalData& globalData, JSGlobalObject* globalObject, JSValue proto) { return Structure::create(globalData, globalObject, proto, TypeInfo(CompoundType, StructureFlags), &s_info); }
         static void visitChildren(JSCell*, SlotVisitor&);
         static JS_EXPORTDATA const ClassInfo s_info;

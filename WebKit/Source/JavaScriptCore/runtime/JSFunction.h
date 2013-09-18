@@ -23,6 +23,11 @@
 
 #ifndef JSFunction_h
 #define JSFunction_h
+#ifdef ARTEMIS
+#include <QRegExp>
+#include <QStringList>
+#include <QDebug>
+#endif
 
 #include "InternalFunction.h"
 #include "JSObject.h"
@@ -120,6 +125,11 @@ namespace JSC {
         {
             return OBJECT_OFFSETOF(JSFunction, m_executable);
         }
+
+#ifdef ARTEMIS
+        QList<QString> getArgumentsFromSourceCode(ExecState* execState);
+
+#endif
 
     protected:
         const static unsigned StructureFlags = OverridesGetOwnPropertySlot | ImplementsHasInstance | OverridesVisitChildren | OverridesGetPropertyNames | JSObject::StructureFlags;

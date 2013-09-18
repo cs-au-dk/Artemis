@@ -34,6 +34,8 @@
 #include <wtf/StdLibExtras.h>
 
 #ifdef ARTEMIS
+#include <QString>
+#include <QSet>
 #include "symbolic/expression/expression.h"
 #include "symbolic/expression/integerexpression.h"
 #include "symbolic/expression/integercoercion.h"
@@ -236,6 +238,8 @@ namespace JSC {
         Symbolic::StringExpression* generateStringCoercionExpression(ExecState* exec);
         Symbolic::BooleanExpression* generateBooleanExpression(ExecState* exec);
         Symbolic::BooleanExpression* generateBooleanCoercionExpression(ExecState* exec);
+
+        QString getAsJSONString(ExecState* exec, QSet<QString>* visitedObjects);
 #endif
         
         // Extracting the value.

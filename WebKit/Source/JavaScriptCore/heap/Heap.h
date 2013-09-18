@@ -36,6 +36,7 @@
 #include "WriteBarrierSupport.h"
 #include <wtf/HashCountedSet.h>
 #include <wtf/HashSet.h>
+#include <QString>
 
 #define COLLECT_ON_EVERY_ALLOCATION 0
 
@@ -124,6 +125,7 @@ namespace JSC {
         void collect(SweepToggle);
 #ifdef ARTEMIS
         void notifyIsNotSafeToCollect() { m_isSafeToCollect = false; }
+        void heapAsString(ExecState*, QString*, QSet<QString>* visitedObjects);
 #endif
 
         void reportExtraMemoryCost(size_t cost);
@@ -243,7 +245,6 @@ namespace JSC {
         FinalizerOwner m_finalizerOwner;
         
         bool m_isSafeToCollect;
-
         JSGlobalData* m_globalData;
         double m_lastGCLength;
         double m_lastCodeDiscardTime;

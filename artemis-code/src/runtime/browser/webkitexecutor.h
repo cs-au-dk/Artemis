@@ -80,6 +80,7 @@ private:
     PathTracerPtr mPathTracer;
     bool mNextOpCanceled;
     bool mKeepOpen;
+    bool testingDone;
 
     TraceBuilder* mTraceBuilder;
 

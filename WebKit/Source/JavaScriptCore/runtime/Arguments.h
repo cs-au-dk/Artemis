@@ -73,6 +73,14 @@ namespace JSC {
         Arguments(CallFrame*, NoParametersType);
 
     public:
+
+#ifdef ARTEMIS
+        JSValue getActivation(){
+            return d->activation.get();
+        }
+
+#endif
+
         static const ClassInfo s_info;
 
         static void visitChildren(JSCell*, SlotVisitor&);
@@ -101,7 +109,6 @@ namespace JSC {
         { 
             return Structure::create(globalData, globalObject, prototype, TypeInfo(ObjectType, StructureFlags), &s_info); 
         }
-
     protected:
         static const unsigned StructureFlags = OverridesGetOwnPropertySlot | OverridesVisitChildren | OverridesGetPropertyNames | JSObject::StructureFlags;
 

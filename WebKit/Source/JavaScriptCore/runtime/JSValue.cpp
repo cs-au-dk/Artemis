@@ -289,6 +289,44 @@ UString JSValue::toUStringSlowCase(ExecState* exec) const
 }
 #ifdef ARTEMIS
 
+
+QString JSValue::getAsJSONString(ExecState* exec, QSet<QString>* visitedObjects){
+    QString s;
+    if(isString()){
+        QString stringValue = QString::fromStdString(std::string(getString(exec).utf8().data()));
+        stringValue.replace(QChar::fromAscii('"'), QString::fromStdString("\\\""));
+        stringValue.replace(QChar::fromAscii('\n'),QString::fromStdString("\\n"));
+        stringValue.prepend(QChar::fromAscii('"'));
+        stringValue.append(QChar::fromAscii('"'));
+        s.append(stringValue);
+        }
+        if(isBoolean()){
+            s.append(QString::fromStdString(isTrue()?"true":"false"));
+        }
+
+        if(isNull()){
+            s.append(QString::fromStdString("null"));
+        }
+
+        if(isUndefined()){
+            s.append(QString::fromStdString("\"#UNDEFINED#\""));
+        }
+
+        if(isNumber()){
+            uint32_t i = 0;
+            getUInt32(i);
+            s.append(QString::number(i));
+        }
+
+        JSObject* o;
+        if(isObject() && (o = getObject()) > 0){
+            s.append(o->getAsJSONString(exec, visitedObjects));
+        }
+        return s;
+
+}
+
+
 void JSValue::makeSymbolic(Symbolic::Expression* symbolicValue) {
 
     if (isSymbolic()) {

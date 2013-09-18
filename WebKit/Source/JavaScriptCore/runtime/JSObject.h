@@ -37,6 +37,12 @@
 #include "JSString.h"
 #include <wtf/StdLibExtras.h>
 
+#ifdef ARTEMIS
+#include <QString>
+#include <QSet>
+#include <QDebug>
+#endif
+
 namespace JSC {
 
     inline JSCell* getJSFunction(JSValue value)
@@ -88,6 +94,11 @@ namespace JSC {
         JS_EXPORT_PRIVATE static void visitChildren(JSCell*, SlotVisitor&);
 
         JS_EXPORT_PRIVATE static UString className(const JSObject*);
+
+#ifdef ARTEMIS
+        QString classNameString();
+        QString getAsJSONString(ExecState* exec, QSet<QString>* visitedObjects);
+#endif
 
         JSValue prototype() const;
         void setPrototype(JSGlobalData&, JSValue prototype);

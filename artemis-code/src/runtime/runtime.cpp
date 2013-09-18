@@ -18,9 +18,11 @@
 #include <iostream>
 
 #include <QSharedPointer>
+#include <QDebug>
 
 #include "model/coverage/coveragetooutputstream.h"
 #include "util/loggingutil.h"
+#include "util/fileutil.h"
 #include "model/pathtracer.h"
 
 #include "statistics/statsstorage.h"
@@ -95,6 +97,10 @@ Runtime::Runtime(QObject* parent, const Options& options, const QUrl& url) : QOb
                                          enableConstantStringInstrumentation,
                                          enablePropertyAccessInstrumentation);
 
+    if(options.reportHeap != NO_CALLS){
+        mWebkitExecutor->webkitListener->enableHeapReport(options.reportHeap == NAMED_CALLS, 0, options.heapReportFactor);
+    }
+
     QSharedPointer<FormInputGenerator> formInputGenerator;
     switch (options.formInputGenerationStrategy) {
     case Random:
@@ -145,6 +151,12 @@ Runtime::Runtime(QObject* parent, const Options& options, const QUrl& url) : QOb
 
     /** Visited states **/
     mVisitedStates = new set<long>();
+}
+
+void writeAndWrapReportBuffer(int nm, QString buffer){
+    QString numberStr = QString::number(nm);
+    buffer = QString("{\"heap-report\":[").append(buffer).append(QString("]}"));
+    writeStringToFile(QString("heap-report-") + QDateTime::currentDateTime().toString("dd-MM-yy-hh-mm-ss")+" ("+numberStr+").json",buffer);
 
 }
 
@@ -190,6 +202,24 @@ void Runtime::done()
         Log::info("\n=== Path Tracer ===\n");
         mAppmodel->getPathTracer()->write();
         Log::info("=== Path Tracer END ===\n");
+    }
+
+    if(mOptions.reportHeap != NO_CALLS){
+        QString buffer = "";
+        int i = 0;
+        int nm;
+        QList<QString> report = mWebkitExecutor->webkitListener->getHeapReport(nm);
+        foreach(QString rap, report){
+            buffer += rap;
+            if (i < report.length()-1){
+                buffer += QString(", ");
+            }
+            i++;
+        }
+        if(buffer.length() > 0){
+            writeAndWrapReportBuffer(nm,buffer);
+        }
+
     }
 
     Log::info("\n=== Statistics ===\n");

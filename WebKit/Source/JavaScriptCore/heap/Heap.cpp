@@ -36,7 +36,9 @@
 #include "WeakSetInlines.h"
 #include <algorithm>
 #include <wtf/CurrentTime.h>
-
+#include <QString>
+#include <QDebug>
+#include <QSet>
 
 using namespace std;
 using namespace JSC;
@@ -272,6 +274,34 @@ inline void CountIfGlobalObject::operator()(JSCell* cell)
     count(1);
 }
 
+#ifdef ARTEMIS
+
+class HeapStringGeneratorFunctor {
+public:
+    HeapStringGeneratorFunctor(ExecState* execState, QSet<QString>* visited):m_execState(execState), m_visited(visited){}
+
+    typedef QString ReturnType;
+    ReturnType returnValue();
+    void operator ()(JSCell*);
+private:
+    ExecState* m_execState;
+    QString m_string;
+    QSet<QString>* m_visited;
+};
+
+void HeapStringGeneratorFunctor::operator ()(JSCell* cell){
+    JSObject* o;
+    if(!cell || !cell->isObject() || !(o = asObject(cell)) || !o->isGlobalObject()){
+        return;
+    }
+    m_string = o->getAsJSONString(m_execState, m_visited);
+}
+
+HeapStringGeneratorFunctor::ReturnType HeapStringGeneratorFunctor::returnValue(){ return m_string; }
+
+#endif
+
+
 class RecordType {
 public:
     typedef PassOwnPtr<TypeCountSet> ReturnType;
@@ -372,6 +402,25 @@ void Heap::lastChanceToFinalize()
     m_destroyedTypeCounts.dump(WTF::dataFile(), "Destroyed Type Counts");
 #endif
 }
+
+
+
+#ifdef ARTEMIS
+    void Heap::heapAsString(ExecState* execState, QString* s, QSet<QString>* visitedObjects){
+        bool oldSetting = m_isSafeToCollect;
+        notifyIsNotSafeToCollect();
+        HeapStringGeneratorFunctor f = HeapStringGeneratorFunctor(execState, visitedObjects);
+        //m_objectSpace.forEachCell<HeapStringGeneratorFunctor>(f);
+        f(execState->codeBlock()->globalObject());
+        s->append(f.returnValue());
+        if(oldSetting){
+            notifyIsSafeToCollect();
+        }
+
+    }
+
+#endif
+
 
 void Heap::reportExtraMemoryCostSlowCase(size_t cost)
 {

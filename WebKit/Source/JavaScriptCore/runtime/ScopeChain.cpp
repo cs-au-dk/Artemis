@@ -21,11 +21,14 @@
 #include "config.h"
 #include "ScopeChain.h"
 
+#include <QSet>
+
 #include "JSActivation.h"
 #include "JSGlobalObject.h"
 #include "JSObject.h"
 #include "PropertyNameArray.h"
 #include <stdio.h>
+#include "Arguments.h"
 
 namespace JSC {
 
@@ -52,6 +55,62 @@ void ScopeChainNode::print()
 }
 
 #endif
+
+
+#ifdef ARTEMIS
+        QString ScopeChainNode::scopeChainAsJSON(JSFunction* function, ExecState* execState, QSet<QString>* visitedObjects){
+            std::string retString = "{ \"parameters\":[";
+            bool first = true;
+            foreach(QString s, function->getArgumentsFromSourceCode(execState)){
+                if(!first){
+                    retString += ", ";
+                }
+                first = false;
+                retString += "\""+s.toStdString() + "\"";
+            }
+            retString += "], \"arguments\":";
+
+            JSValue arguments = execState->interpreter()->retrieveArguments(execState, function);
+
+            retString += arguments.getAsJSONString(execState, visitedObjects).toStdString();
+
+            ScopeChainIterator scopeEnd = end();
+            retString += ", \"scope_chain\": [";
+            int i = 0;
+            for (ScopeChainIterator scopeIter = begin(); scopeIter != scopeEnd; ++scopeIter) {
+                i++;
+                qDebug() << i;
+                JSObject* o = scopeIter->get();
+                if(o == globalObject.get()){
+                    continue;
+                }
+                if(retString.length() > 1){
+                    retString += ", ";
+                }
+                retString += o->getAsJSONString(execState,visitedObjects).toStdString();
+                /*
+                retString += "{ \"#OBJECT_NAME#\":\""+o->classNameString().toStdString()+"\"";
+
+                PropertyNameArray propertyNames(execState);
+                o->methodTable()->getPropertyNames(o,execState, propertyNames, ExcludeDontEnumProperties);
+                PropertyNameArray::const_iterator propEnd = propertyNames.end();
+                for (PropertyNameArray::const_iterator propIter = propertyNames.begin(); propIter != propEnd; propIter++) {
+                    Identifier name = *propIter;
+                    QString strName = QString::fromStdString((std::string) name.ustring().utf8().data());
+                    retString += ", \""+ strName.toStdString()+"\":"+ o->get(execState,name).getAsJSONString(execState, visitedObjects, true).toStdString();
+                }
+                retString +="}";
+                */
+            }
+            retString += "]}";
+
+
+
+            return QString::fromStdString(retString);
+        }
+
+#endif
+
 
 const ClassInfo ScopeChainNode::s_info = { "ScopeChainNode", 0, 0, 0, CREATE_METHOD_TABLE(ScopeChainNode) };
 
