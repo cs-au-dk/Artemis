@@ -120,7 +120,7 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
     {"major-mode", required_argument, NULL, 'm'},
     {"path-trace-report", required_argument, NULL, 'a'},
     {"path-trace-report-bytecode", required_argument, NULL, 'b'},
-    {"function-call-heap-report", required_argument, NULL, 'e'},
+    {"function-call-heap-report", required_argument, NULL, 'g'},
     {"function-call-heap-report-random-factor", required_argument, NULL, 'l'},
     {"concolic-tree-output", required_argument, NULL, 'd'},
     {"help", no_argument, NULL, 'h'},
@@ -319,7 +319,7 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             break;
         }
 
- case 'e' : {
+ case 'g' : {
             if(string(optarg).compare("all") == 0){
                 options.reportHeap = artemis::ALL_CALLS;
             } else if (string(optarg).compare("named") == 0){

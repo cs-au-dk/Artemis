@@ -94,7 +94,6 @@ QString JSObject::getAsJSONString(ExecState* exec, QSet<QString>* visitedObjects
     PropertyNameArrayData::PropertyNameVector::const_iterator iter = propertyNames.data()->propertyNameVector().begin();
     PropertyNameArrayData::PropertyNameVector::const_iterator end = propertyNames.data()->propertyNameVector().end();
     QString cnString = classNameString();
-    qDebug() << cnString;
     QString s = QString::fromStdString("\"#OBJECT_NAME#\":\"").append(cnString).append(QString::fromStdString("\""));
     string.append(QString::fromStdString("{"));
     string.append(s);

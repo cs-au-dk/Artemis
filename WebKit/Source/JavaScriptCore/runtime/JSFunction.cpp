@@ -175,16 +175,12 @@ CallType JSFunction::getCallData(JSCell* cell, CallData& callData)
 #ifdef ARTEMIS
 QList<QString> JSFunction::getArgumentsFromSourceCode(ExecState* execState){
 
-    QString funcDecl =QString::fromStdString(std::string(toString(execState).utf8().data()));
-    qDebug() <<funcDecl;
+    QString funcDecl =QString::fromStdString(std::string(toString(execState)->value(execState).utf8().data()));
     if(sourceCode()){
         funcDecl = funcDecl.replace(QString::fromStdString(std::string(sourceCode()->toString().utf8().data())),QString::fromStdString(""));
     }
-    qDebug() <<funcDecl;
     funcDecl = funcDecl.replace(QRegExp(QString::fromStdString("^[^\\(]+\\(([^\\)]*)\\).*$")), QString::fromStdString("\\1"));
-    qDebug() <<funcDecl;
     QStringList list = funcDecl.split(QString::fromStdString(","), QString::SkipEmptyParts);
-    qDebug() << list;
     for(int i = 0; i < list.length(); i++){
         list.append(list.takeFirst().trimmed());
     }

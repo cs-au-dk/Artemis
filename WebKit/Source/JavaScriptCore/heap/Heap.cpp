@@ -37,8 +37,9 @@
 #include <algorithm>
 #include <wtf/CurrentTime.h>
 #include <QString>
-#include <QDebug>
+#ifdef ARTEMIS
 #include <QSet>
+#endif
 
 using namespace std;
 using namespace JSC;

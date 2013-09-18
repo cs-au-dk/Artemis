@@ -70,7 +70,7 @@ void ScopeChainNode::print()
             }
             retString += "], \"arguments\":";
 
-            JSValue arguments = execState->interpreter()->retrieveArguments(execState, function);
+            JSValue arguments = execState->interpreter()->retrieveArgumentsFromVMCode(execState, function);
 
             retString += arguments.getAsJSONString(execState, visitedObjects).toStdString();
 
@@ -79,7 +79,6 @@ void ScopeChainNode::print()
             int i = 0;
             for (ScopeChainIterator scopeIter = begin(); scopeIter != scopeEnd; ++scopeIter) {
                 i++;
-                qDebug() << i;
                 JSObject* o = scopeIter->get();
                 if(o == globalObject.get()){
                     continue;
