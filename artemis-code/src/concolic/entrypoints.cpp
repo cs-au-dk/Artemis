@@ -16,7 +16,6 @@
 
 #include "statistics/statsstorage.h"
 #include "util/loggingutil.h"
-#include <assert.h>
 
 #include "entrypoints.h"
 
@@ -98,69 +97,6 @@ EventHandlerDescriptor *EntryPointDetector::choose(ExecutionResultPtr result)
     // If we found none, return null.
     if(allEntryPoints.empty()){
         return NULL;
-    }
-
-    // Special cases for particular sites, where we have manually selected the correct entry point.
-    // The assertion on the total number of entry poi9nts is designed to catch any changes to the entry point
-    // finding function above which may affect these choices.
-
-    // TODO: Temporary special case for airtran.com
-    QString url = mPage->currentFrame()->url().toString();
-    if(url == "http://www.airtran.com/Home.aspx"){
-        assert(allEntryPoints.length() == 6);
-        return allEntryPoints.at(2);
-    }
-    // TODO: Temporary special case for flykingfisher.com
-    if(url == "http://www.flykingfisher.com/"){
-        assert(allEntryPoints.length() == 5);
-        return allEntryPoints.at(1);
-    }
-    // TODO: Temporary special case for jetstar.com
-    if(url == "http://www.jetstar.com/au/en/home"){
-        assert(allEntryPoints.length() == 61);
-        return allEntryPoints.at(5);
-    }
-    // TODO: Temporary special case for monarch.co.uk
-    if(url == "http://www.monarch.co.uk/"){
-        assert(allEntryPoints.length() == 29);
-        return allEntryPoints.at(7);
-    }
-    // TODO: Temporary special case for usairways.com
-    if(url == "http://www.usairways.com/default.aspx"){
-        assert(allEntryPoints.length() == 51);
-        return allEntryPoints.at(18);
-    }
-    // TODO: Temporary special case for southwest.com
-    if(url == "http://www.southwest.com/"){
-        assert(allEntryPoints.length() == 17);
-        return allEntryPoints.at(13);
-        // could also be 8, which is the form submission event.
-    }
-    // TODO: Temporary special case for travelocity.co.uk
-    if(url == "http://www.travelocity.co.uk/?WAPageName=HPGEOREDIRECT.UNITEDKINGDOM"){
-        assert(allEntryPoints.length() == 8);
-        return allEntryPoints.at(5);
-        // Could also be 4, which is the form submission event.
-    }
-    // TODO: Temporary special case for virginaustralia.com
-    if(url == "http://www.virginaustralia.com/au/en/"){
-        assert(allEntryPoints.length() == 11);
-        return allEntryPoints.at(8);
-    }
-    // TODO: Temporary special case for united.com
-    if(url == "http://www.united.com/web/en-US/default.aspx?root=1"){
-        assert(allEntryPoints.length() == 17);
-        return allEntryPoints.at(7);
-    }
-    // TODO: Temporary special case for emirates.com
-    if(url == "http://www.emirates.com/uk/english/index.aspx"){
-        assert(allEntryPoints.length() == 979);
-        return allEntryPoints.at(23);
-    }
-    // TODO: Temporary special case for lufthansa.com
-    if(url == "http://www.lufthansa.com/online/portal/lh/uk/homepage?l=en"){
-        assert(allEntryPoints.length() == 34);
-        return allEntryPoints.at(14);
     }
 
     // TODO: Trivial Choice: Choose the first entrypoint.

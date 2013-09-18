@@ -166,7 +166,7 @@ void ConcolicRuntime::postInitialConcreteExecution(QSharedPointer<ExecutionResul
     Log::debug("Analysing page entrypoints...");
 
     // Choose and save the entry point for use in future runs.
-    EntryPointDetector detector(mWebkitExecutor->getPage());
+    MockEntryPointDetector detector(mWebkitExecutor->getPage());
     mEntryPointEvent = detector.choose(result);
 
     if(mEntryPointEvent){

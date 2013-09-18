@@ -80,7 +80,6 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/concolic/solver/solver.h \
     src/concolic/search/searchdfs.h \
     src/concolic/executiontree/nodes/trace.h \
-    src/concolic/entrypoints.h \
     src/concolic/executiontree/tracebuilder.h \
     src/runtime/toplevel/concolicruntime.h \
     src/concolic/traceclassifier.h \
@@ -116,7 +115,9 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/runtime/toplevel/artformruntime.h \
     src/concolic/executiontree/nodes/traceunexploredunsat.h \
     src/concolic/executiontree/nodes/traceunexploredmissed.h \
-    src/concolic/executiontree/nodes/traceunexploredunsolvable.h
+    src/concolic/executiontree/nodes/traceunexploredunsolvable.h \
+    src/concolic/mockentrypointdetector.h \
+    src/concolic/entrypoints.h
 
 SOURCES += src/runtime/input/ajaxinput.cpp \
     src/strategies/prioritizer/constantprioritizer.cpp \
@@ -212,6 +213,7 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/runtime/toplevel/artformruntime.cpp \
     src/concolic/executiontree/nodes/traceunexploredunsat.cpp \
     src/concolic/executiontree/nodes/traceunexploredmissed.cpp \
-    src/concolic/executiontree/nodes/traceunexploredunsolvable.cpp
+    src/concolic/executiontree/nodes/traceunexploredunsolvable.cpp \
+    src/concolic/mockentrypointdetector.cpp
 
 QT += network
