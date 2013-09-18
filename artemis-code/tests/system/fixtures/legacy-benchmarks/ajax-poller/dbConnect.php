@@ -1,6 +1,5 @@
 <?php
 
-$conn = mysql_connect("localhost","artemis","artemis");
-mysql_select_db("ajaxPoller",$conn);
+$connection = new SQLite3(dirname(__FILE__).'/ajax-poller.db');
 
 ?>

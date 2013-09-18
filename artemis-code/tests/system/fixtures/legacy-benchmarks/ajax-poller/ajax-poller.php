@@ -1,5 +1,5 @@
 <?php
-include_once("dbConnect.php");
+require_once("dbConnect.php");
 ?>
 <!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN" "http://www.w3.org/TR/html4/strict.dtd">
 <HTML>
@@ -55,16 +55,17 @@ include_once("dbConnect.php");
 			
 			
 			// Retreving poll from database
-	   $res = mysql_query("select * from poller where ID='$pollerId'");	
-			if($inf = mysql_fetch_array($res)){
+                /** @var $connection SQLite3 */
+                $res = $connection->query("select *, rowid as ID from poller where rowid='$pollerId'");
+			if($inf = $res->fetchArray()){
 				echo "<p class=\"pollerTitle\">".$inf["pollerTitle"]."</p>";	// Output poller title
 				
-				$resOptions = mysql_query("select * from poller_option where pollerID='$pollerId' order by pollerOrder") or die(mysql_error());	// Find poll options, i.e. radio buttons
+				$resOptions = $connection->query("select *, rowid AS ID from poller_option where pollerID='$pollerId' order by pollerOrder") or die($connection->lastErrorMsg());	// Find poll options, i.e. radio buttons
 				$ii = 0;
-				while($infOptions = mysql_fetch_array($resOptions)){
-					$ii++;
+				while($infOptions = $resOptions->fetchArray()){
+                    $ii++;
 					if($infOptions["defaultChecked"])$checked=" checked"; else $checked = "";
-					echo "<p class=\"pollerOption\"><input$checked type=\"radio\" value=\"".$infOptions["ID"]."\" name=\"vote[".$inf["ID"]."]".$ii."\" id=\"pollerOption".$infOptions["ID"]."\"><label for=\"pollerOption".$infOptions["ID"]."\" id=\"optionLabel".$infOptions["ID"]."\">".$infOptions["optionText"]."</label></p>";	
+					echo "<p class=\"pollerOption\"><input$checked type=\"radio\" value=\"".$infOptions["ID"]."\" name=\"vote[".$inf["ID"]."]".$ii."\" id=\"pollerOption".$infOptions["ID"]."\"><label for=\"pollerOption".$infOptions["ID"]."\" id=\"optionLabel".$infOptions["ID"]."\">".$infOptions["optionText"]."</label></p>";
 			
 				}
 			}			

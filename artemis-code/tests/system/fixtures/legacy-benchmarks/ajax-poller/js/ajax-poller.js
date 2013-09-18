@@ -198,18 +198,17 @@ function prepareForPollResults(pollId)
 
 
 function castMyVote(pollId,formObj)
-{	
+{
 	var elements = formObj.elements['vote[' + pollId + ']'];
   //  alert(">>> " + formObj.elements.toString() + "   " + elements.tagName + "   " +  elements.getAttribute("value"));
-	var optionId = false;
-
+    var optionId = false;
 	for(var no=1;no<=5;no++){
 		if(document.forms.artemis['vote[' + pollId + ']'+no].checked)
             optionId = document.forms.artemis['vote[' + pollId + ']'+no].value
 	}
+    console.log(optionId);
 	Poller_Set_Cookie('dhtmlgoodies_poller_' + pollId,'1',6000000);
 	if(optionId){
-	
 		var ajaxIndex = ajaxObjects.length;
 		ajaxObjects[ajaxIndex] = new sack();
 		ajaxObjects[ajaxIndex].requestFile = serverSideFile + '?pollId=' + pollId + '&optionId=' + optionId;
