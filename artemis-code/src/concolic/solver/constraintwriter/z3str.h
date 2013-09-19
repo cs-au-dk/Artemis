@@ -43,6 +43,15 @@ namespace artemis
  *
  * [1] http://z3.codeplex.com/
  * [2] http://www.cs.purdue.edu/homes/zheng16/str/
+ *
+ * TODO: A better approach to determining the types and
+ *   coercions required. Currently we apply coercions
+ *   as the appear in the PC. It may be more powerful
+ *   (or clearer) to first pre-process the PC to examine
+ *   which variables are used in which contects. Then
+ *   it should be possible to determine the best choice
+ *   of type for each input variable and which coercions
+ *   are required.
  */
 class Z3STRConstraintWriter : public ConstraintWriter, public Symbolic::Visitor
 {
@@ -62,19 +71,21 @@ private:
      * --------------------------------------
      *
      * Each call to visit writes (returns) its value into ``mExpressionBuffer``
-     * and new symbols are written directly to ``mOutput``.
+     * and ``mExpressionType``. New symbols are written directly to ``mOutput``.
      *
      * The type of the expression written to mExpressionBuffer should match the
-     * expected type by the call to visit. This type is stored in mExpressionType.
+     * type stored in mExpressionType.
      *
      * Each call to visit should
-     * 1. Check if its own type (documented below) matches mExpressionType, if not
-     *    it should mark the translation as an error.
+     * 1. Check the types (returned via mExpressionType) of any recursive calls
+     *      to the visitors match those required.
      * 2. Write the subexpression created by the call to mExpressionBuffer.
-     *    ! This subexpression should be of type mExpressionType
+     * 3. Write the type of the subexpression to mExpressionType
      *
-     * Symbolic values are bound to the relevant type (according to mExpressionType)
-     * the first time they are accessed (responsibility of the symbolic* visitors).
+     * Symbolic values are bound to the relevant type according to the coercions
+     * in the PC. We ignore coercions from inputs to integers (which the solver
+     * cannot handle but we can use) and a coercion from a non-input string
+     * expression to an integer is not supported.
      *
      * Constant values are automatically converted to the relevant type (according to
      * mExpressionType) when accessed (responsibility of the constant* visitors).
@@ -108,24 +119,27 @@ private:
      * we only support one type of constraint to be applied
      * to any symbol.
      *
-     * E.g. a string input can be coerced into an int, and
-     * we can apply as many integer constraints to it as we
-     * want. However, if that is the case then we will not
-     * allow any string constraints on said string.
+     * We treat all input variables as either strings or ints,
+     * and support certin types of mixing constraints on the
+     * same variable via coercions.
      *
-     * In other words, we don't support constraints mixing
-     * the different domains (int, real, bool, string)
-     * with the exception of integer constraints on string
-     * lengths.
+     * E.g. a string input can be coerced into an bool, and
+     * we can apply as many boolean constraints to it as we
+     * want. We can also support string constraints on the
+     * same variable.
      *
-     * We do this by recording the "type" an input is expected
-     * to be when used, regardless of how it has been coerced.
-     * That is, we ignore all coercions and apply the type in a
-     * lazy manner as needed. We register a type error if the
-     * same input is given two conflicting types.
+     * Integer constraints are handled slightly differently
+     * as we cannot support general coercions from strings
+     * to ints. However, we allow (string) input variables to
+     * be coerced to integers silently and solve these
+     * constraints as integers.
      *
-     * This is similar to the Kaluza behaviour.
+     * Mixing the type of a given input is always an error.
+     *
+     * We also support direct mixing of the string and int
+     * domains via integer constraints on string length.
      */
+
     void recordAndEmitType(const Symbolic::SymbolicSource&, Symbolic::Type type);
     inline bool checkType(Symbolic::Type expected);
 
@@ -133,14 +147,16 @@ private:
 
     static inline std::string stringfindreplace(const std::string& string, const std::string& search, const std::string& replace);
 
+    void error(std::string reason);
+
     std::map<std::string, Symbolic::Type> mTypemap;
     std::ofstream mOutput;
+    std::ofstream mConstriantLog;
 
     // holds the current subexpression returned by the previous call to visit
     std::string mExpressionBuffer;
 
-    // indicates the current type of the subexpression, used for determening
-    // the correct type of symbolic values
+    // indicates the current type of the subexpression returned in mExpressionBuffer
     Symbolic::Type mExpressionType;
 
     bool mError; // indicates that an error occured when writing the file

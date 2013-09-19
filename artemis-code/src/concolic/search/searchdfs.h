@@ -60,6 +60,14 @@ public:
     // Restart a fresh search from the beginning of the tree.
     void restartSearch();
 
+    // When over an unexplored node, we may mark it as "attempted but failed to explore".
+    // This can be used in later "passes" of the search to avoid wasting time on unreachable nodes or guide the search intelligently.
+    // TODO: Currently it is not, and is only used in TraceDisplay to show the user what is going on.
+    bool overUnexploredNode();
+    void markNodeUnsat();
+    void markNodeUnsolvable();
+    void markNodeMissed();
+
     // The visitor part which does the actual searching.
     void visit(TraceNode* node);            // Abstract nodes. An error if we reach this.
     void visit(TraceConcreteBranch* node);
@@ -82,7 +90,7 @@ private:
     // Stores whether or not the iteration is finished.
     bool mFoundTarget;
 
-    // We store the position which we left off the search on the previos call to chooseNextTarget.
+    // We store the position which we left off the search on the previous call to chooseNextTarget.
     // We store the parent branch of the unexplored node and the "direction" (i.e. true or false branch)
     // of that node which was unexplored.
     // This allows us to easily re-start the search and/or check whether an attept worked correctly.

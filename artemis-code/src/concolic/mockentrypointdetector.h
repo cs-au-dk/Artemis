@@ -14,44 +14,31 @@
  * limitations under the License.
  */
 
-#include <QString>
-#include <QList>
-#include <QWebFrame>
+#include "entrypoints.h"
 
-#include "runtime/browser/executionresult.h"
-
-#ifndef ENTRYPOINTS_H
-#define ENTRYPOINTS_H
+#ifndef MOCKENTRYPOINTDETECTOR_H
+#define MOCKENTRYPOINTDETECTOR_H
 
 namespace artemis
 {
 
 
-
-
-/*
- *  Inspects the page to detect any entry points (i.e. forms and buttons) we may wish to analyse.
- *  Assumes Artemis is running with a page loaded.
+/**
+ * An entry-point finder which hard-codes known entry points for specific sites.
+ * This is used for testing the concolic mode before we have a robust real
+ * implementation for finding and choosing entry points.
  */
-
-class EntryPointDetector
+class MockEntryPointDetector : public EntryPointDetector
 {
 public:
-    EntryPointDetector(ArtemisWebPagePtr page);
-
-    QList<EventHandlerDescriptorConstPtr> detectAll(ExecutionResultPtr result);
+    MockEntryPointDetector(ArtemisWebPagePtr page);
 
     // Chooses a single entry point on the page. Can return NULL if it does not find a suitable entry point.
     EventHandlerDescriptorConstPtr choose(ExecutionResultPtr result);
-
-protected:
-    ArtemisWebPagePtr mPage;
-    void printResultInfo(ExecutionResultPtr result);
 };
 
 
 
-}
+} //namespace artemis
 
-
-#endif // ENTRYPOINTS_H
+#endif // MOCKENTRYPOINTDETECTOR_H

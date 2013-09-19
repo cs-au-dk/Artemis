@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+#include <fstream>
+
 #include "util/loggingutil.h"
 #include "concolic/executiontree/tracemerger.h"
 #include "concolic/solver/z3solver.h"
@@ -44,6 +46,15 @@ void ConcolicRuntime::run(const QUrl& url)
 
     mGraphOutputIndex = 1;
     mGraphOutputNameFormat = QString("tree-%1_%2.gv").arg(QDateTime::currentDateTime().toString("dd-MM-yy-hh-mm-ss"));
+
+    std::ofstream constraintLog;
+    constraintLog.open("/tmp/z3constraintlog", std::ofstream::out | std::ofstream::app);
+
+    constraintLog << "================================================================================\n";
+    constraintLog << "Begin concolic analysis of " << url.toString().toStdString() << " at " << QDateTime::currentDateTime().toString("dd-MM-yy-hh-mm-ss").toStdString() << "\n";
+    constraintLog << "\n";
+
+    constraintLog.close();
 
     preConcreteExecution();
 }
@@ -155,7 +166,7 @@ void ConcolicRuntime::postInitialConcreteExecution(QSharedPointer<ExecutionResul
     Log::debug("Analysing page entrypoints...");
 
     // Choose and save the entry point for use in future runs.
-    EntryPointDetector detector(mWebkitExecutor->getPage());
+    MockEntryPointDetector detector(mWebkitExecutor->getPage());
     mEntryPointEvent = detector.choose(result);
 
     if(mEntryPointEvent){
@@ -223,6 +234,11 @@ void ConcolicRuntime::mergeTraceIntoTree()
         // A normal run.
         // Merge trace with tracegraph
         mSymbolicExecutionGraph = TraceMerger::merge(trace, mSymbolicExecutionGraph);
+
+        // Check if we actually explored the intended target.
+        if(mSearchStrategy->overUnexploredNode()){
+            mSearchStrategy->markNodeMissed();
+        }
     }
 
     // Dump the current state of the tree to a file.
@@ -383,10 +399,22 @@ void ConcolicRuntime::exploreNextTarget()
         preConcreteExecution();
 
     }else{
-        // TODO: Should try someting else/go concrete/...?
+        // TODO: Should try someting else...?
         Log::debug("Could not solve the constraint.");
-        Log::debug("This case is not yet implemented!");
         Log::debug("Skipping this target!");
+
+        // Mark the current node as unsolvable.
+        // If it was solved but unsatisfiable, then mark it as UNSAT instead.
+        if(solution->isUnsat()){
+            mSearchStrategy->markNodeUnsat();
+        }else{
+            mSearchStrategy->markNodeUnsolvable();
+        }
+
+        // Dump the current state of the tree to a file.
+        if(mOptions.concolicTreeOutput == TREE_ALL){
+            outputTreeGraph();
+        }
 
         // Skip this node and move on to the next.
         chooseNextTargetAndExplore();

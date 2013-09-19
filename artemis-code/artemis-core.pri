@@ -111,7 +111,11 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/concolic/solver/kaluzasolver.h \
     src/runtime/toplevel/artformruntime.h \
     src/runtime/input/forms/formfielddescriptor.h \
-    src/runtime/input/forms/forminputcollection.h
+    src/runtime/input/forms/forminputcollection.h \
+    src/concolic/executiontree/nodes/traceunexploredunsat.h \
+    src/concolic/executiontree/nodes/traceunexploredmissed.h \
+    src/concolic/executiontree/nodes/traceunexploredunsolvable.h \
+    src/concolic/mockentrypointdetector.h
 
 SOURCES += src/runtime/input/ajaxinput.cpp \
     src/strategies/prioritizer/constantprioritizer.cpp \
@@ -203,6 +207,10 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/concolic/solver/kaluzasolver.cpp \
     src/runtime/toplevel/artformruntime.cpp \
     src/runtime/input/forms/formfielddescriptor.cpp \
-    src/runtime/input/forms/forminputcollection.cpp
+    src/runtime/input/forms/forminputcollection.cpp \
+    src/concolic/executiontree/nodes/traceunexploredunsat.cpp \
+    src/concolic/executiontree/nodes/traceunexploredmissed.cpp \
+    src/concolic/executiontree/nodes/traceunexploredunsolvable.cpp \
+    src/concolic/mockentrypointdetector.cpp
 
 QT += network

@@ -14,46 +14,35 @@
  * limitations under the License.
  */
 
-#ifndef TRACEUNEXPLORED_H
-#define TRACEUNEXPLORED_H
+#ifndef TRACEUNEXPLOREDMISSED_H
+#define TRACEUNEXPLOREDMISSED_H
 
-#include "trace.h"
+#include "traceunexplored.h"
 
 namespace artemis {
 
 /**
- * This is just a placeholder for unexplored parts of the tree.
- *
- * This node is a singleton node.
+ *  A marker for parts of the tree which we attempted to explore but the trace 'missed' the desired target.
  */
-class TraceUnexplored : public TraceNode
+class TraceUnexploredMissed : public TraceUnexplored
 {
-
 public:
-
     /**
-     * For performance reasons we only generate a single unexplored trace node such
-     * that we can quickly get and discard these without trashing our memory.
+     *  As with TraceUnexplored, this simple marker is a singleton for performance reaons.
      */
-    static QSharedPointer<TraceUnexplored> getInstance();
+    static QSharedPointer<TraceUnexploredMissed> getInstance();
 
     void accept(TraceVisitor* visitor);
     bool isEqualShallow(const QSharedPointer<const TraceNode>& other);
-    ~TraceUnexplored() {}
+    ~TraceUnexploredMissed() {}
 
-    // This must be a pointer, it will not compile as a value
-    static QSharedPointer<TraceUnexplored>* mInstance;
+    static QSharedPointer<TraceUnexploredMissed>* mInstance;
 
-protected:
-    TraceUnexplored() {}
-
-
-
+private:
+    TraceUnexploredMissed() {}
 };
-
-typedef QSharedPointer<TraceUnexplored> TraceUnexploredPtr;
 
 
 }
 
-#endif // TRACEUNEXPLORED_H
+#endif // TRACEUNEXPLOREDMISSED_H

@@ -62,6 +62,21 @@ QList<EventHandlerDescriptorConstPtr> EntryPointDetector::detectAll(ExecutionRes
             if (element.tagName().compare("form", Qt::CaseInsensitive) == 0){
                 entryEvents.append(event);
             }
+
+        }else if(event->getName().compare("click", Qt::CaseInsensitive) == 0 &&
+                 event->getDomElement()->getTagName().compare("input", Qt::CaseInsensitive) == 0 &&
+                 (event->getDomElement()->getElement(mPage).attribute("type").compare("button", Qt::CaseInsensitive) == 0 ||
+                  event->getDomElement()->getElement(mPage).attribute("type").compare("submit", Qt::CaseInsensitive) == 0 ||
+                  event->getDomElement()->getElement(mPage).attribute("type").compare("image", Qt::CaseInsensitive) == 0)){
+
+            // Accept a click on an input element of type button, submit, or image.
+            entryEvents.append(event);
+
+        }else if(event->getName().compare("submit", Qt::CaseInsensitive) == 0 &&
+                 event->getDomElement()->getTagName().compare("form", Qt::CaseInsensitive) == 0){
+
+            // Accept a submit event on a form element.
+            entryEvents.append(event);
         }
 
     }
@@ -75,16 +90,19 @@ QList<EventHandlerDescriptorConstPtr> EntryPointDetector::detectAll(ExecutionRes
 
 EventHandlerDescriptorConstPtr EntryPointDetector::choose(ExecutionResultPtr result)
 {
-    // TODO: Trivial choice: select the first click on a button we find.
-    foreach (EventHandlerDescriptorConstPtr event , result->getEventHandlers()){
-        if(event->getName().compare("click", Qt::CaseInsensitive) == 0 &&
-                event->getDomElement()->getTagName().compare("button", Qt::CaseInsensitive) == 0){
-            return event;
-        }
-    }
+
+    // Detect all entry points on the page, according to the heuristics in detectAll().
+    QList<EventHandlerDescriptorConstPtr> allEntryPoints = detectAll(result);
+
     // If we found none, return null.
-    // TODO, we should really not do this... could we throw an exception?
-    return EventHandlerDescriptorConstPtr();
+    if(allEntryPoints.empty()){
+        // TODO, we should really not do this... could we throw an exception?
+        return EventHandlerDescriptorConstPtr();
+    }
+
+    // TODO: Trivial Choice: Choose the first entrypoint.
+    return allEntryPoints.at(0);
+
 }
 
 

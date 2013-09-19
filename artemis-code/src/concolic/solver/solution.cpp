@@ -25,14 +25,20 @@
 namespace artemis
 {
 
-Solution::Solution(bool success) :
-    mSuccess(success)
+Solution::Solution(bool success, bool unsat) :
+    mSuccess(success),
+    mUnsat(unsat)
 {
 }
 
 bool Solution::isSolved() const
 {
     return mSuccess;
+}
+
+bool Solution::isUnsat() const
+{
+    return mUnsat;
 }
 
 void Solution::insertSymbol(QString symbol, Symbolvalue value)

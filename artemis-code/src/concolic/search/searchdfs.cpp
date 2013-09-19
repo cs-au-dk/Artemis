@@ -72,7 +72,13 @@ bool DepthFirstSearch::chooseNextTarget()
         if(isImmediatelyUnexplored(current)){
             // Then the previous run did not reach the intended target.
             // Use the same method as continueFromLeaf() to jump to the next node to be searched.
-            current = nextAfterLeaf();
+            // If the parent stack is empty here, then we have reached the end of the search.
+            if(mParentStack.empty()){
+                mFoundTarget = false;
+                return false;
+            }else{
+                current = nextAfterLeaf();
+            }
         }
 
     }else{
@@ -136,25 +142,37 @@ void DepthFirstSearch::visit(TraceNode *node)
 
 void DepthFirstSearch::visit(TraceConcreteBranch *node)
 {
-    // At a branch, we explore only the 'false' subtree.
-    // Once we reach a leaf, the parent stack is used to return to branches and explore their 'true' children (see continueFromLeaf()).
-    // This allows us to stop the search once we find a node we would like to explore.
-    // The depth limit is also enforced here.
-    if(mCurrentDepth < mDepthLimit){
-        mParentStack.push(SavedPosition(node, mCurrentDepth, *mCurrentPC));
-        mCurrentDepth++;
-        mPreviousParent = node;
-        mPreviousDirection = false; // We are always taking the false branch here.
+    // Concrete branches are basically ignored by this search.
+    // If there are unexplored nodes as children of a concrete branch, then we ignore them and only search through children of symbolic branches.
+
+    if(isImmediatelyUnexplored(node->getFalseBranch()) && isImmediatelyUnexplored(node->getTrueBranch())){
+        Log::fatal("Reached a branch where both branches are unexplored during search.");
+        exit(1);
+
+    }else if(isImmediatelyUnexplored(node->getFalseBranch())){
+        // Then we treat this node as a pass-through to the 'true' subtree
+        node->getTrueBranch()->accept(this);
+
+    }else if(isImmediatelyUnexplored(node->getTrueBranch())){
+        // Then we treat this node as a pass-through to the 'false' subtree
         node->getFalseBranch()->accept(this);
+
     }else{
-        // If we have reached the depth limit, then treat this node as a leaf and skip to whatever we are supposed to search next.
-        continueFromLeaf();
+        // Both branches are explored, so we must search each in turn.
+        mParentStack.push(SavedPosition(node, mCurrentDepth, *mCurrentPC));
+        //mCurrentDepth++; // Do not increase depth for concrete branches.
+        mPreviousParent = node;
+        mPreviousDirection = false; // We are always taking the false branch to begin with.
+        node->getFalseBranch()->accept(this);
     }
 }
 
 void DepthFirstSearch::visit(TraceSymbolicBranch *node)
 {
-    // See TraceConcreteBranch above.
+    // At a branch, we explore only the 'false' subtree.
+    // Once we reach a leaf, the parent stack is used to return to branches and explore their 'true' children (see continueFromLeaf()).
+    // This allows us to stop the search once we find a node we would like to explore.
+    // The depth limit is also enforced here.
     if(mCurrentDepth < mDepthLimit){
         mParentStack.push(SavedPosition(node, mCurrentDepth, *mCurrentPC));
         mCurrentDepth++;
@@ -221,6 +239,83 @@ TraceNodePtr DepthFirstSearch::nextAfterLeaf()
     mPreviousDirection = true;
 
     return parent.node->getTrueBranch();
+}
+
+
+
+
+
+/*
+ *  The functions which deal with marking certain nodes as Unsat, Unsolvable, or Missed.
+ *  We do this by replacing the current TraceUnexplored with the relevant marker class.
+ */
+
+
+bool DepthFirstSearch::overUnexploredNode()
+{
+    // This method can only be called once we have started a search.
+    assert(mIsPreviousRun);
+
+    // Use mPreviousParent and mPreviousDirection to find the "current" node again, as in chooseNextTarget().
+    TraceNodePtr current;
+    if(mPreviousDirection){
+        current = mPreviousParent->getTrueBranch();
+    }else{
+        current = mPreviousParent->getFalseBranch();
+    }
+
+    return isImmediatelyUnexplored(current);
+}
+
+void DepthFirstSearch::markNodeUnsat()
+{
+    // This method can only be called once we have started a search.
+    assert(mIsPreviousRun);
+
+    // Replace the current node with TraceNodeUnsat.
+    if(mPreviousDirection){
+        // Replace the true branch of mPreviousParent.
+        assert(isImmediatelyUnexplored(mPreviousParent->getTrueBranch()));
+        mPreviousParent->setTrueBranch(TraceUnexploredUnsat::getInstance());
+    }else{
+        // Replace the false branch of mPreviousParent.
+        assert(isImmediatelyUnexplored(mPreviousParent->getFalseBranch()));
+        mPreviousParent->setFalseBranch(TraceUnexploredUnsat::getInstance());
+    }
+}
+
+void DepthFirstSearch::markNodeUnsolvable()
+{
+    // This method can only be called once we have started a search.
+    assert(mIsPreviousRun);
+
+    // Replace the current node with TraceUnexploredUnsolvable.
+    if(mPreviousDirection){
+        // Replace the true branch of mPreviousParent.
+        assert(isImmediatelyUnexplored(mPreviousParent->getTrueBranch()));
+        mPreviousParent->setTrueBranch(TraceUnexploredUnsolvable::getInstance());
+    }else{
+        // Replace the false branch of mPreviousParent.
+        assert(isImmediatelyUnexplored(mPreviousParent->getFalseBranch()));
+        mPreviousParent->setFalseBranch(TraceUnexploredUnsolvable::getInstance());
+    }
+}
+
+void DepthFirstSearch::markNodeMissed()
+{
+    // This method can only be called once we have started a search.
+    assert(mIsPreviousRun);
+
+    // Replace the current node with TraceUnexploredMissed.
+    if(mPreviousDirection){
+        // Replace the true branch of mPreviousParent.
+        assert(isImmediatelyUnexplored(mPreviousParent->getTrueBranch()));
+        mPreviousParent->setTrueBranch(TraceUnexploredMissed::getInstance());
+    }else{
+        // Replace the false branch of mPreviousParent.
+        assert(isImmediatelyUnexplored(mPreviousParent->getFalseBranch()));
+        mPreviousParent->setFalseBranch(TraceUnexploredMissed::getInstance());
+    }
 }
 
 
