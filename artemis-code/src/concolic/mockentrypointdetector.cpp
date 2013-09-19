@@ -15,6 +15,7 @@
  */
 
 #include <assert.h>
+#include <QDebug>
 
 #include "mockentrypointdetector.h"
 
@@ -35,6 +36,7 @@ EventHandlerDescriptorConstPtr MockEntryPointDetector::choose(ExecutionResultPtr
 
     // If we found none, return null.
     if(allEntryPoints.empty()){
+        qDebug() << "Could not detect any entry points.\n";
         // TODO, we should really not do this... could we throw an exception?
         return EventHandlerDescriptorConstPtr();
     }
@@ -108,6 +110,14 @@ EventHandlerDescriptorConstPtr MockEntryPointDetector::choose(ExecutionResultPtr
         assert(allEntryPoints.length() == 34);
         return allEntryPoints.at(14);
     }
+
+    if(url == "http://www.alaskaair.com/"){
+        assert(allEntryPoints.length() == 14);
+        return allEntryPoints.at(6);
+    }
+
+
+    qDebug() << "Did not match any known URL during entry-point finding.\n";
 
     // If the site is not on the list, then this mock class does not support it, so return NULL.
     // TODO, we should really not do this... could we throw an exception?
