@@ -153,8 +153,7 @@ void Z3STRConstraintWriter::visit(Symbolic::ConstantInteger* constantinteger)
     }
 
     if (mExpressionBuffer.find("nan") != std::string::npos) {
-        mError = true;
-        mErrorReason = "Unsupported constraint using NaN constant";
+        error("Unsupported constraint using NaN constant");
     }
 }
 
@@ -264,8 +263,7 @@ void Z3STRConstraintWriter::visit(Symbolic::StringBinaryOperation* stringbinaryo
     case Symbolic::STRING_GT:
     case Symbolic::STRING_LEQ:
     case Symbolic::STRING_LT:
-        mError = true;
-        mErrorReason = "Unsupported operation on strings";
+        error("Unsupported operation on strings");
         return;
     default:
         break;
@@ -344,7 +342,7 @@ void Z3STRConstraintWriter::visit(Symbolic::StringLength* stringlength)
     std::ostringstream strs;
     strs << "(Length " << mExpressionBuffer << ")";
     mExpressionBuffer = strs.str();
-    mExpressionType = Symbolic::STRING;
+    mExpressionType = Symbolic::INT;
 }
 
 
@@ -392,12 +390,11 @@ std::string Z3STRConstraintWriter::stringfindreplace(const std::string& string,
 
 void Z3STRConstraintWriter::error(std::string reason)
 {
-    mError = true;
-    mErrorReason = reason;
-    mExpressionBuffer = "ERROR";
-
-    // TODO: Temporary.
-    mConstriantLog << reason << std::endl;
+    if(!mError){
+        mError = true;
+        mErrorReason = reason;
+        mExpressionBuffer = "ERROR";
+    }
 }
 
 
@@ -437,8 +434,7 @@ void Z3STRConstraintWriter::coercetype(Symbolic::Type from,
             break;
 
         case Symbolic::STRING:
-            mError = true;
-            mErrorReason = "Unsupported type coercion from INT to STRING";
+            error("Unsupported type coercion from INT to STRING");
             break;
 
         case Symbolic::BOOL:
@@ -447,8 +443,7 @@ void Z3STRConstraintWriter::coercetype(Symbolic::Type from,
             break;
 
         default:
-            mError = true;
-            mErrorReason = "Unsupported type coercion from INT to UNKNOWN";
+            error("Unsupported type coercion from INT to UNKNOWN");
             break;
         }
 
@@ -459,8 +454,7 @@ void Z3STRConstraintWriter::coercetype(Symbolic::Type from,
 
         switch (to) {
         case Symbolic::INT:
-            mError = true;
-            mErrorReason = "Unsupported type coercion from STRING to INT";
+            error("Unsupported type coercion from STRING to INT");
             break;
 
         case Symbolic::STRING:
@@ -474,8 +468,7 @@ void Z3STRConstraintWriter::coercetype(Symbolic::Type from,
             break;
 
         default:
-            mError = true;
-            mErrorReason = "Unsupported type coercion from STRING to UNKNOWN";
+            error("Unsupported type coercion from STRING to UNKNOWN");
             break;
         }
 
@@ -501,16 +494,14 @@ void Z3STRConstraintWriter::coercetype(Symbolic::Type from,
             break;
 
         default:
-            mError = true;
-            mErrorReason = "Unsupported type coercion from INT to UNKNOWN";
+            error("Unsupported type coercion from INT to UNKNOWN");
             break;
         }
 
         break;
 
     default:
-        mError = true;
-        mErrorReason = "Unsupported type coercion from UNKNOWN to UNKNOWN";
+        error("Unsupported type coercion from UNKNOWN to UNKNOWN");
         break;
     }
 
