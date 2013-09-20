@@ -1,5 +1,5 @@
  
-The following instructions assumes you are using a Linux-based system. 
+The following instructions assumes you are using a (64 bit) Linux-based system. 
 Artemis have been successfully installed on Ubuntu 12.10 and Fedora 18.
 
  0. Fetch all software dependencies using
@@ -39,7 +39,9 @@ Artemis have been successfully installed on Ubuntu 12.10 and Fedora 18.
 
       export LD_LIBRARY_PATH=$ARTEMISDIR/WebKit/WebKitBuild/Release/lib  
 
-    where `<path>` is the root directory of the Artemis repository.
-
     This environment variable is needed every time you wish to
     execute Artemis.
+
+4. Configure your path to include Artemis executable
+
+      export PATH=$ARTEMISDIR/artemis-code/dist:$PATH
