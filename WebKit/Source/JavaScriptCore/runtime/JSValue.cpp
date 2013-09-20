@@ -319,7 +319,7 @@ QString JSValue::getAsJSONString(ExecState* exec, QSet<QString>* visitedObjects)
         }
 
         JSObject* o;
-        if(isObject() && (o = getObject()) > 0){
+        if(isObject() && (o = getObject()) != 0){
             s.append(o->getAsJSONString(exec, visitedObjects));
         }
         return s;
