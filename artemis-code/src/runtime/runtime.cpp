@@ -98,7 +98,7 @@ Runtime::Runtime(QObject* parent, const Options& options, const QUrl& url) : QOb
                                          enablePropertyAccessInstrumentation);
 
     if(options.reportHeap != NO_CALLS){
-        mWebkitExecutor->webkitListener->enableHeapReport(options.reportHeap == NAMED_CALLS, 0, options.heapReportFactor);
+        mWebkitExecutor->mWebkitListener->enableHeapReport(options.reportHeap == NAMED_CALLS, 0, options.heapReportFactor);
     }
 
     QSharedPointer<FormInputGenerator> formInputGenerator;
@@ -118,7 +118,7 @@ Runtime::Runtime(QObject* parent, const Options& options, const QUrl& url) : QOb
     mInputgenerator = new RandomInputGenerator(this,
                                                formInputGenerator,
                                                QSharedPointer<StaticEventParameterGenerator>(new StaticEventParameterGenerator()),
-                                               new TargetGenerator(this, jqueryListener),
+                                               TargetGeneratorConstPtr(new TargetGenerator(jqueryListener)),
                                                options.numberSameLength);
     mTerminationStrategy = new NumberOfIterationsTermination(this, options.iterationLimit);
 
@@ -135,7 +135,7 @@ Runtime::Runtime(QObject* parent, const Options& options, const QUrl& url) : QOb
     case READWRITE:
         mPrioritizerStrategy = PrioritizerStrategyPtr(new ReadWritePrioritizer());
         break;
-    case  ALL_STRATEGIES:{
+    case ALL_STRATEGIES:{
         CollectedPrioritizer* strategy = new CollectedPrioritizer();
         strategy->addPrioritizer(new ConstantPrioritizer());
         strategy->addPrioritizer(new CoveragePrioritizer());
@@ -208,7 +208,7 @@ void Runtime::done()
         QString buffer = "";
         int i = 0;
         int nm;
-        QList<QString> report = mWebkitExecutor->webkitListener->getHeapReport(nm);
+        QList<QString> report = mWebkitExecutor->mWebkitListener->getHeapReport(nm);
         foreach(QString rap, report){
             buffer += rap;
             if (i < report.length()-1){

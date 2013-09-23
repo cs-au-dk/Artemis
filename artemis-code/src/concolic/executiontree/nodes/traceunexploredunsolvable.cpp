@@ -14,21 +14,25 @@
  * limitations under the License.
  */
 
-#include "jquerytarget.h"
+#include "traceunexploredunsolvable.h"
 
-#include "targetgenerator.h"
+namespace artemis {
 
-namespace artemis
+QSharedPointer<TraceUnexploredUnsolvable>* TraceUnexploredUnsolvable::mInstance = new QSharedPointer<TraceUnexploredUnsolvable>(new TraceUnexploredUnsolvable());
+
+QSharedPointer<TraceUnexploredUnsolvable> TraceUnexploredUnsolvable::getInstance()
 {
-
-TargetGenerator::TargetGenerator(JQueryListener* jqueryListener) :
-    mJQueryListener(jqueryListener)
-{
+    return *TraceUnexploredUnsolvable::mInstance;
 }
 
-TargetDescriptorConstPtr TargetGenerator::generateTarget(EventHandlerDescriptorConstPtr eventHandler) const
+void TraceUnexploredUnsolvable::accept(TraceVisitor* visitor)
 {
-    return TargetDescriptorConstPtr(new JQueryTarget(eventHandler, mJQueryListener));
+    visitor->visit(this);
 }
 
-} // END NAMESPACE
+bool TraceUnexploredUnsolvable::isEqualShallow(const QSharedPointer<const TraceNode>& other)
+{
+    return !other.dynamicCast<const TraceUnexploredUnsolvable>().isNull();
+}
+
+}

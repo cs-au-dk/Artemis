@@ -20,10 +20,10 @@
 namespace artemis
 {
 
-KeyboardEventParameters::KeyboardEventParameters(QObject* parent, QString eventType, bool canBubble, bool cancelable,
-        QString keyIdentifier,  unsigned int keyLocation,
-        bool ctrlKey, bool altKey, bool shiftKey, bool metaKey, bool altGraphKey)
-    : EventParameters(parent)
+KeyboardEventParameters::KeyboardEventParameters(QString eventType, bool canBubble, bool cancelable,
+                                                QString keyIdentifier,  unsigned int keyLocation,
+                                                bool ctrlKey, bool altKey, bool shiftKey, bool metaKey, bool altGraphKey) :
+    EventParameters()
 {
     Q_ASSERT(!eventType.isEmpty());
     this->eventType = eventType;
@@ -38,7 +38,7 @@ KeyboardEventParameters::KeyboardEventParameters(QObject* parent, QString eventT
     this->altGraphKey = altGraphKey;
 }
 
-QString KeyboardEventParameters::jsString() const
+QString KeyboardEventParameters::getJsString() const
 {
     if (!cachedJsString.isEmpty()) {
         return cachedJsString;
@@ -65,7 +65,7 @@ QString KeyboardEventParameters::jsString() const
     return res;
 }
 
-EventType KeyboardEventParameters::type() const
+EventType KeyboardEventParameters::getType() const
 {
     return KEY_EVENT;
 }

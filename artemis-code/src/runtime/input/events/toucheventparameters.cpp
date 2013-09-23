@@ -2,15 +2,15 @@
 namespace artemis{
 
 
-TouchEventParameters::TouchEventParameters() : EventParameters(NULL)
+TouchEventParameters::TouchEventParameters() : EventParameters()
 {
 }
 
-QString TouchEventParameters::jsString() const {
+QString TouchEventParameters::getJsString() const {
     return QString("");
 }
 
-EventType TouchEventParameters::type() const{
+EventType TouchEventParameters::getType() const{
     return TOUCH_EVENT;
 }
 

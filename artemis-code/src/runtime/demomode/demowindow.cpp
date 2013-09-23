@@ -126,11 +126,10 @@ DemoModeMainWindow::DemoModeMainWindow(AppModelPtr appModel, WebKitExecutor* web
     QFont sectionFont;
     sectionFont.setBold(true);
 
-    QLabel* entryPointLabel = new QLabel("Potential Entry Points:");
-    entryPointLabel->setFont(sectionFont);
-    mAnalysisLayout->addWidget(entryPointLabel);
+    mEntryPointLabel = new QLabel("Potential Entry Points:");
+    mEntryPointLabel->setFont(sectionFont);
+    mAnalysisLayout->addWidget(mEntryPointLabel);
     mAnalysisLayout->addWidget(mEntryPointList);
-    mAnalysisLayout->addWidget(new QLabel("Currently we only detect 'click' events on\n'button' elements and 'a' elements within\nforms.\n\nSelect an entry above to highlight it on the page."));
     mAnalysisLayout->addSpacing(10);
 
     QLabel* curTraceLabel = new QLabel("Trace Recording:");
@@ -387,19 +386,20 @@ void DemoModeMainWindow::preTraceExecution(ExecutionResultPtr result)
     // Simply run the entry-point detector and display its results.
     Log::debug("CONCOLIC-INFO: Analysing page entrypoints...");
 
-    QList<EventHandlerDescriptor*> allEntryPoints;
+    QList<EventHandlerDescriptorConstPtr> allEntryPoints;
 
     // Detect all potential entry points on the page.
     allEntryPoints = mEntryPointDetector.detectAll(result);
 
     // List them all
     Log::debug(QString("CONCOLIC-INFO: Found %1 potential entry points.").arg(allEntryPoints.length()).toStdString());
-    foreach(EventHandlerDescriptor* ep, allEntryPoints){
+    foreach (EventHandlerDescriptorConstPtr ep, allEntryPoints){
         // Log to termianl
         Log::debug(QString("CONCOLIC-INFO: Potential entry point :: %1").arg(ep->toString()).toStdString());
         // Log to GUI.
-        addEntryPoint(ep->toString(), ep->domElement());
+        addEntryPoint(ep->toString(), ep->getDomElement());
     }
+    mEntryPointLabel->setText(QString("Potential Entry Points: %1").arg(allEntryPoints.length()));
 
     // Display the page for the user to interact with.
     mWebView->setEnabled(true);
@@ -478,6 +478,7 @@ void DemoModeMainWindow::resetPageAnlaysis()
 {
     mKnownEntryPoints.clear();
     mEntryPointList->clear();
+    mEntryPointLabel->setText("Potential Entry Points:");
 }
 
 

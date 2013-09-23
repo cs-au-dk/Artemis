@@ -3,15 +3,15 @@
 namespace artemis{
 
 
-UnknownEventParameters::UnknownEventParameters() : EventParameters(NULL)
+UnknownEventParameters::UnknownEventParameters() : EventParameters()
 {
 }
 
-QString UnknownEventParameters::jsString() const {
+QString UnknownEventParameters::getJsString() const {
     return QString("");
 }
 
-EventType UnknownEventParameters::type() const{
+EventType UnknownEventParameters::getType() const{
     return UNKNOWN_EVENT;
 }
 

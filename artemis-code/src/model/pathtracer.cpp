@@ -23,15 +23,18 @@
 namespace artemis
 {
 
-PathTracer::PathTracer(PathTraceReport reportLevel, bool reportBytecode) :
+PathTracer::PathTracer(PathTraceReport reportLevel) :
     mTraces(QList<PathTrace>()),
-    mReportLevel(reportLevel),
-    mReportBytecode(reportBytecode)
+    mReportLevel(reportLevel)
 {
 }
 
 void PathTracer::notifyStartingLoad()
 {
+    if(mReportLevel == NO_TRACES){
+        return;
+    }
+
     newPathTrace("Starting Page Load", LOAD);
 }
 
@@ -39,6 +42,10 @@ void PathTracer::notifyStartingLoad()
 // TODO: Maybe obsolete since we have slEventListenerTriggered below?
 void PathTracer::notifyStartingEvent(QSharedPointer<const BaseInput> inputEvent)
 {
+    if(mReportLevel == NO_TRACES){
+        return;
+    }
+
     QString eventStr = inputEvent->toString();
     // TODO: is there a better way to check for inputEvent being a click without adding a special method to BaseInput?
     TraceType type = eventStr.startsWith("DomInput(click") ? CLICK : OTHER;
@@ -48,6 +55,10 @@ void PathTracer::notifyStartingEvent(QSharedPointer<const BaseInput> inputEvent)
 // An event which WebKit is executing.
 void PathTracer::slEventListenerTriggered(QWebElement* elem, QString eventName)
 {
+    if(mReportLevel == NO_TRACES){
+        return;
+    }
+
     TraceType type;
     if(eventName == "click"){
         type = CLICK;
@@ -63,6 +74,10 @@ void PathTracer::slEventListenerTriggered(QWebElement* elem, QString eventName)
 
 void PathTracer::slJavascriptFunctionCalled(QString functionName, size_t bytecodeSize, uint functionStartLine, uint sourceOffset, QSource* source)
 {
+    if(mReportLevel == NO_TRACES){
+        return;
+    }
+
     TraceItem item;
     item.type = FUNCALL;
     item.name = displayedFunctionName(functionName);
@@ -77,24 +92,19 @@ void PathTracer::slJavascriptFunctionCalled(QString functionName, size_t bytecod
 
 void PathTracer::slJavascriptFunctionReturned(QString functionName)
 {
-    appendItem(FUNRET, displayedFunctionName(functionName), "");
-}
+    if(mReportLevel == NO_TRACES){
+        return;
+    }
 
-void PathTracer::slJavascriptBytecodeExecuted(const ByteCodeInfoStruct binfo, uint sourceOffset, QSource* source)
-{
-    TraceItem item;
-    item.type = BYTECODE;
-    item.name = binfo.getOpcodeName();
-    item.message = binfo.isSymbolic ? "Symbolic" : "";
-    item.sourceUrl = source->getUrl();
-    item.sourceOffset = sourceOffset;
-    item.sourceStartLine = source->getStartLine();
-    item.bytecodeOffset = binfo.bytecodeOffset;
-    appendItem(item);
+    appendItem(FUNRET, displayedFunctionName(functionName), "");
 }
 
 void PathTracer::slJavascriptAlert(QWebFrame* frame, QString msg)
 {
+    if(mReportLevel == NO_TRACES){
+        return;
+    }
+
     msg = msg.replace("\n", "\\n");
     appendItem(ALERT, "alert()",  "Message: " + msg);
 }
@@ -167,11 +177,6 @@ void PathTracer::write()
                     stackLevel--;
                     //Log::info("   Function End | " + std::string(stackLevel*2, ' ') + itemStr);
                     break;
-                case BYTECODE:
-                    if(mReportBytecode){
-                        Log::info("                | " + std::string(stackLevel*2, ' ') + itemStr);
-                    }
-                    break;
                 case ALERT:
                     Log::info("     Alert Call | " + std::string(stackLevel*2, ' ') + itemStr);
                     break;
@@ -187,6 +192,10 @@ void PathTracer::write()
 }
 
 void PathTracer::writePathTraceHTML(bool linkWithCoverage, QString coveragePath, QString& pathToFile){
+    if(mReportLevel == NO_TRACES){
+        return;
+    }
+
     TraceItem item;
     PathTrace trace;
     QString itemStr;
@@ -207,11 +216,6 @@ void PathTracer::writePathTraceHTML(bool linkWithCoverage, QString coveragePath,
     res += "<h1>Path Tracer Results</h1>\n";
 
     res += "<hr>\n<h3>Display Options:</h3>\n<ul class=\"controls\">\n";
-    if(mReportBytecode){
-        res += "\t<li><a onclick=\"toggleSetting('hidebytecode')\">Toggle Bytecodes</a></li>\n";
-    }else{
-        res += "\t<li>(Bytecode disabled)</li>\n";
-    }
     res += "\t<li><a onclick=\"toggleSetting('showclicktracesonly')\">Toggle displaying click traces only</a></li>\n";
     res += "\t<li><a onclick=\"toggleSetting('hidemousetraces')\">Toggle mouse-related traces</a></li>\n";
     res += "\t<li><a onclick=\"toggleSetting('hideloadtraces')\">Toggle loading-related traces</a></li>\n";
@@ -252,11 +256,6 @@ void PathTracer::writePathTraceHTML(bool linkWithCoverage, QString coveragePath,
                 case FUNRET:
                     res += "</ol>\n" + QString(indentLevel-1, '\t') + "</li>\n";
                     indentLevel--;
-                    break;
-                case BYTECODE:
-                    if(mReportBytecode){
-                        res += "<li class=\"bytecode\">" + itemStr + extraStr + "</li>\n";
-                    }
                     break;
                 case ALERT:
                     res += "<li class=\"alert\"><span class=\"label\">Alert Call:</span> " + itemStr + extraStr + "</li>\n";

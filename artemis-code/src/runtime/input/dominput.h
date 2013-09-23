@@ -16,6 +16,8 @@
 #ifndef DOMINPUT_H
 #define DOMINPUT_H
 
+#include <QSharedPointer>
+
 #include "strategies/inputgenerator/targets/targetdescriptor.h"
 
 #include "forms/forminputcollection.h"
@@ -32,29 +34,28 @@ class DomInput: public BaseInput
 {
 
 public:
-    DomInput(const EventHandlerDescriptor* handler, QSharedPointer<const FormInputCollection> formInput,
-             const EventParameters* params, const TargetDescriptor* target);
-    ~DomInput(){
-        delete mEventHandler;
-        delete mEvtParams;
-        delete mTarget;
-    }
+    DomInput(EventHandlerDescriptorConstPtr handler,
+             FormInputCollectionConstPtr formInput,
+             EventParametersConstPtr params,
+             TargetDescriptorConstPtr target);
 
     void apply(ArtemisWebPagePtr page, QWebExecutionListener* webkitListener) const;
-    QSharedPointer<const BaseInput> getPermutation(const QSharedPointer<const FormInputGenerator>& formInputGenerator,
-                                                   const QSharedPointer<const EventParameterGenerator>& eventParameterGenerator,
-                                                   TargetGenerator* targetGenerator,
-                                                   QSharedPointer<const ExecutionResult> result) const;
+    BaseInputConstPtr getPermutation(const FormInputGeneratorConstPtr& formInputGenerator,
+                                     const EventParameterGeneratorConstPtr& eventParameterGenerator,
+                                     const TargetGeneratorConstPtr& targetGenerator,
+                                     const ExecutionResultConstPtr& result) const;
 
     int hashCode() const;
     QString toString() const;
 
 private:
-    const EventHandlerDescriptor* mEventHandler;
-    QSharedPointer<const FormInputCollection> mFormInput;
-    const EventParameters* mEvtParams;
-    const TargetDescriptor* mTarget;
+    EventHandlerDescriptorConstPtr mEventHandler;
+    FormInputCollectionConstPtr mFormInput;
+    EventParametersConstPtr mEvtParams;
+    TargetDescriptorConstPtr mTarget;
 };
+
+typedef QSharedPointer<const DomInput> DomInputConstPtr;
 
 }
 

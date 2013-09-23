@@ -40,14 +40,14 @@ class PathTracer : public QObject
     Q_OBJECT
 
 public:
-    explicit PathTracer(PathTraceReport reportLevel, bool reportBytecode);
+    explicit PathTracer(PathTraceReport reportLevel);
     void notifyStartingLoad();
     void notifyStartingEvent(QSharedPointer<const BaseInput> inputEvent);
     void write();
     void writePathTraceHTML(bool linkWithCoverage, QString coveragePath, QString& pathToFile);
 
 private:
-    enum ItemType {FUNCALL, FUNRET, BYTECODE, ALERT};
+    enum ItemType {FUNCALL, FUNRET, ALERT};
     struct TraceItem {
         ItemType type;
         QString name;
@@ -66,7 +66,6 @@ private:
 
     QList<PathTrace> mTraces;
     const PathTraceReport mReportLevel;
-    const bool mReportBytecode;
 
     void newPathTrace(QString description, TraceType type);
     void appendItem(TraceItem item);
@@ -79,7 +78,6 @@ private:
 public slots:
     void slJavascriptFunctionCalled(QString functionName, size_t bytecodeSize, uint functionStartLine, uint sourceOffset, QSource* source);
     void slJavascriptFunctionReturned(QString functionName);
-    void slJavascriptBytecodeExecuted(const ByteCodeInfoStruct binfo, uint sourceOffset, QSource* source);
     void slEventListenerTriggered(QWebElement* elem, QString eventName);
     void slJavascriptAlert(QWebFrame* frame, QString msg);
 };

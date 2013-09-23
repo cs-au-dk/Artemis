@@ -18,6 +18,7 @@
 #include <iostream>
 #include <fstream>
 #include <sstream>
+#include <errno.h>
 
 #include <QDebug>
 #include <QDir>
@@ -38,6 +39,7 @@ Z3Solver::Z3Solver(): Solver() {
 
 SolutionPtr Z3Solver::solve(PathConditionPtr pc)
 {
+    std::ofstream constraintLog("/tmp/z3constraintlog", std::ofstream::out | std::ofstream::app);
 
     // 1. translate pc to something solvable using the translator
 
@@ -45,7 +47,8 @@ SolutionPtr Z3Solver::solve(PathConditionPtr pc)
 
     if (!cw->write(pc, "/tmp/z3input")) {
         statistics()->accumulate("Concolic::Solver::ConstraintsNotWritten", 1);
-        return SolutionPtr(new Solution(false));
+        constraintLog << "Could not translate the PC into solver input." << std::endl << std::endl;
+        return SolutionPtr(new Solution(false, false));
     }
 
     statistics()->accumulate("Concolic::Solver::ConstraintsWritten", 1);
@@ -59,38 +62,43 @@ SolutionPtr Z3Solver::solve(PathConditionPtr pc)
 
     if (artemisdir == NULL) {
         qDebug() << "Warning, ARTEMISDIR environment variable not set!";
-        return SolutionPtr(new Solution(false));
+        constraintLog << "Not running due to ARTEMISDIR environmaent variable not being set." << std::endl << std::endl;
+        return SolutionPtr(new Solution(false, false));
     }
 
     QDir solverpath = QDir(QString(artemisdir));
 
     if (!solverpath.cd("contrib") || !solverpath.cd("Z3-str") || !solverpath.exists("Z3-str.py")) {
         qDebug() << "Warning, could not find Z3-str.py";
-        return SolutionPtr(new Solution(false));
+        constraintLog << "Could not find Z3-str.py." << std::endl << std::endl;
+        return SolutionPtr(new Solution(false, false));
     }
 
     std::string cmd = solverpath.filePath("Z3-str.py").toStdString() + " /tmp/z3input > /tmp/z3result";
     int result = std::system(cmd.data());
 
     if (result != 0) {
+        if(result == -1){
+            constraintLog << "Call to std::system(Z3-str.py) failed with error " << errno << ": " << strerror(errno) << std::endl << std::endl;
+        }else{
+            constraintLog << "Call to Z3-str.py returned code " << result << "." << std::endl << std::endl;
+        }
         statistics()->accumulate("Concolic::Solver::ConstraintsNotSolved", 1);
-        return SolutionPtr(new Solution(false));
+        return SolutionPtr(new Solution(false, false));
     }
-
-    statistics()->accumulate("Concolic::Solver::ConstraintsSolved", 1);
 
     // 3. interpret the result
 
-    SolutionPtr solution = SolutionPtr(new Solution(true));
+    SolutionPtr solution = SolutionPtr(new Solution(true, false));
     if (solution->isSolved()) {
 
     }
 
     std::string line;
     std::ifstream fp("/tmp/z3result");
-    std::ofstream constraintLog("/tmp/z3constraintlog", std::ofstream::out | std::ofstream::app);
 
     if (fp.is_open()) {
+        statistics()->accumulate("Concolic::Solver::ConstraintsSolved", 1);
 
         std::getline(fp, line); // discard decoractive line
         std::getline(fp, line); // load sat line
@@ -98,8 +106,8 @@ SolutionPtr Z3Solver::solve(PathConditionPtr pc)
         if (line.compare(">> SAT") != 0) {
             // UNSAT
             statistics()->accumulate("Concolic::Solver::ConstraintsSolvedAsUNSAT", 1);
-            constraintLog << "Could not be solved\n\n";
-            return SolutionPtr(new Solution(false));
+            constraintLog << "Solved as UNSAT." << std::endl << std::endl;
+            return SolutionPtr(new Solution(false, true));
         }
 
         std::getline(fp, line); // discard decoractive line
@@ -147,7 +155,7 @@ SolutionPtr Z3Solver::solve(PathConditionPtr pc)
 
             symbolvalue.kind = Symbolic::STRING;
 
-            if (value.find("(- ") == -1) { // not a negative value, this is a bit of a hack
+            if (value.find("(- ") == std::string::npos) { // not a negative value
                 symbolvalue.string = value;
             } else {
                 symbolvalue.string = "-" + value.substr(3, value.length() - 4);
@@ -158,9 +166,13 @@ SolutionPtr Z3Solver::solve(PathConditionPtr pc)
 
             constraintLog << symbol << " = " << symbolvalue.string << "\n";
         }
+    }else{
+        statistics()->accumulate("Concolic::Solver::ConstraintsNotSolved", 1);
+        constraintLog << "Could not read result file." << std::endl << std::endl;
+        return SolutionPtr(new Solution(false, false));
     }
 
-    constraintLog << "\n";
+    constraintLog << std::endl;
     constraintLog.close();
     fp.close();
 

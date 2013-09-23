@@ -21,6 +21,8 @@
 
 #include <QDebug>
 
+#include "util/loggingutil.h"
+
 #include "kaluza.h"
 
 #ifdef ARTEMIS
@@ -58,14 +60,13 @@ bool KaluzaConstraintWriter::write(PathConditionPtr pathCondition, std::string o
     mOutput.close();
 
     if (mError) {
-        std::string error = std::string("Artemis is unable generate constraints - ") + mErrorReason + ".";
-        qDebug(error.c_str());
+        Log::warning("Artemis is unable generate constraints - " + mErrorReason + ".");
         return false;
     }
 
     for (std::map<std::string, Symbolic::Type>::iterator iter = mTypemap.begin(); iter != mTypemap.end(); iter++) {
         if (iter->second == Symbolic::TYPEERROR) {
-            qDebug("Artemis is unable generate constraints - a type-error was found.");
+            Log::warning("Artemis is unable generate constraints - a type-error was found.");
             return false;
         }
     }

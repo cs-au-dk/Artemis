@@ -43,6 +43,10 @@
 namespace artemis
 {
 
+/**
+ * Responsible for all direct interaction with WebKit and controlling the
+ * low-level execution of the selected configurations.
+ */
 class WebKitExecutor : public QObject
 {
     Q_OBJECT
@@ -61,13 +65,14 @@ public:
     void executeSequence(ExecutableConfigurationConstPtr conf, bool keepOpen);
     void detach();
 
-    QWebExecutionListener* webkitListener; // TODO should not be public
-
     ArtemisWebPagePtr getPage();
 
     TraceBuilder* getTraceBuilder();
 
+    QWebExecutionListener* mWebkitListener; // TODO should not be public
+
 private:
+
     ArtemisWebPagePtr mPage;
     ExecutionResultBuilderPtr mResultBuilder;
     ExecutableConfigurationConstPtr currentConf;

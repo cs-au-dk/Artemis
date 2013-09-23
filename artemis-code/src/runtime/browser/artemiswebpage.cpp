@@ -14,9 +14,11 @@
  * limitations under the License.
  */
 #include <QDebug>
+#include <QWebFrame>
 
 #include "artemisglobals.h"
 #include "statistics/statsstorage.h"
+#include "model/coverage/coveragelistener.h"
 
 #include "artemiswebpage.h"
 
@@ -27,6 +29,12 @@ ArtemisWebPage::ArtemisWebPage() :
     QWebPage(NULL),
     mAcceptNavigation(true) // Unless we are in manual mode and choose otherwise, we accept all navigation.
 {
+}
+
+void ArtemisWebPage::updateFormIdentifiers()
+{
+    QString js = "for (var i = 0; i < document.forms.length; i++) { var form = document.forms[i]; for (var j = 0; j < form.elements.length; j++) { var element = form.elements[j]; if (element.id == \"\") {element.id = \"ARTEMISID-\" + i + \"-\" + j;} }}";
+    currentFrame()->documentElement().evaluateJavaScript(js, DONT_MEASURE_COVERAGE, true);
 }
 
 void ArtemisWebPage::javaScriptAlert(QWebFrame* frame, const QString& msg)

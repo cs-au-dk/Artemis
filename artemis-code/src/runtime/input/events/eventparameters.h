@@ -16,24 +16,28 @@
 #ifndef EVENTPARAMETERS_H
 #define EVENTPARAMETERS_H
 
-#include <QObject>
+#include <QSharedPointer>
 
 #include "eventypes.h"
 
 namespace artemis
 {
 
-class EventParameters : public QObject
+class EventParameters
 {
 public:
-    EventParameters(QObject* parent) : QObject(parent) {};
+    EventParameters() {}
+    virtual ~EventParameters() {}
 
-    /*
-     Returns a javascript function call on the form EVENT_OBJECT_PLACEHOLDER.initXevent(..params..)"
+    /**
+     * Returns a javascript function call on the form EVENT_OBJECT_PLACEHOLDER.initXevent(..params..)"
      */
-    virtual QString jsString() const = 0;
-    virtual EventType type() const = 0;
+    virtual QString getJsString() const = 0;
+
+    virtual EventType getType() const = 0;
 };
+
+typedef QSharedPointer<const EventParameters> EventParametersConstPtr;
 
 }
 

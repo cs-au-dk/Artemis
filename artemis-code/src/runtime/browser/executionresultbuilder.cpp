@@ -83,7 +83,7 @@ void ExecutionResultBuilder::registerEventHandlersIntoResult()
         qDebug() << "Finalizing " << p.second << "  " << p.first->tagName() << " _T: "
                  << p.first->attribute(QString("title"));
 
-        EventHandlerDescriptor* handler = new EventHandlerDescriptor(this, p.first, p.second);
+        EventHandlerDescriptorConstPtr handler = EventHandlerDescriptorConstPtr(new EventHandlerDescriptor(p.first, p.second));
 
         if (handler->isInvalid()) {
             qWarning() << "WARN: element was invalid, ignoring";
@@ -96,30 +96,33 @@ void ExecutionResultBuilder::registerEventHandlersIntoResult()
 
 void ExecutionResultBuilder::registerFromFieldsIntoResult()
 {
-    QSet<QWebFrame*> ff = getAllFrames();
+    mPage->updateFormIdentifiers(); // make sure that form identifiers are set
 
-    foreach(QWebFrame * f, ff) {
-        QWebElementCollection inputs = f->findAllElements("input");
-        foreach(QWebElement i, inputs) {
-            FormFieldTypes fType =  getTypeFromAttr(i.attribute("type"));
+    foreach(QWebFrame* frame, getAllFrames()) {
+        // Gather <input> elements
+        foreach(QWebElement input, frame->findAllElements("input")) {
 
-            if (fType == NO_INPUT)
-                { continue; }
+            FormFieldTypes type =  getTypeFromAttr(input.attribute("type"));
 
-            FormFieldDescriptorPtr formf = FormFieldDescriptorPtr(new FormFieldDescriptor(fType, DOMElementDescriptorConstPtr(new DOMElementDescriptor(&i))));
-            mResult->mFormFields.insert(formf);
+            if (type == NO_INPUT) {
+                continue;
+            }
+
+            DOMElementDescriptorConstPtr elementDescriptor = DOMElementDescriptorConstPtr(new DOMElementDescriptor(&input));
+            FormFieldDescriptorPtr fieldDescriptor = FormFieldDescriptorPtr(new FormFieldDescriptor(type, elementDescriptor));
+
+            mResult->mFormFields.insert(fieldDescriptor);
         }
 
-        //Gather <textarea> elements
-        QWebElementCollection textareas = f->findAllElements("textarea");
-        foreach(QWebElement ta, textareas) {
+        // Gather <textarea> elements
+        foreach(QWebElement ta, frame->findAllElements("textarea")) {
+
             FormFieldDescriptorPtr taf = FormFieldDescriptorPtr(new FormFieldDescriptor(TEXT, DOMElementDescriptorConstPtr(new DOMElementDescriptor(&ta))));
             mResult->mFormFields.insert(taf);
         }
 
-        //Gather select tags
-        QWebElementCollection selects = f->findAllElements("select");
-        foreach(QWebElement ss, selects) {
+        // Gather select tags
+        foreach(QWebElement ss, frame->findAllElements("select")) {
             QSet<QString> options = getSelectOptions(ss);
             FormFieldDescriptorPtr ssf = FormFieldDescriptorPtr(new FormFieldDescriptor(FIXED_INPUT, DOMElementDescriptorConstPtr(new DOMElementDescriptor(&ss)), options));
             mResult->mFormFields.insert(ssf);
@@ -156,7 +159,6 @@ QSet<QString> ExecutionResultBuilder::getSelectOptions(const QWebElement& e)
 
         if (valueAttr.isEmpty()) {
             Log::warning("Found empty option element in select, ignoring");
-//            qWarning() << "WARN: Found empty option element in select, ignoring";
             continue;
         }
 

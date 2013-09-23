@@ -23,6 +23,7 @@
 #include "concolic/search/searchdfs.h"
 #include "concolic/solver/solver.h"
 #include "concolic/entrypoints.h"
+#include "concolic/mockentrypointdetector.h"
 #include "concolic/executiontree/traceprinter.h"
 #include "concolic/executiontree/tracedisplay.h"
 #include "concolic/traceclassifier.h"
@@ -78,7 +79,7 @@ protected:
     QUrl mUrl;
     QSharedPointer<ExecutableConfiguration> mNextConfiguration;
     TraceNodePtr mSymbolicExecutionGraph;
-    EventHandlerDescriptor* mEntryPointEvent;
+    EventHandlerDescriptorConstPtr mEntryPointEvent;
 
     bool mRunningToGetEntryPoints;
     bool mRunningWithInitialValues;

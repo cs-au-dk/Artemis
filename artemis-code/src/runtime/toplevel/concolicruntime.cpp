@@ -137,14 +137,14 @@ void ConcolicRuntime::outputTreeGraph()
 void ConcolicRuntime::setupNextConfiguration(QSharedPointer<FormInputCollection> formInput)
 {
     // Create a suitable EventParameters object for this submission. (As in StaticEventParameterGenerator.)
-    EventParameters* eventParameters = new MouseEventParameters(NULL, mEntryPointEvent->name(), true, true, 1, 0, 0, 0, 0, false, false, false, false, 0);
+    EventParametersConstPtr eventParameters = EventParametersConstPtr(new MouseEventParameters(mEntryPointEvent->getName(), true, true, 1, 0, 0, 0, 0, false, false, false, false, 0));
 
     // Create a suitable TargetDescriptor object for this submission.
     // TODO: No support for JQuery unless we use a JQueryTarget, JQueryListener (and TargetGenerator?).
-    TargetDescriptor* targetDescriptor = new LegacyTarget(NULL, mEntryPointEvent);
+    TargetDescriptorConstPtr targetDescriptor = TargetDescriptorConstPtr(new LegacyTarget(mEntryPointEvent));
 
     // Create a DomInput which will inject the empty FormInput and fire the entry point event.
-    QSharedPointer<const BaseInput> submitEvent = QSharedPointer<const BaseInput>(new DomInput(mEntryPointEvent, formInput, eventParameters, targetDescriptor));
+    BaseInputConstPtr submitEvent = BaseInputConstPtr(new DomInput(mEntryPointEvent, formInput, eventParameters, targetDescriptor));
     // TODO:: Where should/are the eventParameters and targetDescriptor pointers cleaned up?
 
     // Create an input sequence consisting of just this event.
@@ -166,7 +166,7 @@ void ConcolicRuntime::postInitialConcreteExecution(QSharedPointer<ExecutionResul
     Log::debug("Analysing page entrypoints...");
 
     // Choose and save the entry point for use in future runs.
-    EntryPointDetector detector(mWebkitExecutor->getPage());
+    MockEntryPointDetector detector(mWebkitExecutor->getPage());
     mEntryPointEvent = detector.choose(result);
 
     if(mEntryPointEvent){
@@ -234,6 +234,11 @@ void ConcolicRuntime::mergeTraceIntoTree()
         // A normal run.
         // Merge trace with tracegraph
         mSymbolicExecutionGraph = TraceMerger::merge(trace, mSymbolicExecutionGraph);
+
+        // Check if we actually explored the intended target.
+        if(mSearchStrategy->overUnexploredNode()){
+            mSearchStrategy->markNodeMissed();
+        }
     }
 
     // Dump the current state of the tree to a file.
@@ -327,7 +332,6 @@ QSharedPointer<const FormFieldDescriptor> ConcolicRuntime::findFormFieldForVaria
     switch(varSourceIdentifierMethod){
     case Symbolic::INPUT_NAME:
         // Fetch the formField with this name
-        // Fetch the form field with this id
         foreach(QSharedPointer<const FormFieldDescriptor> field, mFormFields){
             if(field->getDomElement()->getName() == varBaseName){
                 varSourceField = field;
@@ -337,19 +341,13 @@ QSharedPointer<const FormFieldDescriptor> ConcolicRuntime::findFormFieldForVaria
         break;
 
     case Symbolic::ELEMENT_ID:
-        // Fetch the form field with this id
+        // Fetch the form field with this id (or Artemis ID)
         foreach(QSharedPointer<const FormFieldDescriptor> field, mFormFields){
             if(field->getDomElement()->getId() == varBaseName){
                 varSourceField = field;
                 break;
             }
         }
-        break;
-
-    case Symbolic::LEGACY:
-        // TODO: The form fields without names or ids are just numbered, so I have no idea what to do here!
-        Log::fatal("Identifying inputs by legacy numbering is not yet supported in the concolic runtime.");
-        exit(1);
         break;
 
     default:
@@ -404,6 +402,19 @@ void ConcolicRuntime::exploreNextTarget()
         // TODO: Should try someting else...?
         Log::debug("Could not solve the constraint.");
         Log::debug("Skipping this target!");
+
+        // Mark the current node as unsolvable.
+        // If it was solved but unsatisfiable, then mark it as UNSAT instead.
+        if(solution->isUnsat()){
+            mSearchStrategy->markNodeUnsat();
+        }else{
+            mSearchStrategy->markNodeUnsolvable();
+        }
+
+        // Dump the current state of the tree to a file.
+        if(mOptions.concolicTreeOutput == TREE_ALL){
+            outputTreeGraph();
+        }
 
         // Skip this node and move on to the next.
         chooseNextTargetAndExplore();

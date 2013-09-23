@@ -26,12 +26,12 @@ class KeyboardEventParameters : public EventParameters
 {
 public:
 
-    KeyboardEventParameters(QObject* parent, QString eventType, bool canBubble, bool cancelable,
+    KeyboardEventParameters(QString eventType, bool canBubble, bool cancelable,
                             QString keyIdentifier,  unsigned int keyLocation,
                             bool ctrlKey, bool altKey, bool shiftKey, bool metaKey, bool altGraphKey);
 
-    QString jsString() const;
-    EventType type() const;
+    QString getJsString() const;
+    EventType getType() const;
 
     //Event options:
     bool canBubble;

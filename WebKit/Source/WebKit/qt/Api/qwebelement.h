@@ -139,7 +139,7 @@ public:
     void removeAllChildren();
 
 #ifdef ARTEMIS
-    QVariant evaluateJavaScript(const QString& scriptSource, const QUrl& u = QUrl());
+    QVariant evaluateJavaScript(const QString& scriptSource, const QUrl& u = QUrl(), bool hideFromArtemis = false);
 #else
     QVariant evaluateJavaScript(const QString& scriptSource);
 #endif

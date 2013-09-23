@@ -38,10 +38,10 @@ void TimerInput::apply(ArtemisWebPagePtr, QWebExecutionListener* webkitListener)
     webkitListener->timerFire(mTimer->getId());
 }
 
-QSharedPointer<const BaseInput> TimerInput::getPermutation(const QSharedPointer<const FormInputGenerator>&,
-                                                           const QSharedPointer<const EventParameterGenerator>&,
-                                                           TargetGenerator*,
-                                                           QSharedPointer<const ExecutionResult>) const
+BaseInputConstPtr TimerInput::getPermutation(const FormInputGeneratorConstPtr& formInputGenerator,
+                                             const EventParameterGeneratorConstPtr& eventParameterGenerator,
+                                             const TargetGeneratorConstPtr& targetGenerator,
+                                             const ExecutionResultConstPtr& result) const
 {
     return QSharedPointer<const BaseInput>(new TimerInput(this->mTimer));
 }

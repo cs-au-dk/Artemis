@@ -85,10 +85,6 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             "           none - (default) Path trace report is omitted\n"
             "           html - HTML trace report is generated in the folder you run Artemis from\n"
             "\n"
-            "--path-trace-report-bytecode true|false:\n"
-            "\n"
-            "           Show executed bytecodes in path trace reports. Default is false.\n"
-            "\n"
             "--concolic-tree-output <trees>:\n"
             "           none - Do not output any graphs.\n"
             "           final (default) - Generate a graph of the final tree after analysis.\n"
@@ -119,7 +115,6 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
     {"coverage-report-ignore", required_argument, NULL, 'k'},
     {"major-mode", required_argument, NULL, 'm'},
     {"path-trace-report", required_argument, NULL, 'a'},
-    {"path-trace-report-bytecode", required_argument, NULL, 'b'},
     {"function-call-heap-report", required_argument, NULL, 'g'},
     {"function-call-heap-report-random-factor", required_argument, NULL, 'l'},
     {"concolic-tree-output", required_argument, NULL, 'd'},
@@ -305,21 +300,7 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             break;
         }
 
-        case 'b': {
-
-            if (string(optarg).compare("true") == 0) {
-                options.reportPathTraceBytecode  = true;
-            } else if (string(optarg).compare("false") == 0) {
-                options.reportPathTraceBytecode = false;
-            } else {
-                cerr << "ERROR: Invalid choice of path-trace-report-bytecode " << optarg << endl;
-                exit(1);
-            }
-
-            break;
-        }
-
- case 'g' : {
+        case 'g' : {
             if(string(optarg).compare("all") == 0){
                 options.reportHeap = artemis::ALL_CALLS;
             } else if (string(optarg).compare("named") == 0){
@@ -332,10 +313,12 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             }
             break;
         }
+
         case 'l' : {
             options.heapReportFactor = std::max(QString(optarg).toInt(), 1);
             break;
         }
+
         case 'd': {
 
             if (string(optarg).compare("none") == 0) {

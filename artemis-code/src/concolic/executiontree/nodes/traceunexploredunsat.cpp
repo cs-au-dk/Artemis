@@ -13,25 +13,26 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
-#ifndef STATICEVENTPARAMETERGENERATOR_H
-#define STATICEVENTPARAMETERGENERATOR_H
 
-#include "eventparametergenerator.h"
+#include "traceunexploredunsat.h"
 
-namespace artemis
+namespace artemis {
+
+QSharedPointer<TraceUnexploredUnsat>* TraceUnexploredUnsat::mInstance = new QSharedPointer<TraceUnexploredUnsat>(new TraceUnexploredUnsat());
+
+QSharedPointer<TraceUnexploredUnsat> TraceUnexploredUnsat::getInstance()
 {
-
-class StaticEventParameterGenerator : public EventParameterGenerator
-{
-
-public:
-
-    StaticEventParameterGenerator();
-
-    EventParametersConstPtr generateEventParameters(EventHandlerDescriptorConstPtr eventHandler) const;
-
-};
-
+    return *TraceUnexploredUnsat::mInstance;
 }
 
-#endif // STATICEVENTPARAMETERGENERATOR_H
+void TraceUnexploredUnsat::accept(TraceVisitor* visitor)
+{
+    visitor->visit(this);
+}
+
+bool TraceUnexploredUnsat::isEqualShallow(const QSharedPointer<const TraceNode>& other)
+{
+    return !other.dynamicCast<const TraceUnexploredUnsat>().isNull();
+}
+
+}

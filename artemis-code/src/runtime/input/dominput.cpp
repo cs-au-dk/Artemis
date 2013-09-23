@@ -22,35 +22,37 @@
 namespace artemis
 {
 
-DomInput::DomInput(const EventHandlerDescriptor* handler,
-                   QSharedPointer<const FormInputCollection> formInput,
-                   const EventParameters* params,
-                   const TargetDescriptor* target)
+DomInput::DomInput(EventHandlerDescriptorConstPtr handler,
+                   FormInputCollectionConstPtr formInput,
+                   EventParametersConstPtr params,
+                   TargetDescriptorConstPtr target) :
+    mEventHandler(handler),
+    mFormInput(formInput),
+    mEvtParams(params),
+    mTarget(target)
 {
-    // TODO change to auto ptr
-    mEventHandler = handler;
-    mFormInput = formInput;
-    // TODO change to auto ptr
-    mEvtParams = params;
-    // TODO change to auto ptr
-    mTarget = target;
 }
 
-
-void DomInput::apply(ArtemisWebPagePtr page, QWebExecutionListener* webkitListener) const
+void DomInput::apply(ArtemisWebPagePtr page, QWebExecutionListener*) const
 {
-    QWebElement handler = mEventHandler->domElement()->getElement(page);
-    QWebElement target = mTarget->get(page);
-
-    QString jsInitEvent = mEvtParams->jsString();
+    // Prepare forms
 
     mFormInput->writeToPage(page);
 
+    // Trigger event
+
+    QWebElement handler = mEventHandler->getDomElement()->getElement(page);
+    QWebElement target = mTarget->get(page);
+
     if (handler.isNull() || target.isNull()) {
         qWarning() << "WARNING::Skipping event, event handler or target could not be found";
-    } else if(mEvtParams->type() == TOUCH_EVENT){
-        qWarning() << "Skipping event. Touch events are not supported!";
+
+    } else if (mEvtParams->getType() == TOUCH_EVENT) {
+        qWarning() << "WARNING::Skipping event, touch events are not supported!";
+
     } else {
+        QString jsInitEvent = mEvtParams->getJsString();
+
         qDebug() << "Event Handler: " << handler.tagName() << " _ID: "
                  << handler.attribute(QString("id")) << " _Title: "
                  << handler.attribute(QString("title")) << "class: "
@@ -66,17 +68,16 @@ void DomInput::apply(ArtemisWebPagePtr page, QWebExecutionListener* webkitListen
     }
 }
 
-QSharedPointer<const BaseInput> DomInput::getPermutation(const QSharedPointer<const FormInputGenerator>& formInputGenerator,
-                                                         const QSharedPointer<const EventParameterGenerator>& eventParameterGenerator,
-                                                         TargetGenerator* targetGenerator,
-                                                         QSharedPointer<const ExecutionResult> result) const
+BaseInputConstPtr DomInput::getPermutation(const FormInputGeneratorConstPtr& formInputGenerator,
+                                           const EventParameterGeneratorConstPtr& eventParameterGenerator,
+                                           const TargetGeneratorConstPtr& targetGenerator,
+                                           const ExecutionResultConstPtr& result) const
 {
-    EventParameters* newParams = eventParameterGenerator->generateEventParameters(NULL, mEventHandler);
-    QSharedPointer<FormInputCollection> newForm = formInputGenerator->generateFormFields(mFormInput->getFields(), result);
-    TargetDescriptor* target = targetGenerator->generateTarget(NULL, mEventHandler);
-    EventHandlerDescriptor* newEventHandlerDescriptor = new EventHandlerDescriptor(NULL, mEventHandler);
+    EventParametersConstPtr newParams = eventParameterGenerator->generateEventParameters(mEventHandler);
+    FormInputCollectionPtr newForm = formInputGenerator->generateFormFields(mFormInput->getFields(), result);
+    TargetDescriptorConstPtr target = targetGenerator->generateTarget(mEventHandler);
 
-    return QSharedPointer<const DomInput>(new DomInput(newEventHandlerDescriptor, newForm, newParams, target));
+    return DomInputConstPtr(new DomInput(mEventHandler, newForm, newParams, target));
 }
 
 int DomInput::hashCode() const

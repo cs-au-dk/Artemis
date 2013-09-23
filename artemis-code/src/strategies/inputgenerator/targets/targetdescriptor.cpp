@@ -19,9 +19,9 @@
 namespace artemis
 {
 
-TargetDescriptor::TargetDescriptor(QObject* parent, const EventHandlerDescriptor* eventHandler) : QObject(parent)
+TargetDescriptor::TargetDescriptor(EventHandlerDescriptorConstPtr eventHandler) :
+    mEventHandler(eventHandler)
 {
-    mEventHandler = new EventHandlerDescriptor(this, eventHandler);
 }
 
 }

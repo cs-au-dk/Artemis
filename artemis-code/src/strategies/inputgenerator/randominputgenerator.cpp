@@ -32,20 +32,17 @@ namespace artemis
 
 RandomInputGenerator::RandomInputGenerator(
         QObject* parent,
-        QSharedPointer<const FormInputGenerator> formInputGenerator,
+        FormInputGeneratorConstPtr formInputGenerator,
         QSharedPointer<const EventParameterGenerator> eventParameterInputGenerator,
-        TargetGenerator* targetGenerator,
+        TargetGeneratorConstPtr targetGenerator,
         int numberSameLength) :
 
     InputGeneratorStrategy(parent),
     mFormInputGenerator(formInputGenerator),
-    mEventParameterGenerator(eventParameterInputGenerator)
+    mEventParameterGenerator(eventParameterInputGenerator),
+    mTargetGenerator(targetGenerator),
+    mNumberSameLength(numberSameLength)
 {
-    mTargetGenerator = targetGenerator;
-    mTargetGenerator->setParent(this);
-
-    mNumberSameLength = numberSameLength;
-
 }
 
 QList<QSharedPointer<ExecutableConfiguration> > RandomInputGenerator::addNewConfigurations(
@@ -61,9 +58,9 @@ QList<QSharedPointer<ExecutableConfiguration> > RandomInputGenerator::addNewConf
     return newConfigurations;
 }
 
-QList<QSharedPointer<ExecutableConfiguration> > RandomInputGenerator::insertSameLength(
-        QSharedPointer<const ExecutableConfiguration> oldConfiguration,
-        QSharedPointer<const ExecutionResult> result)
+QList<ExecutableConfigurationPtr> RandomInputGenerator::insertSameLength(
+        ExecutableConfigurationConstPtr oldConfiguration,
+        ExecutionResultConstPtr result)
 {
     QList<QSharedPointer<ExecutableConfiguration> > newConfigurations;
 
@@ -95,22 +92,27 @@ QList<QSharedPointer<ExecutableConfiguration> > RandomInputGenerator::insertSame
     return newConfigurations;
 }
 
-QList<QSharedPointer<ExecutableConfiguration> > RandomInputGenerator::insertExtended(
-        QSharedPointer<const ExecutableConfiguration> oldConfiguration,
-        QSharedPointer<const ExecutionResult> result)
+QList<ExecutableConfigurationPtr> RandomInputGenerator::insertExtended(
+        ExecutableConfigurationConstPtr oldConfiguration,
+        ExecutionResultConstPtr result)
 {
-    QList<QSharedPointer<ExecutableConfiguration> > newConfigurations;
+    QList<ExecutableConfigurationPtr> newConfigurations;
 
-    foreach (EventHandlerDescriptor* ee, result->getEventHandlers()) {
-        EventParameters* newParams = mEventParameterGenerator->generateEventParameters(NULL, ee);
-        if(dynamic_cast<UnknownEventParameters*>(newParams) == 0){
-            TargetDescriptor* target = mTargetGenerator->generateTarget(NULL, ee);
-            QSharedPointer<FormInputCollection> newForm = mFormInputGenerator->generateFormFields(result->getFormFields(), result);
-            QSharedPointer<const DomInput> domInput = QSharedPointer<const DomInput>(new DomInput(ee, newForm, newParams, target));
+    foreach (EventHandlerDescriptorConstPtr ee, result->getEventHandlers()) {
 
-            QSharedPointer<const InputSequence> newInputSequence = oldConfiguration->getInputSequence()->extend(domInput);
+        EventType type = ee->getEventType();
 
-            QSharedPointer<ExecutableConfiguration> newConfiguration = QSharedPointer<ExecutableConfiguration>(new ExecutableConfiguration(newInputSequence, oldConfiguration->getUrl()));
+        // TODO what should we do with all of the other types of events?
+        if (type == KEY_EVENT || type == MOUSE_EVENT || type == TOUCH_EVENT || type == BASE_EVENT) {
+
+            FormInputCollectionPtr newForm = mFormInputGenerator->generateFormFields(result->getFormFields(), result);
+            EventParametersConstPtr newParams = mEventParameterGenerator->generateEventParameters(ee);
+            TargetDescriptorConstPtr target = mTargetGenerator->generateTarget(ee);
+
+            DomInputConstPtr domInput = DomInputConstPtr(new DomInput(ee, newForm, newParams, target));
+            InputSequenceConstPtr newInputSequence = oldConfiguration->getInputSequence()->extend(domInput);
+
+            ExecutableConfigurationPtr newConfiguration = ExecutableConfigurationPtr(new ExecutableConfiguration(newInputSequence, oldConfiguration->getUrl()));
 
             newConfigurations.append(newConfiguration);
         }

@@ -1794,6 +1794,13 @@ sub GenerateImplementation
                     
                     if ($attribute->signature->extendedAttributes->{"Symbolic"}) {
                         # ARTEMIS BEGIN
+                        push(@implContent, "\n");
+                        push(@implContent, "    // Do not make hidden inputs symbolic.\n");
+                        push(@implContent, "    WTF::AtomicString type = impl->getAttribute(WebCore::HTMLNames::typeAttr);\n");
+                        push(@implContent, "    if(strncmp(type.string().lower().ascii().data(), \"hidden\", 6) == 0){\n");
+                        push(@implContent, "        return result;\n");
+                        push(@implContent, "    }\n");
+                        push(@implContent, "\n");
                         push(@implContent, "    if (castedThis->m_" . $attribute->signature->name . "Symbolic == NULL) {\n");
                         push(@implContent, "        std::ostringstream strs;\n");
                         push(@implContent, "        strs << \"SYM_IN_\";\n");
@@ -1810,9 +1817,8 @@ sub GenerateImplementation
                         push(@implContent, "            strs << inputName.string().ascii().data();\n");
                         push(@implContent, "            method = Symbolic::INPUT_NAME;\n");
                         push(@implContent, "        } else {\n");
-                        push(@implContent, "            std::cout << \"Warning: Form input element without ID or name used - a sequential ID was used for the symbolic value. This will break concolic execution!\" << std::endl;\n");
-                        push(@implContent, "            strs << Symbolic::NEXT_SYMBOLIC_ID++;\n");
-                        push(@implContent, "            method = Symbolic::LEGACY;\n");
+                        push(@implContent, "            std::cout << \"Error: Form input element without ID, name or Artemis ID used - this will break concolic execution!\" << std::endl;\n");
+                        push(@implContent, "            return result;\n");
                         push(@implContent, "        }\n");
                         push(@implContent, "\n");
                         push(@implContent, "        result.makeSymbolic(new Symbolic::SymbolicString(Symbolic::SymbolicSource(Symbolic::INPUT, method, std::string(strs.str()))));");

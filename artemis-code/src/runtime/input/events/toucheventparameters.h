@@ -8,8 +8,8 @@ class TouchEventParameters : public EventParameters
 public:
     TouchEventParameters();
 
-    QString jsString() const ;
-    EventType type() const;
+    QString getJsString() const ;
+    EventType getType() const;
 
 };
 }

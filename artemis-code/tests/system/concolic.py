@@ -29,6 +29,10 @@ def _run_test(test_filename, dryrun=False):
         
     # insert global assertions here
 
+    assert report.get('Concolic::Solver::ConstraintsSolvedAsUNSAT', 0) == 0, "An UNSAT constraint were encountered"
+    assert report.get('Concolic::Solver::ConstraintsSolved', 0) != 0, "No constraints were solved"
+    assert report.get('Concolic::Solver::ConstraintsNotWritten', 0) == 0, "Unwritten constraints were encountered"            
+
 
 def _list_tests_in_folder(folder):
     out = []

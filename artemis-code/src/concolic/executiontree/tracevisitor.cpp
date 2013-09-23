@@ -23,6 +23,9 @@ namespace artemis
 // These "default" implementations simply relay the call top the parent class' method.
 // They can be overriden as required to create a visitor of any granularity.
 void TraceVisitor::visit(TraceUnexplored* node)         { visit(static_cast<TraceNode*>(node)); }
+void TraceVisitor::visit(TraceUnexploredUnsat *node)    { visit(static_cast<TraceUnexplored*>(node)); }
+void TraceVisitor::visit(TraceUnexploredUnsolvable *node){visit(static_cast<TraceUnexplored*>(node)); }
+void TraceVisitor::visit(TraceUnexploredMissed *node)   { visit(static_cast<TraceUnexplored*>(node)); }
 
 void TraceVisitor::visit(TraceBranch* node)             { visit(static_cast<TraceNode*>(node)); }
 void TraceVisitor::visit(TraceConcreteBranch* node)     { visit(static_cast<TraceBranch*>(node)); }

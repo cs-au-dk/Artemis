@@ -30,6 +30,23 @@ class ArtemisWebPage : public QWebPage
 
 public:
     explicit ArtemisWebPage();
+
+    /**
+     * Updates all form elements accessible through document.forms with a form identifier.
+     *
+     * The identifier is the form and element indexes written to the id property. This is only
+     * done if both the id and name properties are empty.
+     *
+     * The identifier consist of the relative indexes of the element and the element's parent
+     * form.
+     *
+     * This is used primarily by the symbolic infrastructure to associate form inputs accross
+     * exectutions. However, note that this approach is not robust if additional form elements
+     * (or forms) are prepended to existing form elements (or forms), since this will change the
+     * indexes.
+     */
+    void updateFormIdentifiers();
+
     void javaScriptAlert(QWebFrame* frame, const QString& msg);
     bool javaScriptConfirm(QWebFrame* frame, const QString& msg);
     void javaScriptConsoleMessage(const QString& message, int lineNumber, const QString& sourceID);

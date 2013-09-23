@@ -30,10 +30,10 @@ public:
     ~AjaxInput() {}
 
     void apply(ArtemisWebPagePtr page, QWebExecutionListener* webkitListener) const;
-    QSharedPointer<const BaseInput> getPermutation(const QSharedPointer<const FormInputGenerator>& formInputGenerator,
-                                                   const QSharedPointer<const EventParameterGenerator>& eventParameterGenerator,
-                                                   TargetGenerator* targetGenerator,
-                                                   QSharedPointer<const ExecutionResult> result) const;
+    BaseInputConstPtr getPermutation(const FormInputGeneratorConstPtr& formInputGenerator,
+                                     const EventParameterGeneratorConstPtr& eventParameterGenerator,
+                                     const TargetGeneratorConstPtr& targetGenerator,
+                                     const ExecutionResultConstPtr& result) const;
 
     int hashCode() const;
     QString toString() const;

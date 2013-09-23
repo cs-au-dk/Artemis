@@ -44,6 +44,9 @@
 #include "nodes/traceconcretebranch.h"
 #include "nodes/tracesymbolicbranch.h"
 #include "nodes/traceunexplored.h"
+#include "nodes/traceunexploredunsat.h"
+#include "nodes/traceunexploredunsolvable.h"
+#include "nodes/traceunexploredmissed.h"
 
 #ifndef TRACENODES_H
 #define TRACENODES_H

@@ -2,6 +2,11 @@ source.count(QRegExp("\n"))*.[oa]
 *.pyc
 *.so
 
+*#
+*~
+
+.idea
+*.pro.user.2.7pre1
 
 build-output
 artemis-build-output
@@ -9,8 +14,6 @@ qt-env*
 
 ./qt/*
 ./qt
-
-
 
 js-code-dump
 

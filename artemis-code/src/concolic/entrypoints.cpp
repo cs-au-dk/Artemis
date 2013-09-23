@@ -30,7 +30,7 @@ EntryPointDetector::EntryPointDetector(ArtemisWebPagePtr page) :
 }
 
 
-QList<EventHandlerDescriptor*> EntryPointDetector::detectAll(ExecutionResultPtr result)
+QList<EventHandlerDescriptorConstPtr> EntryPointDetector::detectAll(ExecutionResultPtr result)
 {
     // TEMP: for development...
     printResultInfo(result);
@@ -40,38 +40,43 @@ QList<EventHandlerDescriptor*> EntryPointDetector::detectAll(ExecutionResultPtr 
     // For now we have a simple implementation which checks for 'click' events on 'button' or 'a' elements.
     // TODO: at least also 'submit' on 'form' and maybe check where these buttons are...
 
-    QList<EventHandlerDescriptor*> entryEvents;
+    QList<EventHandlerDescriptorConstPtr> entryEvents;
 
-    foreach(EventHandlerDescriptor* event , result->getEventHandlers()){
-        if(event->name().compare("click", Qt::CaseInsensitive) == 0 &&
-                event->domElement()->getTagName().compare("button", Qt::CaseInsensitive) == 0){
+    foreach (EventHandlerDescriptorConstPtr event , result->getEventHandlers()){
+        if (event->getName().compare("click", Qt::CaseInsensitive) == 0 &&
+                event->getDomElement()->getTagName().compare("button", Qt::CaseInsensitive) == 0){
             // Accept any click on a button
             entryEvents.append(event);
 
-        }else if(event->name().compare("click", Qt::CaseInsensitive) == 0 &&
-                 event->domElement()->getTagName().compare("a", Qt::CaseInsensitive) == 0){
+        } else if (event->getName().compare("click", Qt::CaseInsensitive) == 0 &&
+                 event->getDomElement()->getTagName().compare("a", Qt::CaseInsensitive) == 0){
 
             // Accept a click on a link only if it is inside a form.
-            QWebElement element = event->domElement()->getElement(mPage);
+            QWebElement element = event->getDomElement()->getElement(mPage);
             // Search upwards until we find a form or reach the top of the hierarchy.
-            while(element.tagName().compare("form", Qt::CaseInsensitive) != 0 &&
+            while (element.tagName().compare("form", Qt::CaseInsensitive) != 0 &&
                   !element.isNull()){
                 element = element.parent();
             }
             // If we did find a form element then we know the original event was on an element we consider interesting.
-            if(element.tagName().compare("form", Qt::CaseInsensitive) == 0){
+            if (element.tagName().compare("form", Qt::CaseInsensitive) == 0){
                 entryEvents.append(event);
             }
 
-        }else if(event->name().compare("click", Qt::CaseInsensitive) == 0 &&
-                 event->domElement()->getTagName().compare("input", Qt::CaseInsensitive) == 0 &&
-                 (event->domElement()->getElement(mPage).attribute("type").compare("button", Qt::CaseInsensitive) == 0 ||
-                  event->domElement()->getElement(mPage).attribute("type").compare("submit", Qt::CaseInsensitive) == 0 ||
-                  event->domElement()->getElement(mPage).attribute("type").compare("image", Qt::CaseInsensitive) == 0)){
+        }else if(event->getName().compare("click", Qt::CaseInsensitive) == 0 &&
+                 event->getDomElement()->getTagName().compare("input", Qt::CaseInsensitive) == 0 &&
+                 (event->getDomElement()->getElement(mPage).attribute("type").compare("button", Qt::CaseInsensitive) == 0 ||
+                  event->getDomElement()->getElement(mPage).attribute("type").compare("submit", Qt::CaseInsensitive) == 0 ||
+                  event->getDomElement()->getElement(mPage).attribute("type").compare("image", Qt::CaseInsensitive) == 0)){
 
             // Accept a click on an input element of type button, submit, or image.
             entryEvents.append(event);
 
+        }else if(event->getName().compare("submit", Qt::CaseInsensitive) == 0 &&
+                 event->getDomElement()->getTagName().compare("form", Qt::CaseInsensitive) == 0){
+
+            // Accept a submit event on a form element.
+            entryEvents.append(event);
         }
 
     }
@@ -83,57 +88,16 @@ QList<EventHandlerDescriptor*> EntryPointDetector::detectAll(ExecutionResultPtr 
 
 
 
-EventHandlerDescriptor *EntryPointDetector::choose(ExecutionResultPtr result)
+EventHandlerDescriptorConstPtr EntryPointDetector::choose(ExecutionResultPtr result)
 {
 
     // Detect all entry points on the page, according to the heuristics in detectAll().
-    QList<EventHandlerDescriptor*> allEntryPoints = detectAll(result);
+    QList<EventHandlerDescriptorConstPtr> allEntryPoints = detectAll(result);
 
     // If we found none, return null.
     if(allEntryPoints.empty()){
-        return NULL;
-    }
-
-    // TODO: Temporary special case for airtran.com, choose the correct entry point (3rd one).
-    QString url = mPage->currentFrame()->url().toString();
-    if(url == "http://www.airtran.com/Home.aspx"){
-        return allEntryPoints.at(2);
-    }
-    // TODO: Temporary special case for flykingfisher.com
-    if(url == "http://www.flykingfisher.com/"){
-        return allEntryPoints.at(1);
-    }
-    // TODO: Temporary special case for jetstar.com
-    if(url == "http://www.jetstar.com/au/en/home"){
-        return allEntryPoints.at(5);
-    }
-    // TODO: Temporary special case for monarch.co.uk
-    if(url == "http://www.monarch.co.uk/"){
-        return allEntryPoints.at(7);
-    }
-    // TODO: Temporary special case for usairways.com
-    if(url == "http://www.usairways.com/default.aspx"){
-        return allEntryPoints.at(13);
-    }
-    // TODO: Temporary special case for southwest.com
-    if(url == "http://www.southwest.com/"){
-        return allEntryPoints.at(9);
-    }
-    // TODO: Temporary special case for travelocity.co.uk
-    if(url == "http://www.travelocity.co.uk/?WAPageName=HPGEOREDIRECT.UNITEDKINGDOM"){
-        return allEntryPoints.at(3);
-    }
-    // TODO: Temporary special case for virginaustralia.com
-    if(url == "http://www.virginaustralia.com/au/en/"){
-        return allEntryPoints.at(4);
-    }
-    // TODO: Temporary special case for united.com
-    if(url == "http://www.united.com/web/en-US/default.aspx?root=1"){
-        return allEntryPoints.at(5);
-    }
-    // TODO: Temporary special case for united.com
-    if(url == "http://www.emirates.com/uk/english/index.aspx"){
-        return allEntryPoints.at(23);
+        // TODO, we should really not do this... could we throw an exception?
+        return EventHandlerDescriptorConstPtr();
     }
 
     // TODO: Trivial Choice: Choose the first entrypoint.
@@ -149,13 +113,13 @@ void EntryPointDetector::printResultInfo(ExecutionResultPtr result)
 
     // Begin by just listing some relevant information from the execution result...
     QString eventNames;
-    foreach(EventHandlerDescriptor* event , result->getEventHandlers()){
-        eventNames.append(QString("%1 on %2, ").arg(event->name()).arg(event->domElement()->getTagName()));
+    foreach (EventHandlerDescriptorConstPtr event , result->getEventHandlers()){
+        eventNames.append(QString("%1 on %2, ").arg(event->getName()).arg(event->getDomElement()->getTagName()));
     }
     Log::debug(QString("CONCOLIC-INFO: Event Handlers (%1): %2").arg(result->getEventHandlers().length()).arg(eventNames).toStdString());
 
     QString formNames;
-    foreach(QSharedPointer<const FormFieldDescriptor> field, result->getFormFields()){
+    foreach (QSharedPointer<const FormFieldDescriptor> field, result->getFormFields()){
         formNames.append(field->getDomElement()->getTagName());
         formNames.append(", ");
     }
