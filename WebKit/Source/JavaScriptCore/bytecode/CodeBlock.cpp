@@ -1996,7 +1996,7 @@ HandlerInfo* CodeBlock::handlerForBytecodeOffset(unsigned bytecodeOffset)
 
 int CodeBlock::lineNumberForBytecodeOffset(unsigned bytecodeOffset)
 {
-    ASSERT(bytecodeOffset < instructions().size());
+    //ASSERT(bytecodeOffset < instructions().size());
 
     if (!m_rareData)
         return m_ownerExecutable->source().firstLine();
@@ -2041,7 +2041,7 @@ void CodeBlock::expressionRangeForBytecodeOffset(unsigned bytecodeOffset, int& d
             high = mid;
     }
 
-    ASSERT(low);
+    //ASSERT(low);
     if (!low) {
         startOffset = 0;
         endOffset = 0;
