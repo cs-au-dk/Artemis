@@ -65,7 +65,7 @@ def _run_test(raw_filename, dryrun=False):
 
     for field_name in ("testinputx", "testinputy", "testinputNameId", "testinputId", "testinputfoo", "testinputbar"):
         value = str(report.get("Concolic::Solver::Constraint.SYM_IN_%s" % field_name, 0))
-        if value == 'False':
+        if value == 'False' or value == '""':
             value = ''
         new_fields.append("#%s=%s" % (field_name, value))
         
