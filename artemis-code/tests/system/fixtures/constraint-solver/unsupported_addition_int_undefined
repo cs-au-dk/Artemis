@@ -1,5 +1,0 @@
-if ((x*2) + undefined) {
-    
-} else {
-alert(x);
-}

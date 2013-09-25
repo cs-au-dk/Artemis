@@ -1,3 +1,0 @@
-if (100000000 + parseInt(x)) {
-    alert(x_1);
-}

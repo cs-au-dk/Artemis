@@ -1,3 +1,0 @@
-if (parseInt(y) + (parseInt(x)*2)) {
-    alert(x);
-}

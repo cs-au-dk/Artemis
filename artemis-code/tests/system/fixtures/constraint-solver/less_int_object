@@ -1,3 +1,0 @@
-if ((x*2) < new Object(123)) {
-    alert(x);
-}

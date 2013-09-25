@@ -1,3 +1,0 @@
-if ((foo=="baz") < (bar=="bar")) {
-    alert(x);
-}

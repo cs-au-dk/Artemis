@@ -1,3 +1,0 @@
-if ((foo+bar) == "foobar" && (foo == "foo")) {
-    alert(x_1);
-}

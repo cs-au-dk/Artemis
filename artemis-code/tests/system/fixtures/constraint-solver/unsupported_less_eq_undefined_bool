@@ -1,5 +1,0 @@
-if (undefined <= (foo=="foo")) {
-
-} else {
-    alert(x);
-}

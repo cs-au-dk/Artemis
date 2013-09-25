@@ -1,5 +1,0 @@
-if (x < undefined) {
-
-} else {
-    alert(x);
-}

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 
 WEBSERVER_PORT = 8001
-WEBSERVER_ROOT = './fixtures/constraint-solver/'
+WEBSERVER_ROOT = './fixtures/solver/'
 WEBSERVER_URL = 'http://localhost:%s' % WEBSERVER_PORT
 
 TWO_VARIABLES_TEMPLATE_FILE = WEBSERVER_ROOT + '/%symbolic_test_two_variables.html'

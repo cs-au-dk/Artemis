@@ -1,5 +1,0 @@
-if ("test" <= (x*5)) {
-
-} else {
-    alert(x);
-}

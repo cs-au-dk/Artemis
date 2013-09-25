@@ -1,5 +1,0 @@
-if ("test" < (foo=="foo")) {
-    
-} else {
-alert(x);
-}

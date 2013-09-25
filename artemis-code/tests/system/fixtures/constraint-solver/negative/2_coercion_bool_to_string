@@ -1,3 +1,0 @@
-if (((parseInt(x) == 1) + "foo") == "truefoo") {
-    alert(x_1);
-}

@@ -1,5 +1,0 @@
-if ((x*2) < foo) {
-
-} else {
-    alert(x);
-}

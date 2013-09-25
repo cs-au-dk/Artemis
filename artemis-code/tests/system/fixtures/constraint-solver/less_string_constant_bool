@@ -1,3 +1,0 @@
-if ((y < false) == false) {
-    alert(x);
-}

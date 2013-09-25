@@ -1,5 +1,0 @@
-if (undefined < (x*5)) {
-
-} else {
-    alert(x);
-}

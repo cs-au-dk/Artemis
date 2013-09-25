@@ -1,3 +1,0 @@
-if (x <= true) {
-    alert(x);
-}
