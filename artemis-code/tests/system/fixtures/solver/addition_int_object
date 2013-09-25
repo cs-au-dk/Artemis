@@ -1,0 +1,3 @@
+if (parseInt(x) + new Object(123)) {
+    alert(x);
+}
