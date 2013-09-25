@@ -45,8 +45,25 @@ void FormInputCollection::writeToPage(ArtemisWebPagePtr page) const
         QWebElement element = input.first->getDomElement()->getElement(page);;
 
         if (!element.isNull()) {
-            element.setAttribute("value", input.second);
+
+            if (element.attribute("type", "") == "checkbox") {
+                // all empty and "false" values are translated into unchecked state
+                if (input.second.compare("") == 0 || input.second.compare("false") == 0) {
+                    element.evaluateJavaScript("this.checked = false;");
+                    element.setAttribute("value", "");
+                } else {
+                    element.evaluateJavaScript("this.checked = true;");
+                    element.setAttribute("value", input.second);
+                }
+
+            } else {
+
+                element.setAttribute("value", input.second);
+
+            }
         }
+
+
     }
 }
 

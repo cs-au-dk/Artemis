@@ -245,6 +245,15 @@ void WebKitExecutor::slLoadFinished(bool ok)
 
         qDebug() << "Setting value " << mPresetFields[f] << "for element " << f << endl;
         elm.setAttribute("value", mPresetFields[f]);
+
+        if (elm.attribute("type", "") == "checkbox") {
+            // all non-empty values are translated into checked
+            if (mPresetFields[f] == "") {
+                elm.evaluateJavaScript("this.checked = false;");
+            } else {
+                elm.evaluateJavaScript("this.checked = true;");
+            }
+        }
     }
 
     // Execute input sequence

@@ -1341,6 +1341,8 @@ sub GenerateImplementation
     # ARTEMIS BEGIN
     $implIncludes{"\"symbolic/symbolicinterpreter.h\""} = 1;
     $implIncludes{"\"symbolic/expression/symbolicstring.h\""} = 1;
+    $implIncludes{"\"symbolic/expression/symbolicinteger.h\""} = 1;
+    $implIncludes{"\"symbolic/expression/symbolicboolean.h\""} = 1;
     $implIncludes{"<iostream>"} = 1;
     $implIncludes{"<ostream>"} = 1;
     $implIncludes{"<sstream>"} = 1;
@@ -1821,7 +1823,15 @@ sub GenerateImplementation
                         push(@implContent, "            return result;\n");
                         push(@implContent, "        }\n");
                         push(@implContent, "\n");
+                        if ($attribute->signature->extendedAttributes->{"SymbolicString"}) {
                         push(@implContent, "        result.makeSymbolic(new Symbolic::SymbolicString(Symbolic::SymbolicSource(Symbolic::INPUT, method, std::string(strs.str()))));");
+                        }
+                        if ($attribute->signature->extendedAttributes->{"SymbolicBoolean"}) {
+                        push(@implContent, "        result.makeSymbolic(new Symbolic::SymbolicBoolean(Symbolic::SymbolicSource(Symbolic::INPUT, method, std::string(strs.str()))));");
+                        }
+                        if ($attribute->signature->extendedAttributes->{"SymbolicInteger"}) {
+                        push(@implContent, "        result.makeSymbolic(new Symbolic::SymbolicInteger(Symbolic::SymbolicSource(Symbolic::INPUT, method, std::string(strs.str()))));");
+                        }
                         push(@implContent, "\n");
                         push(@implContent, "    } else {\n");
                         push(@implContent, "        result.makeSymbolic(castedThis->m_" . $attribute->signature->name . "Symbolic);\n");

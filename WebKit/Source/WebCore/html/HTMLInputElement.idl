@@ -26,7 +26,7 @@ module html {
         attribute [Reflect] DOMString autocomplete;
         attribute [Reflect] boolean autofocus;
         attribute [Reflect=checked] boolean defaultChecked;
-        attribute boolean checked;
+        attribute [Symbolic SymbolicBoolean] boolean checked;
         attribute [Reflect] DOMString dirName;
         attribute [Reflect] boolean disabled;
         readonly attribute HTMLFormElement form;
@@ -56,11 +56,11 @@ module html {
         attribute [Reflect] DOMString step;
         attribute [TreatNullAs=NullString] DOMString type; // readonly dropped as part of DOM level 2
         attribute [TreatNullAs=NullString] DOMString defaultValue;
-        attribute [TreatNullAs=NullString, Symbolic] DOMString value;
+        attribute [TreatNullAs=NullString, Symbolic SymbolicString] DOMString value;
 #if !defined(LANGUAGE_CPP) || !LANGUAGE_CPP
         attribute Date valueAsDate setter raises(DOMException);
 #endif
-        attribute double valueAsNumber setter raises(DOMException);
+        attribute [Symbolic SymbolicInteger] double valueAsNumber setter raises(DOMException);
 
         void stepUp(in [Optional] long n) raises(DOMException);
         void stepDown(in [Optional] long n) raises(DOMException);
