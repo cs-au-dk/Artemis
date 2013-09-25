@@ -3,6 +3,7 @@ ARCH := $(shell uname -m)
 help:
 	@echo "Targets:"
 	@echo "    all				- Build webkit,  artemis, and the constraint solver"
+	@echo "    all-debug                    - Build webkit (debug),  artemis, and the constraint solver"
 	@echo ""
 	@echo "    webkit-minimal[-debug] 	- Build a minimal WebKit Qt port [with debug info]"
 	@echo "    webkit-clean             	- Clean WebKit files"
@@ -26,6 +27,7 @@ CONTRIB_Z3_STR = ./contrib/Z3-str
 build: check webkit-minimal artemis
 
 all: webkit-minimal constraintsolver artemis
+all-debug: webkit-minimal-debug constraintsolver artemis
 
 webkit-jscore-test:
 	${WEBKIT_TEST_SCRIPT}
