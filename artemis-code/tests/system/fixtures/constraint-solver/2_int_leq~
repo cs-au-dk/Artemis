@@ -1,3 +1,0 @@
-if (parseInt(x_1) <= parseInt(y)) {
-    alert(x_1);
-}

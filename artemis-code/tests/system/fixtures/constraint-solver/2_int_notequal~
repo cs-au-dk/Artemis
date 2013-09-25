@@ -1,5 +1,0 @@
-if (parseInt(x_1) != 1 && parseInt(y) != 2) {
-
-} else {
-    alert(x_1);
-}
