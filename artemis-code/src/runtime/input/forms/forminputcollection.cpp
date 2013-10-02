@@ -46,7 +46,7 @@ void FormInputCollection::writeToPage(ArtemisWebPagePtr page) const
 
         if (!element.isNull()) {
 
-            if (element.attribute("type", "") == "checkbox") {
+            if (element.attribute("type", "") == "checkbox" || element.attribute("type", "") == "radio") {
                 // all empty and "false" values are translated into unchecked state
                 if (input.second.compare("") == 0 || input.second.compare("false") == 0) {
                     element.evaluateJavaScript("this.checked = false;");

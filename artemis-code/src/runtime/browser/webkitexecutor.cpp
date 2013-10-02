@@ -252,7 +252,7 @@ void WebKitExecutor::slLoadFinished(bool ok)
 
         //elm.setAttribute("value", mPresetFields[f]);
 
-        if (elm.attribute("type", "") == "checkbox") {
+        if (elm.attribute("type", "") == "checkbox" || elm.attribute("type", "") == "radio") {
             // all non-empty values are translated into checked
             if (mPresetFields[f] == "") {
                 elm.evaluateJavaScript("this.checked = false;");
