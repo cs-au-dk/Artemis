@@ -23,11 +23,11 @@ def _run_test(raw_filename, dryrun=False):
     unsupported = 'unsupported' in raw_filename
     name = raw_filename.replace('.', '_')
 
-    fields = ("testinputx", "testinputy", "testinputNameId", "testinputId", "testinputfoo", "testinputbar", "booleaninput")
+    fields = ("testinputx", "testinputy", "testinputNameId", "testinputId", "testinputfoo", "testinputbar", "booleaninput", "selectinput")
 
     report = execute_artemis(name, "%s/%s" % (WEBSERVER_URL, test_filename), 
                              iterations=2,
-                             fields=["#testinputx=1", "#testinputy=2", "#testinputNameId=1", "#testinputId=1", "#testinputfoo=foo", "#testinputbar=bar", "#booleaninput=checked"],
+                             fields=["#testinputx=1", "#testinputy=2", "#testinputNameId=1", "#testinputId=1", "#testinputfoo=foo", "#testinputbar=bar", "#booleaninput=checked", "#selectinput=Select1"],
                              dryrun=dryrun)
 
     assert report.get('WebKit::alerts', 0) == 1, "Initial execution did not reach a print statement"

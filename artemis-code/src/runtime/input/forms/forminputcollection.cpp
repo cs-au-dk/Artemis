@@ -58,7 +58,16 @@ void FormInputCollection::writeToPage(ArtemisWebPagePtr page) const
 
             } else {
 
-                element.setAttribute("value", input.second);
+                // We do this using JavaScript because some values are only correctly set this way
+                // E.g. if you set the value of a select box then this approach correctly updates the node,
+                // where the setAttribute approach updates the value itself but not the remaining state of the node
+
+                // TODO this is a bit risky, what if this triggers other events?
+
+                QString setValue = QString("this.value = \"") + input.second + "\";";
+                element.evaluateJavaScript(setValue);
+
+                //element.setAttribute("value", input.second);
 
             }
         }

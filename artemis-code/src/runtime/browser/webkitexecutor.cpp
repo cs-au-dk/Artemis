@@ -243,8 +243,14 @@ void WebKitExecutor::slLoadFinished(bool ok)
             continue;
         }
 
-        qDebug() << "Setting value " << mPresetFields[f] << "for element " << f << endl;
-        elm.setAttribute("value", mPresetFields[f]);
+        qDebug() << "Setting value " << mPresetFields[f] << "for element " << f;
+
+        // TODO this code should be merged together with the code in forminputcollection.cpp
+
+        QString setValue = QString("this.value = \"") +  mPresetFields[f] + "\";";
+        elm.evaluateJavaScript(setValue);
+
+        //elm.setAttribute("value", mPresetFields[f]);
 
         if (elm.attribute("type", "") == "checkbox") {
             // all non-empty values are translated into checked

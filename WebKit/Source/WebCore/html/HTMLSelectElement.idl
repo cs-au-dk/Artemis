@@ -55,7 +55,7 @@ module html {
 #endif
         readonly attribute HTMLCollection selectedOptions;
         attribute long selectedIndex;
-        attribute [TreatNullAs=NullString] DOMString value;
+        attribute [TreatNullAs=NullString, Symbolic, SymbolicString] DOMString value;
 
         readonly attribute boolean willValidate;
         readonly attribute ValidityState validity;

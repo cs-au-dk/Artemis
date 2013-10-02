@@ -15,6 +15,11 @@
 			var elmId = document.getElementById("testinputId").value;
 
                         var b_1 = document.getElementById("booleaninput").checked;
+
+                        var selectNode = document.getElementById("selectinput");
+                        var select = selectNode.value;
+                        //var select = selectNode.options[selectNode.selectedIndex].value;
+
             $TESTSTATEMENT
 		}
 	</script>
@@ -30,7 +35,12 @@
 	<input type="text" id="testinputId" value="1" />
 
         <input type="checkbox" id="booleaninput" name="booleaninput" checked="checked" />
-
+        
+        <select id="selectinput" name="selectinput">
+          <option value="Select1" selected="selected">Select1</option>
+          <option value="Select2">Select2</option>
+        </select>
+        
 	<button onclick="doSomething();">DO</button>
 </body>
 </html>
