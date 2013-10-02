@@ -367,8 +367,12 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
         }
 
         if (url.scheme().isEmpty()) {
-            // the http:// part is missing
-            url = QUrl("http://" + url.toString());
+            QFile file(url.toString());
+
+            if (!file.exists()) {
+                // the http:// part is missing and it is not a file
+                url = QUrl("http://" + url.toString());
+            }
         }
 
         if (!url.isValid()) {
