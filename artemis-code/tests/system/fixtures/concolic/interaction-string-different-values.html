@@ -2,7 +2,7 @@
 TEST PC[0] = ((SymbolicString != SymbolicString) == ConstantBoolean)
 TEST Concolic::Solver::ConstraintsWritten = 2
 TEST Concolic::Solver::ConstraintsSolved = 2
-TEST_INTERN Concolic::Solver::Constraint.SYM_IN_input_A ! Concolic::Solver::Constraint.SYM_IN_input_B
+TEST_INTERN Concolic::Solver::Constraint.SYM_IN_input_A = Concolic::Solver::Constraint.SYM_IN_input_B
 -->
 <!doctype html><html lang="en">
 <head>
@@ -33,7 +33,7 @@ TEST_INTERN Concolic::Solver::Constraint.SYM_IN_input_A ! Concolic::Solver::Cons
 
 	<form method="GET" action="about:blank" >
 
-		<input type="text" id="input_A" />
+		<input type="text" id="input_A" value="someVal"/>
 		<input type="text" id="input_B" />
 
 		<button type="submit" onclick="return validate();">Submit</button>

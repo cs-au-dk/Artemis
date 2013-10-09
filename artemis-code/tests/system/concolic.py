@@ -56,7 +56,7 @@ def _list_tests_in_folder(folder):
         with open(p, 'r') as fl:
             if re.match("^\s*<!--\s*$", fl.readline()):
                 for line in fl:
-                    m = re.match("\s*TEST(_INTERN)? ([^<>!=\s]+) ((<|>|=|!)=?) (.+)$", line)
+                    m = re.match("\s*TEST(_INTERN)? ([^<>!=\s]+)\s*((<|>|=|!)=?)([^=].*)$", line)
                     if not m:
                         continue
                     test_mode = "i_test" if m.group(1) else "test"
@@ -88,16 +88,35 @@ def test_generator(filename, name, test_dict=None, internal_test=None, dry_run=F
             return
 
         assert test_dict or internal_test, "No tests to execute"
+        tested_unsat = False
+        tested_not_written = False
+        tested_not_solved = False
+
         if internal_test:
             for op, tMap in internal_test.iteritems():
                 for s, v in tMap.iteritems():
+                    tested_not_written = tested_not_written or s == "Concolic::Solver::ConstraintsNotWritten"
+                    tested_unsat = tested_unsat or s == "Concolic::Solver::ConstraintsSolvedAsUNSAT"
+                    tested_not_solved = tested_not_solved or s == "Concolic::Solver::ConstraintsNotSolved"
                     _assert_test_case(self, op, _get_from_report(report, s)['val'], _get_from_report(report, v)['val'])
+
         if test_dict:
             for op, tMap in test_dict.iteritems():
                 for s, v in tMap.iteritems():
+                    tested_not_written = tested_not_written or s == "Concolic::Solver::ConstraintsNotWritten"
+                    tested_unsat = tested_unsat or s == "Concolic::Solver::ConstraintsSolvedAsUNSAT"
+                    tested_not_solved = tested_not_solved or s == "Concolic::Solver::ConstraintsNotSolved"
+
                     v = int(v) if v.isdigit() else (True if v == "true" else (False if v == "false" else v))
                     r_val = _get_from_report(report, s)
                     _assert_test_case(self, op, r_val['val'], v.replace(" ", "") if r_val['pc'] else v)
+
+        assert tested_unsat or not "Concolic::Solver::ConstraintsSolvedAsUNSAT" in report, \
+            "Constraints solved as UNSAT are errors pr. default."
+        assert tested_not_written or not "Concolic::Solver::ConstraintsNotWritten" in report, \
+            "Not written constraints are pr. default an error"
+        assert tested_not_solved or not "Concolic::Solver::ConstraintsNotSolved" in report, \
+            "Not solved constraints are a pr. default an error."
 
     return test
 
