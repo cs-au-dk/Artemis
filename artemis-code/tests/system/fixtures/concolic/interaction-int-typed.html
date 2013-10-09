@@ -1,3 +1,12 @@
+<!--
+TEST PC[0] = (IntegerCoercion( SymbolicString ) >= ConstantInteger)
+TEST PC[1] = (IntegerCoercion( SymbolicString ) >= ConstantInteger)
+TEST PC[2] = ((IntegerCoercion( SymbolicString ) != IntegerCoercion( SymbolicString )) == ConstantBoolean)
+TEST Concolic::Solver::ConstraintsWritten = 4
+TEST Concolic::Solver::ConstraintsSolved = 4
+TEST Concolic::Solver::Constraint.SYM_IN_input_A = 10
+TEST_INTERN Concolic::Solver::Constraint.SYM_IN_input_A = Concolic::Solver::Constraint.SYM_IN_input_B
+-->
 <!doctype html><html lang="en">
 <head>
 	<meta charset="utf-8">
