@@ -1,0 +1,32 @@
+<!--
+TEST Concolic::Solver::ConstraintsWritten = 2
+TEST Concolic::Solver::ConstraintsSolved = 2
+TEST Concolic::Solver::Constraint.SYM_IN_testInput = true
+-->
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+    <script type="text/javascript" src="jquery.js"></script>
+    <script type="text/javascript" >
+        var x = 1234;
+        function validate(){
+            var input = $("#textInput").checked;
+            if(input){
+                return true;
+            } else{
+                alert("WRONG VALUE");
+                return false;
+            }
+        }
+
+    </script>
+</head>
+<body>
+
+<form id="SomeForm" action="#">
+    <input type="checkbox" id="textInput"/>
+    <button type="submit" onclick="validate()">Submit</button>
+</form>
+</body>
+</html>

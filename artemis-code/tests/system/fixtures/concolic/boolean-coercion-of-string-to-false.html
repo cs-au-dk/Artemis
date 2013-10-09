@@ -1,0 +1,48 @@
+<!--
+TEST Concolic::Solver::ConstraintsWritten = 3
+TEST Concolic::Solver::ConstraintsSolved = 3
+-->
+<!doctype html><html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+	<title>Ben Spencer</title>
+	<meta name="author" content="Ben Spencer">
+	<script type="text/javascript">
+        var x = "testme";
+
+		function validate() {
+			var input = document.getElementById("testinput").value;
+			var input2 = document.getElementById("testinput2").value;
+
+			if (input) {
+                return true;
+			} else {
+                if(x == input2){
+                    return true;
+                } else{
+                    alert("Wrong second input");
+                    return false;
+                }
+
+			}
+		}
+	</script>
+
+</head>
+<body>
+
+	<p>Write <i>testme</i> in the field to do something.</p>
+
+	<form method="GET" action="#" >
+
+		<input type="text" id="testinput" value="test"/>
+		<input type="text" id="testinput2" value="test"/>
+
+		<button type="submit" onclick="return validate();">Submit</button>
+
+	</form>
+
+</body>
+</html>
