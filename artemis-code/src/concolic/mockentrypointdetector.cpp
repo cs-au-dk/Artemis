@@ -55,8 +55,11 @@ EventHandlerDescriptorConstPtr MockEntryPointDetector::choose(ExecutionResultPtr
     QString url = mPage->currentFrame()->url().toString();
 
     if(url == "http://www.airtran.com/Home.aspx"){
-        assert(allEntryPoints.length() == 6);
-        return allEntryPoints.at(2);
+        assert(allEntryPoints.length() == 11);
+        return allEntryPoints.at(5);
+        // 4 is the href on the button
+        // 5 is the onclick of the same button
+        // 9 is the form submission event for the "flight status" form (not the main search form)
     }
 
     if(url == "http://www.flykingfisher.com/"){
