@@ -1,0 +1,44 @@
+<!--
+TEST PC[0] = ((SymbolicString != ConstantString) == ConstantBoolean)
+TEST Concolic::Solver::ConstraintsSolved = 2
+TEST Concolic::Solver::ConstraintsWritten = 2
+TEST Concolic::Solver::Constraint.SYM_IN_input = testme
+-->
+<!doctype html><html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+	<title>Ben Spencer</title>
+	<meta name="author" content="Ben Spencer">
+	<script type="text/javascript">
+
+		function validate() {
+			var x = document.getElementById("input").value;
+			y = "testme"
+
+			if (x != y) {
+				alert("Error!\n'" + x + "' does not match '" + y + "'");
+				return false;
+			}else{
+				return true;
+			}
+		}
+	</script>
+
+</head>
+<body>
+
+	<p>Write <i>testme</i> in the field to do something.</p>
+	<p>The field below is set to <code>display: none</code>, as is done with some multi-part or multi-stage forms.</p>
+
+	<form method="GET" action="about:blank" >
+
+		<input type="text" id="input" style="display: none;" />
+
+		<button type="submit" onclick="return validate();">Submit</button>
+
+	</form>
+
+</body>
+</html>
