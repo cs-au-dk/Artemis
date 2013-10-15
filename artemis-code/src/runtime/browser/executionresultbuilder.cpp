@@ -96,7 +96,7 @@ void ExecutionResultBuilder::registerEventHandlersIntoResult()
 
 void ExecutionResultBuilder::registerFromFieldsIntoResult()
 {
-    mPage->updateFormIdentifiers(); // make sure that form identifiers are set
+    mPage->updateFormIdentifiers(); // make sure that form identifiers (Artemis IDs) are set
 
     foreach(QWebFrame* frame, getAllFrames()) {
         // Gather <input> elements

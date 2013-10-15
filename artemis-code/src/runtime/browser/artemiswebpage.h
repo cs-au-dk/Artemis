@@ -33,7 +33,7 @@ public:
     explicit ArtemisWebPage();
 
     /**
-     * Updates all form elements accessible through document.forms with a form identifier.
+     * Updates all form elements accessible through document.forms with a form identifier (Artemis ID).
      *
      * The identifier is the form and element indexes written to the id property. This is only
      * done if both the id and name properties are empty.
