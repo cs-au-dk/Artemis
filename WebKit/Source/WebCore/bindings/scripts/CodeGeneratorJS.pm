@@ -1346,6 +1346,7 @@ sub GenerateImplementation
     $implIncludes{"<iostream>"} = 1;
     $implIncludes{"<ostream>"} = 1;
     $implIncludes{"<sstream>"} = 1;
+    $implIncludes{"<QDebug>"} = 1;
     # ARTEMIS END
 
     AddIncludesForTypeInImpl($interfaceName);
@@ -1820,7 +1821,8 @@ sub GenerateImplementation
                         push(@implContent, "            strs << inputName.string().ascii().data();\n");
                         push(@implContent, "            method = Symbolic::INPUT_NAME;\n");
                         push(@implContent, "        } else {\n");
-                        push(@implContent, "            std::cout << \"Error: Form input element without ID, name or Artemis ID used - this will break concolic execution!\" << std::endl;\n");
+#                        push(@implContent, "            std::cout << \"Error: Form input element without ID, name or Artemis ID used - this will break concolic execution!\" << std::endl;\n");
+                        push(@implContent, "            qWarning() << \"Form input element without ID, name or Artemis ID used - this will break concolic execution!\";\n");
                         push(@implContent, "            return result;\n");
                         push(@implContent, "        }\n");
                         push(@implContent, "\n");
