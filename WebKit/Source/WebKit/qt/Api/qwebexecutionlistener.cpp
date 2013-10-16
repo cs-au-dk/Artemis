@@ -132,7 +132,10 @@ void QWebExecutionListener::ajaxCallbackEventAdded(WebCore::LazyXMLHttpRequest* 
 
 void QWebExecutionListener::ajaxCallbackFire(int callbackId) {
     WebCore::LazyXMLHttpRequest* xmlHttpRequest = m_ajax_callbacks.value(callbackId);
-
+    if(!xmlHttpRequest){
+        qWarning() << "WARNING: xmlHttpRequest not found!";
+        return;
+    }
 	xmlHttpRequest->fire();
 
 }
