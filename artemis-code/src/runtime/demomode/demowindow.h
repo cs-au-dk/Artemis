@@ -101,6 +101,9 @@ private:
     QPushButton* mGenerateReportsBtn;
     QPushButton* mPathTraceReportBtn;
     QPushButton* mCoverageReportBtn;
+    QPushButton* mManualEntryPointXPathBtn;
+    QPushButton* mManualEntryPointClickBtn;
+    QLabel* mManualEntryPointDescription;
 
     // The initial analysis panel is provided as its own widget.
     InitialAnalysisWidget* mInitialAnalysis;
@@ -135,6 +138,12 @@ private:
     QString mPathTraceFilename;
     QString mCoverageFilename;
 
+    // Location of the manual entry point.
+    QString mManualEntryPointXPath;
+    QWebElementCollection mManualEntryPointMatches;
+    QWebElement mManualEntryPointElement;
+    QPoint mManualEntryPointCoordinates;
+
 
 protected slots:
     // For the GUI.
@@ -158,13 +167,19 @@ protected slots:
     // For the analysis/GUI interaction.
     void slEntryPointSelectionChanged();
 
+    // Trace recording
     void slStartTraceRecording();
     void slEndTraceRecording();
     void slAddedTraceNode();
 
+    // Links to coverage and trace reports
     void slShowTraceReport();
     void slShowCoverageReport();
     void slExportLinkedReports();
+
+    // Manual entry-point selection.
+    void slEnterManualEntryPoint();
+    void slClickManualEntryPoint();
 
 signals:
     void sigClose();

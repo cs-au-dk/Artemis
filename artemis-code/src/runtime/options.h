@@ -96,6 +96,8 @@ typedef struct OptionsType {
     PathTraceReport reportPathTrace;
 
     ConcolicTreeOutput concolicTreeOutput;
+    QString concolicEntryPoint;
+
     HeapReport reportHeap;
 
     int heapReportFactor;
