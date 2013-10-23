@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+#include <QFile>
+
 #include "demowindow.h"
 
 #include "util/loggingutil.h"
@@ -222,6 +224,10 @@ DemoModeMainWindow::DemoModeMainWindow(AppModelPtr appModel, WebKitExecutor* web
     mMenuBar = new QMenuBar(this);
 
     QMenu* fileMenu = new QMenu("&File", mMenuBar);
+
+    QAction* dumpDOMAction = fileMenu->addAction("&Dump DOM");
+    connect(dumpDOMAction, SIGNAL(triggered()), this, SLOT(slDumpDOM()));
+
     QAction* exitAction = fileMenu->addAction("&Exit");
     connect(exitAction, SIGNAL(triggered()), this, SLOT(close()));
 
@@ -663,7 +669,17 @@ void DemoModeMainWindow::slShowExamples()
     loadUrl(examplesIndexUrl());
 }
 
+void DemoModeMainWindow::slDumpDOM()
+{
+    QString filename = "dom.html";
+    QString dom = mWebPage->mainFrame()->toHtml();
 
+    QFile fp(filename);
+
+    fp.open(QIODevice::WriteOnly);
+    fp.write(dom.toStdString().data());
+    fp.close();
+}
 
 // Attached to the "View trace report" button.
 // Prevented (by UI) from being called until mPathTraceFilename is set.

@@ -159,6 +159,7 @@ protected slots:
     void slLinkHovered(const QString & link, const QString & title, const QString & textContent);
     void slJavascriptAlert(QWebFrame* frame, QString message);
     void slShowExamples();
+    void slDumpDOM();
 
     // For the analysis logic.
     void slExecutedSequence(ExecutableConfigurationConstPtr configuration, QSharedPointer<ExecutionResult> result);
