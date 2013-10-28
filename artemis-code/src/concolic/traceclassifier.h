@@ -32,7 +32,7 @@ class TraceClassifier : public TraceVisitor
 public:
     TraceClassifier();
 
-    bool classify(TraceNodePtr trace);
+    bool classify(TraceNodePtr &trace);
     bool mWasAlert;
     TraceNodePtr* mPreviousLink; // Used to backtrack when we must add a success marker.
 
