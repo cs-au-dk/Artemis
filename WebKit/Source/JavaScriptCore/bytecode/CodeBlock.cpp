@@ -1996,7 +1996,13 @@ HandlerInfo* CodeBlock::handlerForBytecodeOffset(unsigned bytecodeOffset)
 
 int CodeBlock::lineNumberForBytecodeOffset(unsigned bytecodeOffset)
 {
+    // This assertion was failing, see here for some discussion: https://github.com/cs-au-dk/Artemis/issues/90
     //ASSERT(bytecodeOffset < instructions().size());
+    // Emit a warning instead.
+    //if( ! bytecodeOffset < instructions().size() ){
+        //fprintf(stderr, "Warning: Assertion bytecodeOffset < instructions().size() failed in CodeBlock.cpp, line %d.\n", __LINE__ - 1);
+    //}
+    // TODO: This results in the warning being printed hundreds of times.
 
     if (!m_rareData)
         return m_ownerExecutable->source().firstLine();
@@ -2041,6 +2047,7 @@ void CodeBlock::expressionRangeForBytecodeOffset(unsigned bytecodeOffset, int& d
             high = mid;
     }
 
+    // This assertion was failing, see here for some discussion: https://github.com/cs-au-dk/Artemis/issues/90
     //ASSERT(low);
     if (!low) {
         startOffset = 0;
