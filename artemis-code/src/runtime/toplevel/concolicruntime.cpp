@@ -15,6 +15,7 @@
  */
 
 #include <fstream>
+#include <assert.h>
 
 #include "util/loggingutil.h"
 #include "concolic/executiontree/tracemerger.h"
@@ -32,6 +33,18 @@ ConcolicRuntime::ConcolicRuntime(QObject* parent, const Options& options, const 
     QObject::connect(mWebkitExecutor, SIGNAL(sigExecutedSequence(ExecutableConfigurationConstPtr, QSharedPointer<ExecutionResult>)),
                      this, SLOT(postConcreteExecution(ExecutableConfigurationConstPtr, QSharedPointer<ExecutionResult>)));
 
+    mManualEntryPoint = !options.concolicEntryPoint.isNull();
+    mManualEntryPointXPath = options.concolicEntryPoint;
+
+    // This web view is not used and not shown, but is required to give proper geometry to the ArtemisWebPage which
+    // renders the site being tested. It is required to have proper geometry in order to click correctly on elements.
+    // Without this the "bare" ArtemisWebPage is laid out correctly but the document element has zero size, so any
+    // click is outside its boundary and is not recognised.
+    // TODO: Investigate whether we need to resize the web view to avoid large pages overflowing outside the document.
+    mWebView = ArtemisWebViewPtr(new ArtemisWebView());
+    mWebView->setPage(mWebkitExecutor->getPage().data());
+    //mWebView->resize(1000,1000);
+    //mWebView->show();
 
 }
 
@@ -39,10 +52,23 @@ void ConcolicRuntime::run(const QUrl& url)
 {
     mUrl = url;
 
-    mNextConfiguration = QSharedPointer<ExecutableConfiguration>(new ExecutableConfiguration(QSharedPointer<InputSequence>(new InputSequence()), url));
+    // If the entry-point is specified as an argument, then skip the entry-point finding iteration.
+    if(mManualEntryPoint){
+        mRunningToGetEntryPoints = false;
+        mRunningWithInitialValues = true;
 
-    mRunningToGetEntryPoints = true;
-    mRunningWithInitialValues = false;
+        // TODO: This code is partially duplicated in setupNextConfiguration(). Not sure how to make this shorter...
+        BaseInputConstPtr submitEvent = BaseInputConstPtr(new ClickInput(mManualEntryPointXPath, FormInputCollectionConstPtr(new FormInputCollection(QList<FormInputPair>()))));
+        QList<QSharedPointer<const BaseInput> > inputList = QList<QSharedPointer<const BaseInput> >() << submitEvent;
+        InputSequenceConstPtr inputSequence = InputSequenceConstPtr(new InputSequence(inputList));
+        mNextConfiguration = QSharedPointer<ExecutableConfiguration>(new ExecutableConfiguration(inputSequence, mUrl));
+
+    }else{
+        mRunningToGetEntryPoints = true;
+        mRunningWithInitialValues = false;
+
+        mNextConfiguration = QSharedPointer<ExecutableConfiguration>(new ExecutableConfiguration(QSharedPointer<InputSequence>(new InputSequence()), url));
+    }
 
     mGraphOutputIndex = 1;
     mGraphOutputNameFormat = QString("tree-%1_%2.gv").arg(QDateTime::currentDateTime().toString("dd-MM-yy-hh-mm-ss"));
@@ -94,6 +120,9 @@ void ConcolicRuntime::postConcreteExecution(ExecutableConfigurationConstPtr conf
      *  3. Neither: A normal run, where we add to the tree and choose a new target.
      */
 
+    // Find the form fields on the page and save them.
+    mFormFields = result->getFormFields();
+
     if(mRunningToGetEntryPoints){
 
         postInitialConcreteExecution(result); // Runs the next iteration itself.
@@ -136,23 +165,30 @@ void ConcolicRuntime::outputTreeGraph()
 // Sets mNextConfiguration.
 void ConcolicRuntime::setupNextConfiguration(QSharedPointer<FormInputCollection> formInput)
 {
-    // Create a suitable EventParameters object for this submission. (As in StaticEventParameterGenerator.)
-    EventParametersConstPtr eventParameters = EventParametersConstPtr(new MouseEventParameters(mEntryPointEvent->getName(), true, true, 1, 0, 0, 0, 0, false, false, false, false, 0));
+    BaseInputConstPtr submitEvent;
 
-    // Create a suitable TargetDescriptor object for this submission.
-    // TODO: No support for JQuery unless we use a JQueryTarget, JQueryListener (and TargetGenerator?).
-    TargetDescriptorConstPtr targetDescriptor = TargetDescriptorConstPtr(new LegacyTarget(mEntryPointEvent));
+    // Depending on whether we have a manual or auto-detected entry point, create a suitable input type.
+    if(mManualEntryPoint){
+        // Create a ClickInput which will inject the FormInputCollection and click on the given coordinates.
+        submitEvent = BaseInputConstPtr(new ClickInput(mManualEntryPointXPath, formInput));
+    }else{
+        // Create a suitable EventParameters object for this submission. (As in StaticEventParameterGenerator.)
+        EventParametersConstPtr eventParameters = EventParametersConstPtr(new MouseEventParameters(mEntryPointEvent->getName(), true, true, 1, 0, 0, 0, 0, false, false, false, false, 0));
 
-    // Create a DomInput which will inject the empty FormInput and fire the entry point event.
-    BaseInputConstPtr submitEvent = BaseInputConstPtr(new DomInput(mEntryPointEvent, formInput, eventParameters, targetDescriptor));
-    // TODO:: Where should/are the eventParameters and targetDescriptor pointers cleaned up?
+        // Create a suitable TargetDescriptor object for this submission.
+        // TODO: No support for JQuery unless we use a JQueryTarget, JQueryListener (and TargetGenerator?).
+        TargetDescriptorConstPtr targetDescriptor = TargetDescriptorConstPtr(new LegacyTarget(mEntryPointEvent));
+
+        // Create a DomInput which will inject the FormInputCollection and fire the entry point event.
+        submitEvent = BaseInputConstPtr(new DomInput(mEntryPointEvent, formInput, eventParameters, targetDescriptor));
+    }
 
     // Create an input sequence consisting of just this event.
     QList<QSharedPointer<const BaseInput> > inputList;
     inputList.append(submitEvent);
     InputSequenceConstPtr inputSequence = InputSequenceConstPtr(new InputSequence(inputList));
 
-    // Create an executableConfiguration from this niput sequence.
+    // Create an executableConfiguration from this input sequence.
     mNextConfiguration = QSharedPointer<ExecutableConfiguration>(new ExecutableConfiguration(inputSequence, mUrl));
 
     Log::debug("Next configuration is:");
@@ -163,6 +199,8 @@ void ConcolicRuntime::setupNextConfiguration(QSharedPointer<FormInputCollection>
 // Does the processing after the very first page load, to prepare for the testing.
 void ConcolicRuntime::postInitialConcreteExecution(QSharedPointer<ExecutionResult> result)
 {
+    assert(!mManualEntryPoint);
+
     Log::debug("Analysing page entrypoints...");
 
     // Choose and save the entry point for use in future runs.
@@ -179,11 +217,7 @@ void ConcolicRuntime::postInitialConcreteExecution(QSharedPointer<ExecutionResul
         // Create the new event sequence and set mNextConfiguration.
         setupNextConfiguration(formInput);
 
-        // Find the form fields on the page and save them.
-        // TODO: We do this in the initial run so everything is stable, but at the cost of not being able to be at all dynamic (e.g. any form field not detected here will not be used correclty).
-        mFormFields = result->getFormFields();
-
-        // Print them
+        // Print the form fields found on the page.
         Log::debug("Form fields found:");
         foreach(QSharedPointer<const FormFieldDescriptor> field, mFormFields){
             Log::debug(field->getDomElement()->toString().toStdString());

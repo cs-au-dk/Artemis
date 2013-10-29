@@ -739,12 +739,14 @@ void DemoModeMainWindow::slEnterManualEntryPoint()
         button.removeAttribute("artformbutton");
     }
 
+    // TODO: The following code is duplicated in ClickInput.
+
     // Check if this element is available (and unique) on the page and highlight it.
     // To use QXmlQuery for XPath lookups we would need to parse the DOM as XML, and it will typically be invalid.
     // Instead we will inject some JavaScript to do the XPath lookup and then look up those elements from here.
 
     QWebElement document = mWebPage->currentFrame()->documentElement();
-    QString jsInjection = QString("var ArtFormButtons = document.evaluate(\"%1\", document, null, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null); for(var i = 0; i < ArtFormButtons.snapshotLength; i++){ ArtFormButtons.snapshotItem(i).setAttribute('artformbutton', 'true'); };").arg(mManualEntryPointXPath.replace('"', "\\\""));
+    QString jsInjection = QString("var ArtFormButtons = document.evaluate(\"%1\", document, null, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null); for(var i = 0; i < ArtFormButtons.snapshotLength; i++){ ArtFormButtons.snapshotItem(i).setAttribute('artformbutton', 'true'); };").arg(QString(mManualEntryPointXPath).replace('"', "\\\""));
     document.evaluateJavaScript(jsInjection, QUrl(), true);
     // TODO: look into whether we could read any useful results from this call.
 
