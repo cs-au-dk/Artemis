@@ -45,14 +45,14 @@ inline QString intTostring(const int i)
 
 inline QUrl examplesIndexUrl()
 {
-    // The defualt URL will be artemis-code/tests/system/fixtures/forms/examples-index.html
+    // The defualt URL will be artemis-code/tests/system/fixtures/concolic-examples-index.html
     char* artemisdir = std::getenv("ARTEMISDIR");
     if(!artemisdir){
         std::cerr << "Could not read ARTEMISDIR environment variable." << std::endl;
         exit(1);
     }
 
-    return QUrl(QString("file://%1/artemis-code/tests/demo/examples-index.html").arg(artemisdir));
+    return QUrl(QString("file://%1/artemis-code/tests/system/fixtures/concolic-examples-index.html").arg(artemisdir));
 }
 
 }

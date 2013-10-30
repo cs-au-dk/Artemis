@@ -34,7 +34,7 @@ ArtemisWebPage::ArtemisWebPage() :
 
 void ArtemisWebPage::updateFormIdentifiers()
 {
-    QString js = "for (var i = 0; i < document.forms.length; i++) { var form = document.forms[i]; for (var j = 0; j < form.elements.length; j++) { var element = form.elements[j]; if (element.id == \"\") {element.id = \"ARTEMISID-\" + i + \"-\" + j;} }}";
+    QString js = "for (var i = 0; i < document.forms.length; i++) { var form = document.forms[i]; for (var j = 0; j < form.elements.length; j++) { var element = form.elements[j]; if (element.id == \"\" || element.id.indexOf(\"ARTEMISID\") != -1) {element.id = \"ARTEMISID-\" + i + \"-\" + j;} }}";
     currentFrame()->documentElement().evaluateJavaScript(js, DONT_MEASURE_COVERAGE, true);
 }
 

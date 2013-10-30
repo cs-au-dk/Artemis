@@ -29,13 +29,14 @@ TraceClassifier::TraceClassifier()
 {
 }
 
-bool TraceClassifier::classify(TraceNodePtr trace)
+bool TraceClassifier::classify(TraceNodePtr& trace)
 {
     // First simple implementation: scan the trace looking for an alert() call.
     // If there is an alert() then the trace is a failure, otherwise a success.
 
     mWasAlert = false;
 
+    mPreviousLink = &trace;
     trace->accept(this);
 
     return !mWasAlert;

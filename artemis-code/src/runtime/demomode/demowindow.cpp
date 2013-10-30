@@ -92,6 +92,18 @@ DemoModeMainWindow::DemoModeMainWindow(AppModelPtr appModel, WebKitExecutor* web
     mEntryPointList = new QListWidget();
     mEntryPointList->setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Minimum);
 
+    // Buttons for the Manual Entry Point panel.
+    mManualEntryPointXPathBtn = new QPushButton("Set XPath for entry point");
+    QObject::connect(mManualEntryPointXPathBtn, SIGNAL(released()),
+                     this, SLOT(slEnterManualEntryPoint()));
+    mManualEntryPointDescription = new QLabel();
+    mManualEntryPointDescription->setHidden(true);
+    mManualEntryPointClickBtn = new QPushButton("Click this entry point.");
+    QObject::connect(mManualEntryPointClickBtn, SIGNAL(released()),
+                     this, SLOT(slClickManualEntryPoint()));
+    mManualEntryPointClickBtn->setEnabled(false);
+    // TODO: connect the buttons to slots.
+
     // Buttons for Trace Recording panel.
     mStartTraceRecordingBtn = new QPushButton("Start Recording");
     mEndTraceRecordingBtn = new QPushButton("End Recording");
@@ -131,6 +143,14 @@ DemoModeMainWindow::DemoModeMainWindow(AppModelPtr appModel, WebKitExecutor* web
     mEntryPointLabel->setFont(sectionFont);
     mAnalysisLayout->addWidget(mEntryPointLabel);
     mAnalysisLayout->addWidget(mEntryPointList);
+    mAnalysisLayout->addSpacing(10);
+
+    QLabel* manualEntryPointLabel = new QLabel("Manual Entry Point (by XPath)");
+    manualEntryPointLabel->setFont(sectionFont);
+    mAnalysisLayout->addWidget(manualEntryPointLabel);
+    mAnalysisLayout->addWidget(mManualEntryPointXPathBtn);
+    mAnalysisLayout->addWidget(mManualEntryPointDescription);
+    mAnalysisLayout->addWidget(mManualEntryPointClickBtn);
     mAnalysisLayout->addSpacing(10);
 
     QLabel* curTraceLabel = new QLabel("Trace Recording:");
@@ -484,6 +504,8 @@ void DemoModeMainWindow::resetPageAnlaysis()
     mKnownEntryPoints.clear();
     mEntryPointList->clear();
     mEntryPointLabel->setText("Potential Entry Points:");
+
+    mManualEntryPointClickBtn->setEnabled(false);
 }
 
 
@@ -700,6 +722,64 @@ void DemoModeMainWindow::slExportLinkedReports()
     // Enable the report viewing buttons now that there are reports to view.
     mPathTraceReportBtn->setEnabled(true);
     mCoverageReportBtn->setEnabled(true);
+}
+
+
+// Attached to the "enter manual entry point" button.
+void DemoModeMainWindow::slEnterManualEntryPoint()
+{
+    mManualEntryPointXPath = QInputDialog::getText(this, "Enter Button XPath", "XPath to button (need not be a button element but should be clickable):", QLineEdit::Normal, mManualEntryPointXPath);
+
+    mManualEntryPointDescription->setText(QString("XPath to button element: %1").arg(mManualEntryPointXPath));
+    mManualEntryPointDescription->setHidden(false);
+
+    // Clear highlighting on previously selected elements.
+    foreach(QWebElement button, mManualEntryPointMatches){
+        button.setStyleProperty("outline", "none");
+        button.removeAttribute("artformbutton");
+    }
+
+    // TODO: The following code is duplicated in ClickInput.
+
+    // Check if this element is available (and unique) on the page and highlight it.
+    // To use QXmlQuery for XPath lookups we would need to parse the DOM as XML, and it will typically be invalid.
+    // Instead we will inject some JavaScript to do the XPath lookup and then look up those elements from here.
+
+    QWebElement document = mWebPage->currentFrame()->documentElement();
+    QString jsInjection = QString("var ArtFormButtons = document.evaluate(\"%1\", document, null, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null); for(var i = 0; i < ArtFormButtons.snapshotLength; i++){ ArtFormButtons.snapshotItem(i).setAttribute('artformbutton', 'true'); };").arg(QString(mManualEntryPointXPath).replace('"', "\\\""));
+    document.evaluateJavaScript(jsInjection, QUrl(), true);
+    // TODO: look into whether we could read any useful results from this call.
+
+    mManualEntryPointMatches = document.findAll("*[artformbutton]");
+    foreach(QWebElement button, mManualEntryPointMatches){
+        button.setStyleProperty("outline", "10px solid orange");
+    }
+
+    // Check that the result exists and is unique.
+    if(mManualEntryPointMatches.count() != 1){
+        mManualEntryPointDescription->setText(QString("%1\nThere should be exactly one entry point.\nThat found %2.").arg(mManualEntryPointDescription->text()).arg(mManualEntryPointMatches.count()));
+        return;
+    }
+    mManualEntryPointElement = mManualEntryPointMatches.at(0);
+
+    // Find the coordinates of the element
+    mManualEntryPointCoordinates = mManualEntryPointElement.geometry().center();
+    // TODO: Is it possible to add a marker on the page at these coordinates (e.g. by injecting a small JS snippet)?
+
+    mManualEntryPointDescription->setText(QString("%1\nClick at: (%2,%3).").arg(mManualEntryPointDescription->text()).arg(mManualEntryPointCoordinates.x()).arg(mManualEntryPointCoordinates.y()));
+
+    // Enable the button and to click it.
+    mManualEntryPointClickBtn->setEnabled(true);
+}
+
+// Attached to the "click the maual entry point" button.
+void DemoModeMainWindow::slClickManualEntryPoint()
+{
+    QMouseEvent mouseButtonPress(QEvent::MouseButtonPress, mManualEntryPointCoordinates, Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
+    QApplication::sendEvent(mWebPage, &mouseButtonPress);
+
+    QMouseEvent mouseButtonRelease(QEvent::MouseButtonRelease, mManualEntryPointCoordinates, Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
+    QApplication::sendEvent(mWebPage, &mouseButtonRelease);
 }
 
 

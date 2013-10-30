@@ -31,6 +31,8 @@
 #include "runtime/input/dominput.h"
 #include "runtime/input/events/mouseeventparameters.h"
 #include "strategies/inputgenerator/targets/legacytarget.h"
+#include "runtime/input/clickinput.h"
+#include "runtime/browser/artemiswebview.h"
 
 #include "runtime/runtime.h"
 
@@ -77,6 +79,9 @@ protected:
     void preConcreteExecution();
 
     QUrl mUrl;
+
+    ArtemisWebViewPtr mWebView;
+
     QSharedPointer<ExecutableConfiguration> mNextConfiguration;
     TraceNodePtr mSymbolicExecutionGraph;
     EventHandlerDescriptorConstPtr mEntryPointEvent;
@@ -84,6 +89,12 @@ protected:
     bool mRunningToGetEntryPoints;
     bool mRunningWithInitialValues;
     DepthFirstSearchPtr mSearchStrategy; // TODO: For now we are using DFS hard-coded...
+
+    // For now, we can choose between entry points specified by XPath (with --concolic-button) or the built-in EP finding.
+    // If an XPath has been give, we want to skip the entry point finding run completely and use a different method for injecting clicks.
+    // If mManualEntryPoint is set, then we use mEntryPointXPath and skip the first iteration, otherwise we use mEntryPointEvent.
+    bool mManualEntryPoint;
+    QString mManualEntryPointXPath;
 
     TraceClassifier mTraceClassifier;
 

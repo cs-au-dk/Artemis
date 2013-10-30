@@ -86,6 +86,10 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             "           none - (default) Path trace report is omitted\n"
             "           html - HTML trace report is generated in the folder you run Artemis from\n"
             "\n"
+            "--concolic-button <XPath>:\n"
+            "           Use the given XPath to locate the button to be used in concolic mode.\n"
+            "           If not supplied, the concolic mode will use its built-in button finding, which is not robust.\n"
+            "\n"
             "--concolic-tree-output <trees>:\n"
             "           none - Do not output any graphs.\n"
             "           final (default) - Generate a graph of the final tree after analysis.\n"
@@ -120,6 +124,7 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
     {"function-call-heap-report", required_argument, NULL, 'g'},
     {"function-call-heap-report-random-factor", required_argument, NULL, 'l'},
     {"concolic-tree-output", required_argument, NULL, 'd'},
+    {"concolic-button", required_argument, NULL, 'b'},
     {"help", no_argument, NULL, 'h'},
     {0, 0, 0, 0}
     };
@@ -334,6 +339,11 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
                 exit(1);
             }
 
+            break;
+        }
+
+        case 'b': {
+            options.concolicEntryPoint = QString(optarg);
             break;
         }
 

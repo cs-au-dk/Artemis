@@ -1,3 +1,9 @@
+<!--
+TEST PC[0] = ((SymbolicString != ConstantString) == ConstantBoolean)
+TEST Concolic::Solver::ConstraintsSolved = 2
+TEST Concolic::Solver::ConstraintsWritten = 2
+TEST Concolic::Solver::Constraint.SYM_IN_input = testme
+-->
 <!doctype html><html lang="en">
 <head>
 	<meta charset="utf-8">
@@ -8,10 +14,10 @@
 	<script type="text/javascript">
 
 		function validate() {
-			var x = parseInt(document.getElementById("input_A").value);
-			var y = parseInt(document.getElementById("input_B").value);
+			var x = document.getElementById("input").value;
+			y = "testme"
 
-			if (y != x) {
+			if (x != y) {
 				alert("Error!\n'" + x + "' does not match '" + y + "'");
 				return false;
 			}else{
@@ -23,12 +29,12 @@
 </head>
 <body>
 
-	<p>Write matching integer values in the fields.</p>
+	<p>Write <i>testme</i> in the field to do something.</p>
+	<p>The field below is set to <code>display: none</code>, as is done with some multi-part or multi-stage forms.</p>
 
 	<form method="GET" action="about:blank" >
 
-		<input type="text" id="input_A" />
-		<input type="text" id="input_B" />
+		<input type="text" id="input" style="display: none;" />
 
 		<button type="submit" onclick="return validate();">Submit</button>
 
