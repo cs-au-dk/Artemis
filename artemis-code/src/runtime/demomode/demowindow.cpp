@@ -139,13 +139,13 @@ DemoModeMainWindow::DemoModeMainWindow(AppModelPtr appModel, WebKitExecutor* web
     QFont sectionFont;
     sectionFont.setBold(true);
 
-    mEntryPointLabel = new QLabel("Potential Entry Points:");
+    mEntryPointLabel = new QLabel("Candidate Entry Point Events:");
     mEntryPointLabel->setFont(sectionFont);
     mAnalysisLayout->addWidget(mEntryPointLabel);
     mAnalysisLayout->addWidget(mEntryPointList);
     mAnalysisLayout->addSpacing(10);
 
-    QLabel* manualEntryPointLabel = new QLabel("Manual Entry Point (by XPath)");
+    QLabel* manualEntryPointLabel = new QLabel("Manual Entry Point:");
     manualEntryPointLabel->setFont(sectionFont);
     mAnalysisLayout->addWidget(manualEntryPointLabel);
     mAnalysisLayout->addWidget(mManualEntryPointXPathBtn);
@@ -179,7 +179,7 @@ DemoModeMainWindow::DemoModeMainWindow(AppModelPtr appModel, WebKitExecutor* web
     // Execution reports section.
     QLabel* reportsLabel = new QLabel("Execution Reports");
     reportsLabel->setFont(sectionFont);
-    QLabel* reportsExplanation = new QLabel("These reports (currently) record all trace and coverage information since the start of the session.");
+    QLabel* reportsExplanation = new QLabel("These reports (currently) record all trace and\ncoverage information since the start of the\nsession.");
     mAnalysisLayout->addWidget(reportsLabel);
     mAnalysisLayout->addWidget(reportsExplanation);
     mGenerateReportsBtn = new QPushButton("Generate Reports");
@@ -241,7 +241,7 @@ DemoModeMainWindow::DemoModeMainWindow(AppModelPtr appModel, WebKitExecutor* web
 
     // Set what the window looks like
     resize(1300, 800);
-    setWindowTitle("Artemis Demonstration Mode");
+    setWindowTitle("ArtForm Demonstration Mode");
 
 
     // Signals used by the analysis itself.
@@ -424,7 +424,7 @@ void DemoModeMainWindow::preTraceExecution(ExecutionResultPtr result)
         // Log to GUI.
         addEntryPoint(ep->toString(), ep->getDomElement());
     }
-    mEntryPointLabel->setText(QString("Potential Entry Points: %1").arg(allEntryPoints.length()));
+    mEntryPointLabel->setText(QString("Candidate Entry Point Events: %1").arg(allEntryPoints.length()));
 
     // Display the page for the user to interact with.
     mWebView->setEnabled(true);
@@ -503,7 +503,7 @@ void DemoModeMainWindow::resetPageAnlaysis()
 {
     mKnownEntryPoints.clear();
     mEntryPointList->clear();
-    mEntryPointLabel->setText("Potential Entry Points:");
+    mEntryPointLabel->setText("Candidate Entry Point Events:");
 
     mManualEntryPointClickBtn->setEnabled(false);
 }
