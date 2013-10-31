@@ -93,7 +93,7 @@ In order to gain a larger code coverage Artemis generates input to forms instead
 
 The input generator can be set by setting the `--strategy-form-input-generation <strategy>` option. As an example the following command executes Artemis on [google.com](https://google.com) with the `javascript-constants` input generator, the `coverage` prioritization function and four iterations: 
 
-    artemis https://google.com --staregy-form-input-generator javascript-constants --strategy-priority coverage 
+    artemis https://google.com --staregy-form-input-generaton javascript-constants --strategy-priority coverage 
 
 ### Output
 
