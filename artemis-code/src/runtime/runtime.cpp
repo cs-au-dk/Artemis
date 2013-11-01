@@ -142,6 +142,12 @@ Runtime::Runtime(QObject* parent, const Options& options, const QUrl& url) : QOb
         strategy->addPrioritizer(new ReadWritePrioritizer());
         mPrioritizerStrategy = PrioritizerStrategyPtr(strategy);}
         break;
+    case COVERAGE_STRATEGIES:{
+        CollectedPrioritizer* strategy = new CollectedPrioritizer();
+        strategy->addPrioritizer(new ConstantPrioritizer());
+        strategy->addPrioritizer(new CoveragePrioritizer());
+        mPrioritizerStrategy = PrioritizerStrategyPtr(strategy);
+    }
     default:
         assert(false);
     }
