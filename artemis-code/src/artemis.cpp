@@ -235,7 +235,7 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
                 options.prioritizerStrategy = artemis::COVERAGE;
             } else if (string(optarg).compare("readwrite") == 0) {
                 options.prioritizerStrategy = artemis::READWRITE;
-            } else if (string(optarg).compare("article-all") == 0){
+            } else if (string(optarg).compare("all") == 0){
                 options.prioritizerStrategy = artemis::ALL_STRATEGIES;
             } else {
                 cerr << "ERROR: Invalid choice of prioritizer strategy " << optarg << endl;
