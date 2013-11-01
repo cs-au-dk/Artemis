@@ -79,7 +79,6 @@ void QWebExecutionListener::eventAdded(WebCore::EventTarget * target, const char
 
 void QWebExecutionListener::enableHeapReport(bool namedOnly, int heapReportNumber, int factor){
     m_reportHeapMode = namedOnly?1:2;
-    qDebug() << "SETTING HEAPN" << heapReportNumber;
     m_heapReportNumber = heapReportNumber;
     m_heapReportFactor = factor;
 }
@@ -253,7 +252,8 @@ void QWebExecutionListener::javascript_called_function(const JSC::DebuggerCallFr
 
     JSC::CodeBlock* codeBlock = frame.callFrame()->codeBlock();
 
-    if((m_reportHeapMode > 0 && (m_reportHeapMode > 1 || functionName.length() > 0)) && 0 == (rand() % m_heapReportFactor)){
+    if((m_reportHeapMode > 0 && (m_reportHeapMode > 1 || functionName.length() > 0)) && (m_heapReportFactor == 0 || 0 == (rand() % m_heapReportFactor))){
+        qDebug() << "REPORTIN";
         JSC::JSFunction* functionObject = (JSC::JSFunction*) frame.callFrame()->callee();
 
         std::stringstream ss;
@@ -278,7 +278,6 @@ void QWebExecutionListener::javascript_called_function(const JSC::DebuggerCallFr
         frame.callFrame()->heap()->heapAsString(frame.callFrame(), &hReport, visitedObjects);
         hReport.append(QString::fromStdString("}"));
         m_heapReport.append(hReport);
-
         if(m_heapReport.length() >=10){
             QString buffer;
             int i = 0 ;
