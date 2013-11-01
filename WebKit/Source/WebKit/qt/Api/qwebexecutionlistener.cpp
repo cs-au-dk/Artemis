@@ -49,12 +49,14 @@
 
 using namespace std;
 
-QWebExecutionListener::QWebExecutionListener(QObject *parent) :
-    QObject(parent),
-    inst::ExecutionListener(),
-    jscinst::JSCExecutionListener(),
-    m_ajax_callback_next_id(0),
-    m_reportHeapMode(0)
+QWebExecutionListener::QWebExecutionListener(QObject *parent)
+    : QObject(parent)
+    , inst::ExecutionListener()
+    , jscinst::JSCExecutionListener()
+    , m_ajax_callback_next_id(0)
+    , m_reportHeapMode(0)
+    , m_heapReportNumber(0)
+    , m_heapReportFactor(1)
 {
 }
 
@@ -78,7 +80,7 @@ void QWebExecutionListener::eventAdded(WebCore::EventTarget * target, const char
 }
 
 void QWebExecutionListener::enableHeapReport(bool namedOnly, int heapReportNumber, int factor){
-    m_reportHeapMode = namedOnly?1:2;
+    m_reportHeapMode = namedOnly ? 1 : 2;
     m_heapReportNumber = heapReportNumber;
     m_heapReportFactor = factor;
 }
