@@ -99,28 +99,30 @@ void ArtemisRuntime::postConcreteExecution(ExecutableConfigurationConstPtr confi
 {
     mWorklist->reprioritize(mAppmodel);
 
-    long hash;
-    if (mOptions.disableStateCheck ||
-            mVisitedStates->find(hash = result->getPageStateHash()) == mVisitedStates->end()) {
+    if (!mOptions.disableStateCheck) {
 
-        // Store the state
-        qDebug() << "Visiting new state";
-        mVisitedStates->insert(hash);
+        long hash = result->getPageStateHash();
+        if (mVisitedStates.find(hash) != mVisitedStates.end()) {
 
-        // FormCrawl (generate statistics)
-        mEntryPointDetector.detectAll(result);
-
-        // Generate new inputs
-        QList<QSharedPointer<ExecutableConfiguration> > newConfigurations = mInputgenerator->addNewConfigurations(configuration, result);
-        foreach(QSharedPointer<ExecutableConfiguration> newConfiguration, newConfigurations) {
-            mWorklist->add(newConfiguration, mAppmodel);
+            qDebug() << "Page state has already been seen";
+            preConcreteExecution();
+            return;
         }
 
-        statistics()->accumulate("InputGenerator::added-configurations", newConfigurations.size());
-
-    } else {
-        qDebug() << "Page state has already been seen";
+        qDebug() << "Visiting new state";
+        mVisitedStates.insert(hash);
     }
+
+    // FormCrawl (generate statistics)
+    mEntryPointDetector.detectAll(result);
+
+    // Generate new inputs
+    QList<QSharedPointer<ExecutableConfiguration> > newConfigurations = mInputgenerator->addNewConfigurations(configuration, result);
+    foreach(QSharedPointer<ExecutableConfiguration> newConfiguration, newConfigurations) {
+        mWorklist->add(newConfiguration, mAppmodel);
+    }
+
+    statistics()->accumulate("InputGenerator::added-configurations", newConfigurations.size());
 
     preConcreteExecution();
 }
