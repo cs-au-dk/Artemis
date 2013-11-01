@@ -10,8 +10,9 @@ STATS_END = '=== Statistics END ==='
 RE_STATS_LINE = re.compile(r'^(.*):(.*)$')
 
 
-def run_artemis(address, iterations):
-    cmd = ['/usr/local/bin/artemis'] + ['http://%s/' % address] + ['-i %s' % iterations]
+def run_artemis(address, iterations, tries=3):
+    cmd = ['/usr/local/bin/artemis'] + ([address] if address[:3] != "http" else ['http://%s/' % address]) + [
+        '-i %s' % iterations]
     start_t = time.time()
     try:
         std_out = (subprocess.check_output(cmd, stderr=subprocess.STDOUT)).decode("utf-8")
@@ -34,7 +35,8 @@ def run_artemis(address, iterations):
     except subprocess.CalledProcessError:
         covered_lines = -1
     end_t = time.time()
-    return end_t - start_t, covered_lines
+    return (end_t - start_t, covered_lines, 4-tries) if covered_lines > -1 or tries == 1 else run_artemis(address, iterations,
+                                                                                                 tries=tries - 1)
 
 
 def log_result_to_file(file_name, result):
@@ -48,7 +50,7 @@ def initialize_file(n):
     fn = 'result_file-%s.csv' % int(time.time())
     with open(fn, 'w') as fp:
         fp.write("Site,%s\n" % (
-            ",".join("Num iterations #%s,Runtime #%s,Unique covered lines #%s" % (i, i, i) for i in range(1, n+1))))
+            ",".join("Num iterations #%s,Runtime #%s,Unique covered lines #%s, Tries #%s" % (i, i, i, i) for i in range(1, n + 1))))
     return fn
 
 
@@ -77,7 +79,7 @@ if __name__ == '__main__':
             for it in iterations:
                 print '%s iteration(s)' % it
                 run = run_artemis(url, it)
-                print 'Ran %s seconds with %s unique covered lines' % run
+                print 'Ran %s seconds with %s unique covered lines in %s attempt(s)' % run
                 print ''
                 runs.append([it] + list(run))
             result.append([url] + runs)
