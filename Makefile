@@ -4,9 +4,11 @@ help:
 	@echo "Targets:"
 	@echo "    all				- Build webkit,  artemis, and the constraint solver"
 	@echo "    all-debug                    - Build webkit (debug),  artemis, and the constraint solver"
+	@echo "    all-clean                    - Cleans WebKit (debug and normal) and Artemis"
 	@echo ""
 	@echo "    webkit-minimal[-debug] 	- Build a minimal WebKit Qt port [with debug info]"
 	@echo "    webkit-clean             	- Clean WebKit files"
+	@echo "    webkit-clean-debug		- Clean WebKit debug files"
 	@echo ""
 	@echo "    artemis                  	- Build Artemis"
 	@echo "    artemis-clean            	- Clean artemis"
@@ -28,11 +30,16 @@ build: check webkit-minimal artemis
 
 all: webkit-minimal constraintsolver artemis
 all-debug: webkit-minimal-debug constraintsolver artemis
+all-clean: webkit-clean webkit-clean-debug artemis-clean 
 
 webkit-jscore-test:
 	${WEBKIT_TEST_SCRIPT}
 
 webkit-minimal:	check check-env check-sys
+	@if test -d "./WebKit/WebKitBuild/Debug"; then \
+		rm -f ./WebKit/WebKitBuild/Release; \
+		rm -rf ./WebKit/WebKitBuild/Debug; \
+	fi
 	@echo "Building minimal release QtWebKit"
 	${WEBKIT_BUILD_SCRIPT} --minimal
 
@@ -40,6 +47,10 @@ webkit-minimal:	check check-env check-sys
 webkit-minimal-debug: check check-env check-sys
 	@echo "Building minimal debug QtWebKit"
 	${WEBKIT_BUILD_SCRIPT} --debug --minimal
+	@echo "Removing release version"
+	@rm -rf ./WebKit/WebKitBuild/Release
+	@echo "Setting up symbolic link"
+	ln -s ./Debug/ ./WebKit/WebKitBuild/Release
 
 webkit-clean: check-env
 	@echo "Cleaning WebKit build"

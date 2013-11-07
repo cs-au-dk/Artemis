@@ -53,7 +53,7 @@ protected:
 
     AppModelPtr mAppmodel;
     WebKitExecutor* mWebkitExecutor;
-    set<long>* mVisitedStates;
+    set<long> mVisitedStates;
 
     TerminationStrategy* mTerminationStrategy;
     PrioritizerStrategyPtr mPrioritizerStrategy;
