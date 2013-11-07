@@ -26,6 +26,7 @@
 #include "concolic/mockentrypointdetector.h"
 #include "concolic/executiontree/traceprinter.h"
 #include "concolic/executiontree/tracedisplay.h"
+#include "concolic/executiontree/tracedisplayoverview.h"
 #include "concolic/traceclassifier.h"
 
 #include "runtime/input/dominput.h"
@@ -88,7 +89,11 @@ protected:
 
     bool mRunningToGetEntryPoints;
     bool mRunningWithInitialValues;
+
+    // Controls for the search procedure.
     DepthFirstSearchPtr mSearchStrategy; // TODO: For now we are using DFS hard-coded...
+    int mSearchPasses; // The number of passes to make of the search algorithm before giving up.
+    bool mSearchFoundTarget;
 
     // For now, we can choose between entry points specified by XPath (with --concolic-button) or the built-in EP finding.
     // If an XPath has been give, we want to skip the entry point finding run completely and use a different method for injecting clicks.
@@ -101,6 +106,7 @@ protected:
     // Method and variables for generating a graphviz graph of the execution tree.
     void outputTreeGraph();
     TraceDisplay mTraceDisplay;
+    TraceDisplayOverview mTraceDisplayOverview;
     QString mGraphOutputNameFormat;
     int mGraphOutputIndex;
 

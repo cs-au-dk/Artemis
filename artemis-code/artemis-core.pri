@@ -116,7 +116,8 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/concolic/executiontree/nodes/traceunexploredmissed.h \
     src/concolic/executiontree/nodes/traceunexploredunsolvable.h \
     src/concolic/mockentrypointdetector.h \
-    src/runtime/input/clickinput.h
+    src/runtime/input/clickinput.h \
+    src/concolic/executiontree/tracedisplayoverview.h
 
 SOURCES += src/runtime/input/ajaxinput.cpp \
     src/strategies/prioritizer/constantprioritizer.cpp \
@@ -213,6 +214,7 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/concolic/executiontree/nodes/traceunexploredmissed.cpp \
     src/concolic/executiontree/nodes/traceunexploredunsolvable.cpp \
     src/concolic/mockentrypointdetector.cpp \
-    src/runtime/input/clickinput.cpp
+    src/runtime/input/clickinput.cpp \
+    src/concolic/executiontree/tracedisplayoverview.cpp
 
 QT += network

@@ -192,6 +192,24 @@ void DepthFirstSearch::visit(TraceUnexplored *node)
     mFoundTarget = true;
 }
 
+void DepthFirstSearch::visit(TraceUnexploredMissed *node)
+{
+    // For now we will not re-try the same path again (as we don't have any way to generate a different injection).
+    continueFromLeaf();
+}
+
+void DepthFirstSearch::visit(TraceUnexploredUnsat *node)
+{
+    // For now we will not re-try the same path again (as we don't have any way to generate a different injection).
+    continueFromLeaf();
+}
+
+void DepthFirstSearch::visit(TraceUnexploredUnsolvable *node)
+{
+    // For now we will not re-try the same path again (as we don't have any way to generate a different injection).
+    continueFromLeaf();
+}
+
 void DepthFirstSearch::visit(TraceAnnotation *node)
 {
     // Skip all annotations, which are only relevant to classification and not searching.

@@ -73,6 +73,9 @@ public:
     void visit(TraceConcreteBranch* node);
     void visit(TraceSymbolicBranch* node);
     void visit(TraceUnexplored* node);
+    void visit(TraceUnexploredMissed* node);
+    void visit(TraceUnexploredUnsat* node);
+    void visit(TraceUnexploredUnsolvable* node);
     void visit(TraceAnnotation* node);      // Ignore all annotations.
     void visit(TraceEnd* node);             // Stop searching at *any* end node.
 

@@ -32,6 +32,22 @@ TraceDisplay::TraceDisplay(bool simplified) :
     mSimplified(simplified)
 {
     mExpressionPrinter = QSharedPointer<ExpressionPrinter>(new ExpressionValuePrinter());
+
+    mStyleBranches = "[label = \"Branch\\n(concrete)\"]";
+    mStyleSymBranches = "[style = filled, fillcolor = azure]";
+    mStyleUnexplored = "[label = \"???\", shape = circle, style = filled, fillcolor = lightgray]";
+    mStyleUnexploredUnsat = "[label = \"UNSAT\", shape = ellipse, style = filled, fillcolor = lightgray]";
+    mStyleUnexploredUnsolvable = "[label = \"Could not solve\", shape = ellipse, style = filled, fillcolor = lightgray]";
+    mStyleUnexploredMissed = "[label = \"Missed\", shape = ellipse, style = filled, fillcolor = lightgray]";
+    mStyleAlerts = "[shape = rectangle, style = filled, fillcolor = beige]";
+    mStyleDomMods = "[label = \"DOM Modification\"]";
+    mStyleLoads = "[label = \"Page Load\"]";
+    mStyleFunctions = "[shape = rectangle]";
+    mStyleEndSucc = "[label = \"End\", fillcolor = green, style = filled, shape = circle]";
+    mStyleEndFail = "[label = \"End\", fillcolor = red, style = filled, shape = circle]";
+    mStyleEndUnk = "[label = \"End\", fillcolor = lightgray, style = filled, shape = circle]";
+    mStyleAggregates = "[style = filled, fillcolor = snow, shape = box3d]";
+
 }
 
 /**
@@ -53,85 +69,85 @@ QString TraceDisplay::makeGraph(TraceNodePtr tree)
 
     // Build the header (this is where the styling for each node type is done).
 
-    result += indent + "subgraph branches {\n" + indent + indent + "node [label = \"Branch\\n(concrete)\"];\n\n";
+    result += indent + "subgraph branches {\n" + indent + indent + "node " + mStyleBranches + ";\n\n";
     foreach(QString node, mHeaderBranches){
         result += indent + indent + node + ";\n";
     }
     result += indent + "}\n\n";
 
-    result += indent + "subgraph branches_sym {\n" + indent + indent + "node [style = filled, fillcolor = azure];\n\n";
+    result += indent + "subgraph branches_sym {\n" + indent + indent + "node " + mStyleSymBranches + ";\n\n";
     foreach(QString node, mHeaderSymBranches){
         result += indent + indent + node + ";\n";
     }
     result += indent + "}\n\n";
 
-    result += indent + "subgraph unexplored {\n" + indent + indent + "node [label = \"???\", shape = circle, style = filled, fillcolor = lightgray];\n\n";
+    result += indent + "subgraph unexplored {\n" + indent + indent + "node " + mStyleUnexplored + ";\n\n";
     foreach(QString node, mHeaderUnexplored){
         result += indent + indent + node + ";\n";
     }
     result += indent + "}\n\n";
 
-    result += indent + "subgraph unexplored_unsat {\n" + indent + indent + "node [label = \"UNSAT\", shape = ellipse, style = filled, fillcolor = lightgray];\n\n";
+    result += indent + "subgraph unexplored_unsat {\n" + indent + indent + "node " + mStyleUnexploredUnsat + ";\n\n";
     foreach(QString node, mHeaderUnexploredUnsat){
         result += indent + indent + node + ";\n";
     }
     result += indent + "}\n\n";
 
-    result += indent + "subgraph unexplored_unsolvable {\n" + indent + indent + "node [label = \"Could not solve\", shape = ellipse, style = filled, fillcolor = lightgray];\n\n";
+    result += indent + "subgraph unexplored_unsolvable {\n" + indent + indent + "node " + mStyleUnexploredUnsolvable + ";\n\n";
     foreach(QString node, mHeaderUnexploredUnsolvable){
         result += indent + indent + node + ";\n";
     }
     result += indent + "}\n\n";
 
-    result += indent + "subgraph unexplored_missed {\n" + indent + indent + "node [label = \"Missed\", shape = ellipse, style = filled, fillcolor = lightgray];\n\n";
+    result += indent + "subgraph unexplored_missed {\n" + indent + indent + "node " + mStyleUnexploredMissed + ";\n\n";
     foreach(QString node, mHeaderUnexploredMissed){
         result += indent + indent + node + ";\n";
     }
     result += indent + "}\n\n";
 
-    result += indent + "subgraph alerts {\n" + indent + indent + "node [shape = rectangle, style = filled, fillcolor = beige];\n\n";
+    result += indent + "subgraph alerts {\n" + indent + indent + "node " + mStyleAlerts + ";\n\n";
     foreach(QString node, mHeaderAlerts){
         result += indent + indent + node + ";\n";
     }
     result += indent + "}\n\n";
 
-    result += indent + "subgraph dom_mods {\n" + indent + indent + "node [label = \"DOM Modification\"];\n\n";
+    result += indent + "subgraph dom_mods {\n" + indent + indent + "node " + mStyleDomMods + ";\n\n";
     foreach(QString node, mHeaderDomMods){
         result += indent + indent + node + ";\n";
     }
     result += indent + "}\n\n";
 
-    result += indent + "subgraph loads {\n" + indent + indent + "node [label = \"Page Load\"];\n\n";
+    result += indent + "subgraph loads {\n" + indent + indent + "node " + mStyleLoads + ";\n\n";
     foreach(QString node, mHeaderLoads){
         result += indent + indent + node + ";\n";
     }
     result += indent + "}\n\n";
 
-    result += indent + "subgraph functions {\n" + indent + indent + "node [shape = rectangle];\n\n";
+    result += indent + "subgraph functions {\n" + indent + indent + "node " + mStyleFunctions + ";\n\n";
     foreach(QString node, mHeaderFunctions){
         result += indent + indent + node + ";\n";
     }
     result += indent + "}\n\n";
 
-    result += indent + "subgraph end_succ {\n" + indent + indent + "node [label = \"End\", fillcolor = green, style = filled, shape = circle];\n\n";
+    result += indent + "subgraph end_succ {\n" + indent + indent + "node " + mStyleEndSucc + ";\n\n";
     foreach(QString node, mHeaderEndSucc){
         result += indent + indent + node + ";\n";
     }
     result += indent + "}\n\n";
 
-    result += indent + "subgraph end_fail {\n" + indent + indent + "node [label = \"End\", fillcolor = red, style = filled, shape = circle];\n\n";
+    result += indent + "subgraph end_fail {\n" + indent + indent + "node " + mStyleEndFail + ";\n\n";
     foreach(QString node, mHeaderEndFail){
         result += indent + indent + node + ";\n";
     }
     result += indent + "}\n\n";
 
-    result += indent + "subgraph end_unk {\n" + indent + indent + "node [label = \"End\", fillcolor = lightgray, style = filled, shape = circle];\n\n";
+    result += indent + "subgraph end_unk {\n" + indent + indent + "node " + mStyleEndUnk + ";\n\n";
     foreach(QString node, mHeaderEndUnk){
         result += indent + indent + node + ";\n";
     }
     result += indent + "}\n\n";
 
-    result += indent + "subgraph aggregates {\n" + indent + indent + "node [style = filled, fillcolor = snow, shape = box3d];\n\n";
+    result += indent + "subgraph aggregates {\n" + indent + indent + "node " + mStyleAggregates + ";\n\n";
     foreach(QString node, mHeaderAggregates){
         result += indent + indent + node + ";\n";
     }
@@ -145,6 +161,10 @@ QString TraceDisplay::makeGraph(TraceNodePtr tree)
     foreach(QString edge, mEdges){
         result += indent + edge + ";\n";
     }
+
+
+    // Add the legend (if any) on the end.
+    result += mLegend;
 
 
     // End the graph
@@ -267,7 +287,7 @@ void TraceDisplay::visit(TraceSymbolicBranch *node)
     QString symbolicExpression(mExpressionPrinter->getResult().c_str());
     mExpressionPrinter->clear();
     symbolicExpression.replace("\"", "\\\"");
-    symbolicExpression.replace(")(", ")\\n("); // TODO: Hack for splitting m,ultiple clauses onto diffent lines.
+    symbolicExpression.replace(")(", ")\\n("); // TODO: Hack for splitting multiple clauses onto diffent lines.
     QString label = QString(" [label = \"Branch\\n%1\"]").arg(symbolicExpression);
 
     // TODO: can we add the symbolic condition to the node label?

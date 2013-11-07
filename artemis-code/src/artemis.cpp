@@ -93,7 +93,9 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             "--concolic-tree-output <trees>:\n"
             "           none - Do not output any graphs.\n"
             "           final (default) - Generate a graph of the final tree after analysis.\n"
+            "           final-overview - Like final but also includes a simplified overview graph."
             "           all - Generate a graph of the tree at every iteration.\n"
+            "           all-overview - Like all but also includes simplified overview graphs."
             "\n"
             "--strategy-priority <strategy>:\n"
             "           Select priority strategy.\n"
@@ -333,6 +335,12 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
                 options.concolicTreeOutput = artemis::TREE_FINAL;
             } else if (string(optarg).compare("all") == 0) {
                 options.concolicTreeOutput = artemis::TREE_ALL;
+            } else if (string(optarg).compare("final-overview") == 0) {
+                options.concolicTreeOutput = artemis::TREE_FINAL;
+                options.concolicTreeOutputOverview = true;
+            } else if (string(optarg).compare("all-overview") == 0) {
+                options.concolicTreeOutput = artemis::TREE_ALL;
+                options.concolicTreeOutputOverview = true;
             } else {
                 cerr << "ERROR: Invalid choice of concolic-tree-output " << optarg << endl;
                 exit(1);

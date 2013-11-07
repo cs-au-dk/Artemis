@@ -20,6 +20,7 @@
 #include "util/loggingutil.h"
 #include "concolic/executiontree/tracemerger.h"
 #include "concolic/solver/z3solver.h"
+#include "statistics/statsstorage.h"
 
 #include "concolicruntime.h"
 
@@ -46,6 +47,10 @@ ConcolicRuntime::ConcolicRuntime(QObject* parent, const Options& options, const 
     //mWebView->resize(1000,1000);
     //mWebView->show();
 
+    // The number of times we are willing to run the search procedure hoping to find some more nodes.
+    // Note that if we know there are no unexplored nodes left we will stop anyway, so this is an upper limit.
+    mSearchPasses = 3;
+    mSearchFoundTarget = false;
 }
 
 void ConcolicRuntime::run(const QUrl& url)
@@ -71,7 +76,7 @@ void ConcolicRuntime::run(const QUrl& url)
     }
 
     mGraphOutputIndex = 1;
-    mGraphOutputNameFormat = QString("tree-%1_%2.gv").arg(QDateTime::currentDateTime().toString("dd-MM-yy-hh-mm-ss"));
+    mGraphOutputNameFormat = QString("tree-%1_%2%3.gv").arg(QDateTime::currentDateTime().toString("dd-MM-yy-hh-mm-ss"));
 
     std::ofstream constraintLog;
     constraintLog.open("/tmp/z3constraintlog", std::ofstream::out | std::ofstream::app);
@@ -149,11 +154,15 @@ void ConcolicRuntime::postConcreteExecution(ExecutableConfigurationConstPtr conf
 void ConcolicRuntime::outputTreeGraph()
 {
     // We want all the graphs from a certain run to have the same "base" name and an increasing index, so they can be easily grouped.
-    QString name = mGraphOutputNameFormat.arg(mGraphOutputIndex);
+    QString name = mGraphOutputNameFormat.arg("").arg(mGraphOutputIndex);
+    QString name_min = mGraphOutputNameFormat.arg("min_").arg(mGraphOutputIndex);
     Log::debug(QString("CONCOLIC-INFO: Writing tree to file %1").arg(name).toStdString());
     mGraphOutputIndex++;
 
     mTraceDisplay.writeGraphFile(mSymbolicExecutionGraph, name, false);
+    if(mOptions.concolicTreeOutputOverview){
+        mTraceDisplayOverview.writeGraphFile(mSymbolicExecutionGraph, name_min, false);
+    }
 
     // TODO: Is there any way to have extra information added to the graph? e.g. the current target node.
 }
@@ -320,12 +329,18 @@ QSharedPointer<FormInputCollection> ConcolicRuntime::createFormInput(QMap<QStrin
     foreach(QString varName, varList){
         Symbolvalue value = solution->findSymbol(varName);
         if(!value.found){
-            Log::info(QString("Error: Could not find value for %1 in the solver's solution.").arg(varName).toStdString());
-            exit(1);
+            Log::error(QString("Error: Could not find value for %1 in the solver's solution.").arg(varName).toStdString());
+            statistics()->accumulate("Concolic::FailedInjections", 1);
+            continue;
         }
 
         // Find the corresponding FormField by searching on the relevant attribute.
         QSharedPointer<const FormFieldDescriptor> varSourceField = findFormFieldForVariable(varName, freeVariables.value(varName));
+        // May be null if we failed to inject.
+        if(varSourceField.isNull()){
+            // Error already logged within findFormFieldForVariable.
+            continue;
+        }
 
         // Create the field/value pairing to be injected using the FormInput object.
         switch (value.kind) {
@@ -342,8 +357,9 @@ QSharedPointer<FormInputCollection> ConcolicRuntime::createFormInput(QMap<QStrin
             Log::debug(QString("Injecting %1 into %2").arg(QString(value.string.c_str())).arg(varName).toStdString());
             break;
         default:
-            Log::info(QString("Unimplemented value type encountered for variable %1 (%2)").arg(varName).arg(value.kind).toStdString());
-            exit(1);
+            Log::error(QString("Unimplemented value type encountered for variable %1 (%2)").arg(varName).arg(value.kind).toStdString());
+            statistics()->accumulate("Concolic::FailedInjections", 1);
+            continue;
         }
 
     }
@@ -385,15 +401,16 @@ QSharedPointer<const FormFieldDescriptor> ConcolicRuntime::findFormFieldForVaria
         break;
 
     default:
-        Log::fatal("Unexpected identification method for form fields encountered.");
-        exit(1);
-        break;
+        Log::error("Error: Unexpected identification method for form fields encountered.");
+        statistics()->accumulate("Concolic::FailedInjections", 1);
+        return varSourceField; // Returning null to signify error.
     }
 
     // Check that we found a FormField.
     if(varSourceField.isNull()){
-        Log::fatal(QString("Could not identify a form field for %1.").arg(varName).toStdString());
-        exit(1);
+        Log::error(QString("Error: Could not identify a form field for %1.").arg(varName).toStdString());
+        statistics()->accumulate("Concolic::FailedInjections", 1);
+        return varSourceField; // Returning null to signify error.
     }
 
     return varSourceField;
@@ -461,13 +478,25 @@ void ConcolicRuntime::chooseNextTargetAndExplore()
 {
     // Choose the next target.
     if(mSearchStrategy->chooseNextTarget()){
+        mSearchFoundTarget = true;
 
         // Explore this target. Runs the next execution itself.
         exploreNextTarget();
 
+    }else if (mSearchPasses > 1 && mSearchFoundTarget){
+        mSearchFoundTarget = false;
+        mSearchPasses--;
+
+        Log::debug("\n============= Finished DFS ==============");
+        Log::debug("Finished this pass of the tree. Increasing depth limit and restarting.");
+
+        mSearchStrategy->setDepthLimit(mSearchStrategy->getDepthLimit() + 5);
+        mSearchStrategy->restartSearch();
+        chooseNextTargetAndExplore();
+
     }else{
         Log::debug("\n============= Finished DFS ==============");
-        Log::debug("Finished serach of the tree (first pass at this depth).");
+        Log::debug("Finished serach of the tree.");
 
         if(mOptions.concolicTreeOutput == TREE_FINAL){
             outputTreeGraph();
