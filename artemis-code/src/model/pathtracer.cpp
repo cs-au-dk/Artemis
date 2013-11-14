@@ -23,9 +23,9 @@
 namespace artemis
 {
 
-PathTracer::PathTracer(PathTraceReport reportLevel) :
-    mTraces(QList<PathTrace>()),
-    mReportLevel(reportLevel)
+PathTracer::PathTracer(PathTraceReport reportLevel, CoverageListenerPtr coverage)
+    : mCoverage(coverage)
+    , mReportLevel(reportLevel)
 {
 }
 
@@ -80,11 +80,7 @@ void PathTracer::slJavascriptFunctionCalled(QString functionName, size_t bytecod
 
     TraceItem item;
     item.type = FUNCALL;
-    item.name = displayedFunctionName(functionName);
-    item.message = QString("File: %1, Line: %2.").arg(displayedUrl(source->getUrl())).arg(functionStartLine);
-    item.sourceUrl = source->getUrl();
-    item.sourceOffset = sourceOffset;
-    item.sourceStartLine = source->getStartLine();
+    item.string = displayedFunctionName(functionName);
     item.lineInFile = functionStartLine;
     item.sourceID = SourceInfo::getId(source->getUrl(), source->getStartLine());
     appendItem(item);
@@ -96,7 +92,7 @@ void PathTracer::slJavascriptFunctionReturned(QString functionName)
         return;
     }
 
-    appendItem(FUNRET, displayedFunctionName(functionName), "");
+    appendItem(FUNRET, displayedFunctionName(functionName));
 }
 
 void PathTracer::slJavascriptAlert(QWebFrame* frame, QString msg)
@@ -106,7 +102,7 @@ void PathTracer::slJavascriptAlert(QWebFrame* frame, QString msg)
     }
 
     msg = msg.replace("\n", "\\n");
-    appendItem(ALERT, "alert()",  "Message: " + msg);
+    appendItem(ALERT, msg);
 }
 
 void PathTracer::newPathTrace(QString description, TraceType type)
@@ -122,18 +118,17 @@ void PathTracer::appendItem(TraceItem item)
 {
     if(mTraces.isEmpty()){
         Log::error("Error: Trace item was added before any trace was started.");
-        Log::error("       Name: " + item.name.toStdString());
+        Log::error("       Name: " + item.getName().toStdString());
         exit(1);
     }
     mTraces.last().items.append(item);
 }
 
-void PathTracer::appendItem(ItemType type, QString name, QString message)
+void PathTracer::appendItem(ItemType type, QString name)
 {
     TraceItem item;
     item.type = type;
-    item.name = name;
-    item.message = message;
+    item.string = name;
     appendItem(item);
 }
 
@@ -163,10 +158,11 @@ void PathTracer::write()
             stackLevel = 1;
 
             foreach(item, trace.items){
-                if(item.message == ""){
-                    itemStr = item.name.toStdString();
+                QString message = item.getMessage(mCoverage);
+                if(message == ""){
+                    itemStr = item.getName().toStdString();
                 }else{
-                    itemStr = (item.name.leftJustified(35 - stackLevel*2) + ' ' + item.message).toStdString();
+                    itemStr = (item.getName().leftJustified(35 - stackLevel*2) + ' ' + message).toStdString();
                 }
                 switch(item.type){
                 case FUNCALL:
@@ -232,12 +228,14 @@ void PathTracer::writePathTraceHTML(bool linkWithCoverage, QString coveragePath,
 
             QListIterator<TraceItem> itemIt(trace.items);
             while(itemIt.hasNext()){
+                QString message = item.getMessage(mCoverage);
+
                 item = itemIt.next();
 
-                itemStr = item.name;
+                itemStr = item.getName();
                 itemStr.replace('&',"&amp;").replace('>',"&gt;").replace('<',"&lt;");
                 itemStr = "<span class=\"itemname\">" + itemStr + "</span>";
-                extraStr = item.message.isEmpty() ? "" : (" <span class=\"extrainfo\">" + item.message + "</span>");
+                extraStr = message.isEmpty() ? "" : (" <span class=\"extrainfo\">" + message + "</span>");
                 indent = QString(indentLevel, '\t');
                 res += indent;
 
@@ -249,7 +247,7 @@ void PathTracer::writePathTraceHTML(bool linkWithCoverage, QString coveragePath,
                     }else{
                         functionLink = "";
                     }
-                    extraStr = QString("<span class=\"extrainfo\">File: <a href=\"%1\">%2</a>, Line: %3, %4</span>").arg(item.sourceUrl).arg(displayedUrl(item.sourceUrl, true)).arg(item.lineInFile).arg(functionLink);
+                    extraStr = QString("<span class=\"extrainfo\">File: <a href=\"%1\">%2</a>, Line: %3, %4</span>").arg(item.getUrl(mCoverage)).arg(displayedUrl(item.getUrl(mCoverage), true)).arg(item.lineInFile).arg(functionLink);
                     res += "<li class=\"funcall\">\n"+indent+"\t<span class=\"label\">Function Call:</span> " + itemStr + extraStr + "\n"+indent+"\t<ol class=\"functionbody\">\n";
                     indentLevel++;
                     break;

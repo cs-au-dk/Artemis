@@ -32,6 +32,7 @@
 #include "runtime/options.h"
 #include "runtime/input/baseinput.h"
 #include "model/coverage/sourceinfo.h"
+#include "model/coverage/coveragelistener.h"
 
 namespace artemis
 {
@@ -41,22 +42,48 @@ class PathTracer : public QObject
     Q_OBJECT
 
 public:
-    explicit PathTracer(PathTraceReport reportLevel);
+    explicit PathTracer(PathTraceReport reportLevel, CoverageListenerPtr coverage);
     void notifyStartingLoad();
     void notifyStartingEvent(QSharedPointer<const BaseInput> inputEvent);
     void write();
     void writePathTraceHTML(bool linkWithCoverage, QString coveragePath, QString& pathToFile);
 
 private:
+
+    CoverageListenerPtr mCoverage; // used for printing urls without storing the entire URL
+
     enum ItemType {FUNCALL, FUNRET, ALERT};
     struct TraceItem {
         ItemType type;
-        QString name;
+        QString string;
+
         // The following are not present in all item types.
-        QString sourceUrl;
-        uint sourceOffset, sourceStartLine, lineInFile, bytecodeOffset;
+        uint lineInFile;
         sourceid_t sourceID;
-        QString message;
+
+        QString getUrl(CoverageListenerPtr coverage) {
+            return coverage->getSourceInfo(sourceID)->getURL();
+        }
+
+        QString getName() {
+            switch (type) {
+            case ALERT:
+                return "alert()";
+            default:
+                return string;
+            }
+        }
+
+        QString getMessage(CoverageListenerPtr coverage) {
+            switch (type) {
+            case FUNCALL:
+                return QString("File: %1, Line: %2.").arg(PathTracer::displayedUrl(getUrl(coverage))).arg(lineInFile);
+            case ALERT:
+                return string;
+            default:
+                return "";
+            }
+        }
     };
     enum TraceType {OTHER, CLICK, LOAD, MOUSE};
     struct PathTrace {
@@ -70,9 +97,9 @@ private:
 
     void newPathTrace(QString description, TraceType type);
     void appendItem(TraceItem item);
-    void appendItem(ItemType type, QString name, QString message);
+    void appendItem(ItemType type, QString name);
 
-    QString displayedUrl(QString url, bool fileNameOnly = false);
+    static QString displayedUrl(QString url, bool fileNameOnly = false);
     QString displayedFunctionName(QString name);
     QString TraceClass(TraceType type);
 

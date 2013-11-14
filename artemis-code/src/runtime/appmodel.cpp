@@ -27,9 +27,9 @@ AppModel::AppModel(Options options)
 
     // If we are in concolic mode then enable the path tracer by default (but without overriding any user-specified setting).
     if(options.majorMode == artemis::CONCOLIC && options.reportPathTrace == artemis::NO_TRACES){
-        mPathTracer = PathTracerPtr(new PathTracer(artemis::HTML_TRACES));
+        mPathTracer = PathTracerPtr(new PathTracer(artemis::HTML_TRACES, mCoverageListener));
     }else{
-        mPathTracer = PathTracerPtr(new PathTracer(options.reportPathTrace));
+        mPathTracer = PathTracerPtr(new PathTracer(options.reportPathTrace, mCoverageListener));
     }
 }
 
