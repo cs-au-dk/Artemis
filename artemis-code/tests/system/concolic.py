@@ -23,7 +23,7 @@ def _run_test(test_filename, pc=None, dryrun=False):
     name = test_filename.replace('.', '_')
 
     report = execute_artemis(name, "%s/%s" % (WEBSERVER_URL, test_filename),
-                             iterations=2,
+                             iterations=0,
                              major_mode='concolic',
                              dryrun=dryrun)
 
@@ -79,7 +79,7 @@ def _list_tests_in_folder(folder):
 def test_generator(filename, name, test_dict=None, internal_test=None, dry_run=False):
     def test(self):
         report = execute_artemis(name, "%s/%s" % (WEBSERVER_URL, filename),
-                                 iterations=2,
+                                 iterations=0,
                                  major_mode='concolic',
                                  dryrun=dry_run)
 
