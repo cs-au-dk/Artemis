@@ -55,7 +55,7 @@ QSource* QSourceRegistry::get(JSC::SourceProvider* sourceProvider)
     QString url = QString::fromStdString(sourceProvider->url().utf8().data());
     uint lineOffset = sourceProvider->startPosition().m_line.zeroBasedInt() + 1;
 
-    uint key = qHash(new QPair<QString, uint>(url, lineOffset));
+    uint key = qHash(QPair<QString, uint>(url, lineOffset));
 
     QHash<uint, QSource*>::iterator iter = m_registry.find(key);
 
