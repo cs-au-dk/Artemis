@@ -49,7 +49,7 @@ public:
     virtual void run(const QUrl& url) = 0;
 
 protected:
-    void done();
+    virtual void done();
 
     AppModelPtr mAppmodel;
     WebKitExecutor* mWebkitExecutor;

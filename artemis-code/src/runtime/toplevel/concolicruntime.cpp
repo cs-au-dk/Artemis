@@ -28,8 +28,9 @@ namespace artemis
 {
 
 
-ConcolicRuntime::ConcolicRuntime(QObject* parent, const Options& options, const QUrl& url) :
-    Runtime(parent, options, url)
+ConcolicRuntime::ConcolicRuntime(QObject* parent, const Options& options, const QUrl& url)
+    : Runtime(parent, options, url)
+    , mNumIterations(0)
 {
     QObject::connect(mWebkitExecutor, SIGNAL(sigExecutedSequence(ExecutableConfigurationConstPtr, QSharedPointer<ExecutionResult>)),
                      this, SLOT(postConcreteExecution(ExecutableConfigurationConstPtr, QSharedPointer<ExecutionResult>)));
@@ -41,7 +42,6 @@ ConcolicRuntime::ConcolicRuntime(QObject* parent, const Options& options, const 
     // renders the site being tested. It is required to have proper geometry in order to click correctly on elements.
     // Without this the "bare" ArtemisWebPage is laid out correctly but the document element has zero size, so any
     // click is outside its boundary and is not recognised.
-    // TODO: Investigate whether we need to resize the web view to avoid large pages overflowing outside the document.
     mWebView = ArtemisWebViewPtr(new ArtemisWebView());
     mWebView->setPage(mWebkitExecutor->getPage().data());
     //mWebView->resize(1000,1000);
@@ -92,6 +92,11 @@ void ConcolicRuntime::run(const QUrl& url)
 
 void ConcolicRuntime::preConcreteExecution()
 {
+    if (mOptions.iterationLimit > 0 && mOptions.iterationLimit <= mNumIterations) {
+        Log::debug("Iteration limit reached");
+        mNextConfiguration.clear();
+    }
+
     if (mNextConfiguration.isNull()) {
         mWebkitExecutor->detach();
         done();
@@ -112,8 +117,6 @@ void ConcolicRuntime::preConcreteExecution()
 
     mWebkitExecutor->executeSequence(mNextConfiguration); // calls the postConcreteExecution method as callback
 }
-
-
 
 // TODO: This method is a mess! It needs refactoring/reorganising ASAP.
 void ConcolicRuntime::postConcreteExecution(ExecutableConfigurationConstPtr configuration, QSharedPointer<ExecutionResult> result)
@@ -143,6 +146,8 @@ void ConcolicRuntime::postConcreteExecution(ExecutableConfigurationConstPtr conf
         chooseNextTargetAndExplore();
 
     }
+
+    mNumIterations++;
 }
 
 
@@ -508,6 +513,12 @@ void ConcolicRuntime::chooseNextTargetAndExplore()
     }
 }
 
+
+void ConcolicRuntime::done()
+{
+    statistics()->accumulate("Concolic::iterations", mNumIterations);
+    Runtime::done();
+}
 
 
 } // namespace artemis

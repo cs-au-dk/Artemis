@@ -75,6 +75,7 @@ public:
     ConcolicRuntime(QObject* parent, const Options& options, const QUrl& url);
 
     void run(const QUrl& url);
+    void done();
 
 protected:
     void preConcreteExecution();
@@ -121,6 +122,9 @@ protected:
     void chooseNextTargetAndExplore();
 
     QSet<QSharedPointer<const FormFieldDescriptor> > mFormFields;
+
+    // State
+    unsigned int mNumIterations;
 
 private slots:
     void postConcreteExecution(ExecutableConfigurationConstPtr configuration, QSharedPointer<ExecutionResult> result);
