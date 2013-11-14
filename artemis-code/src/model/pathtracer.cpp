@@ -14,9 +14,12 @@
  * limitations under the License.
  */
 
+#include <sstream>
+
 #include "util/loggingutil.h"
 #include "util/fileutil.h"
 #include "model/coverage/codeblockinfo.h"
+#include "statistics/statsstorage.h"
 
 #include "pathtracer.h"
 
@@ -26,6 +29,7 @@ namespace artemis
 PathTracer::PathTracer(PathTraceReport reportLevel, CoverageListenerPtr coverage)
     : mCoverage(coverage)
     , mReportLevel(reportLevel)
+    , mTraceItemPoolUncompressedSize(0)
 {
 }
 
@@ -110,7 +114,6 @@ void PathTracer::newPathTrace(QString description, TraceType type)
     PathTrace newTrace;
     newTrace.type = type;
     newTrace.description = description;
-    newTrace.items = QList<TraceItem>();
     mTraces.append(newTrace);
 }
 
@@ -121,7 +124,15 @@ void PathTracer::appendItem(TraceItem item)
         Log::error("       Name: " + item.getName().toStdString());
         exit(1);
     }
-    mTraces.last().items.append(item);
+
+    TraceItemReference reference = item.hashcode();
+
+    if (!mTraceItemPool.contains(reference)) {
+        mTraceItemPool.insert(reference, item);
+    }
+
+    mTraces.last().items.append(reference);
+    mTraceItemPoolUncompressedSize++;
 }
 
 void PathTracer::appendItem(ItemType type, QString name)
@@ -134,6 +145,7 @@ void PathTracer::appendItem(ItemType type, QString name)
 
 void PathTracer::write()
 {
+    TraceItemReference itemReference;
     TraceItem item;
     PathTrace trace;
     uint stackLevel;
@@ -157,7 +169,8 @@ void PathTracer::write()
             Log::info("    Trace Start | " + trace.description.toStdString());
             stackLevel = 1;
 
-            foreach(item, trace.items){
+            foreach(itemReference, trace.items){
+                item = mTraceItemPool[itemReference];
                 QString message = item.getMessage(mCoverage);
                 if(message == ""){
                     itemStr = item.getName().toStdString();
@@ -226,11 +239,13 @@ void PathTracer::writePathTraceHTML(bool linkWithCoverage, QString coveragePath,
             res += "\t<li class=\"trace "+TraceClass(trace.type)+" collapsed\">\n\t\t<span class=\"label\">Trace Start:</span> <span class=\"description\">" + trace.description + "</span>\n\t\t<ol class=\"singletrace\">\n";
             indentLevel = 3;
 
-            QListIterator<TraceItem> itemIt(trace.items);
-            while(itemIt.hasNext()){
-                QString message = item.getMessage(mCoverage);
+            QListIterator<TraceItemReference> itemIt(trace.items);
 
-                item = itemIt.next();
+            while(itemIt.hasNext()){
+
+                item = mTraceItemPool[itemIt.next()];
+
+                QString message = item.getMessage(mCoverage);
 
                 itemStr = item.getName();
                 itemStr.replace('&',"&amp;").replace('>',"&gt;").replace('<',"&lt;");
@@ -310,6 +325,14 @@ QString PathTracer::TraceClass(TraceType type)
     default:
         return "unknown";
     }
+}
+
+void PathTracer::writeStatistics()
+{
+    std::stringstream out;
+    out << mTraceItemPool.size() << "/" << mTraceItemPoolUncompressedSize;
+
+    statistics()->set("WebKit::pathtracer::traceitempool-compression", out.str());
 }
 
 }

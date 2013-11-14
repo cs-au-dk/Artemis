@@ -201,6 +201,8 @@ void Runtime::done()
         Log::info("=== Path Tracer END ===\n");
     }
 
+    mAppmodel->getPathTracer()->writeStatistics();
+
     if(mOptions.reportHeap != NO_CALLS){
         QString buffer = "";
         int i = 0;

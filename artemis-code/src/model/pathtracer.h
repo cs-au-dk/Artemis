@@ -28,6 +28,7 @@
 #include <QDateTime>
 #include <QListIterator>
 #include <QSource>
+#include <QHash>
 
 #include "runtime/options.h"
 #include "runtime/input/baseinput.h"
@@ -47,6 +48,7 @@ public:
     void notifyStartingEvent(QSharedPointer<const BaseInput> inputEvent);
     void write();
     void writePathTraceHTML(bool linkWithCoverage, QString coveragePath, QString& pathToFile);
+    void writeStatistics();
 
 private:
 
@@ -84,12 +86,27 @@ private:
                 return "";
             }
         }
+
+        uint hashcode() {
+            return (uint)type + qHash(string) * 7 + lineInFile * 31 + sourceID * 79;
+        }
     };
+
+    /**
+     * We place all trace items in the trace item pool, such that items with identical contents are merged together.
+     *
+     * This is to reduce the high memory consumption resulting from a large number of very similar traces.
+     */
+    typedef uint TraceItemReference;
+    QHash<TraceItemReference, TraceItem> mTraceItemPool;
+
+    unsigned int mTraceItemPoolUncompressedSize;
+
     enum TraceType {OTHER, CLICK, LOAD, MOUSE};
     struct PathTrace {
         TraceType type;
         QString description;
-        QList<TraceItem> items;
+        QList<TraceItemReference> items;
     };
 
     QList<PathTrace> mTraces;
