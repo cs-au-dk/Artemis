@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+#include <assert.h>
+
 #include <QApplication>
 #include <QMouseEvent>
 #include <QWebElement>
@@ -61,18 +63,54 @@ void ClickInput::apply(ArtemisWebPagePtr page, QWebExecutionListener *webkitList
 
     // Find the coordinates of the element
     QPoint targetCoords = targetElement.geometry().center();
+    QSize viewportSize = page->viewportSize();
 
     Log::debug(QString("ClickInput: Clicking on coordinates (%1, %2) for XPath query \"%3\"").arg(targetCoords.x()).arg(targetCoords.y()).arg(mTargetXPath).toStdString());
     Log::debug(targetElement.toOuterXml().toStdString());
+    Log::debug((QString("Dimensions of web view are X: ") + QString::number(viewportSize.width()) + " Y: " + QString::number(viewportSize.height()) + " Scrollbar position is X: " + QString::number(page->mainFrame()->scrollBarValue(Qt::Horizontal)) + " Y:" + QString::number(page->mainFrame()->scrollBarValue(Qt::Vertical))).toStdString());
 
+    if ((viewportSize.width() + page->mainFrame()->scrollBarValue(Qt::Horizontal)) < targetCoords.x() ||
+        (viewportSize.height() + page->mainFrame()->scrollBarValue(Qt::Vertical)) < targetCoords.y()) {
+
+        Log::debug("Target outside viewport, repositioning");
+
+        int xScroll = std::min(
+            page->mainFrame()->contentsSize().width() - viewportSize.width(), // scroll to the far left
+            std::max(
+                0, // don't scroll
+                targetCoords.x() - (viewportSize.width() / 2)
+            )
+        );
+
+        page->mainFrame()->setScrollBarValue(Qt::Horizontal, xScroll);
+
+        int yScroll = std::min(
+            page->mainFrame()->contentsSize().height() - viewportSize.height(), // scroll to the bottom
+            std::max(
+                0, // don't scroll
+                targetCoords.y() - (viewportSize.height() / 2)
+            )
+        );
+
+        page->mainFrame()->setScrollBarValue(Qt::Vertical, yScroll);
+
+        targetCoords = QPoint(targetCoords.x() - xScroll, targetCoords.y() - yScroll);
+
+        Log::debug(QString("ClickInput: Changed coordinates to (%1, %2)").arg(targetCoords.x()).arg(targetCoords.y()).toStdString());
+
+    }
+
+    targetElement.setFocus();
 
     // Click the target element's coordinates.
 
     QMouseEvent mouseButtonPress(QEvent::MouseButtonPress, targetCoords, Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
     QApplication::sendEvent(page.data(), &mouseButtonPress);
+    //assert(mouseButtonPress.isAccepted());
 
     QMouseEvent mouseButtonRelease(QEvent::MouseButtonRelease, targetCoords, Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
     QApplication::sendEvent(page.data(), &mouseButtonRelease);
+    //assert(mouseButtonRelease.isAccepted());
 
 }
 

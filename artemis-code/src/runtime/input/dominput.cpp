@@ -57,7 +57,8 @@ void DomInput::apply(ArtemisWebPagePtr page, QWebExecutionListener*) const
         qDebug() << "Event Handler: " << handler.tagName() << " _ID: "
                  << handler.attribute(QString("id")) << " _Title: "
                  << handler.attribute(QString("title")) << "class: "
-                 << handler.attribute(QString("class"));
+                 << handler.attribute(QString("class")) << "name: "
+                 << handler.attribute(QString("name"));
         qDebug() << "Target: " << target.tagName() << " _ID: " << target.attribute(QString("id"))
                  << " _Title: " << target.attribute(QString("title")) << "class: "
                  << target.attribute(QString("class"));
