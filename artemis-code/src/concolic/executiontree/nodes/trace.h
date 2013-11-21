@@ -20,6 +20,7 @@
 #include <QSharedPointer>
 #include <QString>
 #include <QList>
+#include <QUrl>
 
 #include "JavaScriptCore/symbolic/expr.h"
 
@@ -92,7 +93,7 @@ public:
 class TracePageLoad : public TraceAnnotation
 {
 public:
-    QString page; // TODO: should we keep both the old and new pages?
+    QUrl url; // The NEW url being loaded.
 
     bool isEqualShallow(const QSharedPointer<const TraceNode>& other)
     {

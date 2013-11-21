@@ -138,7 +138,7 @@ void TraceViewerDialog::visit(TraceDomModification *node)
 
 void TraceViewerDialog::visit(TracePageLoad *node)
 {
-    mNodeList->addItem(QString("Page Load: %1").arg(node->page));
+    mNodeList->addItem(QString("Page Load: %1").arg(node->url.toString()));
     node->next->accept(this);
 }
 

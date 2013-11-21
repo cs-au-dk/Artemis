@@ -89,6 +89,11 @@ public:
     virtual void webkit_ajax_send(const char * url, const char * data) = 0;
     virtual void ajaxCallbackEventAdded(WebCore::LazyXMLHttpRequest*) = 0;
 
+    /**
+      Loading pages and submitting forms
+      */
+    virtual void page_load_scheduled(const char* url) = 0;
+
 };
 
 extern ExecutionListener* listener;

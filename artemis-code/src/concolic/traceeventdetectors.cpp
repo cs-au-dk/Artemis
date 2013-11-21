@@ -103,5 +103,20 @@ void TraceFunctionCallDetector::slJavascriptFunctionCalled(QString functionName,
 
 
 
+/* Page Load Detector ********************************************************/
+
+void TracePageLoadDetector::slPageLoad(QUrl url)
+{
+    // Create the trace node.
+    QSharedPointer<TracePageLoad> node  = QSharedPointer<TracePageLoad>(new TracePageLoad());
+    node->url = url;
+
+    // Pass the new node to the trace builder.
+    newNode(node.staticCast<TraceNode>(), &(node->next));
+}
+
+
+
+
 
 } //namespace artmeis

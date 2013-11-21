@@ -31,16 +31,16 @@ TraceDisplayOverview::TraceDisplayOverview() :
     mStyleBranches = "[label = \"\", shape = circle, style = filled, fillcolor = black]";
     mStyleSymBranches = "[label = \"\", shape = circle, style = filled, fillcolor = cyan]";
     mStyleUnexplored = "[label = \"?\", shape = circle, style = filled, fillcolor = lightgray]";
-    mStyleUnexploredUnsat = "[label = \"U\", shape = circle, style = filled, fillcolor = indigo]";
+    mStyleUnexploredUnsat = "[label = \"U\", shape = circle, style = filled, fillcolor = blueviolet]";
     mStyleUnexploredUnsolvable = "[label = \"X\", shape = circle, style = filled, fillcolor = hotpink]";
     mStyleUnexploredMissed = "[label = \"M\", shape = circle, style = filled, fillcolor = chocolate]";
     mStyleAlerts = "[label = \"!\", shape = circle, style = filled, fillcolor = gold]";
     //mStyleDomMods not used
-    //mStyleLoads not used
+    mStyleLoads = "[label = \"L\" shape = circle, style=filled, fillcolor = honeydew]";
     //mStyleFunctions not used
-    mStyleEndSucc = "[label = \"\", fillcolor = green, style = filled, shape = circle]";
-    mStyleEndFail = "[label = \"\", fillcolor = red, style = filled, shape = circle]";
-    mStyleEndUnk = "[label = \"\", fillcolor = lightgray, style = filled, shape = circle]";
+    mStyleEndSucc = "[label = \"S\", fillcolor = green, style = filled, shape = circle]";
+    mStyleEndFail = "[label = \"F\", fillcolor = red, style = filled, shape = circle]";
+    mStyleEndUnk = "[label = \"E\", fillcolor = lightgray, style = filled, shape = circle]";
     //mStyleAggregates not used
 
 
@@ -53,33 +53,40 @@ TraceDisplayOverview::TraceDisplayOverview() :
             "        <td bgcolor=\"black\" border=\"1\" width=\"25pt\"></td>\n"
             "        <td align=\"left\">Concrete Branch</td>\n"
             "\n"
-            "        <td bgcolor=\"lightgray\" border=\"1\" width=\"25pt\">?</td>\n"
-            "        <td align=\"left\">Unexplored</td>\n"
+            "        <td bgcolor=\"gold\" border=\"1\" width=\"25pt\">!</td>\n"
+            "        <td align=\"left\">Alert</td>\n"
             "      </tr>\n"
             "      <tr>\n"
             "        <td bgcolor=\"cyan\" border=\"1\" width=\"25pt\"></td>\n"
             "        <td align=\"left\">Symbolic Branch</td>\n"
             "\n"
-            "        <td bgcolor=\"gold\" border=\"1\" width=\"25pt\">!</td>\n"
-            "        <td align=\"left\">Alert</td>\n"
+            "        <td bgcolor=\"honeydew\" border=\"1\" width=\"25pt\">L</td>\n"
+            "        <td align=\"left\">Page Load</td>\n"
             "      </tr>\n"
             "      <tr>\n"
-            "        <td bgcolor=\"green\" border=\"1\" width=\"25pt\"></td>\n"
+            "        <td bgcolor=\"green\" border=\"1\" width=\"25pt\">S</td>\n"
             "        <td align=\"left\">End (Success)</td>\n"
             "\n"
-            "        <td bgcolor=\"indigo\" border=\"1\" width=\"25pt\">U</td>\n"
+            "        <td width=\"25pt\"></td>\n"
+            "        <td align=\"left\">DOM Modification</td>\n"
+            "      </tr>\n"
+            "      <tr>\n"
+            "        <td bgcolor=\"red\" border=\"1\" width=\"25pt\">F</td>\n"
+            "        <td align=\"left\">End (Failure)</td>\n"
+            "\n"
+            "        <td bgcolor=\"blueviolet\" border=\"1\" width=\"25pt\">U</td>\n"
             "        <td align=\"left\">Unsatisfiable</td>\n"
             "      </tr>\n"
             "      <tr>\n"
-            "        <td bgcolor=\"red\" border=\"1\" width=\"25pt\"></td>\n"
-            "        <td align=\"left\">End (Failure)</td>\n"
+            "        <td bgcolor=\"lightgray\" border=\"1\" width=\"25pt\">E</td>\n"
+            "        <td align=\"left\">End (Unknown)</td>\n"
             "\n"
             "        <td bgcolor=\"chocolate\" border=\"1\" width=\"25pt\">M</td>\n"
             "        <td align=\"left\">Missed</td>\n"
             "      </tr>\n"
             "      <tr>\n"
-            "        <td bgcolor=\"lightgray\" border=\"1\" width=\"25pt\"></td>\n"
-            "        <td align=\"left\">End (Unknown)</td>\n"
+            "        <td bgcolor=\"lightgray\" border=\"1\" width=\"25pt\">?</td>\n"
+            "        <td align=\"left\">Unexplored</td>\n"
             "\n"
             "        <td bgcolor=\"hotpink\" border=\"1\" width=\"25pt\">X</td>\n"
             "        <td align=\"left\">Could not solve</td>\n"
@@ -196,7 +203,17 @@ void TraceDisplayOverview::visit(TraceDomModification *node)
 
 void TraceDisplayOverview::visit(TracePageLoad *node)
 {
-    // Skip these nodes.
+    flushAggregation();
+
+    QString name = QString("load_%1").arg(mNodeCounter);
+    mNodeCounter++;
+
+    // Always show loads, but no longer show messages.
+    mHeaderLoads.append(name);
+    addInEdge(name);
+
+    mPreviousNode = name;
+    mEdgeExtras = "";
     node->next->accept(this);
 }
 

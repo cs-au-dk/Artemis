@@ -156,6 +156,13 @@ void QWebExecutionListener::webkit_ajax_send(const char * url, const char * data
     emit ajax_request(url_u, data_q);
 }
 
+// Page loading detection
+
+void QWebExecutionListener::page_load_scheduled(const char* url) {
+    QUrl newUrl = QUrl(QString::fromAscii(url));
+    emit sigPageLoadScheduled(newUrl);
+}
+
 // TIMERS START
 
 void QWebExecutionListener::timerAdded(WebCore::ScriptExecutionContext* context, int timerId, int timeout, bool singleShot) {

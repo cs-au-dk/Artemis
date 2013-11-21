@@ -105,6 +105,19 @@ public slots:
 };
 
 
+
+/*
+ *  Detector for page loads.
+ */
+class TracePageLoadDetector : public TraceEventDetector
+{
+    Q_OBJECT
+
+public slots:
+    void slPageLoad(QUrl url);
+};
+
+
 } // namespace artemis
 
 #endif // TRACEEVENTDETECTORS_H

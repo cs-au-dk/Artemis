@@ -41,7 +41,7 @@ TraceDisplay::TraceDisplay(bool simplified) :
     mStyleUnexploredMissed = "[label = \"Missed\", shape = ellipse, style = filled, fillcolor = lightgray]";
     mStyleAlerts = "[shape = rectangle, style = filled, fillcolor = beige]";
     mStyleDomMods = "[label = \"DOM Modification\"]";
-    mStyleLoads = "[label = \"Page Load\"]";
+    mStyleLoads = "[shape = rectangle, style=filled, fillcolor = honeydew]";
     mStyleFunctions = "[shape = rectangle]";
     mStyleEndSucc = "[label = \"End\", fillcolor = green, style = filled, shape = circle]";
     mStyleEndFail = "[label = \"End\", fillcolor = red, style = filled, shape = circle]";
@@ -405,8 +405,8 @@ void TraceDisplay::visit(TracePageLoad *node)
     QString name = QString("load_%1").arg(mNodeCounter);
     mNodeCounter++;
 
-    // TODO: Can we add the URL to the node label?
-    mHeaderLoads.append(name);
+    QString nodeDecl = QString("%1 [label = \"Page Load:\\n%2\"]").arg(name).arg(node->url.toString());
+    mHeaderLoads.append(nodeDecl);
 
     addInEdge(name);
 

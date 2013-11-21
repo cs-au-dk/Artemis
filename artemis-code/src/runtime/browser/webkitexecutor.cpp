@@ -154,6 +154,12 @@ WebKitExecutor::WebKitExecutor(QObject* parent,
                      functionCallDetector.data(), SLOT(slJavascriptFunctionCalled(QString, size_t, uint, uint, QSource*)));
     mTraceBuilder->addDetector(functionCallDetector);
 
+    // The page load detector
+    QSharedPointer<TracePageLoadDetector> pageLoadDetector(new TracePageLoadDetector());
+    QObject::connect(mWebkitListener, SIGNAL(sigPageLoadScheduled(QUrl)),
+                     pageLoadDetector.data(), SLOT(slPageLoad(QUrl)));
+    mTraceBuilder->addDetector(pageLoadDetector);
+
 }
 
 WebKitExecutor::~WebKitExecutor()

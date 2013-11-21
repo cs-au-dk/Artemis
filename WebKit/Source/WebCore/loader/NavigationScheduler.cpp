@@ -49,6 +49,10 @@
 #include "UserGestureIndicator.h"
 #include <wtf/CurrentTime.h>
 
+#ifdef ARTEMIS
+#include "instrumentation/executionlistener.h"
+#endif
+
 namespace WebCore {
 
 unsigned NavigationDisablerForBeforeUnload::s_navigationDisableCount = 0;
@@ -309,6 +313,10 @@ void NavigationScheduler::scheduleRedirect(double delay, const String& url)
     if (url.isEmpty())
         return;
 
+#ifdef ARTEMIS
+    inst::getListener()->page_load_scheduled(url.ascii().data());
+#endif
+
     // We want a new back/forward list item if the refresh timeout is > 1 second.
     if (!m_redirect || delay <= m_redirect->delay())
         schedule(adoptPtr(new ScheduledRedirect(delay, m_frame->document()->securityOrigin(), url, true, delay <= 1)));
@@ -339,6 +347,10 @@ void NavigationScheduler::scheduleLocationChange(SecurityOrigin* securityOrigin,
     if (url.isEmpty())
         return;
 
+#ifdef ARTEMIS
+    inst::getListener()->page_load_scheduled(url.ascii().data());
+#endif
+
     lockBackForwardList = lockBackForwardList || mustLockBackForwardList(m_frame);
 
     FrameLoader* loader = m_frame->loader();
@@ -361,6 +373,10 @@ void NavigationScheduler::scheduleLocationChange(SecurityOrigin* securityOrigin,
 void NavigationScheduler::scheduleFormSubmission(PassRefPtr<FormSubmission> submission)
 {
     ASSERT(m_frame->page());
+
+#ifdef ARTEMIS
+    inst::getListener()->page_load_scheduled(submission->action().string().ascii().data());
+#endif
 
     // FIXME: Do we need special handling for form submissions where the URL is the same
     // as the current one except for the fragment part? See scheduleLocationChange above.
@@ -387,6 +403,10 @@ void NavigationScheduler::scheduleRefresh()
     if (url.isEmpty())
         return;
 
+#ifdef ARTEMIS
+    inst::getListener()->page_load_scheduled(url.string().ascii().data());
+#endif
+
     schedule(adoptPtr(new ScheduledRefresh(m_frame->document()->securityOrigin(), url.string(), m_frame->loader()->outgoingReferrer())));
 }
 
@@ -394,6 +414,10 @@ void NavigationScheduler::scheduleHistoryNavigation(int steps)
 {
     if (!shouldScheduleNavigation())
         return;
+
+#ifdef ARTEMIS
+    inst::getListener()->page_load_scheduled("");
+#endif
 
     // Invalid history navigations (such as history.forward() during a new load) have the side effect of cancelling any scheduled
     // redirects. We also avoid the possibility of cancelling the current load by avoiding the scheduled redirection altogether.

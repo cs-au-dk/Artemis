@@ -89,6 +89,8 @@ public:
     void ajaxCallbackFire(int callbackId);
     void clearAjaxCallbacks();
 
+    void page_load_scheduled(const char* url);
+
     virtual void timerAdded(WebCore::ScriptExecutionContext* context, int timerId, int timeout, bool singleShot);
     virtual void timerRemoved(WebCore::ScriptExecutionContext* context, int timerId);
     void timerFire(int timerId);
@@ -138,6 +140,7 @@ signals:
     void sigJavascriptPropertyRead(QString propertyName, intptr_t codeBlockID, intptr_t SourceID, QSource* source);
     void sigJavascriptPropertyWritten(QString propertyName, intptr_t codeBlockID, intptr_t SourceID, QSource* source);
 
+    /* JavaScript Instrumentation */
     void loadedJavaScript(QString sourcecode, QSource* source);
     void statementExecuted(uint linenumber, QSource* source);
     void sigJavascriptFunctionCalled(QString functionName, size_t bytecodeSize, uint functionLine, uint sourceOffset, QSource* source);
@@ -145,6 +148,8 @@ signals:
     void sigJavascriptBytecodeExecuted(const ByteCodeInfoStruct byteInfo, uint sourceOffset, QSource* source);
     void sigJavascriptBranchExecuted(bool jump, Symbolic::Expression* condition, uint sourceOffset, QSource* source, const ByteCodeInfoStruct byteInfo);
 
+    /* Page Load Instrumentation */
+    void sigPageLoadScheduled(QUrl url);
 };
 
 
