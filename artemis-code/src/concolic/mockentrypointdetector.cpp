@@ -119,8 +119,20 @@ EventHandlerDescriptorConstPtr MockEntryPointDetector::choose(ExecutionResultPtr
         return allEntryPoints.at(6);
     }
 
+    if(url == "http://www.jetblue.com/"){
+        assert(allEntryPoints.length() == 26);
+        return allEntryPoints.at(16);
+    }
 
-    qDebug() << "Did not match any known URL during entry-point finding.\n";
+    if(url == "http://www.flyfrontier.com/"){
+        assert(allEntryPoints.length() == 23);
+        return allEntryPoints.at(1);
+    }
+
+
+    qDebug() << "Did not match any known URL during entry-point finding.";
+    qDebug() << "URL: " << url;
+    qDebug() << "Candidate EPs: " << allEntryPoints.length();
 
     // If the site is not on the list, then this mock class does not support it, so return NULL.
     // TODO, we should really not do this... could we throw an exception?
