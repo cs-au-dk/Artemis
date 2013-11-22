@@ -85,6 +85,8 @@ public slots:
 
     void slJavascriptConstantStringEncountered(QString constant);
 
+signals:
+    void sigDomModified(QString start, QString end); // Only fired at the end, not for every modification.
 };
 
 typedef QSharedPointer<ExecutionResultBuilder> ExecutionResultBuilderPtr;

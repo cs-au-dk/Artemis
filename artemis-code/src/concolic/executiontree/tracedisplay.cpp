@@ -40,7 +40,7 @@ TraceDisplay::TraceDisplay(bool simplified) :
     mStyleUnexploredUnsolvable = "[label = \"Could not solve\", shape = ellipse, style = filled, fillcolor = lightgray]";
     mStyleUnexploredMissed = "[label = \"Missed\", shape = ellipse, style = filled, fillcolor = lightgray]";
     mStyleAlerts = "[shape = rectangle, style = filled, fillcolor = beige]";
-    mStyleDomMods = "[label = \"DOM Modification\"]";
+    mStyleDomMods = "[shape = rectangle, style = filled, fillcolor = peachpuff]";
     mStyleLoads = "[shape = rectangle, style=filled, fillcolor = honeydew]";
     mStyleFunctions = "[shape = rectangle]";
     mStyleEndSucc = "[label = \"End\", fillcolor = green, style = filled, shape = circle]";
@@ -380,20 +380,28 @@ void TraceDisplay::visit(TraceAlert *node)
 
 void TraceDisplay::visit(TraceDomModification *node)
 {
-    // If in simplified mode, then we ignore this node and just add it to the aggregate node instead.
-    if(mSimplified && mCurrentlyAggregating){
-        mAggregatedDomModifications++;
-    }else{
-        QString name = QString("dom_%1").arg(mNodeCounter);
-        mNodeCounter++;
+    flushAggregation();
 
-        mHeaderDomMods.append(name);
+    QString name = QString("dom_%1").arg(mNodeCounter);
+    mNodeCounter++;
 
-        addInEdge(name);
-
-        mPreviousNode = name;
-        mEdgeExtras = "";
+    QString wordList = (node->words.size() > 0 ? "\\nIndicator words:" : "");
+    QString word;
+    int count;
+    foreach(int index, node->words.keys()){
+        word = TraceDomModDetector::indicators.at(index);
+        count = node->words.value(index);
+        wordList += QString("\\n%1: %2").arg(word).arg(count);
     }
+
+    QString nodeDecl = QString("%1 [label = \"DOM Modified: %2% %3\"]").arg(name).arg(node->amountModified).arg(wordList);
+    mHeaderDomMods.append(nodeDecl);
+
+    addInEdge(name);
+
+    mPreviousNode = name;
+    mEdgeExtras = "";
+
     node->next->accept(this);
 }
 
@@ -521,7 +529,6 @@ void TraceDisplay::clearData()
 
     mAggregatedConcreteBranches = 0;
     mAggregatedFunctionCalls = 0;
-    mAggregatedDomModifications = 0;
     mCurrentlyAggregating = false;
 }
 
@@ -556,7 +563,6 @@ void TraceDisplay::flushAggregation()
 
         mCurrentlyAggregating = false;
         mAggregatedConcreteBranches = 0;
-        mAggregatedDomModifications = 0;
         mAggregatedFunctionCalls = 0;
     }
 }

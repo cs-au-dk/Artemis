@@ -160,6 +160,13 @@ WebKitExecutor::WebKitExecutor(QObject* parent,
                      pageLoadDetector.data(), SLOT(slPageLoad(QUrl)));
     mTraceBuilder->addDetector(pageLoadDetector);
 
+    // The DOM modification "detector".
+    QSharedPointer<TraceDomModDetector> domModDetector(new TraceDomModDetector());
+    QObject::connect(mResultBuilder.data(), SIGNAL(sigDomModified(QString, QString)),
+                     domModDetector.data(), SLOT(slDomModified(QString, QString)));
+    mTraceBuilder->addDetector(domModDetector);
+
+
 }
 
 WebKitExecutor::~WebKitExecutor()
@@ -290,13 +297,15 @@ void WebKitExecutor::slLoadFinished(bool ok)
         mWebkitListener->endSymbolicSession();
     }
 
-    // End the trace recording in all cases. In concolic mode this is the trace we want, in manual mode we will be recording our own traces anyway.
+    // Get the result of this execution.
+    // N.B. This sends some statistics to the trace recorder, so we call it before ending the trace.
+    QSharedPointer<ExecutionResult> result = mResultBuilder->getResult();
 
+    // End the trace recording.
     mTraceBuilder->endRecording();
 
     // TODO: This was previously enclosed by if(!mKeepOpen). This means no post-load analysis can be done in demo mode. What are tyhe implications of changing this? Which other parts will depend on this?
-
-    emit sigExecutedSequence(currentConf, mResultBuilder->getResult());
+    emit sigExecutedSequence(currentConf, result);
 
 
     mKeepOpen = false;

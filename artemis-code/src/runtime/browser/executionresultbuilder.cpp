@@ -63,6 +63,10 @@ QSharedPointer<ExecutionResult> ExecutionResultBuilder::getResult()
     mResult->mStateHash = qHash(mResult->mPageContents);
     mResult->mModifiedDom = mResult->mPageContents.localeAwareCompare(mPageStateAfterLoad) != 0;
 
+    if(mResult->mModifiedDom){
+        emit sigDomModified(mPageStateAfterLoad, mResult->mPageContents);
+    }
+
     return mResult;
 }
 

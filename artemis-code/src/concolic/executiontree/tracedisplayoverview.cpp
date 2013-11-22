@@ -35,7 +35,7 @@ TraceDisplayOverview::TraceDisplayOverview() :
     mStyleUnexploredUnsolvable = "[label = \"X\", shape = circle, style = filled, fillcolor = hotpink]";
     mStyleUnexploredMissed = "[label = \"M\", shape = circle, style = filled, fillcolor = chocolate]";
     mStyleAlerts = "[label = \"!\", shape = circle, style = filled, fillcolor = gold]";
-    //mStyleDomMods not used
+    mStyleDomMods = "[label = \"W\", shape = circle, style = filled, fillcolor = peachpuff]";
     mStyleLoads = "[label = \"L\" shape = circle, style=filled, fillcolor = honeydew]";
     //mStyleFunctions not used
     mStyleEndSucc = "[label = \"S\", fillcolor = green, style = filled, shape = circle]";
@@ -67,8 +67,8 @@ TraceDisplayOverview::TraceDisplayOverview() :
             "        <td bgcolor=\"green\" border=\"1\" width=\"25pt\">S</td>\n"
             "        <td align=\"left\">End (Success)</td>\n"
             "\n"
-            "        <td width=\"25pt\"></td>\n"
-            "        <td align=\"left\">DOM Modification</td>\n"
+            "        <td bgcolor=\"peachpuff\" border=\"1\" width=\"25pt\">W</td>\n"
+            "        <td align=\"left\">Indicator word added</td>\n"
             "      </tr>\n"
             "      <tr>\n"
             "        <td bgcolor=\"red\" border=\"1\" width=\"25pt\">F</td>\n"
@@ -196,7 +196,19 @@ void TraceDisplayOverview::visit(TraceAlert *node)
 
 void TraceDisplayOverview::visit(TraceDomModification *node)
 {
-    // Skip these nodes.
+    if(node->words.size() > 0){
+        flushAggregation();
+
+        QString name = QString("dom_%1").arg(mNodeCounter);
+        mNodeCounter++;
+
+        mHeaderDomMods.append(name);
+        addInEdge(name);
+
+        mPreviousNode = name;
+        mEdgeExtras = "";
+    }
+
     node->next->accept(this);
 }
 

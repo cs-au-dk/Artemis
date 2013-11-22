@@ -21,6 +21,7 @@
 #include <QString>
 #include <QList>
 #include <QUrl>
+#include <QMap>
 
 #include "JavaScriptCore/symbolic/expr.h"
 
@@ -86,7 +87,8 @@ public:
 
      ~TraceDomModification() {}
 
-    int amountModified; // TODO: type? how is this measured?
+    double amountModified;
+    QMap<int,int> words; // Mapping from index of TraceDomModDetector::indicators to the count of that word.
 };
 
 

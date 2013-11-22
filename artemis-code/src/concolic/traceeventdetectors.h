@@ -19,6 +19,7 @@
 #include <QSharedPointer>
 #include <QSource>
 #include <QWebExecutionListener>
+#include <QPair>
 
 #include "concolic/executiontree/tracenodes.h"
 
@@ -35,6 +36,7 @@ class TraceBuilder;
 
 // I have put all the detectors into a single file for now, as I anticipate each of them being relatively simple.
 
+// To be honest none of them keep any state, so they might as well all be in one class anyway. They have turned out to be much simpler than anticipated.
 
 
 /*
@@ -116,6 +118,30 @@ class TracePageLoadDetector : public TraceEventDetector
 public slots:
     void slPageLoad(QUrl url);
 };
+
+
+/*
+ *  Detector for DOM modifications.
+ *  Currently this is used as a "batch" notification of all changes at the end of a trace.
+ */
+class TraceDomModDetector : public TraceEventDetector
+{
+    Q_OBJECT
+
+public slots:
+    void slDomModified(QString start, QString end);
+
+private:
+    static QPair<double, QMap<int, int> > computeMetrics(QString start, QString end);
+    static QStringList tokenise(QString dom);
+    static QPair<int, QStringList> findInsertions(QStringList start, QStringList end);
+
+    static QList<QString> getIndicators();
+
+public:
+    static const QList<QString> indicators;
+};
+
 
 
 } // namespace artemis

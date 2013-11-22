@@ -16,6 +16,7 @@
 
 
 #include "concolic/executiontree/tracenodes.h"
+#include "concolic/traceeventdetectors.h"
 #include "concolic/solver/expressionvalueprinter.h"
 
 #include <QString>
@@ -106,7 +107,6 @@ protected:
     // The aggregated data which is omitted from the simplified view.
     int mAggregatedConcreteBranches;
     int mAggregatedFunctionCalls;
-    int mAggregatedDomModifications;
 
     // Whether or not we are currently in a "concrete execution phase".
     bool mCurrentlyAggregating;
