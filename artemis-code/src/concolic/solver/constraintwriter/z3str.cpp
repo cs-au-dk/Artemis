@@ -321,9 +321,37 @@ void Z3STRConstraintWriter::visit(Symbolic::BooleanBinaryOperation* booleanbinar
 
 /** Other Operations **/
 
-void Z3STRConstraintWriter::visit(Symbolic::StringRegexReplace*)
+void Z3STRConstraintWriter::visit(Symbolic::StringRegexReplace* regex)
 {
+    // special case input filtering (filters matching X and replacing with "")
+    if (regex->getReplace()->compare("") != std::string::npos) {
+
+        // right now, only support a very limited number of whitespace filters
+
+        if (regex->getRegexpattern()->compare("/ /g") != std::string::npos ||
+            regex->getRegexpattern()->compare("/ /") != std::string::npos) {
+
+            regex->getSource()->accept(this);
+            if(!checkType(Symbolic::STRING)){
+                error("String regex operation on non-string");
+                return;
+            }
+
+            mOutput << "(assert (= (Contains " << mExpressionBuffer << " \" \") false))\n";
+            mConstriantLog << "(assert (= (Contains " << mExpressionBuffer << " \" \") false))\n";
+
+            mExpressionBuffer = mExpressionBuffer; // to be explicit, we just let the parent buffer flow down
+            mExpressionType = Symbolic::STRING;
+
+            return;
+        }
+
+    }
+
+
     error("Regex constraints not supported");
+
+
 }
 
 void Z3STRConstraintWriter::visit(Symbolic::StringReplace* replace)
