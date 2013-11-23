@@ -141,6 +141,7 @@ private:
      */
 
     void recordAndEmitType(const Symbolic::SymbolicSource&, Symbolic::Type type);
+    void recordAndEmitType(const std::string&, Symbolic::Type type);
     inline bool checkType(Symbolic::Type expected);
 
     void coercetype(Symbolic::Type from, Symbolic::Type to, std::string expression);
