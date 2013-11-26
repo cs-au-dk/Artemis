@@ -57,23 +57,11 @@ void ConcolicRuntime::run(const QUrl& url)
 {
     mUrl = url;
 
-    // If the entry-point is specified as an argument, then skip the entry-point finding iteration.
-    if(mManualEntryPoint){
-        mRunningToGetEntryPoints = false;
-        mRunningWithInitialValues = true;
+    // We always run the first (no injection) load, to get the form fields and if necessary the entry-point.
+    mRunningFirstLoad = true;
+    mRunningWithInitialValues = false;
 
-        // TODO: This code is partially duplicated in setupNextConfiguration(). Not sure how to make this shorter...
-        BaseInputConstPtr submitEvent = BaseInputConstPtr(new ClickInput(mManualEntryPointXPath, FormInputCollectionConstPtr(new FormInputCollection(QList<FormInputPair>()))));
-        QList<QSharedPointer<const BaseInput> > inputList = QList<QSharedPointer<const BaseInput> >() << submitEvent;
-        InputSequenceConstPtr inputSequence = InputSequenceConstPtr(new InputSequence(inputList));
-        mNextConfiguration = QSharedPointer<ExecutableConfiguration>(new ExecutableConfiguration(inputSequence, mUrl));
-
-    }else{
-        mRunningToGetEntryPoints = true;
-        mRunningWithInitialValues = false;
-
-        mNextConfiguration = QSharedPointer<ExecutableConfiguration>(new ExecutableConfiguration(QSharedPointer<InputSequence>(new InputSequence()), url));
-    }
+    mNextConfiguration = QSharedPointer<ExecutableConfiguration>(new ExecutableConfiguration(QSharedPointer<InputSequence>(new InputSequence()), url));
 
     mGraphOutputIndex = 1;
     mGraphOutputNameFormat = QString("tree-%1_%2%3.gv").arg(QDateTime::currentDateTime().toString("dd-MM-yy-hh-mm-ss"));
@@ -103,8 +91,8 @@ void ConcolicRuntime::preConcreteExecution()
         return;
     }
 
-    if(mRunningToGetEntryPoints){
-        Log::debug("\n===== Entry-Point-Finding-Iteration =====");
+    if(mRunningFirstLoad){
+        Log::debug("\n========== First-Load-Iteration =========");
     }else{
         if(mRunningWithInitialValues){
             Log::debug("\n=========== Initial-Iteration ===========");
@@ -118,20 +106,16 @@ void ConcolicRuntime::preConcreteExecution()
     mWebkitExecutor->executeSequence(mNextConfiguration); // calls the postConcreteExecution method as callback
 }
 
-// TODO: This method is a mess! It needs refactoring/reorganising ASAP.
 void ConcolicRuntime::postConcreteExecution(ExecutableConfigurationConstPtr configuration, QSharedPointer<ExecutionResult> result)
 {
     /*
      * We can be in three possible states.
-     *  1. mRunningToGetEntryPoints: A simple page load in which case we need to check for the entry points and choose one.
+     *  1. mRunningFirstLoad: A simple page load in which case we need to check for the entry points and choose one, and save the fomr fields.
      *  2. mRunningWithInitialValues: The initial form submission. use this to seed the trace tree then choose a target.
      *  3. Neither: A normal run, where we add to the tree and choose a new target.
      */
 
-    // Find the form fields on the page and save them.
-    mFormFields = result->getFormFields();
-
-    if(mRunningToGetEntryPoints){
+    if(mRunningFirstLoad){
 
         postInitialConcreteExecution(result); // Runs the next iteration itself.
 
@@ -186,6 +170,8 @@ void ConcolicRuntime::setupNextConfiguration(QSharedPointer<FormInputCollection>
         // Create a ClickInput which will inject the FormInputCollection and click on the given coordinates.
         submitEvent = BaseInputConstPtr(new ClickInput(mManualEntryPointXPath, formInput));
     }else{
+        assert(!mEntryPointEvent.isNull());
+
         // Create a suitable EventParameters object for this submission. (As in StaticEventParameterGenerator.)
         EventParametersConstPtr eventParameters = EventParametersConstPtr(new MouseEventParameters(mEntryPointEvent->getName(), true, true, 1, 0, 0, 0, 0, false, false, false, false, 0));
 
@@ -213,45 +199,52 @@ void ConcolicRuntime::setupNextConfiguration(QSharedPointer<FormInputCollection>
 // Does the processing after the very first page load, to prepare for the testing.
 void ConcolicRuntime::postInitialConcreteExecution(QSharedPointer<ExecutionResult> result)
 {
-    assert(!mManualEntryPoint);
+    // Find the form fields on the page and save them.
+    mFormFields = result->getFormFields();
 
-    Log::debug("Analysing page entrypoints...");
+    // Print the form fields found on the page.
+    Log::debug("Form fields found:");
+    foreach(QSharedPointer<const FormFieldDescriptor> field, mFormFields){
+        Log::debug(field->getDomElement()->toString().toStdString());
+    }
 
-    // Choose and save the entry point for use in future runs.
-    MockEntryPointDetector detector(mWebkitExecutor->getPage());
-    mEntryPointEvent = detector.choose(result);
+    // Create an "empty" form input which will inject noting into the page.
+    QList<FormInputPair > inputs;
+    FormInputCollectionPtr formInput = FormInputCollectionPtr(new FormInputCollection(inputs));
 
-    if(mEntryPointEvent){
-        Log::debug(QString("Chose entry point %1").arg(mEntryPointEvent->toString()).toStdString());
+    // On the next iteration, we will be running with initial values.
+    mRunningFirstLoad = false;
+    mRunningWithInitialValues = true;
 
-        // Create an "empty" form input which will inject noting into the page.
-        QList<FormInputPair > inputs;
-        FormInputCollectionPtr formInput = FormInputCollectionPtr(new FormInputCollection(inputs));
+    // If we are using automatic entry-point finding, then detect them here.
+    // If we use a manual XPath then we don't need to do anything about entry-points yet, it is dealt with in ClickInput.
+    if(!mManualEntryPoint){
 
-        // Create the new event sequence and set mNextConfiguration.
-        setupNextConfiguration(formInput);
+        Log::debug("Analysing page entrypoints...");
 
-        // Print the form fields found on the page.
-        Log::debug("Form fields found:");
-        foreach(QSharedPointer<const FormFieldDescriptor> field, mFormFields){
-            Log::debug(field->getDomElement()->toString().toStdString());
+        // Choose and save the entry point for use in future runs.
+        MockEntryPointDetector detector(mWebkitExecutor->getPage());
+        mEntryPointEvent = detector.choose(result);
+
+        if(mEntryPointEvent){
+            Log::debug(QString("Chose entry point %1").arg(mEntryPointEvent->toString()).toStdString());
+
+        }else{
+            Log::debug("\n========== No Entry Points ==========");
+            Log::debug("Could not find any suitable entry point for the analysis on this page. Exiting.");
+
+            mWebkitExecutor->detach();
+            done();
+            return;
         }
 
-        // On the next iteration, we will be running with initial values.
-        mRunningToGetEntryPoints = false;
-        mRunningWithInitialValues = true;
-
-        // Execute this configuration.
-        preConcreteExecution();
-
-    }else{
-        Log::debug("\n========== No Entry Points ==========");
-        Log::debug("Could not find any suitable entry point for the analysis on this page. Exiting.");
-
-        mWebkitExecutor->detach();
-        done();
-        return;
     }
+
+    // Create the new event sequence and set mNextConfiguration.
+    setupNextConfiguration(formInput);
+
+    // Execute the next configuration.
+    preConcreteExecution();
 }
 
 

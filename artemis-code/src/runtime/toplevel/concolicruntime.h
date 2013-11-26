@@ -88,7 +88,7 @@ protected:
     TraceNodePtr mSymbolicExecutionGraph;
     EventHandlerDescriptorConstPtr mEntryPointEvent;
 
-    bool mRunningToGetEntryPoints;
+    bool mRunningFirstLoad;
     bool mRunningWithInitialValues;
 
     // Controls for the search procedure.
@@ -124,7 +124,7 @@ protected:
     QSet<QSharedPointer<const FormFieldDescriptor> > mFormFields;
 
     // State
-    unsigned int mNumIterations;
+    int mNumIterations;
 
 private slots:
     void postConcreteExecution(ExecutableConfigurationConstPtr configuration, QSharedPointer<ExecutionResult> result);
