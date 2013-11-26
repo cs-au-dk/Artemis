@@ -34,9 +34,9 @@
 namespace artemis
 {
 
-Z3STRConstraintWriter::Z3STRConstraintWriter() :
-    mExpressionType(Symbolic::TYPEERROR),
-    mError(false)
+Z3STRConstraintWriter::Z3STRConstraintWriter()
+    : mExpressionType(Symbolic::TYPEERROR)
+    , mError(false)
 {
 }
 
@@ -321,14 +321,52 @@ void Z3STRConstraintWriter::visit(Symbolic::BooleanBinaryOperation* booleanbinar
 
 /** Other Operations **/
 
-void Z3STRConstraintWriter::visit(Symbolic::StringRegexReplace*)
+void Z3STRConstraintWriter::visit(Symbolic::StringRegexReplace* regex)
 {
+    // special case input filtering (filters matching X and replacing with "")
+    if (regex->getReplace()->compare("") != std::string::npos) {
+
+        // right now, only support a very limited number of whitespace filters
+
+        if (regex->getRegexpattern()->compare("/ /g") != std::string::npos ||
+            regex->getRegexpattern()->compare("/ /") != std::string::npos) {
+
+            regex->getSource()->accept(this);
+            if(!checkType(Symbolic::STRING)){
+                error("String regex operation on non-string");
+                return;
+            }
+
+            mOutput << "(assert (= (Contains " << mExpressionBuffer << " \" \") false))\n";
+            mConstriantLog << "(assert (= (Contains " << mExpressionBuffer << " \" \") false))\n";
+
+            mExpressionBuffer = mExpressionBuffer; // to be explicit, we just let the parent buffer flow down
+            mExpressionType = Symbolic::STRING;
+
+            return;
+        }
+
+    }
+
+
     error("Regex constraints not supported");
+
+
 }
 
-void Z3STRConstraintWriter::visit(Symbolic::StringReplace*)
+void Z3STRConstraintWriter::visit(Symbolic::StringReplace* replace)
 {
-    error("String replace constraints not supported");
+    replace->getSource()->accept(this);
+    if(!checkType(Symbolic::STRING)){
+        error("String replace operation on non-string");
+        return;
+    }
+
+    std::ostringstream strs;
+    strs << "(Replace " << mExpressionBuffer << " \"" << *replace->getPattern() << "\" \"" << *replace->getReplace() << "\")";
+
+    mExpressionBuffer = strs.str();
+    mExpressionType = Symbolic::STRING;
 }
 
 void Z3STRConstraintWriter::visit(Symbolic::StringLength* stringlength)
@@ -351,21 +389,26 @@ void Z3STRConstraintWriter::visit(Symbolic::StringLength* stringlength)
 
 void Z3STRConstraintWriter::recordAndEmitType(const Symbolic::SymbolicSource& source, Symbolic::Type type)
 {
+    recordAndEmitType(source.getIdentifier(), type);
+}
+
+void Z3STRConstraintWriter::recordAndEmitType(const std::string& source, Symbolic::Type type)
+{
     static const char* typeStrings[] = {
         "Int", "Bool", "String", "ERROR"
     };
 
-    std::map<std::string, Symbolic::Type>::iterator iter = mTypemap.find(source.getIdentifier());
+    std::map<std::string, Symbolic::Type>::iterator iter = mTypemap.find(source);
 
     if (iter != mTypemap.end()) {
         // type already recorded, update type info
         iter->second = iter->second == type ? type : Symbolic::TYPEERROR;
     } else {
         // type not recorded before, output definition and store type
-        mTypemap.insert(std::pair<std::string, Symbolic::Type>(source.getIdentifier(), type));
+        mTypemap.insert(std::pair<std::string, Symbolic::Type>(source, type));
 
-        mOutput << "(declare-const " << Z3STRConstraintWriter::encodeIdentifier(source.getIdentifier()) << " " << typeStrings[type] << ")\n";
-        mConstriantLog << "(declare-const " << Z3STRConstraintWriter::encodeIdentifier(source.getIdentifier()) << " " << typeStrings[type] << ")\n";
+        mOutput << "(declare-const " << Z3STRConstraintWriter::encodeIdentifier(source) << " " << typeStrings[type] << ")\n";
+        mConstriantLog << "(declare-const " << Z3STRConstraintWriter::encodeIdentifier(source) << " " << typeStrings[type] << ")\n";
     }
 
 }
