@@ -262,10 +262,15 @@ void ConcolicRuntime::mergeTraceIntoTree()
     // This can  modify it to add the correct end marker to the trace.
     TraceNodePtr trace = mWebkitExecutor->getTraceBuilder()->trace();
 
-    if(mTraceClassifier.classify(trace)){
+    switch(mTraceClassifier.classify(trace)){
+    case SUCCESS:
         Log::debug("Recoreded trace was classified as a SUCCESS.");
-    }else{
+        break;
+    case FAILURE:
         Log::debug("Recoreded trace was classified as a FAILURE.");
+        break;
+    default:
+        Log::debug("Recoreded trace was classified as UNKNOWN.");
     }
 
 

@@ -29,17 +29,19 @@ TraceClassifier::TraceClassifier()
 {
 }
 
-bool TraceClassifier::classify(TraceNodePtr& trace)
+TraceClassificationResult TraceClassifier::classify(TraceNodePtr& trace)
 {
-    // First simple implementation: scan the trace looking for an alert() call.
-    // If there is an alert() then the trace is a failure, otherwise a success.
+    // Simple implementation which will not be general enough for all sites.
+    // Scan the trace and classify according to the following rules:
+    //     * Alert -> failure
+    //     * New page load -> success
+    //     * DOM modification which introduces indicator words -> failure.
+    //     * Otherwise, when reaching the end of a trace, assume success.
+    // TODO: We should probably have a three-state return value instead of bool here, and leave traces with no annotations as unknown?
 
-    mWasAlert = false;
-
-    mPreviousLink = &trace;
     trace->accept(this);
 
-    return !mWasAlert;
+    return mResult; // Set by the visitor before returning.
 }
 
 
@@ -50,18 +52,15 @@ bool TraceClassifier::classify(TraceNodePtr& trace)
 
 
 
-/* Definitions the visitor part **********************************************/
+// Definitions for the visitor part
 
 
 
 void TraceClassifier::visit(TraceAlert *node)
 {
-    mWasAlert = true;
+    mResult = FAILURE;
 
-    // In this simple classifier, we will classify this a a failure as soon as we reach an alert.
-    // So we add the "failure" marker immediately here.
-    // We can also stop the visitor here as well, as there is no need to continue.
-
+    // Add the failure marker immediately here, and do not scan any more of the trace.
     QSharedPointer<TraceEndFailure> marker = QSharedPointer<TraceEndFailure>(new TraceEndFailure());
     marker->next = node->next;
     node->next = marker;
@@ -69,19 +68,34 @@ void TraceClassifier::visit(TraceAlert *node)
 
 void TraceClassifier::visit(TraceDomModification *node)
 {
-    mPreviousLink = &node->next;
-    node->next->accept(this);
+    // Check if there are any "indicator words" in this modification.
+    if(node->words.size() > 0) {
+        mResult = FAILURE;
+
+        // Add a failure marker immediately after this node, and do not continue scanning.
+        QSharedPointer<TraceEndFailure> marker = QSharedPointer<TraceEndFailure>(new TraceEndFailure());
+        marker->next = node->next;
+        node->next = marker;
+
+    }else{
+        // If this modifcation is OK, then continue scanning the trace.
+        node->next->accept(this);
+    }
 }
 
 void TraceClassifier::visit(TracePageLoad *node)
 {
-    mPreviousLink = &node->next;
-    node->next->accept(this);
+    // We consider any page load (or POST request, etc.) as a success for getting through the *client-side* validation.
+    mResult = SUCCESS;
+
+    // Add a success marker and do not continue scanning.
+    QSharedPointer<TraceEndSuccess> marker = QSharedPointer<TraceEndSuccess>(new TraceEndSuccess());
+    marker->next = node->next;
+    node->next = marker;
 }
 
 void TraceClassifier::visit(TraceFunctionCall *node)
 {
-    mPreviousLink = &node->next;
     node->next->accept(this);
 }
 
@@ -98,11 +112,9 @@ void TraceClassifier::visit(TraceBranch *node)
 
     if(isImmediatelyUnexplored(node->getFalseBranch())){
         // Took 'true' branch.
-        mPreviousLink = &node->mBranchTrue;
         node->getTrueBranch()->accept(this);
     } else if(isImmediatelyUnexplored(node->getTrueBranch())){
         // Took 'false' branch.
-        mPreviousLink = &node->mBranchFalse;
         node->getFalseBranch()->accept(this);
     } else {
         // Invalid branch node
@@ -113,21 +125,16 @@ void TraceClassifier::visit(TraceBranch *node)
 
 void TraceClassifier::visit(TraceUnexplored *node)
 {
-    // Reached the end of the trace, so stop.
-    // TODO: This should not actually be reached on any well-formed trace. The only unexplored nodes should be direct children of branches.
+    // This should not actually be reached on any well-formed trace. The only unexplored nodes should be direct children of branches.
+    Log::fatal("Trace Classifier: reached an unexplored node, which should not be present in the trace.");
+    exit(1);
 }
 
 void TraceClassifier::visit(TraceEndUnknown *node)
 {
     // Reached the end of the trace, so stop.
-    // As we only fail on alerts, this means we have a successful trace.
-    // Splice in the marker just before the end.
-
-    QSharedPointer<TraceEndSuccess> marker = QSharedPointer<TraceEndSuccess>(new TraceEndSuccess());
-    // Adds the pointer to this node as the successor to the new node.
-    marker->next = *mPreviousLink;
-    // Replaces the pointer to this node by the marker.
-    *mPreviousLink = qSharedPointerCast<TraceNode>(marker);
+    // In this simple classifier, we don't know if this is a success or failure.
+    mResult = UNKNOWN;
 }
 
 void TraceClassifier::visit(TraceEnd *node)

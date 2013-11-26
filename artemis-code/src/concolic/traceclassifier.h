@@ -23,6 +23,12 @@
 namespace artemis
 {
 
+
+enum TraceClassificationResult {
+    UNKNOWN, SUCCESS, FAILURE
+};
+
+
 /*
  *  Classifies a complete annotated trace as either a success or a failure.
  *  Also modifies the trace to include an END-SUCCESS or END-FAILURE marker.
@@ -32,9 +38,8 @@ class TraceClassifier : public TraceVisitor
 public:
     TraceClassifier();
 
-    bool classify(TraceNodePtr &trace);
-    bool mWasAlert;
-    TraceNodePtr* mPreviousLink; // Used to backtrack when we must add a success marker.
+    TraceClassificationResult classify(TraceNodePtr &trace);
+    TraceClassificationResult mResult;
 
 
     // Annotation nodes are used in the classification

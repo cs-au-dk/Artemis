@@ -1,0 +1,64 @@
+<!--
+TEST PC[0] = ((SymbolicString != ConstantString) == ConstantBoolean)
+TEST Concolic::Solver::ConstraintsSolved = 2
+TEST Concolic::Solver::ConstraintsWritten = 2
+TEST Concolic::Solver::Constraint.SYM_IN_testinput = testme
+-->
+<!doctype html><html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+	<title>Ben Spencer</title>
+	<meta name="author" content="Ben Spencer">
+	<script type="text/javascript">
+		var a = "testme";
+		var b = "test";
+		var c = "bad";
+
+		function validate() {
+			var t = document.getElementById("testinput").value;
+
+			if (t != a) {
+				if (t == c) {
+					alert("Bad input");
+				} else if (t == b) {
+					addMessage();
+				} else {
+					addError();
+				}
+				return false;
+			}else{
+				return true;
+			}
+		}
+		
+		function addError() {
+			var message = document.getElementById("message");
+			message.innerHTML = "Error: Please enter <i>testme</i>:";
+		}
+		
+		function addMessage() {
+			var message = document.getElementById("message");
+			message.innerHTML = "That wasn't quite what we were expecting.";
+		}
+	</script>
+
+</head>
+<body>
+
+	<p>Write <i>testme</i> in the field to do something.</p>
+
+	<form method="GET" action="about:blank" >
+
+		<p id="message" style="color:red"></p>
+
+		<input type="text" id="testinput" />
+
+		<button id="mybutton" type="submit" onclick="return validate();">Submit</button>
+		<!-- Without the ID we add an Artemis-ID, which changes the DOM every time. This will not be a problem in practice but it's annoying in this trivial example. -->
+
+	</form>
+
+</body>
+</html>

@@ -439,15 +439,19 @@ void DemoModeMainWindow::postTraceExecution()
 
     mPreviousTrace = mWebkitExecutor->getTraceBuilder()->trace();
 
-    bool result = mTraceClassifier.classify(mPreviousTrace);
+    TraceClassificationResult result = mTraceClassifier.classify(mPreviousTrace);
 
     mTraceClassificationResult->setVisible(true);
-    if(result){
+    switch(result){
+    case SUCCESS:
         Log::debug("CONCOLIC-INFO: This trace was classified as a SUCCESS.");
         mTraceClassificationResult->setText("Classification: <font color='green'>SUCCESS</font>");
-    }else{
+    case FAILURE:
         Log::debug("CONCOLIC-INFO: This trace was classified as a FAILURE.");
         mTraceClassificationResult->setText("Classification: <font color='red'>FAILURE</font>");
+    default:
+        Log::debug("CONCOLIC-INFO: This trace was classified as UNKNOWN.");
+        mTraceClassificationResult->setText("Classification: <font color='blue'>UNKNOWN</font>");
     }
 
     // Reset the trace tracking text in the GUI.
