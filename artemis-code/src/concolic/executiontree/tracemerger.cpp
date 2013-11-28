@@ -138,6 +138,8 @@ void TraceMerger::visit(TraceAnnotation* node)
 
     if (node->isEqualShallow(mCurrentTree)) {
 
+        fixDoubleCountedAnnotations(mCurrentTree);
+
         TraceAnnotationPtr treeAnnotation = mCurrentTree.dynamicCast<TraceAnnotation>();
 
         mCurrentTree = treeAnnotation->next;
@@ -158,6 +160,24 @@ void TraceMerger::visit(TraceNode* node)
 {
     qWarning() << "TraceNode reached, this indicates a missing case in the TraceMerger visitor!";
     exit(1);
+}
+
+
+// Checks whether the given node is an alert, page load or dom modification (with indicator words) and if so,
+// decrements the appropriate statistics to account for "double-counting" them in the trace detectors.
+void TraceMerger::fixDoubleCountedAnnotations(TraceNodePtr node)
+{
+    if(!node.dynamicCast<TraceAlert>().isNull()) {
+        statistics()->accumulate("Concolic::ExecutionTree::Alerts", -1);
+    } else if(!node.dynamicCast<TracePageLoad>().isNull()) {
+        statistics()->accumulate("Concolic::ExecutionTree::PageLoads", -1);
+    } else {
+        QSharedPointer<TraceDomModification> domMod = node.dynamicCast<TraceDomModification>();
+        if(!domMod.isNull() && domMod->words.size() > 0){ // Condition on words must match TraceDomModDetector::slDomModified().
+            statistics()->accumulate("Concolic::ExecutionTree::InterestingDomModifications", -1);
+        }
+
+    }
 }
 
 

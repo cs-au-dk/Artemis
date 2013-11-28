@@ -52,6 +52,8 @@ private:
 
     TraceNodePtr mCurrentTree;
     TraceNodePtr mCurrentTrace;
+
+    static void fixDoubleCountedAnnotations(TraceNodePtr node);
 };
 
 }

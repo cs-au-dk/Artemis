@@ -93,7 +93,7 @@ void TraceAlertDetector::slJavascriptAlert(QWebFrame* frame, QString msg)
     // Leave node.next as null.
 
     if(mTraceBuilder->isRecording()){
-        statistics()->accumulate("Concolic::Detectors::Alerts", 1);
+        statistics()->accumulate("Concolic::ExecutionTree::Alerts", 1);
     }
 
     // Pass this new node to the trace builder and pass a pointer to where the sucessor should be attached.
@@ -128,7 +128,7 @@ void TracePageLoadDetector::slPageLoad(QUrl url)
     node->url = url;
 
     if(mTraceBuilder->isRecording()){
-        statistics()->accumulate("Concolic::Detectors::PageLoads", 1);
+        statistics()->accumulate("Concolic::ExecutionTree::PageLoads", 1);
     }
 
     // Pass the new node to the trace builder.
@@ -148,8 +148,8 @@ void TraceDomModDetector::slDomModified(QString start, QString end)
     node->amountModified = metrics.first;
     node->words = metrics.second;
 
-    if(mTraceBuilder->isRecording() && node->words.size() > 0){
-        statistics()->accumulate("Concolic::Detectors::DomModificationsWithIndicators", 1);
+    if(mTraceBuilder->isRecording() && node->words.size() > 0){ // Condition must match TraceMerger::fixDoubleCountedAnnotations()
+        statistics()->accumulate("Concolic::ExecutionTree::InterestingDomModifications", 1);
     }
 
     // Pass the new node to the trace builder.
