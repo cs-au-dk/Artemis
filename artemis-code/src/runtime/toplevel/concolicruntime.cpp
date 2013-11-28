@@ -276,6 +276,8 @@ void ConcolicRuntime::mergeTraceIntoTree()
         mSymbolicExecutionGraph = trace;
         mSearchStrategy = DepthFirstSearchPtr(new DepthFirstSearch(mSymbolicExecutionGraph));
         mRunningWithInitialValues = false;
+
+        statistics()->accumulate("Concolic::ExecutionTree::DistinctTracesExplored", 1);
     }else{
         // A normal run.
         // Merge trace with tracegraph
@@ -284,6 +286,8 @@ void ConcolicRuntime::mergeTraceIntoTree()
         // Check if we actually explored the intended target.
         if(mSearchStrategy->overUnexploredNode()){
             mSearchStrategy->markNodeMissed();
+        }else{
+            statistics()->accumulate("Concolic::ExecutionTree::DistinctTracesExplored", 1);
         }
     }
 

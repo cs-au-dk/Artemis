@@ -54,11 +54,10 @@ public:
 
     void setTraceBuilder(TraceBuilder* traceBuilder);
 
-private:
+protected:
     TraceBuilder* mTraceBuilder; // Must use standard pointer as this is set via the 'this' pointer of the parent trace builder.
     // TODO: can probably be a QWeakPointer? Still should not be QSharedPointer to avoid a circular reference.
 
-protected:
     // See TraceBuilder::newNode comment in tracebuilder.h.
     void newNode(QSharedPointer<TraceNode> node, QSharedPointer<TraceNode>* successor);
 };

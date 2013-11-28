@@ -26,6 +26,7 @@
 #include <QDateTime>
 
 #include "util/loggingutil.h"
+#include "statistics/statsstorage.h"
 
 #include "z3str.h"
 
@@ -343,12 +344,15 @@ void Z3STRConstraintWriter::visit(Symbolic::StringRegexReplace* regex)
             mExpressionBuffer = mExpressionBuffer; // to be explicit, we just let the parent buffer flow down
             mExpressionType = Symbolic::STRING;
 
+            statistics()->accumulate("Concolic::Solver::RegexSuccessfullyTranslated", 1);
+
             return;
         }
 
     }
 
 
+    statistics()->accumulate("Concolic::Solver::RegexNotTranslated", 1);
     error("Regex constraints not supported");
 
 

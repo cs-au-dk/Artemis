@@ -60,6 +60,7 @@ void TraceMerger::visit(TraceEnd* node)
     // case: trace end
     if (!mCurrentTrace->isEqualShallow(mCurrentTree)) {
         qWarning() << "Warning, divergance discovered while merging a trace! (TraceEnd)";
+        statistics()->accumulate("Concolic::ExecutionTree::DivergentMerges", 1);
     }
 }
 
@@ -76,9 +77,34 @@ void TraceMerger::visit(TraceBranch* node)
     // case: traceBranch
     if (node->isEqualShallow(mCurrentTree)) {
 
-        // Merge the traces for each branch
-
         TraceBranchPtr treeBranch = mCurrentTree.dynamicCast<TraceBranch>();
+
+        // Add statistics if we are completing the exploratrion of this branch.
+        // i.e. if one branch is explored in the tree, and the unexplored branch is to be replaced by something else in the trace.
+        if((TraceVisitor::isImmediatelyUnexplored(treeBranch->getTrueBranch())
+                && !TraceVisitor::isImmediatelyUnexplored(treeBranch->getFalseBranch())
+                && !TraceVisitor::isImmediatelyUnexplored(node->getTrueBranch()))
+            || (TraceVisitor::isImmediatelyUnexplored(treeBranch->getFalseBranch())
+                && !TraceVisitor::isImmediatelyUnexplored(treeBranch->getTrueBranch())
+                && !TraceVisitor::isImmediatelyUnexplored(node->getFalseBranch()))) {
+            // Check whether we are exploring a new path at this branch node.
+            if(TraceVisitor::isImmediatelyConcreteBranch(treeBranch)) {
+                statistics()->accumulate("Concolic::ExecutionTree::ConcreteBranchesFullyExplored", 1);
+            }else{
+                statistics()->accumulate("Concolic::ExecutionTree::SymbolicBranchesFullyExplored", 1);
+            }
+        }
+        // "Fix" the statistics for branch counts
+        // This is a slight hack as we count nodes multiple times in the detector but then we decrement the counter
+        // again here for any duplicate nodes.
+        if(TraceVisitor::isImmediatelyConcreteBranch(treeBranch)) {
+            statistics()->accumulate("Concolic::ExecutionTree::ConcreteBranchesTotal", -1);
+        }else{
+            statistics()->accumulate("Concolic::ExecutionTree::SymbolicBranchesTotal", -1);
+        }
+
+
+        // Merge the traces for each branch
 
         mCurrentTree = treeBranch->getTrueBranch();
         mCurrentTrace = node->getTrueBranch();
@@ -97,6 +123,7 @@ void TraceMerger::visit(TraceBranch* node)
     }
 
     qWarning() << "Warning, divergance discovered while merging a trace! (TraceBranch)";
+    statistics()->accumulate("Concolic::ExecutionTree::DivergentMerges", 1);
 }
 
 void TraceMerger::visit(TraceAnnotation* node)
@@ -124,6 +151,7 @@ void TraceMerger::visit(TraceAnnotation* node)
     }
 
     qWarning() << "Warning, divergance discovered while merging a trace! (TraceAnnotation)";
+    statistics()->accumulate("Concolic::ExecutionTree::DivergentMerges", 1);
 }
 
 void TraceMerger::visit(TraceNode* node)

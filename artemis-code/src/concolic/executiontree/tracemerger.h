@@ -17,6 +17,8 @@
 #include "concolic/executiontree/tracenodes.h"
 #include "concolic/executiontree/tracevisitor.h"
 
+#include "statistics/statsstorage.h"
+
 #ifndef TRACEMERGER_H
 #define TRACEMERGER_H
 

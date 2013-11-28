@@ -43,6 +43,7 @@ public:
 
     void beginRecording();
     void endRecording();
+    bool isRecording() { return mRecording; }
     TraceNodePtr trace();
 
     // Called by the detectors to add a new node to the trace.
