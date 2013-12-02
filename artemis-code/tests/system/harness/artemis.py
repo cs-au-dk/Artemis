@@ -25,9 +25,11 @@ def execute_artemis(execution_uuid, url, iterations=1,
                     fields=None,
                     major_mode=None,
                     reverse_constraint_solver=False,
+                    concolic_button=None,
                     dryrun=False,
+                    output_parent_dir=OUTPUT_DIR,
                     **kwargs):
-    output_dir = os.path.join(OUTPUT_DIR, execution_uuid)
+    output_dir = os.path.join(output_parent_dir, execution_uuid)
 
     if os.path.isdir(output_dir):
         shutil.rmtree(output_dir)
@@ -70,6 +72,10 @@ def execute_artemis(execution_uuid, url, iterations=1,
     if major_mode is not None:
         args.append('--major-mode')
         args.append(major_mode)
+    
+    if concolic_button is not None:
+        args.append('--concolic-button')
+        args.append(concolic_button)
 
     cmd = [ARTEMIS_EXEC] + [url] + args
 
