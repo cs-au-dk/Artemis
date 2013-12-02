@@ -152,8 +152,6 @@ void ConcolicRuntime::outputTreeGraph()
     if(mOptions.concolicTreeOutputOverview){
         mTraceDisplayOverview.writeGraphFile(mSymbolicExecutionGraph, name_min, false);
     }
-
-    // TODO: Is there any way to have extra information added to the graph? e.g. the current target node.
 }
 
 
@@ -506,6 +504,8 @@ void ConcolicRuntime::chooseNextTargetAndExplore()
         Log::debug("Finished serach of the tree.");
 
         if(mOptions.concolicTreeOutput == TREE_FINAL){
+            // "Fake" the counter for graph output, as this will be the only one we create.
+            mGraphOutputIndex = mNumIterations;
             outputTreeGraph();
         }
 
