@@ -73,7 +73,7 @@ EventHandlerDescriptorConstPtr MockEntryPointDetector::choose(ExecutionResultPtr
     }
 
     if(url == "http://www.monarch.co.uk/"){
-        assert(allEntryPoints.length() == 29);
+        assert(allEntryPoints.length() == 34);
         return allEntryPoints.at(7);
     }
 
@@ -83,8 +83,8 @@ EventHandlerDescriptorConstPtr MockEntryPointDetector::choose(ExecutionResultPtr
     }
 
     if(url == "http://www.southwest.com/"){
-        assert(allEntryPoints.length() == 17);
-        return allEntryPoints.at(13);
+        assert(allEntryPoints.length() == 18);
+        return allEntryPoints.at(14);
         // could also be 8, which is the form submission event.
     }
 
@@ -100,8 +100,8 @@ EventHandlerDescriptorConstPtr MockEntryPointDetector::choose(ExecutionResultPtr
     }
 
     if(url == "http://www.united.com/web/en-US/default.aspx?root=1"){
-        assert(allEntryPoints.length() == 17);
-        return allEntryPoints.at(7);
+        assert(allEntryPoints.length() == 54);
+        return allEntryPoints.at(14);
     }
 
     if(url == "http://www.emirates.com/uk/english/index.aspx"){
@@ -115,8 +115,8 @@ EventHandlerDescriptorConstPtr MockEntryPointDetector::choose(ExecutionResultPtr
     }
 
     if(url == "http://www.alaskaair.com/"){
-        assert(allEntryPoints.length() == 14);
-        return allEntryPoints.at(6);
+        assert(allEntryPoints.length() == 19);
+        return allEntryPoints.at(10);
     }
 
     if(url == "http://www.jetblue.com/"){

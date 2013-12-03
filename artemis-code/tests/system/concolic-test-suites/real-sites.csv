@@ -1,6 +1,16 @@
 Site, URL, Entry Point
-Lufthansa, http://www.lufthansa.com/online/portal/lh/uk/homepage?l=en, auto
+AirTran, http://www.airtran.com/Home.aspx, auto
 FlyKingfisher, http://www.flykingfisher.com/, auto
+JetStar, http://www.jetstar.com/au/en/home, auto
+Monarch, http://www.monarch.co.uk/, auto
+USAirways, http://www.usairways.com/default.aspx, id('ctl00_phMain_BookTravelWidgetControl_SearchInvokeButtonControl_SearchCommand')
+Southwest, http://www.southwest.com/, auto
+Travelocity, http://www.travelocity.co.uk/?WAPageName=HPGEOREDIRECT.UNITEDKINGDOM, auto
+VirginAustralia, http://www.virginaustralia.com/au/en/, auto
+United, http://www.united.com/web/en-US/default.aspx?root=1, auto
+Emirates, http://www.emirates.com/uk/english/index.aspx", id('MainContent_ctl04_ctl01_ctl00_ctl07_btnStartBooking')
+Lufthansa, http://www.lufthansa.com/online/portal/lh/uk/homepage?l=en, auto
+AlaskaAir, http://www.alaskaair.com/, auto
 JetBlue, http://www.jetblue.com/, auto
 FlyFrontier, http://www.flyfrontier.com/, auto
-KLM, http://www.klm.com/travel/gb_en/index.htm, auto
+KLM, http://www.klm.com/travel/gb_en/index.htm, id('ebt-flightsearch-submit')
