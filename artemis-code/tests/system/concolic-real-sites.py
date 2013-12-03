@@ -92,6 +92,7 @@ def main():
         setattr(TestSequence, test_name, test)
     
     # Run the unit tests
+    print "Starting tests..."
     suite = unittest.TestLoader().loadTestsFromTestCase(TestSequence)
     unittest.TextTestRunner(verbosity=2).run(suite)
     
@@ -138,7 +139,8 @@ def test_generator(site_name, site_url, site_ep, dry_run=False, logger=None, ver
             # Add all concolic statistics from Artemis to the logged data.
             for key in report.keys():
                 if key[:10].lower() == "concolic::" and key[:29].lower() != "concolic::solver::constraint.":
-                    data[key[10:]] = str(report[key])
+                    col_header = key[10:].replace("::", "::\n")
+                    data[col_header] = str(report[key])
             
             # Append the log data to the google doc.
             logger.log_data(data)
@@ -176,14 +178,19 @@ def _read_csv_file(filename):
 
 # Google Spreadsheets Logging
 class GDataLogger():
-    """Allows logging to a google spreadsheet. New data is simply appended to the table as a new row."""
+    """
+    Allows logging to a google spreadsheet.
+    New data is simply appended to the table as a new row.
+    New columns are added as required."""
     
     def __init__(self, spreadsheet_key, worksheet_id):
         # If no worksheet_id is given, the GData API uses the default worksheet in the given spreadsheet instead.
         # However, this does not seem to be working, so we require it for now.
+        # Also it is assumed we have one when we update the worksheet size. We could add 'od6' as the default.
         self._spreadsheet_key = spreadsheet_key
         self._worksheet_id = worksheet_id
         self._isopen = False
+        self.blank_row = True # Insert a blank row before any logging is done, to visually separate tests.
     
     # TODO: This is a hack. We should use some of the proper authentication APIs instead.
     def open_spreadsheet(self):
@@ -201,6 +208,9 @@ class GDataLogger():
         
         print "Login successful."
         self._isopen = True
+        
+        if self.blank_row:
+            self.log_data({'Testing Run':' '}) # Completely blank rows are not allowed to be written
 
     def log_data(self, data):
         """Takes a dictionary mapping column names to values and appends it to the spreadsheet."""
@@ -251,6 +261,17 @@ class GDataLogger():
         
         # Work out which we need to add
         new_columns = set(desired_columns) - set(columns)
+        
+        # Resize the worksheet if necessary
+        # Because we use the list feed to add rows, we only need to worry about the width here.
+        work_sheet = self._sheet.GetWorksheetsFeed(self._spreadsheet_key, self._worksheet_id)
+        if(last_col_no + len(new_columns) > int(work_sheet.col_count.text)):
+            work_sheet.col_count.text = str(last_col_no + len(new_columns))
+            try:
+                self._sheet.UpdateWorksheet(work_sheet)
+            except gdata.service.RequestError:
+                print "Error resizing worksheet."
+                assert(false) # Fail this test.
         
         # Add them
         try:

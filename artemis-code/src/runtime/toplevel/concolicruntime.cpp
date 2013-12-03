@@ -518,7 +518,7 @@ void ConcolicRuntime::chooseNextTargetAndExplore()
 
 void ConcolicRuntime::done()
 {
-    statistics()->accumulate("Concolic::iterations", mNumIterations);
+    statistics()->accumulate("Concolic::Iterations", mNumIterations);
     Runtime::done();
 }
 
