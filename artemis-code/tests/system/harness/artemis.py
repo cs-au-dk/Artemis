@@ -28,6 +28,7 @@ def execute_artemis(execution_uuid, url, iterations=1,
                     concolic_button=None,
                     dryrun=False,
                     output_parent_dir=OUTPUT_DIR,
+                    catch_artemis_return_code=True,
                     **kwargs):
     output_dir = os.path.join(output_parent_dir, execution_uuid)
 
@@ -130,5 +131,9 @@ def execute_artemis(execution_uuid, url, iterations=1,
 
 
     except subprocess.CalledProcessError as e:
-        raise Exception("Exception thrown by call %s \n\n %s \n\n Exception thrown by call %s" \
-                        % (e.cmd, e.output, e.cmd))
+        if catch_artemis_return_code:
+            raise Exception("Exception thrown by call %s \n\n %s \n\n Exception thrown by call %s" \
+                            % (e.cmd, e.output, e.cmd))
+        else:
+            # If the caller is interested in the return code we allow them to catch this themselves.
+            raise e
