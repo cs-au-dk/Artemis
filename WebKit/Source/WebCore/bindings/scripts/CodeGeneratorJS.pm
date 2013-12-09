@@ -1800,8 +1800,7 @@ sub GenerateImplementation
                         push(@implContent, "\n");
                         push(@implContent, "    // Do not make hidden inputs symbolic.\n");
                         push(@implContent, "    WTF::AtomicString type = impl->getAttribute(WebCore::HTMLNames::typeAttr);\n");
-                        push(@implContent, "    const char* typePtr = type.string().lower().ascii().data();\n");
-                        push(@implContent, "    if(strncmp(typePtr, \"hidden\", 6) == 0 || strncmp(typePtr, \"submit\", 6) == 0){\n");
+                        push(@implContent, "    if(strncmp(type.string().lower().ascii().data(), \"hidden\", 6) == 0 || strncmp(type.string().lower().ascii().data(), \"submit\", 6) == 0){\n");
                         push(@implContent, "        return result;\n");
                         push(@implContent, "    }\n");
                         push(@implContent, "\n");
