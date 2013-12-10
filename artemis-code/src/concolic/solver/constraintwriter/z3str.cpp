@@ -329,8 +329,13 @@ void Z3STRConstraintWriter::visit(Symbolic::StringRegexReplace* regex)
 
         // right now, only support a very limited number of whitespace filters
 
-        if (regex->getRegexpattern()->compare("/ /g") != std::string::npos ||
-            regex->getRegexpattern()->compare("/ /") != std::string::npos) {
+        bool replaceSpaces = regex->getRegexpattern()->compare("/ /g") != std::string::npos ||
+                regex->getRegexpattern()->compare("/ /") != std::string::npos;
+        bool replaceNewlines = regex->getRegexpattern()->compare("/\\n/g") != std::string::npos ||
+                regex->getRegexpattern()->compare("/\\r/") != std::string::npos ||
+                regex->getRegexpattern()->compare("/\\r\\n/") != std::string::npos;
+
+        if (replaceSpaces || replaceNewlines) {
 
             regex->getSource()->accept(this);
             if(!checkType(Symbolic::STRING)){
@@ -338,8 +343,13 @@ void Z3STRConstraintWriter::visit(Symbolic::StringRegexReplace* regex)
                 return;
             }
 
-            mOutput << "(assert (= (Contains " << mExpressionBuffer << " \" \") false))\n";
-            mConstriantLog << "(assert (= (Contains " << mExpressionBuffer << " \" \") false))\n";
+            if(replaceSpaces){
+                mOutput << "(assert (= (Contains " << mExpressionBuffer << " \" \") false))\n";
+                mConstriantLog << "(assert (= (Contains " << mExpressionBuffer << " \" \") false))\n";
+            }
+
+            // In fact the solver currently cannot return results which contain newlines,
+            // so we can completely ignore the case of replaceNewlines.
 
             mExpressionBuffer = mExpressionBuffer; // to be explicit, we just let the parent buffer flow down
             mExpressionType = Symbolic::STRING;

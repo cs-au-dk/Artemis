@@ -1,0 +1,33 @@
+<!--
+TEST Concolic::Solver::ConstraintsWritten = 2
+TEST Concolic::Solver::ConstraintsSolved = 2
+-->
+<!DOCTYPE html>
+<html>
+<head>
+    <title></title>
+    <script type="text/javascript" src="jquery.js"></script>
+    <script type="text/javascript" >
+        var x = "test";
+        function validate(){
+            var input = $("#textInput").val();
+            if(input == x){
+                return true
+            } else{
+                alert("WRONG VALUE");
+                return false;
+            }
+        }
+
+    </script>
+</head>
+<body>
+
+<form id="SomeForm" action="#">
+    <label for="textInput">Submit</label>
+    <input type="text" id="textInput"  value="1337"/>
+    <button type="submit" onclick="validate()">Submit</button>
+</form>
+
+</body>
+</html>
