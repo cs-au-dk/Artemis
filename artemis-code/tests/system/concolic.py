@@ -91,6 +91,7 @@ def test_generator(filename, name, test_dict=None, internal_test=None, dry_run=F
         tested_unsat = False
         tested_not_written = False
         tested_not_solved = False
+        tested_no_failed_injections = False
 
         if internal_test:
             for op, tMap in internal_test.iteritems():
@@ -98,6 +99,7 @@ def test_generator(filename, name, test_dict=None, internal_test=None, dry_run=F
                     tested_not_written = tested_not_written or s == "Concolic::Solver::ConstraintsNotWritten"
                     tested_unsat = tested_unsat or s == "Concolic::Solver::ConstraintsSolvedAsUNSAT"
                     tested_not_solved = tested_not_solved or s == "Concolic::Solver::ConstraintsNotSolved"
+                    tested_no_failed_injections = tested_no_failed_injections or s == "Concolic::FailedInjections"
                     _assert_test_case(self, op, _get_from_report(report, s)['val'], _get_from_report(report, v)['val'])
 
         if test_dict:
@@ -106,6 +108,7 @@ def test_generator(filename, name, test_dict=None, internal_test=None, dry_run=F
                     tested_not_written = tested_not_written or s == "Concolic::Solver::ConstraintsNotWritten"
                     tested_unsat = tested_unsat or s == "Concolic::Solver::ConstraintsSolvedAsUNSAT"
                     tested_not_solved = tested_not_solved or s == "Concolic::Solver::ConstraintsNotSolved"
+                    tested_no_failed_injections = tested_no_failed_injections or s == "Concolic::FailedInjections"
 
                     v = int(v) if v.isdigit() else (True if v == "true" else (False if v == "false" else v))
                     r_val = _get_from_report(report, s)
@@ -117,6 +120,8 @@ def test_generator(filename, name, test_dict=None, internal_test=None, dry_run=F
             "Not written constraints are pr. default an error"
         assert tested_not_solved or not "Concolic::Solver::ConstraintsNotSolved" in report, \
             "Not solved constraints are a pr. default an error."
+        assert tested_no_failed_injections or not "Concolic::FailedInjections" in report, \
+            "Failed injections are an error by default."
 
     return test
 

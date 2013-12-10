@@ -1798,9 +1798,10 @@ sub GenerateImplementation
                     if ($attribute->signature->extendedAttributes->{"Symbolic"}) {
                         # ARTEMIS BEGIN
                         push(@implContent, "\n");
-                        push(@implContent, "    // Do not make hidden inputs symbolic.\n");
+                        push(@implContent, "    // Do not make hidden inputs or values read from buttons symbolic.\n");
                         push(@implContent, "    WTF::AtomicString type = impl->getAttribute(WebCore::HTMLNames::typeAttr);\n");
-                        push(@implContent, "    if(strncmp(type.string().lower().ascii().data(), \"hidden\", 6) == 0 || strncmp(type.string().lower().ascii().data(), \"submit\", 6) == 0){\n");
+                        # See commit f1a40d5c for an odd gotcha here.
+                        push(@implContent, "    if(strncmp(type.string().lower().ascii().data(), \"hidden\", 6) == 0 || strncmp(type.string().lower().ascii().data(), \"submit\", 6) == 0 || strncmp(type.string().lower().ascii().data(), \"button\", 6) == 0){\n");
                         push(@implContent, "        return result;\n");
                         push(@implContent, "    }\n");
                         push(@implContent, "\n");

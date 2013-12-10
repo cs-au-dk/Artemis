@@ -1,0 +1,51 @@
+<!--
+TEST PC[0] = ((SymbolicString != ConstantString) == ConstantBoolean)
+TEST Concolic::Solver::ConstraintsSolved = 3
+TEST Concolic::Solver::ConstraintsWritten = 3
+TEST Concolic::Solver::Constraint.SYM_IN_input = testme
+-->
+<!doctype html><html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+	<title>Ben Spencer</title>
+	<meta name="author" content="Ben Spencer">
+	<script type="text/javascript">
+
+		function validate() {
+			var x = document.getElementById("input").value;
+			var y = document.getElementById("btn").value;
+			var z = document.getElementById("btn2").value;
+
+			if (x != y) {
+				if(x != z) {
+					alert("Error!\n'" + x + "' does not match '" + y + "' or '" + z + "'");
+					return false;
+				} else {
+					return true;
+				}
+			}else{
+				return true;
+			}
+		}
+	</script>
+
+</head>
+<body>
+
+	<p>Write <i>testme</i> or <i>testme2</i> in the field to do something.</p>
+
+	<form method="GET" action="about:blank" >
+
+		<input type="text" id="input" />
+		
+		<input type="submit" id="btn" value="testme" />
+		<input type="button" id="btn2" value="testme2" />
+
+		<button type="submit" onclick="return validate();">Submit</button>
+
+	</form>
+
+</body>
+</html>
