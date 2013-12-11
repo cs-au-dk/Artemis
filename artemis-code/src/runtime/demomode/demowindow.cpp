@@ -446,12 +446,15 @@ void DemoModeMainWindow::postTraceExecution()
     case SUCCESS:
         Log::debug("CONCOLIC-INFO: This trace was classified as a SUCCESS.");
         mTraceClassificationResult->setText("Classification: <font color='green'>SUCCESS</font>");
+        break;
     case FAILURE:
         Log::debug("CONCOLIC-INFO: This trace was classified as a FAILURE.");
         mTraceClassificationResult->setText("Classification: <font color='red'>FAILURE</font>");
+        break;
     default:
         Log::debug("CONCOLIC-INFO: This trace was classified as UNKNOWN.");
         mTraceClassificationResult->setText("Classification: <font color='blue'>UNKNOWN</font>");
+        break;
     }
 
     // Reset the trace tracking text in the GUI.
