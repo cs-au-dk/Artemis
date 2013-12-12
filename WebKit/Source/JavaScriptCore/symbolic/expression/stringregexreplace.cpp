@@ -33,7 +33,12 @@ StringRegexReplace::StringRegexReplace(StringExpression* source, std::string* re
 
 void StringRegexReplace::accept(Visitor* visitor) 
 {
-	visitor->visit(this); 	
+	visitor->visit(this, NULL); 	
+}
+
+void StringRegexReplace::accept(Visitor* visitor, void* arg) 
+{
+	visitor->visit(this, arg); 	
 }
 
 }

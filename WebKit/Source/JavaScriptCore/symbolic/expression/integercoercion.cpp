@@ -31,7 +31,12 @@ IntegerCoercion::IntegerCoercion(Expression* expression) :
 
 void IntegerCoercion::accept(Visitor* visitor) 
 {
-	visitor->visit(this); 	
+	visitor->visit(this, NULL); 	
+}
+
+void IntegerCoercion::accept(Visitor* visitor, void* arg) 
+{
+	visitor->visit(this, arg); 	
 }
 
 }

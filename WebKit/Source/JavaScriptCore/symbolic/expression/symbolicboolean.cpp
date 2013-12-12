@@ -31,7 +31,12 @@ SymbolicBoolean::SymbolicBoolean(SymbolicSource source) :
 
 void SymbolicBoolean::accept(Visitor* visitor) 
 {
-	visitor->visit(this); 	
+	visitor->visit(this, NULL); 	
+}
+
+void SymbolicBoolean::accept(Visitor* visitor, void* arg) 
+{
+	visitor->visit(this, arg); 	
 }
 
 }

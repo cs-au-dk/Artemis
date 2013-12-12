@@ -52,7 +52,12 @@ IntegerBinaryOperation::IntegerBinaryOperation(IntegerExpression* lhs, IntegerBi
 
 void IntegerBinaryOperation::accept(Visitor* visitor) 
 {
-	visitor->visit(this); 	
+	visitor->visit(this, NULL); 	
+}
+
+void IntegerBinaryOperation::accept(Visitor* visitor, void* arg) 
+{
+	visitor->visit(this, arg); 	
 }
 
 }

@@ -31,7 +31,12 @@ SymbolicString::SymbolicString(SymbolicSource source) :
 
 void SymbolicString::accept(Visitor* visitor) 
 {
-	visitor->visit(this); 	
+	visitor->visit(this, NULL); 	
+}
+
+void SymbolicString::accept(Visitor* visitor, void* arg) 
+{
+	visitor->visit(this, arg); 	
 }
 
 }

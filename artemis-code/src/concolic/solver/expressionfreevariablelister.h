@@ -31,21 +31,21 @@ class ExpressionFreeVariableLister: public Symbolic::Visitor
 {
 public:
 
-    void visit(Symbolic::SymbolicInteger* symbolicinteger);
-    void visit(Symbolic::ConstantInteger* constantinteger);
-    void visit(Symbolic::IntegerBinaryOperation* integerbinaryoperation);
-    void visit(Symbolic::IntegerCoercion* integercoercion);
-    void visit(Symbolic::SymbolicString* symbolicstring);
-    void visit(Symbolic::ConstantString* constantstring);
-    void visit(Symbolic::StringBinaryOperation* stringbinaryoperation);
-    void visit(Symbolic::StringCoercion* stringcoercion);
-    void visit(Symbolic::StringRegexReplace* stringregexreplace);
-    void visit(Symbolic::StringReplace* stringreplace);
-    void visit(Symbolic::SymbolicBoolean* symbolicboolean);
-    void visit(Symbolic::ConstantBoolean* constantboolean);
-    void visit(Symbolic::BooleanCoercion* booleancoercion);
-    void visit(Symbolic::BooleanBinaryOperation* booleanbinaryoperation);
-    void visit(Symbolic::StringLength* stringlength);
+    void visit(Symbolic::SymbolicInteger* symbolicinteger, void* arg);
+    void visit(Symbolic::ConstantInteger* constantinteger, void* arg);
+    void visit(Symbolic::IntegerBinaryOperation* integerbinaryoperation, void* arg);
+    void visit(Symbolic::IntegerCoercion* integercoercion, void* arg);
+    void visit(Symbolic::SymbolicString* symbolicstring, void* arg);
+    void visit(Symbolic::ConstantString* constantstring, void* arg);
+    void visit(Symbolic::StringBinaryOperation* stringbinaryoperation, void* arg);
+    void visit(Symbolic::StringCoercion* stringcoercion, void* arg);
+    void visit(Symbolic::StringRegexReplace* stringregexreplace, void* arg);
+    void visit(Symbolic::StringReplace* stringreplace, void* arg);
+    void visit(Symbolic::SymbolicBoolean* symbolicboolean, void* arg);
+    void visit(Symbolic::ConstantBoolean* constantboolean, void* arg);
+    void visit(Symbolic::BooleanCoercion* booleancoercion, void* arg);
+    void visit(Symbolic::BooleanBinaryOperation* booleanbinaryoperation, void* arg);
+    void visit(Symbolic::StringLength* stringlength, void* arg);
 
     inline QMap<QString, Symbolic::SourceIdentifierMethod> getResult() const {
         return mResult;

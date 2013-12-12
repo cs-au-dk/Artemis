@@ -35,6 +35,7 @@ class SymbolicString : public StringExpression
 public:
     explicit SymbolicString(SymbolicSource source);
     void accept(Visitor* visitor);
+    void accept(Visitor* visitor, void* arg);
 
 	inline SymbolicSource getSource() {
 		return m_source;

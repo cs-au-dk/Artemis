@@ -34,6 +34,7 @@ class ConstantString : public StringExpression
 public:
     explicit ConstantString(std::string* value);
     void accept(Visitor* visitor);
+    void accept(Visitor* visitor, void* arg);
 
 	inline std::string* getValue() {
 		return m_value;

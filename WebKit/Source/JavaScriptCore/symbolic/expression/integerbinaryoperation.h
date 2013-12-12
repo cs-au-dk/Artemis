@@ -42,6 +42,7 @@ class IntegerBinaryOperation : public IntegerExpression
 public:
     explicit IntegerBinaryOperation(IntegerExpression* lhs, IntegerBinaryOp op, IntegerExpression* rhs);
     void accept(Visitor* visitor);
+    void accept(Visitor* visitor, void* arg);
 
 	inline IntegerExpression* getLhs() {
 		return m_lhs;

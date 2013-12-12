@@ -31,7 +31,12 @@ StringLength::StringLength(StringExpression* string) :
 
 void StringLength::accept(Visitor* visitor) 
 {
-	visitor->visit(this); 	
+	visitor->visit(this, NULL); 	
+}
+
+void StringLength::accept(Visitor* visitor, void* arg) 
+{
+	visitor->visit(this, arg); 	
 }
 
 }

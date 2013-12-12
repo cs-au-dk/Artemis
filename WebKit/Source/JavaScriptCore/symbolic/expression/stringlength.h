@@ -35,6 +35,7 @@ class StringLength : public IntegerExpression
 public:
     explicit StringLength(StringExpression* string);
     void accept(Visitor* visitor);
+    void accept(Visitor* visitor, void* arg);
 
 	inline StringExpression* getString() {
 		return m_string;

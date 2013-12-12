@@ -22,26 +22,26 @@ namespace artemis
 {
 
 
-void ExpressionValuePrinter::visit(Symbolic::ConstantInteger* constantinteger)
+void ExpressionValuePrinter::visit(Symbolic::ConstantInteger* constantinteger, void* arg)
 {
     std::ostringstream doubleStr;
     doubleStr << constantinteger->getValue();
     m_result += doubleStr.str();
 }
 
-void ExpressionValuePrinter::visit(Symbolic::ConstantString* constantstring)
+void ExpressionValuePrinter::visit(Symbolic::ConstantString* constantstring, void* arg)
 {
     m_result += '"';
     m_result += *(constantstring->getValue());
     m_result += '"';
 }
 
-void ExpressionValuePrinter::visit(Symbolic::ConstantBoolean* constantboolean)
+void ExpressionValuePrinter::visit(Symbolic::ConstantBoolean* constantboolean, void* arg)
 {
     m_result += constantboolean->getValue() ? "true" : "false";
 }
 
-void ExpressionValuePrinter::visit(Symbolic::SymbolicString *symbolicstring)
+void ExpressionValuePrinter::visit(Symbolic::SymbolicString *symbolicstring, void* arg)
 {
     // These names begin with SYM_IN_, so we don't need to mark them at all... it is clear what they are.
     m_result += symbolicstring->getSource().getIdentifier();

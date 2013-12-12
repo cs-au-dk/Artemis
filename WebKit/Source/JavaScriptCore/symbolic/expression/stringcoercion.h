@@ -35,6 +35,7 @@ class StringCoercion : public StringExpression
 public:
     explicit StringCoercion(Expression* expression);
     void accept(Visitor* visitor);
+    void accept(Visitor* visitor, void* arg);
 
 	inline Expression* getExpression() {
 		return m_expression;

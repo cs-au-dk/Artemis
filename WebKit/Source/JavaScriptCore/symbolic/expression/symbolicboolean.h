@@ -35,6 +35,7 @@ class SymbolicBoolean : public BooleanExpression
 public:
     explicit SymbolicBoolean(SymbolicSource source);
     void accept(Visitor* visitor);
+    void accept(Visitor* visitor, void* arg);
 
 	inline SymbolicSource getSource() {
 		return m_source;

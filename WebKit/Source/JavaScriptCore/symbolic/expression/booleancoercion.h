@@ -35,6 +35,7 @@ class BooleanCoercion : public BooleanExpression
 public:
     explicit BooleanCoercion(Expression* expression);
     void accept(Visitor* visitor);
+    void accept(Visitor* visitor, void* arg);
 
 	inline Expression* getExpression() {
 		return m_expression;
