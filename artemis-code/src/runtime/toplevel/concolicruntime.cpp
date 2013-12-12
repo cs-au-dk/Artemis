@@ -310,7 +310,11 @@ void ConcolicRuntime::printSolution(SolutionPtr solution, QStringList varList)
                 Log::debug(QString("%1 = %2").arg(var).arg(value.u.boolean ? "true" : "false").toStdString());
                 break;
             case Symbolic::STRING:
-                Log::debug(QString("%1 = %2").arg(var).arg(value.string.c_str()).toStdString());
+                if(value.string.empty()){
+                    Log::debug(QString("%1 = \"\"").arg(var).toStdString());
+                }else{
+                    Log::debug(QString("%1 = %2").arg(var).arg(value.string.c_str()).toStdString());
+                }
                 break;
             default:
                 Log::info(QString("Unimplemented value type encountered for variable %1 (%2)").arg(var).arg(value.kind).toStdString());

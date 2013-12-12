@@ -137,6 +137,12 @@ SolutionPtr Z3Solver::solve(PathConditionPtr pc)
             Symbolvalue symbolvalue;
             symbolvalue.found = true;
 
+            // Empty string is signalled by the solver script as the literal ""
+            // This means we cannot inject the literal "" (i.e. two double quotes) now.
+            if(value.compare("\"\"") == 0){
+                value.clear();
+            }
+
             /*if (value.compare("false") == 0) {
                 symbolvalue.kind = Symbolic::BOOL;
                 symbolvalue.u.boolean = false;
