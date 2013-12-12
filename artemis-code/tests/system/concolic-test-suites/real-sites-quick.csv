@@ -1,0 +1,15 @@
+Site, URL, Entry Point
+AirTran, http://www.airtran.com/Home.aspx, .//*[@id='SkySales']/table/tbody/tr[9]/td[2]/span/span/a
+FlyKingfisher, http://www.flykingfisher.com/, id('btnFltSchd')
+JetStar, http://www.jetstar.com/au/en/home, id('btnSearchForFlights')
+Monarch, http://www.monarch.co.uk/, id('FindFlightsButton')
+USAirways, http://www.usairways.com/default.aspx, id('ctl00_phMain_BookTravelWidgetControl_SearchInvokeButtonControl_SearchCommand')
+Southwest, http://www.southwest.com/, id('booking_widget_content_row_btn_search')
+Travelocity, http://www.travelocity.co.uk/?WAPageName=HPGEOREDIRECT.UNITEDKINGDOM, id('dp_submit')
+VirginAustralia, http://www.virginaustralia.com/au/en/, .//*[@id='flights-form']/div[11]
+United, http://www.united.com/web/en-US/default.aspx?root=1, id('ctl00_ContentInfo_Booking1_btnSearchFlight')
+Emirates, http://www.emirates.com/uk/english/index.aspx, id('MainContent_ctl04_ctl01_ctl00_ctl07_btnStartBooking')
+AlaskaAir, http://www.alaskaair.com/, id('findFlights')
+JetBlue, http://www.jetblue.com/, .//*[@id='fflight']/div[4]/div/input
+FlyFrontier, http://www.flyfrontier.com/, id('btnFindMyFlight')
+KLM, http://www.klm.com/travel/gb_en/index.htm, id('ebt-flightsearch-submit')
