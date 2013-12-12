@@ -34,6 +34,11 @@ void ConstantBoolean::accept(Visitor* visitor)
 	visitor->visit(this); 	
 }
 
+void ConstantBoolean::accept(Visitor* visitor, void* arg) 
+{
+	visitor->visit(this, arg); 	
+}
+
 }
 
 #endif

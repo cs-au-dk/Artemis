@@ -20,79 +20,79 @@ namespace artemis
 {
 
 
-void ExpressionFreeVariableLister::visit(Symbolic::SymbolicInteger* symbolicinteger)
+void ExpressionFreeVariableLister::visit(Symbolic::SymbolicInteger* symbolicinteger, void* arg)
 {
     mResult.insert(QString(symbolicinteger->getSource().getIdentifier().c_str()), symbolicinteger->getSource().getIdentifierMethod());
 }
 
-void ExpressionFreeVariableLister::visit(Symbolic::ConstantInteger* constantinteger)
+void ExpressionFreeVariableLister::visit(Symbolic::ConstantInteger* constantinteger, void* arg)
 {
 }
 
-void ExpressionFreeVariableLister::visit(Symbolic::IntegerBinaryOperation* integerbinaryoperation)
+void ExpressionFreeVariableLister::visit(Symbolic::IntegerBinaryOperation* integerbinaryoperation, void* arg)
 {
-    integerbinaryoperation->getLhs()->accept(this);
-    integerbinaryoperation->getRhs()->accept(this);
+    integerbinaryoperation->getLhs()->accept(this, arg);
+    integerbinaryoperation->getRhs()->accept(this, arg);
 }
 
-void ExpressionFreeVariableLister::visit(Symbolic::IntegerCoercion* integercoercion)
+void ExpressionFreeVariableLister::visit(Symbolic::IntegerCoercion* integercoercion, void* arg)
 {
-    integercoercion->getExpression()->accept(this);
+    integercoercion->getExpression()->accept(this, arg);
 }
 
-void ExpressionFreeVariableLister::visit(Symbolic::SymbolicString* symbolicstring)
+void ExpressionFreeVariableLister::visit(Symbolic::SymbolicString* symbolicstring, void* arg)
 {
     mResult.insert(QString(symbolicstring->getSource().getIdentifier().c_str()), symbolicstring->getSource().getIdentifierMethod());
 }
 
-void ExpressionFreeVariableLister::visit(Symbolic::ConstantString* constantstring)
+void ExpressionFreeVariableLister::visit(Symbolic::ConstantString* constantstring, void* arg)
 {
 }
 
-void ExpressionFreeVariableLister::visit(Symbolic::StringBinaryOperation* stringbinaryoperation)
+void ExpressionFreeVariableLister::visit(Symbolic::StringBinaryOperation* stringbinaryoperation, void* arg)
 {
-    stringbinaryoperation->getLhs()->accept(this);
-    stringbinaryoperation->getRhs()->accept(this);
+    stringbinaryoperation->getLhs()->accept(this, arg);
+    stringbinaryoperation->getRhs()->accept(this, arg);
 }
 
-void ExpressionFreeVariableLister::visit(Symbolic::StringRegexReplace* stringregexreplace)
+void ExpressionFreeVariableLister::visit(Symbolic::StringRegexReplace* stringregexreplace, void* arg)
 {
-    stringregexreplace->getSource()->accept(this);
+    stringregexreplace->getSource()->accept(this, arg);
 }
 
-void ExpressionFreeVariableLister::visit(Symbolic::StringReplace* stringreplace)
+void ExpressionFreeVariableLister::visit(Symbolic::StringReplace* stringreplace, void* arg)
 {
-    stringreplace->getSource()->accept(this);
+    stringreplace->getSource()->accept(this, arg);
 }
 
-void ExpressionFreeVariableLister::visit(Symbolic::StringCoercion* stringcoercion)
+void ExpressionFreeVariableLister::visit(Symbolic::StringCoercion* stringcoercion, void* arg)
 {
-    stringcoercion->getExpression()->accept(this);
+    stringcoercion->getExpression()->accept(this, arg);
 }
 
-void ExpressionFreeVariableLister::visit(Symbolic::SymbolicBoolean* symbolicboolean)
+void ExpressionFreeVariableLister::visit(Symbolic::SymbolicBoolean* symbolicboolean, void* arg)
 {
     mResult.insert(QString(symbolicboolean->getSource().getIdentifier().c_str()), symbolicboolean->getSource().getIdentifierMethod());
 }
 
-void ExpressionFreeVariableLister::visit(Symbolic::ConstantBoolean* constantboolean)
+void ExpressionFreeVariableLister::visit(Symbolic::ConstantBoolean* constantboolean, void* arg)
 {
 }
 
-void ExpressionFreeVariableLister::visit(Symbolic::BooleanCoercion* booleancoercion)
+void ExpressionFreeVariableLister::visit(Symbolic::BooleanCoercion* booleancoercion, void* arg)
 {
-    booleancoercion->getExpression()->accept(this);
+    booleancoercion->getExpression()->accept(this, arg);
 }
 
-void ExpressionFreeVariableLister::visit(Symbolic::BooleanBinaryOperation* booleanbinaryoperation)
+void ExpressionFreeVariableLister::visit(Symbolic::BooleanBinaryOperation* booleanbinaryoperation, void* arg)
 {
-    booleanbinaryoperation->getLhs()->accept(this);
-    booleanbinaryoperation->getRhs()->accept(this);
+    booleanbinaryoperation->getLhs()->accept(this, arg);
+    booleanbinaryoperation->getRhs()->accept(this, arg);
 }
 
-void ExpressionFreeVariableLister::visit(Symbolic::StringLength* stringlength)
+void ExpressionFreeVariableLister::visit(Symbolic::StringLength* stringlength, void* arg)
 {
-    stringlength->getString()->accept(this);
+    stringlength->getString()->accept(this, arg);
 }
 
 

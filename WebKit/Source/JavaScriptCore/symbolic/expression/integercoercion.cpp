@@ -34,6 +34,11 @@ void IntegerCoercion::accept(Visitor* visitor)
 	visitor->visit(this); 	
 }
 
+void IntegerCoercion::accept(Visitor* visitor, void* arg) 
+{
+	visitor->visit(this, arg); 	
+}
+
 }
 
 #endif

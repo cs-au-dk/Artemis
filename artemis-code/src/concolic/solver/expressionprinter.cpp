@@ -25,17 +25,17 @@ ExpressionPrinter::ExpressionPrinter()
 {
 }
 
-void ExpressionPrinter::visit(Symbolic::SymbolicInteger* symbolicinteger)
+void ExpressionPrinter::visit(Symbolic::SymbolicInteger* symbolicinteger, void* args)
 {
     m_result += "SymbolicInteger";
 }
 
-void ExpressionPrinter::visit(Symbolic::ConstantInteger* constantinteger)
+void ExpressionPrinter::visit(Symbolic::ConstantInteger* constantinteger, void* args)
 {
     m_result += "ConstantInteger";
 }
 
-void ExpressionPrinter::visit(Symbolic::IntegerBinaryOperation* integerbinaryoperation)
+void ExpressionPrinter::visit(Symbolic::IntegerBinaryOperation* integerbinaryoperation, void* args)
 {
     m_result += "(";
     integerbinaryoperation->getLhs()->accept(this);
@@ -46,24 +46,24 @@ void ExpressionPrinter::visit(Symbolic::IntegerBinaryOperation* integerbinaryope
     m_result += ")";
 }
 
-void ExpressionPrinter::visit(Symbolic::IntegerCoercion* integercoercion)
+void ExpressionPrinter::visit(Symbolic::IntegerCoercion* integercoercion, void* args)
 {
      m_result += "IntegerCoercion( ";
      integercoercion->getExpression()->accept(this);
      m_result += " )";
 }
 
-void ExpressionPrinter::visit(Symbolic::SymbolicString* symbolicstring)
+void ExpressionPrinter::visit(Symbolic::SymbolicString* symbolicstring, void* args)
 {
     m_result += "SymbolicString";
 }
 
-void ExpressionPrinter::visit(Symbolic::ConstantString* constantstring)
+void ExpressionPrinter::visit(Symbolic::ConstantString* constantstring, void* args)
 {
     m_result += "ConstantString";
 }
 
-void ExpressionPrinter::visit(Symbolic::StringBinaryOperation* stringbinaryoperation)
+void ExpressionPrinter::visit(Symbolic::StringBinaryOperation* stringbinaryoperation, void* args)
 {
     m_result += "(";
     stringbinaryoperation->getLhs()->accept(this);
@@ -74,7 +74,7 @@ void ExpressionPrinter::visit(Symbolic::StringBinaryOperation* stringbinaryopera
     m_result += ")";
 }
 
-void ExpressionPrinter::visit(Symbolic::StringRegexReplace* stringregexreplace)
+void ExpressionPrinter::visit(Symbolic::StringRegexReplace* stringregexreplace, void* args)
 {
     m_result += "StringRegexReplace( ";
     stringregexreplace->getSource()->accept(this);
@@ -85,7 +85,7 @@ void ExpressionPrinter::visit(Symbolic::StringRegexReplace* stringregexreplace)
     m_result += "\" )";
 }
 
-void ExpressionPrinter::visit(Symbolic::StringReplace* stringreplace)
+void ExpressionPrinter::visit(Symbolic::StringReplace* stringreplace, void* args)
 {
     m_result += "StringReplace( ";
     stringreplace->getSource()->accept(this);
@@ -96,31 +96,31 @@ void ExpressionPrinter::visit(Symbolic::StringReplace* stringreplace)
     m_result += "\" )";
 }
 
-void ExpressionPrinter::visit(Symbolic::StringCoercion* stringcoercion)
+void ExpressionPrinter::visit(Symbolic::StringCoercion* stringcoercion, void* args)
 {
     m_result += "StringCoercion( ";
     stringcoercion->getExpression()->accept(this);
     m_result += " )";
 }
 
-void ExpressionPrinter::visit(Symbolic::SymbolicBoolean* symbolicboolean)
+void ExpressionPrinter::visit(Symbolic::SymbolicBoolean* symbolicboolean, void* args)
 {
     m_result += "SymbolicBoolean";
 }
 
-void ExpressionPrinter::visit(Symbolic::ConstantBoolean* constantboolean)
+void ExpressionPrinter::visit(Symbolic::ConstantBoolean* constantboolean, void* args)
 {
     m_result += "ConstantBoolean";
 }
 
-void ExpressionPrinter::visit(Symbolic::BooleanCoercion* booleancoercion)
+void ExpressionPrinter::visit(Symbolic::BooleanCoercion* booleancoercion, void* args)
 {
     m_result += "BooleanCoercion( ";
     booleancoercion->getExpression()->accept(this);
     m_result += " )";
 }
 
-void ExpressionPrinter::visit(Symbolic::BooleanBinaryOperation* booleanbinaryoperation)
+void ExpressionPrinter::visit(Symbolic::BooleanBinaryOperation* booleanbinaryoperation, void* args)
 {
     m_result += "(";
     booleanbinaryoperation->getLhs()->accept(this);
@@ -131,7 +131,7 @@ void ExpressionPrinter::visit(Symbolic::BooleanBinaryOperation* booleanbinaryope
     m_result += ")";
 }
 
-void ExpressionPrinter::visit(Symbolic::StringLength* stringlength)
+void ExpressionPrinter::visit(Symbolic::StringLength* stringlength, void* args)
 {
     m_result += "StringLength( ";
     stringlength->getString()->accept(this);

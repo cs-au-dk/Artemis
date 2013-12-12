@@ -34,6 +34,11 @@ void SymbolicInteger::accept(Visitor* visitor)
 	visitor->visit(this); 	
 }
 
+void SymbolicInteger::accept(Visitor* visitor, void* arg) 
+{
+	visitor->visit(this, arg); 	
+}
+
 }
 
 #endif

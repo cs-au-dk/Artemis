@@ -38,11 +38,11 @@ class ExpressionValuePrinter : public ExpressionPrinter
 
 public:
 
-    void visit(Symbolic::ConstantInteger* constantinteger);
-    void visit(Symbolic::ConstantString* constantstring);
-    void visit(Symbolic::ConstantBoolean* constantboolean);
+    void visit(Symbolic::ConstantInteger* constantinteger, void* arg);
+    void visit(Symbolic::ConstantString* constantstring, void* arg);
+    void visit(Symbolic::ConstantBoolean* constantboolean, void* arg);
 
-    void visit(Symbolic::SymbolicString* symbolicstring);
+    void visit(Symbolic::SymbolicString* symbolicstring, void* arg);
 
 };
 

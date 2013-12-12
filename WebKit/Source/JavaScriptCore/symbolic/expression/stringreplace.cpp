@@ -36,6 +36,11 @@ void StringReplace::accept(Visitor* visitor)
 	visitor->visit(this); 	
 }
 
+void StringReplace::accept(Visitor* visitor, void* arg) 
+{
+	visitor->visit(this, arg); 	
+}
+
 }
 
 #endif

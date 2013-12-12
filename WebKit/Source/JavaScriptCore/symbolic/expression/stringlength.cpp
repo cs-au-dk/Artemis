@@ -34,6 +34,11 @@ void StringLength::accept(Visitor* visitor)
 	visitor->visit(this); 	
 }
 
+void StringLength::accept(Visitor* visitor, void* arg) 
+{
+	visitor->visit(this, arg); 	
+}
+
 }
 
 #endif

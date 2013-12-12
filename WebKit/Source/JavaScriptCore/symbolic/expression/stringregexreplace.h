@@ -34,6 +34,7 @@ class StringRegexReplace : public StringExpression
 public:
     explicit StringRegexReplace(StringExpression* source, std::string* regexpattern, std::string* replace);
     void accept(Visitor* visitor);
+    void accept(Visitor* visitor, void* arg);
 
 	inline StringExpression* getSource() {
 		return m_source;

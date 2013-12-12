@@ -59,6 +59,7 @@ class %s %s
 {
 public:
     virtual void accept(Visitor* visitor) = 0;
+    virtual void accept(Visitor* visitor, void* arg) = 0;
 };
 
 }
@@ -139,6 +140,7 @@ class %s : public %s
 public:
     explicit %s(%s);
     void accept(Visitor* visitor);
+    void accept(Visitor* visitor, void* arg);
 """ % (ID, parent, ID, signature))
 
 		for field_type, field_name in fields:
@@ -240,7 +242,12 @@ void %s::accept(Visitor* visitor)
 {
 	visitor->visit(this); 	
 }
-""" % ID)
+
+void %s::accept(Visitor* visitor, void* arg) 
+{
+	visitor->visit(this, arg); 	
+}
+""" % (ID, ID))
 
 		fp.write("""
 }
@@ -303,6 +310,7 @@ public:
 		for object_ID in object_IDs:
 			name = object_ID.lower()
 			fp.write("    virtual void visit(%s* %s) = 0;\n" % (object_ID, name))
+			fp.write("    virtual void visit(%s* %s, void* arg) = 0;\n" % (object_ID, name))
 
 
 		fp.write("""

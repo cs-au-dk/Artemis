@@ -55,6 +55,11 @@ void StringBinaryOperation::accept(Visitor* visitor)
 	visitor->visit(this); 	
 }
 
+void StringBinaryOperation::accept(Visitor* visitor, void* arg) 
+{
+	visitor->visit(this, arg); 	
+}
+
 }
 
 #endif

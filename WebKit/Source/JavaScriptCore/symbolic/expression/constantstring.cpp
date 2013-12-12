@@ -34,6 +34,11 @@ void ConstantString::accept(Visitor* visitor)
 	visitor->visit(this); 	
 }
 
+void ConstantString::accept(Visitor* visitor, void* arg) 
+{
+	visitor->visit(this, arg); 	
+}
+
 }
 
 #endif

@@ -97,7 +97,7 @@ bool Z3STRConstraintWriter::write(PathConditionPtr pathCondition, std::string ou
 
 
 //N.B. This will not currently be present in any of our PCs.
-void Z3STRConstraintWriter::visit(Symbolic::SymbolicInteger* symbolicinteger)
+void Z3STRConstraintWriter::visit(Symbolic::SymbolicInteger* symbolicinteger, void* args)
 {
     // Checks this symbolic value is of type INT and raises an error otherwise.
     recordAndEmitType(symbolicinteger->getSource(), Symbolic::INT);
@@ -106,7 +106,7 @@ void Z3STRConstraintWriter::visit(Symbolic::SymbolicInteger* symbolicinteger)
     mExpressionType = Symbolic::INT;
 }
 
-void Z3STRConstraintWriter::visit(Symbolic::SymbolicString* symbolicstring)
+void Z3STRConstraintWriter::visit(Symbolic::SymbolicString* symbolicstring, void* args)
 {
     // Checks this symbolic value is of type STRING and raises an error otherwise.
     recordAndEmitType(symbolicstring->getSource(), Symbolic::STRING);
@@ -116,7 +116,7 @@ void Z3STRConstraintWriter::visit(Symbolic::SymbolicString* symbolicstring)
 }
 
 //N.B. This will not currently be present in any of our PCs.
-void Z3STRConstraintWriter::visit(Symbolic::SymbolicBoolean* symbolicboolean)
+void Z3STRConstraintWriter::visit(Symbolic::SymbolicBoolean* symbolicboolean, void* args)
 {
     // Checks this symbolic value is of type BOOL and raises an error otherwise.
     recordAndEmitType(symbolicboolean->getSource(), Symbolic::BOOL);
@@ -128,7 +128,7 @@ void Z3STRConstraintWriter::visit(Symbolic::SymbolicBoolean* symbolicboolean)
 /** Constant Integer/String/Boolean **/
 
 
-void Z3STRConstraintWriter::visit(Symbolic::ConstantInteger* constantinteger)
+void Z3STRConstraintWriter::visit(Symbolic::ConstantInteger* constantinteger, void* args)
 {
     /**
      * Note! We convert the double into an integer in some cases since we do not support
@@ -158,7 +158,7 @@ void Z3STRConstraintWriter::visit(Symbolic::ConstantInteger* constantinteger)
     }
 }
 
-void Z3STRConstraintWriter::visit(Symbolic::ConstantString* constantstring)
+void Z3STRConstraintWriter::visit(Symbolic::ConstantString* constantstring, void* args)
 {
     std::ostringstream strs;
 
@@ -168,7 +168,7 @@ void Z3STRConstraintWriter::visit(Symbolic::ConstantString* constantstring)
     mExpressionType = Symbolic::STRING;
 }
 
-void Z3STRConstraintWriter::visit(Symbolic::ConstantBoolean* constantboolean)
+void Z3STRConstraintWriter::visit(Symbolic::ConstantBoolean* constantboolean, void* args)
 {
     std::ostringstream strs;
 
@@ -180,7 +180,7 @@ void Z3STRConstraintWriter::visit(Symbolic::ConstantBoolean* constantboolean)
 
 /** Coercion **/
 
-void Z3STRConstraintWriter::visit(Symbolic::IntegerCoercion* integercoercion)
+void Z3STRConstraintWriter::visit(Symbolic::IntegerCoercion* integercoercion, void* args)
 {
     // If we are coercing from an input (string) to an integer, then this is a special case.
     // Instead of calling coerceType() (which would raise an error) we just silently ignore the coercion and record
@@ -202,14 +202,14 @@ void Z3STRConstraintWriter::visit(Symbolic::IntegerCoercion* integercoercion)
     coercetype(mExpressionType, Symbolic::INT, mExpressionBuffer); // Sets mExpressionBuffer and Type.
 }
 
-void Z3STRConstraintWriter::visit(Symbolic::StringCoercion* stringcoercion)
+void Z3STRConstraintWriter::visit(Symbolic::StringCoercion* stringcoercion, void* args)
 {
     stringcoercion->getExpression()->accept(this);
 
     coercetype(mExpressionType, Symbolic::STRING, mExpressionBuffer); // Sets mExpressionBuffer and Type.
 }
 
-void Z3STRConstraintWriter::visit(Symbolic::BooleanCoercion* booleancoercion)
+void Z3STRConstraintWriter::visit(Symbolic::BooleanCoercion* booleancoercion, void* args)
 {
     booleancoercion->getExpression()->accept(this);
 
@@ -219,7 +219,7 @@ void Z3STRConstraintWriter::visit(Symbolic::BooleanCoercion* booleancoercion)
 
 /** Binary Operations **/
 
-void Z3STRConstraintWriter::visit(Symbolic::IntegerBinaryOperation* integerbinaryoperation)
+void Z3STRConstraintWriter::visit(Symbolic::IntegerBinaryOperation* integerbinaryoperation, void* args)
 {
     static const char* op[] = {
         "(+ ", "(- ", "(* ", "(div ", "(= ", "(= (= ", "(<= ", "(< ", "(>= ", "(> ", "(mod ", "(= (= ", "(= "
@@ -249,7 +249,7 @@ void Z3STRConstraintWriter::visit(Symbolic::IntegerBinaryOperation* integerbinar
     mExpressionType = opGetType(integerbinaryoperation->getOp());
 }
 
-void Z3STRConstraintWriter::visit(Symbolic::StringBinaryOperation* stringbinaryoperation)
+void Z3STRConstraintWriter::visit(Symbolic::StringBinaryOperation* stringbinaryoperation, void* args)
 {
     static const char* op[] = {
         "(Concat ", "(= ", "(= (= ", "_", "_", "_", "_", "(= ", "(= (= "
@@ -290,7 +290,7 @@ void Z3STRConstraintWriter::visit(Symbolic::StringBinaryOperation* stringbinaryo
     mExpressionType = opGetType(stringbinaryoperation->getOp());
 }
 
-void Z3STRConstraintWriter::visit(Symbolic::BooleanBinaryOperation* booleanbinaryoperation)
+void Z3STRConstraintWriter::visit(Symbolic::BooleanBinaryOperation* booleanbinaryoperation, void* args)
 {
     static const char* op[] = {
         "(= ", "(= (= ", "(= ", "(! (= "
@@ -322,7 +322,7 @@ void Z3STRConstraintWriter::visit(Symbolic::BooleanBinaryOperation* booleanbinar
 
 /** Other Operations **/
 
-void Z3STRConstraintWriter::visit(Symbolic::StringRegexReplace* regex)
+void Z3STRConstraintWriter::visit(Symbolic::StringRegexReplace* regex, void* args)
 {
     // special case input filtering (filters matching X and replacing with "")
     if (regex->getReplace()->compare("") != std::string::npos) {
@@ -368,7 +368,7 @@ void Z3STRConstraintWriter::visit(Symbolic::StringRegexReplace* regex)
 
 }
 
-void Z3STRConstraintWriter::visit(Symbolic::StringReplace* replace)
+void Z3STRConstraintWriter::visit(Symbolic::StringReplace* replace, void* args)
 {
     replace->getSource()->accept(this);
     if(!checkType(Symbolic::STRING)){
@@ -383,7 +383,7 @@ void Z3STRConstraintWriter::visit(Symbolic::StringReplace* replace)
     mExpressionType = Symbolic::STRING;
 }
 
-void Z3STRConstraintWriter::visit(Symbolic::StringLength* stringlength)
+void Z3STRConstraintWriter::visit(Symbolic::StringLength* stringlength, void* args)
 {
     stringlength->getString()->accept(this);
     if(!checkType(Symbolic::STRING)){

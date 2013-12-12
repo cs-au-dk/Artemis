@@ -34,6 +34,11 @@ void BooleanCoercion::accept(Visitor* visitor)
 	visitor->visit(this); 	
 }
 
+void BooleanCoercion::accept(Visitor* visitor, void* arg) 
+{
+	visitor->visit(this, arg); 	
+}
+
 }
 
 #endif

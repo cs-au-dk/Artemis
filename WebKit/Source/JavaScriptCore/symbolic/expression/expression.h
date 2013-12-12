@@ -31,6 +31,7 @@ class Expression
 {
 public:
     virtual void accept(Visitor* visitor) = 0;
+    virtual void accept(Visitor* visitor, void* arg) = 0;
 };
 
 }

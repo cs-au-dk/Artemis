@@ -53,21 +53,21 @@ public:
 
 private:
 
-    void visit(Symbolic::SymbolicInteger* symbolicinteger);
-    void visit(Symbolic::ConstantInteger* constantinteger);
-    void visit(Symbolic::IntegerBinaryOperation* integerbinaryoperation);
-    void visit(Symbolic::IntegerCoercion* integercoercion);
-    void visit(Symbolic::SymbolicString* symbolicstring);
-    void visit(Symbolic::ConstantString* constantstring);
-    void visit(Symbolic::StringBinaryOperation* stringbinaryoperation);
-    void visit(Symbolic::StringCoercion* stringcoercion);
-    void visit(Symbolic::StringRegexReplace* stringregexreplace);
-    void visit(Symbolic::StringReplace* stringreplace);
-    void visit(Symbolic::SymbolicBoolean* symbolicboolean);
-    void visit(Symbolic::ConstantBoolean* constantboolean);
-    void visit(Symbolic::BooleanCoercion* booleancoercion);
-    void visit(Symbolic::BooleanBinaryOperation* booleanbinaryoperation);
-    void visit(Symbolic::StringLength* stringlength);
+    void visit(Symbolic::SymbolicInteger* symbolicinteger, void* args);
+    void visit(Symbolic::ConstantInteger* constantinteger, void* args);
+    void visit(Symbolic::IntegerBinaryOperation* integerbinaryoperation, void* args);
+    void visit(Symbolic::IntegerCoercion* integercoercion, void* args);
+    void visit(Symbolic::SymbolicString* symbolicstring, void* args);
+    void visit(Symbolic::ConstantString* constantstring, void* args);
+    void visit(Symbolic::StringBinaryOperation* stringbinaryoperation, void* args);
+    void visit(Symbolic::StringCoercion* stringcoercion, void* args);
+    void visit(Symbolic::StringRegexReplace* stringregexreplace, void* args);
+    void visit(Symbolic::StringReplace* stringreplace, void* args);
+    void visit(Symbolic::SymbolicBoolean* symbolicboolean, void* args);
+    void visit(Symbolic::ConstantBoolean* constantboolean, void* args);
+    void visit(Symbolic::BooleanCoercion* booleancoercion, void* args);
+    void visit(Symbolic::BooleanBinaryOperation* booleanbinaryoperation, void* args);
+    void visit(Symbolic::StringLength* stringlength, void* args);
 
     /**
      * Kaluza does not support mixing constraints on strings,

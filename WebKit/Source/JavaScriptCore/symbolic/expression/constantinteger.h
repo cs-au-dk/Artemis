@@ -34,6 +34,7 @@ class ConstantInteger : public IntegerExpression
 public:
     explicit ConstantInteger(double value);
     void accept(Visitor* visitor);
+    void accept(Visitor* visitor, void* arg);
 
 	inline double getValue() {
 		return m_value;

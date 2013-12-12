@@ -35,6 +35,7 @@ class IntegerCoercion : public IntegerExpression
 public:
     explicit IntegerCoercion(Expression* expression);
     void accept(Visitor* visitor);
+    void accept(Visitor* visitor, void* arg);
 
 	inline Expression* getExpression() {
 		return m_expression;

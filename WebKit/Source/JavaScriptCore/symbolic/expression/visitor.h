@@ -51,20 +51,35 @@ class Visitor
 
 public:
     virtual void visit(SymbolicInteger* symbolicinteger) = 0;
+    virtual void visit(SymbolicInteger* symbolicinteger, void* arg) = 0;
     virtual void visit(ConstantInteger* constantinteger) = 0;
+    virtual void visit(ConstantInteger* constantinteger, void* arg) = 0;
     virtual void visit(IntegerBinaryOperation* integerbinaryoperation) = 0;
+    virtual void visit(IntegerBinaryOperation* integerbinaryoperation, void* arg) = 0;
     virtual void visit(IntegerCoercion* integercoercion) = 0;
+    virtual void visit(IntegerCoercion* integercoercion, void* arg) = 0;
     virtual void visit(SymbolicString* symbolicstring) = 0;
+    virtual void visit(SymbolicString* symbolicstring, void* arg) = 0;
     virtual void visit(ConstantString* constantstring) = 0;
+    virtual void visit(ConstantString* constantstring, void* arg) = 0;
     virtual void visit(StringBinaryOperation* stringbinaryoperation) = 0;
+    virtual void visit(StringBinaryOperation* stringbinaryoperation, void* arg) = 0;
     virtual void visit(StringCoercion* stringcoercion) = 0;
+    virtual void visit(StringCoercion* stringcoercion, void* arg) = 0;
     virtual void visit(StringLength* stringlength) = 0;
+    virtual void visit(StringLength* stringlength, void* arg) = 0;
     virtual void visit(StringReplace* stringreplace) = 0;
+    virtual void visit(StringReplace* stringreplace, void* arg) = 0;
     virtual void visit(StringRegexReplace* stringregexreplace) = 0;
+    virtual void visit(StringRegexReplace* stringregexreplace, void* arg) = 0;
     virtual void visit(SymbolicBoolean* symbolicboolean) = 0;
+    virtual void visit(SymbolicBoolean* symbolicboolean, void* arg) = 0;
     virtual void visit(ConstantBoolean* constantboolean) = 0;
+    virtual void visit(ConstantBoolean* constantboolean, void* arg) = 0;
     virtual void visit(BooleanCoercion* booleancoercion) = 0;
+    virtual void visit(BooleanCoercion* booleancoercion, void* arg) = 0;
     virtual void visit(BooleanBinaryOperation* booleanbinaryoperation) = 0;
+    virtual void visit(BooleanBinaryOperation* booleanbinaryoperation, void* arg) = 0;
 
 };
 

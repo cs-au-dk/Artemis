@@ -42,6 +42,7 @@ class BooleanBinaryOperation : public BooleanExpression
 public:
     explicit BooleanBinaryOperation(BooleanExpression* lhs, BooleanBinaryOp op, BooleanExpression* rhs);
     void accept(Visitor* visitor);
+    void accept(Visitor* visitor, void* arg);
 
 	inline BooleanExpression* getLhs() {
 		return m_lhs;

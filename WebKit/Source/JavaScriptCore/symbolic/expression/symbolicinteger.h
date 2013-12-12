@@ -35,6 +35,7 @@ class SymbolicInteger : public IntegerExpression
 public:
     explicit SymbolicInteger(SymbolicSource source);
     void accept(Visitor* visitor);
+    void accept(Visitor* visitor, void* arg);
 
 	inline SymbolicSource getSource() {
 		return m_source;

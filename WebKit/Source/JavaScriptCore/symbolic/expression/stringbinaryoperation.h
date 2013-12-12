@@ -42,6 +42,7 @@ class StringBinaryOperation : public StringExpression
 public:
     explicit StringBinaryOperation(StringExpression* lhs, StringBinaryOp op, StringExpression* rhs);
     void accept(Visitor* visitor);
+    void accept(Visitor* visitor, void* arg);
 
 	inline StringExpression* getLhs() {
 		return m_lhs;

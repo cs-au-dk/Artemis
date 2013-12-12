@@ -74,12 +74,12 @@ bool KaluzaConstraintWriter::write(PathConditionPtr pathCondition, std::string o
     return true;
 }
 
-void KaluzaConstraintWriter::visit(Symbolic::SymbolicInteger* symbolicinteger)
+void KaluzaConstraintWriter::visit(Symbolic::SymbolicInteger* symbolicinteger, void* args)
 {
     mIdentifierStore = symbolicinteger->getSource().getIdentifier();
 }
 
-void KaluzaConstraintWriter::visit(Symbolic::ConstantInteger* constantinteger)
+void KaluzaConstraintWriter::visit(Symbolic::ConstantInteger* constantinteger, void* args)
 {
     std::ostringstream strs;
     strs << constantinteger->getValue();
@@ -87,7 +87,7 @@ void KaluzaConstraintWriter::visit(Symbolic::ConstantInteger* constantinteger)
     mIdentifierStore = strs.str();
 }
 
-void KaluzaConstraintWriter::visit(Symbolic::IntegerBinaryOperation* integerbinaryoperation)
+void KaluzaConstraintWriter::visit(Symbolic::IntegerBinaryOperation* integerbinaryoperation, void* args)
 {
     integerbinaryoperation->getLhs()->accept(this);
     std::string lhs = mIdentifierStore;
@@ -108,24 +108,24 @@ void KaluzaConstraintWriter::visit(Symbolic::IntegerBinaryOperation* integerbina
     mOutput << mIdentifierStore << " := " << lhs << " " << opToString(integerbinaryoperation->getOp()) << " " << rhs << ";\n";
 }
 
-void KaluzaConstraintWriter::visit(Symbolic::IntegerCoercion* integercoercion)
+void KaluzaConstraintWriter::visit(Symbolic::IntegerCoercion* integercoercion, void* args)
 {
     integercoercion->getExpression()->accept(this);
 }
 
-void KaluzaConstraintWriter::visit(Symbolic::SymbolicString* symbolicstring)
+void KaluzaConstraintWriter::visit(Symbolic::SymbolicString* symbolicstring, void* args)
 {
     mIdentifierStore = symbolicstring->getSource().getIdentifier();
 }
 
-void KaluzaConstraintWriter::visit(Symbolic::ConstantString* constantstring)
+void KaluzaConstraintWriter::visit(Symbolic::ConstantString* constantstring, void* args)
 {
     std::ostringstream strs;
     strs << "\"" << *constantstring->getValue() << "\"";
     mIdentifierStore = strs.str();
 }
 
-void KaluzaConstraintWriter::visit(Symbolic::StringBinaryOperation* stringbinaryoperation)
+void KaluzaConstraintWriter::visit(Symbolic::StringBinaryOperation* stringbinaryoperation, void* args)
 {
     stringbinaryoperation->getLhs()->accept(this);
     std::string lhs = mIdentifierStore;
@@ -146,41 +146,41 @@ void KaluzaConstraintWriter::visit(Symbolic::StringBinaryOperation* stringbinary
     mOutput << mIdentifierStore << " := " << lhs << " " << opToString(stringbinaryoperation->getOp()) << " " << rhs << ";\n";
 }
 
-void KaluzaConstraintWriter::visit(Symbolic::StringRegexReplace*)
+void KaluzaConstraintWriter::visit(Symbolic::StringRegexReplace*, void* args)
 {
     mError = true;
     mErrorReason = "Regex constraints not supported";
     mIdentifierStore = "ERROR";
 }
 
-void KaluzaConstraintWriter::visit(Symbolic::StringReplace*)
+void KaluzaConstraintWriter::visit(Symbolic::StringReplace*, void* args)
 {
     mError = true;
     mErrorReason = "String replace constraints not supported";
     mIdentifierStore = "ERROR";
 }
 
-void KaluzaConstraintWriter::visit(Symbolic::StringCoercion* stringcoercion)
+void KaluzaConstraintWriter::visit(Symbolic::StringCoercion* stringcoercion, void* args)
 {
     stringcoercion->getExpression()->accept(this);
 }
 
-void KaluzaConstraintWriter::visit(Symbolic::SymbolicBoolean* symbolicboolean)
+void KaluzaConstraintWriter::visit(Symbolic::SymbolicBoolean* symbolicboolean, void* args)
 {
     mIdentifierStore = symbolicboolean->getSource().getIdentifier();
 }
 
-void KaluzaConstraintWriter::visit(Symbolic::ConstantBoolean* constantboolean)
+void KaluzaConstraintWriter::visit(Symbolic::ConstantBoolean* constantboolean, void* args)
 {
     mIdentifierStore = constantboolean->getValue() == true ? "true" : "false";
 }
 
-void KaluzaConstraintWriter::visit(Symbolic::BooleanCoercion* booleancoercion)
+void KaluzaConstraintWriter::visit(Symbolic::BooleanCoercion* booleancoercion, void* args)
 {
     booleancoercion->getExpression()->accept(this);
 }
 
-void KaluzaConstraintWriter::visit(Symbolic::BooleanBinaryOperation* booleanbinaryoperation)
+void KaluzaConstraintWriter::visit(Symbolic::BooleanBinaryOperation* booleanbinaryoperation, void* args)
 {
     booleanbinaryoperation->getLhs()->accept(this);
     std::string lhs = mIdentifierStore;
@@ -214,7 +214,7 @@ void KaluzaConstraintWriter::recordType(const std::string& identifier, Symbolic:
 
 }
 
-void KaluzaConstraintWriter::visit(Symbolic::StringLength* stringlength)
+void KaluzaConstraintWriter::visit(Symbolic::StringLength* stringlength, void* args)
 {
     mError = true;
     mErrorReason = "String length constraints not supported";

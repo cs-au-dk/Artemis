@@ -55,6 +55,11 @@ void IntegerBinaryOperation::accept(Visitor* visitor)
 	visitor->visit(this); 	
 }
 
+void IntegerBinaryOperation::accept(Visitor* visitor, void* arg) 
+{
+	visitor->visit(this, arg); 	
+}
+
 }
 
 #endif

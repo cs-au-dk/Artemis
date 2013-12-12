@@ -34,6 +34,7 @@ class ConstantBoolean : public BooleanExpression
 public:
     explicit ConstantBoolean(bool value);
     void accept(Visitor* visitor);
+    void accept(Visitor* visitor, void* arg);
 
 	inline bool getValue() {
 		return m_value;

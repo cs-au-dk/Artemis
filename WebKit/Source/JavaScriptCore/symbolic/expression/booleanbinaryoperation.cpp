@@ -55,6 +55,11 @@ void BooleanBinaryOperation::accept(Visitor* visitor)
 	visitor->visit(this); 	
 }
 
+void BooleanBinaryOperation::accept(Visitor* visitor, void* arg) 
+{
+	visitor->visit(this, arg); 	
+}
+
 }
 
 #endif

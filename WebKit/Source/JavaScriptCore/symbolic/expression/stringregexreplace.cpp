@@ -36,6 +36,11 @@ void StringRegexReplace::accept(Visitor* visitor)
 	visitor->visit(this); 	
 }
 
+void StringRegexReplace::accept(Visitor* visitor, void* arg) 
+{
+	visitor->visit(this, arg); 	
+}
+
 }
 
 #endif
