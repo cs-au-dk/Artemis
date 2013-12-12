@@ -52,7 +52,7 @@ StringBinaryOperation::StringBinaryOperation(StringExpression* lhs, StringBinary
 
 void StringBinaryOperation::accept(Visitor* visitor) 
 {
-	visitor->visit(this); 	
+	visitor->visit(this, NULL); 	
 }
 
 void StringBinaryOperation::accept(Visitor* visitor, void* arg) 

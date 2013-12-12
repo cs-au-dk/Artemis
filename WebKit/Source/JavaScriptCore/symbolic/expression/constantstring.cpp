@@ -31,7 +31,7 @@ ConstantString::ConstantString(std::string* value) :
 
 void ConstantString::accept(Visitor* visitor) 
 {
-	visitor->visit(this); 	
+	visitor->visit(this, NULL); 	
 }
 
 void ConstantString::accept(Visitor* visitor, void* arg) 

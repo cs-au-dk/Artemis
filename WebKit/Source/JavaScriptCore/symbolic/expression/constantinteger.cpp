@@ -31,7 +31,7 @@ ConstantInteger::ConstantInteger(double value) :
 
 void ConstantInteger::accept(Visitor* visitor) 
 {
-	visitor->visit(this); 	
+	visitor->visit(this, NULL); 	
 }
 
 void ConstantInteger::accept(Visitor* visitor, void* arg) 

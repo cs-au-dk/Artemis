@@ -31,7 +31,7 @@ BooleanCoercion::BooleanCoercion(Expression* expression) :
 
 void BooleanCoercion::accept(Visitor* visitor) 
 {
-	visitor->visit(this); 	
+	visitor->visit(this, NULL); 	
 }
 
 void BooleanCoercion::accept(Visitor* visitor, void* arg) 

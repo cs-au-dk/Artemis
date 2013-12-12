@@ -31,7 +31,7 @@ ConstantBoolean::ConstantBoolean(bool value) :
 
 void ConstantBoolean::accept(Visitor* visitor) 
 {
-	visitor->visit(this); 	
+	visitor->visit(this, NULL); 	
 }
 
 void ConstantBoolean::accept(Visitor* visitor, void* arg) 

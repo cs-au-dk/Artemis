@@ -240,7 +240,7 @@ Type opGetType(%s op)
 		fp.write("""
 void %s::accept(Visitor* visitor) 
 {
-	visitor->visit(this); 	
+	visitor->visit(this, NULL); 	
 }
 
 void %s::accept(Visitor* visitor, void* arg) 
@@ -309,7 +309,6 @@ public:
 
 		for object_ID in object_IDs:
 			name = object_ID.lower()
-			fp.write("    virtual void visit(%s* %s) = 0;\n" % (object_ID, name))
 			fp.write("    virtual void visit(%s* %s, void* arg) = 0;\n" % (object_ID, name))
 
 

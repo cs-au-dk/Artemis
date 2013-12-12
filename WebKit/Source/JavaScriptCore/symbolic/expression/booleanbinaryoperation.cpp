@@ -52,7 +52,7 @@ BooleanBinaryOperation::BooleanBinaryOperation(BooleanExpression* lhs, BooleanBi
 
 void BooleanBinaryOperation::accept(Visitor* visitor) 
 {
-	visitor->visit(this); 	
+	visitor->visit(this, NULL); 	
 }
 
 void BooleanBinaryOperation::accept(Visitor* visitor, void* arg) 

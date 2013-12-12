@@ -31,7 +31,7 @@ SymbolicInteger::SymbolicInteger(SymbolicSource source) :
 
 void SymbolicInteger::accept(Visitor* visitor) 
 {
-	visitor->visit(this); 	
+	visitor->visit(this, NULL); 	
 }
 
 void SymbolicInteger::accept(Visitor* visitor, void* arg) 
