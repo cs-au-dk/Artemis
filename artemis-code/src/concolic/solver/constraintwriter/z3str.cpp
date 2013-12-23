@@ -35,6 +35,19 @@
 namespace artemis
 {
 
+typedef struct CoercionPromise_t {
+
+    bool isCoerced;
+    Symbolic::Type coerceTo;
+
+    CoercionPromise_t(Symbolic::Type coerceTo)
+        : isCoerced(false)
+        , coerceTo(coerceTo)
+    {
+    }
+
+} CoercionPromise;
+
 Z3STRConstraintWriter::Z3STRConstraintWriter()
     : mExpressionType(Symbolic::TYPEERROR)
     , mError(false)
@@ -108,6 +121,25 @@ void Z3STRConstraintWriter::visit(Symbolic::SymbolicInteger* symbolicinteger, vo
 
 void Z3STRConstraintWriter::visit(Symbolic::SymbolicString* symbolicstring, void* args)
 {
+    // If we are coercing from an input (string) to an integer, then this is a special case.
+    // Instead of returning a symbolic string (which would raise an error) we just silently ignore the coercion and record
+    // the variable as an integer instead of a string.
+    if(args != NULL) {
+
+        CoercionPromise* promise = (CoercionPromise*)args;
+
+        if (promise->coerceTo == Symbolic::INT) {
+            promise->isCoerced = true;
+
+            recordAndEmitType(symbolicstring->getSource(), Symbolic::INT);
+            mExpressionBuffer = Z3STRConstraintWriter::encodeIdentifier(symbolicstring->getSource().getIdentifier());
+            mExpressionType = Symbolic::INT;
+
+            return;
+
+        }
+    }
+
     // Checks this symbolic value is of type STRING and raises an error otherwise.
     recordAndEmitType(symbolicstring->getSource(), Symbolic::STRING);
 
@@ -182,38 +214,32 @@ void Z3STRConstraintWriter::visit(Symbolic::ConstantBoolean* constantboolean, vo
 
 void Z3STRConstraintWriter::visit(Symbolic::IntegerCoercion* integercoercion, void* args)
 {
-    // If we are coercing from an input (string) to an integer, then this is a special case.
-    // Instead of calling coerceType() (which would raise an error) we just silently ignore the coercion and record
-    // the variable as an integer instead of a string.
-    Symbolic::Expression* coercedexpression = integercoercion->getExpression();
-    Symbolic::SymbolicString* symbolicstring = dynamic_cast<Symbolic::SymbolicString*>(coercedexpression);
-    if(symbolicstring){
-        // Instead of calling the visitor again on the child (which marks this input as a string), we handle it here
-        // and mark it as an integer directly, ignoring the coercion.
-        recordAndEmitType(symbolicstring->getSource(), Symbolic::INT);
-        mExpressionBuffer = Z3STRConstraintWriter::encodeIdentifier(symbolicstring->getSource().getIdentifier());
-        mExpressionType = Symbolic::INT;
+    CoercionPromise promise(Symbolic::INT);
+    integercoercion->getExpression()->accept(this, &promise);
 
-        return;
+    if (!promise.isCoerced) {
+        coercetype(mExpressionType, Symbolic::INT, mExpressionBuffer); // Sets mExpressionBuffer and Type.
     }
-
-    integercoercion->getExpression()->accept(this);
-
-    coercetype(mExpressionType, Symbolic::INT, mExpressionBuffer); // Sets mExpressionBuffer and Type.
 }
 
 void Z3STRConstraintWriter::visit(Symbolic::StringCoercion* stringcoercion, void* args)
 {
+    CoercionPromise promise(Symbolic::STRING);
     stringcoercion->getExpression()->accept(this);
 
-    coercetype(mExpressionType, Symbolic::STRING, mExpressionBuffer); // Sets mExpressionBuffer and Type.
+    if (!promise.isCoerced) {
+        coercetype(mExpressionType, Symbolic::STRING, mExpressionBuffer); // Sets mExpressionBuffer and Type.
+    }
 }
 
 void Z3STRConstraintWriter::visit(Symbolic::BooleanCoercion* booleancoercion, void* args)
 {
+    CoercionPromise promise(Symbolic::BOOL);
     booleancoercion->getExpression()->accept(this);
 
-    coercetype(mExpressionType, Symbolic::BOOL, mExpressionBuffer); // Sets mExpressionBuffer and Type.
+    if (!promise.isCoerced) {
+        coercetype(mExpressionType, Symbolic::BOOL, mExpressionBuffer); // Sets mExpressionBuffer and Type.
+    }
 }
 
 
@@ -337,22 +363,27 @@ void Z3STRConstraintWriter::visit(Symbolic::StringRegexReplace* regex, void* arg
 
         if (replaceSpaces || replaceNewlines) {
 
-            regex->getSource()->accept(this);
-            if(!checkType(Symbolic::STRING)){
-                error("String regex operation on non-string");
-                return;
-            }
+            regex->getSource()->accept(this, args); // send args through, allow local coercions
 
-            if(replaceSpaces){
-                mOutput << "(assert (= (Contains " << mExpressionBuffer << " \" \") false))\n";
-                mConstriantLog << "(assert (= (Contains " << mExpressionBuffer << " \" \") false))\n";
-            }
+            // You could use the following block to prevent certain characters to be used,
+            // but this would be problematic wrt. possible coercions, so we just ignore these filtering regexes.
+
+            //if(!checkType(Symbolic::STRING)){
+            //    error("String regex operation on non-string");
+            //    return;
+            //}
+            //
+            //if(replaceSpaces){
+            //    mOutput << "(assert (= (Contains " << mExpressionBuffer << " \" \") false))\n";
+            //    mConstriantLog << "(assert (= (Contains " << mExpressionBuffer << " \" \") false))\n";
+            //}
 
             // In fact the solver currently cannot return results which contain newlines,
             // so we can completely ignore the case of replaceNewlines.
 
-            mExpressionBuffer = mExpressionBuffer; // to be explicit, we just let the parent buffer flow down
-            mExpressionType = Symbolic::STRING;
+            // to be explicit, we just let the parent buffer flow down
+            mExpressionBuffer = mExpressionBuffer;
+            mExpressionType = mExpressionType;
 
             statistics()->accumulate("Concolic::Solver::RegexSuccessfullyTranslated", 1);
 
