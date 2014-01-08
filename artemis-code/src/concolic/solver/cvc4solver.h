@@ -14,33 +14,28 @@
  * limitations under the License.
  */
 
-#ifndef Z3STR_H
-#define Z3STR_H
+#ifndef CVC4SOLVER_H
+#define CVC4SOLVER_H
 
-#include <fstream>
-#include <map>
-
-#include <QSharedPointer>
-
-#include "JavaScriptCore/symbolic/expr.h"
-#include "JavaScriptCore/symbolic/expression/visitor.h"
-
-#include "smt.h"
-#include "abstract.h"
+#include "solver.h"
 
 namespace artemis
 {
 
-class Z3STRConstraintWriter : public SMTConstraintWriter
+/*
+ *  Generic symbolic constrint solver interface.
+ */
+
+class CVC4Solver : public Solver
 {
 public:
 
-    Z3STRConstraintWriter();
+    CVC4Solver();
+
+    SolutionPtr solve(PathConditionPtr pc);
 
 };
 
-typedef QSharedPointer<Z3STRConstraintWriter> Z3STRConstraintWriterPtr;
-
 }
 
-#endif // Z3STR_H
+#endif // CVC4SOLVER_H

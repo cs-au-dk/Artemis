@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef Z3STR_H
-#define Z3STR_H
+#ifndef CVC4_H
+#define CVC4_H
 
 #include <fstream>
 #include <map>
@@ -31,15 +31,15 @@
 namespace artemis
 {
 
-class Z3STRConstraintWriter : public SMTConstraintWriter
+class CVC4ConstraintWriter : public SMTConstraintWriter
 {
 public:
 
-    Z3STRConstraintWriter();
+    CVC4ConstraintWriter();
 
 };
 
-typedef QSharedPointer<Z3STRConstraintWriter> Z3STRConstraintWriterPtr;
+typedef QSharedPointer<CVC4ConstraintWriter> CVC4ConstraintWriterPtr;
 
 }
 

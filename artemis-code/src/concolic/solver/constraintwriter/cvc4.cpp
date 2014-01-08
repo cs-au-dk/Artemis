@@ -14,33 +14,28 @@
  * limitations under the License.
  */
 
-#ifndef Z3STR_H
-#define Z3STR_H
+#include <assert.h>
+#include <cstdlib>
+#include <iostream>
+#include <ostream>
+#include <sstream>
+#include <cstdlib>
+#include <math.h>
 
-#include <fstream>
-#include <map>
+#include <QDebug>
+#include <QDateTime>
 
-#include <QSharedPointer>
+#include "util/loggingutil.h"
+#include "statistics/statsstorage.h"
 
-#include "JavaScriptCore/symbolic/expr.h"
-#include "JavaScriptCore/symbolic/expression/visitor.h"
-
-#include "smt.h"
-#include "abstract.h"
+#include "cvc4.h"
 
 namespace artemis
 {
 
-class Z3STRConstraintWriter : public SMTConstraintWriter
+CVC4ConstraintWriter::CVC4ConstraintWriter()
+    : SMTConstraintWriter()
 {
-public:
-
-    Z3STRConstraintWriter();
-
-};
-
-typedef QSharedPointer<Z3STRConstraintWriter> Z3STRConstraintWriterPtr;
-
 }
 
-#endif // Z3STR_H
+}
