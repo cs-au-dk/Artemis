@@ -72,7 +72,7 @@ typedef struct OptionsType {
         reportPathTrace(NO_TRACES),
         concolicTreeOutput(TREE_FINAL),
         concolicTreeOutputOverview(false),
-        solver(Z3STR),
+        solver(CVC4),
         reportHeap(NO_CALLS),
         heapReportFactor(1)
     {}

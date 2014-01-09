@@ -33,6 +33,7 @@ This software includes components from:
 * Google Mock (https://code.google.com/p/googlemock/)
 * Z3 (http://z3.codeplex.com/)
 * Z3-str (http://www.cs.purdue.edu/homes/zheng16/str/)
+* CVC4 (http://cvc4.cs.nyu.edu/)
 
 Installation 
 ------------

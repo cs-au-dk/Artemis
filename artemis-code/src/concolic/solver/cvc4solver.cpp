@@ -57,8 +57,26 @@ SolutionPtr CVC4Solver::solve(PathConditionPtr pc)
 
     // TODO we could use the direct C++ solver interface and omit the system calls and file read/write
 
+    char* artemisdir;
+    artemisdir = std::getenv("ARTEMISDIR");
+
+    if (artemisdir == NULL) {
+        qDebug() << "Warning, ARTEMISDIR environment variable not set!";
+        constraintLog << "Not running due to ARTEMISDIR environmaent variable not being set." << std::endl << std::endl;
+        return SolutionPtr(new Solution(false, false));
+    }
+
+    QDir solverpath = QDir(QString(artemisdir));
+    QString exec = "cvc4-1.3-x86_64-linux-opt";
+
+    if (!solverpath.cd("contrib") || !solverpath.cd("CVC4") || !solverpath.exists(exec)) {
+        qDebug() << "Warning, could not find " << exec;;
+        constraintLog << "Could not find " << exec.toStdString() << std::endl << std::endl;
+        return SolutionPtr(new Solution(false, false));
+    }
+
     // --rewrite-divk enables div and mod by a constant factor
-    std::string cmd = "cvc4 --lang=smtlib2 /tmp/cvc4input --rewrite-divk > /tmp/cvc4result";
+    std::string cmd = solverpath.filePath(exec).toStdString() + " --lang=smtlib2 /tmp/cvc4input --rewrite-divk > /tmp/cvc4result";
     int result = std::system(cmd.data());
 
     if (result != 0) {
