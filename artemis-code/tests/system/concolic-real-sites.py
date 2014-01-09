@@ -114,6 +114,7 @@ def test_generator(site_name, site_url, site_ep, dry_run=False, logger=None, ver
                                      iterations=0,
                                      major_mode='concolic',
                                      concolic_tree_output='final-overview',
+                                     verbosity='info',
                                      concolic_button=(None if site_ep.lower() == 'auto' else site_ep),
                                      dryrun=dry_run,
                                      output_parent_dir=test_dir,

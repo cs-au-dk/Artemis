@@ -75,13 +75,15 @@ void ConcolicRuntime::run(const QUrl& url)
 
     constraintLog.close();
 
+    Log::info(QString("Concolic analysis of %1").arg(url.toString()).toStdString());
+
     preConcreteExecution();
 }
 
 void ConcolicRuntime::preConcreteExecution()
 {
     if (mOptions.iterationLimit > 0 && mOptions.iterationLimit <= mNumIterations) {
-        Log::debug("Iteration limit reached");
+        Log::info("Iteration limit reached");
         mNextConfiguration.clear();
     }
 
@@ -93,11 +95,14 @@ void ConcolicRuntime::preConcreteExecution()
 
     if(mRunningFirstLoad){
         Log::debug("\n========== First-Load-Iteration =========");
+        Log::info("Iteration 0: Form-field and entry-point finding");
     }else{
         if(mRunningWithInitialValues){
             Log::debug("\n=========== Initial-Iteration ===========");
+            Log::info("Iteration 1: Submit with default values");
         }else{
             Log::debug("\n============= New-Iteration =============");
+            Log::info(QString("Iteration %1:").arg(mNumIterations+1).toStdString());
         }
     }
     Log::debug("--------------- COVERAGE ----------------\n");
@@ -202,9 +207,12 @@ void ConcolicRuntime::postInitialConcreteExecution(QSharedPointer<ExecutionResul
 
     // Print the form fields found on the page.
     Log::debug("Form fields found:");
+    QStringList fieldNames;
     foreach(QSharedPointer<const FormFieldDescriptor> field, mFormFields){
         Log::debug(field->getDomElement()->toString().toStdString());
+        fieldNames.append(field->getDomElement()->toString());
     }
+    Log::info(QString("  Form fields: %1").arg(fieldNames.join(", ")).toStdString());
 
     // Create an "empty" form input which will inject noting into the page.
     QList<FormInputPair > inputs;
@@ -226,16 +234,20 @@ void ConcolicRuntime::postInitialConcreteExecution(QSharedPointer<ExecutionResul
 
         if(mEntryPointEvent){
             Log::debug(QString("Chose entry point %1").arg(mEntryPointEvent->toString()).toStdString());
+            Log::info(QString("  Entry point: %1").arg(mEntryPointEvent->toString()).toStdString());
 
         }else{
             Log::debug("\n========== No Entry Points ==========");
             Log::debug("Could not find any suitable entry point for the analysis on this page. Exiting.");
+            Log::info("No entry points detected.");
 
             mWebkitExecutor->detach();
             done();
             return;
         }
 
+    }else{
+        Log::info(QString("  Entry point: %1").arg(mManualEntryPointXPath).toStdString());
     }
 
     // Create the new event sequence and set mNextConfiguration.
@@ -255,13 +267,13 @@ void ConcolicRuntime::mergeTraceIntoTree()
 
     switch(mTraceClassifier.classify(trace)){
     case SUCCESS:
-        Log::debug("Recoreded trace was classified as a SUCCESS.");
+        Log::info("  Recorded trace was classified as a SUCCESS.");
         break;
     case FAILURE:
-        Log::debug("Recoreded trace was classified as a FAILURE.");
+        Log::info("  Recorded trace was classified as a FAILURE.");
         break;
     default:
-        Log::debug("Recoreded trace was classified as UNKNOWN.");
+        Log::info("  Recorded trace was classified as UNKNOWN.");
     }
 
 
@@ -284,6 +296,7 @@ void ConcolicRuntime::mergeTraceIntoTree()
         // Check if we actually explored the intended target.
         if(mSearchStrategy->overUnexploredNode()){
             mSearchStrategy->markNodeMissed();
+            Log::info("  Recorded trace did not take the expected path.");
         }else{
             statistics()->accumulate("Concolic::ExecutionTree::DistinctTracesExplored", 1);
         }
@@ -304,24 +317,24 @@ void ConcolicRuntime::printSolution(SolutionPtr solution, QStringList varList)
         if(value.found){
             switch (value.kind) {
             case Symbolic::INT:
-                Log::debug(QString("%1 = %2").arg(var).arg(value.u.integer).toStdString());
+                Log::info(QString("    %1 = %2").arg(var).arg(value.u.integer).toStdString());
                 break;
             case Symbolic::BOOL:
-                Log::debug(QString("%1 = %2").arg(var).arg(value.u.boolean ? "true" : "false").toStdString());
+                Log::info(QString("    %1 = %2").arg(var).arg(value.u.boolean ? "true" : "false").toStdString());
                 break;
             case Symbolic::STRING:
                 if(value.string.empty()){
-                    Log::debug(QString("%1 = \"\"").arg(var).toStdString());
+                    Log::info(QString("    %1 = \"\"").arg(var).toStdString());
                 }else{
-                    Log::debug(QString("%1 = %2").arg(var).arg(value.string.c_str()).toStdString());
+                    Log::info(QString("    %1 = %2").arg(var).arg(value.string.c_str()).toStdString());
                 }
                 break;
             default:
-                Log::info(QString("Unimplemented value type encountered for variable %1 (%2)").arg(var).arg(value.kind).toStdString());
+                Log::fatal(QString("Unimplemented value type encountered for variable %1 (%2)").arg(var).arg(value.kind).toStdString());
                 exit(1);
             }
         }else{
-            Log::info(QString("Error: Could not find value for %1 in the solver's solution.").arg(var).toStdString());
+            Log::fatal(QString("Error: Could not find value for %1 in the solver's solution.").arg(var).toStdString());
             exit(1);
         }
     }
@@ -431,8 +444,10 @@ void ConcolicRuntime::exploreNextTarget()
 {
     PathConditionPtr target = mSearchStrategy->getTargetPC();
 
-    Log::debug("Target is: ");
-    Log::debug(target->toStatisticsValuesString());
+    Log::info("  Next target:");
+    QString targetString = QString("    ") + QString::fromStdString(target->toStatisticsValuesString()).trimmed();
+    targetString.replace('\n', "\n    ");
+    Log::info(targetString.toStdString());
 
     // Get (and print) the list of free variables in the target PC.
     QMap<QString, Symbolic::SourceIdentifierMethod> freeVariables = target->freeVariables();
@@ -446,7 +461,8 @@ void ConcolicRuntime::exploreNextTarget()
     SolutionPtr solution = solver.solve(target);
 
     if(solution->isSolved()) {
-        Log::debug("Solved the target Pc:");
+        Log::debug("Solved the target PC:");
+        Log::info("  Next injection:");
 
         // Print this solution
         printSolution(solution, varList);
@@ -467,8 +483,11 @@ void ConcolicRuntime::exploreNextTarget()
         // If it was solved but unsatisfiable, then mark it as UNSAT instead.
         if(solution->isUnsat()){
             mSearchStrategy->markNodeUnsat();
+            Log::info("  Constraint is UNSAT.");
         }else{
             mSearchStrategy->markNodeUnsolvable();
+            Log::info("  Could not solve constraint:");
+            Log::info(QString("    %1").arg(solution->getUnsolvableReason()).toStdString());
         }
 
         // Dump the current state of the tree to a file.
@@ -497,7 +516,7 @@ void ConcolicRuntime::chooseNextTargetAndExplore()
         mSearchPasses--;
 
         Log::debug("\n============= Finished DFS ==============");
-        Log::debug("Finished this pass of the tree. Increasing depth limit and restarting.");
+        Log::info("Finished this pass of the tree. Increasing depth limit and restarting.");
 
         mSearchStrategy->setDepthLimit(mSearchStrategy->getDepthLimit() + 5);
         mSearchStrategy->restartSearch();
@@ -505,7 +524,7 @@ void ConcolicRuntime::chooseNextTargetAndExplore()
 
     }else{
         Log::debug("\n============= Finished DFS ==============");
-        Log::debug("Finished serach of the tree.");
+        Log::info("Finished serach of the tree.");
 
         if(mOptions.concolicTreeOutput == TREE_FINAL){
             // "Fake" the counter for graph output, as this will be the only one we create.

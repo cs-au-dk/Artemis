@@ -61,8 +61,7 @@ public:
     void restartSearch();
 
     // When over an unexplored node, we may mark it as "attempted but failed to explore".
-    // This can be used in later "passes" of the search to avoid wasting time on unreachable nodes or guide the search intelligently.
-    // TODO: Currently it is not, and is only used in TraceDisplay to show the user what is going on.
+    // This can be used in later "passes" of the search to avoid wasting time on unreachable nodes.
     bool overUnexploredNode();
     void markNodeUnsat();
     void markNodeUnsolvable();

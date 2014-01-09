@@ -44,7 +44,7 @@ class Solution
 {
 
 public:
-    Solution(bool success, bool unsat);
+    Solution(bool success, bool unsat, QString unsolvableReason = "");
 
     bool isSolved() const;
     bool isUnsat() const;
@@ -53,10 +53,13 @@ public:
 
     void toStatistics();
 
+    QString getUnsolvableReason() { return mUnsolvableReason; }
+
 private:
     bool mSuccess;
     bool mUnsat;
     QHash<QString, Symbolvalue> mSymbols;
+    QString mUnsolvableReason; // Must be set whenever !mSuccess && !mUnsat.
 };
 
 typedef QSharedPointer<Solution> SolutionPtr;

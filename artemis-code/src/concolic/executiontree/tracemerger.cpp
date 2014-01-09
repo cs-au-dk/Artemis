@@ -17,6 +17,8 @@
 #include <stdlib.h>
 #include <QDebug>
 
+#include "util/loggingutil.h"
+
 #include "tracemerger.h"
 
 namespace artemis
@@ -61,6 +63,7 @@ void TraceMerger::visit(TraceEnd* node)
     if (!mCurrentTrace->isEqualShallow(mCurrentTree)) {
         qWarning() << "Warning, divergance discovered while merging a trace! (TraceEnd)";
         statistics()->accumulate("Concolic::ExecutionTree::DivergentMerges", 1);
+        Log::info("  Trace merge diverged from the tree (TraceEnd).");
     }
 }
 
@@ -124,6 +127,7 @@ void TraceMerger::visit(TraceBranch* node)
 
     qWarning() << "Warning, divergance discovered while merging a trace! (TraceBranch)";
     statistics()->accumulate("Concolic::ExecutionTree::DivergentMerges", 1);
+    Log::info("  Trace merge diverged from the tree (TraceBranch).");
 }
 
 void TraceMerger::visit(TraceAnnotation* node)
@@ -154,6 +158,7 @@ void TraceMerger::visit(TraceAnnotation* node)
 
     qWarning() << "Warning, divergance discovered while merging a trace! (TraceAnnotation)";
     statistics()->accumulate("Concolic::ExecutionTree::DivergentMerges", 1);
+    Log::info("  Trace merge diverged from the tree (TraceAnnotation).");
 }
 
 void TraceMerger::visit(TraceNode* node)

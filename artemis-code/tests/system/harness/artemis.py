@@ -29,6 +29,7 @@ def execute_artemis(execution_uuid, url, iterations=1,
                     dryrun=False,
                     output_parent_dir=OUTPUT_DIR,
                     catch_artemis_return_code=True,
+                    verbosity=None,
                     **kwargs):
     output_dir = os.path.join(output_parent_dir, execution_uuid)
 
@@ -50,6 +51,10 @@ def execute_artemis(execution_uuid, url, iterations=1,
     if coverage is not None:
         args.append('--coverage-report')
         args.append(coverage)
+    
+    if verbosity is not None:
+        args.append('-v')
+        args.append(verbosity)
 
     for key in kwargs:
         args.append('--%s' % key.replace('_', '-'))

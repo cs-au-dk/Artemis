@@ -48,7 +48,7 @@ SolutionPtr Z3Solver::solve(PathConditionPtr pc)
     if (!cw->write(pc, "/tmp/z3input")) {
         statistics()->accumulate("Concolic::Solver::ConstraintsNotWritten", 1);
         constraintLog << "Could not translate the PC into solver input." << std::endl << std::endl;
-        return SolutionPtr(new Solution(false, false));
+        return SolutionPtr(new Solution(false, false, "Could not translate the PC into solver input."));
     }
 
     statistics()->accumulate("Concolic::Solver::ConstraintsWritten", 1);
@@ -63,7 +63,7 @@ SolutionPtr Z3Solver::solve(PathConditionPtr pc)
     if (artemisdir == NULL) {
         qDebug() << "Warning, ARTEMISDIR environment variable not set!";
         constraintLog << "Not running due to ARTEMISDIR environmaent variable not being set." << std::endl << std::endl;
-        return SolutionPtr(new Solution(false, false));
+        return SolutionPtr(new Solution(false, false, "Could not run solver because ARTEMISDIR is not set."));
     }
 
     QDir solverpath = QDir(QString(artemisdir));
@@ -71,20 +71,22 @@ SolutionPtr Z3Solver::solve(PathConditionPtr pc)
     if (!solverpath.cd("contrib") || !solverpath.cd("Z3-str") || !solverpath.exists("Z3-str.py")) {
         qDebug() << "Warning, could not find Z3-str.py";
         constraintLog << "Could not find Z3-str.py." << std::endl << std::endl;
-        return SolutionPtr(new Solution(false, false));
+        return SolutionPtr(new Solution(false, false, "Could not find Z3-str.py."));
     }
 
     std::string cmd = solverpath.filePath("Z3-str.py").toStdString() + " /tmp/z3input > /tmp/z3result";
     int result = std::system(cmd.data());
 
     if (result != 0) {
+        QString error;
         if(result == -1){
-            constraintLog << "Call to std::system(Z3-str.py) failed with error " << errno << ": " << strerror(errno) << std::endl << std::endl;
+            error = QString("Call to std::system(Z3-str.py) failed with error %1: %2").arg(errno).arg(strerror(errno));
         }else{
-            constraintLog << "Call to Z3-str.py returned code " << result << "." << std::endl << std::endl;
+            error = QString("Call to Z3-str.py returned code %1").arg(result);
         }
+        constraintLog << error.toStdString() << std::endl << std::endl;
         statistics()->accumulate("Concolic::Solver::ConstraintsNotSolved", 1);
-        return SolutionPtr(new Solution(false, false));
+        return SolutionPtr(new Solution(false, false, error));
     }
 
     // 3. interpret the result
@@ -175,7 +177,7 @@ SolutionPtr Z3Solver::solve(PathConditionPtr pc)
     }else{
         statistics()->accumulate("Concolic::Solver::ConstraintsNotSolved", 1);
         constraintLog << "Could not read result file." << std::endl << std::endl;
-        return SolutionPtr(new Solution(false, false));
+        return SolutionPtr(new Solution(false, false, "Could not read result file."));
     }
 
     constraintLog << std::endl;
