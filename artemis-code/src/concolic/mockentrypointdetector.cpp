@@ -134,9 +134,9 @@ EventHandlerDescriptorConstPtr MockEntryPointDetector::choose(ExecutionResultPtr
     qDebug() << "URL: " << url;
     qDebug() << "Candidate EPs: " << allEntryPoints.length();
 
-    // If the site is not on the list, then this mock class does not support it, so return NULL.
-    // TODO, we should really not do this... could we throw an exception?
-    return EventHandlerDescriptorConstPtr();
+    // If the site is not on the list, then this mock class does not support it, just return something
+    // Most of our tests expect this behaviour
+    return allEntryPoints.at(0);
 
 }
 
