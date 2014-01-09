@@ -77,17 +77,7 @@ SolutionPtr CVC4Solver::solve(PathConditionPtr pc)
 
     // --rewrite-divk enables div and mod by a constant factor
     std::string cmd = solverpath.filePath(exec).toStdString() + " --lang=smtlib2 /tmp/cvc4input --rewrite-divk > /tmp/cvc4result";
-    int result = std::system(cmd.data());
-
-    if (result != 0) {
-        if(result == -1){
-            constraintLog << "Call to std::system(cvc4) failed with error " << errno << ": " << strerror(errno) << std::endl << std::endl;
-        }else{
-            constraintLog << "Call to cvc4 returned code " << result << "." << std::endl << std::endl;
-        }
-        statistics()->accumulate("Concolic::Solver::ConstraintsNotSolved", 1);
-        return SolutionPtr(new Solution(false, false));
-    }
+    std::system(cmd.data()); // result of command interpreted in step 3
 
     // 3. interpret the result
 
@@ -101,11 +91,28 @@ SolutionPtr CVC4Solver::solve(PathConditionPtr pc)
 
         std::getline(fp, line); // load sat line
 
-        if (line.compare("sat") != 0) {
+        if (line.compare("unsat") == 0 || line.compare("unknown") == 0) {
             // UNSAT
             statistics()->accumulate("Concolic::Solver::ConstraintsSolvedAsUNSAT", 1);
             constraintLog << "Solved as UNSAT." << std::endl << std::endl;
             return SolutionPtr(new Solution(false, true));
+        } else if (line.compare("sat") != 0) {
+            // ERROR, we can't use return types to detect errors, since an unsat result will result in an error code (because we try to access the model)
+            statistics()->accumulate("Concolic::Solver::ConstraintsNotSolved", 1);
+            constraintLog << "Error when solving following input file:" << std::endl << std::endl;
+
+            std::ifstream fp;
+            fp.open ("/tmp/cvc4input");
+            std::string line;
+            while (std::getline(fp, line)) {
+                constraintLog << line << std::endl;
+            }
+            fp.close();
+
+            constraintLog << std::endl;
+
+            return SolutionPtr(new Solution(false, false));
+
         }
 
         std::getline(fp, line); // discard model line
