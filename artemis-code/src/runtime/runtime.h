@@ -35,6 +35,8 @@
 #include "runtime/executableconfiguration.h"
 #include "runtime/appmodel.h"
 
+#include "concolic/solver/solver.h"
+
 namespace artemis
 {
 
@@ -50,6 +52,8 @@ public:
 
 protected:
     virtual void done();
+
+    SolverPtr getSolver(const Options& options);
 
     AppModelPtr mAppmodel;
     WebKitExecutor* mWebkitExecutor;

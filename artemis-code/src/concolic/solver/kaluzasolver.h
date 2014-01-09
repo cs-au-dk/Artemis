@@ -32,6 +32,8 @@ public:
 
 };
 
+typedef QSharedPointer<KaluzaSolver> KaluzaSolverPtr;
+
 }
 
 #endif // KALUZASOLVER_H

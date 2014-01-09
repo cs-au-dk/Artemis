@@ -19,7 +19,7 @@
 
 #include "util/loggingutil.h"
 #include "concolic/executiontree/tracemerger.h"
-#include "concolic/solver/z3solver.h"
+#include "concolic/solver/cvc4solver.h"
 #include "statistics/statsstorage.h"
 
 #include "concolicruntime.h"
@@ -442,8 +442,8 @@ void ConcolicRuntime::exploreNextTarget()
     Log::debug(varList.join(", ").toStdString());
 
     // Try to solve this PC to get some concrete input.
-    Z3Solver solver;
-    SolutionPtr solution = solver.solve(target);
+    SolverPtr solver = getSolver(mOptions);
+    SolutionPtr solution = solver->solve(target);
 
     if(solution->isSolved()) {
         Log::debug("Solved the target Pc:");

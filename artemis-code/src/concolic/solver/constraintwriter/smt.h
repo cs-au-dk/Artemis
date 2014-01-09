@@ -30,6 +30,19 @@
 namespace artemis
 {
 
+typedef struct CoercionPromise_t {
+
+    bool isCoerced;
+    Symbolic::Type coerceTo;
+
+    CoercionPromise_t(Symbolic::Type coerceTo)
+        : isCoerced(false)
+        , coerceTo(coerceTo)
+    {
+    }
+
+} CoercionPromise;
+
 /**
  * Visitor generating symbolic constraints for the
  * SMT solver Z3[1] with the Z3-str extension[2].
@@ -64,7 +77,7 @@ public:
     static std::string encodeIdentifier(const std::string&);
     static std::string decodeIdentifier(const std::string&);
 
-private:
+protected:
 
     /**
      * Invariants between each call to visit:
@@ -93,28 +106,34 @@ private:
      */
 
     // Returns integer values to mExpressionBuffer
-    void visit(Symbolic::SymbolicInteger* symbolicinteger, void* args);
-    void visit(Symbolic::ConstantInteger* constantinteger, void* args);
-    void visit(Symbolic::IntegerBinaryOperation* integerbinaryoperation, void* args);
-    void visit(Symbolic::IntegerCoercion* integercoercion, void* args);
-    void visit(Symbolic::StringLength* stringlength, void* args);
+    virtual void visit(Symbolic::SymbolicInteger* symbolicinteger, void* args);
+    virtual void visit(Symbolic::ConstantInteger* constantinteger, void* args);
+    virtual void visit(Symbolic::IntegerBinaryOperation* integerbinaryoperation, void* args);
+    virtual void visit(Symbolic::IntegerCoercion* integercoercion, void* args);
+    virtual void visit(Symbolic::StringLength* stringlength, void* args);
 
     // Returns string values to mExpressionBuffer
-    void visit(Symbolic::SymbolicString* symbolicstring, void* args);
-    void visit(Symbolic::ConstantString* constantstring, void* args);
-    void visit(Symbolic::StringBinaryOperation* stringbinaryoperation, void* args);
-    void visit(Symbolic::StringCoercion* stringcoercion, void* args);
-    void visit(Symbolic::StringRegexReplace* stringregexreplace, void* args);
-    void visit(Symbolic::StringReplace* stringreplace, void* args);
+    virtual void visit(Symbolic::SymbolicString* symbolicstring, void* args);
+    virtual void visit(Symbolic::ConstantString* constantstring, void* args);
+    virtual void visit(Symbolic::StringBinaryOperation* stringbinaryoperation, void* args);
+    virtual void visit(Symbolic::StringCoercion* stringcoercion, void* args);
+    virtual void visit(Symbolic::StringRegexReplace* stringregexreplace, void* args);
+    virtual void visit(Symbolic::StringReplace* stringreplace, void* args);
 
     // Returns boolean values to mExpressionBuffer
-    void visit(Symbolic::SymbolicBoolean* symbolicboolean, void* args);
-    void visit(Symbolic::ConstantBoolean* constantboolean, void* args);
-    void visit(Symbolic::BooleanCoercion* booleancoercion, void* args);
-    void visit(Symbolic::BooleanBinaryOperation* booleanbinaryoperation, void* args);
+    virtual void visit(Symbolic::SymbolicBoolean* symbolicboolean, void* args);
+    virtual void visit(Symbolic::ConstantBoolean* constantboolean, void* args);
+    virtual void visit(Symbolic::BooleanCoercion* booleancoercion, void* args);
+    virtual void visit(Symbolic::BooleanBinaryOperation* booleanbinaryoperation, void* args);
+
+    // Output writing
+    virtual void preVisitPathConditionsHook();
+    virtual void postVisitPathConditionsHook();
+
+    virtual std::string ifLabel();
 
     /**
-     * CVC4 does not support mixing constraints on strings,
+     * SMT does not support mixing constraints on strings,
      * bools and integers. Thus, we allow type coercions but
      * we only support one type of constraint to be applied
      * to any symbol.
@@ -142,7 +161,7 @@ private:
 
     void recordAndEmitType(const Symbolic::SymbolicSource&, Symbolic::Type type);
     void recordAndEmitType(const std::string&, Symbolic::Type type);
-    inline bool checkType(Symbolic::Type expected);
+    bool checkType(Symbolic::Type expected);
 
     void coercetype(Symbolic::Type from, Symbolic::Type to, std::string expression);
 

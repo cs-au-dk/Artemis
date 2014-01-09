@@ -53,6 +53,9 @@ enum HeapReport{
     ALL_CALLS, NAMED_CALLS, NO_CALLS
 };
 
+enum SMTSolver {
+    KALUZA, Z3STR, CVC4
+};
 
 typedef struct OptionsType {
 
@@ -69,6 +72,7 @@ typedef struct OptionsType {
         reportPathTrace(NO_TRACES),
         concolicTreeOutput(TREE_FINAL),
         concolicTreeOutputOverview(false),
+        solver(Z3STR),
         reportHeap(NO_CALLS),
         heapReportFactor(1)
     {}
@@ -99,6 +103,7 @@ typedef struct OptionsType {
     ConcolicTreeOutput concolicTreeOutput;
     bool concolicTreeOutputOverview;
     QString concolicEntryPoint;
+    SMTSolver solver;
 
     HeapReport reportHeap;
 

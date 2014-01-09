@@ -36,6 +36,8 @@ public:
 
 };
 
+typedef QSharedPointer<CVC4Solver> CVC4SolverPtr;
+
 }
 
 #endif // CVC4SOLVER_H

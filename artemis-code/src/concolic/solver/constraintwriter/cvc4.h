@@ -37,6 +37,18 @@ public:
 
     CVC4ConstraintWriter();
 
+protected:
+    virtual void visit(Symbolic::StringLength* stringlength, void* args);
+
+    virtual void visit(Symbolic::SymbolicString* symbolicstring, void* args);
+    virtual void visit(Symbolic::ConstantString* constantstring, void* args);
+    virtual void visit(Symbolic::StringBinaryOperation* stringbinaryoperation, void* args);
+    virtual void visit(Symbolic::StringCoercion* stringcoercion, void* args);
+    virtual void visit(Symbolic::StringRegexReplace* stringregexreplace, void* args);
+    virtual void visit(Symbolic::StringReplace* stringreplace, void* args);
+
+    virtual void preVisitPathConditionsHook();
+    virtual void postVisitPathConditionsHook();
 };
 
 typedef QSharedPointer<CVC4ConstraintWriter> CVC4ConstraintWriterPtr;
