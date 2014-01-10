@@ -445,7 +445,7 @@ void ConcolicRuntime::exploreNextTarget()
     PathConditionPtr target = mSearchStrategy->getTargetPC();
 
     Log::info("  Next target:");
-    QString targetString = QString("    ") + QString::fromStdString(target->toStatisticsValuesString()).trimmed();
+    QString targetString = QString("    ") + QString::fromStdString(target->toStatisticsValuesString(true)).trimmed();
     targetString.replace('\n', "\n    ");
     Log::info(targetString.toStdString());
 

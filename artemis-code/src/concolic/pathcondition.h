@@ -43,7 +43,7 @@ public:
     uint size();
 
     std::string toStatisticsString();
-    std::string toStatisticsValuesString();
+    std::string toStatisticsValuesString(bool includeBranching = false);
     QMap<QString, Symbolic::SourceIdentifierMethod> freeVariables();
 
     void visit(TraceNode* node);

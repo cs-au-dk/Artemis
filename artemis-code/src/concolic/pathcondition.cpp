@@ -128,7 +128,7 @@ std::string PathCondition::toStatisticsString()
     return sstrm.str();
 }
 
-std::string PathCondition::toStatisticsValuesString()
+std::string PathCondition::toStatisticsValuesString(bool includeBranching)
 {
     std::stringstream sstrm;
 
@@ -136,7 +136,11 @@ std::string PathCondition::toStatisticsValuesString()
         ExpressionValuePrinter printer;
         mConditions.at(i).first->accept(&printer);
 
-        sstrm << "PC[" << i << "]: " << printer.getResult() << std::endl;
+        if (includeBranching && !mConditions.at(i).second) {
+            sstrm << "PC[" << i << "]: (" << printer.getResult() << " == false)" << std::endl;
+        } else {
+            sstrm << "PC[" << i << "]: " << printer.getResult() << std::endl;
+        }
     }
 
     return sstrm.str();
