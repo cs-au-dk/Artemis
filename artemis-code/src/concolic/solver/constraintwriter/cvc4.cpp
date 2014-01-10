@@ -41,8 +41,23 @@ CVC4ConstraintWriter::CVC4ConstraintWriter()
 
 void CVC4ConstraintWriter::preVisitPathConditionsHook()
 {
-    mOutput << "(set-logic ALL_SUPPORTED)\n";
-    mOutput << "(set-option :produce-models true)\n";
+    mOutput << "(set-logic ALL_SUPPORTED)" << std::endl;
+    mOutput << "(set-option :produce-models true)" << std::endl << std::endl;
+    mOutput << "(define-fun str.contains ((?in String) (?s String)) Bool\n"
+               "    (exists ((?a String) (?b String))\n"
+               "        (= ?in (str.++ ?a ?s ?b)))\n"
+               ")\n"
+               "\n"
+               "(define-fun str.replace ((?x String) (?y String) (?s String) (?r String)) Bool\n"
+               "    (ite (str.contains ?x ?s)\n"
+               "         (or\n"
+               "             (and (= ?s ?r)\n"
+               "                  (= ?x ?y))\n"
+               "             (exists ((?a String) (?b String))\n"
+               "                 (and  (= ?s (str.++ ?a ?x ?b))\n"
+               "                 (= ?r (str.++ ?a ?y ?b)))))\n"
+               "         (= ?s ?r))\n"
+               ")" << std::endl << std::endl;
 }
 
 void CVC4ConstraintWriter::postVisitPathConditionsHook()
@@ -143,12 +158,67 @@ void CVC4ConstraintWriter::visit(Symbolic::StringCoercion* stringcoercion, void*
 
 void CVC4ConstraintWriter::visit(Symbolic::StringRegexReplace* regex, void* args)
 {
-    error("SYMBOLIC STRING REGEX REPLACE NOT SUPPORTED");
+    // special case input filtering (filters matching X and replacing with "")
+    if (regex->getReplace()->compare("") != std::string::npos) {
+
+        // right now, only support a very limited number of whitespace filters
+
+        bool replaceSpaces = regex->getRegexpattern()->compare("/ /g") != std::string::npos ||
+                regex->getRegexpattern()->compare("/ /") != std::string::npos;
+        bool replaceNewlines = regex->getRegexpattern()->compare("/\\n/g") != std::string::npos ||
+                regex->getRegexpattern()->compare("/\\r/") != std::string::npos ||
+                regex->getRegexpattern()->compare("/\\r\\n/") != std::string::npos;
+
+        if (replaceSpaces || replaceNewlines) {
+
+            regex->getSource()->accept(this, args); // send args through, allow local coercions
+
+            // You could use the following block to prevent certain characters to be used,
+            // but this would be problematic wrt. possible coercions, so we just ignore these filtering regexes.
+
+            //if(!checkType(Symbolic::STRING)){
+            //    error("String regex operation on non-string");
+            //    return;
+            //}
+            //
+            //if(replaceSpaces){
+            //    mOutput << "(assert (= (Contains " << mExpressionBuffer << " \" \") false))\n";
+            //    mConstriantLog << "(assert (= (Contains " << mExpressionBuffer << " \" \") false))\n";
+            //}
+
+            // In fact the solver currently cannot return results which contain newlines,
+            // so we can completely ignore the case of replaceNewlines.
+
+            // to be explicit, we just let the parent buffer flow down
+            mExpressionBuffer = mExpressionBuffer;
+            mExpressionType = mExpressionType;
+
+            statistics()->accumulate("Concolic::Solver::RegexSuccessfullyTranslated", 1);
+
+            return;
+        }
+
+    }
+
+
+    statistics()->accumulate("Concolic::Solver::RegexNotTranslated", 1);
+    error("Regex constraints not supported");
 }
 
 void CVC4ConstraintWriter::visit(Symbolic::StringReplace* replace, void* args)
 {
-    error("SYMBOLIC STRING REPLACE NOT SUPPORTED");
+    replace->getSource()->accept(this);
+    if(!checkType(Symbolic::STRING)){
+        error("String replace operation on non-string");
+        return;
+    }
+
+    std::string temporary = emitAndReturnNewTemporary(Symbolic::STRING);
+
+    mOutput << "(assert (str.replace " << "\"" << *replace->getPattern() << "\" \"" << *replace->getReplace() << "\" " << mExpressionBuffer << " " << temporary << "))";
+
+    mExpressionBuffer = temporary;
+    mExpressionType = Symbolic::STRING;
 }
 
 void CVC4ConstraintWriter::visit(Symbolic::StringLength* stringlength, void* args)

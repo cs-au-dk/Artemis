@@ -36,6 +36,7 @@ namespace artemis
 SMTConstraintWriter::SMTConstraintWriter()
     : mExpressionType(Symbolic::TYPEERROR)
     , mError(false)
+    , mNextTemporarySequence(0)
 {
 }
 
@@ -346,6 +347,27 @@ void SMTConstraintWriter::error(std::string reason)
 
 /** Types **/
 
+void SMTConstraintWriter::emitConst(const std::string& identifier, Symbolic::Type type)
+{
+    static const char* typeStrings[] = {
+        "Int", "Bool", "String", "ERROR"
+    };
+
+    mOutput << "(declare-const " << identifier << " " << typeStrings[type] << ")\n";
+    mConstriantLog << "(declare-const " << identifier << " " << typeStrings[type] << ")\n";
+}
+
+std::string SMTConstraintWriter::emitAndReturnNewTemporary(Symbolic::Type type)
+{
+    stringstream t;
+    t << "TMP" << mNextTemporarySequence++;
+
+    std::string temporaryName = t.str();
+
+    emitConst(temporaryName, type);
+    return temporaryName;
+}
+
 void SMTConstraintWriter::recordAndEmitType(const Symbolic::SymbolicSource& source, Symbolic::Type type)
 {
     recordAndEmitType(source.getIdentifier(), type);
@@ -353,10 +375,6 @@ void SMTConstraintWriter::recordAndEmitType(const Symbolic::SymbolicSource& sour
 
 void SMTConstraintWriter::recordAndEmitType(const std::string& source, Symbolic::Type type)
 {
-    static const char* typeStrings[] = {
-        "Int", "Bool", "String", "ERROR"
-    };
-
     std::map<std::string, Symbolic::Type>::iterator iter = mTypemap.find(source);
 
     if (iter != mTypemap.end()) {
@@ -365,9 +383,7 @@ void SMTConstraintWriter::recordAndEmitType(const std::string& source, Symbolic:
     } else {
         // type not recorded before, output definition and store type
         mTypemap.insert(std::pair<std::string, Symbolic::Type>(source, type));
-
-        mOutput << "(declare-const " << SMTConstraintWriter::encodeIdentifier(source) << " " << typeStrings[type] << ")\n";
-        mConstriantLog << "(declare-const " << SMTConstraintWriter::encodeIdentifier(source) << " " << typeStrings[type] << ")\n";
+        emitConst(SMTConstraintWriter::encodeIdentifier(source), type);
     }
 
 }

@@ -77,7 +77,7 @@ SolutionPtr CVC4Solver::solve(PathConditionPtr pc)
     }
 
     // --rewrite-divk enables div and mod by a constant factor
-    std::string cmd = solverpath.filePath(exec).toStdString() + " --lang=smtlib2 /tmp/cvc4input --rewrite-divk > /tmp/cvc4result";
+    std::string cmd = solverpath.filePath(exec).toStdString() + " --lang=smtlib2 /tmp/cvc4input --rewrite-divk > /tmp/cvc4result 2> /tmp/cvc4result";
     std::system(cmd.data()); // result of command interpreted in step 3
 
     // 3. interpret the result
@@ -92,12 +92,12 @@ SolutionPtr CVC4Solver::solve(PathConditionPtr pc)
 
         std::getline(fp, line); // load sat line
 
-        if (line.compare("unsat") == 0 || line.compare("unknown") == 0) {
+        if (line.compare("unsat") == 0) {
             // UNSAT
             statistics()->accumulate("Concolic::Solver::ConstraintsSolvedAsUNSAT", 1);
             constraintLog << "Solved as UNSAT." << std::endl << std::endl;
             return SolutionPtr(new Solution(false, true));
-        } else if (line.compare("sat") != 0) {
+        } else if (line.compare("sat") != 0 && line.compare("unknown") != 0) {
             // ERROR, we can't use return types to detect errors, since an unsat result will result in an error code (because we try to access the model)
             statistics()->accumulate("Concolic::Solver::ConstraintsNotSolved", 1);
             constraintLog << "Error when solving following input file:" << std::endl << std::endl;
@@ -115,6 +115,8 @@ SolutionPtr CVC4Solver::solve(PathConditionPtr pc)
             return SolutionPtr(new Solution(false, false));
 
         }
+
+        // Notice, we interpret sat and unknown internally as sat
 
         std::getline(fp, line); // discard model line
 

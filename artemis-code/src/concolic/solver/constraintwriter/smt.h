@@ -165,6 +165,9 @@ protected:
 
     void coercetype(Symbolic::Type from, Symbolic::Type to, std::string expression);
 
+    std::string emitAndReturnNewTemporary(Symbolic::Type type);
+    void emitConst(const std::string& identifier, Symbolic::Type type);
+
     static inline std::string stringfindreplace(const std::string& string, const std::string& search, const std::string& replace);
 
     void error(std::string reason);
@@ -181,6 +184,8 @@ protected:
 
     bool mError; // indicates that an error occured when writing the file
     std::string mErrorReason;
+
+    unsigned int mNextTemporarySequence;
 };
 
 typedef QSharedPointer<SMTConstraintWriter> SMTConstraintWriterPtr;
