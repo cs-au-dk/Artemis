@@ -90,6 +90,8 @@ void ArtemisRuntime::preConcreteExecution()
     Log::debug("--------------- COVERAGE ----------------\n");
     Log::debug(mAppmodel->getCoverageListener()->toString().toStdString());
 
+    mExecStat->beginNewIteration();
+
     ExecutableConfigurationConstPtr nextConfiguration = mWorklist->remove();
 
     mWebkitExecutor->executeSequence(nextConfiguration); // calls the postConcreteExecution method as callback

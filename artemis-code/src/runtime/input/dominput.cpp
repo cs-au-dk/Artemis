@@ -26,7 +26,9 @@ namespace artemis
 DomInput::DomInput(EventHandlerDescriptorConstPtr handler,
                    FormInputCollectionConstPtr formInput,
                    EventParametersConstPtr params,
-                   TargetDescriptorConstPtr target) :
+                   TargetDescriptorConstPtr target,
+                   EventExecutionStatistics* execStat) :
+    BaseInput(execStat),
     mEventHandler(handler),
     mFormInput(formInput),
     mEvtParams(params),
@@ -63,7 +65,7 @@ void DomInput::apply(ArtemisWebPagePtr page, QWebExecutionListener*) const
                  << " _Title: " << target.attribute(QString("title")) << "class: "
                  << target.attribute(QString("class"));
         qDebug() << "Executing: " << jsInitEvent;
-
+        mExecStat->registerEventDescription(mEventHandler);
         QVariant result = target.evaluateJavaScript(jsInitEvent, DONT_MEASURE_COVERAGE);
 
         qDebug() << "Result: " << result;
@@ -79,7 +81,7 @@ BaseInputConstPtr DomInput::getPermutation(const FormInputGeneratorConstPtr& for
     FormInputCollectionPtr newForm = formInputGenerator->generateFormFields(mFormInput->getFields(), result);
     TargetDescriptorConstPtr target = targetGenerator->generateTarget(mEventHandler);
 
-    return DomInputConstPtr(new DomInput(mEventHandler, newForm, newParams, target));
+    return DomInputConstPtr(new DomInput(mEventHandler, newForm, newParams, target, mExecStat));
 }
 
 int DomInput::hashCode() const

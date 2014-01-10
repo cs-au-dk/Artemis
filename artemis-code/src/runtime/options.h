@@ -53,6 +53,10 @@ enum HeapReport{
     ALL_CALLS, NAMED_CALLS, NO_CALLS
 };
 
+enum ExportEventSequence{
+    DONT_EXPORT, EXPORT_SELENIUM
+};
+
 enum SMTSolver {
     KALUZA, Z3STR, CVC4
 };
@@ -74,6 +78,7 @@ typedef struct OptionsType {
         concolicTreeOutputOverview(false),
         concolicUnlimitedDepth(false),
         solver(CVC4),
+        exportEventSequence(DONT_EXPORT),
         reportHeap(NO_CALLS),
         heapReportFactor(1)
     {}
@@ -106,6 +111,8 @@ typedef struct OptionsType {
     QString concolicEntryPoint;
     bool concolicUnlimitedDepth;
     SMTSolver solver;
+
+    ExportEventSequence exportEventSequence;
 
     HeapReport reportHeap;
 

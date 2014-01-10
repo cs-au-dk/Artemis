@@ -76,21 +76,20 @@ void ExecutionResultBuilder::registerEventHandlersIntoResult()
     QPair<QWebElement*, QString> p;
     foreach(p, mElementPointers) {
         if (getType(p.second) == UNKNOWN_EVENT) {
-            qWarning() << "WARN: Ignoring unsupported event of type " << p.second;
+            qWarning() << "Ignoring unsupported event of type " << p.second;
             continue;
         }
 
         if (p.first->isNull()) {
-            qWarning() << "WARN: Got event handler with NULL element. Assuming document is reciever";
+            qWarning() << "Got event handler with NULL element. Assuming document is reciever";
         }
 
-        qDebug() << "Finalizing " << p.second << "  " << p.first->tagName() << " _T: "
+        qDebug() << "Finalizing " << p.second << " xpath=" << p.first->xPath() << " _T: "
                  << p.first->attribute(QString("title"));
-
         EventHandlerDescriptorConstPtr handler = EventHandlerDescriptorConstPtr(new EventHandlerDescriptor(p.first, p.second));
 
         if (handler->isInvalid()) {
-            qWarning() << "WARN: element was invalid, ignoring";
+            qWarning() << "element was invalid, ignoring";
         } else {
             mResult->mEventHandlers.append(handler);
         }

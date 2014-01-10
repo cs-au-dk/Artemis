@@ -122,7 +122,10 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/concolic/solver/cvc4solver.h \
     src/concolic/solver/constraintwriter/cvc4.h \
     src/concolic/solver/constraintwriter/smt.h \
-    src/concolic/solver/constraintwriter/cvc4regexcompiler.h
+    src/concolic/solver/constraintwriter/cvc4regexcompiler.h \
+    src/model/eventexecutionstatistics.h \
+    src/model/seleniumeventexecutionstatistics.h \
+    src/model/stubeventexecutionstatistics.h
 
 SOURCES += src/runtime/input/ajaxinput.cpp \
     src/strategies/prioritizer/constantprioritizer.cpp \
@@ -224,6 +227,8 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/concolic/solver/cvc4solver.cpp \
     src/concolic/solver/constraintwriter/cvc4.cpp \
     src/concolic/solver/constraintwriter/smt.cpp \
-    src/concolic/solver/constraintwriter/cvc4regexcompiler.cpp
+    src/concolic/solver/constraintwriter/cvc4regexcompiler.cpp \
+    src/model/seleniumeventexecutionstatistics.cpp \
+    src/model/stubeventexecutionstatistics.cpp
 
 QT += network

@@ -23,6 +23,8 @@
 #include "strategies/inputgenerator/event/eventparametergenerator.h"
 #include "strategies/inputgenerator/form/forminputgenerator.h"
 #include "strategies/inputgenerator/targets/targetgenerator.h"
+#include "model/eventexecutionstatistics.h"
+#include "model/stubeventexecutionstatistics.h"
 
 namespace artemis
 {
@@ -31,6 +33,10 @@ class BaseInput
 {
 
 public:
+
+    BaseInput(){}
+    BaseInput(EventExecutionStatistics* execStat): mExecStat(execStat){}
+
     virtual ~BaseInput() {}
 
     virtual void apply(ArtemisWebPagePtr page, QWebExecutionListener* webkitListener) const = 0;
@@ -41,6 +47,8 @@ public:
 
     virtual int hashCode() const = 0;
     virtual QString toString() const = 0;
+protected:
+    EventExecutionStatistics* mExecStat;
 };
 
 typedef QSharedPointer<const BaseInput> BaseInputConstPtr;

@@ -36,6 +36,7 @@
 #include "runtime/appmodel.h"
 
 #include "concolic/solver/solver.h"
+#include "model/eventexecutionstatistics.h"
 
 namespace artemis
 {
@@ -64,6 +65,7 @@ protected:
     InputGeneratorStrategy* mInputgenerator;
 
     Options mOptions;
+    EventExecutionStatistics* mExecStat;
 private:
     QString* mHeapReport;
 

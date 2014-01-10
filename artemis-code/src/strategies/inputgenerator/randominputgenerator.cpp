@@ -35,12 +35,14 @@ RandomInputGenerator::RandomInputGenerator(
         FormInputGeneratorConstPtr formInputGenerator,
         QSharedPointer<const EventParameterGenerator> eventParameterInputGenerator,
         TargetGeneratorConstPtr targetGenerator,
+        EventExecutionStatistics* execStat,
         int numberSameLength) :
 
     InputGeneratorStrategy(parent),
     mFormInputGenerator(formInputGenerator),
     mEventParameterGenerator(eventParameterInputGenerator),
     mTargetGenerator(targetGenerator),
+    mExecStat(execStat),
     mNumberSameLength(numberSameLength)
 {
 }
@@ -109,7 +111,7 @@ QList<ExecutableConfigurationPtr> RandomInputGenerator::insertExtended(
             EventParametersConstPtr newParams = mEventParameterGenerator->generateEventParameters(ee);
             TargetDescriptorConstPtr target = mTargetGenerator->generateTarget(ee);
 
-            DomInputConstPtr domInput = DomInputConstPtr(new DomInput(ee, newForm, newParams, target));
+            DomInputConstPtr domInput = DomInputConstPtr(new DomInput(ee, newForm, newParams, target, mExecStat));
             InputSequenceConstPtr newInputSequence = oldConfiguration->getInputSequence()->extend(domInput);
 
             ExecutableConfigurationPtr newConfiguration = ExecutableConfigurationPtr(new ExecutableConfiguration(newInputSequence, oldConfiguration->getUrl()));

@@ -36,8 +36,8 @@ INSTALLS += installtarget
 include(artemis-core.pri)
 
 HEADERS += \
-    src/artemisapplication.h \
+    src/artemisapplication.h
 
 SOURCES += \
     src/artemis.cpp \
-    src/artemisapplication.cpp \
+    src/artemisapplication.cpp
