@@ -53,6 +53,10 @@ enum HeapReport{
     ALL_CALLS, NAMED_CALLS, NO_CALLS
 };
 
+enum ExportEventSequence{
+    DONT_EXPORT, EXPORT_SELENIUM
+};
+
 
 typedef struct OptionsType {
 
@@ -68,6 +72,7 @@ typedef struct OptionsType {
         majorMode(AUTOMATED),
         reportPathTrace(NO_TRACES),
         concolicTreeOutput(TREE_FINAL),
+        exportEventSequence(DONT_EXPORT),
         reportHeap(NO_CALLS),
         heapReportFactor(1)
     {}
@@ -97,6 +102,8 @@ typedef struct OptionsType {
 
     ConcolicTreeOutput concolicTreeOutput;
     QString concolicEntryPoint;
+
+    ExportEventSequence exportEventSequence;
 
     HeapReport reportHeap;
 

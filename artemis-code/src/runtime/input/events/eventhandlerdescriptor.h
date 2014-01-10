@@ -21,6 +21,7 @@
 #include <QString>
 #include <QDebug>
 #include <QSharedPointer>
+#include <QWebElement>
 
 #include "runtime/input/events/eventypes.h"
 #include "domelementdescriptor.h"
@@ -51,7 +52,10 @@ public:
     }
 
     int hashCode() const;
+
     QString toString() const;
+
+    QString xPathToElement() const;
 
     QDebug friend operator<<(QDebug dbg, const EventHandlerDescriptor& e);
 
@@ -59,7 +63,7 @@ public:
 private:
     DOMElementDescriptorConstPtr mElement;
     QString mEventName;
-
+    QString mXPath;
 };
 
 typedef QSharedPointer<EventHandlerDescriptor> EventHandlerDescriptorPtr;

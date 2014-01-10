@@ -10,34 +10,40 @@ from harness.artemis import execute_artemis
 
 
 def run_lambda(f, tries=3):
+    print("Attempt %s" % (4 - tries))
     try:
         start_t = time.time()
         result = f()
         end_t = time.time()
     except Exception:
-        return run_lambda(f, tries - 1) if tries <= 1 else {"result": -1, "time": -1, "attempts": 4 - tries}
+        return run_lambda(f, tries - 1) if tries > 1 else {"result": {'WebKit::coverage::covered-unique': -1},
+                                                           "time": -1, "attempts": 4 - tries}
 
     return {"result": result, "time": end_t - start_t, "attempts": 4 - tries}
 
 
 def generate_reports(name, path, exclude):
     url = WEBSERVER_URL + "/" + path
-    print ("Testing: %s" % url)
+    print("Starting testing: %s" % name)
+    print("Running events")
     events_r = run_lambda(lambda: execute_artemis(name, url,
                                                   iterations=100,
                                                   strategy_form_input='random',
                                                   strategy_priority='constant',
                                                   exclude=exclude))
+    print("Running const")
     const_r = run_lambda(lambda: execute_artemis(name, url,
                                                  iterations=100,
                                                  strategy_form_input='javascript-constants',
                                                  strategy_priority='constant',
                                                  exclude=exclude))
+    print("Running cov")
     cov_r = run_lambda(lambda: execute_artemis(name, url,
                                                iterations=100,
                                                strategy_form_input='javascript-constants',
                                                strategy_priority='coverage',
                                                exclude=exclude))
+    print("Running all")
     all_r = run_lambda(lambda: execute_artemis(name, url,
                                                iterations=100,
                                                strategy_form_input='javascript-constants',
@@ -84,7 +90,7 @@ def run_old_benchmarks(benchmarks):
                    reports['cov']['attempts'],
                    reports['all']['result']['WebKit::coverage::covered-unique'],
                    reports['all']['time'],
-                  reports['cov']['attempts']]
+                   reports['cov']['attempts']]
         log_result_to_file(file_name, results)
 
 

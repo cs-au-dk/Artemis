@@ -180,7 +180,7 @@ void ConcolicRuntime::setupNextConfiguration(QSharedPointer<FormInputCollection>
         TargetDescriptorConstPtr targetDescriptor = TargetDescriptorConstPtr(new LegacyTarget(mEntryPointEvent));
 
         // Create a DomInput which will inject the FormInputCollection and fire the entry point event.
-        submitEvent = BaseInputConstPtr(new DomInput(mEntryPointEvent, formInput, eventParameters, targetDescriptor));
+        submitEvent = BaseInputConstPtr(new DomInput(mEntryPointEvent, formInput, eventParameters, targetDescriptor, mExecStat));
     }
 
     // Create an input sequence consisting of just this event.

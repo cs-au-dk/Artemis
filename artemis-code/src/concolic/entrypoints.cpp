@@ -43,6 +43,7 @@ QList<EventHandlerDescriptorConstPtr> EntryPointDetector::detectAll(ExecutionRes
     QList<EventHandlerDescriptorConstPtr> entryEvents;
 
     foreach (EventHandlerDescriptorConstPtr event , result->getEventHandlers()){
+        qDebug() << "XPATH: " << event->xPathToElement();
         if (event->getName().compare("click", Qt::CaseInsensitive) == 0 &&
                 event->getDomElement()->getTagName().compare("button", Qt::CaseInsensitive) == 0){
             // Accept any click on a button

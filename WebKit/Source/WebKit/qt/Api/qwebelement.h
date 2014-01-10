@@ -140,6 +140,9 @@ public:
 
 #ifdef ARTEMIS
     QVariant evaluateJavaScript(const QString& scriptSource, const QUrl& u = QUrl(), bool hideFromArtemis = false);
+    QString xPath();
+    int numberOfChildren(QString cssSelector);
+
 #else
     QVariant evaluateJavaScript(const QString& scriptSource);
 #endif

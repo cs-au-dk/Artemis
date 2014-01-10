@@ -26,6 +26,8 @@
 #include "events/domelementdescriptor.h"
 #include "events/eventparameters.h"
 
+#include "model/stubeventexecutionstatistics.h"
+
 #include "baseinput.h"
 
 namespace artemis
@@ -38,7 +40,9 @@ public:
     DomInput(EventHandlerDescriptorConstPtr handler,
              FormInputCollectionConstPtr formInput,
              EventParametersConstPtr params,
-             TargetDescriptorConstPtr target);
+             TargetDescriptorConstPtr target,
+             EventExecutionStatistics* execStat);
+
 
     void apply(ArtemisWebPagePtr page, QWebExecutionListener* webkitListener) const;
     BaseInputConstPtr getPermutation(const FormInputGeneratorConstPtr& formInputGenerator,

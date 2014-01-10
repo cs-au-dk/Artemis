@@ -35,6 +35,8 @@
 #include "runtime/executableconfiguration.h"
 #include "runtime/appmodel.h"
 
+#include "model/eventexecutionstatistics.h"
+
 namespace artemis
 {
 
@@ -58,8 +60,8 @@ protected:
     TerminationStrategy* mTerminationStrategy;
     PrioritizerStrategyPtr mPrioritizerStrategy;
     InputGeneratorStrategy* mInputgenerator;
-
     Options mOptions;
+    EventExecutionStatistics* mExecStat;
 private:
     QString* mHeapReport;
 

@@ -22,6 +22,7 @@ namespace artemis
 EventHandlerDescriptor::EventHandlerDescriptor(QWebElement* element, QString name) :
     mEventName(name)
 {
+    mXPath = element->xPath();
     mElement = DOMElementDescriptorConstPtr(new DOMElementDescriptor(element));
 }
 
@@ -34,6 +35,12 @@ QString EventHandlerDescriptor::toString() const
 {
     return QString(mEventName + "@") + mElement->toString();
 }
+
+QString EventHandlerDescriptor::xPathToElement() const
+{
+    return mXPath;
+}
+
 
 QDebug operator<<(QDebug dbg, const EventHandlerDescriptor& e)
 {

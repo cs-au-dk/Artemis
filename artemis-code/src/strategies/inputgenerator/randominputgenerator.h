@@ -25,6 +25,7 @@
 #include "targets/targetgenerator.h"
 #include "form/forminputgenerator.h"
 #include "event/eventparametergenerator.h"
+#include "model/eventexecutionstatistics.h"
 
 #include "inputgeneratorstrategy.h"
 
@@ -40,6 +41,7 @@ public:
                          FormInputGeneratorConstPtr formInputGenerator,
                          EventParameterGeneratorConstPtr eventParameterInputGenerator,
                          TargetGeneratorConstPtr targetGenerator,
+                         EventExecutionStatistics* execStat,
                          int numberSameLength);
 
     QList<QSharedPointer<ExecutableConfiguration> > addNewConfigurations(QSharedPointer<const ExecutableConfiguration>, QSharedPointer<const ExecutionResult>);
@@ -53,7 +55,7 @@ private:
     QList<ExecutableConfigurationPtr> insertExtended(ExecutableConfigurationConstPtr e, ExecutionResultConstPtr result);
 
     TargetGeneratorConstPtr mTargetGenerator;
-
+    EventExecutionStatistics* mExecStat;
     int mNumberSameLength;
 
 };

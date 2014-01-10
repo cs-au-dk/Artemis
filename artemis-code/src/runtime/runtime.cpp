@@ -25,6 +25,9 @@
 #include "util/fileutil.h"
 #include "model/pathtracer.h"
 
+#include "model/seleniumeventexecutionstatistics.h"
+#include "model/stubeventexecutionstatistics.h"
+
 #include "statistics/statsstorage.h"
 #include "statistics/writers/pretty.h"
 
@@ -115,10 +118,20 @@ Runtime::Runtime(QObject* parent, const Options& options, const QUrl& url) : QOb
         assert(false);
     }
 
+    switch(options.exportEventSequence){
+    case DONT_EXPORT:
+        mExecStat = new StubEventExecutionStatistics;
+        break;
+    case EXPORT_SELENIUM:
+        mExecStat = new SeleniumEventExecutionStatistics;
+        break;
+    }
+
     mInputgenerator = new RandomInputGenerator(this,
                                                formInputGenerator,
                                                QSharedPointer<StaticEventParameterGenerator>(new StaticEventParameterGenerator()),
                                                TargetGeneratorConstPtr(new TargetGenerator(jqueryListener)),
+                                               mExecStat,
                                                options.numberSameLength);
     mTerminationStrategy = new NumberOfIterationsTermination(this, options.iterationLimit);
 
@@ -145,6 +158,9 @@ Runtime::Runtime(QObject* parent, const Options& options, const QUrl& url) : QOb
     default:
         assert(false);
     }
+
+
+
 
     QObject::connect(mWebkitExecutor, SIGNAL(sigAbortedExecution(QString)),
                      this, SLOT(slAbortedExecution(QString)));
