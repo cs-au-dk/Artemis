@@ -109,21 +109,15 @@ def test_generator(site_name, site_url, site_ep, dry_run=False, logger=None, ver
         
         # Run and time the test
         start_time = time.time()
-        try:
-            report = execute_artemis(site_name, site_url,
-                                     iterations=0,
-                                     major_mode='concolic',
-                                     concolic_tree_output='final-overview',
-                                     verbosity='info',
-                                     concolic_button=(None if site_ep.lower() == 'auto' else site_ep),
-                                     dryrun=dry_run,
-                                     output_parent_dir=test_dir,
-                                     catch_artemis_return_code=False)
-            return_code = "0"
-        except subprocess.CalledProcessError as e:
-            # The return code is non-zero.
-            return_code = str(e.returncode)
-            report = {}
+        report = execute_artemis(site_name, site_url,
+                                 iterations=0,
+                                 major_mode='concolic',
+                                 concolic_tree_output='final-overview',
+                                 verbosity='info',
+                                 concolic_button=(None if site_ep.lower() == 'auto' else site_ep),
+                                 dryrun=dry_run,
+                                 output_parent_dir=test_dir,
+                                 ignore_artemis_crash=True)
         end_time = time.time()
 
         if dry_run:
@@ -143,7 +137,7 @@ def test_generator(site_name, site_url, site_ep, dry_run=False, logger=None, ver
             data['URL'] = site_url
             data['Entry Point'] = site_ep
             data['Running Time'] = str(datetime.timedelta(seconds=(end_time - start_time)))
-            data['Exit Code'] = return_code
+            data['Exit Code'] = str(report['returncode'])
             
             # Add all concolic statistics from Artemis to the logged data.
             for key in report.keys():
@@ -154,6 +148,9 @@ def test_generator(site_name, site_url, site_ep, dry_run=False, logger=None, ver
             # Append the log data to the google doc.
             logger.log_data(data)
         
+        # Fail the test if the return code was non-zero.
+        if report['returncode'] != 0:
+            raise Exception("Exception thrown by call to artemis (returned %d)." % report['returncode'])
     
     return test
 

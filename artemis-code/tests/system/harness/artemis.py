@@ -28,7 +28,7 @@ def execute_artemis(execution_uuid, url, iterations=1,
                     concolic_button=None,
                     dryrun=False,
                     output_parent_dir=OUTPUT_DIR,
-                    catch_artemis_return_code=True,
+                    ignore_artemis_crash=False, # Suppresses the exception thrown by a non-zero return code and returns whatever information it can.
                     verbosity=None,
                     **kwargs):
     output_dir = os.path.join(output_parent_dir, execution_uuid)
@@ -90,55 +90,58 @@ def execute_artemis(execution_uuid, url, iterations=1,
 
     try:
         stdout = (subprocess.check_output(cmd, cwd=output_dir, stderr=subprocess.STDOUT)).decode("utf-8")
-
-        fp = open(os.path.join(output_dir, 'stdout.txt'), 'wb')
-        fp.write(stdout.encode())
-        fp.close()
-        offset1 = stdout.find(STATS_START) + len(STATS_START)
-        offset2 = stdout.find(STATS_END)
-        statistics = stdout[offset1:offset2]
-
-        report = {}
-
-        for line in statistics.splitlines():
-            match = RE_STATS_LINE.match(line)
-
-            if match is not None:
-                try:
-                    key = match.group(1).strip()
-
-                    value = match.group(2).strip()
-
-                    if value.isdigit():
-                        value = int(value)
-
-                    elif value == 'true':
-                        value = True
-
-                    elif value == 'false':
-                        value = False
-
-                    report[key] = value
-                except:
-                    print('Error parsing statistics result for line %s' % line)
-
-        condOffset1 = stdout.find(PATHCOND_START) + len(PATHCOND_START)
-        condOffset2 = stdout.find(PATHCOND_END)
-        pathCond = stdout[condOffset1:condOffset2]
-        pc = []
-        for line in pathCond.splitlines():
-            m = RE_PATHCOND_LINE.match(line)
-            if m is not None:
-                value = m.group(2).strip()
-                pc.append(value)
-        report['pathCondition'] = pc
-        return report
-
-
+        returncode = 0
     except subprocess.CalledProcessError as e:
-        if catch_artemis_return_code:
+        if ignore_artemis_crash:
+            stdout = e.output
+            returncode = e.returncode
+        else:
             raise Exception("Exception thrown by call %s \n\n %s \n\n Exception thrown by call %s" \
                             % (e.cmd, e.output, e.cmd))
-        else:
-            # If the caller is interested in the return code we allow them to catch this themselves.
-            raise e
+
+
+    fp = open(os.path.join(output_dir, 'stdout.txt'), 'wb')
+    fp.write(stdout.encode())
+    fp.close()
+    offset1 = stdout.find(STATS_START) + len(STATS_START)
+    offset2 = stdout.find(STATS_END)
+    statistics = stdout[offset1:offset2]
+
+    report = {}
+    report['returncode'] = returncode
+
+    for line in statistics.splitlines():
+        match = RE_STATS_LINE.match(line)
+
+        if match is not None:
+            try:
+                key = match.group(1).strip()
+
+                value = match.group(2).strip()
+
+                if value.isdigit():
+                    value = int(value)
+
+                elif value == 'true':
+                    value = True
+
+                elif value == 'false':
+                    value = False
+
+                report[key] = value
+            except:
+                print('Error parsing statistics result for line %s' % line)
+
+    condOffset1 = stdout.find(PATHCOND_START) + len(PATHCOND_START)
+    condOffset2 = stdout.find(PATHCOND_END)
+    pathCond = stdout[condOffset1:condOffset2]
+    pc = []
+    for line in pathCond.splitlines():
+        m = RE_PATHCOND_LINE.match(line)
+        if m is not None:
+            value = m.group(2).strip()
+            pc.append(value)
+    report['pathCondition'] = pc
+    return report
+
+
