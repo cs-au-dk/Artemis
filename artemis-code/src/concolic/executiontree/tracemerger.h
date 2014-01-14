@@ -47,11 +47,17 @@ public:
     void visit(TraceAnnotation* node);
     void visit(TraceEnd* node);
 
+    void reportFailedMerge();
+
 private:
     TraceMerger() {}
 
     TraceNodePtr mCurrentTree;
     TraceNodePtr mCurrentTrace;
+
+    TraceNodePtr mStartingTrace;
+    TraceNodePtr mStartingTree;
+    static const bool mReportFailedMerge = false; // Whether to dump out failed merges for anaysis.
 
     static void fixDoubleCountedAnnotations(TraceNodePtr node);
 };

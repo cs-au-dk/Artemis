@@ -18,6 +18,7 @@
 #include <QDebug>
 
 #include "util/loggingutil.h"
+#include "concolic/executiontree/tracedisplay.h"
 
 #include "tracemerger.h"
 
@@ -35,6 +36,9 @@ TraceNodePtr TraceMerger::merge(TraceNodePtr trace, TraceNodePtr executiontree)
     }
 
     TraceMerger merger;
+
+    merger.mStartingTrace = trace;
+    merger.mStartingTree = executiontree;
 
     merger.mCurrentTrace = trace;
     merger.mCurrentTree = executiontree;
@@ -64,6 +68,7 @@ void TraceMerger::visit(TraceEnd* node)
         qWarning() << "Warning, divergance discovered while merging a trace! (TraceEnd)";
         statistics()->accumulate("Concolic::ExecutionTree::DivergentMerges", 1);
         Log::info("  Trace merge diverged from the tree (TraceEnd).");
+        reportFailedMerge();
     }
 }
 
@@ -128,6 +133,7 @@ void TraceMerger::visit(TraceBranch* node)
     qWarning() << "Warning, divergance discovered while merging a trace! (TraceBranch)";
     statistics()->accumulate("Concolic::ExecutionTree::DivergentMerges", 1);
     Log::info("  Trace merge diverged from the tree (TraceBranch).");
+    reportFailedMerge();
 }
 
 void TraceMerger::visit(TraceAnnotation* node)
@@ -159,6 +165,7 @@ void TraceMerger::visit(TraceAnnotation* node)
     qWarning() << "Warning, divergance discovered while merging a trace! (TraceAnnotation)";
     statistics()->accumulate("Concolic::ExecutionTree::DivergentMerges", 1);
     Log::info("  Trace merge diverged from the tree (TraceAnnotation).");
+    reportFailedMerge();
 }
 
 void TraceMerger::visit(TraceNode* node)
@@ -184,6 +191,23 @@ void TraceMerger::fixDoubleCountedAnnotations(TraceNodePtr node)
 
     }
 }
+
+
+// When we find a divergent merge, this function writes the entire original tree and trace out to a file for manual analysis.
+void TraceMerger::reportFailedMerge()
+{
+    if(mReportFailedMerge){
+        QString date = QDateTime::currentDateTime().toString("dd-MM-yy-hh-mm-ss");
+        QString pathToTreeFile = QString("divergence-%1-tree.gv").arg(date);
+        QString pathToTraceFile = QString("divergence-%1-trace.gv").arg(date);
+
+        TraceDisplay display(true); // false for full information, but it's too big to look at!
+
+        display.writeGraphFile(mStartingTree, pathToTreeFile, false);
+        display.writeGraphFile(mStartingTrace, pathToTraceFile, false);
+    }
+}
+
 
 
 }
