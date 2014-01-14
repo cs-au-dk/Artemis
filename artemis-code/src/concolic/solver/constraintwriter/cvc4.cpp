@@ -41,7 +41,7 @@ CVC4ConstraintWriter::CVC4ConstraintWriter()
 
 void CVC4ConstraintWriter::preVisitPathConditionsHook()
 {
-    mOutput << "(set-logic ALL_SUPPORTED)" << std::endl;
+    mOutput << "(set-logic QF_S)" << std::endl;
     mOutput << "(set-option :produce-models true)" << std::endl << std::endl;
     mOutput << "(define-fun str.contains ((?in String) (?s String)) Bool\n"
                "    (exists ((?a String) (?b String))\n"
