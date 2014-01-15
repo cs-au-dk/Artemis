@@ -134,6 +134,16 @@
 	},
 
 	{
+		"ID": "StringCharAt",
+		"type": "expression",
+		"parent": "StringExpression",
+		"fields": [
+			["StringExpression*", "source"],
+			["unsigned int", "position"]
+		]
+	},
+
+	{
 		"ID": "StringRegexReplace",
 		"type": "expression",
 		"parent": "StringExpression",

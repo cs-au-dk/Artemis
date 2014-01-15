@@ -16,22 +16,39 @@
 
  // AUTO GENERATED - DO NOT MODIFY
 
+#ifndef SYMBOLIC_STRINGCHARAT_H
+#define SYMBOLIC_STRINGCHARAT_H
+
+#include <string>
+
+#include "visitor.h"
+#include "stringexpression.h"
+
 #ifdef ARTEMIS
 
-#include "expression/symbolicinteger.h"
-#include "expression/constantinteger.h"
-#include "expression/integerbinaryoperation.h"
-#include "expression/integercoercion.h"
-#include "expression/symbolicstring.h"
-#include "expression/constantstring.h"
-#include "expression/stringbinaryoperation.h"
-#include "expression/stringcoercion.h"
-#include "expression/stringlength.h"
-#include "expression/stringreplace.h"
-#include "expression/stringcharat.h"
-#include "expression/stringregexreplace.h"
-#include "expression/symbolicboolean.h"
-#include "expression/constantboolean.h"
-#include "expression/booleancoercion.h"
-#include "expression/booleanbinaryoperation.h"
+namespace Symbolic
+{
+
+class StringCharAt : public StringExpression
+{
+public:
+    explicit StringCharAt(StringExpression* source, unsigned int position);
+    void accept(Visitor* visitor);
+    void accept(Visitor* visitor, void* arg);
+
+	inline StringExpression* getSource() {
+		return m_source;
+	}
+	inline unsigned int getPosition() {
+		return m_position;
+	}
+
+private:
+	StringExpression* m_source;
+	unsigned int m_position;
+
+};
+}
+
 #endif
+#endif // SYMBOLIC_STRINGCHARAT_H

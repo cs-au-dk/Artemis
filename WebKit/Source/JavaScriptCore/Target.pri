@@ -251,7 +251,8 @@ SOURCES += \
     symbolic/expression/booleanbinaryoperation.cpp \
     symbolic/expression/stringreplace.cpp \
     symbolic/expression/stringregexreplace.cpp \
-    symbolic/expression/stringlength.cpp
+    symbolic/expression/stringlength.cpp \
+    symbolic/expression/stringcharat.cpp
 
 *sh4* {
     QMAKE_CXXFLAGS += -mieee -w
@@ -307,4 +308,5 @@ HEADERS += \
     symbolic/expression/stringreplace.h \
     symbolic/expression/stringregexreplace.h \
     symbolic/expression/symbolicsource.h \
-    symbolic/expression/stringlength.h
+    symbolic/expression/stringlength.h \
+    symbolic/expression/stringcharat.h

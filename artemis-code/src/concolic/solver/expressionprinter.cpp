@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+#include <sstream>
+
 #include "expressionprinter.h"
 
 #ifdef ARTEMIS
@@ -100,6 +102,19 @@ void ExpressionPrinter::visit(Symbolic::StringCoercion* stringcoercion, void* ar
 {
     m_result += "StringCoercion( ";
     stringcoercion->getExpression()->accept(this);
+    m_result += " )";
+}
+
+void ExpressionPrinter::visit(Symbolic::StringCharAt* stringcharat, void* arg)
+{
+    m_result += "StringCharAt( ";
+    stringcharat->getSource()->accept(this);
+    m_result += " , ";
+
+    std::ostringstream i;
+    i << stringcharat->getPosition();
+    m_result += i.str();
+
     m_result += " )";
 }
 

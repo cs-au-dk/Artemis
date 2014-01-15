@@ -202,6 +202,11 @@ void SMTConstraintWriter::visit(Symbolic::StringCoercion* stringcoercion, void* 
     error("NO SYMBOLIC STRING SUPPORT");
 }
 
+void SMTConstraintWriter::visit(Symbolic::StringCharAt* stringcharat, void* arg)
+{
+    error("NO SYMBOLIC STRING SUPPORT");
+}
+
 void SMTConstraintWriter::visit(Symbolic::BooleanCoercion* booleancoercion, void* args)
 {
     CoercionPromise promise(Symbolic::BOOL);

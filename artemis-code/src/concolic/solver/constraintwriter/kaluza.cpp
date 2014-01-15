@@ -165,6 +165,13 @@ void KaluzaConstraintWriter::visit(Symbolic::StringCoercion* stringcoercion, voi
     stringcoercion->getExpression()->accept(this);
 }
 
+void KaluzaConstraintWriter::visit(Symbolic::StringCharAt* stringcharat, void* arg)
+{
+    mError = true;
+    mErrorReason = "StringCharAt constraints not supported";
+    mIdentifierStore = "ERROR";
+}
+
 void KaluzaConstraintWriter::visit(Symbolic::SymbolicBoolean* symbolicboolean, void* args)
 {
     mIdentifierStore = symbolicboolean->getSource().getIdentifier();

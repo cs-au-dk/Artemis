@@ -117,6 +117,7 @@ protected:
     virtual void visit(Symbolic::ConstantString* constantstring, void* args);
     virtual void visit(Symbolic::StringBinaryOperation* stringbinaryoperation, void* args);
     virtual void visit(Symbolic::StringCoercion* stringcoercion, void* args);
+    virtual void visit(Symbolic::StringCharAt* stringcharat, void* arg);
     virtual void visit(Symbolic::StringRegexReplace* stringregexreplace, void* args);
     virtual void visit(Symbolic::StringReplace* stringreplace, void* args);
 

@@ -39,6 +39,7 @@ public:
     void visit(Symbolic::ConstantString* constantstring, void* arg);
     void visit(Symbolic::StringBinaryOperation* stringbinaryoperation, void* arg);
     void visit(Symbolic::StringCoercion* stringcoercion, void* arg);
+    void visit(Symbolic::StringCharAt* stringcharat, void* arg);
     void visit(Symbolic::StringRegexReplace* stringregexreplace, void* arg);
     void visit(Symbolic::StringReplace* stringreplace, void* arg);
     void visit(Symbolic::SymbolicBoolean* symbolicboolean, void* arg);

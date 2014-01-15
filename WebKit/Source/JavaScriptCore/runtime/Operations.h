@@ -98,15 +98,54 @@ namespace JSC {
 
         unsigned oldLength = 0;
 
+#ifdef ARTEMIS
+        bool isSymbolic = thisValue.isSymbolic();
+#endif
+
         for (unsigned i = 0; i < exec->argumentCount(); ++i) {
             JSValue v = exec->argument(i);
             ropeBuilder.append(v.toString(exec));
+
+#ifdef ARTEMIS
+            if (v.isSymbolic()) {
+                isSymbolic = true;
+            }
+#endif
 
             if (ropeBuilder.length() < oldLength) // True for overflow
                 return throwOutOfMemoryError(exec);
         }
 
+#ifdef ARTEMIS
+        if (isSymbolic) {
+
+            Symbolic::StringExpression* symbolicConcat =
+                    thisValue.isSymbolic() ? (Symbolic::StringExpression*)thisValue.asSymbolic() :
+                                             (Symbolic::StringExpression*)new Symbolic::ConstantString(new std::string(thisValue.toUString(exec).ascii().data()));
+
+            for (unsigned i = 0; i < exec->argumentCount(); ++i) {
+
+                JSValue arg = exec->argument(i);
+
+                symbolicConcat = new Symbolic::StringBinaryOperation(
+                            symbolicConcat,
+                            Symbolic::CONCAT,
+                            arg.isSymbolic() ? (Symbolic::StringExpression*)arg.asSymbolic() :
+                                               (Symbolic::StringExpression*)new Symbolic::ConstantString(new std::string(arg.toUString(exec).ascii().data())));
+
+            }
+
+            JSRopeString* result = ropeBuilder.release();
+            result->makeSymbolic(symbolicConcat);
+
+            return result;
+
+        } else {
+            return ropeBuilder.release();
+        }
+#else
         return ropeBuilder.release();
+#endif
     }
 
     // ECMA 11.9.3

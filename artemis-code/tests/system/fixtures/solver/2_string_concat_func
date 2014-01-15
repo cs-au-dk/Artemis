@@ -1,0 +1,3 @@
+if (foo.concat(bar) == "foobar") {
+    alert(x_1);
+}

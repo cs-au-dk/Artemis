@@ -42,7 +42,8 @@ CVC4ConstraintWriter::CVC4ConstraintWriter()
 void CVC4ConstraintWriter::preVisitPathConditionsHook()
 {
     mOutput << "(set-logic QF_S)" << std::endl;
-    mOutput << "(set-option :produce-models true)" << std::endl << std::endl;
+    mOutput << "(set-option :produce-models true)" << std::endl;
+    mOutput << "(set-option :strings-exp true)" << std::endl << std::endl;
     mOutput << "(define-fun str.contains ((?in String) (?s String)) Bool\n"
                "    (exists ((?a String) (?b String))\n"
                "        (= ?in (str.++ ?a ?s ?b)))\n"
@@ -154,6 +155,23 @@ void CVC4ConstraintWriter::visit(Symbolic::StringCoercion* stringcoercion, void*
     if (!promise.isCoerced) {
         coercetype(mExpressionType, Symbolic::STRING, mExpressionBuffer); // Sets mExpressionBuffer and Type.
     }
+}
+
+void CVC4ConstraintWriter::visit(Symbolic::StringCharAt* stringcharat, void* arg)
+{
+    stringcharat->getSource()->accept(this);
+    if(!checkType(Symbolic::STRING)){
+        error("String char at operation on non-string");
+        return;
+    }
+
+    // CVC4 requires the length of mExpressionBuffer to be at least getPosition+1.
+    mOutput << "(assert (> (str.len " << mExpressionBuffer << ") " << stringcharat->getPosition() << "))" << std::endl;
+
+    std::ostringstream strs;
+    strs << "(str.at " << mExpressionBuffer << " " << stringcharat->getPosition() << ")";
+    mExpressionBuffer = strs.str();
+    mExpressionType = Symbolic::STRING;
 }
 
 void CVC4ConstraintWriter::visit(Symbolic::StringRegexReplace* regex, void* args)

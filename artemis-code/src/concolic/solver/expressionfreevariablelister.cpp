@@ -70,6 +70,11 @@ void ExpressionFreeVariableLister::visit(Symbolic::StringCoercion* stringcoercio
     stringcoercion->getExpression()->accept(this, arg);
 }
 
+void ExpressionFreeVariableLister::visit(Symbolic::StringCharAt* stringcharat, void* arg)
+{
+    stringcharat->getSource()->accept(this, arg);
+}
+
 void ExpressionFreeVariableLister::visit(Symbolic::SymbolicBoolean* symbolicboolean, void* arg)
 {
     mResult.insert(QString(symbolicboolean->getSource().getIdentifier().c_str()), symbolicboolean->getSource().getIdentifierMethod());
