@@ -91,7 +91,6 @@ JSC::JSValue SymbolicInterpreter::ail_op_binary(JSC::CallFrame* callFrame,
     if (!m_inSession) return result;
 
     if (!x.isSymbolic() && !y.isSymbolic()) {
-        std::cerr << "NOT SYMBOLIC OP" << std::endl;
         return result; // not symbolic
     }
 

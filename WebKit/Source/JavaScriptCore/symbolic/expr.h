@@ -30,6 +30,8 @@
 #include "expression/stringreplace.h"
 #include "expression/stringcharat.h"
 #include "expression/stringregexreplace.h"
+#include "expression/stringregexsubmatch.h"
+#include "expression/stringregexsubmatchindex.h"
 #include "expression/symbolicboolean.h"
 #include "expression/constantboolean.h"
 #include "expression/booleancoercion.h"

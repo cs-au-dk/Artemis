@@ -117,14 +117,15 @@ void CVC4ConstraintWriter::visit(Symbolic::StringBinaryOperation* stringbinaryop
     };
 
     switch (stringbinaryoperation->getOp()) {
-    case Symbolic::STRING_GEQ:
-    case Symbolic::STRING_GT:
-    case Symbolic::STRING_LEQ:
-    case Symbolic::STRING_LT:
+    case Symbolic::CONCAT:
+    case Symbolic::STRING_EQ:
+    case Symbolic::STRING_NEQ:
+    case Symbolic::STRING_SEQ:
+    case Symbolic::STRING_SNEQ:
+        break; // these are supported
+    default:
         error("Unsupported operation on strings");
         return;
-    default:
-        break;
     }
 
     stringbinaryoperation->getLhs()->accept(this);
@@ -237,6 +238,42 @@ void CVC4ConstraintWriter::visit(Symbolic::StringReplace* replace, void* args)
 
     mExpressionBuffer = temporary;
     mExpressionType = Symbolic::STRING;
+}
+
+void CVC4ConstraintWriter::visit(Symbolic::StringRegexSubmatch* submatch, void* args)
+{
+    submatch->getSource()->accept(this);
+    if(!checkType(Symbolic::STRING)){
+        error("String char at operation on non-string");
+        return;
+    }
+
+    std::string pre = this->emitAndReturnNewTemporary(Symbolic::STRING);
+    std::string match = this->emitAndReturnNewTemporary(Symbolic::STRING);
+    std::string post = this->emitAndReturnNewTemporary(Symbolic::STRING);
+
+    mOutput << "(assert (= " << mExpressionBuffer << " (str.++ " << pre << " " << match << " " << post << ")))" << std::endl;
+
+    std::ostringstream strs;
+
+    strs << "(str.in.re " << match << " (str.to.re \"" << *submatch->getRegexpattern() << "\") )";
+    mExpressionBuffer = strs.str();
+    mExpressionType = Symbolic::BOOL;
+}
+
+void CVC4ConstraintWriter::visit(Symbolic::StringRegexSubmatchIndex* submatchIndex, void* args)
+{
+    submatchIndex->getSource()->accept(this);
+    if(!checkType(Symbolic::STRING)){
+        error("String submatch index operation on non-string");
+        return;
+    }
+
+    /*
+     * TODO this is currently not supported, or we don't know how to support it, in CVC4.
+     */
+
+    error("SUBMATCH INDEX NOT SUPPORTED");
 }
 
 void CVC4ConstraintWriter::visit(Symbolic::StringLength* stringlength, void* args)

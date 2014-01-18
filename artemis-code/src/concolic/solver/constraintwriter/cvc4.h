@@ -38,8 +38,6 @@ public:
     CVC4ConstraintWriter();
 
 protected:
-    virtual void visit(Symbolic::StringLength* stringlength, void* args);
-
     virtual void visit(Symbolic::SymbolicString* symbolicstring, void* args);
     virtual void visit(Symbolic::ConstantString* constantstring, void* args);
     virtual void visit(Symbolic::StringBinaryOperation* stringbinaryoperation, void* args);
@@ -47,6 +45,9 @@ protected:
     virtual void visit(Symbolic::StringCharAt* stringcharat, void* arg);
     virtual void visit(Symbolic::StringRegexReplace* stringregexreplace, void* args);
     virtual void visit(Symbolic::StringReplace* stringreplace, void* args);
+    virtual void visit(Symbolic::StringRegexSubmatch* submatch, void* args);
+    virtual void visit(Symbolic::StringRegexSubmatchIndex* submatchIndex, void* args);
+    virtual void visit(Symbolic::StringLength* stringlength, void* args);
 
     virtual void preVisitPathConditionsHook();
     virtual void postVisitPathConditionsHook();

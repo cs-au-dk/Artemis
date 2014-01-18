@@ -92,14 +92,15 @@ void Z3STRConstraintWriter::visit(Symbolic::StringBinaryOperation* stringbinaryo
     };
 
     switch (stringbinaryoperation->getOp()) {
-    case Symbolic::STRING_GEQ:
-    case Symbolic::STRING_GT:
-    case Symbolic::STRING_LEQ:
-    case Symbolic::STRING_LT:
+    case Symbolic::CONCAT:
+    case Symbolic::STRING_EQ:
+    case Symbolic::STRING_NEQ:
+    case Symbolic::STRING_SEQ:
+    case Symbolic::STRING_SNEQ:
+        break; // these are supported
+    default:
         error("Unsupported operation on strings");
         return;
-    default:
-        break;
     }
 
     stringbinaryoperation->getLhs()->accept(this);

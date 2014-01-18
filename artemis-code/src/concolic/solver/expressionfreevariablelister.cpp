@@ -60,6 +60,16 @@ void ExpressionFreeVariableLister::visit(Symbolic::StringRegexReplace* stringreg
     stringregexreplace->getSource()->accept(this, arg);
 }
 
+void ExpressionFreeVariableLister::visit(Symbolic::StringRegexSubmatch* submatch, void* arg)
+{
+    submatch->getSource()->accept(this, arg);
+}
+
+void ExpressionFreeVariableLister::visit(Symbolic::StringRegexSubmatchIndex* submatchIndex, void* arg)
+{
+    submatchIndex->getSource()->accept(this, arg);
+}
+
 void ExpressionFreeVariableLister::visit(Symbolic::StringReplace* stringreplace, void* arg)
 {
     stringreplace->getSource()->accept(this, arg);

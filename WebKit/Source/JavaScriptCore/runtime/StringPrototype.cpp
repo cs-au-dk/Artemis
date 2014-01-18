@@ -979,7 +979,17 @@ EncodedJSValue JSC_HOST_CALL stringProtoFuncSearch(ExecState* exec)
     }
     RegExpConstructor* regExpConstructor = exec->lexicalGlobalObject()->regExpConstructor();
     MatchResult result = regExpConstructor->performMatch(*globalData, reg, string, s, 0);
-    return JSValue::encode(result ? jsNumber(result.start) : jsNumber(-1));
+
+    JSValue r = result ? jsNumber(result.start) : jsNumber(-1);
+
+#ifdef ARTEMIS
+    if (thisValue.isSymbolic()) {
+        r.makeSymbolic(new Symbolic::StringRegexSubmatchIndex((Symbolic::StringExpression*)thisValue.asSymbolic(),
+                                                              new std::string(reg->pattern().ascii().data())));
+    }
+#endif
+
+    return JSValue::encode(r);
 }
 
 EncodedJSValue JSC_HOST_CALL stringProtoFuncSlice(ExecState* exec)

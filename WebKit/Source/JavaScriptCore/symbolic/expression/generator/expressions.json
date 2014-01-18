@@ -156,6 +156,26 @@
 
 
 	{
+		"ID": "StringRegexSubmatch",
+		"type": "expression",
+		"parent": "BooleanExpression",
+		"fields": [
+			["StringExpression*", "source"],
+			["std::string*", "regexpattern"]
+		]
+	},
+
+	{
+		"ID": "StringRegexSubmatchIndex",
+		"type": "expression",
+		"parent": "IntegerExpression",
+		"fields": [
+			["StringExpression*", "source"],
+			["std::string*", "regexpattern"]
+		]
+	},
+
+	{
 		"ID": "BooleanExpression",
 		"type": "interface",
 		"parent": "Expression"

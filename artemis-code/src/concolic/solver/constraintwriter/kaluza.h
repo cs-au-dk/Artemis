@@ -63,6 +63,8 @@ private:
     void visit(Symbolic::StringCoercion* stringcoercion, void* args);
     void visit(Symbolic::StringCharAt* stringcharat, void* arg);
     void visit(Symbolic::StringRegexReplace* stringregexreplace, void* args);
+    void visit(Symbolic::StringRegexSubmatch* submatch, void* arg);
+    void visit(Symbolic::StringRegexSubmatchIndex* submatchIndex, void* arg);
     void visit(Symbolic::StringReplace* stringreplace, void* args);
     void visit(Symbolic::SymbolicBoolean* symbolicboolean, void* args);
     void visit(Symbolic::ConstantBoolean* constantboolean, void* args);

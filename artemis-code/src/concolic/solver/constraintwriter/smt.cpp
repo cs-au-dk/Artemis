@@ -58,7 +58,7 @@ bool SMTConstraintWriter::write(PathConditionPtr pathCondition, std::string outp
     mError = false;
 
     mOutput.open(outputFile.data());
-    mConstriantLog.open("/tmp/smtconstraintlog", std::ofstream::out | std::ofstream::app);
+    mConstriantLog.open("/tmp/constraintlog", std::ofstream::out | std::ofstream::app);
 
     mConstriantLog << "********************************************************************************\n";
     mConstriantLog << "Wrote Constraint at " << QDateTime::currentDateTime().toString("dd-MM-yy-hh-mm-ss").toStdString() << "\n";
@@ -285,6 +285,11 @@ void SMTConstraintWriter::visit(Symbolic::BooleanBinaryOperation* booleanbinaryo
     mExpressionType = opGetType(booleanbinaryoperation->getOp());
 }
 
+void SMTConstraintWriter::visit(Symbolic::StringRegexSubmatch* submatch, void* args)
+{
+    error("NO SYMBOLIC STRING REGEX SUBMATCH SUPPORT");
+}
+
 /** Other Operations **/
 
 void SMTConstraintWriter::visit(Symbolic::StringRegexReplace* regex, void* args)
@@ -302,6 +307,10 @@ void SMTConstraintWriter::visit(Symbolic::StringLength* stringlength, void* args
     error("NO STRING LENGTH SUPPORT");
 }
 
+void SMTConstraintWriter::visit(Symbolic::StringRegexSubmatchIndex* submatchIndex, void* args)
+{
+    error("NO STRING REGEX SUBMATCH-INDEX SUPPORT");
+}
 
 /** Utility **/
 

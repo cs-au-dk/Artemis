@@ -111,6 +111,7 @@ protected:
     virtual void visit(Symbolic::IntegerBinaryOperation* integerbinaryoperation, void* args);
     virtual void visit(Symbolic::IntegerCoercion* integercoercion, void* args);
     virtual void visit(Symbolic::StringLength* stringlength, void* args);
+    virtual void visit(Symbolic::StringRegexSubmatchIndex* submatchIndex, void* arg);
 
     // Returns string values to mExpressionBuffer
     virtual void visit(Symbolic::SymbolicString* symbolicstring, void* args);
@@ -126,6 +127,7 @@ protected:
     virtual void visit(Symbolic::ConstantBoolean* constantboolean, void* args);
     virtual void visit(Symbolic::BooleanCoercion* booleancoercion, void* args);
     virtual void visit(Symbolic::BooleanBinaryOperation* booleanbinaryoperation, void* args);
+    virtual void visit(Symbolic::StringRegexSubmatch* submatch, void* arg);
 
     // Output writing
     virtual void preVisitPathConditionsHook();

@@ -44,6 +44,8 @@ public:
     void visit(Symbolic::StringCharAt* stringcharat, void* arg);
     void visit(Symbolic::StringRegexReplace* stringregexreplace, void* arg);
     void visit(Symbolic::StringReplace* stringreplace, void* arg);
+    void visit(Symbolic::StringRegexSubmatch* submatch, void* arg);
+    void visit(Symbolic::StringRegexSubmatchIndex* submatchIndex, void* arg);
     void visit(Symbolic::SymbolicBoolean* symbolicboolean, void* arg);
     void visit(Symbolic::ConstantBoolean* constantboolean, void* arg);
     void visit(Symbolic::BooleanCoercion* booleancoercion, void* arg);
