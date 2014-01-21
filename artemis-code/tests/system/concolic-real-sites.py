@@ -28,6 +28,7 @@ import getpass
 import shutil
 
 from harness.artemis import execute_artemis
+from harness.artemis import ARTEMIS_EXEC
 
 try:
     import gdata.spreadsheet.service
@@ -127,6 +128,15 @@ def test_generator(site_name, site_url, site_ep, dry_run=False, logger=None, ver
         # Copy the constraint log into the current test directory.
         shutil.copyfile("/tmp/z3constraintlog", os.path.join(test_dir, site_name, "constraint-log.txt"))
         
+        # If the return code indicates a failure, check for a core dump and create a backtrace if one exists.
+        # We also delete the core dumps to save space!
+        if report['returncode'] != 0 and os.path.isfile('core'):
+            try:
+                bt_cmd = "gdb -q -n -ex bt -batch %s core > backtrace.txt 2>&1" % ARTEMIS_EXEC
+                subprocess.call(bt_cmd, shell=True);
+                os.remove('core')
+            except OSError:
+                pass # Ignore any errors in this part.
         
         if logger is not None:
             # Add the information about this run to the logged data.
