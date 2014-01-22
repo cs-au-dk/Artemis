@@ -247,9 +247,11 @@ TraceNodePtr DepthFirstSearch::nextAfterLeaf()
     *mCurrentPC = parent.condition;
 
     // If the branch is symbolic, we need to add its condition to the current PC.
+    // Also update the depth, as we would have done in DepthFirstSearch::visit(TraceSymbolicBranch *node).
     TraceSymbolicBranch* sym = dynamic_cast<TraceSymbolicBranch*>(parent.node);
     if(sym){
         mCurrentPC->addCondition(sym->getSymbolicCondition(), true); // We are always taking the true branch here.
+        mCurrentDepth++;
     }
 
     // Keep the previous parent information up-to-date when branching from the stack.
