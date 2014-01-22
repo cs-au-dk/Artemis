@@ -178,17 +178,17 @@ void CVC4ConstraintWriter::visit(Symbolic::StringCharAt* stringcharat, void* arg
 void CVC4ConstraintWriter::visit(Symbolic::StringRegexReplace* regex, void* args)
 {
     // special case input filtering (filters matching X and replacing with "")
-    if (regex->getReplace()->compare("") != std::string::npos) {
+    if (regex->getReplace()->compare("") == 0) {
 
         // right now, only support a very limited number of whitespace filters
 
-        bool replaceSpaces = regex->getRegexpattern()->compare("/ /g") != std::string::npos ||
-                regex->getRegexpattern()->compare("/ /") != std::string::npos;
-        bool replaceNewlines = regex->getRegexpattern()->compare("/\\n/g") != std::string::npos ||
-                regex->getRegexpattern()->compare("/\\r/") != std::string::npos ||
-                regex->getRegexpattern()->compare("/\\r\\n/") != std::string::npos;
+        bool replaceSpaces = regex->getRegexpattern()->compare("/ /g") == 0 ||
+                regex->getRegexpattern()->compare("/ /") == 0;
+        bool replaceNewlines = regex->getRegexpattern()->compare("/\\n/g") == 0 ||
+                regex->getRegexpattern()->compare("/\\r/") == 0 ||
+                regex->getRegexpattern()->compare("/\\r\\n/") == 0;
 
-        if (replaceSpaces || replaceNewlines) {
+        if (replaceSpaces || replaceNewlines || true) { // TODO: Hack, always filter away these for now
 
             regex->getSource()->accept(this, args); // send args through, allow local coercions
 
