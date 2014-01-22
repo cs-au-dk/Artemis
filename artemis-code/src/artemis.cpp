@@ -97,6 +97,9 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             "           all - Generate a graph of the tree at every iteration.\n"
             "           all-overview - Like all but also includes simplified overview graphs."
             "\n"
+            "--concolic-unlimited-depth\n"
+            "           Removes the depth limit from the concolic search procedure.\n"
+            "\n"
             "--strategy-priority <strategy>:\n"
             "           Select priority strategy.\n"
             "\n"
@@ -128,6 +131,7 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
     {"function-call-heap-report-random-factor", required_argument, NULL, 'l'},
     {"concolic-tree-output", required_argument, NULL, 'd'},
     {"concolic-button", required_argument, NULL, 'b'},
+    {"concolic-unlimited-depth", no_argument, NULL, 'u'},
     {"help", no_argument, NULL, 'h'},
     {0, 0, 0, 0}
     };
@@ -351,6 +355,11 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
                 exit(1);
             }
 
+            break;
+        }
+
+        case 'u': {
+            options.concolicUnlimitedDepth = true;
             break;
         }
 

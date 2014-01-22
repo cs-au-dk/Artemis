@@ -50,6 +50,7 @@ ConcolicRuntime::ConcolicRuntime(QObject* parent, const Options& options, const 
     // The number of times we are willing to run the search procedure hoping to find some more nodes.
     // Note that if we know there are no unexplored nodes left we will stop anyway, so this is an upper limit.
     mSearchPasses = 3;
+    mSearchPassesUnlimited = mOptions.concolicUnlimitedDepth;
     mSearchFoundTarget = false;
 }
 
@@ -501,7 +502,7 @@ void ConcolicRuntime::exploreNextTarget()
 }
 
 
-// Uses the search strategy to choose a new tsarget and then explore it.
+// Uses the search strategy to choose a new target and then explore it.
 void ConcolicRuntime::chooseNextTargetAndExplore()
 {
     // Choose the next target.
@@ -511,9 +512,11 @@ void ConcolicRuntime::chooseNextTargetAndExplore()
         // Explore this target. Runs the next execution itself.
         exploreNextTarget();
 
-    }else if (mSearchPasses > 1 && mSearchFoundTarget){
+    }else if (mSearchFoundTarget && (mSearchPassesUnlimited || mSearchPasses > 1)){
         mSearchFoundTarget = false;
-        mSearchPasses--;
+        if(!mSearchPassesUnlimited){
+            mSearchPasses--;
+        }
 
         Log::debug("\n============= Finished DFS ==============");
         Log::info("Finished this pass of the tree. Increasing depth limit and restarting.");

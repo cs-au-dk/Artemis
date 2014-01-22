@@ -94,6 +94,7 @@ protected:
     // Controls for the search procedure.
     DepthFirstSearchPtr mSearchStrategy; // TODO: For now we are using DFS hard-coded...
     int mSearchPasses; // The number of passes to make of the search algorithm before giving up.
+    bool mSearchPassesUnlimited; // Whether to limit the number of passes we do at all. If true, we search until there are no unexplored nodes remaining.
     bool mSearchFoundTarget;
 
     // For now, we can choose between entry points specified by XPath (with --concolic-button) or the built-in EP finding.

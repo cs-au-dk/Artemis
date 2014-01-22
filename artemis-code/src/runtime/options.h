@@ -69,6 +69,7 @@ typedef struct OptionsType {
         reportPathTrace(NO_TRACES),
         concolicTreeOutput(TREE_FINAL),
         concolicTreeOutputOverview(false),
+        concolicUnlimitedDepth(false),
         reportHeap(NO_CALLS),
         heapReportFactor(1)
     {}
@@ -99,6 +100,7 @@ typedef struct OptionsType {
     ConcolicTreeOutput concolicTreeOutput;
     bool concolicTreeOutputOverview;
     QString concolicEntryPoint;
+    bool concolicUnlimitedDepth;
 
     HeapReport reportHeap;
 
