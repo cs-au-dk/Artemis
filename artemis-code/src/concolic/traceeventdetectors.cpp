@@ -197,7 +197,7 @@ QPair<double, QMap<int, int> > TraceDomModDetector::computeMetrics(QString start
 // It is not super-important exactly how we define the tokens.
 QStringList TraceDomModDetector::tokenise(QString dom)
 {
-    QRegExp delimiters("\\s+|<|>|\"|'|:|\\.|,|!|\\?|/|;");
+    QRegExp delimiters("\\s+|<|>|\"|'|:|\\.|,|!|\\?|/|;|-");
     return dom.split(delimiters, QString::SkipEmptyParts);
 }
 
@@ -275,6 +275,16 @@ QList<QString> TraceDomModDetector::getIndicators()
     words.append("Warning");
     words.append("Valid");
     words.append("Invalid");
+    words.append("Required");
+    words.append("Require");
+    words.append("Sorry");
+    words.append("Field");
+    words.append("Selected");
+    words.append("Select");
+    words.append("Enter");
+    words.append("Important");
+    words.append("Correct");
+    words.append("Incorrect");
     return words;
 }
 const QList<QString> TraceDomModDetector::indicators = TraceDomModDetector::getIndicators();
