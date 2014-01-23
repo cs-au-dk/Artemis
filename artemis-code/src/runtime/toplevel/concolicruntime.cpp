@@ -476,10 +476,6 @@ void ConcolicRuntime::exploreNextTarget()
         preConcreteExecution();
 
     }else{
-        // TODO: Should try someting else...?
-        Log::debug("Could not solve the constraint.");
-        Log::debug("Skipping this target!");
-
         // Mark the current node as unsolvable.
         // If it was solved but unsatisfiable, then mark it as UNSAT instead.
         if(solution->isUnsat()){
@@ -490,6 +486,7 @@ void ConcolicRuntime::exploreNextTarget()
             Log::info("  Could not solve constraint:");
             Log::info(QString("    %1").arg(solution->getUnsolvableReason()).toStdString());
         }
+        Log::debug("Skipping this target!");
 
         // Dump the current state of the tree to a file.
         if(mOptions.concolicTreeOutput == TREE_ALL){
