@@ -33,6 +33,7 @@ TraceNodePtr TraceMerger::merge(TraceNodePtr trace, TraceNodePtr executiontree)
 
     if (executiontree.isNull()) {
         return trace; // replace the entire execution tree with the trace
+        statistics()->accumulate("Concolic::ExecutionTree::DistinctTracesExplored", 1);
     }
 
     TraceMerger merger;
@@ -60,6 +61,7 @@ void TraceMerger::visit(TraceEnd* node)
 
         // Insert this trace directly into the tree and return
         mCurrentTree = mCurrentTrace;
+        statistics()->accumulate("Concolic::ExecutionTree::DistinctTracesExplored", 1);
         return;
     }
 
@@ -79,6 +81,7 @@ void TraceMerger::visit(TraceBranch* node)
 
         // Insert this trace directly into the tree and return
         mCurrentTree = mCurrentTrace;
+        statistics()->accumulate("Concolic::ExecutionTree::DistinctTracesExplored", 1);
         return;
     }
 
@@ -143,6 +146,7 @@ void TraceMerger::visit(TraceAnnotation* node)
 
         // Insert this trace directly into the tree and return
         mCurrentTree = mCurrentTrace;
+        statistics()->accumulate("Concolic::ExecutionTree::DistinctTracesExplored", 1);
         return;
     }
 

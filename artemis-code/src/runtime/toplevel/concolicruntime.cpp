@@ -298,8 +298,6 @@ void ConcolicRuntime::mergeTraceIntoTree()
         if(mSearchStrategy->overUnexploredNode()){
             mSearchStrategy->markNodeMissed();
             Log::info("  Recorded trace did not take the expected path.");
-        }else{
-            statistics()->accumulate("Concolic::ExecutionTree::DistinctTracesExplored", 1);
         }
     }
 
