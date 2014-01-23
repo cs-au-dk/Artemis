@@ -65,7 +65,7 @@ void ConcolicRuntime::run(const QUrl& url)
     mNextConfiguration = QSharedPointer<ExecutableConfiguration>(new ExecutableConfiguration(QSharedPointer<InputSequence>(new InputSequence()), url));
 
     mGraphOutputIndex = 1;
-    mGraphOutputNameFormat = QString("tree-%1_%2%3.gv").arg(QDateTime::currentDateTime().toString("dd-MM-yy-hh-mm-ss"));
+    mGraphOutputNameFormat = QString("tree-%1_%2%3-%4.gv").arg(QDateTime::currentDateTime().toString("yyyy-MM-dd-hh-mm-ss"));
 
     std::ofstream constraintLog;
     constraintLog.open("/tmp/z3constraintlog", std::ofstream::out | std::ofstream::app);
@@ -148,15 +148,37 @@ void ConcolicRuntime::postConcreteExecution(ExecutableConfigurationConstPtr conf
 // Utility method to output the tree graph at each step.
 void ConcolicRuntime::outputTreeGraph()
 {
+    if(mOptions.concolicTreeOutput == TREE_NONE){
+        return;
+    }
+    // Output the graphs, and if we are in TREE_FINAL mode, then delete the older ones.
+    // We do it like this to make sure there is always an up-to-date version of the tree saved out either for
+    // viewing the progress or in case of crashes.
+
     // We want all the graphs from a certain run to have the same "base" name and an increasing index, so they can be easily grouped.
-    QString name = mGraphOutputNameFormat.arg("").arg(mGraphOutputIndex);
-    QString name_min = mGraphOutputNameFormat.arg("min_").arg(mGraphOutputIndex);
+    QString name = mGraphOutputNameFormat.arg("").arg(mNumIterations).arg(mGraphOutputIndex);
+    QString name_min = mGraphOutputNameFormat.arg("min_").arg(mNumIterations).arg(mGraphOutputIndex);
     Log::debug(QString("CONCOLIC-INFO: Writing tree to file %1").arg(name).toStdString());
     mGraphOutputIndex++;
 
+    QString previous_name = mGraphOutputPreviousName;
+    QString previous_name_min = mGraphOutputOverviewPreviousName;
+
     mTraceDisplay.writeGraphFile(mSymbolicExecutionGraph, name, false);
+    mGraphOutputPreviousName = name;
     if(mOptions.concolicTreeOutputOverview){
         mTraceDisplayOverview.writeGraphFile(mSymbolicExecutionGraph, name_min, false);
+        mGraphOutputOverviewPreviousName = name_min;
+    }
+
+    if(mOptions.concolicTreeOutput == TREE_FINAL){
+        // Delete the older graph files.
+        if(!previous_name.isEmpty()){ // Empty if we have not written a graph yet.
+            QFile::remove(previous_name);
+        }
+        if(!previous_name_min.isEmpty()){ // Empty if we have not written a graph yet.
+            QFile::remove(previous_name_min);
+        }
     }
 }
 
@@ -302,9 +324,7 @@ void ConcolicRuntime::mergeTraceIntoTree()
     }
 
     // Dump the current state of the tree to a file.
-    if(mOptions.concolicTreeOutput == TREE_ALL){
-        outputTreeGraph();
-    }
+    outputTreeGraph();
 }
 
 
@@ -487,9 +507,7 @@ void ConcolicRuntime::exploreNextTarget()
         Log::debug("Skipping this target!");
 
         // Dump the current state of the tree to a file.
-        if(mOptions.concolicTreeOutput == TREE_ALL){
-            outputTreeGraph();
-        }
+        outputTreeGraph();
 
         // Skip this node and move on to the next.
         chooseNextTargetAndExplore();
@@ -523,12 +541,6 @@ void ConcolicRuntime::chooseNextTargetAndExplore()
     }else{
         Log::debug("\n============= Finished DFS ==============");
         Log::info("Finished serach of the tree.");
-
-        if(mOptions.concolicTreeOutput == TREE_FINAL){
-            // "Fake" the counter for graph output, as this will be the only one we create.
-            mGraphOutputIndex = mNumIterations;
-            outputTreeGraph();
-        }
 
         mWebkitExecutor->detach();
         done();

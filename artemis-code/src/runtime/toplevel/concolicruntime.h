@@ -111,6 +111,8 @@ protected:
     TraceDisplayOverview mTraceDisplayOverview;
     QString mGraphOutputNameFormat;
     int mGraphOutputIndex;
+    QString mGraphOutputPreviousName;
+    QString mGraphOutputOverviewPreviousName;
 
     // Helper methods for postConcreteExecution.
     void setupNextConfiguration(QSharedPointer<FormInputCollection> formInput);
