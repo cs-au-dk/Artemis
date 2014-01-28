@@ -68,10 +68,10 @@ void ConcolicRuntime::run(const QUrl& url)
     mGraphOutputNameFormat = QString("tree-%1_%2%3-%4.gv").arg(QDateTime::currentDateTime().toString("yyyy-MM-dd-hh-mm-ss"));
 
     std::ofstream constraintLog;
-    constraintLog.open("/tmp/z3constraintlog", std::ofstream::out | std::ofstream::app);
+    constraintLog.open("/tmp/constraintlog", std::ofstream::out | std::ofstream::app);
 
     constraintLog << "================================================================================\n";
-    constraintLog << "Begin concolic analysis of " << url.toString().toStdString() << " at " << QDateTime::currentDateTime().toString("dd-MM-yy-hh-mm-ss").toStdString() << "\n";
+    constraintLog << "Begin concolic analysis of " << url.toString().toStdString() << " at " << QDateTime::currentDateTime().toString("yyyy-MM-dd-hh-mm-ss").toStdString() << "\n";
     constraintLog << "\n";
 
     constraintLog.close();

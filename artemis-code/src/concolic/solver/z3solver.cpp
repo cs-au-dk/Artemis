@@ -39,7 +39,7 @@ Z3Solver::Z3Solver(): Solver() {
 
 SolutionPtr Z3Solver::solve(PathConditionPtr pc)
 {
-    std::ofstream constraintLog("/tmp/z3constraintlog", std::ofstream::out | std::ofstream::app);
+    std::ofstream constraintLog("/tmp/constraintlog", std::ofstream::out | std::ofstream::app);
 
     // 1. translate pc to something solvable using the translator
 

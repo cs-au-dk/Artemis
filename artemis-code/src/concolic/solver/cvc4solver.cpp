@@ -49,7 +49,7 @@ SolutionPtr CVC4Solver::solve(PathConditionPtr pc)
         statistics()->accumulate("Concolic::Solver::ConstraintsNotWritten", 1);
         constraintLog << "Could not translate the PC into solver input." << std::endl;
         constraintLog << pc->toStatisticsString() << std::endl << std::endl;
-        return SolutionPtr(new Solution(false, false));
+        return SolutionPtr(new Solution(false, false, "Could not translate the PC into solver input."));
     }
 
     statistics()->accumulate("Concolic::Solver::ConstraintsWritten", 1);
@@ -64,7 +64,7 @@ SolutionPtr CVC4Solver::solve(PathConditionPtr pc)
     if (artemisdir == NULL) {
         qDebug() << "Warning, ARTEMISDIR environment variable not set!";
         constraintLog << "Not running due to ARTEMISDIR environmaent variable not being set." << std::endl << std::endl;
-        return SolutionPtr(new Solution(false, false));
+        return SolutionPtr(new Solution(false, false, "Could not run solver because ARTEMISDIR is not set."));
     }
 
     QDir solverpath = QDir(QString(artemisdir));
@@ -73,12 +73,13 @@ SolutionPtr CVC4Solver::solve(PathConditionPtr pc)
     if (!solverpath.cd("contrib") || !solverpath.cd("CVC4") || !solverpath.exists(exec)) {
         qDebug() << "Warning, could not find " << exec;;
         constraintLog << "Could not find " << exec.toStdString() << std::endl << std::endl;
-        return SolutionPtr(new Solution(false, false));
+        return SolutionPtr(new Solution(false, false, "Could not find CVC4 binary."));
     }
 
     // --rewrite-divk enables div and mod by a constant factor
     std::string cmd = solverpath.filePath(exec).toStdString() + " --lang=smtlib2 /tmp/cvc4input --rewrite-divk > /tmp/cvc4result 2> /tmp/cvc4result";
     std::system(cmd.data()); // result of command interpreted in step 3
+    // We do not check the return code as it will be an "error" in unsat cases. Error checking is done below.
 
     // 3. interpret the result
 
@@ -112,7 +113,7 @@ SolutionPtr CVC4Solver::solve(PathConditionPtr pc)
 
             constraintLog << std::endl;
 
-            return SolutionPtr(new Solution(false, false));
+            return SolutionPtr(new Solution(false, false, "There was an error while running the solver."));
 
         }
 
@@ -195,7 +196,7 @@ SolutionPtr CVC4Solver::solve(PathConditionPtr pc)
     } else {
         statistics()->accumulate("Concolic::Solver::ConstraintsNotSolved", 1);
         constraintLog << "Could not read result file." << std::endl << std::endl;
-        return SolutionPtr(new Solution(false, false));
+        return SolutionPtr(new Solution(false, false, "Could not read result file."));
     }
 
     constraintLog << std::endl;

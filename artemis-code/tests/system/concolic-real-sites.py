@@ -104,9 +104,9 @@ def test_generator(site_name, site_url, site_ep, dry_run=False, logger=None, ver
     """Returns a function which will test the given website when executed."""
     
     def test(self):
-        # Clear /tmp/z3constraintlog so we can get the constraints from this run only.
+        # Clear /tmp/constraintlog so we can get the constraints from this run only.
         if not dry_run:
-            open("/tmp/z3constraintlog", 'w').close()
+            open("/tmp/constraintlog", 'w').close()
         
         # Run and time the test
         start_time = time.time()
@@ -126,7 +126,7 @@ def test_generator(site_name, site_url, site_ep, dry_run=False, logger=None, ver
             return
         
         # Copy the constraint log into the current test directory.
-        shutil.copyfile("/tmp/z3constraintlog", os.path.join(test_dir, site_name, "constraint-log.txt"))
+        shutil.copyfile("/tmp/constraintlog", os.path.join(test_dir, site_name, "constraint-log.txt"))
         
         # If the return code indicates a failure, check for a core dump and create a backtrace if one exists.
         # We also delete the core dumps to save space!
