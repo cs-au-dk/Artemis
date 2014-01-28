@@ -42,6 +42,8 @@
 #include "strategies/prioritizer/collectedprioritizer.h"
 
 #include "concolic/solver/z3solver.h"
+#include "concolic/solver/kaluzasolver.h"
+#include "concolic/solver/cvc4solver.h"
 #include "concolic/pathcondition.h"
 
 #include "runtime.h"
@@ -182,13 +184,13 @@ void Runtime::done()
     // solve the last PC - this is needed by some system tests
     PathConditionPtr pc = PathCondition::createFromTrace(mWebkitExecutor->getTraceBuilder()->trace());
 
-    if (mOptions.concolicNegateLastConstraint) {
+    if (!pc.isNull() && mOptions.concolicNegateLastConstraint) {
         pc->negateLastCondition();
     }
 
-    Z3Solver solver;
+    SolverPtr solver = getSolver(mOptions);
 
-    SolutionPtr solution = solver.solve(pc);
+    SolutionPtr solution = solver->solve(pc);
     solution->toStatistics();
 
     // Print final output
@@ -235,6 +237,21 @@ void Runtime::done()
 
     // TODO, see next TODO
     emit sigTestingDone();
+}
+
+SolverPtr Runtime::getSolver(const Options& options)
+{
+    switch(options.solver) {
+    case Z3STR:
+        return Z3SolverPtr(new Z3Solver());
+    case KALUZA:
+        return KaluzaSolverPtr(new KaluzaSolver());
+    case CVC4:
+        return CVC4SolverPtr(new CVC4Solver());
+    default:
+        cerr << "Unknown solver selected" << std::endl;
+        exit(1);
+    }
 }
 
 void Runtime::slAbortedExecution(QString reason)

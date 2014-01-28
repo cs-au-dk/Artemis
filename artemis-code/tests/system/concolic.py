@@ -1,14 +1,13 @@
 #!/usr/bin/env python
 
-WEBSERVER_PORT = 8002
-WEBSERVER_ROOT = './fixtures/concolic/'
-WEBSERVER_URL = 'http://localhost:%s' % WEBSERVER_PORT
+import os
+
+FIXTURE_ROOT = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'fixtures/concolic/')
 
 import sys
 import re
 import unittest
 
-from harness.environment import WebServer
 from harness.artemis import execute_artemis
 from os import listdir
 from os.path import isfile, join
@@ -22,7 +21,7 @@ class TestSequence(unittest.TestCase):
 def _run_test(test_filename, pc=None, dryrun=False):
     name = test_filename.replace('.', '_')
 
-    report = execute_artemis(name, "%s/%s" % (WEBSERVER_URL, test_filename),
+    report = execute_artemis(name, "%s%s" % (FIXTURE_ROOT, test_filename),
                              iterations=0,
                              major_mode='concolic',
                              dryrun=dryrun)
@@ -78,7 +77,7 @@ def _list_tests_in_folder(folder):
 
 def test_generator(filename, name, test_dict=None, internal_test=None, dry_run=False):
     def test(self):
-        report = execute_artemis(name, "%s/%s" % (WEBSERVER_URL, filename),
+        report = execute_artemis(name, "%s%s" % (FIXTURE_ROOT, filename),
                                  iterations=0,
                                  major_mode='concolic',
                                  dryrun=dry_run)
@@ -154,13 +153,11 @@ def _assert_test_case(test_case, op, v1, v2):
 
 
 if __name__ == '__main__':
-    server = WebServer(WEBSERVER_ROOT, WEBSERVER_PORT)
     dryrun = len(sys.argv) == 2 and sys.argv[1] == "dryrun"
-    for t in _list_tests_in_folder(WEBSERVER_ROOT):
+    for t in _list_tests_in_folder(FIXTURE_ROOT):
         test_name = 'test_%s' % t['fn'].replace(".", "_")
         test = test_generator(t['fn'], test_name, test_dict=t['test'], internal_test=t['i_test'],
                               dry_run=dryrun)
         setattr(TestSequence, test_name, test)
     suite = unittest.TestLoader().loadTestsFromTestCase(TestSequence)
     unittest.TextTestRunner(verbosity=2).run(suite)
-    del server

@@ -541,7 +541,7 @@ namespace JSC {
 
 #ifdef ARTEMIS
     inline bool JSValue::isSymbolic() const {
-        return (u.asInt64 & TagTypeSymbolic) == TagTypeSymbolic;
+        return ((u.asInt64 & TagTypeSymbolic) == TagTypeSymbolic);
     }
 
     inline SymbolicImmediate* JSValue::getImmediate() const

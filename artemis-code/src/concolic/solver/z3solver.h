@@ -36,6 +36,8 @@ public:
 
 };
 
+typedef QSharedPointer<Z3Solver> Z3SolverPtr;
+
 }
 
 #endif // Z3SOLVER_H

@@ -83,6 +83,9 @@ def execute_artemis(execution_uuid, url, iterations=1,
         args.append('--concolic-button')
         args.append(concolic_button)
 
+    args.append('-v')
+    args.append('all')
+
     cmd = [ARTEMIS_EXEC] + [url] + args
 
     if dryrun:

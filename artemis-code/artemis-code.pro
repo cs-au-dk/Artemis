@@ -6,6 +6,8 @@ debugart {
 INCLUDEPATH += \
     ../WebKit/WebKitBuild/Debug/include/ \
     ../WebKit/WebKitBuild/Debug/include/QtWebKit/ \
+    ../WebKit/Source/JavaScriptCore/runtime/ \
+    ../WebKit/Source/JavaScriptCore/ \
     ../WebKit/Source/WebCore/ \
     ../WebKit/Source/WTF/ \
     ../WebKit/Source/ \
@@ -15,6 +17,8 @@ LIBS += ../WebKit/WebKitBuild/Debug/lib/libQtWebKit.so
 INCLUDEPATH += \
     ../WebKit/WebKitBuild/Release/include/ \
     ../WebKit/WebKitBuild/Release/include/QtWebKit/ \
+    ../WebKit/Source/JavaScriptCore/runtime/ \
+    ../WebKit/Source/JavaScriptCore/ \
     ../WebKit/Source/WebCore/ \
     ../WebKit/Source/WTF/ \
     ../WebKit/Source/ \

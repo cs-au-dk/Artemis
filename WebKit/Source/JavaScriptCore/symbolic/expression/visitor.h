@@ -40,7 +40,10 @@ enum Type {
     class StringCoercion;
     class StringLength;
     class StringReplace;
+    class StringCharAt;
     class StringRegexReplace;
+    class StringRegexSubmatch;
+    class StringRegexSubmatchIndex;
     class SymbolicBoolean;
     class ConstantBoolean;
     class BooleanCoercion;
@@ -60,7 +63,10 @@ public:
     virtual void visit(StringCoercion* stringcoercion, void* arg) = 0;
     virtual void visit(StringLength* stringlength, void* arg) = 0;
     virtual void visit(StringReplace* stringreplace, void* arg) = 0;
+    virtual void visit(StringCharAt* stringcharat, void* arg) = 0;
     virtual void visit(StringRegexReplace* stringregexreplace, void* arg) = 0;
+    virtual void visit(StringRegexSubmatch* stringregexsubmatch, void* arg) = 0;
+    virtual void visit(StringRegexSubmatchIndex* stringregexsubmatchindex, void* arg) = 0;
     virtual void visit(SymbolicBoolean* symbolicboolean, void* arg) = 0;
     virtual void visit(ConstantBoolean* constantboolean, void* arg) = 0;
     virtual void visit(BooleanCoercion* booleancoercion, void* arg) = 0;

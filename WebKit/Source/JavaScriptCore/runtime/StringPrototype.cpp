@@ -19,6 +19,8 @@
  *
  */
 
+#include <iostream>
+
 #include "config.h"
 #include "StringPrototype.h"
 
@@ -727,21 +729,45 @@ EncodedJSValue JSC_HOST_CALL stringProtoFuncToString(ExecState* exec)
 EncodedJSValue JSC_HOST_CALL stringProtoFuncCharAt(ExecState* exec)
 {
     JSValue thisValue = exec->hostThisValue();
-    if (thisValue.isUndefinedOrNull()) // CheckObjectCoercible
-        return throwVMTypeError(exec);
-    UString s = thisValue.toString(exec)->value(exec);
-    unsigned len = s.length();
-    JSValue a0 = exec->argument(0);
-    if (a0.isUInt32()) {
-        uint32_t i = a0.asUInt32();
-        if (i < len)
-            return JSValue::encode(jsSingleCharacterSubstring(exec, s, i));
-        return JSValue::encode(jsEmptyString(exec));
+     if (thisValue.isUndefinedOrNull()) // CheckObjectCoercible
+         return throwVMTypeError(exec);
+     UString s = thisValue.toString(exec)->value(exec);
+     unsigned len = s.length();
+     JSValue a0 = exec->argument(0);
+
+     JSValue result;
+
+     if (a0.isUInt32()) {
+         uint32_t i = a0.asUInt32();
+         if (i < len)
+             result = jsSingleCharacterSubstring(exec, s, i);
+         else
+            result = JSString::createHasOtherOwner(exec->globalData(), StringImpl::empty()); //jsEmptyString(exec); // don't use global empty string, otherwise we set a symbolic value globally, I'm not sure if this creates a leak
+     } else {
+         double dpos = a0.toInteger(exec);
+         if (dpos >= 0 && dpos < len)
+             result = jsSingleCharacterSubstring(exec, s, static_cast<unsigned>(dpos));
+         else
+             result = JSString::createHasOtherOwner(exec->globalData(), StringImpl::empty()); //jsEmptyString(exec); // see above
+     }
+
+    #ifdef ARTEMIS
+    if (thisValue.isSymbolic()) {
+        std::cerr << "-------------OPTION 1 for " << s.ascii().data() << " at " << (a0.isUInt32() ? a0.asUInt32() : static_cast<uint32_t>(a0.toInteger(exec))) << std::endl;
+        result.makeSymbolic(new Symbolic::StringCharAt((Symbolic::StringExpression*)thisValue.asSymbolic(),
+                                                        a0.isUInt32() ? a0.asUInt32() : static_cast<uint32_t>(a0.toInteger(exec))));
+    } else {
+        std::cerr << "-------------OPTION 2" << std::endl;
     }
-    double dpos = a0.toInteger(exec);
-    if (dpos >= 0 && dpos < len)
-        return JSValue::encode(jsSingleCharacterSubstring(exec, s, static_cast<unsigned>(dpos)));
-    return JSValue::encode(jsEmptyString(exec));
+    #endif
+
+    EncodedJSValue v = JSValue::encode(result);
+
+    if (!JSValue::decode(v).isSymbolic()) {
+        std::cerr << "-------------SELF CHECK FAIL" << std::endl;
+    }
+
+    return JSValue::encode(result);
 }
 
 EncodedJSValue JSC_HOST_CALL stringProtoFuncCharCodeAt(ExecState* exec)
@@ -749,6 +775,13 @@ EncodedJSValue JSC_HOST_CALL stringProtoFuncCharCodeAt(ExecState* exec)
     JSValue thisValue = exec->hostThisValue();
     if (thisValue.isUndefinedOrNull()) // CheckObjectCoercible
         return throwVMTypeError(exec);
+
+#ifdef ARTEMIS
+    if (thisValue.isSymbolic()) {
+        std::cerr << "Warning: Symbolic information lost in StringPrototype::stringProtoFuncCharCodeAt" << std::endl;
+    }
+#endif
+
     UString s = thisValue.toString(exec)->value(exec);
     unsigned len = s.length();
     JSValue a0 = exec->argument(0);
@@ -770,8 +803,31 @@ EncodedJSValue JSC_HOST_CALL stringProtoFuncCharCodeAt(ExecState* exec)
 EncodedJSValue JSC_HOST_CALL stringProtoFuncConcat(ExecState* exec)
 {
     JSValue thisValue = exec->hostThisValue();
+
+#ifdef ARTEMIS
+    if (thisValue.isString() && (exec->argumentCount() == 1)) {
+
+        JSValue thatValue = exec->argument(0);
+
+        JSString* arg1 = asString(thisValue);
+        JSString* arg2 = thatValue.toString(exec);
+        JSValue result = jsString(exec, arg1, arg2);
+
+        if (thisValue.isSymbolic() || thatValue.isSymbolic()) {
+            result.makeSymbolic(new Symbolic::StringBinaryOperation(
+                                    thisValue.isSymbolic() ? (Symbolic::StringExpression*)thisValue.asSymbolic() :
+                                                             (Symbolic::StringExpression*)new Symbolic::ConstantString(new std::string(thisValue.toUString(exec).ascii().data())),
+                                    Symbolic::CONCAT,
+                                    thatValue.isSymbolic() ? (Symbolic::StringExpression*)thatValue.asSymbolic() :
+                                                             (Symbolic::StringExpression*)new Symbolic::ConstantString(new std::string(thatValue.toUString(exec).ascii().data()))));
+        }
+
+        return JSValue::encode(result);
+    }
+#else
     if (thisValue.isString() && (exec->argumentCount() == 1))
         return JSValue::encode(jsString(exec, asString(thisValue), exec->argument(0).toString(exec)));
+#endif
 
     if (thisValue.isUndefinedOrNull()) // CheckObjectCoercible
         return throwVMTypeError(exec);
@@ -923,7 +979,17 @@ EncodedJSValue JSC_HOST_CALL stringProtoFuncSearch(ExecState* exec)
     }
     RegExpConstructor* regExpConstructor = exec->lexicalGlobalObject()->regExpConstructor();
     MatchResult result = regExpConstructor->performMatch(*globalData, reg, string, s, 0);
-    return JSValue::encode(result ? jsNumber(result.start) : jsNumber(-1));
+
+    JSValue r = result ? jsNumber(result.start) : jsNumber(-1);
+
+#ifdef ARTEMIS
+    if (thisValue.isSymbolic()) {
+        r.makeSymbolic(new Symbolic::StringRegexSubmatchIndex((Symbolic::StringExpression*)thisValue.asSymbolic(),
+                                                              new std::string(reg->pattern().ascii().data())));
+    }
+#endif
+
+    return JSValue::encode(r);
 }
 
 EncodedJSValue JSC_HOST_CALL stringProtoFuncSlice(ExecState* exec)

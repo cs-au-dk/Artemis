@@ -18,6 +18,7 @@
  *
  */
 
+#include <iostream>
 #include "config.h"
 #include "RegExpPrototype.h"
 
@@ -84,7 +85,19 @@ EncodedJSValue JSC_HOST_CALL regExpProtoFuncTest(ExecState* exec)
     JSValue thisValue = exec->hostThisValue();
     if (!thisValue.inherits(&RegExpObject::s_info))
         return throwVMTypeError(exec);
-    return JSValue::encode(jsBoolean(asRegExpObject(thisValue)->test(exec, exec->argument(0).toString(exec))));
+
+    JSValue arg = exec->argument(0);
+    RegExpObject* reg = asRegExpObject(thisValue);
+    JSValue result = jsBoolean(reg->test(exec, arg.toString(exec)));
+
+#ifdef ARTEMIS
+    if (arg.isSymbolic()) {
+        result.makeSymbolic(new Symbolic::StringRegexSubmatch((Symbolic::StringExpression*)arg.asSymbolic(),
+                                                              new std::string(reg->regExp()->pattern().ascii().data())));
+    }
+#endif
+
+    return JSValue::encode(result);
 }
 
 EncodedJSValue JSC_HOST_CALL regExpProtoFuncExec(ExecState* exec)

@@ -8,6 +8,7 @@ QMAKE_CXXFLAGS += -g \
     -Wno-unused-parameter
 
 DEFINES += ARTEMIS=1
+DEFINES += WTF_PLATFORM_QT=1
 
 HEADERS += src/runtime/input/ajaxinput.h \
     src/strategies/prioritizer/constantprioritizer.h \
@@ -117,7 +118,11 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/concolic/executiontree/nodes/traceunexploredunsolvable.h \
     src/concolic/mockentrypointdetector.h \
     src/runtime/input/clickinput.h \
-    src/concolic/executiontree/tracedisplayoverview.h
+    src/concolic/executiontree/tracedisplayoverview.h \
+    src/concolic/solver/cvc4solver.h \
+    src/concolic/solver/constraintwriter/cvc4.h \
+    src/concolic/solver/constraintwriter/smt.h \
+    src/concolic/solver/constraintwriter/cvc4regexcompiler.h
 
 SOURCES += src/runtime/input/ajaxinput.cpp \
     src/strategies/prioritizer/constantprioritizer.cpp \
@@ -215,6 +220,10 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/concolic/executiontree/nodes/traceunexploredunsolvable.cpp \
     src/concolic/mockentrypointdetector.cpp \
     src/runtime/input/clickinput.cpp \
-    src/concolic/executiontree/tracedisplayoverview.cpp
+    src/concolic/executiontree/tracedisplayoverview.cpp \
+    src/concolic/solver/cvc4solver.cpp \
+    src/concolic/solver/constraintwriter/cvc4.cpp \
+    src/concolic/solver/constraintwriter/smt.cpp \
+    src/concolic/solver/constraintwriter/cvc4regexcompiler.cpp
 
 QT += network

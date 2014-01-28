@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+#include <sstream>
+
 #include "expressionprinter.h"
 
 #ifdef ARTEMIS
@@ -85,7 +87,7 @@ void ExpressionPrinter::visit(Symbolic::StringRegexReplace* stringregexreplace, 
     m_result += "\" )";
 }
 
-void ExpressionPrinter::visit(Symbolic::StringReplace* stringreplace, void* args)
+void ExpressionPrinter::visit(Symbolic::StringReplace* stringreplace, void* arg)
 {
     m_result += "StringReplace( ";
     stringreplace->getSource()->accept(this);
@@ -96,10 +98,41 @@ void ExpressionPrinter::visit(Symbolic::StringReplace* stringreplace, void* args
     m_result += "\" )";
 }
 
+void ExpressionPrinter::visit(Symbolic::StringRegexSubmatch* submatch, void* arg)
+{
+    m_result += "StringRegexSubmatch( ";
+    submatch->getSource()->accept(this);
+    m_result += ", \"";
+    m_result += submatch->getRegexpattern()->data();
+    m_result += "\" )";
+}
+
+void ExpressionPrinter::visit(Symbolic::StringRegexSubmatchIndex* submatchIndex, void* arg)
+{
+    m_result += "StringRegexSubmatchIndex( ";
+    submatchIndex->getSource()->accept(this);
+    m_result += ", \"";
+    m_result += submatchIndex->getRegexpattern()->data();
+    m_result += "\" )";
+}
+
 void ExpressionPrinter::visit(Symbolic::StringCoercion* stringcoercion, void* args)
 {
     m_result += "StringCoercion( ";
     stringcoercion->getExpression()->accept(this);
+    m_result += " )";
+}
+
+void ExpressionPrinter::visit(Symbolic::StringCharAt* stringcharat, void* arg)
+{
+    m_result += "StringCharAt( ";
+    stringcharat->getSource()->accept(this);
+    m_result += " , ";
+
+    std::ostringstream i;
+    i << stringcharat->getPosition();
+    m_result += i.str();
+
     m_result += " )";
 }
 

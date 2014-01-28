@@ -170,6 +170,10 @@ namespace JSC {
         static void visitChildren(JSCell*, SlotVisitor&);
 
 #ifdef ARTEMIS
+        inline bool isSymbolic() {
+            return m_symbolic != NULL;
+        }
+
         inline void makeSymbolic(Symbolic::StringExpression* symbolic) {
             m_symbolic = symbolic;
         }

@@ -100,6 +100,11 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             "--concolic-unlimited-depth\n"
             "           Removes the depth limit from the concolic search procedure.\n"
             "\n"
+            "--smt-solver <solver>:\n"
+            "           z3str - Use the Z3-str SMT solver as backend.\n"
+            "           cvc4 (default) - Use the CVC4 SMT solver as backend. CVC4 is required to be on your path.\n"
+            "           kaluza - Use the Kaluza solver as backend."
+            "\n"
             "--strategy-priority <strategy>:\n"
             "           Select priority strategy.\n"
             "\n"
@@ -132,6 +137,7 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
     {"concolic-tree-output", required_argument, NULL, 'd'},
     {"concolic-button", required_argument, NULL, 'b'},
     {"concolic-unlimited-depth", no_argument, NULL, 'u'},
+    {"smt-solver", required_argument, NULL, 'n'},
     {"help", no_argument, NULL, 'h'},
     {0, 0, 0, 0}
     };
@@ -145,9 +151,61 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
 
         switch (c) {
 
-        case 'h': {
-            std::cout << usage;
-            exit(0);
+        case 'a': {
+
+            if (string(optarg).compare("all") == 0) {
+                options.reportPathTrace  = artemis::ALL_TRACES;
+            } else if (string(optarg).compare("click") == 0) {
+                options.reportPathTrace = artemis::CLICK_TRACES;
+            } else if (string(optarg).compare("none") == 0) {
+                options.reportPathTrace = artemis::NO_TRACES;
+            }else if (string(optarg).compare("html") == 0) {
+                options.reportPathTrace = artemis::HTML_TRACES;
+            } else {
+                cerr << "ERROR: Invalid choice of path-trace-report " << optarg << endl;
+                exit(1);
+            }
+
+            break;
+        }
+
+        case 'b': {
+            options.concolicEntryPoint = QString(optarg);
+            break;
+        }
+
+        case 'c': {
+            QStringList parts = QString(optarg).split("=");
+            options.presetCookies.insert(parts.at(0), parts.at(1));
+            break;
+        }
+
+        case 'd': {
+
+            if (string(optarg).compare("none") == 0) {
+                options.concolicTreeOutput = artemis::TREE_NONE;
+            } else if (string(optarg).compare("final") == 0) {
+                options.concolicTreeOutput = artemis::TREE_FINAL;
+            } else if (string(optarg).compare("all") == 0) {
+                options.concolicTreeOutput = artemis::TREE_ALL;
+            } else if (string(optarg).compare("final-overview") == 0) {
+                options.concolicTreeOutput = artemis::TREE_FINAL;
+                options.concolicTreeOutputOverview = true;
+            } else if (string(optarg).compare("all-overview") == 0) {
+                options.concolicTreeOutput = artemis::TREE_ALL;
+                options.concolicTreeOutputOverview = true;
+            } else {
+                cerr << "ERROR: Invalid choice of concolic-tree-output " << optarg << endl;
+                exit(1);
+            }
+
+            break;
+        }
+
+        case 'e': {
+            options.concolicNegateLastConstraint = true;
+
+            break;
         }
 
         case 'f': {
@@ -158,6 +216,77 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             Q_ASSERT(lastEqualsIndex >= 0);
 
             options.presetFormfields.insert(input.left(lastEqualsIndex), input.mid(lastEqualsIndex+1));
+            break;
+        }
+
+        case 'g' : {
+            if(string(optarg).compare("all") == 0){
+                options.reportHeap = artemis::ALL_CALLS;
+            } else if (string(optarg).compare("named") == 0){
+                options.reportHeap = artemis::NAMED_CALLS;
+            } else if (string(optarg).compare("none") == 0){
+
+            } else {
+                cerr << "ERROR: Invalid choice of function-call-heap-report " << optarg << endl;
+                exit(1);
+            }
+            break;
+        }
+
+        case 'h': {
+            std::cout << usage;
+            exit(0);
+        }
+
+        case 'i': {
+            options.iterationLimit = QString(optarg).toInt();
+            break;
+        }
+
+        case 'j': {
+            options.numberSameLength = QString(optarg).toInt();
+            break;
+        }
+
+        case 'k': {
+            options.coverageIgnoreUrls.insert(QUrl(QString(optarg)));
+            break;
+        }
+
+        case 'l' : {
+            options.heapReportFactor = std::max(QString(optarg).toInt(), 1);
+            break;
+        }
+
+        case 'm': {
+
+            if (string(optarg).compare("artemis") == 0) {
+                options.majorMode = artemis::AUTOMATED;
+            } else if (string(optarg).compare("manual") == 0) {
+                options.majorMode = artemis::MANUAL;
+            } else if (string(optarg).compare("concolic") == 0) {
+                options.majorMode = artemis::CONCOLIC;
+            } else {
+                cerr << "ERROR: Invalid choice of major-mode " << optarg << endl;
+                exit(1);
+            }
+
+            break;
+        }
+
+        case 'n': {
+
+            if (string(optarg).compare("kaluza") == 0) {
+                options.solver = artemis::KALUZA;
+            } else if (string(optarg).compare("z3str") == 0) {
+                options.solver = artemis::Z3STR;
+            } else if (string(optarg).compare("cvc4") == 0) {
+                options.solver = artemis::CVC4;
+            } else {
+                cerr << "ERROR: Invalid choice of --smt-solver " << optarg << endl;
+                exit(1);
+            }
+
             break;
         }
 
@@ -172,31 +301,49 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             break;
         }
 
+        case 's': {
+            options.disableStateCheck = false;
+            break;
+        }
+
         case 't': {
             options.useProxy = QString(optarg);
             break;
         }
 
-        case 'c': {
-            QStringList parts = QString(optarg).split("=");
-            options.presetCookies.insert(parts.at(0), parts.at(1));
+        case 'u': {
+            options.concolicUnlimitedDepth = true;
             break;
         }
 
-        case 'i': {
-            options.iterationLimit = QString(optarg).toInt();
-            break;
-        }
+        case 'v': {
+           artemis::Log::addLogLevel(artemis::OFF);
 
-        case 'j': {
-            options.numberSameLength = QString(optarg).toInt();
-            break;
-        }
+           if(QString(optarg).indexOf("debug",0,Qt::CaseInsensitive)>=0){
+               artemis::Log::addLogLevel(artemis::DEBUG);
+           }
 
-        case 's': {
-            options.disableStateCheck = false;
-            break;
-        }
+           if(QString(optarg).indexOf("warning",0,Qt::CaseInsensitive)>=0){
+               artemis::Log::addLogLevel(artemis::WARNING);
+           }
+           if(QString(optarg).indexOf("error",0,Qt::CaseInsensitive)>=0){
+               artemis::Log::addLogLevel(artemis::ERROR);
+           }
+           if(QString(optarg).indexOf("fatal",0,Qt::CaseInsensitive)>=0){
+               artemis::Log::addLogLevel(artemis::FATAL);
+           }
+
+           if(QString(optarg).indexOf("all",0,Qt::CaseInsensitive)>=0){
+               artemis::Log::addLogLevel(artemis::ALL);
+           }
+
+           if(QString(optarg).indexOf("off",0,Qt::CaseInsensitive)>=0){
+               artemis::Log::addLogLevel(artemis::OFF);
+
+           }
+
+           break;
+       }
 
         case 'x': {
 
@@ -227,11 +374,6 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             break;
         }
 
-        case 'k': {
-            options.coverageIgnoreUrls.insert(QUrl(QString(optarg)));
-            break;
-        }
-
         case 'z': {
             if (string(optarg).compare("constant") == 0) {
                 options.prioritizerStrategy = artemis::CONSTANT;
@@ -247,129 +389,6 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
                 cerr << "ERROR: Invalid choice of prioritizer strategy " << optarg << endl;
                 exit(1);
             }
-
-            break;
-        }
-
-         case 'v': {
-            artemis::Log::addLogLevel(artemis::OFF);
-
-            if(QString(optarg).indexOf("debug",0,Qt::CaseInsensitive)>=0){
-                artemis::Log::addLogLevel(artemis::DEBUG);
-            }
-
-            if(QString(optarg).indexOf("warning",0,Qt::CaseInsensitive)>=0){
-                artemis::Log::addLogLevel(artemis::WARNING);
-            }
-            if(QString(optarg).indexOf("error",0,Qt::CaseInsensitive)>=0){
-                artemis::Log::addLogLevel(artemis::ERROR);
-            }
-            if(QString(optarg).indexOf("fatal",0,Qt::CaseInsensitive)>=0){
-                artemis::Log::addLogLevel(artemis::FATAL);
-            }
-
-            if(QString(optarg).indexOf("all",0,Qt::CaseInsensitive)>=0){
-                artemis::Log::addLogLevel(artemis::ALL);
-            }
-
-            if(QString(optarg).indexOf("off",0,Qt::CaseInsensitive)>=0){
-                artemis::Log::addLogLevel(artemis::OFF);
-            }
-
-            if(QString(optarg).indexOf("info",0,Qt::CaseInsensitive)>=0){
-                artemis::Log::addLogLevel(artemis::INFO);
-            }
-
-            break;
-        }
-
-        case 'm': {
-
-            if (string(optarg).compare("artemis") == 0) {
-                options.majorMode = artemis::AUTOMATED;
-            } else if (string(optarg).compare("manual") == 0) {
-                options.majorMode = artemis::MANUAL;
-            } else if (string(optarg).compare("concolic") == 0) {
-                options.majorMode = artemis::CONCOLIC;
-            } else {
-                cerr << "ERROR: Invalid choice of major-mode " << optarg << endl;
-                exit(1);
-            }
-
-            break;
-        }
-
-        case 'a': {
-
-            if (string(optarg).compare("all") == 0) {
-                options.reportPathTrace  = artemis::ALL_TRACES;
-            } else if (string(optarg).compare("click") == 0) {
-                options.reportPathTrace = artemis::CLICK_TRACES;
-            } else if (string(optarg).compare("none") == 0) {
-                options.reportPathTrace = artemis::NO_TRACES;
-            }else if (string(optarg).compare("html") == 0) {
-                options.reportPathTrace = artemis::HTML_TRACES;
-            } else {
-                cerr << "ERROR: Invalid choice of path-trace-report " << optarg << endl;
-                exit(1);
-            }
-
-            break;
-        }
-
-        case 'g' : {
-            if(string(optarg).compare("all") == 0){
-                options.reportHeap = artemis::ALL_CALLS;
-            } else if (string(optarg).compare("named") == 0){
-                options.reportHeap = artemis::NAMED_CALLS;
-            } else if (string(optarg).compare("none") == 0){
-
-            } else {
-                cerr << "ERROR: Invalid choice of function-call-heap-report " << optarg << endl;
-                exit(1);
-            }
-            break;
-        }
-
-        case 'l' : {
-            options.heapReportFactor = std::max(QString(optarg).toInt(), 1);
-            break;
-        }
-
-        case 'd': {
-
-            if (string(optarg).compare("none") == 0) {
-                options.concolicTreeOutput = artemis::TREE_NONE;
-            } else if (string(optarg).compare("final") == 0) {
-                options.concolicTreeOutput = artemis::TREE_FINAL;
-            } else if (string(optarg).compare("all") == 0) {
-                options.concolicTreeOutput = artemis::TREE_ALL;
-            } else if (string(optarg).compare("final-overview") == 0) {
-                options.concolicTreeOutput = artemis::TREE_FINAL;
-                options.concolicTreeOutputOverview = true;
-            } else if (string(optarg).compare("all-overview") == 0) {
-                options.concolicTreeOutput = artemis::TREE_ALL;
-                options.concolicTreeOutputOverview = true;
-            } else {
-                cerr << "ERROR: Invalid choice of concolic-tree-output " << optarg << endl;
-                exit(1);
-            }
-
-            break;
-        }
-
-        case 'u': {
-            options.concolicUnlimitedDepth = true;
-            break;
-        }
-
-        case 'b': {
-            options.concolicEntryPoint = QString(optarg);
-            break;
-        }
-
-        case 'e': {
-            options.concolicNegateLastConstraint = true;
 
             break;
         }

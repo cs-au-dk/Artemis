@@ -153,6 +153,20 @@ void KaluzaConstraintWriter::visit(Symbolic::StringRegexReplace*, void* args)
     mIdentifierStore = "ERROR";
 }
 
+void KaluzaConstraintWriter::visit(Symbolic::StringRegexSubmatch* submatch, void* arg)
+{
+    mError = true;
+    mErrorReason = "Regex constraints not supported";
+    mIdentifierStore = "ERROR";
+}
+
+void KaluzaConstraintWriter::visit(Symbolic::StringRegexSubmatchIndex* submatchIndex, void* arg)
+{
+    mError = true;
+    mErrorReason = "Regex constraints not supported";
+    mIdentifierStore = "ERROR";
+}
+
 void KaluzaConstraintWriter::visit(Symbolic::StringReplace*, void* args)
 {
     mError = true;
@@ -163,6 +177,13 @@ void KaluzaConstraintWriter::visit(Symbolic::StringReplace*, void* args)
 void KaluzaConstraintWriter::visit(Symbolic::StringCoercion* stringcoercion, void* args)
 {
     stringcoercion->getExpression()->accept(this);
+}
+
+void KaluzaConstraintWriter::visit(Symbolic::StringCharAt* stringcharat, void* arg)
+{
+    mError = true;
+    mErrorReason = "StringCharAt constraints not supported";
+    mIdentifierStore = "ERROR";
 }
 
 void KaluzaConstraintWriter::visit(Symbolic::SymbolicBoolean* symbolicboolean, void* args)

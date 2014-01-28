@@ -1,0 +1,3 @@
+if (foo.charAt(1) == "o") {
+    alert(foo.charAt(1));
+}

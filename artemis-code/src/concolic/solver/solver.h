@@ -35,10 +35,13 @@ class Solver
 public:
 
     Solver();
+    virtual ~Solver() {}
 
     virtual SolutionPtr solve(PathConditionPtr pc) = 0;
 
 };
+
+typedef QSharedPointer<Solver> SolverPtr;
 
 }
 
