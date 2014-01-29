@@ -339,7 +339,10 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
 
            if(QString(optarg).indexOf("off",0,Qt::CaseInsensitive)>=0){
                artemis::Log::addLogLevel(artemis::OFF);
+           }
 
+           if(QString(optarg).indexOf("info",0,Qt::CaseInsensitive)>=0){
+               artemis::Log::addLogLevel(artemis::INFO);
            }
 
            break;
