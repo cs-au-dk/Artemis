@@ -59,7 +59,7 @@ private:
     bool mSuccess;
     bool mUnsat;
     QHash<QString, Symbolvalue> mSymbols;
-    QString mUnsolvableReason; // Must be set whenever !mSuccess && !mUnsat.
+    QString mUnsolvableReason; // Should be set whenever !mSuccess && !mUnsat.
 };
 
 typedef QSharedPointer<Solution> SolutionPtr;
