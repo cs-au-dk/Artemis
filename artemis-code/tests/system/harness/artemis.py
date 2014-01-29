@@ -2,6 +2,7 @@ import os
 import shutil
 import subprocess
 import re
+import codecs
 
 ARTEMIS_EXEC = '/usr/local/bin/artemis'
 OUTPUT_DIR = '.output'
@@ -103,8 +104,8 @@ def execute_artemis(execution_uuid, url, iterations=1,
                             % (e.cmd, e.output, e.cmd))
 
 
-    fp = open(os.path.join(output_dir, 'stdout.txt'), 'wb')
-    fp.write(stdout.encode())
+    fp = codecs.open(os.path.join(output_dir, 'stdout.txt'), 'wb', encoding='utf-8')
+    fp.write(stdout)
     fp.close()
     offset1 = stdout.find(STATS_START) + len(STATS_START)
     offset2 = stdout.find(STATS_END)
