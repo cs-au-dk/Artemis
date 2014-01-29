@@ -104,62 +104,76 @@ def test_generator(site_name, site_url, site_ep, dry_run=False, logger=None, ver
     """Returns a function which will test the given website when executed."""
     
     def test(self):
-        # Clear /tmp/constraintlog so we can get the constraints from this run only.
-        if not dry_run:
-            open("/tmp/constraintlog", 'w').close()
+        # Begin with the data we know about
+        data = {}
+        data['Testing Run'] = test_date
+        data['Artemis Version'] = version
+        data['Site'] = site_name
+        data['URL'] = site_url
+        data['Entry Point'] = site_ep
         
-        # Run and time the test
-        start_time = time.time()
-        report = execute_artemis(site_name, site_url,
-                                 iterations=0,
-                                 major_mode='concolic',
-                                 concolic_tree_output='final-overview',
-                                 verbosity='info',
-                                 concolic_button=(None if site_ep.lower() == 'auto' else site_ep),
-                                 dryrun=dry_run,
-                                 output_parent_dir=test_dir,
-                                 ignore_artemis_crash=True)
-        end_time = time.time()
-
-        if dry_run:
-            # Only print the command, exit
-            return
-        
-        # Copy the constraint log into the current test directory.
-        shutil.copyfile("/tmp/constraintlog", os.path.join(test_dir, site_name, "constraint-log.txt"))
-        
-        # If the return code indicates a failure, check for a core dump and create a backtrace if one exists.
-        # We also delete the core dumps to save space!
-        if report['returncode'] != 0 and os.path.isfile('core'):
-            try:
-                bt_cmd = "gdb -q -n -ex bt -batch %s core > backtrace.txt 2>&1" % ARTEMIS_EXEC
-                subprocess.call(bt_cmd, shell=True);
-                os.remove('core')
-            except OSError:
-                pass # Ignore any errors in this part.
-        
-        if logger is not None:
-            # Add the information about this run to the logged data.
-            data = {}
-            data['Testing Run'] = test_date
-            data['Artemis Version'] = version
-            data['Site'] = site_name
-            data['URL'] = site_url
-            data['Entry Point'] = site_ep
+        try:
+            # Clear /tmp/constraintlog so we can get the constraints from this run only.
+            if not dry_run:
+                open("/tmp/constraintlog", 'w').close()
+            
+            # Run and time the test
+            start_time = time.time()
+            report = execute_artemis(site_name, site_url,
+                                     iterations=0,
+                                     major_mode='concolic',
+                                     concolic_tree_output='final-overview',
+                                     verbosity='info',
+                                     concolic_button=(None if site_ep.lower() == 'auto' else site_ep),
+                                     dryrun=dry_run,
+                                     output_parent_dir=test_dir,
+                                     ignore_artemis_crash=True)
+            end_time = time.time()
             data['Running Time'] = str(datetime.timedelta(seconds=(end_time - start_time)))
             data['Exit Code'] = str(report['returncode'])
+
+            if dry_run:
+                # Only print the command, exit
+                return
             
-            # Add all concolic statistics from Artemis to the logged data.
-            for key in report.keys():
-                if key[:10].lower() == "concolic::" and key[:29].lower() != "concolic::solver::constraint.":
-                    col_header = key[10:].replace("::", "::\n")
-                    data[col_header] = str(report[key])
+            # Copy the constraint log into the current test directory.
+            shutil.copyfile("/tmp/constraintlog", os.path.join(test_dir, site_name, "constraint-log.txt"))
             
-            # Append the log data to the google doc.
-            logger.log_data(data)
+            # If the return code indicates a failure, check for a core dump and create a backtrace if one exists.
+            # We also delete the core dumps to save space!
+            if report['returncode'] != 0 and os.path.isfile('core'):
+                try:
+                    bt_cmd = "gdb -q -n -ex bt -batch %s core > backtrace.txt 2>&1" % ARTEMIS_EXEC
+                    subprocess.call(bt_cmd, shell=True);
+                    os.remove('core')
+                except OSError:
+                    pass # Ignore any errors in this part.
+            
+            if logger is not None:
+                # Add all concolic statistics from Artemis to the logged data.
+                for key in report.keys():
+                    if key[:10].lower() == "concolic::" and key[:29].lower() != "concolic::solver::constraint.":
+                        col_header = key[10:].replace("::", "::\n")
+                        data[col_header] = str(report[key])
+                
+                # Append the log data to the google doc.
+                logger.log_data(data)
+            
+        except Exception as e:
+            # Catch any exceptions which ocurred during the test suite itself.
+            # Try to log a message that this has happened (but ignore any new errors this may cause).
+            try:
+                if logger is not None:
+                    data['Analysis'] = "Exception of type '%s' in the test suite." % type(e).__name__
+                    logger.log_data(data)
+            except:
+                pass
+            
+            # Re-raise the same exception, as if we had never caught it in the first place.
+            raise e
         
         # Fail the test if the return code was non-zero.
-        if report['returncode'] != 0:
+        if 'returncode' in report and report['returncode'] != 0:
             raise Exception("Exception thrown by call to artemis (returned %d)." % report['returncode'])
     
     return test
