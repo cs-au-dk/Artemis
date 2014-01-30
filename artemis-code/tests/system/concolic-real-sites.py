@@ -141,11 +141,12 @@ def test_generator(site_name, site_url, site_ep, dry_run=False, logger=None, ver
             
             # If the return code indicates a failure, check for a core dump and create a backtrace if one exists.
             # We also delete the core dumps to save space!
-            if report['returncode'] != 0 and os.path.isfile('core'):
+            core_file = os.path.join(test_dir, site_name, 'core')
+            if report['returncode'] != 0 and os.path.isfile(core_file):
                 try:
                     bt_cmd = "gdb -q -n -ex bt -batch %s core > backtrace.txt 2>&1" % ARTEMIS_EXEC
-                    subprocess.call(bt_cmd, shell=True);
-                    os.remove('core')
+                    subprocess.call(bt_cmd, shell=True, cwd=os.path.join(test_dir, site_name));
+                    os.remove(core_file)
                 except OSError:
                     pass # Ignore any errors in this part.
             
