@@ -67,7 +67,50 @@ TEST(CVC4RegexTest, FIXED_NUMBER_CHAR_1_3) {
 
 TEST(CVC4RegexTest, RANGE_A_Z) {
     std::string result = CVC4RegexCompiler::compile("[a-z]");
-    ASSERT_EQ("(re.++ (str.to.re \"c\") (re.++ (re.opt (str.to.re \"c\")) (re.opt (str.to.re \"c\"))))", result);
+    ASSERT_EQ("(re.range \"a\" \"z\")", result);
 }
+
+TEST(CVC4RegexTest, RANGE_A_B_D_E) {
+    std::string result = CVC4RegexCompiler::compile("[a-bd-e]");
+    ASSERT_EQ("(re.or (re.range \"a\" \"b\") (re.range \"d\" \"e\"))", result);
+}
+
+TEST(CVC4RegexTest, CHAR_ABC) {
+    std::string result = CVC4RegexCompiler::compile("[abc]");
+    ASSERT_EQ("(re.or \"a\" \"b\" \"c\")", result);
+}
+
+TEST(CVC4RegexTest, NESTED_MATCHES) {
+    std::string result = CVC4RegexCompiler::compile("a(b)(c)");
+    ASSERT_EQ("(re.++ (str.to.re \"a\") (str.to.re \"b\") (str.to.re \"c\"))", result);
+}
+
+TEST(CVC4RegexTest, NESTED_MATCHES_WILDCARD) {
+    std::string result = CVC4RegexCompiler::compile("a(b|c)*");
+    ASSERT_EQ("(re.++ (str.to.re \"a\") (re.* (re.or (str.to.re \"b\") (str.to.re \"c\"))))", result);
+}
+
+TEST(CVC4RegexTest, RL_EXAMPLE_1) {
+    try {
+        std::string result = CVC4RegexCompiler::compile("[a-zA-Z]{3}\\+?");
+        ASSERT_EQ("(re.++ (re.++ (re.or (re.range \"A\" \"Z\") (re.range \"a\" \"z\")) (re.or (re.range \"A\" \"Z\") (re.range \"a\" \"z\")) (re.or (re.range \"A\" \"Z\") (re.range \"a\" \"z\"))) (re.opt (str.to.re \"+\")))", result);
+    } catch (CVC4RegexCompilerException ex) {
+        std::cerr << ex.what() << std::endl;
+        throw ex;
+    }
+}
+
+/*TEST(CVC4RegexTest, DOT_STAR) {
+    std::string result = CVC4RegexCompiler::compile(".");
+    ASSERT_EQ("DOTSTAR", result);
+}*/
+
+//^[a-zA-Z]{3}\+?$
+
+//TEST(CVC4RegexTest, CHAR_CLASS_W) {
+//    std::string result = CVC4RegexCompiler::compile("[\\w]");
+//    ASSERT_EQ("(re.or \"a\" \"b\" \"c\")", result);
+//}
+
 
 }
