@@ -103,16 +103,27 @@ SolutionPtr CVC4Solver::solve(PathConditionPtr pc)
             statistics()->accumulate("Concolic::Solver::ConstraintsNotSolved", 1);
             constraintLog << "Error when solving following input file:" << std::endl << std::endl;
 
-            std::ifstream fp;
-            fp.open ("/tmp/cvc4input");
+            std::ifstream fp_input;
+            fp_input.open ("/tmp/cvc4input");
             std::string line;
-            while (std::getline(fp, line)) {
+            while (std::getline(fp_input, line)) {
                 constraintLog << line << std::endl;
             }
-            fp.close();
+            fp_input.close();
+
+            constraintLog << std::endl << "The result was:" << std::endl;
+
+            // Copy /tmp/cvc4result into constraintlog using a fresh file pointer (i.e. not the one we ).
+            std::ifstream fp_result;
+            fp_result.open ("/tmp/cvc4input");
+            while (std::getline(fp_result, line)) {
+                constraintLog << line << std::endl;
+            }
+            fp_result.close();
 
             constraintLog << std::endl;
 
+            fp.close(); // The main fp.
             return SolutionPtr(new Solution(false, false, "There was an error while running the solver."));
 
         }
