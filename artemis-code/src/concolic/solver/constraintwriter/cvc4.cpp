@@ -28,6 +28,8 @@
 #include "util/loggingutil.h"
 #include "statistics/statsstorage.h"
 
+#include "cvc4regexcompiler.h"
+
 #include "cvc4.h"
 
 namespace artemis
@@ -256,8 +258,16 @@ void CVC4ConstraintWriter::visit(Symbolic::StringRegexSubmatch* submatch, void* 
 
     std::ostringstream strs;
 
-    strs << "(str.in.re " << match << " (str.to.re \"" << *submatch->getRegexpattern() << "\") )";
-    mExpressionBuffer = strs.str();
+    try {
+        strs << "(str.in.re " << match << " " << CVC4RegexCompiler::compile(*submatch->getRegexpattern()) << ")";
+        mExpressionBuffer = strs.str();
+
+    } catch (CVC4RegexCompilerException ex) {
+        std::stringstream err;
+        err << "The CVC4RegexCompiler failed when compiling the regex " << *submatch->getRegexpattern() << " with the error message: " << ex.what();
+        error(err.str());
+    }
+
     mExpressionType = Symbolic::BOOL;
 }
 

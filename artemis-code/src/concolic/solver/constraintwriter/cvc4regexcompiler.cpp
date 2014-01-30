@@ -17,8 +17,10 @@
 #include "cvc4regexcompiler.h"
 
 #include <sstream>
+#include <iostream>
 
 #include "wtf/ExportMacros.h"
+#include "wtf/Vector.h"
 #include "JavaScriptCore/runtime/JSExportMacros.h"
 #include "wtf/Platform.h"
 #include "JavaScriptCore/yarr/Yarr.h"
@@ -130,6 +132,10 @@ std::string visitPatternAlternative(const JSC::Yarr::PatternAlternative* alterna
 
 std::string visitPatternTerm(const JSC::Yarr::PatternTerm* term)
 {
+    if (term->m_invert) {
+        throw CVC4RegexCompilerException("Unsupported usage of not in regex");
+    }
+
     std::stringstream result;
 
     switch (term->type) {
@@ -154,15 +160,47 @@ std::string visitPatternTerm(const JSC::Yarr::PatternTerm* term)
         break;
     }
 
-    case JSC::Yarr::PatternTerm::TypeCharacterClass:
+    case JSC::Yarr::PatternTerm::TypeCharacterClass: {
+
+        /*
+         * Right now, we don't have support for . and \x character classes. Not until we figure out
+         * how these are encoded.
+         */
 
         if (term->characterClass->m_matchesUnicode.size() > 0 || term->characterClass->m_rangesUnicode.size()) {
             throw CVC4RegexCompilerException("Unsupported usage of non-ascii characters in range regex");
         }
 
-        result << "CC";
-        // TODO
+        bool emitOnlyOne = (term->characterClass->m_ranges.size() + term->characterClass->m_matches.size()) == 1;
+
+        if (!emitOnlyOne) {
+            result << "(re.or";
+        }
+
+        for (size_t i = 0; i < term->characterClass->m_ranges.size(); ++i) {
+            if (!emitOnlyOne) {
+                result << " ";
+            }
+
+            result << "(re.range \"" << (char)term->characterClass->m_ranges[i].begin << "\" \"" << \
+                      (char)term->characterClass->m_ranges[i].end << "\")";
+        }
+
+        for (size_t i = 0; i < term->characterClass->m_matches.size(); ++i) {
+            if (!emitOnlyOne) {
+                result << " ";
+            }
+
+            result << "\"" << (char)term->characterClass->m_matches[i] << "\"";
+        }
+
+        if (!emitOnlyOne) {
+            result << ")";
+        }
+
         break;
+
+    }
 
     case JSC::Yarr::PatternTerm::TypeBackReference:
         throw CVC4RegexCompilerException("Unsupported usage of back references in regex");
@@ -173,15 +211,15 @@ std::string visitPatternTerm(const JSC::Yarr::PatternTerm* term)
         break;
 
     case JSC::Yarr::PatternTerm::TypeParenthesesSubpattern:
-        // TODO
+        result << visitPatternDisjunction(term->parentheses.disjunction);
         break;
 
     case JSC::Yarr::PatternTerm::TypeParentheticalAssertion:
-        // TODO
+        throw CVC4RegexCompilerException("Unsupported usage of parenthetical-assertions, example of usage needed for implementation.)");
         break;
 
     case JSC::Yarr::PatternTerm::TypeDotStarEnclosure:
-        // TODO
+        throw CVC4RegexCompilerException("Unsupported usage of dotstar enclosure, example of usage needed for implementation.)");
         break;
 
     default:
@@ -200,7 +238,7 @@ std::string CVC4RegexCompiler::compile(const std::string &javaScriptRegex)
     JSC::Yarr::YarrPattern pattern(JSC::UString(javaScriptRegex.c_str()), caseSensitivity, multiline, &m_constructionError);
 
     if (m_constructionError) {
-        std::string err = "RegularExpression: YARR compile failed with " + std::string(m_constructionError);
+        std::string err = "RegularExpression: YARR compile failed with: " + std::string(m_constructionError);
         throw CVC4RegexCompilerException(err);
     }
 
