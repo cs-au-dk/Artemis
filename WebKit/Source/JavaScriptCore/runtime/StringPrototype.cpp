@@ -753,19 +753,10 @@ EncodedJSValue JSC_HOST_CALL stringProtoFuncCharAt(ExecState* exec)
 
     #ifdef ARTEMIS
     if (thisValue.isSymbolic()) {
-        std::cerr << "-------------OPTION 1 for " << s.ascii().data() << " at " << (a0.isUInt32() ? a0.asUInt32() : static_cast<uint32_t>(a0.toInteger(exec))) << std::endl;
         result.makeSymbolic(new Symbolic::StringCharAt((Symbolic::StringExpression*)thisValue.asSymbolic(),
                                                         a0.isUInt32() ? a0.asUInt32() : static_cast<uint32_t>(a0.toInteger(exec))));
-    } else {
-        std::cerr << "-------------OPTION 2" << std::endl;
     }
     #endif
-
-    EncodedJSValue v = JSValue::encode(result);
-
-    if (!JSValue::decode(v).isSymbolic()) {
-        std::cerr << "-------------SELF CHECK FAIL" << std::endl;
-    }
 
     return JSValue::encode(result);
 }
