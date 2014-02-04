@@ -4,11 +4,13 @@
 A Test Suite for running the concolic mode on some real examples.
 
 The examples to use are taken from a CSV file passed as the first argument.
-The optional second argument "dryrun" just prints the commands that would have been executed.
+The optional argument "dryrun" just prints the commands that would have been executed.
+The optional argument "external-ep-finder" uses an external tool to choose the buttons to analyse.
 
 The CSV file has there columns: The unique name we use to identify the site, the URL which leads to the form, and the
 entry-point to be used. The entry-point can either be an XPath expression or the word 'auto' to use the automatic 
-entry-points which are hard-coded in ArtForm. The first line is ignored as a header.
+entry-points which are hard-coded in ArtForm. If the argument 'external-ep-finder' is used, then this column is ignored
+and the external entrypoint-finding tool is used instead. The first line is ignored as a header.
 
 The results from each run are saved in the following folder structure:
 ./Real-Site-Teating_<date>/<site name>/{<execution tree>, <overview tree>, <constraint log>}
@@ -26,9 +28,11 @@ import subprocess
 import re
 import getpass
 import shutil
+import argparse
 
 from harness.artemis import execute_artemis
 from harness.artemis import ARTEMIS_EXEC
+from harness.entrypoint_finder import call_ep_finder
 
 try:
     import gdata.spreadsheet.service
@@ -54,20 +58,16 @@ def main():
     print "ArtForm concolic mode test suite"
     
     # Check the arguments
-    if len(sys.argv) == 2:
-        filename = sys.argv[1]
-        dry_run = False
-    elif len(sys.argv) == 3 and sys.argv[2].lower() == "dryrun":
-        filename = sys.argv[1]
-        dry_run = True
-    else:
-        print "Usage:"
-        print "./concolic-real-sites.py tests.csv [dryrun]"
-        print "The CSV file has three columns: unique site name, url, entry-point (XPath or 'auto'). The first row is a header."
-        exit(1)
+    parser = DefaultHelpParser(description="Runs the test suite of real sites.")
+    parser.add_argument('csv_file', help="The CSV file listing the tests to be run. It contains three columns: unique site name, url, entry-point (XPath or 'auto'). The first row is a header.")
+    parser.add_argument('--dryrun', action='store_true', dest='dry_run', help="Just prints the commands that would have been executed.")
+    parser.add_argument('--external-ep-finder', action='store_true', dest='external_ep_finder', help="Use DIADEM instead of the entry-points listed in the CSV file.")
+    args = parser.parse_args()
+    dry_run = args.dry_run
+    external_ep_finder = args.external_ep_finder
     
     # Read the CSV file
-    sites = _read_csv_file(filename)
+    sites = _read_csv_file(args.csv_file)
     
     # Create a directory for the test results from this run,
     run_name = "Test Suite Run %s" % time.strftime("%Y-%m-%d_%H-%M-%S")
@@ -87,16 +87,61 @@ def main():
     # Generate a method to test each site and add it to our unit-testable class.
     date_string = time.strftime("%Y-%m-%d %H:%M:%S")
     for s in sites:
-        test_name = 'test_%s' % re.sub(r'\s+', '', s[0])
-        test = test_generator(s[0], s[1], s[2], dry_run=dry_run, logger=logger, version=artemis_version_url,
-                              test_date=date_string, test_dir=run_name)
-        setattr(TestSequence, test_name, test)
+        # Check how we will find the EPs.
+        if external_ep_finder:
+            ep_list = call_ep_finder(s[1], dry_run=dry_run)
+            
+            # If we are doing a dry-run then the entry-point finder will not have been called, so use a dummy EP.
+            ep_list = ["EP-FROM-EXTERNAL-TOOL"]
+        else:
+            ep_list = [s[2]]
+        
+        if len(ep_list) == 0:
+            log_no_ep_error(logger, s[0], s[1], artemis_version_url, date_string)
+        elif len(ep_list) == 1:
+            test_name = 'test_%s' % re.sub(r'\s+', '', s[0])
+            add_test_function(test_name, s[0], s[1], ep_list[0], dry_run, logger, artemis_version_url, date_string, run_name)
+        else:
+            for idx, ep in enumerate(ep_list):
+                test_name = 'test_%s_%d' % (re.sub(r'\s+', '', s[0]), idx+1)
+                site_id = "%s_%d" % (s[0], idx+1)
+                add_test_function(test_name, site_id, s[1], ep, dry_run, logger, artemis_version_url, date_string, run_name)
     
     # Run the unit tests
     print "Starting tests..."
     suite = unittest.TestLoader().loadTestsFromTestCase(TestSequence)
     unittest.TextTestRunner(verbosity=2).run(suite)
     
+
+
+def add_test_function(test_name, site_id, site_url, site_ep, dry_run, logger, artemis_version_url, date_string, run_name):
+    """Adds a site testing function to the TestSequence."""
+    test = test_generator(site_id, site_url, site_ep, dry_run=dry_run, logger=logger, version=artemis_version_url,
+                          test_date=date_string, test_dir=run_name)
+    setattr(TestSequence, test_name, test)
+
+def log_no_ep_error(logger, site_id, site_url, version, test_date):
+    """
+    Logs an error in cases where there was no entrypoint found, so no test will be run.
+    This is implemented by adding a method to do this to the test suite.
+    """
+    
+    def log_msg():
+        if logger is not None:
+            data = {}
+            data['Testing Run'] = test_date
+            data['Artemis Version'] = version
+            data['Site'] = site_id
+            data['URL'] = site_url
+            data['Analysis'] = "DIADEM did not return any entry-points."
+            logger.log_data(data)
+        
+        # Fail this test.
+        raise Exception("No entry-point found.")
+    
+    # Add this "test" function to the TestSequence.
+    setattr(TestSequence, site_id, log_msg)
+
 
 
 
@@ -334,6 +379,14 @@ def _current_git_commit_hyperlink():
     else:
         return ""
 
+
+# An argument parser which prints the help message after an error.
+# http://stackoverflow.com/a/3637103/1044484
+class DefaultHelpParser(argparse.ArgumentParser):
+    def error(self, message):
+        sys.stderr.write('Error: %s\n' % message)
+        self.print_help()
+        sys.exit(2)
 
 
 if __name__ == "__main__":
