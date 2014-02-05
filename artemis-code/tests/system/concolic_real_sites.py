@@ -198,12 +198,13 @@ def test_generator(site_name, site_url, site_ep, dry_run=False, logger=None, ver
                                      output_parent_dir=test_dir,
                                      ignore_artemis_crash=True)
             end_time = time.time()
-            data['Running Time'] = str(datetime.timedelta(seconds=(end_time - start_time)))
-            data['Exit Code'] = str(report['returncode'])
-
+            
             if dry_run:
                 # Only print the command, exit
                 return
+            
+            data['Running Time'] = str(datetime.timedelta(seconds=(end_time - start_time)))
+            data['Exit Code'] = str(report['returncode'])
             
             # Copy the constraint log into the current test directory.
             shutil.copyfile("/tmp/constraintlog", os.path.join(test_dir, site_name, "constraint-log.txt"))

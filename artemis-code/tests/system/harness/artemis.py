@@ -91,6 +91,7 @@ def execute_artemis(execution_uuid, url, iterations=1,
 
     if dryrun:
         print ' '.join(cmd)
+        return
 
     try:
         stdout = (subprocess.check_output(cmd, cwd=output_dir, stderr=subprocess.STDOUT)).decode("utf-8")
