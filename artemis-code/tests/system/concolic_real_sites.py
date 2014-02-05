@@ -72,18 +72,18 @@ def main():
     # Read the CSV file
     sites = _read_csv_file(args.csv_file)
     
-    # Create a directory for the test results from this run
-    date_string = time.strftime("%Y-%m-%d %H:%M:%S")
-    run_dir_name = "Test Suite Run %s" % date_string
-    if not dry_run:
-        os.mkdir(run_dir_name)
-    
     # Open the google spreadsheet used for logging
     if not dry_run:
         logger = GDataLogger(SPREADSHEET_KEY, WORKSHEET_ID)
         logger.open_spreadsheet()
     else:
         logger=None
+    
+    # Create a directory for the test results from this run
+    date_string = time.strftime("%Y-%m-%d %H:%M:%S")
+    run_dir_name = "Test Suite Run %s" % date_string
+    if not dry_run:
+        os.mkdir(run_dir_name)
     
     # Check the version of Artemis we are using (by git commit)
     artemis_version_url = _current_git_commit_hyperlink()
@@ -115,9 +115,6 @@ def full_test_generator(site_name, site_url, dry_run=False, logger=None, version
     """
     
     def full_test(self):
-        
-        print site_name, site_url
-        
         # Run the entry-point finder.
         try:
             ep_list = call_ep_finder(site_url)
@@ -145,18 +142,21 @@ def full_test_generator(site_name, site_url, dry_run=False, logger=None, version
         else:
             for idx, ep in enumerate(ep_list):
                 site_id = "%s_%d" % (site_name, idx+1)
-                test_functions.append((site_name, test_generator(site_id, site_url, ep, dry_run, logger, version,
+                test_functions.append((site_id, test_generator(site_id, site_url, ep, dry_run, logger, version,
                                                              test_date, test_dir)))
         
         # Run each of these functions to actually test the different EPs.
         # Keep track of any exceptions (so we can report them at the end) but do not allow them to pass through.
         test_exceptions = []
+        print
         for site_id, test_site in test_functions:
             try:
                 test_site(None) # The functions returned by test_generator expect to be attached to an object (and 
                                 # therefore have the self parameter, but this is never used.
+                print "    %s: OK" % site_id
             except Exception as e:
                 test_exceptions.append((site_id, type(e).__name__))
+                print "    %s: ERROR" % site_id
         
         # If there have been any errors, report them and throw an exception to show that this test was not completely
         # successful.

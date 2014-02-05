@@ -34,10 +34,11 @@ def execute_artemis(execution_uuid, url, iterations=1,
                     **kwargs):
     output_dir = os.path.join(output_parent_dir, execution_uuid)
 
-    if os.path.isdir(output_dir):
-        shutil.rmtree(output_dir)
+    if not dryrun:
+        if os.path.isdir(output_dir):
+            shutil.rmtree(output_dir)
 
-    os.makedirs(output_dir)
+        os.makedirs(output_dir)
 
     args = ["-i %s" % iterations]
 
