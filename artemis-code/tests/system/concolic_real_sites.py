@@ -59,9 +59,12 @@ def main():
     
     # Check the arguments
     parser = DefaultHelpParser(description="Runs the test suite of real sites.")
-    parser.add_argument('csv_file', help="The CSV file listing the tests to be run. It contains three columns: unique site name, url, entry-point (XPath or 'auto'). The first row is a header.")
-    parser.add_argument('--dryrun', action='store_true', dest='dry_run', help="Just prints the commands that would have been executed.")
-    parser.add_argument('--external-ep-finder', action='store_true', dest='external_ep_finder', help="Use DIADEM instead of the entry-points listed in the CSV file.")
+    parser.add_argument('csv_file', help="The CSV file listing the tests to be run. It contains three columns: unique "
+                                         "site name, url, entry-point (XPath or 'auto'). The first row is a header.")
+    parser.add_argument('--dryrun', action='store_true', dest='dry_run',
+                        help="Just prints the commands that would have been executed.")
+    parser.add_argument('--external-ep-finder', action='store_true', dest='external_ep_finder',
+                        help="Use DIADEM instead of the entry-points listed in the CSV file.")
     args = parser.parse_args()
     dry_run = args.dry_run
     external_ep_finder = args.external_ep_finder
@@ -69,10 +72,11 @@ def main():
     # Read the CSV file
     sites = _read_csv_file(args.csv_file)
     
-    # Create a directory for the test results from this run,
-    run_name = "Test Suite Run %s" % time.strftime("%Y-%m-%d_%H-%M-%S")
+    # Create a directory for the test results from this run
+    date_string = time.strftime("%Y-%m-%d %H:%M:%S")
+    run_dir_name = "Test Suite Run %s" % date_string
     if not dry_run:
-        os.mkdir(run_name)
+        os.mkdir(run_dir_name)
     
     # Open the google spreadsheet used for logging
     if not dry_run:
@@ -85,68 +89,88 @@ def main():
     artemis_version_url = _current_git_commit_hyperlink()
     
     # Generate a method to test each site and add it to our unit-testable class.
-    date_string = time.strftime("%Y-%m-%d %H:%M:%S")
     for s in sites:
+        test_name = 'test_%s' % re.sub(r'\s+', '', s[0])
         # Check how we will find the EPs.
         if external_ep_finder:
-            ep_list = call_ep_finder(s[1], dry_run=dry_run)
-            
-            # If we are doing a dry-run then the entry-point finder will not have been called, so use a dummy EP.
-            ep_list = ["EP-FROM-EXTERNAL-TOOL"]
+            test = full_test_generator(s[0], s[1], dry_run, logger, artemis_version_url, date_string, run_dir_name)
         else:
-            ep_list = [s[2]]
+            test = test_generator(s[0], s[1], s[2], dry_run, logger, artemis_version_url, date_string, run_dir_name)
         
-        if len(ep_list) == 0:
-            log_no_ep_error(logger, s[0], s[1], artemis_version_url, date_string)
-        elif len(ep_list) == 1:
-            test_name = 'test_%s' % re.sub(r'\s+', '', s[0])
-            add_test_function(test_name, s[0], s[1], ep_list[0], dry_run, logger, artemis_version_url, date_string, run_name)
-        else:
-            for idx, ep in enumerate(ep_list):
-                test_name = 'test_%s_%d' % (re.sub(r'\s+', '', s[0]), idx+1)
-                site_id = "%s_%d" % (s[0], idx+1)
-                add_test_function(test_name, site_id, s[1], ep, dry_run, logger, artemis_version_url, date_string, run_name)
+        setattr(TestSequence, test_name, test)
     
     # Run the unit tests
     print "Starting tests..."
     suite = unittest.TestLoader().loadTestsFromTestCase(TestSequence)
     unittest.TextTestRunner(verbosity=2).run(suite)
-    
 
 
-def add_test_function(test_name, site_id, site_url, site_ep, dry_run, logger, artemis_version_url, date_string, run_name):
-    """Adds a site testing function to the TestSequence."""
-    test = test_generator(site_id, site_url, site_ep, dry_run=dry_run, logger=logger, version=artemis_version_url,
-                          test_date=date_string, test_dir=run_name)
-    setattr(TestSequence, test_name, test)
 
-def log_no_ep_error(logger, site_id, site_url, version, test_date):
+def full_test_generator(site_name, site_url, dry_run=False, logger=None, version="", test_date="", test_dir="."):
     """
-    Logs an error in cases where there was no entrypoint found, so no test will be run.
-    This is implemented by adding a method to do this to the test suite.
+    Returns a function which does a 'full' test of the given site.
+    This means running the external entry-point finding tool and then for each EP found running the test returned by 
+    test_generator() for that site and entry-point.
+    The returned function is careful not to allow any exceptions from individual tests to interfere with the others.
     """
     
-    def log_msg():
-        if logger is not None:
-            data = {}
-            data['Testing Run'] = test_date
-            data['Artemis Version'] = version
-            data['Site'] = site_id
-            data['URL'] = site_url
-            data['Analysis'] = "DIADEM did not return any entry-points."
-            logger.log_data(data)
+    def full_test(self):
         
-        # Fail this test.
-        raise Exception("No entry-point found.")
+        print site_name, site_url
+        
+        # Run the entry-point finder.
+        try:
+            ep_list = call_ep_finder(site_url)
+        except Exception as e:
+            # Log this and stop (with the same exception).
+            _log_error_message(logger, site_name, site_url, version, test_date, 
+                              "Exception of type '%s' in test suite while trying to run DIADEM." % type(e).__name__)
+            raise e
+        
+        # If we are doing a dry-run then the entry-point finder will not have been called, so use a dummy EP.
+        if dry_run:
+            ep_list = ["EP-FROM-EXTERNAL-TOOL"]
+        
+        # If there were no entry-points returned, then log this and stop.
+        # This is not considered an error, so no exception is raised.
+        if not ep_list:
+            _log_error_message(logger, site_name, site_url, version, test_date, "DIADEM returned no entry-points.")
+            return
+        
+        # For each EP returned, call test_generator() to get a function to test that EP.
+        test_functions = []
+        if len(ep_list) == 1:
+            test_functions.append((site_name, test_generator(site_name, site_url, ep_list[0], dry_run, logger, version,
+                                                             test_date, test_dir)))
+        else:
+            for idx, ep in enumerate(ep_list):
+                site_id = "%s_%d" % (site_name, idx+1)
+                test_functions.append((site_name, test_generator(site_id, site_url, ep, dry_run, logger, version,
+                                                             test_date, test_dir)))
+        
+        # Run each of these functions to actually test the different EPs.
+        # Keep track of any exceptions (so we can report them at the end) but do not allow them to pass through.
+        test_exceptions = []
+        for site_id, test_site in test_functions:
+            try:
+                test_site(None) # The functions returned by test_generator expect to be attached to an object (and 
+                                # therefore have the self parameter, but this is never used.
+            except Exception as e:
+                test_exceptions.append((site_id, type(e).__name__))
+        
+        # If there have been any errors, report them and throw an exception to show that this test was not completely
+        # successful.
+        if test_exceptions:
+            error_list = ["%s in %s" % (site_exception, site_id) for site_id, site_exception in test_exceptions]
+            error_msg = "Errors occurred: %s" % ", ".join(error_list)
+            raise Exception(error_msg)
     
-    # Add this "test" function to the TestSequence.
-    setattr(TestSequence, site_id, log_msg)
-
+    return full_test
 
 
 
 def test_generator(site_name, site_url, site_ep, dry_run=False, logger=None, version="", test_date="", test_dir="."):
-    """Returns a function which will test the given website when executed."""
+    """Returns a function which will test the given site and entry-point when executed."""
     
     def test(self):
         # Begin with the data we know about
@@ -226,6 +250,27 @@ def test_generator(site_name, site_url, site_ep, dry_run=False, logger=None, ver
 
 
 
+def _log_error_message(logger, site_id, site_url, version, test_date, message):
+    """
+    Logs an error message to mark when ArtForm could not be run.
+    Silently ignores exceptions during logging, as this is onyl an error-recovery function.
+    """
+    try:
+        if logger is not None:
+            data = {}
+            data['Testing Run'] = test_date
+            data['Artemis Version'] = version
+            data['Site'] = site_id
+            data['URL'] = site_url
+            data['Analysis'] = message
+            logger.log_data(data)
+    except Exception:
+        pass
+
+
+
+
+
 
 
 def _read_csv_file(filename):
@@ -257,7 +302,8 @@ class GDataLogger():
     """
     Allows logging to a google spreadsheet.
     New data is simply appended to the table as a new row.
-    New columns are added as required."""
+    New columns are added as required.
+    """
     
     def __init__(self, spreadsheet_key, worksheet_id):
         # If no worksheet_id is given, the GData API uses the default worksheet in the given spreadsheet instead.
@@ -280,7 +326,7 @@ class GDataLogger():
             self._sheet.ProgrammaticLogin()
         except gdata.service.BadAuthentication as e:
             print "Failed to log in:", e.message
-            sys.exit() # TODO: What should we actually do here?
+            sys.exit()
         
         print "Login successful."
         self._isopen = True
