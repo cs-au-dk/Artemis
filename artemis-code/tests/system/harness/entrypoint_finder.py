@@ -20,3 +20,8 @@ def call_ep_finder(url, dry_run=False):
     
     # TODO: dummy implementation (works on local tests)
     return ["//button", "//a"]
+
+
+
+class DiademCallException(Exception):
+    pass

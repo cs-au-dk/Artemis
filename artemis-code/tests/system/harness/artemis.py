@@ -102,7 +102,7 @@ def execute_artemis(execution_uuid, url, iterations=1,
             stdout = e.output
             returncode = e.returncode
         else:
-            raise Exception("Exception thrown by call %s \n\n %s \n\n Exception thrown by call %s" \
+            raise ArtemisCallException("Exception thrown by call %s \n\n %s \n\n Exception thrown by call %s" \
                             % (e.cmd, e.output, e.cmd))
 
 
@@ -151,3 +151,5 @@ def execute_artemis(execution_uuid, url, iterations=1,
     return report
 
 
+class ArtemisCallException(Exception):
+    pass
