@@ -56,6 +56,9 @@ def execute_artemis(execution_uuid, url, iterations=1,
     if verbosity is not None:
         args.append('-v')
         args.append(verbosity)
+    else:
+        args.append('-v')
+        args.append('all')
 
     for key in kwargs:
         args.append('--%s' % key.replace('_', '-'))
@@ -83,9 +86,6 @@ def execute_artemis(execution_uuid, url, iterations=1,
     if concolic_button is not None:
         args.append('--concolic-button')
         args.append(concolic_button)
-
-    args.append('-v')
-    args.append('all')
 
     cmd = [ARTEMIS_EXEC] + [url] + args
 
