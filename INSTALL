@@ -46,3 +46,9 @@ Artemis have been successfully installed on Ubuntu 12.10 and Fedora 18.
 4. Configure your path to include Artemis executable
 
       export PATH=$ARTEMISDIR/artemis-code/dist:$PATH
+
+5. Enable auto-completion in bash by running
+      
+      mv artemis-bash-complete /etc/bash-complete.d/artemis 
+   
+   as root.

@@ -1,0 +1,33 @@
+
+# file: artemisf
+# artemis parameter-completion
+
+_artemis() 
+{
+    local cur prev opts
+    COMPREPLY=()
+    cur="${COMP_WORDS[COMP_CWORD]}"
+    prev="${COMP_WORDS[COMP_CWORD-1]}"
+    opts=`artemis --option-values`
+  case "${prev}" in
+	--*)
+	    local mmopts=`artemis --option-values=${prev}`
+	    if [ -n "${mmopts}" ] 
+	    then 
+	        COMPREPLY=( $(compgen -W "${mmopts}" -- ${cur}) )
+		return 0
+	    fi 
+            ;;
+	*)  
+	    ;;
+    esac
+
+    if [[ ${cur} == -* ]] ; then
+        COMPREPLY=( $(compgen -W "${opts}" -- ${cur}) )
+        return 0
+    fi
+
+}
+
+complete -F _artemis  artemis
+
