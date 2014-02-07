@@ -42,8 +42,8 @@ except ImportError:
 
 
 
-#SPREADSHEET_KEY = "0ApQcHUu6OpaUdDZ5TTR1UlZJYWd1U2ktM0o2YlFoX3c" # Testing
-SPREADSHEET_KEY = "0ApQcHUu6OpaUdFZJZEV6LXU2VkZZa1M3QTh6TFAwUWc" # Real Log
+SPREADSHEET_KEY = "0ApQcHUu6OpaUdDZ5TTR1UlZJYWd1U2ktM0o2YlFoX3c" # Testing
+#SPREADSHEET_KEY = "0ApQcHUu6OpaUdFZJZEV6LXU2VkZZa1M3QTh6TFAwUWc" # Real Log
 WORKSHEET_ID = "od6"
 
 
@@ -116,10 +116,14 @@ def full_test_generator(site_name, site_url, dry_run=False, logger=None, version
     def full_test(self):
         # Run the entry-point finder.
         try:
+            start_time = time.time()
             ep_list = call_ep_finder(site_url)
+            end_time = time.time()
+            ep_finder_time = str(datetime.timedelta(seconds=(end_time - start_time)))
         except Exception as e:
             # Log this and stop (with the same exception).
             _log_error_message(logger, site_name, site_url, version, test_date, 
+                              str(datetime.timedelta(seconds=(time.time() - start_time))),
                               "Exception of type '%s' in test suite while trying to run DIADEM." % type(e).__name__)
             raise
         
@@ -130,19 +134,20 @@ def full_test_generator(site_name, site_url, dry_run=False, logger=None, version
         # If there were no entry-points returned, then log this and stop.
         # This is not considered an error, so no exception is raised.
         if not ep_list:
-            _log_error_message(logger, site_name, site_url, version, test_date, "DIADEM returned no entry-points.")
+            _log_error_message(logger, site_name, site_url, version, test_date, ep_finder_time,
+                               "DIADEM returned no entry-points.")
             return
         
         # For each EP returned, call test_generator() to get a function to test that EP.
         test_functions = []
         if len(ep_list) == 1:
             test_functions.append((site_name, test_generator(site_name, site_url, ep_list[0], dry_run, logger, version,
-                                                             test_date, test_dir)))
+                                                             test_date, test_dir, ep_finder_time)))
         else:
             for idx, ep in enumerate(ep_list):
                 site_id = "%s_%d" % (site_name, idx+1)
                 test_functions.append((site_id, test_generator(site_id, site_url, ep, dry_run, logger, version,
-                                                             test_date, test_dir)))
+                                                             test_date, test_dir, ep_finder_time)))
         
         # Run each of these functions to actually test the different EPs.
         # Keep track of any exceptions (so we can report them at the end) but do not allow them to pass through.
@@ -168,7 +173,8 @@ def full_test_generator(site_name, site_url, dry_run=False, logger=None, version
 
 
 
-def test_generator(site_name, site_url, site_ep, dry_run=False, logger=None, version="", test_date="", test_dir="."):
+def test_generator(site_name, site_url, site_ep, dry_run=False, logger=None, version="", test_date="", test_dir=".", 
+                   ep_finder_time=""):
     """Returns a function which will test the given site and entry-point when executed."""
     
     def test(self):
@@ -179,6 +185,7 @@ def test_generator(site_name, site_url, site_ep, dry_run=False, logger=None, ver
         data['Site'] = site_name
         data['URL'] = site_url
         data['Entry Point'] = site_ep
+        data['DIADEM Running Time'] = ep_finder_time
         
         try:
             # Clear /tmp/constraintlog so we can get the constraints from this run only.
@@ -251,7 +258,7 @@ def test_generator(site_name, site_url, site_ep, dry_run=False, logger=None, ver
 
 
 
-def _log_error_message(logger, site_id, site_url, version, test_date, message):
+def _log_error_message(logger, site_id, site_url, version, test_date, ep_finder_time, message):
     """
     Logs an error message to mark when ArtForm could not be run.
     Silently ignores exceptions during logging, as this is onyl an error-recovery function.
@@ -263,6 +270,7 @@ def _log_error_message(logger, site_id, site_url, version, test_date, message):
             data['Artemis Version'] = version
             data['Site'] = site_id
             data['URL'] = site_url
+            data['DIADEM Running Time'] = ep_finder_time
             data['Analysis'] = message
             logger.log_data(data)
     except Exception:
