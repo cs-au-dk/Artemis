@@ -118,7 +118,7 @@ def full_test_generator(site_name, site_url, dry_run=False, logger=None, version
         # Run the entry-point finder.
         try:
             start_time = time.time()
-            ep_list = call_ep_finder(site_url)
+            ep_list = call_ep_finder(site_url, test_dir)
             end_time = time.time()
             ep_finder_time = str(datetime.timedelta(seconds=(end_time - start_time)))
         except Exception as e:
