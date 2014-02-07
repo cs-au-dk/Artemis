@@ -31,6 +31,7 @@ import argparse
 
 from harness.artemis import execute_artemis
 from harness.artemis import ARTEMIS_EXEC
+from harness.artemis import ArtemisCallException
 from harness.entrypoint_finder import call_ep_finder
 
 try:
@@ -42,8 +43,8 @@ except ImportError:
 
 
 
-SPREADSHEET_KEY = "0ApQcHUu6OpaUdDZ5TTR1UlZJYWd1U2ktM0o2YlFoX3c" # Testing
-#SPREADSHEET_KEY = "0ApQcHUu6OpaUdFZJZEV6LXU2VkZZa1M3QTh6TFAwUWc" # Real Log
+#SPREADSHEET_KEY = "0ApQcHUu6OpaUdDZ5TTR1UlZJYWd1U2ktM0o2YlFoX3c" # Testing
+SPREADSHEET_KEY = "0ApQcHUu6OpaUdFZJZEV6LXU2VkZZa1M3QTh6TFAwUWc" # Real Log
 WORKSHEET_ID = "od6"
 
 
@@ -161,13 +162,14 @@ def full_test_generator(site_name, site_url, dry_run=False, logger=None, version
             except Exception as e:
                 test_exceptions.append((site_id, type(e).__name__))
                 print "    %s: ERROR" % site_id
+                print "        ", e
         
         # If there have been any errors, report them and throw an exception to show that this test was not completely
         # successful.
         if test_exceptions:
             error_list = ["%s in %s" % (site_exception, site_id) for site_id, site_exception in test_exceptions]
             error_msg = "Errors occurred: %s" % ", ".join(error_list)
-            raise TestSuiteException(error_msg)
+            raise TestSuiteException(error_msg) #TODO: Would be good if we could preserve the original locations as well in this message!
     
     return full_test
 
