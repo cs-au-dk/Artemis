@@ -231,8 +231,11 @@ def test_generator(site_name, site_url, site_ep, dry_run=False, logger=None, ver
             if logger is not None:
                 # Add all concolic statistics from Artemis to the logged data.
                 for key in report.keys():
-                    if key[:10].lower() == "concolic::" and key[:29].lower() != "concolic::solver::constraint.":
+                    if key.startswith("concolic::") and ! key.startswith("concolic::solver::constraint."):
                         col_header = key[10:].replace("::", "::\n")
+                        data[col_header] = str(report[key])
+                    elif key.startswith("ajax::"):
+                        col_header = key[6:].replace("::", "::\n")
                         data[col_header] = str(report[key])
                 
                 # Append the log data to the google doc.
