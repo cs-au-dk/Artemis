@@ -242,6 +242,7 @@ void ExecutionResultBuilder::slAjaxRequestInitiated(QUrl u, QString postData)
 {
     QSharedPointer<AjaxRequest> req = QSharedPointer<AjaxRequest>(new AjaxRequest(u, postData));
     qDebug() << "Adding AJAX request: " << req;
+    statistics()->accumulate("ajax::XMLHttpRequest::sent", 1);
     mResult->mAjaxRequest.insert(req);
 }
 
