@@ -89,11 +89,11 @@ def main():
     artemis_version_url = current_git_commit_hyperlink()
     
     # Generate a method to test each site and add it to our unit-testable class.
+    ep_log = []
     for s in sites:
         test_name = 'test_%s' % re.sub(r'\s+', '', s[0])
         # Check how we will find the EPs.
         if external_ep_finder:
-            ep_log = []
             test = full_test_generator(s[0], s[1], dry_run, logger, artemis_version_url, date_string, run_dir_name, ep_log)
         else:
             test = test_generator(s[0], s[1], s[2], dry_run, logger, artemis_version_url, date_string, run_dir_name)
@@ -120,10 +120,12 @@ def full_test_generator(site_name, site_url, dry_run=False, logger=None, version
     """
     
     def full_test(self):
+        os.makedirs(os.path.join(test_dir, site_name))
+        
         # Run the entry-point finder.
         try:
             start_time = time.time()
-            ep_list = call_ep_finder(site_url, test_dir)
+            ep_list = call_ep_finder(site_url, os.path.join(test_dir, site_name))
             end_time = time.time()
             ep_finder_time = str(datetime.timedelta(seconds=(end_time - start_time)))
         except Exception as e:
@@ -317,7 +319,7 @@ def _save_ep_log(filename, ep_log):
     """Writes a list of (site name, url, xpath) triples to a csv file as a log of the tests which were run."""
     
     with open(filename, 'wb') as logfile:
-        writer = csv.writer(filename)
+        writer = csv.writer(logfile)
         writer.writerow(("Site", "URL", "Entry Point"))
         writer.writerows(ep_log)
 

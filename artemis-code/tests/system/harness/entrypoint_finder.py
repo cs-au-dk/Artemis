@@ -54,6 +54,7 @@ def call_ep_finder(url, test_dir=".", dry_run=False):
     results = []
     with open(os.path.join(test_dir, EP_FINDER_RESULT), 'rb') as result_file:
         csvreader = csv.reader(result_file)
+        csvreader.next() # Skip header row.
         for row in csvreader:
             results.append(row[1])
     
