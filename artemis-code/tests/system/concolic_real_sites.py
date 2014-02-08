@@ -93,7 +93,8 @@ def main():
         test_name = 'test_%s' % re.sub(r'\s+', '', s[0])
         # Check how we will find the EPs.
         if external_ep_finder:
-            test = full_test_generator(s[0], s[1], dry_run, logger, artemis_version_url, date_string, run_dir_name)
+            ep_log = []
+            test = full_test_generator(s[0], s[1], dry_run, logger, artemis_version_url, date_string, run_dir_name, ep_log)
         else:
             test = test_generator(s[0], s[1], s[2], dry_run, logger, artemis_version_url, date_string, run_dir_name)
         
@@ -103,10 +104,14 @@ def main():
     print "Starting tests..."
     suite = unittest.TestLoader().loadTestsFromTestCase(TestSequence)
     unittest.TextTestRunner(verbosity=2).run(suite)
+    
+    # Save the EPs which were used.
+    if external_ep_finder:
+        _save_ep_log(os.path.join(run_dir_name, "ep-log.csv"), ep_log)
 
 
 
-def full_test_generator(site_name, site_url, dry_run=False, logger=None, version="", test_date="", test_dir="."):
+def full_test_generator(site_name, site_url, dry_run=False, logger=None, version="", test_date="", test_dir=".", ep_log=None):
     """
     Returns a function which does a 'full' test of the given site.
     This means running the external entry-point finding tool and then for each EP found running the test returned by 
@@ -144,11 +149,13 @@ def full_test_generator(site_name, site_url, dry_run=False, logger=None, version
         if len(ep_list) == 1:
             test_functions.append((site_name, test_generator(site_name, site_url, ep_list[0], dry_run, logger, version,
                                                              test_date, test_dir, ep_finder_time)))
+            ep_log.append((site_name, site_url, ep_list[0]))
         else:
             for idx, ep in enumerate(ep_list):
                 site_id = "%s_%d" % (site_name, idx+1)
                 test_functions.append((site_id, test_generator(site_id, site_url, ep, dry_run, logger, version,
                                                              test_date, test_dir, ep_finder_time)))
+                ep_log.append((site_id, site_url, ep))
         
         # Run each of these functions to actually test the different EPs.
         # Keep track of any exceptions (so we can report them at the end) but do not allow them to pass through.
@@ -187,7 +194,7 @@ def test_generator(site_name, site_url, site_ep, dry_run=False, logger=None, ver
         data['Site'] = site_name
         data['URL'] = site_url
         data['Entry Point'] = site_ep
-        data['DIADEM Running Time'] = ep_finder_time
+        data['DIADEM Time'] = ep_finder_time
         
         try:
             # Clear /tmp/constraintlog so we can get the constraints from this run only.
@@ -231,7 +238,7 @@ def test_generator(site_name, site_url, site_ep, dry_run=False, logger=None, ver
             if logger is not None:
                 # Add all concolic statistics from Artemis to the logged data.
                 for key in report.keys():
-                    if key.startswith("concolic::") and ! key.startswith("concolic::solver::constraint."):
+                    if key.startswith("concolic::") and not key.startswith("concolic::solver::constraint."):
                         col_header = key[10:].replace("::", "::\n")
                         data[col_header] = str(report[key])
                     elif key.startswith("ajax::"):
@@ -275,7 +282,7 @@ def _log_error_message(logger, site_id, site_url, version, test_date, ep_finder_
             data['Artemis Version'] = version
             data['Site'] = site_id
             data['URL'] = site_url
-            data['DIADEM Running Time'] = ep_finder_time
+            data['DIADEM Time'] = ep_finder_time
             data['Analysis'] = message
             logger.log_data(data)
     except Exception:
@@ -305,6 +312,14 @@ def _read_csv_file(filename):
         print "Encountered a row with the wrong length, aborting."
         exit(1)
 
+
+def _save_ep_log(filename, ep_log):
+    """Writes a list of (site name, url, xpath) triples to a csv file as a log of the tests which were run."""
+    
+    with open(filename, 'wb') as logfile:
+        writer = csv.writer(filename)
+        writer.writerow(("Site", "URL", "Entry Point"))
+        writer.writerows(ep_log)
 
 
 
