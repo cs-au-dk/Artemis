@@ -5,17 +5,17 @@
 namespace artemis{
 
     void SeleniumEventExecutionStatistics::registerEventDescription(EventHandlerDescriptorConstPtr desc){
-        qDebug() << "Event description registered.";
+        qDebug() << "SELENIUM: Event description registered.";
         mRegisteredHandlers.append(desc);
     }
 
     void SeleniumEventExecutionStatistics::beginNewIteration(){
-        qDebug() << "Begin new selenium iteration.";
+        qDebug() << "SELENIUM: Begin new selenium iteration.";
         mRegisteredHandlers.clear();
     }
 
     QString SeleniumEventExecutionStatistics::generateOutput(){
-        qDebug() << "Generating selenium output.";
+        qDebug() << "SELENIUM: Generating selenium output.";
         foreach(EventHandlerDescriptorConstPtr desc, mRegisteredHandlers){
 
         }
