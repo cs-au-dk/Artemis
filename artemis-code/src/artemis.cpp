@@ -325,7 +325,7 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
                     std::cout << "z3str cvc4 kaluza";
                 }
             } else {
-                std::cout << "-c -t -r -p -s -e --major-mode "
+                std::cout << "-c -t -r -p -s -e -i --major-mode "
                              "--strategy-form-input-generation "
                              "--coverage-report "
                              "--coverage-report-ignore "

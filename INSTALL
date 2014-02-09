@@ -47,8 +47,8 @@ Artemis have been successfully installed on Ubuntu 12.10 and Fedora 18.
 
       export PATH=$ARTEMISDIR/artemis-code/dist:$PATH
 
-5. Enable auto-completion in bash by running
+5. Enable completion in bash by running
       
-      mv artemis-bash-complete /etc/bash-complete.d/artemis 
+      cp artemis-bash-complete /etc/bash_completion.d/artemis 
    
    as root.
