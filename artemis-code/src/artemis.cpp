@@ -338,7 +338,10 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
                     std::cout << "all named none";
                 } else if(string(optarg).compare("--smt-solver") == 0){
                     std::cout << "z3str cvc4 kaluza";
+                } else if(string(optarg).compare("--export-event-sequence") == 0){
+                    std::cout << "selenium";
                 }
+
             } else {
                 std::cout << "-c -t -r -p -s -e -i --major-mode "
                              "--strategy-form-input-generation "
@@ -353,7 +356,8 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
                              "--export-event-sequence "
                              "--input-strategy-same-length "
                              "--function-call-heap-report "
-                             "--function-call-heap-report-random-factor ";
+                             "--function-call-heap-report-random-factor "
+                             "--export-event-sequence";
             }
 
             exit(0);
