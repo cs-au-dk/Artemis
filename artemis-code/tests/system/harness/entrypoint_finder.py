@@ -29,6 +29,13 @@ def call_ep_finder(url, test_dir=".", dry_run=False):
     with open(os.path.join(EP_FINDER_DIR, EP_FINDER_INPUT), 'w') as input_file:
         input_file.write(url + '\n')
     
+    # Clear the result file in case we accidentally read an outdated version.
+    try:
+        os.remove(os.path.join(EP_FINDER_DIR, EP_FINDER_RESULT))
+    except OSError:
+        pass # If the file does not exist, ignore.
+        # Note that this is not exactly what we want as OSError can be raised if the delete fails for another reason.
+    
     # Run DIADEM (Save the output, even if it crashes or returns non-zero).
     cmd = os.path.join(EP_FINDER_DIR, EP_FINDER_SCRIPT)
     try:
