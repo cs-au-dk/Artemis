@@ -235,10 +235,11 @@ def test_generator(site_name, site_url, site_ep, dry_run=False, logger=None, ver
             if logger is not None:
                 # Add all concolic statistics from Artemis to the logged data.
                 for key in report.keys():
-                    if key.startswith("concolic::") and not key.startswith("concolic::solver::constraint."):
+                    key_lc = key.lower()
+                    if key_lc.startswith("concolic::") and not key_lc.startswith("concolic::solver::constraint."):
                         col_header = key[10:].replace("::", "::\n")
                         data[col_header] = str(report[key])
-                    elif key.startswith("ajax::"):
+                    elif key_lc.startswith("ajax::"):
                         col_header = key[6:].replace("::", "::\n")
                         data[col_header] = str(report[key])
                 
