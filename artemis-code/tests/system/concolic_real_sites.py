@@ -148,16 +148,11 @@ def full_test_generator(site_name, site_url, dry_run=False, logger=None, version
         
         # For each EP returned, call test_generator() to get a function to test that EP.
         test_functions = []
-        if len(ep_list) == 1:
-            test_functions.append((site_name, test_generator(site_name, site_url, ep_list[0], dry_run, logger, version,
-                                                             test_date, test_dir, ep_finder_time)))
-            ep_log.append((site_name, site_url, ep_list[0]))
-        else:
-            for idx, ep in enumerate(ep_list):
-                site_id = "%s_%d" % (site_name, idx+1)
-                test_functions.append((site_id, test_generator(site_id, site_url, ep, dry_run, logger, version,
-                                                             test_date, test_dir, ep_finder_time)))
-                ep_log.append((site_id, site_url, ep))
+        for idx, ep in enumerate(ep_list):
+            site_id = "%s_%d" % (site_name, idx+1)
+            test_functions.append((site_id, test_generator(site_id, site_url, ep, dry_run, logger, version,
+                                                         test_date, test_dir, ep_finder_time)))
+            ep_log.append((site_id, site_url, ep))
         
         # Run each of these functions to actually test the different EPs.
         # Keep track of any exceptions (so we can report them at the end) but do not allow them to pass through.
