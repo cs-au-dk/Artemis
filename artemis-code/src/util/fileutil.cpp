@@ -30,6 +30,7 @@ void writeStringToFile(QString filename, QString data)
     out << (data.isEmpty() ? " " : data);
     file.close();
     out.flush();
+
 }
 
 void createDir(QString path, QString folderName)

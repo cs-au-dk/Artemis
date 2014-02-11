@@ -10,7 +10,7 @@ class StubEventExecutionStatistics: public EventExecutionStatistics
 public:
     StubEventExecutionStatistics(){}
 
-    void registerEventDescription(EventHandlerDescriptorConstPtr desc);
+    virtual void registerEvent(EventTuple desc);
 
     void beginNewIteration();
 

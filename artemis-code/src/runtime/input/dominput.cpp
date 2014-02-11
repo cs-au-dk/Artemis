@@ -65,7 +65,7 @@ void DomInput::apply(ArtemisWebPagePtr page, QWebExecutionListener*) const
                  << " _Title: " << target.attribute(QString("title")) << "class: "
                  << target.attribute(QString("class"));
         qDebug() << "Executing: " << jsInitEvent;
-        mExecStat->registerEventDescription(mEventHandler);
+        mExecStat->registerEvent(EventTuple(mEventHandler, mEvtParams));
         QVariant result = target.evaluateJavaScript(jsInitEvent, DONT_MEASURE_COVERAGE);
 
         qDebug() << "Result: " << result;
