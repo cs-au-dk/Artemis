@@ -54,6 +54,7 @@ void ArtemisRuntime::preConcreteExecution()
         cout << "\n" << endl;
 
         mWebkitExecutor->detach();
+        mExecStat->generateOutput();
         done();
         return;
     }

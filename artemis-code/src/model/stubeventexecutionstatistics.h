@@ -14,7 +14,7 @@ public:
 
     void beginNewIteration();
 
-    QString generateOutput();
+    void generateOutput();
 };
 
 }

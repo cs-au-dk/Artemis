@@ -8,8 +8,8 @@ void StubEventExecutionStatistics::beginNewIteration(){
 
 }
 
-QString StubEventExecutionStatistics::generateOutput(){
-    return QString();
+void StubEventExecutionStatistics::generateOutput(){
+
 }
 
 }

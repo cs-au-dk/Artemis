@@ -4,22 +4,35 @@
 
 namespace artemis{
 
+    SeleniumEventExecutionStatistics::SeleniumEventExecutionStatistics(const QUrl& url){
+        mUrl = url;
+        qDebug() << "SELENIUM: initializing stats with url: " <<  url;
+    }
+
     void SeleniumEventExecutionStatistics::registerEventDescription(EventHandlerDescriptorConstPtr desc){
-        qDebug() << "SELENIUM: Event description registered.";
-        mRegisteredHandlers.append(desc);
+        qDebug() << "SELENIUM: Event description registered at: " << desc->xPathToElement();
+        mCurrentRegisteredHandlers->append(desc);
     }
 
     void SeleniumEventExecutionStatistics::beginNewIteration(){
         qDebug() << "SELENIUM: Begin new selenium iteration.";
-        mRegisteredHandlers.clear();
+        if(mCurrentRegisteredHandlers != NULL){
+            mRegisteredHandlers.append(*mCurrentRegisteredHandlers);
+        }
+        mCurrentRegisteredHandlers = new QList<EventHandlerDescriptorPtr>();
     }
 
-    QString SeleniumEventExecutionStatistics::generateOutput(){
+    void SeleniumEventExecutionStatistics::generateOutput(){
         qDebug() << "SELENIUM: Generating selenium output.";
-        foreach(EventHandlerDescriptorConstPtr desc, mRegisteredHandlers){
+        QList<SeleniumTableRow> rows;
 
+        rows.append(SeleniumTableRow("open", mUrl.toString()));
+
+        foreach(EventHandlerDescriptorConstPtr desc, mRegisteredHandlers.last()){
+            rows.append(SeleniumTableRow(desc->getName(), desc->xPathToElement()));
         }
 
-        return QString();
     }
+
+
 }

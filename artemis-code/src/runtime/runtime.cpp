@@ -125,7 +125,7 @@ Runtime::Runtime(QObject* parent, const Options& options, const QUrl& url) : QOb
         mExecStat = new StubEventExecutionStatistics;
         break;
     case EXPORT_SELENIUM:
-        mExecStat = new SeleniumEventExecutionStatistics;
+        mExecStat = new SeleniumEventExecutionStatistics(url);
         break;
     }
 

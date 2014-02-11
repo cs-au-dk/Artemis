@@ -17,7 +17,7 @@ public:
 
     virtual void beginNewIteration() = 0;
 
-    virtual QString generateOutput() = 0;
+    virtual void generateOutput() = 0;
 };
 
 
