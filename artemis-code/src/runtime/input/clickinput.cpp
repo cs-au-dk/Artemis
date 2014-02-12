@@ -56,7 +56,7 @@ void ClickInput::apply(ArtemisWebPagePtr page, QWebExecutionListener *webkitList
 
     // Check that the result exists and is unique.
     if(matches.count() != 1){
-        Log::fatal(QString("Error: The manual entry point XPath specified found %1 elements; there should be exactly 1.").arg(matches.count()).toStdString());
+        Log::info(QString("Error: The manual entry point XPath specified found %1 elements; there should be exactly 1.").arg(matches.count()).toStdString());
         exit(1);
     }
     QWebElement targetElement = matches.at(0);
