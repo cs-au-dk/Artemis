@@ -27,50 +27,92 @@ namespace artemis{
         mCurrentRegisteredHandlers = QList<EventTuple>();
     }
 
+
     void SeleniumEventExecutionStatistics::generateOutput(){
         beginNewIteration();
         qDebug() << "SELENIUM: Generating selenium output.";
         QList<SeleniumTableRow> rows;
 
-        int i = 0;
+        int i = 1;
         QMap<QString, QString> testNameToFile;
         QDir outDir = uniqueDir("selenium-");
         foreach(QList<EventTuple> list, mRegisteredHandlers){
             rows.append(SeleniumTableRow("open", mUrl.toString()));
-            MouseEventParameters mep;
-            KeyboardEventParameters kep;
             foreach(EventTuple desc, list){
+                QSharedPointer<const MouseEventParameters> mep = qSharedPointerDynamicCast<const MouseEventParameters>(desc.mEvtParams);
+                QSharedPointer<const KeyboardEventParameters> kep = qSharedPointerDynamicCast<const KeyboardEventParameters>(desc.mEvtParams);
 
-                if(mep = dynamic_cast<MouseEventParameters>(desc.mEvtParams)){
+                if(mep){
 
-                    if(mep.altKey){
+                    if(mep->altKey){
                         rows.append(SeleniumTableRow("altKeyDown"));
                     }
-                    if(mep.ctrlKey){
+                    if(mep->ctrlKey){
                         rows.append(SeleniumTableRow("controlKeyDown"));
                     }
-                    if(mep.shiftKey){
+                    if(mep->shiftKey){
                         rows.append(SeleniumTableRow("shiftKeyDown"));
                     }
-                    if(mep.metaKey){
+                    if(mep->metaKey){
                         rows.append(SeleniumTableRow("metaKeyDown"));
                     }
 
-                } else if(kep = dynamic_cast<KeyboardEventParameters>(desc.mEvtParams)){
+                    rows.append(SeleniumTableRow(desc.mEventHandler->getName(), desc.mEventHandler->xPathToElement()));
+
+
+                    if(mep->metaKey){
+                        rows.append(SeleniumTableRow("metaKeyUp"));
+                    }
+                    if(mep->altKey){
+                        rows.append(SeleniumTableRow("altKeyUp"));
+                    }
+                    if(mep->ctrlKey){
+                        rows.append(SeleniumTableRow("controlKeyUp"));
+                    }
+                    if(mep->shiftKey){
+                        rows.append(SeleniumTableRow("shiftKeyUp"));
+                    }
+
+                } else if(kep){
+                    if(kep->altKey){
+                        rows.append(SeleniumTableRow("altKeyDown"));
+                    }
+                    if(kep->ctrlKey){
+                        rows.append(SeleniumTableRow("controlKeyDown"));
+                    }
+                    if(kep->shiftKey){
+                        rows.append(SeleniumTableRow("shiftKeyDown"));
+                    }
+                    if(kep->metaKey){
+                        rows.append(SeleniumTableRow("metaKeyDown"));
+                    }
+
+                    rows.append(SeleniumTableRow(desc.mEventHandler->getName(), desc.mEventHandler->xPathToElement(), kep->keyIdentifier));
+
+
+                    if(kep->metaKey){
+                        rows.append(SeleniumTableRow("metaKeyUp"));
+                    }
+                    if(kep->altKey){
+                        rows.append(SeleniumTableRow("altKeyUp"));
+                    }
+                    if(kep->ctrlKey){
+                        rows.append(SeleniumTableRow("controlKeyUp"));
+                    }
+                    if(kep->shiftKey){
+                        rows.append(SeleniumTableRow("shiftKeyUp"));
+                    }
 
                 } else {
-                    // Handle blur and stuff
+                    rows.append(SeleniumTableRow("fireEvent", desc.mEventHandler->xPathToElement(), desc.mEventHandler->getName()));
                 }
-
-                //                rows.append(SeleniumTableRow(desc.mEventHandler->getName(), desc.mEventHandler->xPathToElement()));
-                qDebug() << "SELENIUM: Adding row "<< desc.mEventHandler->getName() << desc.mEventHandler->xPathToElement();
-                //TODO: Need better way of creating rows:
-                //      Should support:
-                //        * blur ect. http://natzp.blogspot.dk/2011/04/to-automate-on-blur-on-key-elements.html
-                //        * ctrl, shift, .. keys on both keydown and mouse events
-                //        * sending value on keydown
             }
             QString testName = "iteration";
+            int j = (int)mRegisteredHandlers.size()/10;
+            while(j > (int)i/10){
+                testName.append("0");
+                j = (int)j/10;
+            }
             testName.append(QString::number(i));
             testNameToFile.insert(testName, createTestFile(outDir, testName , rows));
             rows = QList<SeleniumTableRow>();
