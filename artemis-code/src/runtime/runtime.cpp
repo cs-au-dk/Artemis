@@ -26,6 +26,7 @@
 #include "model/pathtracer.h"
 
 #include "model/seleniumeventexecutionstatistics.h"
+#include "model/jsoneventexecutionstatistics.h"
 #include "model/stubeventexecutionstatistics.h"
 
 #include "statistics/statsstorage.h"
@@ -127,6 +128,8 @@ Runtime::Runtime(QObject* parent, const Options& options, const QUrl& url) : QOb
     case EXPORT_SELENIUM:
         mExecStat = new SeleniumEventExecutionStatistics(url);
         break;
+    case EXPORT_JSON:
+        mExecStat = new JSONEventExecutionStatistics(url);
     }
 
     mInputgenerator = new RandomInputGenerator(this,

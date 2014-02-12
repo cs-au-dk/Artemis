@@ -54,7 +54,7 @@ enum HeapReport{
 };
 
 enum ExportEventSequence{
-    DONT_EXPORT, EXPORT_SELENIUM
+    DONT_EXPORT, EXPORT_SELENIUM, EXPORT_JSON
 };
 
 enum SMTSolver {
