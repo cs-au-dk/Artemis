@@ -13,7 +13,7 @@ import csv
 
 #TODO: Should this be set by an environment variable or something else?
 EP_FINDER_DIR = '/home/ben/DIADEM/form.observer'
-EP_FINDER_SCRIPT = 'form-observer.sh'
+EP_FINDER_SCRIPT = 'timed-form-observer.sh'
 EP_FINDER_INPUT = 'form-observer-input.txt'
 EP_FINDER_RESULT = 'buttons.csv'
 
