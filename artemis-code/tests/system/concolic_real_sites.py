@@ -47,6 +47,8 @@ except ImportError:
 SPREADSHEET_KEY = "0ApQcHUu6OpaUdFZJZEV6LXU2VkZZa1M3QTh6TFAwUWc" # Real Log
 WORKSHEET_ID = "od6"
 
+EP_VISUALISATION_SCRIPT = os.path.join(os.environ['ARTEMISDIR'], 'artemis-code', 'scripts', 'entrypoint-identifier.sh')
+
 
 # The unit test object. The test_* functions will be filled in by main().
 class TestSequence(unittest.TestCase):
@@ -145,6 +147,13 @@ def full_test_generator(site_name, site_url, dry_run=False, logger=None, version
             _log_error_message(logger, site_name, site_url, version, test_date, ep_finder_time,
                                "DIADEM returned no entry-points.")
             return
+        
+        # Call the entrypoint visualiser, which is just part of the logging of this test suite. Suppress output.
+        cmd = [EP_VISUALISATION_SCRIPT, site_url, 'buttons.png'] + ep_list
+        try:
+            subprocess.check_output(cmd, cwd=os.path.join(test_dir, site_name), stderr=subprocess.STDOUT)
+        except CalledProcessError:
+            pass
         
         # For each EP returned, call test_generator() to get a function to test that EP.
         test_functions = []
