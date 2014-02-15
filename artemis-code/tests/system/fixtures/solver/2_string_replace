@@ -1,0 +1,3 @@
+if (foo.replace("oo", "zz") == "fzz") {
+    alert("hit");
+}

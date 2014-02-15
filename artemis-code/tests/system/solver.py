@@ -56,7 +56,7 @@ def _run_test(raw_filename, dryrun=False):
                              reverse_constraint_solver=True,
                              dryrun=dryrun)
 
-    assert report.get('WebKit::alerts', 0) == 1, "Execution using inputs from the solver did not reach a print statement"
+    assert report.get('WebKit::alerts', 0) == 1, "Execution using inputs from the solver did not reach a print statement... %s" % new_fields
 
     # negative case
 

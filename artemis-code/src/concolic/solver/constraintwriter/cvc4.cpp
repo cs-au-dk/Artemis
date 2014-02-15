@@ -223,11 +223,10 @@ void CVC4ConstraintWriter::visit(Symbolic::StringReplace* replace, void* args)
         return;
     }
 
-    std::string temporary = emitAndReturnNewTemporary(Symbolic::STRING);
+    std::stringstream str;
+    str << "(str.replace " << mExpressionBuffer << " " << "\"" << *replace->getPattern() << "\" \"" << *replace->getReplace() << "\")";
 
-    mOutput << "(assert (str.replace " << "\"" << *replace->getPattern() << "\" \"" << *replace->getReplace() << "\" " << mExpressionBuffer << " " << temporary << "))";
-
-    mExpressionBuffer = temporary;
+    mExpressionBuffer = str.str();
     mExpressionType = Symbolic::STRING;
 }
 
