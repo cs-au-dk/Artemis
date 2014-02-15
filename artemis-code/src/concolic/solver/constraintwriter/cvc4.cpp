@@ -251,6 +251,8 @@ void CVC4ConstraintWriter::visit(Symbolic::StringRegexSubmatch* submatch, void* 
         strs << "(str.in.re " << match << " " << CVC4RegexCompiler::compile(*submatch->getRegexpattern()) << ")";
         mExpressionBuffer = strs.str();
 
+        mOutput << "; Regex compiler: " << *submatch->getRegexpattern() << " -> " << strs.str() << std::endl;
+
     } catch (CVC4RegexCompilerException ex) {
         std::stringstream err;
         err << "The CVC4RegexCompiler failed when compiling the regex " << *submatch->getRegexpattern() << " with the error message: " << ex.what();
