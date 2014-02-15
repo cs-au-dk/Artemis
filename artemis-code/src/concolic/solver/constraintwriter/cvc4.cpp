@@ -43,24 +43,13 @@ CVC4ConstraintWriter::CVC4ConstraintWriter()
 
 void CVC4ConstraintWriter::preVisitPathConditionsHook()
 {
-    mOutput << "(set-logic QF_S)" << std::endl;
+    mOutput << "(set-logic UFSLIA)" << std::endl;
     mOutput << "(set-option :produce-models true)" << std::endl;
-    mOutput << "(set-option :strings-exp true)" << std::endl << std::endl;
-    mOutput << "(define-fun str.contains ((?in String) (?s String)) Bool\n"
-               "    (exists ((?a String) (?b String))\n"
-               "        (= ?in (str.++ ?a ?s ?b)))\n"
-               ")\n"
-               "\n"
-               "(define-fun str.replace ((?x String) (?y String) (?s String) (?r String)) Bool\n"
-               "    (ite (str.contains ?x ?s)\n"
-               "         (or\n"
-               "             (and (= ?s ?r)\n"
-               "                  (= ?x ?y))\n"
-               "             (exists ((?a String) (?b String))\n"
-               "                 (and  (= ?s (str.++ ?a ?x ?b))\n"
-               "                 (= ?r (str.++ ?a ?y ?b)))))\n"
-               "         (= ?s ?r))\n"
-               ")" << std::endl << std::endl;
+    mOutput << "(set-option :strings-exp true)" << std::endl;
+    mOutput << "(set-option :strings-fmf true)" << std::endl;
+    //mOutput << "(set-option :fmf-bound-int true)" << std::endl;
+    //mOutput << "(set-option :finite-model-find true)" << std::endl;
+    mOutput << std::endl;
 }
 
 void CVC4ConstraintWriter::postVisitPathConditionsHook()

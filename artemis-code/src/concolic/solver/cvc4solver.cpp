@@ -68,7 +68,7 @@ SolutionPtr CVC4Solver::solve(PathConditionPtr pc)
     }
 
     QDir solverpath = QDir(QString(artemisdir));
-    QString exec = "cvc4-1.3-x86_64-linux-opt";
+    QString exec = "cvc4-2014-02-15-x86_64-linux-opt";
 
     if (!solverpath.cd("contrib") || !solverpath.cd("CVC4") || !solverpath.exists(exec)) {
         qDebug() << "Warning, could not find " << exec;;
@@ -153,11 +153,6 @@ SolutionPtr CVC4Solver::solve(PathConditionPtr pc)
             std::getline(ss, symbol, ' ');
             std::getline(ss, type, ' '); // skip a static prefix
             std::getline(ss, type, ' ');
-
-            if (type.compare("String") == 0) {
-                std::getline(ss, value, ' '); // skip redundant "type" string
-            }
-
             std::getline(ss, value, ')');
 
             // decode type of value
