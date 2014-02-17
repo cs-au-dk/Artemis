@@ -25,11 +25,7 @@ def main():
     parser.add_argument('xpath', nargs='*', help="The XPath expression(s) to identify on the page.")
     args = parser.parse_args()
     
-    url = "http://www.mistymountain.co.uk"
-    ep1 = "//a[@id='email']"
-    ep2 = "//strong[@id='name']"
-    
-    print "Loading", url
+    print "Loading", args.url
     display = XPathDisplay(args.url)
     for idx,xpath in enumerate(args.xpath):
         label = "EP %d" % (idx+1)
