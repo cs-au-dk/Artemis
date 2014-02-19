@@ -234,7 +234,8 @@ void HTMLAnchorElement::parseAttribute(Attribute* attr)
                     hrefAttribute->setValue(nullAtom);
             }
 #ifdef ARTEMIS
-            else if(protocolIsJavaScript(parsedURL)){
+            else if(protocolIsJavaScript(parsedURL) && !hasEventListeners(eventNames().clickEvent)) {
+                // Don't set the onclick event handler if it already has one.
                 setAttributeEventListener(eventNames().clickEvent, createAttributeEventListener(this, attr));
             }
 #endif
