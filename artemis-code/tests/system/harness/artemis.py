@@ -34,10 +34,11 @@ def execute_artemis(execution_uuid, url, iterations=1,
                     **kwargs):
     output_dir = os.path.join(output_parent_dir, execution_uuid)
 
-    if os.path.isdir(output_dir):
-        shutil.rmtree(output_dir)
+    if not dryrun:
+        if os.path.isdir(output_dir):
+            shutil.rmtree(output_dir)
 
-    os.makedirs(output_dir)
+        os.makedirs(output_dir)
 
     args = ["-i %s" % iterations]
 
@@ -56,6 +57,9 @@ def execute_artemis(execution_uuid, url, iterations=1,
     if verbosity is not None:
         args.append('-v')
         args.append(verbosity)
+    else:
+        args.append('-v')
+        args.append('all')
 
     for key in kwargs:
         args.append('--%s' % key.replace('_', '-'))
@@ -84,13 +88,11 @@ def execute_artemis(execution_uuid, url, iterations=1,
         args.append('--concolic-button')
         args.append(concolic_button)
 
-    args.append('-v')
-    args.append('all')
-
     cmd = [ARTEMIS_EXEC] + [url] + args
 
     if dryrun:
         print ' '.join(cmd)
+        return
 
     try:
         stdout = (subprocess.check_output(cmd, cwd=output_dir, stderr=subprocess.STDOUT)).decode("utf-8")
@@ -100,7 +102,7 @@ def execute_artemis(execution_uuid, url, iterations=1,
             stdout = e.output
             returncode = e.returncode
         else:
-            raise Exception("Exception thrown by call %s \n\n %s \n\n Exception thrown by call %s" \
+            raise ArtemisCallException("Exception thrown by call %s \n\n %s \n\n Exception thrown by call %s" \
                             % (e.cmd, e.output, e.cmd))
 
 
@@ -149,3 +151,5 @@ def execute_artemis(execution_uuid, url, iterations=1,
     return report
 
 
+class ArtemisCallException(Exception):
+    pass

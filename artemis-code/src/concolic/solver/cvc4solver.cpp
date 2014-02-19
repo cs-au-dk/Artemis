@@ -48,7 +48,7 @@ SolutionPtr CVC4Solver::solve(PathConditionPtr pc)
     if (!cw->write(pc, "/tmp/cvc4input")) {
         statistics()->accumulate("Concolic::Solver::ConstraintsNotWritten", 1);
         constraintLog << "Could not translate the PC into solver input." << std::endl;
-        constraintLog << pc->toStatisticsString() << std::endl << std::endl;
+        constraintLog << pc->toStatisticsValuesString(true) << std::endl << std::endl;
         return SolutionPtr(new Solution(false, false, "Could not translate the PC into solver input."));
     }
 
