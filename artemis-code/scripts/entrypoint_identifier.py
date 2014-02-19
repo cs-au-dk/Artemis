@@ -48,6 +48,7 @@ class XPathDisplay(QWebView):
         self._loaded = False # Used within _wait_load.
         self.loadFinished.connect(self._loadFinished)
         self.load(QUrl(url))
+        #self.show()
         self._wait_load()
     
     def _wait_load(self, delay=0):
@@ -63,6 +64,7 @@ class XPathDisplay(QWebView):
     
     def save(self, outfile):
         """Saves the current diaplay as an image file."""
+        print 'Saving', outfile
         # Adjust the viewport to see the whole page.
         frame = self.page().mainFrame()
         self.page().setViewportSize(frame.contentsSize())
@@ -71,7 +73,6 @@ class XPathDisplay(QWebView):
         painter = QPainter(image)
         frame.render(painter)
         painter.end()
-        print 'Saving', outfile
         image.save(outfile)
     
     def addxpath(self, xpath, label):
@@ -101,7 +102,8 @@ class XPathDisplay(QWebView):
             }
         """
         js_injection = js_injection % (xpath, label)
-        self.page().currentFrame().evaluateJavaScript(js_injection)
+        #print js_injection
+        self.page().mainFrame().evaluateJavaScript(js_injection)
     
 
 

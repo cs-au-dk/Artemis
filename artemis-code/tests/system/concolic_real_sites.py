@@ -149,11 +149,12 @@ def full_test_generator(site_name, site_url, dry_run=False, logger=None, version
             return
         
         # Call the entrypoint visualiser, which is just part of the logging of this test suite. Suppress output.
-        cmd = [EP_VISUALISATION_SCRIPT, site_url, 'buttons.png'] + ep_list
-        try:
-            subprocess.check_output(cmd, cwd=os.path.join(test_dir, site_name), stderr=subprocess.STDOUT)
-        except CalledProcessError:
-            pass
+        #TODO: This crashes too often on real sites, so disabling it until we can work out what is going on.
+        #cmd = [EP_VISUALISATION_SCRIPT, site_url, 'buttons.png'] + ep_list
+        #try:
+        #    subprocess.check_output(cmd, cwd=os.path.join(test_dir, site_name), stderr=subprocess.STDOUT)
+        #except CalledProcessError:
+        #    pass
         
         # For each EP returned, call test_generator() to get a function to test that EP.
         test_functions = []
