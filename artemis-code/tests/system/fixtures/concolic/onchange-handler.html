@@ -1,0 +1,51 @@
+<!--
+
+-->
+<!doctype html><html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+	<title>Ben Spencer</title>
+	<meta name="author" content="Ben Spencer">
+	<script type="text/javascript">
+		var x = "testme";
+		var validated = false;
+
+		function validatefield() {
+			var y = document.getElementById("testinput").value;
+
+			if (y != x) {
+				validated = false;
+				document.getElementById("testinput").style.backgroundColor = 'red';
+			}else{
+				validated = true;
+				document.getElementById("testinput").style.backgroundColor = 'green';
+			}
+		}
+
+		function validatebutton() {
+			if(validated) {
+				return true;
+			}else{
+				alert("Error!");
+				return false;
+			}
+		}
+	</script>
+
+</head>
+<body>
+
+	<p>Write <i>testme</i> in the field to do something.</p>
+
+	<form method="GET" action="about:blank" >
+
+		<input type="text" id="testinput" onchange="validatefield();" />
+
+		<button type="submit" onclick="return validatebutton();">Submit</button>
+
+	</form>
+
+</body>
+</html>
