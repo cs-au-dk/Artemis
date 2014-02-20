@@ -126,7 +126,8 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/model/eventexecutionstatistics.h \
     src/model/seleniumeventexecutionstatistics.h \
     src/model/stubeventexecutionstatistics.h \
-    src/model/jsoneventexecutionstatistics.h
+    src/model/jsoneventexecutionstatistics.h \
+    src/concolic/solver/variabletypecalculator.h
 
 SOURCES += src/runtime/input/ajaxinput.cpp \
     src/strategies/prioritizer/constantprioritizer.cpp \
@@ -231,6 +232,7 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/concolic/solver/constraintwriter/cvc4regexcompiler.cpp \
     src/model/seleniumeventexecutionstatistics.cpp \
     src/model/stubeventexecutionstatistics.cpp \
-    src/model/jsoneventexecutionstatistics.cpp
+    src/model/jsoneventexecutionstatistics.cpp \
+    src/concolic/solver/variabletypecalculator.cpp
 
 QT += network
