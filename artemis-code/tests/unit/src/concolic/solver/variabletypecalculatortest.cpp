@@ -11,7 +11,16 @@
 namespace artemis
 {
 
-TEST(VariableTypeCalculatorTest, SAMPLE_EXPR) {
+// Using a fixture allows access to the private members of VariableTypeCalculator.
+class VariableTypeCalculatorTest : public ::testing::Test {
+public:
+    QSet<QString> getStringVars(VariableTypeCalculator& calculator) { return calculator.mStringVars; }
+    QSet<QString> getIntVars(VariableTypeCalculator& calculator) { return calculator.mIntVars; }
+    QSet<QString> getBoolVars(VariableTypeCalculator& calculator) { return calculator.mBoolVars; }
+};
+
+
+TEST_F(VariableTypeCalculatorTest, SAMPLE_EXPR) {
     // The expression given as an example in variabletypecalculator.cpp.
     // IntegerBinaryOperation(IntegerCoercion(v1), INT_EQ, IntegerCoercion(StringBinaryOperation(v1, CONCAT, v2)))
 
@@ -41,14 +50,14 @@ TEST(VariableTypeCalculatorTest, SAMPLE_EXPR) {
     VariableTypeCalculator calculator;
     QMap<QString, Symbolic::Type> result = calculator.calculateTypes(testpc);
 
-    EXPECT_EQ(stringVars, calculator.getStringVars());
-    EXPECT_EQ(intVars, calculator.getIntVars());
-    EXPECT_EQ(boolVars, calculator.getBoolVars());
+    EXPECT_EQ(stringVars, getStringVars(calculator));
+    EXPECT_EQ(intVars, getIntVars(calculator));
+    EXPECT_EQ(boolVars, getBoolVars(calculator));
     ASSERT_EQ(expected, result);
 }
 
 
-TEST(VariableTypeCalculatorTest, INT_COERCION) {
+TEST_F(VariableTypeCalculatorTest, INT_COERCION) {
     // IntegerBinaryOperation(IntegerCoercion(Var1), INT_EQ, IntegerCoercion(Var2))
 
     // Set up the expression and PC
@@ -73,13 +82,13 @@ TEST(VariableTypeCalculatorTest, INT_COERCION) {
     VariableTypeCalculator calculator;
     QMap<QString, Symbolic::Type> result = calculator.calculateTypes(testpc);
 
-    EXPECT_EQ(stringVars, calculator.getStringVars());
-    EXPECT_EQ(intVars, calculator.getIntVars());
-    EXPECT_EQ(boolVars, calculator.getBoolVars());
+    EXPECT_EQ(stringVars, getStringVars(calculator));
+    EXPECT_EQ(intVars, getIntVars(calculator));
+    EXPECT_EQ(boolVars, getBoolVars(calculator));
     ASSERT_EQ(expected, result);
 }
 
-TEST(VariableTypeCalculatorTest, BOOL_COERCION) {
+TEST_F(VariableTypeCalculatorTest, BOOL_COERCION) {
     // BooleanCoercion(Var1)
 
     // Set up the expression and PC
@@ -99,14 +108,14 @@ TEST(VariableTypeCalculatorTest, BOOL_COERCION) {
     VariableTypeCalculator calculator;
     QMap<QString, Symbolic::Type> result = calculator.calculateTypes(testpc);
 
-    EXPECT_EQ(stringVars, calculator.getStringVars());
-    EXPECT_EQ(intVars, calculator.getIntVars());
-    EXPECT_EQ(boolVars, calculator.getBoolVars());
+    EXPECT_EQ(stringVars, getStringVars(calculator));
+    EXPECT_EQ(intVars, getIntVars(calculator));
+    EXPECT_EQ(boolVars, getBoolVars(calculator));
     ASSERT_EQ(expected, result);
 }
 
 
-TEST(VariableTypeCalculatorTest, STRING_VARS) {
+TEST_F(VariableTypeCalculatorTest, STRING_VARS) {
     // StringBinaryOperation(v1, CONCAT, v2)
 
     // Set up the symbolic expression and PC.
@@ -129,14 +138,14 @@ TEST(VariableTypeCalculatorTest, STRING_VARS) {
     VariableTypeCalculator calculator;
     QMap<QString, Symbolic::Type> result = calculator.calculateTypes(testpc);
 
-    EXPECT_EQ(stringVars, calculator.getStringVars());
-    EXPECT_EQ(intVars, calculator.getIntVars());
-    EXPECT_EQ(boolVars, calculator.getBoolVars());
+    EXPECT_EQ(stringVars, getStringVars(calculator));
+    EXPECT_EQ(intVars, getIntVars(calculator));
+    EXPECT_EQ(boolVars, getBoolVars(calculator));
     ASSERT_EQ(expected, result);
 }
 
 
-TEST(VariableTypeCalculatorTest, MULTI_EXPR_PC) {
+TEST_F(VariableTypeCalculatorTest, MULTI_EXPR_PC) {
     // Set up the expressions and PC
     Symbolic::SymbolicBoolean input1 = Symbolic::SymbolicBoolean(Symbolic::SymbolicSource(Symbolic::INPUT, Symbolic::ELEMENT_ID, "Var1"));
     Symbolic::SymbolicBoolean input2 = Symbolic::SymbolicBoolean(Symbolic::SymbolicSource(Symbolic::INPUT, Symbolic::ELEMENT_ID, "Var2"));
@@ -157,9 +166,9 @@ TEST(VariableTypeCalculatorTest, MULTI_EXPR_PC) {
     VariableTypeCalculator calculator;
     QMap<QString, Symbolic::Type> result = calculator.calculateTypes(testpc);
 
-    EXPECT_EQ(stringVars, calculator.getStringVars());
-    EXPECT_EQ(intVars, calculator.getIntVars());
-    EXPECT_EQ(boolVars, calculator.getBoolVars());
+    EXPECT_EQ(stringVars, getStringVars(calculator));
+    EXPECT_EQ(intVars, getIntVars(calculator));
+    EXPECT_EQ(boolVars, getBoolVars(calculator));
     ASSERT_EQ(expected, result);
 }
 

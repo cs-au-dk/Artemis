@@ -37,13 +37,10 @@ namespace artemis
  */
 class VariableTypeCalculator : public Symbolic::Visitor
 {
+    friend class VariableTypeCalculatorTest;
+
 public:
     QMap<QString, Symbolic::Type> calculateTypes(PathConditionPtr pathCondition);
-
-    // Used for testing, only set after a call to calculateTypes().
-    QSet<QString> getStringVars() { return mStringVars; }
-    QSet<QString> getIntVars() { return mIntVars; }
-    QSet<QString> getBoolVars() { return mBoolVars; }
 
 protected:
     // Results in integer expressions
