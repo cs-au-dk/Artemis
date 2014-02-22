@@ -261,8 +261,15 @@ std::string CVC4RegexCompiler::compile(const std::string &javaScriptRegex, bool&
     bool caseSensitivity = false;
     bool multiline = false;
 
+    std::string input = javaScriptRegex;
+
+    if (input.length() >= 2 && input.at(0) == '/' and input.at(input.length()-1) == '/') {
+        // Strip "/ /" from regex
+        input = input.substr(1, input.length()-2);
+    }
+
     const char* m_constructionError = 0;
-    JSC::Yarr::YarrPattern pattern(JSC::UString(javaScriptRegex.c_str()), caseSensitivity, multiline, &m_constructionError);
+    JSC::Yarr::YarrPattern pattern(JSC::UString(input.c_str()), caseSensitivity, multiline, &m_constructionError);
 
     if (m_constructionError) {
         std::string err = "RegularExpression: YARR compile failed with: " + std::string(m_constructionError);
