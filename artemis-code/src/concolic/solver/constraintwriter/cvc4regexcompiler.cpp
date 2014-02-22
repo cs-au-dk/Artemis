@@ -139,6 +139,22 @@ std::string visitPatternAlternative(const JSC::Yarr::PatternAlternative* alterna
 
 std::string visitPatternTerm(const JSC::Yarr::PatternTerm* term, bool& bol, bool& eol)
 {
+    // Special case for "." character class.
+    if (term->m_invert && term->type == JSC::Yarr::PatternTerm::TypeCharacterClass &&
+            term->characterClass->m_matches.size() == 2 &&
+            term->characterClass->m_ranges.size() == 0 &&
+            term->characterClass->m_matchesUnicode.size() == 2 &&
+            term->characterClass->m_rangesUnicode.size() == 0 &&
+            (char)term->characterClass->m_matches[0] == '\n' &&
+            (char)term->characterClass->m_matches[1] == '\r')  {
+
+        // CVC4 does not have any notion of "match all" or negative matches, so return a subset of
+        // "." in its place.
+        return "(re.or (re.range \"0\" \"9\") (re.range \"A\" \"Z\") (re.range \"a\" \"z\") \"_\" \"-\")";
+
+    }
+
+
     if (term->m_invert) {
         throw CVC4RegexCompilerException("Unsupported usage of \"not\" in regex");
     }
@@ -174,11 +190,6 @@ std::string visitPatternTerm(const JSC::Yarr::PatternTerm* term, bool& bol, bool
     }
 
     case JSC::Yarr::PatternTerm::TypeCharacterClass: {
-
-        /*
-         * Right now, we don't have support for . and \x character classes. Not until we figure out
-         * how these are encoded.
-         */
 
         if (term->characterClass->m_matchesUnicode.size() > 0 || term->characterClass->m_rangesUnicode.size()) {
             throw CVC4RegexCompilerException("Unsupported usage of non-ascii characters in range regex");

@@ -126,12 +126,11 @@ TEST(CVC4RegexTest, EOL_BOL_LEGACY_TEST) {
     ASSERT_EQ(eol, true);
 }
 
-/*TEST(CVC4RegexTest, DOT_STAR) {
-    std::string result = CVC4RegexCompiler::compile(".");
-    ASSERT_EQ("DOTSTAR", result);
-}*/
-
-//^[a-zA-Z]{3}\+?$
+TEST(CVC4RegexTest, DOT_STAR) {
+    bool bol, eol = false;
+    std::string result = CVC4RegexCompiler::compile(".", bol, eol);
+    ASSERT_EQ("(re.or (re.range \"0\" \"9\") (re.range \"A\" \"Z\") (re.range \"a\" \"z\") \"_\" \"-\")", result);
+}
 
 TEST(CVC4RegexTest, CHAR_CLASS_W) {
     bool bol, eol = false;
