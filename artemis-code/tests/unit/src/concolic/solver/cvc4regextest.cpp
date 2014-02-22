@@ -133,10 +133,11 @@ TEST(CVC4RegexTest, EOL_BOL_LEGACY_TEST) {
 
 //^[a-zA-Z]{3}\+?$
 
-//TEST(CVC4RegexTest, CHAR_CLASS_W) {
-//    std::string result = CVC4RegexCompiler::compile("[\\w]");
-//    ASSERT_EQ("(re.or \"a\" \"b\" \"c\")", result);
-//}
+TEST(CVC4RegexTest, CHAR_CLASS_W) {
+    bool bol, eol = false;
+    std::string result = CVC4RegexCompiler::compile("\\w", bol, eol);
+    ASSERT_EQ("(re.or (re.range \"0\" \"9\") (re.range \"A\" \"Z\") (re.range \"a\" \"z\") \"_\")", result);
+}
 
 
 }
