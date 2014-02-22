@@ -230,35 +230,74 @@ void CVC4ConstraintWriter::visit(Symbolic::StringReplace* replace, void* args)
     mExpressionType = Symbolic::STRING;
 }
 
+/**
+ * Used by
+ *
+ * regex.prototype.test
+ */
 void CVC4ConstraintWriter::visit(Symbolic::StringRegexSubmatch* submatch, void* args)
 {
     submatch->getSource()->accept(this);
+
     if(!checkType(Symbolic::STRING)){
         error("String char at operation on non-string");
         return;
     }
 
-    std::string pre = this->emitAndReturnNewTemporary(Symbolic::STRING);
-    std::string match = this->emitAndReturnNewTemporary(Symbolic::STRING);
-    std::string post = this->emitAndReturnNewTemporary(Symbolic::STRING);
+    // Set return type
 
-    mOutput << "(assert (= " << mExpressionBuffer << " (str.++ " << pre << " " << match << " " << post << ")))" << std::endl;
+    mExpressionType = Symbolic::BOOL;
 
-    std::ostringstream strs;
+    // Compile regex
+
+    bool bol, eol = false;
+    std::string regexPattern;
 
     try {
-        strs << "(str.in.re " << match << " " << CVC4RegexCompiler::compile(*submatch->getRegexpattern()) << ")";
-        mExpressionBuffer = strs.str();
-
-        mOutput << "; Regex compiler: " << *submatch->getRegexpattern() << " -> " << strs.str() << std::endl;
+        regexPattern = CVC4RegexCompiler::compile(*submatch->getRegexpattern(), bol, eol);
+        mOutput << "; Regex compiler: " << *submatch->getRegexpattern() << " -> " << regexPattern << std::endl;
 
     } catch (CVC4RegexCompilerException ex) {
         std::stringstream err;
         err << "The CVC4RegexCompiler failed when compiling the regex " << *submatch->getRegexpattern() << " with the error message: " << ex.what();
         error(err.str());
+        return;
     }
 
-    mExpressionType = Symbolic::BOOL;
+    // Constraints (optimized for the positive case)
+
+    if (bol && eol) {
+
+        std::string pre = this->emitAndReturnNewTemporary(Symbolic::STRING);
+        std::string match = this->emitAndReturnNewTemporary(Symbolic::STRING);
+        std::string post = this->emitAndReturnNewTemporary(Symbolic::STRING);
+
+        mOutput << "(assert (= " << mExpressionBuffer << " (str.++ " << pre << " " << match << " " << post << ")))" << std::endl;
+        mExpressionBuffer = match;
+
+    } else if (bol) {
+
+        std::string match = this->emitAndReturnNewTemporary(Symbolic::STRING);
+        std::string post = this->emitAndReturnNewTemporary(Symbolic::STRING);
+
+        mOutput << "(assert (= " << mExpressionBuffer << " (str.++ " << match << " " << post << ")))" << std::endl;
+        mExpressionBuffer = match;
+
+    } else if (eol) {
+
+        std::string pre = this->emitAndReturnNewTemporary(Symbolic::STRING);
+        std::string match = this->emitAndReturnNewTemporary(Symbolic::STRING);
+
+        mOutput << "(assert (= " << mExpressionBuffer << " (str.++ " << pre << " " << match << ")))" << std::endl;
+        mExpressionBuffer = match;
+
+    }
+
+    std::ostringstream strs;
+    strs << "(str.in.re " << mExpressionBuffer << " " << regexPattern << ")";
+
+    mExpressionBuffer = strs.str();
+
 }
 
 void CVC4ConstraintWriter::visit(Symbolic::StringRegexSubmatchIndex* submatchIndex, void* args)
