@@ -1,0 +1,4 @@
+var regex = /foo/
+if (foo.search(regex) == 0) {
+    alert(foo);
+}
