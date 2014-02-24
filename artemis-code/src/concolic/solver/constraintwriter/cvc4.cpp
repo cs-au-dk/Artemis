@@ -142,7 +142,7 @@ void CVC4ConstraintWriter::visit(Symbolic::StringBinaryOperation* stringbinaryop
 void CVC4ConstraintWriter::visit(Symbolic::StringCoercion* stringcoercion, void* args)
 {
     CoercionPromise promise(Symbolic::STRING);
-    stringcoercion->getExpression()->accept(this);
+    stringcoercion->getExpression()->accept(this, &promise);
 
     if (!promise.isCoerced) {
         coercetype(mExpressionType, Symbolic::STRING, mExpressionBuffer); // Sets mExpressionBuffer and Type.

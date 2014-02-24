@@ -210,7 +210,7 @@ void SMTConstraintWriter::visit(Symbolic::StringCharAt* stringcharat, void* arg)
 void SMTConstraintWriter::visit(Symbolic::BooleanCoercion* booleancoercion, void* args)
 {
     CoercionPromise promise(Symbolic::BOOL);
-    booleancoercion->getExpression()->accept(this);
+    booleancoercion->getExpression()->accept(this, &promise);
 
     if (!promise.isCoerced) {
         coercetype(mExpressionType, Symbolic::BOOL, mExpressionBuffer); // Sets mExpressionBuffer and Type.
