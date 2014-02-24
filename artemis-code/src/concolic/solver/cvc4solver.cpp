@@ -101,7 +101,12 @@ SolutionPtr CVC4Solver::solve(PathConditionPtr pc)
         } else if (line.compare("sat") != 0 && line.compare("unknown") != 0) {
             // ERROR, we can't use return types to detect errors, since an unsat result will result in an error code (because we try to access the model)
             statistics()->accumulate("Concolic::Solver::ConstraintsNotSolved", 1);
-            constraintLog << "Error when solving following input file:" << std::endl << std::endl;
+
+            constraintLog << "Error when solving the following PC:" << std::endl;
+
+            constraintLog <<pc->toStatisticsValuesString(true);
+
+            constraintLog << std::endl << "The input file was:" << std::endl;
 
             std::ifstream fp_input;
             fp_input.open ("/tmp/cvc4input");
@@ -115,7 +120,7 @@ SolutionPtr CVC4Solver::solve(PathConditionPtr pc)
 
             // Copy /tmp/cvc4result into constraintlog using a fresh file pointer (i.e. not the one we ).
             std::ifstream fp_result;
-            fp_result.open ("/tmp/cvc4input");
+            fp_result.open ("/tmp/cvc4result");
             while (std::getline(fp_result, line)) {
                 constraintLog << line << std::endl;
             }
