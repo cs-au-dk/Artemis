@@ -61,9 +61,11 @@ void CVC4ConstraintWriter::postVisitPathConditionsHook()
 
 void CVC4ConstraintWriter::visit(Symbolic::SymbolicString* symbolicstring, void* args)
 {
+    std::string name = symbolicstring->getSource().getIdentifier();
+
     // If we are coercing from an input (string) to an integer, then this is a special case.
-    // Instead of returning a symbolic string (which would raise an error) we just silently ignore the coercion and record
-    // the variable as an integer instead of a string.
+    // Instead of returning a symbolic string (which would raise an error) we just silently ignore the coercion and
+    // record the variable as an integer instead of a string.
     if (args != NULL) {
 
         CoercionPromise* promise = (CoercionPromise*)args;
@@ -71,20 +73,14 @@ void CVC4ConstraintWriter::visit(Symbolic::SymbolicString* symbolicstring, void*
         if (promise->coerceTo == Symbolic::INT) {
             promise->isCoerced = true;
 
-            recordAndEmitType(symbolicstring->getSource(), Symbolic::INT);
-            mExpressionBuffer = SMTConstraintWriter::encodeIdentifier(symbolicstring->getSource().getIdentifier());
-            mExpressionType = Symbolic::INT;
-
+            // Check this symbolic variable against the expected type STRING and add a coercion if necessary/possible.
+            emitVariableAndAnyCoercion(name, Symbolic::INT); // Sets mExpressionBuffer and Type.
             return;
-
         }
     }
 
-    // Checks this symbolic value is of type STRING and raises an error otherwise.
-    recordAndEmitType(symbolicstring->getSource(), Symbolic::STRING);
-
-    mExpressionBuffer = SMTConstraintWriter::encodeIdentifier(symbolicstring->getSource().getIdentifier());
-    mExpressionType = Symbolic::STRING;
+    // Check this symbolic variable against the expected type STRING and add a coercion if necessary/possible.
+    emitVariableAndAnyCoercion(name, Symbolic::STRING); // Sets mExpressionBuffer and Type.
 }
 
 void CVC4ConstraintWriter::visit(Symbolic::ConstantString* constantstring, void* args)
@@ -141,6 +137,8 @@ void CVC4ConstraintWriter::visit(Symbolic::StringBinaryOperation* stringbinaryop
 
 void CVC4ConstraintWriter::visit(Symbolic::StringCoercion* stringcoercion, void* args)
 {
+    // We use the coercion promise to push this coercion further down the tree in cases where it is useful.
+    // Currently this is not used for STRING coercions.
     CoercionPromise promise(Symbolic::STRING);
     stringcoercion->getExpression()->accept(this, &promise);
 
@@ -181,7 +179,9 @@ void CVC4ConstraintWriter::visit(Symbolic::StringRegexReplace* regex, void* args
 
         if (replaceSpaces || replaceNewlines || true) { // TODO: Hack, always filter away these for now
 
-            regex->getSource()->accept(this, args); // send args through, allow local coercions
+            // args (a possible CoercionPromise) is sent through, making StringRegexReplace "transparent" to these
+            // promises and allowing a coercion to be pushed through them if that is useful.
+            regex->getSource()->accept(this, args);
 
             // You could use the following block to prevent certain characters to be used,
             // but this would be problematic wrt. possible coercions, so we just ignore these filtering regexes.
@@ -217,8 +217,30 @@ void CVC4ConstraintWriter::visit(Symbolic::StringRegexReplace* regex, void* args
 
 void CVC4ConstraintWriter::visit(Symbolic::StringReplace* replace, void* args)
 {
-    replace->getSource()->accept(this);
+    // The args (a possible CoercionPromise) is sent through, making StringReplace "transparent" to these
+    // promises and allowing a coercion to be pushed through them if that is useful.
+    // However, this means we must be careful not to emit the StringReplace in cases where we havce managed to do a
+    // successful coercion.
+    replace->getSource()->accept(this, args);
+
     if(!checkType(Symbolic::STRING)){
+        // If the returned type is non-string, then either we have successfully coerced an input or we have an error.
+
+        // TODO: This optimisation is only valid in cases where the string replace is doing some cleaning-up which is
+        // irrelevant to our injected values of the coerced type (e.g. stripping whitespace around ints).
+
+        if(args != NULL) {
+
+            CoercionPromise* promise = (CoercionPromise*)args;
+            if(promise->isCoerced) {
+                // We did a successful implicit coercion, so elide this StringReplace and let mExpressionBuffer and
+                // Type flow down.
+                mExpressionBuffer = mExpressionBuffer;
+                mExpressionType = mExpressionType;
+                return;
+            }
+        }
+
         error("String replace operation on non-string");
         return;
     }

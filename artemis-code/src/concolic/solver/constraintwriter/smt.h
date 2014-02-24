@@ -26,6 +26,7 @@
 #include "JavaScriptCore/symbolic/expression/visitor.h"
 
 #include "abstract.h"
+#include "concolic/solver/variabletypecalculator.h"
 
 namespace artemis
 {
@@ -162,8 +163,11 @@ protected:
      * domains via integer constraints on string length.
      */
 
-    void recordAndEmitType(const Symbolic::SymbolicSource&, Symbolic::Type type);
-    void recordAndEmitType(const std::string&, Symbolic::Type type);
+    void computeAndDeclareTypes(PathConditionPtr pathCondition);
+    std::map<std::string, Symbolic::Type> mTypeMapping; // TODO: Looks like this will need to be a std::map or similar becuase std::string does not support qHash!
+
+    void emitVariableAndAnyCoercion(std::string variable, Symbolic::Type type); // Relies on mTypeMapping being populated
+
     bool checkType(Symbolic::Type expected);
 
     void coercetype(Symbolic::Type from, Symbolic::Type to, std::string expression);
@@ -175,7 +179,6 @@ protected:
 
     void error(std::string reason);
 
-    std::map<std::string, Symbolic::Type> mTypemap;
     std::ofstream mOutput;
     std::ofstream mConstriantLog;
 

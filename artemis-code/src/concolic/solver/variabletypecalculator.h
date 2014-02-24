@@ -18,8 +18,8 @@
 #define VARIABLETYPECALCULATOR_H
 
 #include <QString>
-#include <QSet>
 #include <QMap>
+#include <QSet>
 
 #include "concolic/pathcondition.h"
 #include "JavaScriptCore/symbolic/expr.h"

@@ -63,6 +63,14 @@ QMap<QString, Symbolic::Type> VariableTypeCalculator::calculateTypes(PathConditi
  * then whichever subexpression we see instead can set mExpectedType as usual, because any variables in that
  * subexpression really would have to be of the pre-coerced type (the type of the subexpression arguments).
  *
+ * Also there are certain subexpressions (currently StringRegexReplace and StringReplace) which are "transparent" to
+ * coercions in the constraint writer. These are also made transparent here top match (i.e. the expected type is
+ * simply passed on as-is).
+ *
+ * TODO: have some central method to determine when nodes should be transparent to coercions (possibly even
+ * conditionally on their arguments, such as regex replacements only being transparent when removing whitespace) which
+ * is used both here and in the constraint writer.
+ *
  * For example the following expression:
  * IntegerBinaryOperation(IntegerCoercion(v1), INT_EQ, IntegerCoercion(StringBinaryOperation(v1, CONCAT, v2)))
  * Should result in the following assignment: v1: once as int and once as string, v2: once as string.
@@ -92,6 +100,7 @@ void VariableTypeCalculator::visit(Symbolic::IntegerBinaryOperation *integerbina
 void VariableTypeCalculator::visit(Symbolic::IntegerCoercion *integercoercion, void *args)
 {
     // Ignoring coercions (see comment above).
+    mExpectedType = mExpectedType;
     integercoercion->getExpression()->accept(this);
 }
 
@@ -132,6 +141,7 @@ void VariableTypeCalculator::visit(Symbolic::StringBinaryOperation *stringbinary
 void VariableTypeCalculator::visit(Symbolic::StringCoercion *stringcoercion, void *args)
 {
     // Ignoring coercions (see comment above).
+    mExpectedType = mExpectedType;
     stringcoercion->getExpression()->accept(this);
 }
 
@@ -144,15 +154,17 @@ void VariableTypeCalculator::visit(Symbolic::StringCharAt *stringcharat, void *a
 
 void VariableTypeCalculator::visit(Symbolic::StringRegexReplace *stringregexreplace, void *args)
 {
-    // Expecting a string subexpression.
-    mExpectedType = Symbolic::STRING;
+    // Ignoring nodes which are transparent to the coercionpromise (see above).
+    // This is either String->String or ignored by the constraint writer, so keeping mExpectedType as-is is sensible.
+    mExpectedType = mExpectedType;
     stringregexreplace->getSource()->accept(this);
 }
 
 void VariableTypeCalculator::visit(Symbolic::StringReplace *stringreplace, void *args)
 {
-    // Expecting a string subexpression.
-    mExpectedType = Symbolic::STRING;
+    // Ignoring nodes which are transparent to the coercionpromise (see above).
+    // This is either String->String or ignored by the constraint writer, so keeping mExpectedType as-is is sensible.
+    mExpectedType = mExpectedType;
     stringreplace->getSource()->accept(this);
 }
 
@@ -170,6 +182,7 @@ void VariableTypeCalculator::visit(Symbolic::ConstantBoolean *constantboolean, v
 void VariableTypeCalculator::visit(Symbolic::BooleanCoercion *booleancoercion, void *args)
 {
     // Ignoring coercions (see comment above).
+    mExpectedType = mExpectedType;
     booleancoercion->getExpression()->accept(this);
 }
 

@@ -173,6 +173,62 @@ TEST_F(VariableTypeCalculatorTest, MULTI_EXPR_PC) {
 }
 
 
+TEST_F(VariableTypeCalculatorTest, STRING_REPLACE) {
+    // BooleanCoercion(StringReplace(SymbolicString(v1), "", ""))
+
+    // Set up the symbolic expression and PC.
+    Symbolic::SymbolicString input1 = Symbolic::SymbolicString(Symbolic::SymbolicSource(Symbolic::INPUT, Symbolic::ELEMENT_ID, "Var1"));
+    std::string pattern, replacement;
+    Symbolic::StringReplace replace1 = Symbolic::StringReplace(&input1, &pattern, &replacement);
+    Symbolic::BooleanCoercion booleancoercion1 = Symbolic::BooleanCoercion(&replace1);
+    PathConditionPtr testpc = PathConditionPtr(new PathCondition());
+    testpc->addCondition(&booleancoercion1, true);
+
+    // Expected results
+    QSet<QString> stringVars, intVars, boolVars;
+    boolVars.insert("Var1");
+
+    QMap<QString, Symbolic::Type> expected;
+    expected.insert("Var1", Symbolic::BOOL);
+
+    // Run the test
+    VariableTypeCalculator calculator;
+    QMap<QString, Symbolic::Type> result = calculator.calculateTypes(testpc);
+
+    EXPECT_EQ(stringVars, getStringVars(calculator));
+    EXPECT_EQ(intVars, getIntVars(calculator));
+    EXPECT_EQ(boolVars, getBoolVars(calculator));
+    ASSERT_EQ(expected, result);
+}
+
+
+TEST_F(VariableTypeCalculatorTest, STRING_REGEX_REPLACE) {
+    // BooleanCoercion(StringRegexReplace(SymbolicString(v1), "", ""))
+
+    // Set up the symbolic expression and PC.
+    Symbolic::SymbolicString input1 = Symbolic::SymbolicString(Symbolic::SymbolicSource(Symbolic::INPUT, Symbolic::ELEMENT_ID, "Var1"));
+    std::string pattern, replacement;
+    Symbolic::StringRegexReplace replace1 = Symbolic::StringRegexReplace(&input1, &pattern, &replacement);
+    Symbolic::BooleanCoercion booleancoercion1 = Symbolic::BooleanCoercion(&replace1);
+    PathConditionPtr testpc = PathConditionPtr(new PathCondition());
+    testpc->addCondition(&booleancoercion1, true);
+
+    // Expected results
+    QSet<QString> stringVars, intVars, boolVars;
+    boolVars.insert("Var1");
+
+    QMap<QString, Symbolic::Type> expected;
+    expected.insert("Var1", Symbolic::BOOL);
+
+    // Run the test
+    VariableTypeCalculator calculator;
+    QMap<QString, Symbolic::Type> result = calculator.calculateTypes(testpc);
+
+    EXPECT_EQ(stringVars, getStringVars(calculator));
+    EXPECT_EQ(intVars, getIntVars(calculator));
+    EXPECT_EQ(boolVars, getBoolVars(calculator));
+    ASSERT_EQ(expected, result);
+}
 
 // TODO: Test each feature of the expressions separately (if feasible?)
 
