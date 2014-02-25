@@ -3,7 +3,6 @@ TEST PC[0] = (BooleanCoercion(SymbolicString)==ConstantBoolean)
 TEST Concolic::Solver::ConstraintsSolved = 16
 TEST Concolic::Solver::ConstraintsWritten = 16
 TEST Concolic::Solver::ConstraintsSolvedAsUNSAT = 14
-TEST Concolic::Solver::Constraint.SYM_IN_testinput = AAAAAA
 -->
 <!doctype html><html lang="en">
 <head>
@@ -18,7 +17,7 @@ TEST Concolic::Solver::Constraint.SYM_IN_testinput = AAAAAA
 		function validate() {
 			var y = document.getElementById("testinput").value;
 
-			// This example should be solvable with --concolic-unlimited-depth enable but not solvable without it.
+			// This example should be solvable with --concolic-unlimited-depth enabled but not solvable without it.
 			// The assertions at the top are designed to cover the default case (depth limit of 15 (5*3 passes)).
 			
 			if(!y) { alert("Error!"); return false; }
