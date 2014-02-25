@@ -56,7 +56,7 @@ SolutionPtr CVC4Solver::solve(PathConditionPtr pc)
 
     // 2. run the solver on the file
 
-    // TODO we could use the direct C++ solver interface and omit the system calls and file read/write
+    // We could use the direct C++ solver interface and omit the system calls and file read/write, but this method makes debugging and logging much easier.
 
     char* artemisdir;
     artemisdir = std::getenv("ARTEMISDIR");
@@ -175,21 +175,15 @@ SolutionPtr CVC4Solver::solve(PathConditionPtr pc)
                 value = value.substr(1, value.length() - 2);
             }
 
-            /*if (value.compare("false") == 0) {
-                symbolvalue.kind = Symbolic::BOOL;
-                symbolvalue.u.boolean = false;
+            // TODO: Proper support for the different types in our injection code.
 
-            } else if (value.compare("true") == 0) {
-                symbolvalue.kind = Symbolic::BOOL;
-                symbolvalue.u.boolean = true;
-
-            } else {
-                symbolvalue.kind = Symbolic::INT;
-                symbolvalue.u.integer = std::atoi(value.c_str());
-            }*/
-
-            // TODO, add support for the other types,
-            // right now not needed as we only have symbolic strings as input
+            // For now we only inject as strings, so all variables are treated as strings here.
+            // This causes a problem for booleans as "false" evaluates to true, so we do some translation here to
+            // allow us to inject the empty string "" when we get a boolean false from the solver.
+            // This is a complete hack until we have real support for int and bool typed variables.
+            if(type.compare("Bool") == 0 && value.compare("false") == 0) {
+                value.clear();
+            }
 
             symbolvalue.kind = Symbolic::STRING;
 

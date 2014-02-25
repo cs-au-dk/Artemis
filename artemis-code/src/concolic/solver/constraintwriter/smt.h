@@ -24,9 +24,9 @@
 
 #include "JavaScriptCore/symbolic/expr.h"
 #include "JavaScriptCore/symbolic/expression/visitor.h"
+#include "concolic/solver/variabletypecalculator.h"
 
 #include "abstract.h"
-#include "concolic/solver/variabletypecalculator.h"
 
 namespace artemis
 {
@@ -164,7 +164,7 @@ protected:
      */
 
     void computeAndDeclareTypes(PathConditionPtr pathCondition);
-    std::map<std::string, Symbolic::Type> mTypeMapping; // TODO: Looks like this will need to be a std::map or similar becuase std::string does not support qHash!
+    std::map<std::string, Symbolic::Type> mTypeMapping;
 
     void emitVariable(std::string variable); // Relies on mTypeMapping being populated by computeAndDeclareTypes.
 
