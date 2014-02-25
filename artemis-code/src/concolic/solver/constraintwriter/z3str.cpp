@@ -50,21 +50,18 @@ void Z3STRConstraintWriter::visit(Symbolic::SymbolicString* symbolicstring, void
     // If we are coercing from an input (string) to an integer, then this is a special case.
     // Instead of returning a symbolic string (which would raise an error) we just silently ignore the coercion and
     // record the variable as an integer instead of a string.
-    if(args != NULL) {
+    if (args != NULL) {
 
         CoercionPromise* promise = (CoercionPromise*)args;
 
-        if (promise->coerceTo == Symbolic::INT) {
+        if (promise->coerceTo == Symbolic::INT &&
+                mTypeMapping[name] == Symbolic::INT) {
             promise->isCoerced = true;
-
-            // Check this symbolic variable against the expected type STRING and add a coercion if necessary/possible.
-            emitVariableAndAnyCoercion(name, Symbolic::INT); // Sets mExpressionBuffer and Type.
-            return;
         }
     }
 
-    // Check this symbolic variable against the expected type STRING and add a coercion if necessary/possible.
-    emitVariableAndAnyCoercion(name, Symbolic::STRING); // Sets mExpressionBuffer and Type.
+    // Emit this variable with the previously calculated type.
+    emitVariable(name); // Sets mExpressionBuffer and Type.
 }
 
 void Z3STRConstraintWriter::visit(Symbolic::ConstantString* constantstring, void* args)

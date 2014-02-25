@@ -166,7 +166,7 @@ protected:
     void computeAndDeclareTypes(PathConditionPtr pathCondition);
     std::map<std::string, Symbolic::Type> mTypeMapping; // TODO: Looks like this will need to be a std::map or similar becuase std::string does not support qHash!
 
-    void emitVariableAndAnyCoercion(std::string variable, Symbolic::Type type); // Relies on mTypeMapping being populated
+    void emitVariable(std::string variable); // Relies on mTypeMapping being populated by computeAndDeclareTypes.
 
     bool checkType(Symbolic::Type expected);
 

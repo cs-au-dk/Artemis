@@ -123,9 +123,9 @@ void SMTConstraintWriter::computeAndDeclareTypes(PathConditionPtr pathCondition)
 //N.B. This will not currently be present in any of our PCs.
 void SMTConstraintWriter::visit(Symbolic::SymbolicInteger* symbolicinteger, void* args)
 {
-    // Check this symbolic variable against the expected type INT and insert a coercion if necessary.
+    // Emit this variable with the previously calculated type (not necessarily INT).
     // This call sets mExpressionBuffer and mExpressionType itself.
-    emitVariableAndAnyCoercion(symbolicinteger->getSource().getIdentifier(), Symbolic::INT);
+    emitVariable(symbolicinteger->getSource().getIdentifier());
 
     // We don't [currently] deal with any CoercionPromise here, as this is an optimisation for the string-input/int-variable issues only.
 }
@@ -138,9 +138,9 @@ void SMTConstraintWriter::visit(Symbolic::SymbolicString* symbolicstring, void* 
 //N.B. This will not currently be present in any of our PCs.
 void SMTConstraintWriter::visit(Symbolic::SymbolicBoolean* symbolicboolean, void* args)
 {
-    // Check this symbolic variable against the expected type BOOL and insert a coercion if necessary.
+    // Emit this variable with the previously calculated type (not necessarily BOOL).
     // This call sets mExpressionBuffer and mExpressionType itself.
-    emitVariableAndAnyCoercion(symbolicboolean->getSource().getIdentifier(), Symbolic::INT);
+    emitVariable(symbolicboolean->getSource().getIdentifier());
 
     // We don't [currently] deal with any CoercionPromise here, as this is an optimisation for the string-input/int-variable issues only.
 }
@@ -400,7 +400,7 @@ bool SMTConstraintWriter::checkType(Symbolic::Type expected) {
     return mExpressionType == expected;
 }
 
-void SMTConstraintWriter::emitVariableAndAnyCoercion(std::string variable, Symbolic::Type type) {
+void SMTConstraintWriter::emitVariable(std::string variable) {
     // If the type given in the PC matches that in mTypeMapping do nothing, otherwise add a coercion (if possible).
     // N.B. This function must ensure mExpressionBuffer and mExpressionType are set. (done by coerceType)
     if(mTypeMapping.find(variable) == mTypeMapping.end()) {
@@ -410,8 +410,8 @@ void SMTConstraintWriter::emitVariableAndAnyCoercion(std::string variable, Symbo
     }
 
     // The coercion will be ignored if mTypeMapping matches with type. An error is produced for impossible coercions.
-    std::string expression = SMTConstraintWriter::encodeIdentifier(variable);
-    coercetype(type, mTypeMapping[variable], expression);
+    mExpressionBuffer = SMTConstraintWriter::encodeIdentifier(variable);
+    mExpressionType = mTypeMapping[variable];
 }
 
 void SMTConstraintWriter::coercetype(Symbolic::Type from,

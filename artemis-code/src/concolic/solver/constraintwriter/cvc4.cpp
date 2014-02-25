@@ -70,17 +70,14 @@ void CVC4ConstraintWriter::visit(Symbolic::SymbolicString* symbolicstring, void*
 
         CoercionPromise* promise = (CoercionPromise*)args;
 
-        if (promise->coerceTo == Symbolic::INT) {
+        if (promise->coerceTo == Symbolic::INT &&
+                mTypeMapping[name] == Symbolic::INT) {
             promise->isCoerced = true;
-
-            // Check this symbolic variable against the expected type STRING and add a coercion if necessary/possible.
-            emitVariableAndAnyCoercion(name, Symbolic::INT); // Sets mExpressionBuffer and Type.
-            return;
         }
     }
 
-    // Check this symbolic variable against the expected type STRING and add a coercion if necessary/possible.
-    emitVariableAndAnyCoercion(name, Symbolic::STRING); // Sets mExpressionBuffer and Type.
+    // Emit this variable with the previously calculated type.
+    emitVariable(name); // Sets mExpressionBuffer and Type.
 }
 
 void CVC4ConstraintWriter::visit(Symbolic::ConstantString* constantstring, void* args)
