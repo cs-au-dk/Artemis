@@ -26,11 +26,11 @@
 #include "JavaScriptCore/yarr/Yarr.h"
 #include "JavaScriptCore/yarr/YarrPattern.h"
 
-std::string visitPatternAlternative(const JSC::Yarr::PatternAlternative*);
-std::string visitPatternTerm(const JSC::Yarr::PatternTerm*);
+std::string visitPatternAlternative(const JSC::Yarr::PatternAlternative*, bool& bol, bool& eol);
+std::string visitPatternTerm(const JSC::Yarr::PatternTerm*, bool& bol, bool& eol);
 
 
-std::string visitPatternDisjunction(const JSC::Yarr::PatternDisjunction* disjunction)
+std::string visitPatternDisjunction(const JSC::Yarr::PatternDisjunction* disjunction, bool& bol, bool& eol)
 {
     std::stringstream result;
 
@@ -44,7 +44,7 @@ std::string visitPatternDisjunction(const JSC::Yarr::PatternDisjunction* disjunc
         }
 
         JSC::Yarr::PatternAlternative* alternative = disjunction->m_alternatives[alt];
-        result << visitPatternAlternative(alternative);
+        result << visitPatternAlternative(alternative, bol, eol);
     }
 
     if (disjunction->m_alternatives.size() > 1) {
@@ -54,25 +54,14 @@ std::string visitPatternDisjunction(const JSC::Yarr::PatternDisjunction* disjunc
     return result.str();
 }
 
-std::string visitPatternAlternative(const JSC::Yarr::PatternAlternative* alternative)
+std::string visitPatternAlternative(const JSC::Yarr::PatternAlternative* alternative, bool& bol, bool& eol)
 {
-    std::stringstream result;
-
-    if (alternative->m_terms.size() == 0) {
-        return "(str.to.re \"\")";
-    }
-
-    if (alternative->m_terms.size() > 1) {
-        result << "(re.++ ";
-    }
+    std::list<std::string> compiledTerms;
 
     for (unsigned i = 0; i < alternative->m_terms.size(); ++i) {
-        if (i != 0) {
-            result << " ";
-        }
 
+        std::stringstream compiledTerm;
         const JSC::Yarr::PatternTerm& term = alternative->m_terms[i];
-
 
         if (term.quantityType != JSC::Yarr::QuantifierFixedCount) {
             // Handle non-fixed results
@@ -83,21 +72,21 @@ std::string visitPatternAlternative(const JSC::Yarr::PatternAlternative* alterna
              */
 
             if (term.quantityCount.unsafeGet() == JSC::Yarr::quantifyInfinite) {
-                result << "(re.* " << visitPatternTerm(&term) << ")";
+                compiledTerm << "(re.* " << visitPatternTerm(&term, bol, eol) << ")";
 
             } else if (term.quantityCount.unsafeGet() == 1) {
-                result << "(re.opt " << visitPatternTerm(&term) << ")";
+                compiledTerm << "(re.opt " << visitPatternTerm(&term, bol, eol) << ")";
 
             } else {
 
-                result << "(re.++";
+                compiledTerm << "(re.++";
 
                 // insert 0 .. min concrete terms (already done before this term) and min .. max optional
                 for (int i = 0; i < term.quantityCount.unsafeGet(); i++) {
-                    result << " (re.opt " << visitPatternTerm(&term) << ")";
+                    compiledTerm << " (re.opt " << visitPatternTerm(&term, bol, eol) << ")";
                 }
 
-                result << ")";
+                compiledTerm << ")";
 
             }
 
@@ -105,46 +94,86 @@ std::string visitPatternAlternative(const JSC::Yarr::PatternAlternative* alterna
             // Handle fixed results
 
             if (term.quantityCount.unsafeGet() == 1) {
-                result << visitPatternTerm(&term);
+                compiledTerm << visitPatternTerm(&term, bol, eol);
 
             } else {
                 // Remark: I don't know if its ever possible that quantityCount > 1 for fixed values
                 // Similar terms (such as CC) are compiled into each their term with a quantity of 1
 
-                result << "(re.++";
+                compiledTerm << "(re.++";
 
                 for (int i = 0; i < term.quantityCount.unsafeGet(); i++) {
-                    result << " " << visitPatternTerm(&term);
+                    compiledTerm << " " << visitPatternTerm(&term, bol, eol);
                 }
 
-                result << ")";
+                compiledTerm << ")";
             }
 
         }
+
+        if (compiledTerm.str().size() > 0) {
+            compiledTerms.push_back(compiledTerm.str());
+        }
     }
 
-    if (alternative->m_terms.size() > 1) {
-        result << ")";
+    if (compiledTerms.size() == 0) {
+        return "(str.to.re \"\")";
     }
+
+    if (compiledTerms.size() == 1) {
+        return compiledTerms.front();
+    }
+
+    std::stringstream result;
+    result << "(re.++";
+
+    while (!compiledTerms.empty()) {
+        result << " " << compiledTerms.front();
+        compiledTerms.pop_front();
+    }
+
+    result << ")";
 
     return result.str();
 }
 
-std::string visitPatternTerm(const JSC::Yarr::PatternTerm* term)
+std::string visitPatternTerm(const JSC::Yarr::PatternTerm* term, bool& bol, bool& eol)
 {
+    // Special case for "." character class.
+    if (term->m_invert && term->type == JSC::Yarr::PatternTerm::TypeCharacterClass &&
+            term->characterClass->m_matches.size() == 2 &&
+            term->characterClass->m_ranges.size() == 0 &&
+            term->characterClass->m_matchesUnicode.size() == 2 &&
+            term->characterClass->m_rangesUnicode.size() == 0 &&
+            (char)term->characterClass->m_matches[0] == '\n' &&
+            (char)term->characterClass->m_matches[1] == '\r')  {
+
+        // CVC4 does not have any notion of "match all" or negative matches, so return a subset of
+        // "." in its place.
+        return "(re.or (re.range \"0\" \"9\") (re.range \"A\" \"Z\") (re.range \"a\" \"z\") \"_\" \"-\")";
+
+    }
+
+
     if (term->m_invert) {
-        throw CVC4RegexCompilerException("Unsupported usage of not in regex");
+        throw CVC4RegexCompilerException("Unsupported usage of \"not\" in regex");
     }
 
     std::stringstream result;
 
     switch (term->type) {
     case JSC::Yarr::PatternTerm::TypeAssertionBOL:
-        throw CVC4RegexCompilerException("Unsupported usage of ^ in regex");
+        // Notice, the CVC4 constraint writer enforces BOL/EOL, not the regex compiler.
+        // This allows for some constraint writer specific optimizations and tricks.
+        //
+        // We do not enforce the correct positioning of BOL/EOL!
+        // We assume that they have been inserted in their correct position.
+
+        bol = true;
         break;
 
     case JSC::Yarr::PatternTerm::TypeAssertionEOL:
-        throw CVC4RegexCompilerException("Unsupported usage of $ in regex");
+        eol = true;
         break;
 
     case JSC::Yarr::PatternTerm::TypeAssertionWordBoundary:
@@ -161,11 +190,6 @@ std::string visitPatternTerm(const JSC::Yarr::PatternTerm* term)
     }
 
     case JSC::Yarr::PatternTerm::TypeCharacterClass: {
-
-        /*
-         * Right now, we don't have support for . and \x character classes. Not until we figure out
-         * how these are encoded.
-         */
 
         if (term->characterClass->m_matchesUnicode.size() > 0 || term->characterClass->m_rangesUnicode.size()) {
             throw CVC4RegexCompilerException("Unsupported usage of non-ascii characters in range regex");
@@ -211,7 +235,7 @@ std::string visitPatternTerm(const JSC::Yarr::PatternTerm* term)
         break;
 
     case JSC::Yarr::PatternTerm::TypeParenthesesSubpattern:
-        result << visitPatternDisjunction(term->parentheses.disjunction);
+        result << visitPatternDisjunction(term->parentheses.disjunction, bol, eol);
         break;
 
     case JSC::Yarr::PatternTerm::TypeParentheticalAssertion:
@@ -229,20 +253,30 @@ std::string visitPatternTerm(const JSC::Yarr::PatternTerm* term)
     return result.str();
 }
 
-std::string CVC4RegexCompiler::compile(const std::string &javaScriptRegex)
+std::string CVC4RegexCompiler::compile(const std::string &javaScriptRegex, bool& bol, bool& eol)
 {
+    bol = false;
+    eol = false;
+
     bool caseSensitivity = false;
     bool multiline = false;
 
+    std::string input = javaScriptRegex;
+
+    if (input.length() >= 2 && input.at(0) == '/' and input.at(input.length()-1) == '/') {
+        // Strip "/ /" from regex
+        input = input.substr(1, input.length()-2);
+    }
+
     const char* m_constructionError = 0;
-    JSC::Yarr::YarrPattern pattern(JSC::UString(javaScriptRegex.c_str()), caseSensitivity, multiline, &m_constructionError);
+    JSC::Yarr::YarrPattern pattern(JSC::UString(input.c_str()), caseSensitivity, multiline, &m_constructionError);
 
     if (m_constructionError) {
         std::string err = "RegularExpression: YARR compile failed with: " + std::string(m_constructionError);
         throw CVC4RegexCompilerException(err);
     }
 
-    return visitPatternDisjunction(pattern.m_body);
+    return visitPatternDisjunction(pattern.m_body, bol, eol);
 }
 
 CVC4RegexCompiler::CVC4RegexCompiler()

@@ -1,0 +1,4 @@
+var r = /oo$/
+if (foo.replace(r, "jj") == "fjj") {
+    alert(foo);
+}
