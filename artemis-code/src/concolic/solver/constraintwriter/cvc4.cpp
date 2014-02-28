@@ -222,7 +222,7 @@ void CVC4ConstraintWriter::visit(Symbolic::StringRegexReplace* obj, void* args)
         mExpressionBuffer = mExpressionBuffer;
         mExpressionType = mExpressionType;
 
-        statistics()->accumulate("Concolic::Solver::RegexSuccessfullyTranslated", 1);
+        Statistics::statistics()->accumulate("Concolic::Solver::RegexSuccessfullyTranslated", 1);
 
         return;
     }

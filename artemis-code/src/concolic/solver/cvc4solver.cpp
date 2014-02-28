@@ -89,14 +89,15 @@ SolutionPtr CVC4Solver::solve(PathConditionPtr pc, FormRestrictions formRestrict
 
     if (!cw->write(pc, formRestrictions, "/tmp/cvc4input")) {
 
-        statistics()->accumulate("Concolic::Solver::ConstraintsNotWritten", 1);
+        Statistics::statistics()->accumulate("Concolic::Solver::ConstraintsNotWritten", 1);
 
         std::stringstream reason;
         reason << "Could not translate the PC into solver input: " << cw->getErrorReason();
         return emitError(clog, reason.str());
+
     }
 
-    statistics()->accumulate("Concolic::Solver::ConstraintsWritten", 1);
+    Statistics::statistics()->accumulate("Concolic::Solver::ConstraintsWritten", 1);
 
     // 2. run the solver on the file
 
@@ -126,11 +127,11 @@ SolutionPtr CVC4Solver::solve(PathConditionPtr pc, FormRestrictions formRestrict
 
     double time = (double)timer.elapsed()/1000;
     Log::info(QString("  Took %1s").arg(time).toStdString());
-    statistics()->accumulate("Concolic::Solver::TotalSolverTime", time);
+    Statistics::statistics()->accumulate("Concolic::Solver::TotalSolverTime", time);
     clog << "Duration: " << time << "s" << std::endl;
 
     if (WEXITSTATUS(result) == 124) {
-        statistics()->accumulate("Concolic::Solver::SolverTimeouts", 1);
+        Statistics::statistics()->accumulate("Concolic::Solver::SolverTimeouts", 1);
         return emitError(clog, "CVC4 execution timed-out..");
     }
 
@@ -142,11 +143,11 @@ SolutionPtr CVC4Solver::solve(PathConditionPtr pc, FormRestrictions formRestrict
     std::ifstream fp("/tmp/cvc4result");
 
     if (!fp.is_open()) {
-        statistics()->accumulate("Concolic::Solver::ConstraintsNotSolved", 1);
+        Statistics::statistics()->accumulate("Concolic::Solver::ConstraintsNotSolved", 1);
         return emitError(clog, "Could not read result file.");
     }
 
-    statistics()->accumulate("Concolic::Solver::ConstraintsSolved", 1);
+    Statistics::statistics()->accumulate("Concolic::Solver::ConstraintsSolved", 1);
 
     std::getline(fp, line); // load sat line
 
@@ -155,7 +156,7 @@ SolutionPtr CVC4Solver::solve(PathConditionPtr pc, FormRestrictions formRestrict
         // UNSAT
         emitConstraints(constraintIndex, identifier, false);
 
-        statistics()->accumulate("Concolic::Solver::ConstraintsSolvedAsUNSAT", 1);
+        Statistics::statistics()->accumulate("Concolic::Solver::ConstraintsSolvedAsUNSAT", 1);
         clog << "Solved as UNSAT." << std::endl << std::endl;
         return SolutionPtr(new Solution(false, true));
 
@@ -163,7 +164,7 @@ SolutionPtr CVC4Solver::solve(PathConditionPtr pc, FormRestrictions formRestrict
 
         // ERROR, we can't use return types to detect errors, since an unsat result will result in an error code (because we try to access the model)
 
-        statistics()->accumulate("Concolic::Solver::ConstraintsNotSolved", 1);
+        Statistics::statistics()->accumulate("Concolic::Solver::ConstraintsNotSolved", 1);
 
         // Copy contents of constraint files for debugging
 
@@ -250,7 +251,7 @@ SolutionPtr CVC4Solver::solve(PathConditionPtr pc, FormRestrictions formRestrict
         if (type.compare("String") == 0) {
             // Double-check we have a string-typed variable name.
             if (symbol_name_type != Symbolic::STRING){
-                statistics()->accumulate("Concolic::Solver::ErrorsReadingSolution", 1);
+                Statistics::statistics()->accumulate("Concolic::Solver::ErrorsReadingSolution", 1);
                 return emitError(clog, "Variable name and type mismatch for String variable in solver's result.");
             }
 
@@ -267,7 +268,7 @@ SolutionPtr CVC4Solver::solve(PathConditionPtr pc, FormRestrictions formRestrict
         } else if (type.compare("Bool") == 0) {
             // Double-check we have a bool-typed variable name.
             if (symbol_name_type != Symbolic::BOOL){
-                statistics()->accumulate("Concolic::Solver::ErrorsReadingSolution", 1);
+                Statistics::statistics()->accumulate("Concolic::Solver::ErrorsReadingSolution", 1);
                 return emitError(clog, "Variable name and type mismatch for Bool variable in solver's result.");
             }
 
@@ -278,7 +279,7 @@ SolutionPtr CVC4Solver::solve(PathConditionPtr pc, FormRestrictions formRestrict
             } else if (value.compare("true") == 0) {
                 symbolvalue.u.boolean = true;
             } else {
-                statistics()->accumulate("Concolic::Solver::ErrorsReadingSolution", 1);
+                Statistics::statistics()->accumulate("Concolic::Solver::ErrorsReadingSolution", 1);
                 return emitError(clog, "Value of boolean returned is not true/false.");
             }
 
@@ -310,13 +311,13 @@ SolutionPtr CVC4Solver::solve(PathConditionPtr pc, FormRestrictions formRestrict
                     symbolvalue.string = "-" + value.substr(3, value.length() - 3);
                 }
             } else {
-                statistics()->accumulate("Concolic::Solver::ErrorsReadingSolution", 1);
+                Statistics::statistics()->accumulate("Concolic::Solver::ErrorsReadingSolution", 1);
                 return emitError(clog, "Variable name and type mismatch for Int variable in solver's result.");
             }
 
 
         } else {
-            statistics()->accumulate("Concolic::Solver::ErrorsReadingSolution", 1);
+            Statistics::statistics()->accumulate("Concolic::Solver::ErrorsReadingSolution", 1);
             std::ostringstream err;
             err << "Unknown type " << type << " encountered in result.";
             return emitError(clog, err.str());

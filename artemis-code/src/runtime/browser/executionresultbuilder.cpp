@@ -206,7 +206,7 @@ void ExecutionResultBuilder::slEventListenerRemoved(QWebElement* elem, QString n
 void ExecutionResultBuilder::slTimerAdded(int timerId, int timeout, bool singleShot)
 {
     qDebug() << "Artemis::Timer " << timerId << " added";
-    statistics()->accumulate("timers::registered", 1);
+    Statistics::statistics()->accumulate("timers::registered", 1);
     mResult->mTimers.insert(timerId, QSharedPointer<Timer>(new Timer(timerId, timeout, singleShot)));
 }
 
@@ -241,13 +241,13 @@ void ExecutionResultBuilder::slAjaxRequestInitiated(QUrl u, QString postData)
 {
     QSharedPointer<AjaxRequest> req = QSharedPointer<AjaxRequest>(new AjaxRequest(u, postData));
     qDebug() << "Adding AJAX request: " << req;
-    statistics()->accumulate("ajax::XMLHttpRequest::sent", 1);
+    Statistics::statistics()->accumulate("ajax::XMLHttpRequest::sent", 1);
     mResult->mAjaxRequest.insert(req);
 }
 
 void ExecutionResultBuilder::slJavascriptConstantStringEncountered(QString constant)
 {
-    statistics()->accumulate("WebKit::jsconstants", 1);
+    Statistics::statistics()->accumulate("WebKit::jsconstants", 1);
     mResult->mJavascriptConstantsObservedForLastEvent.insert(constant);
 }
 

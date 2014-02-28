@@ -27,17 +27,17 @@ namespace artemis
 
 StatsPrettyWriter::StatsPrettyWriter() {}
 
-void StatsPrettyWriter::write(const StatsStorage* stats)
+void StatsPrettyWriter::write(const Statistics::StatsStorage* stats)
 {
 
-    QHashIterator<QString, int> i(stats->intStorage);
+    QHashIterator<QString, int> i(stats->getIntStorage());
 
     while (i.hasNext()) {
         i.next();
         Log::info(i.key().toStdString()+": "+QString::number(i.value()).toStdString());
     }
 
-    QHashIterator<QString, QString> j(stats->stringStorage);
+    QHashIterator<QString, QString> j(stats->getStringStorage());
 
     while (j.hasNext()) {
         j.next();

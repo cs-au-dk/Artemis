@@ -17,7 +17,10 @@
 #include "statsstorage.h"
 #include <QDebug>
 
-namespace artemis
+#ifdef ARTEMIS
+
+
+namespace Statistics
 {
 
 StatsStorage::StatsStorage()
@@ -43,7 +46,7 @@ void StatsStorage::set(QString key, int value)
 
 void StatsStorage::set(QString key, bool value)
 {
-    this->stringStorage.insert(key, value ? "true" : "false");
+    this->stringStorage.insert(key, value ? QString::fromStdString("true") : QString::fromStdString("false"));
 }
 
 void StatsStorage::set(QString key, double value)
@@ -58,8 +61,18 @@ void StatsStorage::set(QString key, QString value)
 
 void StatsStorage::set(QString key, const std::string& value)
 {
-    this->stringStorage.insert(key, value.c_str());
+    this->stringStorage.insert(key, QString::fromStdString(value.c_str()));
 }
+
+
+QHash<QString, int> StatsStorage::getIntStorage() const {
+    return intStorage;
+}
+
+QHash<QString, QString> StatsStorage::getStringStorage() const {
+    return stringStorage;
+}
+
 
 StatsStorage* statistics()
 {
@@ -68,3 +81,4 @@ StatsStorage* statistics()
 }
 
 }
+#endif

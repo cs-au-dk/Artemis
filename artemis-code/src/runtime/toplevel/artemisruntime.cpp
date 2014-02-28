@@ -125,8 +125,7 @@ void ArtemisRuntime::postConcreteExecution(ExecutableConfigurationConstPtr confi
         mWorklist->add(newConfiguration, mAppmodel);
     }
 
-    statistics()->accumulate("InputGenerator::added-configurations", newConfigurations.size());
-
+    Statistics::statistics()->accumulate("InputGenerator::added-configurations", newConfigurations.size());
     preConcreteExecution();
 }
 

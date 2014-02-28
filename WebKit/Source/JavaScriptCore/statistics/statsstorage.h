@@ -19,13 +19,13 @@
 
 #include <QHash>
 
-namespace artemis
+#ifdef ARTEMIS
+
+namespace Statistics
 {
 
 class StatsStorage
 {
-
-    friend class StatsPrettyWriter;
 
 public:
     StatsStorage();
@@ -35,8 +35,9 @@ public:
     void set(QString key, bool value);
     void set(QString key, double value);
     void set(QString key, QString value);
-    void set(QString key, const std::string& value);
-
+    void set(QString key, const std::string& value);    
+    QHash<QString, int> getIntStorage() const ;
+    QHash<QString, QString> getStringStorage() const;
 private:
     QHash<QString, int> intStorage;
     QHash<QString, double> doubleStorage;
@@ -47,4 +48,5 @@ StatsStorage* statistics();
 
 }
 
+#endif //ARTEMIS
 #endif // STATSSTORAGE_H

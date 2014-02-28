@@ -17,7 +17,7 @@
 #ifndef STATISTICS_PRETTY_WRITER_H
 #define STATISTICS_PRETTY_WRITER_H
 
-#include "../statsstorage.h"
+#include "statistics/statsstorage.h"
 
 namespace artemis
 {
@@ -27,7 +27,7 @@ class StatsPrettyWriter
 
 public:
 
-    static void write(const StatsStorage* stats);
+    static void write(const Statistics::StatsStorage* stats);
 
 private:
     StatsPrettyWriter();
