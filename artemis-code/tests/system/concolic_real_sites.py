@@ -47,7 +47,7 @@ except ImportError:
 SPREADSHEET_KEY = "0ApQcHUu6OpaUdFZJZEV6LXU2VkZZa1M3QTh6TFAwUWc" # Real Log
 WORKSHEET_ID = "od6"
 
-EP_VISUALISATION_SCRIPT = os.path.join(os.environ['ARTEMISDIR'], 'artemis-code', 'scripts', 'entrypoint-identifier.sh')
+EP_VISUALIZATION_SCRIPT = os.path.join(os.environ['ARTEMISDIR'], 'artemis-code', 'scripts', 'entrypoint_identifier.py')
 
 
 # The unit test object. The test_* functions will be filled in by main().
@@ -148,13 +148,13 @@ def full_test_generator(site_name, site_url, dry_run=False, logger=None, version
                                "DIADEM returned no entry-points.")
             return
         
-        # Call the entrypoint visualiser, which is just part of the logging of this test suite. Suppress output.
-        #TODO: This crashes too often on real sites, so disabling it until we can work out what is going on.
-        #cmd = [EP_VISUALISATION_SCRIPT, site_url, 'buttons.png'] + ep_list
-        #try:
-        #    subprocess.check_output(cmd, cwd=os.path.join(test_dir, site_name), stderr=subprocess.STDOUT)
-        #except CalledProcessError:
-        #    pass
+        # Call the entrypoint visualiser, which is just part of the logging of this test suite.
+        # Suppress output and ignore errors.
+        cmd = [EP_VISUALIZATION_SCRIPT, site_url, 'buttons.png'] + ep_list
+        try:
+            subprocess.check_output(cmd, cwd=os.path.join(test_dir, site_name), stderr=subprocess.STDOUT)
+        except CalledProcessError:
+            pass
         
         # For each EP returned, call test_generator() to get a function to test that EP.
         test_functions = []
@@ -170,12 +170,14 @@ def full_test_generator(site_name, site_url, dry_run=False, logger=None, version
         print
         for site_id, test_site in test_functions:
             try:
+                print "    %s:" % site_id,
+                sys.stdout.flush()
                 test_site(None) # The functions returned by test_generator expect to be attached to an object (and 
                                 # therefore have the self parameter, but this is never used.
-                print "    %s: OK" % site_id
+                print "OK"
             except Exception as e:
                 test_exceptions.append((site_id, type(e).__name__))
-                print "    %s: ERROR" % site_id
+                print "ERROR"
                 print "        ", e
         
         # If there have been any errors, report them and throw an exception to show that this test was not completely

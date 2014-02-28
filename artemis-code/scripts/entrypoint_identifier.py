@@ -1,3 +1,4 @@
+#!/usr/bin/env python3
 """
 Creates a screenshot of a web page with certain XPath entry-points identified.
 """
@@ -5,15 +6,17 @@ Creates a screenshot of a web page with certain XPath entry-points identified.
 import sys
 import time
 import argparse
+import os
 
+# Use python3/Qt5 to avoid conflicts with Artemis' own modified version of WebKit.
 try:
-    from PyQt4.QtCore import QUrl
-    from PyQt4.QtGui import QApplication, QImage, QPainter
-    from PyQt4.QtWebKit import QWebView
+    from PyQt5.QtCore import QUrl
+    from PyQt5.QtWidgets import QApplication
+    from PyQt5.QtGui import QImage, QPainter
+    from PyQt5.QtWebKitWidgets import QWebView
 except ImportError:
-    print "The 'PyQt4' module is required by this script."
-    print "Alternatively, PyQt4.QtWebKit may be trying to use our modified WebKit and failing."
-    print "You may need to modify LD_LIBRARY_PATH for this script. Try the entrypoint-identifier.sh wrapper script."
+    print("The 'PyQt5' module and WebKit bindings are required by this script.")
+    print("For example on Ubuntu >= 13.10 you should be able to install python3-pyqt5 and python3-pyqt5.qtwebkit.")
     sys.exit()
 
 
@@ -25,7 +28,7 @@ def main():
     parser.add_argument('xpath', nargs='*', help="The XPath expression(s) to identify on the page.")
     args = parser.parse_args()
     
-    print "Loading", args.url
+    print("Loading", args.url)
     display = XPathDisplay(args.url)
     for idx,xpath in enumerate(args.xpath):
         label = "EP %d" % (idx+1)
@@ -47,9 +50,12 @@ class XPathDisplay(QWebView):
         QWebView.__init__(self)
         self._loaded = False # Used within _wait_load.
         self.loadFinished.connect(self._loadFinished)
-        self.load(QUrl(url))
-        #self.show()
-        self._wait_load()
+        # The version of webkit I have prints some stuff to stdout which I do not want.
+        # See https://bugreports.qt-project.org/browse/QTBUG-31074
+        with suppress_stdout_stderr():
+            self.load(QUrl(url))
+            #self.show()
+            self._wait_load()
     
     def _wait_load(self, delay=0):
         """Waits until the page has loaded."""
@@ -64,7 +70,7 @@ class XPathDisplay(QWebView):
     
     def save(self, outfile):
         """Saves the current diaplay as an image file."""
-        print 'Saving', outfile
+        print('Saving', outfile)
         # Adjust the viewport to see the whole page.
         frame = self.page().mainFrame()
         self.page().setViewportSize(frame.contentsSize())
@@ -77,7 +83,7 @@ class XPathDisplay(QWebView):
     
     def addxpath(self, xpath, label):
         """Adds a label to the display which identifies the single node matched by the given XPath expression."""
-        print "Adding identifier", label
+        print("Adding identifier", label)
         xpath = xpath.replace("'", "\\'")
         label = label.replace("'", "\\'")
         js_injection = """
@@ -114,6 +120,39 @@ class DefaultHelpParser(argparse.ArgumentParser):
         sys.stderr.write('Error: %s\n' % message)
         self.print_help()
         sys.exit(2)
+
+
+# Suppress output from WebKit.
+# http://stackoverflow.com/q/11130156/1044484
+class suppress_stdout_stderr(object):
+    '''
+    A context manager for doing a "deep suppression" of stdout and stderr in 
+    Python, i.e. will suppress all print, even if the print originates in a 
+    compiled C/Fortran sub-function.
+       This will not suppress raised exceptions, since exceptions are printed
+    to stderr just before a script exits, and after the context manager has
+    exited (at least, I think that is why it lets exceptions through).      
+    '''
+    
+    def __init__(self):
+        # Open a pair of null files
+        self.null_fds =  [os.open(os.devnull,os.O_RDWR) for x in range(2)]
+        # Save the actual stdout (1) and stderr (2) file descriptors.
+        self.save_fds = (os.dup(1), os.dup(2))
+    
+    def __enter__(self):
+        # Assign the null pointers to stdout and stderr.
+        os.dup2(self.null_fds[0],1)
+        os.dup2(self.null_fds[1],2)
+    
+    def __exit__(self, *_):
+        # Re-assign the real stdout/stderr back to (1) and (2)
+        os.dup2(self.save_fds[0],1)
+        os.dup2(self.save_fds[1],2)
+        # Close the null files
+        os.close(self.null_fds[0])
+        os.close(self.null_fds[1])
+
 
 
 if __name__ == "__main__":
