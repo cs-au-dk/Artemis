@@ -41,10 +41,22 @@ void ExpressionValuePrinter::visit(Symbolic::ConstantBoolean* constantboolean, v
     m_result += constantboolean->getValue() ? "true" : "false";
 }
 
+
+// These names begin with SYM_IN_, so we don't need to mark them at all... it is clear what they are.
+
+void ExpressionValuePrinter::visit(Symbolic::SymbolicInteger *symbolicinteger, void *arg)
+{
+    m_result += symbolicinteger->getSource().getIdentifier();
+}
+
 void ExpressionValuePrinter::visit(Symbolic::SymbolicString *symbolicstring, void* arg)
 {
-    // These names begin with SYM_IN_, so we don't need to mark them at all... it is clear what they are.
     m_result += symbolicstring->getSource().getIdentifier();
+}
+
+void ExpressionValuePrinter::visit(Symbolic::SymbolicBoolean *symbolicboolean, void *arg)
+{
+    m_result += symbolicboolean->getSource().getIdentifier();
 }
 
 

@@ -42,7 +42,7 @@ public:
      * @param javaScriptRegex A RAW JavaScript variant of regex.
      * @return An expression containing CVC4 constraints
      */
-    static std::string compile(const std::string& javaScriptRegex);
+    static std::string compile(const std::string& javaScriptRegex, bool& bol, bool& eol);
 
 private:
     CVC4RegexCompiler();

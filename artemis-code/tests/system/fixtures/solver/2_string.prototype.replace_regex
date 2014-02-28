@@ -1,0 +1,4 @@
+var r = /f/
+if (foo.replace(r, "g") == "goo") {
+    alert(foo);
+}

@@ -42,7 +42,9 @@ public:
     void visit(Symbolic::ConstantString* constantstring, void* arg);
     void visit(Symbolic::ConstantBoolean* constantboolean, void* arg);
 
+    void visit(Symbolic::SymbolicInteger* symbolicinteger, void* arg);
     void visit(Symbolic::SymbolicString* symbolicstring, void* arg);
+    void visit(Symbolic::SymbolicBoolean* symbolicboolean, void* arg);
 
 };
 
