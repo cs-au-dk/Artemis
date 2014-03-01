@@ -19,8 +19,8 @@
 namespace artemis
 {
 
-Solver::Solver() {
-
+Solver::Solver()
+{
 }
 
 } // namespace artemis

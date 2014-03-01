@@ -20,9 +20,9 @@
 #include <sstream>
 #include <errno.h>
 
-#include <QDebug>
 #include <QDir>
 #include <QString>
+#include <QDateTime>
 
 #include "statistics/statsstorage.h"
 
@@ -33,47 +33,84 @@
 namespace artemis
 {
 
-CVC4Solver::CVC4Solver(): Solver() {
+CVC4Solver::CVC4Solver()
+    : Solver()
+{
+}
 
+CVC4Solver::~CVC4Solver()
+{
+}
+
+SolutionPtr CVC4Solver::emitError(std::ofstream& clog, const std::string& reason)
+{
+    clog << "ERROR: " << reason << std::endl << std::endl;
+
+    return SolutionPtr(new Solution(false, false, QString::fromStdString(reason)));
+}
+
+void CVC4Solver::emitConstraints(std::ofstream& constraintIndex, const QString& identifier, bool sat)
+{
+    constraintIndex << identifier.toStdString() << "," << (sat ? "sat/unknown" : "unsat") << std::endl;
+    QFile::copy("/tmp/cvc4input", QString::fromStdString("/tmp/constraints/") + identifier);
 }
 
 SolutionPtr CVC4Solver::solve(PathConditionPtr pc)
 {
-    std::ofstream constraintLog("/tmp/constraintlog", std::ofstream::out | std::ofstream::app);
+    // 0. Emit debug information
+
+    QDir().mkdir("/tmp/constraints/");
+    QDir constraintsPath = QDir("/tmp/constraints/");
+
+    QString identifier = QDateTime::currentDateTime().toString("dd-MM-yy-hh-mm-ss");
+
+    int next = 0;
+    while (constraintsPath.exists(identifier)) {
+        if (identifier.contains("--")) {
+            identifier.chop(identifier.size() - identifier.indexOf("--"));
+        }
+
+        identifier = identifier + QString("--") + QString::number(next++);
+    }
+
+    std::ofstream clog("/tmp/constraintlog", std::ofstream::out | std::ofstream::app);
+    std::ofstream constraintIndex("/tmp/constraintindex", std::ofstream::out | std::ofstream::app);
+
+    clog << "********************************************************************************" << std::endl;
+    clog << "Identifier " << identifier.toStdString() << std::endl;
+    clog << "Time: " << QDateTime::currentDateTime().toString("dd-MM-yy-hh-mm-ss").toStdString() << std::endl;
+    clog << "PC: " << pc->toStatisticsValuesString(true) << std::endl;
+    clog << std::endl;
 
     // 1. translate pc to something solvable using the translator
 
     CVC4ConstraintWriterPtr cw = CVC4ConstraintWriterPtr(new CVC4ConstraintWriter());
 
     if (!cw->write(pc, "/tmp/cvc4input")) {
+
         statistics()->accumulate("Concolic::Solver::ConstraintsNotWritten", 1);
-        constraintLog << "Could not translate the PC into solver input." << std::endl;
-        constraintLog << pc->toStatisticsValuesString(true) << std::endl << std::endl;
-        return SolutionPtr(new Solution(false, false, "Could not translate the PC into solver input."));
+
+        std::stringstream reason;
+        reason << "Could not translate the PC into solver input: " << cw->getErrorReason();
+        return emitError(clog, reason.str());
     }
 
     statistics()->accumulate("Concolic::Solver::ConstraintsWritten", 1);
 
     // 2. run the solver on the file
 
-    // TODO we could use the direct C++ solver interface and omit the system calls and file read/write
-
     char* artemisdir;
     artemisdir = std::getenv("ARTEMISDIR");
 
     if (artemisdir == NULL) {
-        qDebug() << "Warning, ARTEMISDIR environment variable not set!";
-        constraintLog << "Not running due to ARTEMISDIR environmaent variable not being set." << std::endl << std::endl;
-        return SolutionPtr(new Solution(false, false, "Could not run solver because ARTEMISDIR is not set."));
+        return emitError(clog, "Warning, ARTEMISDIR environment variable not set!");
     }
 
     QDir solverpath = QDir(QString(artemisdir));
     QString exec = "cvc4-2014-02-19-x86_64-linux-opt";
 
     if (!solverpath.cd("contrib") || !solverpath.cd("CVC4") || !solverpath.exists(exec)) {
-        qDebug() << "Warning, could not find " << exec;;
-        constraintLog << "Could not find " << exec.toStdString() << std::endl << std::endl;
-        return SolutionPtr(new Solution(false, false, "Could not find CVC4 binary."));
+        return emitError(clog, "Could not find CVC4 binary.");
     }
 
     // --rewrite-divk enables div and mod by a constant factor
@@ -88,134 +125,139 @@ SolutionPtr CVC4Solver::solve(PathConditionPtr pc)
     std::string line;
     std::ifstream fp("/tmp/cvc4result");
 
-    if (fp.is_open()) {
-        statistics()->accumulate("Concolic::Solver::ConstraintsSolved", 1);
-
-        std::getline(fp, line); // load sat line
-
-        if (line.compare("unsat") == 0) {
-            // UNSAT
-            statistics()->accumulate("Concolic::Solver::ConstraintsSolvedAsUNSAT", 1);
-            constraintLog << "Solved as UNSAT." << std::endl << std::endl;
-            return SolutionPtr(new Solution(false, true));
-        } else if (line.compare("sat") != 0 && line.compare("unknown") != 0) {
-            // ERROR, we can't use return types to detect errors, since an unsat result will result in an error code (because we try to access the model)
-            statistics()->accumulate("Concolic::Solver::ConstraintsNotSolved", 1);
-
-            constraintLog << "Error when solving the following PC:" << std::endl;
-
-            constraintLog <<pc->toStatisticsValuesString(true);
-
-            constraintLog << std::endl << "The input file was:" << std::endl;
-
-            std::ifstream fp_input;
-            fp_input.open ("/tmp/cvc4input");
-            std::string line;
-            while (std::getline(fp_input, line)) {
-                constraintLog << line << std::endl;
-            }
-            fp_input.close();
-
-            constraintLog << std::endl << "The result was:" << std::endl;
-
-            // Copy /tmp/cvc4result into constraintlog using a fresh file pointer (i.e. not the one we ).
-            std::ifstream fp_result;
-            fp_result.open ("/tmp/cvc4result");
-            while (std::getline(fp_result, line)) {
-                constraintLog << line << std::endl;
-            }
-            fp_result.close();
-
-            constraintLog << std::endl;
-
-            fp.close(); // The main fp.
-            return SolutionPtr(new Solution(false, false, "There was an error while running the solver."));
-
-        }
-
-        // Notice, we interpret sat and unknown internally as sat
-
-        std::getline(fp, line); // discard model line
-
-        constraintLog << "Solved as:\n";
-
-        while (fp.good()) {
-
-            // split each line
-            std::getline(fp, line);
-
-            // check for end-of-solutions
-            if (line.compare(")") == 0) {
-                break;
-            }
-
-            std::string symbol;
-            std::string type;
-            std::string value;
-
-            std::stringstream ss(line);
-            std::getline(ss, symbol, ' '); // skip a static prefix
-            std::getline(ss, symbol, ' ');
-            std::getline(ss, type, ' '); // skip a static prefix
-            std::getline(ss, type, ' ');
-            std::getline(ss, value, ')');
-
-            // decode type of value
-            Symbolvalue symbolvalue;
-            symbolvalue.found = true;
-
-            // Empty string is signalled by the solver script as the literal ""
-            // This means we cannot inject the literal "" (i.e. two double quotes) now.
-            if (value.compare("\"\"") == 0){
-                value.clear();
-            }
-
-            // Strip quotes from strings
-            if (type.compare("String") == 0 && value.find("\"") != std::string::npos && value.length() > 1) {
-                value = value.substr(1, value.length() - 2);
-            }
-
-            /*if (value.compare("false") == 0) {
-                symbolvalue.kind = Symbolic::BOOL;
-                symbolvalue.u.boolean = false;
-
-            } else if (value.compare("true") == 0) {
-                symbolvalue.kind = Symbolic::BOOL;
-                symbolvalue.u.boolean = true;
-
-            } else {
-                symbolvalue.kind = Symbolic::INT;
-                symbolvalue.u.integer = std::atoi(value.c_str());
-            }*/
-
-            // TODO, add support for the other types,
-            // right now not needed as we only have symbolic strings as input
-
-            symbolvalue.kind = Symbolic::STRING;
-
-            if (value.find("(- ") == std::string::npos) { // not a negative value
-                symbolvalue.string = value;
-            } else {
-                symbolvalue.string = "-" + value.substr(3, value.length() - 3);
-            }
-
-            // save result
-            solution->insertSymbol(SMTConstraintWriter::decodeIdentifier(symbol).c_str(), symbolvalue);
-
-            constraintLog << symbol << " = " << symbolvalue.string << "\n";
-        }
-    } else {
+    if (!fp.is_open()) {
         statistics()->accumulate("Concolic::Solver::ConstraintsNotSolved", 1);
-        constraintLog << "Could not read result file." << std::endl << std::endl;
-        return SolutionPtr(new Solution(false, false, "Could not read result file."));
+        return emitError(clog, "Could not read result file.");
     }
 
-    constraintLog << std::endl;
-    constraintLog.close();
+    statistics()->accumulate("Concolic::Solver::ConstraintsSolved", 1);
+
+    std::getline(fp, line); // load sat line
+
+    if (line.compare("unsat") == 0) {
+
+        // UNSAT
+        emitConstraints(constraintIndex, identifier, false);
+
+        statistics()->accumulate("Concolic::Solver::ConstraintsSolvedAsUNSAT", 1);
+        clog << "Solved as UNSAT." << std::endl << std::endl;
+        return SolutionPtr(new Solution(false, true));
+
+    } else if (line.compare("sat") != 0 && line.compare("unknown") != 0) {
+
+        // ERROR, we can't use return types to detect errors, since an unsat result will result in an error code (because we try to access the model)
+
+        statistics()->accumulate("Concolic::Solver::ConstraintsNotSolved", 1);
+
+        // Copy contents of constraint files for debugging
+
+        clog << "Constraints:" << std::endl << std::endl;
+
+        std::ifstream fp_input;
+        fp_input.open ("/tmp/cvc4input");
+        std::string line;
+        while (std::getline(fp_input, line)) {
+            clog << line << std::endl;
+        }
+        fp_input.close();
+
+        clog << "Result: " << std::endl;
+
+        std::ifstream fp_result;
+        fp_result.open ("/tmp/cvc4result");
+        while (std::getline(fp_result, line)) {
+            clog << line << std::endl;
+        }
+        fp_result.close();
+
+        clog << std::endl;
+
+        fp.close(); // The main fp.
+
+        return emitError(clog, "CVC4 responded with an error while solving the constraints.");
+    }
+
+    // Notice, we interpret sat and unknown internally as sat
+
+    emitConstraints(constraintIndex, identifier, true);
+
+    std::getline(fp, line); // discard model line
+
+    clog << "Solved as:\n";
+
+    while (fp.good()) {
+
+        // split each line
+        std::getline(fp, line);
+
+        // check for end-of-solutions
+        if (line.compare(")") == 0) {
+            break;
+        }
+
+        std::string symbol;
+        std::string type;
+        std::string value;
+
+        std::stringstream ss(line);
+        std::getline(ss, symbol, ' '); // skip a static prefix
+        std::getline(ss, symbol, ' ');
+        std::getline(ss, type, ' '); // skip a static prefix
+        std::getline(ss, type, ' ');
+        std::getline(ss, value, ')');
+
+        // decode type of value
+        Symbolvalue symbolvalue;
+        symbolvalue.found = true;
+
+        // Empty string is signalled by the solver script as the literal ""
+        // This means we cannot inject the literal "" (i.e. two double quotes) now.
+        if (value.compare("\"\"") == 0){
+            value.clear();
+        }
+
+        // Strip quotes from strings
+        if (type.compare("String") == 0 && value.find("\"") != std::string::npos && value.length() > 1) {
+            value = value.substr(1, value.length() - 2);
+        }
+
+        /*if (value.compare("false") == 0) {
+            symbolvalue.kind = Symbolic::BOOL;
+            symbolvalue.u.boolean = false;
+
+        } else if (value.compare("true") == 0) {
+            symbolvalue.kind = Symbolic::BOOL;
+            symbolvalue.u.boolean = true;
+
+        } else {
+            symbolvalue.kind = Symbolic::INT;
+            symbolvalue.u.integer = std::atoi(value.c_str());
+        }*/
+
+        // TODO, add support for the other types,
+        // right now not needed as we only have symbolic strings as input
+
+        symbolvalue.kind = Symbolic::STRING;
+
+        if (value.find("(- ") == std::string::npos) { // not a negative value
+            symbolvalue.string = value;
+        } else {
+            symbolvalue.string = "-" + value.substr(3, value.length() - 3);
+        }
+
+        // save result
+        solution->insertSymbol(SMTConstraintWriter::decodeIdentifier(symbol).c_str(), symbolvalue);
+
+        clog << symbol << " = " << symbolvalue.string << std::endl;
+    }
+
+    clog << std::endl;
+    clog.close();
+    constraintIndex.close();
+
     fp.close();
 
     return solution;
-
 }
 
 } // namespace artemis

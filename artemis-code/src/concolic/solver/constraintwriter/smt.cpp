@@ -58,11 +58,6 @@ bool SMTConstraintWriter::write(PathConditionPtr pathCondition, std::string outp
     mError = false;
 
     mOutput.open(outputFile.data());
-    mConstriantLog.open("/tmp/constraintlog", std::ofstream::out | std::ofstream::app);
-
-    mConstriantLog << "********************************************************************************\n";
-    mConstriantLog << "Wrote Constraint at " << QDateTime::currentDateTime().toString("dd-MM-yy-hh-mm-ss").toStdString() << "\n";
-    mConstriantLog << "\n";
 
     preVisitPathConditionsHook();
 
@@ -76,35 +71,22 @@ bool SMTConstraintWriter::write(PathConditionPtr pathCondition, std::string outp
         mOutput << "(assert (= " << mExpressionBuffer;
         mOutput << (pathCondition->get(i).second ? " true" : " false");
         mOutput << "))\n";
-
-        mConstriantLog << "(assert (= " << mExpressionBuffer;
-        mConstriantLog << (pathCondition->get(i).second ? " true" : " false");
-        mConstriantLog << "))\n";
-
     }
 
     postVisitPathConditionsHook();
 
-    mConstriantLog << "\n";
-
     mOutput.close();
 
     if (mError) {
-        std::string error = std::string("Artemis is unable generate constraints - ") + mErrorReason + ".";
-        Log::warning(error);
-        mConstriantLog << error << std::endl;
         return false;
     }
 
     for (std::map<std::string, Symbolic::Type>::iterator iter = mTypemap.begin(); iter != mTypemap.end(); iter++) {
         if (iter->second == Symbolic::TYPEERROR) {
-            Log::warning("Artemis is unable generate constraints - a type-error was found.");
-            mConstriantLog << "Artemis is unable generate constraints - a type-error was found." << std::endl;
+            mErrorReason = "Artemis is unable generate constraints - a type-error was found.";
             return false;
         }
     }
-
-    mConstriantLog.close();
 
     return true;
 }

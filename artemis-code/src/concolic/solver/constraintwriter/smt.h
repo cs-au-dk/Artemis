@@ -74,6 +74,10 @@ public:
 
     bool write(PathConditionPtr pathCondition, std::string outputFile);
 
+    std::string getErrorReason() {
+        return mErrorReason;
+    }
+
     static std::string encodeIdentifier(const std::string&);
     static std::string decodeIdentifier(const std::string&);
 
