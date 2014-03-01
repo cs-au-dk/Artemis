@@ -38,6 +38,7 @@ class ExpressionValuePrinter : public ExpressionPrinter
 
 public:
 
+    void visit(Symbolic::ConstantObject* obj, void* arg);
     void visit(Symbolic::ConstantInteger* constantinteger, void* arg);
     void visit(Symbolic::ConstantString* constantstring, void* arg);
     void visit(Symbolic::ConstantBoolean* constantboolean, void* arg);

@@ -49,6 +49,13 @@ protected:
     virtual void visit(Symbolic::StringRegexSubmatchIndex* submatchIndex, void* args);
     virtual void visit(Symbolic::StringLength* stringlength, void* args);
 
+    virtual void visit(Symbolic::StringRegexSubmatchArray* exp, void* args);
+    virtual void visit(Symbolic::StringRegexSubmatchArrayAt* exp, void* args);
+    virtual void visit(Symbolic::StringRegexSubmatchArrayMatch* exp, void* args);
+
+    virtual void visit(Symbolic::ConstantObject* obj, void* arg);
+    virtual void visit(Symbolic::ObjectBinaryOperation* obj, void* arg);
+
     virtual void preVisitPathConditionsHook();
     virtual void postVisitPathConditionsHook();
 };

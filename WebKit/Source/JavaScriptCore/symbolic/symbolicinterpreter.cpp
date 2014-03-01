@@ -135,12 +135,20 @@ JSC::JSValue SymbolicInterpreter::ail_op_binary(JSC::CallFrame* callFrame,
         }
 
         // Case 3: Object nullness
-        if (x.isUndefinedOrNull()) {
-            return result;
-        }
+        if (x.isUndefinedOrNull() || y.isUndefinedOrNull()) {
 
-        if (y.isUndefinedOrNull()) {
+            // We only support the case where both x and y are objects or null/undefined.
+            // Mixing null/undefined and other types are not supported
+
+            if ((x.isUndefinedOrNull() || x.isObject()) && (y.isUndefinedOrNull() || y.isObject())) {
+                Symbolic::ObjectExpression* sx = x.generateObjectExpression(callFrame);
+                Symbolic::ObjectExpression* sy = y.generateObjectExpression(callFrame);
+
+                result.makeSymbolic(new ObjectBinaryOperation(sx, neq ? OBJ_EQ : OBJ_NEQ, sy));
+            }
+
             return result;
+
         }
 
         // Case 4: Object identity

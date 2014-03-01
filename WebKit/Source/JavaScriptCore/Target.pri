@@ -254,7 +254,12 @@ SOURCES += \
     symbolic/expression/stringlength.cpp \
     symbolic/expression/stringcharat.cpp \
     symbolic/expression/stringregexsubmatch.cpp \
-    symbolic/expression/stringregexsubmatchindex.cpp
+    symbolic/expression/stringregexsubmatcharray.cpp \
+    symbolic/expression/stringregexsubmatcharrayat.cpp \
+    symbolic/expression/stringregexsubmatcharraymatch.cpp \
+    symbolic/expression/stringregexsubmatchindex.cpp \
+    symbolic/expression/constantobject.cpp \
+    symbolic/expression/objectbinaryoperation.cpp
 
 *sh4* {
     QMAKE_CXXFLAGS += -mieee -w
@@ -306,6 +311,7 @@ HEADERS += \
     symbolic/expression/booleancoercion.h \
     symbolic/expression/visitor.h \
     symbolic/expr.h \
+    symbolic/expression/objectexpression.h \
     symbolic/expression/booleanbinaryoperation.h \
     symbolic/expression/stringreplace.h \
     symbolic/expression/stringregexreplace.h \
@@ -313,4 +319,9 @@ HEADERS += \
     symbolic/expression/stringlength.h \
     symbolic/expression/stringcharat.h \
     symbolic/expression/stringregexsubmatch.h \
-    symbolic/expression/stringregexsubmatchindex.h
+    symbolic/expression/stringregexsubmatcharray.h \
+    symbolic/expression/stringregexsubmatcharrayat.h \
+    symbolic/expression/stringregexsubmatcharraymatch.h \
+    symbolic/expression/stringregexsubmatchindex.h \
+    symbolic/expression/constantobject.h \
+    symbolic/expression/objectbinaryoperation.h

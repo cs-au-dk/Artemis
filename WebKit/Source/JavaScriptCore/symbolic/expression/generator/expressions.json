@@ -4,10 +4,13 @@
 		"type": "interface",
 		"parent": null
 	},
+
+	{
+		"ID": "ObjectExpression",
+		"type": "interface",
+		"parent": "Expression"
+	},
 		
-
-
-
 	{
 		"ID": "IntegerExpression",
 		"type": "interface",
@@ -60,6 +63,33 @@
 		]
 	},
 
+	{
+		"ID": "ConstantObject",
+		"type": "expression",
+		"parent": "ObjectExpression",
+		"fields": [
+			["bool", "isNull"]
+		]
+	},
+
+	{
+		"ID": "ObjectBinaryOperation",
+		"type": "expression",
+		"parent": "BooleanExpression",
+		"fields": [
+			["ObjectExpression*", "lhs"],
+			["ObjectBinaryOp", "op"],
+			["ObjectExpression*", "rhs"]
+		],
+		"enums": [
+			{
+				"ID": "ObjectBinaryOp",
+				"values": ["OBJ_EQ", "OBJ_NEQ"],
+				"names": ["==", "!="],
+				"types": ["BOOL", "BOOL"]
+			}
+		]
+	},
 
 	{
 		"ID": "StringExpression",
@@ -172,6 +202,35 @@
 		"fields": [
 			["StringExpression*", "source"],
 			["std::string*", "regexpattern"]
+		]
+	},
+
+	{
+		"ID": "StringRegexSubmatchArray",
+		"type": "expression",
+		"parent": "Expression",
+		"fields": [
+			["StringExpression*", "source"],
+			["std::string*", "regexpattern"]
+		]
+	},
+
+	{
+		"ID": "StringRegexSubmatchArrayAt",
+		"type": "expression",
+		"parent": "StringExpression",
+		"fields": [
+			["StringRegexSubmatchArray*", "match"],
+			["int", "group"]
+		]
+	},
+
+	{
+		"ID": "StringRegexSubmatchArrayMatch",
+		"type": "expression",
+		"parent": "ObjectExpression",
+		"fields": [
+			["StringRegexSubmatchArray*", "match"]
 		]
 	},
 

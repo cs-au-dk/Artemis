@@ -290,6 +290,8 @@ void SMTConstraintWriter::visit(Symbolic::StringRegexSubmatch* submatch, void* a
     error("NO SYMBOLIC STRING REGEX SUBMATCH SUPPORT");
 }
 
+
+
 /** Other Operations **/
 
 void SMTConstraintWriter::visit(Symbolic::StringRegexReplace* regex, void* args)
@@ -300,6 +302,31 @@ void SMTConstraintWriter::visit(Symbolic::StringRegexReplace* regex, void* args)
 void SMTConstraintWriter::visit(Symbolic::StringReplace* replace, void* args)
 {
     error("NO SYMBOLIC STRING REPLACE SUPPORT");
+}
+
+void SMTConstraintWriter::visit(Symbolic::StringRegexSubmatchArray* exp, void* arg)
+{
+    error("NO SYMBOLIC STRING REGEX SUBMATCH (ARRAY) SUPPORT");
+}
+
+void SMTConstraintWriter::visit(Symbolic::StringRegexSubmatchArrayAt* exp, void* arg)
+{
+    error("NO SYMBOLIC STRING REGEX SUBMATCH (ARRAY) SUPPORT");
+}
+
+void SMTConstraintWriter::visit(Symbolic::StringRegexSubmatchArrayMatch* exp, void* arg)
+{
+    error("NO SYMBOLIC STRING REGEX SUBMATCH (ARRAY) SUPPORT");
+}
+
+void SMTConstraintWriter::visit(Symbolic::ConstantObject* obj, void* arg)
+{
+    error("NO SYMBOLIC NULL/OBJECT SUPPORT");
+}
+
+void SMTConstraintWriter::visit(Symbolic::ObjectBinaryOperation* obj, void* arg)
+{
+    error("NO SYMBOLIC NULL/OBJECT SUPPORT");
 }
 
 void SMTConstraintWriter::visit(Symbolic::StringLength* stringlength, void* args)

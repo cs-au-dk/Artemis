@@ -452,6 +452,31 @@ void CVC4ConstraintWriter::visit(Symbolic::StringRegexSubmatchIndex* submatchInd
 
 }
 
+void CVC4ConstraintWriter::visit(Symbolic::StringRegexSubmatchArray* exp, void* arg)
+{
+    error("NO SYMBOLIC STRING REGEX SUBMATCH (ARRAY) SUPPORT");
+}
+
+void CVC4ConstraintWriter::visit(Symbolic::StringRegexSubmatchArrayAt* exp, void* arg)
+{
+    error("NO SYMBOLIC STRING REGEX SUBMATCH (ARRAY) SUPPORT");
+}
+
+void CVC4ConstraintWriter::visit(Symbolic::StringRegexSubmatchArrayMatch* exp, void* arg)
+{
+    error("NO SYMBOLIC STRING REGEX SUBMATCH (ARRAY) SUPPORT");
+}
+
+void CVC4ConstraintWriter::visit(Symbolic::ConstantObject* obj, void* arg)
+{
+    error("NO SYMBOLIC NULL/OBJECT SUPPORT");
+}
+
+void CVC4ConstraintWriter::visit(Symbolic::ObjectBinaryOperation* obj, void* arg)
+{
+    error("NO SYMBOLIC NULL/OBJECT SUPPORT");
+}
+
 void CVC4ConstraintWriter::visit(Symbolic::StringLength* stringlength, void* args)
 {
     stringlength->getString()->accept(this);

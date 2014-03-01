@@ -381,6 +381,10 @@ Symbolic::StringExpression* JSValue::generateStringExpression(ExecState* exec){
     return this->isSymbolic()?(Symbolic::StringExpression*) this->asSymbolic(): new Symbolic::ConstantString(new std::string(this->toPrimitive(exec).toUString(exec).ascii().data()));
 }
 
+Symbolic::ObjectExpression* JSValue::generateObjectExpression(ExecState* exec){
+    return this->isSymbolic()?(Symbolic::ObjectExpression*) this->asSymbolic(): new Symbolic::ConstantObject(this->isUndefinedOrNull());
+}
+
 Symbolic::IntegerExpression* JSValue::generateIntegerCoercionExpression(ExecState* exec){
     return this->isSymbolic() ? (Symbolic::IntegerExpression*)new Symbolic::IntegerCoercion(this->asSymbolic()) : new Symbolic::ConstantInteger(this->toPrimitive(exec).toNumber(exec));
 }
