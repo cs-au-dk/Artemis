@@ -35,7 +35,7 @@ std::string visitPatternDisjunction(const JSC::Yarr::PatternDisjunction* disjunc
     std::stringstream result;
 
     if (disjunction->m_alternatives.size() > 1) {
-        result << "(re.or ";
+        result << "(re.union ";
     }
 
     for (unsigned alt = 0; alt < disjunction->m_alternatives.size(); ++alt) {
@@ -150,7 +150,7 @@ std::string visitPatternTerm(const JSC::Yarr::PatternTerm* term, bool& bol, bool
 
         // CVC4 does not have any notion of "match all" or negative matches, so return a subset of
         // "." in its place.
-        return "(re.or (re.range \"0\" \"9\") (re.range \"A\" \"Z\") (re.range \"a\" \"z\") \"_\" \"-\")";
+        return "(re.union (re.range \"0\" \"9\") (re.range \"A\" \"Z\") (re.range \"a\" \"z\") \"_\" \"-\")";
 
     }
 
@@ -198,7 +198,7 @@ std::string visitPatternTerm(const JSC::Yarr::PatternTerm* term, bool& bol, bool
         bool emitOnlyOne = (term->characterClass->m_ranges.size() + term->characterClass->m_matches.size()) == 1;
 
         if (!emitOnlyOne) {
-            result << "(re.or";
+            result << "(re.union";
         }
 
         for (size_t i = 0; i < term->characterClass->m_ranges.size(); ++i) {

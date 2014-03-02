@@ -107,7 +107,7 @@ SolutionPtr CVC4Solver::solve(PathConditionPtr pc)
     }
 
     QDir solverpath = QDir(QString(artemisdir));
-    QString exec = "cvc4-2014-02-19-x86_64-linux-opt";
+    QString exec = "cvc4-2014-03-01-x86_64-linux-opt";
 
     if (!solverpath.cd("contrib") || !solverpath.cd("CVC4") || !solverpath.exists(exec)) {
         return emitError(clog, "Could not find CVC4 binary.");
