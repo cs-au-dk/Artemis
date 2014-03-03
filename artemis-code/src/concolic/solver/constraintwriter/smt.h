@@ -190,7 +190,6 @@ protected:
 
     std::map<std::string, Symbolic::Type> mTypemap;
     std::ofstream mOutput;
-    std::ofstream mConstriantLog;
 
     // holds the current subexpression returned by the previous call to visit
     std::string mExpressionBuffer;

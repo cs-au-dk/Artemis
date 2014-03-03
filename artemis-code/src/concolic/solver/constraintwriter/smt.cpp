@@ -377,7 +377,6 @@ void SMTConstraintWriter::emitConst(const std::string& identifier, Symbolic::Typ
     };
 
     mOutput << "(declare-const " << identifier << " " << typeStrings[type] << ")\n";
-    mConstriantLog << "(declare-const " << identifier << " " << typeStrings[type] << ")\n";
 }
 
 std::string SMTConstraintWriter::emitAndReturnNewTemporary(Symbolic::Type type)
