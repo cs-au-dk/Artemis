@@ -33,10 +33,13 @@ namespace Symbolic
 class StringRegexSubmatchArray : public Expression
 {
 public:
-    explicit StringRegexSubmatchArray(StringExpression* source, std::string* regexpattern);
+    explicit StringRegexSubmatchArray(unsigned int identifier, StringExpression* source, std::string* regexpattern);
     void accept(Visitor* visitor);
     void accept(Visitor* visitor, void* arg);
 
+	inline unsigned int getIdentifier() {
+		return m_identifier;
+	}
 	inline StringExpression* getSource() {
 		return m_source;
 	}
@@ -45,6 +48,7 @@ public:
 	}
 
 private:
+	unsigned int m_identifier;
 	StringExpression* m_source;
 	std::string* m_regexpattern;
 

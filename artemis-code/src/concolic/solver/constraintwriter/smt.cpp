@@ -373,7 +373,7 @@ void SMTConstraintWriter::error(std::string reason)
 void SMTConstraintWriter::emitConst(const std::string& identifier, Symbolic::Type type)
 {
     static const char* typeStrings[] = {
-        "Int", "Bool", "String", "ERROR"
+        "Int", "Bool", "String", "Bool", "ERROR"
     };
 
     mOutput << "(declare-const " << identifier << " " << typeStrings[type] << ")\n";

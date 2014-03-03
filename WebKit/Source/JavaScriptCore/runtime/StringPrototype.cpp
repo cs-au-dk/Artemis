@@ -44,6 +44,7 @@
 #include <wtf/unicode/Collator.h>
 #ifdef ARTEMIS
 #include "JavaScriptCore/symbolic/expr.h"
+#include "JavaScriptCore/symbolic/symbolicinterpreter.h"
 #endif 
 using namespace WTF;
 
@@ -926,6 +927,7 @@ EncodedJSValue JSC_HOST_CALL stringProtoFuncMatch(ExecState* exec)
         if (thisValue.isSymbolic()) {
 
             Symbolic::StringRegexSubmatchArray* symbolicMatch = new Symbolic::StringRegexSubmatchArray(
+                        Symbolic::NEXT_SYMBOLIC_ID++,
                         (Symbolic::StringExpression*)thisValue.asSymbolic(),
                         new std::string(regExp->pattern().ascii().data()));
 

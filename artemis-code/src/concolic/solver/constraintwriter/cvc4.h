@@ -19,6 +19,7 @@
 
 #include <fstream>
 #include <map>
+#include <set>
 
 #include <QSharedPointer>
 
@@ -58,6 +59,13 @@ protected:
 
     virtual void preVisitPathConditionsHook();
     virtual void postVisitPathConditionsHook();
+
+    void helperRegexTest(const std::string& regex, const std::string& expression,
+                                               std::string* outMatch);
+    void helperRegexMatchPositive(const std::string& regex, const std::string& expression,
+                                  std::string* outPre, std::string* outMatch, std::string* outPost);
+
+    std::set<unsigned int> m_singletonCompilations;
 };
 
 typedef QSharedPointer<CVC4ConstraintWriter> CVC4ConstraintWriterPtr;

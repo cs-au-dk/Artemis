@@ -62,8 +62,8 @@ public:
     virtual void visit(ConstantInteger* constantinteger, void* arg) = 0;
     virtual void visit(IntegerBinaryOperation* integerbinaryoperation, void* arg) = 0;
     virtual void visit(IntegerCoercion* integercoercion, void* arg) = 0;
-    virtual void visit(ConstantObject* obj, void* arg) = 0;
-    virtual void visit(ObjectBinaryOperation* obj, void* arg) = 0;
+    virtual void visit(ConstantObject* constantobject, void* arg) = 0;
+    virtual void visit(ObjectBinaryOperation* objectbinaryoperation, void* arg) = 0;
     virtual void visit(SymbolicString* symbolicstring, void* arg) = 0;
     virtual void visit(ConstantString* constantstring, void* arg) = 0;
     virtual void visit(StringBinaryOperation* stringbinaryoperation, void* arg) = 0;

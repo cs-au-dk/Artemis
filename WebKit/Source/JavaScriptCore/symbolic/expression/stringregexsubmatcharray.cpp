@@ -23,8 +23,9 @@
 namespace Symbolic
 {
 
-StringRegexSubmatchArray::StringRegexSubmatchArray(StringExpression* source, std::string* regexpattern) :
+StringRegexSubmatchArray::StringRegexSubmatchArray(unsigned int identifier, StringExpression* source, std::string* regexpattern) :
     Expression(),
+    m_identifier(identifier),
     m_source(source),
     m_regexpattern(regexpattern)
 {

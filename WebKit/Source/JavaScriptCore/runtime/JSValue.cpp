@@ -360,6 +360,9 @@ void JSValue::makeSymbolic(Symbolic::Expression* symbolicValue) {
     } else if (isFalse()) {
         symbolicImmediate->u.asInt64 = u.asInt64;
         u.asInt64 = (TagTypeSymbolicFalse | (int64_t)symbolicImmediate);
+    } else if (isNull()) {
+        symbolicImmediate->u.asInt64 = u.asInt64;
+        u.asInt64 = (TagTypeSymbolicNull | (int64_t)symbolicImmediate);
     } else {
         ASSERT(false);
     }
