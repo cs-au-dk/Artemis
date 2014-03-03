@@ -148,9 +148,7 @@ std::string visitPatternTerm(const JSC::Yarr::PatternTerm* term, bool& bol, bool
             (char)term->characterClass->m_matches[0] == '\n' &&
             (char)term->characterClass->m_matches[1] == '\r')  {
 
-        // CVC4 does not have any notion of "match all" or negative matches, so return a subset of
-        // "." in its place.
-        return "(re.union (re.range \"0\" \"9\") (re.range \"A\" \"Z\") (re.range \"a\" \"z\") \"_\" \"-\")";
+        return "re.allchar";
 
     }
 
