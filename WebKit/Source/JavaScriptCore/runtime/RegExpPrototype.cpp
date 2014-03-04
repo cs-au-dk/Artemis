@@ -105,6 +105,13 @@ EncodedJSValue JSC_HOST_CALL regExpProtoFuncExec(ExecState* exec)
     JSValue thisValue = exec->hostThisValue();
     if (!thisValue.inherits(&RegExpObject::s_info))
         return throwVMTypeError(exec);
+
+    // TODO(Artemis): In some cases the containing symbolic value is not the same as the symbolic value in the
+    // outer value. We should find a more permanent solution for handling symbolic strings.
+    if (exec->argument(0).isSymbolic() && exec->argument(0).isString()) {
+        exec->argument(0).toString(exec)->makeSymbolic((Symbolic::StringExpression*)exec->argument(0).asSymbolic());
+    }
+
     return JSValue::encode(asRegExpObject(thisValue)->exec(exec, exec->argument(0).toString(exec)));
 }
 

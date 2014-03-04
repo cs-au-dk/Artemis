@@ -145,7 +145,7 @@ JSC::JSValue SymbolicInterpreter::ail_op_binary(JSC::CallFrame* callFrame,
                 Symbolic::ObjectExpression* sx = x.generateObjectExpression(callFrame);
                 Symbolic::ObjectExpression* sy = y.generateObjectExpression(callFrame);
 
-                result.makeSymbolic(new ObjectBinaryOperation(sx, neq ? OBJ_EQ : OBJ_NEQ, sy));
+                result.makeSymbolic(new ObjectBinaryOperation(sx, neq ? OBJ_NEQ : OBJ_EQ, sy));
             }
 
             return result;

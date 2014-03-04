@@ -279,7 +279,44 @@ void RegExpObject::put(JSCell* cell, ExecState* exec, const Identifier& property
 
 JSValue RegExpObject::exec(ExecState* exec, JSString* string)
 {
-    if (MatchResult result = match(exec, string))
+#ifdef ARTEMIS
+    // Notice, this function supports the global pattern such that multiple calls to the regexp
+    // object with the same string iterates between matches.
+    //
+    // The current implementation prevents symbolic handling of regexes with the global flag after the first match
+
+    MatchResult result = match(exec, string);
+
+    if (string->isSymbolic() && (!regExp()->global() || result.end == 0)) {
+
+        Symbolic::StringRegexSubmatchArray* symbolicMatch = new Symbolic::StringRegexSubmatchArray(
+                    Symbolic::NEXT_SYMBOLIC_ID++,
+                    (Symbolic::StringExpression*)string->asSymbolic(),
+                    new std::string(regExp()->pattern().ascii().data()));
+
+        JSValue r;
+
+        if (result) {
+            RegExpMatchesArray* array = RegExpMatchesArray::create(exec, string, regExp(), result);
+            array->reifyAllPropertiesIfNecessary(exec);
+
+            for (int i = 0; i < array->length(); i++) {
+                JSValue v = array->getDirectOffset(i);
+                v.makeSymbolic(new Symbolic::StringRegexSubmatchArrayAt(symbolicMatch, i));
+                array->setIndex(exec->globalData(), i, v);
+            }
+
+            r = array;
+        } else {
+            r = jsNull();
+        }
+
+        r.makeSymbolic(new Symbolic::StringRegexSubmatchArrayMatch(symbolicMatch));
+        return r;
+    }
+#endif
+
+    if (result)
         return RegExpMatchesArray::create(exec, string, regExp(), result);
     return jsNull();
 }

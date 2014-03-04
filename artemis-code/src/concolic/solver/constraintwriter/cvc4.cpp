@@ -35,8 +35,8 @@
 namespace artemis
 {
 
-std::string OBJECT_NULL = "true";
-std::string OBJECT_NOT_NULL = "false";
+std::string OBJECT_NULL = "false";
+std::string OBJECT_NOT_NULL = "true";
 
 CVC4ConstraintWriter::CVC4ConstraintWriter()
     : SMTConstraintWriter()
@@ -299,12 +299,14 @@ void CVC4ConstraintWriter::visit(Symbolic::StringRegexSubmatchArray* exp, void* 
         std::string match = "ERROR";
         this->helperRegexTest(*exp->getRegexpattern(), mExpressionBuffer, &match);
 
+        // Match
         std::stringstream matchIdResult;
         matchIdResult << "rs" << exp->getIdentifier() << "RESULT";
 
         this->emitConst(matchIdResult.str(), Symbolic::OBJECT);
         mOutput << "(assert (= " << matchIdResult.str() << " " << match << "))" << std::endl;
 
+        // Index0
         std::stringstream matchIdIndex0;
         matchIdIndex0 << "rs" << exp->getIdentifier() << "INDEX0";
 
