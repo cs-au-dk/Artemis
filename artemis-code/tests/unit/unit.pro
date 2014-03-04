@@ -30,4 +30,5 @@ SOURCES += \
     src/gtest/gtest-all.cc \
     src/gmock/gmock-all.cc \
     src/strategies/inputgenerator/form/constantstringforminputgeneratortest.cpp \
-    src/concolic/solver/cvc4regextest.cpp
+    src/concolic/solver/cvc4regextest.cpp \
+    src/concolic/solver/cvc4solvertest.cpp

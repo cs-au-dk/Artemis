@@ -19,6 +19,7 @@
 
 #include <fstream>
 #include <map>
+#include <set>
 
 #include <QSharedPointer>
 
@@ -49,8 +50,22 @@ protected:
     virtual void visit(Symbolic::StringRegexSubmatchIndex* submatchIndex, void* args);
     virtual void visit(Symbolic::StringLength* stringlength, void* args);
 
+    virtual void visit(Symbolic::StringRegexSubmatchArray* exp, void* args);
+    virtual void visit(Symbolic::StringRegexSubmatchArrayAt* exp, void* args);
+    virtual void visit(Symbolic::StringRegexSubmatchArrayMatch* exp, void* args);
+
+    virtual void visit(Symbolic::ConstantObject* obj, void* arg);
+    virtual void visit(Symbolic::ObjectBinaryOperation* obj, void* arg);
+
     virtual void preVisitPathConditionsHook();
     virtual void postVisitPathConditionsHook();
+
+    void helperRegexTest(const std::string& regex, const std::string& expression,
+                                               std::string* outMatch);
+    void helperRegexMatchPositive(const std::string& regex, const std::string& expression,
+                                  std::string* outPre, std::string* outMatch, std::string* outPost);
+
+    std::set<unsigned int> m_singletonCompilations;
 };
 
 typedef QSharedPointer<CVC4ConstraintWriter> CVC4ConstraintWriterPtr;

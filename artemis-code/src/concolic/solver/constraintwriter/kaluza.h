@@ -53,6 +53,8 @@ public:
 
 private:
 
+    void visit(Symbolic::ConstantObject* obj, void* arg);
+    void visit(Symbolic::ObjectBinaryOperation* obj, void* arg);
     void visit(Symbolic::SymbolicInteger* symbolicinteger, void* args);
     void visit(Symbolic::ConstantInteger* constantinteger, void* args);
     void visit(Symbolic::IntegerBinaryOperation* integerbinaryoperation, void* args);
@@ -65,6 +67,9 @@ private:
     void visit(Symbolic::StringRegexReplace* stringregexreplace, void* args);
     void visit(Symbolic::StringRegexSubmatch* submatch, void* arg);
     void visit(Symbolic::StringRegexSubmatchIndex* submatchIndex, void* arg);
+    void visit(Symbolic::StringRegexSubmatchArray* exp, void* arg);
+    void visit(Symbolic::StringRegexSubmatchArrayAt* exp, void* arg);
+    void visit(Symbolic::StringRegexSubmatchArrayMatch* exp, void* arg);
     void visit(Symbolic::StringReplace* stringreplace, void* args);
     void visit(Symbolic::SymbolicBoolean* symbolicboolean, void* args);
     void visit(Symbolic::ConstantBoolean* constantboolean, void* args);

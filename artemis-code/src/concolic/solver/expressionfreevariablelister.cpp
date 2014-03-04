@@ -20,6 +20,16 @@ namespace artemis
 {
 
 
+void ExpressionFreeVariableLister::visit(Symbolic::ConstantObject* obj, void* arg)
+{
+}
+
+void ExpressionFreeVariableLister::visit(Symbolic::ObjectBinaryOperation* obj, void* arg)
+{
+    obj->getLhs()->accept(this, arg);
+    obj->getRhs()->accept(this, arg);
+}
+
 void ExpressionFreeVariableLister::visit(Symbolic::SymbolicInteger* symbolicinteger, void* arg)
 {
     mResult.insert(QString(symbolicinteger->getSource().getIdentifier().c_str()), symbolicinteger->getSource().getIdentifierMethod());
@@ -58,6 +68,21 @@ void ExpressionFreeVariableLister::visit(Symbolic::StringBinaryOperation* string
 void ExpressionFreeVariableLister::visit(Symbolic::StringRegexReplace* stringregexreplace, void* arg)
 {
     stringregexreplace->getSource()->accept(this, arg);
+}
+
+void ExpressionFreeVariableLister::visit(Symbolic::StringRegexSubmatchArray* exp, void* arg)
+{
+    exp->getSource()->accept(this, arg);
+}
+
+void ExpressionFreeVariableLister::visit(Symbolic::StringRegexSubmatchArrayAt* exp, void* arg)
+{
+    exp->getMatch()->accept(this, arg);
+}
+
+void ExpressionFreeVariableLister::visit(Symbolic::StringRegexSubmatchArrayMatch* exp, void* arg)
+{
+    exp->getMatch()->accept(this, arg);
 }
 
 void ExpressionFreeVariableLister::visit(Symbolic::StringRegexSubmatch* submatch, void* arg)

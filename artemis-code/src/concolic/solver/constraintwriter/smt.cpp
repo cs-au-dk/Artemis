@@ -58,11 +58,6 @@ bool SMTConstraintWriter::write(PathConditionPtr pathCondition, std::string outp
     mError = false;
 
     mOutput.open(outputFile.data());
-    mConstriantLog.open("/tmp/constraintlog", std::ofstream::out | std::ofstream::app);
-
-    mConstriantLog << "********************************************************************************\n";
-    mConstriantLog << "Wrote Constraint at " << QDateTime::currentDateTime().toString("dd-MM-yy-hh-mm-ss").toStdString() << "\n";
-    mConstriantLog << "\n";
 
     preVisitPathConditionsHook();
 
@@ -76,35 +71,22 @@ bool SMTConstraintWriter::write(PathConditionPtr pathCondition, std::string outp
         mOutput << "(assert (= " << mExpressionBuffer;
         mOutput << (pathCondition->get(i).second ? " true" : " false");
         mOutput << "))\n";
-
-        mConstriantLog << "(assert (= " << mExpressionBuffer;
-        mConstriantLog << (pathCondition->get(i).second ? " true" : " false");
-        mConstriantLog << "))\n";
-
     }
 
     postVisitPathConditionsHook();
 
-    mConstriantLog << "\n";
-
     mOutput.close();
 
     if (mError) {
-        std::string error = std::string("Artemis is unable generate constraints - ") + mErrorReason + ".";
-        Log::warning(error);
-        mConstriantLog << error << std::endl;
         return false;
     }
 
     for (std::map<std::string, Symbolic::Type>::iterator iter = mTypemap.begin(); iter != mTypemap.end(); iter++) {
         if (iter->second == Symbolic::TYPEERROR) {
-            Log::warning("Artemis is unable generate constraints - a type-error was found.");
-            mConstriantLog << "Artemis is unable generate constraints - a type-error was found." << std::endl;
+            mErrorReason = "Artemis is unable generate constraints - a type-error was found.";
             return false;
         }
     }
-
-    mConstriantLog.close();
 
     return true;
 }
@@ -290,6 +272,8 @@ void SMTConstraintWriter::visit(Symbolic::StringRegexSubmatch* submatch, void* a
     error("NO SYMBOLIC STRING REGEX SUBMATCH SUPPORT");
 }
 
+
+
 /** Other Operations **/
 
 void SMTConstraintWriter::visit(Symbolic::StringRegexReplace* regex, void* args)
@@ -300,6 +284,31 @@ void SMTConstraintWriter::visit(Symbolic::StringRegexReplace* regex, void* args)
 void SMTConstraintWriter::visit(Symbolic::StringReplace* replace, void* args)
 {
     error("NO SYMBOLIC STRING REPLACE SUPPORT");
+}
+
+void SMTConstraintWriter::visit(Symbolic::StringRegexSubmatchArray* exp, void* arg)
+{
+    error("NO SYMBOLIC STRING REGEX SUBMATCH (ARRAY) SUPPORT");
+}
+
+void SMTConstraintWriter::visit(Symbolic::StringRegexSubmatchArrayAt* exp, void* arg)
+{
+    error("NO SYMBOLIC STRING REGEX SUBMATCH (ARRAY) SUPPORT");
+}
+
+void SMTConstraintWriter::visit(Symbolic::StringRegexSubmatchArrayMatch* exp, void* arg)
+{
+    error("NO SYMBOLIC STRING REGEX SUBMATCH (ARRAY) SUPPORT");
+}
+
+void SMTConstraintWriter::visit(Symbolic::ConstantObject* obj, void* arg)
+{
+    error("NO SYMBOLIC NULL/OBJECT SUPPORT");
+}
+
+void SMTConstraintWriter::visit(Symbolic::ObjectBinaryOperation* obj, void* arg)
+{
+    error("NO SYMBOLIC NULL/OBJECT SUPPORT");
 }
 
 void SMTConstraintWriter::visit(Symbolic::StringLength* stringlength, void* args)
@@ -364,11 +373,10 @@ void SMTConstraintWriter::error(std::string reason)
 void SMTConstraintWriter::emitConst(const std::string& identifier, Symbolic::Type type)
 {
     static const char* typeStrings[] = {
-        "Int", "Bool", "String", "ERROR"
+        "Int", "Bool", "String", "Bool", "ERROR"
     };
 
     mOutput << "(declare-const " << identifier << " " << typeStrings[type] << ")\n";
-    mConstriantLog << "(declare-const " << identifier << " " << typeStrings[type] << ")\n";
 }
 
 std::string SMTConstraintWriter::emitAndReturnNewTemporary(Symbolic::Type type)

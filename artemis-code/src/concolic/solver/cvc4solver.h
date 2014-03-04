@@ -19,6 +19,8 @@
 
 #include "solver.h"
 
+#include <QString>
+
 namespace artemis
 {
 
@@ -31,8 +33,13 @@ class CVC4Solver : public Solver
 public:
 
     CVC4Solver();
+    ~CVC4Solver();
 
     SolutionPtr solve(PathConditionPtr pc);
+
+private:
+    SolutionPtr emitError(std::ofstream& clog, const std::string& reason);
+    void emitConstraints(std::ofstream& constraintIndex, const QString& identifier, bool sat);
 
 };
 

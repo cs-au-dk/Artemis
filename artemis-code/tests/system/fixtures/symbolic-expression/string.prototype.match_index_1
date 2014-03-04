@@ -1,0 +1,4 @@
+TEST PC: ((StringRegexSubmatchArrayAt(StringRegexSubmatchArray(SymbolicString,"(\w?)"),1)==ConstantString)==ConstantBoolean)
+if (x.match(/(\w?)/)[1] == 'testinput1') {
+    alert(x);
+}

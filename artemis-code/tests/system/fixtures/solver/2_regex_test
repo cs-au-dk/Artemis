@@ -1,4 +1,0 @@
-var regex = /foo/
-if (regex.test(foo)) {
-    alert(foo);
-}

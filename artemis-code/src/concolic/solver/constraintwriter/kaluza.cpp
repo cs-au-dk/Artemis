@@ -146,6 +146,20 @@ void KaluzaConstraintWriter::visit(Symbolic::StringBinaryOperation* stringbinary
     mOutput << mIdentifierStore << " := " << lhs << " " << opToString(stringbinaryoperation->getOp()) << " " << rhs << ";\n";
 }
 
+void KaluzaConstraintWriter::visit(Symbolic::ConstantObject* obj, void* arg)
+{
+    mError = true;
+    mErrorReason = "Null objects not supported";
+    mIdentifierStore = "ERROR";
+}
+
+void KaluzaConstraintWriter::visit(Symbolic::ObjectBinaryOperation* obj, void* arg)
+{
+    mError = true;
+    mErrorReason = "Null objects not supported";
+    mIdentifierStore = "ERROR";
+}
+
 void KaluzaConstraintWriter::visit(Symbolic::StringRegexReplace*, void* args)
 {
     mError = true;
@@ -161,6 +175,27 @@ void KaluzaConstraintWriter::visit(Symbolic::StringRegexSubmatch* submatch, void
 }
 
 void KaluzaConstraintWriter::visit(Symbolic::StringRegexSubmatchIndex* submatchIndex, void* arg)
+{
+    mError = true;
+    mErrorReason = "Regex constraints not supported";
+    mIdentifierStore = "ERROR";
+}
+
+void KaluzaConstraintWriter::visit(Symbolic::StringRegexSubmatchArray* exp, void* arg)
+{
+    mError = true;
+    mErrorReason = "Regex constraints not supported";
+    mIdentifierStore = "ERROR";
+}
+
+void KaluzaConstraintWriter::visit(Symbolic::StringRegexSubmatchArrayAt* exp, void* arg)
+{
+    mError = true;
+    mErrorReason = "Regex constraints not supported";
+    mIdentifierStore = "ERROR";
+}
+
+void KaluzaConstraintWriter::visit(Symbolic::StringRegexSubmatchArrayMatch* exp, void* arg)
 {
     mError = true;
     mErrorReason = "Regex constraints not supported";

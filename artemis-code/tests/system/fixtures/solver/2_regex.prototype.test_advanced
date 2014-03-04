@@ -1,0 +1,4 @@
+var regex = /fo*/
+if (regex.test(foo)) {
+    alert(foo);
+}

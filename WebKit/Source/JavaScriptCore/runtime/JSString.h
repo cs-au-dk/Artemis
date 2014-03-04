@@ -177,6 +177,12 @@ namespace JSC {
         inline void makeSymbolic(Symbolic::StringExpression* symbolic) {
             m_symbolic = symbolic;
         }
+
+        Symbolic::StringExpression* asSymbolic() {
+            ASSERT(isSymbolic());
+            return m_symbolic;
+        }
+
 #endif
     protected:
         bool isRope() const { return m_value.isNull(); }

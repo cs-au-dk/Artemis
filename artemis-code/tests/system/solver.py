@@ -59,7 +59,7 @@ def _run_test(raw_filename, dryrun=False):
     assert report.get('WebKit::alerts', 0) == 1, "Execution using inputs from the solver did not reach a print statement... %s" % new_fields
 
     # negative case
-
+    
     new_fields = []
 
     for field_name in fields:
@@ -67,7 +67,7 @@ def _run_test(raw_filename, dryrun=False):
         if value == 'False' or value == '""':
             value = ''
         new_fields.append("#%s=%s" % (field_name, value))
-        
+
     report = execute_artemis(name, "%s/%s" % (WEBSERVER_URL, test_filename),                                                                            
                              iterations=2,              
                              fields=new_fields,
@@ -76,7 +76,7 @@ def _run_test(raw_filename, dryrun=False):
 
     assert report.get('Concolic::Solver::ConstraintsSolvedAsUNSAT', 0) == 0, "NEGATED execution returned as UNSAT"
     assert report.get('Concolic::Solver::ConstraintsSolved', 0) == 1, "NEGATED execution did not solve a constraint"
-    assert report.get('WebKit::alerts', 0) == 0, "NEGATED execution REACHED a print statement when it should not"
+    assert report.get('WebKit::alerts', 0) == 0, "NEGATED execution REACHED a print statement when it should not using %s" % new_fields
 
 
 def _insert_test_into_template(path, filename):

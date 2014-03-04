@@ -291,7 +291,7 @@ namespace Symbolic
 
 // Move this to another file?
 enum Type {
-	INT, BOOL, STRING, TYPEERROR
+	INT, BOOL, STRING, OBJECT, TYPEERROR
 };
 
 """)

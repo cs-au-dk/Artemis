@@ -27,6 +27,22 @@ ExpressionPrinter::ExpressionPrinter()
 {
 }
 
+void ExpressionPrinter::visit(Symbolic::ConstantObject* obj, void* arg)
+{
+    m_result += "ConstantObject";
+}
+
+void ExpressionPrinter::visit(Symbolic::ObjectBinaryOperation* obj, void* arg)
+{
+    m_result += "(";
+    obj->getLhs()->accept(this);
+    m_result += " ";
+    m_result += opToString(obj->getOp());
+    m_result += " ";
+    obj->getRhs()->accept(this);
+    m_result += ")";
+}
+
 void ExpressionPrinter::visit(Symbolic::SymbolicInteger* symbolicinteger, void* args)
 {
     m_result += "SymbolicInteger";
@@ -114,6 +130,34 @@ void ExpressionPrinter::visit(Symbolic::StringRegexSubmatchIndex* submatchIndex,
     m_result += ", \"";
     m_result += submatchIndex->getRegexpattern()->data();
     m_result += "\" )";
+}
+
+void ExpressionPrinter::visit(Symbolic::StringRegexSubmatchArray* exp, void* arg)
+{
+    m_result += "StringRegexSubmatchArray( ";
+    exp->getSource()->accept(this);
+    m_result += ", \"";
+    m_result += exp->getRegexpattern()->data();
+    m_result += "\" )";
+}
+
+void ExpressionPrinter::visit(Symbolic::StringRegexSubmatchArrayAt* exp, void* arg)
+{
+    std::stringstream s;
+    s << exp->getGroup();
+
+    m_result += "StringRegexSubmatchArrayAt( ";
+    exp->getMatch()->accept(this);
+    m_result += ", ";
+    m_result += s.str();
+    m_result += " )";
+}
+
+void ExpressionPrinter::visit(Symbolic::StringRegexSubmatchArrayMatch* exp, void* arg)
+{
+    m_result += "StringRegexSubmatchArrayMatch( ";
+    exp->getMatch()->accept(this);
+    m_result += ")";
 }
 
 void ExpressionPrinter::visit(Symbolic::StringCoercion* stringcoercion, void* args)

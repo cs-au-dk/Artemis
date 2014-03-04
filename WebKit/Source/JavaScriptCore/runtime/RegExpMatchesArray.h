@@ -68,13 +68,15 @@ namespace JSC {
 
         static const unsigned StructureFlags = OverridesGetOwnPropertySlot | OverridesVisitChildren | OverridesGetPropertyNames | Base::StructureFlags;
 
-    private:
+        // Artemis; this function is made public such that we can initialize all properties and inject symbolic values
+    public:
         ALWAYS_INLINE void reifyAllPropertiesIfNecessary(ExecState* exec)
         {
             if (m_state != ReifiedAll)
                 reifyAllProperties(exec);
         }
 
+    private:
         ALWAYS_INLINE void reifyMatchPropertyIfNecessary(ExecState* exec)
         {
             if (m_state == ReifiedNone)

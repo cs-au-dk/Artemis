@@ -44,6 +44,7 @@
 #include <wtf/unicode/Collator.h>
 #ifdef ARTEMIS
 #include "JavaScriptCore/symbolic/expr.h"
+#include "JavaScriptCore/symbolic/symbolicinterpreter.h"
 #endif 
 using namespace WTF;
 
@@ -920,8 +921,40 @@ EncodedJSValue JSC_HOST_CALL stringProtoFuncMatch(ExecState* exec)
     RegExpConstructor* regExpConstructor = exec->lexicalGlobalObject()->regExpConstructor();
     MatchResult result = regExpConstructor->performMatch(*globalData, regExp, string, s, 0);
     // case without 'g' flag is handled like RegExp.prototype.exec
-    if (!global)
+    if (!global) {
+
+#ifdef ARTEMIS
+        if (thisValue.isSymbolic()) {
+
+            Symbolic::StringRegexSubmatchArray* symbolicMatch = new Symbolic::StringRegexSubmatchArray(
+                        Symbolic::NEXT_SYMBOLIC_ID++,
+                        (Symbolic::StringExpression*)thisValue.asSymbolic(),
+                        new std::string(regExp->pattern().ascii().data()));
+
+            JSValue r;
+
+            if (result) {
+                RegExpMatchesArray* array = RegExpMatchesArray::create(exec, string, regExp, result);
+                array->reifyAllPropertiesIfNecessary(exec);
+
+                for (int i = 0; i < array->length(); i++) {
+                    JSValue v = array->getDirectOffset(i);
+                    v.makeSymbolic(new Symbolic::StringRegexSubmatchArrayAt(symbolicMatch, i));
+                    array->setIndex(exec->globalData(), i, v);
+                }
+
+                r = array;
+            } else {
+                r = jsNull();
+            }
+
+            r.makeSymbolic(new Symbolic::StringRegexSubmatchArrayMatch(symbolicMatch));
+            return JSValue::encode(r);
+        }
+#endif
+
         return JSValue::encode(result ? RegExpMatchesArray::create(exec, string, regExp, result) : jsNull());
+    }
 
     // return array of matches
     MarkedArgumentBuffer list;

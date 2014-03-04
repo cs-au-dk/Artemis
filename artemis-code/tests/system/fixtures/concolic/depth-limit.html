@@ -17,7 +17,7 @@ TEST Concolic::Solver::ConstraintsSolvedAsUNSAT = 14
 		function validate() {
 			var y = document.getElementById("testinput").value;
 
-			// This example should be solvable with --concolic-unlimited-depth enable but not solvable without it.
+			// This example should be solvable with --concolic-unlimited-depth enabled but not solvable without it.
 			// The assertions at the top are designed to cover the default case (depth limit of 15 (5*3 passes)).
 			
 			if(!y) { alert("Error!"); return false; }

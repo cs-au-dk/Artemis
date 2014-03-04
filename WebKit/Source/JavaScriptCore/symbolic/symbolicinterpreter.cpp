@@ -36,7 +36,8 @@
 namespace Symbolic
 {
 
-unsigned int NEXT_SYMBOLIC_ID = 0; // backwards compatibility, used to generate sequential symbolic IDs
+// Global used to generate "unique" identifiers for crossreferencing symbolic expressions and values
+unsigned int NEXT_SYMBOLIC_ID = 0;
 
 const char* opToString(OP op) {
     static const char* OPStrings[] = {
@@ -135,12 +136,20 @@ JSC::JSValue SymbolicInterpreter::ail_op_binary(JSC::CallFrame* callFrame,
         }
 
         // Case 3: Object nullness
-        if (x.isUndefinedOrNull()) {
-            return result;
-        }
+        if (x.isUndefinedOrNull() || y.isUndefinedOrNull()) {
 
-        if (y.isUndefinedOrNull()) {
+            // We only support the case where both x and y are objects or null/undefined.
+            // Mixing null/undefined and other types are not supported
+
+            if ((x.isUndefinedOrNull() || x.isObject()) && (y.isUndefinedOrNull() || y.isObject())) {
+                Symbolic::ObjectExpression* sx = x.generateObjectExpression(callFrame);
+                Symbolic::ObjectExpression* sy = y.generateObjectExpression(callFrame);
+
+                result.makeSymbolic(new ObjectBinaryOperation(sx, neq ? OBJ_NEQ : OBJ_EQ, sy));
+            }
+
             return result;
+
         }
 
         // Case 4: Object identity

@@ -21,6 +21,10 @@
 namespace artemis
 {
 
+void ExpressionValuePrinter::visit(Symbolic::ConstantObject* obj, void* arg)
+{
+    m_result += obj->getIsnull() ? "null" : "not-null";
+}
 
 void ExpressionValuePrinter::visit(Symbolic::ConstantInteger* constantinteger, void* arg)
 {

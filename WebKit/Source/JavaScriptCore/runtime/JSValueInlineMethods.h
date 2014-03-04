@@ -383,7 +383,12 @@ namespace JSC {
 
     inline bool JSValue::isEmpty() const
     {
+#ifdef ARTEMIS
+        return getInt64() == ValueEmpty;
+#else
         return u.asInt64 == ValueEmpty;
+#endif
+
     }
 
     inline bool JSValue::isUndefined() const

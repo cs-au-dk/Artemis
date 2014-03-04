@@ -33,6 +33,8 @@ public:
     ExpressionPrinter();
     virtual ~ExpressionPrinter(){}
 
+    void visit(Symbolic::ConstantObject* obj, void* arg);
+    void visit(Symbolic::ObjectBinaryOperation* obj, void* arg);
     void visit(Symbolic::SymbolicInteger* symbolicinteger, void* arg);
     void visit(Symbolic::ConstantInteger* constantinteger, void* arg);
     void visit(Symbolic::IntegerBinaryOperation* integerbinaryoperation, void* arg);
@@ -46,6 +48,9 @@ public:
     void visit(Symbolic::StringReplace* stringreplace, void* arg);
     void visit(Symbolic::StringRegexSubmatch* submatch, void* arg);
     void visit(Symbolic::StringRegexSubmatchIndex* submatchIndex, void* arg);
+    void visit(Symbolic::StringRegexSubmatchArray* exp, void* arg);
+    void visit(Symbolic::StringRegexSubmatchArrayAt* exp, void* arg);
+    void visit(Symbolic::StringRegexSubmatchArrayMatch* exp, void* arg);
     void visit(Symbolic::SymbolicBoolean* symbolicboolean, void* arg);
     void visit(Symbolic::ConstantBoolean* constantboolean, void* arg);
     void visit(Symbolic::BooleanCoercion* booleancoercion, void* arg);

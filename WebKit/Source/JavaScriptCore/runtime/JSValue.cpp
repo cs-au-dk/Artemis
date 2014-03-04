@@ -360,6 +360,9 @@ void JSValue::makeSymbolic(Symbolic::Expression* symbolicValue) {
     } else if (isFalse()) {
         symbolicImmediate->u.asInt64 = u.asInt64;
         u.asInt64 = (TagTypeSymbolicFalse | (int64_t)symbolicImmediate);
+    } else if (isNull()) {
+        symbolicImmediate->u.asInt64 = u.asInt64;
+        u.asInt64 = (TagTypeSymbolicNull | (int64_t)symbolicImmediate);
     } else {
         ASSERT(false);
     }
@@ -379,6 +382,10 @@ Symbolic::IntegerExpression* JSValue::generateIntegerExpression(ExecState* exec)
 
 Symbolic::StringExpression* JSValue::generateStringExpression(ExecState* exec){
     return this->isSymbolic()?(Symbolic::StringExpression*) this->asSymbolic(): new Symbolic::ConstantString(new std::string(this->toPrimitive(exec).toUString(exec).ascii().data()));
+}
+
+Symbolic::ObjectExpression* JSValue::generateObjectExpression(ExecState* exec){
+    return this->isSymbolic()?(Symbolic::ObjectExpression*) this->asSymbolic(): new Symbolic::ConstantObject(this->isUndefinedOrNull());
 }
 
 Symbolic::IntegerExpression* JSValue::generateIntegerCoercionExpression(ExecState* exec){

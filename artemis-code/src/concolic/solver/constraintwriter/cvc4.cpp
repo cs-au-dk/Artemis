@@ -35,6 +35,9 @@
 namespace artemis
 {
 
+std::string OBJECT_NULL = "false";
+std::string OBJECT_NOT_NULL = "true";
+
 CVC4ConstraintWriter::CVC4ConstraintWriter()
     : SMTConstraintWriter()
 {
@@ -166,58 +169,52 @@ void CVC4ConstraintWriter::visit(Symbolic::StringCharAt* stringcharat, void* arg
     mExpressionType = Symbolic::STRING;
 }
 
-void CVC4ConstraintWriter::visit(Symbolic::StringRegexReplace* regex, void* args)
+void CVC4ConstraintWriter::visit(Symbolic::StringRegexReplace* obj, void* args)
 {
-    // special case input filtering (filters matching X and replacing with "")
-    if (regex->getReplace()->compare("") == 0) {
+    /**
+      * TODO:
+      *
+      * Support the negative case.
+      */
 
-        // right now, only support a very limited number of whitespace filters
+    obj->getSource()->accept(this);
 
-        bool replaceSpaces = regex->getRegexpattern()->compare("/ /g") == 0 ||
-                regex->getRegexpattern()->compare("/ /") == 0;
-        bool replaceNewlines = regex->getRegexpattern()->compare("/\\n/g") == 0 ||
-                regex->getRegexpattern()->compare("/\\r/") == 0 ||
-                regex->getRegexpattern()->compare("/\\r\\n/") == 0;
-
-        if (replaceSpaces || replaceNewlines || true) { // TODO: Hack, always filter away these for now
-
-            regex->getSource()->accept(this, args); // send args through, allow local coercions
-
-            // You could use the following block to prevent certain characters to be used,
-            // but this would be problematic wrt. possible coercions, so we just ignore these filtering regexes.
-
-            //if(!checkType(Symbolic::STRING)){
-            //    error("String regex operation on non-string");
-            //    return;
-            //}
-            //
-            //if(replaceSpaces){
-            //    mOutput << "(assert (= (Contains " << mExpressionBuffer << " \" \") false))\n";
-            //    mConstriantLog << "(assert (= (Contains " << mExpressionBuffer << " \" \") false))\n";
-            //}
-
-            // In fact the solver currently cannot return results which contain newlines,
-            // so we can completely ignore the case of replaceNewlines.
-
-            // to be explicit, we just let the parent buffer flow down
-            mExpressionBuffer = mExpressionBuffer;
-            mExpressionType = mExpressionType;
-
-            statistics()->accumulate("Concolic::Solver::RegexSuccessfullyTranslated", 1);
-
-            return;
-        }
-
+    if(!checkType(Symbolic::STRING)){
+        error("StringRegexReplace operation on non-string");
+        return;
     }
 
+    // special case input filtering (filters matching X and replacing with "")
+    if (obj->getReplace()->compare("") == 0) {
 
-    statistics()->accumulate("Concolic::Solver::RegexNotTranslated", 1);
-    error("Regex constraints not supported");
+        // ignore the filter
+        mExpressionBuffer = mExpressionBuffer;
+        mExpressionType = mExpressionType;
+
+        statistics()->accumulate("Concolic::Solver::RegexSuccessfullyTranslated", 1);
+
+        return;
+    }
+
+    std::string pre, match, post;
+    this->helperRegexMatchPositive(*obj->getRegexpattern(), mExpressionBuffer, &pre, &match, &post);
+
+    std::stringstream out;
+
+    if (!pre.empty() || !post.empty()) {
+        out << "(str.++ " << pre << " \"" << *obj->getReplace() << "\" " << post << ")";
+    } else {
+        out << "\"" << *obj->getReplace() << "\"";
+    }
+
+    mExpressionBuffer = out.str();
+    mExpressionType = Symbolic::STRING;
 }
 
 void CVC4ConstraintWriter::visit(Symbolic::StringReplace* replace, void* args)
 {
     replace->getSource()->accept(this);
+
     if(!checkType(Symbolic::STRING)){
         error("String replace operation on non-string");
         return;
@@ -230,50 +227,168 @@ void CVC4ConstraintWriter::visit(Symbolic::StringReplace* replace, void* args)
     mExpressionType = Symbolic::STRING;
 }
 
-void CVC4ConstraintWriter::visit(Symbolic::StringRegexSubmatch* submatch, void* args)
+/**
+ * Used by
+ *
+ * regex.prototype.test
+ */
+void CVC4ConstraintWriter::visit(Symbolic::StringRegexSubmatch* obj, void* args)
 {
-    submatch->getSource()->accept(this);
+    obj->getSource()->accept(this);
+
     if(!checkType(Symbolic::STRING)){
         error("String char at operation on non-string");
         return;
     }
 
-    std::string pre = this->emitAndReturnNewTemporary(Symbolic::STRING);
-    std::string match = this->emitAndReturnNewTemporary(Symbolic::STRING);
-    std::string post = this->emitAndReturnNewTemporary(Symbolic::STRING);
+    std::string match = "ERROR";
+    this->helperRegexTest(*obj->getRegexpattern(), mExpressionBuffer, &match);
 
-    mOutput << "(assert (= " << mExpressionBuffer << " (str.++ " << pre << " " << match << " " << post << ")))" << std::endl;
-
-    std::ostringstream strs;
-
-    try {
-        strs << "(str.in.re " << match << " " << CVC4RegexCompiler::compile(*submatch->getRegexpattern()) << ")";
-        mExpressionBuffer = strs.str();
-
-        mOutput << "; Regex compiler: " << *submatch->getRegexpattern() << " -> " << strs.str() << std::endl;
-
-    } catch (CVC4RegexCompilerException ex) {
-        std::stringstream err;
-        err << "The CVC4RegexCompiler failed when compiling the regex " << *submatch->getRegexpattern() << " with the error message: " << ex.what();
-        error(err.str());
-    }
-
+    mExpressionBuffer = match;
     mExpressionType = Symbolic::BOOL;
 }
 
-void CVC4ConstraintWriter::visit(Symbolic::StringRegexSubmatchIndex* submatchIndex, void* args)
+void CVC4ConstraintWriter::visit(Symbolic::StringRegexSubmatchIndex* obj, void* args)
 {
-    submatchIndex->getSource()->accept(this);
+    obj->getSource()->accept(this);
+
     if(!checkType(Symbolic::STRING)){
         error("String submatch index operation on non-string");
         return;
     }
 
-    /*
-     * TODO this is currently not supported, or we don't know how to support it, in CVC4.
-     */
+    std::string pre, match, post;
+    this->helperRegexMatchPositive(*obj->getRegexpattern(), mExpressionBuffer, &pre, &match, &post);
 
-    error("SUBMATCH INDEX NOT SUPPORTED");
+    if (pre.empty()) {
+        mExpressionBuffer = "0";
+    } else {
+        std::ostringstream out;
+        out << "(str.len " << pre << ")";
+        mExpressionBuffer = out.str();
+    }
+
+    mExpressionType = Symbolic::INT;
+
+}
+
+void CVC4ConstraintWriter::visit(Symbolic::StringRegexSubmatchArray* exp, void* arg)
+{
+    /**
+      * TODO
+      *
+      * Add proper support for inspecting submatches (group 0...n)
+      * - Accessing group 0 returns the source string, and not the match
+      * - Accessing group 1...n throws an error
+      *
+      * A proper implementation will use helperRegexMatch (adds support for
+      * group 0) and extends it to support sub matches (group 1...n).
+      *
+      */
+
+    exp->getSource()->accept(this);
+
+    if(!checkType(Symbolic::STRING)){
+        error("String regex submation operation on non-string");
+        return;
+    }
+
+    if (m_singletonCompilations.find(exp->getIdentifier()) == m_singletonCompilations.end()) {
+        m_singletonCompilations.insert(exp->getIdentifier());
+
+        std::string match = "ERROR";
+        this->helperRegexTest(*exp->getRegexpattern(), mExpressionBuffer, &match);
+
+        // Match
+        std::stringstream matchIdResult;
+        matchIdResult << "rs" << exp->getIdentifier() << "RESULT";
+
+        this->emitConst(matchIdResult.str(), Symbolic::OBJECT);
+        mOutput << "(assert (= " << matchIdResult.str() << " " << match << "))" << std::endl;
+
+        // Index0
+        std::stringstream matchIdIndex0;
+        matchIdIndex0 << "rs" << exp->getIdentifier() << "INDEX0";
+
+        this->emitConst(matchIdIndex0.str(), Symbolic::STRING);
+        mOutput << "(assert (= " << matchIdIndex0.str() << " " << mExpressionBuffer << "))" << std::endl;
+    }
+
+    mExpressionType = Symbolic::OBJECT;
+
+}
+
+void CVC4ConstraintWriter::visit(Symbolic::StringRegexSubmatchArrayAt* exp, void* arg)
+{
+    exp->getMatch()->accept(this);
+
+    if(!checkType(Symbolic::OBJECT)){
+        error("Array match operation (@) on non-object");
+        return;
+    }
+
+    if (exp->getGroup() != 0) {
+        error("Array match operation does not support accessing groups > 0");
+        return;
+    }
+
+    std::stringstream matchIdIndex0;
+    matchIdIndex0 << "rs" << exp->getMatch()->getIdentifier() << "INDEX0";
+
+    mExpressionBuffer = matchIdIndex0.str();
+    mExpressionType = Symbolic::OBJECT;
+}
+
+void CVC4ConstraintWriter::visit(Symbolic::StringRegexSubmatchArrayMatch* exp, void* arg)
+{
+    exp->getMatch()->accept(this);
+
+    if(!checkType(Symbolic::OBJECT)){
+        error("Array match operation (match value) on non-object");
+        return;
+    }
+
+    std::stringstream matchIdResult;
+    matchIdResult << "rs" << exp->getMatch()->getIdentifier() << "RESULT";
+
+    mExpressionBuffer = matchIdResult.str();
+    mExpressionType = Symbolic::OBJECT;
+}
+
+void CVC4ConstraintWriter::visit(Symbolic::ConstantObject* obj, void* arg)
+{
+    mExpressionType = Symbolic::OBJECT;
+    mExpressionBuffer = obj->getIsnull() ? OBJECT_NULL : OBJECT_NOT_NULL;
+}
+
+void CVC4ConstraintWriter::visit(Symbolic::ObjectBinaryOperation* obj, void* arg)
+{
+    static const char* op[] = {
+        "(= ", "(= (= "
+    };
+
+    static const char* opclose[] = {
+        ")", ") false)"
+    };
+
+    obj->getLhs()->accept(this);
+    std::string lhs = mExpressionBuffer;
+    if(!checkType(Symbolic::OBJECT)){
+        error("Object operation with incorrectly typed LHS");
+        return;
+    }
+
+    obj->getRhs()->accept(this);
+    std::string rhs = mExpressionBuffer;
+    if(!checkType(Symbolic::OBJECT)){
+        error("Object operation with incorrectly typed RHS");
+        return;
+    }
+
+    std::ostringstream strs;
+    strs << op[obj->getOp()] << lhs << " " << rhs << opclose[obj->getOp()];
+    mExpressionBuffer = strs.str();
+    mExpressionType = opGetType(obj->getOp());
 }
 
 void CVC4ConstraintWriter::visit(Symbolic::StringLength* stringlength, void* args)
@@ -288,6 +403,117 @@ void CVC4ConstraintWriter::visit(Symbolic::StringLength* stringlength, void* arg
     strs << "(str.len " << mExpressionBuffer << ")";
     mExpressionBuffer = strs.str();
     mExpressionType = Symbolic::INT;
+}
+
+void CVC4ConstraintWriter::helperRegexTest(const std::string& regex, const std::string& expression,
+                                           std::string* outMatch)
+{
+    bool bol, eol = false;
+    std::string cvc4regex;
+
+    try {
+        cvc4regex = CVC4RegexCompiler::compile(regex, bol, eol);
+        mOutput << "; Regex compiler: " << regex << " -> " << cvc4regex << std::endl;
+
+    } catch (CVC4RegexCompilerException ex) {
+        std::stringstream err;
+        err << "The CVC4RegexCompiler failed when compiling the regex " << regex << " with the error message: " << ex.what();
+        error(err.str());
+        return;
+    }
+
+    std::stringstream out;
+    out << "(str.in.re " << expression;
+
+    if (!bol || !eol) {
+        out << " (re.++";
+    }
+
+    if (!bol) {
+        out << " (re.* re.allchar)";
+    }
+
+    out << " " << cvc4regex;
+
+    if (!eol) {
+        out << " (re.* re.allchar)";
+    }
+
+    if (!bol || !eol) {
+        out << ")";
+    }
+
+    out << ")";
+
+    *outMatch = out.str();
+}
+
+void CVC4ConstraintWriter::helperRegexMatchPositive(const std::string& regex, const std::string& expression,
+                                                    std::string* outPre, std::string* outMatch, std::string* outPost)
+{
+    /**
+     * TODO:
+     *
+     * Add support for the negative version of helperRegexMatch.
+     *
+     */
+
+    // Compile regex
+
+    bool bol, eol = false;
+    std::string cvc4regex;
+
+    try {
+        cvc4regex = CVC4RegexCompiler::compile(regex, bol, eol);
+        mOutput << "; Regex compiler: " << regex << " -> " << cvc4regex << std::endl;
+
+    } catch (CVC4RegexCompilerException ex) {
+        std::stringstream err;
+        err << "The CVC4RegexCompiler failed when compiling the regex " << regex << " with the error message: " << ex.what();
+        error(err.str());
+        return;
+    }
+
+    // Constraints (optimized for the positive case)
+
+    if (bol && eol) {
+        *outPre = "";
+        *outMatch = expression;
+        *outPost = "";
+
+    } else if (bol) {
+        std::string match = this->emitAndReturnNewTemporary(Symbolic::STRING);
+        std::string post = this->emitAndReturnNewTemporary(Symbolic::STRING);
+
+        mOutput << "(assert (= " << expression << " (str.++ " << match << " " << post << ")))" << std::endl;
+
+        *outPre = "";
+        *outMatch = match;
+        *outPost = post;
+
+    } else if (eol) {
+        std::string pre = this->emitAndReturnNewTemporary(Symbolic::STRING);
+        std::string match = this->emitAndReturnNewTemporary(Symbolic::STRING);
+
+        mOutput << "(assert (= " << expression << " (str.++ " << pre << " " << match << ")))" << std::endl;
+
+        *outPre = pre;
+        *outMatch = match;
+        *outPost = "";
+
+    } else {
+        std::string pre = this->emitAndReturnNewTemporary(Symbolic::STRING);
+        std::string match = this->emitAndReturnNewTemporary(Symbolic::STRING);
+        std::string post = this->emitAndReturnNewTemporary(Symbolic::STRING);
+
+        mOutput << "(assert (= " << expression << " (str.++ " << pre << " " << match << " " << post << ")))" << std::endl;
+
+        *outPre = pre;
+        *outMatch = match;
+        *outPost = post;
+    }
+
+    mOutput << "(assert (str.in.re " << *outMatch << " " << cvc4regex << "))" << std::endl;
 }
 
 }

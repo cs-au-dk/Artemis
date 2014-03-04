@@ -74,6 +74,10 @@ public:
 
     bool write(PathConditionPtr pathCondition, std::string outputFile);
 
+    std::string getErrorReason() {
+        return mErrorReason;
+    }
+
     static std::string encodeIdentifier(const std::string&);
     static std::string decodeIdentifier(const std::string&);
 
@@ -105,6 +109,9 @@ protected:
      *
      */
 
+    // Internal
+    virtual void visit(Symbolic::StringRegexSubmatchArray* exp, void* arg);
+
     // Returns integer values to mExpressionBuffer
     virtual void visit(Symbolic::SymbolicInteger* symbolicinteger, void* args);
     virtual void visit(Symbolic::ConstantInteger* constantinteger, void* args);
@@ -121,6 +128,7 @@ protected:
     virtual void visit(Symbolic::StringCharAt* stringcharat, void* arg);
     virtual void visit(Symbolic::StringRegexReplace* stringregexreplace, void* args);
     virtual void visit(Symbolic::StringReplace* stringreplace, void* args);
+    virtual void visit(Symbolic::StringRegexSubmatchArrayAt* exp, void* arg);
 
     // Returns boolean values to mExpressionBuffer
     virtual void visit(Symbolic::SymbolicBoolean* symbolicboolean, void* args);
@@ -128,6 +136,11 @@ protected:
     virtual void visit(Symbolic::BooleanCoercion* booleancoercion, void* args);
     virtual void visit(Symbolic::BooleanBinaryOperation* booleanbinaryoperation, void* args);
     virtual void visit(Symbolic::StringRegexSubmatch* submatch, void* arg);
+
+    // Returns Object values to mExpressionBuffer
+    virtual void visit(Symbolic::StringRegexSubmatchArrayMatch* exp, void* arg);
+    virtual void visit(Symbolic::ConstantObject* obj, void* arg);
+    virtual void visit(Symbolic::ObjectBinaryOperation* obj, void* arg);
 
     // Output writing
     virtual void preVisitPathConditionsHook();
@@ -177,7 +190,6 @@ protected:
 
     std::map<std::string, Symbolic::Type> mTypemap;
     std::ofstream mOutput;
-    std::ofstream mConstriantLog;
 
     // holds the current subexpression returned by the previous call to visit
     std::string mExpressionBuffer;

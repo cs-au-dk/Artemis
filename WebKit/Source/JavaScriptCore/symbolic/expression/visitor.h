@@ -27,13 +27,15 @@ namespace Symbolic
 
 // Move this to another file?
 enum Type {
-	INT, BOOL, STRING, TYPEERROR
+    INT, BOOL, STRING, OBJECT, TYPEERROR
 };
 
     class SymbolicInteger;
     class ConstantInteger;
     class IntegerBinaryOperation;
     class IntegerCoercion;
+    class ConstantObject;
+    class ObjectBinaryOperation;
     class SymbolicString;
     class ConstantString;
     class StringBinaryOperation;
@@ -44,6 +46,9 @@ enum Type {
     class StringRegexReplace;
     class StringRegexSubmatch;
     class StringRegexSubmatchIndex;
+    class StringRegexSubmatchArray;
+    class StringRegexSubmatchArrayAt;
+    class StringRegexSubmatchArrayMatch;
     class SymbolicBoolean;
     class ConstantBoolean;
     class BooleanCoercion;
@@ -57,6 +62,8 @@ public:
     virtual void visit(ConstantInteger* constantinteger, void* arg) = 0;
     virtual void visit(IntegerBinaryOperation* integerbinaryoperation, void* arg) = 0;
     virtual void visit(IntegerCoercion* integercoercion, void* arg) = 0;
+    virtual void visit(ConstantObject* constantobject, void* arg) = 0;
+    virtual void visit(ObjectBinaryOperation* objectbinaryoperation, void* arg) = 0;
     virtual void visit(SymbolicString* symbolicstring, void* arg) = 0;
     virtual void visit(ConstantString* constantstring, void* arg) = 0;
     virtual void visit(StringBinaryOperation* stringbinaryoperation, void* arg) = 0;
@@ -67,6 +74,9 @@ public:
     virtual void visit(StringRegexReplace* stringregexreplace, void* arg) = 0;
     virtual void visit(StringRegexSubmatch* stringregexsubmatch, void* arg) = 0;
     virtual void visit(StringRegexSubmatchIndex* stringregexsubmatchindex, void* arg) = 0;
+    virtual void visit(StringRegexSubmatchArray* stringregexsubmatcharray, void* arg) = 0;
+    virtual void visit(StringRegexSubmatchArrayAt* stringregexsubmatcharrayat, void* arg) = 0;
+    virtual void visit(StringRegexSubmatchArrayMatch* stringregexsubmatcharraymatch, void* arg) = 0;
     virtual void visit(SymbolicBoolean* symbolicboolean, void* arg) = 0;
     virtual void visit(ConstantBoolean* constantboolean, void* arg) = 0;
     virtual void visit(BooleanCoercion* booleancoercion, void* arg) = 0;
