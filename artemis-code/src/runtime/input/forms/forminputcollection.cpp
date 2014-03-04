@@ -42,37 +42,8 @@ QSet<FormFieldDescriptorConstPtr> FormInputCollection::getFields() const
 void FormInputCollection::writeToPage(ArtemisWebPagePtr page) const
 {
     foreach(FormInputPair input, mInputs) {
-        QWebElement element = input.first->getDomElement()->getElement(page);;
-
-        if (!element.isNull()) {
-
-            if (element.attribute("type", "") == "checkbox" || element.attribute("type", "") == "radio") {
-                // all empty and "false" values are translated into unchecked state
-                if (input.second.compare("") == 0 || input.second.compare("false") == 0) {
-                    element.evaluateJavaScript("this.checked = false;");
-                    element.setAttribute("value", "");
-                } else {
-                    element.evaluateJavaScript("this.checked = true;");
-                    element.setAttribute("value", input.second);
-                }
-
-            } else {
-
-                // We do this using JavaScript because some values are only correctly set this way
-                // E.g. if you set the value of a select box then this approach correctly updates the node,
-                // where the setAttribute approach updates the value itself but not the remaining state of the node
-
-                // TODO this is a bit risky, what if this triggers other events?
-
-                QString setValue = QString("this.value = \"") + input.second + "\";";
-                element.evaluateJavaScript(setValue);
-
-                //element.setAttribute("value", input.second);
-
-            }
-        }
-
-
+        QWebElement element = input.first->getDomElement()->getElement(page);
+        FormFieldInjector::inject(element, input.second);
     }
 }
 

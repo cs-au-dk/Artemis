@@ -23,6 +23,7 @@
 #include <QSharedPointer>
 
 #include "formfielddescriptor.h"
+#include "formfieldinjector.h"
 
 namespace artemis
 {

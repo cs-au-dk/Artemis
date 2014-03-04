@@ -32,6 +32,7 @@
 #include "model/coverage/coveragelistener.h"
 #include "model/pathtracer.h"
 #include "strategies/inputgenerator/targets/jquerylistener.h"
+#include "runtime/input/forms/formfieldinjector.h"
 
 #include "executionresult.h"
 #include "executionresultbuilder.h"
