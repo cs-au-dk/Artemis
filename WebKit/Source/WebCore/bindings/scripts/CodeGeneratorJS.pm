@@ -1826,14 +1826,15 @@ sub GenerateImplementation
                         push(@implContent, "            return result;\n");
                         push(@implContent, "        }\n");
                         push(@implContent, "\n");
+                        push(@implContent, "        Symbolic::SourceType inputSourceType = Symbolic::SymbolicSource::typeAttrToSourceType(type.string().ascii().data());\n");
                         if ($attribute->signature->extendedAttributes->{"SymbolicString"}) {
-                        push(@implContent, "        result.makeSymbolic(new Symbolic::SymbolicString(Symbolic::SymbolicSource(Symbolic::INPUT, method, std::string(strs.str()))));");
+                        push(@implContent, "        result.makeSymbolic(new Symbolic::SymbolicString(Symbolic::SymbolicSource(inputSourceType, method, std::string(strs.str()))));");
                         }
                         if ($attribute->signature->extendedAttributes->{"SymbolicBoolean"}) {
-                        push(@implContent, "        result.makeSymbolic(new Symbolic::SymbolicBoolean(Symbolic::SymbolicSource(Symbolic::INPUT, method, std::string(strs.str()))));");
+                        push(@implContent, "        result.makeSymbolic(new Symbolic::SymbolicBoolean(Symbolic::SymbolicSource(inputSourceType, method, std::string(strs.str()))));");
                         }
                         if ($attribute->signature->extendedAttributes->{"SymbolicInteger"}) {
-                        push(@implContent, "        result.makeSymbolic(new Symbolic::SymbolicInteger(Symbolic::SymbolicSource(Symbolic::INPUT, method, std::string(strs.str()))));");
+                        push(@implContent, "        result.makeSymbolic(new Symbolic::SymbolicInteger(Symbolic::SymbolicSource(inputSourceType, method, std::string(strs.str()))));");
                         }
                         push(@implContent, "\n");
                         push(@implContent, "    } else {\n");
