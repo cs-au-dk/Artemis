@@ -17,6 +17,8 @@
 #ifndef SYMBOLICSOURCE_H
 #define SYMBOLICSOURCE_H
 
+#include <strings.h>
+
 namespace Symbolic {
 
 enum SourceIdentifierMethod {
@@ -24,7 +26,7 @@ enum SourceIdentifierMethod {
 };
 
 enum SourceType {
-    INPUT
+    TEXT, SELECT, RADIO, CHECKBOX
 };
 
 class SymbolicSource
@@ -35,7 +37,6 @@ public:
         m_type(type),
         m_identifier_method(identifier_method),
         m_identifier(identifier) {
-
     }
 
     inline SourceType getType() const {
@@ -48,6 +49,19 @@ public:
 
     inline std::string getIdentifier() const {
         return m_identifier;
+    }
+
+    static SourceType typeAttrToSourceType(const char * type) {
+        if(strncasecmp(type, "select", 6) == 0){
+            return SELECT;
+        }
+        if(strncasecmp(type, "radio", 5) == 0){
+            return RADIO;
+        }
+        if(strncasecmp(type, "checkbox", 8) == 0){
+            return CHECKBOX;
+        }
+        return TEXT;
     }
 
 private:
