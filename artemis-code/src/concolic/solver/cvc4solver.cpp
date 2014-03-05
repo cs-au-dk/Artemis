@@ -210,39 +210,46 @@ SolutionPtr CVC4Solver::solve(PathConditionPtr pc)
         Symbolvalue symbolvalue;
         symbolvalue.found = true;
 
-        // Empty string is signalled by the solver script as the literal ""
-        // This means we cannot inject the literal "" (i.e. two double quotes) now.
-        if (value.compare("\"\"") == 0){
-            value.clear();
-        }
+        if (type.compare("String") == 0) {
+            symbolvalue.kind = Symbolic::STRING;
 
-        // Strip quotes from strings
-        if (type.compare("String") == 0 && value.find("\"") != std::string::npos && value.length() > 1) {
-            value = value.substr(1, value.length() - 2);
-        }
+            // Strip quotes from strings
+            // TODO: Does this even need to be conditional, can strings be returned without quotes?
+            if (value.find("\"") != std::string::npos && value.length() > 1) {
+                value = value.substr(1, value.length() - 2);
+            }
 
-        /*if (value.compare("false") == 0) {
-            symbolvalue.kind = Symbolic::BOOL;
-            symbolvalue.u.boolean = false;
-
-        } else if (value.compare("true") == 0) {
-            symbolvalue.kind = Symbolic::BOOL;
-            symbolvalue.u.boolean = true;
-
-        } else {
-            symbolvalue.kind = Symbolic::INT;
-            symbolvalue.u.integer = std::atoi(value.c_str());
-        }*/
-
-        // TODO, add support for the other types,
-        // right now not needed as we only have symbolic strings as input
-
-        symbolvalue.kind = Symbolic::STRING;
-
-        if (value.find("(- ") == std::string::npos) { // not a negative value
             symbolvalue.string = value;
+
+        } else if (type.compare("Bool") == 0) {
+            symbolvalue.kind = Symbolic::BOOL;
+
+            if (value.compare("false") == 0) {
+                symbolvalue.u.boolean = false;
+            } else if (value.compare("true") == 0) {
+                symbolvalue.u.boolean = true;
+            } else {
+                return emitError(clog, "Value of boolean returned is not true/false.");
+            }
+
+        } else if (type.compare("Integer") == 0) {
+            // We only generate symbolic strings and bools in the PCs and pass those to this solver.
+            // The constraint writer can do some string -> int optimsations in certain situations to gelp CVC4.
+            // We want to undo those here so the results produced match up with the input given.
+            // Hence we leave integer results as strings in the result and do not translate them.
+            symbolvalue.kind = Symbolic::STRING;
+
+            // Handle negative values.
+            if (value.find("(- ") == std::string::npos) {
+                symbolvalue.string = value;
+            } else {
+                symbolvalue.string = "-" + value.substr(3, value.length() - 3);
+            }
+
         } else {
-            symbolvalue.string = "-" + value.substr(3, value.length() - 3);
+            std::ostringstream err;
+            err << "Unknown type " << type << "encountered in result.";
+            return emitError(clog, err.str());
         }
 
         // save result
