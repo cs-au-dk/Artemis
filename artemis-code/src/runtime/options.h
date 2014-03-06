@@ -21,6 +21,7 @@
 #include <QSet>
 #include <QMap>
 #include <QString>
+#include "input/forms/injectionvalue.h"
 
 namespace artemis
 {
@@ -83,7 +84,7 @@ typedef struct OptionsType {
         heapReportFactor(1)
     {}
 
-    QMap<QString, QString> presetFormfields;
+    QMap<QString, InjectionValue> presetFormfields;
     QMap<QString, QString> presetCookies;
 
     QSet<QUrl> coverageIgnoreUrls;

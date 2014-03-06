@@ -27,6 +27,7 @@
 #include "artemisapplication.h"
 #include "util/loggingutil.h"
 #include "artemisglobals.h"
+#include "runtime/input/forms/injectionvalue.h"
 
 using namespace std;
 
@@ -43,6 +44,8 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             "\n"
             "-f #<formElementId>=<formElementValue> : Set the form element with ID #<formElementId> to the value <formElementValue> at each iteration. Remember to write the # for the element ID.\n"
             "\n"
+            "-F #<formElementId>=true|false : As with -f but for boolean value injections (e.g. into check boxes).\n"
+            "\n"
             "-c <URl> : Cookies - // TODO\n"
             "\n"
             "-t <URL>:<PORT> : Set proxy\n"
@@ -53,7 +56,7 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             "\n"
             "-s       : Enable DOM state checking\n"
             "\n"
-            "-e       : Negate the last solved PC printet to stdout (used for testing)\n"
+            "-e       : Negate the last solved PC printed to stdout (used for testing)\n"
             "\n"
             "--major-mode <mode>:\n"
             "           The major-mode specifies the top-level test algorithm used by Artemis.\n"
@@ -157,7 +160,7 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
     artemis::Log::addLogLevel(artemis::INFO);
     artemis::Log::addLogLevel(artemis::FATAL);
 
-    while ((c = getopt_long(argc, argv, "ehsrp:a:m:f:t:c:i:v:", long_options, &option_index)) != -1) {
+    while ((c = getopt_long(argc, argv, "ehsrp:a:m:F:f:t:c:i:v:", long_options, &option_index)) != -1) {
 
         switch (c) {
 
@@ -225,7 +228,29 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             int lastEqualsIndex = QString(optarg).lastIndexOf("=");
             Q_ASSERT(lastEqualsIndex >= 0);
 
-            options.presetFormfields.insert(input.left(lastEqualsIndex), input.mid(lastEqualsIndex+1));
+            options.presetFormfields.insert(input.left(lastEqualsIndex), artemis::InjectionValue(input.mid(lastEqualsIndex+1)));
+            break;
+        }
+
+        case 'F': {
+
+            QString input = QString(optarg);
+
+            int lastEqualsIndex = QString(optarg).lastIndexOf("=");
+            Q_ASSERT(lastEqualsIndex >= 0);
+
+            QString name = input.left(lastEqualsIndex);
+            QString value = input.mid(lastEqualsIndex+1);
+
+            if (value == "true") {
+                options.presetFormfields.insert(name, artemis::InjectionValue(true));
+            } else if (value == "false") {
+                options.presetFormfields.insert(name, artemis::InjectionValue(false));
+            }else {
+                cerr << "ERROR: Invalid choice of injection " << name.toStdString() << "=" << value.toStdString() << endl;
+                cerr << "Should be 'true' or 'false' only for boolean injections." << endl;
+                exit(1);
+            }
             break;
         }
 

@@ -32,6 +32,7 @@ class InjectionValue
 public:
     InjectionValue(QString stringValue) : value(stringValue) {}
     InjectionValue(bool boolValue) : value(boolValue) {}
+    InjectionValue() : value(QString()) {} // Need default constructor to be able to put InjectionValue into a QMap.
 
     QString getString() {
         assert(isString());
@@ -43,6 +44,9 @@ public:
     }
     bool isString() { // Returns true for strings, false for bools.
         return value.type() == QVariant::String;
+    }
+    QString toString() { // Used as a printable value for debug output, etc. Should not be used for injection!
+        return value.toString();
     }
 
 private:

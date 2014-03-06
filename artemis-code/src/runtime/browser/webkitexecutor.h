@@ -55,7 +55,7 @@ class WebKitExecutor : public QObject
 public:
     WebKitExecutor(QObject* parent,
                    AppModelPtr appmodel,
-                   QMap<QString, QString> presetFields,
+                   QMap<QString, InjectionValue> presetFields,
                    JQueryListener* jqueryListener,
                    AjaxRequestListener* ajaxListener,
                    bool enableConstantStringInstrumentation,
@@ -79,7 +79,7 @@ private:
     ExecutableConfigurationConstPtr currentConf;
     AjaxRequestListener* mAjaxListener;
     JQueryListener* mJquery;
-    QMap<QString, QString> mPresetFields;
+    QMap<QString, InjectionValue> mPresetFields;
 
     CoverageListenerPtr mCoverageListener;
     JavascriptStatisticsPtr mJavascriptStatistics;

@@ -40,7 +40,7 @@ namespace artemis
 
 WebKitExecutor::WebKitExecutor(QObject* parent,
                                AppModelPtr appmodel,
-                               QMap<QString, QString> presetFields,
+                               QMap<QString, InjectionValue> presetFields,
                                JQueryListener* jqueryListener,
                                AjaxRequestListener* ajaxListener,
                                bool enableConstantStringInstrumentation,
@@ -256,9 +256,9 @@ void WebKitExecutor::slLoadFinished(bool ok)
             continue;
         }
 
-        qDebug() << "Setting value " << mPresetFields[f] << "for element " << f;
+        qDebug() << "Setting value " << mPresetFields[f].toString() << "for element " << f;
 
-        FormFieldInjector::inject(elm, InjectionValue(mPresetFields[f]));
+        FormFieldInjector::inject(elm, mPresetFields[f]);
     }
 
     // Execute input sequence
