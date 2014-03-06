@@ -20,20 +20,29 @@ namespace artemis
 {
 
 
-bool FormFieldInjector::inject(QWebElement element, QString value)
+bool FormFieldInjector::inject(QWebElement element, InjectionValue value)
 {
     if (element.isNull()) {
         return false;
     }
 
+    // TODO: Currently we only inject strings, so convert the InjectionValue into a string.
+    // This will be replaced by more sophisticated injection soon.
+    QString stringValue;
+    if (value.isString()) {
+        stringValue = value.getString();
+    } else {
+        stringValue = value.getBool() ? "true" : "false";
+    }
+
     if (element.attribute("type", "") == "checkbox" || element.attribute("type", "") == "radio") {
         // all empty and "false" values are translated into unchecked state
-        if (value.compare("") == 0 || value.compare("false") == 0) {
+        if (stringValue.compare("") == 0 || stringValue.compare("false") == 0) {
             element.evaluateJavaScript("this.checked = false;");
             element.setAttribute("value", "");
         } else {
             element.evaluateJavaScript("this.checked = true;");
-            element.setAttribute("value", value);
+            element.setAttribute("value", stringValue);
         }
 
     } else {
@@ -44,7 +53,7 @@ bool FormFieldInjector::inject(QWebElement element, QString value)
 
         // TODO this is a bit risky, what if this triggers other events?
 
-        QString setValue = QString("this.value = \"") + value + "\";";
+        QString setValue = QString("this.value = \"") + stringValue + "\";";
         element.evaluateJavaScript(setValue);
 
         //element.setAttribute("value", value);

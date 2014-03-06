@@ -21,7 +21,7 @@
 #include <QDebug>
 #include <QWebElement>
 
-#include "forminputcollection.h"
+#include "injectionvalue.h"
 
 namespace artemis
 {
@@ -36,7 +36,7 @@ class FormFieldInjector
 {
 public:
     // Returns whether the injection was successful or not.
-    static bool inject(QWebElement element, QString value);
+    static bool inject(QWebElement element, InjectionValue value);
 };
 
 

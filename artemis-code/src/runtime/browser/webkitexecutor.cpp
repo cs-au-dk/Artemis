@@ -258,7 +258,7 @@ void WebKitExecutor::slLoadFinished(bool ok)
 
         qDebug() << "Setting value " << mPresetFields[f] << "for element " << f;
 
-        FormFieldInjector::inject(elm, mPresetFields[f]);
+        FormFieldInjector::inject(elm, InjectionValue(mPresetFields[f]));
     }
 
     // Execute input sequence

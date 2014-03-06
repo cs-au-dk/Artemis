@@ -127,7 +127,8 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/model/seleniumeventexecutionstatistics.h \
     src/model/stubeventexecutionstatistics.h \
     src/model/jsoneventexecutionstatistics.h \
-    src/runtime/input/forms/formfieldinjector.h
+    src/runtime/input/forms/formfieldinjector.h \
+    src/runtime/input/forms/injectionvalue.h
 
 SOURCES += src/runtime/input/ajaxinput.cpp \
     src/strategies/prioritizer/constantprioritizer.cpp \
