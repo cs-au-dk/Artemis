@@ -385,26 +385,25 @@ QSharedPointer<FormInputCollection> ConcolicRuntime::createFormInput(QMap<QStrin
 
         // Create the field/value pairing to be injected using the FormInput object.
         switch (value.kind) {
-        case Symbolic::INT:
-            inputs.append(FormInputPair(varSourceField, QString::number(value.u.integer)));
-            Log::debug(QString("Injecting %1 into %2").arg(QString::number(value.u.integer)).arg(varName).toStdString());
-            break;
         case Symbolic::BOOL:
-            inputs.append(FormInputPair(varSourceField, QString(value.u.boolean ? "true" : "false"))); // TODO: How to represent booleans here?
-            Log::debug(QString("Injecting %1 into %2").arg(value.u.boolean ? "true" : "false").arg(varName).toStdString());
+            inputs.append(FormInputPair(varSourceField, InjectionValue(value.u.boolean))); // TODO: How to represent booleans here?
+            Log::debug(QString("Injecting boolean %1 into %2").arg(value.u.boolean ? "true" : "false").arg(varName).toStdString());
             break;
         case Symbolic::STRING:
-            inputs.append(FormInputPair(varSourceField, QString(value.string.c_str())));
-            Log::debug(QString("Injecting %1 into %2").arg(QString(value.string.c_str())).arg(varName).toStdString());
+            inputs.append(FormInputPair(varSourceField, InjectionValue(QString::fromStdString(value.string))));
+            Log::debug(QString("Injecting string '%1' into %2").arg(QString(value.string.c_str())).arg(varName).toStdString());
             break;
+        case Symbolic::INT:
+            Log::error(QString("INJECTION ERROR: INT typed variable %1 encountered in the solver result, which is not expected.").arg(varName).toStdString());
+            statistics()->accumulate("Concolic::FailedInjections", 1);
+            continue;
         default:
-            Log::error(QString("Unimplemented value type encountered for variable %1 (%2)").arg(varName).arg(value.kind).toStdString());
+            Log::error(QString("INJECTION ERROR: Unimplemented value type encountered for variable %1 (%2)").arg(varName).arg(value.kind).toStdString());
             statistics()->accumulate("Concolic::FailedInjections", 1);
             continue;
         }
 
     }
-
 
     // Set up a new configuration which tests this input.
     return QSharedPointer<FormInputCollection>(new FormInputCollection(inputs));

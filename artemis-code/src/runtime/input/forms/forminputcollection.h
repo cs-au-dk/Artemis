@@ -28,7 +28,7 @@
 namespace artemis
 {
 
-typedef QPair<FormFieldDescriptorConstPtr, QString> FormInputPair;
+typedef QPair<FormFieldDescriptorConstPtr, InjectionValue> FormInputPair;
 
 /**
  * A collection of <form input, value> pairs used to inject concrete values into a web page

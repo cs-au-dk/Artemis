@@ -34,6 +34,7 @@
 #include "strategies/inputgenerator/targets/legacytarget.h"
 #include "runtime/input/clickinput.h"
 #include "runtime/browser/artemiswebview.h"
+#include "runtime/input/forms/injectionvalue.h"
 
 #include "runtime/runtime.h"
 

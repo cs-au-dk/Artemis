@@ -43,7 +43,7 @@ void FormInputCollection::writeToPage(ArtemisWebPagePtr page) const
 {
     foreach(FormInputPair input, mInputs) {
         QWebElement element = input.first->getDomElement()->getElement(page);
-        FormFieldInjector::inject(element, InjectionValue(input.second));
+        FormFieldInjector::inject(element, input.second);
     }
 }
 
