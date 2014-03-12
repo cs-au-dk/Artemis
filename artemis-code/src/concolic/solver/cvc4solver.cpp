@@ -232,7 +232,7 @@ SolutionPtr CVC4Solver::solve(PathConditionPtr pc)
                 return emitError(clog, "Value of boolean returned is not true/false.");
             }
 
-        } else if (type.compare("Integer") == 0) {
+        } else if (type.compare("Int") == 0) {
             // We only generate symbolic strings and bools in the PCs and pass those to this solver.
             // The constraint writer can do some string -> int optimsations in certain situations to gelp CVC4.
             // We want to undo those here so the results produced match up with the input given.
@@ -248,7 +248,7 @@ SolutionPtr CVC4Solver::solve(PathConditionPtr pc)
 
         } else {
             std::ostringstream err;
-            err << "Unknown type " << type << "encountered in result.";
+            err << "Unknown type " << type << " encountered in result.";
             return emitError(clog, err.str());
         }
 
