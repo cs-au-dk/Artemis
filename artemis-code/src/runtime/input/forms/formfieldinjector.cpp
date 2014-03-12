@@ -16,6 +16,9 @@
 
 #include "formfieldinjector.h"
 
+#include <QDebug>
+#include "statistics/statsstorage.h"
+
 namespace artemis
 {
 
@@ -23,29 +26,35 @@ namespace artemis
 bool FormFieldInjector::inject(QWebElement element, InjectionValue value)
 {
     if (element.isNull()) {
+        qDebug() << "Warning: failed to inject input.\n";
+        statistics()->accumulate("Concolic::FailedInjections", 1); // TODO: this is called even in non-concolic modes!
         return false;
     }
 
-    // TODO: Currently we only inject strings, so convert the InjectionValue into a string.
-    // This will be replaced by more sophisticated injection soon.
-    QString stringValue;
-    if (value.isString()) {
-        stringValue = value.getString();
-    } else {
-        stringValue = value.getBool() ? "true" : "false";
-    }
-
     if (element.attribute("type", "") == "checkbox" || element.attribute("type", "") == "radio") {
-        // all empty and "false" values are translated into unchecked state
-        if (stringValue.compare("") == 0 || stringValue.compare("false") == 0) {
-            element.evaluateJavaScript("this.checked = false;");
-            element.setAttribute("value", "");
-        } else {
+
+        // We only expect to inject bool values into checkboxes or radio buttons. Reject string values.
+        if (value.isString()) {
+            qDebug() << "Warning: failed to inject input " << element.toPlainText() << ": expected a BOOL.\n";
+            statistics()->accumulate("Concolic::FailedInjections", 1); // TODO: this is called even in non-concolic modes!
+            return false;
+        }
+
+        // Setting the checked property via JavaScript injection allows WebKit to correctly update the state of the
+        // page, for example by unsetting other inputs in the same radio button group.
+        if (value.getBool()) {
             element.evaluateJavaScript("this.checked = true;");
-            element.setAttribute("value", stringValue);
+        } else {
+            element.evaluateJavaScript("this.checked = false;");
         }
 
     } else {
+        // For all other input types we expect a string injection.
+        if (!value.isString()) {
+            qDebug() << "Warning: failed to inject input " << element.toPlainText() << ": expected a STRING.\n";
+            statistics()->accumulate("Concolic::FailedInjections", 1); // TODO: this is called even in non-concolic modes!
+            return false;
+        }
 
         // We do this using JavaScript because some values are only correctly set this way
         // E.g. if you set the value of a select box then this approach correctly updates the node,
@@ -53,14 +62,14 @@ bool FormFieldInjector::inject(QWebElement element, InjectionValue value)
 
         // TODO this is a bit risky, what if this triggers other events?
 
-        QString setValue = QString("this.value = \"") + stringValue + "\";";
+        QString setValue = QString("this.value = \"") + value.getString() + "\";";
         element.evaluateJavaScript(setValue);
 
-        //element.setAttribute("value", value);
-
     }
+    // TODO: Do we need any other cases here?
+    // For example seperate handling of "select" types where we could inject by index?
 
-    return true; // TODO: Once we have detection of different input types and specialised injection we will be able to have a useful return value.
+    return true;
 }
 
 
