@@ -177,8 +177,16 @@ void CVC4ConstraintWriter::visit(Symbolic::StringRegexReplace* obj, void* args)
       * Support the negative case.
       */
 
-    obj->getSource()->accept(this);
+    obj->getSource()->accept(this, args); // send args through, allow local coercions
 
+    // Detect if there was a local coercion performed, in which case this regex replace should be ignored.
+    if (isSuccessfulCoercion(args)) {
+        // Let mExpressionBuffer and type flow through as-is.
+        // StringRegexReplace is completely transparent to successful CoercionPromises.
+        return;
+    }
+
+    // Otherwise, we expect a string subexpression.
     if(!checkType(Symbolic::STRING)){
         error("StringRegexReplace operation on non-string");
         return;
@@ -213,8 +221,16 @@ void CVC4ConstraintWriter::visit(Symbolic::StringRegexReplace* obj, void* args)
 
 void CVC4ConstraintWriter::visit(Symbolic::StringReplace* replace, void* args)
 {
-    replace->getSource()->accept(this);
+    replace->getSource()->accept(this, args); // send args through, allow local coercions
 
+    // Detect if there was a local coercion performed, in which case this regex replace should be ignored.
+    if (isSuccessfulCoercion(args)) {
+        // Let mExpressionBuffer and type flow through as-is.
+        // StringReplace is completely transparent to successful CoercionPromises.
+        return;
+    }
+
+    // Otherwise, we expect a string subexpression.
     if(!checkType(Symbolic::STRING)){
         error("String replace operation on non-string");
         return;

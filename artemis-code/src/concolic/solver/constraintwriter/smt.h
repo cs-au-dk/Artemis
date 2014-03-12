@@ -188,6 +188,8 @@ protected:
 
     void error(std::string reason);
 
+    bool isSuccessfulCoercion(void* args);
+
     std::map<std::string, Symbolic::Type> mTypemap;
     std::ofstream mOutput;
 

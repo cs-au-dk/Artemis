@@ -504,4 +504,16 @@ void SMTConstraintWriter::coercetype(Symbolic::Type from,
 }
 
 
+// Tests whether the args parameter of visit is a coercion object which was successful.
+bool SMTConstraintWriter::isSuccessfulCoercion(void *args)
+{
+    if (args == NULL) {
+        return false;
+    }
+
+    CoercionPromise* promise = (CoercionPromise*)args;
+    return promise->isCoerced;
+}
+
+
 }
