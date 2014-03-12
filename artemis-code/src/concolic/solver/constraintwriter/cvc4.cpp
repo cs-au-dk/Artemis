@@ -177,15 +177,11 @@ void CVC4ConstraintWriter::visit(Symbolic::StringRegexReplace* obj, void* args)
       * Support the negative case.
       */
 
-    obj->getSource()->accept(this);
-
-    if(!checkType(Symbolic::STRING)){
-        error("StringRegexReplace operation on non-string");
-        return;
-    }
-
     // special case input filtering (filters matching X and replacing with "")
     if (obj->getReplace()->compare("") == 0) {
+
+        // In these "safe" replacements we send args through, allowing local coercion optimisations.
+        obj->getSource()->accept(this, args);
 
         // ignore the filter
         mExpressionBuffer = mExpressionBuffer;
@@ -193,6 +189,14 @@ void CVC4ConstraintWriter::visit(Symbolic::StringRegexReplace* obj, void* args)
 
         statistics()->accumulate("Concolic::Solver::RegexSuccessfullyTranslated", 1);
 
+        return;
+    }
+
+    // In the general case we do not pass args through and do not allow local coercion through StringRegexReplace.
+    obj->getSource()->accept(this);
+
+    if(!checkType(Symbolic::STRING)){
+        error("StringRegexReplace operation on non-string");
         return;
     }
 
@@ -213,6 +217,11 @@ void CVC4ConstraintWriter::visit(Symbolic::StringRegexReplace* obj, void* args)
 
 void CVC4ConstraintWriter::visit(Symbolic::StringReplace* replace, void* args)
 {
+    // Currently we do not pass args through and therefore do not allow local coercion optimisations passing through
+    // a StringReplace (as is done with StringRegexReplace in certain cases, see above).
+    // The optimisation for StringRegexReplace improves jQuery support so it is common, but we have not seen the same
+    // patterns with standard StringReplace.
+
     replace->getSource()->accept(this);
 
     if(!checkType(Symbolic::STRING)){
