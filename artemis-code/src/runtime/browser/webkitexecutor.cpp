@@ -160,6 +160,8 @@ WebKitExecutor::WebKitExecutor(QObject* parent,
                      pageLoadDetector.data(), SLOT(slPageLoad(QUrl)));
     mTraceBuilder->addDetector(pageLoadDetector);
 
+    // The event marker detector is created and connected in the concolic runtime.
+
     // The DOM modification "detector".
     QSharedPointer<TraceDomModDetector> domModDetector(new TraceDomModDetector());
     QObject::connect(mResultBuilder.data(), SIGNAL(sigDomModified(QString, QString)),

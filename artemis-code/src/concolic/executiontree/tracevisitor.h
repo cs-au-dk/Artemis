@@ -37,6 +37,7 @@ class TraceAnnotation;
 class TraceAlert;
 class TraceDomModification;
 class TracePageLoad;
+class TraceMarker;
 class TraceFunctionCall;
 class TraceEnd;
 class TraceEndSuccess;
@@ -80,6 +81,7 @@ public:
     virtual void visit(TraceAlert* node);
     virtual void visit(TraceDomModification* node);
     virtual void visit(TracePageLoad* node);
+    virtual void visit(TraceMarker* node);
     virtual void visit(TraceFunctionCall* node);
     virtual void visit(TraceEnd* node);
     virtual void visit(TraceEndSuccess* node);

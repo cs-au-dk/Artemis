@@ -142,6 +142,18 @@ public:
 };
 
 
+/*
+ * Detector for event markers (i.e. the form field injections and button clicks)
+ */
+class TraceMarkerDetector : public TraceEventDetector
+{
+    Q_OBJECT
+
+public slots:
+    void slNewMarker(QString label);
+};
+
+
 
 } // namespace artemis
 

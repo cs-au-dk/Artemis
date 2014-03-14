@@ -43,6 +43,7 @@ public:
     void visit(TraceAlert* node);
     void visit(TraceDomModification* node);
     void visit(TracePageLoad* node);
+    void visit(TraceMarker* node);
     void visit(TraceFunctionCall* node);
     void visit(TraceEndSuccess* node);
     void visit(TraceEndFailure* node);

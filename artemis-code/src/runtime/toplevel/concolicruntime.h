@@ -135,6 +135,9 @@ private slots:
     void postConcreteExecution(ExecutableConfigurationConstPtr configuration, QSharedPointer<ExecutionResult> result);
     void postValueInjection();
 
+signals:
+    void sigNewTraceMarker(QString label);
+
 };
 
 } // namespace artemis

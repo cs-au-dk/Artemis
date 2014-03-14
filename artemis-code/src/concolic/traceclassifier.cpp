@@ -94,6 +94,11 @@ void TraceClassifier::visit(TracePageLoad *node)
     node->next = marker;
 }
 
+void TraceClassifier::visit(TraceMarker *node)
+{
+    node->next->accept(this);
+}
+
 void TraceClassifier::visit(TraceFunctionCall *node)
 {
     node->next->accept(this);

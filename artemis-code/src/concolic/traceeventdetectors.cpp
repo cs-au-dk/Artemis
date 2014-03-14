@@ -291,4 +291,19 @@ const QList<QString> TraceDomModDetector::indicators = TraceDomModDetector::getI
 
 
 
+
+// Trace Marker Detector
+
+void TraceMarkerDetector::slNewMarker(QString label)
+{
+    // Create the trace node.
+    QSharedPointer<TraceMarker> node  = QSharedPointer<TraceMarker>(new TraceMarker());
+    node->label = label;
+
+    // Pass the new node to the trace builder.
+    newNode(node.staticCast<TraceNode>(), &(node->next));
+}
+
+
+
 } //namespace artmeis

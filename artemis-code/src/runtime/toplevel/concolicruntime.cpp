@@ -19,6 +19,8 @@
 
 #include "util/loggingutil.h"
 #include "concolic/executiontree/tracemerger.h"
+#include "concolic/executiontree/tracenodes.h"
+#include "concolic/traceeventdetectors.h"
 #include "concolic/solver/cvc4solver.h"
 #include "statistics/statsstorage.h"
 
@@ -52,6 +54,12 @@ ConcolicRuntime::ConcolicRuntime(QObject* parent, const Options& options, const 
     mSearchPasses = 3;
     mSearchPassesUnlimited = mOptions.concolicUnlimitedDepth;
     mSearchFoundTarget = false;
+
+    // The event detector for 'marker' events in the traces is created and connected here, as WebKitExecutor (where the rest are handled) does not know when these events happen.
+    QSharedPointer<TraceMarkerDetector> markerDetector(new TraceMarkerDetector());
+    QObject::connect(this, SIGNAL(sigNewTraceMarker(QString)),
+                     markerDetector.data(), SLOT(slNewMarker(QString)));
+    mWebkitExecutor->getTraceBuilder()->addDetector(markerDetector);
 }
 
 void ConcolicRuntime::run(const QUrl& url)
@@ -118,10 +126,25 @@ void ConcolicRuntime::postValueInjection()
     // If necessary, trigger the form inputs' handlers.
     if(mOptions.concolicTriggerEventHandlers) {
         foreach(FormFieldDescriptorConstPtr field, mFormFields) {
+            // Add a marker to the trace
+            QString label;
+            if(field->getDomElement()->getId() != "") {
+                label = QString("Trigger onchange for '%s'").arg(field->getDomElement()->getId());
+            } else if(field->getDomElement()->getName() != "") {
+                label = QString("Trigger onchange for '%s'").arg(field->getDomElement()->getName());
+            }else {
+                label = "Trigger onchange";
+            }
+            emit sigNewTraceMarker(label);
+
+            // Trigger the handler
             element = field->getDomElement()->getElement(mWebkitExecutor->getPage());
             FormFieldInjector::triggerChangeHandler(element);
         }
     }
+
+    // From here on, we will be triggering the button only.
+    emit sigNewTraceMarker("Clicking button");
 }
 
 void ConcolicRuntime::postConcreteExecution(ExecutableConfigurationConstPtr configuration, QSharedPointer<ExecutionResult> result)
