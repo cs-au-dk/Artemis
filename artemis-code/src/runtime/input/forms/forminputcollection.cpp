@@ -45,6 +45,8 @@ void FormInputCollection::writeToPage(ArtemisWebPagePtr page) const
         QWebElement element = input.first->getDomElement()->getElement(page);
         FormFieldInjector::inject(element, input.second);
     }
+
+    emit sigFinishedWriteToPage();
 }
 
 QDebug operator<<(QDebug dbg, FormInputCollection* f)

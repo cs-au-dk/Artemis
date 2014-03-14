@@ -96,17 +96,21 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             "--concolic-tree-output <trees>:\n"
             "           none - Do not output any graphs.\n"
             "           final (default) - Generate a graph of the final tree after analysis.\n"
-            "           final-overview - Like final but also includes a simplified overview graph."
+            "           final-overview - Like final but also includes a simplified overview graph.\n"
             "           all - Generate a graph of the tree at every iteration.\n"
-            "           all-overview - Like all but also includes simplified overview graphs."
+            "           all-overview - Like all but also includes simplified overview graphs.\n"
             "\n"
             "--concolic-unlimited-depth\n"
             "           Removes the depth limit from the concolic search procedure.\n"
             "\n"
+            "--concolic-event-sequences <strategy>\n"
+            "           ignore (default) - Ignore handlers for individual field modification.\n"
+            "           simple - Fire the onchange event for each field which is injected.\n"
+            "\n"
             "--smt-solver <solver>:\n"
             "           z3str - Use the Z3-str SMT solver as backend.\n"
             "           cvc4 (default) - Use the CVC4 SMT solver as backend. CVC4 is required to be on your path.\n"
-            "           kaluza - Use the Kaluza solver as backend."
+            "           kaluza - Use the Kaluza solver as backend.\n"
             "\n"
             "--strategy-priority <strategy>:\n"
             "           Select priority strategy.\n"
@@ -148,6 +152,7 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
     {"concolic-tree-output", required_argument, NULL, 'd'},
     {"concolic-button", required_argument, NULL, 'b'},
     {"concolic-unlimited-depth", no_argument, NULL, 'u'},
+    {"concolic-event-sequences", required_argument, NULL, 'w'},
     {"smt-solver", required_argument, NULL, 'n'},
     {"export-event-sequence", required_argument, NULL, 'o'},
     {"help", no_argument, NULL, 'h'},
@@ -358,7 +363,9 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
                     std::cout << "all click html none";
                 } else if(string(optarg).compare("--concolic-tree-output") == 0){
                     std::cout << "none final all final-overview all-overview";
-                } else if(string(optarg).compare("--strategy-priority") == 0){
+                } else if(string(optarg).compare("--concolic-event-sequences") == 0){
+                    std::cout << "ignore simple";
+                }else if(string(optarg).compare("--strategy-priority") == 0){
                     std::cout << "constant random coverage readwrite all";
                 } else if(string(optarg).compare("--export-event-sequence") == 0){
                     std::cout << "selenium json";
@@ -379,6 +386,7 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
                              "--concolic-button "
                              "--concolic-tree-output "
                              "--concolic-unlimited-depth "
+                             "--concolic-event-sequences "
                              "--strategy-priority "
                              "--smt-solver "
                              "--export-event-sequence "
@@ -443,6 +451,19 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
 
            break;
        }
+
+        case 'w': {
+            if (string(optarg).compare("ignore") == 0) {
+                options.concolicTriggerEventHandlers = false;
+            } else if (string(optarg).compare("simple") == 0) {
+                options.concolicTriggerEventHandlers = true;
+            } else {
+                cerr << "ERROR: Invalid choice of event-sequence handling strategy " << optarg << endl;
+                exit(1);
+            }
+
+            break;
+        }
 
         case 'x': {
 

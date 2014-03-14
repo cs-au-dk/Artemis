@@ -33,8 +33,9 @@ typedef QPair<FormFieldDescriptorConstPtr, InjectionValue> FormInputPair;
 /**
  * A collection of <form input, value> pairs used to inject concrete values into a web page
  */
-class FormInputCollection
+class FormInputCollection : public QObject
 {
+    Q_OBJECT
 
 public:
     FormInputCollection(const QList<FormInputPair>& inputs);
@@ -51,6 +52,9 @@ public:
 
 private:
     QList<FormInputPair> mInputs;
+
+signals:
+    void sigFinishedWriteToPage() const; // used to notify the concolic mode when the values have been injected.
 
 };
 

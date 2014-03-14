@@ -35,6 +35,7 @@
 #include "runtime/input/clickinput.h"
 #include "runtime/browser/artemiswebview.h"
 #include "runtime/input/forms/injectionvalue.h"
+#include "runtime/input/forms/formfieldinjector.h"
 
 #include "runtime/runtime.h"
 
@@ -125,13 +126,14 @@ protected:
     void exploreNextTarget();
     void chooseNextTargetAndExplore();
 
-    QSet<QSharedPointer<const FormFieldDescriptor> > mFormFields;
+    QList<FormFieldDescriptorConstPtr> mFormFields;
 
     // State
     int mNumIterations;
 
 private slots:
     void postConcreteExecution(ExecutableConfigurationConstPtr configuration, QSharedPointer<ExecutionResult> result);
+    void postValueInjection();
 
 };
 

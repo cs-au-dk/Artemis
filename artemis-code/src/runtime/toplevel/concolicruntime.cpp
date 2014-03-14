@@ -109,7 +109,19 @@ void ConcolicRuntime::preConcreteExecution()
     Log::debug("--------------- COVERAGE ----------------\n");
     Log::debug(mAppmodel->getCoverageListener()->toString().toStdString());
 
-    mWebkitExecutor->executeSequence(mNextConfiguration); // calls the postConcreteExecution method as callback
+    mWebkitExecutor->executeSequence(mNextConfiguration); // calls the postValueInjection (via FormInputCollection) and postConcreteExecution methods as callback
+}
+
+void ConcolicRuntime::postValueInjection()
+{
+    QWebElement element;
+    // If necessary, trigger the form inputs' handlers.
+    if(mOptions.concolicTriggerEventHandlers) {
+        foreach(FormFieldDescriptorConstPtr field, mFormFields) {
+            element = field->getDomElement()->getElement(mWebkitExecutor->getPage());
+            FormFieldInjector::triggerChangeHandler(element);
+        }
+    }
 }
 
 void ConcolicRuntime::postConcreteExecution(ExecutableConfigurationConstPtr configuration, QSharedPointer<ExecutionResult> result)
@@ -226,7 +238,7 @@ void ConcolicRuntime::setupNextConfiguration(QSharedPointer<FormInputCollection>
 void ConcolicRuntime::postInitialConcreteExecution(QSharedPointer<ExecutionResult> result)
 {
     // Find the form fields on the page and save them.
-    mFormFields = result->getFormFields();
+    mFormFields = result->getFormFields().toList();
 
     // Print the form fields found on the page.
     Log::debug("Form fields found:");
@@ -237,9 +249,12 @@ void ConcolicRuntime::postInitialConcreteExecution(QSharedPointer<ExecutionResul
     }
     Log::info(QString("  Form fields: %1").arg(fieldNames.join(", ")).toStdString());
 
-    // Create an "empty" form input which will inject noting into the page.
+    // Create an "empty" form input which will inject nothing into the page.
     QList<FormInputPair > inputs;
     FormInputCollectionPtr formInput = FormInputCollectionPtr(new FormInputCollection(inputs));
+    // Connect it to postValueInjection so we will know when the injection is performed.
+    QObject::connect(formInput.data(), SIGNAL(sigFinishedWriteToPage()),
+                     this, SLOT(postValueInjection()));
 
     // On the next iteration, we will be running with initial values.
     mRunningFirstLoad = false;
@@ -406,7 +421,12 @@ QSharedPointer<FormInputCollection> ConcolicRuntime::createFormInput(QMap<QStrin
     }
 
     // Set up a new configuration which tests this input.
-    return QSharedPointer<FormInputCollection>(new FormInputCollection(inputs));
+    QSharedPointer<FormInputCollection> formInput = QSharedPointer<FormInputCollection>(new FormInputCollection(inputs));
+    // Connect it to postValueInjection so we will know when the injection is performed.
+    QObject::connect(formInput.data(), SIGNAL(sigFinishedWriteToPage()),
+                     this, SLOT(postValueInjection()));
+
+    return formInput;
 }
 
 

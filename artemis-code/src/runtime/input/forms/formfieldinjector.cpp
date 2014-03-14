@@ -22,7 +22,6 @@
 namespace artemis
 {
 
-
 bool FormFieldInjector::inject(QWebElement element, InjectionValue value)
 {
     if (element.isNull()) {
@@ -70,6 +69,19 @@ bool FormFieldInjector::inject(QWebElement element, InjectionValue value)
     // For example seperate handling of "select" types where we could inject by index?
 
     return true;
+}
+
+
+
+void FormFieldInjector::triggerChangeHandler(QWebElement element)
+{
+    if (element.isNull()) {
+        qDebug() << "Warning: failed to trigger input handler.\n";
+        return;
+    }
+
+    QString jsInjection = "event = document.createEvent('HTMLEvents'); event.initEvent('change', false, true); this.dispatchEvent(event);";
+    element.evaluateJavaScript(jsInjection);
 }
 
 

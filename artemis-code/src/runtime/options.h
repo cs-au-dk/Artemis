@@ -78,6 +78,7 @@ typedef struct OptionsType {
         concolicTreeOutput(TREE_FINAL),
         concolicTreeOutputOverview(false),
         concolicUnlimitedDepth(false),
+        concolicTriggerEventHandlers(false),
         solver(CVC4),
         exportEventSequence(DONT_EXPORT),
         reportHeap(NO_CALLS),
@@ -111,6 +112,7 @@ typedef struct OptionsType {
     bool concolicTreeOutputOverview;
     QString concolicEntryPoint;
     bool concolicUnlimitedDepth;
+    bool concolicTriggerEventHandlers;
     SMTSolver solver;
 
     ExportEventSequence exportEventSequence;
