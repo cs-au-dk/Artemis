@@ -136,7 +136,7 @@ private slots:
     void postValueInjection();
 
 signals:
-    void sigNewTraceMarker(QString label);
+    void sigNewTraceMarker(QString label, QString index);
 
 };
 

@@ -114,6 +114,7 @@ class TraceMarker : public TraceAnnotation
 {
 public:
     QString label;
+    QString index;
 
     bool isEqualShallow(const QSharedPointer<const TraceNode>& other)
     {

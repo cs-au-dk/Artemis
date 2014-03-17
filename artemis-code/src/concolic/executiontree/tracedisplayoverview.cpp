@@ -245,8 +245,10 @@ void TraceDisplayOverview::visit(TraceMarker *node)
     QString name = QString("marker_%1").arg(mNodeCounter);
     mNodeCounter++;
 
-    // Always show markers, but no longer show messages.
-    mHeaderMarkers.append(name);
+    // Always show markers, but only show the index as the label.
+    QString nodeDecl = QString("%1 [label = \"%2\"]").arg(name).arg(node->index);
+    mHeaderMarkers.append(nodeDecl);
+
     addInEdge(name);
 
     mPreviousNode = name;

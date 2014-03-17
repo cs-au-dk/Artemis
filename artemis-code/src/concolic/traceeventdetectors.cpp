@@ -294,11 +294,12 @@ const QList<QString> TraceDomModDetector::indicators = TraceDomModDetector::getI
 
 // Trace Marker Detector
 
-void TraceMarkerDetector::slNewMarker(QString label)
+void TraceMarkerDetector::slNewMarker(QString label, QString index)
 {
     // Create the trace node.
     QSharedPointer<TraceMarker> node  = QSharedPointer<TraceMarker>(new TraceMarker());
     node->label = label;
+    node->index = index;
 
     // Pass the new node to the trace builder.
     newNode(node.staticCast<TraceNode>(), &(node->next));

@@ -150,7 +150,7 @@ class TraceMarkerDetector : public TraceEventDetector
     Q_OBJECT
 
 public slots:
-    void slNewMarker(QString label);
+    void slNewMarker(QString label, QString index);
 };
 
 
