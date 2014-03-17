@@ -194,7 +194,7 @@ void writeCoverageHtml(CoverageListenerPtr cov, QString& pathToFile)
 
     res += ("</body></html>");
 
-    pathToFile = QString("coverage-") + timeString + ".html";
+    pathToFile = QString("coverage.html");
 
     writeStringToFile(pathToFile, res);
 }
