@@ -89,7 +89,7 @@ bool DepthFirstSearch::chooseNextTarget()
     // Call the visitor to continue the search.
     current->accept(this);
 
-    // Future runs should ocntinue wherever we left off.
+    // Future runs should continue wherever we left off.
     mIsPreviousRun = true;
 
     // The visitor will set its own "output" in mCurrentPC.

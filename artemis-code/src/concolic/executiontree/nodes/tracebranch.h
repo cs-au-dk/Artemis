@@ -16,6 +16,8 @@
 
 #include "trace.h"
 
+#include <QSource>
+
 #ifndef TRACEBRANCH_H
 #define TRACEBRANCH_H
 
@@ -55,8 +57,27 @@ public:
         mBranchFalse = node;
     }
 
+    inline uint getSourceOffset()
+    {
+        return mSourceOffset;
+    }
+
+    inline QSource* getSource()
+    {
+        return mSource;
+    }
+
+    inline uint getLinenumber()
+    {
+        return mLinenumber;
+    }
+
 protected:
-    TraceBranch(); // we should only use the concrete or symbolic subclasses
+    TraceBranch(uint sourceOffset, QSource* source, uint linenumber); // we should only use the concrete or symbolic subclasses
+
+    uint mSourceOffset;
+    QSource* mSource;
+    uint mLinenumber;
 
     TraceNodePtr mBranchTrue;
     TraceNodePtr mBranchFalse;

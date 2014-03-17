@@ -21,10 +21,18 @@
 
 namespace artemis {
 
+TraceDisplayOverview::TraceDisplayOverview()
+    : TraceDisplayOverview(false, false)
+{
+}
 
+TraceDisplayOverview::TraceDisplayOverview(bool simple)
+    : TraceDisplayOverview(simple, false)
+{
+}
 
-TraceDisplayOverview::TraceDisplayOverview() :
-    TraceDisplay(false)
+TraceDisplayOverview::TraceDisplayOverview(bool simple, bool linkToCoverage)
+    : TraceDisplay(simple, linkToCoverage)
 {
     // Override the styles for each node type to make them simpler.
 

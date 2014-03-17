@@ -20,10 +20,13 @@
 
 namespace artemis {
 
-TraceBranch::TraceBranch()
+TraceBranch::TraceBranch(uint sourceOffset, QSource* source, uint linenumber)
+    : mSourceOffset(sourceOffset)
+    , mSource(source)
+    , mLinenumber(linenumber)
+    , mBranchTrue(TraceUnexplored::getInstance())
+    , mBranchFalse(TraceUnexplored::getInstance())
 {
-    mBranchTrue = TraceUnexplored::getInstance();
-    mBranchFalse = TraceUnexplored::getInstance();
 }
 
 }

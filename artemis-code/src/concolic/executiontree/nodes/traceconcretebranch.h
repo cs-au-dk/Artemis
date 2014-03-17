@@ -26,7 +26,7 @@ class TraceConcreteBranch : public TraceBranch
 
 public:
 
-    TraceConcreteBranch();
+    TraceConcreteBranch(uint sourceOffset, QSource* source, uint linenumber);
     ~TraceConcreteBranch() {}
 
     void accept(TraceVisitor* visitor);
