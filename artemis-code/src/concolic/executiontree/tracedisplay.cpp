@@ -17,8 +17,11 @@
 
 #include "tracedisplay.h"
 
+#include <sstream>
+
 #include "util/loggingutil.h"
 #include "util/fileutil.h"
+#include "model/coverage/coveragelistener.h"
 
 
 namespace artemis
@@ -28,8 +31,19 @@ QString TraceDisplay::indent = "  ";
 
 bool TraceDisplay::mPassThroughEndMarkers = false;
 
-TraceDisplay::TraceDisplay(bool simplified) :
-    mSimplified(simplified)
+TraceDisplay::TraceDisplay()
+    : TraceDisplay(true, false)
+{
+}
+
+TraceDisplay::TraceDisplay(bool simplified)
+    : TraceDisplay(simplified, false)
+{
+}
+
+TraceDisplay::TraceDisplay(bool simplified, bool linkToCoverage)
+    : mSimplified(simplified)
+    , mLinkToCoverage(linkToCoverage)
 {
     mExpressionPrinter = QSharedPointer<ExpressionPrinter>(new ExpressionValuePrinter());
 
@@ -266,7 +280,22 @@ void TraceDisplay::visit(TraceConcreteBranch *node)
 
     // If not in simplified mode (or if we chose to display this branch anyway) we just output this node as usual.
 
-    mHeaderBranches.append(name);
+    std::stringstream sourceId;
+    sourceId << SourceInfo::getId(node->getSource()->getUrl(), node->getSource()->getStartLine());
+
+    std::stringstream sourceLine;
+    sourceLine << node->getLinenumber();
+
+    QString source = "#";
+    if (mLinkToCoverage) {
+        source = QString("coverage.html?code=ID%1&line=%2").arg(
+                    QString::fromStdString(sourceId.str()),
+                    QString::fromStdString(sourceLine.str()));
+    }
+
+    QString label = QString(" [URL = \"%1\"]").arg(source);
+
+    mHeaderBranches.append(name + label);
 
     addInEdge(name);
 
@@ -293,9 +322,24 @@ void TraceDisplay::visit(TraceSymbolicBranch *node)
     node->getSymbolicCondition()->accept(mExpressionPrinter.data());
     QString symbolicExpression(mExpressionPrinter->getResult().c_str());
     mExpressionPrinter->clear();
+
     symbolicExpression.replace("\\", "\\\\");
     symbolicExpression.replace("\"", "\\\"");
-    QString label = QString(" [label = \"Branch\\n%1\"]").arg(symbolicExpression);
+
+    std::stringstream sourceId;
+    sourceId << SourceInfo::getId(node->getSource()->getUrl(), node->getSource()->getStartLine());
+
+    std::stringstream sourceLine;
+    sourceLine << node->getLinenumber();
+
+    QString source = "#";
+    if (mLinkToCoverage) {
+        source = QString("coverage.html?code=ID%1&line=%2").arg(
+                    QString::fromStdString(sourceId.str()),
+                    QString::fromStdString(sourceLine.str()));
+    }
+
+    QString label = QString(" [label = \"Branch\\n%1\", URL = \"%2\"]").arg(symbolicExpression, source);
 
     mHeaderSymBranches.append(name + label);
 

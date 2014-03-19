@@ -25,7 +25,7 @@ class TraceSymbolicBranch : public TraceBranch
 {
 public:
 
-    TraceSymbolicBranch(Symbolic::Expression* condition);
+    TraceSymbolicBranch(Symbolic::Expression* condition, uint sourceOffset, QSource* source, uint linenumber);
     ~TraceSymbolicBranch() {}
 
     void accept(TraceVisitor* visitor);

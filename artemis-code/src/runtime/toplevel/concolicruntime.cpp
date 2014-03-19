@@ -32,6 +32,8 @@ namespace artemis
 
 ConcolicRuntime::ConcolicRuntime(QObject* parent, const Options& options, const QUrl& url)
     : Runtime(parent, options, url)
+    , mTraceDisplay(true, options.outputCoverage != NONE)
+    , mTraceDisplayOverview(false, options.outputCoverage != NONE)
     , mNumIterations(0)
 {
     QObject::connect(mWebkitExecutor, SIGNAL(sigExecutedSequence(ExecutableConfigurationConstPtr, QSharedPointer<ExecutionResult>)),
@@ -159,11 +161,11 @@ void ConcolicRuntime::postConcreteExecution(ExecutableConfigurationConstPtr conf
      *  3. Neither: A normal run, where we add to the tree and choose a new target.
      */
 
-    if(mRunningFirstLoad){
+    if (mRunningFirstLoad){
 
         postInitialConcreteExecution(result); // Runs the next iteration itself.
 
-    }else{
+    } else {
         // We already have an entry point.
 
         // Merge the new trace into the tree.
@@ -342,7 +344,7 @@ void ConcolicRuntime::mergeTraceIntoTree()
 
 
     // Now we must merge this trace into the tree.
-    if(mRunningWithInitialValues){
+    if (mRunningWithInitialValues){
         // After the very first run we need to set up the tree & search procedure.
         // We can't just begin with an empty tree and merge every trace in, as the search procedure needs a
         // pointer to the tree, which will be replaced in that case.
@@ -352,7 +354,8 @@ void ConcolicRuntime::mergeTraceIntoTree()
         mRunningWithInitialValues = false;
 
         statistics()->accumulate("Concolic::ExecutionTree::DistinctTracesExplored", 1);
-    }else{
+
+    } else {
         // A normal run.
         // Merge trace with tracegraph
         mSymbolicExecutionGraph = TraceMerger::merge(trace, mSymbolicExecutionGraph);

@@ -18,8 +18,8 @@
 
 namespace artemis {
 
-TraceConcreteBranch::TraceConcreteBranch() :
-    TraceBranch()
+TraceConcreteBranch::TraceConcreteBranch(uint sourceOffset, QSource* source, uint linenumber) :
+    TraceBranch(sourceOffset, source, linenumber)
 {
 }
 

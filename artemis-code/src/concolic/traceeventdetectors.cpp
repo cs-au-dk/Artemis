@@ -55,10 +55,10 @@ void TraceBranchDetector::slBranch(bool jump, Symbolic::Expression* condition, u
 
     if (condition == NULL) {
         // concrete branch
-        node = QSharedPointer<TraceBranch>(new TraceConcreteBranch());
+        node = QSharedPointer<TraceBranch>(new TraceConcreteBranch(sourceOffset, source, byteInfo.linenumber));
     } else {
         // symbolic branch
-        node = QSharedPointer<TraceBranch>(new TraceSymbolicBranch(condition));
+        node = QSharedPointer<TraceBranch>(new TraceSymbolicBranch(condition, sourceOffset, source, byteInfo.linenumber));
     }
 
     // Set the branch we did not take to "unexplored". The one we took is left null.

@@ -40,7 +40,9 @@ namespace artemis
 class TraceDisplay : public TraceVisitor
 {
 public:
-    TraceDisplay(bool simplified = true);
+    TraceDisplay();
+    TraceDisplay(bool simplified);
+    TraceDisplay(bool simplified, bool linkToCoverage);
 
     // The function which is called to generate the output.
     QString makeGraph(TraceNodePtr tree);
@@ -117,6 +119,9 @@ protected:
 
     // The legend of the graph, if any.
     QString mLegend;
+
+    // Enable links to a coverage.html file
+    bool mLinkToCoverage;
 };
 
 
