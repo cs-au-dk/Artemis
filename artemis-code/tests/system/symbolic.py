@@ -1,8 +1,8 @@
 #!/usr/bin/env python
 
-WEBSERVER_PORT = 8001
-WEBSERVER_ROOT = './fixtures/symbolic-expression'
-WEBSERVER_URL = 'http://localhost:%s' % WEBSERVER_PORT
+import os
+
+WEBSERVER_ROOT = os.path.join(os.path.dirname(os.path.realpath(__file__)), './fixtures/symbolic-expression')
 
 TWO_VARIABLES_TEMPLATE_FILE = WEBSERVER_ROOT + '/%symbolic_test_two_variables.html'
 
@@ -26,7 +26,7 @@ def test_generator(filename, name, path_condition, page):
         else:
             newFilename = setUpTempFileFromTemplate(WEBSERVER_ROOT, filename)
 
-        report = execute_artemis(name, "{0}/{1}".format(WEBSERVER_URL, newFilename), iterations=5)
+        report = execute_artemis(name, "{0}/{1}".format(WEBSERVER_ROOT, newFilename), iterations=5)
         if len(report['pathCondition']) > 0:
             pc = report['pathCondition'][-1]
         else:
@@ -80,10 +80,8 @@ def generate_tests_from_folder(folder):
 
 
 if __name__ == '__main__':
-    server = WebServer(WEBSERVER_ROOT, WEBSERVER_PORT)
     for t in generate_tests_from_folder(WEBSERVER_ROOT):
         test_name = 'test_%s' % t['name']
         test = test_generator(t['file_name'], t['name'], t['path_condition'], t['page'])
         setattr(TestSequence, test_name, test)
     unittest.main()
-    del server
