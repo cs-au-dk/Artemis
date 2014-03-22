@@ -13,7 +13,7 @@ from os import listdir
 from os.path import isfile, join
 
 
-class TestSequence(unittest.TestCase):
+class Concolic(unittest.TestCase):
     pass
 
 def _list_tests_in_folder(folder):
@@ -122,7 +122,7 @@ if __name__ == '__main__':
     for t in _list_tests_in_folder(FIXTURE_ROOT):
         test_name = 'test_%s' % t['fn'].replace(".", "_")
         test = test_generator(t['fn'], test_name, test_dict=t['test'], internal_test=t['i_test'])
-        setattr(TestSequence, test_name, test)
+        setattr(Concolic, test_name, test)
 
     unittest.main(buffer=True)
 
