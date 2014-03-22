@@ -16,9 +16,7 @@
 
                         var b_1 = document.getElementById("booleaninput").checked;
 
-                        var selectNode = document.getElementById("selectinput");
-                        var select = selectNode.value;
-                        //var select = selectNode.options[selectNode.selectedIndex].value;
+                        var select = document.getElementById("testinputselect");
 
             $TESTSTATEMENT
 		}
@@ -35,10 +33,12 @@
 	<input type="text" id="testinputId" value="1" />
 
         <input type="checkbox" id="booleaninput" name="booleaninput" checked="checked" />
-        
-        <select id="selectinput" name="selectinput">
-          <option value="Select1" selected="selected">Select1</option>
-          <option value="Select2">Select2</option>
+
+        <select name="testinputselect" id="testinputselect">
+                  <option value="volvo">Volvo</option>
+                  <option value="saab">Saab</option>
+                  <option value="mercedes">Mercedes</option>
+                  <option value="audi">Audi</option>
         </select>
 
         <input type="radio" name="radio1" id="radio1a" value="Radio1a"> Radio1a

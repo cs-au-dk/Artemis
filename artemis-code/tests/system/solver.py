@@ -26,11 +26,11 @@ def test_generator(test_name, test_filename):
         unsat = 'unsat' in test_filename
         unsupported = 'unsupported' in test_filename
 
-        fields = ("testinputx", "testinputy", "testinputNameId", "testinputId", "testinputfoo", "testinputbar", "booleaninput", "selectinput", "radio1a", "radio1b", "radio1c")
+        fields = ("testinputx", "testinputy", "testinputNameId", "testinputId", "testinputfoo", "testinputbar", "booleaninput", "selectinput", "radio1a", "radio1b", "radio1c", "testinputselect")
 
         report = execute_artemis(test_name, "%s/%s" % (FIXTURE_ROOT, test_filename), 
                                  iterations=2,
-                                 fields=["#testinputx=1", "#testinputy=2", "#testinputNameId=1", "#testinputId=1", "#testinputfoo=foo", "#testinputbar=bar", "#booleaninput=checked", "#selectinput=Select1", "#radio1b=checked", "#radio1a=", "#radio1c="],
+                                 fields=["#testinputx=1", "#testinputy=2", "#testinputNameId=1", "#testinputId=1", "#testinputfoo=foo", "#testinputbar=bar", "#booleaninput=checked", "#selectinput=Select1", "#radio1b=checked", "#radio1a=", "#radio1c=", "#testinputselect=volvo"],
                                  verbose=True)
 
         assert report.get('WebKit::alerts', 0) == 1, "Initial execution did not reach a print statement"
