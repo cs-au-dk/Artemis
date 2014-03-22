@@ -28,6 +28,7 @@ def execute_artemis(execution_uuid, url, iterations=1,
                     reverse_constraint_solver=False,
                     concolic_button=None,
                     dryrun=False,
+                    verbose=False,
                     output_parent_dir=OUTPUT_DIR,
                     ignore_artemis_crash=False, # Suppresses the exception thrown by a non-zero return code and returns whatever information it can.
                     verbosity=None,
@@ -90,8 +91,10 @@ def execute_artemis(execution_uuid, url, iterations=1,
 
     cmd = [ARTEMIS_EXEC] + [url] + args
 
-    if dryrun:
+    if dryrun or verbose:
         print ' '.join(cmd)
+
+    if dryrun:
         return
 
     try:
