@@ -19,17 +19,16 @@ from os.path import isfile, join
 class Solver(unittest.TestCase):
     pass
 
-def test_generator(raw_filename):
+def test_generator(test_name, test_filename):
     
     def test(self):
 
-        unsat = 'unsat' in raw_filename
-        unsupported = 'unsupported' in raw_filename
-        name = raw_filename.replace('.', '_')
+        unsat = 'unsat' in test_filename
+        unsupported = 'unsupported' in test_filename
 
         fields = ("testinputx", "testinputy", "testinputNameId", "testinputId", "testinputfoo", "testinputbar", "booleaninput", "selectinput", "radio1a", "radio1b", "radio1c")
 
-        report = execute_artemis(name, "%s/%s" % (FIXTURE_ROOT, test_filename), 
+        report = execute_artemis(test_name, "%s/%s" % (FIXTURE_ROOT, test_filename), 
                                  iterations=2,
                                  fields=["#testinputx=1", "#testinputy=2", "#testinputNameId=1", "#testinputId=1", "#testinputfoo=foo", "#testinputbar=bar", "#booleaninput=checked", "#selectinput=Select1", "#radio1b=checked", "#radio1a=", "#radio1c="],
                                  verbose=True)
@@ -54,7 +53,7 @@ def test_generator(raw_filename):
                 value = ''
             new_fields.append("#%s=%s" % (field_name, value))
             
-        report = execute_artemis(name, "%s/%s" % (FIXTURE_ROOT, test_filename),
+        report = execute_artemis(test_name, "%s/%s" % (FIXTURE_ROOT, test_filename),
                                  iterations=2,              
                                  fields=new_fields,
                                  reverse_constraint_solver=True,
@@ -70,9 +69,9 @@ def test_generator(raw_filename):
             value = str(report.get("Concolic::Solver::Constraint.SYM_IN_%s" % field_name, 0))
             if value == 'False' or value == '""':
                 value = ''
-                new_fields.append("#%s=%s" % (field_name, value))
+            new_fields.append("#%s=%s" % (field_name, value))
 
-        report = execute_artemis(name, "%s/%s" % (FIXTURE_ROOT, test_filename),
+        report = execute_artemis(test_name, "%s/%s" % (FIXTURE_ROOT, test_filename),
                              iterations=2,              
                              fields=new_fields,
                              reverse_constraint_solver=True,
@@ -121,7 +120,7 @@ if __name__ == '__main__':
         test_filename = _insert_test_into_template(FIXTURE_ROOT, raw_filename)
         test_name = 'test_%s' % raw_filename.replace(".", "_")
 
-        test = test_generator(raw_filename)
+        test = test_generator(test_name, test_filename)
         setattr(Solver, test_name, test)
 
     unittest.main(buffer=True)
