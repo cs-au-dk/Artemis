@@ -74,6 +74,10 @@ def main():
     # Read the CSV file
     sites = _read_csv_file(args.csv_file)
     
+    if not sites:
+        print "No sites to test!"
+        return
+    
     # Open the google spreadsheet used for logging
     if not dry_run:
         logger = GDataLogger(SPREADSHEET_KEY, WORKSHEET_ID)
@@ -102,14 +106,24 @@ def main():
         
         setattr(TestSequence, test_name, test)
     
+    # Clear the constraint index and constraints directory.
+    if not dry_run:
+        open("/tmp/constraintindex", 'w').close()
+        shutil.rmtree("/tmp/constraints", ignore_errors=True)
+    
     # Run the unit tests
     print "Starting tests..."
     suite = unittest.TestLoader().loadTestsFromTestCase(TestSequence)
     unittest.TextTestRunner(verbosity=2).run(suite)
     
     # Save the EPs which were used.
-    if external_ep_finder:
+    if external_ep_finder and not dry_run:
         _save_ep_log(os.path.join(run_dir_name, "ep-log.csv"), ep_log)
+    
+    # Save the constraint index and constraints directory.
+    if not dry_run:
+        shutil.copyfile("/tmp/constraintindex", os.path.join(run_dir_name, "all-constraints-index.txt"))
+        shutil.copytree("/tmp/constraints", os.path.join(run_dir_name, "all-constraints"))
 
 
 
