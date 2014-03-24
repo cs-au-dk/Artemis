@@ -22,6 +22,7 @@
 #include <QList>
 
 #include "runtime/input/forms/forminputcollection.h"
+#include "runtime/input/forms/injectionvalue.h"
 
 #include "constantstringforminputgenerator.h"
 
@@ -53,22 +54,22 @@ FormInputCollectionPtr ConstantStringFormInputGenerator::generateFormFields(QSet
         switch (field->getType()) {
         case TEXT:
             if (executionResult->getJavascriptConstantsObservedForLastEvent().size() == 0) {
-                inputs.append(FormInputPair(field, generateRandomString(10)));
+                inputs.append(FormInputPair(field, InjectionValue(generateRandomString(10))));
             } else {
-                inputs.append(FormInputPair(field, pickRand(executionResult->getJavascriptConstantsObservedForLastEvent())));
+                inputs.append(FormInputPair(field, InjectionValue(pickRand(executionResult->getJavascriptConstantsObservedForLastEvent()))));
             }
             break;
 
         case BOOLEAN:
-            inputs.append(FormInputPair(field, randomBool() ? "true" : "false"));
+            inputs.append(FormInputPair(field, InjectionValue(randomBool())));
             break;
 
         case FIXED_INPUT:
-            inputs.append(FormInputPair(field, pickRand(field->getInputOptions())));
+            inputs.append(FormInputPair(field, InjectionValue(pickRand(field->getInputOptions()))));
             break;
 
         default:
-            inputs.append(FormInputPair(field, ""));
+            inputs.append(FormInputPair(field, InjectionValue(QString(""))));
         }
     }
 

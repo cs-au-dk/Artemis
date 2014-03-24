@@ -55,7 +55,8 @@ TraceDisplay::TraceDisplay(bool simplified, bool linkToCoverage)
     mStyleUnexploredMissed = "[label = \"Missed\", shape = ellipse, style = filled, fillcolor = lightgray]";
     mStyleAlerts = "[shape = rectangle, style = filled, fillcolor = beige]";
     mStyleDomMods = "[shape = rectangle, style = filled, fillcolor = peachpuff]";
-    mStyleLoads = "[shape = rectangle, style=filled, fillcolor = honeydew]";
+    mStyleLoads = "[shape = rectangle, style = filled, fillcolor = honeydew]";
+    mStyleMarkers = "[shape = rectangle, style = filled, fillcolor = forestgreen]";
     mStyleFunctions = "[shape = rectangle]";
     mStyleEndSucc = "[label = \"End\", fillcolor = green, style = filled, shape = circle]";
     mStyleEndFail = "[label = \"End\", fillcolor = red, style = filled, shape = circle]";
@@ -133,6 +134,12 @@ QString TraceDisplay::makeGraph(TraceNodePtr tree)
 
     result += indent + "subgraph loads {\n" + indent + indent + "node " + mStyleLoads + ";\n\n";
     foreach(QString node, mHeaderLoads){
+        result += indent + indent + node + ";\n";
+    }
+    result += indent + "}\n\n";
+
+    result += indent + "subgraph markers {\n" + indent + indent + "node " + mStyleMarkers + ";\n\n";
+    foreach(QString node, mHeaderMarkers){
         result += indent + indent + node + ";\n";
     }
     result += indent + "}\n\n";
@@ -467,6 +474,24 @@ void TraceDisplay::visit(TracePageLoad *node)
 }
 
 
+void TraceDisplay::visit(TraceMarker *node)
+{
+    flushAggregation();
+
+    QString name = QString("marker_%1").arg(mNodeCounter);
+    mNodeCounter++;
+
+    QString nodeDecl = QString("%1 [label = \"%2\"]").arg(name).arg(node->label);
+    mHeaderMarkers.append(nodeDecl);
+
+    addInEdge(name);
+
+    mPreviousNode = name;
+    mEdgeExtras = "";
+    node->next->accept(this);
+}
+
+
 void TraceDisplay::visit(TraceFunctionCall *node)
 {
     // In simplified output mode, if we are currently aggregating, then do not generate this node.
@@ -556,6 +581,7 @@ void TraceDisplay::clearData()
     mHeaderAlerts.clear();
     mHeaderDomMods.clear();
     mHeaderLoads.clear();
+    mHeaderMarkers.clear();
     mHeaderFunctions.clear();
     mHeaderEndUnk.clear();
     mHeaderEndSucc.clear();

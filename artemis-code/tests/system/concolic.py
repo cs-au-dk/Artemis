@@ -80,7 +80,8 @@ def test_generator(filename, name, test_dict=None, internal_test=None, dry_run=F
         report = execute_artemis(name, "%s%s" % (FIXTURE_ROOT, filename),
                                  iterations=0,
                                  major_mode='concolic',
-                                 dryrun=dry_run)
+                                 dryrun=dry_run,
+                                 concolic_event_sequences='simple')
 
         if dry_run:
             # only print the command, exit

@@ -40,7 +40,7 @@ namespace artemis
 
 WebKitExecutor::WebKitExecutor(QObject* parent,
                                AppModelPtr appmodel,
-                               QMap<QString, QString> presetFields,
+                               QMap<QString, InjectionValue> presetFields,
                                JQueryListener* jqueryListener,
                                AjaxRequestListener* ajaxListener,
                                bool enableConstantStringInstrumentation,
@@ -160,6 +160,8 @@ WebKitExecutor::WebKitExecutor(QObject* parent,
                      pageLoadDetector.data(), SLOT(slPageLoad(QUrl)));
     mTraceBuilder->addDetector(pageLoadDetector);
 
+    // The event marker detector is created and connected in the concolic runtime.
+
     // The DOM modification "detector".
     QSharedPointer<TraceDomModDetector> domModDetector(new TraceDomModDetector());
     QObject::connect(mResultBuilder.data(), SIGNAL(sigDomModified(QString, QString)),
@@ -256,23 +258,9 @@ void WebKitExecutor::slLoadFinished(bool ok)
             continue;
         }
 
-        qDebug() << "Setting value " << mPresetFields[f] << "for element " << f;
+        qDebug() << "Setting value " << mPresetFields[f].toString() << "for element " << f;
 
-        // TODO this code should be merged together with the code in forminputcollection.cpp
-
-        QString setValue = QString("this.value = \"") +  mPresetFields[f] + "\";";
-        elm.evaluateJavaScript(setValue);
-
-        //elm.setAttribute("value", mPresetFields[f]);
-
-        if (elm.attribute("type", "") == "checkbox" || elm.attribute("type", "") == "radio") {
-            // all non-empty values are translated into checked
-            if (mPresetFields[f] == "") {
-                elm.evaluateJavaScript("this.checked = false;");
-            } else {
-                elm.evaluateJavaScript("this.checked = true;");
-            }
-        }
+        FormFieldInjector::inject(elm, mPresetFields[f]);
     }
 
     // Execute input sequence

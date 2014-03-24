@@ -142,6 +142,12 @@ void TraceViewerDialog::visit(TracePageLoad *node)
     node->next->accept(this);
 }
 
+void TraceViewerDialog::visit(TraceMarker *node)
+{
+    mNodeList->addItem(QString("Marker: %1").arg(node->label));
+    node->next->accept(this);
+}
+
 void TraceViewerDialog::visit(TraceFunctionCall *node)
 {
     mNodeList->addItem(QString("Function Call: %1").arg(node->name));

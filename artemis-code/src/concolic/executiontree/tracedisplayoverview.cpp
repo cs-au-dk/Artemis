@@ -45,6 +45,7 @@ TraceDisplayOverview::TraceDisplayOverview(bool simple, bool linkToCoverage)
     mStyleAlerts = "[label = \"!\", shape = circle, style = filled, fillcolor = gold]";
     mStyleDomMods = "[label = \"W\", shape = circle, style = filled, fillcolor = peachpuff]";
     mStyleLoads = "[label = \"L\" shape = circle, style=filled, fillcolor = honeydew]";
+    mStyleMarkers = "[label = \"\", shape = circle, style = filled, fillcolor = forestgreen]";
     //mStyleFunctions not used
     mStyleEndSucc = "[label = \"S\", fillcolor = green, style = filled, shape = circle]";
     mStyleEndFail = "[label = \"F\", fillcolor = red, style = filled, shape = circle]";
@@ -98,6 +99,13 @@ TraceDisplayOverview::TraceDisplayOverview(bool simple, bool linkToCoverage)
             "\n"
             "        <td bgcolor=\"hotpink\" border=\"1\" width=\"25pt\">X</td>\n"
             "        <td align=\"left\">Could not solve</td>\n"
+            "      </tr>\n"
+            "      <tr>\n"
+            "        <td width=\"25pt\"></td>\n"
+            "        <td align=\"left\"></td>\n"
+            "\n"
+            "        <td bgcolor=\"forestgreen\" border=\"1\" width=\"25pt\"></td>\n"
+            "        <td align=\"left\">Event marker</td>\n"
             "      </tr>\n"
             "    </table>\n"
             "    >];\n"
@@ -230,6 +238,25 @@ void TraceDisplayOverview::visit(TracePageLoad *node)
 
     // Always show loads, but no longer show messages.
     mHeaderLoads.append(name);
+    addInEdge(name);
+
+    mPreviousNode = name;
+    mEdgeExtras = "";
+    node->next->accept(this);
+}
+
+
+void TraceDisplayOverview::visit(TraceMarker *node)
+{
+    flushAggregation();
+
+    QString name = QString("marker_%1").arg(mNodeCounter);
+    mNodeCounter++;
+
+    // Always show markers, but only show the index as the label.
+    QString nodeDecl = QString("%1 [label = \"%2\"]").arg(name).arg(node->index);
+    mHeaderMarkers.append(nodeDecl);
+
     addInEdge(name);
 
     mPreviousNode = name;
