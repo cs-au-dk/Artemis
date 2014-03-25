@@ -15,7 +15,7 @@ from os import listdir
 from os.path import isfile, join
 
 
-class TestSequence(unittest.TestCase):
+class Symbolic(unittest.TestCase):
     pass
 
 
@@ -83,5 +83,5 @@ if __name__ == '__main__':
     for t in generate_tests_from_folder(WEBSERVER_ROOT):
         test_name = 'test_%s' % t['name']
         test = test_generator(t['file_name'], t['name'], t['path_condition'], t['page'])
-        setattr(TestSequence, test_name, test)
+        setattr(Symbolic, test_name, test)
     unittest.main()
