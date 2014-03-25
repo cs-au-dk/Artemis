@@ -26,11 +26,14 @@ def test_generator(filename, name, path_condition, page):
         else:
             newFilename = setUpTempFileFromTemplate(WEBSERVER_ROOT, filename)
 
-        report = execute_artemis(name, "{0}/{1}".format(WEBSERVER_ROOT, newFilename), iterations=5)
-        if len(report['pathCondition']) > 0:
+        report = execute_artemis(name, "{0}/{1}".format(WEBSERVER_ROOT, newFilename), iterations=2,
+				fields=["#selectinput=volvo"],)
+        
+	if len(report['pathCondition']) > 0:
             pc = report['pathCondition'][-1]
         else:
             pc = ""
+
         self.assertEqual(path_condition.replace(" ", ""), pc.replace(" ", ""))
 
     return test
