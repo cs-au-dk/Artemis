@@ -36,6 +36,8 @@
 namespace Symbolic
 {
 
+bool SymbolicInterpreter::m_isOpGetByValWithSymbolicArg = false;
+
 // Global used to generate "unique" identifiers for crossreferencing symbolic expressions and values
 unsigned int NEXT_SYMBOLIC_ID = 0;
 

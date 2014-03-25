@@ -73,6 +73,23 @@ public:
     void beginSession();
     void endSession();
 
+    /*
+     *  Global bit which is set when a op_get_by_val is called with a symbolic value.
+     *  This is used to identify symbolic calls to lookup functions from the WebKit<->JavaScript layer,
+     *  which does not get any symbolic information about lookup properties and indexes.
+     *
+     *  We could have expanded the APIs to send the original JSValue (with symbolic inforamtion) to the
+     *  API layer, but it would require a lot of changes to a very central part of WebKit. This "hack"
+     *  allows us to access the data globally without changing the existing APIs.
+     */
+    static bool isOpGetByValWithSymbolicArg() {
+        return SymbolicInterpreter::m_isOpGetByValWithSymbolicArg;
+    }
+
+    static void setOpGetByValWithSymbolicArg(bool val) {
+        SymbolicInterpreter::m_isOpGetByValWithSymbolicArg = val;
+    }
+
 private:
     void fatalError(JSC::CodeBlock* codeBlock, std::string reason) __attribute__((noreturn));
 
@@ -81,6 +98,8 @@ private:
 
     bool m_inSession;
     bool m_shouldGC;
+
+    static bool m_isOpGetByValWithSymbolicArg;
 };
 
 }
