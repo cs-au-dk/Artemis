@@ -1805,6 +1805,16 @@ sub GenerateImplementation
                         push(@implContent, "        return result;\n");
                         push(@implContent, "    }\n");
                         push(@implContent, "\n");
+                        # This is a hack to add code to the methods jsHTMLElementValue() and jsHTMLElementValueAsNumber() but not to jsHTMLElementChecked().
+                        if ($getFunctionName ne "jsHTMLInputElementChecked") {
+                            push(@implContent, "    // Do not make checkbox or radio button values symbolic.\n");
+                            push(@implContent, "    if(strncmp(type.string().lower().ascii().data(), \"radio\", 5) == 0 || strncmp(type.string().lower().ascii().data(), \"checkbox\", 8) == 0){\n");
+                            push(@implContent, "        return result;\n");
+                            push(@implContent, "    }\n");
+                        } else {
+                            push(@implContent, "    // This is the method jsHTMLInputElementChecked, so no special handling of radio buttons and checkboxes has been added.\n");
+                        }
+                        push(@implContent, "\n");
                         push(@implContent, "    if (castedThis->m_" . $attribute->signature->name . "Symbolic == NULL) {\n");
                         push(@implContent, "        std::ostringstream strs;\n");
                         push(@implContent, "        strs << \"SYM_IN_\";\n");
