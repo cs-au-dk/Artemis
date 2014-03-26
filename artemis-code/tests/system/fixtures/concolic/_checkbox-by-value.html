@@ -1,0 +1,44 @@
+<!--
+TEST PC = ((SymbolicBoolean == ConstantBoolean) == ConstantBoolean)
+TEST Concolic::Solver::Constraint.SYM_IN_testinput = true
+TEST Concolic::Solver::ConstraintsWritten = 2
+TEST Concolic::Solver::ConstraintsSolved = 2
+-->
+<!doctype html><html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+	<title>Ben Spencer</title>
+	<meta name="author" content="Ben Spencer">
+	<script type="text/javascript">
+		function validate() {
+			var y = document.getElementById("testinput").checked;
+
+			// This should be ignored.
+			if(document.getElementById("testinput").value == "badconstraint") {
+				alert("unreachable branch");
+			}
+
+			if (y == true) {
+				return false;
+			}else{
+				return true;
+			}
+		}
+	</script>
+
+</head>
+<body>
+
+
+	<form method="GET" action="about:blank" >
+
+		<input type="checkbox" id="testinput" value="submissionvalue" />
+
+		<button type="submit" onclick="return validate();">Submit</button>
+
+	</form>
+
+</body>
+</html>
