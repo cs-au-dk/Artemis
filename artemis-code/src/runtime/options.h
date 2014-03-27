@@ -21,6 +21,7 @@
 #include <QSet>
 #include <QMap>
 #include <QString>
+#include "input/forms/injectionvalue.h"
 
 namespace artemis
 {
@@ -77,13 +78,14 @@ typedef struct OptionsType {
         concolicTreeOutput(TREE_FINAL),
         concolicTreeOutputOverview(false),
         concolicUnlimitedDepth(false),
+        concolicTriggerEventHandlers(false),
         solver(CVC4),
         exportEventSequence(DONT_EXPORT),
         reportHeap(NO_CALLS),
         heapReportFactor(1)
     {}
 
-    QMap<QString, QString> presetFormfields;
+    QMap<QString, InjectionValue> presetFormfields;
     QMap<QString, QString> presetCookies;
 
     QSet<QUrl> coverageIgnoreUrls;
@@ -110,6 +112,7 @@ typedef struct OptionsType {
     bool concolicTreeOutputOverview;
     QString concolicEntryPoint;
     bool concolicUnlimitedDepth;
+    bool concolicTriggerEventHandlers;
     SMTSolver solver;
 
     ExportEventSequence exportEventSequence;

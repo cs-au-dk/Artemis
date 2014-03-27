@@ -234,7 +234,8 @@ def test_generator(site_name, site_url, site_ep, dry_run=False, logger=None, ver
                                      concolic_button=(None if site_ep.lower() == 'auto' else site_ep),
                                      dryrun=dry_run,
                                      output_parent_dir=test_dir,
-                                     ignore_artemis_crash=True)
+                                     ignore_artemis_crash=True,
+                                     coverage='html')
             end_time = time.time()
             
             if dry_run:

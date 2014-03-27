@@ -110,6 +110,25 @@ public:
 };
 
 
+class TraceMarker : public TraceAnnotation
+{
+public:
+    QString label;
+    QString index;
+
+    bool isEqualShallow(const QSharedPointer<const TraceNode>& other)
+    {
+        return !other.dynamicCast<const TraceMarker>().isNull();
+    }
+
+    void accept(TraceVisitor* visitor) {
+        visitor->visit(this);
+    }
+
+    ~TraceMarker(){}
+};
+
+
 class TraceFunctionCall : public TraceAnnotation
 {
 public:

@@ -19,6 +19,8 @@
 
 #include "util/loggingutil.h"
 #include "concolic/executiontree/tracemerger.h"
+#include "concolic/executiontree/tracenodes.h"
+#include "concolic/traceeventdetectors.h"
 #include "concolic/solver/cvc4solver.h"
 #include "statistics/statsstorage.h"
 
@@ -54,6 +56,12 @@ ConcolicRuntime::ConcolicRuntime(QObject* parent, const Options& options, const 
     mSearchPasses = 3;
     mSearchPassesUnlimited = mOptions.concolicUnlimitedDepth;
     mSearchFoundTarget = false;
+
+    // The event detector for 'marker' events in the traces is created and connected here, as WebKitExecutor (where the rest are handled) does not know when these events happen.
+    QSharedPointer<TraceMarkerDetector> markerDetector(new TraceMarkerDetector());
+    QObject::connect(this, SIGNAL(sigNewTraceMarker(QString, QString)),
+                     markerDetector.data(), SLOT(slNewMarker(QString, QString)));
+    mWebkitExecutor->getTraceBuilder()->addDetector(markerDetector);
 }
 
 void ConcolicRuntime::run(const QUrl& url)
@@ -111,7 +119,37 @@ void ConcolicRuntime::preConcreteExecution()
     Log::debug("--------------- COVERAGE ----------------\n");
     Log::debug(mAppmodel->getCoverageListener()->toString().toStdString());
 
-    mWebkitExecutor->executeSequence(mNextConfiguration); // calls the postConcreteExecution method as callback
+    mWebkitExecutor->executeSequence(mNextConfiguration); // calls the postValueInjection (via FormInputCollection) and postConcreteExecution methods as callback
+}
+
+void ConcolicRuntime::postValueInjection()
+{
+    QWebElement element;
+    int markerIdx = 1;
+    // If necessary, trigger the form inputs' handlers.
+    if(mOptions.concolicTriggerEventHandlers) {
+        foreach(FormFieldDescriptorConstPtr field, mFormFields) {
+            // Add a marker to the trace
+            QString label;
+            if(field->getDomElement()->getId() != "") {
+                label = QString("Trigger onchange for '%1'").arg(field->getDomElement()->getId());
+            } else if(field->getDomElement()->getName() != "") {
+                label = QString("Trigger onchange for '%1'").arg(field->getDomElement()->getName());
+            }else {
+                label = "Trigger onchange";
+            }
+            emit sigNewTraceMarker(label, QString::number(markerIdx));
+
+            // Trigger the handler
+            element = field->getDomElement()->getElement(mWebkitExecutor->getPage());
+            FormFieldInjector::triggerChangeHandler(element);
+
+            markerIdx++;
+        }
+
+        // From here on, we will be triggering the button only.
+        emit sigNewTraceMarker("Clicking submit button", "B");
+    }
 }
 
 void ConcolicRuntime::postConcreteExecution(ExecutableConfigurationConstPtr configuration, QSharedPointer<ExecutionResult> result)
@@ -228,7 +266,7 @@ void ConcolicRuntime::setupNextConfiguration(QSharedPointer<FormInputCollection>
 void ConcolicRuntime::postInitialConcreteExecution(QSharedPointer<ExecutionResult> result)
 {
     // Find the form fields on the page and save them.
-    mFormFields = result->getFormFields();
+    mFormFields = result->getFormFields().toList();
 
     // Print the form fields found on the page.
     Log::debug("Form fields found:");
@@ -239,9 +277,12 @@ void ConcolicRuntime::postInitialConcreteExecution(QSharedPointer<ExecutionResul
     }
     Log::info(QString("  Form fields: %1").arg(fieldNames.join(", ")).toStdString());
 
-    // Create an "empty" form input which will inject noting into the page.
+    // Create an "empty" form input which will inject nothing into the page.
     QList<FormInputPair > inputs;
     FormInputCollectionPtr formInput = FormInputCollectionPtr(new FormInputCollection(inputs));
+    // Connect it to postValueInjection so we will know when the injection is performed.
+    QObject::connect(formInput.data(), SIGNAL(sigFinishedWriteToPage()),
+                     this, SLOT(postValueInjection()));
 
     // On the next iteration, we will be running with initial values.
     mRunningFirstLoad = false;
@@ -388,29 +429,33 @@ QSharedPointer<FormInputCollection> ConcolicRuntime::createFormInput(QMap<QStrin
 
         // Create the field/value pairing to be injected using the FormInput object.
         switch (value.kind) {
-        case Symbolic::INT:
-            inputs.append(FormInputPair(varSourceField, QString::number(value.u.integer)));
-            Log::debug(QString("Injecting %1 into %2").arg(QString::number(value.u.integer)).arg(varName).toStdString());
-            break;
         case Symbolic::BOOL:
-            inputs.append(FormInputPair(varSourceField, QString(value.u.boolean ? "true" : "false"))); // TODO: How to represent booleans here?
-            Log::debug(QString("Injecting %1 into %2").arg(value.u.boolean ? "true" : "false").arg(varName).toStdString());
+            inputs.append(FormInputPair(varSourceField, InjectionValue(value.u.boolean))); // TODO: How to represent booleans here?
+            Log::debug(QString("Injecting boolean %1 into %2").arg(value.u.boolean ? "true" : "false").arg(varName).toStdString());
             break;
         case Symbolic::STRING:
-            inputs.append(FormInputPair(varSourceField, QString(value.string.c_str())));
-            Log::debug(QString("Injecting %1 into %2").arg(QString(value.string.c_str())).arg(varName).toStdString());
+            inputs.append(FormInputPair(varSourceField, InjectionValue(QString::fromStdString(value.string))));
+            Log::debug(QString("Injecting string '%1' into %2").arg(QString(value.string.c_str())).arg(varName).toStdString());
             break;
+        case Symbolic::INT:
+            Log::error(QString("INJECTION ERROR: INT typed variable %1 encountered in the solver result, which is not expected.").arg(varName).toStdString());
+            statistics()->accumulate("Concolic::FailedInjections", 1);
+            continue;
         default:
-            Log::error(QString("Unimplemented value type encountered for variable %1 (%2)").arg(varName).arg(value.kind).toStdString());
+            Log::error(QString("INJECTION ERROR: Unimplemented value type encountered for variable %1 (%2)").arg(varName).arg(value.kind).toStdString());
             statistics()->accumulate("Concolic::FailedInjections", 1);
             continue;
         }
 
     }
 
-
     // Set up a new configuration which tests this input.
-    return QSharedPointer<FormInputCollection>(new FormInputCollection(inputs));
+    QSharedPointer<FormInputCollection> formInput = QSharedPointer<FormInputCollection>(new FormInputCollection(inputs));
+    // Connect it to postValueInjection so we will know when the injection is performed.
+    QObject::connect(formInput.data(), SIGNAL(sigFinishedWriteToPage()),
+                     this, SLOT(postValueInjection()));
+
+    return formInput;
 }
 
 

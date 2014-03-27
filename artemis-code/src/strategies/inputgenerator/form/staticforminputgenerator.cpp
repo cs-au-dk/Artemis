@@ -21,6 +21,7 @@
 #include <QList>
 
 #include "runtime/input/forms/forminputcollection.h"
+#include "runtime/input/forms/injectionvalue.h"
 
 #include "staticforminputgenerator.h"
 
@@ -46,18 +47,18 @@ FormInputCollectionPtr StaticFormInputGenerator::generateFormFields(QSet<FormFie
 
         switch (field->getType()) {
         case TEXT:
-            inputs.append(FormInputPair(field, generateRandomString(10)));
+            inputs.append(FormInputPair(field, InjectionValue(generateRandomString(10))));
             break;
         case BOOLEAN:
-            inputs.append(FormInputPair(field, randomBool() ? "true" : "false"));
+            inputs.append(FormInputPair(field, InjectionValue(randomBool())));
             break;
         case FIXED_INPUT:
             if(field->getInputOptions().size()>0){
-                inputs.append(FormInputPair(field, pickRand(field->getInputOptions())));
+                inputs.append(FormInputPair(field, InjectionValue(pickRand(field->getInputOptions()))));
                 break;
             }
         default:
-            inputs.append(FormInputPair(field, ""));
+            inputs.append(FormInputPair(field, InjectionValue(QString(""))));
         }
     }
 

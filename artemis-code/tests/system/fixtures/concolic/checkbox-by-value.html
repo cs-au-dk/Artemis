@@ -13,17 +13,18 @@ TEST Concolic::Solver::ConstraintsSolved = 2
 	<meta name="author" content="Ben Spencer">
 	<script type="text/javascript">
 		function validate() {
-			var e = document.getElementById("testinput");
+			var y = document.getElementById("testinput").checked;
 
-			if (e.checked == true) {
-				return false;
+			// This should be ignored.
+			if(document.getElementById("testinput").value == "badconstraint") {
+				alert("unreachable branch");
 			}
 
-			if (e.value != "on") {
+			if (y == true) {
 				return false;
+			}else{
+				return true;
 			}
-
-			return true;
 		}
 	</script>
 
@@ -33,7 +34,7 @@ TEST Concolic::Solver::ConstraintsSolved = 2
 
 	<form method="GET" action="about:blank" >
 
-		<input type="checkbox" id="testinput" />
+		<input type="checkbox" id="testinput" value="submissionvalue" />
 
 		<button type="submit" onclick="return validate();">Submit</button>
 

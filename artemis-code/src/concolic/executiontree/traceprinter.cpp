@@ -121,6 +121,12 @@ void TerminalTracePrinter::visit(TracePageLoad* node)
     addSingleValue("Load");
 }
 
+void TerminalTracePrinter::visit(TraceMarker *node)
+{
+    node->next->accept(this);
+    addSingleValue(QString("Marker: %1").arg(node->label));
+}
+
 void TerminalTracePrinter::visit(TraceFunctionCall* node)
 {
     node->next->accept(this);
