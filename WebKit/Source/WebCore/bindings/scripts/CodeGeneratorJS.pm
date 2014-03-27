@@ -1808,6 +1808,13 @@ sub GenerateImplementation
                         push(@implContent, "    if (castedThis->m_" . $attribute->signature->name . "Symbolic == NULL) {\n");
                         push(@implContent, "        std::ostringstream strs;\n");
                         push(@implContent, "        strs << \"SYM_IN_\";\n");
+                        # This tags int and bool typed variables with different names, avoiding any naming conflicts between two variables from the same element.
+                        if ($attribute->signature->extendedAttributes->{"SymbolicBoolean"}) {
+                            push(@implContent, "        strs << \"BOOL_\";\n");
+                        }
+                        if ($attribute->signature->extendedAttributes->{"SymbolicInteger"}) {
+                            push(@implContent, "        strs << \"INT_\";\n");
+                        }
                         push(@implContent, "\n");
                         push(@implContent, "        WTF::AtomicString inputName = impl->getAttribute(WebCore::HTMLNames::nameAttr);\n");
                         push(@implContent, "        WTF::AtomicString inputId = impl->getAttribute(WebCore::HTMLNames::idAttr);\n");
@@ -1826,15 +1833,17 @@ sub GenerateImplementation
                         push(@implContent, "            return result;\n");
                         push(@implContent, "        }\n");
                         push(@implContent, "\n");
-                        push(@implContent, "        Symbolic::SourceType inputSourceType = Symbolic::SymbolicSource::typeAttrToSourceType(type.string().ascii().data());\n");
                         if ($attribute->signature->extendedAttributes->{"SymbolicString"}) {
-                        push(@implContent, "        result.makeSymbolic(new Symbolic::SymbolicString(Symbolic::SymbolicSource(inputSourceType, method, std::string(strs.str()))));");
+                            push(@implContent, "        Symbolic::SourceType inputSourceType = Symbolic::SymbolicSource::stringAccessTypeAttrToSourceType(type.string().ascii().data());\n");
+                            push(@implContent, "        result.makeSymbolic(new Symbolic::SymbolicString(Symbolic::SymbolicSource(inputSourceType, method, std::string(strs.str()))));\n");
                         }
                         if ($attribute->signature->extendedAttributes->{"SymbolicBoolean"}) {
-                        push(@implContent, "        result.makeSymbolic(new Symbolic::SymbolicBoolean(Symbolic::SymbolicSource(inputSourceType, method, std::string(strs.str()))));");
+                            push(@implContent, "        Symbolic::SourceType inputSourceType = Symbolic::SymbolicSource::boolAccessTypeAttrToSourceType(type.string().ascii().data());\n");
+                            push(@implContent, "        result.makeSymbolic(new Symbolic::SymbolicBoolean(Symbolic::SymbolicSource(inputSourceType, method, std::string(strs.str()))));\n");
                         }
                         if ($attribute->signature->extendedAttributes->{"SymbolicInteger"}) {
-                        push(@implContent, "        result.makeSymbolic(new Symbolic::SymbolicInteger(Symbolic::SymbolicSource(inputSourceType, method, std::string(strs.str()))));");
+                            push(@implContent, "        Symbolic::SourceType inputSourceType = Symbolic::SymbolicSource::intAccessTypeAttrToSourceType(type.string().ascii().data());\n");
+                            push(@implContent, "        result.makeSymbolic(new Symbolic::SymbolicInteger(Symbolic::SymbolicSource(inputSourceType, method, std::string(strs.str()))));\n");
                         }
                         push(@implContent, "\n");
                         push(@implContent, "    } else {\n");

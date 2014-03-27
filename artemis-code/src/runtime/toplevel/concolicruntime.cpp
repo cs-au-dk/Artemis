@@ -357,7 +357,7 @@ void ConcolicRuntime::printSolution(SolutionPtr solution, QStringList varList)
             }
         }else{
             Log::fatal(QString("Error: Could not find value for %1 in the solver's solution.").arg(var).toStdString());
-            exit(1);
+            exit(1); // TODO: Maybe this should just be "could not solve" instead?
         }
     }
 }
@@ -420,8 +420,9 @@ QSharedPointer<const FormFieldDescriptor> ConcolicRuntime::findFormFieldForVaria
     QSharedPointer<const FormFieldDescriptor> varSourceField;
 
     // Variable names are of the form SYM_IN_<name>, and we will need to use <name> directly when searching the ids and names of the form fields.
+    // Bool and int variables can also have a marker to distinguish them from other variables from the same element.
     QString varBaseName = varName;
-    varBaseName.replace("SYM_IN_", "");
+    varBaseName.remove(QRegExp("^SYM_IN_(INT_|BOOL_)?"));
 
     switch(varSourceIdentifierMethod){
     case Symbolic::INPUT_NAME:

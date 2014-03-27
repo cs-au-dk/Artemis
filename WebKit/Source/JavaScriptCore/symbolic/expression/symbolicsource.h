@@ -26,7 +26,7 @@ enum SourceIdentifierMethod {
 };
 
 enum SourceType {
-    TEXT, SELECT, RADIO, CHECKBOX
+    TEXT, SELECT, SELECT_INDEX, RADIO, CHECKBOX, UNKNOWN
 };
 
 class SymbolicSource
@@ -51,17 +51,28 @@ public:
         return m_identifier;
     }
 
-    static SourceType typeAttrToSourceType(const char * type) {
+    static SourceType stringAccessTypeAttrToSourceType(const char * type) {
         if(strncasecmp(type, "select", 6) == 0){
             return SELECT;
         }
+        return TEXT;
+    }
+
+    static SourceType intAccessTypeAttrToSourceType(const char * type) {
+        if(strncasecmp(type, "select", 6) == 0){
+            return SELECT_INDEX;
+        }
+        return UNKNOWN;
+    }
+
+    static SourceType boolAccessTypeAttrToSourceType(const char * type) {
         if(strncasecmp(type, "radio", 5) == 0){
             return RADIO;
         }
         if(strncasecmp(type, "checkbox", 8) == 0){
             return CHECKBOX;
         }
-        return TEXT;
+        return UNKNOWN;
     }
 
 private:
