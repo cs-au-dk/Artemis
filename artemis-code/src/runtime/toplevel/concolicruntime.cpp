@@ -389,7 +389,7 @@ void ConcolicRuntime::printSolution(SolutionPtr solution, QStringList varList)
                 if(value.string.empty()){
                     Log::info(QString("    %1 = \"\"").arg(var).toStdString());
                 }else{
-                    Log::info(QString("    %1 = %2").arg(var).arg(value.string.c_str()).toStdString());
+                    Log::info(QString("    %1 = \"%2\"").arg(var).arg(value.string.c_str()).toStdString());
                 }
                 break;
             default:
@@ -430,7 +430,7 @@ QSharedPointer<FormInputCollection> ConcolicRuntime::createFormInput(QMap<QStrin
         // Create the field/value pairing to be injected using the FormInput object.
         switch (value.kind) {
         case Symbolic::BOOL:
-            inputs.append(FormInputPair(varSourceField, InjectionValue(value.u.boolean))); // TODO: How to represent booleans here?
+            inputs.append(FormInputPair(varSourceField, InjectionValue(value.u.boolean)));
             Log::debug(QString("Injecting boolean %1 into %2").arg(value.u.boolean ? "true" : "false").arg(varName).toStdString());
             break;
         case Symbolic::STRING:
@@ -438,9 +438,9 @@ QSharedPointer<FormInputCollection> ConcolicRuntime::createFormInput(QMap<QStrin
             Log::debug(QString("Injecting string '%1' into %2").arg(QString(value.string.c_str())).arg(varName).toStdString());
             break;
         case Symbolic::INT:
-            Log::error(QString("INJECTION ERROR: INT typed variable %1 encountered in the solver result, which is not expected.").arg(varName).toStdString());
-            statistics()->accumulate("Concolic::FailedInjections", 1);
-            continue;
+            inputs.append(FormInputPair(varSourceField, InjectionValue(value.u.integer)));
+            Log::debug(QString("Injecting int %1 into %2").arg(value.u.integer).arg(varName).toStdString());
+            break;
         default:
             Log::error(QString("INJECTION ERROR: Unimplemented value type encountered for variable %1 (%2)").arg(varName).arg(value.kind).toStdString());
             statistics()->accumulate("Concolic::FailedInjections", 1);

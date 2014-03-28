@@ -30,31 +30,10 @@ bool FormFieldInjector::inject(QWebElement element, InjectionValue value)
         return false;
     }
 
-    if (element.attribute("type", "") == "checkbox" || element.attribute("type", "") == "radio") {
+    // Depending on the variable type, we will inject in different ways.
+    switch (value.getType()) {
 
-        // We only expect to inject bool values into checkboxes or radio buttons. Reject string values.
-        if (value.isString()) {
-            qDebug() << "Warning: failed to inject input " << element.toPlainText() << ": expected a BOOL.\n";
-            statistics()->accumulate("Concolic::FailedInjections", 1); // TODO: this is called even in non-concolic modes!
-            return false;
-        }
-
-        // Setting the checked property via JavaScript injection allows WebKit to correctly update the state of the
-        // page, for example by unsetting other inputs in the same radio button group.
-        if (value.getBool()) {
-            element.evaluateJavaScript("this.checked = true;");
-        } else {
-            element.evaluateJavaScript("this.checked = false;");
-        }
-
-    } else {
-        // For all other input types we expect a string injection.
-        if (!value.isString()) {
-            qDebug() << "Warning: failed to inject input " << element.toPlainText() << ": expected a STRING.\n";
-            statistics()->accumulate("Concolic::FailedInjections", 1); // TODO: this is called even in non-concolic modes!
-            return false;
-        }
-
+    case QVariant::String:
         // We do this using JavaScript because some values are only correctly set this way
         // E.g. if you set the value of a select box then this approach correctly updates the node,
         // where the setAttribute approach updates the value itself but not the remaining state of the node
@@ -64,9 +43,46 @@ bool FormFieldInjector::inject(QWebElement element, InjectionValue value)
         QString setValue = QString("this.value = \"") + value.getString() + "\";";
         element.evaluateJavaScript(setValue);
 
+        break;
+
+    case QVariant::Bool:
+        // Bool injection is only supported into checkbox and radio button input types.
+        if (element.attribute("type", "") == "checkbox" || element.attribute("type", "") == "radio") {
+
+            // Setting the checked property via JavaScript injection allows WebKit to correctly update the state of the
+            // page, for example by unsetting other inputs in the same radio button group.
+            if (value.getBool()) {
+                element.evaluateJavaScript("this.checked = true;");
+            } else {
+                element.evaluateJavaScript("this.checked = false;");
+            }
+
+        } else {
+            qDebug() << "Warning: failed to inject BOOL into input " << element.toPlainText() << ".\n";
+            statistics()->accumulate("Concolic::FailedInjections", 1); // TODO: this is called even in non-concolic modes!
+            return false;
+        }
+
+        break;
+
+    case QVariant::Int:
+        // Int injection is only supported into select boxes as the selectedIndex.
+        if (element.attribute("type", "") == "select") {
+
+            element.evaluateJavaScript(QString("this.selectedIndex = %1;").arg(value.getInt()));
+
+        } else {
+            qDebug() << "Warning: failed to inject INT into input " << element.toPlainText() << ".\n";
+            statistics()->accumulate("Concolic::FailedInjections", 1); // TODO: this is called even in non-concolic modes!
+            return false;
+        }
+        break;
+
+    default:
+        qDebug() << "Error: Tried to inject a variable with an unknown type.\n";
+        statistics()->accumulate("Concolic::FailedInjections", 1); // TODO: this is called even in non-concolic modes!
+        return false;
     }
-    // TODO: Do we need any other cases here?
-    // For example seperate handling of "select" types where we could inject by index?
 
     return true;
 }
