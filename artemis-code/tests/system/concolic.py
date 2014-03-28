@@ -77,6 +77,7 @@ def test_generator(filename, name, test_dict=None, internal_test=None):
         report = execute_artemis(name, "%s%s" % (FIXTURE_ROOT, filename),
                                  iterations=0,
                                  major_mode='concolic',
+                                 concolic_event_sequences='simple',
                                  verbose=True)
 
         assert test_dict or internal_test, "No tests to execute"
