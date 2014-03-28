@@ -210,7 +210,27 @@ SolutionPtr CVC4Solver::solve(PathConditionPtr pc)
         Symbolvalue symbolvalue;
         symbolvalue.found = true;
 
+        // The variable names indicate the type of the variable when it was read from the DOM.
+        // SYM_IN_x => string, SYM_IN_INT_y => int, SYM_IN_BOOL_z => bool
+        // But we also have the type used by the solver for that variable. These should walways match up, except in
+        // the case where we perform a string->int optimisation and see a string named variable with int type in the
+        // solver. These variables should be converted back to strings.
+
+        Symbolic::Type symbol_name_type;
+        if (SMTConstraintWriter::decodeIdentifier(symbol).compare(0, 12, "SYM_IN_BOOL_") == 0) {
+            symbol_name_type = Symbolic::BOOL;
+        } else if (SMTConstraintWriter::decodeIdentifier(symbol).compare(0, 11, "SYM_IN_INT_") == 0) {
+            symbol_name_type = Symbolic::INT;
+        } else {
+            symbol_name_type = Symbolic::STRING;
+        }
+
         if (type.compare("String") == 0) {
+            // Double-check we have a string-typed variable name.
+            if (symbol_name_type != Symbolic::STRING){
+                return emitError(clog, "Variable name and type mismatch for String variable in solver's result.");
+            }
+
             symbolvalue.kind = Symbolic::STRING;
 
             // Strip quotes from strings
@@ -222,6 +242,11 @@ SolutionPtr CVC4Solver::solve(PathConditionPtr pc)
             symbolvalue.string = value;
 
         } else if (type.compare("Bool") == 0) {
+            // Double-check we have a bool-typed variable name.
+            if (symbol_name_type != Symbolic::BOOL){
+                return emitError(clog, "Variable name and type mismatch for Bool variable in solver's result.");
+            }
+
             symbolvalue.kind = Symbolic::BOOL;
 
             if (value.compare("false") == 0) {
@@ -233,18 +258,36 @@ SolutionPtr CVC4Solver::solve(PathConditionPtr pc)
             }
 
         } else if (type.compare("Int") == 0) {
-            // We only generate symbolic strings and bools in the PCs and pass those to this solver.
-            // The constraint writer can do some string -> int optimsations in certain situations to gelp CVC4.
-            // We want to undo those here so the results produced match up with the input given.
-            // Hence we leave integer results as strings in the result and do not translate them.
-            symbolvalue.kind = Symbolic::STRING;
+            // Check the type according to the variable name.
+            if (symbol_name_type == Symbolic::INT) {
+                // This really is an int-typed variable.
 
-            // Handle negative values.
-            if (value.find("(- ") == std::string::npos) {
-                symbolvalue.string = value;
+                symbolvalue.kind = Symbolic::INT;
+
+                // Handle negative values.
+                if (value.find("(- ") == std::string::npos) {
+                    std::stringstream(value) >> symbolvalue.u.integer;
+                } else {
+                    std::stringstream(value.substr(3, value.length() - 3)) >> symbolvalue.u.integer;
+                    symbolvalue.u.integer *= -1;
+                }
+
+            } else if (symbol_name_type == Symbolic::STRING) {
+                // This variable was optimised string->int by the constraint writer to help CVC4.
+                // We want to undo this here.
+
+                symbolvalue.kind = Symbolic::STRING;
+
+                // Handle negative values.
+                if (value.find("(- ") == std::string::npos) {
+                    symbolvalue.string = value;
+                } else {
+                    symbolvalue.string = "-" + value.substr(3, value.length() - 3);
+                }
             } else {
-                symbolvalue.string = "-" + value.substr(3, value.length() - 3);
+                return emitError(clog, "Variable name and type mismatch for Int variable in solver's result.");
             }
+
 
         } else {
             std::ostringstream err;
