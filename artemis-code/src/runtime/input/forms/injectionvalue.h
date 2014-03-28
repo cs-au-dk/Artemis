@@ -48,7 +48,7 @@ public:
         assert(getType() == QVariant::Int);
         return value.toInt();
     }
-    bool getType() const {
+    QVariant::Type getType() const {
         return value.type();
     }
     QString toString() const { // Used as a printable value for debug output, etc. Should not be used for injection!

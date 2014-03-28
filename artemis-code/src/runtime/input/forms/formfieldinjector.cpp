@@ -24,8 +24,10 @@ namespace artemis
 
 bool FormFieldInjector::inject(QWebElement element, InjectionValue value)
 {
+    QString setValue;
+
     if (element.isNull()) {
-        qDebug() << "Warning: failed to inject input.\n";
+        qDebug() << "Warning: failed to inject input. Targeting null element.\n";
         statistics()->accumulate("Concolic::FailedInjections", 1); // TODO: this is called even in non-concolic modes!
         return false;
     }
@@ -40,7 +42,7 @@ bool FormFieldInjector::inject(QWebElement element, InjectionValue value)
 
         // TODO this is a bit risky, what if this triggers other events?
 
-        QString setValue = QString("this.value = \"") + value.getString() + "\";";
+        setValue = QString("this.value = \"") + value.getString() + "\";";
         element.evaluateJavaScript(setValue);
 
         break;
@@ -67,7 +69,7 @@ bool FormFieldInjector::inject(QWebElement element, InjectionValue value)
 
     case QVariant::Int:
         // Int injection is only supported into select boxes as the selectedIndex.
-        if (element.attribute("type", "") == "select") {
+        if (element.tagName().toLower() == "select") {
 
             element.evaluateJavaScript(QString("this.selectedIndex = %1;").arg(value.getInt()));
 
