@@ -58,12 +58,17 @@ public:
         return TEXT;
     }
 
+    // Removed the int SourceType lookup function for two reasons.
+    // 1) We currently only generate ints for select box selectedIndex lookups.
+    // 2) Select boxes are not identified by type attribute anyway, they are a separate element. So this code was returning UNKNOWN anyway.
+    /*
     static SourceType intAccessTypeAttrToSourceType(const char * type) {
         if(strncasecmp(type, "select", 6) == 0){
             return SELECT_INDEX;
         }
         return UNKNOWN;
     }
+    */
 
     static SourceType boolAccessTypeAttrToSourceType(const char * type) {
         if(strncasecmp(type, "radio", 5) == 0){

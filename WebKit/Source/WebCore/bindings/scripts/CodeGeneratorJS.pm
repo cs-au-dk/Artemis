@@ -1347,6 +1347,11 @@ sub GenerateImplementation
     $implIncludes{"<ostream>"} = 1;
     $implIncludes{"<sstream>"} = 1;
     $implIncludes{"<QDebug>"} = 1;
+    # Hack to include extra header for JSHTMLOptionsCollection.cpp.
+    # Assumes we don't set SymbolicOptionsCollectionAttr anywhere but in HTMLOptionsCollection.idl.
+    if ($className eq "JSHTMLOptionsCollection") {
+        $implIncludes{"\"HTMLSelectElement.h\""} = 1;
+    }
     # ARTEMIS END
 
     AddIncludesForTypeInImpl($interfaceName);
@@ -1797,22 +1802,26 @@ sub GenerateImplementation
                     
                     if ($attribute->signature->extendedAttributes->{"Symbolic"}) {
                         # ARTEMIS BEGIN
-                        push(@implContent, "\n");
-                        push(@implContent, "    // Do not make hidden inputs or values read from buttons symbolic.\n");
-                        push(@implContent, "    WTF::AtomicString type = impl->getAttribute(WebCore::HTMLNames::typeAttr);\n");
-                        # See commit f1a40d5c for an odd gotcha here.
-                        push(@implContent, "    if(strncmp(type.string().lower().ascii().data(), \"hidden\", 6) == 0 || strncmp(type.string().lower().ascii().data(), \"submit\", 6) == 0 || strncmp(type.string().lower().ascii().data(), \"button\", 6) == 0){\n");
-                        push(@implContent, "        return result;\n");
-                        push(@implContent, "    }\n");
-                        push(@implContent, "\n");
-                        # This adds code to the methods jsHTMLElementValue() and jsHTMLElementValueAsNumber() but not to jsHTMLElementChecked().
-                        if ($attribute->signature->extendedAttributes->{"SymbolicBoolean"}) {
-                            push(@implContent, "    // This is a boolean access function, so no special handling of radio buttons and checkboxes has been added.\n");
-                        } else {
-                            push(@implContent, "    // Do not make checkbox or radio button values symbolic.\n");
-                            push(@implContent, "    if(strncmp(type.string().lower().ascii().data(), \"radio\", 5) == 0 || strncmp(type.string().lower().ascii().data(), \"checkbox\", 8) == 0){\n");
+                        # Remove the type-checks for SymbolicOptionsCollectionAttr, which does not have impl->getAttribute().
+                        # We assume SymbolicOptionsCollectionAttr is only set on attributes of select box OptionsCollection attributes (obviously).
+                        unless ($attribute->signature->extendedAttributes->{"SymbolicOptionsCollectionAttr"}) {
+                            push(@implContent, "\n");
+                            push(@implContent, "    // Do not make hidden inputs or values read from buttons symbolic.\n");
+                            push(@implContent, "    WTF::AtomicString type = impl->getAttribute(WebCore::HTMLNames::typeAttr);\n");
+                            # See commit f1a40d5c for an odd gotcha here.
+                            push(@implContent, "    if(strncmp(type.string().lower().ascii().data(), \"hidden\", 6) == 0 || strncmp(type.string().lower().ascii().data(), \"submit\", 6) == 0 || strncmp(type.string().lower().ascii().data(), \"button\", 6) == 0){\n");
                             push(@implContent, "        return result;\n");
                             push(@implContent, "    }\n");
+                            push(@implContent, "\n");
+                            # This adds code to the methods jsHTMLElementValue() and jsHTMLElementValueAsNumber() but not to jsHTMLElementChecked().
+                            if ($attribute->signature->extendedAttributes->{"SymbolicBoolean"}) {
+                                push(@implContent, "    // This is a boolean access function, so no special handling of radio buttons and checkboxes has been added.\n");
+                            } else {
+                                push(@implContent, "    // Do not make checkbox or radio button values symbolic.\n");
+                                push(@implContent, "    if(strncmp(type.string().lower().ascii().data(), \"radio\", 5) == 0 || strncmp(type.string().lower().ascii().data(), \"checkbox\", 8) == 0){\n");
+                                push(@implContent, "        return result;\n");
+                                push(@implContent, "    }\n");
+                            }
                         }
                         push(@implContent, "\n");
                         push(@implContent, "    if (castedThis->m_" . $attribute->signature->name . "Symbolic == NULL) {\n");
@@ -1826,8 +1835,15 @@ sub GenerateImplementation
                             push(@implContent, "        strs << \"INT_\";\n");
                         }
                         push(@implContent, "\n");
-                        push(@implContent, "        WTF::AtomicString inputName = impl->getAttribute(WebCore::HTMLNames::nameAttr);\n");
-                        push(@implContent, "        WTF::AtomicString inputId = impl->getAttribute(WebCore::HTMLNames::idAttr);\n");
+                        # For options collection objects, we calculate the symbolic name from the 'parent' select element instead of the default method.
+                        if ($attribute->signature->extendedAttributes->{"SymbolicOptionsCollectionAttr"}) {
+                            push(@implContent, "        HTMLSelectElement* parentSelect = toHTMLSelectElement(impl->base());\n");
+                            push(@implContent, "        WTF::AtomicString inputName = parentSelect->getAttribute(WebCore::HTMLNames::nameAttr);\n");
+                            push(@implContent, "        WTF::AtomicString inputId = parentSelect->getAttribute(WebCore::HTMLNames::idAttr);\n");
+                        } else {
+                            push(@implContent, "        WTF::AtomicString inputName = impl->getAttribute(WebCore::HTMLNames::nameAttr);\n");
+                            push(@implContent, "        WTF::AtomicString inputId = impl->getAttribute(WebCore::HTMLNames::idAttr);\n");
+                        }
                         push(@implContent, "\n");
                         push(@implContent, "        Symbolic::SourceIdentifierMethod method;\n");
 
@@ -1852,7 +1868,7 @@ sub GenerateImplementation
                             push(@implContent, "        result.makeSymbolic(new Symbolic::SymbolicBoolean(Symbolic::SymbolicSource(inputSourceType, method, std::string(strs.str()))));\n");
                         }
                         if ($attribute->signature->extendedAttributes->{"SymbolicInteger"}) {
-                            push(@implContent, "        Symbolic::SourceType inputSourceType = Symbolic::SymbolicSource::intAccessTypeAttrToSourceType(type.string().ascii().data());\n");
+                            push(@implContent, "        Symbolic::SourceType inputSourceType = Symbolic::SELECT_INDEX;\n");
                             push(@implContent, "        result.makeSymbolic(new Symbolic::SymbolicInteger(Symbolic::SymbolicSource(inputSourceType, method, std::string(strs.str()))));\n");
                         }
                         push(@implContent, "\n");
