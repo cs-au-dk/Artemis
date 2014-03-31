@@ -60,7 +60,7 @@ bool FormFieldInjector::inject(QWebElement element, InjectionValue value)
             }
 
         } else {
-            qDebug() << "Warning: failed to inject BOOL into input " << element.toPlainText() << ".\n";
+            qDebug() << "Warning: failed to inject BOOL into input " << element.tagName() << " input: id:" << element.attribute("id", "") << ", classes:" << element.classes().join(",") << ".\n";
             statistics()->accumulate("Concolic::FailedInjections", 1); // TODO: this is called even in non-concolic modes!
             return false;
         }
@@ -74,7 +74,7 @@ bool FormFieldInjector::inject(QWebElement element, InjectionValue value)
             element.evaluateJavaScript(QString("this.selectedIndex = %1;").arg(value.getInt()));
 
         } else {
-            qDebug() << "Warning: failed to inject INT into input " << element.toPlainText() << ".\n";
+            qDebug() << "Warning: failed to inject INT into " << element.tagName() << " input: id:" << element.attribute("id", "") << ", classes:" << element.classes().join(",") << ".\n";
             statistics()->accumulate("Concolic::FailedInjections", 1); // TODO: this is called even in non-concolic modes!
             return false;
         }

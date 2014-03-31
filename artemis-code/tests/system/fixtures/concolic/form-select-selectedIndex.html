@@ -2,7 +2,7 @@
 TEST PC[0] = ((SymbolicInteger != ConstantInteger) == ConstantBoolean)
 TEST Concolic::Solver::ConstraintsSolved = 2
 TEST Concolic::Solver::ConstraintsWritten = 2
-TEST Concolic::Solver::Constraint.SYM_IN_INT_testinput = 0
+TEST Concolic::Solver::Constraint.SYM_IN_INT_testinput = 1
 -->
 <!doctype html><html lang="en">
 <head>
@@ -11,7 +11,7 @@ TEST Concolic::Solver::Constraint.SYM_IN_INT_testinput = 0
 
 	<title></title>
 	<script type="text/javascript">
-		var x = 0;
+		var x = 1;
 
 		function validate() {
 			var y = document.getElementById("testinput").selectedIndex;
@@ -38,8 +38,6 @@ TEST Concolic::Solver::Constraint.SYM_IN_INT_testinput = 0
 		  <option value="mercedes">Mercedes</option>
 		  <option value="audi">Audi</option>
 		</select>
-
-		<input type="text" id="testinput" />
 
 		<button type="submit" >Submit</button>
 
