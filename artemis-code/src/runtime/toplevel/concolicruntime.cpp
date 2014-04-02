@@ -267,6 +267,7 @@ void ConcolicRuntime::postInitialConcreteExecution(QSharedPointer<ExecutionResul
 {
     // Find the form fields on the page and save them.
     mFormFields = result->getFormFields().toList();
+    mFormFieldRestrictions = FormFieldRestrictedValues::getRestrictions(mFormFields, mWebkitExecutor->getPage());
 
     // Print the form fields found on the page.
     Log::debug("Form fields found:");
@@ -276,6 +277,26 @@ void ConcolicRuntime::postInitialConcreteExecution(QSharedPointer<ExecutionResul
         fieldNames.append(field->getDomElement()->toString());
     }
     Log::info(QString("  Form fields: %1").arg(fieldNames.join(", ")).toStdString());
+
+    // Print the form field restrictions found.
+    QStringList options;
+    Log::debug("Form field SELECT restrictions found:");
+    if (mFormFieldRestrictions.first.size() == 0) {
+        Log::debug("  none");
+    }
+    foreach (SelectRestriction sr, mFormFieldRestrictions.first) {
+        options = sr.values.toList();
+        Log::debug(QString("  '%1' chosen from: %2").arg(sr.variable).arg(options.join(", ")).toStdString());
+    }
+
+    Log::debug("Form field RADIO restrictions found:");
+    if (mFormFieldRestrictions.second.size() == 0) {
+        Log::debug("  none");
+    }
+    foreach (RadioRestriction rr, mFormFieldRestrictions.second) {
+        options = rr.variables.toList();
+        Log::debug(QString("  '%1' mutually exclusive%2: %3").arg(rr.groupName).arg(rr.alwaysSet ? "" : " (or none)").arg(options.join(", ")).toStdString());
+    }
 
     // Create an "empty" form input which will inject nothing into the page.
     QList<FormInputPair > inputs;
@@ -469,6 +490,7 @@ QSharedPointer<const FormFieldDescriptor> ConcolicRuntime::findFormFieldForVaria
     QString varBaseName = varName;
     varBaseName.remove(QRegExp("^SYM_IN_(INT_|BOOL_)?"));
 
+    // TODO: There is similar code in formfieldrestrictedvalues.cpp, which could be merged into a single utility.
     switch(varSourceIdentifierMethod){
     case Symbolic::INPUT_NAME:
         // Fetch the formField with this name

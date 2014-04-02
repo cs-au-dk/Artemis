@@ -128,7 +128,8 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/model/stubeventexecutionstatistics.h \
     src/model/jsoneventexecutionstatistics.h \
     src/runtime/input/forms/formfieldinjector.h \
-    src/runtime/input/forms/injectionvalue.h
+    src/runtime/input/forms/injectionvalue.h \
+    src/runtime/input/forms/formfieldrestrictedvalues.h
 
 SOURCES += src/runtime/input/ajaxinput.cpp \
     src/strategies/prioritizer/constantprioritizer.cpp \
@@ -234,6 +235,7 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/model/seleniumeventexecutionstatistics.cpp \
     src/model/stubeventexecutionstatistics.cpp \
     src/model/jsoneventexecutionstatistics.cpp \
-    src/runtime/input/forms/formfieldinjector.cpp
+    src/runtime/input/forms/formfieldinjector.cpp \
+    src/runtime/input/forms/formfieldrestrictedvalues.cpp
 
 QT += network
