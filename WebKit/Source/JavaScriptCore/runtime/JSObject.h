@@ -827,8 +827,18 @@ inline JSValue JSValue::get(ExecState* exec, const Identifier& propertyName, Pro
     }
     JSCell* cell = asCell();
     while (true) {
-        if (cell->fastGetOwnPropertySlot(exec, propertyName, slot))
+        if (cell->fastGetOwnPropertySlot(exec, propertyName, slot)) {
+#ifdef ARTEMIS
+            // fastGetOwnPropertySlot overwrites the slotBase with the cell pointer, under certain conditions.
+            // However, this scrubs away all symbolic information. Thus, reset the slotBase to the correct
+            // value w. symbolic information.
+            if (isSymbolic() && slot.slotBase().asCell() == asCell()) {
+                slot.setBase(*this);
+            }
+#endif
+
             return slot.getValue(exec, propertyName);
+        }
         JSValue prototype = asObject(cell)->prototype();
         if (!prototype.isObject())
             return jsUndefined();

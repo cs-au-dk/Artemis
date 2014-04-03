@@ -26,7 +26,7 @@ def test_generator(filename, name, path_condition, page):
         else:
             newFilename = setUpTempFileFromTemplate(WEBSERVER_ROOT, filename)
 
-        report = execute_artemis(name, "{0}/{1}".format(WEBSERVER_ROOT, newFilename), iterations=2,
+        report = execute_artemis(name, "{0}/{1}".format(WEBSERVER_ROOT, newFilename), verbose=True, iterations=2,
 				fields=["#selectinput=volvo"],)
         
 	if len(report['pathCondition']) > 0:
@@ -88,4 +88,4 @@ if __name__ == '__main__':
         test = test_generator(t['file_name'], t['name'], t['path_condition'], t['page'])
 	test.__name__ = test_name
         setattr(Symbolic, test_name, test)
-    unittest.main()
+    unittest.main(buffer=True)
