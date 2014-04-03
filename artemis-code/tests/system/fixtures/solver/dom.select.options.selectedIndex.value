@@ -1,0 +1,3 @@
+if (select.options[select.selectedIndex].value == "volvo") {
+    alert("hit");
+}

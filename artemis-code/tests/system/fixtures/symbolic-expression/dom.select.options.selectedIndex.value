@@ -1,0 +1,4 @@
+TEST PC: ((SymbolicString == ConstantString) == ConstantBoolean)
+if (select.options[select.selectedIndex].value == "volvo") {
+    alert("hit");
+}
