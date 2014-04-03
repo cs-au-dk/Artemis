@@ -17,6 +17,7 @@
 #include <QPair>
 #include <QString>
 #include <QSet>
+#include <QList>
 #include <QHash>
 
 #include "runtime/input/forms/formfielddescriptor.h"
@@ -31,7 +32,7 @@ namespace artemis
 
 typedef struct {
     QString variable;
-    QSet<QString> values;
+    QList<QString> values;
 } SelectRestriction;
 
 typedef struct {

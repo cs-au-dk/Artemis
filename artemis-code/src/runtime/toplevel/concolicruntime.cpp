@@ -285,13 +285,17 @@ void ConcolicRuntime::postInitialConcreteExecution(QSharedPointer<ExecutionResul
         Log::debug("  none");
     }
     foreach (SelectRestriction sr, mFormFieldRestrictions.first) {
-        options = sr.values.toList();
+        int idx = 0;
+        foreach(QString val, sr.values) {
+            options.append(QString("%1/'%2'").arg(idx).arg(val));
+            idx++;
+        }
         Log::debug(QString("  '%1' chosen from: %2").arg(sr.variable).arg(options.join(", ")).toStdString());
     }
 
     Log::debug("Form field RADIO restrictions found:");
     if (mFormFieldRestrictions.second.size() == 0) {
-        Log::debug("  none");
+        Log::debug("  None");
     }
     foreach (RadioRestriction rr, mFormFieldRestrictions.second) {
         options = rr.variables.toList();

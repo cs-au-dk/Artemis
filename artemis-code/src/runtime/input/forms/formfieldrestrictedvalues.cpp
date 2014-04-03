@@ -34,8 +34,10 @@ FormRestrictions FormFieldRestrictedValues::getRestrictions(QList<FormFieldDescr
         if (field->getType() == FIXED_INPUT) {
             SelectRestriction result;
             result.variable = getVariableName(field);
-            result.values = field->getInputOptions();
-
+            QWebElementCollection options = field->getDomElement()->getElement(page).findAll("option");
+            foreach(QWebElement o, options) {
+                result.values.append(o.attribute("value"));
+            }
             selects.insert(result);
 
         } else if (field->getDomElement()->getElement(page).attribute("type") == "radio") {
