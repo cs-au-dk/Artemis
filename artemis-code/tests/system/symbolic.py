@@ -86,5 +86,6 @@ if __name__ == '__main__':
     for t in generate_tests_from_folder(WEBSERVER_ROOT):
         test_name = 'test_%s' % t['name']
         test = test_generator(t['file_name'], t['name'], t['path_condition'], t['page'])
+	test.__name__ = test_name
         setattr(Symbolic, test_name, test)
     unittest.main()
