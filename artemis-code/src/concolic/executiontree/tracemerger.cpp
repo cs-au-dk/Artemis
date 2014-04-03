@@ -90,31 +90,6 @@ void TraceMerger::visit(TraceBranch* node)
 
         TraceBranchPtr treeBranch = mCurrentTree.dynamicCast<TraceBranch>();
 
-        // Add statistics if we are completing the exploratrion of this branch.
-        // i.e. if one branch is explored in the tree, and the unexplored branch is to be replaced by something else in the trace.
-        if((TraceVisitor::isImmediatelyUnexplored(treeBranch->getTrueBranch())
-                && !TraceVisitor::isImmediatelyUnexplored(treeBranch->getFalseBranch())
-                && !TraceVisitor::isImmediatelyUnexplored(node->getTrueBranch()))
-            || (TraceVisitor::isImmediatelyUnexplored(treeBranch->getFalseBranch())
-                && !TraceVisitor::isImmediatelyUnexplored(treeBranch->getTrueBranch())
-                && !TraceVisitor::isImmediatelyUnexplored(node->getFalseBranch()))) {
-            // Check whether we are exploring a new path at this branch node.
-            if(TraceVisitor::isImmediatelyConcreteBranch(treeBranch)) {
-                statistics()->accumulate("Concolic::ExecutionTree::ConcreteBranchesFullyExplored", 1);
-            }else{
-                statistics()->accumulate("Concolic::ExecutionTree::SymbolicBranchesFullyExplored", 1);
-            }
-        }
-        // "Fix" the statistics for branch counts
-        // This is a slight hack as we count nodes multiple times in the detector but then we decrement the counter
-        // again here for any duplicate nodes.
-        if(TraceVisitor::isImmediatelyConcreteBranch(treeBranch)) {
-            statistics()->accumulate("Concolic::ExecutionTree::ConcreteBranchesTotal", -1);
-        }else{
-            statistics()->accumulate("Concolic::ExecutionTree::SymbolicBranchesTotal", -1);
-        }
-
-
         // Merge the traces for each branch
 
         mCurrentTree = treeBranch->getTrueBranch();
@@ -151,9 +126,6 @@ void TraceMerger::visit(TraceAnnotation* node)
     }
 
     if (node->isEqualShallow(mCurrentTree)) {
-
-        fixDoubleCountedAnnotations(mCurrentTree);
-
         TraceAnnotationPtr treeAnnotation = mCurrentTree.dynamicCast<TraceAnnotation>();
 
         mCurrentTree = treeAnnotation->next;
@@ -176,24 +148,6 @@ void TraceMerger::visit(TraceNode* node)
 {
     qWarning() << "TraceNode reached, this indicates a missing case in the TraceMerger visitor!";
     exit(1);
-}
-
-
-// Checks whether the given node is an alert, page load or dom modification (with indicator words) and if so,
-// decrements the appropriate statistics to account for "double-counting" them in the trace detectors.
-void TraceMerger::fixDoubleCountedAnnotations(TraceNodePtr node)
-{
-    if(!node.dynamicCast<TraceAlert>().isNull()) {
-        statistics()->accumulate("Concolic::ExecutionTree::Alerts", -1);
-    } else if(!node.dynamicCast<TracePageLoad>().isNull()) {
-        statistics()->accumulate("Concolic::ExecutionTree::PageLoads", -1);
-    } else {
-        QSharedPointer<TraceDomModification> domMod = node.dynamicCast<TraceDomModification>();
-        if(!domMod.isNull() && domMod->words.size() > 0){ // Condition on words must match TraceDomModDetector::slDomModified().
-            statistics()->accumulate("Concolic::ExecutionTree::InterestingDomModifications", -1);
-        }
-
-    }
 }
 
 

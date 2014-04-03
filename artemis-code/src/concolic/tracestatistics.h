@@ -36,24 +36,62 @@ public:
     TraceStatistics();
 
     int mNumNodes;
+
     int mNumBranches;
     int mNumSymBranches;
+    int mNumConcreteBranches;
+    int mNumBranchesFullyExplored;
+    int mNumSymBranchesFullyExplored;
+    int mNumConcreteBranchesFullyExplored;
+
+    int mNumEventSequenceSymBranches;
+    int mNumEventSequenceSymBranchesFullyExplored;
+
     int mNumAlerts;
     int mNumFunctionCalls;
+    int mNumDomModifications;
+    int mNumInterestingDomModifications;
+    int mNumPageLoads;
+    int mNumEventMarkers;
+
+    int mNumEndSuccess;
+    int mNumEndFailure;
+    int mNumEndUnknown;
+
+    int mNumUnexplored;
+    int mNumUnexploredUnsat;
+    int mNumUnexploredMissed;
+    int mNumUnexploredUnsolvable;
 
     void processTrace(TraceNodePtr trace);
 
-    // Cases we need to ignore or which cause an error.
+    // Cases we ignore or which cause an error.
     virtual void visit(TraceNode* node);
     virtual void visit(TraceAnnotation* node);
-    virtual void visit(TraceEnd* node);
-    virtual void visit(TraceUnexplored* node);
 
     // Cases we will implement.
     virtual void visit(TraceConcreteBranch* node);
     virtual void visit(TraceSymbolicBranch* node);
+
     virtual void visit(TraceAlert* node);
     virtual void visit(TraceFunctionCall* node);
+    virtual void visit(TraceDomModification* node);
+    virtual void visit(TracePageLoad* node);
+    virtual void visit(TraceMarker* node);
+
+    virtual void visit(TraceEndSuccess* node);
+    virtual void visit(TraceEndFailure* node);
+    virtual void visit(TraceEndUnknown* node);
+
+    virtual void visit(TraceUnexplored* node);
+    virtual void visit(TraceUnexploredUnsat* node);
+    virtual void visit(TraceUnexploredMissed* node);
+    virtual void visit(TraceUnexploredUnsolvable* node);
+
+protected:
+    bool isFullyExplored(TraceBranch* node);
+    int mNumSymBranchesSinceLastMarker;
+    int mNumSymBranchesFullyExploredSinceLastMarker;
 };
 
 

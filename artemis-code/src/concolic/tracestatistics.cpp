@@ -32,10 +32,35 @@ void TraceStatistics::processTrace(TraceNodePtr trace)
 {
     // Initialise the statistic variables.
     mNumNodes = 0;
+
     mNumBranches = 0;
     mNumSymBranches = 0;
+    mNumConcreteBranches = 0;
+    mNumBranchesFullyExplored = 0;
+    mNumSymBranchesFullyExplored = 0;
+    mNumConcreteBranchesFullyExplored = 0;
+
+    mNumEventSequenceSymBranches = 0;
+    mNumEventSequenceSymBranchesFullyExplored = 0;
+
+    mNumSymBranchesSinceLastMarker = 0;
+    mNumSymBranchesFullyExploredSinceLastMarker = 0;
+
     mNumAlerts = 0;
     mNumFunctionCalls = 0;
+    mNumDomModifications = 0;
+    mNumInterestingDomModifications = 0;
+    mNumPageLoads = 0;
+    mNumEventMarkers = 0;
+
+    mNumEndSuccess = 0;
+    mNumEndFailure = 0;
+    mNumEndUnknown = 0;
+
+    mNumUnexplored = 0;
+    mNumUnexploredUnsat = 0;
+    mNumUnexploredMissed = 0;
+    mNumUnexploredUnsolvable = 0;
 
     // Run the visitor
     trace->accept(this);
@@ -60,37 +85,38 @@ void TraceStatistics::visit(TraceAnnotation *node)
     node->next->accept(this);
 }
 
-// For trace ends, simply end as we have nowhere to go.
-void TraceStatistics::visit(TraceEnd *node)
-{
-    mNumNodes++;
-}
-
-void TraceStatistics::visit(TraceUnexplored *node)
-{
-    mNumNodes++;
-}
-
-// For concrete branch nodes, search both children and add to branch counter.
 void TraceStatistics::visit(TraceConcreteBranch *node)
 {
     mNumNodes++;
     mNumBranches++;
+    mNumConcreteBranches++;
+
+    if(isFullyExplored(node)) {
+        mNumBranchesFullyExplored++;
+        mNumConcreteBranchesFullyExplored++;
+    }
+
     node->getFalseBranch()->accept(this);
     node->getTrueBranch()->accept(this);
 }
 
-// For symbolic branch nodes, search both children and add to branch and symbolic counter.
 void TraceStatistics::visit(TraceSymbolicBranch *node)
 {
     mNumNodes++;
     mNumBranches++;
     mNumSymBranches++;
+    mNumSymBranchesSinceLastMarker++;
+
+    if(isFullyExplored(node)) {
+        mNumBranchesFullyExplored++;
+        mNumSymBranchesFullyExplored++;
+        mNumSymBranchesFullyExploredSinceLastMarker++;
+    }
+
     node->getFalseBranch()->accept(this);
     node->getTrueBranch()->accept(this);
 }
 
-// Add to alert counter and continue.
 void TraceStatistics::visit(TraceAlert *node)
 {
     mNumNodes++;
@@ -98,12 +124,96 @@ void TraceStatistics::visit(TraceAlert *node)
     node->next->accept(this);
 }
 
-// Add to function call counter and continue.
 void TraceStatistics::visit(TraceFunctionCall *node)
 {
     mNumNodes++;
     mNumFunctionCalls++;
     node->next->accept(this);
+}
+
+void TraceStatistics::visit(TraceDomModification *node)
+{
+    // We only count DOM modifications if they contain any of our "indicator words".
+    mNumNodes++;
+    mNumDomModifications++;
+    if(node->words.size() > 0) {
+        mNumInterestingDomModifications++;
+    }
+    node->next->accept(this);
+}
+
+void TraceStatistics::visit(TracePageLoad *node)
+{
+    mNumNodes++;
+    mNumPageLoads++;
+    node->next->accept(this);
+}
+
+void TraceStatistics::visit(TraceMarker *node)
+{
+    mNumNodes++;
+    mNumEventMarkers++;
+
+    mNumEventSequenceSymBranches += mNumSymBranchesSinceLastMarker;
+    mNumEventSequenceSymBranchesFullyExplored += mNumSymBranchesFullyExploredSinceLastMarker;
+
+    mNumSymBranchesSinceLastMarker = 0;
+    mNumSymBranchesFullyExploredSinceLastMarker = 0;
+
+    node->next->accept(this);
+}
+
+void TraceStatistics::visit(TraceEndSuccess *node)
+{
+    mNumNodes++;
+    mNumEndSuccess++;
+}
+
+void TraceStatistics::visit(TraceEndFailure *node)
+{
+    mNumNodes++;
+    mNumEndFailure++;
+}
+
+void TraceStatistics::visit(TraceEndUnknown*node)
+{
+    mNumNodes++;
+    mNumEndUnknown++;
+}
+
+void TraceStatistics::visit(TraceUnexplored *node)
+{
+    mNumNodes++;
+    mNumUnexplored++;
+}
+
+void TraceStatistics::visit(TraceUnexploredUnsat *node)
+{
+    mNumNodes++;
+    mNumUnexploredUnsat++;
+}
+
+void TraceStatistics::visit(TraceUnexploredMissed *node)
+{
+    mNumNodes++;
+    mNumUnexploredMissed++;
+}
+
+void TraceStatistics::visit(TraceUnexploredUnsolvable *node)
+{
+    mNumNodes++;
+    mNumUnexploredUnsolvable++;
+}
+
+
+
+
+// Checks if a branch is fully explored.
+bool TraceStatistics::isFullyExplored(TraceBranch *node)
+{
+    bool leftExplored = !isImmediatelyUnexplored(node->getFalseBranch()) || isImmediatelyUnsat(node->getFalseBranch());
+    bool rightExplored = !isImmediatelyUnexplored(node->getTrueBranch()) || isImmediatelyUnsat(node->getTrueBranch());;
+    return leftExplored && rightExplored;
 }
 
 

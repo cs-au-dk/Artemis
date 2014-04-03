@@ -590,10 +590,41 @@ void ConcolicRuntime::chooseNextTargetAndExplore()
         Log::debug("\n============= Finished DFS ==============");
         Log::info("Finished serach of the tree.");
 
+        reportStatistics();
+
         mWebkitExecutor->detach();
         done();
         return;
     }
+}
+
+void ConcolicRuntime::reportStatistics()
+{
+    TraceStatistics stats;
+    stats.processTrace(mSymbolicExecutionGraph);
+
+    statistics()->accumulate("Concolic::ExecutionTree::ConcreteBranchesTotal", stats.mNumConcreteBranches);
+    statistics()->accumulate("Concolic::ExecutionTree::ConcreteBranchesFullyExplored", stats.mNumConcreteBranchesFullyExplored);
+
+    statistics()->accumulate("Concolic::ExecutionTree::SymbolicBranchesTotal", stats.mNumSymBranches);
+    statistics()->accumulate("Concolic::ExecutionTree::SymbolicBranchesFullyExplored", stats.mNumSymBranchesFullyExplored);
+
+    statistics()->accumulate("Concolic::ExecutionTree::Alerts", stats.mNumAlerts);
+    statistics()->accumulate("Concolic::ExecutionTree::PageLoads", stats.mNumPageLoads);
+    statistics()->accumulate("Concolic::ExecutionTree::InterestingDomModifications", stats.mNumInterestingDomModifications);
+
+    statistics()->accumulate("Concolic::ExecutionTree::EndSuccess", stats.mNumEndSuccess);
+    statistics()->accumulate("Concolic::ExecutionTree::EndFailure", stats.mNumEndFailure);
+    statistics()->accumulate("Concolic::ExecutionTree::EndUnknown", stats.mNumEndUnknown);
+
+    statistics()->accumulate("Concolic::ExecutionTree::Unexplored", stats.mNumUnexplored);
+    statistics()->accumulate("Concolic::ExecutionTree::Unsat", stats.mNumUnexploredUnsat);
+    statistics()->accumulate("Concolic::ExecutionTree::Missed", stats.mNumUnexploredMissed);
+    statistics()->accumulate("Concolic::ExecutionTree::CouldNotSolve", stats.mNumUnexploredUnsolvable);
+
+    statistics()->accumulate("Concolic::EventSequence::HandlersTriggered", mFormFields.size());
+    statistics()->accumulate("Concolic::EventSequence::SymbolicBranchesTotal", stats.mNumEventSequenceSymBranches);
+    statistics()->accumulate("Concolic::EventSequence::SymbolicBranchesFullyExplored", stats.mNumEventSequenceSymBranchesFullyExplored);
 }
 
 
