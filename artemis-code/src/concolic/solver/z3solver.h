@@ -32,7 +32,7 @@ public:
 
     Z3Solver();
 
-    SolutionPtr solve(PathConditionPtr pc);
+    SolutionPtr solve(PathConditionPtr pc, FormRestrictions formRestrictions);
 
 };
 

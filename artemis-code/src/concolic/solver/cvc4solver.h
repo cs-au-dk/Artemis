@@ -35,7 +35,7 @@ public:
     CVC4Solver();
     ~CVC4Solver();
 
-    SolutionPtr solve(PathConditionPtr pc);
+    SolutionPtr solve(PathConditionPtr pc, FormRestrictions formRestrictions);
 
 private:
     SolutionPtr emitError(std::ofstream& clog, const std::string& reason);

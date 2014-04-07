@@ -44,7 +44,7 @@ CVC4ConstraintWriter::CVC4ConstraintWriter()
 
 }
 
-void CVC4ConstraintWriter::preVisitPathConditionsHook()
+void CVC4ConstraintWriter::preVisitPathConditionsHook(FormRestrictions formRestrictions)
 {
     mOutput << "(set-logic UFSLIA)" << std::endl;
     mOutput << "(set-option :produce-models true)" << std::endl;
@@ -53,6 +53,13 @@ void CVC4ConstraintWriter::preVisitPathConditionsHook()
     //mOutput << "(set-option :fmf-bound-int true)" << std::endl;
     //mOutput << "(set-option :finite-model-find true)" << std::endl;
     mOutput << std::endl;
+
+    foreach(SelectRestriction sr, formRestrictions.first) {
+        helperSelectRestriction(sr);
+    }
+    foreach(RadioRestriction rr, formRestrictions.second) {
+        helperRadioCondition(rr);
+    }
 }
 
 void CVC4ConstraintWriter::postVisitPathConditionsHook()
@@ -524,5 +531,69 @@ void CVC4ConstraintWriter::helperRegexMatchPositive(const std::string& regex, co
 
     mOutput << "(assert (str.in.re " << *outMatch << " " << cvc4regex << "))" << std::endl;
 }
+
+
+
+void CVC4ConstraintWriter::helperSelectRestriction(SelectRestriction constraint)
+{
+    // TODO: Hack to guess the variable name in the constraint. This will prevent string->int optimisations working for select box values.
+    QString name = QString("SYM_IN_%1").arg(constraint.variable);
+    QString idxname = QString("SYM_IN_INT_%1").arg(constraint.variable);
+
+    recordAndEmitType(name.toStdString(), Symbolic::STRING);
+    recordAndEmitType(idxname.toStdString(), Symbolic::INT);
+
+    mOutput << "(assert\n  (or\n";
+
+    int idx = 0;
+    foreach(QString value, constraint.values) {
+        mOutput << "    (and (= " << SMTConstraintWriter::encodeIdentifier(idxname.toStdString()) << " " << idx << ") (= " << SMTConstraintWriter::encodeIdentifier(name.toStdString()) << " \"" << value.toStdString() << "\"))\n";
+        idx++;
+    }
+
+    mOutput << "  )\n)\n\n";
+}
+
+void CVC4ConstraintWriter::helperRadioCondition(RadioRestriction constraint)
+{
+    QString name;
+    QList<QString> names;
+
+    foreach(QString var, constraint.variables) {
+        // TODO: Hack to guess the variable name in the constraint.
+        name = QString("SYM_IN_BOOL_%1").arg(var);
+        names.append(name);
+
+        recordAndEmitType(name.toStdString(), Symbolic::BOOL);
+    }
+
+    mOutput << "(assert\n  (or\n";
+
+    foreach(QString currentVar, names) {
+        mOutput << "    (and ";
+
+        foreach(QString var, names) {
+            if(var == currentVar) {
+                mOutput << SMTConstraintWriter::encodeIdentifier(var.toStdString()) << " ";
+            } else {
+                mOutput << "(not " << SMTConstraintWriter::encodeIdentifier(var.toStdString()) << ") ";
+            }
+        }
+
+        mOutput << ")\n";
+    }
+
+    // If the radio button group is not always set, then it is possible to submit with all values false.
+    if(!constraint.alwaysSet) {
+        mOutput << "    (and ";
+        foreach(QString var, names) {
+            mOutput << "(not " << SMTConstraintWriter::encodeIdentifier(var.toStdString()) << ") ";
+        }
+        mOutput << ")\n";
+    }
+
+    mOutput << "  )\n)\n\n";
+}
+
 
 }

@@ -552,7 +552,8 @@ void ConcolicRuntime::exploreNextTarget()
 
     // Try to solve this PC to get some concrete input.
     SolverPtr solver = getSolver(mOptions);
-    SolutionPtr solution = solver->solve(target);
+    SolutionPtr solution = solver->solve(target, mFormFieldRestrictions);
+    // TODO: Add select and radio restrictions to this call.
 
     if(solution->isSolved()) {
         Log::debug("Solved the target PC:");

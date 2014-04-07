@@ -55,7 +55,7 @@ void CVC4Solver::emitConstraints(std::ofstream& constraintIndex, const QString& 
     QFile::copy("/tmp/cvc4input", QString::fromStdString("/tmp/constraints/") + identifier);
 }
 
-SolutionPtr CVC4Solver::solve(PathConditionPtr pc)
+SolutionPtr CVC4Solver::solve(PathConditionPtr pc, FormRestrictions formRestrictions)
 {
     // 0. Emit debug information
 
@@ -86,7 +86,7 @@ SolutionPtr CVC4Solver::solve(PathConditionPtr pc)
 
     CVC4ConstraintWriterPtr cw = CVC4ConstraintWriterPtr(new CVC4ConstraintWriter());
 
-    if (!cw->write(pc, "/tmp/cvc4input")) {
+    if (!cw->write(pc, formRestrictions, "/tmp/cvc4input")) {
 
         statistics()->accumulate("Concolic::Solver::ConstraintsNotWritten", 1);
 

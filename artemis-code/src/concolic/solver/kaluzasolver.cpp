@@ -36,14 +36,15 @@ KaluzaSolver::KaluzaSolver(): Solver() {
 
 }
 
-SolutionPtr KaluzaSolver::solve(PathConditionPtr pc)
+SolutionPtr KaluzaSolver::solve(PathConditionPtr pc, FormRestrictions formRestrictions)
 {
+    qDebug() << "Warning: KaluzaSolver does not support implicit form restrictions.\n";
 
     // 1. translate pc to something solvable using the translator
 
     KaluzaConstraintWriterPtr constraintwriter = KaluzaConstraintWriterPtr(new KaluzaConstraintWriter());
 
-    if (!constraintwriter->write(pc, "/tmp/kaluza")) {
+    if (!constraintwriter->write(pc, formRestrictions, "/tmp/kaluza")) {
         statistics()->accumulate("Concolic::Solver::ConstraintsNotWritten", 1);
         return SolutionPtr(new Solution(false, false));
     }

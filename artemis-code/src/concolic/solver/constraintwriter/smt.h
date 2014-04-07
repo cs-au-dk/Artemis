@@ -24,6 +24,7 @@
 
 #include "JavaScriptCore/symbolic/expr.h"
 #include "JavaScriptCore/symbolic/expression/visitor.h"
+#include "runtime/input/forms/formfieldrestrictedvalues.h"
 
 #include "abstract.h"
 
@@ -72,7 +73,7 @@ public:
 
     SMTConstraintWriter();
 
-    bool write(PathConditionPtr pathCondition, std::string outputFile);
+    bool write(PathConditionPtr pathCondition, FormRestrictions formRestrictions, std::string outputFile);
 
     std::string getErrorReason() {
         return mErrorReason;
@@ -143,7 +144,7 @@ protected:
     virtual void visit(Symbolic::ObjectBinaryOperation* obj, void* arg);
 
     // Output writing
-    virtual void preVisitPathConditionsHook();
+    virtual void preVisitPathConditionsHook(FormRestrictions formRestrictions);
     virtual void postVisitPathConditionsHook();
 
     virtual std::string ifLabel();

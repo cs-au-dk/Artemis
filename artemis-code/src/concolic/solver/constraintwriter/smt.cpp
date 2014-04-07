@@ -40,7 +40,7 @@ SMTConstraintWriter::SMTConstraintWriter()
 {
 }
 
-void SMTConstraintWriter::preVisitPathConditionsHook()
+void SMTConstraintWriter::preVisitPathConditionsHook(FormRestrictions formRestrictions)
 {
 }
 
@@ -53,13 +53,13 @@ std::string SMTConstraintWriter::ifLabel()
     return "ite";
 }
 
-bool SMTConstraintWriter::write(PathConditionPtr pathCondition, std::string outputFile)
+bool SMTConstraintWriter::write(PathConditionPtr pathCondition, FormRestrictions formRestrictions, std::string outputFile)
 {
     mError = false;
 
     mOutput.open(outputFile.data());
 
-    preVisitPathConditionsHook();
+    preVisitPathConditionsHook(formRestrictions);
 
     for (uint i = 0; i < pathCondition->size(); i++) {
 

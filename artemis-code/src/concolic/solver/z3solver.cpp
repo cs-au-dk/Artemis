@@ -37,15 +37,17 @@ Z3Solver::Z3Solver(): Solver() {
 
 }
 
-SolutionPtr Z3Solver::solve(PathConditionPtr pc)
+SolutionPtr Z3Solver::solve(PathConditionPtr pc, FormRestrictions formRestrictions)
 {
+    qDebug() << "Warning: Z3Solver does not support implicit form restrictions.\n";
+
     std::ofstream constraintLog("/tmp/constraintlog", std::ofstream::out | std::ofstream::app);
 
     // 1. translate pc to something solvable using the translator
 
     Z3STRConstraintWriterPtr cw = Z3STRConstraintWriterPtr(new Z3STRConstraintWriter());
 
-    if (!cw->write(pc, "/tmp/z3input")) {
+    if (!cw->write(pc, formRestrictions, "/tmp/z3input")) {
         statistics()->accumulate("Concolic::Solver::ConstraintsNotWritten", 1);
         constraintLog << "Could not translate the PC into solver input." << std::endl << std::endl;
         return SolutionPtr(new Solution(false, false, "Could not translate the PC into solver input."));

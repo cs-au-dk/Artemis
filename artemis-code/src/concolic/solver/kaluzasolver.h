@@ -28,7 +28,7 @@ public:
 
     KaluzaSolver();
 
-    SolutionPtr solve(PathConditionPtr pc);
+    SolutionPtr solve(PathConditionPtr pc, FormRestrictions formRestrictions);
 
 };
 

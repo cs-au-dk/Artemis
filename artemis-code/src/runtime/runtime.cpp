@@ -209,7 +209,7 @@ void Runtime::done()
 
     SolverPtr solver = getSolver(mOptions);
 
-    SolutionPtr solution = solver->solve(pc);
+    SolutionPtr solution = solver->solve(pc, FormRestrictions()); // TODO: Not using the real form restrictions here can give inconsistent reults compared with the main solver.
     solution->toStatistics();
 
     // Print final output
