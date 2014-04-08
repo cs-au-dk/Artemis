@@ -121,6 +121,7 @@ if __name__ == '__main__':
         test_name = 'test_%s' % raw_filename.replace(".", "_")
 
         test = test_generator(test_name, test_filename)
+	test.__name__ = test_name
         setattr(Solver, test_name, test)
 
     unittest.main(buffer=True)
