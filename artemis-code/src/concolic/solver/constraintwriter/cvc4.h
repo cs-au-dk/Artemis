@@ -57,7 +57,7 @@ protected:
     virtual void visit(Symbolic::ConstantObject* obj, void* arg);
     virtual void visit(Symbolic::ObjectBinaryOperation* obj, void* arg);
 
-    virtual void preVisitPathConditionsHook(FormRestrictions formRestrictions);
+    virtual void preVisitPathConditionsHook(FormRestrictions formRestrictions, QSet<QString> varsUsed);
     virtual void postVisitPathConditionsHook();
 
     void helperRegexTest(const std::string& regex, const std::string& expression,
@@ -65,8 +65,9 @@ protected:
     void helperRegexMatchPositive(const std::string& regex, const std::string& expression,
                                   std::string* outPre, std::string* outMatch, std::string* outPost);
 
-    void helperSelectRestriction(SelectRestriction constraint);
-    void helperRadioCondition(RadioRestriction constraint);
+    enum SelectConstraintType { VALUE_ONLY, INDEX_ONLY, VALUE_INDEX };
+    void helperSelectRestriction(SelectRestriction constraint, SelectConstraintType type);
+    void helperRadioRestriction(RadioRestriction constraint);
 
     std::set<unsigned int> m_singletonCompilations;
 };

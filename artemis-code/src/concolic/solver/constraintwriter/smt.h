@@ -144,7 +144,7 @@ protected:
     virtual void visit(Symbolic::ObjectBinaryOperation* obj, void* arg);
 
     // Output writing
-    virtual void preVisitPathConditionsHook(FormRestrictions formRestrictions);
+    virtual void preVisitPathConditionsHook(FormRestrictions formRestrictions, QSet<QString> varsUsed);
     virtual void postVisitPathConditionsHook();
 
     virtual std::string ifLabel();

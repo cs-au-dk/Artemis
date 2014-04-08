@@ -44,7 +44,7 @@ CVC4ConstraintWriter::CVC4ConstraintWriter()
 
 }
 
-void CVC4ConstraintWriter::preVisitPathConditionsHook(FormRestrictions formRestrictions)
+void CVC4ConstraintWriter::preVisitPathConditionsHook(FormRestrictions formRestrictions, QSet<QString> varsUsed)
 {
     mOutput << "(set-logic UFSLIA)" << std::endl;
     mOutput << "(set-option :produce-models true)" << std::endl;
@@ -54,11 +54,34 @@ void CVC4ConstraintWriter::preVisitPathConditionsHook(FormRestrictions formRestr
     //mOutput << "(set-option :finite-model-find true)" << std::endl;
     mOutput << std::endl;
 
+    // Only write the form frestrictions which relate to variables which are actually used in the PC.
     foreach(SelectRestriction sr, formRestrictions.first) {
-        helperSelectRestriction(sr);
+        // TODO: Hack to guess the variable names, as in helperSelectRestriction().
+        QString name = QString("SYM_IN_%1").arg(sr.variable);
+        QString idxname = QString("SYM_IN_INT_%1").arg(sr.variable);
+
+        if(varsUsed.contains(name) && varsUsed.contains(idxname)) {
+            helperSelectRestriction(sr, VALUE_INDEX);
+        } else if(varsUsed.contains(name)) {
+            helperSelectRestriction(sr, VALUE_ONLY);
+        } else if(varsUsed.contains(idxname)) {
+            helperSelectRestriction(sr, INDEX_ONLY);
+        }
+        // else this select is not mentioned in the PC, so ignore.
     }
+
     foreach(RadioRestriction rr, formRestrictions.second) {
-        helperRadioCondition(rr);
+        QString name;
+        bool variableMatch = false;
+        foreach(QString var, rr.variables) {
+            // TODO: Hack to guess the variable name in the constraint, as in helperRadioRestriction().
+            name = QString("SYM_IN_BOOL_%1").arg(var);
+            variableMatch = variableMatch || varsUsed.contains(name);
+        }
+
+        if(variableMatch) {
+            helperRadioRestriction(rr);
+        }
     }
 }
 
@@ -534,7 +557,7 @@ void CVC4ConstraintWriter::helperRegexMatchPositive(const std::string& regex, co
 
 
 
-void CVC4ConstraintWriter::helperSelectRestriction(SelectRestriction constraint)
+void CVC4ConstraintWriter::helperSelectRestriction(SelectRestriction constraint, SelectConstraintType type)
 {
     // TODO: Hack to guess the variable name in the constraint. This will prevent string->int optimisations working for select box values.
     QString name = QString("SYM_IN_%1").arg(constraint.variable);
@@ -547,14 +570,31 @@ void CVC4ConstraintWriter::helperSelectRestriction(SelectRestriction constraint)
 
     int idx = 0;
     foreach(QString value, constraint.values) {
-        mOutput << "    (and (= " << SMTConstraintWriter::encodeIdentifier(idxname.toStdString()) << " " << idx << ") (= " << SMTConstraintWriter::encodeIdentifier(name.toStdString()) << " \"" << value.toStdString() << "\"))\n";
+        std::stringstream idxconstraint;
+        std::stringstream valueconstraint;
+
+        idxconstraint << "(= " << SMTConstraintWriter::encodeIdentifier(idxname.toStdString()) << " " << idx << ")";
+        valueconstraint << "(= " << SMTConstraintWriter::encodeIdentifier(name.toStdString()) << " \"" << value.toStdString() << "\")";
+
+        switch(type) {
+        case VALUE_ONLY:
+            mOutput << "    " << valueconstraint.str() << std::endl;
+            break;
+        case INDEX_ONLY:
+            mOutput << "    " << idxconstraint.str() << std::endl;
+            break;
+        default:
+            mOutput << "    (and " << idxconstraint.str() << " " << valueconstraint.str() << ")" << std::endl;
+            break;
+        }
+
         idx++;
     }
 
     mOutput << "  )\n)\n\n";
 }
 
-void CVC4ConstraintWriter::helperRadioCondition(RadioRestriction constraint)
+void CVC4ConstraintWriter::helperRadioRestriction(RadioRestriction constraint)
 {
     QString name;
     QList<QString> names;
