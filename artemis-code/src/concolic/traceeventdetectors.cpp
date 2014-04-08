@@ -20,7 +20,6 @@
 #include "concolic/executiontree/tracebuilder.h"
 
 #include "util/loggingutil.h"
-#include "statistics/statsstorage.h"
 
 
 namespace artemis
@@ -69,16 +68,6 @@ void TraceBranchDetector::slBranch(bool jump, Symbolic::Expression* condition, u
         newNode(node, &(node->mBranchFalse));
     }
 
-    // Add the new branch to the statistics.
-    // This is a slight hack as we count nodes multiple times here (on different runs) but then we decrement the
-    // counter again for any duplicate nodes when the trace is merged into the tree.
-    if(mTraceBuilder->isRecording()) {
-        if(condition == NULL) {
-            statistics()->accumulate("Concolic::ExecutionTree::ConcreteBranchesTotal", 1);
-        }else{
-            statistics()->accumulate("Concolic::ExecutionTree::SymbolicBranchesTotal", 1);
-        }
-    }
 }
 
 
@@ -91,10 +80,6 @@ void TraceAlertDetector::slJavascriptAlert(QWebFrame* frame, QString msg)
     QSharedPointer<TraceAlert> node = QSharedPointer<TraceAlert>(new TraceAlert());
     node->message = msg;
     // Leave node.next as null.
-
-    if(mTraceBuilder->isRecording()){
-        statistics()->accumulate("Concolic::ExecutionTree::Alerts", 1);
-    }
 
     // Pass this new node to the trace builder and pass a pointer to where the sucessor should be attached.
     newNode(node.staticCast<TraceNode>(), &(node->next));
@@ -127,10 +112,6 @@ void TracePageLoadDetector::slPageLoad(QUrl url)
     QSharedPointer<TracePageLoad> node  = QSharedPointer<TracePageLoad>(new TracePageLoad());
     node->url = url;
 
-    if(mTraceBuilder->isRecording()){
-        statistics()->accumulate("Concolic::ExecutionTree::PageLoads", 1);
-    }
-
     // Pass the new node to the trace builder.
     newNode(node.staticCast<TraceNode>(), &(node->next));
 }
@@ -147,10 +128,6 @@ void TraceDomModDetector::slDomModified(QString start, QString end)
     QPair<double, QMap<int, int> > metrics = computeMetrics(start, end);
     node->amountModified = metrics.first;
     node->words = metrics.second;
-
-    if(mTraceBuilder->isRecording() && node->words.size() > 0){ // Condition must match TraceMerger::fixDoubleCountedAnnotations()
-        statistics()->accumulate("Concolic::ExecutionTree::InterestingDomModifications", 1);
-    }
 
     // Pass the new node to the trace builder.
     newNode(node.staticCast<TraceNode>(), &(node->next));

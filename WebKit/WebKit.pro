@@ -8,6 +8,8 @@
 TEMPLATE = subdirs
 CONFIG += ordered
 
+DEFINES += "ARTEMIS=true"
+
 load(features)
 
 QMAKEPATH = $$(QMAKEPATH)

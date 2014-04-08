@@ -28,6 +28,7 @@
 #include "concolic/executiontree/tracedisplay.h"
 #include "concolic/executiontree/tracedisplayoverview.h"
 #include "concolic/traceclassifier.h"
+#include "concolic/tracestatistics.h"
 
 #include "runtime/input/dominput.h"
 #include "runtime/input/events/mouseeventparameters.h"
@@ -126,6 +127,7 @@ protected:
     QSharedPointer<const FormFieldDescriptor> findFormFieldForVariable(QString varName, Symbolic::SourceIdentifierMethod varSourceIdentifierMethod);
     void exploreNextTarget();
     void chooseNextTargetAndExplore();
+    void reportStatistics();
 
     QList<FormFieldDescriptorConstPtr> mFormFields;
     FormRestrictions mFormFieldRestrictions;

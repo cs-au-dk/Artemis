@@ -58,8 +58,6 @@ private:
     TraceNodePtr mStartingTrace;
     TraceNodePtr mStartingTree;
     static const bool mReportFailedMerge = false; // Whether to dump out failed merges for anaysis.
-
-    static void fixDoubleCountedAnnotations(TraceNodePtr node);
 };
 
 }
