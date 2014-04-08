@@ -30,6 +30,12 @@ void StatsStorage::accumulate(QString key, int value)
     this->intStorage.insert(key, value);
 }
 
+void StatsStorage::accumulate(QString key, double value)
+{
+    value += this->doubleStorage.value(key, 0);
+    this->doubleStorage.insert(key, value);
+}
+
 void StatsStorage::set(QString key, int value)
 {
     this->intStorage.insert(key, value);
@@ -38,6 +44,11 @@ void StatsStorage::set(QString key, int value)
 void StatsStorage::set(QString key, bool value)
 {
     this->stringStorage.insert(key, value ? "true" : "false");
+}
+
+void StatsStorage::set(QString key, double value)
+{
+    this->doubleStorage.insert(key, value);
 }
 
 void StatsStorage::set(QString key, QString value)

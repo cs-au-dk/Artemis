@@ -30,13 +30,16 @@ class StatsStorage
 public:
     StatsStorage();
     void accumulate(QString key, int value);
+    void accumulate(QString key, double value);
     void set(QString key, int value);
     void set(QString key, bool value);
+    void set(QString key, double value);
     void set(QString key, QString value);
     void set(QString key, const std::string& value);
 
 private:
     QHash<QString, int> intStorage;
+    QHash<QString, double> doubleStorage;
     QHash<QString, QString> stringStorage;
 };
 

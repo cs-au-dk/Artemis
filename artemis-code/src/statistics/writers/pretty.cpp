@@ -44,6 +44,13 @@ void StatsPrettyWriter::write(const StatsStorage* stats)
         Log::info(j.key().toStdString()+": "+j.value().toStdString());
     }
 
+    QHashIterator<QString, double> k(stats->doubleStorage);
+
+    while (k.hasNext()) {
+        k.next();
+        Log::info(k.key().toStdString()+": "+QString::number(k.value()).toStdString());
+    }
+
 }
 
 }

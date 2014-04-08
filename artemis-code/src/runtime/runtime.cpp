@@ -198,7 +198,7 @@ void Runtime::done()
 
     // Do some last-minute statistics
 
-    statistics()->accumulate("WebKit::coverage::covered-unique", mAppmodel->getCoverageListener()->getNumCoveredLines());
+    statistics()->accumulate("WebKit::coverage::covered-unique", (int)mAppmodel->getCoverageListener()->getNumCoveredLines());
 
     // solve the last PC - this is needed by some system tests
     PathConditionPtr pc = PathCondition::createFromTrace(mWebkitExecutor->getTraceBuilder()->trace());

@@ -23,6 +23,7 @@
 #include <QDir>
 #include <QString>
 #include <QDateTime>
+#include <QElapsedTimer>
 
 #include "statistics/statsstorage.h"
 
@@ -113,10 +114,19 @@ SolutionPtr CVC4Solver::solve(PathConditionPtr pc, FormRestrictions formRestrict
         return emitError(clog, "Could not find CVC4 binary.");
     }
 
+    Log::info("Solving...");
+    QElapsedTimer timer;
+
     // --rewrite-divk enables div and mod by a constant factor
     std::string cmd = solverpath.filePath(exec).toStdString() + " --lang=smtlib2 /tmp/cvc4input --rewrite-divk > /tmp/cvc4result 2> /tmp/cvc4result";
+    timer.start();
     std::system(cmd.data()); // result of command interpreted in step 3
     // We do not check the return code as it will be an "error" in unsat cases. Error checking is done below.
+
+    double time = (double)timer.elapsed()/1000;
+    Log::info(QString("  Took %1s").arg(time).toStdString());
+    statistics()->accumulate("Concolic::Solver::TotalSolverTime", time);
+    clog << "Duration: " << time << "s" << std::endl;
 
     // 3. interpret the result
 
