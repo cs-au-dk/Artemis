@@ -71,7 +71,8 @@ protected:
     // These lists contain the declarations of nodes which are to be put at the beginning of the file.
     // They include the node labels and any node-specific formatting.
     // Each type (e.g. branches) becomes a subgraph in the result which are styled separately.
-    QList<QString> mHeaderBranches, mHeaderSymBranches, mHeaderUnexplored, mHeaderUnexploredUnsat, mHeaderUnexploredUnsolvable, mHeaderUnexploredMissed, mHeaderAlerts, mHeaderDomMods, mHeaderLoads, mHeaderMarkers, mHeaderFunctions, mHeaderEndUnk, mHeaderEndSucc, mHeaderEndFail, mHeaderAggregates;
+    QList<QString> mHeaderBranches, mHeaderSymBranches, mHeaderUnexplored, mHeaderUnexploredUnsat, mHeaderUnexploredUnsolvable, mHeaderUnexploredMissed, mHeaderAlerts, mHeaderDomMods, mHeaderLoads, mHeaderFunctions, mHeaderEndUnk, mHeaderEndSucc, mHeaderEndFail, mHeaderAggregates;
+    QMultiMap<QString, QString> mHeaderMarkers;
 
     // These strings contain the arguments passed to the subgraphs representing each node type.
     // They hold the styling information for each node type.

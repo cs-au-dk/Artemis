@@ -254,8 +254,7 @@ void TraceDisplayOverview::visit(TraceMarker *node)
     mNodeCounter++;
 
     // Always show markers, but only show the index as the label.
-    QString nodeDecl = QString("%1 [label = \"%2\"]").arg(name).arg(node->index);
-    mHeaderMarkers.append(nodeDecl);
+    mHeaderMarkers.insert(node->index, name);
 
     addInEdge(name);
 

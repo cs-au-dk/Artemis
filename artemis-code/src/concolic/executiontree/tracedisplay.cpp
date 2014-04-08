@@ -139,8 +139,16 @@ QString TraceDisplay::makeGraph(TraceNodePtr tree)
     result += indent + "}\n\n";
 
     result += indent + "subgraph markers {\n" + indent + indent + "node " + mStyleMarkers + ";\n\n";
-    foreach(QString node, mHeaderMarkers){
-        result += indent + indent + node + ";\n";
+    foreach(QString idx, mHeaderMarkers.uniqueKeys()){
+        result += indent + indent + "{\n";
+        result += indent + indent + indent + "rank = same;\n";
+        result += indent + indent + indent + QString("node [label = \"%1\"];\n").arg(idx);
+
+        foreach(QString node, mHeaderMarkers.values(idx)) {
+            result += indent + indent + indent + node + ";\n";
+        }
+
+        result += indent + indent + "}\n\n";
     }
     result += indent + "}\n\n";
 
@@ -482,7 +490,7 @@ void TraceDisplay::visit(TraceMarker *node)
     mNodeCounter++;
 
     QString nodeDecl = QString("%1 [label = \"%2\"]").arg(name).arg(node->label);
-    mHeaderMarkers.append(nodeDecl);
+    mHeaderMarkers.insert(node->index, nodeDecl);
 
     addInEdge(name);
 
