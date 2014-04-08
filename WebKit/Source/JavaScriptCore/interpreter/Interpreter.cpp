@@ -4331,8 +4331,6 @@ skip_id_custom_self:
         int dst = vPC[1].u.operand;
         int base = vPC[2].u.operand;
         int property = vPC[3].u.operand;
-        
-        std::cout << "GET PROPERTY BY VAL" << std::endl;
 
         JSValue baseValue = callFrame->r(base).jsValue();
         JSValue subscript = callFrame->r(property).jsValue();
