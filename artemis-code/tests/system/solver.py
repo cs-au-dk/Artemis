@@ -44,6 +44,8 @@ def test_generator(test_name, test_filename):
         else:
             assert report.get('Concolic::Solver::ConstraintsSolvedAsUNSAT', 0) == 0, "Initial execution returned as UNSAT"
             assert report.get('Concolic::Solver::ConstraintsSolved', 0) == 1, "Initial execution did not solve a constraint"
+
+	assert report.get('Concolic::Solver::ErrorsReadingSolution', 0) == 0, "Errors reading the solver solution"
         
         new_fields = []
 
@@ -60,6 +62,7 @@ def test_generator(test_name, test_filename):
                                  verbose=True)
 
         assert report.get('WebKit::alerts', 0) == 1, "Execution using inputs from the solver did not reach a print statement... %s" % new_fields
+        assert report.get('Concolic::Solver::ErrorsReadingSolution', 0) == 0, "Errors reading the solver solution"
 
         # negative case
     
@@ -77,6 +80,7 @@ def test_generator(test_name, test_filename):
                              reverse_constraint_solver=True,
                              verbose=True)
 
+        assert report.get('Concolic::Solver::ErrorsReadingSolution', 0) == 0, "Errors reading the solver solution"
         assert report.get('Concolic::Solver::ConstraintsSolvedAsUNSAT', 0) == 0, "NEGATED execution returned as UNSAT"
         assert report.get('Concolic::Solver::ConstraintsSolved', 0) == 1, "NEGATED execution did not solve a constraint"
         assert report.get('WebKit::alerts', 0) == 0, "NEGATED execution REACHED a print statement when it should not using %s" % new_fields
