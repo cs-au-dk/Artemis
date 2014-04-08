@@ -226,6 +226,12 @@ SolutionPtr CVC4Solver::solve(PathConditionPtr pc, FormRestrictions formRestrict
         // the case where we perform a string->int optimisation and see a string named variable with int type in the
         // solver. These variables should be converted back to strings.
 
+        // Variables not prefixed with SYM_IN are ignored
+
+        if (SMTConstraintWriter::decodeIdentifier(symbol).compare(0, 7, "SYM_IN_") != 0) {
+            continue;
+        }
+
         Symbolic::Type symbol_name_type;
         if (SMTConstraintWriter::decodeIdentifier(symbol).compare(0, 12, "SYM_IN_BOOL_") == 0) {
             symbol_name_type = Symbolic::BOOL;
@@ -238,6 +244,7 @@ SolutionPtr CVC4Solver::solve(PathConditionPtr pc, FormRestrictions formRestrict
         if (type.compare("String") == 0) {
             // Double-check we have a string-typed variable name.
             if (symbol_name_type != Symbolic::STRING){
+                statistics()->accumulate("Concolic::Solver::ErrorsReadingSolution", 1);
                 return emitError(clog, "Variable name and type mismatch for String variable in solver's result.");
             }
 
@@ -254,6 +261,7 @@ SolutionPtr CVC4Solver::solve(PathConditionPtr pc, FormRestrictions formRestrict
         } else if (type.compare("Bool") == 0) {
             // Double-check we have a bool-typed variable name.
             if (symbol_name_type != Symbolic::BOOL){
+                statistics()->accumulate("Concolic::Solver::ErrorsReadingSolution", 1);
                 return emitError(clog, "Variable name and type mismatch for Bool variable in solver's result.");
             }
 
@@ -264,6 +272,7 @@ SolutionPtr CVC4Solver::solve(PathConditionPtr pc, FormRestrictions formRestrict
             } else if (value.compare("true") == 0) {
                 symbolvalue.u.boolean = true;
             } else {
+                statistics()->accumulate("Concolic::Solver::ErrorsReadingSolution", 1);
                 return emitError(clog, "Value of boolean returned is not true/false.");
             }
 
@@ -295,11 +304,13 @@ SolutionPtr CVC4Solver::solve(PathConditionPtr pc, FormRestrictions formRestrict
                     symbolvalue.string = "-" + value.substr(3, value.length() - 3);
                 }
             } else {
+                statistics()->accumulate("Concolic::Solver::ErrorsReadingSolution", 1);
                 return emitError(clog, "Variable name and type mismatch for Int variable in solver's result.");
             }
 
 
         } else {
+            statistics()->accumulate("Concolic::Solver::ErrorsReadingSolution", 1);
             std::ostringstream err;
             err << "Unknown type " << type << " encountered in result.";
             return emitError(clog, err.str());
