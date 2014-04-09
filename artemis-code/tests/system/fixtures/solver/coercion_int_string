@@ -1,0 +1,3 @@
+if (select.selectedIndex + "B" == "0B") {
+   alert(foo);
+}

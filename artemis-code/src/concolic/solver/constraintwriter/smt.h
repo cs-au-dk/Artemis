@@ -180,7 +180,7 @@ protected:
     void recordAndEmitType(const std::string&, Symbolic::Type type);
     bool checkType(Symbolic::Type expected);
 
-    void coercetype(Symbolic::Type from, Symbolic::Type to, std::string expression);
+    virtual void coercetype(Symbolic::Type from, Symbolic::Type to, std::string expression);
 
     std::string emitAndReturnNewTemporary(Symbolic::Type type);
     void emitConst(const std::string& identifier, Symbolic::Type type);

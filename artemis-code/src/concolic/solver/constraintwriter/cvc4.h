@@ -60,6 +60,8 @@ protected:
     virtual void preVisitPathConditionsHook(FormRestrictions formRestrictions, QSet<QString> varsUsed);
     virtual void postVisitPathConditionsHook();
 
+    virtual void coercetype(Symbolic::Type from, Symbolic::Type to, std::string expression);
+
     void helperRegexTest(const std::string& regex, const std::string& expression,
                                                std::string* outMatch);
     void helperRegexMatchPositive(const std::string& regex, const std::string& expression,

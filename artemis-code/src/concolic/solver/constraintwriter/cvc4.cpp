@@ -32,6 +32,8 @@
 
 #include "cvc4.h"
 
+//#define ENABLE_COERCION_OPTIMIZATION
+
 namespace artemis
 {
 
@@ -94,9 +96,11 @@ void CVC4ConstraintWriter::postVisitPathConditionsHook()
 
 void CVC4ConstraintWriter::visit(Symbolic::SymbolicString* symbolicstring, void* args)
 {
-    // If we are coercing from an input (string) to an integer, then this is a special case.
-    // Instead of returning a symbolic string (which would raise an error) we just silently ignore the coercion and record
-    // the variable as an integer instead of a string.
+
+#ifdef ENABLE_COERCION_OPTIMIZATION
+    // If we are coercing from a string input to an integer downstream, it is safe to omit
+    // the downstream coercion and return an integer here. Notice, the code detecting if it
+    // is safe or not to do this is not implemented.
     if (args != NULL) {
 
         CoercionPromise* promise = (CoercionPromise*)args;
@@ -112,6 +116,7 @@ void CVC4ConstraintWriter::visit(Symbolic::SymbolicString* symbolicstring, void*
 
         }
     }
+#endif
 
     // Checks this symbolic value is of type STRING and raises an error otherwise.
     recordAndEmitType(symbolicstring->getSource(), Symbolic::STRING);
@@ -633,6 +638,25 @@ void CVC4ConstraintWriter::helperRadioRestriction(RadioRestriction constraint)
     }
 
     mOutput << "  )\n)\n\n";
+}
+
+void CVC4ConstraintWriter::coercetype(Symbolic::Type from, Symbolic::Type to, std::string expression)
+{
+    if (from == Symbolic::STRING && to == Symbolic::INT) {
+
+        mExpressionBuffer = "(str.to.int " + expression + ")";
+        mExpressionType = Symbolic::INT;
+        return;
+    }
+
+    if (from == Symbolic::INT && to == Symbolic::STRING) {
+
+        mExpressionBuffer = "(int.to.str " + expression + ")";
+        mExpressionType = Symbolic::STRING;
+        return;
+    }
+
+    SMTConstraintWriter::coercetype(from, to, expression);
 }
 
 
