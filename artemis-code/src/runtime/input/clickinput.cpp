@@ -64,7 +64,7 @@ void ClickInput::apply(ArtemisWebPagePtr page, QWebExecutionListener *webkitList
     // Find the coordinates of the element
     // For some reason targetElement.geometry().center(); does not seem to update correctly if the button moves during
     // the injection, so we are forced to pull the position from JavaScript. See issue #110.
-    // We also can't simply use getBoundingClientRect() as this is only relevant to the viewport.
+    // We also can't simply use getBoundingClientRect() as this is only relative to the viewport.
     QVariant clickPoint = targetElement.evaluateJavaScript("function findPos(obj) { var l=r=0; do { l+=obj.offsetLeft; r+=obj.offsetTop; }while(obj=obj.offsetParent) return [l,r] } bb=this.getBoundingClientRect(); width=bb.right-bb.left; height=bb.bottom-bb.top; absPos=findPos(this); clickX=absPos[0] + width/2; clickY = absPos[1] + height/2; [Math.floor(clickX), Math.floor(clickY)];");
     QPoint targetCoords = QPoint(clickPoint.toList()[0].toInt(), clickPoint.toList()[1].toInt());
 

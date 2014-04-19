@@ -10,10 +10,10 @@ import os
 
 # Use python3/Qt5 to avoid conflicts with Artemis' own modified version of WebKit.
 try:
-    from PyQt5.QtCore import QUrl
+    from PyQt5.QtCore import QUrl, pyqtSlot
     from PyQt5.QtWidgets import QApplication
     from PyQt5.QtGui import QImage, QPainter
-    from PyQt5.QtWebKitWidgets import QWebView
+    from PyQt5.QtWebKitWidgets import QWebView, QWebPage
 except ImportError:
     print("The 'PyQt5' module and WebKit bindings are required by this script.")
     print("For example on Ubuntu >= 13.10 you should be able to install python3-pyqt5 and python3-pyqt5.qtwebkit.")
@@ -48,6 +48,7 @@ class XPathDisplay(QWebView):
     def __init__(self, url):
         self.app = QApplication(sys.argv)
         QWebView.__init__(self)
+        self.setPage(SilentWebPage())
         self._loaded = False # Used within _wait_load.
         self.loadFinished.connect(self._loadFinished)
         # The version of webkit I have prints some stuff to stdout which I do not want.
@@ -111,6 +112,33 @@ class XPathDisplay(QWebView):
         #print js_injection
         self.page().mainFrame().evaluateJavaScript(js_injection)
     
+
+
+# Override some functions to make sure our QWebView is not stalled by JavaScript alerts and so on.
+class SilentWebPage(QWebPage):
+    def __init__(self):
+        QWebPage.__init__(self)
+    
+    def javaScriptAlert(self, frame, message):
+        """Silently ignore JS alerts."""
+        print("Ignoring alert")
+    
+    def javaScriptConfirm(self, frame, message):
+        """Silently ignore JS confirmations."""
+        print("Ignoring confirmation")
+        return True
+    
+    def javaScriptPrompt(self, frame, message, default):
+        """Silently ignore JS prompts."""
+        print("Ignoring prompt")
+        return (True, str(default))
+    
+    # TODO: I can't get this to work. There seems to be a bug in certain versions of Qt where this method is non-virtual which prevents overriding or something...?
+    #@pyqtSlot(result=bool)
+    #def shouldInterruptJavaScript(self):
+    #    """Silently kill slow running JS."""
+    #    print("Killing JavaScript after timeout")
+    #    return True
 
 
 # An argument parser which prints the help message after an error.

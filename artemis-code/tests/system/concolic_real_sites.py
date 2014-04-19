@@ -47,7 +47,7 @@ except ImportError:
 SPREADSHEET_KEY = "0ApQcHUu6OpaUdFZJZEV6LXU2VkZZa1M3QTh6TFAwUWc" # Real Log
 WORKSHEET_ID = "od6"
 
-EP_VISUALIZATION_SCRIPT = os.path.join(os.environ['ARTEMISDIR'], 'artemis-code', 'scripts', 'entrypoint_identifier.py')
+EP_VISUALIZATION_SCRIPT = os.path.join(os.environ['ARTEMISDIR'], 'artemis-code', 'scripts', 'timed-entrypoint-identifier.sh')
 
 
 # The unit test object. The test_* functions will be filled in by main().
@@ -167,7 +167,7 @@ def full_test_generator(site_name, site_url, dry_run=False, logger=None, version
         cmd = [EP_VISUALIZATION_SCRIPT, site_url, 'buttons.png'] + ep_list
         try:
             subprocess.check_output(cmd, cwd=os.path.join(test_dir, site_name), stderr=subprocess.STDOUT)
-        except CalledProcessError:
+        except subprocess.CalledProcessError:
             pass
         
         # For each EP returned, call test_generator() to get a function to test that EP.
