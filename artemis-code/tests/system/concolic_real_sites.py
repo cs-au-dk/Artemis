@@ -235,7 +235,8 @@ def test_generator(site_name, site_url, site_ep, dry_run=False, logger=None, ver
                                      dryrun=dry_run,
                                      output_parent_dir=test_dir,
                                      ignore_artemis_crash=True,
-                                     coverage='html')
+                                     coverage='html',
+                                     concolic_event_sequences='simple')
             end_time = time.time()
             
             if dry_run:
