@@ -51,7 +51,7 @@ void CVC4ConstraintWriter::preVisitPathConditionsHook(FormRestrictions formRestr
     mOutput << "(set-logic UFSLIA)" << std::endl;
     mOutput << "(set-option :produce-models true)" << std::endl;
     mOutput << "(set-option :strings-exp true)" << std::endl;
-    mOutput << "(set-option :strings-fmf true)" << std::endl;
+    //mOutput << "(set-option :strings-fmf true)" << std::endl;
     //mOutput << "(set-option :fmf-bound-int true)" << std::endl;
     //mOutput << "(set-option :finite-model-find true)" << std::endl;
     mOutput << std::endl;

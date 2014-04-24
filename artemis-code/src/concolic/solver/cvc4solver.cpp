@@ -108,7 +108,7 @@ SolutionPtr CVC4Solver::solve(PathConditionPtr pc, FormRestrictions formRestrict
     }
 
     QDir solverpath = QDir(QString(artemisdir));
-    QString exec = "cvc4-2014-03-01-x86_64-linux-opt";
+    QString exec = "timed-cvc4.sh";
 
     if (!solverpath.cd("contrib") || !solverpath.cd("CVC4") || !solverpath.exists(exec)) {
         return emitError(clog, "Could not find CVC4 binary.");
@@ -120,13 +120,19 @@ SolutionPtr CVC4Solver::solve(PathConditionPtr pc, FormRestrictions formRestrict
     // --rewrite-divk enables div and mod by a constant factor
     std::string cmd = solverpath.filePath(exec).toStdString() + " --lang=smtlib2 /tmp/cvc4input --rewrite-divk > /tmp/cvc4result 2> /tmp/cvc4result";
     timer.start();
-    std::system(cmd.data()); // result of command interpreted in step 3
-    // We do not check the return code as it will be an "error" in unsat cases. Error checking is done below.
+    int result = std::system(cmd.data()); // result of command interpreted in step 3
+    // We cannot use the return code for error checking as it will be an "error" in all unsat cases (because we try to get the model). Error checking is done below.
+    // However we can use it to check whether the timeout script had to kill CVC4 or not.
 
     double time = (double)timer.elapsed()/1000;
     Log::info(QString("  Took %1s").arg(time).toStdString());
     statistics()->accumulate("Concolic::Solver::TotalSolverTime", time);
     clog << "Duration: " << time << "s" << std::endl;
+
+    if (WEXITSTATUS(result) == 124) {
+        statistics()->accumulate("Concolic::Solver::SolverTimeouts", 1);
+        return emitError(clog, "CVC4 execution timed-out..");
+    }
 
     // 3. interpret the result
 
