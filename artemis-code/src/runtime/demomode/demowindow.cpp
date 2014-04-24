@@ -618,32 +618,16 @@ void DemoModeMainWindow::slViewTrace()
 // Called when the "Generate Trace Graph" button is clicked.
 void DemoModeMainWindow::slGenerateTraceGraph()
 {
-    QString graphFile, pngFile;
+    QString graphFile;
 
     Log::debug("DEMO: Generating trace graph.");
     TraceDisplay display;
     display.writeGraphFile(mPreviousTrace, graphFile);
 
-    if(graphFile.endsWith(".gv")){
-        pngFile = graphFile;
-        pngFile.chop(3);
-        pngFile += ".png";
-    }else{
-        pngFile = graphFile + ".png";
-    }
-
-    // Convert to PNG
-    QString command = QString("dot -Tpng %1 -o %2").arg(graphFile).arg(pngFile);
+    // Display it with xdot
+    QString command = QString("xdot %1").arg(graphFile);
     QProcess process;
-    process.start(command);
-
-    // Display the PNG.
-    process.waitForFinished(); // Blocks until the png is generated.
-
-    // TODO: what do we do if there was any problem?
-    ImageViewerDialog imageView(pngFile);
-    imageView.exec();
-
+    process.startDetached(command);
 
 }
 
