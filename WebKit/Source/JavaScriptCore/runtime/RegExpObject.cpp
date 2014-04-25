@@ -302,8 +302,10 @@ JSValue RegExpObject::exec(ExecState* exec, JSString* string)
 
             for (int i = 0; i < array->length(); i++) {
                 JSValue v = array->getDirectOffset(i);
-                v.makeSymbolic(new Symbolic::StringRegexSubmatchArrayAt(symbolicMatch, i));
-                array->setIndex(exec->globalData(), i, v);
+                if (!v.isEmpty() && !v.isDeleted()) {
+                    v.makeSymbolic(new Symbolic::StringRegexSubmatchArrayAt(symbolicMatch, i));
+                    array->setIndex(exec->globalData(), i, v);
+                }
             }
 
             r = array;

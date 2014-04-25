@@ -204,6 +204,9 @@ namespace JSC {
 
         // Querying the type.
         bool isEmpty() const;
+#ifdef ARTEMIS
+        bool isDeleted() const;
+#endif
         bool isFunction() const;
         bool isUndefined() const;
         bool isNull() const;

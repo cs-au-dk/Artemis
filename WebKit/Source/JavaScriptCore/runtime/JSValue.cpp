@@ -347,13 +347,13 @@ void JSValue::makeSymbolic(Symbolic::Expression* symbolicValue) {
     } else if (isDouble()) {
         symbolicImmediate->u.asInt64 = u.asInt64;
         u.asInt64 = (TagTypeSymbolicDouble | (int64_t)symbolicImmediate);
-    } else if (isObject()) {
-        symbolicImmediate->u.asInt64 = u.asInt64;
-        u.asInt64 = (TagTypeSymbolicObject | (int64_t)symbolicImmediate);
     } else if (isString()) {
         symbolicImmediate->u.asInt64 = u.asInt64;
         u.asInt64 = (TagTypeSymbolicObject | (int64_t)symbolicImmediate);
         static_cast<JSString*>(asCell())->makeSymbolic(dynamic_cast<Symbolic::StringExpression*>(symbolicValue));
+    } else if (isObject()) {
+        symbolicImmediate->u.asInt64 = u.asInt64;
+        u.asInt64 = (TagTypeSymbolicObject | (int64_t)symbolicImmediate);
     } else if (isTrue()) {
         symbolicImmediate->u.asInt64 = u.asInt64;
         u.asInt64 = (TagTypeSymbolicTrue | (int64_t)symbolicImmediate);

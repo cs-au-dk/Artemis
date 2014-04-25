@@ -391,6 +391,13 @@ namespace JSC {
 
     }
 
+#ifdef ARTEMIS
+    inline bool JSValue::isDeleted() const
+    {
+        return getInt64() == ValueDeleted;
+    }
+#endif
+
     inline bool JSValue::isUndefined() const
     {
         return asValue() == JSValue(JSUndefined);
