@@ -618,8 +618,6 @@ void ConcolicRuntime::chooseNextTargetAndExplore()
         Log::debug("\n============= Finished DFS ==============");
         Log::info("Finished serach of the tree.");
 
-        reportStatistics();
-
         mWebkitExecutor->detach();
         done();
         return;
@@ -628,6 +626,8 @@ void ConcolicRuntime::chooseNextTargetAndExplore()
 
 void ConcolicRuntime::reportStatistics()
 {
+    statistics()->accumulate("Concolic::Iterations", mNumIterations);
+
     TraceStatistics stats;
     stats.processTrace(mSymbolicExecutionGraph);
 
@@ -646,6 +646,7 @@ void ConcolicRuntime::reportStatistics()
     statistics()->accumulate("Concolic::ExecutionTree::EndUnknown", stats.mNumEndUnknown);
 
     statistics()->accumulate("Concolic::ExecutionTree::Unexplored", stats.mNumUnexplored);
+    statistics()->accumulate("Concolic::ExecutionTree::UnexploredSymbolicChild", stats.mNumUnexploredSymbolicChild);
     statistics()->accumulate("Concolic::ExecutionTree::Unsat", stats.mNumUnexploredUnsat);
     statistics()->accumulate("Concolic::ExecutionTree::Missed", stats.mNumUnexploredMissed);
     statistics()->accumulate("Concolic::ExecutionTree::CouldNotSolve", stats.mNumUnexploredUnsolvable);
@@ -658,7 +659,7 @@ void ConcolicRuntime::reportStatistics()
 
 void ConcolicRuntime::done()
 {
-    statistics()->accumulate("Concolic::Iterations", mNumIterations);
+    reportStatistics();
     Runtime::done();
 }
 

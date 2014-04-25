@@ -59,6 +59,7 @@ public:
     int mNumEndUnknown;
 
     int mNumUnexplored;
+    int mNumUnexploredSymbolicChild;
     int mNumUnexploredUnsat;
     int mNumUnexploredMissed;
     int mNumUnexploredUnsolvable;

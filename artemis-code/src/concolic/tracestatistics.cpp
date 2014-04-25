@@ -58,6 +58,7 @@ void TraceStatistics::processTrace(TraceNodePtr trace)
     mNumEndUnknown = 0;
 
     mNumUnexplored = 0;
+    mNumUnexploredSymbolicChild = 0;
     mNumUnexploredUnsat = 0;
     mNumUnexploredMissed = 0;
     mNumUnexploredUnsolvable = 0;
@@ -111,6 +112,14 @@ void TraceStatistics::visit(TraceSymbolicBranch *node)
         mNumBranchesFullyExplored++;
         mNumSymBranchesFullyExplored++;
         mNumSymBranchesFullyExploredSinceLastMarker++;
+    }
+
+    if(isImmediatelyUnexplored(node->getFalseBranch())) {
+        mNumUnexploredSymbolicChild++;
+    }
+
+    if(isImmediatelyUnexplored(node->getTrueBranch())) {
+        mNumUnexploredSymbolicChild++;
     }
 
     node->getFalseBranch()->accept(this);
