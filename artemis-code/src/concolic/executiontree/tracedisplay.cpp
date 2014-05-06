@@ -242,9 +242,6 @@ void TraceDisplay::visit(TraceNode *node)
 
 void TraceDisplay::visit(TraceConcreteBranch *node)
 {
-    QString name = QString("br_%1").arg(mNodeCounter);
-    mNodeCounter++;
-
     // For concrete branches, if both children are explored, then we want to always show them in the tree.
     // If only one child is explored, then we consider this part of a concrete execution and aggregate any such branches into a single node.
     // The case where no children are explored should never happen in a valid tree, but we would want to display this if it did.
@@ -302,6 +299,9 @@ void TraceDisplay::visit(TraceConcreteBranch *node)
     }
 
     QString label = QString(" [URL = \"%1\"]").arg(source);
+
+    QString name = QString("br_%1").arg(mNodeCounter);
+    mNodeCounter++;
 
     mHeaderBranches.append(name + label);
 
