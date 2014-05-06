@@ -23,6 +23,39 @@ def test_generator(test_name, test_filename):
     
     def test(self):
 
+        def _fetch_and_inject(fields, report):
+        
+            string_fields = []
+            boolean_fields = []
+            integer_fields = []
+        
+            for field_name in fields:
+
+                value = report.get("Concolic::Solver::Constraint.SYM_IN_%s" % field_name, None)
+
+                if value is not None:
+                    value = str(value).replace('"', '')
+                    string_fields.append("#%s=%s" % (field_name, value))
+                    continue
+
+                value = report.get("Concolic::Solver::Constraint.SYM_IN_BOOL_%s" % field_name, None)
+
+                if value is not None:
+                    value = str(value)
+                    value = 'true' if value == 'True' else 'false' if value == 'False' else value
+                    boolean_fields.append("#%s=%s" % (field_name, value))
+                    continue
+
+                value = report.get("Concolic::Solver::Constraint.SYM_IN_INT_%s" % field_name, None)
+
+                if value is not None:
+                    integer_fields.append("#%s=%s" % (field_name, str(value)))
+                    continue
+
+                string_fields.append("#%s=%s" % (field_name, 0))
+
+            return string_fields, boolean_fields, integer_fields
+
         unsat = 'unsat' in test_filename
         unsupported = 'unsupported' in test_filename
 
@@ -30,7 +63,8 @@ def test_generator(test_name, test_filename):
 
         report = execute_artemis(test_name, "%s/%s" % (FIXTURE_ROOT, test_filename), 
                                  iterations=2,
-                                 fields=["#testinputx=1", "#testinputy=2", "#testinputNameId=1", "#testinputId=1", "#testinputfoo=foo", "#testinputbar=bar", "#booleaninput=checked", "#selectinput=Select1", "#radio1b=checked", "#radio1a=", "#radio1c=", "#testinputselect=volvo"],
+                                 boolean_fields=["#booleaninput=true", "#radio1b=true", "#radio1a=false", "#radio1c=false"],
+                                 string_fields=["#testinputx=1", "#testinputy=2", "#testinputNameId=1", "#testinputId=1", "#testinputfoo=foo", "#testinputbar=bar", "#selectinput=Select1", "#testinputselect=volvo"],
                                  verbose=True)
 
         assert report.get('WebKit::alerts', 0) == 1, "Initial execution did not reach a print statement"
@@ -46,44 +80,36 @@ def test_generator(test_name, test_filename):
             assert report.get('Concolic::Solver::ConstraintsSolved', 0) == 1, "Initial execution did not solve a constraint"
 
 	assert report.get('Concolic::Solver::ErrorsReadingSolution', 0) == 0, "Errors reading the solver solution"
-        
-        new_fields = []
 
-        for field_name in fields:
-            value = str(report.get("Concolic::Solver::Constraint.SYM_IN_%s" % field_name, 0))
-            if value == 'False' or value == '""':
-                value = ''
-            new_fields.append("#%s=%s" % (field_name, value))
+        string_fields, boolean_fields, integer_fields = _fetch_and_inject(fields, report)
             
         report = execute_artemis(test_name, "%s/%s" % (FIXTURE_ROOT, test_filename),
-                                 iterations=2,              
-                                 fields=new_fields,
+                                 iterations=2,       
+                                 boolean_fields=boolean_fields,
+                                 string_fields=string_fields,
+                                 integer_fields=integer_fields,
                                  reverse_constraint_solver=True,
                                  verbose=True)
 
-        assert report.get('WebKit::alerts', 0) == 1, "Execution using inputs from the solver did not reach a print statement... %s" % new_fields
+        assert report.get('WebKit::alerts', 0) == 1, "Execution using inputs from the solver did not reach a print statement... STRING: %s, BOOLEAN: %s, INTEGER: %s" % (string_fields, boolean_fields, integer_fields)
         assert report.get('Concolic::Solver::ErrorsReadingSolution', 0) == 0, "Errors reading the solver solution"
 
         # negative case
     
-        new_fields = []
-
-        for field_name in fields:
-            value = str(report.get("Concolic::Solver::Constraint.SYM_IN_%s" % field_name, 0))
-            if value == 'False' or value == '""':
-                value = ''
-            new_fields.append("#%s=%s" % (field_name, value))
+        string_fields, boolean_fields, integer_fields = _fetch_and_inject(fields, report)
 
         report = execute_artemis(test_name, "%s/%s" % (FIXTURE_ROOT, test_filename),
                              iterations=2,              
-                             fields=new_fields,
+                             boolean_fields=boolean_fields,
+                             string_fields=string_fields,
+                             integer_fields=integer_fields,
                              reverse_constraint_solver=True,
                              verbose=True)
 
         assert report.get('Concolic::Solver::ErrorsReadingSolution', 0) == 0, "Errors reading the solver solution"
         assert report.get('Concolic::Solver::ConstraintsSolvedAsUNSAT', 0) == 0, "NEGATED execution returned as UNSAT"
         assert report.get('Concolic::Solver::ConstraintsSolved', 0) == 1, "NEGATED execution did not solve a constraint"
-        assert report.get('WebKit::alerts', 0) == 0, "NEGATED execution REACHED a print statement when it should not using %s" % new_fields
+        assert report.get('WebKit::alerts', 0) == 0, "NEGATED execution REACHED a print statement when it should not using STRING: %s, BOOLEAN: %s, INTEGER: %s" % (string_fields, boolean_fields, integer_fields)
 
     return test
 

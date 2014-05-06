@@ -23,7 +23,9 @@ def execute_artemis(execution_uuid, url, iterations=1,
                     strategy_priority=None,
                     coverage=None,
                     exclude=None,
-                    fields=None,
+                    string_fields=None,
+                    boolean_fields=None,
+                    integer_fields=None,
                     major_mode=None,
                     reverse_constraint_solver=False,
                     concolic_button=None,
@@ -72,11 +74,25 @@ def execute_artemis(execution_uuid, url, iterations=1,
             args.append('--coverage-report-ignore')
             args.append(file)
 
-    if fields is None:
-        fields = []
+    if string_fields is None:
+        string_fields = []
 
-    for field in fields:
+    if boolean_fields is None:
+        boolean_fields = []
+
+    if integer_fields is None:
+        integer_fields = []
+
+    for field in string_fields:
         args.append('-f')
+        args.append(field)
+
+    for field in boolean_fields:
+        args.append('-F')
+        args.append(field)
+
+    for field in integer_fields:
+        args.append('-I')
         args.append(field)
 
     if reverse_constraint_solver:
