@@ -17,7 +17,8 @@
 #ifndef STATSSTORAGE_H
 #define STATSSTORAGE_H
 
-#include <QHash>
+#include <map>
+#include <string>
 
 #ifdef ARTEMIS
 
@@ -29,19 +30,24 @@ class StatsStorage
 
 public:
     StatsStorage();
-    void accumulate(QString key, int value);
-    void accumulate(QString key, double value);
-    void set(QString key, int value);
-    void set(QString key, bool value);
-    void set(QString key, double value);
-    void set(QString key, QString value);
-    void set(QString key, const std::string& value);    
-    QHash<QString, int> getIntStorage() const ;
-    QHash<QString, QString> getStringStorage() const;
+
+    void accumulate(const std::string& key, int value);
+    void accumulate(const std::string& key, double value);
+    void set(const std::string& key, int value);
+    void set(const std::string& key, bool value);
+    void set(const std::string& key, double value);
+    void set(const std::string& key, const std::string& value);
+
+    void writeToStdOut();
+
 private:
-    QHash<QString, int> intStorage;
-    QHash<QString, double> doubleStorage;
-    QHash<QString, QString> stringStorage;
+    typedef std::map<std::string, int> IntStorage;
+    typedef std::map<std::string, double> DoubleStorage;
+    typedef std::map<std::string, std::string> StringStorage;
+
+    IntStorage mIntStorage;
+    DoubleStorage mDoubleStorage;
+    StringStorage mStringStorage;
 };
 
 StatsStorage* statistics();

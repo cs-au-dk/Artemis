@@ -125,8 +125,7 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/model/jsoneventexecutionstatistics.h \
     src/runtime/input/forms/formfieldinjector.h \
     src/runtime/input/forms/injectionvalue.h \
-    src/runtime/input/forms/formfieldrestrictedvalues.h \
-    src/statistics/writers/pretty.h
+    src/runtime/input/forms/formfieldrestrictedvalues.h
 
 SOURCES += src/runtime/input/ajaxinput.cpp \
     src/strategies/prioritizer/constantprioritizer.cpp \
@@ -166,7 +165,6 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/model/coverage/codeblockinfo.cpp \
     src/util/fileutil.cpp \
     src/util/urlutil.cpp \
-    src/statistics/writers/pretty.cpp \
     src/exceptionhandlingqapp.cpp \
     src/runtime/browser/executionresultbuilder.cpp \
     src/strategies/inputgenerator/event/staticeventparametergenerator.cpp \
@@ -230,7 +228,6 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/model/stubeventexecutionstatistics.cpp \
     src/model/jsoneventexecutionstatistics.cpp \
     src/runtime/input/forms/formfieldinjector.cpp \
-    src/runtime/input/forms/formfieldrestrictedvalues.cpp \
-    src/model/jsoneventexecutionstatistics.cpp
+    src/runtime/input/forms/formfieldrestrictedvalues.cpp
 
 QT += network

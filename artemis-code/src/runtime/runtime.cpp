@@ -31,7 +31,6 @@
 
 
 #include "statistics/statsstorage.h"
-#include "statistics/writers/pretty.h"
 
 #include "strategies/inputgenerator/randominputgenerator.h"
 #include "strategies/inputgenerator/event/staticeventparametergenerator.h"
@@ -244,7 +243,7 @@ void Runtime::done()
     }
 
     Log::info("\n=== Statistics ===\n");
-    StatsPrettyWriter::write(Statistics::statistics());
+    Statistics::statistics()->writeToStdOut();
     Log::info("\n=== Statistics END ===\n\n");
 
     Log::info("\n=== Last pathconditions ===\n");

@@ -15,7 +15,9 @@
  */
 
 #include "statsstorage.h"
+
 #include <QDebug>
+#include <iostream>
 
 #ifdef ARTEMIS
 
@@ -27,50 +29,72 @@ StatsStorage::StatsStorage()
 {
 }
 
-void StatsStorage::accumulate(QString key, int value)
+void StatsStorage::accumulate(const std::string& key, int value)
 {
-    value += this->intStorage.value(key, 0);
-    this->intStorage.insert(key, value);
+    IntStorage::iterator iter = mIntStorage.find(key);
+
+    if (iter == mIntStorage.end()) {
+        mIntStorage.insert(std::pair<std::string, int>(key, value));
+    } else {
+        iter->second += value;
+    }
 }
 
-void StatsStorage::accumulate(QString key, double value)
+void StatsStorage::accumulate(const std::string& key, double value)
 {
-    value += this->doubleStorage.value(key, 0);
-    this->doubleStorage.insert(key, value);
+    DoubleStorage::iterator iter = mDoubleStorage.find(key);
+
+    if (iter == mDoubleStorage.end()) {
+        mDoubleStorage.insert(std::pair<std::string, double>(key, value));
+    } else {
+        iter->second += value;
+    }
 }
 
-void StatsStorage::set(QString key, int value)
+void StatsStorage::set(const std::string& key, int value)
 {
-    this->intStorage.insert(key, value);
+    mIntStorage.insert(std::pair<std::string, int>(key, value));
 }
 
-void StatsStorage::set(QString key, bool value)
+void StatsStorage::set(const std::string& key, bool value)
 {
-    this->stringStorage.insert(key, value ? QString::fromStdString("true") : QString::fromStdString("false"));
+    mStringStorage.insert(std::pair<std::string, std::string>(key, (value ? "true" : "false")));
 }
 
-void StatsStorage::set(QString key, double value)
+void StatsStorage::set(const std::string& key, double value)
 {
-    this->doubleStorage.insert(key, value);
+    mDoubleStorage.insert(std::pair<std::string, double>(key, value));
 }
 
-void StatsStorage::set(QString key, QString value)
+void StatsStorage::set(const std::string& key, const std::string& value)
 {
-    this->stringStorage.insert(key, value);
+    mStringStorage.insert(std::pair<std::string, std::string>(key, value));
 }
 
-void StatsStorage::set(QString key, const std::string& value)
+void StatsStorage::writeToStdOut()
 {
-    this->stringStorage.insert(key, QString::fromStdString(value.c_str()));
-}
 
+    IntStorage::iterator iiter = mIntStorage.begin();
 
-QHash<QString, int> StatsStorage::getIntStorage() const {
-    return intStorage;
-}
+    while (iiter != mIntStorage.end()) {
+        std::cout << iiter->first << ": " << iiter->second << std::endl;
+        iiter++;
+    }
 
-QHash<QString, QString> StatsStorage::getStringStorage() const {
-    return stringStorage;
+    StringStorage::iterator siter = mStringStorage.begin();
+
+    while (siter != mStringStorage.end()) {
+        std::cout << siter->first << ": " << siter->second << std::endl;
+        siter++;
+    }
+
+    DoubleStorage::iterator diter = mDoubleStorage.begin();
+
+    while (diter != mDoubleStorage.end()) {
+        std::cout << diter->first << ": " << diter->second << std::endl;
+        diter++;
+    }
+
 }
 
 

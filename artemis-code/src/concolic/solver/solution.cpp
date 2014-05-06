@@ -71,13 +71,13 @@ void Solution::toStatistics()
 
         switch (value.kind) {
         case Symbolic::INT:
-            Statistics::statistics()->set(key, value.u.integer);
+            Statistics::statistics()->set(key.toStdString(), value.u.integer);
             break;
         case Symbolic::BOOL:
-            Statistics::statistics()->set(key, value.u.boolean);
+            Statistics::statistics()->set(key.toStdString(), value.u.boolean);
             break;
         case Symbolic::STRING:
-            Statistics::statistics()->set(key, value.string);
+            Statistics::statistics()->set(key.toStdString(), value.string);
             break;
         default:
             std::cerr << "Unimplemented value type encountered" << std::endl;
