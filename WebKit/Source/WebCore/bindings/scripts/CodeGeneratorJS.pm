@@ -1828,7 +1828,7 @@ sub GenerateImplementation
 
                         if ($attribute->signature->extendedAttributes->{"SymbolicOptionElement"}) {
                             push(@implContent, "\n");
-                            push(@implContent, "    if (!slotBase.isSymbolic()) {\n");
+                            push(@implContent, "    if (!slotBase.isIndirectSymbolic()) {\n");
                             push(@implContent, "        return result;\n");
                             push(@implContent, "    }\n");
                         }
@@ -2409,7 +2409,7 @@ sub GenerateImplementation
             push(@implContent, "    JSValue value = toJS(exec, thisObj->globalObject(), static_cast<$implClassName*>(thisObj->impl())->item(index));\n");
         }
         push(@implContent, "if (value.isObject() && Symbolic::SymbolicInterpreter::isOpGetByValWithSymbolicArg()) {\n");
-        push(@implContent, "    value.makeSymbolic(NULL);");
+        push(@implContent, "    value.makeIndirectSymbolic();");
         push(@implContent, "}\n");
         push(@implContent, "return value;\n");
         push(@implContent, "}\n\n");
