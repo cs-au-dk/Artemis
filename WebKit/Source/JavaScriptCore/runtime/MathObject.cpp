@@ -30,6 +30,8 @@
 #include <wtf/RandomNumber.h>
 #include <wtf/RandomNumberSeed.h>
 
+#include <statistics/statsstorage.h>
+
 namespace JSC {
 
 ASSERT_CLASS_FITS_IN_CELL(MathObject);
@@ -120,26 +122,42 @@ bool MathObject::getOwnPropertyDescriptor(JSObject* object, ExecState* exec, con
 
 EncodedJSValue JSC_HOST_CALL mathProtoFuncAbs(ExecState* exec)
 {
+    if (exec->argument(0).isSymbolic()) {
+        Statistics::statistics()->accumulate("Concolic::MissingInstrumentation::mathProtoFuncAbs", 1);
+    }
     return JSValue::encode(jsNumber(fabs(exec->argument(0).toNumber(exec))));
 }
 
 EncodedJSValue JSC_HOST_CALL mathProtoFuncACos(ExecState* exec)
 {
+    if (exec->argument(0).isSymbolic()) {
+        Statistics::statistics()->accumulate("Concolic::MissingInstrumentation::mathProtoFuncACos", 1);
+    }
     return JSValue::encode(jsDoubleNumber(acos(exec->argument(0).toNumber(exec))));
 }
 
 EncodedJSValue JSC_HOST_CALL mathProtoFuncASin(ExecState* exec)
 {
+    if (exec->argument(0).isSymbolic()) {
+        Statistics::statistics()->accumulate("Concolic::MissingInstrumentation::mathProtoFuncASin", 1);
+    }
     return JSValue::encode(jsDoubleNumber(asin(exec->argument(0).toNumber(exec))));
 }
 
 EncodedJSValue JSC_HOST_CALL mathProtoFuncATan(ExecState* exec)
 {
+    if (exec->argument(0).isSymbolic()) {
+        Statistics::statistics()->accumulate("Concolic::MissingInstrumentation::mathProtoFuncATan", 1);
+    }
     return JSValue::encode(jsDoubleNumber(atan(exec->argument(0).toNumber(exec))));
 }
 
 EncodedJSValue JSC_HOST_CALL mathProtoFuncATan2(ExecState* exec)
 {
+    if (exec->argument(0).isSymbolic() || exec->argument(1).isSymbolic()) {
+        Statistics::statistics()->accumulate("Concolic::MissingInstrumentation::mathProtoFuncATan2", 1);
+    }
+
     double arg0 = exec->argument(0).toNumber(exec);
     double arg1 = exec->argument(1).toNumber(exec);
     return JSValue::encode(jsDoubleNumber(atan2(arg0, arg1)));
@@ -147,34 +165,55 @@ EncodedJSValue JSC_HOST_CALL mathProtoFuncATan2(ExecState* exec)
 
 EncodedJSValue JSC_HOST_CALL mathProtoFuncCeil(ExecState* exec)
 {
+    if (exec->argument(0).isSymbolic()) {
+        Statistics::statistics()->accumulate("Concolic::MissingInstrumentation::mathProtoFuncCeil", 1);
+    }
     return JSValue::encode(jsNumber(ceil(exec->argument(0).toNumber(exec))));
 }
 
 EncodedJSValue JSC_HOST_CALL mathProtoFuncCos(ExecState* exec)
 {
+    if (exec->argument(0).isSymbolic()) {
+        Statistics::statistics()->accumulate("Concolic::MissingInstrumentation::mathProtoFuncCos", 1);
+    }
     return JSValue::encode(jsDoubleNumber(cos(exec->argument(0).toNumber(exec))));
 }
 
 EncodedJSValue JSC_HOST_CALL mathProtoFuncExp(ExecState* exec)
 {
+    if (exec->argument(0).isSymbolic()) {
+        Statistics::statistics()->accumulate("Concolic::MissingInstrumentation::mathProtoFuncExp", 1);
+    }
     return JSValue::encode(jsDoubleNumber(exp(exec->argument(0).toNumber(exec))));
 }
 
 EncodedJSValue JSC_HOST_CALL mathProtoFuncFloor(ExecState* exec)
 {
+    if (exec->argument(0).isSymbolic()) {
+        Statistics::statistics()->accumulate("Concolic::MissingInstrumentation::mathProtoFuncFloor", 1);
+    }
     return JSValue::encode(jsNumber(floor(exec->argument(0).toNumber(exec))));
 }
 
 EncodedJSValue JSC_HOST_CALL mathProtoFuncLog(ExecState* exec)
 {
+    if (exec->argument(0).isSymbolic()) {
+        Statistics::statistics()->accumulate("Concolic::MissingInstrumentation::mathProtoFuncLog", 1);
+    }
     return JSValue::encode(jsDoubleNumber(log(exec->argument(0).toNumber(exec))));
 }
 
 EncodedJSValue JSC_HOST_CALL mathProtoFuncMax(ExecState* exec)
 {
+    bool isSymbolic = false;
+
     unsigned argsCount = exec->argumentCount();
     double result = -std::numeric_limits<double>::infinity();
     for (unsigned k = 0; k < argsCount; ++k) {
+        if (exec->argument(k).isSymbolic()) {
+            isSymbolic = true;
+        }
+
         double val = exec->argument(k).toNumber(exec);
         if (isnan(val)) {
             result = std::numeric_limits<double>::quiet_NaN();
@@ -183,14 +222,24 @@ EncodedJSValue JSC_HOST_CALL mathProtoFuncMax(ExecState* exec)
         if (val > result || (val == 0 && result == 0 && !signbit(val)))
             result = val;
     }
+
+    if (isSymbolic) {
+        Statistics::statistics()->accumulate("Concolic::MissingInstrumentation::mathProtoFuncMax", 1);
+    }
     return JSValue::encode(jsNumber(result));
 }
 
 EncodedJSValue JSC_HOST_CALL mathProtoFuncMin(ExecState* exec)
 {
+    bool isSymbolic = false;
+
     unsigned argsCount = exec->argumentCount();
     double result = +std::numeric_limits<double>::infinity();
     for (unsigned k = 0; k < argsCount; ++k) {
+        if (exec->argument(k).isSymbolic()) {
+            isSymbolic = true;
+        }
+
         double val = exec->argument(k).toNumber(exec);
         if (isnan(val)) {
             result = std::numeric_limits<double>::quiet_NaN();
@@ -199,12 +248,20 @@ EncodedJSValue JSC_HOST_CALL mathProtoFuncMin(ExecState* exec)
         if (val < result || (val == 0 && result == 0 && signbit(val)))
             result = val;
     }
+
+    if (isSymbolic) {
+        Statistics::statistics()->accumulate("Concolic::MissingInstrumentation::mathProtoFuncMin", 1);
+    }
     return JSValue::encode(jsNumber(result));
 }
 
 EncodedJSValue JSC_HOST_CALL mathProtoFuncPow(ExecState* exec)
 {
     // ECMA 15.8.2.1.13
+
+    if (exec->argument(0).isSymbolic() || exec->argument(1).isSymbolic()) {
+        Statistics::statistics()->accumulate("Concolic::MissingInstrumentation::mathProtoFuncPow", 1);
+    }
 
     double arg = exec->argument(0).toNumber(exec);
     double arg2 = exec->argument(1).toNumber(exec);
@@ -218,11 +275,17 @@ EncodedJSValue JSC_HOST_CALL mathProtoFuncPow(ExecState* exec)
 
 EncodedJSValue JSC_HOST_CALL mathProtoFuncRandom(ExecState* exec)
 {
+    Statistics::statistics()->accumulate("Concolic::MissingInstrumentation::mathProtoFuncRandom", 1);
+
     return JSValue::encode(jsDoubleNumber(exec->lexicalGlobalObject()->weakRandomNumber()));
 }
 
 EncodedJSValue JSC_HOST_CALL mathProtoFuncRound(ExecState* exec)
 {
+    if (exec->argument(0).isSymbolic()) {
+        Statistics::statistics()->accumulate("Concolic::MissingInstrumentation::mathProtoFuncRound", 1);
+    }
+
     double arg = exec->argument(0).toNumber(exec);
     double integer = ceil(arg);
     return JSValue::encode(jsNumber(integer - (integer - arg > 0.5)));
@@ -230,16 +293,25 @@ EncodedJSValue JSC_HOST_CALL mathProtoFuncRound(ExecState* exec)
 
 EncodedJSValue JSC_HOST_CALL mathProtoFuncSin(ExecState* exec)
 {
+    if (exec->argument(0).isSymbolic()) {
+        Statistics::statistics()->accumulate("Concolic::MissingInstrumentation::mathProtoFuncSin", 1);
+    }
     return JSValue::encode(exec->globalData().cachedSin(exec->argument(0).toNumber(exec)));
 }
 
 EncodedJSValue JSC_HOST_CALL mathProtoFuncSqrt(ExecState* exec)
 {
+    if (exec->argument(0).isSymbolic()) {
+        Statistics::statistics()->accumulate("Concolic::MissingInstrumentation::mathProtoFuncSqrt", 1);
+    }
     return JSValue::encode(jsDoubleNumber(sqrt(exec->argument(0).toNumber(exec))));
 }
 
 EncodedJSValue JSC_HOST_CALL mathProtoFuncTan(ExecState* exec)
 {
+    if (exec->argument(0).isSymbolic()) {
+        Statistics::statistics()->accumulate("Concolic::MissingInstrumentation::mathProtoFuncTan", 1);
+    }
     return JSValue::encode(jsDoubleNumber(tan(exec->argument(0).toNumber(exec))));
 }
 
