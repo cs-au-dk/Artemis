@@ -332,7 +332,7 @@ void PathTracer::writeStatistics()
     std::stringstream out;
     out << mTraceItemPool.size() << "/" << mTraceItemPoolUncompressedSize;
 
-    statistics()->set("WebKit::pathtracer::traceitempool-compression", out.str());
+    Statistics::statistics()->set("WebKit::pathtracer::traceitempool-compression", out.str());
 }
 
 }

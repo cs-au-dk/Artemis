@@ -28,7 +28,7 @@ bool FormFieldInjector::inject(QWebElement element, InjectionValue value)
 
     if (element.isNull()) {
         qDebug() << "Warning: failed to inject input. Targeting null element.\n";
-        statistics()->accumulate("Concolic::FailedInjections", 1); // TODO: this is called even in non-concolic modes!
+        Statistics::statistics()->accumulate("Concolic::FailedInjections", 1); // TODO: this is called even in non-concolic modes!
         return false;
     }
 
@@ -61,7 +61,7 @@ bool FormFieldInjector::inject(QWebElement element, InjectionValue value)
 
         } else {
             qDebug() << "Warning: failed to inject BOOL into input " << element.tagName() << " input: id:" << element.attribute("id", "") << ", classes:" << element.classes().join(",") << ".\n";
-            statistics()->accumulate("Concolic::FailedInjections", 1); // TODO: this is called even in non-concolic modes!
+            Statistics::statistics()->accumulate("Concolic::FailedInjections", 1); // TODO: this is called even in non-concolic modes!
             return false;
         }
 
@@ -75,14 +75,14 @@ bool FormFieldInjector::inject(QWebElement element, InjectionValue value)
 
         } else {
             qDebug() << "Warning: failed to inject INT into " << element.tagName() << " input: id:" << element.attribute("id", "") << ", classes:" << element.classes().join(",") << ".\n";
-            statistics()->accumulate("Concolic::FailedInjections", 1); // TODO: this is called even in non-concolic modes!
+            Statistics::statistics()->accumulate("Concolic::FailedInjections", 1); // TODO: this is called even in non-concolic modes!
             return false;
         }
         break;
 
     default:
         qDebug() << "Error: Tried to inject a variable with an unknown type.\n";
-        statistics()->accumulate("Concolic::FailedInjections", 1); // TODO: this is called even in non-concolic modes!
+        Statistics::statistics()->accumulate("Concolic::FailedInjections", 1); // TODO: this is called even in non-concolic modes!
         return false;
     }
 

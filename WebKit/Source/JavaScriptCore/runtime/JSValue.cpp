@@ -327,19 +327,34 @@ QString JSValue::getAsJSONString(ExecState* exec, QSet<QString>* visitedObjects)
 }
 
 
+void JSValue::makeIndirectSymbolic() {
+
+    makeExtended();
+    getImmediate()->indirectSymbolic = true;
+
+}
+
 void JSValue::makeSymbolic(Symbolic::Expression* symbolicValue) {
+    ASSERT(symbolicValue != NULL);
 
-    if (isSymbolic()) {
-        getImmediate()->symbolic = symbolicValue;
+    makeExtended();
+    getImmediate()->symbolic = symbolicValue;
 
-        if (isString()) {
-           static_cast<JSString*>(asCell())->makeSymbolic(dynamic_cast<Symbolic::StringExpression*>(symbolicValue));
-        }
+    if (isString()) {
+       static_cast<JSString*>(asCell())->makeSymbolic(dynamic_cast<Symbolic::StringExpression*>(symbolicValue));
+    }
+
+}
+
+void JSValue::makeExtended() {
+
+    if (isExtended()) {
         return;
     }
 
     SymbolicImmediate* symbolicImmediate = new SymbolicImmediate();
-    symbolicImmediate->symbolic = symbolicValue;
+    symbolicImmediate->symbolic = NULL;
+    symbolicImmediate->indirectSymbolic = false;
 
     if (isInt32()) {
         symbolicImmediate->u.asInt64 = u.asInt64;
@@ -350,7 +365,6 @@ void JSValue::makeSymbolic(Symbolic::Expression* symbolicValue) {
     } else if (isString()) {
         symbolicImmediate->u.asInt64 = u.asInt64;
         u.asInt64 = (TagTypeSymbolicObject | (int64_t)symbolicImmediate);
-        static_cast<JSString*>(asCell())->makeSymbolic(dynamic_cast<Symbolic::StringExpression*>(symbolicValue));
     } else if (isObject()) {
         symbolicImmediate->u.asInt64 = u.asInt64;
         u.asInt64 = (TagTypeSymbolicObject | (int64_t)symbolicImmediate);
@@ -372,8 +386,7 @@ void JSValue::makeSymbolic(Symbolic::Expression* symbolicValue) {
 Symbolic::Expression* JSValue::asSymbolic() const
 {
     ASSERT(isSymbolic());
-    SymbolicImmediate* immediate = getImmediate();
-    return immediate->symbolic;
+    return getImmediate()->symbolic;
 }
 
 Symbolic::IntegerExpression* JSValue::generateIntegerExpression(ExecState* exec){

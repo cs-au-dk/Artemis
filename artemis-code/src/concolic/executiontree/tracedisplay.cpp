@@ -242,7 +242,6 @@ void TraceDisplay::visit(TraceNode *node)
 
 void TraceDisplay::visit(TraceConcreteBranch *node)
 {
-    QString name = QString("br_%1").arg(mNodeCounter);
     mNodeCounter++;
 
     // For concrete branches, if both children are explored, then we want to always show them in the tree.
@@ -301,6 +300,7 @@ void TraceDisplay::visit(TraceConcreteBranch *node)
                     QString::fromStdString(sourceLine.str()));
     }
 
+    QString name = QString("br_%1").arg(mNodeCounter);
     QString label = QString(" [URL = \"%1\"]").arg(source);
 
     mHeaderBranches.append(name + label);
@@ -324,7 +324,6 @@ void TraceDisplay::visit(TraceSymbolicBranch *node)
 {
     flushAggregation();
 
-    QString name = QString("sym_%1").arg(mNodeCounter);
     mNodeCounter++;
 
     node->getSymbolicCondition()->accept(mExpressionPrinter.data());
@@ -347,6 +346,7 @@ void TraceDisplay::visit(TraceSymbolicBranch *node)
                     QString::fromStdString(sourceLine.str()));
     }
 
+    QString name = QString("sym_%1").arg(mNodeCounter);
     QString label = QString(" [label = \"Branch\\n%1\", URL = \"%2\"]").arg(symbolicExpression, source);
 
     mHeaderSymBranches.append(name + label);

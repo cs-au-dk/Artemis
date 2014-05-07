@@ -100,6 +100,9 @@ Special Casing Symbolic Objects
 We do not support symbolic objects in general. However, we do mark specific objects as symbolic in order to implement symbolic handling of specific instances of objects.
 
  * We make the result returned by regexp operations (who return arrays or null) symbolic. The symbolic value from these operations is treated as a special null or non-null symbolic value, in order to reason about the outcome of a regexp match.
+ 
+Special Casing Indirect Symbolic Values
+---------------------------------------
 
- * We mark objects as symbolic if they are accessed using a value lookup using a symbolic index. The symbolic expression is set to NULL. This is used as a flag in order to implement symbolic value properties on option elements within a select element soundly. See issue #82, access pattern 3.
+ * We mark objects as indirect symbolic if they are accessed using a value lookup using a symbolic index. This is used as a flag in order to implement symbolic value properties on option elements within a select element soundly. See issue #82, access pattern 3.
 

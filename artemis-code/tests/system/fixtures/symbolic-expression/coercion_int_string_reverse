@@ -1,0 +1,4 @@
+TEST PC:(((ConstantString+StringCoercion(SymbolicInteger))==ConstantString)==ConstantBoolean)
+if ("B" + select.selectedIndex == "0") {
+    alert(x);
+}

@@ -54,7 +54,7 @@ void JavascriptStatistics::slJavascriptPropertyRead(QString propertyName, intptr
         return;
     }
 
-    statistics()->accumulate("WebKit::readproperties", 1);
+    Statistics::statistics()->accumulate("WebKit::readproperties", 1);
 
     if (mInputBeingExecuted != 0) {
         mPropertyReadSet.value(mInputBeingExecuted)->insert(propertyName);
@@ -67,7 +67,7 @@ void JavascriptStatistics::slJavascriptPropertyWritten(QString propertyName, int
         return;
     }
 
-    statistics()->accumulate("WebKit::writtenproperties", 1);
+    Statistics::statistics()->accumulate("WebKit::writtenproperties", 1);
 
     if (mInputBeingExecuted != 0) {
         mPropertyWriteSet.value(mInputBeingExecuted)->insert(propertyName);

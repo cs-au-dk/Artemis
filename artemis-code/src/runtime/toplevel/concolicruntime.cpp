@@ -378,9 +378,10 @@ void ConcolicRuntime::mergeTraceIntoTree()
         mSearchStrategy = DepthFirstSearchPtr(new DepthFirstSearch(mSymbolicExecutionGraph));
         mRunningWithInitialValues = false;
 
-        statistics()->accumulate("Concolic::ExecutionTree::DistinctTracesExplored", 1);
+        Statistics::statistics()->accumulate("Concolic::ExecutionTree::DistinctTracesExplored", 1);
 
     } else {
+
         // A normal run.
         // Merge trace with tracegraph
         mSymbolicExecutionGraph = TraceMerger::merge(trace, mSymbolicExecutionGraph);
@@ -440,7 +441,7 @@ QSharedPointer<FormInputCollection> ConcolicRuntime::createFormInput(QMap<QStrin
         Symbolvalue value = solution->findSymbol(varName);
         if(!value.found){
             Log::error(QString("Error: Could not find value for %1 in the solver's solution.").arg(varName).toStdString());
-            statistics()->accumulate("Concolic::FailedInjections", 1);
+            Statistics::statistics()->accumulate("Concolic::FailedInjections", 1);
             continue;
         }
 
@@ -468,7 +469,7 @@ QSharedPointer<FormInputCollection> ConcolicRuntime::createFormInput(QMap<QStrin
             break;
         default:
             Log::error(QString("INJECTION ERROR: Unimplemented value type encountered for variable %1 (%2)").arg(varName).arg(value.kind).toStdString());
-            statistics()->accumulate("Concolic::FailedInjections", 1);
+            Statistics::statistics()->accumulate("Concolic::FailedInjections", 1);
             continue;
         }
 
@@ -518,14 +519,14 @@ QSharedPointer<const FormFieldDescriptor> ConcolicRuntime::findFormFieldForVaria
 
     default:
         Log::error("Error: Unexpected identification method for form fields encountered.");
-        statistics()->accumulate("Concolic::FailedInjections", 1);
+        Statistics::statistics()->accumulate("Concolic::FailedInjections", 1);
         return varSourceField; // Returning null to signify error.
     }
 
     // Check that we found a FormField.
     if(varSourceField.isNull()){
         Log::error(QString("Error: Could not identify a form field for %1.").arg(varName).toStdString());
-        statistics()->accumulate("Concolic::FailedInjections", 1);
+        Statistics::statistics()->accumulate("Concolic::FailedInjections", 1);
         return varSourceField; // Returning null to signify error.
     }
 
@@ -626,34 +627,34 @@ void ConcolicRuntime::chooseNextTargetAndExplore()
 
 void ConcolicRuntime::reportStatistics()
 {
-    statistics()->accumulate("Concolic::Iterations", mNumIterations);
+    Statistics::statistics()->accumulate("Concolic::Iterations", mNumIterations);
 
     TraceStatistics stats;
     stats.processTrace(mSymbolicExecutionGraph);
 
-    statistics()->accumulate("Concolic::ExecutionTree::ConcreteBranchesTotal", stats.mNumConcreteBranches);
-    statistics()->accumulate("Concolic::ExecutionTree::ConcreteBranchesFullyExplored", stats.mNumConcreteBranchesFullyExplored);
+    Statistics::statistics()->accumulate("Concolic::ExecutionTree::ConcreteBranchesTotal", stats.mNumConcreteBranches);
+    Statistics::statistics()->accumulate("Concolic::ExecutionTree::ConcreteBranchesFullyExplored", stats.mNumConcreteBranchesFullyExplored);
 
-    statistics()->accumulate("Concolic::ExecutionTree::SymbolicBranchesTotal", stats.mNumSymBranches);
-    statistics()->accumulate("Concolic::ExecutionTree::SymbolicBranchesFullyExplored", stats.mNumSymBranchesFullyExplored);
+    Statistics::statistics()->accumulate("Concolic::ExecutionTree::SymbolicBranchesTotal", stats.mNumSymBranches);
+    Statistics::statistics()->accumulate("Concolic::ExecutionTree::SymbolicBranchesFullyExplored", stats.mNumSymBranchesFullyExplored);
 
-    statistics()->accumulate("Concolic::ExecutionTree::Alerts", stats.mNumAlerts);
-    statistics()->accumulate("Concolic::ExecutionTree::PageLoads", stats.mNumPageLoads);
-    statistics()->accumulate("Concolic::ExecutionTree::InterestingDomModifications", stats.mNumInterestingDomModifications);
+    Statistics::statistics()->accumulate("Concolic::ExecutionTree::Alerts", stats.mNumAlerts);
+    Statistics::statistics()->accumulate("Concolic::ExecutionTree::PageLoads", stats.mNumPageLoads);
+    Statistics::statistics()->accumulate("Concolic::ExecutionTree::InterestingDomModifications", stats.mNumInterestingDomModifications);
 
-    statistics()->accumulate("Concolic::ExecutionTree::EndSuccess", stats.mNumEndSuccess);
-    statistics()->accumulate("Concolic::ExecutionTree::EndFailure", stats.mNumEndFailure);
-    statistics()->accumulate("Concolic::ExecutionTree::EndUnknown", stats.mNumEndUnknown);
+    Statistics::statistics()->accumulate("Concolic::ExecutionTree::EndSuccess", stats.mNumEndSuccess);
+    Statistics::statistics()->accumulate("Concolic::ExecutionTree::EndFailure", stats.mNumEndFailure);
+    Statistics::statistics()->accumulate("Concolic::ExecutionTree::EndUnknown", stats.mNumEndUnknown);
 
-    statistics()->accumulate("Concolic::ExecutionTree::Unexplored", stats.mNumUnexplored);
-    statistics()->accumulate("Concolic::ExecutionTree::UnexploredSymbolicChild", stats.mNumUnexploredSymbolicChild);
-    statistics()->accumulate("Concolic::ExecutionTree::Unsat", stats.mNumUnexploredUnsat);
-    statistics()->accumulate("Concolic::ExecutionTree::Missed", stats.mNumUnexploredMissed);
-    statistics()->accumulate("Concolic::ExecutionTree::CouldNotSolve", stats.mNumUnexploredUnsolvable);
+    Statistics::statistics()->accumulate("Concolic::ExecutionTree::Unexplored", stats.mNumUnexplored);
+    Statistics::statistics()->accumulate("Concolic::ExecutionTree::UnexploredSymbolicChild", stats.mNumUnexploredSymbolicChild);
+    Statistics::statistics()->accumulate("Concolic::ExecutionTree::Unsat", stats.mNumUnexploredUnsat);
+    Statistics::statistics()->accumulate("Concolic::ExecutionTree::Missed", stats.mNumUnexploredMissed);
+    Statistics::statistics()->accumulate("Concolic::ExecutionTree::CouldNotSolve", stats.mNumUnexploredUnsolvable);
 
-    statistics()->accumulate("Concolic::EventSequence::HandlersTriggered", mFormFields.size());
-    statistics()->accumulate("Concolic::EventSequence::SymbolicBranchesTotal", stats.mNumEventSequenceSymBranches);
-    statistics()->accumulate("Concolic::EventSequence::SymbolicBranchesFullyExplored", stats.mNumEventSequenceSymBranchesFullyExplored);
+    Statistics::statistics()->accumulate("Concolic::EventSequence::HandlersTriggered", mFormFields.size());
+    Statistics::statistics()->accumulate("Concolic::EventSequence::SymbolicBranchesTotal", stats.mNumEventSequenceSymBranches);
+    Statistics::statistics()->accumulate("Concolic::EventSequence::SymbolicBranchesFullyExplored", stats.mNumEventSequenceSymBranchesFullyExplored);
 }
 
 

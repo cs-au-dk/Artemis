@@ -54,8 +54,6 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/util/loggingutil.h \
     src/util/fileutil.h \
     src/util/urlutil.h \
-    src/statistics/statsstorage.h \
-    src/statistics/writers/pretty.h \
     src/exceptionhandlingqapp.h \
     src/runtime/browser/executionresultbuilder.h \
     src/strategies/inputgenerator/form/forminputgenerator.h \
@@ -167,8 +165,6 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/model/coverage/codeblockinfo.cpp \
     src/util/fileutil.cpp \
     src/util/urlutil.cpp \
-    src/statistics/statsstorage.cpp \
-    src/statistics/writers/pretty.cpp \
     src/exceptionhandlingqapp.cpp \
     src/runtime/browser/executionresultbuilder.cpp \
     src/strategies/inputgenerator/event/staticeventparametergenerator.cpp \

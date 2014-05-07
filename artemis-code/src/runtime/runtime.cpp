@@ -29,8 +29,8 @@
 #include "model/jsoneventexecutionstatistics.h"
 #include "model/stubeventexecutionstatistics.h"
 
+
 #include "statistics/statsstorage.h"
-#include "statistics/writers/pretty.h"
 
 #include "strategies/inputgenerator/randominputgenerator.h"
 #include "strategies/inputgenerator/event/staticeventparametergenerator.h"
@@ -198,7 +198,7 @@ void Runtime::done()
 
     // Do some last-minute statistics
 
-    statistics()->accumulate("WebKit::coverage::covered-unique", (int)mAppmodel->getCoverageListener()->getNumCoveredLines());
+    Statistics::statistics()->accumulate("WebKit::coverage::covered-unique", (int)mAppmodel->getCoverageListener()->getNumCoveredLines());
 
     // solve the last PC - this is needed by some system tests
     PathConditionPtr pc = PathCondition::createFromTrace(mWebkitExecutor->getTraceBuilder()->trace());
@@ -243,7 +243,7 @@ void Runtime::done()
     }
 
     Log::info("\n=== Statistics ===\n");
-    StatsPrettyWriter::write(statistics());
+    Statistics::statistics()->writeToStdOut();
     Log::info("\n=== Statistics END ===\n\n");
 
     Log::info("\n=== Last pathconditions ===\n");

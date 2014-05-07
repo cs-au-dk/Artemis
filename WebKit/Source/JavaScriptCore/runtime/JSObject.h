@@ -832,7 +832,7 @@ inline JSValue JSValue::get(ExecState* exec, const Identifier& propertyName, Pro
             // fastGetOwnPropertySlot overwrites the slotBase with the cell pointer, under certain conditions.
             // However, this scrubs away all symbolic information. Thus, reset the slotBase to the correct
             // value w. symbolic information.
-            if (isSymbolic() && slot.slotBase().asCell() == asCell()) {
+            if (isExtended() && slot.slotBase().asCell() == asCell()) {
                 slot.setBase(*this);
             }
 #endif

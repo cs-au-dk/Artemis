@@ -33,7 +33,7 @@ TraceNodePtr TraceMerger::merge(TraceNodePtr trace, TraceNodePtr executiontree)
 
     if (executiontree.isNull()) {
         return trace; // replace the entire execution tree with the trace
-        statistics()->accumulate("Concolic::ExecutionTree::DistinctTracesExplored", 1);
+        Statistics::statistics()->accumulate("Concolic::ExecutionTree::DistinctTracesExplored", 1);
     }
 
     TraceMerger merger;
@@ -61,14 +61,14 @@ void TraceMerger::visit(TraceEnd* node)
 
         // Insert this trace directly into the tree and return
         mCurrentTree = mCurrentTrace;
-        statistics()->accumulate("Concolic::ExecutionTree::DistinctTracesExplored", 1);
+        Statistics::statistics()->accumulate("Concolic::ExecutionTree::DistinctTracesExplored", 1);
         return;
     }
 
     // case: trace end
     if (!mCurrentTrace->isEqualShallow(mCurrentTree)) {
         qWarning() << "Warning, divergance discovered while merging a trace! (TraceEnd)";
-        statistics()->accumulate("Concolic::ExecutionTree::DivergentMerges", 1);
+        Statistics::statistics()->accumulate("Concolic::ExecutionTree::DivergentMerges", 1);
         Log::info("  Trace merge diverged from the tree (TraceEnd).");
         reportFailedMerge();
     }
@@ -81,7 +81,7 @@ void TraceMerger::visit(TraceBranch* node)
 
         // Insert this trace directly into the tree and return
         mCurrentTree = mCurrentTrace;
-        statistics()->accumulate("Concolic::ExecutionTree::DistinctTracesExplored", 1);
+        Statistics::statistics()->accumulate("Concolic::ExecutionTree::DistinctTracesExplored", 1);
         return;
     }
 
@@ -109,7 +109,7 @@ void TraceMerger::visit(TraceBranch* node)
     }
 
     qWarning() << "Warning, divergance discovered while merging a trace! (TraceBranch)";
-    statistics()->accumulate("Concolic::ExecutionTree::DivergentMerges", 1);
+    Statistics::statistics()->accumulate("Concolic::ExecutionTree::DivergentMerges", 1);
     Log::info("  Trace merge diverged from the tree (TraceBranch).");
     reportFailedMerge();
 }
@@ -121,7 +121,7 @@ void TraceMerger::visit(TraceAnnotation* node)
 
         // Insert this trace directly into the tree and return
         mCurrentTree = mCurrentTrace;
-        statistics()->accumulate("Concolic::ExecutionTree::DistinctTracesExplored", 1);
+        Statistics::statistics()->accumulate("Concolic::ExecutionTree::DistinctTracesExplored", 1);
         return;
     }
 
@@ -139,7 +139,7 @@ void TraceMerger::visit(TraceAnnotation* node)
     }
 
     qWarning() << "Warning, divergance discovered while merging a trace! (TraceAnnotation)";
-    statistics()->accumulate("Concolic::ExecutionTree::DivergentMerges", 1);
+    Statistics::statistics()->accumulate("Concolic::ExecutionTree::DivergentMerges", 1);
     Log::info("  Trace merge diverged from the tree (TraceAnnotation).");
     reportFailedMerge();
 }
