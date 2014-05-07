@@ -71,8 +71,8 @@ bool StringObject::getOwnPropertySlotByIndex(JSCell* cell, ExecState* exec, unsi
 
 bool StringObject::getOwnPropertyDescriptor(JSObject* object, ExecState* exec, const Identifier& propertyName, PropertyDescriptor& descriptor)
 {
-    if (static_cast<JSString*>(cell)->isSymbolic()) {
-        Statistics::statistics()->accumulate("Concolic::MissingInstrumentation::stringGetOwnPropertDescriptor", 1);
+    if (static_cast<StringObject*>(object)->internalValue()->isSymbolic()) {
+        Statistics::statistics()->accumulate("Concolic::MissingInstrumentation::stringGetOwnPropertyDescriptor", 1);
     }
 
     StringObject* thisObject = jsCast<StringObject*>(object);
