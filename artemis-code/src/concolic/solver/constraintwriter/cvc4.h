@@ -28,6 +28,7 @@
 
 #include "smt.h"
 #include "abstract.h"
+#include "cvc4typeanalysis.h"
 
 namespace artemis
 {
@@ -37,6 +38,8 @@ class CVC4ConstraintWriter : public SMTConstraintWriter
 public:
 
     CVC4ConstraintWriter();
+
+    bool write(PathConditionPtr pathCondition, FormRestrictions formRestrictions, std::string outputFile);
 
 protected:
     virtual void visit(Symbolic::SymbolicString* symbolicstring, void* args);
@@ -72,6 +75,8 @@ protected:
     void helperRadioRestriction(RadioRestriction constraint);
 
     std::set<unsigned int> m_singletonCompilations;
+
+    CVC4TypeAnalysisPtr mTypeAnalysis;
 };
 
 typedef QSharedPointer<CVC4ConstraintWriter> CVC4ConstraintWriterPtr;

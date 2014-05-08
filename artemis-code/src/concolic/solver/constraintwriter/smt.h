@@ -73,7 +73,7 @@ public:
 
     SMTConstraintWriter();
 
-    bool write(PathConditionPtr pathCondition, FormRestrictions formRestrictions, std::string outputFile);
+    virtual bool write(PathConditionPtr pathCondition, FormRestrictions formRestrictions, std::string outputFile);
 
     std::string getErrorReason() {
         return mErrorReason;

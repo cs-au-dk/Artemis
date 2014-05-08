@@ -32,7 +32,7 @@
 
 #include "cvc4.h"
 
-//#define ENABLE_COERCION_OPTIMIZATION
+#define ENABLE_COERCION_OPTIMIZATION
 
 namespace artemis
 {
@@ -42,8 +42,22 @@ std::string OBJECT_NOT_NULL = "true";
 
 CVC4ConstraintWriter::CVC4ConstraintWriter()
     : SMTConstraintWriter()
+    , mTypeAnalysis(new CVC4TypeAnalysis())
 {
 
+}
+
+bool CVC4ConstraintWriter::write(PathConditionPtr pathCondition, FormRestrictions formRestrictions, std::string outputFile) {
+
+    for (uint i = 0; i < pathCondition->size(); i++) {
+        mTypeAnalysis->analyze(pathCondition->get(i).first);
+    }
+
+    bool result = SMTConstraintWriter::write(pathCondition, formRestrictions, outputFile);
+
+    mTypeAnalysis->reset();
+
+    return result;
 }
 
 void CVC4ConstraintWriter::preVisitPathConditionsHook(FormRestrictions formRestrictions, QSet<QString> varsUsed)
@@ -99,13 +113,14 @@ void CVC4ConstraintWriter::visit(Symbolic::SymbolicString* symbolicstring, void*
 
 #ifdef ENABLE_COERCION_OPTIMIZATION
     // If we are coercing from a string input to an integer downstream, it is safe to omit
-    // the downstream coercion and return an integer here. Notice, the code detecting if it
-    // is safe or not to do this is not implemented.
+    // the downstream coercion and return an integer here.
     if (args != NULL) {
 
         CoercionPromise* promise = (CoercionPromise*)args;
 
-        if (promise->coerceTo == Symbolic::INT) {
+        if (promise->coerceTo == Symbolic::INT &&
+            mTypeAnalysis->hasUniqueConstraint(symbolicstring->getSource().getIdentifier(), CVC4TypeAnalysis::WEAK_INTEGER)) {
+
             promise->isCoerced = true;
 
             recordAndEmitType(symbolicstring->getSource(), Symbolic::INT);
@@ -113,7 +128,6 @@ void CVC4ConstraintWriter::visit(Symbolic::SymbolicString* symbolicstring, void*
             mExpressionType = Symbolic::INT;
 
             return;
-
         }
     }
 #endif
