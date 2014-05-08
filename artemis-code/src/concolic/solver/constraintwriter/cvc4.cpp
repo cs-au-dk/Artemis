@@ -582,7 +582,12 @@ void CVC4ConstraintWriter::helperSelectRestriction(SelectRestriction constraint,
     QString name = QString("SYM_IN_%1").arg(constraint.variable);
     QString idxname = QString("SYM_IN_INT_%1").arg(constraint.variable);
 
-    recordAndEmitType(name.toStdString(), Symbolic::STRING);
+    if (mTypeAnalysis->hasUniqueConstraint(name.toStdString(), CVC4TypeAnalysis::WEAK_INTEGER)) {
+        recordAndEmitType(name.toStdString(), Symbolic::INT);
+    } else {
+        recordAndEmitType(name.toStdString(), Symbolic::STRING);
+    }
+
     recordAndEmitType(idxname.toStdString(), Symbolic::INT);
 
     mOutput << "(assert\n  (or\n";
@@ -593,7 +598,12 @@ void CVC4ConstraintWriter::helperSelectRestriction(SelectRestriction constraint,
         std::stringstream valueconstraint;
 
         idxconstraint << "(= " << SMTConstraintWriter::encodeIdentifier(idxname.toStdString()) << " " << idx << ")";
-        valueconstraint << "(= " << SMTConstraintWriter::encodeIdentifier(name.toStdString()) << " \"" << value.toStdString() << "\")";
+
+        if (mTypeAnalysis->hasUniqueConstraint(name.toStdString(), CVC4TypeAnalysis::WEAK_INTEGER)) {
+            valueconstraint << "(= " << SMTConstraintWriter::encodeIdentifier(name.toStdString()) << " " << value.toStdString() << ")";
+        } else {
+            valueconstraint << "(= " << SMTConstraintWriter::encodeIdentifier(name.toStdString()) << " \"" << value.toStdString() << "\")";
+        }
 
         switch(type) {
         case VALUE_ONLY:
