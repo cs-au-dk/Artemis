@@ -585,20 +585,24 @@ void CVC4ConstraintWriter::helperRegexMatchPositive(const std::string& regex, co
 
 void CVC4ConstraintWriter::helperSelectRestriction(SelectRestriction constraint, SelectConstraintType type)
 {
-    // TODO: Hack to guess the variable name in the constraint. This will prevent string->int optimisations working for select box values.
+    // TODO: Hack to guess the variable name in the constraint.
     QString name = QString("SYM_IN_%1").arg(constraint.variable);
     QString idxname = QString("SYM_IN_INT_%1").arg(constraint.variable);
 
     bool coerceToInt = false;
-    if (mTypeAnalysis->hasUniqueConstraint(name.toStdString(), CVC4TypeAnalysis::WEAK_INTEGER) &&
-        FormFieldRestrictedValues::safeForIntegerCoercion(mFormRestrictions, name) ) {
-        recordAndEmitType(name.toStdString(), Symbolic::INT);
-        coerceToInt = true;
-    } else {
-        recordAndEmitType(name.toStdString(), Symbolic::STRING);
+    if(type == VALUE_ONLY || type == VALUE_INDEX) {
+        if (mTypeAnalysis->hasUniqueConstraint(name.toStdString(), CVC4TypeAnalysis::WEAK_INTEGER) &&
+                FormFieldRestrictedValues::safeForIntegerCoercion(mFormRestrictions, name) ) {
+            recordAndEmitType(name.toStdString(), Symbolic::INT);
+            coerceToInt = true;
+        } else {
+            recordAndEmitType(name.toStdString(), Symbolic::STRING);
+        }
     }
 
-    recordAndEmitType(idxname.toStdString(), Symbolic::INT);
+    if(type == INDEX_ONLY || type == VALUE_INDEX) {
+        recordAndEmitType(idxname.toStdString(), Symbolic::INT);
+    }
 
     mOutput << "(assert\n  (or\n";
 
