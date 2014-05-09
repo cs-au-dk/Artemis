@@ -29,6 +29,7 @@
 #include "smt.h"
 #include "abstract.h"
 #include "cvc4typeanalysis.h"
+#include "statistics/statsstorage.h"
 
 namespace artemis
 {
@@ -77,6 +78,7 @@ protected:
     std::set<unsigned int> m_singletonCompilations;
 
     CVC4TypeAnalysisPtr mTypeAnalysis;
+    std::set<std::string> mSuccessfulCoercions;
 };
 
 typedef QSharedPointer<CVC4ConstraintWriter> CVC4ConstraintWriterPtr;

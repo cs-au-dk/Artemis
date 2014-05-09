@@ -106,6 +106,10 @@ void CVC4ConstraintWriter::postVisitPathConditionsHook()
     mOutput << "\n";
     mOutput << "(check-sat)\n";
     mOutput << "(get-model)\n";
+
+    if(!mSuccessfulCoercions.empty()) {
+        Statistics::statistics()->accumulate("Concolic::Solver::SuccessfulCoercionOptimisations", (int)mSuccessfulCoercions.size());
+    }
 }
 
 void CVC4ConstraintWriter::visit(Symbolic::SymbolicString* symbolicstring, void* args)
@@ -127,6 +131,8 @@ void CVC4ConstraintWriter::visit(Symbolic::SymbolicString* symbolicstring, void*
             recordAndEmitType(symbolicstring->getSource(), Symbolic::INT);
             mExpressionBuffer = SMTConstraintWriter::encodeIdentifier(symbolicstring->getSource().getIdentifier());
             mExpressionType = Symbolic::INT;
+
+            mSuccessfulCoercions.insert(symbolicstring->getSource().getIdentifier());
 
             return;
         }
