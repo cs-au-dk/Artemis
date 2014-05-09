@@ -144,7 +144,7 @@ protected:
     virtual void visit(Symbolic::ObjectBinaryOperation* obj, void* arg);
 
     // Output writing
-    virtual void preVisitPathConditionsHook(FormRestrictions formRestrictions, QSet<QString> varsUsed);
+    virtual void preVisitPathConditionsHook(QSet<QString> varsUsed);
     virtual void postVisitPathConditionsHook();
 
     virtual std::string ifLabel();
@@ -202,6 +202,8 @@ protected:
     std::string mErrorReason;
 
     unsigned int mNextTemporarySequence;
+
+    FormRestrictions mFormRestrictions;
 };
 
 typedef QSharedPointer<SMTConstraintWriter> SMTConstraintWriterPtr;

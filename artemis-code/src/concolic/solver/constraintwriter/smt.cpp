@@ -40,7 +40,7 @@ SMTConstraintWriter::SMTConstraintWriter()
 {
 }
 
-void SMTConstraintWriter::preVisitPathConditionsHook(FormRestrictions formRestrictions, QSet<QString> varsUsed)
+void SMTConstraintWriter::preVisitPathConditionsHook(QSet<QString> varsUsed)
 {
 }
 
@@ -57,10 +57,12 @@ bool SMTConstraintWriter::write(PathConditionPtr pathCondition, FormRestrictions
 {
     mError = false;
 
+    mFormRestrictions = formRestrictions;
+
     mOutput.open(outputFile.data());
 
     QSet<QString> freeVars = pathCondition->freeVariables().keys().toSet();
-    preVisitPathConditionsHook(formRestrictions, freeVars);
+    preVisitPathConditionsHook(freeVars);
 
     for (uint i = 0; i < pathCondition->size(); i++) {
 

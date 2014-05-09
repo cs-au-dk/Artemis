@@ -60,7 +60,7 @@ protected:
     virtual void visit(Symbolic::ConstantObject* obj, void* arg);
     virtual void visit(Symbolic::ObjectBinaryOperation* obj, void* arg);
 
-    virtual void preVisitPathConditionsHook(FormRestrictions formRestrictions, QSet<QString> varsUsed);
+    virtual void preVisitPathConditionsHook(QSet<QString> varsUsed);
     virtual void postVisitPathConditionsHook();
 
     virtual void coercetype(Symbolic::Type from, Symbolic::Type to, std::string expression);

@@ -55,6 +55,27 @@ FormRestrictions FormFieldRestrictedValues::getRestrictions(QList<FormFieldDescr
     return FormRestrictions(selects, radioGroups.values().toSet());
 }
 
+bool FormFieldRestrictedValues::safeForIntegerCoercion(FormRestrictions restrictions, QString variable)
+{
+    QString name = variable;
+    name.remove(QRegExp("^SYM_IN_(INT_|BOOL_)?"));
+
+    // A variable is only unsafe to coerce (according to the FormRestrictions) if it has a select restriction with a value which cannot be coerced to a valid integer.
+    foreach(SelectRestriction sr, restrictions.first) {
+        if(sr.variable == name) {
+            foreach(QString value, sr.values) {
+                // TODO: Would prefer to use a more general regex (e.g. allowing zero-padded values or leading/trailing
+                // spaces) but these values cannot currently be injected back correctly (even though we could coerce
+                // and solve them), so we are quite conservative for now.
+                if(!value.contains(QRegExp("^(0|([1-9][0-9]*))$"))) {
+                    return false;
+                }
+            }
+        }
+    }
+    return true;
+}
+
 
 
 

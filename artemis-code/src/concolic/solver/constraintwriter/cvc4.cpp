@@ -60,7 +60,7 @@ bool CVC4ConstraintWriter::write(PathConditionPtr pathCondition, FormRestriction
     return result;
 }
 
-void CVC4ConstraintWriter::preVisitPathConditionsHook(FormRestrictions formRestrictions, QSet<QString> varsUsed)
+void CVC4ConstraintWriter::preVisitPathConditionsHook(QSet<QString> varsUsed)
 {
     mOutput << "(set-logic UFSLIA)" << std::endl;
     mOutput << "(set-option :produce-models true)" << std::endl;
@@ -71,7 +71,7 @@ void CVC4ConstraintWriter::preVisitPathConditionsHook(FormRestrictions formRestr
     mOutput << std::endl;
 
     // Only write the form frestrictions which relate to variables which are actually used in the PC.
-    foreach(SelectRestriction sr, formRestrictions.first) {
+    foreach(SelectRestriction sr, mFormRestrictions.first) {
         // TODO: Hack to guess the variable names, as in helperSelectRestriction().
         QString name = QString("SYM_IN_%1").arg(sr.variable);
         QString idxname = QString("SYM_IN_INT_%1").arg(sr.variable);
@@ -86,7 +86,7 @@ void CVC4ConstraintWriter::preVisitPathConditionsHook(FormRestrictions formRestr
         // else this select is not mentioned in the PC, so ignore.
     }
 
-    foreach(RadioRestriction rr, formRestrictions.second) {
+    foreach(RadioRestriction rr, mFormRestrictions.second) {
         QString name;
         bool variableMatch = false;
         foreach(QString var, rr.variables) {
@@ -119,7 +119,8 @@ void CVC4ConstraintWriter::visit(Symbolic::SymbolicString* symbolicstring, void*
         CoercionPromise* promise = (CoercionPromise*)args;
 
         if (promise->coerceTo == Symbolic::INT &&
-            mTypeAnalysis->hasUniqueConstraint(symbolicstring->getSource().getIdentifier(), CVC4TypeAnalysis::WEAK_INTEGER)) {
+            mTypeAnalysis->hasUniqueConstraint(symbolicstring->getSource().getIdentifier(), CVC4TypeAnalysis::WEAK_INTEGER) &&
+            FormFieldRestrictedValues::safeForIntegerCoercion(mFormRestrictions, QString::fromStdString(symbolicstring->getSource().getIdentifier())) ) {
 
             promise->isCoerced = true;
 
@@ -582,8 +583,11 @@ void CVC4ConstraintWriter::helperSelectRestriction(SelectRestriction constraint,
     QString name = QString("SYM_IN_%1").arg(constraint.variable);
     QString idxname = QString("SYM_IN_INT_%1").arg(constraint.variable);
 
-    if (mTypeAnalysis->hasUniqueConstraint(name.toStdString(), CVC4TypeAnalysis::WEAK_INTEGER)) {
+    bool coerceToInt = false;
+    if (mTypeAnalysis->hasUniqueConstraint(name.toStdString(), CVC4TypeAnalysis::WEAK_INTEGER) &&
+        FormFieldRestrictedValues::safeForIntegerCoercion(mFormRestrictions, name) ) {
         recordAndEmitType(name.toStdString(), Symbolic::INT);
+        coerceToInt = true;
     } else {
         recordAndEmitType(name.toStdString(), Symbolic::STRING);
     }
@@ -599,7 +603,7 @@ void CVC4ConstraintWriter::helperSelectRestriction(SelectRestriction constraint,
 
         idxconstraint << "(= " << SMTConstraintWriter::encodeIdentifier(idxname.toStdString()) << " " << idx << ")";
 
-        if (mTypeAnalysis->hasUniqueConstraint(name.toStdString(), CVC4TypeAnalysis::WEAK_INTEGER)) {
+        if (coerceToInt) {
             valueconstraint << "(= " << SMTConstraintWriter::encodeIdentifier(name.toStdString()) << " " << value.toStdString() << ")";
         } else {
             valueconstraint << "(= " << SMTConstraintWriter::encodeIdentifier(name.toStdString()) << " \"" << value.toStdString() << "\")";

@@ -33,6 +33,7 @@ class CVC4TypeAnalysis : public Symbolic::Visitor
 public:
 
     CVC4TypeAnalysis();
+    virtual ~CVC4TypeAnalysis() {}
 
     void analyze(Symbolic::Expression* expr);
     void reset();

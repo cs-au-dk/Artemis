@@ -1,0 +1,54 @@
+<!--
+TEST PC[0] = ((SymbolicString != ConstantString) == ConstantBoolean)
+TEST Concolic::Solver::ConstraintsSolved = 2
+TEST Concolic::Solver::ConstraintsWritten = 2
+TEST Concolic::Solver::Constraint.SYM_IN_testinput = testme
+-->
+<!doctype html><html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+	<title>Ben Spencer</title>
+	<meta name="author" content="Ben Spencer">
+	<script type="text/javascript">
+
+		function validate() {
+			var y = document.getElementById("testinput").value;
+
+			if (y <= 1) {
+				alert("Error!");
+				return false;
+			}else{
+				return true;
+			}
+		}
+	</script>
+
+</head>
+<body>
+
+	<p>Choose something greater than 1.</p>
+
+	<form method="GET" action="about:blank" >
+
+		<!--
+			The problem here is the zero-padding.
+			Even though we can coerce these to integers and solve correctly,
+			we cannot inject 2 into this form, only "02".
+			And what if there were values "2" and "02", how would we know what to do?
+		-->
+
+		<select name="testinput" id="testinput" >
+			<option value="00" >Zero</option>
+			<option value="01" >One</option>
+			<option value="02" >Two</option>
+			<option value="03" >Three</option>
+		</select>
+
+		<button type="submit" onclick="return validate();">Submit</button>
+
+	</form>
+
+</body>
+</html>
