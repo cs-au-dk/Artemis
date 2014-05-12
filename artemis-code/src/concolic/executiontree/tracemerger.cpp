@@ -159,7 +159,7 @@ void TraceMerger::reportFailedMerge()
         QString pathToTreeFile = QString("divergence-%1-tree.gv").arg(date);
         QString pathToTraceFile = QString("divergence-%1-trace.gv").arg(date);
 
-        TraceDisplay display(true); // false for full information, but it's too big to look at!
+        TraceDisplay display;
 
         display.writeGraphFile(mStartingTree, pathToTreeFile, false);
         display.writeGraphFile(mStartingTrace, pathToTraceFile, false);

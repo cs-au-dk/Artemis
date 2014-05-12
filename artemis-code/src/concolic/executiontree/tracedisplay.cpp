@@ -32,18 +32,12 @@ QString TraceDisplay::indent = "  ";
 bool TraceDisplay::mPassThroughEndMarkers = false;
 
 TraceDisplay::TraceDisplay()
-    : TraceDisplay(true, false)
+    : TraceDisplay(false)
 {
 }
 
-TraceDisplay::TraceDisplay(bool simplified)
-    : TraceDisplay(simplified, false)
-{
-}
-
-TraceDisplay::TraceDisplay(bool simplified, bool linkToCoverage)
-    : mSimplified(simplified)
-    , mLinkToCoverage(linkToCoverage)
+TraceDisplay::TraceDisplay(bool linkToCoverage)
+    : mLinkToCoverage(linkToCoverage)
 {
     mExpressionPrinter = QSharedPointer<ExpressionPrinter>(new ExpressionValuePrinter());
 
@@ -244,49 +238,6 @@ void TraceDisplay::visit(TraceConcreteBranch *node)
 {
     mNodeCounter++;
 
-    // For concrete branches, if both children are explored, then we want to always show them in the tree.
-    // If only one child is explored, then we consider this part of a concrete execution and aggregate any such branches into a single node.
-    // The case where no children are explored should never happen in a valid tree, but we would want to display this if it did.
-    // Also, we only want to go into aggregation mode if there is another concrete branch as a direct child of this.
-    // This prevents aggregating single nodes!
-    if(mSimplified){
-
-        // Check how many children of this node are explored (see above).
-
-        if(isImmediatelyUnexplored(node->getFalseBranch()) && !isImmediatelyUnexplored(node->getTrueBranch())){
-            // This is a "boring" branch to true.
-            // Begin aggregation from here if the true branch is another concrete branch.
-            if(isImmediatelyConcreteBranch(node->getTrueBranch())){
-                mCurrentlyAggregating = true;
-            }
-            if(mCurrentlyAggregating){
-                mAggregatedConcreteBranches++;
-                node->getTrueBranch()->accept(this);
-                return;
-            }
-        }
-
-        if(!isImmediatelyUnexplored(node->getFalseBranch()) && isImmediatelyUnexplored(node->getTrueBranch())){
-            // This is a "boring" branch to false.
-            // Begin aggregation from here if the false branch is another concrete branch.
-            if(isImmediatelyConcreteBranch(node->getFalseBranch())){
-                mCurrentlyAggregating = true;
-            }
-            if(mCurrentlyAggregating){
-                mAggregatedConcreteBranches++;
-                node->getFalseBranch()->accept(this);
-                return;
-            }else{
-                // Begin aggregation from here if the false branch is another concrete branch.
-            }
-        }
-
-        // If 2 or 0 children are explored, or we are not currently aggregating,
-        // then fall through to the "normal mode" processing below.
-    }
-
-    // If not in simplified mode (or if we chose to display this branch anyway) we just output this node as usual.
-
     std::stringstream sourceId;
     sourceId << SourceInfo::getId(node->getSource()->getUrl(), node->getSource()->getStartLine());
 
@@ -322,8 +273,6 @@ void TraceDisplay::visit(TraceConcreteBranch *node)
 
 void TraceDisplay::visit(TraceSymbolicBranch *node)
 {
-    flushAggregation();
-
     mNodeCounter++;
 
     node->getSymbolicCondition()->accept(mExpressionPrinter.data());
@@ -368,8 +317,6 @@ void TraceDisplay::visit(TraceSymbolicBranch *node)
 
 void TraceDisplay::visit(TraceUnexplored *node)
 {
-    flushAggregation();
-
     QString name = QString("unexp_%1").arg(mNodeCounter);
     mNodeCounter++;
 
@@ -380,8 +327,6 @@ void TraceDisplay::visit(TraceUnexplored *node)
 
 void TraceDisplay::visit(TraceUnexploredUnsat *node)
 {
-    flushAggregation();
-
     QString name = QString("unexp_unsat_%1").arg(mNodeCounter);
     mNodeCounter++;
 
@@ -392,8 +337,6 @@ void TraceDisplay::visit(TraceUnexploredUnsat *node)
 
 void TraceDisplay::visit(TraceUnexploredUnsolvable *node)
 {
-    flushAggregation();
-
     QString name = QString("unexp_unsolvable_%1").arg(mNodeCounter);
     mNodeCounter++;
 
@@ -404,8 +347,6 @@ void TraceDisplay::visit(TraceUnexploredUnsolvable *node)
 
 void TraceDisplay::visit(TraceUnexploredMissed *node)
 {
-    flushAggregation();
-
     QString name = QString("unexp_missed_%1").arg(mNodeCounter);
     mNodeCounter++;
 
@@ -417,8 +358,6 @@ void TraceDisplay::visit(TraceUnexploredMissed *node)
 
 void TraceDisplay::visit(TraceAlert *node)
 {
-    flushAggregation();
-
     QString name = QString("alt_%1").arg(mNodeCounter);
     mNodeCounter++;
 
@@ -438,8 +377,6 @@ void TraceDisplay::visit(TraceAlert *node)
 
 void TraceDisplay::visit(TraceDomModification *node)
 {
-    flushAggregation();
-
     QString name = QString("dom_%1").arg(mNodeCounter);
     mNodeCounter++;
 
@@ -466,8 +403,6 @@ void TraceDisplay::visit(TraceDomModification *node)
 
 void TraceDisplay::visit(TracePageLoad *node)
 {
-    flushAggregation();
-
     QString name = QString("load_%1").arg(mNodeCounter);
     mNodeCounter++;
 
@@ -484,8 +419,6 @@ void TraceDisplay::visit(TracePageLoad *node)
 
 void TraceDisplay::visit(TraceMarker *node)
 {
-    flushAggregation();
-
     QString name = QString("marker_%1").arg(mNodeCounter);
     mNodeCounter++;
 
@@ -502,31 +435,24 @@ void TraceDisplay::visit(TraceMarker *node)
 
 void TraceDisplay::visit(TraceFunctionCall *node)
 {
-    // In simplified output mode, if we are currently aggregating, then do not generate this node.
-    if(mSimplified && mCurrentlyAggregating){
-        mAggregatedFunctionCalls++;
-    }else{
+    QString name = QString("fun_%1").arg(mNodeCounter);
+    mNodeCounter++;
 
-        QString name = QString("fun_%1").arg(mNodeCounter);
-        mNodeCounter++;
+    QString funcName = node->name.isEmpty() ? "(anonymous)" : (node->name + "()");
+    QString nodeDecl = QString("%1 [label = \"%2\"]").arg(name).arg(funcName);
+    mHeaderFunctions.append(nodeDecl);
 
-        QString funcName = node->name.isEmpty() ? "(anonymous)" : (node->name + "()");
-        QString nodeDecl = QString("%1 [label = \"%2\"]").arg(name).arg(funcName);
-        mHeaderFunctions.append(nodeDecl);
+    addInEdge(name);
 
-        addInEdge(name);
+    mPreviousNode = name;
+    mEdgeExtras = "";
 
-        mPreviousNode = name;
-        mEdgeExtras = "";
-    }
     node->next->accept(this);
 }
 
 
 void TraceDisplay::visit(TraceEndSuccess *node)
 {
-    flushAggregation();
-
     QString name = QString("end_s_%1").arg(mNodeCounter);
     mNodeCounter++;
 
@@ -544,8 +470,6 @@ void TraceDisplay::visit(TraceEndSuccess *node)
 
 void TraceDisplay::visit(TraceEndFailure *node)
 {
-    flushAggregation();
-
     QString name = QString("end_f_%1").arg(mNodeCounter);
     mNodeCounter++;
 
@@ -563,8 +487,6 @@ void TraceDisplay::visit(TraceEndFailure *node)
 
 void TraceDisplay::visit(TraceEndUnknown *node)
 {
-    flushAggregation();
-
     QString name = QString("end_u_%1").arg(mNodeCounter);
     mNodeCounter++;
 
@@ -603,10 +525,6 @@ void TraceDisplay::clearData()
     mNodeCounter = 0;
 
     mExpressionPrinter->clear();
-
-    mAggregatedConcreteBranches = 0;
-    mAggregatedFunctionCalls = 0;
-    mCurrentlyAggregating = false;
 }
 
 // Adds a new edge to mEdges.
@@ -619,30 +537,6 @@ void TraceDisplay::addInEdge(QString endpoint)
     mEdges.append(edge);
 }
 
-
-// If we are currently aggregating, this function should output the aggregate node and return us to "normal" mode
-// So the next node can be processed.
-// This is called by nodes which should be displayed as usual even in simplified mode.
-void TraceDisplay::flushAggregation()
-{
-    if(mSimplified && mCurrentlyAggregating){
-        QString name = QString("aggr_%1").arg(mNodeCounter);
-        mNodeCounter++;
-
-        QString nodeDecl = QString("%1 [label = \"\\n Concrete Execution  \\n Branches: %2  \\n Function Calls: %3  \\n \"]").arg(name)
-                .arg(mAggregatedConcreteBranches).arg(mAggregatedFunctionCalls);
-        mHeaderAggregates.append(nodeDecl);
-
-        addInEdge(name);
-
-        mPreviousNode = name;
-        mEdgeExtras = "";
-
-        mCurrentlyAggregating = false;
-        mAggregatedConcreteBranches = 0;
-        mAggregatedFunctionCalls = 0;
-    }
-}
 
 
 } //namespace artemis

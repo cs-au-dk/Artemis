@@ -22,17 +22,12 @@
 namespace artemis {
 
 TraceDisplayOverview::TraceDisplayOverview()
-    : TraceDisplayOverview(false, false)
+    : TraceDisplayOverview(false)
 {
 }
 
-TraceDisplayOverview::TraceDisplayOverview(bool simple)
-    : TraceDisplayOverview(simple, false)
-{
-}
-
-TraceDisplayOverview::TraceDisplayOverview(bool simple, bool linkToCoverage)
-    : TraceDisplay(simple, linkToCoverage)
+TraceDisplayOverview::TraceDisplayOverview(bool linkToCoverage)
+    : TraceDisplay(linkToCoverage)
 {
     // Override the styles for each node type to make them simpler.
 
@@ -50,7 +45,6 @@ TraceDisplayOverview::TraceDisplayOverview(bool simple, bool linkToCoverage)
     mStyleEndSucc = "[label = \"S\", fillcolor = green, style = filled, shape = circle]";
     mStyleEndFail = "[label = \"F\", fillcolor = red, style = filled, shape = circle]";
     mStyleEndUnk = "[label = \"E\", fillcolor = lightgray, style = filled, shape = circle]";
-    //mStyleAggregates not used
 
 
     // Add a legend.
@@ -168,8 +162,6 @@ void TraceDisplayOverview::visit(TraceConcreteBranch *node)
 
 void TraceDisplayOverview::visit(TraceSymbolicBranch *node)
 {
-    flushAggregation(); // Not currently used in overview mode.
-
     QString name = QString("sym_%1").arg(mNodeCounter);
     mNodeCounter++;
 
@@ -195,8 +187,6 @@ void TraceDisplayOverview::visit(TraceSymbolicBranch *node)
 
 void TraceDisplayOverview::visit(TraceAlert *node)
 {
-    flushAggregation();
-
     QString name = QString("alt_%1").arg(mNodeCounter);
     mNodeCounter++;
 
@@ -213,8 +203,6 @@ void TraceDisplayOverview::visit(TraceAlert *node)
 void TraceDisplayOverview::visit(TraceDomModification *node)
 {
     if(node->words.size() > 0){
-        flushAggregation();
-
         QString name = QString("dom_%1").arg(mNodeCounter);
         mNodeCounter++;
 
@@ -231,8 +219,6 @@ void TraceDisplayOverview::visit(TraceDomModification *node)
 
 void TraceDisplayOverview::visit(TracePageLoad *node)
 {
-    flushAggregation();
-
     QString name = QString("load_%1").arg(mNodeCounter);
     mNodeCounter++;
 
@@ -248,8 +234,6 @@ void TraceDisplayOverview::visit(TracePageLoad *node)
 
 void TraceDisplayOverview::visit(TraceMarker *node)
 {
-    flushAggregation();
-
     QString name = QString("marker_%1").arg(mNodeCounter);
     mNodeCounter++;
 

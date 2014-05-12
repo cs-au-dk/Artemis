@@ -32,8 +32,8 @@ namespace artemis
 
 ConcolicRuntime::ConcolicRuntime(QObject* parent, const Options& options, const QUrl& url)
     : Runtime(parent, options, url)
-    , mTraceDisplay(true, options.outputCoverage != NONE)
-    , mTraceDisplayOverview(false, options.outputCoverage != NONE)
+    , mTraceDisplay(options.outputCoverage != NONE)
+    , mTraceDisplayOverview(options.outputCoverage != NONE)
     , mNumIterations(0)
 {
     QObject::connect(mWebkitExecutor, SIGNAL(sigExecutedSequence(ExecutableConfigurationConstPtr, QSharedPointer<ExecutionResult>)),
