@@ -43,6 +43,26 @@ void TraceEventDetector::newNode(QSharedPointer<TraceNode> node, QSharedPointer<
     }
 }
 
+void TraceEventDetector::newSummaryInfo(TraceConcreteSummarisation::EventType info)
+{
+    if(mTraceBuilder){
+        mTraceBuilder->newSummaryInfo(info);
+    }else{
+        Log::fatal("Trace Event Detector being used with no associated Trace Builder.");
+        exit(1);
+    }
+}
+
+bool TraceEventDetector::shouldSummarise()
+{
+    if(mTraceBuilder){
+        return mTraceBuilder->shouldSummarise();
+    }else{
+        Log::fatal("Trace Event Detector being used with no associated Trace Builder.");
+        exit(1);
+    }
+}
+
 
 
 // Branch Detector
@@ -50,6 +70,16 @@ void TraceEventDetector::newNode(QSharedPointer<TraceNode> node, QSharedPointer<
 
 void TraceBranchDetector::slBranch(bool jump, Symbolic::Expression* condition, uint sourceOffset, QSource* source, const ByteCodeInfoStruct byteInfo)
 {
+    // Concrete branches can be summarised. Check if the trace builder requests this.
+    if(shouldSummarise() && condition == NULL) {
+        if(jump){
+            newSummaryInfo(TraceConcreteSummarisation::BRANCH_TRUE);
+        }else{
+            newSummaryInfo(TraceConcreteSummarisation::BRANCH_FALSE);
+        }
+        return;
+    }
+
     QSharedPointer<TraceBranch> node;
 
     if (condition == NULL) {
@@ -93,6 +123,12 @@ void TraceAlertDetector::slJavascriptAlert(QWebFrame* frame, QString msg)
 
 void TraceFunctionCallDetector::slJavascriptFunctionCalled(QString functionName, size_t bytecodeSize, uint functionStartLine, uint sourceOffset, QSource* source)
 {
+    // Function calls can be summarised. Check if the trace builder requests this.
+    if(shouldSummarise()) {
+        newSummaryInfo(TraceConcreteSummarisation::FUNCTION_CALL);
+        return;
+    }
+
     // Create a new function call node.
     QSharedPointer<TraceFunctionCall> node = QSharedPointer<TraceFunctionCall>(new TraceFunctionCall());
     node->name = functionName;

@@ -47,6 +47,7 @@ public:
     void visit(TracePageLoad* node);
     void visit(TraceMarker* node);
     void visit(TraceFunctionCall* node);
+    void visit(TraceConcreteSummarisation* node);
     //void visit(TraceEndSuccess* node);            // Handled by TraceDisplay
     //void visit(TraceEndFailure* node);            // Handled by TraceDisplay
     //void visit(TraceEndUnknown* node);            // Handled by TraceDisplay

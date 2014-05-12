@@ -45,6 +45,7 @@ TraceDisplayOverview::TraceDisplayOverview(bool linkToCoverage)
     mStyleEndSucc = "[label = \"S\", fillcolor = green, style = filled, shape = circle]";
     mStyleEndFail = "[label = \"F\", fillcolor = red, style = filled, shape = circle]";
     mStyleEndUnk = "[label = \"E\", fillcolor = lightgray, style = filled, shape = circle]";
+    //mStyleAggregates not used
 
 
     // Add a legend.
@@ -249,6 +250,13 @@ void TraceDisplayOverview::visit(TraceMarker *node)
 
 
 void TraceDisplayOverview::visit(TraceFunctionCall *node)
+{
+    // Skip these nodes.
+    node->next->accept(this);
+}
+
+
+void TraceDisplayOverview::visit(TraceConcreteSummarisation *node)
 {
     // Skip these nodes.
     node->next->accept(this);

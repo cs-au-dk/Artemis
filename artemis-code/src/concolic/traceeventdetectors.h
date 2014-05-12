@@ -60,6 +60,8 @@ protected:
 
     // See TraceBuilder::newNode comment in tracebuilder.h.
     void newNode(QSharedPointer<TraceNode> node, QSharedPointer<TraceNode>* successor);
+    void newSummaryInfo(TraceConcreteSummarisation::EventType info);
+    bool shouldSummarise();
 };
 
 

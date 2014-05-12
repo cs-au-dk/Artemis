@@ -212,6 +212,60 @@ public:
 
 
 
+// This node type is used to lump together a sequence of (single-child) concrete branches and function calls.
+// It is a summary of concrete execution which occurred between two "interesting" node types.
+class TraceConcreteSummarisation : public TraceAnnotation
+{
+public:
+    enum EventType {
+        BRANCH_FALSE, BRANCH_TRUE, FUNCTION_CALL
+    };
+
+    QList<EventType> events;
+
+    void accept(TraceVisitor* visitor) {
+        visitor->visit(this);
+    }
+
+    bool isEqualShallow(const QSharedPointer<const TraceNode>& other)
+    {
+        return !other.dynamicCast<const TraceConcreteSummarisation>().isNull();
+    }
+
+    int numBranches()
+    {
+        int i = 0;
+        foreach(EventType e, events) {
+            switch(e) {
+            case BRANCH_FALSE:
+            case BRANCH_TRUE:
+                i++;
+                break;
+            case FUNCTION_CALL:
+                break;
+            }
+        }
+        return i;
+    }
+
+    int numFunctions()
+    {
+        int i = 0;
+        foreach(EventType e, events) {
+            switch(e) {
+            case BRANCH_FALSE:
+            case BRANCH_TRUE:
+                break;
+            case FUNCTION_CALL:
+                i++;
+                break;
+            }
+        }
+        return i;
+    }
+
+    ~TraceConcreteSummarisation(){}
+};
 
 
 

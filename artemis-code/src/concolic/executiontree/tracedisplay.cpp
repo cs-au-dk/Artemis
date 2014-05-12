@@ -451,6 +451,24 @@ void TraceDisplay::visit(TraceFunctionCall *node)
 }
 
 
+void TraceDisplay::visit(TraceConcreteSummarisation *node)
+{
+    QString name = QString("aggr_%1").arg(mNodeCounter);
+    mNodeCounter++;
+
+    QString nodeDecl = QString("%1 [label = \"\\n Concrete Execution  \\n Branches: %2  \\n Function Calls: %3  \\n \"]")
+            .arg(name).arg(node->numBranches()).arg(node->numFunctions());
+    mHeaderAggregates.append(nodeDecl);
+
+    addInEdge(name);
+
+    mPreviousNode = name;
+    mEdgeExtras = "";
+
+    node->next->accept(this);
+}
+
+
 void TraceDisplay::visit(TraceEndSuccess *node)
 {
     QString name = QString("end_s_%1").arg(mNodeCounter);

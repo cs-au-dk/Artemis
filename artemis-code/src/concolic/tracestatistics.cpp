@@ -172,6 +172,17 @@ void TraceStatistics::visit(TraceMarker *node)
     node->next->accept(this);
 }
 
+void TraceStatistics::visit(TraceConcreteSummarisation *node)
+{
+    int functions = node->numFunctions();
+    int branches = node ->numBranches();
+
+    mNumNodes += functions + branches;
+    mNumFunctionCalls += functions;
+    mNumConcreteBranches += branches;
+    // Concrete branches in a summary node cannot be fully explored.
+}
+
 void TraceStatistics::visit(TraceEndSuccess *node)
 {
     mNumNodes++;

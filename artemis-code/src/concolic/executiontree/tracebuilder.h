@@ -30,6 +30,10 @@ namespace artemis
 
 /*
  *  Records a trace of the entire execution along a single path.
+ *
+ * The trace builder can either add new nodes directly, or some can be added to a larger summary node.
+ * It is up to the detectors to decide which events are suitable to be summarised and call either newNode or
+ * newSummaryInfo as required.
  */
 
 class TraceBuilder : public QObject
@@ -37,7 +41,7 @@ class TraceBuilder : public QObject
     Q_OBJECT
 
 public:
-    TraceBuilder(QObject* parent);
+    TraceBuilder(QObject* parent, bool shouldSummarise);
 
     void addDetector(QSharedPointer<TraceEventDetector> detector);
 
@@ -51,6 +55,11 @@ public:
     // which will itself be null.
     void newNode(QSharedPointer<TraceNode> node, QSharedPointer<TraceNode>* successor);
 
+    // Called by the detectors to add some summarisable concrete information to the trace.
+    void newSummaryInfo(TraceConcreteSummarisation::EventType info);
+
+    bool shouldSummarise() { return mSummarise; }
+
 private:
     bool mRecording; // Whether we are currently recording a trace.
 
@@ -60,6 +69,10 @@ private:
     // It should be valid whenever mRecording is true.
 
     QList<QSharedPointer<TraceEventDetector> > mDetectors; // The interesting event detectors which add nodes to the traces.
+
+    bool mSummarise; // Whether or not this trace builder wants the detectors to notify it about summary information.
+    QList<TraceConcreteSummarisation::EventType> mCurrentSummary;
+    void flushSummary();
 
 signals:
     void sigAddedNode();

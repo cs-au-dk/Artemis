@@ -79,6 +79,7 @@ public:
     virtual void visit(TraceDomModification* node);
     virtual void visit(TracePageLoad* node);
     virtual void visit(TraceMarker* node);
+    virtual void visit(TraceConcreteSummarisation* node);
 
     virtual void visit(TraceEndSuccess* node);
     virtual void visit(TraceEndFailure* node);

@@ -154,6 +154,13 @@ void TraceViewerDialog::visit(TraceFunctionCall *node)
     node->next->accept(this);
 }
 
+void TraceViewerDialog::visit(TraceConcreteSummarisation *node)
+{
+    mNodeList->addItem(QString("Concrete Execution: %1 branches, %2 function calls").arg(node->numBranches())
+                       .arg(node->numFunctions()));
+    node->next->accept(this);
+}
+
 void TraceViewerDialog::visit(TraceEndSuccess *node)
 {
     mNodeList->addItem("End (Success)");
