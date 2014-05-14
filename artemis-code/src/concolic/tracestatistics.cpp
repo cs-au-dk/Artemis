@@ -174,13 +174,22 @@ void TraceStatistics::visit(TraceMarker *node)
 
 void TraceStatistics::visit(TraceConcreteSummarisation *node)
 {
-    int functions = node->numFunctions();
-    int branches = node ->numBranches();
+    QList<int> functions = node->numFunctions();
+    QList<int> branches = node->numBranches();
 
-    mNumNodes += functions + branches;
-    mNumFunctionCalls += functions;
-    mNumConcreteBranches += branches;
-    // Concrete branches in a summary node cannot be fully explored.
+    foreach(int fns, functions) {
+        mNumNodes += fns;
+        mNumFunctionCalls += fns;
+    }
+
+    foreach(int brs, branches) {
+        mNumNodes += brs;
+        mNumConcreteBranches += brs;
+    }
+
+    if(node->executions.length() > 1) {
+        mNumConcreteBranchesFullyExplored += node->executions.length() - 1;
+    }
 }
 
 void TraceStatistics::visit(TraceEndSuccess *node)

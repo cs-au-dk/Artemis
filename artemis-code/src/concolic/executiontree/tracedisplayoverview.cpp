@@ -45,7 +45,7 @@ TraceDisplayOverview::TraceDisplayOverview(bool linkToCoverage)
     mStyleEndSucc = "[label = \"S\", fillcolor = green, style = filled, shape = circle]";
     mStyleEndFail = "[label = \"F\", fillcolor = red, style = filled, shape = circle]";
     mStyleEndUnk = "[label = \"E\", fillcolor = lightgray, style = filled, shape = circle]";
-    //mStyleAggregates not used
+    mStyleAggregates = "[label = \"\", shape = square, style = filled, fillcolor = black]";
 
 
     // Add a legend.
@@ -258,8 +258,25 @@ void TraceDisplayOverview::visit(TraceFunctionCall *node)
 
 void TraceDisplayOverview::visit(TraceConcreteSummarisation *node)
 {
-    // Skip these nodes.
-    node->next->accept(this);
+    // If there are multiple children then branch, but otherwise ignore.
+    if(node->executions.length() == 1) {
+        node->executions[0].second->accept(this);
+    } else if(node->executions.length() > 1) {
+
+        QString name = QString("aggr_%1").arg(mNodeCounter);
+        mNodeCounter++;
+
+        mHeaderAggregates.append(name);
+
+        addInEdge(name);
+
+        foreach(TraceConcreteSummarisation::SingleExecution execution, node->executions) {
+            mPreviousNode = name;
+            mEdgeExtras = "";
+
+            execution.second->accept(this);
+        }
+    }
 }
 
 

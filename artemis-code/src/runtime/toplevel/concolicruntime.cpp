@@ -629,6 +629,10 @@ void ConcolicRuntime::reportStatistics()
 {
     Statistics::statistics()->accumulate("Concolic::Iterations", mNumIterations);
 
+    if(mSymbolicExecutionGraph.isNull()) {
+        return;
+    }
+
     TraceStatistics stats;
     stats.processTrace(mSymbolicExecutionGraph);
 

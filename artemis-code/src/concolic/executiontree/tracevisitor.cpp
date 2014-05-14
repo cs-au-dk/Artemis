@@ -37,7 +37,8 @@ void TraceVisitor::visit(TraceDomModification* node)    { visit(static_cast<Trac
 void TraceVisitor::visit(TracePageLoad* node)           { visit(static_cast<TraceAnnotation*>(node)); }
 void TraceVisitor::visit(TraceMarker *node)             { visit(static_cast<TraceAnnotation*>(node));  }
 void TraceVisitor::visit(TraceFunctionCall* node)       { visit(static_cast<TraceAnnotation*>(node)); }
-void TraceVisitor::visit(TraceConcreteSummarisation *node){visit(static_cast<TraceAnnotation*>(node)); }
+
+void TraceVisitor::visit(TraceConcreteSummarisation *node){visit(static_cast<TraceNode*>(node)); }
 
 void TraceVisitor::visit(TraceEnd* node)                { visit(static_cast<TraceNode*>(node)); }
 void TraceVisitor::visit(TraceEndSuccess* node)         { visit(static_cast<TraceEnd*>(node)); }
@@ -48,7 +49,7 @@ void TraceVisitor::visit(TraceEndUnknown* node)         { visit(static_cast<Trac
 
 // These helper methods can be useful fo concrete visitors.
 
-// Checks if a given sub-trace is simply a single Traceunexplored node.
+// Checks if a given sub-trace is simply a single TraceUnexplored node.
 // Useful for checking the branch conditions in visitors which work on straight-line traces.
 bool TraceVisitor::isImmediatelyUnexplored(QSharedPointer<TraceNode> trace)
 {
@@ -58,12 +59,6 @@ bool TraceVisitor::isImmediatelyUnexplored(QSharedPointer<TraceNode> trace)
 bool TraceVisitor::isImmediatelyUnsat(QSharedPointer<TraceNode> trace)
 {
     return !trace.dynamicCast<TraceUnexploredUnsat>().isNull(); // Is there a more elegant way to do this?
-}
-
-// Checks whether a given sub-trace begins with a concrete branch.
-bool TraceVisitor::isImmediatelyConcreteBranch(QSharedPointer<TraceNode> trace)
-{
-    return !trace.dynamicCast<TraceConcreteBranch>().isNull();
 }
 
 

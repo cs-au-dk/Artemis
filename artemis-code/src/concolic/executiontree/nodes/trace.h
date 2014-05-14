@@ -212,16 +212,30 @@ public:
 
 
 
-// This node type is used to lump together a sequence of (single-child) concrete branches and function calls.
-// It is a summary of concrete execution which occurred between two "interesting" node types.
-class TraceConcreteSummarisation : public TraceAnnotation
+/*
+ * This node type is used to lump together a sequence of (single-child) concrete branches and function calls.
+ * It is a summary of concrete execution which occurred between two "interesting" node types.
+ *
+ * It is also possible for different traces to take different paths through a concrete summary.
+ * To handle this case a TraceCopnctreteSummarisation contains a list of possible concrete executions and pointers to
+ * the remaining subtree which that execution leads to.
+ *
+ * There must be at least one execution in each TraceConcreteSummarisation. This is handled by the TraceBuilder.
+ *
+ * If there are multiple executions, they should all agree on a certain prefix and only diverge when some take a
+ * BRANCH_FALSE and some take a BRANCH_TRUE. This is handled by the TraceMerger.
+ *
+ */
+class TraceConcreteSummarisation : public TraceNode
 {
 public:
     enum EventType {
         BRANCH_FALSE, BRANCH_TRUE, FUNCTION_CALL
     };
 
-    QList<EventType> events;
+    typedef QPair<QList<EventType>, TraceNodePtr> SingleExecution;
+
+    QList<SingleExecution> executions;
 
     void accept(TraceVisitor* visitor) {
         visitor->visit(this);
@@ -232,41 +246,52 @@ public:
         return !other.dynamicCast<const TraceConcreteSummarisation>().isNull();
     }
 
-    int numBranches()
+    QList<int> numBranches()
     {
-        int i = 0;
-        foreach(EventType e, events) {
-            switch(e) {
-            case BRANCH_FALSE:
-            case BRANCH_TRUE:
-                i++;
-                break;
-            case FUNCTION_CALL:
-                break;
+        QList<int> result;
+        int i;
+        foreach(SingleExecution execution, executions) {
+            i = 0;
+            foreach(EventType e, execution.first) {
+                switch(e) {
+                case BRANCH_FALSE:
+                case BRANCH_TRUE:
+                    i++;
+                    break;
+                case FUNCTION_CALL:
+                    break;
+                }
             }
+            result.append(i);
         }
-        return i;
+        return result;
     }
 
-    int numFunctions()
+    QList<int> numFunctions()
     {
-        int i = 0;
-        foreach(EventType e, events) {
-            switch(e) {
-            case BRANCH_FALSE:
-            case BRANCH_TRUE:
-                break;
-            case FUNCTION_CALL:
-                i++;
-                break;
+        QList<int> result;
+        int i;
+        foreach(SingleExecution execution, executions) {
+            i = 0;
+            foreach(EventType e, execution.first) {
+                switch(e) {
+                case BRANCH_FALSE:
+                case BRANCH_TRUE:
+                    break;
+                case FUNCTION_CALL:
+                    i++;
+                    break;
+                }
             }
+            result.append(i);
         }
-        return i;
+        return result;
     }
 
     ~TraceConcreteSummarisation(){}
 };
 
+typedef QSharedPointer<TraceConcreteSummarisation> TraceConcreteSummarisationPtr;
 
 
 }

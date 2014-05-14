@@ -106,7 +106,9 @@ void TraceClassifier::visit(TraceFunctionCall *node)
 
 void TraceClassifier::visit(TraceConcreteSummarisation *node)
 {
-    node->next->accept(this);
+    foreach(TraceConcreteSummarisation::SingleExecution execution, node->executions) {
+        execution.second->accept(this);
+    }
 }
 
 void TraceClassifier::visit(TraceNode *node)

@@ -71,6 +71,7 @@ public:
     void visit(TraceNode* node);            // Abstract nodes. An error if we reach this.
     void visit(TraceConcreteBranch* node);
     void visit(TraceSymbolicBranch* node);
+    void visit(TraceConcreteSummarisation *node);
     void visit(TraceUnexplored* node);
     void visit(TraceUnexploredMissed* node);
     void visit(TraceUnexploredUnsat* node);
@@ -105,12 +106,18 @@ private:
     // Each ancestor node is paired with its depth in the tree and the PC up to that point.
     // This is used for backtracking during the DFS.
     // N.B. We could avoid this if we included parent pointers in the tree, but this would involve some iterative traversal, going against the idea of using a visitor in the first place!
+    // Exactly one of node and summaryNode should be non-null. childrenVisited is only valid for summaryNode.
     struct SavedPosition {
         SavedPosition(){}
-        SavedPosition(TraceBranch* node, unsigned int depth, PathCondition condition) : node(node), depth(depth), condition(condition) {}
+        SavedPosition(TraceBranch* node, unsigned int depth, PathCondition condition) : node(node), depth(depth), condition(condition), summaryNode(NULL), childrenVisited(1) {}
+        SavedPosition(TraceConcreteSummarisation* summaryNode, unsigned int depth, PathCondition condition, int childrenVisited) : node(NULL), depth(depth), condition(condition), summaryNode(summaryNode), childrenVisited(childrenVisited) {}
+
         TraceBranch* node;
         unsigned int depth;
         PathCondition condition; // Condition to reach this node, not including the symbolic condition of this particular node if it is symbolic.
+
+        TraceConcreteSummarisation* summaryNode;
+        int childrenVisited;
     };
     QStack<SavedPosition> mParentStack;
 

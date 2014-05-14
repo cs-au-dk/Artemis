@@ -104,12 +104,15 @@ void TraceBuilder::newSummaryInfo(TraceConcreteSummarisation::EventType info)
 // Write out a new summary node and update mSuccessor.
 void TraceBuilder::flushSummary()
 {
+    QPair<QList<TraceConcreteSummarisation::EventType>, TraceNodePtr> execution;
+    execution.first = mCurrentSummary;
+
     QSharedPointer<TraceConcreteSummarisation> node(new TraceConcreteSummarisation);
-    node->events = mCurrentSummary;
+    node->executions.append(execution);
 
     // Add the new node to the current successor pointer and update the successor pointer.
     *mSuccessor = node;
-    mSuccessor = &(node->next);
+    mSuccessor = &(node->executions[0].second);
 
     mCurrentSummary.clear();
 }

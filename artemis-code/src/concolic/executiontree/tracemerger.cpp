@@ -67,10 +67,7 @@ void TraceMerger::visit(TraceEnd* node)
 
     // case: trace end
     if (!mCurrentTrace->isEqualShallow(mCurrentTree)) {
-        qWarning() << "Warning, divergance discovered while merging a trace! (TraceEnd)";
-        Statistics::statistics()->accumulate("Concolic::ExecutionTree::DivergentMerges", 1);
-        Log::info("  Trace merge diverged from the tree (TraceEnd).");
-        reportFailedMerge();
+        handleDivergence();
     }
 }
 
@@ -108,10 +105,7 @@ void TraceMerger::visit(TraceBranch* node)
         return;
     }
 
-    qWarning() << "Warning, divergance discovered while merging a trace! (TraceBranch)";
-    Statistics::statistics()->accumulate("Concolic::ExecutionTree::DivergentMerges", 1);
-    Log::info("  Trace merge diverged from the tree (TraceBranch).");
-    reportFailedMerge();
+    handleDivergence();
 }
 
 void TraceMerger::visit(TraceAnnotation* node)
@@ -138,11 +132,102 @@ void TraceMerger::visit(TraceAnnotation* node)
         return;
     }
 
-    qWarning() << "Warning, divergance discovered while merging a trace! (TraceAnnotation)";
-    Statistics::statistics()->accumulate("Concolic::ExecutionTree::DivergentMerges", 1);
-    Log::info("  Trace merge diverged from the tree (TraceAnnotation).");
-    reportFailedMerge();
+    handleDivergence();
 }
+
+
+void TraceMerger::visit(TraceConcreteSummarisation *node)
+{
+    // case: unexplored branch in the tree
+    if (TraceVisitor::isImmediatelyUnexplored(mCurrentTree)) {
+
+        // Insert this trace directly into the tree and return
+        mCurrentTree = mCurrentTrace;
+        Statistics::statistics()->accumulate("Concolic::ExecutionTree::DistinctTracesExplored", 1);
+        return;
+    }
+
+    if (node->isEqualShallow(mCurrentTree)) {
+        TraceConcreteSummarisationPtr treeSummary = mCurrentTree.dynamicCast<TraceConcreteSummarisation>();
+
+        // Check that the event sequences from these two summaries can be merged.
+
+        // The trace summary is assumed to have a single execution path.
+        // To merge it with the tree, we check each of the execution paths in the tree node in turn.
+        // For each tree node execution sequence:
+        //     If the sequences match perfectly, then this is a match and we are done. Continue merging the children.
+        //     If the sequences have matching prefixes until a BRANCH_TRUE and BRANCH_FALSE, then this is is a
+        //       fully explored concrete branch which does not match this execution so move on to the next.
+        //     If the sequences first diverge without a BRANCH_TRUE and BRANCH_FALSE then this is a trace divergence.
+        // If the end of the list of executions is reached and the trace still has not been matched or marked as a
+        //   divergence then it must be a new branch point and is added to the list.
+
+        // Check the trace has a unique execution path.
+        if(node->executions.length() != 1) {
+            Log::fatal("Attempting to merge a trace with multiple concrete execution paths within a summary node.");
+            exit(1);
+        }
+        QPair<QList<TraceConcreteSummarisation::EventType>, TraceNodePtr> traceExec = node->executions[0];
+
+        // Attempt to match with each tree execution path in turn.
+        foreach(TraceConcreteSummarisation::SingleExecution treeExec, treeSummary->executions) {
+
+            // If the executions matche exactly then merge the successor nodes and end.
+            if(treeExec.first == traceExec.first) {
+                mCurrentTree = treeExec.second;
+                mCurrentTrace = traceExec.second;
+                mCurrentTrace->accept(this);
+
+                treeExec.second = mCurrentTree;
+
+                mCurrentTree = treeSummary;
+                return;
+            }
+
+            // Otherwise, we need to check the first difference between them.
+            bool goodMatch = false;
+            int len = min(treeExec.first.length(), traceExec.first.length());
+            for(int i = 0; i < len; i++) {
+                if(treeExec.first[i] != traceExec.first[i]){
+                    qDebug() << "found mismatch!" << treeExec.first[i] << traceExec.first[i];
+
+                    if(treeExec.first[i] == TraceConcreteSummarisation::FUNCTION_CALL ||
+                            traceExec.first[i] == TraceConcreteSummarisation::FUNCTION_CALL) {
+                        // The traces diverged but not at BRANCH_TRUE and BRANCH_FALSE.
+                        handleDivergence();
+                        return;
+
+                    } else {
+                        // The traces have differed at BRANCH_TRUE vs BRANCH_FALSE.
+                        // So we should continue the outer loop to check if any other traces will match it.
+                        goodMatch = true;
+                        break;
+                    }
+                }
+            }
+
+            if(!goodMatch) {
+                // If we reach here then one must be shorter than the other (but matches a prefix).
+                // This counts as a divergence, as one trace will continue with the summary while the other goes on to
+                // an "interesting" node.
+                handleDivergence();
+                return;
+            }
+
+        }
+
+        // If we have checked each execution without finding a match or a divergence, then this is a valid new path.
+        // Insert the new path into the tree and return.
+        treeSummary->executions.append(traceExec);
+        // mCurrentTree is not changed.
+        Statistics::statistics()->accumulate("Concolic::ExecutionTree::DistinctTracesExplored", 1);
+        return;
+    }
+
+    // Corresponding tree node was not a concrete summary.
+    handleDivergence();
+}
+
 
 void TraceMerger::visit(TraceNode* node)
 {
@@ -152,8 +237,12 @@ void TraceMerger::visit(TraceNode* node)
 
 
 // When we find a divergent merge, this function writes the entire original tree and trace out to a file for manual analysis.
-void TraceMerger::reportFailedMerge()
+void TraceMerger::handleDivergence()
 {
+    qWarning() << "Warning, divergance discovered while merging a trace!";
+    Statistics::statistics()->accumulate("Concolic::ExecutionTree::DivergentMerges", 1);
+    Log::info("  Trace merge diverged from the tree.");
+
     if(mReportFailedMerge){
         QString date = QDateTime::currentDateTime().toString("dd-MM-yy-hh-mm-ss");
         QString pathToTreeFile = QString("divergence-%1-tree.gv").arg(date);
@@ -165,6 +254,7 @@ void TraceMerger::reportFailedMerge()
         display.writeGraphFile(mStartingTrace, pathToTraceFile, false);
     }
 }
+
 
 
 

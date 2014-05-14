@@ -185,6 +185,27 @@ void DepthFirstSearch::visit(TraceSymbolicBranch *node)
     }
 }
 
+void DepthFirstSearch::visit(TraceConcreteSummarisation *node)
+{
+    // If this node has only one execution path then it is just an annotation and we pass over it.
+    if(node->executions.length() == 1) {
+        node->executions[0].second->accept(this);
+        return;
+    }
+
+    // If there are multiple children, we must add this node to the parent stack so we can explore the rest.
+    // The depth limit is ignored for concrete branches.
+    if(node->executions.length() > 1) {
+        mParentStack.push(SavedPosition(node, mCurrentDepth, *mCurrentPC, 1));
+        node->executions[0].second->accept(this);
+        // N.B. we do not update mPreviousParent or mPreviousDirection as these should not be used to refer to a
+        // concrete summarisation. They are used when we find an unexplored node and attempt to explore it and then
+        // need to work out where it used to be in the tree to see if we replaced it or not. Seeing as there must be a
+        // true branch node after a concrete summary before we can see an unexplored node these are not necessary here.
+
+    }
+}
+
 void DepthFirstSearch::visit(TraceUnexplored *node)
 {
     // When we reach an unexplored node, we want to return it.
@@ -243,22 +264,45 @@ TraceNodePtr DepthFirstSearch::nextAfterLeaf()
     assert(!mParentStack.empty());
 
     SavedPosition parent = mParentStack.pop();
+
     mCurrentDepth = parent.depth;
     *mCurrentPC = parent.condition;
 
-    // If the branch is symbolic, we need to add its condition to the current PC.
-    // Also update the depth, as we would have done in DepthFirstSearch::visit(TraceSymbolicBranch *node).
-    TraceSymbolicBranch* sym = dynamic_cast<TraceSymbolicBranch*>(parent.node);
-    if(sym){
-        mCurrentPC->addCondition(sym->getSymbolicCondition(), true); // We are always taking the true branch here.
-        mCurrentDepth++;
+    // The saved position can either be a branch node or a summary node (with multiple children).
+    if(parent.node != NULL) {
+
+        // If the branch is symbolic, we need to add its condition to the current PC.
+        // Also update the depth, as we would have done in DepthFirstSearch::visit(TraceSymbolicBranch *node).
+        TraceSymbolicBranch* sym = dynamic_cast<TraceSymbolicBranch*>(parent.node);
+        if(sym){
+            mCurrentPC->addCondition(sym->getSymbolicCondition(), true); // We are always taking the true branch here.
+            mCurrentDepth++;
+        }
+
+        // Keep the previous parent information up-to-date when branching from the stack.
+        mPreviousParent = parent.node;
+        mPreviousDirection = true;
+
+        return parent.node->getTrueBranch();
+
+    } else {
+        assert(parent.summaryNode != NULL);
+        assert(parent.childrenVisited < parent.summaryNode->executions.length());
+
+        // As this branching is concrete, we can leave the PC, depth, etc. as-is.
+        // And we also ignore previous parent as in visit(TraceConcreteSummarisation)
+
+        // Push a new entry onto the parent stack to deal with any remaining children, then explore the current one.
+        unsigned int currentChild = parent.childrenVisited;
+        parent.childrenVisited += 1;
+
+        if(parent.childrenVisited < parent.summaryNode->executions.length()) {
+            mParentStack.push(parent);
+        }
+
+        return parent.summaryNode->executions[currentChild].second;
+
     }
-
-    // Keep the previous parent information up-to-date when branching from the stack.
-    mPreviousParent = parent.node;
-    mPreviousDirection = true;
-
-    return parent.node->getTrueBranch();
 }
 
 

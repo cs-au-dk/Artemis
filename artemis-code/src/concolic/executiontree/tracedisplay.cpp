@@ -456,16 +456,24 @@ void TraceDisplay::visit(TraceConcreteSummarisation *node)
     QString name = QString("aggr_%1").arg(mNodeCounter);
     mNodeCounter++;
 
-    QString nodeDecl = QString("%1 [label = \"\\n Concrete Execution  \\n Branches: %2  \\n Function Calls: %3  \\n \"]")
-            .arg(name).arg(node->numBranches()).arg(node->numFunctions());
+    QStringList executionStats;
+    QList<int> functions = node->numFunctions();
+    QList<int> branches = node->numBranches();
+    for(int i = 0; i < node->executions.length(); i++) {
+        executionStats.append(QString("\\n Branches: %2  \\n Function Calls: %3  \\n").arg(branches[i]).arg(functions[i]));
+    }
+
+    QString nodeDecl = QString("%1 [label = \"\\n Concrete Execution %2 \"]").arg(name).arg(executionStats.join("---"));
     mHeaderAggregates.append(nodeDecl);
 
     addInEdge(name);
 
-    mPreviousNode = name;
-    mEdgeExtras = "";
+    foreach(TraceConcreteSummarisation::SingleExecution execution, node->executions) {
+        mPreviousNode = name;
+        mEdgeExtras = "";
 
-    node->next->accept(this);
+        execution.second->accept(this);
+    }
 }
 
 
