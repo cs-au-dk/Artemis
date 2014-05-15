@@ -64,10 +64,10 @@ bool FormFieldRestrictedValues::safeForIntegerCoercion(FormRestrictions restrict
     foreach(SelectRestriction sr, restrictions.first) {
         if(sr.variable == name) {
             foreach(QString value, sr.values) {
-                // TODO: Would prefer to use a more general regex (e.g. allowing zero-padded values or leading/trailing
-                // spaces) but these values cannot currently be injected back correctly (even though we could coerce
+                // TODO: Would prefer to use a more general regex (e.g. allowing leading/trailing spaces)
+                // but these values cannot currently be injected back correctly (even though we could coerce
                 // and solve them), so we are quite conservative for now.
-                if(!value.contains(QRegExp("^(0|([1-9][0-9]*))$"))) {
+                if(!value.contains(QRegExp("^([0-9]*)$"))) {
                     return false;
                 }
             }
