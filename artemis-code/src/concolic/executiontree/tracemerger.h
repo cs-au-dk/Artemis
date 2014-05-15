@@ -58,7 +58,7 @@ private:
 
     TraceNodePtr mStartingTrace;
     TraceNodePtr mStartingTree;
-    static const bool mReportFailedMerge = true; // Whether to dump out failed merges for anaysis.
+    static const bool mReportFailedMerge = false; // Whether to dump out failed merges for anaysis.
 
     void reportDivergence();
 };
