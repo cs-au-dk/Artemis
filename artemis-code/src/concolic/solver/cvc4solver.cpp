@@ -235,14 +235,16 @@ SolutionPtr CVC4Solver::solve(PathConditionPtr pc, FormRestrictions formRestrict
 
         // Variables not prefixed with SYM_IN are ignored
 
-        if (SMTConstraintWriter::decodeIdentifier(symbol).compare(0, 7, "SYM_IN_") != 0) {
+        std::string identifier = SMTConstraintWriter::decodeIdentifier(symbol);
+
+        if (identifier.compare(0, 7, "SYM_IN_") != 0) {
             continue;
         }
 
         Symbolic::Type symbol_name_type;
-        if (SMTConstraintWriter::decodeIdentifier(symbol).compare(0, 12, "SYM_IN_BOOL_") == 0) {
+        if (identifier.compare(0, 12, "SYM_IN_BOOL_") == 0) {
             symbol_name_type = Symbolic::BOOL;
-        } else if (SMTConstraintWriter::decodeIdentifier(symbol).compare(0, 11, "SYM_IN_INT_") == 0) {
+        } else if (identifier.compare(0, 11, "SYM_IN_INT_") == 0) {
             symbol_name_type = Symbolic::INT;
         } else {
             symbol_name_type = Symbolic::STRING;
@@ -310,6 +312,28 @@ SolutionPtr CVC4Solver::solve(PathConditionPtr pc, FormRestrictions formRestrict
                 } else {
                     symbolvalue.string = "-" + value.substr(3, value.length() - 3);
                 }
+
+                // If the symbol references a select element, then we must ensure that
+                // the solved value matches a valid value for the select.
+                // This is not always the case if leading zeros exist in the select, since
+                // these are stripped out in our solution.
+
+                if (FormFieldRestrictedValues::symbolReferencesSelect(formRestrictions, QString::fromStdString(identifier))) {
+
+                    if (FormFieldRestrictedValues::isValidSelectValue(formRestrictions, QString::fromStdString(identifier), QString::fromStdString(symbolvalue.string)) ||
+                        FormFieldRestrictedValues::fuzzyMatchSelectValue(formRestrictions, QString::fromStdString(identifier), &symbolvalue.string)) {
+
+                        // either it was valid, or fuzzyMatch found a match and updated the value for us
+
+                    } else {
+                        Statistics::statistics()->accumulate("Concolic::Solver::InvalidSolution", 1);
+                        return emitError(clog, "Solver returned a solution which is invalid according to the form restrictions.");
+
+                    }
+
+                }
+
+
             } else {
                 Statistics::statistics()->accumulate("Concolic::Solver::ErrorsReadingSolution", 1);
                 return emitError(clog, "Variable name and type mismatch for Int variable in solver's result.");
@@ -324,7 +348,7 @@ SolutionPtr CVC4Solver::solve(PathConditionPtr pc, FormRestrictions formRestrict
         }
 
         // save result
-        solution->insertSymbol(SMTConstraintWriter::decodeIdentifier(symbol).c_str(), symbolvalue);
+        solution->insertSymbol(identifier.c_str(), symbolvalue);
 
         clog << symbol << " = " << symbolvalue.string << std::endl;
     }
