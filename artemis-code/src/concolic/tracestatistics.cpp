@@ -190,6 +190,10 @@ void TraceStatistics::visit(TraceConcreteSummarisation *node)
     if(node->executions.length() > 1) {
         mNumConcreteBranchesFullyExplored += node->executions.length() - 1;
     }
+
+    foreach(TraceConcreteSummarisation::SingleExecution execution, node->executions) {
+        execution.second->accept(this);
+    }
 }
 
 void TraceStatistics::visit(TraceEndSuccess *node)
