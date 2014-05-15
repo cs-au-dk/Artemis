@@ -148,11 +148,18 @@ void CVC4TypeAnalysis::visit(Symbolic::StringCharAt* stringcharat, void* arg) {
 
 }
 
-void CVC4TypeAnalysis::visit(Symbolic::StringRegexReplace* stringregexreplace, void* arg) {
+void CVC4TypeAnalysis::visit(Symbolic::StringRegexReplace* obj, void* arg) {
 
-    mExpressionType = STRING;
-    stringregexreplace->getSource()->accept(this);
+    // special case input filtering (filters matching X and replacing with "")
+    if (obj->getReplace()->compare("") == 0) {
 
+        mExpressionType = mExpressionType; // don't apply any strong constraints
+        obj->getSource()->accept(this);
+
+    } else {
+        mExpressionType = STRING;
+        obj->getSource()->accept(this);
+    }
 }
 
 void CVC4TypeAnalysis::visit(Symbolic::StringRegexSubmatch* stringregexsubmatch, void* arg) {

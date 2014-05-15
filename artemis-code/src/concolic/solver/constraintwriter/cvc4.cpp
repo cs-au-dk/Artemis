@@ -239,7 +239,7 @@ void CVC4ConstraintWriter::visit(Symbolic::StringRegexReplace* obj, void* args)
         // In these "safe" replacements we send args through, allowing local coercion optimisations.
         obj->getSource()->accept(this, args);
 
-        // ignore the filter
+        // ignore the filter (no-op)
         mExpressionBuffer = mExpressionBuffer;
         mExpressionType = mExpressionType;
 
