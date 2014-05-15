@@ -134,6 +134,8 @@ void CVC4ConstraintWriter::visit(Symbolic::SymbolicString* symbolicstring, void*
 
             mSuccessfulCoercions.insert(symbolicstring->getSource().getIdentifier());
 
+            Statistics::statistics()->accumulate("Concolic::Solver::StringIntCoercionOptimization", 1);
+
             return;
         }
     }

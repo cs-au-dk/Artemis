@@ -56,7 +56,7 @@ bool CVC4TypeAnalysis::hasUniqueConstraint(const std::string& identifier, CVC4Ty
     std::map<std::string, int>::iterator iter = mType.find(identifier);
 
     assert(iter != mType.end());
-    return (iter->second & type) == type;
+    return iter->second == type;
 }
 
 void CVC4TypeAnalysis::visit(Symbolic::SymbolicInteger* symbolicinteger, void* arg) {
