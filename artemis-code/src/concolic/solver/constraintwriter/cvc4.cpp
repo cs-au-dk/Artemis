@@ -591,6 +591,7 @@ void CVC4ConstraintWriter::helperSelectRestriction(SelectRestriction constraint,
 
     bool coerceToInt = false;
     if(type == VALUE_ONLY || type == VALUE_INDEX) {
+#ifdef ENABLE_COERCION_OPTIMIZATION
         if (mTypeAnalysis->hasUniqueConstraint(name.toStdString(), CVC4TypeAnalysis::WEAK_INTEGER) &&
                 FormFieldRestrictedValues::safeForIntegerCoercion(mFormRestrictions, name) ) {
             recordAndEmitType(name.toStdString(), Symbolic::INT);
@@ -598,6 +599,9 @@ void CVC4ConstraintWriter::helperSelectRestriction(SelectRestriction constraint,
         } else {
             recordAndEmitType(name.toStdString(), Symbolic::STRING);
         }
+#else
+        recordAndEmitType(name.toStdString(), Symbolic::STRING);
+#endif
     }
 
     if(type == INDEX_ONLY || type == VALUE_INDEX) {
