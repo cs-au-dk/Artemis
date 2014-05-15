@@ -233,6 +233,9 @@ void CVC4ConstraintWriter::visit(Symbolic::StringRegexReplace* obj, void* args)
       * Support the negative case.
       */
 
+    // Examples of whitespace filters
+    // /^\s+|\s+$/g
+
     // special case input filtering (filters matching X and replacing with "")
     if (obj->getReplace()->compare("") == 0) {
 
