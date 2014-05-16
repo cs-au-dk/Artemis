@@ -66,6 +66,9 @@ protected:
 
     Options mOptions;
     EventExecutionStatistics* mExecStat;
+
+    QList<FormFieldDescriptorConstPtr> mLatestFormFields; // set this to get better solver output statistics
+
 private:
     QString* mHeapReport;
 

@@ -1,0 +1,3 @@
+if (elmId != "" && parseInt(elmId) == 1) {
+    alert(x);
+}

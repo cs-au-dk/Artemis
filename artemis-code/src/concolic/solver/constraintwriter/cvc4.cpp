@@ -134,6 +134,8 @@ void CVC4ConstraintWriter::visit(Symbolic::SymbolicString* symbolicstring, void*
 
             mSuccessfulCoercions.insert(symbolicstring->getSource().getIdentifier());
 
+            Statistics::statistics()->accumulate("Concolic::Solver::StringIntCoercionOptimization", 1);
+
             return;
         }
     }
@@ -233,13 +235,16 @@ void CVC4ConstraintWriter::visit(Symbolic::StringRegexReplace* obj, void* args)
       * Support the negative case.
       */
 
+    // Examples of whitespace filters
+    // /^\s+|\s+$/g
+
     // special case input filtering (filters matching X and replacing with "")
     if (obj->getReplace()->compare("") == 0) {
 
         // In these "safe" replacements we send args through, allowing local coercion optimisations.
         obj->getSource()->accept(this, args);
 
-        // ignore the filter
+        // ignore the filter (no-op)
         mExpressionBuffer = mExpressionBuffer;
         mExpressionType = mExpressionType;
 
@@ -591,6 +596,7 @@ void CVC4ConstraintWriter::helperSelectRestriction(SelectRestriction constraint,
 
     bool coerceToInt = false;
     if(type == VALUE_ONLY || type == VALUE_INDEX) {
+#ifdef ENABLE_COERCION_OPTIMIZATION
         if (mTypeAnalysis->hasUniqueConstraint(name.toStdString(), CVC4TypeAnalysis::WEAK_INTEGER) &&
                 FormFieldRestrictedValues::safeForIntegerCoercion(mFormRestrictions, name) ) {
             recordAndEmitType(name.toStdString(), Symbolic::INT);
@@ -598,6 +604,9 @@ void CVC4ConstraintWriter::helperSelectRestriction(SelectRestriction constraint,
         } else {
             recordAndEmitType(name.toStdString(), Symbolic::STRING);
         }
+#else
+        recordAndEmitType(name.toStdString(), Symbolic::STRING);
+#endif
     }
 
     if(type == INDEX_ONLY || type == VALUE_INDEX) {

@@ -1,0 +1,4 @@
+var val = elmId.replace(/^\s+|\s+$/g, "");
+if (parseInt(val) == 1) {
+    alert(foo);
+}

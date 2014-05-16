@@ -59,12 +59,12 @@ def test_generator(test_name, test_filename):
         unsat = 'unsat' in test_filename
         unsupported = 'unsupported' in test_filename
 
-        fields = ("testinputselectint", "testinputx", "testinputy", "testinputNameId", "testinputId", "testinputfoo", "testinputbar", "booleaninput", "selectinput", "radio1a", "radio1b", "radio1c", "testinputselect")
+        fields = ("testinputselectintlz", "testinputselectint", "testinputx", "testinputy", "testinputNameId", "testinputId", "testinputfoo", "testinputbar", "booleaninput", "selectinput", "radio1a", "radio1b", "radio1c", "testinputselect")
 
         report = execute_artemis(test_name, "%s/%s" % (FIXTURE_ROOT, test_filename), 
                                  iterations=2,
                                  boolean_fields=["#booleaninput=true", "#radio1b=true", "#radio1a=false", "#radio1c=false"],
-                                 string_fields=["#testinputselectint=0", "#testinputx=1", "#testinputy=2", "#testinputNameId=1", "#testinputId=1", "#testinputfoo=foo", "#testinputbar=bar", "#selectinput=Select1", "#testinputselect=volvo"],
+                                 string_fields=["#testinputselectintlz=00", "#testinputselectint=0", "#testinputx=1", "#testinputy=2", "#testinputNameId=1", "#testinputId=1", "#testinputfoo=foo", "#testinputbar=bar", "#selectinput=Select1", "#testinputselect=volvo"],
                                  verbose=True)
 
         assert report.get('WebKit::alerts', 0) == 1, "Initial execution did not reach a print statement"

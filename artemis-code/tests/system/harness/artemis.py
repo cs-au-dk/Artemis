@@ -146,17 +146,16 @@ def execute_artemis(execution_uuid, url, iterations=1,
         if match is not None:
             try:
                 key = match.group(1).strip()
-
                 value = match.group(2).strip()
 
-                if value.isdigit():
+                if value.isdigit() and ('INT_' in key or not 'SYM_IN_' in key):
                     value = int(value)
 
-                elif value == 'true':
-                    value = True
-
-                elif value == 'false':
-                    value = False
+                if 'BOOL_' in key or not 'SYM_IN_' in key:
+                    if value == 'true':
+                        value = True
+                    elif value == 'false':
+                        value = False
 
                 report[key] = value
             except:

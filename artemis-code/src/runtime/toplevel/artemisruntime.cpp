@@ -100,6 +100,8 @@ void ArtemisRuntime::preConcreteExecution()
 
 void ArtemisRuntime::postConcreteExecution(ExecutableConfigurationConstPtr configuration, ExecutionResultPtr result)
 {
+    mLatestFormFields = result->getFormFields().toList();
+
     mWorklist->reprioritize(mAppmodel);
 
     if (!mOptions.disableStateCheck) {

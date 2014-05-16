@@ -64,10 +64,10 @@ bool FormFieldRestrictedValues::safeForIntegerCoercion(FormRestrictions restrict
     foreach(SelectRestriction sr, restrictions.first) {
         if(sr.variable == name) {
             foreach(QString value, sr.values) {
-                // TODO: Would prefer to use a more general regex (e.g. allowing zero-padded values or leading/trailing
-                // spaces) but these values cannot currently be injected back correctly (even though we could coerce
+                // TODO: Would prefer to use a more general regex (e.g. allowing leading/trailing spaces)
+                // but these values cannot currently be injected back correctly (even though we could coerce
                 // and solve them), so we are quite conservative for now.
-                if(!value.contains(QRegExp("^(0|([1-9][0-9]*))$"))) {
+                if(!value.contains(QRegExp("^([0-9]*)$"))) {
                     return false;
                 }
             }
@@ -76,7 +76,63 @@ bool FormFieldRestrictedValues::safeForIntegerCoercion(FormRestrictions restrict
     return true;
 }
 
+bool FormFieldRestrictedValues::symbolReferencesSelect(FormRestrictions restrictions, QString identifier) {
 
+    QString name = identifier;
+    name.remove(QRegExp("^SYM_IN_(INT_|BOOL_)?"));
+
+    foreach (SelectRestriction sr, restrictions.first) {
+        if (sr.variable == name) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+
+bool FormFieldRestrictedValues::isValidSelectValue(FormRestrictions restrictions, QString identifier, QString symbolvalue) {
+
+    QString name = identifier;
+    name.remove(QRegExp("^SYM_IN_(INT_|BOOL_)?"));
+
+    foreach (SelectRestriction sr, restrictions.first) {
+        if (sr.variable == name && sr.values.contains(symbolvalue)) {
+            return true;
+        }
+    }
+    return false;
+
+}
+
+bool FormFieldRestrictedValues::fuzzyMatchSelectValue(FormRestrictions restrictions, QString identifier, std::string* symbolvalue) {
+
+    QString name = identifier;
+    name.remove(QRegExp("^SYM_IN_(INT_|BOOL_)?"));
+
+    QString value = QString::fromStdString(*symbolvalue);
+
+    foreach (SelectRestriction sr, restrictions.first) {
+        if (sr.variable == name) {
+
+            if (sr.values.contains(value)) {
+                return true;
+            }
+
+            // find the first match were the value matches the suffix of the valid values
+            foreach (QString v, sr.values) {
+                if (v.endsWith(value)) {
+                    *symbolvalue = v.toStdString();
+                    return true;
+                }
+            }
+
+            return false;
+        }
+    }
+    return false;
+
+}
 
 
 // Returns the variable name used for a given field (id or name).
