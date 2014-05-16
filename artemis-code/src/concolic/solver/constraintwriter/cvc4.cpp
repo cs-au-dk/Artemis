@@ -613,6 +613,29 @@ void CVC4ConstraintWriter::helperSelectRestriction(SelectRestriction constraint,
         recordAndEmitType(idxname.toStdString(), Symbolic::INT);
     }
 
+    // If the select is empty, assert some default values.
+    if(constraint.values.isEmpty()) {
+        std::stringstream idxconstraint;
+        std::stringstream valueconstraint;
+
+        valueconstraint << "(assert (= " << SMTConstraintWriter::encodeIdentifier(name.toStdString()) << " \"\"))";
+        idxconstraint << "(assert (= " << SMTConstraintWriter::encodeIdentifier(idxname.toStdString()) << " -1))";
+
+        switch(type) {
+        case VALUE_ONLY:
+            mOutput << valueconstraint.str() << std::endl << std::endl;
+            break;
+        case INDEX_ONLY:
+            mOutput << idxconstraint.str() << std::endl << std::endl;
+            break;
+        default:
+            mOutput << idxconstraint.str()  << std::endl << valueconstraint.str() << std::endl << std::endl;
+            break;
+        }
+
+        return;
+    }
+
     mOutput << "(assert\n  (or\n";
 
     int idx = 0;
