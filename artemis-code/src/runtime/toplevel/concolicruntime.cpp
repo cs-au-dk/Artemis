@@ -119,51 +119,49 @@ void ConcolicRuntime::preConcreteExecution()
     Log::debug("--------------- COVERAGE ----------------\n");
     Log::debug(mAppmodel->getCoverageListener()->toString().toStdString());
 
-    mWebkitExecutor->executeSequence(mNextConfiguration); // calls the postValueInjection (via FormInputCollection) and postConcreteExecution methods as callback
+    mMarkerIndex = 1;
+    mWebkitExecutor->executeSequence(mNextConfiguration); // calls the postSingleInjection, postAllinjection (via FormInputCollection) and postConcreteExecution methods as callback
 }
 
-void ConcolicRuntime::postValueInjection()
+void ConcolicRuntime::postAllInjection()
 {
-    QWebElement element;
-    int markerIdx = 1;
-    // If necessary, trigger the form inputs' handlers.
+    // Update the form restrictions for the current DOM.
+    mFormFieldRestrictions = FormFieldRestrictedValues::getRestrictions(mFormFields, mWebkitExecutor->getPage());
+
     if(mOptions.concolicTriggerEventHandlers) {
-        foreach(FormFieldDescriptorConstPtr field, mFormFields) {
-            // Update the form restrictions for the current DOM.
-            mFormFieldRestrictions = FormFieldRestrictedValues::getRestrictions(mFormFields, mWebkitExecutor->getPage());
-
-            // Get the identifier of the field
-            QString identifier;
-            QString label;
-            if(field->getDomElement()->getId() != "") {
-                identifier = field->getDomElement()->getId();
-                label = QString("Trigger onchange for '%1'").arg(identifier);
-            } else if(field->getDomElement()->getName() != "") {
-                identifier = field->getDomElement()->getName();
-                label = QString("Trigger onchange for '%1'").arg(identifier);
-            }else {
-                label = "Trigger onchange";
-            }
-
-            // Check if there is any form restriction relevant to this event (and should be added to the marker).
-            // For now we only handle select restrictions.
-            QPair<bool, SelectRestriction> restriction(false, SelectRestriction());
-            if(!identifier.isEmpty()) {
-                restriction = FormFieldRestrictedValues::getRelevantSelectRestriction(mFormFieldRestrictions, identifier);
-            }
-
-            // Add a marker to the trace
-            emit sigNewTraceMarker(label, QString::number(markerIdx), restriction.first, restriction.second);
-
-            // Trigger the handler
-            element = field->getDomElement()->getElement(mWebkitExecutor->getPage());
-            FormFieldInjector::triggerChangeHandler(element);
-
-            markerIdx++;
-        }
-
         // From here on, we will be triggering the button only.
         emit sigNewTraceMarker("Clicking submit button", "B", false, SelectRestriction());
+    }
+}
+
+void ConcolicRuntime::postSingleInjection(FormFieldDescriptorConstPtr field)
+{
+    // Update the form restrictions for the current DOM.
+    mFormFieldRestrictions = FormFieldRestrictedValues::getRestrictions(mFormFields, mWebkitExecutor->getPage());
+
+    if(mOptions.concolicTriggerEventHandlers) {
+        // Find the identifier for this field
+        QString identifier;
+        if(field->getDomElement()->getId() != "") {
+            identifier = field->getDomElement()->getId();
+        } else {
+            identifier = field->getDomElement()->getName();
+        }
+        QString label = QString("Trigger onchange for '%1'").arg(identifier);
+
+        // Check if there is any form restriction relevant to this event (and should be added to the marker).
+        // For now we only handle select restrictions.
+        QPair<bool, SelectRestriction> restriction(false, SelectRestriction());
+        restriction = FormFieldRestrictedValues::getRelevantSelectRestriction(mFormFieldRestrictions, identifier);
+
+        // Add a marker to the trace
+        emit sigNewTraceMarker(label, QString::number(mMarkerIndex), restriction.first, restriction.second);
+
+        // Trigger the handler
+        QWebElement element = field->getDomElement()->getElement(mWebkitExecutor->getPage());
+        FormFieldInjector::triggerChangeHandler(element);
+
+        mMarkerIndex++;
     }
 }
 
@@ -319,10 +317,12 @@ void ConcolicRuntime::postInitialConcreteExecution(QSharedPointer<ExecutionResul
 
     // Create an "empty" form input which will inject nothing into the page.
     QList<FormInputPair > inputs;
-    FormInputCollectionPtr formInput = FormInputCollectionPtr(new FormInputCollection(inputs));
-    // Connect it to postValueInjection so we will know when the injection is performed.
+    FormInputCollectionPtr formInput = FormInputCollectionPtr(new FormInputCollection(inputs, true, mFormFields));
+    // Connect it to our slots so we will know when the injection is performed.
     QObject::connect(formInput.data(), SIGNAL(sigFinishedWriteToPage()),
-                     this, SLOT(postValueInjection()));
+                     this, SLOT(postAllInjection()));
+    QObject::connect(formInput.data(), SIGNAL(sigInjectedToField(FormFieldDescriptorConstPtr)),
+                     this, SLOT(postSingleInjection(FormFieldDescriptorConstPtr)));
 
     // On the next iteration, we will be running with initial values.
     mRunningFirstLoad = false;
@@ -491,10 +491,12 @@ QSharedPointer<FormInputCollection> ConcolicRuntime::createFormInput(QMap<QStrin
     }
 
     // Set up a new configuration which tests this input.
-    QSharedPointer<FormInputCollection> formInput = QSharedPointer<FormInputCollection>(new FormInputCollection(inputs));
-    // Connect it to postValueInjection so we will know when the injection is performed.
+    QSharedPointer<FormInputCollection> formInput = QSharedPointer<FormInputCollection>(new FormInputCollection(inputs, true, mFormFields));
+    // Connect it to our slots so we will know when the injection is performed.
     QObject::connect(formInput.data(), SIGNAL(sigFinishedWriteToPage()),
-                     this, SLOT(postValueInjection()));
+                     this, SLOT(postAllInjection()));
+    QObject::connect(formInput.data(), SIGNAL(sigInjectedToField(FormFieldDescriptorConstPtr)),
+                     this, SLOT(postSingleInjection(FormFieldDescriptorConstPtr)));
 
     return formInput;
 }

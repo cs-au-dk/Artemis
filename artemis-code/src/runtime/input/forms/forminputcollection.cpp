@@ -24,7 +24,15 @@ namespace artemis
 {
 
 FormInputCollection::FormInputCollection(const QList<FormInputPair>& inputs) :
-    mInputs(inputs)
+    mInputs(inputs),
+    mTriggerOnAllFields(false)
+{
+}
+
+FormInputCollection::FormInputCollection(const QList<FormInputPair> &inputs, bool triggerOnAllFields, QList<FormFieldDescriptorConstPtr> allFields) :
+    mInputs(inputs),
+    mTriggerOnAllFields(triggerOnAllFields),
+    mAllFields(allFields)
 {
 }
 
@@ -41,9 +49,26 @@ QSet<FormFieldDescriptorConstPtr> FormInputCollection::getFields() const
 
 void FormInputCollection::writeToPage(ArtemisWebPagePtr page) const
 {
-    foreach(FormInputPair input, mInputs) {
-        QWebElement element = input.first->getDomElement()->getElement(page);
-        FormFieldInjector::inject(element, input.second);
+    if(mTriggerOnAllFields) {
+        // Loop over mAllFields and inject if we have a suitable value.
+        // Note that this may inject less than the code below if mAllFields is not a superset of the fields in mInputs.
+        foreach(FormFieldDescriptorConstPtr field, mAllFields) {
+            foreach(FormInputPair input, mInputs) {
+                if(input.first == field) {
+                    QWebElement element = input.first->getDomElement()->getElement(page);
+                    FormFieldInjector::inject(element, input.second);
+                }
+            }
+            emit sigInjectedToField(field);
+        }
+
+    } else {
+        // Ignore mAllFields and just inject the values we know about.
+        foreach(FormInputPair input, mInputs) {
+            QWebElement element = input.first->getDomElement()->getElement(page);
+            FormFieldInjector::inject(element, input.second);
+            emit sigInjectedToField(input.first);
+        }
     }
 
     emit sigFinishedWriteToPage();
