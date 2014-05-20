@@ -135,6 +135,21 @@ bool FormFieldRestrictedValues::fuzzyMatchSelectValue(FormRestrictions restricti
 }
 
 
+QPair<bool, SelectRestriction> FormFieldRestrictedValues::getRelevantSelectRestriction(FormRestrictions restrictions, QString identifier)
+{
+    QString name = identifier;
+    name.remove(QRegExp("^SYM_IN_(INT_|BOOL_)?"));
+
+    foreach (SelectRestriction sr, restrictions.first) {
+        if (sr.variable == name) {
+            return QPair<bool, SelectRestriction>(true, sr);
+        }
+    }
+
+    return QPair<bool, SelectRestriction>(false, SelectRestriction());
+}
+
+
 // Returns the variable name used for a given field (id or name).
 QString FormFieldRestrictedValues::getVariableName(FormFieldDescriptorConstPtr field)
 {

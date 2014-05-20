@@ -140,7 +140,7 @@ private slots:
     void postValueInjection();
 
 signals:
-    void sigNewTraceMarker(QString label, QString index);
+    void sigNewTraceMarker(QString label, QString index, bool isSelectRestriction, SelectRestriction selectRestriction);
 
 };
 

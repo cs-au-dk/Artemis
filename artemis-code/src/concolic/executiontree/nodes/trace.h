@@ -27,6 +27,9 @@
 
 #include "concolic/executiontree/tracevisitor.h"
 
+#include "runtime/input/forms/formfieldrestrictedvalues.h"
+
+
 namespace artemis
 {
 
@@ -115,6 +118,8 @@ class TraceMarker : public TraceAnnotation
 public:
     QString label;
     QString index;
+    bool isSelectRestriction;
+    SelectRestriction selectRestriction;
 
     bool isEqualShallow(const QSharedPointer<const TraceNode>& other)
     {

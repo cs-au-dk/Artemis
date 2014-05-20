@@ -59,8 +59,8 @@ ConcolicRuntime::ConcolicRuntime(QObject* parent, const Options& options, const 
 
     // The event detector for 'marker' events in the traces is created and connected here, as WebKitExecutor (where the rest are handled) does not know when these events happen.
     QSharedPointer<TraceMarkerDetector> markerDetector(new TraceMarkerDetector());
-    QObject::connect(this, SIGNAL(sigNewTraceMarker(QString, QString)),
-                     markerDetector.data(), SLOT(slNewMarker(QString, QString)));
+    QObject::connect(this, SIGNAL(sigNewTraceMarker(QString, QString, bool, SelectRestriction)),
+                     markerDetector.data(), SLOT(slNewMarker(QString, QString, bool, SelectRestriction)));
     mWebkitExecutor->getTraceBuilder()->addDetector(markerDetector);
 }
 
@@ -129,16 +129,31 @@ void ConcolicRuntime::postValueInjection()
     // If necessary, trigger the form inputs' handlers.
     if(mOptions.concolicTriggerEventHandlers) {
         foreach(FormFieldDescriptorConstPtr field, mFormFields) {
-            // Add a marker to the trace
+            // Update the form restrictions for the current DOM.
+            mFormFieldRestrictions = FormFieldRestrictedValues::getRestrictions(mFormFields, mWebkitExecutor->getPage());
+
+            // Get the identifier of the field
+            QString identifier;
             QString label;
             if(field->getDomElement()->getId() != "") {
-                label = QString("Trigger onchange for '%1'").arg(field->getDomElement()->getId());
+                identifier = field->getDomElement()->getId();
+                label = QString("Trigger onchange for '%1'").arg(identifier);
             } else if(field->getDomElement()->getName() != "") {
-                label = QString("Trigger onchange for '%1'").arg(field->getDomElement()->getName());
+                identifier = field->getDomElement()->getName();
+                label = QString("Trigger onchange for '%1'").arg(identifier);
             }else {
                 label = "Trigger onchange";
             }
-            emit sigNewTraceMarker(label, QString::number(markerIdx));
+
+            // Check if there is any form restriction relevant to this event (and should be added to the marker).
+            // For now we only handle select restrictions.
+            QPair<bool, SelectRestriction> restriction(false, SelectRestriction());
+            if(!identifier.isEmpty()) {
+                restriction = FormFieldRestrictedValues::getRelevantSelectRestriction(mFormFieldRestrictions, identifier);
+            }
+
+            // Add a marker to the trace
+            emit sigNewTraceMarker(label, QString::number(markerIdx), restriction.first, restriction.second);
 
             // Trigger the handler
             element = field->getDomElement()->getElement(mWebkitExecutor->getPage());
@@ -148,7 +163,7 @@ void ConcolicRuntime::postValueInjection()
         }
 
         // From here on, we will be triggering the button only.
-        emit sigNewTraceMarker("Clicking submit button", "B");
+        emit sigNewTraceMarker("Clicking submit button", "B", false, SelectRestriction());
     }
 }
 

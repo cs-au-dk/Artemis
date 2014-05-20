@@ -307,12 +307,14 @@ const QList<QString> TraceDomModDetector::indicators = TraceDomModDetector::getI
 
 // Trace Marker Detector
 
-void TraceMarkerDetector::slNewMarker(QString label, QString index)
+void TraceMarkerDetector::slNewMarker(QString label, QString index, bool isSelectRestriction, SelectRestriction selectRestriction)
 {
     // Create the trace node.
     QSharedPointer<TraceMarker> node  = QSharedPointer<TraceMarker>(new TraceMarker());
     node->label = label;
     node->index = index;
+    node ->isSelectRestriction = isSelectRestriction;
+    node ->selectRestriction = selectRestriction;
 
     // Pass the new node to the trace builder.
     newNode(node.staticCast<TraceNode>(), &(node->next));
