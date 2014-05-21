@@ -3068,7 +3068,7 @@ void FrameView::paintContents(GraphicsContext* p, const IntRect& rect)
         return;
     }
 
-    ASSERT(!needsLayout());
+    //ASSERT(!needsLayout());
     if (needsLayout())
         return;
 
@@ -3199,7 +3199,7 @@ void FrameView::updateLayoutAndStyleIfNeededRecursive()
     // When frame flattening is on, child frame can mark parent frame dirty. In such case, child frame
     // needs to call layout on parent frame recursively.
     // This assert ensures that parent frames are clean, when child frames finished updating layout and style.
-    ASSERT(!needsLayout());
+    //ASSERT(!needsLayout());
 }
     
 void FrameView::flushDeferredRepaints()
