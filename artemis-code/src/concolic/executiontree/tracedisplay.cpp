@@ -288,7 +288,7 @@ void TraceDisplay::visit(TraceConcreteBranch *node)
 
     QString source = "#";
     if (mLinkToCoverage) {
-        source = QString("coverage.html?code=ID%1&line=%2").arg(
+        source = QString("coverage.html?code=ID%1&amp;line=%2").arg(
                     QString::fromStdString(sourceId.str()),
                     QString::fromStdString(sourceLine.str()));
     }
@@ -334,7 +334,7 @@ void TraceDisplay::visit(TraceSymbolicBranch *node)
 
     QString source = "#";
     if (mLinkToCoverage) {
-        source = QString("coverage.html?code=ID%1&line=%2").arg(
+        source = QString("coverage.html?code=ID%1&amp;line=%2").arg(
                     QString::fromStdString(sourceId.str()),
                     QString::fromStdString(sourceLine.str()));
     }

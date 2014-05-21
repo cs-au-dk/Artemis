@@ -18,6 +18,7 @@
 #include "concolic/executiontree/tracenodes.h"
 #include "concolic/traceeventdetectors.h"
 #include "concolic/solver/expressionvalueprinter.h"
+#include "model/coverage/sourceinfo.h"
 
 #include <QString>
 #include <QList>

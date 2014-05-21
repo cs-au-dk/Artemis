@@ -175,7 +175,22 @@ void TraceDisplayOverview::visit(TraceSymbolicBranch *node)
 
     // We always show symbolic brnaches, but we no longer need to find their conditions, etc.
 
-    mHeaderSymBranches.append(name);
+    std::stringstream sourceId;
+    sourceId << SourceInfo::getId(node->getSource()->getUrl(), node->getSource()->getStartLine());
+
+    std::stringstream sourceLine;
+    sourceLine << node->getLinenumber();
+
+    QString source = "#";
+    if (mLinkToCoverage) {
+        source = QString("coverage.html?code=ID%1&amp;line=%2").arg(
+                    QString::fromStdString(sourceId.str()),
+                    QString::fromStdString(sourceLine.str()));
+    }
+
+    QString label = QString(" [URL = \"%1\"]").arg(source);
+
+    mHeaderSymBranches.append(name + label);
     addInEdge(name);
 
     // Childeren are displayed in the tree in the order they are specified in the edges list.
