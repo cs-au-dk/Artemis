@@ -16,9 +16,9 @@
 
                         var b_1 = document.getElementById("booleaninput").checked;
 
-                        var selectNode = document.getElementById("selectinput");
-                        var select = selectNode.value;
-                        //var select = selectNode.options[selectNode.selectedIndex].value;
+                        var select = document.getElementById("testinputselect");
+			var selectint = document.getElementById("testinputselectint");
+			var selectintlz = document.getElementById("testinputselectintlz");
 
             $TESTSTATEMENT
 		}
@@ -35,11 +35,28 @@
 	<input type="text" id="testinputId" value="1" />
 
         <input type="checkbox" id="booleaninput" name="booleaninput" checked="checked" />
-        
-        <select id="selectinput" name="selectinput">
-          <option value="Select1" selected="selected">Select1</option>
-          <option value="Select2">Select2</option>
+
+        <select name="testinputselect" id="testinputselect">
+                  <option value="volvo">Volvo</option>
+                  <option value="saab">Saab</option>
+                  <option value="mercedes">Mercedes</option>
+                  <option value="audi">Audi</option>
         </select>
+
+        <select name="testinputselectint" id="testinputselectint">
+                  <option value="0">0-Volvo</option>
+                  <option value="1">1-Saab</option>
+                  <option value="2">2-Mercedes</option>
+                  <option value="3">3-Audi</option>
+        </select>
+
+        <select name="testinputselectintlz" id="testinputselectintlz">
+                  <option value="00">00-Volvo</option>
+                  <option value="01">01-Saab</option>
+                  <option value="02">02-Mercedes</option>
+                  <option value="03">03-Audi</option>
+        </select>
+
 
         <input type="radio" name="radio1" id="radio1a" value="Radio1a"> Radio1a
         <input type="radio" name="radio1" id="radio1b" value="Radio1b" checked="checked"> Radio1b

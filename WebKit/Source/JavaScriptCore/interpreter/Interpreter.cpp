@@ -34,6 +34,7 @@
 
 #include "config.h"
 #include "Interpreter.h"
+#include <iostream>
 
 #include "Arguments.h"
 #include "BatchedTransitionOptimizer.h"
@@ -70,6 +71,7 @@
 #include <stdio.h>
 #include <wtf/Threading.h>
 #include <wtf/text/StringBuilder.h>
+#include <symbolic/symbolicinterpreter.h>
 
 #ifdef ARTEMIS
 #include <QDebug>
@@ -4329,7 +4331,7 @@ skip_id_custom_self:
         int dst = vPC[1].u.operand;
         int base = vPC[2].u.operand;
         int property = vPC[3].u.operand;
-        
+
         JSValue baseValue = callFrame->r(base).jsValue();
         JSValue subscript = callFrame->r(property).jsValue();
 
@@ -4337,6 +4339,10 @@ skip_id_custom_self:
         if (jscinst::get_jsc_listener()->isPropertyAccessInstrumentationEnabled()) {
         readProperty(callFrame, subscript.toUString(callFrame).ascii().data());
 	}
+#endif
+
+#ifdef ARTEMIS
+        Symbolic::SymbolicInterpreter::setOpGetByValWithSymbolicArg(subscript.isSymbolic());
 #endif
 
         JSValue result;
@@ -4357,6 +4363,10 @@ skip_id_custom_self:
             Identifier property(callFrame, subscript.toString(callFrame)->value(callFrame));
             result = baseValue.get(callFrame, property);
         }
+
+#ifdef ARTEMIS
+        Symbolic::SymbolicInterpreter::setOpGetByValWithSymbolicArg(false);
+#endif
 
         CHECK_FOR_EXCEPTION();
         callFrame->uncheckedR(dst) = result;

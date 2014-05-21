@@ -95,6 +95,7 @@ namespace JSC {
         } u;
 
         Symbolic::Expression* symbolic;
+        bool indirectSymbolic;
 
     } SymbolicImmediate;
 #endif
@@ -204,6 +205,9 @@ namespace JSC {
 
         // Querying the type.
         bool isEmpty() const;
+#ifdef ARTEMIS
+        bool isDeleted() const;
+#endif
         bool isFunction() const;
         bool isUndefined() const;
         bool isNull() const;
@@ -218,10 +222,17 @@ namespace JSC {
 
 #ifdef ARTEMIS
         // Symbolic operations
+
+        bool isExtended() const;
+
+        bool isIndirectSymbolic() const;
         bool isSymbolic() const;
+
+        void makeIndirectSymbolic();
         void makeSymbolic(Symbolic::Expression* symbolic);
 
         Symbolic::Expression* asSymbolic() const;
+
         Symbolic::IntegerExpression* generateIntegerExpression(ExecState* exec);
         Symbolic::StringExpression* generateStringExpression(ExecState* exec);
         Symbolic::ObjectExpression* generateObjectExpression(ExecState* exec);
@@ -230,6 +241,10 @@ namespace JSC {
         Symbolic::BooleanExpression* generateBooleanExpression(ExecState* exec);
         Symbolic::BooleanExpression* generateBooleanCoercionExpression(ExecState* exec);
 
+    private:
+        void makeExtended();
+
+    public:
         QString getAsJSONString(ExecState* exec, QSet<QString>* visitedObjects);
 #endif
         

@@ -37,21 +37,23 @@ Z3Solver::Z3Solver(): Solver() {
 
 }
 
-SolutionPtr Z3Solver::solve(PathConditionPtr pc)
+SolutionPtr Z3Solver::solve(PathConditionPtr pc, FormRestrictions formRestrictions)
 {
+    qDebug() << "Warning: Z3Solver does not support implicit form restrictions.\n";
+
     std::ofstream constraintLog("/tmp/constraintlog", std::ofstream::out | std::ofstream::app);
 
     // 1. translate pc to something solvable using the translator
 
     Z3STRConstraintWriterPtr cw = Z3STRConstraintWriterPtr(new Z3STRConstraintWriter());
 
-    if (!cw->write(pc, "/tmp/z3input")) {
-        statistics()->accumulate("Concolic::Solver::ConstraintsNotWritten", 1);
+    if (!cw->write(pc, formRestrictions, "/tmp/z3input")) {
+        Statistics::statistics()->accumulate("Concolic::Solver::ConstraintsNotWritten", 1);
         constraintLog << "Could not translate the PC into solver input." << std::endl << std::endl;
         return SolutionPtr(new Solution(false, false, "Could not translate the PC into solver input."));
     }
 
-    statistics()->accumulate("Concolic::Solver::ConstraintsWritten", 1);
+    Statistics::statistics()->accumulate("Concolic::Solver::ConstraintsWritten", 1);
 
     // 2. run the solver on the file
 
@@ -85,7 +87,7 @@ SolutionPtr Z3Solver::solve(PathConditionPtr pc)
             error = QString("Call to Z3-str.py returned code %1").arg(result);
         }
         constraintLog << error.toStdString() << std::endl << std::endl;
-        statistics()->accumulate("Concolic::Solver::ConstraintsNotSolved", 1);
+        Statistics::statistics()->accumulate("Concolic::Solver::ConstraintsNotSolved", 1);
         return SolutionPtr(new Solution(false, false, error));
     }
 
@@ -100,14 +102,14 @@ SolutionPtr Z3Solver::solve(PathConditionPtr pc)
     std::ifstream fp("/tmp/z3result");
 
     if (fp.is_open()) {
-        statistics()->accumulate("Concolic::Solver::ConstraintsSolved", 1);
+        Statistics::statistics()->accumulate("Concolic::Solver::ConstraintsSolved", 1);
 
         std::getline(fp, line); // discard decoractive line
         std::getline(fp, line); // load sat line
 
         if (line.compare(">> SAT") != 0) {
             // UNSAT
-            statistics()->accumulate("Concolic::Solver::ConstraintsSolvedAsUNSAT", 1);
+            Statistics::statistics()->accumulate("Concolic::Solver::ConstraintsSolvedAsUNSAT", 1);
             constraintLog << "Solved as UNSAT." << std::endl << std::endl;
             return SolutionPtr(new Solution(false, true));
         }
@@ -175,7 +177,7 @@ SolutionPtr Z3Solver::solve(PathConditionPtr pc)
             constraintLog << symbol << " = " << symbolvalue.string << "\n";
         }
     }else{
-        statistics()->accumulate("Concolic::Solver::ConstraintsNotSolved", 1);
+        Statistics::statistics()->accumulate("Concolic::Solver::ConstraintsNotSolved", 1);
         constraintLog << "Could not read result file." << std::endl << std::endl;
         return SolutionPtr(new Solution(false, false, "Could not read result file."));
     }

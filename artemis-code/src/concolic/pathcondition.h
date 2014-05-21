@@ -51,6 +51,7 @@ public:
     void visit(TraceSymbolicBranch* node);
     void visit(TraceUnexplored* node);
     void visit(TraceAnnotation* node);
+    void visit(TraceConcreteSummarisation* node);
     void visit(TraceEnd* node);
 
     // Used to incrementally create a PC in the search procedure.

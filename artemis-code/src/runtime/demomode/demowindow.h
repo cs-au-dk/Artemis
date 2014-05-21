@@ -37,7 +37,6 @@
 #include "initialanalysiswidget.h"
 #include "artemisglobals.h"
 #include "model/coverage/coveragetooutputstream.h"
-#include "imageviewer/imageviewerdialog.h"
 
 #include "concolic/entrypoints.h"
 #include "concolic/executiontree/tracenodes.h"

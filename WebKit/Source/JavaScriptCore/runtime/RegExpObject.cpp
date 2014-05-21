@@ -298,12 +298,16 @@ JSValue RegExpObject::exec(ExecState* exec, JSString* string)
 
         if (result) {
             RegExpMatchesArray* array = RegExpMatchesArray::create(exec, string, regExp(), result);
-            array->reifyAllPropertiesIfNecessary(exec);
 
             for (int i = 0; i < array->length(); i++) {
-                JSValue v = array->getDirectOffset(i);
-                v.makeSymbolic(new Symbolic::StringRegexSubmatchArrayAt(symbolicMatch, i));
-                array->setIndex(exec->globalData(), i, v);
+                PropertySlot slot;
+                array->getPropertySlot(exec, i, slot);
+                JSValue v = slot.getValue(exec, i);
+
+                if (!v.isEmpty() && !v.isDeleted() && v.isString()) {
+                    v.makeSymbolic(new Symbolic::StringRegexSubmatchArrayAt(symbolicMatch, i));
+                    array->setIndex(exec->globalData(), i, v);
+                }
             }
 
             r = array;

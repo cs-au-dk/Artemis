@@ -165,7 +165,7 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
     artemis::Log::addLogLevel(artemis::INFO);
     artemis::Log::addLogLevel(artemis::FATAL);
 
-    while ((c = getopt_long(argc, argv, "ehsrp:a:m:F:f:t:c:i:v:", long_options, &option_index)) != -1) {
+    while ((c = getopt_long(argc, argv, "ehsrp:a:m:I:F:f:t:c:i:v:", long_options, &option_index)) != -1) {
 
         switch (c) {
 
@@ -238,6 +238,7 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
         }
 
         case 'F': {
+            // Boolean injected value
 
             QString input = QString(optarg);
 
@@ -256,6 +257,31 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
                 cerr << "Should be 'true' or 'false' only for boolean injections." << endl;
                 exit(1);
             }
+            break;
+        }
+
+        case 'I': {
+            // Integer injected value
+
+            QString input = QString(optarg);
+
+            int lastEqualsIndex = QString(optarg).lastIndexOf("=");
+            Q_ASSERT(lastEqualsIndex >= 0);
+
+            QString name = input.left(lastEqualsIndex);
+            QString value = input.mid(lastEqualsIndex+1);
+
+            bool ok;
+            int v = value.toInt(&ok);
+
+            options.presetFormfields.insert(name, artemis::InjectionValue(v));
+
+            if (!ok) {
+                cerr << "ERROR: Invalid choice of injection " << name.toStdString() << "=" << value.toStdString() << endl;
+                cerr << "Should be a valid integer for integer injections." << endl;
+                exit(1);
+            }
+
             break;
         }
 

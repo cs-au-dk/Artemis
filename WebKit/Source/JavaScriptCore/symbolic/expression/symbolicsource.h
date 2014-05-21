@@ -26,7 +26,7 @@ enum SourceIdentifierMethod {
 };
 
 enum SourceType {
-    TEXT, SELECT, RADIO, CHECKBOX
+    TEXT, SELECT, SELECT_INDEX, RADIO, CHECKBOX, UNKNOWN
 };
 
 class SymbolicSource
@@ -51,17 +51,33 @@ public:
         return m_identifier;
     }
 
-    static SourceType typeAttrToSourceType(const char * type) {
+    static SourceType stringAccessTypeAttrToSourceType(const char * type) {
         if(strncasecmp(type, "select", 6) == 0){
             return SELECT;
         }
+        return TEXT;
+    }
+
+    // Removed the int SourceType lookup function for two reasons.
+    // 1) We currently only generate ints for select box selectedIndex lookups.
+    // 2) Select boxes are not identified by type attribute anyway, they are a separate element. So this code was returning UNKNOWN anyway.
+    /*
+    static SourceType intAccessTypeAttrToSourceType(const char * type) {
+        if(strncasecmp(type, "select", 6) == 0){
+            return SELECT_INDEX;
+        }
+        return UNKNOWN;
+    }
+    */
+
+    static SourceType boolAccessTypeAttrToSourceType(const char * type) {
         if(strncasecmp(type, "radio", 5) == 0){
             return RADIO;
         }
         if(strncasecmp(type, "checkbox", 8) == 0){
             return CHECKBOX;
         }
-        return TEXT;
+        return UNKNOWN;
     }
 
 private:

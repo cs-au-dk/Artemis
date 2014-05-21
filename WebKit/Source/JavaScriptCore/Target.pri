@@ -259,7 +259,8 @@ SOURCES += \
     symbolic/expression/stringregexsubmatcharraymatch.cpp \
     symbolic/expression/stringregexsubmatchindex.cpp \
     symbolic/expression/constantobject.cpp \
-    symbolic/expression/objectbinaryoperation.cpp
+    symbolic/expression/objectbinaryoperation.cpp \
+    statistics/statsstorage.cpp
 
 *sh4* {
     QMAKE_CXXFLAGS += -mieee -w
@@ -324,4 +325,5 @@ HEADERS += \
     symbolic/expression/stringregexsubmatcharraymatch.h \
     symbolic/expression/stringregexsubmatchindex.h \
     symbolic/expression/constantobject.h \
-    symbolic/expression/objectbinaryoperation.h
+    symbolic/expression/objectbinaryoperation.h \
+    statistics/statsstorage.h

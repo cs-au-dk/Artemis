@@ -34,8 +34,7 @@ TimerInput::TimerInput(QSharedPointer<const Timer> timer)
 
 void TimerInput::apply(ArtemisWebPagePtr, QWebExecutionListener* webkitListener) const
 {
-    statistics()->accumulate("timers::fired", 1);
-    webkitListener->timerFire(mTimer->getId());
+    Statistics::statistics()->accumulate("timers::fired", 1); webkitListener->timerFire(mTimer->getId());
 }
 
 BaseInputConstPtr TimerInput::getPermutation(const FormInputGeneratorConstPtr& formInputGenerator,

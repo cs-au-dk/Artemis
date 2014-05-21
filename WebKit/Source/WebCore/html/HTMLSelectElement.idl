@@ -54,8 +54,8 @@ module html {
         void remove(in long index);
 #endif
         readonly attribute HTMLCollection selectedOptions;
-        attribute long selectedIndex;
-        attribute [TreatNullAs=NullString, Symbolic, SymbolicString] DOMString value;
+        attribute [Symbolic, SymbolicInteger, SymbolicSelectElement] long selectedIndex;
+        attribute [TreatNullAs=NullString, Symbolic, SymbolicString, SymbolicSelectElement] DOMString value;
 
         readonly attribute boolean willValidate;
         readonly attribute ValidityState validity;

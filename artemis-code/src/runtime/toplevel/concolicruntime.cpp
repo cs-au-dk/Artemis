@@ -32,8 +32,8 @@ namespace artemis
 
 ConcolicRuntime::ConcolicRuntime(QObject* parent, const Options& options, const QUrl& url)
     : Runtime(parent, options, url)
-    , mTraceDisplay(true, options.outputCoverage != NONE)
-    , mTraceDisplayOverview(false, options.outputCoverage != NONE)
+    , mTraceDisplay(options.outputCoverage != NONE)
+    , mTraceDisplayOverview(options.outputCoverage != NONE)
     , mNumIterations(0)
 {
     QObject::connect(mWebkitExecutor, SIGNAL(sigExecutedSequence(ExecutableConfigurationConstPtr, QSharedPointer<ExecutionResult>)),
@@ -267,6 +267,7 @@ void ConcolicRuntime::postInitialConcreteExecution(QSharedPointer<ExecutionResul
 {
     // Find the form fields on the page and save them.
     mFormFields = result->getFormFields().toList();
+    mFormFieldRestrictions = FormFieldRestrictedValues::getRestrictions(mFormFields, mWebkitExecutor->getPage());
 
     // Print the form fields found on the page.
     Log::debug("Form fields found:");
@@ -276,6 +277,30 @@ void ConcolicRuntime::postInitialConcreteExecution(QSharedPointer<ExecutionResul
         fieldNames.append(field->getDomElement()->toString());
     }
     Log::info(QString("  Form fields: %1").arg(fieldNames.join(", ")).toStdString());
+
+    // Print the form field restrictions found.
+    QStringList options;
+    Log::debug("Form field SELECT restrictions found:");
+    if (mFormFieldRestrictions.first.size() == 0) {
+        Log::debug("  none");
+    }
+    foreach (SelectRestriction sr, mFormFieldRestrictions.first) {
+        int idx = 0;
+        foreach(QString val, sr.values) {
+            options.append(QString("%1/'%2'").arg(idx).arg(val));
+            idx++;
+        }
+        Log::debug(QString("  '%1' chosen from: %2").arg(sr.variable).arg(options.join(", ")).toStdString());
+    }
+
+    Log::debug("Form field RADIO restrictions found:");
+    if (mFormFieldRestrictions.second.size() == 0) {
+        Log::debug("  None");
+    }
+    foreach (RadioRestriction rr, mFormFieldRestrictions.second) {
+        options = rr.variables.toList();
+        Log::debug(QString("  '%1' mutually exclusive%2: %3").arg(rr.groupName).arg(rr.alwaysSet ? "" : " (or none)").arg(options.join(", ")).toStdString());
+    }
 
     // Create an "empty" form input which will inject nothing into the page.
     QList<FormInputPair > inputs;
@@ -353,9 +378,10 @@ void ConcolicRuntime::mergeTraceIntoTree()
         mSearchStrategy = DepthFirstSearchPtr(new DepthFirstSearch(mSymbolicExecutionGraph));
         mRunningWithInitialValues = false;
 
-        statistics()->accumulate("Concolic::ExecutionTree::DistinctTracesExplored", 1);
+        Statistics::statistics()->accumulate("Concolic::ExecutionTree::DistinctTracesExplored", 1);
 
     } else {
+
         // A normal run.
         // Merge trace with tracegraph
         mSymbolicExecutionGraph = TraceMerger::merge(trace, mSymbolicExecutionGraph);
@@ -389,7 +415,7 @@ void ConcolicRuntime::printSolution(SolutionPtr solution, QStringList varList)
                 if(value.string.empty()){
                     Log::info(QString("    %1 = \"\"").arg(var).toStdString());
                 }else{
-                    Log::info(QString("    %1 = %2").arg(var).arg(value.string.c_str()).toStdString());
+                    Log::info(QString("    %1 = \"%2\"").arg(var).arg(value.string.c_str()).toStdString());
                 }
                 break;
             default:
@@ -398,7 +424,7 @@ void ConcolicRuntime::printSolution(SolutionPtr solution, QStringList varList)
             }
         }else{
             Log::fatal(QString("Error: Could not find value for %1 in the solver's solution.").arg(var).toStdString());
-            exit(1);
+            exit(1); // TODO: Maybe this should just be "could not solve" instead?
         }
     }
 }
@@ -415,7 +441,7 @@ QSharedPointer<FormInputCollection> ConcolicRuntime::createFormInput(QMap<QStrin
         Symbolvalue value = solution->findSymbol(varName);
         if(!value.found){
             Log::error(QString("Error: Could not find value for %1 in the solver's solution.").arg(varName).toStdString());
-            statistics()->accumulate("Concolic::FailedInjections", 1);
+            Statistics::statistics()->accumulate("Concolic::FailedInjections", 1);
             continue;
         }
 
@@ -430,7 +456,7 @@ QSharedPointer<FormInputCollection> ConcolicRuntime::createFormInput(QMap<QStrin
         // Create the field/value pairing to be injected using the FormInput object.
         switch (value.kind) {
         case Symbolic::BOOL:
-            inputs.append(FormInputPair(varSourceField, InjectionValue(value.u.boolean))); // TODO: How to represent booleans here?
+            inputs.append(FormInputPair(varSourceField, InjectionValue(value.u.boolean)));
             Log::debug(QString("Injecting boolean %1 into %2").arg(value.u.boolean ? "true" : "false").arg(varName).toStdString());
             break;
         case Symbolic::STRING:
@@ -438,12 +464,12 @@ QSharedPointer<FormInputCollection> ConcolicRuntime::createFormInput(QMap<QStrin
             Log::debug(QString("Injecting string '%1' into %2").arg(QString(value.string.c_str())).arg(varName).toStdString());
             break;
         case Symbolic::INT:
-            Log::error(QString("INJECTION ERROR: INT typed variable %1 encountered in the solver result, which is not expected.").arg(varName).toStdString());
-            statistics()->accumulate("Concolic::FailedInjections", 1);
-            continue;
+            inputs.append(FormInputPair(varSourceField, InjectionValue(value.u.integer)));
+            Log::debug(QString("Injecting int %1 into %2").arg(value.u.integer).arg(varName).toStdString());
+            break;
         default:
             Log::error(QString("INJECTION ERROR: Unimplemented value type encountered for variable %1 (%2)").arg(varName).arg(value.kind).toStdString());
-            statistics()->accumulate("Concolic::FailedInjections", 1);
+            Statistics::statistics()->accumulate("Concolic::FailedInjections", 1);
             continue;
         }
 
@@ -465,9 +491,11 @@ QSharedPointer<const FormFieldDescriptor> ConcolicRuntime::findFormFieldForVaria
     QSharedPointer<const FormFieldDescriptor> varSourceField;
 
     // Variable names are of the form SYM_IN_<name>, and we will need to use <name> directly when searching the ids and names of the form fields.
+    // Bool and int variables can also have a marker to distinguish them from other variables from the same element.
     QString varBaseName = varName;
-    varBaseName.replace("SYM_IN_", "");
+    varBaseName.remove(QRegExp("^SYM_IN_(INT_|BOOL_)?"));
 
+    // TODO: There is similar code in formfieldrestrictedvalues.cpp, which could be merged into a single utility.
     switch(varSourceIdentifierMethod){
     case Symbolic::INPUT_NAME:
         // Fetch the formField with this name
@@ -491,14 +519,14 @@ QSharedPointer<const FormFieldDescriptor> ConcolicRuntime::findFormFieldForVaria
 
     default:
         Log::error("Error: Unexpected identification method for form fields encountered.");
-        statistics()->accumulate("Concolic::FailedInjections", 1);
+        Statistics::statistics()->accumulate("Concolic::FailedInjections", 1);
         return varSourceField; // Returning null to signify error.
     }
 
     // Check that we found a FormField.
     if(varSourceField.isNull()){
         Log::error(QString("Error: Could not identify a form field for %1.").arg(varName).toStdString());
-        statistics()->accumulate("Concolic::FailedInjections", 1);
+        Statistics::statistics()->accumulate("Concolic::FailedInjections", 1);
         return varSourceField; // Returning null to signify error.
     }
 
@@ -525,7 +553,8 @@ void ConcolicRuntime::exploreNextTarget()
 
     // Try to solve this PC to get some concrete input.
     SolverPtr solver = getSolver(mOptions);
-    SolutionPtr solution = solver->solve(target);
+    SolutionPtr solution = solver->solve(target, mFormFieldRestrictions);
+    // TODO: Add select and radio restrictions to this call.
 
     if(solution->isSolved()) {
         Log::debug("Solved the target PC:");
@@ -590,8 +619,6 @@ void ConcolicRuntime::chooseNextTargetAndExplore()
         Log::debug("\n============= Finished DFS ==============");
         Log::info("Finished serach of the tree.");
 
-        reportStatistics();
-
         mWebkitExecutor->detach();
         done();
         return;
@@ -600,37 +627,44 @@ void ConcolicRuntime::chooseNextTargetAndExplore()
 
 void ConcolicRuntime::reportStatistics()
 {
+    Statistics::statistics()->accumulate("Concolic::Iterations", mNumIterations);
+
+    if(mSymbolicExecutionGraph.isNull()) {
+        return;
+    }
+
     TraceStatistics stats;
     stats.processTrace(mSymbolicExecutionGraph);
 
-    statistics()->accumulate("Concolic::ExecutionTree::ConcreteBranchesTotal", stats.mNumConcreteBranches);
-    statistics()->accumulate("Concolic::ExecutionTree::ConcreteBranchesFullyExplored", stats.mNumConcreteBranchesFullyExplored);
+    Statistics::statistics()->accumulate("Concolic::ExecutionTree::ConcreteBranchesTotal", stats.mNumConcreteBranches);
+    Statistics::statistics()->accumulate("Concolic::ExecutionTree::ConcreteBranchesFullyExplored", stats.mNumConcreteBranchesFullyExplored);
 
-    statistics()->accumulate("Concolic::ExecutionTree::SymbolicBranchesTotal", stats.mNumSymBranches);
-    statistics()->accumulate("Concolic::ExecutionTree::SymbolicBranchesFullyExplored", stats.mNumSymBranchesFullyExplored);
+    Statistics::statistics()->accumulate("Concolic::ExecutionTree::SymbolicBranchesTotal", stats.mNumSymBranches);
+    Statistics::statistics()->accumulate("Concolic::ExecutionTree::SymbolicBranchesFullyExplored", stats.mNumSymBranchesFullyExplored);
 
-    statistics()->accumulate("Concolic::ExecutionTree::Alerts", stats.mNumAlerts);
-    statistics()->accumulate("Concolic::ExecutionTree::PageLoads", stats.mNumPageLoads);
-    statistics()->accumulate("Concolic::ExecutionTree::InterestingDomModifications", stats.mNumInterestingDomModifications);
+    Statistics::statistics()->accumulate("Concolic::ExecutionTree::Alerts", stats.mNumAlerts);
+    Statistics::statistics()->accumulate("Concolic::ExecutionTree::PageLoads", stats.mNumPageLoads);
+    Statistics::statistics()->accumulate("Concolic::ExecutionTree::InterestingDomModifications", stats.mNumInterestingDomModifications);
 
-    statistics()->accumulate("Concolic::ExecutionTree::EndSuccess", stats.mNumEndSuccess);
-    statistics()->accumulate("Concolic::ExecutionTree::EndFailure", stats.mNumEndFailure);
-    statistics()->accumulate("Concolic::ExecutionTree::EndUnknown", stats.mNumEndUnknown);
+    Statistics::statistics()->accumulate("Concolic::ExecutionTree::EndSuccess", stats.mNumEndSuccess);
+    Statistics::statistics()->accumulate("Concolic::ExecutionTree::EndFailure", stats.mNumEndFailure);
+    Statistics::statistics()->accumulate("Concolic::ExecutionTree::EndUnknown", stats.mNumEndUnknown);
 
-    statistics()->accumulate("Concolic::ExecutionTree::Unexplored", stats.mNumUnexplored);
-    statistics()->accumulate("Concolic::ExecutionTree::Unsat", stats.mNumUnexploredUnsat);
-    statistics()->accumulate("Concolic::ExecutionTree::Missed", stats.mNumUnexploredMissed);
-    statistics()->accumulate("Concolic::ExecutionTree::CouldNotSolve", stats.mNumUnexploredUnsolvable);
+    Statistics::statistics()->accumulate("Concolic::ExecutionTree::Unexplored", stats.mNumUnexplored);
+    Statistics::statistics()->accumulate("Concolic::ExecutionTree::UnexploredSymbolicChild", stats.mNumUnexploredSymbolicChild);
+    Statistics::statistics()->accumulate("Concolic::ExecutionTree::Unsat", stats.mNumUnexploredUnsat);
+    Statistics::statistics()->accumulate("Concolic::ExecutionTree::Missed", stats.mNumUnexploredMissed);
+    Statistics::statistics()->accumulate("Concolic::ExecutionTree::CouldNotSolve", stats.mNumUnexploredUnsolvable);
 
-    statistics()->accumulate("Concolic::EventSequence::HandlersTriggered", mFormFields.size());
-    statistics()->accumulate("Concolic::EventSequence::SymbolicBranchesTotal", stats.mNumEventSequenceSymBranches);
-    statistics()->accumulate("Concolic::EventSequence::SymbolicBranchesFullyExplored", stats.mNumEventSequenceSymBranchesFullyExplored);
+    Statistics::statistics()->accumulate("Concolic::EventSequence::HandlersTriggered", mFormFields.size());
+    Statistics::statistics()->accumulate("Concolic::EventSequence::SymbolicBranchesTotal", stats.mNumEventSequenceSymBranches);
+    Statistics::statistics()->accumulate("Concolic::EventSequence::SymbolicBranchesFullyExplored", stats.mNumEventSequenceSymBranchesFullyExplored);
 }
 
 
 void ConcolicRuntime::done()
 {
-    statistics()->accumulate("Concolic::Iterations", mNumIterations);
+    reportStatistics();
     Runtime::done();
 }
 

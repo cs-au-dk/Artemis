@@ -82,7 +82,7 @@ QList<EventHandlerDescriptorConstPtr> EntryPointDetector::detectAll(ExecutionRes
 
     }
 
-    statistics()->accumulate("FormCrawl::Entrypoints", entryEvents.size());
+    Statistics::statistics()->accumulate("FormCrawl::Entrypoints", entryEvents.size());
 
     return entryEvents;
 }

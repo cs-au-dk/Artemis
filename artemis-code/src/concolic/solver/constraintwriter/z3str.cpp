@@ -170,7 +170,7 @@ void Z3STRConstraintWriter::visit(Symbolic::StringRegexReplace* regex, void* arg
             mExpressionBuffer = mExpressionBuffer;
             mExpressionType = mExpressionType;
 
-            statistics()->accumulate("Concolic::Solver::RegexSuccessfullyTranslated", 1);
+            Statistics::statistics()->accumulate("Concolic::Solver::RegexSuccessfullyTranslated", 1);
 
             return;
         }
@@ -178,7 +178,7 @@ void Z3STRConstraintWriter::visit(Symbolic::StringRegexReplace* regex, void* arg
     }
 
 
-    statistics()->accumulate("Concolic::Solver::RegexNotTranslated", 1);
+    Statistics::statistics()->accumulate("Concolic::Solver::RegexNotTranslated", 1);
     error("Regex constraints not supported");
 
 

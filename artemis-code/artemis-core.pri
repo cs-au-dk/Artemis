@@ -54,8 +54,6 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/util/loggingutil.h \
     src/util/fileutil.h \
     src/util/urlutil.h \
-    src/statistics/statsstorage.h \
-    src/statistics/writers/pretty.h \
     src/exceptionhandlingqapp.h \
     src/runtime/browser/executionresultbuilder.h \
     src/strategies/inputgenerator/form/forminputgenerator.h \
@@ -101,8 +99,6 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/concolic/executiontree/tracenodes.h \
     src/concolic/executiontree/tracemerger.h \
     src/concolic/executiontree/tracedisplay.h \
-    src/runtime/demomode/imageviewer/imageviewerwidget.h \
-    src/runtime/demomode/imageviewer/imageviewerdialog.h \
     src/concolic/solver/expressionvalueprinter.h \
     src/concolic/solver/expressionfreevariablelister.h \
     src/concolic/solver/constraintwriter/abstract.h \
@@ -128,7 +124,9 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/model/stubeventexecutionstatistics.h \
     src/model/jsoneventexecutionstatistics.h \
     src/runtime/input/forms/formfieldinjector.h \
-    src/runtime/input/forms/injectionvalue.h
+    src/runtime/input/forms/injectionvalue.h \
+    src/runtime/input/forms/formfieldrestrictedvalues.h \
+    src/concolic/solver/constraintwriter/cvc4typeanalysis.h
 
 SOURCES += src/runtime/input/ajaxinput.cpp \
     src/strategies/prioritizer/constantprioritizer.cpp \
@@ -168,8 +166,6 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/model/coverage/codeblockinfo.cpp \
     src/util/fileutil.cpp \
     src/util/urlutil.cpp \
-    src/statistics/statsstorage.cpp \
-    src/statistics/writers/pretty.cpp \
     src/exceptionhandlingqapp.cpp \
     src/runtime/browser/executionresultbuilder.cpp \
     src/strategies/inputgenerator/event/staticeventparametergenerator.cpp \
@@ -208,8 +204,6 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/concolic/executiontree/nodes/tracesymbolicbranch.cpp \
     src/concolic/executiontree/tracemerger.cpp \
     src/concolic/executiontree/tracedisplay.cpp \
-    src/runtime/demomode/imageviewer/imageviewerwidget.cpp \
-    src/runtime/demomode/imageviewer/imageviewerdialog.cpp \
     src/concolic/search/searchdfs.cpp \
     src/concolic/solver/expressionvalueprinter.cpp \
     src/concolic/solver/expressionfreevariablelister.cpp \
@@ -234,6 +228,8 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/model/seleniumeventexecutionstatistics.cpp \
     src/model/stubeventexecutionstatistics.cpp \
     src/model/jsoneventexecutionstatistics.cpp \
-    src/runtime/input/forms/formfieldinjector.cpp
+    src/runtime/input/forms/formfieldinjector.cpp \
+    src/runtime/input/forms/formfieldrestrictedvalues.cpp \
+    src/concolic/solver/constraintwriter/cvc4typeanalysis.cpp
 
 QT += network

@@ -23,11 +23,14 @@ def execute_artemis(execution_uuid, url, iterations=1,
                     strategy_priority=None,
                     coverage=None,
                     exclude=None,
-                    fields=None,
+                    string_fields=None,
+                    boolean_fields=None,
+                    integer_fields=None,
                     major_mode=None,
                     reverse_constraint_solver=False,
                     concolic_button=None,
                     dryrun=False,
+                    verbose=False,
                     output_parent_dir=OUTPUT_DIR,
                     ignore_artemis_crash=False, # Suppresses the exception thrown by a non-zero return code and returns whatever information it can.
                     concolic_event_sequences=None,
@@ -71,11 +74,25 @@ def execute_artemis(execution_uuid, url, iterations=1,
             args.append('--coverage-report-ignore')
             args.append(file)
 
-    if fields is None:
-        fields = []
+    if string_fields is None:
+        string_fields = []
 
-    for field in fields:
+    if boolean_fields is None:
+        boolean_fields = []
+
+    if integer_fields is None:
+        integer_fields = []
+
+    for field in string_fields:
         args.append('-f')
+        args.append(field)
+
+    for field in boolean_fields:
+        args.append('-F')
+        args.append(field)
+
+    for field in integer_fields:
+        args.append('-I')
         args.append(field)
 
     if reverse_constraint_solver:
@@ -95,8 +112,10 @@ def execute_artemis(execution_uuid, url, iterations=1,
 
     cmd = [ARTEMIS_EXEC] + [url] + args
 
-    if dryrun:
+    if dryrun or verbose:
         print ' '.join(cmd)
+
+    if dryrun:
         return
 
     try:
@@ -127,17 +146,16 @@ def execute_artemis(execution_uuid, url, iterations=1,
         if match is not None:
             try:
                 key = match.group(1).strip()
-
                 value = match.group(2).strip()
 
-                if value.isdigit():
+                if value.isdigit() and ('INT_' in key or not 'SYM_IN_' in key):
                     value = int(value)
 
-                elif value == 'true':
-                    value = True
-
-                elif value == 'false':
-                    value = False
+                if 'BOOL_' in key or not 'SYM_IN_' in key:
+                    if value == 'true':
+                        value = True
+                    elif value == 'false':
+                        value = False
 
                 report[key] = value
             except:

@@ -1,0 +1,3 @@
+if (parseInt(selectintlz.value) == 0) {
+    alert("hit");
+}

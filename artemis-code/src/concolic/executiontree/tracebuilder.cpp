@@ -22,9 +22,10 @@
 namespace artemis
 {
 
-TraceBuilder::TraceBuilder(QObject* parent) :
+TraceBuilder::TraceBuilder(QObject* parent, bool shouldSummarise) :
     QObject(parent),
-    mRecording(false)
+    mRecording(false),
+    mSummarise(shouldSummarise)
 {
 }
 
@@ -51,6 +52,7 @@ void TraceBuilder::beginRecording()
     // Reset the trace to be empty.
     mTrace = QSharedPointer<TraceNode>();
     mSuccessor = &mTrace;
+    mCurrentSummary.clear();
 
 }
 
@@ -58,6 +60,10 @@ void TraceBuilder::endRecording()
 {
     if(!mRecording){
         return;
+    }
+
+    if(!mCurrentSummary.empty()){
+        flushSummary(); // Updates mSuccessor.
     }
 
     mRecording = false;
@@ -72,6 +78,10 @@ void TraceBuilder::newNode(QSharedPointer<TraceNode> node, QSharedPointer<TraceN
 {
     // ignore the new node unless we are recording a trace.
     if(mRecording){
+        // If we have an active summary node running then flush that, then add this new node as a successor.
+        if(!mCurrentSummary.empty()){
+            flushSummary(); // Updates mSuccessor.
+        }
 
         // Add the new node to the current successor pointer.
         *mSuccessor = node;
@@ -82,6 +92,29 @@ void TraceBuilder::newNode(QSharedPointer<TraceNode> node, QSharedPointer<TraceN
         // Notify the GUI (or anyone else) of the new node)
         emit sigAddedNode();
     }
+}
+
+void TraceBuilder::newSummaryInfo(TraceConcreteSummarisation::EventType info)
+{
+    if(mRecording){
+        mCurrentSummary.append(info);
+    }
+}
+
+// Write out a new summary node and update mSuccessor.
+void TraceBuilder::flushSummary()
+{
+    QPair<QList<TraceConcreteSummarisation::EventType>, TraceNodePtr> execution;
+    execution.first = mCurrentSummary;
+
+    QSharedPointer<TraceConcreteSummarisation> node(new TraceConcreteSummarisation);
+    node->executions.append(execution);
+
+    // Add the new node to the current successor pointer and update the successor pointer.
+    *mSuccessor = node;
+    mSuccessor = &(node->executions[0].second);
+
+    mCurrentSummary.clear();
 }
 
 TraceNodePtr TraceBuilder::trace()

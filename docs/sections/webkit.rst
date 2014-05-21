@@ -86,3 +86,23 @@ Notice, that the bit patterns for the different symbolic values are as follows::
   Int       1 1 0 0 (not symbolic)
 
 The (a) bit indicates if the value is numeric or not, the (d) bit indicates if the value is symbolic or not (in order to differentiate normal concrete integers).
+
+Special Casing Symbolic Strings
+-------------------------------
+
+Strings are represented by a JSValue (object type) who points to a JSString. A string is made symbolic by marking both the JSValue and JSString as symbolic. It is not enough to only mark the JSValue as symbolic, because a number of internal library functions (which we need to instrument for correct symbolic handling) only operate on the JSString object, and can't access the JSValue pointing to it. We fix this by propagating the symbolic information from the JSValue to the JSString.
+
+This can cause problems if two distinct JSValue objects point to the same JSString for optimization purposes. Some special handling exist to avoid this case.
+
+Special Casing Symbolic Objects
+-------------------------------
+
+We do not support symbolic objects in general. However, we do mark specific objects as symbolic in order to implement symbolic handling of specific instances of objects.
+
+ * We make the result returned by regexp operations (who return arrays or null) symbolic. The symbolic value from these operations is treated as a special null or non-null symbolic value, in order to reason about the outcome of a regexp match.
+ 
+Special Casing Indirect Symbolic Values
+---------------------------------------
+
+ * We mark objects as indirect symbolic if they are accessed using a value lookup using a symbolic index. This is used as a flag in order to implement symbolic value properties on option elements within a select element soundly. See issue #82, access pattern 3.
+

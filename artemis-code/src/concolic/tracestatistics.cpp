@@ -58,6 +58,7 @@ void TraceStatistics::processTrace(TraceNodePtr trace)
     mNumEndUnknown = 0;
 
     mNumUnexplored = 0;
+    mNumUnexploredSymbolicChild = 0;
     mNumUnexploredUnsat = 0;
     mNumUnexploredMissed = 0;
     mNumUnexploredUnsolvable = 0;
@@ -113,6 +114,14 @@ void TraceStatistics::visit(TraceSymbolicBranch *node)
         mNumSymBranchesFullyExploredSinceLastMarker++;
     }
 
+    if(isImmediatelyUnexplored(node->getFalseBranch())) {
+        mNumUnexploredSymbolicChild++;
+    }
+
+    if(isImmediatelyUnexplored(node->getTrueBranch())) {
+        mNumUnexploredSymbolicChild++;
+    }
+
     node->getFalseBranch()->accept(this);
     node->getTrueBranch()->accept(this);
 }
@@ -161,6 +170,30 @@ void TraceStatistics::visit(TraceMarker *node)
     mNumSymBranchesFullyExploredSinceLastMarker = 0;
 
     node->next->accept(this);
+}
+
+void TraceStatistics::visit(TraceConcreteSummarisation *node)
+{
+    QList<int> functions = node->numFunctions();
+    QList<int> branches = node->numBranches();
+
+    foreach(int fns, functions) {
+        mNumNodes += fns;
+        mNumFunctionCalls += fns;
+    }
+
+    foreach(int brs, branches) {
+        mNumNodes += brs;
+        mNumConcreteBranches += brs;
+    }
+
+    if(node->executions.length() > 1) {
+        mNumConcreteBranchesFullyExplored += node->executions.length() - 1;
+    }
+
+    foreach(TraceConcreteSummarisation::SingleExecution execution, node->executions) {
+        execution.second->accept(this);
+    }
 }
 
 void TraceStatistics::visit(TraceEndSuccess *node)

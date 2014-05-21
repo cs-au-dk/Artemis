@@ -134,7 +134,7 @@ WebKitExecutor::WebKitExecutor(QObject* parent,
 
 
     // Set up the trace builder and event detectors.
-    mTraceBuilder = new TraceBuilder(this);
+    mTraceBuilder = new TraceBuilder(this, true);
 
     // The branch detector.
     QSharedPointer<TraceBranchDetector> branchDetector(new TraceBranchDetector());

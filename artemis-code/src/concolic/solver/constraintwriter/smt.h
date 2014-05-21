@@ -24,6 +24,7 @@
 
 #include "JavaScriptCore/symbolic/expr.h"
 #include "JavaScriptCore/symbolic/expression/visitor.h"
+#include "runtime/input/forms/formfieldrestrictedvalues.h"
 
 #include "abstract.h"
 
@@ -72,7 +73,7 @@ public:
 
     SMTConstraintWriter();
 
-    bool write(PathConditionPtr pathCondition, std::string outputFile);
+    virtual bool write(PathConditionPtr pathCondition, FormRestrictions formRestrictions, std::string outputFile);
 
     std::string getErrorReason() {
         return mErrorReason;
@@ -143,7 +144,7 @@ protected:
     virtual void visit(Symbolic::ObjectBinaryOperation* obj, void* arg);
 
     // Output writing
-    virtual void preVisitPathConditionsHook();
+    virtual void preVisitPathConditionsHook(QSet<QString> varsUsed);
     virtual void postVisitPathConditionsHook();
 
     virtual std::string ifLabel();
@@ -179,7 +180,7 @@ protected:
     void recordAndEmitType(const std::string&, Symbolic::Type type);
     bool checkType(Symbolic::Type expected);
 
-    void coercetype(Symbolic::Type from, Symbolic::Type to, std::string expression);
+    virtual void coercetype(Symbolic::Type from, Symbolic::Type to, std::string expression);
 
     std::string emitAndReturnNewTemporary(Symbolic::Type type);
     void emitConst(const std::string& identifier, Symbolic::Type type);
@@ -201,6 +202,8 @@ protected:
     std::string mErrorReason;
 
     unsigned int mNextTemporarySequence;
+
+    FormRestrictions mFormRestrictions;
 };
 
 typedef QSharedPointer<SMTConstraintWriter> SMTConstraintWriterPtr;

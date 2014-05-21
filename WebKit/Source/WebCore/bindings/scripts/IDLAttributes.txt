@@ -117,3 +117,7 @@ Symbolic
 SymbolicString
 SymbolicBoolean
 SymbolicInteger
+SymbolicOptionsCollection
+SymbolicInputElement
+SymbolicSelectElement
+SymbolicOptionElement

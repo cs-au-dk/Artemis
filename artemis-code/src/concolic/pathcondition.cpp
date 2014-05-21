@@ -73,9 +73,7 @@ void PathCondition::visit(TraceSymbolicBranch* node)
 
 void PathCondition::visit(TraceUnexplored* node)
 {
-    // We should not reach an unexplored node!
-    qWarning("Warning: Unexplored node reached in traversal of execution trace");
-    exit(1);
+    // Ignore
 }
 
 void PathCondition::visit(TraceAnnotation* node)
@@ -83,15 +81,19 @@ void PathCondition::visit(TraceAnnotation* node)
     node->next->accept(this);
 }
 
+void PathCondition::visit(TraceConcreteSummarisation *node)
+{
+    // Ignore concrete summaries.
+    foreach(TraceConcreteSummarisation::SingleExecution execution, node->executions) {
+        execution.second->accept(this);
+    }
+}
+
 void PathCondition::visit(TraceConcreteBranch *node)
 {
     // Ignore the concrete branches
-
-    if (TraceVisitor::isImmediatelyUnexplored(node->getFalseBranch())) {
-        node->getTrueBranch()->accept(this);
-    } else {
-        node->getFalseBranch()->accept(this);
-    }
+    node->getTrueBranch()->accept(this);
+    node->getFalseBranch()->accept(this);
 }
 
 void PathCondition::visit(TraceEnd* node)

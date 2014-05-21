@@ -36,19 +36,20 @@ KaluzaSolver::KaluzaSolver(): Solver() {
 
 }
 
-SolutionPtr KaluzaSolver::solve(PathConditionPtr pc)
+SolutionPtr KaluzaSolver::solve(PathConditionPtr pc, FormRestrictions formRestrictions)
 {
+    qDebug() << "Warning: KaluzaSolver does not support implicit form restrictions.\n";
 
     // 1. translate pc to something solvable using the translator
 
     KaluzaConstraintWriterPtr constraintwriter = KaluzaConstraintWriterPtr(new KaluzaConstraintWriter());
 
-    if (!constraintwriter->write(pc, "/tmp/kaluza")) {
-        statistics()->accumulate("Concolic::Solver::ConstraintsNotWritten", 1);
+    if (!constraintwriter->write(pc, formRestrictions, "/tmp/kaluza")) {
+        Statistics::statistics()->accumulate("Concolic::Solver::ConstraintsNotWritten", 1);
         return SolutionPtr(new Solution(false, false));
     }
 
-    statistics()->accumulate("Concolic::Solver::ConstraintsWritten", 1);
+    Statistics::statistics()->accumulate("Concolic::Solver::ConstraintsWritten", 1);
 
     // 2. run the solver on the file
 
@@ -70,11 +71,11 @@ SolutionPtr KaluzaSolver::solve(PathConditionPtr pc)
     int result = std::system(solverpath.filePath("artemiskaluza.sh").toStdString().data());
 
     if (result != 0) {
-        statistics()->accumulate("Concolic::Solver::ConstraintsNotSolved", 1);
+        Statistics::statistics()->accumulate("Concolic::Solver::ConstraintsNotSolved", 1);
         return SolutionPtr(new Solution(false, false));
     }
 
-    statistics()->accumulate("Concolic::Solver::ConstraintsSolved", 1);
+    Statistics::statistics()->accumulate("Concolic::Solver::ConstraintsSolved", 1);
 
     // 3. interpret the result
 

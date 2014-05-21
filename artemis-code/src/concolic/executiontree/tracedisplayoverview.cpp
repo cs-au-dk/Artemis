@@ -22,17 +22,12 @@
 namespace artemis {
 
 TraceDisplayOverview::TraceDisplayOverview()
-    : TraceDisplayOverview(false, false)
+    : TraceDisplayOverview(false)
 {
 }
 
-TraceDisplayOverview::TraceDisplayOverview(bool simple)
-    : TraceDisplayOverview(simple, false)
-{
-}
-
-TraceDisplayOverview::TraceDisplayOverview(bool simple, bool linkToCoverage)
-    : TraceDisplay(simple, linkToCoverage)
+TraceDisplayOverview::TraceDisplayOverview(bool linkToCoverage)
+    : TraceDisplay(linkToCoverage)
 {
     // Override the styles for each node type to make them simpler.
 
@@ -50,7 +45,7 @@ TraceDisplayOverview::TraceDisplayOverview(bool simple, bool linkToCoverage)
     mStyleEndSucc = "[label = \"S\", fillcolor = green, style = filled, shape = circle]";
     mStyleEndFail = "[label = \"F\", fillcolor = red, style = filled, shape = circle]";
     mStyleEndUnk = "[label = \"E\", fillcolor = lightgray, style = filled, shape = circle]";
-    //mStyleAggregates not used
+    mStyleAggregates = "[label = \"\", shape = square, style = filled, fillcolor = black]";
 
 
     // Add a legend.
@@ -168,8 +163,6 @@ void TraceDisplayOverview::visit(TraceConcreteBranch *node)
 
 void TraceDisplayOverview::visit(TraceSymbolicBranch *node)
 {
-    flushAggregation(); // Not currently used in overview mode.
-
     QString name = QString("sym_%1").arg(mNodeCounter);
     mNodeCounter++;
 
@@ -210,8 +203,6 @@ void TraceDisplayOverview::visit(TraceSymbolicBranch *node)
 
 void TraceDisplayOverview::visit(TraceAlert *node)
 {
-    flushAggregation();
-
     QString name = QString("alt_%1").arg(mNodeCounter);
     mNodeCounter++;
 
@@ -228,8 +219,6 @@ void TraceDisplayOverview::visit(TraceAlert *node)
 void TraceDisplayOverview::visit(TraceDomModification *node)
 {
     if(node->words.size() > 0){
-        flushAggregation();
-
         QString name = QString("dom_%1").arg(mNodeCounter);
         mNodeCounter++;
 
@@ -246,8 +235,6 @@ void TraceDisplayOverview::visit(TraceDomModification *node)
 
 void TraceDisplayOverview::visit(TracePageLoad *node)
 {
-    flushAggregation();
-
     QString name = QString("load_%1").arg(mNodeCounter);
     mNodeCounter++;
 
@@ -263,14 +250,11 @@ void TraceDisplayOverview::visit(TracePageLoad *node)
 
 void TraceDisplayOverview::visit(TraceMarker *node)
 {
-    flushAggregation();
-
     QString name = QString("marker_%1").arg(mNodeCounter);
     mNodeCounter++;
 
     // Always show markers, but only show the index as the label.
-    QString nodeDecl = QString("%1 [label = \"%2\"]").arg(name).arg(node->index);
-    mHeaderMarkers.append(nodeDecl);
+    mHeaderMarkers.insert(node->index, name);
 
     addInEdge(name);
 
@@ -284,6 +268,30 @@ void TraceDisplayOverview::visit(TraceFunctionCall *node)
 {
     // Skip these nodes.
     node->next->accept(this);
+}
+
+
+void TraceDisplayOverview::visit(TraceConcreteSummarisation *node)
+{
+    // If there are multiple children then branch, but otherwise ignore.
+    if(node->executions.length() == 1) {
+        node->executions[0].second->accept(this);
+    } else if(node->executions.length() > 1) {
+
+        QString name = QString("aggr_%1").arg(mNodeCounter);
+        mNodeCounter++;
+
+        mHeaderAggregates.append(name);
+
+        addInEdge(name);
+
+        foreach(TraceConcreteSummarisation::SingleExecution execution, node->executions) {
+            mPreviousNode = name;
+            mEdgeExtras = "";
+
+            execution.second->accept(this);
+        }
+    }
 }
 
 

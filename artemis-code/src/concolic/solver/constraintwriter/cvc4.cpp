@@ -32,6 +32,8 @@
 
 #include "cvc4.h"
 
+#define ENABLE_COERCION_OPTIMIZATION
+
 namespace artemis
 {
 
@@ -40,19 +42,63 @@ std::string OBJECT_NOT_NULL = "true";
 
 CVC4ConstraintWriter::CVC4ConstraintWriter()
     : SMTConstraintWriter()
+    , mTypeAnalysis(new CVC4TypeAnalysis())
 {
 
 }
 
-void CVC4ConstraintWriter::preVisitPathConditionsHook()
+bool CVC4ConstraintWriter::write(PathConditionPtr pathCondition, FormRestrictions formRestrictions, std::string outputFile) {
+
+    for (uint i = 0; i < pathCondition->size(); i++) {
+        mTypeAnalysis->analyze(pathCondition->get(i).first);
+    }
+
+    bool result = SMTConstraintWriter::write(pathCondition, formRestrictions, outputFile);
+
+    mTypeAnalysis->reset();
+
+    return result;
+}
+
+void CVC4ConstraintWriter::preVisitPathConditionsHook(QSet<QString> varsUsed)
 {
     mOutput << "(set-logic UFSLIA)" << std::endl;
     mOutput << "(set-option :produce-models true)" << std::endl;
     mOutput << "(set-option :strings-exp true)" << std::endl;
-    mOutput << "(set-option :strings-fmf true)" << std::endl;
+    //mOutput << "(set-option :strings-fmf true)" << std::endl;
     //mOutput << "(set-option :fmf-bound-int true)" << std::endl;
     //mOutput << "(set-option :finite-model-find true)" << std::endl;
     mOutput << std::endl;
+
+    // Only write the form frestrictions which relate to variables which are actually used in the PC.
+    foreach(SelectRestriction sr, mFormRestrictions.first) {
+        // TODO: Hack to guess the variable names, as in helperSelectRestriction().
+        QString name = QString("SYM_IN_%1").arg(sr.variable);
+        QString idxname = QString("SYM_IN_INT_%1").arg(sr.variable);
+
+        if(varsUsed.contains(name) && varsUsed.contains(idxname)) {
+            helperSelectRestriction(sr, VALUE_INDEX);
+        } else if(varsUsed.contains(name)) {
+            helperSelectRestriction(sr, VALUE_ONLY);
+        } else if(varsUsed.contains(idxname)) {
+            helperSelectRestriction(sr, INDEX_ONLY);
+        }
+        // else this select is not mentioned in the PC, so ignore.
+    }
+
+    foreach(RadioRestriction rr, mFormRestrictions.second) {
+        QString name;
+        bool variableMatch = false;
+        foreach(QString var, rr.variables) {
+            // TODO: Hack to guess the variable name in the constraint, as in helperRadioRestriction().
+            name = QString("SYM_IN_BOOL_%1").arg(var);
+            variableMatch = variableMatch || varsUsed.contains(name);
+        }
+
+        if(variableMatch) {
+            helperRadioRestriction(rr);
+        }
+    }
 }
 
 void CVC4ConstraintWriter::postVisitPathConditionsHook()
@@ -60,28 +106,40 @@ void CVC4ConstraintWriter::postVisitPathConditionsHook()
     mOutput << "\n";
     mOutput << "(check-sat)\n";
     mOutput << "(get-model)\n";
+
+    if(!mSuccessfulCoercions.empty()) {
+        Statistics::statistics()->accumulate("Concolic::Solver::SuccessfulCoercionOptimisations", (int)mSuccessfulCoercions.size());
+    }
 }
 
 void CVC4ConstraintWriter::visit(Symbolic::SymbolicString* symbolicstring, void* args)
 {
-    // If we are coercing from an input (string) to an integer, then this is a special case.
-    // Instead of returning a symbolic string (which would raise an error) we just silently ignore the coercion and record
-    // the variable as an integer instead of a string.
+
+#ifdef ENABLE_COERCION_OPTIMIZATION
+    // If we are coercing from a string input to an integer downstream, it is safe to omit
+    // the downstream coercion and return an integer here.
     if (args != NULL) {
 
         CoercionPromise* promise = (CoercionPromise*)args;
 
-        if (promise->coerceTo == Symbolic::INT) {
+        if (promise->coerceTo == Symbolic::INT &&
+            mTypeAnalysis->hasUniqueConstraint(symbolicstring->getSource().getIdentifier(), CVC4TypeAnalysis::WEAK_INTEGER) &&
+            FormFieldRestrictedValues::safeForIntegerCoercion(mFormRestrictions, QString::fromStdString(symbolicstring->getSource().getIdentifier())) ) {
+
             promise->isCoerced = true;
 
             recordAndEmitType(symbolicstring->getSource(), Symbolic::INT);
             mExpressionBuffer = SMTConstraintWriter::encodeIdentifier(symbolicstring->getSource().getIdentifier());
             mExpressionType = Symbolic::INT;
 
-            return;
+            mSuccessfulCoercions.insert(symbolicstring->getSource().getIdentifier());
 
+            Statistics::statistics()->accumulate("Concolic::Solver::StringIntCoercionOptimization", 1);
+
+            return;
         }
     }
+#endif
 
     // Checks this symbolic value is of type STRING and raises an error otherwise.
     recordAndEmitType(symbolicstring->getSource(), Symbolic::STRING);
@@ -177,17 +235,20 @@ void CVC4ConstraintWriter::visit(Symbolic::StringRegexReplace* obj, void* args)
       * Support the negative case.
       */
 
+    // Examples of whitespace filters
+    // /^\s+|\s+$/g
+
     // special case input filtering (filters matching X and replacing with "")
     if (obj->getReplace()->compare("") == 0) {
 
         // In these "safe" replacements we send args through, allowing local coercion optimisations.
         obj->getSource()->accept(this, args);
 
-        // ignore the filter
+        // ignore the filter (no-op)
         mExpressionBuffer = mExpressionBuffer;
         mExpressionType = mExpressionType;
 
-        statistics()->accumulate("Concolic::Solver::RegexSuccessfullyTranslated", 1);
+        Statistics::statistics()->accumulate("Concolic::Solver::RegexSuccessfullyTranslated", 1);
 
         return;
     }
@@ -524,5 +585,149 @@ void CVC4ConstraintWriter::helperRegexMatchPositive(const std::string& regex, co
 
     mOutput << "(assert (str.in.re " << *outMatch << " " << cvc4regex << "))" << std::endl;
 }
+
+
+
+void CVC4ConstraintWriter::helperSelectRestriction(SelectRestriction constraint, SelectConstraintType type)
+{
+    // TODO: Hack to guess the variable name in the constraint.
+    QString name = QString("SYM_IN_%1").arg(constraint.variable);
+    QString idxname = QString("SYM_IN_INT_%1").arg(constraint.variable);
+
+    bool coerceToInt = false;
+    if(type == VALUE_ONLY || type == VALUE_INDEX) {
+#ifdef ENABLE_COERCION_OPTIMIZATION
+        if (mTypeAnalysis->hasUniqueConstraint(name.toStdString(), CVC4TypeAnalysis::WEAK_INTEGER) &&
+                FormFieldRestrictedValues::safeForIntegerCoercion(mFormRestrictions, name) ) {
+            recordAndEmitType(name.toStdString(), Symbolic::INT);
+            coerceToInt = true;
+        } else {
+            recordAndEmitType(name.toStdString(), Symbolic::STRING);
+        }
+#else
+        recordAndEmitType(name.toStdString(), Symbolic::STRING);
+#endif
+    }
+
+    if(type == INDEX_ONLY || type == VALUE_INDEX) {
+        recordAndEmitType(idxname.toStdString(), Symbolic::INT);
+    }
+
+    // If the select is empty, assert some default values.
+    if(constraint.values.isEmpty()) {
+        std::stringstream idxconstraint;
+        std::stringstream valueconstraint;
+
+        valueconstraint << "(assert (= " << SMTConstraintWriter::encodeIdentifier(name.toStdString()) << " \"\"))";
+        idxconstraint << "(assert (= " << SMTConstraintWriter::encodeIdentifier(idxname.toStdString()) << " -1))";
+
+        switch(type) {
+        case VALUE_ONLY:
+            mOutput << valueconstraint.str() << std::endl << std::endl;
+            break;
+        case INDEX_ONLY:
+            mOutput << idxconstraint.str() << std::endl << std::endl;
+            break;
+        default:
+            mOutput << idxconstraint.str()  << std::endl << valueconstraint.str() << std::endl << std::endl;
+            break;
+        }
+
+        return;
+    }
+
+    mOutput << "(assert\n  (or\n";
+
+    int idx = 0;
+    foreach(QString value, constraint.values) {
+        std::stringstream idxconstraint;
+        std::stringstream valueconstraint;
+
+        idxconstraint << "(= " << SMTConstraintWriter::encodeIdentifier(idxname.toStdString()) << " " << idx << ")";
+
+        if (coerceToInt) {
+            valueconstraint << "(= " << SMTConstraintWriter::encodeIdentifier(name.toStdString()) << " " << value.toStdString() << ")";
+        } else {
+            valueconstraint << "(= " << SMTConstraintWriter::encodeIdentifier(name.toStdString()) << " \"" << value.toStdString() << "\")";
+        }
+
+        switch(type) {
+        case VALUE_ONLY:
+            mOutput << "    " << valueconstraint.str() << std::endl;
+            break;
+        case INDEX_ONLY:
+            mOutput << "    " << idxconstraint.str() << std::endl;
+            break;
+        default:
+            mOutput << "    (and " << idxconstraint.str() << " " << valueconstraint.str() << ")" << std::endl;
+            break;
+        }
+
+        idx++;
+    }
+
+    mOutput << "  )\n)\n\n";
+}
+
+void CVC4ConstraintWriter::helperRadioRestriction(RadioRestriction constraint)
+{
+    QString name;
+    QList<QString> names;
+
+    foreach(QString var, constraint.variables) {
+        // TODO: Hack to guess the variable name in the constraint.
+        name = QString("SYM_IN_BOOL_%1").arg(var);
+        names.append(name);
+
+        recordAndEmitType(name.toStdString(), Symbolic::BOOL);
+    }
+
+    mOutput << "(assert\n  (or\n";
+
+    foreach(QString currentVar, names) {
+        mOutput << "    (and ";
+
+        foreach(QString var, names) {
+            if(var == currentVar) {
+                mOutput << SMTConstraintWriter::encodeIdentifier(var.toStdString()) << " ";
+            } else {
+                mOutput << "(not " << SMTConstraintWriter::encodeIdentifier(var.toStdString()) << ") ";
+            }
+        }
+
+        mOutput << ")\n";
+    }
+
+    // If the radio button group is not always set, then it is possible to submit with all values false.
+    if(!constraint.alwaysSet) {
+        mOutput << "    (and ";
+        foreach(QString var, names) {
+            mOutput << "(not " << SMTConstraintWriter::encodeIdentifier(var.toStdString()) << ") ";
+        }
+        mOutput << ")\n";
+    }
+
+    mOutput << "  )\n)\n\n";
+}
+
+void CVC4ConstraintWriter::coercetype(Symbolic::Type from, Symbolic::Type to, std::string expression)
+{
+    if (from == Symbolic::STRING && to == Symbolic::INT) {
+
+        mExpressionBuffer = "(str.to.int " + expression + ")";
+        mExpressionType = Symbolic::INT;
+        return;
+    }
+
+    if (from == Symbolic::INT && to == Symbolic::STRING) {
+
+        mExpressionBuffer = "(int.to.str " + expression + ")";
+        mExpressionType = Symbolic::STRING;
+        return;
+    }
+
+    SMTConstraintWriter::coercetype(from, to, expression);
+}
+
 
 }

@@ -391,6 +391,13 @@ namespace JSC {
 
     }
 
+#ifdef ARTEMIS
+    inline bool JSValue::isDeleted() const
+    {
+        return getInt64() == ValueDeleted;
+    }
+#endif
+
     inline bool JSValue::isUndefined() const
     {
         return asValue() == JSValue(JSUndefined);
@@ -545,8 +552,16 @@ namespace JSC {
 #endif // USE(JSVALUE64)
 
 #ifdef ARTEMIS
-    inline bool JSValue::isSymbolic() const {
+    inline bool JSValue::isExtended() const {
         return ((u.asInt64 & TagTypeSymbolic) == TagTypeSymbolic);
+    }
+
+    inline bool JSValue::isIndirectSymbolic() const {
+        return (isExtended() && getImmediate()->indirectSymbolic);
+    }
+
+    inline bool JSValue::isSymbolic() const {
+        return (isExtended() && getImmediate()->symbolic != NULL);
     }
 
     inline SymbolicImmediate* JSValue::getImmediate() const
@@ -556,7 +571,7 @@ namespace JSC {
 
     inline JSC::JSCell* JSValue::getPtr() const
     {
-        if (isSymbolic()) {
+        if (isExtended()) {
             SymbolicImmediate* immediate = getImmediate();
             return immediate->u.ptr;
         }

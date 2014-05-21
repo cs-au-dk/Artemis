@@ -40,7 +40,7 @@ void ArtemisWebPage::updateFormIdentifiers()
 
 void ArtemisWebPage::javaScriptAlert(QWebFrame* frame, const QString& msg)
 {
-    statistics()->accumulate("WebKit::alerts", 1);
+    Statistics::statistics()->accumulate("WebKit::alerts", 1);
     qDebug() << "JAVASCRIPT ALERT: " << msg;
     emit sigJavascriptAlert(frame, msg);
 }

@@ -23,6 +23,7 @@
 #include <QDir>
 #include <QString>
 #include <QDateTime>
+#include <QElapsedTimer>
 
 #include "statistics/statsstorage.h"
 
@@ -55,7 +56,7 @@ void CVC4Solver::emitConstraints(std::ofstream& constraintIndex, const QString& 
     QFile::copy("/tmp/cvc4input", QString::fromStdString("/tmp/constraints/") + identifier);
 }
 
-SolutionPtr CVC4Solver::solve(PathConditionPtr pc)
+SolutionPtr CVC4Solver::solve(PathConditionPtr pc, FormRestrictions formRestrictions)
 {
     // 0. Emit debug information
 
@@ -86,16 +87,17 @@ SolutionPtr CVC4Solver::solve(PathConditionPtr pc)
 
     CVC4ConstraintWriterPtr cw = CVC4ConstraintWriterPtr(new CVC4ConstraintWriter());
 
-    if (!cw->write(pc, "/tmp/cvc4input")) {
+    if (!cw->write(pc, formRestrictions, "/tmp/cvc4input")) {
 
-        statistics()->accumulate("Concolic::Solver::ConstraintsNotWritten", 1);
+        Statistics::statistics()->accumulate("Concolic::Solver::ConstraintsNotWritten", 1);
 
         std::stringstream reason;
         reason << "Could not translate the PC into solver input: " << cw->getErrorReason();
         return emitError(clog, reason.str());
+
     }
 
-    statistics()->accumulate("Concolic::Solver::ConstraintsWritten", 1);
+    Statistics::statistics()->accumulate("Concolic::Solver::ConstraintsWritten", 1);
 
     // 2. run the solver on the file
 
@@ -107,16 +109,31 @@ SolutionPtr CVC4Solver::solve(PathConditionPtr pc)
     }
 
     QDir solverpath = QDir(QString(artemisdir));
-    QString exec = "cvc4-2014-03-01-x86_64-linux-opt";
+    QString exec = "timed-cvc4.sh";
 
     if (!solverpath.cd("contrib") || !solverpath.cd("CVC4") || !solverpath.exists(exec)) {
         return emitError(clog, "Could not find CVC4 binary.");
     }
 
+    Log::info("Solving...");
+    QElapsedTimer timer;
+
     // --rewrite-divk enables div and mod by a constant factor
     std::string cmd = solverpath.filePath(exec).toStdString() + " --lang=smtlib2 /tmp/cvc4input --rewrite-divk > /tmp/cvc4result 2> /tmp/cvc4result";
-    std::system(cmd.data()); // result of command interpreted in step 3
-    // We do not check the return code as it will be an "error" in unsat cases. Error checking is done below.
+    timer.start();
+    int result = std::system(cmd.data()); // result of command interpreted in step 3
+    // We cannot use the return code for error checking as it will be an "error" in all unsat cases (because we try to get the model). Error checking is done below.
+    // However we can use it to check whether the timeout script had to kill CVC4 or not.
+
+    double time = (double)timer.elapsed()/1000;
+    Log::info(QString("  Took %1s").arg(time).toStdString());
+    Statistics::statistics()->accumulate("Concolic::Solver::TotalSolverTime", time);
+    clog << "Duration: " << time << "s" << std::endl;
+
+    if (WEXITSTATUS(result) == 124) {
+        Statistics::statistics()->accumulate("Concolic::Solver::SolverTimeouts", 1);
+        return emitError(clog, "CVC4 execution timed-out..");
+    }
 
     // 3. interpret the result
 
@@ -126,11 +143,11 @@ SolutionPtr CVC4Solver::solve(PathConditionPtr pc)
     std::ifstream fp("/tmp/cvc4result");
 
     if (!fp.is_open()) {
-        statistics()->accumulate("Concolic::Solver::ConstraintsNotSolved", 1);
+        Statistics::statistics()->accumulate("Concolic::Solver::ConstraintsNotSolved", 1);
         return emitError(clog, "Could not read result file.");
     }
 
-    statistics()->accumulate("Concolic::Solver::ConstraintsSolved", 1);
+    Statistics::statistics()->accumulate("Concolic::Solver::ConstraintsSolved", 1);
 
     std::getline(fp, line); // load sat line
 
@@ -139,7 +156,7 @@ SolutionPtr CVC4Solver::solve(PathConditionPtr pc)
         // UNSAT
         emitConstraints(constraintIndex, identifier, false);
 
-        statistics()->accumulate("Concolic::Solver::ConstraintsSolvedAsUNSAT", 1);
+        Statistics::statistics()->accumulate("Concolic::Solver::ConstraintsSolvedAsUNSAT", 1);
         clog << "Solved as UNSAT." << std::endl << std::endl;
         return SolutionPtr(new Solution(false, true));
 
@@ -147,7 +164,7 @@ SolutionPtr CVC4Solver::solve(PathConditionPtr pc)
 
         // ERROR, we can't use return types to detect errors, since an unsat result will result in an error code (because we try to access the model)
 
-        statistics()->accumulate("Concolic::Solver::ConstraintsNotSolved", 1);
+        Statistics::statistics()->accumulate("Concolic::Solver::ConstraintsNotSolved", 1);
 
         // Copy contents of constraint files for debugging
 
@@ -210,7 +227,36 @@ SolutionPtr CVC4Solver::solve(PathConditionPtr pc)
         Symbolvalue symbolvalue;
         symbolvalue.found = true;
 
+        // The variable names indicate the type of the variable when it was read from the DOM.
+        // SYM_IN_x => string, SYM_IN_INT_y => int, SYM_IN_BOOL_z => bool
+        // But we also have the type used by the solver for that variable. These should walways match up, except in
+        // the case where we perform a string->int optimisation and see a string named variable with int type in the
+        // solver. These variables should be converted back to strings.
+
+        // Variables not prefixed with SYM_IN are ignored
+
+        std::string identifier = SMTConstraintWriter::decodeIdentifier(symbol);
+
+        if (identifier.compare(0, 7, "SYM_IN_") != 0) {
+            continue;
+        }
+
+        Symbolic::Type symbol_name_type;
+        if (identifier.compare(0, 12, "SYM_IN_BOOL_") == 0) {
+            symbol_name_type = Symbolic::BOOL;
+        } else if (identifier.compare(0, 11, "SYM_IN_INT_") == 0) {
+            symbol_name_type = Symbolic::INT;
+        } else {
+            symbol_name_type = Symbolic::STRING;
+        }
+
         if (type.compare("String") == 0) {
+            // Double-check we have a string-typed variable name.
+            if (symbol_name_type != Symbolic::STRING){
+                Statistics::statistics()->accumulate("Concolic::Solver::ErrorsReadingSolution", 1);
+                return emitError(clog, "Variable name and type mismatch for String variable in solver's result.");
+            }
+
             symbolvalue.kind = Symbolic::STRING;
 
             // Strip quotes from strings
@@ -222,6 +268,12 @@ SolutionPtr CVC4Solver::solve(PathConditionPtr pc)
             symbolvalue.string = value;
 
         } else if (type.compare("Bool") == 0) {
+            // Double-check we have a bool-typed variable name.
+            if (symbol_name_type != Symbolic::BOOL){
+                Statistics::statistics()->accumulate("Concolic::Solver::ErrorsReadingSolution", 1);
+                return emitError(clog, "Variable name and type mismatch for Bool variable in solver's result.");
+            }
+
             symbolvalue.kind = Symbolic::BOOL;
 
             if (value.compare("false") == 0) {
@@ -229,31 +281,74 @@ SolutionPtr CVC4Solver::solve(PathConditionPtr pc)
             } else if (value.compare("true") == 0) {
                 symbolvalue.u.boolean = true;
             } else {
+                Statistics::statistics()->accumulate("Concolic::Solver::ErrorsReadingSolution", 1);
                 return emitError(clog, "Value of boolean returned is not true/false.");
             }
 
         } else if (type.compare("Int") == 0) {
-            // We only generate symbolic strings and bools in the PCs and pass those to this solver.
-            // The constraint writer can do some string -> int optimsations in certain situations to gelp CVC4.
-            // We want to undo those here so the results produced match up with the input given.
-            // Hence we leave integer results as strings in the result and do not translate them.
-            symbolvalue.kind = Symbolic::STRING;
+            // Check the type according to the variable name.
+            if (symbol_name_type == Symbolic::INT) {
+                // This really is an int-typed variable.
 
-            // Handle negative values.
-            if (value.find("(- ") == std::string::npos) {
-                symbolvalue.string = value;
+                symbolvalue.kind = Symbolic::INT;
+
+                // Handle negative values.
+                if (value.find("(- ") == std::string::npos) {
+                    std::stringstream(value) >> symbolvalue.u.integer;
+                } else {
+                    std::stringstream(value.substr(3, value.length() - 3)) >> symbolvalue.u.integer;
+                    symbolvalue.u.integer *= -1;
+                }
+
+            } else if (symbol_name_type == Symbolic::STRING) {
+                // This variable was optimised string->int by the constraint writer to help CVC4.
+                // We want to undo this here.
+
+                symbolvalue.kind = Symbolic::STRING;
+
+                // Handle negative values.
+                if (value.find("(- ") == std::string::npos) {
+                    symbolvalue.string = value;
+                } else {
+                    symbolvalue.string = "-" + value.substr(3, value.length() - 3);
+                }
+
+                // If the symbol references a select element, then we must ensure that
+                // the solved value matches a valid value for the select.
+                // This is not always the case if leading zeros exist in the select, since
+                // these are stripped out in our solution.
+
+                if (FormFieldRestrictedValues::symbolReferencesSelect(formRestrictions, QString::fromStdString(identifier))) {
+
+                    if (FormFieldRestrictedValues::isValidSelectValue(formRestrictions, QString::fromStdString(identifier), QString::fromStdString(symbolvalue.string)) ||
+                        FormFieldRestrictedValues::fuzzyMatchSelectValue(formRestrictions, QString::fromStdString(identifier), &symbolvalue.string)) {
+
+                        // either it was valid, or fuzzyMatch found a match and updated the value for us
+
+                    } else {
+                        Statistics::statistics()->accumulate("Concolic::Solver::InvalidSolution", 1);
+                        return emitError(clog, "Solver returned a solution which is invalid according to the form restrictions.");
+
+                    }
+
+                }
+
+
             } else {
-                symbolvalue.string = "-" + value.substr(3, value.length() - 3);
+                Statistics::statistics()->accumulate("Concolic::Solver::ErrorsReadingSolution", 1);
+                return emitError(clog, "Variable name and type mismatch for Int variable in solver's result.");
             }
 
+
         } else {
+            Statistics::statistics()->accumulate("Concolic::Solver::ErrorsReadingSolution", 1);
             std::ostringstream err;
             err << "Unknown type " << type << " encountered in result.";
             return emitError(clog, err.str());
         }
 
         // save result
-        solution->insertSymbol(SMTConstraintWriter::decodeIdentifier(symbol).c_str(), symbolvalue);
+        solution->insertSymbol(identifier.c_str(), symbolvalue);
 
         clog << symbol << " = " << symbolvalue.string << std::endl;
     }

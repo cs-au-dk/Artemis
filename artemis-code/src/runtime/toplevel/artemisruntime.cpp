@@ -100,6 +100,8 @@ void ArtemisRuntime::preConcreteExecution()
 
 void ArtemisRuntime::postConcreteExecution(ExecutableConfigurationConstPtr configuration, ExecutionResultPtr result)
 {
+    mLatestFormFields = result->getFormFields().toList();
+
     mWorklist->reprioritize(mAppmodel);
 
     if (!mOptions.disableStateCheck) {
@@ -125,8 +127,7 @@ void ArtemisRuntime::postConcreteExecution(ExecutableConfigurationConstPtr confi
         mWorklist->add(newConfiguration, mAppmodel);
     }
 
-    statistics()->accumulate("InputGenerator::added-configurations", newConfigurations.size());
-
+    Statistics::statistics()->accumulate("InputGenerator::added-configurations", newConfigurations.size());
     preConcreteExecution();
 }
 

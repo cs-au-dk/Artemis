@@ -37,6 +37,7 @@
 #include "runtime/browser/artemiswebview.h"
 #include "runtime/input/forms/injectionvalue.h"
 #include "runtime/input/forms/formfieldinjector.h"
+#include "runtime/input/forms/formfieldrestrictedvalues.h"
 
 #include "runtime/runtime.h"
 
@@ -129,6 +130,7 @@ protected:
     void reportStatistics();
 
     QList<FormFieldDescriptorConstPtr> mFormFields;
+    FormRestrictions mFormFieldRestrictions;
 
     // State
     int mNumIterations;

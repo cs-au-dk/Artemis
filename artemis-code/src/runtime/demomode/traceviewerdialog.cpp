@@ -154,6 +154,18 @@ void TraceViewerDialog::visit(TraceFunctionCall *node)
     node->next->accept(this);
 }
 
+void TraceViewerDialog::visit(TraceConcreteSummarisation *node)
+{
+    if(node->executions.length() == 1) {
+        mNodeList->addItem(QString("Concrete Execution: %1 branches, %2 function calls").arg(node->numBranches()[0])
+                       .arg(node->numFunctions()[0]));
+        node->executions[0].second->accept(this);
+    } else {
+        Log::fatal("Trace Viewer: reached an invalid summary node.");
+        exit(1);
+    }
+}
+
 void TraceViewerDialog::visit(TraceEndSuccess *node)
 {
     mNodeList->addItem("End (Success)");

@@ -104,6 +104,13 @@ void TraceClassifier::visit(TraceFunctionCall *node)
     node->next->accept(this);
 }
 
+void TraceClassifier::visit(TraceConcreteSummarisation *node)
+{
+    foreach(TraceConcreteSummarisation::SingleExecution execution, node->executions) {
+        execution.second->accept(this);
+    }
+}
+
 void TraceClassifier::visit(TraceNode *node)
 {
     Log::fatal("Trace Classifier: visited a node which was not handled correctly.");
@@ -112,27 +119,13 @@ void TraceClassifier::visit(TraceNode *node)
 
 void TraceClassifier::visit(TraceBranch *node)
 {
-    // We expect one branch to be "capped" by an immediate TraceUnexplored and the other to be the successor.
-    // Anything else is an error (should not be present in a single trace direct from the trace builder).
-
-    if(isImmediatelyUnexplored(node->getFalseBranch())){
-        // Took 'true' branch.
-        node->getTrueBranch()->accept(this);
-    } else if(isImmediatelyUnexplored(node->getTrueBranch())){
-        // Took 'false' branch.
-        node->getFalseBranch()->accept(this);
-    } else {
-        // Invalid branch node
-        Log::fatal("Trace Classifier: reached an invalid branch node.");
-        exit(1);
-    }
+    node->getTrueBranch()->accept(this);
+    node->getFalseBranch()->accept(this);
 }
 
 void TraceClassifier::visit(TraceUnexplored *node)
 {
-    // This should not actually be reached on any well-formed trace. The only unexplored nodes should be direct children of branches.
-    Log::fatal("Trace Classifier: reached an unexplored node, which should not be present in the trace.");
-    exit(1);
+    return;
 }
 
 void TraceClassifier::visit(TraceEndUnknown *node)

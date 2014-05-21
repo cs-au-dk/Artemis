@@ -24,7 +24,7 @@ module html {
         JSGenerateToNativeObject,
         CustomIndexedSetter
     ] HTMLOptionsCollection : HTMLCollection {
-                 attribute long selectedIndex;
+                 attribute [Symbolic, SymbolicInteger, SymbolicOptionsCollection] long selectedIndex;
                  attribute [Custom] unsigned long length
                         setter raises (DOMException);
 

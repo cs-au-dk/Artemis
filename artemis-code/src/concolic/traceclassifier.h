@@ -48,6 +48,7 @@ public:
     virtual void visit(TracePageLoad* node);
     virtual void visit(TraceMarker* node);
     virtual void visit(TraceFunctionCall* node);
+    virtual void visit(TraceConcreteSummarisation* node);
 
     // Catch-all. Should not be called.
     virtual void visit(TraceNode* node);

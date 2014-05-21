@@ -1,0 +1,4 @@
+TEST PC: ((SymbolicInteger == ConstantInteger) == ConstantBoolean)
+if (select.selectedIndex == 0) {
+    alert(x);
+}

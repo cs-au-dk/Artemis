@@ -28,6 +28,8 @@
 
 #include "smt.h"
 #include "abstract.h"
+#include "cvc4typeanalysis.h"
+#include "statistics/statsstorage.h"
 
 namespace artemis
 {
@@ -37,6 +39,8 @@ class CVC4ConstraintWriter : public SMTConstraintWriter
 public:
 
     CVC4ConstraintWriter();
+
+    bool write(PathConditionPtr pathCondition, FormRestrictions formRestrictions, std::string outputFile);
 
 protected:
     virtual void visit(Symbolic::SymbolicString* symbolicstring, void* args);
@@ -57,15 +61,24 @@ protected:
     virtual void visit(Symbolic::ConstantObject* obj, void* arg);
     virtual void visit(Symbolic::ObjectBinaryOperation* obj, void* arg);
 
-    virtual void preVisitPathConditionsHook();
+    virtual void preVisitPathConditionsHook(QSet<QString> varsUsed);
     virtual void postVisitPathConditionsHook();
+
+    virtual void coercetype(Symbolic::Type from, Symbolic::Type to, std::string expression);
 
     void helperRegexTest(const std::string& regex, const std::string& expression,
                                                std::string* outMatch);
     void helperRegexMatchPositive(const std::string& regex, const std::string& expression,
                                   std::string* outPre, std::string* outMatch, std::string* outPost);
 
+    enum SelectConstraintType { VALUE_ONLY, INDEX_ONLY, VALUE_INDEX };
+    void helperSelectRestriction(SelectRestriction constraint, SelectConstraintType type);
+    void helperRadioRestriction(RadioRestriction constraint);
+
     std::set<unsigned int> m_singletonCompilations;
+
+    CVC4TypeAnalysisPtr mTypeAnalysis;
+    std::set<std::string> mSuccessfulCoercions;
 };
 
 typedef QSharedPointer<CVC4ConstraintWriter> CVC4ConstraintWriterPtr;

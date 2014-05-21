@@ -20,6 +20,7 @@
 #include <QSharedPointer>
 
 #include "concolic/pathcondition.h"
+#include "runtime/input/forms/formfieldrestrictedvalues.h"
 
 #include "solution.h"
 
@@ -37,7 +38,7 @@ public:
     Solver();
     virtual ~Solver() {}
 
-    virtual SolutionPtr solve(PathConditionPtr pc) = 0;
+    virtual SolutionPtr solve(PathConditionPtr pc, FormRestrictions formRestrictions) = 0;
 
 };
 

@@ -32,8 +32,7 @@ class TraceDisplayOverview : public TraceDisplay
 {
 public:
     TraceDisplayOverview();
-    TraceDisplayOverview(bool simple);
-    TraceDisplayOverview(bool simple, bool linkToCoverage);
+    TraceDisplayOverview(bool linkToCoverage);
 
     // The trace visitors
     //void visit(TraceNode* node);                  // Handled by TraceDisplay
@@ -48,6 +47,7 @@ public:
     void visit(TracePageLoad* node);
     void visit(TraceMarker* node);
     void visit(TraceFunctionCall* node);
+    void visit(TraceConcreteSummarisation* node);
     //void visit(TraceEndSuccess* node);            // Handled by TraceDisplay
     //void visit(TraceEndFailure* node);            // Handled by TraceDisplay
     //void visit(TraceEndUnknown* node);            // Handled by TraceDisplay

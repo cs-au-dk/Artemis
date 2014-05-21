@@ -119,7 +119,7 @@ void CoverageListener::slJavascriptScriptParsed(QString sourceCode, QSource* sou
 void CoverageListener::slJavascriptStatementExecuted(uint linenumber, QSource* source)
 {
 
-    statistics()->accumulate("WebKit::coverage::covered", 1);
+    Statistics::statistics()->accumulate("WebKit::coverage::covered", 1);
 
     sourceid_t sourceID = SourceInfo::getId(source->getUrl(), source->getStartLine());
     SourceInfoPtr sourceInfo = mSources.value(sourceID, SourceInfoPtr(NULL));

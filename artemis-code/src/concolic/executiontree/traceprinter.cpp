@@ -136,6 +136,18 @@ void TerminalTracePrinter::visit(TraceFunctionCall* node)
     addSingleValue(lines);
 }
 
+void TerminalTracePrinter::visit(TraceConcreteSummarisation *node)
+{
+    if(node->executions.length() > 0) {
+        node->executions[0].second->accept(this);
+        addSingleValue("Concrete Execution");
+
+        if(node->executions.length() > 1) {
+            addSingleValue("!!! Note: missing concrete executions here. !!!");
+        }
+    }
+}
+
 void TerminalTracePrinter::visit(TraceEndSuccess* node)
 {
     // Nowhere to go from here.
