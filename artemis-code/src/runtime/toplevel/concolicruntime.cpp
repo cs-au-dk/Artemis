@@ -555,6 +555,11 @@ QSharedPointer<const FormFieldDescriptor> ConcolicRuntime::findFormFieldForVaria
 void ConcolicRuntime::exploreNextTarget()
 {
     PathConditionPtr target = mSearchStrategy->getTargetPC();
+    QSet<SelectRestriction> dynamicSelectConstraints = mSearchStrategy->getTargetDomConstraints();
+
+    // TODO: Currently only select constraints are handled dynamically, so we need to merge them with the static radio button constraints.
+    FormRestrictions dynamicRestrictions = mFormFieldRestrictions;
+    dynamicRestrictions.first = dynamicSelectConstraints;
 
     Log::info("  Next target:");
     QString targetString = QString("    ") + QString::fromStdString(target->toStatisticsValuesString(true)).trimmed();
@@ -570,8 +575,7 @@ void ConcolicRuntime::exploreNextTarget()
 
     // Try to solve this PC to get some concrete input.
     SolverPtr solver = getSolver(mOptions);
-    SolutionPtr solution = solver->solve(target, mFormFieldRestrictions);
-    // TODO: Add select and radio restrictions to this call.
+    SolutionPtr solution = solver->solve(target, dynamicRestrictions);
 
     if(solution->isSolved()) {
         Log::debug("Solved the target PC:");
