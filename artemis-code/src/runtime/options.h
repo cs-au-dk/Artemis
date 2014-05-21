@@ -121,6 +121,7 @@ typedef struct OptionsType {
 
     int heapReportFactor;
 
+    QString customUserAgent;
 
 } Options;
 

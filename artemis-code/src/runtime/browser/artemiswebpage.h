@@ -53,10 +53,14 @@ public:
     void javaScriptConsoleMessage(const QString& message, int lineNumber, const QString& sourceID);
     bool javaScriptPrompt(QWebFrame* frame, const QString& msg, const QString& defaultValue, QString* result);
 
+    void setCustomUserAgent(QString ua);
+    QString userAgentForUrl ( const QUrl & url ) const;
+
     bool mAcceptNavigation; // Used when in manual mode; see acceptNavigationRequest.
 
 protected:
     virtual bool acceptNavigationRequest(QWebFrame *frame, const QNetworkRequest &request, NavigationType type);
+    QString mCustomUserAgent;
 
 signals:
     void sigJavascriptAlert(QWebFrame* frame, QString msg);

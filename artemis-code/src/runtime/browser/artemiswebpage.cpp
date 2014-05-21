@@ -63,6 +63,21 @@ bool ArtemisWebPage::javaScriptPrompt(QWebFrame* frame, const QString& msg, cons
     return true;
 }
 
+void ArtemisWebPage::setCustomUserAgent(QString ua)
+{
+    mCustomUserAgent = ua;
+}
+
+
+QString ArtemisWebPage::userAgentForUrl(const QUrl &url) const
+{
+    if(mCustomUserAgent.isEmpty()) {
+        return QWebPage::userAgentForUrl(url);
+    } else {
+        return mCustomUserAgent;
+    }
+}
+
 
 // This function is called whenever WebKit requests to navigate frame to the resource specified by request by means of the specified navigation type type.
 bool ArtemisWebPage::acceptNavigationRequest(QWebFrame *frame, const QNetworkRequest &request, QWebPage::NavigationType type)

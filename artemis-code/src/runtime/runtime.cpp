@@ -103,6 +103,10 @@ Runtime::Runtime(QObject* parent, const Options& options, const QUrl& url) : QOb
                                          enableConstantStringInstrumentation,
                                          enablePropertyAccessInstrumentation);
 
+    if(!options.customUserAgent.isEmpty()) {
+        mWebkitExecutor->getPage()->setCustomUserAgent(options.customUserAgent);
+    }
+
     if(options.reportHeap != NO_CALLS){
         mWebkitExecutor->mWebkitListener->enableHeapReport(options.reportHeap == NAMED_CALLS, 0, options.heapReportFactor);
     }

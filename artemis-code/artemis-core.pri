@@ -126,7 +126,8 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/runtime/input/forms/formfieldinjector.h \
     src/runtime/input/forms/injectionvalue.h \
     src/runtime/input/forms/formfieldrestrictedvalues.h \
-    src/concolic/solver/constraintwriter/cvc4typeanalysis.h
+    src/concolic/solver/constraintwriter/cvc4typeanalysis.h \
+    src/util/useragents.h
 
 SOURCES += src/runtime/input/ajaxinput.cpp \
     src/strategies/prioritizer/constantprioritizer.cpp \

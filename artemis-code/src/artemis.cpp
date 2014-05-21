@@ -28,6 +28,7 @@
 #include "util/loggingutil.h"
 #include "artemisglobals.h"
 #include "runtime/input/forms/injectionvalue.h"
+#include "util/useragents.h"
 
 using namespace std;
 
@@ -137,6 +138,11 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             "\n"
             "--function-call-heap-report-random-factor <int>\n"
             "           When faced with many function calls, this parameter saves data with a factor <int>^-1\n"
+            "\n"
+            "--user-agent <custom-ua>\n"
+            "           Change the user-agent reported by Artemis to <custom-ua>.\n"
+            "           The following built-in user agents can also be specified (case sensitive):\n"
+            "           default, iphone4, ipad4, nexus5, chrome35\n"
             "\n";
 
     struct option long_options[] = {
@@ -157,6 +163,7 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
     {"export-event-sequence", required_argument, NULL, 'o'},
     {"help", no_argument, NULL, 'h'},
     {"option-values", optional_argument, NULL, 'q'},
+    {"user-agent", required_argument, NULL, 'U'},
     {0, 0, 0, 0}
     };
 
@@ -443,6 +450,16 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
 
         case 'u': {
             options.concolicUnlimitedDepth = true;
+            break;
+        }
+
+        case 'U': {
+            if(artemis::UserAgents::userAgents().contains(QString(optarg))) {
+                options.customUserAgent = artemis::UserAgents::userAgents().value(QString(optarg));
+            } else {
+                options.customUserAgent = QString(optarg);
+            }
+
             break;
         }
 
