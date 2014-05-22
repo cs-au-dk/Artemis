@@ -59,8 +59,8 @@ ConcolicRuntime::ConcolicRuntime(QObject* parent, const Options& options, const 
 
     // The event detector for 'marker' events in the traces is created and connected here, as WebKitExecutor (where the rest are handled) does not know when these events happen.
     QSharedPointer<TraceMarkerDetector> markerDetector(new TraceMarkerDetector());
-    QObject::connect(this, SIGNAL(sigNewTraceMarker(QString, QString)),
-                     markerDetector.data(), SLOT(slNewMarker(QString, QString)));
+    QObject::connect(this, SIGNAL(sigNewTraceMarker(QString, QString, bool, SelectRestriction)),
+                     markerDetector.data(), SLOT(slNewMarker(QString, QString, bool, SelectRestriction)));
     mWebkitExecutor->getTraceBuilder()->addDetector(markerDetector);
 }
 
@@ -119,36 +119,49 @@ void ConcolicRuntime::preConcreteExecution()
     Log::debug("--------------- COVERAGE ----------------\n");
     Log::debug(mAppmodel->getCoverageListener()->toString().toStdString());
 
-    mWebkitExecutor->executeSequence(mNextConfiguration); // calls the postValueInjection (via FormInputCollection) and postConcreteExecution methods as callback
+    mMarkerIndex = 1;
+    mWebkitExecutor->executeSequence(mNextConfiguration); // calls the postSingleInjection, postAllinjection (via FormInputCollection) and postConcreteExecution methods as callback
 }
 
-void ConcolicRuntime::postValueInjection()
+void ConcolicRuntime::postAllInjection()
 {
-    QWebElement element;
-    int markerIdx = 1;
-    // If necessary, trigger the form inputs' handlers.
+    // Update the form restrictions for the current DOM.
+    mFormFieldRestrictions = FormFieldRestrictedValues::getRestrictions(mFormFields, mWebkitExecutor->getPage());
+
     if(mOptions.concolicTriggerEventHandlers) {
-        foreach(FormFieldDescriptorConstPtr field, mFormFields) {
-            // Add a marker to the trace
-            QString label;
-            if(field->getDomElement()->getId() != "") {
-                label = QString("Trigger onchange for '%1'").arg(field->getDomElement()->getId());
-            } else if(field->getDomElement()->getName() != "") {
-                label = QString("Trigger onchange for '%1'").arg(field->getDomElement()->getName());
-            }else {
-                label = "Trigger onchange";
-            }
-            emit sigNewTraceMarker(label, QString::number(markerIdx));
-
-            // Trigger the handler
-            element = field->getDomElement()->getElement(mWebkitExecutor->getPage());
-            FormFieldInjector::triggerChangeHandler(element);
-
-            markerIdx++;
-        }
-
         // From here on, we will be triggering the button only.
-        emit sigNewTraceMarker("Clicking submit button", "B");
+        emit sigNewTraceMarker("Clicking submit button", "B", false, SelectRestriction());
+    }
+}
+
+void ConcolicRuntime::postSingleInjection(FormFieldDescriptorConstPtr field)
+{
+    // Update the form restrictions for the current DOM.
+    mFormFieldRestrictions = FormFieldRestrictedValues::getRestrictions(mFormFields, mWebkitExecutor->getPage());
+
+    if(mOptions.concolicTriggerEventHandlers) {
+        // Find the identifier for this field
+        QString identifier;
+        if(field->getDomElement()->getId() != "") {
+            identifier = field->getDomElement()->getId();
+        } else {
+            identifier = field->getDomElement()->getName();
+        }
+        QString label = QString("Trigger onchange for '%1'").arg(identifier);
+
+        // Check if there is any form restriction relevant to this event (and should be added to the marker).
+        // For now we only handle select restrictions.
+        QPair<bool, SelectRestriction> restriction(false, SelectRestriction());
+        restriction = FormFieldRestrictedValues::getRelevantSelectRestriction(mFormFieldRestrictions, identifier);
+
+        // Add a marker to the trace
+        emit sigNewTraceMarker(label, QString::number(mMarkerIndex), restriction.first, restriction.second);
+
+        // Trigger the handler
+        QWebElement element = field->getDomElement()->getElement(mWebkitExecutor->getPage());
+        FormFieldInjector::triggerChangeHandler(element);
+
+        mMarkerIndex++;
     }
 }
 
@@ -304,10 +317,12 @@ void ConcolicRuntime::postInitialConcreteExecution(QSharedPointer<ExecutionResul
 
     // Create an "empty" form input which will inject nothing into the page.
     QList<FormInputPair > inputs;
-    FormInputCollectionPtr formInput = FormInputCollectionPtr(new FormInputCollection(inputs));
-    // Connect it to postValueInjection so we will know when the injection is performed.
+    FormInputCollectionPtr formInput = FormInputCollectionPtr(new FormInputCollection(inputs, true, mFormFields));
+    // Connect it to our slots so we will know when the injection is performed.
     QObject::connect(formInput.data(), SIGNAL(sigFinishedWriteToPage()),
-                     this, SLOT(postValueInjection()));
+                     this, SLOT(postAllInjection()));
+    QObject::connect(formInput.data(), SIGNAL(sigInjectedToField(FormFieldDescriptorConstPtr)),
+                     this, SLOT(postSingleInjection(FormFieldDescriptorConstPtr)));
 
     // On the next iteration, we will be running with initial values.
     mRunningFirstLoad = false;
@@ -476,10 +491,12 @@ QSharedPointer<FormInputCollection> ConcolicRuntime::createFormInput(QMap<QStrin
     }
 
     // Set up a new configuration which tests this input.
-    QSharedPointer<FormInputCollection> formInput = QSharedPointer<FormInputCollection>(new FormInputCollection(inputs));
-    // Connect it to postValueInjection so we will know when the injection is performed.
+    QSharedPointer<FormInputCollection> formInput = QSharedPointer<FormInputCollection>(new FormInputCollection(inputs, true, mFormFields));
+    // Connect it to our slots so we will know when the injection is performed.
     QObject::connect(formInput.data(), SIGNAL(sigFinishedWriteToPage()),
-                     this, SLOT(postValueInjection()));
+                     this, SLOT(postAllInjection()));
+    QObject::connect(formInput.data(), SIGNAL(sigInjectedToField(FormFieldDescriptorConstPtr)),
+                     this, SLOT(postSingleInjection(FormFieldDescriptorConstPtr)));
 
     return formInput;
 }
@@ -538,6 +555,11 @@ QSharedPointer<const FormFieldDescriptor> ConcolicRuntime::findFormFieldForVaria
 void ConcolicRuntime::exploreNextTarget()
 {
     PathConditionPtr target = mSearchStrategy->getTargetPC();
+    QSet<SelectRestriction> dynamicSelectConstraints = mSearchStrategy->getTargetDomConstraints();
+
+    // TODO: Currently only select constraints are handled dynamically, so we need to merge them with the static radio button constraints.
+    FormRestrictions dynamicRestrictions = mFormFieldRestrictions;
+    dynamicRestrictions.first = dynamicSelectConstraints;
 
     Log::info("  Next target:");
     QString targetString = QString("    ") + QString::fromStdString(target->toStatisticsValuesString(true)).trimmed();
@@ -553,8 +575,7 @@ void ConcolicRuntime::exploreNextTarget()
 
     // Try to solve this PC to get some concrete input.
     SolverPtr solver = getSolver(mOptions);
-    SolutionPtr solution = solver->solve(target, mFormFieldRestrictions);
-    // TODO: Add select and radio restrictions to this call.
+    SolutionPtr solution = solver->solve(target, dynamicRestrictions);
 
     if(solution->isSolved()) {
         Log::debug("Solved the target PC:");

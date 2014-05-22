@@ -22,6 +22,7 @@
 #include <QPair>
 
 #include "concolic/executiontree/tracenodes.h"
+#include "runtime/input/forms/formfieldrestrictedvalues.h"
 
 #ifndef TRACEEVENTDETECTORS_H
 #define TRACEEVENTDETECTORS_H
@@ -152,7 +153,7 @@ class TraceMarkerDetector : public TraceEventDetector
     Q_OBJECT
 
 public slots:
-    void slNewMarker(QString label, QString index);
+    void slNewMarker(QString label, QString index, bool isSelectRestriction, SelectRestriction selectRestriction);
 };
 
 

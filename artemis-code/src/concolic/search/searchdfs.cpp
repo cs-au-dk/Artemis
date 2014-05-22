@@ -30,6 +30,7 @@ DepthFirstSearch::DepthFirstSearch(TraceNodePtr tree, unsigned int depthLimit) :
     mIsPreviousRun(false)
 {
     mCurrentPC = PathConditionPtr(new PathCondition());
+    mCurrentDomConstraints = QSet<SelectRestriction>();
 }
 
 
@@ -107,6 +108,11 @@ PathConditionPtr DepthFirstSearch::getTargetPC()
     return mCurrentPC;
 }
 
+QSet<SelectRestriction> DepthFirstSearch::getTargetDomConstraints()
+{
+    return mCurrentDomConstraints;
+}
+
 void DepthFirstSearch::setDepthLimit(unsigned int depth)
 {
     mDepthLimit = depth;
@@ -124,6 +130,7 @@ void DepthFirstSearch::restartSearch()
     mParentStack.clear();
     mCurrentDepth = 0;
     mCurrentPC = PathConditionPtr(new PathCondition());
+    mCurrentDomConstraints = QSet<SelectRestriction>();
 }
 
 
@@ -159,7 +166,7 @@ void DepthFirstSearch::visit(TraceConcreteBranch *node)
 
     }else{
         // Both branches are explored, so we must search each in turn.
-        mParentStack.push(SavedPosition(node, mCurrentDepth, *mCurrentPC));
+        mParentStack.push(SavedPosition(node, mCurrentDepth, *mCurrentPC, mCurrentDomConstraints));
         //mCurrentDepth++; // Do not increase depth for concrete branches.
         mPreviousParent = node;
         mPreviousDirection = false; // We are always taking the false branch to begin with.
@@ -174,7 +181,7 @@ void DepthFirstSearch::visit(TraceSymbolicBranch *node)
     // This allows us to stop the search once we find a node we would like to explore.
     // The depth limit is also enforced here.
     if(mCurrentDepth < mDepthLimit){
-        mParentStack.push(SavedPosition(node, mCurrentDepth, *mCurrentPC));
+        mParentStack.push(SavedPosition(node, mCurrentDepth, *mCurrentPC, mCurrentDomConstraints));
         mCurrentDepth++;
         mPreviousParent = node;
         mPreviousDirection = false;
@@ -196,7 +203,7 @@ void DepthFirstSearch::visit(TraceConcreteSummarisation *node)
     // If there are multiple children, we must add this node to the parent stack so we can explore the rest.
     // The depth limit is ignored for concrete branches.
     if(node->executions.length() > 1) {
-        mParentStack.push(SavedPosition(node, mCurrentDepth, *mCurrentPC, 1));
+        mParentStack.push(SavedPosition(node, mCurrentDepth, *mCurrentPC, mCurrentDomConstraints, 1));
         node->executions[0].second->accept(this);
         // N.B. we do not update mPreviousParent or mPreviousDirection as these should not be used to refer to a
         // concrete summarisation. They are used when we find an unexplored node and attempt to explore it and then
@@ -204,6 +211,15 @@ void DepthFirstSearch::visit(TraceConcreteSummarisation *node)
         // true branch node after a concrete summary before we can see an unexplored node these are not necessary here.
 
     }
+}
+
+void DepthFirstSearch::visit(TraceMarker *node)
+{
+    // Markers may optionally contain some DOM constraints which need to be recorded.
+    if(node->isSelectRestriction) {
+        mCurrentDomConstraints.insert(node->selectRestriction);
+    }
+    node->next->accept(this);
 }
 
 void DepthFirstSearch::visit(TraceUnexplored *node)
@@ -267,6 +283,7 @@ TraceNodePtr DepthFirstSearch::nextAfterLeaf()
 
     mCurrentDepth = parent.depth;
     *mCurrentPC = parent.condition;
+    mCurrentDomConstraints = parent.domConstraints;
 
     // The saved position can either be a branch node or a summary node (with multiple children).
     if(parent.node != NULL) {

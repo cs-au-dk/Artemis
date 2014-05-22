@@ -132,15 +132,18 @@ protected:
     QList<FormFieldDescriptorConstPtr> mFormFields;
     FormRestrictions mFormFieldRestrictions;
 
+    int mMarkerIndex;
+
     // State
     int mNumIterations;
 
 private slots:
     void postConcreteExecution(ExecutableConfigurationConstPtr configuration, QSharedPointer<ExecutionResult> result);
-    void postValueInjection();
+    void postAllInjection();
+    void postSingleInjection(FormFieldDescriptorConstPtr field);
 
 signals:
-    void sigNewTraceMarker(QString label, QString index);
+    void sigNewTraceMarker(QString label, QString index, bool isSelectRestriction, SelectRestriction selectRestriction);
 
 };
 

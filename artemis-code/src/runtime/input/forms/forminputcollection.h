@@ -39,6 +39,7 @@ class FormInputCollection : public QObject
 
 public:
     FormInputCollection(const QList<FormInputPair>& inputs);
+    FormInputCollection(const QList<FormInputPair> &inputs, bool triggerOnAllFields, QList<FormFieldDescriptorConstPtr> allFields);
 
     QSet<FormFieldDescriptorConstPtr> getFields() const;
 
@@ -53,8 +54,12 @@ public:
 private:
     QList<FormInputPair> mInputs;
 
+    bool mTriggerOnAllFields;
+    QList<FormFieldDescriptorConstPtr> mAllFields;
+
 signals:
-    void sigFinishedWriteToPage() const; // used to notify the concolic mode when the values have been injected.
+    void sigFinishedWriteToPage() const; // Used to notify the concolic mode when the values have been injected.
+    void sigInjectedToField(FormFieldDescriptorConstPtr field) const; // Used to notify the concolic mode as each field is injected.
 
 };
 

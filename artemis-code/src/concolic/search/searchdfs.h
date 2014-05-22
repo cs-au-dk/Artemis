@@ -53,6 +53,9 @@ public:
     // Retrieves the PC of any target node which was selected.
     PathConditionPtr getTargetPC();
 
+    // Retrieves the DOM constraints of any target node which was selected.
+    QSet<SelectRestriction> getTargetDomConstraints();
+
     // The depth limit for our DFS.
     void setDepthLimit(unsigned int depth);
     unsigned int getDepthLimit();
@@ -72,11 +75,12 @@ public:
     void visit(TraceConcreteBranch* node);
     void visit(TraceSymbolicBranch* node);
     void visit(TraceConcreteSummarisation *node);
+    void visit(TraceMarker* node);
     void visit(TraceUnexplored* node);
     void visit(TraceUnexploredMissed* node);
     void visit(TraceUnexploredUnsat* node);
     void visit(TraceUnexploredUnsolvable* node);
-    void visit(TraceAnnotation* node);      // Ignore all annotations.
+    void visit(TraceAnnotation* node);      // Ignore all other annotations.
     void visit(TraceEnd* node);             // Stop searching at *any* end node.
 
 private:
@@ -89,6 +93,9 @@ private:
 
     // The PC which is accumulated as we move down the tree.
     PathConditionPtr mCurrentPC;
+
+    // The dynamic DOM constraints which are accumulated as we move down the tree.
+    QSet<SelectRestriction> mCurrentDomConstraints;
 
     // Stores whether or not the iteration is finished.
     bool mFoundTarget;
@@ -109,12 +116,14 @@ private:
     // Exactly one of node and summaryNode should be non-null. childrenVisited is only valid for summaryNode.
     struct SavedPosition {
         SavedPosition(){}
-        SavedPosition(TraceBranch* node, unsigned int depth, PathCondition condition) : node(node), depth(depth), condition(condition), summaryNode(NULL), childrenVisited(1) {}
-        SavedPosition(TraceConcreteSummarisation* summaryNode, unsigned int depth, PathCondition condition, int childrenVisited) : node(NULL), depth(depth), condition(condition), summaryNode(summaryNode), childrenVisited(childrenVisited) {}
+        SavedPosition(TraceBranch* node, unsigned int depth, PathCondition condition, QSet<SelectRestriction> domConstraints) : node(node), depth(depth), condition(condition), domConstraints(domConstraints), summaryNode(NULL), childrenVisited(1) {}
+        SavedPosition(TraceConcreteSummarisation* summaryNode, unsigned int depth, PathCondition condition, QSet<SelectRestriction> domConstraints, int childrenVisited) : node(NULL), depth(depth), condition(condition), domConstraints(domConstraints), summaryNode(summaryNode), childrenVisited(childrenVisited) {}
 
         TraceBranch* node;
+
         unsigned int depth;
         PathCondition condition; // Condition to reach this node, not including the symbolic condition of this particular node if it is symbolic.
+        QSet<SelectRestriction> domConstraints;
 
         TraceConcreteSummarisation* summaryNode;
         int childrenVisited;
