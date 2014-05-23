@@ -106,3 +106,61 @@ Special Casing Indirect Symbolic Values
 
  * We mark objects as indirect symbolic if they are accessed using a value lookup using a symbolic index. This is used as a flag in order to implement symbolic value properties on option elements within a select element soundly. See issue #82, access pattern 3.
 
+Symbolic Handling of Native JavaScript Functions and DOM
+--------------------------------------------------------
+
+As an easy reference, we use http://www.w3schools.com/jsref/ as an easy-to-read reference of the API of native JavaScript-, browser-, and DOM objects. We want to support all parts of the API which cah read, modify, or create symbolic values - either by emitting constraints or emitting a warning indicating incomplete symbolic handling.
+
+Symbolic Support
+^^^^^^^^^^^^^^^^
+
+``String.{charAt, concat, match, replace, search, toString, valueOf, length}``,
+
+.. note::
+
+   ``String.replace(S2, S3)`` only supported if ``String`` is symbolic. Warnings are emitted if ``S1`` are not symbolic but ``S2`` or ``S3`` are symbolic.
+
+``RegExp.{exec, test}``,
+
+.. note::
+
+   ``RegExp.exec`` only support non-gobal regular expressions. If the regular expression contains the global flag, then only the first match using exec is supported. Warnings are emitted for subsequent matches.
+
+.. note::
+
+   ``RegExp.{exec, test}`` and ``String.{match, replace, search}`` using regular expressions only support the positive case (in which a match exist). The constraints emitted are not always satisfiable if the solution expects the negative case (in which no match exist).
+
+``parseInt``,
+
+``Input Checkbox.checked``, ``Input Radio.checked``, ``Input Text.{value, valueAsNumber}``, ``Select.{value, selectedIndex}``, ``OptionGroup.selectedIndex``, ``Option.value``
+
+.. note::
+
+   All other properties on the ``Input {Checkbox, Radio, Text}``, ``Select``, ``OptionGroup`` and ``Option`` objects are not supported and do not emit warnings.
+
+
+Usage Warnings
+^^^^^^^^^^^^^^
+
+``Math.{abs, acos, asin, atan, atan2, ceil, cos, exp, floor, log, max, min, pow, random, round, sin, sqrt, tan}``,
+
+``String.{charCodeAt, indexOf, lastIndexOf, localeCompare, slice, split, substr, substring, toLocaleLowerCase, toLocaleUpperCase, toLowerCase, toUpperCase, trim, trimLeft, trimRight, anchor, big, blink, bold, fixed, fontcolor, fontsize, italics, link, small, strike, sub, sup, fromCharCode}``,
+
+``RegExp.{constructor, compile}``, ``decodeURI``, ``decodeURIComponent``, ``encodeURI``, ``encodeURIComponent``, ``eval``, ``isFinite``, ``isNaN``, ``parseFloat``, ``escape``, ``unescape``
+
+.. note::
+
+   ``RegExp.{constructor, compile}(A1, A2)`` emit warnings if A1 or A2 are symbolic. Thus, we only support concrete regular expressions.
+
+No Symbolic Support and No Usage Warnings
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+
+``Array.*``, ``Boolean.*``, ``Date.*``, ``Number.*``, ``RegExp.{global, ignoreCase, lastIndex, multiline, source, toString}``, ``String.<index lookup>``
+
+``Window.*``, ``Navigator.*``, ``Screen.*``, ``History.*``, ``Location.*``
+
+``document.*``, ``Element.*``, ``Attribute.*``, ``Events.*``
+
+``Anchor.*``, ``Area.*``, ``Audio.*``, ``Base.*``, ``Blockquote.*``, ``Button.*``, ``Canvas.*``, ``Column.*``, ``ColumnGroup.*``, ``Datalist.*``, ``Del.*``, ``Details.*``, ``Dialog.*``, ``Embed.*``, ``Fieldset.*``, ``Form.*``, ``IFrame.*``, ``Image.*``, ``Ins.*``, ``Input Button*``, ``Input Color.*``, ``Input Date.*``, ``Input Datetime.*``, ``Input Datetime Local.*``, ``Input Email.*``, ``Input File.*``, ``Input Hidden.*``, ``Input Image.*``, ``Input Month.*``, ``Input Number.*``, ``Input Password.*``, ``Input Range.*``, ``Input Reset.*``, ``Input Search.*``, ``Input Submit.*``, ``Input Time.*``, ``Input URL.*``, ``Input Week.*``, ``Keygen.*``, ``Label.*``, ``Legend.*``, ``Li.*``, ``Link.*``, ``Map.*``, ``Menu.*``, ``MenuItem.*``, ``Meta.*``, ``Meter.*``, ``Object.*``, ``Ol.*``, ``Parameter.*``, ``Progress.*``, ``Quote.*``, ``Script.*``, ``Source.*``, ``Style.*``, ``Table.*``, ``TableData.*``, ``TableHeader.*``, ``TableRow.*``, ``Textarea.*``, ``Time.*``, ``Title.*``, ``Track.*``, ``Video.*``,
+
+``Input Checkbox.*``, ``Input Radio.*``, ``Input Text.*``, ``Select.*``, ``OptionGroup.*``, ``Option.*``

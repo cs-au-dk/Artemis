@@ -34,6 +34,7 @@
 #include "UStringBuilder.h"
 #include "UStringConcatenate.h"
 #include <wtf/PassOwnPtr.h>
+#include <statistics/statsstorage.h>
 
 namespace JSC {
 
@@ -287,36 +288,42 @@ JSValue RegExpObject::exec(ExecState* exec, JSString* string)
 
     MatchResult result = match(exec, string);
 
-    if (string->isSymbolic() && (!regExp()->global() || result.end == 0)) {
+    if (string->isSymbolic()) {
 
-        Symbolic::StringRegexSubmatchArray* symbolicMatch = new Symbolic::StringRegexSubmatchArray(
-                    Symbolic::NEXT_SYMBOLIC_ID++,
-                    (Symbolic::StringExpression*)string->asSymbolic(),
-                    new std::string(regExp()->pattern().ascii().data()));
+        if ((!regExp()->global() || result.end == 0)) {
 
-        JSValue r;
+            Symbolic::StringRegexSubmatchArray* symbolicMatch = new Symbolic::StringRegexSubmatchArray(
+                        Symbolic::NEXT_SYMBOLIC_ID++,
+                        (Symbolic::StringExpression*)string->asSymbolic(),
+                        new std::string(regExp()->pattern().ascii().data()));
 
-        if (result) {
-            RegExpMatchesArray* array = RegExpMatchesArray::create(exec, string, regExp(), result);
+            JSValue r;
 
-            for (int i = 0; i < array->length(); i++) {
-                PropertySlot slot;
-                array->getPropertySlot(exec, i, slot);
-                JSValue v = slot.getValue(exec, i);
+            if (result) {
+                RegExpMatchesArray* array = RegExpMatchesArray::create(exec, string, regExp(), result);
 
-                if (!v.isEmpty() && !v.isDeleted() && v.isString()) {
-                    v.makeSymbolic(new Symbolic::StringRegexSubmatchArrayAt(symbolicMatch, i));
-                    array->setIndex(exec->globalData(), i, v);
+                for (int i = 0; i < array->length(); i++) {
+                    PropertySlot slot;
+                    array->getPropertySlot(exec, i, slot);
+                    JSValue v = slot.getValue(exec, i);
+
+                    if (!v.isEmpty() && !v.isDeleted() && v.isString()) {
+                        v.makeSymbolic(new Symbolic::StringRegexSubmatchArrayAt(symbolicMatch, i));
+                        array->setIndex(exec->globalData(), i, v);
+                    }
                 }
+
+                r = array;
+            } else {
+                r = jsNull();
             }
 
-            r = array;
-        } else {
-            r = jsNull();
-        }
+            r.makeSymbolic(new Symbolic::StringRegexSubmatchArrayMatch(symbolicMatch));
+            return r;
 
-        r.makeSymbolic(new Symbolic::StringRegexSubmatchArrayMatch(symbolicMatch));
-        return r;
+        } else {
+            Statistics::statistics()->accumulate("Concolic::MissingInstrumentation::regExpProtoFuncExec", 1);
+        }
     }
 #endif
 

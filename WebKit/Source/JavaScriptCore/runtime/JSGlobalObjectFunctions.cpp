@@ -43,6 +43,7 @@
 #include <wtf/MathExtras.h>
 #include <wtf/StringExtras.h>
 #include <wtf/unicode/UTF8.h>
+#include <statistics/statsstorage.h>
 
 using namespace WTF;
 using namespace Unicode;
@@ -502,6 +503,11 @@ EncodedJSValue JSC_HOST_CALL globalFuncEval(ExecState* exec)
         return throwVMError(exec, createEvalError(exec, "The \"this\" value passed to eval must be the global object from which eval originated"));
 
     JSValue x = exec->argument(0);
+
+    if (x.isSymbolic()) {
+        Statistics::statistics()->accumulate("Concolic::MissingInstrumentation::globalFuncEval", 1);
+    }
+
     if (!x.isString())
         return JSValue::encode(x);
 
@@ -567,22 +573,38 @@ EncodedJSValue JSC_HOST_CALL globalFuncParseInt(ExecState* exec)
 
 EncodedJSValue JSC_HOST_CALL globalFuncParseFloat(ExecState* exec)
 {
+    if (exec->argument(0).isSymbolic()) {
+        Statistics::statistics()->accumulate("Concolic::MissingInstrumentation::globalFuncParseFloat", 1);
+    }
+
     return JSValue::encode(jsNumber(parseFloat(exec->argument(0).toString(exec)->value(exec))));
 }
 
 EncodedJSValue JSC_HOST_CALL globalFuncIsNaN(ExecState* exec)
 {
+    if (exec->argument(0).isSymbolic()) {
+        Statistics::statistics()->accumulate("Concolic::MissingInstrumentation::globalFuncIsNaN", 1);
+    }
+
     return JSValue::encode(jsBoolean(isnan(exec->argument(0).toNumber(exec))));
 }
 
 EncodedJSValue JSC_HOST_CALL globalFuncIsFinite(ExecState* exec)
 {
+    if (exec->argument(0).isSymbolic()) {
+        Statistics::statistics()->accumulate("Concolic::MissingInstrumentation::globalFuncIsFinite", 1);
+    }
+
     double n = exec->argument(0).toNumber(exec);
     return JSValue::encode(jsBoolean(isfinite(n)));
 }
 
 EncodedJSValue JSC_HOST_CALL globalFuncDecodeURI(ExecState* exec)
 {
+    if (exec->argument(0).isSymbolic()) {
+        Statistics::statistics()->accumulate("Concolic::MissingInstrumentation::globalFuncDecodeURI", 1);
+    }
+
     static const char do_not_unescape_when_decoding_URI[] =
         "#$&+,/:;=?@";
 
@@ -591,11 +613,19 @@ EncodedJSValue JSC_HOST_CALL globalFuncDecodeURI(ExecState* exec)
 
 EncodedJSValue JSC_HOST_CALL globalFuncDecodeURIComponent(ExecState* exec)
 {
+    if (exec->argument(0).isSymbolic()) {
+        Statistics::statistics()->accumulate("Concolic::MissingInstrumentation::globalFuncDecodeURIComponent", 1);
+    }
+
     return JSValue::encode(decode(exec, "", true));
 }
 
 EncodedJSValue JSC_HOST_CALL globalFuncEncodeURI(ExecState* exec)
 {
+    if (exec->argument(0).isSymbolic()) {
+        Statistics::statistics()->accumulate("Concolic::MissingInstrumentation::globalFuncEncodeURI", 1);
+    }
+
     static const char do_not_escape_when_encoding_URI[] =
         "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
         "abcdefghijklmnopqrstuvwxyz"
@@ -607,6 +637,10 @@ EncodedJSValue JSC_HOST_CALL globalFuncEncodeURI(ExecState* exec)
 
 EncodedJSValue JSC_HOST_CALL globalFuncEncodeURIComponent(ExecState* exec)
 {
+    if (exec->argument(0).isSymbolic()) {
+        Statistics::statistics()->accumulate("Concolic::MissingInstrumentation::globalFuncEncodeURIComponent", 1);
+    }
+
     static const char do_not_escape_when_encoding_URI_component[] =
         "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
         "abcdefghijklmnopqrstuvwxyz"
@@ -618,6 +652,10 @@ EncodedJSValue JSC_HOST_CALL globalFuncEncodeURIComponent(ExecState* exec)
 
 EncodedJSValue JSC_HOST_CALL globalFuncEscape(ExecState* exec)
 {
+    if (exec->argument(0).isSymbolic()) {
+        Statistics::statistics()->accumulate("Concolic::MissingInstrumentation::globalFuncEscape", 1);
+    }
+
     static const char do_not_escape[] =
         "ABCDEFGHIJKLMNOPQRSTUVWXYZ"
         "abcdefghijklmnopqrstuvwxyz"
@@ -663,6 +701,10 @@ EncodedJSValue JSC_HOST_CALL globalFuncEscape(ExecState* exec)
 
 EncodedJSValue JSC_HOST_CALL globalFuncUnescape(ExecState* exec)
 {
+    if (exec->argument(0).isSymbolic()) {
+        Statistics::statistics()->accumulate("Concolic::MissingInstrumentation::globalFuncUnescape", 1);
+    }
+
     UStringBuilder builder;
     UString str = exec->argument(0).toString(exec)->value(exec);
     int k = 0;
