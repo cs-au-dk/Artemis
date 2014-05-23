@@ -36,6 +36,7 @@
 #include "RegExpCache.h"
 #include "StringRecursionChecker.h"
 #include "UStringConcatenate.h"
+#include <statistics/statsstorage.h>
 
 namespace JSC {
 
@@ -124,6 +125,10 @@ EncodedJSValue JSC_HOST_CALL regExpProtoFuncCompile(ExecState* exec)
     RegExp* regExp;
     JSValue arg0 = exec->argument(0);
     JSValue arg1 = exec->argument(1);
+
+    if (arg0.isSymbolic() || arg1.isSymbolic()) {
+        Statistics::statistics()->accumulate("Concolic::MissingInstrumentation::regExpProtoFuncCompile", 1);
+    }
     
     if (arg0.inherits(&RegExpObject::s_info)) {
         if (!arg1.isUndefined())

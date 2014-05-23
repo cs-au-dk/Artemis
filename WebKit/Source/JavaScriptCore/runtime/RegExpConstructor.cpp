@@ -25,6 +25,7 @@
 #include "Error.h"
 #include "RegExpMatchesArray.h"
 #include "RegExpPrototype.h"
+#include <statistics/statsstorage.h>
 
 namespace JSC {
 
@@ -259,6 +260,10 @@ JSObject* constructRegExp(ExecState* exec, JSGlobalObject* globalObject, const A
 {
     JSValue arg0 = args.at(0);
     JSValue arg1 = args.at(1);
+
+    if (arg0.isSymbolic() || arg1.isSymbolic()) {
+        Statistics::statistics()->accumulate("Concolic::MissingInstrumentation::regExpProtoFuncConstructor", 1);
+    }
 
     if (arg0.inherits(&RegExpObject::s_info)) {
         if (!arg1.isUndefined())

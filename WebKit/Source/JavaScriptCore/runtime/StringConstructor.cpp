@@ -27,6 +27,8 @@
 #include "JSGlobalObject.h"
 #include "StringPrototype.h"
 
+#include <statistics/statsstorage.h>
+
 namespace JSC {
 
 static EncodedJSValue JSC_HOST_CALL stringFromCharCode(ExecState*);
@@ -77,15 +79,25 @@ static NEVER_INLINE JSValue stringFromCharCodeSlowCase(ExecState* exec)
     unsigned length = exec->argumentCount();
     UChar* buf;
     PassRefPtr<StringImpl> impl = StringImpl::createUninitialized(length, buf);
-    for (unsigned i = 0; i < length; ++i)
+    for (unsigned i = 0; i < length; ++i) {
+        if (exec->argument(i).isSymbolic()) {
+            Statistics::statistics()->accumulate("Concolic::MissingInstrumentation::stringFromCharCode", 1);
+        }
         buf[i] = static_cast<UChar>(exec->argument(i).toUInt32(exec));
+    }
     return jsString(exec, impl);
 }
 
 static EncodedJSValue JSC_HOST_CALL stringFromCharCode(ExecState* exec)
 {
-    if (LIKELY(exec->argumentCount() == 1))
+    if (LIKELY(exec->argumentCount() == 1)) {
+
+        if (exec->argument(0).isSymbolic()) {
+            Statistics::statistics()->accumulate("Concolic::MissingInstrumentation::stringFromCharCode", 1);
+        }
+
         return JSValue::encode(jsSingleCharacterString(exec, exec->argument(0).toUInt32(exec)));
+    }
     return JSValue::encode(stringFromCharCodeSlowCase(exec));
 }
 

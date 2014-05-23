@@ -20,6 +20,7 @@
  */
 
 #include <iostream>
+#include <assert.h>
 
 #include "config.h"
 #include "StringPrototype.h"
@@ -45,6 +46,7 @@
 #ifdef ARTEMIS
 #include "JavaScriptCore/symbolic/expr.h"
 #include "JavaScriptCore/symbolic/symbolicinterpreter.h"
+#include <statistics/statsstorage.h>
 #endif 
 using namespace WTF;
 
@@ -706,6 +708,12 @@ EncodedJSValue JSC_HOST_CALL stringProtoFuncReplace(ExecState* exec)
                                                        new std::string(replaceValue.toUString(exec).ascii().data())));
         return JSValue::encode(value);
     } else {
+
+        assert(!thisValue.isSymbolic());
+        if (searchValue.isSymbolic() || replaceValue.isSymbolic()) {
+            Statistics::statistics()->accumulate("Concolic::MissingInstrumentation::stringProtoFuncReplace", 1);
+        }
+
         return replaceUsingStringSearch(exec, string, searchValue);
     }
 #else
@@ -770,7 +778,7 @@ EncodedJSValue JSC_HOST_CALL stringProtoFuncCharCodeAt(ExecState* exec)
 
 #ifdef ARTEMIS
     if (thisValue.isSymbolic()) {
-        std::cerr << "Warning: Symbolic information lost in StringPrototype::stringProtoFuncCharCodeAt" << std::endl;
+        Statistics::statistics()->accumulate("Concolic::MissingInstrumentation::stringProtoFuncCharCodeAt", 1);
     }
 #endif
 
@@ -829,6 +837,7 @@ EncodedJSValue JSC_HOST_CALL stringProtoFuncConcat(ExecState* exec)
 EncodedJSValue JSC_HOST_CALL stringProtoFuncIndexOf(ExecState* exec)
 {
     JSValue thisValue = exec->hostThisValue();
+
     if (thisValue.isUndefinedOrNull()) // CheckObjectCoercible
         return throwVMTypeError(exec);
     UString s = thisValue.toString(exec)->value(exec);
@@ -836,6 +845,12 @@ EncodedJSValue JSC_HOST_CALL stringProtoFuncIndexOf(ExecState* exec)
     JSValue a0 = exec->argument(0);
     JSValue a1 = exec->argument(1);
     UString u2 = a0.toString(exec)->value(exec);
+
+#ifdef ARTEMIS
+    if (thisValue.isSymbolic() || a0.isSymbolic() || a1.isSymbolic()) {
+        Statistics::statistics()->accumulate("Concolic::MissingInstrumentation::stringProtoFuncIndexOf", 1);
+    }
+#endif
 
     size_t result;
     if (a1.isUndefined())
@@ -864,6 +879,7 @@ EncodedJSValue JSC_HOST_CALL stringProtoFuncIndexOf(ExecState* exec)
 EncodedJSValue JSC_HOST_CALL stringProtoFuncLastIndexOf(ExecState* exec)
 {
     JSValue thisValue = exec->hostThisValue();
+
     if (thisValue.isUndefinedOrNull()) // CheckObjectCoercible
         return throwVMTypeError(exec);
     UString s = thisValue.toString(exec)->value(exec);
@@ -871,6 +887,12 @@ EncodedJSValue JSC_HOST_CALL stringProtoFuncLastIndexOf(ExecState* exec)
 
     JSValue a0 = exec->argument(0);
     JSValue a1 = exec->argument(1);
+
+#ifdef ARTEMIS
+    if (thisValue.isSymbolic() || a0.isSymbolic() || a1.isSymbolic()) {
+        Statistics::statistics()->accumulate("Concolic::MissingInstrumentation::stringProtoFuncLastIndexOf", 1);
+    }
+#endif
 
     UString u2 = a0.toString(exec)->value(exec);
     double dpos = a1.toIntegerPreserveNaN(exec);
@@ -1031,6 +1053,10 @@ EncodedJSValue JSC_HOST_CALL stringProtoFuncSlice(ExecState* exec)
     JSValue a0 = exec->argument(0);
     JSValue a1 = exec->argument(1);
 
+    if (thisValue.isSymbolic() || a0.isSymbolic() || a1.isSymbolic()) {
+        Statistics::statistics()->accumulate("Concolic::MissingInstrumentation::stringProtoFuncSlice", 1);
+    }
+
     // The arg processing is very much like ArrayProtoFunc::Slice
     double start = a0.toInteger(exec);
     double end = a1.isUndefined() ? len : a1.toInteger(exec);
@@ -1098,6 +1124,10 @@ EncodedJSValue JSC_HOST_CALL stringProtoFuncSplit(ExecState* exec)
     // 5. If limit is undefined, let lim = 2^32-1; else let lim = ToUint32(limit).
     JSValue limitValue = exec->argument(1);
     unsigned limit = limitValue.isUndefined() ? 0xFFFFFFFFu : limitValue.toUInt32(exec);
+
+    if (thisValue.isSymbolic() || limitValue.isSymbolic()) {
+        Statistics::statistics()->accumulate("Concolic::MissingInstrumentation::stringProtoFuncSplit", 1);
+    }
 
     // 7. Let p = 0.
     size_t position = 0;
@@ -1308,6 +1338,10 @@ EncodedJSValue JSC_HOST_CALL stringProtoFuncSubstr(ExecState* exec)
     JSValue a0 = exec->argument(0);
     JSValue a1 = exec->argument(1);
 
+    if (thisValue.isSymbolic() || a0.isSymbolic() || a1.isSymbolic()) {
+        Statistics::statistics()->accumulate("Concolic::MissingInstrumentation::stringProtoFuncSubstr", 1);
+    }
+
     double start = a0.toInteger(exec);
     double length = a1.isUndefined() ? len : a1.toInteger(exec);
     if (start >= len || length <= 0)
@@ -1340,6 +1374,10 @@ EncodedJSValue JSC_HOST_CALL stringProtoFuncSubstring(ExecState* exec)
     JSValue a1 = exec->argument(1);
     int len = jsString->length();
 
+    if (thisValue.isSymbolic() || a0.isSymbolic() || a1.isSymbolic()) {
+        Statistics::statistics()->accumulate("Concolic::MissingInstrumentation::stringProtoFuncSubstring", 1);
+    }
+
     double start = a0.toNumber(exec);
     double end;
     if (!(start >= 0)) // check for negative values or NaN
@@ -1368,6 +1406,11 @@ EncodedJSValue JSC_HOST_CALL stringProtoFuncSubstring(ExecState* exec)
 EncodedJSValue JSC_HOST_CALL stringProtoFuncToLowerCase(ExecState* exec)
 {
     JSValue thisValue = exec->hostThisValue();
+
+    if (thisValue.isSymbolic()) {
+        Statistics::statistics()->accumulate("Concolic::MissingInstrumentation::stringProtoFuncTo[Locale]LowerCase", 1);
+    }
+
     if (thisValue.isUndefinedOrNull()) // CheckObjectCoercible
         return throwVMTypeError(exec);
     JSString* sVal = thisValue.toString(exec);
@@ -1387,6 +1430,11 @@ EncodedJSValue JSC_HOST_CALL stringProtoFuncToLowerCase(ExecState* exec)
 EncodedJSValue JSC_HOST_CALL stringProtoFuncToUpperCase(ExecState* exec)
 {
     JSValue thisValue = exec->hostThisValue();
+
+    if (thisValue.isSymbolic()) {
+        Statistics::statistics()->accumulate("Concolic::MissingInstrumentation::stringProtoFuncTo[Locale]UpperCase", 1);
+    }
+
     if (thisValue.isUndefinedOrNull()) // CheckObjectCoercible
         return throwVMTypeError(exec);
     JSString* sVal = thisValue.toString(exec);
@@ -1409,17 +1457,30 @@ EncodedJSValue JSC_HOST_CALL stringProtoFuncLocaleCompare(ExecState* exec)
       return JSValue::encode(jsNumber(0));
 
     JSValue thisValue = exec->hostThisValue();
+
     if (thisValue.isUndefinedOrNull()) // CheckObjectCoercible
         return throwVMTypeError(exec);
     UString s = thisValue.toString(exec)->value(exec);
 
     JSValue a0 = exec->argument(0);
+
+#ifdef ARTEMIS
+    if (thisValue.isSymbolic() || a0.isSymbolic()) {
+        Statistics::statistics()->accumulate("Concolic::MissingInstrumentation::stringProtoFuncLocaleCompare", 1);
+    }
+#endif
+
     return JSValue::encode(jsNumber(localeCompare(s, a0.toString(exec)->value(exec))));
 }
 
 EncodedJSValue JSC_HOST_CALL stringProtoFuncBig(ExecState* exec)
 {
     JSValue thisValue = exec->hostThisValue();
+
+    if (thisValue.isSymbolic()) {
+        Statistics::statistics()->accumulate("Concolic::MissingInstrumentation::stringProtoFuncBig", 1);
+    }
+
     if (thisValue.isUndefinedOrNull()) // CheckObjectCoercible
         return throwVMTypeError(exec);
     UString s = thisValue.toString(exec)->value(exec);
@@ -1429,6 +1490,11 @@ EncodedJSValue JSC_HOST_CALL stringProtoFuncBig(ExecState* exec)
 EncodedJSValue JSC_HOST_CALL stringProtoFuncSmall(ExecState* exec)
 {
     JSValue thisValue = exec->hostThisValue();
+
+    if (thisValue.isSymbolic()) {
+        Statistics::statistics()->accumulate("Concolic::MissingInstrumentation::stringProtoFuncSmall", 1);
+    }
+
     if (thisValue.isUndefinedOrNull()) // CheckObjectCoercible
         return throwVMTypeError(exec);
     UString s = thisValue.toString(exec)->value(exec);
@@ -1438,6 +1504,11 @@ EncodedJSValue JSC_HOST_CALL stringProtoFuncSmall(ExecState* exec)
 EncodedJSValue JSC_HOST_CALL stringProtoFuncBlink(ExecState* exec)
 {
     JSValue thisValue = exec->hostThisValue();
+
+    if (thisValue.isSymbolic()) {
+        Statistics::statistics()->accumulate("Concolic::MissingInstrumentation::stringProtoFuncBlink", 1);
+    }
+
     if (thisValue.isUndefinedOrNull()) // CheckObjectCoercible
         return throwVMTypeError(exec);
     UString s = thisValue.toString(exec)->value(exec);
@@ -1447,6 +1518,11 @@ EncodedJSValue JSC_HOST_CALL stringProtoFuncBlink(ExecState* exec)
 EncodedJSValue JSC_HOST_CALL stringProtoFuncBold(ExecState* exec)
 {
     JSValue thisValue = exec->hostThisValue();
+
+    if (thisValue.isSymbolic()) {
+        Statistics::statistics()->accumulate("Concolic::MissingInstrumentation::stringProtoFuncBold", 1);
+    }
+
     if (thisValue.isUndefinedOrNull()) // CheckObjectCoercible
         return throwVMTypeError(exec);
     UString s = thisValue.toString(exec)->value(exec);
@@ -1456,6 +1532,11 @@ EncodedJSValue JSC_HOST_CALL stringProtoFuncBold(ExecState* exec)
 EncodedJSValue JSC_HOST_CALL stringProtoFuncFixed(ExecState* exec)
 {
     JSValue thisValue = exec->hostThisValue();
+
+    if (thisValue.isSymbolic()) {
+        Statistics::statistics()->accumulate("Concolic::MissingInstrumentation::stringProtoFuncFixed", 1);
+    }
+
     if (thisValue.isUndefinedOrNull()) // CheckObjectCoercible
         return throwVMTypeError(exec);
     UString s = thisValue.toString(exec)->value(exec);
@@ -1465,6 +1546,11 @@ EncodedJSValue JSC_HOST_CALL stringProtoFuncFixed(ExecState* exec)
 EncodedJSValue JSC_HOST_CALL stringProtoFuncItalics(ExecState* exec)
 {
     JSValue thisValue = exec->hostThisValue();
+
+    if (thisValue.isSymbolic()) {
+        Statistics::statistics()->accumulate("Concolic::MissingInstrumentation::stringProtoFuncItalics", 1);
+    }
+
     if (thisValue.isUndefinedOrNull()) // CheckObjectCoercible
         return throwVMTypeError(exec);
     UString s = thisValue.toString(exec)->value(exec);
@@ -1474,6 +1560,11 @@ EncodedJSValue JSC_HOST_CALL stringProtoFuncItalics(ExecState* exec)
 EncodedJSValue JSC_HOST_CALL stringProtoFuncStrike(ExecState* exec)
 {
     JSValue thisValue = exec->hostThisValue();
+
+    if (thisValue.isSymbolic()) {
+        Statistics::statistics()->accumulate("Concolic::MissingInstrumentation::stringProtoFuncStrike", 1);
+    }
+
     if (thisValue.isUndefinedOrNull()) // CheckObjectCoercible
         return throwVMTypeError(exec);
     UString s = thisValue.toString(exec)->value(exec);
@@ -1483,6 +1574,11 @@ EncodedJSValue JSC_HOST_CALL stringProtoFuncStrike(ExecState* exec)
 EncodedJSValue JSC_HOST_CALL stringProtoFuncSub(ExecState* exec)
 {
     JSValue thisValue = exec->hostThisValue();
+
+    if (thisValue.isSymbolic()) {
+        Statistics::statistics()->accumulate("Concolic::MissingInstrumentation::stringProtoFuncSub", 1);
+    }
+
     if (thisValue.isUndefinedOrNull()) // CheckObjectCoercible
         return throwVMTypeError(exec);
     UString s = thisValue.toString(exec)->value(exec);
@@ -1492,6 +1588,11 @@ EncodedJSValue JSC_HOST_CALL stringProtoFuncSub(ExecState* exec)
 EncodedJSValue JSC_HOST_CALL stringProtoFuncSup(ExecState* exec)
 {
     JSValue thisValue = exec->hostThisValue();
+
+    if (thisValue.isSymbolic()) {
+        Statistics::statistics()->accumulate("Concolic::MissingInstrumentation::stringProtoFuncSup", 1);
+    }
+
     if (thisValue.isUndefinedOrNull()) // CheckObjectCoercible
         return throwVMTypeError(exec);
     UString s = thisValue.toString(exec)->value(exec);
@@ -1505,6 +1606,11 @@ EncodedJSValue JSC_HOST_CALL stringProtoFuncFontcolor(ExecState* exec)
         return throwVMTypeError(exec);
     UString s = thisValue.toString(exec)->value(exec);
     JSValue a0 = exec->argument(0);
+
+    if (thisValue.isSymbolic() || a0.isSymbolic()) {
+        Statistics::statistics()->accumulate("Concolic::MissingInstrumentation::stringProtoFuncFontcolor", 1);
+    }
+
     return JSValue::encode(jsMakeNontrivialString(exec, "<font color=\"", a0.toString(exec)->value(exec), "\">", s, "</font>"));
 }
 
@@ -1515,6 +1621,10 @@ EncodedJSValue JSC_HOST_CALL stringProtoFuncFontsize(ExecState* exec)
         return throwVMTypeError(exec);
     UString s = thisValue.toString(exec)->value(exec);
     JSValue a0 = exec->argument(0);
+
+    if (thisValue.isSymbolic() | a0.isSymbolic()) {
+        Statistics::statistics()->accumulate("Concolic::MissingInstrumentation::stringProtoFuncFontsize", 1);
+    }
 
     uint32_t smallInteger;
     if (a0.getUInt32(smallInteger) && smallInteger <= 9) {
@@ -1560,6 +1670,11 @@ EncodedJSValue JSC_HOST_CALL stringProtoFuncAnchor(ExecState* exec)
         return throwVMTypeError(exec);
     UString s = thisValue.toString(exec)->value(exec);
     JSValue a0 = exec->argument(0);
+
+    if (thisValue.isSymbolic() || a0.isSymbolic()) {
+        Statistics::statistics()->accumulate("Concolic::MissingInstrumentation::stringProtoFuncAnchor", 1);
+    }
+
     return JSValue::encode(jsMakeNontrivialString(exec, "<a name=\"", a0.toString(exec)->value(exec), "\">", s, "</a>"));
 }
 
@@ -1571,6 +1686,10 @@ EncodedJSValue JSC_HOST_CALL stringProtoFuncLink(ExecState* exec)
     UString s = thisValue.toString(exec)->value(exec);
     JSValue a0 = exec->argument(0);
     UString linkText = a0.toString(exec)->value(exec);
+
+    if (thisValue.isSymbolic() || a0.isSymbolic()) {
+        Statistics::statistics()->accumulate("Concolic::MissingInstrumentation::stringProtoFuncLink", 1);
+    }
 
     unsigned linkTextSize = linkText.length();
     unsigned stringSize = s.length();
@@ -1635,18 +1754,33 @@ static inline JSValue trimString(ExecState* exec, JSValue thisValue, int trimKin
 EncodedJSValue JSC_HOST_CALL stringProtoFuncTrim(ExecState* exec)
 {
     JSValue thisValue = exec->hostThisValue();
+
+    if (thisValue.isSymbolic()) {
+        Statistics::statistics()->accumulate("Concolic::MissingInstrumentation::stringProtoFuncTrim", 1);
+    }
+
     return JSValue::encode(trimString(exec, thisValue, TrimLeft | TrimRight));
 }
 
 EncodedJSValue JSC_HOST_CALL stringProtoFuncTrimLeft(ExecState* exec)
 {
     JSValue thisValue = exec->hostThisValue();
+
+    if (thisValue.isSymbolic()) {
+        Statistics::statistics()->accumulate("Concolic::MissingInstrumentation::stringProtoFuncTrimLeft", 1);
+    }
+
     return JSValue::encode(trimString(exec, thisValue, TrimLeft));
 }
 
 EncodedJSValue JSC_HOST_CALL stringProtoFuncTrimRight(ExecState* exec)
 {
     JSValue thisValue = exec->hostThisValue();
+
+    if (thisValue.isSymbolic()) {
+        Statistics::statistics()->accumulate("Concolic::MissingInstrumentation::stringProtoFuncTrimRight", 1);
+    }
+
     return JSValue::encode(trimString(exec, thisValue, TrimRight));
 }
     
