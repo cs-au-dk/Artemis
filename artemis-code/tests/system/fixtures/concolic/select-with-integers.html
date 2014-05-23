@@ -1,8 +1,9 @@
 <!--
-TEST PC[0] = ((SymbolicString != ConstantString) == ConstantBoolean)
+TEST PC[0] = (IntegerCoercion( SymbolicString ) > ConstantInteger)
 TEST Concolic::Solver::ConstraintsSolved = 2
 TEST Concolic::Solver::ConstraintsWritten = 2
-TEST Concolic::Solver::Constraint.SYM_IN_testinput = testme
+TEST Concolic::Solver::Constraint.SYM_IN_testinput != 0
+TEST Concolic::Solver::Constraint.SYM_IN_testinput != 1
 -->
 <!doctype html><html lang="en">
 <head>
