@@ -132,7 +132,7 @@ Symbolic Support
 
 ``parseInt``,
 
-``Math.{floor, ceil}``,
+``Math.{floor, ceil, max, min}``,
 
 .. note::
 
@@ -148,7 +148,7 @@ Symbolic Support
 Usage Warnings
 ^^^^^^^^^^^^^^
 
-``Math.{abs, acos, asin, atan, atan2, cos, exp, log, max, min, pow, random, round, sin, sqrt, tan}``,
+``Math.{abs, acos, asin, atan, atan2, cos, exp, log, pow, random, round, sin, sqrt, tan}``,
 
 ``String.{charCodeAt, indexOf, lastIndexOf, localeCompare, slice, split, substr, substring, toLocaleLowerCase, toLocaleUpperCase, toLowerCase, toUpperCase, trim, trimLeft, trimRight, anchor, big, blink, bold, fixed, fontcolor, fontsize, italics, link, small, strike, sub, sup, fromCharCode}``,
 

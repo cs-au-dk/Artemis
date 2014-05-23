@@ -16,37 +16,41 @@
 
  // AUTO GENERATED - DO NOT MODIFY
 
-#ifndef SYMBOLIC_CONSTANTBOOLEAN_H
-#define SYMBOLIC_CONSTANTBOOLEAN_H
+#ifndef SYMBOLIC_INTEGERMAXMIN_H
+#define SYMBOLIC_INTEGERMAXMIN_H
 
 #include <string>
 
 #include <list>
 
 #include "visitor.h"
-#include "booleanexpression.h"
+#include "integerexpression.h"
 
 #ifdef ARTEMIS
 
 namespace Symbolic
 {
 
-class ConstantBoolean : public BooleanExpression
+class IntegerMaxMin : public IntegerExpression
 {
 public:
-    explicit ConstantBoolean(bool value);
+    explicit IntegerMaxMin(std::list<Expression*> expressions, bool max);
     void accept(Visitor* visitor);
     void accept(Visitor* visitor, void* arg);
 
-	inline bool getValue() {
-		return m_value;
+	inline std::list<Expression*> getExpressions() {
+		return m_expressions;
+	}
+	inline bool getMax() {
+		return m_max;
 	}
 
 private:
-	bool m_value;
+	std::list<Expression*> m_expressions;
+	bool m_max;
 
 };
 }
 
 #endif
-#endif // SYMBOLIC_CONSTANTBOOLEAN_H
+#endif // SYMBOLIC_INTEGERMAXMIN_H

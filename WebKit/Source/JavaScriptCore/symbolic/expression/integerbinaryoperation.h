@@ -21,6 +21,8 @@
 
 #include <string>
 
+#include <list>
+
 #include "integerexpression.h"
 #include "visitor.h"
 

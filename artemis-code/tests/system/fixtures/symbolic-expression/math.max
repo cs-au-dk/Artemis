@@ -1,0 +1,4 @@
+TEST PC: ((IntegerMax(IntegerCoercion(SymbolicString),IntegerCoercion(SymbolicString))==ConstantInteger)==ConstantBoolean)
+if (Math.max(x, y) == 1) {
+    alert(x);
+}

@@ -120,6 +120,7 @@ protected:
     virtual void visit(Symbolic::IntegerCoercion* integercoercion, void* args);
     virtual void visit(Symbolic::StringLength* stringlength, void* args);
     virtual void visit(Symbolic::StringRegexSubmatchIndex* submatchIndex, void* arg);
+    virtual void visit(Symbolic::IntegerMaxMin* obj, void* arg);
 
     // Returns string values to mExpressionBuffer
     virtual void visit(Symbolic::SymbolicString* symbolicstring, void* args);

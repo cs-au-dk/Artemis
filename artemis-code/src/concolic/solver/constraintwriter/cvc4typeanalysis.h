@@ -57,6 +57,7 @@ protected:
     void visit(Symbolic::ConstantInteger* constantinteger, void* arg);
     void visit(Symbolic::IntegerBinaryOperation* integerbinaryoperation, void* arg);
     void visit(Symbolic::IntegerCoercion* integercoercion, void* arg);
+    void visit(Symbolic::IntegerMaxMin* integermaxmin, void* arg);
     void visit(Symbolic::ConstantObject* constantobject, void* arg);
     void visit(Symbolic::ObjectBinaryOperation* objectbinaryoperation, void* arg);
     void visit(Symbolic::SymbolicString* symbolicstring, void* arg);

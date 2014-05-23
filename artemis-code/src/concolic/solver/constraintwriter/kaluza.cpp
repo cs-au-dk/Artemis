@@ -115,6 +115,13 @@ void KaluzaConstraintWriter::visit(Symbolic::IntegerCoercion* integercoercion, v
     integercoercion->getExpression()->accept(this);
 }
 
+void KaluzaConstraintWriter::visit(Symbolic::IntegerMaxMin* obj, void* arg)
+{
+    mError = true;
+    mErrorReason = "Math max and min not supported";
+    mIdentifierStore = "ERROR";
+}
+
 void KaluzaConstraintWriter::visit(Symbolic::SymbolicString* symbolicstring, void* args)
 {
     mIdentifierStore = symbolicstring->getSource().getIdentifier();

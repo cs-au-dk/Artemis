@@ -238,6 +238,7 @@ SOURCES += \
     instrumentation/bytecodeinfo.cpp \
     symbolic/expression/symbolicinteger.cpp \
     symbolic/expression/constantinteger.cpp \
+    symbolic/expression/integermaxmin.cpp \
     symbolic/expression/integerbinaryoperation.cpp \
     symbolic/expression/booleanbinaryoperation.cpp \
     symbolic/expression/integercoercion.cpp \
@@ -297,6 +298,7 @@ HEADERS += \
     symbolic/expression/expression.h \
     symbolic/expression/integerexpression.h \
     symbolic/expression/symbolicinteger.h \
+    symbolic/expression/integermaxmin.h \
     symbolic/expression/constantinteger.h \
     symbolic/expression/integerbinaryoperation.h \
     symbolic/expression/booleanbinaryoperation.h \

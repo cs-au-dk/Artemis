@@ -20,6 +20,7 @@
 
 #include "config.h"
 #include "MathObject.h"
+#include <iostream>
 
 #include "Lookup.h"
 #include "ObjectPrototype.h"
@@ -222,53 +223,84 @@ EncodedJSValue JSC_HOST_CALL mathProtoFuncLog(ExecState* exec)
 EncodedJSValue JSC_HOST_CALL mathProtoFuncMax(ExecState* exec)
 {
     bool isSymbolic = false;
+    std::list<Symbolic::Expression*> args;
 
     unsigned argsCount = exec->argumentCount();
     double result = -std::numeric_limits<double>::infinity();
     for (unsigned k = 0; k < argsCount; ++k) {
-        if (exec->argument(k).isSymbolic()) {
-            isSymbolic = true;
-        }
+        JSValue v = exec->argument(k);
 
-        double val = exec->argument(k).toNumber(exec);
+        double val = v.toNumber(exec);
         if (isnan(val)) {
             result = std::numeric_limits<double>::quiet_NaN();
             break;
         }
         if (val > result || (val == 0 && result == 0 && !signbit(val)))
             result = val;
+
+        // Symbolic handling
+
+        if (v.isSymbolic()) {
+            isSymbolic = true;
+            if (v.isNumber()) {
+                args.push_back(v.asSymbolic());
+            } else {
+                args.push_back((Symbolic::IntegerExpression*)new Symbolic::IntegerCoercion(v.asSymbolic()));
+            }
+        } else {
+            args.push_back(new Symbolic::ConstantInteger(val));
+        }
     }
 
+    JSValue res = jsNumber(result);
+
     if (isSymbolic) {
-        Statistics::statistics()->accumulate("Concolic::MissingInstrumentation::mathProtoFuncMax", 1);
+        std::cout << "MAKE SYMBOLIC!!! " << std::endl;
+        res.makeSymbolic(new Symbolic::IntegerMaxMin(args, true));
+    } else {
+        std::cout << "DONT MAKE SYMBOLIC!!! " << std::endl;
     }
-    return JSValue::encode(jsNumber(result));
+    return JSValue::encode(res);
 }
 
 EncodedJSValue JSC_HOST_CALL mathProtoFuncMin(ExecState* exec)
 {
     bool isSymbolic = false;
+    std::list<Symbolic::Expression*> args;
 
     unsigned argsCount = exec->argumentCount();
     double result = +std::numeric_limits<double>::infinity();
     for (unsigned k = 0; k < argsCount; ++k) {
-        if (exec->argument(k).isSymbolic()) {
-            isSymbolic = true;
-        }
+        JSValue v = exec->argument(k);
 
-        double val = exec->argument(k).toNumber(exec);
+        double val = v.toNumber(exec);
         if (isnan(val)) {
             result = std::numeric_limits<double>::quiet_NaN();
             break;
         }
         if (val < result || (val == 0 && result == 0 && signbit(val)))
             result = val;
+
+        // Symbolic handling
+
+        if (v.isSymbolic()) {
+            isSymbolic = true;
+            if (v.isNumber()) {
+                args.push_back(v.asSymbolic());
+            } else {
+                args.push_back((Symbolic::IntegerExpression*)new Symbolic::IntegerCoercion(v.asSymbolic()));
+            }
+        } else {
+            args.push_back(new Symbolic::ConstantInteger(val));
+        }
     }
 
+    JSValue res = jsNumber(result);
+
     if (isSymbolic) {
-        Statistics::statistics()->accumulate("Concolic::MissingInstrumentation::mathProtoFuncMin", 1);
+        res.makeSymbolic(new Symbolic::IntegerMaxMin(args, false));
     }
-    return JSValue::encode(jsNumber(result));
+    return JSValue::encode(res);
 }
 
 EncodedJSValue JSC_HOST_CALL mathProtoFuncPow(ExecState* exec)

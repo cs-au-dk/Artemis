@@ -22,6 +22,7 @@
 #include "expression/constantinteger.h"
 #include "expression/integerbinaryoperation.h"
 #include "expression/integercoercion.h"
+#include "expression/integermaxmin.h"
 #include "expression/constantobject.h"
 #include "expression/objectbinaryoperation.h"
 #include "expression/symbolicstring.h"

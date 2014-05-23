@@ -18,7 +18,6 @@
 
 #ifdef ARTEMIS
 
-#include <assert.h>
 #include "booleancoercion.h"
 
 namespace Symbolic
@@ -28,7 +27,6 @@ BooleanCoercion::BooleanCoercion(Expression* expression) :
     BooleanExpression(),
     m_expression(expression)
 {
-    assert(expression != NULL);
 }
 
 void BooleanCoercion::accept(Visitor* visitor) 

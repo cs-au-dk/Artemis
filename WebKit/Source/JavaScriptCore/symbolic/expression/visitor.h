@@ -27,13 +27,14 @@ namespace Symbolic
 
 // Move this to another file?
 enum Type {
-    INT, BOOL, STRING, OBJECT, TYPEERROR
+	INT, BOOL, STRING, OBJECT, TYPEERROR
 };
 
     class SymbolicInteger;
     class ConstantInteger;
     class IntegerBinaryOperation;
     class IntegerCoercion;
+    class IntegerMaxMin;
     class ConstantObject;
     class ObjectBinaryOperation;
     class SymbolicString;
@@ -62,6 +63,7 @@ public:
     virtual void visit(ConstantInteger* constantinteger, void* arg) = 0;
     virtual void visit(IntegerBinaryOperation* integerbinaryoperation, void* arg) = 0;
     virtual void visit(IntegerCoercion* integercoercion, void* arg) = 0;
+    virtual void visit(IntegerMaxMin* integermaxmin, void* arg) = 0;
     virtual void visit(ConstantObject* constantobject, void* arg) = 0;
     virtual void visit(ObjectBinaryOperation* objectbinaryoperation, void* arg) = 0;
     virtual void visit(SymbolicString* symbolicstring, void* arg) = 0;

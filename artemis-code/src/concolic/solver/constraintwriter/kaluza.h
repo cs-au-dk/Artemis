@@ -59,6 +59,7 @@ private:
     void visit(Symbolic::ConstantInteger* constantinteger, void* args);
     void visit(Symbolic::IntegerBinaryOperation* integerbinaryoperation, void* args);
     void visit(Symbolic::IntegerCoercion* integercoercion, void* args);
+    void visit(Symbolic::IntegerMaxMin* integermaxmin, void* arg);
     void visit(Symbolic::SymbolicString* symbolicstring, void* args);
     void visit(Symbolic::ConstantString* constantstring, void* args);
     void visit(Symbolic::StringBinaryOperation* stringbinaryoperation, void* args);

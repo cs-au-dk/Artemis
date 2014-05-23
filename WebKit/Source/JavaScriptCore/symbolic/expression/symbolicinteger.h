@@ -21,6 +21,8 @@
 
 #include <string>
 
+#include <list>
+
 #include "visitor.h"
 #include "symbolicsource.h"
 #include "integerexpression.h"

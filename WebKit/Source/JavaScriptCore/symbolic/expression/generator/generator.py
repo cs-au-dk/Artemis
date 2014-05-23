@@ -103,6 +103,7 @@ def generate_expression(target_dir, ID, parent, fields, enums):
 		fp.write("#define SYMBOLIC_%s_H\n\n" % ID.upper())
 
 		fp.write("#include <string>\n\n")
+		fp.write("#include <list>\n\n")
 
 		enum_ids = [enum['ID'] for enum in enums]
 

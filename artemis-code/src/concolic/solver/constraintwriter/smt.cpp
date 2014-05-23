@@ -324,6 +324,45 @@ void SMTConstraintWriter::visit(Symbolic::StringRegexSubmatchIndex* submatchInde
     error("NO STRING REGEX SUBMATCH-INDEX SUPPORT");
 }
 
+void SMTConstraintWriter::visit(Symbolic::IntegerMaxMin* obj, void* arg)
+{
+
+    std::list<Symbolic::Expression*> expressions = obj->getExpressions();
+    std::list<Symbolic::Expression*>::iterator iter;
+
+    std::string comp = obj->getMax() ?  ">" : "<";
+
+    std::string last_var = "0"; // returned if people use Math.max() / Math.min(), correct behaviour would be -infty, but we can't model that
+
+    for (iter = expressions.begin(); iter != expressions.end(); iter++) {
+
+        Symbolic::Expression* expression = *iter;
+        expression->accept(this);
+
+        if(!checkType(Symbolic::INT)){
+            error("Integer max/min operation with incorrectly typed argument");
+            return;
+        }
+
+        std::string new_var = this->emitAndReturnNewTemporary(Symbolic::INT);
+
+        if (iter == expressions.begin()) {
+            // this is the first element
+            mOutput << "(assert (= " << new_var << " " << mExpressionBuffer << " ))" << std::endl;
+        } else {
+
+            mOutput << "(assert (= " << new_var << " (ite (" << comp << " " << last_var << " " << mExpressionBuffer << " ) " << last_var << " " << mExpressionBuffer << " )))" << std::endl;
+        }
+
+        last_var = new_var;
+
+    }
+
+    mExpressionBuffer = last_var;
+    mExpressionType = Symbolic::INT;
+
+}
+
 /** Utility **/
 
 std::string SMTConstraintWriter::stringfindreplace(const std::string& string,

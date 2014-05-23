@@ -50,6 +50,17 @@ void ExpressionFreeVariableLister::visit(Symbolic::IntegerCoercion* integercoerc
     integercoercion->getExpression()->accept(this, arg);
 }
 
+void ExpressionFreeVariableLister::visit(Symbolic::IntegerMaxMin* obj, void* arg)
+{
+    std::list<Symbolic::Expression*> expressions = obj->getExpressions();
+    std::list<Symbolic::Expression*>::iterator iter;
+
+    for (iter = expressions.begin(); iter != expressions.end(); iter++) {
+        Symbolic::Expression* expression = *iter;
+        expression->accept(this);
+    }
+}
+
 void ExpressionFreeVariableLister::visit(Symbolic::SymbolicString* symbolicstring, void* arg)
 {
     mResult.insert(QString(symbolicstring->getSource().getIdentifier().c_str()), symbolicstring->getSource().getIdentifierMethod());

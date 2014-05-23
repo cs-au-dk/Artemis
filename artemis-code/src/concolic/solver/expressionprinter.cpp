@@ -71,6 +71,29 @@ void ExpressionPrinter::visit(Symbolic::IntegerCoercion* integercoercion, void* 
      m_result += " )";
 }
 
+void ExpressionPrinter::visit(Symbolic::IntegerMaxMin* obj, void* arg)
+{
+    if (obj->getMax()) {
+        m_result += "IntegerMax( ";
+    } else {
+        m_result += "IntegerMin( ";
+    }
+
+    std::list<Symbolic::Expression*> expressions = obj->getExpressions();
+    std::list<Symbolic::Expression*>::iterator iter;
+
+    for (iter = expressions.begin(); iter != expressions.end(); iter++) {
+        if (iter != expressions.begin()) {
+            m_result += ", ";
+        }
+
+        Symbolic::Expression* expression = *iter;
+        expression->accept(this);
+    }
+
+    m_result += " )";
+}
+
 void ExpressionPrinter::visit(Symbolic::SymbolicString* symbolicstring, void* args)
 {
     m_result += "SymbolicString";

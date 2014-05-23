@@ -86,6 +86,19 @@ void CVC4TypeAnalysis::visit(Symbolic::IntegerCoercion* integercoercion, void* a
 
 }
 
+void CVC4TypeAnalysis::visit(Symbolic::IntegerMaxMin* obj, void* arg) {
+
+    std::list<Symbolic::Expression*> expressions = obj->getExpressions();
+    std::list<Symbolic::Expression*>::iterator iter;
+
+    for (iter = expressions.begin(); iter != expressions.end(); iter++) {
+        mExpressionType = INTEGER;
+        Symbolic::Expression* expression = *iter;
+        expression->accept(this);
+    }
+
+}
+
 void CVC4TypeAnalysis::visit(Symbolic::ConstantObject* constantobject, void* arg) {
     // NO-OP
 }

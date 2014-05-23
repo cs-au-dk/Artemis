@@ -1,0 +1,4 @@
+TEST PC: ((IntegerCoercion(SymbolicString) * ConstantInteger) < (IntegerCoercion(SymbolicString) * ConstantInteger))
+if ((Math.floor(x)*2) >= (Math.floor(y)*2)) {
+    alert(x);
+}

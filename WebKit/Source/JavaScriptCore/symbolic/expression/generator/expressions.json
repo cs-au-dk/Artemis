@@ -64,6 +64,17 @@
 	},
 
 	{
+		"ID": "IntegerMaxMin",
+		"type": "expression",
+		"parent": "IntegerExpression",
+		"fields": [
+		    ["std::list<Expression*>", "expressions"],
+                    ["bool", "max"]
+		]
+	},
+
+
+	{
 		"ID": "ConstantObject",
 		"type": "expression",
 		"parent": "ObjectExpression",

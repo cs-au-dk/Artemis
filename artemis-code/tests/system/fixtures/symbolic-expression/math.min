@@ -1,0 +1,4 @@
+TEST PC: ((IntegerMin(IntegerCoercion(SymbolicString),IntegerCoercion(SymbolicString))==ConstantInteger)==ConstantBoolean)
+if (Math.min(x, y) == 1) {
+    alert(x);
+}
