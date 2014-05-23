@@ -148,14 +148,7 @@ def execute_artemis(execution_uuid, url, iterations=1,
                 key = match.group(1).strip()
                 value = match.group(2).strip()
 
-                if value.isdigit() and ('INT_' in key or not 'SYM_IN_' in key):
-                    value = int(value)
-
-                if 'BOOL_' in key or not 'SYM_IN_' in key:
-                    if value == 'true':
-                        value = True
-                    elif value == 'false':
-                        value = False
+                value = to_appropriate_type(key, value)
 
                 report[key] = value
             except:
@@ -172,6 +165,19 @@ def execute_artemis(execution_uuid, url, iterations=1,
             pc.append(value)
     report['pathCondition'] = pc
     return report
+
+
+def to_appropriate_type(key, value):
+    if value.isdigit() and ('INT_' in key or not 'SYM_IN_' in key):
+        return int(value)
+
+    if 'BOOL_' in key or not 'SYM_IN_' in key:
+        if value == 'true':
+            return True
+        elif value == 'false':
+            return False
+    
+    return value
 
 
 class ArtemisCallException(Exception):

@@ -8,7 +8,7 @@ import sys
 import re
 import unittest
 
-from harness.artemis import execute_artemis
+from harness.artemis import execute_artemis, to_appropriate_type
 from os import listdir
 from os.path import isfile, join
 
@@ -103,7 +103,7 @@ def test_generator(filename, name, test_dict=None, internal_test=None):
                     tested_not_solved = tested_not_solved or s == "Concolic::Solver::ConstraintsNotSolved"
                     tested_no_failed_injections = tested_no_failed_injections or s == "Concolic::FailedInjections"
 
-                    v = int(v) if v.isdigit() else (True if v == "true" else (False if v == "false" else v))
+                    v = to_appropriate_type(s, v)
                     r_val = _get_from_report(report, s)
                     _assert_test_case(self, op, r_val['val'], v.replace(" ", "") if r_val['pc'] else v)
 
@@ -117,6 +117,7 @@ def test_generator(filename, name, test_dict=None, internal_test=None):
             "Failed injections are an error by default."
 
     return test
+
 
 if __name__ == '__main__':
 
