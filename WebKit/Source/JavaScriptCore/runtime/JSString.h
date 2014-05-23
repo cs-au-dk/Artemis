@@ -30,6 +30,7 @@
 #include "Structure.h"
 #ifdef ARTEMIS
 #include "symbolic/expr.h"
+#include <statistics/statsstorage.h>
 #endif
 namespace JSC {
 
@@ -490,6 +491,9 @@ namespace JSC {
         bool isStrictUInt32;
         unsigned i = propertyName.toUInt32(isStrictUInt32);
         if (isStrictUInt32 && i < m_length) {
+            if (isSymbolic()) {
+                Statistics::statistics()->accumulate("Concolic::MissingInstrumentation::stringIndexLookup", 1);
+            }
             slot.setValue(getIndex(exec, i));
             return true;
         }

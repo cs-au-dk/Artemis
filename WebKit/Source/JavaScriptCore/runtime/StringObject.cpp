@@ -24,8 +24,6 @@
 #include "Error.h"
 #include "PropertyNameArray.h"
 
-#include <statistics/statsstorage.h>
-
 namespace JSC {
 
 ASSERT_CLASS_FITS_IN_CELL(StringObject);
@@ -47,9 +45,6 @@ void StringObject::finishCreation(JSGlobalData& globalData, JSString* string)
 
 bool StringObject::getOwnPropertySlot(JSCell* cell, ExecState* exec, const Identifier& propertyName, PropertySlot& slot)
 {
-    if (static_cast<JSString*>(cell)->isSymbolic()) {
-        Statistics::statistics()->accumulate("Concolic::MissingInstrumentation::stringGetOwnPropertySlot", 1);
-    }
 
     StringObject* thisObject = jsCast<StringObject*>(cell);
     if (thisObject->internalValue()->getStringPropertySlot(exec, propertyName, slot))
@@ -59,9 +54,6 @@ bool StringObject::getOwnPropertySlot(JSCell* cell, ExecState* exec, const Ident
     
 bool StringObject::getOwnPropertySlotByIndex(JSCell* cell, ExecState* exec, unsigned propertyName, PropertySlot& slot)
 {
-    if (static_cast<JSString*>(cell)->isSymbolic()) {
-        Statistics::statistics()->accumulate("Concolic::MissingInstrumentation::stringGetOwnPropertySlotByIndex", 1);
-    }
 
     StringObject* thisObject = jsCast<StringObject*>(cell);
     if (thisObject->internalValue()->getStringPropertySlot(exec, propertyName, slot))
@@ -71,9 +63,6 @@ bool StringObject::getOwnPropertySlotByIndex(JSCell* cell, ExecState* exec, unsi
 
 bool StringObject::getOwnPropertyDescriptor(JSObject* object, ExecState* exec, const Identifier& propertyName, PropertyDescriptor& descriptor)
 {
-    if (static_cast<StringObject*>(object)->internalValue()->isSymbolic()) {
-        Statistics::statistics()->accumulate("Concolic::MissingInstrumentation::stringGetOwnPropertyDescriptor", 1);
-    }
 
     StringObject* thisObject = jsCast<StringObject*>(object);
     if (thisObject->internalValue()->getStringPropertyDescriptor(exec, propertyName, descriptor))
@@ -83,10 +72,6 @@ bool StringObject::getOwnPropertyDescriptor(JSObject* object, ExecState* exec, c
 
 void StringObject::put(JSCell* cell, ExecState* exec, const Identifier& propertyName, JSValue value, PutPropertySlot& slot)
 {
-    if (static_cast<JSString*>(cell)->isSymbolic()) {
-        Statistics::statistics()->accumulate("Concolic::MissingInstrumentation::stringPut", 1);
-    }
-
     if (propertyName == exec->propertyNames().length) {
         if (slot.isStrictMode())
             throwTypeError(exec, StrictModeReadonlyPropertyWriteError);
