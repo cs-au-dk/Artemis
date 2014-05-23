@@ -165,10 +165,18 @@ EncodedJSValue JSC_HOST_CALL mathProtoFuncATan2(ExecState* exec)
 
 EncodedJSValue JSC_HOST_CALL mathProtoFuncCeil(ExecState* exec)
 {
-    if (exec->argument(0).isSymbolic()) {
-        Statistics::statistics()->accumulate("Concolic::MissingInstrumentation::mathProtoFuncCeil", 1);
+    JSValue origin = exec->argument(0);
+    JSValue v = jsNumber(ceil(exec->argument(0).toNumber(exec)));
+
+    if (origin.isSymbolic()) {
+        if (origin.isNumber()) {
+            v.makeSymbolic(origin.asSymbolic());
+        } else {
+            v.makeSymbolic((Symbolic::IntegerExpression*)new Symbolic::IntegerCoercion(origin.asSymbolic()));
+        }
     }
-    return JSValue::encode(jsNumber(ceil(exec->argument(0).toNumber(exec))));
+
+    return JSValue::encode(v);
 }
 
 EncodedJSValue JSC_HOST_CALL mathProtoFuncCos(ExecState* exec)
@@ -189,10 +197,18 @@ EncodedJSValue JSC_HOST_CALL mathProtoFuncExp(ExecState* exec)
 
 EncodedJSValue JSC_HOST_CALL mathProtoFuncFloor(ExecState* exec)
 {
-    if (exec->argument(0).isSymbolic()) {
-        Statistics::statistics()->accumulate("Concolic::MissingInstrumentation::mathProtoFuncFloor", 1);
+    JSValue origin = exec->argument(0);
+    JSValue v = jsNumber(origin.toNumber(exec));
+
+    if (origin.isSymbolic()) {
+        if (origin.isNumber()) {
+            v.makeSymbolic(origin.asSymbolic());
+        } else {
+            v.makeSymbolic((Symbolic::IntegerExpression*)new Symbolic::IntegerCoercion(origin.asSymbolic()));
+        }
     }
-    return JSValue::encode(jsNumber(floor(exec->argument(0).toNumber(exec))));
+
+    return JSValue::encode(v);
 }
 
 EncodedJSValue JSC_HOST_CALL mathProtoFuncLog(ExecState* exec)

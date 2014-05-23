@@ -132,6 +132,12 @@ Symbolic Support
 
 ``parseInt``,
 
+``Math.{floor, ceil}``,
+
+.. note::
+
+   JavaScript represents all numeric values as doubles, while we represent numeric values as integers. Thus, ``Math.{floor, ceil}`` returns the input symbolic value unmodified. This introduces some degree of imprecision in our solutions.
+
 ``Input Checkbox.checked``, ``Input Radio.checked``, ``Input Text.{value, valueAsNumber}``, ``Select.{value, selectedIndex}``, ``OptionGroup.selectedIndex``, ``Option.value``
 
 .. note::
@@ -142,7 +148,7 @@ Symbolic Support
 Usage Warnings
 ^^^^^^^^^^^^^^
 
-``Math.{abs, acos, asin, atan, atan2, ceil, cos, exp, floor, log, max, min, pow, random, round, sin, sqrt, tan}``,
+``Math.{abs, acos, asin, atan, atan2, cos, exp, log, max, min, pow, random, round, sin, sqrt, tan}``,
 
 ``String.{charCodeAt, indexOf, lastIndexOf, localeCompare, slice, split, substr, substring, toLocaleLowerCase, toLocaleUpperCase, toLowerCase, toUpperCase, trim, trimLeft, trimRight, anchor, big, blink, bold, fixed, fontcolor, fontsize, italics, link, small, strike, sub, sup, fromCharCode}``,
 
