@@ -114,7 +114,7 @@ As an easy reference, we use http://www.w3schools.com/jsref/ as an easy-to-read 
 Symbolic Support
 ^^^^^^^^^^^^^^^^
 
-``String.{charAt, concat, match, replace, search, toString, valueOf}``,
+``String.{charAt, concat, match, replace, search, toString, valueOf, length}``,
 
 .. note::
 
@@ -155,7 +155,7 @@ Usage Warnings
 No Symbolic Support and No Usage Warnings
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-``Array.*``, ``Boolean.*``, ``Date.*``, ``Number.*``, ``RegExp.{global, ignoreCase, lastIndex, multiline, source, toString}``
+``Array.*``, ``Boolean.*``, ``Date.*``, ``Number.*``, ``RegExp.{global, ignoreCase, lastIndex, multiline, source, toString}``, ``String.<index lookup>``
 
 ``Window.*``, ``Navigator.*``, ``Screen.*``, ``History.*``, ``Location.*``
 
