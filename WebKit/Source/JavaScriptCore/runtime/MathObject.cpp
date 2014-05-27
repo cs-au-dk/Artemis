@@ -255,10 +255,7 @@ EncodedJSValue JSC_HOST_CALL mathProtoFuncMax(ExecState* exec)
     JSValue res = jsNumber(result);
 
     if (isSymbolic) {
-        std::cout << "MAKE SYMBOLIC!!! " << std::endl;
         res.makeSymbolic(new Symbolic::IntegerMaxMin(args, true));
-    } else {
-        std::cout << "DONT MAKE SYMBOLIC!!! " << std::endl;
     }
     return JSValue::encode(res);
 }
