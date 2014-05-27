@@ -94,15 +94,21 @@ def main():
     # Check the version of Artemis we are using (by git commit)
     artemis_version_url = current_git_commit_hyperlink()
     
+    # Where to save the constraints.
+    constraints_index = os.path.join(run_dir_name, "all-constraints-index.txt")
+    constraints_dir = os.path.join(run_dir_name, "all-constraints")
+    
     # Generate a method to test each site and add it to our unit-testable class.
     ep_log = []
     for s in sites:
         test_name = 'test_%s' % re.sub(r'\s+', '', s[0])
         # Check how we will find the EPs.
         if external_ep_finder:
-            test = full_test_generator(s[0], s[1], dry_run, logger, artemis_version_url, date_string, run_dir_name, ep_log)
+            test = full_test_generator(s[0], s[1], dry_run, logger, artemis_version_url, date_string, run_dir_name,
+                                    ep_log, constraints_index, constraints_dir)
         else:
-            test = test_generator(s[0], s[1], s[2], dry_run, logger, artemis_version_url, date_string, run_dir_name)
+            test = test_generator(s[0], s[1], s[2], dry_run, logger, artemis_version_url, date_string, run_dir_name, 
+                                    constraints_index, constraints_dir)
         
         setattr(TestSequence, test_name, test)
     
@@ -120,14 +126,11 @@ def main():
     if external_ep_finder and not dry_run:
         _save_ep_log(os.path.join(run_dir_name, "ep-log.csv"), ep_log)
     
-    # Save the constraint index and constraints directory.
-    if not dry_run:
-        shutil.copyfile("/tmp/constraintindex", os.path.join(run_dir_name, "all-constraints-index.txt"))
-        shutil.copytree("/tmp/constraints", os.path.join(run_dir_name, "all-constraints"))
 
 
 
-def full_test_generator(site_name, site_url, dry_run=False, logger=None, version="", test_date="", test_dir=".", ep_log=None):
+def full_test_generator(site_name, site_url, dry_run=False, logger=None, version="", test_date="", test_dir=".",
+                        ep_log=None, constraints_index=None, constraints_dir=None):
     """
     Returns a function which does a 'full' test of the given site.
     This means running the external entry-point finding tool and then for each EP found running the test returned by 
@@ -175,7 +178,8 @@ def full_test_generator(site_name, site_url, dry_run=False, logger=None, version
         for idx, ep in enumerate(ep_list):
             site_id = "%s_%d" % (site_name, idx+1)
             test_functions.append((site_id, test_generator(site_id, site_url, ep, dry_run, logger, version,
-                                                         test_date, test_dir, ep_finder_time)))
+                                                         test_date, test_dir, ep_finder_time, constraints_index,
+                                                         constraints_dir)))
             ep_log.append((site_id, site_url, ep))
         
         # Run each of these functions to actually test the different EPs.
@@ -206,7 +210,7 @@ def full_test_generator(site_name, site_url, dry_run=False, logger=None, version
 
 
 def test_generator(site_name, site_url, site_ep, dry_run=False, logger=None, version="", test_date="", test_dir=".", 
-                   ep_finder_time=""):
+                   ep_finder_time="", constraints_index=None, constraints_dir=None):
     """Returns a function which will test the given site and entry-point when executed."""
     
     def test(self):
@@ -248,6 +252,14 @@ def test_generator(site_name, site_url, site_ep, dry_run=False, logger=None, ver
             
             # Copy the constraint log into the current test directory.
             shutil.copyfile("/tmp/constraintlog", os.path.join(test_dir, site_name, "constraint-log.txt"))
+            
+            # Save the constraint index and constraints directory to the main run directory.
+            if constraints_index:
+                shutil.copyfile("/tmp/constraintindex", constraints_index)
+            if constraints_dir:
+                # TODO: Would be better to use a copy-and-overwrite function, but shutil doesn't seem to have one.
+                shutil.rmtree(constraints_dir, ignore_errors=True)
+                shutil.copytree("/tmp/constraints", constraints_dir)
             
             # If the return code indicates a failure, check for a core dump and create a backtrace if one exists.
             # We also delete the core dumps to save space!
