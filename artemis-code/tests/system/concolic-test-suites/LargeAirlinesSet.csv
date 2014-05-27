@@ -1,0 +1,149 @@
+Site,URL,Entry Point
+aa_1,http://localhost:8080/2014-04-26/aa/,id('localeSubmit')
+aegeanair_1,http://localhost:8080/2014-04-26/aegeanair/,id('pnr_retrieve_form')/div[@class='checkBoxWrapper'][1]/button[@class='BtnSearchHome rightAlign'][1]
+aegeanair_2,http://localhost:8080/2014-04-26/aegeanair/,id('Redeem_MnBLoginBtn')
+aegeanair_3,http://localhost:8080/2014-04-26/aegeanair/,id('MnBLoginBtn')
+aegeanair_4,http://localhost:8080/2014-04-26/aegeanair/,id('MybookingBtn')
+aegeanair_5,http://localhost:8080/2014-04-26/aegeanair/,/html[1]/body[1]/div[@class='main_wrapper'][1]/empty[1]/div[@class='nav more'][1]/form[1]/fieldset[1]/input[@class='submit'][1]
+aerlingus_1,http://localhost:8080/2014-04-26/aerlingus/,id('showDeparture')
+aerlingus_2,http://localhost:8080/2014-04-26/aerlingus/,id('hide-message')
+aerlingus_3,http://localhost:8080/2014-04-26/aerlingus/,id('showReturn')
+airasia_1,http://localhost:8080/2014-04-26/airasia/,id('search-box')/button[1]
+airasia_2,http://localhost:8080/2014-04-26/airasia/,id('ControlGroupCompactView_ButtonSubmit')
+airlineforums_1,http://localhost:8080/2014-04-26/airlineforums/,id('search_wrap')/input[@class='submit_input clickable'][1]
+airtran_1,http://localhost:8080/2014-04-26/airtran/,id('search')/input[5]
+airtran_2,http://localhost:8080/2014-04-26/airtran/,id('SkySales')/table[@class='form'][1]/tbody[1]/tr[9]/td[2]/span[@class='button'][1]/span[1]/a[1]
+alaskaair_1,http://localhost:8080/2014-04-26/alaskaair/,id('findFlights')
+allegiantair_1,http://localhost:8080/2014-04-26/allegiantair/,id('subscribeForm')/table[1]/tbody[1]/tr[3]/td[1]/input[1]
+bmibaby_1,http://localhost:8080/2014-04-26/bmibaby/,id('go_button')
+britishairways_1,http://localhost:8080/2014-04-26/britishairways/,id('go_button')
+bruneiair_1,http://localhost:8080/2014-04-26/bruneiair/,id('button')
+brusselsairlines_1,http://localhost:8080/2014-04-26/brusselsairlines/,id('LanguageSwitch_saveCustomCountryLanguage')
+bwiairport_1,http://localhost:8080/2014-04-26/bwiairport/,id('searchSubmit')
+cathaypacific_1,http://localhost:8080/2014-04-26/cathaypacific/,id('splashCookie')/span[1]/input[@class='btn'][1]
+cheapflights_1,http://localhost:8080/2014-04-26/cheapflights/,id('buttonSearch')
+cheaptickets_1,http://localhost:8080/2014-04-26/cheaptickets/,id('searchbox_008106643373581316187:yvu7x6pevuo')/div[@class='submit button-alternate button-medium'][1]/input[1]
+cheaptickets_2,http://localhost:8080/2014-04-26/cheaptickets/,id('search')/div[@class='hotelFormMod '][1]/div[@class='hotelSearchForm searchForm '][1]/form[@class='searchFormForm'][1]/fieldset[@class='hotelSearch'][1]/div[@class='group groupWithButtons'][1]/div[@class='buttons'][1]/div[@class='submit button-primary button-medium'][1]/input[1]
+copaair_1,http://localhost:8080/2014-04-26/copaair/,id('askUs')
+copaair_2,http://localhost:8080/2014-04-26/copaair/,id('btn_city_destination')
+copaair_3,http://localhost:8080/2014-04-26/copaair/,id('btn_city_origin')
+croatiaairlines_1,http://localhost:8080/2014-04-26/croatiaairlines/,id('ctl06_ctl21_btnSearch')
+delta_1,http://localhost:8080/2014-04-26/delta/,/html[1]/body[@class='onecolumn page homepage  '][1]/div[3]/nav[1]/div[4]/div[@class='tabContainer'][1]/div[1]/div[4]/div[1]/div[1]/div[@class='widget-body'][1]/form[1]/div[2]/div[@class='widget-body-content-top float-left'][1]/div[@class='trip-btn-container float-left'][1]/div[@class='left-trip-btn-cont'][1]/button[3]
+delta_2,http://localhost:8080/2014-04-26/delta/,id('ui-tabs-1')/div[3]/nav[1]/div[4]/div[@class='tabContainer'][1]/div[1]/div[3]/div[1]/form[1]/div[4]/fieldset[1]/button[1]
+delta_3,http://localhost:8080/2014-04-26/delta/,/html[1]/body[@class='onecolumn page homepage  '][1]/div[3]/nav[1]/div[4]/div[@class='tabContainer'][1]/div[1]/div[4]/div[1]/div[1]/div[@class='widget-body'][1]/form[1]/div[2]/div[@class='widget-body-content-top float-left'][1]/div[@class='trip-btn-container float-left'][1]/div[@class='left-trip-btn-cont'][1]/button[2]
+delta_4,http://localhost:8080/2014-04-26/delta/,/html[1]/body[@class='onecolumn page homepage  '][1]/div[3]/nav[1]/div[2]/div[2]/div[@class='infoContainer'][1]/div[@class='ieCss'][1]/div[@class='ieCssInputFields'][1]/form[2]/fieldset[@class='submitButton'][1]/button[1]
+delta_5,http://localhost:8080/2014-04-26/delta/,/html[1]/body[@class='onecolumn page homepage  '][1]/div[3]/nav[1]/div[2]/div[2]/div[@class='infoContainer'][1]/div[@class='ieCss'][1]/div[@class='ieCssInputFields'][1]/form[3]/fieldset[@class='submitButton'][1]/button[1]
+delta_6,http://localhost:8080/2014-04-26/delta/,id('ui-tabs-1')/div[3]/nav[1]/div[2]/div[2]/div[@class='infoContainer'][1]/div[@class='ieCss'][1]/div[@class='ieCssInputFields'][1]/form[3]/fieldset[@class='submitButton'][1]/button[1]
+delta_7,http://localhost:8080/2014-04-26/delta/,id('ui-tabs-1')/div[3]/nav[1]/div[6]/div[2]/form[1]/div[@class='defaultPaddingTop'][1]/button[1]
+delta_8,http://localhost:8080/2014-04-26/delta/,id('ui-tabs-1')/div[3]/nav[1]/section[2]/div[1]/div[1]/form[1]/div[@class='loginWrapper'][1]/div[2]/fieldset[1]/div[1]/div[3]/button[1]
+delta_9,http://localhost:8080/2014-04-26/delta/,id('ui-tabs-1')/div[3]/nav[1]/div[4]/div[@class='tabContainer'][1]/div[1]/div[2]/div[1]/form[1]/div[1]/fieldset[1]/button[1]
+delta_10,http://localhost:8080/2014-04-26/delta/,/html[1]/body[@class='onecolumn page homepage  '][1]/div[3]/nav[1]/div[2]/div[2]/div[@class='infoContainer'][1]/div[@class='ieCss'][1]/div[@class='ieCssInputFields'][1]/form[1]/fieldset[@class='submitButton'][1]/button[1]
+delta_11,http://localhost:8080/2014-04-26/delta/,id('ui-tabs-1')/div[3]/nav[1]/div[2]/div[2]/div[@class='infoContainer'][1]/div[@class='ieCss'][1]/div[@class='ieCssInputFields'][1]/form[2]/fieldset[@class='submitButton'][1]/button[1]
+delta_12,http://localhost:8080/2014-04-26/delta/,id('ui-tabs-1')/div[3]/nav[1]/div[5]/div[2]/form[1]/div[3]/input[1]
+delta_13,http://localhost:8080/2014-04-26/delta/,/html[1]/body[@class='onecolumn page homepage  '][1]/div[3]/nav[1]/div[4]/div[@class='tabContainer'][1]/div[1]/div[6]/div[1]/form[1]/div[4]/fieldset[1]/button[1]
+delta_14,http://localhost:8080/2014-04-26/delta/,id('ui-tabs-1')/div[3]/nav[1]/div[4]/div[@class='tabContainer'][1]/div[1]/div[1]/div[1]/div[1]/div[@class='widget-body'][1]/form[1]/div[@class='float-left'][1]/div[@class='widget-body-content-bottom'][1]/div[@class='search-cell-container findFlightsSubmit'][1]/button[1]
+delta_15,http://localhost:8080/2014-04-26/delta/,/html[1]/body[@class='onecolumn page homepage  '][1]/div[3]/nav[1]/div[5]/div[2]/form[1]/div[3]/input[1]
+delta_16,http://localhost:8080/2014-04-26/delta/,/html[1]/body[@class='onecolumn page homepage  '][1]/div[3]/nav[1]/section[2]/div[1]/div[1]/form[1]/div[@class='loginWrapper'][1]/div[2]/fieldset[1]/div[1]/div[3]/button[1]
+delta_17,http://localhost:8080/2014-04-26/delta/,/html[1]/body[@class='onecolumn page homepage  '][1]/div[3]/div[@class='header'][1]/header[@class='clr'][1]/nav[1]/ul[@class='row secondary clr'][1]/li[@class='menu-item search'][1]/form[1]/div[@class='ui-widget overlabel-wrapper'][1]/button[1]
+delta_18,http://localhost:8080/2014-04-26/delta/,id('ui-tabs-1')/div[3]/nav[1]/div[2]/div[2]/div[@class='infoContainer'][1]/div[@class='ieCss'][1]/div[@class='ieCssInputFields'][1]/form[1]/fieldset[@class='submitButton'][1]/button[1]
+delta_19,http://localhost:8080/2014-04-26/delta/,/html[1]/body[@class='onecolumn page homepage  '][1]/div[3]/nav[1]/div[4]/div[@class='tabContainer'][1]/div[1]/div[4]/div[1]/div[1]/div[@class='widget-body'][1]/form[1]/div[2]/div[@class='widget-body-content-top float-left'][1]/div[@class='trip-btn-container float-left'][1]/div[@class='left-trip-btn-cont'][1]/button[1]
+delta_20,http://localhost:8080/2014-04-26/delta/,/html[1]/body[@class='onecolumn page homepage  '][1]/div[3]/nav[1]/div[4]/div[@class='tabContainer'][1]/div[1]/div[4]/div[1]/div[1]/div[@class='widget-body'][1]/form[1]/div[@class='float-left'][1]/div[@class='widget-body-content-bottom'][1]/div[@class='search-cell-container findFlightsSubmit'][1]/button[1]
+delta_21,http://localhost:8080/2014-04-26/delta/,id('ui-tabs-1')/div[3]/nav[1]/div[4]/div[@class='tabContainer'][1]/div[1]/div[1]/div[1]/div[1]/div[@class='widget-body'][1]/form[1]/div[2]/div[@class='widget-body-content-top float-left'][1]/div[@class='trip-btn-container float-left'][1]/div[@class='left-trip-btn-cont'][1]/button[3]
+delta_22,http://localhost:8080/2014-04-26/delta/,id('ui-tabs-1')/div[3]/nav[1]/div[4]/div[@class='tabContainer'][1]/div[1]/div[1]/div[1]/div[1]/div[@class='widget-body'][1]/form[1]/div[2]/div[@class='widget-body-content-top float-left'][1]/div[@class='trip-btn-container float-left'][1]/div[@class='left-trip-btn-cont'][1]/button[1]
+delta_23,http://localhost:8080/2014-04-26/delta/,/html[1]/body[@class='onecolumn page homepage  '][1]/div[3]/nav[1]/div[4]/div[@class='tabContainer'][1]/div[1]/div[5]/div[1]/form[1]/div[1]/fieldset[1]/button[1]
+delta_24,http://localhost:8080/2014-04-26/delta/,id('ui-tabs-1')/div[3]/div[@class='header'][1]/header[@class='clr'][1]/nav[1]/ul[@class='row secondary clr'][1]/li[@class='menu-item search'][1]/form[1]/div[@class='ui-widget'][1]/button[1]
+delta_25,http://localhost:8080/2014-04-26/delta/,id('ui-tabs-1')/div[3]/nav[1]/div[4]/div[@class='tabContainer'][1]/div[1]/div[1]/div[1]/div[1]/div[@class='widget-body'][1]/form[1]/div[2]/div[@class='widget-body-content-top float-left'][1]/div[@class='trip-btn-container float-left'][1]/div[@class='left-trip-btn-cont'][1]/button[2]
+delta_26,http://localhost:8080/2014-04-26/delta/,/html[1]/body[@class='onecolumn page homepage  '][1]/div[3]/nav[1]/div[6]/div[2]/form[1]/div[@class='defaultPaddingTop'][1]/button[1]
+etihadairways_1,http://localhost:8080/2014-04-26/etihadairways/,id('t1-p1')/button[@class='btn btn-medium-arrow btn-color2 ie7-submit-now '][1]
+expedia_1,http://localhost:8080/2014-04-26/expedia/,id('uw-hf-sub-anc')
+expedia_2,http://localhost:8080/2014-04-26/expedia/,id('xp_hp_contentContainer')/div[@class='xp-grd-ctn en_GB'][1]/div[@class='xp-grd-col-8 module xp-grd-last'][1]/div[@class='newsLetter'][1]/form[@class='newsContent emea-en_GB'][1]/div[@class='btn'][1]/input[@class='xp-b-submit2'][1]
+flightnetwork_1,http://localhost:8080/2014-04-26/flightnetwork/,id('button')
+flightnetwork_2,http://localhost:8080/2014-04-26/flightnetwork/,id('btn_submit')
+flybe_1,http://localhost:8080/2014-04-26/flybe/,id('flight-search-button')
+flykingfisher_1,http://localhost:8080/2014-04-26/flykingfisher/,id('btnFltSchd')
+flykingfisher_2,http://localhost:8080/2014-04-26/flykingfisher/,id('btnFltSearch')
+frontierairlines_1,http://localhost:8080/2014-04-26/frontierairlines/,id('btnHPERSignIn')
+frontierairlines_2,http://localhost:8080/2014-04-26/frontierairlines/,id('btnBaseEmail')
+goindigo_1,http://localhost:8080/2014-04-26/goindigo/,id('memberLogin_Submit')
+goindigo_2,http://localhost:8080/2014-04-26/goindigo/,id('searchContainerAutoComplete')/input[@class='icon-white icon-search'][1]
+hawaiianair_1,http://localhost:8080/2014-04-26/hawaiianair/,id('btnemailvalidation')
+hawaiianair_2,http://localhost:8080/2014-04-26/hawaiianair/,id('TaskBarSearchTextBox_btn')
+hawaiianair_3,http://localhost:8080/2014-04-26/hawaiianair/,id('btnBookVacationPackages')
+hawaiianair_4,http://localhost:8080/2014-04-26/hawaiianair/,id('ctl00_PlaceHolderMain_ctl01_fsMain_HotelBttnSearch')
+hawaiianair_5,http://localhost:8080/2014-04-26/hawaiianair/,id('ctl00_PlaceHolderMain_ctl01_fsMain_BttnSearch')
+hongkongairport_1,http://localhost:8080/2014-04-26/hongkongairport/,id('searchContent')/div[@class='searchButton'][1]/input[1]
+jal_1,http://localhost:8080/2014-04-26/jal/,id('rnHeadSearchBtn01')/input[1]
+jal_2,http://localhost:8080/2014-04-26/jal/,id('memberLogin')/div[@class='set mgt0'][1]/div[@class='setL roImg'][1]/input[1]
+jal_3,http://localhost:8080/2014-04-26/jal/,id('domTMModule1')/form[@class='domTMModule1'][1]/div[@class='submitArea'][1]/p[@class='alC'][1]/input[1]
+jet2_1,http://localhost:8080/2014-04-26/jet2/,id('TA9FEDC7A027_ctl00_ctl00_C004')
+jet2_2,http://localhost:8080/2014-04-26/jet2/,id('emailsignup')
+jet2_3,http://localhost:8080/2014-04-26/jet2/,id('low-fare-finder')
+jet2_4,http://localhost:8080/2014-04-26/jet2/,id('recent-searches')
+jet2_5,http://localhost:8080/2014-04-26/jet2/,id('groups')
+jet2_6,http://localhost:8080/2014-04-26/jet2/,id('ctl36_ctl00_ctl00_ctl00_C001_Col00')/div[@class='sfFormSubmit sfSubmitBtnSmall'][1]/input[1]
+jetairways_1,http://localhost:8080/2014-04-26/jetairways/,id('ctl00_ctl00_body_PrintContent_IWOVID_item_1_btnGo')
+jetblue_1,http://localhost:8080/2014-04-26/jetblue/,id('fflight')/div[@class='submit-btn-wrap'][1]/div[@class='submit-btn-inner'][1]/input[@class='find-it-btn'][1]
+jetblue_2,http://localhost:8080/2014-04-26/jetblue/,id('loupe-btn')
+jetblue_3,http://localhost:8080/2014-04-26/jetblue/,id('signin_btn')
+jetstar_1,http://localhost:8080/2014-04-26/jetstar/,id('btnSearchForFlights')
+jetstar_2,http://localhost:8080/2014-04-26/jetstar/,id('ctl05_ctl05_pnl1')/button[@class='png-bg SiteSearchBtn'][1]
+kayak_1,http://localhost:8080/2014-04-26/kayak/,id('fdimgbutton')
+laoairlines_1,http://localhost:8080/2014-04-26/laoairlines/,id('boxfl')/form[1]/div[@class='relse'][1]/div[@class='pos-g'][1]/input[1]
+laoairlines_2,http://localhost:8080/2014-04-26/laoairlines/,id('lineNolog')/span[@class='hlogin-c'][1]/input[1]
+lot_1,http://localhost:8080/2014-04-26/lot/,id('flightBookingForm')/div[@class='row f-row'][2]/div[@class='twelve columns'][1]/span[@class='ui-combobox'][1]/button[@class='ui-button ui-widget ui-state-default ui-button-icon-only ui-corner-right ui-combobox-toggle'][1]
+lot_2,http://localhost:8080/2014-04-26/lot/,id('flightBookingForm')/div[@class='f-buttons'][1]/span[@class='btn expand'][1]/input[1]
+lot_3,http://localhost:8080/2014-04-26/lot/,id('newsletterSubscriptionFooterForm')/div[@class='row f-row mini'][1]/div[@class='two columns'][1]/span[@class='btn secondary'][1]/input[1]
+lot_4,http://localhost:8080/2014-04-26/lot/,id('flightBookingForm')/div[@class='row f-row'][1]/div[@class='twelve columns'][1]/span[@class='ui-combobox'][1]/button[@class='ui-button ui-widget ui-state-default ui-button-icon-only ui-corner-right ui-combobox-toggle'][1]
+malaysiaairlines_1,http://localhost:8080/2014-04-26/malaysiaairlines/,id('search_submit')
+malaysiaairlines_2,http://localhost:8080/2014-04-26/malaysiaairlines/,id('ibeFormSubmit')
+monarch_1,http://localhost:8080/2014-04-26/monarch/,id('FindFlightsButton')
+monarch_2,http://localhost:8080/2014-04-26/monarch/,id('form')/div[@class='holder'][1]/header[@class='main-header'][1]/p[@class='site-search'][1]/button[1]
+orbitz_1,http://localhost:8080/2014-04-26/orbitz/,id('search')/div[@class='hotelFormMod '][1]/div[@class='hotelSearchForm searchForm '][1]/form[@class='searchFormForm'][1]/fieldset[@class='hotelSearch'][1]/div[@class='group groupWithButtons'][1]/div[@class='buttons'][1]/div[@class='submit button-primary button-medium'][1]/input[1]
+philippineairlines_1,http://localhost:8080/2014-04-26/philippineairlines/,id('ui-tabs-1')/table[1]/tbody[1]/tr[2]/td[1]/table[@class='footer_bar'][1]/tbody[1]/tr[2]/td[1]/form[1]/table[@class='footer_txt_nolink'][1]/tbody[1]/tr[1]/td[7]/a[1]/input[@class='subscribe_button'][1]
+philippineairlines_2,http://localhost:8080/2014-04-26/philippineairlines/,id('ui-tabs-1')/table[1]/tbody[1]/tr[1]/td[1]/table[2]/tbody[1]/tr[1]/td[1]/table[@class='home_body_table'][1]/tbody[1]/tr[1]/td[@class='formBG'][1]/table[@class='formMainTable'][1]/tbody[1]/tr[1]/td[1]/div[1]/div[2]/form[2]/table[1]/tbody[1]/tr[1]/td[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[2]/table[1]/tbody[1]/tr[6]/td[1]/table[1]/tbody[1]/tr[1]/td[1]/input[@class='form_button1'][1]
+philippineairlines_3,http://localhost:8080/2014-04-26/philippineairlines/,/html[1]/body[1]/table[1]/tbody[1]/tr[1]/td[1]/table[2]/tbody[1]/tr[1]/td[1]/table[@class='home_body_table'][1]/tbody[1]/tr[1]/td[@class='formBG'][1]/table[@class='formMainTable'][1]/tbody[1]/tr[1]/td[1]/div[1]/div[7]/form[@class='form-search-box'][1]/table[@class='show search'][1]/tbody[1]/tr[5]/td[2]/button[@class='ui-datepicker-trigger'][1]
+philippineairlines_4,http://localhost:8080/2014-04-26/philippineairlines/,/html[1]/body[1]/table[1]/tbody[1]/tr[1]/td[1]/table[2]/tbody[1]/tr[1]/td[1]/table[@class='home_body_table'][1]/tbody[1]/tr[1]/td[@class='formBG'][1]/table[@class='formMainTable'][1]/tbody[1]/tr[1]/td[1]/div[1]/div[5]/form[1]/table[1]/tbody[1]/tr[4]/td[1]/table[@class='date_table'][1]/tbody[1]/tr[2]/td[2]/label[1]/div[@class='hide'][1]/button[@class='ui-datepicker-trigger'][1]
+philippineairlines_5,http://localhost:8080/2014-04-26/philippineairlines/,/html[1]/body[1]/table[1]/tbody[1]/tr[1]/td[1]/table[2]/tbody[1]/tr[1]/td[1]/table[@class='home_body_table'][1]/tbody[1]/tr[1]/td[@class='formBG'][1]/table[@class='formMainTable'][1]/tbody[1]/tr[1]/td[1]/div[1]/div[5]/form[1]/table[1]/tbody[1]/tr[4]/td[1]/table[@class='date_table'][1]/tbody[1]/tr[2]/td[1]/div[@class='hide'][1]/button[@class='ui-datepicker-trigger'][1]
+philippineairlines_6,http://localhost:8080/2014-04-26/philippineairlines/,/html[1]/body[1]/table[1]/tbody[1]/tr[1]/td[1]/table[2]/tbody[1]/tr[1]/td[1]/table[@class='home_body_table'][1]/tbody[1]/tr[1]/td[@class='formBG'][1]/table[@class='formMainTable'][1]/tbody[1]/tr[1]/td[1]/div[1]/div[6]/form[2]/table[1]/tbody[1]/tr[1]/td[1]/div[1]/div[1]/div[1]/div[1]/div[1]/div[5]/table[1]/tbody[1]/tr[6]/td[1]/table[1]/tbody[1]/tr[1]/td[1]/input[@class='form_button1'][1]
+philippineairlines_7,http://localhost:8080/2014-04-26/philippineairlines/,/html[1]/body[1]/table[1]/tbody[1]/tr[1]/td[1]/table[2]/tbody[1]/tr[1]/td[1]/table[@class='home_body_table'][1]/tbody[1]/tr[1]/td[@class='formBG'][1]/table[@class='formMainTable'][1]/tbody[1]/tr[1]/td[1]/div[1]/div[6]/form[1]/table[1]/tbody[1]/tr[1]/td[1]/div[1]/div[1]/table[1]/tbody[1]/tr[4]/td[2]/table[1]/tbody[1]/tr[2]/td[1]/button[@class='ui-datepicker-trigger'][1]
+philippineairlines_8,http://localhost:8080/2014-04-26/philippineairlines/,id('ui-tabs-1')/table[1]/tbody[1]/tr[1]/td[1]/table[2]/tbody[1]/tr[1]/td[1]/table[@class='home_body_table'][1]/tbody[1]/tr[1]/td[@class='formBG'][1]/table[@class='formMainTable'][1]/tbody[1]/tr[1]/td[1]/div[1]/div[1]/form[1]/table[1]/tbody[1]/tr[4]/td[1]/table[@class='date_table'][1]/tbody[1]/tr[2]/td[2]/label[1]/div[@class='hide'][1]/button[@class='ui-datepicker-trigger'][1]
+philippineairlines_9,http://localhost:8080/2014-04-26/philippineairlines/,/html[1]/body[1]/table[1]/tbody[1]/tr[1]/td[1]/table[2]/tbody[1]/tr[1]/td[1]/table[@class='home_body_table'][1]/tbody[1]/tr[1]/td[@class='formBG'][1]/table[@class='formMainTable'][1]/tbody[1]/tr[1]/td[1]/div[1]/div[6]/form[1]/table[1]/tbody[1]/tr[1]/td[1]/div[1]/div[1]/table[1]/tbody[1]/tr[6]/td[1]/table[1]/tbody[1]/tr[1]/td[1]/input[@class='form_button1'][1]
+philippineairlines_10,http://localhost:8080/2014-04-26/philippineairlines/,id('ui-tabs-1')/table[1]/tbody[1]/tr[1]/td[1]/table[2]/tbody[1]/tr[1]/td[1]/table[@class='home_body_table'][1]/tbody[1]/tr[1]/td[@class='formBG'][1]/table[@class='formMainTable'][1]/tbody[1]/tr[1]/td[1]/div[1]/div[2]/form[1]/table[1]/tbody[1]/tr[1]/td[1]/div[1]/div[1]/table[1]/tbody[1]/tr[6]/td[1]/table[1]/tbody[1]/tr[1]/td[1]/input[@class='form_button1'][1]
+philippineairlines_11,http://localhost:8080/2014-04-26/philippineairlines/,/html[1]/body[1]/table[1]/tbody[1]/tr[1]/td[1]/table[2]/tbody[1]/tr[1]/td[1]/table[@class='home_body_table'][1]/tbody[1]/tr[1]/td[@class='formBG'][1]/table[@class='formMainTable'][1]/tbody[1]/tr[1]/td[1]/div[1]/div[7]/form[@class='form-search-box'][1]/table[@class='show search'][1]/tbody[1]/tr[10]/td[2]/div[4]/button[@class='form_button'][1]
+philippineairlines_12,http://localhost:8080/2014-04-26/philippineairlines/,id('ui-tabs-1')/table[1]/tbody[1]/tr[1]/td[1]/table[2]/tbody[1]/tr[1]/td[1]/table[@class='home_body_table'][1]/tbody[1]/tr[1]/td[@class='formBG'][1]/table[@class='formMainTable'][1]/tbody[1]/tr[1]/td[1]/div[1]/div[3]/form[@class='form-search-box'][1]/table[@class='show search'][1]/tbody[1]/tr[10]/td[2]/div[4]/button[@class='form_button'][1]
+philippineairlines_13,http://localhost:8080/2014-04-26/philippineairlines/,id('ui-tabs-1')/table[1]/tbody[1]/tr[1]/td[1]/table[2]/tbody[1]/tr[1]/td[1]/table[@class='home_body_table'][1]/tbody[1]/tr[1]/td[@class='formBG'][1]/table[@class='formMainTable'][1]/tbody[1]/tr[1]/td[1]/div[1]/div[3]/form[@class='form-search-box'][1]/table[@class='show search'][1]/tbody[1]/tr[5]/td[2]/button[@class='ui-datepicker-trigger'][1]
+philippineairlines_14,http://localhost:8080/2014-04-26/philippineairlines/,id('ui-tabs-1')/table[1]/tbody[1]/tr[1]/td[1]/table[2]/tbody[1]/tr[1]/td[1]/table[@class='home_body_table'][1]/tbody[1]/tr[1]/td[@class='formBG'][1]/table[@class='formMainTable'][1]/tbody[1]/tr[1]/td[1]/div[1]/div[1]/form[1]/table[1]/tbody[1]/tr[4]/td[1]/table[@class='date_table'][1]/tbody[1]/tr[2]/td[1]/div[@class='hide'][1]/button[@class='ui-datepicker-trigger'][1]
+philippineairlines_15,http://localhost:8080/2014-04-26/philippineairlines/,/html[1]/body[1]/table[1]/tbody[1]/tr[2]/td[1]/table[@class='footer_bar'][1]/tbody[1]/tr[2]/td[1]/form[1]/table[@class='footer_txt_nolink'][1]/tbody[1]/tr[1]/td[7]/a[1]/input[@class='subscribe_button'][1]
+ryanair_1,http://localhost:8080/2014-04-26/ryanair/,/html[1]/body[@class='en-market'][1]/div[@class='page'][1]/footer[@class='footer clearfix'][1]/section[@class='top-footer clearfix'][1]/div[@class='footer-social float-r'][1]/div[@class='subscribe'][1]/div[@class='subscribe-form'][1]/form[1]/input[@class='subscribe-button join-button'][1]
+ryanair_2,http://localhost:8080/2014-04-26/ryanair/,id('flight-booking-form')/div[@class='form-row clearfix discounts-area'][1]/div[@class='discounts-button float-r'][1]/button[@class='flight-form_button submit-button-validation tabbed'][1]
+san_1,http://localhost:8080/2014-04-26/san/,id('ctl00_NavTopLeft_flight_search1_ibtnGo')
+san_2,http://localhost:8080/2014-04-26/san/,id('ctl00_site_banner1_site_search1_ImageButton1')
+saudiairlines_1,http://localhost:8080/2014-04-26/saudiairlines/,id('Layer7_landing')/center[1]/div[1]/form[1]/div[@class='submit-bt'][1]/input[1]
+singaporeair_1,http://localhost:8080/2014-04-26/singaporeair/,id('header')/div[@class='clearfix'][1]/div[@class='globalNav grid_10 omega'][1]/div[@class='roundedInput searchNav'][1]/form[1]/button[@class='searchNav'][1]
+singaporeair_2,http://localhost:8080/2014-04-26/singaporeair/,id('fareDeals')/div[@class='fareDealPromoPanel'][1]/div[@class='grid_6 alpha omega'][1]/div[1]/div[1]/div[@class='fareDealPromoHeader'][1]/span[@class='fielditem'][1]/a[@class='arrowLink'][1]
+singaporeair_3,http://localhost:8080/2014-04-26/singaporeair/,id('headerLoginForm')/div[@class='fieldset fl'][3]/button[@class='jQloginloader siteButton button1'][1]
+southwest_1,http://localhost:8080/2014-04-26/southwest/,id('loginSubmitButton')
+southwest_2,http://localhost:8080/2014-04-26/southwest/,id('booking_widget_content_row_btn_search')
+southwest_3,http://localhost:8080/2014-04-26/southwest/,id('search_go_button')
+spicejet_1,http://localhost:8080/2014-04-26/spicejet/,id('ctl00_mainContent_btn_FindFlights')
+thomascook_1,http://localhost:8080/2014-04-26/thomascook/,id('departureDateDiv')/button[@class='ui-datepicker-trigger'][1]
+thomascook_2,http://localhost:8080/2014-04-26/thomascook/,id('search-btn')
+tigerairways_1,http://localhost:8080/2014-04-26/tigerairways/,id('search-btn')
+tigerairways_2,http://localhost:8080/2014-04-26/tigerairways/,id('submitSearch')
+topix_1,http://localhost:8080/2014-04-26/topix/,id('search_submit')
+topix_2,http://localhost:8080/2014-04-26/topix/,id('col3')/div[@class='widget widget_plain email_miniform'][1]/form[1]/div[@class='row'][1]/input[@class='submit_button button_orange'][1]
+topix_3,http://localhost:8080/2014-04-26/topix/,id('news_footer')/li[1]/div[@class='widget widget_plain email_miniform'][1]/form[1]/div[@class='row'][1]/input[@class='submit_button button_orange'][1]
+travelocity_1,http://localhost:8080/2014-04-26/travelocity/,id('uw_flight_show_additional_link')
+united_1,http://localhost:8080/2014-04-26/united/,id('ctl00_ContentInfo_Booking1_btnSearchFlight')
+united_2,http://localhost:8080/2014-04-26/united/,id('ctl00_ContentInfo_accountsummary_btnOnePassSignIn')
+united_3,http://localhost:8080/2014-04-26/united/,id('ctl00_ContentInfo_manageres_btnImport')
+united_4,http://localhost:8080/2014-04-26/united/,id('ctl00_CustomerHeader_btnSearch')
+united_5,http://localhost:8080/2014-04-26/united/,id('ctl00_ContentInfo_Checkinflightstatus_btnCheckIn')
+usairways_1,http://localhost:8080/2014-04-26/usairways/,id('ctl00_phMain_BookTravelWidgetControl_SearchInvokeButtonControl_SearchCommand')
+virginaustralia_1,http://localhost:8080/2014-04-26/virginaustralia/,id('form-velocity-header-login')/fieldset[@class='submit-bar'][1]/button[@class='velocity-flyout-submit velocity-button'][1]
+virginaustralia_2,http://localhost:8080/2014-04-26/virginaustralia/,id('flights-submit')
+westjet_1,http://localhost:8080/2014-04-26/westjet/,id('flightsMain')/form[@class='flight-book'][1]/fieldset[@class='submit'][1]/a[1]
+westjet_2,http://localhost:8080/2014-04-26/westjet/,id('global-submit-search')
+yatra_1,http://localhost:8080/2014-04-26/yatra/,id('BE_flight_flsearch_btn')
+yatra_2,http://localhost:8080/2014-04-26/yatra/,id('BE_flight_fhsearch_btn')
+yatra_3,http://localhost:8080/2014-04-26/yatra/,id('subscribe')
