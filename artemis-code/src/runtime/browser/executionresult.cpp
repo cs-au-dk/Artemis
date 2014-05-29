@@ -37,7 +37,7 @@ QList<int> ExecutionResult::getAjaxCallbackHandlers() const
     return mAjaxCallbackHandlers;
 }
 
-QSet<QSharedPointer<const FormFieldDescriptor> > ExecutionResult::getFormFields() const
+QList<QSharedPointer<const FormFieldDescriptor> > ExecutionResult::getFormFields() const
 {
     return mFormFields;
 }

@@ -39,7 +39,7 @@ public:
     ExecutionResult();
 
     QList<EventHandlerDescriptorConstPtr> getEventHandlers() const;
-    QSet<QSharedPointer<const FormFieldDescriptor> > getFormFields() const;
+    QList<QSharedPointer<const FormFieldDescriptor> > getFormFields() const;
 
     bool isDomModified() const;
     long getPageStateHash() const;
@@ -60,7 +60,7 @@ public:
 
 private:
     QList<EventHandlerDescriptorConstPtr> mEventHandlers;
-    QSet<QSharedPointer<const FormFieldDescriptor> > mFormFields;
+    QList<QSharedPointer<const FormFieldDescriptor> > mFormFields;
 
     bool mModifiedDom;
     long mStateHash;

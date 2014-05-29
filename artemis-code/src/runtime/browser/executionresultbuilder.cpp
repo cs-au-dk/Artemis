@@ -102,33 +102,31 @@ void ExecutionResultBuilder::registerFromFieldsIntoResult()
     mPage->updateFormIdentifiers(); // make sure that form identifiers (Artemis IDs) are set
 
     foreach(QWebFrame* frame, getAllFrames()) {
-        // Gather <input> elements
-        foreach(QWebElement input, frame->findAllElements("input")) {
+        // Gather all form field elements.
+        // We select them all at once so we can maintain the DOM ordering of the form filds list.
+        foreach(QWebElement field, frame->findAllElements("input, textarea, select")) {
+            if(field.tagName().toLower() == "input") {
+                FormFieldTypes type =  getTypeFromAttr(field.attribute("type"));
 
-            FormFieldTypes type =  getTypeFromAttr(input.attribute("type"));
+                if (type == NO_INPUT) {
+                    continue;
+                }
 
-            if (type == NO_INPUT) {
-                continue;
+                DOMElementDescriptorConstPtr elementDescriptor = DOMElementDescriptorConstPtr(new DOMElementDescriptor(&field));
+                FormFieldDescriptorPtr fieldDescriptor = FormFieldDescriptorPtr(new FormFieldDescriptor(type, elementDescriptor));
+
+                mResult->mFormFields.append(fieldDescriptor);
+
+            } else if(field.tagName().toLower() == "textarea") {
+                FormFieldDescriptorPtr taf = FormFieldDescriptorPtr(new FormFieldDescriptor(TEXT, DOMElementDescriptorConstPtr(new DOMElementDescriptor(&field))));
+                mResult->mFormFields.append(taf);
+
+            } else if(field.tagName().toLower() == "select") {
+                QSet<QString> options = getSelectOptions(field);
+                FormFieldDescriptorPtr ssf = FormFieldDescriptorPtr(new FormFieldDescriptor(FIXED_INPUT, DOMElementDescriptorConstPtr(new DOMElementDescriptor(&field)), options));
+                mResult->mFormFields.append(ssf);
+
             }
-
-            DOMElementDescriptorConstPtr elementDescriptor = DOMElementDescriptorConstPtr(new DOMElementDescriptor(&input));
-            FormFieldDescriptorPtr fieldDescriptor = FormFieldDescriptorPtr(new FormFieldDescriptor(type, elementDescriptor));
-
-            mResult->mFormFields.insert(fieldDescriptor);
-        }
-
-        // Gather <textarea> elements
-        foreach(QWebElement ta, frame->findAllElements("textarea")) {
-
-            FormFieldDescriptorPtr taf = FormFieldDescriptorPtr(new FormFieldDescriptor(TEXT, DOMElementDescriptorConstPtr(new DOMElementDescriptor(&ta))));
-            mResult->mFormFields.insert(taf);
-        }
-
-        // Gather select tags
-        foreach(QWebElement ss, frame->findAllElements("select")) {
-            QSet<QString> options = getSelectOptions(ss);
-            FormFieldDescriptorPtr ssf = FormFieldDescriptorPtr(new FormFieldDescriptor(FIXED_INPUT, DOMElementDescriptorConstPtr(new DOMElementDescriptor(&ss)), options));
-            mResult->mFormFields.insert(ssf);
         }
     }
 }

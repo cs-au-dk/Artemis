@@ -107,7 +107,7 @@ QList<ExecutableConfigurationPtr> RandomInputGenerator::insertExtended(
         // TODO what should we do with all of the other types of events?
         if (type == KEY_EVENT || type == MOUSE_EVENT || type == TOUCH_EVENT || type == BASE_EVENT) {
 
-            FormInputCollectionPtr newForm = mFormInputGenerator->generateFormFields(result->getFormFields(), result);
+            FormInputCollectionPtr newForm = mFormInputGenerator->generateFormFields(result->getFormFields().toSet(), result);
             EventParametersConstPtr newParams = mEventParameterGenerator->generateEventParameters(ee);
             TargetDescriptorConstPtr target = mTargetGenerator->generateTarget(ee);
 

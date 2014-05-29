@@ -279,14 +279,13 @@ void ConcolicRuntime::setupNextConfiguration(QSharedPointer<FormInputCollection>
 void ConcolicRuntime::postInitialConcreteExecution(QSharedPointer<ExecutionResult> result)
 {
     // Find the form fields on the page and save them.
-    mFormFields = result->getFormFields().toList();
+    mFormFields = result->getFormFields();
     mFormFieldRestrictions = FormFieldRestrictedValues::getRestrictions(mFormFields, mWebkitExecutor->getPage());
 
     // Print the form fields found on the page.
     Log::debug("Form fields found:");
     QStringList fieldNames;
     foreach(QSharedPointer<const FormFieldDescriptor> field, mFormFields){
-        Log::debug(field->getDomElement()->toString().toStdString());
         fieldNames.append(field->getDomElement()->toString());
     }
     Log::info(QString("  Form fields: %1").arg(fieldNames.join(", ")).toStdString());
@@ -295,7 +294,7 @@ void ConcolicRuntime::postInitialConcreteExecution(QSharedPointer<ExecutionResul
     QStringList options;
     Log::debug("Form field SELECT restrictions found:");
     if (mFormFieldRestrictions.first.size() == 0) {
-        Log::debug("  none");
+        Log::debug("  None");
     }
     foreach (SelectRestriction sr, mFormFieldRestrictions.first) {
         int idx = 0;
