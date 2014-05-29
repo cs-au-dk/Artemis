@@ -108,7 +108,7 @@ def main():
                                     ep_log, constraints_index, constraints_dir)
         else:
             test = test_generator(s[0], s[1], s[2], dry_run, logger, artemis_version_url, date_string, run_dir_name, 
-                                    constraints_index, constraints_dir)
+                                    None, constraints_index, constraints_dir)
         
         setattr(TestSequence, test_name, test)
     
@@ -129,8 +129,8 @@ def main():
 
 
 
-def full_test_generator(site_name, site_url, dry_run=False, logger=None, version="", test_date="", test_dir=".",
-                        ep_log=None, constraints_index=None, constraints_dir=None):
+def full_test_generator(site_name, site_url, dry_run, logger, version, test_date, test_dir, ep_log, constraints_index,
+                        constraints_dir):
     """
     Returns a function which does a 'full' test of the given site.
     This means running the external entry-point finding tool and then for each EP found running the test returned by 
@@ -209,8 +209,8 @@ def full_test_generator(site_name, site_url, dry_run=False, logger=None, version
 
 
 
-def test_generator(site_name, site_url, site_ep, dry_run=False, logger=None, version="", test_date="", test_dir=".", 
-                   ep_finder_time="", constraints_index=None, constraints_dir=None):
+def test_generator(site_name, site_url, site_ep, dry_run, logger, version, test_date, test_dir, ep_finder_time,
+                    constraints_index, constraints_dir):
     """Returns a function which will test the given site and entry-point when executed."""
     
     def test(self):
@@ -221,7 +221,7 @@ def test_generator(site_name, site_url, site_ep, dry_run=False, logger=None, ver
         data['Site'] = site_name
         data['URL'] = site_url
         data['Entry Point'] = site_ep
-        data['DIADEM Time'] = ep_finder_time
+        data['DIADEM Time'] = ep_finder_time if ep_finder_time is not None else ""
         
         try:
             # Clear /tmp/constraintlog so we can get the constraints from this run only.
