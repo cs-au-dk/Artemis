@@ -196,12 +196,12 @@ void CVC4TypeAnalysis::visit(Symbolic::StringRegexSubmatchArray* stringregexsubm
 
 }
 
-void CVC4TypeAnalysis::visit(Symbolic::StringRegexSubmatchArrayAt* stringregexsubmatcharrayat, void* arg) {
-    // NO-OP
+void CVC4TypeAnalysis::visit(Symbolic::StringRegexSubmatchArrayAt* obj, void* arg) {
+    obj->getMatch()->accept(this);
 }
 
-void CVC4TypeAnalysis::visit(Symbolic::StringRegexSubmatchArrayMatch* stringregexsubmatcharraymatch, void* arg) {
-    // NO-OP
+void CVC4TypeAnalysis::visit(Symbolic::StringRegexSubmatchArrayMatch* obj, void* arg) {
+    obj->getMatch()->accept(this);
 }
 
 void CVC4TypeAnalysis::visit(Symbolic::SymbolicBoolean* symbolicboolean, void* arg) {
