@@ -101,13 +101,19 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             "           all - Generate a graph of the tree at every iteration.\n"
             "           all-overview - Like all but also includes simplified overview graphs.\n"
             "\n"
+            "--concolic-search-procedure <search>\n"
+            "           Choose the search procedure used to choose new areas of the concolic execution tree to explore.\n"
+            "\n"
+            "           dfs - (default) Depth first search with iterative deepening\n"
+            "           skip-boring - Uses reinforcement learning to prioritise \"interesting\" areas of the tree.\n"
+            "\n"
             "--concolic-dfs-depth <n>x<m>\n"
             "           The depth limit used for the iterative depth-first search.\n"
             "           n is the base depth limit (of symbolic branches).\n"
             "           m is the number of passes of the search, each at a lower depth.\n"
             "           The default is 5x3 for a total depth limit of 15 after two restarts.\n"
             "\n"
-            "--concolic-unlimited-depth\n"
+            "--concolic-dfs-unlimited-depth\n"
             "           Removes the restart limit from the concolic depth-first search procedure.\n"
             "\n"
             "--concolic-event-sequences <strategy>\n"
@@ -163,8 +169,9 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
     {"function-call-heap-report-random-factor", required_argument, NULL, 'l'},
     {"concolic-tree-output", required_argument, NULL, 'd'},
     {"concolic-button", required_argument, NULL, 'b'},
+    {"concolic-search-procedure", required_argument, NULL, 'S'},
     {"concolic-dfs-depth", required_argument, NULL, 'D'},
-    {"concolic-unlimited-depth", no_argument, NULL, 'u'},
+    {"concolic-dfs-unlimited-depth", no_argument, NULL, 'u'},
     {"concolic-event-sequences", required_argument, NULL, 'w'},
     {"smt-solver", required_argument, NULL, 'n'},
     {"export-event-sequence", required_argument, NULL, 'o'},
@@ -424,6 +431,8 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
                     std::cout << "all click html none";
                 } else if(string(optarg).compare("--concolic-tree-output") == 0){
                     std::cout << "none final all final-overview all-overview";
+                } else if(string(optarg).compare("----concolic-search-procedure") == 0){
+                    std::cout << "dfs skip-boring";
                 } else if(string(optarg).compare("--concolic-event-sequences") == 0){
                     std::cout << "ignore simple";
                 }else if(string(optarg).compare("--strategy-priority") == 0){
@@ -446,7 +455,9 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
                              "--path-trace-report "
                              "--concolic-button "
                              "--concolic-tree-output "
-                             "--concolic-unlimited-depth "
+                             "--concolic-search-procedure "
+                             "--concolic-dfs-depth "
+                             "--concolic-dfs-unlimited-depth "
                              "--concolic-event-sequences "
                              "--strategy-priority "
                              "--smt-solver "
@@ -468,6 +479,18 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
 
         case 's': {
             options.disableStateCheck = false;
+            break;
+        }
+
+        case 'S': {
+            if(string(optarg).compare("dfs") == 0){
+                options.concolicSearchProcedure = artemis::DFS;
+            } else if(string(optarg).compare("skip-boring") == 0){
+                options.concolicSearchProcedure = artemis::SKIPBORING;
+            } else {
+                cerr << "ERROR: Invalid choice of concolic-search-procedure " << optarg << endl;
+                exit(1);
+            }
             break;
         }
 

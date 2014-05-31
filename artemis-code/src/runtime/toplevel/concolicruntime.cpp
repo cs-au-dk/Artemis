@@ -383,10 +383,22 @@ void ConcolicRuntime::mergeTraceIntoTree()
         // pointer to the tree, which will be replaced in that case.
         // If this is a problem, we could just introduce a header node for trees.
         mSymbolicExecutionGraph = trace;
-        mSearchStrategy = TreeSearchPtr(new DepthFirstSearch(mSymbolicExecutionGraph,
-                                                             mOptions.concolicDfsDepthLimit,
-                                                             mOptions.concolicDfsRestartLimit));
         mRunningWithInitialValues = false;
+
+        switch(mOptions.concolicSearchProcedure) {
+        case DFS:
+            mSearchStrategy = TreeSearchPtr(new DepthFirstSearch(mSymbolicExecutionGraph,
+                                                                 mOptions.concolicDfsDepthLimit,
+                                                                 mOptions.concolicDfsRestartLimit));
+            break;
+
+        case SKIPBORING:
+            Log::fatal("Search procedure skip-boring is not yet implemented.");
+            exit(1);
+        default:
+            Log::fatal("Unknown search procedure.");
+            exit(1);
+        }
 
         Statistics::statistics()->accumulate("Concolic::ExecutionTree::DistinctTracesExplored", 1);
 

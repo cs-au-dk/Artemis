@@ -62,6 +62,10 @@ enum SMTSolver {
     KALUZA, Z3STR, CVC4
 };
 
+enum ConcolicSearch {
+    DFS, SKIPBORING
+};
+
 typedef struct OptionsType {
 
     OptionsType() :
@@ -78,6 +82,7 @@ typedef struct OptionsType {
         concolicTreeOutput(TREE_FINAL),
         concolicTreeOutputOverview(false),
         concolicTriggerEventHandlers(false),
+        concolicSearchProcedure(DFS),
         concolicDfsDepthLimit(5),
         concolicDfsRestartLimit(3),
         solver(CVC4),
@@ -113,6 +118,8 @@ typedef struct OptionsType {
     bool concolicTreeOutputOverview;
     QString concolicEntryPoint;
     bool concolicTriggerEventHandlers;
+
+    ConcolicSearch concolicSearchProcedure;
 
     unsigned int concolicDfsDepthLimit;
     unsigned int concolicDfsRestartLimit;
