@@ -44,7 +44,7 @@ namespace artemis
  *  that the tree is only extended and not modified (removing TraceUnexplored nodes in particular is fine).
  */
 
-class DepthFirstSearch : TreeSearch
+class DepthFirstSearch : public TreeSearch
 {
 public:
     DepthFirstSearch(TraceNodePtr tree, unsigned int depthLimit, unsigned int restartLimit);
@@ -145,7 +145,6 @@ private:
     TraceNodePtr nextAfterLeaf();
 };
 
-typedef QSharedPointer<DepthFirstSearch> DepthFirstSearchPtr;
 
 
 

@@ -96,7 +96,7 @@ protected:
     bool mRunningWithInitialValues;
 
     // Controls for the search procedure.
-    DepthFirstSearchPtr mSearchStrategy; // TODO: For now we are using DFS hard-coded...
+    TreeSearchPtr mSearchStrategy;
 
     // We can choose between entry points specified by XPath (with --concolic-button) or the built-in EP finding.
     // If an XPath has been give, we want to skip the entry point finding run completely and use a different method for injecting clicks.

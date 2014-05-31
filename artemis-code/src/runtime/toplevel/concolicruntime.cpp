@@ -383,9 +383,9 @@ void ConcolicRuntime::mergeTraceIntoTree()
         // pointer to the tree, which will be replaced in that case.
         // If this is a problem, we could just introduce a header node for trees.
         mSymbolicExecutionGraph = trace;
-        mSearchStrategy = DepthFirstSearchPtr(new DepthFirstSearch(mSymbolicExecutionGraph,
-                                                                   mOptions.concolicDfsDepthLimit,
-                                                                   mOptions.concolicDfsRestartLimit));
+        mSearchStrategy = TreeSearchPtr(new DepthFirstSearch(mSymbolicExecutionGraph,
+                                                             mOptions.concolicDfsDepthLimit,
+                                                             mOptions.concolicDfsRestartLimit));
         mRunningWithInitialValues = false;
 
         Statistics::statistics()->accumulate("Concolic::ExecutionTree::DistinctTracesExplored", 1);

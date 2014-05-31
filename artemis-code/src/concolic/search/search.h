@@ -32,7 +32,6 @@ namespace artemis
  *  Abstract interface for searching for the next node to explore in the path tree.
  */
 
-// TODO: decide which methods from DepthFirstSearch should become part of this interface!
 
 class TreeSearch : public TraceVisitor
 {
@@ -58,6 +57,7 @@ public:
 
 };
 
+typedef QSharedPointer<TreeSearch> TreeSearchPtr;
 
 
 
