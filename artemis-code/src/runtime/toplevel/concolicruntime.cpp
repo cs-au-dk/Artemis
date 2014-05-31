@@ -51,12 +51,6 @@ ConcolicRuntime::ConcolicRuntime(QObject* parent, const Options& options, const 
     //mWebView->resize(1000,1000);
     //mWebView->show();
 
-    // The number of times we are willing to run the search procedure hoping to find some more nodes.
-    // Note that if we know there are no unexplored nodes left we will stop anyway, so this is an upper limit.
-    mSearchPasses = 3;
-    mSearchPassesUnlimited = mOptions.concolicUnlimitedDepth;
-    mSearchFoundTarget = false;
-
     // The event detector for 'marker' events in the traces is created and connected here, as WebKitExecutor (where the rest are handled) does not know when these events happen.
     QSharedPointer<TraceMarkerDetector> markerDetector(new TraceMarkerDetector());
     QObject::connect(this, SIGNAL(sigNewTraceMarker(QString, QString, bool, SelectRestriction)),
@@ -389,7 +383,9 @@ void ConcolicRuntime::mergeTraceIntoTree()
         // pointer to the tree, which will be replaced in that case.
         // If this is a problem, we could just introduce a header node for trees.
         mSymbolicExecutionGraph = trace;
-        mSearchStrategy = DepthFirstSearchPtr(new DepthFirstSearch(mSymbolicExecutionGraph));
+        mSearchStrategy = DepthFirstSearchPtr(new DepthFirstSearch(mSymbolicExecutionGraph,
+                                                                   mOptions.concolicDfsDepthLimit,
+                                                                   mOptions.concolicDfsRestartLimit));
         mRunningWithInitialValues = false;
 
         Statistics::statistics()->accumulate("Concolic::ExecutionTree::DistinctTracesExplored", 1);
@@ -617,26 +613,11 @@ void ConcolicRuntime::chooseNextTargetAndExplore()
 {
     // Choose the next target.
     if(mSearchStrategy->chooseNextTarget()){
-        mSearchFoundTarget = true;
-
-        // Explore this target. Runs the next execution itself.
+        // Runs the next execution itself.
         exploreNextTarget();
 
-    }else if (mSearchFoundTarget && (mSearchPassesUnlimited || mSearchPasses > 1)){
-        mSearchFoundTarget = false;
-        if(!mSearchPassesUnlimited){
-            mSearchPasses--;
-        }
-
-        Log::debug("\n============= Finished DFS ==============");
-        Log::info("Finished this pass of the tree. Increasing depth limit and restarting.");
-
-        mSearchStrategy->setDepthLimit(mSearchStrategy->getDepthLimit() + 5);
-        mSearchStrategy->restartSearch();
-        chooseNextTargetAndExplore();
-
     }else{
-        Log::debug("\n============= Finished DFS ==============");
+        Log::debug("\n============= Finished Search ==============");
         Log::info("Finished serach of the tree.");
 
         mWebkitExecutor->detach();

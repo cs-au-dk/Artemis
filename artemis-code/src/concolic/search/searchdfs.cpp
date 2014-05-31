@@ -23,10 +23,14 @@ namespace artemis
 
 
 
-DepthFirstSearch::DepthFirstSearch(TraceNodePtr tree, unsigned int depthLimit) :
+DepthFirstSearch::DepthFirstSearch(TraceNodePtr tree, unsigned int depthLimit, unsigned int restartLimit) :
     mTree(tree),
     mDepthLimit(depthLimit),
+    mInitialDepthLimit(depthLimit),
     mCurrentDepth(0),
+    mRestartsRemaining(restartLimit),
+    mUnlimitedRestarts(restartLimit == 0),
+    mPreviousPassFoundTarget(false),
     mIsPreviousRun(false)
 {
     mCurrentPC = PathConditionPtr(new PathCondition());
@@ -76,7 +80,7 @@ bool DepthFirstSearch::chooseNextTarget()
             // If the parent stack is empty here, then we have reached the end of the search.
             if(mParentStack.empty()){
                 mFoundTarget = false;
-                return false;
+                return deepenRestartAndChoose();
             }else{
                 current = nextAfterLeaf();
             }
@@ -95,7 +99,13 @@ bool DepthFirstSearch::chooseNextTarget()
 
     // The visitor will set its own "output" in mCurrentPC.
     // This function returns whether we reached the end of the iteration or not.
-    return mFoundTarget;
+    if(mFoundTarget) {
+        mPreviousPassFoundTarget = true;
+        return true;
+    } else {
+        // Attempt to increase the depth limit and restart, if possible.
+        return deepenRestartAndChoose();
+    }
 
 }
 
@@ -129,8 +139,26 @@ void DepthFirstSearch::restartSearch()
     mIsPreviousRun = false;
     mParentStack.clear();
     mCurrentDepth = 0;
+    mPreviousPassFoundTarget = false;
     mCurrentPC = PathConditionPtr(new PathCondition());
     mCurrentDomConstraints = QSet<SelectRestriction>();
+}
+
+// Increase the depth limit and restart.
+bool DepthFirstSearch::deepenRestartAndChoose()
+{
+    if (mPreviousPassFoundTarget && (mUnlimitedRestarts || mRestartsRemaining > 1)) {
+        if (!mUnlimitedRestarts){
+            mRestartsRemaining --;
+        }
+        Log::debug("\n============= Finished Search ==============");
+        Log::info("Finished this pass of the tree. Increasing depth limit and restarting.");
+        setDepthLimit(getDepthLimit() + mInitialDepthLimit);
+        restartSearch();
+        return chooseNextTarget();
+    } else {
+       return false;
+    }
 }
 
 

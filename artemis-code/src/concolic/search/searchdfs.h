@@ -31,11 +31,13 @@ namespace artemis
 
 /**
  *  Implements the path tree search with DFS.
+ * (Strictly something like iterative deepening, see below.)
  *
  *  Usage:
  *      chooseNextTarget() can be called to find the next unexplored node in the tree.
- *      It returns either a pointer to an unexplored node, or a null pointer when we reach the end of the tree.
- *      Once this happens we have the option to restart, possibly increasing the search depth as well.
+ *      It returns true if the search is over an unexplored node, or false when we reach the end of the search.
+ *      Once the tree has been explored at a certain depth, the depth limit is increased and the search restarted a
+ *      certain number of times.
  *
  *  Note that the implementation of this class relies on the fact that pointers to branch nodes in the tree
  *  will still be valid between calls. When merging new traces into the tree (or any other operations) it is essential
@@ -45,7 +47,7 @@ namespace artemis
 class DepthFirstSearch : TreeSearch
 {
 public:
-    DepthFirstSearch(TraceNodePtr tree, unsigned int depthLimit = 5); // TODO: what is a sensible default?
+    DepthFirstSearch(TraceNodePtr tree, unsigned int depthLimit, unsigned int restartLimit);
 
     // Selects an unexplored node from the tree to be explored next.
     bool chooseNextTarget();
@@ -62,6 +64,7 @@ public:
 
     // Restart a fresh search from the beginning of the tree.
     void restartSearch();
+    bool deepenRestartAndChoose();
 
     // When over an unexplored node, we may mark it as "attempted but failed to explore".
     // This can be used in later "passes" of the search to avoid wasting time on unreachable nodes.
@@ -87,9 +90,16 @@ private:
     // The root of the tree we are searching.
     TraceNodePtr mTree;
 
-    // The maximum depth (in branches only) that we will search in the tree.
+    // The maximum depth (in symbolic branches only) that we will search in the tree.
     unsigned int mDepthLimit;
+    unsigned int mInitialDepthLimit;
     unsigned int mCurrentDepth;
+
+    // Controls how many times we are allowed to deepen the search.
+    unsigned int mRestartsRemaining;
+    bool mUnlimitedRestarts;
+    // Used to end the search once we have explored all nodes.
+    bool mPreviousPassFoundTarget;
 
     // The PC which is accumulated as we move down the tree.
     PathConditionPtr mCurrentPC;

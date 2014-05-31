@@ -449,7 +449,7 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
         }
 
         case 'u': {
-            options.concolicUnlimitedDepth = true;
+            options.concolicDfsRestartLimit = 0;
             break;
         }
 

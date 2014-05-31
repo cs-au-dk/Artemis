@@ -37,8 +37,25 @@ namespace artemis
 class TreeSearch : public TraceVisitor
 {
 public:
-    virtual bool chooseNextTarget() = 0;     // Returns true iff a target was found.
-    virtual PathConditionPtr getTargetPC() = 0; // Returns the target's PC after a call to chooseNextTarget() returns true.
+    // Selects an unexplored node from the tree to be explored next.
+    // Returns true iff a target was found.
+    virtual bool chooseNextTarget() = 0;
+
+    // Returns the target's PC after a call to chooseNextTarget() returns true.
+    virtual PathConditionPtr getTargetPC() = 0;
+
+    // Returns the target's DOM constraints after a call to chooseNextTarget() returns true.
+    virtual QSet<SelectRestriction> getTargetDomConstraints() = 0;
+
+    // Check if the node selected for exploration by a call to chooseNextTarget() is still unexplored.
+    // This is used after a new trace has been merged into the tree to check if it explored the desired path.
+    virtual bool overUnexploredNode() = 0;
+
+    // When a selected node is not explored, it can be marked as "attempted but failed to explore".
+    virtual void markNodeUnsat() = 0;
+    virtual void markNodeUnsolvable() = 0;
+    virtual void markNodeMissed() = 0;
+
 };
 
 

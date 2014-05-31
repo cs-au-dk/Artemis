@@ -77,8 +77,9 @@ typedef struct OptionsType {
         reportPathTrace(NO_TRACES),
         concolicTreeOutput(TREE_FINAL),
         concolicTreeOutputOverview(false),
-        concolicUnlimitedDepth(false),
         concolicTriggerEventHandlers(false),
+        concolicDfsDepthLimit(5),
+        concolicDfsRestartLimit(3),
         solver(CVC4),
         exportEventSequence(DONT_EXPORT),
         reportHeap(NO_CALLS),
@@ -111,8 +112,11 @@ typedef struct OptionsType {
     ConcolicTreeOutput concolicTreeOutput;
     bool concolicTreeOutputOverview;
     QString concolicEntryPoint;
-    bool concolicUnlimitedDepth;
     bool concolicTriggerEventHandlers;
+
+    unsigned int concolicDfsDepthLimit;
+    unsigned int concolicDfsRestartLimit;
+
     SMTSolver solver;
 
     ExportEventSequence exportEventSequence;
