@@ -172,7 +172,7 @@ bool DepthFirstSearch::deepenRestartAndChoose()
 void DepthFirstSearch::visit(TraceNode *node)
 {
     Log::fatal("Error: Reached a node of unknown type while searching the tree (DFS).");
-    exit(1); // TODO: is this appropriate?
+    exit(1);
 }
 
 void DepthFirstSearch::visit(TraceConcreteBranch *node)

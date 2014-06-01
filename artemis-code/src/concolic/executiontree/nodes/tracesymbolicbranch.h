@@ -40,6 +40,8 @@ private:
 
 };
 
+typedef QSharedPointer<TraceSymbolicBranch> TraceSymbolicBranchPtr;
+
 }
 
 #endif // TRACESYMBOLICBRANCH_H

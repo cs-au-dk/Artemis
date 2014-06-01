@@ -133,6 +133,8 @@ public:
     ~TraceMarker(){}
 };
 
+typedef QSharedPointer<TraceMarker> TraceMarkerPtr;
+
 
 class TraceFunctionCall : public TraceAnnotation
 {

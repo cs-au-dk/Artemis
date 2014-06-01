@@ -31,7 +31,7 @@ namespace artemis
 
 /**
  *  Implements the path tree search with DFS.
- * (Strictly something like iterative deepening, see below.)
+ *  (Strictly something like iterative deepening, see below.)
  *
  *  Usage:
  *      chooseNextTarget() can be called to find the next unexplored node in the tree.
