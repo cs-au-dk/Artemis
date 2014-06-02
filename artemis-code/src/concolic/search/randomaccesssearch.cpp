@@ -49,14 +49,46 @@ bool RandomAccessSearch::chooseNextTarget()
 
 PathConditionPtr RandomAccessSearch::calculatePC(RandomAccessSearch::ExplorationDescriptor target)
 {
-    // Search "upwards" through mBranchParents to build the PC.
-    // TODO
+    // Search upwards through the tree using mBranchParents to build the PC.
+
+    QPair<TraceSymbolicBranchPtr, bool> current = QPair<TraceSymbolicBranchPtr, bool>(target.branch, target.branchDirection);
+    PathConditionPtr pc = PathConditionPtr(new PathCondition());
+
+    // Null parent marks the first symbolic branch on each trace.
+    while (!current.isNull()) {
+        // Add the current node's condition to the PC.
+        pc->addCondition(current.first->getSymbolicCondition(), current.second);
+
+        // Move to the next node.
+        assert(mBranchParents.contains(current));
+        current = mBranchParents.value(current);
+    }
+
+    return pc;
 }
 
 QSet<SelectRestriction> RandomAccessSearch::calculateDomConstraints(RandomAccessSearch::ExplorationDescriptor target)
 {
-    // Search "upwards" through mBranchParentMarkers and mMarkerParents to build the DOM constraints.
-    // TODO
+    // First find the initial marker above this branch.
+    assert(mBranchParentMarkers.contains(target.branch));
+    TraceMarkerPtr current = mBranchParentMarkers.value(target.branch);
+
+    // Search upwards through the tree using mMarkerParents to build the DOM constraints.
+    QSet<SelectRestriction> restrictions;
+
+    // Null parent markes the first marker node on each trace.
+    while (!current.isNull()) {
+        // Add the current marker's condition.
+        if (current->isSelectRestriction) {
+            restrictions.insert(current->selectRestriction);
+        }
+
+        // Move to the next node.
+        assert(mMarkerParents.contains(current));
+        current = mMarkerParents.value(current);
+    }
+
+    return restrictions;
 }
 
 
