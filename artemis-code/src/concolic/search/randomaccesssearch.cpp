@@ -230,6 +230,7 @@ void RandomAccessSearch::visit(TraceSymbolicBranch *node)
         ExplorationDescriptor explore;
         explore.branch = thisSymBranch;
         explore.branchDirection = false;
+        mPossibleExplorations.append(explore);
     } else {
         mCurrentBranchParent = thisSymBranch;
         mCurrentBranchParentDirection = false;
@@ -240,6 +241,7 @@ void RandomAccessSearch::visit(TraceSymbolicBranch *node)
         ExplorationDescriptor explore;
         explore.branch = thisSymBranch;
         explore.branchDirection = true;
+        mPossibleExplorations.append(explore);
     } else {
         mCurrentBranchParent = thisSymBranch;
         mCurrentBranchParentDirection = true;

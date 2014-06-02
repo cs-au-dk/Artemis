@@ -33,7 +33,7 @@ public:
 
 protected:
     // Chooses between the possible exploration targets.
-    QPair<bool, ExplorationDescriptor> nextTarget(QSet<ExplorationDescriptor> possibleTargets);
+    QPair<bool, ExplorationDescriptor> nextTarget(QList<ExplorationDescriptor> possibleTargets);
 
 private:
     unsigned int mSearchAttempts;

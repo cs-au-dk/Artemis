@@ -89,7 +89,7 @@ protected:
      *  otherwise. If success is true, then nodeDescriptor must be a member of possibleTargets which is selected for
      *  exploration.
      */
-    virtual QPair<bool, ExplorationDescriptor> nextTarget(QSet<ExplorationDescriptor> possibleTargets) = 0;
+    virtual QPair<bool, ExplorationDescriptor> nextTarget(QList<ExplorationDescriptor> possibleTargets) = 0;
 
 private:
     // The tree
@@ -109,7 +109,7 @@ private:
     QMap<TraceSymbolicBranchPtr, TraceMarkerPtr> mBranchParentMarkers;
 
     // The set of possible explorations of the current tree.
-    QSet<ExplorationDescriptor> mPossibleExplorations;
+    QList<ExplorationDescriptor> mPossibleExplorations;
 
     // Scan the whole tree and build the list of possible explorations and the parent pointer table.
     // TODO: To fully rescan the tree like this is needlessly inefficient.

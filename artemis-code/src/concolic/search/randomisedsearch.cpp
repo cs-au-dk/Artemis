@@ -26,7 +26,7 @@ RandomisedSearch::RandomisedSearch(TraceNodePtr tree, unsigned int searchAttempt
 {
 }
 
-QPair<bool, RandomAccessSearch::ExplorationDescriptor> RandomisedSearch::nextTarget(QSet<RandomAccessSearch::ExplorationDescriptor> possibleTargets)
+QPair<bool, RandomAccessSearch::ExplorationDescriptor> RandomisedSearch::nextTarget(QList<ExplorationDescriptor> possibleTargets)
 {
     // If we have run out of attempts, then return false.
     if (mSearchAttempts < 1 || possibleTargets.empty()) {
@@ -34,12 +34,11 @@ QPair<bool, RandomAccessSearch::ExplorationDescriptor> RandomisedSearch::nextTar
     }
 
     // Otherwise choose one of the possible targets at random and return it.
-    QList<ExplorationDescriptor> targets = possibleTargets.toList();
-    int idx = qrand() % targets.length();
+    int idx = qrand() % possibleTargets.length();
 
     mSearchAttempts--;
 
-    return QPair<bool, RandomAccessSearch::ExplorationDescriptor>(true, targets.at(idx));
+    return QPair<bool, RandomAccessSearch::ExplorationDescriptor>(true, possibleTargets.at(idx));
 }
 
 
