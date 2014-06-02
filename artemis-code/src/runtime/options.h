@@ -63,7 +63,7 @@ enum SMTSolver {
 };
 
 enum ConcolicSearch {
-    DFS, SKIPBORING
+    SEARCH_DFS, SEARCH_RANDOM, SEARCH_EASILYBORED
 };
 
 typedef struct OptionsType {
@@ -82,9 +82,10 @@ typedef struct OptionsType {
         concolicTreeOutput(TREE_FINAL),
         concolicTreeOutputOverview(false),
         concolicTriggerEventHandlers(false),
-        concolicSearchProcedure(DFS),
+        concolicSearchProcedure(SEARCH_DFS),
         concolicDfsDepthLimit(5),
         concolicDfsRestartLimit(3),
+        concolicRandomLimit(10),
         solver(CVC4),
         exportEventSequence(DONT_EXPORT),
         reportHeap(NO_CALLS),
@@ -120,9 +121,9 @@ typedef struct OptionsType {
     bool concolicTriggerEventHandlers;
 
     ConcolicSearch concolicSearchProcedure;
-
     unsigned int concolicDfsDepthLimit;
     unsigned int concolicDfsRestartLimit;
+    unsigned int concolicRandomLimit;
 
     SMTSolver solver;
 

@@ -24,6 +24,9 @@
 #include "concolic/solver/cvc4solver.h"
 #include "statistics/statsstorage.h"
 
+#include "concolic/search/searchdfs.h"
+#include "concolic/search/randomisedsearch.h"
+
 #include "concolicruntime.h"
 
 namespace artemis
@@ -386,14 +389,19 @@ void ConcolicRuntime::mergeTraceIntoTree()
         mRunningWithInitialValues = false;
 
         switch(mOptions.concolicSearchProcedure) {
-        case DFS:
+        case SEARCH_DFS:
             mSearchStrategy = TreeSearchPtr(new DepthFirstSearch(mSymbolicExecutionGraph,
                                                                  mOptions.concolicDfsDepthLimit,
                                                                  mOptions.concolicDfsRestartLimit));
             break;
 
-        case SKIPBORING:
-            Log::fatal("Search procedure skip-boring is not yet implemented.");
+        case SEARCH_RANDOM:
+            mSearchStrategy = TreeSearchPtr(new RandomisedSearch(mSymbolicExecutionGraph,
+                                                                 mOptions.concolicRandomLimit));
+            break;
+
+        case SEARCH_EASILYBORED:
+            Log::fatal("Search procedure easily-bored is not yet implemented.");
             exit(1);
         default:
             Log::fatal("Unknown search procedure.");

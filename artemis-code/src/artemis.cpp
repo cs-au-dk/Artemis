@@ -105,7 +105,8 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             "           Choose the search procedure used to choose new areas of the concolic execution tree to explore.\n"
             "\n"
             "           dfs - (default) Depth first search with iterative deepening\n"
-            "           skip-boring - Uses reinforcement learning to prioritise \"interesting\" areas of the tree.\n"
+            "           random - Randomised search\n"
+            "           easily-bored - Uses reinforcement learning to prioritise \"interesting\" areas of the tree.\n"
             "\n"
             "--concolic-dfs-depth <n>x<m>\n"
             "           The depth limit used for the iterative depth-first search.\n"
@@ -115,6 +116,10 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             "\n"
             "--concolic-dfs-unlimited-depth\n"
             "           Removes the restart limit from the concolic depth-first search procedure.\n"
+            "\n"
+            "--concolic-random-attempts <n>\n"
+            "           The number of time the random search procedure will attempt new exploration.\n"
+            "           Select 0 for unlimited attempts.\n"
             "\n"
             "--concolic-event-sequences <strategy>\n"
             "           ignore (default) - Ignore handlers for individual field modification.\n"
@@ -172,6 +177,7 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
     {"concolic-search-procedure", required_argument, NULL, 'S'},
     {"concolic-dfs-depth", required_argument, NULL, 'D'},
     {"concolic-dfs-unlimited-depth", no_argument, NULL, 'u'},
+    {"concolic-random-attempts", required_argument, NULL, 'R'},
     {"concolic-event-sequences", required_argument, NULL, 'w'},
     {"smt-solver", required_argument, NULL, 'n'},
     {"export-event-sequence", required_argument, NULL, 'o'},
@@ -249,8 +255,8 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             }
 
             bool ok1, ok2;
-            int depth = parts[0].toInt(&ok1);
-            int passes = parts[1].toInt(&ok2);
+            unsigned int depth = parts[0].toUInt(&ok1);
+            unsigned int passes = parts[1].toUInt(&ok2);
             if(!ok1 || !ok2 || depth < 1 || passes < 1) {
                 cerr << "ERROR: Invalid value for concolic-dfs-depth " << optarg << endl;
                 exit(1);
@@ -432,7 +438,7 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
                 } else if(string(optarg).compare("--concolic-tree-output") == 0){
                     std::cout << "none final all final-overview all-overview";
                 } else if(string(optarg).compare("----concolic-search-procedure") == 0){
-                    std::cout << "dfs skip-boring";
+                    std::cout << "dfs random easily-bored";
                 } else if(string(optarg).compare("--concolic-event-sequences") == 0){
                     std::cout << "ignore simple";
                 }else if(string(optarg).compare("--strategy-priority") == 0){
@@ -477,6 +483,16 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             break;
         }
 
+        case 'R': {
+            bool ok;
+            options.concolicRandomLimit = QString(optarg).toUInt(&ok);
+            if(!ok) {
+                cerr << "ERROR: Invalid choice of concolic-random-limit " << optarg << endl;
+                exit(1);
+            }
+            break;
+        }
+
         case 's': {
             options.disableStateCheck = false;
             break;
@@ -484,9 +500,11 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
 
         case 'S': {
             if(string(optarg).compare("dfs") == 0){
-                options.concolicSearchProcedure = artemis::DFS;
-            } else if(string(optarg).compare("skip-boring") == 0){
-                options.concolicSearchProcedure = artemis::SKIPBORING;
+                options.concolicSearchProcedure = artemis::SEARCH_DFS;
+            } else if(string(optarg).compare("random") == 0){
+                options.concolicSearchProcedure = artemis::SEARCH_RANDOM;
+            } else if(string(optarg).compare("easily-bored") == 0){
+                options.concolicSearchProcedure = artemis::SEARCH_EASILYBORED;
             } else {
                 cerr << "ERROR: Invalid choice of concolic-search-procedure " << optarg << endl;
                 exit(1);

@@ -20,7 +20,7 @@
 #include <QObject>
 
 #include "concolic/executiontree/tracenodes.h"
-#include "concolic/search/searchdfs.h"
+#include "concolic/search/search.h"
 #include "concolic/solver/solver.h"
 #include "concolic/entrypoints.h"
 #include "concolic/mockentrypointdetector.h"
