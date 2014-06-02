@@ -105,7 +105,8 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             "           Choose the search procedure used to choose new areas of the concolic execution tree to explore.\n"
             "\n"
             "           dfs - (default) Depth first search with iterative deepening\n"
-            "           random - Randomised search\n"
+            "           dfs-testing - Simple DFS without deepening (used for testing)\n"
+            "           random - Randomised search (used for testing)\n"
             "           easily-bored - Uses reinforcement learning to prioritise \"interesting\" areas of the tree.\n"
             "\n"
             "--concolic-dfs-depth <n>x<m>\n"
@@ -438,7 +439,7 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
                 } else if(string(optarg).compare("--concolic-tree-output") == 0){
                     std::cout << "none final all final-overview all-overview";
                 } else if(string(optarg).compare("----concolic-search-procedure") == 0){
-                    std::cout << "dfs random easily-bored";
+                    std::cout << "dfs dfs-testing random easily-bored";
                 } else if(string(optarg).compare("--concolic-event-sequences") == 0){
                     std::cout << "ignore simple";
                 }else if(string(optarg).compare("--strategy-priority") == 0){
@@ -501,6 +502,8 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
         case 'S': {
             if(string(optarg).compare("dfs") == 0){
                 options.concolicSearchProcedure = artemis::SEARCH_DFS;
+            } else if(string(optarg).compare("dfs-testing") == 0){
+                options.concolicSearchProcedure = artemis::SEARCH_DFSTESTING;
             } else if(string(optarg).compare("random") == 0){
                 options.concolicSearchProcedure = artemis::SEARCH_RANDOM;
             } else if(string(optarg).compare("easily-bored") == 0){

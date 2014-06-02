@@ -129,7 +129,8 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/concolic/solver/constraintwriter/cvc4typeanalysis.h \
     src/util/useragents.h \
     src/concolic/search/randomaccesssearch.h \
-    src/concolic/search/randomisedsearch.h
+    src/concolic/search/randomisedsearch.h \
+    src/concolic/search/dfstesting.h
 
 SOURCES += src/runtime/input/ajaxinput.cpp \
     src/strategies/prioritizer/constantprioritizer.cpp \
@@ -235,6 +236,7 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/runtime/input/forms/formfieldrestrictedvalues.cpp \
     src/concolic/solver/constraintwriter/cvc4typeanalysis.cpp \
     src/concolic/search/randomaccesssearch.cpp \
-    src/concolic/search/randomisedsearch.cpp
+    src/concolic/search/randomisedsearch.cpp \
+    src/concolic/search/dfstesting.cpp
 
 QT += network

@@ -70,6 +70,9 @@ protected:
         // The child of the branch which is unexplored.
         bool branchDirection;
 
+        // Information which is useful to one or more of the subclasses:
+        unsigned int symbolicDepth;
+
         // Hash and equality operators so it can be put into sets, etc.
         friend inline bool operator==(const ExplorationDescriptor& a, const ExplorationDescriptor& b)
         {
@@ -122,6 +125,7 @@ private:
     TraceSymbolicBranchPtr mCurrentBranchParent;
     bool mCurrentBranchParentDirection;
     TraceMarkerPtr mCurrentMarkerParent;
+    unsigned int mCurrentSymbolicDepth;
     TraceNodePtr mThisNode; // Tracks a smart pointer vaersion of 'this' throughout the visitor.
     void analyseNode(TraceNodePtr node);
 

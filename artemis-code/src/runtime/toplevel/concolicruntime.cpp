@@ -25,6 +25,7 @@
 #include "statistics/statsstorage.h"
 
 #include "concolic/search/searchdfs.h"
+#include "concolic/search/dfstesting.h"
 #include "concolic/search/randomisedsearch.h"
 
 #include "concolicruntime.h"
@@ -395,6 +396,11 @@ void ConcolicRuntime::mergeTraceIntoTree()
                                                                  mOptions.concolicDfsRestartLimit));
             break;
 
+        case SEARCH_DFSTESTING:
+            // The depth limit from this is taken from the standard DFS arguments so the total depth will match.
+            mSearchStrategy = TreeSearchPtr(new DfsTesting(mSymbolicExecutionGraph,
+                                                           mOptions.concolicDfsDepthLimit * mOptions.concolicDfsRestartLimit));
+            break;
         case SEARCH_RANDOM:
             mSearchStrategy = TreeSearchPtr(new RandomisedSearch(mSymbolicExecutionGraph,
                                                                  mOptions.concolicRandomLimit));

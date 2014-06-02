@@ -63,7 +63,7 @@ enum SMTSolver {
 };
 
 enum ConcolicSearch {
-    SEARCH_DFS, SEARCH_RANDOM, SEARCH_EASILYBORED
+    SEARCH_DFS, SEARCH_DFSTESTING, SEARCH_RANDOM, SEARCH_EASILYBORED
 };
 
 typedef struct OptionsType {

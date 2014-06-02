@@ -186,6 +186,7 @@ void RandomAccessSearch::analyseTree()
     mCurrentBranchParent = TraceSymbolicBranchPtr();
     // mCurrentBranchParentDirection
     mCurrentMarkerParent = TraceMarkerPtr();
+    mCurrentSymbolicDepth = 0;
 
     // All calls to the visitor must go through analyseNode, so that mThisNode is always valid.
     analyseNode(mTree);
@@ -217,12 +218,14 @@ void RandomAccessSearch::visit(TraceConcreteBranch *node)
     TraceSymbolicBranchPtr currentBranchParent = mCurrentBranchParent;
     bool currentBranchParentDirection = mCurrentBranchParentDirection;
     TraceMarkerPtr currentMarkerParent = mCurrentMarkerParent;
+    unsigned int currentSymbolicDepth = mCurrentSymbolicDepth;
 
     analyseNode(node->getFalseBranch());
 
     mCurrentBranchParent = currentBranchParent;
     mCurrentBranchParentDirection = currentBranchParentDirection;
     mCurrentMarkerParent = currentMarkerParent;
+    mCurrentSymbolicDepth = currentSymbolicDepth;
 
     analyseNode(node->getTrueBranch());
 }
@@ -234,6 +237,7 @@ void RandomAccessSearch::visit(TraceSymbolicBranch *node)
 
     // Keep the current marker parent so we can reset it correctly for both branches.
     TraceMarkerPtr currentMarkerParent = mCurrentMarkerParent;
+    unsigned int currentSymbolicDepth = mCurrentSymbolicDepth + 1;
 
     // Update the tables.
     QPair<TraceSymbolicBranchPtr, bool> parent = QPair<TraceSymbolicBranchPtr, bool>(mCurrentBranchParent, mCurrentBranchParentDirection);
@@ -246,11 +250,13 @@ void RandomAccessSearch::visit(TraceSymbolicBranch *node)
         ExplorationDescriptor explore;
         explore.branch = thisSymBranch;
         explore.branchDirection = false;
+        explore.symbolicDepth = currentSymbolicDepth;
         mPossibleExplorations.append(explore);
     } else {
         mCurrentBranchParent = thisSymBranch;
         mCurrentBranchParentDirection = false;
         mCurrentMarkerParent = currentMarkerParent;
+        mCurrentSymbolicDepth = currentSymbolicDepth;
         analyseNode(node->getFalseBranch());
     }
 
@@ -258,11 +264,13 @@ void RandomAccessSearch::visit(TraceSymbolicBranch *node)
         ExplorationDescriptor explore;
         explore.branch = thisSymBranch;
         explore.branchDirection = true;
+        explore.symbolicDepth = currentSymbolicDepth;
         mPossibleExplorations.append(explore);
     } else {
         mCurrentBranchParent = thisSymBranch;
         mCurrentBranchParentDirection = true;
         mCurrentMarkerParent = currentMarkerParent;
+        mCurrentSymbolicDepth = currentSymbolicDepth;
         analyseNode(node->getTrueBranch());
     }
 
@@ -276,11 +284,13 @@ void RandomAccessSearch::visit(TraceConcreteSummarisation *node)
     TraceSymbolicBranchPtr currentBranchParent = mCurrentBranchParent;
     bool currentBranchParentDirection = mCurrentBranchParentDirection;
     TraceMarkerPtr currentMarkerParent = mCurrentMarkerParent;
+    unsigned int currentSymbolicDepth = mCurrentSymbolicDepth;
 
     foreach(TraceConcreteSummarisation::SingleExecution ex, node->executions) {
         mCurrentBranchParent = currentBranchParent;
         mCurrentBranchParentDirection = currentBranchParentDirection;
         mCurrentMarkerParent = currentMarkerParent;
+        mCurrentSymbolicDepth = currentSymbolicDepth;
 
         analyseNode(ex.second);
     }

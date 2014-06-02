@@ -78,7 +78,7 @@ def test_generator(filename, name, test_dict=None, internal_test=None):
                                  iterations=0,
                                  major_mode='concolic',
                                  concolic_event_sequences='simple',
-                                 #concolic_search_procedure='random',
+                                 #concolic_search_procedure='dfs-testing',
                                  verbose=True)
 
         assert test_dict or internal_test, "No tests to execute"
