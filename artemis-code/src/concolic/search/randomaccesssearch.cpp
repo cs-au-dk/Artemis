@@ -15,6 +15,7 @@
  */
 
 #include "randomaccesssearch.h"
+#include <assert.h>
 
 namespace artemis {
 
@@ -27,6 +28,11 @@ bool RandomAccessSearch::chooseNextTarget()
 {
     // Call analyseTree to get the set of possible explorations.
     analyseTree();
+
+    // If there are none, then the search is over.
+    if (mPossibleExplorations.empty()) {
+        return false;
+    }
 
     // Call chooseNext() to choose one of these to explore.
     QPair<bool, ExplorationDescriptor> choice = nextTarget(mPossibleExplorations);
@@ -55,13 +61,13 @@ PathConditionPtr RandomAccessSearch::calculatePC(RandomAccessSearch::Exploration
     PathConditionPtr pc = PathConditionPtr(new PathCondition());
 
     // Null parent marks the first symbolic branch on each trace.
-    while (!current.isNull()) {
+    while (!current.first.isNull()) {
         // Add the current node's condition to the PC.
         pc->addCondition(current.first->getSymbolicCondition(), current.second);
 
         // Move to the next node.
-        assert(mBranchParents.contains(current));
-        current = mBranchParents.value(current);
+        assert(mBranchParents.contains(current.first));
+        current = mBranchParents.value(current.first);
     }
 
     return pc;
@@ -185,7 +191,7 @@ void RandomAccessSearch::analyseTree()
 
 void RandomAccessSearch::analyseNode(TraceNodePtr node)
 {
-    mThisNode = mTree;
+    mThisNode = node;
     mTree->accept(this);
 }
 
@@ -210,30 +216,32 @@ void RandomAccessSearch::visit(TraceConcreteBranch *node)
 
 void RandomAccessSearch::visit(TraceSymbolicBranch *node)
 {
+    TraceSymbolicBranchPtr thisSymBranch = mThisNode.dynamicCast<TraceSymbolicBranch>();
+    assert(!thisSymBranch.isNull());
+
     // Update the tables.
     QPair<TraceSymbolicBranchPtr, bool> parent = QPair<TraceSymbolicBranchPtr, bool>(mCurrentBranchParent, mCurrentBranchParentDirection);
-    mBranchParents.insert(mThisNode, parent);
-    mBranchParentMarkers.insert(mThisNode, mCurrentBranchParent);
-    TraceSymbolicBranchPtr thisNode = mThisNode;
+    mBranchParents.insert(thisSymBranch, parent);
+    mBranchParentMarkers.insert(thisSymBranch, mCurrentMarkerParent);
 
     // If either child is unexplored, this is a new exploration target.
     // Otherwise, analyse the children.
     if (isImmediatelyUnexplored(node->getFalseBranch())) {
         ExplorationDescriptor explore;
-        explore.branch = mThisNode;
+        explore.branch = thisSymBranch;
         explore.branchDirection = false;
     } else {
-        mCurrentBranchParent = thisNode;
+        mCurrentBranchParent = thisSymBranch;
         mCurrentBranchParentDirection = false;
         analyseNode(node->getFalseBranch());
     }
 
     if (isImmediatelyUnexplored(node->getTrueBranch())) {
         ExplorationDescriptor explore;
-        explore.branch = mThisNode;
+        explore.branch = thisSymBranch;
         explore.branchDirection = true;
     } else {
-        mCurrentBranchParent = thisNode;
+        mCurrentBranchParent = thisSymBranch;
         mCurrentBranchParentDirection = true;
         analyseNode(node->getTrueBranch());
     }
@@ -250,11 +258,14 @@ void RandomAccessSearch::visit(TraceConcreteSummarisation *node)
 
 void RandomAccessSearch::visit(TraceMarker *node)
 {
+    TraceMarkerPtr thisMarker = mThisNode.dynamicCast<TraceMarker>();
+    assert(!thisMarker.isNull());
+
     // Update the tables
-    mMarkerParents.insert(mThisNode, mCurrentMarkerParent);
+    mMarkerParents.insert(thisMarker, mCurrentMarkerParent);
 
     // Continue
-    mCurrentMarkerParent = mThisNode;
+    mCurrentMarkerParent = thisMarker;
     analyseNode(node->next);
 }
 

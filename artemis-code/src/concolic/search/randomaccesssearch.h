@@ -37,6 +37,7 @@ namespace artemis
 
 class RandomAccessSearch : public TreeSearch
 {
+public:
     RandomAccessSearch(TraceNodePtr tree);
 
     bool chooseNextTarget() final;
@@ -68,6 +69,17 @@ protected:
         TraceSymbolicBranchPtr branch;
         // The child of the branch which is unexplored.
         bool branchDirection;
+
+        // Hash and equality operators so it can be put into sets, etc.
+        friend inline bool operator==(const ExplorationDescriptor& a, const ExplorationDescriptor& b)
+        {
+            return a.branch == b.branch && a.branchDirection == b.branchDirection ;
+        }
+
+        friend inline uint qHash(const ExplorationDescriptor& key)
+        {
+            return ::qHash(key.branch) ^ ::qHash((int)key.branchDirection);
+        }
     };
 
     /**
@@ -103,6 +115,7 @@ private:
     // TODO: To fully rescan the tree like this is needlessly inefficient.
     // Instead we really should have the trace merger notify the search procedure of where the tree was extended.
     // Then mBranchParents, mPossibleExplorations etc. could be updated incrementally.
+    // Alternatively, we could just analyse all of the possible exploration targets from the previous call.
     void analyseTree();
 
     // Temp variables used by the visitors.
@@ -116,6 +129,7 @@ private:
     PathConditionPtr calculatePC(ExplorationDescriptor target);
     QSet<SelectRestriction> calculateDomConstraints(ExplorationDescriptor target);
 };
+
 
 } //namespace artemis
 
