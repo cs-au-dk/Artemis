@@ -16,6 +16,8 @@
 
 #include "randomisedsearch.h"
 
+#include <QTime>
+
 namespace artemis
 {
 
@@ -24,6 +26,7 @@ RandomisedSearch::RandomisedSearch(TraceNodePtr tree, unsigned int searchAttempt
     RandomAccessSearch(tree),
     mSearchAttempts(searchAttempts)
 {
+    qsrand(QTime::currentTime().msec());
 }
 
 QPair<bool, RandomAccessSearch::ExplorationDescriptor> RandomisedSearch::nextTarget(QList<ExplorationDescriptor> possibleTargets)

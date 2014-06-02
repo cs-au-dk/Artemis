@@ -58,9 +58,26 @@ bool TraceVisitor::isImmediatelyUnexplored(QSharedPointer<TraceNode> trace)
 
 bool TraceVisitor::isImmediatelyUnsat(QSharedPointer<TraceNode> trace)
 {
-    return !trace.dynamicCast<TraceUnexploredUnsat>().isNull(); // Is there a more elegant way to do this?
+    return !trace.dynamicCast<TraceUnexploredUnsat>().isNull();
 }
 
+bool TraceVisitor::isImmediatelyUnsolvable(QSharedPointer<TraceNode> trace)
+{
+    return !trace.dynamicCast<TraceUnexploredUnsolvable>().isNull();
+}
+
+bool TraceVisitor::isImmediatelyMissed(QSharedPointer<TraceNode> trace)
+{
+    return !trace.dynamicCast<TraceUnexploredMissed>().isNull();
+}
+
+bool TraceVisitor::isImmediatelyNotAttempted(QSharedPointer<TraceNode> trace)
+{
+    return isImmediatelyUnexplored(trace) &&
+            !isImmediatelyUnsat(trace) &&
+            !isImmediatelyUnsolvable(trace) &&
+            !isImmediatelyMissed(trace);
+}
 
 
 } // namespace artemis

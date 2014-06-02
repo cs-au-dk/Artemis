@@ -34,6 +34,7 @@ def execute_artemis(execution_uuid, url, iterations=1,
                     output_parent_dir=OUTPUT_DIR,
                     ignore_artemis_crash=False, # Suppresses the exception thrown by a non-zero return code and returns whatever information it can.
                     concolic_event_sequences=None,
+                    concolic_search_procedure=None,
                     verbosity=None,
                     **kwargs):
     output_dir = os.path.join(output_parent_dir, execution_uuid)
@@ -109,6 +110,10 @@ def execute_artemis(execution_uuid, url, iterations=1,
     if concolic_event_sequences is not None:
         args.append('--concolic-event-sequences')
         args.append(concolic_event_sequences)
+
+    if concolic_search_procedure is not None:
+        args.append('--concolic-search-procedure')
+        args.append(concolic_search_procedure)
 
     cmd = [ARTEMIS_EXEC] + [url] + args
 

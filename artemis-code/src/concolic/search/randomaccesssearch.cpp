@@ -19,9 +19,9 @@
 
 namespace artemis {
 
-RandomAccessSearch::RandomAccessSearch(TraceNodePtr tree)
+RandomAccessSearch::RandomAccessSearch(TraceNodePtr tree) :
+    mTree(tree)
 {
-
 }
 
 bool RandomAccessSearch::chooseNextTarget()
@@ -31,6 +31,7 @@ bool RandomAccessSearch::chooseNextTarget()
 
     // If there are none, then the search is over.
     if (mPossibleExplorations.empty()) {
+        mTarget = ExplorationDescriptor();
         return false;
     }
 
@@ -39,6 +40,7 @@ bool RandomAccessSearch::chooseNextTarget()
 
     // Check if they chose to stop searching.
     if (!choice.first) {
+        mTarget = ExplorationDescriptor();
         return false;
     }
 
@@ -117,9 +119,9 @@ bool RandomAccessSearch::overUnexploredNode()
 
     // Use mTarget to check if we explored the correct area.
     if (mTarget.branchDirection) {
-        return isImmediatelyUnexplored(mTarget.branch->getTrueBranch());
+        return isImmediatelyNotAttempted(mTarget.branch->getTrueBranch());
     } else {
-        return isImmediatelyUnexplored(mTarget.branch->getFalseBranch());
+        return isImmediatelyNotAttempted(mTarget.branch->getFalseBranch());
     }
 }
 
@@ -130,11 +132,11 @@ void RandomAccessSearch::markNodeUnsat()
 
     // Assuming overUnexploredNode(), mark this target as UNSAT.
     if (mTarget.branchDirection) {
-        assert(isImmediatelyUnexplored(mTarget.branch->getTrueBranch()));
+        assert(isImmediatelyNotAttempted(mTarget.branch->getTrueBranch()));
         mTarget.branch->setTrueBranch(TraceUnexploredUnsat::getInstance());
     } else {
-        assert(isImmediatelyUnexplored(mTarget.branch->getFalseBranch()));
-        mTarget.branch->setTrueBranch(TraceUnexploredUnsat::getInstance());
+        assert(isImmediatelyNotAttempted(mTarget.branch->getFalseBranch()));
+        mTarget.branch->setFalseBranch(TraceUnexploredUnsat::getInstance());
     }
 }
 
@@ -145,11 +147,11 @@ void RandomAccessSearch::markNodeUnsolvable()
 
     // Assuming overUnexploredNode(), mark this target as Unsolvable.
     if (mTarget.branchDirection) {
-        assert(isImmediatelyUnexplored(mTarget.branch->getTrueBranch()));
+        assert(isImmediatelyNotAttempted(mTarget.branch->getTrueBranch()));
         mTarget.branch->setTrueBranch(TraceUnexploredUnsolvable::getInstance());
     } else {
-        assert(isImmediatelyUnexplored(mTarget.branch->getFalseBranch()));
-        mTarget.branch->setTrueBranch(TraceUnexploredUnsolvable::getInstance());
+        assert(isImmediatelyNotAttempted(mTarget.branch->getFalseBranch()));
+        mTarget.branch->setFalseBranch(TraceUnexploredUnsolvable::getInstance());
     }
 }
 
@@ -160,11 +162,11 @@ void RandomAccessSearch::markNodeMissed()
 
     // Assuming overUnexploredNode(), mark this target as Missed.
     if (mTarget.branchDirection) {
-        assert(isImmediatelyUnexplored(mTarget.branch->getTrueBranch()));
+        assert(isImmediatelyNotAttempted(mTarget.branch->getTrueBranch()));
         mTarget.branch->setTrueBranch(TraceUnexploredMissed::getInstance());
     } else {
-        assert(isImmediatelyUnexplored(mTarget.branch->getFalseBranch()));
-        mTarget.branch->setTrueBranch(TraceUnexploredMissed::getInstance());
+        assert(isImmediatelyNotAttempted(mTarget.branch->getFalseBranch()));
+        mTarget.branch->setFalseBranch(TraceUnexploredMissed::getInstance());
     }
 }
 
@@ -192,7 +194,7 @@ void RandomAccessSearch::analyseTree()
 void RandomAccessSearch::analyseNode(TraceNodePtr node)
 {
     mThisNode = node;
-    mTree->accept(this);
+    node->accept(this);
 }
 
 
@@ -210,7 +212,18 @@ void RandomAccessSearch::visit(TraceNode *node)
 void RandomAccessSearch::visit(TraceConcreteBranch *node)
 {
     // Just recurse on both children.
+
+    // But reset the visitor state correctly for the second one.
+    TraceSymbolicBranchPtr currentBranchParent = mCurrentBranchParent;
+    bool currentBranchParentDirection = mCurrentBranchParentDirection;
+    TraceMarkerPtr currentMarkerParent = mCurrentMarkerParent;
+
     analyseNode(node->getFalseBranch());
+
+    mCurrentBranchParent = currentBranchParent;
+    mCurrentBranchParentDirection = currentBranchParentDirection;
+    mCurrentMarkerParent = currentMarkerParent;
+
     analyseNode(node->getTrueBranch());
 }
 
@@ -219,6 +232,9 @@ void RandomAccessSearch::visit(TraceSymbolicBranch *node)
     TraceSymbolicBranchPtr thisSymBranch = mThisNode.dynamicCast<TraceSymbolicBranch>();
     assert(!thisSymBranch.isNull());
 
+    // Keep the current marker parent so we can reset it correctly for both branches.
+    TraceMarkerPtr currentMarkerParent = mCurrentMarkerParent;
+
     // Update the tables.
     QPair<TraceSymbolicBranchPtr, bool> parent = QPair<TraceSymbolicBranchPtr, bool>(mCurrentBranchParent, mCurrentBranchParentDirection);
     mBranchParents.insert(thisSymBranch, parent);
@@ -226,7 +242,7 @@ void RandomAccessSearch::visit(TraceSymbolicBranch *node)
 
     // If either child is unexplored, this is a new exploration target.
     // Otherwise, analyse the children.
-    if (isImmediatelyUnexplored(node->getFalseBranch())) {
+    if (isImmediatelyNotAttempted(node->getFalseBranch())) {
         ExplorationDescriptor explore;
         explore.branch = thisSymBranch;
         explore.branchDirection = false;
@@ -234,10 +250,11 @@ void RandomAccessSearch::visit(TraceSymbolicBranch *node)
     } else {
         mCurrentBranchParent = thisSymBranch;
         mCurrentBranchParentDirection = false;
+        mCurrentMarkerParent = currentMarkerParent;
         analyseNode(node->getFalseBranch());
     }
 
-    if (isImmediatelyUnexplored(node->getTrueBranch())) {
+    if (isImmediatelyNotAttempted(node->getTrueBranch())) {
         ExplorationDescriptor explore;
         explore.branch = thisSymBranch;
         explore.branchDirection = true;
@@ -245,6 +262,7 @@ void RandomAccessSearch::visit(TraceSymbolicBranch *node)
     } else {
         mCurrentBranchParent = thisSymBranch;
         mCurrentBranchParentDirection = true;
+        mCurrentMarkerParent = currentMarkerParent;
         analyseNode(node->getTrueBranch());
     }
 
@@ -253,7 +271,17 @@ void RandomAccessSearch::visit(TraceSymbolicBranch *node)
 void RandomAccessSearch::visit(TraceConcreteSummarisation *node)
 {
     // Just recurse on all children.
+
+    // But reset the visitor state correctly for the second one.
+    TraceSymbolicBranchPtr currentBranchParent = mCurrentBranchParent;
+    bool currentBranchParentDirection = mCurrentBranchParentDirection;
+    TraceMarkerPtr currentMarkerParent = mCurrentMarkerParent;
+
     foreach(TraceConcreteSummarisation::SingleExecution ex, node->executions) {
+        mCurrentBranchParent = currentBranchParent;
+        mCurrentBranchParentDirection = currentBranchParentDirection;
+        mCurrentMarkerParent = currentMarkerParent;
+
         analyseNode(ex.second);
     }
 }
@@ -268,6 +296,7 @@ void RandomAccessSearch::visit(TraceMarker *node)
 
     // Continue
     mCurrentMarkerParent = thisMarker;
+
     analyseNode(node->next);
 }
 

@@ -487,7 +487,7 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             bool ok;
             options.concolicRandomLimit = QString(optarg).toUInt(&ok);
             if(!ok) {
-                cerr << "ERROR: Invalid choice of concolic-random-limit " << optarg << endl;
+                cerr << "ERROR: Invalid choice of concolic-random-attempts " << optarg << endl;
                 exit(1);
             }
             break;

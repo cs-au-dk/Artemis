@@ -93,6 +93,9 @@ public:
     // Helper methods for concrete visitors.
     static bool isImmediatelyUnexplored(QSharedPointer<TraceNode> trace);
     static bool isImmediatelyUnsat(QSharedPointer<TraceNode> trace);
+    static bool isImmediatelyUnsolvable(QSharedPointer<TraceNode> trace);
+    static bool isImmediatelyMissed(QSharedPointer<TraceNode> trace);
+    static bool isImmediatelyNotAttempted(QSharedPointer<TraceNode> trace);
 
     virtual ~TraceVisitor(){}
 };
