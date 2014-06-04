@@ -15,6 +15,7 @@
  */
 
 #include <stdlib.h>
+#include <assert.h>
 #include <QDebug>
 
 #include "util/loggingutil.h"
@@ -36,16 +37,17 @@ TraceNodePtr TraceMerger::merge(TraceNodePtr trace, TraceNodePtr executiontree)
         Statistics::statistics()->accumulate("Concolic::ExecutionTree::DistinctTracesExplored", 1);
     }
 
-    TraceMerger merger;
+    mStartingTrace = trace;
+    mStartingTree = executiontree;
 
-    merger.mStartingTrace = trace;
-    merger.mStartingTree = executiontree;
+    mCurrentTrace = trace;
+    mCurrentTree = executiontree;
 
-    merger.mCurrentTrace = trace;
-    merger.mCurrentTree = executiontree;
-    trace->accept(&merger);
+    mPreviousParent = TraceNodePtr();
 
-    return merger.mCurrentTree;
+    trace->accept(this);
+
+    return mCurrentTree;
 }
 
 void TraceMerger::visit(TraceUnexplored* node)
@@ -62,6 +64,7 @@ void TraceMerger::visit(TraceEnd* node)
         // Insert this trace directly into the tree and return
         mCurrentTree = mCurrentTrace;
         Statistics::statistics()->accumulate("Concolic::ExecutionTree::DistinctTracesExplored", 1);
+        reportMerge(mCurrentTrace);
         return;
     }
 
@@ -79,6 +82,7 @@ void TraceMerger::visit(TraceBranch* node)
         // Insert this trace directly into the tree and return
         mCurrentTree = mCurrentTrace;
         Statistics::statistics()->accumulate("Concolic::ExecutionTree::DistinctTracesExplored", 1);
+        reportMerge(mCurrentTrace);
         return;
     }
 
@@ -91,12 +95,16 @@ void TraceMerger::visit(TraceBranch* node)
 
         mCurrentTree = treeBranch->getTrueBranch();
         mCurrentTrace = node->getTrueBranch();
+        mPreviousParent = treeBranch;
+        mPreviousDirection = 1;
         mCurrentTrace->accept(this);
 
         treeBranch->setTrueBranch(mCurrentTree);
 
         mCurrentTree = treeBranch->getFalseBranch();
         mCurrentTrace = node->getFalseBranch();
+        mPreviousParent = treeBranch;
+        mPreviousDirection = 0;
         mCurrentTrace->accept(this);
 
         treeBranch->setFalseBranch(mCurrentTree);
@@ -116,6 +124,7 @@ void TraceMerger::visit(TraceAnnotation* node)
         // Insert this trace directly into the tree and return
         mCurrentTree = mCurrentTrace;
         Statistics::statistics()->accumulate("Concolic::ExecutionTree::DistinctTracesExplored", 1);
+        reportMerge(mCurrentTrace);
         return;
     }
 
@@ -144,6 +153,7 @@ void TraceMerger::visit(TraceConcreteSummarisation *node)
         // Insert this trace directly into the tree and return
         mCurrentTree = mCurrentTrace;
         Statistics::statistics()->accumulate("Concolic::ExecutionTree::DistinctTracesExplored", 1);
+        reportMerge(mCurrentTrace);
         return;
     }
 
@@ -170,12 +180,15 @@ void TraceMerger::visit(TraceConcreteSummarisation *node)
         QPair<QList<TraceConcreteSummarisation::EventType>, TraceNodePtr> traceExec = node->executions[0];
 
         // Attempt to match with each tree execution path in turn.
+        int idx = 0;
         foreach(TraceConcreteSummarisation::SingleExecution treeExec, treeSummary->executions) {
 
-            // If the executions matche exactly then merge the successor nodes and end.
+            // If the executions match exactly then merge the successor nodes and end.
             if(treeExec.first == traceExec.first) {
                 mCurrentTree = treeExec.second;
                 mCurrentTrace = traceExec.second;
+                mPreviousParent = treeSummary;
+                mPreviousDirection = idx;
                 mCurrentTrace->accept(this);
 
                 treeExec.second = mCurrentTree;
@@ -214,6 +227,7 @@ void TraceMerger::visit(TraceConcreteSummarisation *node)
                 return;
             }
 
+            idx++;
         }
 
         // If we have checked each execution without finding a match or a divergence, then this is a valid new path.
@@ -221,6 +235,9 @@ void TraceMerger::visit(TraceConcreteSummarisation *node)
         treeSummary->executions.append(traceExec);
         // mCurrentTree is not changed.
         Statistics::statistics()->accumulate("Concolic::ExecutionTree::DistinctTracesExplored", 1);
+        mPreviousParent = treeSummary;
+        mPreviousDirection = treeSummary->executions.length()-1;
+        reportMerge(traceExec.second);
         return;
     }
 
@@ -253,6 +270,13 @@ void TraceMerger::handleDivergence()
         display.writeGraphFile(mStartingTree, pathToTreeFile, false);
         display.writeGraphFile(mStartingTrace, pathToTraceFile, false);
     }
+}
+
+// When we merge a trace, trigger the signals.
+void TraceMerger::reportMerge(TraceNodePtr newPart)
+{
+    assert(!mPreviousParent.isNull());
+    emit sigTraceJoined(mPreviousParent, mPreviousDirection, newPart);
 }
 
 

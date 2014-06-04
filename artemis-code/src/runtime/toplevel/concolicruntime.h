@@ -29,6 +29,7 @@
 #include "concolic/executiontree/tracedisplayoverview.h"
 #include "concolic/traceclassifier.h"
 #include "concolic/tracestatistics.h"
+#include "concolic/executiontree/tracemerger.h"
 
 #include "runtime/input/dominput.h"
 #include "runtime/input/events/mouseeventparameters.h"
@@ -103,6 +104,8 @@ protected:
     // If mManualEntryPoint is set, then we use mEntryPointXPath and skip the first iteration, otherwise we use mEntryPointEvent.
     bool mManualEntryPoint;
     QString mManualEntryPointXPath;
+
+    TraceMerger mTraceMerger;
 
     TraceClassifier mTraceClassifier;
 

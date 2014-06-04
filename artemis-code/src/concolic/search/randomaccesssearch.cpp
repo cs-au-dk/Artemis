@@ -199,6 +199,13 @@ void RandomAccessSearch::analyseNode(TraceNodePtr node)
 }
 
 
+// Called whenever a new trace (suffix) is added to the tree.
+void RandomAccessSearch::slNewTraceAdded(TraceNodePtr parent, int direction, TraceNodePtr suffix)
+{
+    newTraceAdded(parent, direction, suffix);
+}
+
+
 
 
 
@@ -326,6 +333,7 @@ void RandomAccessSearch::visit(TraceEnd *node)
 {
     // Ignore.
 }
+
 
 
 

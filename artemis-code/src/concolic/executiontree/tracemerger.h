@@ -35,10 +35,12 @@ namespace artemis
  * Thus, the usage of a pointer to the executiontree pointer.
  *
  */
-class TraceMerger : public TraceVisitor
+class TraceMerger : public QObject, public TraceVisitor
 {
+    Q_OBJECT
+
 public:
-    static TraceNodePtr merge(TraceNodePtr trace, TraceNodePtr executiontree);
+    TraceNodePtr merge(TraceNodePtr trace, TraceNodePtr executiontree);
 
     void visit(TraceNode* node);
 
@@ -50,9 +52,12 @@ public:
 
     void handleDivergence();
 
-private:
-    TraceMerger() {}
+signals:
+    // Notifies where a new trace is joined into the tree.
+    // Arguments are parent branch (or summary), direction from that branch, and the new part of the trace which was added.
+    void sigTraceJoined(TraceNodePtr parent, bool direction, TraceNodePtr suffix);
 
+private:
     TraceNodePtr mCurrentTree;
     TraceNodePtr mCurrentTrace;
 
@@ -61,6 +66,11 @@ private:
     static const bool mReportFailedMerge = false; // Whether to dump out failed merges for anaysis.
 
     void reportDivergence();
+
+    // Used to report where a new trace was added to the tree.
+    TraceNodePtr mPreviousParent;
+    int mPreviousDirection;
+    void reportMerge(TraceNodePtr newPart);
 };
 
 }

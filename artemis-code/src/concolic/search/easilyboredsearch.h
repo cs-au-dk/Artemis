@@ -35,6 +35,7 @@ public:
 
 protected:
     QPair<bool, ExplorationDescriptor> nextTarget(QList<ExplorationDescriptor> possibleTargets);
+    void newTraceAdded(TraceNodePtr parent, int direction, TraceNodePtr suffix);
 
 };
 

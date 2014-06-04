@@ -37,4 +37,10 @@ QPair<bool, RandomAccessSearch::ExplorationDescriptor> EasilyBoredSearch::nextTa
 }
 
 
+void EasilyBoredSearch::newTraceAdded(TraceNodePtr parent, int direction, TraceNodePtr suffix)
+{
+    // TODO: Process the new trace suffix, if required.
+}
+
+
 } //namespace artemis

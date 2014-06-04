@@ -18,7 +18,6 @@
 #include <assert.h>
 
 #include "util/loggingutil.h"
-#include "concolic/executiontree/tracemerger.h"
 #include "concolic/executiontree/tracenodes.h"
 #include "concolic/traceeventdetectors.h"
 #include "concolic/solver/cvc4solver.h"
@@ -401,15 +400,22 @@ void ConcolicRuntime::mergeTraceIntoTree()
             // The depth limit from this is taken from the standard DFS arguments so the total depth will match.
             mSearchStrategy = TreeSearchPtr(new DfsTesting(mSymbolicExecutionGraph,
                                                            mOptions.concolicDfsDepthLimit * mOptions.concolicDfsRestartLimit));
+            QObject::connect(&mTraceMerger, SIGNAL(sigTraceJoined(TraceNodePtr, int, TraceNodePtr)),
+                             mSearchStrategy.dynamicCast<RandomAccessSearch>().data(), SLOT(slNewTraceAdded(TraceNodePtr, int, TraceNodePtr)));
             break;
         case SEARCH_RANDOM:
             mSearchStrategy = TreeSearchPtr(new RandomisedSearch(mSymbolicExecutionGraph,
                                                                  mOptions.concolicRandomLimit));
+            QObject::connect(&mTraceMerger, SIGNAL(sigTraceJoined(TraceNodePtr, int, TraceNodePtr)),
+                             mSearchStrategy.dynamicCast<RandomAccessSearch>().data(), SLOT(slNewTraceAdded(TraceNodePtr, int, TraceNodePtr)));
             break;
 
         case SEARCH_EASILYBORED:
             mSearchStrategy = TreeSearchPtr(new EasilyBoredSearch(mSymbolicExecutionGraph));
+            QObject::connect(&mTraceMerger, SIGNAL(sigTraceJoined(TraceNodePtr, int, TraceNodePtr)),
+                             mSearchStrategy.dynamicCast<RandomAccessSearch>().data(), SLOT(slNewTraceAdded(TraceNodePtr, int, TraceNodePtr)));
             break;
+
         default:
             Log::fatal("Unknown search procedure.");
             exit(1);
@@ -421,7 +427,7 @@ void ConcolicRuntime::mergeTraceIntoTree()
 
         // A normal run.
         // Merge trace with tracegraph
-        mSymbolicExecutionGraph = TraceMerger::merge(trace, mSymbolicExecutionGraph);
+        mSymbolicExecutionGraph = mTraceMerger.merge(trace, mSymbolicExecutionGraph);
 
         // Check if we actually explored the intended target.
         if(mSearchStrategy->overUnexploredNode()){

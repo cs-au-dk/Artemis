@@ -35,8 +35,10 @@ namespace artemis
  *  This class provides the interface required for TreeSearch and manages the tree itself.
  */
 
-class RandomAccessSearch : public TreeSearch
+class RandomAccessSearch : public QObject, public TreeSearch
 {
+    Q_OBJECT
+
 public:
     RandomAccessSearch(TraceNodePtr tree);
 
@@ -61,6 +63,9 @@ public:
     void visit(TraceUnexplored* node) final;
     void visit(TraceAnnotation* node) final;
     void visit(TraceEnd* node) final;
+
+public slots:
+    void slNewTraceAdded(TraceNodePtr parent, int direction, TraceNodePtr suffix);
 
 protected:
     struct ExplorationDescriptor {
@@ -92,6 +97,16 @@ protected:
      *  exploration.
      */
     virtual QPair<bool, ExplorationDescriptor> nextTarget(QList<ExplorationDescriptor> possibleTargets) = 0;
+
+    /**
+     *  Subclasses may override this method to be notifid when a new trace suffix is added to the tree.
+     *  Note that this method may not always be called between calls to nextTarget().
+     *  parent is the branch where the new trace split off from the existing tree.
+     *  It can be a concrete branch, symbolic branch or concrete summary.
+     *  direction is the direction from that node where the new trace was added.
+     *  suffix is the newly added part of the trace itself.
+     */
+    virtual void newTraceAdded(TraceNodePtr parent, int direction, TraceNodePtr suffix) {}
 
 private:
     // The tree
