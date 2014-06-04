@@ -27,6 +27,7 @@
 #include "concolic/search/searchdfs.h"
 #include "concolic/search/dfstesting.h"
 #include "concolic/search/randomisedsearch.h"
+#include "concolic/search/easilyboredsearch.h"
 
 #include "concolicruntime.h"
 
@@ -407,8 +408,8 @@ void ConcolicRuntime::mergeTraceIntoTree()
             break;
 
         case SEARCH_EASILYBORED:
-            Log::fatal("Search procedure easily-bored is not yet implemented.");
-            exit(1);
+            mSearchStrategy = TreeSearchPtr(new EasilyBoredSearch(mSymbolicExecutionGraph));
+            break;
         default:
             Log::fatal("Unknown search procedure.");
             exit(1);
