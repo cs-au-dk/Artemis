@@ -53,15 +53,14 @@ public:
 
     // The visitor part.
     // Should only be called by analyseTree().
-    // TODO: Could these be made private to enforce this?
-    void visit(TraceNode* node);
-    void visit(TraceConcreteBranch* node);
-    void visit(TraceSymbolicBranch* node);
-    void visit(TraceConcreteSummarisation *node);
-    void visit(TraceMarker* node);
-    void visit(TraceUnexplored* node);
-    void visit(TraceAnnotation* node);
-    void visit(TraceEnd* node);
+    void visit(TraceNode* node) final;
+    void visit(TraceConcreteBranch* node) final;
+    void visit(TraceSymbolicBranch* node) final;
+    void visit(TraceConcreteSummarisation *node) final;
+    void visit(TraceMarker* node) final;
+    void visit(TraceUnexplored* node) final;
+    void visit(TraceAnnotation* node) final;
+    void visit(TraceEnd* node) final;
 
 protected:
     struct ExplorationDescriptor {
