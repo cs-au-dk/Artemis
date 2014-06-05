@@ -350,7 +350,19 @@ SolutionPtr CVC4Solver::solve(PathConditionPtr pc, FormRestrictions formRestrict
         // save result
         solution->insertSymbol(identifier.c_str(), symbolvalue);
 
-        clog << symbol << " = " << symbolvalue.string << std::endl;
+        switch(symbolvalue.kind) {
+        case Symbolic::STRING:
+            clog << symbol << " = \"" << symbolvalue.string << "\"" << std::endl;
+            break;
+        case Symbolic::INT:
+            clog << symbol << " = " << symbolvalue.u.integer << std::endl;
+            break;
+        case Symbolic::BOOL:
+            clog << symbol << " = " << symbolvalue.u.boolean << std::endl;
+            break;
+        default:
+            break;
+        }
     }
 
     clog << std::endl;
