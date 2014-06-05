@@ -1,5 +1,7 @@
 <!--
-
+TEST PC[0] = ((SymbolicString == ConstantString) == ConstantBoolean)
+TEST Concolic::Solver::ConstraintsSolved = 2
+TEST Concolic::Solver::ConstraintsWritten = 2
 -->
 <!doctype html><html lang="en">
 <head>
@@ -11,10 +13,9 @@
 	<script type="text/javascript">
 
 		function lookahead() {
-			var a = document.getElementById("textbox").value;
-			var b = document.getElementById("testinput").value;
-			if (a == b) {
-				alert("You have entered the same as the select box!");
+			var x = document.getElementById("testinput").value;
+			if (x == "hello") {
+				alert("Don't forget to set the drop-down box!");
 			}
 		}
 
@@ -28,7 +29,7 @@
 
 	<form method="GET" action="about:blank" >
 
-		<input type="text" id="textbox" onchange="lookahead()" >
+		<input type="text" onchange="lookahead()" >
 
 		<select name="testinput" id="testinput" >
 			<option value="hello" >hello</option>

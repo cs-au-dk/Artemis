@@ -123,6 +123,7 @@ protected:
     QSharedPointer<FormInputCollection> createFormInput(QMap<QString, Symbolic::SourceIdentifierMethod> freeVariables, SolutionPtr solution);
     QSharedPointer<const FormFieldDescriptor> findFormFieldForVariable(QString varName, Symbolic::SourceIdentifierMethod varSourceIdentifierMethod);
     void exploreNextTarget();
+    FormRestrictions mergeDynamicSelectRestrictions(FormRestrictions base, QSet<SelectRestriction> replacements);
     void chooseNextTargetAndExplore();
     void reportStatistics();
 
