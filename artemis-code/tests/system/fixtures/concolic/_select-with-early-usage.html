@@ -1,0 +1,45 @@
+<!--
+
+-->
+<!doctype html><html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+	<title>Ben Spencer</title>
+	<meta name="author" content="Ben Spencer">
+	<script type="text/javascript">
+
+		function lookahead() {
+			var a = document.getElementById("textbox").value;
+			var b = document.getElementById("testinput").value;
+			if (a == b) {
+				alert("You have entered the same as the select box!");
+			}
+		}
+
+		function validate() {
+			return true;
+		}
+	</script>
+
+</head>
+<body>
+
+	<form method="GET" action="about:blank" >
+
+		<input type="text" id="textbox" onchange="lookahead()" >
+
+		<select name="testinput" id="testinput" >
+			<option value="hello" >hello</option>
+			<option value="hi there" >hi there</option>
+			<option value="testme" >testme</option>
+			<option value="goodbye" >goodbye</option>
+		</select>
+
+		<button type="submit" onclick="return validate();">Submit</button>
+
+	</form>
+
+</body>
+</html>
