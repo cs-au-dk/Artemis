@@ -586,8 +586,7 @@ void ConcolicRuntime::exploreNextTarget()
     QSet<SelectRestriction> dynamicSelectConstraints = mSearchStrategy->getTargetDomConstraints();
 
     // TODO: Currently only select constraints are handled dynamically, so we need to merge them with the static radio button constraints.
-    FormRestrictions dynamicRestrictions = mFormFieldRestrictions;
-    dynamicRestrictions.first = dynamicSelectConstraints;
+    FormRestrictions dynamicRestrictions = mergeDynamicSelectRestrictions(mFormFieldRestrictions, dynamicSelectConstraints);
 
     Log::info("  Next target:");
     QString targetString = QString("    ") + QString::fromStdString(target->toStatisticsValuesString(true)).trimmed();
@@ -638,6 +637,30 @@ void ConcolicRuntime::exploreNextTarget()
         // Skip this node and move on to the next.
         chooseNextTargetAndExplore();
     }
+}
+
+FormRestrictions ConcolicRuntime::mergeDynamicSelectRestrictions(FormRestrictions base, QSet<SelectRestriction> replacements)
+{
+    // Copy the radio constraints across as-is, they are not handled dynamically yet.
+    // Merge in the updated constraints from the search procedure with the latest "default" ones from base.
+
+    FormRestrictions updated = base;
+    updated.first = replacements;
+
+    QSet<QString> replacementVariables;
+    foreach(SelectRestriction sr, replacements) {
+        qDebug() << "We have an updated value for" << sr.variable;
+        replacementVariables.insert(sr.variable);
+    }
+
+    foreach(SelectRestriction sr, base.first) {
+        if (!replacementVariables.contains(sr.variable)) {
+            qDebug() << "Using the default value for value for" << sr.variable;
+            updated.first.insert(sr);
+        }
+    }
+
+    return updated;
 }
 
 
