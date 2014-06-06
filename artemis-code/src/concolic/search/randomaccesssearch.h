@@ -108,6 +108,14 @@ protected:
      */
     virtual void newTraceAdded(TraceNodePtr parent, int direction, TraceNodePtr suffix) {}
 
+    /**
+     *  These functions may be used if the subclasses need to be notified about other types of modification to the tree.
+     *  The modification itself is done by this helper.
+     */
+    virtual void newUnsat(ExplorationDescriptor node) {}
+    virtual void newUnsolvable(ExplorationDescriptor node) {}
+    virtual void newMissed(ExplorationDescriptor node) {}
+
 private:
     // The tree
     TraceNodePtr mTree;

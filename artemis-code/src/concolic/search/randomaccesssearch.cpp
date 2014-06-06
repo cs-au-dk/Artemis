@@ -138,6 +138,9 @@ void RandomAccessSearch::markNodeUnsat()
         assert(isImmediatelyNotAttempted(mTarget.branch->getFalseBranch()));
         mTarget.branch->setFalseBranch(TraceUnexploredUnsat::getInstance());
     }
+
+    // Notify the subclass
+    newUnsat(mTarget);
 }
 
 void RandomAccessSearch::markNodeUnsolvable()
@@ -153,6 +156,9 @@ void RandomAccessSearch::markNodeUnsolvable()
         assert(isImmediatelyNotAttempted(mTarget.branch->getFalseBranch()));
         mTarget.branch->setFalseBranch(TraceUnexploredUnsolvable::getInstance());
     }
+
+    // Notify the subclass
+    newUnsolvable(mTarget);
 }
 
 void RandomAccessSearch::markNodeMissed()
@@ -168,6 +174,9 @@ void RandomAccessSearch::markNodeMissed()
         assert(isImmediatelyNotAttempted(mTarget.branch->getFalseBranch()));
         mTarget.branch->setFalseBranch(TraceUnexploredMissed::getInstance());
     }
+
+    // Notify the subclass
+    newMissed(mTarget);
 }
 
 
