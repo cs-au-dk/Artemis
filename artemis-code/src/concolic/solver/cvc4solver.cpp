@@ -77,6 +77,8 @@ SolutionPtr CVC4Solver::solve(PathConditionPtr pc, FormRestrictions formRestrict
     std::ofstream clog("/tmp/constraintlog", std::ofstream::out | std::ofstream::app);
     std::ofstream constraintIndex("/tmp/constraintindex", std::ofstream::out | std::ofstream::app);
 
+    Log::info(QString("  Constraint file: %1").arg(identifier).toStdString());
+
     clog << "********************************************************************************" << std::endl;
     clog << "Identifier " << identifier.toStdString() << std::endl;
     clog << "Time: " << QDateTime::currentDateTime().toString("dd-MM-yy-hh-mm-ss").toStdString() << std::endl;
