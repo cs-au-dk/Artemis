@@ -20,8 +20,8 @@ namespace artemis
 {
 
 
-EasilyBoredSearch::EasilyBoredSearch(TraceNodePtr tree) :
-    RandomAccessSearch(tree)
+EasilyBoredSearch::EasilyBoredSearch(TraceNodePtr tree, uint searchBudget) :
+    RandomAccessSearch(tree, searchBudget)
 {
 }
 

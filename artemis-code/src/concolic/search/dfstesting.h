@@ -30,7 +30,7 @@ namespace artemis
 class DfsTesting : public RandomAccessSearch
 {
 public:
-    DfsTesting(TraceNodePtr tree, unsigned int depthLimit);
+    DfsTesting(TraceNodePtr tree, uint searchBudget, uint depthLimit);
 
 protected:
     QPair<bool, ExplorationDescriptor> nextTarget(QList<ExplorationDescriptor> possibleTargets);

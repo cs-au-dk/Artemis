@@ -118,9 +118,10 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             "--concolic-dfs-unlimited-depth\n"
             "           Removes the restart limit from the concolic depth-first search procedure.\n"
             "\n"
-            "--concolic-random-attempts <n>\n"
-            "           The number of time the random search procedure will attempt new exploration.\n"
-            "           Select 0 for unlimited attempts.\n"
+            "--concolic-search-budget <n>\n"
+            "           The number of times the random, dfs-testing or easily-bored search procedures will attempt\n"
+            "           new exploration.\n"
+            "           The default is 25. Select 0 for unlimited attempts.\n"
             "\n"
             "--concolic-event-sequences <strategy>\n"
             "           ignore (default) - Ignore handlers for individual field modification.\n"
@@ -178,7 +179,7 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
     {"concolic-search-procedure", required_argument, NULL, 'S'},
     {"concolic-dfs-depth", required_argument, NULL, 'D'},
     {"concolic-dfs-unlimited-depth", no_argument, NULL, 'u'},
-    {"concolic-random-attempts", required_argument, NULL, 'R'},
+    {"concolic-search-budget", required_argument, NULL, 'R'},
     {"concolic-event-sequences", required_argument, NULL, 'w'},
     {"smt-solver", required_argument, NULL, 'n'},
     {"export-event-sequence", required_argument, NULL, 'o'},
@@ -486,9 +487,9 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
 
         case 'R': {
             bool ok;
-            options.concolicRandomLimit = QString(optarg).toUInt(&ok);
+            options.concolicSearchBudget = QString(optarg).toUInt(&ok);
             if(!ok) {
-                cerr << "ERROR: Invalid choice of concolic-random-attempts " << optarg << endl;
+                cerr << "ERROR: Invalid choice of concolic-search-budget " << optarg << endl;
                 exit(1);
             }
             break;

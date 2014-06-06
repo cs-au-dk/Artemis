@@ -16,30 +16,25 @@
 
 #include "randomisedsearch.h"
 
+#include <assert.h>
 #include <QTime>
 
 namespace artemis
 {
 
 
-RandomisedSearch::RandomisedSearch(TraceNodePtr tree, unsigned int searchAttempts) :
-    RandomAccessSearch(tree),
-    mSearchAttempts(searchAttempts)
+RandomisedSearch::RandomisedSearch(TraceNodePtr tree, uint searchBudget) :
+    RandomAccessSearch(tree, searchBudget)
 {
     qsrand(QTime::currentTime().msec());
 }
 
 QPair<bool, RandomAccessSearch::ExplorationDescriptor> RandomisedSearch::nextTarget(QList<ExplorationDescriptor> possibleTargets)
 {
-    // If we have run out of attempts, then return false.
-    if (mSearchAttempts < 1 || possibleTargets.empty()) {
-        return QPair<bool, ExplorationDescriptor>(false, ExplorationDescriptor());
-    }
+    assert(possibleTargets.length() > 0);
 
-    // Otherwise choose one of the possible targets at random and return it.
+    // Choose one of the possible targets at random and return it.
     int idx = qrand() % possibleTargets.length();
-
-    mSearchAttempts--;
 
     return QPair<bool, RandomAccessSearch::ExplorationDescriptor>(true, possibleTargets.at(idx));
 }

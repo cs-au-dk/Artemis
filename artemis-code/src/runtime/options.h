@@ -85,7 +85,7 @@ typedef struct OptionsType {
         concolicSearchProcedure(SEARCH_DFS),
         concolicDfsDepthLimit(5),
         concolicDfsRestartLimit(3),
-        concolicRandomLimit(15),
+        concolicSearchBudget(25),
         solver(CVC4),
         exportEventSequence(DONT_EXPORT),
         reportHeap(NO_CALLS),
@@ -123,7 +123,7 @@ typedef struct OptionsType {
     ConcolicSearch concolicSearchProcedure;
     unsigned int concolicDfsDepthLimit;
     unsigned int concolicDfsRestartLimit;
-    unsigned int concolicRandomLimit;
+    unsigned int concolicSearchBudget;
 
     SMTSolver solver;
 

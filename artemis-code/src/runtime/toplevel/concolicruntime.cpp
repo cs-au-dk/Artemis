@@ -399,19 +399,21 @@ void ConcolicRuntime::mergeTraceIntoTree()
         case SEARCH_DFSTESTING:
             // The depth limit from this is taken from the standard DFS arguments so the total depth will match.
             mSearchStrategy = TreeSearchPtr(new DfsTesting(mSymbolicExecutionGraph,
+                                                           mOptions.concolicSearchBudget,
                                                            mOptions.concolicDfsDepthLimit * mOptions.concolicDfsRestartLimit));
             QObject::connect(&mTraceMerger, SIGNAL(sigTraceJoined(TraceNodePtr, int, TraceNodePtr)),
                              mSearchStrategy.dynamicCast<RandomAccessSearch>().data(), SLOT(slNewTraceAdded(TraceNodePtr, int, TraceNodePtr)));
             break;
         case SEARCH_RANDOM:
             mSearchStrategy = TreeSearchPtr(new RandomisedSearch(mSymbolicExecutionGraph,
-                                                                 mOptions.concolicRandomLimit));
+                                                                 mOptions.concolicSearchBudget));
             QObject::connect(&mTraceMerger, SIGNAL(sigTraceJoined(TraceNodePtr, int, TraceNodePtr)),
                              mSearchStrategy.dynamicCast<RandomAccessSearch>().data(), SLOT(slNewTraceAdded(TraceNodePtr, int, TraceNodePtr)));
             break;
 
         case SEARCH_EASILYBORED:
-            mSearchStrategy = TreeSearchPtr(new EasilyBoredSearch(mSymbolicExecutionGraph));
+            mSearchStrategy = TreeSearchPtr(new EasilyBoredSearch(mSymbolicExecutionGraph,
+                                                                  mOptions.concolicSearchBudget));
             QObject::connect(&mTraceMerger, SIGNAL(sigTraceJoined(TraceNodePtr, int, TraceNodePtr)),
                              mSearchStrategy.dynamicCast<RandomAccessSearch>().data(), SLOT(slNewTraceAdded(TraceNodePtr, int, TraceNodePtr)));
             break;

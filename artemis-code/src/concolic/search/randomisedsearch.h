@@ -29,7 +29,7 @@ namespace artemis
 class RandomisedSearch : public RandomAccessSearch
 {
 public:
-    RandomisedSearch(TraceNodePtr tree, unsigned int searchAttempts);
+    RandomisedSearch(TraceNodePtr tree, uint searchBudget);
 
 protected:
     // Chooses between the possible exploration targets.

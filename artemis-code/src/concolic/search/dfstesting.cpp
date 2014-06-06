@@ -19,8 +19,8 @@
 namespace artemis
 {
 
-DfsTesting::DfsTesting(TraceNodePtr tree, unsigned int depthLimit) :
-    RandomAccessSearch(tree),
+DfsTesting::DfsTesting(TraceNodePtr tree, uint searchBudget, uint depthLimit) :
+    RandomAccessSearch(tree, searchBudget),
     mDepthLimit(depthLimit)
 {
 }

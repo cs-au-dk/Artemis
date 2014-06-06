@@ -31,7 +31,7 @@ namespace artemis
 class EasilyBoredSearch : public RandomAccessSearch
 {
 public:
-    EasilyBoredSearch(TraceNodePtr tree);
+    EasilyBoredSearch(TraceNodePtr tree, uint searchBudget);
 
 protected:
     QPair<bool, ExplorationDescriptor> nextTarget(QList<ExplorationDescriptor> possibleTargets);

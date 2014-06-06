@@ -40,7 +40,7 @@ class RandomAccessSearch : public QObject, public TreeSearch
     Q_OBJECT
 
 public:
-    RandomAccessSearch(TraceNodePtr tree);
+    RandomAccessSearch(TraceNodePtr tree, uint searchBudget);
 
     bool chooseNextTarget() final;
 
@@ -119,6 +119,10 @@ protected:
 private:
     // The tree
     TraceNodePtr mTree;
+
+    // The number of search attempts this class is allowed to make.
+    uint mBudget;
+    bool mUnlimitedBudget;
 
     // After a call to chooseNextTarget (which returned true), these hold the current state of the search position.
     ExplorationDescriptor mTarget;

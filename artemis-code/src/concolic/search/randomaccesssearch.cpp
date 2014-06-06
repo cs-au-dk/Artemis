@@ -19,13 +19,22 @@
 
 namespace artemis {
 
-RandomAccessSearch::RandomAccessSearch(TraceNodePtr tree) :
-    mTree(tree)
+RandomAccessSearch::RandomAccessSearch(TraceNodePtr tree, uint searchBudget) :
+    mTree(tree),
+    mBudget(searchBudget),
+    mUnlimitedBudget(searchBudget == 0)
 {
 }
 
 bool RandomAccessSearch::chooseNextTarget()
 {
+    // If the budget is exhausted, the search is over.
+    if(!(mUnlimitedBudget || mBudget > 0)) {
+        mTarget = ExplorationDescriptor();
+        return false;
+    }
+    mBudget--;
+
     // Call analyseTree to get the set of possible explorations.
     analyseTree();
 
