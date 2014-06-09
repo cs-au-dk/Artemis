@@ -22,12 +22,19 @@ namespace artemis {
 RandomAccessSearch::RandomAccessSearch(TraceNodePtr tree, uint searchBudget) :
     mTree(tree),
     mBudget(searchBudget),
-    mUnlimitedBudget(searchBudget == 0)
+    mUnlimitedBudget(searchBudget == 0),
+    mNotifiedFirstTrace(false)
 {
 }
 
 bool RandomAccessSearch::chooseNextTarget()
 {
+    // If we have never notified the subclass about the initial tree, do this now.
+    if(!mNotifiedFirstTrace) {
+        newTraceAdded(TraceNodePtr(), false, mTree);
+        mNotifiedFirstTrace = true;
+    }
+
     // If the budget is exhausted, the search is over.
     if(!(mUnlimitedBudget || mBudget > 0)) {
         mTarget = ExplorationDescriptor();

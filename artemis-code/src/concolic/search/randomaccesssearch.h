@@ -105,6 +105,8 @@ protected:
      *  It can be a concrete branch, symbolic branch or concrete summary.
      *  direction is the direction from that node where the new trace was added.
      *  suffix is the newly added part of the trace itself.
+     *
+     *  This method is also called on the initial trace with a null parent.
      */
     virtual void newTraceAdded(TraceNodePtr parent, int direction, TraceNodePtr suffix) {}
 
@@ -158,6 +160,9 @@ private:
     // Helpers for chooseNextTarget
     PathConditionPtr calculatePC(ExplorationDescriptor target);
     QSet<SelectRestriction> calculateDomConstraints(ExplorationDescriptor target);
+
+    // Whether we have notified about the initial tree yet.
+    bool mNotifiedFirstTrace;
 };
 
 

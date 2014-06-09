@@ -55,7 +55,7 @@ public:
 signals:
     // Notifies where a new trace is joined into the tree.
     // Arguments are parent branch (or summary), direction from that branch, and the new part of the trace which was added.
-    void sigTraceJoined(TraceNodePtr parent, bool direction, TraceNodePtr suffix);
+    void sigTraceJoined(TraceNodePtr parent, int direction, TraceNodePtr suffix);
 
 private:
     TraceNodePtr mCurrentTree;

@@ -17,17 +17,16 @@
 #ifndef EASILYBOREDSEARCH_H
 #define EASILYBOREDSEARCH_H
 
+#include "concolic/executiontree/tracevisitor.h"
 #include "randomaccesssearch.h"
+#include "model/coverage/sourceinfo.h"
 
 namespace artemis
 {
 
 /**
- *  Easily-Bored search strategy.
- *
- *
+    Michael's easily bored search strategy.
  */
-
 class EasilyBoredSearch : public RandomAccessSearch
 {
 public:
@@ -35,8 +34,37 @@ public:
 
 protected:
     QPair<bool, ExplorationDescriptor> nextTarget(QList<ExplorationDescriptor> possibleTargets);
-    void newTraceAdded(TraceNodePtr parent, int direction, TraceNodePtr suffix);
+    void newTraceAdded(TraceNodePtr node, int branch,TraceNodePtr suffix);
+    void newUnsat(ExplorationDescriptor node);
 
+private:
+    QHash<QPair<QPair<uint, uint>, bool>, QPair<uint, uint> > counts;
+
+    static QPair<QPair<uint, uint>, bool> getId(TraceBranchPtr node, bool branch);
+    static QPair<QPair<uint, uint>, bool> getId(TraceBranch* node, bool branch);
+    double getValue(ExplorationDescriptor target);
+
+    /**
+        Probability of choosing the best unexplored node.
+     */
+    static const double P = 0.9;
+
+    class EasilyBoredVisitor : public TraceVisitor
+    {
+    public:
+        EasilyBoredVisitor(EasilyBoredSearch* search);
+
+    private:
+        EasilyBoredSearch* search;
+
+        void visit(TraceNode* node);
+        void visit(TraceConcreteBranch* node);
+        void visit(TraceSymbolicBranch* node);
+        void visit(TraceConcreteSummarisation *node);
+        void visit(TraceUnexplored* node);
+        void visit(TraceAnnotation* node);
+        void visit(TraceEnd* node);
+    };
 };
 
 } //namespace artemis
