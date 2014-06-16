@@ -73,22 +73,22 @@ bool RandomAccessSearch::chooseNextTarget()
 
 PathConditionPtr RandomAccessSearch::calculatePC(RandomAccessSearch::ExplorationDescriptor target)
 {
-    // Search upwards through the tree using mBranchParents to build the PC.
+    // Search upwards through the tree using mBranchParents to build the PathBranchList.
 
     QPair<TraceSymbolicBranchPtr, bool> current = QPair<TraceSymbolicBranchPtr, bool>(target.branch, target.branchDirection);
-    PathConditionPtr pc = PathConditionPtr(new PathCondition());
+    PathBranchList branches;
 
     // Null parent marks the first symbolic branch on each trace.
     while (!current.first.isNull()) {
         // Add the current node's condition to the PC.
-        pc->addCondition(current.first->getSymbolicCondition(), current.second);
+        branches.append(PathBranch(current.first.data(), current.second));
 
         // Move to the next node.
         assert(mBranchParents.contains(current.first));
         current = mBranchParents.value(current.first);
     }
 
-    return pc;
+    return PathCondition::createFromBranchList(branches);
 }
 
 QSet<SelectRestriction> RandomAccessSearch::calculateDomConstraints(RandomAccessSearch::ExplorationDescriptor target)

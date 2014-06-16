@@ -102,7 +102,8 @@ private:
     bool mPreviousPassFoundTarget;
 
     // The PC which is accumulated as we move down the tree.
-    PathConditionPtr mCurrentPC;
+    // Note that we do not store the PC directly but instead keep a list of branches, which allows PathCondition::createFromBranchList to build the PC intelligently.
+    PathBranchList mCurrentPC;
 
     // The dynamic DOM constraints which are accumulated as we move down the tree.
     QSet<SelectRestriction> mCurrentDomConstraints;
@@ -126,13 +127,13 @@ private:
     // Exactly one of node and summaryNode should be non-null. childrenVisited is only valid for summaryNode.
     struct SavedPosition {
         SavedPosition(){}
-        SavedPosition(TraceBranch* node, unsigned int depth, PathCondition condition, QSet<SelectRestriction> domConstraints) : node(node), depth(depth), condition(condition), domConstraints(domConstraints), summaryNode(NULL), childrenVisited(1) {}
-        SavedPosition(TraceConcreteSummarisation* summaryNode, unsigned int depth, PathCondition condition, QSet<SelectRestriction> domConstraints, int childrenVisited) : node(NULL), depth(depth), condition(condition), domConstraints(domConstraints), summaryNode(summaryNode), childrenVisited(childrenVisited) {}
+        SavedPosition(TraceBranch* node, unsigned int depth, PathBranchList condition, QSet<SelectRestriction> domConstraints) : node(node), depth(depth), condition(condition), domConstraints(domConstraints), summaryNode(NULL), childrenVisited(1) {}
+        SavedPosition(TraceConcreteSummarisation* summaryNode, unsigned int depth, PathBranchList condition, QSet<SelectRestriction> domConstraints, int childrenVisited) : node(NULL), depth(depth), condition(condition), domConstraints(domConstraints), summaryNode(summaryNode), childrenVisited(childrenVisited) {}
 
         TraceBranch* node;
 
         unsigned int depth;
-        PathCondition condition; // Condition to reach this node, not including the symbolic condition of this particular node if it is symbolic.
+        PathBranchList condition; // Condition to reach this node, not including the symbolic condition of this particular node if it is symbolic.
         QSet<SelectRestriction> domConstraints;
 
         TraceConcreteSummarisation* summaryNode;

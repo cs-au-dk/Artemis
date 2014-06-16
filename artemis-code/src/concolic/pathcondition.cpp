@@ -39,30 +39,35 @@ PathCondition::PathCondition()
  */
 PathConditionPtr PathCondition::createFromTrace(TraceNodePtr trace)
 {
-    PathCondition* obj = new PathCondition();
-
-    qDebug() << "GENERATE TRACE";
+    BranchCheckingVisitor branchFinder;
 
     if (!trace.isNull()) {
-        trace->accept(obj);
+        trace->accept(&branchFinder);
     }
 
-    return PathConditionPtr(obj);
+    return createFromBranchList(branchFinder.mBranches);
 }
 
-void PathCondition::visit(TraceNode* node)
+QSharedPointer<PathCondition> PathCondition::createFromBranchList(PathBranchList branches)
+{
+    PathConditionPtr pc = PathConditionPtr(new PathCondition);
+    foreach(PathBranch br, branches) {
+        pc->addCondition(br.first->getSymbolicCondition(), br.second);
+    }
+    return pc;
+}
+
+void PathCondition::BranchCheckingVisitor::visit(TraceNode* node)
 {
     // We should not fall back to this node, this indicates that we are missing a case
     qWarning("Warning: TraceNode catch-all reached, this should not happen");
     exit(1);
 }
 
-void PathCondition::visit(TraceSymbolicBranch* node)
+void PathCondition::BranchCheckingVisitor::visit(TraceSymbolicBranch* node)
 {
     bool outcome = TraceVisitor::isImmediatelyUnexplored(node->getFalseBranch());
-    mConditions.append(QPair<Symbolic::Expression*, bool>(node->getSymbolicCondition(), outcome));
-
-    qDebug() << "ADD CONDITION " << outcome << node->getSymbolicCondition();
+    mBranches.append(PathBranch(node, outcome));
 
     if (outcome) {
         node->getTrueBranch()->accept(this);
@@ -71,17 +76,17 @@ void PathCondition::visit(TraceSymbolicBranch* node)
     }
 }
 
-void PathCondition::visit(TraceUnexplored* node)
+void PathCondition::BranchCheckingVisitor::visit(TraceUnexplored* node)
 {
     // Ignore
 }
 
-void PathCondition::visit(TraceAnnotation* node)
+void PathCondition::BranchCheckingVisitor::visit(TraceAnnotation* node)
 {
     node->next->accept(this);
 }
 
-void PathCondition::visit(TraceConcreteSummarisation *node)
+void PathCondition::BranchCheckingVisitor::visit(TraceConcreteSummarisation *node)
 {
     // Ignore concrete summaries.
     foreach(TraceConcreteSummarisation::SingleExecution execution, node->executions) {
@@ -89,14 +94,14 @@ void PathCondition::visit(TraceConcreteSummarisation *node)
     }
 }
 
-void PathCondition::visit(TraceConcreteBranch *node)
+void PathCondition::BranchCheckingVisitor::visit(TraceConcreteBranch *node)
 {
     // Ignore the concrete branches
     node->getTrueBranch()->accept(this);
     node->getFalseBranch()->accept(this);
 }
 
-void PathCondition::visit(TraceEnd* node)
+void PathCondition::BranchCheckingVisitor::visit(TraceEnd* node)
 {
     // Ignore the end node
 }

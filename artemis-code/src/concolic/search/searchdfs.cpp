@@ -33,7 +33,6 @@ DepthFirstSearch::DepthFirstSearch(TraceNodePtr tree, unsigned int depthLimit, u
     mPreviousPassFoundTarget(false),
     mIsPreviousRun(false)
 {
-    mCurrentPC = PathConditionPtr(new PathCondition());
     mCurrentDomConstraints = QSet<SelectRestriction>();
 }
 
@@ -115,7 +114,7 @@ bool DepthFirstSearch::chooseNextTarget()
  */
 PathConditionPtr DepthFirstSearch::getTargetPC()
 {
-    return mCurrentPC;
+    return PathCondition::createFromBranchList(mCurrentPC);
 }
 
 QSet<SelectRestriction> DepthFirstSearch::getTargetDomConstraints()
@@ -140,7 +139,7 @@ void DepthFirstSearch::restartSearch()
     mParentStack.clear();
     mCurrentDepth = 0;
     mPreviousPassFoundTarget = false;
-    mCurrentPC = PathConditionPtr(new PathCondition());
+    mCurrentPC.clear();
     mCurrentDomConstraints = QSet<SelectRestriction>();
 }
 
@@ -194,7 +193,7 @@ void DepthFirstSearch::visit(TraceConcreteBranch *node)
 
     }else{
         // Both branches are explored, so we must search each in turn.
-        mParentStack.push(SavedPosition(node, mCurrentDepth, *mCurrentPC, mCurrentDomConstraints));
+        mParentStack.push(SavedPosition(node, mCurrentDepth, mCurrentPC, mCurrentDomConstraints));
         //mCurrentDepth++; // Do not increase depth for concrete branches.
         mPreviousParent = node;
         mPreviousDirection = false; // We are always taking the false branch to begin with.
@@ -209,11 +208,11 @@ void DepthFirstSearch::visit(TraceSymbolicBranch *node)
     // This allows us to stop the search once we find a node we would like to explore.
     // The depth limit is also enforced here.
     if(mCurrentDepth < mDepthLimit){
-        mParentStack.push(SavedPosition(node, mCurrentDepth, *mCurrentPC, mCurrentDomConstraints));
+        mParentStack.push(SavedPosition(node, mCurrentDepth, mCurrentPC, mCurrentDomConstraints));
         mCurrentDepth++;
         mPreviousParent = node;
         mPreviousDirection = false;
-        mCurrentPC->addCondition(node->getSymbolicCondition(), false); // We are always taking the false branch here.
+        mCurrentPC.append(PathBranch(node, false)); // We are always taking the false branch here.
         node->getFalseBranch()->accept(this);
     }else{
         continueFromLeaf();
@@ -231,7 +230,7 @@ void DepthFirstSearch::visit(TraceConcreteSummarisation *node)
     // If there are multiple children, we must add this node to the parent stack so we can explore the rest.
     // The depth limit is ignored for concrete branches.
     if(node->executions.length() > 1) {
-        mParentStack.push(SavedPosition(node, mCurrentDepth, *mCurrentPC, mCurrentDomConstraints, 1));
+        mParentStack.push(SavedPosition(node, mCurrentDepth, mCurrentPC, mCurrentDomConstraints, 1));
         node->executions[0].second->accept(this);
         // N.B. we do not update mPreviousParent or mPreviousDirection as these should not be used to refer to a
         // concrete summarisation. They are used when we find an unexplored node and attempt to explore it and then
@@ -310,7 +309,7 @@ TraceNodePtr DepthFirstSearch::nextAfterLeaf()
     SavedPosition parent = mParentStack.pop();
 
     mCurrentDepth = parent.depth;
-    *mCurrentPC = parent.condition;
+    mCurrentPC = parent.condition;
     mCurrentDomConstraints = parent.domConstraints;
 
     // The saved position can either be a branch node or a summary node (with multiple children).
@@ -320,7 +319,7 @@ TraceNodePtr DepthFirstSearch::nextAfterLeaf()
         // Also update the depth, as we would have done in DepthFirstSearch::visit(TraceSymbolicBranch *node).
         TraceSymbolicBranch* sym = dynamic_cast<TraceSymbolicBranch*>(parent.node);
         if(sym){
-            mCurrentPC->addCondition(sym->getSymbolicCondition(), true); // We are always taking the true branch here.
+            mCurrentPC.append(PathBranch(sym, true)); // We are always taking the true branch here.
             mCurrentDepth++;
         }
 

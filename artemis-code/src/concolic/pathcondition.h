@@ -31,13 +31,15 @@
 namespace artemis
 {
 
-class PathCondition : public TraceVisitor
+class PathCondition
 {
 
 public:
     PathCondition();
 
     static QSharedPointer<PathCondition> createFromTrace(TraceNodePtr endpoint);
+
+    static QSharedPointer<PathCondition> createFromBranchList(QList<QPair<TraceSymbolicBranch*, bool> > branches);
 
     const QPair<Symbolic::Expression*, bool> get(int index);
     uint size();
@@ -46,14 +48,6 @@ public:
     std::string toStatisticsValuesString(bool includeBranching = false);
     QMap<QString, Symbolic::SourceIdentifierMethod> freeVariables();
 
-    void visit(TraceNode* node);
-    void visit(TraceConcreteBranch* node);
-    void visit(TraceSymbolicBranch* node);
-    void visit(TraceUnexplored* node);
-    void visit(TraceAnnotation* node);
-    void visit(TraceConcreteSummarisation* node);
-    void visit(TraceEnd* node);
-
     // Used to incrementally create a PC in the search procedure.
     void addCondition(Symbolic::Expression* condition, bool outcome);
 
@@ -61,9 +55,26 @@ public:
 
 private:
     QList<QPair<Symbolic::Expression*, bool> > mConditions;
+
+    class BranchCheckingVisitor : public TraceVisitor
+    {
+    public:
+        void visit(TraceNode* node);
+        void visit(TraceConcreteBranch* node);
+        void visit(TraceSymbolicBranch* node);
+        void visit(TraceUnexplored* node);
+        void visit(TraceAnnotation* node);
+        void visit(TraceConcreteSummarisation* node);
+        void visit(TraceEnd* node);
+
+        QList<QPair<TraceSymbolicBranch*, bool> > mBranches;
+    };
 };
 
 typedef QSharedPointer<PathCondition> PathConditionPtr;
+
+typedef QPair<TraceSymbolicBranch*, bool> PathBranch;
+typedef QList<QPair<TraceSymbolicBranch*, bool> > PathBranchList;
 
 }
 
