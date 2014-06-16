@@ -44,7 +44,7 @@ class Solution
 {
 
 public:
-    Solution(bool success, bool unsat, QString unsolvableReason = "");
+    Solution(bool success, bool unsat, QString unsolvableReason = "", int unsolvableClause = -1);
 
     bool isSolved() const;
     bool isUnsat() const;
@@ -54,12 +54,14 @@ public:
     void toStatistics();
 
     QString getUnsolvableReason() { return mUnsolvableReason; }
+    int getUnsolvableClause() { return mUnsolvableClause; }
 
 private:
     bool mSuccess;
     bool mUnsat;
     QHash<QString, Symbolvalue> mSymbols;
     QString mUnsolvableReason; // Should be set whenever !mSuccess && !mUnsat.
+    int mUnsolvableClause; // May be -1 if no single clause could be identified as the problem.
 };
 
 typedef QSharedPointer<Solution> SolutionPtr;

@@ -50,9 +50,12 @@ PathConditionPtr PathCondition::createFromTrace(TraceNodePtr trace)
 
 QSharedPointer<PathCondition> PathCondition::createFromBranchList(PathBranchList branches)
 {
+    // In order to make a best-effort at searching for a new ode, we simply ignore the conditions of branches which are known to be unsolvable.
     PathConditionPtr pc = PathConditionPtr(new PathCondition);
     foreach(PathBranch br, branches) {
-        pc->addCondition(br.first->getSymbolicCondition(), br.second);
+        if(!br.first->isDifficult()) {
+            pc->addCondition(br.first->getSymbolicCondition(), br.second, br.first);
+        }
     }
     return pc;
 }
@@ -106,14 +109,19 @@ void PathCondition::BranchCheckingVisitor::visit(TraceEnd* node)
     // Ignore the end node
 }
 
-void PathCondition::addCondition(Symbolic::Expression* condition, bool outcome)
+void PathCondition::addCondition(Symbolic::Expression* condition, bool outcome, TraceSymbolicBranch* branch)
 {
-    mConditions.append(qMakePair(condition, outcome));
+    mConditions.append(qMakePair(qMakePair(condition, outcome), branch));
 }
 
 const QPair<Symbolic::Expression*, bool> PathCondition::get(int index)
 {
-    return mConditions.at(index);
+    return mConditions.at(index).first;
+}
+
+TraceSymbolicBranch* PathCondition::getBranch(int index)
+{
+    return mConditions.at(index).second;
 }
 
 uint PathCondition::size()
@@ -127,7 +135,7 @@ std::string PathCondition::toStatisticsString()
 
     for (int i = 0; i < mConditions.size(); i++) {
         ExpressionPrinter printer;
-        mConditions.at(i).first->accept(&printer);
+        mConditions.at(i).first.first->accept(&printer);
 
         sstrm << "PC[" << i << "]: " << printer.getResult() << std::endl;
     }
@@ -141,9 +149,9 @@ std::string PathCondition::toStatisticsValuesString(bool includeBranching)
 
     for (int i = 0; i < mConditions.size(); i++) {
         ExpressionValuePrinter printer;
-        mConditions.at(i).first->accept(&printer);
+        mConditions.at(i).first.first->accept(&printer);
 
-        if (includeBranching && !mConditions.at(i).second) {
+        if (includeBranching && !mConditions.at(i).first.second) {
             sstrm << "PC[" << i << "]: (" << printer.getResult() << " == false)" << std::endl;
         } else {
             sstrm << "PC[" << i << "]: " << printer.getResult() << std::endl;
@@ -159,7 +167,7 @@ QMap<QString, Symbolic::SourceIdentifierMethod> PathCondition::freeVariables()
     QMap<QString, Symbolic::SourceIdentifierMethod> vars;
 
     for (int i = 0; i < mConditions.size(); i++) {
-        mConditions.at(i).first->accept(&lister);
+        mConditions.at(i).first.first->accept(&lister);
         // N.B. QMap::unite does not remove duplicates, so we can't use that.
         foreach(QString var, lister.getResult().keys()){
             vars.insert(var, lister.getResult().value(var));
@@ -173,7 +181,7 @@ QMap<QString, Symbolic::SourceIdentifierMethod> PathCondition::freeVariables()
 void PathCondition::negateLastCondition()
 {
     if (mConditions.size() > 0) {
-        mConditions.last().second = !mConditions.last().second;
+        mConditions.last().first.second = !mConditions.last().first.second;
     }
 }
 

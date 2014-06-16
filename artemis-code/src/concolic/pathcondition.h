@@ -42,6 +42,7 @@ public:
     static QSharedPointer<PathCondition> createFromBranchList(QList<QPair<TraceSymbolicBranch*, bool> > branches);
 
     const QPair<Symbolic::Expression*, bool> get(int index);
+    TraceSymbolicBranch* getBranch(int index);
     uint size();
 
     std::string toStatisticsString();
@@ -49,12 +50,12 @@ public:
     QMap<QString, Symbolic::SourceIdentifierMethod> freeVariables();
 
     // Used to incrementally create a PC in the search procedure.
-    void addCondition(Symbolic::Expression* condition, bool outcome);
+    void addCondition(Symbolic::Expression* condition, bool outcome, TraceSymbolicBranch* branch);
 
     void negateLastCondition();
 
 private:
-    QList<QPair<Symbolic::Expression*, bool> > mConditions;
+    QList<QPair<QPair<Symbolic::Expression*, bool>, TraceSymbolicBranch*> > mConditions;
 
     class BranchCheckingVisitor : public TraceVisitor
     {

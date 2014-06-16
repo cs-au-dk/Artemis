@@ -35,8 +35,17 @@ public:
         return mCondition;
     }
 
+    inline bool isDifficult() {
+        return mDifficult;
+    }
+
+    inline void markDifficult() {
+        mDifficult = true;
+    }
+
 private:
     Symbolic::Expression* mCondition; // TODO: MEMORY
+    bool mDifficult;
 
 };
 

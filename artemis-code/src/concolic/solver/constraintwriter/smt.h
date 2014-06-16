@@ -79,6 +79,10 @@ public:
         return mErrorReason;
     }
 
+    int getErrorClause() {
+        return mErrorClause;
+    }
+
     static std::string encodeIdentifier(const std::string&);
     static std::string decodeIdentifier(const std::string&);
 
@@ -201,6 +205,10 @@ protected:
 
     bool mError; // indicates that an error occured when writing the file
     std::string mErrorReason;
+
+    // If an error occured which was caused by a particular clause in the PC its index is recorded. Otherwise mErrorClause is -1.
+    int mCurrentClause;
+    int mErrorClause;
 
     unsigned int mNextTemporarySequence;
 

@@ -587,6 +587,19 @@ void ConcolicRuntime::exploreNextTarget()
     PathConditionPtr target = mSearchStrategy->getTargetPC();
     QSet<SelectRestriction> dynamicSelectConstraints = mSearchStrategy->getTargetDomConstraints();
 
+    // If the returned PC is empty, then there were no solvable constraints on the path.
+    if(target->size() < 1) {
+        mSearchStrategy->markNodeUnsolvable();
+        Log::info("  Could not solve constraint:");
+        Log::info("    All branches on path were known to be difficult.");
+        Log::debug("Skipping this target!");
+        // Dump the current state of the tree to a file.
+        outputTreeGraph();
+        // Skip this node and move on to the next.
+        chooseNextTargetAndExplore();
+        return;
+    }
+
     // TODO: Currently only select constraints are handled dynamically, so we need to merge them with the static radio button constraints.
     FormRestrictions dynamicRestrictions = mergeDynamicSelectRestrictions(mFormFieldRestrictions, dynamicSelectConstraints);
 
@@ -627,9 +640,28 @@ void ConcolicRuntime::exploreNextTarget()
             mSearchStrategy->markNodeUnsat();
             Log::info("  Constraint is UNSAT.");
         }else{
-            mSearchStrategy->markNodeUnsolvable();
-            Log::info("  Could not solve constraint:");
-            Log::info(QString("    %1").arg(solution->getUnsolvableReason()).toStdString());
+            // Check if there was a specific clause which caused this PC to be unsolvable and mark it as difficult.
+            if(solution->getUnsolvableClause() >= 0) {
+                TraceSymbolicBranch* difficultBranch = target->getBranch(solution->getUnsolvableClause());
+                assert(!difficultBranch->isDifficult()); // We should never have tried to solve a known difficult branch. Otherwise we may get stuck in a loop when we retry!
+                difficultBranch->markDifficult();
+                Statistics::statistics()->accumulate("Concolic::ExecutionTree::DifficultBranches", 1);
+            }
+
+            // We must give up in the following cases:
+            //    * There was no bad clause identified
+            //    * The bad clause was from the node we were directly targeting
+            // Otherwise we can re-try writing the PC without this difficult clause.
+            if (solution->getUnsolvableClause() < 0 || (uint)solution->getUnsolvableClause() == target->size()-1) {
+                mSearchStrategy->markNodeUnsolvable();
+                Log::info("  Could not solve constraint:");
+                Log::info(QString("    %1").arg(solution->getUnsolvableReason()).toStdString());
+
+            } else {
+                Log::info("  Could not solve this constraint. Re-trying after marking as difficult.");
+                Statistics::statistics()->accumulate("Concolic::DifficultBranchRetries", 1);
+                exploreNextTarget(); // N.B. the call to Search::getTargetPC() will return an updated PC if the tree has been modified to mark a node as difficult.
+            }
         }
         Log::debug("Skipping this target!");
 

@@ -38,7 +38,7 @@ public:
     SolutionPtr solve(PathConditionPtr pc, FormRestrictions formRestrictions);
 
 private:
-    SolutionPtr emitError(std::ofstream& clog, const std::string& reason);
+    SolutionPtr emitError(std::ofstream& clog, const std::string& reason, int clause = -1);
     void emitConstraints(std::ofstream& constraintIndex, const QString& identifier, bool sat);
 
 };

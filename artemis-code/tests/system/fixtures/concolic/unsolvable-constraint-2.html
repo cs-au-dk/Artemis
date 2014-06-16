@@ -1,10 +1,11 @@
 <!--
-TEST PC[0] = (SymbolicString <= ConstantString)
+TEST PC[0] = (SymbolicString > ConstantString)
 TEST PC[1] = ((SymbolicString != ConstantString) == ConstantBoolean)
-TEST Concolic::Solver::ConstraintsSolved = 1
-TEST Concolic::Solver::ConstraintsWritten = 1
+TEST Concolic::Solver::ConstraintsSolved = 2
+TEST Concolic::Solver::ConstraintsWritten = 2
 TEST Concolic::Solver::ConstraintsNotWritten = 2
 TEST Concolic::ExecutionTree::DifficultBranches = 1
+TEST Concolic::DifficultBranchRetries = 1
 -->
 <!doctype html><html lang="en">
 <head>
@@ -19,15 +20,18 @@ TEST Concolic::ExecutionTree::DifficultBranches = 1
 		function validate() {
 			var y = document.getElementById("testinput").value;
 
-			if (y > x) { // A condition we do not support.
-				alert("Error!");
-			}
+			if (y <= x) { // A condition we do not support.
 
-			if (y != x) { // A condition we can solve even if we skip the one above.
+				if (y != x) { // A condition we can solve even if we skip the one above.
+					alert("Error!");
+					return false;
+				}else{
+					return true;
+				}
+
+			} else {
 				alert("Error!");
 				return false;
-			}else{
-				return true;
 			}
 		}
 	</script>

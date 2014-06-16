@@ -25,10 +25,11 @@
 namespace artemis
 {
 
-Solution::Solution(bool success, bool unsat, QString unsolvableReason) :
+Solution::Solution(bool success, bool unsat, QString unsolvableReason, int unsolvableClause) :
     mSuccess(success),
     mUnsat(unsat),
-    mUnsolvableReason(unsolvableReason)
+    mUnsolvableReason(unsolvableReason),
+    mUnsolvableClause(unsolvableClause)
 {
 }
 

@@ -295,8 +295,13 @@ void TraceDisplay::visit(TraceSymbolicBranch *node)
                     QString::fromStdString(sourceLine.str()));
     }
 
+    QString difficult = "";
+    if(node->isDifficult()) {
+        difficult = "fillcolor = blue, ";
+    }
+
     QString name = QString("sym_%1").arg(mNodeCounter);
-    QString label = QString(" [label = \"Branch\\n%1\", URL = \"%2\"]").arg(symbolicExpression, source);
+    QString label = QString(" [%1label = \"Branch\\n%2\", URL = \"%3\"]").arg(difficult, symbolicExpression, source);
 
     mHeaderSymBranches.append(name + label);
 

@@ -68,36 +68,36 @@ TraceDisplayOverview::TraceDisplayOverview(bool linkToCoverage)
             "        <td align=\"left\">Page Load</td>\n"
             "      </tr>\n"
             "      <tr>\n"
-            "        <td bgcolor=\"green\" border=\"1\" width=\"25pt\">S</td>\n"
-            "        <td align=\"left\">End (Success)</td>\n"
+            "        <td bgcolor=\"blue\" border=\"1\" width=\"25pt\"></td>\n"
+            "        <td align=\"left\">Difficult Branch</td>\n"
             "\n"
             "        <td bgcolor=\"peachpuff\" border=\"1\" width=\"25pt\">W</td>\n"
             "        <td align=\"left\">Indicator word added</td>\n"
             "      </tr>\n"
             "      <tr>\n"
-            "        <td bgcolor=\"red\" border=\"1\" width=\"25pt\">F</td>\n"
-            "        <td align=\"left\">End (Failure)</td>\n"
+            "        <td bgcolor=\"green\" border=\"1\" width=\"25pt\">S</td>\n"
+            "        <td align=\"left\">End (Success)</td>\n"
             "\n"
             "        <td bgcolor=\"blueviolet\" border=\"1\" width=\"25pt\">U</td>\n"
             "        <td align=\"left\">Unsatisfiable</td>\n"
             "      </tr>\n"
             "      <tr>\n"
-            "        <td bgcolor=\"lightgray\" border=\"1\" width=\"25pt\">E</td>\n"
-            "        <td align=\"left\">End (Unknown)</td>\n"
+            "        <td bgcolor=\"red\" border=\"1\" width=\"25pt\">F</td>\n"
+            "        <td align=\"left\">End (Failure)</td>\n"
             "\n"
             "        <td bgcolor=\"chocolate\" border=\"1\" width=\"25pt\">M</td>\n"
             "        <td align=\"left\">Missed</td>\n"
             "      </tr>\n"
             "      <tr>\n"
-            "        <td bgcolor=\"lightgray\" border=\"1\" width=\"25pt\">?</td>\n"
-            "        <td align=\"left\">Unexplored</td>\n"
+            "        <td bgcolor=\"lightgray\" border=\"1\" width=\"25pt\">E</td>\n"
+            "        <td align=\"left\">End (Unknown)</td>\n"
             "\n"
             "        <td bgcolor=\"hotpink\" border=\"1\" width=\"25pt\">X</td>\n"
             "        <td align=\"left\">Could not solve</td>\n"
             "      </tr>\n"
             "      <tr>\n"
-            "        <td width=\"25pt\"></td>\n"
-            "        <td align=\"left\"></td>\n"
+            "        <td bgcolor=\"lightgray\" border=\"1\" width=\"25pt\">?</td>\n"
+            "        <td align=\"left\">Unexplored</td>\n"
             "\n"
             "        <td bgcolor=\"forestgreen\" border=\"1\" width=\"25pt\"></td>\n"
             "        <td align=\"left\">Event marker</td>\n"
@@ -181,7 +181,12 @@ void TraceDisplayOverview::visit(TraceSymbolicBranch *node)
                     QString::fromStdString(sourceLine.str()));
     }
 
-    QString label = QString(" [URL = \"%1\"]").arg(source);
+    QString difficult = "";
+    if(node->isDifficult()) {
+        difficult = "fillcolor = blue, ";
+    }
+
+    QString label = QString(" [%1URL = \"%2\"]").arg(difficult, source);
 
     mHeaderSymBranches.append(name + label);
     addInEdge(name);

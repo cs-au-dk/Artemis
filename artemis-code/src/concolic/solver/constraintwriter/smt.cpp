@@ -36,6 +36,7 @@ namespace artemis
 SMTConstraintWriter::SMTConstraintWriter()
     : mExpressionType(Symbolic::TYPEERROR)
     , mError(false)
+    , mErrorClause(-1)
     , mNextTemporarySequence(0)
 {
 }
@@ -56,6 +57,7 @@ std::string SMTConstraintWriter::ifLabel()
 bool SMTConstraintWriter::write(PathConditionPtr pathCondition, FormRestrictions formRestrictions, std::string outputFile)
 {
     mError = false;
+    mCurrentClause = -1;
 
     mFormRestrictions = formRestrictions;
 
@@ -65,6 +67,7 @@ bool SMTConstraintWriter::write(PathConditionPtr pathCondition, FormRestrictions
     preVisitPathConditionsHook(freeVars);
 
     for (uint i = 0; i < pathCondition->size(); i++) {
+        mCurrentClause = i;
 
         pathCondition->get(i).first->accept(this);
         if(!checkType(Symbolic::BOOL) && !checkType(Symbolic::TYPEERROR)){
@@ -75,6 +78,7 @@ bool SMTConstraintWriter::write(PathConditionPtr pathCondition, FormRestrictions
         mOutput << (pathCondition->get(i).second ? " true" : " false");
         mOutput << "))\n";
     }
+    mCurrentClause = -1;
 
     postVisitPathConditionsHook();
 
@@ -406,6 +410,7 @@ void SMTConstraintWriter::error(std::string reason)
     if(!mError){
         mError = true;
         mErrorReason = reason;
+        mErrorClause = mCurrentClause;
         mExpressionBuffer = "ERROR";
     }
 }

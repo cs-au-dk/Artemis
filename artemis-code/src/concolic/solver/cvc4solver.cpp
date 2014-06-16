@@ -43,11 +43,11 @@ CVC4Solver::~CVC4Solver()
 {
 }
 
-SolutionPtr CVC4Solver::emitError(std::ofstream& clog, const std::string& reason)
+SolutionPtr CVC4Solver::emitError(std::ofstream& clog, const std::string& reason, int clause)
 {
     clog << "ERROR: " << reason << std::endl << std::endl;
 
-    return SolutionPtr(new Solution(false, false, QString::fromStdString(reason)));
+    return SolutionPtr(new Solution(false, false, QString::fromStdString(reason), clause));
 }
 
 void CVC4Solver::emitConstraints(std::ofstream& constraintIndex, const QString& identifier, bool sat)
@@ -95,7 +95,7 @@ SolutionPtr CVC4Solver::solve(PathConditionPtr pc, FormRestrictions formRestrict
 
         std::stringstream reason;
         reason << "Could not translate the PC into solver input: " << cw->getErrorReason();
-        return emitError(clog, reason.str());
+        return emitError(clog, reason.str(), cw->getErrorClause());
 
     }
 
