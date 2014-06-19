@@ -30,7 +30,7 @@ module html {
         attribute DOMString label;
         attribute [Reflect=selected] boolean defaultSelected;
         attribute boolean selected;
-        attribute [Symbolic, SymbolicString, SymbolicOptionElement] DOMString value;
+        attribute [Symbolic, SymbolicString, SymbolicOptionElement, SymbolicNotExplicit] DOMString value;
 
 #if defined(LANGUAGE_JAVASCRIPT) && LANGUAGE_JAVASCRIPT
         attribute DOMString text setter raises(DOMException);

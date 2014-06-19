@@ -86,6 +86,9 @@ bool FormFieldInjector::inject(QWebElement element, InjectionValue value)
         return false;
     }
 
+    element.evaluateJavaScript(QString("this.symbolictrigger == \"\";"));
+    element.evaluateJavaScript(QString("this.options.symbolictrigger == \"\";"));
+
     return true;
 }
 

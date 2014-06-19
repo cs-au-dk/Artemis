@@ -961,8 +961,16 @@ sub GenerateHeader
                 push(@headerContent, "    Symbolic::Expression* m_" . $attribute->signature->name . "Symbolic;\n");
             }
         }
+
+        foreach my $attribute (@{$dataNode->attributes}) {
+            if ($attribute->signature->extendedAttributes->{"Symbolic"}) {         
+                push(@headerContent, "    bool m_isSymbolic;\n");
+                last;
+            }
+        }
         push(@headerContent, "\n");
     }
+
     # ARTEMIS END
 
     push(@headerContent, "};\n\n");
@@ -1608,6 +1616,13 @@ sub GenerateImplementation
                 push(@implContent, "    , m_" . $attribute->signature->name . "Symbolic(NULL)\n");
             }
         }
+        foreach my $attribute (@{$dataNode->attributes}) {
+            if ($attribute->signature->extendedAttributes->{"Symbolic"}) {
+                push(@implContent, "    , m_isSymbolic(false)\n");
+                last;
+            }
+        }
+
         # ARTEMIS END
         push(@implContent, "{\n");
         push(@implContent, "}\n\n");
@@ -1801,6 +1816,12 @@ sub GenerateImplementation
 
                     push(@implContent, "    castedThis->m_" . $attribute->signature->name . ".set(exec->globalData(), castedThis, result);\n") if ($attribute->signature->extendedAttributes->{"CachedAttribute"});
                     
+                    if ($attribute->signature->extendedAttributes->{"SymbolicTrigger"}) {
+                        # ARTEMIS BEGIN
+                        push(@implContent, "    castedThis->m_isSymbolic = true;\n");
+                        # ARTEMIS END
+                    }
+
                     if ($attribute->signature->extendedAttributes->{"Symbolic"}) {
                         # ARTEMIS BEGIN
 
@@ -1831,6 +1852,17 @@ sub GenerateImplementation
                             push(@implContent, "    if (!slotBase.isIndirectSymbolic()) {\n");
                             push(@implContent, "        return result;\n");
                             push(@implContent, "    }\n");
+                        }
+
+                        push(@implContent, "\n");
+
+                        # Return if this value is not symbolic
+                        
+                        unless ($attribute->signature->extendedAttributes->{"SymbolicNotExplicit"}) {
+                            push(@implContent, "    if (castedThis->m_isSymbolic == false) {\n");
+                            push(@implContent, "        return result;\n");
+                            push(@implContent, "    }\n");
+
                         }
 
                         push(@implContent, "\n");

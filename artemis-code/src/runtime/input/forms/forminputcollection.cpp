@@ -59,6 +59,11 @@ void FormInputCollection::writeToPage(ArtemisWebPagePtr page) const
                     FormFieldInjector::inject(element, input.second);
                 }
             }
+
+            // do this not only for the form fields we inject into, but all of them
+            field->getDomElement()->getElement(page).evaluateJavaScript(QString("this.symbolictrigger == \"\";"));
+            field->getDomElement()->getElement(page).evaluateJavaScript(QString("this.options.symbolictrigger == \"\";"));
+
             emit sigInjectedToField(field);
         }
 
