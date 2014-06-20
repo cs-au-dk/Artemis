@@ -41,6 +41,7 @@ public:
     virtual void javascript_bytecode_executed(JSC::Interpreter* interpreter, JSC::CodeBlock*, JSC::Instruction* inst, const JSC::BytecodeInfo&); //__attribute__((noreturn));
     virtual void javascript_branch_executed(bool jump, Symbolic::Expression* condition, JSC::ExecState*, const JSC::Instruction*, const JSC::BytecodeInfo&);
     virtual void javascriptConstantStringEncountered(std::string constant); //__attribute__((noreturn));
+    virtual void javascript_symbolic_field_read(std::string variable, bool isSymbolic);
 
     /* Property Access Instrumentation */
 public:

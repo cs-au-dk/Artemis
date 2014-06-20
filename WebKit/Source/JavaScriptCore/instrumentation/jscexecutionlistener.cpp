@@ -42,13 +42,17 @@ void JSCExecutionListener::javascript_bytecode_executed(JSC::Interpreter*, JSC::
 }
 
 void JSCExecutionListener::javascript_branch_executed(bool jump, Symbolic::Expression* condition, JSC::ExecState*, const JSC::Instruction*, const JSC::BytecodeInfo&) {
-    cerr << "Warning: Default listener for javascript_branch_executed was invoked " << endl;
+    qWarning() << "Warning: Default listener for javascript_branch_executed was invoked " << endl;
     //exit(1);
 }
 
 void JSCExecutionListener::javascriptConstantStringEncountered(std::string) {
     qWarning()  << "Warning: Default listener for javascript_constant_encountered was invoked " << endl;
     //exit(1);
+}
+
+void JSCExecutionListener::javascript_symbolic_field_read(std::string variable, bool isSymbolic) {
+    qWarning() << "Warning: Default listener for javascript_symbolic_field_read was invoked." << endl;
 }
 
 void JSCExecutionListener::javascript_property_read(std::string, JSC::ExecState*)

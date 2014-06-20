@@ -78,6 +78,7 @@ typedef struct OptionsType {
         concolicTreeOutput(TREE_FINAL),
         concolicTreeOutputOverview(false),
         concolicTriggerEventHandlers(false),
+        concolicEventHandlerReport(false),
         concolicDfsDepthLimit(5),
         concolicDfsRestartLimit(3),
         solver(CVC4),
@@ -113,6 +114,7 @@ typedef struct OptionsType {
     bool concolicTreeOutputOverview;
     QString concolicEntryPoint;
     bool concolicTriggerEventHandlers;
+    bool concolicEventHandlerReport;
 
     unsigned int concolicDfsDepthLimit;
     unsigned int concolicDfsRestartLimit;

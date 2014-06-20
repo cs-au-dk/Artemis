@@ -29,6 +29,7 @@
 #include "concolic/executiontree/tracedisplayoverview.h"
 #include "concolic/traceclassifier.h"
 #include "concolic/tracestatistics.h"
+#include "concolic/handlerdependencytracker.h"
 
 #include "runtime/input/dominput.h"
 #include "runtime/input/events/mouseeventparameters.h"
@@ -131,6 +132,8 @@ protected:
     FormRestrictions mFormFieldRestrictions;
 
     int mMarkerIndex;
+
+    HandlerDependencyTracker mHandlerTracker;
 
     // State
     int mNumIterations;

@@ -492,6 +492,14 @@ void QWebExecutionListener::javascript_branch_executed(bool jump, Symbolic::Expr
     emit sigJavascriptBranchExecuted(jump, condition, callFrame->codeBlock()->sourceOffset(), m_sourceRegistry.get(callFrame->codeBlock()->source()), binfo);
 }
 
+void QWebExecutionListener::javascript_symbolic_field_read(std::string variable, bool isSymbolic)
+{
+    if (!JSC::Interpreter::m_enableInstrumentations)
+        return;
+
+    emit sigJavascriptSymbolicFieldRead(QString::fromStdString(variable), isSymbolic);
+}
+
 QWebExecutionListener* QWebExecutionListener::getListener() {
     return (QWebExecutionListener*)inst::getListener();
 }
