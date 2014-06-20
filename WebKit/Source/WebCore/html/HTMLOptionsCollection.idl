@@ -25,6 +25,7 @@ module html {
         CustomIndexedSetter
     ] HTMLOptionsCollection : HTMLCollection {
                  attribute [Symbolic, SymbolicInteger, SymbolicOptionsCollection] long selectedIndex;
+                 attribute [TreatNullAs=NullString, SymbolicTrigger] DOMString symbolictrigger;
                  attribute [Custom] unsigned long length
                         setter raises (DOMException);
 

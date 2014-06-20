@@ -121,3 +121,5 @@ SymbolicOptionsCollection
 SymbolicInputElement
 SymbolicSelectElement
 SymbolicOptionElement
+SymbolicTrigger
+SymbolicNotExplicit

@@ -38,6 +38,7 @@ ConcolicRuntime::ConcolicRuntime(QObject* parent, const Options& options, const 
     : Runtime(parent, options, url)
     , mTraceDisplay(options.outputCoverage != NONE)
     , mTraceDisplayOverview(options.outputCoverage != NONE)
+    , mHandlerTracker(options.concolicEventHandlerReport)
     , mNumIterations(0)
 {
     QObject::connect(mWebkitExecutor, SIGNAL(sigExecutedSequence(ExecutableConfigurationConstPtr, QSharedPointer<ExecutionResult>)),
@@ -60,6 +61,9 @@ ConcolicRuntime::ConcolicRuntime(QObject* parent, const Options& options, const 
     QObject::connect(this, SIGNAL(sigNewTraceMarker(QString, QString, bool, SelectRestriction)),
                      markerDetector.data(), SLOT(slNewMarker(QString, QString, bool, SelectRestriction)));
     mWebkitExecutor->getTraceBuilder()->addDetector(markerDetector);
+
+    QObject::connect(QWebExecutionListener::getListener(), SIGNAL(sigJavascriptSymbolicFieldRead(QString, bool)),
+                     &mHandlerTracker, SLOT(slJavascriptSymbolicFieldRead(QString, bool)));
 }
 
 void ConcolicRuntime::run(const QUrl& url)
@@ -97,6 +101,7 @@ void ConcolicRuntime::preConcreteExecution()
     }
 
     if (mNextConfiguration.isNull()) {
+        mHandlerTracker.writeGraph();
         mWebkitExecutor->detach();
         done();
         return;
@@ -117,6 +122,8 @@ void ConcolicRuntime::preConcreteExecution()
     Log::debug("--------------- COVERAGE ----------------\n");
     Log::debug(mAppmodel->getCoverageListener()->toString().toStdString());
 
+    mHandlerTracker.newIteration();
+
     mMarkerIndex = 1;
     mWebkitExecutor->executeSequence(mNextConfiguration); // calls the postSingleInjection, postAllinjection (via FormInputCollection) and postConcreteExecution methods as callback
 }
@@ -128,6 +135,7 @@ void ConcolicRuntime::postAllInjection()
 
     if(mOptions.concolicTriggerEventHandlers) {
         // From here on, we will be triggering the button only.
+        mHandlerTracker.beginHandler("Submit Button");
         emit sigNewTraceMarker("Clicking submit button", "B", false, SelectRestriction());
     }
 }
@@ -153,6 +161,7 @@ void ConcolicRuntime::postSingleInjection(FormFieldDescriptorConstPtr field)
         restriction = FormFieldRestrictedValues::getRelevantSelectRestriction(mFormFieldRestrictions, identifier);
 
         // Add a marker to the trace
+        mHandlerTracker.beginHandler(identifier);
         emit sigNewTraceMarker(label, QString::number(mMarkerIndex), restriction.first, restriction.second);
 
         // Trigger the handler
@@ -167,7 +176,7 @@ void ConcolicRuntime::postConcreteExecution(ExecutableConfigurationConstPtr conf
 {
     /*
      * We can be in three possible states.
-     *  1. mRunningFirstLoad: A simple page load in which case we need to check for the entry points and choose one, and save the fomr fields.
+     *  1. mRunningFirstLoad: A simple page load in which case we need to check for the entry points and choose one, and save the form fields.
      *  2. mRunningWithInitialValues: The initial form submission. use this to seed the trace tree then choose a target.
      *  3. Neither: A normal run, where we add to the tree and choose a new target.
      */
@@ -710,6 +719,7 @@ void ConcolicRuntime::chooseNextTargetAndExplore()
         Log::debug("\n============= Finished Search ==============");
         Log::info("Finished serach of the tree.");
 
+        mHandlerTracker.writeGraph();
         mWebkitExecutor->detach();
         done();
         return;

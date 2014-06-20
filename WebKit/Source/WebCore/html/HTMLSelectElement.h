@@ -62,6 +62,9 @@ public:
     String value() const;
     void setValue(const String&);
 
+    String symbolictrigger() const;
+    void setSymbolictrigger(const String&);
+
     HTMLOptionsCollection* options();
     HTMLCollection* selectedOptions();
 

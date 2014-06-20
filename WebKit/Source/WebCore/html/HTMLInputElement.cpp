@@ -1050,6 +1050,15 @@ void HTMLInputElement::setValue(const String& value, TextFieldEventBehavior even
     notifyFormStateChanged();
 }
 
+void HTMLInputElement::setSymbolictrigger(const String& value, TextFieldEventBehavior eventBehavior)
+{
+}
+
+String HTMLInputElement::symbolictrigger() const
+{
+    return String();
+}
+
 void HTMLInputElement::setValueInternal(const String& sanitizedValue, TextFieldEventBehavior eventBehavior)
 {
     m_valueIfDirty = sanitizedValue;

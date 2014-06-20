@@ -80,6 +80,7 @@ public:
     virtual void javascript_property_read(std::string propertyName, JSC::ExecState*);
     virtual void javascript_property_written(std::string propertyName, JSC::ExecState*);
     virtual void javascript_branch_executed(bool jump, Symbolic::Expression* condition, JSC::ExecState*, const JSC::Instruction*, const JSC::BytecodeInfo&);
+    virtual void javascript_symbolic_field_read(std::string variable, bool isSymbolic);
 
     void javascriptConstantStringEncountered(std::string constant);
     virtual void javascript_eval_call(const char * eval_string);
@@ -147,6 +148,7 @@ signals:
     void sigJavascriptFunctionReturned(QString functionName);
     void sigJavascriptBytecodeExecuted(const ByteCodeInfoStruct byteInfo, uint sourceOffset, QSource* source);
     void sigJavascriptBranchExecuted(bool jump, Symbolic::Expression* condition, uint sourceOffset, QSource* source, const ByteCodeInfoStruct byteInfo);
+    void sigJavascriptSymbolicFieldRead(QString variable, bool isSymbolic);
 
     /* Page Load Instrumentation */
     void sigPageLoadScheduled(QUrl url);

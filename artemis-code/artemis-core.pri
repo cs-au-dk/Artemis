@@ -131,7 +131,8 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/concolic/search/randomaccesssearch.h \
     src/concolic/search/randomisedsearch.h \
     src/concolic/search/dfstesting.h \
-    src/concolic/search/easilyboredsearch.h
+    src/concolic/search/easilyboredsearch.h \
+    src/concolic/handlerdependencytracker.h
 
 SOURCES += src/runtime/input/ajaxinput.cpp \
     src/strategies/prioritizer/constantprioritizer.cpp \
@@ -239,6 +240,7 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/concolic/search/randomaccesssearch.cpp \
     src/concolic/search/randomisedsearch.cpp \
     src/concolic/search/dfstesting.cpp \
-    src/concolic/search/easilyboredsearch.cpp
+    src/concolic/search/easilyboredsearch.cpp \
+    src/concolic/handlerdependencytracker.cpp
 
 QT += network

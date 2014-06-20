@@ -127,6 +127,10 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             "           ignore (default) - Ignore handlers for individual field modification.\n"
             "           simple - Fire the onchange event for each field which is injected.\n"
             "\n"
+            "--concolic-event-handler-report\n"
+            "           Outpus a graph of the symbolic variables which are read from each event handler.\n"
+            "           (Requires major-mode concolic and concolic-event-sequences)\n"
+            "\n"
             "--smt-solver <solver>:\n"
             "           z3str - Use the Z3-str SMT solver as backend.\n"
             "           cvc4 (default) - Use the CVC4 SMT solver as backend. CVC4 is required to be on your path.\n"
@@ -181,6 +185,7 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
     {"concolic-dfs-unlimited-depth", no_argument, NULL, 'u'},
     {"concolic-search-budget", required_argument, NULL, 'R'},
     {"concolic-event-sequences", required_argument, NULL, 'w'},
+    {"concolic-event-handler-report", no_argument, NULL, 'H'},
     {"smt-solver", required_argument, NULL, 'n'},
     {"export-event-sequence", required_argument, NULL, 'o'},
     {"help", no_argument, NULL, 'h'},
@@ -352,6 +357,11 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
         case 'h': {
             std::cout << usage;
             exit(0);
+        }
+
+        case 'H': {
+            options.concolicEventHandlerReport = true;
+            break;
         }
 
         case 'i': {

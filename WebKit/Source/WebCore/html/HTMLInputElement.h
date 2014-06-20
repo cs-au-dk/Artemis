@@ -137,6 +137,8 @@ public:
 
     String value() const;
     void setValue(const String&, TextFieldEventBehavior = DispatchNoEvent);
+    String symbolictrigger() const;
+    void setSymbolictrigger(const String&, TextFieldEventBehavior = DispatchNoEvent);
     void setValueForUser(const String&);
     // Checks if the specified string would be a valid value.
     // We should not call this for types with no string value such as CHECKBOX and RADIO.
