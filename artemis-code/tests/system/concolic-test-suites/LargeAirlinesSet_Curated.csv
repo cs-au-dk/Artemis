@@ -4,7 +4,7 @@ alaskaair_1,http://localhost:8080/2014-04-26/alaskaair/,id('findFlights')
 cheapflights_1,http://localhost:8080/2014-04-26/cheapflights/,id('buttonSearch')
 cheaptickets_2,http://localhost:8080/2014-04-26/cheaptickets/,id('search')/div[@class='hotelFormMod '][1]/div[@class='hotelSearchForm searchForm '][1]/form[@class='searchFormForm'][1]/fieldset[@class='hotelSearch'][1]/div[@class='group groupWithButtons'][1]/div[@class='buttons'][1]/div[@class='submit button-primary button-medium'][1]/input[1]
 croatiaairlines_1,http://localhost:8080/2014-04-26/croatiaairlines/,id('ctl06_ctl21_btnSearch')
-etihadairways_1,http://localhost:8080/2014-04-26/etihadairways/,id('t1-p1')/button[@class='btn btn-medium-arrow btn-color2 ie7-submit-now '][1]
+etihadairways_1,http://localhost:8080/2014-04-26/etihadairways/,//*[@id='contentJump']/div[2]/div/div[1]/article/div[2]/div/button
 expedia_1,http://localhost:8080/2014-04-26/expedia/,id('uw-hf-sub-anc')
 flightnetwork_1,http://localhost:8080/2014-04-26/flightnetwork/,id('button')
 flybe_1,http://localhost:8080/2014-04-26/flybe/,id('flight-search-button')
