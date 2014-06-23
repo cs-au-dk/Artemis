@@ -62,14 +62,20 @@ class GDataLogger():
         Take a dict of the column headers and values to be inserted and makes the dictionary keys suitable for passing
         to the GData API.
         """
-        # Column names must exist and they are given lower-case with spaces removed!
-        # It seems they also have colons removed as well.
-        # TODO: Is there any definitive reference for how this should be done?
-        # I know that if column names have duplicate encodings they will be numbered, which is hard to handle here.
+        # Column names must exist and they are given lower-case and must be converted to valid XML element names.
+        # Colons are used for namespacing so they are also not allowed in the column name part.
+        # If column names have duplicate encodings they will be numbered, which is hard to handle here.
         # So I am assuming all column names will be unique, even after this transformation.
+        # This includes column names which are already in the spreadsheet but which are not in this data set.
+        invalid_chars = "!\"#$%&'()*+,/;<=>?@[\]^`{|}~"
+        invalid_start_chars = "-.0123456789"
+        disallowed_by_google_api = ":"
+        
+        strip_expression = re.compile(r"\s+|[" + re.escape(invalid_chars + disallowed_by_google_api) + r"]+|^[" + re.escape(invalid_start_chars) + "]+")
+        
         processed_data = {}
         for column, value in data.iteritems():
-            column_api_name = re.sub(r'\s+|:', '', column.lower())
+            column_api_name = re.sub(strip_expression, '', column.lower())
             processed_data[column_api_name] = value
         
         return processed_data
