@@ -26,9 +26,10 @@ namespace artemis
 {
 
 HandlerDependencyTracker::HandlerDependencyTracker(bool enabled) :
-    mEnabled(enabled),
-    mCurrentEvent("[none]")
-{}
+    mEnabled(enabled)
+{
+    mCurrentEvent = mNoEventLabel;
+}
 
 void HandlerDependencyTracker::writeGraph()
 {
@@ -50,14 +51,28 @@ void HandlerDependencyTracker::writeGraph()
         idx++;
     }
     // Check for any which were not listed in the event sequence...
+    QSet<QString> extras;
     foreach(EdgeDescriptor edge, mEdgeCounts.keys()) {
-        assert(mEvents.contains(edge.first.first) || edge.first.first == "[none]");
+        assert(mEvents.contains(edge.first.first) || edge.first.first == mNoEventLabel);
         if(!mEvents.contains(edge.first.second)) {
             names.insert(edge.first.second, QString("unknown_%1").arg(idx));
             graph += QString("  %1 [label = \"%2\", fillcolor = \"lightpink\"];\n").arg(names[edge.first.second], edge.first.second);
             idx++;
+            extras.insert(edge.first.second);
         }
     }
+    // Sanity check for any variable reads not coming from a known handler.
+    QSet<QString> observed;
+    foreach(EdgeDescriptor edge, mEdgeCounts.keys()) {
+        observed.insert(edge.first.first);
+    }
+    if(observed.contains(mNoEventLabel)) {
+        names.insert(mNoEventLabel, QString("no_source"));
+        graph += QString("  no_source [label = \"%1\", fillcolor = \"lightpink\"];\n").arg(mNoEventLabel);
+        mEvents.prepend(mNoEventLabel);
+    }
+    observed.subtract(extras);
+    assert(mEvents.toSet().contains(observed));
 
     graph += "\n";
 
@@ -101,7 +116,7 @@ void HandlerDependencyTracker::newIteration()
     // Reset mEvents, so we only keep the version from the latest run.
     // In fact it should be the same on every iteration (except the initial load...).
     mEvents.clear();
-    mCurrentEvent = "[none]";
+    mCurrentEvent = mNoEventLabel;
 }
 
 void HandlerDependencyTracker::slJavascriptSymbolicFieldRead(QString variable, bool isSymbolic)
