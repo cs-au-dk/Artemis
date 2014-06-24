@@ -37,6 +37,16 @@ PassOwnPtr<HTMLOptionsCollection> HTMLOptionsCollection::create(HTMLSelectElemen
     return adoptPtr(new HTMLOptionsCollection(select));
 }
 
+void HTMLOptionsCollection::setSymbolictrigger(const String& value)
+{
+}
+
+String HTMLOptionsCollection::symbolictrigger() const
+{
+    return String();
+}
+
+
 void HTMLOptionsCollection::add(PassRefPtr<HTMLOptionElement> element, ExceptionCode &ec)
 {
     add(element, length(), ec);

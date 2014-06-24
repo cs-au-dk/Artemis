@@ -37,6 +37,9 @@ class HTMLOptionsCollection : public HTMLCollection {
 public:
     static PassOwnPtr<HTMLOptionsCollection> create(HTMLSelectElement*);
 
+    String symbolictrigger() const;
+    void setSymbolictrigger(const String&);
+
     void add(PassRefPtr<HTMLOptionElement>, ExceptionCode&);
     void add(PassRefPtr<HTMLOptionElement>, int index, ExceptionCode&);
     void remove(int index);

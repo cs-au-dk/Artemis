@@ -1,0 +1,46 @@
+<!--
+TEST PC[0] = (IntegerCoercion( SymbolicString ) < ConstantInteger)
+TEST Concolic::Solver::ConstraintsSolved = 2
+TEST Concolic::Solver::ConstraintsWritten = 2
+TEST Concolic::Solver::Constraint.SYM_IN_testinput = -5
+-->
+<!doctype html><html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+	<title>Ben Spencer</title>
+	<meta name="author" content="Ben Spencer">
+	<script type="text/javascript">
+		function validate() {
+			var y = document.getElementById("testinput").value;
+
+			if (y >= 0) {
+				alert("Error!");
+				return false;
+			}else{
+				return true;
+			}
+		}
+	</script>
+
+</head>
+<body>
+
+	<p>Choose a negative number from the drop-down to do something.</p>
+
+	<form method="GET" action="about:blank" >
+
+		<select name="testinput" id="testinput" >
+			<option value="" >Select something</option>
+			<option value="2" >Two</option>
+			<option value="0" >Zero</option>
+			<option value="-5" >Minus five</option>
+		</select>
+
+		<button type="submit" onclick="return validate();">Submit</button>
+
+	</form>
+
+</body>
+</html>

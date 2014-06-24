@@ -961,8 +961,16 @@ sub GenerateHeader
                 push(@headerContent, "    Symbolic::Expression* m_" . $attribute->signature->name . "Symbolic;\n");
             }
         }
+
+        foreach my $attribute (@{$dataNode->attributes}) {
+            if ($attribute->signature->extendedAttributes->{"Symbolic"}) {         
+                push(@headerContent, "    bool m_isSymbolic;\n");
+                last;
+            }
+        }
         push(@headerContent, "\n");
     }
+
     # ARTEMIS END
 
     push(@headerContent, "};\n\n");
@@ -1344,6 +1352,7 @@ sub GenerateImplementation
     $implIncludes{"\"symbolic/expression/symbolicstring.h\""} = 1;
     $implIncludes{"\"symbolic/expression/symbolicinteger.h\""} = 1;
     $implIncludes{"\"symbolic/expression/symbolicboolean.h\""} = 1;
+    $implIncludes{"\"instrumentation/jscexecutionlistener.h\""} = 1;
     $implIncludes{"<iostream>"} = 1;
     $implIncludes{"<ostream>"} = 1;
     $implIncludes{"<sstream>"} = 1;
@@ -1608,6 +1617,13 @@ sub GenerateImplementation
                 push(@implContent, "    , m_" . $attribute->signature->name . "Symbolic(NULL)\n");
             }
         }
+        foreach my $attribute (@{$dataNode->attributes}) {
+            if ($attribute->signature->extendedAttributes->{"Symbolic"}) {
+                push(@implContent, "    , m_isSymbolic(false)\n");
+                last;
+            }
+        }
+
         # ARTEMIS END
         push(@implContent, "{\n");
         push(@implContent, "}\n\n");
@@ -1801,6 +1817,12 @@ sub GenerateImplementation
 
                     push(@implContent, "    castedThis->m_" . $attribute->signature->name . ".set(exec->globalData(), castedThis, result);\n") if ($attribute->signature->extendedAttributes->{"CachedAttribute"});
                     
+                    if ($attribute->signature->extendedAttributes->{"SymbolicTrigger"}) {
+                        # ARTEMIS BEGIN
+                        push(@implContent, "    castedThis->m_isSymbolic = true;\n");
+                        # ARTEMIS END
+                    }
+
                     if ($attribute->signature->extendedAttributes->{"Symbolic"}) {
                         # ARTEMIS BEGIN
 
@@ -1835,18 +1857,19 @@ sub GenerateImplementation
 
                         push(@implContent, "\n");
 
-                        # If we don't have a symbolic value cached already, then calculate a symbolic name and create a new value
 
-                        push(@implContent, "    if (castedThis->m_" . $attribute->signature->name . "Symbolic == NULL) {\n");
-                        push(@implContent, "        std::ostringstream strs;\n");
-                        push(@implContent, "        strs << \"SYM_IN_\";\n");
+                        # Calculate the symbolic name for this element.
+
+                        push(@implContent, "    // Calculate the symbolic name for this element.\n");
+                        push(@implContent, "    std::ostringstream strs;\n");
+                        push(@implContent, "    strs << \"SYM_IN_\";\n");
 
                         # This tags int and bool typed variables with different names, avoiding any naming conflicts between two variables from the same element.
                         if ($attribute->signature->extendedAttributes->{"SymbolicBoolean"}) {
-                            push(@implContent, "        strs << \"BOOL_\";\n");
+                            push(@implContent, "    strs << \"BOOL_\";\n");
                         }
                         if ($attribute->signature->extendedAttributes->{"SymbolicInteger"}) {
-                            push(@implContent, "        strs << \"INT_\";\n");
+                            push(@implContent, "    strs << \"INT_\";\n");
                         }
 
                         push(@implContent, "\n");
@@ -1855,53 +1878,53 @@ sub GenerateImplementation
                         # Always emit inputName, inputId and inputSourceType
 
                         if ($attribute->signature->extendedAttributes->{"SymbolicOptionElement"}) {
-                            push(@implContent, "        HTMLSelectElement* parentSelect = impl->ownerSelectElement();\n");
-                            push(@implContent, "        WTF::AtomicString inputName = parentSelect->getAttribute(WebCore::HTMLNames::nameAttr);\n");
-                            push(@implContent, "        WTF::AtomicString inputId = parentSelect->getAttribute(WebCore::HTMLNames::idAttr);\n");
+                            push(@implContent, "    HTMLSelectElement* parentSelect = impl->ownerSelectElement();\n");
+                            push(@implContent, "    WTF::AtomicString inputName = parentSelect->getAttribute(WebCore::HTMLNames::nameAttr);\n");
+                            push(@implContent, "    WTF::AtomicString inputId = parentSelect->getAttribute(WebCore::HTMLNames::idAttr);\n");
 
                             if ($attribute->signature->extendedAttributes->{"SymbolicString"}) {
-                                push(@implContent, "        Symbolic::SourceType inputSourceType = Symbolic::SELECT;\n");
+                                push(@implContent, "    Symbolic::SourceType inputSourceType = Symbolic::SELECT;\n");
                             } else {
                                 push(@implContent, "# Error, SymbolicOptionElement only supports SymbolicString, causes a compile error");
                             }
 
                         } elsif ($attribute->signature->extendedAttributes->{"SymbolicOptionsCollection"}) {
                             # For options collection objects, we calculate the symbolic name from the 'parent' select element instead of the default method.
-                            push(@implContent, "        HTMLSelectElement* parentSelect = toHTMLSelectElement(impl->base());\n");
-                            push(@implContent, "        WTF::AtomicString inputName = parentSelect->getAttribute(WebCore::HTMLNames::nameAttr);\n");
-                            push(@implContent, "        WTF::AtomicString inputId = parentSelect->getAttribute(WebCore::HTMLNames::idAttr);\n");
+                            push(@implContent, "    HTMLSelectElement* parentSelect = toHTMLSelectElement(impl->base());\n");
+                            push(@implContent, "    WTF::AtomicString inputName = parentSelect->getAttribute(WebCore::HTMLNames::nameAttr);\n");
+                            push(@implContent, "    WTF::AtomicString inputId = parentSelect->getAttribute(WebCore::HTMLNames::idAttr);\n");
 
                             if ($attribute->signature->extendedAttributes->{"SymbolicInteger"}) {
-                                push(@implContent, "        Symbolic::SourceType inputSourceType = Symbolic::SELECT_INDEX;\n");
+                                push(@implContent, "    Symbolic::SourceType inputSourceType = Symbolic::SELECT_INDEX;\n");
                             } elsif ($attribute->signature->extendedAttributes->{"SymbolicString"}) {
-                                push(@implContent, "        Symbolic::SourceType inputSourceType = Symbolic::SELECT;\n");
+                                push(@implContent, "    Symbolic::SourceType inputSourceType = Symbolic::SELECT;\n");
                             } else {
                                 push(@implContent, "# Error, SymbolicOptionsCollection only supports SymbolicInteger and SymbolicString, causes a compile error");
                             }
 
                         } elsif ($attribute->signature->extendedAttributes->{"SymbolicSelectElement"}) {
-                            push(@implContent, "        WTF::AtomicString inputName = impl->getAttribute(WebCore::HTMLNames::nameAttr);\n");
-                            push(@implContent, "        WTF::AtomicString inputId = impl->getAttribute(WebCore::HTMLNames::idAttr);\n");
+                            push(@implContent, "    WTF::AtomicString inputName = impl->getAttribute(WebCore::HTMLNames::nameAttr);\n");
+                            push(@implContent, "    WTF::AtomicString inputId = impl->getAttribute(WebCore::HTMLNames::idAttr);\n");
 
                             if ($attribute->signature->extendedAttributes->{"SymbolicInteger"}) {
-                                push(@implContent, "        Symbolic::SourceType inputSourceType = Symbolic::SELECT_INDEX;\n");
+                                push(@implContent, "    Symbolic::SourceType inputSourceType = Symbolic::SELECT_INDEX;\n");
                             } elsif ($attribute->signature->extendedAttributes->{"SymbolicString"}) {
-                                push(@implContent, "        Symbolic::SourceType inputSourceType = Symbolic::SELECT;\n");
+                                push(@implContent, "    Symbolic::SourceType inputSourceType = Symbolic::SELECT;\n");
                             } else {
                                 push(@implContent, "# Error, SymbolicSelectElement only supports SymbolicInteger and SymbolicString, causes a compile error");
                             }
 
 
                         } elsif ($attribute->signature->extendedAttributes->{"SymbolicInputElement"}) { 
-                            push(@implContent, "        WTF::AtomicString inputName = impl->getAttribute(WebCore::HTMLNames::nameAttr);\n");
-                            push(@implContent, "        WTF::AtomicString inputId = impl->getAttribute(WebCore::HTMLNames::idAttr);\n");
+                            push(@implContent, "    WTF::AtomicString inputName = impl->getAttribute(WebCore::HTMLNames::nameAttr);\n");
+                            push(@implContent, "    WTF::AtomicString inputId = impl->getAttribute(WebCore::HTMLNames::idAttr);\n");
 
                             if ($attribute->signature->extendedAttributes->{"SymbolicString"}) {
-                                push(@implContent, "        Symbolic::SourceType inputSourceType = Symbolic::SymbolicSource::stringAccessTypeAttrToSourceType(type.string().ascii().data());\n");
+                                push(@implContent, "    Symbolic::SourceType inputSourceType = Symbolic::SymbolicSource::stringAccessTypeAttrToSourceType(type.string().ascii().data());\n");
                             } elsif ($attribute->signature->extendedAttributes->{"SymbolicBoolean"}) {
-                                push(@implContent, "        Symbolic::SourceType inputSourceType = Symbolic::SymbolicSource::boolAccessTypeAttrToSourceType(type.string().ascii().data());\n");
+                                push(@implContent, "    Symbolic::SourceType inputSourceType = Symbolic::SymbolicSource::boolAccessTypeAttrToSourceType(type.string().ascii().data());\n");
                             } else { # SymbolicInteger, only used for valueAsNumber
-                                push(@implContent, "        Symbolic::SourceType inputSourceType = Symbolic::SymbolicSource::stringAccessTypeAttrToSourceType(type.string().ascii().data());\n");
+                                push(@implContent, "    Symbolic::SourceType inputSourceType = Symbolic::SymbolicSource::stringAccessTypeAttrToSourceType(type.string().ascii().data());\n");
                             }
 
                         } else {
@@ -1911,20 +1934,41 @@ sub GenerateImplementation
                         # CONTEXT SPECIFIC END
 
                         push(@implContent, "\n");
-                        push(@implContent, "        Symbolic::SourceIdentifierMethod method;\n");
+                        push(@implContent, "    Symbolic::SourceIdentifierMethod method;\n");
 
-                        push(@implContent, "        if (inputId.length() != 0) {\n");
-                        push(@implContent, "            strs << inputId.string().ascii().data();\n");
-                        push(@implContent, "            method = Symbolic::ELEMENT_ID;\n");
-                        push(@implContent, "        } else if (inputName.length() != 0) {\n");
-                        push(@implContent, "            strs << inputName.string().ascii().data();\n");
-                        push(@implContent, "            method = Symbolic::INPUT_NAME;\n");
-                        push(@implContent, "        } else {\n");
-#                       push(@implContent, "            std::cout << \"Error: Form input element without ID, name or Artemis ID used - this will break concolic execution!\" << std::endl;\n");
-                        push(@implContent, "            qWarning() << \"Form input element without ID, name or Artemis ID used - this will break concolic execution!\";\n");
-                        push(@implContent, "            return result;\n");
-                        push(@implContent, "        }\n");
+                        push(@implContent, "    if (inputId.length() != 0) {\n");
+                        push(@implContent, "        strs << inputId.string().ascii().data();\n");
+                        push(@implContent, "        method = Symbolic::ELEMENT_ID;\n");
+                        push(@implContent, "    } else if (inputName.length() != 0) {\n");
+                        push(@implContent, "        strs << inputName.string().ascii().data();\n");
+                        push(@implContent, "        method = Symbolic::INPUT_NAME;\n");
+                        push(@implContent, "    } else {\n");
+                        push(@implContent, "        qWarning() << \"Form input element without ID, name or Artemis ID used - this will break concolic execution!\";\n");
+                        push(@implContent, "        return result;\n");
+                        push(@implContent, "    }\n");
                         push(@implContent, "\n");
+
+
+                        # Notify artemis about this (possible) read.
+
+                        push(@implContent, "    jscinst::get_jsc_listener()->javascript_symbolic_field_read(strs.str(), castedThis->m_isSymbolic);\n");
+
+                        push(@implContent, "\n");
+
+                        # Return if this value is not symbolic
+                        
+                        unless ($attribute->signature->extendedAttributes->{"SymbolicNotExplicit"}) {
+                            push(@implContent, "    if (castedThis->m_isSymbolic == false) {\n");
+                            push(@implContent, "        return result;\n");
+                            push(@implContent, "    }\n");
+
+                        }
+
+                        push(@implContent, "\n");
+
+                        # If we don't have a symbolic value cached already then create a new value
+
+                        push(@implContent, "    if (castedThis->m_" . $attribute->signature->name . "Symbolic == NULL) {\n");
 
                         if ($attribute->signature->extendedAttributes->{"SymbolicString"}) {
                             push(@implContent, "        result.makeSymbolic(new Symbolic::SymbolicString(Symbolic::SymbolicSource(inputSourceType, method, std::string(strs.str()))));\n");

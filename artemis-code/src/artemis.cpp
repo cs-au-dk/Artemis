@@ -101,12 +101,22 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             "           all - Generate a graph of the tree at every iteration.\n"
             "           all-overview - Like all but also includes simplified overview graphs.\n"
             "\n"
+            "--concolic-dfs-depth <n>x<m>\n"
+            "           The depth limit used for the iterative depth-first search.\n"
+            "           n is the base depth limit (of symbolic branches).\n"
+            "           m is the number of passes of the search, each at a lower depth.\n"
+            "           The default is 5x3 for a total depth limit of 15 after two restarts.\n"
+            "\n"
             "--concolic-unlimited-depth\n"
-            "           Removes the depth limit from the concolic search procedure.\n"
+            "           Removes the restart limit from the concolic depth-first search procedure.\n"
             "\n"
             "--concolic-event-sequences <strategy>\n"
             "           ignore (default) - Ignore handlers for individual field modification.\n"
             "           simple - Fire the onchange event for each field which is injected.\n"
+            "\n"
+            "--concolic-event-handler-report\n"
+            "           Outpus a graph of the symbolic variables which are read from each event handler.\n"
+            "           (Requires major-mode concolic and concolic-event-sequences)\n"
             "\n"
             "--smt-solver <solver>:\n"
             "           z3str - Use the Z3-str SMT solver as backend.\n"
@@ -157,8 +167,10 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
     {"function-call-heap-report-random-factor", required_argument, NULL, 'l'},
     {"concolic-tree-output", required_argument, NULL, 'd'},
     {"concolic-button", required_argument, NULL, 'b'},
+    {"concolic-dfs-depth", required_argument, NULL, 'D'},
     {"concolic-unlimited-depth", no_argument, NULL, 'u'},
     {"concolic-event-sequences", required_argument, NULL, 'w'},
+    {"concolic-event-handler-report", no_argument, NULL, 'H'},
     {"smt-solver", required_argument, NULL, 'n'},
     {"export-event-sequence", required_argument, NULL, 'o'},
     {"help", no_argument, NULL, 'h'},
@@ -223,6 +235,27 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
                 cerr << "ERROR: Invalid choice of concolic-tree-output " << optarg << endl;
                 exit(1);
             }
+
+            break;
+        }
+
+        case 'D': {
+            QStringList parts = QString(optarg).split("x");
+            if(parts.length() != 2) {
+                cerr << "ERROR: Invalid format for concolic-dfs-depth " << optarg << endl;
+                exit(1);
+            }
+
+            bool ok1, ok2;
+            int depth = parts[0].toInt(&ok1);
+            int passes = parts[1].toInt(&ok2);
+            if(!ok1 || !ok2 || depth < 1 || passes < 1) {
+                cerr << "ERROR: Invalid value for concolic-dfs-depth " << optarg << endl;
+                exit(1);
+            }
+
+            options.concolicDfsDepthLimit = depth;
+            options.concolicDfsRestartLimit = passes;
 
             break;
         }
@@ -309,6 +342,11 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
         case 'h': {
             std::cout << usage;
             exit(0);
+        }
+
+        case 'H': {
+            options.concolicEventHandlerReport = true;
+            break;
         }
 
         case 'i': {
@@ -449,7 +487,7 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
         }
 
         case 'u': {
-            options.concolicUnlimitedDepth = true;
+            options.concolicDfsRestartLimit = 0;
             break;
         }
 

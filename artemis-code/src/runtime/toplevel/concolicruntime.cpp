@@ -34,6 +34,7 @@ ConcolicRuntime::ConcolicRuntime(QObject* parent, const Options& options, const 
     : Runtime(parent, options, url)
     , mTraceDisplay(options.outputCoverage != NONE)
     , mTraceDisplayOverview(options.outputCoverage != NONE)
+    , mHandlerTracker(options.concolicEventHandlerReport)
     , mNumIterations(0)
 {
     QObject::connect(mWebkitExecutor, SIGNAL(sigExecutedSequence(ExecutableConfigurationConstPtr, QSharedPointer<ExecutionResult>)),
@@ -51,17 +52,14 @@ ConcolicRuntime::ConcolicRuntime(QObject* parent, const Options& options, const 
     //mWebView->resize(1000,1000);
     //mWebView->show();
 
-    // The number of times we are willing to run the search procedure hoping to find some more nodes.
-    // Note that if we know there are no unexplored nodes left we will stop anyway, so this is an upper limit.
-    mSearchPasses = 3;
-    mSearchPassesUnlimited = mOptions.concolicUnlimitedDepth;
-    mSearchFoundTarget = false;
-
     // The event detector for 'marker' events in the traces is created and connected here, as WebKitExecutor (where the rest are handled) does not know when these events happen.
     QSharedPointer<TraceMarkerDetector> markerDetector(new TraceMarkerDetector());
     QObject::connect(this, SIGNAL(sigNewTraceMarker(QString, QString, bool, SelectRestriction)),
                      markerDetector.data(), SLOT(slNewMarker(QString, QString, bool, SelectRestriction)));
     mWebkitExecutor->getTraceBuilder()->addDetector(markerDetector);
+
+    QObject::connect(QWebExecutionListener::getListener(), SIGNAL(sigJavascriptSymbolicFieldRead(QString, bool)),
+                     &mHandlerTracker, SLOT(slJavascriptSymbolicFieldRead(QString, bool)));
 }
 
 void ConcolicRuntime::run(const QUrl& url)
@@ -99,6 +97,7 @@ void ConcolicRuntime::preConcreteExecution()
     }
 
     if (mNextConfiguration.isNull()) {
+        mHandlerTracker.writeGraph();
         mWebkitExecutor->detach();
         done();
         return;
@@ -119,6 +118,8 @@ void ConcolicRuntime::preConcreteExecution()
     Log::debug("--------------- COVERAGE ----------------\n");
     Log::debug(mAppmodel->getCoverageListener()->toString().toStdString());
 
+    mHandlerTracker.newIteration();
+
     mMarkerIndex = 1;
     mWebkitExecutor->executeSequence(mNextConfiguration); // calls the postSingleInjection, postAllinjection (via FormInputCollection) and postConcreteExecution methods as callback
 }
@@ -130,6 +131,7 @@ void ConcolicRuntime::postAllInjection()
 
     if(mOptions.concolicTriggerEventHandlers) {
         // From here on, we will be triggering the button only.
+        mHandlerTracker.beginHandler("Submit Button");
         emit sigNewTraceMarker("Clicking submit button", "B", false, SelectRestriction());
     }
 }
@@ -155,6 +157,7 @@ void ConcolicRuntime::postSingleInjection(FormFieldDescriptorConstPtr field)
         restriction = FormFieldRestrictedValues::getRelevantSelectRestriction(mFormFieldRestrictions, identifier);
 
         // Add a marker to the trace
+        mHandlerTracker.beginHandler(identifier);
         emit sigNewTraceMarker(label, QString::number(mMarkerIndex), restriction.first, restriction.second);
 
         // Trigger the handler
@@ -169,7 +172,7 @@ void ConcolicRuntime::postConcreteExecution(ExecutableConfigurationConstPtr conf
 {
     /*
      * We can be in three possible states.
-     *  1. mRunningFirstLoad: A simple page load in which case we need to check for the entry points and choose one, and save the fomr fields.
+     *  1. mRunningFirstLoad: A simple page load in which case we need to check for the entry points and choose one, and save the form fields.
      *  2. mRunningWithInitialValues: The initial form submission. use this to seed the trace tree then choose a target.
      *  3. Neither: A normal run, where we add to the tree and choose a new target.
      */
@@ -389,7 +392,9 @@ void ConcolicRuntime::mergeTraceIntoTree()
         // pointer to the tree, which will be replaced in that case.
         // If this is a problem, we could just introduce a header node for trees.
         mSymbolicExecutionGraph = trace;
-        mSearchStrategy = DepthFirstSearchPtr(new DepthFirstSearch(mSymbolicExecutionGraph));
+        mSearchStrategy = TreeSearchPtr(new DepthFirstSearch(mSymbolicExecutionGraph,
+                                                             mOptions.concolicDfsDepthLimit,
+                                                             mOptions.concolicDfsRestartLimit));
         mRunningWithInitialValues = false;
 
         Statistics::statistics()->accumulate("Concolic::ExecutionTree::DistinctTracesExplored", 1);
@@ -557,8 +562,7 @@ void ConcolicRuntime::exploreNextTarget()
     QSet<SelectRestriction> dynamicSelectConstraints = mSearchStrategy->getTargetDomConstraints();
 
     // TODO: Currently only select constraints are handled dynamically, so we need to merge them with the static radio button constraints.
-    FormRestrictions dynamicRestrictions = mFormFieldRestrictions;
-    dynamicRestrictions.first = dynamicSelectConstraints;
+    FormRestrictions dynamicRestrictions = mergeDynamicSelectRestrictions(mFormFieldRestrictions, dynamicSelectConstraints);
 
     Log::info("  Next target:");
     QString targetString = QString("    ") + QString::fromStdString(target->toStatisticsValuesString(true)).trimmed();
@@ -611,34 +615,44 @@ void ConcolicRuntime::exploreNextTarget()
     }
 }
 
+FormRestrictions ConcolicRuntime::mergeDynamicSelectRestrictions(FormRestrictions base, QSet<SelectRestriction> replacements)
+{
+    // Copy the radio constraints across as-is, they are not handled dynamically yet.
+    // Merge in the updated constraints from the search procedure with the latest "default" ones from base.
+
+    FormRestrictions updated = base;
+    updated.first = replacements;
+
+    QSet<QString> replacementVariables;
+    foreach(SelectRestriction sr, replacements) {
+        qDebug() << "We have an updated value for" << sr.variable;
+        replacementVariables.insert(sr.variable);
+    }
+
+    foreach(SelectRestriction sr, base.first) {
+        if (!replacementVariables.contains(sr.variable)) {
+            qDebug() << "Using the default value for value for" << sr.variable;
+            updated.first.insert(sr);
+        }
+    }
+
+    return updated;
+}
+
 
 // Uses the search strategy to choose a new target and then explore it.
 void ConcolicRuntime::chooseNextTargetAndExplore()
 {
     // Choose the next target.
     if(mSearchStrategy->chooseNextTarget()){
-        mSearchFoundTarget = true;
-
-        // Explore this target. Runs the next execution itself.
+        // Runs the next execution itself.
         exploreNextTarget();
 
-    }else if (mSearchFoundTarget && (mSearchPassesUnlimited || mSearchPasses > 1)){
-        mSearchFoundTarget = false;
-        if(!mSearchPassesUnlimited){
-            mSearchPasses--;
-        }
-
-        Log::debug("\n============= Finished DFS ==============");
-        Log::info("Finished this pass of the tree. Increasing depth limit and restarting.");
-
-        mSearchStrategy->setDepthLimit(mSearchStrategy->getDepthLimit() + 5);
-        mSearchStrategy->restartSearch();
-        chooseNextTargetAndExplore();
-
     }else{
-        Log::debug("\n============= Finished DFS ==============");
+        Log::debug("\n============= Finished Search ==============");
         Log::info("Finished serach of the tree.");
 
+        mHandlerTracker.writeGraph();
         mWebkitExecutor->detach();
         done();
         return;

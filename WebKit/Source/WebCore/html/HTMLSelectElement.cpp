@@ -257,6 +257,16 @@ void HTMLSelectElement::setValue(const String &value)
     setSelectedIndex(-1);
 }
 
+void HTMLSelectElement::setSymbolictrigger(const String& value)
+{
+}
+
+String HTMLSelectElement::symbolictrigger() const
+{
+    return String();
+}
+
+
 bool HTMLSelectElement::isPresentationAttribute(const QualifiedName& name) const
 {
     if (name == alignAttr) {
