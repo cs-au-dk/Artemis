@@ -13,7 +13,8 @@ TEST Concolic::Solver::ConstraintsWritten = 2
 	<script type="text/javascript">
 
 		function lookahead() {
-			var x = document.getElementById("testinput").value;
+			var mySelect = document.getElementById("testinput");
+			var x = mySelect[mySelect.selectedIndex].value;
 
 			if (x == "hello") {
 				document.getElementById("message").innerHTML = "Don't forget to set the drop-down box!";
@@ -21,7 +22,8 @@ TEST Concolic::Solver::ConstraintsWritten = 2
 		}
 
 		function validate() {
-			var x = document.getElementById("testinput").value;
+			var mySelect = document.getElementById("testinput");
+			var x = mySelect[mySelect.selectedIndex].value;
 
 			if (x != "testme") {
 				alert("Error");
