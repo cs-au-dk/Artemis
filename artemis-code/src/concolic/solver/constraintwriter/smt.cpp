@@ -389,18 +389,20 @@ std::string SMTConstraintWriter::stringfindreplace(const std::string& string,
  */
 std::string SMTConstraintWriter::encodeIdentifier(const std::string& identifier) {
 
-    std::string SEARCH = "_";
-    std::string REPLACE = "QQQ";
+    std::string t = SMTConstraintWriter::stringfindreplace(identifier, "_" , "QQQ");
+    t = SMTConstraintWriter::stringfindreplace(t, "[" , "WWW");
+    t = SMTConstraintWriter::stringfindreplace(t, "]" , "ZZZ");
 
-    return SMTConstraintWriter::stringfindreplace(identifier, SEARCH, REPLACE);
+    return t;
 }
 
 std::string SMTConstraintWriter::decodeIdentifier(const std::string& identifier) {
 
-    std::string SEARCH = "QQQ";
-    std::string REPLACE = "_";
+    std::string t = SMTConstraintWriter::stringfindreplace(identifier, "QQQ", "_");
+    t = SMTConstraintWriter::stringfindreplace(t, "WWW", "[");
+    t = SMTConstraintWriter::stringfindreplace(t, "ZZZ", "]");
 
-    return SMTConstraintWriter::stringfindreplace(identifier, SEARCH, REPLACE);
+    return t;
 }
 
 /** Error handling **/
