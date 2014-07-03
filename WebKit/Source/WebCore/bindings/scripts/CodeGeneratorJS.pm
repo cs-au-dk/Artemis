@@ -1948,16 +1948,12 @@ sub GenerateImplementation
                         push(@implContent, "    }\n");
                         push(@implContent, "\n");
 
-
-                        # Notify artemis about this (possible) read.
-
-                        push(@implContent, "    jscinst::get_jsc_listener()->javascript_symbolic_field_read(strs.str(), castedThis->m_isSymbolic);\n");
-
-                        push(@implContent, "\n");
-
-                        # Return if this value is not symbolic
-                        
                         unless ($attribute->signature->extendedAttributes->{"SymbolicNotExplicit"}) {
+                            # Notify artemis about this (possible) read.
+                            push(@implContent, "    jscinst::get_jsc_listener()->javascript_symbolic_field_read(strs.str(), castedThis->m_isSymbolic);\n");
+                            push(@implContent, "\n");
+
+                            # Return if this value is not symbolic
                             push(@implContent, "    if (castedThis->m_isSymbolic == false) {\n");
                             push(@implContent, "        return result;\n");
                             push(@implContent, "    }\n");
