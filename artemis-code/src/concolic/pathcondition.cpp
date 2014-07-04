@@ -50,7 +50,7 @@ PathConditionPtr PathCondition::createFromTrace(TraceNodePtr trace)
 
 QSharedPointer<PathCondition> PathCondition::createFromBranchList(PathBranchList branches)
 {
-    // In order to make a best-effort at searching for a new ode, we simply ignore the conditions of branches which are known to be unsolvable.
+    // In order to make a best-effort at searching for a new node, we simply ignore the conditions of branches which are known to be unsolvable.
     PathConditionPtr pc = PathConditionPtr(new PathCondition);
     foreach(PathBranch br, branches) {
         if(!br.first->isDifficult()) {

@@ -251,6 +251,15 @@ void DepthFirstSearch::visit(TraceMarker *node)
 
 void DepthFirstSearch::visit(TraceUnexplored *node)
 {
+    // If this is a direct child of a difficult branch, we should skip it without attempting to solve.
+    TraceSymbolicBranch* parent = dynamic_cast<TraceSymbolicBranch*>(mPreviousParent);
+
+    if (parent && parent->isDifficult()) {
+        markNodeUnsolvable();
+        continueFromLeaf();
+        return;
+    }
+
     // When we reach an unexplored node, we want to return it.
     // Stop the visitor. The PC to return is in mCurrentPC.
     mFoundTarget = true;

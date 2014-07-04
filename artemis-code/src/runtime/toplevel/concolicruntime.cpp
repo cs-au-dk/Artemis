@@ -716,6 +716,8 @@ void ConcolicRuntime::chooseNextTargetAndExplore()
         exploreNextTarget();
 
     }else{
+        outputTreeGraph();
+
         Log::debug("\n============= Finished Search ==============");
         Log::info("Finished serach of the tree.");
 

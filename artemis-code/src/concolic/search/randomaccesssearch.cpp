@@ -65,7 +65,6 @@ bool RandomAccessSearch::chooseNextTarget()
 
     // Calculate the PC and DOM constraints.
     mTarget = choice.second;
-    mTargetPC = calculatePC(mTarget);
     mTargetDomConstraints = calculateDomConstraints(mTarget);
 
     return true;
@@ -80,8 +79,11 @@ PathConditionPtr RandomAccessSearch::calculatePC(RandomAccessSearch::Exploration
 
     // Null parent marks the first symbolic branch on each trace.
     while (!current.first.isNull()) {
+        qDebug() << "Adding" << current << "Difficult:" << current.first->isDifficult();
+
         // Add the current node's condition to the PC.
-        branches.append(PathBranch(current.first.data(), current.second));
+        // We prepend so the resulting PC is given in root to leaf order, which is required.
+        branches.prepend(PathBranch(current.first.data(), current.second));
 
         // Move to the next node.
         assert(mBranchParents.contains(current.first));
@@ -120,7 +122,7 @@ QSet<SelectRestriction> RandomAccessSearch::calculateDomConstraints(RandomAccess
 
 PathConditionPtr RandomAccessSearch::getTargetPC()
 {
-    return mTargetPC;
+    return calculatePC(mTarget);
 }
 
 QSet<SelectRestriction> RandomAccessSearch::getTargetDomConstraints()
@@ -283,7 +285,15 @@ void RandomAccessSearch::visit(TraceSymbolicBranch *node)
         explore.branch = thisSymBranch;
         explore.branchDirection = false;
         explore.symbolicDepth = currentSymbolicDepth;
-        mPossibleExplorations.append(explore);
+
+        // If this node is difficult, replace the unexplored child with CNS and ignore it.
+        if (node->isDifficult()) {
+            node->setFalseBranch(TraceUnexploredUnsolvable::getInstance());
+            newUnsolvable(explore);
+        } else {
+            // Otherwise, add it to the exploration list.
+            mPossibleExplorations.append(explore);
+        }
     } else {
         mCurrentBranchParent = thisSymBranch;
         mCurrentBranchParentDirection = false;
@@ -297,7 +307,15 @@ void RandomAccessSearch::visit(TraceSymbolicBranch *node)
         explore.branch = thisSymBranch;
         explore.branchDirection = true;
         explore.symbolicDepth = currentSymbolicDepth;
-        mPossibleExplorations.append(explore);
+
+        // If this node is difficult, replace the unexplored child with CNS and ignore it.
+        if (node->isDifficult()) {
+            node->setTrueBranch(TraceUnexploredUnsolvable::getInstance());
+            newUnsolvable(explore);
+        } else {
+            // Otherwise, add it to the exploration list.
+            mPossibleExplorations.append(explore);
+        }
     } else {
         mCurrentBranchParent = thisSymBranch;
         mCurrentBranchParentDirection = true;

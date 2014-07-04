@@ -128,7 +128,6 @@ private:
 
     // After a call to chooseNextTarget (which returned true), these hold the current state of the search position.
     ExplorationDescriptor mTarget;
-    PathConditionPtr mTargetPC;
     QSet<SelectRestriction> mTargetDomConstraints;
 
     // A table of parent pointers (between symbolic branches), used to build the PC for a given ExplorationDescriptor.
