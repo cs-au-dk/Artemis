@@ -32,6 +32,9 @@
 
 using namespace std;
 
+artemis::ConcolicSearchSelector getSelector(QString concolicSelectionProcedure);
+
+
 QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
 {
 
@@ -105,9 +108,7 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             "           Choose the search procedure used to choose new areas of the concolic execution tree to explore.\n"
             "\n"
             "           dfs - (default) Depth first search with iterative deepening\n"
-            "           dfs-testing - Simple DFS without deepening (used for testing)\n"
-            "           random - Randomised search (used for testing)\n"
-            "           easily-bored - Uses reinforcement learning to prioritise \"interesting\" areas of the tree.\n"
+            "           selector - Use the selectors system (see concolic-selection-procedure and concolic-selection-budget)\n"
             "\n"
             "--concolic-dfs-depth <n>x<m>\n"
             "           The depth limit used for the iterative depth-first search.\n"
@@ -118,9 +119,16 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             "--concolic-dfs-unlimited-depth\n"
             "           Removes the restart limit from the concolic depth-first search procedure.\n"
             "\n"
-            "--concolic-search-budget <n>\n"
-            "           The number of times the random, dfs-testing or easily-bored search procedures will attempt\n"
-            "           new exploration.\n"
+            "--concolic-selection-procedure <selector>\n"
+            "           The procedure used to select the next exploration when concolic-search-procedure is set to selectors.\n"
+            "\n"
+            "           dfs - (default) Depth first search (no depth limit)\n"
+            "           random - choose new explorations at random\n"
+            "           avoid-unsat - experimental procedure which chooses branches with less history of being unsatisfiable\n"
+            "           round-robin(<s1>:<s2>:...:<sN>) - comines other selectors\n"
+            "\n"
+            "--concolic-selection-budget <n>\n"
+            "           The number of times the selection procedures will attempt new exploration.\n"
             "           The default is 25. Select 0 for unlimited attempts.\n"
             "\n"
             "--concolic-event-sequences <strategy>\n"
@@ -128,7 +136,7 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             "           simple - Fire the onchange event for each field which is injected.\n"
             "\n"
             "--concolic-event-handler-report\n"
-            "           Outpus a graph of the symbolic variables which are read from each event handler.\n"
+            "           Outputs a graph of the symbolic variables which are read from each event handler.\n"
             "           (Requires major-mode concolic and concolic-event-sequences)\n"
             "\n"
             "--smt-solver <solver>:\n"
@@ -183,7 +191,8 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
     {"concolic-search-procedure", required_argument, NULL, 'S'},
     {"concolic-dfs-depth", required_argument, NULL, 'D'},
     {"concolic-dfs-unlimited-depth", no_argument, NULL, 'u'},
-    {"concolic-search-budget", required_argument, NULL, 'R'},
+    {"concolic-selection-procedure", required_argument, NULL, 'T'},
+    {"concolic-selection-budget", required_argument, NULL, 'R'},
     {"concolic-event-sequences", required_argument, NULL, 'w'},
     {"concolic-event-handler-report", no_argument, NULL, 'H'},
     {"smt-solver", required_argument, NULL, 'n'},
@@ -476,6 +485,8 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
                              "--concolic-search-procedure "
                              "--concolic-dfs-depth "
                              "--concolic-dfs-unlimited-depth "
+                             "--concolic-selection-procedure "
+                             "--concolic-selection-budget "
                              "--concolic-event-sequences "
                              "--strategy-priority "
                              "--smt-solver "
@@ -513,12 +524,8 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
         case 'S': {
             if(string(optarg).compare("dfs") == 0){
                 options.concolicSearchProcedure = artemis::SEARCH_DFS;
-            } else if(string(optarg).compare("dfs-testing") == 0){
-                options.concolicSearchProcedure = artemis::SEARCH_DFSTESTING;
-            } else if(string(optarg).compare("random") == 0){
-                options.concolicSearchProcedure = artemis::SEARCH_RANDOM;
-            } else if(string(optarg).compare("easily-bored") == 0){
-                options.concolicSearchProcedure = artemis::SEARCH_EASILYBORED;
+            } else if(string(optarg).compare("selector") == 0){
+                options.concolicSearchProcedure = artemis::SEARCH_SELECTOR;
             } else {
                 cerr << "ERROR: Invalid choice of concolic-search-procedure " << optarg << endl;
                 exit(1);
@@ -528,6 +535,13 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
 
         case 't': {
             options.useProxy = QString(optarg);
+            break;
+        }
+
+        case 'T': {
+            // getSelector will exit with an error message itself if necesary.
+            std::cerr << optarg << std::endl;
+            options.concolicSearchSelector = getSelector(QString(optarg));
             break;
         }
 
@@ -686,6 +700,47 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
     }
 
     return url;
+}
+
+/**
+ *  Parses the argument to concolic-selection-procedure into a new ConcolicSearchSelector struct.
+ */
+artemis::ConcolicSearchSelector getSelector(QString concolicSelectionProcedure) {
+    std::cerr << concolicSelectionProcedure.toStdString() << std::endl;
+    std::cerr << concolicSelectionProcedure.startsWith("round-robin") << std::endl;
+
+    QRegExp delimitXXX("[()]");
+    qDebug() << concolicSelectionProcedure.section(delimitXXX,1,1).split(":");
+
+    artemis::ConcolicSearchSelector selector;
+     if (concolicSelectionProcedure.compare("dfs") == 0)
+     {
+         selector.type = artemis::ConcolicSearchSelector::SELECTOR_DFS;
+     }
+     else if (concolicSelectionProcedure.compare("random") == 0)
+     {
+         selector.type = artemis::ConcolicSearchSelector::SELECTOR_RANDOM;
+     }
+     else if (concolicSelectionProcedure.compare("avoid-unsat") == 0)
+     {
+         selector.type = artemis::ConcolicSearchSelector::SELECTOR_AVOID_UNSAT;
+     }
+     else if (concolicSelectionProcedure.startsWith("round-robin"))
+     {
+         selector.type = artemis::ConcolicSearchSelector::SELECTOR_ROUND_ROBIN;
+         QRegExp delimit("[()]");
+         QStringList parts = concolicSelectionProcedure.section(delimit,1,1).split(":");
+         for (int i = 0; i < parts.size(); i++)
+         {
+             selector.components.append(getSelector(parts.at(i)));
+         }
+     }
+     else
+     {
+         cerr << "ERROR: Invalid choice of concolic-selection-procedure: " << concolicSelectionProcedure.toStdString() << endl;
+         exit(1);
+     }
+     return selector;
 }
 
 void artemisConsoleMessageHandler(QtMsgType type, const char* msg)

@@ -21,6 +21,8 @@
 #include <QMap>
 
 #include "search.h"
+#include "explorationdescriptor.h"
+#include "abstractselector.h"
 
 namespace artemis
 {
@@ -40,87 +42,28 @@ class RandomAccessSearch : public QObject, public TreeSearch
     Q_OBJECT
 
 public:
-    RandomAccessSearch(TraceNodePtr tree, uint searchBudget);
+    RandomAccessSearch(TraceNodePtr tree, AbstractSelectorPtr selector, uint searchBudget);
 
-    bool chooseNextTarget() final;
+    bool chooseNextTarget();
 
-    PathConditionPtr getTargetPC() final;
-    QSet<SelectRestriction> getTargetDomConstraints() final;
+    PathConditionPtr getTargetPC();
+    QSet<SelectRestriction> getTargetDomConstraints();
 
-    bool overUnexploredNode() final;
+    bool overUnexploredNode();
 
-    void markNodeUnsat() final;
-    void markNodeUnsolvable() final;
-    void markNodeMissed() final;
-
-    // The visitor part.
-    // Should only be called by analyseTree().
-    void visit(TraceNode* node) final;
-    void visit(TraceConcreteBranch* node) final;
-    void visit(TraceSymbolicBranch* node) final;
-    void visit(TraceConcreteSummarisation *node) final;
-    void visit(TraceMarker* node) final;
-    void visit(TraceUnexplored* node) final;
-    void visit(TraceAnnotation* node) final;
-    void visit(TraceEnd* node) final;
+    void markNodeUnsat();
+    void markNodeUnsolvable();
+    void markNodeMissed();
 
 public slots:
     void slNewTraceAdded(TraceNodePtr parent, int direction, TraceNodePtr suffix);
 
-protected:
-    struct ExplorationDescriptor {
-        // The parent branch of the unexplored node.
-        TraceSymbolicBranchPtr branch;
-        // The child of the branch which is unexplored.
-        bool branchDirection;
-
-        // Information which is useful to one or more of the subclasses:
-        unsigned int symbolicDepth;
-
-        // Hash and equality operators so it can be put into sets, etc.
-        friend inline bool operator==(const ExplorationDescriptor& a, const ExplorationDescriptor& b)
-        {
-            return a.branch == b.branch && a.branchDirection == b.branchDirection ;
-        }
-
-        friend inline uint qHash(const ExplorationDescriptor& key)
-        {
-            return ::qHash(key.branch) ^ ::qHash((int)key.branchDirection);
-        }
-    };
-
-    /**
-     *  Subclasses should override this method.
-     *  possibleTargets is the set of ExplorationDescriptors representing every unexplored node in the graph.
-     *  It returns a pair (success, nodeDescriptor) where success is true if we wish to continue exploration and false
-     *  otherwise. If success is true, then nodeDescriptor must be a member of possibleTargets which is selected for
-     *  exploration.
-     */
-    virtual QPair<bool, ExplorationDescriptor> nextTarget(QList<ExplorationDescriptor> possibleTargets) = 0;
-
-    /**
-     *  Subclasses may override this method to be notifid when a new trace suffix is added to the tree.
-     *  Note that this method may not always be called between calls to nextTarget().
-     *  parent is the branch where the new trace split off from the existing tree.
-     *  It can be a concrete branch, symbolic branch or concrete summary.
-     *  direction is the direction from that node where the new trace was added.
-     *  suffix is the newly added part of the trace itself.
-     *
-     *  This method is also called on the initial trace with a null parent.
-     */
-    virtual void newTraceAdded(TraceNodePtr parent, int direction, TraceNodePtr suffix) {}
-
-    /**
-     *  These functions may be used if the subclasses need to be notified about other types of modification to the tree.
-     *  The modification itself is done by this helper.
-     */
-    virtual void newUnsat(ExplorationDescriptor node) {}
-    virtual void newUnsolvable(ExplorationDescriptor node) {}
-    virtual void newMissed(ExplorationDescriptor node) {}
-
 private:
     // The tree
     TraceNodePtr mTree;
+
+    // The selector
+    AbstractSelectorPtr mSelector;
 
     // The number of search attempts this class is allowed to make.
     uint mBudget;
@@ -162,8 +105,20 @@ private:
 
     // Whether we have notified about the initial tree yet.
     bool mNotifiedFirstTrace;
-};
 
+
+    // The visitor part.
+    // Should only be called by analyseTree().
+    void visit(TraceNode* node);
+    void visit(TraceConcreteBranch* node);
+    void visit(TraceSymbolicBranch* node);
+    void visit(TraceConcreteSummarisation *node);
+    void visit(TraceMarker* node);
+    void visit(TraceUnexplored* node);
+    void visit(TraceAnnotation* node);
+    void visit(TraceEnd* node);
+
+};
 
 } //namespace artemis
 

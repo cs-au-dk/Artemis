@@ -24,9 +24,11 @@
 #include "statistics/statsstorage.h"
 
 #include "concolic/search/searchdfs.h"
-#include "concolic/search/dfstesting.h"
-#include "concolic/search/randomisedsearch.h"
-#include "concolic/search/easilyboredsearch.h"
+#include "concolic/search/randomaccesssearch.h"
+#include "concolic/search/avoidunsatselector.h"
+#include "concolic/search/dfsselector.h"
+#include "concolic/search/randomisedselector.h"
+#include "concolic/search/roundrobinselector.h"
 
 #include "concolicruntime.h"
 
@@ -405,26 +407,10 @@ void ConcolicRuntime::mergeTraceIntoTree()
                                                                  mOptions.concolicDfsRestartLimit));
             break;
 
-        case SEARCH_DFSTESTING:
-            // The depth limit from this is taken from the standard DFS arguments so the total depth will match.
-            mSearchStrategy = TreeSearchPtr(new DfsTesting(mSymbolicExecutionGraph,
-                                                           mOptions.concolicSearchBudget,
-                                                           mOptions.concolicDfsDepthLimit * mOptions.concolicDfsRestartLimit));
-            QObject::connect(&mTraceMerger, SIGNAL(sigTraceJoined(TraceNodePtr, int, TraceNodePtr)),
-                             mSearchStrategy.dynamicCast<RandomAccessSearch>().data(), SLOT(slNewTraceAdded(TraceNodePtr, int, TraceNodePtr)));
-            break;
-        case SEARCH_RANDOM:
-            mSearchStrategy = TreeSearchPtr(new RandomisedSearch(mSymbolicExecutionGraph,
-                                                                 mOptions.concolicSearchBudget));
-            QObject::connect(&mTraceMerger, SIGNAL(sigTraceJoined(TraceNodePtr, int, TraceNodePtr)),
-                             mSearchStrategy.dynamicCast<RandomAccessSearch>().data(), SLOT(slNewTraceAdded(TraceNodePtr, int, TraceNodePtr)));
-            break;
-
-        case SEARCH_EASILYBORED:
-            mSearchStrategy = TreeSearchPtr(new EasilyBoredSearch(mSymbolicExecutionGraph,
-                                                                  mOptions.concolicSearchBudget));
-            QObject::connect(&mTraceMerger, SIGNAL(sigTraceJoined(TraceNodePtr, int, TraceNodePtr)),
-                             mSearchStrategy.dynamicCast<RandomAccessSearch>().data(), SLOT(slNewTraceAdded(TraceNodePtr, int, TraceNodePtr)));
+        case SEARCH_SELECTOR:
+            mSearchStrategy = TreeSearchPtr(new RandomAccessSearch(mSymbolicExecutionGraph,
+                                                                   buildSelector(mOptions.concolicSearchSelector),
+                                                                   mOptions.concolicSearchBudget));
             break;
 
         default:
@@ -762,6 +748,36 @@ void ConcolicRuntime::reportStatistics()
     Statistics::statistics()->accumulate("Concolic::EventSequence::HandlersTriggered", mFormFields.size());
     Statistics::statistics()->accumulate("Concolic::EventSequence::SymbolicBranchesTotal", stats.mNumEventSequenceSymBranches);
     Statistics::statistics()->accumulate("Concolic::EventSequence::SymbolicBranchesFullyExplored", stats.mNumEventSequenceSymBranchesFullyExplored);
+}
+
+
+AbstractSelectorPtr ConcolicRuntime::buildSelector(ConcolicSearchSelector description)
+{
+    AbstractSelectorPtr selector;
+    QList<AbstractSelectorPtr> children;
+
+    switch(description.type) {
+    case ConcolicSearchSelector::SELECTOR_DFS:
+        selector = AbstractSelectorPtr(new DFSSelector());
+        break;
+    case ConcolicSearchSelector::SELECTOR_RANDOM:
+        selector = AbstractSelectorPtr(new RandomisedSelector());
+        break;
+    case ConcolicSearchSelector::SELECTOR_AVOID_UNSAT:
+        selector = AbstractSelectorPtr(new AvoidUnsatSelector());
+        break;
+    case ConcolicSearchSelector::SELECTOR_ROUND_ROBIN:
+        foreach(ConcolicSearchSelector childDescription, description.components) {
+            children.append(buildSelector(childDescription));
+        }
+        selector = AbstractSelectorPtr(new RoundRobinSelector(children));
+        break;
+    default:
+        Log::fatal("ERROR: Unsupported choice of concolic-selection-procedure.");
+        exit(1);
+    }
+
+    return selector;
 }
 
 

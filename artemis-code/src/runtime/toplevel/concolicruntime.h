@@ -31,6 +31,7 @@
 #include "concolic/tracestatistics.h"
 #include "concolic/executiontree/tracemerger.h"
 #include "concolic/handlerdependencytracker.h"
+#include "concolic/search/abstractselector.h"
 
 #include "runtime/input/dominput.h"
 #include "runtime/input/events/mouseeventparameters.h"
@@ -140,6 +141,9 @@ protected:
 
     // State
     int mNumIterations;
+
+    // Helper for creating the selector search strategy.
+    AbstractSelectorPtr buildSelector(ConcolicSearchSelector description);
 
 private slots:
     void postConcreteExecution(ExecutableConfigurationConstPtr configuration, QSharedPointer<ExecutionResult> result);

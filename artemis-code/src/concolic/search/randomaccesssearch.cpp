@@ -19,8 +19,9 @@
 
 namespace artemis {
 
-RandomAccessSearch::RandomAccessSearch(TraceNodePtr tree, uint searchBudget) :
+RandomAccessSearch::RandomAccessSearch(TraceNodePtr tree, AbstractSelectorPtr selector, uint searchBudget) :
     mTree(tree),
+    mSelector(selector),
     mBudget(searchBudget),
     mUnlimitedBudget(searchBudget == 0),
     mNotifiedFirstTrace(false)
@@ -29,9 +30,9 @@ RandomAccessSearch::RandomAccessSearch(TraceNodePtr tree, uint searchBudget) :
 
 bool RandomAccessSearch::chooseNextTarget()
 {
-    // If we have never notified the subclass about the initial tree, do this now.
+    // If we have never notified the selector about the initial tree, do this now.
     if(!mNotifiedFirstTrace) {
-        newTraceAdded(TraceNodePtr(), false, mTree);
+        mSelector->newTraceAdded(TraceNodePtr(), false, mTree);
         mNotifiedFirstTrace = true;
     }
 
@@ -52,25 +53,19 @@ bool RandomAccessSearch::chooseNextTarget()
     }
 
     // Call chooseNext() to choose one of these to explore.
-    QPair<bool, ExplorationDescriptor> choice = nextTarget(mPossibleExplorations);
-
-    // Check if they chose to stop searching.
-    if (!choice.first) {
-        mTarget = ExplorationDescriptor();
-        return false;
-    }
+    ExplorationDescriptor choice = mSelector->nextTarget(mPossibleExplorations);
 
     // This must be a valid choice.
-    assert(mPossibleExplorations.contains(choice.second));
+    assert(mPossibleExplorations.contains(choice));
 
-    // Calculate the PC and DOM constraints.
-    mTarget = choice.second;
+    // Calculate the DOM constraints (PC is calculated from mTarget on-the-fly to account for branches marked as difficult).
+    mTarget = choice;
     mTargetDomConstraints = calculateDomConstraints(mTarget);
 
     return true;
 }
 
-PathConditionPtr RandomAccessSearch::calculatePC(RandomAccessSearch::ExplorationDescriptor target)
+PathConditionPtr RandomAccessSearch::calculatePC(ExplorationDescriptor target)
 {
     // Search upwards through the tree using mBranchParents to build the PathBranchList.
 
@@ -93,7 +88,7 @@ PathConditionPtr RandomAccessSearch::calculatePC(RandomAccessSearch::Exploration
     return PathCondition::createFromBranchList(branches);
 }
 
-QSet<SelectRestriction> RandomAccessSearch::calculateDomConstraints(RandomAccessSearch::ExplorationDescriptor target)
+QSet<SelectRestriction> RandomAccessSearch::calculateDomConstraints(ExplorationDescriptor target)
 {
     // First find the initial marker above this branch.
     assert(mBranchParentMarkers.contains(target.branch));
@@ -157,8 +152,8 @@ void RandomAccessSearch::markNodeUnsat()
         mTarget.branch->setFalseBranch(TraceUnexploredUnsat::getInstance());
     }
 
-    // Notify the subclass
-    newUnsat(mTarget);
+    // Notify the selector
+    mSelector->newUnsat(mTarget);
 }
 
 void RandomAccessSearch::markNodeUnsolvable()
@@ -175,8 +170,8 @@ void RandomAccessSearch::markNodeUnsolvable()
         mTarget.branch->setFalseBranch(TraceUnexploredUnsolvable::getInstance());
     }
 
-    // Notify the subclass
-    newUnsolvable(mTarget);
+    // Notify the selector
+    mSelector->newUnsolvable(mTarget);
 }
 
 void RandomAccessSearch::markNodeMissed()
@@ -193,8 +188,8 @@ void RandomAccessSearch::markNodeMissed()
         mTarget.branch->setFalseBranch(TraceUnexploredMissed::getInstance());
     }
 
-    // Notify the subclass
-    newMissed(mTarget);
+    // Notify the selector
+    mSelector->newMissed(mTarget);
 }
 
 
@@ -229,7 +224,7 @@ void RandomAccessSearch::analyseNode(TraceNodePtr node)
 // Called whenever a new trace (suffix) is added to the tree.
 void RandomAccessSearch::slNewTraceAdded(TraceNodePtr parent, int direction, TraceNodePtr suffix)
 {
-    newTraceAdded(parent, direction, suffix);
+    mSelector->newTraceAdded(parent, direction, suffix);
 }
 
 
@@ -289,7 +284,7 @@ void RandomAccessSearch::visit(TraceSymbolicBranch *node)
         // If this node is difficult, replace the unexplored child with CNS and ignore it.
         if (node->isDifficult()) {
             node->setFalseBranch(TraceUnexploredUnsolvable::getInstance());
-            newUnsolvable(explore);
+            mSelector->newUnsolvable(explore);
         } else {
             // Otherwise, add it to the exploration list.
             mPossibleExplorations.append(explore);
@@ -311,7 +306,7 @@ void RandomAccessSearch::visit(TraceSymbolicBranch *node)
         // If this node is difficult, replace the unexplored child with CNS and ignore it.
         if (node->isDifficult()) {
             node->setTrueBranch(TraceUnexploredUnsolvable::getInstance());
-            newUnsolvable(explore);
+            mSelector->newUnsolvable(explore);
         } else {
             // Otherwise, add it to the exploration list.
             mPossibleExplorations.append(explore);

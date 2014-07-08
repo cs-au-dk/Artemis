@@ -63,8 +63,15 @@ enum SMTSolver {
 };
 
 enum ConcolicSearch {
-    SEARCH_DFS, SEARCH_DFSTESTING, SEARCH_RANDOM, SEARCH_EASILYBORED
+    SEARCH_DFS, SEARCH_SELECTOR
 };
+
+struct ConcolicSearchSelector
+{
+     enum { SELECTOR_DFS, SELECTOR_RANDOM, SELECTOR_AVOID_UNSAT, SELECTOR_ROUND_ROBIN } type;
+     QList<ConcolicSearchSelector> components;
+};
+
 
 typedef struct OptionsType {
 
@@ -125,6 +132,8 @@ typedef struct OptionsType {
     ConcolicSearch concolicSearchProcedure;
     unsigned int concolicDfsDepthLimit;
     unsigned int concolicDfsRestartLimit;
+
+    ConcolicSearchSelector concolicSearchSelector;
     unsigned int concolicSearchBudget;
 
     SMTSolver solver;
