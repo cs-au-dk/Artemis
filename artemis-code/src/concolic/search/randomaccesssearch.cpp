@@ -32,7 +32,7 @@ bool RandomAccessSearch::chooseNextTarget()
 {
     // If we have never notified the selector about the initial tree, do this now.
     if(!mNotifiedFirstTrace) {
-        mSelector->newTraceAdded(TraceNodePtr(), false, mTree);
+        mSelector->newTraceAdded(TraceNodePtr(), false, mTree, mTree);
         mNotifiedFirstTrace = true;
     }
 
@@ -222,9 +222,9 @@ void RandomAccessSearch::analyseNode(TraceNodePtr node)
 
 
 // Called whenever a new trace (suffix) is added to the tree.
-void RandomAccessSearch::slNewTraceAdded(TraceNodePtr parent, int direction, TraceNodePtr suffix)
+void RandomAccessSearch::slNewTraceAdded(TraceNodePtr parent, int direction, TraceNodePtr suffix, TraceNodePtr fullTrace)
 {
-    mSelector->newTraceAdded(parent, direction, suffix);
+    mSelector->newTraceAdded(parent, direction, suffix, fullTrace);
 }
 
 

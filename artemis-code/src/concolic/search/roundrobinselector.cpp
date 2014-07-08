@@ -32,11 +32,11 @@ ExplorationDescriptor RoundRobinSelector::nextTarget(QList<ExplorationDescriptor
     return (this->selectors.at(this->index))->nextTarget(possibleTargets);
 }
 
-void RoundRobinSelector::newTraceAdded(TraceNodePtr parent, int branch, TraceNodePtr next)
+void RoundRobinSelector::newTraceAdded(TraceNodePtr parent, int branch, TraceNodePtr next, TraceNodePtr fullTrace)
 {
     for (int i = 0; i < this->selectors.size(); i++)
     {
-      this->selectors.at(i)->newTraceAdded(parent, branch, next);
+      this->selectors.at(i)->newTraceAdded(parent, branch, next, fullTrace);
     }
 }
 

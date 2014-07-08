@@ -58,7 +58,7 @@ ExplorationDescriptor AvoidUnsatSelector::nextTarget(QList<ExplorationDescriptor
     return bestTarget;
 }
 
-void AvoidUnsatSelector::newTraceAdded(TraceNodePtr node, int branch, TraceNodePtr suffix)
+void AvoidUnsatSelector::newTraceAdded(TraceNodePtr node, int branch, TraceNodePtr suffix, TraceNodePtr fullTrace)
 {
     // update count for current node
     TraceSymbolicBranchPtr branchNode = node.dynamicCast<TraceSymbolicBranch>();

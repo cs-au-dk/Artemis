@@ -60,8 +60,9 @@ public:
         summary).
         @param branch the branch of the parent node in the new trace.
         @param next the next node in the new trace.
+        @param fullTrace the entire recorded trace, including the prefix which is not part of the tree.
      */
-    void newTraceAdded(TraceNodePtr node, int branch, TraceNodePtr suffix);
+    void newTraceAdded(TraceNodePtr node, int branch, TraceNodePtr suffix, TraceNodePtr fullTrace);
 
     /**
         Processes the notification that the given node (and its branch)

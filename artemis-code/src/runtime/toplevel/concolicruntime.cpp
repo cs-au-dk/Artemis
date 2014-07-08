@@ -411,6 +411,8 @@ void ConcolicRuntime::mergeTraceIntoTree()
             mSearchStrategy = TreeSearchPtr(new RandomAccessSearch(mSymbolicExecutionGraph,
                                                                    buildSelector(mOptions.concolicSearchSelector),
                                                                    mOptions.concolicSearchBudget));
+            QObject::connect(&mTraceMerger, SIGNAL(sigTraceJoined(TraceNodePtr, int, TraceNodePtr, TraceNodePtr)),
+                             mSearchStrategy.dynamicCast<RandomAccessSearch>().data(), SLOT(slNewTraceAdded(TraceNodePtr, int, TraceNodePtr, TraceNodePtr)));
             break;
 
         default:

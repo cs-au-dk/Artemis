@@ -56,7 +56,7 @@ public:
     void markNodeMissed();
 
 public slots:
-    void slNewTraceAdded(TraceNodePtr parent, int direction, TraceNodePtr suffix);
+    void slNewTraceAdded(TraceNodePtr parent, int direction, TraceNodePtr suffix, TraceNodePtr fullTrace);
 
 private:
     // The tree

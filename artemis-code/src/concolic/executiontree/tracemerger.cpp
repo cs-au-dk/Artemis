@@ -276,7 +276,7 @@ void TraceMerger::handleDivergence()
 void TraceMerger::reportMerge(TraceNodePtr newPart)
 {
     assert(!mPreviousParent.isNull());
-    emit sigTraceJoined(mPreviousParent, mPreviousDirection, newPart);
+    emit sigTraceJoined(mPreviousParent, mPreviousDirection, newPart, mStartingTrace);
 }
 
 
