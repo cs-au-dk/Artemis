@@ -36,6 +36,9 @@ def execute_artemis(execution_uuid, url, iterations=1,
                     concolic_event_sequences=None,
                     concolic_search_procedure=None,
                     concolic_search_budget=None,
+                    concolic_event_handler_report=False,
+                    concolic_selection_procedure=None,
+                    concolic_selection_budget=None,
                     verbosity=None,
                     **kwargs):
     output_dir = os.path.join(output_parent_dir, execution_uuid)
@@ -119,6 +122,17 @@ def execute_artemis(execution_uuid, url, iterations=1,
     if concolic_search_budget is not None:
         args.append('--concolic-search-budget')
         args.append(concolic_search_budget)
+
+    if concolic_event_handler_report:
+        args.append('--concolic-event-handler-report')
+
+    if concolic_selection_procedure is not None:
+        args.append('--concolic-selection-procedure')
+        args.append(concolic_selection_procedure)
+
+    if concolic_selection_budget is not None:
+        args.append('--concolic-selection-budget')
+        args.append(concolic_selection_budget)
 
     cmd = [ARTEMIS_EXEC] + [url] + args
 

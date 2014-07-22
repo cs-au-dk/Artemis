@@ -240,7 +240,11 @@ def test_generator(site_name, site_url, site_ep, dry_run, logger, version, test_
                                      output_parent_dir=test_dir,
                                      ignore_artemis_crash=True,
                                      coverage='html',
-                                     concolic_event_sequences='simple')
+                                     concolic_event_sequences='simple',
+                                     #concolic_search_procedure='selector',
+                                     #concolic_selection_procedure='avoid-unsat',
+                                     #concolic_selection_budget='50',
+                                     concolic_event_handler_report=True)
             end_time = time.time()
             
             if dry_run:

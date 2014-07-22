@@ -3,33 +3,23 @@ airtran_2,http://localhost:8080/2014-04-26/airtran/,id('SkySales')/table[@class=
 alaskaair_1,http://localhost:8080/2014-04-26/alaskaair/,id('findFlights')
 cheapflights_1,http://localhost:8080/2014-04-26/cheapflights/,id('buttonSearch')
 cheaptickets_2,http://localhost:8080/2014-04-26/cheaptickets/,id('search')/div[@class='hotelFormMod '][1]/div[@class='hotelSearchForm searchForm '][1]/form[@class='searchFormForm'][1]/fieldset[@class='hotelSearch'][1]/div[@class='group groupWithButtons'][1]/div[@class='buttons'][1]/div[@class='submit button-primary button-medium'][1]/input[1]
-croatiaairlines_1,http://localhost:8080/2014-04-26/croatiaairlines/,id('ctl06_ctl21_btnSearch')
-etihadairways_1,http://localhost:8080/2014-04-26/etihadairways/,//*[@id='contentJump']/div[2]/div/div[1]/article/div[2]/div/button
 expedia_1,http://localhost:8080/2014-04-26/expedia/,id('uw-hf-sub-anc')
 flightnetwork_1,http://localhost:8080/2014-04-26/flightnetwork/,id('button')
 flybe_1,http://localhost:8080/2014-04-26/flybe/,id('flight-search-button')
 flykingfisher_1,http://localhost:8080/2014-04-26/flykingfisher/,id('btnFltSchd')
-flykingfisher_2,http://localhost:8080/2014-04-26/flykingfisher/,id('btnFltSearch')
 jal_3,http://localhost:8080/2014-04-26/jal/,id('domTMModule1')/form[@class='domTMModule1'][1]/div[@class='submitArea'][1]/p[@class='alC'][1]/input[1]
-jetblue_1,http://localhost:8080/2014-04-26/jetblue/,id('fflight')/div[@class='submit-btn-wrap'][1]/div[@class='submit-btn-inner'][1]/input[@class='find-it-btn'][1]
 jetstar_1,http://localhost:8080/2014-04-26/jetstar/,id('btnSearchForFlights')
 kayak_1,http://localhost:8080/2014-04-26/kayak/,id('fdimgbutton')
 laoairlines_1,http://localhost:8080/2014-04-26/laoairlines/,id('boxfl')/form[1]/div[@class='relse'][1]/div[@class='pos-g'][1]/input[1]
 malaysiaairlines_2,http://localhost:8080/2014-04-26/malaysiaairlines/,id('ibeFormSubmit')
 monarch_1,http://localhost:8080/2014-04-26/monarch/,id('FindFlightsButton')
 orbitz_1,http://localhost:8080/2014-04-26/orbitz/,id('search')/div[@class='hotelFormMod '][1]/div[@class='hotelSearchForm searchForm '][1]/form[@class='searchFormForm'][1]/fieldset[@class='hotelSearch'][1]/div[@class='group groupWithButtons'][1]/div[@class='buttons'][1]/div[@class='submit button-primary button-medium'][1]/input[1]
-philippineairlines_10,http://localhost:8080/2014-04-26/philippineairlines/,id('ui-tabs-1')/table[1]/tbody[1]/tr[1]/td[1]/table[2]/tbody[1]/tr[1]/td[1]/table[@class='home_body_table'][1]/tbody[1]/tr[1]/td[@class='formBG'][1]/table[@class='formMainTable'][1]/tbody[1]/tr[1]/td[1]/div[1]/div[2]/form[1]/table[1]/tbody[1]/tr[1]/td[1]/div[1]/div[1]/table[1]/tbody[1]/tr[6]/td[1]/table[1]/tbody[1]/tr[1]/td[1]/input[@class='form_button1'][1]
-philippineairlines_12,http://localhost:8080/2014-04-26/philippineairlines/,id('ui-tabs-1')/table[1]/tbody[1]/tr[1]/td[1]/table[2]/tbody[1]/tr[1]/td[1]/table[@class='home_body_table'][1]/tbody[1]/tr[1]/td[@class='formBG'][1]/table[@class='formMainTable'][1]/tbody[1]/tr[1]/td[1]/div[1]/div[3]/form[@class='form-search-box'][1]/table[@class='show search'][1]/tbody[1]/tr[10]/td[2]/div[4]/button[@class='form_button'][1]
 philippineairlines_16,http://localhost:8080/2014-04-26/philippineairlines/,id('button_bookFlightsSearch')
-ryanair_2,http://localhost:8080/2014-04-26/ryanair/,id('flight-booking-form')/div[@class='form-row clearfix discounts-area'][1]/div[@class='discounts-button float-r'][1]/button[@class='flight-form_button submit-button-validation tabbed'][1]
 southwest_2,http://localhost:8080/2014-04-26/southwest/,id('booking_widget_content_row_btn_search')
 spicejet_1,http://localhost:8080/2014-04-26/spicejet/,id('ctl00_mainContent_btn_FindFlights')
 thomascook_2,http://localhost:8080/2014-04-26/thomascook/,id('search-btn')
 travelocity_2,http://localhost:8080/2014-04-26/travelocity/,id('uw_flight_submit_lnk')
-travelocity_3,http://localhost:8080/2014-04-26/travelocity/,id('uw_flight_fh_submit_lnk')
-united_1,http://localhost:8080/2014-04-26/united/,id('ctl00_ContentInfo_Booking1_btnSearchFlight')
 usairways_1,http://localhost:8080/2014-04-26/usairways/,id('ctl00_phMain_BookTravelWidgetControl_SearchInvokeButtonControl_SearchCommand')
 virginaustralia_2,http://localhost:8080/2014-04-26/virginaustralia/,id('flights-submit')
 westjet_1,http://localhost:8080/2014-04-26/westjet/,id('flightsMain')/form[@class='flight-book'][1]/fieldset[@class='submit'][1]/a[1]
 yatra_1,http://localhost:8080/2014-04-26/yatra/,id('BE_flight_flsearch_btn')
-yatra_2,http://localhost:8080/2014-04-26/yatra/,id('BE_flight_fhsearch_btn')
