@@ -135,6 +135,13 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             "           ignore (default) - Ignore handlers for individual field modification.\n"
             "           simple - Fire the onchange event for each field which is injected.\n"
             "\n"
+            "--concolic-event-sequence-permutation <permutation>\n"
+            "           In the 'simple' mode of concolic-event-sequences, each event handler is\n"
+            "           triggered in the DOM order bey default and this option allows the order to be\n"
+            "           modified. The new order is a reordering of the default list [1,2,...,N]\n"
+            "           where N is the number of event handlers. e.g. if there are 4 fields then a\n"
+            "           valid value would be [4,2,1,3].\n"
+            "\n"
             "--concolic-event-handler-report\n"
             "           Outputs a graph of the symbolic variables which are read from each event handler.\n"
             "           (Requires major-mode concolic and concolic-event-sequences)\n"
@@ -194,6 +201,7 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
     {"concolic-selection-procedure", required_argument, NULL, 'T'},
     {"concolic-selection-budget", required_argument, NULL, 'R'},
     {"concolic-event-sequences", required_argument, NULL, 'w'},
+    {"concolic-event-sequence-permutation", required_argument, NULL, 'W'},
     {"concolic-event-handler-report", no_argument, NULL, 'H'},
     {"smt-solver", required_argument, NULL, 'n'},
     {"export-event-sequence", required_argument, NULL, 'o'},
@@ -601,6 +609,13 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
                 cerr << "ERROR: Invalid choice of event-sequence handling strategy " << optarg << endl;
                 exit(1);
             }
+
+            break;
+        }
+
+        case 'W': {
+            // Validity is checked when used in the concolic runtime.
+            options.concolicEventHandlerPermutation = QString(optarg);
 
             break;
         }

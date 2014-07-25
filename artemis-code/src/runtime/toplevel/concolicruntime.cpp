@@ -288,7 +288,7 @@ void ConcolicRuntime::setupNextConfiguration(QSharedPointer<FormInputCollection>
 void ConcolicRuntime::postInitialConcreteExecution(QSharedPointer<ExecutionResult> result)
 {
     // Find the form fields on the page and save them.
-    mFormFields = result->getFormFields();
+    mFormFields = permuteFormFields(result->getFormFields(), mOptions.concolicEventHandlerPermutation);
     mFormFieldRestrictions = FormFieldRestrictedValues::getRestrictions(mFormFields, mWebkitExecutor->getPage());
 
     // Print the form fields found on the page.
@@ -369,6 +369,66 @@ void ConcolicRuntime::postInitialConcreteExecution(QSharedPointer<ExecutionResul
 
     // Execute the next configuration.
     preConcreteExecution();
+}
+
+// Re-orders the form fields list given the permutation supplied as an argument.
+// Format should be "[2,4,3,1]" but validity needs to be checked here.
+QList<FormFieldDescriptorConstPtr> ConcolicRuntime::permuteFormFields(QList<FormFieldDescriptorConstPtr> fields, QString permutation)
+{
+    // If the string is empty, no permutation was specified.
+    if(permutation.isEmpty()) {
+        return fields;
+    }
+
+    // Decode the permutation
+    QRegExp validFormat("\\[\\d((,|\\d)*\\d)?\\]");
+    permutation.replace(' ', "");
+    if(!validFormat.exactMatch(permutation)) {
+        Log::fatal("Error in concolic-event-sequence-permutation (invalid format).");
+        Log::fatal(permutation.toStdString());
+        exit(1);
+    }
+
+    permutation.replace('[', "");
+    permutation.replace(']', "");
+    QStringList elements = permutation.split(',');
+    QList<int> reordering;
+    int x;
+    foreach(QString el, elements) {
+        x = el.toInt();
+        if(x == 0) {
+            // 0 or error decoding.
+            Log::fatal("Error in concolic-event-sequence-permutation (found 0 or failed to decode a value).");
+            Log::fatal(permutation.toStdString());
+            exit(1);
+        }
+        reordering.append(x);
+    }
+
+    // Check the size matches and the permutation is valid
+    if(reordering.length() != fields.length()) {
+        Log::fatal("Error in concolic-event-sequence-permutation (wrong length).");
+        Log::fatal(permutation.toStdString());
+        exit(1);
+    }
+
+    QList<int> sorted = reordering;
+    qSort(sorted);
+    for(int i = 0; i < sorted.length(); i++) {
+        if(sorted.at(i) != i+1) {
+            Log::fatal("Error in concolic-event-sequence-permutation (not a valid permutation).");
+            Log::fatal(permutation.toStdString());
+            exit(1);
+        }
+    }
+
+    // Apply the permutation
+    QList<FormFieldDescriptorConstPtr> result;
+    foreach(int idx, reordering) {
+        result.append(fields.at(idx - 1)); // Permutations are numbered from 1, not from 0.
+    }
+
+    return result;
 }
 
 
