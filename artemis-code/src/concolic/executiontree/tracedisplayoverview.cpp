@@ -37,14 +37,14 @@ TraceDisplayOverview::TraceDisplayOverview(bool linkToCoverage)
     mStyleUnexploredUnsat = "[label = \"U\", shape = circle, style = filled, fillcolor = blueviolet]";
     mStyleUnexploredUnsolvable = "[label = \"X\", shape = circle, style = filled, fillcolor = hotpink]";
     mStyleUnexploredMissed = "[label = \"M\", shape = circle, style = filled, fillcolor = chocolate]";
-    mStyleAlerts = "[label = \"!\", shape = circle, style = filled, fillcolor = gold]";
+    mStyleAlerts = "[label = \"!\", shape = circle, style = filled, fillcolor = khaki]";
     mStyleDomMods = "[label = \"W\", shape = circle, style = filled, fillcolor = peachpuff]";
     mStyleLoads = "[label = \"L\" shape = circle, style=filled, fillcolor = honeydew]";
     mStyleMarkers = "[label = \"\", shape = circle, style = filled, fillcolor = forestgreen]";
     //mStyleFunctions not used
     mStyleEndSucc = "[label = \"S\", fillcolor = green, style = filled, shape = circle]";
     mStyleEndFail = "[label = \"F\", fillcolor = red, style = filled, shape = circle]";
-    mStyleEndUnk = "[label = \"E\", fillcolor = lightgray, style = filled, shape = circle]";
+    mStyleEndUnk = "[label = \"E\", fillcolor = yellow, style = filled, shape = circle]";
     mStyleAggregates = "[label = \"\", shape = square, style = filled, fillcolor = black]";
 
 
@@ -57,7 +57,7 @@ TraceDisplayOverview::TraceDisplayOverview(bool linkToCoverage)
             "        <td bgcolor=\"black\" border=\"1\" width=\"25pt\"></td>\n"
             "        <td align=\"left\">Concrete Branch</td>\n"
             "\n"
-            "        <td bgcolor=\"gold\" border=\"1\" width=\"25pt\">!</td>\n"
+            "        <td bgcolor=\"khaki\" border=\"1\" width=\"25pt\">!</td>\n"
             "        <td align=\"left\">Alert</td>\n"
             "      </tr>\n"
             "      <tr>\n"
@@ -89,7 +89,7 @@ TraceDisplayOverview::TraceDisplayOverview(bool linkToCoverage)
             "        <td align=\"left\">Missed</td>\n"
             "      </tr>\n"
             "      <tr>\n"
-            "        <td bgcolor=\"lightgray\" border=\"1\" width=\"25pt\">E</td>\n"
+            "        <td bgcolor=\"yellow\" border=\"1\" width=\"25pt\">E</td>\n"
             "        <td align=\"left\">End (Unknown)</td>\n"
             "\n"
             "        <td bgcolor=\"hotpink\" border=\"1\" width=\"25pt\">X</td>\n"

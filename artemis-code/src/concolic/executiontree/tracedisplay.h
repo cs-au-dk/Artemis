@@ -35,8 +35,6 @@ namespace artemis
 /**
  * Converts a trace or tree to GraphViz dot format, which can then be
  * output for rendering with GraphViz.
- *
- * TODO: What is a sensible name for this class?
  */
 class TraceDisplay : public TraceVisitor
 {

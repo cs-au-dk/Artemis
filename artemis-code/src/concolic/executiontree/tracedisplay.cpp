@@ -44,17 +44,17 @@ TraceDisplay::TraceDisplay(bool linkToCoverage)
     mStyleBranches = "[label = \"Branch\\n(concrete)\"]";
     mStyleSymBranches = "[style = filled, fillcolor = azure]";
     mStyleUnexplored = "[label = \"???\", shape = circle, style = filled, fillcolor = lightgray]";
-    mStyleUnexploredUnsat = "[label = \"UNSAT\", shape = ellipse, style = filled, fillcolor = lightgray]";
-    mStyleUnexploredUnsolvable = "[label = \"Could not solve\", shape = ellipse, style = filled, fillcolor = lightgray]";
-    mStyleUnexploredMissed = "[label = \"Missed\", shape = ellipse, style = filled, fillcolor = lightgray]";
-    mStyleAlerts = "[shape = rectangle, style = filled, fillcolor = beige]";
+    mStyleUnexploredUnsat = "[label = \"UNSAT\", shape = ellipse, style = filled, fillcolor = blueviolet]";
+    mStyleUnexploredUnsolvable = "[label = \"Could not solve\", shape = ellipse, style = filled, fillcolor = hotpink]";
+    mStyleUnexploredMissed = "[label = \"Missed\", shape = ellipse, style = filled, fillcolor = chocolate]";
+    mStyleAlerts = "[shape = rectangle, style = filled, fillcolor = khaki]";
     mStyleDomMods = "[shape = rectangle, style = filled, fillcolor = peachpuff]";
     mStyleLoads = "[shape = rectangle, style = filled, fillcolor = honeydew]";
     mStyleMarkers = "[shape = rectangle, style = filled, fillcolor = forestgreen]";
     mStyleFunctions = "[shape = rectangle]";
-    mStyleEndSucc = "[label = \"End\", fillcolor = green, style = filled, shape = circle]";
-    mStyleEndFail = "[label = \"End\", fillcolor = red, style = filled, shape = circle]";
-    mStyleEndUnk = "[label = \"End\", fillcolor = lightgray, style = filled, shape = circle]";
+    mStyleEndSucc = "[label = \"Succ\", fillcolor = green, style = filled, shape = circle]";
+    mStyleEndFail = "[label = \"Fail\", fillcolor = red, style = filled, shape = circle]";
+    mStyleEndUnk = "[label = \"Unk\", fillcolor = yellow, style = filled, shape = circle]";
     mStyleAggregates = "[style = filled, fillcolor = snow, shape = box3d]";
 
 }
