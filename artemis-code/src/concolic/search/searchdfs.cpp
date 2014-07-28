@@ -160,6 +160,27 @@ bool DepthFirstSearch::deepenRestartAndChoose()
     }
 }
 
+// Look up the parent branch (and direction) of the current target and mark it.
+void DepthFirstSearch::markExplorationIndex(uint index)
+{
+    // This method can only be called once we have started a search.
+    assert(mIsPreviousRun);
+
+    // This only works on symbolic branches. But mPreviousParent should be symbolic anyway, if we are over an unexplored node.
+    TraceSymbolicBranch* parent = dynamic_cast<TraceSymbolicBranch*>(mPreviousParent);
+    if(parent == NULL) {
+        Log::debug("WARNING: Marking exploration index on concrete branch.");
+        return;
+    }
+
+    if(mPreviousDirection){
+        parent->markExploration(index, true);
+    }else{
+        parent->markExploration(index, false);
+    }
+
+}
+
 
 
 

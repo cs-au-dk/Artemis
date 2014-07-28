@@ -17,6 +17,8 @@
 #ifndef TRACESYMBOLICBRANCH_H
 #define TRACESYMBOLICBRANCH_H
 
+#include <assert.h>
+
 #include "tracebranch.h"
 
 namespace artemis {
@@ -43,10 +45,28 @@ public:
         mDifficult = true;
     }
 
+    inline uint getExplorationIndex() {
+        return mExplorationIndex;
+    }
+
+    inline bool getExplorationDirection() {
+        return mExplorationDirection;
+    }
+
+    inline void markExploration(uint index, bool direction) {
+        assert(index != 0); // Never set to "not explored"
+        assert(mExplorationIndex == 0); // Never re-set.
+        mExplorationIndex = index;
+        mExplorationDirection = direction;
+    }
+
 private:
     Symbolic::Expression* mCondition; // TODO: MEMORY
     bool mDifficult;
 
+    // Used to add an index to the output graph linking which attempted explorations by the search procedure lead to which explored traces.
+    uint mExplorationIndex; // 0 = not chosen for exploration by the search.
+    bool mExplorationDirection;
 };
 
 typedef QSharedPointer<TraceSymbolicBranch> TraceSymbolicBranchPtr;

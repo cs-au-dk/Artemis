@@ -142,6 +142,7 @@ protected:
 
     // State
     int mNumIterations;
+    uint mExplorationIndex;
 
     // Helper for creating the selector search strategy.
     AbstractSelectorPtr buildSelector(ConcolicSearchSelector description);

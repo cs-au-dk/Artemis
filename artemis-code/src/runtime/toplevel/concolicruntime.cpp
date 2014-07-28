@@ -42,6 +42,7 @@ ConcolicRuntime::ConcolicRuntime(QObject* parent, const Options& options, const 
     , mTraceDisplayOverview(options.outputCoverage != NONE)
     , mHandlerTracker(options.concolicEventHandlerReport)
     , mNumIterations(0)
+    , mExplorationIndex(1)
 {
     QObject::connect(mWebkitExecutor, SIGNAL(sigExecutedSequence(ExecutableConfigurationConstPtr, QSharedPointer<ExecutionResult>)),
                      this, SLOT(postConcreteExecution(ExecutableConfigurationConstPtr, QSharedPointer<ExecutionResult>)));
@@ -439,7 +440,7 @@ void ConcolicRuntime::mergeTraceIntoTree()
     // This can  modify it to add the correct end marker to the trace.
     TraceNodePtr trace = mWebkitExecutor->getTraceBuilder()->trace();
 
-    switch(mTraceClassifier.classify(trace)){
+    switch(mTraceClassifier.classify(trace, mExplorationIndex)){
     case SUCCESS:
         Log::info("  Recorded trace was classified as a SUCCESS.");
         break;
@@ -641,6 +642,11 @@ QSharedPointer<const FormFieldDescriptor> ConcolicRuntime::findFormFieldForVaria
 // Generates a new solution from the path condition and runs it.
 void ConcolicRuntime::exploreNextTarget()
 {
+    // Add the exploration index to the tree.
+    mExplorationIndex++;
+    mSearchStrategy->markExplorationIndex(mExplorationIndex);
+
+    // Get the PC
     PathConditionPtr target = mSearchStrategy->getTargetPC();
     QSet<SelectRestriction> dynamicSelectConstraints = mSearchStrategy->getTargetDomConstraints();
 

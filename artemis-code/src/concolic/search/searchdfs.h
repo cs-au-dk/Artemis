@@ -66,6 +66,9 @@ public:
     void restartSearch();
     bool deepenRestartAndChoose();
 
+    // Update the tree to include exploration index information for the current target.
+    void markExplorationIndex(uint index);
+
     // When over an unexplored node, we may mark it as "attempted but failed to explore".
     // This can be used in later "passes" of the search to avoid wasting time on unreachable nodes.
     bool overUnexploredNode();

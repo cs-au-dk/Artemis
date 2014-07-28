@@ -23,7 +23,8 @@ namespace artemis {
 TraceSymbolicBranch::TraceSymbolicBranch(Symbolic::Expression* condition, uint sourceOffset, QSource* source, uint linenumber) :
     TraceBranch(sourceOffset, source, linenumber),
     mCondition(condition),
-    mDifficult(false)
+    mDifficult(false),
+    mExplorationIndex(0)
 {
     assert(condition != NULL);
 }

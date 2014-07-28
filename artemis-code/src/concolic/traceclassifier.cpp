@@ -29,15 +29,16 @@ TraceClassifier::TraceClassifier()
 {
 }
 
-TraceClassificationResult TraceClassifier::classify(TraceNodePtr& trace)
+TraceClassificationResult TraceClassifier::classify(TraceNodePtr& trace, uint explorationIndex)
 {
     // Simple implementation which will not be general enough for all sites.
     // Scan the trace and classify according to the following rules:
     //     * Alert -> failure
     //     * New page load -> success
-    //     * DOM modification which introduces indicator words -> failure.
-    //     * Otherwise, when reaching the end of a trace, assume success.
-    // TODO: We should probably have a three-state return value instead of bool here, and leave traces with no annotations as unknown?
+    //     * DOM modification which introduces indicator words -> failure
+    //     * Otherwise unknown
+
+    mExplorationIndex = explorationIndex;
 
     trace->accept(this);
 
@@ -64,6 +65,9 @@ void TraceClassifier::visit(TraceAlert *node)
     QSharedPointer<TraceEndFailure> marker = QSharedPointer<TraceEndFailure>(new TraceEndFailure());
     marker->next = node->next;
     node->next = marker;
+    if(mExplorationIndex > 0) {
+        marker->traceIndices.append(mExplorationIndex);
+    }
 }
 
 void TraceClassifier::visit(TraceDomModification *node)
@@ -76,6 +80,9 @@ void TraceClassifier::visit(TraceDomModification *node)
         QSharedPointer<TraceEndFailure> marker = QSharedPointer<TraceEndFailure>(new TraceEndFailure());
         marker->next = node->next;
         node->next = marker;
+        if(mExplorationIndex > 0) {
+            marker->traceIndices.append(mExplorationIndex);
+        }
 
     }else{
         // If this modifcation is OK, then continue scanning the trace.
@@ -92,6 +99,9 @@ void TraceClassifier::visit(TracePageLoad *node)
     QSharedPointer<TraceEndSuccess> marker = QSharedPointer<TraceEndSuccess>(new TraceEndSuccess());
     marker->next = node->next;
     node->next = marker;
+    if(mExplorationIndex > 0) {
+        marker->traceIndices.append(mExplorationIndex);
+    }
 }
 
 void TraceClassifier::visit(TraceMarker *node)
@@ -132,6 +142,11 @@ void TraceClassifier::visit(TraceEndUnknown *node)
 {
     // Reached the end of the trace, so stop.
     // In this simple classifier, we don't know if this is a success or failure.
+
+    if(mExplorationIndex > 0) {
+        node->traceIndices.append(mExplorationIndex);
+    }
+
     mResult = UNKNOWN;
 }
 

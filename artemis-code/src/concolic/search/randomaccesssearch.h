@@ -51,6 +51,8 @@ public:
 
     bool overUnexploredNode();
 
+    void markExplorationIndex(uint index);
+
     void markNodeUnsat();
     void markNodeUnsolvable();
     void markNodeMissed();

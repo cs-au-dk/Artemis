@@ -30,6 +30,7 @@ namespace artemis
 QString TraceDisplay::indent = "  ";
 
 bool TraceDisplay::mPassThroughEndMarkers = false;
+bool TraceDisplay::mShowExplorationIndices = true;
 
 TraceDisplay::TraceDisplay()
     : TraceDisplay(false)
@@ -310,12 +311,20 @@ void TraceDisplay::visit(TraceSymbolicBranch *node)
     // Childeren are displayed in the tree in the order they are specified in the edges list.
     // We want false branches on the left, so process those first.
 
+    if(mShowExplorationIndices && node->getExplorationIndex() > 0 && node->getExplorationDirection() == false) {
+        mEdgeExtras = QString("[color = red, xlabel = \"%1\"]").arg(node->getExplorationIndex());
+    } else {
+        mEdgeExtras = "[color = red]";
+    }
     mPreviousNode = name;
-    mEdgeExtras = "[color = red]";
     node->getFalseBranch()->accept(this);
 
+    if(mShowExplorationIndices && node->getExplorationIndex() > 0 && node->getExplorationDirection() == true) {
+        mEdgeExtras = QString("[color = darkgreen, xlabel = \"%1\"]").arg(node->getExplorationIndex());
+    } else {
+        mEdgeExtras = "[color = darkgreen]";
+    }
     mPreviousNode = name;
-    mEdgeExtras = "[color = darkgreen]";
     node->getTrueBranch()->accept(this);
 }
 
@@ -487,7 +496,18 @@ void TraceDisplay::visit(TraceEndSuccess *node)
     QString name = QString("end_s_%1").arg(mNodeCounter);
     mNodeCounter++;
 
-    mHeaderEndSucc.append(name);
+    QStringList indices;
+    foreach(uint idx, node->traceIndices) {
+        indices.append(QString::number(idx));
+    }
+
+    QString nodeDecl;
+    if(mShowExplorationIndices) {
+        nodeDecl = QString("%1 [xlabel = \"%2\"]").arg(name).arg(indices.join(", "));
+    } else {
+        nodeDecl = name;
+    }
+    mHeaderEndSucc.append(nodeDecl);
 
     addInEdge(name);
 
@@ -504,7 +524,18 @@ void TraceDisplay::visit(TraceEndFailure *node)
     QString name = QString("end_f_%1").arg(mNodeCounter);
     mNodeCounter++;
 
-    mHeaderEndFail.append(name);
+    QStringList indices;
+    foreach(uint idx, node->traceIndices) {
+        indices.append(QString::number(idx));
+    }
+
+    QString nodeDecl;
+    if(mShowExplorationIndices) {
+        nodeDecl = QString("%1 [xlabel = \"%2\"]").arg(name).arg(indices.join(", "));
+    } else {
+        nodeDecl = name;
+    }
+    mHeaderEndFail.append(nodeDecl);
 
     addInEdge(name);
 
@@ -521,7 +552,18 @@ void TraceDisplay::visit(TraceEndUnknown *node)
     QString name = QString("end_u_%1").arg(mNodeCounter);
     mNodeCounter++;
 
-    mHeaderEndUnk.append(name);
+    QStringList indices;
+    foreach(uint idx, node->traceIndices) {
+        indices.append(QString::number(idx));
+    }
+
+    QString nodeDecl;
+    if(mShowExplorationIndices) {
+        nodeDecl = QString("%1 [xlabel = \"%2\"]").arg(name).arg(indices.join(", "));
+    } else {
+        nodeDecl = name;
+    }
+    mHeaderEndUnk.append(nodeDecl);
 
     addInEdge(name);
 }
@@ -552,7 +594,7 @@ void TraceDisplay::clearData()
     mEdges.clear();
 
     mPreviousNode = "start";
-    mEdgeExtras = "";
+    mEdgeExtras = mShowExplorationIndices ? "[xlabel = \"1\"]" : "";
     mNodeCounter = 0;
 
     mExpressionPrinter->clear();

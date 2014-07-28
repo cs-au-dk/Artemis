@@ -50,6 +50,9 @@ public:
     // This is used after a new trace has been merged into the tree to check if it explored the desired path.
     virtual bool overUnexploredNode() = 0;
 
+    // Update the tree to include exploration index information for the current target.
+    virtual void markExplorationIndex(uint index) = 0;
+
     // When a selected node is not explored, it can be marked as "attempted but failed to explore".
     virtual void markNodeUnsat() = 0;
     virtual void markNodeUnsolvable() = 0;

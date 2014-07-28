@@ -194,12 +194,20 @@ void TraceDisplayOverview::visit(TraceSymbolicBranch *node)
     // Childeren are displayed in the tree in the order they are specified in the edges list.
     // We want false branches on the left, so process those first.
 
+    if(mShowExplorationIndices && node->getExplorationIndex() > 0 && node->getExplorationDirection() == false) {
+        mEdgeExtras = QString("[color = red, xlabel = \"%1\"]").arg(node->getExplorationIndex());
+    } else {
+        mEdgeExtras = "[color = red]";
+    }
     mPreviousNode = name;
-    mEdgeExtras = "[color = red]";
     node->getFalseBranch()->accept(this);
 
+    if(mShowExplorationIndices && node->getExplorationIndex() > 0 && node->getExplorationDirection() == true) {
+        mEdgeExtras = QString("[color = darkgreen, xlabel = \"%1\"]").arg(node->getExplorationIndex());
+    } else {
+        mEdgeExtras = "[color = darkgreen]";
+    }
     mPreviousNode = name;
-    mEdgeExtras = "[color = darkgreen]";
     node->getTrueBranch()->accept(this);
 }
 

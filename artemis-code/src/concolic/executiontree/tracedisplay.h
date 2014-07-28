@@ -103,6 +103,11 @@ protected:
     // For now the parameter is just a constant.
     static bool mPassThroughEndMarkers;
 
+    // Exploration indices show links between which branches were selected for exploration (and in which order) and
+    // the traces that those explorations explored.
+    // This parameter controls whether these indices are shown. For now it is constant true.
+    static bool mShowExplorationIndices;
+
     // The legend of the graph, if any.
     QString mLegend;
 

@@ -138,6 +138,18 @@ bool RandomAccessSearch::overUnexploredNode()
     }
 }
 
+void RandomAccessSearch::markExplorationIndex(uint index)
+{
+    // Only call after a successful call to chooseNextTarget().
+    assert(!mTarget.branch.isNull());
+
+    if (mTarget.branchDirection) {
+        mTarget.branch->markExploration(index, true);
+    } else {
+        mTarget.branch->markExploration(index, false);
+    }
+}
+
 void RandomAccessSearch::markNodeUnsat()
 {
     // Only call after a successful call to chooseNextTarget().
