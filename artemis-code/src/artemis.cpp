@@ -535,7 +535,7 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             } else if(string(optarg).compare("selector") == 0){
                 options.concolicSearchProcedure = artemis::SEARCH_SELECTOR;
             } else {
-                cerr << "ERROR: Invalid choice of concolic-search-procedure " << optarg << endl;
+                std::cerr << "ERROR: Invalid choice of concolic-search-procedure " << optarg << std::endl;
                 exit(1);
             }
             break;
@@ -548,7 +548,7 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
 
         case 'T': {
             // getSelector will exit with an error message itself if necesary.
-            std::cerr << optarg << std::endl;
+            //std::cerr << optarg << std::endl;
             options.concolicSearchSelector = getSelector(QString(optarg));
             break;
         }
@@ -721,11 +721,11 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
  *  Parses the argument to concolic-selection-procedure into a new ConcolicSearchSelector struct.
  */
 artemis::ConcolicSearchSelector getSelector(QString concolicSelectionProcedure) {
-    std::cerr << concolicSelectionProcedure.toStdString() << std::endl;
-    std::cerr << concolicSelectionProcedure.startsWith("round-robin") << std::endl;
+    //std::cerr << concolicSelectionProcedure.toStdString() << std::endl;
+    //std::cerr << concolicSelectionProcedure.startsWith("round-robin") << std::endl;
 
     QRegExp delimitXXX("[()]");
-    qDebug() << concolicSelectionProcedure.section(delimitXXX,1,1).split(":");
+    //qDebug() << concolicSelectionProcedure.section(delimitXXX,1,1).split(":");
 
     artemis::ConcolicSearchSelector selector;
      if (concolicSelectionProcedure.compare("dfs") == 0)
@@ -752,7 +752,7 @@ artemis::ConcolicSearchSelector getSelector(QString concolicSelectionProcedure) 
      }
      else
      {
-         cerr << "ERROR: Invalid choice of concolic-selection-procedure: " << concolicSelectionProcedure.toStdString() << endl;
+         std::cerr << "ERROR: Invalid choice of concolic-selection-procedure: " << concolicSelectionProcedure.toStdString() << std::endl;
          exit(1);
      }
      return selector;
