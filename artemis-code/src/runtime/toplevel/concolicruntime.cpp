@@ -104,7 +104,7 @@ void ConcolicRuntime::preConcreteExecution()
     }
 
     if (mNextConfiguration.isNull()) {
-        mHandlerTracker.writeGraph();
+        mHandlerTracker.writeGraph(mFormFieldPermutation);
         mWebkitExecutor->detach();
         done();
         return;
@@ -127,7 +127,7 @@ void ConcolicRuntime::preConcreteExecution()
 
     mHandlerTracker.newIteration();
 
-    mMarkerIndex = 1;
+    mMarkerIndex = 0;
     mWebkitExecutor->executeSequence(mNextConfiguration); // calls the postSingleInjection, postAllinjection (via FormInputCollection) and postConcreteExecution methods as callback
 }
 
@@ -165,7 +165,8 @@ void ConcolicRuntime::postSingleInjection(FormFieldDescriptorConstPtr field)
 
         // Add a marker to the trace
         mHandlerTracker.beginHandler(identifier);
-        emit sigNewTraceMarker(label, QString::number(mMarkerIndex), restriction.first, restriction.second);
+        QString idxStr = mMarkerIndex < mFormFieldPermutation.length() ? QString::number(mFormFieldPermutation.at(mMarkerIndex)) : "?";
+        emit sigNewTraceMarker(label, idxStr, restriction.first, restriction.second);
 
         // Trigger the handler
         QWebElement element = field->getDomElement()->getElement(mWebkitExecutor->getPage());
@@ -378,6 +379,12 @@ QList<FormFieldDescriptorConstPtr> ConcolicRuntime::permuteFormFields(QList<Form
 {
     // If the string is empty, no permutation was specified.
     if(permutation.isEmpty()) {
+        QList<int> noPerm;
+        for(int i = 0; i < fields.length(); i++) {
+            noPerm.append(i+1);
+        }
+
+        mFormFieldPermutation = noPerm;
         return fields;
     }
 
@@ -429,6 +436,7 @@ QList<FormFieldDescriptorConstPtr> ConcolicRuntime::permuteFormFields(QList<Form
         result.append(fields.at(idx - 1)); // Permutations are numbered from 1, not from 0.
     }
 
+    mFormFieldPermutation = reordering;
     return result;
 }
 
@@ -778,7 +786,7 @@ void ConcolicRuntime::chooseNextTargetAndExplore()
         Log::debug("\n============= Finished Search ==============");
         Log::info("Finished serach of the tree.");
 
-        mHandlerTracker.writeGraph();
+        mHandlerTracker.writeGraph(mFormFieldPermutation);
         mWebkitExecutor->detach();
         done();
         return;

@@ -31,7 +31,7 @@ HandlerDependencyTracker::HandlerDependencyTracker(bool enabled) :
     mCurrentEvent = mNoEventLabel;
 }
 
-void HandlerDependencyTracker::writeGraph()
+void HandlerDependencyTracker::writeGraph(QList<int> indexPermutation)
 {
     if(!mEnabled) {
         return;
@@ -48,7 +48,8 @@ void HandlerDependencyTracker::writeGraph()
     QString idxStr;
     foreach(QString label, mEvents) {
         names.insert(label, QString("event_%1").arg(idx));
-        idxStr = idx == mEvents.length() ? "B" : QString::number(idx); // TODO: Make these index labels correspond to any permutation used for the event handlers.
+        idxStr = (idx-1) < indexPermutation.length() ? QString::number(indexPermutation.at(idx-1)) : "";
+        idxStr = idx == mEvents.length() ? "B" : idxStr;
         graph += QString("  %1 [label = \"%2\", xlabel = \"%3\"];\n").arg(names[label], label, idxStr);
         idx++;
     }

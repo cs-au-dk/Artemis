@@ -39,7 +39,7 @@ class HandlerDependencyTracker : public QObject
 public:
     HandlerDependencyTracker(bool enabled);
 
-    void writeGraph();
+    void writeGraph(QList<int> indexPermutation);
 
     void beginHandler(QString variable);
 

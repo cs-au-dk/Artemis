@@ -267,7 +267,6 @@ void TraceDisplayOverview::visit(TraceMarker *node)
     mNodeCounter++;
 
     // Always show markers, but only show the index as the label.
-    // TODO: Make these index labels correspond to any permutation used for the event handlers.
     mHeaderMarkers.insert(node->index, name);
 
     addInEdge(name);
