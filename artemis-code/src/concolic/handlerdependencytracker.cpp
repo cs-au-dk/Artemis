@@ -45,9 +45,11 @@ void HandlerDependencyTracker::writeGraph()
 
     // Declare each node.
     int idx = 1;
+    QString idxStr;
     foreach(QString label, mEvents) {
         names.insert(label, QString("event_%1").arg(idx));
-        graph += QString("  %1 [label = \"%2\"];\n").arg(names[label], label);
+        idxStr = idx == mEvents.length() ? "B" : QString::number(idx); // TODO: Make these index labels correspond to any permutation used for the event handlers.
+        graph += QString("  %1 [label = \"%2\", xlabel = \"%3\"];\n").arg(names[label], label, idxStr);
         idx++;
     }
     // Check for any which were not listed in the event sequence...
@@ -56,7 +58,7 @@ void HandlerDependencyTracker::writeGraph()
         assert(mEvents.contains(edge.first.first) || edge.first.first == mNoEventLabel);
         if(!mEvents.contains(edge.first.second)) {
             names.insert(edge.first.second, QString("unknown_%1").arg(idx));
-            graph += QString("  %1 [label = \"%2\", fillcolor = \"lightpink\"];\n").arg(names[edge.first.second], edge.first.second);
+            graph += QString("  %1 [label = \"%2\", fillcolor = \"red\"];\n").arg(names[edge.first.second], edge.first.second);
             idx++;
             extras.insert(edge.first.second);
         }
@@ -68,7 +70,7 @@ void HandlerDependencyTracker::writeGraph()
     }
     if(observed.contains(mNoEventLabel)) {
         names.insert(mNoEventLabel, QString("no_source"));
-        graph += QString("  no_source [label = \"%1\", fillcolor = \"lightpink\"];\n").arg(mNoEventLabel);
+        graph += QString("  no_source [label = \"%1\", fillcolor = \"lightgray\"];\n").arg(mNoEventLabel);
         mEvents.prepend(mNoEventLabel);
     }
     observed.subtract(extras);
@@ -84,11 +86,14 @@ void HandlerDependencyTracker::writeGraph()
     graph += "\n";
 
     // Add the edges.
+    QString edgeColour;
     foreach(EdgeDescriptor edge, mEdgeCounts.keys()) {
+        edgeColour = (edge.second ? "blue" : "red");
+        edgeColour = edge.first.first == mNoEventLabel ? "gray" : edgeColour;
         graph += QString("  %1 -> %2 [label = \" %3\" color = \"%4\"];\n").arg(names[edge.first.first],
                                                                             names[edge.first.second],
                                                                             QString::number(mEdgeCounts[edge]),
-                                                                            (edge.second ? "blue" : "red"));
+                                                                            edgeColour);
     }
 
     // Finish
