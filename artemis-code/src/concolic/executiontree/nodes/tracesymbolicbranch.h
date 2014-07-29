@@ -55,7 +55,7 @@ public:
 
     inline void markExploration(uint index, bool direction) {
         assert(index != 0); // Never set to "not explored"
-        assert(mExplorationIndex == 0); // Never re-set.
+        //assert(mExplorationIndex == 0); // Never re-set.
         mExplorationIndex = index;
         mExplorationDirection = direction;
     }

@@ -640,11 +640,13 @@ QSharedPointer<const FormFieldDescriptor> ConcolicRuntime::findFormFieldForVaria
 
 
 // Generates a new solution from the path condition and runs it.
-void ConcolicRuntime::exploreNextTarget()
+void ConcolicRuntime::exploreNextTarget(bool isRetry)
 {
     // Add the exploration index to the tree.
-    mExplorationIndex++;
-    mSearchStrategy->markExplorationIndex(mExplorationIndex);
+    if(!isRetry) {
+        mExplorationIndex++;
+        mSearchStrategy->markExplorationIndex(mExplorationIndex);
+    }
 
     // Get the PC
     PathConditionPtr target = mSearchStrategy->getTargetPC();
@@ -723,7 +725,8 @@ void ConcolicRuntime::exploreNextTarget()
             } else {
                 Log::info("  Could not solve this constraint. Re-trying after marking as difficult.");
                 Statistics::statistics()->accumulate("Concolic::DifficultBranchRetries", 1);
-                exploreNextTarget(); // N.B. the call to Search::getTargetPC() will return an updated PC if the tree has been modified to mark a node as difficult.
+                exploreNextTarget(true); // N.B. the call to Search::getTargetPC() will return an updated PC if the tree has been modified to mark a node as difficult.
+                return;
             }
         }
         Log::debug("Skipping this target!");
