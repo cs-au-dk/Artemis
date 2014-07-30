@@ -436,7 +436,14 @@ void TraceDisplay::visit(TraceMarker *node)
     QString name = QString("marker_%1").arg(mNodeCounter);
     mNodeCounter++;
 
-    QString nodeDecl = QString("%1 [label = \"%2\"]").arg(name).arg(node->label);
+    QString nodeLabel;
+    if(node->index == "B") {
+        nodeLabel = node->label;
+    } else {
+        nodeLabel = node->index + ": " + node->label;
+    }
+
+    QString nodeDecl = QString("%1 [label = \"%2\"]").arg(name, nodeLabel);
     mHeaderMarkers.insert(node->index, nodeDecl);
 
     addInEdge(name);

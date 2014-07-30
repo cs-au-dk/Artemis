@@ -141,6 +141,7 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             "           modified. The new order is a reordering of the default list [1,2,...,N]\n"
             "           where N is the number of event handlers. e.g. if there are 4 fields then a\n"
             "           valid value would be [4,2,1,3].\n"
+            "           It is also possible to remove handlers from the event sequence, e.g. [1,2,4]\n"
             "\n"
             "--concolic-event-handler-report\n"
             "           Outputs a graph of the symbolic variables which are read from each event handler.\n"

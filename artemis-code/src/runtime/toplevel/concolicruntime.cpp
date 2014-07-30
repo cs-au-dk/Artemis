@@ -413,21 +413,27 @@ QList<FormFieldDescriptorConstPtr> ConcolicRuntime::permuteFormFields(QList<Form
         reordering.append(x);
     }
 
-    // Check the size matches and the permutation is valid
-    if(reordering.length() != fields.length()) {
-        Log::fatal("Error in concolic-event-sequence-permutation (wrong length).");
+    // Check the size is valid (not longer than the original list)
+    if(reordering.length() > fields.length()) {
+        Log::fatal("Error in concolic-event-sequence-permutation (too long).");
         Log::fatal(permutation.toStdString());
         exit(1);
     }
 
-    QList<int> sorted = reordering;
-    qSort(sorted);
-    for(int i = 0; i < sorted.length(); i++) {
-        if(sorted.at(i) != i+1) {
-            Log::fatal("Error in concolic-event-sequence-permutation (not a valid permutation).");
+    // Check that the values are valid (all refer to an appropriate index)
+    foreach(int handler, reordering) {
+        if(handler <= 0 || handler > fields.length()) { // handlers are 1-indexed.
+            Log::fatal("Error in concolic-event-sequence-permutation (index out of range).");
             Log::fatal(permutation.toStdString());
             exit(1);
         }
+    }
+
+    // Check that it is a valid permutation (unique values)
+    if(reordering.length() != reordering.toSet().size()) {
+        Log::fatal("Error in concolic-event-sequence-permutation (repeated index).");
+        Log::fatal(permutation.toStdString());
+        exit(1);
     }
 
     // Apply the permutation
