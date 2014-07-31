@@ -18,6 +18,7 @@
 #include <assert.h>
 
 #include "util/loggingutil.h"
+#include "util/fileutil.h"
 #include "concolic/executiontree/tracenodes.h"
 #include "concolic/traceeventdetectors.h"
 #include "concolic/solver/cvc4solver.h"
@@ -454,7 +455,9 @@ void ConcolicRuntime::mergeTraceIntoTree()
     // This can  modify it to add the correct end marker to the trace.
     TraceNodePtr trace = mWebkitExecutor->getTraceBuilder()->trace();
 
-    switch(mTraceClassifier.classify(trace, mExplorationIndex)){
+    TraceClassificationResult result = mTraceClassifier.classify(trace, mExplorationIndex);
+
+    switch(result){
     case SUCCESS:
         Log::info("  Recorded trace was classified as a SUCCESS.");
         break;
@@ -464,6 +467,8 @@ void ConcolicRuntime::mergeTraceIntoTree()
     default:
         Log::info("  Recorded trace was classified as UNKNOWN.");
     }
+
+    logInjectionValues(result);
 
 
     // Now we must merge this trace into the tree.
@@ -571,17 +576,21 @@ QSharedPointer<FormInputCollection> ConcolicRuntime::createFormInput(QMap<QStrin
         }
 
         // Create the field/value pairing to be injected using the FormInput object.
+        InjectionValue iv;
         switch (value.kind) {
         case Symbolic::BOOL:
-            inputs.append(FormInputPair(varSourceField, InjectionValue(value.u.boolean)));
+            iv = InjectionValue(value.u.boolean);
+            inputs.append(FormInputPair(varSourceField, iv));
             Log::debug(QString("Injecting boolean %1 into %2").arg(value.u.boolean ? "true" : "false").arg(varName).toStdString());
             break;
         case Symbolic::STRING:
-            inputs.append(FormInputPair(varSourceField, InjectionValue(QString::fromStdString(value.string))));
+            iv = InjectionValue(QString::fromStdString(value.string));
+            inputs.append(FormInputPair(varSourceField, iv));
             Log::debug(QString("Injecting string '%1' into %2").arg(QString(value.string.c_str())).arg(varName).toStdString());
             break;
         case Symbolic::INT:
-            inputs.append(FormInputPair(varSourceField, InjectionValue(value.u.integer)));
+            iv = InjectionValue(value.u.integer);
+            inputs.append(FormInputPair(varSourceField, iv));
             Log::debug(QString("Injecting int %1 into %2").arg(value.u.integer).arg(varName).toStdString());
             break;
         default:
@@ -589,6 +598,10 @@ QSharedPointer<FormInputCollection> ConcolicRuntime::createFormInput(QMap<QStrin
             Statistics::statistics()->accumulate("Concolic::FailedInjections", 1);
             continue;
         }
+
+        QString varBaseName = varName;
+        varBaseName.remove(QRegExp("^SYM_IN_(INT_|BOOL_)?"));
+        mPreviousInjections.insert(varBaseName, iv);
 
     }
 
@@ -697,6 +710,8 @@ void ConcolicRuntime::exploreNextTarget(bool isRetry)
     // Try to solve this PC to get some concrete input.
     SolverPtr solver = getSolver(mOptions);
     SolutionPtr solution = solver->solve(target, dynamicRestrictions);
+
+    mPreviousConstraintID = solver->getLastConstraintID();
 
     if(solution->isSolved()) {
         Log::debug("Solved the target PC:");
@@ -863,6 +878,81 @@ AbstractSelectorPtr ConcolicRuntime::buildSelector(ConcolicSearchSelector descri
     }
 
     return selector;
+}
+
+// Write the injection logs to a file /tmp/injections/*
+void ConcolicRuntime::logInjectionValues(TraceClassificationResult classification)
+{
+    QString entryPoint = mManualEntryPoint ? mManualEntryPointXPath : "auto";
+    entryPoint.replace("\"", "\\\"");
+
+    QPair<QString, QString> classificationStr;
+    switch(classification) {
+    case SUCCESS:
+        classificationStr = qMakePair<QString, QString>("succ", "Success");
+        break;
+    case FAILURE:
+        classificationStr = qMakePair<QString, QString>("fail", "Failure");
+        break;
+    case UNKNOWN:// Fall-through
+    default:
+        classificationStr = qMakePair<QString, QString>("unk", "Unknown");
+    }
+
+    // Proper JSON support added in Qt5.0 unfortunately.
+    QString json = "{\n";
+    //json += QString("  \"url\": \"%1\",\n").arg(mUrl.toString());
+    json += QString("  \"entrypoint\": \"%1\",\n").arg(entryPoint);
+    json += QString("  \"explorationindex\": \"%1\",\n").arg(mExplorationIndex);
+    json += QString("  \"constraint\": \"%1\",\n").arg(mPreviousConstraintID);
+    json += QString("  \"classification\": \"%1\",\n").arg(classificationStr.second);
+
+    json += "  \"injection\": [\n";
+
+    // Find the list of injected variables.
+    QStringList varNames;
+    foreach(FormFieldDescriptorConstPtr field, mFormFields) {
+        QString var = field->getDomElement()->getId();
+        if(mPreviousInjections.contains(var)) {
+            varNames.append(var);
+        }
+    }
+
+    // Write out the injection values. We need the list first so we can tell the last element.
+    for(int i = 0; i < varNames.length(); i++) {
+        InjectionValue inject = mPreviousInjections.value(varNames.at(i));
+
+        QString value;
+        switch(inject.getType()) {
+        case QVariant::Bool:
+            value = inject.getBool() ? "true" : "false";
+            break;
+        case QVariant::Int:
+            value = QString::number(inject.getInt());
+            break;
+        case QVariant::String: // Fall-through
+        default:
+            value = "\"" + inject.getString() + "\"";
+        }
+
+        json += "    {\n";
+        json += QString("      \"field\": \"%1\",\n").arg(varNames.at(i));
+        json += QString("      \"value\": %1\n").arg(value);
+        if(i == varNames.length() - 1) {
+            json += "    }\n";
+        } else {
+            json += "    },\n";
+        }
+    }
+
+    json += "  ]\n";
+
+    json += "}\n";
+
+    QString filename = QString("/tmp/injections/%1_%2.json").arg(QString::number(mExplorationIndex), classificationStr.first);
+
+    createDir("/tmp", "injections");
+    writeStringToFile(filename, json);
 }
 
 

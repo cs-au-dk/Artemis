@@ -224,9 +224,10 @@ def test_generator(site_name, site_url, site_ep, dry_run, logger, version, test_
         data['DIADEM Time'] = ep_finder_time if ep_finder_time is not None else ""
         
         try:
-            # Clear /tmp/constraintlog so we can get the constraints from this run only.
+            # Clear /tmp/constraintlog and injections so we can get info from this run only.
             if not dry_run:
                 open("/tmp/constraintlog", 'w').close()
+                shutil.rmtree("/tmp/injections", ignore_errors=True)
             
             # Run and time the test
             start_time = time.time()
@@ -264,6 +265,9 @@ def test_generator(site_name, site_url, site_ep, dry_run, logger, version, test_
                 # TODO: Would be better to use a copy-and-overwrite function, but shutil doesn't seem to have one.
                 shutil.rmtree(constraints_dir, ignore_errors=True)
                 shutil.copytree("/tmp/constraints", constraints_dir)
+            
+            # Save the injections log to the current directory
+            shutil.copytree("/tmp/injections", os.path.join(test_dir, site_name, "injections"))
             
             # If the return code indicates a failure, check for a core dump and create a backtrace if one exists.
             # We also delete the core dumps to save space!

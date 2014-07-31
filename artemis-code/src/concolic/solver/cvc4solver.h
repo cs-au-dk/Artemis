@@ -37,10 +37,13 @@ public:
 
     SolutionPtr solve(PathConditionPtr pc, FormRestrictions formRestrictions);
 
+    QString getLastConstraintID() { return mLastConstraintID; }
+
 private:
     SolutionPtr emitError(std::ofstream& clog, const std::string& reason, int clause = -1);
     void emitConstraints(std::ofstream& constraintIndex, const QString& identifier, bool sat);
 
+    QString mLastConstraintID;
 };
 
 typedef QSharedPointer<CVC4Solver> CVC4SolverPtr;

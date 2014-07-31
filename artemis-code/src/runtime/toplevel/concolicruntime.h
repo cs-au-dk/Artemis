@@ -148,6 +148,11 @@ protected:
     // Helper for creating the selector search strategy.
     AbstractSelectorPtr buildSelector(ConcolicSearchSelector description);
 
+    // Logging
+    QMap<QString, InjectionValue> mPreviousInjections;
+    QString mPreviousConstraintID;
+    void logInjectionValues(TraceClassificationResult classification);
+
 private slots:
     void postConcreteExecution(ExecutableConfigurationConstPtr configuration, QSharedPointer<ExecutionResult> result);
     void postAllInjection();

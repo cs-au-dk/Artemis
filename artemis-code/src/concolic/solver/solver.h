@@ -40,6 +40,7 @@ public:
 
     virtual SolutionPtr solve(PathConditionPtr pc, FormRestrictions formRestrictions) = 0;
 
+    virtual QString getLastConstraintID() { return ""; }
 };
 
 typedef QSharedPointer<Solver> SolverPtr;

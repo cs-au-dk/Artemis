@@ -73,6 +73,7 @@ SolutionPtr CVC4Solver::solve(PathConditionPtr pc, FormRestrictions formRestrict
 
         identifier = identifier + QString("--") + QString::number(next++);
     }
+    mLastConstraintID = identifier;
 
     std::ofstream clog("/tmp/constraintlog", std::ofstream::out | std::ofstream::app);
     std::ofstream constraintIndex("/tmp/constraintindex", std::ofstream::out | std::ofstream::app);
