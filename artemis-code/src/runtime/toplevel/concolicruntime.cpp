@@ -903,7 +903,7 @@ void ConcolicRuntime::logInjectionValues(TraceClassificationResult classificatio
     QString json = "{\n";
     //json += QString("  \"url\": \"%1\",\n").arg(mUrl.toString());
     json += QString("  \"entrypoint\": \"%1\",\n").arg(entryPoint);
-    json += QString("  \"explorationindex\": \"%1\",\n").arg(mExplorationIndex);
+    json += QString("  \"explorationindex\": %1,\n").arg(mExplorationIndex);
     json += QString("  \"constraint\": \"%1\",\n").arg(mPreviousConstraintID);
     json += QString("  \"classification\": \"%1\",\n").arg(classificationStr.second);
 
