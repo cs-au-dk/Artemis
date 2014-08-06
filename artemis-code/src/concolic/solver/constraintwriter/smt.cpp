@@ -392,6 +392,7 @@ std::string SMTConstraintWriter::encodeIdentifier(const std::string& identifier)
     std::string t = SMTConstraintWriter::stringfindreplace(identifier, "_" , "QQQ");
     t = SMTConstraintWriter::stringfindreplace(t, "[" , "WWW");
     t = SMTConstraintWriter::stringfindreplace(t, "]" , "ZZZ");
+    t = SMTConstraintWriter::stringfindreplace(t, ":" , "CCC");
 
     return t;
 }
@@ -401,6 +402,7 @@ std::string SMTConstraintWriter::decodeIdentifier(const std::string& identifier)
     std::string t = SMTConstraintWriter::stringfindreplace(identifier, "QQQ", "_");
     t = SMTConstraintWriter::stringfindreplace(t, "WWW", "[");
     t = SMTConstraintWriter::stringfindreplace(t, "ZZZ", "]");
+    t = SMTConstraintWriter::stringfindreplace(t, "CCC", ":");
 
     return t;
 }
