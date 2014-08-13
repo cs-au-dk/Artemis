@@ -30,16 +30,22 @@
 namespace artemis
 {
 
-typedef struct {
+struct SelectRestriction {
     QString variable;
-    QList<QString> values;
-} SelectRestriction;
+    QStringList values;
 
-typedef struct {
+    QDebug friend operator<<(QDebug dbg, const SelectRestriction& sr);
+
+};
+
+struct RadioRestriction {
     QString groupName;
     bool alwaysSet; // If no option is set by default, it is possible to submit with all variables set to false.
     QSet<QString> variables;
-} RadioRestriction;
+
+    QDebug friend operator<<(QDebug dbg, const RadioRestriction& rr);
+
+};
 
 typedef QPair<QSet<SelectRestriction>, QSet<RadioRestriction> > FormRestrictions;
 

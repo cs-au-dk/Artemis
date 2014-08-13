@@ -171,4 +171,15 @@ QString FormFieldRestrictedValues::getVariableName(FormFieldDescriptorConstPtr f
 
 
 
+QDebug operator<<(QDebug dbg, const SelectRestriction& sr) {
+    dbg.nospace() << "Select " << sr.variable << " from [" << sr.values.join(",") << "].";
+    return dbg.space();
+}
+
+QDebug operator<<(QDebug dbg, const RadioRestriction& rr) {
+    dbg.nospace() << "Radio " << rr.groupName << " options [" << QStringList(rr.variables.toList()).join(",") << "]" << (rr.alwaysSet ? "" : " NOT") << " always set.";
+    return dbg.space();
+}
+
+
 } // namespace artemis

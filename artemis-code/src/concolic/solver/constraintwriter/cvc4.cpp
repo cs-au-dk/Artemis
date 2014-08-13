@@ -85,7 +85,6 @@ void CVC4ConstraintWriter::preVisitPathConditionsHook(QSet<QString> varsUsed)
         }
         // else this select is not mentioned in the PC, so ignore.
     }
-
     foreach(RadioRestriction rr, mFormRestrictions.second) {
         QString name;
         bool variableMatch = false;

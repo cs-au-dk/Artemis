@@ -74,7 +74,10 @@ struct ConcolicSearchSelector
 };
 
 enum ConcolicBenchmarkFeatures {
-    RADIO_RESTRICTION, SELECT_RESTRICTION, SELECT_RESTRICTION_DYNAMIC
+    ALL_ENABLED = 0,
+    RADIO_RESTRICTION = 1,
+    SELECT_RESTRICTION = 2,
+    SELECT_RESTRICTION_DYNAMIC = 4
 };
 
 
@@ -103,7 +106,8 @@ typedef struct OptionsType {
         solver(CVC4),
         exportEventSequence(DONT_EXPORT),
         reportHeap(NO_CALLS),
-        heapReportFactor(1)
+        heapReportFactor(1),
+        concolicDisabledFeatures(0)
     {}
 
     QMap<QString, InjectionValue> presetFormfields;
