@@ -20,6 +20,7 @@
 #include <QSharedPointer>
 #include <QHash>
 #include <QString>
+#include <QStringList>
 
 #include "JavaScriptCore/symbolic/expression/visitor.h"
 
@@ -52,6 +53,8 @@ public:
     Symbolvalue findSymbol(QString symbol);
 
     void toStatistics();
+
+    QStringList symbols();
 
     QString getUnsolvableReason() { return mUnsolvableReason; }
     int getUnsolvableClause() { return mUnsolvableClause; }

@@ -87,6 +87,11 @@ void Solution::toStatistics()
     }
 }
 
+QStringList Solution::symbols()
+{
+    return mSymbols.keys();
+}
+
 } // namespace artemis
 
 

@@ -713,8 +713,8 @@ void ConcolicRuntime::exploreNextTarget(bool isRetry)
     Log::info(targetString.toStdString());
 
     // Get (and print) the list of free variables in the target PC.
-    QMap<QString, Symbolic::SourceIdentifierMethod> freeVariables = target->freeVariables();
-    QStringList varList = freeVariables.keys();
+    QMap<QString, Symbolic::SourceIdentifierMethod> injectionVariables = target->freeVariables();
+    QStringList varList = injectionVariables.keys();
 
     Log::debug(QString("Variables we need to solve (%1):").arg(varList.length()).toStdString());
     Log::debug(varList.join(", ").toStdString());
@@ -729,11 +729,16 @@ void ConcolicRuntime::exploreNextTarget(bool isRetry)
         Log::debug("Solved the target PC:");
         Log::info("  Next injection:");
 
+        // Check if there are any variables in the solution which were not originally in the PC.
+        // This can happen (e.g.) with radio button constraints, and these MUST be included in the injection.
+        injectionVariables.unite(getExtraSolutionVariables(solution, varList));
+        varList = injectionVariables.keys();
+
         // Print this solution
         printSolution(solution, varList);
 
 
-        QSharedPointer<FormInputCollection> formInput = createFormInput(freeVariables, solution);
+        QSharedPointer<FormInputCollection> formInput = createFormInput(injectionVariables, solution);
         setupNextConfiguration(formInput);
 
         // Execute next iteration
@@ -778,6 +783,57 @@ void ConcolicRuntime::exploreNextTarget(bool isRetry)
         // Skip this node and move on to the next.
         chooseNextTargetAndExplore();
     }
+}
+
+QMap<QString, Symbolic::SourceIdentifierMethod> ConcolicRuntime::getExtraSolutionVariables(SolutionPtr solution, QStringList expected)
+{
+    // If there are any variables in solution which are not listed in expected, then look up their SourceIdentifierMethod and return them.
+    QMap<QString, Symbolic::SourceIdentifierMethod> result;
+    QString baseName;
+    bool found;
+    Symbolic::SourceIdentifierMethod method;
+
+    foreach (QString symbol, solution->symbols()) {
+        if (!expected.contains(symbol)) {
+            // This is a new variable from the solver.
+            // We can't know the SourceIdentifierMethod, so search for the element in the list of form fields.
+
+            baseName = symbol;
+            baseName.remove(QRegExp("^SYM_IN_(INT_|BOOL_)?"));
+            found = false;
+
+            // Check for matchiong ID.
+            foreach (FormFieldDescriptorConstPtr field, mFormFields) {
+                if (field->getDomElement()->getId() == baseName) {
+                    found = true;
+                    method = Symbolic::ELEMENT_ID;
+                    break;
+                }
+            }
+
+            // Check for mathcing name
+            if (!found) {
+                foreach (FormFieldDescriptorConstPtr field, mFormFields) {
+                    if (field->getDomElement()->getName() == baseName) {
+                        found = true;
+                        method = Symbolic::INPUT_NAME;
+                        break;
+                    }
+                }
+            }
+
+            // If nothing was found it is an error.
+            if (!found) {
+                Log::fatal("Error: Found a variable in the solution which was not in the PC and could not be found in the DOM.");
+                Log::fatal(symbol.toStdString());
+                exit(1);
+            }
+
+            result.insert(symbol, method);
+        }
+    }
+
+    return result;
 }
 
 FormRestrictions ConcolicRuntime::mergeDynamicSelectRestrictions(FormRestrictions base, QSet<SelectRestriction> replacements)
