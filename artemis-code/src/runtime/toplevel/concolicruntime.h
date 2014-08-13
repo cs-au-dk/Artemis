@@ -134,6 +134,7 @@ protected:
 
     QList<FormFieldDescriptorConstPtr> mFormFields;
     FormRestrictions mFormFieldRestrictions;
+    FormRestrictions mFormFieldInitialRestritions;
     QList<FormFieldDescriptorConstPtr> permuteFormFields(QList<FormFieldDescriptorConstPtr> fields, QString permutation);
     QList<int> mFormFieldPermutation;
 
@@ -152,6 +153,9 @@ protected:
     QMap<QString, InjectionValue> mPreviousInjections;
     QString mPreviousConstraintID;
     void logInjectionValues(TraceClassificationResult classification);
+
+    // Benchmarking
+    QFlags<ConcolicBenchmarkFeatures> mDisabledFeatures;
 
 private slots:
     void postConcreteExecution(ExecutableConfigurationConstPtr configuration, QSharedPointer<ExecutionResult> result);

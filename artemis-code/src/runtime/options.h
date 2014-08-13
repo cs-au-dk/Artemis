@@ -21,6 +21,7 @@
 #include <QSet>
 #include <QMap>
 #include <QString>
+#include <QFlags>
 #include "input/forms/injectionvalue.h"
 
 namespace artemis
@@ -70,6 +71,10 @@ struct ConcolicSearchSelector
 {
      enum { SELECTOR_DFS, SELECTOR_RANDOM, SELECTOR_AVOID_UNSAT, SELECTOR_ROUND_ROBIN } type;
      QList<ConcolicSearchSelector> components;
+};
+
+enum ConcolicBenchmarkFeatures {
+    RADIO_RESTRICTION, SELECT_RESTRICTION, SELECT_RESTRICTION_DYNAMIC
 };
 
 
@@ -147,6 +152,8 @@ typedef struct OptionsType {
     int heapReportFactor;
 
     QString customUserAgent;
+
+    QFlags<ConcolicBenchmarkFeatures> concolicDisabledFeatures;
 
 } Options;
 

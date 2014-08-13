@@ -147,9 +147,14 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             "           Outputs a graph of the symbolic variables which are read from each event handler.\n"
             "           (Requires major-mode concolic and concolic-event-sequences)\n"
             "\n"
+            "--concolic-disable-features <features-list>\n"
+            "           Used for benchmarking only. Disables the listed features (comma separated list).\n"
+            "           The features which can be disabled with this option are:\n"
+            "           radio-restriction, select-restriction, select-restriction-dynamic\n"
+            "\n"
             "--smt-solver <solver>:\n"
             "           z3str - Use the Z3-str SMT solver as backend.\n"
-            "           cvc4 (default) - Use the CVC4 SMT solver as backend. CVC4 is required to be on your path.\n"
+            "           cvc4 (default) - Use the CVC4 SMT solver as backend.\n"
             "           kaluza - Use the Kaluza solver as backend.\n"
             "\n"
             "--strategy-priority <strategy>:\n"
@@ -204,6 +209,7 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
     {"concolic-event-sequences", required_argument, NULL, 'w'},
     {"concolic-event-sequence-permutation", required_argument, NULL, 'W'},
     {"concolic-event-handler-report", no_argument, NULL, 'H'},
+    {"concolic-disable-features", required_argument, NULL, 'B'},
     {"smt-solver", required_argument, NULL, 'n'},
     {"export-event-sequence", required_argument, NULL, 'o'},
     {"help", no_argument, NULL, 'h'},
@@ -241,6 +247,24 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
 
         case 'b': {
             options.concolicEntryPoint = QString(optarg);
+            break;
+        }
+
+        case 'B': {
+            QStringList features = QString(optarg).split(",");
+            foreach(QString feature, features) {
+                feature = feature.trimmed();
+                if (feature == "radio-restriction") {
+                    options.concolicDisabledFeatures |= artemis::RADIO_RESTRICTION;
+                } else if (feature == "select-restriction") {
+                    options.concolicDisabledFeatures |= artemis::SELECT_RESTRICTION;
+                } else if (feature == "select-restriction-dynamic") {
+                    options.concolicDisabledFeatures |= artemis::SELECT_RESTRICTION_DYNAMIC;
+                } else {
+                    cerr << "ERROR: Invalid choice of concolic-disable-features " << optarg << endl;
+                    exit(1);
+                }
+            }
             break;
         }
 

@@ -70,7 +70,7 @@ void CVC4ConstraintWriter::preVisitPathConditionsHook(QSet<QString> varsUsed)
     //mOutput << "(set-option :finite-model-find true)" << std::endl;
     mOutput << std::endl;
 
-    // Only write the form frestrictions which relate to variables which are actually used in the PC.
+    // Only write the form restrictions which relate to variables which are actually used in the PC.
     foreach(SelectRestriction sr, mFormRestrictions.first) {
         // TODO: Hack to guess the variable names, as in helperSelectRestriction().
         QString name = QString("SYM_IN_%1").arg(sr.variable);

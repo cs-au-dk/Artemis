@@ -44,6 +44,7 @@ ConcolicRuntime::ConcolicRuntime(QObject* parent, const Options& options, const 
     , mHandlerTracker(options.concolicEventHandlerReport)
     , mNumIterations(0)
     , mExplorationIndex(1)
+    , mDisabledFeatures(options.concolicDisabledFeatures)
 {
     QObject::connect(mWebkitExecutor, SIGNAL(sigExecutedSequence(ExecutableConfigurationConstPtr, QSharedPointer<ExecutionResult>)),
                      this, SLOT(postConcreteExecution(ExecutableConfigurationConstPtr, QSharedPointer<ExecutionResult>)));
@@ -293,6 +294,7 @@ void ConcolicRuntime::postInitialConcreteExecution(QSharedPointer<ExecutionResul
     // Find the form fields on the page and save them.
     mFormFields = permuteFormFields(result->getFormFields(), mOptions.concolicEventHandlerPermutation);
     mFormFieldRestrictions = FormFieldRestrictedValues::getRestrictions(mFormFields, mWebkitExecutor->getPage());
+    mFormFieldInitialRestritions = mFormFieldRestrictions;
 
     // Print the form fields found on the page.
     Log::debug("Form fields found:");
@@ -694,6 +696,16 @@ void ConcolicRuntime::exploreNextTarget(bool isRetry)
 
     // TODO: Currently only select constraints are handled dynamically, so we need to merge them with the static radio button constraints.
     FormRestrictions dynamicRestrictions = mergeDynamicSelectRestrictions(mFormFieldRestrictions, dynamicSelectConstraints);
+    // If these features have been disabled, then remove the restrictions.
+    if (mDisabledFeatures.testFlag(SELECT_RESTRICTION_DYNAMIC)) {
+        dynamicRestrictions.first = mFormFieldInitialRestritions.first;
+    }
+    if (mDisabledFeatures.testFlag(SELECT_RESTRICTION)) {
+        dynamicRestrictions.first.clear();
+    }
+    if (mDisabledFeatures.testFlag(RADIO_RESTRICTION)) {
+        dynamicRestrictions.second.clear();
+    }
 
     Log::info("  Next target:");
     QString targetString = QString("    ") + QString::fromStdString(target->toStatisticsValuesString(true)).trimmed();
