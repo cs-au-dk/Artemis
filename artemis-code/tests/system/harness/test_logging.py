@@ -2,6 +2,7 @@
 import subprocess
 import re
 import getpass
+import sys
 
 import gdata.spreadsheet.service
 
@@ -23,12 +24,18 @@ class GDataLogger():
         self.blank_row = True # Insert a blank row before any logging is done, to visually separate tests.
     
     # TODO: This is a hack. We should use some of the proper authentication APIs instead.
-    def open_spreadsheet(self):
+    def open_spreadsheet(self, email=None, password=None):
         """Ask the user for their Google accopunt and password and open the spreadsheet."""
         
         self._sheet = gdata.spreadsheet.service.SpreadsheetsService()
-        self._sheet.email = raw_input("Please enter your google account (email): ")
-        self._sheet.password = getpass.getpass("Please enter your password: ")
+        if email:
+            self._sheet.email = email
+        else:
+            self._sheet.email = raw_input("Please enter your google account (email): ")
+        if password:
+            self._sheet.password = password
+        else:
+            self._sheet.password = getpass.getpass("Please enter your password: ")
         self._sheet.source = "ArtForm Test Logger"
         try:
             self._sheet.ProgrammaticLogin()
