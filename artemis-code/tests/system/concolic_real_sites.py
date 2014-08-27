@@ -275,7 +275,10 @@ def test_generator(site_name, site_url, site_ep, dry_run, logger, version, test_
                 shutil.copytree("/tmp/constraints", constraints_dir)
             
             # Save the injections log to the current directory
-            shutil.copytree("/tmp/injections", os.path.join(test_dir, site_name, "injections"))
+            try:
+                shutil.copytree("/tmp/injections", os.path.join(test_dir, site_name, "injections"))
+            except OSError:
+                pass # Ignore erros (e.g. if there were no injections).
             
             # If the return code indicates a failure, check for a core dump and create a backtrace if one exists.
             # We also delete the core dumps to save space!
