@@ -26,7 +26,7 @@ class KaluzaSolver : public Solver
 {
 public:
 
-    KaluzaSolver();
+    KaluzaSolver(ConcolicBenchmarkFeatures disabledFeatures);
 
     SolutionPtr solve(PathConditionPtr pc, FormRestrictions formRestrictions);
 

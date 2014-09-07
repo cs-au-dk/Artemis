@@ -33,11 +33,12 @@
 namespace artemis
 {
 
-SMTConstraintWriter::SMTConstraintWriter()
+SMTConstraintWriter::SMTConstraintWriter(ConcolicBenchmarkFeatures disabledFeatures)
     : mExpressionType(Symbolic::TYPEERROR)
     , mError(false)
     , mErrorClause(-1)
     , mNextTemporarySequence(0)
+    , mDisabledFeatures(disabledFeatures)
 {
 }
 

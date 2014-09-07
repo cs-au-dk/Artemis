@@ -34,8 +34,8 @@
 namespace artemis
 {
 
-CVC4Solver::CVC4Solver()
-    : Solver()
+CVC4Solver::CVC4Solver(ConcolicBenchmarkFeatures disabledFeatures)
+    : Solver(disabledFeatures)
 {
 }
 
@@ -88,7 +88,7 @@ SolutionPtr CVC4Solver::solve(PathConditionPtr pc, FormRestrictions formRestrict
 
     // 1. translate pc to something solvable using the translator
 
-    CVC4ConstraintWriterPtr cw = CVC4ConstraintWriterPtr(new CVC4ConstraintWriter());
+    CVC4ConstraintWriterPtr cw = CVC4ConstraintWriterPtr(new CVC4ConstraintWriter(mDisabledFeatures));
 
     if (!cw->write(pc, formRestrictions, "/tmp/cvc4input")) {
 

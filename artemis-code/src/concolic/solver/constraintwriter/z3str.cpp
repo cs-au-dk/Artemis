@@ -33,8 +33,8 @@
 namespace artemis
 {
 
-Z3STRConstraintWriter::Z3STRConstraintWriter()
-    : SMTConstraintWriter()
+Z3STRConstraintWriter::Z3STRConstraintWriter(ConcolicBenchmarkFeatures disabledFeatures)
+    : SMTConstraintWriter(disabledFeatures)
 {
 }
 

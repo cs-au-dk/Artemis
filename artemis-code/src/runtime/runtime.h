@@ -69,6 +69,9 @@ protected:
 
     QList<FormFieldDescriptorConstPtr> mLatestFormFields; // set this to get better solver output statistics
 
+    // Benchmarking
+    ConcolicBenchmarkFeatures mDisabledFeatures;
+
 private:
     QString* mHeapReport;
 

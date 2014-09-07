@@ -38,7 +38,7 @@ class CVC4ConstraintWriter : public SMTConstraintWriter
 {
 public:
 
-    CVC4ConstraintWriter();
+    CVC4ConstraintWriter(ConcolicBenchmarkFeatures disabledFeatures);
 
     bool write(PathConditionPtr pathCondition, FormRestrictions formRestrictions, std::string outputFile);
 

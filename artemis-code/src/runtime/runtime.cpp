@@ -57,7 +57,9 @@ using namespace std;
 namespace artemis
 {
 
-Runtime::Runtime(QObject* parent, const Options& options, const QUrl& url) : QObject(parent)
+Runtime::Runtime(QObject* parent, const Options& options, const QUrl& url)
+    : QObject(parent)
+    , mDisabledFeatures(options.concolicDisabledFeatures)
 {
     Log::info("Artemis - Automated tester for JavaScript");
     Log::info("Started: " + QDateTime::currentDateTime().toString().toStdString());
@@ -268,11 +270,11 @@ SolverPtr Runtime::getSolver(const Options& options)
 {
     switch(options.solver) {
     case Z3STR:
-        return Z3SolverPtr(new Z3Solver());
+        return Z3SolverPtr(new Z3Solver(mDisabledFeatures));
     case KALUZA:
-        return KaluzaSolverPtr(new KaluzaSolver());
+        return KaluzaSolverPtr(new KaluzaSolver(mDisabledFeatures));
     case CVC4:
-        return CVC4SolverPtr(new CVC4Solver());
+        return CVC4SolverPtr(new CVC4Solver(mDisabledFeatures));
     default:
         cerr << "Unknown solver selected" << std::endl;
         exit(1);

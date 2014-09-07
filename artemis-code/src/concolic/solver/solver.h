@@ -21,6 +21,7 @@
 
 #include "concolic/pathcondition.h"
 #include "runtime/input/forms/formfieldrestrictedvalues.h"
+#include "concolic/benchmerking.h"
 
 #include "solution.h"
 
@@ -35,12 +36,16 @@ class Solver
 {
 public:
 
-    Solver();
+    Solver(ConcolicBenchmarkFeatures disabledFeatures);
     virtual ~Solver() {}
 
     virtual SolutionPtr solve(PathConditionPtr pc, FormRestrictions formRestrictions) = 0;
 
     virtual QString getLastConstraintID() { return ""; }
+
+protected:
+    // Benchmarking
+    ConcolicBenchmarkFeatures mDisabledFeatures;
 };
 
 typedef QSharedPointer<Solver> SolverPtr;

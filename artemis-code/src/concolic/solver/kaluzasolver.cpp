@@ -32,8 +32,9 @@
 namespace artemis
 {
 
-KaluzaSolver::KaluzaSolver(): Solver() {
-
+KaluzaSolver::KaluzaSolver(ConcolicBenchmarkFeatures disabledFeatures)
+    : Solver(disabledFeatures)
+{
 }
 
 SolutionPtr KaluzaSolver::solve(PathConditionPtr pc, FormRestrictions formRestrictions)

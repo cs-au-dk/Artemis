@@ -155,9 +155,6 @@ protected:
     QString mPreviousConstraintID;
     void logInjectionValues(TraceClassificationResult classification);
 
-    // Benchmarking
-    QFlags<ConcolicBenchmarkFeatures> mDisabledFeatures;
-
 private slots:
     void postConcreteExecution(ExecutableConfigurationConstPtr configuration, QSharedPointer<ExecutionResult> result);
     void postAllInjection();

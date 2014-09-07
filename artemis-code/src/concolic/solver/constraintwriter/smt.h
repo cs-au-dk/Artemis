@@ -25,6 +25,7 @@
 #include "JavaScriptCore/symbolic/expr.h"
 #include "JavaScriptCore/symbolic/expression/visitor.h"
 #include "runtime/input/forms/formfieldrestrictedvalues.h"
+#include "concolic/benchmerking.h"
 
 #include "abstract.h"
 
@@ -71,7 +72,7 @@ class SMTConstraintWriter : public ConstraintWriter, public Symbolic::Visitor
 {
 public:
 
-    SMTConstraintWriter();
+    SMTConstraintWriter(ConcolicBenchmarkFeatures disabledFeatures);
 
     virtual bool write(PathConditionPtr pathCondition, FormRestrictions formRestrictions, std::string outputFile);
 
@@ -213,6 +214,9 @@ protected:
     unsigned int mNextTemporarySequence;
 
     FormRestrictions mFormRestrictions;
+
+    // Benchmarking
+    ConcolicBenchmarkFeatures mDisabledFeatures;
 };
 
 typedef QSharedPointer<SMTConstraintWriter> SMTConstraintWriterPtr;

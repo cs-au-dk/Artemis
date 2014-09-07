@@ -19,7 +19,8 @@
 namespace artemis
 {
 
-Solver::Solver()
+Solver::Solver(ConcolicBenchmarkFeatures disabledFeatures)
+    : mDisabledFeatures(disabledFeatures)
 {
 }
 

@@ -150,7 +150,7 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             "--concolic-disable-features <features-list>\n"
             "           Used for benchmarking only. Disables the listed features (comma separated list).\n"
             "           The features which can be disabled with this option are:\n"
-            "           radio-restriction, select-restriction, select-restriction-dynamic\n"
+            "           radio-restriction, select-restriction, select-restriction-dynamic, select-link-value-index\n"
             "\n"
             "--smt-solver <solver>:\n"
             "           z3str - Use the Z3-str SMT solver as backend.\n"
@@ -260,6 +260,8 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
                     options.concolicDisabledFeatures |= artemis::SELECT_RESTRICTION;
                 } else if (feature == "select-restriction-dynamic") {
                     options.concolicDisabledFeatures |= artemis::SELECT_RESTRICTION_DYNAMIC;
+                } else if (feature == "select-link-value-index") {
+                    options.concolicDisabledFeatures |= artemis::SELECT_LINK_VALUE_INDEX;
                 } else {
                     cerr << "ERROR: Invalid choice of concolic-disable-features " << optarg << endl;
                     exit(1);

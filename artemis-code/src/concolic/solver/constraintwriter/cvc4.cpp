@@ -40,8 +40,8 @@ namespace artemis
 std::string OBJECT_NULL = "false";
 std::string OBJECT_NOT_NULL = "true";
 
-CVC4ConstraintWriter::CVC4ConstraintWriter()
-    : SMTConstraintWriter()
+CVC4ConstraintWriter::CVC4ConstraintWriter(ConcolicBenchmarkFeatures disabledFeatures)
+    : SMTConstraintWriter(disabledFeatures)
     , mTypeAnalysis(new CVC4TypeAnalysis())
 {
 
@@ -77,7 +77,14 @@ void CVC4ConstraintWriter::preVisitPathConditionsHook(QSet<QString> varsUsed)
         QString idxname = QString("SYM_IN_INT_%1").arg(sr.variable);
 
         if(varsUsed.contains(name) && varsUsed.contains(idxname)) {
-            helperSelectRestriction(sr, VALUE_INDEX);
+            if (!mDisabledFeatures.testFlag(SELECT_LINK_VALUE_INDEX)) {
+                // Default behaviour: link value and index constraints.
+                helperSelectRestriction(sr, VALUE_INDEX);
+            } else {
+                // Overridden behaviour: output both constraints separately.
+                helperSelectRestriction(sr, VALUE_ONLY);
+                helperSelectRestriction(sr, INDEX_ONLY);
+            }
         } else if(varsUsed.contains(name)) {
             helperSelectRestriction(sr, VALUE_ONLY);
         } else if(varsUsed.contains(idxname)) {

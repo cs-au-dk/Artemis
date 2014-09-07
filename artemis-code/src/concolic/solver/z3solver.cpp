@@ -33,8 +33,9 @@
 namespace artemis
 {
 
-Z3Solver::Z3Solver(): Solver() {
-
+Z3Solver::Z3Solver(ConcolicBenchmarkFeatures disabledFeatures)
+    : Solver(disabledFeatures)
+{
 }
 
 SolutionPtr Z3Solver::solve(PathConditionPtr pc, FormRestrictions formRestrictions)
@@ -45,7 +46,7 @@ SolutionPtr Z3Solver::solve(PathConditionPtr pc, FormRestrictions formRestrictio
 
     // 1. translate pc to something solvable using the translator
 
-    Z3STRConstraintWriterPtr cw = Z3STRConstraintWriterPtr(new Z3STRConstraintWriter());
+    Z3STRConstraintWriterPtr cw = Z3STRConstraintWriterPtr(new Z3STRConstraintWriter(mDisabledFeatures));
 
     if (!cw->write(pc, formRestrictions, "/tmp/z3input")) {
         Statistics::statistics()->accumulate("Concolic::Solver::ConstraintsNotWritten", 1);

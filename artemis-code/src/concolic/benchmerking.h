@@ -14,30 +14,26 @@
  * limitations under the License.
  */
 
-#ifndef Z3SOLVER_H
-#define Z3SOLVER_H
+#ifndef BENCHMERKING_H
+#define BENCHMERKING_H
 
-#include "solver.h"
+#include <QFlags>
 
 namespace artemis
 {
 
-/*
- *  Generic symbolic constrint solver interface.
- */
-
-class Z3Solver : public Solver
-{
-public:
-
-    Z3Solver(ConcolicBenchmarkFeatures disabledFeatures);
-
-    SolutionPtr solve(PathConditionPtr pc, FormRestrictions formRestrictions);
-
+enum ConcolicBenchmarkFeatureValues {
+    ALL_ENABLED = 0,
+    RADIO_RESTRICTION = 1,
+    SELECT_RESTRICTION = 2,
+    SELECT_RESTRICTION_DYNAMIC = 4,
+    SELECT_LINK_VALUE_INDEX = 8
 };
 
-typedef QSharedPointer<Z3Solver> Z3SolverPtr;
+Q_DECLARE_FLAGS(ConcolicBenchmarkFeatures, ConcolicBenchmarkFeatureValues)
+Q_DECLARE_OPERATORS_FOR_FLAGS(ConcolicBenchmarkFeatures)
 
-}
 
-#endif // Z3SOLVER_H
+
+} // namespace artemis
+#endif // BENCHMERKING_H

@@ -44,7 +44,6 @@ ConcolicRuntime::ConcolicRuntime(QObject* parent, const Options& options, const 
     , mHandlerTracker(options.concolicEventHandlerReport)
     , mNumIterations(0)
     , mExplorationIndex(1)
-    , mDisabledFeatures(options.concolicDisabledFeatures)
 {
     QObject::connect(mWebkitExecutor, SIGNAL(sigExecutedSequence(ExecutableConfigurationConstPtr, QSharedPointer<ExecutionResult>)),
                      this, SLOT(postConcreteExecution(ExecutableConfigurationConstPtr, QSharedPointer<ExecutionResult>)));
@@ -802,7 +801,7 @@ QMap<QString, Symbolic::SourceIdentifierMethod> ConcolicRuntime::getExtraSolutio
             baseName.remove(QRegExp("^SYM_IN_(INT_|BOOL_)?"));
             found = false;
 
-            // Check for matchiong ID.
+            // Check for matching ID.
             foreach (FormFieldDescriptorConstPtr field, mFormFields) {
                 if (field->getDomElement()->getId() == baseName) {
                     found = true;

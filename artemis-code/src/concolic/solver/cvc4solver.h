@@ -32,7 +32,7 @@ class CVC4Solver : public Solver
 {
 public:
 
-    CVC4Solver();
+    CVC4Solver(ConcolicBenchmarkFeatures disabledFeatures);
     ~CVC4Solver();
 
     SolutionPtr solve(PathConditionPtr pc, FormRestrictions formRestrictions);

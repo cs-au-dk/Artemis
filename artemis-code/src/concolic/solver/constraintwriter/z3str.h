@@ -35,7 +35,7 @@ class Z3STRConstraintWriter : public SMTConstraintWriter
 {
 public:
 
-    Z3STRConstraintWriter();
+    Z3STRConstraintWriter(ConcolicBenchmarkFeatures disabledFeatures);
 
 protected:
     virtual void visit(Symbolic::StringLength* stringlength, void* args);
