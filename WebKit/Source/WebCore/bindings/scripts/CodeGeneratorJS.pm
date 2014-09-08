@@ -1368,6 +1368,13 @@ sub GenerateImplementation
 
     @implContent = ();
 
+    # ARTEMIS BEGIN
+    # Include the switch to enable selectedIndex support.
+    if ($className eq "JSHTMLSelectElement" or $className eq "JSHTMLOptionsCollection") {
+        push(@implContent, "\n#define ARTEMIS_ENABLE_SYMBOLIC_SELECTEDINDEX\n\n");
+    }
+    # ARTEMIS END
+
     push(@implContent, "\nusing namespace JSC;\n\n");
     push(@implContent, "namespace WebCore {\n\n");
 
@@ -1857,6 +1864,16 @@ sub GenerateImplementation
 
                         push(@implContent, "\n");
 
+                        # Check for feature selectedIndex which may be disabled for benchmarking.
+                        if ($attribute->signature->extendedAttributes->{"SymbolicSelectElement"} or
+                            $attribute->signature->extendedAttributes->{"SymbolicOptionsCollection"}) {
+                            if ($attribute->signature->extendedAttributes->{"SymbolicInteger"}) {
+                                push(@implContent, "#ifndef ARTEMIS_ENABLE_SYMBOLIC_SELECTEDINDEX\n");
+                                push(@implContent, "    return result;\n");
+                                push(@implContent, "#endif\n");
+                                push(@implContent, "\n");
+                            }
+                        }
 
                         # Calculate the symbolic name for this element.
 
