@@ -1374,6 +1374,8 @@ sub GenerateImplementation
     push(@implContent, "\n#define ARTEMIS_ENABLE_SYMBOLIC_SELECTEDINDEX\n");
     # Support checked instead of value on radio and checkbox inputs
     push(@implContent, "\n#define ARTEMIS_ENABLE_SYMBOLIC_CHECKED_PROPERTY\n");
+    # Hidden inputs should be concrete.
+    push(@implContent, "\n#define ARTEMIS_ENABLE_CONCRETE_HIDDEN_INPUTS\n");
     push(@implContent, "\n");
     # ARTEMIS END
 
@@ -1842,7 +1844,12 @@ sub GenerateImplementation
                             push(@implContent, "    // Do not make hidden inputs or values read from buttons symbolic.\n");
                             push(@implContent, "    WTF::AtomicString type = impl->getAttribute(WebCore::HTMLNames::typeAttr);\n");
                             # See commit f1a40d5c for an odd gotcha here.
-                            push(@implContent, "    if(strncmp(type.string().lower().ascii().data(), \"hidden\", 6) == 0 || strncmp(type.string().lower().ascii().data(), \"submit\", 6) == 0 || strncmp(type.string().lower().ascii().data(), \"button\", 6) == 0){\n");
+                            push(@implContent, "#ifdef ARTEMIS_ENABLE_CONCRETE_HIDDEN_INPUTS\n");
+                            push(@implContent, "    if(strncmp(type.string().lower().ascii().data(), \"hidden\", 6) == 0) {\n");
+                            push(@implContent, "        return result;\n");
+                            push(@implContent, "    }\n");
+                            push(@implContent, "#endif\n");
+                            push(@implContent, "    if(strncmp(type.string().lower().ascii().data(), \"submit\", 6) == 0 || strncmp(type.string().lower().ascii().data(), \"button\", 6) == 0){\n");
                             push(@implContent, "        return result;\n");
                             push(@implContent, "    }\n");
                             push(@implContent, "\n");
