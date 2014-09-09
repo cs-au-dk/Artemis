@@ -1369,10 +1369,12 @@ sub GenerateImplementation
     @implContent = ();
 
     # ARTEMIS BEGIN
-    # Include the switch to enable selectedIndex support.
-    if ($className eq "JSHTMLSelectElement" or $className eq "JSHTMLOptionsCollection") {
-        push(@implContent, "\n#define ARTEMIS_ENABLE_SYMBOLIC_SELECTEDINDEX\n\n");
-    }
+    # Benchmarking feature switches
+    # Support selectedIndex
+    push(@implContent, "\n#define ARTEMIS_ENABLE_SYMBOLIC_SELECTEDINDEX\n");
+    # Support checked instead of value on radio and checkbox inputs
+    push(@implContent, "\n#define ARTEMIS_ENABLE_SYMBOLIC_CHECKED_PROPERTY\n");
+    push(@implContent, "\n");
     # ARTEMIS END
 
     push(@implContent, "\nusing namespace JSC;\n\n");
@@ -1846,10 +1848,16 @@ sub GenerateImplementation
                             push(@implContent, "\n");
                             # Only handle the symbolic boolean values on radio and checkbox elements. This removes symbolic handling of the .value property (SymbolicString) if its the .value property of a radio or checkbox element.
                             unless ($attribute->signature->extendedAttributes->{"SymbolicBoolean"}) {
+                                push(@implContent, "#ifdef ARTEMIS_ENABLE_SYMBOLIC_CHECKED_PROPERTY\n");
                                 push(@implContent, "    // Do not make checkbox or radio button values symbolic.\n");
                                 push(@implContent, "    if(strncmp(type.string().lower().ascii().data(), \"radio\", 5) == 0 || strncmp(type.string().lower().ascii().data(), \"checkbox\", 8) == 0){\n");
                                 push(@implContent, "        return result;\n");
                                 push(@implContent, "    }\n");
+                                push(@implContent, "#endif\n");
+                            } else {
+                                push(@implContent, "#ifndef ARTEMIS_ENABLE_SYMBOLIC_CHECKED_PROPERTY\n");
+                                push(@implContent, "    return result; // Disable symbolic booleans for testing.\n");
+                                push(@implContent, "#endif\n");
                             }
                         }
 
@@ -1869,7 +1877,7 @@ sub GenerateImplementation
                             $attribute->signature->extendedAttributes->{"SymbolicOptionsCollection"}) {
                             if ($attribute->signature->extendedAttributes->{"SymbolicInteger"}) {
                                 push(@implContent, "#ifndef ARTEMIS_ENABLE_SYMBOLIC_SELECTEDINDEX\n");
-                                push(@implContent, "    return result;\n");
+                                push(@implContent, "    return result; // Disable the selectedIndex feature for benchmarking.\n");
                                 push(@implContent, "#endif\n");
                                 push(@implContent, "\n");
                             }
