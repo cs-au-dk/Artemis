@@ -26,7 +26,7 @@ namespace artemis
 
 /**
  * InjectionValue is a thin wrapper around QVariant.
- * This just allows us to enforce that only certain types (QString or bool) are stored in this value.
+ * This just allows us to enforce that only certain types (QString, int or bool) are stored in this value.
  */
 class InjectionValue
 {

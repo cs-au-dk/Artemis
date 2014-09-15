@@ -62,17 +62,6 @@ namespace artemis
  *          Set next input according to the result of the constraint solver
  *      od
  *
- *  Steps that needs to be added (formcrawl project):
- *
- *    Build an annotated trace of the path taken
- *    Classify the trace as a success/failure and add it to the tree
- *    Check that we took the intended path
- *      * Need to deal with cases where we did not (simplest implementation: just give up)
- *    Finish after some condition (coverage, timeout, ...)
- *
- *  We also have a demo mode which does not drive the execution but only records and prints out the information
- *  which would be collected during a run of concolic execution.
- *
  */
 class ConcolicRuntime : public Runtime
 {

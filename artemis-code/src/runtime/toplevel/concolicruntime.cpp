@@ -561,6 +561,9 @@ QSharedPointer<FormInputCollection> ConcolicRuntime::createFormInput(QMap<QStrin
     QList<FormInputPair> inputs;
 
     foreach(QString varName, varList){
+
+        qDebug() << "########## createFormInput() processing " << varName;
+
         Symbolvalue value = solution->findSymbol(varName);
         if(!value.found){
             Log::error(QString("Error: Could not find value for %1 in the solver's solution.").arg(varName).toStdString());
@@ -621,6 +624,9 @@ QSharedPointer<FormInputCollection> ConcolicRuntime::createFormInput(QMap<QStrin
 // Given a symbolic variable, find the corresponding form field on the page.
 QSharedPointer<const FormFieldDescriptor> ConcolicRuntime::findFormFieldForVariable(QString varName, Symbolic::SourceIdentifierMethod varSourceIdentifierMethod)
 {
+
+    qDebug() << "##########     findFormFieldForVariable(" << varName << "," << (varSourceIdentifierMethod == Symbolic::INPUT_NAME ? "INPUT_NAME" : "ELEMENT_ID") << ")";
+
     QSharedPointer<const FormFieldDescriptor> varSourceField;
 
     // Variable names are of the form SYM_IN_<name>, and we will need to use <name> directly when searching the ids and names of the form fields.
@@ -973,6 +979,43 @@ void ConcolicRuntime::logInjectionValues(TraceClassificationResult classificatio
     json += QString("  \"explorationindex\": %1,\n").arg(mExplorationIndex);
     json += QString("  \"constraint\": \"%1\",\n").arg(mPreviousConstraintID);
     json += QString("  \"classification\": \"%1\",\n").arg(classificationStr.second);
+
+
+
+    // Debugging
+    json += "  \"debugging\": [\n";
+
+    int remainingInjections = mPreviousInjections.size(); // mPreviousInjections cannot change during this printing.
+    foreach(QString var, mPreviousInjections.keys()) {
+        InjectionValue inject = mPreviousInjections.value(var);
+
+        QString value;
+        switch(inject.getType()) {
+        case QVariant::Bool:
+            value = inject.getBool() ? "true" : "false";
+            break;
+        case QVariant::Int:
+            value = QString::number(inject.getInt());
+            break;
+        case QVariant::String: // Fall-through
+        default:
+            value = "\"" + inject.getString() + "\"";
+        }
+
+        json += "    {\n";
+        json += QString("      \"field\": \"%1\",\n").arg(var);
+        json += QString("      \"value\": %1\n").arg(value);
+
+        if(remainingInjections <= 1) {
+            json += "    }\n";
+        } else {
+            json += "    },\n";
+        }
+        remainingInjections--;
+    }
+
+    json += "  ],\n";
+
 
     json += "  \"injection\": [\n";
 
