@@ -1,0 +1,20 @@
+<!doctype html><html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+	<script type="text/javascript">
+	  function validate() {
+	    var input = document.getElementById("testinput").value;
+	    if (parseInt(input) == 1) {
+              return true;
+	    }
+	  }
+	</script>
+</head>
+<body>
+	<form method="GET" action="#" >
+		<input type="text" id="testinput" value="test"/>
+		<button type="submit" onclick="return validate();">Submit</button>
+	</form>
+</body>
+</html>

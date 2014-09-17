@@ -27,7 +27,8 @@ enum ConcolicBenchmarkFeatureValues {
     RADIO_RESTRICTION = 1,
     SELECT_RESTRICTION = 2,
     SELECT_RESTRICTION_DYNAMIC = 4,
-    SELECT_LINK_VALUE_INDEX = 8
+    SELECT_LINK_VALUE_INDEX = 8,
+    CVC4_COERCION_OPT = 16
 };
 
 Q_DECLARE_FLAGS(ConcolicBenchmarkFeatures, ConcolicBenchmarkFeatureValues)

@@ -32,8 +32,6 @@
 
 #include "cvc4.h"
 
-#define ENABLE_COERCION_OPTIMIZATION
-
 namespace artemis
 {
 
@@ -121,10 +119,9 @@ void CVC4ConstraintWriter::postVisitPathConditionsHook()
 void CVC4ConstraintWriter::visit(Symbolic::SymbolicString* symbolicstring, void* args)
 {
 
-#ifdef ENABLE_COERCION_OPTIMIZATION
     // If we are coercing from a string input to an integer downstream, it is safe to omit
     // the downstream coercion and return an integer here.
-    if (args != NULL) {
+    if (!mDisabledFeatures.testFlag(CVC4_COERCION_OPT) && args != NULL) {
 
         CoercionPromise* promise = (CoercionPromise*)args;
 
@@ -139,13 +136,11 @@ void CVC4ConstraintWriter::visit(Symbolic::SymbolicString* symbolicstring, void*
             mExpressionType = Symbolic::INT;
 
             mSuccessfulCoercions.insert(symbolicstring->getSource().getIdentifier());
-
             Statistics::statistics()->accumulate("Concolic::Solver::StringIntCoercionOptimization", 1);
 
             return;
         }
     }
-#endif
 
     // Checks this symbolic value is of type STRING and raises an error otherwise.
     recordAndEmitType(symbolicstring->getSource(), Symbolic::STRING);
@@ -602,17 +597,19 @@ void CVC4ConstraintWriter::helperSelectRestriction(SelectRestriction constraint,
 
     bool coerceToInt = false;
     if(type == VALUE_ONLY || type == VALUE_INDEX) {
-#ifdef ENABLE_COERCION_OPTIMIZATION
-        if (mTypeAnalysis->hasUniqueConstraint(name.toStdString(), CVC4TypeAnalysis::WEAK_INTEGER) &&
+        if (!mDisabledFeatures.testFlag(CVC4_COERCION_OPT) &&
+                mTypeAnalysis->hasUniqueConstraint(name.toStdString(), CVC4TypeAnalysis::WEAK_INTEGER) &&
                 FormFieldRestrictedValues::safeForIntegerCoercion(mFormRestrictions, name) ) {
+
             recordAndEmitType(name.toStdString(), Symbolic::INT);
             coerceToInt = true;
+
+            mSuccessfulCoercions.insert(name.toStdString());
+            Statistics::statistics()->accumulate("Concolic::Solver::StringIntCoercionOptimization", 1);
+
         } else {
             recordAndEmitType(name.toStdString(), Symbolic::STRING);
         }
-#else
-        recordAndEmitType(name.toStdString(), Symbolic::STRING);
-#endif
     }
 
     if(type == INDEX_ONLY || type == VALUE_INDEX) {

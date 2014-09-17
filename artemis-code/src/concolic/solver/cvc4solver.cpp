@@ -43,19 +43,6 @@ CVC4Solver::~CVC4Solver()
 {
 }
 
-SolutionPtr CVC4Solver::emitError(std::ofstream& clog, const std::string& reason, int clause)
-{
-    clog << "ERROR: " << reason << std::endl << std::endl;
-
-    return SolutionPtr(new Solution(false, false, QString::fromStdString(reason), clause));
-}
-
-void CVC4Solver::emitConstraints(std::ofstream& constraintIndex, const QString& identifier, bool sat)
-{
-    constraintIndex << identifier.toStdString() << "," << (sat ? "sat/unknown" : "unsat") << std::endl;
-    QFile::copy("/tmp/cvc4input", QString::fromStdString("/tmp/constraints/") + identifier);
-}
-
 SolutionPtr CVC4Solver::solve(PathConditionPtr pc, FormRestrictions formRestrictions)
 {
     // 0. Emit debug information
@@ -375,6 +362,19 @@ SolutionPtr CVC4Solver::solve(PathConditionPtr pc, FormRestrictions formRestrict
     fp.close();
 
     return solution;
+}
+
+SolutionPtr CVC4Solver::emitError(std::ofstream& clog, const std::string& reason, int clause)
+{
+    clog << "ERROR: " << reason << std::endl << std::endl;
+
+    return SolutionPtr(new Solution(false, false, QString::fromStdString(reason), clause));
+}
+
+void CVC4Solver::emitConstraints(std::ofstream& constraintIndex, const QString& identifier, bool sat)
+{
+    constraintIndex << identifier.toStdString() << "," << (sat ? "sat/unknown" : "unsat") << std::endl;
+    QFile::copy("/tmp/cvc4input", QString::fromStdString("/tmp/constraints/") + identifier);
 }
 
 } // namespace artemis
