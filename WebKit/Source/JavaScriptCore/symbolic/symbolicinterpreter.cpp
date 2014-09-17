@@ -24,6 +24,9 @@
 #include "JavaScriptCore/interpreter/CallFrame.h"
 #include "JavaScriptCore/instrumentation/bytecodeinfo.h"
 #include "JavaScriptCore/runtime/JSString.h"
+#include "JavaScriptCore/runtime/CallData.h"
+
+#include "instrumentation/jscexecutionlistener.h"
 
 #include "JavaScriptCore/symbolic/expr.h"
 
@@ -37,6 +40,7 @@ namespace Symbolic
 {
 
 bool SymbolicInterpreter::m_isOpGetByValWithSymbolicArg = false;
+bool SymbolicInterpreter::m_featureIndirectOptionIndexLookupEnabled = true;
 
 // Global used to generate "unique" identifiers for crossreferencing symbolic expressions and values
 unsigned int NEXT_SYMBOLIC_ID = 0;

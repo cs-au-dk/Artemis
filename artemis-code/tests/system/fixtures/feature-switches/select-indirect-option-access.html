@@ -1,0 +1,32 @@
+<!doctype html><html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+	<script type="text/javascript">
+		var x = 2;
+		function validate() {
+                        var select = document.getElementById("testinput");
+			var i = select.options.selectedIndex;
+                        var opt = select.options[i];
+
+			if (opt.value == "hello") {
+				alert("Selected the first value!");
+			}
+
+                        return true;
+		}
+	</script>
+
+</head>
+<body>
+	<form method="GET" action="about:blank" >
+		<select name="testinput" id="testinput" >
+			<option value="hello" >hello</option>
+			<option value="hi there" >hi there</option>
+			<option value="testme" >testme</option>
+			<option value="goodbye" >goodbye</option>
+		</select>
+		<button type="submit" onclick="return validate();">Submit</button>
+	</form>
+</body>
+</html>

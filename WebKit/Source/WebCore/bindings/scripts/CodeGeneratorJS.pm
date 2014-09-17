@@ -1353,6 +1353,7 @@ sub GenerateImplementation
     $implIncludes{"\"symbolic/expression/symbolicinteger.h\""} = 1;
     $implIncludes{"\"symbolic/expression/symbolicboolean.h\""} = 1;
     $implIncludes{"\"instrumentation/jscexecutionlistener.h\""} = 1;
+    $implIncludes{"\"statistics/statsstorage.h\""} = 1;
     $implIncludes{"<iostream>"} = 1;
     $implIncludes{"<ostream>"} = 1;
     $implIncludes{"<sstream>"} = 1;
@@ -1872,9 +1873,12 @@ sub GenerateImplementation
 
                         if ($attribute->signature->extendedAttributes->{"SymbolicOptionElement"}) {
                             push(@implContent, "\n");
-                            push(@implContent, "    if (!slotBase.isIndirectSymbolic()) {\n");
+                            push(@implContent, "    if (!Symbolic::SymbolicInterpreter::isFeatureIndirectOptionIndexLookupEnabled() || !slotBase.isIndirectSymbolic()) {\n");
                             push(@implContent, "        return result;\n");
                             push(@implContent, "    }\n");
+                            push(@implContent, "    \n");
+                            push(@implContent, "    Statistics::statistics()->accumulate(\"Concolic::Solver::IndirectOptionIndexAccess\", 1);\n");
+
                         }
 
                         push(@implContent, "\n");

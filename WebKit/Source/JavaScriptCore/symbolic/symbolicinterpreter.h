@@ -20,9 +20,7 @@
 #include <sstream>
 
 #include "WTF/wtf/ExportMacros.h"
-#include "JavaScriptCore/runtime/CallData.h"
 #include "JavaScriptCore/instrumentation/bytecodeinfo.h"
-#include "instrumentation/jscexecutionlistener.h"
 
 #include "native/nativelookup.h"
 
@@ -54,18 +52,18 @@ const char* opToString(OP op);
 public:
     SymbolicInterpreter();
 
-    void ail_call(JSC::CallFrame* callFrame, const JSC::Instruction* vPC, JSC::BytecodeInfo& info);
-    void ail_call_native(JSC::CallFrame* callFrame, const JSC::Instruction* vPC, JSC::BytecodeInfo& info,
+    void ail_call(JSC::ExecState* callFrame, const JSC::Instruction* vPC, JSC::BytecodeInfo& info);
+    void ail_call_native(JSC::ExecState* callFrame, const JSC::Instruction* vPC, JSC::BytecodeInfo& info,
                          JSC::native_function_ID_t functionID);
 
-    JSC::JSValue ail_op_binary(JSC::CallFrame* callFrame, const JSC::Instruction* vPC, JSC::BytecodeInfo& info,
+    JSC::JSValue ail_op_binary(JSC::ExecState* callFrame, const JSC::Instruction* vPC, JSC::BytecodeInfo& info,
                                JSC::JSValue& x, OP op, JSC::JSValue& y, JSC::JSValue result);
 
-    void ail_jmp_iff(JSC::CallFrame* callFrame, const JSC::Instruction* vPC, JSC::BytecodeInfo& info,
+    void ail_jmp_iff(JSC::ExecState* callFrame, const JSC::Instruction* vPC, JSC::BytecodeInfo& info,
                      JSC::JSValue& condition, bool jumps);
 
     // called from the interpreter before it starts executing (a single trace)
-    void preExecution(JSC::CallFrame* callFrame);
+    void preExecution(JSC::ExecState* callFrame);
 
     /*
      * Called from Artemis
@@ -90,6 +88,18 @@ public:
         SymbolicInterpreter::m_isOpGetByValWithSymbolicArg = val;
     }
 
+    /*
+     * Feature bits.
+     *
+     * These are set by Artemis directly, to disable internal features for benchmarking purposes.
+     */
+    static bool isFeatureIndirectOptionIndexLookupEnabled() {
+        return SymbolicInterpreter::m_featureIndirectOptionIndexLookupEnabled;
+    }
+    static void setFeatureIndirectOptionIndexLookupEnabled(bool value) {
+        SymbolicInterpreter::m_featureIndirectOptionIndexLookupEnabled = value;
+    }
+
 private:
     void fatalError(JSC::CodeBlock* codeBlock, std::string reason) __attribute__((noreturn));
 
@@ -100,6 +110,7 @@ private:
     bool m_shouldGC;
 
     static bool m_isOpGetByValWithSymbolicArg;
+    static bool m_featureIndirectOptionIndexLookupEnabled;
 };
 
 }
