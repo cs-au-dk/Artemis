@@ -36,18 +36,11 @@ Artemis have been successfully installed on Ubuntu 12.10 and Fedora 18.
    
    	  make all
 
- 3. Add the instrumented WebKit library to your library path
-
-      export LD_LIBRARY_PATH=$ARTEMISDIR/WebKit/WebKitBuild/Release/lib  
-
-    This environment variable is needed every time you wish to
-    execute Artemis.
-
-4. Configure your path to include Artemis executable
+3. Configure your path to include Artemis executable
 
       export PATH=$ARTEMISDIR/artemis-code/dist:$PATH
 
-5. Enable completion in bash by running
+4. Enable completion in bash by running
       
       cp artemis-bash-complete /etc/bash_completion.d/artemis 
    
