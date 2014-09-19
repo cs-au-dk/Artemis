@@ -238,6 +238,17 @@ void ExpressionPrinter::visit(Symbolic::StringLength* stringlength, void* args)
     m_result += " )";
 }
 
+void ExpressionPrinter::visit(Symbolic::StringIndexOf* obj, void* args)
+{
+    m_result += "StringIndexOf( ";
+    obj->getSource()->accept(this);
+    m_result += " , ";
+    obj->getPattern()->accept(this);
+    m_result += " , ";
+    obj->getOffset()->accept(this);
+    m_result += " )";
+}
+
 }
 
 #endif

@@ -175,6 +175,17 @@
 	},
 
 	{
+		"ID": "StringIndexOf",
+		"type": "expression",
+		"parent": "IntegerExpression",
+		"fields": [
+			["StringExpression*", "source"],
+			["StringExpression*", "pattern"],
+			["IntegerExpression*", "offset"]
+		]
+	},
+
+	{
 		"ID": "StringCharAt",
 		"type": "expression",
 		"parent": "StringExpression",

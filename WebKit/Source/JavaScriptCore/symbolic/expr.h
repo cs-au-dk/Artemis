@@ -31,6 +31,7 @@
 #include "expression/stringcoercion.h"
 #include "expression/stringlength.h"
 #include "expression/stringreplace.h"
+#include "expression/stringindexof.h"
 #include "expression/stringcharat.h"
 #include "expression/stringregexreplace.h"
 #include "expression/stringregexsubmatch.h"

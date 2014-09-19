@@ -53,6 +53,7 @@ protected:
     virtual void visit(Symbolic::StringRegexSubmatch* submatch, void* args);
     virtual void visit(Symbolic::StringRegexSubmatchIndex* submatchIndex, void* args);
     virtual void visit(Symbolic::StringLength* stringlength, void* args);
+    virtual void visit(Symbolic::StringIndexOf* stringindexof, void* arg);
 
     virtual void visit(Symbolic::StringRegexSubmatchArray* exp, void* args);
     virtual void visit(Symbolic::StringRegexSubmatchArrayAt* exp, void* args);

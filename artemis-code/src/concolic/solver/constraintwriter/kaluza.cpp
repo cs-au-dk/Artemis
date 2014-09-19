@@ -286,6 +286,12 @@ void KaluzaConstraintWriter::visit(Symbolic::StringLength* stringlength, void* a
     mIdentifierStore = "ERROR";
 }
 
+void KaluzaConstraintWriter::visit(Symbolic::StringIndexOf* obj, void* args)
+{
+    mError = true;
+    mErrorReason = "String index of constraints not supported";
+    mIdentifierStore = "ERROR";
+}
 
 }
 

@@ -1,0 +1,4 @@
+TEST PC: ((StringIndexOf(SymbolicString,ConstantString,ConstantInteger)==ConstantInteger)==ConstantBoolean)
+if (x.indexOf('input') == 4) {
+    alert(x);
+}

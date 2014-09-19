@@ -261,6 +261,7 @@ SOURCES += \
     symbolic/expression/stringregexsubmatchindex.cpp \
     symbolic/expression/constantobject.cpp \
     symbolic/expression/objectbinaryoperation.cpp \
+    symbolic/expression/stringindexof.cpp \
     statistics/statsstorage.cpp
 
 *sh4* {
@@ -328,4 +329,5 @@ HEADERS += \
     symbolic/expression/stringregexsubmatchindex.h \
     symbolic/expression/constantobject.h \
     symbolic/expression/objectbinaryoperation.h \
+    symbolic/expression/stringindexof.h \
     statistics/statsstorage.h

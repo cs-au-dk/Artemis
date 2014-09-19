@@ -43,6 +43,7 @@ enum Type {
     class StringCoercion;
     class StringLength;
     class StringReplace;
+    class StringIndexOf;
     class StringCharAt;
     class StringRegexReplace;
     class StringRegexSubmatch;
@@ -72,6 +73,7 @@ public:
     virtual void visit(StringCoercion* stringcoercion, void* arg) = 0;
     virtual void visit(StringLength* stringlength, void* arg) = 0;
     virtual void visit(StringReplace* stringreplace, void* arg) = 0;
+    virtual void visit(StringIndexOf* stringindexof, void* arg) = 0;
     virtual void visit(StringCharAt* stringcharat, void* arg) = 0;
     virtual void visit(StringRegexReplace* stringregexreplace, void* arg) = 0;
     virtual void visit(StringRegexSubmatch* stringregexsubmatch, void* arg) = 0;

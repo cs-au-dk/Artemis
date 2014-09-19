@@ -476,6 +476,35 @@ void CVC4ConstraintWriter::visit(Symbolic::StringLength* stringlength, void* arg
     mExpressionType = Symbolic::INT;
 }
 
+void CVC4ConstraintWriter::visit(Symbolic::StringIndexOf* obj, void* arg)
+{
+    obj->getSource()->accept(this);
+    std::string source = mExpressionBuffer;
+    if(!checkType(Symbolic::STRING)){
+        error("String index of operation on non-string");
+        return;
+    }
+
+    obj->getPattern()->accept(this);
+    std::string pattern = mExpressionBuffer;
+    if(!checkType(Symbolic::STRING)){
+        error("String index of operation (pattern) on non-string");
+        return;
+    }
+
+    obj->getOffset()->accept(this);
+    std::string offset = mExpressionBuffer;
+    if(!checkType(Symbolic::INT)){
+        error("String index of operation (offset) on non-string");
+        return;
+    }
+
+    std::ostringstream strs;
+    strs << "(str.indexof " << source << " " << pattern << " " << offset << ")";
+    mExpressionBuffer = strs.str();
+    mExpressionType = Symbolic::INT;
+}
+
 void CVC4ConstraintWriter::helperRegexTest(const std::string& regex, const std::string& expression,
                                            std::string* outMatch)
 {

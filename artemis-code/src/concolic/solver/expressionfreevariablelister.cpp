@@ -146,5 +146,12 @@ void ExpressionFreeVariableLister::visit(Symbolic::StringLength* stringlength, v
     stringlength->getString()->accept(this, arg);
 }
 
+void ExpressionFreeVariableLister::visit(Symbolic::StringIndexOf* obj, void* arg)
+{
+    obj->getSource()->accept(this, arg);
+    obj->getPattern()->accept(this, arg);
+    obj->getOffset()->accept(this, arg);
+}
+
 
 } // namespace artemis

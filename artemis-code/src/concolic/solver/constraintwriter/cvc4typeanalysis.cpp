@@ -232,4 +232,17 @@ void CVC4TypeAnalysis::visit(Symbolic::BooleanBinaryOperation* booleanbinaryoper
 
 }
 
+void CVC4TypeAnalysis::visit(Symbolic::StringIndexOf* indexof, void* arg) {
+
+    mExpressionType = STRING;
+    indexof->getSource()->accept(this);
+
+    mExpressionType = STRING;
+    indexof->getPattern()->accept(this);
+
+    mExpressionType = INTEGER;
+    indexof->getOffset()->accept(this);
+
+}
+
 }

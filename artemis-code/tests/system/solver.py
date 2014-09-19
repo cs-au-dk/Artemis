@@ -65,7 +65,7 @@ def test_generator(test_name, test_filename):
                                  iterations=2,
                                  boolean_fields=["#booleaninput=true", "#radio1b=true", "#radio1a=false", "#radio1c=false"],
                                  string_fields=["#testinputselectintlz=00", "#testinputselectint=0", "#testinputx=1", "#testinputy=2", "#testinputNameId=1", "#testinputId=1", "#testinputfoo=foo", "#testinputbar=bar", "#selectinput=Select1", "#testinputselect=volvo"],
-                                 verbose=True)
+                                 verbose=False)
 
         assert report.get('WebKit::alerts', 0) == 1, "Initial execution did not reach a print statement"
 
@@ -89,7 +89,7 @@ def test_generator(test_name, test_filename):
                                  string_fields=string_fields,
                                  integer_fields=integer_fields,
                                  reverse_constraint_solver=True,
-                                 verbose=True)
+                                 verbose=False)
 
         assert report.get('WebKit::alerts', 0) == 1, "Execution using inputs from the solver did not reach a print statement... STRING: %s, BOOLEAN: %s, INTEGER: %s" % (string_fields, boolean_fields, integer_fields)
         assert report.get('Concolic::Solver::ErrorsReadingSolution', 0) == 0, "Errors reading the solver solution"
@@ -104,7 +104,7 @@ def test_generator(test_name, test_filename):
                              string_fields=string_fields,
                              integer_fields=integer_fields,
                              reverse_constraint_solver=True,
-                             verbose=True)
+                             verbose=False)
 
         assert report.get('Concolic::Solver::ErrorsReadingSolution', 0) == 0, "Errors reading the solver solution"
         assert report.get('Concolic::Solver::ConstraintsSolvedAsUNSAT', 0) == 0, "NEGATED execution returned as UNSAT"

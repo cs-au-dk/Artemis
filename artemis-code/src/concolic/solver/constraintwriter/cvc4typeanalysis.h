@@ -77,6 +77,7 @@ protected:
     void visit(Symbolic::ConstantBoolean* constantboolean, void* arg);
     void visit(Symbolic::BooleanCoercion* booleancoercion, void* arg);
     void visit(Symbolic::BooleanBinaryOperation* booleanbinaryoperation, void* arg);
+    void visit(Symbolic::StringIndexOf* stringindexof, void* arg);
 
 
     void recordConstraint(const std::string&, CVC4Type);

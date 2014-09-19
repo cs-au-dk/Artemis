@@ -845,18 +845,12 @@ EncodedJSValue JSC_HOST_CALL stringProtoFuncIndexOf(ExecState* exec)
     JSValue a0 = exec->argument(0);
     JSValue a1 = exec->argument(1);
     UString u2 = a0.toString(exec)->value(exec);
-
-#ifdef ARTEMIS
-    if (thisValue.isSymbolic() || a0.isSymbolic() || a1.isSymbolic()) {
-        Statistics::statistics()->accumulate("Concolic::MissingInstrumentation::stringProtoFuncIndexOf", 1);
-    }
-#endif
+    unsigned pos = 0;
 
     size_t result;
     if (a1.isUndefined())
         result = s.find(u2);
     else {
-        unsigned pos;
         int len = s.length();
         if (a1.isUInt32())
             pos = min<uint32_t>(a1.asUInt32(), len);
@@ -870,6 +864,22 @@ EncodedJSValue JSC_HOST_CALL stringProtoFuncIndexOf(ExecState* exec)
         }
         result = s.find(u2, pos);
     }
+
+//#ifdef ARTEMIS
+    if (thisValue.isSymbolic() || a0.isSymbolic() || a1.isSymbolic()) {
+
+        JSValue r = (result == notFound) ? jsNumber(-1) : jsNumber(result);
+        r.makeSymbolic(new Symbolic::StringIndexOf(
+                           thisValue.isSymbolic() ? (Symbolic::StringExpression*)thisValue.asSymbolic() :
+                                                    (Symbolic::StringExpression*)new Symbolic::ConstantString(new std::string(s.ascii().data())),
+                           a0.isSymbolic() ? (Symbolic::StringExpression*)a0.asSymbolic() :
+                                             (Symbolic::StringExpression*)new Symbolic::ConstantString(new std::string(u2.ascii().data())),
+                           a1.isSymbolic() ? (Symbolic::IntegerExpression*)a1.asSymbolic() :
+                                             (Symbolic::IntegerExpression*)new Symbolic::ConstantInteger(pos)));
+
+        return JSValue::encode(r);
+    }
+//#endif
 
     if (result == notFound)
         return JSValue::encode(jsNumber(-1));

@@ -77,6 +77,7 @@ private:
     void visit(Symbolic::BooleanCoercion* booleancoercion, void* args);
     void visit(Symbolic::BooleanBinaryOperation* booleanbinaryoperation, void* args);
     void visit(Symbolic::StringLength* stringlength, void* args);
+    void visit(Symbolic::StringIndexOf* stringindexof, void* arg);
 
     /**
      * Kaluza does not support mixing constraints on strings,

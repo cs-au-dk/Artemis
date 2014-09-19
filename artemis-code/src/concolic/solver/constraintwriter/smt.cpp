@@ -368,6 +368,11 @@ void SMTConstraintWriter::visit(Symbolic::IntegerMaxMin* obj, void* arg)
 
 }
 
+void SMTConstraintWriter::visit(Symbolic::StringIndexOf* stringindexof, void* arg)
+{
+    error("NO STRING INDEX OF SUPPORT");
+}
+
 /** Utility **/
 
 std::string SMTConstraintWriter::stringfindreplace(const std::string& string,
