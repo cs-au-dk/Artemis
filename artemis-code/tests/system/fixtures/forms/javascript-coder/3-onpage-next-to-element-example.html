@@ -1,0 +1,64 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!DOCTYPE html
+   PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd" >
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>
+      Example for Validator
+    </title>
+    <style type="text/css" xml:space="preserve">
+BODY, P,TD{ font-family: Arial,Verdana,Helvetica, sans-serif; font-size: 10pt }
+A{font-family: Arial,Verdana,Helvetica, sans-serif;}
+B {	font-family : Arial, Helvetica, sans-serif;	font-size : 12px;	font-weight : bold;}
+.error_strings{ font-family:Verdana; font-size:14px; color:#660000; background-color:#ff0;}
+</style><script language="JavaScript" src="gen_validatorv4.js"
+    type="text/javascript" xml:space="preserve"></script>
+  </head>
+  <body>
+    <form action="" name="myform" id="myform">
+      <table cellspacing="2" cellpadding="2" border="0">
+        <tr>
+          <td align="right">
+            Name
+          </td>
+          <td>
+            <div id='myform_Name_errorloc' class="error_strings"></div>
+            <input type="text" name="Name" />
+          </td>
+        </tr>
+        <tr>
+          <td align="right">
+            EMail
+          </td>
+          <td>
+            <div id='myform_Email_errorloc' class="error_strings"></div>
+            <input type="text" name="Email" />
+          </td>
+        </tr>
+        
+        <tr>
+          <td align="right"></td>
+          <td>
+            <input type="submit" value="Submit" />
+          </td>
+        </tr>
+      </table>
+    </form><script language="JavaScript" type="text/javascript"
+    xml:space="preserve">//<![CDATA[
+//You should create the validator only after the definition of the HTML form
+  var frmvalidator  = new Validator("myform");
+    frmvalidator.EnableOnPageErrorDisplay();
+    frmvalidator.EnableMsgsTogether();
+
+    frmvalidator.addValidation("Name","req","Please enter your First Name");
+    frmvalidator.addValidation("Name","maxlen=20",	"Max length for FirstName is 20");
+
+    frmvalidator.addValidation("Email","maxlen=50");
+    frmvalidator.addValidation("Email","req");
+    frmvalidator.addValidation("Email","email");
+//]]></script>
+  </body>
+</html>

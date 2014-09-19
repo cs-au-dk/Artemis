@@ -1,0 +1,71 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!DOCTYPE html
+   PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd" >
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>
+      JavaScript form validator Example: Conditional validation
+    </title>
+    <style type="text/css" xml:space="preserve">
+BODY, P,TD{ font-family: Arial,Verdana,Helvetica, sans-serif; font-size: 10pt }
+A{font-family: Arial,Verdana,Helvetica, sans-serif;}
+B {	font-family : Arial, Helvetica, sans-serif;	font-size : 12px;	font-weight : bold;}
+.error_strings{ font-family:Verdana; font-size:14px; color:#660000; background-color:#ff0;}
+</style><script language="JavaScript" src="gen_validatorv4.js"
+    type="text/javascript" xml:space="preserve"></script>
+  </head>
+  <body>
+  <h1>Conditional validation</h1>
+  <ul>
+  <li>The file upload is a mandatory field</li>
+  <li>Allowed file types are: jpg,gif,png</li>
+  </ul>
+    <form action="" name="myform" id="myform">
+      <table cellspacing="2" cellpadding="2" border="0">
+        <tr>
+          <td align="right" valign="top">
+            How did you hear about us?
+          </td>
+          <td>
+                <div id='myform_hearabout_errorloc' class="error_strings"></div>
+               <div  id='hearabout_0_container'><input type='radio' name='hearabout' id='hearabout_radio_0' value='Newspaper Ad'/><label for='hearabout_radio_0'  id='hearabout_radio_0_label'>Newspaper Ad</label></div>
+               <div  id='hearabout_1_container'><input type='radio' name='hearabout' id='hearabout_radio_1' value='Search Engine' tabindex='1'/><label for='hearabout_radio_1' id='hearabout_radio_1_label'>Search Engine</label></div>
+               <div  id='hearabout_2_container'><input type='radio' name='hearabout' id='hearabout_radio_2' value='Other' tabindex='2'/><label for='hearabout_radio_2'  id='hearabout_radio_2_label'>Other</label></div>
+               <div >
+                  <div id='myform_hearabout_other_errorloc' class="error_strings"></div>
+                  <input type='text' name='hearabout_other' id='hearabout_other' size='20' />
+               </div>
+          </td>
+        </tr>      
+        <tr>
+          <td align="right"></td>
+          <td>
+            <div id="myform_errorloc" class="error_strings">
+            </div>
+          </td>
+        </tr>        
+        <tr>
+          <td align="right"></td>
+          <td>
+            <input type="submit" value="Submit" />
+          </td>
+        </tr>
+      </table>
+    </form><script language="JavaScript" type="text/javascript"
+    xml:space="preserve">//<![CDATA[
+  var frmvalidator  = new Validator("myform");
+  frmvalidator.EnableOnPageErrorDisplay();
+  frmvalidator.EnableMsgsTogether();
+  
+  frmvalidator.addValidation("hearabout","selone","Please select an option from 'How did you hear about us'");
+
+  frmvalidator.addValidation("hearabout_other","req","Please fill-in this textbox",
+        "VWZ_IsChecked(document.forms['myform'].elements['hearabout'],'Other')");
+
+
+//]]></script>
+  </body>
+</html>

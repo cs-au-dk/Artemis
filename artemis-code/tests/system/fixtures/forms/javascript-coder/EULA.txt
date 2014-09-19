@@ -1,0 +1,30 @@
+FREE USE LICENSE
+
+PLEASE READ THE FOLLOWING TERMS AND CONDITIONS.
+YOU AGREE THAT ALL OF THE TERMS AND CONDITIONS BELOW APPLY TO YOU AND
+ANYONE ELSE WHO USES THIS SOFTWARE,
+
+1. SOFTWARE COVERED BY THIS LICENSE
+
+This license agreement ("Agreement") applies only to the version of
+the JavaScript Form Validator software ("JavaScript Form Validator")
+with which this Agreement is included by JavaScript-Coder.com
+("JavaScript-Coder.com"). Different license terms may apply to other 
+software packages or other materials from JavaScript-Coder.com, 
+and license terms for later versions of JavaScript Form Validator may
+also be changed.
+
+2. FREE USE LICENSE.
+
+* JavaScript-Coder.com grants you a non-exclusive 
+license, free of charge, to use Form Validation script
+code in any number of your web pages.
+
+* You may not sell, rent or lease this software or part of it
+
+3 DISCLAIMER 
+JAVASCRIPT FORM VALIDATOR IS DISTRIBUTED "AS IS". NO WARRANTY OF ANY 
+KIND IS EXPRESSED OR IMPLIED. YOU USE AT YOUR OWN RISK. JAVASCRIPT-CODER.COM
+WILL NOT BE LIABLE FOR DATA LOSS, DAMAGES, AND LOSS OF PROFITS OR ANY 
+OTHER KIND OF LOSS WHILE USING OR MISUSING THIS SOFTWARE.
+

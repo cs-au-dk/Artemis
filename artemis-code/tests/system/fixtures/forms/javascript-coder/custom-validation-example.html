@@ -1,0 +1,162 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!DOCTYPE html
+   PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd" >
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>
+      Example for Validator
+    </title>
+    <style type="text/css" xml:space="preserve">
+BODY, P,TD{ font-family: Arial,Verdana,Helvetica, sans-serif; font-size: 10pt }
+A{font-family: Arial,Verdana,Helvetica, sans-serif;}
+B {	font-family : Arial, Helvetica, sans-serif;	font-size : 12px;	font-weight : bold;}
+.error_strings{ font-family:Verdana; font-size:10px; color:#660000;}
+</style><script language="JavaScript" src="gen_validatorv4.js"
+    type="text/javascript" xml:space="preserve"></script>
+  </head>
+  <body>
+    <form action="" name="myform" id="myform">
+      <table cellspacing="2" cellpadding="2" border="0">
+        <tr>
+          <td align="right">
+            First Name
+          </td>
+          <td>
+            <input type="text" name="FirstName" />
+          </td>
+        </tr>
+        <tr>
+          <td align="right">
+            Last Name
+          </td>
+          <td>
+            <input type="text" name="LastName" />
+          </td>
+        </tr>
+        <tr>
+          <td align="right">
+            EMail
+          </td>
+          <td>
+            <input type="text" name="Email" />
+          </td>
+        </tr>
+        <tr>
+          <td align="right">
+            Phone
+          </td>
+          <td>
+            <input type="text" name="Phone" />
+          </td>
+        </tr>
+        <tr>
+          <td align="right">
+            Address
+          </td>
+          <td>
+            <textarea cols="20" rows="5" name="Address"></textarea>
+          </td>
+        </tr>
+        <tr>
+          <td align="right">
+            Country
+          </td>
+          <td>
+            <select name="Country">
+            <option value="" selected="selected">
+              [choose yours]
+            </option>
+            <option value="008">
+              Albania
+            </option>
+            <option value="012">
+              Algeria
+            </option>
+            <option value="016">
+              American Samoa
+            </option>
+            <option value="020">
+              Andorra
+            </option>
+            <option value="024">
+              Angola
+            </option>
+            <option value="660">
+              Anguilla
+            </option>
+            <option value="010">
+              Antarctica
+            </option>
+            <option value="028">
+              Antigua And Barbuda
+            </option>
+            <option value="032">
+              Argentina
+            </option>
+            <option value="051">
+              Armenia
+            </option>
+            <option value="533">
+              Aruba
+            </option></select>
+          </td>
+        </tr>
+        <tr>
+          <td align="right"></td>
+          <td>
+            <div id="myform_errorloc" class="error_strings">
+            </div>
+          </td>
+        </tr>
+        <tr>
+          <td align="right"></td>
+          <td>
+            <input type="submit" value="Submit" />
+          </td>
+        </tr>
+      </table>
+    </form><script language="JavaScript" type="text/javascript"
+    xml:space="preserve">//<![CDATA[
+//You should create the validator only after the definition of the HTML form
+  var frmvalidator  = new Validator("myform");
+ frmvalidator.EnableOnPageErrorDisplaySingleBox();
+ frmvalidator.EnableMsgsTogether();
+ 
+ frmvalidator.addValidation("FirstName","req","Please enter your First Name");
+  frmvalidator.addValidation("FirstName","maxlen=20",	"Max length for FirstName is 20");
+  frmvalidator.addValidation("FirstName","alpha_s","Name can contain alphabetic chars only");
+  
+  frmvalidator.addValidation("LastName","req","Please enter your Last Name");
+  frmvalidator.addValidation("LastName","maxlen=20","For LastName, Max length is 20");
+  
+  frmvalidator.addValidation("Email","maxlen=50");
+  frmvalidator.addValidation("Email","req");
+  frmvalidator.addValidation("Email","email");
+  
+  frmvalidator.addValidation("Phone","maxlen=50");
+  frmvalidator.addValidation("Phone","numeric");
+  
+  frmvalidator.addValidation("Address","maxlen=50");
+  frmvalidator.addValidation("Country","dontselect=0");
+  
+    function DoCustomValidation()
+    {
+        var frm = document.forms["myform"];
+        if(frm.FirstName.value == 'Bob')
+        {
+            sfm_show_error_msg("Bob, you can't submit this form. Go away! ");
+            return false;
+        }
+        else
+        {
+            return true;
+        }
+    }
+	
+  frmvalidator.setAddnlValidationFunction(DoCustomValidation);
+//]]></script>
+  </body>
+</html>

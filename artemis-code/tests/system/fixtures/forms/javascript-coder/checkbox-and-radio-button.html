@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+
+<!DOCTYPE html
+   PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN"
+   "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd" >
+
+<html xmlns="http://www.w3.org/1999/xhtml">
+  <head>
+    <title>
+      JavaScript form validator Example:Checkbox and Radio button
+    </title>
+    <style type="text/css" xml:space="preserve">
+BODY, P,TD{ font-family: Arial,Verdana,Helvetica, sans-serif; font-size: 10pt }
+A{font-family: Arial,Verdana,Helvetica, sans-serif;}
+B {	font-family : Arial, Helvetica, sans-serif;	font-size : 12px;	font-weight : bold;}
+.error_strings{ font-family:Verdana; font-size:14px; color:#660000;}
+</style><script language="JavaScript" src="gen_validatorv4.js"
+    type="text/javascript" xml:space="preserve"></script>
+  </head>
+  <body>
+  <h1>JavaScript form validator Example:Checkbox and Radio button</h1>
+  <ul>
+  <li>Password should not be same as user name (validator: "neelmnt")</li>
+  <li>Confirm Password should be same as password (validator: "eqelmnt")</li>
+  <li>The numbers should match this relation: large num > medium num > small num</li>
+  </ul>
+    <form action="" name="chkform" id="myform">
+    <p>
+    <label for='hostingsupport'>Need Website maintenance?</label><input type='checkbox' name='hostingsupport' id='hostingsupport' value='y'/>
+    </p>
+    <p>
+    <label for='antarctica'>Are you from Antarctica?</label><input type='checkbox' name='antarctica' id='antarctica' value='y'/>
+    </p>    
+    <p>
+    Website features required:<br/>
+    <input type='checkbox' name='features[]' id='features_item_0' value='HTML'/><label for='features_item_0'>Plain HTML Pages</label>
+    <input type='checkbox' name='features[]' id='features_item_1' value='Videos'/><label for='features_item_1'>Embedded Videos</label>
+    <input type='checkbox' name='features[]' id='features_item_2' value='flash'/><label for='features_item_2'>Flash</label>
+    <input type='checkbox' name='features[]' id='features_item_3' value='webapp'/><label for='features_item_3'>Custom web application</label>
+    </p>    
+    
+    <p>
+    Do you agree to our terms &amp; conditions?<br/>
+    <input type='radio' name='Terms' id='Terms_radio_0' value='Agree'/><label for='Terms_radio_0'>Agree</label>
+    <input type='radio' name='Terms' id='Terms_radio_0' value='Disagree'/><label for='Terms_radio_1'>Disagree</label>
+    </p>
+    <div id="chkform_errorloc" class="error_strings">
+    </div>
+    <p>
+    <input type="submit" value="Submit" />
+    </p>
+    </form><script language="JavaScript" type="text/javascript"
+    xml:space="preserve">//<![CDATA[
+  var chktestValidator  = new Validator("chkform");
+  chktestValidator.EnableOnPageErrorDisplaySingleBox();
+  chktestValidator.EnableMsgsTogether();
+  chktestValidator.addValidation("hostingsupport","shouldselchk=y","Sorry; we can support only if you select Website maintenance");
+  chktestValidator.addValidation("antarctica","dontselectchk=y","Sorry; we don't support customers from Antarctica!");
+  
+  chktestValidator.addValidation("features[]","selmin=2","Select at least two features");
+  chktestValidator.addValidation("features[]","selmax=3","Select maximum 3 features");
+  
+  chktestValidator.addValidation("Terms","selectradio","Please select an option from 'Agree to Terms'");
+  chktestValidator.addValidation("Terms","dontselectradio=Disagree","Can't proceed since you disagree to the Terms");
+ 
+//]]></script>
+  </body>
+</html>
