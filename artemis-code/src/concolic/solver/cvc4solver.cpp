@@ -109,7 +109,7 @@ SolutionPtr CVC4Solver::solve(PathConditionPtr pc, FormRestrictions formRestrict
     QElapsedTimer timer;
 
     // --rewrite-divk enables div and mod by a constant factor
-    std::string cmd = solverpath.filePath(exec).toStdString() + " /tmp/cvc4input &> /tmp/cvc4result";
+    std::string cmd = solverpath.filePath(exec).toStdString() + " /tmp/cvc4input > /tmp/cvc4result 2> /tmp/cvc4result";
     timer.start();
     int result = std::system(cmd.data()); // result of command interpreted in step 3
     // We cannot use the return code for error checking as it will be an "error" in all unsat cases (because we try to get the model). Error checking is done below.
