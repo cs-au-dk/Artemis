@@ -4,7 +4,7 @@ import subprocess
 import re
 import codecs
 
-ARTEMIS_EXEC = '/usr/local/bin/artemis'
+ARTEMIS_EXEC = 'artemis'
 OUTPUT_DIR = '.output'
 
 STATS_START = '=== Statistics ==='
