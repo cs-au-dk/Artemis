@@ -35,9 +35,9 @@ INSTALLS += installtarget
 include(artemis-core.pri)
 
 debugart {
-    QMAKE_LFLAGS += '-Wl,-rpath,\'$$PWD/../WebKit/WebKitBuild/Release/lib\''
-} else {
     QMAKE_LFLAGS += '-Wl,-rpath,\'$$PWD/../WebKit/WebKitBuild/Debug/lib\''
+} else {
+    QMAKE_LFLAGS += '-Wl,-rpath,\'$$PWD/../WebKit/WebKitBuild/Release/lib\''
 }
 
 HEADERS += \
