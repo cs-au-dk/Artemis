@@ -1,0 +1,24 @@
+<!doctype html><html lang="en">
+<!-- http://www.w3schools.com/js/js_form_validation.asp -->
+<head>
+<meta charset="utf-8">
+<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+<script type="text/javascript">
+    function validateForm()  {
+        var x = document.forms["myForm"]["fname"].value;
+        if (x == null || x == "") {
+            alert("First name must be filled out");
+            return false;
+        }
+
+        return true;
+    }
+</script>
+</head>
+<body>
+<form name="myForm" action="" onsubmit="return validateForm();" method="post">
+    First name: <input type="text" name="fname">
+    <input type="submit" value="Submit">
+</form>
+</body>
+</html>
