@@ -61,6 +61,8 @@ def test_generator(test_name, test_filename):
 
         fields = ("testinputselectintlz", "testinputselectint", "testinputx", "testinputy", "testinputNameId", "testinputId", "testinputfoo", "testinputbar", "booleaninput", "selectinput", "radio1a", "radio1b", "radio1c", "testinputselect")
 
+        # initial execution
+
         report = execute_artemis(test_name, "%s/%s" % (FIXTURE_ROOT, test_filename), 
                                  iterations=2,
                                  boolean_fields=["#booleaninput=true", "#radio1b=true", "#radio1a=false", "#radio1c=false"],
@@ -70,18 +72,21 @@ def test_generator(test_name, test_filename):
         assert report.get('WebKit::alerts', 0) == 1, "Initial execution did not reach a print statement"
 
         if unsat:
-            assert report.get('Concolic::Solver::ConstraintsSolvedAsUNSAT', 0) == 1, "Initial execution did not return as UNSAT"
+            assert report.get('Concolic::Solver::ConstraintsSolvedAsUNSAT', 0) == 1, \
+                "Initial execution did not return as UNSAT"
             return
         elif unsupported:
-            assert report.get('Concolic::Solver::ConstraintsSolved', 0) == 0, "Initial execution did not return as unsupported"
+            assert report.get('Concolic::Solver::ConstraintsSolved', 0) == 0, \
+                "Initial execution did not return as unsupported"
             return
-        else:
-            assert report.get('Concolic::Solver::ConstraintsSolvedAsUNSAT', 0) == 0, "Initial execution returned as UNSAT"
-            assert report.get('Concolic::Solver::ConstraintsSolved', 0) == 1, "Initial execution did not solve a constraint"
 
 	assert report.get('Concolic::Solver::ErrorsReadingSolution', 0) == 0, "Errors reading the solver solution"
+        assert report.get('Concolic::Solver::ConstraintsSolvedAsUNSAT', 0) == 0, "Initial execution returned as UNSAT"
+        assert report.get('Concolic::Solver::ConstraintsSolved', 0) == 1, "Initial execution did not solve a constraint"
 
         string_fields, boolean_fields, integer_fields = _fetch_and_inject(fields, report)
+
+        # repeat positive case
             
         report = execute_artemis(test_name, "%s/%s" % (FIXTURE_ROOT, test_filename),
                                  iterations=2,       
@@ -91,8 +96,13 @@ def test_generator(test_name, test_filename):
                                  reverse_constraint_solver=True,
                                  verbose=False)
 
-        assert report.get('WebKit::alerts', 0) == 1, "Execution using inputs from the solver did not reach a print statement... STRING: %s, BOOLEAN: %s, INTEGER: %s" % (string_fields, boolean_fields, integer_fields)
+        assert report.get('WebKit::alerts', 0) == 1, \
+            "Execution using inputs from the solver did not reach a print statement... STRING: %s, BOOLEAN: %s, INTEGER: %s" % (string_fields, boolean_fields, integer_fields)
+
         assert report.get('Concolic::Solver::ErrorsReadingSolution', 0) == 0, "Errors reading the solver solution"
+        assert report.get('Concolic::Solver::ConstraintsSolvedAsUNSAT', 0) == 0, "NEGATED execution returned as UNSAT"
+        assert report.get('Concolic::Solver::ConstraintsSolved', 0) == 1, \
+            "NEGATED execution did not solve a constraint"
 
         # negative case
     
@@ -103,13 +113,10 @@ def test_generator(test_name, test_filename):
                              boolean_fields=boolean_fields,
                              string_fields=string_fields,
                              integer_fields=integer_fields,
-                             reverse_constraint_solver=True,
                              verbose=False)
 
-        assert report.get('Concolic::Solver::ErrorsReadingSolution', 0) == 0, "Errors reading the solver solution"
-        assert report.get('Concolic::Solver::ConstraintsSolvedAsUNSAT', 0) == 0, "NEGATED execution returned as UNSAT"
-        assert report.get('Concolic::Solver::ConstraintsSolved', 0) == 1, "NEGATED execution did not solve a constraint"
-        assert report.get('WebKit::alerts', 0) == 0, "NEGATED execution REACHED a print statement when it should not using STRING: %s, BOOLEAN: %s, INTEGER: %s" % (string_fields, boolean_fields, integer_fields)
+        assert report.get('WebKit::alerts', 0) == 0, \
+            "NEGATED execution REACHED a print statement when it should not using STRING: %s, BOOLEAN: %s, INTEGER: %s" % (string_fields, boolean_fields, integer_fields)
 
     return test
 
