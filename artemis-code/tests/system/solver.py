@@ -82,6 +82,8 @@ def test_generator(test_name, test_filename):
 
 	assert report.get('Concolic::Solver::ErrorsReadingSolution', 0) == 0, "Errors reading the solver solution"
         assert report.get('Concolic::Solver::ConstraintsSolvedAsUNSAT', 0) == 0, "Initial execution returned as UNSAT"
+        assert report.get('Concolic::Solver::ConstraintsNotSolved', 0) == 0, \
+            "Initial execution returned with an error"
         assert report.get('Concolic::Solver::ConstraintsSolved', 0) == 1, "Initial execution did not solve a constraint"
 
         string_fields, boolean_fields, integer_fields = _fetch_and_inject(fields, report)
@@ -101,6 +103,8 @@ def test_generator(test_name, test_filename):
 
         assert report.get('Concolic::Solver::ErrorsReadingSolution', 0) == 0, "Errors reading the solver solution"
         assert report.get('Concolic::Solver::ConstraintsSolvedAsUNSAT', 0) == 0, "NEGATED execution returned as UNSAT"
+        assert report.get('Concolic::Solver::ConstraintsNotSolved', 0) == 0, \
+            "NEGATED execution returned with an error"
         assert report.get('Concolic::Solver::ConstraintsSolved', 0) == 1, \
             "NEGATED execution did not solve a constraint"
 

@@ -69,8 +69,8 @@ protected:
 
     void helperRegexTest(const std::string& regex, const std::string& expression,
                                                std::string* outMatch);
-    void helperRegexMatchPositive(const std::string& regex, const std::string& expression,
-                                  std::string* outPre, std::string* outMatch, std::string* outPost);
+    void helperRegexMatch(const std::string& regex, const std::string& expression,
+                                  std::string* outIsMatch, std::string* outPre, std::string* outMatch, std::string* outPost);
 
     enum SelectConstraintType { VALUE_ONLY, INDEX_ONLY, VALUE_INDEX };
     void helperSelectRestriction(SelectRestriction constraint, SelectConstraintType type);

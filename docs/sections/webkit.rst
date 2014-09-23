@@ -126,10 +126,6 @@ Symbolic Support
 
    ``RegExp.exec`` only support non-gobal regular expressions. If the regular expression contains the global flag, then only the first match using exec is supported. Warnings are emitted for subsequent matches.
 
-.. note::
-
-   ``RegExp.{exec, test}`` and ``String.{match, replace, search}`` using regular expressions only support the positive case (in which a match exist). The constraints emitted are not always satisfiable if the solution expects the negative case (in which no match exist).
-
 ``parseInt``,
 
 ``Math.{floor, ceil, max, min}``,

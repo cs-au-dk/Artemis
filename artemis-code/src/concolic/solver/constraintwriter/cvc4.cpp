@@ -230,12 +230,6 @@ void CVC4ConstraintWriter::visit(Symbolic::StringCharAt* stringcharat, void* arg
 
 void CVC4ConstraintWriter::visit(Symbolic::StringRegexReplace* obj, void* args)
 {
-    /**
-      * TODO:
-      *
-      * Support the negative case.
-      */
-
     // Examples of whitespace filters
     // /^\s+|\s+$/g
 
@@ -262,16 +256,23 @@ void CVC4ConstraintWriter::visit(Symbolic::StringRegexReplace* obj, void* args)
         return;
     }
 
-    std::string pre, match, post;
-    this->helperRegexMatchPositive(*obj->getRegexpattern(), mExpressionBuffer, &pre, &match, &post);
+    std::string isMatch, pre, match, post;
+    this->helperRegexMatch(*obj->getRegexpattern(), mExpressionBuffer, &isMatch, &pre, &match, &post);
 
     std::stringstream out;
+
+    out << "(ite " << isMatch << " ";
+
+    if (pre.compare("\"\"") == 0) pre = "";
+    if (post.compare("\"\"") == 0) post = "";
 
     if (!pre.empty() || !post.empty()) {
         out << "(str.++ " << pre << " \"" << *obj->getReplace() << "\" " << post << ")";
     } else {
         out << "\"" << *obj->getReplace() << "\"";
     }
+
+    out << " " << mExpressionBuffer << ")";
 
     mExpressionBuffer = out.str();
     mExpressionType = Symbolic::STRING;
@@ -328,17 +329,13 @@ void CVC4ConstraintWriter::visit(Symbolic::StringRegexSubmatchIndex* obj, void* 
         return;
     }
 
-    std::string pre, match, post;
-    this->helperRegexMatchPositive(*obj->getRegexpattern(), mExpressionBuffer, &pre, &match, &post);
+    std::string isMatch, pre, match, post;
+    this->helperRegexMatch(*obj->getRegexpattern(), mExpressionBuffer, &isMatch, &pre, &match, &post);
 
-    if (pre.empty()) {
-        mExpressionBuffer = "0";
-    } else {
-        std::ostringstream out;
-        out << "(str.len " << pre << ")";
-        mExpressionBuffer = out.str();
-    }
+    std::stringstream out;
+    out << "(ite " << isMatch << " (str.len " << pre << ") (- 1))";
 
+    mExpressionBuffer = out.str();
     mExpressionType = Symbolic::INT;
 
 }
@@ -505,8 +502,20 @@ void CVC4ConstraintWriter::visit(Symbolic::StringIndexOf* obj, void* arg)
     mExpressionType = Symbolic::INT;
 }
 
-void CVC4ConstraintWriter::helperRegexTest(const std::string& regex, const std::string& expression,
-                                           std::string* outMatch)
+/**
+ * @brief CVC4ConstraintWriter::helperRegexTest
+ * @param regex
+ * @param expression
+ * @param outMatch
+ *
+ * Returns a new boolean expression (outIsMatch) which evaluates to:
+ * - true if regex matches a substring in expression, or
+ * - false otherwise.
+ *
+ * outIsMatch is set to "ERROR" if an error occurs, and the internal error procedure is called.
+ *
+ */
+void CVC4ConstraintWriter::helperRegexTest(const std::string& regex, const std::string& expression, std::string* outIsMatch)
 {
     bool bol, eol = false;
     std::string cvc4regex;
@@ -519,6 +528,7 @@ void CVC4ConstraintWriter::helperRegexTest(const std::string& regex, const std::
         std::stringstream err;
         err << "The CVC4RegexCompiler failed when compiling the regex " << regex << " with the error message: " << ex.what();
         error(err.str());
+        *outIsMatch = "ERROR";
         return;
     }
 
@@ -545,19 +555,30 @@ void CVC4ConstraintWriter::helperRegexTest(const std::string& regex, const std::
 
     out << ")";
 
-    *outMatch = out.str();
+    *outIsMatch = out.str();
 }
 
-void CVC4ConstraintWriter::helperRegexMatchPositive(const std::string& regex, const std::string& expression,
-                                                    std::string* outPre, std::string* outMatch, std::string* outPost)
+/**
+ * @brief CVC4ConstraintWriter::helperRegexMatch
+ * @param regex
+ * @param expression
+ * @param outIsMatch
+ * @param outPre
+ * @param outMatch
+ * @param outPost
+ *
+ * Returns a new boolean expression (outIsMatch) which evaluates to:
+ * - true if regex matches a substring in expression, or
+ * - false otherwise.
+ *
+ * If outIsMatch is true, then outMatch will contain the first occurrence of a match,
+ * while outPre will contain the prefix of expression before outMatch and outPost will contain the suffix.
+ *
+ * out* is set to "ERROR" if an error occurs, and the internal error procedure is called.
+ */
+void CVC4ConstraintWriter::helperRegexMatch(const std::string& regex, const std::string& expression,
+                                                    std::string* outIsMatch, std::string* outPre, std::string* outMatch, std::string* outPost)
 {
-    /**
-     * TODO:
-     *
-     * Add support for the negative version of helperRegexMatch.
-     *
-     */
-
     // Compile regex
 
     bool bol, eol = false;
@@ -571,15 +592,25 @@ void CVC4ConstraintWriter::helperRegexMatchPositive(const std::string& regex, co
         std::stringstream err;
         err << "The CVC4RegexCompiler failed when compiling the regex " << regex << " with the error message: " << ex.what();
         error(err.str());
+
+        *outPre = *outMatch = *outPost = *outIsMatch = "ERROR";
         return;
     }
 
-    // Constraints (optimized for the positive case)
+    // Constraints on match
+
+    std::string isMatch;
+    this->helperRegexTest(regex, expression, &isMatch);
+
+    *outIsMatch = this->emitAndReturnNewTemporary(Symbolic::BOOL);
+    mOutput << "(assert (= " << *outIsMatch << " " << isMatch << "))" << std::endl;
+
+    // Constraints on outPre, outMatch, and outPost
 
     if (bol && eol) {
-        *outPre = "";
+        *outPre = "\"\"";
         *outMatch = expression;
-        *outPost = "";
+        *outPost = "\"\"";
 
     } else if (bol) {
         std::string match = this->emitAndReturnNewTemporary(Symbolic::STRING);
@@ -587,7 +618,7 @@ void CVC4ConstraintWriter::helperRegexMatchPositive(const std::string& regex, co
 
         mOutput << "(assert (= " << expression << " (str.++ " << match << " " << post << ")))" << std::endl;
 
-        *outPre = "";
+        *outPre = "\"\"";
         *outMatch = match;
         *outPost = post;
 
@@ -599,7 +630,7 @@ void CVC4ConstraintWriter::helperRegexMatchPositive(const std::string& regex, co
 
         *outPre = pre;
         *outMatch = match;
-        *outPost = "";
+        *outPost = "\"\"";
 
     } else {
         std::string pre = this->emitAndReturnNewTemporary(Symbolic::STRING);
@@ -613,7 +644,7 @@ void CVC4ConstraintWriter::helperRegexMatchPositive(const std::string& regex, co
         *outPost = post;
     }
 
-    mOutput << "(assert (str.in.re " << *outMatch << " " << cvc4regex << "))" << std::endl;
+    mOutput << "(assert (=> " << *outIsMatch << " (and (str.in.re " << *outMatch << " " << cvc4regex << ") (not (str.in.re " << *outPre << " " << cvc4regex << ")))))" << std::endl;
 }
 
 
