@@ -1,0 +1,39 @@
+<!--
+TEST PC = ((SymbolicBoolean == ConstantBoolean) == ConstantBoolean)
+TEST Concolic::Solver::Constraint.SYM_IN_testinput_o1: true
+TEST Concolic::Solver::ConstraintsWritten = 2
+TEST Concolic::Solver::ConstraintsSolved = 2
+-->
+<!doctype html><html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+	<title>Ben Spencer</title>
+	<meta name="author" content="Ben Spencer">
+	<script type="text/javascript">
+		function validate() {
+			var y = document.getElementById("testinput_o1").checked;
+
+			if (y == true) {
+				return true;
+			}else{
+				return false;
+			}
+		}
+	</script>
+
+</head>
+<body>
+
+	<form method="GET" action="about:blank" >
+
+		<input type="radio" name="testinput" value="option1" id="testinput_o1" > Option 1<br>
+		<input type="radio" name="testinput" value="option2" id="testinput_o2" > Option 2<br>
+
+		<button type="submit" onclick="return validate();">Submit</button>
+
+	</form>
+
+</body>
+</html>

@@ -144,7 +144,7 @@ class FeatureSwitchTests(unittest.TestCase):
                                          iterations=0,
                                          major_mode='concolic',
                                          concolic_event_sequences='simple',
-                                         verbose=True)
+                                         verbose=False)
 
                 self.assertEqual(2, report.get(key, 0));
 
@@ -154,7 +154,7 @@ class FeatureSwitchTests(unittest.TestCase):
                                          major_mode='concolic',
                                          concolic_event_sequences='simple',
                                          concolic_disable_features='cvc4-coercion-opt',
-                                         verbose=True)
+                                         verbose=False)
 
                 self.assertEqual(0, report.get(key, 0));
 
@@ -167,7 +167,7 @@ class FeatureSwitchTests(unittest.TestCase):
                                          iterations=0,
                                          major_mode='concolic',
                                          concolic_event_sequences='simple',
-                                         verbose=True)
+                                         verbose=False)
 
                 self.assertEqual(2, report.get(key, 0));
 
@@ -177,7 +177,7 @@ class FeatureSwitchTests(unittest.TestCase):
                                          major_mode='concolic',
                                          concolic_event_sequences='simple',
                                          concolic_disable_features='select-symbolic-index',
-                                         verbose=True)
+                                         verbose=False)
 
                 self.assertEqual(0, report.get(key, 0));
 
@@ -190,7 +190,7 @@ class FeatureSwitchTests(unittest.TestCase):
                                          iterations=0,
                                          major_mode='concolic',
                                          concolic_event_sequences='simple',
-                                         verbose=True)
+                                         verbose=False)
 
                 self.assertEqual(2, report.get(key, 0));
 
@@ -200,6 +200,29 @@ class FeatureSwitchTests(unittest.TestCase):
                                          major_mode='concolic',
                                          concolic_event_sequences='simple',
                                          concolic_disable_features='select-indirection-option-index',
+                                         verbose=False)
+
+                self.assertEqual(0, report.get(key, 0));
+
+        def test_symbolic_checked_property_access_feature_switch(self):
+
+                key = 'Concolic::Interpreter::SymbolicCheckedPropertyAccess'
+
+                report = execute_artemis('symbolic_select_property_access_feature_switch', 
+                                         '%sfeature-switches/radio-button.html' % FIXTURE_ROOT,
+                                         iterations=0,
+                                         major_mode='concolic',
+                                         concolic_event_sequences='simple',
+                                         verbose=True)
+
+                self.assertEqual(2, report.get(key, 0));
+
+                report = execute_artemis('symbolic_select_property_access_feature_switch', 
+                                         '%sfeature-switches/radio-button.html' % FIXTURE_ROOT,
+                                         iterations=0,
+                                         major_mode='concolic',
+                                         concolic_event_sequences='simple',
+                                         concolic_disable_features='radio-checkbox-symbolic',
                                          verbose=True)
 
                 self.assertEqual(0, report.get(key, 0));

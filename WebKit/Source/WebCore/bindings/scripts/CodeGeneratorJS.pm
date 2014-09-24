@@ -1371,8 +1371,6 @@ sub GenerateImplementation
 
     # ARTEMIS BEGIN
     # Benchmarking feature switches
-    # Support checked instead of value on radio and checkbox inputs
-    push(@implContent, "\n#define ARTEMIS_ENABLE_SYMBOLIC_CHECKED_PROPERTY\n");
     # Hidden inputs should be concrete.
     push(@implContent, "\n#define ARTEMIS_ENABLE_CONCRETE_HIDDEN_INPUTS\n");
     push(@implContent, "\n");
@@ -1854,16 +1852,15 @@ sub GenerateImplementation
                             push(@implContent, "\n");
                             # Only handle the symbolic boolean values on radio and checkbox elements. This removes symbolic handling of the .value property (SymbolicString) if its the .value property of a radio or checkbox element.
                             unless ($attribute->signature->extendedAttributes->{"SymbolicBoolean"}) {
-                                push(@implContent, "#ifdef ARTEMIS_ENABLE_SYMBOLIC_CHECKED_PROPERTY\n");
                                 push(@implContent, "    // Do not make checkbox or radio button values symbolic.\n");
                                 push(@implContent, "    if(strncmp(type.string().lower().ascii().data(), \"radio\", 5) == 0 || strncmp(type.string().lower().ascii().data(), \"checkbox\", 8) == 0){\n");
                                 push(@implContent, "        return result;\n");
                                 push(@implContent, "    }\n");
-                                push(@implContent, "#endif\n");
                             } else {
-                                push(@implContent, "#ifndef ARTEMIS_ENABLE_SYMBOLIC_CHECKED_PROPERTY\n");
-                                push(@implContent, "    return result; // Disable symbolic booleans for testing.\n");
-                                push(@implContent, "#endif\n");
+                                push(@implContent, "    if (!Symbolic::SymbolicInterpreter::isFeatureSymbolicCheckedPropertyEnabled()) {\n");
+                                push(@implContent, "        return result; // Disable symbolic booleans for testing.\n");
+                                push(@implContent, "    }\n");
+                                push(@implContent, "    Statistics::statistics()->accumulate(\"Concolic::Interpreter::SymbolicCheckedPropertyAccess\", 1);\n");
                             }
                         }
 

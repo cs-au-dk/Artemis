@@ -107,6 +107,13 @@ public:
         SymbolicInterpreter::m_featureIndirectOptionIndexLookupEnabled = value;
     }
 
+    static bool isFeatureSymbolicCheckedPropertyEnabled() {
+        return SymbolicInterpreter::m_featureSymbolicCheckedPropertyEnabled;
+    }
+    static void setFeatureSymbolicCheckedPropertyEnabled(bool value) {
+        SymbolicInterpreter::m_featureSymbolicCheckedPropertyEnabled = value;
+    }
+
 private:
     void fatalError(JSC::CodeBlock* codeBlock, std::string reason) __attribute__((noreturn));
 
@@ -121,6 +128,7 @@ private:
     // Feature flags
     static bool m_featureSymbolicSelectedIndexEnabled;
     static bool m_featureIndirectOptionIndexLookupEnabled;
+    static bool m_featureSymbolicCheckedPropertyEnabled;
 };
 
 }
