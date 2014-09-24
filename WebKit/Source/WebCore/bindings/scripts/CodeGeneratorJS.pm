@@ -1371,8 +1371,6 @@ sub GenerateImplementation
 
     # ARTEMIS BEGIN
     # Benchmarking feature switches
-    # Support selectedIndex
-    push(@implContent, "\n#define ARTEMIS_ENABLE_SYMBOLIC_SELECTEDINDEX\n");
     # Support checked instead of value on radio and checkbox inputs
     push(@implContent, "\n#define ARTEMIS_ENABLE_SYMBOLIC_CHECKED_PROPERTY\n");
     # Hidden inputs should be concrete.
@@ -1877,7 +1875,7 @@ sub GenerateImplementation
                             push(@implContent, "        return result;\n");
                             push(@implContent, "    }\n");
                             push(@implContent, "    \n");
-                            push(@implContent, "    Statistics::statistics()->accumulate(\"Concolic::Solver::IndirectOptionIndexAccess\", 1);\n");
+                            push(@implContent, "    Statistics::statistics()->accumulate(\"Concolic::Interpreter::IndirectOptionIndexAccess\", 1);\n");
 
                         }
 
@@ -1887,9 +1885,10 @@ sub GenerateImplementation
                         if ($attribute->signature->extendedAttributes->{"SymbolicSelectElement"} or
                             $attribute->signature->extendedAttributes->{"SymbolicOptionsCollection"}) {
                             if ($attribute->signature->extendedAttributes->{"SymbolicInteger"}) {
-                                push(@implContent, "#ifndef ARTEMIS_ENABLE_SYMBOLIC_SELECTEDINDEX\n");
-                                push(@implContent, "    return result; // Disable the selectedIndex feature for benchmarking.\n");
-                                push(@implContent, "#endif\n");
+                                push(@implContent, "    if (!Symbolic::SymbolicInterpreter::isFeatureSymbolicSelectedIndexEnabled()) {\n");
+                                push(@implContent, "        return result; // Disable the selectedIndex feature for benchmarking.\n");
+                                push(@implContent, "    }\n");
+                                push(@implContent, "    Statistics::statistics()->accumulate(\"Concolic::Interpreter::SymbolicSelectedIndexAccess\", 1);\n");
                                 push(@implContent, "\n");
                             }
                         }

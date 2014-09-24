@@ -40,6 +40,8 @@ namespace Symbolic
 {
 
 bool SymbolicInterpreter::m_isOpGetByValWithSymbolicArg = false;
+
+bool SymbolicInterpreter::m_featureSymbolicSelectedIndexEnabled = true;
 bool SymbolicInterpreter::m_featureIndirectOptionIndexLookupEnabled = true;
 
 // Global used to generate "unique" identifiers for crossreferencing symbolic expressions and values

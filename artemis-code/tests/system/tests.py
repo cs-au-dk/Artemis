@@ -158,9 +158,32 @@ class FeatureSwitchTests(unittest.TestCase):
 
                 self.assertEqual(0, report.get(key, 0));
 
+        def test_select_index_access_feature_switch(self):
+
+                key = 'Concolic::Interpreter::SymbolicSelectedIndexAccess'
+
+                report = execute_artemis('select_index_access_feature_switch', 
+                                         '%sfeature-switches/select-index-access.html' % FIXTURE_ROOT,
+                                         iterations=0,
+                                         major_mode='concolic',
+                                         concolic_event_sequences='simple',
+                                         verbose=True)
+
+                self.assertEqual(2, report.get(key, 0));
+
+                report = execute_artemis('select_index_access_feature_switch', 
+                                         '%sfeature-switches/select-index-access.html' % FIXTURE_ROOT,
+                                         iterations=0,
+                                         major_mode='concolic',
+                                         concolic_event_sequences='simple',
+                                         concolic_disable_features='select-symbolic-index',
+                                         verbose=True)
+
+                self.assertEqual(0, report.get(key, 0));
+
         def test_select_indirect_option_access_feature_switch(self):
 
-                key = 'Concolic::Solver::IndirectOptionIndexAccess'
+                key = 'Concolic::Interpreter::IndirectOptionIndexAccess'
 
                 report = execute_artemis('select_indirect_option_access_feature_switch', 
                                          '%sfeature-switches/select-indirect-option-access.html' % FIXTURE_ROOT,
@@ -169,7 +192,7 @@ class FeatureSwitchTests(unittest.TestCase):
                                          concolic_event_sequences='simple',
                                          verbose=True)
 
-                self.assertEqual(1, report.get(key, 0));
+                self.assertEqual(2, report.get(key, 0));
 
                 report = execute_artemis('select_indirect_option_access_feature_switch', 
                                          '%sfeature-switches/select-indirect-option-access.html' % FIXTURE_ROOT,

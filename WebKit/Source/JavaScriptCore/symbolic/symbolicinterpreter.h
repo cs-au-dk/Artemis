@@ -93,6 +93,13 @@ public:
      *
      * These are set by Artemis directly, to disable internal features for benchmarking purposes.
      */
+    static bool isFeatureSymbolicSelectedIndexEnabled() {
+        return SymbolicInterpreter::m_featureSymbolicSelectedIndexEnabled;
+    }
+    static void setFeatureSymbolicSelectedIndexEnabled(bool value) {
+        SymbolicInterpreter::m_featureSymbolicSelectedIndexEnabled = value;
+    }
+
     static bool isFeatureIndirectOptionIndexLookupEnabled() {
         return SymbolicInterpreter::m_featureIndirectOptionIndexLookupEnabled;
     }
@@ -110,6 +117,9 @@ private:
     bool m_shouldGC;
 
     static bool m_isOpGetByValWithSymbolicArg;
+
+    // Feature flags
+    static bool m_featureSymbolicSelectedIndexEnabled;
     static bool m_featureIndirectOptionIndexLookupEnabled;
 };
 
