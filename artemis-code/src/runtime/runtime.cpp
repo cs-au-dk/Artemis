@@ -103,7 +103,8 @@ Runtime::Runtime(QObject* parent, const Options& options, const QUrl& url)
     mWebkitExecutor = new WebKitExecutor(this, mAppmodel, options.presetFormfields,
                                          jqueryListener, ajaxRequestListner,
                                          enableConstantStringInstrumentation,
-                                         enablePropertyAccessInstrumentation);
+                                         enablePropertyAccessInstrumentation,
+                                         options.concolicDisabledFeatures);
 
     if(!options.customUserAgent.isEmpty()) {
         mWebkitExecutor->getPage()->setCustomUserAgent(options.customUserAgent);

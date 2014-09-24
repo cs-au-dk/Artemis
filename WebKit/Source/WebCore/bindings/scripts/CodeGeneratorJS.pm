@@ -1369,13 +1369,6 @@ sub GenerateImplementation
 
     @implContent = ();
 
-    # ARTEMIS BEGIN
-    # Benchmarking feature switches
-    # Hidden inputs should be concrete.
-    push(@implContent, "\n#define ARTEMIS_ENABLE_CONCRETE_HIDDEN_INPUTS\n");
-    push(@implContent, "\n");
-    # ARTEMIS END
-
     push(@implContent, "\nusing namespace JSC;\n\n");
     push(@implContent, "namespace WebCore {\n\n");
 
@@ -1840,21 +1833,28 @@ sub GenerateImplementation
                             push(@implContent, "\n");
                             push(@implContent, "    // Do not make hidden inputs or values read from buttons symbolic.\n");
                             push(@implContent, "    WTF::AtomicString type = impl->getAttribute(WebCore::HTMLNames::typeAttr);\n");
+                            push(@implContent, "    if (Symbolic::SymbolicInterpreter::isFeatureConcreteValuePropertyEnabled()) {\n");
                             # See commit f1a40d5c for an odd gotcha here.
-                            push(@implContent, "#ifdef ARTEMIS_ENABLE_CONCRETE_HIDDEN_INPUTS\n");
-                            push(@implContent, "    if(strncmp(type.string().lower().ascii().data(), \"hidden\", 6) == 0) {\n");
-                            push(@implContent, "        return result;\n");
-                            push(@implContent, "    }\n");
-                            push(@implContent, "#endif\n");
-                            push(@implContent, "    if(strncmp(type.string().lower().ascii().data(), \"submit\", 6) == 0 || strncmp(type.string().lower().ascii().data(), \"button\", 6) == 0){\n");
-                            push(@implContent, "        return result;\n");
+                            # Should match the list in formfielddescriptor.cpp
+                            push(@implContent, "        if (strncmp(type.string().lower().ascii().data(), \"hidden\", 6) == 0 ||\n");
+                            push(@implContent, "            strncmp(type.string().lower().ascii().data(), \"submit\", 6) == 0 ||\n");
+                            push(@implContent, "            strncmp(type.string().lower().ascii().data(), \"button\", 6) == 0 ||\n");
+                            push(@implContent, "            strncmp(type.string().lower().ascii().data(), \"reset\", 5) == 0 ||\n");
+                            push(@implContent, "            strncmp(type.string().lower().ascii().data(), \"image\", 5) == 0 ){\n");
+                            push(@implContent, "            Statistics::statistics()->accumulate(\"Concolic::Interpreter::ConcreteValuePropertyAccessIgnored\", 1);\n");
+                            push(@implContent, "            return result;\n");
+                            push(@implContent, "        }\n");
                             push(@implContent, "    }\n");
                             push(@implContent, "\n");
+
                             # Only handle the symbolic boolean values on radio and checkbox elements. This removes symbolic handling of the .value property (SymbolicString) if its the .value property of a radio or checkbox element.
                             unless ($attribute->signature->extendedAttributes->{"SymbolicBoolean"}) {
                                 push(@implContent, "    // Do not make checkbox or radio button values symbolic.\n");
-                                push(@implContent, "    if(strncmp(type.string().lower().ascii().data(), \"radio\", 5) == 0 || strncmp(type.string().lower().ascii().data(), \"checkbox\", 8) == 0){\n");
-                                push(@implContent, "        return result;\n");
+                                push(@implContent, "    if (Symbolic::SymbolicInterpreter::isFeatureConcreteValuePropertyEnabled()) {\n");
+                                push(@implContent, "        if (strncmp(type.string().lower().ascii().data(), \"radio\", 5) == 0 || strncmp(type.string().lower().ascii().data(), \"checkbox\", 8) == 0){\n");
+                                push(@implContent, "            Statistics::statistics()->accumulate(\"Concolic::Interpreter::ConcreteValuePropertyAccessIgnored\", 1);\n");
+                                push(@implContent, "            return result;\n");
+                                push(@implContent, "        }\n");
                                 push(@implContent, "    }\n");
                             } else {
                                 push(@implContent, "    if (!Symbolic::SymbolicInterpreter::isFeatureSymbolicCheckedPropertyEnabled()) {\n");

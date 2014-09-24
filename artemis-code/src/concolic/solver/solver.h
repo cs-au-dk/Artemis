@@ -21,7 +21,7 @@
 
 #include "concolic/pathcondition.h"
 #include "runtime/input/forms/formfieldrestrictedvalues.h"
-#include "concolic/benchmerking.h"
+#include "concolic/benchmarking.h"
 
 #include "solution.h"
 

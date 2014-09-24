@@ -59,7 +59,8 @@ public:
                    JQueryListener* jqueryListener,
                    AjaxRequestListener* ajaxListener,
                    bool enableConstantStringInstrumentation,
-                   bool enablePropertyAccessInstrumentation);
+                   bool enablePropertyAccessInstrumentation,
+                   ConcolicBenchmarkFeatures disabledFeatures);
     ~WebKitExecutor();
 
     void executeSequence(ExecutableConfigurationConstPtr conf);

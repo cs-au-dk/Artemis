@@ -213,7 +213,7 @@ class FeatureSwitchTests(unittest.TestCase):
                                          iterations=0,
                                          major_mode='concolic',
                                          concolic_event_sequences='simple',
-                                         verbose=True)
+                                         verbose=False)
 
                 self.assertEqual(2, report.get(key, 0));
 
@@ -223,9 +223,35 @@ class FeatureSwitchTests(unittest.TestCase):
                                          major_mode='concolic',
                                          concolic_event_sequences='simple',
                                          concolic_disable_features='radio-checkbox-symbolic',
-                                         verbose=True)
+                                         verbose=False)
 
                 self.assertEqual(0, report.get(key, 0));
+
+        def test_concrete_value_property_access_feature_switch(self):
+
+                ignored_access = 'Concolic::Interpreter::ConcreteValuePropertyAccessIgnored'
+                traces_explored = 'Concolic::ExecutionTree::DistinctTracesExplored'
+
+                report = execute_artemis('concrete_value_property_access_feature_switch', 
+                                         '%sfeature-switches/hidden-field-concrete-access.html' % FIXTURE_ROOT,
+                                         iterations=0,
+                                         major_mode='concolic',
+                                         concolic_event_sequences='simple',
+                                         verbose=False)
+
+                self.assertEqual(1, report.get(ignored_access, 0));
+                self.assertEqual(1, report.get(traces_explored, 0));
+
+                report = execute_artemis('concrete_value_property_access_feature_switch', 
+                                         '%sfeature-switches/hidden-field-concrete-access.html' % FIXTURE_ROOT,
+                                         iterations=0,
+                                         major_mode='concolic',
+                                         concolic_event_sequences='simple',
+                                         concolic_disable_features='concrete-value-property',
+                                         verbose=False)
+
+                self.assertEqual(0, report.get(ignored_access, 0));
+                self.assertEqual(2, report.get(traces_explored, 0));
 
 
 if __name__ == '__main__':

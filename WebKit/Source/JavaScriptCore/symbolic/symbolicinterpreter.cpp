@@ -41,9 +41,11 @@ namespace Symbolic
 
 bool SymbolicInterpreter::m_isOpGetByValWithSymbolicArg = false;
 
+// All benchmarking features are on by default.
 bool SymbolicInterpreter::m_featureSymbolicSelectedIndexEnabled = true;
 bool SymbolicInterpreter::m_featureIndirectOptionIndexLookupEnabled = true;
 bool SymbolicInterpreter::m_featureSymbolicCheckedPropertyEnabled = true;
+bool SymbolicInterpreter::m_featureConcreteValuePropertyEnabled = true;
 
 // Global used to generate "unique" identifiers for crossreferencing symbolic expressions and values
 unsigned int NEXT_SYMBOLIC_ID = 0;

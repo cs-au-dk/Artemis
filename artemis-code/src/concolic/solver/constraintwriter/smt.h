@@ -25,7 +25,7 @@
 #include "JavaScriptCore/symbolic/expr.h"
 #include "JavaScriptCore/symbolic/expression/visitor.h"
 #include "runtime/input/forms/formfieldrestrictedvalues.h"
-#include "concolic/benchmerking.h"
+#include "concolic/benchmarking.h"
 
 #include "abstract.h"
 

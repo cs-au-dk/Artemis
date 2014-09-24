@@ -22,7 +22,7 @@
 #include <QMap>
 #include <QString>
 #include "input/forms/injectionvalue.h"
-#include "concolic/benchmerking.h"
+#include "concolic/benchmarking.h"
 
 namespace artemis
 {

@@ -26,6 +26,7 @@
 
 #include "runtime/browser/executionresult.h"
 #include "runtime/browser/artemiswebpage.h"
+#include "concolic/benchmarking.h"
 
 namespace artemis
 {
@@ -49,7 +50,7 @@ class ExecutionResultBuilder : public QObject
     Q_OBJECT
 
 public:
-    explicit ExecutionResultBuilder(ArtemisWebPagePtr page);
+    explicit ExecutionResultBuilder(ArtemisWebPagePtr page, ConcolicBenchmarkFeatures disabledFeatures);
     
     void reset();
     void notifyPageLoaded();
@@ -69,6 +70,8 @@ private:
     QString mPageStateAfterLoad;
 
     QList<QPair<QWebElement*, QString> > mElementPointers;
+
+    ConcolicBenchmarkFeatures mDisabledFeatures;
 
 public slots:
     void slScriptCrashed(QString cause, intptr_t sourceID, int lineNumber);

@@ -154,7 +154,7 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             "           The features which can be disabled with this option are:\n"
             "           radio-restriction, select-restriction, select-restriction-dynamic, select-symbolic-index,\n"
             "           select-link-value-index, select-indirection-option-index, radio-checkbox-symbolic,\n"
-            "           cvc4-coercion-opt\n"
+            "           concrete-value-property, cvc4-coercion-opt\n"
             "\n"
             "--smt-solver <solver>:\n"
             "           z3str - Use the Z3-str SMT solver as backend.\n"
@@ -274,6 +274,9 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
                     Symbolic::SymbolicInterpreter::setFeatureSymbolicSelectedIndexEnabled(false);
                 } else if (feature == "radio-checkbox-symbolic") {
                     Symbolic::SymbolicInterpreter::setFeatureSymbolicCheckedPropertyEnabled(false);
+                } else if (feature == "concrete-value-property") {
+                    options.concolicDisabledFeatures |= artemis::CONCRETE_VALUE_PROPERTY;
+                    Symbolic::SymbolicInterpreter::setFeatureConcreteValuePropertyEnabled(false);
                 } else {
                     cerr << "ERROR: Invalid choice of concolic-disable-features " << optarg << endl;
                     exit(1);

@@ -14,8 +14,8 @@
  * limitations under the License.
  */
 
-#ifndef BENCHMERKING_H
-#define BENCHMERKING_H
+#ifndef BENCHMARKING_H
+#define BENCHMARKING_H
 
 #include <QFlags>
 
@@ -28,7 +28,8 @@ enum ConcolicBenchmarkFeatureValues {
     SELECT_RESTRICTION = 2,
     SELECT_RESTRICTION_DYNAMIC = 4,
     SELECT_LINK_VALUE_INDEX = 8,
-    CVC4_COERCION_OPT = 16
+    CVC4_COERCION_OPT = 16,
+    CONCRETE_VALUE_PROPERTY = 32
 };
 
 Q_DECLARE_FLAGS(ConcolicBenchmarkFeatures, ConcolicBenchmarkFeatureValues)
@@ -37,4 +38,4 @@ Q_DECLARE_OPERATORS_FOR_FLAGS(ConcolicBenchmarkFeatures)
 
 
 } // namespace artemis
-#endif // BENCHMERKING_H
+#endif // BENCHMARKING_H

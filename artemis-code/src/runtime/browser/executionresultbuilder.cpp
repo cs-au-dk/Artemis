@@ -26,9 +26,11 @@
 namespace artemis
 {
 
-ExecutionResultBuilder::ExecutionResultBuilder(ArtemisWebPagePtr page) : QObject(NULL)
+ExecutionResultBuilder::ExecutionResultBuilder(ArtemisWebPagePtr page, ConcolicBenchmarkFeatures disabledFeatures) :
+    QObject(NULL),
+    mPage(page),
+    mDisabledFeatures(disabledFeatures)
 {
-    mPage = page;
     reset();
 }
 
@@ -109,7 +111,11 @@ void ExecutionResultBuilder::registerFromFieldsIntoResult()
                 FormFieldTypes type =  getTypeFromAttr(field.attribute("type"));
 
                 if (type == NO_INPUT) {
-                    continue;
+                    if (mDisabledFeatures.testFlag(CONCRETE_VALUE_PROPERTY)) {
+                        type = TEXT;
+                    } else {
+                        continue;
+                    }
                 }
 
                 DOMElementDescriptorConstPtr elementDescriptor = DOMElementDescriptorConstPtr(new DOMElementDescriptor(&field));

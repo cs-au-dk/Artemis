@@ -1,0 +1,35 @@
+<!doctype html><html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+	<title>Ben Spencer</title>
+	<meta name="author" content="Ben Spencer">
+	<script type="text/javascript">
+
+		function validate() {
+			var x = "testme";
+			var y = document.getElementById("hidden").value;
+
+			if (x != y) {
+				alert("Error!\n'" + x + "' does not match '" + y + "'");
+				return false;
+			}else{
+				return true;
+			}
+		}
+	</script>
+
+</head>
+<body>
+
+	<form method="GET" action="about:blank" >
+
+		<input type="hidden" id="hidden" value="hidden" />
+
+		<button type="submit" onclick="return validate();">Submit</button>
+
+	</form>
+
+</body>
+</html>

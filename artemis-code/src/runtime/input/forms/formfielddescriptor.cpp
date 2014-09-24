@@ -65,6 +65,7 @@ FormFieldTypes getTypeFromAttr(QString typeAttr)
         text
     */
 
+    // Should match the list in CodeGeneratorJS.pm
     if (typeAttr == "button"
         || typeAttr == "hidden"
         || typeAttr == "submit"

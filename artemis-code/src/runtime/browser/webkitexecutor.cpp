@@ -44,7 +44,8 @@ WebKitExecutor::WebKitExecutor(QObject* parent,
                                JQueryListener* jqueryListener,
                                AjaxRequestListener* ajaxListener,
                                bool enableConstantStringInstrumentation,
-                               bool enablePropertyAccessInstrumentation) :
+                               bool enablePropertyAccessInstrumentation,
+                               ConcolicBenchmarkFeatures disabledFeatures) :
     QObject(parent),
     mNextOpCanceled(false), mKeepOpen(false)
 {
@@ -63,7 +64,7 @@ WebKitExecutor::WebKitExecutor(QObject* parent,
     QObject::connect(mPage.data()->networkAccessManager(), SIGNAL(finished(QNetworkReply*)), this, SLOT(slNAMFinished(QNetworkReply*)));
     QObject::connect(mPage.data(), SIGNAL(loadProgress(int)),
                      this, SLOT(slLoadProgress(int)));
-    mResultBuilder = ExecutionResultBuilderPtr(new ExecutionResultBuilder(mPage));
+    mResultBuilder = ExecutionResultBuilderPtr(new ExecutionResultBuilder(mPage, disabledFeatures));
 
     mCoverageListener = appmodel->getCoverageListener();
     mJavascriptStatistics = appmodel->getJavascriptStatistics();

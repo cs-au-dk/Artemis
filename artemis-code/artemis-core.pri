@@ -136,7 +136,7 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/concolic/search/randomisedselector.h \
     src/concolic/search/roundrobinselector.h \
     src/concolic/search/explorationdescriptor.h \
-    src/concolic/benchmerking.h
+    src/concolic/benchmarking.h
 
 SOURCES += src/runtime/input/ajaxinput.cpp \
     src/strategies/prioritizer/constantprioritizer.cpp \
