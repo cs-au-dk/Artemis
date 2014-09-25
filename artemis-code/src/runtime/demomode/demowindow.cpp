@@ -426,6 +426,12 @@ void DemoModeMainWindow::preTraceExecution(ExecutionResultPtr result)
     }
     mEntryPointLabel->setText(QString("Candidate Entry Point Events: %1").arg(allEntryPoints.length()));
 
+    // Make all form fields symbolic.
+    foreach (QSharedPointer<const FormFieldDescriptor> field, result->getFormFields()) {
+        field->getDomElement()->getElement(mWebkitExecutor->getPage()).evaluateJavaScript(QString("this.symbolictrigger == \"\";"));
+        field->getDomElement()->getElement(mWebkitExecutor->getPage()).evaluateJavaScript(QString("this.options.symbolictrigger == \"\";"));
+    }
+
     // Display the page for the user to interact with.
     mWebView->setEnabled(true);
 
