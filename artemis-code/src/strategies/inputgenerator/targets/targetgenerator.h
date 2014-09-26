@@ -20,24 +20,30 @@
 #include <QSharedPointer>
 
 #include "runtime/input/events/eventhandlerdescriptor.h"
-#include "strategies/inputgenerator/targets/jquerylistener.h"
 
 #include "targetdescriptor.h"
 
 namespace artemis
 {
 
+/**
+ * @brief The TargetGenerator class
+ *
+ * The TargetGenerator selects the DOM node used as the target argument used when triggering a given event handler. The choice
+ * is encoded in the TagetDescriptor.
+ *
+ * TargetGenerator is called post-execution in iteration A, while TargetDescriptors are used to identify concrete DOM nodes observed
+ * at runtime in a later iteration not equal to A (using the get method on TargetDesciptor).
+ *
+ */
 class TargetGenerator
 {
 
 public:
-    TargetGenerator(JQueryListener* jqueryListener);
+    TargetGenerator() {}
     virtual ~TargetGenerator() {}
 
-    TargetDescriptorConstPtr generateTarget(EventHandlerDescriptorConstPtr eventHandler) const;
-
-private:
-    JQueryListener* mJQueryListener;
+    virtual TargetDescriptorConstPtr generateTarget(EventHandlerDescriptorConstPtr eventHandler) const = 0;
 };
 
 typedef QSharedPointer<const TargetGenerator> TargetGeneratorConstPtr;

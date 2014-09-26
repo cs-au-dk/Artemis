@@ -25,8 +25,9 @@
 namespace artemis
 {
 
-HandlerDependencyTracker::HandlerDependencyTracker(bool enabled) :
-    mEnabled(enabled)
+HandlerDependencyTracker::HandlerDependencyTracker(bool enabled)
+    : mEnabled(enabled)
+    , mNoEventLabel("[none]")
 {
     mCurrentEvent = mNoEventLabel;
 }

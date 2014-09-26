@@ -21,6 +21,8 @@
 #include "strategies/inputgenerator/targets/jquerylistener.h"
 #include "util/randomutil.h"
 
+#include "statistics/statsstorage.h"
+
 #include "jquerytarget.h"
 
 namespace artemis
@@ -41,7 +43,7 @@ QString JQueryTarget::getSignature(QWebElement element) const
     QString result = getSignature(element.parent());
 
     if (element.tagName() == QString("HTML")) {
-        result = result.append("#document.HTML");
+        result = result.append("#document"); // at some point this was #document.HTML?
     }
     else {
         result = result.append(element.tagName());
@@ -89,6 +91,8 @@ QWebElement JQueryTarget::get(ArtemisWebPagePtr page) const
 
         QString name = element.tagName();
         qDebug() << "TARGET::Selecting element " << name << " out of a total of " << elements.count() << "element(s) and " << selectors.count() << " selector(s)" << endl;
+
+        Statistics::statistics()->accumulate("TargetGeneration::jQuery::eventsIdentified", 1);
 
         return element;
     }

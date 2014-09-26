@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Aarhus University
+ * Copyright 2014 Aarhus University
  *
  * Licensed under the GNU General Public License, Version 3 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,11 +14,24 @@
  * limitations under the License.
  */
 
-#include "targetgenerator.h"
+#ifndef LEGACYTARGETGENERATOR_H
+#define LEGACYTARGETGENERATOR_H
+
+#include "strategies/inputgenerator/targets/targetgenerator.h"
 
 namespace artemis
 {
 
+class LegacyTargetGenerator : public TargetGenerator
+{
 
+public:
+    LegacyTargetGenerator() {}
 
-} // END NAMESPACE
+    virtual TargetDescriptorConstPtr generateTarget(EventHandlerDescriptorConstPtr eventHandler) const;
+
+};
+
+}
+
+#endif // LEGACYTARGETGENERATOR_H

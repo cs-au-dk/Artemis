@@ -11,7 +11,14 @@ FIXTURE_ROOT = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'fixtur
 class JQueryTest(unittest.TestCase):
 
 	def test_detect_jquery_eventhandler(self):
-		execute_artemis('test-jquery-live', '%s/jquery-live/index.html' % FIXTURE_ROOT)
+		report = execute_artemis('test-jquery-live', '%s/jquery-live/index.html' % FIXTURE_ROOT, 
+                                         iterations=2)
+                self.assertEqual(1, report.get('TargetGeneration::jQuery::eventsIdentified', 0))
+
+		report = execute_artemis('test-jquery-live', '%s/jquery-live/index.html' % FIXTURE_ROOT, 
+                                         jquery_support='false',
+                                         iterations=2)
+                self.assertEqual(0, report.get('TargetGeneration::jQuery::eventsIdentified', 0))
 
 
 class TimerTests(unittest.TestCase):

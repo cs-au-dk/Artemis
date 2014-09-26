@@ -191,6 +191,9 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             "           Change the user-agent reported by Artemis to <custom-ua>.\n"
             "           The following built-in user agents can also be specified (case sensitive):\n"
             "           default, iphone4, ipad4, nexus5, chrome35\n"
+            "\n"
+            "--jquery-support <true|false>\n"
+            "           Support for jQuery event handlers. Default: true."
             "\n";
 
     struct option long_options[] = {
@@ -219,6 +222,7 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
     {"help", no_argument, NULL, 'h'},
     {"option-values", optional_argument, NULL, 'q'},
     {"user-agent", required_argument, NULL, 'U'},
+    {"jquery-support", required_argument, NULL, 'A'},
     {0, 0, 0, 0}
     };
 
@@ -708,6 +712,21 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             }
 
             break;
+        }
+
+        case 'A': {
+
+            if (string(optarg).compare("true") == 0) {
+                options.targetStrategy = artemis::JQUERY;
+            } else if (string(optarg).compare("false") == 0) {
+                options.targetStrategy = artemis::LEGACY;
+            } else {
+                cerr << "ERROR: Invalid choice of jQuery support" << optarg << endl;
+                exit(1);
+            }
+
+            break;
+
         }
 
         case '?': {

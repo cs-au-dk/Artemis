@@ -1,5 +1,5 @@
 /*
- * Copyright 2012 Aarhus University
+ * Copyright 2014 Aarhus University
  *
  * Licensed under the GNU General Public License, Version 3 (the "License");
  * you may not use this file except in compliance with the License.
@@ -14,11 +14,29 @@
  * limitations under the License.
  */
 
-#include "targetgenerator.h"
+#ifndef JQUERYTARGETGENERATOR_H
+#define JQUERYTARGETGENERATOR_H
+
+#include "strategies/inputgenerator/targets/targetgenerator.h"
+#include "strategies/inputgenerator/targets/jquerylistener.h"
 
 namespace artemis
 {
 
+class JqueryTargetGenerator : public TargetGenerator
+{
+
+public:
+    JqueryTargetGenerator(JQueryListener* jqueryListener)
+        : mJQueryListener(jqueryListener) {}
+
+    virtual TargetDescriptorConstPtr generateTarget(EventHandlerDescriptorConstPtr eventHandler) const;
 
 
-} // END NAMESPACE
+private:
+    JQueryListener* mJQueryListener;
+};
+
+}
+
+#endif // JQUERYTARGETGENERATOR_H

@@ -37,6 +37,9 @@
 #include "strategies/inputgenerator/form/staticforminputgenerator.h"
 #include "strategies/inputgenerator/form/constantstringforminputgenerator.h"
 
+#include "strategies/inputgenerator/targets/jquerytargetgenerator.h"
+#include "strategies/inputgenerator/targets/legacytargetgenerator.h"
+
 #include "strategies/termination/numberofiterationstermination.h"
 
 #include "strategies/prioritizer/constantprioritizer.h"
@@ -136,13 +139,29 @@ Runtime::Runtime(QObject* parent, const Options& options, const QUrl& url)
         mExecStat = new SeleniumEventExecutionStatistics(url);
         break;
     case EXPORT_JSON:
-        mExecStat = new JSONEventExecutionStatistics(url);
+        mExecStat = new JSONEventExecutionStatistics(url);  
+        break;
+
+    default:
+        assert(false);
+    }
+
+    switch(options.targetStrategy) {
+    case JQUERY:
+        mTargetGenerator = TargetGeneratorConstPtr(new JqueryTargetGenerator(jqueryListener));
+        break;
+    case LEGACY:
+        mTargetGenerator = TargetGeneratorConstPtr(new LegacyTargetGenerator());
+        break;
+
+    default:
+        assert(false);
     }
 
     mInputgenerator = new RandomInputGenerator(this,
                                                formInputGenerator,
                                                QSharedPointer<StaticEventParameterGenerator>(new StaticEventParameterGenerator()),
-                                               TargetGeneratorConstPtr(new TargetGenerator(jqueryListener)),
+                                               mTargetGenerator,
                                                mExecStat,
                                                options.numberSameLength);
     mTerminationStrategy = new NumberOfIterationsTermination(this, options.iterationLimit);
@@ -170,9 +189,6 @@ Runtime::Runtime(QObject* parent, const Options& options, const QUrl& url)
     default:
         assert(false);
     }
-
-
-
 
     QObject::connect(mWebkitExecutor, SIGNAL(sigAbortedExecution(QString)),
                      this, SLOT(slAbortedExecution(QString)));

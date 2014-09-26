@@ -267,8 +267,7 @@ void ConcolicRuntime::setupNextConfiguration(QSharedPointer<FormInputCollection>
         EventParametersConstPtr eventParameters = EventParametersConstPtr(new MouseEventParameters(mEntryPointEvent->getName(), true, true, 1, 0, 0, 0, 0, false, false, false, false, 0));
 
         // Create a suitable TargetDescriptor object for this submission.
-        // TODO: No support for JQuery unless we use a JQueryTarget, JQueryListener (and TargetGenerator?).
-        TargetDescriptorConstPtr targetDescriptor = TargetDescriptorConstPtr(new LegacyTarget(mEntryPointEvent));
+        TargetDescriptorConstPtr targetDescriptor = mTargetGenerator->generateTarget(mEntryPointEvent);
 
         // Create a DomInput which will inject the FormInputCollection and fire the entry point event.
         submitEvent = BaseInputConstPtr(new DomInput(mEntryPointEvent, formInput, eventParameters, targetDescriptor, mExecStat));
