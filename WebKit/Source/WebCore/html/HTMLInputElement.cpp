@@ -56,6 +56,7 @@
 #include "WheelEvent.h"
 #include <wtf/MathExtras.h>
 #include <wtf/StdLibExtras.h>
+#include "statistics/statsstorage.h"
 
 #if ENABLE(INPUT_TYPE_COLOR)
 #include "ColorInputType.h"
@@ -421,11 +422,13 @@ double HTMLInputElement::alignValueForStep(double newValue, double step, unsigne
 
 void HTMLInputElement::stepUp(int n, ExceptionCode& ec)
 {
+    Statistics::statistics()->accumulate("Concolic::Solver::WARNING::InputSource::stepUp", 1);
     applyStep(n, RejectAny, DispatchNoEvent, ec);
 }
 
 void HTMLInputElement::stepDown(int n, ExceptionCode& ec)
 {
+    Statistics::statistics()->accumulate("Concolic::Solver::WARNING::InputSource::stepDown", 1);
     applyStep(-n, RejectAny, DispatchNoEvent, ec);
 }
 

@@ -1827,45 +1827,61 @@ sub GenerateImplementation
                     if ($attribute->signature->extendedAttributes->{"Symbolic"}) {
                         # ARTEMIS BEGIN
 
-                        # Conditionally skip symbolic values for certain instances of input elements
-
                         if ($attribute->signature->extendedAttributes->{"SymbolicInputElement"}) {
+
+                        # Conditionally skip symbolic values for certain instances of input elements
+                        if ($attribute->signature->name eq "value") {
                             push(@implContent, "\n");
-                            push(@implContent, "    // Do not make hidden inputs or values read from buttons symbolic.\n");
-                            push(@implContent, "    WTF::AtomicString type = impl->getAttribute(WebCore::HTMLNames::typeAttr);\n");
-                            push(@implContent, "    if (Symbolic::SymbolicInterpreter::isFeatureConcreteValuePropertyEnabled()) {\n");
+                            push(@implContent, "    std::string type = impl->getAttribute(WebCore::HTMLNames::typeAttr).string().lower().ascii().data();\n");
                             # See commit f1a40d5c for an odd gotcha here.
-                            # Should match the list in formfielddescriptor.cpp
-                            push(@implContent, "        if (strncmp(type.string().lower().ascii().data(), \"hidden\", 6) == 0 ||\n");
-                            push(@implContent, "            strncmp(type.string().lower().ascii().data(), \"submit\", 6) == 0 ||\n");
-                            push(@implContent, "            strncmp(type.string().lower().ascii().data(), \"button\", 6) == 0 ||\n");
-                            push(@implContent, "            strncmp(type.string().lower().ascii().data(), \"reset\", 5) == 0 ||\n");
-                            push(@implContent, "            strncmp(type.string().lower().ascii().data(), \"image\", 5) == 0 ){\n");
-                            push(@implContent, "            Statistics::statistics()->accumulate(\"Concolic::Interpreter::ConcreteValuePropertyAccessIgnored\", 1);\n");
-                            push(@implContent, "            return result;\n");
-                            push(@implContent, "        }\n");
+                            # Should match the list in formfielddescriptor.cpp minus checkbox and radio
+                            push(@implContent, "    if (type.compare(\"hidden\") == 0 ||");
+                            push(@implContent, "        type.compare(\"button\") == 0 ||");
+                            push(@implContent, "        type.compare(\"reset\") == 0 ||");
+                            push(@implContent, "        type.compare(\"image\") == 0 ||");
+                            push(@implContent, "        type.compare(\"submit\") == 0 ||");
+                            push(@implContent, "        type.compare(\"checkbox\") == 0 ||");
+                            push(@implContent, "        type.compare(\"radio\") == 0) {\n");
+                            push(@implContent, "        Statistics::statistics()->accumulate(\"Concolic::Interpreter::ConcreteValuePropertyAccessIgnored\", 1);\n");
+                            push(@implContent, "        return result;\n");
                             push(@implContent, "    }\n");
                             push(@implContent, "\n");
 
-                            # Only handle the symbolic boolean values on radio and checkbox elements. This removes symbolic handling of the .value property (SymbolicString) if its the .value property of a radio or checkbox element.
-                            unless ($attribute->signature->extendedAttributes->{"SymbolicBoolean"}) {
-                                push(@implContent, "    // Do not make checkbox or radio button values symbolic.\n");
-                                push(@implContent, "    if (Symbolic::SymbolicInterpreter::isFeatureConcreteValuePropertyEnabled()) {\n");
-                                push(@implContent, "        if (strncmp(type.string().lower().ascii().data(), \"radio\", 5) == 0 || strncmp(type.string().lower().ascii().data(), \"checkbox\", 8) == 0){\n");
-                                push(@implContent, "            Statistics::statistics()->accumulate(\"Concolic::Interpreter::ConcreteValuePropertyAccessIgnored\", 1);\n");
-                                push(@implContent, "            return result;\n");
-                                push(@implContent, "        }\n");
-                                push(@implContent, "    }\n");
-                            } else {
-                                push(@implContent, "    if (!Symbolic::SymbolicInterpreter::isFeatureSymbolicCheckedPropertyEnabled()) {\n");
-                                push(@implContent, "        return result; // Disable symbolic booleans for testing.\n");
-                                push(@implContent, "    }\n");
-                                push(@implContent, "    Statistics::statistics()->accumulate(\"Concolic::Interpreter::SymbolicCheckedPropertyAccess\", 1);\n");
-                            }
+                            push(@implContent, "    if (type.compare(\"text\") != 0 &&");
+                            push(@implContent, "        type.compare(\"password\") != 0) {\n");
+                            push(@implContent, "        Statistics::statistics()->accumulate(\"Concolic::Warning::InputSource\", 1);\n");
+                            push(@implContent, "        return result;\n");
+                            push(@implContent, "    }\n");
                         }
 
-                        # Conditionally skip symbolic values for certain instances of option elements
+                        # Conditionally skip .checked for certain instances of input elements
+                        if ($attribute->signature->name eq "checked") {
+                            push(@implContent, "\n");
+                            push(@implContent, "    std::string type = impl->getAttribute(WebCore::HTMLNames::typeAttr).string().lower().ascii().data();\n");
+                            push(@implContent, "    if (type.compare(\"radio\") != 0 &&");
+                            push(@implContent, "        type.compare(\"checkbox\") != 0) {\n");
+                            push(@implContent, "        return result;\n");
+                            push(@implContent, "    }\n");
+                            push(@implContent, "\n");
+                            push(@implContent, "Statistics::statistics()->accumulate(\"Concolic::Interpreter::SymbolicCheckedPropertyAccess\", 1);\n");
+                        }
 
+
+                        # Emit warnings for all other properties
+
+                        if ($attribute->signature->name eq "valueAsNumber" or
+                            $attribute->signature->name eq "valueAsDate" or
+                            $attribute->signature->name eq "list" or
+                            $attribute->signature->name eq "selectedOption") {
+                            push(@implContent, "std::string type = impl->getAttribute(WebCore::HTMLNames::typeAttr).string().lower().ascii().data();\n");
+                            push(@implContent, "Statistics::statistics()->accumulate(\"Concolic::Warning::InputSource::${name}\", 1);\n");
+                            push(@implContent, "return result;\n");
+                        }
+
+                        } # end SymbolicInputElement
+
+
+                        # Conditionally skip symbolic values for certain instances of option elements
                         if ($attribute->signature->extendedAttributes->{"SymbolicOptionElement"}) {
                             push(@implContent, "\n");
                             push(@implContent, "    if (!Symbolic::SymbolicInterpreter::isFeatureIndirectOptionIndexLookupEnabled() || !slotBase.isIndirectSymbolic()) {\n");
@@ -1946,17 +1962,16 @@ sub GenerateImplementation
                                 push(@implContent, "# Error, SymbolicSelectElement only supports SymbolicInteger and SymbolicString, causes a compile error");
                             }
 
-
                         } elsif ($attribute->signature->extendedAttributes->{"SymbolicInputElement"}) { 
                             push(@implContent, "    WTF::AtomicString inputName = impl->getAttribute(WebCore::HTMLNames::nameAttr);\n");
                             push(@implContent, "    WTF::AtomicString inputId = impl->getAttribute(WebCore::HTMLNames::idAttr);\n");
 
                             if ($attribute->signature->extendedAttributes->{"SymbolicString"}) {
-                                push(@implContent, "    Symbolic::SourceType inputSourceType = Symbolic::SymbolicSource::stringAccessTypeAttrToSourceType(type.string().ascii().data());\n");
+                                push(@implContent, "    Symbolic::SourceType inputSourceType = Symbolic::SymbolicSource::stringAccessTypeAttrToSourceType(type.c_str());\n");
                             } elsif ($attribute->signature->extendedAttributes->{"SymbolicBoolean"}) {
-                                push(@implContent, "    Symbolic::SourceType inputSourceType = Symbolic::SymbolicSource::boolAccessTypeAttrToSourceType(type.string().ascii().data());\n");
+                                push(@implContent, "    Symbolic::SourceType inputSourceType = Symbolic::SymbolicSource::boolAccessTypeAttrToSourceType(type.c_str());\n");
                             } else { # SymbolicInteger, only used for valueAsNumber
-                                push(@implContent, "    Symbolic::SourceType inputSourceType = Symbolic::SymbolicSource::stringAccessTypeAttrToSourceType(type.string().ascii().data());\n");
+                                push(@implContent, "    Symbolic::SourceType inputSourceType = Symbolic::SymbolicSource::stringAccessTypeAttrToSourceType(type.c_str());\n");
                             }
 
                         } else {

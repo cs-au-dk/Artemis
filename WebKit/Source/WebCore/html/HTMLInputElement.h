@@ -267,8 +267,10 @@ private:
 
     virtual bool canTriggerImplicitSubmission() const { return isTextField(); }
 
+public:
     virtual const AtomicString& formControlType() const;
 
+private:
     virtual bool saveFormControlState(String& value) const;
     virtual void restoreFormControlState(const String&);
 
