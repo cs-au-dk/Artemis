@@ -710,6 +710,16 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             break;
         }
 
+        case '?': {
+            // getopt has already printed an error
+            exit(1);
+        }
+
+        default: {
+            cerr << "Unhandled option." << endl;
+            exit(1);
+        }
+
         }
     }
 
