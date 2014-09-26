@@ -1986,7 +1986,8 @@ sub GenerateImplementation
                             push(@implContent, "\n");
 
                             # Return if this value is not symbolic
-                            push(@implContent, "    if (castedThis->m_isSymbolic == false) {\n");
+                            push(@implContent, "    if (castedThis->m_isSymbolic == false && Symbolic::SymbolicInterpreter::isFeatureSymbolicTriggeringEnabled()) {\n");
+                            push(@implContent, "        Statistics::statistics()->accumulate(\"Concolic::Interpreter::ConcreteInputValueAccess\", 1);\n");
                             push(@implContent, "        return result;\n");
                             push(@implContent, "    }\n");
 

@@ -121,6 +121,13 @@ public:
         SymbolicInterpreter::m_featureConcreteValuePropertyEnabled = value;
     }
 
+    static bool isFeatureSymbolicTriggeringEnabled() {
+        return m_featureSymbolicTriggeringEnabled;
+    }
+    static void setFeatureSymbolicTriggeringEnabled(bool value) {
+        SymbolicInterpreter::m_featureSymbolicTriggeringEnabled = value;
+    }
+
 private:
     void fatalError(JSC::CodeBlock* codeBlock, std::string reason) __attribute__((noreturn));
 
@@ -137,6 +144,7 @@ private:
     static bool m_featureIndirectOptionIndexLookupEnabled;
     static bool m_featureSymbolicCheckedPropertyEnabled;
     static bool m_featureConcreteValuePropertyEnabled;
+    static bool m_featureSymbolicTriggeringEnabled;
 };
 
 }

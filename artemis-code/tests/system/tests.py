@@ -253,6 +253,30 @@ class FeatureSwitchTests(unittest.TestCase):
                 self.assertEqual(0, report.get(ignored_access, 0));
                 self.assertEqual(2, report.get(traces_explored, 0));
 
+        def test_symbolic_only_after_injection_feature_switch(self):
+
+                key = 'Concolic::Interpreter::ConcreteInputValueAccess'
+
+                report = execute_artemis('symbolic_only_after_injection_feature_switch', 
+                                         '%sfeature-switches/select-with-early-usage.html' % FIXTURE_ROOT,
+                                         iterations=0,
+                                         major_mode='concolic',
+                                         concolic_event_sequences='simple',
+                                         verbose=False)
+
+                self.assertEqual(2, report.get(key, 0));
+
+                report = execute_artemis('symbolic_only_after_injection_feature_switch', 
+                                         '%sfeature-switches/select-with-early-usage.html' % FIXTURE_ROOT,
+                                         iterations=0,
+                                         major_mode='concolic',
+                                         concolic_event_sequences='simple',
+                                         concolic_disable_features='symbolic-after-injection',
+                                         verbose=False)
+
+                self.assertEqual(0, report.get(key, 0));
+
+
 
 if __name__ == '__main__':
  	unittest.main()

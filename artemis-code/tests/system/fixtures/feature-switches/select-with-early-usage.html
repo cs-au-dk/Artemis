@@ -1,0 +1,56 @@
+<!--
+TEST PC[0] = ((SymbolicString != ConstantString) == ConstantBoolean)
+TEST Concolic::Solver::ConstraintsSolved = 2
+TEST Concolic::Solver::ConstraintsWritten = 2
+-->
+<!doctype html><html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+	<title>Ben Spencer</title>
+	<meta name="author" content="Ben Spencer">
+	<script type="text/javascript">
+
+		function lookahead() {
+			var x = document.getElementById("testinput").value;
+
+			if (x == "hello") {
+				document.getElementById("message").innerHTML = "Don't forget to set the drop-down box!";
+			}
+		}
+
+		function validate() {
+			var x = document.getElementById("testinput").value;
+
+			if (x != "testme") {
+				alert("Error");
+				return false;
+			} else {
+				return true;
+			}
+		}
+	</script>
+
+</head>
+<body>
+
+	<form method="GET" action="about:blank" >
+
+		<p id="message"></p>
+
+		<input type="text" onchange="lookahead()" >
+
+		<select name="testinput" id="testinput" >
+			<option value="hello" >hello</option>
+			<option value="hi there" >hi there</option>
+			<option value="testme" >testme</option>
+			<option value="goodbye" >goodbye</option>
+		</select>
+
+		<button type="submit" onclick="return validate();">Submit</button>
+
+	</form>
+
+</body>
+</html>
