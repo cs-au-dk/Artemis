@@ -1842,12 +1842,14 @@ sub GenerateImplementation
                             push(@implContent, "        type.compare(\"submit\") == 0 ||");
                             push(@implContent, "        type.compare(\"checkbox\") == 0 ||");
                             push(@implContent, "        type.compare(\"radio\") == 0) {\n");
-                            push(@implContent, "        Statistics::statistics()->accumulate(\"Concolic::Interpreter::ConcreteValuePropertyAccessIgnored\", 1);\n");
-                            push(@implContent, "        return result;\n");
+                            push(@implContent, "        if (Symbolic::SymbolicInterpreter::isFeatureConcreteValuePropertyEnabled()) {\n");
+                            push(@implContent, "            Statistics::statistics()->accumulate(\"Concolic::Interpreter::ConcreteValuePropertyAccessIgnored\", 1);\n");
+                            push(@implContent, "            return result;\n");
+                            push(@implContent, "        }\n");
                             push(@implContent, "    }\n");
                             push(@implContent, "\n");
 
-                            push(@implContent, "    if (type.compare(\"text\") != 0 &&");
+                            push(@implContent, "    else if (type.compare(\"text\") != 0 &&");
                             push(@implContent, "        type.compare(\"password\") != 0) {\n");
                             push(@implContent, "        Statistics::statistics()->accumulate(\"Concolic::Warning::InputSource\", 1);\n");
                             push(@implContent, "        return result;\n");
@@ -1856,6 +1858,11 @@ sub GenerateImplementation
 
                         # Conditionally skip .checked for certain instances of input elements
                         if ($attribute->signature->name eq "checked") {
+                            push(@implContent, "if (!Symbolic::SymbolicInterpreter::isFeatureSymbolicCheckedPropertyEnabled()) {\n");
+                            push(@implContent, "    Statistics::statistics()->accumulate(\"Concolic::Interpreter::ConcreteCheckedPropertyAccessIgnored\", 1);\n");
+                            push(@implContent, "    return result;\n");
+                            push(@implContent, "}\n");
+                            push(@implContent, "\n");
                             push(@implContent, "\n");
                             push(@implContent, "    std::string type = impl->getAttribute(WebCore::HTMLNames::typeAttr).string().lower().ascii().data();\n");
                             push(@implContent, "    if (type.compare(\"radio\") != 0 &&");
