@@ -128,6 +128,8 @@ protected:
     QList<FormFieldDescriptorConstPtr> permuteFormFields(QList<FormFieldDescriptorConstPtr> fields, QString permutation);
     QList<int> mFormFieldPermutation;
 
+    void updateFormFieldRestrictionsForCurrentDom();
+
     int mMarkerIndex;
 
     HandlerDependencyTracker mHandlerTracker;

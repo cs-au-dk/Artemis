@@ -651,6 +651,11 @@ void CVC4ConstraintWriter::helperRegexMatch(const std::string& regex, const std:
 
 void CVC4ConstraintWriter::helperSelectRestriction(SelectRestriction constraint, SelectConstraintType type)
 {
+    Statistics::statistics()->accumulate("Concolic::Solver::SelectDomConstraintsWritten", 1);
+    if(type == VALUE_INDEX) {
+        Statistics::statistics()->accumulate("Concolic::Solver::SelectConstraintsWithLinkedValueAndIndex", 1);
+    }
+
     // TODO: Hack to guess the variable name in the constraint.
     QString name = QString("SYM_IN_%1").arg(constraint.variable);
     QString idxname = QString("SYM_IN_INT_%1").arg(constraint.variable);
@@ -734,6 +739,8 @@ void CVC4ConstraintWriter::helperSelectRestriction(SelectRestriction constraint,
 
 void CVC4ConstraintWriter::helperRadioRestriction(RadioRestriction constraint)
 {
+    Statistics::statistics()->accumulate("Concolic::Solver::RadioDomConstraintsWritten", 1);
+
     QString name;
     QList<QString> names;
 

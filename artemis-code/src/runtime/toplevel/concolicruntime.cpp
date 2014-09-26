@@ -122,6 +122,8 @@ void ConcolicRuntime::preConcreteExecution()
             Log::debug("\n============= New-Iteration =============");
             Log::info(QString("Iteration %1:").arg(mNumIterations+1).toStdString());
         }
+
+        mFormFieldRestrictions = mFormFieldInitialRestritions; // Prevents noticing a change vetween the end of one execution and the start of the next.
     }
     Log::debug("--------------- COVERAGE ----------------\n");
     Log::debug(mAppmodel->getCoverageListener()->toString().toStdString());
@@ -134,8 +136,7 @@ void ConcolicRuntime::preConcreteExecution()
 
 void ConcolicRuntime::postAllInjection()
 {
-    // Update the form restrictions for the current DOM.
-    mFormFieldRestrictions = FormFieldRestrictedValues::getRestrictions(mFormFields, mWebkitExecutor->getPage());
+    updateFormFieldRestrictionsForCurrentDom();
 
     if(mOptions.concolicTriggerEventHandlers) {
         // From here on, we will be triggering the button only.
@@ -146,8 +147,7 @@ void ConcolicRuntime::postAllInjection()
 
 void ConcolicRuntime::postSingleInjection(FormFieldDescriptorConstPtr field)
 {
-    // Update the form restrictions for the current DOM.
-    mFormFieldRestrictions = FormFieldRestrictedValues::getRestrictions(mFormFields, mWebkitExecutor->getPage());
+    updateFormFieldRestrictionsForCurrentDom();
 
     if(mOptions.concolicTriggerEventHandlers) {
         // Find the identifier for this field
@@ -174,6 +174,17 @@ void ConcolicRuntime::postSingleInjection(FormFieldDescriptorConstPtr field)
         FormFieldInjector::triggerChangeHandler(element);
 
         mMarkerIndex++;
+    }
+}
+
+void ConcolicRuntime::updateFormFieldRestrictionsForCurrentDom()
+{
+    FormRestrictions oldRestrictions = mFormFieldRestrictions;
+
+    mFormFieldRestrictions = FormFieldRestrictedValues::getRestrictions(mFormFields, mWebkitExecutor->getPage());
+
+    if(oldRestrictions != mFormFieldRestrictions) {
+        Statistics::statistics()->accumulate("Concolic::Solver::DomConstraintsUpdatedDynamically", 1);
     }
 }
 
@@ -562,8 +573,6 @@ QSharedPointer<FormInputCollection> ConcolicRuntime::createFormInput(QMap<QStrin
 
     foreach(QString varName, varList){
 
-        qDebug() << "########## createFormInput() processing " << varName;
-
         Symbolvalue value = solution->findSymbol(varName);
         if(!value.found){
             Log::error(QString("Error: Could not find value for %1 in the solver's solution.").arg(varName).toStdString());
@@ -624,9 +633,6 @@ QSharedPointer<FormInputCollection> ConcolicRuntime::createFormInput(QMap<QStrin
 // Given a symbolic variable, find the corresponding form field on the page.
 QSharedPointer<const FormFieldDescriptor> ConcolicRuntime::findFormFieldForVariable(QString varName, Symbolic::SourceIdentifierMethod varSourceIdentifierMethod)
 {
-
-    qDebug() << "##########     findFormFieldForVariable(" << varName << "," << (varSourceIdentifierMethod == Symbolic::INPUT_NAME ? "INPUT_NAME" : "ELEMENT_ID") << ")";
-
     QSharedPointer<const FormFieldDescriptor> varSourceField;
 
     // Variable names are of the form SYM_IN_<name>, and we will need to use <name> directly when searching the ids and names of the form fields.
@@ -703,6 +709,9 @@ void ConcolicRuntime::exploreNextTarget(bool isRetry)
     FormRestrictions dynamicRestrictions = mergeDynamicSelectRestrictions(mFormFieldRestrictions, dynamicSelectConstraints);
     // If these features have been disabled, then remove the restrictions.
     if (mDisabledFeatures.testFlag(SELECT_RESTRICTION_DYNAMIC)) {
+        if (dynamicRestrictions.first != mFormFieldInitialRestritions.first) {
+            Statistics::statistics()->accumulate("Concolic::Solver::SelectDynamicDomConstraintsIgnored", 1);
+        }
         dynamicRestrictions.first = mFormFieldInitialRestritions.first;
     }
     if (mDisabledFeatures.testFlag(SELECT_RESTRICTION)) {

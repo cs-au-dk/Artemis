@@ -276,6 +276,101 @@ class FeatureSwitchTests(unittest.TestCase):
 
         self.assertEqual(0, report.get(key, 0));
 
+    def test_select_dom_constraints_feature_switch(self):
+
+        key = 'Concolic::Solver::SelectDomConstraintsWritten'
+
+        report = execute_artemis('select_dom_constraints_feature_switch',
+                                 '%sfeature-switches/select-by-value.html' % FIXTURE_ROOT,
+                                 iterations=0,
+                                 major_mode='concolic',
+                                 concolic_event_sequences='simple',
+                                 verbose=False)
+
+        self.assertEqual(1, report.get(key, 0));
+
+        report = execute_artemis('select_dom_constraints_feature_switch',
+                                 '%sfeature-switches/select-by-value.html' % FIXTURE_ROOT,
+                                 iterations=0,
+                                 major_mode='concolic',
+                                 concolic_event_sequences='simple',
+                                 concolic_disable_features='select-restriction',
+                                 verbose=False)
+
+        self.assertEqual(0, report.get(key, 0));
+
+    def test_radio_dom_constraints_feature_switch(self):
+
+        key = 'Concolic::Solver::RadioDomConstraintsWritten'
+
+        report = execute_artemis('radio_dom_constraints_feature_switch',
+                                 '%sfeature-switches/radio-button.html' % FIXTURE_ROOT,
+                                 iterations=0,
+                                 major_mode='concolic',
+                                 concolic_event_sequences='simple',
+                                 verbose=False)
+
+        self.assertEqual(1, report.get(key, 0));
+
+        report = execute_artemis('radio_dom_constraints_feature_switch',
+                                 '%sfeature-switches/radio-button.html' % FIXTURE_ROOT,
+                                 iterations=0,
+                                 major_mode='concolic',
+                                 concolic_event_sequences='simple',
+                                 concolic_disable_features='radio-restriction',
+                                 verbose=False)
+
+        self.assertEqual(0, report.get(key, 0));
+
+    def test_select_link_value_and_index_feature_switch(self):
+
+        key = 'Concolic::Solver::SelectConstraintsWithLinkedValueAndIndex'
+
+        report = execute_artemis('select_link_value_and_index_feature_switch',
+                                 '%sfeature-switches/select-by-index-and-value.html' % FIXTURE_ROOT,
+                                 iterations=0,
+                                 major_mode='concolic',
+                                 concolic_event_sequences='simple',
+                                 verbose=False)
+
+        self.assertEqual(1, report.get(key, 0));
+
+        report = execute_artemis('select_link_value_and_index_feature_switch',
+                                 '%sfeature-switches/select-by-index-and-value.html' % FIXTURE_ROOT,
+                                 iterations=0,
+                                 major_mode='concolic',
+                                 concolic_event_sequences='simple',
+                                 concolic_disable_features='select-link-value-index',
+                                 verbose=False)
+
+        self.assertEqual(0, report.get(key, 0));
+
+    def test_select_dynamic_dom_constraints_feature_switch(self):
+
+        updates = 'Concolic::Solver::DomConstraintsUpdatedDynamically'
+        ignored = 'Concolic::Solver::SelectDynamicDomConstraintsIgnored'
+        # N.B. Neither statistic is very intuitive here. the number ignored is often much more than the number of updates. The number of updates can be more than the number of updates which would have made any difference.
+
+        report = execute_artemis('select_link_value_and_index_feature_switch',
+                                 '%sfeature-switches/select-dynamic-form-updates.html' % FIXTURE_ROOT,
+                                 iterations=0,
+                                 major_mode='concolic',
+                                 concolic_event_sequences='simple',
+                                 verbose=False)
+
+        self.assertEqual(5, report.get(updates, 0));
+        self.assertEqual(0, report.get(ignored, 0));
+
+        report = execute_artemis('select_link_value_and_index_feature_switch',
+                                 '%sfeature-switches/select-dynamic-form-updates.html' % FIXTURE_ROOT,
+                                 iterations=0,
+                                 major_mode='concolic',
+                                 concolic_event_sequences='simple',
+                                 concolic_disable_features='select-restriction-dynamic',
+                                 verbose=False)
+
+        self.assertEqual(9, report.get(ignored, 0));
+
 
 
 if __name__ == '__main__':
