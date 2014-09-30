@@ -17,7 +17,8 @@ Substantial Addons:
    :maxdepth: 1
 
    sections/ail
-   
+   sections/concolic
+              
 Extending Artemis:
 
 .. toctree::

@@ -59,7 +59,7 @@ module html {
         attribute [TreatNullAs=NullString, Symbolic SymbolicString SymbolicInputElement] DOMString value;
         attribute [TreatNullAs=NullString, SymbolicTrigger] DOMString symbolictrigger;
 #if !defined(LANGUAGE_CPP) || !LANGUAGE_CPP
-        attribute Date valueAsDate setter raises(DOMException);
+        attribute [Symbolic SymbolicInteger SymbolicInputElement] Date valueAsDate setter raises(DOMException);
 #endif
         attribute [Symbolic SymbolicInteger SymbolicInputElement] double valueAsNumber setter raises(DOMException);
 

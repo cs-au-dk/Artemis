@@ -35,6 +35,10 @@ enum PrioritizerStrategies {
     CONSTANT, RANDOM, COVERAGE, READWRITE, ALL_STRATEGIES
 };
 
+enum TargetStrategies {
+    JQUERY, LEGACY
+};
+
 enum CoverageReport {
     STDOUT, HTML, NONE
 };
@@ -84,6 +88,7 @@ typedef struct OptionsType {
         concolicNegateLastConstraint(false),
         formInputGenerationStrategy(Random),
         prioritizerStrategy(CONSTANT),
+        targetStrategy(JQUERY),
         outputCoverage(NONE),
         majorMode(AUTOMATED),
         reportPathTrace(NO_TRACES),
@@ -120,6 +125,7 @@ typedef struct OptionsType {
 
     FormInputGenerationStrategies formInputGenerationStrategy;
     PrioritizerStrategies prioritizerStrategy;
+    TargetStrategies targetStrategy;
     CoverageReport outputCoverage;
 
     MajorMode majorMode;

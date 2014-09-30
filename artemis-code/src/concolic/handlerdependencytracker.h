@@ -54,7 +54,7 @@ private:
     QString mCurrentEvent;
     QList<QString> mEvents;
 
-    const QString mNoEventLabel = "[none]";
+    const QString mNoEventLabel;
 
     typedef QPair<QPair<QString, QString>, bool> EdgeDescriptor;
     QMap<EdgeDescriptor, uint> mEdgeCounts;

@@ -67,7 +67,7 @@ def test_generator(test_name, test_filename):
                                  iterations=2,
                                  boolean_fields=["#booleaninput=true", "#radio1b=true", "#radio1a=false", "#radio1c=false"],
                                  string_fields=["#testinputselectintlz=00", "#testinputselectint=0", "#testinputx=1", "#testinputy=2", "#testinputNameId=1", "#testinputId=1", "#testinputfoo=foo", "#testinputbar=bar", "#selectinput=Select1", "#testinputselect=volvo"],
-                                 verbose=False)
+                                 verbose=True)
 
         assert report.get('WebKit::alerts', 0) == 1, "Initial execution did not reach a print statement"
 

@@ -63,6 +63,7 @@ protected:
     TerminationStrategy* mTerminationStrategy;
     PrioritizerStrategyPtr mPrioritizerStrategy;
     InputGeneratorStrategy* mInputgenerator;
+    TargetGeneratorConstPtr mTargetGenerator;
 
     Options mOptions;
     EventExecutionStatistics* mExecStat;

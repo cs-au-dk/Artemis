@@ -136,7 +136,9 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/concolic/search/randomisedselector.h \
     src/concolic/search/roundrobinselector.h \
     src/concolic/search/explorationdescriptor.h \
-    src/concolic/benchmarking.h
+    src/concolic/benchmarking.h \
+    src/strategies/inputgenerator/targets/jquerytargetgenerator.h \
+    src/strategies/inputgenerator/targets/legacytargetgenerator.h
 
 SOURCES += src/runtime/input/ajaxinput.cpp \
     src/strategies/prioritizer/constantprioritizer.cpp \
@@ -246,6 +248,8 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/concolic/search/avoidunsatselector.cpp \
     src/concolic/search/dfsselector.cpp \
     src/concolic/search/randomisedselector.cpp \
-    src/concolic/search/roundrobinselector.cpp
+    src/concolic/search/roundrobinselector.cpp \
+    src/strategies/inputgenerator/targets/jquerytargetgenerator.cpp \
+    src/strategies/inputgenerator/targets/legacytargetgenerator.cpp
 
 QT += network
