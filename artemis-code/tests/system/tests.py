@@ -13,7 +13,8 @@ class JQueryTest(unittest.TestCase):
     def test_detect_jquery_eventhandler(self):
         report = execute_artemis('test-jquery-live', '%s/jquery-live/index.html' % FIXTURE_ROOT, 
                                  iterations=2)
-                self.assertEqual(1, report.get('TargetGeneration::jQuery::eventsIdentified', 0))
+
+        self.assertEqual(1, report.get('TargetGeneration::jQuery::eventsIdentified', 0))
 
         report = execute_artemis('test-jquery-live', '%s/jquery-live/index.html' % FIXTURE_ROOT, 
                                  jquery_support='false',
@@ -355,6 +356,7 @@ class FeatureSwitchTests(unittest.TestCase):
 
     def test_select_dynamic_dom_constraints_feature_switch(self):
 
+        success_traces = 'Concolic::ExecutionTree::EndSuccess'
         updates = 'Concolic::Solver::DomConstraintsUpdatedDynamically'
         ignored = 'Concolic::Solver::SelectDynamicDomConstraintsIgnored'
         # N.B. Neither statistic is very intuitive here. the number ignored is often much more than the number of updates. The number of updates can be more than the number of updates which would have made any difference.
@@ -366,6 +368,7 @@ class FeatureSwitchTests(unittest.TestCase):
                                  concolic_event_sequences='simple',
                                  verbose=False)
 
+        self.assertEqual(2, report.get(success_traces, 0));
         self.assertEqual(5, report.get(updates, 0));
         self.assertEqual(0, report.get(ignored, 0));
 
@@ -377,7 +380,40 @@ class FeatureSwitchTests(unittest.TestCase):
                                  concolic_disable_features='select-restriction-dynamic',
                                  verbose=False)
 
+        self.assertEqual(0, report.get(success_traces, 0));
         self.assertEqual(9, report.get(ignored, 0));
+
+
+    def test_event_sequence_inject_in_sync_feature_switch(self):
+
+        success_traces = 'Concolic::ExecutionTree::EndSuccess'
+        in_sync      = 'Concolic::EventSequence::ChangeHandlersTriggeredInSync'
+        after_inject = 'Concolic::EventSequence::ChangeHandlersTriggeredAfterInjection'
+
+        report = execute_artemis('event_sequence_inject_in_sync_feature_switch',
+                                 '%sfeature-switches/select-dynamic-form-updates.html' % FIXTURE_ROOT,
+                                 iterations=0,
+                                 major_mode='concolic',
+                                 concolic_event_sequences='simple',
+                                 verbose=False)
+
+        self.assertEqual(2, report.get(success_traces, 0));
+        self.assertEqual(12, report.get(in_sync, 0));
+        self.assertEqual(0, report.get(after_inject, 0));
+
+        report = execute_artemis('event_sequence_inject_in_sync_feature_switch',
+                                 '%sfeature-switches/select-dynamic-form-updates.html' % FIXTURE_ROOT,
+                                 iterations=0,
+                                 major_mode='concolic',
+                                 concolic_event_sequences='simple',
+                                 concolic_disable_features='event-sequence-sync-injections',
+                                 verbose=False)
+
+        self.assertEqual(0, report.get(success_traces, 0));
+        self.assertEqual(0, report.get(in_sync, 0));
+        self.assertEqual(8, report.get(after_inject, 0)); # Not 12 again because there are less traces executed!
+
+
 
 
 

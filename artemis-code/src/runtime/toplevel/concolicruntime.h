@@ -121,6 +121,7 @@ protected:
     FormRestrictions mergeDynamicSelectRestrictions(FormRestrictions base, QSet<SelectRestriction> replacements);
     void chooseNextTargetAndExplore();
     void reportStatistics();
+    void triggerFieldChangeHandler(FormFieldDescriptorConstPtr field);
 
     QList<FormFieldDescriptorConstPtr> mFormFields;
     FormRestrictions mFormFieldRestrictions;

@@ -29,7 +29,8 @@ enum ConcolicBenchmarkFeatureValues {
     SELECT_RESTRICTION_DYNAMIC = 4,
     SELECT_LINK_VALUE_INDEX = 8,
     CVC4_COERCION_OPT = 16,
-    CONCRETE_VALUE_PROPERTY = 32
+    CONCRETE_VALUE_PROPERTY = 32,
+    EVENT_SEQUENCE_SYNC_INJECTIONS = 64
 };
 
 Q_DECLARE_FLAGS(ConcolicBenchmarkFeatures, ConcolicBenchmarkFeatureValues)

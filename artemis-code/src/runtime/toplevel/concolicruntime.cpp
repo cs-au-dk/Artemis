@@ -123,7 +123,7 @@ void ConcolicRuntime::preConcreteExecution()
             Log::info(QString("Iteration %1:").arg(mNumIterations+1).toStdString());
         }
 
-        mFormFieldRestrictions = mFormFieldInitialRestritions; // Prevents noticing a change vetween the end of one execution and the start of the next.
+        mFormFieldRestrictions = mFormFieldInitialRestritions; // Prevents noticing a change between the end of one execution and the start of the next.
     }
     Log::debug("--------------- COVERAGE ----------------\n");
     Log::debug(mAppmodel->getCoverageListener()->toString().toStdString());
@@ -139,6 +139,15 @@ void ConcolicRuntime::postAllInjection()
     updateFormFieldRestrictionsForCurrentDom();
 
     if(mOptions.concolicTriggerEventHandlers) {
+
+        // If synchronised injections are disabled then trigger all the events here (after all the injections).
+        if(mOptions.concolicDisabledFeatures.testFlag(EVENT_SEQUENCE_SYNC_INJECTIONS)) {
+            foreach(FormFieldDescriptorConstPtr field, mFormFields) {
+                Statistics::statistics()->accumulate("Concolic::EventSequence::ChangeHandlersTriggeredAfterInjection", 1);
+                triggerFieldChangeHandler(field);
+            }
+        }
+
         // From here on, we will be triggering the button only.
         mHandlerTracker.beginHandler("Submit Button");
         emit sigNewTraceMarker("Clicking submit button", "B", false, SelectRestriction());
@@ -149,32 +158,39 @@ void ConcolicRuntime::postSingleInjection(FormFieldDescriptorConstPtr field)
 {
     updateFormFieldRestrictionsForCurrentDom();
 
-    if(mOptions.concolicTriggerEventHandlers) {
-        // Find the identifier for this field
-        QString identifier;
-        if(field->getDomElement()->getId() != "") {
-            identifier = field->getDomElement()->getId();
-        } else {
-            identifier = field->getDomElement()->getName();
-        }
-        QString label = QString("Trigger onchange for '%1'").arg(identifier);
-
-        // Check if there is any form restriction relevant to this event (and should be added to the marker).
-        // For now we only handle select restrictions.
-        QPair<bool, SelectRestriction> restriction(false, SelectRestriction());
-        restriction = FormFieldRestrictedValues::getRelevantSelectRestriction(mFormFieldRestrictions, identifier);
-
-        // Add a marker to the trace
-        mHandlerTracker.beginHandler(identifier);
-        QString idxStr = mMarkerIndex < mFormFieldPermutation.length() ? QString::number(mFormFieldPermutation.at(mMarkerIndex)) : "?";
-        emit sigNewTraceMarker(label, idxStr, restriction.first, restriction.second);
-
-        // Trigger the handler
-        QWebElement element = field->getDomElement()->getElement(mWebkitExecutor->getPage());
-        FormFieldInjector::triggerChangeHandler(element);
-
-        mMarkerIndex++;
+    if(mOptions.concolicTriggerEventHandlers &&
+            !mOptions.concolicDisabledFeatures.testFlag(EVENT_SEQUENCE_SYNC_INJECTIONS)) {
+        Statistics::statistics()->accumulate("Concolic::EventSequence::ChangeHandlersTriggeredInSync", 1);
+        triggerFieldChangeHandler(field);
     }
+}
+
+void ConcolicRuntime::triggerFieldChangeHandler(FormFieldDescriptorConstPtr field)
+{
+    // Find the identifier for this field
+    QString identifier;
+    if(field->getDomElement()->getId() != "") {
+        identifier = field->getDomElement()->getId();
+    } else {
+        identifier = field->getDomElement()->getName();
+    }
+    QString label = QString("Trigger onchange for '%1'").arg(identifier);
+
+    // Check if there is any form restriction relevant to this event (and should be added to the marker).
+    // For now we only handle select restrictions.
+    QPair<bool, SelectRestriction> restriction(false, SelectRestriction());
+    restriction = FormFieldRestrictedValues::getRelevantSelectRestriction(mFormFieldRestrictions, identifier);
+
+    // Add a marker to the trace
+    mHandlerTracker.beginHandler(identifier);
+    QString idxStr = mMarkerIndex < mFormFieldPermutation.length() ? QString::number(mFormFieldPermutation.at(mMarkerIndex)) : "?";
+    emit sigNewTraceMarker(label, idxStr, restriction.first, restriction.second);
+
+    // Trigger the handler
+    QWebElement element = field->getDomElement()->getElement(mWebkitExecutor->getPage());
+    FormFieldInjector::triggerChangeHandler(element);
+
+    mMarkerIndex++;
 }
 
 void ConcolicRuntime::updateFormFieldRestrictionsForCurrentDom()

@@ -154,7 +154,8 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             "           The features which can be disabled with this option are:\n"
             "           radio-restriction, select-restriction, select-restriction-dynamic, select-symbolic-index,\n"
             "           select-link-value-index, select-indirection-option-index, radio-checkbox-symbolic,\n"
-            "           concrete-value-property, symbolic-after-injection, cvc4-coercion-opt\n"
+            "           concrete-value-property, symbolic-after-injection, cvc4-coercion-opt,\n"
+            "           event-sequence-sync-injections\n"
             "\n"
             "--smt-solver <solver>:\n"
             "           z3str - Use the Z3-str SMT solver as backend.\n"
@@ -283,6 +284,8 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
                     Symbolic::SymbolicInterpreter::setFeatureConcreteValuePropertyEnabled(false);
                 } else if (feature == "symbolic-after-injection") {
                     Symbolic::SymbolicInterpreter::setFeatureSymbolicTriggeringEnabled(false);
+                } else if (feature == "event-sequence-sync-injections") {
+                    options.concolicDisabledFeatures |= artemis::EVENT_SEQUENCE_SYNC_INJECTIONS;
                 } else {
                     cerr << "ERROR: Invalid choice of concolic-disable-features " << optarg << endl;
                     exit(1);
