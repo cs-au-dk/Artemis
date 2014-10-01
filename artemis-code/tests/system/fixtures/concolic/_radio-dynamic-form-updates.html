@@ -1,0 +1,91 @@
+<!--
+
+-->
+<!doctype html><html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+	<title>Ben Spencer</title>
+	<meta name="author" content="Ben Spencer">
+	<script type="text/javascript">
+		var x = "oxford";
+		var y = "aarhus";
+
+		function validate() {
+			var z = (document.querySelector("input[name='city']:checked") || {value:""}).value;
+
+			if (z == x) {
+				return true;
+			} else if(z == y) {
+				return true;
+			} else {
+				alert("Error!");
+				return false;
+			}
+		}
+
+		function updateCity() {
+			var country = document.getElementById("country");
+			
+			if(country.value == "uk") {
+				newCityValues({bristol:"Bristol", london:"London", oxford:"Oxford"});
+			} else if(country.value == "dk") {
+				newCityValues({copenhagen:"Copenhagen", aarhus:"Aarhus", aalborg:"Aalborg"});
+			} else if(country.value == "us") {
+				newCityValues({newyork:"New York", washington:"Washington", sanfrancisco:"San Francisco"});
+			} else {
+				// NOT REACHED
+			}
+		}
+
+		function newCityValues(values) {
+			var container = document.getElementById("city-container");
+			// Reset
+			while(container.firstChild) {
+				container.removeChild(container.firstChild)
+			}
+			
+			// Add new values
+			for(index in values) {
+				var field = document.createElement("input");
+				field.type = "radio";
+				field.name = "city";
+				field.id = "city-" + index;
+				field.value = index;
+				container.appendChild(field);
+				
+				var label = document.createElement("label");
+				label.setAttribute("for", "city-" + index);
+				label.appendChild(document.createTextNode(values[index]));
+				container.appendChild(label)
+			}
+		}
+
+		window.onload = updateCity;
+
+	</script>
+
+</head>
+<body>
+
+	<form method="GET" action="about:blank" >
+
+		<p>Please select the city <i>Aarhus</i> or <i>Oxford</i> to do something.</p>
+
+		<select name="country" id="country" onchange="updateCity()" >
+			<option value="uk" >UK</option>
+			<option value="dk" >Denmark</option>
+			<option value="us" >USA</option>
+		</select>
+
+		<div id="city-container" >
+			<!-- Options will be filled dynamically -->
+		</div>
+
+		<button type="submit" onclick="return validate();">Submit</button>
+
+	</form>
+
+</body>
+</html>
