@@ -123,3 +123,4 @@ SymbolicSelectElement
 SymbolicOptionElement
 SymbolicTrigger
 SymbolicNotExplicit
+UsageWarning

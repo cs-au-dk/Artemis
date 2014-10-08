@@ -90,6 +90,12 @@ class PrioritizationStrategies(unittest.TestCase):
 
 class InstrumentationTests(unittest.TestCase):
 
+    def test_detect_warning_flag(self):
+        report = execute_artemis('test-jquery-live', '%s/jquery-live/index.html' % FIXTURE_ROOT, 
+                                 iterations=2)
+
+        self.assertEqual(1, report.get('DOM::APIUsageWarning::JSEvent.target', 0))
+
     def test_alert(self):
         report = execute_artemis('instrumentation-alert', '%s/instrumentation/alert.html' % FIXTURE_ROOT)
 

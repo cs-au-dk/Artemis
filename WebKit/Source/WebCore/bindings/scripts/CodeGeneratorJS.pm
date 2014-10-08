@@ -1818,6 +1818,12 @@ sub GenerateImplementation
 
                     push(@implContent, "    castedThis->m_" . $attribute->signature->name . ".set(exec->globalData(), castedThis, result);\n") if ($attribute->signature->extendedAttributes->{"CachedAttribute"});
                     
+                    if ($attribute->signature->extendedAttributes->{"UsageWarning"}) {
+                        # ARTEMIS BEGIN
+                        push(@implContent, "Statistics::statistics()->accumulate(\"DOM::APIUsageWarning::$className.${name}\", 1);\n");
+                        # ARTEMIS END
+                    }
+
                     if ($attribute->signature->extendedAttributes->{"SymbolicTrigger"}) {
                         # ARTEMIS BEGIN
                         push(@implContent, "    castedThis->m_isSymbolic = true;\n");
