@@ -37,6 +37,11 @@
 #include <algorithm>
 #include <wtf/Assertions.h>
 #include <wtf/HashSet.h>
+#ifdef ARTEMIS
+#include "JavaScriptCore/symbolic/expr.h"
+#include "JavaScriptCore/symbolic/symbolicinterpreter.h"
+#include <statistics/statsstorage.h>
+#endif
 
 namespace JSC {
 
@@ -1212,6 +1217,8 @@ EncodedJSValue JSC_HOST_CALL arrayProtoFuncIndexOf(ExecState* exec)
     if (exec->hadException())
         return JSValue::encode(jsUndefined());
 
+    JSValue value = jsNumber(-1);
+
     unsigned index = argumentClampedIndexFromStartOrEnd(exec, 1, length);
     JSValue searchElement = exec->argument(0);
     for (; index < length; ++index) {
@@ -1220,11 +1227,37 @@ EncodedJSValue JSC_HOST_CALL arrayProtoFuncIndexOf(ExecState* exec)
             return JSValue::encode(jsUndefined());
         if (!e)
             continue;
-        if (JSValue::strictEqual(exec, searchElement, e))
-            return JSValue::encode(jsNumber(index));
+        if (JSValue::strictEqual(exec, searchElement, e)) {
+            value = jsNumber(index);
+            break;
+        }
     }
 
-    return JSValue::encode(jsNumber(-1));
+#ifdef ARTEMIS
+    bool isSymbolic = searchElement.isSymbolic();
+
+    unsigned index = argumentClampedIndexFromStartOrEnd(exec, 1, length);
+    for (; index < length && !isSymbolic; ++index) {
+JSValue e = getProperty(exec, thisObj, index);
+
+    if (thisValue.isSymbolic()) {
+        JSValue value = JSValue::decode(replaceUsingStringSearch(exec, string, searchValue));
+        value.makeSymbolic(new Symbolic::StringReplace((Symbolic::StringExpression*)thisValue.asSymbolic(),
+                                                       new std::string(searchValue.toUString(exec).ascii().data()),
+                                                       new std::string(replaceValue.toUString(exec).ascii().data())));
+        return JSValue::encode(value);
+    } else {
+
+        assert(!thisValue.isSymbolic());
+        if (searchValue.isSymbolic() || replaceValue.isSymbolic()) {
+            Statistics::statistics()->accumulate("Concolic::MissingInstrumentation::stringProtoFuncReplace", 1);
+        }
+
+        return replaceUsingStringSearch(exec, string, searchValue);
+    }
+#endif
+
+    return JSValue::encode(value);
 }
 
 EncodedJSValue JSC_HOST_CALL arrayProtoFuncLastIndexOf(ExecState* exec)
