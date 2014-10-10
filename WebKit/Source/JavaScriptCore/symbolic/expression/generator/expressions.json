@@ -4,12 +4,6 @@
 		"type": "interface",
 		"parent": null
 	},
-
-	{
-		"ID": "ObjectExpression",
-		"type": "interface",
-		"parent": "Expression"
-	},
 		
 	{
 		"ID": "IntegerExpression",
@@ -73,6 +67,20 @@
 		]
 	},
 
+    {
+        "ID": "ObjectExpression",
+        "type": "interface",
+        "parent": "Expression"
+    },
+
+    {
+        "ID": "SymbolicObject",
+        "type": "expression",
+        "parent": "ObjectExpression",
+        "fields": [
+            ["int", "id"]
+        ]
+    },
 
 	{
 		"ID": "ConstantObject",
@@ -82,6 +90,16 @@
 			["bool", "isNull"]
 		]
 	},
+
+    {
+        "ID": "ObjectArrayIndexOf",
+        "type": "expression",
+        "parent": "IntegerExpression",
+        "fields": [
+            ["std::list<ObjectExpression*>", "array"],
+            ["ObjectExpression*", "searchElement"]
+        ]
+    },
 
 	{
 		"ID": "ObjectBinaryOperation",
@@ -307,6 +325,6 @@
 				"types": ["BOOL", "BOOL", "BOOL", "BOOL"]
 			}
 		]
-	}
+    }
 			
 ]

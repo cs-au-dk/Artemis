@@ -1824,6 +1824,12 @@ sub GenerateImplementation
                         # ARTEMIS END
                     }
 
+                    if ($attribute->signature->extendedAttributes->{"SymbolicEventTarget"}) {
+                        # ARTEMIS BEGIN
+                        # push(@implContent, "        result.makeSymbolic(new Symbolic::SymbolicString(Symbolic::SymbolicSource(inputSourceType, method, std::string(strs.str()))));\n");
+                        # ARTEMIS END
+                    }
+
                     if ($attribute->signature->extendedAttributes->{"SymbolicTrigger"}) {
                         # ARTEMIS BEGIN
                         push(@implContent, "    castedThis->m_isSymbolic = true;\n");

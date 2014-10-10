@@ -262,6 +262,8 @@ SOURCES += \
     symbolic/expression/constantobject.cpp \
     symbolic/expression/objectbinaryoperation.cpp \
     symbolic/expression/stringindexof.cpp \
+    symbolic/expression/symbolicobject.cpp \
+    symbolic/expression/objectarrayindexof.cpp \
     statistics/statsstorage.cpp
 
 *sh4* {
@@ -330,4 +332,6 @@ HEADERS += \
     symbolic/expression/constantobject.h \
     symbolic/expression/objectbinaryoperation.h \
     symbolic/expression/stringindexof.h \
+    symbolic/expression/symbolicobject.h \
+    symbolic/expression/objectarrayindexof.h \
     statistics/statsstorage.h
