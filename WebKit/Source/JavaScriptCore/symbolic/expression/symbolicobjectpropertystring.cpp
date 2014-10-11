@@ -16,42 +16,30 @@
 
  // AUTO GENERATED - DO NOT MODIFY
 
-#ifndef SYMBOLIC_OBJECTARRAYINDEXOF_H
-#define SYMBOLIC_OBJECTARRAYINDEXOF_H
-
-#include <string>
-
-#include <list>
-
-#include "visitor.h"
-#include "expression.h"
-#include "integerexpression.h"
-
 #ifdef ARTEMIS
+
+#include "symbolicobjectpropertystring.h"
 
 namespace Symbolic
 {
 
-class ObjectArrayIndexOf : public IntegerExpression
+SymbolicObjectPropertyString::SymbolicObjectPropertyString(SymbolicObject* obj, std::string propertyName) :
+    StringExpression(),
+    m_obj(obj),
+    m_propertyName(propertyName)
 {
-public:
-    explicit ObjectArrayIndexOf(std::list<Expression*> array, Expression* searchElement);
-    void accept(Visitor* visitor);
-    void accept(Visitor* visitor, void* arg);
+}
 
-	inline std::list<Expression*> getArray() {
-		return m_array;
-	}
-	inline Expression* getSearchelement() {
-		return m_searchElement;
-	}
+void SymbolicObjectPropertyString::accept(Visitor* visitor) 
+{
+	visitor->visit(this, NULL); 	
+}
 
-private:
-	std::list<Expression*> m_array;
-	Expression* m_searchElement;
+void SymbolicObjectPropertyString::accept(Visitor* visitor, void* arg) 
+{
+	visitor->visit(this, arg); 	
+}
 
-};
 }
 
 #endif
-#endif // SYMBOLIC_OBJECTARRAYINDEXOF_H

@@ -272,7 +272,8 @@ void Runtime::done()
     Log::info("\n=== Statistics END ===\n\n");
 
     Log::info("\n=== Last pathconditions ===\n");
-    Log::info(pc->toStatisticsString());
+    Log::info(pc->toStatisticsValuesString(true));
+    //Log::info(pc->toStatisticsString());
     Log::info("=== Last pathconditions END ===\n\n");
 
     Log::info("Artemis terminated on: "+ QDateTime::currentDateTime().toString().toStdString());

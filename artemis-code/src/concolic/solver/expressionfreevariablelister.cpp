@@ -153,5 +153,27 @@ void ExpressionFreeVariableLister::visit(Symbolic::StringIndexOf* obj, void* arg
     obj->getOffset()->accept(this, arg);
 }
 
+void ExpressionFreeVariableLister::visit(Symbolic::SymbolicObject* obj, void* arg)
+{
+    //mResult.insert(QString(symbolicboolean->getSource().getIdentifier().c_str()), symbolicboolean->getSource().getIdentifierMethod());
+    // TODO what should we insert here?
+}
+
+void ExpressionFreeVariableLister::visit(Symbolic::ObjectArrayIndexOf* obj, void* arg)
+{
+    obj->getSearchelement()->accept(this, arg);
+
+    std::list<Symbolic::Expression*>::iterator it = obj->getArray().begin();
+    for (; it != obj->getArray().end(); ++it) {
+        Symbolic::Expression* elm = (*it);
+        elm->accept(this);
+    }
+}
+
+void ExpressionFreeVariableLister::visit(Symbolic::SymbolicObjectPropertyString* obj, void* arg)
+{
+    obj->getObj()->accept(this, arg);
+}
+
 
 } // namespace artemis

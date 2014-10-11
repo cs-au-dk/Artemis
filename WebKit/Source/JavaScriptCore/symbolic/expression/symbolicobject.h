@@ -25,6 +25,7 @@
 
 #include "visitor.h"
 #include "objectexpression.h"
+#include "symbolicsource.h"
 
 #ifdef ARTEMIS
 
@@ -34,16 +35,16 @@ namespace Symbolic
 class SymbolicObject : public ObjectExpression
 {
 public:
-    explicit SymbolicObject(int id);
+    explicit SymbolicObject(SymbolicSource source);
     void accept(Visitor* visitor);
     void accept(Visitor* visitor, void* arg);
 
-	inline int getId() {
-		return m_id;
+	inline SymbolicSource getSource() {
+		return m_source;
 	}
 
 private:
-	int m_id;
+	SymbolicSource m_source;
 
 };
 }

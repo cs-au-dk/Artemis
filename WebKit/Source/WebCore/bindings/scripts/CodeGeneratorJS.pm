@@ -1826,7 +1826,19 @@ sub GenerateImplementation
 
                     if ($attribute->signature->extendedAttributes->{"SymbolicEventTarget"}) {
                         # ARTEMIS BEGIN
-                        push(@implContent, "        result.makeSymbolic(new Symbolic::SymbolicObject(0));\n");
+                        push(@implContent, "        Symbolic::SymbolicSource source(Symbolic::EVENT_TARGET, Symbolic::EVENT_TARGET_IDENT, \"\");\n");
+                        push(@implContent, "        result.makeSymbolic(new Symbolic::SymbolicObject(source));\n");
+                        # ARTEMIS END
+                    }
+
+                    if ($attribute->signature->extendedAttributes->{"SymbolicObjectStringProperty"}) {
+                        # ARTEMIS BEGIN
+                        my $pReflect = $attribute->signature->extendedAttributes->{"Reflect"};
+                        my $pAttr = ($pReflect and $pReflect ne "VALUE_IS_MISSING") ? $pReflect : $name;
+
+                        push(@implContent, "        if (slotBase.isSymbolic()) {\n");
+                        push(@implContent, "        result.makeSymbolic(new Symbolic::SymbolicObjectPropertyString((Symbolic::SymbolicObject*)slotBase.asSymbolic(), \"" . $pAttr . "\"));\n");
+                        push(@implContent, "        }\n");
                         # ARTEMIS END
                     }
 
@@ -2373,7 +2385,7 @@ sub GenerateImplementation
 
                     my $numParameters = @{$function->parameters};
                     my ($functionString, $dummy) = GenerateParametersCheck(\@implContent, $function, $dataNode, $numParameters, $implClassName, $functionImplementationName, $svgPropertyType, $svgPropertyOrListPropertyType, $svgListPropertyType);
-                    GenerateImplementationFunctionCall($function, $functionString, "    ", $svgPropertyType, $implClassName);
+                    GenerateImplementationFunctionCall($function, $functionString, "    ", $svgPropertyType, $implClassName, 0);
                 }
             } else {
                 if ($interfaceName eq "DOMWindow") {
@@ -2431,7 +2443,7 @@ sub GenerateImplementation
                     } else {
                         my $numParameters = @{$function->parameters};
                         my ($functionString, $dummy) = GenerateParametersCheck(\@implContent, $function, $dataNode, $numParameters, $implClassName, $functionImplementationName, $svgPropertyType, $svgPropertyOrListPropertyType, $svgListPropertyType);
-                        GenerateImplementationFunctionCall($function, $functionString, "    ", $svgPropertyType, $implClassName);
+                        GenerateImplementationFunctionCall($function, $functionString, "    ", $svgPropertyType, $implClassName, $function->signature->extendedAttributes->{"SymbolicObjectStringProperty"});
                     }
                 }
             }
@@ -2765,7 +2777,7 @@ sub GenerateParametersCheck
                 push @optionalCallbackArguments, "ec";
             }
             my $functionString = "$functionName(" . join(", ", @optionalCallbackArguments) . ")";
-            GenerateImplementationFunctionCall($function, $functionString, "    " x 2, $svgPropertyType, $implClassName);
+            GenerateImplementationFunctionCall($function, $functionString, "    " x 2, $svgPropertyType, $implClassName, 0);
             push(@$outputArray, "    }\n\n");
         }
 
@@ -3051,6 +3063,7 @@ sub GenerateImplementationFunctionCall()
     my $indent = shift;
     my $svgPropertyType = shift;
     my $implClassName = shift;
+    my $addSymbolicProperty = shift;
 
     if ($function->signature->type eq "void") {
         push(@implContent, $indent . "$functionString;\n");
@@ -3074,6 +3087,13 @@ sub GenerateImplementationFunctionCall()
         if ($codeGenerator->ExtendedAttributeContains($function->signature->extendedAttributes->{"CallWith"}, "ScriptState")) {
             push(@implContent, $indent . "if (exec->hadException())\n");
             push(@implContent, $indent . "    return JSValue::encode(jsUndefined());\n");
+        }
+
+        # Artemis
+        if (!$function->isStatic and $addSymbolicProperty) {
+            push(@implContent, $indent . "if (thisValue.isSymbolic()) {\n");
+            push(@implContent, $indent . "    result.makeSymbolic(new Symbolic::SymbolicObjectPropertyString((Symbolic::SymbolicObject*)thisValue.asSymbolic(), name.ascii().data()));\n");
+            push(@implContent, $indent . "}\n");
         }
 
         push(@implContent, $indent . "return JSValue::encode(result);\n");

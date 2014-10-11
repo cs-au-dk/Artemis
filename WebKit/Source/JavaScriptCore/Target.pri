@@ -264,6 +264,7 @@ SOURCES += \
     symbolic/expression/stringindexof.cpp \
     symbolic/expression/symbolicobject.cpp \
     symbolic/expression/objectarrayindexof.cpp \
+    symbolic/expression/symbolicobjectpropertystring.cpp \
     statistics/statsstorage.cpp
 
 *sh4* {
@@ -334,4 +335,5 @@ HEADERS += \
     symbolic/expression/stringindexof.h \
     symbolic/expression/symbolicobject.h \
     symbolic/expression/objectarrayindexof.h \
+    symbolic/expression/symbolicobjectpropertystring.h \
     statistics/statsstorage.h

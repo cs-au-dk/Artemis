@@ -78,7 +78,17 @@
         "type": "expression",
         "parent": "ObjectExpression",
         "fields": [
-            ["int", "id"]
+            ["SymbolicSource", "source"]
+        ]
+    },
+
+    {
+        "ID": "SymbolicObjectPropertyString",
+        "type": "expression",
+        "parent": "StringExpression",
+        "fields": [
+            ["SymbolicObject*", "obj"],
+            ["std::string", "propertyName"]
         ]
     },
 
@@ -87,7 +97,7 @@
 		"type": "expression",
 		"parent": "ObjectExpression",
 		"fields": [
-			["bool", "isNull"]
+            ["void*", "instanceIdentifier"]
 		]
 	},
 
@@ -96,8 +106,8 @@
         "type": "expression",
         "parent": "IntegerExpression",
         "fields": [
-            ["std::list<ObjectExpression*>", "array"],
-            ["ObjectExpression*", "searchElement"]
+            ["std::list<Expression*>", "array"],
+            ["Expression*", "searchElement"]
         ]
     },
 

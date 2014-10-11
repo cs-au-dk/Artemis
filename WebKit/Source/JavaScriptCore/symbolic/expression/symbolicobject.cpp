@@ -23,9 +23,9 @@
 namespace Symbolic
 {
 
-SymbolicObject::SymbolicObject(int id) :
+SymbolicObject::SymbolicObject(SymbolicSource source) :
     ObjectExpression(),
-    m_id(id)
+    m_source(source)
 {
 }
 

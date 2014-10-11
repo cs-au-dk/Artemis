@@ -389,6 +389,8 @@ Symbolic::Expression* JSValue::asSymbolic() const
     return getImmediate()->symbolic;
 }
 
+
+
 Symbolic::IntegerExpression* JSValue::generateIntegerExpression(ExecState* exec){
     return this->isSymbolic()?(Symbolic::IntegerExpression*)this->asSymbolic() : new Symbolic::ConstantInteger(this->toPrimitive(exec).asNumber());
 }
@@ -398,7 +400,7 @@ Symbolic::StringExpression* JSValue::generateStringExpression(ExecState* exec){
 }
 
 Symbolic::ObjectExpression* JSValue::generateObjectExpression(ExecState* exec){
-    return this->isSymbolic()?(Symbolic::ObjectExpression*) this->asSymbolic(): new Symbolic::ConstantObject(this->isUndefinedOrNull());
+    return this->isSymbolic()?(Symbolic::ObjectExpression*) this->asSymbolic(): new Symbolic::ConstantObject(this->isUndefinedOrNull() ? 0 : (void*) this);
 }
 
 Symbolic::IntegerExpression* JSValue::generateIntegerCoercionExpression(ExecState* exec){

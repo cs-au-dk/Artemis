@@ -23,7 +23,7 @@ namespace artemis
 
 void ExpressionValuePrinter::visit(Symbolic::ConstantObject* obj, void* arg)
 {
-    m_result += obj->getIsnull() ? "null" : "not-null";
+    m_result += obj->getInstanceidentifier() == 0 ? "null" : "not-null";
 }
 
 void ExpressionValuePrinter::visit(Symbolic::ConstantInteger* constantinteger, void* arg)
@@ -63,6 +63,19 @@ void ExpressionValuePrinter::visit(Symbolic::SymbolicBoolean *symbolicboolean, v
     m_result += symbolicboolean->getSource().getIdentifier();
 }
 
+void ExpressionValuePrinter::visit(Symbolic::SymbolicObject* obj, void* arg)
+{
+    m_result += obj->getSource().getIdentifier();
+}
+
+void ExpressionValuePrinter::visit(Symbolic::SymbolicObjectPropertyString* obj, void* arg)
+{
+    m_result += "SymbolicProperty[";
+    m_result += obj->getPropertyname();
+    m_result += "]( ";
+    obj->getObj()->accept(this);
+    m_result += " )";
+}
 
 }
 

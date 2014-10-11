@@ -46,6 +46,9 @@ public:
     void visit(Symbolic::SymbolicInteger* symbolicinteger, void* arg);
     void visit(Symbolic::SymbolicString* symbolicstring, void* arg);
     void visit(Symbolic::SymbolicBoolean* symbolicboolean, void* arg);
+    void visit(Symbolic::SymbolicObject* symbolicobject, void* arg);
+
+    void visit(Symbolic::SymbolicObjectPropertyString* obj, void* arg);
 
 };
 

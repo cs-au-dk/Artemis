@@ -35,9 +35,6 @@
 namespace artemis
 {
 
-std::string OBJECT_NULL = "false";
-std::string OBJECT_NOT_NULL = "true";
-
 CVC4ConstraintWriter::CVC4ConstraintWriter(ConcolicBenchmarkFeatures disabledFeatures)
     : SMTConstraintWriter(disabledFeatures)
     , mTypeAnalysis(new CVC4TypeAnalysis())
@@ -425,8 +422,11 @@ void CVC4ConstraintWriter::visit(Symbolic::StringRegexSubmatchArrayMatch* exp, v
 
 void CVC4ConstraintWriter::visit(Symbolic::ConstantObject* obj, void* arg)
 {
+    std::stringstream instanceIdentifier;
+    instanceIdentifier << (unsigned long)obj->getInstanceidentifier();
+
     mExpressionType = Symbolic::OBJECT;
-    mExpressionBuffer = obj->getIsnull() ? OBJECT_NULL : OBJECT_NOT_NULL;
+    mExpressionBuffer = instanceIdentifier.str();
 }
 
 void CVC4ConstraintWriter::visit(Symbolic::ObjectBinaryOperation* obj, void* arg)

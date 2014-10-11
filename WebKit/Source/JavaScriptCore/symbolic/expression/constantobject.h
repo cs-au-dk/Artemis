@@ -34,16 +34,16 @@ namespace Symbolic
 class ConstantObject : public ObjectExpression
 {
 public:
-    explicit ConstantObject(bool isNull);
+    explicit ConstantObject(void* instanceIdentifier);
     void accept(Visitor* visitor);
     void accept(Visitor* visitor, void* arg);
 
-	inline bool getIsnull() {
-		return m_isNull;
+	inline void* getInstanceidentifier() {
+		return m_instanceIdentifier;
 	}
 
 private:
-	bool m_isNull;
+	void* m_instanceIdentifier;
 
 };
 }

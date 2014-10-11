@@ -249,6 +249,36 @@ void ExpressionPrinter::visit(Symbolic::StringIndexOf* obj, void* args)
     m_result += " )";
 }
 
+void ExpressionPrinter::visit(Symbolic::SymbolicObject* obj, void* arg)
+{
+    m_result += "SymbolicObject( ";
+    m_result += " )";
+}
+
+void ExpressionPrinter::visit(Symbolic::ObjectArrayIndexOf* obj, void* arg)
+{
+    m_result += "ObjectArrayIndexOf( ";
+    obj->getSearchelement()->accept(this);
+    m_result += " , [";
+
+    std::list<Symbolic::Expression*>::iterator it = obj->getArray().begin();
+    for (; it != obj->getArray().end(); ++it) {
+        Symbolic::Expression* elm = (*it);
+        elm->accept(this);
+        m_result += " , ";
+    }
+
+    m_result += " ])";
+
+}
+
+void ExpressionPrinter::visit(Symbolic::SymbolicObjectPropertyString* obj, void* arg)
+{
+    m_result += "SymbolicProperty( ";
+    obj->getObj()->accept(this);
+    m_result += " )";
+}
+
 }
 
 #endif

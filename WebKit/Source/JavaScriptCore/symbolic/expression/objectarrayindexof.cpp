@@ -23,7 +23,7 @@
 namespace Symbolic
 {
 
-ObjectArrayIndexOf::ObjectArrayIndexOf(std::list<ObjectExpression*> array, ObjectExpression* searchElement) :
+ObjectArrayIndexOf::ObjectArrayIndexOf(std::list<Expression*> array, Expression* searchElement) :
     IntegerExpression(),
     m_array(array),
     m_searchElement(searchElement)

@@ -22,11 +22,11 @@
 namespace Symbolic {
 
 enum SourceIdentifierMethod {
-    INPUT_NAME, ELEMENT_ID
+    INPUT_NAME, ELEMENT_ID, EVENT_TARGET_IDENT
 };
 
 enum SourceType {
-    TEXT, SELECT, SELECT_INDEX, RADIO, CHECKBOX, UNKNOWN
+    TEXT, SELECT, SELECT_INDEX, RADIO, CHECKBOX, EVENT_TARGET, UNKNOWN
 };
 
 class SymbolicSource

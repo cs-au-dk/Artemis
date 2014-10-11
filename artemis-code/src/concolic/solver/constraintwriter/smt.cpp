@@ -304,6 +304,11 @@ void SMTConstraintWriter::visit(Symbolic::StringRegexSubmatchArrayAt* exp, void*
     error("NO SYMBOLIC STRING REGEX SUBMATCH (ARRAY) SUPPORT");
 }
 
+void SMTConstraintWriter::visit(Symbolic::SymbolicObjectPropertyString* obj, void* arg)
+{
+    error("NO SYMBOLIC NODE PROPERTY SUPPORT");
+}
+
 void SMTConstraintWriter::visit(Symbolic::StringRegexSubmatchArrayMatch* exp, void* arg)
 {
     error("NO SYMBOLIC STRING REGEX SUBMATCH (ARRAY) SUPPORT");
@@ -317,6 +322,11 @@ void SMTConstraintWriter::visit(Symbolic::ConstantObject* obj, void* arg)
 void SMTConstraintWriter::visit(Symbolic::ObjectBinaryOperation* obj, void* arg)
 {
     error("NO SYMBOLIC NULL/OBJECT SUPPORT");
+}
+
+void SMTConstraintWriter::visit(Symbolic::SymbolicObject* obj, void* arg)
+{
+    error("NO SYMBOLIC OBJECT SUPPORT");
 }
 
 void SMTConstraintWriter::visit(Symbolic::StringLength* stringlength, void* args)
@@ -370,7 +380,12 @@ void SMTConstraintWriter::visit(Symbolic::IntegerMaxMin* obj, void* arg)
 
 void SMTConstraintWriter::visit(Symbolic::StringIndexOf* stringindexof, void* arg)
 {
-    error("NO STRING INDEX OF SUPPORT");
+    error("NO STRING INDEXOF SUPPORT");
+}
+
+void SMTConstraintWriter::visit(Symbolic::ObjectArrayIndexOf* obj, void* arg)
+{
+    error("NO OBJECT ARRAY INDEXOF SUPPORT");
 }
 
 /** Utility **/

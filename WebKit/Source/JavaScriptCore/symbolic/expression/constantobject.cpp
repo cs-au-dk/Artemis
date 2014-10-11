@@ -23,9 +23,9 @@
 namespace Symbolic
 {
 
-ConstantObject::ConstantObject(bool isNull) :
+ConstantObject::ConstantObject(void* instanceIdentifier) :
     ObjectExpression(),
-    m_isNull(isNull)
+    m_instanceIdentifier(instanceIdentifier)
 {
 }
 

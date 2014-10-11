@@ -24,6 +24,7 @@
 #include "expression/integercoercion.h"
 #include "expression/integermaxmin.h"
 #include "expression/symbolicobject.h"
+#include "expression/symbolicobjectpropertystring.h"
 #include "expression/constantobject.h"
 #include "expression/objectarrayindexof.h"
 #include "expression/objectbinaryoperation.h"

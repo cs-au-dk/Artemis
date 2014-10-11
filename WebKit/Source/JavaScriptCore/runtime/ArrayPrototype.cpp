@@ -1211,6 +1211,7 @@ EncodedJSValue JSC_HOST_CALL arrayProtoFuncReduceRight(ExecState* exec)
 
 EncodedJSValue JSC_HOST_CALL arrayProtoFuncIndexOf(ExecState* exec)
 {
+    Statistics::statistics()->accumulate("Concolic:TMP::arrayProtoFuncIndexOf", 1);
     // 15.4.4.14
     JSObject* thisObj = exec->hostThisValue().toObject(exec);
     unsigned length = thisObj->get(exec, exec->propertyNames().length).toUInt32(exec);
@@ -1236,24 +1237,34 @@ EncodedJSValue JSC_HOST_CALL arrayProtoFuncIndexOf(ExecState* exec)
 #ifdef ARTEMIS
     bool isSymbolic = searchElement.isSymbolic();
 
-    unsigned index = argumentClampedIndexFromStartOrEnd(exec, 1, length);
+    index = argumentClampedIndexFromStartOrEnd(exec, 1, length);
     for (; index < length && !isSymbolic; ++index) {
-JSValue e = getProperty(exec, thisObj, index);
+        JSValue e = getProperty(exec, thisObj, index);
+        isSymbolic = isSymbolic || e.isSymbolic();
+    }
 
-    if (thisValue.isSymbolic()) {
-        JSValue value = JSValue::decode(replaceUsingStringSearch(exec, string, searchValue));
-        value.makeSymbolic(new Symbolic::StringReplace((Symbolic::StringExpression*)thisValue.asSymbolic(),
-                                                       new std::string(searchValue.toUString(exec).ascii().data()),
-                                                       new std::string(replaceValue.toUString(exec).ascii().data())));
-        return JSValue::encode(value);
-    } else {
+    // TODO Artemis: This implementation assumes that the symbolic values are objects... which is not always the case..
 
-        assert(!thisValue.isSymbolic());
-        if (searchValue.isSymbolic() || replaceValue.isSymbolic()) {
-            Statistics::statistics()->accumulate("Concolic::MissingInstrumentation::stringProtoFuncReplace", 1);
+    if (isSymbolic) {
+        Statistics::statistics()->accumulate("Concolic:TMP::arrayProtoFuncIndexOfIsSymbolic", 1);
+
+        std::list<Symbolic::Expression*> symbList;
+
+        index = argumentClampedIndexFromStartOrEnd(exec, 1, length);
+        for (; index < length; ++index) {
+            JSValue e = getProperty(exec, thisObj, index);
+            symbList.push_back(e.isSymbolic() ?
+                                   (Symbolic::Expression*)e.asSymbolic() :
+                                   (Symbolic::Expression*)new Symbolic::ConstantObject((void*)e.asCell()));
         }
 
-        return replaceUsingStringSearch(exec, string, searchValue);
+        Symbolic::Expression* symbElement = searchElement.isSymbolic() ?
+                    (Symbolic::Expression*)searchElement.asSymbolic() :
+                    (Symbolic::Expression*)new Symbolic::ConstantObject((void*)searchElement.asCell());
+
+        value.makeSymbolic(new Symbolic::ObjectArrayIndexOf(symbList, symbElement));
+                                                       //new std::string(searchValue.toUString(exec).ascii().data()),
+                                                       //new std::string(replaceValue.toUString(exec).ascii().data())));
     }
 #endif
 

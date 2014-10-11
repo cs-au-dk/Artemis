@@ -1,17 +1,6 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-	<script type="text/javascript">
-		function doSomething() {
-			var y = document.getElementById("testinput").value;
-			var x = document.getElementById("testinput1").value;
-			var x_1 = document.getElementById("testinput2").value;
-
-			var select = document.getElementById("selectinput");
-
-            $TESTSTATEMENT
-		}
-	</script>
 </head>
 <body>
 	<input type="text" name="testinput" id="testinput" />
@@ -25,6 +14,20 @@
                   <option value="audi">Audi</option>
         </select>
 
-	<button onclick="doSomething();">DO</button>
+	<button id="targethook">DO</button>
+
+	<script type="text/javascript">
+	function doSomething(e) {
+	  var y = document.getElementById("testinput").value;
+	  var x = document.getElementById("testinput1").value;
+	  var x_1 = document.getElementById("testinput2").value;
+        
+   	  var select = document.getElementById("selectinput");
+
+          $TESTSTATEMENT
+	}
+
+        document.getElementById("targethook").onclick = doSomething;
+        </script>
 </body>
 </html>

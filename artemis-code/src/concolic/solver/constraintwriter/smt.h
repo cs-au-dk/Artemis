@@ -127,6 +127,7 @@ protected:
     virtual void visit(Symbolic::StringRegexSubmatchIndex* submatchIndex, void* arg);
     virtual void visit(Symbolic::IntegerMaxMin* obj, void* arg);
     virtual void visit(Symbolic::StringIndexOf* stringindexof, void* arg);
+    virtual void visit(Symbolic::ObjectArrayIndexOf* objectarrayindexof, void* arg);
 
     // Returns string values to mExpressionBuffer
     virtual void visit(Symbolic::SymbolicString* symbolicstring, void* args);
@@ -137,6 +138,7 @@ protected:
     virtual void visit(Symbolic::StringRegexReplace* stringregexreplace, void* args);
     virtual void visit(Symbolic::StringReplace* stringreplace, void* args);
     virtual void visit(Symbolic::StringRegexSubmatchArrayAt* exp, void* arg);
+    virtual void visit(Symbolic::SymbolicObjectPropertyString* obj, void* arg);
 
     // Returns boolean values to mExpressionBuffer
     virtual void visit(Symbolic::SymbolicBoolean* symbolicboolean, void* args);
@@ -149,6 +151,7 @@ protected:
     virtual void visit(Symbolic::StringRegexSubmatchArrayMatch* exp, void* arg);
     virtual void visit(Symbolic::ConstantObject* obj, void* arg);
     virtual void visit(Symbolic::ObjectBinaryOperation* obj, void* arg);
+    virtual void visit(Symbolic::SymbolicObject* symbolicobject, void* arg);
 
     // Output writing
     virtual void preVisitPathConditionsHook(QSet<QString> varsUsed);

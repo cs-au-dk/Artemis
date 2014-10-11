@@ -293,6 +293,27 @@ void KaluzaConstraintWriter::visit(Symbolic::StringIndexOf* obj, void* args)
     mIdentifierStore = "ERROR";
 }
 
+void KaluzaConstraintWriter::visit(Symbolic::SymbolicObject* obj, void* arg)
+{
+    mError = true;
+    mErrorReason = "Symbolic objects not supported";
+    mIdentifierStore = "ERROR";
+}
+
+void KaluzaConstraintWriter::visit(Symbolic::ObjectArrayIndexOf* obj, void* arg)
+{
+    mError = true;
+    mErrorReason = "Array index for objects not supported";
+    mIdentifierStore = "ERROR";
+}
+
+void KaluzaConstraintWriter::visit(Symbolic::SymbolicObjectPropertyString* obj, void* arg)
+{
+    mError = true;
+    mErrorReason = "Symbolic node properties not supported";
+    mIdentifierStore = "ERROR";
+}
+
 }
 
 #endif

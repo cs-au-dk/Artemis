@@ -36,6 +36,7 @@ enum Type {
     class IntegerCoercion;
     class IntegerMaxMin;
     class SymbolicObject;
+    class SymbolicObjectPropertyString;
     class ConstantObject;
     class ObjectArrayIndexOf;
     class ObjectBinaryOperation;
@@ -68,6 +69,7 @@ public:
     virtual void visit(IntegerCoercion* integercoercion, void* arg) = 0;
     virtual void visit(IntegerMaxMin* integermaxmin, void* arg) = 0;
     virtual void visit(SymbolicObject* symbolicobject, void* arg) = 0;
+    virtual void visit(SymbolicObjectPropertyString* symbolicobjectpropertystring, void* arg) = 0;
     virtual void visit(ConstantObject* constantobject, void* arg) = 0;
     virtual void visit(ObjectArrayIndexOf* objectarrayindexof, void* arg) = 0;
     virtual void visit(ObjectBinaryOperation* objectbinaryoperation, void* arg) = 0;
