@@ -163,8 +163,9 @@ void ExpressionFreeVariableLister::visit(Symbolic::ObjectArrayIndexOf* obj, void
 {
     obj->getSearchelement()->accept(this, arg);
 
-    std::list<Symbolic::Expression*>::iterator it = obj->getArray().begin();
-    for (; it != obj->getArray().end(); ++it) {
+    std::list<Symbolic::Expression*> list = obj->getArray();
+    std::list<Symbolic::Expression*>::iterator it = list.begin();
+    for (; it != list.end(); ++it) {
         Symbolic::Expression* elm = (*it);
         elm->accept(this);
     }

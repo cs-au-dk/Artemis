@@ -254,8 +254,9 @@ void CVC4TypeAnalysis::visit(Symbolic::ObjectArrayIndexOf* obj, void* arg) {
     mExpressionType = OBJECT;
     obj->getSearchelement()->accept(this, arg);
 
-    std::list<Symbolic::Expression*>::iterator it = obj->getArray().begin();
-    for (; it != obj->getArray().end(); ++it) {
+    std::list<Symbolic::Expression*> list = obj->getArray();
+    std::list<Symbolic::Expression*>::iterator it = list.begin();
+    for (; it != list.end(); ++it) {
         Symbolic::Expression* elm = (*it);
         mExpressionType = OBJECT;
         elm->accept(this);

@@ -136,6 +136,12 @@ Symbolic Support
 
    JavaScript represents all numeric values as doubles, while we represent numeric values as integers. Thus, ``Math.{floor, ceil}`` returns the input symbolic value unmodified. This introduces some degree of imprecision in our solutions.
 
+``Array.indexOf``
+
+.. note::
+
+   Only support for symbolic objects.
+   
 ``Input.{value, valueAsNumber, valueAsDate, checked}``,  ``Select.{value, selectedIndex}``, ``OptionGroup.selectedIndex``, ``Option.value``
 
 .. note::

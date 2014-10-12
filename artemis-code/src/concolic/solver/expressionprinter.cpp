@@ -261,8 +261,9 @@ void ExpressionPrinter::visit(Symbolic::ObjectArrayIndexOf* obj, void* arg)
     obj->getSearchelement()->accept(this);
     m_result += " , [";
 
-    std::list<Symbolic::Expression*>::iterator it = obj->getArray().begin();
-    for (; it != obj->getArray().end(); ++it) {
+    std::list<Symbolic::Expression*> list = obj->getArray();
+    std::list<Symbolic::Expression*>::iterator it = list.begin();
+    for (; it != list.end(); ++it) {
         Symbolic::Expression* elm = (*it);
         elm->accept(this);
         m_result += " , ";
