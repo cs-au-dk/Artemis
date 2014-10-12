@@ -63,6 +63,7 @@ const char* opToString(OP op) {
 SymbolicInterpreter::SymbolicInterpreter() :
     m_nextSymbolicValue(0),
     m_inSession(false),
+    m_sessionId(0),
     m_shouldGC(false)
 {
 }
@@ -429,8 +430,14 @@ void SymbolicInterpreter::preExecution(JSC::CallFrame* callFrame)
 
 void SymbolicInterpreter::beginSession()
 {
+    beginSession(0);
+}
+
+void SymbolicInterpreter::beginSession(unsigned int sessionId)
+{
     m_shouldGC = true;
     m_inSession = true;
+    m_sessionId = sessionId;
 }
 
 void SymbolicInterpreter::endSession()

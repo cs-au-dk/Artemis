@@ -1,0 +1,26 @@
+<!doctype html>
+<html lang="en">
+<head>
+</head>
+<body>
+  <input type="text" name="testinput" id="testinput" />
+  <button id="hook">DO</button>
+
+  <script type="text/javascript">
+    var x = "testme";
+    var y = "something else"
+
+    var z = y == x;
+
+    function doSomething(e) {
+      if (e.target.parentNode) {
+        alert(x);
+      }
+    }
+
+    document.getElementById('hook').onclick = doSomething;
+  </script>
+
+
+</body>
+</html>

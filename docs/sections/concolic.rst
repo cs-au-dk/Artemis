@@ -152,8 +152,8 @@ Symbolic Support
 
    ``Event.target`` acts as a symbolic source of symbolic objects.
 
-``Element.tagName``, ``HTMLElement.{id, className, title, lang}``
-   
+``Element.{tagName, getAttribute}``, ``HTMLElement.{id, className, title, lang}``
+
 
 Usage Warnings
 ^^^^^^^^^^^^^^
@@ -167,6 +167,8 @@ Usage Warnings
 .. note::
 
    ``RegExp.{constructor, compile}(A1, A2)`` emit warnings if A1 or A2 are symbolic. Thus, we only support concrete regular expressions.
+
+``Element.*``, ``HTMLElement.*``, ``Node.*``
    
 No Symbolic Support and No Usage Warnings
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
@@ -175,7 +177,7 @@ No Symbolic Support and No Usage Warnings
 
 ``Window.*``, ``Navigator.*``, ``Screen.*``, ``History.*``, ``Location.*``
 
-``document.*``, ``Element.*``, ``Attribute.*``, ``Events.*``, ``Event.*``
+``document.*``, ``Attribute.*``, ``Events.*``, ``Event.*``
 
 ``Anchor.*``, ``Area.*``, ``Audio.*``, ``Base.*``, ``Blockquote.*``, ``Button.*``, ``Canvas.*``, ``Column.*``, ``ColumnGroup.*``, ``Datalist.*``, ``Del.*``, ``Details.*``, ``Dialog.*``, ``Embed.*``, ``Fieldset.*``, ``Form.*``, ``IFrame.*``, ``Image.*``, ``Ins.*``, ``Input Button*``, ``Input Color.*``, ``Input Date.*``, ``Input Datetime.*``, ``Input Datetime Local.*``, ``Input Email.*``, ``Input File.*``, ``Input Hidden.*``, ``Input Image.*``, ``Input Month.*``, ``Input Number.*``, ``Input Password.*``, ``Input Range.*``, ``Input Reset.*``, ``Input Search.*``, ``Input Submit.*``, ``Input Time.*``, ``Input URL.*``, ``Input Week.*``, ``Keygen.*``, ``Label.*``, ``Legend.*``, ``Li.*``, ``Link.*``, ``Map.*``, ``Menu.*``, ``MenuItem.*``, ``Meta.*``, ``Meter.*``, ``Object.*``, ``Ol.*``, ``Parameter.*``, ``Progress.*``, ``Quote.*``, ``Script.*``, ``Source.*``, ``Style.*``, ``Table.*``, ``TableData.*``, ``TableHeader.*``, ``TableRow.*``, ``Textarea.*``, ``Time.*``, ``Title.*``, ``Track.*``, ``Video.*``,
 

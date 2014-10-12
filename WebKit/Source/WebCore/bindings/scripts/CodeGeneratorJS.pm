@@ -1348,6 +1348,7 @@ sub GenerateImplementation
 
     # ARTEMIS BEGIN
     $implIncludes{"\"html/HTMLSelectElement.h\""} = 1;
+    $implIncludes{"\"interpreter/Interpreter.h\""} = 1;
     $implIncludes{"\"symbolic/symbolicinterpreter.h\""} = 1;
     $implIncludes{"\"symbolic/expression/symbolicstring.h\""} = 1;
     $implIncludes{"\"symbolic/expression/symbolicinteger.h\""} = 1;
@@ -1824,9 +1825,19 @@ sub GenerateImplementation
                         # ARTEMIS END
                     }
 
+                    if ($attribute->signature->extendedAttributes->{"WarningIfSymbolic"}) {
+                        # ARTEMIS BEGIN
+                        push(@implContent, "        if (slotBase.isSymbolic()) {\n");
+                        push(@implContent, "            Statistics::statistics()->accumulate(\"Concolic::SymbolicAPIUsageWarning::$className.${name}\", 1);\n");
+                        push(@implContent, "        }\n");
+                        # ARTEMIS END
+                    }
+
                     if ($attribute->signature->extendedAttributes->{"SymbolicEventTarget"}) {
                         # ARTEMIS BEGIN
-                        push(@implContent, "        Symbolic::SymbolicSource source(Symbolic::EVENT_TARGET, Symbolic::EVENT_TARGET_IDENT, \"\");\n");
+                        push(@implContent, "        std::ostringstream sessionId;\n");
+                        push(@implContent, "        sessionId << JSC::Interpreter::m_symbolic->getSessionId();\n");
+                        push(@implContent, "        Symbolic::SymbolicSource source(Symbolic::EVENT_TARGET, Symbolic::EVENT_TARGET_IDENT, sessionId.str());\n");
                         push(@implContent, "        result.makeSymbolic(new Symbolic::SymbolicObject(source));\n");
                         # ARTEMIS END
                     }
@@ -2371,6 +2382,14 @@ sub GenerateImplementation
             push(@implContent, "{\n");
 
             $implIncludes{"<runtime/Error.h>"} = 1;
+
+            if ($function->signature->extendedAttributes->{"WarningIfSymbolic"}) {
+                # ARTEMIS BEGIN
+                push(@implContent, "    if (exec->hostThisValue().isSymbolic()) {\n");
+                push(@implContent, "        Statistics::statistics()->accumulate(\"Concolic::SymbolicAPIUsageWarning::$className.${functionName}\", 1);\n");
+                push(@implContent, "    }\n");
+                # ARTEMIS END
+            }
 
             if ($function->isStatic) {
                 if ($isCustom) {

@@ -65,10 +65,15 @@ public:
     // called from the interpreter before it starts executing (a single trace)
     void preExecution(JSC::ExecState* callFrame);
 
+    unsigned int getSessionId() {
+        return m_sessionId;
+    }
+
     /*
      * Called from Artemis
      */
     void beginSession();
+    void beginSession(unsigned int sessionId);
     void endSession();
 
     /*
@@ -135,6 +140,8 @@ private:
     int m_nextSymbolicValue;
 
     bool m_inSession;
+    unsigned int m_sessionId;
+
     bool m_shouldGC;
 
     static bool m_isOpGetByValWithSymbolicArg;

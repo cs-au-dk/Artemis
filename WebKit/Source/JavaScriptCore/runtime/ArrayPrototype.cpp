@@ -1236,16 +1236,17 @@ EncodedJSValue JSC_HOST_CALL arrayProtoFuncIndexOf(ExecState* exec)
 
 #ifdef ARTEMIS
     bool isSymbolic = searchElement.isSymbolic();
+    Symbolic::Type type = searchElement.isObject() && !searchElement.isString() ? Symbolic::OBJECT : Symbolic::TYPEERROR;
 
     index = argumentClampedIndexFromStartOrEnd(exec, 1, length);
-    for (; index < length && !isSymbolic; ++index) {
+    for (; index < length; ++index) {
         JSValue e = getProperty(exec, thisObj, index);
         isSymbolic = isSymbolic || e.isSymbolic();
+        type = type == Symbolic::OBJECT && e.isObject() && !e.isString() ? Symbolic::OBJECT : Symbolic::TYPEERROR;
     }
 
-    // TODO Artemis: This implementation assumes that the symbolic values are objects... which is not always the case..
-
-    if (isSymbolic) {
+    // We only support the indexOf operator if all elements in the array and the searchElement are objects
+    if (isSymbolic && type == Symbolic::OBJECT) {
         Statistics::statistics()->accumulate("Concolic:TMP::arrayProtoFuncIndexOfIsSymbolic", 1);
 
         std::list<Symbolic::Expression*> symbList;
@@ -1263,8 +1264,6 @@ EncodedJSValue JSC_HOST_CALL arrayProtoFuncIndexOf(ExecState* exec)
                     (Symbolic::Expression*)new Symbolic::ConstantObject((void*)searchElement.asCell());
 
         value.makeSymbolic(new Symbolic::ObjectArrayIndexOf(symbList, symbElement));
-                                                       //new std::string(searchValue.toUString(exec).ascii().data()),
-                                                       //new std::string(replaceValue.toUString(exec).ascii().data())));
     }
 #endif
 

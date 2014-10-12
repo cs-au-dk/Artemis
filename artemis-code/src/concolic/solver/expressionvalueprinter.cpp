@@ -65,7 +65,9 @@ void ExpressionValuePrinter::visit(Symbolic::SymbolicBoolean *symbolicboolean, v
 
 void ExpressionValuePrinter::visit(Symbolic::SymbolicObject* obj, void* arg)
 {
+    m_result += "SymbolicObject[";
     m_result += obj->getSource().getIdentifier();
+    m_result += "]";
 }
 
 void ExpressionValuePrinter::visit(Symbolic::SymbolicObjectPropertyString* obj, void* arg)

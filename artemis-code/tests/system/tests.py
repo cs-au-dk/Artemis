@@ -90,11 +90,19 @@ class PrioritizationStrategies(unittest.TestCase):
 
 class InstrumentationTests(unittest.TestCase):
 
-    def test_detect_warning_flag(self):
-        report = execute_artemis('test-jquery-live', '%s/jquery-live/index.html' % FIXTURE_ROOT, 
+    def test_detect_symbolic_dom_warning(self):
+        report = execute_artemis('test-symbolic-dom-warning', 
+                                 '%s/instrumentation/symbolic-dom-warning.html' % FIXTURE_ROOT, 
                                  iterations=2)
 
-        self.assertEqual(1, report.get('DOM::APIUsageWarning::JSEvent.target', 0))
+        self.assertEqual(1, report.get('Concolic::SymbolicAPIUsageWarning::JSHTMLElement.dir', 0))
+        self.assertEqual(1, report.get('Concolic::SymbolicAPIUsageWarning::JSNode.jsNodePrototypeFunctionNormalize', 0))
+
+    def test_detect_warning_flag(self):
+        report = execute_artemis('test-jquery-live', '%s/instrumentation/dom-warning.html' % FIXTURE_ROOT, 
+                                 iterations=2)
+
+        self.assertEqual(1, report.get('DOM::APIUsageWarning::JSNode.parentNode', 0))
 
     def test_alert(self):
         report = execute_artemis('instrumentation-alert', '%s/instrumentation/alert.html' % FIXTURE_ROOT)
