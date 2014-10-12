@@ -519,6 +519,56 @@ void CVC4ConstraintWriter::visit(Symbolic::StringLength* stringlength, void* arg
     mExpressionType = Symbolic::INT;
 }
 
+void CVC4ConstraintWriter::visit(Symbolic::ObjectArrayIndexOf* obj, void* arg)
+{
+    std::string index = emitAndReturnNewTemporary(Symbolic::INT);
+    std::stringstream output;
+    output << "(assert (or";
+
+    obj->getSearchelement()->accept(this);
+    if(!checkType(Symbolic::OBJECT)){
+        error("String array indexof operation on non-object");
+        return;
+    }
+
+    std::string searchElementIdent = mExpressionBuffer;
+
+    // Build hit cases
+
+    std::list<Symbolic::Expression*> list = obj->getArray();
+    std::list<Symbolic::Expression*>::iterator it = list.begin();
+    unsigned int i = 0;
+    for (; it != list.end(); ++it) {
+        Symbolic::Expression* elm = (*it);
+
+        elm->accept(this);
+        if(!checkType(Symbolic::OBJECT)){
+            error("String array indexof operation on non-object");
+            return;
+        }
+
+        output << " (and (= " << index << " " << i << ") (= " << searchElementIdent << " " << mExpressionBuffer << "))";
+        ++i;
+    }
+
+    // Build miss case
+
+    output << " (and (= " << index << " (- 1))";
+
+    it = list.begin();
+    for (; it != list.end(); ++it) {
+        Symbolic::Expression* elm = (*it);
+        elm->accept(this);
+        output << " (not (= " << searchElementIdent << " " << mExpressionBuffer << "))";
+    }
+
+    output << ")))";
+
+    mOutput << output.str() << std::endl;
+    mExpressionBuffer = index;
+    mExpressionType = Symbolic::INT;
+}
+
 void CVC4ConstraintWriter::visit(Symbolic::StringIndexOf* obj, void* arg)
 {
     obj->getSource()->accept(this);

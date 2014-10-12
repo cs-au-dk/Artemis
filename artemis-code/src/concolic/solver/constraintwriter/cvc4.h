@@ -51,6 +51,7 @@ protected:
     virtual void visit(Symbolic::StringRegexSubmatchIndex* submatchIndex, void* args);
     virtual void visit(Symbolic::StringLength* stringlength, void* args);
     virtual void visit(Symbolic::StringIndexOf* stringindexof, void* arg);
+    virtual void visit(Symbolic::ObjectArrayIndexOf* objectarrayindexof, void* arg);
 
     // Returns string values to mExpressionBuffer
     virtual void visit(Symbolic::SymbolicString* symbolicstring, void* args);
