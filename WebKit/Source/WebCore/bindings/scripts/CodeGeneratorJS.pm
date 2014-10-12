@@ -1836,7 +1836,7 @@ sub GenerateImplementation
                     if ($attribute->signature->extendedAttributes->{"SymbolicEventTarget"}) {
                         # ARTEMIS BEGIN
                         push(@implContent, "        std::ostringstream sessionId;\n");
-                        push(@implContent, "        sessionId << JSC::Interpreter::m_symbolic->getSessionId();\n");
+                        push(@implContent, "        sessionId << \"SYM_TARGET_\" << JSC::Interpreter::m_symbolic->getSessionId();\n");
                         push(@implContent, "        Symbolic::SymbolicSource source(Symbolic::EVENT_TARGET, Symbolic::EVENT_TARGET_IDENT, sessionId.str());\n");
                         push(@implContent, "        result.makeSymbolic(new Symbolic::SymbolicObject(source));\n");
                         # ARTEMIS END

@@ -568,6 +568,27 @@ void SMTConstraintWriter::coercetype(Symbolic::Type from,
 
         break;
 
+    case Symbolic::OBJECT:
+
+        switch(to) {
+
+        case Symbolic::STRING:
+            error("Unsupported type coercion from OBJECT to STRING");
+            break;
+
+        case Symbolic::BOOL:
+            mExpressionBuffer = "(not (= " + expression + " 0))"; // true if not 0 (not null/undefined)
+            mExpressionType = Symbolic::BOOL;
+            break;
+
+        default:
+            error("Unsupported type coercion from OBJECT to UNKNOWN");
+            break;
+
+        }
+
+        break;
+
     default:
         error("Unsupported type coercion from UNKNOWN to UNKNOWN");
         break;

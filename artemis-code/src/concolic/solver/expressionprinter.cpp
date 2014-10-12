@@ -252,6 +252,7 @@ void ExpressionPrinter::visit(Symbolic::StringIndexOf* obj, void* args)
 void ExpressionPrinter::visit(Symbolic::SymbolicObject* obj, void* arg)
 {
     m_result += "SymbolicObject( ";
+    m_result += obj->getSource().getIdentifier();
     m_result += " )";
 }
 

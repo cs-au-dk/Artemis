@@ -155,8 +155,7 @@ void ExpressionFreeVariableLister::visit(Symbolic::StringIndexOf* obj, void* arg
 
 void ExpressionFreeVariableLister::visit(Symbolic::SymbolicObject* obj, void* arg)
 {
-    //mResult.insert(QString(symbolicboolean->getSource().getIdentifier().c_str()), symbolicboolean->getSource().getIdentifierMethod());
-    // TODO what should we insert here?
+    mResult.insert(QString(obj->getSource().getIdentifier().c_str()), obj->getSource().getIdentifierMethod());
 }
 
 void ExpressionFreeVariableLister::visit(Symbolic::ObjectArrayIndexOf* obj, void* arg)

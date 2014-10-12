@@ -198,7 +198,7 @@ void CVC4ConstraintWriter::visit(Symbolic::StringBinaryOperation* stringbinaryop
 void CVC4ConstraintWriter::visit(Symbolic::StringCoercion* stringcoercion, void* args)
 {
     CoercionPromise promise(Symbolic::STRING);
-    stringcoercion->getExpression()->accept(this);
+    stringcoercion->getExpression()->accept(this, &promise);
 
     if (!promise.isCoerced) {
         coercetype(mExpressionType, Symbolic::STRING, mExpressionBuffer); // Sets mExpressionBuffer and Type.
@@ -458,6 +458,51 @@ void CVC4ConstraintWriter::visit(Symbolic::ObjectBinaryOperation* obj, void* arg
     strs << op[obj->getOp()] << lhs << " " << rhs << opclose[obj->getOp()];
     mExpressionBuffer = strs.str();
     mExpressionType = opGetType(obj->getOp());
+}
+
+void CVC4ConstraintWriter::visit(Symbolic::SymbolicObject* obj, void* arg)
+{
+
+    // If we are coercing from an object to a string downstream, it is safe to omit
+    // the downstream coercion and return the "string" version of the object here.
+    if (arg != NULL) {
+
+        CoercionPromise* promise = (CoercionPromise*)arg;
+
+        if (promise->coerceTo == Symbolic::STRING) {
+            promise->isCoerced = true;
+
+            std::stringstream ident;
+            ident << obj->getSource().getIdentifier() << "__TOSTRING";
+
+            recordAndEmitType(ident.str(), Symbolic::STRING);
+            mExpressionBuffer = SMTConstraintWriter::encodeIdentifier(ident.str());
+            mExpressionType = Symbolic::STRING;
+
+            return;
+        }
+
+    }
+
+    // Checks this symbolic value is of type OBJECT and raises an error otherwise.
+    recordAndEmitType(obj->getSource(), Symbolic::OBJECT);
+
+    mExpressionBuffer = SMTConstraintWriter::encodeIdentifier(obj->getSource().getIdentifier());
+    mExpressionType = Symbolic::OBJECT;
+}
+
+void CVC4ConstraintWriter::visit(Symbolic::SymbolicObjectPropertyString* obj, void* arg)
+{
+    obj->getObj()->accept(this);
+
+    std::stringstream ident;
+    ident << mExpressionBuffer << SMTConstraintWriter::encodeIdentifier("__") << obj->getPropertyname();
+
+    // Checks this symbolic value is of type OBJECT and raises an error otherwise.
+    recordAndEmitType(ident.str(), Symbolic::STRING);
+
+    mExpressionBuffer = ident.str();
+    mExpressionType = Symbolic::STRING;
 }
 
 void CVC4ConstraintWriter::visit(Symbolic::StringLength* stringlength, void* args)

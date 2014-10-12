@@ -1211,7 +1211,6 @@ EncodedJSValue JSC_HOST_CALL arrayProtoFuncReduceRight(ExecState* exec)
 
 EncodedJSValue JSC_HOST_CALL arrayProtoFuncIndexOf(ExecState* exec)
 {
-    Statistics::statistics()->accumulate("Concolic:TMP::arrayProtoFuncIndexOf", 1);
     // 15.4.4.14
     JSObject* thisObj = exec->hostThisValue().toObject(exec);
     unsigned length = thisObj->get(exec, exec->propertyNames().length).toUInt32(exec);
@@ -1247,7 +1246,6 @@ EncodedJSValue JSC_HOST_CALL arrayProtoFuncIndexOf(ExecState* exec)
 
     // We only support the indexOf operator if all elements in the array and the searchElement are objects
     if (isSymbolic && type == Symbolic::OBJECT) {
-        Statistics::statistics()->accumulate("Concolic:TMP::arrayProtoFuncIndexOfIsSymbolic", 1);
 
         std::list<Symbolic::Expression*> symbList;
 

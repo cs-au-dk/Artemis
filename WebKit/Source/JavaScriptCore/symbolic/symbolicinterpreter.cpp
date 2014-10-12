@@ -121,6 +121,16 @@ JSC::JSValue SymbolicInterpreter::ail_op_binary(JSC::CallFrame* callFrame,
         JSC::JSValue xx = x.toPrimitive(callFrame);
         JSC::JSValue yy = y.toPrimitive(callFrame);
 
+        if (xx.isString() && x.isObject() && !x.isString() && x.isSymbolic()) {
+            // object -> string coercion
+            xx.makeSymbolic(new Symbolic::StringCoercion(x.asSymbolic()));
+        }
+
+        if (yy.isString() && y.isObject() && !y.isString() && y.isSymbolic()) {
+            // object -> string coercion
+            yy.makeSymbolic(new Symbolic::StringCoercion(y.asSymbolic()));
+        }
+
         // Case 1: Number
         if (xx.isNumber() && yy.isNumber()) {
 
@@ -135,11 +145,10 @@ JSC::JSValue SymbolicInterpreter::ail_op_binary(JSC::CallFrame* callFrame,
 
         }
 
-
         // Case 2: String
         if (xx.isString() && yy.isString()) {
-            Symbolic::StringExpression* sx = x.generateStringExpression(callFrame);
-            Symbolic::StringExpression* sy = y.generateStringExpression(callFrame);
+            Symbolic::StringExpression* sx = xx.generateStringExpression(callFrame);
+            Symbolic::StringExpression* sy = yy.generateStringExpression(callFrame);
 
             result.makeSymbolic(new StringBinaryOperation(sx, neq?STRING_NEQ:STRING_EQ, sy));
 

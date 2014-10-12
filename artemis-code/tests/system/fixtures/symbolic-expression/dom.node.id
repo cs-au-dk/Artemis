@@ -1,4 +1,4 @@
-TEST PC: ((SymbolicProperty(SymbolicObject())==ConstantString)==ConstantBoolean)
+TEST PC: ((SymbolicProperty(SymbolicObject(SYM_TARGET_0))==ConstantString)==ConstantBoolean)
 if (e.target.id == "foo") {
     alert(e.target.id);
 }

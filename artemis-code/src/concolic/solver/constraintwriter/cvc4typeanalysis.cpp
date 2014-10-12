@@ -246,7 +246,7 @@ void CVC4TypeAnalysis::visit(Symbolic::StringIndexOf* indexof, void* arg) {
 }
 
 void CVC4TypeAnalysis::visit(Symbolic::SymbolicObject* obj, void* arg) {
-    // TODO
+    recordConstraint(obj->getSource().getIdentifier(), mExpressionType);
 }
 
 void CVC4TypeAnalysis::visit(Symbolic::ObjectArrayIndexOf* obj, void* arg) {
@@ -265,7 +265,7 @@ void CVC4TypeAnalysis::visit(Symbolic::ObjectArrayIndexOf* obj, void* arg) {
 }
 
 void CVC4TypeAnalysis::visit(Symbolic::SymbolicObjectPropertyString* obj, void* arg) {
-    // TODO
+    // NO-OP
 }
 
 }

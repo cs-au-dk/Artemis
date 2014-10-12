@@ -43,24 +43,34 @@ public:
     bool write(PathConditionPtr pathCondition, FormRestrictions formRestrictions, std::string outputFile);
 
 protected:
+
+    // Internal
+    virtual void visit(Symbolic::StringRegexSubmatchArray* exp, void* args);
+
+    // Returns integer values to mExpressionBuffer
+    virtual void visit(Symbolic::StringRegexSubmatchIndex* submatchIndex, void* args);
+    virtual void visit(Symbolic::StringLength* stringlength, void* args);
+    virtual void visit(Symbolic::StringIndexOf* stringindexof, void* arg);
+
+    // Returns string values to mExpressionBuffer
     virtual void visit(Symbolic::SymbolicString* symbolicstring, void* args);
     virtual void visit(Symbolic::ConstantString* constantstring, void* args);
-    virtual void visit(Symbolic::StringBinaryOperation* stringbinaryoperation, void* args);
     virtual void visit(Symbolic::StringCoercion* stringcoercion, void* args);
     virtual void visit(Symbolic::StringCharAt* stringcharat, void* arg);
     virtual void visit(Symbolic::StringRegexReplace* stringregexreplace, void* args);
     virtual void visit(Symbolic::StringReplace* stringreplace, void* args);
     virtual void visit(Symbolic::StringRegexSubmatch* submatch, void* args);
-    virtual void visit(Symbolic::StringRegexSubmatchIndex* submatchIndex, void* args);
-    virtual void visit(Symbolic::StringLength* stringlength, void* args);
-    virtual void visit(Symbolic::StringIndexOf* stringindexof, void* arg);
-
-    virtual void visit(Symbolic::StringRegexSubmatchArray* exp, void* args);
     virtual void visit(Symbolic::StringRegexSubmatchArrayAt* exp, void* args);
-    virtual void visit(Symbolic::StringRegexSubmatchArrayMatch* exp, void* args);
+    virtual void visit(Symbolic::SymbolicObjectPropertyString* obj, void* arg);
 
+    // Returns boolean values to mExpressionBuffer
+    virtual void visit(Symbolic::StringBinaryOperation* stringbinaryoperation, void* args);
+
+    // Returns Object values to mExpressionBuffer
+    virtual void visit(Symbolic::StringRegexSubmatchArrayMatch* exp, void* args);
     virtual void visit(Symbolic::ConstantObject* obj, void* arg);
     virtual void visit(Symbolic::ObjectBinaryOperation* obj, void* arg);
+    virtual void visit(Symbolic::SymbolicObject* obj, void* arg);
 
     virtual void preVisitPathConditionsHook(QSet<QString> varsUsed);
     virtual void postVisitPathConditionsHook();
