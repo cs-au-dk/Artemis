@@ -32,7 +32,7 @@ TEST(CVC4RegexTest, SIMPLE_CHAR_CHAR) {
 TEST(CVC4RegexTest, DISJ) {
     bool bol, eol = false;
     std::string result = CVC4RegexCompiler::compile("a|b", bol, eol);
-    ASSERT_EQ("(re.or (str.to.re \"a\") (str.to.re \"b\"))", result);
+    ASSERT_EQ("(re.union (str.to.re \"a\") (str.to.re \"b\"))", result);
 }
 
 TEST(CVC4RegexTest, WILDCARD_CHAR) {
@@ -86,13 +86,13 @@ TEST(CVC4RegexTest, RANGE_A_Z) {
 TEST(CVC4RegexTest, RANGE_A_B_D_E) {
     bool bol, eol = false;
     std::string result = CVC4RegexCompiler::compile("[a-bd-e]", bol, eol);
-    ASSERT_EQ("(re.or (re.range \"a\" \"b\") (re.range \"d\" \"e\"))", result);
+    ASSERT_EQ("(re.union (re.range \"a\" \"b\") (re.range \"d\" \"e\"))", result);
 }
 
 TEST(CVC4RegexTest, CHAR_ABC) {
     bool bol, eol = false;
     std::string result = CVC4RegexCompiler::compile("[abc]", bol, eol);
-    ASSERT_EQ("(re.or \"a\" \"b\" \"c\")", result);
+    ASSERT_EQ("(re.union (str.to.re \"a\") (str.to.re \"b\") (str.to.re \"c\"))", result);
 }
 
 TEST(CVC4RegexTest, NESTED_MATCHES) {
@@ -104,14 +104,14 @@ TEST(CVC4RegexTest, NESTED_MATCHES) {
 TEST(CVC4RegexTest, NESTED_MATCHES_WILDCARD) {
     bool bol, eol = false;
     std::string result = CVC4RegexCompiler::compile("a(b|c)*", bol, eol);
-    ASSERT_EQ("(re.++ (str.to.re \"a\") (re.* (re.or (str.to.re \"b\") (str.to.re \"c\"))))", result);
+    ASSERT_EQ("(re.++ (str.to.re \"a\") (re.* (re.union (str.to.re \"b\") (str.to.re \"c\"))))", result);
 }
 
 TEST(CVC4RegexTest, RL_EXAMPLE_1) {
     try {
         bool bol, eol = false;
         std::string result = CVC4RegexCompiler::compile("[a-zA-Z]{3}\\+?", bol, eol);
-        ASSERT_EQ("(re.++ (re.++ (re.or (re.range \"A\" \"Z\") (re.range \"a\" \"z\")) (re.or (re.range \"A\" \"Z\") (re.range \"a\" \"z\")) (re.or (re.range \"A\" \"Z\") (re.range \"a\" \"z\"))) (re.opt (str.to.re \"+\")))", result);
+        ASSERT_EQ("(re.++ (re.++ (re.union (re.range \"A\" \"Z\") (re.range \"a\" \"z\")) (re.union (re.range \"A\" \"Z\") (re.range \"a\" \"z\")) (re.union (re.range \"A\" \"Z\") (re.range \"a\" \"z\"))) (re.opt (str.to.re \"\\+\")))", result);
     } catch (CVC4RegexCompilerException ex) {
         std::cerr << ex.what() << std::endl;
         throw ex;
@@ -129,13 +129,13 @@ TEST(CVC4RegexTest, EOL_BOL_LEGACY_TEST) {
 TEST(CVC4RegexTest, DOT_STAR) {
     bool bol, eol = false;
     std::string result = CVC4RegexCompiler::compile(".", bol, eol);
-    ASSERT_EQ("(re.or (re.range \"0\" \"9\") (re.range \"A\" \"Z\") (re.range \"a\" \"z\") \"_\" \"-\")", result);
+    ASSERT_EQ("re.allchar", result);
 }
 
 TEST(CVC4RegexTest, CHAR_CLASS_W) {
     bool bol, eol = false;
     std::string result = CVC4RegexCompiler::compile("\\w", bol, eol);
-    ASSERT_EQ("(re.or (re.range \"0\" \"9\") (re.range \"A\" \"Z\") (re.range \"a\" \"z\") \"_\")", result);
+    ASSERT_EQ("(re.union (re.range \"0\" \"9\") (re.range \"A\" \"Z\") (re.range \"a\" \"z\") (str.to.re \"\\_\"))", result);
 }
 
 

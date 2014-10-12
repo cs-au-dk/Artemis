@@ -28,7 +28,7 @@
 
 std::string visitPatternAlternative(const JSC::Yarr::PatternAlternative*, bool& bol, bool& eol);
 std::string visitPatternTerm(const JSC::Yarr::PatternTerm*, bool& bol, bool& eol);
-
+std::string escapeChar(char c);
 
 std::string visitPatternDisjunction(const JSC::Yarr::PatternDisjunction* disjunction, bool& bol, bool& eol)
 {
@@ -180,18 +180,23 @@ std::string visitPatternTerm(const JSC::Yarr::PatternTerm* term, bool& bol, bool
 
     case JSC::Yarr::PatternTerm::TypePatternCharacter: {
         if ((int)(term->patternCharacter) > 255) {
-            throw CVC4RegexCompilerException("Unsupported usage of non-ascii characters in regex");
+            std::stringstream str;
+            str << "Unsupported usage of non-ascii characters (value " << (int)(term->patternCharacter) << " ) in regex";
+            throw CVC4RegexCompilerException(str.str());
         }
 
-        result << "(str.to.re \"" << (char)term->patternCharacter << "\")";
+        result << "(str.to.re \"" << escapeChar((char)term->patternCharacter) << "\")";
         break;
     }
 
     case JSC::Yarr::PatternTerm::TypeCharacterClass: {
 
-        if (term->characterClass->m_matchesUnicode.size() > 0 || term->characterClass->m_rangesUnicode.size()) {
-            throw CVC4RegexCompilerException("Unsupported usage of non-ascii characters in range regex");
+        if ((term->characterClass->m_ranges.size() + term->characterClass->m_matches.size()) == 0 &&
+             (term->characterClass->m_matchesUnicode.size() > 0 || term->characterClass->m_rangesUnicode.size())) {
+            throw CVC4RegexCompilerException("Unsupported usage of pure non-ascii characters in range regex");
         }
+
+        // we omit all non-ascii characters from the range
 
         bool emitOnlyOne = (term->characterClass->m_ranges.size() + term->characterClass->m_matches.size()) == 1;
 
@@ -204,8 +209,8 @@ std::string visitPatternTerm(const JSC::Yarr::PatternTerm* term, bool& bol, bool
                 result << " ";
             }
 
-            result << "(re.range \"" << (char)term->characterClass->m_ranges[i].begin << "\" \"" << \
-                      (char)term->characterClass->m_ranges[i].end << "\")";
+            result << "(re.range \"" << escapeChar((char)term->characterClass->m_ranges[i].begin) << "\" \"" << \
+                      escapeChar((char)term->characterClass->m_ranges[i].end) << "\")";
         }
 
         for (size_t i = 0; i < term->characterClass->m_matches.size(); ++i) {
@@ -213,7 +218,7 @@ std::string visitPatternTerm(const JSC::Yarr::PatternTerm* term, bool& bol, bool
                 result << " ";
             }
 
-            result << "\"" << (char)term->characterClass->m_matches[i] << "\"";
+            result << "(str.to.re \"" << escapeChar((char)term->characterClass->m_matches[i]) << "\")";
         }
 
         if (!emitOnlyOne) {
@@ -279,4 +284,20 @@ std::string CVC4RegexCompiler::compile(const std::string &javaScriptRegex, bool&
 
 CVC4RegexCompiler::CVC4RegexCompiler()
 {
+}
+
+std::string escapeChar(char c)
+{
+    std::stringstream result;
+
+    int ci = (int)c;
+    if ((ci >= 48 && ci <= 57) || (ci >= 65 && ci <= 90) || (ci >= 97 && ci <= 122)) { // a-z, A-Z, 0-9
+        result << c;
+    } else if (ci > 32 && ci < 127) {
+        result << "\\" << c;
+    } else {
+        result << "\\x" << (ci < 16 ? "0" : "") << std::hex << ci; // emits \xYY where YY is the hex representation of the ascii char
+    }
+
+    return result.str();
 }

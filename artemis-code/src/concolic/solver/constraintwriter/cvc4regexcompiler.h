@@ -46,7 +46,6 @@ public:
 
 private:
     CVC4RegexCompiler();
-
 };
 
 #endif // CVC4REGEXCOMPILER_H
