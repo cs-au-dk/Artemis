@@ -39,7 +39,6 @@ CVC4ConstraintWriter::CVC4ConstraintWriter(ConcolicBenchmarkFeatures disabledFea
     : SMTConstraintWriter(disabledFeatures)
     , mTypeAnalysis(new CVC4TypeAnalysis())
 {
-
 }
 
 bool CVC4ConstraintWriter::write(PathConditionPtr pathCondition, FormRestrictions formRestrictions, std::string outputFile) {
@@ -49,9 +48,7 @@ bool CVC4ConstraintWriter::write(PathConditionPtr pathCondition, FormRestriction
     }
 
     bool result = SMTConstraintWriter::write(pathCondition, formRestrictions, outputFile);
-
     mTypeAnalysis->reset();
-
     return result;
 }
 
@@ -364,18 +361,22 @@ void CVC4ConstraintWriter::visit(Symbolic::StringRegexSubmatchArray* exp, void* 
         std::string match = "ERROR";
         this->helperRegexTest(*exp->getRegexpattern(), mExpressionBuffer, &match);
 
-        // Match
+        // result symbol
         std::stringstream matchIdResult;
         matchIdResult << "rs" << exp->getIdentifier() << "RESULT";
 
         this->emitConst(matchIdResult.str(), Symbolic::OBJECT);
-        mOutput << "(assert (= " << matchIdResult.str() << " " << match << "))" << std::endl;
 
-        // Index0
+        // match => result != 0
+        // !match => result == 0
+        mOutput << "(assert (ite " << match << " (not (= " << matchIdResult.str() << " 0)) (= " << matchIdResult.str() << " 0) ))" << std::endl;
+
+        // Index0 symbol
         std::stringstream matchIdIndex0;
         matchIdIndex0 << "rs" << exp->getIdentifier() << "INDEX0";
 
         this->emitConst(matchIdIndex0.str(), Symbolic::STRING);
+
         mOutput << "(assert (= " << matchIdIndex0.str() << " " << mExpressionBuffer << "))" << std::endl;
     }
 
@@ -401,7 +402,7 @@ void CVC4ConstraintWriter::visit(Symbolic::StringRegexSubmatchArrayAt* exp, void
     matchIdIndex0 << "rs" << exp->getMatch()->getIdentifier() << "INDEX0";
 
     mExpressionBuffer = matchIdIndex0.str();
-    mExpressionType = Symbolic::OBJECT;
+    mExpressionType = Symbolic::STRING;
 }
 
 void CVC4ConstraintWriter::visit(Symbolic::StringRegexSubmatchArrayMatch* exp, void* arg)
@@ -426,7 +427,7 @@ void CVC4ConstraintWriter::visit(Symbolic::ConstantObject* obj, void* arg)
     instanceIdentifier << (unsigned long)obj->getInstanceidentifier();
 
     mExpressionType = Symbolic::OBJECT;
-    mExpressionBuffer = instanceIdentifier.str();
+    mExpressionBuffer = instanceIdentifier.str(); // 0 if the reference is null or undefined, otherwise its a number
 }
 
 void CVC4ConstraintWriter::visit(Symbolic::ObjectBinaryOperation* obj, void* arg)
