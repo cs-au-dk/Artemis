@@ -57,7 +57,7 @@ module core {
                  attribute [TreatReturnedNullStringAs=Null, TreatNullAs=NullString, WarningIfSymbolic ] DOMString        nodeValue
                      setter raises(DOMException);
 
-                readonly attribute [WarningIfSymbolic] unsigned short   nodeType;
+        readonly attribute [SymbolicObjectIntProperty] unsigned short   nodeType;
         readonly attribute [WarningIfSymbolic, UsageWarning] Node             parentNode;
         readonly attribute [WarningIfSymbolic] NodeList         childNodes;
         readonly attribute [WarningIfSymbolic] Node             firstChild;

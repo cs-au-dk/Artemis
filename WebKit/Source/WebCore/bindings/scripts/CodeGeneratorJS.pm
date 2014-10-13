@@ -1348,6 +1348,7 @@ sub GenerateImplementation
 
     # ARTEMIS BEGIN
     $implIncludes{"\"html/HTMLSelectElement.h\""} = 1;
+    $implIncludes{"\"dom/domsnapshot.h\""} = 1;
     $implIncludes{"\"interpreter/Interpreter.h\""} = 1;
     $implIncludes{"\"symbolic/symbolicinterpreter.h\""} = 1;
     $implIncludes{"\"symbolic/expression/symbolicstring.h\""} = 1;
@@ -1835,20 +1836,33 @@ sub GenerateImplementation
 
                     if ($attribute->signature->extendedAttributes->{"SymbolicEventTarget"}) {
                         # ARTEMIS BEGIN
+                        push(@implContent, "   Node* base = impl->currentTarget()->toNode();\n");
+                        push(@implContent, "   if (base != 0) {\n");
+
+                        push(@implContent, "        Symbolic::DOMSnapshot* domSnapshot = new DOMSnapshotImpl(base);\n");
                         push(@implContent, "        std::ostringstream sessionId;\n");
                         push(@implContent, "        sessionId << \"SYM_TARGET_\" << JSC::Interpreter::m_symbolic->getSessionId();\n");
-                        push(@implContent, "        Symbolic::SymbolicSource source(Symbolic::EVENT_TARGET, Symbolic::EVENT_TARGET_IDENT, sessionId.str());\n");
+                        push(@implContent, "        Symbolic::SymbolicSource source(Symbolic::EVENT_TARGET, Symbolic::EVENT_TARGET_IDENT, sessionId.str(), domSnapshot);\n");
                         push(@implContent, "        result.makeSymbolic(new Symbolic::SymbolicObject(source));\n");
+                        push(@implContent, "   }\n");
                         # ARTEMIS END
                     }
 
-                    if ($attribute->signature->extendedAttributes->{"SymbolicObjectStringProperty"}) {
+                    if ($attribute->signature->extendedAttributes->{"SymbolicObjectStringProperty"} or
+                        $attribute->signature->extendedAttributes->{"SymbolicObjectIntProperty"}) {
+
                         # ARTEMIS BEGIN
                         my $pReflect = $attribute->signature->extendedAttributes->{"Reflect"};
                         my $pAttr = ($pReflect and $pReflect ne "VALUE_IS_MISSING") ? $pReflect : $name;
 
+                        my $symbolicVar = "new Symbolic::SymbolicObjectPropertyString((Symbolic::SymbolicObject*)slotBase.asSymbolic(), \"" . $pAttr . "\")";
+
+                        if ($attribute->signature->extendedAttributes->{"SymbolicObjectIntProperty"}) {
+                            $symbolicVar = "new Symbolic::IntegerCoercion(" . $symbolicVar . ")";
+                        }
+
                         push(@implContent, "        if (slotBase.isSymbolic()) {\n");
-                        push(@implContent, "        result.makeSymbolic(new Symbolic::SymbolicObjectPropertyString((Symbolic::SymbolicObject*)slotBase.asSymbolic(), \"" . $pAttr . "\"));\n");
+                        push(@implContent, "        result.makeSymbolic(" . $symbolicVar . ");\n");
                         push(@implContent, "        }\n");
                         # ARTEMIS END
                     }

@@ -73,7 +73,8 @@ SOURCES += \
     accessibility/AXObjectCache.cpp \
     bindings/generic/ActiveDOMCallback.cpp \
     bindings/generic/RuntimeEnabledFeatures.cpp \
-    instrumentation/listenerdebugger.cpp
+    instrumentation/listenerdebugger.cpp \
+    dom/domsnapshot.cpp
 
 v8 {
     include($$PWD/../JavaScriptCore/yarr/yarr.pri)
@@ -1406,7 +1407,8 @@ HEADERS += \
     bindings/generic/ActiveDOMCallback.h \
     bindings/generic/RuntimeEnabledFeatures.h \
     instrumentation/executionlistener.h \
-    instrumentation/listenerdebugger.h
+    instrumentation/listenerdebugger.h \
+    dom/domsnapshot.h
 
 v8 {
     HEADERS += \

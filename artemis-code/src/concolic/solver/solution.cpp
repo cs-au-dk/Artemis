@@ -80,6 +80,9 @@ void Solution::toStatistics()
         case Symbolic::STRING:
             Statistics::statistics()->set(key.toStdString(), value.string);
             break;
+        case Symbolic::OBJECT:
+            Statistics::statistics()->set(key.toStdString(), value.string);
+            break;
         default:
             std::cerr << "Unimplemented value type encountered" << std::endl;
             std::exit(1);

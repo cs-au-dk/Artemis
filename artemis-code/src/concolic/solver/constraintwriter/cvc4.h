@@ -76,6 +76,8 @@ protected:
     virtual void preVisitPathConditionsHook(QSet<QString> varsUsed);
     virtual void postVisitPathConditionsHook();
 
+    void emitDOMConstraints();
+
     virtual void coercetype(Symbolic::Type from, Symbolic::Type to, std::string expression);
 
     void helperRegexTest(const std::string& regex, const std::string& expression,
@@ -87,10 +89,13 @@ protected:
     void helperSelectRestriction(SelectRestriction constraint, SelectConstraintType type);
     void helperRadioRestriction(RadioRestriction constraint);
 
-    std::set<unsigned int> m_singletonCompilations;
+    std::set<unsigned long> m_singletonCompilations;
 
     CVC4TypeAnalysisPtr mTypeAnalysis;
     std::set<std::string> mSuccessfulCoercions;
+
+    std::set<Symbolic::SymbolicObject*> mVisitedSymbolicObjects;
+    std::set<std::string> mUsedSymbolicObjectProperties;
 };
 
 typedef QSharedPointer<CVC4ConstraintWriter> CVC4ConstraintWriterPtr;

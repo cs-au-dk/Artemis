@@ -27,9 +27,9 @@ module html {
     ] HTMLElement : Element {
                  // iht.com relies on id returning the empty string when no id is present. 
                  // Other browsers do this as well. So we don't convert null to JS null.
-                 attribute [Reflect SymbolicObjectStringProperty] DOMString id;
-                 attribute [Reflect SymbolicObjectStringProperty] DOMString title;
-                 attribute [Reflect SymbolicObjectStringProperty] DOMString lang;
+                 attribute [Reflect, SymbolicObjectStringProperty] DOMString id;
+                 attribute [Reflect, WarningIfSymbolic] DOMString title;
+                 attribute [Reflect, WarningIfSymbolic] DOMString lang;
                  attribute [WarningIfSymbolic] boolean             translate;
                  attribute [Reflect, WarningIfSymbolic] DOMString dir;
                  attribute [Reflect=class, SymbolicObjectStringProperty] DOMString className;

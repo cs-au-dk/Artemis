@@ -25,9 +25,9 @@
 #include <QDateTime>
 #include <QElapsedTimer>
 
-#include "statistics/statsstorage.h"
-
 #include "concolic/solver/constraintwriter/cvc4.h"
+
+#include "statistics/statsstorage.h"
 
 #include "cvc4solver.h"
 
@@ -218,123 +218,27 @@ SolutionPtr CVC4Solver::solve(PathConditionPtr pc, FormRestrictions formRestrict
         symbolvalue.found = true;
 
         // The variable names indicate the type of the variable when it was read from the DOM.
-        // SYM_IN_x => string, SYM_IN_INT_y => int, SYM_IN_BOOL_z => bool
+        // SYM_IN_x => string, SYM_IN_INT_y => int, SYM_IN_BOOL_z => bool, SYM_TARGET => DOM NODE
         // But we also have the type used by the solver for that variable. These should walways match up, except in
         // the case where we perform a string->int optimisation and see a string named variable with int type in the
         // solver. These variables should be converted back to strings.
 
-        // Variables not prefixed with SYM_IN are ignored
+        // Variables not prefixed with SYM_ are ignored
 
         std::string identifier = SMTConstraintWriter::decodeIdentifier(symbol);
 
-        if (identifier.compare(0, 7, "SYM_IN_") != 0) {
-            continue;
-        }
+        if (identifier.compare(0, 7, "SYM_IN_") == 0) {
+            SolutionPtr ret = decodeDOMInputResult(clog, identifier, type, value, &symbolvalue, formRestrictions);
+            if (!ret.isNull()) return ret;
 
-        Symbolic::Type symbol_name_type;
-        if (identifier.compare(0, 12, "SYM_IN_BOOL_") == 0) {
-            symbol_name_type = Symbolic::BOOL;
-        } else if (identifier.compare(0, 11, "SYM_IN_INT_") == 0) {
-            symbol_name_type = Symbolic::INT;
-        } else {
-            symbol_name_type = Symbolic::STRING;
-        }
+        } else if (identifier.compare(0, 11, "SYM_TARGET_") == 0 && identifier.find("_SOLUTIONXPATH") != std::string::npos) {
+            // solution for SYM_TARGET_XX is found in SYM_TARGET_XX_SOLUTIONXPATH
+            identifier = identifier.substr(0, identifier.length()-14); // remove _solutionxpath
 
-        if (type.compare("String") == 0) {
-            // Double-check we have a string-typed variable name.
-            if (symbol_name_type != Symbolic::STRING){
-                Statistics::statistics()->accumulate("Concolic::Solver::ErrorsReadingSolution", 1);
-                return emitError(clog, "Variable name and type mismatch for String variable in solver's result.");
-            }
-
-            symbolvalue.kind = Symbolic::STRING;
-
-            // Strip quotes from strings
-            // TODO: Does this even need to be conditional, can strings be returned without quotes?
-            if (value.find("\"") != std::string::npos && value.length() > 1) {
-                value = value.substr(1, value.length() - 2);
-            }
-
+            symbolvalue.kind = Symbolic::OBJECT;
             symbolvalue.string = value;
-
-        } else if (type.compare("Bool") == 0) {
-            // Double-check we have a bool-typed variable name.
-            if (symbol_name_type != Symbolic::BOOL){
-                Statistics::statistics()->accumulate("Concolic::Solver::ErrorsReadingSolution", 1);
-                return emitError(clog, "Variable name and type mismatch for Bool variable in solver's result.");
-            }
-
-            symbolvalue.kind = Symbolic::BOOL;
-
-            if (value.compare("false") == 0) {
-                symbolvalue.u.boolean = false;
-            } else if (value.compare("true") == 0) {
-                symbolvalue.u.boolean = true;
-            } else {
-                Statistics::statistics()->accumulate("Concolic::Solver::ErrorsReadingSolution", 1);
-                return emitError(clog, "Value of boolean returned is not true/false.");
-            }
-
-        } else if (type.compare("Int") == 0) {
-            // Check the type according to the variable name.
-            if (symbol_name_type == Symbolic::INT) {
-                // This really is an int-typed variable.
-
-                symbolvalue.kind = Symbolic::INT;
-
-                // Handle negative values.
-                if (value.find("(- ") == std::string::npos) {
-                    std::stringstream(value) >> symbolvalue.u.integer;
-                } else {
-                    std::stringstream(value.substr(3, value.length() - 3)) >> symbolvalue.u.integer;
-                    symbolvalue.u.integer *= -1;
-                }
-
-            } else if (symbol_name_type == Symbolic::STRING) {
-                // This variable was optimised string->int by the constraint writer to help CVC4.
-                // We want to undo this here.
-
-                symbolvalue.kind = Symbolic::STRING;
-
-                // Handle negative values.
-                if (value.find("(- ") == std::string::npos) {
-                    symbolvalue.string = value;
-                } else {
-                    symbolvalue.string = "-" + value.substr(3, value.length() - 3);
-                }
-
-                // If the symbol references a select element, then we must ensure that
-                // the solved value matches a valid value for the select.
-                // This is not always the case if leading zeros exist in the select, since
-                // these are stripped out in our solution.
-
-                if (FormFieldRestrictedValues::symbolReferencesSelect(formRestrictions, QString::fromStdString(identifier))) {
-
-                    if (FormFieldRestrictedValues::isValidSelectValue(formRestrictions, QString::fromStdString(identifier), QString::fromStdString(symbolvalue.string)) ||
-                        FormFieldRestrictedValues::fuzzyMatchSelectValue(formRestrictions, QString::fromStdString(identifier), &symbolvalue.string)) {
-
-                        // either it was valid, or fuzzyMatch found a match and updated the value for us
-
-                    } else {
-                        Statistics::statistics()->accumulate("Concolic::Solver::InvalidSolution", 1);
-                        return emitError(clog, "Solver returned a solution which is invalid according to the form restrictions.");
-
-                    }
-
-                }
-
-
-            } else {
-                Statistics::statistics()->accumulate("Concolic::Solver::ErrorsReadingSolution", 1);
-                return emitError(clog, "Variable name and type mismatch for Int variable in solver's result.");
-            }
-
-
         } else {
-            Statistics::statistics()->accumulate("Concolic::Solver::ErrorsReadingSolution", 1);
-            std::ostringstream err;
-            err << "Unknown type " << type << " encountered in result.";
-            return emitError(clog, err.str());
+            continue;
         }
 
         // save result
@@ -350,6 +254,8 @@ SolutionPtr CVC4Solver::solve(PathConditionPtr pc, FormRestrictions formRestrict
         case Symbolic::BOOL:
             clog << symbol << " = " << symbolvalue.u.boolean << std::endl;
             break;
+        case Symbolic::OBJECT:
+            clog << symbol << " is xpath[" << symbolvalue.string << "]" << std::endl;
         default:
             break;
         }
@@ -362,6 +268,125 @@ SolutionPtr CVC4Solver::solve(PathConditionPtr pc, FormRestrictions formRestrict
     fp.close();
 
     return solution;
+}
+
+SolutionPtr CVC4Solver::decodeDOMInputResult(std::ofstream& clog,
+                                             std::string identifier,
+                                             std::string type,
+                                             std::string value,
+                                             Symbolvalue* symbolvalue,
+                                             const FormRestrictions& formRestrictions)
+{
+
+    Symbolic::Type symbol_name_type;
+    if (identifier.compare(0, 12, "SYM_IN_BOOL_") == 0) {
+        symbol_name_type = Symbolic::BOOL;
+    } else if (identifier.compare(0, 11, "SYM_IN_INT_") == 0) {
+        symbol_name_type = Symbolic::INT;
+    } else if (identifier.compare(0, 12, "SYM_IN_BOOL_")) {
+        symbol_name_type = Symbolic::STRING;
+    } else {
+        std::cerr << "ERROR: Unknown symbol in solution: " << identifier << std::endl;
+        exit(1);
+    }
+
+    if (type.compare("String") == 0) {
+        // Double-check we have a string-typed variable name.
+        if (symbol_name_type != Symbolic::STRING){
+            Statistics::statistics()->accumulate("Concolic::Solver::ErrorsReadingSolution", 1);
+            return emitError(clog, "Variable name and type mismatch for String variable in solver's result.");
+        }
+
+        symbolvalue->kind = Symbolic::STRING;
+
+        // Strip quotes from strings
+        // TODO: Does this even need to be conditional, can strings be returned without quotes?
+        if (value.find("\"") != std::string::npos && value.length() > 1) {
+            value = value.substr(1, value.length() - 2);
+        }
+
+        symbolvalue->string = value;
+
+    } else if (type.compare("Bool") == 0) {
+        // Double-check we have a bool-typed variable name.
+        if (symbol_name_type != Symbolic::BOOL){
+            Statistics::statistics()->accumulate("Concolic::Solver::ErrorsReadingSolution", 1);
+            return emitError(clog, "Variable name and type mismatch for Bool variable in solver's result.");
+        }
+
+        symbolvalue->kind = Symbolic::BOOL;
+
+        if (value.compare("false") == 0) {
+            symbolvalue->u.boolean = false;
+        } else if (value.compare("true") == 0) {
+            symbolvalue->u.boolean = true;
+        } else {
+            Statistics::statistics()->accumulate("Concolic::Solver::ErrorsReadingSolution", 1);
+            return emitError(clog, "Value of boolean returned is not true/false.");
+        }
+
+    } else if (type.compare("Int") == 0) {
+        // Check the type according to the variable name.
+        if (symbol_name_type == Symbolic::INT) {
+            // This really is an int-typed variable.
+
+            symbolvalue->kind = Symbolic::INT;
+
+            // Handle negative values.
+            if (value.find("(- ") == std::string::npos) {
+                std::stringstream(value) >> symbolvalue->u.integer;
+            } else {
+                std::stringstream(value.substr(3, value.length() - 3)) >> symbolvalue->u.integer;
+                symbolvalue->u.integer *= -1;
+            }
+
+        } else if (symbol_name_type == Symbolic::STRING) {
+            // This variable was optimised string->int by the constraint writer to help CVC4.
+            // We want to undo this here.
+
+            symbolvalue->kind = Symbolic::STRING;
+
+            // Handle negative values.
+            if (value.find("(- ") == std::string::npos) {
+                symbolvalue->string = value;
+            } else {
+                symbolvalue->string = "-" + value.substr(3, value.length() - 3);
+            }
+
+            // If the symbol references a select element, then we must ensure that
+            // the solved value matches a valid value for the select.
+            // This is not always the case if leading zeros exist in the select, since
+            // these are stripped out in our solution.
+
+            if (FormFieldRestrictedValues::symbolReferencesSelect(formRestrictions, QString::fromStdString(identifier))) {
+
+                if (FormFieldRestrictedValues::isValidSelectValue(formRestrictions, QString::fromStdString(identifier), QString::fromStdString(symbolvalue->string)) ||
+                    FormFieldRestrictedValues::fuzzyMatchSelectValue(formRestrictions, QString::fromStdString(identifier), &symbolvalue->string)) {
+
+                    // either it was valid, or fuzzyMatch found a match and updated the value for us
+
+                } else {
+                    Statistics::statistics()->accumulate("Concolic::Solver::InvalidSolution", 1);
+                    return emitError(clog, "Solver returned a solution which is invalid according to the form restrictions.");
+
+                }
+
+            }
+
+        }  else {
+            Statistics::statistics()->accumulate("Concolic::Solver::ErrorsReadingSolution", 1);
+            return emitError(clog, "Variable name and type mismatch for Int variable in solver's result.");
+        }
+
+
+    } else {
+        Statistics::statistics()->accumulate("Concolic::Solver::ErrorsReadingSolution", 1);
+        std::ostringstream err;
+        err << "Unknown type " << type << " encountered in result.";
+        return emitError(clog, err.str());
+    }
+
+    return SolutionPtr(NULL);
 }
 
 SolutionPtr CVC4Solver::emitError(std::ofstream& clog, const std::string& reason, int clause)

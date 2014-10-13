@@ -126,4 +126,5 @@ SymbolicNotExplicit
 UsageWarning
 SymbolicEventTarget
 SymbolicObjectStringProperty
+SymbolicObjectIntProperty
 WarningIfSymbolic

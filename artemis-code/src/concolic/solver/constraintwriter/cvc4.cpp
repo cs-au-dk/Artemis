@@ -43,11 +43,15 @@ CVC4ConstraintWriter::CVC4ConstraintWriter(ConcolicBenchmarkFeatures disabledFea
 
 bool CVC4ConstraintWriter::write(PathConditionPtr pathCondition, FormRestrictions formRestrictions, std::string outputFile) {
 
+    // pre analysis
     for (uint i = 0; i < pathCondition->size(); i++) {
         mTypeAnalysis->analyze(pathCondition->get(i).first);
     }
 
+    // main visitor
     bool result = SMTConstraintWriter::write(pathCondition, formRestrictions, outputFile);
+
+    // cleanup
     mTypeAnalysis->reset();
     return result;
 }
@@ -101,9 +105,11 @@ void CVC4ConstraintWriter::preVisitPathConditionsHook(QSet<QString> varsUsed)
 
 void CVC4ConstraintWriter::postVisitPathConditionsHook()
 {
-    mOutput << "\n";
-    mOutput << "(check-sat)\n";
-    mOutput << "(get-model)\n";
+    emitDOMConstraints();
+
+    mOutput << std::endl;
+    mOutput << "(check-sat)" << std::endl;
+    mOutput << "(get-model)" << std::endl;
 
     if(!mSuccessfulCoercions.empty()) {
         Statistics::statistics()->accumulate("Concolic::Solver::SuccessfulCoercionOptimisations", (int)mSuccessfulCoercions.size());
@@ -462,7 +468,6 @@ void CVC4ConstraintWriter::visit(Symbolic::ObjectBinaryOperation* obj, void* arg
 
 void CVC4ConstraintWriter::visit(Symbolic::SymbolicObject* obj, void* arg)
 {
-
     // If we are coercing from an object to a string downstream, it is safe to omit
     // the downstream coercion and return the "string" version of the object here.
     if (arg != NULL) {
@@ -487,6 +492,8 @@ void CVC4ConstraintWriter::visit(Symbolic::SymbolicObject* obj, void* arg)
     // Checks this symbolic value is of type OBJECT and raises an error otherwise.
     recordAndEmitType(obj->getSource(), Symbolic::OBJECT);
 
+    mVisitedSymbolicObjects.insert(obj);
+
     mExpressionBuffer = SMTConstraintWriter::encodeIdentifier(obj->getSource().getIdentifier());
     mExpressionType = Symbolic::OBJECT;
 }
@@ -500,6 +507,8 @@ void CVC4ConstraintWriter::visit(Symbolic::SymbolicObjectPropertyString* obj, vo
 
     // Checks this symbolic value is of type OBJECT and raises an error otherwise.
     recordAndEmitType(ident.str(), Symbolic::STRING);
+
+    mUsedSymbolicObjectProperties.insert(obj->getPropertyname());
 
     mExpressionBuffer = ident.str();
     mExpressionType = Symbolic::STRING;
@@ -893,6 +902,58 @@ void CVC4ConstraintWriter::coercetype(Symbolic::Type from, Symbolic::Type to, st
     }
 
     SMTConstraintWriter::coercetype(from, to, expression);
+}
+
+void CVC4ConstraintWriter::emitDOMConstraints()
+{
+
+    std::set<Symbolic::SymbolicObject*>::iterator iter;
+    for (iter = mVisitedSymbolicObjects.begin(); iter != mVisitedSymbolicObjects.end(); ++iter) {
+
+        Symbolic::DOMSnapshot* domSnapshot = (*iter)->getSource().getDOMSnapshot();
+        std::string identifier = (*iter)->getSource().getIdentifier();
+
+        recordAndEmitType(identifier + "_SOLUTIONXPATH", Symbolic::STRING);
+
+        mOutput << std::endl;
+        mOutput << "; CONSTRAINTS FOR DOM NODE " << identifier << std::endl;
+        mOutput << "(assert (or " << std::endl;
+
+        std::map<Symbolic::DOMSnapshotNodeId, Symbolic::DOMSnapshotNode*> nodes = domSnapshot->getNodes();
+        std::map<Symbolic::DOMSnapshotNodeId, Symbolic::DOMSnapshotNode*>::iterator iter;
+        for (iter = nodes.begin(); iter != nodes.end(); ++iter) {
+            Symbolic::DOMSnapshotNodeId id = iter->first;
+            Symbolic::DOMSnapshotNode* node = iter->second;
+
+            // symbolic symbolic DOM must resolve to the concrete DOM id
+            mOutput << "    (and (= " << SMTConstraintWriter::encodeIdentifier(identifier) << " " << id << ")";
+
+            // special, emit the xpath to the result object. This is used later as the final result
+            mOutput << std::endl << "         (= " \
+                    << SMTConstraintWriter::encodeIdentifier(identifier + "_SOLUTIONXPATH") \
+                    << " \"" << node->getXpath() << "\")";
+
+            // all attributes must match
+            Symbolic::DOMSnapshotNodeAttributes attributes = node->getAttributes();
+            std::set<std::string>::iterator iter2;
+            for (iter2 = mUsedSymbolicObjectProperties.begin(); iter2 != mUsedSymbolicObjectProperties.end(); ++iter2) {
+
+                Symbolic::DOMSnapshotNodeAttributes::iterator result = attributes.find((*iter2));
+                std::string value = (result == attributes.end()) ? "" : result->second;
+
+                mOutput << std::endl << "         (= " \
+                        << SMTConstraintWriter::encodeIdentifier(identifier + "__" + (*iter2)) \
+                        << " \"" << value << "\")";
+            }
+
+            mOutput << ")" << std::endl; // and END
+        }
+
+        mOutput << "))" << std::endl;
+        mOutput << std::endl;
+
+    }
+
 }
 
 
