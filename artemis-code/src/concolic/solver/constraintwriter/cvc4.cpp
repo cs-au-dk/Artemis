@@ -481,6 +481,9 @@ void CVC4ConstraintWriter::visit(Symbolic::SymbolicObject* obj, void* arg)
             ident << obj->getSource().getIdentifier() << "__TOSTRING";
 
             recordAndEmitType(ident.str(), Symbolic::STRING);
+
+            mUsedSymbolicObjectProperties[obj].insert("TOSTRING");
+
             mExpressionBuffer = SMTConstraintWriter::encodeIdentifier(ident.str());
             mExpressionType = Symbolic::STRING;
 
@@ -508,7 +511,7 @@ void CVC4ConstraintWriter::visit(Symbolic::SymbolicObjectPropertyString* obj, vo
     // Checks this symbolic value is of type OBJECT and raises an error otherwise.
     recordAndEmitType(ident.str(), Symbolic::STRING);
 
-    mUsedSymbolicObjectProperties.insert(obj->getPropertyname());
+    mUsedSymbolicObjectProperties[obj->getObj()].insert(obj->getPropertyname());
 
     mExpressionBuffer = ident.str();
     mExpressionType = Symbolic::STRING;
@@ -920,10 +923,10 @@ void CVC4ConstraintWriter::emitDOMConstraints()
         mOutput << "(assert (or " << std::endl;
 
         std::map<Symbolic::DOMSnapshotNodeId, Symbolic::DOMSnapshotNode*> nodes = domSnapshot->getNodes();
-        std::map<Symbolic::DOMSnapshotNodeId, Symbolic::DOMSnapshotNode*>::iterator iter;
-        for (iter = nodes.begin(); iter != nodes.end(); ++iter) {
-            Symbolic::DOMSnapshotNodeId id = iter->first;
-            Symbolic::DOMSnapshotNode* node = iter->second;
+        std::map<Symbolic::DOMSnapshotNodeId, Symbolic::DOMSnapshotNode*>::iterator iter2;
+        for (iter2 = nodes.begin(); iter2 != nodes.end(); ++iter2) {
+            Symbolic::DOMSnapshotNodeId id = iter2->first;
+            Symbolic::DOMSnapshotNode* node = iter2->second;
 
             // symbolic symbolic DOM must resolve to the concrete DOM id
             mOutput << "    (and (= " << SMTConstraintWriter::encodeIdentifier(identifier) << " " << id << ")";
@@ -935,14 +938,14 @@ void CVC4ConstraintWriter::emitDOMConstraints()
 
             // all attributes must match
             Symbolic::DOMSnapshotNodeAttributes attributes = node->getAttributes();
-            std::set<std::string>::iterator iter2;
-            for (iter2 = mUsedSymbolicObjectProperties.begin(); iter2 != mUsedSymbolicObjectProperties.end(); ++iter2) {
+            std::set<std::string>::iterator iter3;
+            for (iter3 = mUsedSymbolicObjectProperties[(*iter)].begin(); iter3 != mUsedSymbolicObjectProperties[(*iter)].end(); ++iter3) {
 
-                Symbolic::DOMSnapshotNodeAttributes::iterator result = attributes.find((*iter2));
+                Symbolic::DOMSnapshotNodeAttributes::iterator result = attributes.find((*iter3));
                 std::string value = (result == attributes.end()) ? "" : result->second;
 
                 mOutput << std::endl << "         (= " \
-                        << SMTConstraintWriter::encodeIdentifier(identifier + "__" + (*iter2)) \
+                        << SMTConstraintWriter::encodeIdentifier(identifier + "__" + (*iter3)) \
                         << " \"" << value << "\")";
             }
 

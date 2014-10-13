@@ -95,7 +95,7 @@ protected:
     std::set<std::string> mSuccessfulCoercions;
 
     std::set<Symbolic::SymbolicObject*> mVisitedSymbolicObjects;
-    std::set<std::string> mUsedSymbolicObjectProperties;
+    std::map<Symbolic::SymbolicObject*, std::set<std::string> > mUsedSymbolicObjectProperties;
 };
 
 typedef QSharedPointer<CVC4ConstraintWriter> CVC4ConstraintWriterPtr;

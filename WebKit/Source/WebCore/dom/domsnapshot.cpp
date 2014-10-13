@@ -60,8 +60,8 @@ DOMSnapshotNodeImpl::DOMSnapshotNodeImpl(Element* element)
 
     // toString representation
 
-    // TODO
-    //m_attributes.insert(std::pair<std::string, std::string>("class", element->getAttribute(WTF::String("class")).string().ascii().data()));
+    // jsObject::className(obj) gives the right result
+    m_attributes.insert(std::pair<std::string, std::string>("TOSTRING", std::string("[object ") + element->nodeName().ascii().data() + "]"));
 }
 
 DOMSnapshotImpl::DOMSnapshotImpl(Node* base)
