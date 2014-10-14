@@ -20,6 +20,7 @@
 #include <list>
 #include <map>
 #include <string>
+#include <queue>
 
 #include "JavaScriptCore/symbolic/expression/symbolicsource.h"
 
@@ -32,13 +33,13 @@ class DOMSnapshotNodeImpl : public Symbolic::DOMSnapshotNode
 {
 
 public:
-    DOMSnapshotNodeImpl(WebCore::Element* element);
+    DOMSnapshotNodeImpl(std::string elementAsString, WebCore::Element* element);
 };
 
 class DOMSnapshotImpl : public Symbolic::DOMSnapshot
 {
 public:
-    DOMSnapshotImpl(WebCore::Node* base);
+    DOMSnapshotImpl(std::queue<std::pair<Node*, std::string> > queue);
 };
 
 }

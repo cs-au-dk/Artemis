@@ -22,6 +22,7 @@
 #include "WebCore/dom/NodeList.h"
 #include "WebCore/dom/Element.h"
 #include "wtf/text/AtomicString.h"
+#include "JavaScriptCore/runtime/JSValue.h"
 
 #include "statistics/statsstorage.h"
 #include <iostream>
@@ -30,7 +31,7 @@
 
 namespace WebCore {
 
-DOMSnapshotNodeImpl::DOMSnapshotNodeImpl(Element* element)
+DOMSnapshotNodeImpl::DOMSnapshotNodeImpl(std::string elementAsString, Element* element)
     : DOMSnapshotNode()
 {
     // xpath
@@ -59,31 +60,23 @@ DOMSnapshotNodeImpl::DOMSnapshotNodeImpl(Element* element)
     }
 
     // toString representation
-
-    // jsObject::className(obj) gives the right result
-    m_attributes.insert(std::pair<std::string, std::string>("TOSTRING", std::string("[object ") + element->nodeName().ascii().data() + "]"));
+    m_attributes.insert(std::pair<std::string, std::string>("TOSTRING", elementAsString));
 }
 
-DOMSnapshotImpl::DOMSnapshotImpl(Node* base)
+DOMSnapshotImpl::DOMSnapshotImpl(std::queue<std::pair<Node*, std::string> > queue)
     : DOMSnapshot()
 {
-    std::queue<Node*> queue;
-    queue.push(base);
-
-    // add all relevant child elements
-    WTF::RefPtr<NodeList> l = WTF::getPtr(base->getElementsByTagName(WTF::AtomicString("*")));
-    for (unsigned i = 0; i < l->length(); ++i) {
-        queue.push(l->item(i));
-    }
-
     while (!queue.empty()) {
-        Node* cur = queue.front();
+        std::pair<Node*, std::string> item = queue.front();
         queue.pop();
+
+        Node* cur = item.first;
+        std::string className = item.second;
 
         Element* element = dynamic_cast<Element*>(cur);
         if (element) {
             m_nodes.insert(std::pair<Symbolic::DOMSnapshotNodeId, Symbolic::DOMSnapshotNode*>(
-                               (Symbolic::DOMSnapshotNodeId)cur, new DOMSnapshotNodeImpl(element)));
+                               (Symbolic::DOMSnapshotNodeId)cur, new DOMSnapshotNodeImpl(className, element)));
         }
     }
 }
