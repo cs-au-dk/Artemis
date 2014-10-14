@@ -31,6 +31,7 @@
 #include "FragmentScriptingPermission.h"
 #include "HTMLNames.h"
 #include "ScrollTypes.h"
+#include <string>
 
 namespace WebCore {
 
@@ -412,6 +413,10 @@ public:
 
     IntSize savedLayerScrollOffset() const;
     void setSavedLayerScrollOffset(const IntSize&);
+
+    // Artemis
+
+    std::string getXPath();
 
 protected:
     Element(const QualifiedName& tagName, Document* document, ConstructionType type)

@@ -153,7 +153,7 @@ void CVC4ConstraintWriter::visit(Symbolic::ConstantString* constantstring, void*
 {
     std::ostringstream strs;
 
-    strs << "\"" << *constantstring->getValue() << "\"";
+    strs << "\"" << CVC4RegexCompiler::escape(*constantstring->getValue()) << "\"";
 
     mExpressionBuffer = strs.str();
     mExpressionType = Symbolic::STRING;
@@ -934,7 +934,7 @@ void CVC4ConstraintWriter::emitDOMConstraints()
             // special, emit the xpath to the result object. This is used later as the final result
             mOutput << std::endl << "         (= " \
                     << SMTConstraintWriter::encodeIdentifier(identifier + "_SOLUTIONXPATH") \
-                    << " \"" << node->getXpath() << "\")";
+                    << " \"" << CVC4RegexCompiler::escape(node->getXpath()) << "\")";
 
             // all attributes must match
             Symbolic::DOMSnapshotNodeAttributes attributes = node->getAttributes();
@@ -946,7 +946,7 @@ void CVC4ConstraintWriter::emitDOMConstraints()
 
                 mOutput << std::endl << "         (= " \
                         << SMTConstraintWriter::encodeIdentifier(identifier + "__" + (*iter3)) \
-                        << " \"" << value << "\")";
+                        << " \"" << CVC4RegexCompiler::escape(value) << "\")";
             }
 
             mOutput << ")" << std::endl; // and END

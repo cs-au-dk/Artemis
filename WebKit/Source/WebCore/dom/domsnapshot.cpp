@@ -36,7 +36,7 @@ DOMSnapshotNodeImpl::DOMSnapshotNodeImpl(std::string elementAsString, Element* e
 {
     // xpath
 
-    m_xpath = "TODO";
+    m_xpath = element->getXPath();
 
     // tagName (defined in element.idl)
 

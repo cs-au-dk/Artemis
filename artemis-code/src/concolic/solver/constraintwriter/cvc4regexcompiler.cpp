@@ -28,7 +28,6 @@
 
 std::string visitPatternAlternative(const JSC::Yarr::PatternAlternative*, bool& bol, bool& eol);
 std::string visitPatternTerm(const JSC::Yarr::PatternTerm*, bool& bol, bool& eol);
-std::string escapeChar(char c);
 
 std::string visitPatternDisjunction(const JSC::Yarr::PatternDisjunction* disjunction, bool& bol, bool& eol)
 {
@@ -185,7 +184,7 @@ std::string visitPatternTerm(const JSC::Yarr::PatternTerm* term, bool& bol, bool
             throw CVC4RegexCompilerException(str.str());
         }
 
-        result << "(str.to.re \"" << escapeChar((char)term->patternCharacter) << "\")";
+        result << "(str.to.re \"" << CVC4RegexCompiler::escape((char)term->patternCharacter) << "\")";
         break;
     }
 
@@ -209,8 +208,8 @@ std::string visitPatternTerm(const JSC::Yarr::PatternTerm* term, bool& bol, bool
                 result << " ";
             }
 
-            result << "(re.range \"" << escapeChar((char)term->characterClass->m_ranges[i].begin) << "\" \"" << \
-                      escapeChar((char)term->characterClass->m_ranges[i].end) << "\")";
+            result << "(re.range \"" << CVC4RegexCompiler::escape((char)term->characterClass->m_ranges[i].begin) << "\" \"" << \
+                      CVC4RegexCompiler::escape((char)term->characterClass->m_ranges[i].end) << "\")";
         }
 
         for (size_t i = 0; i < term->characterClass->m_matches.size(); ++i) {
@@ -218,7 +217,7 @@ std::string visitPatternTerm(const JSC::Yarr::PatternTerm* term, bool& bol, bool
                 result << " ";
             }
 
-            result << "(str.to.re \"" << escapeChar((char)term->characterClass->m_matches[i]) << "\")";
+            result << "(str.to.re \"" << CVC4RegexCompiler::escape((char)term->characterClass->m_matches[i]) << "\")";
         }
 
         if (!emitOnlyOne) {
@@ -286,7 +285,7 @@ CVC4RegexCompiler::CVC4RegexCompiler()
 {
 }
 
-std::string escapeChar(char c)
+std::string CVC4RegexCompiler::escape(const char c)
 {
     std::stringstream result;
 
@@ -297,6 +296,17 @@ std::string escapeChar(char c)
         result << "\\" << c;
     } else {
         result << "\\x" << (ci < 16 ? "0" : "") << std::hex << ci; // emits \xYY where YY is the hex representation of the ascii char
+    }
+
+    return result.str();
+}
+
+std::string CVC4RegexCompiler::escape(const std::string& str)
+{
+    std::stringstream result;
+
+    for (unsigned i = 0; i < str.length(); ++i) {
+        result << CVC4RegexCompiler::escape(str.at(i));
     }
 
     return result.str();

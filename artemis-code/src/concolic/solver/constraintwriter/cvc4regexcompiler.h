@@ -43,6 +43,8 @@ public:
      * @return An expression containing CVC4 constraints
      */
     static std::string compile(const std::string& javaScriptRegex, bool& bol, bool& eol);
+    static std::string escape(const char c);
+    static std::string escape(const std::string& str);
 
 private:
     CVC4RegexCompiler();
