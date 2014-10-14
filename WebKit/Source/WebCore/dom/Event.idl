@@ -54,7 +54,7 @@ module events {
 #endif
 
         readonly attribute DOMString        type;
-        readonly attribute EventTarget      target;
+        readonly attribute [UsageWarning] EventTarget      target;
         readonly attribute EventTarget      currentTarget;
         readonly attribute unsigned short   eventPhase;
         readonly attribute [InitializedByEventConstructor] boolean bubbles;
