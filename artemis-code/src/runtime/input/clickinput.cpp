@@ -122,7 +122,7 @@ void ClickInput::apply(ArtemisWebPagePtr page, QWebExecutionListener *webkitList
 BaseInputConstPtr ClickInput::getPermutation(const FormInputGeneratorConstPtr &formInputGenerator, const EventParameterGeneratorConstPtr &eventParameterGenerator, const TargetGeneratorConstPtr &targetGenerator, const ExecutionResultConstPtr &result) const
 {
     // No permutations, just return a new ClickInput with the same parameters (as in timerinput.cpp).
-    return QSharedPointer<const BaseInput>(new ClickInput(mTargetXPath, mFormInput));
+    return BaseInputConstPtr(NULL);
 }
 
 int ClickInput::hashCode() const

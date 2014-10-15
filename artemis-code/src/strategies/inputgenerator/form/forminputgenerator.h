@@ -40,6 +40,9 @@ public:
 
     virtual FormInputCollectionPtr generateFormFields(QSet<FormFieldDescriptorConstPtr> fields,
                                                       ExecutionResultConstPtr executionResult) const = 0;
+    virtual FormInputCollectionPtr permuteFormFields(QSet<FormFieldDescriptorConstPtr> fields,
+                                                     FormInputCollectionConstPtr oldFields,
+                                                     ExecutionResultConstPtr executionResult) const = 0;
 
 protected:
     QList<QString> mExcludedFormFields;

@@ -20,6 +20,7 @@
 #include <QSharedPointer>
 
 #include "runtime/input/events/eventhandlerdescriptor.h"
+#include "runtime/browser/executionresult.h"
 
 #include "targetdescriptor.h"
 
@@ -35,6 +36,14 @@ namespace artemis
  * TargetGenerator is called post-execution in iteration A, while TargetDescriptors are used to identify concrete DOM nodes observed
  * at runtime in a later iteration not equal to A (using the get method on TargetDesciptor).
  *
+ * generateTarget is callend when generating a fresh target for an event-handler, while permuteTarget is used to select an alternative
+ * target after exploring the event handler with a previously selected target.
+ *
+ * permuteTarget may be called multiple times with the same eventhandler, oldTarget, and result (if we want to find multiple
+ * alternative targets here and now).
+ *
+ * Returns either a new target or NULL if no alternative targets exist for oldTarget/result.
+ *
  */
 class TargetGenerator
 {
@@ -44,6 +53,9 @@ public:
     virtual ~TargetGenerator() {}
 
     virtual TargetDescriptorConstPtr generateTarget(EventHandlerDescriptorConstPtr eventHandler) const = 0;
+    virtual TargetDescriptorConstPtr permuteTarget(EventHandlerDescriptorConstPtr eventHandler,
+                                                   TargetDescriptorConstPtr oldTarget,
+                                                   ExecutionResultConstPtr result) const = 0;
 };
 
 typedef QSharedPointer<const TargetGenerator> TargetGeneratorConstPtr;

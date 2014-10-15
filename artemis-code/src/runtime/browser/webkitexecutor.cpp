@@ -45,9 +45,10 @@ WebKitExecutor::WebKitExecutor(QObject* parent,
                                AjaxRequestListener* ajaxListener,
                                bool enableConstantStringInstrumentation,
                                bool enablePropertyAccessInstrumentation,
-                               ConcolicBenchmarkFeatures disabledFeatures) :
-    QObject(parent),
-    mNextOpCanceled(false), mKeepOpen(false)
+                               ConcolicBenchmarkFeatures disabledFeatures)
+    : QObject(parent)
+    , mNextOpCanceled(false), mKeepOpen(false)
+    , mSymbolicMode(MODE_CONCRETE)
 {
 
     mPresetFields = presetFields;
@@ -186,10 +187,10 @@ void WebKitExecutor::detach() {
 
 void WebKitExecutor::executeSequence(ExecutableConfigurationConstPtr conf)
 {
-    executeSequence(conf, false);
+    executeSequence(conf, MODE_CONCOLIC);
 }
 
-void WebKitExecutor::executeSequence(ExecutableConfigurationConstPtr conf, bool keepOpen)
+void WebKitExecutor::executeSequence(ExecutableConfigurationConstPtr conf, SYMBOLIC_MODE symbolicMode)
 {
     currentConf = conf;
 
@@ -203,10 +204,12 @@ void WebKitExecutor::executeSequence(ExecutableConfigurationConstPtr conf, bool 
     mJavascriptStatistics->notifyStartingLoad();
     mPathTracer->notifyStartingLoad();
 
-    mWebkitListener->beginSymbolicSession();
-    mWebkitListener->clearAjaxCallbacks(); // reset the ajax callback ids
+    mSymbolicMode = symbolicMode;
+    if (symbolicMode == MODE_CONCOLIC || symbolicMode == MODE_CONCOLIC_CONTINOUS) {
+        mWebkitListener->beginSymbolicSession();
+    }
 
-    mKeepOpen = keepOpen;
+    mWebkitListener->clearAjaxCallbacks(); // reset the ajax callback ids
 
     mPage->mainFrame()->load(conf->getUrl());
 }
@@ -272,6 +275,10 @@ void WebKitExecutor::slLoadFinished(bool ok)
 
     foreach(QSharedPointer<const BaseInput> input, currentConf->getInputSequence()->toList()) {
 
+        if (mSymbolicMode == MODE_CONCOLIC_LAST_EVENT && input == currentConf->getInputSequence()->getLast()) {
+            mWebkitListener->beginSymbolicSession();
+        }
+
         mResultBuilder->notifyStartingEvent();
         mCoverageListener->notifyStartingEvent(input);
         mJavascriptStatistics->notifyStartingEvent(input);
@@ -282,7 +289,7 @@ void WebKitExecutor::slLoadFinished(bool ok)
         input->apply(this->mPage, this->mWebkitListener);
     }
 
-    if (!mKeepOpen) {
+    if (mSymbolicMode == MODE_CONCOLIC || mSymbolicMode == MODE_CONCOLIC_LAST_EVENT) {
         mWebkitListener->endSymbolicSession();
     }
 
@@ -295,9 +302,6 @@ void WebKitExecutor::slLoadFinished(bool ok)
 
     // TODO: This was previously enclosed by if(!mKeepOpen). This means no post-load analysis can be done in demo mode. What are tyhe implications of changing this? Which other parts will depend on this?
     emit sigExecutedSequence(currentConf, result);
-
-
-    mKeepOpen = false;
 }
 
 ArtemisWebPagePtr WebKitExecutor::getPage()

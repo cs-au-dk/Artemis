@@ -42,7 +42,7 @@ BaseInputConstPtr TimerInput::getPermutation(const FormInputGeneratorConstPtr& f
                                              const TargetGeneratorConstPtr& targetGenerator,
                                              const ExecutionResultConstPtr& result) const
 {
-    return QSharedPointer<const BaseInput>(new TimerInput(this->mTimer));
+    return BaseInputConstPtr(NULL);
 }
 
 int TimerInput::hashCode() const

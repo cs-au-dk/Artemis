@@ -76,4 +76,12 @@ FormInputCollectionPtr ConstantStringFormInputGenerator::generateFormFields(QSet
     return QSharedPointer<FormInputCollection>(new FormInputCollection(inputs));
 }
 
+FormInputCollectionPtr ConstantStringFormInputGenerator::permuteFormFields(
+        QSet<FormFieldDescriptorConstPtr> fields,
+        FormInputCollectionConstPtr,
+        ExecutionResultConstPtr executionResult) const
+{
+    return generateFormFields(fields, executionResult);
+}
+
 }

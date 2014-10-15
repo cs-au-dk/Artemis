@@ -14,26 +14,20 @@
  * limitations under the License.
  */
 
-#ifndef LEGACYTARGETGENERATOR_H
-#define LEGACYTARGETGENERATOR_H
-
-#include "strategies/inputgenerator/targets/targetgenerator.h"
+#include "concolictarget.h"
 
 namespace artemis
 {
 
-class LegacyTargetGenerator : public TargetGenerator
+ConcolicTarget::ConcolicTarget(EventHandlerDescriptorConstPtr eventHandler)
+    : TargetDescriptor(eventHandler)
 {
-
-public:
-    LegacyTargetGenerator() {}
-
-    TargetDescriptorConstPtr generateTarget(EventHandlerDescriptorConstPtr eventHandler) const;
-    TargetDescriptorConstPtr permuteTarget(EventHandlerDescriptorConstPtr eventHandler,
-                                           TargetDescriptorConstPtr oldTarget,
-                                           ExecutionResultConstPtr result) const;
-};
-
 }
 
-#endif // LEGACYTARGETGENERATOR_H
+QWebElement ConcolicTarget::get(ArtemisWebPagePtr page) const
+{
+    // legacy impl.
+    return mEventHandler->getDomElement()->getElement(page);
+}
+
+}

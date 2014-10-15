@@ -25,4 +25,11 @@ TargetDescriptorConstPtr LegacyTargetGenerator::generateTarget(EventHandlerDescr
     return TargetDescriptorConstPtr(new LegacyTarget(eventHandler));
 }
 
+TargetDescriptorConstPtr LegacyTargetGenerator::permuteTarget(EventHandlerDescriptorConstPtr eventHandler,
+                                                              TargetDescriptorConstPtr oldTarget,
+                                                              ExecutionResultConstPtr result) const
+{
+    return TargetDescriptorConstPtr(NULL);
+}
+
 } // END NAMESPACE

@@ -36,7 +36,7 @@ enum PrioritizerStrategies {
 };
 
 enum TargetStrategies {
-    JQUERY, LEGACY
+    TARGET_JQUERY, TARGET_LEGACY, TARGET_CONCOLIC
 };
 
 enum CoverageReport {
@@ -87,7 +87,7 @@ typedef struct OptionsType {
         concolicNegateLastConstraint(false),
         formInputGenerationStrategy(Random),
         prioritizerStrategy(CONSTANT),
-        targetStrategy(JQUERY),
+        targetStrategy(TARGET_LEGACY),
         outputCoverage(NONE),
         majorMode(AUTOMATED),
         reportPathTrace(NO_TRACES),

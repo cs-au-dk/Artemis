@@ -74,8 +74,13 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             "           random - (default) random inputs\n"
             "\n"
             "\n"
-            "--jquery-support <true|false>\n"
-            "           Support for jQuery event handlers. Default: true."
+            "--strategy-target-selection <strategy>:\n"
+            "           Select target selection strategy.\n"
+            "\n"
+            "           concolic - use concolic testing to select a target\n"
+            "           jquery - use a model to support instrumented jQuery\n"
+            "           legacy - (default) set the target to the element on which the event-handler is registered\n"
+            "\n"
             "--strategy-priority <strategy>:\n"
             "           Select priority strategy.\n"
             "\n"
@@ -219,7 +224,7 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
     {"help", no_argument, NULL, 'h'},
     {"option-values", optional_argument, NULL, 'q'},
     {"user-agent", required_argument, NULL, 'U'},
-    {"jquery-support", required_argument, NULL, 'A'},
+    {"strategy-target-selection", required_argument, NULL, 'A'},
     {0, 0, 0, 0}
     };
 
@@ -702,12 +707,14 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
 
         case 'A': {
 
-            if (string(optarg).compare("true") == 0) {
-                options.targetStrategy = artemis::JQUERY;
-            } else if (string(optarg).compare("false") == 0) {
-                options.targetStrategy = artemis::LEGACY;
+            if (string(optarg).compare("jquery") == 0) {
+                options.targetStrategy = artemis::TARGET_JQUERY;
+            } else if (string(optarg).compare("concolic") == 0) {
+                options.targetStrategy = artemis::TARGET_CONCOLIC;
+            } else if (string(optarg).compare("legacy") == 0) {
+                options.targetStrategy = artemis::TARGET_LEGACY;
             } else {
-                cerr << "ERROR: Invalid choice of jQuery support" << optarg << endl;
+                cerr << "ERROR: Invalid choice of target strategy " << optarg << endl;
                 exit(1);
             }
 

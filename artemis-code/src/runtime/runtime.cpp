@@ -39,6 +39,7 @@
 
 #include "strategies/inputgenerator/targets/jquerytargetgenerator.h"
 #include "strategies/inputgenerator/targets/legacytargetgenerator.h"
+#include "strategies/inputgenerator/targets/concolictargetgenerator.h"
 
 #include "strategies/termination/numberofiterationstermination.h"
 
@@ -147,10 +148,13 @@ Runtime::Runtime(QObject* parent, const Options& options, const QUrl& url)
     }
 
     switch(options.targetStrategy) {
-    case JQUERY:
+    case TARGET_CONCOLIC:
+        mTargetGenerator = TargetGeneratorConstPtr(new ConcolicTargetGenerator(mWebkitExecutor->getTraceBuilder()));
+        break;
+    case TARGET_JQUERY:
         mTargetGenerator = TargetGeneratorConstPtr(new JqueryTargetGenerator(jqueryListener));
         break;
-    case LEGACY:
+    case TARGET_LEGACY:
         mTargetGenerator = TargetGeneratorConstPtr(new LegacyTargetGenerator());
         break;
 

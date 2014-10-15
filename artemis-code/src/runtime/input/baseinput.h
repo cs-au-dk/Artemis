@@ -52,6 +52,7 @@ protected:
 };
 
 typedef QSharedPointer<const BaseInput> BaseInputConstPtr;
+typedef QSharedPointer<BaseInput> BaseInputPtr;
 
 }
 

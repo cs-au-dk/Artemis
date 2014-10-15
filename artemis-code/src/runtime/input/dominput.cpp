@@ -77,11 +77,21 @@ BaseInputConstPtr DomInput::getPermutation(const FormInputGeneratorConstPtr& for
                                            const TargetGeneratorConstPtr& targetGenerator,
                                            const ExecutionResultConstPtr& result) const
 {
-    EventParametersConstPtr newParams = eventParameterGenerator->generateEventParameters(mEventHandler);
-    FormInputCollectionPtr newForm = formInputGenerator->generateFormFields(mFormInput->getFields(), result);
-    TargetDescriptorConstPtr target = targetGenerator->generateTarget(mEventHandler);
+    EventParametersConstPtr newParams = eventParameterGenerator->permuteEventParameters(mEventHandler, mEvtParams, result);
+    FormInputCollectionConstPtr newForm = formInputGenerator->permuteFormFields(mFormInput->getFields(), mFormInput, result);
+    TargetDescriptorConstPtr target = targetGenerator->permuteTarget(mEventHandler, mTarget, result);
 
-    return DomInputConstPtr(new DomInput(mEventHandler, newForm, newParams, target, mExecStat));
+    if (!newParams.isNull() || !newForm.isNull() || !target.isNull()) {
+        return DomInputConstPtr(new DomInput(
+                                    mEventHandler,
+                                    newForm.isNull() ? mFormInput : newForm,
+                                    newParams.isNull() ? mEvtParams : newParams,
+                                    target.isNull() ? mTarget : target,
+                                    mExecStat));
+    }
+
+    return BaseInputConstPtr(NULL);
+
 }
 
 int DomInput::hashCode() const

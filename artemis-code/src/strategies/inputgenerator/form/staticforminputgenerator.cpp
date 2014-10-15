@@ -65,4 +65,12 @@ FormInputCollectionPtr StaticFormInputGenerator::generateFormFields(QSet<FormFie
     return FormInputCollectionPtr(new FormInputCollection(inputs));
 }
 
+FormInputCollectionPtr StaticFormInputGenerator::permuteFormFields(
+        QSet<FormFieldDescriptorConstPtr> fields,
+        FormInputCollectionConstPtr,
+        ExecutionResultConstPtr executionResult) const
+{
+    return generateFormFields(fields, executionResult);
+}
+
 }

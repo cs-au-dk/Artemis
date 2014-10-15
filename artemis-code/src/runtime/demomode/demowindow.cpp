@@ -506,7 +506,7 @@ void DemoModeMainWindow::loadUrl(QUrl url)
 
     Log::debug(QString("CONCOLIC-INFO: Loading page %1").arg(url.toString()).toStdString());
     ExecutableConfigurationPtr initial = ExecutableConfigurationPtr(new ExecutableConfiguration(InputSequencePtr(new InputSequence()), url));
-    mWebkitExecutor->executeSequence(initial, true); // Calls slExecutedSequence method as callback.
+    mWebkitExecutor->executeSequence(initial, MODE_CONCOLIC_CONTINOUS); // Calls slExecutedSequence method as callback.
 
     resetPageAnlaysis();
 }

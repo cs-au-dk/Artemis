@@ -39,7 +39,7 @@ BaseInputConstPtr AjaxInput::getPermutation(const FormInputGeneratorConstPtr&,
                                             const TargetGeneratorConstPtr&,
                                             const ExecutionResultConstPtr&) const
 {
-    return QSharedPointer<const BaseInput>(new AjaxInput(this->mCallbackId));
+    return BaseInputConstPtr(NULL); // no permutation exists
 }
 
 int AjaxInput::hashCode() const

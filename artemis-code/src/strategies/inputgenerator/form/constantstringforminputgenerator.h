@@ -32,6 +32,9 @@ public:
 
     FormInputCollectionPtr generateFormFields(QSet<FormFieldDescriptorConstPtr> fields,
                                               ExecutionResultConstPtr executionResult) const;
+    FormInputCollectionPtr permuteFormFields(QSet<FormFieldDescriptorConstPtr> fields,
+                                             FormInputCollectionConstPtr oldFields,
+                                             ExecutionResultConstPtr executionResult) const;
 };
 
 typedef QSharedPointer<ConstantStringFormInputGenerator> ConstantStringFormInputGeneratorPtr;

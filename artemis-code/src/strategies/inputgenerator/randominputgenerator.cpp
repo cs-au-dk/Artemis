@@ -36,26 +36,25 @@ RandomInputGenerator::RandomInputGenerator(
         QSharedPointer<const EventParameterGenerator> eventParameterInputGenerator,
         TargetGeneratorConstPtr targetGenerator,
         EventExecutionStatistics* execStat,
-        int numberSameLength) :
-
-    InputGeneratorStrategy(parent),
-    mFormInputGenerator(formInputGenerator),
-    mEventParameterGenerator(eventParameterInputGenerator),
-    mTargetGenerator(targetGenerator),
-    mExecStat(execStat),
-    mNumberSameLength(numberSameLength)
+        int numberSameLength)
+    : InputGeneratorStrategy(parent)
+    , mFormInputGenerator(formInputGenerator)
+    , mEventParameterGenerator(eventParameterInputGenerator)
+    , mTargetGenerator(targetGenerator)
+    , mExecStat(execStat)
+    , mNumberSameLength(numberSameLength)
 {
 }
 
 QList<QSharedPointer<ExecutableConfiguration> > RandomInputGenerator::addNewConfigurations(
-        QSharedPointer<const ExecutableConfiguration> configuration,
+        QSharedPointer<const ExecutableConfiguration> oldConfiguration,
         QSharedPointer<const ExecutionResult> result)
 {
 
     QList<QSharedPointer<ExecutableConfiguration> > newConfigurations;
 
-    newConfigurations.append(insertSameLength(configuration, result));
-    newConfigurations.append(insertExtended(configuration, result));
+    newConfigurations.append(insertSameLength(oldConfiguration, result));
+    newConfigurations.append(insertExtended(oldConfiguration, result));
 
     return newConfigurations;
 }
@@ -64,31 +63,20 @@ QList<ExecutableConfigurationPtr> RandomInputGenerator::insertSameLength(
         ExecutableConfigurationConstPtr oldConfiguration,
         ExecutionResultConstPtr result)
 {
-    QList<QSharedPointer<ExecutableConfiguration> > newConfigurations;
+    QList<ExecutableConfigurationPtr> newConfigurations;
+    if (oldConfiguration->isInitial()) return newConfigurations;
 
-    QSharedPointer<const InputSequence> sequence = oldConfiguration->getInputSequence();
-
-    if (sequence->isEmpty()) {
-        return newConfigurations;
-    }
-
-    QSharedPointer<const BaseInput> last = sequence->getLast();
+    InputSequenceConstPtr sequence = oldConfiguration->getInputSequence();
+    BaseInputConstPtr last = sequence->getLast();
 
     for (int i = 0; i < mNumberSameLength; i++) {
         QSharedPointer<const BaseInput> newLast = last->getPermutation(mFormInputGenerator, mEventParameterGenerator, mTargetGenerator, result);
+        if (newLast.isNull()) continue;
 
         QSharedPointer<const InputSequence> newSeq = sequence->replaceLast(newLast);
         QSharedPointer<ExecutableConfiguration> newConf = \
                 QSharedPointer<ExecutableConfiguration>(new ExecutableConfiguration(newSeq, oldConfiguration->getUrl()));
         newConfigurations.append(newConf);
-
-        /**
-         * // TODO
-         *
-         * The above code will generate duplicates of the same sequence over time, as the variants generator can repeat already
-         * used parameters. Is this a good way to extend our test sequences? And if so should we put in some "isEqual"-ish check
-         * to avoid duplications?
-         */
     }
 
     return newConfigurations;

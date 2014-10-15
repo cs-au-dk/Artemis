@@ -14,31 +14,31 @@
  * limitations under the License.
  */
 
-#ifndef JQUERYTARGETGENERATOR_H
-#define JQUERYTARGETGENERATOR_H
+#ifndef CONCOLICTARGETGENERATOR_H
+#define CONCOLICTARGETGENERATOR_H
 
 #include "strategies/inputgenerator/targets/targetgenerator.h"
 #include "strategies/inputgenerator/targets/jquerylistener.h"
+#include "concolic/executiontree/tracebuilder.h"
 
 namespace artemis
 {
 
-class JqueryTargetGenerator : public TargetGenerator
+class ConcolicTargetGenerator : public TargetGenerator
 {
 
 public:
-    JqueryTargetGenerator(JQueryListener* jqueryListener)
-        : mJQueryListener(jqueryListener) {}
-
+    ConcolicTargetGenerator(TraceBuilder* traceBuilder);
     TargetDescriptorConstPtr generateTarget(EventHandlerDescriptorConstPtr eventHandler) const;
     TargetDescriptorConstPtr permuteTarget(EventHandlerDescriptorConstPtr eventHandler,
                                            TargetDescriptorConstPtr oldTarget,
                                            ExecutionResultConstPtr result) const;
 
 private:
-    JQueryListener* mJQueryListener;
+    TraceBuilder* mTraceBuilder;
+
 };
 
 }
 
-#endif // JQUERYTARGETGENERATOR_H
+#endif // CONCOLICTARGETGENERATOR_H

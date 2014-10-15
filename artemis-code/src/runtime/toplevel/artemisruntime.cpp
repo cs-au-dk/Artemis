@@ -95,7 +95,7 @@ void ArtemisRuntime::preConcreteExecution()
 
     ExecutableConfigurationConstPtr nextConfiguration = mWorklist->remove();
 
-    mWebkitExecutor->executeSequence(nextConfiguration); // calls the postConcreteExecution method as callback
+    mWebkitExecutor->executeSequence(nextConfiguration, mOptions.targetStrategy == TARGET_CONCOLIC ? MODE_CONCOLIC_LAST_EVENT : MODE_CONCOLIC); // calls the postConcreteExecution method as callback
 }
 
 void ArtemisRuntime::postConcreteExecution(ExecutableConfigurationConstPtr configuration, ExecutionResultPtr result)

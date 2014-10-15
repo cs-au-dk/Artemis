@@ -44,6 +44,10 @@
 namespace artemis
 {
 
+enum SYMBOLIC_MODE {
+    MODE_CONCRETE, MODE_CONCOLIC_CONTINOUS, MODE_CONCOLIC, MODE_CONCOLIC_LAST_EVENT
+};
+
 /**
  * Responsible for all direct interaction with WebKit and controlling the
  * low-level execution of the selected configurations.
@@ -64,7 +68,7 @@ public:
     ~WebKitExecutor();
 
     void executeSequence(ExecutableConfigurationConstPtr conf);
-    void executeSequence(ExecutableConfigurationConstPtr conf, bool keepOpen);
+    void executeSequence(ExecutableConfigurationConstPtr conf, SYMBOLIC_MODE symbolicMode);
     void detach();
 
     ArtemisWebPagePtr getPage();
@@ -90,6 +94,8 @@ private:
     bool testingDone;
 
     TraceBuilder* mTraceBuilder;
+
+    SYMBOLIC_MODE mSymbolicMode;
 
 signals:
     void sigExecutedSequence(ExecutableConfigurationConstPtr conf, QSharedPointer<ExecutionResult> res);

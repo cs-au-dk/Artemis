@@ -81,4 +81,12 @@ EventParametersConstPtr StaticEventParameterGenerator::generateEventParameters(E
     }
 }
 
+EventParametersConstPtr StaticEventParameterGenerator::permuteEventParameters(EventHandlerDescriptorConstPtr,
+                                                       EventParametersConstPtr,
+                                                       ExecutionResultConstPtr) const
+{
+    // we only return static results, so we will not try to permutate values
+    return EventParametersConstPtr(NULL);
+}
+
 }

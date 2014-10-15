@@ -25,4 +25,13 @@ TargetDescriptorConstPtr JqueryTargetGenerator::generateTarget(EventHandlerDescr
     return TargetDescriptorConstPtr(new JQueryTarget(eventHandler, mJQueryListener));
 }
 
+TargetDescriptorConstPtr JqueryTargetGenerator::permuteTarget(
+        EventHandlerDescriptorConstPtr eventHandler,
+        TargetDescriptorConstPtr,
+        ExecutionResultConstPtr) const
+{
+    // TODO, we should check here if the model is applicable, and if not we should return NULL
+    return TargetDescriptorConstPtr(new JQueryTarget(eventHandler, mJQueryListener));
+}
+
 } // END NAMESPACE

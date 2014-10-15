@@ -30,7 +30,9 @@ public:
     StaticEventParameterGenerator();
 
     EventParametersConstPtr generateEventParameters(EventHandlerDescriptorConstPtr eventHandler) const;
-
+    EventParametersConstPtr permuteEventParameters(EventHandlerDescriptorConstPtr eventHandler,
+                                                   EventParametersConstPtr oldParameters,
+                                                   ExecutionResultConstPtr result) const;
 };
 
 }

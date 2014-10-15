@@ -22,6 +22,7 @@
 
 #include "runtime/input/events/eventparameters.h"
 #include "runtime/input/events/eventhandlerdescriptor.h"
+#include "runtime/browser/executionresult.h"
 
 namespace artemis
 {
@@ -34,6 +35,9 @@ public:
     virtual ~EventParameterGenerator() {}
 
     virtual EventParametersConstPtr generateEventParameters(EventHandlerDescriptorConstPtr eventHandler) const = 0;
+    virtual EventParametersConstPtr permuteEventParameters(EventHandlerDescriptorConstPtr eventHandler,
+                                                           EventParametersConstPtr oldParameters,
+                                                           ExecutionResultConstPtr result) const = 0;
 };
 
 typedef QSharedPointer<const EventParameterGenerator> EventParameterGeneratorConstPtr;

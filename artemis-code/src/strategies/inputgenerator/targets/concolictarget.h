@@ -14,31 +14,24 @@
  * limitations under the License.
  */
 
-#ifndef JQUERYTARGETGENERATOR_H
-#define JQUERYTARGETGENERATOR_H
+#ifndef CONCOLICTARGET_H
+#define CONCOLICTARGET_H
 
-#include "strategies/inputgenerator/targets/targetgenerator.h"
+#include <QWebElement>
+
 #include "strategies/inputgenerator/targets/jquerylistener.h"
+#include "targetdescriptor.h"
 
 namespace artemis
 {
 
-class JqueryTargetGenerator : public TargetGenerator
+class ConcolicTarget : public TargetDescriptor
 {
-
 public:
-    JqueryTargetGenerator(JQueryListener* jqueryListener)
-        : mJQueryListener(jqueryListener) {}
-
-    TargetDescriptorConstPtr generateTarget(EventHandlerDescriptorConstPtr eventHandler) const;
-    TargetDescriptorConstPtr permuteTarget(EventHandlerDescriptorConstPtr eventHandler,
-                                           TargetDescriptorConstPtr oldTarget,
-                                           ExecutionResultConstPtr result) const;
-
-private:
-    JQueryListener* mJQueryListener;
+    ConcolicTarget(EventHandlerDescriptorConstPtr eventHandler);
+    QWebElement get(ArtemisWebPagePtr page) const;
 };
 
 }
 
-#endif // JQUERYTARGETGENERATOR_H
+#endif // CONCOLICTARGET_H
