@@ -83,7 +83,6 @@ typedef struct OptionsType {
     OptionsType() :
         iterationLimit(4),
         numberSameLength(1),
-        recreatePage(false),
         disableStateCheck(true),
         concolicNegateLastConstraint(false),
         formInputGenerationStrategy(Random),
@@ -116,12 +115,10 @@ typedef struct OptionsType {
     int iterationLimit;
     int numberSameLength;
 
-    bool recreatePage;
     bool disableStateCheck;
     bool concolicNegateLastConstraint;
 
     QString useProxy;
-    QString dumpPageStates;
 
     FormInputGenerationStrategies formInputGenerationStrategy;
     PrioritizerStrategies prioritizerStrategy;
