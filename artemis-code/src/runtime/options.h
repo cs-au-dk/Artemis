@@ -39,6 +39,10 @@ enum TargetStrategies {
     TARGET_JQUERY, TARGET_LEGACY, TARGET_CONCOLIC
 };
 
+enum EventGenerationStrategies {
+    EVENT_LEGACY, EVENT_FASTTRACK
+};
+
 enum CoverageReport {
     STDOUT, HTML, NONE
 };
@@ -85,6 +89,7 @@ typedef struct OptionsType {
         numberSameLength(1),
         disableStateCheck(true),
         concolicNegateLastConstraint(false),
+        eventGenerationStrategy(EVENT_LEGACY),
         formInputGenerationStrategy(Random),
         prioritizerStrategy(CONSTANT),
         targetStrategy(TARGET_LEGACY),
@@ -119,6 +124,8 @@ typedef struct OptionsType {
     bool concolicNegateLastConstraint;
 
     QString useProxy;
+
+    EventGenerationStrategies eventGenerationStrategy;
 
     FormInputGenerationStrategies formInputGenerationStrategy;
     PrioritizerStrategies prioritizerStrategy;

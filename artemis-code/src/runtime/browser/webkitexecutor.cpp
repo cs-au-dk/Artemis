@@ -30,6 +30,9 @@
 #include "strategies/inputgenerator/targets/jquerylistener.h"
 #include "util/loggingutil.h"
 #include "concolic/executiontree/tracebuilder.h"
+#include "concolic/pathcondition.h"
+
+#include "statistics/statsstorage.h"
 
 #include "webkitexecutor.h"
 
@@ -299,6 +302,11 @@ void WebKitExecutor::slLoadFinished(bool ok)
 
     // End the trace recording.
     mTraceBuilder->endRecording();
+
+    PathConditionPtr pc = PathCondition::createFromTrace(mTraceBuilder->trace());
+    if (pc->size() > 0) {
+        Statistics::statistics()->accumulate("Concolic::sessions::hasPC", 1);
+    }
 
     // TODO: This was previously enclosed by if(!mKeepOpen). This means no post-load analysis can be done in demo mode. What are tyhe implications of changing this? Which other parts will depend on this?
     emit sigExecutedSequence(currentConf, result);

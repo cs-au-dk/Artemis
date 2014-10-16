@@ -33,6 +33,8 @@
 #include "statistics/statsstorage.h"
 
 #include "strategies/inputgenerator/randominputgenerator.h"
+#include "strategies/inputgenerator/fasttrackinputgenerator.h"
+
 #include "strategies/inputgenerator/event/staticeventparametergenerator.h"
 #include "strategies/inputgenerator/form/staticforminputgenerator.h"
 #include "strategies/inputgenerator/form/constantstringforminputgenerator.h"
@@ -162,12 +164,27 @@ Runtime::Runtime(QObject* parent, const Options& options, const QUrl& url)
         assert(false);
     }
 
-    mInputgenerator = new RandomInputGenerator(this,
-                                               formInputGenerator,
-                                               QSharedPointer<StaticEventParameterGenerator>(new StaticEventParameterGenerator()),
-                                               mTargetGenerator,
-                                               mExecStat,
-                                               options.numberSameLength);
+    switch(options.eventGenerationStrategy) {
+
+    case EVENT_FASTTRACK:
+        mInputgenerator = new FasttrackInputGenerator(this,
+                                                      formInputGenerator,
+                                                      QSharedPointer<StaticEventParameterGenerator>(new StaticEventParameterGenerator()),
+                                                      mTargetGenerator,
+                                                      mExecStat);
+
+        break;
+
+    case EVENT_LEGACY:
+    default:
+        mInputgenerator = new RandomInputGenerator(this,
+                                                   formInputGenerator,
+                                                   QSharedPointer<StaticEventParameterGenerator>(new StaticEventParameterGenerator()),
+                                                   mTargetGenerator,
+                                                   mExecStat,
+                                                   options.numberSameLength);
+    }
+
     mTerminationStrategy = new NumberOfIterationsTermination(this, options.iterationLimit);
 
     switch (options.prioritizerStrategy) {
