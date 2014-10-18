@@ -40,6 +40,7 @@ def execute_artemis(execution_uuid, url, iterations=1,
                     concolic_selection_procedure=None,
                     concolic_selection_budget=None,
                     verbosity=None,
+                    sys_timeout=None,
                     extra_args=None, #TODO: Use kwargs instead.
                     **kwargs):
     output_dir = os.path.join(output_parent_dir, execution_uuid)
@@ -138,7 +139,9 @@ def execute_artemis(execution_uuid, url, iterations=1,
     if extra_args is not None:
         args.extend(extra_args.split()) # TODO: In general split() is not good enough here.
 
-    cmd = [ARTEMIS_EXEC] + [url] + args
+    timeout = ['timeout', '%ss' % sys_timeout] if sys_timeout is not None else []
+
+    cmd = timeout + [ARTEMIS_EXEC] + [url] + args
 
     if dryrun or verbose:
         print ' '.join(cmd)
