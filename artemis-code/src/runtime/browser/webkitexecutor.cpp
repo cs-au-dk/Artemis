@@ -168,10 +168,12 @@ WebKitExecutor::WebKitExecutor(QObject* parent,
     // The event marker detector is created and connected in the concolic runtime.
 
     // The DOM modification "detector".
+    /* Disable for now, we are running out of memory on large pages
     QSharedPointer<TraceDomModDetector> domModDetector(new TraceDomModDetector());
     QObject::connect(mResultBuilder.data(), SIGNAL(sigDomModified(QString, QString)),
                      domModDetector.data(), SLOT(slDomModified(QString, QString)));
     mTraceBuilder->addDetector(domModDetector);
+    */
 
 
 }

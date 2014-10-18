@@ -154,8 +154,11 @@ void TracePageLoadDetector::slPageLoad(QUrl url)
 
 
 
-/* DOM Modification Detector */
-
+/*
+ * DOM Modification Detector
+ *
+ * Notice, this detector is very memory expensive on large pages (allocates 2^N words where N is the number of tokens on the page).
+*/
 void TraceDomModDetector::slDomModified(QString start, QString end)
 {
     // Create the node.
