@@ -299,9 +299,6 @@ void Runtime::done()
 
     Log::info("Artemis terminated on: "+ QDateTime::currentDateTime().toString().toStdString());
 
-    exit(0);
-
-    // TODO, see next TODO
     emit sigTestingDone();
 }
 
@@ -323,9 +320,6 @@ SolverPtr Runtime::getSolver(const Options& options)
 void Runtime::slAbortedExecution(QString reason)
 {
     cerr << reason.toStdString() << std::endl;
-    exit(1);
-
-    // TODO we should use this emit, but we have some race conditions happening when Artemis shuts down.
     emit sigTestingDone();
 }
 
