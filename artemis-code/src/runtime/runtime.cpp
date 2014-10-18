@@ -244,20 +244,6 @@ void Runtime::done()
 
     Statistics::statistics()->accumulate("WebKit::coverage::covered-unique", (int)mAppmodel->getCoverageListener()->getNumCoveredLines());
 
-    // solve the last PC - this is needed by some system tests
-    PathConditionPtr pc = PathCondition::createFromTrace(mWebkitExecutor->getTraceBuilder()->trace());
-
-    if (!pc.isNull() && mOptions.concolicNegateLastConstraint) {
-        pc->negateLastCondition();
-    }
-
-    SolverPtr solver = getSolver(mOptions);
-    SolutionPtr solution = solver->solve(
-                pc,
-                FormFieldRestrictedValues::getRestrictions(mLatestFormFields, mWebkitExecutor->getPage()));
-
-    solution->toStatistics();
-
     // Print final output
 
     if (mOptions.reportPathTrace == HTML_TRACES) {
@@ -288,14 +274,31 @@ void Runtime::done()
 
     }
 
+    // solve the last PC - this is needed by some system tests
+
+    if (mOptions.debugConcolic) {
+        PathConditionPtr pc = PathCondition::createFromTrace(mWebkitExecutor->getTraceBuilder()->trace());
+
+        if (!pc.isNull() && mOptions.concolicNegateLastConstraint) {
+            pc->negateLastCondition();
+        }
+
+        SolverPtr solver = getSolver(mOptions);
+        SolutionPtr solution = solver->solve(
+                    pc,
+                    FormFieldRestrictedValues::getRestrictions(mLatestFormFields, mWebkitExecutor->getPage()));
+
+        solution->toStatistics();
+
+        Log::info("\n=== Last pathconditions ===\n");
+        //Log::info(pc->toStatisticsValuesString(true));
+        Log::info(pc->toStatisticsString());
+        Log::info("=== Last pathconditions END ===\n\n");
+    }
+
     Log::info("\n=== Statistics ===\n");
     Statistics::statistics()->writeToStdOut();
     Log::info("\n=== Statistics END ===\n\n");
-
-    Log::info("\n=== Last pathconditions ===\n");
-    //Log::info(pc->toStatisticsValuesString(true));
-    Log::info(pc->toStatisticsString());
-    Log::info("=== Last pathconditions END ===\n\n");
 
     Log::info("Artemis terminated on: "+ QDateTime::currentDateTime().toString().toStdString());
 

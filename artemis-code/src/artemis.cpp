@@ -60,6 +60,8 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             "\n"
             "-e       : Negate the last solved PC printed to stdout (used for testing)\n"
             "\n"
+            "--debug-concolic: Run the concolic subsystem on the last iteration and output results.\n"
+            "\n"
             "--major-mode <mode>:\n"
             "           The major-mode specifies the top-level test algorithm used by Artemis.\n"
             "\n"
@@ -232,6 +234,7 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
     {"concolic-disable-features", required_argument, NULL, 'B'},
     {"strategy-event-generation", required_argument, NULL, 'C'},
     {"concolic-dfs-depth", required_argument, NULL, 'D'},
+    {"debug-concolic", no_argument, NULL, 'E'},
     {0, 0, 0, 0}
     };
 
@@ -347,6 +350,12 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
 
             options.concolicDfsDepthLimit = depth;
             options.concolicDfsRestartLimit = passes;
+
+            break;
+        }
+
+        case 'E': {
+            options.debugConcolic = true;
 
             break;
         }
