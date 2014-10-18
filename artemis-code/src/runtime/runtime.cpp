@@ -303,6 +303,7 @@ void Runtime::done()
     Log::info("Artemis terminated on: "+ QDateTime::currentDateTime().toString().toStdString());
 
     emit sigTestingDone();
+    std::exit(0);
 }
 
 SolverPtr Runtime::getSolver(const Options& options)
@@ -324,6 +325,7 @@ void Runtime::slAbortedExecution(QString reason)
 {
     cerr << reason.toStdString() << std::endl;
     emit sigTestingDone();
+    std::exit(1);
 }
 
 } /* namespace artemis */
