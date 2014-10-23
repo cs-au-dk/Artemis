@@ -123,7 +123,7 @@ void ConcolicRuntime::preConcreteExecution()
             Log::info(QString("Iteration %1:").arg(mNumIterations+1).toStdString());
         }
 
-        mFormFieldRestrictions = mFormFieldInitialRestritions; // Prevents noticing a change between the end of one execution and the start of the next.
+        mFormFieldRestrictions = mFormFieldInitialRestrictions; // Prevents noticing a change between the end of one execution and the start of the next.
     }
     Log::debug("--------------- COVERAGE ----------------\n");
     Log::debug(mAppmodel->getCoverageListener()->toString().toStdString());
@@ -319,7 +319,7 @@ void ConcolicRuntime::postInitialConcreteExecution(QSharedPointer<ExecutionResul
     // Find the form fields on the page and save them.
     mFormFields = permuteFormFields(result->getFormFields(), mOptions.concolicEventHandlerPermutation);
     mFormFieldRestrictions = FormFieldRestrictedValues::getRestrictions(mFormFields, mWebkitExecutor->getPage());
-    mFormFieldInitialRestritions = mFormFieldRestrictions;
+    mFormFieldInitialRestrictions = mFormFieldRestrictions;
 
     // Print the form fields found on the page.
     Log::debug("Form fields found:");
@@ -721,13 +721,13 @@ void ConcolicRuntime::exploreNextTarget(bool isRetry)
     }
 
     // TODO: Currently only select constraints are handled dynamically, so we need to merge them with the static radio button constraints.
-    FormRestrictions dynamicRestrictions = mergeDynamicSelectRestrictions(mFormFieldRestrictions, dynamicSelectConstraints);
+    FormRestrictions dynamicRestrictions = mergeDynamicSelectRestrictions(mFormFieldInitialRestrictions, dynamicSelectConstraints);
     // If these features have been disabled, then remove the restrictions.
     if (mDisabledFeatures.testFlag(SELECT_RESTRICTION_DYNAMIC)) {
-        if (dynamicRestrictions.first != mFormFieldInitialRestritions.first) {
+        if (dynamicRestrictions.first != mFormFieldInitialRestrictions.first) {
             Statistics::statistics()->accumulate("Concolic::Solver::SelectDynamicDomConstraintsIgnored", 1);
         }
-        dynamicRestrictions.first = mFormFieldInitialRestritions.first;
+        dynamicRestrictions.first = mFormFieldInitialRestrictions.first;
     }
     if (mDisabledFeatures.testFlag(SELECT_RESTRICTION)) {
         dynamicRestrictions.first.clear();
