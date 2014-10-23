@@ -125,7 +125,7 @@ protected:
 
     QList<FormFieldDescriptorConstPtr> mFormFields;
     FormRestrictions mFormFieldRestrictions;
-    FormRestrictions mFormFieldInitialRestritions;
+    FormRestrictions mFormFieldInitialRestrictions;
     QList<FormFieldDescriptorConstPtr> permuteFormFields(QList<FormFieldDescriptorConstPtr> fields, QString permutation);
     QList<int> mFormFieldPermutation;
 
