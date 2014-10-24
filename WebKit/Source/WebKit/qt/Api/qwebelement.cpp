@@ -825,7 +825,11 @@ QString QWebElement::xPath(){
 }
 
 bool QWebElement::isUserVisible(){
-    return (m_element != NULL && m_element->hasNonEmptyBoundingBox());
+    // this element is (approximative) visible by the user if
+    return (m_element != NULL && // it exist
+            (tagName().length() == 0 || // is the root element
+             parent().isNull() || // is the root element
+             m_element->hasNonEmptyBoundingBox())); // has a bounding box when rendered
 }
 
 int QWebElement::numberOfChildren(QString cssSelector){
