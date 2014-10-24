@@ -824,6 +824,10 @@ QString QWebElement::xPath(){
     return QString::fromStdString(m_element->getXPath());
 }
 
+bool QWebElement::isUserVisible(){
+    return (m_element != NULL && m_element->hasNonEmptyBoundingBox());
+}
+
 int QWebElement::numberOfChildren(QString cssSelector){
     QWebElementCollection elements = findAll(cssSelector);
     int counter = 0;

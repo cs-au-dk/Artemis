@@ -50,7 +50,9 @@ class ExecutionResultBuilder : public QObject
     Q_OBJECT
 
 public:
-    explicit ExecutionResultBuilder(ArtemisWebPagePtr page, ConcolicBenchmarkFeatures disabledFeatures);
+    explicit ExecutionResultBuilder(ArtemisWebPagePtr page,
+                                    ConcolicBenchmarkFeatures disabledFeatures,
+                                    bool enableEventVisibilityFiltering);
     
     void reset();
     void notifyPageLoaded();
@@ -72,6 +74,7 @@ private:
     QList<QPair<QWebElement*, QString> > mElementPointers;
 
     ConcolicBenchmarkFeatures mDisabledFeatures;
+    bool mEnableEventVisibilityFiltering;
 
 public slots:
     void slScriptCrashed(QString cause, intptr_t sourceID, int lineNumber);

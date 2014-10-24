@@ -110,6 +110,7 @@ Runtime::Runtime(QObject* parent, const Options& options, const QUrl& url)
                                          jqueryListener, ajaxRequestListner,
                                          enableConstantStringInstrumentation,
                                          enablePropertyAccessInstrumentation,
+                                         options.enableEventVisibilityFiltering,
                                          options.concolicDisabledFeatures);
 
     if(!options.customUserAgent.isEmpty()) {

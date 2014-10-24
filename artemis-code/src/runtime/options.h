@@ -109,7 +109,8 @@ typedef struct OptionsType {
         exportEventSequence(DONT_EXPORT),
         reportHeap(NO_CALLS),
         heapReportFactor(1),
-        concolicDisabledFeatures(0)
+        concolicDisabledFeatures(0),
+        enableEventVisibilityFiltering(false)
     {}
 
     QMap<QString, InjectionValue> presetFormfields;
@@ -161,6 +162,8 @@ typedef struct OptionsType {
     QString customUserAgent;
 
     ConcolicBenchmarkFeatures concolicDisabledFeatures;
+
+    bool enableEventVisibilityFiltering;
 
 } Options;
 
