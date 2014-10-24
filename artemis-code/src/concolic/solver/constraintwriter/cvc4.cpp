@@ -68,6 +68,15 @@ void CVC4ConstraintWriter::preVisitPathConditionsHook(QSet<QString> varsUsed)
     //mOutput << "(set-option :finite-model-find true)" << std::endl;
     mOutput << std::endl;
 
+    foreach (QString var, varsUsed) {
+        if (var.contains("SYM_IN_INT")) {
+            // a select index, I'm not happy about these name checks
+            // force positive numbers
+            recordAndEmitType(var.toStdString(), Symbolic::INT);
+            mOutput << "(assert (>= " << SMTConstraintWriter::encodeIdentifier(var.toStdString()) << " 0))" << std::endl;
+        }
+    }
+
     // Only write the form restrictions which relate to variables which are actually used in the PC.
     foreach(SelectRestriction sr, mFormRestrictions.first) {
         // TODO: Hack to guess the variable names, as in helperSelectRestriction().
