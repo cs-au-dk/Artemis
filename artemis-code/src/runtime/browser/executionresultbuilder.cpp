@@ -26,10 +26,13 @@
 namespace artemis
 {
 
-ExecutionResultBuilder::ExecutionResultBuilder(ArtemisWebPagePtr page, ConcolicBenchmarkFeatures disabledFeatures) :
-    QObject(NULL),
-    mPage(page),
-    mDisabledFeatures(disabledFeatures)
+ExecutionResultBuilder::ExecutionResultBuilder(ArtemisWebPagePtr page,
+                                               ConcolicBenchmarkFeatures disabledFeatures,
+                                               bool enableEventVisibilityFiltering)
+    : QObject(NULL)
+    , mPage(page)
+    , mDisabledFeatures(disabledFeatures)
+    , mEnableEventVisibilityFiltering(enableEventVisibilityFiltering)
 {
     reset();
 }
@@ -82,6 +85,18 @@ void ExecutionResultBuilder::registerEventHandlersIntoResult()
             continue;
         }
 
+        if (mEnableEventVisibilityFiltering && !p.first->isUserVisible()) {
+            Statistics::statistics()->accumulate("WebKit::events::skipped::visibility", 1);
+            qDebug() << "Skipping EVENTHANDLER event (not user visible) =" << p.second
+                     << "tag = " << p.first->tagName()
+                     << "id = " << p.first->attribute(QString("id"))
+                     << "title = " << p.first->attribute(QString("title"))
+                     << "class = " << p.first->attribute("class")
+                     << "visible = " << p.first->isUserVisible()
+                     << "xpath = " << p.first->xPath();
+            continue;
+        }
+
         if (p.first->isNull()) {
             qWarning() << "Got event handler with NULL element. Assuming document is reciever";
         }
@@ -93,6 +108,7 @@ void ExecutionResultBuilder::registerEventHandlersIntoResult()
         if (handler->isInvalid()) {
             qWarning() << "element was invalid, ignoring";
         } else {
+            Statistics::statistics()->accumulate("WebKit::events::added", 1);
             mResult->mEventHandlers.append(handler);
         }
     }
@@ -181,10 +197,12 @@ void ExecutionResultBuilder::slEventListenerAdded(QWebElement* elem, QString eve
     Q_CHECK_PTR(elem);
 
     qDebug() << "Detected EVENTHANDLER event =" << eventName
-             << "tag =" << elem->tagName()
-             << "id =" << elem->attribute(QString("id"))
-             << "title =" << elem->attribute(QString("title"))
-             << "class =" << elem->attribute("class");
+             << "tag = " << elem->tagName()
+             << "id = " << elem->attribute(QString("id"))
+             << "title = " << elem->attribute(QString("title"))
+             << "class = " << elem->attribute("class")
+             << "visible = " << elem->isUserVisible()
+             << "xpath = " << elem->xPath();
 
     if (isNonInteractive(eventName)) {
         return;
