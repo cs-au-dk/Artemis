@@ -48,14 +48,8 @@ public:
 
     PathConditionPtr getTargetPC();
     QSet<SelectRestriction> getTargetDomConstraints();
+    ExplorationDescriptor getTargetDescriptor();
 
-    bool overUnexploredNode();
-
-    void markExplorationIndex(uint index);
-
-    void markNodeUnsat();
-    void markNodeUnsolvable();
-    void markNodeMissed();
 
 public slots:
     void slNewTraceAdded(TraceNodePtr parent, int direction, TraceNodePtr suffix, TraceNodePtr fullTrace);

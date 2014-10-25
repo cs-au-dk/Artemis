@@ -234,7 +234,7 @@ void Runtime::done()
         pc->negateLastCondition();
     }
 
-    SolverPtr solver = getSolver(mOptions);
+    SolverPtr solver = Solver::getSolver(mOptions);
     SolutionPtr solution = solver->solve(
                 pc,
                 FormFieldRestrictedValues::getRestrictions(mLatestFormFields, mWebkitExecutor->getPage()));
@@ -286,21 +286,6 @@ void Runtime::done()
 
     // TODO, see next TODO
     emit sigTestingDone();
-}
-
-SolverPtr Runtime::getSolver(const Options& options)
-{
-    switch(options.solver) {
-    case Z3STR:
-        return Z3SolverPtr(new Z3Solver(mDisabledFeatures));
-    case KALUZA:
-        return KaluzaSolverPtr(new KaluzaSolver(mDisabledFeatures));
-    case CVC4:
-        return CVC4SolverPtr(new CVC4Solver(mDisabledFeatures));
-    default:
-        cerr << "Unknown solver selected" << std::endl;
-        exit(1);
-    }
 }
 
 void Runtime::slAbortedExecution(QString reason)

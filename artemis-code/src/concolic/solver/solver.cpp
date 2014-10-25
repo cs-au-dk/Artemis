@@ -16,6 +16,10 @@
 
 #include "solver.h"
 
+#include "z3solver.h"
+#include "kaluzasolver.h"
+#include "cvc4solver.h"
+
 namespace artemis
 {
 
@@ -23,5 +27,22 @@ Solver::Solver(ConcolicBenchmarkFeatures disabledFeatures)
     : mDisabledFeatures(disabledFeatures)
 {
 }
+
+
+QSharedPointer<Solver> Solver::getSolver(const Options& options)
+{
+    switch(options.solver) {
+    case Z3STR:
+        return Z3SolverPtr(new Z3Solver(options.concolicDisabledFeatures));
+    case KALUZA:
+        return KaluzaSolverPtr(new KaluzaSolver(options.concolicDisabledFeatures));
+    case CVC4:
+        return CVC4SolverPtr(new CVC4Solver(options.concolicDisabledFeatures));
+    default:
+        std::cerr << "Unknown solver selected" << std::endl;
+        exit(1);
+    }
+}
+
 
 } // namespace artemis

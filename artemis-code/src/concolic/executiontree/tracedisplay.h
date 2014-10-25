@@ -56,6 +56,7 @@ public:
     void visit(TraceUnexploredUnsat* node);
     void visit(TraceUnexploredUnsolvable* node);
     void visit(TraceUnexploredMissed* node);
+    void visit(TraceUnexploredQueued* node);
     void visit(TraceAlert* node);
     void visit(TraceDomModification* node);
     void visit(TracePageLoad* node);
@@ -70,12 +71,12 @@ protected:
     // These lists contain the declarations of nodes which are to be put at the beginning of the file.
     // They include the node labels and any node-specific formatting.
     // Each type (e.g. branches) becomes a subgraph in the result which are styled separately.
-    QList<QString> mHeaderBranches, mHeaderSymBranches, mHeaderUnexplored, mHeaderUnexploredUnsat, mHeaderUnexploredUnsolvable, mHeaderUnexploredMissed, mHeaderAlerts, mHeaderDomMods, mHeaderLoads, mHeaderFunctions, mHeaderEndUnk, mHeaderEndSucc, mHeaderEndFail, mHeaderAggregates;
+    QList<QString> mHeaderBranches, mHeaderSymBranches, mHeaderUnexplored, mHeaderUnexploredUnsat, mHeaderUnexploredUnsolvable, mHeaderUnexploredMissed, mHeaderUnexploredQueued, mHeaderAlerts, mHeaderDomMods, mHeaderLoads, mHeaderFunctions, mHeaderEndUnk, mHeaderEndSucc, mHeaderEndFail, mHeaderAggregates;
     QMultiMap<QString, QString> mHeaderMarkers;
 
     // These strings contain the arguments passed to the subgraphs representing each node type.
     // They hold the styling information for each node type.
-    QString mStyleBranches, mStyleSymBranches, mStyleUnexplored, mStyleUnexploredUnsat, mStyleUnexploredUnsolvable, mStyleUnexploredMissed, mStyleAlerts, mStyleDomMods, mStyleLoads, mStyleMarkers, mStyleFunctions, mStyleEndUnk, mStyleEndSucc, mStyleEndFail, mStyleAggregates;
+    QString mStyleBranches, mStyleSymBranches, mStyleUnexplored, mStyleUnexploredUnsat, mStyleUnexploredUnsolvable, mStyleUnexploredMissed, mStyleUnexploredQueued, mStyleAlerts, mStyleDomMods, mStyleLoads, mStyleMarkers, mStyleFunctions, mStyleEndUnk, mStyleEndSucc, mStyleEndFail, mStyleAggregates;
 
     // The edges to be added to the graph.
     QList<QString> mEdges;

@@ -33,6 +33,7 @@ class TraceUnexplored;
 class TraceUnexploredUnsat;
 class TraceUnexploredUnsolvable;
 class TraceUnexploredMissed;
+class TraceUnexploredQueued;
 class TraceAnnotation;
 class TraceAlert;
 class TraceDomModification;
@@ -78,6 +79,7 @@ public:
     virtual void visit(TraceUnexploredUnsat* node);
     virtual void visit(TraceUnexploredUnsolvable* node);
     virtual void visit(TraceUnexploredMissed* node);
+    virtual void visit(TraceUnexploredQueued* node);
     virtual void visit(TraceAnnotation* node);
     virtual void visit(TraceAlert* node);
     virtual void visit(TraceDomModification* node);
@@ -95,6 +97,7 @@ public:
     static bool isImmediatelyUnsat(QSharedPointer<TraceNode> trace);
     static bool isImmediatelyUnsolvable(QSharedPointer<TraceNode> trace);
     static bool isImmediatelyMissed(QSharedPointer<TraceNode> trace);
+    static bool isImmediatelyQueued(QSharedPointer<TraceNode> trace);
     static bool isImmediatelyNotAttempted(QSharedPointer<TraceNode> trace);
 
     virtual ~TraceVisitor(){}

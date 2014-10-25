@@ -23,7 +23,7 @@ namespace artemis
 {
 
 /**
- *  Used by RandomAccessSearch and the selectors system.
+ *  A pointer to a certain exploration target in the search tree.
  */
 struct ExplorationDescriptor {
     // The parent branch of the unexplored node.

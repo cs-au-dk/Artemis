@@ -58,6 +58,9 @@ public:
     // Retrieves the DOM constraints of any target node which was selected.
     QSet<SelectRestriction> getTargetDomConstraints();
 
+    // Returns a description of the target which can be looked up later.
+    ExplorationDescriptor getTargetDescriptor();
+
     // The depth limit for our DFS.
     void setDepthLimit(unsigned int depth);
     unsigned int getDepthLimit();
@@ -66,15 +69,6 @@ public:
     void restartSearch();
     bool deepenRestartAndChoose();
 
-    // Update the tree to include exploration index information for the current target.
-    void markExplorationIndex(uint index);
-
-    // When over an unexplored node, we may mark it as "attempted but failed to explore".
-    // This can be used in later "passes" of the search to avoid wasting time on unreachable nodes.
-    bool overUnexploredNode();
-    void markNodeUnsat();
-    void markNodeUnsolvable();
-    void markNodeMissed();
 
     // The visitor part which does the actual searching.
     void visit(TraceNode* node);            // Abstract nodes. An error if we reach this.
@@ -86,6 +80,7 @@ public:
     void visit(TraceUnexploredMissed* node);
     void visit(TraceUnexploredUnsat* node);
     void visit(TraceUnexploredUnsolvable* node);
+    void visit(TraceUnexploredQueued* node);
     void visit(TraceAnnotation* node);      // Ignore all other annotations.
     void visit(TraceEnd* node);             // Stop searching at *any* end node.
 
@@ -147,6 +142,10 @@ private:
     // Helper methods for the visitors.
     void continueFromLeaf();
     TraceNodePtr nextAfterLeaf();
+
+    // This is a hack used by getTargetDescriptor() and visit(TraceUnexplored)
+    ExplorationDescriptor getCurrentExplorationDescriptor(TraceSymbolicBranch* parent);
+    static void pointerDeleterNoOp(TraceSymbolicBranch* branch) {}
 };
 
 
