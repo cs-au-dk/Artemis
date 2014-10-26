@@ -26,10 +26,13 @@
 namespace artemis
 {
 
-ExecutionResultBuilder::ExecutionResultBuilder(ArtemisWebPagePtr page, ConcolicBenchmarkFeatures disabledFeatures) :
-    QObject(NULL),
-    mPage(page),
-    mDisabledFeatures(disabledFeatures)
+ExecutionResultBuilder::ExecutionResultBuilder(ArtemisWebPagePtr page,
+                                               ConcolicBenchmarkFeatures disabledFeatures,
+                                               bool enableEventVisibilityFiltering)
+    : QObject(NULL)
+    , mPage(page)
+    , mDisabledFeatures(disabledFeatures)
+    , mEnableEventVisibilityFiltering(enableEventVisibilityFiltering)
 {
     reset();
 }
@@ -78,7 +81,7 @@ void ExecutionResultBuilder::registerEventHandlersIntoResult()
     QPair<QWebElement*, QString> p;
     foreach(p, mElementPointers) {
         if (getType(p.second) == UNKNOWN_EVENT) {
-            qWarning() << "Ignoring unsupported event of type " << p.second;
+            qWarning() << "Ignoring unsupported event of type " << p.second << ", skipping";
             continue;
         }
 
@@ -91,10 +94,30 @@ void ExecutionResultBuilder::registerEventHandlersIntoResult()
         EventHandlerDescriptorConstPtr handler = EventHandlerDescriptorConstPtr(new EventHandlerDescriptor(p.first, p.second));
 
         if (handler->isInvalid()) {
-            qWarning() << "element was invalid, ignoring";
-        } else {
-            mResult->mEventHandlers.append(handler);
+            qWarning() << "element was invalid, skipping";
+            continue;
         }
+
+        // sometimes a handler is registered on a NULL element? and the descriptor infrastructure guesses a correct element to replace it
+        // check if that guess is visible
+        if (mEnableEventVisibilityFiltering) {
+            QWebElement actualSource = handler->getDomElement()->getElement(mPage);
+            if (actualSource.isUserVisible() == false) {
+                Statistics::statistics()->accumulate("WebKit::events::skipped::visibility", 1);
+                qDebug() << "Skipping EVENTHANDLER event (not user visible) =" << p.second
+                         << "tag = " << actualSource.tagName()
+                         << "id = " << actualSource.attribute(QString("id"))
+                         << "title = " << actualSource.attribute(QString("title"))
+                         << "class = " << actualSource.attribute("class")
+                         << "visible = " << actualSource.isUserVisible()
+                         << "xpath = " << actualSource.xPath();
+                continue;
+            }
+        }
+
+        Statistics::statistics()->accumulate("WebKit::events::added", 1);
+        mResult->mEventHandlers.append(handler);
+
     }
 
 }
@@ -181,10 +204,13 @@ void ExecutionResultBuilder::slEventListenerAdded(QWebElement* elem, QString eve
     Q_CHECK_PTR(elem);
 
     qDebug() << "Detected EVENTHANDLER event =" << eventName
-             << "tag =" << elem->tagName()
-             << "id =" << elem->attribute(QString("id"))
-             << "title =" << elem->attribute(QString("title"))
-             << "class =" << elem->attribute("class");
+             << "tag = " << elem->tagName()
+             << "id = " << elem->attribute(QString("id"))
+             << "title = " << elem->attribute(QString("title"))
+             << "class = " << elem->attribute("class")
+             << "visible = " << elem->isUserVisible()
+             << "xpath = " << elem->xPath()
+             << "isNull = " << elem->isNull();
 
     if (isNonInteractive(eventName)) {
         return;

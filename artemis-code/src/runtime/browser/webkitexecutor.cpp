@@ -30,6 +30,9 @@
 #include "strategies/inputgenerator/targets/jquerylistener.h"
 #include "util/loggingutil.h"
 #include "concolic/executiontree/tracebuilder.h"
+#include "concolic/pathcondition.h"
+
+#include "statistics/statsstorage.h"
 
 #include "webkitexecutor.h"
 
@@ -45,6 +48,7 @@ WebKitExecutor::WebKitExecutor(QObject* parent,
                                AjaxRequestListener* ajaxListener,
                                bool enableConstantStringInstrumentation,
                                bool enablePropertyAccessInstrumentation,
+                               bool enableEventVisibilityFiltering,
                                ConcolicBenchmarkFeatures disabledFeatures)
     : QObject(parent)
     , mNextOpCanceled(false), mKeepOpen(false)
@@ -65,7 +69,7 @@ WebKitExecutor::WebKitExecutor(QObject* parent,
     QObject::connect(mPage.data()->networkAccessManager(), SIGNAL(finished(QNetworkReply*)), this, SLOT(slNAMFinished(QNetworkReply*)));
     QObject::connect(mPage.data(), SIGNAL(loadProgress(int)),
                      this, SLOT(slLoadProgress(int)));
-    mResultBuilder = ExecutionResultBuilderPtr(new ExecutionResultBuilder(mPage, disabledFeatures));
+    mResultBuilder = ExecutionResultBuilderPtr(new ExecutionResultBuilder(mPage, disabledFeatures, enableEventVisibilityFiltering));
 
     mCoverageListener = appmodel->getCoverageListener();
     mJavascriptStatistics = appmodel->getJavascriptStatistics();
@@ -165,10 +169,12 @@ WebKitExecutor::WebKitExecutor(QObject* parent,
     // The event marker detector is created and connected in the concolic runtime.
 
     // The DOM modification "detector".
+    /* Disable for now, we are running out of memory on large pages
     QSharedPointer<TraceDomModDetector> domModDetector(new TraceDomModDetector());
     QObject::connect(mResultBuilder.data(), SIGNAL(sigDomModified(QString, QString)),
                      domModDetector.data(), SLOT(slDomModified(QString, QString)));
     mTraceBuilder->addDetector(domModDetector);
+    */
 
 
 }
@@ -299,6 +305,11 @@ void WebKitExecutor::slLoadFinished(bool ok)
 
     // End the trace recording.
     mTraceBuilder->endRecording();
+
+    PathConditionPtr pc = PathCondition::createFromTrace(mTraceBuilder->trace());
+    if (pc->size() > 0) {
+        Statistics::statistics()->accumulate("Concolic::sessions::hasPC", 1);
+    }
 
     // TODO: This was previously enclosed by if(!mKeepOpen). This means no post-load analysis can be done in demo mode. What are tyhe implications of changing this? Which other parts will depend on this?
     emit sigExecutedSequence(currentConf, result);

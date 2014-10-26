@@ -76,6 +76,7 @@ def test_generator(filename, name, test_dict=None, internal_test=None):
     def test(self):
         report = execute_artemis(name, "%s%s" % (FIXTURE_ROOT, filename),
                                  iterations=0,
+                                 debug_concolic=' ',
                                  major_mode='concolic',
                                  concolic_event_sequences='simple',
                                  #concolic_search_procedure='dfs-testing',

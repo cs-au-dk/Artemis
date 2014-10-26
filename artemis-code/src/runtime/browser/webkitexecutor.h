@@ -64,6 +64,7 @@ public:
                    AjaxRequestListener* ajaxListener,
                    bool enableConstantStringInstrumentation,
                    bool enablePropertyAccessInstrumentation,
+                   bool enableEventVisibilityFiltering,
                    ConcolicBenchmarkFeatures disabledFeatures);
     ~WebKitExecutor();
 

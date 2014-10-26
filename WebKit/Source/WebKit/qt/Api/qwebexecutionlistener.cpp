@@ -44,6 +44,7 @@
 #include "JavaScriptCore/bytecode/CodeBlock.h"
 #include "JavaScriptCore/bytecode/Opcode.h"
 #include "JavaScriptCore/interpreter/Interpreter.h"
+#include "WebCore/dom/Node.h"
 
 #include "qwebexecutionlistener.h"
 
@@ -60,11 +61,18 @@ QWebExecutionListener::QWebExecutionListener(QObject *parent)
 {
 }
 
-void QWebExecutionListener::eventAdded(WebCore::EventTarget * target, const char* type) {
+void QWebExecutionListener::eventAdded(WebCore::EventTarget* target, const char* type) {
     std::string typeString = std::string(type);
 
     if (target->toNode() != NULL) {
-        emit addedEventListener(new QWebElement(target->toNode()), QString(tr(typeString.c_str())));
+        WebCore::Node*  node = target->toNode();
+        if (node->isDocumentNode() || node->isElementNode()) {
+            // Notice! QWebElement will default to a NULL value if node is not an element node but a document node.
+            // We recover this case later by assuming null values refer to the target node.
+            emit addedEventListener(new QWebElement(node), QString(tr(typeString.c_str())));
+        } else {
+            qWarning() << QString::fromStdString("Event handler added to non-document and non-elmenet node. Ignored.");
+        }
 
     } else if (target->toDOMWindow() != NULL) {
         emit addedEventListener(new QWebElement(target->toDOMWindow()->frameElement()), QString(tr(typeString.c_str())));

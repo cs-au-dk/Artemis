@@ -38,6 +38,10 @@ public:
     QSharedPointer<const BaseInput> getLast() const;
     const QList<QSharedPointer<const BaseInput> > toList() const;
 
+    int length() const {
+        return mSequence.length();
+    }
+
     QString toString() const;
 
 private:

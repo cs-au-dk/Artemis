@@ -33,6 +33,8 @@
 #include "statistics/statsstorage.h"
 
 #include "strategies/inputgenerator/randominputgenerator.h"
+#include "strategies/inputgenerator/fasttrackinputgenerator.h"
+
 #include "strategies/inputgenerator/event/staticeventparametergenerator.h"
 #include "strategies/inputgenerator/form/staticforminputgenerator.h"
 #include "strategies/inputgenerator/form/constantstringforminputgenerator.h"
@@ -108,6 +110,7 @@ Runtime::Runtime(QObject* parent, const Options& options, const QUrl& url)
                                          jqueryListener, ajaxRequestListner,
                                          enableConstantStringInstrumentation,
                                          enablePropertyAccessInstrumentation,
+                                         options.enableEventVisibilityFiltering,
                                          options.concolicDisabledFeatures);
 
     if(!options.customUserAgent.isEmpty()) {
@@ -162,12 +165,27 @@ Runtime::Runtime(QObject* parent, const Options& options, const QUrl& url)
         assert(false);
     }
 
-    mInputgenerator = new RandomInputGenerator(this,
-                                               formInputGenerator,
-                                               QSharedPointer<StaticEventParameterGenerator>(new StaticEventParameterGenerator()),
-                                               mTargetGenerator,
-                                               mExecStat,
-                                               options.numberSameLength);
+    switch(options.eventGenerationStrategy) {
+
+    case EVENT_FASTTRACK:
+        mInputgenerator = new FasttrackInputGenerator(this,
+                                                      formInputGenerator,
+                                                      QSharedPointer<StaticEventParameterGenerator>(new StaticEventParameterGenerator()),
+                                                      mTargetGenerator,
+                                                      mExecStat);
+
+        break;
+
+    case EVENT_LEGACY:
+    default:
+        mInputgenerator = new RandomInputGenerator(this,
+                                                   formInputGenerator,
+                                                   QSharedPointer<StaticEventParameterGenerator>(new StaticEventParameterGenerator()),
+                                                   mTargetGenerator,
+                                                   mExecStat,
+                                                   options.numberSameLength);
+    }
+
     mTerminationStrategy = new NumberOfIterationsTermination(this, options.iterationLimit);
 
     switch (options.prioritizerStrategy) {
@@ -227,20 +245,6 @@ void Runtime::done()
 
     Statistics::statistics()->accumulate("WebKit::coverage::covered-unique", (int)mAppmodel->getCoverageListener()->getNumCoveredLines());
 
-    // solve the last PC - this is needed by some system tests
-    PathConditionPtr pc = PathCondition::createFromTrace(mWebkitExecutor->getTraceBuilder()->trace());
-
-    if (!pc.isNull() && mOptions.concolicNegateLastConstraint) {
-        pc->negateLastCondition();
-    }
-
-    SolverPtr solver = getSolver(mOptions);
-    SolutionPtr solution = solver->solve(
-                pc,
-                FormFieldRestrictedValues::getRestrictions(mLatestFormFields, mWebkitExecutor->getPage()));
-
-    solution->toStatistics();
-
     // Print final output
 
     if (mOptions.reportPathTrace == HTML_TRACES) {
@@ -271,21 +275,36 @@ void Runtime::done()
 
     }
 
+    // solve the last PC - this is needed by some system tests
+
+    if (mOptions.debugConcolic) {
+        PathConditionPtr pc = PathCondition::createFromTrace(mWebkitExecutor->getTraceBuilder()->trace());
+
+        if (!pc.isNull() && mOptions.concolicNegateLastConstraint) {
+            pc->negateLastCondition();
+        }
+
+        SolverPtr solver = getSolver(mOptions);
+        SolutionPtr solution = solver->solve(
+                    pc,
+                    FormFieldRestrictedValues::getRestrictions(mLatestFormFields, mWebkitExecutor->getPage()));
+
+        solution->toStatistics();
+
+        Log::info("\n=== Last pathconditions ===\n");
+        //Log::info(pc->toStatisticsValuesString(true));
+        Log::info(pc->toStatisticsString());
+        Log::info("=== Last pathconditions END ===\n\n");
+    }
+
     Log::info("\n=== Statistics ===\n");
     Statistics::statistics()->writeToStdOut();
     Log::info("\n=== Statistics END ===\n\n");
 
-    Log::info("\n=== Last pathconditions ===\n");
-    //Log::info(pc->toStatisticsValuesString(true));
-    Log::info(pc->toStatisticsString());
-    Log::info("=== Last pathconditions END ===\n\n");
-
     Log::info("Artemis terminated on: "+ QDateTime::currentDateTime().toString().toStdString());
 
-    exit(0);
-
-    // TODO, see next TODO
     emit sigTestingDone();
+    std::exit(0);
 }
 
 SolverPtr Runtime::getSolver(const Options& options)
@@ -306,10 +325,8 @@ SolverPtr Runtime::getSolver(const Options& options)
 void Runtime::slAbortedExecution(QString reason)
 {
     cerr << reason.toStdString() << std::endl;
-    exit(1);
-
-    // TODO we should use this emit, but we have some race conditions happening when Artemis shuts down.
     emit sigTestingDone();
+    std::exit(1);
 }
 
 } /* namespace artemis */

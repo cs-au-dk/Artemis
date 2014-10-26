@@ -39,6 +39,10 @@ enum TargetStrategies {
     TARGET_JQUERY, TARGET_LEGACY, TARGET_CONCOLIC
 };
 
+enum EventGenerationStrategies {
+    EVENT_LEGACY, EVENT_FASTTRACK
+};
+
 enum CoverageReport {
     STDOUT, HTML, NONE
 };
@@ -85,6 +89,7 @@ typedef struct OptionsType {
         numberSameLength(1),
         disableStateCheck(true),
         concolicNegateLastConstraint(false),
+        eventGenerationStrategy(EVENT_LEGACY),
         formInputGenerationStrategy(Random),
         prioritizerStrategy(CONSTANT),
         targetStrategy(TARGET_LEGACY),
@@ -104,7 +109,9 @@ typedef struct OptionsType {
         exportEventSequence(DONT_EXPORT),
         reportHeap(NO_CALLS),
         heapReportFactor(1),
-        concolicDisabledFeatures(0)
+        concolicDisabledFeatures(0),
+        debugConcolic(false),
+        enableEventVisibilityFiltering(false)
     {}
 
     QMap<QString, InjectionValue> presetFormfields;
@@ -119,6 +126,8 @@ typedef struct OptionsType {
     bool concolicNegateLastConstraint;
 
     QString useProxy;
+
+    EventGenerationStrategies eventGenerationStrategy;
 
     FormInputGenerationStrategies formInputGenerationStrategy;
     PrioritizerStrategies prioritizerStrategy;
@@ -154,6 +163,9 @@ typedef struct OptionsType {
     QString customUserAgent;
 
     ConcolicBenchmarkFeatures concolicDisabledFeatures;
+
+    bool debugConcolic;
+    bool enableEventVisibilityFiltering;
 
 } Options;
 

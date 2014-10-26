@@ -65,6 +65,7 @@ def test_generator(test_name, test_filename):
 
         report = execute_artemis(test_name, "%s/%s" % (FIXTURE_ROOT, test_filename), 
                                  iterations=2,
+                                 debug_concolic=' ',
                                  boolean_fields=["#booleaninput=true", "#radio1b=true", "#radio1a=false", "#radio1c=false"],
                                  string_fields=["#testinputselectintlz=00", "#testinputselectint=0", "#testinputx=1", "#testinputy=2", "#testinputNameId=1", "#testinputId=1", "#testinputfoo=foo", "#testinputbar=bar", "#selectinput=Select1", "#testinputselect=volvo"],
                                  verbose=True)
@@ -92,6 +93,7 @@ def test_generator(test_name, test_filename):
             
         report = execute_artemis(test_name, "%s/%s" % (FIXTURE_ROOT, test_filename),
                                  iterations=2,       
+                                 debug_concolic=' ',
                                  boolean_fields=boolean_fields,
                                  string_fields=string_fields,
                                  integer_fields=integer_fields,
@@ -113,7 +115,8 @@ def test_generator(test_name, test_filename):
         string_fields, boolean_fields, integer_fields = _fetch_and_inject(fields, report)
 
         report = execute_artemis(test_name, "%s/%s" % (FIXTURE_ROOT, test_filename),
-                             iterations=2,              
+                             iterations=2,          
+                             debug_concolic=' ',    
                              boolean_fields=boolean_fields,
                              string_fields=string_fields,
                              integer_fields=integer_fields,

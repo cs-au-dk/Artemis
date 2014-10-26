@@ -167,6 +167,7 @@ class FeatureSwitchTests(unittest.TestCase):
         report = execute_artemis('test_cvc4_feature_switch',
                                  '%sfeature-switches/cvc4-coercion-opt.html' % FIXTURE_ROOT,
                                  iterations=0,
+                                 debug_concolic=' ',
                                  major_mode='concolic',
                                  concolic_event_sequences='simple',
                                  verbose=False)
@@ -436,6 +437,7 @@ class TargetSolverNoInjection(unittest.TestCase):
         report = execute_artemis('test_%s' % name,
                                  '%s/event-delegation/%s/index.html' % (FIXTURE_ROOT, name),
                                  iterations=2,
+                                 debug_concolic=' ',
                                  verbose=False)
 
 	assert report.get('Concolic::Solver::ErrorsReadingSolution', 0) == 0, \

@@ -140,7 +140,8 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/strategies/inputgenerator/targets/jquerytargetgenerator.h \
     src/strategies/inputgenerator/targets/legacytargetgenerator.h \
     src/strategies/inputgenerator/targets/concolictargetgenerator.h \
-    src/strategies/inputgenerator/targets/concolictarget.h
+    src/strategies/inputgenerator/targets/concolictarget.h \
+    src/strategies/inputgenerator/fasttrackinputgenerator.h
 
 SOURCES += src/runtime/input/ajaxinput.cpp \
     src/strategies/prioritizer/constantprioritizer.cpp \
@@ -254,6 +255,7 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/strategies/inputgenerator/targets/jquerytargetgenerator.cpp \
     src/strategies/inputgenerator/targets/legacytargetgenerator.cpp \
     src/strategies/inputgenerator/targets/concolictargetgenerator.cpp \
-    src/strategies/inputgenerator/targets/concolictarget.cpp
+    src/strategies/inputgenerator/targets/concolictarget.cpp \
+    src/strategies/inputgenerator/fasttrackinputgenerator.cpp
 
 QT += network
