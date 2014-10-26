@@ -1,0 +1,6 @@
+Site,URL,EntryPoint
+airtran,http://localhost:8080/2014-08-21/airtran/,//*[@id="SkySales"]/table/tbody/tr[9]/td[2]/span/span/a
+cheapflights,http://localhost:8080/2014-08-21/cheapflights/,//*[@id="hybridSearch"]/div[1]/span
+frontierairlines,http://localhost:8080/2014-08-21/frontierairlines/,//*[@id="btnFindMyFlight"]
+goair,http://localhost:8080/2014-08-21/goair/,//*[@id="img1"]
+priceline,http://localhost:8080/2014-08-21/priceline/,//*[@id="air-submit-btn"]
