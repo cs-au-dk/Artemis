@@ -62,6 +62,7 @@
 
 #ifdef ARTEMIS
 #include "interpreter/Interpreter.h"
+#include "WebCore/dom/Element.h"
 
 #endif
 
@@ -827,8 +828,9 @@ QString QWebElement::xPath(){
 bool QWebElement::isUserVisible(){
     // this element is (approximative) visible by the user if
     return (m_element != NULL && // it exist
-            (tagName().length() == 0 || // is the root element
-             parent().isNull() || // is the root element
+            (tagName().length() == 0 || // root element
+             tagName().compare(QString::fromStdString("BODY")) == 0 || // body is always visible! (but has no bounding box for some reason)
+             parent().isNull() || // root element
              m_element->hasNonEmptyBoundingBox())); // has a bounding box when rendered
 }
 

@@ -144,7 +144,7 @@ def execute_artemis(execution_uuid, url, iterations=1,
     cmd = timeout + [ARTEMIS_EXEC] + [url] + args
 
     if dryrun or verbose:
-        print ' '.join(cmd)
+        print(' '.join(cmd))
 
     if dryrun:
         return

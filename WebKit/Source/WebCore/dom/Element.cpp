@@ -73,6 +73,7 @@
 #include "htmlediting.h"
 #include <wtf/text/CString.h>
 #include <sstream>
+#include <iostream>
 
 #if ENABLE(SVG)
 #include "SVGElement.h"
