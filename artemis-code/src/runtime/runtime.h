@@ -54,8 +54,6 @@ public:
 protected:
     virtual void done();
 
-    SolverPtr getSolver(const Options& options);
-
     AppModelPtr mAppmodel;
     WebKitExecutor* mWebkitExecutor;
     set<long> mVisitedStates;

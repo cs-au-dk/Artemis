@@ -22,6 +22,7 @@
 #include "concolic/pathcondition.h"
 #include "runtime/input/forms/formfieldrestrictedvalues.h"
 #include "concolic/benchmarking.h"
+#include "runtime/options.h"
 
 #include "solution.h"
 
@@ -42,6 +43,8 @@ public:
     virtual SolutionPtr solve(PathConditionPtr pc, FormRestrictions formRestrictions) = 0;
 
     virtual QString getLastConstraintID() { return ""; }
+
+    static QSharedPointer<Solver> getSolver(const Options& options);
 
 protected:
     // Benchmarking

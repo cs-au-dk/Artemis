@@ -125,87 +125,10 @@ QSet<SelectRestriction> RandomAccessSearch::getTargetDomConstraints()
     return mTargetDomConstraints;
 }
 
-bool RandomAccessSearch::overUnexploredNode()
+ExplorationDescriptor RandomAccessSearch::getTargetDescriptor()
 {
-    // Only call after a successful call to chooseNextTarget().
-    assert(!mTarget.branch.isNull());
-
-    // Use mTarget to check if we explored the correct area.
-    if (mTarget.branchDirection) {
-        return isImmediatelyNotAttempted(mTarget.branch->getTrueBranch());
-    } else {
-        return isImmediatelyNotAttempted(mTarget.branch->getFalseBranch());
-    }
+    return mTarget;
 }
-
-void RandomAccessSearch::markExplorationIndex(uint index)
-{
-    // Only call after a successful call to chooseNextTarget().
-    assert(!mTarget.branch.isNull());
-
-    if (mTarget.branchDirection) {
-        mTarget.branch->markExploration(index, true);
-    } else {
-        mTarget.branch->markExploration(index, false);
-    }
-}
-
-void RandomAccessSearch::markNodeUnsat()
-{
-    // Only call after a successful call to chooseNextTarget().
-    assert(!mTarget.branch.isNull());
-
-    // Assuming overUnexploredNode(), mark this target as UNSAT.
-    if (mTarget.branchDirection) {
-        assert(isImmediatelyNotAttempted(mTarget.branch->getTrueBranch()));
-        mTarget.branch->setTrueBranch(TraceUnexploredUnsat::getInstance());
-    } else {
-        assert(isImmediatelyNotAttempted(mTarget.branch->getFalseBranch()));
-        mTarget.branch->setFalseBranch(TraceUnexploredUnsat::getInstance());
-    }
-
-    // Notify the selector
-    mSelector->newUnsat(mTarget);
-}
-
-void RandomAccessSearch::markNodeUnsolvable()
-{
-    // Only call after a successful call to chooseNextTarget().
-    assert(!mTarget.branch.isNull());
-
-    // Assuming overUnexploredNode(), mark this target as Unsolvable.
-    if (mTarget.branchDirection) {
-        assert(isImmediatelyNotAttempted(mTarget.branch->getTrueBranch()));
-        mTarget.branch->setTrueBranch(TraceUnexploredUnsolvable::getInstance());
-    } else {
-        assert(isImmediatelyNotAttempted(mTarget.branch->getFalseBranch()));
-        mTarget.branch->setFalseBranch(TraceUnexploredUnsolvable::getInstance());
-    }
-
-    // Notify the selector
-    mSelector->newUnsolvable(mTarget);
-}
-
-void RandomAccessSearch::markNodeMissed()
-{
-    // Only call after a successful call to chooseNextTarget().
-    assert(!mTarget.branch.isNull());
-
-    // Assuming overUnexploredNode(), mark this target as Missed.
-    if (mTarget.branchDirection) {
-        assert(isImmediatelyNotAttempted(mTarget.branch->getTrueBranch()));
-        mTarget.branch->setTrueBranch(TraceUnexploredMissed::getInstance());
-    } else {
-        assert(isImmediatelyNotAttempted(mTarget.branch->getFalseBranch()));
-        mTarget.branch->setFalseBranch(TraceUnexploredMissed::getInstance());
-    }
-
-    // Notify the selector
-    mSelector->newMissed(mTarget);
-}
-
-
-
 
 
 // Analyse the tree and set the following:

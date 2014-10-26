@@ -62,6 +62,7 @@ void TraceStatistics::processTrace(TraceNodePtr trace)
     mNumUnexploredUnsat = 0;
     mNumUnexploredMissed = 0;
     mNumUnexploredUnsolvable = 0;
+    mNumUnexploredQueued = 0;
 
     // Run the visitor
     trace->accept(this);
@@ -236,6 +237,12 @@ void TraceStatistics::visit(TraceUnexploredUnsolvable *node)
 {
     mNumNodes++;
     mNumUnexploredUnsolvable++;
+}
+
+void TraceStatistics::visit(TraceUnexploredQueued *node)
+{
+    mNumNodes++;
+    mNumUnexploredQueued++;
 }
 
 

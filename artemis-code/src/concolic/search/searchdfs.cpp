@@ -15,8 +15,11 @@
  */
 
 #include "searchdfs.h"
-#include "util/loggingutil.h"
+
 #include <assert.h>
+
+#include "util/loggingutil.h"
+#include "concolic/executiontree/treemanager.h"
 
 namespace artemis
 {
@@ -122,6 +125,21 @@ QSet<SelectRestriction> DepthFirstSearch::getTargetDomConstraints()
     return mCurrentDomConstraints;
 }
 
+ExplorationDescriptor DepthFirstSearch::getTargetDescriptor()
+{
+    // This method can only be called once we have started a search.
+    assert(mIsPreviousRun);
+
+    // To generate an ExplorationDescriptor, we need to know the parent symbolic branch.
+    // However we know that mPreviousParent must be a pointer to a TraceSymbolicBranch instance at the time when this
+    // method is called. It can only be TraceConcreteBranch during the intermediate part of the search.
+
+    TraceSymbolicBranch* parent = dynamic_cast<TraceSymbolicBranch*>(mPreviousParent);
+    assert(parent); // N.B. This assertion could fail with certain impossible-to-generate tree structures, where a concrete branch is not immediately unexplored but also does not lead to a symbolic branch before being unexplored (i.e. a partial trace under a concrete branch).
+
+    return getCurrentExplorationDescriptor(parent);
+}
+
 void DepthFirstSearch::setDepthLimit(unsigned int depth)
 {
     mDepthLimit = depth;
@@ -160,26 +178,6 @@ bool DepthFirstSearch::deepenRestartAndChoose()
     }
 }
 
-// Look up the parent branch (and direction) of the current target and mark it.
-void DepthFirstSearch::markExplorationIndex(uint index)
-{
-    // This method can only be called once we have started a search.
-    assert(mIsPreviousRun);
-
-    // This only works on symbolic branches. But mPreviousParent should be symbolic anyway, if we are over an unexplored node.
-    TraceSymbolicBranch* parent = dynamic_cast<TraceSymbolicBranch*>(mPreviousParent);
-    if(parent == NULL) {
-        Log::debug("WARNING: Marking exploration index on concrete branch.");
-        return;
-    }
-
-    if(mPreviousDirection){
-        parent->markExploration(index, true);
-    }else{
-        parent->markExploration(index, false);
-    }
-
-}
 
 
 
@@ -273,10 +271,11 @@ void DepthFirstSearch::visit(TraceMarker *node)
 void DepthFirstSearch::visit(TraceUnexplored *node)
 {
     // If this is a direct child of a difficult branch, we should skip it without attempting to solve.
+    // This is NOT just an optimisation. The search should not return the direct children of difficult branches.
     TraceSymbolicBranch* parent = dynamic_cast<TraceSymbolicBranch*>(mPreviousParent);
 
     if (parent && parent->isDifficult()) {
-        markNodeUnsolvable();
+        TreeManager::markNodeUnsolvable(getCurrentExplorationDescriptor(parent));
         continueFromLeaf();
         return;
     }
@@ -301,6 +300,12 @@ void DepthFirstSearch::visit(TraceUnexploredUnsat *node)
 void DepthFirstSearch::visit(TraceUnexploredUnsolvable *node)
 {
     // For now we will not re-try the same path again (as we don't have any way to generate a different injection).
+    continueFromLeaf();
+}
+
+void DepthFirstSearch::visit(TraceUnexploredQueued *node)
+{
+    // Already marked for exploration, so skip.
     continueFromLeaf();
 }
 
@@ -383,78 +388,30 @@ TraceNodePtr DepthFirstSearch::nextAfterLeaf()
 
 
 
-/*
- *  The functions which deal with marking certain nodes as Unsat, Unsolvable, or Missed.
- *  We do this by replacing the current TraceUnexplored with the relevant marker class.
- */
-
-
-bool DepthFirstSearch::overUnexploredNode()
+ExplorationDescriptor DepthFirstSearch::getCurrentExplorationDescriptor(TraceSymbolicBranch* parent)
 {
-    // This method can only be called once we have started a search.
-    assert(mIsPreviousRun);
+    // This is a complete hack becuase DepthFirstSearch predates any support for ExplorationDescriptor.
 
-    // Use mPreviousParent and mPreviousDirection to find the "current" node again, as in chooseNextTarget().
-    TraceNodePtr current;
-    if(mPreviousDirection){
-        current = mPreviousParent->getTrueBranch();
-    }else{
-        current = mPreviousParent->getFalseBranch();
-    }
+    // We need to get a QSharedPointer to the parent symbolic branch, but only have mPreviousParent, which is a
+    // ponter to TraceBranch. This method must be passed a valid SYMBOLIC parent pointer.
+    assert(parent);
 
-    return isImmediatelyUnexplored(current);
+    // We cannot allow the QSharedPointer to delete parts of the tree when it goes out of scope, so we provide a custom
+    // Deleter method to the constructor which is called to delete the pointer when the shared pointer is destroyed.
+    // By setting this Deleter to a no-op, we can "leak" the pointer which is intentional, as it is already handled by
+    // a different shared pointer in the tree.
+    // The pointer MUST NOT be preserved longer than the tree, or it will cause parts of the tree to be kept in memory
+    // and leaked when the pointer goes out of scope. It is like a raw pointer really.
+    TraceSymbolicBranchPtr parentSmartPointer = TraceSymbolicBranchPtr(parent, pointerDeleterNoOp);
+
+    ExplorationDescriptor desc;
+    desc.branch = parentSmartPointer;
+    desc.branchDirection = mPreviousDirection;
+    desc.symbolicDepth = mCurrentDepth;
+    return desc;
 }
 
-void DepthFirstSearch::markNodeUnsat()
-{
-    // This method can only be called once we have started a search.
-    assert(mIsPreviousRun);
 
-    // Replace the current node with TraceNodeUnsat.
-    if(mPreviousDirection){
-        // Replace the true branch of mPreviousParent.
-        assert(isImmediatelyUnexplored(mPreviousParent->getTrueBranch()));
-        mPreviousParent->setTrueBranch(TraceUnexploredUnsat::getInstance());
-    }else{
-        // Replace the false branch of mPreviousParent.
-        assert(isImmediatelyUnexplored(mPreviousParent->getFalseBranch()));
-        mPreviousParent->setFalseBranch(TraceUnexploredUnsat::getInstance());
-    }
-}
-
-void DepthFirstSearch::markNodeUnsolvable()
-{
-    // This method can only be called once we have started a search.
-    assert(mIsPreviousRun);
-
-    // Replace the current node with TraceUnexploredUnsolvable.
-    if(mPreviousDirection){
-        // Replace the true branch of mPreviousParent.
-        assert(isImmediatelyUnexplored(mPreviousParent->getTrueBranch()));
-        mPreviousParent->setTrueBranch(TraceUnexploredUnsolvable::getInstance());
-    }else{
-        // Replace the false branch of mPreviousParent.
-        assert(isImmediatelyUnexplored(mPreviousParent->getFalseBranch()));
-        mPreviousParent->setFalseBranch(TraceUnexploredUnsolvable::getInstance());
-    }
-}
-
-void DepthFirstSearch::markNodeMissed()
-{
-    // This method can only be called once we have started a search.
-    assert(mIsPreviousRun);
-
-    // Replace the current node with TraceUnexploredMissed.
-    if(mPreviousDirection){
-        // Replace the true branch of mPreviousParent.
-        assert(isImmediatelyUnexplored(mPreviousParent->getTrueBranch()));
-        mPreviousParent->setTrueBranch(TraceUnexploredMissed::getInstance());
-    }else{
-        // Replace the false branch of mPreviousParent.
-        assert(isImmediatelyUnexplored(mPreviousParent->getFalseBranch()));
-        mPreviousParent->setFalseBranch(TraceUnexploredMissed::getInstance());
-    }
-}
 
 
 

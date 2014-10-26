@@ -141,7 +141,10 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/strategies/inputgenerator/targets/legacytargetgenerator.h \
     src/strategies/inputgenerator/targets/concolictargetgenerator.h \
     src/strategies/inputgenerator/targets/concolictarget.h \
-    src/strategies/inputgenerator/fasttrackinputgenerator.h
+    src/strategies/inputgenerator/fasttrackinputgenerator.h \
+    src/concolic/concolicanalysis.h \
+    src/concolic/executiontree/treemanager.h \
+    src/concolic/executiontree/nodes/traceunexploredqueued.h
 
 SOURCES += src/runtime/input/ajaxinput.cpp \
     src/strategies/prioritizer/constantprioritizer.cpp \
@@ -256,6 +259,9 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/strategies/inputgenerator/targets/legacytargetgenerator.cpp \
     src/strategies/inputgenerator/targets/concolictargetgenerator.cpp \
     src/strategies/inputgenerator/targets/concolictarget.cpp \
-    src/strategies/inputgenerator/fasttrackinputgenerator.cpp
+    src/strategies/inputgenerator/fasttrackinputgenerator.cpp \
+    src/concolic/concolicanalysis.cpp \
+    src/concolic/executiontree/treemanager.cpp \
+    src/concolic/executiontree/nodes/traceunexploredqueued.cpp
 
 QT += network

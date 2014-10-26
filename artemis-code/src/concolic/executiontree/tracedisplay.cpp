@@ -48,6 +48,7 @@ TraceDisplay::TraceDisplay(bool linkToCoverage)
     mStyleUnexploredUnsat = "[label = \"UNSAT\", shape = ellipse, style = filled, fillcolor = blueviolet]";
     mStyleUnexploredUnsolvable = "[label = \"Could not solve\", shape = ellipse, style = filled, fillcolor = hotpink]";
     mStyleUnexploredMissed = "[label = \"Missed\", shape = ellipse, style = filled, fillcolor = chocolate]";
+    mStyleUnexploredQueued = "[label = \"Queued\", shape = ellipse, style = filled, fillcolor = white]";
     mStyleAlerts = "[shape = rectangle, style = filled, fillcolor = khaki]";
     mStyleDomMods = "[shape = rectangle, style = filled, fillcolor = peachpuff]";
     mStyleLoads = "[shape = rectangle, style = filled, fillcolor = honeydew]";
@@ -111,6 +112,12 @@ QString TraceDisplay::makeGraph(TraceNodePtr tree)
 
     result += indent + "subgraph unexplored_missed {\n" + indent + indent + "node " + mStyleUnexploredMissed + ";\n\n";
     foreach(QString node, mHeaderUnexploredMissed){
+        result += indent + indent + node + ";\n";
+    }
+    result += indent + "}\n\n";
+
+    result += indent + "subgraph unexplored_queued {\n" + indent + indent + "node " + mStyleUnexploredQueued + ";\n\n";
+    foreach(QString node, mHeaderUnexploredQueued){
         result += indent + indent + node + ";\n";
     }
     result += indent + "}\n\n";
@@ -369,6 +376,16 @@ void TraceDisplay::visit(TraceUnexploredMissed *node)
     addInEdge(name);
 }
 
+void TraceDisplay::visit(TraceUnexploredQueued *node)
+{
+    QString name = QString("unexp_queued_%1").arg(mNodeCounter);
+    mNodeCounter++;
+
+    mHeaderUnexploredQueued.append(name);
+
+    addInEdge(name);
+}
+
 
 void TraceDisplay::visit(TraceAlert *node)
 {
@@ -588,6 +605,7 @@ void TraceDisplay::clearData()
     mHeaderUnexploredUnsat.clear();
     mHeaderUnexploredUnsolvable.clear();
     mHeaderUnexploredMissed.clear();
+    mHeaderUnexploredQueued.clear();
     mHeaderAlerts.clear();
     mHeaderDomMods.clear();
     mHeaderLoads.clear();

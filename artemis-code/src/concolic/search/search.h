@@ -16,6 +16,7 @@
 
 #include "concolic/executiontree/tracenodes.h"
 #include "concolic/pathcondition.h"
+#include "concolic/search/explorationdescriptor.h"
 
 #ifndef SEARCH_H
 #define SEARCH_H
@@ -46,17 +47,8 @@ public:
     // Returns the target's DOM constraints after a call to chooseNextTarget() returns true.
     virtual QSet<SelectRestriction> getTargetDomConstraints() = 0;
 
-    // Check if the node selected for exploration by a call to chooseNextTarget() is still unexplored.
-    // This is used after a new trace has been merged into the tree to check if it explored the desired path.
-    virtual bool overUnexploredNode() = 0;
-
-    // Update the tree to include exploration index information for the current target.
-    virtual void markExplorationIndex(uint index) = 0;
-
-    // When a selected node is not explored, it can be marked as "attempted but failed to explore".
-    virtual void markNodeUnsat() = 0;
-    virtual void markNodeUnsolvable() = 0;
-    virtual void markNodeMissed() = 0;
+    // Returns a description of the target which can be looked up later.
+    virtual ExplorationDescriptor getTargetDescriptor() = 0;
 
 };
 

@@ -26,6 +26,7 @@ void TraceVisitor::visit(TraceUnexplored* node)         { visit(static_cast<Trac
 void TraceVisitor::visit(TraceUnexploredUnsat *node)    { visit(static_cast<TraceUnexplored*>(node)); }
 void TraceVisitor::visit(TraceUnexploredUnsolvable *node){visit(static_cast<TraceUnexplored*>(node)); }
 void TraceVisitor::visit(TraceUnexploredMissed *node)   { visit(static_cast<TraceUnexplored*>(node)); }
+void TraceVisitor::visit(TraceUnexploredQueued *node)   { visit(static_cast<TraceUnexplored*>(node)); }
 
 void TraceVisitor::visit(TraceBranch* node)             { visit(static_cast<TraceNode*>(node)); }
 void TraceVisitor::visit(TraceConcreteBranch* node)     { visit(static_cast<TraceBranch*>(node)); }
@@ -47,7 +48,7 @@ void TraceVisitor::visit(TraceEndUnknown* node)         { visit(static_cast<Trac
 
 
 
-// These helper methods can be useful fo concrete visitors.
+// These helper methods can be useful for concrete visitors.
 
 // Checks if a given sub-trace is simply a single TraceUnexplored node.
 // Useful for checking the branch conditions in visitors which work on straight-line traces.
@@ -71,12 +72,18 @@ bool TraceVisitor::isImmediatelyMissed(QSharedPointer<TraceNode> trace)
     return !trace.dynamicCast<TraceUnexploredMissed>().isNull();
 }
 
+bool TraceVisitor::isImmediatelyQueued(QSharedPointer<TraceNode> trace)
+{
+    return !trace.dynamicCast<TraceUnexploredQueued>().isNull();
+}
+
 bool TraceVisitor::isImmediatelyNotAttempted(QSharedPointer<TraceNode> trace)
 {
     return isImmediatelyUnexplored(trace) &&
             !isImmediatelyUnsat(trace) &&
             !isImmediatelyUnsolvable(trace) &&
-            !isImmediatelyMissed(trace);
+            !isImmediatelyMissed(trace) &&
+            !isImmediatelyQueued(trace);
 }
 
 

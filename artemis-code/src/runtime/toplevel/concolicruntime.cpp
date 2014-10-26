@@ -19,17 +19,8 @@
 
 #include "util/loggingutil.h"
 #include "util/fileutil.h"
-#include "concolic/executiontree/tracenodes.h"
 #include "concolic/traceeventdetectors.h"
-#include "concolic/solver/cvc4solver.h"
 #include "statistics/statsstorage.h"
-
-#include "concolic/search/searchdfs.h"
-#include "concolic/search/randomaccesssearch.h"
-#include "concolic/search/avoidunsatselector.h"
-#include "concolic/search/dfsselector.h"
-#include "concolic/search/randomisedselector.h"
-#include "concolic/search/roundrobinselector.h"
 
 #include "concolicruntime.h"
 
@@ -39,11 +30,11 @@ namespace artemis
 
 ConcolicRuntime::ConcolicRuntime(QObject* parent, const Options& options, const QUrl& url)
     : Runtime(parent, options, url)
+    , mConcolicAnalysis(new ConcolicAnalysis(options, ConcolicAnalysis::CONCOLIC_RUNTIME))
     , mTraceDisplay(options.outputCoverage != NONE)
     , mTraceDisplayOverview(options.outputCoverage != NONE)
     , mHandlerTracker(options.concolicEventHandlerReport)
     , mNumIterations(0)
-    , mExplorationIndex(1)
 {
     QObject::connect(mWebkitExecutor, SIGNAL(sigExecutedSequence(ExecutableConfigurationConstPtr, QSharedPointer<ExecutionResult>)),
                      this, SLOT(postConcreteExecution(ExecutableConfigurationConstPtr, QSharedPointer<ExecutionResult>)));
@@ -68,6 +59,10 @@ ConcolicRuntime::ConcolicRuntime(QObject* parent, const Options& options, const 
 
     QObject::connect(QWebExecutionListener::getListener(), SIGNAL(sigJavascriptSymbolicFieldRead(QString, bool)),
                      &mHandlerTracker, SLOT(slJavascriptSymbolicFieldRead(QString, bool)));
+
+    // Link the ConcolicAnalysis signals.
+    QObject::connect(mConcolicAnalysis.data(), SIGNAL(sigExecutionTreeUpdated(TraceNodePtr)),
+                     this, SLOT(slExecutionTreeUpdated(TraceNodePtr)));
 }
 
 void ConcolicRuntime::run(const QUrl& url)
@@ -234,8 +229,10 @@ void ConcolicRuntime::postConcreteExecution(ExecutableConfigurationConstPtr conf
 
 
 
-
-
+void ConcolicRuntime::slExecutionTreeUpdated(TraceNodePtr tree)
+{
+    outputTreeGraph();
+}
 
 // Utility method to output the tree graph at each step.
 void ConcolicRuntime::outputTreeGraph()
@@ -256,10 +253,10 @@ void ConcolicRuntime::outputTreeGraph()
     QString previous_name = mGraphOutputPreviousName;
     QString previous_name_min = mGraphOutputOverviewPreviousName;
 
-    mTraceDisplay.writeGraphFile(mSymbolicExecutionGraph, name, false);
+    mTraceDisplay.writeGraphFile(mConcolicAnalysis->getExecutionTree(), name, false);
     mGraphOutputPreviousName = name;
     if(mOptions.concolicTreeOutputOverview){
-        mTraceDisplayOverview.writeGraphFile(mSymbolicExecutionGraph, name_min, false);
+        mTraceDisplayOverview.writeGraphFile(mConcolicAnalysis->getExecutionTree(), name_min, false);
         mGraphOutputOverviewPreviousName = name_min;
     }
 
@@ -320,6 +317,7 @@ void ConcolicRuntime::postInitialConcreteExecution(QSharedPointer<ExecutionResul
     mFormFields = permuteFormFields(result->getFormFields(), mOptions.concolicEventHandlerPermutation);
     mFormFieldRestrictions = FormFieldRestrictedValues::getRestrictions(mFormFields, mWebkitExecutor->getPage());
     mFormFieldInitialRestrictions = mFormFieldRestrictions;
+    mConcolicAnalysis->setFormRestrictions(mFormFieldInitialRestrictions);
 
     // Print the form fields found on the page.
     Log::debug("Form fields found:");
@@ -482,9 +480,10 @@ void ConcolicRuntime::mergeTraceIntoTree()
     // This can  modify it to add the correct end marker to the trace.
     TraceNodePtr trace = mWebkitExecutor->getTraceBuilder()->trace();
 
-    TraceClassificationResult result = mTraceClassifier.classify(trace, mExplorationIndex);
+    uint explorationIndex = mRunningWithInitialValues ? 1 : mExplorationResult.explorationIndex;
+    TraceClassificationResult classification = mTraceClassifier.classify(trace, explorationIndex);
 
-    switch(result){
+    switch(classification){
     case SUCCESS:
         Log::info("  Recorded trace was classified as a SUCCESS.");
         break;
@@ -495,61 +494,20 @@ void ConcolicRuntime::mergeTraceIntoTree()
         Log::info("  Recorded trace was classified as UNKNOWN.");
     }
 
-    logInjectionValues(result);
+    logInjectionValues(classification);
 
+    mConcolicAnalysis->addTrace(trace, mExplorationResult.target);
 
-    // Now we must merge this trace into the tree.
-    if (mRunningWithInitialValues){
-        // After the very first run we need to set up the tree & search procedure.
-        // We can't just begin with an empty tree and merge every trace in, as the search procedure needs a
-        // pointer to the tree, which will be replaced in that case.
-        // If this is a problem, we could just introduce a header node for trees.
-        mSymbolicExecutionGraph = trace;
-        mRunningWithInitialValues = false;
-
-        switch(mOptions.concolicSearchProcedure) {
-        case SEARCH_DFS:
-            mSearchStrategy = TreeSearchPtr(new DepthFirstSearch(mSymbolicExecutionGraph,
-                                                                 mOptions.concolicDfsDepthLimit,
-                                                                 mOptions.concolicDfsRestartLimit));
-            break;
-
-        case SEARCH_SELECTOR:
-            mSearchStrategy = TreeSearchPtr(new RandomAccessSearch(mSymbolicExecutionGraph,
-                                                                   buildSelector(mOptions.concolicSearchSelector),
-                                                                   mOptions.concolicSearchBudget));
-            QObject::connect(&mTraceMerger, SIGNAL(sigTraceJoined(TraceNodePtr, int, TraceNodePtr, TraceNodePtr)),
-                             mSearchStrategy.dynamicCast<RandomAccessSearch>().data(), SLOT(slNewTraceAdded(TraceNodePtr, int, TraceNodePtr, TraceNodePtr)));
-            break;
-
-        default:
-            Log::fatal("Unknown search procedure.");
-            exit(1);
-        }
-
-        Statistics::statistics()->accumulate("Concolic::ExecutionTree::DistinctTracesExplored", 1);
-
-    } else {
-
-        // A normal run.
-        // Merge trace with tracegraph
-        mSymbolicExecutionGraph = mTraceMerger.merge(trace, mSymbolicExecutionGraph);
-
-        // Check if we actually explored the intended target.
-        if(mSearchStrategy->overUnexploredNode()){
-            mSearchStrategy->markNodeMissed();
-            Log::info("  Recorded trace did not take the expected path.");
-        }
-    }
-
-    // Dump the current state of the tree to a file.
-    outputTreeGraph();
+    // Once we have done at least one merge, the we are now into the "main" analysis.
+    mRunningWithInitialValues = false;
 }
 
 
 // Prints the solution from the solver.
 void ConcolicRuntime::printSolution(SolutionPtr solution, QStringList varList)
 {
+    Log::info("  Next injection:");
+
     foreach(QString var, varList){
         Symbolvalue value = solution->findSymbol(var);
         if(value.found){
@@ -695,123 +653,34 @@ QSharedPointer<const FormFieldDescriptor> ConcolicRuntime::findFormFieldForVaria
 
 
 // Generates a new solution from the path condition and runs it.
-void ConcolicRuntime::exploreNextTarget(bool isRetry)
+void ConcolicRuntime::exploreNextTarget()
 {
-    // Add the exploration index to the tree.
-    if(!isRetry) {
-        mExplorationIndex++;
-        mSearchStrategy->markExplorationIndex(mExplorationIndex);
-    }
+    assert(mExplorationResult.newExploration);
+    assert(mExplorationResult.solution->isSolved());
 
-    // Get the PC
-    PathConditionPtr target = mSearchStrategy->getTargetPC();
-    QSet<SelectRestriction> dynamicSelectConstraints = mSearchStrategy->getTargetDomConstraints();
+    Log::debug("Solved the target PC:");
 
-    // If the returned PC is empty, then there were no solvable constraints on the path.
-    if(target->size() < 1) {
-        mSearchStrategy->markNodeUnsolvable();
-        Log::info("  Could not solve constraint:");
-        Log::info("    All branches on path were known to be difficult.");
-        Log::debug("Skipping this target!");
-        // Dump the current state of the tree to a file.
-        outputTreeGraph();
-        // Skip this node and move on to the next.
-        chooseNextTargetAndExplore();
-        return;
-    }
+    SolutionPtr solution = mExplorationResult.solution;
 
-    // TODO: Currently only select constraints are handled dynamically, so we need to merge them with the static radio button constraints.
-    FormRestrictions dynamicRestrictions = mergeDynamicSelectRestrictions(mFormFieldInitialRestrictions, dynamicSelectConstraints);
-    // If these features have been disabled, then remove the restrictions.
-    if (mDisabledFeatures.testFlag(SELECT_RESTRICTION_DYNAMIC)) {
-        if (dynamicRestrictions.first != mFormFieldInitialRestrictions.first) {
-            Statistics::statistics()->accumulate("Concolic::Solver::SelectDynamicDomConstraintsIgnored", 1);
-        }
-        dynamicRestrictions.first = mFormFieldInitialRestrictions.first;
-    }
-    if (mDisabledFeatures.testFlag(SELECT_RESTRICTION)) {
-        dynamicRestrictions.first.clear();
-    }
-    if (mDisabledFeatures.testFlag(RADIO_RESTRICTION)) {
-        dynamicRestrictions.second.clear();
-    }
-
-    Log::info("  Next target:");
-    QString targetString = QString("    ") + QString::fromStdString(target->toStatisticsValuesString(true)).trimmed();
-    targetString.replace('\n', "\n    ");
-    Log::info(targetString.toStdString());
-
-    // Get (and print) the list of free variables in the target PC.
-    QMap<QString, Symbolic::SourceIdentifierMethod> injectionVariables = target->freeVariables();
+    // Get the list of free variables in the target PC.
+    QMap<QString, Symbolic::SourceIdentifierMethod> injectionVariables = mExplorationResult.pc->freeVariables();
     QStringList varList = injectionVariables.keys();
 
-    Log::debug(QString("Variables we need to solve (%1):").arg(varList.length()).toStdString());
-    Log::debug(varList.join(", ").toStdString());
+    // TODO: There is no longer really any reason to differentiate between variables from the PC and those introduced by the solver. This code could be combined and we would not need to read the PC back from the ExplorationResult.
 
-    // Try to solve this PC to get some concrete input.
-    SolverPtr solver = getSolver(mOptions);
-    SolutionPtr solution = solver->solve(target, dynamicRestrictions);
+    // Check if there are any variables in the solution which were not originally in the PC.
+    // This can happen (e.g.) with radio button constraints, and these MUST be included in the injection.
+    injectionVariables.unite(getExtraSolutionVariables(solution, varList));
+    varList = injectionVariables.keys();
 
-    mPreviousConstraintID = solver->getLastConstraintID();
+    // Print this solution
+    printSolution(solution, varList);
 
-    if(solution->isSolved()) {
-        Log::debug("Solved the target PC:");
-        Log::info("  Next injection:");
+    QSharedPointer<FormInputCollection> formInput = createFormInput(injectionVariables, solution);
+    setupNextConfiguration(formInput);
 
-        // Check if there are any variables in the solution which were not originally in the PC.
-        // This can happen (e.g.) with radio button constraints, and these MUST be included in the injection.
-        injectionVariables.unite(getExtraSolutionVariables(solution, varList));
-        varList = injectionVariables.keys();
-
-        // Print this solution
-        printSolution(solution, varList);
-
-
-        QSharedPointer<FormInputCollection> formInput = createFormInput(injectionVariables, solution);
-        setupNextConfiguration(formInput);
-
-        // Execute next iteration
-        preConcreteExecution();
-
-    }else{
-        // Mark the current node as unsolvable.
-        // If it was solved but unsatisfiable, then mark it as UNSAT instead.
-        if(solution->isUnsat()){
-            mSearchStrategy->markNodeUnsat();
-            Log::info("  Constraint is UNSAT.");
-        }else{
-            // Check if there was a specific clause which caused this PC to be unsolvable and mark it as difficult.
-            if(solution->getUnsolvableClause() >= 0) {
-                TraceSymbolicBranch* difficultBranch = target->getBranch(solution->getUnsolvableClause());
-                assert(!difficultBranch->isDifficult()); // We should never have tried to solve a known difficult branch. Otherwise we may get stuck in a loop when we retry!
-                difficultBranch->markDifficult();
-                Statistics::statistics()->accumulate("Concolic::ExecutionTree::DifficultBranches", 1);
-            }
-
-            // We must give up in the following cases:
-            //    * There was no bad clause identified
-            //    * The bad clause was from the node we were directly targeting
-            // Otherwise we can re-try writing the PC without this difficult clause.
-            if (solution->getUnsolvableClause() < 0 || (uint)solution->getUnsolvableClause() == target->size()-1) {
-                mSearchStrategy->markNodeUnsolvable();
-                Log::info("  Could not solve constraint:");
-                Log::info(QString("    %1").arg(solution->getUnsolvableReason()).toStdString());
-
-            } else {
-                Log::info("  Could not solve this constraint. Re-trying after marking as difficult.");
-                Statistics::statistics()->accumulate("Concolic::DifficultBranchRetries", 1);
-                exploreNextTarget(true); // N.B. the call to Search::getTargetPC() will return an updated PC if the tree has been modified to mark a node as difficult.
-                return;
-            }
-        }
-        Log::debug("Skipping this target!");
-
-        // Dump the current state of the tree to a file.
-        outputTreeGraph();
-
-        // Skip this node and move on to the next.
-        chooseNextTargetAndExplore();
-    }
+    // Execute next iteration
+    preConcreteExecution();
 }
 
 QMap<QString, Symbolic::SourceIdentifierMethod> ConcolicRuntime::getExtraSolutionVariables(SolutionPtr solution, QStringList expected)
@@ -820,7 +689,7 @@ QMap<QString, Symbolic::SourceIdentifierMethod> ConcolicRuntime::getExtraSolutio
     QMap<QString, Symbolic::SourceIdentifierMethod> result;
     QString baseName;
     bool found;
-    Symbolic::SourceIdentifierMethod method;
+    Symbolic::SourceIdentifierMethod method = Symbolic::ELEMENT_ID; // Initial value to remove warning.
 
     foreach (QString symbol, solution->symbols()) {
         if (!expected.contains(symbol)) {
@@ -865,40 +734,19 @@ QMap<QString, Symbolic::SourceIdentifierMethod> ConcolicRuntime::getExtraSolutio
     return result;
 }
 
-FormRestrictions ConcolicRuntime::mergeDynamicSelectRestrictions(FormRestrictions base, QSet<SelectRestriction> replacements)
-{
-    // Copy the radio constraints across as-is, they are not handled dynamically yet.
-    // Merge in the updated constraints from the search procedure with the latest "default" ones from base.
-
-    FormRestrictions updated = base;
-    updated.first = replacements;
-
-    QSet<QString> replacementVariables;
-    foreach(SelectRestriction sr, replacements) {
-        qDebug() << "We have an updated value for" << sr.variable;
-        replacementVariables.insert(sr.variable);
-    }
-
-    foreach(SelectRestriction sr, base.first) {
-        if (!replacementVariables.contains(sr.variable)) {
-            qDebug() << "Using the default value for value for" << sr.variable;
-            updated.first.insert(sr);
-        }
-    }
-
-    return updated;
-}
-
 
 // Uses the search strategy to choose a new target and then explore it.
 void ConcolicRuntime::chooseNextTargetAndExplore()
 {
-    // Choose the next target.
-    if(mSearchStrategy->chooseNextTarget()){
+    mExplorationResult = mConcolicAnalysis->nextExploration();
+
+    if (mExplorationResult.newExploration) {
+
         // Runs the next execution itself.
         exploreNextTarget();
 
-    }else{
+    } else {
+
         outputTreeGraph();
 
         Log::debug("\n============= Finished Search ==============");
@@ -915,12 +763,12 @@ void ConcolicRuntime::reportStatistics()
 {
     Statistics::statistics()->accumulate("Concolic::Iterations", mNumIterations);
 
-    if(mSymbolicExecutionGraph.isNull()) {
+    if(mConcolicAnalysis->getExecutionTree().isNull()) {
         return;
     }
 
     TraceStatistics stats;
-    stats.processTrace(mSymbolicExecutionGraph);
+    stats.processTrace(mConcolicAnalysis->getExecutionTree());
 
     Statistics::statistics()->accumulate("Concolic::ExecutionTree::ConcreteBranchesTotal", stats.mNumConcreteBranches);
     Statistics::statistics()->accumulate("Concolic::ExecutionTree::ConcreteBranchesFullyExplored", stats.mNumConcreteBranchesFullyExplored);
@@ -948,35 +796,6 @@ void ConcolicRuntime::reportStatistics()
 }
 
 
-AbstractSelectorPtr ConcolicRuntime::buildSelector(ConcolicSearchSelector description)
-{
-    AbstractSelectorPtr selector;
-    QList<AbstractSelectorPtr> children;
-
-    switch(description.type) {
-    case ConcolicSearchSelector::SELECTOR_DFS:
-        selector = AbstractSelectorPtr(new DFSSelector());
-        break;
-    case ConcolicSearchSelector::SELECTOR_RANDOM:
-        selector = AbstractSelectorPtr(new RandomisedSelector());
-        break;
-    case ConcolicSearchSelector::SELECTOR_AVOID_UNSAT:
-        selector = AbstractSelectorPtr(new AvoidUnsatSelector());
-        break;
-    case ConcolicSearchSelector::SELECTOR_ROUND_ROBIN:
-        foreach(ConcolicSearchSelector childDescription, description.components) {
-            children.append(buildSelector(childDescription));
-        }
-        selector = AbstractSelectorPtr(new RoundRobinSelector(children));
-        break;
-    default:
-        Log::fatal("ERROR: Unsupported choice of concolic-selection-procedure.");
-        exit(1);
-    }
-
-    return selector;
-}
-
 // Write the injection logs to a file /tmp/injections/*
 void ConcolicRuntime::logInjectionValues(TraceClassificationResult classification)
 {
@@ -1000,12 +819,11 @@ void ConcolicRuntime::logInjectionValues(TraceClassificationResult classificatio
     QString json = "{\n";
     //json += QString("  \"url\": \"%1\",\n").arg(mUrl.toString());
     json += QString("  \"entrypoint\": \"%1\",\n").arg(entryPoint);
-    json += QString("  \"explorationindex\": %1,\n").arg(mExplorationIndex);
-    json += QString("  \"constraint\": \"%1\",\n").arg(mPreviousConstraintID);
+    json += QString("  \"explorationindex\": %1,\n").arg(mExplorationResult.explorationIndex);
+    json += QString("  \"constraint\": \"%1\",\n").arg(mExplorationResult.constraintID);
     json += QString("  \"classification\": \"%1\",\n").arg(classificationStr.second);
 
-
-
+    // TODO: Is this debug code still needed?
     // Debugging
     json += "  \"debugging\": [\n";
 
@@ -1083,7 +901,7 @@ void ConcolicRuntime::logInjectionValues(TraceClassificationResult classificatio
 
     json += "}\n";
 
-    QString filename = QString("/tmp/injections/%1_%2.json").arg(QString::number(mExplorationIndex), classificationStr.first);
+    QString filename = QString("/tmp/injections/%1_%2.json").arg(QString::number(mExplorationResult.explorationIndex), classificationStr.first);
 
     createDir("/tmp", "injections");
     writeStringToFile(filename, json);

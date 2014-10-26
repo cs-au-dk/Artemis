@@ -63,6 +63,7 @@ public:
     int mNumUnexploredUnsat;
     int mNumUnexploredMissed;
     int mNumUnexploredUnsolvable;
+    int mNumUnexploredQueued;
 
     void processTrace(TraceNodePtr trace);
 
@@ -90,6 +91,7 @@ public:
     virtual void visit(TraceUnexploredUnsat* node);
     virtual void visit(TraceUnexploredMissed* node);
     virtual void visit(TraceUnexploredUnsolvable* node);
+    virtual void visit(TraceUnexploredQueued* node);
 
 protected:
     bool isFullyExplored(TraceBranch* node);

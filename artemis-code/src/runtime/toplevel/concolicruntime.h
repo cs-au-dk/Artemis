@@ -19,9 +19,9 @@
 
 #include <QObject>
 
+#include "concolic/concolicanalysis.h"
 #include "concolic/executiontree/tracenodes.h"
-#include "concolic/search/search.h"
-#include "concolic/solver/solver.h"
+#include "concolic/solver/solution.h"
 #include "concolic/entrypoints.h"
 #include "concolic/mockentrypointdetector.h"
 #include "concolic/executiontree/traceprinter.h"
@@ -29,7 +29,6 @@
 #include "concolic/executiontree/tracedisplayoverview.h"
 #include "concolic/traceclassifier.h"
 #include "concolic/tracestatistics.h"
-#include "concolic/executiontree/tracemerger.h"
 #include "concolic/handlerdependencytracker.h"
 #include "concolic/search/abstractselector.h"
 
@@ -47,22 +46,6 @@
 namespace artemis
 {
 
-/*
- *  The main controller for the concolic execution.
- *
- *  Algorithm:
- *      Insert "default" input as next input
- *      While next input exists do:
- *          Execute WebKit using the next input
- *          Merge the last execution trace with the symbolic execution tree
- *          Search algorithm chooses a desired path
- *          Retrieve the coresponding path constraint (from path tree)
- *          Solve the constraint, returns a concrete input to test
- *              * Need to deal with cases where we can't solve (simplest implementation: mark as given up and move on)
- *          Set next input according to the result of the constraint solver
- *      od
- *
- */
 class ConcolicRuntime : public Runtime
 {
     Q_OBJECT
@@ -80,23 +63,22 @@ protected:
 
     ArtemisWebViewPtr mWebView;
 
+    ConcolicAnalysisPtr mConcolicAnalysis;
+    ConcolicAnalysis::ExplorationResult mExplorationResult;
+
     QSharedPointer<ExecutableConfiguration> mNextConfiguration;
-    TraceNodePtr mSymbolicExecutionGraph;
     EventHandlerDescriptorConstPtr mEntryPointEvent;
 
     bool mRunningFirstLoad;
     bool mRunningWithInitialValues;
 
     // Controls for the search procedure.
-    TreeSearchPtr mSearchStrategy;
 
     // We can choose between entry points specified by XPath (with --concolic-button) or the built-in EP finding.
     // If an XPath has been give, we want to skip the entry point finding run completely and use a different method for injecting clicks.
     // If mManualEntryPoint is set, then we use mEntryPointXPath and skip the first iteration, otherwise we use mEntryPointEvent.
     bool mManualEntryPoint;
     QString mManualEntryPointXPath;
-
-    TraceMerger mTraceMerger;
 
     TraceClassifier mTraceClassifier;
 
@@ -116,9 +98,8 @@ protected:
     void printSolution(SolutionPtr solution, QStringList varList);
     QSharedPointer<FormInputCollection> createFormInput(QMap<QString, Symbolic::SourceIdentifierMethod> freeVariables, SolutionPtr solution);
     QSharedPointer<const FormFieldDescriptor> findFormFieldForVariable(QString varName, Symbolic::SourceIdentifierMethod varSourceIdentifierMethod);
-    void exploreNextTarget(bool isRetry = false);
+    void exploreNextTarget();
     QMap<QString, Symbolic::SourceIdentifierMethod> getExtraSolutionVariables(SolutionPtr solution, QStringList expected);
-    FormRestrictions mergeDynamicSelectRestrictions(FormRestrictions base, QSet<SelectRestriction> replacements);
     void chooseNextTargetAndExplore();
     void reportStatistics();
     void triggerFieldChangeHandler(FormFieldDescriptorConstPtr field);
@@ -137,20 +118,17 @@ protected:
 
     // State
     int mNumIterations;
-    uint mExplorationIndex;
-
-    // Helper for creating the selector search strategy.
-    AbstractSelectorPtr buildSelector(ConcolicSearchSelector description);
 
     // Logging
     QMap<QString, InjectionValue> mPreviousInjections;
-    QString mPreviousConstraintID;
     void logInjectionValues(TraceClassificationResult classification);
 
 private slots:
     void postConcreteExecution(ExecutableConfigurationConstPtr configuration, QSharedPointer<ExecutionResult> result);
     void postAllInjection();
     void postSingleInjection(FormFieldDescriptorConstPtr field);
+
+    void slExecutionTreeUpdated(TraceNodePtr tree);
 
 signals:
     void sigNewTraceMarker(QString label, QString index, bool isSelectRestriction, SelectRestriction selectRestriction);
