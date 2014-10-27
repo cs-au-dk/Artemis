@@ -319,6 +319,11 @@ TraceNodePtr ConcolicAnalysis::getExecutionTree()
     return mExecutionTree;
 }
 
+uint ConcolicAnalysis::getExplorationIndex()
+{
+    return mExplorationIndex;
+}
+
 FormRestrictions ConcolicAnalysis::mergeDynamicSelectRestrictions(FormRestrictions base, QSet<SelectRestriction> replacements)
 {
     // Copy the radio constraints across as-is, they are not handled dynamically yet.

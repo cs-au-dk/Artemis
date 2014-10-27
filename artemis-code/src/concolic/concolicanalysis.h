@@ -119,7 +119,7 @@ public:
 
     // Accessor for the search tree, which should not be externally modified!
     TraceNodePtr getExecutionTree();
-
+    uint getExplorationIndex();
 
 
 signals:

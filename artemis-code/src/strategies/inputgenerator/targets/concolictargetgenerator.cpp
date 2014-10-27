@@ -17,6 +17,8 @@
 #include "concolictarget.h"
 #include "concolic/pathcondition.h"
 #include "concolic/concolicanalysis.h"
+#include "concolic/executiontree/tracedisplay.h"
+#include "concolic/executiontree/tracedisplayoverview.h"
 
 #include "concolictargetgenerator.h"
 
@@ -77,6 +79,9 @@ TargetDescriptorConstPtr ConcolicTargetGenerator::permuteTarget(EventHandlerDesc
     Log::debug("Found solution for new target value:");
     printSolution(exploration.solution);
 
+    QString eventName = eventHandler->toString();
+    outputTree(target->getAnalysis()->getExecutionTree(), eventName, target->getAnalysis()->getExplorationIndex());
+
     // The symbolic variable for the target will be TARGET_0.
     Symbolvalue newTarget = exploration.solution->findSymbol("SYM_TARGET_0");
     assert(newTarget.found); // TODO: should probably be a soft requirement once we are sure everything is working??
@@ -127,6 +132,24 @@ void ConcolicTargetGenerator::printSolution(const SolutionPtr solution) const
             exit(1);
         }
     }
+}
+
+void ConcolicTargetGenerator::outputTree(TraceNodePtr tree, QString eventName, uint count) const
+{
+    // TODO: Make this stuff respect the concolic output options (e.g. whether to output them, whether to include the overview, whether to only keep the final one for each eventName, ...)
+    if (mOptions.concolicTreeOutput == TREE_NONE) {
+        return;
+    }
+
+    TraceDisplay display;
+    TraceDisplayOverview display_min;
+
+    QString date = QDateTime::currentDateTime().toString("yyyy-MM-dd-hh-mm-ss");
+    QString filename = QString("event_%1_%2_%3.gv").arg(date, eventName).arg(count);
+    QString filename_min = QString("event_%1_%2_%3_min.gv").arg(date, eventName).arg(count);
+
+    display.writeGraphFile(tree, filename, false);
+    display_min.writeGraphFile(tree, filename_min, false);
 }
 
 }
