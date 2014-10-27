@@ -20,6 +20,7 @@
 #include <QWebElement>
 
 #include "strategies/inputgenerator/targets/jquerylistener.h"
+#include "concolic/concolicanalysis.h"
 #include "targetdescriptor.h"
 
 namespace artemis
@@ -28,9 +29,19 @@ namespace artemis
 class ConcolicTarget : public TargetDescriptor
 {
 public:
-    ConcolicTarget(EventHandlerDescriptorConstPtr eventHandler);
+    ConcolicTarget(EventHandlerDescriptorConstPtr eventHandler, QString targetXPath, ConcolicAnalysisPtr analysis, ConcolicAnalysis::ExplorationHandle explorationTarget);
     QWebElement get(ArtemisWebPagePtr page) const;
+
+    ConcolicAnalysisPtr getAnalysis() const;
+    ConcolicAnalysis::ExplorationHandle getExplorationTarget() const;
+
+protected:
+    QString mTargetXPath;
+    ConcolicAnalysisPtr mAnalysis;
+    ConcolicAnalysis::ExplorationHandle mExplorationTarget;
 };
+
+typedef QSharedPointer<const ConcolicTarget> ConcolicTargetDescriptorConstPtr;
 
 }
 

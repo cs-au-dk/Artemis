@@ -152,7 +152,7 @@ Runtime::Runtime(QObject* parent, const Options& options, const QUrl& url)
 
     switch(options.targetStrategy) {
     case TARGET_CONCOLIC:
-        mTargetGenerator = TargetGeneratorConstPtr(new ConcolicTargetGenerator(mWebkitExecutor->getTraceBuilder()));
+        mTargetGenerator = TargetGeneratorConstPtr(new ConcolicTargetGenerator(mOptions, mWebkitExecutor->getTraceBuilder()));
         break;
     case TARGET_JQUERY:
         mTargetGenerator = TargetGeneratorConstPtr(new JqueryTargetGenerator(jqueryListener));

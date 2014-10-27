@@ -51,7 +51,8 @@ class ConcolicAnalysis : public QObject
 {
     Q_OBJECT
 
-protected:
+public:
+    // TODO: ExplorationHandle was intended to be opaque. Maybe it could be made protected if we only ever passed out pointers instead of actual objects.
     struct ExplorationHandle
     {
         bool noExplorationTarget;
@@ -75,7 +76,6 @@ protected:
         }
     };
 
-public:
     enum OutputMode {
         QUIET, CONCOLIC_RUNTIME
     };

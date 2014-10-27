@@ -16,49 +16,117 @@
 
 #include "concolictarget.h"
 #include "concolic/pathcondition.h"
+#include "concolic/concolicanalysis.h"
 
 #include "concolictargetgenerator.h"
 
 namespace artemis {
 
-ConcolicTargetGenerator::ConcolicTargetGenerator(TraceBuilder* traceBuilder)
+ConcolicTargetGenerator::ConcolicTargetGenerator(Options options, TraceBuilder* traceBuilder)
     : TargetGenerator()
+    , mOptions(options)
     , mTraceBuilder(traceBuilder)
 {
 }
 
 TargetDescriptorConstPtr ConcolicTargetGenerator::generateTarget(EventHandlerDescriptorConstPtr eventHandler) const
 {
-    // create a context and save a reference in the returned target...
-    // this reference can then be pulled out from oldTarget in permuteTarget below.
+    // Create a context and save a reference in the returned target.
+    // This reference can then be pulled out from oldTarget in permuteTarget below.
+    ConcolicAnalysisPtr analysis(new ConcolicAnalysis(mOptions, ConcolicAnalysis::QUIET));
+    ConcolicAnalysis::ExplorationHandle explorationTarget = ConcolicAnalysis::NO_EXPLORATION_TARGET;
 
+    // TODO: Connect the ConcolicAnalysis signal for tree updates to something which can print out the tree?
+
+    // No trace has been recorded yet, so we do not suggest any target values intelligently.
     // This method should do the naive solution and return a target == base handler (see legacy target impl.)
 
-    return TargetDescriptorConstPtr(new ConcolicTarget(eventHandler));
+    return TargetDescriptorConstPtr(new ConcolicTarget(eventHandler, "", analysis, explorationTarget));
 }
 
 TargetDescriptorConstPtr ConcolicTargetGenerator::permuteTarget(EventHandlerDescriptorConstPtr eventHandler,
                                        TargetDescriptorConstPtr oldTarget,
                                        ExecutionResultConstPtr result) const
 {
+    ConcolicTargetDescriptorConstPtr target = oldTarget.dynamicCast<const ConcolicTarget>();
+    assert(!target.isNull()); // TODO: Once we are sure everything is working correctly this should probably be a soft requirement.
 
     PathConditionPtr pc = PathCondition::createFromTrace(mTraceBuilder->trace());
+    Log::debug("New PC found:");
+    Log::debug(pc->toStatisticsValuesString(true));
 
-    // now the fun begins. We have a reference to the trace builder, and the symbolic "context" in oldTarget. Now check if any
-    // constraints exist, if so return a new target to try out. If no interesting targets exist then return NULL as below.
+    // The previous trace is guaranteed to be generated from oldTarget, so this should match our ConcolicTarrget.
+    // Add the trace into the analysis, passing in the ExplorationHandle which lets the analysis know where this run was expected to exlpore.
 
-    // If a target is found, then return a ConcolicTarget with the context and a representation (xpath) of the target. The
-    // runtime will call "get" on the target in the next iteration and use the xpath to find the real target.
+    // We only start the symbolic session for the last event to be executed, and permuteTarget is only called for the
+    // last event in an event sequence! -- we can assume that the event sequence reaching this event is constant.
 
+    target->getAnalysis()->addTrace(mTraceBuilder->trace(), target->getExplorationTarget());
+
+    // Now we can request suggestions of new targets to explore from the concolic analysis.
+    ConcolicAnalysis::ExplorationResult exploration = target->getAnalysis()->nextExploration();
+
+    if (!exploration.newExploration) {
+        Log::debug("Could not find any new exploration");
+        return TargetDescriptorConstPtr(NULL); // TODO: is this the correct way to signal nothing to suggest?
+    }
+
+    Log::debug("PC solved:");
+    Log::debug(pc->toStatisticsValuesString(true));
+
+    Log::debug("Found solution for new target value:");
+    printSolution(exploration.solution);
+
+    // The symbolic variable for the target will be TARGET_0.
+    Symbolvalue newTarget = exploration.solution->findSymbol("SYM_TARGET_0");
+    assert(newTarget.found); // TODO: should probably be a soft requirement once we are sure everything is working??
+    QString targetXPath = QString::fromStdString(newTarget.string);
+
+    // If a target is found, then return a ConcolicTarget with the context and a representation (xpath) of the target.
+    // The runtime will call "get" on the target in the next iteration and use the xpath to find the real target.
+
+    return TargetDescriptorConstPtr(new ConcolicTarget(eventHandler, targetXPath, target->getAnalysis(), exploration.target));
+
+
+    // TODO ...
     // Notice that this function can be called multiple times with the same "oldTarget" and "result", because of how Artemis functions.
     // We should only return the new interesting target once, and otherwise NULL.
 
-    // The symbolic variable for the target will be TARGET_0. We only start the symbolic session for the last event to be executed, and
-    // permuteTarget is only called for the last event in an event sequence! -- we can assume that the event sequence reaching this event
-    // is constant.
+}
 
-    return TargetDescriptorConstPtr(NULL);
 
+// TODO: Merge with ConcolicRuntime::printSolution and put somewhere accessible by both.
+void ConcolicTargetGenerator::printSolution(const SolutionPtr solution) const
+{
+    QStringList symbols = solution->symbols();
+
+    foreach (QString var, symbols) {
+        Symbolvalue value = solution->findSymbol(var);
+        assert(value.found);
+
+        // TODO: Only object type should be seen here?
+        switch (value.kind) {
+        case Symbolic::INT:
+            Log::debug(QString("    %1 = %2").arg(var).arg(value.u.integer).toStdString());
+            break;
+        case Symbolic::BOOL:
+            Log::debug(QString("    %1 = %2").arg(var).arg(value.u.boolean ? "true" : "false").toStdString());
+            break;
+        case Symbolic::STRING:
+            if (value.string.empty()) {
+                Log::debug(QString("    %1 = \"\"").arg(var).toStdString());
+            } else {
+                Log::debug(QString("    %1 = \"%2\"").arg(var).arg(value.string.c_str()).toStdString());
+            }
+            break;
+        case Symbolic::OBJECT:
+            Log::debug(QString("    %1 -> %2").arg(var).arg(value.string.c_str()).toStdString());
+            break;
+        default:
+            Log::fatal(QString("Unimplemented value type encountered for variable %1 (%2)").arg(var).arg(value.kind).toStdString());
+            exit(1);
+        }
+    }
 }
 
 }

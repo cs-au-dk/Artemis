@@ -92,7 +92,7 @@ void ConcolicAnalysis::mergeTraceIntoTree(TraceNodePtr trace, ExplorationHandle 
     mExecutionTree = mTraceMerger.merge(trace, mExecutionTree);
 
     // Check if we actually explored the intended target.
-    if (TreeManager::isQueuedOrNotAttempted(target.target)) {
+    if (!target.noExplorationTarget && TreeManager::isQueuedOrNotAttempted(target.target)) {
         TreeManager::markNodeMissed(target.target);
         concolicRuntimeInfo("  Recorded trace did not take the expected path.");
     }

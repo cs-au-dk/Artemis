@@ -20,6 +20,8 @@
 #include "strategies/inputgenerator/targets/targetgenerator.h"
 #include "strategies/inputgenerator/targets/jquerylistener.h"
 #include "concolic/executiontree/tracebuilder.h"
+#include "runtime/options.h"
+#include "concolic/solver/solution.h"
 
 namespace artemis
 {
@@ -28,15 +30,17 @@ class ConcolicTargetGenerator : public TargetGenerator
 {
 
 public:
-    ConcolicTargetGenerator(TraceBuilder* traceBuilder);
+    ConcolicTargetGenerator(Options options, TraceBuilder* traceBuilder);
     TargetDescriptorConstPtr generateTarget(EventHandlerDescriptorConstPtr eventHandler) const;
     TargetDescriptorConstPtr permuteTarget(EventHandlerDescriptorConstPtr eventHandler,
                                            TargetDescriptorConstPtr oldTarget,
                                            ExecutionResultConstPtr result) const;
 
-private:
+protected:
+    Options mOptions;
     TraceBuilder* mTraceBuilder;
 
+    void printSolution(const SolutionPtr solution) const;
 };
 
 }

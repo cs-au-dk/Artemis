@@ -19,15 +19,31 @@
 namespace artemis
 {
 
-ConcolicTarget::ConcolicTarget(EventHandlerDescriptorConstPtr eventHandler)
+ConcolicTarget::ConcolicTarget(EventHandlerDescriptorConstPtr eventHandler, QString targetXPath, ConcolicAnalysisPtr analysis, ConcolicAnalysis::ExplorationHandle explorationTarget)
     : TargetDescriptor(eventHandler)
+    , mTargetXPath(targetXPath)
+    , mAnalysis(analysis)
+    , mExplorationTarget(explorationTarget)
 {
 }
 
 QWebElement ConcolicTarget::get(ArtemisWebPagePtr page) const
 {
+    // TODO: If mTargetXPath is non-empty, then use that to find the appropriate target instead!
+
+
     // legacy impl.
     return mEventHandler->getDomElement()->getElement(page);
+}
+
+ConcolicAnalysisPtr ConcolicTarget::getAnalysis() const
+{
+    return mAnalysis;
+}
+
+ConcolicAnalysis::ExplorationHandle ConcolicTarget::getExplorationTarget() const
+{
+    return mExplorationTarget;
 }
 
 }
