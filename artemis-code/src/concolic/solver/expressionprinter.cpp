@@ -281,6 +281,21 @@ void ExpressionPrinter::visit(Symbolic::SymbolicObjectPropertyString* obj, void*
     m_result += " )";
 }
 
+void ExpressionPrinter::visit(Symbolic::StringSubstring* obj, void* arg)
+{
+    m_result += "StringSubstring( ";
+    obj->getSource()->accept(this);
+    m_result += " ,";
+    std::ostringstream from;
+    from << obj->getFrom();
+    m_result += from.str();
+    m_result += " ,";
+    std::ostringstream length;
+    length << obj->getLength();
+    m_result += length.str();
+    m_result += " )";
+}
+
 }
 
 #endif

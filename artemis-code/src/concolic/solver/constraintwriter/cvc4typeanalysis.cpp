@@ -268,4 +268,9 @@ void CVC4TypeAnalysis::visit(Symbolic::SymbolicObjectPropertyString* obj, void* 
     // NO-OP
 }
 
+void CVC4TypeAnalysis::visit(Symbolic::StringSubstring* obj, void* arg) {
+    mExpressionType = STRING;
+    obj->getSource()->accept(this);
+}
+
 }

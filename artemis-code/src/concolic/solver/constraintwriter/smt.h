@@ -139,6 +139,7 @@ protected:
     virtual void visit(Symbolic::StringReplace* stringreplace, void* args);
     virtual void visit(Symbolic::StringRegexSubmatchArrayAt* exp, void* arg);
     virtual void visit(Symbolic::SymbolicObjectPropertyString* obj, void* arg);
+    virtual void visit(Symbolic::StringSubstring* obj, void* arg);
 
     // Returns boolean values to mExpressionBuffer
     virtual void visit(Symbolic::SymbolicBoolean* symbolicboolean, void* args);

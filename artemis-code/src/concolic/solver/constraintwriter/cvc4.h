@@ -63,6 +63,7 @@ protected:
     virtual void visit(Symbolic::StringRegexSubmatch* submatch, void* args);
     virtual void visit(Symbolic::StringRegexSubmatchArrayAt* exp, void* args);
     virtual void visit(Symbolic::SymbolicObjectPropertyString* obj, void* arg);
+    virtual void visit(Symbolic::StringSubstring* obj, void* arg);
 
     // Returns boolean values to mExpressionBuffer
     virtual void visit(Symbolic::StringBinaryOperation* stringbinaryoperation, void* args);

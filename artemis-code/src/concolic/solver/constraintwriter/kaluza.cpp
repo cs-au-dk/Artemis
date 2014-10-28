@@ -314,6 +314,13 @@ void KaluzaConstraintWriter::visit(Symbolic::SymbolicObjectPropertyString* obj, 
     mIdentifierStore = "ERROR";
 }
 
+void KaluzaConstraintWriter::visit(Symbolic::StringSubstring* obj, void* arg)
+{
+    mError = true;
+    mErrorReason = "Symbolic string substring not supported";
+    mIdentifierStore = "ERROR";
+}
+
 }
 
 #endif

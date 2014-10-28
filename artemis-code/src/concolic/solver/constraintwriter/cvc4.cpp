@@ -526,6 +526,59 @@ void CVC4ConstraintWriter::visit(Symbolic::SymbolicObjectPropertyString* obj, vo
     mExpressionType = Symbolic::STRING;
 }
 
+void CVC4ConstraintWriter::visit(Symbolic::StringSubstring* obj, void* arg)
+{
+    obj->getSource()->accept(this);
+    if(!checkType(Symbolic::STRING)){
+        error("String substring operation on non-string type");
+        return;
+    }
+
+    std::ostringstream i;
+    std::ostringstream j;
+
+    if (obj->getFrom() >= 0) {
+        // fixed start index
+        i << obj->getFrom();
+
+        if (obj->getLength() >= 0) {
+            // fixed length
+            j << obj->getFrom() + obj->getLength();
+
+        } else {
+            // unbounded
+            j << emitAndReturnNewTemporary(Symbolic::INT);
+            mOutput << "(assert (= " << j.str() << "(str.len " << mExpressionBuffer << ")))" << std::endl;
+        }
+
+    } else {
+        // relative start index to length
+
+        i << emitAndReturnNewTemporary(Symbolic::INT);
+        j << emitAndReturnNewTemporary(Symbolic::INT);
+
+        mOutput << "(assert (> " << i.str() << " 0))" << std::endl;
+        mOutput << "(assert (= " << i.str() << " (ite (>= (str.len " << mExpressionBuffer << ") " << (obj->getFrom() * -1) << ")" \
+                   << "(- (str.len " << mExpressionBuffer << ") " << (obj->getFrom() * -1) << ") " \
+                   << "0)))" << std::endl;
+
+        if (obj->getLength() >= 0 && obj->getLength() < (obj->getFrom() * -1)) {
+            // fixed length (i + length)
+            mOutput << "(assert (= " << j.str() << "(+ " << i.str() << " " << obj->getLength() << ")))" << std::endl;
+
+        } else {
+            // unbounded or length longer than negative offset (length of source)
+            mOutput << "(assert (= " << j.str() << "(str.len " << mExpressionBuffer << ")))" << std::endl;
+        }
+    }
+
+    std::ostringstream strs;
+    strs << "(str.substr " << mExpressionBuffer << " " << i.str() << " " << j.str() << ")";
+    mExpressionBuffer = strs.str();
+    mExpressionType = Symbolic::STRING;
+
+}
+
 void CVC4ConstraintWriter::visit(Symbolic::StringLength* stringlength, void* args)
 {
     stringlength->getString()->accept(this);

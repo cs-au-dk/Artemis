@@ -175,5 +175,9 @@ void ExpressionFreeVariableLister::visit(Symbolic::SymbolicObjectPropertyString*
     obj->getObj()->accept(this, arg);
 }
 
+void ExpressionFreeVariableLister::visit(Symbolic::StringSubstring* obj, void* arg) {
+    obj->getSource()->accept(this, arg);
+}
+
 
 } // namespace artemis

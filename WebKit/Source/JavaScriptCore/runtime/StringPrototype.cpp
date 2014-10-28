@@ -1348,26 +1348,44 @@ EncodedJSValue JSC_HOST_CALL stringProtoFuncSubstr(ExecState* exec)
     JSValue a0 = exec->argument(0);
     JSValue a1 = exec->argument(1);
 
-    if (thisValue.isSymbolic() || a0.isSymbolic() || a1.isSymbolic()) {
-        Statistics::statistics()->accumulate("Concolic::MissingInstrumentation::stringProtoFuncSubstr", 1);
-    }
+    JSValue result;
 
     double start = a0.toInteger(exec);
     double length = a1.isUndefined() ? len : a1.toInteger(exec);
-    if (start >= len || length <= 0)
-        return JSValue::encode(jsEmptyString(exec));
-    if (start < 0) {
-        start += len;
-        if (start < 0)
-            start = 0;
+    if (start >= len || length <= 0) {
+        result = jsEmptyString(exec);
+    } else {
+        if (start < 0) {
+            start += len;
+            if (start < 0)
+                start = 0;
+        }
+        if (start + length > len)
+            length = len - start;
+        unsigned substringStart = static_cast<unsigned>(start);
+        unsigned substringLength = static_cast<unsigned>(length);
+
+        if (jsString)
+            result = jsSubstring(exec, jsString, substringStart, substringLength);
+        else
+            result = jsSubstring(exec, uString, substringStart, substringLength);
     }
-    if (start + length > len)
-        length = len - start;
-    unsigned substringStart = static_cast<unsigned>(start);
-    unsigned substringLength = static_cast<unsigned>(length);
-    if (jsString)
-        return JSValue::encode(jsSubstring(exec, jsString, substringStart, substringLength));
-    return JSValue::encode(jsSubstring(exec, uString, substringStart, substringLength));
+
+    if (a0.isSymbolic() || a1.isSymbolic()) {
+        Statistics::statistics()->accumulate("Concolic::MissingInstrumentation::stringProtoFuncSubstrSymbolicLimits", 1);
+    }
+
+    if (thisValue.isSymbolic()) {
+
+        double low = a0.toInteger(exec);
+        double high = a1.isUndefined() ? -1 : a1.toInteger(exec);
+        result.makeSymbolic(new Symbolic::StringSubstring(jsString ?
+                                                              (Symbolic::StringExpression*)thisValue.asSymbolic() :
+                                                              new Symbolic::StringCoercion(thisValue.asSymbolic()),
+                                                          (int)low, (int)high));
+    }
+
+    return JSValue::encode(result);
 }
 
 EncodedJSValue JSC_HOST_CALL stringProtoFuncSubstring(ExecState* exec)
@@ -1383,10 +1401,6 @@ EncodedJSValue JSC_HOST_CALL stringProtoFuncSubstring(ExecState* exec)
     JSValue a0 = exec->argument(0);
     JSValue a1 = exec->argument(1);
     int len = jsString->length();
-
-    if (thisValue.isSymbolic() || a0.isSymbolic() || a1.isSymbolic()) {
-        Statistics::statistics()->accumulate("Concolic::MissingInstrumentation::stringProtoFuncSubstring", 1);
-    }
 
     double start = a0.toNumber(exec);
     double end;
@@ -1410,7 +1424,20 @@ EncodedJSValue JSC_HOST_CALL stringProtoFuncSubstring(ExecState* exec)
     }
     unsigned substringStart = static_cast<unsigned>(start);
     unsigned substringLength = static_cast<unsigned>(end) - substringStart;
-    return JSValue::encode(jsSubstring(exec, jsString, substringStart, substringLength));
+
+    JSValue result = jsSubstring(exec, jsString, substringStart, substringLength);
+
+    if (a0.isSymbolic() || a1.isSymbolic()) {
+        Statistics::statistics()->accumulate("Concolic::MissingInstrumentation::stringProtoFuncSubstringSymbolicLimits", 1);
+    }
+
+    if (thisValue.isSymbolic()) {
+        double low = a0.toInteger(exec);
+        double high = a1.isUndefined() ? -1 : (a1.toInteger(exec) > low ? a1.toInteger(exec) - low : 0); // get length
+        result.makeSymbolic(new Symbolic::StringSubstring((Symbolic::StringExpression*)thisValue.asSymbolic(), (int)low, (int)high));
+    }
+
+    return JSValue::encode(result);
 }
 
 EncodedJSValue JSC_HOST_CALL stringProtoFuncToLowerCase(ExecState* exec)
