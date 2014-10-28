@@ -236,6 +236,7 @@ SolutionPtr CVC4Solver::solve(PathConditionPtr pc, FormRestrictions formRestrict
             identifier = identifier.substr(0, identifier.length()-14); // remove _solutionxpath
 
             symbolvalue.kind = Symbolic::OBJECT;
+            value = value.substr(1, value.length() - 2); // Strip quotes from strings
             symbolvalue.string = value;
         } else {
             continue;

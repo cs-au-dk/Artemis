@@ -2128,33 +2128,6 @@ PassRefPtr<Attr> Element::ensureAttr(const QualifiedName& name)
 
 std::string Element::getXPath()
 {
-    /*
-    if(parent().tagName().length() == 0){
-        return QString::fromStdString("/");
-    }
-    QString currentPathFragment, id, tn = tagName().toLower();
-    QWebElement p = parent();
-    if ((id = attribute(QString::fromStdString("id"), QString())).length() > 0 && !id.startsWith(QString::fromStdString("ARTEMISID-")) && document().findAll(QString::fromStdString(" #").append(id)).count() == 1) {
-        return QString::fromStdString("//").append(tn).append(QString::fromStdString("[@id=\"")).append(id).append(QString::fromStdString("\"]"));
-    }
-
-    if(p.firstChild() == p.lastChild() || p.numberOfChildren(tn) == 1){
-        currentPathFragment = tn;
-    } else {
-        QWebElement elm = p.firstChild();
-        int counter = 1;
-        while(this->operator !=(elm)){
-            if(elm.tagName().toLower() == tn){
-                counter++;
-            }
-            elm = elm.nextSibling();
-        }
-        currentPathFragment = tn.append(QString::fromStdString("[")).append(QString::number(counter)).append(QString::fromStdString("]"));
-    }
-
-    return p.xPath().append(QString::fromStdString("/")).append(currentPathFragment);
-    */
-
     // root element
     if (tagName().length() == 0 || parentElement() == NULL) {
         return "/";

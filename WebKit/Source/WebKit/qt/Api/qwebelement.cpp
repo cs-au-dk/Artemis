@@ -63,6 +63,8 @@
 #ifdef ARTEMIS
 #include "interpreter/Interpreter.h"
 #include "WebCore/dom/Element.h"
+#include "WebCore/xml/XPathResult.h"
+#include <iostream>
 
 #endif
 
@@ -825,14 +827,31 @@ QString QWebElement::xPath() {
 }
 
 QWebElement QWebElement::lookupXPath(QString xPath) {
-    // TODO: This code is duplicated in DemoModeMainWindow and ConcolicRuntime
-    // TODO: Could we not do this using a manual traversal? Our xpaths are fairly simple
-    // or use internal call m_element->document()->evaluate(WTF::String(xPath.toStdString()), m_element->document()->toNode(), )
-
+    // TODO: This code is duplicated (or an alternative version of the same logic) in DemoModeMainWindow and ConcolicRuntime
     // Find the element on the page (by injecting JS to do the XPath lookup)
 
+    QString rawXPath(xPath);
+    rawXPath.replace(QString::fromStdString("\\\""), QString::fromStdString("\""));
+
+    ExceptionCode ec;
+    WTF::RefPtr<XPathResult> result = m_element->document()->evaluate(WTF::String(rawXPath.toStdString().data()), m_element->document()->toNode(), NULL, 6, NULL, ec);
+
+    if (result != NULL && result->snapshotLength(ec) == 1) {
+        Node* node = result->snapshotItem(0, ec);
+        if (node != NULL && node->isElementNode()) {
+            return QWebElement(node);
+        }
+    }
+
+    // TODO remove this line
+    std::cout << "FAIL :( on " << rawXPath.toStdString() << " pointer " << (long)result.get() << " length " << (result == NULL ? 0l : result->snapshotLength(ec)) << " EC " << ec << std::endl;
+    return QWebElement();
+
+    /*
+    std::cout << "LOOKUP!!!!" << std::endl;
+
     QString escapedXPath(xPath);
-    escapedXPath.replace(QChar::fromAscii('"'), QString::fromStdString("\\\""));
+    //escapedXPath.replace(QChar::fromAscii('"'), QString::fromStdString("\\\""));
     QString jsInjection = QString::fromStdString("var ARTTARGETS = document.evaluate(\"%1\", document, null, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null); for(var i = 0; i < ARTTARGETS.snapshotLength; i++){ ARTTARGETS.snapshotItem(i).setAttribute('arttarget', 'true'); };").arg(escapedXPath);
     document().evaluateJavaScript(jsInjection, QUrl(), true);
     // TODO: look into whether we could read any useful results from this call.
@@ -841,6 +860,7 @@ QWebElement QWebElement::lookupXPath(QString xPath) {
 
     // Check that the result exists and is unique.
     return matches.count() == 1 ? matches.at(0) : QWebElement();
+    */
 }
 
 bool QWebElement::isUserVisible() {
