@@ -295,6 +295,8 @@ void WebKitExecutor::slLoadFinished(bool ok)
         input->apply(this->mPage, this->mWebkitListener);
     }
 
+    qDebug() << "\n------------ POST PROCESSING -----------" << endl;
+
     if (mSymbolicMode == MODE_CONCOLIC || mSymbolicMode == MODE_CONCOLIC_LAST_EVENT) {
         mWebkitListener->endSymbolicSession();
     }
@@ -310,6 +312,8 @@ void WebKitExecutor::slLoadFinished(bool ok)
     if (pc->size() > 0) {
         Statistics::statistics()->accumulate("Concolic::sessions::hasPC", 1);
     }
+
+    qDebug() << "\n------------ DONE EXECUTING -----------" << endl;
 
     // TODO: This was previously enclosed by if(!mKeepOpen). This means no post-load analysis can be done in demo mode. What are tyhe implications of changing this? Which other parts will depend on this?
     emit sigExecutedSequence(currentConf, result);
