@@ -29,11 +29,21 @@ ConcolicTarget::ConcolicTarget(EventHandlerDescriptorConstPtr eventHandler, QStr
 
 QWebElement ConcolicTarget::get(ArtemisWebPagePtr page) const
 {
-    // TODO: If mTargetXPath is non-empty, then use that to find the appropriate target instead!
+    QWebElement root = mEventHandler->getDomElement()->getElement(page);
 
+    if (mTargetXPath.isNull() || mTargetXPath.isEmpty()) {
+        return root; // initial iteration
+    }
 
-    // legacy impl.
-    return mEventHandler->getDomElement()->getElement(page);
+    QWebElement target = root.lookupXPath(mTargetXPath);
+    if (!target.isNull()) {
+        return target;
+    }
+
+    // for now, emit a hard error. This should be changed to something less terminating later
+    Log::error(std::string("Concolic target with xpath ") + mTargetXPath.toStdString() + " could not be found.");
+    exit(1);
+    //return root;
 }
 
 ConcolicAnalysisPtr ConcolicTarget::getAnalysis() const

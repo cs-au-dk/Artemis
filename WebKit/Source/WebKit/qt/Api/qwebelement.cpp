@@ -819,13 +819,31 @@ QVariant QWebElement::evaluateJavaScript(const QString& scriptSource)
 #ifdef ARTEMIS
 
 
-QString QWebElement::xPath(){
+QString QWebElement::xPath() {
     if (m_element == NULL) return QString::null;
-
     return QString::fromStdString(m_element->getXPath());
 }
 
-bool QWebElement::isUserVisible(){
+QWebElement QWebElement::lookupXPath(QString xPath) {
+    // TODO: This code is duplicated in DemoModeMainWindow and ConcolicRuntime
+    // TODO: Could we not do this using a manual traversal? Our xpaths are fairly simple
+    // or use internal call m_element->document()->evaluate(WTF::String(xPath.toStdString()), m_element->document()->toNode(), )
+
+    // Find the element on the page (by injecting JS to do the XPath lookup)
+
+    QString escapedXPath(xPath);
+    escapedXPath.replace(QChar::fromAscii('"'), QString::fromStdString("\\\""));
+    QString jsInjection = QString::fromStdString("var ARTTARGETS = document.evaluate(\"%1\", document, null, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null); for(var i = 0; i < ARTTARGETS.snapshotLength; i++){ ARTTARGETS.snapshotItem(i).setAttribute('arttarget', 'true'); };").arg(escapedXPath);
+    document().evaluateJavaScript(jsInjection, QUrl(), true);
+    // TODO: look into whether we could read any useful results from this call.
+
+    QWebElementCollection matches = document().findAll(QString::fromStdString("*[arttarget]"));
+
+    // Check that the result exists and is unique.
+    return matches.count() == 1 ? matches.at(0) : QWebElement();
+}
+
+bool QWebElement::isUserVisible() {
     // this element is (approximative) visible by the user if
     return (m_element != NULL && // it exist
             (tagName().length() == 0 || // root element
