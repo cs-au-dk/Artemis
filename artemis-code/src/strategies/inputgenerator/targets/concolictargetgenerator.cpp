@@ -50,6 +50,14 @@ TargetDescriptorConstPtr ConcolicTargetGenerator::permuteTarget(EventHandlerDesc
                                        TargetDescriptorConstPtr oldTarget,
                                        ExecutionResultConstPtr result) const
 {
+    // Notice that this function can be called multiple times with the same "oldTarget" and "result", because of how Artemis functions.
+    // We should only return the new interesting target once, and otherwise NULL.
+
+    //if ( ... ) {
+    //    return TargetDescriptorConstPtr(NULL);
+    //}
+
+    // oldTarget should be of type ConcolicTargetDescriptor
     ConcolicTargetDescriptorConstPtr target = oldTarget.dynamicCast<const ConcolicTarget>();
     assert(!target.isNull()); // TODO: Once we are sure everything is working correctly this should probably be a soft requirement.
 
@@ -79,7 +87,7 @@ TargetDescriptorConstPtr ConcolicTargetGenerator::permuteTarget(EventHandlerDesc
     Log::debug("Found solution for new target value:");
     printSolution(exploration.solution);
 
-    QString eventName = eventHandler->toString();
+    QString eventName = eventHandler->toString(); // TODO: better name...
     outputTree(target->getAnalysis()->getExecutionTree(), eventName, target->getAnalysis()->getExplorationIndex());
 
     // The symbolic variable for the target will be TARGET_0.
@@ -91,11 +99,6 @@ TargetDescriptorConstPtr ConcolicTargetGenerator::permuteTarget(EventHandlerDesc
     // The runtime will call "get" on the target in the next iteration and use the xpath to find the real target.
 
     return TargetDescriptorConstPtr(new ConcolicTarget(eventHandler, targetXPath, target->getAnalysis(), exploration.target));
-
-
-    // TODO ...
-    // Notice that this function can be called multiple times with the same "oldTarget" and "result", because of how Artemis functions.
-    // We should only return the new interesting target once, and otherwise NULL.
 
 }
 
@@ -151,5 +154,6 @@ void ConcolicTargetGenerator::outputTree(TraceNodePtr tree, QString eventName, u
     display.writeGraphFile(tree, filename, false);
     display_min.writeGraphFile(tree, filename_min, false);
 }
+
 
 }
