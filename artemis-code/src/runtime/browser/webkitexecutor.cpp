@@ -277,11 +277,14 @@ void WebKitExecutor::slLoadFinished(bool ok)
 
     qDebug() << "\n------------ EXECUTE SEQUENCE -----------" << endl;
 
-    mTraceBuilder->beginRecording();
+    if (mSymbolicMode != MODE_CONCOLIC_LAST_EVENT) {
+        mTraceBuilder->beginRecording();
+    }
 
     foreach(QSharedPointer<const BaseInput> input, currentConf->getInputSequence()->toList()) {
 
         if (mSymbolicMode == MODE_CONCOLIC_LAST_EVENT && input == currentConf->getInputSequence()->getLast()) {
+            mTraceBuilder->beginRecording();
             mWebkitListener->beginSymbolicSession();
         }
 
