@@ -579,6 +579,16 @@ namespace JSC {
         return u.ptr;
     }
 
+    inline void JSValue::setPtr(JSC::JSCell* value)
+    {
+        if (isExtended()) {
+            SymbolicImmediate* immediate = getImmediate();
+            immediate->u.ptr = value;
+        } else {
+            u.ptr = value;
+        }
+    }
+
     inline int64_t JSValue::getInt64() const
     {
         return (int64_t)getPtr();

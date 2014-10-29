@@ -79,11 +79,13 @@ namespace JSC {
         JSString(JSGlobalData& globalData, PassRefPtr<StringImpl> value)
             : JSCell(globalData, globalData.stringStructure.get())
             , m_value(value)
+            , m_isGlobal(false)
         {
         }
 
         JSString(JSGlobalData& globalData)
             : JSCell(globalData, globalData.stringStructure.get())
+            , m_isGlobal(false)
         {
         }
 
@@ -95,6 +97,7 @@ namespace JSC {
             m_is8Bit = m_value.impl()->is8Bit();
 #ifdef ARTEMIS
             m_symbolic = NULL;
+            m_isGlobal = false;
 #endif
         }
 
@@ -107,6 +110,7 @@ namespace JSC {
             Heap::heap(this)->reportExtraMemoryCost(cost);
 #ifdef ARTEMIS
             m_symbolic = NULL;
+            m_isGlobal = false;
 #endif
         }
 
@@ -118,6 +122,7 @@ namespace JSC {
             m_is8Bit = true;
 #ifdef ARTEMIS
             m_symbolic = NULL;
+            m_isGlobal = false;
 #endif
         }
         
@@ -131,6 +136,12 @@ namespace JSC {
             newString->finishCreation(globalData, length, cost);
             return newString;
         }
+        static JSString* createGlobal(JSGlobalData& globalData, PassRefPtr<StringImpl> value)
+        {
+            JSString* result = create(globalData, value);
+            result->m_isGlobal = true;
+            return result;
+        }
         static JSString* createHasOtherOwner(JSGlobalData& globalData, PassRefPtr<StringImpl> value)
         {
             ASSERT(value);
@@ -138,6 +149,12 @@ namespace JSC {
             JSString* newString = new (NotNull, allocateCell<JSString>(globalData.heap)) JSString(globalData, value);
             newString->finishCreation(globalData, length);
             return newString;
+        }
+        static JSString* createHasGlobalOwner(JSGlobalData& globalData, PassRefPtr<StringImpl> value)
+        {
+            JSString* result = createHasOtherOwner(globalData, value);
+            result->m_isGlobal = true;
+            return result;
         }
 
         const UString& value(ExecState*) const;
@@ -174,8 +191,29 @@ namespace JSC {
             return m_symbolic != NULL;
         }
 
+        inline bool isGlobalString() {
+            return m_isGlobal;
+        }
+
         inline void makeSymbolic(Symbolic::StringExpression* symbolic) {
+            ASSERT(!isGlobalString());
             m_symbolic = symbolic;
+        }
+
+        /**
+         * @brief makeSymbolicSafe
+         * @param symbolic
+         * @return the current string or a NEW string if the current string is a global
+         */
+        inline JSString* makeSymbolicSafe(Symbolic::StringExpression* symbolic, JSGlobalData& globalData) {
+            if (isGlobalString()) {
+                JSString* result = JSString::createHasOtherOwner(globalData, m_value.impl());
+                result->makeSymbolic(symbolic);
+                return result;
+            } else {
+                m_symbolic = symbolic;
+                return this;
+            }
         }
 
         Symbolic::StringExpression* asSymbolic() {
@@ -208,6 +246,7 @@ namespace JSC {
         friend JSString* jsSubstring(ExecState*, JSString*, unsigned offset, unsigned length);
 #ifdef ARTEMIS
         Symbolic::StringExpression* m_symbolic;
+        bool m_isGlobal;
 #endif
 
     };
@@ -476,7 +515,7 @@ namespace JSC {
 #ifdef ARTEMIS
             if (m_symbolic != NULL) {
                 JSValue v = jsNumber(m_length);
-                v.makeSymbolic(new Symbolic::StringLength(m_symbolic));
+                v.makeSymbolic(new Symbolic::StringLength(m_symbolic), exec->globalData());
                 slot.setValue(v);
             } else {
                 slot.setValue(jsNumber(m_length));

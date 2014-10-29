@@ -127,7 +127,7 @@ JSC::JSValue SymbolicInterpreter::ail_op_binary(JSC::CallFrame* callFrame,
             Symbolic::IntegerExpression* sx = x.generateIntegerExpression(callFrame);
             Symbolic::IntegerExpression* sy = y.generateIntegerExpression(callFrame);
 
-            result.makeSymbolic(new IntegerBinaryOperation(sx, neq?INT_NEQ:INT_EQ, sy));
+            result.makeSymbolic(new IntegerBinaryOperation(sx, neq?INT_NEQ:INT_EQ, sy), callFrame->globalData());
 
             ASSERT(result.isSymbolic());
 
@@ -140,20 +140,20 @@ JSC::JSValue SymbolicInterpreter::ail_op_binary(JSC::CallFrame* callFrame,
 
             if (x.isObject() && !x.isString() && x.isSymbolic()) {
                 // object -> string coercion
-                xx.makeSymbolic(new Symbolic::StringCoercion(x.asSymbolic()));
+                xx.makeSymbolic(new Symbolic::StringCoercion(x.asSymbolic()), callFrame->globalData());
                 x = xx;
             }
 
             if (y.isObject() && !y.isString() && y.isSymbolic()) {
                 // object -> string coercion
-                yy.makeSymbolic(new Symbolic::StringCoercion(y.asSymbolic()));
+                yy.makeSymbolic(new Symbolic::StringCoercion(y.asSymbolic()), callFrame->globalData());
                 y = yy;
             }
 
             Symbolic::StringExpression* sx = x.generateStringExpression(callFrame);
             Symbolic::StringExpression* sy = y.generateStringExpression(callFrame);
 
-            result.makeSymbolic(new StringBinaryOperation(sx, neq?STRING_NEQ:STRING_EQ, sy));
+            result.makeSymbolic(new StringBinaryOperation(sx, neq?STRING_NEQ:STRING_EQ, sy), callFrame->globalData());
 
             ASSERT(result.isSymbolic());
 
@@ -170,7 +170,7 @@ JSC::JSValue SymbolicInterpreter::ail_op_binary(JSC::CallFrame* callFrame,
                 Symbolic::ObjectExpression* sx = x.generateObjectExpression(callFrame);
                 Symbolic::ObjectExpression* sy = y.generateObjectExpression(callFrame);
 
-                result.makeSymbolic(new ObjectBinaryOperation(sx, neq ? OBJ_NEQ : OBJ_EQ, sy));
+                result.makeSymbolic(new ObjectBinaryOperation(sx, neq ? OBJ_NEQ : OBJ_EQ, sy), callFrame->globalData());
             }
 
             return result;
@@ -187,7 +187,7 @@ JSC::JSValue SymbolicInterpreter::ail_op_binary(JSC::CallFrame* callFrame,
         if(xx.isBoolean() && yy.isBoolean()){
             Symbolic::BooleanExpression* sx = x.generateBooleanExpression(callFrame);
             Symbolic::BooleanExpression* sy = y.generateBooleanExpression(callFrame);
-            result.makeSymbolic(new BooleanBinaryOperation(sx,neq?BOOL_NEQ:BOOL_EQ,sy));
+            result.makeSymbolic(new BooleanBinaryOperation(sx,neq?BOOL_NEQ:BOOL_EQ,sy), callFrame->globalData());
             return result;
         }
 
@@ -203,7 +203,7 @@ JSC::JSValue SymbolicInterpreter::ail_op_binary(JSC::CallFrame* callFrame,
             ASSERT(sx != NULL);
             ASSERT(sy != NULL);
 
-            result.makeSymbolic(new IntegerBinaryOperation(sx, neq?INT_NEQ:INT_EQ, sy));
+            result.makeSymbolic(new IntegerBinaryOperation(sx, neq?INT_NEQ:INT_EQ, sy), callFrame->globalData());
 
             ASSERT(result.isSymbolic());
 
@@ -223,21 +223,21 @@ JSC::JSValue SymbolicInterpreter::ail_op_binary(JSC::CallFrame* callFrame,
         if(x.isString() && y.isString()){
             Symbolic::StringExpression* sx = x.generateStringExpression(callFrame);
             Symbolic::StringExpression* sy = y.generateStringExpression(callFrame);
-            result.makeSymbolic(new StringBinaryOperation(sx,neq?STRING_SNEQ:STRING_SEQ,sy));
+            result.makeSymbolic(new StringBinaryOperation(sx,neq?STRING_SNEQ:STRING_SEQ,sy), callFrame->globalData());
             return result;
         }
 
         if(x.isNumber() && y.isNumber()){
             Symbolic::IntegerExpression* sx = x.generateIntegerExpression(callFrame);
             Symbolic::IntegerExpression* sy = y.generateIntegerExpression(callFrame);
-            result.makeSymbolic(new IntegerBinaryOperation(sx,neq?INT_SNEQ:INT_SEQ,sy));
+            result.makeSymbolic(new IntegerBinaryOperation(sx,neq?INT_SNEQ:INT_SEQ,sy), callFrame->globalData());
             return result;
         }
 
         if(x.isBoolean() && y.isBoolean()){
             Symbolic::BooleanExpression* sx = x.generateBooleanExpression(callFrame);
             Symbolic::BooleanExpression* sy = y.generateBooleanExpression(callFrame);
-            result.makeSymbolic(new BooleanBinaryOperation(sx,neq?BOOL_SNEQ:BOOL_SEQ,sy));
+            result.makeSymbolic(new BooleanBinaryOperation(sx,neq?BOOL_SNEQ:BOOL_SEQ,sy), callFrame->globalData());
             return result;
         }
 
@@ -266,12 +266,12 @@ JSC::JSValue SymbolicInterpreter::ail_op_binary(JSC::CallFrame* callFrame,
         if(xx.isString() && yy.isString()){
             Symbolic::StringExpression* sx = x.generateStringExpression(callFrame);
             Symbolic::StringExpression* sy = y.generateStringExpression(callFrame);
-            result.makeSymbolic(new StringBinaryOperation(sx,strOp,sy));
+            result.makeSymbolic(new StringBinaryOperation(sx,strOp,sy), callFrame->globalData());
             return result;
         }
         Symbolic::IntegerExpression* sx = xx.isNumber()?x.generateIntegerExpression(callFrame):x.generateIntegerCoercionExpression(callFrame);
         Symbolic::IntegerExpression* sy = yy.isNumber()?y.generateIntegerExpression(callFrame):y.generateIntegerCoercionExpression(callFrame);
-        result.makeSymbolic(new IntegerBinaryOperation(sx,intOp,sy));
+        result.makeSymbolic(new IntegerBinaryOperation(sx,intOp,sy), callFrame->globalData());
         return result;
         break;
 }
@@ -288,7 +288,7 @@ JSC::JSValue SymbolicInterpreter::ail_op_binary(JSC::CallFrame* callFrame,
             ASSERT(sx);
             ASSERT(sy);
 
-            result.makeSymbolic(new IntegerBinaryOperation(sx, INT_ADD, sy));
+            result.makeSymbolic(new IntegerBinaryOperation(sx, INT_ADD, sy), callFrame->globalData());
 
             ASSERT(result.isSymbolic());
 
@@ -315,7 +315,7 @@ JSC::JSValue SymbolicInterpreter::ail_op_binary(JSC::CallFrame* callFrame,
             ASSERT(sx != NULL);
             ASSERT(sy != NULL);
 
-            result.makeSymbolic(new StringBinaryOperation(sx, CONCAT, sy));
+            result.makeSymbolic(new StringBinaryOperation(sx, CONCAT, sy), callFrame->globalData());
 
             ASSERT(result.isSymbolic());
 
@@ -334,7 +334,7 @@ JSC::JSValue SymbolicInterpreter::ail_op_binary(JSC::CallFrame* callFrame,
             ASSERT(sx != NULL);
             ASSERT(sy != NULL);
 
-            result.makeSymbolic(new StringBinaryOperation(sx, CONCAT, sy));
+            result.makeSymbolic(new StringBinaryOperation(sx, CONCAT, sy), callFrame->globalData());
 
             ASSERT(result.isSymbolic());
 
@@ -352,7 +352,7 @@ JSC::JSValue SymbolicInterpreter::ail_op_binary(JSC::CallFrame* callFrame,
         ASSERT(sx != NULL);
         ASSERT(sy != NULL);
 
-        result.makeSymbolic(new IntegerBinaryOperation(sx, INT_ADD, sy));
+        result.makeSymbolic(new IntegerBinaryOperation(sx, INT_ADD, sy), callFrame->globalData());
 
         ASSERT(result.isSymbolic());
 
@@ -374,7 +374,7 @@ JSC::JSValue SymbolicInterpreter::ail_op_binary(JSC::CallFrame* callFrame,
         ASSERT(sx != NULL);
         ASSERT(sy != NULL);
 
-        result.makeSymbolic(new IntegerBinaryOperation(sx,intOp,sy));
+        result.makeSymbolic(new IntegerBinaryOperation(sx,intOp,sy), callFrame->globalData());
         ASSERT(result.isSymbolic());
         return result;
 

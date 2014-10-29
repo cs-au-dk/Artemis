@@ -1261,7 +1261,7 @@ EncodedJSValue JSC_HOST_CALL arrayProtoFuncIndexOf(ExecState* exec)
                     (Symbolic::Expression*)searchElement.asSymbolic() :
                     (Symbolic::Expression*)new Symbolic::ConstantObject((void*)searchElement.asCell());
 
-        value.makeSymbolic(new Symbolic::ObjectArrayIndexOf(symbList, symbElement));
+        value.makeSymbolic(new Symbolic::ObjectArrayIndexOf(symbList, symbElement), exec->globalData());
     }
 #endif
 

@@ -1857,7 +1857,7 @@ sub GenerateImplementation
                         push(@implContent, "       std::ostringstream sessionId;\n");
                         push(@implContent, "       sessionId << \"SYM_TARGET_\" << JSC::Interpreter::m_symbolic->getSessionId();\n");
                         push(@implContent, "       Symbolic::SymbolicSource source(Symbolic::EVENT_TARGET, Symbolic::EVENT_TARGET_IDENT, sessionId.str(), domSnapshot);\n");
-                        push(@implContent, "       result.makeSymbolic(new Symbolic::SymbolicObject(source));\n");
+                        push(@implContent, "       result.makeSymbolic(new Symbolic::SymbolicObject(source), exec->globalData());\n");
                         push(@implContent, "   }\n");
                         # ARTEMIS END
                     }
@@ -1876,7 +1876,7 @@ sub GenerateImplementation
                         }
 
                         push(@implContent, "        if (slotBase.isSymbolic()) {\n");
-                        push(@implContent, "        result.makeSymbolic(" . $symbolicVar . ");\n");
+                        push(@implContent, "        result.makeSymbolic(" . $symbolicVar . ", exec->globalData());\n");
                         push(@implContent, "        }\n");
                         # ARTEMIS END
                     }
@@ -2085,16 +2085,16 @@ sub GenerateImplementation
                         push(@implContent, "    if (castedThis->m_" . $attribute->signature->name . "Symbolic == NULL) {\n");
 
                         if ($attribute->signature->extendedAttributes->{"SymbolicString"}) {
-                            push(@implContent, "        result.makeSymbolic(new Symbolic::SymbolicString(Symbolic::SymbolicSource(inputSourceType, method, std::string(strs.str()))));\n");
+                            push(@implContent, "        result.makeSymbolic(new Symbolic::SymbolicString(Symbolic::SymbolicSource(inputSourceType, method, std::string(strs.str()))), exec->globalData());\n");
                         } elsif ($attribute->signature->extendedAttributes->{"SymbolicBoolean"}) {
-                            push(@implContent, "        result.makeSymbolic(new Symbolic::SymbolicBoolean(Symbolic::SymbolicSource(inputSourceType, method, std::string(strs.str()))));\n");
+                            push(@implContent, "        result.makeSymbolic(new Symbolic::SymbolicBoolean(Symbolic::SymbolicSource(inputSourceType, method, std::string(strs.str()))), exec->globalData());\n");
                         } else { # SymbolicInteger
-                            push(@implContent, "        result.makeSymbolic(new Symbolic::SymbolicInteger(Symbolic::SymbolicSource(inputSourceType, method, std::string(strs.str()))));\n");
+                            push(@implContent, "        result.makeSymbolic(new Symbolic::SymbolicInteger(Symbolic::SymbolicSource(inputSourceType, method, std::string(strs.str()))), exec->globalData());\n");
                         }
 
                         push(@implContent, "\n");
                         push(@implContent, "    } else {\n");
-                        push(@implContent, "        result.makeSymbolic(castedThis->m_" . $attribute->signature->name . "Symbolic);\n");
+                        push(@implContent, "        result.makeSymbolic(castedThis->m_" . $attribute->signature->name . "Symbolic, exec->globalData());\n");
                         push(@implContent, "    }\n");
                         # ARTEMIS END
                     }
@@ -3139,7 +3139,7 @@ sub GenerateImplementationFunctionCall()
         # Artemis
         if (!$function->isStatic and $addSymbolicProperty) {
             push(@implContent, $indent . "if (thisValue.isSymbolic()) {\n");
-            push(@implContent, $indent . "    result.makeSymbolic(new Symbolic::SymbolicObjectPropertyString((Symbolic::SymbolicObject*)thisValue.asSymbolic(), name.ascii().data()));\n");
+            push(@implContent, $indent . "    result.makeSymbolic(new Symbolic::SymbolicObjectPropertyString((Symbolic::SymbolicObject*)thisValue.asSymbolic(), name.ascii().data()), exec->globalData());\n");
             push(@implContent, $indent . "}\n");
         }
 

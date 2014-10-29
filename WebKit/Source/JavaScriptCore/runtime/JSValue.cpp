@@ -334,14 +334,16 @@ void JSValue::makeIndirectSymbolic() {
 
 }
 
-void JSValue::makeSymbolic(Symbolic::Expression* symbolicValue) {
+void JSValue::makeSymbolic(Symbolic::Expression* symbolicValue, JSGlobalData& globalData) {
     ASSERT(symbolicValue != NULL);
 
     makeExtended();
     getImmediate()->symbolic = symbolicValue;
 
     if (isString()) {
-       static_cast<JSString*>(asCell())->makeSymbolic(dynamic_cast<Symbolic::StringExpression*>(symbolicValue));
+        JSString* string = static_cast<JSString*>(asCell());
+        string = string->makeSymbolicSafe(dynamic_cast<Symbolic::StringExpression*>(symbolicValue), globalData);
+        setPtr(string);
     }
 
 }

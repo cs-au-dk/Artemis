@@ -94,7 +94,8 @@ EncodedJSValue JSC_HOST_CALL regExpProtoFuncTest(ExecState* exec)
 #ifdef ARTEMIS
     if (arg.isSymbolic()) {
         result.makeSymbolic(new Symbolic::StringRegexSubmatch((Symbolic::StringExpression*)arg.asSymbolic(),
-                                                              new std::string(reg->regExp()->pattern().ascii().data())));
+                                                              new std::string(reg->regExp()->pattern().ascii().data())),
+                            exec->globalData());
     }
 #endif
 
@@ -110,7 +111,8 @@ EncodedJSValue JSC_HOST_CALL regExpProtoFuncExec(ExecState* exec)
     // TODO(Artemis): In some cases the containing symbolic value is not the same as the symbolic value in the
     // outer value. We should find a more permanent solution for handling symbolic strings.
     if (exec->argument(0).isSymbolic() && exec->argument(0).isString()) {
-        exec->argument(0).toString(exec)->makeSymbolic((Symbolic::StringExpression*)exec->argument(0).asSymbolic());
+        exec->argument(0).makeSymbolic((Symbolic::StringExpression*)exec->argument(0).asSymbolic(),
+                                       exec->globalData());
     }
 
     return JSValue::encode(asRegExpObject(thisValue)->exec(exec, exec->argument(0).toString(exec)));

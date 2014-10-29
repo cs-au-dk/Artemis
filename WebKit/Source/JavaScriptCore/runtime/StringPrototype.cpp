@@ -689,7 +689,8 @@ EncodedJSValue JSC_HOST_CALL stringProtoFuncReplace(ExecState* exec)
             JSValue value = JSValue::decode(replaceUsingRegExpSearch(exec, string, searchValue));
             value.makeSymbolic(new Symbolic::StringRegexReplace((Symbolic::StringExpression*)thisValue.asSymbolic(),
                                                                 new std::string(searchValue.toUString(exec).ascii().data()),
-                                                                new std::string(replaceValue.toUString(exec).ascii().data())));
+                                                                new std::string(replaceValue.toUString(exec).ascii().data())),
+                               exec->globalData());
             return JSValue::encode(value);
         } else {
             return replaceUsingRegExpSearch(exec, string, searchValue);
@@ -705,7 +706,8 @@ EncodedJSValue JSC_HOST_CALL stringProtoFuncReplace(ExecState* exec)
         JSValue value = JSValue::decode(replaceUsingStringSearch(exec, string, searchValue));
         value.makeSymbolic(new Symbolic::StringReplace((Symbolic::StringExpression*)thisValue.asSymbolic(),
                                                        new std::string(searchValue.toUString(exec).ascii().data()),
-                                                       new std::string(replaceValue.toUString(exec).ascii().data())));
+                                                       new std::string(replaceValue.toUString(exec).ascii().data())),
+                           exec->globalData());
         return JSValue::encode(value);
     } else {
 
@@ -763,7 +765,8 @@ EncodedJSValue JSC_HOST_CALL stringProtoFuncCharAt(ExecState* exec)
     #ifdef ARTEMIS
     if (thisValue.isSymbolic()) {
         result.makeSymbolic(new Symbolic::StringCharAt((Symbolic::StringExpression*)thisValue.asSymbolic(),
-                                                        a0.isUInt32() ? a0.asUInt32() : static_cast<uint32_t>(a0.toInteger(exec))));
+                                                        a0.isUInt32() ? a0.asUInt32() : static_cast<uint32_t>(a0.toInteger(exec))),
+                            exec->globalData());
     }
     #endif
 
@@ -819,7 +822,8 @@ EncodedJSValue JSC_HOST_CALL stringProtoFuncConcat(ExecState* exec)
                                                              (Symbolic::StringExpression*)new Symbolic::ConstantString(new std::string(thisValue.toUString(exec).ascii().data())),
                                     Symbolic::CONCAT,
                                     thatValue.isSymbolic() ? (Symbolic::StringExpression*)thatValue.asSymbolic() :
-                                                             (Symbolic::StringExpression*)new Symbolic::ConstantString(new std::string(thatValue.toUString(exec).ascii().data()))));
+                                                             (Symbolic::StringExpression*)new Symbolic::ConstantString(new std::string(thatValue.toUString(exec).ascii().data()))),
+                                exec->globalData());
         }
 
         return JSValue::encode(result);
@@ -875,7 +879,8 @@ EncodedJSValue JSC_HOST_CALL stringProtoFuncIndexOf(ExecState* exec)
                            a0.isSymbolic() ? (Symbolic::StringExpression*)a0.asSymbolic() :
                                              (Symbolic::StringExpression*)new Symbolic::ConstantString(new std::string(u2.ascii().data())),
                            a1.isSymbolic() ? (Symbolic::IntegerExpression*)a1.asSymbolic() :
-                                             (Symbolic::IntegerExpression*)new Symbolic::ConstantInteger(pos)));
+                                             (Symbolic::IntegerExpression*)new Symbolic::ConstantInteger(pos)),
+                       exec->globalData());
 
         return JSValue::encode(r);
     }
@@ -974,7 +979,7 @@ EncodedJSValue JSC_HOST_CALL stringProtoFuncMatch(ExecState* exec)
                     JSValue v = slot.getValue(exec, i);
 
                     if (!v.isEmpty() && !v.isDeleted() && v.isString()) {
-                        v.makeSymbolic(new Symbolic::StringRegexSubmatchArrayAt(symbolicMatch, i));
+                        v.makeSymbolic(new Symbolic::StringRegexSubmatchArrayAt(symbolicMatch, i), exec->globalData());
                         array->setIndex(exec->globalData(), i, v);
                     }
                 }
@@ -984,7 +989,7 @@ EncodedJSValue JSC_HOST_CALL stringProtoFuncMatch(ExecState* exec)
                 r = jsNull();
             }
 
-            r.makeSymbolic(new Symbolic::StringRegexSubmatchArrayMatch(symbolicMatch));
+            r.makeSymbolic(new Symbolic::StringRegexSubmatchArrayMatch(symbolicMatch), exec->globalData());
             return JSValue::encode(r);
         }
 #endif
@@ -1045,7 +1050,8 @@ EncodedJSValue JSC_HOST_CALL stringProtoFuncSearch(ExecState* exec)
 #ifdef ARTEMIS
     if (thisValue.isSymbolic()) {
         r.makeSymbolic(new Symbolic::StringRegexSubmatchIndex((Symbolic::StringExpression*)thisValue.asSymbolic(),
-                                                              new std::string(reg->pattern().ascii().data())));
+                                                              new std::string(reg->pattern().ascii().data())),
+                       exec->globalData());
     }
 #endif
 
@@ -1382,7 +1388,8 @@ EncodedJSValue JSC_HOST_CALL stringProtoFuncSubstr(ExecState* exec)
         result.makeSymbolic(new Symbolic::StringSubstring(jsString ?
                                                               (Symbolic::StringExpression*)thisValue.asSymbolic() :
                                                               new Symbolic::StringCoercion(thisValue.asSymbolic()),
-                                                          (int)low, (int)high));
+                                                          (int)low, (int)high),
+                            exec->globalData());
     }
 
     return JSValue::encode(result);
@@ -1434,7 +1441,7 @@ EncodedJSValue JSC_HOST_CALL stringProtoFuncSubstring(ExecState* exec)
     if (thisValue.isSymbolic()) {
         double low = a0.toInteger(exec);
         double high = a1.isUndefined() ? -1 : (a1.toInteger(exec) > low ? a1.toInteger(exec) - low : 0); // get length
-        result.makeSymbolic(new Symbolic::StringSubstring((Symbolic::StringExpression*)thisValue.asSymbolic(), (int)low, (int)high));
+        result.makeSymbolic(new Symbolic::StringSubstring((Symbolic::StringExpression*)thisValue.asSymbolic(), (int)low, (int)high), exec->globalData());
     }
 
     return JSValue::encode(result);
