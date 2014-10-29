@@ -342,7 +342,7 @@ void JSValue::makeSymbolic(Symbolic::Expression* symbolicValue, JSGlobalData& gl
 
     if (isString()) {
         JSString* string = static_cast<JSString*>(asCell());
-        string->makeSymbolicSafe(dynamic_cast<Symbolic::StringExpression*>(symbolicValue), globalData);
+        string = string->makeSymbolicSafe(dynamic_cast<Symbolic::StringExpression*>(symbolicValue), globalData);
         setPtr(string);
     }
 
