@@ -81,6 +81,7 @@ protected:
     void visit(Symbolic::SymbolicObject* symbolicobject, void* arg);
     void visit(Symbolic::ObjectArrayIndexOf* objectarrayindexof, void* arg);
     void visit(Symbolic::SymbolicObjectPropertyString* obj, void* arg);
+    void visit(Symbolic::StringSubstring* obj, void* arg);
 
     void recordConstraint(const std::string&, CVC4Type);
 

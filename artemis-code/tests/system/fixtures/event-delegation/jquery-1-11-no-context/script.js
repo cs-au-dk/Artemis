@@ -24,6 +24,8 @@ $(function() {
         items = algorithm_func(items);
         
         $("#result-" + algorithm_name).html(items.join(" "));
+
+        alert(algorithm_name);
     };
 
     // Register event handler

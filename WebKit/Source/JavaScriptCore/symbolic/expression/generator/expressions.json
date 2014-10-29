@@ -281,9 +281,20 @@
 		"type": "expression",
 		"parent": "ObjectExpression",
 		"fields": [
-			["StringRegexSubmatchArray*", "match"]
+            ["StringRegexSubmatchArray*", "match"]
 		]
 	},
+
+    {
+        "ID": "StringSubstring",
+        "type": "expression",
+        "parent": "StringExpression",
+        "fields": [
+            ["StringExpression*", "source"],
+            ["int", "from"],
+            ["int", "length"]
+        ]
+    },
 
 	{
 		"ID": "BooleanExpression",

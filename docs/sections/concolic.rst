@@ -112,12 +112,16 @@ As an easy reference, we use http://www.w3schools.com/jsref/ as an easy-to-read 
 Symbolic Support
 ^^^^^^^^^^^^^^^^
 
-``String.{charAt, concat, match, replace, search, toString, valueOf, length}``,
+``String.{charAt, concat, match, replace, search, toString, valueOf, length, substr, substring}``,
 
 .. note::
 
    ``String.replace(S2, S3)`` only supported if ``String`` is symbolic. Warnings are emitted if ``S1`` are not symbolic but ``S2`` or ``S3`` are symbolic.
 
+.. note::
+
+   ``String.{substr, substring}`` emit warnings if their indexes (start index, end index or length) are symbolic.
+   
 ``RegExp.{exec, test}``,
 
 .. note::
@@ -166,7 +170,7 @@ Usage Warnings
 
 ``Math.{abs, acos, asin, atan, atan2, cos, exp, log, pow, random, round, sin, sqrt, tan}``,
 
-``String.{charCodeAt, indexOf, lastIndexOf, localeCompare, slice, split, substr, substring, toLocaleLowerCase, toLocaleUpperCase, toLowerCase, toUpperCase, trim, trimLeft, trimRight, anchor, big, blink, bold, fixed, fontcolor, fontsize, italics, link, small, strike, sub, sup, fromCharCode}``,
+``String.{charCodeAt, indexOf, lastIndexOf, localeCompare, slice, split, substring, toLocaleLowerCase, toLocaleUpperCase, toLowerCase, toUpperCase, trim, trimLeft, trimRight, anchor, big, blink, bold, fixed, fontcolor, fontsize, italics, link, small, strike, sub, sup, fromCharCode}``,
 
 ``RegExp.{constructor, compile}``, ``decodeURI``, ``decodeURIComponent``, ``encodeURI``, ``encodeURIComponent``, ``eval``, ``isFinite``, ``isNaN``, ``parseFloat``, ``escape``, ``unescape``
 

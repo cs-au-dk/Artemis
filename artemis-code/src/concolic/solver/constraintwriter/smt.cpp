@@ -309,6 +309,11 @@ void SMTConstraintWriter::visit(Symbolic::SymbolicObjectPropertyString* obj, voi
     error("NO SYMBOLIC NODE PROPERTY SUPPORT");
 }
 
+void SMTConstraintWriter::visit(Symbolic::StringSubstring* obj, void* arg)
+{
+    error("NO SYMBOLIC STRING SUBSTRING SUPPORT");
+}
+
 void SMTConstraintWriter::visit(Symbolic::StringRegexSubmatchArrayMatch* exp, void* arg)
 {
     error("NO SYMBOLIC STRING REGEX SUBMATCH (ARRAY) SUPPORT");
