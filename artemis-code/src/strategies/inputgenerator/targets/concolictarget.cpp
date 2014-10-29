@@ -41,7 +41,7 @@ QWebElement ConcolicTarget::get(ArtemisWebPagePtr page) const
     }
 
     // for now, emit a hard error. This should be changed to something less terminating later
-    Log::error(std::string("Concolic target with xpath ") + mTargetXPath.toStdString() + " could not be found.");
+    Log::fatal(std::string("Concolic target with xpath ") + mTargetXPath.toStdString() + " could not be found.");
     exit(1);
     //return root;
 }

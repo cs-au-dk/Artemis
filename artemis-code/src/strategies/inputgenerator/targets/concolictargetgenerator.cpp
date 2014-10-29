@@ -51,19 +51,17 @@ TargetDescriptorConstPtr ConcolicTargetGenerator::permuteTarget(EventHandlerDesc
                                        ExecutionResultConstPtr result) const
 {
     // Notice that this function can be called multiple times with the same "oldTarget" and "result", because of how Artemis functions.
-    // We should only return the new interesting target once, and otherwise NULL.
-
-    //if ( ... ) {
-    //    return TargetDescriptorConstPtr(NULL);
-    //}
+    // In this case the concolic analysis can return new explorations until there is nothing left to explore in the execution tree.
 
     // oldTarget should be of type ConcolicTargetDescriptor
     ConcolicTargetDescriptorConstPtr target = oldTarget.dynamicCast<const ConcolicTarget>();
-    assert(!target.isNull()); // TODO: Once we are sure everything is working correctly this should probably be a soft requirement.
+    assert(!target.isNull());
 
     PathConditionPtr pc = PathCondition::createFromTrace(mTraceBuilder->trace());
     Log::debug("New PC found:");
     Log::debug(pc->toStatisticsValuesString(true));
+
+    QString eventName = eventHandler->toString(); // TODO: better name would be useful...
 
     // The previous trace is guaranteed to be generated from oldTarget, so this should match our ConcolicTarrget.
     // Add the trace into the analysis, passing in the ExplorationHandle which lets the analysis know where this run was expected to exlpore.
@@ -78,6 +76,7 @@ TargetDescriptorConstPtr ConcolicTargetGenerator::permuteTarget(EventHandlerDesc
 
     if (!exploration.newExploration) {
         Log::debug("Could not find any new exploration");
+        outputTree(target->getAnalysis()->getExecutionTree(), eventName, target->getAnalysis()->getExplorationIndex());
         return TargetDescriptorConstPtr(NULL); // TODO: is this the correct way to signal nothing to suggest?
     }
 
@@ -87,7 +86,6 @@ TargetDescriptorConstPtr ConcolicTargetGenerator::permuteTarget(EventHandlerDesc
     Log::debug("Found solution for new target value:");
     printSolution(exploration.solution);
 
-    QString eventName = eventHandler->toString(); // TODO: better name...
     outputTree(target->getAnalysis()->getExecutionTree(), eventName, target->getAnalysis()->getExplorationIndex());
 
     // The symbolic variable for the target will be TARGET_0.
