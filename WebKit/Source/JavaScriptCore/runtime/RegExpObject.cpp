@@ -308,7 +308,7 @@ JSValue RegExpObject::exec(ExecState* exec, JSString* string)
                     JSValue v = slot.getValue(exec, i);
 
                     if (!v.isEmpty() && !v.isDeleted() && v.isString()) {
-                        v.makeSymbolic(new Symbolic::StringRegexSubmatchArrayAt(symbolicMatch, i));
+                        v.makeSymbolic(new Symbolic::StringRegexSubmatchArrayAt(symbolicMatch, i), exec->globalData());
                         array->setIndex(exec->globalData(), i, v);
                     }
                 }
@@ -318,7 +318,7 @@ JSValue RegExpObject::exec(ExecState* exec, JSString* string)
                 r = jsNull();
             }
 
-            r.makeSymbolic(new Symbolic::StringRegexSubmatchArrayMatch(symbolicMatch));
+            r.makeSymbolic(new Symbolic::StringRegexSubmatchArrayMatch(symbolicMatch), exec->globalData());
             return r;
 
         } else {

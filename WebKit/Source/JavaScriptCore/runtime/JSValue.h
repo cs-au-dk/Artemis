@@ -229,7 +229,7 @@ namespace JSC {
         bool isSymbolic() const;
 
         void makeIndirectSymbolic();
-        void makeSymbolic(Symbolic::Expression* symbolic);
+        void makeSymbolic(Symbolic::Expression* symbolic, JSGlobalData& globalData);
 
         Symbolic::Expression* asSymbolic() const;
 
@@ -428,6 +428,7 @@ namespace JSC {
 
         SymbolicImmediate* getImmediate() const;
         JSC::JSCell* getPtr() const;
+        void setPtr(JSC::JSCell* value);
         int64_t getInt64() const;
 #else
         // If all bits in the mask are set, this indicates an integer number,

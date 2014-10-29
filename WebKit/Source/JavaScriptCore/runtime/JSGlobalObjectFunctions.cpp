@@ -561,7 +561,7 @@ EncodedJSValue JSC_HOST_CALL globalFuncParseInt(ExecState* exec)
 #ifdef ARTEMIS
     if (value.isSymbolic()) {
         JSValue v = jsNumber(parseInt(s, radixValue.toInt32(exec)));
-        v.makeSymbolic(new Symbolic::IntegerCoercion(value.asSymbolic()));
+        v.makeSymbolic(new Symbolic::IntegerCoercion(value.asSymbolic()), exec->globalData());
         return JSValue::encode(v);
     } else {
         return JSValue::encode(jsNumber(parseInt(s, radixValue.toInt32(exec))));

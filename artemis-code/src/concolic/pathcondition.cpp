@@ -156,6 +156,9 @@ std::string PathCondition::toStatisticsValuesString(bool includeBranching)
         } else {
             sstrm << "PC[" << i << "]: " << printer.getResult() << std::endl;
         }
+
+        TraceSymbolicBranch* branch = mConditions.at(i).second;
+        sstrm << "  @ " << branch->getSource()->getUrl().toStdString() << ":" << branch->getSource()->getStartLine() << " line " << branch->getLinenumber() << std::endl;
     }
 
     return sstrm.str();

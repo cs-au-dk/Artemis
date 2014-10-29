@@ -4542,7 +4542,7 @@ skip_id_custom_self:
             JSValue _oldv = _v;
 
             _v = jsBoolean(_oldv.toBoolean(callFrame));
-            _v.makeSymbolic(_oldv.generateBooleanCoercionExpression(callFrame));
+            _v.makeSymbolic(_oldv.generateBooleanCoercionExpression(callFrame), callFrame->globalData());
         }
 
         bool _jumped = _v.toBoolean(callFrame);
@@ -4595,7 +4595,7 @@ skip_id_custom_self:
             JSValue _oldv = _v;
 
             _v = jsBoolean(_oldv.toBoolean(callFrame));
-            _v.makeSymbolic(_oldv.generateBooleanCoercionExpression(callFrame));
+            _v.makeSymbolic(_oldv.generateBooleanCoercionExpression(callFrame), callFrame->globalData());
         }
 
         bool _jumped = !_v.toBoolean(callFrame);
@@ -4646,7 +4646,7 @@ skip_id_custom_self:
             JSValue _oldv = _v;
 
             _v = jsBoolean(_oldv.toBoolean(callFrame));
-            _v.makeSymbolic(_oldv.generateBooleanCoercionExpression(callFrame));
+            _v.makeSymbolic(_oldv.generateBooleanCoercionExpression(callFrame), callFrame->globalData());
         }
 
         bool _jumped = _v.toBoolean(callFrame);
@@ -4694,7 +4694,7 @@ skip_id_custom_self:
             JSValue _oldv = _v;
 
             _v = jsBoolean(_oldv.toBoolean(callFrame));
-            _v.makeSymbolic(_oldv.generateBooleanCoercionExpression(callFrame));
+            _v.makeSymbolic(_oldv.generateBooleanCoercionExpression(callFrame), callFrame->globalData());
         }
 
         bool _jumped = !_v.toBoolean(callFrame);

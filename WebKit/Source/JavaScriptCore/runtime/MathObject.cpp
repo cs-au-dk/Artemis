@@ -171,9 +171,9 @@ EncodedJSValue JSC_HOST_CALL mathProtoFuncCeil(ExecState* exec)
 
     if (origin.isSymbolic()) {
         if (origin.isNumber()) {
-            v.makeSymbolic(origin.asSymbolic());
+            v.makeSymbolic(origin.asSymbolic(), exec->globalData());
         } else {
-            v.makeSymbolic((Symbolic::IntegerExpression*)new Symbolic::IntegerCoercion(origin.asSymbolic()));
+            v.makeSymbolic((Symbolic::IntegerExpression*)new Symbolic::IntegerCoercion(origin.asSymbolic()), exec->globalData());
         }
     }
 
@@ -203,9 +203,9 @@ EncodedJSValue JSC_HOST_CALL mathProtoFuncFloor(ExecState* exec)
 
     if (origin.isSymbolic()) {
         if (origin.isNumber()) {
-            v.makeSymbolic(origin.asSymbolic());
+            v.makeSymbolic(origin.asSymbolic(), exec->globalData());
         } else {
-            v.makeSymbolic((Symbolic::IntegerExpression*)new Symbolic::IntegerCoercion(origin.asSymbolic()));
+            v.makeSymbolic((Symbolic::IntegerExpression*)new Symbolic::IntegerCoercion(origin.asSymbolic()), exec->globalData());
         }
     }
 
@@ -255,7 +255,7 @@ EncodedJSValue JSC_HOST_CALL mathProtoFuncMax(ExecState* exec)
     JSValue res = jsNumber(result);
 
     if (isSymbolic) {
-        res.makeSymbolic(new Symbolic::IntegerMaxMin(args, true));
+        res.makeSymbolic(new Symbolic::IntegerMaxMin(args, true), exec->globalData());
     }
     return JSValue::encode(res);
 }
@@ -295,7 +295,7 @@ EncodedJSValue JSC_HOST_CALL mathProtoFuncMin(ExecState* exec)
     JSValue res = jsNumber(result);
 
     if (isSymbolic) {
-        res.makeSymbolic(new Symbolic::IntegerMaxMin(args, false));
+        res.makeSymbolic(new Symbolic::IntegerMaxMin(args, false), exec->globalData());
     }
     return JSValue::encode(res);
 }
