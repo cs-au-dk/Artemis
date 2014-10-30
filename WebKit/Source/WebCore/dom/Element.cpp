@@ -2129,8 +2129,11 @@ PassRefPtr<Attr> Element::ensureAttr(const QualifiedName& name)
 std::string Element::getXPath()
 {
     // root element
-    if (tagName().length() == 0 || parentElement() == NULL) {
+    if (tagName().length() == 0) {
         return "/";
+    }
+    if (parentElement() == NULL) {
+        return std::string("/") + tagName().lower().ascii().data();
     }
 
     std::string tn = tagName().lower().ascii().data();
