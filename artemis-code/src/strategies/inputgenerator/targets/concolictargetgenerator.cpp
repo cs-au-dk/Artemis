@@ -28,6 +28,7 @@ ConcolicTargetGenerator::ConcolicTargetGenerator(Options options, TraceBuilder* 
     : TargetGenerator()
     , mOptions(options)
     , mTraceBuilder(traceBuilder)
+    , mTreeIdx(1)
 {
 }
 
@@ -146,8 +147,9 @@ void ConcolicTargetGenerator::outputTree(TraceNodePtr tree, QString eventName, u
     TraceDisplayOverview display_min;
 
     QString date = QDateTime::currentDateTime().toString("yyyy-MM-dd-hh-mm-ss");
-    QString filename = QString("event_%1_%2_%3.gv").arg(date, eventName).arg(count);
-    QString filename_min = QString("event_%1_%2_%3_min.gv").arg(date, eventName).arg(count);
+    QString filename = QString("event_%1_%2_%3_%4.gv").arg(date, eventName).arg(count).arg(mTreeIdx);
+    QString filename_min = QString("event_%1_%2_%3_%4_min.gv").arg(date, eventName).arg(count).arg(mTreeIdx);
+    mTreeIdx++;
 
     display.writeGraphFile(tree, filename, false);
     display_min.writeGraphFile(tree, filename_min, false);

@@ -39,6 +39,7 @@ public:
 protected:
     Options mOptions;
     TraceBuilder* mTraceBuilder;
+    mutable uint mTreeIdx;
 
     void printSolution(const SolutionPtr solution) const;
     void outputTree(TraceNodePtr tree, QString eventName, uint count) const;
