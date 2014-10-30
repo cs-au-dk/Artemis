@@ -1,0 +1,27 @@
+<!doctype html>
+<html>
+<head>
+
+<!-- The prototype examples are only snippets, so this working example was adapted from it. -->
+<!-- http://prototypejs.org/learn/event-delegation.html -->
+
+<script src="prototype-1.7.2.0.js"></script>
+</head>
+
+<div id="items">
+  <ul>
+    <li>lorem</li>
+    <li>ipsum</li>
+    <li>dolor</li>
+  </ul>
+</div>
+
+<script>
+$('items').on('click', 'li', function(event, element) {
+  alert(element.textContent); // Replaced dummy handler body.
+});
+
+</script>
+
+</body>
+</html>

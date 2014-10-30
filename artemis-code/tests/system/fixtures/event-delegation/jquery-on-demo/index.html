@@ -1,0 +1,37 @@
+<!doctype html>
+<html lang="en">
+<head>
+
+<!-- Taken directly from http://api.jquery.com/on/#example-9 -->
+
+<meta charset="utf-8">
+<title>on demo</title>
+<style>
+p {
+background: yellow;
+font-weight: bold;
+cursor: pointer;
+padding: 5px;
+}
+p.over {
+background: #ccc;
+}
+span {
+color: red;
+}
+</style>
+<!-- Modified to make the exmaple run locally -->
+<!--<script src="//code.jquery.com/jquery-1.10.2.js"></script>-->
+<script src="jquery-1.10.2.js"></script>
+</head>
+<body>
+<p>Click me!</p>
+<span></span>
+<script>
+var count = 0;
+$( "body" ).on( "click", "p", function() {
+$( this ).after( "<p>Another paragraph! " + (++count) + "</p>" );
+});
+</script>
+</body>
+</html>
