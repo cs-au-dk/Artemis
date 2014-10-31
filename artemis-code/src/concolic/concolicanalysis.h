@@ -58,9 +58,12 @@ public:
         bool noExplorationTarget;
         ExplorationDescriptor target;
 
+        uint explorationIndex;
+
         ExplorationHandle()
             : noExplorationTarget(false)
             , target()
+            , explorationIndex(0)
         {}
 
         // Hash and equality operators so it can be put into sets, etc.
@@ -71,7 +74,10 @@ public:
 
         friend inline uint qHash(const ExplorationHandle& key)
         {
-            return ::qHash((int)key.noExplorationTarget) ^ ::qHash(key.target.branch) ^ ::qHash((int)key.target.branchDirection);
+            return ::qHash((int)key.noExplorationTarget) ^
+                    ::qHash(key.explorationIndex) ^
+                    ::qHash(key.target.branch) ^
+                    ::qHash((int)key.target.branchDirection);
             // TODO: Why can't I just call ::qHash(key.target) directly? (Compiler complains...)
         }
     };
@@ -94,7 +100,6 @@ public:
         ExplorationHandle target;
 
         // Logging and output stuff
-        uint explorationIndex;
         QString constraintID;
     };
 

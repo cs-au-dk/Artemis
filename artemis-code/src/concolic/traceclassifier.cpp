@@ -29,7 +29,7 @@ TraceClassifier::TraceClassifier()
 {
 }
 
-TraceClassificationResult TraceClassifier::classify(TraceNodePtr& trace, uint explorationIndex)
+TraceClassificationResult TraceClassifier::classify(TraceNodePtr& trace)
 {
     // Simple implementation which will not be general enough for all sites.
     // Scan the trace and classify according to the following rules:
@@ -37,8 +37,6 @@ TraceClassificationResult TraceClassifier::classify(TraceNodePtr& trace, uint ex
     //     * New page load -> success
     //     * DOM modification which introduces indicator words -> failure
     //     * Otherwise unknown
-
-    mExplorationIndex = explorationIndex;
 
     trace->accept(this);
 
@@ -65,9 +63,6 @@ void TraceClassifier::visit(TraceAlert *node)
     QSharedPointer<TraceEndFailure> marker = QSharedPointer<TraceEndFailure>(new TraceEndFailure());
     marker->next = node->next;
     node->next = marker;
-    if(mExplorationIndex > 0) {
-        marker->traceIndices.append(mExplorationIndex);
-    }
 }
 
 void TraceClassifier::visit(TraceDomModification *node)
@@ -80,9 +75,6 @@ void TraceClassifier::visit(TraceDomModification *node)
         QSharedPointer<TraceEndFailure> marker = QSharedPointer<TraceEndFailure>(new TraceEndFailure());
         marker->next = node->next;
         node->next = marker;
-        if(mExplorationIndex > 0) {
-            marker->traceIndices.append(mExplorationIndex);
-        }
 
     }else{
         // If this modifcation is OK, then continue scanning the trace.
@@ -99,9 +91,6 @@ void TraceClassifier::visit(TracePageLoad *node)
     QSharedPointer<TraceEndSuccess> marker = QSharedPointer<TraceEndSuccess>(new TraceEndSuccess());
     marker->next = node->next;
     node->next = marker;
-    if(mExplorationIndex > 0) {
-        marker->traceIndices.append(mExplorationIndex);
-    }
 }
 
 void TraceClassifier::visit(TraceMarker *node)
@@ -142,10 +131,6 @@ void TraceClassifier::visit(TraceEndUnknown *node)
 {
     // Reached the end of the trace, so stop.
     // In this simple classifier, we don't know if this is a success or failure.
-
-    if(mExplorationIndex > 0) {
-        node->traceIndices.append(mExplorationIndex);
-    }
 
     mResult = UNKNOWN;
 }

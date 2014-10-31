@@ -480,8 +480,7 @@ void ConcolicRuntime::mergeTraceIntoTree()
     // This can  modify it to add the correct end marker to the trace.
     TraceNodePtr trace = mWebkitExecutor->getTraceBuilder()->trace();
 
-    uint explorationIndex = mRunningWithInitialValues ? 1 : mExplorationResult.explorationIndex;
-    TraceClassificationResult classification = mTraceClassifier.classify(trace, explorationIndex);
+    TraceClassificationResult classification = mTraceClassifier.classify(trace);
 
     switch(classification){
     case SUCCESS:
@@ -496,7 +495,8 @@ void ConcolicRuntime::mergeTraceIntoTree()
 
     logInjectionValues(classification);
 
-    mConcolicAnalysis->addTrace(trace, mExplorationResult.target);
+    ConcolicAnalysis::ExplorationHandle exploration = mRunningWithInitialValues ? ConcolicAnalysis::NO_EXPLORATION_TARGET : mExplorationResult.target;
+    mConcolicAnalysis->addTrace(trace, exploration);
 
     // Once we have done at least one merge, the we are now into the "main" analysis.
     mRunningWithInitialValues = false;
@@ -819,7 +819,7 @@ void ConcolicRuntime::logInjectionValues(TraceClassificationResult classificatio
     QString json = "{\n";
     //json += QString("  \"url\": \"%1\",\n").arg(mUrl.toString());
     json += QString("  \"entrypoint\": \"%1\",\n").arg(entryPoint);
-    json += QString("  \"explorationindex\": %1,\n").arg(mExplorationResult.explorationIndex);
+    json += QString("  \"explorationindex\": %1,\n").arg(mExplorationResult.target.explorationIndex);
     json += QString("  \"constraint\": \"%1\",\n").arg(mExplorationResult.constraintID);
     json += QString("  \"classification\": \"%1\",\n").arg(classificationStr.second);
 
@@ -901,7 +901,7 @@ void ConcolicRuntime::logInjectionValues(TraceClassificationResult classificatio
 
     json += "}\n";
 
-    QString filename = QString("/tmp/injections/%1_%2.json").arg(QString::number(mExplorationResult.explorationIndex), classificationStr.first);
+    QString filename = QString("/tmp/injections/%1_%2.json").arg(QString::number(mExplorationResult.target.explorationIndex), classificationStr.first);
 
     createDir("/tmp", "injections");
     writeStringToFile(filename, json);

@@ -38,9 +38,8 @@ class TraceClassifier : public TraceVisitor
 public:
     TraceClassifier();
 
-    TraceClassificationResult classify(TraceNodePtr &trace, uint explorationIndex = 0);
+    TraceClassificationResult classify(TraceNodePtr &trace);
     TraceClassificationResult mResult;
-    uint mExplorationIndex;
 
 
     // Annotation nodes are used in the classification

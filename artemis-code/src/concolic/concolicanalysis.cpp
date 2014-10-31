@@ -23,6 +23,7 @@
 #include "concolic/search/randomisedselector.h"
 #include "concolic/search/roundrobinselector.h"
 #include "concolic/executiontree/treemanager.h"
+#include "concolic/executiontree/traceindexer.h"
 
 #include <assert.h>
 
@@ -44,6 +45,9 @@ ConcolicAnalysis::ConcolicAnalysis(Options options, OutputMode output)
 // Add a new trace to the tree.
 void ConcolicAnalysis::addTrace(TraceNodePtr trace, ExplorationHandle target)
 {
+    uint index = target.noExplorationTarget ? 1 : target.explorationIndex;
+    TraceIndexer::index(trace, index);
+
     // If this is the first trace, then we need to intialise the tree and search procedure.
     // We can't just begin with an empty tree and merge every trace in, as the search procedure needs a
     // pointer to the tree, which will be replaced in that case.
@@ -158,6 +162,7 @@ ConcolicAnalysis::ExplorationResult ConcolicAnalysis::nextExploration()
 
             handle.noExplorationTarget = false;
             handle.target = mSearchStrategy->getTargetDescriptor();
+            handle.explorationIndex = mExplorationIndex;
 
             pc = mSearchStrategy->getTargetPC();
 
@@ -169,7 +174,6 @@ ConcolicAnalysis::ExplorationResult ConcolicAnalysis::nextExploration()
                 result.pc = pc;
                 result.solution = solution;
                 result.target = handle;
-                result.explorationIndex = mExplorationIndex;
                 result.constraintID = mPreviousConstraintID;
 
                 foundResult = true;
