@@ -64,7 +64,7 @@ void TraceIndexer::visit(TraceConcreteSummarisation *node)
 
 void TraceIndexer::visit(TraceEnd *node)
 {
-    node->traceIndices.append(mIndex);
+    node->traceIndices.insert(mIndex);
 }
 
 

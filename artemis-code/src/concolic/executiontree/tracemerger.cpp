@@ -72,7 +72,7 @@ void TraceMerger::visit(TraceEnd* node)
     if (mCurrentTrace->isEqualShallow(mCurrentTree)) {
         // Merge the exploration indices.
         TraceEndPtr treeEnd =  mCurrentTree.dynamicCast<TraceEnd>();
-        treeEnd->traceIndices.append(node->traceIndices);
+        treeEnd->traceIndices.unite(node->traceIndices);
 
     } else {
         handleDivergence();

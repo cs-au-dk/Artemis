@@ -159,7 +159,7 @@ public:
 class TraceEnd : public TraceNode
 {
 public:
-    QList<uint> traceIndices;
+    QSet<uint> traceIndices;
 };
 
 typedef QSharedPointer<TraceEnd> TraceEndPtr;

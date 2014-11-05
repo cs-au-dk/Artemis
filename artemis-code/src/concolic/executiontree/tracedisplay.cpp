@@ -521,7 +521,9 @@ void TraceDisplay::visit(TraceEndSuccess *node)
     mNodeCounter++;
 
     QStringList indices;
-    foreach(uint idx, node->traceIndices) {
+    QList<uint> sorted = node->traceIndices.toList();
+    qSort(sorted);
+    foreach(uint idx, sorted) {
         indices.append(QString::number(idx));
     }
 
@@ -549,7 +551,9 @@ void TraceDisplay::visit(TraceEndFailure *node)
     mNodeCounter++;
 
     QStringList indices;
-    foreach(uint idx, node->traceIndices) {
+    QList<uint> sorted = node->traceIndices.toList();
+    qSort(sorted);
+    foreach(uint idx, sorted) {
         indices.append(QString::number(idx));
     }
 
@@ -577,7 +581,9 @@ void TraceDisplay::visit(TraceEndUnknown *node)
     mNodeCounter++;
 
     QStringList indices;
-    foreach(uint idx, node->traceIndices) {
+    QList<uint> sorted = node->traceIndices.toList();
+    qSort(sorted);
+    foreach(uint idx, sorted) {
         indices.append(QString::number(idx));
     }
 
