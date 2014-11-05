@@ -105,4 +105,9 @@ QString DomInput::toString() const
     return QString("DomInput(") + mEventHandler->toString() + QString(")");
 }
 
+TargetDescriptorConstPtr DomInput::getTarget() const
+{
+    return mTarget;
+}
+
 }

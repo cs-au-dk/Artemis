@@ -17,6 +17,9 @@
 #include "runtime/worklist/deterministicworklist.h"
 #include "util/loggingutil.h"
 #include "statistics/statsstorage.h"
+#include "runtime/input/baseinput.h"
+#include "runtime/input/dominput.h"
+#include "strategies/inputgenerator/targets/concolictarget.h"
 
 #include "artemisruntime.h"
 
@@ -100,6 +103,8 @@ void ArtemisRuntime::preConcreteExecution()
 
 void ArtemisRuntime::postConcreteExecution(ExecutableConfigurationConstPtr configuration, ExecutionResultPtr result)
 {
+    notifyAboutNewIteration(configuration);
+
     mLatestFormFields = result->getFormFields();
 
     mWorklist->reprioritize(mAppmodel);
@@ -130,5 +135,30 @@ void ArtemisRuntime::postConcreteExecution(ExecutableConfigurationConstPtr confi
     Statistics::statistics()->accumulate("InputGenerator::added-configurations", newConfigurations.size());
     preConcreteExecution();
 }
+
+
+void ArtemisRuntime::notifyAboutNewIteration(ExecutableConfigurationConstPtr configuration)
+{
+    // If the previously executed trace used a ConcolicTarget, then we must notify the corresponding analysis about the new trace.
+    // Otherwise ignore.
+
+    if (configuration->getInputSequence()->length() < 1) {
+        return;
+    }
+
+    DomInputConstPtr input = configuration->getInputSequence()->getLast().dynamicCast<const DomInput>();
+    if (input.isNull()) {
+        return;
+    }
+
+    ConcolicTargetDescriptorConstPtr target = input->getTarget().dynamicCast<const ConcolicTarget>();
+    if (target.isNull()) {
+        return;
+    }
+
+    // Add the trace into the analysis, passing in the ExplorationHandle which lets the analysis know where this run was expected to exlpore.
+    target->getAnalysis()->addTrace(mWebkitExecutor->getTraceBuilder()->trace(), target->getExplorationTarget());
+}
+
 
 }

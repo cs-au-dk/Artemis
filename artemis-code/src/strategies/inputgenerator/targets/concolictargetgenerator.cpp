@@ -39,8 +39,6 @@ TargetDescriptorConstPtr ConcolicTargetGenerator::generateTarget(EventHandlerDes
     ConcolicAnalysisPtr analysis(new ConcolicAnalysis(mOptions, ConcolicAnalysis::QUIET));
     ConcolicAnalysis::ExplorationHandle explorationTarget = ConcolicAnalysis::NO_EXPLORATION_TARGET;
 
-    // TODO: Connect the ConcolicAnalysis signal for tree updates to something which can print out the tree?
-
     // No trace has been recorded yet, so we do not suggest any target values intelligently.
     // This method should do the naive solution and return a target == base handler (see legacy target impl.)
 
@@ -54,25 +52,16 @@ TargetDescriptorConstPtr ConcolicTargetGenerator::permuteTarget(EventHandlerDesc
     // Notice that this function can be called multiple times with the same "oldTarget" and "result", because of how Artemis functions.
     // In this case the concolic analysis can return new explorations until there is nothing left to explore in the execution tree.
 
+    // We only start the symbolic session for the last event to be executed, and permuteTarget is only called for the
+    // last event in an event sequence! -- we can assume that the event sequence reaching this event is constant.
+
     // oldTarget should be of type ConcolicTargetDescriptor
     ConcolicTargetDescriptorConstPtr target = oldTarget.dynamicCast<const ConcolicTarget>();
     assert(!target.isNull());
 
-    PathConditionPtr pc = PathCondition::createFromTrace(mTraceBuilder->trace());
-    Log::debug("New PC found:");
-    Log::debug(pc->toStatisticsValuesString(true));
+    QString eventName = eventHandler->toString();
 
-    QString eventName = eventHandler->toString(); // TODO: better name would be useful...
-
-    // The previous trace is guaranteed to be generated from oldTarget, so this should match our ConcolicTarrget.
-    // Add the trace into the analysis, passing in the ExplorationHandle which lets the analysis know where this run was expected to exlpore.
-
-    // We only start the symbolic session for the last event to be executed, and permuteTarget is only called for the
-    // last event in an event sequence! -- we can assume that the event sequence reaching this event is constant.
-
-    target->getAnalysis()->addTrace(mTraceBuilder->trace(), target->getExplorationTarget());
-
-    // Now we can request suggestions of new targets to explore from the concolic analysis.
+    // Request suggestions of new targets to explore from the concolic analysis.
     ConcolicAnalysis::ExplorationResult exploration = target->getAnalysis()->nextExploration();
 
     if (!exploration.newExploration) {
@@ -80,9 +69,6 @@ TargetDescriptorConstPtr ConcolicTargetGenerator::permuteTarget(EventHandlerDesc
         outputTree(target->getAnalysis()->getExecutionTree(), eventName, target->getAnalysis()->getExplorationIndex());
         return TargetDescriptorConstPtr(NULL); // TODO: is this the correct way to signal nothing to suggest?
     }
-
-    Log::debug("PC solved:");
-    Log::debug(pc->toStatisticsValuesString(true));
 
     Log::debug("Found solution for new target value:");
     printSolution(exploration.solution);

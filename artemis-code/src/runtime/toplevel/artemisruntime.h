@@ -46,6 +46,8 @@ protected:
     WorkListPtr mWorklist;
     EntryPointDetector mEntryPointDetector;
 
+    void notifyAboutNewIteration(ExecutableConfigurationConstPtr configuration);
+
 private:
     int mIterations;
 

@@ -52,6 +52,7 @@ public:
 
     int hashCode() const;
     QString toString() const;
+    TargetDescriptorConstPtr getTarget() const;
 
 private:
     EventHandlerDescriptorConstPtr mEventHandler;
