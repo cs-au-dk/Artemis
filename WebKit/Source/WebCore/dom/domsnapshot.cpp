@@ -63,20 +63,21 @@ DOMSnapshotNodeImpl::DOMSnapshotNodeImpl(std::string elementAsString, Element* e
     m_attributes.insert(std::pair<std::string, std::string>("TOSTRING", elementAsString));
 }
 
-DOMSnapshotImpl::DOMSnapshotImpl(std::queue<std::pair<Node*, std::string> > queue)
+DOMSnapshotImpl::DOMSnapshotImpl(std::queue<std::pair<void *, std::pair<Node *, std::string> > > queue)
     : DOMSnapshot()
 {
     while (!queue.empty()) {
-        std::pair<Node*, std::string> item = queue.front();
+        std::pair<void *, std::pair<Node *, std::string> > item = queue.front();
         queue.pop();
 
-        Node* cur = item.first;
-        std::string className = item.second;
+        void* identifier = item.first;
+        Node* cur = item.second.first;
+        std::string className = item.second.second;
 
         Element* element = dynamic_cast<Element*>(cur);
         if (element) {
             m_nodes.insert(std::pair<Symbolic::DOMSnapshotNodeId, Symbolic::DOMSnapshotNode*>(
-                               (Symbolic::DOMSnapshotNodeId)cur, new DOMSnapshotNodeImpl(className, element)));
+                               (Symbolic::DOMSnapshotNodeId)identifier, new DOMSnapshotNodeImpl(className, element)));
         }
     }
 }

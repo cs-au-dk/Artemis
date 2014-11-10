@@ -886,6 +886,12 @@ sub GenerateHeader
         }
     }
 
+    # ARTEMIS BEGIN
+    push(@headerContent, "    virtual void* getDomIdentifier() {\n");
+    push(@headerContent, "        return (void*)impl();\n");
+    push(@headerContent, "    }\n");
+    #ARTEMIS END
+
     if (!$hasParent) {
         push(@headerContent, "    $implType* impl() const { return m_impl; }\n");
         push(@headerContent, "    void releaseImpl() { m_impl->deref(); m_impl = 0; }\n\n");
@@ -1842,15 +1848,15 @@ sub GenerateImplementation
                         push(@implContent, "   if (base != 0) {\n");
                         push(@implContent, "       JSValue baseJS = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl->currentTarget()));\n");
 
-                        push(@implContent, "       std::queue<std::pair<Node*, std::string> > queue;\n");
-                        push(@implContent, "       queue.push(std::pair<Node*, std::string>(base, baseJS.toString(exec)->getString(exec).ascii().data()));\n");
+                        push(@implContent, "       std::queue<std::pair<void *, std::pair<Node *, std::string> > > queue;\n");
+                        push(@implContent, "       queue.push(std::pair<void *, std::pair<Node *, std::string> >(baseJS.toObject(exec)->getDomIdentifier(), std::pair<Node *, std::string>(base, baseJS.toString(exec)->getString(exec).ascii().data())));\n");
 
                         push(@implContent, "       // add all relevant child elements\n");
                         push(@implContent, "       WTF::RefPtr<NodeList> l = WTF::getPtr(base->getElementsByTagName(WTF::AtomicString(\"*\")));\n");
                         push(@implContent, "       for (unsigned i = 0; i < l->length(); ++i) {\n");
                         push(@implContent, "          JSValue lJS = toJS(exec, castedThis->globalObject(), WTF::getPtr(l->item(i)));\n");
                         push(@implContent, "          // Note, the second parameter is the \"to string\" version of the object, which we need for certain constraints. \n");
-                        push(@implContent, "          queue.push(std::pair<Node*, std::string>(l->item(i), lJS.toString(exec)->getString(exec).ascii().data()));\n");
+                        push(@implContent, "          queue.push(std::pair<void *, std::pair<Node *, std::string> >(lJS.toObject(exec)->getDomIdentifier(), std::pair<Node *, std::string>(l->item(i), lJS.toString(exec)->getString(exec).ascii().data())));\n");
                         push(@implContent, "       }\n");
 
                         push(@implContent, "       Symbolic::DOMSnapshot* domSnapshot = new DOMSnapshotImpl(queue);\n");

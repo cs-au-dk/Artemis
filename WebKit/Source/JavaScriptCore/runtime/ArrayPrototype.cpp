@@ -41,6 +41,7 @@
 #include "JavaScriptCore/symbolic/expr.h"
 #include "JavaScriptCore/symbolic/symbolicinterpreter.h"
 #include <statistics/statsstorage.h>
+#include "JSObject.h"
 #endif
 
 namespace JSC {
@@ -1254,12 +1255,12 @@ EncodedJSValue JSC_HOST_CALL arrayProtoFuncIndexOf(ExecState* exec)
             JSValue e = getProperty(exec, thisObj, index);
             symbList.push_back(e.isSymbolic() ?
                                    (Symbolic::Expression*)e.asSymbolic() :
-                                   (Symbolic::Expression*)new Symbolic::ConstantObject((void*)e.asCell()));
+                                   (Symbolic::Expression*)new Symbolic::ConstantObject(e.toObject(exec)->getDomIdentifier()));
         }
 
         Symbolic::Expression* symbElement = searchElement.isSymbolic() ?
                     (Symbolic::Expression*)searchElement.asSymbolic() :
-                    (Symbolic::Expression*)new Symbolic::ConstantObject((void*)searchElement.asCell());
+                    (Symbolic::Expression*)new Symbolic::ConstantObject(searchElement.toObject(exec)->getDomIdentifier());
 
         value.makeSymbolic(new Symbolic::ObjectArrayIndexOf(symbList, symbElement), exec->globalData());
     }

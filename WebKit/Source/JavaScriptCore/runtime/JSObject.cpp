@@ -127,6 +127,7 @@ QString JSObject::getAsJSONString(ExecState* exec, QSet<QString>* visitedObjects
     return string;
 }
 
+
 #endif
 
 
