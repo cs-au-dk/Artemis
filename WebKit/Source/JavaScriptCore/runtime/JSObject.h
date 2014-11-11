@@ -98,9 +98,6 @@ namespace JSC {
 #ifdef ARTEMIS
         QString classNameString();
         QString getAsJSONString(ExecState* exec, QSet<QString>* visitedObjects);
-
-        // Does not build if the method body is put into JSObject.cpp for some reason.
-        void* getDomIdentifier() { return (void*)1234; }
 #endif
 
         JSValue prototype() const;

@@ -39,7 +39,7 @@ public:
 class DOMSnapshotImpl : public Symbolic::DOMSnapshot
 {
 public:
-    DOMSnapshotImpl(std::queue<std::pair<void*, std::pair<Node*, std::string> > > queue);
+    DOMSnapshotImpl(std::queue<std::pair<Node*, std::string> > queue);
 };
 
 }
