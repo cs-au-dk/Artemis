@@ -402,7 +402,7 @@ Symbolic::StringExpression* JSValue::generateStringExpression(ExecState* exec){
 }
 
 Symbolic::ObjectExpression* JSValue::generateObjectExpression(ExecState* exec){
-    return this->isSymbolic()?(Symbolic::ObjectExpression*) this->asSymbolic(): new Symbolic::ConstantObject(this->isUndefinedOrNull() ? 0 : (void*) this);
+    return this->isSymbolic()?(Symbolic::ObjectExpression*) this->asSymbolic(): new Symbolic::ConstantObject(this->isUndefinedOrNull() ? 0 : getObject()->getArtemisDomIdentifier(exec));
 }
 
 Symbolic::IntegerExpression* JSValue::generateIntegerCoercionExpression(ExecState* exec){

@@ -98,6 +98,9 @@ namespace JSC {
 #ifdef ARTEMIS
         QString classNameString();
         QString getAsJSONString(ExecState* exec, QSet<QString>* visitedObjects);
+
+        unsigned getArtemisDomIdentifier(ExecState* exec);
+        static unsigned mArtemisDomIdCounter;
 #endif
 
         JSValue prototype() const;

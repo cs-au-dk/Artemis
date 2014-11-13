@@ -1842,15 +1842,15 @@ sub GenerateImplementation
                         push(@implContent, "   if (base != 0) {\n");
                         push(@implContent, "       JSValue baseJS = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl->currentTarget()));\n");
 
-                        push(@implContent, "       std::queue<std::pair<Node*, std::string> > queue;\n");
-                        push(@implContent, "       queue.push(std::pair<Node*, std::string>(base, baseJS.toString(exec)->getString(exec).ascii().data()));\n");
+                        push(@implContent, "       std::queue<std::pair<unsigned, std::pair<Node*, std::string> > > queue;\n");
+                        push(@implContent, "       queue.push(std::pair<unsigned, std::pair<Node*, std::string> >(baseJS.toObject(exec)->getArtemisDomIdentifier(exec), std::pair<Node*, std::string>(base, baseJS.toString(exec)->getString(exec).ascii().data())));\n");
 
                         push(@implContent, "       // add all relevant child elements\n");
                         push(@implContent, "       WTF::RefPtr<NodeList> l = WTF::getPtr(base->getElementsByTagName(WTF::AtomicString(\"*\")));\n");
                         push(@implContent, "       for (unsigned i = 0; i < l->length(); ++i) {\n");
                         push(@implContent, "          JSValue lJS = toJS(exec, castedThis->globalObject(), WTF::getPtr(l->item(i)));\n");
                         push(@implContent, "          // Note, the second parameter is the \"to string\" version of the object, which we need for certain constraints. \n");
-                        push(@implContent, "          queue.push(std::pair<Node*, std::string>(l->item(i), lJS.toString(exec)->getString(exec).ascii().data()));\n");
+                        push(@implContent, "          queue.push(std::pair<unsigned, std::pair<Node*, std::string> >(lJS.toObject(exec)->getArtemisDomIdentifier(exec), std::pair<Node*, std::string>(l->item(i), lJS.toString(exec)->getString(exec).ascii().data())));\n");
                         push(@implContent, "       }\n");
 
                         push(@implContent, "       Symbolic::DOMSnapshot* domSnapshot = new DOMSnapshotImpl(queue);\n");

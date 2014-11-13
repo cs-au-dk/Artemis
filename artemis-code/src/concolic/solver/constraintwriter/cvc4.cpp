@@ -439,7 +439,7 @@ void CVC4ConstraintWriter::visit(Symbolic::StringRegexSubmatchArrayMatch* exp, v
 void CVC4ConstraintWriter::visit(Symbolic::ConstantObject* obj, void* arg)
 {
     std::stringstream instanceIdentifier;
-    instanceIdentifier << (unsigned long)obj->getInstanceidentifier();
+    instanceIdentifier << obj->getInstanceidentifier();
 
     mExpressionType = Symbolic::OBJECT;
     mExpressionBuffer = instanceIdentifier.str(); // 0 if the reference is null or undefined, otherwise its a number

@@ -13,40 +13,28 @@
  * See the License for the specific language governing permissions and
  * limitations under the License.
  */
+/*
+#include "JavaScriptCore/runtime/JSObject.h"
+#include "JavaScriptCore/interpreter/CallFrame.h" // For ExecState
+#include "JavaScriptCore/runtime/JSValue.h"
+#include "JavaScriptCore/runtime/Identifier.h"
 
- // AUTO GENERATED - DO NOT MODIFY
+#ifndef DOMIDENTIFIER_H
+#define DOMIDENTIFIER_H
 
-#ifndef SYMBOLIC_CONSTANTOBJECT_H
-#define SYMBOLIC_CONSTANTOBJECT_H
-
-#include <string>
-
-#include <list>
-
-#include "visitor.h"
-#include "objectexpression.h"
-
-#ifdef ARTEMIS
-
-namespace Symbolic
+namespace artemis
 {
 
-class ConstantObject : public ObjectExpression
+
+class DomIdentifier
 {
 public:
-    explicit ConstantObject(unsigned instanceIdentifier);
-    void accept(Visitor* visitor);
-    void accept(Visitor* visitor, void* arg);
-
-    inline unsigned getInstanceidentifier() {
-		return m_instanceIdentifier;
-	}
+    static uint getIdentifier(JSC::JSObject* object, JSC::ExecState* exec);
 
 private:
-    unsigned m_instanceIdentifier;
-
+    static uint mIdCounter = 1000000000; // Large initial value to make these values obvious in constraints.
 };
-}
 
-#endif
-#endif // SYMBOLIC_CONSTANTOBJECT_H
+
+} // namespace artemis
+#endif // DOMIDENTIFIER_H */

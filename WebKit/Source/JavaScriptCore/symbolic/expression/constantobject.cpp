@@ -23,7 +23,7 @@
 namespace Symbolic
 {
 
-ConstantObject::ConstantObject(void* instanceIdentifier) :
+ConstantObject::ConstantObject(unsigned instanceIdentifier) :
     ObjectExpression(),
     m_instanceIdentifier(instanceIdentifier)
 {
