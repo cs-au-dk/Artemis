@@ -1,0 +1,3 @@
+if (foo.substr(0, 2).indexOf('o') == 1) {
+    alert(foo);
+}

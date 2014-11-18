@@ -1,0 +1,4 @@
+TEST PC: ((IntegerCoercion(StringSubstring(SymbolicString,1,-1))==ConstantInteger)==ConstantBoolean)
+if (x.substr(1) == 4) {
+    alert(x);
+}
