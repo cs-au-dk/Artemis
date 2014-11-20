@@ -53,6 +53,7 @@ bool CVC4ConstraintWriter::write(PathConditionPtr pathCondition, FormRestriction
 
     // cleanup
     mTypeAnalysis->reset();
+    mVisitedSymbolicObjects.clear();
     return result;
 }
 
@@ -110,6 +111,7 @@ void CVC4ConstraintWriter::preVisitPathConditionsHook(QSet<QString> varsUsed)
             helperRadioRestriction(rr);
         }
     }
+
 }
 
 void CVC4ConstraintWriter::postVisitPathConditionsHook()
