@@ -57,6 +57,8 @@ module core {
                  attribute [TreatReturnedNullStringAs=Null, TreatNullAs=NullString, WarningIfSymbolic ] DOMString        nodeValue
                      setter raises(DOMException);
 
+        readonly attribute unsigned long artemisId;
+
         readonly attribute [SymbolicObjectIntProperty] unsigned short   nodeType;
         readonly attribute [WarningIfSymbolic, UsageWarning] Node             parentNode;
         readonly attribute [WarningIfSymbolic] NodeList         childNodes;

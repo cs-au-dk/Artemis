@@ -149,6 +149,7 @@ public:
 
     bool hasTagName(const QualifiedName&) const;
     bool hasLocalName(const AtomicString&) const;
+    unsigned artemisId() const;
     virtual String nodeName() const = 0;
     virtual String nodeValue() const;
     virtual void setNodeValue(const String&, ExceptionCode&);
@@ -805,6 +806,9 @@ protected:
     void setItemRef(const String&);
     void setItemType(const String&);
 #endif
+
+    static unsigned _artemisId;
+    unsigned m_artemisId;
 };
 
 // Used in Node::addSubresourceAttributeURLs() and in addSubresourceStyleURLs()

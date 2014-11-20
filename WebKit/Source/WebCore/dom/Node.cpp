@@ -106,6 +106,7 @@
 #include <wtf/Vector.h>
 #include <wtf/text/CString.h>
 #include <wtf/text/StringBuilder.h>
+#include <iostream>
 
 #if ENABLE(INSPECTOR)
 #include "InspectorController.h"
@@ -539,6 +540,11 @@ void Node::setTabIndexExplicitly(short i)
 void Node::clearTabIndexExplicitly()
 {
     ensureRareData()->clearTabIndexExplicitly();
+}
+
+unsigned Node::artemisId() const
+{
+    return m_artemisId;
 }
 
 String Node::nodeValue() const

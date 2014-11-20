@@ -132,32 +132,15 @@ unsigned JSObject::mArtemisDomIdCounter = 1000000000; // Large initial value to 
 
 unsigned int JSObject::getArtemisDomIdentifier(ExecState* exec)
 {
-    // If there is no 'artemis-dom-identifier' property present, then set one.
-
     // The name of the property, confusingly for this method called the Identifier.
-    Identifier name(exec, "artemis-dom-identifier");
+    Identifier name(exec, "artemisId");
+    ASSERT(hasProperty(exec, name));
 
-    if (hasOwnProperty(exec, name)) {
-        // Fetch an existing property from the object.
-        JSValue id = getDirect(exec->globalData(), name);
-
-        ASSERT(id.isUInt32());
-        return id.asUInt32();
-
-    } else {
-        // Add a new property to the object.
-        mArtemisDomIdCounter++;
-        JSValue newId(mArtemisDomIdCounter);
-        putDirect(exec->globalData(), name, newId);
-
-        // Sanity check as I don't understand the JSObject API fully.
-        ASSERT(hasOwnProperty(exec, name));
-        JSValue readId = get(exec, name);
-        ASSERT(readId.isUInt32());
-        ASSERT(readId.asUInt32() == mArtemisDomIdCounter);
-
-        return mArtemisDomIdCounter;
-    }
+    // Fetch an existing property from the object.
+    PropertySlot slot(this);
+    getPropertySlot(exec, name, slot);
+    JSValue id = slot.getValue(exec, name);
+    return (unsigned)id.asNumber(); // this coercion is going to blow up
 }
 
 

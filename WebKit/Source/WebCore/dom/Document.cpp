@@ -238,6 +238,8 @@ static const int cLayoutScheduleThreshold = 250;
 //
 // It also contains complete tables. If we decide it's better, we could include those instead of the following code.
 
+unsigned Node::_artemisId = 0;
+
 static inline bool isValidNameStart(UChar32 c)
 {
     // rule (e) above
