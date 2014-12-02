@@ -1849,7 +1849,7 @@ sub GenerateImplementation
                         push(@implContent, "       WTF::RefPtr<NodeList> l = WTF::getPtr(base->getElementsByTagName(WTF::AtomicString(\"*\")));\n");
                         push(@implContent, "       for (unsigned i = 0; i < l->length(); ++i) {\n");
                         push(@implContent, "          JSValue lJS = toJS(exec, castedThis->globalObject(), WTF::getPtr(l->item(i)));\n");
-                        push(@implContent, "          // Note, the second parameter is the \"to string\" version of the object, which we need for certain constraints. \n");
+                        push(@implContent, "          // Note, the third parameter is the \"to string\" version of the object, which we need for certain constraints. \n");
                         push(@implContent, "          queue.push(std::pair<unsigned, std::pair<Node*, std::string> >(lJS.toObject(exec)->getArtemisDomIdentifier(exec), std::pair<Node*, std::string>(l->item(i), lJS.toString(exec)->getString(exec).ascii().data())));\n");
                         push(@implContent, "       }\n");
 
