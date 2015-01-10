@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+	<title>Ben Spencer</title>
+	<meta name="author" content="Caper Svenning Jensen">
+</head>
+<body>
+
+<h1>Click below:</h1>
+
+<ul id="container" >
+    <li class="clickable" >boring to click</li>
+    <li class="clickable" id="interesting" >interesting to click</li>
+    <li class="clickable" >boring to click</li>
+</ul>
+
+<script type="text/javascript" >
+    window.onload = function(){
+        c = document.getElementById('container');
+        c.addEventListener('click', function(event){
+            
+            // The idea here is to create two branches on different iterations and then attempt a new exploration
+            // which uses both. This will generate a PC with constraints (and DOM snapshots) from multiple iterations
+            // and demonstrate the DOM constraint duplication bug.
+            
+            if (event.target.className == "clickable") {
+                if (event.target.id == "interesting") {
+                    alert("Interesting");
+                    return;
+                }
+            }
+            
+            alert("Boring");
+            
+        }, false);
+    }
+</script>
+
+</body>
+</html>
+
