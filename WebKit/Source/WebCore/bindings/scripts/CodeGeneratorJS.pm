@@ -1840,23 +1840,10 @@ sub GenerateImplementation
 
                         push(@implContent, "    Node* base = impl->currentTarget()->toNode();\n");
                         push(@implContent, "    if (base != 0) {\n");
-                        push(@implContent, "        JSValue baseJS = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl->currentTarget()));\n");
 
-                        push(@implContent, "        std::queue<std::pair<unsigned, std::pair<Node*, std::string> > > queue;\n");
-                        push(@implContent, "        queue.push(std::pair<unsigned, std::pair<Node*, std::string> >(baseJS.toObject(exec)->getArtemisDomIdentifier(exec), std::pair<Node*, std::string>(base, baseJS.toString(exec)->getString(exec).ascii().data())));\n");
-
-                        push(@implContent, "        // add all relevant child elements\n");
-                        push(@implContent, "        WTF::RefPtr<NodeList> l = WTF::getPtr(base->getElementsByTagName(WTF::AtomicString(\"*\")));\n");
-                        push(@implContent, "        for (unsigned i = 0; i < l->length(); ++i) {\n");
-                        push(@implContent, "           JSValue lJS = toJS(exec, castedThis->globalObject(), WTF::getPtr(l->item(i)));\n");
-                        push(@implContent, "           // Note, the third parameter is the \"to string\" version of the object, which we need for certain constraints. \n");
-                        push(@implContent, "           queue.push(std::pair<unsigned, std::pair<Node*, std::string> >(lJS.toObject(exec)->getArtemisDomIdentifier(exec), std::pair<Node*, std::string>(l->item(i), lJS.toString(exec)->getString(exec).ascii().data())));\n");
-                        push(@implContent, "        }\n");
-
-                        push(@implContent, "        Symbolic::DOMSnapshot* domSnapshot = new DOMSnapshotImpl(queue);\n");
                         push(@implContent, "        std::ostringstream sessionId;\n");
                         push(@implContent, "        sessionId << \"SYM_TARGET_\" << JSC::Interpreter::m_symbolic->getSessionId();\n");
-                        push(@implContent, "        Symbolic::SymbolicSource source(Symbolic::EVENT_TARGET, Symbolic::EVENT_TARGET_IDENT, sessionId.str(), domSnapshot);\n");
+                        push(@implContent, "        Symbolic::SymbolicSource source(Symbolic::EVENT_TARGET, Symbolic::EVENT_TARGET_IDENT, sessionId.str());\n");
                         push(@implContent, "        result.makeSymbolic(new Symbolic::SymbolicObject(source), exec->globalData());\n");
                         push(@implContent, "    }\n");
                         # ARTEMIS END

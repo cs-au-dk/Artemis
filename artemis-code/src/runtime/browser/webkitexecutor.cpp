@@ -318,7 +318,6 @@ void WebKitExecutor::slLoadFinished(bool ok)
 
     qDebug() << "\n------------ DONE EXECUTING -----------" << endl;
 
-    // TODO: This was previously enclosed by if(!mKeepOpen). This means no post-load analysis can be done in demo mode. What are tyhe implications of changing this? Which other parts will depend on this?
     emit sigExecutedSequence(currentConf, result);
 }
 

@@ -55,12 +55,13 @@ std::string SMTConstraintWriter::ifLabel()
     return "ite";
 }
 
-bool SMTConstraintWriter::write(PathConditionPtr pathCondition, FormRestrictions formRestrictions, std::string outputFile)
+bool SMTConstraintWriter::write(PathConditionPtr pathCondition, FormRestrictions formRestrictions, DomSnapshotStorage domSnapshots, std::string outputFile)
 {
     mError = false;
     mCurrentClause = -1;
 
     mFormRestrictions = formRestrictions;
+    mDomSnapshots = domSnapshots;
 
     mOutput.open(outputFile.data());
 

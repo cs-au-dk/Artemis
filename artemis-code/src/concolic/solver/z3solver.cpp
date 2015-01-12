@@ -38,7 +38,7 @@ Z3Solver::Z3Solver(ConcolicBenchmarkFeatures disabledFeatures)
 {
 }
 
-SolutionPtr Z3Solver::solve(PathConditionPtr pc, FormRestrictions formRestrictions)
+SolutionPtr Z3Solver::solve(PathConditionPtr pc, FormRestrictions formRestrictions, DomSnapshotStorage domSnapshots)
 {
     qDebug() << "Warning: Z3Solver does not support implicit form restrictions.\n";
 
@@ -48,7 +48,7 @@ SolutionPtr Z3Solver::solve(PathConditionPtr pc, FormRestrictions formRestrictio
 
     Z3STRConstraintWriterPtr cw = Z3STRConstraintWriterPtr(new Z3STRConstraintWriter(mDisabledFeatures));
 
-    if (!cw->write(pc, formRestrictions, "/tmp/z3input")) {
+    if (!cw->write(pc, formRestrictions, domSnapshots, "/tmp/z3input")) {
         Statistics::statistics()->accumulate("Concolic::Solver::ConstraintsNotWritten", 1);
         constraintLog << "Could not translate the PC into solver input." << std::endl << std::endl;
         return SolutionPtr(new Solution(false, false, "Could not translate the PC into solver input."));

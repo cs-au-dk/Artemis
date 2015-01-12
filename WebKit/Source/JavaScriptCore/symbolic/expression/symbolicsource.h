@@ -31,50 +31,6 @@ enum SourceType {
     TEXT, SELECT, SELECT_INDEX, RADIO, CHECKBOX, EVENT_TARGET, UNKNOWN
 };
 
-typedef long DOMSnapshotNodeId;
-typedef std::map<std::string, std::string> DOMSnapshotNodeAttributes;
-
-class DOMSnapshotNode
-{
-
-public:
-    DOMSnapshotNode() {}
-
-    std::string getXpath() {
-        return m_xpath;
-    }
-
-    const DOMSnapshotNodeAttributes getAttributes() {
-        return m_attributes;
-    }
-
-protected:
-    std::string m_xpath;
-    DOMSnapshotNodeAttributes m_attributes;
-
-};
-
-class DOMSnapshot
-{
-public:
-    DOMSnapshot() {}
-
-    ~DOMSnapshot() {
-
-        std::map<DOMSnapshotNodeId, DOMSnapshotNode*>::iterator iter;
-        for (iter = m_nodes.begin(); iter != m_nodes.end(); ++iter) {
-            delete iter->second;
-        }
-
-    }
-
-    inline std::map<DOMSnapshotNodeId, DOMSnapshotNode*> getNodes() {
-        return m_nodes;
-    }
-
-protected:
-    std::map<DOMSnapshotNodeId, DOMSnapshotNode*> m_nodes;
-};
 
 class SymbolicSource
 {
@@ -84,15 +40,6 @@ public:
         : m_type(type)
         , m_identifier_method(identifier_method)
         , m_identifier(identifier)
-        , m_domSnapshot(NULL)
-    {
-    }
-
-    SymbolicSource(SourceType type, SourceIdentifierMethod identifier_method, std::string identifier, DOMSnapshot* domSnapshot)
-        : m_type(type)
-        , m_identifier_method(identifier_method)
-        , m_identifier(identifier)
-        , m_domSnapshot(domSnapshot)
     {
     }
 
@@ -106,10 +53,6 @@ public:
 
     inline std::string getIdentifier() const {
         return m_identifier;
-    }
-
-    inline DOMSnapshot* getDOMSnapshot() {
-        return m_domSnapshot;
     }
 
     static SourceType stringAccessTypeAttrToSourceType(const char * type) {
@@ -145,7 +88,6 @@ private:
     SourceType m_type;
     SourceIdentifierMethod m_identifier_method;
     std::string m_identifier;
-    DOMSnapshot* m_domSnapshot;
 
 };
 

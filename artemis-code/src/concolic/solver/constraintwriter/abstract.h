@@ -20,6 +20,7 @@
 
 #include "concolic/pathcondition.h"
 #include "runtime/input/forms/formfieldrestrictedvalues.h"
+#include "model/domsnapshotstorage.h"
 
 #ifndef CONSTRAINTWRITER_ABSTRACT_H
 #define CONSTRAINTWRITER_ABSTRACT_H
@@ -32,7 +33,7 @@ class ConstraintWriter
 
 public:
 
-    virtual bool write(PathConditionPtr pathCondition, FormRestrictions formRestrictions, std::string outputFile) = 0;
+    virtual bool write(PathConditionPtr pathCondition, FormRestrictions formRestrictions, DomSnapshotStorage domSnapshots, std::string outputFile) = 0;
 
     virtual ~ConstraintWriter() {}
 

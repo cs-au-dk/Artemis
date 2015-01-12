@@ -76,8 +76,8 @@ DOMSnapshotImpl::DOMSnapshotImpl(std::queue<std::pair<unsigned, std::pair<Node *
 
         Element* element = dynamic_cast<Element*>(cur);
         if (element) {
-            m_nodes.insert(std::pair<Symbolic::DOMSnapshotNodeId, Symbolic::DOMSnapshotNode*>(
-                               (Symbolic::DOMSnapshotNodeId)identifier, new DOMSnapshotNodeImpl(className, element)));
+            m_nodes.insert(std::pair<DOMSnapshotNodeId, DOMSnapshotNode*>(
+                               (DOMSnapshotNodeId)identifier, new DOMSnapshotNodeImpl(className, element)));
         }
     }
 }

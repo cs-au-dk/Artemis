@@ -37,9 +37,9 @@ KaluzaConstraintWriter::KaluzaConstraintWriter() :
 
 }
 
-bool KaluzaConstraintWriter::write(PathConditionPtr pathCondition, FormRestrictions formRestrictions, std::string outputFile)
+bool KaluzaConstraintWriter::write(PathConditionPtr pathCondition, FormRestrictions formRestrictions, DomSnapshotStorage domSnapshots, std::string outputFile)
 {
-    qDebug() << "Warning: KaluzaConstraintWriter does not support implicit form restrictions.\n";
+    qDebug() << "Warning: KaluzaConstraintWriter does not support implicit form restrictions or DOM snapshots.\n";
 
     mNextTemporaryIdentifier = 0;
     mError = false;

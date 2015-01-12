@@ -49,7 +49,7 @@ public:
 
     KaluzaConstraintWriter();
 
-    bool write(PathConditionPtr pathCondition, FormRestrictions formRestrictions, std::string outputFile);
+    bool write(PathConditionPtr pathCondition, FormRestrictions formRestrictions, DomSnapshotStorage domSnapshots, std::string outputFile);
 
 private:
 

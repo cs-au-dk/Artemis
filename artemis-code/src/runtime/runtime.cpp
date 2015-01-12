@@ -287,7 +287,8 @@ void Runtime::done()
         SolverPtr solver = Solver::getSolver(mOptions);
         SolutionPtr solution = solver->solve(
                     pc,
-                    FormFieldRestrictedValues::getRestrictions(mLatestFormFields, mWebkitExecutor->getPage()));
+                    FormFieldRestrictedValues::getRestrictions(mLatestFormFields, mWebkitExecutor->getPage()),
+                    DomSnapshotStorage()); // TODO: Get the latest snapshots as we do for form restrictions.
 
         solution->toStatistics();
 

@@ -25,6 +25,7 @@
 #include "JavaScriptCore/symbolic/expr.h"
 #include "JavaScriptCore/symbolic/expression/visitor.h"
 #include "runtime/input/forms/formfieldrestrictedvalues.h"
+#include "model/domsnapshotstorage.h"
 #include "concolic/benchmarking.h"
 
 #include "abstract.h"
@@ -74,7 +75,7 @@ public:
 
     SMTConstraintWriter(ConcolicBenchmarkFeatures disabledFeatures);
 
-    virtual bool write(PathConditionPtr pathCondition, FormRestrictions formRestrictions, std::string outputFile);
+    virtual bool write(PathConditionPtr pathCondition, FormRestrictions formRestrictions, DomSnapshotStorage domSnapshots, std::string outputFile);
 
     std::string getErrorReason() {
         return mErrorReason;
@@ -219,6 +220,7 @@ protected:
     unsigned int mNextTemporarySequence;
 
     FormRestrictions mFormRestrictions;
+    DomSnapshotStorage mDomSnapshots;
 
     // Benchmarking
     ConcolicBenchmarkFeatures mDisabledFeatures;

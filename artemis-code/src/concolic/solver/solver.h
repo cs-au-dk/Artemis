@@ -21,6 +21,7 @@
 
 #include "concolic/pathcondition.h"
 #include "runtime/input/forms/formfieldrestrictedvalues.h"
+#include "model/domsnapshotstorage.h"
 #include "concolic/benchmarking.h"
 #include "runtime/options.h"
 
@@ -40,7 +41,7 @@ public:
     Solver(ConcolicBenchmarkFeatures disabledFeatures);
     virtual ~Solver() {}
 
-    virtual SolutionPtr solve(PathConditionPtr pc, FormRestrictions formRestrictions) = 0;
+    virtual SolutionPtr solve(PathConditionPtr pc, FormRestrictions formRestrictions, DomSnapshotStorage domSnapshots) = 0;
 
     virtual QString getLastConstraintID() { return ""; }
 

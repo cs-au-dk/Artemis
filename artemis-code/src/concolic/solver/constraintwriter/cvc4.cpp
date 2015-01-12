@@ -30,6 +30,9 @@
 
 #include "cvc4regexcompiler.h"
 
+#include "WebCore/dom/domsnapshot.h"
+#include "model/domsnapshotstorage.h"
+
 #include "cvc4.h"
 
 namespace artemis
@@ -41,7 +44,7 @@ CVC4ConstraintWriter::CVC4ConstraintWriter(ConcolicBenchmarkFeatures disabledFea
 {
 }
 
-bool CVC4ConstraintWriter::write(PathConditionPtr pathCondition, FormRestrictions formRestrictions, std::string outputFile) {
+bool CVC4ConstraintWriter::write(PathConditionPtr pathCondition, FormRestrictions formRestrictions, DomSnapshotStorage domSnapshots, std::string outputFile) {
 
     // pre analysis
     for (uint i = 0; i < pathCondition->size(); i++) {
@@ -49,7 +52,7 @@ bool CVC4ConstraintWriter::write(PathConditionPtr pathCondition, FormRestriction
     }
 
     // main visitor
-    bool result = SMTConstraintWriter::write(pathCondition, formRestrictions, outputFile);
+    bool result = SMTConstraintWriter::write(pathCondition, formRestrictions, domSnapshots, outputFile);
 
     // cleanup
     mTypeAnalysis->reset();
@@ -977,48 +980,59 @@ void CVC4ConstraintWriter::emitDOMConstraints()
     std::set<Symbolic::SymbolicObject*>::iterator iter;
     for (iter = mVisitedSymbolicObjects.begin(); iter != mVisitedSymbolicObjects.end(); ++iter) {
 
-        Symbolic::DOMSnapshot* domSnapshot = (*iter)->getSource().getDOMSnapshot();
         std::string identifier = (*iter)->getSource().getIdentifier();
 
-        recordAndEmitType(identifier + "_SOLUTIONXPATH", Symbolic::STRING);
+        // Look up this symbolic object in the list of snapshots and output a snapshot constraint if one is found.
 
-        mOutput << std::endl;
-        mOutput << "; CONSTRAINTS FOR DOM NODE " << identifier << std::endl;
-        mOutput << "(assert (or " << std::endl;
+        // TODO: remove
+        qDebug() << QString::fromStdString(identifier); // Includes SYM_IN_ prefix.
+        qDebug() << mDomSnapshots;
 
-        std::map<Symbolic::DOMSnapshotNodeId, Symbolic::DOMSnapshotNode*> nodes = domSnapshot->getNodes();
-        std::map<Symbolic::DOMSnapshotNodeId, Symbolic::DOMSnapshotNode*>::iterator iter2;
-        for (iter2 = nodes.begin(); iter2 != nodes.end(); ++iter2) {
-            Symbolic::DOMSnapshotNodeId id = iter2->first;
-            Symbolic::DOMSnapshotNode* node = iter2->second;
+        // If this test fails there will likely be a failed assertion while trying to read back the solver results, as the expected "result" variable will not be present.
+        if (mDomSnapshots.contains(identifier)) {
 
-            // symbolic symbolic DOM must resolve to the concrete DOM id
-            mOutput << "    (and (= " << SMTConstraintWriter::encodeIdentifier(identifier) << " " << id << ")";
+            WebCore::DOMSnapshot domSnapshot = mDomSnapshots.get(identifier);
 
-            // special, emit the xpath to the result object. This is used later as the final result
-            mOutput << std::endl << "         (= " \
-                    << SMTConstraintWriter::encodeIdentifier(identifier + "_SOLUTIONXPATH") \
-                    << " \"" << CVC4RegexCompiler::escape(node->getXpath()) << "\")";
+            recordAndEmitType(identifier + "_SOLUTIONXPATH", Symbolic::STRING);
 
-            // all attributes must match
-            Symbolic::DOMSnapshotNodeAttributes attributes = node->getAttributes();
-            std::set<std::string>::iterator iter3;
-            for (iter3 = mUsedSymbolicObjectProperties[(*iter)].begin(); iter3 != mUsedSymbolicObjectProperties[(*iter)].end(); ++iter3) {
+            mOutput << std::endl;
+            mOutput << "; CONSTRAINTS FOR DOM NODE " << identifier << std::endl;
+            mOutput << "(assert (or " << std::endl;
 
-                Symbolic::DOMSnapshotNodeAttributes::iterator result = attributes.find((*iter3));
-                std::string value = (result == attributes.end()) ? "" : result->second;
+            std::map<WebCore::DOMSnapshotNodeId, WebCore::DOMSnapshotNode*> nodes = domSnapshot.getNodes();
+            std::map<WebCore::DOMSnapshotNodeId, WebCore::DOMSnapshotNode*>::iterator iter2;
+            for (iter2 = nodes.begin(); iter2 != nodes.end(); ++iter2) {
+                WebCore::DOMSnapshotNodeId id = iter2->first;
+                WebCore::DOMSnapshotNode* node = iter2->second;
 
+                // symbolic symbolic DOM must resolve to the concrete DOM id
+                mOutput << "    (and (= " << SMTConstraintWriter::encodeIdentifier(identifier) << " " << id << ")";
+
+                // special, emit the xpath to the result object. This is used later as the final result
                 mOutput << std::endl << "         (= " \
-                        << SMTConstraintWriter::encodeIdentifier(identifier + "__" + (*iter3)) \
-                        << " \"" << CVC4RegexCompiler::escape(value) << "\")";
+                        << SMTConstraintWriter::encodeIdentifier(identifier + "_SOLUTIONXPATH") \
+                        << " \"" << CVC4RegexCompiler::escape(node->getXpath()) << "\")";
+
+                // all attributes must match
+                WebCore::DOMSnapshotNodeAttributes attributes = node->getAttributes();
+                std::set<std::string>::iterator iter3;
+                for (iter3 = mUsedSymbolicObjectProperties[(*iter)].begin(); iter3 != mUsedSymbolicObjectProperties[(*iter)].end(); ++iter3) {
+
+                    WebCore::DOMSnapshotNodeAttributes::iterator result = attributes.find((*iter3));
+                    std::string value = (result == attributes.end()) ? "" : result->second;
+
+                    mOutput << std::endl << "         (= " \
+                            << SMTConstraintWriter::encodeIdentifier(identifier + "__" + (*iter3)) \
+                            << " \"" << CVC4RegexCompiler::escape(value) << "\")";
+                }
+
+                mOutput << ")" << std::endl; // and END
             }
 
-            mOutput << ")" << std::endl; // and END
+            mOutput << "))" << std::endl;
+            mOutput << std::endl;
+
         }
-
-        mOutput << "))" << std::endl;
-        mOutput << std::endl;
-
     }
 
 }

@@ -32,7 +32,7 @@ public:
 
     Z3Solver(ConcolicBenchmarkFeatures disabledFeatures);
 
-    SolutionPtr solve(PathConditionPtr pc, FormRestrictions formRestrictions);
+    SolutionPtr solve(PathConditionPtr pc, FormRestrictions formRestrictions, DomSnapshotStorage domSnapshots);
 
 };
 
