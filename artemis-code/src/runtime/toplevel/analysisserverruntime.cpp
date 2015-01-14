@@ -14,6 +14,10 @@
  * limitations under the License.
  */
 
+#include <QString>
+#include <QDebug>
+#include <qjson/parser.h>
+
 #include "util/loggingutil.h"
 
 #include "analysisserverruntime.h"
@@ -29,6 +33,20 @@ AnalysisServerRuntime::AnalysisServerRuntime(QObject* parent, const Options& opt
 
 void AnalysisServerRuntime::run(const QUrl &url)
 {
+    QJson::Parser parser;
+    bool ok;
+
+    QString json = "{\"test\":\"message\", \"other\":[\"hello\", \"goodbye\"]..}";
+
+    QVariant result = parser.parse(json.toUtf8(), &ok);
+
+    if (!ok) {
+        Log::fatal("Error in parsing JSON");
+        exit(1);
+    }
+
+    qDebug() << result;
+
     Log::fatal("Analysis Server Runtime not yet implemented");
     exit(1);
 }
