@@ -68,6 +68,7 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             "           artemis - (default) the top-level test algorithm described in the ICSE'11 Artemis paper\n"
             "           manual - open a browser window for manual testing of web applications\n"
             "           concolic - perform an automated concolic analysis of form validation code\n"
+            "           server - provides an API to control the Artemis browser and report information\n"
             "\n"
             "--strategy-form-input-generation <strategy>:\n"
             "           Select form input generation strategy.\n"
@@ -431,6 +432,8 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
                 options.majorMode = artemis::MANUAL;
             } else if (string(optarg).compare("concolic") == 0) {
                 options.majorMode = artemis::CONCOLIC;
+            } else if (string(optarg).compare("server") == 0) {
+                options.majorMode = artemis::ANALYSIS_SERVER;
             } else {
                 cerr << "ERROR: Invalid choice of major-mode " << optarg << endl;
                 exit(1);
@@ -795,12 +798,14 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
     QUrl url;
 
     if (optind >= argc) {
-        // If we are in manual mode then the url is optional.
-        if(options.majorMode != artemis::MANUAL){
+        // If we are in manual mode or server mode then the url is optional.
+        if (options.majorMode == artemis::MANUAL) {
+            url = artemis::examplesIndexUrl();
+        } else if (options.majorMode == artemis::ANALYSIS_SERVER) {
+            url = QUrl("about:blank");
+        } else {
             cerr << "Error: You must specify a URL" << endl;
             exit(1);
-        }else{
-            url = artemis::examplesIndexUrl();
         }
 
     }else{

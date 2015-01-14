@@ -48,7 +48,7 @@ enum CoverageReport {
 };
 
 enum MajorMode {
-    AUTOMATED, MANUAL, CONCOLIC
+    AUTOMATED, MANUAL, CONCOLIC, ANALYSIS_SERVER
 };
 
 enum PathTraceReport {
