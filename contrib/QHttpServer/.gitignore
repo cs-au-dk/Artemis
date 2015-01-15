@@ -6,6 +6,8 @@ lib
 Makefile
 *.o
 moc_*
+src/Makefile.Debug
+src/Makefile.Release
 
 # Docs
 docs/html
@@ -15,6 +17,11 @@ docs/html
 */release
 */*/debug
 */*/release
+
+# Examples
+examples/bodydata/bodydata
+examples/greeting/greeting
+examples/helloworld/helloworld
 
 # Visual studio
 *.suo

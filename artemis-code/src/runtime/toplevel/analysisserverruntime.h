@@ -19,6 +19,8 @@
 
 #include <QObject>
 
+#include <qhttpserverfwd.h>
+
 #include "runtime/runtime.h"
 
 namespace artemis
@@ -34,6 +36,8 @@ public:
 
     void run(const QUrl& url);
 
+private slots:
+    void handleRequest(QHttpRequest* request, QHttpResponse* response);
 };
 
 

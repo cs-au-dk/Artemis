@@ -85,6 +85,7 @@ qhttpserver:
 	cd ${CONTRIB_QHTTPSERVER}; qmake
 	cd ${CONTRIB_QHTTPSERVER}; make
 	cd ${CONTRIB_QHTTPSERVER}; sudo make install
+	cd ${CONTRIB_QHTTPSERVER}; sudo ldconfig
 
 check:
 	@echo "Testing for software dependencies - if an error occurs, consult your local package manager for the program immeadiately checked for"

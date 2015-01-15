@@ -16,6 +16,10 @@
 
 #include <QString>
 #include <QDebug>
+
+#include <qhttpserver.h>
+#include <qhttprequest.h>
+#include <qhttpresponse.h>
 #include <qjson/parser.h>
 
 #include "util/loggingutil.h"
@@ -28,7 +32,10 @@ namespace artemis
 AnalysisServerRuntime::AnalysisServerRuntime(QObject* parent, const Options& options, const QUrl& url)
     : Runtime(parent, options, url)
 {
-
+    QHttpServer *server = new QHttpServer(this);
+    connect(server, SIGNAL(newRequest(QHttpRequest*, QHttpResponse*)),
+            this, SLOT(handleRequest(QHttpRequest*, QHttpResponse*)));
+    server->listen(QHostAddress::Any, 8099);
 }
 
 void AnalysisServerRuntime::run(const QUrl &url)
@@ -36,7 +43,7 @@ void AnalysisServerRuntime::run(const QUrl &url)
     QJson::Parser parser;
     bool ok;
 
-    QString json = "{\"test\":\"message\", \"other\":[\"hello\", \"goodbye\"]..}";
+    QString json = "{\"test\":\"message\", \"other\":[\"hello\", \"goodbye\"]}";
 
     QVariant result = parser.parse(json.toUtf8(), &ok);
 
@@ -48,7 +55,16 @@ void AnalysisServerRuntime::run(const QUrl &url)
     qDebug() << result;
 
     Log::fatal("Analysis Server Runtime not yet implemented");
-    exit(1);
+    //exit(1);
+}
+
+
+void AnalysisServerRuntime::handleRequest(QHttpRequest *request, QHttpResponse *response)
+{
+    QByteArray body = "Hello World\n";
+    response->setHeader("Content-Length", QString::number(body.size()));
+    response->writeHead(200);
+    response->end(body);
 }
 
 
