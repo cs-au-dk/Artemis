@@ -25,11 +25,12 @@ WEBKIT_TEST_SCRIPT = ./WebKit/Tools/Scripts/run-javascriptcore-tests --qmakearg=
 
 CONTRIB_Z3 = ./contrib/Z3
 CONTRIB_Z3_STR = ./contrib/Z3-str
+CONTRIB_QHTTPSERVER = ./contrib/QHttpServer
 
 build: check webkit-minimal artemis
 
-all: webkit-minimal constraintsolver artemis
-all-debug: webkit-minimal-debug constraintsolver artemis
+all: webkit-minimal constraintsolver qhttpserver artemis
+all-debug: webkit-minimal-debug constraintsolver qhttpserver artemis
 all-clean: webkit-clean webkit-clean-debug artemis-clean 
 
 webkit-jscore-test:
@@ -79,6 +80,11 @@ constraintsolver:
 	cd ${CONTRIB_Z3}; make a
 
 	cd ${CONTRIB_Z3_STR}; make
+
+qhttpserver:
+	cd ${CONTRIB_QHTTPSERVER}; qmake
+	cd ${CONTRIB_QHTTPSERVER}; make
+	cd ${CONTRIB_QHTTPSERVER}; sudo make install
 
 check:
 	@echo "Testing for software dependencies - if an error occurs, consult your local package manager for the program immeadiately checked for"

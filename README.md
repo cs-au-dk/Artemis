@@ -34,6 +34,7 @@ This software includes components from:
 * Z3 (http://z3.codeplex.com/)
 * Z3-str (http://www.cs.purdue.edu/homes/zheng16/str/)
 * CVC4 (http://cvc4.cs.nyu.edu/)
+* QHttpServer (https://github.com/nikhilm/qhttpserver)
 
 Installation 
 ------------
