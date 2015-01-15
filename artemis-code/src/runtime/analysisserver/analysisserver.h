@@ -14,31 +14,32 @@
  * limitations under the License.
  */
 
-#ifndef ANALYSISSERVERRUNTIME_H
-#define ANALYSISSERVERRUNTIME_H
+#ifndef ANALYSISSERVER_H
+#define ANALYSISSERVER_H
 
-#include <QObject>
-
-#include "runtime/runtime.h"
-#include "runtime/analysisserver/analysisserver.h"
+#include <qhttpserverfwd.h>
 
 namespace artemis
 {
 
-
-class AnalysisServerRuntime : public Runtime
+class AnalysisServer : public QObject
 {
     Q_OBJECT
 
 public:
-    AnalysisServerRuntime(QObject* parent, const Options& options, const QUrl& url);
+    AnalysisServer(quint16 port);
 
-    void run(const QUrl& url);
+    ~AnalysisServer();
 
 protected:
-    AnalysisServer mAnalysisServer;
+    QHttpServer* mServer;
+
+private slots:
+    void handleRequest(QHttpRequest* request, QHttpResponse* response);
+
 };
 
+}
 
-} //namespace artemis
-#endif // ANALYSISSERVERRUNTIME_H
+
+#endif // ANALYSISSERVER_H

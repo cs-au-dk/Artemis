@@ -111,7 +111,8 @@ typedef struct OptionsType {
         heapReportFactor(1),
         concolicDisabledFeatures(0),
         debugConcolic(false),
-        enableEventVisibilityFiltering(false)
+        enableEventVisibilityFiltering(false),
+        analysisServerPort(8008)
     {}
 
     QMap<QString, InjectionValue> presetFormfields;
@@ -166,6 +167,8 @@ typedef struct OptionsType {
 
     bool debugConcolic;
     bool enableEventVisibilityFiltering;
+
+    unsigned short analysisServerPort;
 
 } Options;
 

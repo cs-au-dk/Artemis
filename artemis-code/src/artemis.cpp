@@ -208,6 +208,9 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             "           Change the user-agent reported by Artemis to <custom-ua>.\n"
             "           The following built-in user agents can also be specified (case sensitive):\n"
             "           default, iphone4, ipad4, nexus5, chrome35\n"
+            "\n"
+            "--analysis-server-port <port>\n"
+            "           The port the analysis server major-mode will listen on (default 8008).\n"
             "\n";
 
     struct option long_options[] = {
@@ -240,6 +243,7 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
     {"concolic-dfs-depth", required_argument, NULL, 'D'},
     {"debug-concolic", no_argument, NULL, 'E'},
     {"event-visibility-check", required_argument, NULL, 'G'},
+    {"analysis-server-port", required_argument, NULL, 'p'},
     {0, 0, 0, 0}
     };
 
@@ -458,13 +462,23 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             break;
         }
 
-        case 'o':{
+        case 'o': {
             if(string(optarg).compare("selenium") == 0){
                 options.exportEventSequence = artemis::EXPORT_SELENIUM;
             } else if(string(optarg).compare("json") == 0){
                 options.exportEventSequence = artemis::EXPORT_JSON;
             } else {
                 cerr << "ERROR: Invalid choice of export-event-sequnce " << optarg << endl;
+                exit(1);
+            }
+            break;
+        }
+
+        case 'p': {
+            bool ok;
+            options.analysisServerPort = QString(optarg).toUShort(&ok);
+            if(!ok) {
+                cerr << "ERROR: Invalid choice of analysis-server-port " << optarg << endl;
                 exit(1);
             }
             break;
@@ -518,7 +532,8 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
                              "--input-strategy-same-length "
                              "--function-call-heap-report "
                              "--function-call-heap-report-random-factor "
-                             "--export-event-sequence";
+                             "--export-event-sequence "
+                             "--analysis-server-port ";
             }
 
             exit(0);
