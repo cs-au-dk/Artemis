@@ -88,14 +88,20 @@ void AnalysisServer::slCommandFinished(QVariant response)
 {
     Log::debug("  Analysis server: Finished executing command.");
 
-    // If the command is finished, send the response and then mark this server as idle and ready for a new command.
     assert(waitingResponse);
     ResponseHandler::sendResponse(waitingResponse, response);
+}
 
-    Log::debug("  Analysis server: Response sent, server is idle again.");
+void AnalysisServer::slResponseFinished()
+{
+    // The response has finished sending
+    emit sigResponseFinished();
 
+    // Mark the server as idle and ready for a new command.
     bool releasedOk = mBusy.testAndSetRelease(1, 0);
     assert(releasedOk);
+
+    Log::debug("  Analysis server: Response sent, server is idle again.");
 }
 
 } // namespace artemis

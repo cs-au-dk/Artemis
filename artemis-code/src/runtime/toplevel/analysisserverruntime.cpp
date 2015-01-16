@@ -29,12 +29,16 @@ namespace artemis
 AnalysisServerRuntime::AnalysisServerRuntime(QObject* parent, const Options& options, const QUrl& url)
     : Runtime(parent, options, url)
     , mAnalysisServer(options.analysisServerPort)
+    , mWaitingToExit(false)
 {
     QObject::connect(&mAnalysisServer, SIGNAL(sigExecuteCommand(CommandPtr)),
                      this, SLOT(slExecuteCommand(CommandPtr)));
 
     QObject::connect(this, SIGNAL(sigCommandFinished(QVariant)),
                      &mAnalysisServer, SLOT(slCommandFinished(QVariant)));
+
+    QObject::connect(&mAnalysisServer, SIGNAL(sigResponseFinished()),
+                     this, SLOT(slResponseFinished()));
 }
 
 void AnalysisServerRuntime::run(const QUrl &url)
@@ -64,7 +68,12 @@ void AnalysisServerRuntime::execute(ExitCommand* command)
     Log::debug("  Analysis server runtime: executing an exit command.");
     assert(command);
 
-    emit sigCommandFinished(errorResponse("Exit command is not yet implemented."));
+    QVariantMap response;
+    response.insert("message", "Server is shutting down");
+
+    mWaitingToExit = true;
+
+    emit sigCommandFinished(response);
 }
 
 void AnalysisServerRuntime::execute(ErrorCommand* command)
@@ -103,8 +112,14 @@ QVariant AnalysisServerRuntime::errorResponse(QString message)
 }
 
 
-
-
+// Called once the response from an execute() method has been sent.
+void AnalysisServerRuntime::slResponseFinished()
+{
+    Log::debug("  Analysis server runtime: Response is complete.");
+    if (mWaitingToExit) {
+        done();
+    }
+}
 
 
 

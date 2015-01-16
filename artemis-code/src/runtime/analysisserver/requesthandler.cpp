@@ -36,6 +36,10 @@ RequestHandler::RequestHandler(QHttpRequest* request, QHttpResponse* response, A
     QObject::connect(mResponse, SIGNAL(done()),
                      this, SLOT(deleteLater()));
 
+    // Notify the server once this response is finished.
+    QObject::connect(mResponse, SIGNAL(done()),
+                     server, SLOT(slResponseFinished()));
+
     // Just save the request and response and wait while any POST data arrives.
 
     // Have the request store its own body data. Then we only have to wait for the done() signal, not every data().

@@ -48,9 +48,11 @@ private slots:
     void slHandleRequest(QHttpRequest* request, QHttpResponse* response);
     void slNewCommand(CommandPtr command);
     void slCommandFinished(QVariant response);
+    void slResponseFinished();
 
 signals:
     void sigExecuteCommand(CommandPtr command);
+    void sigResponseFinished();
 };
 
 }

@@ -47,8 +47,11 @@ protected:
 
     QVariant errorResponse(QString message);
 
+    bool mWaitingToExit;
+
 protected slots:
     void slExecuteCommand(CommandPtr command);
+    void slResponseFinished();
 
 signals:
     void sigCommandFinished(QVariant response);

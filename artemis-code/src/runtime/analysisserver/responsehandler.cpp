@@ -35,7 +35,8 @@ void ResponseHandler::sendResponse(QHttpResponse* response, QByteArray data)
 
     response->setHeader("Content-Length", QString::number(data.size()));
     response->writeHead(200);
-    response->end(data);
+    response->write(data);
+    response->end();
     // QHttpResponse deletes itself, so there is no cleaning up to be done.
 }
 
