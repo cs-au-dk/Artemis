@@ -35,8 +35,24 @@ public:
 
     void run(const QUrl& url);
 
+    // Different methods to execute the different types of command.
+    void execute(Command* command);
+    void execute(ExitCommand* command);
+    void execute(ErrorCommand* command);
+    void execute(EchoCommand* command);
+    void execute(PageLoadCommand* command);
+
 protected:
     AnalysisServer mAnalysisServer;
+
+    QVariant errorResponse(QString message);
+
+protected slots:
+    void slExecuteCommand(CommandPtr command);
+
+signals:
+    void sigCommandFinished(QVariant response);
+
 };
 
 

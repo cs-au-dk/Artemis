@@ -28,30 +28,81 @@ namespace artemis
 
 AnalysisServerRuntime::AnalysisServerRuntime(QObject* parent, const Options& options, const QUrl& url)
     : Runtime(parent, options, url)
-    , mAnalysisServer(options.analysisServerPort) // TODO: Take port from options.
+    , mAnalysisServer(options.analysisServerPort)
 {
+    QObject::connect(&mAnalysisServer, SIGNAL(sigExecuteCommand(CommandPtr)),
+                     this, SLOT(slExecuteCommand(CommandPtr)));
 
+    QObject::connect(this, SIGNAL(sigCommandFinished(QVariant)),
+                     &mAnalysisServer, SLOT(slCommandFinished(QVariant)));
 }
 
 void AnalysisServerRuntime::run(const QUrl &url)
 {
-    QJson::Parser parser;
-    bool ok;
-
-    QString json = "{\"test\":\"message\", \"other\":[\"hello\", \"goodbye\"]}";
-
-    QVariant result = parser.parse(json.toUtf8(), &ok);
-
-    if (!ok) {
-        Log::fatal("Error in parsing JSON");
-        exit(1);
-    }
-
-    qDebug() << result;
-
-    Log::fatal("Analysis Server Runtime not yet implemented");
-    //exit(1);
+    Log::info("Analysis Server Runtime waiting for messages...");
 }
+
+void AnalysisServerRuntime::slExecuteCommand(CommandPtr command)
+{
+    Log::debug("  Analysis server runtime: recieved new command.");
+
+    // Recieved a new command from the AnalysisServer.
+    // Execute it (calls back the appropriate execute() method).
+    command->accept(this);
+}
+
+void AnalysisServerRuntime::execute(Command* command)
+{
+    Log::debug("  Analysis server runtime: executing a generic command (error).");
+    assert(command);
+
+    emit sigCommandFinished(errorResponse("Executing an unimplemented command."));
+}
+
+void AnalysisServerRuntime::execute(ExitCommand* command)
+{
+    Log::debug("  Analysis server runtime: executing an exit command.");
+    assert(command);
+
+    emit sigCommandFinished(errorResponse("Exit command is not yet implemented."));
+}
+
+void AnalysisServerRuntime::execute(ErrorCommand* command)
+{
+    Log::debug("  Analysis server runtime: executing an error command.");
+    assert(command);
+
+    // This means there was some error in the parsing.
+    // Just pass the error through and return it.
+    emit sigCommandFinished(errorResponse(command->message));
+}
+
+void AnalysisServerRuntime::execute(EchoCommand* command)
+{
+    Log::debug("  Analysis server runtime: executing an echo command.");
+    assert(command);
+
+    QVariantMap response;
+    response.insert("message", command->message);
+    emit sigCommandFinished(response);
+}
+
+void AnalysisServerRuntime::execute(PageLoadCommand* command)
+{
+    Log::debug("  Analysis server runtime: executing a pageload command.");
+    assert(command);
+
+    emit sigCommandFinished(errorResponse("Page load command is not yet implemented."));
+}
+
+QVariant AnalysisServerRuntime::errorResponse(QString message)
+{
+    QVariantMap response;
+    response.insert("error", message);
+    return response;
+}
+
+
 
 
 

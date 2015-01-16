@@ -17,7 +17,12 @@
 #ifndef ANALYSISSERVER_H
 #define ANALYSISSERVER_H
 
+#include <QAtomicInt>
+
 #include <qhttpserverfwd.h>
+#include <qjson/parser.h>
+
+#include "command.h"
 
 namespace artemis
 {
@@ -34,9 +39,18 @@ public:
 protected:
     QHttpServer* mServer;
 
-private slots:
-    void handleRequest(QHttpRequest* request, QHttpResponse* response);
+    QAtomicInt mBusy;
+    void rejectWhenBusy(QHttpRequest* request, QHttpResponse* response);
 
+    QHttpResponse* waitingResponse;
+
+private slots:
+    void slHandleRequest(QHttpRequest* request, QHttpResponse* response);
+    void slNewCommand(CommandPtr command);
+    void slCommandFinished(QVariant response);
+
+signals:
+    void sigExecuteCommand(CommandPtr command);
 };
 
 }

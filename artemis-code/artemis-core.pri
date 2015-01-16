@@ -148,7 +148,9 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/concolic/executiontree/traceindexer.h \
     src/runtime/toplevel/analysisserverruntime.h \
     src/runtime/analysisserver/analysisserver.h \
-    src/runtime/analysisserver/command.h
+    src/runtime/analysisserver/command.h \
+    src/runtime/analysisserver/requesthandler.h \
+    src/runtime/analysisserver/responsehandler.h
 
 SOURCES += src/runtime/input/ajaxinput.cpp \
     src/strategies/prioritizer/constantprioritizer.cpp \
@@ -269,6 +271,9 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/concolic/executiontree/nodes/traceunexploredqueued.cpp \
     src/concolic/executiontree/traceindexer.cpp \
     src/runtime/toplevel/analysisserverruntime.cpp \
-    src/runtime/analysisserver/analysisserver.cpp
+    src/runtime/analysisserver/analysisserver.cpp \
+    src/runtime/analysisserver/requesthandler.cpp \
+    src/runtime/analysisserver/responsehandler.cpp \
+    src/runtime/analysisserver/command.cpp
 
 QT += network

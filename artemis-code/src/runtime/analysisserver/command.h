@@ -19,52 +19,88 @@
 
 #include <QString>
 #include <QUrl>
+#include <QSharedPointer>
 
 #include "util/loggingutil.h"
 
 namespace artemis
 {
 
+class AnalysisServerRuntime;
 
 /**
- * These structs represent the types of command which can be sent to the analysis server.
+ * These classes represent the types of command which can be sent to the analysis server.
  *
- * When the Runtime is given a Command* to execute, it can use a polymorphic method to take action depending on
+ * When the Runtime is given a Command to execute, it can use a polymorphic method to take action depending on
  * which conrete subclass it has been given.
  */
 
-// Base class should not be instantiated.
-struct Command
+class Command
 {
-protected:
-    Command() {}
+public:
+    virtual void accept(AnalysisServerRuntime* server) = 0;
+    virtual ~Command() {}
 };
+
+typedef QSharedPointer<Command> CommandPtr;
+// Metatype declaration is at the bottom, outside the namespace.
 
 // To end the server.
-struct ExitCommand : public Command
+class ExitCommand : public Command
 {
+public:
+    virtual void accept(AnalysisServerRuntime* server);
 };
 
-// Echo; used for testing
-struct EchoCommand : public Command
+typedef QSharedPointer<ExitCommand> ExitCommandPtr;
+
+// Some error ocurred in parsing the request.
+class ErrorCommand : public Command
 {
-    EchoCommand(QString message)
+public:
+    ErrorCommand(QString message)
         : message(message)
     {}
+    virtual void accept(AnalysisServerRuntime* server);
 
     QString message;
 };
 
-// Load a new page
-struct PageLoadCommand : public Command
+typedef QSharedPointer<ErrorCommand> ErrorCommandPtr;
+
+// Echo; used for testing
+class EchoCommand : public Command
 {
+public:
+    EchoCommand(QString message)
+        : message(message)
+    {}
+    virtual void accept(AnalysisServerRuntime* server);
+
+    QString message;
+};
+
+typedef QSharedPointer<EchoCommand> EchoCommandPtr;
+
+// Load a new page
+class PageLoadCommand : public Command
+{
+public:
     PageLoadCommand(QUrl url)
         : url(url)
     {}
+    virtual void accept(AnalysisServerRuntime* server);
 
     QUrl url;
 };
 
+typedef QSharedPointer<PageLoadCommand> PageLoadCommandPtr;
 
 } // namespace artemis
+
+
+Q_DECLARE_METATYPE(artemis::CommandPtr)
+//qRegisterMetaType<artemis::CommandPtr>();
+
+
 #endif // COMMAND_H
