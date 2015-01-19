@@ -150,7 +150,8 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/runtime/analysisserver/analysisserver.h \
     src/runtime/analysisserver/command.h \
     src/runtime/analysisserver/requesthandler.h \
-    src/runtime/analysisserver/responsehandler.h
+    src/runtime/analysisserver/responsehandler.h \
+    src/util/delayutil.h
 
 SOURCES += src/runtime/input/ajaxinput.cpp \
     src/strategies/prioritizer/constantprioritizer.cpp \
@@ -274,6 +275,7 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/runtime/analysisserver/analysisserver.cpp \
     src/runtime/analysisserver/requesthandler.cpp \
     src/runtime/analysisserver/responsehandler.cpp \
-    src/runtime/analysisserver/command.cpp
+    src/runtime/analysisserver/command.cpp \
+    src/util/delayutil.cpp
 
 QT += network

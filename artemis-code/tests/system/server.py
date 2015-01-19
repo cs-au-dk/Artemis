@@ -86,12 +86,11 @@ class Concolic(unittest.TestCase):
                 "command": "exit"
             }
         
-        try:
-            response = send_to_server(message)
-        except httplib.BadStatusLine:
-            pass
+        response = send_to_server(message)
         
-        time.sleep(0.5)
+        self.assertIn("message", response)
+        
+        time.sleep(2) # Server waits 1s while shutting down to finish sending the final message.
         
         self.assertIsNot(self.server.poll(), None)
         

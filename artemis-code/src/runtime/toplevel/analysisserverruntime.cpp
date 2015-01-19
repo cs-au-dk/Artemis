@@ -20,6 +20,7 @@
 #include <qjson/parser.h>
 
 #include "util/loggingutil.h"
+#include "util/delayutil.h"
 
 #include "analysisserverruntime.h"
 
@@ -117,6 +118,8 @@ void AnalysisServerRuntime::slResponseFinished()
 {
     Log::debug("  Analysis server runtime: Response is complete.");
     if (mWaitingToExit) {
+        // Hack: Wait a little so the response can be sent out (non-blocking on networking).
+        delay(1000);
         done();
     }
 }
