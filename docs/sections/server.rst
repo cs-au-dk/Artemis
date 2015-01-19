@@ -37,7 +37,22 @@ This should return::
 Commands
 ^^^^^^^^
 
-The following commands are supported:
+* ``echo``
+    Returns the text provided in the ``message`` field.
+    
+    Send: ``{"command": "echo", "message": "Hello, World"}``
+    
+    Recieve: ``{"message": "Hello, World"}``
+    
+* ``exit``
+    Shuts down the server.
+    
+    Send: ``{"command":"exit"}``
+    
+    Recieve: ``{"message", "Server is shutting down"}``
+    
+* ``pageload``
+    Not yet implemented.
 
 
 
