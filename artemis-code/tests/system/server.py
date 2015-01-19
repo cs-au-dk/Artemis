@@ -7,8 +7,10 @@ Test suite for Artemis Analysis-Server mode.
 import os
 import unittest
 import subprocess
+import urllib2
 import json
 import time
+import httplib
 
 FIXTURE_ROOT = os.path.join(os.environ['ARTEMISDIR'], 'artemis-code', 'tests', 'system', 'fixtures', 'server')
 
@@ -25,39 +27,85 @@ class Concolic(unittest.TestCase):
     def setUp(self):
         # Run the server and save a reference so we can kill it in the end.
         self.server = run_artemis_server()
+        self.expectedTerminated = False
     
     def tearDown(self):
         # End the server.
-        self.server.terminate()
-        self.server.wait()
-        assert(self.server.poll() is not None)
+        try:
+            self.server.terminate()
+            self.server.wait()
+            assert(self.server.poll() is not None)
+        except OSError:
+            if not self.expectedTerminated:
+                raise
     
     def test_server_process_is_running(self):
         self.assertTrue(self.server.poll() is None)
     
-    @unittest.skip("Not yet implemented")
     def test_connect_to_server(self):
-        self.fail("Not implemented")
+        # Just check we can open the URL without an exception
+        urllib2.urlopen(ARTEMIS_SERVER_URL)
     
-    @unittest.skip("Not yet implemented")
     def test_echo_command(self):
-        self.fail("Not implemented")
+        message = {
+                "command": "echo",
+                "message": "Hello, World!"
+            }
+        
+        response = send_to_server(message)
+        
+        self.assertIn("message", response)
+        self.assertEqual(response["message"], u"Hello, World!")
+    
+    def test_empty_request(self):
+        message = ""
+        
+        response = send_to_server(message, False)
+        
+        self.assertIn("error", response)
+    
+    def test_invalid_json(self):
+        message = "{ This is ]] not :, valid { JSON !"
+        
+        response = send_to_server(message, False)
+        
+        self.assertIn("error", response)
+    
+    def test_invalid_request(self):
+        message = {
+                "required": "fields are not",
+                "present": "in this example"
+            }
+        
+        response = send_to_server(message)
+        
+        self.assertIn("error", response)
+    
+    def test_exit_command(self):
+        message = {
+                "command": "exit"
+            }
+        
+        try:
+            response = send_to_server(message)
+        except httplib.BadStatusLine:
+            pass
+        
+        time.sleep(0.5)
+        
+        self.assertIsNot(self.server.poll(), None)
+        
+        # Stop an exception being thrown by tearDown().
+        self.expectedTerminated = True
     
     @unittest.skip("Not yet implemented")
     def test_server_busy(self):
         self.fail("Not implemented")
     
     @unittest.skip("Not yet implemented")
-    def test_invalid_request(self):
-        self.fail("Not implemented")
-    
-    @unittest.skip("Not yet implemented")
     def test_pageload_command(self):
         self.fail("Not implemented")
     
-    @unittest.skip("Not yet implemented")
-    def test_exit_command(self):
-        self.fail("Not implemented")
     
 
 
@@ -78,18 +126,22 @@ def run_artemis_server():
     p = subprocess.Popen(cmd, cwd=OUTPUT_DIR, stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
     
     # Hack to give the server a little time to come up.
-    time.sleep(1)
+    time.sleep(0.5)
     
     return p
 
 
-def send_to_server_string(message):
+def send_to_server(message, encode_json=True):
     """Sends a command to the running server and returns the result."""
-    pass
-
-def send_to_server(message):
-    """JSON enoding/decoding wrapper for send_to_server()."""
-    pass
+    
+    if encode_json:
+        data = json.dumps(message)
+    else:
+        data = str(message)
+    
+    response = urllib2.urlopen(ARTEMIS_SERVER_URL, data)
+    
+    return json.load(response)
 
 
 if __name__ == '__main__':
