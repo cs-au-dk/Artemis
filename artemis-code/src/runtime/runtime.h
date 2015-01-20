@@ -74,8 +74,8 @@ protected:
 private:
     QString* mHeapReport;
 
-private slots:
-    void slAbortedExecution(QString reason);
+protected slots:
+    virtual void slAbortedExecution(QString reason);
 
 signals:
     void sigTestingDone();

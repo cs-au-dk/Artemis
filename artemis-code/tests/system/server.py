@@ -163,7 +163,6 @@ class AnalysisServerTests(unittest.TestCase):
         
         # TODO: Until we have some other commands to check what was done, there's no way to confirm this has worked.
     
-    @unittest.expectedFailure
     def test_pageload_bad_url(self):
         message = {
                 "command": "pageload",
@@ -173,6 +172,28 @@ class AnalysisServerTests(unittest.TestCase):
         response = send_to_server(message)
         
         self.assertIn("error", response)
+    
+    def test_pageload_bad_url_after_good(self):
+        good_message = {
+                "command": "pageload",
+                "url": fixture_url("handlers.html")
+            }
+        
+        good_response = send_to_server(good_message)
+        
+        self.assertNotIn("error", good_response)
+        self.assertIn("pageload", good_response)
+        
+        bad_message = {
+                "command": "pageload",
+                "url": fixture_url("this-page-doesnt-exist.html")
+            }
+        
+        bad_response = send_to_server(bad_message)
+        
+        self.assertIn("error", bad_response)
+        self.assertNotIn("pageload", bad_response)
+        self.assertNotIn("pageload", bad_response)
     
 
 
@@ -188,7 +209,7 @@ def run_artemis_server():
     We can't use the harness.execute_artemis() method, as it waits until the run is finished and returns its results.
     """
     
-    cmd = [ARTEMIS_EXEC] + ["--major-mode", "server", "--analysis-server-port", str(ARTEMIS_SERVER_PORT)]
+    cmd = [ARTEMIS_EXEC] + ["--major-mode", "server", "--analysis-server-port", str(ARTEMIS_SERVER_PORT), "-v", "all"]
     
     # For debugging, remove the stdout=subprocess.PIPE part to see Artemis' output on screen.
     p = subprocess.Popen(cmd, cwd=OUTPUT_DIR, stderr=subprocess.STDOUT, stdout=subprocess.PIPE)

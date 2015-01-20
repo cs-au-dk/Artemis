@@ -48,7 +48,7 @@ protected:
     QVariant errorResponse(QString message);
 
     enum ServerState {
-        IDLE, EXIT, PAGELOAD
+        IDLE, EXIT, PAGELOAD_BLANK, PAGELOAD
     };
     ServerState mServerState;
     CommandPtr mCurrentCommand;
@@ -63,6 +63,7 @@ protected slots:
     // Browser part
     void slExecutedSequence(ExecutableConfigurationConstPtr configuration, QSharedPointer<ExecutionResult> result);
     void slNavigationRequest(QWebFrame *frame, const QNetworkRequest &request, QWebPage::NavigationType type);
+    virtual void slAbortedExecution(QString reason);
 
 signals:
     void sigCommandFinished(QVariant response);

@@ -115,8 +115,12 @@ void AnalysisServerRuntime::execute(PageLoadCommand* command)
     Log::debug("  Analysis server runtime: executing a pageload command.");
     assert(command);
 
-    mServerState = PAGELOAD;
-    loadUrl(command->url); // Calls back to slExecutedSequence.
+    // WebkitExecutor uses the contents of the page to check for a successful load or not.
+    // Therefore this check fails if we are already on a non-blank page.
+    // So the first step of a page load is to load "about:blank", and then load the "real" URL.
+
+    mServerState = PAGELOAD_BLANK;
+    loadUrl(QUrl("about:blank")); // Calls back to slExecutedSequence.
 }
 
 QVariant AnalysisServerRuntime::errorResponse(QString message)
@@ -153,19 +157,38 @@ void AnalysisServerRuntime::loadUrl(QUrl url)
 
 void AnalysisServerRuntime::slExecutedSequence(ExecutableConfigurationConstPtr configuration, QSharedPointer<ExecutionResult> result)
 {
-    // For now the only state where we expect to be executing a sequence is when loading a page.
-    // TODO: Replace this with a switch on which state we are in.
-    assert(mServerState == PAGELOAD);
+    PageLoadCommandPtr loadCommand; // PAGELOAD_BLANK
+    QVariantMap response; // PAGELOAD
 
-    mWebkitExecutor->getPage()->mAcceptNavigation = false; // Now the loading is finished and further navigation must be dealt with via slNavigationRequest.
+    switch (mServerState) {
+    case PAGELOAD_BLANK:
+        // We are part way through the page-load process. Now we are ready to load the target URL.
+        loadCommand = mCurrentCommand.dynamicCast<PageLoadCommand>();
+        assert(loadCommand);
+        mServerState = PAGELOAD;
+        loadUrl(loadCommand->url); // Calls back to slExecutedSequence again.
+        break;
 
-    // TODO: Save the configuration and result so they can be used by other commands.
+    case PAGELOAD:
+        // Successfully finished loading the real URL.
+        mWebkitExecutor->getPage()->mAcceptNavigation = false; // Now the loading is finished any further navigation must be dealt with via slNavigationRequest.
 
-    // Send a response and finish the PAGELOAD command.
-    QVariantMap response;
-    response.insert("pageload", "done");
+        // TODO: Save the configuration and result so they can be used by other commands.
 
-    emit sigCommandFinished(response);
+        // Send a response and finish the PAGELOAD command.
+        response.insert("pageload", "done");
+
+        emit sigCommandFinished(response);
+        break;
+
+    case IDLE: // Fall-through
+    case EXIT: // Fall-through
+    default:
+        // We do not expect any other server states to be executing event sequences.
+        Log::fatal("Error: Executed an event sequence from a bad state in AnalysisServerRuntime.");
+        exit(1);
+        break;
+    }
 }
 
 // Called when the ArtemisWebPage receives a request for navigation and we have set it's mAcceptingNavigation flag to false.
@@ -174,6 +197,20 @@ void AnalysisServerRuntime::slExecutedSequence(ExecutableConfigurationConstPtr c
 void AnalysisServerRuntime::slNavigationRequest(QWebFrame *frame, const QNetworkRequest &request, QWebPage::NavigationType type)
 {
     loadUrl(request.url());
+}
+
+// Overrides Runtime::slAbortedExecution, called from WebkitExecutor when there is a problem with executing a sequence.
+void AnalysisServerRuntime::slAbortedExecution(QString reason)
+{
+    if (mServerState == PAGELOAD) {
+        // There was an error loading this page, so send an error response.
+        QVariantMap response;
+        response.insert("error", "Could not load the URL.");
+        emit sigCommandFinished(response);
+
+    } else {
+        Runtime::slAbortedExecution(reason);
+    }
 }
 
 
