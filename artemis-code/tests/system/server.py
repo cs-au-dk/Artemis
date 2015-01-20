@@ -11,6 +11,7 @@ import urllib2
 import json
 import time
 import httplib
+import socket
 
 FIXTURE_ROOT = os.path.join(os.environ['ARTEMISDIR'], 'artemis-code', 'tests', 'system', 'fixtures', 'server')
 
@@ -22,7 +23,7 @@ ARTEMIS_SERVER_URL = 'http://localhost:%s' % ARTEMIS_SERVER_PORT
 
 
 
-class Concolic(unittest.TestCase):
+class AnalysisServerTests(unittest.TestCase):
     
     def setUp(self):
         # Run the server and save a reference so we can kill it in the end.
@@ -97,9 +98,57 @@ class Concolic(unittest.TestCase):
         # Stop an exception being thrown by tearDown().
         self.expectedTerminated = True
     
-    @unittest.skip("Not yet implemented")
+    def test_broken_connection(self):
+        slow_message = {
+                "command": "echo",
+                "message": "I am a slow command.",
+                "delay": 1
+            }
+        
+        # Send the slow command but time-out before it finishes.
+        try:
+            slow_response = send_to_server(slow_message, timeout=0.5)
+        except socket.timeout:
+            pass
+        
+        # Check the server is still up and accepting connections.
+        urllib2.urlopen(ARTEMIS_SERVER_URL)
+    
     def test_server_busy(self):
-        self.fail("Not implemented")
+        slow_message = {
+                "command": "echo",
+                "message": "I am a slow command.",
+                "delay": 1
+            }
+        
+        # Send the slow command but time-out before it finishes.
+        try:
+            slow_response = send_to_server(slow_message, timeout=0.5)
+        except socket.timeout:
+            pass
+        
+        # Send another command before the first has finished.
+        busy_message = {
+                "command": "echo",
+                "message": "The server will be busy."
+            }
+        
+        busy_response = send_to_server(busy_message)
+        
+        self.assertIn("error", busy_response)
+        
+        # Wait for the first to finish and confirm everything is working OK again.
+        time.sleep(1)
+        
+        ok_message = {
+                "command": "echo",
+                "message": "The server will be OK now."
+            }
+        
+        ok_response = send_to_server(ok_message)
+        
+        self.assertNotIn("error", ok_response)
+        self.assertIn("message", ok_response)
     
     @unittest.skip("Not yet implemented")
     def test_pageload_command(self):
@@ -130,7 +179,7 @@ def run_artemis_server():
     return p
 
 
-def send_to_server(message, encode_json=True):
+def send_to_server(message, encode_json=True, timeout=None):
     """Sends a command to the running server and returns the result."""
     
     if encode_json:
@@ -138,7 +187,7 @@ def send_to_server(message, encode_json=True):
     else:
         data = str(message)
     
-    response = urllib2.urlopen(ARTEMIS_SERVER_URL, data)
+    response = urllib2.urlopen(ARTEMIS_SERVER_URL, data, timeout)
     
     return json.load(response)
 

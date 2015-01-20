@@ -72,12 +72,14 @@ typedef QSharedPointer<ErrorCommand> ErrorCommandPtr;
 class EchoCommand : public Command
 {
 public:
-    EchoCommand(QString message)
+    EchoCommand(QString message, uint delay)
         : message(message)
+        , delay(delay)
     {}
     virtual void accept(AnalysisServerRuntime* server);
 
     QString message;
+    uint delay;
 };
 
 typedef QSharedPointer<EchoCommand> EchoCommandPtr;

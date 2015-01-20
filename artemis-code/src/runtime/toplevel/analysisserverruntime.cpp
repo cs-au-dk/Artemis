@@ -94,6 +94,11 @@ void AnalysisServerRuntime::execute(EchoCommand* command)
 
     QVariantMap response;
     response.insert("message", command->message);
+
+    if (command->delay > 0) {
+        DelayUtil::delay(command->delay * 1000);
+    }
+
     emit sigCommandFinished(response);
 }
 
@@ -119,7 +124,7 @@ void AnalysisServerRuntime::slResponseFinished()
     Log::debug("  Analysis server runtime: Response is complete.");
     if (mWaitingToExit) {
         // Hack: Wait a little so the response can be sent out (non-blocking on networking).
-        delay(1000);
+        DelayUtil::delay(1000);
         done();
     }
 }

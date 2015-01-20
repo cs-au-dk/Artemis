@@ -34,13 +34,23 @@ This should return::
         "message": "Hello, World"
     {
 
+Only one command can be sent per request. The server is designed to be blocking; any requests sent while another is
+still being processed will return an error.
+
 Commands
 ^^^^^^^^
 
 * ``echo``
-    Returns the text provided in the ``message`` field.
+    Returns the text provided in the ``message`` field. The optional ``delay`` field is the number of seconds to delay
+    before sending back the response (integers 0--30 are valid).
     
-    Send: ``{"command": "echo", "message": "Hello, World"}``
+    Send::
+    
+        {
+            "command": "echo",
+            "message": "Hello, World",
+            "delay": 1                              [Optional]
+        }
     
     Recieve: ``{"message": "Hello, World"}``
     

@@ -153,7 +153,19 @@ CommandPtr RequestHandler::echoCommand(QVariantMap mainObject)
         return parseError("The \"message\" property for an echo command must be a string.");
     }
 
-    return EchoCommandPtr(new EchoCommand(mainObject["message"].toString()));
+    uint delay = 0;
+    if (mainObject.contains("delay")) {
+        bool ok;
+        delay = mainObject["delay"].toUInt(&ok); // Will convert a string "5" to integer 5.
+        if (!ok) {
+            return parseError("The \"delay\" property for an echo command must be a positive integer.");
+        }
+        if (delay > 30) {
+            return parseError("The \"delay\" property must be at most 30 seconds.");
+        }
+    }
+
+    return EchoCommandPtr(new EchoCommand(mainObject["message"].toString(), delay));
 }
 
 CommandPtr RequestHandler::pageloadCommand(QVariantMap mainObject)
@@ -176,7 +188,7 @@ CommandPtr RequestHandler::pageloadCommand(QVariantMap mainObject)
         return parseError("Invalid \"url\" property for a pageload command.");
     }
 
-    return EchoCommandPtr(new EchoCommand(mainObject["message"].toString()));
+    return PageLoadCommandPtr(new PageLoadCommand(url));
 }
 
 

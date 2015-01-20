@@ -20,9 +20,12 @@
 namespace artemis
 {
 
+namespace DelayUtil
+{
+
 void delay(unsigned milliseconds);
 
-
+} // namespace DelayUtil
 
 } // namespace artemis
 #endif // DELAYUTIL_H

@@ -22,6 +22,9 @@
 
 namespace artemis
 {
+namespace DelayUtil
+{
+
 
 void delay(unsigned milliseconds)
 {
@@ -36,4 +39,5 @@ void delay(unsigned milliseconds)
 }
 
 
-}
+} // namespace DelayUtil
+} // namespace artemis
