@@ -30,7 +30,7 @@ namespace artemis
 AnalysisServerRuntime::AnalysisServerRuntime(QObject* parent, const Options& options, const QUrl& url)
     : Runtime(parent, options, url)
     , mAnalysisServer(options.analysisServerPort)
-    , mWaitingToExit(false)
+    , mServerState(IDLE)
 {
     QObject::connect(&mAnalysisServer, SIGNAL(sigExecuteCommand(CommandPtr)),
                      this, SLOT(slExecuteCommand(CommandPtr)));
@@ -50,6 +50,8 @@ void AnalysisServerRuntime::run(const QUrl &url)
 void AnalysisServerRuntime::slExecuteCommand(CommandPtr command)
 {
     Log::debug("  Analysis server runtime: recieved new command.");
+
+    mCurrentCommand = command;
 
     // Recieved a new command from the AnalysisServer.
     // Execute it (calls back the appropriate execute() method).
@@ -72,7 +74,7 @@ void AnalysisServerRuntime::execute(ExitCommand* command)
     QVariantMap response;
     response.insert("message", "Server is shutting down");
 
-    mWaitingToExit = true;
+    mServerState = EXIT;
 
     emit sigCommandFinished(response);
 }
@@ -122,11 +124,14 @@ QVariant AnalysisServerRuntime::errorResponse(QString message)
 void AnalysisServerRuntime::slResponseFinished()
 {
     Log::debug("  Analysis server runtime: Response is complete.");
-    if (mWaitingToExit) {
+    if (mServerState == EXIT) {
         // Hack: Wait a little so the response can be sent out (non-blocking on networking).
         DelayUtil::delay(1000);
         done();
     }
+
+    mServerState = IDLE;
+    mCurrentCommand.clear();
 }
 
 

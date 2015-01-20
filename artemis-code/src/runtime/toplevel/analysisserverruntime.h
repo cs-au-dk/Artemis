@@ -47,7 +47,11 @@ protected:
 
     QVariant errorResponse(QString message);
 
-    bool mWaitingToExit;
+    enum ServerState {
+        IDLE, EXIT, PAGELOAD
+    };
+    ServerState mServerState;
+    CommandPtr mCurrentCommand;
 
 protected slots:
     void slExecuteCommand(CommandPtr command);
