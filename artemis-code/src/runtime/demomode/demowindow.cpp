@@ -499,6 +499,7 @@ void DemoModeMainWindow::displayTraceInformation()
 // Uses the webkit executor to load a URL.
 // All page loads (excluding navigations done during another load, such as fetching adverts, some redirections etc)
 // should be done via this function. mWebPage->mAcceptNavigation helps to ensure this is the case.
+// TODO: very similar method used in analysisserverruntime.cpp.
 void DemoModeMainWindow::loadUrl(QUrl url)
 {
     mWebPage->mAcceptNavigation = true; // Allow navigation during load. This will be reset once the loading phase is finished.
@@ -506,7 +507,7 @@ void DemoModeMainWindow::loadUrl(QUrl url)
 
     Log::debug(QString("CONCOLIC-INFO: Loading page %1").arg(url.toString()).toStdString());
     ExecutableConfigurationPtr initial = ExecutableConfigurationPtr(new ExecutableConfiguration(InputSequencePtr(new InputSequence()), url));
-    mWebkitExecutor->executeSequence(initial, MODE_CONCOLIC_CONTINOUS); // Calls slExecutedSequence method as callback.
+    mWebkitExecutor->executeSequence(initial, MODE_CONCOLIC_CONTINUOUS); // Calls slExecutedSequence method as callback.
 
     resetPageAnlaysis();
 }

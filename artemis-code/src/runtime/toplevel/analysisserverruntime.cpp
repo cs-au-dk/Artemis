@@ -32,14 +32,20 @@ AnalysisServerRuntime::AnalysisServerRuntime(QObject* parent, const Options& opt
     , mAnalysisServer(options.analysisServerPort)
     , mServerState(IDLE)
 {
+    // Connections to the server part
     QObject::connect(&mAnalysisServer, SIGNAL(sigExecuteCommand(CommandPtr)),
                      this, SLOT(slExecuteCommand(CommandPtr)));
-
     QObject::connect(this, SIGNAL(sigCommandFinished(QVariant)),
                      &mAnalysisServer, SLOT(slCommandFinished(QVariant)));
-
     QObject::connect(&mAnalysisServer, SIGNAL(sigResponseFinished()),
                      this, SLOT(slResponseFinished()));
+
+    // Connections to the brpwser part
+    QObject::connect(mWebkitExecutor, SIGNAL(sigExecutedSequence(ExecutableConfigurationConstPtr, QSharedPointer<ExecutionResult>)),
+                     this, SLOT(slExecutedSequence(ExecutableConfigurationConstPtr,QSharedPointer<ExecutionResult>)));
+    QObject::connect(mWebkitExecutor->getPage().data(), SIGNAL(sigNavigationRequest(QWebFrame*,QNetworkRequest,QWebPage::NavigationType)),
+                     this, SLOT(slNavigationRequest(QWebFrame*,QNetworkRequest,QWebPage::NavigationType)));
+    mWebkitExecutor->getPage()->mAcceptNavigation = false;
 }
 
 void AnalysisServerRuntime::run(const QUrl &url)
@@ -109,7 +115,8 @@ void AnalysisServerRuntime::execute(PageLoadCommand* command)
     Log::debug("  Analysis server runtime: executing a pageload command.");
     assert(command);
 
-    emit sigCommandFinished(errorResponse("Page load command is not yet implemented."));
+    mServerState = PAGELOAD;
+    loadUrl(command->url); // Calls back to slExecutedSequence.
 }
 
 QVariant AnalysisServerRuntime::errorResponse(QString message)
@@ -133,6 +140,42 @@ void AnalysisServerRuntime::slResponseFinished()
     mServerState = IDLE;
     mCurrentCommand.clear();
 }
+
+
+// TODO: Very similar method used in demowindow.cpp
+void AnalysisServerRuntime::loadUrl(QUrl url)
+{
+    mWebkitExecutor->getPage()->mAcceptNavigation = true;
+
+    ExecutableConfigurationPtr noInput = ExecutableConfigurationPtr(new ExecutableConfiguration(InputSequencePtr(new InputSequence()), url));
+    mWebkitExecutor->executeSequence(noInput, MODE_CONCOLIC_CONTINUOUS); // Calls slExecutedSequence method as callback.
+}
+
+void AnalysisServerRuntime::slExecutedSequence(ExecutableConfigurationConstPtr configuration, QSharedPointer<ExecutionResult> result)
+{
+    // For now the only state where we expect to be executing a sequence is when loading a page.
+    // TODO: Replace this with a switch on which state we are in.
+    assert(mServerState == PAGELOAD);
+
+    mWebkitExecutor->getPage()->mAcceptNavigation = false; // Now the loading is finished and further navigation must be dealt with via slNavigationRequest.
+
+    // TODO: Save the configuration and result so they can be used by other commands.
+
+    // Send a response and finish the PAGELOAD command.
+    QVariantMap response;
+    response.insert("pageload", "done");
+
+    emit sigCommandFinished(response);
+}
+
+// Called when the ArtemisWebPage receives a request for navigation and we have set it's mAcceptingNavigation flag to false.
+// i.e. when we want to intercept the load and pass it to WebkitExecutor instead.
+// This is done to make sure that all navigation (including "implicit" navigation like clicking links) is handled via WebKitExecutor.
+void AnalysisServerRuntime::slNavigationRequest(QWebFrame *frame, const QNetworkRequest &request, QWebPage::NavigationType type)
+{
+    loadUrl(request.url());
+}
+
 
 
 

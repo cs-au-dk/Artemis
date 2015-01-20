@@ -53,9 +53,16 @@ protected:
     ServerState mServerState;
     CommandPtr mCurrentCommand;
 
+    void loadUrl(QUrl url);
+
 protected slots:
+    // Server part
     void slExecuteCommand(CommandPtr command);
     void slResponseFinished();
+
+    // Browser part
+    void slExecutedSequence(ExecutableConfigurationConstPtr configuration, QSharedPointer<ExecutionResult> result);
+    void slNavigationRequest(QWebFrame *frame, const QNetworkRequest &request, QWebPage::NavigationType type);
 
 signals:
     void sigCommandFinished(QVariant response);

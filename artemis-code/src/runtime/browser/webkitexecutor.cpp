@@ -211,7 +211,7 @@ void WebKitExecutor::executeSequence(ExecutableConfigurationConstPtr conf, SYMBO
     mPathTracer->notifyStartingLoad();
 
     mSymbolicMode = symbolicMode;
-    if (symbolicMode == MODE_CONCOLIC || symbolicMode == MODE_CONCOLIC_CONTINOUS) {
+    if (symbolicMode == MODE_CONCOLIC || symbolicMode == MODE_CONCOLIC_CONTINUOUS) {
         mWebkitListener->beginSymbolicSession();
     }
 

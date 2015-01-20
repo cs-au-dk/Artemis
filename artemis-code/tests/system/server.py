@@ -150,10 +150,29 @@ class AnalysisServerTests(unittest.TestCase):
         self.assertNotIn("error", ok_response)
         self.assertIn("message", ok_response)
     
-    @unittest.skip("Not yet implemented")
     def test_pageload_command(self):
-        self.fail("Not implemented")
+        message = {
+                "command": "pageload",
+                "url": fixture_url("handlers.html")
+            }
+        
+        response = send_to_server(message)
+        
+        self.assertIn("pageload", response)
+        self.assertEqual(response["pageload"], u"done")
+        
+        # TODO: Until we have some other commands to check what was done, there's no way to confirm this has worked.
     
+    @unittest.expectedFailure
+    def test_pageload_bad_url(self):
+        message = {
+                "command": "pageload",
+                "url": fixture_url("this-page-doesnt-exist.html")
+            }
+        
+        response = send_to_server(message)
+        
+        self.assertIn("error", response)
     
 
 
@@ -171,6 +190,7 @@ def run_artemis_server():
     
     cmd = [ARTEMIS_EXEC] + ["--major-mode", "server", "--analysis-server-port", str(ARTEMIS_SERVER_PORT)]
     
+    # For debugging, remove the stdout=subprocess.PIPE part to see Artemis' output on screen.
     p = subprocess.Popen(cmd, cwd=OUTPUT_DIR, stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
     
     # Hack to give the server a little time to come up.
