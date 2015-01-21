@@ -284,5 +284,18 @@ def send_to_server(message, encode_json=True, timeout=None):
     return json.load(response)
 
 
+def check_no_existing_server():
+    no_server = False
+    try:
+        # Just check we can open the URL without an exception
+        urllib2.urlopen(ARTEMIS_SERVER_URL)
+    except:
+        no_server = True
+    
+    return no_server
+
 if __name__ == '__main__':
-    unittest.main(buffer=True)
+    if check_no_existing_server():
+        unittest.main(buffer=True)
+    else:
+        print "There is already a server running at %s which will affect the tests." % ARTEMIS_SERVER_URL
