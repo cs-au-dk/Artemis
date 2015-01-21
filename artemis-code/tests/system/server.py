@@ -195,6 +195,57 @@ class AnalysisServerTests(unittest.TestCase):
         self.assertNotIn("pageload", bad_response)
         self.assertNotIn("pageload", bad_response)
     
+    def test_handlers_command(self):
+        load_message = {
+                "command": "pageload",
+                "url": fixture_url("handlers.html")
+            }
+        
+        load_response = send_to_server(load_message)
+        # load_response is already tested by test_pageload_command()
+        
+        message = {
+            "command": "handlers"
+        }
+        
+        response = send_to_server(message)
+        
+        self.assertIn("handlers", response)
+        
+        handlers = response["handlers"]
+        
+        self.assertEqual(len(handlers), 3)
+        
+        expected_handlers = [
+            {
+                "event": "click",
+                "element": "//a[@id=\"dom-attr\"]"
+            },
+            {
+                "event": "click",
+                "element": "//a[@id=\"js-attr\"]"
+            },
+            {
+                "event": "click",
+                "element": "//a[@id=\"listener\"]"
+            }
+        ]
+        
+        for x in handlers:
+            self.assertIn(x, expected_handlers)
+            expected_handlers.remove(x)
+        
+    
+    def test_handlers_command_without_load(self):
+        message = {
+            "command": "handlers"
+        }
+        
+        response = send_to_server(message)
+        
+        self.assertIn("error", response)
+    
+
 
 
 def fixture_url(page):

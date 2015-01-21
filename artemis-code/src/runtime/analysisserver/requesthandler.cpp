@@ -120,6 +120,9 @@ CommandPtr RequestHandler::createCommand(QVariant data)
     } else if (command == "pageload") {
         return pageloadCommand(mainObject);
 
+    } else if (command == "handlers") {
+        return handlersCommand(mainObject);
+
     } else {
         return parseError("Command was not recognised.");
     }
@@ -189,6 +192,14 @@ CommandPtr RequestHandler::pageloadCommand(QVariantMap mainObject)
     }
 
     return PageLoadCommandPtr(new PageLoadCommand(url));
+}
+
+CommandPtr RequestHandler::handlersCommand(QVariantMap mainObject)
+{
+    Log::debug("  Request handler: Building Handlers command.");
+
+    // There are no extra fields to fetch for a handlers command.
+    return HandlersCommandPtr(new HandlersCommand());
 }
 
 

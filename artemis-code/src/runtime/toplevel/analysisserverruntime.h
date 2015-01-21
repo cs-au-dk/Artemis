@@ -41,6 +41,7 @@ public:
     void execute(ErrorCommand* command);
     void execute(EchoCommand* command);
     void execute(PageLoadCommand* command);
+    void execute(HandlersCommand* command);
 
 protected:
     AnalysisServer mAnalysisServer;
@@ -52,6 +53,9 @@ protected:
     };
     ServerState mServerState;
     CommandPtr mCurrentCommand;
+
+    ExecutableConfigurationConstPtr mLastConfiguration;
+    ExecutionResultPtr mLastExecutionResult;
 
     void loadUrl(QUrl url);
 

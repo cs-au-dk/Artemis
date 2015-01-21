@@ -39,6 +39,11 @@ void PageLoadCommand::accept(AnalysisServerRuntime *server)
     server->execute(this);
 }
 
+void HandlersCommand::accept(AnalysisServerRuntime *server)
+{
+    server->execute(this);
+}
+
 
 
 } // namespace artemis

@@ -115,12 +115,42 @@ void AnalysisServerRuntime::execute(PageLoadCommand* command)
     Log::debug("  Analysis server runtime: executing a pageload command.");
     assert(command);
 
+    // Not strictly required, but for sanity checking we clear the details from the previous page load.
+    mLastConfiguration.clear();
+    mLastExecutionResult.clear();
+
     // WebkitExecutor uses the contents of the page to check for a successful load or not.
     // Therefore this check fails if we are already on a non-blank page.
     // So the first step of a page load is to load "about:blank", and then load the "real" URL.
 
     mServerState = PAGELOAD_BLANK;
     loadUrl(QUrl("about:blank")); // Calls back to slExecutedSequence.
+}
+
+void AnalysisServerRuntime::execute(HandlersCommand *command)
+{
+    Log::debug("  Analysis server runtime: executing a handlers command.");
+    assert(command);
+
+    // Retrieve the list of handlers from the saved response from the previous page load.
+    if (mLastExecutionResult.isNull()) {
+        emit sigCommandFinished(errorResponse("Handlers cannot be listed until a page is loaded."));
+        return;
+    }
+
+    QList<EventHandlerDescriptorConstPtr> handlerList = mLastExecutionResult->getEventHandlers();
+    QVariantList resultList;
+    foreach (EventHandlerDescriptorConstPtr handler, handlerList) {
+        QVariantMap handlerObject;
+        handlerObject.insert("event", handler->getName());
+        handlerObject.insert("element", handler->xPathToElement());
+        resultList.append(handlerObject);
+    }
+
+    QVariantMap result;
+    result.insert("handlers", resultList);
+
+    emit sigCommandFinished(result);
 }
 
 QVariant AnalysisServerRuntime::errorResponse(QString message)
@@ -173,7 +203,9 @@ void AnalysisServerRuntime::slExecutedSequence(ExecutableConfigurationConstPtr c
         // Successfully finished loading the real URL.
         mWebkitExecutor->getPage()->mAcceptNavigation = false; // Now the loading is finished any further navigation must be dealt with via slNavigationRequest.
 
-        // TODO: Save the configuration and result so they can be used by other commands.
+        // Save the configuration and result so they can be used by other commands.
+        mLastConfiguration = configuration;
+        mLastExecutionResult = result;
 
         // Send a response and finish the PAGELOAD command.
         response.insert("pageload", "done");

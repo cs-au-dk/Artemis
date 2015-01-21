@@ -98,6 +98,17 @@ public:
 
 typedef QSharedPointer<PageLoadCommand> PageLoadCommandPtr;
 
+// Gets a list of event handlers fromt he page.
+class HandlersCommand : public Command
+{
+public:
+    virtual void accept(AnalysisServerRuntime* server);
+};
+
+typedef QSharedPointer<HandlersCommand> HandlersCommandPtr;
+
+
+
 } // namespace artemis
 
 

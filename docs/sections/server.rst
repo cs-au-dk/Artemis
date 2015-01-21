@@ -41,8 +41,8 @@ Commands
 ^^^^^^^^
 
 * ``echo``
-    Returns the text provided in the ``message`` field. The optional ``delay`` field is the number of seconds to delay
-    before sending back the response (integers 0--30 are valid).
+    Used for testing. Returns the text provided in the ``message`` field. The optional ``delay`` field is the number
+    of seconds to delay before sending back the response (integers 0--30 are valid).
     
     Send::
     
@@ -57,13 +57,48 @@ Commands
 * ``exit``
     Shuts down the server.
     
-    Send: ``{"command":"exit"}``
+    Send: ``{"command": "exit"}``
     
     Recieve: ``{"message", "Server is shutting down"}``
     
 * ``pageload``
-    Not yet implemented.
-
+    Loads a URL in the Artemis browser.
+    
+    Send::
+    
+        {
+            "command": "pageload",
+            "url": "http://www.example.com"
+        }
+    
+    Recieve: ``{"pageload": "done"}``
+    
+* ``handlers``
+    Lists the event handlers registered on the current page. The list returned is a list of XPath expressions
+    identifying the DOM element each handler is registered on.
+    
+    There must already have been a page load command issued.
+    
+    Send: ``{"command": "handlers"}``
+    
+    Recieve: (e.g for the handlers.html test case) ::
+    
+        {
+            "handlers": [
+                            {
+                                "event": "click",
+                                "element": "//a[@id=\"dom-attr\"]"
+                            },
+                            {
+                                "event": "click",
+                                "element": "//a[@id=\"js-attr\"]"
+                            },
+                            {
+                                "event": "click",
+                                "element": "//a[@id=\"listener\"]"
+                            }
+                        ]
+        }
 
 
 
