@@ -535,6 +535,11 @@ void QWebExecutionListener::endSymbolicSession()
     JSC::Interpreter::m_symbolic->endSession();
 }
 
+unsigned int QWebExecutionListener::getSymbolicSessionId()
+{
+    return JSC::Interpreter::m_symbolic->getSessionId();
+}
+
 namespace inst {
 
 ExecutionListener* listener = 0;

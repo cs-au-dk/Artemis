@@ -24,7 +24,7 @@
 
 namespace artemis {
 
-ConcolicTargetGenerator::ConcolicTargetGenerator(Options options, TraceBuilder* traceBuilder)
+ConcolicTargetGenerator::ConcolicTargetGenerator(Options options, TraceBuilder* traceBuilder, DomSnapshotStoragePtr domSnapshotStorage)
     : TargetGenerator()
     , mOptions(options)
     , mTraceBuilder(traceBuilder)
@@ -37,6 +37,7 @@ TargetDescriptorConstPtr ConcolicTargetGenerator::generateTarget(EventHandlerDes
     // Create a context and save a reference in the returned target.
     // This reference can then be pulled out from oldTarget in permuteTarget below.
     ConcolicAnalysisPtr analysis(new ConcolicAnalysis(mOptions, ConcolicAnalysis::QUIET));
+    analysis->setDomSnapshotStorage(mDomSnapshotStorage);
     ConcolicAnalysis::ExplorationHandle explorationTarget = ConcolicAnalysis::NO_EXPLORATION_TARGET;
 
     // No trace has been recorded yet, so we do not suggest any target values intelligently.

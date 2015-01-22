@@ -75,7 +75,7 @@ public:
 
     SMTConstraintWriter(ConcolicBenchmarkFeatures disabledFeatures);
 
-    virtual bool write(PathConditionPtr pathCondition, FormRestrictions formRestrictions, DomSnapshotStorage domSnapshots, std::string outputFile);
+    virtual bool write(PathConditionPtr pathCondition, FormRestrictions formRestrictions, DomSnapshotStoragePtr domSnapshots, std::string outputFile);
 
     std::string getErrorReason() {
         return mErrorReason;
@@ -220,7 +220,7 @@ protected:
     unsigned int mNextTemporarySequence;
 
     FormRestrictions mFormRestrictions;
-    DomSnapshotStorage mDomSnapshots;
+    DomSnapshotStoragePtr mDomSnapshots;
 
     // Benchmarking
     ConcolicBenchmarkFeatures mDisabledFeatures;

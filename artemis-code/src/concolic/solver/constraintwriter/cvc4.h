@@ -40,7 +40,7 @@ public:
 
     CVC4ConstraintWriter(ConcolicBenchmarkFeatures disabledFeatures);
 
-    bool write(PathConditionPtr pathCondition, FormRestrictions formRestrictions, DomSnapshotStorage domSnapshots, std::string outputFile);
+    bool write(PathConditionPtr pathCondition, FormRestrictions formRestrictions, DomSnapshotStoragePtr domSnapshots, std::string outputFile);
 
 protected:
 

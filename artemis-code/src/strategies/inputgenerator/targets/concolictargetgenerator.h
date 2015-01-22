@@ -22,6 +22,7 @@
 #include "concolic/executiontree/tracebuilder.h"
 #include "runtime/options.h"
 #include "concolic/solver/solution.h"
+#include "model/domsnapshotstorage.h"
 
 namespace artemis
 {
@@ -30,7 +31,7 @@ class ConcolicTargetGenerator : public TargetGenerator
 {
 
 public:
-    ConcolicTargetGenerator(Options options, TraceBuilder* traceBuilder);
+    ConcolicTargetGenerator(Options options, TraceBuilder* traceBuilder, DomSnapshotStoragePtr domSnapshotStorage);
     TargetDescriptorConstPtr generateTarget(EventHandlerDescriptorConstPtr eventHandler) const;
     TargetDescriptorConstPtr permuteTarget(EventHandlerDescriptorConstPtr eventHandler,
                                            TargetDescriptorConstPtr oldTarget,
@@ -40,6 +41,7 @@ protected:
     Options mOptions;
     TraceBuilder* mTraceBuilder;
     mutable uint mTreeIdx;
+    DomSnapshotStoragePtr mDomSnapshotStorage;
 
     void printSolution(const SolutionPtr solution) const;
     void outputTree(TraceNodePtr tree, QString eventName, uint count) const;

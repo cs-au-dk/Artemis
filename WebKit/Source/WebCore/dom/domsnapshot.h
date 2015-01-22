@@ -28,6 +28,10 @@ namespace WebCore {
 class Node;
 class Element;
 
+/**
+ *  Note: The interfaces and implementations here (e.g. DOMSnapshot and DOMSnapshotImpl are separate because they used to be defined in different places.
+ */
+
 typedef long DOMSnapshotNodeId;
 typedef std::map<std::string, std::string> DOMSnapshotNodeAttributes;
 
@@ -85,7 +89,7 @@ public:
 class DOMSnapshotImpl : public DOMSnapshot
 {
 public:
-    DOMSnapshotImpl(std::queue<std::pair<unsigned, std::pair<Node*, std::string> > > queue);
+    DOMSnapshotImpl(std::queue<std::pair<unsigned, std::pair<Element*, std::string> > > queue);
 };
 
 }

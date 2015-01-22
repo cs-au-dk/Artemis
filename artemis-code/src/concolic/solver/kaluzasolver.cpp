@@ -37,7 +37,7 @@ KaluzaSolver::KaluzaSolver(ConcolicBenchmarkFeatures disabledFeatures)
 {
 }
 
-SolutionPtr KaluzaSolver::solve(PathConditionPtr pc, FormRestrictions formRestrictions, DomSnapshotStorage domSnapshots)
+SolutionPtr KaluzaSolver::solve(PathConditionPtr pc, FormRestrictions formRestrictions, DomSnapshotStoragePtr domSnapshots)
 {
     qDebug() << "Warning: KaluzaSolver does not support implicit form restrictions.\n";
 

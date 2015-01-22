@@ -44,7 +44,7 @@ CVC4ConstraintWriter::CVC4ConstraintWriter(ConcolicBenchmarkFeatures disabledFea
 {
 }
 
-bool CVC4ConstraintWriter::write(PathConditionPtr pathCondition, FormRestrictions formRestrictions, DomSnapshotStorage domSnapshots, std::string outputFile) {
+bool CVC4ConstraintWriter::write(PathConditionPtr pathCondition, FormRestrictions formRestrictions, DomSnapshotStoragePtr domSnapshots, std::string outputFile) {
 
     // pre analysis
     for (uint i = 0; i < pathCondition->size(); i++) {
@@ -989,9 +989,9 @@ void CVC4ConstraintWriter::emitDOMConstraints()
         qDebug() << mDomSnapshots;
 
         // If this test fails there will likely be a failed assertion while trying to read back the solver results, as the expected "result" variable will not be present.
-        if (mDomSnapshots.contains(identifier)) {
+        if (mDomSnapshots->contains(identifier)) {
 
-            WebCore::DOMSnapshot domSnapshot = mDomSnapshots.get(identifier);
+            WebCore::DOMSnapshot* domSnapshot = mDomSnapshots->get(identifier);
 
             recordAndEmitType(identifier + "_SOLUTIONXPATH", Symbolic::STRING);
 
@@ -999,7 +999,7 @@ void CVC4ConstraintWriter::emitDOMConstraints()
             mOutput << "; CONSTRAINTS FOR DOM NODE " << identifier << std::endl;
             mOutput << "(assert (or " << std::endl;
 
-            std::map<WebCore::DOMSnapshotNodeId, WebCore::DOMSnapshotNode*> nodes = domSnapshot.getNodes();
+            std::map<WebCore::DOMSnapshotNodeId, WebCore::DOMSnapshotNode*> nodes = domSnapshot->getNodes();
             std::map<WebCore::DOMSnapshotNodeId, WebCore::DOMSnapshotNode*>::iterator iter2;
             for (iter2 = nodes.begin(); iter2 != nodes.end(); ++iter2) {
                 WebCore::DOMSnapshotNodeId id = iter2->first;

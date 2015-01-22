@@ -38,15 +38,19 @@ public:
     bool contains(QString key) const;
     bool contains(std::string key) const;
 
-    WebCore::DOMSnapshot get(QString key) const;
-    WebCore::DOMSnapshot get(std::string key) const;
+    WebCore::DOMSnapshot* get(QString key) const;
+    WebCore::DOMSnapshot* get(std::string key) const;
 
-    void insert(QString key, WebCore::DOMSnapshot snapshot);
-    void create(QString key, BaseInput* input);
+    void insert(QString key, WebCore::DOMSnapshot *snapshot);
+    void create(QSharedPointer<const BaseInput> input, ArtemisWebPagePtr page, unsigned symbolicSessionId);
+
+    void reset();
 
 protected:
-    QMap<QString, WebCore::DOMSnapshot> mSnapshots;
+    QMap<QString, WebCore::DOMSnapshot*> mSnapshots;
 };
+
+typedef QSharedPointer<DomSnapshotStorage> DomSnapshotStoragePtr;
 
 
 QDebug operator<<(QDebug dbg, const DomSnapshotStorage &snapshots);

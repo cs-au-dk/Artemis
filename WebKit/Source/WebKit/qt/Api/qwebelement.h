@@ -144,6 +144,7 @@ public:
     QWebElement lookupXPath(QString xPath);
     bool  isUserVisible();
     int numberOfChildren(QString cssSelector);
+    WebCore::Element* getElement();
 
 #else
     QVariant evaluateJavaScript(const QString& scriptSource);

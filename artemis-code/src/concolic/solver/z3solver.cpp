@@ -38,7 +38,7 @@ Z3Solver::Z3Solver(ConcolicBenchmarkFeatures disabledFeatures)
 {
 }
 
-SolutionPtr Z3Solver::solve(PathConditionPtr pc, FormRestrictions formRestrictions, DomSnapshotStorage domSnapshots)
+SolutionPtr Z3Solver::solve(PathConditionPtr pc, FormRestrictions formRestrictions, DomSnapshotStoragePtr domSnapshots)
 {
     qDebug() << "Warning: Z3Solver does not support implicit form restrictions.\n";
 

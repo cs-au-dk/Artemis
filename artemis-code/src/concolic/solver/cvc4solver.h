@@ -35,7 +35,7 @@ public:
     CVC4Solver(ConcolicBenchmarkFeatures disabledFeatures);
     ~CVC4Solver();
 
-    SolutionPtr solve(PathConditionPtr pc, FormRestrictions formRestrictions, DomSnapshotStorage domSnapshots);
+    SolutionPtr solve(PathConditionPtr pc, FormRestrictions formRestrictions, DomSnapshotStoragePtr domSnapshots);
 
     QString getLastConstraintID() { return mLastConstraintID; }
 

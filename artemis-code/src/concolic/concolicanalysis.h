@@ -122,6 +122,10 @@ public:
     // Updating this once the analysis has started will lead to inconsistent results between different traces.
     void setFormRestrictions(FormRestrictions restrictions);
 
+    // Used to enable DOM constraints in the output.
+    // If this is set, the pointed-to DomSnapshotStorage should be updated by WebkitExecutor to contain up-to-date snapshots.
+    void setDomSnapshotStorage(DomSnapshotStoragePtr domSnapshotStorage);
+
     // Accessor for the search tree, which should not be externally modified!
     TraceNodePtr getExecutionTree();
     uint getExplorationIndex();
@@ -143,6 +147,8 @@ protected:
     FormRestrictions mFormFieldInitialRestrictions;
     FormRestrictions mergeDynamicSelectRestrictions(FormRestrictions base, QSet<SelectRestriction> replacements);
     FormRestrictions updateFormRestrictionsForFeatureFlags(FormRestrictions restrictions);
+
+    DomSnapshotStoragePtr mDomSnapshotStorage;
 
     // Logging
     uint mExplorationIndex;

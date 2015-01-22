@@ -102,6 +102,7 @@ public:
 
     void beginSymbolicSession();
     void endSymbolicSession();
+    unsigned int getSymbolicSessionId();
 
     static QWebExecutionListener* getListener();
     static void attachListeners();

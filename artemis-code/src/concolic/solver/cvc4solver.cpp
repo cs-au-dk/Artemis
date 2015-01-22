@@ -43,7 +43,7 @@ CVC4Solver::~CVC4Solver()
 {
 }
 
-SolutionPtr CVC4Solver::solve(PathConditionPtr pc, FormRestrictions formRestrictions, DomSnapshotStorage domSnapshots)
+SolutionPtr CVC4Solver::solve(PathConditionPtr pc, FormRestrictions formRestrictions, DomSnapshotStoragePtr domSnapshots)
 {
     // 0. Emit debug information
 

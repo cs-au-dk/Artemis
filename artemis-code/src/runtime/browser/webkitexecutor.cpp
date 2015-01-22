@@ -78,6 +78,8 @@ WebKitExecutor::WebKitExecutor(QObject* parent,
     QWebExecutionListener::attachListeners();
     mWebkitListener = QWebExecutionListener::getListener();
 
+    mDomSnapshotStorage = DomSnapshotStoragePtr(new DomSnapshotStorage());
+
     // TODO cleanup in ajax stuff, we are handling ajax through AjaxRequestListener, the ajaxRequest signal and addAjaxCallHandler
 
     if (enableConstantStringInstrumentation) {
@@ -203,6 +205,9 @@ void WebKitExecutor::executeSequence(ExecutableConfigurationConstPtr conf, SYMBO
     mJquery->reset(); // TODO merge into result?
     mResultBuilder->reset();
 
+    // Clear the previous DOM snapshots. In practice this means only one snapshot is stored at a time, as it is only recorded for the last event in symbolic mode MODE_CONCOLIC_LAST_EVENT.
+    mDomSnapshotStorage->reset();
+
     qDebug() << "--------------- FETCH PAGE --------------" << endl;
 
     mCoverageListener->notifyStartingLoad();
@@ -284,6 +289,9 @@ void WebKitExecutor::slLoadFinished(bool ok)
     foreach(QSharedPointer<const BaseInput> input, currentConf->getInputSequence()->toList()) {
 
         if (mSymbolicMode == MODE_CONCOLIC_LAST_EVENT && input == currentConf->getInputSequence()->getLast()) {
+            // Take a DOM snapshot just before the last event.
+            mDomSnapshotStorage->create(input, mPage, mWebkitListener->getSymbolicSessionId());
+
             mTraceBuilder->beginRecording();
             mWebkitListener->beginSymbolicSession();
         }
@@ -329,6 +337,11 @@ ArtemisWebPagePtr WebKitExecutor::getPage()
 TraceBuilder* WebKitExecutor::getTraceBuilder()
 {
     return mTraceBuilder;
+}
+
+DomSnapshotStoragePtr WebKitExecutor::getDomSnapshotStorage()
+{
+    return mDomSnapshotStorage;
 }
 
 }

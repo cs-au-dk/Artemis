@@ -33,7 +33,7 @@ class ConstraintWriter
 
 public:
 
-    virtual bool write(PathConditionPtr pathCondition, FormRestrictions formRestrictions, DomSnapshotStorage domSnapshots, std::string outputFile) = 0;
+    virtual bool write(PathConditionPtr pathCondition, FormRestrictions formRestrictions, DomSnapshotStoragePtr domSnapshots, std::string outputFile) = 0;
 
     virtual ~ConstraintWriter() {}
 

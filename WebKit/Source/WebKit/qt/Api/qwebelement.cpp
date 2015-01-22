@@ -883,7 +883,12 @@ int QWebElement::numberOfChildren(QString cssSelector){
     return counter;
 }
 
-#endif
+Element* QWebElement::getElement()
+{
+    return m_element;
+}
+
+#endif // ARTEMIS
 
 
 

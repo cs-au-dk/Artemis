@@ -41,7 +41,7 @@ public:
     Solver(ConcolicBenchmarkFeatures disabledFeatures);
     virtual ~Solver() {}
 
-    virtual SolutionPtr solve(PathConditionPtr pc, FormRestrictions formRestrictions, DomSnapshotStorage domSnapshots) = 0;
+    virtual SolutionPtr solve(PathConditionPtr pc, FormRestrictions formRestrictions, DomSnapshotStoragePtr domSnapshots) = 0;
 
     virtual QString getLastConstraintID() { return ""; }
 
