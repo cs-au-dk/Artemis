@@ -29,6 +29,7 @@ ConcolicTargetGenerator::ConcolicTargetGenerator(Options options, TraceBuilder* 
     , mOptions(options)
     , mTraceBuilder(traceBuilder)
     , mTreeIdx(1)
+    , mDomSnapshotStorage(domSnapshotStorage)
 {
 }
 

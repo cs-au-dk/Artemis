@@ -986,7 +986,7 @@ void CVC4ConstraintWriter::emitDOMConstraints()
 
         // TODO: remove
         qDebug() << QString::fromStdString(identifier); // Includes SYM_IN_ prefix.
-        qDebug() << mDomSnapshots;
+        qDebug() << *(mDomSnapshots.data());
 
         // If this test fails there will likely be a failed assertion while trying to read back the solver results, as the expected "result" variable will not be present.
         if (mDomSnapshots->contains(identifier)) {
