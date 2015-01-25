@@ -1,0 +1,51 @@
+<!doctype html><html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+    <title>Ben Spencer</title>
+    <meta name="author" content="Ben Spencer">
+
+    <script type="text/javascript" >
+        window.onload = function () {
+            
+            x = document.getElementById("clickable");
+            x.addEventListener("click", function (e) {
+                
+                // Add a new button to the page.
+                // This will be visible in the API as a new handler, so we can confirm this worked.
+                
+                y = document.createElement("button");
+                y.type = "button";
+                y.textContent = "Button";
+                y.style.display = "block";
+                
+                y.addEventListener("click", function (e) {
+                    alert("I am a button.");
+                    e.preventDefault();
+                }, false);
+                
+                z = document.getElementById("container");
+                z.appendChild(y);
+                
+                e.preventDefault();
+            }, false);
+            
+        }
+    </script>
+</head>
+<body>
+
+    <h1>Clickable elements</h1>
+
+    <p><a href="" id="clickable" >Click here to add new buttons to the page.</a></p>
+
+    <hr>
+
+    <div id="container" >
+    </div>
+
+    <hr>
+
+</body>
+</html>

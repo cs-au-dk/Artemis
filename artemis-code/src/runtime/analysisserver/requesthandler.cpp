@@ -123,6 +123,9 @@ CommandPtr RequestHandler::createCommand(QVariant data)
     } else if (command == "handlers") {
         return handlersCommand(mainObject);
 
+    } else if (command == "click") {
+        return clickCommand(mainObject);
+
     } else {
         return parseError("Command was not recognised.");
     }
@@ -200,6 +203,22 @@ CommandPtr RequestHandler::handlersCommand(QVariantMap mainObject)
 
     // There are no extra fields to fetch for a handlers command.
     return HandlersCommandPtr(new HandlersCommand());
+}
+
+CommandPtr RequestHandler::clickCommand(QVariantMap mainObject)
+{
+    Log::debug("  Request handler: Building Click command.");
+
+    // Fetch the XPath
+    if (!mainObject.contains("element")) {
+        return parseError("Could not find the \"element\" property for a click command.");
+    }
+
+    if (mainObject["element"].type() != QVariant::String) {
+        return parseError("The \"element\" property for a click command must be a string.");
+    }
+
+    return ClickCommandPtr(new ClickCommand(mainObject["element"].toString()));
 }
 
 

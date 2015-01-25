@@ -245,6 +245,109 @@ class AnalysisServerTests(unittest.TestCase):
         
         self.assertIn("error", response)
     
+    def test_click_command(self):
+        load_message = {
+                "command": "pageload",
+                "url": fixture_url("click.html")
+            }
+        
+        load_response = send_to_server(load_message)
+        
+        self.assertIn("pageload", load_response)
+        
+        click_message = {
+                "command": "click",
+                "element": "id(\"clickable\")"
+            }
+        
+        click_response = send_to_server(click_message)
+        
+        self.assertIn("click", click_response)
+        self.assertEqual(click_response["click"], u"done")
+    
+    def test_click_command_without_load(self):
+        message = {
+                "command": "click",
+                "element": "id(\"clickable\")"
+            }
+        
+        response = send_to_server(message)
+        
+        self.assertIn("error", response)
+    
+    def test_click_command_with_invalid_xpath(self):
+        load_message = {
+                "command": "pageload",
+                "url": fixture_url("click.html")
+            }
+        
+        load_response = send_to_server(load_message)
+        
+        self.assertIn("pageload", load_response)
+        
+        click_message = {
+                "command": "click",
+                "element": "this is not a real xpath"
+            }
+        
+        click_response = send_to_server(click_message)
+        
+        self.assertIn("error", click_response)
+    
+    def test_click_command_with_no_element(self):
+        load_message = {
+                "command": "pageload",
+                "url": fixture_url("click.html")
+            }
+        
+        load_response = send_to_server(load_message)
+        
+        self.assertIn("pageload", load_response)
+        
+        click_message = {
+                "command": "click",
+                "element": "id(\"no-such-element-exists\")"
+            }
+        
+        click_response = send_to_server(click_message)
+        
+        self.assertIn("error", click_response)
+    
+    def test_click_command_with_handlers_check(self):
+        # Uses the handlers command to confirm the click actually worked.
+        
+        load_message = {
+                "command": "pageload",
+                "url": fixture_url("click.html")
+            }
+        
+        load_response = send_to_server(load_message)
+        
+        self.assertIn("pageload", load_response)
+        
+        handlers_message = {
+                "command": "handlers"
+            }
+        
+        handlers_initial_response = send_to_server(handlers_message)
+        
+        self.assertIn("handlers", handlers_initial_response)
+        self.assertEqual(len(handlers_initial_response["handlers"]), 1)
+        
+        click_message = {
+                "command": "click",
+                "element": "id(\"clickable\")"
+            }
+        
+        click_response = send_to_server(click_message)
+        
+        self.assertIn("click", click_response)
+        self.assertEqual(click_response["click"], u"done")
+        
+        handlers_final_response = send_to_server(handlers_message)
+        
+        self.assertIn("handlers", handlers_final_response)
+        self.assertEqual(len(handlers_final_response["handlers"]), 2)
 
 
 

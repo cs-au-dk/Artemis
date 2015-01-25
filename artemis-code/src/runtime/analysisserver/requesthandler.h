@@ -54,6 +54,7 @@ protected:
     CommandPtr echoCommand(QVariantMap mainObject);
     CommandPtr pageloadCommand(QVariantMap mainObject);
     CommandPtr handlersCommand(QVariantMap mainObject);
+    CommandPtr clickCommand(QVariantMap mainObject);
 
 protected slots:
     void slRequestFullyLoaded();

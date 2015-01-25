@@ -153,6 +153,42 @@ void AnalysisServerRuntime::execute(HandlersCommand *command)
     emit sigCommandFinished(result);
 }
 
+void AnalysisServerRuntime::execute(ClickCommand *command)
+{
+    Log::debug("  Analysis server runtime: executing a click command.");
+    assert(command);
+
+    // Check we have loaded a page already.
+    if (mLastExecutionResult.isNull()) {
+        emit sigCommandFinished(errorResponse("Cannot execute click command until a page is loaded."));
+        return;
+    }
+
+    // Look up the element
+    QWebElement document = mWebkitExecutor->getPage()->currentFrame()->documentElement();
+    QString escapedXPath = command->xPath;
+    escapedXPath.replace('"', "\\\"");
+    QString countingJS = QString("document.evaluate(\"%1\", document, null, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null).snapshotLength;").arg(escapedXPath);
+    uint count = document.evaluateJavaScript(countingJS).toUInt();
+    if (count == 0) {
+        emit sigCommandFinished( errorResponse("The XPath did not match any elements."));
+        return;
+    }
+    if (count > 1) {
+        emit sigCommandFinished(errorResponse(QString("The XPath did not match a unique element. There were %1 matching elements.").arg(count)));
+        return;
+    }
+
+    // Execute the click.
+    QString clickJS = QString("document.evaluate(\"%1\", document, null, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null).snapshotItem(0).click();").arg(escapedXPath);
+    document.evaluateJavaScript(clickJS);
+
+    QVariantMap result;
+    result.insert("click", "done");
+
+    emit sigCommandFinished(result);
+}
+
 QVariant AnalysisServerRuntime::errorResponse(QString message)
 {
     QVariantMap response;

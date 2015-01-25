@@ -107,6 +107,21 @@ public:
 
 typedef QSharedPointer<HandlersCommand> HandlersCommandPtr;
 
+// Clicks an element using an XPath locator.
+// TODO: Add a choice of JS-level and GUI-level clicks. Onlty JS-level is implemented for now.
+class ClickCommand : public Command
+{
+public:
+    ClickCommand(QString xPath)
+        : xPath(xPath)
+    {}
+    virtual void accept(AnalysisServerRuntime* server);
+
+    QString xPath;
+};
+
+typedef QSharedPointer<ClickCommand> ClickCommandPtr;
+
 
 
 } // namespace artemis
