@@ -103,7 +103,7 @@ Commands
 * ``click``
     Clicks on an element specified by XPath.
     
-    For now then only type of lcick is a JavaScript-level click, with no option for a GUI click.
+    For now then only type of click is a JavaScript-level click, with no option for a GUI click.
     
     Send::
     
