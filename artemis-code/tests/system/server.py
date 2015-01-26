@@ -368,8 +368,20 @@ def run_artemis_server():
     # For debugging, remove the stdout=subprocess.PIPE part to see Artemis' output on screen.
     p = subprocess.Popen(cmd, cwd=OUTPUT_DIR, stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
     
-    # Hack to give the server a little time to come up.
-    time.sleep(0.5)
+    # Wait for the server to come up (max 1s).
+    i = 0
+    connected = False
+    s = socket.socket()
+    while i < 10 and not connected:
+        try:
+            s.connect(("localhost", 8008))
+        except socket.error:
+            pass # Server is not up yet.
+        else:
+            s.close()
+            connected = True
+        time.sleep(0.1)
+        i += 1
     
     return p
 
