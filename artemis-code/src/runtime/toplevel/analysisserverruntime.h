@@ -55,8 +55,7 @@ protected:
     ServerState mServerState;
     CommandPtr mCurrentCommand;
 
-    ExecutableConfigurationConstPtr mLastConfiguration;
-    ExecutionResultPtr mLastExecutionResult;
+    bool mIsPageLoaded;
 
     void loadUrl(QUrl url);
 

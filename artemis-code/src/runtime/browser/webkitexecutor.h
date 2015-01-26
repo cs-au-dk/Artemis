@@ -76,6 +76,8 @@ public:
 
     TraceBuilder* getTraceBuilder();
 
+    QList<EventHandlerDescriptorConstPtr> getCurrentEventHandlers();
+
     QWebExecutionListener* mWebkitListener; // TODO should not be public
 
 private:

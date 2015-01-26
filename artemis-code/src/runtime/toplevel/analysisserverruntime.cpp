@@ -31,6 +31,7 @@ AnalysisServerRuntime::AnalysisServerRuntime(QObject* parent, const Options& opt
     : Runtime(parent, options, url)
     , mAnalysisServer(options.analysisServerPort)
     , mServerState(IDLE)
+    , mIsPageLoaded(false)
 {
     // Connections to the server part
     QObject::connect(&mAnalysisServer, SIGNAL(sigExecuteCommand(CommandPtr)),
@@ -115,9 +116,8 @@ void AnalysisServerRuntime::execute(PageLoadCommand* command)
     Log::debug("  Analysis server runtime: executing a pageload command.");
     assert(command);
 
-    // Not strictly required, but for sanity checking we clear the details from the previous page load.
-    mLastConfiguration.clear();
-    mLastExecutionResult.clear();
+    // For a sanity check unset this until the load is finished. This is not strictly required.
+    mIsPageLoaded = false;
 
     // WebkitExecutor uses the contents of the page to check for a successful load or not.
     // Therefore this check fails if we are already on a non-blank page.
@@ -133,12 +133,12 @@ void AnalysisServerRuntime::execute(HandlersCommand *command)
     assert(command);
 
     // Retrieve the list of handlers from the saved response from the previous page load.
-    if (mLastExecutionResult.isNull()) {
+    if (!mIsPageLoaded) {
         emit sigCommandFinished(errorResponse("Handlers cannot be listed until a page is loaded."));
         return;
     }
 
-    QList<EventHandlerDescriptorConstPtr> handlerList = mLastExecutionResult->getEventHandlers();
+    QList<EventHandlerDescriptorConstPtr> handlerList = mWebkitExecutor->getCurrentEventHandlers();
     QVariantList resultList;
     foreach (EventHandlerDescriptorConstPtr handler, handlerList) {
         QVariantMap handlerObject;
@@ -159,7 +159,7 @@ void AnalysisServerRuntime::execute(ClickCommand *command)
     assert(command);
 
     // Check we have loaded a page already.
-    if (mLastExecutionResult.isNull()) {
+    if (!mIsPageLoaded) {
         emit sigCommandFinished(errorResponse("Cannot execute click command until a page is loaded."));
         return;
     }
@@ -239,11 +239,8 @@ void AnalysisServerRuntime::slExecutedSequence(ExecutableConfigurationConstPtr c
         // Successfully finished loading the real URL.
         mWebkitExecutor->getPage()->mAcceptNavigation = false; // Now the loading is finished any further navigation must be dealt with via slNavigationRequest.
 
-        // Save the configuration and result so they can be used by other commands.
-        mLastConfiguration = configuration;
-        mLastExecutionResult = result;
-
         // Send a response and finish the PAGELOAD command.
+        mIsPageLoaded = true;
         response.insert("pageload", "done");
 
         emit sigCommandFinished(response);

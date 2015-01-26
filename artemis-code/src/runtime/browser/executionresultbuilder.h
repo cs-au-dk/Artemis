@@ -60,6 +60,9 @@ public:
     void notifyStartingLoad();
     QSharedPointer<ExecutionResult> getResult();
 
+    // TODO: This would be better exposed somewhere else.
+    QList<EventHandlerDescriptorConstPtr> getCurrentEventHandlers();
+
 private:
     void registerFromFieldsIntoResult();
     void registerEventHandlersIntoResult();

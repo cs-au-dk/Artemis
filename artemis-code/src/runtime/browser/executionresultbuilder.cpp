@@ -77,6 +77,12 @@ QSharedPointer<ExecutionResult> ExecutionResultBuilder::getResult()
 
 void ExecutionResultBuilder::registerEventHandlersIntoResult()
 {
+    mResult->mEventHandlers = getCurrentEventHandlers();
+}
+
+QList<EventHandlerDescriptorConstPtr> ExecutionResultBuilder::getCurrentEventHandlers()
+{
+    QList<EventHandlerDescriptorConstPtr> handlerList;
 
     QPair<QWebElement*, QString> p;
     foreach(p, mElementPointers) {
@@ -116,10 +122,11 @@ void ExecutionResultBuilder::registerEventHandlersIntoResult()
         }
 
         Statistics::statistics()->accumulate("WebKit::events::added", 1);
-        mResult->mEventHandlers.append(handler);
+        handlerList.append(handler);
 
     }
 
+    return handlerList;
 }
 
 void ExecutionResultBuilder::registerFromFieldsIntoResult()

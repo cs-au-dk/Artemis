@@ -332,4 +332,9 @@ TraceBuilder* WebKitExecutor::getTraceBuilder()
     return mTraceBuilder;
 }
 
+QList<EventHandlerDescriptorConstPtr> WebKitExecutor::getCurrentEventHandlers()
+{
+    return mResultBuilder->getCurrentEventHandlers();
+}
+
 }
