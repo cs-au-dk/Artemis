@@ -62,7 +62,7 @@ Commands
     Recieve: ``{"message", "Server is shutting down"}``
     
 * ``pageload``
-    Loads a URL in the Artemis browser.
+    Loads a URL in the Artemis browser. The final URL we end up on after redirects etc. is returned.
     
     Send::
     
@@ -71,7 +71,12 @@ Commands
             "url": "http://www.example.com"
         }
     
-    Recieve: ``{"pageload": "done"}``
+    Recieve::
+    
+        {
+            "pageload": "done",
+            "url": "http://www.example.com"
+        }
     
 * ``handlers``
     Lists the event handlers registered on the current page. The list returned is a list of XPath expressions

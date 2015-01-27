@@ -242,6 +242,7 @@ void AnalysisServerRuntime::slExecutedSequence(ExecutableConfigurationConstPtr c
         // Send a response and finish the PAGELOAD command.
         mIsPageLoaded = true;
         response.insert("pageload", "done");
+        response.insert("url", mWebkitExecutor->getPage()->currentFrame()->url().toString());
 
         emit sigCommandFinished(response);
         break;

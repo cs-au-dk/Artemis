@@ -161,7 +161,8 @@ class AnalysisServerTests(unittest.TestCase):
         self.assertIn("pageload", response)
         self.assertEqual(response["pageload"], u"done")
         
-        # TODO: Until we have some other commands to check what was done, there's no way to confirm this has worked.
+        self.assertIn("url", response)
+        self.assertEqual(response["url"], u"file://" + fixture_url("handlers.html"))
     
     def test_pageload_bad_url(self):
         message = {
@@ -194,6 +195,29 @@ class AnalysisServerTests(unittest.TestCase):
         self.assertIn("error", bad_response)
         self.assertNotIn("pageload", bad_response)
         self.assertNotIn("pageload", bad_response)
+    
+    def test_pageload_command_redirect_301(self):
+        message = {
+                "command": "pageload",
+                "url": "http://bit.ly/1h0ceQI"
+            }
+        
+        response = send_to_server(message)
+        
+        self.assertIn("url", response)
+        self.assertEqual(response["url"], u"http://www.example.com/")
+    
+    @unittest.expectedFailure # See Issue #116.
+    def test_pageload_command_redirect_meta(self):
+        message = {
+                "command": "pageload",
+                "url": fixture_url("redirect.html")
+            }
+        
+        response = send_to_server(message)
+        
+        self.assertIn("url", response)
+        self.assertEqual(response["url"], u"file://" + fixture_url("handlers.html"))
     
     def test_handlers_command(self):
         load_message = {
