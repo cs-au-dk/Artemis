@@ -11,7 +11,7 @@ In this mode **all** other arguments except those prefixed by ``analysis-server-
 The API
 -------
 
-The server runs on port 8099 by default. This can be changed with the ``--analysis-server-port`` option.
+The server runs on port 8008 by default. This can be changed with the ``--analysis-server-port`` option.
 
 Calls to the server are expected to POST a JSON message with the following format::
 
@@ -26,7 +26,7 @@ The ``command`` property must always be set, and the rest of the properties depe
 
 There is an echo command which can be used to check the server is running::
 
-    curl --data '{"command":"echo","message":"Hello, World"}' localhost:8008
+    curl -w "\n" --data '{"command":"echo","message":"Hello, World"}' localhost:8008
 
 This should return::
 
