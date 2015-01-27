@@ -219,15 +219,15 @@ class AnalysisServerTests(unittest.TestCase):
         expected_handlers = [
             {
                 "event": "click",
-                "element": "//a[@id=\"dom-attr\"]"
+                "element": "//a[@id='dom-attr']"
             },
             {
                 "event": "click",
-                "element": "//a[@id=\"js-attr\"]"
+                "element": "//a[@id='js-attr']"
             },
             {
                 "event": "click",
-                "element": "//a[@id=\"listener\"]"
+                "element": "//a[@id='listener']"
             }
         ]
         
