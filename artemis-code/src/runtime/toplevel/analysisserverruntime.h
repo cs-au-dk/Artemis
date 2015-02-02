@@ -49,9 +49,10 @@ protected:
     AnalysisServer mAnalysisServer;
 
     QVariant errorResponse(QString message);
+    void emitTimeout();
 
     enum ServerState {
-        IDLE, EXIT, PAGELOAD_BLANK, PAGELOAD
+        IDLE, EXIT, PAGELOAD_BLANK, PAGELOAD, PAGELOAD_TIMEOUT
     };
     ServerState mServerState;
     CommandPtr mCurrentCommand;
@@ -64,6 +65,7 @@ protected slots:
     // Server part
     void slExecuteCommand(CommandPtr command);
     void slResponseFinished();
+    void slLoadTimeoutTriggered();
 
     // Browser part
     void slExecutedSequence(ExecutableConfigurationConstPtr configuration, QSharedPointer<ExecutionResult> result);

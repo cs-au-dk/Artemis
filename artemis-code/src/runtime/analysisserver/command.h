@@ -88,12 +88,14 @@ typedef QSharedPointer<EchoCommand> EchoCommandPtr;
 class PageLoadCommand : public Command
 {
 public:
-    PageLoadCommand(QUrl url)
+    PageLoadCommand(QUrl url, uint timeout)
         : url(url)
+        , timeout(timeout)
     {}
     virtual void accept(AnalysisServerRuntime* server);
 
     QUrl url;
+    uint timeout;
 };
 
 typedef QSharedPointer<PageLoadCommand> PageLoadCommandPtr;

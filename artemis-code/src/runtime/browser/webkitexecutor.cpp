@@ -245,7 +245,8 @@ void WebKitExecutor::slLoadFinished(bool ok)
 {
     if(mNextOpCanceled){
         mNextOpCanceled = false;
-        qDebug() << "Page load canceled";
+        qDebug() << "Page load cancelled";
+        emit sigAbortedExecution("Page load cancelled");
         return;
     }
 
@@ -254,7 +255,7 @@ void WebKitExecutor::slLoadFinished(bool ok)
         if(html == "<html><head></head><body></body></html>"){
             emit sigAbortedExecution(QString("Error: The requested URL ") + currentConf->getUrl().toString() + QString(" could not be loaded"));
             return;
-        }        
+        }
     }
     mResultBuilder->notifyPageLoaded();
 

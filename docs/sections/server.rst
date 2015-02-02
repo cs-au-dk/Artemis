@@ -49,7 +49,7 @@ Commands
         {
             "command": "echo",
             "message": "Hello, World",
-            "delay": 1                              [Optional]
+            "delay": 1                              [Optional 1s delay]
         }
     
     Recieve: ``{"message": "Hello, World"}``
@@ -64,11 +64,15 @@ Commands
 * ``pageload``
     Loads a URL in the Artemis browser. The final URL we end up on after redirects etc. is returned.
     
+    The optional ``timeout`` parameter is the number of milliseconds to wait before cancelling the load and returning
+    an error (integers 0--30000 accepted), 0 implies no timeout.
+    
     Send::
     
         {
             "command": "pageload",
-            "url": "http://www.example.com"
+            "url": "http://www.example.com",
+            "timeout": 5000                         [Optional 5s timeout]
         }
     
     Recieve::

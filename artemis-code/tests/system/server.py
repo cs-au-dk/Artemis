@@ -220,6 +220,44 @@ class AnalysisServerTests(unittest.TestCase):
         self.assertIn("url", response)
         self.assertEqual(response["url"], u"file://" + fixture_url("handlers.html"))
     
+    def test_pageload_command_timeout(self):
+        message = {
+                "command": "pageload",
+                "url": "http://www.mistymountain.co.uk/", # Any non-trivial page will do.
+                "timeout": 10
+            }
+        
+        response = send_to_server(message)
+        
+        self.assertIn("error", response)
+        self.assertEqual(response["error"], u"Timed out.")
+    
+    def test_pageload_command_timeout_not_triggered(self):
+        message = {
+                "command": "pageload",
+                "url": "http://www.mistymountain.co.uk/", # As before, but with a longer timeout.
+                "timeout": 20000
+            }
+        
+        response = send_to_server(message)
+        
+        self.assertNotIn("error", response)
+        self.assertIn("pageload", response)
+        self.assertEqual(response["pageload"], u"done")
+    
+    @unittest.expectedFailure #See issue #117
+    def test_pageload_command_timeout_blocking_js(self):
+        message = {
+                "command": "pageload",
+                "url": fixture_url("slow-load.html"),
+                "timeout": 500
+            }
+        
+        response = send_to_server(message)
+        
+        self.assertIn("error", response)
+        self.assertEqual(response["error"], u"Timed out.")
+    
     def test_handlers_command(self):
         load_message = {
                 "command": "pageload",

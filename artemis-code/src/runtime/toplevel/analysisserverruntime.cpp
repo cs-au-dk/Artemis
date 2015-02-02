@@ -16,6 +16,7 @@
 
 #include <QString>
 #include <QDebug>
+#include <QTimer>
 
 #include <qjson/parser.h>
 
@@ -116,8 +117,12 @@ void AnalysisServerRuntime::execute(PageLoadCommand* command)
     Log::debug("  Analysis server runtime: executing a pageload command.");
     assert(command);
 
-    // For a sanity check unset this until the load is finished. This is not strictly required.
     mIsPageLoaded = false;
+
+    // The whole load process is limited by the timout field.
+    if (command->timeout > 0) {
+        QTimer::singleShot(command->timeout, this, SLOT(slLoadTimeoutTriggered()));
+    }
 
     // WebkitExecutor uses the contents of the page to check for a successful load or not.
     // Therefore this check fails if we are already on a non-blank page.
@@ -215,6 +220,11 @@ QVariant AnalysisServerRuntime::errorResponse(QString message)
     return response;
 }
 
+void AnalysisServerRuntime::emitTimeout()
+{
+    emit sigCommandFinished(errorResponse("Timed out."));
+}
+
 
 // Called once the response from an execute() method has been sent.
 void AnalysisServerRuntime::slResponseFinished()
@@ -266,6 +276,10 @@ void AnalysisServerRuntime::slExecutedSequence(ExecutableConfigurationConstPtr c
         emit sigCommandFinished(response);
         break;
 
+    case PAGELOAD_TIMEOUT:
+        emitTimeout();
+        break;
+
     case IDLE: // Fall-through
     case EXIT: // Fall-through
     default:
@@ -274,6 +288,13 @@ void AnalysisServerRuntime::slExecutedSequence(ExecutableConfigurationConstPtr c
         exit(1);
         break;
     }
+}
+
+void AnalysisServerRuntime::slLoadTimeoutTriggered()
+{
+    mServerState = PAGELOAD_TIMEOUT;
+    mWebkitExecutor->getPage()->triggerAction(QWebPage::Stop);
+    // slExecutedSequence will now be called.
 }
 
 // Called when the ArtemisWebPage receives a request for navigation and we have set it's mAcceptingNavigation flag to false.
@@ -288,10 +309,11 @@ void AnalysisServerRuntime::slNavigationRequest(QWebFrame *frame, const QNetwork
 void AnalysisServerRuntime::slAbortedExecution(QString reason)
 {
     if (mServerState == PAGELOAD) {
-        // There was an error loading this page, so send an error response.
-        QVariantMap response;
-        response.insert("error", "Could not load the URL.");
-        emit sigCommandFinished(response);
+        // There was an error loading this page.
+        emit sigCommandFinished(errorResponse("Could not load the URL."));
+
+    } else if (mServerState == PAGELOAD_TIMEOUT) {
+        emitTimeout();
 
     } else {
         Runtime::slAbortedExecution(reason);

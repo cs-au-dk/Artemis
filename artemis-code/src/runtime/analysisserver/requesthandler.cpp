@@ -197,7 +197,19 @@ CommandPtr RequestHandler::pageloadCommand(QVariantMap mainObject)
         return parseError("Invalid \"url\" property for a pageload command.");
     }
 
-    return PageLoadCommandPtr(new PageLoadCommand(url));
+    uint timeout = 0;
+    if (mainObject.contains("timeout")) {
+        bool ok;
+        timeout = mainObject["timeout"].toUInt(&ok); // Will convert a string "5" to integer 5.
+        if (!ok) {
+            return parseError("The \"timeout\" property for a pageload command must be a positive integer.");
+        }
+        if (timeout > 30000) {
+            return parseError("The \"timeout\" property must be at most 30,000 milliseconds.");
+        }
+    }
+
+    return PageLoadCommandPtr(new PageLoadCommand(url, timeout));
 }
 
 CommandPtr RequestHandler::handlersCommand(QVariantMap mainObject)
