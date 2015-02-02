@@ -189,6 +189,25 @@ void AnalysisServerRuntime::execute(ClickCommand *command)
     emit sigCommandFinished(result);
 }
 
+void AnalysisServerRuntime::execute(DomCommand *command)
+{
+    Log::debug("  Analysis server runtime: executing a DOM listing command.");
+    assert(command);
+
+    // Check we have loaded a page already.
+    if (!mIsPageLoaded) {
+        emit sigCommandFinished(errorResponse("Cannot execute dom command until a page is loaded."));
+        return;
+    }
+
+    QString dom = mWebkitExecutor->getPage()->mainFrame()->toHtml();
+
+    QVariantMap result;
+    result.insert("dom", dom);
+
+    emit sigCommandFinished(result);
+}
+
 QVariant AnalysisServerRuntime::errorResponse(QString message)
 {
     QVariantMap response;

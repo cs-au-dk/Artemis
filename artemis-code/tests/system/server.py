@@ -12,6 +12,7 @@ import json
 import time
 import httplib
 import socket
+import re
 
 FIXTURE_ROOT = os.path.join(os.environ['ARTEMISDIR'], 'artemis-code', 'tests', 'system', 'fixtures', 'server')
 
@@ -258,6 +259,7 @@ class AnalysisServerTests(unittest.TestCase):
         for x in handlers:
             self.assertIn(x, expected_handlers)
             expected_handlers.remove(x)
+        self.assertEqual(expected_handlers, [])
         
     
     def test_handlers_command_without_load(self):
@@ -372,6 +374,44 @@ class AnalysisServerTests(unittest.TestCase):
         
         self.assertIn("handlers", handlers_final_response)
         self.assertEqual(len(handlers_final_response["handlers"]), 2)
+    
+    def test_dom_command(self):
+        load_message = {
+                "command": "pageload",
+                "url": fixture_url("handlers.html")
+            }
+        
+        load_response = send_to_server(load_message)
+        
+        self.assertIn("pageload", load_response)
+        
+        # Send the DOM command
+        dom_message = {
+            "command": "dom"
+        }
+        
+        dom_response = send_to_server(dom_message)
+        
+        # Read the expected DOM from the HTML file directly.
+        with open(fixture_url("handlers.html")) as f:
+            expected = unicode(f.read())
+        
+        # Ignore whitespace differences.
+        # Artemis IDs are not being added, so we don't have to account for these with a "proper" diff.
+        exp_tokens = [x for x in re.split("\s+|<|>", expected) if x != ""]
+        real_tokens = [x for x in re.split("\s+|<|>", dom_response["dom"]) if x != ""]
+        
+        self.assertIn("dom", dom_response)
+        self.assertEqual(real_tokens, exp_tokens)
+    
+    def test_dom_command_without_load(self):
+        message = {
+                "command": "dom"
+            }
+        
+        response = send_to_server(message)
+        
+        self.assertIn("error", response)
 
 
 

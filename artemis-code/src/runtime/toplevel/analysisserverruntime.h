@@ -43,6 +43,7 @@ public:
     void execute(PageLoadCommand* command);
     void execute(HandlersCommand* command);
     void execute(ClickCommand* command);
+    void execute(DomCommand* command);
 
 protected:
     AnalysisServer mAnalysisServer;

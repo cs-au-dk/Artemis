@@ -118,5 +118,12 @@ Commands
         }
     
     Recieve: ``{"click": "done"}``
+    
+* ``dom``
+    Returns a string representation of the current DOM.
+    
+    Send: ``{"command": "dom"}``
+    
+    Recieve: ``{"dom": "<html> ... </html>"}``
 
 

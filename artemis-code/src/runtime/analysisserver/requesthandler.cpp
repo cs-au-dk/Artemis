@@ -126,6 +126,9 @@ CommandPtr RequestHandler::createCommand(QVariant data)
     } else if (command == "click") {
         return clickCommand(mainObject);
 
+    } else if (command == "dom") {
+        return domCommand(mainObject);
+
     } else {
         return parseError("Command was not recognised.");
     }
@@ -219,6 +222,14 @@ CommandPtr RequestHandler::clickCommand(QVariantMap mainObject)
     }
 
     return ClickCommandPtr(new ClickCommand(mainObject["element"].toString()));
+}
+
+CommandPtr RequestHandler::domCommand(QVariantMap mainObject)
+{
+    Log::debug("  Request handler: Building DOM listing command.");
+
+    // There are no extra fields to fetch for a DOM command.
+    return DomCommandPtr(new DomCommand());
 }
 
 

@@ -98,7 +98,7 @@ public:
 
 typedef QSharedPointer<PageLoadCommand> PageLoadCommandPtr;
 
-// Gets a list of event handlers fromt he page.
+// Gets a list of event handlers from the page.
 class HandlersCommand : public Command
 {
 public:
@@ -122,6 +122,14 @@ public:
 
 typedef QSharedPointer<ClickCommand> ClickCommandPtr;
 
+// Gets a dump of the page DOM.
+class DomCommand : public Command
+{
+public:
+    virtual void accept(AnalysisServerRuntime* server);
+};
+
+typedef QSharedPointer<DomCommand> DomCommandPtr;
 
 
 } // namespace artemis

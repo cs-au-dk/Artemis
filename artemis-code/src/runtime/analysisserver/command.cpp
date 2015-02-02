@@ -49,6 +49,11 @@ void ClickCommand::accept(AnalysisServerRuntime *server)
     server->execute(this);
 }
 
+void DomCommand::accept(AnalysisServerRuntime *server)
+{
+    server->execute(this);
+}
+
 
 
 } // namespace artemis
