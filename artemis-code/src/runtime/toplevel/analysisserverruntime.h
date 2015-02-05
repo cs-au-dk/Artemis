@@ -21,6 +21,7 @@
 
 #include "runtime/runtime.h"
 #include "runtime/analysisserver/analysisserver.h"
+#include "runtime/analysisserver/fieldreadlog.h"
 
 namespace artemis
 {
@@ -44,6 +45,7 @@ public:
     void execute(HandlersCommand* command);
     void execute(ClickCommand* command);
     void execute(DomCommand* command);
+    void execute(FieldsReadCommand* command);
 
 protected:
     AnalysisServer mAnalysisServer;
@@ -60,6 +62,9 @@ protected:
     bool mIsPageLoaded;
 
     void loadUrl(QUrl url);
+
+    // Page analysis
+    FieldReadLog mFieldReadLog;
 
 protected slots:
     // Server part

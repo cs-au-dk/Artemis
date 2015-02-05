@@ -33,6 +33,7 @@ AnalysisServerRuntime::AnalysisServerRuntime(QObject* parent, const Options& opt
     , mAnalysisServer(options.analysisServerPort)
     , mServerState(IDLE)
     , mIsPageLoaded(false)
+    , mFieldReadLog(mWebkitExecutor->getPage())
 {
     // Connections to the server part
     QObject::connect(&mAnalysisServer, SIGNAL(sigExecuteCommand(CommandPtr)),
@@ -42,12 +43,17 @@ AnalysisServerRuntime::AnalysisServerRuntime(QObject* parent, const Options& opt
     QObject::connect(&mAnalysisServer, SIGNAL(sigResponseFinished()),
                      this, SLOT(slResponseFinished()));
 
-    // Connections to the brpwser part
+    // Connections to the browser part
     QObject::connect(mWebkitExecutor, SIGNAL(sigExecutedSequence(ExecutableConfigurationConstPtr, QSharedPointer<ExecutionResult>)),
                      this, SLOT(slExecutedSequence(ExecutableConfigurationConstPtr,QSharedPointer<ExecutionResult>)));
     QObject::connect(mWebkitExecutor->getPage().data(), SIGNAL(sigNavigationRequest(QWebFrame*,QNetworkRequest,QWebPage::NavigationType)),
                      this, SLOT(slNavigationRequest(QWebFrame*,QNetworkRequest,QWebPage::NavigationType)));
     mWebkitExecutor->getPage()->mAcceptNavigation = false;
+
+    // Connections for page analysis
+    QObject::connect(QWebExecutionListener::getListener(), SIGNAL(sigJavascriptSymbolicFieldRead(QString, bool)),
+                     &mFieldReadLog, SLOT(slJavascriptSymbolicFieldRead(QString, bool)));
+
 }
 
 void AnalysisServerRuntime::run(const QUrl &url)
@@ -184,6 +190,12 @@ void AnalysisServerRuntime::execute(ClickCommand *command)
         return;
     }
 
+    // N.B. The XPath provided here is used as part of the event descriptor to decide which events are duplicates.
+    // So unless we create a "canonical" XPath here, different XPaths pointing to the same element will be considered
+    // different events by FieldReadLog. It's an PAI decision about whether canonical XPaths are best or returning the
+    // XPath given is best (the current decision).
+    mFieldReadLog.beginEvent("click", command->xPath);
+
     // Execute the click.
     QString clickJS = QString("document.evaluate(\"%1\", document, null, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null).snapshotItem(0).click();").arg(escapedXPath);
     document.evaluateJavaScript(clickJS);
@@ -209,6 +221,23 @@ void AnalysisServerRuntime::execute(DomCommand *command)
 
     QVariantMap result;
     result.insert("dom", dom);
+
+    emit sigCommandFinished(result);
+}
+
+void AnalysisServerRuntime::execute(FieldsReadCommand *command)
+{
+    Log::debug("  Analysis server runtime: executing a Fields-Read command.");
+    assert(command);
+
+    // Check we have loaded a page already.
+    if (!mIsPageLoaded) {
+        emit sigCommandFinished(errorResponse("Cannot execute fieldsread command until a page is loaded."));
+        return;
+    }
+
+    QVariantMap result;
+    result.insert("fieldsread", mFieldReadLog.getLog());
 
     emit sigCommandFinished(result);
 }
@@ -261,6 +290,8 @@ void AnalysisServerRuntime::slExecutedSequence(ExecutableConfigurationConstPtr c
         loadCommand = mCurrentCommand.dynamicCast<PageLoadCommand>();
         assert(loadCommand);
         mServerState = PAGELOAD;
+        mFieldReadLog.clear();
+        mFieldReadLog.beginEvent("pageload", "");
         loadUrl(loadCommand->url); // Calls back to slExecutedSequence again.
         break;
 

@@ -49,7 +49,7 @@ Commands
         {
             "command": "echo",
             "message": "Hello, World",
-            "delay": 1                              [Optional 1s delay]
+            "delay": 1
         }
     
     Recieve: ``{"message": "Hello, World"}``
@@ -72,7 +72,7 @@ Commands
         {
             "command": "pageload",
             "url": "http://www.example.com",
-            "timeout": 5000                         [Optional 5s timeout]
+            "timeout": 5000
         }
     
     Recieve::
@@ -94,19 +94,19 @@ Commands
     
         {
             "handlers": [
-                            {
-                                "event": "click",
-                                "element": "//a[@id=\"dom-attr\"]"
-                            },
-                            {
-                                "event": "click",
-                                "element": "//a[@id=\"js-attr\"]"
-                            },
-                            {
-                                "event": "click",
-                                "element": "//a[@id=\"listener\"]"
-                            }
-                        ]
+                {
+                    "event": "click",
+                    "element": "//a[@id=\"dom-attr\"]"
+                },
+                {
+                    "event": "click",
+                    "element": "//a[@id=\"js-attr\"]"
+                },
+                {
+                    "event": "click",
+                    "element": "//a[@id=\"listener\"]"
+                }
+            ]
         }
     
 * ``click``
@@ -129,5 +129,56 @@ Commands
     Send: ``{"command": "dom"}``
     
     Recieve: ``{"dom": "<html> ... </html>"}``
-
+    
+* ``fieldsread``
+    Returns a list of the form fields which have been read by different events since the last page load.
+    
+    Send: ``{"command": "fieldsread"}``
+    
+    Recieve: (e.g. from form.html test page) ::
+    
+        {
+            "fieldsread": [
+                {
+                    "element": "//button[1]",
+                    "event": "click",
+                    "reads": [
+                        {
+                            "count": 2,
+                            "field": "//input[@id='first']"
+                        }
+                    ]
+                },
+                {
+                    "element": "//button[2]",
+                    "event": "click",
+                    "reads": [
+                        {
+                            "count": 1,
+                            "field": "//input[@id='second']"
+                        }
+                    ]
+                },
+                {
+                    "element": "//button[3]",
+                    "event": "click",
+                    "reads": [
+                        {
+                            "count": 3,
+                            "field": "//input[@id='first']"
+                        },
+                        {
+                            "count": 3,
+                            "field": "//input[@id='second']"
+                        }
+                    ]
+                }
+            ]
+        }
+    
+    Each "event object" contains the event type triggered and target element (XPath as passed in via the ``click``
+    command), and a list of the form fields which were read by the handler for that event. Each of these "read objects"
+    contains an XPath to the field and a count of the number of times the field value was read (at a low level in the
+    JavaScript interpreter).
+    
 

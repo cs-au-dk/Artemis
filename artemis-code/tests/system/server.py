@@ -279,25 +279,24 @@ class AnalysisServerTests(unittest.TestCase):
         
         self.assertEqual(len(handlers), 3)
         
-        expected_handlers = [
-            {
-                "event": "click",
-                "element": "//a[@id='dom-attr']"
-            },
-            {
-                "event": "click",
-                "element": "//a[@id='js-attr']"
-            },
-            {
-                "event": "click",
-                "element": "//a[@id='listener']"
-            }
-        ]
+        expected_handlers = json.loads("""
+            [
+                {
+                    "event": "click",
+                    "element": "//a[@id='dom-attr']"
+                },
+                {
+                    "event": "click",
+                    "element": "//a[@id='js-attr']"
+                },
+                {
+                    "event": "click",
+                    "element": "//a[@id='listener']"
+                }
+            ]
+        """)
         
-        for x in handlers:
-            self.assertIn(x, expected_handlers)
-            expected_handlers.remove(x)
-        self.assertEqual(expected_handlers, [])
+        self.assertEqual(handlers, expected_handlers)
         
     
     def test_handlers_command_without_load(self):
@@ -450,6 +449,117 @@ class AnalysisServerTests(unittest.TestCase):
         response = send_to_server(message)
         
         self.assertIn("error", response)
+    
+    def test_fieldsread_command(self):
+        load_message = {
+                "command": "pageload",
+                "url": fixture_url("form.html")
+            }
+        
+        load_response = send_to_server(load_message)
+        
+        self.assertIn("pageload", load_response)
+        
+        fieldsread_message = {
+            "command": "fieldsread"
+        }
+        
+        fieldsread_response = send_to_server(fieldsread_message)
+        
+        self.assertIn("fieldsread", fieldsread_response)
+        self.assertEqual(fieldsread_response["fieldsread"], [])
+    
+    def test_fieldsread_command_with_clicks(self):
+        load_message = {
+                "command": "pageload",
+                "url": fixture_url("form.html")
+            }
+        
+        load_response = send_to_server(load_message)
+        
+        self.assertIn("pageload", load_response)
+        
+        # Send a few click commands
+        def click_btn_message(btn_num):
+            return {
+                    "command": "click",
+                    "element": ("//button[%s]" % btn_num)
+                }
+        
+        r = send_to_server(click_btn_message(1))
+        self.assertNotIn("error", r)
+        r = send_to_server(click_btn_message(1))
+        self.assertNotIn("error", r)
+        r = send_to_server(click_btn_message(2))
+        self.assertNotIn("error", r)
+        r = send_to_server(click_btn_message(3))
+        self.assertNotIn("error", r)
+        r = send_to_server(click_btn_message(3))
+        self.assertNotIn("error", r)
+        r = send_to_server(click_btn_message(3))
+        self.assertNotIn("error", r)
+        
+        # Send the fieldsread command
+        fieldsread_message = {
+            "command": "fieldsread"
+        }
+        
+        fieldsread_response = send_to_server(fieldsread_message)
+        
+        expected = json.loads("""
+            {
+                "fieldsread": [
+                    {
+                        "element": "//button[1]",
+                        "event": "click",
+                        "reads": [
+                            {
+                                "count": 2,
+                                "field": "//input[@id='first']"
+                            }
+                        ]
+                    },
+                    {
+                        "element": "//button[2]",
+                        "event": "click",
+                        "reads": [
+                            {
+                                "count": 1,
+                                "field": "//input[@id='second']"
+                            }
+                        ]
+                    },
+                    {
+                        "element": "//button[3]",
+                        "event": "click",
+                        "reads": [
+                            {
+                                "count": 3,
+                                "field": "//input[@id='first']"
+                            },
+                            {
+                                "count": 3,
+                                "field": "//input[@id='second']"
+                            }
+                        ]
+                    }
+                ]
+            }
+        """)
+        
+        self.assertEqual(fieldsread_response, expected)
+    
+    def test_fieldsread_command_without_load(self):
+        message = {
+                "command": "fieldsread"
+            }
+        
+        response = send_to_server(message)
+        
+        self.assertIn("error", response)
+    
+
+
 
 
 

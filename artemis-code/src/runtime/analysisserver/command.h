@@ -133,6 +133,20 @@ public:
 
 typedef QSharedPointer<DomCommand> DomCommandPtr;
 
+// Lists the fields read by each event.
+class FieldsReadCommand : public Command
+{
+public:
+    virtual void accept(AnalysisServerRuntime* server);
+};
+
+typedef QSharedPointer<FieldsReadCommand> FieldsReadCommandPtr;
+
+
+
+
+
+
 
 } // namespace artemis
 

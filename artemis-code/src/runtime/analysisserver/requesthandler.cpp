@@ -129,6 +129,9 @@ CommandPtr RequestHandler::createCommand(QVariant data)
     } else if (command == "dom") {
         return domCommand(mainObject);
 
+    } else if (command == "fieldsread") {
+        return fieldsReadCommand(mainObject);
+
     } else {
         return parseError("Command was not recognised.");
     }
@@ -242,6 +245,14 @@ CommandPtr RequestHandler::domCommand(QVariantMap mainObject)
 
     // There are no extra fields to fetch for a DOM command.
     return DomCommandPtr(new DomCommand());
+}
+
+CommandPtr RequestHandler::fieldsReadCommand(QVariantMap mainObject)
+{
+    Log::debug("  Request handler: Building Fields-Read command.");
+
+    // There are no extra fields to fetch for a fieldsread command.
+    return FieldsReadCommandPtr(new FieldsReadCommand());
 }
 
 
