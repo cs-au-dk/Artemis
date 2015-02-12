@@ -16,7 +16,7 @@ if [[ ! -d "$TARGET_DIR" ]]; then
     exit 1
 fi
 
-if [[ $(ls -A "$TARGET_DIR") ]]; then
+if [[ $(ls "$TARGET_DIR") ]]; then
     echo "Target directory is not empty."
     exit 1
 fi

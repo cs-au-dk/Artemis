@@ -13,6 +13,7 @@ import time
 import httplib
 import socket
 import re
+import shutil
 
 FIXTURE_ROOT = os.path.join(os.environ['ARTEMISDIR'], 'artemis-code', 'tests', 'system', 'fixtures', 'server')
 
@@ -576,6 +577,8 @@ def run_artemis_server(test_name="test"):
     """
     
     output_dir = os.path.join(OUTPUT_DIR, test_name)
+    if os.path.isdir(output_dir):
+        shutil.rmtree(output_dir)
     os.makedirs(output_dir)
     
     cmd = [ARTEMIS_EXEC] + ["--major-mode", "server", "--analysis-server-port", str(ARTEMIS_SERVER_PORT), "-v", "all"]
