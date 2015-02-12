@@ -28,7 +28,7 @@ class AnalysisServerTests(unittest.TestCase):
     
     def setUp(self):
         # Run the server and save a reference so we can kill it in the end.
-        self.server = run_artemis_server()
+        self.server = run_artemis_server(self.id())
         self.expectedTerminated = False
     
     def tearDown(self):
@@ -568,17 +568,20 @@ def fixture_url(page):
     return os.path.join(FIXTURE_ROOT, page)
 
 
-def run_artemis_server():
+def run_artemis_server(test_name="test"):
     """
     Runs Artemis in server mode and returns the PID which can be used to check on it or kill it.
     
     We can't use the harness.execute_artemis() method, as it waits until the run is finished and returns its results.
     """
     
+    output_dir = os.path.join(OUTPUT_DIR, test_name)
+    os.makedirs(output_dir)
+    
     cmd = [ARTEMIS_EXEC] + ["--major-mode", "server", "--analysis-server-port", str(ARTEMIS_SERVER_PORT), "-v", "all"]
     
     # For debugging, remove the stdout=subprocess.PIPE part to see Artemis' output on screen.
-    p = subprocess.Popen(cmd, cwd=OUTPUT_DIR, stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
+    p = subprocess.Popen(cmd, cwd=output_dir, stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
     
     # Wait for the server to come up (max 1s).
     i = 0
