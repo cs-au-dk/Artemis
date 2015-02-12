@@ -45,6 +45,7 @@
 #include "JavaScriptCore/bytecode/Opcode.h"
 #include "JavaScriptCore/interpreter/Interpreter.h"
 #include "WebCore/dom/Node.h"
+#include "WebCore/dom/Document.h"
 
 #include "qwebexecutionlistener.h"
 
