@@ -66,4 +66,7 @@ echo "Branch: $BRANCH" >> "$VERSION_FILE"
 echo "Commit: $COMMIT" >> "$VERSION_FILE"
 echo "GitHub: https://github.com/cs-au-dk/Artemis/commit/$COMMIT_SHA" >> "$VERSION_FILE"
 
+# Set SVN ignore.
+svn propset svn:ignore --recursive .output . > /dev/null
+
 echo "Done."
