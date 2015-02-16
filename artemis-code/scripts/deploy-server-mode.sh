@@ -45,6 +45,7 @@ copy_in_file ./artemis-code/tests/system/fixtures/server tests/fixtures
 
 mkdir "$TARGET_DIR/lib"
 copy_in_file ./WebKit/WebKitBuild/Release/lib/libQtWebKit.so.4 lib/libQtWebKit.so.4
+copy_in_file /usr/local/lib/libqhttpserver.so.0 lib/libqhttpserver.so.0
 
 # Fetch git info while still in the Artemis dir.
 COMMIT=$(git show --no-patch --format="%h - %s")
@@ -85,7 +86,9 @@ cat << 'EOF' > "$WRAPPER_FILE"
 
 # Runs the artemis server with the correct WebKit lib linked in and appropriate arguments.
 
-LD_PRELOAD=$(dirname $0)/lib/libQtWebKit.so.4 $(dirname $0)/artemis --major-mode server --analysis-server-port 5500 -v all
+export LD_PRELOAD="$(dirname $0)/lib/libQtWebKit.so.4 $(dirname $0)/lib/libqhttpserver.so.0"
+
+$(dirname $0)/artemis --major-mode server --analysis-server-port 5500 -v all
 
 EOF
 chmod +x "$WRAPPER_FILE"

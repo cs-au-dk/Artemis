@@ -2,8 +2,8 @@ ARCH := $(shell uname -m)
 
 help:
 	@echo "Targets:"
-	@echo "    all				- Build webkit,  artemis, and the constraint solver"
-	@echo "    all-debug                    - Build webkit (debug),  artemis, and the constraint solver"
+	@echo "    all				- Build webkit,  artemis, Z3 (constraint solver) and QHttpServer"
+	@echo "    all-debug                    - Build webkit (debug),  artemis, , Z3 and QHttpServer"
 	@echo "    all-clean                    - Cleans WebKit (debug and normal) and Artemis"
 	@echo ""
 	@echo "    webkit-minimal[-debug] 	- Build a minimal WebKit Qt port [with debug info]"
@@ -15,6 +15,7 @@ help:
 	@echo "    artemis-format-code		- Format artemis code"
 	@echo ""
 	@echo "    constraintsolver             - Build the constraint solver"
+	@echo "    qhttpserver                  - Build and install the QHttpServer library"
 	@echo ""
 	@echo "    fetch-[apt|yum]		- Fetch dependencies from [apt|yum]"
 	@echo "    fetch-qt			- Fetch, configure and makes Qt"
