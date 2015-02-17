@@ -21,6 +21,19 @@ if [[ $(ls "$TARGET_DIR") ]]; then
     exit 1
 fi
 
+# Build if necessary
+read -n 1 -p "Rebuild WebKit and Artemis? [y/N]: "; echo
+if [[ $REPLY =~ ^[yY]$ ]]; then
+    # Paranoid clean and build
+    time (make all-clean && rm -r WebKit/WebKitBuild/* && make webkit-minimal-debug && make -B artemis)
+    
+    if [[ $? -ne 0 ]]; then
+        echo "Build failied, aborting deploy."
+        exit 1
+    fi
+fi
+
+# Copy all the files
 function copy_in_file {
     FILE=$1
     NAME=$2
@@ -33,9 +46,6 @@ function copy_in_file {
     fi
 }
 
-#TODO: Assumes Artemis is fully built with server mode enabled and working.
-
-# Copy all the files
 copy_in_file ./artemis-code/dist/artemis artemis
 copy_in_file ./docs/sections/server.rst server.rst
 
@@ -84,6 +94,14 @@ WRAPPER_FILE=run-artemis.sh
 cat << 'EOF' > "$WRAPPER_FILE"
 #!/bin/bash
 
+# Check the webkit lib is in place.
+
+if [[ ! -f "$(dirname $0)/lib/libQtWebKit.so.4" ]]; then
+    echo "WebKit library was not found at $(dirname $0)/lib/libQtWebKit.so.4"
+    echo "Try running download-webkit.sh first?"
+    exit 1
+fi
+
 # Runs the artemis server with the correct WebKit lib linked in and appropriate arguments.
 
 export LD_PRELOAD="$(dirname $0)/lib/libQtWebKit.so.4 $(dirname $0)/lib/libqhttpserver.so.0"
@@ -92,5 +110,38 @@ $(dirname $0)/artemis --major-mode server --analysis-server-port 5500 -v all
 
 EOF
 chmod +x "$WRAPPER_FILE"
+
+# Upload webkit to webspace instead of leaving it here, as the file is too big to check in to svn.
+if true; then
+    read -n 1 -p "Re-upload WebKit library? [Y/n]: "; echo
+    if [[ $REPLY == "" ]] || [[ $REPLY =~ ^[yY]$ ]]; then
+        tar -czf artemis-webkit.tgz lib/libQtWebKit.so.4
+        
+        scp artemis-webkit.tgz bspence@linux.cs.ox.ac.uk:/fs/website/people/ben.spencer/
+    fi
+    
+    #rm -f artemis-webkit.tgz lib/libQtWebKit.so.4
+    
+    # Do not re-add the lib in svn.
+    svn add --force lib
+    svn propset svn:ignore libQtWebKit.so.4 lib > /dev/null
+    
+    # Add a script to download the webkit lib.
+    DOWNLOAD_FILE=download-webkit.sh
+    cat << 'EOF' > "$DOWNLOAD_FILE"
+#!/bin/bash
+
+# Download the Artemis modified WebKit library.
+
+cd "$(dirname $0)"
+wget http://www.cs.ox.ac.uk/people/ben.spencer/artemis-webkit.tgz
+tar -xzf artemis-webkit.tgz
+rm artemis-webkit.tgz
+
+EOF
+    chmod +x "$DOWNLOAD_FILE"
+    
+fi
+
 
 echo "Done."
