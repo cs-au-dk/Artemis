@@ -217,9 +217,13 @@ void AnalysisServerRuntime::execute(DomCommand *command)
         return;
     }
 
+    QString url = mWebkitExecutor->getPage()->mainFrame()->url().toString();
+    QString title = mWebkitExecutor->getPage()->mainFrame()->title();
     QString dom = mWebkitExecutor->getPage()->mainFrame()->toHtml();
 
     QVariantMap result;
+    result.insert("url", url);
+    result.insert("title", title);
     result.insert("dom", dom);
 
     emit sigCommandFinished(result);

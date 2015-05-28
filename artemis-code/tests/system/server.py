@@ -164,7 +164,7 @@ class AnalysisServerTests(unittest.TestCase):
         self.assertEqual(response["pageload"], u"done")
         
         self.assertIn("url", response)
-        self.assertEqual(response["url"], u"file://" + fixture_url("handlers.html"))
+        self.assertEqual(response["url"], fixture_url_with_scheme("handlers.html"))
     
     def test_pageload_bad_url(self):
         message = {
@@ -219,7 +219,7 @@ class AnalysisServerTests(unittest.TestCase):
         response = send_to_server(message)
         
         self.assertIn("url", response)
-        self.assertEqual(response["url"], u"file://" + fixture_url("handlers.html"))
+        self.assertEqual(response["url"], fixture_url_with_scheme("handlers.html"))
     
     def test_pageload_command_timeout(self):
         message = {
@@ -441,6 +441,12 @@ class AnalysisServerTests(unittest.TestCase):
         
         self.assertIn("dom", dom_response)
         self.assertEqual(real_tokens, exp_tokens)
+        
+        self.assertIn("url", dom_response)
+        self.assertEqual(dom_response["url"], fixture_url_with_scheme("handlers.html"))
+        
+        self.assertIn("title", dom_response)
+        self.assertEqual(dom_response["title"], "Ben Spencer")
     
     def test_dom_command_without_load(self):
         message = {
@@ -568,6 +574,9 @@ def fixture_url(page):
     """Returns the (local) URL for a given test page."""
     return os.path.join(FIXTURE_ROOT, page)
 
+def fixture_url_with_scheme(page):
+    """Returns the file://... URL for a given test page."""
+    return u"file://" + fixture_url(page)
 
 def run_artemis_server(test_name="test"):
     """

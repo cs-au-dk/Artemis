@@ -124,11 +124,17 @@ Commands
     Recieve: ``{"click": "done"}``
     
 * ``dom``
-    Returns a string representation of the current DOM.
+    Returns information about the current page (the URL, page title, and string represenation of the DOM).
     
     Send: ``{"command": "dom"}``
     
-    Recieve: ``{"dom": "<html> ... </html>"}``
+    Recieve::
+    
+        {
+            "url": "http://www.example.com",
+            "title": "Example Domain",
+            "dom": "<html> ... </html>"
+        }
     
 * ``fieldsread``
     Returns a list of the form fields which have been read by different events since the last page load.
