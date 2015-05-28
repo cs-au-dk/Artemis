@@ -129,6 +129,9 @@ CommandPtr RequestHandler::createCommand(QVariant data)
     } else if (command == "dom") {
         return domCommand(mainObject);
 
+    } else if (command == "element") {
+        return elementCommand(mainObject);
+
     } else if (command == "fieldsread") {
         return fieldsReadCommand(mainObject);
 
@@ -241,10 +244,26 @@ CommandPtr RequestHandler::clickCommand(QVariantMap mainObject)
 
 CommandPtr RequestHandler::domCommand(QVariantMap mainObject)
 {
-    Log::debug("  Request handler: Building DOM listing command.");
+    Log::debug("  Request handler: Building DOM command.");
 
     // There are no extra fields to fetch for a DOM command.
     return DomCommandPtr(new DomCommand());
+}
+
+CommandPtr RequestHandler::elementCommand(QVariantMap mainObject)
+{
+    Log::debug("  Request handler: Building element info command.");
+
+    // Fetch the XPath
+    if (!mainObject.contains("element")) {
+        return parseError("Could not find the \"element\" property for an element command.");
+    }
+
+    if (mainObject["element"].type() != QVariant::String) {
+        return parseError("The \"element\" property for an element command must be a string.");
+    }
+
+    return ElementCommandPtr(new ElementCommand(mainObject["element"].toString()));
 }
 
 CommandPtr RequestHandler::fieldsReadCommand(QVariantMap mainObject)

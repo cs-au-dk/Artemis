@@ -54,6 +54,11 @@ void DomCommand::accept(AnalysisServerRuntime *server)
     server->execute(this);
 }
 
+void ElementCommand::accept(AnalysisServerRuntime *server)
+{
+    server->execute(this);
+}
+
 void FieldsReadCommand::accept(AnalysisServerRuntime *server)
 {
     server->execute(this);

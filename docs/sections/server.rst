@@ -136,6 +136,22 @@ Commands
             "dom": "<html> ... </html>"
         }
     
+* ``element``
+    Returns the string representation of each element (if any) matching a gven XPath.
+    
+    Send: (e.g. for click.html test page) ::
+    
+        {
+            "command": "element",
+            "element": "id(\"clickable\")"
+        }
+    
+    Recieve::
+    
+        {
+            "elements": ["<a href=\"\" id=\"clickable\">Click here to add new buttons to the page.</a>"]
+        }
+    
 * ``fieldsread``
     Returns a list of the form fields which have been read by different events since the last page load.
     

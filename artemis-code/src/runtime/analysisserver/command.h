@@ -124,7 +124,7 @@ public:
 
 typedef QSharedPointer<ClickCommand> ClickCommandPtr;
 
-// Gets a dump of the page DOM.
+// Gets information about the current page.
 class DomCommand : public Command
 {
 public:
@@ -132,6 +132,20 @@ public:
 };
 
 typedef QSharedPointer<DomCommand> DomCommandPtr;
+
+// Gets information about a certain element.
+class ElementCommand : public Command
+{
+public:
+    ElementCommand(QString xPath)
+        : xPath(xPath)
+    {}
+    virtual void accept(AnalysisServerRuntime* server);
+
+    QString xPath;
+};
+
+typedef QSharedPointer<ElementCommand> ElementCommandPtr;
 
 // Lists the fields read by each event.
 class FieldsReadCommand : public Command

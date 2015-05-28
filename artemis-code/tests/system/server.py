@@ -457,6 +457,95 @@ class AnalysisServerTests(unittest.TestCase):
         
         self.assertIn("error", response)
     
+    def test_element_command(self):
+        load_message = {
+                "command": "pageload",
+                "url": fixture_url("click.html")
+            }
+        
+        load_response = send_to_server(load_message)
+        
+        self.assertIn("pageload", load_response)
+        
+        element_message = {
+                "command": "element",
+                "element": "id(\"clickable\")"
+            }
+        
+        element_response = send_to_server(element_message)
+        
+        self.assertIn("elements", element_response)
+        self.assertEqual(element_response["elements"], [u"<a href=\"\" id=\"clickable\">Click here to add new buttons to the page.</a>"])
+    
+    def test_element_command_with_invalid_xpath(self):
+        load_message = {
+                "command": "pageload",
+                "url": fixture_url("click.html")
+            }
+        
+        load_response = send_to_server(load_message)
+        
+        self.assertIn("pageload", load_response)
+        
+        element_message = {
+                "command": "element",
+                "element": "this is not a real xpath"
+            }
+        
+        element_response = send_to_server(element_message)
+        
+        self.assertIn("error", element_response)
+    
+    def test_element_command_with_no_element(self):
+        load_message = {
+                "command": "pageload",
+                "url": fixture_url("click.html")
+            }
+        
+        load_response = send_to_server(load_message)
+        
+        self.assertIn("pageload", load_response)
+        
+        element_message = {
+                "command": "element",
+                "element": "id(\"no-such-element-exists\")"
+            }
+        
+        element_response = send_to_server(element_message)
+        
+        self.assertIn("elements", element_response)
+        self.assertEqual(element_response["elements"], [])
+    
+    def test_eleemnt_command_multiple(self):
+        load_message = {
+                "command": "pageload",
+                "url": fixture_url("click.html")
+            }
+        
+        load_response = send_to_server(load_message)
+        
+        self.assertIn("pageload", load_response)
+        
+        element_message = {
+                "command": "element",
+                "element": "//hr"
+            }
+        
+        element_response = send_to_server(element_message)
+        
+        self.assertIn("elements", element_response)
+        self.assertEqual(element_response["elements"], [u"<hr>", u"<hr>"])
+    
+    def test_element_command_without_load(self):
+        message = {
+                "command": "element",
+                "element": ""
+            }
+        
+        response = send_to_server(message)
+        
+        self.assertIn("error", response)
+    
     def test_fieldsread_command(self):
         load_message = {
                 "command": "pageload",

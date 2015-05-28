@@ -45,6 +45,7 @@ public:
     void execute(HandlersCommand* command);
     void execute(ClickCommand* command);
     void execute(DomCommand* command);
+    void execute(ElementCommand* command);
     void execute(FieldsReadCommand* command);
 
 protected:

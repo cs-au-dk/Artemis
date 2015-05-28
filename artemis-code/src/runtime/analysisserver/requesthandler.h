@@ -56,6 +56,7 @@ protected:
     CommandPtr handlersCommand(QVariantMap mainObject);
     CommandPtr clickCommand(QVariantMap mainObject);
     CommandPtr domCommand(QVariantMap mainObject);
+    CommandPtr elementCommand(QVariantMap mainObject);
     CommandPtr fieldsReadCommand(QVariantMap mainObject);
 
 protected slots:

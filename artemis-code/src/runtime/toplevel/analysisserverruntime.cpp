@@ -182,7 +182,7 @@ void AnalysisServerRuntime::execute(ClickCommand *command)
     QString countingJS = QString("document.evaluate(\"%1\", document, null, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null).snapshotLength;").arg(escapedXPath);
     uint count = document.evaluateJavaScript(countingJS).toUInt();
     if (count == 0) {
-        emit sigCommandFinished( errorResponse("The XPath did not match any elements."));
+        emit sigCommandFinished(errorResponse("The XPath did not match any elements."));
         return;
     }
     if (count > 1) {
@@ -192,7 +192,7 @@ void AnalysisServerRuntime::execute(ClickCommand *command)
 
     // N.B. The XPath provided here is used as part of the event descriptor to decide which events are duplicates.
     // So unless we create a "canonical" XPath here, different XPaths pointing to the same element will be considered
-    // different events by FieldReadLog. It's an PAI decision about whether canonical XPaths are best or returning the
+    // different events by FieldReadLog. It's an API decision about whether canonical XPaths are best or returning the
     // XPath given is best (the current decision).
     mFieldReadLog.beginEvent("click", command->xPath);
 
@@ -208,7 +208,7 @@ void AnalysisServerRuntime::execute(ClickCommand *command)
 
 void AnalysisServerRuntime::execute(DomCommand *command)
 {
-    Log::debug("  Analysis server runtime: executing a DOM listing command.");
+    Log::debug("  Analysis server runtime: executing a DOM command.");
     assert(command);
 
     // Check we have loaded a page already.
@@ -225,6 +225,36 @@ void AnalysisServerRuntime::execute(DomCommand *command)
     result.insert("url", url);
     result.insert("title", title);
     result.insert("dom", dom);
+
+    emit sigCommandFinished(result);
+}
+
+void AnalysisServerRuntime::execute(ElementCommand *command)
+{
+    Log::debug("  Analysis server runtime: executing an element info command.");
+    assert(command);
+
+    // Check we have loaded a page already.
+    if (!mIsPageLoaded) {
+        emit sigCommandFinished(errorResponse("Cannot execute element command until a page is loaded."));
+        return;
+    }
+
+    // Look up the element(s).
+    QWebElement document = mWebkitExecutor->getPage()->currentFrame()->documentElement();
+    QString escapedXPath = command->xPath;
+    escapedXPath.replace('"', "\\\"");
+    QString queryJS = QString("var elems = document.evaluate(\"%1\", document, null, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null); var elStrs = []; for(var i=0; i < elems.snapshotLength; i++) {elStrs.push(elems.snapshotItem(i).outerHTML)}; elStrs;").arg(escapedXPath);
+
+    QVariant elemList = document.evaluateJavaScript(queryJS);
+
+    if(!elemList.isValid()) {
+        emit sigCommandFinished(errorResponse("Invalid XPath."));
+        return;
+    }
+
+    QVariantMap result;
+    result.insert("elements", elemList);
 
     emit sigCommandFinished(result);
 }
