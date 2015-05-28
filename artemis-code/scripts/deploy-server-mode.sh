@@ -55,7 +55,8 @@ copy_in_file ./artemis-code/tests/system/fixtures/server tests/fixtures
 
 mkdir "$TARGET_DIR/lib"
 copy_in_file ./WebKit/WebKitBuild/Release/lib/libQtWebKit.so.4 lib/libQtWebKit.so.4
-copy_in_file /usr/local/lib/libqhttpserver.so.0 lib/libqhttpserver.so.0
+copy_in_file /usr/local/lib/libqhttpserver.so.0.1.0 lib/libqhttpserver.so.0.1.0
+copy_in_file /usr/lib/x86_64-linux-gnu/libqjson.so.0.8.1 lib/libqjson.so.0.8.1 # This can be installed via apt-get, but some systems have an older version which does not work.
 
 # Fetch git info while still in the Artemis dir.
 COMMIT=$(git show --no-patch --format="%h - %s")
@@ -74,11 +75,12 @@ rm server.rst
 # FIXTURE_ROOT = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'fixtures')
 sed -i "s/^FIXTURE_ROOT.*/FIXTURE_ROOT = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'fixtures')/" "$TARGET_DIR/tests/server.py"
 
-# ARTEMIS_EXEC = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'artemis')
-sed -i "s/^ARTEMIS_EXEC.*/ARTEMIS_EXEC = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'artemis')/" "$TARGET_DIR/tests/server.py"
+# ARTEMIS_EXEC = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'run-artemis.sh')
+sed -i "s/^ARTEMIS_EXEC.*/ARTEMIS_EXEC = os.path.join(os.path.dirname(os.path.realpath(__file__)), '..', 'run-artemis.sh')/" "$TARGET_DIR/tests/server.py"
 
 # Add info linking this deploy to the current git commit.
 VERSION_FILE="version.txt"
+echo "Deployed:" $(date +'%F %T') >> "$VERSION_FILE"
 echo "Branch: $BRANCH" >> "$VERSION_FILE"
     echo "Commit: $COMMIT" >> "$VERSION_FILE"
 if [[ $GIT_CHANGES -ne 0 ]]; then
@@ -94,6 +96,10 @@ WRAPPER_FILE=run-artemis.sh
 cat << 'EOF' > "$WRAPPER_FILE"
 #!/bin/bash
 
+# Runs artemis with the needed libraries.
+# If run with no arguemnts, the server mode will run with default settings.
+# If arguments are supplied, they will be passed directly to artemis itself instead of the defaults.
+
 # Check the webkit lib is in place.
 
 if [[ ! -f "$(dirname $0)/lib/libQtWebKit.so.4" ]]; then
@@ -104,17 +110,21 @@ fi
 
 # Runs the artemis server with the correct WebKit lib linked in and appropriate arguments.
 
-export LD_PRELOAD="$(dirname $0)/lib/libQtWebKit.so.4 $(dirname $0)/lib/libqhttpserver.so.0"
+export LD_PRELOAD="$(dirname $0)/lib/libQtWebKit.so.4 $(dirname $0)/lib/libqhttpserver.so.0.1.0 $(dirname $0)/lib/libqjson.so.0.8.1"
 
-$(dirname $0)/artemis --major-mode server --analysis-server-port 5500 -v all
+if [ $# -eq 0 ]; then
+    exec $(dirname $0)/artemis --major-mode server --analysis-server-port 5500 -v all
+else
+    exec $(dirname $0)/artemis "$@"
+fi
 
 EOF
 chmod +x "$WRAPPER_FILE"
 
 # Upload webkit to webspace instead of leaving it here, as the file is too big to check in to svn.
 if true; then
-    read -n 1 -p "Re-upload WebKit library? [Y/n]: "; echo
-    if [[ $REPLY == "" ]] || [[ $REPLY =~ ^[yY]$ ]]; then
+    read -n 1 -p "Re-upload WebKit library? [y/N]: "; echo
+    if [[ $REPLY =~ ^[yY]$ ]]; then
         tar -czf artemis-webkit.tgz lib/libQtWebKit.so.4
         
         scp artemis-webkit.tgz bspence@linux.cs.ox.ac.uk:/fs/website/people/ben.spencer/
