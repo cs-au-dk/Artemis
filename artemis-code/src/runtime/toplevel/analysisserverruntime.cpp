@@ -125,7 +125,7 @@ void AnalysisServerRuntime::execute(PageLoadCommand* command)
 
     mIsPageLoaded = false;
 
-    // The whole load process is limited by the timout field.
+    // The whole load process is limited by the timeout field.
     if (command->timeout > 0) {
         QTimer::singleShot(command->timeout, this, SLOT(slLoadTimeoutTriggered()));
     }
@@ -345,7 +345,17 @@ void AnalysisServerRuntime::slExecutedSequence(ExecutableConfigurationConstPtr c
         emitTimeout();
         break;
 
-    case IDLE: // Fall-through
+    case IDLE:
+        // This is an unexpected page load.
+        // It could be caused by a page redirect.
+        // Other navigation (e.g. clicking links) is supposed to be handled via slNavigationRequest and loadUrl.
+
+        // There is nothing to do (as the server already thought the page loading was complete), so silently proceed.
+        // TODO: If there was any per-page analysis state, it should be reset here as well. All we have so far is the
+        // mFieldReadLog, which we want to start logging from the initial call to pageload, so this is not reset.
+
+        break;
+
     case EXIT: // Fall-through
     default:
         // We do not expect any other server states to be executing event sequences.
