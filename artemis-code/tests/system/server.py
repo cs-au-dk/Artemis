@@ -5,6 +5,7 @@ Test suite for Artemis Analysis-Server mode.
 """
 
 import os
+import sys
 import unittest
 import subprocess
 import urllib2
@@ -42,12 +43,18 @@ class AnalysisServerTests(unittest.TestCase):
             if not self.expectedTerminated:
                 raise
     
+    def assertServerAcceptingConnections(self):
+        try:
+            # Just check we can open the URL without an exception
+            urllib2.urlopen(ARTEMIS_SERVER_URL)
+        except:
+            self.fail("Connecting to the server raised " + sys.exc_info()[0].__name__)
+    
     def test_server_process_is_running(self):
         self.assertTrue(self.server.poll() is None)
     
     def test_connect_to_server(self):
-        # Just check we can open the URL without an exception
-        urllib2.urlopen(ARTEMIS_SERVER_URL)
+        self.assertServerAcceptingConnections()
     
     def test_echo_command(self):
         message = {
@@ -213,13 +220,74 @@ class AnalysisServerTests(unittest.TestCase):
     def test_pageload_command_redirect_meta(self):
         message = {
                 "command": "pageload",
-                "url": fixture_url("redirect.html")
+                "url": fixture_url("redirect-meta.html")
             }
         
         response = send_to_server(message)
         
         self.assertIn("url", response)
         self.assertEqual(response["url"], fixture_url_with_scheme("handlers.html"))
+    
+    @unittest.expectedFailure # See Issue #116.
+    def test_pageload_command_redirect_js(self):
+        message = {
+                "command": "pageload",
+                "url": fixture_url("redirect-js.html")
+            }
+        
+        response = send_to_server(message)
+        
+        self.assertIn("url", response)
+        self.assertEqual(response["url"], fixture_url_with_scheme("handlers.html"))
+    
+    @unittest.expectedFailure # See Issue #116.
+    def test_pageload_command_redirect_js_2(self):
+        message = {
+                "command": "pageload",
+                "url": fixture_url("redirect-js-2.html")
+            }
+        
+        response = send_to_server(message)
+        
+        self.assertIn("url", response)
+        self.assertEqual(response["url"], fixture_url_with_scheme("handlers.html"))
+    
+    
+    def test_pageload_command_redirect_meta_no_crash(self):
+        message = {
+                "command": "pageload",
+                "url": fixture_url("redirect-meta.html")
+            }
+        
+        response = send_to_server(message)
+        
+        # Wait for the redirect and check the server is up.
+        time.sleep(1.5)
+        self.assertServerAcceptingConnections()
+    
+    def test_pageload_command_redirect_js_no_crash(self):
+        message = {
+                "command": "pageload",
+                "url": fixture_url("redirect-js.html")
+            }
+        
+        response = send_to_server(message)
+        
+        # Wait for the redirect and check the server is up.
+        time.sleep(1.5)
+        self.assertServerAcceptingConnections()
+        
+    def test_pageload_command_redirect_js_2_no_crash(self):
+        message = {
+                "command": "pageload",
+                "url": fixture_url("redirect-js-2.html")
+            }
+        
+        response = send_to_server(message)
+        
+        # Wait for the redirect and check the server is up.
+        time.sleep(1.5)
+        self.assertServerAcceptingConnections()
     
     def test_pageload_command_timeout(self):
         message = {
