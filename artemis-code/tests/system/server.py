@@ -216,7 +216,6 @@ class AnalysisServerTests(unittest.TestCase):
         self.assertIn("url", response)
         self.assertEqual(response["url"], u"http://www.example.com/")
     
-    @unittest.expectedFailure # See Issue #116.
     def test_pageload_command_redirect_meta(self):
         message = {
                 "command": "pageload",
@@ -228,8 +227,28 @@ class AnalysisServerTests(unittest.TestCase):
         self.assertIn("url", response)
         self.assertEqual(response["url"], fixture_url_with_scheme("handlers.html"))
     
-    @unittest.expectedFailure # See Issue #116.
-    def test_pageload_command_redirect_js(self):
+    def test_pageload_command_redirect_meta_single_hop_only(self):
+        """
+        The meta-redirect detection only waits for a single redirection. If there is more than one level of redirect,
+        this is not supported. This is to avoid getting stuck in a redirect loop.
+        """
+        
+        message = {
+                "command": "pageload",
+                "url": fixture_url("redirect-meta-double.html")
+            }
+        
+        response = send_to_server(message)
+        
+        self.assertIn("url", response)
+        self.assertEqual(response["url"], fixture_url_with_scheme("redirect-meta.html"))
+    
+    def test_pageload_command_redirect_js_not_supported(self):
+        """
+        We cannot detect when a page redirection is done via JavaScript, so the pageload command does not wait.
+        See issue #116.
+        """
+        
         message = {
                 "command": "pageload",
                 "url": fixture_url("redirect-js.html")
@@ -238,10 +257,15 @@ class AnalysisServerTests(unittest.TestCase):
         response = send_to_server(message)
         
         self.assertIn("url", response)
-        self.assertEqual(response["url"], fixture_url_with_scheme("handlers.html"))
+        self.assertEqual(response["url"], fixture_url_with_scheme("redirect-js.html"))
     
-    @unittest.expectedFailure # See Issue #116.
-    def test_pageload_command_redirect_js_2(self):
+    def test_pageload_command_redirect_js_2_not_supported(self):
+        """
+        We cannot detect when a page redirection is done via JavaScript, so the pageload command does not wait.
+        See issue #116.
+        """
+        
+        
         message = {
                 "command": "pageload",
                 "url": fixture_url("redirect-js-2.html")
@@ -250,7 +274,7 @@ class AnalysisServerTests(unittest.TestCase):
         response = send_to_server(message)
         
         self.assertIn("url", response)
-        self.assertEqual(response["url"], fixture_url_with_scheme("handlers.html"))
+        self.assertEqual(response["url"], fixture_url_with_scheme("redirect-js-2.html"))
     
     
     def test_pageload_command_redirect_meta_no_crash(self):

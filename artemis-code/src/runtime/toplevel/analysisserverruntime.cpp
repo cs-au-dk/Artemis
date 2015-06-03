@@ -33,6 +33,7 @@ AnalysisServerRuntime::AnalysisServerRuntime(QObject* parent, const Options& opt
     , mAnalysisServer(options.analysisServerPort)
     , mServerState(IDLE)
     , mIsPageLoaded(false)
+    , mIsScheduledRedirection(false)
     , mFieldReadLog(mWebkitExecutor->getPage())
 {
     // Connections to the server part
@@ -46,9 +47,13 @@ AnalysisServerRuntime::AnalysisServerRuntime(QObject* parent, const Options& opt
     // Connections to the browser part
     QObject::connect(mWebkitExecutor, SIGNAL(sigExecutedSequence(ExecutableConfigurationConstPtr, QSharedPointer<ExecutionResult>)),
                      this, SLOT(slExecutedSequence(ExecutableConfigurationConstPtr,QSharedPointer<ExecutionResult>)));
+
     QObject::connect(mWebkitExecutor->getPage().data(), SIGNAL(sigNavigationRequest(QWebFrame*,QNetworkRequest,QWebPage::NavigationType)),
                      this, SLOT(slNavigationRequest(QWebFrame*,QNetworkRequest,QWebPage::NavigationType)));
     mWebkitExecutor->getPage()->mAcceptNavigation = false;
+
+    QObject::connect(mWebkitExecutor->mWebkitListener, SIGNAL(sigPageLoadScheduled(QUrl)),
+                     this, SLOT(slPageLoadScheduled(QUrl)));
 
     // Connections for page analysis
     QObject::connect(QWebExecutionListener::getListener(), SIGNAL(sigJavascriptSymbolicFieldRead(QString, bool)),
@@ -323,9 +328,13 @@ void AnalysisServerRuntime::slExecutedSequence(ExecutableConfigurationConstPtr c
         // We are part way through the page-load process. Now we are ready to load the target URL.
         loadCommand = mCurrentCommand.dynamicCast<PageLoadCommand>();
         assert(loadCommand);
+
         mServerState = PAGELOAD;
+        mIsScheduledRedirection = false;
+
         mFieldReadLog.clear();
         mFieldReadLog.beginEvent("pageload", "");
+
         loadUrl(loadCommand->url); // Calls back to slExecutedSequence again.
         break;
 
@@ -333,17 +342,34 @@ void AnalysisServerRuntime::slExecutedSequence(ExecutableConfigurationConstPtr c
         // Successfully finished loading the real URL.
         mWebkitExecutor->getPage()->mAcceptNavigation = false; // Now the loading is finished any further navigation must be dealt with via slNavigationRequest.
 
+        // Check for any redirection we detected.
+        if (mIsScheduledRedirection) {
+            // Wait for the redirected page load to come in...
+            mServerState = PAGELOAD_WAITING_REDIRECT;
+
+        } else {
+            // Send a response and finish the PAGELOAD command.
+            mIsPageLoaded = true;
+            response.insert("pageload", "done");
+            response.insert("url", mWebkitExecutor->getPage()->currentFrame()->url().toString());
+
+            emit sigCommandFinished(response);
+        }
+        break;
+
+    case PAGELOAD_TIMEOUT:
+        emitTimeout();
+        break;
+
+    case PAGELOAD_WAITING_REDIRECT:
+        // Do not check for more redirects here to avoid going into a loop.
+
         // Send a response and finish the PAGELOAD command.
         mIsPageLoaded = true;
         response.insert("pageload", "done");
         response.insert("url", mWebkitExecutor->getPage()->currentFrame()->url().toString());
 
         emit sigCommandFinished(response);
-        break;
-
-    case PAGELOAD_TIMEOUT:
-        emitTimeout();
-        break;
 
     case IDLE:
         // This is an unexpected page load.
@@ -378,6 +404,13 @@ void AnalysisServerRuntime::slLoadTimeoutTriggered()
 void AnalysisServerRuntime::slNavigationRequest(QWebFrame *frame, const QNetworkRequest &request, QWebPage::NavigationType type)
 {
     loadUrl(request.url());
+}
+
+// Called when a page load is scheduled.
+// This is used to detect meta-refresh redirection during a page load command.
+void AnalysisServerRuntime::slPageLoadScheduled(QUrl url)
+{
+    mIsScheduledRedirection = true;
 }
 
 // Overrides Runtime::slAbortedExecution, called from WebkitExecutor when there is a problem with executing a sequence.

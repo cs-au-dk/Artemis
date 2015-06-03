@@ -55,12 +55,13 @@ protected:
     void emitTimeout();
 
     enum ServerState {
-        IDLE, EXIT, PAGELOAD_BLANK, PAGELOAD, PAGELOAD_TIMEOUT
+        IDLE, EXIT, PAGELOAD_BLANK, PAGELOAD, PAGELOAD_TIMEOUT, PAGELOAD_WAITING_REDIRECT
     };
     ServerState mServerState;
     CommandPtr mCurrentCommand;
 
     bool mIsPageLoaded;
+    bool mIsScheduledRedirection;
 
     void loadUrl(QUrl url);
 
@@ -76,6 +77,7 @@ protected slots:
     // Browser part
     void slExecutedSequence(ExecutableConfigurationConstPtr configuration, QSharedPointer<ExecutionResult> result);
     void slNavigationRequest(QWebFrame *frame, const QNetworkRequest &request, QWebPage::NavigationType type);
+    void slPageLoadScheduled(QUrl url);
     virtual void slAbortedExecution(QString reason);
 
 signals:
