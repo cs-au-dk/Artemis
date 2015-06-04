@@ -82,6 +82,21 @@ Commands
             "url": "http://www.example.com"
         }
     
+* ``backbutton``
+    Uses the browser history to go back one page.
+    
+    It is an error to call this command before there are at least two pages in the history.
+    Due to an implementation issue, "about:blank" is never accessible via this command.
+    
+    Send: ``{"command": "backbutton"}``
+    
+    Recieve::
+    
+        {
+            "backbutton": "done",
+            "url": "http://www.example.com"
+        }
+    
 * ``handlers``
     Lists the event handlers registered on the current page. The list returned is a list of XPath expressions
     identifying the DOM element each handler is registered on.

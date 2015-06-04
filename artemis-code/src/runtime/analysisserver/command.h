@@ -156,7 +156,14 @@ public:
 
 typedef QSharedPointer<FieldsReadCommand> FieldsReadCommandPtr;
 
+// Uses the browser history to go back one page.
+class BackButtonCommand : public Command
+{
+public:
+    virtual void accept(AnalysisServerRuntime* server);
+};
 
+typedef QSharedPointer<BackButtonCommand> BackButtonCommandPtr;
 
 
 

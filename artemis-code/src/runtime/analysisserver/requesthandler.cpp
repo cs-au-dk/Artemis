@@ -135,6 +135,9 @@ CommandPtr RequestHandler::createCommand(QVariant data)
     } else if (command == "fieldsread") {
         return fieldsReadCommand(mainObject);
 
+    } else if (command == "backbutton") {
+        return backbuttonCommand(mainObject);
+
     } else {
         return parseError("Command was not recognised.");
     }
@@ -272,6 +275,14 @@ CommandPtr RequestHandler::fieldsReadCommand(QVariantMap mainObject)
 
     // There are no extra fields to fetch for a fieldsread command.
     return FieldsReadCommandPtr(new FieldsReadCommand());
+}
+
+CommandPtr RequestHandler::backbuttonCommand(QVariantMap mainObject)
+{
+    Log::debug("  Request handler: Building Back-button command.");
+
+    // There are no extra fields to fetch for a backbutton command.
+    return BackButtonCommandPtr(new BackButtonCommand());
 }
 
 

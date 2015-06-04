@@ -281,6 +281,20 @@ void AnalysisServerRuntime::execute(FieldsReadCommand *command)
     emit sigCommandFinished(result);
 }
 
+void AnalysisServerRuntime::execute(BackButtonCommand *command)
+{
+    Log::debug("  Analysis server runtime: executing a Back-button command.");
+    assert(command);
+
+    // Check we have loaded a page already.
+    if (!mIsPageLoaded) {
+        emit sigCommandFinished(errorResponse("Cannot execute backbutton command until a page is loaded."));
+        return;
+    }
+
+    backButtonOrError(); // Calls back to slExecutedSequence or finishes the request itself.
+}
+
 QVariant AnalysisServerRuntime::errorResponse(QString message)
 {
     QVariantMap response;
@@ -318,10 +332,25 @@ void AnalysisServerRuntime::loadUrl(QUrl url)
     mWebkitExecutor->executeSequence(noInput, MODE_CONCOLIC_CONTINUOUS); // Calls slExecutedSequence method as callback.
 }
 
+// Use the back button.
+// Either calls back to slExecutedSequence or emits the commandFinished signal with an error response.
+void AnalysisServerRuntime::backButtonOrError()
+{
+    // Check if there is any history to go back to.
+    if (mWebkitExecutor->getPage()->history()->canGoBack()) {
+        mServerState = PAGELOAD_BACK_BUTTON;
+        mWebkitExecutor->getPage()->history()->back(); // Calls back to slExecutedSequence.
+
+    } else {
+        emit sigCommandFinished(errorResponse("No more history to go back through."));
+    }
+}
+
 void AnalysisServerRuntime::slExecutedSequence(ExecutableConfigurationConstPtr configuration, QSharedPointer<ExecutionResult> result)
 {
     PageLoadCommandPtr loadCommand; // PAGELOAD_BLANK
     QVariantMap response; // PAGELOAD
+    QString url; // PAGELOAD_BACK_BUTTON
 
     switch (mServerState) {
     case PAGELOAD_BLANK:
@@ -365,11 +394,36 @@ void AnalysisServerRuntime::slExecutedSequence(ExecutableConfigurationConstPtr c
         // Do not check for more redirects here to avoid going into a loop.
 
         // Send a response and finish the PAGELOAD command.
-        mIsPageLoaded = true;
         response.insert("pageload", "done");
         response.insert("url", mWebkitExecutor->getPage()->currentFrame()->url().toString());
 
         emit sigCommandFinished(response);
+
+        break;
+
+    case PAGELOAD_BACK_BUTTON:
+        // Do not support redirection when using the back button.
+
+        // If we have reached "about:blank" then this is one of the intermediate loads between pageload commands.
+        // In that case issue another back command to mask this.
+        // TODO: This is a bit of a hack to pretend we do not do these intermediate loads.
+        // It could be tripped up if someone intentionally loads "about:blank" and tries to go back to it.
+        // It also causes some odd behaviour when going back from the initial page load (the result is "about:blank"
+        // loaded and an error response).
+
+        url = mWebkitExecutor->getPage()->currentFrame()->url().toString();
+        if (url == "about:blank") {
+            backButtonOrError(); // Calls back to slExecutedSequence or finishes the request itself.
+
+        } else {
+            // Send a response and finish the backbutton command.
+            response.insert("backbutton", "done");
+            response.insert("url", url);
+
+            emit sigCommandFinished(response);
+        }
+
+        break;
 
     case IDLE:
         // This is an unexpected page load.
@@ -416,7 +470,10 @@ void AnalysisServerRuntime::slPageLoadScheduled(QUrl url)
 // Overrides Runtime::slAbortedExecution, called from WebkitExecutor when there is a problem with executing a sequence.
 void AnalysisServerRuntime::slAbortedExecution(QString reason)
 {
-    if (mServerState == PAGELOAD) {
+    if (mServerState == PAGELOAD ||
+            mServerState == PAGELOAD_BLANK ||
+            mServerState == PAGELOAD_WAITING_REDIRECT ||
+            mServerState == PAGELOAD_BACK_BUTTON) {
         // There was an error loading this page.
         emit sigCommandFinished(errorResponse("Could not load the URL."));
 

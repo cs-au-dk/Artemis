@@ -47,6 +47,7 @@ public:
     void execute(DomCommand* command);
     void execute(ElementCommand* command);
     void execute(FieldsReadCommand* command);
+    void execute(BackButtonCommand* command);
 
 protected:
     AnalysisServer mAnalysisServer;
@@ -55,7 +56,7 @@ protected:
     void emitTimeout();
 
     enum ServerState {
-        IDLE, EXIT, PAGELOAD_BLANK, PAGELOAD, PAGELOAD_TIMEOUT, PAGELOAD_WAITING_REDIRECT
+        IDLE, EXIT, PAGELOAD_BLANK, PAGELOAD, PAGELOAD_TIMEOUT, PAGELOAD_WAITING_REDIRECT, PAGELOAD_BACK_BUTTON
     };
     ServerState mServerState;
     CommandPtr mCurrentCommand;
@@ -64,6 +65,8 @@ protected:
     bool mIsScheduledRedirection;
 
     void loadUrl(QUrl url);
+
+    void backButtonOrError();
 
     // Page analysis
     FieldReadLog mFieldReadLog;

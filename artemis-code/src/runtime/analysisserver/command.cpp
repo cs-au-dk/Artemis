@@ -64,6 +64,11 @@ void FieldsReadCommand::accept(AnalysisServerRuntime *server)
     server->execute(this);
 }
 
+void BackButtonCommand::accept(AnalysisServerRuntime *server)
+{
+    server->execute(this);
+}
+
 
 
 } // namespace artemis

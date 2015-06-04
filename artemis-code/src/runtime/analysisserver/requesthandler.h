@@ -58,6 +58,7 @@ protected:
     CommandPtr domCommand(QVariantMap mainObject);
     CommandPtr elementCommand(QVariantMap mainObject);
     CommandPtr fieldsReadCommand(QVariantMap mainObject);
+    CommandPtr backbuttonCommand(QVariantMap mainObject);
 
 protected slots:
     void slRequestFullyLoaded();

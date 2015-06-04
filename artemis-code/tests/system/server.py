@@ -746,6 +746,61 @@ class AnalysisServerTests(unittest.TestCase):
         
         self.assertIn("error", response)
     
+    def test_backbutton_command(self):
+        message_load_1 = {
+                "command": "pageload",
+                "url": fixture_url("handlers.html")
+            }
+        
+        message_load_2 = {
+                "command": "pageload",
+                "url": fixture_url("click.html")
+            }
+        
+        message_back = {
+                "command": "backbutton"
+            }
+        
+        response_1 = send_to_server(message_load_1)
+        self.assertNotIn("error", response_1)
+        
+        response_2 = send_to_server(message_load_2)
+        self.assertNotIn("error", response_2)
+        
+        response_back = send_to_server(message_back)
+        
+        self.assertNotIn("error", response_back)
+        self.assertIn("backbutton", response_back)
+        self.assertIn("url", response_back)
+        self.assertEqual(response_back["url"], fixture_url_with_scheme("handlers.html"))
+    
+    def test_backbutton_command_without_load(self):
+        message = {
+                "command": "backbutton"
+            }
+        
+        response = send_to_server(message)
+        
+        self.assertIn("error", response)
+    
+    def test_backbutton_command_from_first_page(self):
+        message_load = {
+                "command": "pageload",
+                "url": fixture_url("handlers.html")
+            }
+        
+        message_back = {
+                "command": "backbutton"
+            }
+        
+        response_load = send_to_server(message_load)
+        self.assertNotIn("error", response_load)
+        
+        response_back = send_to_server(message_back)
+        
+        self.assertIn("error", response_back)
+    
+    
 
 
 
