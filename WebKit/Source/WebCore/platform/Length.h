@@ -182,7 +182,7 @@ public:
     // are positive and non-zero for now.    
     bool isZero() const 
     {
-        ASSERT(!isUndefined());
+        //ASSERT(!isUndefined()); // ARTEMIS
         if (isCalculated())
             return false;
             
