@@ -88,6 +88,10 @@ if [[ $GIT_CHANGES -ne 0 ]]; then
 fi
 echo "GitHub: https://github.com/cs-au-dk/Artemis/commit/$COMMIT_SHA" >> "$VERSION_FILE"
 
+# Add another version file for WebKit, which may not be deployed as often.
+WEBKIT_VERSION_FILE="webkit-version.txt"
+cp "$VERSION_FILE" "lib/$WEBKIT_VERSION_FILE"
+
 # Set SVN ignore.
 svn propset svn:ignore --recursive .output . > /dev/null
 
@@ -125,7 +129,7 @@ chmod +x "$WRAPPER_FILE"
 if true; then
     read -n 1 -p "Re-upload WebKit library? [y/N]: "; echo
     if [[ $REPLY =~ ^[yY]$ ]]; then
-        tar -czf artemis-webkit.tgz lib/libQtWebKit.so.4
+        tar -czf artemis-webkit.tgz lib/libQtWebKit.so.4 "lib/$WEBKIT_VERSION_FILE"
         
         scp artemis-webkit.tgz bspence@linux.cs.ox.ac.uk:/fs/website/people/ben.spencer/
     fi
@@ -134,7 +138,8 @@ if true; then
     
     # Do not re-add the lib in svn.
     svn add --force lib
-    svn propset svn:ignore libQtWebKit.so.4 lib > /dev/null
+    svn propset svn:ignore "libQtWebKit.so.4
+$WEBKIT_VERSION_FILE" lib > /dev/null
     
     # Add a script to download the webkit lib.
     DOWNLOAD_FILE=download-webkit.sh
