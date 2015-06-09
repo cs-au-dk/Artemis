@@ -391,6 +391,46 @@ class AnalysisServerTests(unittest.TestCase):
         
         self.assertEqual(handlers, expected_handlers)
         
+    def test_handlers_command_xpath_corner_cases(self):
+        load_message = {
+                "command": "pageload",
+                "url": fixture_url("handlers-xpath-corner-cases.html")
+            }
+        
+        load_response = send_to_server(load_message)
+        # load_response is already tested by test_pageload_command()
+        
+        message = {
+            "command": "handlers"
+        }
+        
+        response = send_to_server(message)
+        
+        self.assertIn("handlers", response)
+        
+        handlers = response["handlers"]
+        
+        self.assertEqual(len(handlers), 3)
+        
+        expected_handlers = json.loads("""
+            [
+                {
+                    "event": "click",
+                    "element": "document"
+                },
+                {
+                    "event": "click",
+                    "element": "window"
+                },
+                {
+                    "event": "click",
+                    "element": "/html/body[1]"
+                }
+            ]
+        """)
+        
+        self.assertEqual(handlers, expected_handlers)
+        
     
     def test_handlers_command_without_load(self):
         message = {

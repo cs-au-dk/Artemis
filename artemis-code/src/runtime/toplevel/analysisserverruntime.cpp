@@ -158,8 +158,14 @@ void AnalysisServerRuntime::execute(HandlersCommand *command)
     QVariantList resultList;
     foreach (EventHandlerDescriptorConstPtr handler, handlerList) {
         QVariantMap handlerObject;
+        QString returnedXPath = handler->xPathToElement();
+        if (returnedXPath.isNull()) {
+            // Handles the document object and window object.
+            // N.B. this is not a valid XPath to return.
+            returnedXPath = handler->getDomElement()->toString();
+        }
         handlerObject.insert("event", handler->getName());
-        handlerObject.insert("element", handler->xPathToElement());
+        handlerObject.insert("element", returnedXPath);
         resultList.append(handlerObject);
     }
 
