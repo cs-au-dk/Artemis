@@ -416,11 +416,11 @@ class AnalysisServerTests(unittest.TestCase):
             [
                 {
                     "event": "click",
-                    "element": "document"
+                    "element": "window"
                 },
                 {
                     "event": "click",
-                    "element": "window"
+                    "element": "document"
                 },
                 {
                     "event": "click",

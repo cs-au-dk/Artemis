@@ -19,8 +19,9 @@
 namespace artemis
 {
 
-EventHandlerDescriptor::EventHandlerDescriptor(QWebElement* element, QString name) :
-    mEventName(name)
+EventHandlerDescriptor::EventHandlerDescriptor(QWebElement* element, QString name, QString targetObject) :
+    mEventName(name),
+    mTargetObject(targetObject)
 {
     mXPath = element->xPath();
     mElement = DOMElementDescriptorConstPtr(new DOMElementDescriptor(element));
@@ -39,6 +40,15 @@ QString EventHandlerDescriptor::toString() const
 QString EventHandlerDescriptor::xPathToElement() const
 {
     return mXPath;
+}
+
+QString EventHandlerDescriptor::xPathOrTargetObject() const
+{
+    if (mXPath.isNull()) {
+        return mTargetObject;
+    } else {
+        return mXPath;
+    }
 }
 
 

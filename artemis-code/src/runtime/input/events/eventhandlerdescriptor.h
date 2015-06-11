@@ -33,7 +33,7 @@ class EventHandlerDescriptor
 {
 
 public:
-    EventHandlerDescriptor(QWebElement* element, QString name);
+    EventHandlerDescriptor(QWebElement* element, QString name, QString targetObject="");
 
     inline QString getName() const {
         return mEventName;
@@ -56,6 +56,7 @@ public:
     QString toString() const;
 
     QString xPathToElement() const;
+    QString xPathOrTargetObject() const;
 
     QDebug friend operator<<(QDebug dbg, const EventHandlerDescriptor& e);
 
@@ -64,6 +65,7 @@ private:
     DOMElementDescriptorConstPtr mElement;
     QString mEventName;
     QString mXPath;
+    QString mTargetObject; // Should be set to "window" or "document" if mElement is null.
 };
 
 typedef QSharedPointer<EventHandlerDescriptor> EventHandlerDescriptorPtr;

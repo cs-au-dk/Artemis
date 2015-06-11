@@ -112,8 +112,8 @@ WebKitExecutor::WebKitExecutor(QObject* parent,
     QObject::connect(mWebkitListener, SIGNAL(sigJavascriptPropertyWritten(QString,intptr_t,intptr_t, QSource*)),
                      mJavascriptStatistics.data(), SLOT(slJavascriptPropertyWritten(QString,intptr_t,intptr_t, QSource*)));
 
-    QObject::connect(mWebkitListener, SIGNAL(addedEventListener(QWebElement*, QString)),
-                     mResultBuilder.data(), SLOT(slEventListenerAdded(QWebElement*, QString)));
+    QObject::connect(mWebkitListener, SIGNAL(addedEventListener(QWebElement*, QString, QString)),
+                     mResultBuilder.data(), SLOT(slEventListenerAdded(QWebElement*, QString, QString)));
     QObject::connect(mWebkitListener, SIGNAL(removedEventListener(QWebElement*, QString)),
                      mResultBuilder.data(), SLOT(slEventListenerRemoved(QWebElement*, QString)));
 

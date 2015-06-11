@@ -75,6 +75,7 @@ private:
     QString mPageStateAfterLoad;
 
     QList<QPair<QWebElement*, QString> > mElementPointers;
+    QMap<QWebElement*, QString> mTargetObjects;
 
     ConcolicBenchmarkFeatures mDisabledFeatures;
     bool mEnableEventVisibilityFiltering;
@@ -86,7 +87,7 @@ public slots:
     void slTimerAdded(int timerId, int timeout, bool singleShot);
     void slTimerRemoved(int timerId);
 
-    void slEventListenerAdded(QWebElement* elem, QString name);
+    void slEventListenerAdded(QWebElement* elem, QString name, QString targetObject);
     void slEventListenerRemoved(QWebElement* elem, QString name);
 
     void slAjaxCallbackHandlerAdded(int callbackId);

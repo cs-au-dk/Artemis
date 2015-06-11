@@ -41,6 +41,7 @@ void ExecutionResultBuilder::reset()
 {
     mResult = QSharedPointer<ExecutionResult>(new ExecutionResult());
     mElementPointers.clear();
+    mTargetObjects.clear();
     mPageStateAfterLoad = QString("");
 }
 
@@ -92,12 +93,12 @@ QList<EventHandlerDescriptorConstPtr> ExecutionResultBuilder::getCurrentEventHan
         }
 
         if (p.first->isNull()) {
-            qWarning() << "Got event handler with NULL element. Assuming document is reciever";
+            qWarning() << "Got event handler with NULL element." << mTargetObjects[p.first] << "is reciever.";
         }
 
         qDebug() << "Finalizing " << p.second << " xpath=" << p.first->xPath() << " _T: "
                  << p.first->attribute(QString("title"));
-        EventHandlerDescriptorConstPtr handler = EventHandlerDescriptorConstPtr(new EventHandlerDescriptor(p.first, p.second));
+        EventHandlerDescriptorConstPtr handler = EventHandlerDescriptorConstPtr(new EventHandlerDescriptor(p.first, p.second, mTargetObjects[p.first]));
 
         if (handler->isInvalid()) {
             qWarning() << "element was invalid, skipping";
@@ -206,7 +207,7 @@ QSet<QString> ExecutionResultBuilder::getSelectOptions(const QWebElement& e)
 
 /** LISTENERS **/
 
-void ExecutionResultBuilder::slEventListenerAdded(QWebElement* elem, QString eventName)
+void ExecutionResultBuilder::slEventListenerAdded(QWebElement* elem, QString eventName, QString targetObject)
 {
     Q_CHECK_PTR(elem);
 
@@ -224,6 +225,7 @@ void ExecutionResultBuilder::slEventListenerAdded(QWebElement* elem, QString eve
     }
 
     mElementPointers.append(QPair<QWebElement*, QString>(elem, eventName));
+    mTargetObjects.insert(elem, targetObject);
 }
 
 void ExecutionResultBuilder::slEventListenerRemoved(QWebElement* elem, QString name)
@@ -237,6 +239,7 @@ void ExecutionResultBuilder::slEventListenerRemoved(QWebElement* elem, QString n
     }
 
     mElementPointers.removeAt(mElementPointers.indexOf(QPair<QWebElement*, QString>(elem, name)));
+    mTargetObjects.remove(elem);
     delete elem; //TODO look at these elements (QWebElements) and delete them when they are removed from the list
 }
 

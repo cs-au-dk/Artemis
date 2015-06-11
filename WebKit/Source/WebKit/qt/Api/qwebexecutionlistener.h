@@ -118,7 +118,7 @@ private:
     int m_heapReportNumber;
     int m_heapReportFactor;
 signals:
-    void addedEventListener(QWebElement*, QString);
+    void addedEventListener(QWebElement*, QString, QString);
     void removedEventListener(QWebElement*, QString);
     void triggeredEventListener(QWebElement*, QString);
     

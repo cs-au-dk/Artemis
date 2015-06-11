@@ -69,13 +69,14 @@ void QWebExecutionListener::eventAdded(WebCore::EventTarget* target, const char*
         if (node->isDocumentNode() || node->isElementNode()) {
             // Notice! QWebElement will default to a NULL value if node is not an element node but a document node.
             // We recover this case later by assuming null values refer to the target node.
-            emit addedEventListener(new QWebElement(node), QString(tr(typeString.c_str())));
+            QString targetObject = node->isDocumentNode() ? QString::fromStdString("document") : QString();
+            emit addedEventListener(new QWebElement(node), QString(tr(typeString.c_str())), targetObject);
         } else {
             qWarning() << QString::fromStdString("Event handler added to non-document and non-elmenet node. Ignored.");
         }
 
     } else if (target->toDOMWindow() != NULL) {
-        emit addedEventListener(new QWebElement(target->toDOMWindow()->frameElement()), QString(tr(typeString.c_str())));
+        emit addedEventListener(new QWebElement(target->toDOMWindow()->frameElement()), QString(tr(typeString.c_str())), QString::fromStdString("window"));
 
     } else if (typeString.compare("readystatechange") == 0) {
         qDebug() << QString::fromStdString("WEBKIT::AJAX CALLBACK DETECTED (and ignored in event added)");
