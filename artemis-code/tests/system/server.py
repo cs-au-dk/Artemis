@@ -375,16 +375,16 @@ class AnalysisServerTests(unittest.TestCase):
         expected_handlers = json.loads("""
             [
                 {
-                    "event": "click",
-                    "element": "//a[@id='dom-attr']"
+                    "element": "//a[@id='dom-attr']",
+                    "events": ["click"]
                 },
                 {
-                    "event": "click",
-                    "element": "//a[@id='js-attr']"
+                    "element": "//a[@id='js-attr']",
+                    "events": ["click"]
                 },
                 {
-                    "event": "click",
-                    "element": "//a[@id='listener']"
+                    "element": "//a[@id='listener']",
+                    "events": ["click", "focus"]
                 }
             ]
         """)
@@ -415,16 +415,16 @@ class AnalysisServerTests(unittest.TestCase):
         expected_handlers = json.loads("""
             [
                 {
-                    "event": "click",
-                    "element": "window"
+                    "element": "/html/body[1]",
+                    "events": ["click"]
                 },
                 {
-                    "event": "click",
-                    "element": "document"
+                    "element": "document",
+                    "events": ["click"]
                 },
                 {
-                    "event": "click",
-                    "element": "/html/body[1]"
+                    "element": "window",
+                    "events": ["click"]
                 }
             ]
         """)

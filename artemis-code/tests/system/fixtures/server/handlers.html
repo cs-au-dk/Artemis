@@ -21,6 +21,10 @@
                 e.preventDefault();
             }, false);
             
+            y.addEventListener("focus", function (e) {
+                alert("Focus handler registered via addEventListener.");
+                e.preventDefault();
+            }, false);
         }
     </script>
 </head>

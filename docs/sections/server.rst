@@ -98,8 +98,10 @@ Commands
         }
     
 * ``handlers``
-    Lists the event handlers registered on the current page. The list returned is a list of XPath expressions
-    identifying the DOM element each handler is registered on.
+    Lists the event handlers registered on the current page.
+    The list returned shows XPath expressions identifying the DOM elements with events, and a list of events attached
+    to each.
+    The special cases "document" or "window" may also be given as an identifier for events registered on those objects.
     
     There must already have been a page load command issued.
     
@@ -110,16 +112,16 @@ Commands
         {
             "handlers": [
                 {
-                    "event": "click",
-                    "element": "//a[@id=\"dom-attr\"]"
+                    "element": "//a[@id='dom-attr']",
+                    "events": ["click"]
                 },
                 {
-                    "event": "click",
-                    "element": "//a[@id=\"js-attr\"]"
+                    "element": "//a[@id='js-attr']",
+                    "events": ["click"]
                 },
                 {
-                    "event": "click",
-                    "element": "//a[@id=\"listener\"]"
+                    "element": "//a[@id='listener']",
+                    "events": ["click", "focus"]
                 }
             ]
         }

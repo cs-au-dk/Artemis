@@ -155,11 +155,20 @@ void AnalysisServerRuntime::execute(HandlersCommand *command)
     }
 
     QList<EventHandlerDescriptorConstPtr> handlerList = mWebkitExecutor->getCurrentEventHandlers();
-    QVariantList resultList;
+
+    // Group the handlers by element.
+    // It is safe to use the xpaths as keys because we generate them ourselves, so they are canonical and we cannot
+    // have two different xpaths referring to the same element.
+    QMap<QString, QList<QVariant> > elementHandlers;
     foreach (EventHandlerDescriptorConstPtr handler, handlerList) {
+        elementHandlers[handler->xPathOrTargetObject()].append(handler->getName());
+    }
+
+    QVariantList resultList;
+    foreach (QString identifier, elementHandlers.keys()) {
         QVariantMap handlerObject;
-        handlerObject.insert("event", handler->getName());
-        handlerObject.insert("element", handler->xPathOrTargetObject());
+        handlerObject.insert("element", identifier);
+        handlerObject.insert("events", elementHandlers[identifier]);
         resultList.append(handlerObject);
     }
 
