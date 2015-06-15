@@ -161,6 +161,8 @@ ConcolicAnalysis::ExplorationResult ConcolicAnalysis::nextExploration()
         // Call the search procedure to find an unexplored PC.
         if (mSearchStrategy->chooseNextTarget()) {
 
+            mExplorationIndex++;
+
             handle.noExplorationTarget = false;
             handle.target = mSearchStrategy->getTargetDescriptor();
             handle.explorationIndex = mExplorationIndex;
@@ -213,7 +215,6 @@ SolutionPtr ConcolicAnalysis::solveTargetPC()
     FormRestrictions dynamicRestrictions = mergeDynamicSelectRestrictions(mFormFieldInitialRestrictions, dynamicSelectConstraints);
     dynamicRestrictions = updateFormRestrictionsForFeatureFlags(dynamicRestrictions);
 
-    mExplorationIndex++;
     TreeManager::markExplorationIndex(target, mExplorationIndex);
 
     // Try to solve this PC to get some concrete input.
