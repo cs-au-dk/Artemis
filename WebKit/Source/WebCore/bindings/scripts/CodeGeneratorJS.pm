@@ -1885,12 +1885,12 @@ sub GenerateImplementation
                             push(@implContent, "    std::string type = impl->getAttribute(WebCore::HTMLNames::typeAttr).string().lower().ascii().data();\n");
                             # See commit f1a40d5c for an odd gotcha here.
                             # Should match the list in formfielddescriptor.cpp minus checkbox and radio
-                            push(@implContent, "    if (type.compare(\"hidden\") == 0 ||");
-                            push(@implContent, "        type.compare(\"button\") == 0 ||");
-                            push(@implContent, "        type.compare(\"reset\") == 0 ||");
-                            push(@implContent, "        type.compare(\"image\") == 0 ||");
-                            push(@implContent, "        type.compare(\"submit\") == 0 ||");
-                            push(@implContent, "        type.compare(\"checkbox\") == 0 ||");
+                            push(@implContent, "    if (type.compare(\"hidden\") == 0 ||\n");
+                            push(@implContent, "        type.compare(\"button\") == 0 ||\n");
+                            push(@implContent, "        type.compare(\"reset\") == 0 ||\n");
+                            push(@implContent, "        type.compare(\"image\") == 0 ||\n");
+                            push(@implContent, "        type.compare(\"submit\") == 0 ||\n");
+                            push(@implContent, "        type.compare(\"checkbox\") == 0 ||\n");
                             push(@implContent, "        type.compare(\"radio\") == 0) {\n");
                             push(@implContent, "        if (Symbolic::SymbolicInterpreter::isFeatureConcreteValuePropertyEnabled()) {\n");
                             push(@implContent, "            Statistics::statistics()->accumulate(\"Concolic::Interpreter::ConcreteValuePropertyAccessIgnored\", 1);\n");
@@ -1899,7 +1899,7 @@ sub GenerateImplementation
                             push(@implContent, "    }\n");
                             push(@implContent, "\n");
 
-                            push(@implContent, "    else if (type.compare(\"text\") != 0 &&");
+                            push(@implContent, "    else if (type.compare(\"text\") != 0 &&\n");
                             push(@implContent, "        type.compare(\"password\") != 0) {\n");
                             push(@implContent, "        Statistics::statistics()->accumulate(\"Concolic::Warning::InputSource\", 1);\n");
                             push(@implContent, "        return result;\n");
