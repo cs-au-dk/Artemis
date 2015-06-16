@@ -2,7 +2,7 @@
 TEST PC[0] = ((SymbolicString != ConstantString) == ConstantBoolean)
 TEST Concolic::Solver::ConstraintsSolved = 2
 TEST Concolic::Solver::ConstraintsWritten = 2
-TEST Concolic::Solver::Constraint.SYM_IN_testinput = testme
+TEST Concolic::Solver::Constraint.SYM_IN_ARTEMISID-0-0 = testme
 -->
 <!doctype html><html lang="en">
 <head>
@@ -15,6 +15,7 @@ TEST Concolic::Solver::Constraint.SYM_IN_testinput = testme
 		var x = "testme";
 
 		function validate() {
+			// Elements are not identified in artemis by name attribute to help avoid ambiguity.
 			var y = document.getElementsByName("testinput")[0].value;
 
 			if (y != x) {
