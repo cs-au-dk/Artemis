@@ -431,33 +431,6 @@ class FeatureSwitchTests(unittest.TestCase):
         self.assertEqual(8, report.get(after_inject, 0)); # Not 12 again because there are less traces executed!
 
 
-class TargetSolverNoInjection(unittest.TestCase):
-
-    def _test(self, name):
-        report = execute_artemis('test_%s' % name,
-                                 '%s/event-delegation/%s/index.html' % (FIXTURE_ROOT, name),
-                                 iterations=2,
-                                 debug_concolic=' ',
-                                 verbose=False)
-
-	assert report.get('Concolic::Solver::ErrorsReadingSolution', 0) == 0, \
-            "Errors reading the solver solution"
-        assert report.get('Concolic::Solver::ConstraintsSolvedAsUNSAT', 0) == 0, \
-            "Initial execution returned as UNSAT"
-        assert report.get('Concolic::Solver::ConstraintsNotSolved', 0) == 0, \
-            "Initial execution returned with an error"
-        assert report.get('Concolic::Solver::ConstraintsSolved', 0) == 1, \
-            "Initial execution did not solve a constraint"
-
-    def test_jquery_1_11_no_context(self):
-        self._test('jquery-1-11-no-context')
-
-    def test_jquery_1_11_context(self):
-        self._test('jquery-1-11-context')
-
-    def test_jquery_1_7(self):
-        self._test('jquery-1-7')
-
 
 if __name__ == '__main__':
     unittest.main()

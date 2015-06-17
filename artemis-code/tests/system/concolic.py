@@ -72,15 +72,9 @@ def _get_from_report(report, key):
         return {"val": report[key], "pc": False}
 
 
-def test_generator(filename, name, test_dict=None, internal_test=None):
+def test_generator(artemis_runner, full_filename, name, test_dict=None, internal_test=None):
     def test(self):
-        report = execute_artemis(name, "%s%s" % (FIXTURE_ROOT, filename),
-                                 iterations=0,
-                                 debug_concolic=' ',
-                                 major_mode='concolic',
-                                 concolic_event_sequences='simple',
-                                 #concolic_search_procedure='dfs-testing',
-                                 verbose=True)
+        report = artemis_runner(name, full_filename)
 
         assert test_dict or internal_test, "No tests to execute"
         tested_unsat = False
@@ -121,13 +115,23 @@ def test_generator(filename, name, test_dict=None, internal_test=None):
     return test
 
 
+def _artemis_runner(name, path):
+    return execute_artemis(name, path,
+                           iterations=0,
+                           debug_concolic=' ',
+                           major_mode='concolic',
+                           concolic_event_sequences='simple',
+                           #concolic_search_procedure='dfs-testing',
+                           verbose=True)
+
+
 if __name__ == '__main__':
 
     for t in _list_tests_in_folder(FIXTURE_ROOT):
         test_name = 'test_%s' % t['fn'].replace(".", "_")
-        test = test_generator(t['fn'], test_name, test_dict=t['test'], internal_test=t['i_test'])
+        file_name = "%s%s" % (FIXTURE_ROOT, t['fn'])
+        test = test_generator(_artemis_runner, file_name, test_name, test_dict=t['test'], internal_test=t['i_test'])
         setattr(Concolic, test_name, test)
 
     unittest.main(buffer=True)
 
-     
