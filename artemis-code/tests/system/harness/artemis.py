@@ -21,6 +21,7 @@ RE_PATHCOND_LINE = re.compile(r'^PC\[([0-9]*)\]:(.+)$')
 def execute_artemis(execution_uuid, url, iterations=1,
                     strategy_form_input=None,
                     strategy_priority=None,
+                    strategy_target_selection=None,
                     coverage=None,
                     exclude=None,
                     string_fields=None,
@@ -60,6 +61,10 @@ def execute_artemis(execution_uuid, url, iterations=1,
     if strategy_priority is not None:
         args.append('--strategy-priority')
         args.append(strategy_priority)
+
+    if strategy_target_selection is not None:
+        args.append('--strategy-target-selection')
+        args.append(strategy_target_selection)
 
     if coverage is not None:
         args.append('--coverage-report')
@@ -157,8 +162,9 @@ def execute_artemis(execution_uuid, url, iterations=1,
             stdout = e.output
             returncode = e.returncode
         else:
-            raise ArtemisCallException("Exception thrown by call %s \n\n %s \n\n Exception thrown by call %s" \
-                            % (e.cmd, e.output, e.cmd))
+            #raise ArtemisCallException("Exception thrown by call %s \n\n %s \n\n Exception thrown by call %s" \
+            #                % (e.cmd, e.output, e.cmd))
+            raise ArtemisCallException("Exception thrown by call %s" % e.cmd)
 
 
     fp = codecs.open(os.path.join(output_dir, 'stdout.txt'), 'wb', encoding='utf-8')

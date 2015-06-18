@@ -985,8 +985,8 @@ void CVC4ConstraintWriter::emitDOMConstraints()
         // Look up this symbolic object in the list of snapshots and output a snapshot constraint if one is found.
 
         // TODO: remove
-        qDebug() << QString::fromStdString(identifier); // Includes SYM_IN_ prefix.
-        qDebug() << *(mDomSnapshots.data());
+        //qDebug() << QString::fromStdString(identifier); // Includes SYM_IN_ prefix.
+        //qDebug() << *(mDomSnapshots.data());
 
         // If this test fails there will likely be a failed assertion while trying to read back the solver results, as the expected "result" variable will not be present.
         if (mDomSnapshots->contains(identifier)) {

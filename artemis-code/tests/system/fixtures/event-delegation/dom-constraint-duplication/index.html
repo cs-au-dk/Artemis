@@ -1,3 +1,12 @@
+<!--
+TEST PC[0] = ((SymbolicProperty( SymbolicObject( SYM_TARGET_0 ) ) == ConstantString) == ConstantBoolean)
+TEST PC[1] = ((SymbolicProperty( SymbolicObject( SYM_TARGET_0 ) ) == ConstantString) == ConstantBoolean)
+TEST Concolic::ExecutionTree::DistinctTracesExplored = 2
+TEST Concolic::Solver::ConstraintsSolved = 3
+TEST Concolic::Solver::ConstraintsSolvedAsUNSAT = 1
+TEST Concolic::Solver::ConstraintsWritten = 3
+TEST Concolic::Solver::Constraint.SYM_TARGET_0 = //ul[@id=\"container\"]/li[1]
+-->
 <!doctype html>
 <html lang="en">
 <head>

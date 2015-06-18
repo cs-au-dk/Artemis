@@ -37,19 +37,28 @@ def list_delegation_tests(folder):
         if not os.path.isfile(index_file) or test_name[0:1] == "_" or test_name[0:1] == "%":
             continue
         
-        result = {"test": {}, "i_test": {}, "name": test_name, 'fn': os.path.join(test_name, "index.html")}
+        result = {"test": {}, "i_test": {}, "name": test_name, 'fn': os.path.join(test_name, "index.html"), "expected_failure": False}
         with open(index_file, 'r') as fl:
             if re.match("^\s*<!--\s*$", fl.readline()):
                 for line in fl:
+                    ef = re.match("^\s*EXPECTED_FAILURE", line)
+                    if ef:
+                        result["expected_failure"] = True
+                        continue
+                    
                     m = re.match("\s*TEST(_INTERN)? ([^<>!=\s]+)\s*((<|>|=|!)=?)([^=].*)$", line)
                     if not m:
                         continue
+                    
                     test_mode = "i_test" if m.group(1) else "test"
+                    
                     op = {"<": "lt", "<=": "leq", ">": "gt", ">=": "geq", "==": "eq", "=": "eq", "!": "neq",
                           "!=": "neq"}[m.group(3)]
                     if op not in result[test_mode]:
                         result[test_mode][op] = {}
+                    
                     result[test_mode][op][m.group(2).strip()] = m.group(5).strip()
+                    
                     if re.match("-->", line):
                         break
 
@@ -72,6 +81,7 @@ def _artemis_runner_full(name, path):
     return execute_artemis(name, path,
                            iterations=10,
                            debug_concolic=' ',
+                           strategy_target_selection='concolic',
                            verbose=False)
 
 
@@ -96,12 +106,16 @@ def main():
         setattr(EventDelegation, test_name, test)
     
     # Generate the tests which check for the assertions included in the test suite.
-    # TODO: These all fail because there are no assertions in the test cases yet.
-    #for t in test_cases:
-    #    test_name = 'test_%s' % t['name']
-    #    file_name = "%s%s" % (FIXTURE_ROOT, t['fn'])
-    #    test = concolic.test_generator(_artemis_runner_full, file_name, test_name, test_dict=t['test'], internal_test=t['i_test'])
-    #    setattr(EventDelegation, test_name, test)
+    for t in test_cases:
+        test_name = 'test_%s' % t['name']
+        file_name = "%s%s" % (FIXTURE_ROOT, t['fn'])
+        
+        test = concolic.test_generator(_artemis_runner_full, file_name, test_name, test_dict=t['test'], internal_test=t['i_test'])
+        
+        if t['expected_failure']:
+            test = unittest.expectedFailure(test)
+        
+        setattr(EventDelegation, test_name, test)
     
     unittest.main(buffer=True)
     
