@@ -131,8 +131,8 @@ void ConcolicTargetGenerator::outputTree(TraceNodePtr tree, QString eventName, u
         return;
     }
 
-    TraceDisplay display;
-    TraceDisplayOverview display_min;
+    TraceDisplay display(mOptions.outputCoverage != NONE);
+    TraceDisplayOverview display_min(mOptions.outputCoverage != NONE);
 
     QString date = QDateTime::currentDateTime().toString("yyyy-MM-dd-hh-mm-ss");
     QString filename = QString("event_%1_%2_%3_%4.gv").arg(date, eventName).arg(count).arg(mTreeIdx);
