@@ -36,7 +36,12 @@ AnalysisServer::AnalysisServer(quint16 port)
     mServer = new QHttpServer(this);
     QObject::connect(mServer, SIGNAL(newRequest(QHttpRequest*, QHttpResponse*)),
                      this, SLOT(slHandleRequest(QHttpRequest*, QHttpResponse*)));
-    mServer->listen(QHostAddress::Any, port);
+    bool boundToPort = mServer->listen(QHostAddress::Any, port);
+
+    if (!boundToPort) {
+        Log::fatal(QString("AnalysisServer could not bind to port %1.").arg(port).toStdString());
+        exit(1);
+    }
 
     Log::debug("AnalysisServer listening...");
 }

@@ -56,6 +56,18 @@ class AnalysisServerTests(unittest.TestCase):
     def test_connect_to_server(self):
         self.assertServerAcceptingConnections()
     
+    def test_port_check(self):
+        # Run  an extra server and confirm it terminates with an error.
+        
+        second_server = run_artemis_server(self.id() + "_extra")
+        time.sleep(1)
+        ret = second_server.poll()
+        if ret is None:
+            second_server.terminate()
+            second_server.wait()
+        if ret != 1:
+            self.fail("Two servers runnig on the same port did not give an error.")
+    
     def test_echo_command(self):
         message = {
                 "command": "echo",
