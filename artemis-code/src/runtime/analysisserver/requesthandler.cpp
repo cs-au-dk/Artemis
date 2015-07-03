@@ -127,7 +127,10 @@ CommandPtr RequestHandler::createCommand(QVariant data)
         return clickCommand(mainObject);
 
     } else if (command == "dom") {
-        return domCommand(mainObject);
+        return parseError("The 'dom' command is no longer supported; it has been replaced by the 'page' command.");
+
+    } else if (command == "page") {
+        return pageCommand(mainObject);
 
     } else if (command == "element") {
         return elementCommand(mainObject);
@@ -245,12 +248,20 @@ CommandPtr RequestHandler::clickCommand(QVariantMap mainObject)
     return ClickCommandPtr(new ClickCommand(mainObject["element"].toString()));
 }
 
-CommandPtr RequestHandler::domCommand(QVariantMap mainObject)
+CommandPtr RequestHandler::pageCommand(QVariantMap mainObject)
 {
-    Log::debug("  Request handler: Building DOM command.");
+    Log::debug("  Request handler: Building Page-State command.");
 
-    // There are no extra fields to fetch for a DOM command.
-    return DomCommandPtr(new DomCommand());
+    // There is an optional 'dom' field, which defaults to false if not present.
+    bool includeDom = false;
+    if (mainObject.contains("dom")) {
+        if (mainObject["dom"].type() != QVariant::Bool) {
+            return parseError("The \"dom\" property for a page command must be a boolean.");
+        }
+        includeDom = mainObject["dom"].toBool();
+    }
+
+    return PageStateCommandPtr(new PageStateCommand(includeDom));
 }
 
 CommandPtr RequestHandler::elementCommand(QVariantMap mainObject)

@@ -220,25 +220,31 @@ void AnalysisServerRuntime::execute(ClickCommand *command)
     emit sigCommandFinished(result);
 }
 
-void AnalysisServerRuntime::execute(DomCommand *command)
+void AnalysisServerRuntime::execute(PageStateCommand *command)
 {
-    Log::debug("  Analysis server runtime: executing a DOM command.");
+    Log::debug("  Analysis server runtime: executing a Page-State command.");
     assert(command);
 
     // Check we have loaded a page already.
     if (!mIsPageLoaded) {
-        emit sigCommandFinished(errorResponse("Cannot execute dom command until a page is loaded."));
+        emit sigCommandFinished(errorResponse("Cannot execute page command until a page is loaded."));
         return;
     }
 
     QString url = mWebkitExecutor->getPage()->mainFrame()->url().toString();
     QString title = mWebkitExecutor->getPage()->mainFrame()->title();
     QString dom = mWebkitExecutor->getPage()->mainFrame()->toHtml();
+    uint domEltCount = mWebkitExecutor->getPage()->mainFrame()->documentElement().findAll("*").count();
+    uint domCharCount = dom.length();
 
     QVariantMap result;
     result.insert("url", url);
     result.insert("title", title);
-    result.insert("dom", dom);
+    if (command->includeDom) {
+        result.insert("dom", dom);
+    }
+    result.insert("elements", domEltCount);
+    result.insert("characters", domCharCount);
 
     emit sigCommandFinished(result);
 }

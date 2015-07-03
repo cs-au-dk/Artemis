@@ -49,7 +49,7 @@ void ClickCommand::accept(AnalysisServerRuntime *server)
     server->execute(this);
 }
 
-void DomCommand::accept(AnalysisServerRuntime *server)
+void PageStateCommand::accept(AnalysisServerRuntime *server)
 {
     server->execute(this);
 }

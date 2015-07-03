@@ -125,13 +125,18 @@ public:
 typedef QSharedPointer<ClickCommand> ClickCommandPtr;
 
 // Gets information about the current page.
-class DomCommand : public Command
+class PageStateCommand : public Command
 {
 public:
+    PageStateCommand(bool includeDom)
+        : includeDom(includeDom)
+    {}
     virtual void accept(AnalysisServerRuntime* server);
+
+    bool includeDom;
 };
 
-typedef QSharedPointer<DomCommand> DomCommandPtr;
+typedef QSharedPointer<PageStateCommand> PageStateCommandPtr;
 
 // Gets information about a certain element.
 class ElementCommand : public Command

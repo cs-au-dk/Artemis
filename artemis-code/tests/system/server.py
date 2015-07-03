@@ -557,7 +557,16 @@ class AnalysisServerTests(unittest.TestCase):
         self.assertIn("handlers", handlers_final_response)
         self.assertEqual(len(handlers_final_response["handlers"]), 2)
     
-    def test_dom_command(self):
+    def test_dom_command_deprecated(self):
+        message = {
+            "command": "dom"
+        }
+        
+        response = send_to_server(message)
+        
+        self.assertIn("error", response)
+    
+    def test_page_command(self):
         load_message = {
                 "command": "pageload",
                 "url": fixture_url("handlers.html")
@@ -567,12 +576,66 @@ class AnalysisServerTests(unittest.TestCase):
         
         self.assertIn("pageload", load_response)
         
-        # Send the DOM command
-        dom_message = {
-            "command": "dom"
+        # Send the page command
+        page_message = {
+            "command": "page"
         }
         
-        dom_response = send_to_server(dom_message)
+        page_response = send_to_server(page_message)
+        
+        # Read the expected DOM from the HTML file directly.
+        with open(fixture_url("handlers.html")) as f:
+            expected_dom = unicode(f.read())
+        
+        # This is a hack to avoid parsing the page. http://stackoverflow.com/a/1732454/1044484
+        expected_dom_elts = len(re.findall("<[^/!]", expected_dom))
+        expected_dom_chars = len(expected_dom.strip())
+        
+        # Element count does not include the html element itself.
+        elt_adjustment = 1
+        # Char count is different because whitespace is removed from the end of elements in our webkit. <a href="" > becomes <a href="">
+        char_adjustment = len(re.findall("\" >", expected_dom))
+        
+        self.assertIn("url", page_response)
+        self.assertEqual(page_response["url"], fixture_url_with_scheme("handlers.html"))
+        
+        self.assertIn("title", page_response)
+        self.assertEqual(page_response["title"], "Ben Spencer")
+        
+        self.assertIn("elements", page_response)
+        self.assertEqual(page_response["elements"], expected_dom_elts - elt_adjustment)
+        
+        self.assertIn("characters", page_response)
+        self.assertEqual(page_response["characters"], expected_dom_chars - char_adjustment)
+    
+    def test_page_command_without_load(self):
+        message = {
+                "command": "page"
+            }
+        
+        response = send_to_server(message)
+        
+        self.assertIn("error", response)
+    
+    def test_page_command_with_dom(self):
+        load_message = {
+                "command": "pageload",
+                "url": fixture_url("handlers.html")
+            }
+        
+        load_response = send_to_server(load_message)
+        
+        self.assertIn("pageload", load_response)
+        
+        # Send the page command
+        page_message = {
+            "command": "page",
+            "dom": True
+        }
+        
+        page_response = send_to_server(page_message)
+        
+        self.assertIn("dom", page_response)
         
         # Read the expected DOM from the HTML file directly.
         with open(fixture_url("handlers.html")) as f:
@@ -581,25 +644,35 @@ class AnalysisServerTests(unittest.TestCase):
         # Ignore whitespace differences.
         # Artemis IDs are not being added, so we don't have to account for these with a "proper" diff.
         exp_tokens = [x for x in re.split("\s+|<|>", expected) if x != ""]
-        real_tokens = [x for x in re.split("\s+|<|>", dom_response["dom"]) if x != ""]
+        real_tokens = [x for x in re.split("\s+|<|>", page_response["dom"]) if x != ""]
         
-        self.assertIn("dom", dom_response)
         self.assertEqual(real_tokens, exp_tokens)
         
-        self.assertIn("url", dom_response)
-        self.assertEqual(dom_response["url"], fixture_url_with_scheme("handlers.html"))
-        
-        self.assertIn("title", dom_response)
-        self.assertEqual(dom_response["title"], "Ben Spencer")
+        # Check everything else was at least still in the response as well.
+        self.assertIn("url", page_response)
+        self.assertIn("title", page_response)
+        self.assertIn("elements", page_response)
+        self.assertIn("characters", page_response)
     
-    def test_dom_command_without_load(self):
-        message = {
-                "command": "dom"
+    def test_page_command_with_invalid_dom_request(self):
+        load_message = {
+                "command": "pageload",
+                "url": fixture_url("handlers.html")
             }
         
-        response = send_to_server(message)
+        load_response = send_to_server(load_message)
         
-        self.assertIn("error", response)
+        self.assertIn("pageload", load_response)
+        
+        # Send the page command
+        page_message = {
+            "command": "page",
+            "dom": "Yes please!"
+        }
+        
+        page_response = send_to_server(page_message)
+        
+        self.assertIn("error", page_response)
     
     def test_element_command(self):
         load_message = {

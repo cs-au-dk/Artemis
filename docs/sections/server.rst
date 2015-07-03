@@ -140,17 +140,37 @@ Commands
     
     Recieve: ``{"click": "done"}``
     
-* ``dom``
-    Returns information about the current page (the URL, page title, and string represenation of the DOM).
+* ``page``
+    Returns information about the current page (the URL, page title, and DOM statistics).
     
-    Send: ``{"command": "dom"}``
+    Send: ``{"command": "page"}``
     
     Recieve::
     
         {
             "url": "http://www.example.com",
             "title": "Example Domain",
-            "dom": "<html> ... </html>"
+            "elements": 12,
+            "characters": 1262
+        }
+    
+    The optional "dom" parameter can be set to `True` to include the entire DOM dump.
+    
+    Send::
+    
+        {
+            "command": "page",
+            "dom": True
+        }
+    
+    Recieve::
+    
+        {
+            "url": "http://www.example.com",
+            "title": "Example Domain",
+            "dom": "<html> ... </html>",
+            "elements": 12,
+            "characters": 1262
         }
     
 * ``element``

@@ -55,7 +55,7 @@ protected:
     CommandPtr pageloadCommand(QVariantMap mainObject);
     CommandPtr handlersCommand(QVariantMap mainObject);
     CommandPtr clickCommand(QVariantMap mainObject);
-    CommandPtr domCommand(QVariantMap mainObject);
+    CommandPtr pageCommand(QVariantMap mainObject);
     CommandPtr elementCommand(QVariantMap mainObject);
     CommandPtr fieldsReadCommand(QVariantMap mainObject);
     CommandPtr backbuttonCommand(QVariantMap mainObject);

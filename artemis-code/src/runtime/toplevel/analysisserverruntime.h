@@ -44,7 +44,7 @@ public:
     void execute(PageLoadCommand* command);
     void execute(HandlersCommand* command);
     void execute(ClickCommand* command);
-    void execute(DomCommand* command);
+    void execute(PageStateCommand* command);
     void execute(ElementCommand* command);
     void execute(FieldsReadCommand* command);
     void execute(BackButtonCommand* command);
