@@ -17,11 +17,13 @@
 #include <QString>
 #include <QDebug>
 #include <QTimer>
+#include <QVariant>
 
 #include <qjson/parser.h>
 
 #include "util/loggingutil.h"
 #include "util/delayutil.h"
+#include "runtime/input/forms/formfieldinjector.h"
 
 #include "analysisserverruntime.h"
 
@@ -308,6 +310,70 @@ void AnalysisServerRuntime::execute(BackButtonCommand *command)
     }
 
     backButtonOrError(); // Calls back to slExecutedSequence or finishes the request itself.
+}
+
+void AnalysisServerRuntime::execute(FormInputCommand *command)
+{
+    Log::debug("  Analysis server runtime: executing a Form-input command.");
+    assert(command);
+
+    // Check we have loaded a page already.
+    if (!mIsPageLoaded) {
+        emit sigCommandFinished(errorResponse("Cannot execute forminput command until a page is loaded."));
+        return;
+    }
+
+    // Look up the element.
+    QWebElement field = mWebkitExecutor->getPage()->getElementByXPath(command->field);
+    if (field.isNull()) {
+        emit sigCommandFinished(errorResponse("Form-input field could not be found. The XPath either did not match or matched multiple elements."));
+        return;
+    }
+
+    // Sanity check that this element is a form field and the injection value is an appropriate type.
+    // Some of these checks are repeated in FormFieldInjector::inject, but doing them here allows us to give sensible
+    // error messages, which is useful seeing as this command has quite specific requirements.
+    Log::debug(QString("    Checking field \"%1\" can accept value %2").arg(field.tagName(), command->value.toString()).toStdString());
+    if (field.tagName().toLower() == "input") {
+        // For input fields, the allowable value type depends on the inupt type.
+        // "radio" and "checkbox" inputs must have bool values, and all other input types must use "string".
+        QString inputType = field.attribute("type").toLower();
+        if (inputType == "checkbox" || inputType == "radio") {
+            if (command->value.getType() != QVariant::Bool) {
+                emit sigCommandFinished(errorResponse(QString("Only boolean values can be injected into inputs with 'checkbox' or 'radio' type.")));
+                return;
+            }
+        } else if (command->value.getType() != QVariant::String) {
+            emit sigCommandFinished(errorResponse(QString("Only string values can be injected into normal input fields.")));
+            return;
+        }
+    } else if (field.tagName().toLower() == "select") {
+        // For select boxes we support injection of string or int (as selectedIndex) but not bool.
+        if (command->value.getType() != QVariant::String && command->value.getType() != QVariant::Int) {
+            emit sigCommandFinished(errorResponse(QString("Could not inject '%1' into a select box. Only strings and integers (for selectedIndex) are supported.").arg(command->value.toString())));
+            return;
+        }
+    } else {
+        emit sigCommandFinished(errorResponse(QString("Could not inject into element '%1'; only 'input' or 'select' supported.").arg(field.tagName())));
+        return;
+    }
+
+    // Inject
+    bool couldInject = FormFieldInjector::inject(field, command->value);
+    if (!couldInject) {
+        // Hopefully all these case will already be caught by the sanity-check code above...
+        emit sigCommandFinished(errorResponse(QString("Failed to inject value %1 into field %2.").arg(command->value.toString(), command->field)));
+        return;
+    }
+
+    // Trigger the change handler.
+    FormFieldInjector::triggerChangeHandler(field);
+
+    // Done, nothing to return.
+    QVariantMap result;
+    result.insert("forminput", "done");
+
+    emit sigCommandFinished(result);
 }
 
 QVariant AnalysisServerRuntime::errorResponse(QString message)

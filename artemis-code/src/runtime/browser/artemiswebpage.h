@@ -58,6 +58,8 @@ public:
 
     bool mAcceptNavigation; // Used when in manual mode; see acceptNavigationRequest.
 
+    QWebElement getElementByXPath(QString xPath);
+
 protected:
     virtual bool acceptNavigationRequest(QWebFrame *frame, const QNetworkRequest &request, NavigationType type);
     QString mCustomUserAgent;

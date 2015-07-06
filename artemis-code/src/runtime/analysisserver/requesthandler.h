@@ -59,6 +59,7 @@ protected:
     CommandPtr elementCommand(QVariantMap mainObject);
     CommandPtr fieldsReadCommand(QVariantMap mainObject);
     CommandPtr backbuttonCommand(QVariantMap mainObject);
+    CommandPtr forminputCommand(QVariantMap mainObject);
 
 protected slots:
     void slRequestFullyLoaded();

@@ -78,6 +78,31 @@ QString ArtemisWebPage::userAgentForUrl(const QUrl &url) const
     }
 }
 
+// Returns the element uniquely identified by the given XPath.
+// If no element is found, or multiple are matched, then a null element is returned.
+QWebElement ArtemisWebPage::getElementByXPath(QString xPath)
+{
+    QString escapedXPath(xPath);
+    escapedXPath.replace('"', "\\\"");
+
+    QWebElement document = this->currentFrame()->documentElement();
+    QString jsInjection = QString("var ArtemisSearchElt = document.evaluate(\"%1\", document, null, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null); if(ArtemisSearchElt.snapshotLength == 1) { ArtemisSearchElt.snapshotItem(0).setAttribute('artemissearch', 'true') }; ArtemisSearchElt.snapshotLength;").arg(escapedXPath);
+    uint eltCount = document.evaluateJavaScript(jsInjection, QUrl(), true).toUInt();
+
+    if (eltCount != 1) {
+        Log::debug(QString("getElementByXPath: Found %1 elements, but the XPath should match exactly one.").arg(eltCount).toStdString());
+        return QWebElement();
+    }
+
+    QWebElement searchElement = document.findFirst("*[artemissearch]");
+    assert(!searchElement.isNull());
+
+    // Remove the 'artemissearch' marker so we can re-use it and avoid polluting the DOM more than necessary.
+    searchElement.removeAttribute("artemissearch");
+
+    return searchElement;
+}
+
 
 // This function is called whenever WebKit requests to navigate frame to the resource specified by request by means of the specified navigation type type.
 bool ArtemisWebPage::acceptNavigationRequest(QWebFrame *frame, const QNetworkRequest &request, QWebPage::NavigationType type)

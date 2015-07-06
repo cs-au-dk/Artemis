@@ -48,6 +48,7 @@ public:
     void execute(ElementCommand* command);
     void execute(FieldsReadCommand* command);
     void execute(BackButtonCommand* command);
+    void execute(FormInputCommand*command);
 
 protected:
     AnalysisServer mAnalysisServer;

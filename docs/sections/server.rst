@@ -240,4 +240,102 @@ Commands
     contains an XPath to the field and a count of the number of times the field value was read (at a low level in the
     JavaScript interpreter).
     
+* ``forminput``
+    Injects values into form fields and triggers their change handlers.
+    
+    Send::
+    
+        {
+            "command": "forminput",
+            "field": "id('input-text')",
+            "value": "Hello, world."
+        }
+    
+    Recieve: ``{"forminput": "done"}``
+    
+    The valid element types for ``field`` are ``input`` and ``select``.
+    
+    The ``value`` property can be set to a string (as above), integer, or bool. Strings are used when injecting into
+    text fields or select boxes. Integers can be used to inject into a select box by index (sets the ``selectedIndex``
+    property to the given value). Booleans are used to inject into inputs with type ``checkbox`` or ``radio``.
+    
+    The allowable combinations of ``field`` and ``value`` are:
+    
+    +------------+-------------------------+---------------------+-------------------------+
+    |            | ``input``               | ``input`` with type | ``select``              |
+    |            | (not checkbox or radio) | checkbox or radio   |                         |
+    +============+=========================+=====================+=========================+
+    | **String** | Sets ``.value``         | *Invalid*           | Sets ``.value``         |
+    +------------+-------------------------+---------------------+-------------------------+
+    | **Int**    | *Invalid*               | *Invalid*           | Sets ``.selectedIndex`` |
+    +------------+-------------------------+---------------------+-------------------------+
+    | **Bool**   | *Invalid*               | Sets ``.checked``   | *Invalid*               |
+    +------------+-------------------------+---------------------+-------------------------+
+    
+    For example, the following commands are all valid on the form-injections.html test case::
+    
+        {
+            "command": "forminput",
+            "field": "id('input-text')",
+            "value": "Hello, world."
+        }
+    
+    This one sets the checkbox to ticked::
+    
+        {
+            "command": "forminput",
+            "field": "id('input-checkbox')",
+            "value": true
+        }
+    
+    When injecting into a select box, the ``value`` attribute of the appropriate ``option`` element must be given,
+    which is not necessarily the text which appears in the UI.::
+    
+        <select id="input-select" >
+            <option value="first" >First Option</option>
+            <option value="second" >Second Option</option>
+            <option value="third" >Third Option</option>
+        </select>
+    
+    This one selects "Third Option" in the UI::
+    
+        {
+            "command": "forminput",
+            "field": "id('input-select')",
+            "value": "third"
+        }
+    
+    This one also selects "Third Option", by using the index::
+    
+        {
+            "command": "forminput",
+            "field": "id('input-select')",
+            "value": 2
+        }
+    
+    The form-injections.html example includes a 'marker' element so you can confirm the form input worked::
+    
+        {
+            "command": "element",
+            "element": "id('status')"
+        }
+    
+    ::
+    
+        {
+            "elements": [ "<strong id=\"status\">#input-text set to 'Hello, World'</strong>" ]
+        }
+    
+
+
+
+
+
+
+
+
+
+
+
+
 

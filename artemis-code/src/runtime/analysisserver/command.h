@@ -22,6 +22,7 @@
 #include <QSharedPointer>
 
 #include "util/loggingutil.h"
+#include "runtime/input/forms/injectionvalue.h"
 
 namespace artemis
 {
@@ -169,6 +170,22 @@ public:
 };
 
 typedef QSharedPointer<BackButtonCommand> BackButtonCommandPtr;
+
+// Fills a form field with a given value.
+class FormInputCommand : public Command
+{
+public:
+    FormInputCommand(QString field, InjectionValue value)
+        : field(field)
+        , value(value)
+    {}
+    virtual void accept(AnalysisServerRuntime* server);
+
+    QString field;
+    InjectionValue value;
+};
+
+typedef QSharedPointer<FormInputCommand> FormInputCommandPtr;
 
 
 

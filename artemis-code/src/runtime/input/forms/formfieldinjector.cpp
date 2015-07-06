@@ -40,8 +40,6 @@ bool FormFieldInjector::inject(QWebElement element, InjectionValue value)
         // E.g. if you set the value of a select box then this approach correctly updates the node,
         // where the setAttribute approach updates the value itself but not the remaining state of the node
 
-        // TODO this is a bit risky, what if this triggers other events?
-
         setValue = QString("this.value = \"") + value.getString() + "\";";
         element.evaluateJavaScript(setValue);
 

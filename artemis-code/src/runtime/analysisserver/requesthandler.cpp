@@ -105,7 +105,7 @@ CommandPtr RequestHandler::createCommand(QVariant data)
 
     // Pull out the command.
     if (!mainObject.contains("command")) {
-        return parseError("Could not find the \"command\" field in the top-level object.");
+        return parseError("Could not find the 'command' field in the top-level object.");
     }
 
     QString command = mainObject["command"].toString();
@@ -141,6 +141,9 @@ CommandPtr RequestHandler::createCommand(QVariant data)
     } else if (command == "backbutton") {
         return backbuttonCommand(mainObject);
 
+    } else if (command == "forminput") {
+        return forminputCommand(mainObject);
+
     } else {
         return parseError("Command was not recognised.");
     }
@@ -167,11 +170,11 @@ CommandPtr RequestHandler::echoCommand(QVariantMap mainObject)
 
     // Fetch the message
     if (!mainObject.contains("message")) {
-        return parseError("Could not find the \"message\" property for an echo command.");
+        return parseError("Could not find the 'message' property for an echo command.");
     }
 
     if (mainObject["message"].type() != QVariant::String) {
-        return parseError("The \"message\" property for an echo command must be a string.");
+        return parseError("The 'message' property for an echo command must be a string.");
     }
 
     uint delay = 0;
@@ -179,10 +182,10 @@ CommandPtr RequestHandler::echoCommand(QVariantMap mainObject)
         bool ok;
         delay = mainObject["delay"].toUInt(&ok); // Will convert a string "5" to integer 5.
         if (!ok) {
-            return parseError("The \"delay\" property for an echo command must be a positive integer.");
+            return parseError("The 'delay' property for an echo command must be a positive integer.");
         }
         if (delay > 30) {
-            return parseError("The \"delay\" property must be at most 30 seconds.");
+            return parseError("The 'delay' property must be at most 30 seconds.");
         }
     }
 
@@ -195,18 +198,18 @@ CommandPtr RequestHandler::pageloadCommand(QVariantMap mainObject)
 
     // Fetch the URL and validate it
     if (!mainObject.contains("url")) {
-        return parseError("Could not find the \"url\" property for a pageload command.");
+        return parseError("Could not find the 'url' property for a pageload command.");
     }
 
     if (mainObject["url"].type() != QVariant::String) {
-        return parseError("The \"url\" property for a pageload command must be a string.");
+        return parseError("The 'url' property for a pageload command must be a string.");
     }
 
     // URL is assumed to be unencoded and parsed in tolerant mode.
     QUrl url(mainObject["url"].toString());
 
     if (!url.isValid()) {
-        return parseError("Invalid \"url\" property for a pageload command.");
+        return parseError("Invalid 'url' property for a pageload command.");
     }
 
     uint timeout = 0;
@@ -214,10 +217,10 @@ CommandPtr RequestHandler::pageloadCommand(QVariantMap mainObject)
         bool ok;
         timeout = mainObject["timeout"].toUInt(&ok); // Will convert a string "5" to integer 5.
         if (!ok) {
-            return parseError("The \"timeout\" property for a pageload command must be a positive integer.");
+            return parseError("The 'timeout property for a pageload command must be a positive integer.");
         }
         if (timeout > 30000) {
-            return parseError("The \"timeout\" property must be at most 30,000 milliseconds.");
+            return parseError("The 'timeout' property must be at most 30,000 milliseconds.");
         }
     }
 
@@ -238,11 +241,11 @@ CommandPtr RequestHandler::clickCommand(QVariantMap mainObject)
 
     // Fetch the XPath
     if (!mainObject.contains("element")) {
-        return parseError("Could not find the \"element\" property for a click command.");
+        return parseError("Could not find the 'element' property for a click command.");
     }
 
     if (mainObject["element"].type() != QVariant::String) {
-        return parseError("The \"element\" property for a click command must be a string.");
+        return parseError("The 'element' property for a click command must be a string.");
     }
 
     return ClickCommandPtr(new ClickCommand(mainObject["element"].toString()));
@@ -256,7 +259,7 @@ CommandPtr RequestHandler::pageCommand(QVariantMap mainObject)
     bool includeDom = false;
     if (mainObject.contains("dom")) {
         if (mainObject["dom"].type() != QVariant::Bool) {
-            return parseError("The \"dom\" property for a page command must be a boolean.");
+            return parseError("The 'dom' property for a page command must be a boolean.");
         }
         includeDom = mainObject["dom"].toBool();
     }
@@ -270,11 +273,11 @@ CommandPtr RequestHandler::elementCommand(QVariantMap mainObject)
 
     // Fetch the XPath
     if (!mainObject.contains("element")) {
-        return parseError("Could not find the \"element\" property for an element command.");
+        return parseError("Could not find the 'element' property for an element command.");
     }
 
     if (mainObject["element"].type() != QVariant::String) {
-        return parseError("The \"element\" property for an element command must be a string.");
+        return parseError("The 'element' property for an element command must be a string.");
     }
 
     return ElementCommandPtr(new ElementCommand(mainObject["element"].toString()));
@@ -294,6 +297,40 @@ CommandPtr RequestHandler::backbuttonCommand(QVariantMap mainObject)
 
     // There are no extra fields to fetch for a backbutton command.
     return BackButtonCommandPtr(new BackButtonCommand());
+}
+
+CommandPtr RequestHandler::forminputCommand(QVariantMap mainObject)
+{
+    Log::debug("  Request handler: Building Form-input command.");
+
+    // There should be a 'field' entry (string) and a 'value' entry (string or bool).
+    if (!mainObject.contains("field")) {
+        return parseError("Could not find the 'field' property for a forminput command.");
+    }
+
+    if (mainObject["field"].type() != QVariant::String) {
+        return parseError("The 'field' property for a forminput command must be a string.");
+    }
+
+    if (!mainObject.contains("value")) {
+        return parseError("Could not find the 'value' property for a forminput command.");
+    }
+
+    InjectionValue value;
+    if (mainObject["value"].type() == QVariant::String) {
+        value = InjectionValue(mainObject["value"].toString());
+    } else if (mainObject["value"].type() == QVariant::Int
+               || mainObject["value"].type() == QVariant::UInt
+               || mainObject["value"].type() == QVariant::LongLong
+               || mainObject["value"].type() == QVariant::ULongLong) {
+        value = InjectionValue(mainObject["value"].toInt());
+    } else if (mainObject["value"].type() == QVariant::Bool) {
+        value = InjectionValue(mainObject["value"].toBool());
+    } else {
+        return parseError("The 'value' property for a forminput command must be a string, int or bool.");
+    }
+
+    return FormInputCommandPtr(new FormInputCommand(mainObject["field"].toString(), value));
 }
 
 

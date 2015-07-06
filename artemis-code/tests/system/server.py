@@ -872,32 +872,32 @@ class AnalysisServerTests(unittest.TestCase):
         self.assertIn("error", response)
     
     def test_backbutton_command(self):
-        message_load_1 = {
+        load_message_1 = {
                 "command": "pageload",
                 "url": fixture_url("handlers.html")
             }
         
-        message_load_2 = {
+        load_message_2 = {
                 "command": "pageload",
                 "url": fixture_url("click.html")
             }
         
-        message_back = {
+        back_message = {
                 "command": "backbutton"
             }
         
-        response_1 = send_to_server(message_load_1)
+        response_1 = send_to_server(load_message_1)
         self.assertNotIn("error", response_1)
         
-        response_2 = send_to_server(message_load_2)
+        response_2 = send_to_server(load_message_2)
         self.assertNotIn("error", response_2)
         
-        response_back = send_to_server(message_back)
+        back_response = send_to_server(back_message)
         
-        self.assertNotIn("error", response_back)
-        self.assertIn("backbutton", response_back)
-        self.assertIn("url", response_back)
-        self.assertEqual(response_back["url"], fixture_url_with_scheme("handlers.html"))
+        self.assertNotIn("error", back_response)
+        self.assertIn("backbutton", back_response)
+        self.assertIn("url", back_response)
+        self.assertEqual(back_response["url"], fixture_url_with_scheme("handlers.html"))
     
     def test_backbutton_command_without_load(self):
         message = {
@@ -909,22 +909,380 @@ class AnalysisServerTests(unittest.TestCase):
         self.assertIn("error", response)
     
     def test_backbutton_command_from_first_page(self):
-        message_load = {
+        load_message = {
                 "command": "pageload",
                 "url": fixture_url("handlers.html")
             }
         
-        message_back = {
+        back_message = {
                 "command": "backbutton"
             }
         
-        response_load = send_to_server(message_load)
-        self.assertNotIn("error", response_load)
+        load_response = send_to_server(load_message)
+        self.assertNotIn("error", load_response)
         
-        response_back = send_to_server(message_back)
+        back_response = send_to_server(back_message)
         
-        self.assertIn("error", response_back)
+        self.assertIn("error", back_response)
     
+    def test_forminput_command(self):
+        load_message = {
+                "command": "pageload",
+                "url": fixture_url("form-injection.html")
+            }
+        
+        load_response = send_to_server(load_message)
+        
+        self.assertIn("pageload", load_response)
+        
+        forminput_message = {
+            "command": "forminput",
+            "field": "id('input-text')",
+            "value": "Hello, world."
+        }
+        
+        forminput_response = send_to_server(forminput_message)
+        
+        self.assertIn("forminput", forminput_response)
+        self.assertEqual(forminput_response["forminput"], u"done")
+        
+        self.assertForminputInjectionStatus("#input-text set to 'Hello, world.'")
+    
+    def test_forminput_command_without_load(self):
+        forminput_message = {
+            "command": "forminput",
+            "field": "id('input-text')",
+            "value": "Hello, world."
+        }
+        
+        forminput_response = send_to_server(forminput_message)
+        
+        self.assertIn("error", forminput_response)
+    
+    def test_forminput_command_invalid_request(self):
+        load_message = {
+                "command": "pageload",
+                "url": fixture_url("form-injection.html")
+            }
+        
+        load_response = send_to_server(load_message)
+        
+        self.assertIn("pageload", load_response)
+        
+        forminput_message = {
+            "command": "forminput",
+            "field": "id('input-text')"
+        }
+        
+        forminput_response = send_to_server(forminput_message)
+        
+        self.assertIn("error", forminput_response)
+        
+        forminput_message_2 = {
+            "command": "forminput",
+            "value": "Hello, world."
+        }
+        
+        forminput_response_2 = send_to_server(forminput_message_2)
+        
+        self.assertIn("error", forminput_response_2)
+    
+    def test_forminput_command_invalid_value_type(self):
+        load_message = {
+                "command": "pageload",
+                "url": fixture_url("form-injection.html")
+            }
+        
+        load_response = send_to_server(load_message)
+        
+        self.assertIn("pageload", load_response)
+        
+        forminput_message = {
+            "command": "forminput",
+            "field": "id('input-text')",
+            "value": {"objects": "not", "allowed": "here"}
+        }
+        
+        forminput_response = send_to_server(forminput_message)
+        
+        self.assertIn("error", forminput_response)
+    
+    def test_forminput_command_invalid_value_type_for_input_field(self):
+        load_message = {
+                "command": "pageload",
+                "url": fixture_url("form-injection.html")
+            }
+        
+        load_response = send_to_server(load_message)
+        
+        self.assertIn("pageload", load_response)
+        
+        # It seems pointless to split these into tons of individual tests, so here goes...
+        
+        # 1. TEXT input cannot accept INT
+        forminput_message_1 = {
+            "command": "forminput",
+            "field": "id('input-text')",
+            "value": 1234
+        }
+        
+        forminput_response_1 = send_to_server(forminput_message_1)
+        
+        self.assertIn("error", forminput_response_1)
+        
+        # 2. TEXT input cannot accept BOOL
+        forminput_message = {
+            "command": "forminput",
+            "field": "id('input-text')",
+            "value": True
+        }
+        
+        forminput_response = send_to_server(forminput_message)
+        
+        self.assertIn("error", forminput_response)
+        
+        # 3. CHECKBOX input cannot accept STRING
+        forminput_message = {
+            "command": "forminput",
+            "field": "id('input-checkbox')",
+            "value": "Hello"
+        }
+        
+        forminput_response = send_to_server(forminput_message)
+        
+        self.assertIn("error", forminput_response)
+        
+        # 4. CHECKBOX input cannot accept INT
+        forminput_message = {
+            "command": "forminput",
+            "field": "id('input-checkbox')",
+            "value": 1234
+        }
+        
+        forminput_response = send_to_server(forminput_message)
+        
+        self.assertIn("error", forminput_response)
+        
+        # 5. RADIO input cannot accept STRING
+        forminput_message = {
+            "command": "forminput",
+            "field": "id('input-radio')",
+            "value": "Hello"
+        }
+        
+        forminput_response = send_to_server(forminput_message)
+        
+        self.assertIn("error", forminput_response)
+        
+        # 6. RADIO input cannot accept INT
+        forminput_message = {
+            "command": "forminput",
+            "field": "id('input-radio')",
+            "value": 1234
+        }
+        
+        forminput_response = send_to_server(forminput_message)
+        
+        self.assertIn("error", forminput_response)
+        
+        # 7. SELECT input cannot accept BOOL
+        forminput_message = {
+            "command": "forminput",
+            "field": "id('input-select')",
+            "value": True
+        }
+        
+        forminput_response = send_to_server(forminput_message)
+        
+        self.assertIn("error", forminput_response)
+    
+    def test_forminput_command_no_element(self):
+        load_message = {
+                "command": "pageload",
+                "url": fixture_url("form-injection.html")
+            }
+        
+        load_response = send_to_server(load_message)
+        
+        self.assertIn("pageload", load_response)
+        
+        forminput_message = {
+            "command": "forminput",
+            "field": "id('nonexistant-element')",
+            "value": "Hello, world."
+        }
+        
+        forminput_response = send_to_server(forminput_message)
+        
+        self.assertIn("error", forminput_response)
+    
+    def test_forminput_command_element_not_unique(self):
+        load_message = {
+                "command": "pageload",
+                "url": fixture_url("form-injection.html")
+            }
+        
+        load_response = send_to_server(load_message)
+        
+        self.assertIn("pageload", load_response)
+        
+        forminput_message = {
+            "command": "forminput",
+            "field": "//input",
+            "value": "Hello, world."
+        }
+        
+        forminput_response = send_to_server(forminput_message)
+        
+        self.assertIn("error", forminput_response)
+    
+    def test_forminput_command_field_not_input(self):
+        load_message = {
+                "command": "pageload",
+                "url": fixture_url("form-injection.html")
+            }
+        
+        load_response = send_to_server(load_message)
+        
+        self.assertIn("pageload", load_response)
+        
+        forminput_message = {
+            "command": "forminput",
+            "field": "id('status')",
+            "value": "Hello, world."
+        }
+        
+        forminput_response = send_to_server(forminput_message)
+        
+        self.assertIn("error", forminput_response)
+    
+    def test_forminput_command_checkbox(self):
+        load_message = {
+                "command": "pageload",
+                "url": fixture_url("form-injection.html")
+            }
+        
+        load_response = send_to_server(load_message)
+        
+        self.assertIn("pageload", load_response)
+        
+        forminput_message = {
+            "command": "forminput",
+            "field": "id('input-checkbox')",
+            "value": True
+        }
+        
+        forminput_response = send_to_server(forminput_message)
+        
+        self.assertIn("forminput", forminput_response)
+        self.assertEqual(forminput_response["forminput"], u"done")
+        
+        self.assertForminputInjectionStatus("#input-checkbox set to true")
+        
+    def test_forminput_command_radio_button(self):
+        load_message = {
+                "command": "pageload",
+                "url": fixture_url("form-injection.html")
+            }
+        
+        load_response = send_to_server(load_message)
+        
+        self.assertIn("pageload", load_response)
+        
+        forminput_message = {
+            "command": "forminput",
+            "field": "id('input-radio-1')",
+            "value": True
+        }
+        
+        forminput_response = send_to_server(forminput_message)
+        
+        self.assertIn("forminput", forminput_response)
+        self.assertEqual(forminput_response["forminput"], u"done")
+        
+        self.assertForminputInjectionStatus("#input-radio-1 set to true")
+    
+    def test_forminput_command_select_box(self):
+        load_message = {
+                "command": "pageload",
+                "url": fixture_url("form-injection.html")
+            }
+        
+        load_response = send_to_server(load_message)
+        
+        self.assertIn("pageload", load_response)
+        
+        forminput_message = {
+            "command": "forminput",
+            "field": "id('input-select')",
+            "value": "third"
+        }
+        
+        forminput_response = send_to_server(forminput_message)
+        
+        self.assertIn("forminput", forminput_response)
+        self.assertEqual(forminput_response["forminput"], u"done")
+        
+        self.assertForminputInjectionStatus("#input-select set to 'third' (index 2)")
+    
+    def test_forminput_command_invalid_select_value(self):
+        load_message = {
+                "command": "pageload",
+                "url": fixture_url("form-injection.html")
+            }
+        
+        load_response = send_to_server(load_message)
+        
+        self.assertIn("pageload", load_response)
+        
+        forminput_message = {
+            "command": "forminput",
+            "field": "id('input-select')",
+            "value": "my-made-up-value"
+        }
+        
+        forminput_response = send_to_server(forminput_message)
+        
+        self.assertIn("forminput", forminput_response)
+        self.assertEqual(forminput_response["forminput"], u"done")
+        
+        self.assertForminputInjectionStatus("#input-select set to '' (index -1)")
+    
+    def test_forminput_command_select_box_by_index(self):
+        load_message = {
+                "command": "pageload",
+                "url": fixture_url("form-injection.html")
+            }
+        
+        load_response = send_to_server(load_message)
+        
+        self.assertIn("pageload", load_response)
+        
+        forminput_message = {
+            "command": "forminput",
+            "field": "id('input-select')",
+            "value": 2
+        }
+        
+        forminput_response = send_to_server(forminput_message)
+        
+        self.assertIn("forminput", forminput_response)
+        self.assertEqual(forminput_response["forminput"], u"done")
+        
+        self.assertForminputInjectionStatus("#input-select set to 'third' (index 2)")
+    
+    def assertForminputInjectionStatus(self, expected_status):
+        """Use the 'element' command to check the 'forminput' injection worked."""
+        
+        check_message = {
+            "command": "element",
+            "element": "id('status')"
+        }
+        
+        check_response = send_to_server(check_message)
+        
+        self.assertIn("elements", check_response)
+        self.assertEqual(check_response["elements"], [u"<strong id=\"status\">%s</strong>" % expected_status])
     
 
 
