@@ -326,7 +326,65 @@ Commands
             "elements": [ "<strong id=\"status\">#input-text set to 'Hello, World'</strong>" ]
         }
     
-
+* ``xpath``
+    Evaluates an XPath query and returns the result.
+    
+    The result may be a String, Number, Boolean or Node-Set. Node-sets are represented as an array of the string
+    representations of the nodes.
+    
+    Node-set (all examples on the click.html test case)::
+    
+        {
+            "command": "xpath",
+            "xpath": "//h1"
+        }
+    
+    ::
+    
+        {
+            "result": [ "<h1>Clickable elements</h1>" ] 
+        }
+    
+    String::
+    
+        {
+            "command": "xpath",
+            "xpath": "string(//h1)"
+        }
+    
+    ::
+    
+        {
+            "result": "Clickable elements"
+        }
+    
+    Number::
+    
+        {
+            "command": "xpath",
+            "xpath": "string-length(string(//h1))"
+        }
+    
+    ::
+    
+        {
+            "result": 18.0
+        }
+    
+    Boolean::
+    
+        {
+            "command": "xpath",
+            "xpath": "string-length(string(//h1)) > 10"
+        }
+    
+    ::
+    
+        {
+            "result": true
+        }
+    
+    
 
 
 

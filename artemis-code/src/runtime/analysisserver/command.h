@@ -187,7 +187,19 @@ public:
 
 typedef QSharedPointer<FormInputCommand> FormInputCommandPtr;
 
+// Evaluates an XPath query and returns the result.
+class XPathCommand : public Command
+{
+public:
+    XPathCommand(QString xPath)
+        : xPath(xPath)
+    {}
+    virtual void accept(AnalysisServerRuntime* server);
 
+    QString xPath;
+};
+
+typedef QSharedPointer<XPathCommand> XPathCommandPtr;
 
 
 

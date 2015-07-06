@@ -144,6 +144,9 @@ CommandPtr RequestHandler::createCommand(QVariant data)
     } else if (command == "forminput") {
         return forminputCommand(mainObject);
 
+    } else if (command == "xpath") {
+        return xpathCommand(mainObject);
+
     } else {
         return parseError("Command was not recognised.");
     }
@@ -331,6 +334,22 @@ CommandPtr RequestHandler::forminputCommand(QVariantMap mainObject)
     }
 
     return FormInputCommandPtr(new FormInputCommand(mainObject["field"].toString(), value));
+}
+
+CommandPtr RequestHandler::xpathCommand(QVariantMap mainObject)
+{
+    Log::debug("  Request handler: Building xpath evaluation command.");
+
+    // Fetch the XPath
+    if (!mainObject.contains("xpath")) {
+        return parseError("Could not find the 'xpath' property for an xpath command.");
+    }
+
+    if (mainObject["xpath"].type() != QVariant::String) {
+        return parseError("The 'xpath' property for an xpath command must be a string.");
+    }
+
+    return XPathCommandPtr(new XPathCommand(mainObject["xpath"].toString()));
 }
 
 

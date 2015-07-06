@@ -23,7 +23,6 @@
 
 #include "util/loggingutil.h"
 #include "util/delayutil.h"
-#include "runtime/input/forms/formfieldinjector.h"
 
 #include "analysisserverruntime.h"
 
@@ -196,7 +195,7 @@ void AnalysisServerRuntime::execute(ClickCommand *command)
     QString escapedXPath = command->xPath;
     escapedXPath.replace('"', "\\\"");
     QString countingJS = QString("document.evaluate(\"%1\", document, null, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null).snapshotLength;").arg(escapedXPath);
-    uint count = document.evaluateJavaScript(countingJS).toUInt();
+    uint count = document.evaluateJavaScript(countingJS, QUrl(), true).toUInt();
     if (count == 0) {
         emit sigCommandFinished(errorResponse("The XPath did not match any elements."));
         return;
@@ -214,7 +213,7 @@ void AnalysisServerRuntime::execute(ClickCommand *command)
 
     // Execute the click.
     QString clickJS = QString("document.evaluate(\"%1\", document, null, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null).snapshotItem(0).click();").arg(escapedXPath);
-    document.evaluateJavaScript(clickJS);
+    document.evaluateJavaScript(clickJS, QUrl(), false); // Do not hide this click from Artemis' instrumentation.
 
     QVariantMap result;
     result.insert("click", "done");
@@ -268,7 +267,7 @@ void AnalysisServerRuntime::execute(ElementCommand *command)
     escapedXPath.replace('"', "\\\"");
     QString queryJS = QString("var elems = document.evaluate(\"%1\", document, null, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null); var elStrs = []; for(var i=0; i < elems.snapshotLength; i++) {elStrs.push(elems.snapshotItem(i).outerHTML)}; elStrs;").arg(escapedXPath);
 
-    QVariant elemList = document.evaluateJavaScript(queryJS);
+    QVariant elemList = document.evaluateJavaScript(queryJS, QUrl(), true);
 
     if(!elemList.isValid()) {
         emit sigCommandFinished(errorResponse("Invalid XPath."));
@@ -372,6 +371,55 @@ void AnalysisServerRuntime::execute(FormInputCommand *command)
     // Done, nothing to return.
     QVariantMap result;
     result.insert("forminput", "done");
+
+    emit sigCommandFinished(result);
+}
+
+void AnalysisServerRuntime::execute(XPathCommand *command)
+{
+    Log::debug("  Analysis server runtime: executing an XPath evaluation command.");
+    assert(command);
+
+    // Check we have loaded a page already.
+    if (!mIsPageLoaded) {
+        emit sigCommandFinished(errorResponse("Cannot execute xpath command until a page is loaded."));
+        return;
+    }
+
+    // Look up the element(s).
+    QWebElement document = mWebkitExecutor->getPage()->currentFrame()->documentElement();
+    QString escapedXPath = command->xPath;
+    escapedXPath.replace('"', "\\\"");
+
+    QString evaluationJS = QString("var artemis_xpr = document.evaluate(\"%1\", document, null, XPathResult.ANY_TYPE, null);"
+                                   "var artemis_result;"
+                                   "if (artemis_xpr.resultType == XPathResult.NUMBER_TYPE) {"
+                                   "  artemis_result = artemis_xpr.numberValue;"
+                                   "} else if (artemis_xpr.resultType == XPathResult.STRING_TYPE) {"
+                                   "  artemis_result = artemis_xpr.stringValue;"
+                                   "} else if (artemis_xpr.resultType == XPathResult.BOOLEAN_TYPE) {"
+                                   "  artemis_result = artemis_xpr.booleanValue;"
+                                   "} else {"
+                                   "  artemis_result = [];"
+                                   "  var artemis_elt;"
+                                   "  while (artemis_elt = artemis_xpr.iterateNext()) {"
+                                   "    artemis_result.push(artemis_elt.outerHTML);"
+                                   "  }"
+                                   "};"
+                                   "artemis_result;").arg(escapedXPath);
+
+    QVariant resultValue = document.evaluateJavaScript(evaluationJS, QUrl(), true);
+
+    if (resultValue.isNull()) {
+        emit sigCommandFinished(errorResponse("The given XPath could not be evaluated."));
+        return;
+    }
+
+    // The resulting value is already in the expected response type.
+    // It can be a string, number, bool, or array of strings of elements.
+
+    QVariantMap result;
+    result.insert("result", resultValue);
 
     emit sigCommandFinished(result);
 }

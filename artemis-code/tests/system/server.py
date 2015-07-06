@@ -1284,6 +1284,115 @@ class AnalysisServerTests(unittest.TestCase):
         self.assertIn("elements", check_response)
         self.assertEqual(check_response["elements"], [u"<strong id=\"status\">%s</strong>" % expected_status])
     
+    def test_xpath_command_node_set(self):
+        load_message = {
+                "command": "pageload",
+                "url": fixture_url("click.html")
+            }
+        
+        load_response = send_to_server(load_message)
+        
+        self.assertIn("pageload", load_response)
+        
+        xpath_message = {
+                "command": "xpath",
+                "xpath": "//h1"
+            }
+        
+        xpath_response = send_to_server(xpath_message)
+        
+        self.assertIn("result", xpath_response)
+        self.assertEqual(xpath_response["result"], [ u"<h1>Clickable elements</h1>" ])
+    
+    def test_xpath_command_string(self):
+        load_message = {
+                "command": "pageload",
+                "url": fixture_url("click.html")
+            }
+        
+        load_response = send_to_server(load_message)
+        
+        self.assertIn("pageload", load_response)
+        
+        xpath_message = {
+                "command": "xpath",
+                "xpath": "string(//h1)"
+            }
+        
+        xpath_response = send_to_server(xpath_message)
+        
+        self.assertIn("result", xpath_response)
+        self.assertEqual(xpath_response["result"], u"Clickable elements")
+    
+    def test_xpath_command_number(self):
+        load_message = {
+                "command": "pageload",
+                "url": fixture_url("click.html")
+            }
+        
+        load_response = send_to_server(load_message)
+        
+        self.assertIn("pageload", load_response)
+        
+        xpath_message = {
+                "command": "xpath",
+                "xpath": "string-length(string(//h1))"
+            }
+        
+        xpath_response = send_to_server(xpath_message)
+        
+        self.assertIn("result", xpath_response)
+        self.assertEqual(xpath_response["result"], 18)
+    
+    def test_xpath_command_boolean(self):
+        load_message = {
+                "command": "pageload",
+                "url": fixture_url("click.html")
+            }
+        
+        load_response = send_to_server(load_message)
+        
+        self.assertIn("pageload", load_response)
+        
+        xpath_message = {
+                "command": "xpath",
+                "xpath": "string-length(string(//h1)) > 10"
+            }
+        
+        xpath_response = send_to_server(xpath_message)
+        
+        self.assertIn("result", xpath_response)
+        self.assertEqual(xpath_response["result"], True)
+    
+    def test_xpath_command_invalid_xpath(self):
+        load_message = {
+                "command": "pageload",
+                "url": fixture_url("click.html")
+            }
+        
+        load_response = send_to_server(load_message)
+        
+        self.assertIn("pageload", load_response)
+        
+        xpath_message = {
+                "command": "xpath",
+                "xpath": ""
+            }
+        
+        xpath_response = send_to_server(xpath_message)
+        
+        self.assertIn("error", xpath_response)
+    
+    def test_xpath_command_without_load(self):
+        xpath_message = {
+                "command": "xpath",
+                "xpath": "//h1"
+            }
+        
+        xpath_response = send_to_server(xpath_message)
+        
+        self.assertIn("error", xpath_response)
+    
 
 
 

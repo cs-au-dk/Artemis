@@ -74,6 +74,11 @@ void FormInputCommand::accept(AnalysisServerRuntime *server)
     server->execute(this);
 }
 
+void XPathCommand::accept(AnalysisServerRuntime *server)
+{
+    server->execute(this);
+}
+
 
 
 } // namespace artemis

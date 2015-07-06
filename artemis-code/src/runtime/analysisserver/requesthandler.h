@@ -60,6 +60,7 @@ protected:
     CommandPtr fieldsReadCommand(QVariantMap mainObject);
     CommandPtr backbuttonCommand(QVariantMap mainObject);
     CommandPtr forminputCommand(QVariantMap mainObject);
+    CommandPtr xpathCommand(QVariantMap mainObject);
 
 protected slots:
     void slRequestFullyLoaded();
