@@ -103,6 +103,16 @@ class AnalysisServerTests(unittest.TestCase):
         
         self.assertIn("error", response)
     
+    def test_response_headers(self):
+        message = {
+                "command": "echo",
+                "message": "Hello, World!"
+            }
+        
+        response = send_to_server(message, return_urllib_response=True)
+        
+        self.assertEqual(response.info().gettype(), "application/json")
+    
     def test_exit_command(self):
         message = {
                 "command": "exit"
@@ -1441,7 +1451,7 @@ def run_artemis_server(test_name="test"):
     return p
 
 
-def send_to_server(message, encode_json=True, timeout=None):
+def send_to_server(message, encode_json=True, timeout=None, return_urllib_response=False):
     """Sends a command to the running server and returns the result."""
     
     if encode_json:
@@ -1451,7 +1461,10 @@ def send_to_server(message, encode_json=True, timeout=None):
     
     response = urllib2.urlopen(ARTEMIS_SERVER_URL, data, timeout)
     
-    return json.load(response)
+    if return_urllib_response:
+        return response
+    else:
+        return json.load(response)
 
 
 def check_no_existing_server():

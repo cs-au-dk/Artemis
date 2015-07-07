@@ -34,6 +34,7 @@ void ResponseHandler::sendResponse(QHttpResponse* response, QByteArray data)
     }
 
     response->setHeader("Content-Length", QString::number(data.size()));
+    response->setHeader("Content-Type", "application/json");
     response->writeHead(200);
     response->write(data);
     response->end();
