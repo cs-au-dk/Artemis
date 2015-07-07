@@ -126,14 +126,13 @@ Commands
             ]
         }
     
-    It is also possible to specify a particular element (by XPath) and recieve only the handlers registered on
-    that element, if any.
+    It is also possible to specify a filter (by XPath) and recieve only the handlers registered on matching elements.
     
     Send::
     
         {
             "command": "handlers",
-            "element": "id('listener')"
+            "filter": "id('listener')"
         }
     
     Recieve: (e.g for the handlers.html test case) ::
@@ -147,8 +146,8 @@ Commands
             ]
         }
     
-    Note that the XPath identifier returned in the result is our internally generated one, so may not match the query,
-    but it will refer to the same element.
+    The XPath identifiers returned are Artemis' internally generated ones and may not match the filter, even if it
+    selects a single element.
     
 * ``click``
     Clicks on an element specified by XPath.

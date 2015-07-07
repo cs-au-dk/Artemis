@@ -21,6 +21,7 @@
 #include <QString>
 #include <QSharedPointer>
 #include <QNetworkRequest>
+#include <QWebElementCollection>
 
 namespace artemis
 {
@@ -58,7 +59,8 @@ public:
 
     bool mAcceptNavigation; // Used when in manual mode; see acceptNavigationRequest.
 
-    QWebElement getElementByXPath(QString xPath);
+    QWebElement getSingleElementByXPath(QString xPath);
+    QWebElementCollection getElementsByXPath(QString xPath);
 
 protected:
     virtual bool acceptNavigationRequest(QWebFrame *frame, const QNetworkRequest &request, NavigationType type);

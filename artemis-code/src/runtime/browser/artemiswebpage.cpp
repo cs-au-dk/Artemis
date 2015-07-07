@@ -80,27 +80,47 @@ QString ArtemisWebPage::userAgentForUrl(const QUrl &url) const
 
 // Returns the element uniquely identified by the given XPath.
 // If no element is found, or multiple are matched, then a null element is returned.
-QWebElement ArtemisWebPage::getElementByXPath(QString xPath)
+QWebElement ArtemisWebPage::getSingleElementByXPath(QString xPath)
+{
+    // TODO: implement this in terms of getElementsByXPath.
+
+    QWebElementCollection allMatches = getElementsByXPath(xPath);
+
+    if (allMatches.count() != 1) {
+        Log::debug(QString("getElementByXPath: Found %1 elements, but the XPath should match exactly one.").arg(allMatches.count()).toStdString());
+        return QWebElement();
+    }
+
+    return allMatches.at(0);
+}
+
+QWebElementCollection ArtemisWebPage::getElementsByXPath(QString xPath)
 {
     QString escapedXPath(xPath);
     escapedXPath.replace('"', "\\\"");
 
     QWebElement document = this->currentFrame()->documentElement();
-    QString jsInjection = QString("var ArtemisSearchElt = document.evaluate(\"%1\", document, null, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null); if(ArtemisSearchElt.snapshotLength == 1) { ArtemisSearchElt.snapshotItem(0).setAttribute('artemissearch', 'true') }; ArtemisSearchElt.snapshotLength;").arg(escapedXPath);
-    uint eltCount = document.evaluateJavaScript(jsInjection, QUrl(), true).toUInt();
+    QString jsInjection = QString("var ArtemisSearchElts = document.evaluate(\"%1\", document, null, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null);"
+                                  "for (var i=0; i < ArtemisSearchElts.snapshotLength; i++) {"
+                                  "    ArtemisSearchElts.snapshotItem(i).setAttribute('artemissearch', 'true');"
+                                  "};"
+                                  "ArtemisSearchElts.snapshotLength;").arg(escapedXPath);
+    int eltCount = document.evaluateJavaScript(jsInjection, QUrl(), true).toInt();
 
-    if (eltCount != 1) {
-        Log::debug(QString("getElementByXPath: Found %1 elements, but the XPath should match exactly one.").arg(eltCount).toStdString());
-        return QWebElement();
+    if (eltCount == 0) {
+        Log::debug(QString("getElementByXPath: Found %1 elements, but the XPath should match at least one.").arg(eltCount).toStdString());
+        return QWebElementCollection();
     }
 
-    QWebElement searchElement = document.findFirst("*[artemissearch]");
-    assert(!searchElement.isNull());
+    QWebElementCollection searchedElts = document.findAll("*[artemissearch]");
+    assert(searchedElts.count() == eltCount);
 
     // Remove the 'artemissearch' marker so we can re-use it and avoid polluting the DOM more than necessary.
-    searchElement.removeAttribute("artemissearch");
+    foreach (QWebElement elt, searchedElts) {
+        elt.removeAttribute("artemissearch");
+    }
 
-    return searchElement;
+    return searchedElts;
 }
 
 

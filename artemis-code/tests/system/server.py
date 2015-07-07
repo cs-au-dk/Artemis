@@ -454,7 +454,7 @@ class AnalysisServerTests(unittest.TestCase):
         self.assertEqual(handlers, expected_handlers)
         
     
-    def test_handlers_command_with_element(self):
+    def test_handlers_command_with_filter(self):
         load_message = {
                 "command": "pageload",
                 "url": fixture_url("handlers.html")
@@ -466,7 +466,7 @@ class AnalysisServerTests(unittest.TestCase):
         
         message = {
             "command": "handlers",
-            "element": "id('listener')"
+            "filter": "id('listener')"
         }
         
         response = send_to_server(message)

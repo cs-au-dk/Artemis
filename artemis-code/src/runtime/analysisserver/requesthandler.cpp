@@ -234,16 +234,16 @@ CommandPtr RequestHandler::handlersCommand(QVariantMap mainObject)
 {
     Log::debug("  Request handler: Building Handlers command.");
 
-    // There is an optional "element" field.
-    QString element; // Default to null string if not supplied.
-    if (mainObject.contains("element")) {
-        if (mainObject["element"].type() != QVariant::String) {
-            return parseError("The 'element' property for a handlers command must be a string.");
+    // There is an optional "filter" field.
+    QString filter; // Default to null string if not supplied.
+    if (mainObject.contains("filter")) {
+        if (mainObject["filter"].type() != QVariant::String) {
+            return parseError("The 'filter' property for a handlers command must be a string.");
         }
-        element = mainObject["element"].toString();
+        filter = mainObject["filter"].toString();
     }
 
-    return HandlersCommandPtr(new HandlersCommand(element));
+    return HandlersCommandPtr(new HandlersCommand(filter));
 }
 
 CommandPtr RequestHandler::clickCommand(QVariantMap mainObject)

@@ -157,17 +157,18 @@ void AnalysisServerRuntime::execute(HandlersCommand *command)
 
     QList<EventHandlerDescriptorConstPtr> handlerList = mWebkitExecutor->getCurrentEventHandlers();
 
-    // Check if a specific element was requested.
-    if (!command->xPath.isNull()) {
-        QWebElement specifiedElement = mWebkitExecutor->getPage()->getElementByXPath(command->xPath);
-        if (specifiedElement.isNull()) {
-            emit sigCommandFinished(errorResponse("Element could not be found. The XPath either did not match or matched multiple elements."));
+    // Check if a filter was used.
+    if (!command->filter.isNull()) {
+        QList<QWebElement> matches = mWebkitExecutor->getPage()->getElementsByXPath(command->filter).toList();
+        if (matches.count() < 1) {
+            emit sigCommandFinished(errorResponse("No matches were found for the filter."));
             return;
         }
 
         QList<EventHandlerDescriptorConstPtr> specifiedElementHandlers;
         foreach (EventHandlerDescriptorConstPtr handler, handlerList) {
-            if (handler->getDomElement()->getElement(mWebkitExecutor->getPage()) == specifiedElement) {
+            QWebElement handlerElt = handler->getDomElement()->getElement(mWebkitExecutor->getPage());
+            if (matches.contains(handlerElt)) {
                 specifiedElementHandlers.append(handler);
             }
         }
@@ -342,7 +343,7 @@ void AnalysisServerRuntime::execute(FormInputCommand *command)
     }
 
     // Look up the element.
-    QWebElement field = mWebkitExecutor->getPage()->getElementByXPath(command->field);
+    QWebElement field = mWebkitExecutor->getPage()->getSingleElementByXPath(command->field);
     if (field.isNull()) {
         emit sigCommandFinished(errorResponse("Form-input field could not be found. The XPath either did not match or matched multiple elements."));
         return;
