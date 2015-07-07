@@ -105,7 +105,13 @@ typedef QSharedPointer<PageLoadCommand> PageLoadCommandPtr;
 class HandlersCommand : public Command
 {
 public:
+    HandlersCommand(QString xPath)
+        : xPath(xPath)
+    {}
+
     virtual void accept(AnalysisServerRuntime* server);
+
+    QString xPath; // May be null if no filter element has been given.
 };
 
 typedef QSharedPointer<HandlersCommand> HandlersCommandPtr;

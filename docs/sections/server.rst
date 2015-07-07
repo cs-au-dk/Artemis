@@ -126,6 +126,30 @@ Commands
             ]
         }
     
+    It is also possible to specify a particular element (by XPath) and recieve only the handlers registered on
+    that element, if any.
+    
+    Send::
+    
+        {
+            "command": "handlers",
+            "element": "id('listener')"
+        }
+    
+    Recieve: (e.g for the handlers.html test case) ::
+    
+        {
+            "handlers": [
+                {
+                    "element": "//a[@id='listener']",
+                    "events": ["click", "focus"]
+                }
+            ]
+        }
+    
+    Note that the XPath identifier returned in the result is our internally generated one, so may not match the query,
+    but it will refer to the same element.
+    
 * ``click``
     Clicks on an element specified by XPath.
     

@@ -454,6 +454,40 @@ class AnalysisServerTests(unittest.TestCase):
         self.assertEqual(handlers, expected_handlers)
         
     
+    def test_handlers_command_with_element(self):
+        load_message = {
+                "command": "pageload",
+                "url": fixture_url("handlers.html")
+            }
+        
+        load_response = send_to_server(load_message)
+        
+        self.assertIn("pageload", load_response)
+        
+        message = {
+            "command": "handlers",
+            "element": "id('listener')"
+        }
+        
+        response = send_to_server(message)
+        
+        self.assertIn("handlers", response)
+        
+        handlers = response["handlers"]
+        
+        self.assertEqual(len(handlers), 1)
+        
+        expected_handlers = json.loads("""
+            [
+                {
+                    "element": "//a[@id='listener']",
+                    "events": ["click", "focus"]
+                }
+            ]
+        """)
+        
+        self.assertEqual(handlers, expected_handlers)
+    
     def test_handlers_command_without_load(self):
         message = {
             "command": "handlers"

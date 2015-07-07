@@ -157,6 +157,25 @@ void AnalysisServerRuntime::execute(HandlersCommand *command)
 
     QList<EventHandlerDescriptorConstPtr> handlerList = mWebkitExecutor->getCurrentEventHandlers();
 
+    // Check if a specific element was requested.
+    if (!command->xPath.isNull()) {
+        QWebElement specifiedElement = mWebkitExecutor->getPage()->getElementByXPath(command->xPath);
+        if (specifiedElement.isNull()) {
+            emit sigCommandFinished(errorResponse("Element could not be found. The XPath either did not match or matched multiple elements."));
+            return;
+        }
+
+        QList<EventHandlerDescriptorConstPtr> specifiedElementHandlers;
+        foreach (EventHandlerDescriptorConstPtr handler, handlerList) {
+            if (handler->getDomElement()->getElement(mWebkitExecutor->getPage()) == specifiedElement) {
+                specifiedElementHandlers.append(handler);
+            }
+        }
+
+        // Replace the handlers list with the filtered version and continue.
+        handlerList = specifiedElementHandlers;
+    }
+
     // Group the handlers by element.
     // It is safe to use the xpaths as keys because we generate them ourselves, so they are canonical and we cannot
     // have two different xpaths referring to the same element.
