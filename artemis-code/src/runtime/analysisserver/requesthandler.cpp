@@ -150,6 +150,9 @@ CommandPtr RequestHandler::createCommand(QVariant data)
     } else if (command == "event") {
         return eventCommand(mainObject);
 
+    } else if (command == "windowsize") {
+        return windowsizeCommand(mainObject);
+
     } else {
         return parseError("Command was not recognised.");
     }
@@ -386,6 +389,42 @@ CommandPtr RequestHandler::eventCommand(QVariantMap mainObject)
     }
 
     return EventTriggerCommandPtr(new EventTriggerCommand(mainObject["element"].toString(), mainObject["event"].toString()));
+}
+
+CommandPtr RequestHandler::windowsizeCommand(QVariantMap mainObject)
+{
+    Log::debug("  Request handler: Building window-size command.");
+
+    int width, height;
+    bool ok;
+
+    if (!mainObject.contains("width")) {
+        return parseError("Could not find the 'width' property for a windowsize command.");
+    }
+
+    width = mainObject["width"].toInt(&ok);
+    if (!ok) {
+        return parseError("The 'width' property for a windowsize command must be an integer.");
+    }
+
+    if (!mainObject.contains("height")) {
+        return parseError("Could not find the 'height' property for a windowsize command.");
+    }
+
+    height = mainObject["height"].toInt(&ok);
+    if (!ok) {
+        return parseError("The 'height' property for a windowsize command must be an integer.");
+    }
+
+    if (width < 0 || width > 3000) {
+        return parseError("The 'width' property for a windowsize command must be between 0 and 3000.");
+    }
+
+    if (height < 0 || height > 3000) {
+        return parseError("The 'height' property for a windowsize command must be between 0 and 3000.");
+    }
+
+    return WindowSizeCommandPtr(new WindowSizeCommand(width, height));
 }
 
 

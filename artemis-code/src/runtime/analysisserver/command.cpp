@@ -84,6 +84,11 @@ void EventTriggerCommand::accept(AnalysisServerRuntime *server)
     server->execute(this);
 }
 
+void WindowSizeCommand::accept(AnalysisServerRuntime *server)
+{
+    server->execute(this);
+}
+
 
 
 } // namespace artemis

@@ -424,6 +424,18 @@ Commands
             "result": true
         }
     
+* ``windowsize``
+    Set the size of the browser window.
+    
+    Send::
+    
+        {
+            "command": "windowsize",
+            "width": 1024,
+            "height": 768
+        }
+    
+    Recieve: ``{ "windowsize": "done" }``
     
 
 

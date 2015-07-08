@@ -60,6 +60,14 @@ AnalysisServerRuntime::AnalysisServerRuntime(QObject* parent, const Options& opt
     QObject::connect(QWebExecutionListener::getListener(), SIGNAL(sigJavascriptSymbolicFieldRead(QString, bool)),
                      &mFieldReadLog, SLOT(slJavascriptSymbolicFieldRead(QString, bool)));
 
+    // Browser setup
+    // Set up a web view to give the page proper geometry.
+    mWebView = ArtemisWebViewPtr(new ArtemisWebView());
+    mWebView->setPage(mWebkitExecutor->getPage().data());
+    setWindowSize(1200, 800);
+
+    //mWebView->show();
+    //mWebView->setEnabled(false);
 }
 
 void AnalysisServerRuntime::run(const QUrl &url)
@@ -472,6 +480,20 @@ void AnalysisServerRuntime::execute(EventTriggerCommand *command)
     emit sigCommandFinished(result);
 }
 
+void AnalysisServerRuntime::execute(WindowSizeCommand *command)
+{
+    Log::debug("  Analysis server runtime: executing a window-size command.");
+    assert(command);
+
+    setWindowSize(command->width, command->height);
+
+    QVariantMap result;
+    result.insert("windowsize", "done");
+
+    emit sigCommandFinished(result);
+}
+
+
 QVariant AnalysisServerRuntime::errorResponse(QString message)
 {
     QVariantMap response;
@@ -663,6 +685,21 @@ void AnalysisServerRuntime::slAbortedExecution(QString reason)
 }
 
 
+void AnalysisServerRuntime::setWindowSize(int width, int height)
+{
+    mWebView->resize(width, height);
+
+    // Do not allow resizing.
+    mWebView->setMinimumSize(width, height);
+    mWebView->setMaximumSize(width, height);
+    mWebView->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
+
+    // TODO: Hack: If the window is not visible, show it for a moment (forcing the resize to be processed) and re-hide.
+    if (!mWebView->isVisible()) {
+        mWebView->show();
+        mWebView->hide();
+    }
+}
 
 
 } // namespace artemis

@@ -50,6 +50,19 @@ class AnalysisServerTests(unittest.TestCase):
         except:
             self.fail("Connecting to the server raised " + sys.exc_info()[0].__name__)
     
+    def assertStatusElementContains(self, expected_status):
+        """Use the 'element' command to check the page state reported by the test fixture."""
+        
+        check_message = {
+            "command": "element",
+            "element": "id('status')"
+        }
+        
+        check_response = send_to_server(check_message)
+        
+        self.assertIn("elements", check_response)
+        self.assertEqual(check_response["elements"], [u"<span id=\"status\">%s</span>" % expected_status])
+    
     def test_server_process_is_running(self):
         self.assertTrue(self.server.poll() is None)
     
@@ -990,7 +1003,7 @@ class AnalysisServerTests(unittest.TestCase):
         self.assertIn("forminput", forminput_response)
         self.assertEqual(forminput_response["forminput"], u"done")
         
-        self.assertForminputInjectionStatus("#input-text set to 'Hello, world.'")
+        self.assertStatusElementContains("#input-text set to 'Hello, world.'")
     
     def test_forminput_command_without_load(self):
         forminput_message = {
@@ -1221,7 +1234,7 @@ class AnalysisServerTests(unittest.TestCase):
         self.assertIn("forminput", forminput_response)
         self.assertEqual(forminput_response["forminput"], u"done")
         
-        self.assertForminputInjectionStatus("#input-checkbox set to true")
+        self.assertStatusElementContains("#input-checkbox set to true")
         
     def test_forminput_command_radio_button(self):
         load_message = {
@@ -1244,7 +1257,7 @@ class AnalysisServerTests(unittest.TestCase):
         self.assertIn("forminput", forminput_response)
         self.assertEqual(forminput_response["forminput"], u"done")
         
-        self.assertForminputInjectionStatus("#input-radio-1 set to true")
+        self.assertStatusElementContains("#input-radio-1 set to true")
     
     def test_forminput_command_select_box(self):
         load_message = {
@@ -1267,7 +1280,7 @@ class AnalysisServerTests(unittest.TestCase):
         self.assertIn("forminput", forminput_response)
         self.assertEqual(forminput_response["forminput"], u"done")
         
-        self.assertForminputInjectionStatus("#input-select set to 'third' (index 2)")
+        self.assertStatusElementContains("#input-select set to 'third' (index 2)")
     
     def test_forminput_command_invalid_select_value(self):
         load_message = {
@@ -1290,7 +1303,7 @@ class AnalysisServerTests(unittest.TestCase):
         self.assertIn("forminput", forminput_response)
         self.assertEqual(forminput_response["forminput"], u"done")
         
-        self.assertForminputInjectionStatus("#input-select set to '' (index -1)")
+        self.assertStatusElementContains("#input-select set to '' (index -1)")
     
     def test_forminput_command_select_box_by_index(self):
         load_message = {
@@ -1313,20 +1326,7 @@ class AnalysisServerTests(unittest.TestCase):
         self.assertIn("forminput", forminput_response)
         self.assertEqual(forminput_response["forminput"], u"done")
         
-        self.assertForminputInjectionStatus("#input-select set to 'third' (index 2)")
-    
-    def assertForminputInjectionStatus(self, expected_status):
-        """Use the 'element' command to check the 'forminput' injection worked."""
-        
-        check_message = {
-            "command": "element",
-            "element": "id('status')"
-        }
-        
-        check_response = send_to_server(check_message)
-        
-        self.assertIn("elements", check_response)
-        self.assertEqual(check_response["elements"], [u"<strong id=\"status\">%s</strong>" % expected_status])
+        self.assertStatusElementContains("#input-select set to 'third' (index 2)")
     
     def test_xpath_command_node_set(self):
         load_message = {
@@ -1489,7 +1489,7 @@ class AnalysisServerTests(unittest.TestCase):
         self.assertIn("event", event_response)
         self.assertEqual(event_response["event"], u"done")
         
-        self.assertForminputInjectionStatus("#input-text set to ''")
+        self.assertStatusElementContains("#input-text set to ''")
     
     def test_event_command_without_required_fields(self):
         load_message = {
@@ -1595,6 +1595,61 @@ class AnalysisServerTests(unittest.TestCase):
         
         self.assertIn("event", event_response)
         self.assertEqual(event_response["event"], u"done")
+    
+    def test_windowsize_default(self):
+        load_message = {
+                "command": "pageload",
+                "url": fixture_url("resize-window.html")
+            }
+        
+        load_response = send_to_server(load_message)
+        
+        self.assertIn("pageload", load_response)
+        
+        self.assertStatusElementContains("1200x800")
+    
+    def test_windowsize_command(self):
+        load_message = {
+                "command": "pageload",
+                "url": fixture_url("resize-window.html")
+            }
+        
+        load_response = send_to_server(load_message)
+        
+        self.assertIn("pageload", load_response)
+        
+        windowsize_message = {
+                "command": "windowsize",
+                "width": 1024,
+                "height": 768
+            }
+        
+        windowsize_response = send_to_server(windowsize_message)
+        
+        self.assertIn("windowsize", windowsize_response)
+        self.assertEqual(windowsize_response["windowsize"], u"done")
+        
+        self.assertStatusElementContains("1024x768")
+    
+    def test_windowsize_command_invalid_size(self):
+        load_message = {
+                "command": "pageload",
+                "url": fixture_url("resize-window.html")
+            }
+        
+        load_response = send_to_server(load_message)
+        
+        self.assertIn("pageload", load_response)
+        
+        windowsize_message = {
+                "command": "windowsize",
+                "width": -100,
+                "height": 100000
+            }
+        
+        windowsize_response = send_to_server(windowsize_message)
+        
+        self.assertIn("error", windowsize_response)
     
 
 

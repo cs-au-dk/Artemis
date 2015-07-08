@@ -223,6 +223,28 @@ public:
 
 typedef QSharedPointer<EventTriggerCommand> EventTriggerCommandPtr;
 
+// Resizes the browser window.
+class WindowSizeCommand : public Command
+{
+public:
+    WindowSizeCommand(int width, int height)
+        : width(width)
+        , height(height)
+    {}
+    virtual void accept(AnalysisServerRuntime* server);
+
+    int width;
+    int height;
+};
+
+typedef QSharedPointer<WindowSizeCommand> WindowSizeCommandPtr;
+
+
+
+
+
+
+
 } // namespace artemis
 
 

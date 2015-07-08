@@ -22,6 +22,7 @@
 #include "runtime/runtime.h"
 #include "runtime/analysisserver/analysisserver.h"
 #include "runtime/analysisserver/fieldreadlog.h"
+#include "runtime/browser/artemiswebview.h"
 
 namespace artemis
 {
@@ -51,9 +52,13 @@ public:
     void execute(FormInputCommand* command);
     void execute(XPathCommand* command);
     void execute(EventTriggerCommand* command);
+    void execute(WindowSizeCommand* command);
 
 protected:
     AnalysisServer mAnalysisServer;
+
+    ArtemisWebViewPtr mWebView;
+    void setWindowSize(int width, int height);
 
     QVariant errorResponse(QString message);
     void emitTimeout();

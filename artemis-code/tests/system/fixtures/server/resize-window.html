@@ -1,0 +1,29 @@
+<!DOCTYPE html><html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+    <title>Ben Spencer</title>
+    <meta name="author" content="Ben Spencer">
+
+    <script type="text/javascript" >
+        window.onload = function () {
+            
+            var size = document.getElementById("status");
+            
+            function reportSize() {
+                size.textContent = window.innerWidth + "x" + window.innerHeight;
+            }
+            
+            reportSize();
+            
+            window.onresize = reportSize;
+        }
+    </script>
+</head>
+<body>
+
+    <h1>Window size: <span id="status">?</span></h1>
+
+</body>
+</html>

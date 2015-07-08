@@ -62,6 +62,7 @@ protected:
     CommandPtr forminputCommand(QVariantMap mainObject);
     CommandPtr xpathCommand(QVariantMap mainObject);
     CommandPtr eventCommand(QVariantMap mainObject);
+    CommandPtr windowsizeCommand(QVariantMap mainObject);
 
 protected slots:
     void slRequestFullyLoaded();
