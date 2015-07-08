@@ -687,18 +687,13 @@ void AnalysisServerRuntime::slAbortedExecution(QString reason)
 
 void AnalysisServerRuntime::setWindowSize(int width, int height)
 {
-    mWebView->resize(width, height);
-
     // Do not allow resizing.
     mWebView->setMinimumSize(width, height);
     mWebView->setMaximumSize(width, height);
     mWebView->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Fixed);
 
-    // TODO: Hack: If the window is not visible, show it for a moment (forcing the resize to be processed) and re-hide.
-    if (!mWebView->isVisible()) {
-        mWebView->show();
-        mWebView->hide();
-    }
+    // Resize, even if hidden.
+    mWebView->forceResize(width, height);
 }
 
 

@@ -32,6 +32,8 @@ class ArtemisWebView : public QWebView
 public:
     explicit ArtemisWebView();
 
+    void forceResize(int width, int height);
+
 protected:
     void closeEvent(QCloseEvent* event);
 
