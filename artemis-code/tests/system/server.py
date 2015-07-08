@@ -777,7 +777,7 @@ class AnalysisServerTests(unittest.TestCase):
         self.assertIn("elements", element_response)
         self.assertEqual(element_response["elements"], [])
     
-    def test_eleemnt_command_multiple(self):
+    def test_element_command_multiple(self):
         load_message = {
                 "command": "pageload",
                 "url": fixture_url("click.html")
@@ -1436,6 +1436,165 @@ class AnalysisServerTests(unittest.TestCase):
         xpath_response = send_to_server(xpath_message)
         
         self.assertIn("error", xpath_response)
+    
+    def test_event_command_with_click_event(self):
+        load_message = {
+                "command": "pageload",
+                "url": fixture_url("click.html")
+            }
+        
+        load_response = send_to_server(load_message)
+        
+        self.assertIn("pageload", load_response)
+        
+        event_message = {
+                "command": "event",
+                "element": "id(\"clickable\")",
+                "event": "click"
+            }
+        
+        event_response = send_to_server(event_message)
+        
+        self.assertIn("event", event_response)
+        self.assertEqual(event_response["event"], u"done")
+        
+        # Use the handlers command to confirm the click worked.
+        handlers_message = {
+                "command": "handlers"
+            }
+        
+        handlers_response = send_to_server(handlers_message)
+        
+        self.assertIn("handlers", handlers_response)
+        self.assertEqual(len(handlers_response["handlers"]), 2)
+    
+    def test_event_command_with_change_event(self):
+        load_message = {
+                "command": "pageload",
+                "url": fixture_url("form-injection.html")
+            }
+        
+        load_response = send_to_server(load_message)
+        
+        self.assertIn("pageload", load_response)
+        
+        event_message = {
+                "command": "event",
+                "element": "id(\"input-text\")",
+                "event": "change"
+            }
+        
+        event_response = send_to_server(event_message)
+        
+        self.assertIn("event", event_response)
+        self.assertEqual(event_response["event"], u"done")
+        
+        self.assertForminputInjectionStatus("#input-text set to ''")
+    
+    def test_event_command_without_required_fields(self):
+        load_message = {
+                "command": "pageload",
+                "url": fixture_url("click.html")
+            }
+        
+        load_response = send_to_server(load_message)
+        
+        self.assertIn("pageload", load_response)
+        
+        event_message = {
+                "command": "event",
+                "element": "id(\"clickable\")"
+            }
+        
+        event_response = send_to_server(event_message)
+        
+        self.assertIn("error", event_response)
+        
+        event_message_2 = {
+                "command": "event",
+                "event": "click"
+            }
+        
+        event_response_2 = send_to_server(event_message_2)
+        
+        self.assertIn("error", event_response_2)
+    
+    def test_event_command_without_load(self):
+        event_message = {
+                "command": "event",
+                "element": "id(\"clickable\")",
+                "event": "click"
+            }
+        
+        event_response = send_to_server(event_message)
+        
+        self.assertIn("error", event_response)
+    
+    def test_event_command_event_not_registered(self):
+        # This should be a safe no-op, without any error.
+        
+        load_message = {
+                "command": "pageload",
+                "url": fixture_url("click.html")
+            }
+        
+        load_response = send_to_server(load_message)
+        
+        self.assertIn("pageload", load_response)
+        
+        event_message = {
+                "command": "event",
+                "element": "id(\"clickable\")",
+                "event": "focus"
+            }
+        
+        event_response = send_to_server(event_message)
+        
+        self.assertIn("event", event_response)
+        self.assertEqual(event_response["event"], u"done")
+    
+    def test_event_command_no_such_element(self):
+        load_message = {
+                "command": "pageload",
+                "url": fixture_url("click.html")
+            }
+        
+        load_response = send_to_server(load_message)
+        
+        self.assertIn("pageload", load_response)
+        
+        event_message = {
+                "command": "event",
+                "element": "id(\"nonexistent-element\")",
+                "event": "click"
+            }
+        
+        event_response = send_to_server(event_message)
+        
+        self.assertIn("error", event_response)
+    
+    def test_event_command_nonexistent_event(self):
+        # This is also a safe no-op.
+        
+        load_message = {
+                "command": "pageload",
+                "url": fixture_url("click.html")
+            }
+        
+        load_response = send_to_server(load_message)
+        
+        self.assertIn("pageload", load_response)
+        
+        event_message = {
+                "command": "event",
+                "element": "id(\"clickable\")",
+                "event": "nonexistent-event"
+            }
+        
+        event_response = send_to_server(event_message)
+        
+        self.assertIn("event", event_response)
+        self.assertEqual(event_response["event"], u"done")
     
 
 

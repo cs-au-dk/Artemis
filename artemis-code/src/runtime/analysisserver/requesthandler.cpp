@@ -147,6 +147,9 @@ CommandPtr RequestHandler::createCommand(QVariant data)
     } else if (command == "xpath") {
         return xpathCommand(mainObject);
 
+    } else if (command == "event") {
+        return eventCommand(mainObject);
+
     } else {
         return parseError("Command was not recognised.");
     }
@@ -358,6 +361,31 @@ CommandPtr RequestHandler::xpathCommand(QVariantMap mainObject)
     }
 
     return XPathCommandPtr(new XPathCommand(mainObject["xpath"].toString()));
+}
+
+CommandPtr RequestHandler::eventCommand(QVariantMap mainObject)
+{
+    Log::debug("  Request handler: Building event-trigger command.");
+
+    // Fetch the XPath
+    if (!mainObject.contains("element")) {
+        return parseError("Could not find the 'element' property for an event command.");
+    }
+
+    if (mainObject["element"].type() != QVariant::String) {
+        return parseError("The 'element' property for an event command must be a string.");
+    }
+
+    // Fetch the event name
+    if (!mainObject.contains("event")) {
+        return parseError("Could not find the 'event' property for an event command.");
+    }
+
+    if (mainObject["event"].type() != QVariant::String) {
+        return parseError("The 'event' property for an event command must be a string.");
+    }
+
+    return EventTriggerCommandPtr(new EventTriggerCommand(mainObject["element"].toString(), mainObject["event"].toString()));
 }
 
 

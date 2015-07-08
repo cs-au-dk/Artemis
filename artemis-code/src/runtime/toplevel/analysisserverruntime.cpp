@@ -444,6 +444,34 @@ void AnalysisServerRuntime::execute(XPathCommand *command)
     emit sigCommandFinished(result);
 }
 
+void AnalysisServerRuntime::execute(EventTriggerCommand *command)
+{
+    Log::debug("  Analysis server runtime: executing an event-triggering command.");
+    assert(command);
+
+    // Check we have loaded a page already.
+    if (!mIsPageLoaded) {
+        emit sigCommandFinished(errorResponse("Cannot execute event command until a page is loaded."));
+        return;
+    }
+
+    // Look up the element.
+    QWebElement target = mWebkitExecutor->getPage()->getSingleElementByXPath(command->xPath);
+    if (target.isNull()) {
+        emit sigCommandFinished(errorResponse("Target element could not be found. The XPath either did not match or matched multiple elements."));
+        return;
+    }
+
+    // Build and trigger the event.
+    FormFieldInjector::triggerHandler(target, command->event);
+
+    // No result, just return.
+    QVariantMap result;
+    result.insert("event", "done");
+
+    emit sigCommandFinished(result);
+}
+
 QVariant AnalysisServerRuntime::errorResponse(QString message)
 {
     QVariantMap response;

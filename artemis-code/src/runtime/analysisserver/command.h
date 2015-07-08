@@ -207,7 +207,21 @@ public:
 
 typedef QSharedPointer<XPathCommand> XPathCommandPtr;
 
+// Triggers any event on an element.
+class EventTriggerCommand : public Command
+{
+public:
+    EventTriggerCommand(QString xPath, QString event)
+        : xPath(xPath)
+        , event(event)
+    {}
+    virtual void accept(AnalysisServerRuntime* server);
 
+    QString xPath;
+    QString event;
+};
+
+typedef QSharedPointer<EventTriggerCommand> EventTriggerCommandPtr;
 
 } // namespace artemis
 

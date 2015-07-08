@@ -154,6 +154,8 @@ Commands
     
     For now then only type of click is a JavaScript-level click, with no option for a GUI click.
     
+    N.B. This is now just a special case of the newer ``event`` command.
+    
     Send::
     
         {
@@ -162,6 +164,21 @@ Commands
         }
     
     Recieve: ``{"click": "done"}``
+    
+* ``event``
+    Triggers a JavaScript event on the element at the specified XPath.
+    
+    N.B. Event names are given as "change" or "focus, not "onchange", "onfocus", etc.
+    
+    Send (e.g. on handlers.html)::
+    
+        {
+            "command": "event",
+            "element": "id(\"listener\")",
+            "event": "focus"
+        }
+    
+    Recieve: ``{"event": "done"}``
     
 * ``page``
     Returns information about the current page (the URL, page title, and DOM statistics).

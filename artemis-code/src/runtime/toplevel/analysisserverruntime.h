@@ -50,6 +50,7 @@ public:
     void execute(BackButtonCommand* command);
     void execute(FormInputCommand* command);
     void execute(XPathCommand* command);
+    void execute(EventTriggerCommand* command);
 
 protected:
     AnalysisServer mAnalysisServer;

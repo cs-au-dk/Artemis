@@ -61,6 +61,7 @@ protected:
     CommandPtr backbuttonCommand(QVariantMap mainObject);
     CommandPtr forminputCommand(QVariantMap mainObject);
     CommandPtr xpathCommand(QVariantMap mainObject);
+    CommandPtr eventCommand(QVariantMap mainObject);
 
 protected slots:
     void slRequestFullyLoaded();

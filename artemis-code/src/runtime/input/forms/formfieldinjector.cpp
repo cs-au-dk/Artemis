@@ -92,15 +92,24 @@ bool FormFieldInjector::inject(QWebElement element, InjectionValue value)
 
 
 
-void FormFieldInjector::triggerChangeHandler(QWebElement element)
+
+
+void FormFieldInjector::triggerHandler(QWebElement element, QString eventname)
 {
+    // eventName should be "change", "focus", etc. not "onchange", "onfocus", ...
+
     if (element.isNull()) {
-        qDebug() << "Warning: failed to trigger input handler.\n";
+        qDebug() << "Warning: failed to trigger event handler.\n";
         return;
     }
 
-    QString jsInjection = "event = document.createEvent('HTMLEvents'); event.initEvent('change', false, true); this.dispatchEvent(event);";
+    QString jsInjection = QString("event = document.createEvent('HTMLEvents'); event.initEvent('%1', false, true); this.dispatchEvent(event);").arg(eventname);
     element.evaluateJavaScript(jsInjection);
+}
+
+void FormFieldInjector::triggerChangeHandler(QWebElement element)
+{
+    triggerHandler(element, "change");
 }
 
 

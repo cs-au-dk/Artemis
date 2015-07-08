@@ -79,6 +79,11 @@ void XPathCommand::accept(AnalysisServerRuntime *server)
     server->execute(this);
 }
 
+void EventTriggerCommand::accept(AnalysisServerRuntime *server)
+{
+    server->execute(this);
+}
+
 
 
 } // namespace artemis
