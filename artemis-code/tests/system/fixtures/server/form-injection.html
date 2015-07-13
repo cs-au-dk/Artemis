@@ -11,9 +11,21 @@
             
             var status = document.getElementById("status");
             
+            var keys = [];
+            
             var input_text = document.getElementById("input-text");
             input_text.addEventListener("change", function (e) {
-                status.textContent = "#input-text set to '" + input_text.value + "'";
+                var keysString = "";
+                if (keys.length > 0) {
+                    keysString = " (keys: '" + keys.join("','") + "')";
+                    keys = []
+                }
+                
+                status.textContent = "#input-text set to '" + input_text.value + "'" + keysString;
+            }, false);
+            
+            input_text.addEventListener("keypress", function (e) {
+                keys.push(String.fromCharCode(e.charCode));
             }, false);
             
             var input_radio_1 = document.getElementById("input-radio-1");

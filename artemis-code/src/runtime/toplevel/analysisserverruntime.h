@@ -76,6 +76,8 @@ protected:
 
     void backButtonOrError();
 
+    bool simulateFormInputJS();
+
     // Page analysis
     FieldReadLog mFieldReadLog;
 

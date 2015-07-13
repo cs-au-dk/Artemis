@@ -90,6 +90,21 @@ bool FormFieldInjector::inject(QWebElement element, InjectionValue value)
     return true;
 }
 
+bool FormFieldInjector::injectAndTriggerChangeHandler(QWebElement element, InjectionValue value)
+{
+    if (inject(element, value)) {
+        triggerChangeHandler(element);
+        return true;
+    } else {
+        return false;
+    }
+}
+
+bool FormFieldInjector::injectWithEventSimulation(QWebElement element, InjectionValue value)
+{
+    return false; // TODO
+}
+
 
 
 

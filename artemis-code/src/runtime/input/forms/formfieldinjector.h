@@ -38,6 +38,9 @@ public:
     // Returns whether the injection was successful or not.
     static bool inject(QWebElement element, InjectionValue value);
 
+    static bool injectAndTriggerChangeHandler(QWebElement element, InjectionValue value);
+    static bool injectWithEventSimulation(QWebElement element, InjectionValue value);
+
     static void triggerHandler(QWebElement element, QString eventname);
     static void triggerChangeHandler(QWebElement element);
 };
