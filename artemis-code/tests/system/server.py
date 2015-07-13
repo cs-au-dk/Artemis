@@ -1623,8 +1623,38 @@ class AnalysisServerTests(unittest.TestCase):
         
         # This click loads slow-load.html so we confirm this command was blocking by checking the elapsed time, which
         # will be just over 3s.
-        # I typically see about 3.012 for the elapsed time.
         self.assertTrue(end_time - start_time > 2)
+    
+    @unittest.expectedFailure
+    def test_event_command_blocking_for_XHR_async(self):
+        load_message = {
+            "command": "pageload",
+            "url": fixture_url("click-causes-load.html")
+        }
+        
+        load_response = send_to_server(load_message)
+        
+        self.assertIn("pageload", load_response)
+        
+        event_message = {
+                "command": "event",
+                "element": "id(\"click-xhr\")",
+                "event": "click"
+            }
+        
+        start_time = time.time()
+        
+        event_response = send_to_server(event_message)
+        
+        end_time = time.time()
+        
+        self.assertIn("event", event_response)
+        self.assertEqual(event_response["event"], u"done")
+        
+        # This includes a 3s delay in the XHR onload handler. So we should see a 3s delay while the command blocks.
+        # 
+        self.assertTrue(end_time - start_time > 2)
+        self.assertStatusElementContains("Done.")
     
     def test_windowsize_default(self):
         load_message = {

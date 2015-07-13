@@ -7,9 +7,40 @@
     <meta name="author" content="Ben Spencer">
 
     <script type="text/javascript" >
+        function sleep(msec) {
+            var time = new Date().getTime()
+            var end = time + msec;
+            while(true) {
+                time = new Date().getTime()
+                if (time > end) {
+                    break;
+                }
+            }
+        }
+        
         window.onload = function () {
             
-            
+            var x = document.getElementById("click-xhr");
+            x.addEventListener("click", function (e) {
+                
+                e.preventDefault()
+                
+                var status = document.getElementById("status");
+                status.textContent = "Loading...";
+                
+                var xhr = new XMLHttpRequest();
+                //xhr.withCredentials = true;
+                xhr.open("GET", "https://cors-test.appspot.com/test", true);
+                
+                xhr.onload = function () {
+                    status.textContent = "Finished loading. Sleeping 3s.";
+                    sleep(3000);
+                    status.textContent = "Done.";
+                }
+                
+                xhr.send();
+                
+            }, false);
             
         }
     </script>
@@ -18,8 +49,12 @@
 
     <ul>
         <li><a href="slow-load.html" id="click-pageload" >Click causes page-load.</a></li>
-        <li><a href="slow-load.html" id="click-js-load-data" >Click causes loading of dynamic content.</a></li> <!-- TODO: not implemented yet -->
+        <li><a href="#" id="click-xhr" >Click causes XHR load.</a></li>
     </ul>
+
+    <hr>
+
+    <p>Status: <span id="status">Nothing happening.</span></p>
 
 </body>
 </html>
