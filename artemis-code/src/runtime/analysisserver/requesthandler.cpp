@@ -356,7 +356,28 @@ CommandPtr RequestHandler::forminputCommand(QVariantMap mainObject)
         return parseError("The 'value' property for a forminput command must be a string, int or bool.");
     }
 
-    return FormInputCommandPtr(new FormInputCommand(mainObject["field"].toString(), value));
+    // There may be an optional 'method' entry.
+    FormInputCommand::InputSimulationMethod method = FormInputCommand::OnChange; // By default use onchange-triggerng.
+    if (mainObject.contains("method")) {
+        if (mainObject["method"].type() != QVariant::String) {
+            return parseError("The 'method' property for a forminput command must be a string.");
+        }
+
+        QString methodRequested = mainObject["method"].toString();
+        if (methodRequested == "inject") {
+            method = FormInputCommand::Inject;
+        } else if (methodRequested == "onchange") {
+            method = FormInputCommand::OnChange;
+        } else if (methodRequested == "simulate-js") {
+            method = FormInputCommand::SimulateJS;
+        } else if (methodRequested == "simulate-gui") {
+            method = FormInputCommand::SimulateGUI;
+        } else {
+            return parseError("The 'method' property for a forminput command must be one of 'inject', 'onchange', 'simulate-js' or 'simulate-gui'.");
+        }
+    }
+
+    return FormInputCommandPtr(new FormInputCommand(mainObject["field"].toString(), value, method));
 }
 
 CommandPtr RequestHandler::xpathCommand(QVariantMap mainObject)

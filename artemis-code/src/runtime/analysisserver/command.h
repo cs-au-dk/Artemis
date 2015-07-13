@@ -183,14 +183,18 @@ typedef QSharedPointer<BackButtonCommand> BackButtonCommandPtr;
 class FormInputCommand : public Command
 {
 public:
-    FormInputCommand(QString field, InjectionValue value)
+    enum InputSimulationMethod { Inject, OnChange, SimulateJS, SimulateGUI };
+
+    FormInputCommand(QString field, InjectionValue value, InputSimulationMethod method)
         : field(field)
         , value(value)
+        , method(method)
     {}
     virtual void accept(AnalysisServerRuntime* server);
 
     QString field;
     InjectionValue value;
+    InputSimulationMethod method;
 };
 
 typedef QSharedPointer<FormInputCommand> FormInputCommandPtr;

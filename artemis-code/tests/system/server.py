@@ -1023,8 +1023,6 @@ class AnalysisServerTests(unittest.TestCase):
         
         self.assertIn("forminput", forminput_response)
         self.assertEqual(forminput_response["forminput"], u"done")
-        
-        self.assertStatusElementContains("#input-text set to 'Hello, world.'")
     
     def test_forminput_command_without_load(self):
         forminput_message = {
@@ -1348,6 +1346,83 @@ class AnalysisServerTests(unittest.TestCase):
         self.assertEqual(forminput_response["forminput"], u"done")
         
         self.assertStatusElementContains("#input-select set to 'third' (index 2)")
+    
+    def test_forminput_command_method_inject(self):
+        load_message = {
+                "command": "pageload",
+                "url": fixture_url("form-injection.html")
+            }
+        
+        load_response = send_to_server(load_message)
+        
+        self.assertIn("pageload", load_response)
+        
+        forminput_message = {
+            "command": "forminput",
+            "field": "id('input-text')",
+            "value": "Hello, world.",
+            "method": "inject"
+        }
+        
+        forminput_response = send_to_server(forminput_message)
+        
+        self.assertIn("forminput", forminput_response)
+        self.assertEqual(forminput_response["forminput"], u"done")
+        
+        self.assertStatusElementContains("Nothing changed.")
+    
+    def test_forminput_command_method_onchange(self):
+        load_message = {
+                "command": "pageload",
+                "url": fixture_url("form-injection.html")
+            }
+        
+        load_response = send_to_server(load_message)
+        
+        self.assertIn("pageload", load_response)
+        
+        forminput_message = {
+            "command": "forminput",
+            "field": "id('input-text')",
+            "value": "Hello, world.",
+            "method": "onchange"
+        }
+        
+        forminput_response = send_to_server(forminput_message)
+        
+        self.assertIn("forminput", forminput_response)
+        self.assertEqual(forminput_response["forminput"], u"done")
+        
+        self.assertStatusElementContains("#input-text set to 'Hello, world.'")
+    
+    @unittest.skip("Not yet implemented.")
+    def test_forminput_command_method_simulate_js(self):
+        pass # TODO
+    
+    @unittest.skip("Not yet implemented.")
+    def test_forminput_command_method_simulate_gui(self):
+        pass # TODO
+    
+    def test_forminput_command_method_invalid(self):
+        load_message = {
+                "command": "pageload",
+                "url": fixture_url("form-injection.html")
+            }
+        
+        load_response = send_to_server(load_message)
+        
+        self.assertIn("pageload", load_response)
+        
+        forminput_message = {
+            "command": "forminput",
+            "field": "id('input-text')",
+            "value": "Hello, world.",
+            "method": "no-such-simulation-method"
+        }
+        
+        forminput_response = send_to_server(forminput_message)
+        
+        self.assertIn("error", forminput_response)
     
     def test_xpath_command_node_set(self):
         load_message = {

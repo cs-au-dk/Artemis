@@ -392,16 +392,44 @@ void AnalysisServerRuntime::execute(FormInputCommand *command)
         return;
     }
 
-    // Inject
-    bool couldInject = FormFieldInjector::inject(field, command->value);
-    if (!couldInject) {
-        // Hopefully all these case will already be caught by the sanity-check code above...
-        emit sigCommandFinished(errorResponse(QString("Failed to inject value %1 into field %2.").arg(command->value.toString(), command->field)));
-        return;
-    }
+    bool couldInject;
 
-    // Trigger the change handler.
-    FormFieldInjector::triggerChangeHandler(field);
+    switch (command->method) {
+    case FormInputCommand::Inject:
+        // Inject
+        couldInject = FormFieldInjector::inject(field, command->value);
+        if (!couldInject) {
+            // Hopefully all these cases will already be caught by the sanity-check code above...
+            emit sigCommandFinished(errorResponse(QString("Failed to inject value %1 into field %2.").arg(command->value.toString(), command->field)));
+            return;
+        }
+        break;
+
+    case FormInputCommand::OnChange:
+        // Inject
+        couldInject = FormFieldInjector::inject(field, command->value);
+        if (!couldInject) {
+            // Hopefully all these cases will already be caught by the sanity-check code above...
+            emit sigCommandFinished(errorResponse(QString("Failed to inject value %1 into field %2.").arg(command->value.toString(), command->field)));
+            return;
+        }
+        // Trigger the change handler.
+        FormFieldInjector::triggerChangeHandler(field);
+        break;
+
+    case FormInputCommand::SimulateJS:
+        emit sigCommandFinished(errorResponse("Simulation of input by JS events is not yet supported."));
+        return;
+        break;
+    case FormInputCommand::SimulateGUI:
+        emit sigCommandFinished(errorResponse("Simulation of input by GUI interaction is not yet supported."));
+        return;
+        break;
+    default:
+        emit sigCommandFinished(errorResponse("Unexpected simulation method for 'forminput' command."));
+        return;
+        break;
+    }
 
     // Done, nothing to return.
     QVariantMap result;

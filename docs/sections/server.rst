@@ -299,6 +299,7 @@ Commands
     
 * ``forminput``
     Injects values into form fields and triggers their change handlers.
+    The method of injection can be changed with the optional ``method`` parameter (see below).
     
     Send::
     
@@ -382,6 +383,32 @@ Commands
         {
             "elements": [ "<strong id=\"status\">#input-text set to 'Hello, World'</strong>" ]
         }
+    
+    There is a ``method`` field, which allows you to choose the type of injection performed.
+    Possible values are:
+    
+    ``inject``
+        Inject the value into the ``.value`` property (depending on the input type; see above).
+    
+    ``onchange`` (default)
+        Inject the value and trigger the ``onchange`` handler for the form field.
+    
+    ``simulate-js``
+        Not yet implemented.
+    
+    ``simulate-gui``
+        Not yet implemented.
+    
+    Send::
+    
+        {
+            "command": "forminput",
+            "field": "id('input-text')",
+            "value": "Hello, world.",
+            "method": "inject"
+        }
+    
+    Recieve: ``{"forminput": "done"}``
     
 * ``xpath``
     Evaluates an XPath query and returns the result.
