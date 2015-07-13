@@ -820,6 +820,27 @@ class AnalysisServerTests(unittest.TestCase):
         
         self.assertIn("error", response)
     
+    def test_element_command_with_property(self):
+        load_message = {
+                "command": "pageload",
+                "url": fixture_url("click.html")
+            }
+        
+        load_response = send_to_server(load_message)
+        
+        self.assertIn("pageload", load_response)
+        
+        element_message = {
+                "command": "element",
+                "element": "id(\"clickable\")",
+                "property": "nodeName"
+            }
+        
+        element_response = send_to_server(element_message)
+        
+        self.assertIn("elements", element_response)
+        self.assertEqual(element_response["elements"], [u"A"])
+    
     def test_fieldsread_command(self):
         load_message = {
                 "command": "pageload",

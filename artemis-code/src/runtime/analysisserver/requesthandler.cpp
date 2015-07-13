@@ -297,7 +297,16 @@ CommandPtr RequestHandler::elementCommand(QVariantMap mainObject)
         return parseError("The 'element' property for an element command must be a string.");
     }
 
-    return ElementCommandPtr(new ElementCommand(mainObject["element"].toString()));
+    // There is an optional "property" field.
+    QString property; // Default to null string if not supplied.
+    if (mainObject.contains("property")) {
+        if (mainObject["property"].type() != QVariant::String) {
+            return parseError("The 'property' property for an element command must be a string.");
+        }
+        property = mainObject["property"].toString();
+    }
+
+    return ElementCommandPtr(new ElementCommand(mainObject["element"].toString(), property));
 }
 
 CommandPtr RequestHandler::fieldsReadCommand(QVariantMap mainObject)

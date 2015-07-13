@@ -293,12 +293,19 @@ void AnalysisServerRuntime::execute(ElementCommand *command)
     QWebElement document = mWebkitExecutor->getPage()->currentFrame()->documentElement();
     QString escapedXPath = command->xPath;
     escapedXPath.replace('"', "\\\"");
-    QString queryJS = QString("var elems = document.evaluate(\"%1\", document, null, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null); var elStrs = []; for(var i=0; i < elems.snapshotLength; i++) {elStrs.push(elems.snapshotItem(i).outerHTML)}; elStrs;").arg(escapedXPath);
+
+    QString property = command->property;
+    if (property.isNull()) {
+        property = "outerHTML"; // By default if no property is specified, return the element's string representation.
+    }
+    property.replace('"', "\\\""); // Should never be used, but prevents it being completely broken in case they specify a weird property.
+
+    QString queryJS = QString("var elems = document.evaluate(\"%1\", document, null, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null); var elStrs = []; for(var i=0; i < elems.snapshotLength; i++) {elStrs.push(elems.snapshotItem(i)[\"%2\"])}; elStrs;").arg(escapedXPath, property);
 
     QVariant elemList = document.evaluateJavaScript(queryJS, QUrl(), true);
 
     if(!elemList.isValid()) {
-        emit sigCommandFinished(errorResponse("Invalid XPath."));
+        emit sigCommandFinished(errorResponse("The XPath could not be evaluated. Is it valid?."));
         return;
     }
 

@@ -149,12 +149,14 @@ typedef QSharedPointer<PageStateCommand> PageStateCommandPtr;
 class ElementCommand : public Command
 {
 public:
-    ElementCommand(QString xPath)
+    ElementCommand(QString xPath, QString property)
         : xPath(xPath)
+        , property(property)
     {}
     virtual void accept(AnalysisServerRuntime* server);
 
     QString xPath;
+    QString property; // Null if no property was requested.
 };
 
 typedef QSharedPointer<ElementCommand> ElementCommandPtr;

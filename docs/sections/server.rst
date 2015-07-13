@@ -226,7 +226,24 @@ Commands
     Recieve::
     
         {
-            "elements": ["<a href=\"\" id=\"clickable\">Click here to add new buttons to the page.</a>"]
+            "elements": [ "<a href=\"\" id=\"clickable\">Click here to add new buttons to the page.</a>" ]
+        }
+    
+    There is also an optional ``property`` field which will return the string representation of that object property
+    instead.
+    
+    Send::
+    
+        {
+            "command": "element",
+            "element": "id(\"clickable\")",
+            "property": "nodeName"
+        }
+    
+    Recieve::
+    
+        {
+            "elements": [ "A" ]
         }
     
 * ``fieldsread``
