@@ -1596,6 +1596,36 @@ class AnalysisServerTests(unittest.TestCase):
         self.assertIn("event", event_response)
         self.assertEqual(event_response["event"], u"done")
     
+    def test_event_command_blocking_for_pageload(self):
+        load_message = {
+            "command": "pageload",
+            "url": fixture_url("click-causes-load.html")
+        }
+        
+        load_response = send_to_server(load_message)
+        
+        self.assertIn("pageload", load_response)
+        
+        event_message = {
+                "command": "event",
+                "element": "id(\"click-pageload\")",
+                "event": "click"
+            }
+        
+        start_time = time.time()
+        
+        event_response = send_to_server(event_message)
+        
+        end_time = time.time()
+        
+        self.assertIn("event", event_response)
+        self.assertEqual(event_response["event"], u"done")
+        
+        # This click loads slow-load.html so we confirm this command was blocking by checking the elapsed time, which
+        # will be just over 3s.
+        # I typically see about 3.012 for the elapsed time.
+        self.assertTrue(end_time - start_time > 2)
+    
     def test_windowsize_default(self):
         load_message = {
                 "command": "pageload",
