@@ -421,7 +421,7 @@ void AnalysisServerRuntime::execute(FormInputCommand *command)
 
     if (!couldInject) {
         // Hopefully all these cases will already be caught by the sanity checks code above...
-        emit sigCommandFinished(errorResponse(QString("Failed to inject value %1 into field %2.").arg(command->value.toString(), command->field)));
+        emit sigCommandFinished(errorResponse(QString("Failed to inject value '%1'' into field '%2'.").arg(command->value.toString(), command->field)));
         return;
     }
 

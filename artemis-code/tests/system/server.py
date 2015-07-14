@@ -1417,7 +1417,7 @@ class AnalysisServerTests(unittest.TestCase):
         self.assertIn("forminput", forminput_response)
         self.assertEqual(forminput_response["forminput"], u"done")
         
-        self.assertStatusElementContains("#input-text set to 'Hello, World.' (keys: 'H','e','l','l','o',',',' ','W','o','r','l','d','.')")
+        self.assertStatusElementContains("#input-text set to 'Hello, world.' (keys: 'H','e','l','l','o',',',' ','w','o','r','l','d','.')")
     
     @unittest.skip("Not yet implemented.")
     def test_forminput_command_method_simulate_gui(self):

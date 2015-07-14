@@ -41,8 +41,15 @@ public:
     static bool injectAndTriggerChangeHandler(QWebElement element, InjectionValue value);
     static bool injectWithEventSimulation(QWebElement element, InjectionValue value);
 
-    static void triggerHandler(QWebElement element, QString eventname);
+    static void triggerHandler(QWebElement element, QString eventName);
     static void triggerChangeHandler(QWebElement element);
+
+protected:
+    static QPair<QString, QString> lookupEventType(QString eventName);
+
+    static bool simulateTextFieldFilling(QWebElement element, QString value);
+    static bool simulateBooleanFieldFilling(QWebElement element, InjectionValue value);
+    static bool simulateSelectBoxFilling(QWebElement element, InjectionValue value);
 };
 
 

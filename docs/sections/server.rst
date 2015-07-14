@@ -394,7 +394,9 @@ Commands
         Inject the value and trigger the ``onchange`` handler for the form field.
     
     ``simulate-js``
-        Not yet implemented.
+        Uses JavaScript events to simulate a user filling the form field as closely as possible.
+        The support for text inputs is currently much more sophisticated than for checkboxes, radio buttons, and
+        select boxes.
     
     ``simulate-gui``
         Not yet implemented.
