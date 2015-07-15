@@ -108,6 +108,7 @@ bool FormFieldInjector::injectWithEventSimulation(QWebElement element, Injection
      *
      * For text inputs:
      *  focus
+     *  //click <- N.B. this is not strictly necessary but included because lots of sites listen to it.
      *  For each character:
      *      If capital:
      *          keydown (shift)
@@ -207,7 +208,10 @@ bool FormFieldInjector::simulateTextFieldFilling(QWebElement element, QString va
     // TODO: Simulate this as well.
     element.evaluateJavaScript(injectionJS.arg(""));
 
-    triggerHandler(element, "focus"); // TODO: These events do not have the appropriate parameters or even event types.
+    // TODO: These events do not have the appropriate parameters or even event types.
+    triggerHandler(element, "focus");
+    //triggerHandler(element, "click");
+    //triggerHandler(element, "select");
 
     // Type the input charachter-by-character:
     for (int i = 0; i < value.length(); i++) {
@@ -225,7 +229,7 @@ bool FormFieldInjector::simulateTextFieldFilling(QWebElement element, QString va
         element.evaluateJavaScript(keyboardEventJS.arg("keydown", value.at(i), charCode, shiftKey));
 
         // Send keypress event
-        qDebug() << keyboardEventJS.arg("keypress", value.at(i), charCode, shiftKey);
+        //qDebug() << keyboardEventJS.arg("keypress", value.at(i), charCode, shiftKey);
         element.evaluateJavaScript(keyboardEventJS.arg("keypress", value.at(i), charCode, shiftKey));
 
         // Inject the input

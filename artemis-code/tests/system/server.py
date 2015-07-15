@@ -1767,7 +1767,6 @@ class AnalysisServerTests(unittest.TestCase):
         # will be just over 3s.
         self.assertTrue(end_time - start_time > 2)
     
-    @unittest.expectedFailure
     def test_event_command_blocking_for_XHR_async(self):
         load_message = {
             "command": "pageload",
@@ -1794,7 +1793,6 @@ class AnalysisServerTests(unittest.TestCase):
         self.assertEqual(event_response["event"], u"done")
         
         # This includes a 3s delay in the XHR onload handler. So we should see a 3s delay while the command blocks.
-        # 
         self.assertTrue(end_time - start_time > 2)
         self.assertStatusElementContains("Done.")
     

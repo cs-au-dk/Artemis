@@ -55,6 +55,7 @@ QWebExecutionListener::QWebExecutionListener(QObject *parent)
     , inst::ExecutionListener()
     , jscinst::JSCExecutionListener()
     , m_ajax_callback_next_id(0)
+    , m_do_not_capture_ajax_callbacks(false)
     , m_reportHeapMode(0)
     , m_heapReportNumber(0)
     , m_heapReportFactor(1)
@@ -134,6 +135,11 @@ void QWebExecutionListener::eventTriggered(WebCore::EventTarget * target, const 
 // AJAX SUPPORT
 
 void QWebExecutionListener::ajaxCallbackEventAdded(WebCore::LazyXMLHttpRequest* xmlHttpRequest) {
+    if (m_do_not_capture_ajax_callbacks) {
+        xmlHttpRequest->fire();
+        return;
+    }
+
     int callbackId = m_ajax_callback_next_id++;
 
     m_ajax_callbacks.insert(callbackId, xmlHttpRequest);
@@ -146,7 +152,7 @@ void QWebExecutionListener::ajaxCallbackFire(int callbackId) {
         qWarning() << "WARNING: xmlHttpRequest not found!";
         return;
     }
-	xmlHttpRequest->fire();
+    xmlHttpRequest->fire();
 
 }
 
@@ -157,6 +163,11 @@ void QWebExecutionListener::clearAjaxCallbacks() {
 
     m_ajax_callbacks.clear();
     m_ajax_callback_next_id = 0;
+}
+
+void QWebExecutionListener::doNotCaptureAjaxCallbacks()
+{
+    m_do_not_capture_ajax_callbacks = true;
 }
 
 void QWebExecutionListener::webkit_ajax_send(const char * url, const char * data) {

@@ -70,6 +70,9 @@ AnalysisServerRuntime::AnalysisServerRuntime(QObject* parent, const Options& opt
         mWebView->show();
         mWebView->setEnabled(false);
     }
+
+    // Do not capture AJAX callbacks, force them to be fired synchronously.
+    QWebExecutionListener::getListener()->doNotCaptureAjaxCallbacks();
 }
 
 void AnalysisServerRuntime::run(const QUrl &url)

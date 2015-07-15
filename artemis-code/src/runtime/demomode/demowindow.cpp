@@ -259,7 +259,7 @@ DemoModeMainWindow::DemoModeMainWindow(AppModelPtr appModel, WebKitExecutor* web
     // Configure the connection with ArtemisWebPage which allows interception of page loads.
     // TODO: the pointer from mWebViw is only to QWebPage, but we need ArtemisWebPage.
     // This cast seems a bit of a hack, but we also don't want to modify QWebPage with the extra functionality we need.
-    // Maybe it would be better to modift ArtemisWebView to return ArtemisWebPage from the page() method?
+    // Maybe it would be better to modify ArtemisWebView to return ArtemisWebPage from the page() method?
     mWebPage = dynamic_cast<ArtemisWebPage*>(mWebView->page());
     if(!mWebPage){
         Log::fatal("Using an ArtemisWebView which does not use an ArtemisWebPage.");
@@ -269,6 +269,8 @@ DemoModeMainWindow::DemoModeMainWindow(AppModelPtr appModel, WebKitExecutor* web
                      this, SLOT(slNavigationRequest(QWebFrame*,QNetworkRequest,QWebPage::NavigationType)));
     mWebPage->mAcceptNavigation = false;
 
+    // Do not capture AJAX callbacks, force them to be fired synchronously.
+    QWebExecutionListener::getListener()->doNotCaptureAjaxCallbacks();
 
 
     // TODO: all the above is temp and needs to move into ArtemisBrowserWidget.

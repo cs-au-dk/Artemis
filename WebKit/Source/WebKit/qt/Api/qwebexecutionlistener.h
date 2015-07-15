@@ -89,6 +89,7 @@ public:
 
     void ajaxCallbackFire(int callbackId);
     void clearAjaxCallbacks();
+    void doNotCaptureAjaxCallbacks();
 
     void page_load_scheduled(const char* url);
 
@@ -111,6 +112,7 @@ private:
 
     QMap<int, WebCore::LazyXMLHttpRequest*> m_ajax_callbacks;
     int m_ajax_callback_next_id;
+    bool m_do_not_capture_ajax_callbacks; // If set, the AJAX events are handled synchronously.
 
     QSourceRegistry m_sourceRegistry;
     QList<QString> m_heapReport;
