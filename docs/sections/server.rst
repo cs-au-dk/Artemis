@@ -7,6 +7,8 @@ reporting what it finds.
 
 In this mode **all** other arguments except those prefixed by ``analysis-server-*`` are ignored, including the URL.
 
+There is a debug view which shows the internal browser, which is shown when the option ``--analysis-server-debug-view``
+is given.
 
 The API
 -------

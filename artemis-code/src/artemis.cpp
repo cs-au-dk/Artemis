@@ -211,6 +211,9 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             "\n"
             "--analysis-server-port <port>\n"
             "           The port the analysis server major-mode will listen on (default 8008).\n"
+            "\n"
+            "--analysis-server-debug-view\n"
+            "           The analysis server will display a (non-interactive) window showing the internal browser.\n"
             "\n";
 
     struct option long_options[] = {
@@ -244,6 +247,7 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
     {"debug-concolic", no_argument, NULL, 'E'},
     {"event-visibility-check", required_argument, NULL, 'G'},
     {"analysis-server-port", required_argument, NULL, 'p'},
+    {"analysis-server-debug-view", no_argument, NULL, 'V'},
     {0, 0, 0, 0}
     };
 
@@ -624,6 +628,11 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
 
            break;
        }
+
+        case 'V': {
+            options.analysisServerDebugView = true;
+            break;
+        }
 
         case 'w': {
             if (string(optarg).compare("ignore") == 0) {

@@ -66,8 +66,10 @@ AnalysisServerRuntime::AnalysisServerRuntime(QObject* parent, const Options& opt
     mWebView->setPage(mWebkitExecutor->getPage().data());
     setWindowSize(1200, 800);
 
-    //mWebView->show();
-    //mWebView->setEnabled(false);
+    if (mOptions.analysisServerDebugView) {
+        mWebView->show();
+        mWebView->setEnabled(false);
+    }
 }
 
 void AnalysisServerRuntime::run(const QUrl &url)
