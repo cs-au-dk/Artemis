@@ -303,7 +303,7 @@ void FormFieldInjector::triggerHandler(QWebElement element, QString eventName)
     QString eventType = "Event";
     QString eventInitMethod = "initEvent";
 
-    QString bubbles = "false";
+    QString bubbles = "true";
     QString cancellable = "true";
 
     QString jsInjection = QString("var event = document.createEvent('%1'); event.%2('%3', %4, %5); this.dispatchEvent(event);").arg(eventType, eventInitMethod, eventName, bubbles, cancellable);
