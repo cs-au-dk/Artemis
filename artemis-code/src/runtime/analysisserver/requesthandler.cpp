@@ -377,7 +377,20 @@ CommandPtr RequestHandler::forminputCommand(QVariantMap mainObject)
         }
     }
 
-    return FormInputCommandPtr(new FormInputCommand(mainObject["field"].toString(), value, method));
+    // There may be an optional 'noblur' entry.
+    bool noBlur = false; // default to triggering the 'blur' event.
+    if (mainObject.contains("noblur")) {
+        if (mainObject["noblur"].type() != QVariant::Bool) {
+            return parseError("The 'noblur' property for a forminput command must be a boolean.");
+        }
+        if (method != FormInputCommand::SimulateJS) {
+            return parseError("The 'noblur' property for a forminput command is only valid when 'method' is 'simulate-js'.");
+        }
+
+        noBlur = mainObject["noblur"].toBool();
+    }
+
+    return FormInputCommandPtr(new FormInputCommand(mainObject["field"].toString(), value, method, noBlur));
 }
 
 CommandPtr RequestHandler::xpathCommand(QVariantMap mainObject)

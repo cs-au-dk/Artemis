@@ -185,16 +185,18 @@ class FormInputCommand : public Command
 public:
     enum InputSimulationMethod { Inject, OnChange, SimulateJS, SimulateGUI };
 
-    FormInputCommand(QString field, InjectionValue value, InputSimulationMethod method)
+    FormInputCommand(QString field, InjectionValue value, InputSimulationMethod method, bool noBlur)
         : field(field)
         , value(value)
         , method(method)
+        , noBlur(noBlur)
     {}
     virtual void accept(AnalysisServerRuntime* server);
 
     QString field;
     InjectionValue value;
     InputSimulationMethod method;
+    bool noBlur;
 };
 
 typedef QSharedPointer<FormInputCommand> FormInputCommandPtr;

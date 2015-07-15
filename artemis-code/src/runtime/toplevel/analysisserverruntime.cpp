@@ -405,7 +405,7 @@ void AnalysisServerRuntime::execute(FormInputCommand *command)
         break;
 
     case FormInputCommand::SimulateJS:
-        couldInject = FormFieldInjector::injectWithEventSimulation(field, command->value);
+        couldInject = FormFieldInjector::injectWithEventSimulation(field, command->value, command->noBlur);
         break;
 
     case FormInputCommand::SimulateGUI:

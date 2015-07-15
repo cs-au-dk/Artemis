@@ -397,6 +397,10 @@ Commands
         Uses JavaScript events to simulate a user filling the form field as closely as possible.
         The support for text inputs is currently much more sophisticated than for checkboxes, radio buttons, and
         select boxes.
+        
+        When ``simulate-js`` is used, an extra optional property ``noblur`` can be set to boolean ``true`` to stop the
+        'blur' (de-focus) event being triggered on this element once the injection is complete. This can be useful (for
+        example) to stop auto-complete boxes being hidden when the field is deselected.
     
     ``simulate-gui``
         Not yet implemented.

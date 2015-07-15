@@ -1419,6 +1419,32 @@ class AnalysisServerTests(unittest.TestCase):
         
         self.assertStatusElementContains("#input-text set to 'Hello, world.' (keys: 'H','e','l','l','o',',',' ','w','o','r','l','d','.')")
     
+    def test_forminput_command_method_simulate_js_noblur(self):
+        load_message = {
+                "command": "pageload",
+                "url": fixture_url("form-injection.html")
+            }
+        
+        load_response = send_to_server(load_message)
+        
+        self.assertIn("pageload", load_response)
+        
+        forminput_message = {
+            "command": "forminput",
+            "field": "id('input-text')",
+            "value": "Hello, world.",
+            "method": "simulate-js",
+            "noblur": True
+        }
+        
+        forminput_response = send_to_server(forminput_message)
+        
+        self.assertIn("forminput", forminput_response)
+        self.assertEqual(forminput_response["forminput"], u"done")
+        
+        self.assertStatusElementContains("#input-text set to 'Hello, world.' (keys: 'H','e','l','l','o',',',' ','w','o','r','l','d','.') (in focus)")
+    
+    
     @unittest.skip("Not yet implemented.")
     def test_forminput_command_method_simulate_gui(self):
         pass # TODO

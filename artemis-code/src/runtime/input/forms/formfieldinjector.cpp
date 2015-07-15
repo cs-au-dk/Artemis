@@ -101,7 +101,7 @@ bool FormFieldInjector::injectAndTriggerChangeHandler(QWebElement element, Injec
     }
 }
 
-bool FormFieldInjector::injectWithEventSimulation(QWebElement element, InjectionValue value)
+bool FormFieldInjector::injectWithEventSimulation(QWebElement element, InjectionValue value, bool noBlur)
 {
     /**
      * Simulate a human filling the form field as follows:
@@ -153,14 +153,14 @@ bool FormFieldInjector::injectWithEventSimulation(QWebElement element, Injection
         QString inputType = element.attribute("type").toLower();
         if (inputType == "checkbox" || inputType == "radio") {
             if (value.getType() == QVariant::Bool) {
-                return simulateBooleanFieldFilling(element, value);
+                return simulateBooleanFieldFilling(element, value, noBlur);
             } else {
                 Log::debug("Could not inject non-bool into boolean field.");
                 return false;
             }
         } else {
             if (value.getType() == QVariant::String) {
-                return simulateTextFieldFilling(element, value.getString());
+                return simulateTextFieldFilling(element, value.getString(), noBlur);
             } else {
                 Log::debug("Could not inject non-string into text field.");
                 return false;
@@ -169,7 +169,7 @@ bool FormFieldInjector::injectWithEventSimulation(QWebElement element, Injection
     } else if (element.tagName().toLower() == "select") {
         // For select boxes we support injection of string or int (as selectedIndex) but not bool.
         if (value.getType() == QVariant::String || value.getType() == QVariant::Int) {
-            return simulateSelectBoxFilling(element, value);;
+            return simulateSelectBoxFilling(element, value, noBlur);
         } else {
             Log::debug("Could not inject non-string and non-int into a select box.");
             return false;
@@ -180,7 +180,7 @@ bool FormFieldInjector::injectWithEventSimulation(QWebElement element, Injection
     }
 }
 
-bool FormFieldInjector::simulateTextFieldFilling(QWebElement element, QString value)
+bool FormFieldInjector::simulateTextFieldFilling(QWebElement element, QString value, bool noBlur)
 {
     // Define some event triggering 'skeletons' to be used later.
 
@@ -245,12 +245,14 @@ bool FormFieldInjector::simulateTextFieldFilling(QWebElement element, QString va
 
     // TODO: These events do not have the appropriate parameters or even event types.
     triggerHandler(element, "change");
-    triggerHandler(element, "blur");
+    if (!noBlur) {
+        triggerHandler(element, "blur");
+    }
 
     return true;
 }
 
-bool FormFieldInjector::simulateBooleanFieldFilling(QWebElement element, InjectionValue value)
+bool FormFieldInjector::simulateBooleanFieldFilling(QWebElement element, InjectionValue value, bool noBlur)
 {
     // TODO: These events do not have the appropriate parameters or even event types.
 
@@ -258,19 +260,23 @@ bool FormFieldInjector::simulateBooleanFieldFilling(QWebElement element, Injecti
     triggerHandler(element, "click");
     bool result = inject(element, value);
     triggerHandler(element, "change");
-    triggerHandler(element, "blur");
+    if (!noBlur) {
+        triggerHandler(element, "blur");
+    }
 
     return result;
 }
 
-bool FormFieldInjector::simulateSelectBoxFilling(QWebElement element, InjectionValue value)
+bool FormFieldInjector::simulateSelectBoxFilling(QWebElement element, InjectionValue value, bool noBlur)
 {
     // TODO: These events do not have the appropriate parameters or even event types.
 
     triggerHandler(element, "focus");
     bool result = inject(element, value);
     triggerHandler(element, "change");
-    triggerHandler(element, "blur");
+    if (!noBlur) {
+        triggerHandler(element, "blur");
+    }
 
     return result;
 }

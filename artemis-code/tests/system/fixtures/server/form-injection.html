@@ -12,6 +12,8 @@
             var status = document.getElementById("status");
             
             var keys = [];
+            var didFocus = false;
+            var focusString;
             
             var input_text = document.getElementById("input-text");
             input_text.addEventListener("change", function (e) {
@@ -20,12 +22,24 @@
                     keysString = " (keys: '" + keys.join("','") + "')";
                     keys = []
                 }
+                focusString = didFocus ? " (in focus)" : "";
                 
-                status.textContent = "#input-text set to '" + input_text.value + "'" + keysString;
+                status.textContent = "#input-text set to '" + input_text.value + "'" + keysString + focusString;
             }, false);
             
             input_text.addEventListener("keypress", function (e) {
                 keys.push(String.fromCharCode(e.charCode));
+            }, false);
+            
+            input_text.addEventListener("focus", function (e) {
+                didFocus = true;
+            }, false);
+            
+            input_text.addEventListener("blur", function (e) {
+                if (didFocus) {
+                    status.textContent = status.textContent.substring(0, status.textContent.length - focusString.length)
+                }
+                didFocus = false;
             }, false);
             
             var input_radio_1 = document.getElementById("input-radio-1");
