@@ -26,7 +26,7 @@ ARTEMIS_SERVER_URL = 'http://localhost:%s' % ARTEMIS_SERVER_PORT
 
 
 
-class AnalysisServerTests(unittest.TestCase):
+class AnalysisServerTestBase(unittest.TestCase):
     
     def setUp(self):
         # Run the server and save a reference so we can kill it in the end.
@@ -62,6 +62,9 @@ class AnalysisServerTests(unittest.TestCase):
         
         self.assertIn("elements", check_response)
         self.assertEqual(check_response["elements"], [u"<span id=\"status\">%s</span>" % expected_status])
+    
+
+class AnalysisServerFeatureTests(AnalysisServerTestBase):
     
     def test_server_process_is_running(self):
         self.assertTrue(self.server.poll() is None)
@@ -1444,7 +1447,6 @@ class AnalysisServerTests(unittest.TestCase):
         
         self.assertStatusElementContains("#input-text set to 'Hello, world.' (keys: 'H','e','l','l','o',',',' ','w','o','r','l','d','.') (in focus)")
     
-    
     @unittest.skip("Not yet implemented.")
     def test_forminput_command_method_simulate_gui(self):
         pass # TODO
@@ -1765,7 +1767,7 @@ class AnalysisServerTests(unittest.TestCase):
         
         # This click loads slow-load.html so we confirm this command was blocking by checking the elapsed time, which
         # will be just over 3s.
-        self.assertTrue(end_time - start_time > 2)
+        self.assertGreater(end_time - start_time, 2)
     
     def test_event_command_blocking_for_XHR_async(self):
         load_message = {
@@ -1793,7 +1795,7 @@ class AnalysisServerTests(unittest.TestCase):
         self.assertEqual(event_response["event"], u"done")
         
         # This includes a 3s delay in the XHR onload handler. So we should see a 3s delay while the command blocks.
-        self.assertTrue(end_time - start_time > 2)
+        self.assertGreater(end_time - start_time, 2)
         self.assertStatusElementContains("Done.")
     
     def test_windowsize_default(self):
@@ -1853,7 +1855,9 @@ class AnalysisServerTests(unittest.TestCase):
     
 
 
-
+class AnalysisServerSystemTests(AnalysisServerTestBase):
+    pass
+    
 
 
 def fixture_url(page):
@@ -1927,6 +1931,6 @@ def check_no_existing_server():
 
 if __name__ == '__main__':
     if check_no_existing_server():
-        unittest.main(buffer=True)
+        unittest.main(buffer=True, catchbreak=True)
     else:
         print "There is already a server running at %s which will affect the tests." % ARTEMIS_SERVER_URL
