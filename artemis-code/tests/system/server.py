@@ -1883,6 +1883,23 @@ class AnalysisServerFeatureTests(AnalysisServerTestBase):
         
         self.assertIn("error", windowsize_response)
     
+    def test_timeouts_fired(self):
+        load_message = {
+            "command": "pageload",
+            "url": fixture_url("timers.html")
+        }
+        
+        load_response = send_to_server(load_message)
+        
+        self.assertIn("pageload", load_response)
+        
+        time.sleep(0.5)
+        
+        self.assertStatusElementContains("Timers: timer-0-fired")
+        
+        time.sleep(1)
+        
+        self.assertStatusElementContains("Timers: timer-0-fired timer-1000-fired")
 
 
 class AnalysisServerSystemTests(AnalysisServerTestBase):
