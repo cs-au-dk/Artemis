@@ -80,6 +80,8 @@ public:
 
     QWebExecutionListener* mWebkitListener; // TODO should not be public
 
+    QNetworkCookieJar* getCookieJar();
+
 private:
 
     ArtemisWebPagePtr mPage;

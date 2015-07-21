@@ -152,7 +152,8 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/runtime/analysisserver/requesthandler.h \
     src/runtime/analysisserver/responsehandler.h \
     src/util/delayutil.h \
-    src/runtime/analysisserver/fieldreadlog.h
+    src/runtime/analysisserver/fieldreadlog.h \
+    src/runtime/browser/cookies/resettablecookiejar.h
 
 SOURCES += src/runtime/input/ajaxinput.cpp \
     src/strategies/prioritizer/constantprioritizer.cpp \
@@ -278,6 +279,7 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/runtime/analysisserver/responsehandler.cpp \
     src/runtime/analysisserver/command.cpp \
     src/util/delayutil.cpp \
-    src/runtime/analysisserver/fieldreadlog.cpp
+    src/runtime/analysisserver/fieldreadlog.cpp \
+    src/runtime/browser/cookies/resettablecookiejar.cpp
 
 QT += network

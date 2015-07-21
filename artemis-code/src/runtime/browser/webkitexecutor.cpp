@@ -338,4 +338,9 @@ QList<EventHandlerDescriptorConstPtr> WebKitExecutor::getCurrentEventHandlers()
     return mResultBuilder->getCurrentEventHandlers();
 }
 
+QNetworkCookieJar *WebKitExecutor::getCookieJar()
+{
+    return mAjaxListener->cookieJar();
+}
+
 }

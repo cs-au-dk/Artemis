@@ -32,6 +32,7 @@
 #include "runtime/browser/webkitexecutor.h"
 #include "runtime/browser/executionresult.h"
 #include "runtime/browser/cookies/immutablecookiejar.h"
+#include "runtime/browser/cookies/resettablecookiejar.h"
 #include "runtime/executableconfiguration.h"
 #include "runtime/appmodel.h"
 

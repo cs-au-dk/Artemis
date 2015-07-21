@@ -85,6 +85,7 @@ struct ConcolicSearchSelector
 typedef struct OptionsType {
 
     OptionsType() :
+        saveCookiesForSession(false),
         iterationLimit(4),
         numberSameLength(1),
         disableStateCheck(true),
@@ -118,6 +119,7 @@ typedef struct OptionsType {
 
     QMap<QString, InjectionValue> presetFormfields;
     QMap<QString, QString> presetCookies;
+    bool saveCookiesForSession;
 
     QSet<QUrl> coverageIgnoreUrls;
 

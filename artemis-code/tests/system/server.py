@@ -1900,6 +1900,15 @@ class AnalysisServerFeatureTests(AnalysisServerTestBase):
         time.sleep(1)
         
         self.assertStatusElementContains("Timers: timer-0-fired timer-1000-fired")
+    
+    @unittest.skip("No test implemented")
+    def test_cookies_working(self):
+        pass # TODO
+    
+    @unittest.skip("No test implemented")
+    def test_cookies_cleared_on_pageload(self):
+        pass # TODO
+    
 
 
 class AnalysisServerSystemTests(AnalysisServerTestBase):

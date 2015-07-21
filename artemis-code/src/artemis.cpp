@@ -438,10 +438,12 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
                 options.majorMode = artemis::AUTOMATED;
             } else if (string(optarg).compare("manual") == 0) {
                 options.majorMode = artemis::MANUAL;
+                options.saveCookiesForSession = true;
             } else if (string(optarg).compare("concolic") == 0) {
                 options.majorMode = artemis::CONCOLIC;
             } else if (string(optarg).compare("server") == 0) {
                 options.majorMode = artemis::ANALYSIS_SERVER;
+                options.saveCookiesForSession = true;
             } else {
                 cerr << "ERROR: Invalid choice of major-mode " << optarg << endl;
                 exit(1);

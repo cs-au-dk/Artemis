@@ -142,6 +142,14 @@ void AnalysisServerRuntime::execute(PageLoadCommand* command)
     Log::debug("  Analysis server runtime: executing a pageload command.");
     assert(command);
 
+    // Clear all cookies.
+    // In the server mode the cookie jar will always be of type ResettableCookieJar (see artemis.cpp).
+    QNetworkCookieJar* cookieJar = mWebkitExecutor->getCookieJar();
+    ResettableCookieJar* resettableCookieJar = dynamic_cast<ResettableCookieJar*>(cookieJar);
+    if (resettableCookieJar) {
+        resettableCookieJar->reset();
+    }
+
     mIsPageLoaded = false;
 
     // The whole load process is limited by the timeout field.
