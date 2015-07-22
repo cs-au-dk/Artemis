@@ -267,7 +267,6 @@ DemoModeMainWindow::DemoModeMainWindow(AppModelPtr appModel, WebKitExecutor* web
     }
     QObject::connect(mWebPage, SIGNAL(sigNavigationRequest(QWebFrame*,QNetworkRequest,QWebPage::NavigationType)),
                      this, SLOT(slNavigationRequest(QWebFrame*,QNetworkRequest,QWebPage::NavigationType)));
-    mWebPage->mAcceptNavigation = false;
 
     // Do not capture AJAX callbacks, force them to be fired synchronously.
     QWebExecutionListener::getListener()->doNotCaptureAjaxCallbacks();
@@ -352,7 +351,6 @@ void DemoModeMainWindow::slLoadStarted()
 void DemoModeMainWindow::slLoadFinished(bool ok)
 {
     Log::debug("DEMO: Finished page load.");
-    mWebPage->mAcceptNavigation = false; // Now that we are done loading, any further navigation must be via loadUrl().
     mWebView->setEnabled(true); // Re-allow interaction with the page once it is loaded completely.
 }
 
@@ -396,13 +394,15 @@ void DemoModeMainWindow::slExecutedSequence(ExecutableConfigurationConstPtr conf
 }
 
 
-// Called when the ArtemisWebPage receives a request for navigation and we have set it's mAcceptingNavigation flag to false.
-// i.e. when we want to intercept the load and pass it to WebkitExecutor instead.
+// Called when the ArtemisWebPage receives a request for navigation.
+// This means there has been a page load we did not initiate (e.g. URL click, form submission, etc.).
+// So we need to notify WebKitExecutor that we are starting a new trace event though we didn't call executeSequence().
 void DemoModeMainWindow::slNavigationRequest(QWebFrame *frame, const QNetworkRequest &request, QWebPage::NavigationType type)
 {
     Log::debug(QString("DEMO: Navigation intercepted to %1").arg(request.url().toString()).toStdString());
 
-    loadUrl(request.url());
+    mWebkitExecutor->notifyNewSequence();
+    resetPageAnlaysis();
 }
 
 
@@ -499,19 +499,13 @@ void DemoModeMainWindow::displayTraceInformation()
 
 
 // Uses the webkit executor to load a URL.
-// All page loads (excluding navigations done during another load, such as fetching adverts, some redirections etc)
-// should be done via this function. mWebPage->mAcceptNavigation helps to ensure this is the case.
-// TODO: very similar method used in analysisserverruntime.cpp.
 void DemoModeMainWindow::loadUrl(QUrl url)
 {
-    mWebPage->mAcceptNavigation = true; // Allow navigation during load. This will be reset once the loading phase is finished.
     mWebView->setEnabled(false); // Disable interaction with the page during load.
 
     Log::debug(QString("CONCOLIC-INFO: Loading page %1").arg(url.toString()).toStdString());
     ExecutableConfigurationPtr initial = ExecutableConfigurationPtr(new ExecutableConfiguration(InputSequencePtr(new InputSequence()), url));
-    mWebkitExecutor->executeSequence(initial, MODE_CONCOLIC_CONTINUOUS); // Calls slExecutedSequence method as callback.
-
-    resetPageAnlaysis();
+    mWebkitExecutor->executeSequence(initial, MODE_CONCOLIC_CONTINUOUS); // Calls slStartedLoad, slFinishedLoad, slExecutedSequence, etc. methods as callbacks.
 }
 
 // Called when we load a new page to reset the entry point analysis information (in the app state and in the GUI).

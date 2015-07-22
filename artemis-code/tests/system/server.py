@@ -1909,6 +1909,68 @@ class AnalysisServerFeatureTests(AnalysisServerTestBase):
     def test_cookies_cleared_on_pageload(self):
         pass # TODO
     
+    def test_post_form_submission(self):
+        load_message = {
+                "command": "pageload",
+                "url": "http://www.w3schools.com/php/demo_form_post.php"
+            }
+        
+        load_response = send_to_server(load_message)
+        
+        self.assertIn("pageload", load_response)
+        
+        # Fill the fields
+        fill_message_1 = {
+                "command": "forminput",
+                "field": "//input[1]",
+                "value": "Test"
+            }
+        
+        fill_message_2 = {
+                "command": "forminput",
+                "field": "//input[2]",
+                "value": "test@example.com"
+            }
+        
+        fill_response_1 = send_to_server(fill_message_1)
+        self.assertNotIn("error", fill_response_1)
+        
+        fill_response_2 = send_to_server(fill_message_2)
+        self.assertNotIn("error", fill_response_1)
+        
+        # Submit the form (POST)
+        submit_message = {
+                "command": "click",
+                "element": "//input[@type='submit']"
+            }
+        
+        submit_response = send_to_server(submit_message)
+        self.assertNotIn("error", submit_response)
+        
+        time.sleep(1) # Click is not blocking on the submission. See: test_event_command_blocking_for_form_submission
+        
+        # Check it worked.
+        check_message = {
+                "command": "page",
+                "dom": True
+            }
+        
+        check_response = send_to_server(check_message)
+        
+        self.assertNotIn("error", check_response)
+        
+        self.assertIn("url", check_response)
+        self.assertEqual(check_response["url"], u"http://www.w3schools.com/php/welcome.php")
+        
+        self.assertIn("dom", check_response)
+        self.assertEqual(check_response["dom"], u"""<!DOCTYPE html><html><head></head><body>
+
+Welcome Test<br>
+Your email address is: test@example.com
+
+</body></html>""")
+        
+    
 
 
 class AnalysisServerSystemTests(AnalysisServerTestBase):

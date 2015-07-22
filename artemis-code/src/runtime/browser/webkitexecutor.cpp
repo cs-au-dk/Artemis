@@ -199,7 +199,15 @@ void WebKitExecutor::executeSequence(ExecutableConfigurationConstPtr conf)
 void WebKitExecutor::executeSequence(ExecutableConfigurationConstPtr conf, SYMBOLIC_MODE symbolicMode)
 {
     currentConf = conf;
+    mSymbolicMode = symbolicMode;
 
+    notifyNewSequence();
+
+    mPage->mainFrame()->load(conf->getUrl());
+}
+
+void WebKitExecutor::notifyNewSequence()
+{
     mJquery->reset(); // TODO merge into result?
     mResultBuilder->reset();
 
@@ -210,14 +218,11 @@ void WebKitExecutor::executeSequence(ExecutableConfigurationConstPtr conf, SYMBO
     mJavascriptStatistics->notifyStartingLoad();
     mPathTracer->notifyStartingLoad();
 
-    mSymbolicMode = symbolicMode;
-    if (symbolicMode == MODE_CONCOLIC || symbolicMode == MODE_CONCOLIC_CONTINUOUS) {
+    if (mSymbolicMode == MODE_CONCOLIC || mSymbolicMode == MODE_CONCOLIC_CONTINUOUS) {
         mWebkitListener->beginSymbolicSession();
     }
 
     mWebkitListener->clearAjaxCallbacks(); // reset the ajax callback ids
-
-    mPage->mainFrame()->load(conf->getUrl());
 }
 
 void WebKitExecutor::slLoadProgress(int i){

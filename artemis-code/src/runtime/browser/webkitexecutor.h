@@ -70,6 +70,7 @@ public:
 
     void executeSequence(ExecutableConfigurationConstPtr conf);
     void executeSequence(ExecutableConfigurationConstPtr conf, SYMBOLIC_MODE symbolicMode);
+    void notifyNewSequence();
     void detach();
 
     ArtemisWebPagePtr getPage();

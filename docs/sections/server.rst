@@ -202,7 +202,7 @@ Commands
     
         {
             "command": "page",
-            "dom": True
+            "dom": true
         }
     
     Recieve::

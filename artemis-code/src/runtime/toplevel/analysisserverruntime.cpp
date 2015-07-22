@@ -51,7 +51,6 @@ AnalysisServerRuntime::AnalysisServerRuntime(QObject* parent, const Options& opt
 
     QObject::connect(mWebkitExecutor->getPage().data(), SIGNAL(sigNavigationRequest(QWebFrame*,QNetworkRequest,QWebPage::NavigationType)),
                      this, SLOT(slNavigationRequest(QWebFrame*,QNetworkRequest,QWebPage::NavigationType)));
-    mWebkitExecutor->getPage()->mAcceptNavigation = false;
 
     QObject::connect(mWebkitExecutor->mWebkitListener, SIGNAL(sigPageLoadScheduled(QUrl)),
                      this, SLOT(slPageLoadScheduled(QUrl)));
@@ -564,11 +563,8 @@ void AnalysisServerRuntime::slResponseFinished()
 }
 
 
-// TODO: Very similar method used in demowindow.cpp
 void AnalysisServerRuntime::loadUrl(QUrl url)
 {
-    mWebkitExecutor->getPage()->mAcceptNavigation = true;
-
     ExecutableConfigurationPtr noInput = ExecutableConfigurationPtr(new ExecutableConfiguration(InputSequencePtr(new InputSequence()), url));
     mWebkitExecutor->executeSequence(noInput, MODE_CONCOLIC_CONTINUOUS); // Calls slExecutedSequence method as callback.
 }
@@ -610,7 +606,6 @@ void AnalysisServerRuntime::slExecutedSequence(ExecutableConfigurationConstPtr c
 
     case PAGELOAD:
         // Successfully finished loading the real URL.
-        mWebkitExecutor->getPage()->mAcceptNavigation = false; // Now the loading is finished any further navigation must be dealt with via slNavigationRequest.
 
         // Check for any redirection we detected.
         if (mIsScheduledRedirection) {
@@ -693,12 +688,12 @@ void AnalysisServerRuntime::slLoadTimeoutTriggered()
     // slExecutedSequence will now be called.
 }
 
-// Called when the ArtemisWebPage receives a request for navigation and we have set it's mAcceptingNavigation flag to false.
-// i.e. when we want to intercept the load and pass it to WebkitExecutor instead.
-// This is done to make sure that all navigation (including "implicit" navigation like clicking links) is handled via WebKitExecutor.
+// Called when the ArtemisWebPage receives a request for navigation.
+// This means there has been a page load we did not initiate (e.g. URL click, form submission, etc.).
+// So we need to notify WebKitExecutor that we are starting a new trace event though we didn't call executeSequence().
 void AnalysisServerRuntime::slNavigationRequest(QWebFrame *frame, const QNetworkRequest &request, QWebPage::NavigationType type)
 {
-    loadUrl(request.url());
+    mWebkitExecutor->notifyNewSequence();
 }
 
 // Called when a page load is scheduled.

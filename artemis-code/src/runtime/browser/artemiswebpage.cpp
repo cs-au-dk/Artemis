@@ -27,8 +27,7 @@ namespace artemis
 {
 
 ArtemisWebPage::ArtemisWebPage() :
-    QWebPage(NULL),
-    mAcceptNavigation(true) // Unless we are in manual mode and choose otherwise, we accept all navigation.
+    QWebPage(NULL)
 {
 }
 
@@ -127,25 +126,14 @@ QWebElementCollection ArtemisWebPage::getElementsByXPath(QString xPath)
 // This function is called whenever WebKit requests to navigate frame to the resource specified by request by means of the specified navigation type type.
 bool ArtemisWebPage::acceptNavigationRequest(QWebFrame *frame, const QNetworkRequest &request, QWebPage::NavigationType type)
 {
-    // In demo mode it is useful to be able to intercept all page loads (so they can be passed through webkit executor).
-    // By returning false here we forbid any within-page (i.e. via links, buttons, etc) navigation.
-    // The request is passed via this signal to the demo mode and can be handled there.
-
     //qDebug() << "NAVIGATION: " << request.url().toString() << " Type: " << type;
 
-    if (mAcceptNavigation || type == NavigationTypeOther) {
-        // Allow NavigationTypeOther requests to pass through. It seems that these are really non-navigational XMLHttpRequests
-        return true;
-
-    } else {
+    // Allow NavigationTypeOther requests to pass through. It seems that these are really non-navigational XMLHttpRequests
+    if (type != NavigationTypeOther) {
         emit sigNavigationRequest(frame, request, type);
-        return false;
-
-        // NOTE: I thought there may be a problem here because this function cannot return until the signal has been
-        // dealt with (which may result in a new page load itself).
-        // However, it actually seems to be working correctly, so it looks like QWebView is able to handle these
-        // overlapping loads cleanly after all.
     }
+
+    return true;
 }
 
 }
