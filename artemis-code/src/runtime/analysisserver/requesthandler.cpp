@@ -228,8 +228,8 @@ CommandPtr RequestHandler::pageloadCommand(QVariantMap mainObject)
         if (!ok) {
             return parseError("The 'timeout property for a pageload command must be a positive integer.");
         }
-        if (timeout > 30000) {
-            return parseError("The 'timeout' property must be at most 30,000 milliseconds.");
+        if (timeout > 3600000) {
+            return parseError("The 'timeout' property must be at most 3,600,000 milliseconds.");
         }
     }
 

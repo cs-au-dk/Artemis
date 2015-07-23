@@ -303,7 +303,6 @@ class AnalysisServerFeatureTests(AnalysisServerTestBase):
         See issue #116.
         """
         
-        
         message = {
                 "command": "pageload",
                 "url": fixture_url("redirect-js-2.html")

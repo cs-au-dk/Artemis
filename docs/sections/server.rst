@@ -67,7 +67,7 @@ Commands
     Loads a URL in the Artemis browser. The final URL we end up on after redirects etc. is returned.
     
     The optional ``timeout`` parameter is the number of milliseconds to wait before cancelling the load and returning
-    an error (integers 0--30000 accepted), 0 implies no timeout.
+    an error (integers 0--3600000 accepted), 0 implies no timeout.
     
     Send::
     
