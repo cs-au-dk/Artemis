@@ -51,7 +51,9 @@ WebKitExecutor::WebKitExecutor(QObject* parent,
                                bool enableEventVisibilityFiltering,
                                ConcolicBenchmarkFeatures disabledFeatures)
     : QObject(parent)
-    , mNextOpCanceled(false), mKeepOpen(false)
+    , mIgnoreCancelledPageLoad(false)
+    , mNextOpCanceled(false)
+    , mKeepOpen(false)
     , mSymbolicMode(MODE_CONCRETE)
 {
 
@@ -251,8 +253,11 @@ void WebKitExecutor::slLoadFinished(bool ok)
     if(mNextOpCanceled){
         mNextOpCanceled = false;
         qDebug() << "Page load cancelled";
-        emit sigAbortedExecution("Page load cancelled");
-        return;
+
+        if (!mIgnoreCancelledPageLoad) {
+            emit sigAbortedExecution("Page load cancelled");
+            return;
+        }
     }
 
     if(!ok){

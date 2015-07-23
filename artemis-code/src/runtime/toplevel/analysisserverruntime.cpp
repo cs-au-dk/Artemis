@@ -72,6 +72,9 @@ AnalysisServerRuntime::AnalysisServerRuntime(QObject* parent, const Options& opt
 
     // Do not capture AJAX callbacks, force them to be fired synchronously.
     QWebExecutionListener::getListener()->doNotCaptureAjaxCallbacks();
+
+    // Do not exit on a bad page load.
+    mWebkitExecutor->mIgnoreCancelledPageLoad = true;
 }
 
 void AnalysisServerRuntime::run(const QUrl &url)

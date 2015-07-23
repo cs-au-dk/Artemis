@@ -271,6 +271,8 @@ DemoModeMainWindow::DemoModeMainWindow(AppModelPtr appModel, WebKitExecutor* web
     // Do not capture AJAX callbacks, force them to be fired synchronously.
     QWebExecutionListener::getListener()->doNotCaptureAjaxCallbacks();
 
+    // Do not exit on a bad page load.
+    mWebkitExecutor->mIgnoreCancelledPageLoad = true;
 
     // TODO: all the above is temp and needs to move into ArtemisBrowserWidget.
 /*

@@ -83,6 +83,8 @@ public:
 
     QNetworkCookieJar* getCookieJar();
 
+    bool mIgnoreCancelledPageLoad;
+
 private:
 
     ArtemisWebPagePtr mPage;
