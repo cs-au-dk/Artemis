@@ -108,7 +108,8 @@ bool FormFieldInjector::injectWithEventSimulation(QWebElement element, Injection
      *
      * For text inputs:
      *  focus
-     *  //click <- N.B. this is not strictly necessary but included because lots of sites listen to it.
+     *  //click  // N.B. this is not strictly necessary but included because lots of sites listen to it.
+     *  //select // N.B. this is not strictly necessary but included because lots of sites listen to it.
      *  For each character:
      *      If capital:
      *          keydown (shift)
@@ -224,9 +225,10 @@ bool FormFieldInjector::simulateTextFieldFilling(QWebElement element, QString va
         }
 
         QString charCode = QString::number(value[i].toAscii());
+        QString charCodeUC = QString::number(value[i].toUpper().toAscii());
 
         // Send keydown event
-        element.evaluateJavaScript(keyboardEventJS.arg("keydown", value.at(i), charCode, shiftKey));
+        element.evaluateJavaScript(keyboardEventJS.arg("keydown", value.at(i), charCodeUC, shiftKey));
 
         // Send keypress event
         //qDebug() << keyboardEventJS.arg("keypress", value.at(i), charCode, shiftKey);
@@ -239,7 +241,7 @@ bool FormFieldInjector::simulateTextFieldFilling(QWebElement element, QString va
         element.evaluateJavaScript(inputEventJS);
 
         // Send keyup event
-        element.evaluateJavaScript(keyboardEventJS.arg("keyup", value.at(i), charCode, shiftKey));
+        element.evaluateJavaScript(keyboardEventJS.arg("keyup", value.at(i), charCodeUC, shiftKey));
 
         if (isCap) {
             // Send 'Shift' keyup event.

@@ -1446,6 +1446,35 @@ class AnalysisServerFeatureTests(AnalysisServerTestBase):
         
         self.assertStatusElementContains("#input-text set to 'Hello, world.' (keys: 'H','e','l','l','o',',',' ','w','o','r','l','d','.') (in focus)")
     
+    def test_forminput_command_method_simulate_js_key_events(self):
+        """
+        Check the key events are being simulated accurately enough.
+        Currently checks shift key use, charCode vs. keyCode and upper/lower case codes.
+        """
+        
+        load_message = {
+                "command": "pageload",
+                "url": fixture_url("form-key-events.html")
+            }
+        
+        load_response = send_to_server(load_message)
+        
+        self.assertIn("pageload", load_response)
+        
+        forminput_message = {
+            "command": "forminput",
+            "field": "id('input-text')",
+            "value": "Hello",
+            "method": "simulate-js"
+        }
+        
+        forminput_response = send_to_server(forminput_message)
+        
+        self.assertIn("forminput", forminput_response)
+        self.assertEqual(forminput_response["forminput"], u"done")
+        
+        self.assertStatusElementContains(" keydown 16; keydown 72; keypress 72; keyup 72; keyup 16; keydown 69; keypress 101; keyup 69; keydown 76; keypress 108; keyup 76; keydown 76; keypress 108; keyup 76; keydown 79; keypress 111; keyup 79;")
+    
     @unittest.skip("Not yet implemented.")
     def test_forminput_command_method_simulate_gui(self):
         pass # TODO

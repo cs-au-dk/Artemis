@@ -1,0 +1,44 @@
+<!DOCTYPE html><html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+    <title>Ben Spencer</title>
+    <meta name="author" content="Ben Spencer">
+
+    <script type="text/javascript" >
+        window.onload = function() {
+            
+            var status = document.getElementById("status");
+            
+            var input_text = document.getElementById("input-text");
+            
+            input_text.addEventListener("keydown", function (e) {
+                status.textContent += " keydown " + e.keyCode + ";"
+            }, false);
+            
+            input_text.addEventListener("keypress", function (e) {
+                status.textContent += " keypress " + e.charCode + ";"
+            }, false);
+            
+            input_text.addEventListener("keyup", function (e) {
+                status.textContent += " keyup " + e.keyCode + ";"
+            }, false);
+            
+        }
+        
+    </script>
+</head>
+<body>
+
+    <h1>Key event testing</h1>
+    <hr>
+    <p>Key events: <span id="status"></span></p>
+    <hr>
+
+    <form action="" method="GET" onsubmit="return false;" >
+        <input type="text" id="input-text" ><br>
+    </form>
+
+</body>
+</html>
