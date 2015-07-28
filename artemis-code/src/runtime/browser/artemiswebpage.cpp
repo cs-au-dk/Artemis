@@ -81,8 +81,6 @@ QString ArtemisWebPage::userAgentForUrl(const QUrl &url) const
 // If no element is found, or multiple are matched, then a null element is returned.
 QWebElement ArtemisWebPage::getSingleElementByXPath(QString xPath)
 {
-    // TODO: implement this in terms of getElementsByXPath.
-
     QWebElementCollection allMatches = getElementsByXPath(xPath);
 
     if (allMatches.count() != 1) {

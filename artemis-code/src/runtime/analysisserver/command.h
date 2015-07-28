@@ -121,12 +121,16 @@ typedef QSharedPointer<HandlersCommand> HandlersCommandPtr;
 class ClickCommand : public Command
 {
 public:
-    ClickCommand(QString xPath)
+    enum ClickSimulationMethod { Simple, SimulateJS, SimulateGUI };
+
+    ClickCommand(QString xPath, ClickSimulationMethod method)
         : xPath(xPath)
+        , method(method)
     {}
     virtual void accept(AnalysisServerRuntime* server);
 
     QString xPath;
+    ClickSimulationMethod method;
 };
 
 typedef QSharedPointer<ClickCommand> ClickCommandPtr;

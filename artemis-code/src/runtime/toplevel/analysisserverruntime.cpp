@@ -23,6 +23,7 @@
 
 #include "util/loggingutil.h"
 #include "util/delayutil.h"
+#include "runtime/input/clicksimulator.h"
 
 #include "analysisserverruntime.h"
 
@@ -234,29 +235,38 @@ void AnalysisServerRuntime::execute(ClickCommand *command)
     }
 
     // Look up the element
-    QWebElement document = mWebkitExecutor->getPage()->currentFrame()->documentElement();
-    QString escapedXPath = command->xPath;
-    escapedXPath.replace('"', "\\\"");
-    QString countingJS = QString("document.evaluate(\"%1\", document, null, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null).snapshotLength;").arg(escapedXPath);
-    uint count = document.evaluateJavaScript(countingJS, QUrl(), true).toUInt();
-    if (count == 0) {
-        emit sigCommandFinished(errorResponse("The XPath did not match any elements."));
-        return;
-    }
-    if (count > 1) {
-        emit sigCommandFinished(errorResponse(QString("The XPath did not match a unique element. There were %1 matching elements.").arg(count)));
+    QWebElement target = mWebkitExecutor->getPage()->getSingleElementByXPath(command->xPath);
+
+    if (target.isNull()) {
+        emit sigCommandFinished(errorResponse("Click target could not be found. The XPath either did not match or matched multiple elements."));
         return;
     }
 
-    // N.B. The XPath provided here is used as part of the event descriptor to decide which events are duplicates.
-    // So unless we create a "canonical" XPath here, different XPaths pointing to the same element will be considered
-    // different events by FieldReadLog. It's an API decision about whether canonical XPaths are best or returning the
-    // XPath given is best (the current decision).
-    mFieldReadLog.beginEvent("click", command->xPath);
+    // Get a canonical XPath and use this in the log.
+    mFieldReadLog.beginEvent("click", target.xPath());
 
     // Execute the click.
-    QString clickJS = QString("document.evaluate(\"%1\", document, null, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null).snapshotItem(0).click();").arg(escapedXPath);
-    document.evaluateJavaScript(clickJS, QUrl(), false); // Do not hide this click from Artemis' instrumentation.
+    switch (command->method) {
+    case ClickCommand::Simple:
+        ClickSimulator::clickByEvent(target);
+        break;
+
+    case ClickCommand::SimulateJS:
+        emit sigCommandFinished(errorResponse("Simulation of clicks by JS events is not yet supported."));
+        return;
+        //ClickSimulator::clickByUserEventSimulation(target);
+        break;
+
+    case ClickCommand::SimulateGUI:
+        emit sigCommandFinished(errorResponse("Simulation of clicks by GUI interaction is not yet supported."));
+        return;
+        break;
+
+    default:
+        emit sigCommandFinished(errorResponse("Unexpected simulation method for 'click' command."));
+        return;
+        break;
+    }
 
     QVariantMap result;
     result.insert("click", "done");

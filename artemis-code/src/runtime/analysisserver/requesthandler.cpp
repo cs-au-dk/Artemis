@@ -265,7 +265,26 @@ CommandPtr RequestHandler::clickCommand(QVariantMap mainObject)
         return parseError("The 'element' property for a click command must be a string.");
     }
 
-    return ClickCommandPtr(new ClickCommand(mainObject["element"].toString()));
+    // There may be an optional 'method' entry.
+    ClickCommand::ClickSimulationMethod method = ClickCommand::Simple; // By default use a single click event.
+    if (mainObject.contains("method")) {
+        if (mainObject["method"].type() != QVariant::String) {
+            return parseError("The 'method' property for a 'click' command must be a string.");
+        }
+
+        QString methodRequested = mainObject["method"].toString();
+        if (methodRequested == "simple") {
+            method = ClickCommand::Simple;
+        } else if (methodRequested == "simulate-js") {
+            method = ClickCommand::SimulateJS;
+        } else if (methodRequested == "simulate-gui") {
+            method = ClickCommand::SimulateGUI;
+        } else {
+            return parseError("The 'method' property for a 'click' command must be one of 'simple', 'simulate-js' or 'simulate-gui'.");
+        }
+    }
+
+    return ClickCommandPtr(new ClickCommand(mainObject["element"].toString(), method));
 }
 
 CommandPtr RequestHandler::pageCommand(QVariantMap mainObject)

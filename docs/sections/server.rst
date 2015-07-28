@@ -167,6 +167,29 @@ Commands
     
     Recieve: ``{"click": "done"}``
     
+    There is an optional ``method`` field, which allows you to choose the type of click performed.
+    Possible values are:
+    
+    ``simple`` (default)
+        Just generates a click event, in the saem way as the ``event`` command would.
+    
+    ``simulate-js``
+        Uses JavaScript events to simulate a user click.
+    
+    ``simulate-gui``
+        Not yet implemented.
+    
+    Send::
+    
+        {
+            "command": "click",
+            "element": "id(\"clickable\")",
+            "method": "simulate-js"
+        }
+    
+    Recieve: ``{"click": "done"}``
+    
+    
 * ``event``
     Triggers a JavaScript event on the element at the specified XPath.
     

@@ -616,6 +616,17 @@ class AnalysisServerFeatureTests(AnalysisServerTestBase):
         self.assertIn("handlers", handlers_final_response)
         self.assertEqual(len(handlers_final_response["handlers"]), 2)
     
+    def test_click_command_method_simple(self):
+        pass # TODO
+    
+    @unittest.skip("Not yet implemented.")
+    def test_click_command_method_simulate_js(self):
+        pass # TODO
+    
+    @unittest.skip("Not yet implemented.")
+    def test_click_command_method_simulate_gui(self):
+        pass # TODO
+    
     def test_dom_command_deprecated(self):
         message = {
             "command": "dom"
@@ -903,7 +914,7 @@ class AnalysisServerFeatureTests(AnalysisServerTestBase):
             {
                 "fieldsread": [
                     {
-                        "element": "//button[1]",
+                        "element": "/html/body[1]/form[1]/button[1]",
                         "event": "click",
                         "reads": [
                             {
@@ -913,7 +924,7 @@ class AnalysisServerFeatureTests(AnalysisServerTestBase):
                         ]
                     },
                     {
-                        "element": "//button[2]",
+                        "element": "/html/body[1]/form[1]/button[2]",
                         "event": "click",
                         "reads": [
                             {
@@ -923,7 +934,7 @@ class AnalysisServerFeatureTests(AnalysisServerTestBase):
                         ]
                     },
                     {
-                        "element": "//button[3]",
+                        "element": "/html/body[1]/form[1]/button[3]",
                         "event": "click",
                         "reads": [
                             {

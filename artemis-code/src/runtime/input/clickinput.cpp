@@ -42,6 +42,7 @@ void ClickInput::apply(ArtemisWebPagePtr page, QWebExecutionListener *webkitList
     // Trigger event
 
     // TODO: This code is duplicated in DemoModeMainWindow.
+    // TODO: Merge into ClickSimulator as a new GUI simulation method.
 
     // Find the element on the page (by injecting JS to do the XPath lookup)
 
