@@ -252,9 +252,7 @@ void AnalysisServerRuntime::execute(ClickCommand *command)
         break;
 
     case ClickCommand::SimulateJS:
-        emit sigCommandFinished(errorResponse("Simulation of clicks by JS events is not yet supported."));
-        return;
-        //ClickSimulator::clickByUserEventSimulation(target);
+        ClickSimulator::clickByUserEventSimulation(target);
         break;
 
     case ClickCommand::SimulateGUI:

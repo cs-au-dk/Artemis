@@ -31,7 +31,7 @@ public:
     static void clickByUserEventSimulation(QWebElement element);
 
 protected:
-    void triggerHandler(QWebElement element, QString eventName);
+    static void triggerHandler(QWebElement element, QString eventName);
 };
 
 } // namespace artemis

@@ -37,12 +37,20 @@ void ClickSimulator::clickByUserEventSimulation(QWebElement element)
         return;
     }
 
-    // TODO
+    triggerHandler(element, "mouseover");
+    triggerHandler(element, "mousemove");
+    triggerHandler(element, "mousedown");
+    triggerHandler(element, "focus");
+    triggerHandler(element, "mouseup");
+    triggerHandler(element, "click");
+    triggerHandler(element, "mousemove");
+    triggerHandler(element, "mouseout");
+    triggerHandler(element, "blur"); // TODO: Might need a 'noblur' option?
 }
 
 void ClickSimulator::triggerHandler(QWebElement element, QString eventName)
 {
-    // TODO: This doesn't really belong in FormFieldInjector at all...
+    // TODO: This general method doesn't really belong in FormFieldInjector at all...
     FormFieldInjector::triggerHandler(element, eventName);
 }
 

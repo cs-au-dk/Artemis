@@ -617,11 +617,50 @@ class AnalysisServerFeatureTests(AnalysisServerTestBase):
         self.assertEqual(len(handlers_final_response["handlers"]), 2)
     
     def test_click_command_method_simple(self):
-        pass # TODO
+        load_message = {
+                "command": "pageload",
+                "url": fixture_url("click-mouse-events.html")
+            }
+        
+        load_response = send_to_server(load_message)
+        
+        self.assertIn("pageload", load_response)
+        
+        click_message = {
+            "command": "click",
+            "element": "id('button')",
+            "method": "simple"
+        }
+        
+        click_response = send_to_server(click_message)
+        
+        self.assertIn("click", click_response)
+        self.assertNotIn("error", click_response)
+        
+        self.assertStatusElementContains("click ")
     
-    @unittest.skip("Not yet implemented.")
     def test_click_command_method_simulate_js(self):
-        pass # TODO
+        load_message = {
+                "command": "pageload",
+                "url": fixture_url("click-mouse-events.html")
+            }
+        
+        load_response = send_to_server(load_message)
+        
+        self.assertIn("pageload", load_response)
+        
+        click_message = {
+            "command": "click",
+            "element": "id('button')",
+            "method": "simulate-js"
+        }
+        
+        click_response = send_to_server(click_message)
+        
+        self.assertIn("click", click_response)
+        self.assertNotIn("error", click_response)
+        
+        self.assertStatusElementContains("mouseover mousemove mousedown focus mouseup click mousemove mouseout blur ")
     
     @unittest.skip("Not yet implemented.")
     def test_click_command_method_simulate_gui(self):
