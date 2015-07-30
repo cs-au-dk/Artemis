@@ -50,6 +50,9 @@ protected:
     CommandPtr createCommand(QVariant data);
     CommandPtr parseError(QString message);
 
+    QStringList unexpectedFields(QStringList expected, QVariantMap mainObject);
+    CommandPtr unexpectedFieldsError(QString command, QStringList unexpected);
+
     CommandPtr exitCommand(QVariantMap mainObject);
     CommandPtr echoCommand(QVariantMap mainObject);
     CommandPtr pageloadCommand(QVariantMap mainObject);

@@ -110,59 +110,105 @@ CommandPtr RequestHandler::createCommand(QVariant data)
 
     QString command = mainObject["command"].toString();
 
+    QStringList expectedFields;
+    CommandPtr cmdObject;
+
     // For each command, pull out the other relevant data.
     if (command == "exit") {
-        return exitCommand(mainObject);
+        expectedFields = QStringList();
+        cmdObject = exitCommand(mainObject);
 
     } else if (command == "echo") {
-        return echoCommand(mainObject);
+        expectedFields = QStringList() << "message" << "delay";
+        cmdObject = echoCommand(mainObject);
 
     } else if (command == "pageload") {
-        return pageloadCommand(mainObject);
+        expectedFields = QStringList() << "url" << "timeout";
+        cmdObject = pageloadCommand(mainObject);
 
     } else if (command == "handlers") {
-        return handlersCommand(mainObject);
+        expectedFields = QStringList() << "filter";
+        cmdObject = handlersCommand(mainObject);
 
     } else if (command == "click") {
-        return clickCommand(mainObject);
+        expectedFields = QStringList() << "element" << "method";
+        cmdObject = clickCommand(mainObject);
 
     } else if (command == "dom") {
         return parseError("The 'dom' command is no longer supported; it has been replaced by the 'page' command.");
 
     } else if (command == "page") {
-        return pageCommand(mainObject);
+        expectedFields = QStringList() << "dom";
+        cmdObject = pageCommand(mainObject);
 
     } else if (command == "element") {
-        return elementCommand(mainObject);
+        expectedFields = QStringList() << "element" << "property";
+        cmdObject = elementCommand(mainObject);
 
     } else if (command == "fieldsread") {
-        return fieldsReadCommand(mainObject);
+        expectedFields = QStringList();
+        cmdObject = fieldsReadCommand(mainObject);
 
     } else if (command == "backbutton") {
-        return backbuttonCommand(mainObject);
+        expectedFields = QStringList();
+        cmdObject = backbuttonCommand(mainObject);
 
     } else if (command == "forminput") {
-        return forminputCommand(mainObject);
+        expectedFields = QStringList() << "field" << "value" << "method" << "noblur";
+        cmdObject = forminputCommand(mainObject);
 
     } else if (command == "xpath") {
-        return xpathCommand(mainObject);
+        expectedFields = QStringList() << "xpath";
+        cmdObject = xpathCommand(mainObject);
 
     } else if (command == "event") {
-        return eventCommand(mainObject);
+        expectedFields = QStringList() << "element" << "event";
+        cmdObject = eventCommand(mainObject);
 
     } else if (command == "windowsize") {
-        return windowsizeCommand(mainObject);
+        expectedFields = QStringList() << "width" << "height";
+        cmdObject = windowsizeCommand(mainObject);
 
     } else {
         return parseError("Command was not recognised.");
     }
 
+    // If there were unexpected fields in the request, return an error.
+    QStringList unexpected = unexpectedFields(expectedFields, mainObject);
+    if (!unexpected.empty()) {
+        return unexpectedFieldsError(command, unexpected);
+    }
+
+    return cmdObject;
 }
 
 CommandPtr RequestHandler::parseError(QString message)
 {
     Log::debug(QString("  Request handler: Parse error: %1").arg(message).toStdString());
     return ErrorCommandPtr(new ErrorCommand(message));
+}
+
+QStringList RequestHandler::unexpectedFields(QStringList expected, QVariantMap mainObject)
+{
+    QStringList error;
+    expected.append("command");
+
+    foreach(QString key, mainObject.keys()) {
+        if (!expected.contains(key)) {
+            error.append(key);
+        }
+    }
+
+    return error;
+}
+
+CommandPtr RequestHandler::unexpectedFieldsError(QString command, QStringList unexpected)
+{
+    assert(unexpected.length() > 0);
+    return parseError(QString("Unexpected field%1 '%2' in '%3' command.")
+                      .arg(unexpected.length() > 1 ? "s" : "")
+                      .arg(unexpected.join("', '"))
+                      .arg(command));
 }
 
 CommandPtr RequestHandler::exitCommand(QVariantMap mainObject)

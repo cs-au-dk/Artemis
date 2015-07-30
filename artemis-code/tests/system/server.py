@@ -119,6 +119,17 @@ class AnalysisServerFeatureTests(AnalysisServerTestBase):
         
         self.assertIn("error", response)
     
+    def test_unexpected_field(self):
+        message = {
+                "command": "echo",
+                "message": "Hello, World!",
+                "fake-option": "some value"
+            }
+        
+        response = send_to_server(message)
+        
+        self.assertIn("error", response)
+    
     def test_response_headers(self):
         message = {
                 "command": "echo",
