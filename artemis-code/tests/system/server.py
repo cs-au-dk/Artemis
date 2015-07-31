@@ -673,9 +673,51 @@ class AnalysisServerFeatureTests(AnalysisServerTestBase):
         
         self.assertStatusElementContains("mouseover mousemove mousedown focus mouseup click mousemove mouseout blur ")
     
-    @unittest.skip("Not yet implemented.")
     def test_click_command_method_simulate_gui(self):
-        pass # TODO
+        load_message = {
+                "command": "pageload",
+                "url": fixture_url("click-mouse-events.html")
+            }
+        
+        load_response = send_to_server(load_message)
+        
+        self.assertIn("pageload", load_response)
+        
+        click_message = {
+            "command": "click",
+            "element": "id('button')",
+            "method": "simulate-gui"
+        }
+        
+        click_response = send_to_server(click_message)
+        
+        self.assertIn("click", click_response)
+        self.assertNotIn("error", click_response)
+        
+        self.assertStatusElementContains("mouseover mousedown focus mouseup click ")
+    
+    def test_click_command_method_simulate_gui_with_scroll(self):
+        load_message = {
+                "command": "pageload",
+                "url": fixture_url("click-mouse-events.html")
+            }
+        
+        load_response = send_to_server(load_message)
+        
+        self.assertIn("pageload", load_response)
+        
+        click_message = {
+            "command": "click",
+            "element": "id('button-below-fold')",
+            "method": "simulate-gui"
+        }
+        
+        click_response = send_to_server(click_message)
+        
+        self.assertIn("click", click_response)
+        self.assertNotIn("error", click_response)
+        
+        self.assertStatusElementContains("below-fold-click ")
     
     def test_dom_command_deprecated(self):
         message = {

@@ -12,6 +12,7 @@
             var status = document.getElementById("status");
             
             var btn = document.getElementById("button");
+            var btn2 = document.getElementById("button-below-fold");
             
             var evts = ["mousedown", "mouseup", "mouseover", "mouseout", "mousemove", "click", "focus", "blur"];
             
@@ -22,6 +23,10 @@
                 }, false);
                 
             });
+            
+            btn2.addEventListener("click", function (e) {
+                status.textContent += "below-fold-click "
+            }, false);
             
         }
         
@@ -35,6 +40,9 @@
     <hr>
 
     <button id="button" >Test button</button>
+
+    <hr style="margin-top: 1500px;" >
+    <button id="button-below-fold" >Below the fold button</button>
 
 </body>
 </html>

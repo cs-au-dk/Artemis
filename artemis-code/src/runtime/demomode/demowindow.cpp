@@ -19,6 +19,7 @@
 #include "demowindow.h"
 
 #include "util/loggingutil.h"
+#include "runtime/input/clicksimulator.h"
 
 namespace artemis
 {
@@ -257,15 +258,8 @@ DemoModeMainWindow::DemoModeMainWindow(AppModelPtr appModel, WebKitExecutor* web
 
 
     // Configure the connection with ArtemisWebPage which allows interception of page loads.
-    // TODO: the pointer from mWebViw is only to QWebPage, but we need ArtemisWebPage.
-    // This cast seems a bit of a hack, but we also don't want to modify QWebPage with the extra functionality we need.
-    // Maybe it would be better to modify ArtemisWebView to return ArtemisWebPage from the page() method?
-    mWebPage = dynamic_cast<ArtemisWebPage*>(mWebView->page());
-    if(!mWebPage){
-        Log::fatal("Using an ArtemisWebView which does not use an ArtemisWebPage.");
-        exit(1);
-    }
-    QObject::connect(mWebPage, SIGNAL(sigNavigationRequest(QWebFrame*,QNetworkRequest,QWebPage::NavigationType)),
+    mWebPage = mWebkitExecutor->getPage();
+    QObject::connect(mWebPage.data(), SIGNAL(sigNavigationRequest(QWebFrame*,QNetworkRequest,QWebPage::NavigationType)),
                      this, SLOT(slNavigationRequest(QWebFrame*,QNetworkRequest,QWebPage::NavigationType)));
 
     // Do not capture AJAX callbacks, force them to be fired synchronously.
@@ -732,21 +726,10 @@ void DemoModeMainWindow::slEnterManualEntryPoint()
     // Clear highlighting on previously selected elements.
     foreach(QWebElement button, mManualEntryPointMatches){
         button.setStyleProperty("outline", "none");
-        button.removeAttribute("artformbutton");
     }
 
-    // TODO: The following code is duplicated in ClickInput.
-
-    // Check if this element is available (and unique) on the page and highlight it.
-    // To use QXmlQuery for XPath lookups we would need to parse the DOM as XML, and it will typically be invalid.
-    // Instead we will inject some JavaScript to do the XPath lookup and then look up those elements from here.
-
-    QWebElement document = mWebPage->currentFrame()->documentElement();
-    QString jsInjection = QString("var ArtFormButtons = document.evaluate(\"%1\", document, null, XPathResult.UNORDERED_NODE_SNAPSHOT_TYPE, null); for(var i = 0; i < ArtFormButtons.snapshotLength; i++){ ArtFormButtons.snapshotItem(i).setAttribute('artformbutton', 'true'); };").arg(QString(mManualEntryPointXPath).replace('"', "\\\""));
-    document.evaluateJavaScript(jsInjection, QUrl(), true);
-    // TODO: look into whether we could read any useful results from this call.
-
-    mManualEntryPointMatches = document.findAll("*[artformbutton]");
+    // Highlight any matches
+    mManualEntryPointMatches = mWebPage->getElementsByXPath(mManualEntryPointXPath);
     foreach(QWebElement button, mManualEntryPointMatches){
         button.setStyleProperty("outline", "10px solid orange");
     }
@@ -759,23 +742,19 @@ void DemoModeMainWindow::slEnterManualEntryPoint()
     mManualEntryPointElement = mManualEntryPointMatches.at(0);
 
     // Find the coordinates of the element
-    mManualEntryPointCoordinates = mManualEntryPointElement.geometry().center();
+    mManualEntryPointCoordinates = ClickSimulator::getElementCoordinates(mManualEntryPointElement);
     // TODO: Is it possible to add a marker on the page at these coordinates (e.g. by injecting a small JS snippet)?
 
-    mManualEntryPointDescription->setText(QString("%1\nClick at: (%2,%3).").arg(mManualEntryPointDescription->text()).arg(mManualEntryPointCoordinates.x()).arg(mManualEntryPointCoordinates.y()));
+    mManualEntryPointDescription->setText(QString("%1\nTarget at: (%2,%3).").arg(mManualEntryPointDescription->text()).arg(mManualEntryPointCoordinates.x()).arg(mManualEntryPointCoordinates.y()));
 
-    // Enable the button and to click it.
+    // Enable the button to click it.
     mManualEntryPointClickBtn->setEnabled(true);
 }
 
 // Attached to the "click the maual entry point" button.
 void DemoModeMainWindow::slClickManualEntryPoint()
 {
-    QMouseEvent mouseButtonPress(QEvent::MouseButtonPress, mManualEntryPointCoordinates, Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
-    QApplication::sendEvent(mWebPage, &mouseButtonPress);
-
-    QMouseEvent mouseButtonRelease(QEvent::MouseButtonRelease, mManualEntryPointCoordinates, Qt::LeftButton, Qt::LeftButton, Qt::NoModifier);
-    QApplication::sendEvent(mWebPage, &mouseButtonRelease);
+    ClickSimulator::clickByGuiSimulation(mManualEntryPointElement, mWebPage);
 }
 
 

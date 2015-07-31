@@ -84,7 +84,7 @@ QWebElement ArtemisWebPage::getSingleElementByXPath(QString xPath)
     QWebElementCollection allMatches = getElementsByXPath(xPath);
 
     if (allMatches.count() != 1) {
-        Log::debug(QString("getElementByXPath: Found %1 elements, but the XPath should match exactly one.").arg(allMatches.count()).toStdString());
+        Log::debug(QString("getSingleElementByXPath: Found %1 elements, but the XPath should match exactly one.").arg(allMatches.count()).toStdString());
         return QWebElement();
     }
 
@@ -93,6 +93,9 @@ QWebElement ArtemisWebPage::getSingleElementByXPath(QString xPath)
 
 QWebElementCollection ArtemisWebPage::getElementsByXPath(QString xPath)
 {
+    // To use QXmlQuery for XPath lookups we would need to parse the DOM as XML, and it will typically be invalid.
+    // Instead we will inject some JavaScript to do the XPath lookup and then look up those elements from here.
+
     QString escapedXPath(xPath);
     escapedXPath.replace('"', "\\\"");
 
@@ -105,7 +108,7 @@ QWebElementCollection ArtemisWebPage::getElementsByXPath(QString xPath)
     int eltCount = document.evaluateJavaScript(jsInjection, QUrl(), true).toInt();
 
     if (eltCount == 0) {
-        Log::debug(QString("getElementByXPath: Found %1 elements, but the XPath should match at least one.").arg(eltCount).toStdString());
+        Log::debug(QString("getElementsByXPath: Found %1 elements, but the XPath should match at least one.").arg(eltCount).toStdString());
         return QWebElementCollection();
     }
 

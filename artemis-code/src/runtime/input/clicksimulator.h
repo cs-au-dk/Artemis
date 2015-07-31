@@ -20,6 +20,9 @@
 #include <QString>
 #include <QDebug>
 #include <QWebElement>
+#include <QPoint>
+
+#include "runtime/browser/artemiswebpage.h"
 
 namespace artemis
 {
@@ -29,6 +32,8 @@ class ClickSimulator
 public:
     static void clickByEvent(QWebElement element);
     static void clickByUserEventSimulation(QWebElement element);
+    static void clickByGuiSimulation(QWebElement element, ArtemisWebPagePtr page);
+    static QPoint getElementCoordinates(QWebElement element);
 
 protected:
     static void triggerHandler(QWebElement element, QString eventName);

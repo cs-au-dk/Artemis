@@ -256,8 +256,7 @@ void AnalysisServerRuntime::execute(ClickCommand *command)
         break;
 
     case ClickCommand::SimulateGUI:
-        emit sigCommandFinished(errorResponse("Simulation of clicks by GUI interaction is not yet supported."));
-        return;
+        ClickSimulator::clickByGuiSimulation(target, mWebkitExecutor->getPage());
         break;
 
     default:

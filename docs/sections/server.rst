@@ -177,7 +177,11 @@ Commands
         Uses JavaScript events to simulate a user click.
     
     ``simulate-gui``
-        Not yet implemented.
+        Uses GUI events to simulate a click.
+        
+        N.B. This click is done by clicking the coordinates at the centre of the element. If the element is behind
+        another element or the element bounding box is larger than the clickable/visible area, this command can miss
+        and click the wrong thing.
     
     Send::
     
