@@ -24,6 +24,7 @@ OUTPUT_DIR = '.output'
 ARTEMIS_SERVER_PORT = 8008
 ARTEMIS_SERVER_URL = 'http://localhost:%s' % ARTEMIS_SERVER_PORT
 
+DEBUG_SHOW_ARTEMIS_OUTPUT = False
 
 
 class AnalysisServerTestBase(unittest.TestCase):
@@ -2086,7 +2087,16 @@ class AnalysisServerFeatureTests(AnalysisServerTestBase):
                 "dom": True
             }
         
-        check_response = send_to_server(check_message)
+        # TODO: There are stability problems with this test specifically.
+        # The server is often crashed after the previous call, so (temporarily) check for this and produce a more
+        # readable error message.
+        try:
+            check_response = send_to_server(check_message)
+        except urllib2.URLError as e:
+            if e.reason.errno == 111:
+                self.fail("Server crashed.")
+            else:
+                raise
         
         self.assertNotIn("error", check_response)
         
@@ -2131,8 +2141,10 @@ def run_artemis_server(test_name="test"):
     
     cmd = [ARTEMIS_EXEC] + ["--major-mode", "server", "--analysis-server-port", str(ARTEMIS_SERVER_PORT), "-v", "all"]
     
-    # For debugging, remove the stdout=subprocess.PIPE part to see Artemis' output on screen.
-    p = subprocess.Popen(cmd, cwd=output_dir, stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
+    if DEBUG_SHOW_ARTEMIS_OUTPUT:
+        p = subprocess.Popen(cmd, cwd=output_dir)
+    else:
+        p = subprocess.Popen(cmd, cwd=output_dir, stderr=subprocess.STDOUT, stdout=subprocess.PIPE)
     
     # Wait for the server to come up (max 1s).
     i = 0
@@ -2154,6 +2166,8 @@ def run_artemis_server(test_name="test"):
 
 def send_to_server(message, encode_json=True, timeout=None, return_urllib_response=False):
     """Sends a command to the running server and returns the result."""
+    
+    time.sleep(0.1) # A small wait here to allow the server to settle down makes the test suite more reliable.
     
     if encode_json:
         data = json.dumps(message)
