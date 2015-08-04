@@ -2088,15 +2088,8 @@ class AnalysisServerFeatureTests(AnalysisServerTestBase):
             }
         
         # TODO: There are stability problems with this test specifically.
-        # The server is often crashed after the previous call, so (temporarily) check for this and produce a more
-        # readable error message.
-        try:
-            check_response = send_to_server(check_message)
-        except urllib2.URLError as e:
-            if e.reason.errno == 111:
-                self.fail("Server crashed.")
-            else:
-                raise
+        # The server is often crashed after the previous call.
+        check_response = send_to_server(check_message)
         
         self.assertNotIn("error", check_response)
         
@@ -2116,6 +2109,21 @@ Your email address is: test@example.com
 
 class AnalysisServerSystemTests(AnalysisServerTestBase):
     pass
+    
+
+
+
+class ArtemisCrash(Exception):
+    pass
+
+class ErrorCatchingTestResult(unittest.TextTestResult):
+    def addError(self, test, err):
+        # If the error is a ZeroDivisionException then we replace it with CustomException
+        if isinstance(err[1], urllib2.URLError) and err[1].reason.errno == 111 :
+            err = (ArtemisCrash, ArtemisCrash(err[1]), err[2])
+        
+        # Otherwise report this error as normal.
+        super(ErrorCatchingTestResult, self).addError(test, err)
     
 
 
@@ -2194,6 +2202,6 @@ def check_no_existing_server():
 
 if __name__ == '__main__':
     if check_no_existing_server():
-        unittest.main(buffer=True, catchbreak=True)
+        unittest.main(buffer=True, catchbreak=True, testRunner=unittest.TextTestRunner(resultclass=ErrorCatchingTestResult))
     else:
         print "There is already a server running at %s which will affect the tests." % ARTEMIS_SERVER_URL
