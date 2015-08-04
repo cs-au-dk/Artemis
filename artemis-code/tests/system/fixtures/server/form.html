@@ -22,8 +22,8 @@
     <h1>Button handlers read different form fields</h1>
 
     <form action="" method="GET" >
-        <input type="text" id="first" ><br>
-        <input type="text" id="second" ><br>
+        <input type="text" id="first" onchange="validate('first')" ><br>
+        <input type="text" id="second" onchange="validate('second')" ><br>
         <br>
         <button type="button" onclick="validate('first')" >Validate first</button><br>
         <button type="button" onclick="validate('second')" >Validate second</button><br>

@@ -1008,7 +1008,7 @@ class AnalysisServerFeatureTests(AnalysisServerTestBase):
                 "fieldsread": [
                     {
                         "element": "/html/body[1]/form[1]/button[1]",
-                        "event": "click",
+                        "event": "click/simple",
                         "reads": [
                             {
                                 "count": 2,
@@ -1018,7 +1018,7 @@ class AnalysisServerFeatureTests(AnalysisServerTestBase):
                     },
                     {
                         "element": "/html/body[1]/form[1]/button[2]",
-                        "event": "click",
+                        "event": "click/simple",
                         "reads": [
                             {
                                 "count": 1,
@@ -1028,7 +1028,7 @@ class AnalysisServerFeatureTests(AnalysisServerTestBase):
                     },
                     {
                         "element": "/html/body[1]/form[1]/button[3]",
-                        "event": "click",
+                        "event": "click/simple",
                         "reads": [
                             {
                                 "count": 3,
@@ -1037,6 +1037,131 @@ class AnalysisServerFeatureTests(AnalysisServerTestBase):
                             {
                                 "count": 3,
                                 "field": "//input[@id='second']"
+                            }
+                        ]
+                    }
+                ]
+            }
+        """)
+        
+        self.assertEqual(fieldsread_response, expected)
+    
+    def test_fieldsread_command_with_various_events(self):
+        load_message = {
+                "command": "pageload",
+                "url": fixture_url("form.html")
+            }
+        
+        load_response = send_to_server(load_message)
+        
+        self.assertIn("pageload", load_response)
+        
+        event_messages = [
+                {
+                    "command": "click",
+                    "element": "//button[1]",
+                    "method": "simple"
+                },
+                {
+                    "command": "click",
+                    "element": "//button[1]",
+                    "method": "simulate-js"
+                },
+                {
+                    "command": "event",
+                    "element": "//button[1]",
+                    "event": "click"
+                },
+                {
+                    "command": "event",
+                    "element": "//input[1]",
+                    "event": "change"
+                },
+                {
+                    "command": "forminput",
+                    "field": "//input[1]",
+                    "value": "Test",
+                    "method": "onchange"
+                },
+                {
+                    "command": "forminput",
+                    "field": "//input[1]",
+                    "value": "Test",
+                    "method": "simulate-js"
+                }
+            ]
+        
+        for evt_message in event_messages:
+            r = send_to_server(evt_message)
+            self.assertNotIn("error", r)
+        
+        # Send the fieldsread command
+        fieldsread_message = {
+            "command": "fieldsread"
+        }
+        
+        fieldsread_response = send_to_server(fieldsread_message)
+        
+        expected = json.loads("""
+            {
+                "fieldsread": [
+                    {
+                        "element": "/html/body[1]/form[1]/button[1]",
+                        "event": "click/simple",
+                        "reads": [
+                            {
+                                "count": 1,
+                                "field": "//input[@id='first']"
+                            }
+                        ]
+                    },
+                    {
+                        "element": "/html/body[1]/form[1]/button[1]",
+                        "event": "click/simulate-js",
+                        "reads": [
+                            {
+                                "count": 1,
+                                "field": "//input[@id='first']"
+                            }
+                        ]
+                    },
+                    {
+                        "element": "//input[@id='first']",
+                        "event": "event/change",
+                        "reads": [
+                            {
+                                "count": 1,
+                                "field": "//input[@id='first']"
+                            }
+                        ]
+                    },
+                    {
+                        "element": "/html/body[1]/form[1]/button[1]",
+                        "event": "event/click",
+                        "reads": [
+                            {
+                                "count": 1,
+                                "field": "//input[@id='first']"
+                            }
+                        ]
+                    },
+                    {
+                        "element": "//input[@id='first']",
+                        "event": "forminput/onchange",
+                        "reads": [
+                            {
+                                "count": 1,
+                                "field": "//input[@id='first']"
+                            }
+                        ]
+                    },
+                    {
+                        "element": "//input[@id='first']",
+                        "event": "forminput/simulate-js",
+                        "reads": [
+                            {
+                                "count": 1,
+                                "field": "//input[@id='first']"
                             }
                         ]
                     }

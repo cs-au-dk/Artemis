@@ -242,8 +242,9 @@ void AnalysisServerRuntime::execute(ClickCommand *command)
         return;
     }
 
-    // Get a canonical XPath and use this in the log.
-    mFieldReadLog.beginEvent("click", target.xPath());
+    // Add this event to the fields-read log.
+    QString eventDescription = QString("click/%1").arg(command->methodStr);
+    mFieldReadLog.beginEvent(eventDescription, target.xPath()); // Use a canonical XPath.
 
     // Execute the click.
     switch (command->method) {
@@ -414,6 +415,10 @@ void AnalysisServerRuntime::execute(FormInputCommand *command)
         return;
     }
 
+    // Add this event to the fields-read log.
+    QString eventDescription = QString("forminput/%1").arg(command->methodStr);
+    mFieldReadLog.beginEvent(eventDescription, field.xPath()); // Use a canonical XPath.
+
     bool couldInject;
 
     // Inject
@@ -520,6 +525,10 @@ void AnalysisServerRuntime::execute(EventTriggerCommand *command)
         emit sigCommandFinished(errorResponse("Target element could not be found. The XPath either did not match or matched multiple elements."));
         return;
     }
+
+    // Add this event to the fields-read log.
+    QString eventDescription = QString("event/%1").arg(command->event);
+    mFieldReadLog.beginEvent(eventDescription, target.xPath()); // Use a canonical XPath.
 
     // Build and trigger the event.
     FormFieldInjector::triggerHandler(target, command->event);

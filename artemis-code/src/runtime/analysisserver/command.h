@@ -123,14 +123,16 @@ class ClickCommand : public Command
 public:
     enum ClickSimulationMethod { Simple, SimulateJS, SimulateGUI };
 
-    ClickCommand(QString xPath, ClickSimulationMethod method)
+    ClickCommand(QString xPath, ClickSimulationMethod method, QString methodStr)
         : xPath(xPath)
         , method(method)
+        , methodStr(methodStr)
     {}
     virtual void accept(AnalysisServerRuntime* server);
 
     QString xPath;
     ClickSimulationMethod method;
+    QString methodStr;
 };
 
 typedef QSharedPointer<ClickCommand> ClickCommandPtr;
@@ -189,10 +191,11 @@ class FormInputCommand : public Command
 public:
     enum InputSimulationMethod { Inject, OnChange, SimulateJS, SimulateGUI };
 
-    FormInputCommand(QString field, InjectionValue value, InputSimulationMethod method, bool noBlur)
+    FormInputCommand(QString field, InjectionValue value, InputSimulationMethod method, QString methodStr, bool noBlur)
         : field(field)
         , value(value)
         , method(method)
+        , methodStr(methodStr)
         , noBlur(noBlur)
     {}
     virtual void accept(AnalysisServerRuntime* server);
@@ -200,6 +203,7 @@ public:
     QString field;
     InjectionValue value;
     InputSimulationMethod method;
+    QString methodStr;
     bool noBlur;
 };
 

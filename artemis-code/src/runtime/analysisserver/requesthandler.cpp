@@ -313,12 +313,13 @@ CommandPtr RequestHandler::clickCommand(QVariantMap mainObject)
 
     // There may be an optional 'method' entry.
     ClickCommand::ClickSimulationMethod method = ClickCommand::Simple; // By default use a single click event.
+    QString methodRequested = "simple";
     if (mainObject.contains("method")) {
         if (mainObject["method"].type() != QVariant::String) {
             return parseError("The 'method' property for a 'click' command must be a string.");
         }
 
-        QString methodRequested = mainObject["method"].toString();
+        methodRequested = mainObject["method"].toString();
         if (methodRequested == "simple") {
             method = ClickCommand::Simple;
         } else if (methodRequested == "simulate-js") {
@@ -330,7 +331,7 @@ CommandPtr RequestHandler::clickCommand(QVariantMap mainObject)
         }
     }
 
-    return ClickCommandPtr(new ClickCommand(mainObject["element"].toString(), method));
+    return ClickCommandPtr(new ClickCommand(mainObject["element"].toString(), method, methodRequested));
 }
 
 CommandPtr RequestHandler::pageCommand(QVariantMap mainObject)
@@ -423,12 +424,13 @@ CommandPtr RequestHandler::forminputCommand(QVariantMap mainObject)
 
     // There may be an optional 'method' entry.
     FormInputCommand::InputSimulationMethod method = FormInputCommand::OnChange; // By default use onchange-triggerng.
+    QString methodRequested = "onchange";
     if (mainObject.contains("method")) {
         if (mainObject["method"].type() != QVariant::String) {
             return parseError("The 'method' property for a forminput command must be a string.");
         }
 
-        QString methodRequested = mainObject["method"].toString();
+        methodRequested = mainObject["method"].toString();
         if (methodRequested == "inject") {
             method = FormInputCommand::Inject;
         } else if (methodRequested == "onchange") {
@@ -455,7 +457,7 @@ CommandPtr RequestHandler::forminputCommand(QVariantMap mainObject)
         noBlur = mainObject["noblur"].toBool();
     }
 
-    return FormInputCommandPtr(new FormInputCommand(mainObject["field"].toString(), value, method, noBlur));
+    return FormInputCommandPtr(new FormInputCommand(mainObject["field"].toString(), value, method, methodRequested, noBlur));
 }
 
 CommandPtr RequestHandler::xpathCommand(QVariantMap mainObject)
