@@ -23,10 +23,14 @@ def list_tests_in_folder(folder):
         p = join(folder, f)
         if not isfile(p) or f[0:1] == "_" or f[0:1] == "%" or not f[-5:] == '.html':
             continue
-        result = {"test": {}, "i_test": {}, "fn": f}
+        result = {"test": {}, "i_test": {}, "fn": f, "expected_failure": False}
         with open(p, 'r') as fl:
             if re.match("^\s*<!--\s*$", fl.readline()):
                 for line in fl:
+                    ef = re.match("^\s*EXPECTED_FAILURE", line)
+                    if ef:
+                        result["expected_failure"] = True
+                        continue
                     m = re.match("\s*TEST(_INTERN)? ([^<>!=\s]+)\s*((<|>|=|!)=?)([^=].*)$", line)
                     if not m:
                         continue
@@ -130,7 +134,11 @@ if __name__ == '__main__':
     for t in list_tests_in_folder(FIXTURE_ROOT):
         test_name = 'test_%s' % t['fn'].replace(".", "_")
         file_name = "%s%s" % (FIXTURE_ROOT, t['fn'])
+        
         test = test_generator(_artemis_runner, file_name, test_name, test_dict=t['test'], internal_test=t['i_test'])
+        if t['expected_failure']:
+            test = unittest.expectedFailure(test)
+        
         setattr(Concolic, test_name, test)
 
     unittest.main(buffer=True, catchbreak=True)

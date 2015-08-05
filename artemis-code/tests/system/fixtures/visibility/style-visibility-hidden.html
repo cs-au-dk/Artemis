@@ -1,4 +1,5 @@
 <!--
+EXPECTED_FAILURE
 TEST WebKit::events::skipped::visibility = 1
 TEST InputGenerator::added-configurations = 0
 -->
@@ -13,7 +14,7 @@ TEST InputGenerator::added-configurations = 0
 </head>
 <body>
 
-    <button style="display:none;" onclick="alert('Clicked')" >Click me</button>
+    <button style="visibility: hidden;" onclick="alert('Clicked')" >Click me</button>
 
 </body>
 </html>

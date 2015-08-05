@@ -29,7 +29,11 @@ if __name__ == '__main__':
     for t in concolic.list_tests_in_folder(VISIBILITY_FIXTURE_ROOT):
         test_name = 'test_%s' % t['fn'].replace(".", "_")
         file_name = "%s%s" % (VISIBILITY_FIXTURE_ROOT, t['fn'])
+        
         test = concolic.test_generator(_visibility_artemis_runner, file_name, test_name, test_dict=t['test'], internal_test=t['i_test'])
+        if t['expected_failure']:
+            test = unittest.expectedFailure(test)
+        
         setattr(Visibility, test_name, test)
 
     unittest.main(buffer=True, catchbreak=True)
