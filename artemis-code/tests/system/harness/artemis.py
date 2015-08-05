@@ -42,6 +42,7 @@ def execute_artemis(execution_uuid, url, iterations=1,
                     concolic_selection_budget=None,
                     verbosity=None,
                     sys_timeout=None,
+                    event_visibility_check=None,
                     extra_args=None, #TODO: Use kwargs instead.
                     **kwargs):
     output_dir = os.path.join(output_parent_dir, execution_uuid)
@@ -76,6 +77,10 @@ def execute_artemis(execution_uuid, url, iterations=1,
     else:
         args.append('-v')
         args.append('all')
+
+    if event_visibility_check is not None:
+        args.append('--event-visibility-check')
+        args.append("true" if event_visibility_check else "false")
 
     for key in kwargs:
         args.append('--%s' % key.replace('_', '-'))

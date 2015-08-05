@@ -117,7 +117,7 @@ def main():
         
         setattr(EventDelegation, test_name, test)
     
-    unittest.main(buffer=True)
+    unittest.main(buffer=True, catchbreak=True)
     
 
 if __name__ == "__main__":

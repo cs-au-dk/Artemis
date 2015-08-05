@@ -16,7 +16,7 @@ from os.path import isfile, join
 class Concolic(unittest.TestCase):
     pass
 
-def _list_tests_in_folder(folder):
+def list_tests_in_folder(folder):
     out = []
 
     for f in listdir(folder):
@@ -127,11 +127,11 @@ def _artemis_runner(name, path):
 
 if __name__ == '__main__':
 
-    for t in _list_tests_in_folder(FIXTURE_ROOT):
+    for t in list_tests_in_folder(FIXTURE_ROOT):
         test_name = 'test_%s' % t['fn'].replace(".", "_")
         file_name = "%s%s" % (FIXTURE_ROOT, t['fn'])
         test = test_generator(_artemis_runner, file_name, test_name, test_dict=t['test'], internal_test=t['i_test'])
         setattr(Concolic, test_name, test)
 
-    unittest.main(buffer=True)
+    unittest.main(buffer=True, catchbreak=True)
 

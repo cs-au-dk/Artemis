@@ -44,6 +44,10 @@ void ArtemisRuntime::run(const QUrl& url)
 
     mWorklist->add(initialConfiguration, mAppmodel);
 
+    if (mOptions.enableEventVisibilityFiltering) {
+        Statistics::statistics()->set("WebKit::events::skipped::visibility", 0);
+    }
+
     preConcreteExecution();
 }
 
