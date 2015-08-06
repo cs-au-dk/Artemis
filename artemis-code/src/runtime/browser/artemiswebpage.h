@@ -21,6 +21,7 @@
 #include <QString>
 #include <QSharedPointer>
 #include <QNetworkRequest>
+#include <QWebElementCollection>
 
 namespace artemis
 {
@@ -57,6 +58,9 @@ public:
     QString userAgentForUrl ( const QUrl & url ) const;
 
     bool mAcceptNavigation; // Used when in manual mode; see acceptNavigationRequest.
+
+    // This is an *extremely slow* brute-force method of checking user-visibility of elements.
+    QList<QWebElement> getAllUserClickableElements();
 
 protected:
     virtual bool acceptNavigationRequest(QWebFrame *frame, const QNetworkRequest &request, NavigationType type);

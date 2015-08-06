@@ -35,6 +35,11 @@ ArtemisRuntime::ArtemisRuntime(QObject* parent, const Options& options, const QU
                      this, SLOT(postConcreteExecution(ExecutableConfigurationConstPtr, QSharedPointer<ExecutionResult>)));
 
     mWorklist = WorkListPtr(new DeterministicWorkList(mPrioritizerStrategy));
+
+    // Force the browser window to have a size.
+    mWebView = ArtemisWebViewPtr(new ArtemisWebView());
+    mWebView->setPage(mWebkitExecutor->getPage().data());
+    mWebView->forceResize(1200,800); // TODO: Pull size from mOptions.
 }
 
 void ArtemisRuntime::run(const QUrl& url)

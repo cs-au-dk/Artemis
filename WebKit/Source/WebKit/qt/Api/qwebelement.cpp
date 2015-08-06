@@ -872,6 +872,29 @@ bool QWebElement::isUserVisible() {
              m_element->hasNonEmptyBoundingBox())); // has a bounding box when rendered
 }
 
+QList<QWebElement> QWebElement::getAllUserClickableElements(int min_x, int min_y, int max_x, int max_y)
+{
+    WebCore::Document* document = m_element->document();
+    QSet<WebCore::Element*> clickable;
+
+    for (int y = min_y; y < max_y; y++) {
+        for (int x = min_x; x < max_x; x++) {
+            //qDebug() << "(" << x << "," << y << ") - " << document->elementFromPoint(x, y);
+            clickable.insert(document->elementFromPoint(x, y));
+        }
+    }
+
+    // Build the set separately so we do not construct the QWebElement instances more than once each.
+    QList<QWebElement> result;
+     foreach (WebCore::Element* element, clickable) {
+         if (element != NULL) {
+             result.append(QWebElement(element));
+         }
+     }
+
+    return result;
+}
+
 int QWebElement::numberOfChildren(QString cssSelector){
     QWebElementCollection elements = findAll(cssSelector);
     int counter = 0;

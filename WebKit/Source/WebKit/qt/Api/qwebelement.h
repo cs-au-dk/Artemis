@@ -143,6 +143,7 @@ public:
     QString xPath();
     QWebElement lookupXPath(QString xPath);
     bool  isUserVisible();
+    QList<QWebElement> getAllUserClickableElements(int min_x, int min_y, int max_x, int max_y);
     int numberOfChildren(QString cssSelector);
     WebCore::Element* getElement();
 

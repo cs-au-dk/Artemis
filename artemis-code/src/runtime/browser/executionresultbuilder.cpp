@@ -77,6 +77,10 @@ QSharedPointer<ExecutionResult> ExecutionResultBuilder::getResult()
 
 void ExecutionResultBuilder::registerEventHandlersIntoResult()
 {
+    QList<QWebElement> userClickableElements;
+    if (mEnableEventVisibilityFiltering) {
+        userClickableElements = mPage->getAllUserClickableElements();
+    }
 
     QPair<QWebElement*, QString> p;
     foreach(p, mElementPointers) {
@@ -102,7 +106,7 @@ void ExecutionResultBuilder::registerEventHandlersIntoResult()
         // check if that guess is visible
         if (mEnableEventVisibilityFiltering) {
             QWebElement actualSource = handler->getDomElement()->getElement(mPage);
-            if (actualSource.isUserVisible() == false) {
+            if (!userClickableElements.contains(actualSource)) {
                 Statistics::statistics()->accumulate("WebKit::events::skipped::visibility", 1);
                 qDebug() << "Skipping EVENTHANDLER event (not user visible) =" << p.second
                          << "tag = " << actualSource.tagName()

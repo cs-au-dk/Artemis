@@ -16,6 +16,7 @@
 
 #include <QDebug>
 #include <QWebFrame>
+#include <QWebView>
 
 #include "artemisglobals.h"
 #include "statistics/statsstorage.h"
@@ -103,4 +104,26 @@ bool ArtemisWebPage::acceptNavigationRequest(QWebFrame *frame, const QNetworkReq
     }
 }
 
+
+QList<QWebElement> ArtemisWebPage::getAllUserClickableElements()
+{
+    // Get the page size
+    QWebView* webView = dynamic_cast<QWebView*>(view());
+    assert(webView);
+    int width = webView->size().width();
+    int height = webView->size().height();
+
+    // Get all clickable elements
+    QList<QWebElement> clickable = mainFrame()->documentElement().getAllUserClickableElements(0, 0, width, height);
+
+    Log::debug(QString("getAllUserclickableElements: found %1 clickable elements in %2x%3.").arg(clickable.size()).arg(width).arg(height).toStdString());
+
+    /*foreach (QWebElement e, clickable) {
+        qDebug() << e.tagName() << "@" << e.xPath();
+    }*/
+
+    return clickable;
 }
+
+
+} // namepsace artemis

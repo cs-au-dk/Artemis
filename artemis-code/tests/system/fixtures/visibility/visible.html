@@ -1,5 +1,4 @@
 <!--
-EXPECTED_FAILURE
 TEST WebKit::events::skipped::visibility = 0
 TEST InputGenerator::added-configurations = 1
 -->
@@ -14,8 +13,8 @@ TEST InputGenerator::added-configurations = 1
 </head>
 <body>
 
-    <!-- This should be counted as visible, it's just off the screen.-->
-    <button style="margin-top:100000px" onclick="alert('Clicked')" >Click me</button>
+    <!-- The simple case where we do nothing weird at all. -->
+    <button onclick="alert('Clicked')" >Click me</button>
 
 </body>
 </html>
