@@ -79,7 +79,7 @@ void ExecutionResultBuilder::registerEventHandlersIntoResult()
 {
     QList<QWebElement> userClickableElements;
     if (mEnableEventVisibilityFiltering) {
-        userClickableElements = mPage->getAllUserClickableElements();
+        userClickableElements = mPage->getAllUserClickableElementsAndAncestors();
     }
 
     QPair<QWebElement*, QString> p;
@@ -108,7 +108,7 @@ void ExecutionResultBuilder::registerEventHandlersIntoResult()
             QWebElement actualSource = handler->getDomElement()->getElement(mPage);
 
             // TODO: There are three visibility check methods available to use here.
-            // !userClickableElements.contains(actualSource)    - Checks if the viewport includes a pixel of this element (slow, only works in the viewport, does not handle child elements).
+            // !userClickableElements.contains(actualSource)    - Checks if the viewport includes a pixel of this element (slow and only works in the viewport).
             // !actualSource.isUserVisible()                    - Checks if the element has a bounding box.
             // !actualSource.isUserVisibleIncludingChildren()   - As above bu including children and text nodes.
             // The ideal solution would be some combination of these.

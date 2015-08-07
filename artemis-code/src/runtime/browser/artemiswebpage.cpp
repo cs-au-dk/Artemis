@@ -126,5 +126,22 @@ QList<QWebElement> ArtemisWebPage::getAllUserClickableElements()
     return clickable;
 }
 
+QList<QWebElement> ArtemisWebPage::getAllUserClickableElementsAndAncestors()
+{
+    QList<QWebElement> clickable = getAllUserClickableElements();
+    QList<QWebElement> result = clickable;
+    QWebElement cur;
+
+    foreach (QWebElement elt, clickable) {
+        cur = elt.parent();
+        while (!cur.isNull() && !result.contains(cur)) {
+            result.append(cur);
+            cur = cur.parent();
+        }
+    }
+
+    return result;
+}
+
 
 } // namepsace artemis
