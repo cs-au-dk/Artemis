@@ -872,13 +872,30 @@ bool QWebElement::isUserVisible() {
              m_element->hasNonEmptyBoundingBox())); // has a bounding box when rendered
 }
 
-QList<QWebElement> QWebElement::getAllUserClickableElements(int min_x, int min_y, int max_x, int max_y)
+bool QWebElement::isUserVisibleIncludingChildren() {
+    qDebug() << tagName() << isUserVisible() << m_element->childTextNodesHaveNonEmptyBoundingBox();
+    if (isUserVisible() || m_element->childTextNodesHaveNonEmptyBoundingBox()) {
+        return true;
+    }
+
+    foreach (QWebElement child, findAll(QString::fromAscii("*"))) {
+        qDebug() << child.tagName() << child.isUserVisible() << child.getElement()->childTextNodesHaveNonEmptyBoundingBox();
+        if (child.isUserVisible() || child.getElement()->childTextNodesHaveNonEmptyBoundingBox()) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+// N.B. Due to the use of elementFromPoint, this method only returns elements within the current viewport.
+QList<QWebElement> QWebElement::getAllUserClickableElements(int min_x, int min_y, int max_x, int max_y, int step)
 {
     WebCore::Document* document = m_element->document();
     QSet<WebCore::Element*> clickable;
 
-    for (int y = min_y; y < max_y; y++) {
-        for (int x = min_x; x < max_x; x++) {
+    for (int y = min_y; y < max_y; y += step) {
+        for (int x = min_x; x < max_x; x += step) {
             //qDebug() << "(" << x << "," << y << ") - " << document->elementFromPoint(x, y);
             clickable.insert(document->elementFromPoint(x, y));
         }

@@ -114,7 +114,8 @@ QList<QWebElement> ArtemisWebPage::getAllUserClickableElements()
     int height = webView->size().height();
 
     // Get all clickable elements
-    QList<QWebElement> clickable = mainFrame()->documentElement().getAllUserClickableElements(0, 0, width, height);
+    // N.B. setting the step != 1 will allow some possiblity to miss a clickable element, but makes this dramatically faster.
+    QList<QWebElement> clickable = mainFrame()->documentElement().getAllUserClickableElements(0, 0, width, height, 5);
 
     Log::debug(QString("getAllUserclickableElements: found %1 clickable elements in %2x%3.").arg(clickable.size()).arg(width).arg(height).toStdString());
 
