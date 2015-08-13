@@ -42,6 +42,9 @@ DOMSnapshotNodeImpl::DOMSnapshotNodeImpl(std::string elementAsString, Element* e
 
     m_attributes.insert(std::pair<std::string, std::string>("tagName", element->tagName().ascii().data()));
 
+    // nodeName (defined in node.idl). Will be dientical to tagName.
+    m_attributes.insert(std::pair<std::string, std::string>("nodeName", element->nodeName().ascii().data()));
+
     // nodeType (defined in node.idl)
 
     std::stringstream nodeType;
