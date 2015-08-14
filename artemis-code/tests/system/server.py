@@ -223,6 +223,20 @@ class AnalysisServerFeatureTests(AnalysisServerTestBase):
         self.assertIn("url", response)
         self.assertEqual(response["url"], fixture_url_with_scheme("handlers.html"))
     
+    def test_pageload_command_https(self):
+        message = {
+                "command": "pageload",
+                "url": "https://www.example.com"
+            }
+        
+        response = send_to_server(message)
+        
+        self.assertIn("pageload", response)
+        self.assertEqual(response["pageload"], u"done")
+        
+        self.assertIn("url", response)
+        self.assertEqual(response["url"], u"https://www.example.com/")
+    
     def test_pageload_bad_url(self):
         message = {
                 "command": "pageload",
@@ -265,6 +279,17 @@ class AnalysisServerFeatureTests(AnalysisServerTestBase):
         
         self.assertIn("url", response)
         self.assertEqual(response["url"], u"http://www.example.com/")
+    
+    def test_pageload_command_redirect_301_to_https(self):
+        message = {
+                "command": "pageload",
+                "url": "http://bit.ly/1gG5wiT"
+            }
+        
+        response = send_to_server(message)
+        
+        self.assertIn("url", response)
+        self.assertEqual(response["url"], u"https://www.example.com/")
     
     def test_pageload_command_redirect_meta(self):
         message = {
