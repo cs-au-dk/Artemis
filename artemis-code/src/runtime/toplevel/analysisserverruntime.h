@@ -93,6 +93,9 @@ protected slots:
     void slPageLoadScheduled(QUrl url);
     virtual void slAbortedExecution(QString reason);
 
+    // GUI part
+    void slDebugWindowClosed();
+
 signals:
     void sigCommandFinished(QVariant response);
 

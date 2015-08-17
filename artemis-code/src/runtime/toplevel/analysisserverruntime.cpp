@@ -69,6 +69,9 @@ AnalysisServerRuntime::AnalysisServerRuntime(QObject* parent, const Options& opt
     if (mOptions.analysisServerDebugView) {
         mWebView->show();
         mWebView->setEnabled(false);
+
+        QObject::connect(mWebView.data(), SIGNAL(sigClose()),
+                         this, SLOT(slDebugWindowClosed()));
     }
 
     // Do not capture AJAX callbacks, force them to be fired synchronously.
@@ -738,6 +741,12 @@ void AnalysisServerRuntime::slAbortedExecution(QString reason)
     } else {
         Runtime::slAbortedExecution(reason);
     }
+}
+
+void AnalysisServerRuntime::slDebugWindowClosed()
+{
+    Log::debug("Debug window closed... Exiting immediately.");
+    done();
 }
 
 
