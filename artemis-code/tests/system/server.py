@@ -1790,6 +1790,66 @@ class AnalysisServerFeatureTests(AnalysisServerTestBase):
         
         self.assertIn("error", forminput_response)
     
+    @unittest.expectedFailure # Not yet implemented
+    def test_forminput_command_with_enter_simulate_js(self):
+        load_message = {
+                "command": "pageload",
+                "url": fixture_url("form-submission.html")
+            }
+        
+        load_response = send_to_server(load_message)
+        self.assertIn("pageload", load_response)
+        
+        forminput_message = {
+            "command": "forminput",
+            "field": "id('input-text')",
+            "value": "Hello\r",
+            "method": "simulate-js"
+        }
+        
+        forminput_response = send_to_server(forminput_message)
+        
+        self.assertIn("forminput", forminput_response)
+        self.assertEqual(forminput_response["forminput"], u"done")
+        
+        # If the form submitted we should be at about:blank.
+        page_message = {
+            "command": "page"
+        }
+        
+        page_response = send_to_server(page_message)
+        
+        self.assertIn("url", page_response)
+        self.assertEqual(page_response["url"], "about:blank")
+    
+    @unittest.expectedFailure # Not yet implemented
+    def test_forminput_command_with_enter_simulate_js_key_events(self):
+        load_message = {
+                "command": "pageload",
+                "url": fixture_url("form-key-events.html")
+            }
+        
+        load_response = send_to_server(load_message)
+        self.assertIn("pageload", load_response)
+        
+        forminput_message = {
+            "command": "forminput",
+            "field": "id('input-text')",
+            "value": "a\r",
+            "method": "simulate-js"
+        }
+        
+        forminput_response = send_to_server(forminput_message)
+        
+        self.assertIn("forminput", forminput_response)
+        self.assertEqual(forminput_response["forminput"], u"done")
+        
+        self.assertStatusElementContains(" keydown 65; keypress 97; keyup 65; keydown 13; keypress 13; keyup 13;")
+    
+    @unittest.skip("Not yet implemented.")
+    def test_forminput_command_with_enter_simulate_gui(self):
+        pass # TODO
+    
     def test_xpath_command_node_set(self):
         load_message = {
                 "command": "pageload",
@@ -2120,7 +2180,7 @@ class AnalysisServerFeatureTests(AnalysisServerTestBase):
     def test_event_command_blocking_for_form_submission(self):
         load_message = {
             "command": "pageload",
-            "url": fixture_url("form-submission.html")
+            "url": fixture_url("form-submission-slow.html")
         }
         
         load_response = send_to_server(load_message)
