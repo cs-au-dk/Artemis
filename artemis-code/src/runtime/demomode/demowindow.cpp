@@ -742,7 +742,7 @@ void DemoModeMainWindow::slEnterManualEntryPoint()
     mManualEntryPointElement = mManualEntryPointMatches.at(0);
 
     // Find the coordinates of the element
-    mManualEntryPointCoordinates = ClickSimulator::getElementCoordinates(mManualEntryPointElement);
+    mManualEntryPointCoordinates = ClickSimulator::getElementCoordinatesInViewport(mManualEntryPointElement, mWebPage);
     // TODO: Is it possible to add a marker on the page at these coordinates (e.g. by injecting a small JS snippet)?
 
     mManualEntryPointDescription->setText(QString("%1\nTarget at: (%2,%3).").arg(mManualEntryPointDescription->text()).arg(mManualEntryPointCoordinates.x()).arg(mManualEntryPointCoordinates.y()));

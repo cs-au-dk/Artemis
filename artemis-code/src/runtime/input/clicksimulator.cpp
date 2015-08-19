@@ -72,10 +72,10 @@ void ClickSimulator::triggerHandler(QWebElement element, QString eventName)
  */
 void ClickSimulator::clickByGuiSimulation(QWebElement element, ArtemisWebPagePtr page)
 {
-    QPoint targetCoords = getElementCoordinates(element);
+    QPoint targetCoords = getElementCoordinatesInViewport(element, page);
     QSize viewportSize = page->viewportSize();
 
-    Log::debug(QString("ClickSimulator: Clicking on coordinates (%1, %2)").arg(targetCoords.x()).arg(targetCoords.y()).toStdString());
+    Log::debug(QString("ClickSimulator: Clicking on viewport coordinates (%1, %2)").arg(targetCoords.x()).arg(targetCoords.y()).toStdString());
     Log::debug(element.toOuterXml().toStdString());
     Log::debug((QString("Dimensions of web view are X: ") + QString::number(viewportSize.width()) + " Y: " + QString::number(viewportSize.height()) + " Scrollbar position is X: " + QString::number(page->mainFrame()->scrollBarValue(Qt::Horizontal)) + " Y:" + QString::number(page->mainFrame()->scrollBarValue(Qt::Vertical))).toStdString());
 
@@ -124,7 +124,15 @@ void ClickSimulator::clickByGuiSimulation(QWebElement element, ArtemisWebPagePtr
 
 }
 
-QPoint ClickSimulator::getElementCoordinates(QWebElement element)
+QPoint ClickSimulator::getElementCoordinatesInViewport(QWebElement element, ArtemisWebPagePtr page)
+{
+    QPoint documentCoordinates = getElementCoordinatesInDocument(element);
+
+    return QPoint(documentCoordinates.x() - page->mainFrame()->scrollBarValue(Qt::Horizontal),
+                  documentCoordinates.y() - page->mainFrame()->scrollBarValue(Qt::Vertical));
+}
+
+QPoint ClickSimulator::getElementCoordinatesInDocument(QWebElement element)
 {
     // For some reason targetElement.geometry().center(); does not seem to update correctly if the button moves during
     // the injection, so we are forced to pull the position from JavaScript. See issue #110.
