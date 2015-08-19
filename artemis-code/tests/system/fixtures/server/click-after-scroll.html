@@ -1,0 +1,36 @@
+<!DOCTYPE html><html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+    <title>Ben Spencer</title>
+    <meta name="author" content="Ben Spencer">
+
+    <script type="text/javascript" >
+        window.onload = function () {
+            
+            var status = document.getElementById("status");
+            
+            var x = document.getElementById("scroll-btn");
+            x.addEventListener("click", function (e) {
+                status.textContent += "Scrolled ";
+                window.scroll(0, 50);
+            }, false);
+            
+            var y = document.getElementById("click-btn");
+            y.addEventListener("click", function (e) {
+                status.textContent += "Clicked ";
+            }, false);
+            
+        }
+    </script>
+</head>
+<body>
+
+    <p style="margin-top: 100px;" >Status: <span id="status"></span></p>
+
+    <button id="click-btn" >Click</button>
+    <button id="scroll-btn" style="margin-bottom: 2000px;" >Scroll to 50px down</button>
+
+</body>
+</html>

@@ -722,7 +722,7 @@ class AnalysisServerFeatureTests(AnalysisServerTestBase):
         
         self.assertStatusElementContains("mouseover mousedown focus mouseup click ")
     
-    def test_click_command_method_simulate_gui_with_scroll(self):
+    def test_click_command_method_simulate_gui_with_auto_scroll_required(self):
         load_message = {
                 "command": "pageload",
                 "url": fixture_url("click-mouse-events.html")
@@ -744,6 +744,42 @@ class AnalysisServerFeatureTests(AnalysisServerTestBase):
         self.assertNotIn("error", click_response)
         
         self.assertStatusElementContains("below-fold-click ")
+    
+    def test_click_command_method_simulate_gui_after_page_scroll(self):
+        load_message = {
+                "command": "pageload",
+                "url": fixture_url("click-after-scroll.html")
+            }
+        
+        load_response = send_to_server(load_message)
+        
+        self.assertIn("pageload", load_response)
+        
+        click_message = {
+            "command": "click",
+            "element": "id('click-btn')",
+            "method": "simulate-gui"
+        }
+        scroll_message = {
+            "command": "click",
+            "element": "id('scroll-btn')",
+            "method": "simulate-gui"
+        }
+        
+        response = send_to_server(click_message)
+        self.assertIn("click", response)
+        self.assertNotIn("error", response)
+        
+        response = send_to_server(scroll_message)
+        self.assertIn("click", response)
+        self.assertNotIn("error", response)
+        
+        response = send_to_server(click_message)
+        self.assertIn("click", response)
+        self.assertNotIn("error", response)
+        
+        
+        self.assertStatusElementContains("Clicked Scrolled Clicked ")
     
     def test_dom_command_deprecated(self):
         message = {
