@@ -69,7 +69,7 @@ TargetDescriptorConstPtr ConcolicTargetGenerator::permuteTarget(EventHandlerDesc
     if (!exploration.newExploration) {
         Log::debug("Could not find any new exploration");
         outputTree(target->getAnalysis()->getExecutionTree(), eventName, target->getAnalysis()->getExplorationIndex());
-        return TargetDescriptorConstPtr(NULL); // TODO: is this the correct way to signal nothing to suggest?
+        return TargetDescriptorConstPtr(NULL);
     }
 
     Log::debug("Found solution for new target value:");
