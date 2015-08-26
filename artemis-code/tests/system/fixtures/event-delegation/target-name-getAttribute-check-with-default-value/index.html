@@ -1,5 +1,9 @@
 <!--
-EXPECTED_FAILURE - Checking attributes of the target which are not present on the ancestor node causes a problem.
+TEST PC[0] = ((SymbolicProperty( SymbolicObject( SYM_TARGET_0 ) ) == ConstantString) == ConstantBoolean)
+TEST Concolic::Solver::ConstraintsSolved = 2
+TEST Concolic::Solver::ConstraintsWritten = 2
+TEST Concolic::ExecutionTree::DistinctTracesExplored = 2
+TEST Concolic::Solver::Constraint.SYM_TARGET_0 = //ul[@id=\"container\"]/li[2]
 -->
 <!doctype html>
 <html lang="en">
@@ -14,9 +18,9 @@ EXPECTED_FAILURE - Checking attributes of the target which are not present on th
 
 <h1>Click below:</h1>
 
-<ul id="container" >
+<ul id="container" name="some-default-name" >
     <li>boring to click</li>
-    <li custom="interesting" >interesting to click</li>
+    <li name="interesting" >interesting to click</li>
     <li>boring to click</li>
 </ul>
 
@@ -24,7 +28,8 @@ EXPECTED_FAILURE - Checking attributes of the target which are not present on th
     window.onload = function(){
         c = document.getElementById('container');
         c.addEventListener('click', function(event){
-            if (event.target.getAttribute("custom") == "interesting") {
+            var x = event.target.getAttribute("name");
+            if (x == "interesting") {
                 alert("Interesting");
             } else {
                 alert("Boring");
