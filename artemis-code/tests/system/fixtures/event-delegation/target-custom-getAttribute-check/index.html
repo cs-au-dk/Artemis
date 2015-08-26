@@ -1,0 +1,38 @@
+<!--
+EXPECTED_FAILURE - getAttribute does not seem to be working except in the "id" case.
+-->
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+    <title>Ben Spencer</title>
+    <meta name="author" content="Ben Spencer">
+</head>
+<body>
+
+<h1>Click below:</h1>
+
+<ul id="container" >
+    <li>boring to click</li>
+    <li custom="interesting" >interesting to click</li>
+    <li>boring to click</li>
+</ul>
+
+<script type="text/javascript" >
+    window.onload = function(){
+        c = document.getElementById('container');
+        c.addEventListener('click', function(event){
+            if (event.target.getAttribute("custom") == "interesting") {
+                alert("Interesting");
+            } else {
+                alert("Boring");
+            }
+        }, false);
+    }
+</script>
+
+</body>
+</html>
+
