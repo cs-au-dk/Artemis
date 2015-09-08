@@ -136,7 +136,10 @@ JSC::JSValue SymbolicInterpreter::ail_op_binary(JSC::CallFrame* callFrame,
         }
 
         // Case 2: String
-        if (xx.isString() && yy.isString()) {
+        // Case 2.1: Possibly null Strings
+        if ((xx.isString() && yy.isString())
+                || (xx.isString() && yy.isNull() && y.isSymbolic())
+                || (xx.isNull() && yy.isString() && x.isSymbolic())) {
 
             if (x.isObject() && !x.isString() && x.isSymbolic()) {
                 // object -> string coercion

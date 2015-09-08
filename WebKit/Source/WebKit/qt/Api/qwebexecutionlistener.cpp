@@ -454,6 +454,8 @@ void QWebExecutionListener::javascript_bytecode_executed(JSC::Interpreter* inter
     binfo.isSymbolic = info.isSymbolic();
     binfo.bytecodeOffset = bytecodeOffset;
 
+    //qDebug() << "BYTECODE-LOG:" << binfo.getOpcodeName() << binfo.linenumber << binfo.isSymbolic;
+
     codeBlock->expressionRangeForBytecodeOffset(bytecodeOffset, binfo.divot, binfo.startOffset, binfo.endOffset);
     emit sigJavascriptBytecodeExecuted(binfo,
                                        codeBlock->sourceOffset(),
