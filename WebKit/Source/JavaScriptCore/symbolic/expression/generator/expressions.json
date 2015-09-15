@@ -97,7 +97,7 @@
 		"type": "expression",
 		"parent": "ObjectExpression",
 		"fields": [
-            ["void*", "instanceIdentifier"]
+            ["unsigned", "instanceIdentifier"]
 		]
 	},
 
