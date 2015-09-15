@@ -141,6 +141,8 @@ protected:
     virtual void visit(Symbolic::StringRegexSubmatchArrayAt* exp, void* arg);
     virtual void visit(Symbolic::SymbolicObjectPropertyString* obj, void* arg);
     virtual void visit(Symbolic::StringSubstring* obj, void* arg);
+    virtual void visit(Symbolic::StringToLowerCase* stringtolowercase, void* arg);
+    virtual void visit(Symbolic::StringToUpperCase* stringtouppercase, void* arg);
 
     // Returns boolean values to mExpressionBuffer
     virtual void visit(Symbolic::SymbolicBoolean* symbolicboolean, void* args);
@@ -221,6 +223,7 @@ protected:
 
     FormRestrictions mFormRestrictions;
     DomSnapshotStoragePtr mDomSnapshots;
+    QStringList mPreambleDefinitions;
 
     // Benchmarking
     ConcolicBenchmarkFeatures mDisabledFeatures;

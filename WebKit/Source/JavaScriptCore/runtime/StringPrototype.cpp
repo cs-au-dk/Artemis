@@ -1451,48 +1451,72 @@ EncodedJSValue JSC_HOST_CALL stringProtoFuncToLowerCase(ExecState* exec)
 {
     JSValue thisValue = exec->hostThisValue();
 
-    if (thisValue.isSymbolic()) {
-        Statistics::statistics()->accumulate("Concolic::MissingInstrumentation::stringProtoFuncTo[Locale]LowerCase", 1);
-    }
-
     if (thisValue.isUndefinedOrNull()) // CheckObjectCoercible
         return throwVMTypeError(exec);
     JSString* sVal = thisValue.toString(exec);
     const UString& s = sVal->value(exec);
 
-    int sSize = s.length();
-    if (!sSize)
-        return JSValue::encode(sVal);
+    // ARTEMIS - added result parameter and restructured.
+    JSValue result;
 
-    StringImpl* ourImpl = s.impl();
-    RefPtr<StringImpl> lower = ourImpl->lower();
-    if (ourImpl == lower)
-        return JSValue::encode(sVal);
-    return JSValue::encode(jsString(exec, UString(lower.release())));
+    int sSize = s.length();
+    if (!sSize) {
+        result = sVal;
+    } else {
+
+        StringImpl* ourImpl = s.impl();
+        RefPtr<StringImpl> lower = ourImpl->lower();
+        if (ourImpl == lower) {
+            result = sVal;
+        } else {
+            result = jsString(exec, UString(lower.release()));
+        }
+    }
+
+#ifdef ARTEMIS
+    if (thisValue.isSymbolic()) {
+        result.makeSymbolic(new Symbolic::StringToLowerCase((Symbolic::StringExpression*)thisValue.asSymbolic()),
+                            exec->globalData());
+    }
+#endif
+
+    return JSValue::encode(result);
 }
 
 EncodedJSValue JSC_HOST_CALL stringProtoFuncToUpperCase(ExecState* exec)
 {
     JSValue thisValue = exec->hostThisValue();
 
-    if (thisValue.isSymbolic()) {
-        Statistics::statistics()->accumulate("Concolic::MissingInstrumentation::stringProtoFuncTo[Locale]UpperCase", 1);
-    }
-
     if (thisValue.isUndefinedOrNull()) // CheckObjectCoercible
         return throwVMTypeError(exec);
     JSString* sVal = thisValue.toString(exec);
     const UString& s = sVal->value(exec);
 
-    int sSize = s.length();
-    if (!sSize)
-        return JSValue::encode(sVal);
+    // ARTEMIS - added result parameter and restructured.
+    JSValue result;
 
-    StringImpl* sImpl = s.impl();
-    RefPtr<StringImpl> upper = sImpl->upper();
-    if (sImpl == upper)
-        return JSValue::encode(sVal);
-    return JSValue::encode(jsString(exec, UString(upper.release())));
+    int sSize = s.length();
+    if (!sSize) {
+        result = sVal;
+    } else {
+
+        StringImpl* sImpl = s.impl();
+        RefPtr<StringImpl> upper = sImpl->upper();
+        if (sImpl == upper) {
+            result = sVal;
+        } else {
+            result = jsString(exec, UString(upper.release()));
+        }
+    }
+
+#ifdef ARTEMIS
+    if (thisValue.isSymbolic()) {
+        result.makeSymbolic(new Symbolic::StringToUpperCase((Symbolic::StringExpression*)thisValue.asSymbolic()),
+                            exec->globalData());
+    }
+#endif
+
+    return JSValue::encode(result);
 }
 
 EncodedJSValue JSC_HOST_CALL stringProtoFuncLocaleCompare(ExecState* exec)

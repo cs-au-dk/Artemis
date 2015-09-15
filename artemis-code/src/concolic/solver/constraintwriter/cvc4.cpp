@@ -50,6 +50,8 @@ bool CVC4ConstraintWriter::write(PathConditionPtr pathCondition, FormRestriction
     for (uint i = 0; i < pathCondition->size(); i++) {
         mTypeAnalysis->analyze(pathCondition->get(i).first);
     }
+    mSawToLowerCase = false;
+    mSawToUpperCase = false;
 
     // main visitor
     bool result = SMTConstraintWriter::write(pathCondition, formRestrictions, domSnapshots, outputFile);
@@ -584,6 +586,38 @@ void CVC4ConstraintWriter::visit(Symbolic::StringSubstring* obj, void* arg)
 
 }
 
+void CVC4ConstraintWriter::visit(Symbolic::StringToLowerCase *stringtolowercase, void *arg)
+{
+    preambleAddToLowerCase();
+
+    stringtolowercase->getSource()->accept(this);
+    if(!checkType(Symbolic::STRING)){
+        error("String toLowerCase operation on non-string");
+        return;
+    }
+
+    std::ostringstream strs;
+    strs << "(str_tolowercase_TODO " << mExpressionBuffer << ")";
+    mExpressionBuffer = strs.str();
+    mExpressionType = Symbolic::STRING;
+}
+
+void CVC4ConstraintWriter::visit(Symbolic::StringToUpperCase *stringtouppercase, void *arg)
+{
+    preambleAddToUpperCase();
+
+    stringtouppercase->getSource()->accept(this);
+    if(!checkType(Symbolic::STRING)){
+        error("String toUpperCase operation on non-string");
+        return;
+    }
+
+    std::ostringstream strs;
+    strs << "(str_touppercase_TODO " << mExpressionBuffer << ")";
+    mExpressionBuffer = strs.str();
+    mExpressionType = Symbolic::STRING;
+}
+
 void CVC4ConstraintWriter::visit(Symbolic::StringLength* stringlength, void* args)
 {
     stringlength->getString()->accept(this);
@@ -953,6 +987,38 @@ void CVC4ConstraintWriter::helperRadioRestriction(RadioRestriction constraint)
     }
 
     mOutput << "  )\n)\n\n";
+}
+
+void CVC4ConstraintWriter::preambleAddToLowerCase()
+{
+    if (mSawToLowerCase) {
+        return;
+    }
+    mSawToLowerCase = true;
+
+    // TODO: Real implementation for str_tolowercase
+    QString toLowerCase;
+    toLowerCase += "(define-fun str_tolowercase_TODO ((input String)) String\n";
+    toLowerCase += "    input\n";
+    toLowerCase += ")\n";
+
+    mPreambleDefinitions.append(toLowerCase);
+}
+
+void CVC4ConstraintWriter::preambleAddToUpperCase()
+{
+    if (mSawToUpperCase) {
+        return;
+    }
+    mSawToUpperCase = true;
+
+    // TODO: Real implementation for str_touppercase
+    QString toUpperCase;
+    toUpperCase += "(define-fun str_touppercase_TODO ((input String)) String\n";
+    toUpperCase += "    input\n";
+    toUpperCase += ")\n";
+
+    mPreambleDefinitions.append(toUpperCase);
 }
 
 void CVC4ConstraintWriter::coercetype(Symbolic::Type from, Symbolic::Type to, std::string expression)

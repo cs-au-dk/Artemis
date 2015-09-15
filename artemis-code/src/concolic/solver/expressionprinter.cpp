@@ -296,6 +296,20 @@ void ExpressionPrinter::visit(Symbolic::StringSubstring* obj, void* arg)
     m_result += " )";
 }
 
+void ExpressionPrinter::visit(Symbolic::StringToLowerCase* stringtolowercase, void *arg)
+{
+    m_result += "StringToLowerCase( ";
+    stringtolowercase->getSource()->accept(this);
+    m_result += " )";
+}
+
+void ExpressionPrinter::visit(Symbolic::StringToUpperCase* stringtouppercase, void *arg)
+{
+    m_result += "StringToUpperCase( ";
+    stringtouppercase->getSource()->accept(this);
+    m_result += " )";
+}
+
 }
 
 #endif

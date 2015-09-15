@@ -297,6 +297,24 @@
     },
 
 	{
+		"ID": "StringToLowerCase",
+		"type": "expression",
+		"parent": "StringExpression",
+		"fields": [
+			["StringExpression*", "source"]
+		]
+	},
+
+	{
+		"ID": "StringToUpperCase",
+		"type": "expression",
+		"parent": "StringExpression",
+		"fields": [
+			["StringExpression*", "source"]
+		]
+	},
+
+	{
 		"ID": "BooleanExpression",
 		"type": "interface",
 		"parent": "Expression"

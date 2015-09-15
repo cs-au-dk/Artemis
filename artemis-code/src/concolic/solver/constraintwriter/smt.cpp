@@ -68,6 +68,7 @@ bool SMTConstraintWriter::write(PathConditionPtr pathCondition, FormRestrictions
     QSet<QString> freeVars = pathCondition->freeVariables().keys().toSet();
     preVisitPathConditionsHook(freeVars);
 
+    std::ostringstream output;
     for (uint i = 0; i < pathCondition->size(); i++) {
         mCurrentClause = i;
 
@@ -76,11 +77,15 @@ bool SMTConstraintWriter::write(PathConditionPtr pathCondition, FormRestrictions
             error("Writing the PC did not result in a boolean constraint");
         }
 
-        mOutput << "(assert (= " << mExpressionBuffer;
-        mOutput << (pathCondition->get(i).second ? " true" : " false");
-        mOutput << "))\n";
+        output << "(assert (= " << mExpressionBuffer;
+        output << (pathCondition->get(i).second ? " true" : " false");
+        output << "))\n";
     }
     mCurrentClause = -1;
+
+    mOutput << mPreambleDefinitions.join("\n").toStdString();
+
+    mOutput << output.str();
 
     postVisitPathConditionsHook();
 
@@ -313,6 +318,16 @@ void SMTConstraintWriter::visit(Symbolic::SymbolicObjectPropertyString* obj, voi
 void SMTConstraintWriter::visit(Symbolic::StringSubstring* obj, void* arg)
 {
     error("NO SYMBOLIC STRING SUBSTRING SUPPORT");
+}
+
+void SMTConstraintWriter::visit(Symbolic::StringToLowerCase *stringtolowercase, void *arg)
+{
+    error("NO SYMBOLIC STRING TOLOWERCASE SUPPORT");
+}
+
+void SMTConstraintWriter::visit(Symbolic::StringToUpperCase *stringtouppercase, void *arg)
+{
+    error("NO SYMBOLIC STRING TOUPPERCASE SUPPORT");
 }
 
 void SMTConstraintWriter::visit(Symbolic::StringRegexSubmatchArrayMatch* exp, void* arg)
