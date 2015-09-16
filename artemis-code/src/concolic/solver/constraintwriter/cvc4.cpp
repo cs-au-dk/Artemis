@@ -1000,7 +1000,7 @@ void CVC4ConstraintWriter::preambleAddToLowerCase()
     QString toLowerCase;
     toLowerCase += "(define-fun str_tolowercase_TODO ((input String)) String\n";
     toLowerCase += "    input\n";
-    toLowerCase += ")\n";
+    toLowerCase += ")\n\n";
 
     mPreambleDefinitions.append(toLowerCase);
 }
@@ -1016,7 +1016,7 @@ void CVC4ConstraintWriter::preambleAddToUpperCase()
     QString toUpperCase;
     toUpperCase += "(define-fun str_touppercase_TODO ((input String)) String\n";
     toUpperCase += "    input\n";
-    toUpperCase += ")\n";
+    toUpperCase += ")\n\n";
 
     mPreambleDefinitions.append(toUpperCase);
 }

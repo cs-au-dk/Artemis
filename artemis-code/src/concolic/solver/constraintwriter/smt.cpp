@@ -57,18 +57,24 @@ std::string SMTConstraintWriter::ifLabel()
 
 bool SMTConstraintWriter::write(PathConditionPtr pathCondition, FormRestrictions formRestrictions, DomSnapshotStoragePtr domSnapshots, std::string outputFile)
 {
+    std::string preVisitHookOutput;
+    std::string visitorOutput;
+    std::string postVisitHookOutput;
+
     mError = false;
     mCurrentClause = -1;
 
     mFormRestrictions = formRestrictions;
     mDomSnapshots = domSnapshots;
 
-    mOutput.open(outputFile.data());
+    mOutput.str("");
 
     QSet<QString> freeVars = pathCondition->freeVariables().keys().toSet();
     preVisitPathConditionsHook(freeVars);
 
-    std::ostringstream output;
+    preVisitHookOutput = mOutput.str();
+    mOutput.str("");
+
     for (uint i = 0; i < pathCondition->size(); i++) {
         mCurrentClause = i;
 
@@ -77,19 +83,29 @@ bool SMTConstraintWriter::write(PathConditionPtr pathCondition, FormRestrictions
             error("Writing the PC did not result in a boolean constraint");
         }
 
-        output << "(assert (= " << mExpressionBuffer;
-        output << (pathCondition->get(i).second ? " true" : " false");
-        output << "))\n";
+        mOutput << "(assert (= " << mExpressionBuffer;
+        mOutput << (pathCondition->get(i).second ? " true" : " false");
+        mOutput << "))\n";
     }
     mCurrentClause = -1;
 
-    mOutput << mPreambleDefinitions.join("\n").toStdString();
-
-    mOutput << output.str();
+    visitorOutput = mOutput.str();
+    mOutput.str("");
 
     postVisitPathConditionsHook();
 
-    mOutput.close();
+    postVisitHookOutput = mOutput.str();
+    mOutput.str("");
+
+    std::ofstream constraintFile;
+    constraintFile.open(outputFile.data());
+
+    constraintFile << preVisitHookOutput;
+    constraintFile << mPreambleDefinitions.join("\n").toStdString();
+    constraintFile << visitorOutput;
+    constraintFile << postVisitHookOutput;
+
+    constraintFile.close();
 
     if (mError) {
         return false;

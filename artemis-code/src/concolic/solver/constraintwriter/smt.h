@@ -204,7 +204,7 @@ protected:
     void error(std::string reason);
 
     std::map<std::string, Symbolic::Type> mTypemap;
-    std::ofstream mOutput;
+    std::ostringstream mOutput;
 
     // holds the current subexpression returned by the previous call to visit
     std::string mExpressionBuffer;
