@@ -104,6 +104,7 @@ protected:
     bool mSawToUpperCase;
     void preambleAddToLowerCase();
     void preambleAddToUpperCase();
+
 };
 
 typedef QSharedPointer<CVC4ConstraintWriter> CVC4ConstraintWriterPtr;

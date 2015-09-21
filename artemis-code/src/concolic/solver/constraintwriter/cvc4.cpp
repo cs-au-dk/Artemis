@@ -586,7 +586,7 @@ void CVC4ConstraintWriter::visit(Symbolic::StringSubstring* obj, void* arg)
 
 }
 
-void CVC4ConstraintWriter::visit(Symbolic::StringToLowerCase *stringtolowercase, void *arg)
+void CVC4ConstraintWriter::visit(Symbolic::StringToLowerCase* stringtolowercase, void* arg)
 {
     preambleAddToLowerCase();
 
@@ -596,13 +596,20 @@ void CVC4ConstraintWriter::visit(Symbolic::StringToLowerCase *stringtolowercase,
         return;
     }
 
-    std::ostringstream strs;
-    strs << "(str_tolowercase_TODO " << mExpressionBuffer << ")";
-    mExpressionBuffer = strs.str();
+    // The SMT function str_tolowercase is "relational", so we must split the constraint here and introduce an intermediate variable.
+    std::string intermediateName = emitAndReturnNewTemporary(Symbolic::STRING);
+
+    // Output the constraint up to this point.
+    std::ostringstream lowercase_constraint;
+    lowercase_constraint << "(assert (str_tolowercase_TODO " << mExpressionBuffer << " " << intermediateName << "))";
+    mOutput << lowercase_constraint.str() << "\n";
+
+    // The returned expression is simply the new intermediate, which will be the lowercased version of mExpressionBuffer.
+    mExpressionBuffer = intermediateName;
     mExpressionType = Symbolic::STRING;
 }
 
-void CVC4ConstraintWriter::visit(Symbolic::StringToUpperCase *stringtouppercase, void *arg)
+void CVC4ConstraintWriter::visit(Symbolic::StringToUpperCase* stringtouppercase, void* arg)
 {
     preambleAddToUpperCase();
 
@@ -612,9 +619,16 @@ void CVC4ConstraintWriter::visit(Symbolic::StringToUpperCase *stringtouppercase,
         return;
     }
 
-    std::ostringstream strs;
-    strs << "(str_touppercase_TODO " << mExpressionBuffer << ")";
-    mExpressionBuffer = strs.str();
+    // The SMT function str_touppercase is "relational", so we must split the constraint here and introduce an intermediate variable.
+    std::string intermediateName = emitAndReturnNewTemporary(Symbolic::STRING);
+
+    // Output the constraint up to this point.
+    std::ostringstream uppercase_constraint;
+    uppercase_constraint << "(assert (str_touppercase_TODO " << mExpressionBuffer << " " << intermediateName << "))";
+    mOutput << uppercase_constraint.str() << "\n";
+
+    // The returned expression is simply the new intermediate, which will be the uppercased version of mExpressionBuffer.
+    mExpressionBuffer = intermediateName;
     mExpressionType = Symbolic::STRING;
 }
 
@@ -998,8 +1012,8 @@ void CVC4ConstraintWriter::preambleAddToLowerCase()
 
     // TODO: Real implementation for str_tolowercase
     QString toLowerCase;
-    toLowerCase += "(define-fun str_tolowercase_TODO ((input String)) String\n";
-    toLowerCase += "    input\n";
+    toLowerCase += "(define-fun str_tolowercase_TODO ((input String) (output String)) Bool\n";
+    toLowerCase += "    (= input output) ; Dummy implementation\n";
     toLowerCase += ")\n\n";
 
     mPreambleDefinitions.append(toLowerCase);
@@ -1014,8 +1028,8 @@ void CVC4ConstraintWriter::preambleAddToUpperCase()
 
     // TODO: Real implementation for str_touppercase
     QString toUpperCase;
-    toUpperCase += "(define-fun str_touppercase_TODO ((input String)) String\n";
-    toUpperCase += "    input\n";
+    toUpperCase += "(define-fun str_touppercase_TODO ((input String) (output String)) Bool\n";
+    toUpperCase += "    (= input output) ; Dummy implementation\n";
     toUpperCase += ")\n\n";
 
     mPreambleDefinitions.append(toUpperCase);
