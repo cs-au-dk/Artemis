@@ -14,6 +14,30 @@ SYSTEMTESTS=(tests.py concolic.py delegation.py solver.py symbolic.py visibility
 
 
 cd "$ARTEMISDIR"
+
+# Print some header info
+if [[ true ]];
+then
+    git diff-index --quiet HEAD --
+    if [[ $? -eq 0 ]];
+    then
+        DIRTY=""
+    else
+        DIRTY="(dirty) "
+    fi
+    
+    COMMIT=$(git show --no-patch --format="%h $DIRTY- %s")
+    BRANCH=$(git symbolic-ref --short HEAD)
+    
+    echo "Artemis Test Suite"
+    echo "Started: $(date +'%F %T')"
+    echo "Branch: $BRANCH"
+    echo "Commit: $COMMIT"
+    echo "========================================"
+    echo
+fi
+
+
 TIMEFORMAT="%R"
 
 # Build WebKit
