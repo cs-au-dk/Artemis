@@ -42,7 +42,7 @@ TIMEFORMAT="%R"
 
 # Build WebKit
 echo -n "Build.WebKit "
-CLEAN_TIME="$(time ((make all-clean && rm -r WebKit/WebKitBuild/*) >/dev/null 2>&1) 2>&1 1>/dev/null )"
+CLEAN_TIME="$(time ($((make all-clean && rm -r WebKit/WebKitBuild/*) >/dev/null 2>&1)) 2>&1 1>/dev/null )"
 WEBKIT_TIME="$(time (make webkit-minimal-debug >/dev/null 2>&1) 2>&1 1>/dev/null )"
 
 if [[ $? -eq 0 ]];
@@ -71,7 +71,7 @@ fi
 # Build unit tests
 echo -n "Build.UnitTests "
 cd artemis-code/tests/unit >/dev/null 2>&1
-UNITTEST_TIME="$(time ((qmake && make) >/dev/null 2>&1) 2>&1 1>/dev/null )"
+UNITTEST_TIME="$(time ($((qmake && make) >/dev/null 2>&1)) 2>&1 1>/dev/null )"
 
 if [[ $? -eq 0 ]];
 then
@@ -108,7 +108,7 @@ do
         continue
     fi
     
-    ./"$TESTFILE" -v 2>&1 | awk -W interactive -v scriptname="$TESTNAME" '/^test/ { printf "%s.%s.%s ", scriptname, substr($2, 11, length($2)-11), $1; for(i=4;i<=NF;++i){ printf "%s ", toupper($i) }; print ""; next } /^Ran/ { printf "Summary.%s %s. ", scriptname, $0; getline; getline; print $0; exit }'
+    ./"$TESTFILE" -v 2>&1 1>/dev/null | awk -W interactive -v scriptname="$TESTNAME" '/^test(.*)\.\.\./ { printf "%s.%s.%s ", scriptname, substr($2, 11, length($2)-11), $1; for(i=4;i<=NF;++i){ printf "%s ", toupper($i) }; print ""; next } /^Ran/ { printf "Summary.%s %s. ", scriptname, $0; getline; getline; print $0; exit }'
     
 done
 
