@@ -1,5 +1,9 @@
 <!--
-EXPECTED_FAILURE - Checking attributes of the target which are not present on the ancestor node causes a problem.
+TEST PC[0] = ((SymbolicProperty( SymbolicObject( SYM_TARGET_0 ) ) == ConstantString) == ConstantBoolean)
+TEST Concolic::ExecutionTree::DistinctTracesExplored = 2
+TEST Concolic::Solver::ConstraintsSolved = 2
+TEST Concolic::Solver::ConstraintsWritten = 2
+TEST Concolic::Solver::Constraint.SYM_TARGET_0 = //ul[@id=\"container\"]/li[2]
 -->
 <!doctype html>
 <html lang="en">
