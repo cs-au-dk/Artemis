@@ -2,11 +2,17 @@
 
 # Does a full clean and build and runs all the tests we have.
 
+# Usage:
+# ./build-and-run-all-tests.sh [--skip-build]
+# The --skip-build option just runs the tests with the currently built artemis/webkit.
+
 # Exit codes
 # 0 - Success (N.B. Includes if the tests fail!)
-# 100 - WebKit build failed
-# 101 - Artemis build failed
-# 102 - Unit test build failed (not used, we just skip the unit tests in this case.)
+# 1 - Bad arguments
+# 100 - Clean failed
+# 101 - WebKit build failed
+# 102 - Artemis build failed
+# 103 - Unit test build failed (not used, we just skip the unit tests in this case.)
 
 # The test files to be run in artemis-code/tests/system
 # They are expected to use the python unittest output format.
@@ -40,33 +46,73 @@ fi
 
 TIMEFORMAT="%R"
 
-# Build WebKit
-echo -n "Build.WebKit "
-CLEAN_TIME="$(time ($((make all-clean && rm -r WebKit/WebKitBuild/*) >/dev/null 2>&1)) 2>&1 1>/dev/null )"
-WEBKIT_TIME="$(time (make webkit-minimal-debug >/dev/null 2>&1) 2>&1 1>/dev/null )"
-
-if [[ $? -eq 0 ]];
+# Check arguments
+USAGE="Usage:\n./build-and-run-all-tests.sh [--skip-build]\nThe --skip-build option just runs the tests with the currently built artemis/webkit."
+BUILD=1
+if [[ $# -eq 1 ]];
 then
-    echo "OK"
-    echo "Summary.Build.Clean OK, Took ${CLEAN_TIME}s"
-    echo "Summary.Build.WebKit OK, Took ${WEBKIT_TIME}s"
-else
-    echo "FAIL"
-    exit 100
+    if [[ "$1" == "--skip-build" ]];
+    then
+        BUILD=0
+    else
+        echo -e $USAGE
+        exit 1
+    fi
+elif [[ $# -gt 1 ]];
+then
+    echo -e $USAGE
+    exit 1
 fi
 
-# Build Artemis
-echo -n "Build.Artemis "
-ARTEMIS_TIME="$(time (make -B artemis >/dev/null 2>&1) 2>&1 1>/dev/null )"
-
-if [[ $? -eq 0 ]];
+if [[ $BUILD -eq 1 ]];
 then
-    echo "OK"
-    echo "Summary.Build.Artemis OK, Took ${ARTEMIS_TIME}s"
+    
+    # Clean
+    echo -n "Build.Clean "
+    CLEAN_TIME="$(time ($((make all-clean && rm -r WebKit/WebKitBuild/*) >/dev/null 2>&1)) 2>&1 1>/dev/null )"
+    
+    if [[ $? -eq 0 ]];
+    then
+        echo "OK"
+        echo "Summary.Build.Clean Cleaned in ${CLEAN_TIME}s. OK"
+    else
+        echo "FAIL"
+        exit 100
+    fi
+    
+    # Build WebKit
+    echo -n "Build.WebKit "
+    WEBKIT_TIME="$(time (make webkit-minimal-debug >/dev/null 2>&1) 2>&1 1>/dev/null )"
+    
+    if [[ $? -eq 0 ]];
+    then
+        echo "OK"
+        echo "Summary.Build.WebKit WebKit built in ${WEBKIT_TIME}s. OK"
+    else
+        echo "FAIL"
+        exit 101
+    fi
+    
+    # Build Artemis
+    echo -n "Build.Artemis "
+    ARTEMIS_TIME="$(time (make -B artemis >/dev/null 2>&1) 2>&1 1>/dev/null )"
+    
+    if [[ $? -eq 0 ]];
+    then
+        echo "OK"
+        echo "Summary.Build.Artemis Artemis built in ${ARTEMIS_TIME}s. OK"
+    else
+        echo "FAIL"
+        exit 102
+    fi
+    
 else
-    echo "FAIL"
-    exit 101
+    echo "Build.Clean SKIP"
+    echo "Build.WebKit SKIP"
+    echo "Build.Artemis SKIP"
 fi
+
+
 
 # Build unit tests
 echo -n "Build.UnitTests "
@@ -86,7 +132,7 @@ then
     
 else
     echo "FAIL"
-    #exit 102
+    #exit 103
 fi
 
 
