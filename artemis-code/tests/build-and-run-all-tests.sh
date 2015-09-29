@@ -20,7 +20,7 @@ SYSTEMTESTS=(tests.py concolic.py delegation.py solver.py symbolic.py visibility
 
 
 # Save all summary lines output by this script so they can be appended at the end.
-exec 3>&1 4>&2 > >(awk -W interactive 'BEGIN {summary[0]="";summary[1]="========================================";i=2} /^Summary/ {summary[i++]=$0; print; next} /^PRINT_SUMMARY$/ {for (idx in summary) {print summary[idx]}; exit} /.*/ {print; next}' | tee "$ARTEMISDIR/test-log_$(date +'%F_%T').txt") 2>&1
+exec 3>&1 4>&2 > >(awk -W interactive 'BEGIN {summary[0]="";summary[1]="========================================";i=2} /^Summary/ {summary[i++]=$0; print; next} /^PRINT_SUMMARY$/ {for (idx = 0; idx < i; idx++) {print summary[idx]}; exit} /.*/ {print; next}' | tee "$ARTEMISDIR/test-log_$(date +'%F_%T').txt") 2>&1
 
 
 
