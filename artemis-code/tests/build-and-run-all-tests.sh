@@ -19,6 +19,11 @@
 SYSTEMTESTS=(tests.py concolic.py delegation.py solver.py symbolic.py visibility.py server.py)
 
 
+# Save all summary lines output by this script so they can be appended at the end.
+exec 3>&1 4>&2 > >(awk -W interactive 'BEGIN {summary[0]="";summary[1]="========================================";i=2} /^Summary/ {summary[i++]=$0; print; next} /^PRINT_SUMMARY$/ {for (idx in summary) {print summary[idx]}; exit} /.*/ {print; next}' | tee "$ARTEMISDIR/test-log_$(date +'%F_%T').txt") 2>&1
+
+
+
 cd "$ARTEMISDIR"
 
 # Print some header info
@@ -159,5 +164,13 @@ do
 done
 
 
-# Finished
+# Finished.
+
+
+echo "PRINT_SUMMARY"
+
+# Resore stdout/stderr (ends the redirection process).
+exec 1>&3 2>&4 3>&- 4>&-
+sleep 1
+echo ""
 
