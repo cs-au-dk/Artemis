@@ -51,6 +51,7 @@ public:
     //void visit(TraceEndSuccess* node);            // Handled by TraceDisplay
     //void visit(TraceEndFailure* node);            // Handled by TraceDisplay
     //void visit(TraceEndUnknown* node);            // Handled by TraceDisplay
+    //void visit(TraceDivergence* node);            // Handled by TraceDisplay
 
 protected:
 

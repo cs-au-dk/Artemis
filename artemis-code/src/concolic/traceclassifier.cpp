@@ -103,11 +103,9 @@ void TraceClassifier::visit(TraceFunctionCall *node)
     node->next->accept(this);
 }
 
-void TraceClassifier::visit(TraceConcreteSummarisation *node)
+void TraceClassifier::visit(TraceDivergence* node)
 {
-    foreach(TraceConcreteSummarisation::SingleExecution execution, node->executions) {
-        execution.second->accept(this);
-    }
+    node->next->accept(this);
 }
 
 void TraceClassifier::visit(TraceNode *node)
@@ -120,6 +118,13 @@ void TraceClassifier::visit(TraceBranch *node)
 {
     node->getTrueBranch()->accept(this);
     node->getFalseBranch()->accept(this);
+}
+
+void TraceClassifier::visit(TraceConcreteSummarisation *node)
+{
+    foreach(TraceConcreteSummarisation::SingleExecution execution, node->executions) {
+        execution.second->accept(this);
+    }
 }
 
 void TraceClassifier::visit(TraceUnexplored *node)

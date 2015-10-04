@@ -35,4 +35,9 @@ bool TraceUnexplored::isEqualShallow(const QSharedPointer<const TraceNode>& othe
     return !other.dynamicCast<const TraceUnexplored>().isNull();
 }
 
+void TraceUnexplored::setChild(int position, TraceNodePtr node)
+{
+    assert(false); // We are asserting that position is in the empty range, which is why there is no warning instead.
+}
+
 }

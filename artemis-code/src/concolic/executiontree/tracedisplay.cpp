@@ -58,6 +58,7 @@ TraceDisplay::TraceDisplay(bool linkToCoverage)
     mStyleEndFail = "[label = \"Fail\", fillcolor = red, style = filled, shape = circle]";
     mStyleEndUnk = "[label = \"Unk\", fillcolor = yellow, style = filled, shape = circle]";
     mStyleAggregates = "[style = filled, fillcolor = snow, shape = box3d]";
+    mStyleDivergences = "[label=\"\", shape = star, style = filled, fillcolor = orange]";
 
 }
 
@@ -184,6 +185,11 @@ QString TraceDisplay::makeGraph(TraceNodePtr tree)
     }
     result += indent + "}\n\n";
 
+    result += indent + "subgraph diverged {\n" + indent + indent + "node " + mStyleDivergences + ";\n\n";
+    foreach(QString node, mHeaderDivergences){
+        result += indent + indent + node + ";\n";
+    }
+    result += indent + "}\n\n";
 
     // Build the edges list
 
@@ -598,6 +604,28 @@ void TraceDisplay::visit(TraceEndUnknown *node)
     addInEdge(name);
 }
 
+void TraceDisplay::visit(TraceDivergence* node)
+{
+    QString name = QString("diverge_%1").arg(mNodeCounter);
+    mNodeCounter++;
+
+    mHeaderDivergences.append(name);
+
+    addInEdge(name);
+
+    // Main child
+    mPreviousNode = name;
+    mEdgeExtras = "";
+    node->next->accept(this);
+
+    // Divergent traces
+    foreach (TraceNodePtr child, node->divergedTraces) {
+        mPreviousNode = name;
+        mEdgeExtras = "[color = gray]";
+        child->accept(this);
+    }
+}
+
 
 
 
@@ -621,6 +649,7 @@ void TraceDisplay::clearData()
     mHeaderEndSucc.clear();
     mHeaderEndFail.clear();
     mHeaderAggregates.clear();
+    mHeaderDivergences.clear();
 
     mEdges.clear();
 

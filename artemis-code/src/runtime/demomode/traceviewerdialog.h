@@ -50,6 +50,7 @@ public:
     virtual void visit(TraceEndSuccess* node);
     virtual void visit(TraceEndFailure* node);
     virtual void visit(TraceEndUnknown* node);
+    virtual void visit(TraceDivergence* node);
 
 private:
     QListWidget* mNodeList;

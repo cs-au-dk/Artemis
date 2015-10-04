@@ -23,6 +23,8 @@
 #include <QUrl>
 #include <QMap>
 
+#include <assert.h>
+
 #include "JavaScriptCore/symbolic/expr.h"
 
 #include "concolic/executiontree/tracevisitor.h"
@@ -39,6 +41,7 @@ class TraceNode
 public:
     virtual void accept(TraceVisitor* visitor) = 0;
     virtual bool isEqualShallow(const QSharedPointer<const TraceNode>& other) = 0;
+    virtual void setChild(int position, QSharedPointer<TraceNode> node) = 0; // Used only by TraceMerger to introduce new nodes inline in the trace. Should never be called otherwise.
     virtual ~TraceNode() {}
 };
 
@@ -49,6 +52,11 @@ class TraceAnnotation : public TraceNode
     // Abstract
 public:
     TraceNodePtr next;
+
+    virtual void setChild(int position, TraceNodePtr node) {
+        assert(position == 0);
+        next = node;
+    }
 };
 
 typedef QSharedPointer<TraceAnnotation> TraceAnnotationPtr;
@@ -160,6 +168,11 @@ class TraceEnd : public TraceNode
 {
 public:
     QSet<uint> traceIndices;
+
+    virtual void setChild(int position, TraceNodePtr node) {
+        assert(false); // We are asserting that position is in the empty range, which is why there is no warning instead.
+        // Strictly, this could be implemented in TraceEndSuccess and TraceEndFailure but this is not needed and for simplicity we do not allow it.
+    }
 };
 
 typedef QSharedPointer<TraceEnd> TraceEndPtr;
@@ -232,8 +245,8 @@ public:
  *
  * There must be at least one execution in each TraceConcreteSummarisation. This is handled by the TraceBuilder.
  *
- * If there are multiple executions, they should all agree on a certain prefix and only diverge when some take a
- * BRANCH_FALSE and some take a BRANCH_TRUE. This is handled by the TraceMerger.
+ * If there are multiple executions, they should all agree on a certain prefix (possibly empty) and only diverge when
+ * some take a BRANCH_FALSE and some take a BRANCH_TRUE. This is handled by the TraceMerger.
  *
  */
 class TraceConcreteSummarisation : public TraceNode
@@ -254,6 +267,11 @@ public:
     bool isEqualShallow(const QSharedPointer<const TraceNode>& other)
     {
         return !other.dynamicCast<const TraceConcreteSummarisation>().isNull();
+    }
+
+    virtual void setChild(int position, TraceNodePtr node) {
+        assert(position >= 0 && position < executions.size());
+        executions[position].second = node; // TODO: This will add another trace which may begin with a new concrete summary. The specific use in Tracemerger does not allow this but it may come up in future.
     }
 
     QList<int> numBranches()
