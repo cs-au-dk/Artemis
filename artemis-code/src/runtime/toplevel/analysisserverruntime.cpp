@@ -475,38 +475,48 @@ void AnalysisServerRuntime::execute(XPathCommand *command)
 
     // Look up the element(s).
     QWebElement document = mWebkitExecutor->getPage()->currentFrame()->documentElement();
-    QString escapedXPath = command->xPath;
-    escapedXPath.replace('"', "\\\"");
 
-    QString evaluationJS = QString("var artemis_xpr = document.evaluate(\"%1\", document, null, XPathResult.ANY_TYPE, null);"
-                                   "var artemis_result;"
-                                   "if (artemis_xpr.resultType == XPathResult.NUMBER_TYPE) {"
-                                   "  artemis_result = artemis_xpr.numberValue;"
-                                   "} else if (artemis_xpr.resultType == XPathResult.STRING_TYPE) {"
-                                   "  artemis_result = artemis_xpr.stringValue;"
-                                   "} else if (artemis_xpr.resultType == XPathResult.BOOLEAN_TYPE) {"
-                                   "  artemis_result = artemis_xpr.booleanValue;"
-                                   "} else {"
-                                   "  artemis_result = [];"
-                                   "  var artemis_elt;"
-                                   "  while (artemis_elt = artemis_xpr.iterateNext()) {"
-                                   "    artemis_result.push(artemis_elt.outerHTML);"
-                                   "  }"
-                                   "};"
-                                   "artemis_result;").arg(escapedXPath);
+    QVariantList resultValueList;
+    foreach (QString xPath, command->xPaths) {
+        xPath.replace('"', "\\\"");
 
-    QVariant resultValue = document.evaluateJavaScript(evaluationJS, QUrl(), true);
+        QString evaluationJS = QString("var artemis_xpr = document.evaluate(\"%1\", document, null, XPathResult.ANY_TYPE, null);"
+                                       "var artemis_result;"
+                                       "if (artemis_xpr.resultType == XPathResult.NUMBER_TYPE) {"
+                                       "  artemis_result = artemis_xpr.numberValue;"
+                                       "} else if (artemis_xpr.resultType == XPathResult.STRING_TYPE) {"
+                                       "  artemis_result = artemis_xpr.stringValue;"
+                                       "} else if (artemis_xpr.resultType == XPathResult.BOOLEAN_TYPE) {"
+                                       "  artemis_result = artemis_xpr.booleanValue;"
+                                       "} else {"
+                                       "  artemis_result = [];"
+                                       "  var artemis_elt;"
+                                       "  while (artemis_elt = artemis_xpr.iterateNext()) {"
+                                       "    artemis_result.push(artemis_elt.outerHTML);"
+                                       "  }"
+                                       "};"
+                                       "artemis_result;").arg(xPath);
 
-    if (resultValue.isNull()) {
-        emit sigCommandFinished(errorResponse("The given XPath could not be evaluated."));
-        return;
+        QVariant resultValue = document.evaluateJavaScript(evaluationJS, QUrl(), true);
+
+        if (resultValue.isNull()) {
+            emit sigCommandFinished(errorResponse("The given XPath could not be evaluated."));
+            return;
+        }
+
+        // The resulting value is already in the expected response type.
+        // It can be a string, number, bool, or array of strings of elements (for a node-list).
+        resultValueList.append(resultValue);
     }
 
-    // The resulting value is already in the expected response type.
-    // It can be a string, number, bool, or array of strings of elements.
-
+    // Format the result differently depending on command->formatSingleton, which shows the format of the original command (list or single query).
     QVariantMap result;
-    result.insert("result", resultValue);
+    if (command->formatSingleton) {
+        assert(resultValueList.size() == 1);
+        result.insert("result", resultValueList.first());
+    } else {
+        result.insert("result", resultValueList);
+    }
 
     emit sigCommandFinished(result);
 }

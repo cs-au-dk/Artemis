@@ -54,14 +54,14 @@ Commands
             "delay": 1
         }
     
-    Recieve: ``{"message": "Hello, World"}``
+    Receive: ``{"message": "Hello, World"}``
     
 * ``exit``
     Shuts down the server.
     
     Send: ``{"command": "exit"}``
     
-    Recieve: ``{"message", "Server is shutting down"}``
+    Receive: ``{"message", "Server is shutting down"}``
     
 * ``pageload``
     Loads a URL in the Artemis browser. The final URL we end up on after redirects etc. is returned.
@@ -77,7 +77,7 @@ Commands
             "timeout": 5000
         }
     
-    Recieve::
+    Receive::
     
         {
             "pageload": "done",
@@ -92,7 +92,7 @@ Commands
     
     Send: ``{"command": "backbutton"}``
     
-    Recieve::
+    Receive::
     
         {
             "backbutton": "done",
@@ -109,7 +109,7 @@ Commands
     
     Send: ``{"command": "handlers"}``
     
-    Recieve: (e.g for the handlers.html test case) ::
+    Receive: (e.g for the handlers.html test case) ::
     
         {
             "handlers": [
@@ -128,7 +128,7 @@ Commands
             ]
         }
     
-    It is also possible to specify a filter (by XPath) and recieve only the handlers registered on matching elements.
+    It is also possible to specify a filter (by XPath) and receive only the handlers registered on matching elements.
     
     Send::
     
@@ -137,7 +137,7 @@ Commands
             "filter": "id('listener')"
         }
     
-    Recieve: (e.g for the handlers.html test case) ::
+    Receive: (e.g for the handlers.html test case) ::
     
         {
             "handlers": [
@@ -165,7 +165,7 @@ Commands
             "element": "id(\"clickable\")"
         }
     
-    Recieve: ``{"click": "done"}``
+    Receive: ``{"click": "done"}``
     
     There is an optional ``method`` field, which allows you to choose the type of click performed.
     Possible values are:
@@ -191,7 +191,7 @@ Commands
             "method": "simulate-js"
         }
     
-    Recieve: ``{"click": "done"}``
+    Receive: ``{"click": "done"}``
     
     
 * ``event``
@@ -207,14 +207,14 @@ Commands
             "event": "focus"
         }
     
-    Recieve: ``{"event": "done"}``
+    Receive: ``{"event": "done"}``
     
 * ``page``
     Returns information about the current page (the URL, page title, and DOM statistics).
     
     Send: ``{"command": "page"}``
     
-    Recieve::
+    Receive::
     
         {
             "url": "http://www.example.com",
@@ -232,7 +232,7 @@ Commands
             "dom": true
         }
     
-    Recieve::
+    Receive::
     
         {
             "url": "http://www.example.com",
@@ -252,7 +252,7 @@ Commands
             "element": "id(\"clickable\")"
         }
     
-    Recieve::
+    Receive::
     
         {
             "elements": [ "<a href=\"\" id=\"clickable\">Click here to add new buttons to the page.</a>" ]
@@ -269,7 +269,7 @@ Commands
             "property": "nodeName"
         }
     
-    Recieve::
+    Receive::
     
         {
             "elements": [ "A" ]
@@ -280,7 +280,7 @@ Commands
     
     Send: ``{"command": "fieldsread"}``
     
-    Recieve: (e.g. from form.html test page) ::
+    Receive: (e.g. from form.html test page) ::
     
         {
             "fieldsread": [
@@ -338,7 +338,7 @@ Commands
             "value": "Hello, world."
         }
     
-    Recieve: ``{"forminput": "done"}``
+    Receive: ``{"forminput": "done"}``
     
     The valid element types for ``field`` are ``input`` and ``select``.
     
@@ -443,7 +443,7 @@ Commands
             "method": "inject"
         }
     
-    Recieve: ``{"forminput": "done"}``
+    Receive: ``{"forminput": "done"}``
     
 * ``xpath``
     Evaluates an XPath query and returns the result.
@@ -487,7 +487,7 @@ Commands
     ::
     
         {
-            "result": 18.0
+            "result": 18
         }
     
     Boolean::
@@ -503,6 +503,30 @@ Commands
             "result": true
         }
     
+    It is also possible to provide a list of XPaths to evaluate. The result will be a list of the results of each XPath
+    as above::
+    
+        {
+            "command": "xpath",
+            "xpath": [
+                "//h1",
+                "string(//h1)",
+                "string-length(string(//h1))",
+                "string-length(string(//h1)) > 10"
+            ]
+        }
+    
+    ::
+    
+        {
+            "result": [
+                [ "<h1>Clickable elements</h1>" ],
+                "Clickable elements",
+                18,
+                true
+            ]
+        }
+    
 * ``windowsize``
     Set the size of the browser window.
     
@@ -514,7 +538,7 @@ Commands
             "height": 768
         }
     
-    Recieve: ``{ "windowsize": "done" }``
+    Receive: ``{ "windowsize": "done" }``
     
 
 

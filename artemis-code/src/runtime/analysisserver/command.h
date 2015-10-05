@@ -20,6 +20,7 @@
 #include <QString>
 #include <QUrl>
 #include <QSharedPointer>
+#include <QStringList>
 
 #include "util/loggingutil.h"
 #include "runtime/input/forms/injectionvalue.h"
@@ -209,16 +210,18 @@ public:
 
 typedef QSharedPointer<FormInputCommand> FormInputCommandPtr;
 
-// Evaluates an XPath query and returns the result.
+// Evaluates a list of XPath queries and returns the results.
 class XPathCommand : public Command
 {
 public:
-    XPathCommand(QString xPath)
-        : xPath(xPath)
+    XPathCommand(QStringList xPaths, bool formatSingleton)
+        : xPaths(xPaths)
+        , formatSingleton(formatSingleton)
     {}
     virtual void accept(AnalysisServerRuntime* server);
 
-    QString xPath;
+    QStringList xPaths;
+    bool formatSingleton;
 };
 
 typedef QSharedPointer<XPathCommand> XPathCommandPtr;

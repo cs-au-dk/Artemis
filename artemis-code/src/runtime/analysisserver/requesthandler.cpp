@@ -469,11 +469,28 @@ CommandPtr RequestHandler::xpathCommand(QVariantMap mainObject)
         return parseError("Could not find the 'xpath' property for an xpath command.");
     }
 
-    if (mainObject["xpath"].type() != QVariant::String) {
-        return parseError("The 'xpath' property for an xpath command must be a string.");
+    QStringList xPaths;
+    bool singleton;
+
+    if (mainObject["xpath"].type() == QVariant::String) {
+        singleton = true;
+        xPaths.append(mainObject["xpath"].toString());
+
+    } else if (mainObject["xpath"].type() == QVariant::List) {
+        singleton = false;
+        foreach (QVariant entry, mainObject["xpath"].toList()) {
+            if (entry.type() == QVariant::String) {
+                xPaths.append(entry.toString());
+            } else {
+                return parseError("The 'xpath' property for an xpath command must be a string or list of strings.");
+            }
+        }
+
+    } else {
+        return parseError("The 'xpath' property for an xpath command must be a string or list of strings.");
     }
 
-    return XPathCommandPtr(new XPathCommand(mainObject["xpath"].toString()));
+    return XPathCommandPtr(new XPathCommand(xPaths, singleton));
 }
 
 CommandPtr RequestHandler::eventCommand(QVariantMap mainObject)
