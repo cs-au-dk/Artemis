@@ -17,6 +17,8 @@
 #include "formfieldinjector.h"
 
 #include <QDebug>
+#include <QKeyEvent>
+#include <QApplication>
 #include "statistics/statsstorage.h"
 #include "util/loggingutil.h"
 
@@ -316,6 +318,25 @@ void FormFieldInjector::triggerHandler(QWebElement element, QString eventName)
 void FormFieldInjector::triggerChangeHandler(QWebElement element)
 {
     triggerHandler(element, "change");
+}
+
+void FormFieldInjector::guiPressEnter(QWebElement element)
+{
+    if (element.isNull()) {
+        qDebug() << "Warning: failed to press enter on null element.\n";
+        return;
+    }
+
+    // TODO: Sending a real GUI event does not do anything.
+
+    //QKeyEvent press(QEvent::KeyPress, Qt::Key_Return, Qt::NoModifier);
+    //QKeyEvent release(QEvent::KeyRelease, Qt::Key_Return, Qt::NoModifier);
+
+    //element.setFocus();
+    //webView->event(&press);
+    //webView->event(&release);
+
+    element.evaluateJavaScript("this.form.submit()");
 }
 
 

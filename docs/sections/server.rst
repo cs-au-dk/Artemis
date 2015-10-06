@@ -195,7 +195,7 @@ Commands
     
     
 * ``event``
-    Triggers a JavaScript event on the element at the specified XPath.
+    Triggers a JavaScript event on the element at the specified XPath. (Or custom event; see below.)
     
     N.B. Event names are given as "change" or "focus, not "onchange", "onfocus", etc.
     
@@ -205,6 +205,21 @@ Commands
             "command": "event",
             "element": "id(\"listener\")",
             "event": "focus"
+        }
+    
+    Receive: ``{"event": "done"}``
+    
+    There are also some custom Artemis event types which are not the standard JavaScript events.
+    These are handled separately by Artemis and are not triggered as JavaScript events directly.
+    
+    So far there is only one implemented: for pressing ``Enter`` on a form field (e.g. to submit the form).
+    
+    Send (e.g. on form-submission.html)::
+    
+        {
+            "command": "event",
+            "element": "id(\"input-text\")",
+            "event": "ARTEMIS-press-enter"
         }
     
     Receive: ``{"event": "done"}``

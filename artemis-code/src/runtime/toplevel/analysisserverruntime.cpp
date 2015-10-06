@@ -543,8 +543,22 @@ void AnalysisServerRuntime::execute(EventTriggerCommand *command)
     QString eventDescription = QString("event/%1").arg(command->event);
     mFieldReadLog.beginEvent(eventDescription, target.xPath()); // Use a canonical XPath.
 
-    // Build and trigger the event.
-    FormFieldInjector::triggerHandler(target, command->event);
+    // Check if this is a javaScript event or a custom event (with the prefix ARTEMIS-*).
+    if (!command->event.startsWith("ARTEMIS-")) {
+        // Standard JavaScript event - Build and trigger the event.
+        FormFieldInjector::triggerHandler(target, command->event);
+    } else {
+        // Cusom event - check which type and dispatch.
+        QString event = command->event;
+        event.remove(0, 8);
+
+        if (event == "press-enter") {
+            FormFieldInjector::guiPressEnter(target);
+        } else {
+            emit sigCommandFinished(errorResponse("Custom event type was not recognised."));
+            return;
+        }
+    }
 
     // No result, just return.
     QVariantMap result;

@@ -44,6 +44,8 @@ public:
     static void triggerHandler(QWebElement element, QString eventName);
     static void triggerChangeHandler(QWebElement element);
 
+    static void guiPressEnter(QWebElement element);
+
 protected:
     static bool simulateTextFieldFilling(QWebElement element, QString value, bool noBlur);
     static bool simulateBooleanFieldFilling(QWebElement element, InjectionValue value, bool noBlur);

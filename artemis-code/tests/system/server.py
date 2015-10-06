@@ -2085,6 +2085,62 @@ class AnalysisServerFeatureTests(AnalysisServerTestBase):
         
         self.assertStatusElementContains("#input-text set to ''")
     
+    def test_event_command_custom_press_enter(self):
+        load_message = {
+                "command": "pageload",
+                "url": fixture_url("form-submission.html")
+            }
+        
+        load_response = send_to_server(load_message)
+        
+        self.assertIn("pageload", load_response)
+        
+        event_message = {
+                "command": "event",
+                "element": "id(\"input-text\")",
+                "event": "ARTEMIS-press-enter"
+            }
+        
+        event_response = send_to_server(event_message)
+        
+        self.assertIn("event", event_response)
+        self.assertEqual(event_response["event"], u"done")
+        
+        # Check we got to the result page.
+        check_message = {
+                "command": "page"
+            }
+        
+        # TODO: Sometimes the server is crashed here, as with test_post_form_submission
+        check_response = send_to_server(check_message)
+        
+        self.assertNotIn("error", check_response)
+        
+        self.assertIn("url", check_response)
+        self.assertEqual(check_response["url"], u"about:blank")
+        
+    
+    def test_event_command_custom_bad_event(self):
+        load_message = {
+                "command": "pageload",
+                "url": fixture_url("form-submission.html")
+            }
+        
+        load_response = send_to_server(load_message)
+        
+        self.assertIn("pageload", load_response)
+        
+        event_message = {
+                "command": "event",
+                "element": "id(\"input-text\")",
+                "event": "ARTEMIS-does-not-exist"
+            }
+        
+        event_response = send_to_server(event_message)
+        
+        self.assertNotIn("event", event_response)
+        self.assertIn("error", event_response)
+    
     def test_event_command_without_required_fields(self):
         load_message = {
                 "command": "pageload",
@@ -2406,7 +2462,7 @@ class AnalysisServerFeatureTests(AnalysisServerTestBase):
             }
         
         # TODO: There are stability problems with this test specifically.
-        # The server is often crashed after the previous call.
+        # The server is often crashed after the previous call. (See also test_event_command_custom_press_enter)
         check_response = send_to_server(check_message)
         
         self.assertNotIn("error", check_response)
