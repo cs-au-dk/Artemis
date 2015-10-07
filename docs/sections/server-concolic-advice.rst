@@ -75,11 +75,11 @@ Commands
             }
         }
     
-    If there is no more advice available for that sequence::
+    If there is no more advice available for that sequence, then no values are returned::
     
         {
             "sequence": "MySequenceID",
-            "values" : null
+            "values" : []
         }
     
     N.B. This result is not necessarily final. If there are outstanding traces which have been suggested by Artemis

@@ -594,6 +594,10 @@ CommandPtr RequestHandler::concolicAdviceCommand(QVariantMap mainObject)
 
     sequence = mainObject["sequence"].toString();
 
+    if (sequence.isEmpty()) {
+        return parseError("The 'sequence' property of a concolicadvice command should be non-empty.");
+    }
+
     return ConcolicAdviceCommandPtr(new ConcolicAdviceCommand(action, sequence));
 }
 
