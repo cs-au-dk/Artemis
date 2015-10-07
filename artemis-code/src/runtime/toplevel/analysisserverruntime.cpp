@@ -585,6 +585,12 @@ void AnalysisServerRuntime::execute(ConcolicAdviceCommand* command)
     Log::debug("  Analysis server runtime: executing a concolic-advice command.");
     assert(command);
 
+    // Check we have loaded a page already.
+    if (!mIsPageLoaded) {
+        emit sigCommandFinished(errorResponse("Cannot execute concolicadvice command until a page is loaded."));
+        return;
+    }
+
     emit sigCommandFinished(errorResponse("Not yet implemented."));
     return;
 }

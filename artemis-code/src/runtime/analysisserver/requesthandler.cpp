@@ -170,7 +170,7 @@ CommandPtr RequestHandler::createCommand(QVariant data)
         cmdObject = windowsizeCommand(mainObject);
 
     } else if (command == "concolicadvice") {
-        expectedFields = QStringList() << "begintrace" << "endtrace" << "advice";
+        expectedFields = QStringList() << "action" << "sequence";
         cmdObject = concolicAdviceCommand(mainObject);
 
     } else {
@@ -573,7 +573,7 @@ CommandPtr RequestHandler::concolicAdviceCommand(QVariantMap mainObject)
         return parseError("The 'action' property for a concolicadvice command must be a string.");
     }
 
-    QString actionString = mainObject["advice"].toString();
+    QString actionString = mainObject["action"].toString();
     if (actionString == "begintrace") {
         action = ConcolicAdviceCommand::BeginTrace;
     } else if (actionString == "endtrace") {
