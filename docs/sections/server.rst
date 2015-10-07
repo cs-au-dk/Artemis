@@ -1,3 +1,4 @@
+.. _server:
 
 Server Mode
 ===========
@@ -9,6 +10,8 @@ In this mode **all** other arguments except those prefixed by ``analysis-server-
 
 There is a debug view which shows the internal browser, which is shown when the option ``--analysis-server-debug-view``
 is given.
+
+The concolic advice mode is documented at :ref:`server-concolic-advice`.
 
 The API
 -------
@@ -39,8 +42,9 @@ This should return::
 Only one command can be sent per request. The server is designed to be blocking; any requests sent while another is
 still being processed will return an error.
 
+
 Commands
-^^^^^^^^
+--------
 
 * ``echo``
     Used for testing. Returns the text provided in the ``message`` field. The optional ``delay`` field is the number
@@ -542,6 +546,14 @@ Commands
             ]
         }
     
+    N.B. Non-matching queries are handled as normal in a browser's XPath evaluation::
+    
+        //does-not-exist => []
+        string(//does-not-exist) => ""
+        boolean(//does-not-exist) => false
+    
+    An XPath which cannot be evaluated (because it is invalid) will return an error.
+    
 * ``windowsize``
     Set the size of the browser window.
     
@@ -555,7 +567,11 @@ Commands
     
     Receive: ``{ "windowsize": "done" }``
     
-
+* ``concolicadvice``
+    Allows the server to record traces nito a concolic execution tree and return advice about new form field values
+    which can lead to new exploration.
+    
+    See the :ref:`server-concolic-advice` documentation for details.
 
 
 

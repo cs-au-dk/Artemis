@@ -66,6 +66,7 @@ protected:
     CommandPtr xpathCommand(QVariantMap mainObject);
     CommandPtr eventCommand(QVariantMap mainObject);
     CommandPtr windowsizeCommand(QVariantMap mainObject);
+    CommandPtr concolicAdviceCommand(QVariantMap mainObject);
 
 protected slots:
     void slRequestFullyLoaded();

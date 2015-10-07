@@ -169,6 +169,10 @@ CommandPtr RequestHandler::createCommand(QVariant data)
         expectedFields = QStringList() << "width" << "height";
         cmdObject = windowsizeCommand(mainObject);
 
+    } else if (command == "concolicadvice") {
+        expectedFields = QStringList() << "begintrace" << "endtrace" << "advice";
+        cmdObject = concolicAdviceCommand(mainObject);
+
     } else {
         return parseError("Command was not recognised.");
     }
@@ -552,6 +556,45 @@ CommandPtr RequestHandler::windowsizeCommand(QVariantMap mainObject)
     }
 
     return WindowSizeCommandPtr(new WindowSizeCommand(width, height));
+}
+
+CommandPtr RequestHandler::concolicAdviceCommand(QVariantMap mainObject)
+{
+    Log::debug("  Request handler: Building concolic-advice command.");
+
+    ConcolicAdviceCommand::ConcolicAdviceAction action;
+    QString sequence;
+
+    if (!mainObject.contains("action")) {
+        return parseError("Could not find the 'action' property for a conclicadvice command.");
+    }
+
+    if (mainObject["action"].type() != QVariant::String) {
+        return parseError("The 'action' property for a concolicadvice command must be a string.");
+    }
+
+    QString actionString = mainObject["advice"].toString();
+    if (actionString == "begintrace") {
+        action = ConcolicAdviceCommand::BeginTrace;
+    } else if (actionString == "endtrace") {
+        action = ConcolicAdviceCommand::EndTrace;
+    } else if (actionString == "advice") {
+        action = ConcolicAdviceCommand::Advice;
+    } else {
+        return parseError("The 'action' property for a concolicadvice command was not recognised.");
+    }
+
+    if (!mainObject.contains("sequence")) {
+        return parseError("Could not find the 'sequence' property for a conclicadvice command.");
+    }
+
+    if (mainObject["sequence"].type() != QVariant::String) {
+        return parseError("The 'sequence' property for a concolicadvice command must be a string.");
+    }
+
+    sequence = mainObject["sequence"].toString();
+
+    return ConcolicAdviceCommandPtr(new ConcolicAdviceCommand(action, sequence));
 }
 
 

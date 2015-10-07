@@ -19,7 +19,7 @@ Substantial Addons:
    sections/ail
    sections/concolic
    sections/server
-              
+
 Extending Artemis:
 
 .. toctree::

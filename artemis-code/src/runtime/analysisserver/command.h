@@ -258,8 +258,23 @@ public:
 
 typedef QSharedPointer<WindowSizeCommand> WindowSizeCommandPtr;
 
+// Command to handle all aspects of recording concolic traces and giving concolic advice.
+class ConcolicAdviceCommand : public Command
+{
+public:
+    enum ConcolicAdviceAction { BeginTrace, EndTrace, Advice };
 
+    ConcolicAdviceCommand(ConcolicAdviceAction action, QString sequence)
+        : action(action)
+        , sequence(sequence)
+    {}
+    virtual void accept(AnalysisServerRuntime* server);
 
+    ConcolicAdviceAction action;
+    QString sequence;
+};
+
+typedef QSharedPointer<ConcolicAdviceCommand> ConcolicAdviceCommandPtr;
 
 
 

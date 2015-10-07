@@ -580,6 +580,15 @@ void AnalysisServerRuntime::execute(WindowSizeCommand *command)
     emit sigCommandFinished(result);
 }
 
+void AnalysisServerRuntime::execute(ConcolicAdviceCommand* command)
+{
+    Log::debug("  Analysis server runtime: executing a concolic-advice command.");
+    assert(command);
+
+    emit sigCommandFinished(errorResponse("Not yet implemented."));
+    return;
+}
+
 
 QVariant AnalysisServerRuntime::errorResponse(QString message)
 {

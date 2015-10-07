@@ -53,6 +53,7 @@ public:
     void execute(XPathCommand* command);
     void execute(EventTriggerCommand* command);
     void execute(WindowSizeCommand* command);
+    void execute(ConcolicAdviceCommand* command);
 
 protected:
     AnalysisServer mAnalysisServer;
