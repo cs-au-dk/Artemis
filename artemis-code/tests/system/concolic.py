@@ -7,8 +7,13 @@ FIXTURE_ROOT = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'fixtur
 import sys
 import re
 import unittest
+import inspect
 
 from harness.artemis import execute_artemis, to_appropriate_type
+from harness.artemis import OUTPUT_DIR as ARTEMIS_OUTPUT_DIR
+from harness.js_injection_server import start_server_with_js_injections
+from harness.js_injection_server import HOST_NAME as INJECTION_SERVER_HOST
+from harness.js_injection_server import PORT as INJECTION_SERVER_PORT
 from os import listdir
 from os.path import isfile, join
 
@@ -129,7 +134,7 @@ def _artemis_runner(name, path):
                            verbose=True)
 
 
-if __name__ == '__main__':
+def setup_concolic_tests():
 
     for t in list_tests_in_folder(FIXTURE_ROOT):
         test_name = 'test_%s' % t['fn'].replace(".", "_")
@@ -141,5 +146,70 @@ if __name__ == '__main__':
         
         setattr(Concolic, test_name, test)
 
+
+
+
+
+class ConcolicTraceDivergenceTests(unittest.TestCase):
+    def run_artemis_and_get_final_graph(self, name):
+        address = "http://" + INJECTION_SERVER_HOST + ":" + str(INJECTION_SERVER_PORT)
+        report = _artemis_runner(name, address)
+        
+        # Find the latest tree dump in the output directory.
+        output_dir = os.path.join(ARTEMIS_OUTPUT_DIR, name)
+        
+        all_tree_files = [x for x in os.listdir(output_dir) if os.path.isfile(os.path.join(output_dir, x)) and x.startswith("tree-")]
+        
+        if not all_tree_files:
+            return None
+        
+        # There is expected to only be one entry anyway.
+        latest_tree_file = sorted(all_tree_files)[-1]
+        
+        with open(os.path.join(output_dir, latest_tree_file)) as f:
+            full_graph = f.readlines()
+        
+        # Filter out only the interesting part of the graph
+        result = [edge.rstrip() for edge in full_graph if "->" in edge]
+        return result
+    
+    def test_divergent_from_root(self):
+        
+        js1 = "var x = document.getElementById('testinput'); if (x.value == 'testme') { return true; } else { alert('Error'); return false; }"
+        
+        js2 = "alert('Wasn't expecting that!');"
+        
+        start_server_with_js_injections([js1, js2, js1])
+        
+        #import time
+        #time.sleep(1000)
+        
+        graph = self.run_artemis_and_get_final_graph(inspect.currentframe().f_code.co_name)
+        
+        self.assertIsNotNone(graph)
+        
+        # TODO: Expect this to be a diverged tree, but in fact there is no branch at all...
+        expected_graph = """
+  start -> marker_0 [xlabel = "1"];
+  marker_0 -> marker_1;
+  marker_1 -> aggr_2;
+  aggr_2 -> load_3;
+  load_3 -> end_s_4;""".split("\n")[1:]
+        
+        self.assertEqual(graph, expected_graph)
+
+
+
+
+
+
+
+
+
+
+
+
+if __name__ == '__main__':
+    setup_concolic_tests()
     unittest.main(buffer=True, catchbreak=True)
 
