@@ -454,9 +454,6 @@ CommandPtr RequestHandler::forminputCommand(QVariantMap mainObject)
         if (mainObject["noblur"].type() != QVariant::Bool) {
             return parseError("The 'noblur' property for a forminput command must be a boolean.");
         }
-        if (method != FormInputCommand::SimulateJS) {
-            return parseError("The 'noblur' property for a forminput command is only valid when 'method' is 'simulate-js'.");
-        }
 
         noBlur = mainObject["noblur"].toBool();
     }
