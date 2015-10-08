@@ -83,6 +83,8 @@ AnalysisServerRuntime::AnalysisServerRuntime(QObject* parent, const Options& opt
 
 void AnalysisServerRuntime::run(const QUrl &url)
 {
+    concolicInit();
+
     Log::info("Analysis Server Runtime waiting for messages...");
 }
 
@@ -247,7 +249,7 @@ void AnalysisServerRuntime::execute(ClickCommand *command)
 
     // Add this event to the fields-read log.
     QString eventDescription = QString("click/%1").arg(command->methodStr);
-    mFieldReadLog.beginEvent(eventDescription, target.xPath()); // Use a canonical XPath.
+    notifyStartingEvent(eventDescription, target.xPath()); // Use a canonical XPath.
 
     // Execute the click.
     switch (command->method) {
@@ -420,7 +422,7 @@ void AnalysisServerRuntime::execute(FormInputCommand *command)
 
     // Add this event to the fields-read log.
     QString eventDescription = QString("forminput/%1").arg(command->methodStr);
-    mFieldReadLog.beginEvent(eventDescription, field.xPath()); // Use a canonical XPath.
+    notifyStartingEvent(eventDescription, field.xPath()); // Use a canonical XPath.
 
     bool couldInject;
 
@@ -541,7 +543,7 @@ void AnalysisServerRuntime::execute(EventTriggerCommand *command)
 
     // Add this event to the fields-read log.
     QString eventDescription = QString("event/%1").arg(command->event);
-    mFieldReadLog.beginEvent(eventDescription, target.xPath()); // Use a canonical XPath.
+    notifyStartingEvent(eventDescription, target.xPath()); // Use a canonical XPath.
 
     // Check if this is a javaScript event or a custom event (with the prefix ARTEMIS-*).
     if (!command->event.startsWith("ARTEMIS-")) {
@@ -591,8 +593,23 @@ void AnalysisServerRuntime::execute(ConcolicAdviceCommand* command)
         return;
     }
 
-    emit sigCommandFinished(errorResponse("Not yet implemented."));
-    return;
+    QVariant result;
+    switch (command->action) {
+    case ConcolicAdviceCommand::BeginTrace:
+        result = concolicBeginTrace(command->sequence);
+        break;
+    case ConcolicAdviceCommand::EndTrace:
+        result = concolicEndTrace(command->sequence);
+        break;
+    case ConcolicAdviceCommand::Advice:
+        result = concolicAdvice(command->sequence);
+        break;
+    default:
+        emit sigCommandFinished(errorResponse("Unexpected action in concolicadvice command."));
+        return;
+    }
+
+    emit sigCommandFinished(result);
 }
 
 
@@ -660,7 +677,7 @@ void AnalysisServerRuntime::slExecutedSequence(ExecutableConfigurationConstPtr c
         mIsScheduledRedirection = false;
 
         mFieldReadLog.clear();
-        mFieldReadLog.beginEvent("pageload", "");
+        notifyStartingEvent("pageload", "");
 
         loadUrl(loadCommand->url); // Calls back to slExecutedSequence again.
         break;
@@ -731,6 +748,8 @@ void AnalysisServerRuntime::slExecutedSequence(ExecutableConfigurationConstPtr c
         // TODO: If there was any per-page analysis state, it should be reset here as well. All we have so far is the
         // mFieldReadLog, which we want to start logging from the initial call to pageload, so this is not reset.
 
+        Log::error("Unexpected page load in AnalysisServerRuntime.");
+
         break;
 
     case EXIT: // Fall-through
@@ -800,5 +819,97 @@ void AnalysisServerRuntime::setWindowSize(int width, int height)
     mWebView->forceResize(width, height);
 }
 
+// Called from run() to prepare the page for the analysis.
+void AnalysisServerRuntime::concolicInit()
+{
+    mConcolicSequenceRecording.clear();
+    mConcolicTrees.clear();
+
+    // TODO: Set all form fields symbolic.
+    // Maybe we can just turn off the symbolic triggering feature so even newly-created fields will be symbolic?
+}
+
+// TODO: Call on each new page load to do any preparation for analysis on that page.
+void AnalysisServerRuntime::concolicInitPage()
+{
+
+}
+
+QVariant AnalysisServerRuntime::concolicBeginTrace(QString sequence)
+{
+    if (!mConcolicSequenceRecording.isEmpty()) {
+        return errorResponse("Tried to begin recording a trace while another was already in progress.");
+    }
+    if (sequence.isEmpty()) {
+        return errorResponse("Tried to begin recording with an invalid sequence identifier.");
+    }
+
+    // TODO: Start recording.
+
+    mConcolicSequenceRecording = sequence;
+    return concolicResponseOk();
+}
+
+QVariant AnalysisServerRuntime::concolicEndTrace(QString sequence)
+{
+    if (sequence.isEmpty() || sequence != mConcolicSequenceRecording) {
+        return errorResponse("Tried to end recording of a different trace than the one currently in progress.");
+    }
+
+    // Add the new trace to the tree.
+    if (!mConcolicTrees.contains(sequence)) {
+        mConcolicTrees.insert(sequence, false); // TODO: Dummy implementation with no tree.
+    } else {
+        // TODO: Merge the new trace into the existing tree.
+    }
+
+    mConcolicSequenceRecording.clear();
+    return concolicResponseOk();
+}
+
+QVariant AnalysisServerRuntime::concolicAdvice(QString sequence)
+{
+    if (!mConcolicSequenceRecording.isEmpty()) {
+        // This does not have to be an error, it is just to simplify the API.
+        return errorResponse("Tried to get concolic advice while a trace was recording.");
+    }
+    if (sequence.isEmpty() || !mConcolicTrees.contains(sequence)) {
+        return errorResponse("Tried to get concolic advice for a non-existent sequence ID.");
+    }
+
+    // TODO: Get the tree form mConcolicTrees and check for new advice.
+
+    // TODO: Dummy implementation for now.
+    QVariantMap values;
+    if (mConcolicTrees[sequence] == false) {
+        values.insert("//input[@id='testinput']", "testme");
+        values.insert("//input[@id='some-field']", "Hello, World");
+
+        mConcolicTrees.insert(sequence, true);
+
+    } // else values is left empty - meaning no more exploration suggestions.
+
+    QVariantMap result;
+    result.insert("values", values);
+    return result;
+}
+
+QVariant AnalysisServerRuntime::concolicResponseOk()
+{
+    QVariantMap result;
+    result.insert("concolicadvice", "done");
+    return result;
+}
+
+// Update the fields-read log and the concolic trace recorder of a new event.
+void AnalysisServerRuntime::notifyStartingEvent(QString event, QString elementXPath)
+{
+    mFieldReadLog.beginEvent(event, elementXPath);
+
+    // TODO: If we are recording a concolic trace, then add a new marker for this event.
+    if (!mConcolicSequenceRecording.isEmpty()) {
+        // TODO
+    }
+}
 
 } // namespace artemis

@@ -2601,7 +2601,6 @@ class AnalysisServerConcolicAdviceApiTests(AnalysisServerTestBase):
         
         self.assertIn("error", end_response)
     
-    @unittest.expectedFailure
     def test_endtrace_after_different_start_sequence(self):
         self.loadFixture("concolic-simple.html")
         
@@ -2625,7 +2624,6 @@ class AnalysisServerConcolicAdviceApiTests(AnalysisServerTestBase):
         
         self.assertIn("error", end_response)
     
-    @unittest.expectedFailure
     def test_advice_during_trace(self):
         self.loadFixture("concolic-simple.html")
         
@@ -2691,7 +2689,7 @@ class AnalysisServerConcolicAdviceApiTests(AnalysisServerTestBase):
         self.assertNotIn("error", advice_response)
         self.assertIn("values", advice_response)
         
-        self.assertEqual(advice_response["values"], [])
+        self.assertEqual(advice_response["values"], {})
     
     @unittest.expectedFailure
     def test_simple_trace_then_advice(self):
@@ -2943,6 +2941,11 @@ class AnalysisServerConcolicAdviceApiTests(AnalysisServerTestBase):
     @unittest.skip("TODO")
     def test_record_divergent_traces(self):
         # Just assert this is not a crash - the trace recorded is just useless, no worse.
+        pass
+    
+    @unittest.skip("TODO")
+    def test_page_load_during_trace(self):
+        # I think this is not allowed?
         pass
     
 

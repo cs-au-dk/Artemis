@@ -19,6 +19,7 @@ Substantial Addons:
    sections/ail
    sections/concolic
    sections/server
+   sections/server-concolic-advice
 
 Extending Artemis:
 

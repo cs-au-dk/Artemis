@@ -77,10 +77,20 @@ protected:
 
     void backButtonOrError();
 
-    bool simulateFormInputJS();
-
     // Page analysis
     FieldReadLog mFieldReadLog;
+
+    void notifyStartingEvent(QString event, QString elementXPath);
+
+    // Concolic advice stuff
+    void concolicInit();
+    void concolicInitPage();
+    QVariant concolicBeginTrace(QString sequence);
+    QVariant concolicEndTrace(QString sequence);
+    QVariant concolicAdvice(QString sequence);
+    QVariant concolicResponseOk();
+    QString mConcolicSequenceRecording;
+    QMap<QString, bool> mConcolicTrees; // TODO: dummy implementation.
 
 protected slots:
     // Server part

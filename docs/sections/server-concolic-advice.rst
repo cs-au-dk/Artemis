@@ -57,6 +57,9 @@ Commands
 * ``concolicadvice`` > ``advice``
     Request advice on form field values. There should not be a trace in-progress.
     
+    The ``advice`` action can be called multiple times in a row to get multiple different suggestions for new form
+    values at once.
+    
     Send::
     
         {
@@ -79,7 +82,7 @@ Commands
     
         {
             "sequence": "MySequenceID",
-            "values" : []
+            "values" : {}
         }
     
     N.B. This result is not necessarily final. If there are outstanding traces which have been suggested by Artemis
