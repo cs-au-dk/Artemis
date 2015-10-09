@@ -170,7 +170,7 @@ CommandPtr RequestHandler::createCommand(QVariant data)
         cmdObject = windowsizeCommand(mainObject);
 
     } else if (command == "concolicadvice") {
-        expectedFields = QStringList() << "action" << "sequence";
+        expectedFields = QStringList() << "action" << "sequence" << "amount";
         cmdObject = concolicAdviceCommand(mainObject);
 
     } else {
@@ -561,6 +561,7 @@ CommandPtr RequestHandler::concolicAdviceCommand(QVariantMap mainObject)
 
     ConcolicAdviceCommand::ConcolicAdviceAction action;
     QString sequence;
+    int amount = 1;
 
     if (!mainObject.contains("action")) {
         return parseError("Could not find the 'action' property for a conclicadvice command.");
@@ -595,7 +596,16 @@ CommandPtr RequestHandler::concolicAdviceCommand(QVariantMap mainObject)
         return parseError("The 'sequence' property of a concolicadvice command should be non-empty.");
     }
 
-    return ConcolicAdviceCommandPtr(new ConcolicAdviceCommand(action, sequence));
+    if (mainObject.contains("amount")) {
+        bool ok;
+        amount = mainObject["amount"].toUInt(&ok);
+
+        if (!ok) {
+            return parseError("The 'amount' property for a concolicadvice command must be a non-negative integer.");
+        }
+    }
+
+    return ConcolicAdviceCommandPtr(new ConcolicAdviceCommand(action, sequence, amount));
 }
 
 

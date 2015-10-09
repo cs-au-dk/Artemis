@@ -2689,11 +2689,11 @@ class AnalysisServerConcolicAdviceApiTests(AnalysisServerTestBase):
         self.assertNotIn("error", advice_response)
         self.assertIn("values", advice_response)
         
-        self.assertEqual(advice_response["values"], {})
+        self.assertEqual(advice_response["values"], [])
     
     @unittest.expectedFailure
     def test_simple_trace_then_advice(self):
-        self.loadFixture("concolic-simple.html")
+        self.loadFixture("concolic-simple.html") # TODO: Change this to a page which has multiple branches so we test that only one piece of advice is returned.
         
         # Begin the trace
         begin_message = {
@@ -2751,11 +2751,25 @@ class AnalysisServerConcolicAdviceApiTests(AnalysisServerTestBase):
         self.assertNotIn("error", advice_response)
         self.assertIn("values", advice_response)
         
-        expected_values = {
-                u"//input[@id='testinput']": u"testme"
-            }
+        expected_values = [
+                {
+                    u"//input[@id='testinput']": u"testme"
+                }
+            ]
         
         self.assertEqual(advice_response["values"], expected_values)
+    
+    @unittest.skip("TODO")
+    def test_simple_trace_them_multiple_advice(self):
+        pass
+        
+        # Get some advice, then confirm you can get more (by requesting more than the total remaining amount).
+    
+    @unittest.skip("TODO")
+    def test_simple_trace_then_all_advice(self):
+        pass
+        
+        # Get all advice, then confirm there is no more advice remaining.
     
     @unittest.expectedFailure
     def test_trace_then_advice_then_trace_to_complete_exploration(self):

@@ -87,10 +87,10 @@ protected:
     void concolicInitPage();
     QVariant concolicBeginTrace(QString sequence);
     QVariant concolicEndTrace(QString sequence);
-    QVariant concolicAdvice(QString sequence);
+    QVariant concolicAdvice(QString sequence, uint amount);
     QVariant concolicResponseOk();
     QString mConcolicSequenceRecording;
-    QMap<QString, bool> mConcolicTrees; // TODO: dummy implementation.
+    QMap<QString, uint> mConcolicTrees; // TODO: dummy implementation.
 
 protected slots:
     // Server part

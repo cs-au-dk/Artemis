@@ -76,32 +76,48 @@ Commands
 * ``concolicadvice`` > ``advice``
     Request advice on form field values. There should not be a trace in-progress.
     
-    The ``advice`` action can be called multiple times in a row to get multiple different suggestions for new form
-    values at once.
+    The optional ``amount`` parameter (default value 1) requests that number of suggested form field assignments from
+    the server. If there are less than this number available, all available advice will be returned. Setting ``amount``
+    to 0 will return all available advice.
+    
+    N.B. It is meaningless but allowed to send the amount parameter with other ``concolicadvice`` actions as well.
+    
+    It is safe to call this command multiple times consecutively.
     
     Send::
     
         {
             "command": "concolicadvice",
             "action": "advice",
-            "sequence": "MySequenceID"
+            "sequence": "MySequenceID",
+            "amount": 3
         }
     
     Receive::
     
         {
             "sequence": "MySequenceID",
-            "values" : {
-                "//input[@id='input1']": "Hello",
-                "//input[@id='input2']": "World"
-            }
+            "values" : [
+                {
+                    "//input[@id='input1']": "Hello",
+                    "//input[@id='input2']": "World"
+                },
+                {
+                    "//input[@id='input1']": "Greetings",
+                    "//input[@id='input2']": "World"
+                },
+                {
+                    "//input[@id='input1']": "Greetings",
+                    "//input[@id='input2']": "Everyone"
+                }
+            ]
         }
     
     If there is no more advice available for that sequence, then no values are returned::
     
         {
             "sequence": "MySequenceID",
-            "values" : {}
+            "values" : []
         }
     
     N.B. This result is not necessarily final. If there are outstanding traces which have been suggested by Artemis

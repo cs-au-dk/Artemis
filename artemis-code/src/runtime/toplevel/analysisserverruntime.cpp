@@ -602,7 +602,7 @@ void AnalysisServerRuntime::execute(ConcolicAdviceCommand* command)
         result = concolicEndTrace(command->sequence);
         break;
     case ConcolicAdviceCommand::Advice:
-        result = concolicAdvice(command->sequence);
+        result = concolicAdvice(command->sequence, command->amount);
         break;
     default:
         emit sigCommandFinished(errorResponse("Unexpected action in concolicadvice command."));
@@ -858,7 +858,7 @@ QVariant AnalysisServerRuntime::concolicEndTrace(QString sequence)
 
     // Add the new trace to the tree.
     if (!mConcolicTrees.contains(sequence)) {
-        mConcolicTrees.insert(sequence, false); // TODO: Dummy implementation with no tree.
+        mConcolicTrees.insert(sequence, 0); // TODO: Dummy implementation with no tree.
     } else {
         // TODO: Merge the new trace into the existing tree.
     }
@@ -867,7 +867,7 @@ QVariant AnalysisServerRuntime::concolicEndTrace(QString sequence)
     return concolicResponseOk();
 }
 
-QVariant AnalysisServerRuntime::concolicAdvice(QString sequence)
+QVariant AnalysisServerRuntime::concolicAdvice(QString sequence, uint amount)
 {
     if (!mConcolicSequenceRecording.isEmpty()) {
         // This does not have to be an error, it is just to simplify the API.
@@ -879,18 +879,25 @@ QVariant AnalysisServerRuntime::concolicAdvice(QString sequence)
 
     // TODO: Get the tree form mConcolicTrees and check for new advice.
 
-    // TODO: Dummy implementation for now.
-    QVariantMap values;
-    if (mConcolicTrees[sequence] == false) {
-        values.insert("//input[@id='testinput']", "testme");
-        values.insert("//input[@id='some-field']", "Hello, World");
+    // TODO: Dummy implementation for now - return up to 3 pieces of advice for each tree.
+    QVariantList assignments;
+    if (mConcolicTrees[sequence] < 3) {
+        amount = amount==0 ? 3 : amount;
+        uint numToReturn = min(amount, 3 - mConcolicTrees[sequence]);
 
-        mConcolicTrees.insert(sequence, true);
+        for (uint i = 0; i < numToReturn; i++) {
+            QVariantMap values;
+            values.insert("//input[@id='testinput']", QString("testme-%1").arg(mConcolicTrees[sequence]+i));
+            values.insert("//input[@id='some-field']", "Hello, World");
+            assignments.append(values);
+        }
+
+        mConcolicTrees.insert(sequence, mConcolicTrees[sequence] + numToReturn);
 
     } // else values is left empty - meaning no more exploration suggestions.
 
     QVariantMap result;
-    result.insert("values", values);
+    result.insert("values", assignments);
     return result;
 }
 
