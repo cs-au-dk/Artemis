@@ -13,6 +13,20 @@ Concolic Advice Model
 
 Each trace recorded is associated with a "sequence ID" identifying that particular action sequence.
 
+The required calling sequence is:
+
+* ``begintrace`` "MySequence"
+    * There must be no trace already in progress.
+* Some actions here, e.g. ``forminput``, ``click``, etc.
+* ``endtrace`` "MySequence"
+    * Sequence identifier must match the preceeding ``begintrace``.
+* May record more traces, with any sequence identifiers.
+    * If using the saem sequence identifier "MySequence" the same actions must be performed while recording.
+* ``advice`` "MySequence"
+    * Must have recorded at least one trace for "MySequence" already
+    * Should not be called while recording a new trace.
+* Any actions executed outside of a ``begintrace``/``endtrace`` block will not be recorded, for example actions to
+    reset the state before re-running a new trace for the same sequence.
 
 Commands
 --------
@@ -37,6 +51,8 @@ Commands
     The client can now send commands to execute actions (``forminput``, ``click``, etc.) which will be recorded into
     the trace and saved in the concolic tree for sequence "MySequenceID".
     
+    *Errors:* If any trace is already in progress.
+    
 * ``concolicadvice`` > ``endtrace``
     End recording a trace. There must be a trace with the matching sequence ID in-proress.
     
@@ -53,6 +69,9 @@ Commands
         {
             "concolicadvice": "done"
         }
+    
+    
+    *Errors:* If there is no trace in progress; if the in-progress trace used a different sequence ID.
     
 * ``concolicadvice`` > ``advice``
     Request advice on form field values. There should not be a trace in-progress.
@@ -87,6 +106,8 @@ Commands
     
     N.B. This result is not necessarily final. If there are outstanding traces which have been suggested by Artemis
     but not yet executed then these may open up new possible explorations when they are executed.
+    
+    *Errors:* If there has not been any trace recorded with that id; if there is a trace in-progress.
     
 
 
