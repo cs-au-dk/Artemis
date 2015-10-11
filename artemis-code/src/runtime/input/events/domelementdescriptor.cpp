@@ -47,6 +47,7 @@ DOMElementDescriptor::DOMElementDescriptor(QWebElement* elm) :
         mName = elm->attribute("name");
         mTagName = elm->tagName();
         mClassLine = QString(elm->classes().join(" "));
+        mXPath = elm->xPath();
 
         //setFramePath(elm);
         setElementPath(elm);

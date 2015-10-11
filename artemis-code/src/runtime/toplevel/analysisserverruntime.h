@@ -23,6 +23,7 @@
 #include "runtime/analysisserver/analysisserver.h"
 #include "runtime/analysisserver/fieldreadlog.h"
 #include "runtime/browser/artemiswebview.h"
+#include "concolic/concolicanalysis.h"
 
 namespace artemis
 {
@@ -82,15 +83,20 @@ protected:
 
     void notifyStartingEvent(QString event, QString elementXPath);
 
-    // Concolic advice stuff
+    // Concolic advice
     void concolicInit();
-    void concolicInitPage();
+    void concolicInitPage(QSharedPointer<ExecutionResult> result);
     QVariant concolicBeginTrace(QString sequence);
     QVariant concolicEndTrace(QString sequence);
     QVariant concolicAdvice(QString sequence, uint amount);
+    QString concolicSymbolToXPath(QString sequence, QString symbol);
     QVariant concolicResponseOk();
+    void concolicCreateNewAnalysis(QString sequence);
     QString mConcolicSequenceRecording;
-    QMap<QString, uint> mConcolicTrees; // TODO: dummy implementation.
+    QMap<QString, ConcolicAnalysisPtr> mConcolicTrees;
+    uint mConcolicTraceMarkerIdx;
+    QMap<QString, QList<FormFieldDescriptorConstPtr> > mConcolicFormFields; // Must be defined wherever mConcolicTrees is.
+    QList<FormFieldDescriptorConstPtr> mConcolicFormFieldsForPage;
 
 protected slots:
     // Server part
@@ -107,9 +113,14 @@ protected slots:
     // GUI part
     void slDebugWindowClosed();
 
+    // Concolic advice:
+    void slExecutionTreeUpdated(TraceNodePtr tree);
+
 signals:
     void sigCommandFinished(QVariant response);
 
+    // Concolic advice
+    void sigNewTraceMarker(QString label, QString index, bool isSelectRestriction, SelectRestriction selectRestriction);
 };
 
 

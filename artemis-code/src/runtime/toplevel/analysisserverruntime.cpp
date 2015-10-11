@@ -79,6 +79,14 @@ AnalysisServerRuntime::AnalysisServerRuntime(QObject* parent, const Options& opt
 
     // Do not exit on a bad page load.
     mWebkitExecutor->mIgnoreCancelledPageLoad = true;
+
+    // Concolic advice
+
+    // The event detector for 'marker' events in the traces is created and connected here, as WebKitExecutor (where the rest are handled) does not know when these events happen.
+    QSharedPointer<TraceMarkerDetector> markerDetector(new TraceMarkerDetector());
+    QObject::connect(this, SIGNAL(sigNewTraceMarker(QString, QString, bool, SelectRestriction)),
+                     markerDetector.data(), SLOT(slNewMarker(QString, QString, bool, SelectRestriction)));
+    mWebkitExecutor->getTraceBuilder()->addDetector(markerDetector);
 }
 
 void AnalysisServerRuntime::run(const QUrl &url)
@@ -759,6 +767,8 @@ void AnalysisServerRuntime::slExecutedSequence(ExecutableConfigurationConstPtr c
         exit(1);
         break;
     }
+
+    concolicInitPage(result);
 }
 
 void AnalysisServerRuntime::slLoadTimeoutTriggered()
@@ -824,15 +834,24 @@ void AnalysisServerRuntime::concolicInit()
 {
     mConcolicSequenceRecording.clear();
     mConcolicTrees.clear();
-
-    // TODO: Set all form fields symbolic.
-    // Maybe we can just turn off the symbolic triggering feature so even newly-created fields will be symbolic?
 }
 
-// TODO: Call on each new page load to do any preparation for analysis on that page.
-void AnalysisServerRuntime::concolicInitPage()
+// Called on each new page load to do any preparation for analysis on that page.
+void AnalysisServerRuntime::concolicInitPage(QSharedPointer<ExecutionResult> result)
 {
+    mConcolicFormFieldsForPage = result->getFormFields();
 
+    // Set all form fields symbolic.
+    // N.B. Doing this instead of triggering in FormFieldInjector only (as in concolic mode) is unsafe due to the
+    // test-before-inject issue. It allows constraints to be generated on values which have not yet been injected.
+    // This means injecting a solution to these solved constraints will not take the expected branch, which should
+    // really have been concrete not symbolic to begin with.
+    // However in the server mode we do this to avoid requiring a reset between each recorded trace.
+
+    foreach (FormFieldDescriptorConstPtr element, mConcolicFormFieldsForPage) {
+        element->getDomElement()->getElement(mWebkitExecutor->getPage()).evaluateJavaScript("this.symbolictrigger == \"\";");
+        element->getDomElement()->getElement(mWebkitExecutor->getPage()).evaluateJavaScript("this.options.symbolictrigger == \"\";");
+    }
 }
 
 QVariant AnalysisServerRuntime::concolicBeginTrace(QString sequence)
@@ -844,9 +863,15 @@ QVariant AnalysisServerRuntime::concolicBeginTrace(QString sequence)
         return errorResponse("Tried to begin recording with an invalid sequence identifier.");
     }
 
-    // TODO: Start recording.
+    // If this is the first trace in a new tree, create one.
+    if (!mConcolicTrees.contains(sequence)) {
+        concolicCreateNewAnalysis(sequence);
+    }
+
+    mWebkitExecutor->getTraceBuilder()->beginRecording();
 
     mConcolicSequenceRecording = sequence;
+    mConcolicTraceMarkerIdx = 0;
     return concolicResponseOk();
 }
 
@@ -855,13 +880,18 @@ QVariant AnalysisServerRuntime::concolicEndTrace(QString sequence)
     if (sequence.isEmpty() || sequence != mConcolicSequenceRecording) {
         return errorResponse("Tried to end recording of a different trace than the one currently in progress.");
     }
+    assert(mConcolicTrees.contains(sequence));
 
-    // Add the new trace to the tree.
-    if (!mConcolicTrees.contains(sequence)) {
-        mConcolicTrees.insert(sequence, 0); // TODO: Dummy implementation with no tree.
-    } else {
-        // TODO: Merge the new trace into the existing tree.
-    }
+    // Merge the new trace into the existing tree.
+    mWebkitExecutor->getTraceBuilder()->endRecording();
+    TraceNodePtr trace = mWebkitExecutor->getTraceBuilder()->trace();
+    // N.B. We do not classify the traces in server mode.
+
+    // TODO: For now we pass in no exploration target. Ideally we would keep the exploration target returned from
+    // nextExploration() so the analysis knows which traces belong to which exploration attempts.
+    // This would mean keeping a table of them here and returning an ExplorationHandle-index from concolicAdvice
+    // which could be passed back in calls to concolicBeginTrace [or end].
+    mConcolicTrees[sequence]->addTrace(trace, ConcolicAnalysis::NO_EXPLORATION_TARGET);
 
     mConcolicSequenceRecording.clear();
     return concolicResponseOk();
@@ -877,28 +907,76 @@ QVariant AnalysisServerRuntime::concolicAdvice(QString sequence, uint amount)
         return errorResponse("Tried to get concolic advice for a non-existent sequence ID.");
     }
 
-    // TODO: Get the tree form mConcolicTrees and check for new advice.
+    // Get the tree form mConcolicTrees and check for new advice.
+    ConcolicAnalysisPtr analysis = mConcolicTrees[sequence];
+    QVariantList suggestions;
 
-    // TODO: Dummy implementation for now - return up to 3 pieces of advice for each tree.
-    QVariantList assignments;
-    if (mConcolicTrees[sequence] < 3) {
-        amount = amount==0 ? 3 : amount;
-        uint numToReturn = min(amount, 3 - mConcolicTrees[sequence]);
+    ConcolicAnalysis::ExplorationResult exploration = analysis->nextExploration();
+    uint i = 0;
+    while (exploration.newExploration && (amount == 0 || i < amount)) {
+        assert(exploration.solution->isSolved());
+        QVariantMap assignment;
 
-        for (uint i = 0; i < numToReturn; i++) {
-            QVariantMap values;
-            values.insert("//input[@id='testinput']", QString("testme-%1").arg(mConcolicTrees[sequence]+i));
-            values.insert("//input[@id='some-field']", "Hello, World");
-            assignments.append(values);
+        foreach (QString symbol, exploration.solution->symbols()) {
+            // We need to convert the variable names to elements and then to XPath expressions for the API.
+            QString xPath = concolicSymbolToXPath(sequence, symbol);
+
+            // Decode the value into a single QVariant.
+            QVariant value;
+            Symbolvalue internalValue = exploration.solution->findSymbol(symbol);
+            switch (internalValue.kind) {
+            case Symbolic::INT:
+                value = QVariant(internalValue.u.integer);
+                break;
+            case Symbolic::BOOL:
+                value = QVariant(internalValue.u.boolean);
+                break;
+            case Symbolic::STRING:
+                value = QVariant(QString::fromStdString(internalValue.string));
+                break;
+            default:
+                Log::fatal(QString("Unimplemented value type encountered for variable %1 (%2)").arg(symbol).arg(internalValue.kind).toStdString());
+                exit(1);
+            }
+
+            assignment.insert(xPath, value);
+
+            // TODO: Really we should save exploration.target as well. See comments in concolicEndTrace.
         }
 
-        mConcolicTrees.insert(sequence, mConcolicTrees[sequence] + numToReturn);
+        suggestions.append(assignment);
 
-    } // else values is left empty - meaning no more exploration suggestions.
+        i++;
+        exploration = analysis->nextExploration();
+    }
 
     QVariantMap result;
-    result.insert("values", assignments);
+    result.insert("values", suggestions);
     return result;
+}
+
+QString AnalysisServerRuntime::concolicSymbolToXPath(QString sequence, QString symbol)
+{
+    // TODO: Adapted from ConcolicRuntime::findFormFieldForVariable. The common parts should be merged.
+
+    QString varBaseName = symbol;
+    varBaseName.remove(QRegExp("^SYM_IN_(INT_|BOOL_)?"));
+
+    // Assuming the symbolic source identifier method is always ELEMENT_ID.
+    // Assuming the fields are all in mConcolicFormFields and have not been added dynamically since page load.
+    QSharedPointer<const FormFieldDescriptor> sourceField;
+    foreach(QSharedPointer<const FormFieldDescriptor> field, mConcolicFormFields[sequence]){
+        if(field->getDomElement()->getId() == varBaseName){
+            sourceField = field;
+            break;
+        }
+    }
+    if(sourceField.isNull()) {
+        Log::error(QString("Error: Could not identify a form field for %1.").arg(symbol).toStdString());
+        return "";
+    }
+
+    return sourceField->getDomElement()->getXPath();
 }
 
 QVariant AnalysisServerRuntime::concolicResponseOk()
@@ -908,14 +986,49 @@ QVariant AnalysisServerRuntime::concolicResponseOk()
     return result;
 }
 
+void AnalysisServerRuntime::concolicCreateNewAnalysis(QString sequence)
+{
+    assert(!mConcolicTrees.contains(sequence));
+
+    ConcolicAnalysisPtr newAnalysis = ConcolicAnalysisPtr(new ConcolicAnalysis(mOptions, ConcolicAnalysis::QUIET));
+    mConcolicTrees.insert(sequence, newAnalysis);
+
+    // Get notifications of tree modifications so we can output the trees.
+    QObject::connect(newAnalysis.data(), SIGNAL(sigExecutionTreeUpdated(TraceNodePtr)),
+                     this, SLOT(slExecutionTreeUpdated(TraceNodePtr)));
+
+    // Set the "base" form restrictions.
+    FormRestrictions base = FormFieldRestrictedValues::getRestrictions(mConcolicFormFields[sequence], mWebkitExecutor->getPage());
+    mConcolicTrees[sequence]->setFormRestrictions(base);
+
+    // Save the form fields for this sequence as well.
+    mConcolicFormFields[sequence] = mConcolicFormFieldsForPage;
+}
+
+void AnalysisServerRuntime::slExecutionTreeUpdated(TraceNodePtr tree)
+{
+    // TODO: Output trees.
+}
+
 // Update the fields-read log and the concolic trace recorder of a new event.
 void AnalysisServerRuntime::notifyStartingEvent(QString event, QString elementXPath)
 {
     mFieldReadLog.beginEvent(event, elementXPath);
 
-    // TODO: If we are recording a concolic trace, then add a new marker for this event.
+    // If we are recording a concolic trace, then add a new marker for this event.
     if (!mConcolicSequenceRecording.isEmpty()) {
-        // TODO
+        mConcolicTraceMarkerIdx++;
+
+        // Check for dynamic form restrictions which should be included.
+        FormRestrictions currentFormRestrictions = FormFieldRestrictedValues::getRestrictions(mConcolicFormFields[mConcolicSequenceRecording], mWebkitExecutor->getPage());
+        QWebElement element = mWebkitExecutor->getPage()->getSingleElementByXPath(elementXPath);
+        QPair<bool, SelectRestriction> restriction(false, SelectRestriction());
+        if (!element.isNull()) {
+            QString identifier = element.attribute("id"); // Select elements should all have an ID, possibly auto-generated.
+            restriction = FormFieldRestrictedValues::getRelevantSelectRestriction(currentFormRestrictions, identifier);
+        }
+
+        emit sigNewTraceMarker(event, QString::number(mConcolicTraceMarkerIdx), restriction.first, restriction.second);
     }
 }
 
