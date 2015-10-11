@@ -8,6 +8,8 @@ import sys
 import re
 import unittest
 import inspect
+import time
+import urllib2
 
 from harness.artemis import execute_artemis, to_appropriate_type
 from harness.artemis import OUTPUT_DIR as ARTEMIS_OUTPUT_DIR
@@ -124,14 +126,15 @@ def test_generator(artemis_runner, full_filename, name, test_dict=None, internal
     return test
 
 
-def _artemis_runner(name, path):
+def _artemis_runner(name, path, send_iteration_count=False):
     return execute_artemis(name, path,
                            iterations=0,
                            debug_concolic=' ',
                            major_mode='concolic',
                            concolic_event_sequences='simple',
                            #concolic_search_procedure='dfs-testing',
-                           verbose=True)
+                           verbose=True,
+                           send_iteration_count=send_iteration_count)
 
 
 def setup_concolic_tests():
@@ -153,7 +156,7 @@ def setup_concolic_tests():
 class ConcolicTraceDivergenceTests(unittest.TestCase):
     def run_artemis_and_get_final_graph(self, name):
         address = "http://" + INJECTION_SERVER_HOST + ":" + str(INJECTION_SERVER_PORT)
-        report = _artemis_runner(name, address)
+        report = _artemis_runner(name, address, True)
         
         # Find the latest tree dump in the output directory.
         output_dir = os.path.join(ARTEMIS_OUTPUT_DIR, name)
@@ -170,33 +173,55 @@ class ConcolicTraceDivergenceTests(unittest.TestCase):
             full_graph = f.readlines()
         
         # Filter out only the interesting part of the graph
-        result = [edge.rstrip() for edge in full_graph if "->" in edge]
+        result = [re.sub(" \[.*\]", "", edge.strip()) for edge in full_graph if "->" in edge]
         return result
+    
+    def start_server(self, js_injections):
+        self._server_thread, self._server_stop_event = start_server_with_js_injections(js_injections)
+    
+    def stop_server(self):
+        self._server_stop_event.set()
+        try:
+            # Clear the final request handler which the server is waiting for
+            urllib2.urlopen("http://" + INJECTION_SERVER_HOST + ":" + str(INJECTION_SERVER_PORT) + "/clear-final-request-handler")
+        except:
+            print "Could not connect to server to clear final request handler."
+        self.assertFalse(self._server_thread.is_alive())
+    
     
     def test_divergent_from_root(self):
         
         js1 = "var x = document.getElementById('testinput'); if (x.value == 'testme') { return true; } else { alert('Error'); return false; }"
         
-        js2 = "alert('Wasn't expecting that!');"
+        js2 = "alert(\"Wasn't expecting that!\");"
         
-        start_server_with_js_injections([js1, js2, js1])
-        
-        #import time
-        #time.sleep(1000)
+        self.start_server([js1, js2, js1])
         
         graph = self.run_artemis_and_get_final_graph(inspect.currentframe().f_code.co_name)
         
         self.assertIsNotNone(graph)
         
-        # TODO: Expect this to be a diverged tree, but in fact there is no branch at all...
+        self.stop_server()
+        
         expected_graph = """
-  start -> marker_0 [xlabel = "1"];
-  marker_0 -> marker_1;
-  marker_1 -> aggr_2;
-  aggr_2 -> load_3;
-  load_3 -> end_s_4;""".split("\n")[1:]
+start -> marker_0;
+marker_0 -> marker_1;
+marker_1 -> aggr_2;
+aggr_2 -> diverge_3;
+diverge_3 -> sym_5;
+sym_5 -> unexp_missed_5;
+sym_5 -> alt_6;
+alt_6 -> end_f_7;
+diverge_3 -> alt_8;
+alt_8 -> end_f_9;
+"""
+        expected_graph = expected_graph.split("\n")[1:-1]
         
         self.assertEqual(graph, expected_graph)
+    
+    
+    
+    
 
 
 

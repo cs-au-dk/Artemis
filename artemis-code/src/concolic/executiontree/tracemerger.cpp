@@ -309,6 +309,7 @@ void TraceMerger::handleDivergence()
         addDivergentTraceToNode(divergence, mCurrentTrace);
 
         mImmediateParent->setChild(mImmediateParentDirection, divergence); // Replaces the pointer to mCurrentTree with divercence in the immediate parent node.
+        mCurrentTree = divergence;
 
     } else {
         addDivergentTraceToNode(parentDivergence, mCurrentTrace);

@@ -207,6 +207,9 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             "           Change the user-agent reported by Artemis to <custom-ua>.\n"
             "           The following built-in user agents can also be specified (case sensitive):\n"
             "           default, iphone4, ipad4, nexus5, chrome35\n"
+            "\n"
+            "--testing-concolic-send-iteration-count-to-server\n"
+            "           Only used as part of our test suite. Adds a query of ArtemisIteration=X to each URL in concolic mode.\n"
             "\n";
 
     struct option long_options[] = {
@@ -239,6 +242,7 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
     {"concolic-dfs-depth", required_argument, NULL, 'D'},
     {"debug-concolic", no_argument, NULL, 'E'},
     {"event-visibility-check", required_argument, NULL, 'G'},
+    {"testing-concolic-send-iteration-count-to-server", no_argument, NULL, 'J'},
     {0, 0, 0, 0}
     };
 
@@ -410,6 +414,11 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
 
         case 'j': {
             options.numberSameLength = QString(optarg).toInt();
+            break;
+        }
+
+        case 'J': {
+            options.testingConcolicSendIterationCountToServer = true;
             break;
         }
 
