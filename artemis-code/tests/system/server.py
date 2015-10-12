@@ -2544,12 +2544,15 @@ class AnalysisServerConcolicAdviceTestBase(AnalysisServerTestBase):
         self.assertIn("concolicadvice", response)
         self.assertEqual(response["concolicadvice"], u"done")
     
-    def concolicAdvice(self, identifier):
+    def concolicAdvice(self, identifier, amount=None):
         message = {
                 "command": "concolicadvice",
                 "action": "advice",
                 "sequence": identifier
             }
+        
+        if amount is not None:
+            message["amount"] = amount
         
         response = send_to_server(message)
         
@@ -2761,21 +2764,103 @@ class AnalysisServerConcolicAdviceApiTests(AnalysisServerConcolicAdviceTestBase)
         
         self.assertEqual(values, expected_values)
     
-    @unittest.skip("TODO")
     def test_advice_returns_only_one_assignment_by_default(self):
-        pass
+        self.loadFixture("concolic-multiple-branches.html")
+        
+        # Record a trace.
+        self.concolicBeginTrace("TestSequence")
+        self.formInput("id('testinput')", "")
+        self.click("//button")
+        self.concolicEndTrace("TestSequence")
+        
+        # Getting advice should only return one piece by default, even though there are several in total.
+        values = self.concolicAdvice("TestSequence")
+        
+        expected_values = [
+                {
+                    u"//input[@id='testinput']": u"test1"
+                }
+            ]
+        
+        self.assertEqual(values, expected_values)
     
-    @unittest.skip("TODO")
     def test_simple_trace_then_multiple_advice(self):
-        pass
-        
         # Get some advice, then confirm you can get more (by requesting more than the total remaining amount).
-    
-    @unittest.skip("TODO")
-    def test_simple_trace_then_all_advice(self):
-        pass
+        self.loadFixture("concolic-multiple-branches.html")
         
+        # Record a trace.
+        self.concolicBeginTrace("TestSequence")
+        self.formInput("id('testinput')", "")
+        self.click("//button")
+        self.concolicEndTrace("TestSequence")
+        
+        # Get the advice in multiple batches.
+        values_1 = self.concolicAdvice("TestSequence", 3)
+        
+        expected_values_1 = [
+                {
+                    u"//input[@id='testinput']": u"test1"
+                },
+                {
+                    u"//input[@id='testinput']": u"test2"
+                },
+                {
+                    u"//input[@id='testinput']": u"test3"
+                }
+            ]
+        
+        self.assertEqual(values_1, expected_values_1)
+        
+        values_2 = self.concolicAdvice("TestSequence", 3)
+        
+        expected_values_2 = [
+                {
+                    u"//input[@id='testinput']": u"test4"
+                },
+                {
+                    u"//input[@id='testinput']": u"test5"
+                }
+            ]
+        
+        self.assertEqual(values_2, expected_values_2)
+    
+    def test_simple_trace_then_all_advice(self):
         # Get all advice, then confirm there is no more advice remaining.
+        self.loadFixture("concolic-multiple-branches.html")
+        
+        # Record a trace.
+        self.concolicBeginTrace("TestSequence")
+        self.formInput("id('testinput')", "")
+        self.click("//button")
+        self.concolicEndTrace("TestSequence")
+        
+        # Get the advice
+        values_1 = self.concolicAdvice("TestSequence", 0)
+        
+        expected_values_1 = [
+                {
+                    u"//input[@id='testinput']": u"test1"
+                },
+                {
+                    u"//input[@id='testinput']": u"test2"
+                },
+                {
+                    u"//input[@id='testinput']": u"test3"
+                },
+                {
+                    u"//input[@id='testinput']": u"test4"
+                },
+                {
+                    u"//input[@id='testinput']": u"test5"
+                }
+            ]
+        
+        self.assertEqual(values_1, expected_values_1)
+        
+        # There is no advice remaining as we got it all in the first batch.
+        values_2 = self.concolicAdvice("TestSequence")
+        
+        self.assertEqual(values_2, [])
     
     def test_trace_then_advice_then_trace_to_complete_exploration(self):
         self.loadFixture("concolic-simple.html")
@@ -2839,15 +2924,42 @@ class AnalysisServerConcolicAdviceApiTests(AnalysisServerConcolicAdviceTestBase)
         
         self.assertEqual(values_2, [])
     
-    @unittest.skip("TODO")
     def test_record_duplicate_traces(self):
-        # Recording a new trace whihc is the same as an old one makes no difference.
-        pass
+        # Recording a new trace which is the same as an old one makes no difference.
+        self.loadFixture("concolic-simple.html")
+        
+        # Record an action sequence
+        self.concolicBeginTrace("TestSequence")
+        self.formInput("id('testinput')", "")
+        self.click("//button")
+        self.concolicEndTrace("TestSequence")
+        
+        # Get advice and check it's what we expect.
+        values_1 = self.concolicAdvice("TestSequence")
+        
+        expected_values_1 = [
+                {
+                    u"//input[@id='testinput']": u"testme"
+                }
+            ]
+        
+        self.assertEqual(values_1, expected_values_1)
+        
+        # Record the exact same trace again.
+        self.concolicBeginTrace("TestSequence")
+        self.formInput("id('testinput')", "")
+        self.click("//button")
+        self.concolicEndTrace("TestSequence")
+        
+        # There is no new advice... nothing has changed.
+        values_2 = self.concolicAdvice("TestSequence")
+        
+        self.assertEqual(values_2, [])
     
     @unittest.skip("TODO")
     def test_new_exploration_leads_to_new_suggestion(self):
         pass
-        # As above but after getting "no more advice" we record the suggested trace and it gives some new advice.
+        # After getting "no more advice" we record the suggested trace and it gives some new advice.
     
     @unittest.skip("TODO")
     def test_advice_from_multiple_sequences(self):
@@ -2859,12 +2971,38 @@ class AnalysisServerConcolicAdviceApiTests(AnalysisServerConcolicAdviceTestBase)
     
     @unittest.skip("TODO")
     def test_record_divergent_traces(self):
-        # Just assert this is not a crash - the trace recorded is just useless, no worse.
+        # Just assert this is not a crash or error - the trace recorded is just useless, no worse.
+        # could check it was correctly recorded in the tree...?
         pass
     
     @unittest.skip("TODO")
     def test_page_load_during_trace(self):
         # I think this is not allowed?
+        pass
+    
+
+
+
+class AnalysisServerConcolicAdviceLimitations(AnalysisServerConcolicAdviceTestBase):
+    @unittest.skip("TODO")
+    def test_symbolic_info_is_always_on(self):
+        # The server mode suffers from the test-before-inject issue in order to not require resets between each trace.
+        pass
+    
+    @unittest.skip("TODO")
+    def test_reset_fixes_symbolic_info_is_always_on(self):
+        # Same test as above but with a browser reset between trace recordings.
+        pass
+    
+    @unittest.skip("TODO")
+    def test_symbolic_info_leakage_between_traces(self):
+        # Another limitation of the server mode is that symbolic information can be saved from one trace and used in
+        # another. This is also because we do not want to reset the browser between traces.
+        pass
+    
+    @unittest.skip("TODO")
+    def test_reset_fixes_symbolic_info_leakage_between_traces(self):
+        # Same test as above but with a browser reset between trace recordings.
         pass
     
 

@@ -916,9 +916,13 @@ QVariant AnalysisServerRuntime::concolicAdvice(QString sequence, uint amount)
     ConcolicAnalysisPtr analysis = mConcolicTrees[sequence];
     QVariantList suggestions;
 
-    ConcolicAnalysis::ExplorationResult exploration = analysis->nextExploration();
     uint i = 0;
-    while (exploration.newExploration && (amount == 0 || i < amount)) {
+    while (amount == 0 || i < amount) {
+        ConcolicAnalysis::ExplorationResult exploration = analysis->nextExploration();
+        if (!exploration.newExploration) {
+            break;
+        }
+
         assert(exploration.solution->isSolved());
         QVariantMap assignment;
 
@@ -952,7 +956,11 @@ QVariant AnalysisServerRuntime::concolicAdvice(QString sequence, uint amount)
         suggestions.append(assignment);
 
         i++;
-        exploration = analysis->nextExploration();
+    }
+
+    // Some nodes will have been updated to "queued" status, so update the tree output.
+    if (suggestions.length() > 0) {
+        concolicOutputTree(analysis->getExecutionTree(), sequence);
     }
 
     QVariantMap result;
@@ -1011,7 +1019,7 @@ void AnalysisServerRuntime::concolicCreateNewAnalysis(QString sequence)
     mConcolicFormFields[sequence] = mConcolicFormFieldsForPage;
 }
 
-void AnalysisServerRuntime::slExecutionTreeUpdated(TraceNodePtr tree, QString name)
+void AnalysisServerRuntime::concolicOutputTree(TraceNodePtr tree, QString name)
 {
     // 'name' is the sequence ID for the updated tree.
     QString title = "Concolic tree for sequence:\n" + name;
@@ -1033,6 +1041,11 @@ void AnalysisServerRuntime::slExecutionTreeUpdated(TraceNodePtr tree, QString na
     TraceDisplayOverview displayOverview;
     display.writeGraphFile(tree, filename, false, title);
     displayOverview.writeGraphFile(tree, filenameOverview, false, title);
+}
+
+void AnalysisServerRuntime::slExecutionTreeUpdated(TraceNodePtr tree, QString name)
+{
+    concolicOutputTree(tree, name);
 }
 
 // Update the fields-read log and the concolic trace recorder of a new event.

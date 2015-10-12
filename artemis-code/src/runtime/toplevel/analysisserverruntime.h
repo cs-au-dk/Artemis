@@ -92,6 +92,7 @@ protected:
     QString concolicSymbolToXPath(QString sequence, QString symbol);
     QVariant concolicResponseOk();
     void concolicCreateNewAnalysis(QString sequence);
+    void concolicOutputTree(TraceNodePtr tree, QString name);
     QString mConcolicSequenceRecording;
     QMap<QString, ConcolicAnalysisPtr> mConcolicTrees;
     uint mConcolicTraceMarkerIdx;

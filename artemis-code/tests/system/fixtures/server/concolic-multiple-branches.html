@@ -1,0 +1,44 @@
+<!DOCTYPE html><html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    
+    <title>Ben Spencer</title>
+    <meta name="author" content="Ben Spencer">
+    
+    <script type="text/javascript">
+        function validate() {
+            var y = document.getElementById("testinput").value;
+            
+            if (y == "test1") {
+                return true;
+            } else if (y == "test2") {
+                return true;
+            } else if (y == "test3") {
+                return true;
+            } else if (y == "test4") {
+                return true;
+            } else if (y == "test5") {
+                return true;
+            } else {
+                alert("Error!");
+                return false;
+            }
+        }
+    </script>
+    
+</head>
+<body>
+    
+    <p>Write <i>test1</i> &mdash; <i>test5</i> in the field to do something.</p>
+    
+    <form method="GET" action="about:blank" >
+        
+        <input type="text" id="testinput" />
+        
+        <button type="submit" onclick="return validate();">Submit</button>
+        
+    </form>
+
+</body>
+</html>
