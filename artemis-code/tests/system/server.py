@@ -79,6 +79,38 @@ class AnalysisServerTestBase(unittest.TestCase):
     def loadFixture(self, fixture):
         self.loadPage(fixture_url(fixture))
     
+    def formInput(self, field, value):
+        message = {
+                "command": "forminput",
+                "field": field,
+                "value": value
+            }
+        
+        response = send_to_server(message)
+        self.assertNotIn("error", response)
+        self.assertIn("forminput", response)
+    
+    def click(self, element):
+        message = {
+                "command": "click",
+                "element": "//button"
+            }
+        
+        response = send_to_server(message)
+        self.assertNotIn("error", response)
+        self.assertIn("click", response)
+    
+    def assertUrl(self, url):
+        page_message = {
+            "command": "page"
+        }
+        
+        page_response = send_to_server(page_message)
+        
+        self.assertNotIn("error", page_response)
+        self.assertIn("url", page_response)
+        self.assertEqual(page_response["url"], url)
+    
 
 class AnalysisServerFeatureTests(AnalysisServerTestBase):
     
@@ -1828,14 +1860,7 @@ class AnalysisServerFeatureTests(AnalysisServerTestBase):
         self.assertEqual(forminput_response["forminput"], u"done")
         
         # If the form submitted we should be at about:blank.
-        page_message = {
-            "command": "page"
-        }
-        
-        page_response = send_to_server(page_message)
-        
-        self.assertIn("url", page_response)
-        self.assertEqual(page_response["url"], u"about:blank")
+        self.assertUrl(u"about:blank")
     
     @unittest.expectedFailure # Not yet implemented
     def test_forminput_command_with_enter_simulate_js_key_events(self):
@@ -2122,17 +2147,8 @@ class AnalysisServerFeatureTests(AnalysisServerTestBase):
         self.assertEqual(event_response["event"], u"done")
         
         # Check we got to the result page.
-        check_message = {
-                "command": "page"
-            }
-        
         # TODO: Sometimes the server is crashed here, as with test_post_form_submission
-        check_response = send_to_server(check_message)
-        
-        self.assertNotIn("error", check_response)
-        
-        self.assertIn("url", check_response)
-        self.assertEqual(check_response["url"], u"about:blank")
+        self.assertUrl(u"about:blank")
         
     
     def test_event_command_custom_bad_event(self):
@@ -2501,7 +2517,47 @@ class AnalysisServerSystemTests(AnalysisServerTestBase):
     
 
 
-class AnalysisServerConcolicAdviceApiTests(AnalysisServerTestBase):
+class AnalysisServerConcolicAdviceTestBase(AnalysisServerTestBase):
+    def concolicBeginTrace(self, identifier):
+        message = {
+                "command": "concolicadvice",
+                "action": "begintrace",
+                "sequence": identifier
+            }
+        
+        response = send_to_server(message)
+        
+        self.assertNotIn("error", response)
+        self.assertIn("concolicadvice", response)
+        self.assertEqual(response["concolicadvice"], u"done")
+    
+    def concolicEndTrace(self, identifier):
+        message = {
+                "command": "concolicadvice",
+                "action": "endtrace",
+                "sequence": identifier
+            }
+        
+        response = send_to_server(message)
+        
+        self.assertNotIn("error", response)
+        self.assertIn("concolicadvice", response)
+        self.assertEqual(response["concolicadvice"], u"done")
+    
+    def concolicAdvice(self, identifier):
+        message = {
+                "command": "concolicadvice",
+                "action": "advice",
+                "sequence": identifier
+            }
+        
+        response = send_to_server(message)
+        
+        self.assertNotIn("error", response)
+        self.assertIn("values", response)
+        return response["values"]
+
+class AnalysisServerConcolicAdviceApiTests(AnalysisServerConcolicAdviceTestBase):
     
     def test_invalid_command(self):
         self.loadFixture("concolic-simple.html")
@@ -2650,115 +2706,29 @@ class AnalysisServerConcolicAdviceApiTests(AnalysisServerTestBase):
     def test_empty_trace_then_advice(self):
         self.loadFixture("concolic-simple.html")
         
-        # Begin the trace
-        begin_message = {
-                "command": "concolicadvice",
-                "action": "begintrace",
-                "sequence": "TestSequence"
-            }
-        
-        begin_response = send_to_server(begin_message)
-        
-        self.assertNotIn("error", begin_response)
-        self.assertIn("concolicadvice", begin_response)
-        self.assertEqual(begin_response["concolicadvice"], u"done")
-        
-        # End recording
-        end_message = {
-                "command": "concolicadvice",
-                "action": "endtrace",
-                "sequence": "TestSequence"
-            }
-        
-        end_response = send_to_server(end_message)
-        
-        self.assertNotIn("error", end_response)
-        self.assertIn("concolicadvice", end_response)
-        self.assertEqual(end_response["concolicadvice"], u"done")
+        # Record an empty trace
+        self.concolicBeginTrace("TestSequence")
+        self.concolicEndTrace("TestSequence")
         
         # Get advice and check there are no values.
-        advice_message = {
-                "command": "concolicadvice",
-                "action": "advice",
-                "sequence": "TestSequence"
-            }
+        values = self.concolicAdvice("TestSequence")
         
-        advice_response = send_to_server(advice_message)
-        
-        self.assertNotIn("error", advice_response)
-        self.assertIn("values", advice_response)
-        
-        self.assertEqual(advice_response["values"], [])
+        self.assertEqual(values, [])
     
     def test_simple_trace_then_advice(self):
         self.loadFixture("concolic-simple.html")
         
-        # Begin the trace
-        begin_message = {
-                "command": "concolicadvice",
-                "action": "begintrace",
-                "sequence": "TestSequence"
-            }
-        
-        begin_response = send_to_server(begin_message)
-        
-        self.assertNotIn("error", begin_response)
-        self.assertIn("concolicadvice", begin_response)
-        self.assertEqual(begin_response["concolicadvice"], u"done")
-        
         # Record an action sequence
-        action_message_1 = {
-                "command": "forminput",
-                "field": "id('testinput')",
-                "value": ""
-            }
-        
-        action_response_1 = send_to_server(action_message_1)
-        self.assertNotIn("error", action_response_1)
-        
-        action_message_2 = {
-                "command": "click",
-                "element": "//button"
-            }
-        
-        action_response_2 = send_to_server(action_message_2)
-        self.assertNotIn("error", action_response_2)
-        
-        # End recording
-        end_message = {
-                "command": "concolicadvice",
-                "action": "endtrace",
-                "sequence": "TestSequence"
-            }
-        
-        end_response = send_to_server(end_message)
-        
-        self.assertNotIn("error", end_response)
-        self.assertIn("concolicadvice", end_response)
-        self.assertEqual(end_response["concolicadvice"], u"done")
+        self.concolicBeginTrace("TestSequence")
+        self.formInput("id('testinput')", "")
+        self.click("//button")
+        self.concolicEndTrace("TestSequence")
         
         # We are still on the form page.
-        page_message = {
-            "command": "page"
-        }
-        
-        page_response = send_to_server(page_message)
-        
-        self.assertNotIn("error", page_response)
-        self.assertIn("url", page_response)
-        self.assertEqual(page_response["url"], fixture_url_with_scheme("concolic-simple.html"))
+        self.assertUrl(fixture_url_with_scheme("concolic-simple.html"))
         
         # Get advice and check it's what we expect.
-        advice_message = {
-                "command": "concolicadvice",
-                "action": "advice",
-                "sequence": "TestSequence"
-            }
-        
-        advice_response = send_to_server(advice_message)
-        
-        self.assertNotIn("error", advice_response)
-        self.assertIn("values", advice_response)
+        values = self.concolicAdvice("TestSequence")
         
         expected_values = [
                 {
@@ -2766,77 +2736,22 @@ class AnalysisServerConcolicAdviceApiTests(AnalysisServerTestBase):
                 }
             ]
         
-        self.assertEqual(advice_response["values"], expected_values)
+        self.assertEqual(values, expected_values)
     
     def test_simple_trace_then_advice_from_result_page(self):
         self.loadFixture("concolic-simple.html")
         
-        # Begin the trace
-        begin_message = {
-                "command": "concolicadvice",
-                "action": "begintrace",
-                "sequence": "TestSequence"
-            }
-        
-        begin_response = send_to_server(begin_message)
-        
-        self.assertNotIn("error", begin_response)
-        self.assertIn("concolicadvice", begin_response)
-        self.assertEqual(begin_response["concolicadvice"], u"done")
-        
         # Record an action sequence
-        action_message_1 = {
-                "command": "forminput",
-                "field": "id('testinput')",
-                "value": "testme"
-            }
-        
-        action_response_1 = send_to_server(action_message_1)
-        self.assertNotIn("error", action_response_1)
-        
-        action_message_2 = {
-                "command": "click",
-                "element": "//button"
-            }
-        
-        action_response_2 = send_to_server(action_message_2)
-        self.assertNotIn("error", action_response_2)
-        
-        # End recording
-        end_message = {
-                "command": "concolicadvice",
-                "action": "endtrace",
-                "sequence": "TestSequence"
-            }
-        
-        end_response = send_to_server(end_message)
-        
-        self.assertNotIn("error", end_response)
-        self.assertIn("concolicadvice", end_response)
-        self.assertEqual(end_response["concolicadvice"], u"done")
+        self.concolicBeginTrace("TestSequence")
+        self.formInput("id('testinput')", "testme")
+        self.click("//button")
+        self.concolicEndTrace("TestSequence")
         
         # We are now on the result page (about:blank)
-        page_message = {
-            "command": "page"
-        }
-        
-        page_response = send_to_server(page_message)
-        
-        self.assertNotIn("error", page_response)
-        self.assertIn("url", page_response)
-        self.assertEqual(page_response["url"], u"about:blank?")
+        self.assertUrl(u"about:blank?")
         
         # Get advice and check it's what we expect.
-        advice_message = {
-                "command": "concolicadvice",
-                "action": "advice",
-                "sequence": "TestSequence"
-            }
-        
-        advice_response = send_to_server(advice_message)
-        
-        self.assertNotIn("error", advice_response)
-        self.assertIn("values", advice_response)
+        values = self.concolicAdvice("TestSequence")
         
         expected_values = [
                 {
@@ -2844,7 +2759,7 @@ class AnalysisServerConcolicAdviceApiTests(AnalysisServerTestBase):
                 }
             ]
         
-        self.assertEqual(advice_response["values"], expected_values)
+        self.assertEqual(values, expected_values)
     
     @unittest.skip("TODO")
     def test_advice_returns_only_one_assignment_by_default(self):
@@ -2868,57 +2783,14 @@ class AnalysisServerConcolicAdviceApiTests(AnalysisServerTestBase):
         # As above in test_simple_trace_then_advice, but then record a new trace and confirm that there are no more
         # suggestions.
         
-        # Begin the trace
-        begin_message = {
-                "command": "concolicadvice",
-                "action": "begintrace",
-                "sequence": "TestSequence"
-            }
-        
-        begin_response = send_to_server(begin_message)
-        
-        self.assertNotIn("error", begin_response)
-        
         # Record an action sequence
-        action_message_1 = {
-                "command": "forminput",
-                "field": "id('testinput')",
-                "value": ""
-            }
-        
-        action_response_1 = send_to_server(action_message_1)
-        self.assertNotIn("error", action_response_1)
-        
-        action_message_2 = {
-                "command": "click",
-                "element": "//button"
-            }
-        
-        action_response_2 = send_to_server(action_message_2)
-        self.assertNotIn("error", action_response_2)
-        
-        # End recording
-        end_message = {
-                "command": "concolicadvice",
-                "action": "endtrace",
-                "sequence": "TestSequence"
-            }
-        
-        end_response = send_to_server(end_message)
-        
-        self.assertNotIn("error", end_response)
+        self.concolicBeginTrace("TestSequence")
+        self.formInput("id('testinput')", "")
+        self.click("//button")
+        self.concolicEndTrace("TestSequence")
         
         # Get advice and check it's what we expect.
-        advice_message = {
-                "command": "concolicadvice",
-                "action": "advice",
-                "sequence": "TestSequence"
-            }
-        
-        advice_response = send_to_server(advice_message)
-        
-        self.assertNotIn("error", advice_response)
-        self.assertIn("values", advice_response)
+        values = self.concolicAdvice("TestSequence")
         
         expected_values = [
                 {
@@ -2926,36 +2798,18 @@ class AnalysisServerConcolicAdviceApiTests(AnalysisServerTestBase):
                 }
             ]
         
-        self.assertEqual(advice_response["values"], expected_values)
-        
-        # Begin the next trace
-        begin_response_2 = send_to_server(begin_message)
-        self.assertNotIn("error", begin_response_2)
+        self.assertEqual(values, expected_values)
         
         # Perform the same actions again with the new values
-        action_message_3 = {
-                "command": "forminput",
-                "field": "id('testinput')",
-                "value": "testme"
-            }
-        
-        action_response_3 = send_to_server(action_message_3)
-        self.assertNotIn("error", action_response_3)
-        
-        action_response_4 = send_to_server(action_message_2) # Same click as before
-        self.assertNotIn("error", action_response_4)
-        
-        # End the trace
-        end_response_2 = send_to_server(end_message)
-        self.assertNotIn("error", end_response)
+        self.concolicBeginTrace("TestSequence")
+        self.formInput("id('testinput')", "testme")
+        self.click("//button")
+        self.concolicEndTrace("TestSequence")
         
         # Request advice and confirm there is no more.
-        advice_response_2 = send_to_server(advice_message)
+        values_2 = self.concolicAdvice("TestSequence")
         
-        self.assertNotIn("error", advice_response_2)
-        self.assertIn("values", advice_response_2)
-        
-        self.assertEqual(advice_response_2["values"], [])
+        self.assertEqual(values_2, [])
     
     def test_no_more_advice_after_suggestions_exhausted(self):
         self.loadFixture("concolic-simple.html")
@@ -2963,57 +2817,14 @@ class AnalysisServerConcolicAdviceApiTests(AnalysisServerTestBase):
         # As above in test_trace_then_advice_then_trace_to_complete_exploration, except we do not execute the second 
         # trace... Once it is suggested there is already no more advice to give.
         
-        # Begin the trace
-        begin_message = {
-                "command": "concolicadvice",
-                "action": "begintrace",
-                "sequence": "TestSequence"
-            }
-        
-        begin_response = send_to_server(begin_message)
-        
-        self.assertNotIn("error", begin_response)
-        
         # Record an action sequence
-        action_message_1 = {
-                "command": "forminput",
-                "field": "id('testinput')",
-                "value": ""
-            }
-        
-        action_response_1 = send_to_server(action_message_1)
-        self.assertNotIn("error", action_response_1)
-        
-        action_message_2 = {
-                "command": "click",
-                "element": "//button"
-            }
-        
-        action_response_2 = send_to_server(action_message_2)
-        self.assertNotIn("error", action_response_2)
-        
-        # End recording
-        end_message = {
-                "command": "concolicadvice",
-                "action": "endtrace",
-                "sequence": "TestSequence"
-            }
-        
-        end_response = send_to_server(end_message)
-        
-        self.assertNotIn("error", end_response)
+        self.concolicBeginTrace("TestSequence")
+        self.formInput("id('testinput')", "")
+        self.click("//button")
+        self.concolicEndTrace("TestSequence")
         
         # Get advice and check it's what we expect.
-        advice_message = {
-                "command": "concolicadvice",
-                "action": "advice",
-                "sequence": "TestSequence"
-            }
-        
-        advice_response = send_to_server(advice_message)
-        
-        self.assertNotIn("error", advice_response)
-        self.assertIn("values", advice_response)
+        values = self.concolicAdvice("TestSequence")
         
         expected_values = [
                 {
@@ -3021,15 +2832,12 @@ class AnalysisServerConcolicAdviceApiTests(AnalysisServerTestBase):
                 }
             ]
         
-        self.assertEqual(advice_response["values"], expected_values)
+        self.assertEqual(values, expected_values)
         
         # Request advice and confirm there is no more, even without recording the newly suggested trace.
-        advice_response_2 = send_to_server(advice_message)
+        values_2 = self.concolicAdvice("TestSequence")
         
-        self.assertNotIn("error", advice_response_2)
-        self.assertIn("values", advice_response_2)
-        
-        self.assertEqual(advice_response_2["values"], [])
+        self.assertEqual(values_2, [])
     
     @unittest.skip("TODO")
     def test_record_duplicate_traces(self):
@@ -3061,7 +2869,7 @@ class AnalysisServerConcolicAdviceApiTests(AnalysisServerTestBase):
     
 
 
-class AnalysisServerConcolicAdviceExamples(AnalysisServerTestBase):
+class AnalysisServerConcolicAdviceExamples(AnalysisServerConcolicAdviceTestBase):
     pass
 
 
