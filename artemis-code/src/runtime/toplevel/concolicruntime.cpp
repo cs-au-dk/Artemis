@@ -61,8 +61,8 @@ ConcolicRuntime::ConcolicRuntime(QObject* parent, const Options& options, const 
                      &mHandlerTracker, SLOT(slJavascriptSymbolicFieldRead(QString, bool)));
 
     // Link the ConcolicAnalysis signals.
-    QObject::connect(mConcolicAnalysis.data(), SIGNAL(sigExecutionTreeUpdated(TraceNodePtr)),
-                     this, SLOT(slExecutionTreeUpdated(TraceNodePtr)));
+    QObject::connect(mConcolicAnalysis.data(), SIGNAL(sigExecutionTreeUpdated(TraceNodePtr, QString)),
+                     this, SLOT(slExecutionTreeUpdated(TraceNodePtr, QString)));
 }
 
 void ConcolicRuntime::run(const QUrl& url)
@@ -229,7 +229,7 @@ void ConcolicRuntime::postConcreteExecution(ExecutableConfigurationConstPtr conf
 
 
 
-void ConcolicRuntime::slExecutionTreeUpdated(TraceNodePtr tree)
+void ConcolicRuntime::slExecutionTreeUpdated(TraceNodePtr tree, QString name)
 {
     outputTreeGraph();
 }

@@ -58,7 +58,7 @@ void ConcolicAnalysis::addTrace(TraceNodePtr trace, ExplorationHandle target)
         mergeTraceIntoTree(trace, target);
     }
 
-    emit sigExecutionTreeUpdated(mExecutionTree);
+    emit sigExecutionTreeUpdated(mExecutionTree, mConcolicAnalysisName);
 }
 
 // Initilises mSearchProcedure.
@@ -242,7 +242,7 @@ SolutionPtr ConcolicAnalysis::solveTargetPC()
             concolicRuntimeInfo(QString("    %1").arg(solution->getUnsolvableReason()));
             concolicRuntimeDebug("Skipping this target!");
 
-            emit sigExecutionTreeUpdated(mExecutionTree);
+            emit sigExecutionTreeUpdated(mExecutionTree, mConcolicAnalysisName);
             canRetry = false;
 
         } else {
@@ -275,7 +275,7 @@ SolutionPtr ConcolicAnalysis::solveTargetPC()
         TreeManager::markNodeUnsat(target);
         concolicRuntimeInfo("  Constraint is UNSAT.");
         concolicRuntimeDebug("Skipping this target!");
-        emit sigExecutionTreeUpdated(mExecutionTree);
+        emit sigExecutionTreeUpdated(mExecutionTree, mConcolicAnalysisName);
     }
 
     return solution;
@@ -304,7 +304,7 @@ void ConcolicAnalysis::handleEmptyPC(ExplorationDescriptor target)
     concolicRuntimeInfo("    All branches on path were known to be difficult.");
     concolicRuntimeDebug("Skipping this target!");
 
-    emit sigExecutionTreeUpdated(mExecutionTree);
+    emit sigExecutionTreeUpdated(mExecutionTree, mConcolicAnalysisName);
 }
 
 
@@ -397,6 +397,11 @@ void ConcolicAnalysis::concolicRuntimeDebug(QString message)
     if (mOutput == CONCOLIC_RUNTIME) {
         Log::debug(message.toStdString());
     }
+}
+
+void ConcolicAnalysis::setName(QString name)
+{
+    mConcolicAnalysisName = name;
 }
 
 } //namespace artemis

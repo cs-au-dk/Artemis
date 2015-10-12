@@ -24,6 +24,8 @@
 #include "util/loggingutil.h"
 #include "util/delayutil.h"
 #include "runtime/input/clicksimulator.h"
+#include "concolic/executiontree/tracedisplay.h"
+#include "concolic/executiontree/tracedisplayoverview.h"
 
 #include "analysisserverruntime.h"
 
@@ -834,6 +836,9 @@ void AnalysisServerRuntime::concolicInit()
 {
     mConcolicSequenceRecording.clear();
     mConcolicTrees.clear();
+    mConcolicFormFields.clear();
+    mConcolicTreeOutputFileNames.clear();
+    mConcolicTreeOutputFileNameCounter = 1;
 }
 
 // Called on each new page load to do any preparation for analysis on that page.
@@ -994,8 +999,9 @@ void AnalysisServerRuntime::concolicCreateNewAnalysis(QString sequence)
     mConcolicTrees.insert(sequence, newAnalysis);
 
     // Get notifications of tree modifications so we can output the trees.
-    QObject::connect(newAnalysis.data(), SIGNAL(sigExecutionTreeUpdated(TraceNodePtr)),
-                     this, SLOT(slExecutionTreeUpdated(TraceNodePtr)));
+    QObject::connect(newAnalysis.data(), SIGNAL(sigExecutionTreeUpdated(TraceNodePtr, QString)),
+                     this, SLOT(slExecutionTreeUpdated(TraceNodePtr, QString)));
+    newAnalysis->setName(sequence);
 
     // Set the "base" form restrictions.
     FormRestrictions base = FormFieldRestrictedValues::getRestrictions(mConcolicFormFields[sequence], mWebkitExecutor->getPage());
@@ -1005,9 +1011,28 @@ void AnalysisServerRuntime::concolicCreateNewAnalysis(QString sequence)
     mConcolicFormFields[sequence] = mConcolicFormFieldsForPage;
 }
 
-void AnalysisServerRuntime::slExecutionTreeUpdated(TraceNodePtr tree)
+void AnalysisServerRuntime::slExecutionTreeUpdated(TraceNodePtr tree, QString name)
 {
-    // TODO: Output trees.
+    // 'name' is the sequence ID for the updated tree.
+    QString title = "Concolic tree for sequence:\n" + name;
+
+    QString filename;
+    QString filenameOverview;
+    if (!mConcolicTreeOutputFileNames.contains(name)) {
+        filename = QString("server-tree-%1.gv").arg(mConcolicTreeOutputFileNameCounter);
+        filenameOverview = QString("server-tree-%1_overview.gv").arg(mConcolicTreeOutputFileNameCounter);
+        mConcolicTreeOutputFileNames[name] = QPair<QString, QString>(filename, filenameOverview);
+        mConcolicTreeOutputFileNameCounter++;
+    } else {
+        filename = mConcolicTreeOutputFileNames[name].first;
+        filenameOverview = mConcolicTreeOutputFileNames[name].second;
+    }
+
+    // There is one file per concolic tree, which we overwrite each time the tree is updated.
+    TraceDisplay display;
+    TraceDisplayOverview displayOverview;
+    display.writeGraphFile(tree, filename, false, title);
+    displayOverview.writeGraphFile(tree, filenameOverview, false, title);
 }
 
 // Update the fields-read log and the concolic trace recorder of a new event.

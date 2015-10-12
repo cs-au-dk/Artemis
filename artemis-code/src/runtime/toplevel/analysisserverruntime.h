@@ -97,6 +97,8 @@ protected:
     uint mConcolicTraceMarkerIdx;
     QMap<QString, QList<FormFieldDescriptorConstPtr> > mConcolicFormFields; // Must be defined wherever mConcolicTrees is.
     QList<FormFieldDescriptorConstPtr> mConcolicFormFieldsForPage;
+    QMap<QString, QPair<QString, QString> > mConcolicTreeOutputFileNames;
+    uint mConcolicTreeOutputFileNameCounter;
 
 protected slots:
     // Server part
@@ -114,7 +116,7 @@ protected slots:
     void slDebugWindowClosed();
 
     // Concolic advice:
-    void slExecutionTreeUpdated(TraceNodePtr tree);
+    void slExecutionTreeUpdated(TraceNodePtr tree, QString name);
 
 signals:
     void sigCommandFinished(QVariant response);
