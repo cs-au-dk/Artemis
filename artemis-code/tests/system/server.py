@@ -2956,10 +2956,51 @@ class AnalysisServerConcolicAdviceApiTests(AnalysisServerConcolicAdviceTestBase)
         
         self.assertEqual(values_2, [])
     
-    @unittest.skip("TODO")
+    @unittest.expectedFailure # Bug
     def test_new_exploration_leads_to_new_suggestion(self):
-        pass
         # After getting "no more advice" we record the suggested trace and it gives some new advice.
+        self.loadFixture("concolic-multi-constraint-int.html")
+        
+        # Record an execution trace
+        self.concolicBeginTrace("TestSequence")
+        self.formInput("id('testinput')", "")
+        self.click("//button")
+        self.concolicEndTrace("TestSequence")
+        
+        # Get all advice
+        values_1 = self.concolicAdvice("TestSequence", 0)
+        
+        expected_values_1 = [
+                {
+                    "//input[@id='testinput']": "123"
+                },
+                {
+                    "//input[@id='testinput']": "4568"
+                }
+            ]
+        
+        self.assertEqual(values_1, expected_values_1)
+        
+        # Confirm there is no more advice.
+        values_2 = self.concolicAdvice("TestSequence", 0)
+        self.assertEqual(values_2, [])
+        
+        # Record a new trace, which will expose new branches.
+        self.concolicBeginTrace("TestSequence")
+        self.formInput("id('testinput')", "123")
+        self.click("//button")
+        self.concolicEndTrace("TestSequence")
+        
+        # Confirm there is now more advice available.
+        values_3 = self.concolicAdvice("TestSequence", 0)
+        
+        expected_values_3 = [
+                {
+                    "//input[@id='testinput']": "890"
+                }
+            ]
+        
+        self.assertEqual(values_3, expected_values_3)
     
     @unittest.skip("TODO")
     def test_advice_from_multiple_sequences(self):
