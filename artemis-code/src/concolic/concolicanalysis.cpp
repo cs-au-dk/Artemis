@@ -45,8 +45,12 @@ ConcolicAnalysis::ConcolicAnalysis(Options options, OutputMode output)
 // Add a new trace to the tree.
 void ConcolicAnalysis::addTrace(TraceNodePtr trace, ExplorationHandle target)
 {
-    uint index = target.noExplorationTarget ? 1 : target.explorationIndex;
-    TraceIndexer::index(trace, index);
+    // If there is no exploration target we do not know the trace index, unless it is the initial trace.
+    // For these "unknown" traces, leave the index blank.
+    if (!target.noExplorationTarget || mExecutionTree.isNull()) {
+        uint index = target.noExplorationTarget ? 1 : target.explorationIndex;
+        TraceIndexer::index(trace, index);
+    }
 
     // If this is the first trace, then we need to intialise the tree and search procedure.
     // We can't just begin with an empty tree and merge every trace in, as the search procedure needs a
