@@ -3061,7 +3061,7 @@ class ArtemisCrash(Exception):
 
 class ErrorCatchingTestResult(unittest.TextTestResult):
     def addError(self, test, err):
-        # If the error is a ZeroDivisionException then we replace it with CustomException
+        # If the error is a URLError then we replace it with ArtemisCrash
         if isinstance(err[1], urllib2.URLError) and err[1].reason.errno == 111 :
             err = (ArtemisCrash, ArtemisCrash(err[1]), err[2])
         
@@ -3145,6 +3145,8 @@ def check_no_existing_server():
 
 if __name__ == '__main__':
     if check_no_existing_server():
-        unittest.main(buffer=True, catchbreak=True, testRunner=unittest.TextTestRunner(resultclass=ErrorCatchingTestResult))
+        # Hack to support the "-v" option again. Something about the custom testRunner is breaking it.
+        verbosity = 2 if "-v" in sys.argv else 1
+        unittest.main(buffer=True, catchbreak=True, testRunner=unittest.TextTestRunner(resultclass=ErrorCatchingTestResult, verbosity=verbosity))
     else:
         print "There is already a server running at %s which will affect the tests." % ARTEMIS_SERVER_URL
