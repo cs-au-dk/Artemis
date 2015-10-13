@@ -77,6 +77,8 @@ void ConcolicAnalysis::initSearchProcedure()
         mSearchStrategy = TreeSearchPtr(new DepthFirstSearch(mExecutionTree,
                                                              mOptions.concolicDfsDepthLimit,
                                                              mOptions.concolicDfsRestartLimit));
+        QObject::connect(&mTraceMerger, SIGNAL(sigTraceJoined(TraceNodePtr, int, TraceNodePtr, TraceNodePtr)),
+                         mSearchStrategy.dynamicCast<DepthFirstSearch>().data(), SLOT(slNewTraceAdded(TraceNodePtr, int, TraceNodePtr, TraceNodePtr)));
         break;
 
     case SEARCH_SELECTOR:

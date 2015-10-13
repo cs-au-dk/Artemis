@@ -2956,7 +2956,6 @@ class AnalysisServerConcolicAdviceApiTests(AnalysisServerConcolicAdviceTestBase)
         
         self.assertEqual(values_2, [])
     
-    @unittest.expectedFailure # Bug
     def test_new_exploration_leads_to_new_suggestion(self):
         # After getting "no more advice" we record the suggested trace and it gives some new advice.
         self.loadFixture("concolic-multi-constraint-int.html")

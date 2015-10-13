@@ -34,7 +34,8 @@ DepthFirstSearch::DepthFirstSearch(TraceNodePtr tree, unsigned int depthLimit, u
     mRestartsRemaining(restartLimit),
     mUnlimitedRestarts(restartLimit == 0),
     mPreviousPassFoundTarget(false),
-    mIsPreviousRun(false)
+    mIsPreviousRun(false),
+    mTreeHasNewTrace(false)
 {
     mCurrentDomConstraints = QSet<SelectRestriction>();
 }
@@ -159,6 +160,7 @@ void DepthFirstSearch::restartSearch()
     mPreviousPassFoundTarget = false;
     mCurrentPC.clear();
     mCurrentDomConstraints = QSet<SelectRestriction>();
+    mTreeHasNewTrace = false;
 }
 
 // Increase the depth limit and restart.
@@ -174,7 +176,15 @@ bool DepthFirstSearch::deepenRestartAndChoose()
         restartSearch();
         return chooseNextTarget();
     } else {
-       return false;
+        // There are no restarts remaining, but it is possible that a new trace has been added to the tree "behind" the
+        // search cursor so it has not been seen, even though there are unexplored nodes within the depth limit.
+        // In this case we make one final pass of the tree at the same depth to check.
+        if (mTreeHasNewTrace) {
+            restartSearch();
+            return chooseNextTarget();
+        } else {
+            return false;
+        }
     }
 }
 
@@ -321,6 +331,11 @@ void DepthFirstSearch::visit(TraceEnd *node)
     continueFromLeaf();
 }
 
+void DepthFirstSearch::slNewTraceAdded(TraceNodePtr parent, int direction, TraceNodePtr suffix, TraceNodePtr fullTrace)
+{
+    mTreeHasNewTrace = true;
+}
+
 
 // When at a leaf node, we can use the parent stack to find the next node to explore.
 void DepthFirstSearch::continueFromLeaf()
@@ -329,6 +344,7 @@ void DepthFirstSearch::continueFromLeaf()
     // If the parent stack is empty, then we are finished.
     if(mParentStack.empty()){
         mFoundTarget = false;
+        deepenRestartAndChoose();
     }else{
         nextAfterLeaf()->accept(this);
     }

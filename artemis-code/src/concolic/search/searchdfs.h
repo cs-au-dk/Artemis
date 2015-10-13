@@ -44,8 +44,10 @@ namespace artemis
  *  that the tree is only extended and not modified (removing TraceUnexplored nodes in particular is fine).
  */
 
-class DepthFirstSearch : public TreeSearch
+class DepthFirstSearch : public QObject, public TreeSearch
 {
+    Q_OBJECT
+
 public:
     DepthFirstSearch(TraceNodePtr tree, unsigned int depthLimit, unsigned int restartLimit);
 
@@ -83,6 +85,9 @@ public:
     void visit(TraceUnexploredQueued* node);
     void visit(TraceAnnotation* node);      // Ignore all other annotations.
     void visit(TraceEnd* node);             // Stop searching at *any* end node.
+
+public slots:
+    void slNewTraceAdded(TraceNodePtr parent, int direction, TraceNodePtr suffix, TraceNodePtr fullTrace);
 
 private:
     // The root of the tree we are searching.
@@ -146,6 +151,9 @@ private:
     // This is a hack used by getTargetDescriptor() and visit(TraceUnexplored)
     ExplorationDescriptor getCurrentExplorationDescriptor(TraceSymbolicBranch* parent);
     static void pointerDeleterNoOp(TraceSymbolicBranch* branch) {}
+
+    // Used to check for traces inserted "behind" the search cursor during a search.
+    bool mTreeHasNewTrace;
 };
 
 
