@@ -50,6 +50,7 @@ class JsInjectionRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         self.wfile.write("<body>\n")
         self.wfile.write("  <form method=\"GET\" action=\"about:blank\" >\n")
         self.wfile.write("    <input type=\"text\" id=\"testinput\" />\n")
+        self.wfile.write("      " + self._extra_fields(artemis_iteration).replace("\n", "\n    ") + "\n")
         self.wfile.write("    <button type=\"submit\" onclick=\"return validate()\" >Submit</button>\n")
         self.wfile.write("  </form>\n")
         self.wfile.write("</body>\n")
@@ -64,18 +65,32 @@ class JsInjectionRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         else:
             return "alert('No JS injection found.');"
     
+    def _extra_fields(self, artemis_iteration):
+        if hasattr(self.server, "extra_fields"):
+            if artemis_iteration not in range(len(self.server.extra_fields)):
+                return "<p>No extra fields found for iteration " + str(artemis_iteration) + "</p>"
+            else:
+                return self.server.extra_fields[artemis_iteration]
+        else:
+            return ""
+    
 
 class JsInjectionServer(BaseHTTPServer.HTTPServer):
     def set_js_injection(self, js_injection):
         self.js_injection = js_injection
+    
+    def set_extra_fields(self, extra_fields):
+        self.extra_fields = extra_fields
+    
 
 
-def start_server_with_js_injections(js_list):
+def start_server_with_js_injections(js_list, extra_fields=[]):
     def execute_server(stop_event):
         # Handles one request with each of the JS injections, then shuts down.
         server = JsInjectionServer((HOST_NAME, PORT), JsInjectionRequestHandler)
         
         server.set_js_injection(js_list)
+        server.set_extra_fields(extra_fields)
         while not stop_event.is_set():
             server.handle_request()
         server.server_close()

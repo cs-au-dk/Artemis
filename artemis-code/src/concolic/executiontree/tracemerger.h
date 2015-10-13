@@ -79,10 +79,12 @@ private:
     void addDivergentTraceToNode(TraceDivergencePtr node, TraceNodePtr trace);
     void handleDivergenceAtRoot();
     bool mMergingDivergence;
+    QSet<TraceNodePtr> mAlreadyMismatched;
 
     // Used in the visitors to "fast-foraward" through any divergence nodes in the tree before trying to match.
     // These nodes are added by TraceMerger so they will not match anyhting in the new trace and shouold be skipped over.
-    void skipDivergenceNodesInTree();
+    TraceDivergencePtr skipDivergenceNodesInTree();
+    void unSkipDivergenceNodesInTree(TraceDivergencePtr node);
 };
 
 }

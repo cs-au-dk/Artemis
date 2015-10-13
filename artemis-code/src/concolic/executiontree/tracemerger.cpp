@@ -65,13 +65,14 @@ void TraceMerger::visit(TraceUnexplored* node)
 
 void TraceMerger::visit(TraceEnd* node)
 {
-    skipDivergenceNodesInTree();
+    TraceDivergencePtr skipped = skipDivergenceNodesInTree();
 
     // case: unexplored branch in the tree
     if (TraceVisitor::isImmediatelyUnexplored(mCurrentTree)) {
 
         // Insert this trace directly into the tree and return
         mCurrentTree = mCurrentTrace;
+        unSkipDivergenceNodesInTree(skipped);
         Statistics::statistics()->accumulate("Concolic::ExecutionTree::DistinctTracesExplored", 1);
         reportMerge(mCurrentTrace);
         return;
@@ -82,6 +83,7 @@ void TraceMerger::visit(TraceEnd* node)
         // Merge the exploration indices.
         TraceEndPtr treeEnd =  mCurrentTree.dynamicCast<TraceEnd>();
         treeEnd->traceIndices.unite(node->traceIndices);
+        unSkipDivergenceNodesInTree(skipped);
 
     } else {
         handleDivergence();
@@ -90,13 +92,14 @@ void TraceMerger::visit(TraceEnd* node)
 
 void TraceMerger::visit(TraceBranch* node)
 {
-    skipDivergenceNodesInTree();
+    TraceDivergencePtr skipped = skipDivergenceNodesInTree();
 
     // case: unexplored branch in the tree
     if (TraceVisitor::isImmediatelyUnexplored(mCurrentTree)) {
 
         // Insert this trace directly into the tree and return
         mCurrentTree = mCurrentTrace;
+        unSkipDivergenceNodesInTree(skipped);
         Statistics::statistics()->accumulate("Concolic::ExecutionTree::DistinctTracesExplored", 1);
         reportMerge(mCurrentTrace);
         return;
@@ -130,6 +133,7 @@ void TraceMerger::visit(TraceBranch* node)
         treeBranch->setFalseBranch(mCurrentTree);
 
         mCurrentTree = treeBranch;
+        unSkipDivergenceNodesInTree(skipped);
         return;
     }
 
@@ -138,13 +142,14 @@ void TraceMerger::visit(TraceBranch* node)
 
 void TraceMerger::visit(TraceAnnotation* node)
 {
-    skipDivergenceNodesInTree();
+    TraceDivergencePtr skipped = skipDivergenceNodesInTree();
 
     // case: unexplored branch in the tree
     if (TraceVisitor::isImmediatelyUnexplored(mCurrentTree)) {
 
         // Insert this trace directly into the tree and return
         mCurrentTree = mCurrentTrace;
+        unSkipDivergenceNodesInTree(skipped);
         Statistics::statistics()->accumulate("Concolic::ExecutionTree::DistinctTracesExplored", 1);
         reportMerge(mCurrentTrace);
         return;
@@ -162,6 +167,7 @@ void TraceMerger::visit(TraceAnnotation* node)
         treeAnnotation->next = mCurrentTree;
 
         mCurrentTree = treeAnnotation;
+        unSkipDivergenceNodesInTree(skipped);
         return;
     }
 
@@ -171,13 +177,14 @@ void TraceMerger::visit(TraceAnnotation* node)
 
 void TraceMerger::visit(TraceConcreteSummarisation *node)
 {
-    skipDivergenceNodesInTree();
+    TraceDivergencePtr skipped = skipDivergenceNodesInTree();
 
     // case: unexplored branch in the tree
     if (TraceVisitor::isImmediatelyUnexplored(mCurrentTree)) {
 
         // Insert this trace directly into the tree and return
         mCurrentTree = mCurrentTrace;
+        unSkipDivergenceNodesInTree(skipped);
         Statistics::statistics()->accumulate("Concolic::ExecutionTree::DistinctTracesExplored", 1);
         reportMerge(mCurrentTrace);
         return;
@@ -222,6 +229,7 @@ void TraceMerger::visit(TraceConcreteSummarisation *node)
                 treeExec.second = mCurrentTree;
 
                 mCurrentTree = treeSummary;
+                unSkipDivergenceNodesInTree(skipped);
                 return;
             }
 
@@ -235,6 +243,7 @@ void TraceMerger::visit(TraceConcreteSummarisation *node)
                     if(treeExec.first[i] == TraceConcreteSummarisation::FUNCTION_CALL ||
                             traceExec.first[i] == TraceConcreteSummarisation::FUNCTION_CALL) {
                         // The traces diverged but not at BRANCH_TRUE and BRANCH_FALSE.
+                        mAlreadyMismatched.insert(treeSummary);
                         handleDivergence();
                         return;
 
@@ -251,6 +260,7 @@ void TraceMerger::visit(TraceConcreteSummarisation *node)
                 // If we reach here then one must be shorter than the other (but matches a prefix).
                 // This counts as a divergence, as one trace will continue with the summary while the other goes on to
                 // an "interesting" node.
+                mAlreadyMismatched.insert(treeSummary);
                 handleDivergence();
                 return;
             }
@@ -262,6 +272,7 @@ void TraceMerger::visit(TraceConcreteSummarisation *node)
         // Insert the new path into the tree and return.
         treeSummary->executions.append(traceExec);
         // mCurrentTree is not changed.
+        unSkipDivergenceNodesInTree(skipped);
         Statistics::statistics()->accumulate("Concolic::ExecutionTree::DistinctTracesExplored", 1);
         mPreviousParent = treeSummary;
         mPreviousDirection = treeSummary->executions.length()-1;
@@ -313,9 +324,8 @@ void TraceMerger::handleDivergence()
 
     } else {
         addDivergentTraceToNode(parentDivergence, mCurrentTrace);
+        mCurrentTree = parentDivergence;
     }
-
-
 }
 
 void TraceMerger::addDivergentTraceToNode(TraceDivergencePtr node, TraceNodePtr trace)
@@ -326,7 +336,7 @@ void TraceMerger::addDivergentTraceToNode(TraceDivergencePtr node, TraceNodePtr 
 
     bool matched = false;
     foreach (TraceNodePtr head, node->divergedTraces) {
-        if (trace->isEqualShallow(head)) {
+        if (!mAlreadyMismatched.contains(head) && trace->isEqualShallow(head)) {
             mMergingDivergence = true;
 
             mCurrentTree = head;
@@ -340,6 +350,7 @@ void TraceMerger::addDivergentTraceToNode(TraceDivergencePtr node, TraceNodePtr 
             mMergingDivergence = false;
 
             matched = true;
+            mAlreadyMismatched.clear();
             break;
         }
     }
@@ -361,16 +372,16 @@ void TraceMerger::handleDivergenceAtRoot()
     *mStartingTreeRootPtr = divergence;
 }
 
-void TraceMerger::skipDivergenceNodesInTree()
+TraceDivergencePtr TraceMerger::skipDivergenceNodesInTree()
 {
     TraceDivergencePtr head = mCurrentTree.dynamicCast<TraceDivergence>();
     if (head.isNull()) {
-        return;
+        return TraceDivergencePtr();
     }
 
-    // Sanity check for more tha one divergence in a row.
+    // Sanity check for more than one divergence in a row.
     TraceDivergencePtr nextnode = head->next.dynamicCast<TraceDivergence>();
-    if (!head.isNull()) {
+    if (!nextnode.isNull()) {
         Log::fatal("Found two divergence branches in a row, which is an error in the TraceMerger.");
         exit(1);
     }
@@ -378,7 +389,16 @@ void TraceMerger::skipDivergenceNodesInTree()
     // If everythingis ok, fast-forward one node.
     mImmediateParent = head;
     mImmediateParentDirection = 0;
-    mCurrentTrace = head->next;
+    mCurrentTree = head->next;
+
+    return head;
+}
+
+void TraceMerger::unSkipDivergenceNodesInTree(TraceDivergencePtr node)
+{
+    if (!node.isNull()) {
+        mCurrentTree = node;
+    }
 }
 
 // When we merge a trace, trigger the signals.

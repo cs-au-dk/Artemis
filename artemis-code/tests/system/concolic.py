@@ -126,12 +126,12 @@ def test_generator(artemis_runner, full_filename, name, test_dict=None, internal
     return test
 
 
-def _artemis_runner(name, path, send_iteration_count=False):
+def _artemis_runner(name, path, send_iteration_count=False, concolic_event_sequences='simple'):
     return execute_artemis(name, path,
                            iterations=0,
                            debug_concolic=' ',
                            major_mode='concolic',
-                           concolic_event_sequences='simple',
+                           concolic_event_sequences=concolic_event_sequences,
                            #concolic_search_procedure='dfs-testing',
                            verbose=True,
                            send_iteration_count=send_iteration_count)
@@ -154,9 +154,9 @@ def setup_concolic_tests():
 
 
 class ConcolicTraceDivergenceTests(unittest.TestCase):
-    def run_artemis_and_get_final_graph(self, name):
+    def run_artemis_and_get_final_graph(self, name, concolic_event_sequences='simple'):
         address = "http://" + INJECTION_SERVER_HOST + ":" + str(INJECTION_SERVER_PORT)
-        report = _artemis_runner(name, address, True)
+        report = _artemis_runner(name, address, True, concolic_event_sequences)
         
         # Find the latest tree dump in the output directory.
         output_dir = os.path.join(ARTEMIS_OUTPUT_DIR, name)
@@ -176,8 +176,8 @@ class ConcolicTraceDivergenceTests(unittest.TestCase):
         result = [re.sub(" \[.*\]", "", edge.strip()) for edge in full_graph if "->" in edge]
         return result
     
-    def start_server(self, js_injections):
-        self._server_thread, self._server_stop_event = start_server_with_js_injections(js_injections)
+    def start_server(self, js_injections, extra_fields=[]):
+        self._server_thread, self._server_stop_event = start_server_with_js_injections(js_injections, extra_fields)
     
     def stop_server(self):
         self._server_stop_event.set()
@@ -189,8 +189,11 @@ class ConcolicTraceDivergenceTests(unittest.TestCase):
         self.assertFalse(self._server_thread.is_alive())
     
     
+    @unittest.skip("TODO")
     def test_divergent_from_root(self):
-        
+        pass # Can't find a test so illustrate this, as we always begin with click/onchange.
+    
+    def test_divergent_at_different_nodes(self):
         js1 = "var x = document.getElementById('testinput'); if (x.value == 'testme') { return true; } else { alert('Error'); return false; }"
         
         js2 = "alert(\"Wasn't expecting that!\");"
@@ -219,7 +222,228 @@ alt_8 -> end_f_9;
         
         self.assertEqual(graph, expected_graph)
     
+    @unittest.skip("TODO")
+    def test_divergent_at_mismatched_markers(self):
+        # TODO: call with extra_fields set to something, causing extra markers to be added to the trace.
+        pass
     
+    def test_divergent_inside_concrete_summary(self):
+        js1 = "function f() {}; f(); f(); if (true) {}; var x = document.getElementById('testinput'); if (x.value == 'testme') { return true; } else { alert('Error'); return false; }"
+        
+        js2 = "function f() {}; f(); if (true) {}; f(); var x = document.getElementById('testinput'); if (x.value == 'testme') { return true; } else { alert('Error'); return false; }"
+        
+        self.start_server([js1, js2])
+        
+        graph = self.run_artemis_and_get_final_graph(inspect.currentframe().f_code.co_name)
+        
+        self.assertIsNotNone(graph)
+        
+        self.stop_server()
+        
+        expected_graph = """
+start -> marker_0;
+marker_0 -> marker_1;
+marker_1 -> diverge_2;
+diverge_2 -> aggr_3;
+aggr_3 -> sym_5;
+sym_5 -> unexp_missed_5;
+sym_5 -> alt_6;
+alt_6 -> end_f_7;
+diverge_2 -> aggr_8;
+aggr_8 -> sym_10;
+sym_10 -> load_10;
+load_10 -> end_s_11;
+sym_10 -> unexp_12;
+"""
+        expected_graph = expected_graph.split("\n")[1:-1]
+        
+        self.assertEqual(graph, expected_graph)
+    
+    def test_not_divergent_at_concrete_branch(self):
+        js1 = "if (true) { var x = document.getElementById('testinput'); if (x.value == 'testme') { return true; } else { alert('Error'); return false; }}"
+        
+        js2 = "if (false) { return false; } else { var x = document.getElementById('testinput'); if (x.value == 'testme') { return true; } else { alert('Error'); return false; }}"
+        
+        self.start_server([js1, js2, js2])
+        
+        graph = self.run_artemis_and_get_final_graph(inspect.currentframe().f_code.co_name)
+        
+        self.assertIsNotNone(graph)
+        
+        self.stop_server()
+        
+        expected_graph = """
+start -> marker_0;
+marker_0 -> marker_1;
+marker_1 -> aggr_2;
+aggr_2 -> sym_4;
+sym_4 -> unexp_missed_4;
+sym_4 -> alt_5;
+alt_5 -> end_f_6;
+aggr_2 -> sym_8;
+sym_8 -> load_8;
+load_8 -> end_s_9;
+sym_8 -> alt_10;
+alt_10 -> end_f_11;
+"""
+        expected_graph = expected_graph.split("\n")[1:-1]
+        
+        self.assertEqual(graph, expected_graph)
+    
+    def test_multiple_divergence_at_same_point(self):
+        js1 = "function f() {}; f(); f(); if (true) {}; var x = document.getElementById('testinput'); if (x.value == 'testme') { return true; } else if (x.value == 'test2') { return true; } else if (x.value == 'test3') { return true; } else { alert('Error'); return false; }"
+        
+        js2 = "function f() {}; f(); if (true) {}; f(); alert('JS2');"
+        
+        js3 = "function f() {}; f(); f(); f(); if (true) {}; f(); alert('JS3');"
+        
+        js4 = "function f() {}; if (true) {}; f(); f(); alert('JS4');"
+        
+        self.start_server([js1, js2, js3, js4])
+        
+        graph = self.run_artemis_and_get_final_graph(inspect.currentframe().f_code.co_name)
+        
+        self.assertIsNotNone(graph)
+        
+        self.stop_server()
+        
+        expected_graph = """
+start -> marker_0;
+marker_0 -> marker_1;
+marker_1 -> diverge_2;
+diverge_2 -> aggr_3;
+aggr_3 -> sym_5;
+sym_5 -> unexp_missed_5;
+sym_5 -> sym_7;
+sym_7 -> unexp_missed_7;
+sym_7 -> sym_9;
+sym_9 -> unexp_missed_9;
+sym_9 -> alt_10;
+alt_10 -> end_f_11;
+diverge_2 -> aggr_12;
+aggr_12 -> alt_13;
+alt_13 -> end_f_14;
+diverge_2 -> aggr_15;
+aggr_15 -> alt_16;
+alt_16 -> end_f_17;
+diverge_2 -> aggr_18;
+aggr_18 -> alt_19;
+alt_19 -> end_f_20;
+"""
+        expected_graph = expected_graph.split("\n")[1:-1]
+        
+        self.assertEqual(graph, expected_graph)
+    
+    def test_multiple_divergence_at_different_points(self):
+        js1 = "function f() {}; f(); var x = document.getElementById('testinput'); if (x.value == 'testme') { return true; } else if (x.value == 'test2') { return true; } else { alert('Error'); return false; }"
+        
+        js2 = "alert('JS2');"
+        
+        js3 = "function f() {}; f(); var x = document.getElementById('testinput'); if (x.value == 'testme') { return true; } else { alert('JS3'); }"
+        
+        self.start_server([js1, js2, js3])
+        
+        graph = self.run_artemis_and_get_final_graph(inspect.currentframe().f_code.co_name)
+        
+        self.assertIsNotNone(graph)
+        
+        self.stop_server()
+        
+        expected_graph = """
+start -> marker_0;
+marker_0 -> marker_1;
+marker_1 -> diverge_2;
+diverge_2 -> aggr_3;
+aggr_3 -> sym_5;
+sym_5 -> unexp_missed_5;
+sym_5 -> diverge_6;
+diverge_6 -> sym_8;
+sym_8 -> unexp_missed_8;
+sym_8 -> alt_9;
+alt_9 -> end_f_10;
+diverge_6 -> alt_11;
+alt_11 -> end_f_12;
+diverge_2 -> aggr_13;
+aggr_13 -> alt_14;
+alt_14 -> end_f_15;
+"""
+        expected_graph = expected_graph.split("\n")[1:-1]
+        
+        self.assertEqual(graph, expected_graph)
+    
+    def test_exploration_within_divergence(self):
+        js1 = "function f() {}; f(); f(); if (true) {}; var x = document.getElementById('testinput'); if (x.value == 'testme') { return true; } else if (x.value == 'test2') { return true; } else { alert('Error'); return false; }"
+        
+        js2 = "function f() {}; f(); if (true) {}; f(); var x = document.getElementById('testinput'); if (x.value == 'testme') { return true; } else { alert('Error'); return false; };"
+        
+        self.start_server([js1, js2, js2])
+        
+        graph = self.run_artemis_and_get_final_graph(inspect.currentframe().f_code.co_name)
+        
+        self.assertIsNotNone(graph)
+        
+        self.stop_server()
+        
+        expected_graph = """
+start -> marker_0;
+marker_0 -> marker_1;
+marker_1 -> diverge_2;
+diverge_2 -> aggr_3;
+aggr_3 -> sym_5;
+sym_5 -> unexp_missed_5;
+sym_5 -> sym_7;
+sym_7 -> unexp_missed_7;
+sym_7 -> alt_8;
+alt_8 -> end_f_9;
+diverge_2 -> aggr_10;
+aggr_10 -> sym_12;
+sym_12 -> load_12;
+load_12 -> end_s_13;
+sym_12 -> alt_14;
+alt_14 -> end_f_15;
+"""
+        expected_graph = expected_graph.split("\n")[1:-1]
+        
+        self.assertEqual(graph, expected_graph)
+    
+    def test_divergence_within_divergence(self):
+        js1 = "function f() {}; f(); f(); if (true) {}; var x = document.getElementById('testinput'); if (x.value == 'testme') { return true; } else if (x.value == 'test2') { return true; } else { alert('Error'); return false; }"
+        
+        js2 = "function f() {}; f(); if (true) {}; f(); var x = document.getElementById('testinput'); if (x.value == 'testme') { return true; } else { alert('Error'); return false; };"
+        
+        js3 = "function f() {}; f(); if (true) {}; f(); var x = document.getElementById('testinput'); alert('JS3')"
+        
+        self.start_server([js1, js2, js3])
+        
+        graph = self.run_artemis_and_get_final_graph(inspect.currentframe().f_code.co_name)
+        
+        self.assertIsNotNone(graph)
+        
+        self.stop_server()
+        
+        expected_graph = """
+start -> marker_0;
+marker_0 -> marker_1;
+marker_1 -> diverge_2;
+diverge_2 -> aggr_3;
+aggr_3 -> sym_5;
+sym_5 -> unexp_missed_5;
+sym_5 -> sym_7;
+sym_7 -> unexp_missed_7;
+sym_7 -> alt_8;
+alt_8 -> end_f_9;
+diverge_2 -> aggr_10;
+aggr_10 -> diverge_11;
+diverge_11 -> sym_13;
+sym_13 -> load_13;
+load_13 -> end_s_14;
+sym_13 -> unexp_15;
+diverge_11 -> alt_16;
+alt_16 -> end_f_17;
+"""
+        expected_graph = expected_graph.split("\n")[1:-1]
+        
+        self.assertEqual(graph, expected_graph)
     
     
 
