@@ -273,4 +273,16 @@ void CVC4TypeAnalysis::visit(Symbolic::StringSubstring* obj, void* arg) {
     obj->getSource()->accept(this);
 }
 
+void CVC4TypeAnalysis::visit(Symbolic::StringToLowerCase* stringtolowercase, void *arg)
+{
+    mExpressionType = STRING;
+    stringtolowercase->getSource()->accept(this);
+}
+
+void CVC4TypeAnalysis::visit(Symbolic::StringToUpperCase* stringtouppercase, void *arg)
+{
+    mExpressionType = STRING;
+    stringtouppercase->getSource()->accept(this);
+}
+
 }

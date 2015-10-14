@@ -214,6 +214,9 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             "\n"
             "--analysis-server-debug-view\n"
             "           The analysis server will display a (non-interactive) window showing the internal browser.\n"
+            "\n"
+            "--testing-concolic-send-iteration-count-to-server\n"
+            "           Only used as part of our test suite. Adds a query of ArtemisIteration=X to each URL in concolic mode.\n"
             "\n";
 
     struct option long_options[] = {
@@ -248,6 +251,7 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
     {"event-visibility-check", required_argument, NULL, 'G'},
     {"analysis-server-port", required_argument, NULL, 'p'},
     {"analysis-server-debug-view", no_argument, NULL, 'V'},
+    {"testing-concolic-send-iteration-count-to-server", no_argument, NULL, 'J'},
     {0, 0, 0, 0}
     };
 
@@ -419,6 +423,11 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
 
         case 'j': {
             options.numberSameLength = QString(optarg).toInt();
+            break;
+        }
+
+        case 'J': {
+            options.testingConcolicSendIterationCountToServer = true;
             break;
         }
 

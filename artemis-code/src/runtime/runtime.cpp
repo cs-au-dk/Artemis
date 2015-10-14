@@ -156,7 +156,7 @@ Runtime::Runtime(QObject* parent, const Options& options, const QUrl& url)
 
     switch(options.targetStrategy) {
     case TARGET_CONCOLIC:
-        mTargetGenerator = TargetGeneratorConstPtr(new ConcolicTargetGenerator(mOptions, mWebkitExecutor->getTraceBuilder()));
+        mTargetGenerator = TargetGeneratorConstPtr(new ConcolicTargetGenerator(mOptions, mWebkitExecutor->getTraceBuilder(), mWebkitExecutor->getDomSnapshotStorage()));
         break;
     case TARGET_JQUERY:
         mTargetGenerator = TargetGeneratorConstPtr(new JqueryTargetGenerator(jqueryListener));
@@ -291,7 +291,8 @@ void Runtime::done()
         SolverPtr solver = Solver::getSolver(mOptions);
         SolutionPtr solution = solver->solve(
                     pc,
-                    FormFieldRestrictedValues::getRestrictions(mLatestFormFields, mWebkitExecutor->getPage()));
+                    FormFieldRestrictedValues::getRestrictions(mLatestFormFields, mWebkitExecutor->getPage()),
+                    mWebkitExecutor->getDomSnapshotStorage());
 
         solution->toStatistics();
 

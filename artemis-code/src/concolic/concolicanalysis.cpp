@@ -37,6 +37,7 @@ ConcolicAnalysis::ConcolicAnalysis(Options options, OutputMode output)
     , mOutput(output)
     , mExecutionTree(TraceNodePtr())
     , mSearchStrategy(TreeSearchPtr())
+    , mDomSnapshotStorage(DomSnapshotStoragePtr(new DomSnapshotStorage()))
     , mExplorationIndex(1)
     , mPreviousConstraintID()
 {
@@ -99,7 +100,7 @@ void ConcolicAnalysis::mergeTraceIntoTree(TraceNodePtr trace, ExplorationHandle 
 {
     assert(!mExecutionTree.isNull());
 
-    mExecutionTree = mTraceMerger.merge(trace, mExecutionTree);
+    mExecutionTree = mTraceMerger.merge(trace, mExecutionTree, &mExecutionTree);
 
     // Check if we actually explored the intended target.
     if (!target.noExplorationTarget && TreeManager::isQueuedOrNotAttempted(target.target)) {
@@ -166,6 +167,8 @@ ConcolicAnalysis::ExplorationResult ConcolicAnalysis::nextExploration()
         // Call the search procedure to find an unexplored PC.
         if (mSearchStrategy->chooseNextTarget()) {
 
+            mExplorationIndex++;
+
             handle.noExplorationTarget = false;
             handle.target = mSearchStrategy->getTargetDescriptor();
             handle.explorationIndex = mExplorationIndex;
@@ -218,12 +221,11 @@ SolutionPtr ConcolicAnalysis::solveTargetPC()
     FormRestrictions dynamicRestrictions = mergeDynamicSelectRestrictions(mFormFieldInitialRestrictions, dynamicSelectConstraints);
     dynamicRestrictions = updateFormRestrictionsForFeatureFlags(dynamicRestrictions);
 
-    mExplorationIndex++;
     TreeManager::markExplorationIndex(target, mExplorationIndex);
 
     // Try to solve this PC to get some concrete input.
     SolverPtr solver = Solver::getSolver(mOptions);
-    SolutionPtr solution = solver->solve(pc, dynamicRestrictions);
+    SolutionPtr solution = solver->solve(pc, dynamicRestrictions, mDomSnapshotStorage);
     mPreviousConstraintID = solver->getLastConstraintID();
 
     // If the constraint could not be solved, then we have an oppourtunity to retry.
@@ -267,7 +269,7 @@ SolutionPtr ConcolicAnalysis::solveTargetPC()
                 canRetry = false;
             } else {
 
-                solution = solver->solve(pc, dynamicRestrictions);
+                solution = solver->solve(pc, dynamicRestrictions, mDomSnapshotStorage);
                 mPreviousConstraintID = solver->getLastConstraintID();
 
             }
@@ -322,6 +324,11 @@ void ConcolicAnalysis::handleEmptyPC(ExplorationDescriptor target)
 void ConcolicAnalysis::setFormRestrictions(FormRestrictions restrictions)
 {
     mFormFieldInitialRestrictions = restrictions;
+}
+
+void ConcolicAnalysis::setDomSnapshotStorage(DomSnapshotStoragePtr domSnapshotStorage)
+{
+    mDomSnapshotStorage = domSnapshotStorage;
 }
 
 TraceNodePtr ConcolicAnalysis::getExecutionTree()

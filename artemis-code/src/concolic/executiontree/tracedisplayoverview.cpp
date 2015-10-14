@@ -47,6 +47,7 @@ TraceDisplayOverview::TraceDisplayOverview(bool linkToCoverage)
     mStyleEndFail = "[label = \"F\", fillcolor = red, style = filled, shape = circle]";
     mStyleEndUnk = "[label = \"E\", fillcolor = yellow, style = filled, shape = circle]";
     mStyleAggregates = "[label = \"\", shape = square, style = filled, fillcolor = black]";
+    mStyleDivergences = "[label=\"\", shape = star, style = filled, fillcolor = orange]";
 
 
     // Add a legend.
@@ -100,8 +101,8 @@ TraceDisplayOverview::TraceDisplayOverview(bool linkToCoverage)
             "        <td></td>\n"
             "        <td></td>\n"
             "\n"
-            "        <td></td>\n"
-            "        <td></td>\n"
+            "        <td border=\"1\" width=\"25pt\"><font color=\"orange\">&#9733;</font></td>\n"
+            "        <td align=\"left\">Divergence</td>\n"
             "\n"
             "        <td bgcolor=\"chocolate\" border=\"1\" width=\"25pt\">M</td>\n"
             "        <td align=\"left\">Missed</td>\n"

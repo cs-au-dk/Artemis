@@ -67,10 +67,6 @@ public:
     void setDepthLimit(unsigned int depth);
     unsigned int getDepthLimit();
 
-    // Restart a fresh search from the beginning of the tree.
-    void restartSearch();
-    bool deepenRestartAndChoose();
-
 
     // The visitor part which does the actual searching.
     void visit(TraceNode* node);            // Abstract nodes. An error if we reach this.
@@ -89,6 +85,11 @@ public:
 public slots:
     void slNewTraceAdded(TraceNodePtr parent, int direction, TraceNodePtr suffix, TraceNodePtr fullTrace);
 
+protected:
+    // Restart a fresh search from the beginning of the tree.
+    void restartSearch();
+    bool deepenRestartAndChoose();
+
 private:
     // The root of the tree we are searching.
     TraceNodePtr mTree;
@@ -101,8 +102,10 @@ private:
     // Controls how many times we are allowed to deepen the search.
     unsigned int mRestartsRemaining;
     bool mUnlimitedRestarts;
+
     // Used to end the search once we have explored all nodes.
     bool mPreviousPassFoundTarget;
+    bool mNothingRemainsToExplore;
 
     // The PC which is accumulated as we move down the tree.
     // Note that we do not store the PC directly but instead keep a list of branches, which allows PathCondition::createFromBranchList to build the PC intelligently.

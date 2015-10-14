@@ -85,6 +85,11 @@ QList<EventHandlerDescriptorConstPtr> ExecutionResultBuilder::getCurrentEventHan
 {
     QList<EventHandlerDescriptorConstPtr> handlerList;
 
+    QList<QWebElement> userClickableElements;
+    if (mEnableEventVisibilityFiltering) {
+        userClickableElements = mPage->getAllUserClickableElementsAndAncestors();
+    }
+
     QPair<QWebElement*, QString> p;
     foreach(p, mElementPointers) {
         if (getType(p.second) == UNKNOWN_EVENT) {
@@ -109,7 +114,14 @@ QList<EventHandlerDescriptorConstPtr> ExecutionResultBuilder::getCurrentEventHan
         // check if that guess is visible
         if (mEnableEventVisibilityFiltering) {
             QWebElement actualSource = handler->getDomElement()->getElement(mPage);
-            if (actualSource.isUserVisible() == false) {
+
+            // TODO: There are three visibility check methods available to use here.
+            // !userClickableElements.contains(actualSource)    - Checks if the viewport includes a pixel of this element (slow and only works in the viewport).
+            // !actualSource.isUserVisible()                    - Checks if the element has a bounding box.
+            // !actualSource.isUserVisibleIncludingChildren()   - As above bu including children and text nodes.
+            // The ideal solution would be some combination of these.
+
+            if (!userClickableElements.contains(actualSource)) {
                 Statistics::statistics()->accumulate("WebKit::events::skipped::visibility", 1);
                 qDebug() << "Skipping EVENTHANDLER event (not user visible) =" << p.second
                          << "tag = " << actualSource.tagName()

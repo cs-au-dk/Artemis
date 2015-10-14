@@ -1,0 +1,22 @@
+<!--
+TEST WebKit::events::skipped::visibility = 0
+TEST InputGenerator::added-configurations = 1
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+    <title>Ben Spencer</title>
+    <meta name="author" content="Ben Spencer">
+</head>
+<body>
+
+    <!-- Although the element has zero height the contents is visible and therefore clickable. -->
+    <div style="" onclick="alert('Clicked')" >
+        <a style="position: absolute; top:40px; left:20px;" >Click me</a>
+    </div>
+
+</body>
+</html>

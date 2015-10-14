@@ -872,6 +872,46 @@ bool QWebElement::isUserVisible() {
              m_element->hasNonEmptyBoundingBox())); // has a bounding box when rendered
 }
 
+bool QWebElement::isUserVisibleIncludingChildren() {
+    qDebug() << tagName() << isUserVisible() << m_element->childTextNodesHaveNonEmptyBoundingBox();
+    if (isUserVisible() || m_element->childTextNodesHaveNonEmptyBoundingBox()) {
+        return true;
+    }
+
+    foreach (QWebElement child, findAll(QString::fromAscii("*"))) {
+        qDebug() << child.tagName() << child.isUserVisible() << child.getElement()->childTextNodesHaveNonEmptyBoundingBox();
+        if (child.isUserVisible() || child.getElement()->childTextNodesHaveNonEmptyBoundingBox()) {
+            return true;
+        }
+    }
+
+    return false;
+}
+
+// N.B. Due to the use of elementFromPoint, this method only returns elements within the current viewport.
+QList<QWebElement> QWebElement::getAllUserClickableElements(int min_x, int min_y, int max_x, int max_y, int step)
+{
+    WebCore::Document* document = m_element->document();
+    QSet<WebCore::Element*> clickable;
+
+    for (int y = min_y; y < max_y; y += step) {
+        for (int x = min_x; x < max_x; x += step) {
+            //qDebug() << "(" << x << "," << y << ") - " << document->elementFromPoint(x, y);
+            clickable.insert(document->elementFromPoint(x, y));
+        }
+    }
+
+    // Build the set separately so we do not construct the QWebElement instances more than once each.
+    QList<QWebElement> result;
+     foreach (WebCore::Element* element, clickable) {
+         if (element != NULL) {
+             result.append(QWebElement(element));
+         }
+     }
+
+    return result;
+}
+
 int QWebElement::numberOfChildren(QString cssSelector){
     QWebElementCollection elements = findAll(cssSelector);
     int counter = 0;
@@ -883,7 +923,12 @@ int QWebElement::numberOfChildren(QString cssSelector){
     return counter;
 }
 
-#endif
+Element* QWebElement::getElement()
+{
+    return m_element;
+}
+
+#endif // ARTEMIS
 
 
 

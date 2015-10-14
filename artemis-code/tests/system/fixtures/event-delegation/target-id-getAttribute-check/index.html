@@ -1,0 +1,42 @@
+<!--
+TEST PC[0] = ((SymbolicProperty( SymbolicObject( SYM_TARGET_0 ) ) == ConstantString) == ConstantBoolean)
+TEST Concolic::Solver::ConstraintsSolved = 2
+TEST Concolic::Solver::ConstraintsWritten = 2
+TEST Concolic::ExecutionTree::DistinctTracesExplored = 2
+TEST Concolic::Solver::Constraint.SYM_TARGET_0 = //li[@id='interesting']
+-->
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+    <title>Ben Spencer</title>
+    <meta name="author" content="Ben Spencer">
+</head>
+<body>
+
+<h1>Click below:</h1>
+
+<ul id="container" >
+    <li>boring to click</li>
+    <li id="interesting" >interesting to click</li>
+    <li>boring to click</li>
+</ul>
+
+<script type="text/javascript" >
+    window.onload = function(){
+        c = document.getElementById('container');
+        c.addEventListener('click', function(event){
+            if (event.target.getAttribute("id") == "interesting") {
+                alert("Interesting");
+            } else {
+                alert("Boring");
+            }
+        }, false);
+    }
+</script>
+
+</body>
+</html>
+

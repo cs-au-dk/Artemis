@@ -87,6 +87,12 @@ void TraceStatistics::visit(TraceAnnotation *node)
     node->next->accept(this);
 }
 
+// These are not part of the "real" tree, so ignored completely.
+void TraceStatistics::visit(TraceDivergence* node)
+{
+    node->next->accept(this);
+}
+
 void TraceStatistics::visit(TraceConcreteBranch *node)
 {
     mNumNodes++;

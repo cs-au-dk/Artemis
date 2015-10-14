@@ -7,8 +7,15 @@ FIXTURE_ROOT = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'fixtur
 import sys
 import re
 import unittest
+import inspect
+import time
+import urllib2
 
 from harness.artemis import execute_artemis, to_appropriate_type
+from harness.artemis import OUTPUT_DIR as ARTEMIS_OUTPUT_DIR
+from harness.js_injection_server import start_server_with_js_injections
+from harness.js_injection_server import HOST_NAME as INJECTION_SERVER_HOST
+from harness.js_injection_server import PORT as INJECTION_SERVER_PORT
 from os import listdir
 from os.path import isfile, join
 
@@ -16,17 +23,21 @@ from os.path import isfile, join
 class Concolic(unittest.TestCase):
     pass
 
-def _list_tests_in_folder(folder):
+def list_tests_in_folder(folder):
     out = []
 
     for f in listdir(folder):
         p = join(folder, f)
         if not isfile(p) or f[0:1] == "_" or f[0:1] == "%" or not f[-5:] == '.html':
             continue
-        result = {"test": {}, "i_test": {}, "fn": f}
+        result = {"test": {}, "i_test": {}, "fn": f, "expected_failure": False}
         with open(p, 'r') as fl:
             if re.match("^\s*<!--\s*$", fl.readline()):
                 for line in fl:
+                    ef = re.match("^\s*EXPECTED_FAILURE", line)
+                    if ef:
+                        result["expected_failure"] = True
+                        continue
                     m = re.match("\s*TEST(_INTERN)? ([^<>!=\s]+)\s*((<|>|=|!)=?)([^=].*)$", line)
                     if not m:
                         continue
@@ -72,15 +83,9 @@ def _get_from_report(report, key):
         return {"val": report[key], "pc": False}
 
 
-def test_generator(filename, name, test_dict=None, internal_test=None):
+def test_generator(artemis_runner, full_filename, name, test_dict=None, internal_test=None):
     def test(self):
-        report = execute_artemis(name, "%s%s" % (FIXTURE_ROOT, filename),
-                                 iterations=0,
-                                 debug_concolic=' ',
-                                 major_mode='concolic',
-                                 concolic_event_sequences='simple',
-                                 #concolic_search_procedure='dfs-testing',
-                                 verbose=True)
+        report = artemis_runner(name, full_filename)
 
         assert test_dict or internal_test, "No tests to execute"
         tested_unsat = False
@@ -121,13 +126,364 @@ def test_generator(filename, name, test_dict=None, internal_test=None):
     return test
 
 
-if __name__ == '__main__':
+def _artemis_runner(name, path, send_iteration_count=False, concolic_event_sequences='simple'):
+    print "artemis runnre", concolic_event_sequences
+    return execute_artemis(name, path,
+                           iterations=0,
+                           debug_concolic=' ',
+                           major_mode='concolic',
+                           concolic_event_sequences=concolic_event_sequences,
+                           #concolic_search_procedure='dfs-testing',
+                           verbose=True,
+                           send_iteration_count=send_iteration_count)
 
-    for t in _list_tests_in_folder(FIXTURE_ROOT):
+
+def setup_concolic_tests():
+
+    for t in list_tests_in_folder(FIXTURE_ROOT):
         test_name = 'test_%s' % t['fn'].replace(".", "_")
-        test = test_generator(t['fn'], test_name, test_dict=t['test'], internal_test=t['i_test'])
+        file_name = "%s%s" % (FIXTURE_ROOT, t['fn'])
+        
+        test = test_generator(_artemis_runner, file_name, test_name, test_dict=t['test'], internal_test=t['i_test'])
+        if t['expected_failure']:
+            test = unittest.expectedFailure(test)
+        
         setattr(Concolic, test_name, test)
 
-    unittest.main(buffer=True)
 
+
+
+
+class ConcolicTraceDivergenceTests(unittest.TestCase):
+    def run_artemis_and_get_final_graph(self, name, concolic_event_sequences='simple'):
+        print "run and get graph", concolic_event_sequences
+        
+        address = "http://" + INJECTION_SERVER_HOST + ":" + str(INJECTION_SERVER_PORT)
+        report = _artemis_runner(name, address, True, concolic_event_sequences)
+        
+        # Find the latest tree dump in the output directory.
+        output_dir = os.path.join(ARTEMIS_OUTPUT_DIR, name)
+        
+        all_tree_files = [x for x in os.listdir(output_dir) if os.path.isfile(os.path.join(output_dir, x)) and x.startswith("tree-")]
+        
+        if not all_tree_files:
+            return None
+        
+        # There is expected to only be one entry anyway.
+        latest_tree_file = sorted(all_tree_files)[-1]
+        
+        with open(os.path.join(output_dir, latest_tree_file)) as f:
+            full_graph = f.readlines()
+        
+        # Filter out only the interesting part of the graph
+        result = [re.sub(" \[.*\]", "", edge.strip()) for edge in full_graph if "->" in edge]
+        return result
+    
+    def start_server(self, js_injections, html_injection=None):
+        self._server_thread, self._server_stop_event = start_server_with_js_injections(js_injections, html_injection)
+    
+    def stop_server(self):
+        self._server_stop_event.set()
+        try:
+            # Clear the final request handler which the server is waiting for
+            urllib2.urlopen("http://" + INJECTION_SERVER_HOST + ":" + str(INJECTION_SERVER_PORT) + "/clear-final-request-handler")
+        except:
+            print "Could not connect to server to clear final request handler."
+        self.assertFalse(self._server_thread.is_alive())
+    
+    
+    def test_divergent_from_root(self):
+        js1 = "var x = document.getElementById('testinput'); if (x.value == 'testme') { return true; } else { alert('Error'); return false; }"
+        
+        # Calls onclick as first action
+        html1 = "<input type=\"text\" id=\"testinput\" />\n<button type=\"submit\" onclick=\"return validate()\" >Submit</button>"
+        # No function call
+        html2 = "<input type=\"text\" id=\"testinput\" />\n<button type=\"submit\" >Submit</button>"
+        
+        self.start_server([js1, js1], [html1, html2])
+        
+        # Run the test with no event sequence support, so we do not generate marker nodes at the root.
+        graph = self.run_artemis_and_get_final_graph(inspect.currentframe().f_code.co_name, concolic_event_sequences='ignore')
+        
+        self.assertIsNotNone(graph)
+        
+        self.stop_server()
+        
+        expected_graph = """
+start -> diverge_0;
+diverge_0 -> aggr_1;
+aggr_1 -> sym_3;
+sym_3 -> unexp_missed_3;
+sym_3 -> alt_4;
+alt_4 -> end_f_5;
+diverge_0 -> load_6;
+load_6 -> end_s_7;
+"""
+        expected_graph = expected_graph.split("\n")[1:-1]
+        
+        self.assertEqual(graph, expected_graph)
+    
+    
+    def test_divergent_at_different_nodes(self):
+        js1 = "var x = document.getElementById('testinput'); if (x.value == 'testme') { return true; } else { alert('Error'); return false; }"
+        
+        js2 = "alert(\"Wasn't expecting that!\");"
+        
+        self.start_server([js1, js2, js1])
+        
+        graph = self.run_artemis_and_get_final_graph(inspect.currentframe().f_code.co_name)
+        
+        self.assertIsNotNone(graph)
+        
+        self.stop_server()
+        
+        expected_graph = """
+start -> marker_0;
+marker_0 -> marker_1;
+marker_1 -> aggr_2;
+aggr_2 -> diverge_3;
+diverge_3 -> sym_5;
+sym_5 -> unexp_missed_5;
+sym_5 -> alt_6;
+alt_6 -> end_f_7;
+diverge_3 -> alt_8;
+alt_8 -> end_f_9;
+"""
+        expected_graph = expected_graph.split("\n")[1:-1]
+        
+        self.assertEqual(graph, expected_graph)
+    
+    def test_divergent_inside_concrete_summary(self):
+        js1 = "function f() {}; f(); f(); if (true) {}; var x = document.getElementById('testinput'); if (x.value == 'testme') { return true; } else { alert('Error'); return false; }"
+        
+        js2 = "function f() {}; f(); if (true) {}; f(); var x = document.getElementById('testinput'); if (x.value == 'testme') { return true; } else { alert('Error'); return false; }"
+        
+        self.start_server([js1, js2])
+        
+        graph = self.run_artemis_and_get_final_graph(inspect.currentframe().f_code.co_name)
+        
+        self.assertIsNotNone(graph)
+        
+        self.stop_server()
+        
+        expected_graph = """
+start -> marker_0;
+marker_0 -> marker_1;
+marker_1 -> diverge_2;
+diverge_2 -> aggr_3;
+aggr_3 -> sym_5;
+sym_5 -> unexp_missed_5;
+sym_5 -> alt_6;
+alt_6 -> end_f_7;
+diverge_2 -> aggr_8;
+aggr_8 -> sym_10;
+sym_10 -> load_10;
+load_10 -> end_s_11;
+sym_10 -> unexp_12;
+"""
+        expected_graph = expected_graph.split("\n")[1:-1]
+        
+        self.assertEqual(graph, expected_graph)
+    
+    def test_not_divergent_at_concrete_branch(self):
+        js1 = "if (true) { var x = document.getElementById('testinput'); if (x.value == 'testme') { return true; } else { alert('Error'); return false; }}"
+        
+        js2 = "if (false) { return false; } else { var x = document.getElementById('testinput'); if (x.value == 'testme') { return true; } else { alert('Error'); return false; }}"
+        
+        self.start_server([js1, js2, js2])
+        
+        graph = self.run_artemis_and_get_final_graph(inspect.currentframe().f_code.co_name)
+        
+        self.assertIsNotNone(graph)
+        
+        self.stop_server()
+        
+        expected_graph = """
+start -> marker_0;
+marker_0 -> marker_1;
+marker_1 -> aggr_2;
+aggr_2 -> sym_4;
+sym_4 -> unexp_missed_4;
+sym_4 -> alt_5;
+alt_5 -> end_f_6;
+aggr_2 -> sym_8;
+sym_8 -> load_8;
+load_8 -> end_s_9;
+sym_8 -> alt_10;
+alt_10 -> end_f_11;
+"""
+        expected_graph = expected_graph.split("\n")[1:-1]
+        
+        self.assertEqual(graph, expected_graph)
+    
+    def test_multiple_divergence_at_same_point(self):
+        js1 = "function f() {}; f(); f(); if (true) {}; var x = document.getElementById('testinput'); if (x.value == 'testme') { return true; } else if (x.value == 'test2') { return true; } else if (x.value == 'test3') { return true; } else { alert('Error'); return false; }"
+        
+        js2 = "function f() {}; f(); if (true) {}; f(); alert('JS2');"
+        
+        js3 = "function f() {}; f(); f(); f(); if (true) {}; f(); alert('JS3');"
+        
+        js4 = "function f() {}; if (true) {}; f(); f(); alert('JS4');"
+        
+        self.start_server([js1, js2, js3, js4])
+        
+        graph = self.run_artemis_and_get_final_graph(inspect.currentframe().f_code.co_name)
+        
+        self.assertIsNotNone(graph)
+        
+        self.stop_server()
+        
+        expected_graph = """
+start -> marker_0;
+marker_0 -> marker_1;
+marker_1 -> diverge_2;
+diverge_2 -> aggr_3;
+aggr_3 -> sym_5;
+sym_5 -> unexp_missed_5;
+sym_5 -> sym_7;
+sym_7 -> unexp_missed_7;
+sym_7 -> sym_9;
+sym_9 -> unexp_missed_9;
+sym_9 -> alt_10;
+alt_10 -> end_f_11;
+diverge_2 -> aggr_12;
+aggr_12 -> alt_13;
+alt_13 -> end_f_14;
+diverge_2 -> aggr_15;
+aggr_15 -> alt_16;
+alt_16 -> end_f_17;
+diverge_2 -> aggr_18;
+aggr_18 -> alt_19;
+alt_19 -> end_f_20;
+"""
+        expected_graph = expected_graph.split("\n")[1:-1]
+        
+        self.assertEqual(graph, expected_graph)
+    
+    def test_multiple_divergence_at_different_points(self):
+        js1 = "function f() {}; f(); var x = document.getElementById('testinput'); if (x.value == 'testme') { return true; } else if (x.value == 'test2') { return true; } else { alert('Error'); return false; }"
+        
+        js2 = "alert('JS2');"
+        
+        js3 = "function f() {}; f(); var x = document.getElementById('testinput'); if (x.value == 'testme') { return true; } else { alert('JS3'); }"
+        
+        self.start_server([js1, js2, js3])
+        
+        graph = self.run_artemis_and_get_final_graph(inspect.currentframe().f_code.co_name)
+        
+        self.assertIsNotNone(graph)
+        
+        self.stop_server()
+        
+        expected_graph = """
+start -> marker_0;
+marker_0 -> marker_1;
+marker_1 -> diverge_2;
+diverge_2 -> aggr_3;
+aggr_3 -> sym_5;
+sym_5 -> unexp_missed_5;
+sym_5 -> diverge_6;
+diverge_6 -> sym_8;
+sym_8 -> unexp_missed_8;
+sym_8 -> alt_9;
+alt_9 -> end_f_10;
+diverge_6 -> alt_11;
+alt_11 -> end_f_12;
+diverge_2 -> aggr_13;
+aggr_13 -> alt_14;
+alt_14 -> end_f_15;
+"""
+        expected_graph = expected_graph.split("\n")[1:-1]
+        
+        self.assertEqual(graph, expected_graph)
+    
+    def test_exploration_within_divergence(self):
+        js1 = "function f() {}; f(); f(); if (true) {}; var x = document.getElementById('testinput'); if (x.value == 'testme') { return true; } else if (x.value == 'test2') { return true; } else { alert('Error'); return false; }"
+        
+        js2 = "function f() {}; f(); if (true) {}; f(); var x = document.getElementById('testinput'); if (x.value == 'testme') { return true; } else { alert('Error'); return false; };"
+        
+        self.start_server([js1, js2, js2])
+        
+        graph = self.run_artemis_and_get_final_graph(inspect.currentframe().f_code.co_name)
+        
+        self.assertIsNotNone(graph)
+        
+        self.stop_server()
+        
+        expected_graph = """
+start -> marker_0;
+marker_0 -> marker_1;
+marker_1 -> diverge_2;
+diverge_2 -> aggr_3;
+aggr_3 -> sym_5;
+sym_5 -> unexp_missed_5;
+sym_5 -> sym_7;
+sym_7 -> unexp_missed_7;
+sym_7 -> alt_8;
+alt_8 -> end_f_9;
+diverge_2 -> aggr_10;
+aggr_10 -> sym_12;
+sym_12 -> load_12;
+load_12 -> end_s_13;
+sym_12 -> alt_14;
+alt_14 -> end_f_15;
+"""
+        expected_graph = expected_graph.split("\n")[1:-1]
+        
+        self.assertEqual(graph, expected_graph)
+    
+    def test_divergence_within_divergence(self):
+        js1 = "function f() {}; f(); f(); if (true) {}; var x = document.getElementById('testinput'); if (x.value == 'testme') { return true; } else if (x.value == 'test2') { return true; } else { alert('Error'); return false; }"
+        
+        js2 = "function f() {}; f(); if (true) {}; f(); var x = document.getElementById('testinput'); if (x.value == 'testme') { return true; } else { alert('Error'); return false; };"
+        
+        js3 = "function f() {}; f(); if (true) {}; f(); var x = document.getElementById('testinput'); alert('JS3')"
+        
+        self.start_server([js1, js2, js3])
+        
+        graph = self.run_artemis_and_get_final_graph(inspect.currentframe().f_code.co_name)
+        
+        self.assertIsNotNone(graph)
+        
+        self.stop_server()
+        
+        expected_graph = """
+start -> marker_0;
+marker_0 -> marker_1;
+marker_1 -> diverge_2;
+diverge_2 -> aggr_3;
+aggr_3 -> sym_5;
+sym_5 -> unexp_missed_5;
+sym_5 -> sym_7;
+sym_7 -> unexp_missed_7;
+sym_7 -> alt_8;
+alt_8 -> end_f_9;
+diverge_2 -> aggr_10;
+aggr_10 -> diverge_11;
+diverge_11 -> sym_13;
+sym_13 -> load_13;
+load_13 -> end_s_14;
+sym_13 -> unexp_15;
+diverge_11 -> alt_16;
+alt_16 -> end_f_17;
+"""
+        expected_graph = expected_graph.split("\n")[1:-1]
+        
+        self.assertEqual(graph, expected_graph)
+    
+
+
+
+
+
+
+
+
+
+
+
+
+if __name__ == '__main__':
+    setup_concolic_tests()
+    unittest.main(buffer=True, catchbreak=True)
 

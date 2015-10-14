@@ -16,6 +16,7 @@
 
 #include <QDebug>
 #include <QWebFrame>
+#include <QWebView>
 
 #include "artemisglobals.h"
 #include "statistics/statsstorage.h"
@@ -137,4 +138,44 @@ bool ArtemisWebPage::acceptNavigationRequest(QWebFrame *frame, const QNetworkReq
     return true;
 }
 
+
+QList<QWebElement> ArtemisWebPage::getAllUserClickableElements()
+{
+    // Get the page size
+    QWebView* webView = dynamic_cast<QWebView*>(view());
+    assert(webView);
+    int width = webView->size().width();
+    int height = webView->size().height();
+
+    // Get all clickable elements
+    // N.B. setting the step != 1 will allow some possiblity to miss a clickable element, but makes this dramatically faster.
+    QList<QWebElement> clickable = mainFrame()->documentElement().getAllUserClickableElements(0, 0, width, height, 5);
+
+    Log::debug(QString("getAllUserclickableElements: found %1 clickable elements in %2x%3.").arg(clickable.size()).arg(width).arg(height).toStdString());
+
+    /*foreach (QWebElement e, clickable) {
+        qDebug() << e.tagName() << "@" << e.xPath();
+    }*/
+
+    return clickable;
 }
+
+QList<QWebElement> ArtemisWebPage::getAllUserClickableElementsAndAncestors()
+{
+    QList<QWebElement> clickable = getAllUserClickableElements();
+    QList<QWebElement> result = clickable;
+    QWebElement cur;
+
+    foreach (QWebElement elt, clickable) {
+        cur = elt.parent();
+        while (!cur.isNull() && !result.contains(cur)) {
+            result.append(cur);
+            cur = cur.parent();
+        }
+    }
+
+    return result;
+}
+
+
+} // namepsace artemis

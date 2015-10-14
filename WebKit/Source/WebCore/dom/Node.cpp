@@ -828,13 +828,42 @@ bool Node::hasNonEmptyBoundingBox() const
     if (!box->borderBoundingBox().isEmpty())
         return true;
 
+    return hasNonEmptyBoundingBoxWithoutBoxModel();
+}
+
+// This is just a helper for childTextNodesHaveNonEmptyBoundingBox below and should not be used directly. Use hasNonEmptyBoundingBox for elements instead.
+bool Node::hasNonEmptyBoundingBoxWithoutBoxModel() const
+{
+    RenderObject* renderObject = renderer();
+    if (!renderObject) {
+        return false;
+    }
+
     Vector<IntRect> rects;
-    FloatPoint absPos = renderer()->localToAbsolute();
-    renderer()->absoluteRects(rects, flooredLayoutPoint(absPos));
+    FloatPoint absPos = renderObject->localToAbsolute();
+    renderObject->absoluteRects(rects, flooredLayoutPoint(absPos));
     size_t n = rects.size();
     for (size_t i = 0; i < n; ++i)
         if (!rects[i].isEmpty())
             return true;
+
+    return false;
+}
+
+bool Node::childTextNodesHaveNonEmptyBoundingBox() const
+{
+    const ContainerNode* parent = dynamic_cast<const ContainerNode*>(this);
+    if (!parent) {
+        return false;
+    }
+
+    for (Node* child = parent->firstChild(); child; child = child->nextSibling()) {
+        if (child->isTextNode()) {
+            if (child->hasNonEmptyBoundingBoxWithoutBoxModel()) {
+                return true;
+            }
+        }
+    }
 
     return false;
 }

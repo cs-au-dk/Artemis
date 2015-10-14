@@ -154,7 +154,9 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/util/delayutil.h \
     src/runtime/analysisserver/fieldreadlog.h \
     src/runtime/browser/cookies/resettablecookiejar.h \
-    src/runtime/input/clicksimulator.h
+    src/runtime/input/clicksimulator.h \
+    src/model/domsnapshotstorage.h \
+    src/concolic/executiontree/nodes/tracedivergence.h
 
 SOURCES += src/runtime/input/ajaxinput.cpp \
     src/strategies/prioritizer/constantprioritizer.cpp \
@@ -282,6 +284,7 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/util/delayutil.cpp \
     src/runtime/analysisserver/fieldreadlog.cpp \
     src/runtime/browser/cookies/resettablecookiejar.cpp \
-    src/runtime/input/clicksimulator.cpp
+    src/runtime/input/clicksimulator.cpp \
+    src/model/domsnapshotstorage.cpp
 
 QT += network

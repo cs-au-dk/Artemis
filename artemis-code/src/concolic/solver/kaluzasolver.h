@@ -28,7 +28,7 @@ public:
 
     KaluzaSolver(ConcolicBenchmarkFeatures disabledFeatures);
 
-    SolutionPtr solve(PathConditionPtr pc, FormRestrictions formRestrictions);
+    SolutionPtr solve(PathConditionPtr pc, FormRestrictions formRestrictions, DomSnapshotStoragePtr domSnapshots);
 
 };
 

@@ -45,6 +45,7 @@
 #include "JavaScriptCore/bytecode/Opcode.h"
 #include "JavaScriptCore/interpreter/Interpreter.h"
 #include "WebCore/dom/Node.h"
+#include "WebCore/dom/Document.h"
 
 #include "qwebexecutionlistener.h"
 
@@ -465,6 +466,8 @@ void QWebExecutionListener::javascript_bytecode_executed(JSC::Interpreter* inter
     binfo.isSymbolic = info.isSymbolic();
     binfo.bytecodeOffset = bytecodeOffset;
 
+    //qDebug() << "BYTECODE-LOG:" << binfo.getOpcodeName() << binfo.linenumber << binfo.isSymbolic;
+
     codeBlock->expressionRangeForBytecodeOffset(bytecodeOffset, binfo.divot, binfo.startOffset, binfo.endOffset);
     emit sigJavascriptBytecodeExecuted(binfo,
                                        codeBlock->sourceOffset(),
@@ -545,6 +548,11 @@ void QWebExecutionListener::beginSymbolicSession()
 void QWebExecutionListener::endSymbolicSession()
 {
     JSC::Interpreter::m_symbolic->endSession();
+}
+
+unsigned int QWebExecutionListener::getSymbolicSessionId()
+{
+    return JSC::Interpreter::m_symbolic->getSessionId();
 }
 
 namespace inst {

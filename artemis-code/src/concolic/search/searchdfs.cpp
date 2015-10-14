@@ -34,6 +34,7 @@ DepthFirstSearch::DepthFirstSearch(TraceNodePtr tree, unsigned int depthLimit, u
     mRestartsRemaining(restartLimit),
     mUnlimitedRestarts(restartLimit == 0),
     mPreviousPassFoundTarget(false),
+    mNothingRemainsToExplore(false),
     mIsPreviousRun(false),
     mTreeHasNewTrace(false)
 {
@@ -57,6 +58,11 @@ DepthFirstSearch::DepthFirstSearch(TraceNodePtr tree, unsigned int depthLimit, u
 bool DepthFirstSearch::chooseNextTarget()
 {
     TraceNodePtr current;
+
+    // We may have already finished the search.
+    if (mNothingRemainsToExplore && !mTreeHasNewTrace) {
+        return false;
+    }
 
     // Check if we are starting a new search or continuing an old one.
     if(mIsPreviousRun){
@@ -107,7 +113,12 @@ bool DepthFirstSearch::chooseNextTarget()
         return true;
     } else {
         // Attempt to increase the depth limit and restart, if possible.
-        return deepenRestartAndChoose();
+        if(deepenRestartAndChoose()) {
+            return true;
+        } else {
+            mNothingRemainsToExplore = true;
+            return false;
+        }
     }
 
 }
@@ -118,18 +129,24 @@ bool DepthFirstSearch::chooseNextTarget()
  */
 PathConditionPtr DepthFirstSearch::getTargetPC()
 {
+    // This method can only be called once we have started a search.
+    assert(mIsPreviousRun && !mNothingRemainsToExplore);
+
     return PathCondition::createFromBranchList(mCurrentPC);
 }
 
 QSet<SelectRestriction> DepthFirstSearch::getTargetDomConstraints()
 {
+    // This method can only be called once we have started a search.
+    assert(mIsPreviousRun && !mNothingRemainsToExplore);
+
     return mCurrentDomConstraints;
 }
 
 ExplorationDescriptor DepthFirstSearch::getTargetDescriptor()
 {
     // This method can only be called once we have started a search.
-    assert(mIsPreviousRun);
+    assert(mIsPreviousRun && !mNothingRemainsToExplore);
 
     // To generate an ExplorationDescriptor, we need to know the parent symbolic branch.
     // However we know that mPreviousParent must be a pointer to a TraceSymbolicBranch instance at the time when this
@@ -161,6 +178,7 @@ void DepthFirstSearch::restartSearch()
     mCurrentPC.clear();
     mCurrentDomConstraints = QSet<SelectRestriction>();
     mTreeHasNewTrace = false;
+    mNothingRemainsToExplore = false;
 }
 
 // Increase the depth limit and restart.

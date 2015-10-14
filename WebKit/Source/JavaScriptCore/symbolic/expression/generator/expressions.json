@@ -97,7 +97,7 @@
 		"type": "expression",
 		"parent": "ObjectExpression",
 		"fields": [
-            ["void*", "instanceIdentifier"]
+            ["unsigned", "instanceIdentifier"]
 		]
 	},
 
@@ -295,6 +295,24 @@
             ["int", "length"]
         ]
     },
+
+	{
+		"ID": "StringToLowerCase",
+		"type": "expression",
+		"parent": "StringExpression",
+		"fields": [
+			["StringExpression*", "source"]
+		]
+	},
+
+	{
+		"ID": "StringToUpperCase",
+		"type": "expression",
+		"parent": "StringExpression",
+		"fields": [
+			["StringExpression*", "source"]
+		]
+	},
 
 	{
 		"ID": "BooleanExpression",

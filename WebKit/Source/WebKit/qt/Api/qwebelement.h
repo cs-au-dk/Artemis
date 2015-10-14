@@ -142,8 +142,11 @@ public:
     QVariant evaluateJavaScript(const QString& scriptSource, const QUrl& u = QUrl(), bool hideFromArtemis = false);
     QString xPath();
     QWebElement lookupXPath(QString xPath);
-    bool  isUserVisible();
+    bool isUserVisible();
+    bool isUserVisibleIncludingChildren();
+    QList<QWebElement> getAllUserClickableElements(int min_x, int min_y, int max_x, int max_y, int step);
     int numberOfChildren(QString cssSelector);
+    WebCore::Element* getElement();
 
 #else
     QVariant evaluateJavaScript(const QString& scriptSource);

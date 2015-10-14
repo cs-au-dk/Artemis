@@ -48,13 +48,14 @@ public:
     virtual void visit(TracePageLoad* node);
     virtual void visit(TraceMarker* node);
     virtual void visit(TraceFunctionCall* node);
-    virtual void visit(TraceConcreteSummarisation* node);
+    virtual void visit(TraceDivergence* node);
 
     // Catch-all. Should not be called.
     virtual void visit(TraceNode* node);
 
     // Ignored for classification.
     virtual void visit(TraceBranch* node);
+    virtual void visit(TraceConcreteSummarisation* node);
 
     // Should not be encountered on the main trace.
     virtual void visit(TraceUnexplored* node);

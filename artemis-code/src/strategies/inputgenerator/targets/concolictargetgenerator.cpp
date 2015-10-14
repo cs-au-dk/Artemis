@@ -24,11 +24,12 @@
 
 namespace artemis {
 
-ConcolicTargetGenerator::ConcolicTargetGenerator(Options options, TraceBuilder* traceBuilder)
+ConcolicTargetGenerator::ConcolicTargetGenerator(Options options, TraceBuilder* traceBuilder, DomSnapshotStoragePtr domSnapshotStorage)
     : TargetGenerator()
     , mOptions(options)
     , mTraceBuilder(traceBuilder)
     , mTreeIdx(1)
+    , mDomSnapshotStorage(domSnapshotStorage)
 {
 }
 
@@ -37,6 +38,7 @@ TargetDescriptorConstPtr ConcolicTargetGenerator::generateTarget(EventHandlerDes
     // Create a context and save a reference in the returned target.
     // This reference can then be pulled out from oldTarget in permuteTarget below.
     ConcolicAnalysisPtr analysis(new ConcolicAnalysis(mOptions, ConcolicAnalysis::QUIET));
+    analysis->setDomSnapshotStorage(mDomSnapshotStorage);
     ConcolicAnalysis::ExplorationHandle explorationTarget = ConcolicAnalysis::NO_EXPLORATION_TARGET;
 
     // No trace has been recorded yet, so we do not suggest any target values intelligently.
@@ -67,7 +69,7 @@ TargetDescriptorConstPtr ConcolicTargetGenerator::permuteTarget(EventHandlerDesc
     if (!exploration.newExploration) {
         Log::debug("Could not find any new exploration");
         outputTree(target->getAnalysis()->getExecutionTree(), eventName, target->getAnalysis()->getExplorationIndex());
-        return TargetDescriptorConstPtr(NULL); // TODO: is this the correct way to signal nothing to suggest?
+        return TargetDescriptorConstPtr(NULL);
     }
 
     Log::debug("Found solution for new target value:");
@@ -129,8 +131,8 @@ void ConcolicTargetGenerator::outputTree(TraceNodePtr tree, QString eventName, u
         return;
     }
 
-    TraceDisplay display;
-    TraceDisplayOverview display_min;
+    TraceDisplay display(mOptions.outputCoverage != NONE);
+    TraceDisplayOverview display_min(mOptions.outputCoverage != NONE);
 
     QString date = QDateTime::currentDateTime().toString("yyyy-MM-dd-hh-mm-ss");
     QString filename = QString("event_%1_%2_%3_%4.gv").arg(date, eventName).arg(count).arg(mTreeIdx);

@@ -45,6 +45,7 @@ class TraceEnd;
 class TraceEndSuccess;
 class TraceEndFailure;
 class TraceEndUnknown;
+class TraceDivergence;
 
 
 /*
@@ -91,6 +92,7 @@ public:
     virtual void visit(TraceEndSuccess* node);
     virtual void visit(TraceEndFailure* node);
     virtual void visit(TraceEndUnknown* node);
+    virtual void visit(TraceDivergence* node);
 
     // Helper methods for concrete visitors.
     static bool isImmediatelyUnexplored(QSharedPointer<TraceNode> trace);

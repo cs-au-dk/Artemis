@@ -37,7 +37,7 @@ KaluzaSolver::KaluzaSolver(ConcolicBenchmarkFeatures disabledFeatures)
 {
 }
 
-SolutionPtr KaluzaSolver::solve(PathConditionPtr pc, FormRestrictions formRestrictions)
+SolutionPtr KaluzaSolver::solve(PathConditionPtr pc, FormRestrictions formRestrictions, DomSnapshotStoragePtr domSnapshots)
 {
     qDebug() << "Warning: KaluzaSolver does not support implicit form restrictions.\n";
 
@@ -45,7 +45,7 @@ SolutionPtr KaluzaSolver::solve(PathConditionPtr pc, FormRestrictions formRestri
 
     KaluzaConstraintWriterPtr constraintwriter = KaluzaConstraintWriterPtr(new KaluzaConstraintWriter());
 
-    if (!constraintwriter->write(pc, formRestrictions, "/tmp/kaluza")) {
+    if (!constraintwriter->write(pc, formRestrictions, domSnapshots, "/tmp/kaluza")) {
         Statistics::statistics()->accumulate("Concolic::Solver::ConstraintsNotWritten", 1);
         return SolutionPtr(new Solution(false, false));
     }

@@ -28,7 +28,7 @@ ArtemisWebView::ArtemisWebView() :
 /**
  * Resize the browser window, even when it is hidden.
  *
- * Normally a call to resize() is processed immediately, but if the WWidget is hidden, the call to resizeEvent() can
+ * Normally a call to resize() is processed immediately, but if the QWidget is hidden, the call to resizeEvent() can
  * be delayed until the widget is shown again. We avoid this by forcing an immediate call to resizeEvent.
  */
 void ArtemisWebView::forceResize(int width, int height)

@@ -40,7 +40,7 @@ public:
 
     CVC4ConstraintWriter(ConcolicBenchmarkFeatures disabledFeatures);
 
-    bool write(PathConditionPtr pathCondition, FormRestrictions formRestrictions, std::string outputFile);
+    bool write(PathConditionPtr pathCondition, FormRestrictions formRestrictions, DomSnapshotStoragePtr domSnapshots, std::string outputFile);
 
 protected:
 
@@ -64,6 +64,8 @@ protected:
     virtual void visit(Symbolic::StringRegexSubmatchArrayAt* exp, void* args);
     virtual void visit(Symbolic::SymbolicObjectPropertyString* obj, void* arg);
     virtual void visit(Symbolic::StringSubstring* obj, void* arg);
+    virtual void visit(Symbolic::StringToLowerCase* stringtolowercase, void* arg);
+    virtual void visit(Symbolic::StringToUpperCase* stringtouppercase, void* arg);
 
     // Returns boolean values to mExpressionBuffer
     virtual void visit(Symbolic::StringBinaryOperation* stringbinaryoperation, void* args);
@@ -97,6 +99,12 @@ protected:
 
     std::set<Symbolic::SymbolicObject*> mVisitedSymbolicObjects;
     std::map<Symbolic::SymbolicObject*, std::set<std::string> > mUsedSymbolicObjectProperties;
+
+    bool mSawToLowerCase;
+    bool mSawToUpperCase;
+    void preambleAddToLowerCase();
+    void preambleAddToUpperCase();
+
 };
 
 typedef QSharedPointer<CVC4ConstraintWriter> CVC4ConstraintWriterPtr;

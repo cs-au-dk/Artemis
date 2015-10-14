@@ -265,8 +265,10 @@ SOURCES += \
     symbolic/expression/symbolicobject.cpp \
     symbolic/expression/objectarrayindexof.cpp \
     symbolic/expression/symbolicobjectpropertystring.cpp \
-    statistics/statsstorage.cpp \
-    symbolic/expression/stringsubstring.cpp
+    symbolic/expression/stringsubstring.cpp \
+    symbolic/expression/stringtolowercase.cpp \
+    symbolic/expression/stringtouppercase.cpp \
+    statistics/statsstorage.cpp
 
 *sh4* {
     QMAKE_CXXFLAGS += -mieee -w
@@ -338,4 +340,6 @@ HEADERS += \
     symbolic/expression/objectarrayindexof.h \
     symbolic/expression/symbolicobjectpropertystring.h \
     symbolic/expression/stringsubstring.h \
+    symbolic/expression/stringtolowercase.h \
+    symbolic/expression/stringtouppercase.h \
     statistics/statsstorage.h

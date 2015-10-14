@@ -1838,27 +1838,14 @@ sub GenerateImplementation
                     if ($attribute->signature->extendedAttributes->{"SymbolicEventTarget"}) {
                         # ARTEMIS BEGIN
 
-                        push(@implContent, "   Node* base = impl->currentTarget()->toNode();\n");
-                        push(@implContent, "   if (base != 0) {\n");
-                        push(@implContent, "       JSValue baseJS = toJS(exec, castedThis->globalObject(), WTF::getPtr(impl->currentTarget()));\n");
+                        push(@implContent, "    Node* base = impl->currentTarget()->toNode();\n");
+                        push(@implContent, "    if (base != 0) {\n");
 
-                        push(@implContent, "       std::queue<std::pair<unsigned, std::pair<Node*, std::string> > > queue;\n");
-                        push(@implContent, "       queue.push(std::pair<unsigned, std::pair<Node*, std::string> >(baseJS.toObject(exec)->getArtemisDomIdentifier(exec), std::pair<Node*, std::string>(base, baseJS.toString(exec)->getString(exec).ascii().data())));\n");
-
-                        push(@implContent, "       // add all relevant child elements\n");
-                        push(@implContent, "       WTF::RefPtr<NodeList> l = WTF::getPtr(base->getElementsByTagName(WTF::AtomicString(\"*\")));\n");
-                        push(@implContent, "       for (unsigned i = 0; i < l->length(); ++i) {\n");
-                        push(@implContent, "          JSValue lJS = toJS(exec, castedThis->globalObject(), WTF::getPtr(l->item(i)));\n");
-                        push(@implContent, "          // Note, the second parameter is the \"to string\" version of the object, which we need for certain constraints. \n");
-                        push(@implContent, "          queue.push(std::pair<unsigned, std::pair<Node*, std::string> >(lJS.toObject(exec)->getArtemisDomIdentifier(exec), std::pair<Node*, std::string>(l->item(i), lJS.toString(exec)->getString(exec).ascii().data())));\n");
-                        push(@implContent, "       }\n");
-
-                        push(@implContent, "       Symbolic::DOMSnapshot* domSnapshot = new DOMSnapshotImpl(queue);\n");
-                        push(@implContent, "       std::ostringstream sessionId;\n");
-                        push(@implContent, "       sessionId << \"SYM_TARGET_\" << JSC::Interpreter::m_symbolic->getSessionId();\n");
-                        push(@implContent, "       Symbolic::SymbolicSource source(Symbolic::EVENT_TARGET, Symbolic::EVENT_TARGET_IDENT, sessionId.str(), domSnapshot);\n");
-                        push(@implContent, "       result.makeSymbolic(new Symbolic::SymbolicObject(source), exec->globalData());\n");
-                        push(@implContent, "   }\n");
+                        push(@implContent, "        std::ostringstream sessionId;\n");
+                        push(@implContent, "        sessionId << \"SYM_TARGET_\" << JSC::Interpreter::m_symbolic->getSessionId();\n");
+                        push(@implContent, "        Symbolic::SymbolicSource source(Symbolic::EVENT_TARGET, Symbolic::EVENT_TARGET_IDENT, sessionId.str());\n");
+                        push(@implContent, "        result.makeSymbolic(new Symbolic::SymbolicObject(source), exec->globalData());\n");
+                        push(@implContent, "    }\n");
                         # ARTEMIS END
                     }
 
@@ -1898,12 +1885,12 @@ sub GenerateImplementation
                             push(@implContent, "    std::string type = impl->getAttribute(WebCore::HTMLNames::typeAttr).string().lower().ascii().data();\n");
                             # See commit f1a40d5c for an odd gotcha here.
                             # Should match the list in formfielddescriptor.cpp minus checkbox and radio
-                            push(@implContent, "    if (type.compare(\"hidden\") == 0 ||");
-                            push(@implContent, "        type.compare(\"button\") == 0 ||");
-                            push(@implContent, "        type.compare(\"reset\") == 0 ||");
-                            push(@implContent, "        type.compare(\"image\") == 0 ||");
-                            push(@implContent, "        type.compare(\"submit\") == 0 ||");
-                            push(@implContent, "        type.compare(\"checkbox\") == 0 ||");
+                            push(@implContent, "    if (type.compare(\"hidden\") == 0 ||\n");
+                            push(@implContent, "        type.compare(\"button\") == 0 ||\n");
+                            push(@implContent, "        type.compare(\"reset\") == 0 ||\n");
+                            push(@implContent, "        type.compare(\"image\") == 0 ||\n");
+                            push(@implContent, "        type.compare(\"submit\") == 0 ||\n");
+                            push(@implContent, "        type.compare(\"checkbox\") == 0 ||\n");
                             push(@implContent, "        type.compare(\"radio\") == 0) {\n");
                             push(@implContent, "        if (Symbolic::SymbolicInterpreter::isFeatureConcreteValuePropertyEnabled()) {\n");
                             push(@implContent, "            Statistics::statistics()->accumulate(\"Concolic::Interpreter::ConcreteValuePropertyAccessIgnored\", 1);\n");
@@ -1912,7 +1899,7 @@ sub GenerateImplementation
                             push(@implContent, "    }\n");
                             push(@implContent, "\n");
 
-                            push(@implContent, "    else if (type.compare(\"text\") != 0 &&");
+                            push(@implContent, "    else if (type.compare(\"text\") != 0 &&\n");
                             push(@implContent, "        type.compare(\"password\") != 0) {\n");
                             push(@implContent, "        Statistics::statistics()->accumulate(\"Concolic::Warning::InputSource\", 1);\n");
                             push(@implContent, "        return result;\n");

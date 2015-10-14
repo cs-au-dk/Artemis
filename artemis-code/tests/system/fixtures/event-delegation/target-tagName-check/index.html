@@ -1,0 +1,44 @@
+<!--
+TEST PC[0] = ((SymbolicProperty( SymbolicObject( SYM_TARGET_0 ) ) == ConstantString) == ConstantBoolean)
+TEST Concolic::ExecutionTree::DistinctTracesExplored = 2
+TEST Concolic::Solver::ConstraintsSolved = 2
+TEST Concolic::Solver::ConstraintsWritten = 2
+TEST Concolic::Solver::Constraint.SYM_TARGET_0 = //div[@id='container']/em[1]
+-->
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+    <title>Ben Spencer</title>
+    <meta name="author" content="Ben Spencer">
+</head>
+<body>
+
+<h1>Click below:</h1>
+
+<div id="container" >
+    <span>boring to click</span>
+    <br>
+    <em>interesting to click</em>
+    <br>
+    <span>boring to click</span>
+</div>
+
+<script type="text/javascript" >
+    window.onload = function(){
+        c = document.getElementById('container');
+        c.addEventListener('click', function(event){
+            if (event.target.tagName == "EM") {
+                alert("Interesting");
+            } else {
+                alert("Boring");
+            }
+        }, false);
+    }
+</script>
+
+</body>
+</html>
+

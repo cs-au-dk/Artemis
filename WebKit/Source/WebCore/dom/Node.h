@@ -391,6 +391,9 @@ public:
     // This does not 100% guarantee the user can see it, but is pretty close.
     // Note: This method only works properly after layout has occurred.
     bool hasNonEmptyBoundingBox() const;
+    bool hasNonEmptyBoundingBoxWithoutBoxModel() const;
+    // The same, but checks the text nodes which are direct childen of this node.
+    bool childTextNodesHaveNonEmptyBoundingBox() const;
 
     unsigned nodeIndex() const;
 

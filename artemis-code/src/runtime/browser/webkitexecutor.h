@@ -33,6 +33,7 @@
 #include "model/pathtracer.h"
 #include "strategies/inputgenerator/targets/jquerylistener.h"
 #include "runtime/input/forms/formfieldinjector.h"
+#include "model/domsnapshotstorage.h"
 
 #include "executionresult.h"
 #include "executionresultbuilder.h"
@@ -76,6 +77,7 @@ public:
     ArtemisWebPagePtr getPage();
 
     TraceBuilder* getTraceBuilder();
+    DomSnapshotStoragePtr getDomSnapshotStorage();
 
     QList<EventHandlerDescriptorConstPtr> getCurrentEventHandlers();
 
@@ -102,6 +104,7 @@ private:
     bool testingDone;
 
     TraceBuilder* mTraceBuilder;
+    DomSnapshotStoragePtr mDomSnapshotStorage; // Only used in symbolic mode MODE_CONCOLIC_LAST_EVENT
 
     SYMBOLIC_MODE mSymbolicMode;
 

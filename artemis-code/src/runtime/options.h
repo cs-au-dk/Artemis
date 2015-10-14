@@ -114,7 +114,8 @@ typedef struct OptionsType {
         debugConcolic(false),
         enableEventVisibilityFiltering(false),
         analysisServerPort(8008),
-        analysisServerDebugView(false)
+        analysisServerDebugView(false),
+        testingConcolicSendIterationCountToServer(false)
     {}
 
     QMap<QString, InjectionValue> presetFormfields;
@@ -173,6 +174,9 @@ typedef struct OptionsType {
 
     unsigned short analysisServerPort;
     bool analysisServerDebugView;
+
+    // Instrumentation for the test suites.
+    bool testingConcolicSendIterationCountToServer;
 
 } Options;
 

@@ -37,9 +37,9 @@ KaluzaConstraintWriter::KaluzaConstraintWriter() :
 
 }
 
-bool KaluzaConstraintWriter::write(PathConditionPtr pathCondition, FormRestrictions formRestrictions, std::string outputFile)
+bool KaluzaConstraintWriter::write(PathConditionPtr pathCondition, FormRestrictions formRestrictions, DomSnapshotStoragePtr domSnapshots, std::string outputFile)
 {
-    qDebug() << "Warning: KaluzaConstraintWriter does not support implicit form restrictions.\n";
+    qDebug() << "Warning: KaluzaConstraintWriter does not support implicit form restrictions or DOM snapshots.\n";
 
     mNextTemporaryIdentifier = 0;
     mError = false;
@@ -318,6 +318,20 @@ void KaluzaConstraintWriter::visit(Symbolic::StringSubstring* obj, void* arg)
 {
     mError = true;
     mErrorReason = "Symbolic string substring not supported";
+    mIdentifierStore = "ERROR";
+}
+
+void KaluzaConstraintWriter::visit(Symbolic::StringToLowerCase *stringtolowercase, void *arg)
+{
+    mError = true;
+    mErrorReason = "Symbolic string toLowerCase not supported";
+    mIdentifierStore = "ERROR";
+}
+
+void KaluzaConstraintWriter::visit(Symbolic::StringToUpperCase *stringtouppercase, void *arg)
+{
+    mError = true;
+    mErrorReason = "Symbolic string toUpperCase not supported";
     mIdentifierStore = "ERROR";
 }
 

@@ -25,6 +25,7 @@
 #include "JavaScriptCore/symbolic/expr.h"
 #include "JavaScriptCore/symbolic/expression/visitor.h"
 #include "runtime/input/forms/formfieldrestrictedvalues.h"
+#include "model/domsnapshotstorage.h"
 #include "concolic/benchmarking.h"
 
 #include "abstract.h"
@@ -74,7 +75,7 @@ public:
 
     SMTConstraintWriter(ConcolicBenchmarkFeatures disabledFeatures);
 
-    virtual bool write(PathConditionPtr pathCondition, FormRestrictions formRestrictions, std::string outputFile);
+    virtual bool write(PathConditionPtr pathCondition, FormRestrictions formRestrictions, DomSnapshotStoragePtr domSnapshots, std::string outputFile);
 
     std::string getErrorReason() {
         return mErrorReason;
@@ -140,6 +141,8 @@ protected:
     virtual void visit(Symbolic::StringRegexSubmatchArrayAt* exp, void* arg);
     virtual void visit(Symbolic::SymbolicObjectPropertyString* obj, void* arg);
     virtual void visit(Symbolic::StringSubstring* obj, void* arg);
+    virtual void visit(Symbolic::StringToLowerCase* stringtolowercase, void* arg);
+    virtual void visit(Symbolic::StringToUpperCase* stringtouppercase, void* arg);
 
     // Returns boolean values to mExpressionBuffer
     virtual void visit(Symbolic::SymbolicBoolean* symbolicboolean, void* args);
@@ -201,7 +204,7 @@ protected:
     void error(std::string reason);
 
     std::map<std::string, Symbolic::Type> mTypemap;
-    std::ofstream mOutput;
+    std::ostringstream mOutput;
 
     // holds the current subexpression returned by the previous call to visit
     std::string mExpressionBuffer;
@@ -219,6 +222,8 @@ protected:
     unsigned int mNextTemporarySequence;
 
     FormRestrictions mFormRestrictions;
+    DomSnapshotStoragePtr mDomSnapshots;
+    QStringList mPreambleDefinitions;
 
     // Benchmarking
     ConcolicBenchmarkFeatures mDisabledFeatures;

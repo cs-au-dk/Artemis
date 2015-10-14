@@ -26,7 +26,7 @@
 namespace artemis
 {
 
-TraceNodePtr TraceMerger::merge(TraceNodePtr trace, TraceNodePtr executiontree)
+TraceNodePtr TraceMerger::merge(TraceNodePtr trace, TraceNodePtr executiontree, TraceNodePtr* executionTreeRootPtr)
 {
     if (trace.isNull()) {
         return executiontree;
@@ -38,12 +38,18 @@ TraceNodePtr TraceMerger::merge(TraceNodePtr trace, TraceNodePtr executiontree)
     }
 
     mStartingTrace = trace;
-    mStartingTree = executiontree;
+    mStartingTreeRootPtr = executionTreeRootPtr;
 
     mCurrentTrace = trace;
     mCurrentTree = executiontree;
 
     mPreviousParent = TraceNodePtr();
+    mPreviousDirection = 0;
+
+    mImmediateParent = TraceNodePtr();
+    mImmediateParentDirection = 0;
+
+    mMergingDivergence = false;
 
     trace->accept(this);
 
@@ -58,11 +64,14 @@ void TraceMerger::visit(TraceUnexplored* node)
 
 void TraceMerger::visit(TraceEnd* node)
 {
+    TraceDivergencePtr skipped = skipDivergenceNodesInTree();
+
     // case: unexplored branch in the tree
     if (TraceVisitor::isImmediatelyUnexplored(mCurrentTree)) {
 
         // Insert this trace directly into the tree and return
         mCurrentTree = mCurrentTrace;
+        unSkipDivergenceNodesInTree(skipped);
         Statistics::statistics()->accumulate("Concolic::ExecutionTree::DistinctTracesExplored", 1);
         reportMerge(mCurrentTrace);
         return;
@@ -73,6 +82,7 @@ void TraceMerger::visit(TraceEnd* node)
         // Merge the exploration indices.
         TraceEndPtr treeEnd =  mCurrentTree.dynamicCast<TraceEnd>();
         treeEnd->traceIndices.unite(node->traceIndices);
+        unSkipDivergenceNodesInTree(skipped);
 
     } else {
         handleDivergence();
@@ -81,11 +91,14 @@ void TraceMerger::visit(TraceEnd* node)
 
 void TraceMerger::visit(TraceBranch* node)
 {
+    TraceDivergencePtr skipped = skipDivergenceNodesInTree();
+
     // case: unexplored branch in the tree
     if (TraceVisitor::isImmediatelyUnexplored(mCurrentTree)) {
 
         // Insert this trace directly into the tree and return
         mCurrentTree = mCurrentTrace;
+        unSkipDivergenceNodesInTree(skipped);
         Statistics::statistics()->accumulate("Concolic::ExecutionTree::DistinctTracesExplored", 1);
         reportMerge(mCurrentTrace);
         return;
@@ -102,6 +115,8 @@ void TraceMerger::visit(TraceBranch* node)
         mCurrentTrace = node->getTrueBranch();
         mPreviousParent = treeBranch;
         mPreviousDirection = 1;
+        mImmediateParent = treeBranch;
+        mImmediateParentDirection = 1;
         mCurrentTrace->accept(this);
 
         treeBranch->setTrueBranch(mCurrentTree);
@@ -110,11 +125,14 @@ void TraceMerger::visit(TraceBranch* node)
         mCurrentTrace = node->getFalseBranch();
         mPreviousParent = treeBranch;
         mPreviousDirection = 0;
+        mImmediateParent = treeBranch;
+        mImmediateParentDirection = 0;
         mCurrentTrace->accept(this);
 
         treeBranch->setFalseBranch(mCurrentTree);
 
         mCurrentTree = treeBranch;
+        unSkipDivergenceNodesInTree(skipped);
         return;
     }
 
@@ -123,11 +141,14 @@ void TraceMerger::visit(TraceBranch* node)
 
 void TraceMerger::visit(TraceAnnotation* node)
 {
+    TraceDivergencePtr skipped = skipDivergenceNodesInTree();
+
     // case: unexplored branch in the tree
     if (TraceVisitor::isImmediatelyUnexplored(mCurrentTree)) {
 
         // Insert this trace directly into the tree and return
         mCurrentTree = mCurrentTrace;
+        unSkipDivergenceNodesInTree(skipped);
         Statistics::statistics()->accumulate("Concolic::ExecutionTree::DistinctTracesExplored", 1);
         reportMerge(mCurrentTrace);
         return;
@@ -138,11 +159,14 @@ void TraceMerger::visit(TraceAnnotation* node)
 
         mCurrentTree = treeAnnotation->next;
         mCurrentTrace = node->next;
+        mImmediateParent = treeAnnotation;
+        mImmediateParentDirection = 0;
         mCurrentTrace->accept(this);
 
         treeAnnotation->next = mCurrentTree;
 
         mCurrentTree = treeAnnotation;
+        unSkipDivergenceNodesInTree(skipped);
         return;
     }
 
@@ -152,11 +176,14 @@ void TraceMerger::visit(TraceAnnotation* node)
 
 void TraceMerger::visit(TraceConcreteSummarisation *node)
 {
+    TraceDivergencePtr skipped = skipDivergenceNodesInTree();
+
     // case: unexplored branch in the tree
     if (TraceVisitor::isImmediatelyUnexplored(mCurrentTree)) {
 
         // Insert this trace directly into the tree and return
         mCurrentTree = mCurrentTrace;
+        unSkipDivergenceNodesInTree(skipped);
         Statistics::statistics()->accumulate("Concolic::ExecutionTree::DistinctTracesExplored", 1);
         reportMerge(mCurrentTrace);
         return;
@@ -194,11 +221,14 @@ void TraceMerger::visit(TraceConcreteSummarisation *node)
                 mCurrentTrace = traceExec.second;
                 mPreviousParent = treeSummary;
                 mPreviousDirection = idx;
+                mImmediateParent = treeSummary;
+                mImmediateParentDirection = idx;
                 mCurrentTrace->accept(this);
 
                 treeExec.second = mCurrentTree;
 
                 mCurrentTree = treeSummary;
+                unSkipDivergenceNodesInTree(skipped);
                 return;
             }
 
@@ -212,6 +242,7 @@ void TraceMerger::visit(TraceConcreteSummarisation *node)
                     if(treeExec.first[i] == TraceConcreteSummarisation::FUNCTION_CALL ||
                             traceExec.first[i] == TraceConcreteSummarisation::FUNCTION_CALL) {
                         // The traces diverged but not at BRANCH_TRUE and BRANCH_FALSE.
+                        mAlreadyMismatched.insert(treeSummary);
                         handleDivergence();
                         return;
 
@@ -228,6 +259,7 @@ void TraceMerger::visit(TraceConcreteSummarisation *node)
                 // If we reach here then one must be shorter than the other (but matches a prefix).
                 // This counts as a divergence, as one trace will continue with the summary while the other goes on to
                 // an "interesting" node.
+                mAlreadyMismatched.insert(treeSummary);
                 handleDivergence();
                 return;
             }
@@ -239,6 +271,7 @@ void TraceMerger::visit(TraceConcreteSummarisation *node)
         // Insert the new path into the tree and return.
         treeSummary->executions.append(traceExec);
         // mCurrentTree is not changed.
+        unSkipDivergenceNodesInTree(skipped);
         Statistics::statistics()->accumulate("Concolic::ExecutionTree::DistinctTracesExplored", 1);
         mPreviousParent = treeSummary;
         mPreviousDirection = treeSummary->executions.length()-1;
@@ -257,6 +290,12 @@ void TraceMerger::visit(TraceNode* node)
     exit(1);
 }
 
+void TraceMerger::visit(TraceDivergence* node)
+{
+    qWarning() << "TraceDivergence reached, which is not expected in the recorded trace in the TraceMerger visitor!";
+    exit(1);
+}
+
 
 // When we find a divergent merge, this function writes the entire original tree and trace out to a file for manual analysis.
 void TraceMerger::handleDivergence()
@@ -265,15 +304,101 @@ void TraceMerger::handleDivergence()
     Statistics::statistics()->accumulate("Concolic::ExecutionTree::DivergentMerges", 1);
     Log::info("  Trace merge diverged from the tree.");
 
-    if(mReportFailedMerge){
-        QString date = QDateTime::currentDateTime().toString("dd-MM-yy-hh-mm-ss");
-        QString pathToTreeFile = QString("divergence-%1-tree.gv").arg(date);
-        QString pathToTraceFile = QString("divergence-%1-trace.gv").arg(date);
+    // Use mImmediateParent[Direction] and mCurrentTree to insert a new TraceDivergence into the tree.
 
-        TraceDisplay display;
+    if (mImmediateParent.isNull()) {
+        // If there is a divergence at the root, we need to overwrite the root pointer (a hack) and replace it with a new divergence node.
+        handleDivergenceAtRoot();
+        return;
+    }
 
-        display.writeGraphFile(mStartingTree, pathToTreeFile, false);
-        display.writeGraphFile(mStartingTrace, pathToTraceFile, false);
+    // Check if mImmediateParent is already a divergence node, otherwise we will create a new one.
+    TraceDivergencePtr parentDivergence = mImmediateParent.dynamicCast<TraceDivergence>();
+    if (parentDivergence.isNull()) {
+        TraceDivergencePtr divergence = TraceDivergencePtr(new TraceDivergence());
+        divergence->next = mCurrentTree;
+        addDivergentTraceToNode(divergence, mCurrentTrace);
+
+        mImmediateParent->setChild(mImmediateParentDirection, divergence); // Replaces the pointer to mCurrentTree with divercence in the immediate parent node.
+        mCurrentTree = divergence;
+
+    } else {
+        addDivergentTraceToNode(parentDivergence, mCurrentTrace);
+        mCurrentTree = parentDivergence;
+    }
+}
+
+void TraceMerger::addDivergentTraceToNode(TraceDivergencePtr node, TraceNodePtr trace)
+{
+    // Try to merge this trace with one of the existing divergent traces, if possible.
+    // If there is an existing divergence with a matching head node, then just recursively merge the traces as normal.
+    // Otherwise just append the new trace to the list of divergences.
+
+    bool matched = false;
+    foreach (TraceNodePtr head, node->divergedTraces) {
+        if (!mAlreadyMismatched.contains(head) && trace->isEqualShallow(head)) {
+            mMergingDivergence = true;
+
+            mCurrentTree = head;
+            mCurrentTrace = trace;
+            // mPreviousParent, mPreviousDirection as before.
+            mImmediateParent = node;
+            mImmediateParentDirection = node->divergedTraces.indexOf(head);
+
+            mCurrentTrace->accept(this);
+
+            mMergingDivergence = false;
+
+            matched = true;
+            mAlreadyMismatched.clear();
+            break;
+        }
+    }
+    if (!matched) {
+        node->divergedTraces.append(trace);
+    }
+}
+
+void TraceMerger::handleDivergenceAtRoot()
+{
+    Log::info("  Trace merge diverged immediately. Modifying the root.");
+
+    // HACK: Use mStartingTreeRootPtr to replace the tree pointer in the calling code with one to a new divergence branch.
+
+    TraceDivergencePtr divergence = TraceDivergencePtr(new TraceDivergence());
+    divergence->next = mCurrentTree;
+    addDivergentTraceToNode(divergence, mCurrentTrace); // Same as mStartingTrace here.
+
+    *mStartingTreeRootPtr = divergence;
+    mCurrentTree = divergence;
+}
+
+TraceDivergencePtr TraceMerger::skipDivergenceNodesInTree()
+{
+    TraceDivergencePtr head = mCurrentTree.dynamicCast<TraceDivergence>();
+    if (head.isNull()) {
+        return TraceDivergencePtr();
+    }
+
+    // Sanity check for more than one divergence in a row.
+    TraceDivergencePtr nextnode = head->next.dynamicCast<TraceDivergence>();
+    if (!nextnode.isNull()) {
+        Log::fatal("Found two divergence branches in a row, which is an error in the TraceMerger.");
+        exit(1);
+    }
+
+    // If everythingis ok, fast-forward one node.
+    mImmediateParent = head;
+    mImmediateParentDirection = 0;
+    mCurrentTree = head->next;
+
+    return head;
+}
+
+void TraceMerger::unSkipDivergenceNodesInTree(TraceDivergencePtr node)
+{
+    if (!node.isNull()) {
+        mCurrentTree = node;
     }
 }
 
@@ -281,7 +406,9 @@ void TraceMerger::handleDivergence()
 void TraceMerger::reportMerge(TraceNodePtr newPart)
 {
     assert(!mPreviousParent.isNull());
-    emit sigTraceJoined(mPreviousParent, mPreviousDirection, newPart, mStartingTrace);
+    if (!mMergingDivergence) {
+        emit sigTraceJoined(mPreviousParent, mPreviousDirection, newPart, mStartingTrace);
+    }
 }
 
 

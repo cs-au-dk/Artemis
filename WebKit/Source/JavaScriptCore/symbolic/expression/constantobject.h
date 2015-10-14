@@ -38,12 +38,12 @@ public:
     void accept(Visitor* visitor);
     void accept(Visitor* visitor, void* arg);
 
-    inline unsigned getInstanceidentifier() {
+	inline unsigned getInstanceidentifier() {
 		return m_instanceIdentifier;
 	}
 
 private:
-    unsigned m_instanceIdentifier;
+	unsigned m_instanceIdentifier;
 
 };
 }

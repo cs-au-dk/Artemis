@@ -22,24 +22,74 @@
 #include <string>
 #include <queue>
 
-#include "JavaScriptCore/symbolic/expression/symbolicsource.h"
 
 namespace WebCore {
 
 class Node;
 class Element;
 
-class DOMSnapshotNodeImpl : public Symbolic::DOMSnapshotNode
+/**
+ *  Note: The interfaces and implementations here (e.g. DOMSnapshot and DOMSnapshotImpl are separate because they used to be defined in different places.
+ */
+
+typedef long DOMSnapshotNodeId;
+typedef std::map<std::string, std::string> DOMSnapshotNodeAttributes;
+
+class DOMSnapshotNode
+{
+
+public:
+    DOMSnapshotNode() {}
+
+    std::string getXpath() {
+        return m_xpath;
+    }
+
+    const DOMSnapshotNodeAttributes getAttributes() {
+        return m_attributes;
+    }
+
+protected:
+    std::string m_xpath;
+    DOMSnapshotNodeAttributes m_attributes;
+
+};
+
+class DOMSnapshot
+{
+public:
+    DOMSnapshot() {}
+
+    ~DOMSnapshot() {
+
+        std::map<DOMSnapshotNodeId, DOMSnapshotNode*>::iterator iter;
+        for (iter = m_nodes.begin(); iter != m_nodes.end(); ++iter) {
+            delete iter->second;
+        }
+
+    }
+
+    inline std::map<DOMSnapshotNodeId, DOMSnapshotNode*> getNodes() {
+        return m_nodes;
+    }
+
+protected:
+    std::map<DOMSnapshotNodeId, DOMSnapshotNode*> m_nodes;
+};
+
+
+
+class DOMSnapshotNodeImpl : public DOMSnapshotNode
 {
 
 public:
     DOMSnapshotNodeImpl(std::string elementAsString, WebCore::Element* element);
 };
 
-class DOMSnapshotImpl : public Symbolic::DOMSnapshot
+class DOMSnapshotImpl : public DOMSnapshot
 {
 public:
-    DOMSnapshotImpl(std::queue<std::pair<unsigned, std::pair<Node*, std::string> > > queue);
+    DOMSnapshotImpl(std::queue<std::pair<unsigned, std::pair<Element*, std::string> > > queue);
 };
 
 }

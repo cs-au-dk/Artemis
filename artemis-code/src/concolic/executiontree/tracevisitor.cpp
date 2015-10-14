@@ -46,6 +46,8 @@ void TraceVisitor::visit(TraceEndSuccess* node)         { visit(static_cast<Trac
 void TraceVisitor::visit(TraceEndFailure* node)         { visit(static_cast<TraceEnd*>(node)); }
 void TraceVisitor::visit(TraceEndUnknown* node)         { visit(static_cast<TraceEnd*>(node)); }
 
+void TraceVisitor::visit(TraceDivergence* node)         { visit(static_cast<TraceAnnotation*>(node)); }
+
 
 
 // These helper methods can be useful for concrete visitors.

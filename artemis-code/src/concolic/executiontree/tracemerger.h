@@ -40,7 +40,7 @@ class TraceMerger : public QObject, public TraceVisitor
     Q_OBJECT
 
 public:
-    TraceNodePtr merge(TraceNodePtr trace, TraceNodePtr executiontree);
+    TraceNodePtr merge(TraceNodePtr trace, TraceNodePtr executiontree, TraceNodePtr* executionTreeRootPtr);
 
     void visit(TraceNode* node);
 
@@ -49,8 +49,7 @@ public:
     void visit(TraceAnnotation* node);
     void visit(TraceConcreteSummarisation* node);
     void visit(TraceEnd* node);
-
-    void handleDivergence();
+    void visit(TraceDivergence* node);
 
 signals:
     // Notifies where a new trace is joined into the tree.
@@ -62,15 +61,29 @@ private:
     TraceNodePtr mCurrentTrace;
 
     TraceNodePtr mStartingTrace;
-    TraceNodePtr mStartingTree;
-    static const bool mReportFailedMerge = false; // Whether to dump out failed merges for anaysis.
-
-    void reportDivergence();
+    TraceNodePtr* mStartingTreeRootPtr; // This is a hack to allow us to replace the root node in handleDivergenceAtRoot(). A better solution might be to introduce a header node for trees.
 
     // Used to report where a new trace was added to the tree.
+    // These refer to the nearest ancestor which is a branch node.
     TraceNodePtr mPreviousParent;
     int mPreviousDirection;
     void reportMerge(TraceNodePtr newPart);
+
+    // Used to backtrack in case we need to insert a TraceDivergence node into the tree.
+    // These refer to the immediate parent of the current node.
+    TraceNodePtr mImmediateParent;
+    int mImmediateParentDirection;
+
+    void handleDivergence();
+    void addDivergentTraceToNode(TraceDivergencePtr node, TraceNodePtr trace);
+    void handleDivergenceAtRoot();
+    bool mMergingDivergence;
+    QSet<TraceNodePtr> mAlreadyMismatched;
+
+    // Used in the visitors to "fast-foraward" through any divergence nodes in the tree before trying to match.
+    // These nodes are added by TraceMerger so they will not match anyhting in the new trace and shouold be skipped over.
+    TraceDivergencePtr skipDivergenceNodesInTree();
+    void unSkipDivergenceNodesInTree(TraceDivergencePtr node);
 };
 
 }

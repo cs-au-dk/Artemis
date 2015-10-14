@@ -45,6 +45,7 @@ typedef enum {
 } OP;
 
 const char* opToString(OP op);
+const char* opNameString(OP op);
 
 /*WTF_EXPORT_PRIVATE*/ class SymbolicInterpreter
 {

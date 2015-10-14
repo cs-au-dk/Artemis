@@ -55,6 +55,8 @@ enum Type {
     class StringRegexSubmatchArrayAt;
     class StringRegexSubmatchArrayMatch;
     class StringSubstring;
+    class StringToLowerCase;
+    class StringToUpperCase;
     class SymbolicBoolean;
     class ConstantBoolean;
     class BooleanCoercion;
@@ -89,6 +91,8 @@ public:
     virtual void visit(StringRegexSubmatchArrayAt* stringregexsubmatcharrayat, void* arg) = 0;
     virtual void visit(StringRegexSubmatchArrayMatch* stringregexsubmatcharraymatch, void* arg) = 0;
     virtual void visit(StringSubstring* stringsubstring, void* arg) = 0;
+    virtual void visit(StringToLowerCase* stringtolowercase, void* arg) = 0;
+    virtual void visit(StringToUpperCase* stringtouppercase, void* arg) = 0;
     virtual void visit(SymbolicBoolean* symbolicboolean, void* arg) = 0;
     virtual void visit(ConstantBoolean* constantboolean, void* arg) = 0;
     virtual void visit(BooleanCoercion* booleancoercion, void* arg) = 0;

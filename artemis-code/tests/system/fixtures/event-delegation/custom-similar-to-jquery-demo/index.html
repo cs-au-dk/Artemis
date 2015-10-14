@@ -1,3 +1,10 @@
+<!--
+TEST PC[0] = (ObjectArrayIndexOf( SymbolicObject( SYM_TARGET_0 ) , [ConstantObject ,  ]) < ConstantInteger)
+TEST Concolic::ExecutionTree::DistinctTracesExplored = 2
+TEST Concolic::Solver::ConstraintsSolved = 2
+TEST Concolic::Solver::ConstraintsWritten = 2
+TEST Concolic::Solver::Constraint.SYM_TARGET_0 = /html/body[1]/p[1]
+-->
 <!doctype html>
 <html lang="en">
 <head>
@@ -28,9 +35,9 @@ color: red;
 
 function on(container, type, selector, handler) {
     container.addEventListener(type, function(event) {
-        // Fetch an array containing all descendents of container which match the selector.        
+        // Fetch an array containing all descendents of container which match the selector.
         var matches = Array.prototype.slice.call(document.querySelectorAll(selector));
-        // If the target matches the selector the fire the event.        
+        // If the target matches the selector then fire the event.
         if(matches.indexOf(event.target) >= 0) {
             handler(event);
         }
@@ -42,7 +49,7 @@ body = document.getElementsByTagName("body")[0];
 on(body, "click", "p", function(e) {
     newPara = document.createElement("p");
     newPara.appendChild(document.createTextNode("Another paragraph! " + (++count)));
-    // Add the new paragraph after the clicked target.    
+    // Add the new paragraph after the clicked target.
     e.target.parentNode.insertBefore(newPara, e.target.nextSibling);
 });
 

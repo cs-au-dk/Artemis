@@ -21,6 +21,7 @@
 
 #include "runtime/runtime.h"
 #include "concolic/entrypoints.h"
+#include "runtime/browser/artemiswebview.h"
 
 namespace artemis
 {
@@ -41,6 +42,8 @@ public:
     void run(const QUrl& url);
 
 protected:
+    ArtemisWebViewPtr mWebView;
+
     void preConcreteExecution();
 
     WorkListPtr mWorklist;

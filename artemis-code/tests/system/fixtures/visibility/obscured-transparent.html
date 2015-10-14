@@ -1,0 +1,22 @@
+<!--
+TEST WebKit::events::skipped::visibility = 1
+TEST InputGenerator::added-configurations = 0
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+    <title>Ben Spencer</title>
+    <meta name="author" content="Ben Spencer">
+</head>
+<body>
+
+    <!-- Although the button is visible, it is covered by a transparent element so should not be clickable. -->
+    <button onclick="alert('Clicked')" >Click me</button>
+
+    <div style="background: transparent; border: 2px dashed red; width: 200px; height: 100px; position: absolute; top: 0; left: 0;" >Banner blocking content</div>
+
+</body>
+</html>

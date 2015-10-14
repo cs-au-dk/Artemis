@@ -60,6 +60,10 @@ public:
     QWebElement getSingleElementByXPath(QString xPath);
     QWebElementCollection getElementsByXPath(QString xPath);
 
+    // This is an *extremely slow* brute-force method of checking user-visibility of elements.
+    QList<QWebElement> getAllUserClickableElements();
+    QList<QWebElement> getAllUserClickableElementsAndAncestors();
+
 protected:
     virtual bool acceptNavigationRequest(QWebFrame *frame, const QNetworkRequest &request, NavigationType type);
     QString mCustomUserAgent;

@@ -1,0 +1,74 @@
+<!doctype html>
+<html>
+<head>
+    <title>DOM ID test</title>
+
+    <script src="http://code.jquery.com/jquery-1.10.2.js"></script>
+</head>
+<body>
+
+<div id="parent" >
+
+    <h1 id="test" >Test Element</h1>
+
+    <h1 id="test2" >Test Element #2</h1>
+
+</div>
+
+<hr>
+
+<ul id="log" >
+    <!-- Messages added from JS go here -->
+</ul>
+
+<script type="text/javascript" >
+    /* There is no console.log in the artemis browser so we hack our own on the page itself. */
+    function log(msg) {
+        var list = document.getElementById("log");
+        var item = document.createElement("li");
+        var content = document.createTextNode(msg);
+        item.appendChild(content);
+        list.appendChild(item);
+    }
+    
+    $(document).ready(function(){
+        log("Testing Artemis DOM ID property.");
+        
+        var test = $("#test");
+        var test2 = $("#test2");
+        var parent = test.parent();
+        
+        var prop = "artemisId";
+        
+        //log("test.hasOwnProerty(\"" + prop + "\"): " + test.hasOwnProperty(prop));
+        //log("\"" + prop + "\" in test: " + (prop in test));
+        log("test.prop(\"" + prop + "\"): " + test.prop(prop));
+        log("test2.prop(\"" + prop + "\"): " + test2.prop(prop));
+        
+        log("Modifying property of test.");
+        test.prop("testProp", "testValue");
+        log("test.prop(\"" + prop + "\"): " + test.prop(prop));
+        
+        log("Modifying DOM before test");
+        var newEl = document.createElement("h1");
+        newEl.appendChild(document.createTextNode("Newly added element"));
+        parent.prepend(newEl);
+        log("test.prop(\"" + prop + "\"): " + test.prop(prop));
+        
+        log("Removing and re-adding element.");
+        test.remove();
+        parent.append(test);
+        log("test.prop(\"" + prop + "\"): " + test.prop(prop));
+        
+        log("Detatching and re-adding element.");
+        test.detach();
+        parent.append(test);
+        log("test.prop(\"" + prop + "\"): " + test.prop(prop));
+        
+        log("Fetching test from the DOM again.");
+        log("$(\"#test\").prop(\"" + prop + "\"): " + $("#test").prop(prop));
+    });
+</script>
+
+</body>
+</html>
