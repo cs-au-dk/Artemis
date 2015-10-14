@@ -51,7 +51,7 @@ Commands
     The client can now send commands to execute actions (``forminput``, ``click``, etc.) which will be recorded into
     the trace and saved in the concolic tree for sequence "MySequenceID".
     
-    *Errors:* If any trace is already in progress.
+    **Errors:** If any trace is already in progress.
     
 * ``concolicadvice`` > ``endtrace``
     End recording a trace. There must be a trace with the matching sequence ID in-proress.
@@ -71,7 +71,7 @@ Commands
         }
     
     
-    *Errors:* If there is no trace in progress; if the in-progress trace used a different sequence ID.
+    **Errors:** If there is no trace in progress; if the in-progress trace used a different sequence ID.
     
 * ``concolicadvice`` > ``advice``
     Request advice on form field values. There should not be a trace in-progress.
@@ -96,26 +96,49 @@ Commands
     Receive::
     
         {
+            "concolicadvice": "done",
             "sequence": "MySequenceID",
             "values" : [
-                {
-                    "//input[@id='input1']": "Hello",
-                    "//input[@id='input2']": "World"
-                },
-                {
-                    "//input[@id='input1']": "Greetings",
-                    "//input[@id='input2']": "World"
-                },
-                {
-                    "//input[@id='input1']": "Greetings",
-                    "//input[@id='input2']": "Everyone"
-                }
+                [
+                    {
+                        "field": "//input[@id='input1']",
+                        "value": "Hello"
+                    },
+                    {
+                        "field": "//input[@id='input2']",
+                        "value": "World"
+                    }
+                ],
+                [
+                    {
+                        "field": "//input[@id='input1']",
+                        "value": "Greetings"
+                    },
+                    {
+                        "field": "//input[@id='input2']",
+                        "value": "World"
+                    }
+                ],
+                [
+                    {
+                        "field": "//input[@id='input1']",
+                        "value": "Greetings"
+                    },
+                    {
+                        "field": "//input[@id='input2']",
+                        "value": "Everyone"
+                    }
+                ]
             ]
         }
+    
+    This example is a list of three separate suggested new traces. The first trace fills field ``input1`` with value
+    "Hello" and field ``input2`` with value "World", and so on.
     
     If there is no more advice available for that sequence, then no values are returned::
     
         {
+            "concolicadvice": "done",
             "sequence": "MySequenceID",
             "values" : []
         }
@@ -123,7 +146,41 @@ Commands
     N.B. This result is not necessarily final. If there are outstanding traces which have been suggested by Artemis
     but not yet executed then these may open up new possible explorations when they are executed.
     
-    *Errors:* If there has not been any trace recorded with that id; if there is a trace in-progress.
+    *Types:* The type of the suggested value can be either string, int or bool, depending on the field type.
+    They follow the same rules as the ``forminput`` commnand.
+    
+    For example the response could be::
+    
+        {
+            "concolicadvice": "done",
+            "sequence": "MySequenceID",
+            "values" : [
+                [
+                    {
+                        "field": "//input[@id='my-text-box']",
+                        "value": "Hello"
+                    },
+                    {
+                        "field": "//input[@id='my-select-box']",
+                        "value": "Hello"
+                    },
+                    {
+                        "field": "//input[@id='my-select-box-accessed-by-index']",
+                        "value": 1
+                    },
+                    {
+                        "field": "//input[@id='my-check-box']",
+                        "value": true
+                    },
+                    {
+                        "field": "//input[@id='my-radio-button']",
+                        "value": false
+                    }
+                ]
+            ]
+        }
+    
+    **Errors:** If there has not been any trace recorded with that id; if there is a trace in-progress.
     
 
 

@@ -924,7 +924,7 @@ QVariant AnalysisServerRuntime::concolicAdvice(QString sequence, uint amount)
         }
 
         assert(exploration.solution->isSolved());
-        QVariantMap assignment;
+        QVariantList assignment;
 
         foreach (QString symbol, exploration.solution->symbols()) {
             // We need to convert the variable names to elements and then to XPath expressions for the API.
@@ -948,12 +948,16 @@ QVariant AnalysisServerRuntime::concolicAdvice(QString sequence, uint amount)
                 exit(1);
             }
 
-            assignment.insert(xPath, value);
+            QVariantMap singleAssignment;
+            singleAssignment.insert("field", xPath);
+            singleAssignment.insert("value", value);
+
+            assignment.append(singleAssignment);
 
             // TODO: Really we should save exploration.target as well. See comments in concolicEndTrace.
         }
 
-        suggestions.append(assignment);
+        suggestions.insert(suggestions.size(), assignment);
 
         i++;
     }
@@ -964,6 +968,8 @@ QVariant AnalysisServerRuntime::concolicAdvice(QString sequence, uint amount)
     }
 
     QVariantMap result;
+    result.insert("concolicadvice", "done");
+    result.insert("sequence", sequence);
     result.insert("values", suggestions);
     return result;
 }

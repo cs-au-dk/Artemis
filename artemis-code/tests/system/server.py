@@ -2557,6 +2557,10 @@ class AnalysisServerConcolicAdviceTestBase(AnalysisServerTestBase):
         response = send_to_server(message)
         
         self.assertNotIn("error", response)
+        self.assertIn("concolicadvice", response)
+        self.assertEqual(response["concolicadvice"], u"done")
+        self.assertIn("sequence", response)
+        self.assertEqual(response["sequence"], unicode(identifier))
         self.assertIn("values", response)
         return response["values"]
 
@@ -2734,9 +2738,12 @@ class AnalysisServerConcolicAdviceApiTests(AnalysisServerConcolicAdviceTestBase)
         values = self.concolicAdvice("TestSequence")
         
         expected_values = [
-                {
-                    u"//input[@id='testinput']": u"testme"
-                }
+                [
+                    {
+                        u"field": u"//input[@id='testinput']",
+                        u"value": u"testme"
+                    }
+                ]
             ]
         
         self.assertEqual(values, expected_values)
@@ -2757,9 +2764,12 @@ class AnalysisServerConcolicAdviceApiTests(AnalysisServerConcolicAdviceTestBase)
         values = self.concolicAdvice("TestSequence")
         
         expected_values = [
-                {
-                    u"//input[@id='testinput']": u""
-                }
+                [
+                    {
+                        u"field": u"//input[@id='testinput']",
+                        u"value": u""
+                    }
+                ]
             ]
         
         self.assertEqual(values, expected_values)
@@ -2777,9 +2787,12 @@ class AnalysisServerConcolicAdviceApiTests(AnalysisServerConcolicAdviceTestBase)
         values = self.concolicAdvice("TestSequence")
         
         expected_values = [
-                {
-                    u"//input[@id='testinput']": u"test1"
-                }
+                [
+                    {
+                        u"field": u"//input[@id='testinput']",
+                        u"value": u"test1"
+                    }
+                ]
             ]
         
         self.assertEqual(values, expected_values)
@@ -2798,15 +2811,24 @@ class AnalysisServerConcolicAdviceApiTests(AnalysisServerConcolicAdviceTestBase)
         values_1 = self.concolicAdvice("TestSequence", 3)
         
         expected_values_1 = [
-                {
-                    u"//input[@id='testinput']": u"test1"
-                },
-                {
-                    u"//input[@id='testinput']": u"test2"
-                },
-                {
-                    u"//input[@id='testinput']": u"test3"
-                }
+                [
+                    {
+                        u"field": u"//input[@id='testinput']",
+                        u"value": u"test1"
+                    }
+                ],
+                [
+                    {
+                        u"field": u"//input[@id='testinput']",
+                        u"value": u"test2"
+                    }
+                ],
+                [
+                    {
+                        u"field": u"//input[@id='testinput']",
+                        u"value": u"test3"
+                    }
+                ]
             ]
         
         self.assertEqual(values_1, expected_values_1)
@@ -2814,12 +2836,18 @@ class AnalysisServerConcolicAdviceApiTests(AnalysisServerConcolicAdviceTestBase)
         values_2 = self.concolicAdvice("TestSequence", 3)
         
         expected_values_2 = [
-                {
-                    u"//input[@id='testinput']": u"test4"
-                },
-                {
-                    u"//input[@id='testinput']": u"test5"
-                }
+                [
+                    {
+                        u"field": u"//input[@id='testinput']",
+                        u"value": u"test4"
+                    }
+                ],
+                [
+                    {
+                        u"field": u"//input[@id='testinput']",
+                        u"value": u"test5"
+                    }
+                ]
             ]
         
         self.assertEqual(values_2, expected_values_2)
@@ -2838,21 +2866,36 @@ class AnalysisServerConcolicAdviceApiTests(AnalysisServerConcolicAdviceTestBase)
         values_1 = self.concolicAdvice("TestSequence", 0)
         
         expected_values_1 = [
-                {
-                    u"//input[@id='testinput']": u"test1"
-                },
-                {
-                    u"//input[@id='testinput']": u"test2"
-                },
-                {
-                    u"//input[@id='testinput']": u"test3"
-                },
-                {
-                    u"//input[@id='testinput']": u"test4"
-                },
-                {
-                    u"//input[@id='testinput']": u"test5"
-                }
+                [
+                    {
+                        u"field": u"//input[@id='testinput']",
+                        u"value": u"test1"
+                    }
+                ],
+                [
+                    {
+                        u"field": u"//input[@id='testinput']",
+                        u"value": u"test2"
+                    }
+                ],
+                [
+                    {
+                        u"field": u"//input[@id='testinput']",
+                        u"value": u"test3"
+                    }
+                ],
+                [
+                    {
+                        u"field": u"//input[@id='testinput']",
+                        u"value": u"test4"
+                    }
+                ],
+                [
+                    {
+                        u"field": u"//input[@id='testinput']",
+                        u"value": u"test5"
+                    }
+                ]
             ]
         
         self.assertEqual(values_1, expected_values_1)
@@ -2878,9 +2921,12 @@ class AnalysisServerConcolicAdviceApiTests(AnalysisServerConcolicAdviceTestBase)
         values = self.concolicAdvice("TestSequence")
         
         expected_values = [
-                {
-                    u"//input[@id='testinput']": u"testme"
-                }
+                [
+                    {
+                        u"field": u"//input[@id='testinput']",
+                        u"value": u"testme"
+                    }
+                ]
             ]
         
         self.assertEqual(values, expected_values)
@@ -2912,9 +2958,12 @@ class AnalysisServerConcolicAdviceApiTests(AnalysisServerConcolicAdviceTestBase)
         values = self.concolicAdvice("TestSequence")
         
         expected_values = [
-                {
-                    u"//input[@id='testinput']": u"testme"
-                }
+                [
+                    {
+                        u"field": u"//input[@id='testinput']",
+                        u"value": u"testme"
+                    }
+                ]
             ]
         
         self.assertEqual(values, expected_values)
@@ -2938,9 +2987,12 @@ class AnalysisServerConcolicAdviceApiTests(AnalysisServerConcolicAdviceTestBase)
         values_1 = self.concolicAdvice("TestSequence")
         
         expected_values_1 = [
-                {
-                    u"//input[@id='testinput']": u"testme"
-                }
+                [
+                    {
+                        u"field": u"//input[@id='testinput']",
+                        u"value": u"testme"
+                    }
+                ]
             ]
         
         self.assertEqual(values_1, expected_values_1)
@@ -2970,12 +3022,18 @@ class AnalysisServerConcolicAdviceApiTests(AnalysisServerConcolicAdviceTestBase)
         values_1 = self.concolicAdvice("TestSequence", 0)
         
         expected_values_1 = [
-                {
-                    "//input[@id='testinput']": "123"
-                },
-                {
-                    "//input[@id='testinput']": "4568"
-                }
+                [
+                    {
+                        u"field": u"//input[@id='testinput']",
+                        u"value": u"123"
+                    }
+                ],
+                [
+                    {
+                        u"field": u"//input[@id='testinput']",
+                        u"value": u"4568"
+                    }
+                ]
             ]
         
         self.assertEqual(values_1, expected_values_1)
@@ -2994,12 +3052,53 @@ class AnalysisServerConcolicAdviceApiTests(AnalysisServerConcolicAdviceTestBase)
         values_3 = self.concolicAdvice("TestSequence", 0)
         
         expected_values_3 = [
-                {
-                    "//input[@id='testinput']": "890"
-                }
+                [
+                    {
+                        u"field": u"//input[@id='testinput']",
+                        u"value": u"890"
+                    }
+                ]
             ]
         
         self.assertEqual(values_3, expected_values_3)
+    
+    def test_advice_with_different_types(self):
+        # Different field types lead to values of different data-types inthe advice command.
+        self.loadFixture("concolic-all-field-types.html")
+        
+        # Record a trace.
+        self.concolicBeginTrace("TestSequence")
+        self.click("//button")
+        self.concolicEndTrace("TestSequence")
+        
+        # Get the advice
+        values = self.concolicAdvice("TestSequence", 0)
+        
+        expected_last_suggestion = [
+                {
+                    u"field": u"//input[@id='my-radio-button']",
+                    u"value": True
+                },
+                {
+                    u"field": u"//input[@id='my-check-box']",
+                    u"value": True
+                },
+                {
+                    u"field": u"//select[@id='my-select-box-accessed-by-index']",
+                    u"value": 0
+                },
+                {
+                    u"field": u"//select[@id='my-select-box']",
+                    u"value": u"Hello"
+                },
+                {
+                    u"field": u"//input[@id='my-text-box']",
+                    u"value": u"Hello"
+                }
+            ]
+        
+        self.assertEqual(len(values), 5)
+        self.assertEqual(values[-1], expected_last_suggestion)
     
     @unittest.skip("TODO")
     def test_advice_from_multiple_sequences(self):
