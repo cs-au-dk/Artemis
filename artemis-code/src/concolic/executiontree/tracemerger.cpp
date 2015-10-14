@@ -38,7 +38,6 @@ TraceNodePtr TraceMerger::merge(TraceNodePtr trace, TraceNodePtr executiontree, 
     }
 
     mStartingTrace = trace;
-    mStartingTree = executiontree;
     mStartingTreeRootPtr = executionTreeRootPtr;
 
     mCurrentTrace = trace;
@@ -310,6 +309,7 @@ void TraceMerger::handleDivergence()
     if (mImmediateParent.isNull()) {
         // If there is a divergence at the root, we need to overwrite the root pointer (a hack) and replace it with a new divergence node.
         handleDivergenceAtRoot();
+        return;
     }
 
     // Check if mImmediateParent is already a divergence node, otherwise we will create a new one.
@@ -366,10 +366,11 @@ void TraceMerger::handleDivergenceAtRoot()
     // HACK: Use mStartingTreeRootPtr to replace the tree pointer in the calling code with one to a new divergence branch.
 
     TraceDivergencePtr divergence = TraceDivergencePtr(new TraceDivergence());
-    divergence->next = mStartingTree; // Same as mCurrentTree here.
-    addDivergentTraceToNode(divergence, mStartingTrace); // Same as mCurrentTrace here.
+    divergence->next = mCurrentTree;
+    addDivergentTraceToNode(divergence, mCurrentTrace); // Same as mStartingTrace here.
 
     *mStartingTreeRootPtr = divergence;
+    mCurrentTree = divergence;
 }
 
 TraceDivergencePtr TraceMerger::skipDivergenceNodesInTree()

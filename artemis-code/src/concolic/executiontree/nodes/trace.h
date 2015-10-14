@@ -131,7 +131,10 @@ public:
 
     bool isEqualShallow(const QSharedPointer<const TraceNode>& other)
     {
-        return !other.dynamicCast<const TraceMarker>().isNull();
+        // N.B. For trace markers we have a stricter matching rule that the nodes must have the same index and label.
+        // This is stricter than for other nodes because it is an intentional divergence if the markers are different.
+        QSharedPointer<const TraceMarker> otherMarker = other.dynamicCast<const TraceMarker>();
+        return !otherMarker.isNull() && otherMarker->index == index && otherMarker->label == label;
     }
 
     void accept(TraceVisitor* visitor) {

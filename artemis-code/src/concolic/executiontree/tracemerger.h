@@ -61,7 +61,6 @@ private:
     TraceNodePtr mCurrentTrace;
 
     TraceNodePtr mStartingTrace;
-    TraceNodePtr mStartingTree;
     TraceNodePtr* mStartingTreeRootPtr; // This is a hack to allow us to replace the root node in handleDivergenceAtRoot(). A better solution might be to introduce a header node for trees.
 
     // Used to report where a new trace was added to the tree.

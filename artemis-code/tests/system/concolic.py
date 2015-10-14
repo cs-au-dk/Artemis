@@ -127,6 +127,7 @@ def test_generator(artemis_runner, full_filename, name, test_dict=None, internal
 
 
 def _artemis_runner(name, path, send_iteration_count=False, concolic_event_sequences='simple'):
+    print "artemis runnre", concolic_event_sequences
     return execute_artemis(name, path,
                            iterations=0,
                            debug_concolic=' ',
@@ -155,6 +156,8 @@ def setup_concolic_tests():
 
 class ConcolicTraceDivergenceTests(unittest.TestCase):
     def run_artemis_and_get_final_graph(self, name, concolic_event_sequences='simple'):
+        print "run and get graph", concolic_event_sequences
+        
         address = "http://" + INJECTION_SERVER_HOST + ":" + str(INJECTION_SERVER_PORT)
         report = _artemis_runner(name, address, True, concolic_event_sequences)
         
@@ -176,8 +179,8 @@ class ConcolicTraceDivergenceTests(unittest.TestCase):
         result = [re.sub(" \[.*\]", "", edge.strip()) for edge in full_graph if "->" in edge]
         return result
     
-    def start_server(self, js_injections, extra_fields=[]):
-        self._server_thread, self._server_stop_event = start_server_with_js_injections(js_injections, extra_fields)
+    def start_server(self, js_injections, html_injection=None):
+        self._server_thread, self._server_stop_event = start_server_with_js_injections(js_injections, html_injection)
     
     def stop_server(self):
         self._server_stop_event.set()
@@ -189,9 +192,37 @@ class ConcolicTraceDivergenceTests(unittest.TestCase):
         self.assertFalse(self._server_thread.is_alive())
     
     
-    @unittest.skip("TODO")
     def test_divergent_from_root(self):
-        pass # Can't find a test so illustrate this, as we always begin with click/onchange.
+        js1 = "var x = document.getElementById('testinput'); if (x.value == 'testme') { return true; } else { alert('Error'); return false; }"
+        
+        # Calls onclick as first action
+        html1 = "<input type=\"text\" id=\"testinput\" />\n<button type=\"submit\" onclick=\"return validate()\" >Submit</button>"
+        # No function call
+        html2 = "<input type=\"text\" id=\"testinput\" />\n<button type=\"submit\" >Submit</button>"
+        
+        self.start_server([js1, js1], [html1, html2])
+        
+        # Run the test with no event sequence support, so we do not generate marker nodes at the root.
+        graph = self.run_artemis_and_get_final_graph(inspect.currentframe().f_code.co_name, concolic_event_sequences='ignore')
+        
+        self.assertIsNotNone(graph)
+        
+        self.stop_server()
+        
+        expected_graph = """
+start -> diverge_0;
+diverge_0 -> aggr_1;
+aggr_1 -> sym_3;
+sym_3 -> unexp_missed_3;
+sym_3 -> alt_4;
+alt_4 -> end_f_5;
+diverge_0 -> load_6;
+load_6 -> end_s_7;
+"""
+        expected_graph = expected_graph.split("\n")[1:-1]
+        
+        self.assertEqual(graph, expected_graph)
+    
     
     def test_divergent_at_different_nodes(self):
         js1 = "var x = document.getElementById('testinput'); if (x.value == 'testme') { return true; } else { alert('Error'); return false; }"
@@ -221,11 +252,6 @@ alt_8 -> end_f_9;
         expected_graph = expected_graph.split("\n")[1:-1]
         
         self.assertEqual(graph, expected_graph)
-    
-    @unittest.skip("TODO")
-    def test_divergent_at_mismatched_markers(self):
-        # TODO: call with extra_fields set to something, causing extra markers to be added to the trace.
-        pass
     
     def test_divergent_inside_concrete_summary(self):
         js1 = "function f() {}; f(); f(); if (true) {}; var x = document.getElementById('testinput'); if (x.value == 'testme') { return true; } else { alert('Error'); return false; }"
@@ -444,7 +470,6 @@ alt_16 -> end_f_17;
         expected_graph = expected_graph.split("\n")[1:-1]
         
         self.assertEqual(graph, expected_graph)
-    
     
 
 
