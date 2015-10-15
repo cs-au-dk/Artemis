@@ -1062,6 +1062,7 @@ void AnalysisServerRuntime::notifyStartingEvent(QString event, QString elementXP
     // If we are recording a concolic trace, then add a new marker for this event.
     if (!mConcolicSequenceRecording.isEmpty()) {
         mConcolicTraceMarkerIdx++;
+        QString eventWithElement = event + " @ " + elementXPath;
 
         // Check for dynamic form restrictions which should be included.
         FormRestrictions currentFormRestrictions = FormFieldRestrictedValues::getRestrictions(mConcolicFormFields[mConcolicSequenceRecording], mWebkitExecutor->getPage());
@@ -1072,7 +1073,7 @@ void AnalysisServerRuntime::notifyStartingEvent(QString event, QString elementXP
             restriction = FormFieldRestrictedValues::getRelevantSelectRestriction(currentFormRestrictions, identifier);
         }
 
-        emit sigNewTraceMarker(event, QString::number(mConcolicTraceMarkerIdx), restriction.first, restriction.second);
+        emit sigNewTraceMarker(eventWithElement, QString::number(mConcolicTraceMarkerIdx), restriction.first, restriction.second);
     }
 }
 

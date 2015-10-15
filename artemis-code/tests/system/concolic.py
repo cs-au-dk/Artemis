@@ -7,7 +7,6 @@ FIXTURE_ROOT = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'fixtur
 import sys
 import re
 import unittest
-import inspect
 import time
 import urllib2
 
@@ -191,6 +190,9 @@ class ConcolicTraceDivergenceTests(unittest.TestCase):
             print "Could not connect to server to clear final request handler."
         self.assertFalse(self._server_thread.is_alive())
     
+    def name(self):
+        return self.id().split(".")[-1]
+    
     
     def test_divergent_from_root(self):
         js1 = "var x = document.getElementById('testinput'); if (x.value == 'testme') { return true; } else { alert('Error'); return false; }"
@@ -203,7 +205,7 @@ class ConcolicTraceDivergenceTests(unittest.TestCase):
         self.start_server([js1, js1], [html1, html2])
         
         # Run the test with no event sequence support, so we do not generate marker nodes at the root.
-        graph = self.run_artemis_and_get_final_graph(inspect.currentframe().f_code.co_name, concolic_event_sequences='ignore')
+        graph = self.run_artemis_and_get_final_graph(self.name(), concolic_event_sequences='ignore')
         
         self.assertIsNotNone(graph)
         
@@ -231,7 +233,7 @@ load_6 -> end_s_7;
         
         self.start_server([js1, js2, js1])
         
-        graph = self.run_artemis_and_get_final_graph(inspect.currentframe().f_code.co_name)
+        graph = self.run_artemis_and_get_final_graph(self.name())
         
         self.assertIsNotNone(graph)
         
@@ -260,7 +262,7 @@ alt_8 -> end_f_9;
         
         self.start_server([js1, js2])
         
-        graph = self.run_artemis_and_get_final_graph(inspect.currentframe().f_code.co_name)
+        graph = self.run_artemis_and_get_final_graph(self.name())
         
         self.assertIsNotNone(graph)
         
@@ -292,7 +294,7 @@ sym_10 -> unexp_12;
         
         self.start_server([js1, js2, js2])
         
-        graph = self.run_artemis_and_get_final_graph(inspect.currentframe().f_code.co_name)
+        graph = self.run_artemis_and_get_final_graph(self.name())
         
         self.assertIsNotNone(graph)
         
@@ -327,7 +329,7 @@ alt_10 -> end_f_11;
         
         self.start_server([js1, js2, js3, js4])
         
-        graph = self.run_artemis_and_get_final_graph(inspect.currentframe().f_code.co_name)
+        graph = self.run_artemis_and_get_final_graph(self.name())
         
         self.assertIsNotNone(graph)
         
@@ -369,7 +371,7 @@ alt_19 -> end_f_20;
         
         self.start_server([js1, js2, js3])
         
-        graph = self.run_artemis_and_get_final_graph(inspect.currentframe().f_code.co_name)
+        graph = self.run_artemis_and_get_final_graph(self.name())
         
         self.assertIsNotNone(graph)
         
@@ -404,7 +406,7 @@ alt_14 -> end_f_15;
         
         self.start_server([js1, js2, js2])
         
-        graph = self.run_artemis_and_get_final_graph(inspect.currentframe().f_code.co_name)
+        graph = self.run_artemis_and_get_final_graph(self.name())
         
         self.assertIsNotNone(graph)
         
@@ -441,7 +443,7 @@ alt_14 -> end_f_15;
         
         self.start_server([js1, js2, js3])
         
-        graph = self.run_artemis_and_get_final_graph(inspect.currentframe().f_code.co_name)
+        graph = self.run_artemis_and_get_final_graph(self.name())
         
         self.assertIsNotNone(graph)
         

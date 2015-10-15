@@ -31,7 +31,7 @@ class AnalysisServerTestBase(unittest.TestCase):
     
     def setUp(self):
         # Run the server and save a reference so we can kill it in the end.
-        self.server = run_artemis_server(self.id())
+        self.server = run_artemis_server(self.name())
         self.expectedTerminated = False
     
     def tearDown(self):
@@ -43,6 +43,9 @@ class AnalysisServerTestBase(unittest.TestCase):
         except OSError:
             if not self.expectedTerminated:
                 raise
+    
+    def name(self):
+        return self.id().split(".")[-1]
     
     def assertServerAcceptingConnections(self):
         try:
@@ -123,7 +126,7 @@ class AnalysisServerFeatureTests(AnalysisServerTestBase):
     def test_port_check(self):
         # Run  an extra server and confirm it terminates with an error.
         
-        second_server = run_artemis_server(self.id() + "_extra")
+        second_server = run_artemis_server(self.name() + "_extra")
         time.sleep(1)
         ret = second_server.poll()
         if ret is None:
@@ -3109,14 +3112,12 @@ class AnalysisServerConcolicAdviceApiTests(AnalysisServerConcolicAdviceTestBase)
         pass
     
     @unittest.skip("TODO")
-    def test_record_divergent_traces(self):
-        # Just assert this is not a crash or error - the trace recorded is just useless, no worse.
-        # could check it was correctly recorded in the tree...?
+    def test_page_load_during_trace(self):
+        # I think this is not allowed?
         pass
     
     @unittest.skip("TODO")
-    def test_page_load_during_trace(self):
-        # I think this is not allowed?
+    def test_unrecorded_actions_have_no_effect(self):
         pass
     
 
@@ -3144,6 +3145,130 @@ class AnalysisServerConcolicAdviceLimitations(AnalysisServerConcolicAdviceTestBa
         # Same test as above but with a browser reset between trace recordings.
         pass
     
+
+
+class AnalysisServerTraceDivergenceTests(AnalysisServerConcolicAdviceTestBase):
+    # Partly to check the divergence support is working in server mode.
+    # Partly because some aspects of the divergence support can't easily be tested directly from concolic mode.
+    
+    def get_graph(self, test_name, tree_number=1):
+        graph_file = os.path.join(OUTPUT_DIR, test_name, "server-tree-" + str(tree_number) + ".gv")
+        
+        if not os.path.isfile(graph_file):
+            return None
+        
+        with open(graph_file) as f:
+            full_graph = f.readlines()
+        
+        # Filter out only the interesting part of the graph
+        result = [re.sub(" \[.*\]", "", edge.strip()) for edge in full_graph if "->" in edge]
+        return result
+    
+    def test_server_divergence_one_empty_trace(self):
+        # Record one normal and one empty trace.
+        self.loadFixture("concolic-simple.html")
+        
+        # Record the first (normal) trace.
+        self.concolicBeginTrace("TestSequence")
+        self.formInput("id('testinput')", "")
+        self.click("//button")
+        self.concolicEndTrace("TestSequence")
+        
+        # Record an empty trace into the same concolic tree.
+        self.concolicBeginTrace("TestSequence")
+        self.concolicEndTrace("TestSequence")
+        
+        # Check advice is what we would expect from the fist trace only.
+        values = self.concolicAdvice("TestSequence")
+        expected_values = [
+                [
+                    {
+                        u"field": u"//input[@id='testinput']",
+                        u"value": u"testme"
+                    }
+                ]
+            ]
+        self.assertEqual(values, expected_values)
+        
+        # Check the graph is what we would expect.
+        graph = self.get_graph(self.name())
+        self.assertIsNotNone(graph)
+        
+        expected_graph = """
+start -> diverge_0;
+diverge_0 -> marker_1;
+marker_1 -> marker_2;
+marker_2 -> aggr_3;
+aggr_3 -> sym_5;
+sym_5 -> alt_5;
+alt_5 -> end_u_6;
+sym_5 -> unexp_queued_7;
+diverge_0 -> end_u_8;
+"""
+        expected_graph = expected_graph.split("\n")[1:-1]
+        
+        self.assertEqual(graph, expected_graph)
+    
+    def test_server_divergence_mismatched_trace_recording(self):
+        # Record two traces into the same tree which use different elements.
+        self.loadFixture("concolic-all-field-types.html")
+        
+        # Record the first trace
+        self.concolicBeginTrace("TestSequence")
+        self.formInput("id('my-text-box')", "Wrong Value")
+        self.click("//button")
+        self.concolicEndTrace("TestSequence")
+        
+        # Record a conflicting trace
+        self.formInput("id('my-text-box')", "Hello") # Reset the form
+        self.concolicBeginTrace("TestSequence")
+        self.formInput("id('my-select-box')", "Welcome")
+        self.click("//button")
+        self.concolicEndTrace("TestSequence")
+        # This trace would add new explorations to the tree [it explores new code in validate()] except that it cannot
+        # be merged with the initial trace because of the mismatching marker nodes.
+        
+        # The advice is as if we had never recorded the second trace at all.
+        values = self.concolicAdvice("TestSequence", 0)
+        expected_values = [
+                [
+                    {
+                        "field": "//input[@id='my-text-box']",
+                        "value": "Hello"
+                    }
+                ]
+            ]
+        self.assertEqual(values, expected_values)
+        
+        # Check the graph is what we would expect.
+        graph = self.get_graph(self.name())
+        self.assertIsNotNone(graph)
+        
+        expected_graph = """
+start -> aggr_0;
+aggr_0 -> diverge_1;
+diverge_1 -> marker_2;
+marker_2 -> aggr_3;
+aggr_3 -> marker_4;
+marker_4 -> aggr_5;
+aggr_5 -> sym_7;
+sym_7 -> alt_7;
+alt_7 -> end_u_8;
+sym_7 -> unexp_queued_9;
+diverge_1 -> marker_10;
+marker_10 -> aggr_11;
+aggr_11 -> marker_12;
+marker_12 -> aggr_13;
+aggr_13 -> sym_15;
+sym_15 -> unexp_15;
+sym_15 -> sym_17;
+sym_17 -> alt_17;
+alt_17 -> end_u_18;
+sym_17 -> unexp_19;
+"""
+        expected_graph = expected_graph.split("\n")[1:-1]
+        
+        self.assertEqual(graph, expected_graph)
 
 
 class AnalysisServerConcolicAdviceExamples(AnalysisServerConcolicAdviceTestBase):
