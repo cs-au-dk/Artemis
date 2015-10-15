@@ -47,6 +47,14 @@ class AnalysisServerTestBase(unittest.TestCase):
     def name(self):
         return self.id().split(".")[-1]
     
+    def get_server_log(self, test_name):
+        log_file = os.path.join(OUTPUT_DIR, test_name, "server-log.txt")
+        if not os.path.isfile(log_file):
+            return None
+        with open(log_file) as f:
+            lines = f.readlines()
+        return [re.sub("^\[[- \d]+\]", "[]", x.rstrip()) for x in lines]
+    
     def assertServerAcceptingConnections(self):
         try:
             # Just check we can open the URL without an exception
@@ -145,6 +153,30 @@ class AnalysisServerFeatureTests(AnalysisServerTestBase):
         
         self.assertIn("message", response)
         self.assertEqual(response["message"], u"Hello, World!")
+    
+    def test_server_log(self):
+        message = {
+                "command": "echo",
+                "message": "Hello, World!"
+            }
+        
+        response = send_to_server(message)
+        
+        self.assertNotIn("error", response)
+        
+        log = self.get_server_log(self.name())
+        self.assertIsNotNone(log)
+        
+        expected_log = """
+[] Server started.
+[] Received:
+    {"message": "Hello, World!", "command": "echo"}
+[] Sent:
+    { "message" : "Hello, World!" }
+"""
+        expected_log = expected_log.split("\n")[1:-1]
+        
+        self.assertEqual(log, expected_log)
     
     def test_empty_request(self):
         message = ""
@@ -3314,7 +3346,7 @@ def run_artemis_server(test_name="test"):
         shutil.rmtree(output_dir)
     os.makedirs(output_dir)
     
-    cmd = [ARTEMIS_EXEC] + ["--major-mode", "server", "--analysis-server-port", str(ARTEMIS_SERVER_PORT), "-v", "all"]
+    cmd = [ARTEMIS_EXEC] + ["--major-mode", "server", "--analysis-server-port", str(ARTEMIS_SERVER_PORT), "-v", "all", "--analysis-server-log"]
     
     if DEBUG_SHOW_ARTEMIS_OUTPUT:
         p = subprocess.Popen(cmd, cwd=output_dir)

@@ -32,6 +32,7 @@ void ResponseHandler::sendResponse(QHttpResponse* response, QByteArray data)
     foreach (QString line, QString(data).split("\n")) {
         Log::debug(QString("    %1").arg(line).toStdString());
     }
+    emit sigServerLog(QString(data), true);
 
     response->setHeader("Content-Length", QString::number(data.size()));
     response->setHeader("Content-Type", "application/json");

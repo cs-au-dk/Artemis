@@ -34,7 +34,7 @@ namespace artemis
 
 AnalysisServerRuntime::AnalysisServerRuntime(QObject* parent, const Options& options, const QUrl& url)
     : Runtime(parent, options, url)
-    , mAnalysisServer(options.analysisServerPort)
+    , mAnalysisServer(options.analysisServerPort, options.analysisServerLog)
     , mServerState(IDLE)
     , mIsPageLoaded(false)
     , mIsScheduledRedirection(false)

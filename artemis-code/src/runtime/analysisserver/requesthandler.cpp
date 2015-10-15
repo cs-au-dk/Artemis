@@ -32,6 +32,9 @@ RequestHandler::RequestHandler(QHttpRequest* request, QHttpResponse* response, A
     QObject::connect(this, SIGNAL(sigNewCommand(CommandPtr)),
                      server, SLOT(slNewCommand(CommandPtr)));
 
+    QObject::connect(this, SIGNAL(sigServerLog(QString, bool)),
+                     server, SLOT(slServerLog(QString, bool)));
+
     // Let this object be deleted once the response is handled.
     QObject::connect(mResponse, SIGNAL(done()),
                      this, SLOT(deleteLater()));
@@ -66,6 +69,7 @@ void RequestHandler::slRequestFullyLoaded()
     foreach (QString line, QString(mRequest->body()).split("\n")) {
         Log::debug(QString("    %1").arg(line).toStdString());
     }
+    emit sigServerLog(mRequest->body(), false);
 
     // Now we have all the request data, we can parse it and build a Command object.
     CommandPtr command = createCommand(parseBody(mRequest->body()));

@@ -73,6 +73,7 @@ protected slots:
 
 signals:
     void sigNewCommand(CommandPtr command);
+    void sigServerLog(QString data, bool direction);
 };
 
 } // namespace artemis

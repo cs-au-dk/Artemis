@@ -25,12 +25,19 @@
 namespace artemis
 {
 
-// TODO: Maybe would be best as a namespace, but I'll wait and see what ends up here.
-class ResponseHandler
+class ResponseHandler : public QObject
 {
+    Q_OBJECT
+
 public:
-    static void sendResponse(QHttpResponse* response, QByteArray data);
-    static void sendResponse(QHttpResponse* response, QVariant data);
+    ResponseHandler() {}
+    ~ResponseHandler() {}
+
+    void sendResponse(QHttpResponse* response, QByteArray data);
+    void sendResponse(QHttpResponse* response, QVariant data);
+
+signals:
+    void sigServerLog(QString data, bool direction);
 };
 
 } // namespace artemis

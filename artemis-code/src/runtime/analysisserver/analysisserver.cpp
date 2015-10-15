@@ -14,6 +14,8 @@
  * limitations under the License.
  */
 
+#include <QDateTime>
+
 #include <assert.h>
 #include <qhttpserver.h>
 #include <qhttprequest.h>
@@ -30,8 +32,11 @@
 namespace artemis
 {
 
-AnalysisServer::AnalysisServer(quint16 port)
+AnalysisServer::AnalysisServer(quint16 port, bool log)
     : mBusy(0)
+    , mLogging(log)
+    , mLogFile("server-log.txt")
+    , mLogStream(&mLogFile)
 {
     mServer = new QHttpServer(this);
     QObject::connect(mServer, SIGNAL(newRequest(QHttpRequest*, QHttpResponse*)),
@@ -41,6 +46,18 @@ AnalysisServer::AnalysisServer(quint16 port)
     if (!boundToPort) {
         Log::fatal(QString("AnalysisServer could not bind to port %1.").arg(port).toStdString());
         exit(1);
+    }
+
+    QObject::connect(&mResponseHandler, SIGNAL(sigServerLog(QString, bool)),
+                     this, SLOT(slServerLog(QString, bool)));
+
+    if (mLogging) {
+        if (mLogFile.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) {
+            logEntry("Server started.");
+        } else {
+            Log::error("Could not open server log for writing.");
+            mLogging = false;
+        }
     }
 
     Log::debug("AnalysisServer listening...");
@@ -53,6 +70,10 @@ AnalysisServer::~AnalysisServer()
         mServer->close();
         delete mServer;
     }
+    if (mLogging) {
+        logEntry("Server stopped.");
+        mLogFile.close();
+    }
 }
 
 void AnalysisServer::slHandleRequest(QHttpRequest* request, QHttpResponse* response)
@@ -62,7 +83,7 @@ void AnalysisServer::slHandleRequest(QHttpRequest* request, QHttpResponse* respo
         // Create a request handler object which will wait for all the data to be received and build a Command object.
         // Once this is done it will callback to the slNewCommand slot and delete itself, so we don't need to save it.
         Log::debug("Request recieved...");
-        waitingResponse = response;
+        mWaitingResponse = response;
         new RequestHandler(request, response, this);
 
     } else {
@@ -77,7 +98,7 @@ void AnalysisServer::rejectWhenBusy(QHttpRequest *request, QHttpResponse *respon
     QVariantMap message;
     message.insert("error", "Server is busy.");
 
-    ResponseHandler::sendResponse(response, message);
+    mResponseHandler.sendResponse(response, message);
 }
 
 void AnalysisServer::slNewCommand(CommandPtr command)
@@ -93,8 +114,8 @@ void AnalysisServer::slCommandFinished(QVariant response)
 {
     Log::debug("  Analysis server: Finished executing command.");
 
-    assert(waitingResponse);
-    ResponseHandler::sendResponse(waitingResponse, response);
+    assert(mWaitingResponse);
+    mResponseHandler.sendResponse(mWaitingResponse, response);
 }
 
 void AnalysisServer::slResponseFinished()
@@ -107,6 +128,23 @@ void AnalysisServer::slResponseFinished()
     assert(releasedOk);
 
     Log::debug("  Analysis server: Response sent, server is idle again.");
+}
+
+
+void AnalysisServer::slServerLog(QString data, bool direction)
+{
+    data.replace("\n", "\n    ");
+    QString message = QString("%1:\n    %2").arg(direction ? "Sent" : "Received").arg(data);
+    logEntry(message);
+}
+
+void AnalysisServer::logEntry(QString message)
+{
+    if (mLogging) {
+        QString date = QDateTime::currentDateTime().toString("yyyy-MM-dd hh-mm-ss");
+        mLogStream << QString("[%1] %2\n").arg(date).arg(message);
+        mLogStream.flush();
+    }
 }
 
 } // namespace artemis

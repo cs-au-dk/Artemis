@@ -115,6 +115,7 @@ typedef struct OptionsType {
         enableEventVisibilityFiltering(false),
         analysisServerPort(8008),
         analysisServerDebugView(false),
+        analysisServerLog(false),
         testingConcolicSendIterationCountToServer(false)
     {}
 
@@ -174,6 +175,7 @@ typedef struct OptionsType {
 
     unsigned short analysisServerPort;
     bool analysisServerDebugView;
+    bool analysisServerLog;
 
     // Instrumentation for the test suites.
     bool testingConcolicSendIterationCountToServer;

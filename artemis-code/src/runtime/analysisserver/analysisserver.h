@@ -18,11 +18,13 @@
 #define ANALYSISSERVER_H
 
 #include <QAtomicInt>
+#include <QFile>
 
 #include <qhttpserverfwd.h>
 #include <qjson/parser.h>
 
 #include "command.h"
+#include "responsehandler.h"
 
 namespace artemis
 {
@@ -32,7 +34,7 @@ class AnalysisServer : public QObject
     Q_OBJECT
 
 public:
-    AnalysisServer(quint16 port);
+    AnalysisServer(quint16 port, bool log);
 
     ~AnalysisServer();
 
@@ -42,13 +44,21 @@ protected:
     QAtomicInt mBusy;
     void rejectWhenBusy(QHttpRequest* request, QHttpResponse* response);
 
-    QHttpResponse* waitingResponse;
+    ResponseHandler mResponseHandler;
+    QHttpResponse* mWaitingResponse;
+
+    bool mLogging;
+    QFile mLogFile;
+    QTextStream mLogStream;
+    void logEntry(QString message);
 
 private slots:
     void slHandleRequest(QHttpRequest* request, QHttpResponse* response);
     void slNewCommand(CommandPtr command);
     void slCommandFinished(QVariant response);
     void slResponseFinished();
+
+    void slServerLog(QString data, bool direction);
 
 signals:
     void sigExecuteCommand(CommandPtr command);
