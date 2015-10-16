@@ -174,7 +174,7 @@ CommandPtr RequestHandler::createCommand(QVariant data)
         cmdObject = windowsizeCommand(mainObject);
 
     } else if (command == "concolicadvice") {
-        expectedFields = QStringList() << "action" << "sequence" << "amount";
+        expectedFields = QStringList() << "action" << "sequence" << "amount" << "implicitendtrace" << "allowduringtrace";
         cmdObject = concolicAdviceCommand(mainObject);
 
     } else {
@@ -609,7 +609,25 @@ CommandPtr RequestHandler::concolicAdviceCommand(QVariantMap mainObject)
         }
     }
 
-    return ConcolicAdviceCommandPtr(new ConcolicAdviceCommand(action, sequence, amount));
+    bool implicitEndTrace = false;
+    if (mainObject.contains("implicitendtrace")) {
+        if (mainObject["implicitendtrace"].type() == QVariant::Bool) {
+            implicitEndTrace = mainObject["implicitendtrace"].toBool();
+        } else {
+            return parseError("The 'implicitendtrace' property for a concolicadvice command must be a boolean.");
+        }
+    }
+
+    bool allowDuringTrace = false;
+    if (mainObject.contains("allowduringtrace")) {
+        if (mainObject["allowduringtrace"].type() == QVariant::Bool) {
+            allowDuringTrace = mainObject["allowduringtrace"].toBool();
+        } else {
+            return parseError("The 'allowduringtrace' property for a concolicadvice command must be a boolean.");
+        }
+    }
+
+    return ConcolicAdviceCommandPtr(new ConcolicAdviceCommand(action, sequence, amount, implicitEndTrace, allowDuringTrace));
 }
 
 

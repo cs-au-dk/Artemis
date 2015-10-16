@@ -86,9 +86,9 @@ protected:
     // Concolic advice
     void concolicInit();
     void concolicInitPage(QSharedPointer<ExecutionResult> result);
-    QVariant concolicBeginTrace(QString sequence);
+    QVariant concolicBeginTrace(QString sequence, bool implicitEndTrace);
     QVariant concolicEndTrace(QString sequence);
-    QVariant concolicAdvice(QString sequence, uint amount);
+    QVariant concolicAdvice(QString sequence, uint amount, bool allowDuringTrace);
     QString concolicSymbolToXPath(QString sequence, QString symbol);
     QVariant concolicResponseOk();
     void concolicCreateNewAnalysis(QString sequence);

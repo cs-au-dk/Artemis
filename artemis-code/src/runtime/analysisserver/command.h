@@ -264,16 +264,20 @@ class ConcolicAdviceCommand : public Command
 public:
     enum ConcolicAdviceAction { BeginTrace, EndTrace, Advice };
 
-    ConcolicAdviceCommand(ConcolicAdviceAction action, QString sequence, uint amount)
+    ConcolicAdviceCommand(ConcolicAdviceAction action, QString sequence, uint amount, bool implicitEndTrace, bool allowDuringTrace)
         : action(action)
         , sequence(sequence)
         , amount(amount)
+        , implicitEndTrace(implicitEndTrace)
+        , allowDuringTrace(allowDuringTrace)
     {}
     virtual void accept(AnalysisServerRuntime* server);
 
     ConcolicAdviceAction action;
     QString sequence;
     uint amount;
+    bool implicitEndTrace;
+    bool allowDuringTrace;
 };
 
 typedef QSharedPointer<ConcolicAdviceCommand> ConcolicAdviceCommandPtr;

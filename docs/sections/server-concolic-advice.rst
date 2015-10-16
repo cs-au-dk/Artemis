@@ -21,12 +21,15 @@ The required calling sequence is:
 * ``endtrace`` "MySequence"
     * Sequence identifier must match the preceeding ``begintrace``.
 * May record more traces, with any sequence identifiers.
-    * If using the saem sequence identifier "MySequence" the same actions must be performed while recording.
+    * If using the same sequence identifier "MySequence" the same actions must be performed while recording.
 * ``advice`` "MySequence"
     * Must have recorded at least one trace for "MySequence" already
     * Should not be called while recording a new trace.
 * Any actions executed outside of a ``begintrace``/``endtrace`` block will not be recorded, for example actions to
     reset the state before re-running a new trace for the same sequence.
+
+N.B. There are some relaxations to this format allowed by specifically requesting them.
+See the ``allowduringtrace`` option for ``concolicadvice`` and the ``implicitendtrace`` option for ``begintrace``.
 
 Commands
 --------
@@ -51,7 +54,11 @@ Commands
     The client can now send commands to execute actions (``forminput``, ``click``, etc.) which will be recorded into
     the trace and saved in the concolic tree for sequence "MySequenceID".
     
-    **Errors:** If any trace is already in progress.
+    There is an optional boolean parameter ``implicitendtrace`` (default false) which allows this command to run even
+    if there is already a trace in-progress. In this case the existing trace is ended (as if ``endtrace`` had been
+    called) and the new trace is immediately started.
+    
+    **Errors:** If any trace is already in progress (unless ``implicitendtrace`` is set).
     
 * ``concolicadvice`` > ``endtrace``
     End recording a trace. There must be a trace with the matching sequence ID in-proress.
@@ -180,7 +187,14 @@ Commands
             ]
         }
     
-    **Errors:** If there has not been any trace recorded with that id; if there is a trace in-progress.
+    There is also an option boolean parameter ``allowduringtrace`` (default false) which allows this command to be
+    called while a trace is in-progress. The information gathered by an in-progress trace will not be available until
+    ``endtrace`` is called, so calling ``advice`` during a trace does not gain anything. This means that if the first
+    trace for "MySequenceID" is in-progress when advice is requested for "MySequenceID" then it will return an error
+    because there is no concolic knowledge of that sequence yet.
+    
+    **Errors:** If there has not been any trace recorded with that id; if there is any trace in-progress (unless
+    ``allowduringtrace`` is set).
     
 
 

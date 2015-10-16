@@ -606,13 +606,13 @@ void AnalysisServerRuntime::execute(ConcolicAdviceCommand* command)
     QVariant result;
     switch (command->action) {
     case ConcolicAdviceCommand::BeginTrace:
-        result = concolicBeginTrace(command->sequence);
+        result = concolicBeginTrace(command->sequence, command->implicitEndTrace);
         break;
     case ConcolicAdviceCommand::EndTrace:
         result = concolicEndTrace(command->sequence);
         break;
     case ConcolicAdviceCommand::Advice:
-        result = concolicAdvice(command->sequence, command->amount);
+        result = concolicAdvice(command->sequence, command->amount, command->allowDuringTrace);
         break;
     default:
         emit sigCommandFinished(errorResponse("Unexpected action in concolicadvice command."));
@@ -859,13 +859,18 @@ void AnalysisServerRuntime::concolicInitPage(QSharedPointer<ExecutionResult> res
     }
 }
 
-QVariant AnalysisServerRuntime::concolicBeginTrace(QString sequence)
+QVariant AnalysisServerRuntime::concolicBeginTrace(QString sequence, bool implicitEndTrace)
 {
-    if (!mConcolicSequenceRecording.isEmpty()) {
-        return errorResponse("Tried to begin recording a trace while another was already in progress.");
-    }
     if (sequence.isEmpty()) {
         return errorResponse("Tried to begin recording with an invalid sequence identifier.");
+    }
+    if (!mConcolicSequenceRecording.isEmpty()) {
+        if (implicitEndTrace) {
+            Log::info("Tried to begin recording with an invalid sequence identifier. (Allowed by 'implicitendtrace' flag.)");
+            concolicEndTrace(mConcolicSequenceRecording); // Ignore result.
+        } else {
+            return errorResponse("Tried to begin recording a trace while another was already in progress.");
+        }
     }
 
     // If this is the first trace in a new tree, create one.
@@ -902,14 +907,17 @@ QVariant AnalysisServerRuntime::concolicEndTrace(QString sequence)
     return concolicResponseOk();
 }
 
-QVariant AnalysisServerRuntime::concolicAdvice(QString sequence, uint amount)
+QVariant AnalysisServerRuntime::concolicAdvice(QString sequence, uint amount, bool allowDuringTrace)
 {
-    if (!mConcolicSequenceRecording.isEmpty()) {
-        // This does not have to be an error, it is just to simplify the API.
-        return errorResponse("Tried to get concolic advice while a trace was recording.");
-    }
     if (sequence.isEmpty() || !mConcolicTrees.contains(sequence)) {
         return errorResponse("Tried to get concolic advice for a non-existent sequence ID.");
+    }
+    if (!mConcolicSequenceRecording.isEmpty()) {
+        if (allowDuringTrace) {
+            Log::info("Tried to get concolic advice while a trace was recording. (Allowed by 'allowduringtrace' flag.)");
+        } else {
+            return errorResponse("Tried to get concolic advice while a trace was recording.");
+        }
     }
 
     // Get the tree form mConcolicTrees and check for new advice.

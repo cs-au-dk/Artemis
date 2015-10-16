@@ -2553,12 +2553,15 @@ class AnalysisServerSystemTests(AnalysisServerTestBase):
 
 
 class AnalysisServerConcolicAdviceTestBase(AnalysisServerTestBase):
-    def concolicBeginTrace(self, identifier):
+    def concolicBeginTrace(self, identifier, implicitendtrace=None):
         message = {
                 "command": "concolicadvice",
                 "action": "begintrace",
                 "sequence": identifier
             }
+        
+        if implicitendtrace is not None:
+            message["implicitendtrace"] = implicitendtrace
         
         response = send_to_server(message)
         
@@ -2579,7 +2582,7 @@ class AnalysisServerConcolicAdviceTestBase(AnalysisServerTestBase):
         self.assertIn("concolicadvice", response)
         self.assertEqual(response["concolicadvice"], u"done")
     
-    def concolicAdvice(self, identifier, amount=None):
+    def concolicAdvice(self, identifier, amount=None, allowduringtrace=None):
         message = {
                 "command": "concolicadvice",
                 "action": "advice",
@@ -2588,6 +2591,9 @@ class AnalysisServerConcolicAdviceTestBase(AnalysisServerTestBase):
         
         if amount is not None:
             message["amount"] = amount
+        
+        if allowduringtrace is not None:
+            message["allowduringtrace"] = allowduringtrace
         
         response = send_to_server(message)
         
@@ -2721,6 +2727,29 @@ class AnalysisServerConcolicAdviceApiTests(AnalysisServerConcolicAdviceTestBase)
         end_response = send_to_server(end_message)
         
         self.assertIn("error", end_response)
+    
+    def test_begintrace_during_trace(self):
+        self.loadFixture("concolic-simple.html")
+        
+        begin_message = {
+                "command": "concolicadvice",
+                "action": "begintrace",
+                "sequence": "TestSequence"
+            }
+        
+        begin_response = send_to_server(begin_message)
+        
+        self.assertNotIn("error", begin_response)
+        
+        begin_message_2 = {
+                "command": "concolicadvice",
+                "action": "begintrace",
+                "sequence": "TestSequence"
+            }
+        
+        begin_response_2 = send_to_server(begin_message_2)
+        
+        self.assertIn("error", begin_response_2)
     
     def test_advice_during_trace(self):
         self.loadFixture("concolic-simple.html")
@@ -3135,6 +3164,58 @@ class AnalysisServerConcolicAdviceApiTests(AnalysisServerConcolicAdviceTestBase)
         self.assertEqual(len(values), 5)
         self.assertEqual(values[-1], expected_last_suggestion)
     
+    def test_advice_allowduringtrace_flag(self):
+        self.loadFixture("concolic-simple.html")
+        
+        # Record trace 1
+        self.concolicBeginTrace("TestSequence")
+        self.formInput("id('testinput')", "")
+        self.click("//button")
+        self.concolicEndTrace("TestSequence")
+        
+        # Begin recording trace 2
+        self.concolicBeginTrace("TestSequence")
+        self.formInput("id('testinput')", "testme")
+        self.click("//button")
+        
+        # Request advice mid-trace.
+        # Normally this would not be allowed as per test_advice_during_trace.
+        values = self.concolicAdvice("TestSequence", 0, True)
+        
+        # Advice only knows about trace 1
+        expected_values = [
+                [
+                    {
+                        u"field": u"//input[@id='testinput']",
+                        u"value": u"testme"
+                    }
+                ]
+            ]
+        
+        self.assertEqual(values, expected_values)
+        
+        # Finishing off the trace as normal gives no error.
+        self.concolicEndTrace("TestSequence")
+    
+    def test_begintrace_implicitendtrace_flag(self):
+        self.loadFixture("concolic-simple.html")
+        
+        # Begin recording trace 1
+        self.concolicBeginTrace("TestSequence")
+        self.formInput("id('testinput')", "")
+        self.click("//button")
+        
+        # Record trace 2 without explicitly ending trace 1
+        # Normally this would not be allowed as per test_begintrace_during_trace
+        self.concolicBeginTrace("TestSequence", True)
+        self.formInput("id('testinput')", "testme")
+        self.click("//button")
+        self.concolicEndTrace("TestSequence")
+        
+        # Confirm the advice accounts for both traces having been recorded into the tree correctly.
+        values = self.concolicAdvice("TestSequence")
+        self.assertEqual(values, [])
+    
     @unittest.skip("TODO")
     def test_advice_from_multiple_sequences(self):
         pass
@@ -3145,7 +3226,6 @@ class AnalysisServerConcolicAdviceApiTests(AnalysisServerConcolicAdviceTestBase)
     
     @unittest.skip("TODO")
     def test_page_load_during_trace(self):
-        # I think this is not allowed?
         pass
     
     @unittest.skip("TODO")
