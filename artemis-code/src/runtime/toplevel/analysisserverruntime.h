@@ -57,6 +57,8 @@ public:
     void execute(ConcolicAdviceCommand* command);
 
 protected:
+    virtual void done();
+
     AnalysisServer mAnalysisServer;
 
     ArtemisWebViewPtr mWebView;

@@ -35,8 +35,9 @@ class AnalysisServer : public QObject
 
 public:
     AnalysisServer(quint16 port, bool log);
-
     ~AnalysisServer();
+
+    void logEntry(QString message);
 
 protected:
     QHttpServer* mServer;
@@ -50,7 +51,6 @@ protected:
     bool mLogging;
     QFile mLogFile;
     QTextStream mLogStream;
-    void logEntry(QString message);
 
 private slots:
     void slHandleRequest(QHttpRequest* request, QHttpResponse* response);

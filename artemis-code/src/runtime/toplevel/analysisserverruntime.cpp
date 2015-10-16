@@ -1085,4 +1085,12 @@ void AnalysisServerRuntime::notifyStartingEvent(QString event, QString elementXP
     }
 }
 
+
+void AnalysisServerRuntime::done()
+{
+    mAnalysisServer.logEntry("Server stopped.");
+
+    Runtime::done();
+}
+
 } // namespace artemis

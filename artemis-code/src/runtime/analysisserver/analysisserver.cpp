@@ -71,7 +71,6 @@ AnalysisServer::~AnalysisServer()
         delete mServer;
     }
     if (mLogging) {
-        logEntry("Server stopped.");
         mLogFile.close();
     }
 }
