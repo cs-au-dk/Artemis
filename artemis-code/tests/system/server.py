@@ -3242,7 +3242,7 @@ class AnalysisServerConcolicAdviceLimitations(AnalysisServerConcolicAdviceTestBa
         pass
     
     @unittest.skip("TODO")
-    def test_reset_fixes_symbolic_info_is_always_on(self):
+    def test_browser_reset_clears_symbolic_info(self):
         # Same test as above but with a browser reset between trace recordings.
         pass
     
@@ -3257,6 +3257,19 @@ class AnalysisServerConcolicAdviceLimitations(AnalysisServerConcolicAdviceTestBa
         # Same test as above but with a browser reset between trace recordings.
         pass
     
+    def test_delegation_support_not_used_in_server_mode(self):
+        self.loadFixture("concolic-symbolic-target.html")
+        
+        # Record a trace.
+        self.concolicBeginTrace("TestSequence")
+        self.formInput("id('testinput')", "")
+        self.click("//button")
+        self.concolicEndTrace("TestSequence")
+        
+        # With delegation support enabled, the concolic engine could suggest an assignment but with no form values,
+        # so it returns [[]]. We do not enable symbolic event.target in server mode, so no advice is returned.
+        values = self.concolicAdvice("TestSequence")
+        self.assertEqual(values, [])
 
 
 class AnalysisServerTraceDivergenceTests(AnalysisServerConcolicAdviceTestBase):

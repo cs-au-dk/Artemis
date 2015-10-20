@@ -20,6 +20,7 @@
 #include "runtime/input/baseinput.h"
 #include "runtime/input/dominput.h"
 #include "strategies/inputgenerator/targets/concolictarget.h"
+#include "symbolic/symbolicinterpreter.h"
 
 #include "artemisruntime.h"
 
@@ -40,6 +41,9 @@ ArtemisRuntime::ArtemisRuntime(QObject* parent, const Options& options, const QU
     mWebView = ArtemisWebViewPtr(new ArtemisWebView());
     mWebView->setPage(mWebkitExecutor->getPage().data());
     mWebView->forceResize(1200,800); // TODO: Pull size from mOptions.
+
+    // Enable symbolic target support for ConcolicTargetGenerator to use.
+    Symbolic::SymbolicInterpreter::setFeatureSymbolicEventTargetEnabled(true);
 }
 
 void ArtemisRuntime::run(const QUrl& url)
