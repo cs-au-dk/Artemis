@@ -2543,7 +2543,39 @@ Welcome Test<br>
 Your email address is: test@example.com
 
 </body></html>""")
+    
+    def test_frame_support(self):
+        # Frames are supported in Artemis, so there should be no crashes or errors.
+        # The Artemis infrstructure inspects frames recursively so for example we can see handlers within a frame.
+        # However, server-mode comands do not support frames, so far example the XPaths returned by the handlers
+        # command are frame-local, and commands to click an element cannot reach an element inside a frame.
         
+        self.loadFixture("iframe.html")
+        
+        handlers_command = {
+                "command": "handlers"
+            }
+        
+        handlers_response = send_to_server(handlers_command)
+        
+        expected_handlers = [
+                {
+                    "element": "/html/body[1]/form[1]/button[1]",
+                    "events": [ "click" ]
+                }
+            ]
+        
+        self.assertIn("handlers", handlers_response)
+        self.assertEqual(handlers_response["handlers"], expected_handlers)
+        
+        click_command = {
+                "command": "click",
+                "element": "/html/body[1]/form[1]/button[1]"
+            }
+        
+        click_response = send_to_server(click_command)
+        
+        self.assertIn("error", click_response)
     
 
 
