@@ -2870,6 +2870,42 @@ class AnalysisServerConcolicAdviceApiTests(AnalysisServerConcolicAdviceTestBase)
         
         self.assertEqual(values, expected_values)
     
+    @unittest.skip("TODO")
+    def test_simple_trace_then_advice_from_result_page_with_execution(self):
+        self.loadFixture("concolic-simple-to-interesting-result-page.html")
+        
+        # Record a trace which causes a page load, then end.
+        # TODO: Should we see only the original-page-prefix, or the bit including the onload constraints?
+    
+    @unittest.skip("TODO")
+    def test_trace_record_across_page_loads(self):
+        self.loadFixture("concolic-simple-to-interesting-result-page.html")
+        
+        # Record a trace as above which loads a new page, but then do some actions on the new page before ending.
+        # TODO: What should we see for this case?
+    
+    @unittest.expectedFailure # TODO: Decide what the correct behaviour is in this case.
+    def test_branches_during_page_load(self):
+        self.loadPage("about:blank")
+        
+        self.concolicBeginTrace("TestSequence")
+        self.loadFixture("concolic-onload-constraints.html")
+        self.concolicEndTrace("TestSequence")
+        
+        # We expect to record the form related branches which are in the window.onload handler.
+        values = self.concolicAdvice("TestSequence")
+        
+        expected_values = [
+                [
+                    {
+                        u"field": u"//input[@id='testinput']",
+                        u"value": u"testme"
+                    }
+                ]
+            ]
+        
+        self.assertEqual(values, expected_values)
+    
     def test_advice_returns_only_one_assignment_by_default(self):
         self.loadFixture("concolic-multiple-branches.html")
         
