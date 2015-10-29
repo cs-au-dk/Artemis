@@ -54,6 +54,8 @@ AnalysisServer::AnalysisServer(quint16 port, bool log)
     if (mLogging) {
         if (mLogFile.open(QIODevice::WriteOnly | QIODevice::Truncate | QIODevice::Text)) {
             logEntry("Server started.");
+            logEntry(QString("    Build date: %1").arg(EXE_BUILD_DATE));
+            logEntry(QString("    Build commit: %1").arg(EXE_BUILD_COMMIT));
         } else {
             Log::error("Could not open server log for writing.");
             mLogging = false;

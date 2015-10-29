@@ -53,7 +53,11 @@ class AnalysisServerTestBase(unittest.TestCase):
             return None
         with open(log_file) as f:
             lines = f.readlines()
-        return [re.sub("^\[[- \d]+\]", "[]", x.rstrip()) for x in lines]
+        def strip_variable_info(x):
+            x = re.sub("^\[[- \d]+\] ", "", x.rstrip())
+            x = re.sub("^(    Build (.*?):)(.*)$", "\\1", x)
+            return x
+        return [strip_variable_info(x) for x in lines]
     
     def assertServerAcceptingConnections(self):
         try:
@@ -168,10 +172,12 @@ class AnalysisServerFeatureTests(AnalysisServerTestBase):
         self.assertIsNotNone(log)
         
         expected_log = """
-[] Server started.
-[] Received:
+Server started.
+    Build date:
+    Build commit:
+Received:
     {"message": "Hello, World!", "command": "echo"}
-[] Sent:
+Sent:
     { "message" : "Hello, World!" }
 """
         expected_log = expected_log.split("\n")[1:-1]
