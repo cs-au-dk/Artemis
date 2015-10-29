@@ -654,7 +654,7 @@ void AnalysisServerRuntime::slResponseFinished()
 void AnalysisServerRuntime::loadUrl(QUrl url)
 {
     ExecutableConfigurationPtr noInput = ExecutableConfigurationPtr(new ExecutableConfiguration(InputSequencePtr(new InputSequence()), url));
-    mWebkitExecutor->executeSequence(noInput, MODE_CONCOLIC_CONTINUOUS); // Calls slExecutedSequence method as callback.
+    mWebkitExecutor->executeSequence(noInput, MODE_CONCOLIC_NO_TRACE); // Calls slExecutedSequence method as callback.
 }
 
 // Use the back button.
