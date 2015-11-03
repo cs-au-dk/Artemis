@@ -47,6 +47,7 @@ AnalysisServerRuntime::AnalysisServerRuntime(QObject* parent, const Options& opt
                      &mAnalysisServer, SLOT(slCommandFinished(QVariant)));
     QObject::connect(&mAnalysisServer, SIGNAL(sigResponseFinished()),
                      this, SLOT(slResponseFinished()));
+    mAnalysisServer.logEntry(QString("    Called: %1").arg(mOptions.allArguments));
 
     // Connections to the browser part
     QObject::connect(mWebkitExecutor, SIGNAL(sigExecutedSequence(ExecutableConfigurationConstPtr, QSharedPointer<ExecutionResult>)),

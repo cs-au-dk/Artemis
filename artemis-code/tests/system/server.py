@@ -55,7 +55,7 @@ class AnalysisServerTestBase(unittest.TestCase):
             lines = f.readlines()
         def strip_variable_info(x):
             x = re.sub("^\[[- \d]+\] ", "", x.rstrip())
-            x = re.sub("^(    Build (.*?):)(.*)$", "\\1", x)
+            x = re.sub("^(    Build (.*?):)(.*)$", "\\1 XXX", x)
             return x
         return [strip_variable_info(x) for x in lines]
     
@@ -173,8 +173,9 @@ class AnalysisServerFeatureTests(AnalysisServerTestBase):
         
         expected_log = """
 Server started.
-    Build date:
-    Build commit:
+    Build date: XXX
+    Build commit: XXX
+    Called: artemis --major-mode server --analysis-server-port 8008 -v all --analysis-server-log
 Received:
     {"message": "Hello, World!", "command": "echo"}
 Sent:

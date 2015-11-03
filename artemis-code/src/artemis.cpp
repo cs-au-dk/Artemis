@@ -884,6 +884,12 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
 
     }
 
+    QStringList allArguments;
+    for (int i = 0; i < argc; i++) {
+        allArguments.append(argv[i]);
+    }
+    options.allArguments = allArguments.join(" ");
+
     return url;
 }
 

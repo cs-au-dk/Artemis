@@ -177,6 +177,8 @@ typedef struct OptionsType {
     bool analysisServerDebugView;
     bool analysisServerLog;
 
+    QString allArguments;
+
     // Instrumentation for the test suites.
     bool testingConcolicSendIterationCountToServer;
 
