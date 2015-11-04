@@ -1,11 +1,11 @@
- 
+
 The following instructions assumes you are using a (64 bit) Linux-based system. 
-Artemis have been successfully installed on Ubuntu 12.10 and Fedora 18.
+Artemis has been successfully installed on Ubuntu 12.10 and Fedora 18.
 
  0. Fetch all software dependencies using
     
       make fetch-[apt|yum] (requires root privileges)
-	
+    
     Artemis requires Qt version 4.8.x. If a suitable version of Qt is not 
     provided by your distribution, then you can use the following command
     to download and compile a version compatible with Artemis.
@@ -31,17 +31,17 @@ Artemis have been successfully installed on Ubuntu 12.10 and Fedora 18.
 
     `<qt_path>` is /usr/share/qt4 on Ubuntu systems and
     /usr/lib64/qt4/bin on Fedora.
-     
+    
  2. Build Artemis
    
-   	  make all
+      make all
 
 3. Configure your path to include Artemis executable
 
       export PATH=$ARTEMISDIR/artemis-code/dist:$PATH
 
 4. Enable completion in bash by running
-      
-      cp artemis-bash-complete /etc/bash_completion.d/artemis 
-   
-   as root.
+    
+      cp artemis-code/scripts/artemis-bash-complete /etc/bash_completion.d/artemis 
+    
+    as root.
