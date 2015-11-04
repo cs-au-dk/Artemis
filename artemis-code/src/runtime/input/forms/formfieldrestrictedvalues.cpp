@@ -35,7 +35,7 @@ FormRestrictions FormFieldRestrictedValues::getRestrictions(QList<FormFieldDescr
             SelectRestriction result;
             result.variable = getVariableName(field);
             // A small JS injection to make sure the value property is correctly set on all option elements.
-            field->getDomElement()->getElement(page).evaluateJavaScript("for(i=0; i<this.length; i++){ this.options[i].value = this.options[i].value; }"); // Surprisingly not necessarily a no-op.
+            field->getDomElement()->getElement(page).evaluateJavaScript("for(i=0; i<this.length; i++){ this.options[i].value = this.options[i].value; }", QUrl(), true); // Surprisingly not necessarily a no-op.
             // Read back the values.
             QWebElementCollection options = field->getDomElement()->getElement(page).findAll("option");
             foreach(QWebElement o, options) {

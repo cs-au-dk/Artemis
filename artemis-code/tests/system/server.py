@@ -3362,9 +3362,6 @@ class AnalysisServerConcolicAdviceApiTests(AnalysisServerConcolicAdviceTestBase)
         self.click("//button")
         self.concolicEndTrace("TestSequence")
         
-        # TODO: This is required to prevent a concrete branch divergence near the top of the tree (before the fist forminput) but I can't see why.
-        self.loadFixture("concolic-select-restrictions-dynamic.html")
-        
         # Record a second trace with country Denmark
         self.concolicBeginTrace("TestSequence")
         self.formInput("id('country')", "dk")
