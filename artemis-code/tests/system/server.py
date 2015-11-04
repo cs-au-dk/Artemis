@@ -3307,6 +3307,113 @@ class AnalysisServerConcolicAdviceApiTests(AnalysisServerConcolicAdviceTestBase)
     def test_unrecorded_actions_have_no_effect(self):
         pass
     
+    def test_select_restrictions(self):
+        self.loadFixture("concolic-select-restrictions.html")
+        
+        # Record an initial trace
+        self.concolicBeginTrace("TestSequence")
+        # N.B. Leaving out the forminput command here tests the case of the "base" form field restrictions.
+        # If we fill the field it will get overwritten by the dynamic form field support.
+        self.click("//button")
+        self.concolicEndTrace("TestSequence")
+        
+        # There should be no suggestions returned, as the only branch is unsatisfiable if we model select restrictions.
+        values = self.concolicAdvice("TestSequence")
+        
+        self.assertEqual(values, [])
+    
+    def test_radio_restrictions(self):
+        self.loadFixture("concolic-radio-restrictions.html")
+        
+        # Record an initial trace
+        self.concolicBeginTrace("TestSequence")
+        self.formInput("id('testinput_o1')", True)
+        self.formInput("id('testinput_o2')", False)
+        self.click("//button")
+        self.concolicEndTrace("TestSequence")
+        
+        # There should be only one suggestion returned, as the branch where both are checked is unsatisfiable if we
+        # model radio restrictions.
+        # The suggested advice should also force o2 to be true because the constraint is trying to set o1 false.
+        values = self.concolicAdvice("TestSequence")
+        
+        expected_values = [
+                [
+                    {
+                        u"field": u"//input[@id='testinput_o1']",
+                        u"value": False
+                    },
+                    {
+                        u"field": u"//input[@id='testinput_o2']",
+                        u"value": True
+                    }
+                ]
+            ]
+        
+        self.assertEqual(values, expected_values)
+    
+    def test_select_restrictions_dynamic(self):
+        self.loadFixture("concolic-select-restrictions-dynamic.html")
+        
+        # Record an initial trace, with country UK
+        self.concolicBeginTrace("TestSequence")
+        self.formInput("id('country')", "uk")
+        self.formInput("id('city')", "london")
+        self.click("//button")
+        self.concolicEndTrace("TestSequence")
+        
+        # TODO: This is required to prevent a concrete branch divergence near the top of the tree (before the fist forminput) but I can't see why.
+        self.loadFixture("concolic-select-restrictions-dynamic.html")
+        
+        # Record a second trace with country Denmark
+        self.concolicBeginTrace("TestSequence")
+        self.formInput("id('country')", "dk")
+        self.formInput("id('city')", "copenhagen")
+        self.click("//button")
+        self.concolicEndTrace("TestSequence")
+        
+        # Now we expect to see suggestions which have correctly matched city/country values.
+        # The incorrectly matched branches (e.g. UK and Aarhus) are unsatisfiable and are not returned.
+        values = self.concolicAdvice("TestSequence", 0)
+        
+        expected_values = [
+                [
+                    {
+                        u"field": u"//select[@id='country']",
+                        u"value": u"?"
+                    }
+                ],
+                [
+                    {
+                        u"field": u"//select[@id='country']",
+                        u"value": u"uk"
+                    },
+                    {
+                        u"field": u"//select[@id='city']",
+                        u"value": u"oxford"
+                    }
+                ],
+                [
+                    {
+                        u"field": u"//select[@id='country']",
+                        u"value": u"dk"
+                    },
+                    {
+                        u"field": u"//select[@id='city']",
+                        u"value": u"aarhus"
+                    }
+                ],
+                [
+                    {
+                        u"field": u"//select[@id='country']",
+                        u"value": u"us"
+                    }
+                ]
+            ]
+        
+        self.maxDiff = None
+        self.assertEqual(values, expected_values)
+    
 
 
 

@@ -1027,7 +1027,7 @@ void AnalysisServerRuntime::concolicCreateNewAnalysis(QString sequence)
     newAnalysis->setName(sequence);
 
     // Set the "base" form restrictions.
-    FormRestrictions base = FormFieldRestrictedValues::getRestrictions(mConcolicFormFields[sequence], mWebkitExecutor->getPage());
+    FormRestrictions base = FormFieldRestrictedValues::getRestrictions(mConcolicFormFieldsForPage, mWebkitExecutor->getPage());
     mConcolicTrees[sequence]->setFormRestrictions(base);
 
     // Save the form fields for this sequence as well.
