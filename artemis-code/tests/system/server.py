@@ -59,6 +59,19 @@ class AnalysisServerTestBase(unittest.TestCase):
             return x
         return [strip_variable_info(x) for x in lines]
     
+    def get_graph(self, test_name, tree_number=1):
+        graph_file = os.path.join(OUTPUT_DIR, test_name, "server-tree-" + str(tree_number) + ".gv")
+        
+        if not os.path.isfile(graph_file):
+            return None
+        
+        with open(graph_file) as f:
+            full_graph = f.readlines()
+        
+        # Filter out only the interesting part of the graph
+        result = [re.sub(" \[.*\]", "", edge.strip()) for edge in full_graph if "->" in edge]
+        return result
+    
     def assertServerAcceptingConnections(self):
         try:
             # Just check we can open the URL without an exception
@@ -3449,24 +3462,113 @@ class AnalysisServerConcolicAdviceLimitations(AnalysisServerConcolicAdviceTestBa
         # so it returns [[]]. We do not enable symbolic event.target in server mode, so no advice is returned.
         values = self.concolicAdvice("TestSequence")
         self.assertEqual(values, [])
+    
+    @unittest.expectedFailure # Timers are not handled synchronously.
+    def test_timers_race_conditions(self):
+        # The fixture has validation done in a sequence of timers over a 4s period.
+        # If we record traces without leaving enough space for this to happen the timers will trigger during subsequent
+        # trace recordings and give inconsistent traces.
+        
+        self.loadFixture("concolic-timers.html")
+        
+        # Record the first trace
+        self.concolicBeginTrace("Seq A")
+        self.formInput("id('field1')", "One")
+        self.formInput("id('field2')", "Two")
+        self.formInput("id('field3')", "Wrong")
+        self.click("//button")
+        
+        # Do not wait long enough; cut the trace off too early.
+        time.sleep(2.5)
+        self.concolicEndTrace("Seq A")
+        
+        values_a = self.concolicAdvice("Seq A", 0)
+        graph_a = self.get_graph(self.name(), 1)
+        
+        # Record the second trace
+        self.concolicBeginTrace("Seq B")
+        self.formInput("id('field1')", "One")
+        self.formInput("id('field2')", "Two")
+        self.formInput("id('field3')", "Wrong")
+        self.click("//button")
+        
+        # Wait the full time so we capture all execution.
+        time.sleep(5)
+        self.concolicEndTrace("Seq B")
+        
+        values_b = self.concolicAdvice("Seq B", 0)
+        graph_b = self.get_graph(self.name(), 2)
+        
+        # Check the returned advice.
+        expected_advice_in_synchronous_case = [
+                [
+                    {
+                        u"field": u"//input[@id='field1']",
+                        u"value": u"One"
+                    },
+                    {
+                        u"field": u"//input[@id='field2']",
+                        u"value": u"Two"
+                    },
+                    {
+                        u"field": u"//input[@id='field3']",
+                        u"value": u"Three"
+                    }
+                ],
+                [
+                    {
+                        u"field": u"//input[@id='field1']",
+                        u"value": u"One"
+                    },
+                    {
+                        u"field": u"//input[@id='field2']",
+                        u"value": u""
+                    }
+                ],
+                [
+                    {
+                        u"field": u"//input[@id='field1']",
+                        u"value": u""
+                    }
+                ]
+            ]
+        
+        self.assertEqual(values_a, expected_advice_in_synchronous_case)
+        self.assertEqual(values_b, expected_advice_in_synchronous_case)
+        
+        # Check the trees
+        expected_tree_in_synchronous_case = """
+start -> marker_0;
+marker_0 -> marker_1;
+marker_1 -> marker_2;
+marker_2 -> marker_3;
+marker_3 -> aggr_4;
+aggr_4 -> sym_6;
+sym_6 -> aggr_6;
+aggr_6 -> sym_8;
+sym_8 -> aggr_8;
+aggr_8 -> sym_10;
+sym_10 -> unexp_queued_10;
+sym_10 -> aggr_11;
+aggr_11 -> end_u_12;
+sym_8 -> unexp_queued_13;
+sym_6 -> unexp_queued_14;
+        """
+        expected_tree_in_synchronous_case = expected_tree_in_synchronous_case.split("\n")[1:-1]
+        
+        self.assertEqual(graph_a, expected_tree_in_synchronous_case)
+        self.assertEqual(graph_b, expected_tree_in_synchronous_case)
+    
+    @unittest.skip("TODO")
+    def test_ajax_race_conditions(self):
+        # I expect the behaviour for AJAX requests to be the same as with timers above, but there is no test yet.
+        pass
+    
 
 
 class AnalysisServerTraceDivergenceTests(AnalysisServerConcolicAdviceTestBase):
     # Partly to check the divergence support is working in server mode.
     # Partly because some aspects of the divergence support can't easily be tested directly from concolic mode.
-    
-    def get_graph(self, test_name, tree_number=1):
-        graph_file = os.path.join(OUTPUT_DIR, test_name, "server-tree-" + str(tree_number) + ".gv")
-        
-        if not os.path.isfile(graph_file):
-            return None
-        
-        with open(graph_file) as f:
-            full_graph = f.readlines()
-        
-        # Filter out only the interesting part of the graph
-        result = [re.sub(" \[.*\]", "", edge.strip()) for edge in full_graph if "->" in edge]
-        return result
     
     def test_server_divergence_one_empty_trace(self):
         # Record one normal and one empty trace.
