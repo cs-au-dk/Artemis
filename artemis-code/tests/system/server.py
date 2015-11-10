@@ -3232,6 +3232,10 @@ class AnalysisServerConcolicAdviceApiTests(AnalysisServerConcolicAdviceTestBase)
                     u"value": True
                 },
                 {
+                    u"field": u"//input[@id='my-radio-button-2']",
+                    u"value": False
+                },
+                {
                     u"field": u"//input[@id='my-check-box']",
                     u"value": True
                 },
