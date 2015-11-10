@@ -3651,26 +3651,23 @@ diverge_0 -> end_u_8;
         self.assertIsNotNone(graph)
         
         expected_graph = """
-start -> aggr_0;
-aggr_0 -> diverge_1;
-diverge_1 -> marker_2;
+start -> diverge_0;
+diverge_0 -> marker_1;
+marker_1 -> marker_2;
 marker_2 -> aggr_3;
-aggr_3 -> marker_4;
-marker_4 -> aggr_5;
-aggr_5 -> sym_7;
-sym_7 -> alt_7;
-alt_7 -> end_u_8;
-sym_7 -> unexp_queued_9;
-diverge_1 -> marker_10;
-marker_10 -> aggr_11;
-aggr_11 -> marker_12;
-marker_12 -> aggr_13;
-aggr_13 -> sym_15;
-sym_15 -> unexp_15;
-sym_15 -> sym_17;
-sym_17 -> alt_17;
-alt_17 -> end_u_18;
-sym_17 -> unexp_19;
+aggr_3 -> sym_5;
+sym_5 -> alt_5;
+alt_5 -> end_u_6;
+sym_5 -> unexp_queued_7;
+diverge_0 -> marker_8;
+marker_8 -> marker_9;
+marker_9 -> aggr_10;
+aggr_10 -> sym_12;
+sym_12 -> unexp_12;
+sym_12 -> sym_14;
+sym_14 -> alt_14;
+alt_14 -> end_u_15;
+sym_14 -> unexp_16;
 """
         expected_graph = expected_graph.split("\n")[1:-1]
         
