@@ -39,9 +39,11 @@ contrib/Kaluza/stdout
 
 
 coverage.html
+handlers.gv
 tree*.gv
 traces*.html
 event*.gv
+graph*.gv
 server-log.txt
 server-tree-1.gv
 server-tree-1_overview.gv
