@@ -72,20 +72,13 @@ void CVC4ConstraintWriter::preVisitPathConditionsHook(QSet<QString> varsUsed)
     //mOutput << "(set-option :finite-model-find true)" << std::endl;
     mOutput << std::endl;
 
-    foreach (QString var, varsUsed) {
-        if (var.contains("SYM_IN_INT")) {
-            // a select index, I'm not happy about these name checks
-            // force positive numbers
-            recordAndEmitType(var.toStdString(), Symbolic::INT);
-            mOutput << "(assert (>= " << SMTConstraintWriter::encodeIdentifier(var.toStdString()) << " 0))" << std::endl;
-        }
-    }
-
     // Only write the form restrictions which relate to variables which are actually used in the PC.
+    QSet<QString> selectRestrictionIndexVariables;
     foreach(SelectRestriction sr, mFormRestrictions.first) {
         // TODO: Hack to guess the variable names, as in helperSelectRestriction().
         QString name = QString("SYM_IN_%1").arg(sr.variable);
         QString idxname = QString("SYM_IN_INT_%1").arg(sr.variable);
+        selectRestrictionIndexVariables.insert(idxname);
 
         if(varsUsed.contains(name) && varsUsed.contains(idxname)) {
             if (!mDisabledFeatures.testFlag(SELECT_LINK_VALUE_INDEX)) {
@@ -117,6 +110,15 @@ void CVC4ConstraintWriter::preVisitPathConditionsHook(QSet<QString> varsUsed)
         }
     }
 
+    // Fallback sanity constraint for select indices (see b51f2e24) but in most (all?) cases it will be redundant to the main select restrictions.
+    foreach (QString var, varsUsed) {
+        if (var.contains("SYM_IN_INT") && !selectRestrictionIndexVariables.contains(var)) {
+            Statistics::statistics()->accumulate("Concolic::Solver::IntegerVariableWithoutSelectRestriction", 1);
+            // a select index, force positive numbers
+            recordAndEmitType(var.toStdString(), Symbolic::INT);
+            mOutput << "(assert (>= " << SMTConstraintWriter::encodeIdentifier(var.toStdString()) << " 0))" << std::endl;
+        }
+    }
 }
 
 void CVC4ConstraintWriter::postVisitPathConditionsHook()
@@ -910,7 +912,7 @@ void CVC4ConstraintWriter::helperSelectRestriction(SelectRestriction constraint,
         std::stringstream valueconstraint;
 
         valueconstraint << "(assert (= " << SMTConstraintWriter::encodeIdentifier(name.toStdString()) << " \"\"))";
-        idxconstraint << "(assert (= " << SMTConstraintWriter::encodeIdentifier(idxname.toStdString()) << " -1))";
+        idxconstraint << "(assert (= " << SMTConstraintWriter::encodeIdentifier(idxname.toStdString()) << " (- 1)))";
 
         switch(type) {
         case VALUE_ONLY:

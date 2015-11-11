@@ -1,0 +1,47 @@
+<!--
+TEST PC = ((SymbolicInteger!=ConstantInteger)==ConstantBoolean)
+TEST Concolic::Solver::ConstraintsWritten = 3
+TEST Concolic::Solver::ConstraintsSolved = 3
+TEST Concolic::Solver::ConstraintsSolvedAsUNSAT = 2
+-->
+<!doctype html><html lang="en">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+
+	<title>Ben Spencer</title>
+	<meta name="author" content="Ben Spencer">
+	<script type="text/javascript">
+		// The index check should be SAT, which would not be allowed if we enforced non-negative selectedindex values.
+		function validate() {
+			var y = document.getElementById("testinput");
+			var extra = document.getElementById("extra");
+
+			if (y.selectedIndex != -1) {
+				result = false;
+			}
+			if (extra.value != "testme") {
+				result = false;
+			}
+			return result;
+		}
+	</script>
+
+</head>
+<body>
+
+	<p>This form cannot be submitted.</p>
+
+	<form method="GET" action="about:blank" >
+
+		<select name="testinput" id="testinput" >
+		</select>
+
+		<input type="text" id="extra" >
+
+		<button type="submit" onclick="return validate();">Submit</button>
+
+	</form>
+
+</body>
+</html>
