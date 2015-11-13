@@ -855,8 +855,8 @@ void AnalysisServerRuntime::concolicInitPage(QSharedPointer<ExecutionResult> res
     // However in the server mode we do this to avoid requiring a reset between each recorded trace.
 
     foreach (FormFieldDescriptorConstPtr element, mConcolicFormFieldsForPage) {
-        element->getDomElement()->getElement(mWebkitExecutor->getPage()).evaluateJavaScript("this.symbolictrigger == \"\";");
-        element->getDomElement()->getElement(mWebkitExecutor->getPage()).evaluateJavaScript("this.options.symbolictrigger == \"\";");
+        element->getDomElement()->getElement(mWebkitExecutor->getPage()).evaluateJavaScript("this.symbolictrigger == \"\";", QUrl(), true);
+        element->getDomElement()->getElement(mWebkitExecutor->getPage()).evaluateJavaScript("this.options.symbolictrigger == \"\";", QUrl(), true);
     }
 }
 
@@ -1052,8 +1052,8 @@ void AnalysisServerRuntime::concolicOutputTree(TraceNodePtr tree, QString name)
     }
 
     // There is one file per concolic tree, which we overwrite each time the tree is updated.
-    TraceDisplay display;
-    TraceDisplayOverview displayOverview;
+    TraceDisplay display(mOptions.outputCoverage != NONE);
+    TraceDisplayOverview displayOverview(mOptions.outputCoverage != NONE);
     display.writeGraphFile(tree, filename, false, title);
     displayOverview.writeGraphFile(tree, filenameOverview, false, title);
 }
