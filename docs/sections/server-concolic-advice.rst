@@ -4,7 +4,7 @@ Server Mode - Concolic Advice
 =============================
 
 The server is able to record traces (sequences of actions) symbolically and provide suggestions for new form field
-inputs to use with that sequence whihc will result in new JavaScript being executed.
+inputs to use with that sequence which will result in new JavaScript being executed.
 
 The main server mode documentation is here: :ref:`server`.
 
@@ -30,6 +30,67 @@ The required calling sequence is:
 
 N.B. There are some relaxations to this format allowed by specifically requesting them.
 See the ``allowduringtrace`` option for ``concolicadvice`` and the ``implicitendtrace`` option for ``begintrace``.
+
+Trace matching
+~~~~~~~~~~~~~~
+
+When traces are recorded for a certain sequence they are added to a tree of all execution paths for the execution in
+that trace. The concolic advice makes suggestions for exploring new unseen branches in this tree.
+
+In order to add new traces to the tree, they must have a prefix which matches the top of the tree. For example, if the
+first trace has an initial action of filling field A, then all subsequent traces (for the same sequence ID) must begin
+with filling field A. The simplest way to keep all new traces matching is to make sure **all traces recorded with the
+same sequence ID should execute exactly the same actions during the trace recording**. The only thig which is safe to
+change is the values injected into form fields.
+
+In reality the requirement is slightly weaker. The prefix of the trace has to match the prefix of the tree until the
+trace reaches a new unexplored area, after which there are no restrictions, other than matching with future traces.
+For example, if selecting "Return" instead of "One-way" from a trip-planning form causes an extra "Return date" field
+to be shown, it is safe to only fill "Return date" in the traces where "Return" has already been selected and ignore it
+in the traces where "One-way" is selected. In practice it is difficult to know when this is safe without inspecting the
+concolic tree so the above rule of always using identical traces is recommended.
+
+
+Advice returned
+~~~~~~~~~~~~~~~
+
+The advice returned will contain suggested values for any form fields which were seen in any branch condition in
+executed JavaScript code during the trace recording.
+
+This means it may not include all the form fields which were filled during the trace - some of them will have no
+validation and are considered "uninteresting" by our anlaysis.
+
+It also means that values may be returned for form fields which were not in the original trace. A typical example of
+this is if the trace contains only a submit button click, in which case it likely causes some form field validation
+(leading to some contraints and so soe value suggestions) even though no field is filled. To excercise these branches
+the client can either begin a new sequence which includes these fields, or arrange for the fields to have those values
+set before beginning the [same] trace. In the latter case the analysis will not be able to see any per-field validation
+for these fields which are set outside the trace, so some conditions may be missed.
+
+Form restrictions
+~~~~~~~~~~~~~~~~~
+
+Radio buttons and select boxes (drop-down lists) have implied constraints.
+If a select box only contains options "A", "B" and "C" then the concolic analysis will only return one of those strings
+as a suggested value for that input.
+
+In the particular case of select boxes we have some special support for dynamically changing forms.
+A common pattern is to have two (or more) select boxes whose values update based on earlier selections.
+For example if the fields are "Country" and "City" then selecting "UK" in the first will show a list of UK cities to
+choose from in the second field. Selecting "Denmark" in the first field will give options of Danish cities, and so on.
+In this case the analysis can see the updated values and will only make suggestions of valid pairs.
+``{"Country": "UK", "City": "London"}`` would be valid but ``{"Country": "UK", "City": "Copenhagen"}`` would never be
+returned as a suggestion.
+
+Note that this pattern is only supported if the "Country" and "City" fields are both filled during the trace recording
+and that no other types of dynamic form modifications are supported by the analysis.
+
+The following tests from ``server.py`` and test pages show some examples of these types of forms:
+
+* ``test_select_restrictions`` and ``concolic-select-restrictions.html``
+* ``test_radio_restrictions`` and ``concolic-radio-restrictions.html``
+* ``test_select_restrictions_dynamic`` and ``concolic-select-restrictions-dynamic.html``
+
 
 Commands
 --------
