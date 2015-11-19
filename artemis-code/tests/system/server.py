@@ -15,6 +15,11 @@ import httplib
 import socket
 import re
 import shutil
+import contextlib
+
+from harness.web_server_for_edge_case_testing import BackgroundTestServer
+from harness.web_server_for_edge_case_testing import HOST_NAME as TEST_SERVER_HOST
+from harness.web_server_for_edge_case_testing import PORT as TEST_SERVER_PORT
 
 FIXTURE_ROOT = os.path.join(os.environ['ARTEMISDIR'], 'artemis-code', 'tests', 'system', 'fixtures', 'server')
 
@@ -3466,107 +3471,7 @@ class AnalysisServerConcolicAdviceLimitations(AnalysisServerConcolicAdviceTestBa
         # so it returns [[]]. We do not enable symbolic event.target in server mode, so no advice is returned.
         values = self.concolicAdvice("TestSequence")
         self.assertEqual(values, [])
-    
-    @unittest.expectedFailure # Timers are not handled synchronously.
-    def test_timers_race_conditions(self):
-        # The fixture has validation done in a sequence of timers over a 4s period.
-        # If we record traces without leaving enough space for this to happen the timers will trigger during subsequent
-        # trace recordings and give inconsistent traces.
-        
-        self.loadFixture("concolic-timers.html")
-        
-        # Record the first trace
-        self.concolicBeginTrace("Seq A")
-        self.formInput("id('field1')", "One")
-        self.formInput("id('field2')", "Two")
-        self.formInput("id('field3')", "Wrong")
-        self.click("//button")
-        
-        # Do not wait long enough; cut the trace off too early.
-        time.sleep(2.5)
-        self.concolicEndTrace("Seq A")
-        
-        values_a = self.concolicAdvice("Seq A", 0)
-        graph_a = self.get_graph(self.name(), 1)
-        
-        # Record the second trace
-        self.concolicBeginTrace("Seq B")
-        self.formInput("id('field1')", "One")
-        self.formInput("id('field2')", "Two")
-        self.formInput("id('field3')", "Wrong")
-        self.click("//button")
-        
-        # Wait the full time so we capture all execution.
-        time.sleep(5)
-        self.concolicEndTrace("Seq B")
-        
-        values_b = self.concolicAdvice("Seq B", 0)
-        graph_b = self.get_graph(self.name(), 2)
-        
-        # Check the returned advice.
-        expected_advice_in_synchronous_case = [
-                [
-                    {
-                        u"field": u"//input[@id='field1']",
-                        u"value": u"One"
-                    },
-                    {
-                        u"field": u"//input[@id='field2']",
-                        u"value": u"Two"
-                    },
-                    {
-                        u"field": u"//input[@id='field3']",
-                        u"value": u"Three"
-                    }
-                ],
-                [
-                    {
-                        u"field": u"//input[@id='field1']",
-                        u"value": u"One"
-                    },
-                    {
-                        u"field": u"//input[@id='field2']",
-                        u"value": u""
-                    }
-                ],
-                [
-                    {
-                        u"field": u"//input[@id='field1']",
-                        u"value": u""
-                    }
-                ]
-            ]
-        
-        self.assertEqual(values_a, expected_advice_in_synchronous_case)
-        self.assertEqual(values_b, expected_advice_in_synchronous_case)
-        
-        # Check the trees
-        expected_tree_in_synchronous_case = """
-start -> marker_0;
-marker_0 -> marker_1;
-marker_1 -> marker_2;
-marker_2 -> marker_3;
-marker_3 -> aggr_4;
-aggr_4 -> sym_6;
-sym_6 -> aggr_6;
-aggr_6 -> sym_8;
-sym_8 -> aggr_8;
-aggr_8 -> sym_10;
-sym_10 -> unexp_queued_10;
-sym_10 -> aggr_11;
-aggr_11 -> end_u_12;
-sym_8 -> unexp_queued_13;
-sym_6 -> unexp_queued_14;
-        """
-        expected_tree_in_synchronous_case = expected_tree_in_synchronous_case.split("\n")[1:-1]
-        
-        self.assertEqual(graph_a, expected_tree_in_synchronous_case)
-        self.assertEqual(graph_b, expected_tree_in_synchronous_case)
-    
-    @unittest.skip("TODO")
-    def test_ajax_race_conditions(self):
-        # I expect the behaviour for AJAX requests to be the same as with timers above, but there is no test yet.
-        pass
+
     
 
 
@@ -3681,6 +3586,286 @@ sym_14 -> unexp_16;
 class AnalysisServerConcolicAdviceExamples(AnalysisServerConcolicAdviceTestBase):
     pass
 
+
+
+# Adapted from http://stackoverflow.com/a/1810086/1044484
+@contextlib.contextmanager
+def silent_execution():
+    save_stdout = sys.stdout
+    save_stderr = sys.stderr
+    class Null(object):
+        def write(self, _): pass
+        def flush(self): pass
+    sys.stdout = Null()
+    sys.stderr = Null()
+    try:
+        yield
+    finally:
+        sys.stdout = save_stdout
+        sys.stderr = save_stderr
+
+@contextlib.contextmanager
+def normal_output():
+    yield
+
+
+class AnalysisServerTestsWithCustomTestServer(AnalysisServerConcolicAdviceTestBase):
+    class NullOutput(object):
+        def write(self, _): pass
+        def flush(self): pass
+    
+    def setUp(self):
+        super(AnalysisServerTestsWithCustomTestServer, self).setUp()
+        
+        self._hide_all_test_output = True
+        if self._hide_all_test_output:
+            self._save_stdout = sys.stdout
+            self._save_stderr = sys.stderr
+            sys.stdout = self.NullOutput()
+            sys.stderr = self.NullOutput()
+        
+        self.test_server = BackgroundTestServer()
+        self.test_server.start()
+        self.test_server_url = "http://%s:%s" % (TEST_SERVER_HOST, TEST_SERVER_PORT)
+    
+    def tearDown(self):
+        try:
+            self.test_server.stop()
+            
+            if self._hide_all_test_output:
+                sys.stdout = self._save_stdout
+                sys.stderr = self._save_stderr
+            
+        finally:
+            super(AnalysisServerTestsWithCustomTestServer, self).tearDown()
+    
+    
+
+
+class AnalysisServerAsyncEventsTests(AnalysisServerTestsWithCustomTestServer):
+    @unittest.skip("TODO") # Timers are not handled synchronously.
+    def test_timers_queueing(self):
+        # Identical test to test_ajax_queueing but using timers for the delays.
+        
+        # The fixture has validation done in a sequence of timers over a 4s period.
+        # If we record traces without leaving enough space for this to happen the timers will trigger during subsequent
+        # trace recordings and give inconsistent traces.
+        
+        self.loadFixture("concolic-timers.html")
+        
+        # Record the first trace
+        self.concolicBeginTrace("Seq A")
+        self.formInput("id('field1')", "One")
+        self.formInput("id('field2')", "Two")
+        self.formInput("id('field3')", "Wrong")
+        self.click("//button")
+        
+        # Do not wait long enough; cut the trace off too early.
+        time.sleep(2.5)
+        self.concolicEndTrace("Seq A")
+        
+        values_a = self.concolicAdvice("Seq A", 0)
+        graph_a = self.get_graph(self.name(), 1)
+        
+        # Record the second trace
+        self.concolicBeginTrace("Seq B")
+        self.formInput("id('field1')", "One")
+        self.formInput("id('field2')", "Two")
+        self.formInput("id('field3')", "Wrong")
+        self.click("//button")
+        
+        # Wait the full time so we capture all execution.
+        time.sleep(5)
+        self.concolicEndTrace("Seq B")
+        
+        values_b = self.concolicAdvice("Seq B", 0)
+        graph_b = self.get_graph(self.name(), 2)
+        
+        # Check the returned advice.
+        expected_advice_in_synchronous_case = [
+                [
+                    {
+                        u"field": u"//input[@id='field1']",
+                        u"value": u"One"
+                    },
+                    {
+                        u"field": u"//input[@id='field2']",
+                        u"value": u"Two"
+                    },
+                    {
+                        u"field": u"//input[@id='field3']",
+                        u"value": u"Three"
+                    }
+                ],
+                [
+                    {
+                        u"field": u"//input[@id='field1']",
+                        u"value": u"One"
+                    },
+                    {
+                        u"field": u"//input[@id='field2']",
+                        u"value": u""
+                    }
+                ],
+                [
+                    {
+                        u"field": u"//input[@id='field1']",
+                        u"value": u""
+                    }
+                ]
+            ]
+        
+        self.assertEqual(values_a, expected_advice_in_synchronous_case)
+        self.assertEqual(values_b, expected_advice_in_synchronous_case)
+        
+        # Check the trees
+        expected_tree_in_synchronous_case = """
+start -> marker_0;
+marker_0 -> marker_1;
+marker_1 -> marker_2;
+marker_2 -> marker_3;
+marker_3 -> aggr_4;
+aggr_4 -> sym_6;
+sym_6 -> aggr_6;
+aggr_6 -> sym_8;
+sym_8 -> aggr_8;
+aggr_8 -> sym_10;
+sym_10 -> unexp_queued_10;
+sym_10 -> aggr_11;
+aggr_11 -> end_u_12;
+sym_8 -> unexp_queued_13;
+sym_6 -> unexp_queued_14;
+        """
+        expected_tree_in_synchronous_case = expected_tree_in_synchronous_case.split("\n")[1:-1]
+        
+        self.assertEqual(graph_a, expected_tree_in_synchronous_case)
+        self.assertEqual(graph_b, expected_tree_in_synchronous_case)
+    
+    def test_ajax_queueing(self):
+        # See also: AnalysisServerFeatureTests.test_event_command_blocking_for_XHR_async
+        # Identical test to test_timers_queueing but using AJAX requests for the delays.
+        
+        # The fixture has validation done in a sequence of timers over a 4s period.
+        # If we record traces without leaving enough space for this to happen the timers will trigger during subsequent
+        # trace recordings and give inconsistent traces.
+        
+        self.loadFixture("concolic-ajax.html")
+        
+        # Record the first trace
+        self.concolicBeginTrace("Seq A")
+        self.formInput("id('field1')", "One")
+        self.formInput("id('field2')", "Two")
+        self.formInput("id('field3')", "Wrong")
+        self.click("//button")
+        
+        # Do not wait long enough; cut the trace off too early.
+        time.sleep(2.5)
+        self.concolicEndTrace("Seq A")
+        
+        values_a = self.concolicAdvice("Seq A", 0)
+        graph_a = self.get_graph(self.name(), 1)
+        
+        # Record the second trace
+        self.concolicBeginTrace("Seq B")
+        self.formInput("id('field1')", "One")
+        self.formInput("id('field2')", "Two")
+        self.formInput("id('field3')", "Wrong")
+        self.click("//button")
+        
+        # Wait the full time so we capture all execution.
+        time.sleep(5)
+        self.concolicEndTrace("Seq B")
+        
+        values_b = self.concolicAdvice("Seq B", 0)
+        graph_b = self.get_graph(self.name(), 2)
+        
+        # Check the returned advice.
+        expected_advice_in_synchronous_case = [
+                [
+                    {
+                        u"field": u"//input[@id='field1']",
+                        u"value": u"One"
+                    },
+                    {
+                        u"field": u"//input[@id='field2']",
+                        u"value": u"Two"
+                    },
+                    {
+                        u"field": u"//input[@id='field3']",
+                        u"value": u"Three"
+                    }
+                ],
+                [
+                    {
+                        u"field": u"//input[@id='field1']",
+                        u"value": u"One"
+                    },
+                    {
+                        u"field": u"//input[@id='field2']",
+                        u"value": u""
+                    }
+                ],
+                [
+                    {
+                        u"field": u"//input[@id='field1']",
+                        u"value": u""
+                    }
+                ]
+            ]
+        
+        self.assertEqual(values_a, expected_advice_in_synchronous_case)
+        self.assertEqual(values_b, expected_advice_in_synchronous_case)
+        
+        # Check the trees
+        expected_tree_in_synchronous_case = """
+start -> marker_0;
+marker_0 -> marker_1;
+marker_1 -> marker_2;
+marker_2 -> marker_3;
+marker_3 -> aggr_4;
+aggr_4 -> sym_6;
+sym_6 -> aggr_6;
+aggr_6 -> sym_8;
+sym_8 -> aggr_8;
+aggr_8 -> sym_10;
+sym_10 -> unexp_queued_10;
+sym_10 -> aggr_11;
+aggr_11 -> end_u_12;
+sym_8 -> unexp_queued_13;
+sym_6 -> unexp_queued_14;
+        """
+        expected_tree_in_synchronous_case = expected_tree_in_synchronous_case.split("\n")[1:-1]
+        
+        self.assertEqual(graph_a, expected_tree_in_synchronous_case)
+        self.assertEqual(graph_b, expected_tree_in_synchronous_case)
+    
+    @unittest.skip("TODO") # Timers not handled correctly; expected behaviour not yet decided.
+    def test_async_event_sequencing(self):
+        # Test page has a variety of nested timers and AJAX requests on each event.
+        # The server mode is expected to force these to be executed in a deterministic fixed order.
+        
+        self.loadFixture("concolic-async-event-queueing.html")
+        
+        # We expect all the pageload events to be complete before the server returns from the pageload.
+        # [Except for any which are "too deep" which will never be executed.]
+        self.assertStatusElementContains(" TODO 1 ")
+        
+        # Trigger events and check they also include the associated async events in the call.
+        self.click("id('click-a')")
+        self.assertStatusElementContains(" TODO 2 ")
+        
+        self.click("id('click-b')")
+        self.assertStatusElementContains(" TODO 3 ")
+        
+        self.click("id('click-b')")
+        self.assertStatusElementContains(" TODO 4 ")
+        
+        # There should be no more events remaining and nothing will trigger "in the background".
+        time.sleep(3)
+        self.assertStatusElementContains(" TODO 4 again")
+    
+    
+    
 
 
 

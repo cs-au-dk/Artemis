@@ -10,7 +10,7 @@
         /*
             The idea of this test is to simulate race conditions between timers or AJAX requests on the page.
             
-            In this test the validation is spread across four handlers triggered in-order with delays. If the server
+            In this test the validation is spread across four handlers triggered by AJAX request. If the server
             records traces while the slow validation is still in progress it will corrupt its recorded traces.
         */
         
@@ -37,40 +37,47 @@
             var b2 = false;
             var b3 = false;
             
-            window.setTimeout(function () {
+            function slow_xhr_custom(timeout, callback) {
+                var xhr = new XMLHttpRequest();
+                xhr.open("GET", "http://localhost:8098/slow-response/" + timeout, true);
+                xhr.onload = callback;
+                xhr.send();
+            }
+            
+            slow_xhr_custom(t1, function () {
                 if (f1.value == v1) {
                     logMessage(status, "Field 1: OK");
                     b1 = true;
                 } else {
                     logMessage(status, "Field 1: FAIL");
                 }
-            }, t1)
+            })
             
-            window.setTimeout(function () {
+            slow_xhr_custom(t2, function () {
                 if (f2.value == v2) {
                     logMessage(status, "Field 2: OK");
                     b2 = true;
                 } else {
                     logMessage(status, "Field 2: FAIL");
                 }
-            }, t2)
+            })
             
-            window.setTimeout(function () {
+            slow_xhr_custom(t3, function () {
                 if (f3.value == v3) {
                     logMessage(status, "Field 3: OK");
                     b3 = true;
                 } else {
                     logMessage(status, "Field 3: FAIL");
                 }
-            }, t3)
+            })
             
-            window.setTimeout(function () {
+            slow_xhr_custom(tf, function () {
                 if (b1 && b2 && b3) {
                     document.forms[0].submit();
                 } else {
                     logMessage(status, "Submission failed");
                 }
-            }, tf)
+            })
             
             return false;
         }
