@@ -96,6 +96,7 @@ public:
     virtual void timerAdded(WebCore::ScriptExecutionContext* context, int timerId, int timeout, bool singleShot);
     virtual void timerRemoved(WebCore::ScriptExecutionContext* context, int timerId);
     void timerFire(int timerId);
+    void timerCancel(int timerId);
     void clearTimers();
 
     void enableHeapReport(bool namedOnly, int heapReportNumber, int factor);

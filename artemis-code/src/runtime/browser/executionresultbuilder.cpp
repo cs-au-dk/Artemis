@@ -148,7 +148,7 @@ void ExecutionResultBuilder::registerFromFieldsIntoResult()
 
     foreach(QWebFrame* frame, getAllFrames()) {
         // Gather all form field elements.
-        // We select them all at once so we can maintain the DOM ordering of the form filds list.
+        // We select them all at once so we can maintain the DOM ordering of the form fields list.
         foreach(QWebElement field, frame->findAllElements("input, textarea, select")) {
             if(field.tagName().toLower() == "input") {
                 FormFieldTypes type =  getTypeFromAttr(field.attribute("type"));

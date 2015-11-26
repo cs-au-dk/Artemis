@@ -71,8 +71,12 @@ public:
 
     void executeSequence(ExecutableConfigurationConstPtr conf);
     void executeSequence(ExecutableConfigurationConstPtr conf, SYMBOLIC_MODE symbolicMode);
-    void notifyNewSequence();
+    void notifyNewSequence(bool noNewSymbolicSession = false);
     void detach();
+
+    // An alternative to executeSequence where the actions to execute are performed by the calling code instead of specified in an ExecutableConfiguration.
+    void beginExternalSequence();
+    ExecutionResultPtr endExternalSequence();
 
     ArtemisWebPagePtr getPage();
 

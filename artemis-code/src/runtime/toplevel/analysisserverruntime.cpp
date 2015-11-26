@@ -265,15 +265,21 @@ void AnalysisServerRuntime::execute(ClickCommand *command)
     // Execute the click.
     switch (command->method) {
     case ClickCommand::Simple:
+        beginBrowserAction();
         ClickSimulator::clickByEvent(target);
+        endBrowserAction();
         break;
 
     case ClickCommand::SimulateJS:
+        beginBrowserAction();
         ClickSimulator::clickByUserEventSimulation(target);
+        endBrowserAction();
         break;
 
     case ClickCommand::SimulateGUI:
+        beginBrowserAction();
         ClickSimulator::clickByGuiSimulation(target, mWebkitExecutor->getPage());
+        endBrowserAction();
         break;
 
     default:
@@ -440,15 +446,21 @@ void AnalysisServerRuntime::execute(FormInputCommand *command)
     // Inject
     switch (command->method) {
     case FormInputCommand::Inject:
+        beginBrowserAction();
         couldInject = FormFieldInjector::inject(field, command->value);
+        endBrowserAction();
         break;
 
     case FormInputCommand::OnChange:
+        beginBrowserAction();
         couldInject = FormFieldInjector::injectAndTriggerChangeHandler(field, command->value);
+        endBrowserAction();
         break;
 
     case FormInputCommand::SimulateJS:
+        beginBrowserAction();
         couldInject = FormFieldInjector::injectWithEventSimulation(field, command->value, command->noBlur);
+        endBrowserAction();
         break;
 
     case FormInputCommand::SimulateGUI:
@@ -559,14 +571,18 @@ void AnalysisServerRuntime::execute(EventTriggerCommand *command)
     // Check if this is a javaScript event or a custom event (with the prefix ARTEMIS-*).
     if (!command->event.startsWith("ARTEMIS-")) {
         // Standard JavaScript event - Build and trigger the event.
+        beginBrowserAction();
         FormFieldInjector::triggerHandler(target, command->event);
+        endBrowserAction();
     } else {
         // Cusom event - check which type and dispatch.
         QString event = command->event;
         event.remove(0, 8);
 
         if (event == "press-enter") {
+            beginBrowserAction();
             FormFieldInjector::guiPressEnter(target);
+            endBrowserAction();
         } else {
             emit sigCommandFinished(errorResponse("Custom event type was not recognised."));
             return;
@@ -585,7 +601,9 @@ void AnalysisServerRuntime::execute(WindowSizeCommand *command)
     Log::debug("  Analysis server runtime: executing a window-size command.");
     assert(command);
 
+    beginBrowserAction(); // TODO: Not tested when resize events get handled. This may not capture them.
     setWindowSize(command->width, command->height);
+    endBrowserAction();
 
     QVariantMap result;
     result.insert("windowsize", "done");
@@ -672,6 +690,7 @@ void AnalysisServerRuntime::backButtonOrError()
     }
 }
 
+
 void AnalysisServerRuntime::slExecutedSequence(ExecutableConfigurationConstPtr configuration, QSharedPointer<ExecutionResult> result)
 {
     PageLoadCommandPtr loadCommand; // PAGELOAD_BLANK
@@ -704,6 +723,8 @@ void AnalysisServerRuntime::slExecutedSequence(ExecutableConfigurationConstPtr c
         } else {
             // Send a response and finish the PAGELOAD command.
             mIsPageLoaded = true;
+            clearAsyncEvents(result);
+
             response.insert("pageload", "done");
             response.insert("url", mWebkitExecutor->getPage()->currentFrame()->url().toString());
 
@@ -713,11 +734,14 @@ void AnalysisServerRuntime::slExecutedSequence(ExecutableConfigurationConstPtr c
 
     case PAGELOAD_TIMEOUT:
         emitTimeout();
+        // N.B. Because we do not call clearAsyncEvents() here there may be execution continuing in the background
+        // after a timeout occurs. This is expected/OK as the page is still loading when we return anyway.
         break;
 
     case PAGELOAD_WAITING_REDIRECT:
         // Do not check for more redirects here to avoid going into a loop.
 
+        clearAsyncEvents(result);
         // Send a response and finish the PAGELOAD command.
         response.insert("pageload", "done");
         response.insert("url", mWebkitExecutor->getPage()->currentFrame()->url().toString());
@@ -741,6 +765,8 @@ void AnalysisServerRuntime::slExecutedSequence(ExecutableConfigurationConstPtr c
             backButtonOrError(); // Calls back to slExecutedSequence or finishes the request itself.
 
         } else {
+            clearAsyncEvents(result);
+
             // Send a response and finish the backbutton command.
             response.insert("backbutton", "done");
             response.insert("url", url);
@@ -760,6 +786,8 @@ void AnalysisServerRuntime::slExecutedSequence(ExecutableConfigurationConstPtr c
         // mFieldReadLog, which we want to start logging from the initial call to pageload, so this is not reset.
 
         Log::error("Unexpected page load in AnalysisServerRuntime.");
+
+        clearAsyncEvents(result); // Even though the load is unexpected, we don't want it to pollute the page with new events.
 
         break;
 
@@ -783,10 +811,10 @@ void AnalysisServerRuntime::slLoadTimeoutTriggered()
 
 // Called when the ArtemisWebPage receives a request for navigation.
 // This means there has been a page load we did not initiate (e.g. URL click, form submission, etc.).
-// So we need to notify WebKitExecutor that we are starting a new trace event though we didn't call executeSequence().
+// So we need to notify WebKitExecutor that we are starting a new trace even though we didn't call executeSequence().
 void AnalysisServerRuntime::slNavigationRequest(QWebFrame *frame, const QNetworkRequest &request, QWebPage::NavigationType type)
 {
-    mWebkitExecutor->notifyNewSequence();
+    mWebkitExecutor->notifyNewSequence(true);
 }
 
 // Called when a page load is scheduled.
@@ -1084,6 +1112,56 @@ void AnalysisServerRuntime::notifyStartingEvent(QString event, QString elementXP
 
         emit sigNewTraceMarker(eventWithElement, QString::number(mConcolicTraceMarkerIdx), restriction.first, restriction.second);
     }
+}
+
+
+void AnalysisServerRuntime::beginBrowserAction()
+{
+    //mWebkitExecutor->beginExternalSequence();
+}
+
+void AnalysisServerRuntime::endBrowserAction()
+{
+    ExecutionResultConstPtr result = mWebkitExecutor->endExternalSequence();
+    clearAsyncEvents(result);
+}
+
+void AnalysisServerRuntime::clearAsyncEvents(ExecutionResultConstPtr result)
+{
+    Log::debug("  Clear async events");
+    // AJAX events are handled synchronously in server mode (see call to doNotCaptureAjaxCallbacks in the
+    // AnalysisServerRuntime constructor) so we do not expect to see any queued here.
+    assert(result->getAjaxCallbackHandlers().isEmpty());
+    //assert(result->getAjaxRequests().isEmpty()); // TODO: Check this one.
+
+    // Timers
+    // Assumption on behaviour of WebKitExecutor: The set of timers in the pointed-to result object will continue to
+    // be updated as we do more execution.
+    QList<QSharedPointer<Timer> > timers = result->getTimers();
+
+    // Execute up to four "rounds" of nested timers, then cancell all outstanding timers.
+    // N.B. We are not trying [yet] to execute these timers in chronological order.
+    for (int i = 0; i < 4 && !timers.isEmpty(); i++) {
+        Log::debug(QString("  CAE: Firing timers, round %1").arg(i).toStdString());
+        // Fire all timers.
+        foreach (QSharedPointer<Timer> t, timers) {
+            Log::debug(QString("  CAE: Fire timer %1").arg(t->getId()).toStdString());
+            mWebkitExecutor->mWebkitListener->timerFire(t->getId());
+            if (t->isSingleShot()) {
+                mWebkitExecutor->mWebkitListener->timerCancel(t->getId());
+            }
+        }
+
+        // Get any new timers added by the execution of the previous ones.
+        timers = result->getTimers();
+    }
+    // Cancel any outstanding timers.
+    foreach (QSharedPointer<Timer> t, timers) {
+        Log::debug(QString("  CAE: Cancelling timer %1").arg(t->getId()).toStdString());
+        mWebkitExecutor->mWebkitListener->timerCancel(t->getId());
+    }
+
+    // Now all async events are executed or removed, so there should be no background execution in the browser.
 }
 
 

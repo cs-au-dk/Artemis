@@ -205,8 +205,17 @@ void QWebExecutionListener::timerFire(int timerId) {
         i.value()->findTimeout(timerId)->fired();
     }
 
-    i++;
-    Q_ASSERT(i != m_timers.constEnd());
+    //i++;
+    //Q_ASSERT(i != m_timers.constEnd());
+}
+
+void QWebExecutionListener::timerCancel(int timerId)
+{
+    Q_ASSERT(timerId > 0);
+
+    if (m_timers.contains(timerId)) {
+        WebCore::DOMTimer::removeById(m_timers[timerId], timerId);
+    }
 }
 
 void QWebExecutionListener::clearTimers() {

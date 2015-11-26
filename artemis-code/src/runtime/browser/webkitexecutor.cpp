@@ -207,10 +207,11 @@ void WebKitExecutor::executeSequence(ExecutableConfigurationConstPtr conf, SYMBO
 
     notifyNewSequence();
 
+    qDebug() << "--------------- FETCH PAGE --------------" << endl;
     mPage->mainFrame()->load(conf->getUrl());
 }
 
-void WebKitExecutor::notifyNewSequence()
+void WebKitExecutor::notifyNewSequence(bool noNewSymbolicSession)
 {
     mJquery->reset(); // TODO merge into result?
     mResultBuilder->reset();
@@ -218,18 +219,32 @@ void WebKitExecutor::notifyNewSequence()
     // Clear the previous DOM snapshots. In practice this means only one snapshot is stored at a time, as it is only recorded for the last event in symbolic mode MODE_CONCOLIC_LAST_EVENT.
     mDomSnapshotStorage->reset();
 
-    qDebug() << "--------------- FETCH PAGE --------------" << endl;
-
     mCoverageListener->notifyStartingLoad();
     mResultBuilder->notifyStartingLoad();
     mJavascriptStatistics->notifyStartingLoad();
     mPathTracer->notifyStartingLoad();
 
     if (mSymbolicMode == MODE_CONCOLIC || mSymbolicMode == MODE_CONCOLIC_CONTINUOUS || mSymbolicMode == MODE_CONCOLIC_NO_TRACE) {
-        mWebkitListener->beginSymbolicSession();
+        if (!noNewSymbolicSession) {
+            mWebkitListener->beginSymbolicSession();
+        }
     }
 
     mWebkitListener->clearAjaxCallbacks(); // reset the ajax callback ids
+}
+
+
+void WebKitExecutor::beginExternalSequence()
+{
+    currentConf = ExecutableConfigurationConstPtr();
+    mSymbolicMode = MODE_CONCOLIC_NO_TRACE;
+
+    notifyNewSequence(true);
+}
+
+ExecutionResultPtr WebKitExecutor::endExternalSequence()
+{
+    return mResultBuilder->getResult();
 }
 
 void WebKitExecutor::slLoadProgress(int i){
@@ -255,6 +270,12 @@ void WebKitExecutor::slNAMFinished(QNetworkReply* reply){
 
 void WebKitExecutor::slLoadFinished(bool ok)
 {
+    // If there is no configuration, we are in an "external" execution, so skip all the post-processing.
+    if (currentConf.isNull()) {
+        emit sigExecutedSequence(currentConf, mResultBuilder->getResult());
+        return;
+    }
+
     if(mNextOpCanceled){
         mNextOpCanceled = false;
         qDebug() << "Page load cancelled";

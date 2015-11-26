@@ -20,6 +20,7 @@
             var elt_a = document.getElementById("click-a");
             var elt_b = document.getElementById("click-b");
             var elt_c = document.getElementById("click-c");
+            var elt_d = document.getElementById("click-d");
             
             // Standard timeouts
             window.setTimeout(function() {
@@ -42,6 +43,15 @@
                 intervalCount++;
                 if (intervalCount > 5) {
                     window.clearInterval(intervalId);
+                }
+            }, 500)
+            
+            var intervalCount2 = 1;
+            var intervalId2 = window.setInterval(function() {
+                status.textContent += "Interval-2-500 ["+intervalCount2+"/2]; "
+                intervalCount2++;
+                if (intervalCount2 > 2) {
+                    window.clearInterval(intervalId2);
                 }
             }, 500)
             
@@ -134,6 +144,25 @@
                 slow_xhr(200, "XHR-C-200; ");
             });
             
+            elt_d.addEventListener("click", function() {
+                status.textContent += "Click-D; ";
+                
+                window.setTimeout(function() {
+                    status.textContent += "Timeout-D-Nested-100 [1/5]; ";
+                    window.setTimeout(function() {
+                        status.textContent += "Timeout-D-Nested-100 [2/5]; ";
+                        window.setTimeout(function() {
+                            status.textContent += "Timeout-D-Nested-100 [3/5]; ";
+                            window.setTimeout(function() {
+                                status.textContent += "Timeout-D-Nested-100 [4/5]; ";
+                                window.setTimeout(function() {
+                                    status.textContent += "Timeout-D-Nested-100 [5/5]; ";
+                                }, 100)
+                            }, 100)
+                        }, 100)
+                    }, 100)
+                }, 100)
+            });
             
             status.textContent += "Load-finished; "
         });
@@ -146,6 +175,7 @@
         <li><a id="click-a" >Click A</a></li>
         <li><a id="click-b" >Click B</a></li>
         <li><a id="click-c" >Click C</a></li>
+        <li><a id="click-d" >Click D</a></li>
     </ul>
     
     <p>Async events: <span id="status"></span></p>

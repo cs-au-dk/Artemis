@@ -80,6 +80,10 @@ protected:
 
     void backButtonOrError();
 
+    void beginBrowserAction();
+    void endBrowserAction();
+    void clearAsyncEvents(ExecutionResultConstPtr result);
+
     // Page analysis
     FieldReadLog mFieldReadLog;
 

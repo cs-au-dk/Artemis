@@ -126,7 +126,7 @@ class AnalysisServerTestBase(unittest.TestCase):
     def click(self, element):
         message = {
                 "command": "click",
-                "element": "//button"
+                "element": element
             }
         
         response = send_to_server(message)
@@ -3643,7 +3643,7 @@ class AnalysisServerTestsWithCustomTestServer(AnalysisServerConcolicAdviceTestBa
 
 
 class AnalysisServerAsyncEventsTests(AnalysisServerTestsWithCustomTestServer):
-    @unittest.skip("TODO") # Timers are not handled synchronously.
+    
     def test_timers_queueing(self):
         # Identical test to test_ajax_queueing but using timers for the delays.
         
@@ -3839,7 +3839,6 @@ sym_6 -> unexp_queued_14;
         self.assertEqual(graph_a, expected_tree_in_synchronous_case)
         self.assertEqual(graph_b, expected_tree_in_synchronous_case)
     
-    @unittest.skip("TODO") # Timers not handled correctly; expected behaviour not yet decided.
     def test_async_event_sequencing(self):
         # Test page has a variety of nested timers and AJAX requests on each event.
         # The server mode is expected to force these to be executed in a deterministic fixed order.
@@ -3848,21 +3847,34 @@ sym_6 -> unexp_queued_14;
         
         # We expect all the pageload events to be complete before the server returns from the pageload.
         # [Except for any which are "too deep" which will never be executed.]
-        self.assertStatusElementContains(" TODO 1 ")
+        s1 = "Load; XHR-0; XHR-100; XHR-500; XHR-1000; Load-finished; Timeout-0; Timeout-100; Timeout-500; Timeout-2000; Interval-500 [1/5]; Interval-2-500 [1/2]; Interval-500 [2/5]; Interval-2-500 [2/2]; Interval-500 [3/5]; Interval-500 [4/5]; "
+        self.assertStatusElementContains(s1)
         
         # Trigger events and check they also include the associated async events in the call.
         self.click("id('click-a')")
-        self.assertStatusElementContains(" TODO 2 ")
+        s2 = s1 + "Click-A; XHR-A-500; Timeout-A-100; XHR-A-100 [From T-100]; Timeout-A-200; XHR-A-200 [From T-200]; Timeout-A-100 [From X-500]; "
+        self.assertStatusElementContains(s2)
         
         self.click("id('click-b')")
-        self.assertStatusElementContains(" TODO 3 ")
+        s3 = s2 + "Click-B; XHR-B-Recursive-100 [1/5]; XHR-B-Recursive-100 [2/5]; XHR-B-Recursive-100 [3/5]; XHR-B-Recursive-100 [4/5]; XHR-B-Recursive-100 [5/5]; Timeout-B-100; Timeout-B-200; "
+        self.assertStatusElementContains(s3)
         
-        self.click("id('click-b')")
-        self.assertStatusElementContains(" TODO 4 ")
+        self.click("id('click-c')")
+        s4 = s3 + "Click-C; XHR-C-100; XHR-C-200; Timeout-C-100; Timeout-C-200; "
+        self.assertStatusElementContains(s4)
+        
+        self.click("id('click-d')")
+        s5 = s4 + "Click-D; Timeout-D-Nested-100 [1/5]; Timeout-D-Nested-100 [2/5]; Timeout-D-Nested-100 [3/5]; Timeout-D-Nested-100 [4/5]; "
+        self.assertStatusElementContains(s5)
         
         # There should be no more events remaining and nothing will trigger "in the background".
         time.sleep(3)
-        self.assertStatusElementContains(" TODO 4 again")
+        self.assertStatusElementContains(s5)
+        
+        # N.B. The results from this test are expected to differe slightly from a normal browser.
+        # First, the events are put in a deterministic order, which has all AJAX events fired synchronously before the
+        # timers, and the timers fired in a browser-specified order which is not necessarily chronological.
+        # Second, timers under 4 levels of "nesting" are cleared without being executed to avoid an infinite loop.
     
     
     
