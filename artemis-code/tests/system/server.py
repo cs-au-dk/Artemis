@@ -3588,27 +3588,6 @@ class AnalysisServerConcolicAdviceExamples(AnalysisServerConcolicAdviceTestBase)
 
 
 
-# Adapted from http://stackoverflow.com/a/1810086/1044484
-@contextlib.contextmanager
-def silent_execution():
-    save_stdout = sys.stdout
-    save_stderr = sys.stderr
-    class Null(object):
-        def write(self, _): pass
-        def flush(self): pass
-    sys.stdout = Null()
-    sys.stderr = Null()
-    try:
-        yield
-    finally:
-        sys.stdout = save_stdout
-        sys.stderr = save_stderr
-
-@contextlib.contextmanager
-def normal_output():
-    yield
-
-
 class AnalysisServerTestsWithCustomTestServer(AnalysisServerConcolicAdviceTestBase):
     class NullOutput(object):
         def write(self, _): pass
@@ -3859,8 +3838,9 @@ sym_6 -> unexp_queued_14;
         s3 = s2 + "Click-B; XHR-B-Recursive-100 [1/5]; XHR-B-Recursive-100 [2/5]; XHR-B-Recursive-100 [3/5]; XHR-B-Recursive-100 [4/5]; XHR-B-Recursive-100 [5/5]; Timeout-B-100; Timeout-B-200; "
         self.assertStatusElementContains(s3)
         
+        # N.B. The ajax requests and timers are called in registration order, not timer order.
         self.click("id('click-c')")
-        s4 = s3 + "Click-C; XHR-C-100; XHR-C-200; Timeout-C-100; Timeout-C-200; "
+        s4 = s3 + "Click-C; XHR-C-200; XHR-C-100; Timeout-C-200; Timeout-C-100; "
         self.assertStatusElementContains(s4)
         
         self.click("id('click-d')")

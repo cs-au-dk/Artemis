@@ -134,14 +134,14 @@
                 status.textContent += "Click-C; ";
                 
                 window.setTimeout(function() {
-                    status.textContent += "Timeout-C-100; ";
-                }, 100)
-                window.setTimeout(function() {
                     status.textContent += "Timeout-C-200; ";
                 }, 200)
+                window.setTimeout(function() {
+                    status.textContent += "Timeout-C-100; ";
+                }, 100)
                 
-                slow_xhr(100, "XHR-C-100; ");
                 slow_xhr(200, "XHR-C-200; ");
+                slow_xhr(100, "XHR-C-100; ");
             });
             
             elt_d.addEventListener("click", function() {
