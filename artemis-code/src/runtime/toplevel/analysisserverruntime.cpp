@@ -1117,7 +1117,7 @@ void AnalysisServerRuntime::notifyStartingEvent(QString event, QString elementXP
 
 void AnalysisServerRuntime::beginBrowserAction()
 {
-    //mWebkitExecutor->beginExternalSequence();
+    mWebkitExecutor->beginExternalSequence();
 }
 
 void AnalysisServerRuntime::endBrowserAction()
