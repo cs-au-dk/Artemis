@@ -234,19 +234,6 @@ void WebKitExecutor::notifyNewSequence(bool noNewSymbolicSession)
 }
 
 
-void WebKitExecutor::beginExternalSequence()
-{
-    currentConf = ExecutableConfigurationConstPtr();
-    mSymbolicMode = MODE_CONCOLIC_NO_TRACE;
-
-    notifyNewSequence(true);
-}
-
-ExecutionResultPtr WebKitExecutor::endExternalSequence()
-{
-    return mResultBuilder->getResult();
-}
-
 void WebKitExecutor::slLoadProgress(int i){
     if(!mNextOpCanceled)
         qDebug() << "Page loaded " << i << "%";
@@ -270,11 +257,7 @@ void WebKitExecutor::slNAMFinished(QNetworkReply* reply){
 
 void WebKitExecutor::slLoadFinished(bool ok)
 {
-    // If there is no configuration, we are in an "external" execution, so skip all the post-processing.
-    if (currentConf.isNull()) {
-        emit sigExecutedSequence(currentConf, mResultBuilder->getResult());
-        return;
-    }
+    assert(!currentConf.isNull());
 
     if(mNextOpCanceled){
         mNextOpCanceled = false;

@@ -59,6 +59,11 @@ AnalysisServerRuntime::AnalysisServerRuntime(QObject* parent, const Options& opt
     QObject::connect(mWebkitExecutor->mWebkitListener, SIGNAL(sigPageLoadScheduled(QUrl)),
                      this, SLOT(slPageLoadScheduled(QUrl)));
 
+    QObject::connect(mWebkitExecutor->mWebkitListener, SIGNAL(addedTimer(int, int, bool)),
+                     this, SLOT(slTimerAdded(int, int, bool)));
+    QObject::connect(mWebkitExecutor->mWebkitListener, SIGNAL(removedTimer(int)),
+                     this, SLOT(slTimerRemoved(int)));
+
     // Connections for page analysis
     QObject::connect(QWebExecutionListener::getListener(), SIGNAL(sigJavascriptSymbolicFieldRead(QString, bool)),
                      &mFieldReadLog, SLOT(slJavascriptSymbolicFieldRead(QString, bool)));
@@ -265,21 +270,18 @@ void AnalysisServerRuntime::execute(ClickCommand *command)
     // Execute the click.
     switch (command->method) {
     case ClickCommand::Simple:
-        beginBrowserAction();
         ClickSimulator::clickByEvent(target);
-        endBrowserAction();
+        clearAsyncEvents();
         break;
 
     case ClickCommand::SimulateJS:
-        beginBrowserAction();
         ClickSimulator::clickByUserEventSimulation(target);
-        endBrowserAction();
+        clearAsyncEvents();
         break;
 
     case ClickCommand::SimulateGUI:
-        beginBrowserAction();
         ClickSimulator::clickByGuiSimulation(target, mWebkitExecutor->getPage());
-        endBrowserAction();
+        clearAsyncEvents();
         break;
 
     default:
@@ -446,21 +448,18 @@ void AnalysisServerRuntime::execute(FormInputCommand *command)
     // Inject
     switch (command->method) {
     case FormInputCommand::Inject:
-        beginBrowserAction();
         couldInject = FormFieldInjector::inject(field, command->value);
-        endBrowserAction();
+        clearAsyncEvents();
         break;
 
     case FormInputCommand::OnChange:
-        beginBrowserAction();
         couldInject = FormFieldInjector::injectAndTriggerChangeHandler(field, command->value);
-        endBrowserAction();
+        clearAsyncEvents();
         break;
 
     case FormInputCommand::SimulateJS:
-        beginBrowserAction();
         couldInject = FormFieldInjector::injectWithEventSimulation(field, command->value, command->noBlur);
-        endBrowserAction();
+        clearAsyncEvents();
         break;
 
     case FormInputCommand::SimulateGUI:
@@ -571,18 +570,16 @@ void AnalysisServerRuntime::execute(EventTriggerCommand *command)
     // Check if this is a javaScript event or a custom event (with the prefix ARTEMIS-*).
     if (!command->event.startsWith("ARTEMIS-")) {
         // Standard JavaScript event - Build and trigger the event.
-        beginBrowserAction();
         FormFieldInjector::triggerHandler(target, command->event);
-        endBrowserAction();
+        clearAsyncEvents();
     } else {
         // Cusom event - check which type and dispatch.
         QString event = command->event;
         event.remove(0, 8);
 
         if (event == "press-enter") {
-            beginBrowserAction();
             FormFieldInjector::guiPressEnter(target);
-            endBrowserAction();
+            clearAsyncEvents();
         } else {
             emit sigCommandFinished(errorResponse("Custom event type was not recognised."));
             return;
@@ -601,9 +598,8 @@ void AnalysisServerRuntime::execute(WindowSizeCommand *command)
     Log::debug("  Analysis server runtime: executing a window-size command.");
     assert(command);
 
-    beginBrowserAction(); // TODO: Not tested when resize events get handled. This may not capture them.
     setWindowSize(command->width, command->height);
-    endBrowserAction();
+    clearAsyncEvents(); // TODO: Not tested when resize events get handled. This may not capture them.
 
     QVariantMap result;
     result.insert("windowsize", "done");
@@ -723,7 +719,7 @@ void AnalysisServerRuntime::slExecutedSequence(ExecutableConfigurationConstPtr c
         } else {
             // Send a response and finish the PAGELOAD command.
             mIsPageLoaded = true;
-            clearAsyncEvents(result);
+            clearAsyncEvents();
 
             response.insert("pageload", "done");
             response.insert("url", mWebkitExecutor->getPage()->currentFrame()->url().toString());
@@ -741,7 +737,7 @@ void AnalysisServerRuntime::slExecutedSequence(ExecutableConfigurationConstPtr c
     case PAGELOAD_WAITING_REDIRECT:
         // Do not check for more redirects here to avoid going into a loop.
 
-        clearAsyncEvents(result);
+        clearAsyncEvents();
         // Send a response and finish the PAGELOAD command.
         response.insert("pageload", "done");
         response.insert("url", mWebkitExecutor->getPage()->currentFrame()->url().toString());
@@ -765,7 +761,7 @@ void AnalysisServerRuntime::slExecutedSequence(ExecutableConfigurationConstPtr c
             backButtonOrError(); // Calls back to slExecutedSequence or finishes the request itself.
 
         } else {
-            clearAsyncEvents(result);
+            clearAsyncEvents();
 
             // Send a response and finish the backbutton command.
             response.insert("backbutton", "done");
@@ -787,7 +783,7 @@ void AnalysisServerRuntime::slExecutedSequence(ExecutableConfigurationConstPtr c
 
         Log::error("Unexpected page load in AnalysisServerRuntime.");
 
-        clearAsyncEvents(result); // Even though the load is unexpected, we don't want it to pollute the page with new events.
+        clearAsyncEvents(); // Even though the load is unexpected, we don't want it to pollute the page with new events.
 
         break;
 
@@ -1115,50 +1111,42 @@ void AnalysisServerRuntime::notifyStartingEvent(QString event, QString elementXP
 }
 
 
-void AnalysisServerRuntime::beginBrowserAction()
+void AnalysisServerRuntime::slTimerAdded(int timerId, int timeout, bool singleShot)
 {
-    mWebkitExecutor->beginExternalSequence();
+    assert(!mTimers.contains(timerId));
+    mTimers.insert(timerId, QPair<int, bool>(timeout, singleShot));
 }
 
-void AnalysisServerRuntime::endBrowserAction()
+void AnalysisServerRuntime::slTimerRemoved(int timerId)
 {
-    ExecutionResultConstPtr result = mWebkitExecutor->endExternalSequence();
-    clearAsyncEvents(result);
+    // N.B. clearAsyncEvents removes IDs manually, so we do no necessarily expect timerId to still be in mTimers.
+    mTimers.remove(timerId);
 }
 
-void AnalysisServerRuntime::clearAsyncEvents(ExecutionResultConstPtr result)
+void AnalysisServerRuntime::clearAsyncEvents()
 {
-    Log::debug("  Clear async events");
     // AJAX events are handled synchronously in server mode (see call to doNotCaptureAjaxCallbacks in the
-    // AnalysisServerRuntime constructor) so we do not expect to see any queued here.
-    assert(result->getAjaxCallbackHandlers().isEmpty());
-    //assert(result->getAjaxRequests().isEmpty()); // TODO: Check this one.
+    // AnalysisServerRuntime constructor) so they are ignored here.
 
-    // Timers
-    // Assumption on behaviour of WebKitExecutor: The set of timers in the pointed-to result object will continue to
-    // be updated as we do more execution.
-    QList<QSharedPointer<Timer> > timers = result->getTimers();
-
-    // Execute up to four "rounds" of nested timers, then cancell all outstanding timers.
-    // N.B. We are not trying [yet] to execute these timers in chronological order.
-    for (int i = 0; i < 4 && !timers.isEmpty(); i++) {
-        Log::debug(QString("  CAE: Firing timers, round %1").arg(i).toStdString());
-        // Fire all timers.
-        foreach (QSharedPointer<Timer> t, timers) {
-            Log::debug(QString("  CAE: Fire timer %1").arg(t->getId()).toStdString());
-            mWebkitExecutor->mWebkitListener->timerFire(t->getId());
-            if (t->isSingleShot()) {
-                mWebkitExecutor->mWebkitListener->timerCancel(t->getId());
-            }
+    // Fire up to N timers
+    // TODO: Fire timers up to nesting level of X instead of a cap on the total number.
+    for (int i = 0; i < 50 && !mTimers.isEmpty(); i++) {
+        QList<int> allTimerIds = mTimers.keys();
+        qSort(allTimerIds);
+        int timerId = allTimerIds.at(0); // Take timers in Id order.
+        bool singleShot = mTimers[timerId].second;
+        Log::debug(QString("  CAE: Fire timer %1").arg(timerId).toStdString());
+        mWebkitExecutor->mWebkitListener->timerFire(timerId); // N.B. This may add new timers to the list.
+        if (singleShot) {
+            mTimers.remove(timerId); // This will also get removed by timerCancel, but it may not be immediate.
+            mWebkitExecutor->mWebkitListener->timerCancel(timerId);
         }
-
-        // Get any new timers added by the execution of the previous ones.
-        timers = result->getTimers();
     }
     // Cancel any outstanding timers.
-    foreach (QSharedPointer<Timer> t, timers) {
-        Log::debug(QString("  CAE: Cancelling timer %1").arg(t->getId()).toStdString());
-        mWebkitExecutor->mWebkitListener->timerCancel(t->getId());
+    foreach (int timerId, mTimers.keys()) {
+        Log::debug(QString("  CAE: Cancelling timer %1").arg(timerId).toStdString());
+        mTimers.remove(timerId); // This will also get removed by timerCancel, but it may not be immediate.
+        mWebkitExecutor->mWebkitListener->timerCancel(timerId);
     }
 
     // Now all async events are executed or removed, so there should be no background execution in the browser.
