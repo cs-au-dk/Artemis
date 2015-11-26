@@ -37,10 +37,18 @@
             var b2 = false;
             var b3 = false;
             
+            var xhr_connection_fail_reported = false
             function slow_xhr_custom(timeout, callback) {
                 var xhr = new XMLHttpRequest();
                 xhr.open("GET", "http://localhost:8098/slow-response/" + timeout, true);
                 xhr.onload = callback;
+                xhr.onreadystatechange = function() {
+                    if (this.readyState == XMLHttpRequest.DONE && this.status == 0 && !xhr_connection_fail_reported) {
+                        xhr_connection_fail_reported = true;
+                        alert("XHR connection failed");
+                        status.textContent += "XHR connection failed; "
+                    }
+                };
                 xhr.send();
             }
             

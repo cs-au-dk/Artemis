@@ -3844,7 +3844,7 @@ sym_6 -> unexp_queued_14;
         # Test page has a variety of nested timers and AJAX requests on each event.
         # The server mode is expected to force these to be executed in a deterministic fixed order.
         
-        self.loadFixture("concolic-async-event-queueing.html")
+        self.loadFixture("async-event-queueing.html")
         
         # We expect all the pageload events to be complete before the server returns from the pageload.
         # [Except for any which are "too deep" which will never be executed.]
