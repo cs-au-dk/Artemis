@@ -70,7 +70,7 @@ AnalysisServer::~AnalysisServer()
     Log::debug("Closing AnalysisServer");
     if (mServer) {
         mServer->close();
-        delete mServer;
+        mServer->deleteLater();
     }
     if (mLogging) {
         mLogFile.close();

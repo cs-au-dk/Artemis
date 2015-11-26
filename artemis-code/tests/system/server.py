@@ -2490,11 +2490,7 @@ Sent:
         
         self.assertIn("pageload", load_response)
         
-        time.sleep(0.5)
-        
-        self.assertStatusElementContains("Timers: timer-0-fired")
-        
-        time.sleep(1)
+        time.sleep(1.5)
         
         self.assertStatusElementContains("Timers: timer-0-fired timer-1000-fired")
     

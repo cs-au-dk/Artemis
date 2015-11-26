@@ -57,7 +57,7 @@ RequestHandler::RequestHandler(QHttpRequest* request, QHttpResponse* response, A
 
 RequestHandler::~RequestHandler()
 {
-    delete mRequest;
+    mRequest->deleteLater();
     // mResponse deletes itself once it is finished with.
 }
 
