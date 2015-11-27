@@ -61,6 +61,7 @@ class AnalysisServerTestBase(unittest.TestCase):
         def strip_variable_info(x):
             x = re.sub("^\[[- \d]+\] ", "", x.rstrip())
             x = re.sub("^(    Build (.*?):)(.*)$", "\\1 XXX", x)
+            x = re.sub("^(    Called: )(.*/)?(artemis (.*))$", "\\1\\3", x) # Makes the test more robust under different settings of ARTEMIS_EXEC which some versions of this script use.
             return x
         return [strip_variable_info(x) for x in lines]
     
