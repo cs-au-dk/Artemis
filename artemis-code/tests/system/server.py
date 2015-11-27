@@ -3607,12 +3607,13 @@ class AnalysisServerTestsWithCustomTestServer(AnalysisServerConcolicAdviceTestBa
     def tearDown(self):
         try:
             self.test_server.stop()
+            time.sleep(0.5)
             
+        finally:
             if self._hide_all_test_output:
                 sys.stdout = self._save_stdout
                 sys.stderr = self._save_stderr
             
-        finally:
             super(AnalysisServerTestsWithCustomTestServer, self).tearDown()
     
     
