@@ -1128,21 +1128,29 @@ void AnalysisServerRuntime::clearAsyncEvents()
     // AJAX events are handled synchronously in server mode (see call to doNotCaptureAjaxCallbacks in the
     // AnalysisServerRuntime constructor) so they are ignored here.
 
-    // Fire up to N timers
-    // TODO: Fire timers up to nesting level of X instead of a cap on the total number.
-    for (int i = 0; i < 50 && !mTimers.isEmpty(); i++) {
-        QList<int> allTimerIds = mTimers.keys();
-        qSort(allTimerIds);
-        int timerId = allTimerIds.at(0); // Take timers in Id order.
-        bool singleShot = mTimers[timerId].second;
-        Log::debug(QString("  CAE: Fire timer %1").arg(timerId).toStdString());
-        mWebkitExecutor->mWebkitListener->timerFire(timerId); // N.B. This may add new timers to the list.
-        Statistics::statistics()->accumulate("AnalysisServer::ClearAsyncEvents::TimersTriggered", 1);
-        if (singleShot) {
-            mTimers.remove(timerId); // This will also get removed by timerCancel, but it may not be immediate.
-            mWebkitExecutor->mWebkitListener->timerCancel(timerId);
+    // Fire all timers up to depth 4. i.e. 4 levels of nested timers, or 4 rounds of interval timers.
+    for (int i = 0; i < 4 && !mTimers.isEmpty(); i++) {
+        QList<int> currentRoundTimers = mTimers.keys();
+        qSort(currentRoundTimers); // Take timers in ID order.
+        Log::debug(QString("  CAE: Firing timers in round %1 (%2 timers)").arg(i).arg(currentRoundTimers.length()).toStdString());
+        foreach(int timerId, currentRoundTimers) {
+            if (!mTimers.contains(timerId)) {
+                continue; // This timer must have been removed by an earlier timer in this round.
+            }
+            bool singleShot = mTimers[timerId].second;
+
+            Log::debug(QString("  CAE: Fire timer %1").arg(timerId).toStdString());
+            // N.B. This may add new timers to mTimers, which we will pick up in the next round.
+            mWebkitExecutor->mWebkitListener->timerFire(timerId);
+            Statistics::statistics()->accumulate("AnalysisServer::ClearAsyncEvents::TimersTriggered", 1);
+            if (singleShot) {
+                mTimers.remove(timerId); // This will also get removed by timerCancel, but it may not be immediate.
+                mWebkitExecutor->mWebkitListener->timerCancel(timerId);
+                Statistics::statistics()->accumulate("AnalysisServer::ClearAsyncEvents::TimersTriggered", 1);
+            }
         }
     }
+
     // Cancel any outstanding timers.
     foreach (int timerId, mTimers.keys()) {
         Log::debug(QString("  CAE: Cancelling timer %1").arg(timerId).toStdString());

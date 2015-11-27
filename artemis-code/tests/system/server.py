@@ -3821,7 +3821,9 @@ sym_6 -> unexp_queued_14;
         self.loadFixture("async-event-queueing.html")
         
         # We expect all the pageload events to be complete before the server returns from the pageload.
-        s1 = "Load; XHR-0; XHR-100; XHR-500; XHR-1000; Load-finished; Timeout-0; Timeout-100; Timeout-500; Timeout-2000; Interval-500 [1/5]; Interval-500 [2/5]; Interval-500 [3/5]; Interval-500 [4/5]; Interval-500 [5/5]; Interval-2-500 [1/2]; Interval-2-500 [2/2]; "
+        # N.B. Only 4 "rounds" of interval timers are executed.
+        # N.B. The two interval timers are interleaved because of this "rounds" system.
+        s1 = "Load; XHR-0; XHR-100; XHR-500; XHR-1000; Load-finished; Timeout-0; Timeout-100; Timeout-500; Timeout-2000; Interval-500 [1/5]; Interval-2-500 [1/2]; Interval-500 [2/5]; Interval-2-500 [2/2]; Interval-500 [3/5]; Interval-500 [4/5]; "
         self.assertStatusElementContains(s1)
         
         # Trigger events and check they also include the associated async events in the call.
@@ -3838,8 +3840,9 @@ sym_6 -> unexp_queued_14;
         s4 = s3 + "Click-C; XHR-C-200; XHR-C-100; Timeout-C-200; Timeout-C-100; "
         self.assertStatusElementContains(s4)
         
+        # N.B. Only 4 "rounds" of nested timers are fired.
         self.click("id('click-d')")
-        s5 = s4 + "Click-D; Timeout-D-Nested-100 [1/5]; Timeout-D-Nested-100 [2/5]; Timeout-D-Nested-100 [3/5]; Timeout-D-Nested-100 [4/5]; Timeout-D-Nested-100 [5/5]; "
+        s5 = s4 + "Click-D; Timeout-D-Nested-100 [1/5]; Timeout-D-Nested-100 [2/5]; Timeout-D-Nested-100 [3/5]; Timeout-D-Nested-100 [4/5]; "
         self.assertStatusElementContains(s5)
         
         # There should be no more events remaining and nothing will trigger "in the background".
@@ -3849,7 +3852,7 @@ sym_6 -> unexp_queued_14;
         # N.B. The results from this test are expected to differe slightly from a normal browser.
         # First, the events are put in a deterministic order, which has all AJAX events fired synchronously before the
         # timers, and the timers fired in a browser-specified order which is not necessarily chronological.
-        # Second, only a certain number of timers are executed and the rest are cleared to avoid an infinite loop.
+        # Second, timers over 4 levels of "nesting" are cleared without being executed to avoid an infinite loop.
     
     
     
