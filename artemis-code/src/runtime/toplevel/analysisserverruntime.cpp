@@ -1137,6 +1137,7 @@ void AnalysisServerRuntime::clearAsyncEvents()
         bool singleShot = mTimers[timerId].second;
         Log::debug(QString("  CAE: Fire timer %1").arg(timerId).toStdString());
         mWebkitExecutor->mWebkitListener->timerFire(timerId); // N.B. This may add new timers to the list.
+        Statistics::statistics()->accumulate("AnalysisServer::ClearAsyncEvents::TimersTriggered", 1);
         if (singleShot) {
             mTimers.remove(timerId); // This will also get removed by timerCancel, but it may not be immediate.
             mWebkitExecutor->mWebkitListener->timerCancel(timerId);
@@ -1147,6 +1148,7 @@ void AnalysisServerRuntime::clearAsyncEvents()
         Log::debug(QString("  CAE: Cancelling timer %1").arg(timerId).toStdString());
         mTimers.remove(timerId); // This will also get removed by timerCancel, but it may not be immediate.
         mWebkitExecutor->mWebkitListener->timerCancel(timerId);
+        Statistics::statistics()->accumulate("AnalysisServer::ClearAsyncEvents::TimersCancelled", 1);
     }
 
     // Now all async events are executed or removed, so there should be no background execution in the browser.
