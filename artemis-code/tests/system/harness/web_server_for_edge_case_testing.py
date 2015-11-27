@@ -37,28 +37,14 @@ class TestServerRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         else:
             self.page_404()
     
-    def page_404(self):
-        self.send_response(404)
-        self.send_header("Content-type", "text/html")
-        self.send_header("Access-Control-Allow-Origin", "*")
-        self.end_headers()
-        
-        self.wfile.write("<html>\n")
-        self.wfile.write("<head>\n")
-        self.wfile.write("  <title>Test Server</title>\n")
-        self.wfile.write("</head>\n")
-        self.wfile.write("<body>\n")
-        self.wfile.write("  <h1>404</h1>\n")
-        self.wfile.write("</body>\n")
-        self.wfile.write("</html>\n")
-    
     class TestServerHtmlResponseTemplate:
-        def __init__(self, request, title):
+        def __init__(self, request, title, status=200):
             self.request = request
             self.title = title
+            self.status = status
         
         def __enter__(self):
-            self.request.send_response(200)
+            self.request.send_response(self.status)
             self.request.send_header("Content-type", "text/html")
             self.request.send_header("Access-Control-Allow-Origin", "*")
             self.request.end_headers()
@@ -73,6 +59,10 @@ class TestServerRequestHandler(BaseHTTPServer.BaseHTTPRequestHandler):
         def __exit__(self, type, value, traceback):
             self.request.wfile.write("</body>\n")
             self.request.wfile.write("</html>\n")
+    
+    def page_404(self):
+        with self.TestServerHtmlResponseTemplate(self, "404", 404):
+            pass
     
     def page_index(self):
         with self.TestServerHtmlResponseTemplate(self, "Test Server Index"):
