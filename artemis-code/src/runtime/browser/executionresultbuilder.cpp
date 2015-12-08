@@ -118,7 +118,7 @@ QList<EventHandlerDescriptorConstPtr> ExecutionResultBuilder::getCurrentEventHan
             // TODO: There are three visibility check methods available to use here.
             // !userClickableElements.contains(actualSource)    - Checks if the viewport includes a pixel of this element (slow and only works in the viewport).
             // !actualSource.isUserVisible()                    - Checks if the element has a bounding box.
-            // !actualSource.isUserVisibleIncludingChildren()   - As above bu including children and text nodes.
+            // !actualSource.isUserVisibleIncludingChildren()   - As above but including children and text nodes.
             // The ideal solution would be some combination of these.
 
             if (!userClickableElements.contains(actualSource)) {
