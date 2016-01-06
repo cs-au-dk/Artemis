@@ -77,7 +77,7 @@ private:
         Probability of choosing the best unexplored node.  With the remaining
         probability an unexplored node is chosen randomly.
      */
-    static const double P = 0.9;
+    static constexpr double P = 0.9;
 
     /**
         Given the id of a branching instruction (represented by a pair of 

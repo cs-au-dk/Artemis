@@ -5,7 +5,8 @@ DESTDIR = dist
 
 QMAKE_CXXFLAGS += -g \
     -DEXE_BUILD_DATE="`date +'\"%d-%m-%Y_%H:%M:%S\"'`" \
-    -Wno-unused-parameter
+    -Wno-unused-parameter \
+    -std=c++11
 
 DEFINES += ARTEMIS=1
 DEFINES += WTF_PLATFORM_QT=1

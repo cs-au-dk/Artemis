@@ -139,7 +139,7 @@ void SMTConstraintWriter::visit(Symbolic::ConstantInteger* constantinteger, void
      */
 
     std::ostringstream doubleToInt;
-    if (isnan(constantinteger->getValue())) {
+    if (std::isnan(constantinteger->getValue())) {
         doubleToInt << "nan";
     } else {
         doubleToInt << (int)constantinteger->getValue();
