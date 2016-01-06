@@ -54,6 +54,7 @@ Symbolvalue Solution::findSymbol(QString symbol)
 
     if (iter == mSymbols.end()) {
         Symbolvalue result;
+        result.kind = Symbolic::TYPEERROR; // Not needed; prevents compiler warning.
         result.found = false;
 
         return result;

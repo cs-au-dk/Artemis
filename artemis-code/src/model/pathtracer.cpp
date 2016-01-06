@@ -28,8 +28,8 @@ namespace artemis
 
 PathTracer::PathTracer(PathTraceReport reportLevel, CoverageListenerPtr coverage)
     : mCoverage(coverage)
-    , mReportLevel(reportLevel)
     , mTraceItemPoolUncompressedSize(0)
+    , mReportLevel(reportLevel)
 {
 }
 

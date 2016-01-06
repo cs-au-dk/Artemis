@@ -81,7 +81,7 @@ std::string visitPatternAlternative(const JSC::Yarr::PatternAlternative* alterna
                 compiledTerm << "(re.++";
 
                 // insert 0 .. min concrete terms (already done before this term) and min .. max optional
-                for (int i = 0; i < term.quantityCount.unsafeGet(); i++) {
+                for (uint i = 0; i < term.quantityCount.unsafeGet(); i++) {
                     compiledTerm << " (re.opt " << visitPatternTerm(&term, bol, eol) << ")";
                 }
 
@@ -101,7 +101,7 @@ std::string visitPatternAlternative(const JSC::Yarr::PatternAlternative* alterna
 
                 compiledTerm << "(re.++";
 
-                for (int i = 0; i < term.quantityCount.unsafeGet(); i++) {
+                for (uint i = 0; i < term.quantityCount.unsafeGet(); i++) {
                     compiledTerm << " " << visitPatternTerm(&term, bol, eol);
                 }
 
