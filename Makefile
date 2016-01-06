@@ -20,7 +20,7 @@ help:
 	@echo "    fetch-qt			- Fetch, configure and makes Qt"
 
 CORES = `grep -c ^processor /proc/cpuinfo`
-WEBKIT_BUILD_SCRIPT = ./WebKit/Tools/Scripts/build-webkit --qt --qmakearg="DEFINES+=ARTEMIS=1" --makearg="-j$(CORES)" --qmakearg="CC=gcc-4.7" --qmakearg="CXX=g++-4.7" --no-webkit2 --inspector --javascript-debugger
+WEBKIT_BUILD_SCRIPT = ./WebKit/Tools/Scripts/build-webkit --qt --qmakearg="DEFINES+=ARTEMIS=1" --makearg="-j$(CORES)" --qmakearg="CC=gcc-4.7" --qmakearg="CXX=g++-4.7" --qmakearg="QMAKE_CXXFLAGS+=\" -std=c++11 \"" --no-webkit2 --inspector --javascript-debugger
 WEBKIT_TEST_SCRIPT = ./WebKit/Tools/Scripts/run-javascriptcore-tests --qmakearg="DEFINES+=ARTEMIS=1" --debug
 
 CONTRIB_Z3 = ./contrib/Z3
