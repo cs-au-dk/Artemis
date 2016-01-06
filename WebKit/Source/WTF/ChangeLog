@@ -13,6 +13,20 @@
 
 2012-05-21  Allan Sandfeld Jensen  <allan.jensen@nokia.com>
 
+        GCC 4.7 and C++11 support.
+        https://bugs.webkit.org/show_bug.cgi?id=86465
+
+        Reviewed by Darin Adler.
+
+        Detect C++11 mode in GCC 4.7 and set appropiate compiler feature flags.
+        Turn C++11 override control into a compiler feature flag.
+        Fix non-clang support of compiler feature CXX_DELETED_FUNCTIONS.
+
+        * wtf/Compiler.h:
+        * wtf/Noncopyable.h:
+
+2012-05-21  Allan Sandfeld Jensen  <allan.jensen@nokia.com>
+
         Colliding isinf/isnan between C99 and C++11 with GCC >=4.6
         https://bugs.webkit.org/show_bug.cgi?id=59249
 

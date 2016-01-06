@@ -1,3 +1,38 @@
+2012-05-16  Allan Sandfeld Jensen  <allan.jensen@nokia.com>
+
+        GCC 4.7 and C++11
+        https://bugs.webkit.org/show_bug.cgi?id=86465
+
+        Reviewed by Darin Adler.
+
+        Avoid triggering C++11 string literals.
+
+        * UIProcess/API/qt/tests/inspectorserver/tst_inspectorserver.cpp:
+
+2012-05-21  Allan Sandfeld Jensen  <allan.jensen@nokia.com>
+
+        Disambiguate WTF::bind and std::bind from C++11
+        https://bugs.webkit.org/show_bug.cgi?id=86465
+
+        Reviewed by Darin Adler.
+
+        * Platform/CoreIPC/Connection.cpp:
+        (CoreIPC::Connection::SyncMessageState::processIncomingMessage):
+        (CoreIPC::Connection::addQueueClient):
+        (CoreIPC::Connection::removeQueueClient):
+        (CoreIPC::Connection::invalidate):
+        (CoreIPC::Connection::sendMessage):
+        (CoreIPC::Connection::postConnectionDidCloseOnConnectionWorkQueue):
+        (CoreIPC::Connection::connectionDidClose):
+        (CoreIPC::Connection::enqueueIncomingMessage):
+        * Platform/CoreIPC/unix/ConnectionUnix.cpp:
+        (CoreIPC::Connection::open):
+        (CoreIPC::Connection::setShouldCloseConnectionOnProcessTermination):
+        * WebProcess/Plugins/Netscape/NetscapePlugin.cpp:
+        (WebKit::NetscapePlugin::pluginThreadAsyncCall):
+        * WebProcess/WebPage/FindController.cpp:
+        (WebKit::FindController::findString):
+
 2012-05-03  Fady Samuel  <fsamuel@chromium.org>
 
         Removing line in computeViewportAttributes that enforces a minimum scale factor to never allow zooming out more than viewport

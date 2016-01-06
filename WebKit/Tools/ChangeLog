@@ -1,3 +1,14 @@
+2012-05-15  Allan Sandfeld Jensen  <allan.jensen@nokia.com>
+
+        GCC 4.7 and C++11 support.
+        https://bugs.webkit.org/show_bug.cgi?id=86465
+
+        Reviewed by Darin Adler.
+
+        Update detection of C++11 mode in GCC.
+
+        * qmake/mkspecs/features/unix/default_post.prf:
+
 2012-05-03  Andy Estes  <aestes@apple.com>
 
         InjectedBundleControllerMac.mm needs to include config.h
