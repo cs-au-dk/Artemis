@@ -1,22 +1,28 @@
- 
+
 The following instructions assumes you are using a (64 bit) Linux-based system. 
-Artemis have been successfully installed on Ubuntu 12.10 and Fedora 18.
+Artemis has been successfully installed on Ubuntu 14.04 and Fedora 18.
 
  0. Fetch all software dependencies using
     
       make fetch-[apt|yum] (requires root privileges)
-	
-    Artemis requires Qt version 4.8.x. If a suitable version of Qt is not 
-    provided by your distribution, then you can use the following command
-    to download and compile a version compatible with Artemis.
+    
+    Artemis requires Qt version 4.8.x.
+    Under Ubuntu the correct packages should be included by ``make fetch-apt``.
+    
+    If a suitable version of Qt is not provided by your distribution, then you
+    can use the following command to download and compile a version compatible
+    with Artemis.
 
       make fetch-qt
 
     This will place a version of Qt 4.8 in the `qt/` folder.
 
     You can check your Qt version using the command ``qmake --version``
-    (if qmake is missing then Qt is not installed). Note, you need to 
-    set the QTDIR and PATH variables described in step 1.
+    (if qmake is missing then Qt is not installed).
+    Note, you need to set the QTDIR and PATH variables described in step 1.
+    
+    If Qt 5.x is the default version, it can be changed with the `qtchooser`
+    tool or by installing the Ubuntu package `qt4-default`.
     
  1. Configure your environment variables by running
     
@@ -31,17 +37,19 @@ Artemis have been successfully installed on Ubuntu 12.10 and Fedora 18.
 
     `<qt_path>` is /usr/share/qt4 on Ubuntu systems and
     /usr/lib64/qt4/bin on Fedora.
-     
+
  2. Build Artemis
-   
-   	  make all
+    
+      make all
 
 3. Configure your path to include Artemis executable
 
       export PATH=$ARTEMISDIR/artemis-code/dist:$PATH
 
 4. Enable completion in bash by running
-      
-      cp artemis-bash-complete /etc/bash_completion.d/artemis 
-   
-   as root.
+    
+      cp artemis-code/scripts/artemis-bash-complete /etc/bash_completion.d/artemis 
+    
+    as root.
+
+
