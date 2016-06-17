@@ -3,6 +3,8 @@ TEMPLATE = app
 CONFIG += console
 CONFIG -= app_bundle
 
+CONFIG += static
+
 LIBS += -pthread
 
 DEFINES += ARTEMIS=1
@@ -19,10 +21,12 @@ INCLUDEPATH += ../../../WebKit/WebKitBuild/Release/include/ \
     ../../src/
 
 VPATH += ../../
-include(../../artemis-core.pri)
 
+include(../../artemis-core.pri)
 # Override some options set in artemis-core.pri, as gmock has some warnings.
 QMAKE_CXXFLAGS += -Wno-error
+
+QMAKE_LFLAGS += '-Wl,-rpath,\'$$PWD/../../../WebKit/WebKitBuild/Release/lib\''
 
 HEADERS += \
     include/gtest/gtest.h \
