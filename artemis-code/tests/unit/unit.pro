@@ -21,6 +21,9 @@ INCLUDEPATH += ../../../WebKit/WebKitBuild/Release/include/ \
 VPATH += ../../
 include(../../artemis-core.pri)
 
+# Override some options set in artemis-core.pri, as gmock has some warnings.
+QMAKE_CXXFLAGS += -Wno-error
+
 HEADERS += \
     include/gtest/gtest.h \
     include/gmock/gmock.h
