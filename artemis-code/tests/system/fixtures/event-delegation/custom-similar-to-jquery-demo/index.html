@@ -35,7 +35,7 @@ color: red;
 
 function on(container, type, selector, handler) {
     container.addEventListener(type, function(event) {
-        // Fetch an array containing all descendents of container which match the selector.
+        // Fetch an array containing all descendants of container which match the selector.
         var matches = Array.prototype.slice.call(document.querySelectorAll(selector));
         // If the target matches the selector then fire the event.
         if(matches.indexOf(event.target) >= 0) {
