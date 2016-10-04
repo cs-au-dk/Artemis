@@ -39,6 +39,47 @@ namespace artemis{
         foreach(QList<EventTuple> list, mRegisteredHandlers){
             rows.append(SeleniumTableRow("open", mUrl.toString()));
             foreach(EventTuple desc, list){
+                // Include the form inputs.
+                // N.B. Artemis injects these without triggering events, so this selenium script will not match Artemis' behaviour perfectly.
+                foreach (FormInputPair fip, desc.mFormInput->getInputs()) {
+                    // Generate an appropriate selenium command for text fields, check boxes, radio buttons, selects, etc.
+                    QString xPath = fip.first->getDomElement()->getXPath();
+                    switch (fip.first->getType()) {
+                    case FormFieldTypes::TEXT:
+                        if (fip.second.getType() == QVariant::String) {
+                            rows.append(SeleniumTableRow("type", xPath, fip.second.getString()));
+                        } else {
+                            qDebug() << "SELENIUM: Warning: The field and value don't match.";
+                        }
+                        break;
+                    case FormFieldTypes::FIXED_INPUT:
+                        if (fip.second.getType() == QVariant::String) {
+                            rows.append(SeleniumTableRow("select", xPath, fip.second.getString()));
+                        } else if (fip.second.getType() == QVariant::Int) {
+                            rows.append(SeleniumTableRow("select", xPath, QString("index=%1").arg(fip.second.getInt())));
+                        } else {
+                            qDebug() << "SELENIUM: Warning: The field and value don't match.";
+                        }
+                        break;
+                    case FormFieldTypes::BOOLEAN:
+                        if (fip.second.getType() == QVariant::Bool) {
+                            if (fip.second.getBool()) {
+                                rows.append(SeleniumTableRow("check", xPath));
+                            } else {
+                                rows.append(SeleniumTableRow("uncheck", xPath));
+                            }
+                        } else {
+                            qDebug() << "SELENIUM: Warning: The field and value don't match.";
+                        }
+                        break;
+                    case FormFieldTypes::NO_INPUT: // Fall-through
+                    default:
+                        // Ignore
+                        break;
+                    }
+                }
+
+                // Trigger the actual event
                 QSharedPointer<const MouseEventParameters> mep = qSharedPointerDynamicCast<const MouseEventParameters>(desc.mEvtParams);
                 QSharedPointer<const KeyboardEventParameters> kep = qSharedPointerDynamicCast<const KeyboardEventParameters>(desc.mEvtParams);
 
@@ -107,7 +148,6 @@ namespace artemis{
                     rows.append(SeleniumTableRow("fireEvent", desc.mEventHandler->xPathToElement(), desc.mEventHandler->getName()));
                 }
 
-                // TODO: Also output the form inputs.
             }
             QString testName = "iteration";
             int j = (int)mRegisteredHandlers.size()/10;
