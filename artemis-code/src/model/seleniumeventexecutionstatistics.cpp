@@ -106,6 +106,8 @@ namespace artemis{
                 } else {
                     rows.append(SeleniumTableRow("fireEvent", desc.mEventHandler->xPathToElement(), desc.mEventHandler->getName()));
                 }
+
+                // TODO: Also output the form inputs.
             }
             QString testName = "iteration";
             int j = (int)mRegisteredHandlers.size()/10;

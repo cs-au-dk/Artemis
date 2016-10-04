@@ -41,6 +41,7 @@ protected:
 private:
     bool init;
     QString eventTupleToJSONString(EventTuple evt);
+    QString formInputToJSONString(FormInputCollectionConstPtr formInput);
 };
 }
 #endif // JSONEVENTEXECUTIONSTATISTICS_H

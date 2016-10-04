@@ -114,9 +114,24 @@ QString JSONEventExecutionStatistics::eventTupleToJSONString(EventTuple evt){
         out.append(", \"keyLocation\":").append(QString::number(kep->keyLocation));
 
     }
+    out.append(", \"formInput\": [").append(formInputToJSONString(evt.mFormInput)).append("]");
+
     return out.append(", \"targetXPath\": \"").append(QString(evt.mEventHandler->xPathToElement()).replace("\"", "\\\"")).append("\"").append("}");
 
-
 }
 
+QString JSONEventExecutionStatistics::formInputToJSONString(FormInputCollectionConstPtr formInput)
+{
+    QStringList items;
+    foreach (FormInputPair fip, formInput->getInputs()) {
+        QString itemStr = "[\"";
+        itemStr.append(fip.first->getDomElement()->getXPath().replace("\"", "\\\""));
+        itemStr.append("\", \"");
+        itemStr.append(fip.second.toString());
+        itemStr.append("\"]");
+        items.append(itemStr);
+    }
+    return items.join(", ");
 }
+
+} // namespace artemis

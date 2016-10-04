@@ -3,6 +3,7 @@
 
 #include "runtime/input/events/eventhandlerdescriptor.h"
 #include "runtime/input/events/eventparameters.h"
+#include "runtime/input/forms/forminputcollection.h"
 #include <QString>
 
 namespace artemis{
@@ -10,9 +11,11 @@ namespace artemis{
 struct EventTuple{
     EventHandlerDescriptorConstPtr mEventHandler;
     EventParametersConstPtr mEvtParams;
-    EventTuple(QSharedPointer<const EventHandlerDescriptor> eventHandler, QSharedPointer<const EventParameters> evtParams){
+    FormInputCollectionConstPtr mFormInput;
+    EventTuple(QSharedPointer<const EventHandlerDescriptor> eventHandler, QSharedPointer<const EventParameters> evtParams, QSharedPointer<const FormInputCollection> formInput){
         mEventHandler = eventHandler;
         mEvtParams = evtParams;
+        mFormInput = formInput;
     }
 };
 

@@ -58,6 +58,10 @@ public:
         return mClassLine;
     }
 
+    inline QString getXPath() const {
+        return mXPath;
+    }
+
     uint hashCode() const;
     QString toString() const;
 
@@ -67,6 +71,7 @@ private:
     QString mTagName;
     QString mName;
     QString mClassLine;
+    QString mXPath;
 
     // Path from the mainFrame to the frame containig the element
     QList<int> mFramePath;
