@@ -54,6 +54,8 @@ QList<QSharedPointer<ExecutableConfiguration> > RandomInputGenerator::addNewConf
     QList<QSharedPointer<ExecutableConfiguration> > newConfigurations;
 
     newConfigurations.append(insertSameLength(oldConfiguration, result));
+
+    // TODO: This is a temporary working mode for Artemis, to simplify development and testing of the delegation support. We only explore single actions, not sequences of length >1.
     if (oldConfiguration->isInitial()) {
         newConfigurations.append(insertExtended(oldConfiguration, result));
     }
