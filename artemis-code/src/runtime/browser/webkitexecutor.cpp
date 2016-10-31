@@ -49,10 +49,12 @@ WebKitExecutor::WebKitExecutor(QObject* parent,
                                bool enableConstantStringInstrumentation,
                                bool enablePropertyAccessInstrumentation,
                                bool enableEventVisibilityFiltering,
-                               ConcolicBenchmarkFeatures disabledFeatures)
+                               ConcolicBenchmarkFeatures disabledFeatures,
+                               bool enableExtrnalNavigationRequests)
     : QObject(parent)
     , mNextOpCanceled(false), mKeepOpen(false)
     , mSymbolicMode(MODE_CONCRETE)
+    , mEnableExternalNaviagtionRequests(enableExtrnalNavigationRequests)
 {
 
     mPresetFields = presetFields;
@@ -221,6 +223,9 @@ void WebKitExecutor::executeSequence(ExecutableConfigurationConstPtr conf, SYMBO
     }
 
     mWebkitListener->clearAjaxCallbacks(); // reset the ajax callback ids
+    if (mEnableExternalNaviagtionRequests) {
+        mPage->mAcceptNavigation = true; // Allow navigation dunring the page load.
+    }
 
     mPage->mainFrame()->load(conf->getUrl());
 }
@@ -248,6 +253,10 @@ void WebKitExecutor::slNAMFinished(QNetworkReply* reply){
 
 void WebKitExecutor::slLoadFinished(bool ok)
 {
+    if (mEnableExternalNaviagtionRequests) {
+        mPage->mAcceptNavigation = false; // Now the page load is done, pass all navigation requests to the external signal instead.
+    }
+
     if(mNextOpCanceled){
         mNextOpCanceled = false;
         qDebug() << "Page load canceled";

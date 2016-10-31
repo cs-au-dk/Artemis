@@ -48,6 +48,7 @@ protected:
 
     WorkListPtr mWorklist;
     EntryPointDetector mEntryPointDetector;
+    QSet<QUrl> mUrlsSeen;
 
     void notifyAboutNewIteration(ExecutableConfigurationConstPtr configuration);
 
@@ -56,6 +57,7 @@ private:
 
 private slots:
     void postConcreteExecution(ExecutableConfigurationConstPtr configuration, QSharedPointer<ExecutionResult> result);
+    void slNavigationRequest(QWebFrame* frame, QNetworkRequest request, QWebPage::NavigationType type);
 
 };
 

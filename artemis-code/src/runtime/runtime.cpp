@@ -111,7 +111,8 @@ Runtime::Runtime(QObject* parent, const Options& options, const QUrl& url)
                                          enableConstantStringInstrumentation,
                                          enablePropertyAccessInstrumentation,
                                          options.enableEventVisibilityFiltering,
-                                         options.concolicDisabledFeatures);
+                                         options.concolicDisabledFeatures,
+                                         options.artemisLoadUrls);
 
     if(!options.customUserAgent.isEmpty()) {
         mWebkitExecutor->getPage()->setCustomUserAgent(options.customUserAgent);

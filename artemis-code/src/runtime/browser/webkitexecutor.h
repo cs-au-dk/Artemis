@@ -66,7 +66,8 @@ public:
                    bool enableConstantStringInstrumentation,
                    bool enablePropertyAccessInstrumentation,
                    bool enableEventVisibilityFiltering,
-                   ConcolicBenchmarkFeatures disabledFeatures);
+                   ConcolicBenchmarkFeatures disabledFeatures,
+                   bool enableExtrnalNavigationRequests);
     ~WebKitExecutor();
 
     void executeSequence(ExecutableConfigurationConstPtr conf);
@@ -100,6 +101,7 @@ private:
     DomSnapshotStoragePtr mDomSnapshotStorage; // Only used in symbolic mode MODE_CONCOLIC_LAST_EVENT
 
     SYMBOLIC_MODE mSymbolicMode;
+    bool mEnableExternalNaviagtionRequests;
 
 signals:
     void sigExecutedSequence(ExecutableConfigurationConstPtr conf, QSharedPointer<ExecutionResult> res);
