@@ -44,6 +44,7 @@
 #include <wtf/StringExtras.h>
 #include <wtf/unicode/UTF8.h>
 #include <statistics/statsstorage.h>
+#include <QDebug>
 
 using namespace WTF;
 using namespace Unicode;
@@ -794,5 +795,15 @@ EncodedJSValue JSC_HOST_CALL globalFuncProtoSetter(ExecState* exec)
         throwError(exec, createError(exec, "cyclic __proto__ value"));
     return JSValue::encode(jsUndefined());
 }
+
+#ifdef ARTEMIS
+EncodedJSValue JSC_HOST_CALL globalFuncArtemisMakeSymbolic(ExecState* exec)
+{
+    // TODO: For now it is just a no-op.
+    qDebug() << "globalFuncArtemisMakeSymbolic";
+    JSValue value = exec->argument(0);
+    return JSValue::encode(value);
+}
+#endif
 
 } // namespace JSC

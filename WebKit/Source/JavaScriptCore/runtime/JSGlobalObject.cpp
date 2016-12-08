@@ -92,6 +92,7 @@ const GlobalObjectMethodTable JSGlobalObject::s_globalObjectMethodTable = { &all
   decodeURIComponent    globalFuncDecodeURIComponent    DontEnum|Function 1
   encodeURI             globalFuncEncodeURI             DontEnum|Function 1
   encodeURIComponent    globalFuncEncodeURIComponent    DontEnum|Function 1
+  artemisMakeSymbolic   globalFuncArtemisMakeSymbolic   DontEnum|Function 1
 @end
 */
 
