@@ -10,16 +10,28 @@ FIXTURE_ROOT = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'fixtur
 
 class ConcolicEngnie(unittest.TestCase):
     
-    def test_artemis_make_symbolic_exists(self):
-        file_name = "symbolic-value-test.html"
+    def test_input_functions_exist(self):
+        file_name = "input-functions-exist.html"
         report = run_artemis(self._test_name(), "{}{}".format(FIXTURE_ROOT, file_name))
         
         # Check we get the expected output.
         alerts = report["alerts"]
         
-        self.assertIn("typeof(artemisMakeSymbolic): function", alerts)
-        self.assertIn("Before: 5", alerts)
-        self.assertIn("After: 5", alerts)
+        self.assertIn("typeof(artemisInputString): function", alerts)
+        self.assertIn("typeof(artemisInputInteger): function", alerts)
+        self.assertIn("typeof(artemisInputBoolean): function", alerts)
+        
+    
+    def test_input_functions_default_values(self):
+        file_name = "input-functions-exist.html"
+        report = run_artemis(self._test_name(), "{}{}".format(FIXTURE_ROOT, file_name))
+        
+        # Check we get the expected output.
+        alerts = report["alerts"]
+        
+        self.assertIn("artemisInputString('x'): ''", alerts)
+        self.assertIn("artemisInputInteger('y'): 0", alerts)
+        self.assertIn("artemisInputBoolean('z'): false", alerts)
         
     
     def _test_name(self):

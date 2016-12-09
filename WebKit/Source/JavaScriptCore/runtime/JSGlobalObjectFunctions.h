@@ -52,7 +52,9 @@ namespace JSC {
     EncodedJSValue JSC_HOST_CALL globalFuncProtoSetter(ExecState*);
 
 #ifdef ARTEMIS
-    EncodedJSValue JSC_HOST_CALL globalFuncArtemisMakeSymbolic(ExecState*);
+    EncodedJSValue JSC_HOST_CALL globalFuncArtemisInputString(ExecState*);
+    EncodedJSValue JSC_HOST_CALL globalFuncArtemisInputInteger(ExecState*);
+    EncodedJSValue JSC_HOST_CALL globalFuncArtemisInputBoolean(ExecState*);
 #endif
 
     static const double mantissaOverflowLowerBound = 9007199254740992.0;

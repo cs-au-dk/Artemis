@@ -797,11 +797,30 @@ EncodedJSValue JSC_HOST_CALL globalFuncProtoSetter(ExecState* exec)
 }
 
 #ifdef ARTEMIS
-EncodedJSValue JSC_HOST_CALL globalFuncArtemisMakeSymbolic(ExecState* exec)
+EncodedJSValue JSC_HOST_CALL globalFuncArtemisInputString(ExecState* exec)
 {
-    // TODO: For now it is just a no-op.
-    qDebug() << "globalFuncArtemisMakeSymbolic";
-    JSValue value = exec->argument(0);
+    // The first srgument is expected to be a string giving the name of the input variable being fetched.
+    // TODO: For now we are just returning concrete constants.
+    UString defaultStringValue;
+    JSValue value = jsString(exec, defaultStringValue);
+    return JSValue::encode(value);
+}
+
+EncodedJSValue JSC_HOST_CALL globalFuncArtemisInputInteger(ExecState* exec)
+{
+    // The first srgument is expected to be a string giving the name of the input variable being fetched.
+    // TODO: For now we are just returning concrete constants.
+    int defaultIntegerValue = 0;
+    JSValue value = jsNumber(defaultIntegerValue);
+    return JSValue::encode(value);
+}
+
+EncodedJSValue JSC_HOST_CALL globalFuncArtemisInputBoolean(ExecState* exec)
+{
+    // The first srgument is expected to be a string giving the name of the input variable being fetched.
+    // TODO: For now we are just returning concrete constants.
+    bool defaultBoolValue = false;
+    JSValue value = jsBoolean(defaultBoolValue);
     return JSValue::encode(value);
 }
 #endif
