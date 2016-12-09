@@ -44,7 +44,11 @@
 #include <wtf/StringExtras.h>
 #include <wtf/unicode/UTF8.h>
 #include <statistics/statsstorage.h>
-#include <QDebug>
+
+#ifdef ARTEMIS
+#include "symbolic/directaccesssymbolicvalues.h"
+#include <QString>
+#endif
 
 using namespace WTF;
 using namespace Unicode;
@@ -799,29 +803,42 @@ EncodedJSValue JSC_HOST_CALL globalFuncProtoSetter(ExecState* exec)
 #ifdef ARTEMIS
 EncodedJSValue JSC_HOST_CALL globalFuncArtemisInputString(ExecState* exec)
 {
-    // The first srgument is expected to be a string giving the name of the input variable being fetched.
-    // TODO: For now we are just returning concrete constants.
-    UString defaultStringValue;
-    JSValue value = jsString(exec, defaultStringValue);
-    return JSValue::encode(value);
+    // The argument is a string giving the name of the input variable being fetched.
+    JSValue arg = exec->argument(0);
+    UString arg_str = arg.toString(exec)->value(exec);
+    QString arg_str_qstring = QString::fromAscii(arg_str.ascii().data());
+
+    QString value = Symbolic::get_direct_access_symbolic_values_store()->getString(arg_str_qstring);
+    UString value_ustring = UString(value.toAscii().data());
+
+    JSValue jsValue = jsString(exec, value_ustring); // TODO: Make symbolic
+    return JSValue::encode(jsValue);
 }
 
 EncodedJSValue JSC_HOST_CALL globalFuncArtemisInputInteger(ExecState* exec)
 {
-    // The first srgument is expected to be a string giving the name of the input variable being fetched.
-    // TODO: For now we are just returning concrete constants.
-    int defaultIntegerValue = 0;
-    JSValue value = jsNumber(defaultIntegerValue);
-    return JSValue::encode(value);
+    // The argument is a string giving the name of the input variable being fetched.
+    JSValue arg = exec->argument(0);
+    UString arg_str = arg.toString(exec)->value(exec);
+    QString arg_str_qstring = QString::fromAscii(arg_str.ascii().data());
+
+    int value = Symbolic::get_direct_access_symbolic_values_store()->getInteger(arg_str_qstring);
+
+    JSValue jsValue = jsNumber(value); // TODO: Make symbolic
+    return JSValue::encode(jsValue);
 }
 
 EncodedJSValue JSC_HOST_CALL globalFuncArtemisInputBoolean(ExecState* exec)
 {
-    // The first srgument is expected to be a string giving the name of the input variable being fetched.
-    // TODO: For now we are just returning concrete constants.
-    bool defaultBoolValue = false;
-    JSValue value = jsBoolean(defaultBoolValue);
-    return JSValue::encode(value);
+    // The argument is a string giving the name of the input variable being fetched.
+    JSValue arg = exec->argument(0);
+    UString arg_str = arg.toString(exec)->value(exec);
+    QString arg_str_qstring = QString::fromAscii(arg_str.ascii().data());
+
+    bool value = Symbolic::get_direct_access_symbolic_values_store()->getBoolean(arg_str_qstring);
+
+    JSValue jsValue = jsBoolean(value); // TODO: Make symbolic
+    return JSValue::encode(jsValue);
 }
 #endif
 
