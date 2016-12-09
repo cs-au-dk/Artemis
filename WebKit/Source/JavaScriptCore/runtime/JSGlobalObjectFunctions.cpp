@@ -805,13 +805,22 @@ EncodedJSValue JSC_HOST_CALL globalFuncArtemisInputString(ExecState* exec)
 {
     // The argument is a string giving the name of the input variable being fetched.
     JSValue arg = exec->argument(0);
-    UString arg_str = arg.toString(exec)->value(exec);
-    QString arg_str_qstring = QString::fromAscii(arg_str.ascii().data());
+    JSString* arg_str = arg.toString(exec);
+    if (exec->hadException()) { // Check it can be convetrted to string safely.
+        return JSValue::encode(jsUndefined()); // TODO: This should be an error.
+    }
+    QString arg_str_qstring = QString::fromAscii(arg_str->value(exec).ascii().data()); // JSString -> UString -> char* -> QString
+    // TODO: Strip any spaces from the name.
 
     QString value = Symbolic::get_direct_access_symbolic_values_store()->getString(arg_str_qstring);
     UString value_ustring = UString(value.toAscii().data());
 
-    JSValue jsValue = jsString(exec, value_ustring); // TODO: Make symbolic
+    JSValue jsValue = jsString(exec, value_ustring);
+
+    QString var_identifier = QString::fromAscii("SYM_IN_%1").arg(arg_str_qstring);
+    Symbolic::SymbolicSource symbolic_source = Symbolic::SymbolicSource(Symbolic::DIRECT_ACCESS, Symbolic::DIRECT_ACCESS_IDENT, var_identifier.toStdString());
+    jsValue.makeSymbolic(new Symbolic::SymbolicString(symbolic_source), exec->globalData());
+
     return JSValue::encode(jsValue);
 }
 
@@ -819,12 +828,21 @@ EncodedJSValue JSC_HOST_CALL globalFuncArtemisInputInteger(ExecState* exec)
 {
     // The argument is a string giving the name of the input variable being fetched.
     JSValue arg = exec->argument(0);
-    UString arg_str = arg.toString(exec)->value(exec);
-    QString arg_str_qstring = QString::fromAscii(arg_str.ascii().data());
+    JSString* arg_str = arg.toString(exec);
+    if (exec->hadException()) { // Check it can be convetrted to string safely.
+        return JSValue::encode(jsUndefined()); // TODO: This should be an error.
+    }
+    QString arg_str_qstring = QString::fromAscii(arg_str->value(exec).ascii().data()); // JSString -> UString -> char* -> QString
+    // TODO: Strip any spaces from the name.
 
     int value = Symbolic::get_direct_access_symbolic_values_store()->getInteger(arg_str_qstring);
 
-    JSValue jsValue = jsNumber(value); // TODO: Make symbolic
+    JSValue jsValue = jsNumber(value);
+
+    QString var_identifier = QString::fromAscii("SYM_IN_INT_%1").arg(arg_str_qstring);
+    Symbolic::SymbolicSource symbolic_source = Symbolic::SymbolicSource(Symbolic::DIRECT_ACCESS, Symbolic::DIRECT_ACCESS_IDENT, var_identifier.toStdString());
+    jsValue.makeSymbolic(new Symbolic::SymbolicInteger(symbolic_source), exec->globalData());
+
     return JSValue::encode(jsValue);
 }
 
@@ -832,12 +850,21 @@ EncodedJSValue JSC_HOST_CALL globalFuncArtemisInputBoolean(ExecState* exec)
 {
     // The argument is a string giving the name of the input variable being fetched.
     JSValue arg = exec->argument(0);
-    UString arg_str = arg.toString(exec)->value(exec);
-    QString arg_str_qstring = QString::fromAscii(arg_str.ascii().data());
+    JSString* arg_str = arg.toString(exec);
+    if (exec->hadException()) { // Check it can be convetrted to string safely.
+        return JSValue::encode(jsUndefined()); // TODO: This should be an error.
+    }
+    QString arg_str_qstring = QString::fromAscii(arg_str->value(exec).ascii().data()); // JSString -> UString -> char* -> QString
+    // TODO: Strip any spaces from the name.
 
     bool value = Symbolic::get_direct_access_symbolic_values_store()->getBoolean(arg_str_qstring);
 
-    JSValue jsValue = jsBoolean(value); // TODO: Make symbolic
+    JSValue jsValue = jsBoolean(value);
+
+    QString var_identifier = QString::fromAscii("SYM_IN_BOOL_%1").arg(arg_str_qstring);
+    Symbolic::SymbolicSource symbolic_source = Symbolic::SymbolicSource(Symbolic::DIRECT_ACCESS, Symbolic::DIRECT_ACCESS_IDENT, var_identifier.toStdString());
+    jsValue.makeSymbolic(new Symbolic::SymbolicBoolean(symbolic_source), exec->globalData());
+
     return JSValue::encode(jsValue);
 }
 #endif
