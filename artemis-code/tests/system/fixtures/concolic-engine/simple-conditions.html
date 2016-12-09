@@ -1,0 +1,34 @@
+<!doctype html>
+<html>
+<head>
+    <script type="text/javascript" >
+        window.onload = function () {
+            var x = artemisInputString('x');
+            var y = artemisInputInteger('y')
+            var z = artemisInputBoolean('z')
+            
+            if (x == "testme") {
+                alert("String '" + x + "' is OK");
+            } else {
+                alert("String '" + x + "' is not valid.");
+            }
+            
+            if (y > 10) {
+                alert("Int '" + y + "' is OK");
+            } else {
+                alert("Int '" + y + "' is not valid.");
+            }
+            
+            if (z) {
+                alert("Bool '" + z + "' is OK");
+            } else {
+                alert("Bool '" + z + "' is not valid.");
+            }
+            
+        }
+    </script>
+</head>
+<body>
+    <h1>Symbolic value test page</h1>
+</body>
+</html>
