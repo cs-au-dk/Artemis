@@ -16,7 +16,7 @@
 
 # The test files to be run in artemis-code/tests/system
 # They are expected to use the python unittest output format.
-SYSTEMTESTS=(tests.py concolic.py delegation.py solver.py symbolic.py visibility.py server.py)
+SYSTEMTESTS=(tests.py concolic.py concolic-engine.py delegation.py solver.py symbolic.py visibility.py server.py)
 
 
 # Save all summary lines output by this script so they can be appended at the end.

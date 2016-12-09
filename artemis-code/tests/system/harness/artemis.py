@@ -14,8 +14,8 @@ PATHCOND_START = '=== Last pathconditions ==='
 PATHCOND_END = '=== Last pathconditions END ==='
 
 RE_STATS_LINE = re.compile(r'^(.*):(.*)$')
-
 RE_PATHCOND_LINE = re.compile(r'^PC\[([0-9]*)\]:(.+)$')
+RE_ALERT_LINE = re.compile(r'^JAVASCRIPT ALERT:  "(.*)" $')
 
 
 def execute_artemis(execution_uuid, url, iterations=1,
@@ -206,6 +206,15 @@ def execute_artemis(execution_uuid, url, iterations=1,
             value = m.group(2).strip()
             pc.append(value)
     report['pathCondition'] = pc
+    
+    alert_calls = []
+    for line in stdout.splitlines():
+        match = RE_ALERT_LINE.match(line)
+        if match is not None:
+            value = match.group(1).strip()
+            alert_calls.append(value)
+    report["alerts"] = alert_calls
+    
     return report
 
 
