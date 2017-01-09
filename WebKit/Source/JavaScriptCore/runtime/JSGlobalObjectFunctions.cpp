@@ -48,6 +48,7 @@
 #ifdef ARTEMIS
 #include "symbolic/directaccesssymbolicvalues.h"
 #include <QString>
+#include <QDebug>
 #endif
 
 using namespace WTF;
@@ -807,10 +808,11 @@ EncodedJSValue JSC_HOST_CALL globalFuncArtemisInputString(ExecState* exec)
     JSValue arg = exec->argument(0);
     JSString* arg_str = arg.toString(exec);
     if (exec->hadException()) { // Check it can be convetrted to string safely.
-        return JSValue::encode(jsUndefined()); // TODO: This should be an error.
+        qDebug() << "ERROR: artemisInputString argument is not a string.";
+        return JSValue::encode(jsUndefined());
     }
     QString arg_str_qstring = QString::fromAscii(arg_str->value(exec).ascii().data()); // JSString -> UString -> char* -> QString
-    // TODO: Strip any spaces from the name.
+    arg_str_qstring = arg_str_qstring.trimmed(); // Strip any spaces from the name.
 
     QString value = Symbolic::get_direct_access_symbolic_values_store()->getString(arg_str_qstring);
     UString value_ustring = UString(value.toAscii().data());
@@ -830,10 +832,11 @@ EncodedJSValue JSC_HOST_CALL globalFuncArtemisInputInteger(ExecState* exec)
     JSValue arg = exec->argument(0);
     JSString* arg_str = arg.toString(exec);
     if (exec->hadException()) { // Check it can be convetrted to string safely.
-        return JSValue::encode(jsUndefined()); // TODO: This should be an error.
+        qDebug() << "ERROR: artemisInputInteger argument is not a string.";
+        return JSValue::encode(jsUndefined());
     }
     QString arg_str_qstring = QString::fromAscii(arg_str->value(exec).ascii().data()); // JSString -> UString -> char* -> QString
-    // TODO: Strip any spaces from the name.
+    arg_str_qstring = arg_str_qstring.trimmed(); // Strip any spaces from the name.
 
     int value = Symbolic::get_direct_access_symbolic_values_store()->getInteger(arg_str_qstring);
 
@@ -852,10 +855,11 @@ EncodedJSValue JSC_HOST_CALL globalFuncArtemisInputBoolean(ExecState* exec)
     JSValue arg = exec->argument(0);
     JSString* arg_str = arg.toString(exec);
     if (exec->hadException()) { // Check it can be convetrted to string safely.
-        return JSValue::encode(jsUndefined()); // TODO: This should be an error.
+        qDebug() << "ERROR: artemisInputBoolean argument is not a string.";
+        return JSValue::encode(jsUndefined());
     }
     QString arg_str_qstring = QString::fromAscii(arg_str->value(exec).ascii().data()); // JSString -> UString -> char* -> QString
-    // TODO: Strip any spaces from the name.
+    arg_str_qstring = arg_str_qstring.trimmed(); // Strip any spaces from the name.
 
     bool value = Symbolic::get_direct_access_symbolic_values_store()->getBoolean(arg_str_qstring);
 
