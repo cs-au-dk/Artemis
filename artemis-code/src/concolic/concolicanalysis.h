@@ -126,7 +126,7 @@ public:
     // If this is set, the pointed-to DomSnapshotStorage should be updated by WebkitExecutor to contain up-to-date snapshots.
     void setDomSnapshotStorage(DomSnapshotStoragePtr domSnapshotStorage);
 
-    // Accessor for the search tree, which should not be externally modified!
+    // Accessor for the search tree, which should not be externally modified! (TODO: This is not enforced)
     TraceNodePtr getExecutionTree();
     uint getExplorationIndex();
 

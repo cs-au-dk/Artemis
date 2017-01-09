@@ -218,7 +218,7 @@ void WebKitExecutor::executeSequence(ExecutableConfigurationConstPtr conf, SYMBO
     mPathTracer->notifyStartingLoad();
 
     mSymbolicMode = symbolicMode;
-    if (symbolicMode == MODE_CONCOLIC || symbolicMode == MODE_CONCOLIC_CONTINOUS) {
+    if (symbolicMode == MODE_CONCOLIC || symbolicMode == MODE_CONCOLIC_CONTINOUS || symbolicMode == MODE_CONCOLIC_NO_TRACE) {
         mWebkitListener->beginSymbolicSession();
     }
 
@@ -291,7 +291,7 @@ void WebKitExecutor::slLoadFinished(bool ok)
 
     qDebug() << "\n------------ EXECUTE SEQUENCE -----------" << endl;
 
-    if (mSymbolicMode != MODE_CONCOLIC_LAST_EVENT) {
+    if (mSymbolicMode != MODE_CONCOLIC_LAST_EVENT && mSymbolicMode != MODE_CONCOLIC_NO_TRACE) {
         mTraceBuilder->beginRecording();
     }
 
@@ -326,11 +326,13 @@ void WebKitExecutor::slLoadFinished(bool ok)
     QSharedPointer<ExecutionResult> result = mResultBuilder->getResult();
 
     // End the trace recording.
-    mTraceBuilder->endRecording();
+    if (mSymbolicMode != MODE_CONCOLIC_NO_TRACE) {
+        mTraceBuilder->endRecording();
 
-    PathConditionPtr pc = PathCondition::createFromTrace(mTraceBuilder->trace());
-    if (pc->size() > 0) {
-        Statistics::statistics()->accumulate("Concolic::sessions::hasPC", 1);
+        PathConditionPtr pc = PathCondition::createFromTrace(mTraceBuilder->trace());
+        if (pc->size() > 0) {
+            Statistics::statistics()->accumulate("Concolic::sessions::hasPC", 1);
+        }
     }
 
     qDebug() << "\n------------ DONE EXECUTING -----------" << endl;

@@ -21,7 +21,7 @@ class DirectAccessSymbolicValues
 public:
     DirectAccessSymbolicValues();
 
-    // Called from Artemis // TODO: Where?
+    // Called from Artemis in concolicstandaloneruntime.cpp
     void setString(QString name, QString value);
     void setInteger(QString name, int value);
     void setBoolean(QString name, bool value);

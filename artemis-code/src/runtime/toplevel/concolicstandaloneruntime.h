@@ -22,9 +22,13 @@
 
 #include "runtime/runtime.h"
 #include "runtime/options.h"
+#include "concolic/concolicanalysis.h"
 
 namespace artemis
 {
+
+// TODO: Add something like ConcolicRuntime::reportStatistics() to call during done().
+// TODO: Add support for async events: timers and AJAX, as we do in server mode.
 
 class ConcolicStandaloneRuntime : public Runtime
 {
@@ -35,9 +39,23 @@ public:
 
     void run(const QUrl& url);
 
-    // TODO: Add something like ConcolicRuntime::reportStatistics() to call during done().
-
 protected:
+    QUrl mUrl;
+
+    QString loadJsSnippet();
+    QString mJsCode;
+
+    // Concolic analysis part
+    ConcolicAnalysisPtr mConcolicAnalysis;
+    ConcolicAnalysis::ExplorationResult mExplorationResult;
+
+    int mNumIterations;
+
+    void newConcolicIteration();
+    void doneConcolicIteration(TraceNodePtr trace);
+
+protected slots:
+    void slExecutedSequence(ExecutableConfigurationConstPtr configuration, QSharedPointer<ExecutionResult> result);
 
 };
 
