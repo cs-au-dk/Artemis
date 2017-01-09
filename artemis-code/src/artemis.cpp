@@ -68,6 +68,7 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             "           artemis - (default) the top-level test algorithm described in the ICSE'11 Artemis paper\n"
             "           manual - open a browser window for manual testing of web applications\n"
             "           concolic - perform an automated concolic analysis of form validation code\n"
+            "           concolic-test - perform a concolic analysis of standalone JavaScript snippets (for testing)\n"
             "\n"
             "--strategy-form-input-generation <strategy>:\n"
             "           Select form input generation strategy.\n"
@@ -447,6 +448,8 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
                 options.majorMode = artemis::MANUAL;
             } else if (string(optarg).compare("concolic") == 0) {
                 options.majorMode = artemis::CONCOLIC;
+            } else if (string(optarg).compare("concolic-test") == 0) {
+                options.majorMode = artemis::CONCOLIC_TEST;
             } else {
                 cerr << "ERROR: Invalid choice of major-mode " << optarg << endl;
                 exit(1);
@@ -811,15 +814,23 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
     QUrl url;
 
     if (optind >= argc) {
-        // If we are in manual mode then the url is optional.
-        if(options.majorMode != artemis::MANUAL){
+        // Major-mode concolic-test does not use a URL.
+        if (options.majorMode == artemis::CONCOLIC_TEST) {
+            url = QUrl("about:blank");
+        } else if (options.majorMode == artemis::MANUAL) { // If we are in manual mode then the url is optional.
+            url = artemis::examplesIndexUrl();
+        } else {
+            // In all other cases, a URL is required.
             cerr << "Error: You must specify a URL" << endl;
             exit(1);
-        }else{
-            url = artemis::examplesIndexUrl();
         }
 
     }else{
+        // Major-mode concolic-test does not use a URL.
+        if (options.majorMode == artemis::CONCOLIC_TEST) {
+            cerr << "Error: Major-mode concolic-test does not use a URL." << endl;
+            exit(1);
+        }
 
         QStringList rawurl = QString(argv[optind]).split("@");
         url = rawurl.last();

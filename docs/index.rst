@@ -18,7 +18,8 @@ Substantial Addons:
 
    sections/ail
    sections/concolic
-              
+   sections/concolic-test
+
 Extending Artemis:
 
 .. toctree::

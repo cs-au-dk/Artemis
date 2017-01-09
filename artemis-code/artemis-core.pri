@@ -147,7 +147,8 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/concolic/executiontree/treemanager.h \
     src/concolic/executiontree/nodes/traceunexploredqueued.h \
     src/concolic/executiontree/traceindexer.h \
-    src/model/domsnapshotstorage.h
+    src/model/domsnapshotstorage.h \
+    src/runtime/toplevel/concolicstandaloneruntime.h
 
 SOURCES += src/runtime/input/ajaxinput.cpp \
     src/strategies/prioritizer/constantprioritizer.cpp \
@@ -267,6 +268,7 @@ SOURCES += src/runtime/input/ajaxinput.cpp \
     src/concolic/executiontree/treemanager.cpp \
     src/concolic/executiontree/nodes/traceunexploredqueued.cpp \
     src/concolic/executiontree/traceindexer.cpp \
-    src/model/domsnapshotstorage.cpp
+    src/model/domsnapshotstorage.cpp \
+    src/runtime/toplevel/concolicstandaloneruntime.cpp
 
 QT += network
