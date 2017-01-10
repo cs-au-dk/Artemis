@@ -54,7 +54,7 @@ void ConcolicStandaloneRuntime::run(const QUrl &url)
 QString ConcolicStandaloneRuntime::loadJsSnippet()
 {
     // TODO: Test implementation.
-    return "var x = artemisInputString('x'); alert('x is \'' + x + '\''); if (x == 'testme') { alert('OK'); } else { alert('BAD') }";
+    return "var x = artemisInputString('x'); alert('x is \\'' + x + '\\''); if (x == 'testme') { alert('OK'); } else { alert('BAD') }";
 }
 
 
@@ -77,7 +77,9 @@ void ConcolicStandaloneRuntime::slExecutedSequence(ExecutableConfigurationConstP
 
     // Inject
     Log::debug("Concolic-test mode: Beginning JavaScript execution.");
-    mWebkitExecutor->getPage()->currentFrame()->documentElement().evaluateJavaScript(mJsCode, QUrl(), false);
+    //qDebug() << mJsCode;
+    QVariant jsResult = mWebkitExecutor->getPage()->currentFrame()->documentElement().evaluateJavaScript(mJsCode, QUrl(), false);
+    qDebug() << "Concolic-test mode: Execution result:\n" << jsResult;
 
     // End the trace recording and return this trace.
     mWebkitExecutor->getTraceBuilder()->endRecording();
