@@ -64,7 +64,7 @@ TraceDisplay::TraceDisplay(bool linkToCoverage)
 /**
  *  Returns a string representing a graphviz input file displaying the trace tree provided.
  */
-QString TraceDisplay::makeGraph(TraceNodePtr tree)
+QString TraceDisplay::makeGraph(TraceNodePtr tree, QString title)
 {
     QString result;
     /* The visitor part builds up the lists of information which must be included in the "header" and allthe edges
@@ -77,6 +77,13 @@ QString TraceDisplay::makeGraph(TraceNodePtr tree)
     // Begin the graph
     result += "digraph tree1 {\n" + indent + "graph [ordering = out];\n\n";
 
+    // Add the title
+    if (!title.isNull() && !title.isEmpty()) {
+        title.replace("\"", "\\\"");
+        title.replace("\n", "\\n");
+        result += indent + "labelloc=\"t\";\n";
+        result += indent + "label=\"" + title + "\";\n\n";
+    }
 
     // Build the header (this is where the styling for each node type is done).
 
@@ -207,15 +214,15 @@ QString TraceDisplay::makeGraph(TraceNodePtr tree)
 
 
 // Writes the result of makeGraph() to a file.
-void TraceDisplay::writeGraphFile(TraceNodePtr tree, QString& pathToFile)
+void TraceDisplay::writeGraphFile(TraceNodePtr tree, QString& pathToFile, QString title)
 {
-    writeGraphFile(tree, pathToFile, true);
+    writeGraphFile(tree, pathToFile, true, title);
 }
 
 // Writes the result of makeGraph() to a file.
-void TraceDisplay::writeGraphFile(TraceNodePtr tree, QString& pathToFile, bool autoName)
+void TraceDisplay::writeGraphFile(TraceNodePtr tree, QString& pathToFile, bool autoName, QString title)
 {
-    QString data = makeGraph(tree);
+    QString data = makeGraph(tree, title);
 
     // If autoName is true, we generate a name and "return" it through pathToFile.
     // Otherwise, we use the value given in pathToFile as the name.

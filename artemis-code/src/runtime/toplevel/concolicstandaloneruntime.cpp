@@ -18,6 +18,8 @@
 
 #include "util/loggingutil.h"
 #include "symbolic/directaccesssymbolicvalues.h"
+#include "concolic/executiontree/tracedisplay.h"
+#include "concolic/executiontree/tracedisplayoverview.h"
 
 namespace artemis
 {
@@ -96,6 +98,7 @@ void ConcolicStandaloneRuntime::doneConcolicIteration(TraceNodePtr trace)
         target = mExplorationResult.target;
     }
     mConcolicAnalysis->addTrace(trace, target);
+    concolicOutputTree();
 
     // Check if we have reached the iteration limit.
     mNumIterations++;
@@ -136,6 +139,23 @@ void ConcolicStandaloneRuntime::doneConcolicIteration(TraceNodePtr trace)
 
     // Begin a new itration with the new values.
     newConcolicIteration();
+}
+
+
+
+void ConcolicStandaloneRuntime::concolicOutputTree()
+{
+    int iter_id = mNumIterations + 1;
+    QString title = QString("Concolic test mode, iteration %1").arg(iter_id); // TODO: Include the input JS file name
+
+    QString filename = QString("concolic-test-tree_%1.gv").arg(iter_id);
+    QString filenameOverview = QString("concolic-test-tree_%1_overview.gv").arg(iter_id);;
+
+    TraceDisplay display(mOptions.outputCoverage != NONE);
+    TraceDisplayOverview displayOverview(mOptions.outputCoverage != NONE);
+
+    display.writeGraphFile(mConcolicAnalysis->getExecutionTree(), filename, false, title);
+    displayOverview.writeGraphFile(mConcolicAnalysis->getExecutionTree(), filenameOverview, false, title);
 }
 
 
