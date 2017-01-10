@@ -43,6 +43,7 @@ protected:
     QUrl mUrl;
 
     QString loadJsSnippet();
+    QString mJsFilename;
     QString mJsCode;
 
     // Concolic analysis part

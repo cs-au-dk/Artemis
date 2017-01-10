@@ -16,10 +16,13 @@
 
 #include "concolicstandaloneruntime.h"
 
+#include <QFileInfo>
+
 #include "util/loggingutil.h"
 #include "symbolic/directaccesssymbolicvalues.h"
 #include "concolic/executiontree/tracedisplay.h"
 #include "concolic/executiontree/tracedisplayoverview.h"
+#include "util/fileutil.h"
 
 namespace artemis
 {
@@ -54,7 +57,14 @@ void ConcolicStandaloneRuntime::run(const QUrl &url)
 QString ConcolicStandaloneRuntime::loadJsSnippet()
 {
     // TODO: Test implementation.
-    return "var x = artemisInputString('x'); alert('x is \\'' + x + '\\''); if (x == 'testme') { alert('OK'); } else { alert('BAD') }";
+    mJsFilename = "/home/ben/Artemis/artemis-code/tests/system/fixtures/concolic-engine/simple-conditions.js";
+
+    // TODO: Check mJsFilename is a file, etc.
+    QString jsString = readFile(mJsFilename);
+    qDebug() << jsString;
+    return jsString;
+
+    //return "var x = artemisInputString('x'); alert('x is \\'' + x + '\\''); if (x == 'testme') { alert('OK'); } else { alert('BAD') }";
 }
 
 
@@ -152,7 +162,8 @@ void ConcolicStandaloneRuntime::doneConcolicIteration(TraceNodePtr trace)
 void ConcolicStandaloneRuntime::concolicOutputTree()
 {
     int iter_id = mNumIterations + 1;
-    QString title = QString("Concolic test mode, iteration %1").arg(iter_id); // TODO: Include the input JS file name
+    QString jsFile = QFileInfo(mJsFilename).fileName();
+    QString title = QString("%1, iteration %2").arg(jsFile).arg(iter_id);
 
     QString filename = QString("concolic-test-tree_%1.gv").arg(iter_id);
     QString filenameOverview = QString("concolic-test-tree_%1_overview.gv").arg(iter_id);;

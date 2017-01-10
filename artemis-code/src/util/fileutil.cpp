@@ -41,9 +41,9 @@ void createDir(QString path, QString folderName)
     QDir().mkdir(path + "/" + folderName);
 }
 
-QString readFile(QString fileS)
+QString readFile(QString filename)
 {
-    QFile f(fileS);
+    QFile f(filename);
     f.open(QFile::ReadOnly | QFile::Text);
     QTextStream in(&f);
     return in.readAll();
