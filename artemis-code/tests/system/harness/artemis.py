@@ -43,6 +43,7 @@ def execute_artemis(execution_uuid, url, iterations=1,
                     verbosity=None,
                     sys_timeout=None,
                     event_visibility_check=None,
+                    concolic_test_mode_js=None,
                     extra_args=None, #TODO: Use kwargs instead.
                     **kwargs):
     output_dir = os.path.join(output_parent_dir, execution_uuid)
@@ -146,12 +147,16 @@ def execute_artemis(execution_uuid, url, iterations=1,
         args.append('--concolic-selection-budget')
         args.append(concolic_selection_budget)
 
+    if concolic_test_mode_js is not None:
+        args.append('--concolic-test-mode-js')
+        args.append(concolic_test_mode_js)
+
     if extra_args is not None:
         args.extend(extra_args.split()) # TODO: In general split() is not good enough here.
 
     timeout = ['timeout', '%ss' % sys_timeout] if sys_timeout is not None else []
 
-    cmd = timeout + [ARTEMIS_EXEC] + [url] + args
+    cmd = timeout + [ARTEMIS_EXEC] + ([url] if url is not None else []) + args
 
     if dryrun or verbose:
         print(' '.join(cmd))

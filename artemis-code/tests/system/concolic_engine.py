@@ -11,8 +11,7 @@ FIXTURE_ROOT = os.path.join(os.path.dirname(os.path.realpath(__file__)), 'fixtur
 class ConcolicEngnie(unittest.TestCase):
     
     def test_input_functions_exist(self):
-        file_name = "input-functions-exist.html"
-        report = run_artemis(self._test_name(), "{}{}".format(FIXTURE_ROOT, file_name))
+        report = run_artemis(self._test_name(), os.path.join(FIXTURE_ROOT, "input-functions-exist.js"))
         
         # Check we get the expected output.
         alerts = report["alerts"]
@@ -23,8 +22,7 @@ class ConcolicEngnie(unittest.TestCase):
         
     
     def test_input_functions_default_values(self):
-        file_name = "input-functions-exist.html"
-        report = run_artemis(self._test_name(), "{}{}".format(FIXTURE_ROOT, file_name))
+        report = run_artemis(self._test_name(), os.path.join(FIXTURE_ROOT, "input-functions-exist.js"))
         
         # Check we get the expected output.
         alerts = report["alerts"]
@@ -34,16 +32,23 @@ class ConcolicEngnie(unittest.TestCase):
         self.assertIn("artemisInputBoolean('z'): false", alerts)
         
     
+    def test_concolic_engine(self):
+        report = run_artemis(self._test_name(), os.path.join(FIXTURE_ROOT, "simple-conditions.js"))
+        
+        # Check we explored some branches.
+        self.assertIn("Concolic::ExecutionTree::DistinctTracesExplored", report)
+        self.assertEqual(report["Concolic::ExecutionTree::DistinctTracesExplored"], 8)
+        
+    
     def _test_name(self):
         return self.id().split(".")[-1]
     
 
-def run_artemis(name, path):
-    return execute_artemis(name, path,
-                           iterations=1, # TODO
-                           debug_concolic=' ',
-                           major_mode='concolic', # TODO: Make a new concolic-engine-test mode which doesn't use forms.
-                           verbose=False)
+def run_artemis(name, js_file):
+    return execute_artemis(name, None,
+                           iterations=0,
+                           major_mode='concolic-test',
+                           concolic_test_mode_js=js_file)
 
 if __name__ == "__main__":
     unittest.main()

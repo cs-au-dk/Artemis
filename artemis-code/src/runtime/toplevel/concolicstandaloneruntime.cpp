@@ -65,7 +65,6 @@ QString ConcolicStandaloneRuntime::loadJsSnippet()
 
     // Check mJsFilename is a file, etc.
     QFileInfo qfi = QFileInfo(mJsFilename);
-    qDebug() << mJsFilename;
     if (!qfi.exists()) {
         Log::fatal("Concolic-test mode JS file does not exist:");
         Log::fatal(mJsFilename.toStdString());
@@ -84,7 +83,6 @@ QString ConcolicStandaloneRuntime::loadJsSnippet()
 
     // Read in the JS code.
     QString jsString = readFile(mJsFilename);
-    qDebug() << jsString;
     return jsString;
 }
 
