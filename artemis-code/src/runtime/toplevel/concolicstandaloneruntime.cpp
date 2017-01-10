@@ -121,17 +121,21 @@ void ConcolicStandaloneRuntime::doneConcolicIteration(TraceNodePtr trace)
     Symbolic::DirectAccessSymbolicValues* symValueStore = Symbolic::get_direct_access_symbolic_values_store();
     symValueStore->reset();
     foreach (QString symbol, mExplorationResult.solution->symbols()) {
+        // Remove the SYM_IN_* prefix.
+        QString varName = symbol;
+        varName.remove(QRegExp("^SYM_IN_(INT_|BOOL_)?"));
+
         // Check the type and save the value.
         Symbolvalue value = mExplorationResult.solution->findSymbol(symbol);
         switch (value.kind) {
         case Symbolic::STRING:
-            symValueStore->setString(symbol, QString::fromStdString(value.string));
+            symValueStore->setString(varName, QString::fromStdString(value.string));
             break;
         case Symbolic::INT:
-            symValueStore->setInteger(symbol, value.u.integer);
+            symValueStore->setInteger(varName, value.u.integer);
             break;
         case Symbolic::BOOL:
-            symValueStore->setBoolean(symbol, value.u.boolean);
+            symValueStore->setBoolean(varName, value.u.boolean);
             break;
         default:
             Log::fatal(QString("Error: Unexpected value type encountered for variable %1 (%2).").arg(symbol).arg(value.kind).toStdString());
