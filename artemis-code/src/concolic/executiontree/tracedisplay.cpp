@@ -56,7 +56,7 @@ TraceDisplay::TraceDisplay(bool linkToCoverage)
     mStyleFunctions = "[shape = rectangle]";
     mStyleEndSucc = "[label = \"Succ\", fillcolor = green, style = filled, shape = circle]";
     mStyleEndFail = "[label = \"Fail\", fillcolor = red, style = filled, shape = circle]";
-    mStyleEndUnk = "[label = \"Unk\", fillcolor = yellow, style = filled, shape = circle]";
+    mStyleEndUnk = "[label = \"End\", fillcolor = yellow, style = filled, shape = circle]";
     mStyleAggregates = "[style = filled, fillcolor = snow, shape = box3d]";
 
 }
