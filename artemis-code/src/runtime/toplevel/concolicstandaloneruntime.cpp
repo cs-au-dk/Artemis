@@ -56,15 +56,36 @@ void ConcolicStandaloneRuntime::run(const QUrl &url)
 // Loads the JS code to be tested and returns it as a string.
 QString ConcolicStandaloneRuntime::loadJsSnippet()
 {
-    // TODO: Test implementation.
-    mJsFilename = "/home/ben/Artemis/artemis-code/tests/system/fixtures/concolic-engine/simple-conditions.js";
+    mJsFilename = mOptions.concolicTestModeJsFile;
 
-    // TODO: Check mJsFilename is a file, etc.
+    if (mJsFilename.isNull() || mJsFilename.isEmpty()) {
+        Log::fatal("Concolic-test mode: A JS file to test must be given with '--concolic-test-mode-js <file>'.");
+        return QString();
+    }
+
+    // Check mJsFilename is a file, etc.
+    QFileInfo qfi = QFileInfo(mJsFilename);
+    qDebug() << mJsFilename;
+    if (!qfi.exists()) {
+        Log::fatal("Concolic-test mode JS file does not exist:");
+        Log::fatal(mJsFilename.toStdString());
+        return QString();
+    }
+    if (!qfi.isFile()) {
+        Log::fatal("Concolic-test mode JS file is not a file:");
+        Log::fatal(mJsFilename.toStdString());
+        return QString();
+    }
+    if (!qfi.isReadable()) {
+        Log::fatal("Concolic-test mode JS file is not readable:");
+        Log::fatal(mJsFilename.toStdString());
+        return QString();
+    }
+
+    // Read in the JS code.
     QString jsString = readFile(mJsFilename);
     qDebug() << jsString;
     return jsString;
-
-    //return "var x = artemisInputString('x'); alert('x is \\'' + x + '\\''); if (x == 'testme') { alert('OK'); } else { alert('BAD') }";
 }
 
 

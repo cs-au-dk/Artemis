@@ -188,6 +188,9 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             "           concrete-value-property, symbolic-after-injection, cvc4-coercion-opt,\n"
             "           event-sequence-sync-injections\n"
             "\n"
+            "--concolic-test-mode-js <js-file>\n"
+            "           Specifies the JavaScript source file to be used by major-mode concolic-test.\n"
+            "\n"
             "--smt-solver <solver>:\n"
             "           z3str - Use the Z3-str SMT solver as backend.\n"
             "           cvc4 (default) - Use the CVC4 SMT solver as backend.\n"
@@ -244,6 +247,7 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
     {"debug-concolic", no_argument, NULL, 'E'},
     {"event-visibility-check", required_argument, NULL, 'G'},
     {"load-new-urls", required_argument, NULL, 'L'},
+    {"concolic-test-mode-js", required_argument, NULL, 'J'},
     {0, 0, 0, 0}
     };
 
@@ -787,6 +791,12 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
                 exit(1);
             }
 
+            break;
+        }
+
+        case 'J': {
+            // Validity is checked when used in the concolic-standalone runtime.
+            options.concolicTestModeJsFile = QString(optarg);
             break;
         }
 

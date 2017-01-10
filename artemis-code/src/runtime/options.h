@@ -170,6 +170,8 @@ typedef struct OptionsType {
 
     bool artemisLoadUrls;
 
+    QString concolicTestModeJsFile;
+
 } Options;
 
 }
