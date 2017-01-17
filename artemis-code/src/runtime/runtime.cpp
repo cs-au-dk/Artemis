@@ -69,7 +69,8 @@ Runtime::Runtime(QObject* parent, const Options& options, const QUrl& url)
 {
     Log::info("Artemis - Automated tester for JavaScript");
     Log::info("Started: " + QDateTime::currentDateTime().toString().toStdString());
-    Log::info("Compilation date: " + ((string) EXE_BUILD_DATE));
+    Log::info("Build date: " + ((string) EXE_BUILD_DATE));
+    Log::info("Build commit: " + ((string) EXE_BUILD_COMMIT));
     Log::info("-----\n");
 
     mOptions = options;

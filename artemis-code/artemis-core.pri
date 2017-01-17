@@ -5,8 +5,11 @@ DESTDIR = dist
 
 QMAKE_CXXFLAGS += -g \
     -DEXE_BUILD_DATE="`date +'\"%d-%m-%Y_%H:%M:%S\"'`" \
+    -DEXE_BUILD_COMMIT="\"\\\"`if \`git rev-parse --is-inside-work-tree 2>/dev/null\`; then echo -n \`git rev-parse --short HEAD\`; git status >/dev/null 2>&1; if \`git diff-index --quiet HEAD --\`; then echo ''; else echo ' [with changes]'; fi; else echo '[unknown]'; fi`\\\"\"" \
     -Wno-unused-parameter \
     -std=c++11 -Werror
+    
+    #-DEXE_BUILD_COMMIT="$(if $(git rev-parse --is-inside-work-tree 2>/dev/null); then echo -n $(git rev-parse --short HEAD); if $(git status >/dev/null 2>&1; git diff-index --quiet HEAD --); then echo \"\"; else echo \" [with changes]\"; fi; else echo \"[unknown]\"; fi)" \
 
 DEFINES += ARTEMIS=1
 DEFINES += WTF_PLATFORM_QT=1
