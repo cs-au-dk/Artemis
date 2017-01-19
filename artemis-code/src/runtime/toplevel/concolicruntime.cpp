@@ -759,6 +759,7 @@ void ConcolicRuntime::chooseNextTargetAndExplore()
     }
 }
 
+// TODO: This function is duplicated in concolicstandaloneruntime.cpp.
 void ConcolicRuntime::reportStatistics()
 {
     Statistics::statistics()->accumulate("Concolic::Iterations", mNumIterations);

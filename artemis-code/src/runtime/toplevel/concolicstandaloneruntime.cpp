@@ -22,6 +22,7 @@
 #include "symbolic/directaccesssymbolicvalues.h"
 #include "concolic/executiontree/tracedisplay.h"
 #include "concolic/executiontree/tracedisplayoverview.h"
+#include "concolic/tracestatistics.h"
 #include "util/fileutil.h"
 
 namespace artemis
@@ -193,6 +194,59 @@ void ConcolicStandaloneRuntime::concolicOutputTree()
     display.writeGraphFile(mConcolicAnalysis->getExecutionTree(), filename, false, title);
     displayOverview.writeGraphFile(mConcolicAnalysis->getExecutionTree(), filenameOverview, false, title);
 }
+
+
+void ConcolicStandaloneRuntime::done()
+{
+    // Output a final version of the tree.
+    // This is needed because there may be an unsat/missed/etc. node created in the last iteration which we need to
+    // display even though there is no future iteration.
+    concolicOutputTree();
+
+    // Save some statistics about the tree.
+    reportStatistics();
+
+    // Done
+    Runtime::done();
+}
+
+// TODO: This is copied directly from concolicruntime.cpp and should not be duplicated.
+void ConcolicStandaloneRuntime::reportStatistics()
+{
+    Statistics::statistics()->accumulate("Concolic::Iterations", mNumIterations);
+
+    if(mConcolicAnalysis->getExecutionTree().isNull()) {
+        return;
+    }
+
+    TraceStatistics stats;
+    stats.processTrace(mConcolicAnalysis->getExecutionTree());
+
+    Statistics::statistics()->accumulate("Concolic::ExecutionTree::ConcreteBranchesTotal", stats.mNumConcreteBranches);
+    Statistics::statistics()->accumulate("Concolic::ExecutionTree::ConcreteBranchesFullyExplored", stats.mNumConcreteBranchesFullyExplored);
+
+    Statistics::statistics()->accumulate("Concolic::ExecutionTree::SymbolicBranchesTotal", stats.mNumSymBranches);
+    Statistics::statistics()->accumulate("Concolic::ExecutionTree::SymbolicBranchesFullyExplored", stats.mNumSymBranchesFullyExplored);
+
+    Statistics::statistics()->accumulate("Concolic::ExecutionTree::Alerts", stats.mNumAlerts);
+    Statistics::statistics()->accumulate("Concolic::ExecutionTree::PageLoads", stats.mNumPageLoads);
+    Statistics::statistics()->accumulate("Concolic::ExecutionTree::InterestingDomModifications", stats.mNumInterestingDomModifications);
+
+    Statistics::statistics()->accumulate("Concolic::ExecutionTree::EndSuccess", stats.mNumEndSuccess);
+    Statistics::statistics()->accumulate("Concolic::ExecutionTree::EndFailure", stats.mNumEndFailure);
+    Statistics::statistics()->accumulate("Concolic::ExecutionTree::EndUnknown", stats.mNumEndUnknown);
+
+    Statistics::statistics()->accumulate("Concolic::ExecutionTree::Unexplored", stats.mNumUnexplored);
+    Statistics::statistics()->accumulate("Concolic::ExecutionTree::UnexploredSymbolicChild", stats.mNumUnexploredSymbolicChild);
+    Statistics::statistics()->accumulate("Concolic::ExecutionTree::Unsat", stats.mNumUnexploredUnsat);
+    Statistics::statistics()->accumulate("Concolic::ExecutionTree::Missed", stats.mNumUnexploredMissed);
+    Statistics::statistics()->accumulate("Concolic::ExecutionTree::CouldNotSolve", stats.mNumUnexploredUnsolvable);
+
+    //Statistics::statistics()->accumulate("Concolic::EventSequence::HandlersTriggered", mFormFields.size());
+    //Statistics::statistics()->accumulate("Concolic::EventSequence::SymbolicBranchesTotal", stats.mNumEventSequenceSymBranches);
+    //Statistics::statistics()->accumulate("Concolic::EventSequence::SymbolicBranchesFullyExplored", stats.mNumEventSequenceSymBranchesFullyExplored);
+}
+
 
 
 } // namespace artemis

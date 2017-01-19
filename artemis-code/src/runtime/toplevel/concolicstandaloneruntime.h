@@ -59,6 +59,9 @@ protected:
     // TODO: The common parts of tree output from here, Concolic Runtime, and AnalysisServerRuntime (from feature-server-mode) should be merged. Maybe ConcolicAnalysis could handle this?
     void concolicOutputTree();
 
+    void done();
+    void reportStatistics();
+
 protected slots:
     void slExecutedSequence(ExecutableConfigurationConstPtr configuration, QSharedPointer<ExecutionResult> result);
 
