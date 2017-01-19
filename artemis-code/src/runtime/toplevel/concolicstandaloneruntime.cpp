@@ -181,6 +181,13 @@ void ConcolicStandaloneRuntime::doneConcolicIteration(TraceNodePtr trace)
 
 void ConcolicStandaloneRuntime::concolicOutputTree()
 {
+    if(mOptions.concolicTreeOutput == TREE_NONE){
+        return;
+    }
+
+    QString previous_name = mGraphOutputPreviousName;
+    QString previous_name_min = mGraphOutputOverviewPreviousName;
+
     int iter_id = mNumIterations + 1;
     QString jsFile = QFileInfo(mJsFilename).fileName();
     QString title = QString("%1, iteration %2").arg(jsFile).arg(iter_id);
@@ -192,7 +199,24 @@ void ConcolicStandaloneRuntime::concolicOutputTree()
     TraceDisplayOverview displayOverview(mOptions.outputCoverage != NONE);
 
     display.writeGraphFile(mConcolicAnalysis->getExecutionTree(), filename, false, title);
-    displayOverview.writeGraphFile(mConcolicAnalysis->getExecutionTree(), filenameOverview, false, title);
+    mGraphOutputPreviousName = filename;
+
+    if(mOptions.concolicTreeOutputOverview){
+        displayOverview.writeGraphFile(mConcolicAnalysis->getExecutionTree(), filenameOverview, false, title);
+        mGraphOutputOverviewPreviousName = filenameOverview;
+    }
+
+    // If only the final tree is required, then delete the previous tree.
+    // We do it this way to always have the latest tree on disk in case of a crash.
+    if(mOptions.concolicTreeOutput == TREE_FINAL){
+        // Delete the older graph files.
+        if(!previous_name.isEmpty()){ // Empty if we have not written a graph yet.
+            QFile::remove(previous_name);
+        }
+        if(!previous_name_min.isEmpty()){ // Empty if we have not written a graph yet.
+            QFile::remove(previous_name_min);
+        }
+    }
 }
 
 

@@ -58,6 +58,8 @@ protected:
     // Logging part
     // TODO: The common parts of tree output from here, Concolic Runtime, and AnalysisServerRuntime (from feature-server-mode) should be merged. Maybe ConcolicAnalysis could handle this?
     void concolicOutputTree();
+    QString mGraphOutputPreviousName;
+    QString mGraphOutputOverviewPreviousName;
 
     void done();
     void reportStatistics();
