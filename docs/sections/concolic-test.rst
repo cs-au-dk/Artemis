@@ -33,5 +33,48 @@ during a subsequent iteration.
 Example
 -------
 
+Here is ``simple-conditions.js``:
+
+.. code:: javascript
+
+    var x = artemisInputString('x');
+    var y = artemisInputInteger('y');
+    var z = artemisInputBoolean('z');
+    
+    if (x == "testme") {
+        alert("String '" + x + "' is OK");
+    } else {
+        alert("String '" + x + "' is not valid.");
+    }
+    
+    if (y > 10) {
+        alert("Int '" + y + "' is OK");
+    } else {
+        alert("Int '" + y + "' is not valid.");
+    }
+    
+    if (z) {
+        alert("Bool '" + z + "' is OK");
+    } else {
+        alert("Bool '" + z + "' is not valid.");
+    }
+
+Artemis is invoked as follows:
+
+.. code:: bash
+
+    artemis --major-mode concolic-test -i 0 --concolic-test-mode-js artemis-code/tests/system/fixtures/concolic-engine/simple-conditions.js -v all
+
+It explores the code in 8 iterations, and produces the following tree:
+
+.. image:: ../diagrams/concolic-test-tree_9.gv.png
 
 
+
+
+Tests
+-----
+
+There is a test suite for ``concolic-test`` mode, at ``artemis-code/tests/system/concolic_engine.py``.
+
+So far it only tests the mode itself - the symbolic and concolic features are already covered by other test suites.
