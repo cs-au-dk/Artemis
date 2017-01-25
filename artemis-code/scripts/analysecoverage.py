@@ -10,12 +10,14 @@ import pprint
 
 COVERAGE_START = re.compile(r'Coverage for source located at URL: (.*)  line')
 COVERED_LINE = re.compile(r'>>>')
-COVERAGE_STOP = re.compile(r'==== Source code loaded ====')
+COVERAGE_STOP = re.compile(r'==== Source code loaded ====|=== Statistics ===')
 
 COMMENT_MATCH = re.compile(r'^//.*')
 COMMENT_MATCH2 = re.compile(r'^/\*.*\*/')
 FUNCTION_DECL = re.compile(r'^function .*')
 SCOPE_END = re.compile(r'^}[)]*;?$')
+VAR_DECL = re.compile(r'^var [^=]*$')
+ELSE_LINE = re.compile(r'^}?\s*else\s*{?')
 
 def _coverage_parser(lines, result):
 	line = lines.pop(0)
@@ -37,12 +39,16 @@ def _coverage_parser(lines, result):
 		   COMMENT_MATCH.match(line) is None and \
 		   COMMENT_MATCH2.match(line) is None and \
 		   FUNCTION_DECL.match(line) is None and \
-		   SCOPE_END.match(line) is None:
+		   SCOPE_END.match(line) is None and \
+		   VAR_DECL.match(line) is None and \
+		   ELSE_LINE.match(line) is None:
 			# ignore blank lines
 			# ignore // comments
 			# ignore /* */ comments
 			# ignore function declerations (not assignments of lambda functions)
 			# ignore }, }; });, })); ect.
+			# ignore var x; (not var x = 5;)
+			# ignore } else {
 
 			# should be ignored but are not
 			  # multiline comments
