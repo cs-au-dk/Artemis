@@ -214,6 +214,12 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             "           Change the user-agent reported by Artemis to <custom-ua>.\n"
             "           The following built-in user agents can also be specified (case sensitive):\n"
             "           default, iphone4, ipad4, nexus5, chrome35\n"
+            "\n"
+            "--testing-concolic-send-iteration-count-to-server\n"
+            "           Only used as part of our test suite. Adds a query of ArtemisIteration=X to each URL in concolic mode.\n"
+            "\n"
+            "--event-delegation-testing\n"
+            "           Used during development to test the event delegation support (i.e. strategy-target-selection 'concolic'). Restricts Artemis to only test event sequences of length 1. [Works with major-mode 'artemis' and strategy-event-generation 'random-incremental' (both default).]\n"
             "\n";
 
     struct option long_options[] = {
@@ -248,6 +254,8 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
     {"event-visibility-check", required_argument, NULL, 'G'},
     {"load-new-urls", required_argument, NULL, 'L'},
     {"concolic-test-mode-js", required_argument, NULL, 'J'},
+    {"testing-concolic-send-iteration-count-to-server", no_argument, NULL, 'M'},
+    {"event-delegation-testing", no_argument, NULL, 'K'},
     {0, 0, 0, 0}
     };
 
@@ -427,6 +435,11 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             break;
         }
 
+        case 'K': {
+            options.delegationTestingMode = true;
+            break;
+        }
+
         case 'l' : {
             options.heapReportFactor = std::max(QString(optarg).toInt(), 1);
             break;
@@ -459,6 +472,11 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
                 exit(1);
             }
 
+            break;
+        }
+
+        case 'M': {
+            options.testingConcolicSendIterationCountToServer = true;
             break;
         }
 

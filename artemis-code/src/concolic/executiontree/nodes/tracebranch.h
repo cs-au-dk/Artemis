@@ -33,7 +33,6 @@ public:
 
     // TODO remove and use the set* functions
     friend class TraceBranchDetector; // direct modification of mBranchTrue and mBranchFalse
-    friend class TraceClassifier; // Takes address of mBranchTrue and mBranchFalse and uses this to modify them directly. It seemed even more of a hack to add getTrueBranchPtr() to the interface.
 
     ~TraceBranch() {}
 
@@ -70,6 +69,15 @@ public:
     inline uint getLinenumber()
     {
         return mLinenumber;
+    }
+
+    virtual void setChild(int position, TraceNodePtr node) {
+        assert(position == 0 || position == 1);
+        if (position == 0) {
+            setFalseBranch(node);
+        } else {
+            setTrueBranch(node);
+        }
     }
 
 protected:

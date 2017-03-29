@@ -43,6 +43,8 @@
 #include "expression/stringregexsubmatcharrayat.h"
 #include "expression/stringregexsubmatcharraymatch.h"
 #include "expression/stringsubstring.h"
+#include "expression/stringtolowercase.h"
+#include "expression/stringtouppercase.h"
 #include "expression/symbolicboolean.h"
 #include "expression/constantboolean.h"
 #include "expression/booleancoercion.h"

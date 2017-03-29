@@ -50,6 +50,8 @@ bool CVC4ConstraintWriter::write(PathConditionPtr pathCondition, FormRestriction
     for (uint i = 0; i < pathCondition->size(); i++) {
         mTypeAnalysis->analyze(pathCondition->get(i).first);
     }
+    mSawToLowerCase = false;
+    mSawToUpperCase = false;
 
     // main visitor
     bool result = SMTConstraintWriter::write(pathCondition, formRestrictions, domSnapshots, outputFile);
@@ -584,6 +586,52 @@ void CVC4ConstraintWriter::visit(Symbolic::StringSubstring* obj, void* arg)
 
 }
 
+void CVC4ConstraintWriter::visit(Symbolic::StringToLowerCase* stringtolowercase, void* arg)
+{
+    preambleAddToLowerCase();
+
+    stringtolowercase->getSource()->accept(this);
+    if(!checkType(Symbolic::STRING)){
+        error("String toLowerCase operation on non-string");
+        return;
+    }
+
+    // The SMT function str_tolowercase is "relational", so we must split the constraint here and introduce an intermediate variable.
+    std::string intermediateName = emitAndReturnNewTemporary(Symbolic::STRING);
+
+    // Output the constraint up to this point.
+    std::ostringstream lowercase_constraint;
+    lowercase_constraint << "(assert (str_tolowercase_bounded " << mExpressionBuffer << " " << intermediateName << "))";
+    mOutput << lowercase_constraint.str() << "\n";
+
+    // The returned expression is simply the new intermediate, which will be the lowercased version of mExpressionBuffer.
+    mExpressionBuffer = intermediateName;
+    mExpressionType = Symbolic::STRING;
+}
+
+void CVC4ConstraintWriter::visit(Symbolic::StringToUpperCase* stringtouppercase, void* arg)
+{
+    preambleAddToUpperCase();
+
+    stringtouppercase->getSource()->accept(this);
+    if(!checkType(Symbolic::STRING)){
+        error("String toUpperCase operation on non-string");
+        return;
+    }
+
+    // The SMT function str_touppercase is "relational", so we must split the constraint here and introduce an intermediate variable.
+    std::string intermediateName = emitAndReturnNewTemporary(Symbolic::STRING);
+
+    // Output the constraint up to this point.
+    std::ostringstream uppercase_constraint;
+    uppercase_constraint << "(assert (str_touppercase_bounded " << mExpressionBuffer << " " << intermediateName << "))";
+    mOutput << uppercase_constraint.str() << "\n";
+
+    // The returned expression is simply the new intermediate, which will be the uppercased version of mExpressionBuffer.
+    mExpressionBuffer = intermediateName;
+    mExpressionType = Symbolic::STRING;
+}
+
 void CVC4ConstraintWriter::visit(Symbolic::StringLength* stringlength, void* args)
 {
     stringlength->getString()->accept(this);
@@ -953,6 +1001,130 @@ void CVC4ConstraintWriter::helperRadioRestriction(RadioRestriction constraint)
     }
 
     mOutput << "  )\n)\n\n";
+}
+
+void CVC4ConstraintWriter::preambleAddToLowerCase()
+{
+    if (mSawToLowerCase) {
+        return;
+    }
+    mSawToLowerCase = true;
+
+    int bound = 5;
+
+    QString toLowerCase;
+    toLowerCase += "(define-fun char_tolower ((ch String)) String\n";
+    toLowerCase += "    (ite (= ch \"A\") \"a\"\n";
+    toLowerCase += "    (ite (= ch \"B\") \"b\"\n";
+    toLowerCase += "    (ite (= ch \"C\") \"c\"\n";
+    toLowerCase += "    (ite (= ch \"D\") \"d\"\n";
+    toLowerCase += "    (ite (= ch \"E\") \"e\"\n";
+    toLowerCase += "    (ite (= ch \"F\") \"f\"\n";
+    toLowerCase += "    (ite (= ch \"G\") \"g\"\n";
+    toLowerCase += "    (ite (= ch \"H\") \"h\"\n";
+    toLowerCase += "    (ite (= ch \"I\") \"i\"\n";
+    toLowerCase += "    (ite (= ch \"J\") \"j\"\n";
+    toLowerCase += "    (ite (= ch \"K\") \"k\"\n";
+    toLowerCase += "    (ite (= ch \"L\") \"l\"\n";
+    toLowerCase += "    (ite (= ch \"M\") \"m\"\n";
+    toLowerCase += "    (ite (= ch \"N\") \"n\"\n";
+    toLowerCase += "    (ite (= ch \"O\") \"o\"\n";
+    toLowerCase += "    (ite (= ch \"P\") \"p\"\n";
+    toLowerCase += "    (ite (= ch \"Q\") \"q\"\n";
+    toLowerCase += "    (ite (= ch \"R\") \"r\"\n";
+    toLowerCase += "    (ite (= ch \"S\") \"s\"\n";
+    toLowerCase += "    (ite (= ch \"T\") \"t\"\n";
+    toLowerCase += "    (ite (= ch \"U\") \"u\"\n";
+    toLowerCase += "    (ite (= ch \"V\") \"v\"\n";
+    toLowerCase += "    (ite (= ch \"W\") \"w\"\n";
+    toLowerCase += "    (ite (= ch \"X\") \"x\"\n";
+    toLowerCase += "    (ite (= ch \"Y\") \"y\"\n";
+    toLowerCase += "    (ite (= ch \"Z\") \"z\"\n";
+    toLowerCase += "    ch\n";
+    toLowerCase += "    ))))))))))))))))))))))))))\n";
+    toLowerCase += ")\n";
+    toLowerCase += "(define-fun tolower_match_at ((u String) (l String) (i Int)) Bool\n";
+    toLowerCase += "    (=\n";
+    toLowerCase += "        (char_tolower (str.at u i))\n";
+    toLowerCase += "        (str.at l i)\n";
+    toLowerCase += "    )\n";
+    toLowerCase += ")\n";
+    toLowerCase += "(define-fun str_tolowercase_bounded ((u String) (l String)) Bool\n";
+    toLowerCase += "    (and\n";
+    toLowerCase += "        (= (str.len u) (str.len l))\n";
+    toLowerCase += "        \n";
+    for (int i = 0; i < bound; i++) {
+        toLowerCase += QString("        (ite (> (str.len u) %1)\n").arg(i);
+        toLowerCase += QString("            (tolower_match_at u l %1)\n").arg(i);
+        toLowerCase += "            true\n";
+        toLowerCase += "        )\n";
+    }
+    toLowerCase += "    )\n";
+    toLowerCase += ")\n\n";
+
+    mPreambleDefinitions.append(toLowerCase);
+}
+
+void CVC4ConstraintWriter::preambleAddToUpperCase()
+{
+    if (mSawToUpperCase) {
+        return;
+    }
+    mSawToUpperCase = true;
+
+    int bound = 5;
+
+    QString toUpperCase;
+    toUpperCase += "(define-fun char_toupper ((ch String)) String\n";
+    toUpperCase += "    (ite (= ch \"a\") \"A\"\n";
+    toUpperCase += "    (ite (= ch \"b\") \"B\"\n";
+    toUpperCase += "    (ite (= ch \"c\") \"C\"\n";
+    toUpperCase += "    (ite (= ch \"d\") \"D\"\n";
+    toUpperCase += "    (ite (= ch \"e\") \"E\"\n";
+    toUpperCase += "    (ite (= ch \"f\") \"F\"\n";
+    toUpperCase += "    (ite (= ch \"g\") \"G\"\n";
+    toUpperCase += "    (ite (= ch \"h\") \"H\"\n";
+    toUpperCase += "    (ite (= ch \"i\") \"I\"\n";
+    toUpperCase += "    (ite (= ch \"j\") \"J\"\n";
+    toUpperCase += "    (ite (= ch \"k\") \"K\"\n";
+    toUpperCase += "    (ite (= ch \"l\") \"L\"\n";
+    toUpperCase += "    (ite (= ch \"m\") \"M\"\n";
+    toUpperCase += "    (ite (= ch \"n\") \"N\"\n";
+    toUpperCase += "    (ite (= ch \"o\") \"O\"\n";
+    toUpperCase += "    (ite (= ch \"p\") \"P\"\n";
+    toUpperCase += "    (ite (= ch \"q\") \"Q\"\n";
+    toUpperCase += "    (ite (= ch \"r\") \"R\"\n";
+    toUpperCase += "    (ite (= ch \"s\") \"S\"\n";
+    toUpperCase += "    (ite (= ch \"t\") \"T\"\n";
+    toUpperCase += "    (ite (= ch \"u\") \"U\"\n";
+    toUpperCase += "    (ite (= ch \"v\") \"V\"\n";
+    toUpperCase += "    (ite (= ch \"w\") \"W\"\n";
+    toUpperCase += "    (ite (= ch \"x\") \"X\"\n";
+    toUpperCase += "    (ite (= ch \"y\") \"Y\"\n";
+    toUpperCase += "    (ite (= ch \"z\") \"Z\"\n";
+    toUpperCase += "    ch\n";
+    toUpperCase += "    ))))))))))))))))))))))))))\n";
+    toUpperCase += ")\n";
+    toUpperCase += "(define-fun toupper_match_at ((u String) (l String) (i Int)) Bool\n";
+    toUpperCase += "    (=\n";
+    toUpperCase += "        (char_toupper (str.at u i))\n";
+    toUpperCase += "        (str.at l i)\n";
+    toUpperCase += "    )\n";
+    toUpperCase += ")\n";
+    toUpperCase += "(define-fun str_touppercase_bounded ((u String) (l String)) Bool\n";
+    toUpperCase += "    (and\n";
+    toUpperCase += "        (= (str.len u) (str.len l))\n";
+    toUpperCase += "        \n";
+    for (int i = 0; i < bound; i++) {
+        toUpperCase += QString("        (ite (> (str.len u) %1)\n").arg(i);
+        toUpperCase += QString("            (toupper_match_at u l %1)\n").arg(i);
+        toUpperCase += "            true\n";
+        toUpperCase += "        )\n";
+    }
+    toUpperCase += "    )\n";
+    toUpperCase += ")\n\n";
+
+    mPreambleDefinitions.append(toUpperCase);
 }
 
 void CVC4ConstraintWriter::coercetype(Symbolic::Type from, Symbolic::Type to, std::string expression)

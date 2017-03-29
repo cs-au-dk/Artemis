@@ -303,7 +303,13 @@ void ConcolicRuntime::setupNextConfiguration(QSharedPointer<FormInputCollection>
     InputSequenceConstPtr inputSequence = InputSequenceConstPtr(new InputSequence(inputList));
 
     // Create an executableConfiguration from this input sequence.
-    mNextConfiguration = QSharedPointer<ExecutableConfiguration>(new ExecutableConfiguration(inputSequence, mUrl));
+    QUrl url = mUrl;
+    if (mOptions.testingConcolicSendIterationCountToServer) {
+        QList<QPair<QString, QString> > query;
+        query.append(QPair<QString, QString>("ArtemisIteration", QString::number(mNumIterations)));
+        url.setQueryItems(query);
+    }
+    mNextConfiguration = QSharedPointer<ExecutableConfiguration>(new ExecutableConfiguration(inputSequence, url));
 
     Log::debug("Next configuration is:");
     Log::debug(mNextConfiguration->toString().toStdString());

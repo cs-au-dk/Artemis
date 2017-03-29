@@ -70,6 +70,7 @@ public:
     // Cases we ignore or which cause an error.
     virtual void visit(TraceNode* node);
     virtual void visit(TraceAnnotation* node);
+    virtual void visit(TraceDivergence* node);
 
     // Cases we will implement.
     virtual void visit(TraceConcreteBranch* node);

@@ -60,6 +60,8 @@ public:
     void visit(Symbolic::ObjectArrayIndexOf* objectarrayindexof, void* arg);
     void visit(Symbolic::SymbolicObjectPropertyString* obj, void* arg);
     void visit(Symbolic::StringSubstring* obj, void* arg);
+    void visit(Symbolic::StringToLowerCase* stringtolowercase, void* arg);
+    void visit(Symbolic::StringToUpperCase* stringtouppercase, void* arg);
 
     inline QMap<QString, Symbolic::SourceIdentifierMethod> getResult() const {
         return mResult;

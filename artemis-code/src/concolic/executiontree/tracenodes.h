@@ -48,6 +48,7 @@
 #include "nodes/traceunexploredunsolvable.h"
 #include "nodes/traceunexploredmissed.h"
 #include "nodes/traceunexploredqueued.h"
+#include "nodes/tracedivergence.h"
 
 #ifndef TRACENODES_H
 #define TRACENODES_H

@@ -27,6 +27,7 @@
 #include "JavaScriptCore/runtime/CallData.h"
 
 #include "instrumentation/jscexecutionlistener.h"
+#include "statistics/statsstorage.h"
 
 #include "JavaScriptCore/symbolic/expr.h"
 
@@ -58,6 +59,16 @@ const char* opToString(OP op) {
     };
 
     return OPStrings[op];
+}
+
+const char* opNameString(OP op)
+{
+    static const char* OPNames[] = {
+        "EQUAL", "NOT_EQUAL", "STRICT_EQUAL", "NOT_STRICT_EQUAL", "LESS_EQ", "LESS_STRICT", "GREATER_EQ", "GREATER_STRICT",
+        "ADD", "SUBTRACT", "MULTIPLY", "DIVIDE", "MODULO"
+    };
+
+    return OPNames[op];
 }
 
 SymbolicInterpreter::SymbolicInterpreter() :
@@ -213,6 +224,7 @@ JSC::JSValue SymbolicInterpreter::ail_op_binary(JSC::CallFrame* callFrame,
             return result;
         }
 
+        Statistics::statistics()->accumulate(std::string("Symbolic::Interpreter::LostSymbolicInfo::ail_op_binary::") + opNameString(op), 1);
         return result;
 
         break;
@@ -244,8 +256,11 @@ JSC::JSValue SymbolicInterpreter::ail_op_binary(JSC::CallFrame* callFrame,
             return result;
         }
 
+        Statistics::statistics()->accumulate(std::string("Symbolic::Interpreter::LostSymbolicInfo::ail_op_binary::") + opNameString(op), 1);
+        return result;
 
         break;
+
     case LESS_EQ:{
         intOp = INT_LEQ;
         strOp = STRING_LEQ;

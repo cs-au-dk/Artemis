@@ -112,7 +112,9 @@ typedef struct OptionsType {
         concolicDisabledFeatures(0),
         debugConcolic(false),
         enableEventVisibilityFiltering(false),
-        artemisLoadUrls(false)
+        artemisLoadUrls(false),
+        delegationTestingMode(false),
+        testingConcolicSendIterationCountToServer(false)
     {}
 
     QMap<QString, InjectionValue> presetFormfields;
@@ -170,7 +172,12 @@ typedef struct OptionsType {
 
     bool artemisLoadUrls;
 
+    bool delegationTestingMode;
+
     QString concolicTestModeJsFile;
+
+    // Instrumentation for the test suites.
+    bool testingConcolicSendIterationCountToServer;
 
 } Options;
 

@@ -39,6 +39,7 @@ public:
 
     void accept(TraceVisitor* visitor);
     bool isEqualShallow(const QSharedPointer<const TraceNode>& other);
+    virtual void setChild(int position, TraceNodePtr node);
     ~TraceUnexplored() {}
 
     // This must be a pointer, it will not compile as a value

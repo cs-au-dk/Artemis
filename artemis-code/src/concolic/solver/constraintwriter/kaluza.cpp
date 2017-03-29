@@ -321,6 +321,20 @@ void KaluzaConstraintWriter::visit(Symbolic::StringSubstring* obj, void* arg)
     mIdentifierStore = "ERROR";
 }
 
+void KaluzaConstraintWriter::visit(Symbolic::StringToLowerCase *stringtolowercase, void *arg)
+{
+    mError = true;
+    mErrorReason = "Symbolic string toLowerCase not supported";
+    mIdentifierStore = "ERROR";
+}
+
+void KaluzaConstraintWriter::visit(Symbolic::StringToUpperCase *stringtouppercase, void *arg)
+{
+    mError = true;
+    mErrorReason = "Symbolic string toUpperCase not supported";
+    mIdentifierStore = "ERROR";
+}
+
 }
 
 #endif

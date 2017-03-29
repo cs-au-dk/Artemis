@@ -1,0 +1,4 @@
+TEST PC: ((StringToUpperCase(SymbolicString)==ConstantString)==ConstantBoolean)
+if (x.toUpperCase() == "TEST") {
+    alert(x);
+}

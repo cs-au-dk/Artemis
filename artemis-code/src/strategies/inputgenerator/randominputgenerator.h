@@ -42,7 +42,8 @@ public:
                          EventParameterGeneratorConstPtr eventParameterInputGenerator,
                          TargetGeneratorConstPtr targetGenerator,
                          EventExecutionStatistics* execStat,
-                         int numberSameLength);
+                         int numberSameLength,
+                         bool singleEventOnly);
 
     QList<QSharedPointer<ExecutableConfiguration> > addNewConfigurations(QSharedPointer<const ExecutableConfiguration>, QSharedPointer<const ExecutionResult>);
 
@@ -58,6 +59,7 @@ private:
     EventExecutionStatistics* mExecStat;
     int mNumberSameLength;
 
+    bool mSingleEventOnly;
 };
 
 }

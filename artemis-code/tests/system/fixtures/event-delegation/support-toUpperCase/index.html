@@ -1,11 +1,9 @@
 <!--
-EXPECTED_FAILURE - No support for toLowerCase apparently. No sym branch found.
-
-TEST PC[0] = ((SymbolicProperty( SymbolicObject( SYM_TARGET_0 ) ) == ConstantString) == ConstantBoolean)
+TEST PC[0] = ((StringToUpperCase(SymbolicProperty(SymbolicObject(SYM_TARGET_0)))==ConstantString)==ConstantBoolean)
 TEST Concolic::Solver::ConstraintsSolved = 2
 TEST Concolic::Solver::ConstraintsWritten = 2
 TEST Concolic::ExecutionTree::DistinctTracesExplored = 2
-TEST Concolic::Solver::Constraint.SYM_TARGET_0 = //li[@id=\"INTERESTING\"]
+TEST Concolic::Solver::Constraint.SYM_TARGET_0 = //ul[@id=\"container\"]/li[2]
 -->
 <!doctype html>
 <html lang="en">
@@ -22,7 +20,7 @@ TEST Concolic::Solver::Constraint.SYM_TARGET_0 = //li[@id=\"INTERESTING\"]
 
 <ul id="container" >
     <li>boring to click</li>
-    <li id="INTERESTING" >interesting to click</li>
+    <li class="interesting" >interesting to click</li>
     <li>boring to click</li>
 </ul>
 
@@ -30,7 +28,7 @@ TEST Concolic::Solver::Constraint.SYM_TARGET_0 = //li[@id=\"INTERESTING\"]
     window.onload = function(){
         c = document.getElementById('container');
         c.addEventListener('click', function(event){
-            if (event.target.id.toLowerCase() == "interesting") {
+            if (event.target.className.toUpperCase() == "INTERESTING") {
                 alert("Interesting");
             } else {
                 alert("Boring");

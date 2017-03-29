@@ -103,6 +103,12 @@ void TerminalTracePrinter::visit(TraceUnexplored* node)
     addSingleValue("???");
 }
 
+void TerminalTracePrinter::visit(TraceAnnotation *node)
+{
+    // Fallback for unsupported annotation types, just ignore this node.
+    node->next->accept(this);
+}
+
 void TerminalTracePrinter::visit(TraceAlert* node)
 {
     node->next->accept(this);

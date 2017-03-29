@@ -16,37 +16,37 @@
 
  // AUTO GENERATED - DO NOT MODIFY
 
-#ifndef SYMBOLIC_CONSTANTOBJECT_H
-#define SYMBOLIC_CONSTANTOBJECT_H
+#ifndef SYMBOLIC_STRINGTOLOWERCASE_H
+#define SYMBOLIC_STRINGTOLOWERCASE_H
 
 #include <string>
 
 #include <list>
 
 #include "visitor.h"
-#include "objectexpression.h"
+#include "stringexpression.h"
 
 #ifdef ARTEMIS
 
 namespace Symbolic
 {
 
-class ConstantObject : public ObjectExpression
+class StringToLowerCase : public StringExpression
 {
 public:
-    explicit ConstantObject(unsigned instanceIdentifier);
+    explicit StringToLowerCase(StringExpression* source);
     void accept(Visitor* visitor);
     void accept(Visitor* visitor, void* arg);
 
-	inline unsigned getInstanceidentifier() {
-		return m_instanceIdentifier;
+	inline StringExpression* getSource() {
+		return m_source;
 	}
 
 private:
-	unsigned m_instanceIdentifier;
+	StringExpression* m_source;
 
 };
 }
 
 #endif
-#endif // SYMBOLIC_CONSTANTOBJECT_H
+#endif // SYMBOLIC_STRINGTOLOWERCASE_H

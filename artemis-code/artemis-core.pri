@@ -151,7 +151,8 @@ HEADERS += src/runtime/input/ajaxinput.h \
     src/concolic/executiontree/nodes/traceunexploredqueued.h \
     src/concolic/executiontree/traceindexer.h \
     src/model/domsnapshotstorage.h \
-    src/runtime/toplevel/concolicstandaloneruntime.h
+    src/runtime/toplevel/concolicstandaloneruntime.h \
+    src/concolic/executiontree/nodes/tracedivergence.h
 
 SOURCES += src/runtime/input/ajaxinput.cpp \
     src/strategies/prioritizer/constantprioritizer.cpp \

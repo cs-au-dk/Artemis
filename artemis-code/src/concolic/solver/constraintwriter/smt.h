@@ -141,6 +141,8 @@ protected:
     virtual void visit(Symbolic::StringRegexSubmatchArrayAt* exp, void* arg);
     virtual void visit(Symbolic::SymbolicObjectPropertyString* obj, void* arg);
     virtual void visit(Symbolic::StringSubstring* obj, void* arg);
+    virtual void visit(Symbolic::StringToLowerCase* stringtolowercase, void* arg);
+    virtual void visit(Symbolic::StringToUpperCase* stringtouppercase, void* arg);
 
     // Returns boolean values to mExpressionBuffer
     virtual void visit(Symbolic::SymbolicBoolean* symbolicboolean, void* args);
@@ -202,7 +204,7 @@ protected:
     void error(std::string reason);
 
     std::map<std::string, Symbolic::Type> mTypemap;
-    std::ofstream mOutput;
+    std::ostringstream mOutput;
 
     // holds the current subexpression returned by the previous call to visit
     std::string mExpressionBuffer;
@@ -221,6 +223,7 @@ protected:
 
     FormRestrictions mFormRestrictions;
     DomSnapshotStoragePtr mDomSnapshots;
+    QStringList mPreambleDefinitions;
 
     // Benchmarking
     ConcolicBenchmarkFeatures mDisabledFeatures;

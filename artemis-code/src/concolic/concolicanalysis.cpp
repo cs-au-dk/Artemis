@@ -94,7 +94,7 @@ void ConcolicAnalysis::mergeTraceIntoTree(TraceNodePtr trace, ExplorationHandle 
 {
     assert(!mExecutionTree.isNull());
 
-    mExecutionTree = mTraceMerger.merge(trace, mExecutionTree);
+    mExecutionTree = mTraceMerger.merge(trace, mExecutionTree, &mExecutionTree);
 
     // Check if we actually explored the intended target.
     if (!target.noExplorationTarget && TreeManager::isQueuedOrNotAttempted(target.target)) {

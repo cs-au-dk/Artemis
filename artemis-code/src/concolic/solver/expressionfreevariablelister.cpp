@@ -179,5 +179,15 @@ void ExpressionFreeVariableLister::visit(Symbolic::StringSubstring* obj, void* a
     obj->getSource()->accept(this, arg);
 }
 
+void ExpressionFreeVariableLister::visit(Symbolic::StringToLowerCase* stringtolowercase, void *arg)
+{
+    stringtolowercase->getSource()->accept(this);
+}
+
+void ExpressionFreeVariableLister::visit(Symbolic::StringToUpperCase* stringtouppercase, void *arg)
+{
+    stringtouppercase->getSource()->accept(this);
+}
+
 
 } // namespace artemis

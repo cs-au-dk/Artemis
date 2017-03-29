@@ -40,6 +40,7 @@ public:
     void visit(TraceConcreteBranch* node);
     void visit(TraceSymbolicBranch* node);
     void visit(TraceUnexplored* node);
+    void visit(TraceAnnotation* node);
     void visit(TraceAlert* node);
     void visit(TraceDomModification* node);
     void visit(TracePageLoad* node);

@@ -112,7 +112,7 @@ As an easy reference, we use http://www.w3schools.com/jsref/ as an easy-to-read 
 Symbolic Support
 ^^^^^^^^^^^^^^^^
 
-``String.{charAt, concat, match, replace, search, toString, valueOf, length, substr, substring}``,
+``String.{charAt, concat, match, replace, search, toString, valueOf, length, substr, substring, toLocaleLowerCase, toLocaleUpperCase, toLowerCase, toUpperCase}``,
 
 .. note::
 
@@ -170,7 +170,7 @@ Usage Warnings
 
 ``Math.{abs, acos, asin, atan, atan2, cos, exp, log, pow, random, round, sin, sqrt, tan}``,
 
-``String.{charCodeAt, indexOf, lastIndexOf, localeCompare, slice, split, substring, toLocaleLowerCase, toLocaleUpperCase, toLowerCase, toUpperCase, trim, trimLeft, trimRight, anchor, big, blink, bold, fixed, fontcolor, fontsize, italics, link, small, strike, sub, sup, fromCharCode}``,
+``String.{charCodeAt, indexOf, lastIndexOf, localeCompare, slice, split, substring, trim, trimLeft, trimRight, anchor, big, blink, bold, fixed, fontcolor, fontsize, italics, link, small, strike, sub, sup, fromCharCode}``,
 
 ``RegExp.{constructor, compile}``, ``decodeURI``, ``decodeURIComponent``, ``encodeURI``, ``encodeURIComponent``, ``eval``, ``isFinite``, ``isNaN``, ``parseFloat``, ``escape``, ``unescape``
 

@@ -92,7 +92,7 @@ void TraceViewerDialog::visit(TraceConcreteBranch *node)
 
 void TraceViewerDialog::visit(TraceSymbolicBranch *node)
 {
-    // This printer only works for straight-line traces, so we require branches that one side is alwyas "capped"
+    // This printer only works for straight-line traces, so we require branches that one side is always "capped"
     // by a TraceUnexplored node immediately.
 
     ExpressionPrinter printer;
@@ -179,6 +179,12 @@ void TraceViewerDialog::visit(TraceEndFailure *node)
 void TraceViewerDialog::visit(TraceEndUnknown *node)
 {
     mNodeList->addItem("End (Unknown)");
+}
+
+void TraceViewerDialog::visit(TraceDivergence* node)
+{
+    Log::fatal("Trace Viewer: reached an unexpected divergence node.");
+    exit(1);
 }
 
 
