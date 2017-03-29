@@ -112,6 +112,7 @@ typedef struct OptionsType {
         concolicDisabledFeatures(0),
         debugConcolic(false),
         enableEventVisibilityFiltering(false),
+        delegationTestingMode(false),
         testingConcolicSendIterationCountToServer(false)
     {}
 
@@ -167,6 +168,8 @@ typedef struct OptionsType {
 
     bool debugConcolic;
     bool enableEventVisibilityFiltering;
+
+    bool delegationTestingMode;
 
     // Instrumentation for the test suites.
     bool testingConcolicSendIterationCountToServer;

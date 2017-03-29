@@ -75,14 +75,16 @@ def _artemis_runner_no_injections(name, path):
     return execute_artemis(name, path,
                            iterations=2,
                            debug_concolic=' ',
-                           verbose=False)
+                           verbose=False,
+                           event_delegation_testing=True)
 
 def _artemis_runner_full(name, path):
     return execute_artemis(name, path,
                            iterations=10,
                            debug_concolic=' ',
                            strategy_target_selection='concolic',
-                           verbose=False)
+                           verbose=False,
+                           event_delegation_testing=True)
 
 
 def main():

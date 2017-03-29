@@ -36,13 +36,15 @@ RandomInputGenerator::RandomInputGenerator(
         QSharedPointer<const EventParameterGenerator> eventParameterInputGenerator,
         TargetGeneratorConstPtr targetGenerator,
         EventExecutionStatistics* execStat,
-        int numberSameLength)
+        int numberSameLength,
+        bool singleEventOnly)
     : InputGeneratorStrategy(parent)
     , mFormInputGenerator(formInputGenerator)
     , mEventParameterGenerator(eventParameterInputGenerator)
     , mTargetGenerator(targetGenerator)
     , mExecStat(execStat)
     , mNumberSameLength(numberSameLength)
+    , mSingleEventOnly(singleEventOnly)
 {
 }
 
@@ -55,8 +57,13 @@ QList<QSharedPointer<ExecutableConfiguration> > RandomInputGenerator::addNewConf
 
     newConfigurations.append(insertSameLength(oldConfiguration, result));
 
-    // TODO: This is a temporary working mode for Artemis, to simplify development and testing of the delegation support. We only explore single actions, not sequences of length >1.
-    if (oldConfiguration->isInitial()) {
+    if (mSingleEventOnly) {
+        // This is a temporary working mode for Artemis, to simplify development and testing of the delegation support. We only explore single actions, not sequences of length >1.
+        if (oldConfiguration->isInitial()) {
+            newConfigurations.append(insertExtended(oldConfiguration, result));
+        }
+    } else {
+        // The standard behaviour for Artemis.
         newConfigurations.append(insertExtended(oldConfiguration, result));
     }
 

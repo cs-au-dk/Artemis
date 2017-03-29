@@ -210,6 +210,9 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
             "\n"
             "--testing-concolic-send-iteration-count-to-server\n"
             "           Only used as part of our test suite. Adds a query of ArtemisIteration=X to each URL in concolic mode.\n"
+            "\n"
+            "--event-delegation-testing\n"
+            "           Used during development to test the event delegation support (i.e. strategy-target-selection 'concolic'). Restricts Artemis to only test event sequences of length 1. [Works with major-mode 'artemis' and strategy-event-generation 'random-incremental' (both default).]\n"
             "\n";
 
     struct option long_options[] = {
@@ -243,6 +246,7 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
     {"debug-concolic", no_argument, NULL, 'E'},
     {"event-visibility-check", required_argument, NULL, 'G'},
     {"testing-concolic-send-iteration-count-to-server", no_argument, NULL, 'J'},
+    {"event-delegation-testing", no_argument, NULL, 'K'},
     {0, 0, 0, 0}
     };
 
@@ -424,6 +428,11 @@ QUrl parseCmd(int argc, char* argv[], artemis::Options& options)
 
         case 'k': {
             options.coverageIgnoreUrls.insert(QUrl(QString(optarg)));
+            break;
+        }
+
+        case 'K': {
+            options.delegationTestingMode = true;
             break;
         }
 

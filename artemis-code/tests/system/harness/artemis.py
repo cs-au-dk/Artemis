@@ -44,6 +44,7 @@ def execute_artemis(execution_uuid, url, iterations=1,
                     sys_timeout=None,
                     event_visibility_check=None,
                     send_iteration_count=False,
+                    event_delegation_testing=True,
                     extra_args=None, #TODO: Use kwargs instead.
                     **kwargs):
     output_dir = os.path.join(output_parent_dir, execution_uuid)
@@ -149,6 +150,9 @@ def execute_artemis(execution_uuid, url, iterations=1,
 
     if send_iteration_count:
         args.append('--testing-concolic-send-iteration-count-to-server')
+
+    if event_delegation_testing:
+        args.append('--event-delegation-testing')
 
     if extra_args is not None:
         args.extend(extra_args.split()) # TODO: In general split() is not good enough here.

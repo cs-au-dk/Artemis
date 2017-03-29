@@ -183,7 +183,8 @@ Runtime::Runtime(QObject* parent, const Options& options, const QUrl& url)
                                                    QSharedPointer<StaticEventParameterGenerator>(new StaticEventParameterGenerator()),
                                                    mTargetGenerator,
                                                    mExecStat,
-                                                   options.numberSameLength);
+                                                   options.numberSameLength,
+                                                   options.delegationTestingMode);
     }
 
     mTerminationStrategy = new NumberOfIterationsTermination(this, options.iterationLimit);
